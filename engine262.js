@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 c2746ca3035784e0bc97cce89e364f046cbb3942
+ * engine262 0.0.1 23dfd7a3bb8a2f5a97f6259d82283f59703b8598
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -156,7 +156,7 @@
     }
 
   }
-  class OutOfRange extends RangeError {
+  class OutOfRange$1 extends RangeError {
     /* c8 ignore next */
     constructor(fn, detail) {
       super(`${fn}() argument out of range`);
@@ -437,7 +437,7 @@
     }
   }
 
-  function StringValue(node) {
+  function StringValue$1(node) {
     switch (node.type) {
       case 'Identifier':
       case 'IdentifierName':
@@ -451,7 +451,7 @@
 
       /*c8 ignore next*/
       default:
-        throw new OutOfRange('StringValue', node);
+        throw new OutOfRange$1('StringValue', node);
     }
   }
 
@@ -611,7 +611,7 @@
 
     switch (node.type) {
       case 'BindingIdentifier':
-        return [StringValue(node)];
+        return [StringValue$1(node)];
 
       case 'LexicalDeclaration':
         return BoundNames(node.BindingList);
@@ -684,7 +684,7 @@
           return ['default'];
         }
 
-        throw new OutOfRange('BoundNames', node);
+        throw new OutOfRange$1('BoundNames', node);
 
       case 'SingleNameBinding':
         return BoundNames(node.BindingIdentifier);
@@ -1281,7 +1281,7 @@
 
       /*c8 ignore next*/
       default:
-        throw new OutOfRange('IsSimpleParameterList', node);
+        throw new OutOfRange$1('IsSimpleParameterList', node);
     }
   }
 
@@ -1355,7 +1355,7 @@
 
       /*c8 ignore next*/
       default:
-        throw new OutOfRange('ContainsExpression', node);
+        throw new OutOfRange$1('ContainsExpression', node);
     }
   }
 
@@ -1404,7 +1404,7 @@
           return ModuleRequests(node.FromClause);
         }
 
-        return [StringValue(node.ModuleSpecifier)];
+        return [StringValue$1(node.ModuleSpecifier)];
 
       case 'ExportDeclaration':
         if (node.FromClause) {
@@ -1414,7 +1414,7 @@
         return [];
 
       case 'StringLiteral':
-        return [StringValue(node)];
+        return [StringValue$1(node)];
 
       default:
         return [];
@@ -1586,7 +1586,7 @@
 
           /*c8 ignore next*/
           default:
-            throw new OutOfRange('ExportEntries', node);
+            throw new OutOfRange$1('ExportEntries', node);
         }
 
       default:
@@ -1631,11 +1631,11 @@
     }
   }
 
-  var regex=/[A-Za-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0370-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u048A-\u052F\u0531-\u0556\u0559\u0560-\u0588\u05D0-\u05EA\u05EF-\u05F2\u0620-\u064A\u066E\u066F\u0671-\u06D3\u06D5\u06E5\u06E6\u06EE\u06EF\u06FA-\u06FC\u06FF\u0710\u0712-\u072F\u074D-\u07A5\u07B1\u07CA-\u07EA\u07F4\u07F5\u07FA\u0800-\u0815\u081A\u0824\u0828\u0840-\u0858\u0860-\u086A\u08A0-\u08B4\u08B6-\u08C7\u0904-\u0939\u093D\u0950\u0958-\u0961\u0971-\u0980\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BD\u09CE\u09DC\u09DD\u09DF-\u09E1\u09F0\u09F1\u09FC\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A59-\u0A5C\u0A5E\u0A72-\u0A74\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABD\u0AD0\u0AE0\u0AE1\u0AF9\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3D\u0B5C\u0B5D\u0B5F-\u0B61\u0B71\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BD0\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D\u0C58-\u0C5A\u0C60\u0C61\u0C80\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBD\u0CDE\u0CE0\u0CE1\u0CF1\u0CF2\u0D04-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D\u0D4E\u0D54-\u0D56\u0D5F-\u0D61\u0D7A-\u0D7F\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0E01-\u0E30\u0E32\u0E33\u0E40-\u0E46\u0E81\u0E82\u0E84\u0E86-\u0E8A\u0E8C-\u0EA3\u0EA5\u0EA7-\u0EB0\u0EB2\u0EB3\u0EBD\u0EC0-\u0EC4\u0EC6\u0EDC-\u0EDF\u0F00\u0F40-\u0F47\u0F49-\u0F6C\u0F88-\u0F8C\u1000-\u102A\u103F\u1050-\u1055\u105A-\u105D\u1061\u1065\u1066\u106E-\u1070\u1075-\u1081\u108E\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u1380-\u138F\u13A0-\u13F5\u13F8-\u13FD\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1711\u1720-\u1731\u1740-\u1751\u1760-\u176C\u176E-\u1770\u1780-\u17B3\u17D7\u17DC\u1820-\u1878\u1880-\u18A8\u18AA\u18B0-\u18F5\u1900-\u191E\u1950-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u1A00-\u1A16\u1A20-\u1A54\u1AA7\u1B05-\u1B33\u1B45-\u1B4B\u1B83-\u1BA0\u1BAE\u1BAF\u1BBA-\u1BE5\u1C00-\u1C23\u1C4D-\u1C4F\u1C5A-\u1C7D\u1C80-\u1C88\u1C90-\u1CBA\u1CBD-\u1CBF\u1CE9-\u1CEC\u1CEE-\u1CF3\u1CF5\u1CF6\u1CFA\u1D00-\u1DBF\u1E00-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u2071\u207F\u2090-\u209C\u2102\u2107\u210A-\u2113\u2115\u2118-\u211D\u2124\u2126\u2128\u212A-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CEE\u2CF2\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D80-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u3005-\u3007\u3021-\u3029\u3031-\u3035\u3038-\u303C\u3041-\u3096\u309B-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312F\u3131-\u318E\u31A0-\u31BF\u31F0-\u31FF\u3400-\u4DBF\u4E00-\u9FFC\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA61F\uA62A\uA62B\uA640-\uA66E\uA67F-\uA69D\uA6A0-\uA6EF\uA717-\uA71F\uA722-\uA788\uA78B-\uA7BF\uA7C2-\uA7CA\uA7F5-\uA801\uA803-\uA805\uA807-\uA80A\uA80C-\uA822\uA840-\uA873\uA882-\uA8B3\uA8F2-\uA8F7\uA8FB\uA8FD\uA8FE\uA90A-\uA925\uA930-\uA946\uA960-\uA97C\uA984-\uA9B2\uA9CF\uA9E0-\uA9E4\uA9E6-\uA9EF\uA9FA-\uA9FE\uAA00-\uAA28\uAA40-\uAA42\uAA44-\uAA4B\uAA60-\uAA76\uAA7A\uAA7E-\uAAAF\uAAB1\uAAB5\uAAB6\uAAB9-\uAABD\uAAC0\uAAC2\uAADB-\uAADD\uAAE0-\uAAEA\uAAF2-\uAAF4\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB69\uAB70-\uABE2\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D\uFB1F-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE70-\uFE74\uFE76-\uFEFC\uFF21-\uFF3A\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]|\uD800[\uDC00-\uDC0B\uDC0D-\uDC26\uDC28-\uDC3A\uDC3C\uDC3D\uDC3F-\uDC4D\uDC50-\uDC5D\uDC80-\uDCFA\uDD40-\uDD74\uDE80-\uDE9C\uDEA0-\uDED0\uDF00-\uDF1F\uDF2D-\uDF4A\uDF50-\uDF75\uDF80-\uDF9D\uDFA0-\uDFC3\uDFC8-\uDFCF\uDFD1-\uDFD5]|\uD801[\uDC00-\uDC9D\uDCB0-\uDCD3\uDCD8-\uDCFB\uDD00-\uDD27\uDD30-\uDD63\uDE00-\uDF36\uDF40-\uDF55\uDF60-\uDF67]|\uD802[\uDC00-\uDC05\uDC08\uDC0A-\uDC35\uDC37\uDC38\uDC3C\uDC3F-\uDC55\uDC60-\uDC76\uDC80-\uDC9E\uDCE0-\uDCF2\uDCF4\uDCF5\uDD00-\uDD15\uDD20-\uDD39\uDD80-\uDDB7\uDDBE\uDDBF\uDE00\uDE10-\uDE13\uDE15-\uDE17\uDE19-\uDE35\uDE60-\uDE7C\uDE80-\uDE9C\uDEC0-\uDEC7\uDEC9-\uDEE4\uDF00-\uDF35\uDF40-\uDF55\uDF60-\uDF72\uDF80-\uDF91]|\uD803[\uDC00-\uDC48\uDC80-\uDCB2\uDCC0-\uDCF2\uDD00-\uDD23\uDE80-\uDEA9\uDEB0\uDEB1\uDF00-\uDF1C\uDF27\uDF30-\uDF45\uDFB0-\uDFC4\uDFE0-\uDFF6]|\uD804[\uDC03-\uDC37\uDC83-\uDCAF\uDCD0-\uDCE8\uDD03-\uDD26\uDD44\uDD47\uDD50-\uDD72\uDD76\uDD83-\uDDB2\uDDC1-\uDDC4\uDDDA\uDDDC\uDE00-\uDE11\uDE13-\uDE2B\uDE80-\uDE86\uDE88\uDE8A-\uDE8D\uDE8F-\uDE9D\uDE9F-\uDEA8\uDEB0-\uDEDE\uDF05-\uDF0C\uDF0F\uDF10\uDF13-\uDF28\uDF2A-\uDF30\uDF32\uDF33\uDF35-\uDF39\uDF3D\uDF50\uDF5D-\uDF61]|\uD805[\uDC00-\uDC34\uDC47-\uDC4A\uDC5F-\uDC61\uDC80-\uDCAF\uDCC4\uDCC5\uDCC7\uDD80-\uDDAE\uDDD8-\uDDDB\uDE00-\uDE2F\uDE44\uDE80-\uDEAA\uDEB8\uDF00-\uDF1A]|\uD806[\uDC00-\uDC2B\uDCA0-\uDCDF\uDCFF-\uDD06\uDD09\uDD0C-\uDD13\uDD15\uDD16\uDD18-\uDD2F\uDD3F\uDD41\uDDA0-\uDDA7\uDDAA-\uDDD0\uDDE1\uDDE3\uDE00\uDE0B-\uDE32\uDE3A\uDE50\uDE5C-\uDE89\uDE9D\uDEC0-\uDEF8]|\uD807[\uDC00-\uDC08\uDC0A-\uDC2E\uDC40\uDC72-\uDC8F\uDD00-\uDD06\uDD08\uDD09\uDD0B-\uDD30\uDD46\uDD60-\uDD65\uDD67\uDD68\uDD6A-\uDD89\uDD98\uDEE0-\uDEF2\uDFB0]|\uD808[\uDC00-\uDF99]|\uD809[\uDC00-\uDC6E\uDC80-\uDD43]|[\uD80C\uD81C-\uD820\uD822\uD840-\uD868\uD86A-\uD86C\uD86F-\uD872\uD874-\uD879\uD880-\uD883][\uDC00-\uDFFF]|\uD80D[\uDC00-\uDC2E]|\uD811[\uDC00-\uDE46]|\uD81A[\uDC00-\uDE38\uDE40-\uDE5E\uDED0-\uDEED\uDF00-\uDF2F\uDF40-\uDF43\uDF63-\uDF77\uDF7D-\uDF8F]|\uD81B[\uDE40-\uDE7F\uDF00-\uDF4A\uDF50\uDF93-\uDF9F\uDFE0\uDFE1\uDFE3]|\uD821[\uDC00-\uDFF7]|\uD823[\uDC00-\uDCD5\uDD00-\uDD08]|\uD82C[\uDC00-\uDD1E\uDD50-\uDD52\uDD64-\uDD67\uDD70-\uDEFB]|\uD82F[\uDC00-\uDC6A\uDC70-\uDC7C\uDC80-\uDC88\uDC90-\uDC99]|\uD835[\uDC00-\uDC54\uDC56-\uDC9C\uDC9E\uDC9F\uDCA2\uDCA5\uDCA6\uDCA9-\uDCAC\uDCAE-\uDCB9\uDCBB\uDCBD-\uDCC3\uDCC5-\uDD05\uDD07-\uDD0A\uDD0D-\uDD14\uDD16-\uDD1C\uDD1E-\uDD39\uDD3B-\uDD3E\uDD40-\uDD44\uDD46\uDD4A-\uDD50\uDD52-\uDEA5\uDEA8-\uDEC0\uDEC2-\uDEDA\uDEDC-\uDEFA\uDEFC-\uDF14\uDF16-\uDF34\uDF36-\uDF4E\uDF50-\uDF6E\uDF70-\uDF88\uDF8A-\uDFA8\uDFAA-\uDFC2\uDFC4-\uDFCB]|\uD838[\uDD00-\uDD2C\uDD37-\uDD3D\uDD4E\uDEC0-\uDEEB]|\uD83A[\uDC00-\uDCC4\uDD00-\uDD43\uDD4B]|\uD83B[\uDE00-\uDE03\uDE05-\uDE1F\uDE21\uDE22\uDE24\uDE27\uDE29-\uDE32\uDE34-\uDE37\uDE39\uDE3B\uDE42\uDE47\uDE49\uDE4B\uDE4D-\uDE4F\uDE51\uDE52\uDE54\uDE57\uDE59\uDE5B\uDE5D\uDE5F\uDE61\uDE62\uDE64\uDE67-\uDE6A\uDE6C-\uDE72\uDE74-\uDE77\uDE79-\uDE7C\uDE7E\uDE80-\uDE89\uDE8B-\uDE9B\uDEA1-\uDEA3\uDEA5-\uDEA9\uDEAB-\uDEBB]|\uD869[\uDC00-\uDEDD\uDF00-\uDFFF]|\uD86D[\uDC00-\uDF34\uDF40-\uDFFF]|\uD86E[\uDC00-\uDC1D\uDC20-\uDFFF]|\uD873[\uDC00-\uDEA1\uDEB0-\uDFFF]|\uD87A[\uDC00-\uDFE0]|\uD87E[\uDC00-\uDE1D]|\uD884[\uDC00-\uDF4A]/;
+  var regex$2=/[A-Za-z\xAA\xB5\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0370-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386\u0388-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u048A-\u052F\u0531-\u0556\u0559\u0560-\u0588\u05D0-\u05EA\u05EF-\u05F2\u0620-\u064A\u066E\u066F\u0671-\u06D3\u06D5\u06E5\u06E6\u06EE\u06EF\u06FA-\u06FC\u06FF\u0710\u0712-\u072F\u074D-\u07A5\u07B1\u07CA-\u07EA\u07F4\u07F5\u07FA\u0800-\u0815\u081A\u0824\u0828\u0840-\u0858\u0860-\u086A\u08A0-\u08B4\u08B6-\u08C7\u0904-\u0939\u093D\u0950\u0958-\u0961\u0971-\u0980\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BD\u09CE\u09DC\u09DD\u09DF-\u09E1\u09F0\u09F1\u09FC\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A59-\u0A5C\u0A5E\u0A72-\u0A74\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABD\u0AD0\u0AE0\u0AE1\u0AF9\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3D\u0B5C\u0B5D\u0B5F-\u0B61\u0B71\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BD0\u0C05-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D\u0C58-\u0C5A\u0C60\u0C61\u0C80\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBD\u0CDE\u0CE0\u0CE1\u0CF1\u0CF2\u0D04-\u0D0C\u0D0E-\u0D10\u0D12-\u0D3A\u0D3D\u0D4E\u0D54-\u0D56\u0D5F-\u0D61\u0D7A-\u0D7F\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0E01-\u0E30\u0E32\u0E33\u0E40-\u0E46\u0E81\u0E82\u0E84\u0E86-\u0E8A\u0E8C-\u0EA3\u0EA5\u0EA7-\u0EB0\u0EB2\u0EB3\u0EBD\u0EC0-\u0EC4\u0EC6\u0EDC-\u0EDF\u0F00\u0F40-\u0F47\u0F49-\u0F6C\u0F88-\u0F8C\u1000-\u102A\u103F\u1050-\u1055\u105A-\u105D\u1061\u1065\u1066\u106E-\u1070\u1075-\u1081\u108E\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u1380-\u138F\u13A0-\u13F5\u13F8-\u13FD\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1711\u1720-\u1731\u1740-\u1751\u1760-\u176C\u176E-\u1770\u1780-\u17B3\u17D7\u17DC\u1820-\u1878\u1880-\u18A8\u18AA\u18B0-\u18F5\u1900-\u191E\u1950-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u1A00-\u1A16\u1A20-\u1A54\u1AA7\u1B05-\u1B33\u1B45-\u1B4B\u1B83-\u1BA0\u1BAE\u1BAF\u1BBA-\u1BE5\u1C00-\u1C23\u1C4D-\u1C4F\u1C5A-\u1C7D\u1C80-\u1C88\u1C90-\u1CBA\u1CBD-\u1CBF\u1CE9-\u1CEC\u1CEE-\u1CF3\u1CF5\u1CF6\u1CFA\u1D00-\u1DBF\u1E00-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u2071\u207F\u2090-\u209C\u2102\u2107\u210A-\u2113\u2115\u2118-\u211D\u2124\u2126\u2128\u212A-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CEE\u2CF2\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D80-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u3005-\u3007\u3021-\u3029\u3031-\u3035\u3038-\u303C\u3041-\u3096\u309B-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312F\u3131-\u318E\u31A0-\u31BF\u31F0-\u31FF\u3400-\u4DBF\u4E00-\u9FFC\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA61F\uA62A\uA62B\uA640-\uA66E\uA67F-\uA69D\uA6A0-\uA6EF\uA717-\uA71F\uA722-\uA788\uA78B-\uA7BF\uA7C2-\uA7CA\uA7F5-\uA801\uA803-\uA805\uA807-\uA80A\uA80C-\uA822\uA840-\uA873\uA882-\uA8B3\uA8F2-\uA8F7\uA8FB\uA8FD\uA8FE\uA90A-\uA925\uA930-\uA946\uA960-\uA97C\uA984-\uA9B2\uA9CF\uA9E0-\uA9E4\uA9E6-\uA9EF\uA9FA-\uA9FE\uAA00-\uAA28\uAA40-\uAA42\uAA44-\uAA4B\uAA60-\uAA76\uAA7A\uAA7E-\uAAAF\uAAB1\uAAB5\uAAB6\uAAB9-\uAABD\uAAC0\uAAC2\uAADB-\uAADD\uAAE0-\uAAEA\uAAF2-\uAAF4\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB69\uAB70-\uABE2\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D\uFB1F-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE70-\uFE74\uFE76-\uFEFC\uFF21-\uFF3A\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]|\uD800[\uDC00-\uDC0B\uDC0D-\uDC26\uDC28-\uDC3A\uDC3C\uDC3D\uDC3F-\uDC4D\uDC50-\uDC5D\uDC80-\uDCFA\uDD40-\uDD74\uDE80-\uDE9C\uDEA0-\uDED0\uDF00-\uDF1F\uDF2D-\uDF4A\uDF50-\uDF75\uDF80-\uDF9D\uDFA0-\uDFC3\uDFC8-\uDFCF\uDFD1-\uDFD5]|\uD801[\uDC00-\uDC9D\uDCB0-\uDCD3\uDCD8-\uDCFB\uDD00-\uDD27\uDD30-\uDD63\uDE00-\uDF36\uDF40-\uDF55\uDF60-\uDF67]|\uD802[\uDC00-\uDC05\uDC08\uDC0A-\uDC35\uDC37\uDC38\uDC3C\uDC3F-\uDC55\uDC60-\uDC76\uDC80-\uDC9E\uDCE0-\uDCF2\uDCF4\uDCF5\uDD00-\uDD15\uDD20-\uDD39\uDD80-\uDDB7\uDDBE\uDDBF\uDE00\uDE10-\uDE13\uDE15-\uDE17\uDE19-\uDE35\uDE60-\uDE7C\uDE80-\uDE9C\uDEC0-\uDEC7\uDEC9-\uDEE4\uDF00-\uDF35\uDF40-\uDF55\uDF60-\uDF72\uDF80-\uDF91]|\uD803[\uDC00-\uDC48\uDC80-\uDCB2\uDCC0-\uDCF2\uDD00-\uDD23\uDE80-\uDEA9\uDEB0\uDEB1\uDF00-\uDF1C\uDF27\uDF30-\uDF45\uDFB0-\uDFC4\uDFE0-\uDFF6]|\uD804[\uDC03-\uDC37\uDC83-\uDCAF\uDCD0-\uDCE8\uDD03-\uDD26\uDD44\uDD47\uDD50-\uDD72\uDD76\uDD83-\uDDB2\uDDC1-\uDDC4\uDDDA\uDDDC\uDE00-\uDE11\uDE13-\uDE2B\uDE80-\uDE86\uDE88\uDE8A-\uDE8D\uDE8F-\uDE9D\uDE9F-\uDEA8\uDEB0-\uDEDE\uDF05-\uDF0C\uDF0F\uDF10\uDF13-\uDF28\uDF2A-\uDF30\uDF32\uDF33\uDF35-\uDF39\uDF3D\uDF50\uDF5D-\uDF61]|\uD805[\uDC00-\uDC34\uDC47-\uDC4A\uDC5F-\uDC61\uDC80-\uDCAF\uDCC4\uDCC5\uDCC7\uDD80-\uDDAE\uDDD8-\uDDDB\uDE00-\uDE2F\uDE44\uDE80-\uDEAA\uDEB8\uDF00-\uDF1A]|\uD806[\uDC00-\uDC2B\uDCA0-\uDCDF\uDCFF-\uDD06\uDD09\uDD0C-\uDD13\uDD15\uDD16\uDD18-\uDD2F\uDD3F\uDD41\uDDA0-\uDDA7\uDDAA-\uDDD0\uDDE1\uDDE3\uDE00\uDE0B-\uDE32\uDE3A\uDE50\uDE5C-\uDE89\uDE9D\uDEC0-\uDEF8]|\uD807[\uDC00-\uDC08\uDC0A-\uDC2E\uDC40\uDC72-\uDC8F\uDD00-\uDD06\uDD08\uDD09\uDD0B-\uDD30\uDD46\uDD60-\uDD65\uDD67\uDD68\uDD6A-\uDD89\uDD98\uDEE0-\uDEF2\uDFB0]|\uD808[\uDC00-\uDF99]|\uD809[\uDC00-\uDC6E\uDC80-\uDD43]|[\uD80C\uD81C-\uD820\uD822\uD840-\uD868\uD86A-\uD86C\uD86F-\uD872\uD874-\uD879\uD880-\uD883][\uDC00-\uDFFF]|\uD80D[\uDC00-\uDC2E]|\uD811[\uDC00-\uDE46]|\uD81A[\uDC00-\uDE38\uDE40-\uDE5E\uDED0-\uDEED\uDF00-\uDF2F\uDF40-\uDF43\uDF63-\uDF77\uDF7D-\uDF8F]|\uD81B[\uDE40-\uDE7F\uDF00-\uDF4A\uDF50\uDF93-\uDF9F\uDFE0\uDFE1\uDFE3]|\uD821[\uDC00-\uDFF7]|\uD823[\uDC00-\uDCD5\uDD00-\uDD08]|\uD82C[\uDC00-\uDD1E\uDD50-\uDD52\uDD64-\uDD67\uDD70-\uDEFB]|\uD82F[\uDC00-\uDC6A\uDC70-\uDC7C\uDC80-\uDC88\uDC90-\uDC99]|\uD835[\uDC00-\uDC54\uDC56-\uDC9C\uDC9E\uDC9F\uDCA2\uDCA5\uDCA6\uDCA9-\uDCAC\uDCAE-\uDCB9\uDCBB\uDCBD-\uDCC3\uDCC5-\uDD05\uDD07-\uDD0A\uDD0D-\uDD14\uDD16-\uDD1C\uDD1E-\uDD39\uDD3B-\uDD3E\uDD40-\uDD44\uDD46\uDD4A-\uDD50\uDD52-\uDEA5\uDEA8-\uDEC0\uDEC2-\uDEDA\uDEDC-\uDEFA\uDEFC-\uDF14\uDF16-\uDF34\uDF36-\uDF4E\uDF50-\uDF6E\uDF70-\uDF88\uDF8A-\uDFA8\uDFAA-\uDFC2\uDFC4-\uDFCB]|\uD838[\uDD00-\uDD2C\uDD37-\uDD3D\uDD4E\uDEC0-\uDEEB]|\uD83A[\uDC00-\uDCC4\uDD00-\uDD43\uDD4B]|\uD83B[\uDE00-\uDE03\uDE05-\uDE1F\uDE21\uDE22\uDE24\uDE27\uDE29-\uDE32\uDE34-\uDE37\uDE39\uDE3B\uDE42\uDE47\uDE49\uDE4B\uDE4D-\uDE4F\uDE51\uDE52\uDE54\uDE57\uDE59\uDE5B\uDE5D\uDE5F\uDE61\uDE62\uDE64\uDE67-\uDE6A\uDE6C-\uDE72\uDE74-\uDE77\uDE79-\uDE7C\uDE7E\uDE80-\uDE89\uDE8B-\uDE9B\uDEA1-\uDEA3\uDEA5-\uDEA9\uDEAB-\uDEBB]|\uD869[\uDC00-\uDEDD\uDF00-\uDFFF]|\uD86D[\uDC00-\uDF34\uDF40-\uDFFF]|\uD86E[\uDC00-\uDC1D\uDC20-\uDFFF]|\uD873[\uDC00-\uDEA1\uDEB0-\uDFFF]|\uD87A[\uDC00-\uDFE0]|\uD87E[\uDC00-\uDE1D]|\uD884[\uDC00-\uDF4A]/;
 
   var regex$1=/[0-9A-Z_a-z\xAA\xB5\xB7\xBA\xC0-\xD6\xD8-\xF6\xF8-\u02C1\u02C6-\u02D1\u02E0-\u02E4\u02EC\u02EE\u0300-\u0374\u0376\u0377\u037A-\u037D\u037F\u0386-\u038A\u038C\u038E-\u03A1\u03A3-\u03F5\u03F7-\u0481\u0483-\u0487\u048A-\u052F\u0531-\u0556\u0559\u0560-\u0588\u0591-\u05BD\u05BF\u05C1\u05C2\u05C4\u05C5\u05C7\u05D0-\u05EA\u05EF-\u05F2\u0610-\u061A\u0620-\u0669\u066E-\u06D3\u06D5-\u06DC\u06DF-\u06E8\u06EA-\u06FC\u06FF\u0710-\u074A\u074D-\u07B1\u07C0-\u07F5\u07FA\u07FD\u0800-\u082D\u0840-\u085B\u0860-\u086A\u08A0-\u08B4\u08B6-\u08C7\u08D3-\u08E1\u08E3-\u0963\u0966-\u096F\u0971-\u0983\u0985-\u098C\u098F\u0990\u0993-\u09A8\u09AA-\u09B0\u09B2\u09B6-\u09B9\u09BC-\u09C4\u09C7\u09C8\u09CB-\u09CE\u09D7\u09DC\u09DD\u09DF-\u09E3\u09E6-\u09F1\u09FC\u09FE\u0A01-\u0A03\u0A05-\u0A0A\u0A0F\u0A10\u0A13-\u0A28\u0A2A-\u0A30\u0A32\u0A33\u0A35\u0A36\u0A38\u0A39\u0A3C\u0A3E-\u0A42\u0A47\u0A48\u0A4B-\u0A4D\u0A51\u0A59-\u0A5C\u0A5E\u0A66-\u0A75\u0A81-\u0A83\u0A85-\u0A8D\u0A8F-\u0A91\u0A93-\u0AA8\u0AAA-\u0AB0\u0AB2\u0AB3\u0AB5-\u0AB9\u0ABC-\u0AC5\u0AC7-\u0AC9\u0ACB-\u0ACD\u0AD0\u0AE0-\u0AE3\u0AE6-\u0AEF\u0AF9-\u0AFF\u0B01-\u0B03\u0B05-\u0B0C\u0B0F\u0B10\u0B13-\u0B28\u0B2A-\u0B30\u0B32\u0B33\u0B35-\u0B39\u0B3C-\u0B44\u0B47\u0B48\u0B4B-\u0B4D\u0B55-\u0B57\u0B5C\u0B5D\u0B5F-\u0B63\u0B66-\u0B6F\u0B71\u0B82\u0B83\u0B85-\u0B8A\u0B8E-\u0B90\u0B92-\u0B95\u0B99\u0B9A\u0B9C\u0B9E\u0B9F\u0BA3\u0BA4\u0BA8-\u0BAA\u0BAE-\u0BB9\u0BBE-\u0BC2\u0BC6-\u0BC8\u0BCA-\u0BCD\u0BD0\u0BD7\u0BE6-\u0BEF\u0C00-\u0C0C\u0C0E-\u0C10\u0C12-\u0C28\u0C2A-\u0C39\u0C3D-\u0C44\u0C46-\u0C48\u0C4A-\u0C4D\u0C55\u0C56\u0C58-\u0C5A\u0C60-\u0C63\u0C66-\u0C6F\u0C80-\u0C83\u0C85-\u0C8C\u0C8E-\u0C90\u0C92-\u0CA8\u0CAA-\u0CB3\u0CB5-\u0CB9\u0CBC-\u0CC4\u0CC6-\u0CC8\u0CCA-\u0CCD\u0CD5\u0CD6\u0CDE\u0CE0-\u0CE3\u0CE6-\u0CEF\u0CF1\u0CF2\u0D00-\u0D0C\u0D0E-\u0D10\u0D12-\u0D44\u0D46-\u0D48\u0D4A-\u0D4E\u0D54-\u0D57\u0D5F-\u0D63\u0D66-\u0D6F\u0D7A-\u0D7F\u0D81-\u0D83\u0D85-\u0D96\u0D9A-\u0DB1\u0DB3-\u0DBB\u0DBD\u0DC0-\u0DC6\u0DCA\u0DCF-\u0DD4\u0DD6\u0DD8-\u0DDF\u0DE6-\u0DEF\u0DF2\u0DF3\u0E01-\u0E3A\u0E40-\u0E4E\u0E50-\u0E59\u0E81\u0E82\u0E84\u0E86-\u0E8A\u0E8C-\u0EA3\u0EA5\u0EA7-\u0EBD\u0EC0-\u0EC4\u0EC6\u0EC8-\u0ECD\u0ED0-\u0ED9\u0EDC-\u0EDF\u0F00\u0F18\u0F19\u0F20-\u0F29\u0F35\u0F37\u0F39\u0F3E-\u0F47\u0F49-\u0F6C\u0F71-\u0F84\u0F86-\u0F97\u0F99-\u0FBC\u0FC6\u1000-\u1049\u1050-\u109D\u10A0-\u10C5\u10C7\u10CD\u10D0-\u10FA\u10FC-\u1248\u124A-\u124D\u1250-\u1256\u1258\u125A-\u125D\u1260-\u1288\u128A-\u128D\u1290-\u12B0\u12B2-\u12B5\u12B8-\u12BE\u12C0\u12C2-\u12C5\u12C8-\u12D6\u12D8-\u1310\u1312-\u1315\u1318-\u135A\u135D-\u135F\u1369-\u1371\u1380-\u138F\u13A0-\u13F5\u13F8-\u13FD\u1401-\u166C\u166F-\u167F\u1681-\u169A\u16A0-\u16EA\u16EE-\u16F8\u1700-\u170C\u170E-\u1714\u1720-\u1734\u1740-\u1753\u1760-\u176C\u176E-\u1770\u1772\u1773\u1780-\u17D3\u17D7\u17DC\u17DD\u17E0-\u17E9\u180B-\u180D\u1810-\u1819\u1820-\u1878\u1880-\u18AA\u18B0-\u18F5\u1900-\u191E\u1920-\u192B\u1930-\u193B\u1946-\u196D\u1970-\u1974\u1980-\u19AB\u19B0-\u19C9\u19D0-\u19DA\u1A00-\u1A1B\u1A20-\u1A5E\u1A60-\u1A7C\u1A7F-\u1A89\u1A90-\u1A99\u1AA7\u1AB0-\u1ABD\u1ABF\u1AC0\u1B00-\u1B4B\u1B50-\u1B59\u1B6B-\u1B73\u1B80-\u1BF3\u1C00-\u1C37\u1C40-\u1C49\u1C4D-\u1C7D\u1C80-\u1C88\u1C90-\u1CBA\u1CBD-\u1CBF\u1CD0-\u1CD2\u1CD4-\u1CFA\u1D00-\u1DF9\u1DFB-\u1F15\u1F18-\u1F1D\u1F20-\u1F45\u1F48-\u1F4D\u1F50-\u1F57\u1F59\u1F5B\u1F5D\u1F5F-\u1F7D\u1F80-\u1FB4\u1FB6-\u1FBC\u1FBE\u1FC2-\u1FC4\u1FC6-\u1FCC\u1FD0-\u1FD3\u1FD6-\u1FDB\u1FE0-\u1FEC\u1FF2-\u1FF4\u1FF6-\u1FFC\u203F\u2040\u2054\u2071\u207F\u2090-\u209C\u20D0-\u20DC\u20E1\u20E5-\u20F0\u2102\u2107\u210A-\u2113\u2115\u2118-\u211D\u2124\u2126\u2128\u212A-\u2139\u213C-\u213F\u2145-\u2149\u214E\u2160-\u2188\u2C00-\u2C2E\u2C30-\u2C5E\u2C60-\u2CE4\u2CEB-\u2CF3\u2D00-\u2D25\u2D27\u2D2D\u2D30-\u2D67\u2D6F\u2D7F-\u2D96\u2DA0-\u2DA6\u2DA8-\u2DAE\u2DB0-\u2DB6\u2DB8-\u2DBE\u2DC0-\u2DC6\u2DC8-\u2DCE\u2DD0-\u2DD6\u2DD8-\u2DDE\u2DE0-\u2DFF\u3005-\u3007\u3021-\u302F\u3031-\u3035\u3038-\u303C\u3041-\u3096\u3099-\u309F\u30A1-\u30FA\u30FC-\u30FF\u3105-\u312F\u3131-\u318E\u31A0-\u31BF\u31F0-\u31FF\u3400-\u4DBF\u4E00-\u9FFC\uA000-\uA48C\uA4D0-\uA4FD\uA500-\uA60C\uA610-\uA62B\uA640-\uA66F\uA674-\uA67D\uA67F-\uA6F1\uA717-\uA71F\uA722-\uA788\uA78B-\uA7BF\uA7C2-\uA7CA\uA7F5-\uA827\uA82C\uA840-\uA873\uA880-\uA8C5\uA8D0-\uA8D9\uA8E0-\uA8F7\uA8FB\uA8FD-\uA92D\uA930-\uA953\uA960-\uA97C\uA980-\uA9C0\uA9CF-\uA9D9\uA9E0-\uA9FE\uAA00-\uAA36\uAA40-\uAA4D\uAA50-\uAA59\uAA60-\uAA76\uAA7A-\uAAC2\uAADB-\uAADD\uAAE0-\uAAEF\uAAF2-\uAAF6\uAB01-\uAB06\uAB09-\uAB0E\uAB11-\uAB16\uAB20-\uAB26\uAB28-\uAB2E\uAB30-\uAB5A\uAB5C-\uAB69\uAB70-\uABEA\uABEC\uABED\uABF0-\uABF9\uAC00-\uD7A3\uD7B0-\uD7C6\uD7CB-\uD7FB\uF900-\uFA6D\uFA70-\uFAD9\uFB00-\uFB06\uFB13-\uFB17\uFB1D-\uFB28\uFB2A-\uFB36\uFB38-\uFB3C\uFB3E\uFB40\uFB41\uFB43\uFB44\uFB46-\uFBB1\uFBD3-\uFD3D\uFD50-\uFD8F\uFD92-\uFDC7\uFDF0-\uFDFB\uFE00-\uFE0F\uFE20-\uFE2F\uFE33\uFE34\uFE4D-\uFE4F\uFE70-\uFE74\uFE76-\uFEFC\uFF10-\uFF19\uFF21-\uFF3A\uFF3F\uFF41-\uFF5A\uFF66-\uFFBE\uFFC2-\uFFC7\uFFCA-\uFFCF\uFFD2-\uFFD7\uFFDA-\uFFDC]|\uD800[\uDC00-\uDC0B\uDC0D-\uDC26\uDC28-\uDC3A\uDC3C\uDC3D\uDC3F-\uDC4D\uDC50-\uDC5D\uDC80-\uDCFA\uDD40-\uDD74\uDDFD\uDE80-\uDE9C\uDEA0-\uDED0\uDEE0\uDF00-\uDF1F\uDF2D-\uDF4A\uDF50-\uDF7A\uDF80-\uDF9D\uDFA0-\uDFC3\uDFC8-\uDFCF\uDFD1-\uDFD5]|\uD801[\uDC00-\uDC9D\uDCA0-\uDCA9\uDCB0-\uDCD3\uDCD8-\uDCFB\uDD00-\uDD27\uDD30-\uDD63\uDE00-\uDF36\uDF40-\uDF55\uDF60-\uDF67]|\uD802[\uDC00-\uDC05\uDC08\uDC0A-\uDC35\uDC37\uDC38\uDC3C\uDC3F-\uDC55\uDC60-\uDC76\uDC80-\uDC9E\uDCE0-\uDCF2\uDCF4\uDCF5\uDD00-\uDD15\uDD20-\uDD39\uDD80-\uDDB7\uDDBE\uDDBF\uDE00-\uDE03\uDE05\uDE06\uDE0C-\uDE13\uDE15-\uDE17\uDE19-\uDE35\uDE38-\uDE3A\uDE3F\uDE60-\uDE7C\uDE80-\uDE9C\uDEC0-\uDEC7\uDEC9-\uDEE6\uDF00-\uDF35\uDF40-\uDF55\uDF60-\uDF72\uDF80-\uDF91]|\uD803[\uDC00-\uDC48\uDC80-\uDCB2\uDCC0-\uDCF2\uDD00-\uDD27\uDD30-\uDD39\uDE80-\uDEA9\uDEAB\uDEAC\uDEB0\uDEB1\uDF00-\uDF1C\uDF27\uDF30-\uDF50\uDFB0-\uDFC4\uDFE0-\uDFF6]|\uD804[\uDC00-\uDC46\uDC66-\uDC6F\uDC7F-\uDCBA\uDCD0-\uDCE8\uDCF0-\uDCF9\uDD00-\uDD34\uDD36-\uDD3F\uDD44-\uDD47\uDD50-\uDD73\uDD76\uDD80-\uDDC4\uDDC9-\uDDCC\uDDCE-\uDDDA\uDDDC\uDE00-\uDE11\uDE13-\uDE37\uDE3E\uDE80-\uDE86\uDE88\uDE8A-\uDE8D\uDE8F-\uDE9D\uDE9F-\uDEA8\uDEB0-\uDEEA\uDEF0-\uDEF9\uDF00-\uDF03\uDF05-\uDF0C\uDF0F\uDF10\uDF13-\uDF28\uDF2A-\uDF30\uDF32\uDF33\uDF35-\uDF39\uDF3B-\uDF44\uDF47\uDF48\uDF4B-\uDF4D\uDF50\uDF57\uDF5D-\uDF63\uDF66-\uDF6C\uDF70-\uDF74]|\uD805[\uDC00-\uDC4A\uDC50-\uDC59\uDC5E-\uDC61\uDC80-\uDCC5\uDCC7\uDCD0-\uDCD9\uDD80-\uDDB5\uDDB8-\uDDC0\uDDD8-\uDDDD\uDE00-\uDE40\uDE44\uDE50-\uDE59\uDE80-\uDEB8\uDEC0-\uDEC9\uDF00-\uDF1A\uDF1D-\uDF2B\uDF30-\uDF39]|\uD806[\uDC00-\uDC3A\uDCA0-\uDCE9\uDCFF-\uDD06\uDD09\uDD0C-\uDD13\uDD15\uDD16\uDD18-\uDD35\uDD37\uDD38\uDD3B-\uDD43\uDD50-\uDD59\uDDA0-\uDDA7\uDDAA-\uDDD7\uDDDA-\uDDE1\uDDE3\uDDE4\uDE00-\uDE3E\uDE47\uDE50-\uDE99\uDE9D\uDEC0-\uDEF8]|\uD807[\uDC00-\uDC08\uDC0A-\uDC36\uDC38-\uDC40\uDC50-\uDC59\uDC72-\uDC8F\uDC92-\uDCA7\uDCA9-\uDCB6\uDD00-\uDD06\uDD08\uDD09\uDD0B-\uDD36\uDD3A\uDD3C\uDD3D\uDD3F-\uDD47\uDD50-\uDD59\uDD60-\uDD65\uDD67\uDD68\uDD6A-\uDD8E\uDD90\uDD91\uDD93-\uDD98\uDDA0-\uDDA9\uDEE0-\uDEF6\uDFB0]|\uD808[\uDC00-\uDF99]|\uD809[\uDC00-\uDC6E\uDC80-\uDD43]|[\uD80C\uD81C-\uD820\uD822\uD840-\uD868\uD86A-\uD86C\uD86F-\uD872\uD874-\uD879\uD880-\uD883][\uDC00-\uDFFF]|\uD80D[\uDC00-\uDC2E]|\uD811[\uDC00-\uDE46]|\uD81A[\uDC00-\uDE38\uDE40-\uDE5E\uDE60-\uDE69\uDED0-\uDEED\uDEF0-\uDEF4\uDF00-\uDF36\uDF40-\uDF43\uDF50-\uDF59\uDF63-\uDF77\uDF7D-\uDF8F]|\uD81B[\uDE40-\uDE7F\uDF00-\uDF4A\uDF4F-\uDF87\uDF8F-\uDF9F\uDFE0\uDFE1\uDFE3\uDFE4\uDFF0\uDFF1]|\uD821[\uDC00-\uDFF7]|\uD823[\uDC00-\uDCD5\uDD00-\uDD08]|\uD82C[\uDC00-\uDD1E\uDD50-\uDD52\uDD64-\uDD67\uDD70-\uDEFB]|\uD82F[\uDC00-\uDC6A\uDC70-\uDC7C\uDC80-\uDC88\uDC90-\uDC99\uDC9D\uDC9E]|\uD834[\uDD65-\uDD69\uDD6D-\uDD72\uDD7B-\uDD82\uDD85-\uDD8B\uDDAA-\uDDAD\uDE42-\uDE44]|\uD835[\uDC00-\uDC54\uDC56-\uDC9C\uDC9E\uDC9F\uDCA2\uDCA5\uDCA6\uDCA9-\uDCAC\uDCAE-\uDCB9\uDCBB\uDCBD-\uDCC3\uDCC5-\uDD05\uDD07-\uDD0A\uDD0D-\uDD14\uDD16-\uDD1C\uDD1E-\uDD39\uDD3B-\uDD3E\uDD40-\uDD44\uDD46\uDD4A-\uDD50\uDD52-\uDEA5\uDEA8-\uDEC0\uDEC2-\uDEDA\uDEDC-\uDEFA\uDEFC-\uDF14\uDF16-\uDF34\uDF36-\uDF4E\uDF50-\uDF6E\uDF70-\uDF88\uDF8A-\uDFA8\uDFAA-\uDFC2\uDFC4-\uDFCB\uDFCE-\uDFFF]|\uD836[\uDE00-\uDE36\uDE3B-\uDE6C\uDE75\uDE84\uDE9B-\uDE9F\uDEA1-\uDEAF]|\uD838[\uDC00-\uDC06\uDC08-\uDC18\uDC1B-\uDC21\uDC23\uDC24\uDC26-\uDC2A\uDD00-\uDD2C\uDD30-\uDD3D\uDD40-\uDD49\uDD4E\uDEC0-\uDEF9]|\uD83A[\uDC00-\uDCC4\uDCD0-\uDCD6\uDD00-\uDD4B\uDD50-\uDD59]|\uD83B[\uDE00-\uDE03\uDE05-\uDE1F\uDE21\uDE22\uDE24\uDE27\uDE29-\uDE32\uDE34-\uDE37\uDE39\uDE3B\uDE42\uDE47\uDE49\uDE4B\uDE4D-\uDE4F\uDE51\uDE52\uDE54\uDE57\uDE59\uDE5B\uDE5D\uDE5F\uDE61\uDE62\uDE64\uDE67-\uDE6A\uDE6C-\uDE72\uDE74-\uDE77\uDE79-\uDE7C\uDE7E\uDE80-\uDE89\uDE8B-\uDE9B\uDEA1-\uDEA3\uDEA5-\uDEA9\uDEAB-\uDEBB]|\uD83E[\uDFF0-\uDFF9]|\uD869[\uDC00-\uDEDD\uDF00-\uDFFF]|\uD86D[\uDC00-\uDF34\uDF40-\uDFFF]|\uD86E[\uDC00-\uDC1D\uDC20-\uDFFF]|\uD873[\uDC00-\uDEA1\uDEB0-\uDFFF]|\uD87A[\uDC00-\uDFE0]|\uD87E[\uDC00-\uDE1D]|\uD884[\uDC00-\uDF4A]|\uDB40[\uDD00-\uDDEF]/;
 
-  var regex$2=/[ \xA0\u1680\u2000-\u200A\u202F\u205F\u3000]/;
+  var regex=/[ \xA0\u1680\u2000-\u200A\u202F\u205F\u3000]/;
 
   const MaybeAssignTokens = [// Logical
   ['NULLISH', '??', 3], ['OR', '||', 4], ['AND', '&&', 5], // Binop
@@ -1692,18 +1692,18 @@
   const ReservedWordsStrict = ['implements', 'interface', 'let', 'package', 'private', 'protected', 'public', 'static', 'yield'];
   const isReservedWordStrict = s => ReservedWordsStrict.includes(s);
 
-  const isUnicodeIDStart = c => c && regex.test(c);
+  const isUnicodeIDStart = c => c && regex$2.test(c);
 
   const isUnicodeIDContinue = c => c && regex$1.test(c);
 
-  const isDecimalDigit = c => c && /\d/u.test(c);
+  const isDecimalDigit$1 = c => c && /\d/u.test(c);
   const isHexDigit = c => c && /[\da-f]/ui.test(c);
 
   const isOctalDigit = c => c && /[0-7]/u.test(c);
 
   const isBinaryDigit = c => c === '0' || c === '1';
 
-  const isWhitespace = c => c && (/[\u0009\u000B\u000C\u0020\u00A0\uFEFF]/u.test(c) || regex$2.test(c)); // eslint-disable-line no-control-regex
+  const isWhitespace = c => c && (/[\u0009\u000B\u000C\u0020\u00A0\uFEFF]/u.test(c) || regex.test(c)); // eslint-disable-line no-control-regex
 
   const isLineTerminator = c => c && /[\r\n\u2028\u2029]/u.test(c);
 
@@ -2039,7 +2039,7 @@
 
           case Token.CONDITIONAL:
             // ? ?. ?? ??=
-            if (c1 === '.' && !isDecimalDigit(this.source[this.position + 1])) {
+            if (c1 === '.' && !isDecimalDigit$1(this.source[this.position + 1])) {
               this.position += 1;
               return Token.OPTIONAL;
             }
@@ -2260,7 +2260,7 @@
 
           case Token.PERIOD:
             // . ... NUMBER
-            if (isDecimalDigit(c1)) {
+            if (isDecimalDigit$1(c1)) {
               this.position -= 1;
               return this.scanNumber();
             }
@@ -2303,7 +2303,7 @@
     scanNumber() {
       const start = this.position;
       let base = 10;
-      let check = isDecimalDigit;
+      let check = isDecimalDigit$1;
 
       if (this.source[this.position] === '0') {
         this.scannedValue = 0;
@@ -2341,7 +2341,7 @@
 
         check = {
           16: isHexDigit,
-          10: isDecimalDigit,
+          10: isDecimalDigit$1,
           8: isOctalDigit,
           2: isBinaryDigit
         }[base];
@@ -2388,10 +2388,10 @@
         while (this.position < this.source.length) {
           const c = this.source[this.position];
 
-          if (isDecimalDigit(c)) {
+          if (isDecimalDigit$1(c)) {
             this.position += 1;
           } else if (c === '_') {
-            if (!isDecimalDigit(this.source[this.position + 1])) {
+            if (!isDecimalDigit$1(this.source[this.position + 1])) {
               this.unexpected(this.position + 1);
             }
 
@@ -2420,10 +2420,10 @@
         while (this.position < this.source.length) {
           const c = this.source[this.position];
 
-          if (isDecimalDigit(c)) {
+          if (isDecimalDigit$1(c)) {
             this.position += 1;
           } else if (c === '_') {
-            if (!isDecimalDigit(this.source[this.position + 1])) {
+            if (!isDecimalDigit$1(this.source[this.position + 1])) {
               this.unexpected(this.position + 1);
             }
 
@@ -2526,10 +2526,10 @@
           return String.fromCodePoint(this.scanCodePoint());
 
         default:
-          if (c === '0' && !isDecimalDigit(this.source[this.position + 1])) {
+          if (c === '0' && !isDecimalDigit$1(this.source[this.position + 1])) {
             this.position += 1;
             return '\u{0000}';
-          } else if (this.isStrictMode() && isDecimalDigit(c)) {
+          } else if (this.isStrictMode() && isDecimalDigit$1(c)) {
             this.raise('IllegalOctalEscape', this.position);
           }
 
@@ -2822,7 +2822,7 @@
             break;
 
           case '0':
-            if (isDecimalDigit(s[i + 1])) {
+            if (isDecimalDigit$1(s[i + 1])) {
               return undefined;
             }
 
@@ -2893,7 +2893,7 @@
 
           /*c8 ignore next*/
           default:
-            throw new OutOfRange('ImportEntriesForModule', node);
+            throw new OutOfRange$1('ImportEntriesForModule', node);
         }
 
       case 'ImportedDefaultBinding':
@@ -2913,7 +2913,7 @@
       case 'NameSpaceImport':
         {
           // 1. Let localName be the StringValue of ImportedBinding.
-          const localName = StringValue(node.ImportedBinding); // 2. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~star~, [[LocalName]]: localName }.
+          const localName = StringValue$1(node.ImportedBinding); // 2. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~star~, [[LocalName]]: localName }.
 
           const entry = {
             ModuleRequest: module,
@@ -2936,9 +2936,9 @@
       case 'ImportSpecifier':
         if (node.IdentifierName) {
           // 1. Let importName be the StringValue of IdentifierName.
-          const importName = StringValue(node.IdentifierName); // 2. Let localName be the StringValue of ImportedBinding.
+          const importName = StringValue$1(node.IdentifierName); // 2. Let localName be the StringValue of ImportedBinding.
 
-          const localName = StringValue(node.ImportedBinding); // 3. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: importName, [[LocalName]]: localName }.
+          const localName = StringValue$1(node.ImportedBinding); // 3. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: importName, [[LocalName]]: localName }.
 
           const entry = {
             ModuleRequest: module,
@@ -2949,9 +2949,9 @@
           return [entry];
         } else if (node.ModuleExportName) {
           // 1. Let importName be the StringValue of ModuleExportName.
-          const importName = StringValue(node.ModuleExportName); // 2. Let localName be the StringValue of ImportedBinding.
+          const importName = StringValue$1(node.ModuleExportName); // 2. Let localName be the StringValue of ImportedBinding.
 
-          const localName = StringValue(node.ImportedBinding); // 3. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: importName, [[LocalName]]: localName }.
+          const localName = StringValue$1(node.ImportedBinding); // 3. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: importName, [[LocalName]]: localName }.
 
           const entry = {
             ModuleRequest: module,
@@ -2975,7 +2975,7 @@
 
       /*c8 ignore next*/
       default:
-        throw new OutOfRange('ImportEntriesForModule', node);
+        throw new OutOfRange$1('ImportEntriesForModule', node);
     }
   }
 
@@ -2992,7 +2992,7 @@
       case 'ExportFromClause':
         if (node.IdentifierName) {
           // 1. Let exportName be the StringValue of IdentifierName.
-          const exportName = StringValue(node.IdentifierName); // 2. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~star~, [[LocalName]]: null, [[ExportName]]: exportName }.
+          const exportName = StringValue$1(node.IdentifierName); // 2. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~star~, [[LocalName]]: null, [[ExportName]]: exportName }.
 
           const entry = {
             ModuleRequest: module,
@@ -3004,7 +3004,7 @@
           return [entry];
         } else if (node.ModuleExportName) {
           // 1. Let exportName be the StringValue of ModuleExportName.
-          const exportName = StringValue(node.ModuleExportName); // 2. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~star~, [[LocalName]]: null, [[ExportName]]: exportName }.
+          const exportName = StringValue$1(node.ModuleExportName); // 2. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~star~, [[LocalName]]: null, [[ExportName]]: exportName }.
 
           const entry = {
             ModuleRequest: module,
@@ -3028,8 +3028,8 @@
 
       case 'ExportSpecifier':
         {
-          const sourceName = StringValue(node.localName);
-          const exportName = StringValue(node.exportName);
+          const sourceName = StringValue$1(node.localName);
+          const exportName = StringValue$1(node.exportName);
           let localName;
           let importName;
 
@@ -3055,7 +3055,7 @@
 
       /*c8 ignore next*/
       default:
-        throw new OutOfRange('ExportEntriesForModule', node);
+        throw new OutOfRange$1('ExportEntriesForModule', node);
     }
   }
 
@@ -3082,7 +3082,7 @@
 
               /*c8 ignore next*/
               default:
-                throw new OutOfRange('Evaluate_CharacterEscape', node);
+                throw new OutOfRange$1('Evaluate_CharacterEscape', node);
             }
 
           case !!node.ControlLetter:
@@ -3116,7 +3116,7 @@
 
           /*c8 ignore next*/
           default:
-            throw new OutOfRange('Evaluate_CharacterEscape', node);
+            throw new OutOfRange$1('Evaluate_CharacterEscape', node);
         }
 
       case 'RegExpUnicodeEscapeSequence':
@@ -3135,7 +3135,7 @@
 
           /*c8 ignore next*/
           default:
-            throw new OutOfRange('Evaluate_CharacterEscape', node);
+            throw new OutOfRange$1('Evaluate_CharacterEscape', node);
         }
 
       case 'ClassAtom':
@@ -3154,7 +3154,7 @@
 
           /*c8 ignore next*/
           default:
-            throw new OutOfRange('CharacterValue', node);
+            throw new OutOfRange$1('CharacterValue', node);
         }
 
       case 'ClassEscape':
@@ -3172,12 +3172,12 @@
 
           /*c8 ignore next*/
           default:
-            throw new OutOfRange('CharacterValue', node);
+            throw new OutOfRange$1('CharacterValue', node);
         }
 
       /*c8 ignore next*/
       default:
-        throw new OutOfRange('CharacterValue', node);
+        throw new OutOfRange$1('CharacterValue', node);
     }
   }
 
@@ -3318,7 +3318,7 @@
     return result;
   }
 
-  function IsStringValidUnicode(string) {
+  function IsStringWellFormedUnicode(string) {
     string = string.stringValue(); // 1. Let _strLen_ be the number of code units in string.
 
     const strLen = string.length; // 2. Let k be 0.
@@ -3344,7 +3344,8 @@
 
 
       k += cp.CodeUnitCount;
-    }
+    } // 4. Return true.
+
 
     return true;
   }
@@ -3360,7 +3361,7 @@
 
   function Evaluate_IdentifierReference(IdentifierReference) {
     // 1. Return ? ResolveBinding(StringValue of Identifier).
-    return ResolveBinding(StringValue(IdentifierReference), undefined, IdentifierReference.strict);
+    return ResolveBinding(StringValue$1(IdentifierReference), undefined, IdentifierReference.strict);
   }
 
   // PrimaryExpression : `this`
@@ -3392,18 +3393,18 @@
           return Value.true;
         }
 
-        throw new OutOfRange('Evaluate_Literal', Literal);
+        throw new OutOfRange$1('Evaluate_Literal', Literal);
 
       case 'NumericLiteral':
         // 1. Return the NumericValue of NumericLiteral as defined in 11.8.3.
         return NumericValue(Literal);
 
       case 'StringLiteral':
-        return StringValue(Literal);
+        return StringValue$1(Literal);
 
       /*c8 ignore next*/
       default:
-        throw new OutOfRange('Evaluate_Literal', Literal);
+        throw new OutOfRange$1('Evaluate_Literal', Literal);
     }
   }
 
@@ -3441,7 +3442,7 @@
     } // 1. Let className be StringValue of BindingIdentifier.
 
 
-    const className = StringValue(BindingIdentifier); // 2. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments className and className.
+    const className = StringValue$1(BindingIdentifier); // 2. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments className and className.
 
     let _temp2 = yield* ClassDefinitionEvaluation(ClassTail, className, className);
 
@@ -3700,8 +3701,8078 @@
 
       /*c8 ignore next*/
       default:
-        throw new OutOfRange('Evaluate', node);
+        throw new OutOfRange$1('Evaluate', node);
     }
+  }
+
+  function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
+    const {
+      ClassHeritage,
+      ClassBody
+    } = ClassTail; // 1. Let env be the LexicalEnvironment of the running execution context.
+
+    const env = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let classScope be NewDeclarativeEnvironment(env).
+
+    const classScope = NewDeclarativeEnvironment(env); // 3. If classBinding is not undefined, then
+
+    if (classBinding !== Value.undefined) {
+      // a. Perform classScopeEnv.CreateImmutableBinding(classBinding, true).
+      classScope.CreateImmutableBinding(classBinding, Value.true);
+    }
+
+    let protoParent;
+    let constructorParent; // 4. If ClassHeritage is not present, then
+
+    if (!ClassHeritage) {
+      // a. Let protoParent be %Object.prototype%.
+      protoParent = exports.surroundingAgent.intrinsic('%Object.prototype%'); // b. Let constructorParent be %Function.prototype%.
+
+      constructorParent = exports.surroundingAgent.intrinsic('%Function.prototype%');
+    } else {
+      // 5. Else,
+      // a. Set the running execution context's LexicalEnvironment to classScope.
+      exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = classScope; // b. Let superclassRef be the result of evaluating ClassHeritage.
+
+      const superclassRef = yield* Evaluate(ClassHeritage); // c. Set the running execution context's LexicalEnvironment to env.
+
+      exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = env; // d. Let superclass be ? GetValue(superclassRef).
+
+      let _temp = GetValue(superclassRef);
+      /* c8 ignore if */
+
+
+      if (_temp instanceof AbruptCompletion) {
+        return _temp;
+      }
+      /* c8 ignore if */
+
+
+      if (_temp instanceof Completion) {
+        _temp = _temp.Value;
+      }
+
+      const superclass = _temp; // e. If superclass is null, then
+
+      if (superclass === Value.null) {
+        // i. Let protoParent be null.
+        protoParent = Value.null; // ii. Let constructorParent be %Function.prototype%.
+
+        constructorParent = exports.surroundingAgent.intrinsic('%Function.prototype%');
+      } else if (IsConstructor(superclass) === Value.false) {
+        // f. Else if IsConstructor(superclass) is false, throw a TypeError exception.
+        return exports.surroundingAgent.Throw('TypeError', 'NotAConstructor', superclass);
+      } else {
+        let _temp2 = Get(superclass, new Value('prototype'));
+
+        if (_temp2 instanceof AbruptCompletion) {
+          return _temp2;
+        }
+
+        if (_temp2 instanceof Completion) {
+          _temp2 = _temp2.Value;
+        }
+
+        // g. Else,
+        // i. Let protoParent be ? Get(superclass, "prototype").
+        protoParent = _temp2; // ii. If Type(protoParent) is neither Object nor Null, throw a TypeError exception.
+
+        if (Type(protoParent) !== 'Object' && Type(protoParent) !== 'Null') {
+          return exports.surroundingAgent.Throw('TypeError', 'ObjectPrototypeType');
+        } // iii. Let constructorParent be superclass.
+
+
+        constructorParent = superclass;
+      }
+    } // 6. Let proto be OrdinaryObjectCreate(protoParent).
+
+
+    const proto = OrdinaryObjectCreate(protoParent);
+    let constructor; // 7. If ClassBody is not present, let constructor be empty.
+
+    if (!ClassBody) {
+      constructor = undefined;
+    } else {
+      // 8. Else, let constructor be ConstructorMethod of ClassBody.
+      constructor = ConstructorMethod(ClassBody);
+    } // 9. Set the running execution context's LexicalEnvironment to classScope.
+
+
+    exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = classScope;
+    let F; // 10. If constructor is empty, then
+
+    if (constructor === undefined) {
+      // a. Let steps be the algorithm steps defined in #sec-default-constructor-functions
+      const steps = DefaultConstructorFunctions; // b. Let F be ! CreateBuiltinFunction(steps, 0, className, [[ConstructorKind]], [[SourceText]], empty, constructorParent).
+
+      let _temp3 = CreateBuiltinFunction(steps, ['ConstructorKind', 'SourceText'], undefined, constructorParent, Value.true);
+
+      Assert(!(_temp3 instanceof AbruptCompletion), "CreateBuiltinFunction(steps, ['ConstructorKind', 'SourceText'], undefined, constructorParent, Value.true)" + ' returned an abrupt completion');
+      /* c8 ignore if */
+
+      if (_temp3 instanceof Completion) {
+        _temp3 = _temp3.Value;
+      }
+
+      F = _temp3;
+      SetFunctionLength(F, 0);
+      SetFunctionName(F, className);
+    } else {
+      let _temp4 = yield* DefineMethod(constructor, proto, constructorParent);
+
+      Assert(!(_temp4 instanceof AbruptCompletion), "yield* DefineMethod(constructor, proto, constructorParent)" + ' returned an abrupt completion');
+
+      if (_temp4 instanceof Completion) {
+        _temp4 = _temp4.Value;
+      }
+
+      // 11. Else,
+      // a. Let constructorInfo be ! DefineMethod of constructor with arguments proto and constructorParent.
+      const constructorInfo = _temp4; // b. Let F be constructorInfo.[[Closure]].
+
+      F = constructorInfo.Closure; // c. Perform MakeClassConstructor(F).
+
+      MakeClassConstructor(F); // d. Perform SetFunctionName(F, className).
+
+      SetFunctionName(F, className);
+    } // 14. Perform MakeConstructor(F, false, proto).
+
+
+    MakeConstructor(F, Value.false, proto); // 15. If ClassHeritage is present, set F.[[ConstructorKind]] to derived.
+
+    if (ClassHeritage) {
+      F.ConstructorKind = 'derived';
+    } // 17. Perform CreateMethodProperty(proto, "constructor", F).
+
+
+    let _temp5 = CreateMethodProperty(proto, new Value('constructor'), F);
+
+    Assert(!(_temp5 instanceof AbruptCompletion), "CreateMethodProperty(proto, new Value('constructor'), F)" + ' returned an abrupt completion');
+
+    if (_temp5 instanceof Completion) {
+      _temp5 = _temp5.Value;
+    }
+
+    let methods;
+
+    if (!ClassBody) {
+      methods = [];
+    } else {
+      // 19. Else, let methods be NonConstructorMethodDefinitions of ClassBody.
+      methods = NonConstructorMethodDefinitions(ClassBody);
+    } // 20. For each ClassElement m in order from methods, do
+
+
+    for (const m of methods) {
+      let status; // a. If IsStatic of m is false, then
+
+      if (IsStatic(m) === false) {
+        // i. Let status be PropertyDefinitionEvaluation of m with arguments proto and false.
+        status = yield* PropertyDefinitionEvaluation(m, proto, Value.false);
+      } else {
+        // b. Else,
+        // i. Let status be PropertyDefinitionEvaluation of m with arguments F and false.
+        status = yield* PropertyDefinitionEvaluation(m, F, Value.false);
+      } // c. If status is an abrupt completion, then
+
+
+      if (status instanceof AbruptCompletion) {
+        // i. Set the running execution context's LexicalEnvironment to env.
+        exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = env; // ii. Return Completion(status).
+
+        return Completion(status);
+      }
+    } // 21. Set the running execution context's LexicalEnvironment to env.
+
+
+    exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = env; // 22. If classBinding is not undefined, then
+
+    if (classBinding !== Value.undefined) {
+      // a. Perform classScope.InitializeBinding(classBinding, F).
+      classScope.InitializeBinding(classBinding, F);
+    } // 23. Return F.
+
+
+    return F;
+  } // #sec-default-constructor-functions
+
+  function DefaultConstructorFunctions(args, {
+    NewTarget
+  }) {
+    // 1. If NewTarget is undefined, throw a TypeError exception.
+    if (NewTarget === Value.undefined) {
+      return exports.surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+    } // 2. Let F be the active function object.
+
+
+    const F = exports.surroundingAgent.activeFunctionObject; // 3. If F.[[ConstructorKind]] is derived, then
+
+    if (F.ConstructorKind === 'derived') {
+      let _temp6 = F.GetPrototypeOf();
+
+      Assert(!(_temp6 instanceof AbruptCompletion), "F.GetPrototypeOf()" + ' returned an abrupt completion');
+
+      if (_temp6 instanceof Completion) {
+        _temp6 = _temp6.Value;
+      }
+
+      // a. NOTE: This branch behaves similarly to `constructor(...args) { super(...args); }`. The most
+      //    notable distinction is that while the aforementioned ECMAScript source text observably calls
+      //    the @@iterator method on `%Array.prototype%`, a Default Constructor Function does not.
+      // b. Let func be ! F.[[GetPrototypeOf]]().
+      const func = _temp6; // c. If IsConstructor(func) is false, throw a TypeError exception.
+
+      if (IsConstructor(func) === Value.false) {
+        return exports.surroundingAgent.Throw('TypeError', 'NotAConstructor', func);
+      } // d. Return ? Construct(func, args, NewTarget).
+
+
+      return Construct(func, args, NewTarget);
+    } else {
+      // 4. Else,
+      // a. NOTE: This branch behaves similarly to `constructor() {}`.
+      // b. Return ? OrdinaryCreateFromConstructor(NewTarget, "%Object.prototype%").
+      return OrdinaryCreateFromConstructor(NewTarget, '%Object.prototype%');
+    }
+  }
+
+  DefaultConstructorFunctions.section = 'https://tc39.es/ecma262/#sec-default-constructor-functions';
+
+  function* DefineMethod_MethodDefinition(MethodDefinition, object, functionPrototype) {
+    const {
+      PropertyName,
+      UniqueFormalParameters,
+      FunctionBody
+    } = MethodDefinition; // 1. Let propKey be the result of evaluating PropertyName.
+
+    let propKey = yield* Evaluate_PropertyName(PropertyName); // 2. ReturnIfAbrupt(propKey).
+
+    /* c8 ignore if */
+    if (propKey instanceof AbruptCompletion) {
+      return propKey;
+    }
+    /* c8 ignore if */
+
+
+    if (propKey instanceof Completion) {
+      propKey = propKey.Value;
+    }
+
+    const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment;
+    let prototype; // 4. If functionPrototype is present as a parameter, then
+
+    if (functionPrototype !== undefined) {
+      // a. Let prototype be functionPrototype.
+      prototype = functionPrototype;
+    } else {
+      // 5. Else,
+      // a. Let prototype be %Function.prototype%.
+      prototype = exports.surroundingAgent.intrinsic('%Function.prototype%');
+    } // 6. Let sourceText be the source text matched by MethodDefinition.
+
+
+    const sourceText = sourceTextMatchedBy(MethodDefinition); // 7. Let closure be OrdinaryFunctionCreate(prototype, sourceText, UniqueFormalParameters, FunctionBody, non-lexical-this, scope).
+
+    const closure = OrdinaryFunctionCreate(prototype, sourceText, UniqueFormalParameters, FunctionBody, 'non-lexical-this', scope); // 8. Perform MakeMethod(closure, object).
+
+    MakeMethod(closure, object); // 9. Return the Record { [[Key]]: propKey, [[Closure]]: closure }.
+
+    return {
+      Key: propKey,
+      Closure: closure
+    };
+  }
+
+  DefineMethod_MethodDefinition.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-definemethod';
+  function DefineMethod(node, object, functionPrototype) {
+    switch (node.type) {
+      case 'MethodDefinition':
+        return DefineMethod_MethodDefinition(node, object, functionPrototype);
+
+      case 'ClassElement':
+        return DefineMethod(node.MethodDefinition, object, functionPrototype);
+
+      /*c8 ignore next*/
+      default:
+        throw new OutOfRange$1('DefineMethod', node);
+    }
+  }
+
+  // PropertyName :
+  //   LiteralPropertyName
+  //   ComputedPropertyName
+  // LiteralPropertyName :
+  //   IdentifierName
+  //   StringLiteral
+  //   NumericLiteral
+  // ComputedPropertyName :
+  //   `[` AssignmentExpression `]`
+
+  function* Evaluate_PropertyName(PropertyName) {
+    switch (PropertyName.type) {
+      case 'IdentifierName':
+        return StringValue$1(PropertyName);
+
+      case 'StringLiteral':
+        return new Value(PropertyName.value);
+
+      case 'NumericLiteral':
+        {
+          // 1. Let nbr be the NumericValue of NumericLiteral.
+          const nbr = NumericValue(PropertyName); // 2. Return ! ToString(nbr).
+
+          let _temp = ToString(nbr);
+
+          Assert(!(_temp instanceof AbruptCompletion), "ToString(nbr)" + ' returned an abrupt completion');
+          /* c8 ignore if */
+
+          if (_temp instanceof Completion) {
+            _temp = _temp.Value;
+          }
+
+          return _temp;
+        }
+
+      default:
+        {
+          // 1. Let exprValue be the result of evaluating AssignmentExpression.
+          const exprValue = yield* Evaluate(PropertyName.ComputedPropertyName); // 2. Let propName be ? GetValue(exprValue).
+
+          let _temp2 = GetValue(exprValue);
+          /* c8 ignore if */
+
+
+          if (_temp2 instanceof AbruptCompletion) {
+            return _temp2;
+          }
+          /* c8 ignore if */
+
+
+          if (_temp2 instanceof Completion) {
+            _temp2 = _temp2.Value;
+          }
+
+          const propName = _temp2; // 3. Return ? ToPropertyKey(propName).
+
+          return ToPropertyKey(propName);
+        }
+    }
+  }
+
+  //   AdditiveExpression : AdditiveExpression + MultiplicativeExpression
+
+  function* Evaluate_AdditiveExpression_Plus({
+    AdditiveExpression,
+    MultiplicativeExpression
+  }) {
+    // 1. Return ? EvaluateStringOrNumericBinaryExpression(AdditiveExpression, +, MultiplicativeExpression).
+    return yield* EvaluateStringOrNumericBinaryExpression(AdditiveExpression, '+', MultiplicativeExpression);
+  } // #sec-subtraction-operator-minus-runtime-semantics-evaluation
+
+
+  Evaluate_AdditiveExpression_Plus.section = 'https://tc39.es/ecma262/#sec-addition-operator-plus-runtime-semantics-evaluation';
+
+  function* Evaluate_AdditiveExpression_Minus({
+    AdditiveExpression,
+    MultiplicativeExpression
+  }) {
+    // 1. Return ? EvaluateStringOrNumericBinaryExpression(AdditiveExpression, -, MultiplicativeExpression).
+    return yield* EvaluateStringOrNumericBinaryExpression(AdditiveExpression, '-', MultiplicativeExpression);
+  }
+
+  Evaluate_AdditiveExpression_Minus.section = 'https://tc39.es/ecma262/#sec-subtraction-operator-minus-runtime-semantics-evaluation';
+  function* Evaluate_AdditiveExpression(AdditiveExpression) {
+    switch (AdditiveExpression.operator) {
+      case '+':
+        return yield* Evaluate_AdditiveExpression_Plus(AdditiveExpression);
+
+      case '-':
+        return yield* Evaluate_AdditiveExpression_Minus(AdditiveExpression);
+
+      /*c8 ignore next*/
+      default:
+        throw new OutOfRange$1('Evaluate_AdditiveExpression', AdditiveExpression);
+    }
+  }
+
+  function refineLeftHandSideExpression(node, type) {
+    switch (node.type) {
+      case 'ArrayLiteral':
+        {
+          const refinement = {
+            type: 'ArrayAssignmentPattern',
+            AssignmentElementList: [],
+            AssignmentRestElement: undefined
+          };
+          node.ElementList.forEach(n => {
+            switch (n.type) {
+              case 'SpreadElement':
+                refinement.AssignmentRestElement = {
+                  type: 'AssignmentRestElement',
+                  DestructuringAssignmentTarget: n.AssignmentExpression
+                };
+                break;
+
+              case 'ArrayLiteral':
+              case 'ObjectLiteral':
+                refinement.AssignmentElementList.push({
+                  type: 'AssignmentElement',
+                  DestructuringAssignmentTarget: n,
+                  Initializer: null
+                });
+                break;
+
+              default:
+                refinement.AssignmentElementList.push(refineLeftHandSideExpression(n, 'array'));
+                break;
+            }
+          });
+          return refinement;
+        }
+
+      case 'ObjectLiteral':
+        {
+          const refined = {
+            type: 'ObjectAssignmentPattern',
+            AssignmentPropertyList: [],
+            AssignmentRestProperty: undefined
+          };
+          node.PropertyDefinitionList.forEach(p => {
+            if (p.PropertyName === null && p.AssignmentExpression) {
+              refined.AssignmentRestProperty = {
+                type: 'AssignmentRestProperty',
+                DestructuringAssignmentTarget: p.AssignmentExpression
+              };
+            } else {
+              refined.AssignmentPropertyList.push(refineLeftHandSideExpression(p, 'object'));
+            }
+          });
+          return refined;
+        }
+
+      case 'PropertyDefinition':
+        return {
+          type: 'AssignmentProperty',
+          PropertyName: node.PropertyName,
+          AssignmentElement: node.AssignmentExpression.type === 'AssignmentExpression' ? {
+            type: 'AssignmentElement',
+            DestructuringAssignmentTarget: node.AssignmentExpression.LeftHandSideExpression,
+            Initializer: node.AssignmentExpression.AssignmentExpression
+          } : {
+            type: 'AssignmentElement',
+            DestructuringAssignmentTarget: node.AssignmentExpression,
+            Initializer: undefined
+          }
+        };
+
+      case 'IdentifierReference':
+        if (type === 'array') {
+          return {
+            type: 'AssignmentElement',
+            DestructuringAssignmentTarget: node,
+            Initializer: undefined
+          };
+        } else {
+          return {
+            type: 'AssignmentProperty',
+            IdentifierReference: node,
+            Initializer: undefined
+          };
+        }
+
+      case 'MemberExpression':
+        return {
+          type: 'AssignmentElement',
+          DestructuringAssignmentTarget: node,
+          Initializer: undefined
+        };
+
+      case 'CoverInitializedName':
+        return {
+          type: 'AssignmentProperty',
+          IdentifierReference: node.IdentifierReference,
+          Initializer: node.Initializer
+        };
+
+      case 'AssignmentExpression':
+        return {
+          type: 'AssignmentElement',
+          DestructuringAssignmentTarget: node.LeftHandSideExpression,
+          Initializer: node.AssignmentExpression
+        };
+
+      case 'Elision':
+        return {
+          type: 'Elision'
+        };
+
+      /*c8 ignore next*/
+      default:
+        throw new OutOfRange$1('refineLeftHandSideExpression', node.type);
+    }
+  } // #sec-assignment-operators-runtime-semantics-evaluation
+  //   AssignmentExpression :
+  //     LeftHandSideExpression `=` AssignmentExpression
+  //     LeftHandSideExpression AssignmentOperator AssignmentExpression
+  //     LeftHandSideExpression `&&=` AssignmentExpression
+  //     LeftHandSideExpression `||=` AssignmentExpression
+  //     LeftHandSideExpression `??=` AssignmentExpression
+
+  function* Evaluate_AssignmentExpression({
+    LeftHandSideExpression,
+    AssignmentOperator,
+    AssignmentExpression
+  }) {
+    if (AssignmentOperator === '=') {
+      // 1. If LeftHandSideExpression is neither an ObjectLiteral nor an ArrayLiteral, then
+      if (LeftHandSideExpression.type !== 'ObjectLiteral' && LeftHandSideExpression.type !== 'ArrayLiteral') {
+        // a. Let lref be the result of evaluating LeftHandSideExpression.
+        let lref = yield* Evaluate(LeftHandSideExpression); // b. ReturnIfAbrupt(lref).
+
+        /* c8 ignore if */
+        if (lref instanceof AbruptCompletion) {
+          return lref;
+        }
+        /* c8 ignore if */
+
+
+        if (lref instanceof Completion) {
+          lref = lref.Value;
+        }
+
+        let rval;
+
+        if (IsAnonymousFunctionDefinition(AssignmentExpression) && IsIdentifierRef(LeftHandSideExpression)) {
+          // i. Let rval be NamedEvaluation of AssignmentExpression with argument GetReferencedName(lref).
+          rval = yield* NamedEvaluation(AssignmentExpression, GetReferencedName(lref));
+        } else {
+          // d. Else,
+          // i. Let rref be the result of evaluating AssignmentExpression.
+          const rref = yield* Evaluate(AssignmentExpression); // ii. Let rval be ? GetValue(rref).
+
+          let _temp = GetValue(rref);
+          /* c8 ignore if */
+
+
+          if (_temp instanceof AbruptCompletion) {
+            return _temp;
+          }
+          /* c8 ignore if */
+
+
+          if (_temp instanceof Completion) {
+            _temp = _temp.Value;
+          }
+
+          rval = _temp;
+        } // e. Perform ? PutValue(lref, rval).
+
+
+        let _temp2 = PutValue(lref, rval);
+
+        if (_temp2 instanceof AbruptCompletion) {
+          return _temp2;
+        }
+
+        if (_temp2 instanceof Completion) {
+          _temp2 = _temp2.Value;
+        }
+
+        return rval;
+      } // 2. Let assignmentPattern be the AssignmentPattern that is covered by LeftHandSideExpression.
+
+
+      const assignmentPattern = refineLeftHandSideExpression(LeftHandSideExpression); // 3. Let rref be the result of evaluating AssignmentExpression.
+
+      const rref = yield* Evaluate(AssignmentExpression); // 3. Let rval be ? GetValue(rref).
+
+      let _temp3 = GetValue(rref);
+
+      if (_temp3 instanceof AbruptCompletion) {
+        return _temp3;
+      }
+
+      if (_temp3 instanceof Completion) {
+        _temp3 = _temp3.Value;
+      }
+
+      const rval = _temp3; // 4. Perform ? DestructuringAssignmentEvaluation of assignmentPattern using rval as the argument.
+
+      let _temp4 = yield* DestructuringAssignmentEvaluation(assignmentPattern, rval);
+
+      if (_temp4 instanceof AbruptCompletion) {
+        return _temp4;
+      }
+
+      if (_temp4 instanceof Completion) {
+        _temp4 = _temp4.Value;
+      }
+
+      return rval;
+    } else if (AssignmentOperator === '&&=') {
+      // 1. Let lref be the result of evaluating LeftHandSideExpression.
+      const lref = yield* Evaluate(LeftHandSideExpression); // 2. Let lval be ? GetValue(lref).
+
+      let _temp5 = GetValue(lref);
+
+      if (_temp5 instanceof AbruptCompletion) {
+        return _temp5;
+      }
+
+      if (_temp5 instanceof Completion) {
+        _temp5 = _temp5.Value;
+      }
+
+      const lval = _temp5; // 3. Let lbool be ! ToBoolean(lval).
+
+      let _temp6 = ToBoolean(lval);
+
+      Assert(!(_temp6 instanceof AbruptCompletion), "ToBoolean(lval)" + ' returned an abrupt completion');
+      /* c8 ignore if */
+
+      if (_temp6 instanceof Completion) {
+        _temp6 = _temp6.Value;
+      }
+
+      const lbool = _temp6; // 4. If lbool is false, return lval.
+
+      if (lbool === Value.false) {
+        return lval;
+      }
+
+      let rval; // 5. If IsAnonymousFunctionDefinition(AssignmentExpression) is true and IsIdentifierRef of LeftHandSideExpression is true, then
+
+      if (IsAnonymousFunctionDefinition(AssignmentExpression) && IsIdentifierRef(LeftHandSideExpression)) {
+        // a. Let rval be NamedEvaluation of AssignmentExpression with argument GetReferencedName(lref).
+        rval = yield* NamedEvaluation(AssignmentExpression, GetReferencedName(lref));
+      } else {
+        // 6. Else,
+        // a. Let rref be the result of evaluating AssignmentExpression.
+        const rref = yield* Evaluate(AssignmentExpression); // b. Let rval be ? GetValue(rref).
+
+        let _temp7 = GetValue(rref);
+
+        if (_temp7 instanceof AbruptCompletion) {
+          return _temp7;
+        }
+
+        if (_temp7 instanceof Completion) {
+          _temp7 = _temp7.Value;
+        }
+
+        rval = _temp7;
+      } // 7. Perform ? PutValue(lref, rval).
+
+
+      let _temp8 = PutValue(lref, rval);
+
+      if (_temp8 instanceof AbruptCompletion) {
+        return _temp8;
+      }
+
+      if (_temp8 instanceof Completion) {
+        _temp8 = _temp8.Value;
+      }
+
+      return rval;
+    } else if (AssignmentOperator === '||=') {
+      // 1. Let lref be the result of evaluating LeftHandSideExpression.
+      const lref = yield* Evaluate(LeftHandSideExpression); // 2. Let lval be ? GetValue(lref).
+
+      let _temp9 = GetValue(lref);
+
+      if (_temp9 instanceof AbruptCompletion) {
+        return _temp9;
+      }
+
+      if (_temp9 instanceof Completion) {
+        _temp9 = _temp9.Value;
+      }
+
+      const lval = _temp9; // 3. Let lbool be ! ToBoolean(lval).
+
+      let _temp10 = ToBoolean(lval);
+
+      Assert(!(_temp10 instanceof AbruptCompletion), "ToBoolean(lval)" + ' returned an abrupt completion');
+
+      if (_temp10 instanceof Completion) {
+        _temp10 = _temp10.Value;
+      }
+
+      const lbool = _temp10; // 4. If lbool is true, return lval.
+
+      if (lbool === Value.true) {
+        return lval;
+      }
+
+      let rval; // 5. If IsAnonymousFunctionDefinition(AssignmentExpression) is true and IsIdentifierRef of LeftHandSideExpression is true, then
+
+      if (IsAnonymousFunctionDefinition(AssignmentExpression) && IsIdentifierRef(LeftHandSideExpression)) {
+        // a. Let rval be NamedEvaluation of AssignmentExpression with argument GetReferencedName(lref).
+        rval = yield* NamedEvaluation(AssignmentExpression, GetReferencedName(lref));
+      } else {
+        // 6. Else,
+        // a. Let rref be the result of evaluating AssignmentExpression.
+        const rref = yield* Evaluate(AssignmentExpression); // b. Let rval be ? GetValue(rref).
+
+        let _temp11 = GetValue(rref);
+
+        if (_temp11 instanceof AbruptCompletion) {
+          return _temp11;
+        }
+
+        if (_temp11 instanceof Completion) {
+          _temp11 = _temp11.Value;
+        }
+
+        rval = _temp11;
+      } // 7. Perform ? PutValue(lref, rval).
+
+
+      let _temp12 = PutValue(lref, rval);
+
+      if (_temp12 instanceof AbruptCompletion) {
+        return _temp12;
+      }
+
+      if (_temp12 instanceof Completion) {
+        _temp12 = _temp12.Value;
+      }
+
+      return rval;
+    } else if (AssignmentOperator === '??=') {
+      // 1.Let lref be the result of evaluating LeftHandSideExpression.
+      const lref = yield* Evaluate(LeftHandSideExpression); // 2. Let lval be ? GetValue(lref).
+
+      let _temp13 = GetValue(lref);
+
+      if (_temp13 instanceof AbruptCompletion) {
+        return _temp13;
+      }
+
+      if (_temp13 instanceof Completion) {
+        _temp13 = _temp13.Value;
+      }
+
+      const lval = _temp13; // 3. If lval is not undefined nor null, return lval.
+
+      if (lval !== Value.undefined && lval !== Value.null) {
+        return lval;
+      }
+
+      let rval; // 4. If IsAnonymousFunctionDefinition(AssignmentExpression) is true and IsIdentifierRef of LeftHandSideExpression is true, then
+
+      if (IsAnonymousFunctionDefinition(AssignmentExpression) && IsIdentifierRef(LeftHandSideExpression)) {
+        // a. Let rval be NamedEvaluation of AssignmentExpression with argument GetReferencedName(lref).
+        rval = yield* NamedEvaluation(AssignmentExpression, GetReferencedName(lref));
+      } else {
+        // 5. Else,
+        // a. Let rref be the result of evaluating AssignmentExpression.
+        const rref = yield* Evaluate(AssignmentExpression); // b. Let rval be ? GetValue(rref).
+
+        let _temp14 = GetValue(rref);
+
+        if (_temp14 instanceof AbruptCompletion) {
+          return _temp14;
+        }
+
+        if (_temp14 instanceof Completion) {
+          _temp14 = _temp14.Value;
+        }
+
+        rval = _temp14;
+      } // 6. Perform ? PutValue(lref, rval).
+
+
+      let _temp15 = PutValue(lref, rval);
+
+      if (_temp15 instanceof AbruptCompletion) {
+        return _temp15;
+      }
+
+      if (_temp15 instanceof Completion) {
+        _temp15 = _temp15.Value;
+      }
+
+      return rval;
+    } else {
+      // 1. Let lref be the result of evaluating LeftHandSideExpression.
+      const lref = yield* Evaluate(LeftHandSideExpression); // 2. Let lval be ? GetValue(lref).
+
+      let _temp16 = GetValue(lref);
+
+      if (_temp16 instanceof AbruptCompletion) {
+        return _temp16;
+      }
+
+      if (_temp16 instanceof Completion) {
+        _temp16 = _temp16.Value;
+      }
+
+      const lval = _temp16; // 3. Let rref be the result of evaluating AssignmentExpression.
+
+      const rref = yield* Evaluate(AssignmentExpression); // 4. Let rval be ? GetValue(rref).
+
+      let _temp17 = GetValue(rref);
+
+      if (_temp17 instanceof AbruptCompletion) {
+        return _temp17;
+      }
+
+      if (_temp17 instanceof Completion) {
+        _temp17 = _temp17.Value;
+      }
+
+      const rval = _temp17; // 5. Let assignmentOpText be the source text matched by AssignmentOperator.
+
+      const assignmentOpText = AssignmentOperator; // 6. Let opText be the sequence of Unicode code points associated with assignmentOpText in the following table:
+
+      const opText = {
+        '**=': '**',
+        '*=': '*',
+        '/=': '/',
+        '%=': '%',
+        '+=': '+',
+        '-=': '-',
+        '<<=': '<<',
+        '>>=': '>>',
+        '>>>=': '>>>',
+        '&=': '&',
+        '^=': '^',
+        '|=': '|'
+      }[assignmentOpText]; // 7. Let r be ApplyStringOrNumericBinaryOperator(lval, opText, rval).
+
+      const r = ApplyStringOrNumericBinaryOperator(lval, opText, rval); // 8. Perform ? PutValue(lref, r).
+
+      let _temp18 = PutValue(lref, r);
+
+      if (_temp18 instanceof AbruptCompletion) {
+        return _temp18;
+      }
+
+      if (_temp18 instanceof Completion) {
+        _temp18 = _temp18.Value;
+      }
+
+      return r;
+    }
+  }
+
+  //   BitwiseANDExpression : BitwiseANDExpression `&` EqualityExpression
+  //   BitwiseXORExpression : BitwiseXORExpression `^` BitwiseANDExpression
+  //   BitwiseORExpression : BitwiseORExpression `|` BitwiseXORExpression
+  // The production A : A @ B, where @ is one of the bitwise operators in the
+  // productions above, is evaluated as follows:
+
+  function* Evaluate_BinaryBitwiseExpression({
+    A,
+    operator,
+    B
+  }) {
+    return yield* EvaluateStringOrNumericBinaryExpression(A, operator, B);
+  }
+
+  //   CoalesceExpression :
+  //     CoalesceExpressionHead `??` BitwiseORExpression
+
+  function* Evaluate_CoalesceExpression({
+    CoalesceExpressionHead,
+    BitwiseORExpression
+  }) {
+    // 1. Let lref be the result of evaluating |CoalesceExpressionHead|.
+    const lref = yield* Evaluate(CoalesceExpressionHead); // 2. Let lval be ? GetValue(lref).
+
+    let _temp = GetValue(lref);
+    /* c8 ignore if */
+
+
+    if (_temp instanceof AbruptCompletion) {
+      return _temp;
+    }
+    /* c8 ignore if */
+
+
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    const lval = _temp; // 3. If lval is *undefined* or *null*,
+
+    if (lval === Value.undefined || lval === Value.null) {
+      // a. Let rref be the result of evaluating |BitwiseORExpression|.
+      const rref = yield* Evaluate(BitwiseORExpression); // b. Return ? GetValue(rref).
+
+      return GetValue(rref);
+    } // 4. Otherwise, return lval.
+
+
+    return lval;
+  }
+
+  //   EmptyStatement : `;`
+
+  function Evaluate_EmptyStatement(_EmptyStatement) {
+    // 1. Return NormalCompletion(empty).
+    return NormalCompletion(undefined);
+  }
+
+  // ExponentiationExpression : UpdateExpression ** ExponentiationExpression
+
+  function* Evaluate_ExponentiationExpression({
+    UpdateExpression,
+    ExponentiationExpression
+  }) {
+    // 1. Return ? EvaluateStringOrNumericBinaryExpression(UpdateExpression, **, ExponentiationExpression).
+    return yield* EvaluateStringOrNumericBinaryExpression(UpdateExpression, '**', ExponentiationExpression);
+  }
+
+  // IfStatement :
+  //   `if` `(` Expression `)` Statement `else` Statement
+  //   `if` `(` Expression `)` Statement
+
+  function* Evaluate_IfStatement({
+    Expression,
+    Statement_a,
+    Statement_b
+  }) {
+    // 1. Let exprRef be the result of evaluating Expression.
+    const exprRef = yield* Evaluate(Expression); // 2. Let exprValue be ! ToBoolean(? GetValue(exprRef)).
+
+    let _temp = GetValue(exprRef);
+    /* c8 ignore if */
+
+
+    if (_temp instanceof AbruptCompletion) {
+      return _temp;
+    }
+    /* c8 ignore if */
+
+
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    const exprValue = ToBoolean(_temp);
+
+    if (Statement_b) {
+      let stmtCompletion; // 3. If exprValue is true, then
+
+      if (exprValue === Value.true) {
+        // a. Let stmtCompletion be the result of evaluating the first Statement.
+        stmtCompletion = yield* Evaluate(Statement_a);
+      } else {
+        // 4. Else,
+        // a. Let stmtCompletion be the result of evaluating the second Statement.
+        stmtCompletion = yield* Evaluate(Statement_b);
+      } // 5. Return Completion(UpdateEmpty(stmtCompletion, undefined)).
+
+
+      return Completion(UpdateEmpty(EnsureCompletion(stmtCompletion), Value.undefined));
+    } else {
+      // 3. If exprValue is false, then
+      if (exprValue === Value.false) {
+        // a. Return NormalCompletion(undefined).
+        return NormalCompletion(Value.undefined);
+      } else {
+        // 4. Else,
+        // a. Let stmtCompletion be the result of evaluating Statement.
+        const stmtCompletion = yield* Evaluate(Statement_a); // b. Return Completion(UpdateEmpty(stmtCompletion, undefined)).
+
+        return Completion(UpdateEmpty(EnsureCompletion(stmtCompletion), Value.undefined));
+      }
+    }
+  }
+
+  // ImportCall : `import` `(` AssignmentExpression `)`
+
+  function* Evaluate_ImportCall({
+    AssignmentExpression
+  }) {
+    let _temp = GetActiveScriptOrModule();
+
+    Assert(!(_temp instanceof AbruptCompletion), "GetActiveScriptOrModule()" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    // 1. Let referencingScriptOrModule be ! GetActiveScriptOrModule().
+    const referencingScriptOrModule = _temp; // 2. Let argRef be the result of evaluating AssignmentExpression.
+
+    const argRef = yield* Evaluate(AssignmentExpression); // 3. Let specifier be ? GetValue(argRef).
+
+    let _temp2 = GetValue(argRef);
+    /* c8 ignore if */
+
+
+    if (_temp2 instanceof AbruptCompletion) {
+      return _temp2;
+    }
+    /* c8 ignore if */
+
+
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
+    }
+
+    const specifier = _temp2; // 4. Let promiseCapability be ! NewPromiseCapability(%Promise%).
+
+    let _temp3 = NewPromiseCapability(exports.surroundingAgent.intrinsic('%Promise%'));
+
+    Assert(!(_temp3 instanceof AbruptCompletion), "NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))" + ' returned an abrupt completion');
+
+    if (_temp3 instanceof Completion) {
+      _temp3 = _temp3.Value;
+    }
+
+    const promiseCapability = _temp3; // 5. Let specifierString be ToString(specifier).
+
+    let specifierString = ToString(specifier); // 6. IfAbruptRejectPromise(specifierString, promiseCapability).
+
+    /* c8 ignore if */
+    if (specifierString instanceof AbruptCompletion) {
+      const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [specifierString.Value]);
+
+      if (hygenicTemp2 instanceof AbruptCompletion) {
+        return hygenicTemp2;
+      }
+
+      return promiseCapability.Promise;
+    }
+    /* c8 ignore if */
+
+
+    if (specifierString instanceof Completion) {
+      specifierString = specifierString.Value;
+    }
+
+    let _temp4 = HostImportModuleDynamically(referencingScriptOrModule, specifierString, promiseCapability);
+
+    Assert(!(_temp4 instanceof AbruptCompletion), "HostImportModuleDynamically(referencingScriptOrModule, specifierString, promiseCapability)" + ' returned an abrupt completion');
+
+    if (_temp4 instanceof Completion) {
+      _temp4 = _temp4.Value;
+    }
+
+    return promiseCapability.Promise;
+  }
+
+  //   MultiplicativeExpression :
+  //     MultiplicativeExpression MultiplicativeOperator ExponentiationExpression
+
+  function* Evaluate_MultiplicativeExpression({
+    MultiplicativeExpression,
+    MultiplicativeOperator,
+    ExponentiationExpression
+  }) {
+    // 1. Let opText be the source text matched by MultiplicativeOperator.
+    const opText = MultiplicativeOperator; // 2. Return ? EvaluateStringOrNumericBinaryExpression(MultiplicativeExpression, opText, ExponentiationExpression).
+
+    return yield* EvaluateStringOrNumericBinaryExpression(MultiplicativeExpression, opText, ExponentiationExpression);
+  }
+
+  // ThrowStatement : `throw` Expression `;`
+
+  function* Evaluate_ThrowStatement({
+    Expression
+  }) {
+    // 1. Let exprRef be the result of evaluating Expression.
+    const exprRef = yield* Evaluate(Expression); // 2. Let exprValue be ? GetValue(exprRef).
+
+    let _temp = GetValue(exprRef);
+    /* c8 ignore if */
+
+
+    if (_temp instanceof AbruptCompletion) {
+      return _temp;
+    }
+    /* c8 ignore if */
+
+
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    const exprValue = _temp; // 3. Return ThrowCompletion(exprValue).
+
+    return ThrowCompletion(exprValue);
+  }
+
+  //   LeftHandSideExpression `++`
+  //   LeftHandSideExpression `--`
+  //   `++` UnaryExpression
+  //   `--` UnaryExpression
+
+  function* Evaluate_UpdateExpression({
+    LeftHandSideExpression,
+    operator,
+    UnaryExpression
+  }) {
+    switch (true) {
+      // UpdateExpression : LeftHandSideExpression `++`
+      case operator === '++' && !!LeftHandSideExpression:
+        {
+          // 1. Let lhs be the result of evaluating LeftHandSideExpression.
+          const lhs = yield* Evaluate(LeftHandSideExpression); // 2. Let oldValue be ? ToNumeric(? GetValue(lhs)).
+
+          let _temp4 = GetValue(lhs);
+          /* c8 ignore if */
+
+
+          if (_temp4 instanceof AbruptCompletion) {
+            return _temp4;
+          }
+          /* c8 ignore if */
+
+
+          if (_temp4 instanceof Completion) {
+            _temp4 = _temp4.Value;
+          }
+
+          let _temp = ToNumeric(_temp4);
+
+          if (_temp instanceof AbruptCompletion) {
+            return _temp;
+          }
+
+          if (_temp instanceof Completion) {
+            _temp = _temp.Value;
+          }
+
+          const oldValue = _temp; // 3. Let newValue be ! Type(oldvalue)::add(oldValue, Type(oldValue)::unit).
+
+          let _temp2 = TypeForMethod(oldValue).add(oldValue, TypeForMethod(oldValue).unit);
+
+          Assert(!(_temp2 instanceof AbruptCompletion), "TypeForMethod(oldValue).add(oldValue, TypeForMethod(oldValue).unit)" + ' returned an abrupt completion');
+          /* c8 ignore if */
+
+          if (_temp2 instanceof Completion) {
+            _temp2 = _temp2.Value;
+          }
+
+          const newValue = _temp2; // 4. Perform ? PutValue(lhs, newValue).
+
+          let _temp3 = PutValue(lhs, newValue);
+
+          if (_temp3 instanceof AbruptCompletion) {
+            return _temp3;
+          }
+
+          if (_temp3 instanceof Completion) {
+            _temp3 = _temp3.Value;
+          }
+
+          return oldValue;
+        }
+      // UpdateExpression : LeftHandSideExpression `--`
+
+      case operator === '--' && !!LeftHandSideExpression:
+        {
+          // 1. Let lhs be the result of evaluating LeftHandSideExpression.
+          const lhs = yield* Evaluate(LeftHandSideExpression); // 2. Let oldValue be ? ToNumeric(? GetValue(lhs)).
+
+          let _temp8 = GetValue(lhs);
+
+          if (_temp8 instanceof AbruptCompletion) {
+            return _temp8;
+          }
+
+          if (_temp8 instanceof Completion) {
+            _temp8 = _temp8.Value;
+          }
+
+          let _temp5 = ToNumeric(_temp8);
+
+          if (_temp5 instanceof AbruptCompletion) {
+            return _temp5;
+          }
+
+          if (_temp5 instanceof Completion) {
+            _temp5 = _temp5.Value;
+          }
+
+          const oldValue = _temp5; // 3. Let newValue be ! Type(oldvalue)::subtract(oldValue, Type(oldValue)::unit).
+
+          let _temp6 = TypeForMethod(oldValue).subtract(oldValue, TypeForMethod(oldValue).unit);
+
+          Assert(!(_temp6 instanceof AbruptCompletion), "TypeForMethod(oldValue).subtract(oldValue, TypeForMethod(oldValue).unit)" + ' returned an abrupt completion');
+
+          if (_temp6 instanceof Completion) {
+            _temp6 = _temp6.Value;
+          }
+
+          const newValue = _temp6; // 4. Perform ? PutValue(lhs, newValue).
+
+          let _temp7 = PutValue(lhs, newValue);
+
+          if (_temp7 instanceof AbruptCompletion) {
+            return _temp7;
+          }
+
+          if (_temp7 instanceof Completion) {
+            _temp7 = _temp7.Value;
+          }
+
+          return oldValue;
+        }
+      // UpdateExpression : `++` UnaryExpression
+
+      case operator === '++' && !!UnaryExpression:
+        {
+          // 1. Let expr be the result of evaluating UnaryExpression.
+          const expr = yield* Evaluate(UnaryExpression); // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
+
+          let _temp12 = GetValue(expr);
+
+          if (_temp12 instanceof AbruptCompletion) {
+            return _temp12;
+          }
+
+          if (_temp12 instanceof Completion) {
+            _temp12 = _temp12.Value;
+          }
+
+          let _temp9 = ToNumeric(_temp12);
+
+          if (_temp9 instanceof AbruptCompletion) {
+            return _temp9;
+          }
+
+          if (_temp9 instanceof Completion) {
+            _temp9 = _temp9.Value;
+          }
+
+          const oldValue = _temp9; // 3. Let newValue be ! Type(oldvalue)::add(oldValue, Type(oldValue)::unit).
+
+          let _temp10 = TypeForMethod(oldValue).add(oldValue, TypeForMethod(oldValue).unit);
+
+          Assert(!(_temp10 instanceof AbruptCompletion), "TypeForMethod(oldValue).add(oldValue, TypeForMethod(oldValue).unit)" + ' returned an abrupt completion');
+
+          if (_temp10 instanceof Completion) {
+            _temp10 = _temp10.Value;
+          }
+
+          const newValue = _temp10; // 4. Perform ? PutValue(expr, newValue).
+
+          let _temp11 = PutValue(expr, newValue);
+
+          if (_temp11 instanceof AbruptCompletion) {
+            return _temp11;
+          }
+
+          if (_temp11 instanceof Completion) {
+            _temp11 = _temp11.Value;
+          }
+
+          return newValue;
+        }
+      // UpdateExpression : `--` UnaryExpression
+
+      case operator === '--' && !!UnaryExpression:
+        {
+          // 1. Let expr be the result of evaluating UnaryExpression.
+          const expr = yield* Evaluate(UnaryExpression); // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
+
+          let _temp16 = GetValue(expr);
+
+          if (_temp16 instanceof AbruptCompletion) {
+            return _temp16;
+          }
+
+          if (_temp16 instanceof Completion) {
+            _temp16 = _temp16.Value;
+          }
+
+          let _temp13 = ToNumeric(_temp16);
+
+          if (_temp13 instanceof AbruptCompletion) {
+            return _temp13;
+          }
+
+          if (_temp13 instanceof Completion) {
+            _temp13 = _temp13.Value;
+          }
+
+          const oldValue = _temp13; // 3. Let newValue be ! Type(oldvalue)::subtract(oldValue, Type(oldValue)::unit).
+
+          let _temp14 = TypeForMethod(oldValue).subtract(oldValue, TypeForMethod(oldValue).unit);
+
+          Assert(!(_temp14 instanceof AbruptCompletion), "TypeForMethod(oldValue).subtract(oldValue, TypeForMethod(oldValue).unit)" + ' returned an abrupt completion');
+
+          if (_temp14 instanceof Completion) {
+            _temp14 = _temp14.Value;
+          }
+
+          const newValue = _temp14; // 4. Perform ? PutValue(expr, newValue).
+
+          let _temp15 = PutValue(expr, newValue);
+
+          if (_temp15 instanceof AbruptCompletion) {
+            return _temp15;
+          }
+
+          if (_temp15 instanceof Completion) {
+            _temp15 = _temp15.Value;
+          }
+
+          return newValue;
+        }
+
+      /*c8 ignore next*/
+      default:
+        throw new OutOfRange$1('Evaluate_UpdateExpression', operator);
+    }
+  }
+
+  function GlobalDeclarationInstantiation(script, env) {
+    // 1. Assert: env is a global Environment Record.
+    Assert(env instanceof EnvironmentRecord, "env instanceof EnvironmentRecord"); // 2. Let lexNames be the LexicallyDeclaredNames of script.
+
+    const lexNames = LexicallyDeclaredNames(script); // 3. Let varNames be the VarDeclaredNames of script.
+
+    const varNames = VarDeclaredNames(script); // 4. For each name in lexNames, do
+
+    for (const name of lexNames) {
+      // 1. If env.HasVarDeclaration(name) is true, throw a SyntaxError exception.
+      if (env.HasVarDeclaration(name) === Value.true) {
+        return exports.surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
+      } // 1. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
+
+
+      if (env.HasLexicalDeclaration(name) === Value.true) {
+        return exports.surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
+      } // 1. Let hasRestrictedGlobal be ? env.HasRestrictedGlobalProperty(name).
+
+
+      let _temp = env.HasRestrictedGlobalProperty(name);
+      /* c8 ignore if */
+
+
+      if (_temp instanceof AbruptCompletion) {
+        return _temp;
+      }
+      /* c8 ignore if */
+
+
+      if (_temp instanceof Completion) {
+        _temp = _temp.Value;
+      }
+
+      const hasRestrictedGlobal = _temp; // 1. If hasRestrictedGlobal is true, throw a SyntaxError exception.
+
+      if (hasRestrictedGlobal === Value.true) {
+        return exports.surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
+      }
+    } // 5. For each name in varNames, do
+
+
+    for (const name of varNames) {
+      // 1. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
+      if (env.HasLexicalDeclaration(name) === Value.true) {
+        return exports.surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
+      }
+    } // 6. Let varDeclarations be the VarScopedDeclarations of script.
+
+
+    const varDeclarations = VarScopedDeclarations(script); // 7. Let functionsToInitialize be a new empty List.
+
+    const functionsToInitialize = []; // 8. Let declaredFunctionNames be a new empty List.
+
+    const declaredFunctionNames = new ValueSet(); // 9. For each d in varDeclarations, in reverse list order, do
+
+    for (const d of [...varDeclarations].reverse()) {
+      // a. If d is neither a VariableDeclaration nor a ForBinding nor a BindingIdentifier, then
+      if (d.type !== 'VariableDeclaration' && d.type !== 'ForBinding' && d.type !== 'BindingIdentifier') {
+        // i. Assert: d is either a FunctionDeclaration, a GeneratorDeclaration, an AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration.
+        Assert(d.type === 'FunctionDeclaration' || d.type === 'GeneratorDeclaration' || d.type === 'AsyncFunctionDeclaration' || d.type === 'AsyncGeneratorDeclaration', "d.type === 'FunctionDeclaration'\n             || d.type === 'GeneratorDeclaration'\n             || d.type === 'AsyncFunctionDeclaration'\n             || d.type === 'AsyncGeneratorDeclaration'"); // ii. NOTE: If there are multiple function declarations for the same name, the last declaration is used.
+        // iii. Let fn be the sole element of the BoundNames of d.
+
+        const fn = BoundNames(d)[0]; // iv. If fn is not an element of declaredFunctionNames, then
+
+        if (!declaredFunctionNames.has(fn)) {
+          let _temp2 = env.CanDeclareGlobalFunction(fn);
+
+          if (_temp2 instanceof AbruptCompletion) {
+            return _temp2;
+          }
+
+          if (_temp2 instanceof Completion) {
+            _temp2 = _temp2.Value;
+          }
+
+          // 1. Let fnDefinable be ? env.CanDeclareGlobalFunction(fn).
+          const fnDefinable = _temp2; // 2. If fnDefinable is false, throw a TypeError exception.
+
+          if (fnDefinable === Value.false) {
+            return exports.surroundingAgent.Throw('TypeError', 'AlreadyDeclared', fn);
+          } // 3. Append fn to declaredFunctionNames.
+
+
+          declaredFunctionNames.add(fn); // 4. Insert d as the first element of functionsToInitialize.
+
+          functionsToInitialize.unshift(d);
+        }
+      }
+    } // 10. Let declaredVarNames be a new empty List.
+
+
+    const declaredVarNames = new ValueSet(); // 11. For each d in varDeclarations, do
+
+    for (const d of varDeclarations) {
+      // a. If d is a VariableDeclaration, a ForBinding, or a BindingIdentifier, then
+      if (d.type === 'VariableDeclaration' || d.type === 'ForBinding' || d.type === 'BindingIdentifier') {
+        // i. For each String vn in the BoundNames of d, do
+        for (const vn of BoundNames(d)) {
+          // 1. If vn is not an element of declaredFunctionNames, then
+          if (!declaredFunctionNames.has(vn)) {
+            let _temp3 = env.CanDeclareGlobalVar(vn);
+
+            if (_temp3 instanceof AbruptCompletion) {
+              return _temp3;
+            }
+
+            if (_temp3 instanceof Completion) {
+              _temp3 = _temp3.Value;
+            }
+
+            // a. Let vnDefinable be ? env.CanDeclareGlobalVar(vn).
+            const vnDefinable = _temp3; // b. If vnDefinable is false, throw a TypeError exception.
+
+            if (vnDefinable === Value.false) {
+              return exports.surroundingAgent.Throw('TypeError', 'AlreadyDeclared', vn);
+            } // c. If vn is not an element of declaredVarNames, then
+
+
+            if (!declaredVarNames.has(vn)) {
+              // i. Append vn to declaredVarNames.
+              declaredVarNames.add(vn);
+            }
+          }
+        }
+      }
+    } // 12. NOTE: No abnormal terminations occur after this algorithm step if the global object is an ordinary object. However, if the global object is a Proxy exotic object it may exhibit behaviours that cause abnormal terminations in some of the following steps.
+    // 13. NOTE: Annex B.3.3.2 adds additional steps at this point.
+    // 14. Let lexDeclarations be the LexicallyScopedDeclarations of script.
+
+
+    const lexDeclarations = LexicallyScopedDeclarations(script); // 15. For each element d in lexDeclarations, do
+
+    for (const d of lexDeclarations) {
+      // a. NOTE: Lexically declared names are only instantiated here but not initialized.
+      // b. For each element dn of the BoundNames of d, do
+      for (const dn of BoundNames(d)) {
+        // 1. If IsConstantDeclaration of d is true, then
+        if (IsConstantDeclaration(d)) {
+          let _temp4 = env.CreateImmutableBinding(dn, Value.true);
+
+          if (_temp4 instanceof AbruptCompletion) {
+            return _temp4;
+          }
+
+          if (_temp4 instanceof Completion) {
+            _temp4 = _temp4.Value;
+          }
+        } else {
+          let _temp5 = env.CreateMutableBinding(dn, Value.false);
+
+          if (_temp5 instanceof AbruptCompletion) {
+            return _temp5;
+          }
+
+          if (_temp5 instanceof Completion) {
+            _temp5 = _temp5.Value;
+          }
+        }
+      }
+    } // 16. For each Parse Node f in functionsToInitialize, do
+
+
+    for (const f of functionsToInitialize) {
+      // a. Let fn be the sole element of the BoundNames of f.
+      const fn = BoundNames(f)[0]; // b. Let fo be InstantiateFunctionObject of f with argument env.
+
+      const fo = InstantiateFunctionObject(f, env); // c. Perform ? env.CreateGlobalFunctionBinding(fn, fo, false).
+
+      let _temp6 = env.CreateGlobalFunctionBinding(fn, fo, Value.false);
+
+      if (_temp6 instanceof AbruptCompletion) {
+        return _temp6;
+      }
+
+      if (_temp6 instanceof Completion) {
+        _temp6 = _temp6.Value;
+      }
+    } // 17. For each String vn in declaredVarNames, in list order, do
+
+
+    for (const vn of declaredVarNames) {
+      let _temp7 = env.CreateGlobalVarBinding(vn, Value.false);
+
+      if (_temp7 instanceof AbruptCompletion) {
+        return _temp7;
+      }
+
+      if (_temp7 instanceof Completion) {
+        _temp7 = _temp7.Value;
+      }
+    } // 18. Return NormalCompletion(empty).
+
+
+    return NormalCompletion(undefined);
+  }
+
+  //   FunctionDeclaration :
+  //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
+  //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
+
+  function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaration, scope) {
+    const {
+      BindingIdentifier,
+      FormalParameters,
+      FunctionBody
+    } = FunctionDeclaration; // 1. Let name be StringValue of BindingIdentifier.
+
+    const name = BindingIdentifier ? StringValue$1(BindingIdentifier) : new Value('default'); // 2. Let sourceText be the source text matched by FunctionDeclaration.
+
+    const sourceText = sourceTextMatchedBy(FunctionDeclaration); // 3. Let F be OrdinaryFunctionCreate(%Function.prototype%, sourceText, FormalParameters, FunctionBody, non-lexical-this, scope).
+
+    let _temp = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%Function.prototype%'), sourceText, FormalParameters, FunctionBody, 'non-lexical-this', scope);
+
+    Assert(!(_temp instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), sourceText, FormalParameters, FunctionBody, 'non-lexical-this', scope)" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    const F = _temp; // 4. Perform SetFunctionName(F, name).
+
+    SetFunctionName(F, name); // 5. Perform MakeConstructor(F).
+
+    MakeConstructor(F); // 6. Return F.
+
+    return F;
+  } // 14.4.11 #sec-generator-function-definitions-runtime-semantics-instantiatefunctionobject
+  //   GeneratorDeclaration :
+  //     `function` `*` BindingIdentifier `(` FormalParameters `)` `{` GeneratorBody `}`
+  //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
+
+  function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclaration, scope) {
+    const {
+      BindingIdentifier,
+      FormalParameters,
+      GeneratorBody
+    } = GeneratorDeclaration; // 1. Let name be StringValue of BindingIdentifier.
+
+    const name = BindingIdentifier ? StringValue$1(BindingIdentifier) : new Value('default'); // 2. Let sourceText be the source text matched by GeneratorDeclaration.
+
+    const sourceText = sourceTextMatchedBy(GeneratorDeclaration); // 3. Let F be OrdinaryFunctionCreate(%GeneratorFunction.prototype%, sourceText, FormalParameters, GeneratorBody, non-lexical-this, scope).
+
+    let _temp2 = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%GeneratorFunction.prototype%'), sourceText, FormalParameters, GeneratorBody, 'non-lexical-this', scope);
+
+    Assert(!(_temp2 instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype%'), sourceText, FormalParameters, GeneratorBody, 'non-lexical-this', scope)" + ' returned an abrupt completion');
+
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
+    }
+
+    const F = _temp2; // 4. Perform SetFunctionName(F, name).
+
+    SetFunctionName(F, name); // 5. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
+
+    let _temp3 = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%'));
+
+    Assert(!(_temp3 instanceof AbruptCompletion), "OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%'))" + ' returned an abrupt completion');
+
+    if (_temp3 instanceof Completion) {
+      _temp3 = _temp3.Value;
+    }
+
+    const prototype = _temp3; // 6. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
+
+    let _temp4 = DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
+      Value: prototype,
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.false
+    }));
+
+    Assert(!(_temp4 instanceof AbruptCompletion), "DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({\n    Value: prototype,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
+
+    if (_temp4 instanceof Completion) {
+      _temp4 = _temp4.Value;
+    }
+
+    return F;
+  } // #sec-async-function-definitions-InstantiateFunctionObject
+  //  AsyncFunctionDeclaration :
+  //    `async` `function` BindingIdentifier `(` FormalParameters `)` `{` AsyncFunctionBody `}`
+  //    `async` `function` `(` FormalParameters `)` `{` AsyncFunctionBody `}`
+
+  function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunctionDeclaration, scope) {
+    const {
+      BindingIdentifier,
+      FormalParameters,
+      AsyncFunctionBody
+    } = AsyncFunctionDeclaration; // 1. Let name be StringValue of BindingIdentifier.
+
+    const name = BindingIdentifier ? StringValue$1(BindingIdentifier) : new Value('default'); // 2. Let sourceText be the source text matched by AsyncFunctionDeclaration.
+
+    const sourceText = sourceTextMatchedBy(AsyncFunctionDeclaration); // 3. Let F be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, FormalParameters, AsyncFunctionBody, non-lexical-this, scope).
+
+    let _temp5 = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, FormalParameters, AsyncFunctionBody, 'non-lexical-this', scope);
+
+    Assert(!(_temp5 instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, FormalParameters, AsyncFunctionBody, 'non-lexical-this', scope)" + ' returned an abrupt completion');
+
+    if (_temp5 instanceof Completion) {
+      _temp5 = _temp5.Value;
+    }
+
+    const F = _temp5; // 4. Perform ! SetFunctionName(F, name).
+
+    SetFunctionName(F, name); // 5. Return F.
+
+    return F;
+  } // #sec-asyncgenerator-definitions-evaluatebody
+  //  AsyncGeneratorDeclaration :
+  //    `async` `function` `*` BindingIdentifier `(` FormalParameters`)` `{` AsyncGeneratorBody `}`
+  //    `async` `function` `*` `(` FormalParameters`)` `{` AsyncGeneratorBody `}`
+
+  function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGeneratorDeclaration, scope) {
+    const {
+      BindingIdentifier,
+      FormalParameters,
+      AsyncGeneratorBody
+    } = AsyncGeneratorDeclaration; // 1. Let name be StringValue of BindingIdentifier.
+
+    const name = BindingIdentifier ? StringValue$1(BindingIdentifier) : new Value('default'); // 2. Let sourceText be the source text matched by AsyncGeneratorDeclaration.
+
+    const sourceText = sourceTextMatchedBy(AsyncGeneratorDeclaration); // 3. Let F be ! OrdinaryFunctionCreate(%AsyncGeneratorFunction.prototype%, sourceText, FormalParameters, AsyncGeneratorBody, non-lexical-this, scope).
+
+    let _temp6 = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), sourceText, FormalParameters, AsyncGeneratorBody, 'non-lexical-this', scope);
+
+    Assert(!(_temp6 instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), sourceText, FormalParameters, AsyncGeneratorBody, 'non-lexical-this', scope)" + ' returned an abrupt completion');
+
+    if (_temp6 instanceof Completion) {
+      _temp6 = _temp6.Value;
+    }
+
+    const F = _temp6; // 4. Perform ! SetFunctionName(F, name).
+
+    SetFunctionName(F, name); // 5. Let prototype be ! OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
+
+    let _temp7 = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%'));
+
+    Assert(!(_temp7 instanceof AbruptCompletion), "OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%'))" + ' returned an abrupt completion');
+
+    if (_temp7 instanceof Completion) {
+      _temp7 = _temp7.Value;
+    }
+
+    const prototype = _temp7; // 6. Perform ! DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
+
+    let _temp8 = DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
+      Value: prototype,
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.false
+    }));
+
+    Assert(!(_temp8 instanceof AbruptCompletion), "DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({\n    Value: prototype,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
+
+    if (_temp8 instanceof Completion) {
+      _temp8 = _temp8.Value;
+    }
+
+    return F;
+  }
+  function InstantiateFunctionObject(AnyFunctionDeclaration, scope) {
+    switch (AnyFunctionDeclaration.type) {
+      case 'FunctionDeclaration':
+        return InstantiateFunctionObject_FunctionDeclaration(AnyFunctionDeclaration, scope);
+
+      case 'GeneratorDeclaration':
+        return InstantiateFunctionObject_GeneratorDeclaration(AnyFunctionDeclaration, scope);
+
+      case 'AsyncFunctionDeclaration':
+        return InstantiateFunctionObject_AsyncFunctionDeclaration(AnyFunctionDeclaration, scope);
+
+      case 'AsyncGeneratorDeclaration':
+        return InstantiateFunctionObject_AsyncGeneratorDeclaration(AnyFunctionDeclaration, scope);
+
+      /*c8 ignore next*/
+      default:
+        throw new OutOfRange$1('InstantiateFunctionObject', AnyFunctionDeclaration);
+    }
+  }
+
+  // Script :
+  //   [empty]
+  //   ScriptBody
+
+  function* Evaluate_Script({
+    ScriptBody
+  }) {
+    if (!ScriptBody) {
+      return NormalCompletion(Value.undefined);
+    }
+
+    return yield* Evaluate(ScriptBody);
+  }
+
+  function Evaluate_ScriptBody(ScriptBody) {
+    return Evaluate_StatementList(ScriptBody.StatementList);
+  }
+
+  function* Evaluate_StatementList(StatementList) {
+    if (StatementList.length === 0) {
+      return NormalCompletion(undefined);
+    }
+
+    let sl = yield* Evaluate(StatementList[0]);
+
+    if (StatementList.length === 1) {
+      return sl;
+    }
+
+    for (const StatementListItem of StatementList.slice(1)) {
+      /* c8 ignore if */
+      if (sl instanceof AbruptCompletion) {
+        return sl;
+      }
+      /* c8 ignore if */
+
+
+      if (sl instanceof Completion) {
+        sl = sl.Value;
+      }
+      let s = yield* Evaluate(StatementListItem); // We don't always return a Completion value, but here we actually need it
+      // to be a Completion.
+
+      s = EnsureCompletion(s);
+      sl = UpdateEmpty(s, sl);
+    }
+
+    return sl;
+  }
+
+  //   ExpressionStatement :
+  //     Expression `;`
+
+  function* Evaluate_ExpressionStatement({
+    Expression
+  }) {
+    // 1. Let exprRef be the result of evaluating Expression.
+    const exprRef = yield* Evaluate(Expression); // 2. Return ? GetValue(exprRef).
+
+    return GetValue(exprRef);
+  }
+
+  //   VariableDeclaration :
+  //     BindingIdentifier
+  //     BindingIdentifier Initializer
+  //     BindingPattern Initializer
+
+  function* Evaluate_VariableDeclaration({
+    BindingIdentifier,
+    Initializer,
+    BindingPattern
+  }) {
+    if (BindingIdentifier) {
+      if (!Initializer) {
+        // 1. Return NormalCompletion(empty).
+        return NormalCompletion(undefined);
+      } // 1. Let bindingId be StringValue of BindingIdentifier.
+
+
+      const bindingId = StringValue$1(BindingIdentifier); // 2. Let lhs be ? ResolveBinding(bindingId).
+
+      let _temp = ResolveBinding(bindingId, undefined, BindingIdentifier.strict);
+      /* c8 ignore if */
+
+
+      if (_temp instanceof AbruptCompletion) {
+        return _temp;
+      }
+      /* c8 ignore if */
+
+
+      if (_temp instanceof Completion) {
+        _temp = _temp.Value;
+      }
+
+      const lhs = _temp; // 3. If IsAnonymousFunctionDefinition(Initializer) is true, then
+
+      let value;
+
+      if (IsAnonymousFunctionDefinition(Initializer)) {
+        // a. Let value be NamedEvaluation of Initializer with argument bindingId.
+        value = yield* NamedEvaluation(Initializer, bindingId);
+      } else {
+        // 4. Else,
+        // a. Let rhs be the result of evaluating Initializer.
+        const rhs = yield* Evaluate(Initializer); // b. Let value be ? GetValue(rhs).
+
+        let _temp2 = GetValue(rhs);
+
+        if (_temp2 instanceof AbruptCompletion) {
+          return _temp2;
+        }
+
+        if (_temp2 instanceof Completion) {
+          _temp2 = _temp2.Value;
+        }
+
+        value = _temp2;
+      } // 5. Return ? PutValue(lhs, value).
+
+
+      return PutValue(lhs, value);
+    } // 1. Let rhs be the result of evaluating Initializer.
+
+
+    const rhs = yield* Evaluate(Initializer); // 2. Let rval be ? GetValue(rhs).
+
+    let _temp3 = GetValue(rhs);
+
+    if (_temp3 instanceof AbruptCompletion) {
+      return _temp3;
+    }
+
+    if (_temp3 instanceof Completion) {
+      _temp3 = _temp3.Value;
+    }
+
+    const rval = _temp3; // 3. Return the result of performing BindingInitialization for BindingPattern passing rval and undefined as arguments.
+
+    return yield* BindingInitialization(BindingPattern, rval, Value.undefined);
+  } // 13.3.2.4 #sec-variable-statement-runtime-semantics-evaluation
+  //   VariableDeclarationList : VariableDeclarationList `,` VariableDeclaration
+  //
+  // (implicit)
+  //   VariableDeclarationList : VariableDeclaration
+
+
+  Evaluate_VariableDeclaration.section = 'https://tc39.es/ecma262/#sec-variable-statement-runtime-semantics-evaluation';
+  function* Evaluate_VariableDeclarationList(VariableDeclarationList) {
+    let next;
+
+    for (const VariableDeclaration of VariableDeclarationList) {
+      next = yield* Evaluate_VariableDeclaration(VariableDeclaration);
+
+      /* c8 ignore if */
+      if (next instanceof AbruptCompletion) {
+        return next;
+      }
+      /* c8 ignore if */
+
+
+      if (next instanceof Completion) {
+        next = next.Value;
+      }
+    }
+
+    return next;
+  } // 13.3.2.4 #sec-variable-statement-runtime-semantics-evaluation
+  //   VariableStatement : `var` VariableDeclarationList `;`
+
+  function* Evaluate_VariableStatement({
+    VariableDeclarationList
+  }) {
+    let next = yield* Evaluate_VariableDeclarationList(VariableDeclarationList);
+
+    if (next instanceof AbruptCompletion) {
+      return next;
+    }
+
+    if (next instanceof Completion) {
+      next = next.Value;
+    }
+    return NormalCompletion(undefined);
+  }
+
+  // FunctionDeclaration :
+  //   function BindingIdentifier ( FormalParameters ) { FunctionBody }
+  //   function ( FormalParameters ) { FunctionBody }
+
+  function Evaluate_FunctionDeclaration(_FunctionDeclaration) {
+    // 1. Return NormalCompletion(empty).
+    return NormalCompletion(undefined);
+  }
+
+  // CallExpression :
+  //   CoverCallExpressionAndAsyncArrowHead
+  //   CallExpression Arguments
+
+  function* Evaluate_CallExpression(CallExpression) {
+    // 1. Let expr be CoveredCallExpression of CoverCallExpressionAndAsyncArrowHead.
+    const expr = CallExpression; // 2. Let memberExpr be the MemberExpression of expr.
+
+    const memberExpr = expr.CallExpression; // 3. Let arguments be the Arguments of expr.
+
+    const args = expr.Arguments; // 4. Let ref be the result of evaluating memberExpr.
+
+    const ref = yield* Evaluate(memberExpr); // 5. Let func be ? GetValue(ref).
+
+    let _temp = GetValue(ref);
+    /* c8 ignore if */
+
+
+    if (_temp instanceof AbruptCompletion) {
+      return _temp;
+    }
+    /* c8 ignore if */
+
+
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    const func = _temp; // 6. If Type(ref) is Reference, IsPropertyReference(ref) is false, and GetReferencedName(ref) is "eval", then
+
+    if (Type(ref) === 'Reference' && IsPropertyReference(ref) === Value.false && Type(GetReferencedName(ref)) === 'String' && GetReferencedName(ref).stringValue() === 'eval') {
+      // a. If SameValue(func, %eval%) is true, then
+      if (SameValue(func, exports.surroundingAgent.intrinsic('%eval%')) === Value.true) {
+        let _temp2 = yield* ArgumentListEvaluation(args);
+
+        if (_temp2 instanceof AbruptCompletion) {
+          return _temp2;
+        }
+
+        if (_temp2 instanceof Completion) {
+          _temp2 = _temp2.Value;
+        }
+
+        // i. Let argList be ? ArgumentListEvaluation of arguments.
+        const argList = _temp2; // ii. If argList has no elements, return undefined.
+
+        if (argList.length === 0) {
+          return Value.undefined;
+        } // iii. Let evalText be the first element of argList.
+
+
+        const evalText = argList[0]; // iv. If the source code matching this CallExpression is strict mode code, let strictCaller be true. Otherwise let strictCaller be false.
+
+        const strictCaller = CallExpression.strict; // v. Let evalRealm be the current Realm Record.
+
+        const evalRealm = exports.surroundingAgent.currentRealmRecord; // vi. Return ? PerformEval(evalText, evalRealm, strictCaller, true).
+
+        return PerformEval(evalText, evalRealm, strictCaller, true);
+      }
+    } // 7. Let thisCall be this CallExpression.
+
+    const tailCall = IsInTailPosition(); // 9. Return ? EvaluateCall(func, ref, arguments, tailCall).
+
+    return yield* EvaluateCall(func, ref, args, tailCall);
+  }
+
+  function* EvaluateCall(func, ref, args, tailPosition) {
+    // 1. If Type(ref) is Reference, then
+    let thisValue;
+
+    if (Type(ref) === 'Reference') {
+      // a. If IsPropertyReference(ref) is true, then
+      if (IsPropertyReference(ref) === Value.true) {
+        // i. Let thisValue be GetThisValue(ref).
+        thisValue = GetThisValue(ref);
+      } else {
+        // i. Assert: the base of ref is an Environment Record.
+        Assert(ref.BaseValue instanceof EnvironmentRecord, "ref.BaseValue instanceof EnvironmentRecord"); // ii. Let envRef be GetBase(ref).
+
+        const refEnv = GetBase(ref); // iii. Let thisValue be envRef.WithBaseObject().
+
+        thisValue = refEnv.WithBaseObject();
+      }
+    } else {
+      // a. Let thisValue be undefined.
+      thisValue = Value.undefined;
+    } // 3. Let argList be ? ArgumentListEvaluation of arguments.
+
+
+    let _temp = yield* ArgumentListEvaluation(args);
+    /* c8 ignore if */
+
+
+    if (_temp instanceof AbruptCompletion) {
+      return _temp;
+    }
+    /* c8 ignore if */
+
+
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    const argList = _temp; // 4. If Type(func) is not Object, throw a TypeError exception.
+
+    if (Type(func) !== 'Object') {
+      return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', func);
+    } // 5. If IsCallable(func) is false, throw a TypeError exception.
+
+
+    if (IsCallable(func) === Value.false) {
+      return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', func);
+    } // 6. If tailPosition is true, perform PrepareForTailCall().
+
+
+    if (tailPosition) {
+      PrepareForTailCall();
+    } // 7. Let result be Call(func, thisValue, argList).
+
+
+    const result = Call(func, thisValue, argList); // 8. Assert: If tailPosition is true, the above call will not return here but instead
+    //    evaluation will continue as if the following return has already occurred.
+
+    Assert(!tailPosition, "!tailPosition"); // 9. Assert: If result is not an abrupt completion, then Type(result) is an ECMAScript language type.
+
+    if (!(result instanceof AbruptCompletion)) {
+      Assert(result instanceof Value || result instanceof Completion, "result instanceof Value || result instanceof Completion");
+    } // 10. Return result.
+
+
+    return result;
+  }
+
+  function GetTemplateObject(templateLiteral) {
+    // 1. Let realm be the current Realm Record.
+    const realm = exports.surroundingAgent.currentRealmRecord; // 2. Let templateRegistry be realm.[[TemplateMap]].
+
+    const templateRegistry = realm.TemplateMap; // 3. For each element e of templateRegistry, do
+
+    for (const e of templateRegistry) {
+      // a. If e.[[Site]] is the same Parse Node as templateLiteral, then
+      if (e.Site === templateLiteral) {
+        // b. Return e.[[Array]].
+        return e.Array;
+      }
+    } // 4. Let rawStrings be TemplateStrings of templateLiteral with argument true.
+
+
+    const rawStrings = TemplateStrings(templateLiteral, true); // 5. Let cookedStrings be TemplateStrings of templateLiteral with argument false.
+
+    const cookedStrings = TemplateStrings(templateLiteral, false); // 6. Let count be the number of elements in the List cookedStrings.
+
+    const count = cookedStrings.length; // 7. Assert: count ≤ 232 - 1.
+
+    Assert(count < 2 ** 32 - 1, "count < (2 ** 32) - 1"); // 8. Let template be ! ArrayCreate(count).
+
+    let _temp = ArrayCreate(count);
+
+    Assert(!(_temp instanceof AbruptCompletion), "ArrayCreate(count)" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    const template = _temp; // 9. Let template be ! ArrayCreate(count).
+
+    let _temp2 = ArrayCreate(count);
+
+    Assert(!(_temp2 instanceof AbruptCompletion), "ArrayCreate(count)" + ' returned an abrupt completion');
+
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
+    }
+
+    const rawObj = _temp2; // 10. Let index be 0.
+
+    let index = 0; // 11. Repeat, while index < count
+
+    while (index < count) {
+      let _temp3 = ToString(F(index));
+
+      Assert(!(_temp3 instanceof AbruptCompletion), "ToString(F(index))" + ' returned an abrupt completion');
+
+      if (_temp3 instanceof Completion) {
+        _temp3 = _temp3.Value;
+      }
+
+      // a. Let prop be ! ToString(𝔽(index)).
+      const prop = _temp3; // b. Let cookedValue be the String value cookedStrings[index].
+
+      const cookedValue = cookedStrings[index]; // c. Call template.[[DefineOwnProperty]](prop, PropertyDescriptor { [[Value]]: cookedValue, [[Writable]]: false, [[Enumerable]]: true, [[Configurable]]: false }).
+
+      let _temp4 = template.DefineOwnProperty(prop, Descriptor({
+        Value: cookedValue,
+        Writable: Value.false,
+        Enumerable: Value.true,
+        Configurable: Value.false
+      }));
+
+      Assert(!(_temp4 instanceof AbruptCompletion), "template.DefineOwnProperty(prop, Descriptor({\n      Value: cookedValue,\n      Writable: Value.false,\n      Enumerable: Value.true,\n      Configurable: Value.false,\n    }))" + ' returned an abrupt completion');
+
+      if (_temp4 instanceof Completion) {
+        _temp4 = _temp4.Value;
+      }
+
+      const rawValue = rawStrings[index]; // e. Call rawObj.[[DefineOwnProperty]](prop, PropertyDescriptor { [[Value]]: rawValue, [[Writable]]: false, [[Enumerable]]: true, [[Configurable]]: false }).
+
+      let _temp5 = rawObj.DefineOwnProperty(prop, Descriptor({
+        Value: rawValue,
+        Writable: Value.false,
+        Enumerable: Value.true,
+        Configurable: Value.false
+      }));
+
+      Assert(!(_temp5 instanceof AbruptCompletion), "rawObj.DefineOwnProperty(prop, Descriptor({\n      Value: rawValue,\n      Writable: Value.false,\n      Enumerable: Value.true,\n      Configurable: Value.false,\n    }))" + ' returned an abrupt completion');
+
+      if (_temp5 instanceof Completion) {
+        _temp5 = _temp5.Value;
+      }
+
+      index += 1;
+    } // 12. Perform SetIntegrityLevel(rawObj, frozen).
+
+
+    let _temp6 = SetIntegrityLevel(rawObj, 'frozen');
+
+    Assert(!(_temp6 instanceof AbruptCompletion), "SetIntegrityLevel(rawObj, 'frozen')" + ' returned an abrupt completion');
+
+    if (_temp6 instanceof Completion) {
+      _temp6 = _temp6.Value;
+    }
+
+    let _temp7 = template.DefineOwnProperty(new Value('raw'), Descriptor({
+      Value: rawObj,
+      Writable: Value.false,
+      Enumerable: Value.false,
+      Configurable: Value.false
+    }));
+
+    Assert(!(_temp7 instanceof AbruptCompletion), "template.DefineOwnProperty(new Value('raw'), Descriptor({\n    Value: rawObj,\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
+
+    if (_temp7 instanceof Completion) {
+      _temp7 = _temp7.Value;
+    }
+
+    let _temp8 = SetIntegrityLevel(template, 'frozen');
+
+    Assert(!(_temp8 instanceof AbruptCompletion), "SetIntegrityLevel(template, 'frozen')" + ' returned an abrupt completion');
+
+    if (_temp8 instanceof Completion) {
+      _temp8 = _temp8.Value;
+    }
+
+    templateRegistry.push({
+      Site: templateLiteral,
+      Array: template
+    }); // 16. Return template.
+
+    return template;
+  } // 12.2.9.3 #sec-template-literals-runtime-semantics-argumentlistevaluation
+  //   TemplateLiteral : NoSubstitutionTemplate
+  //
+  // https://github.com/tc39/ecma262/pull/1402
+  //   TemplateLiteral : SubstitutionTemplate
+
+
+  GetTemplateObject.section = 'https://tc39.es/ecma262/#sec-gettemplateobjec';
+
+  function* ArgumentListEvaluation_TemplateLiteral(TemplateLiteral) {
+    switch (true) {
+      case TemplateLiteral.TemplateSpanList.length === 1:
+        {
+          const templateLiteral = TemplateLiteral;
+          const siteObj = GetTemplateObject(templateLiteral);
+          return [siteObj];
+        }
+
+      case TemplateLiteral.TemplateSpanList.length > 1:
+        {
+          const templateLiteral = TemplateLiteral;
+          const siteObj = GetTemplateObject(templateLiteral);
+          const restSub = [];
+
+          for (const Expression of TemplateLiteral.ExpressionList) {
+            const subRef = yield* Evaluate(Expression);
+
+            let _temp9 = GetValue(subRef);
+            /* c8 ignore if */
+
+
+            if (_temp9 instanceof AbruptCompletion) {
+              return _temp9;
+            }
+            /* c8 ignore if */
+
+
+            if (_temp9 instanceof Completion) {
+              _temp9 = _temp9.Value;
+            }
+
+            const subValue = _temp9;
+            restSub.push(subValue);
+          }
+
+          return [siteObj, ...restSub];
+        }
+
+      /*c8 ignore next*/
+      default:
+        throw new OutOfRange$1('ArgumentListEvaluation_TemplateLiteral', TemplateLiteral);
+    }
+  } // 12.3.6.1 #sec-argument-lists-runtime-semantics-argumentlistevaluation
+  //   Arguments : `(` `)`
+  //   ArgumentList :
+  //     AssignmentExpression
+  //     `...` AssignmentExpression
+  //     ArgumentList `,` AssignmentExpression
+  //     ArgumentList `,` `...` AssignmentExpression
+  //
+  // (implicit)
+  //   Arguments :
+  //     `(` ArgumentList `)`
+  //     `(` ArgumentList `,` `)`
+
+
+  ArgumentListEvaluation_TemplateLiteral.section = 'https://tc39.es/ecma262/#sec-template-literals-runtime-semantics-argumentlistevaluation';
+
+  function* ArgumentListEvaluation_Arguments(Arguments) {
+    const precedingArgs = [];
+
+    for (const element of Arguments) {
+      if (element.type === 'AssignmentRestElement') {
+        const {
+          AssignmentExpression
+        } = element; // 2. Let spreadRef be the result of evaluating AssignmentExpression.
+
+        const spreadRef = yield* Evaluate(AssignmentExpression); // 3. Let spreadObj be ? GetValue(spreadRef).
+
+        let _temp10 = GetValue(spreadRef);
+
+        if (_temp10 instanceof AbruptCompletion) {
+          return _temp10;
+        }
+
+        if (_temp10 instanceof Completion) {
+          _temp10 = _temp10.Value;
+        }
+
+        const spreadObj = _temp10; // 4. Let iteratorRecord be ? GetIterator(spreadObj).
+
+        let _temp11 = GetIterator(spreadObj);
+
+        if (_temp11 instanceof AbruptCompletion) {
+          return _temp11;
+        }
+
+        if (_temp11 instanceof Completion) {
+          _temp11 = _temp11.Value;
+        }
+
+        const iteratorRecord = _temp11; // 5. Repeat,
+
+        while (true) {
+          let _temp12 = IteratorStep(iteratorRecord);
+
+          if (_temp12 instanceof AbruptCompletion) {
+            return _temp12;
+          }
+
+          if (_temp12 instanceof Completion) {
+            _temp12 = _temp12.Value;
+          }
+
+          // a. Let next be ? IteratorStep(iteratorRecord).
+          const next = _temp12; // b. If next is false, return list.
+
+          if (next === Value.false) {
+            break;
+          } // c. Let nextArg be ? IteratorValue(next).
+
+
+          let _temp13 = IteratorValue(next);
+
+          if (_temp13 instanceof AbruptCompletion) {
+            return _temp13;
+          }
+
+          if (_temp13 instanceof Completion) {
+            _temp13 = _temp13.Value;
+          }
+
+          const nextArg = _temp13; // d. Append nextArg as the last element of list.
+
+          precedingArgs.push(nextArg);
+        }
+      } else {
+        const AssignmentExpression = element; // 2. Let ref be the result of evaluating AssignmentExpression.
+
+        const ref = yield* Evaluate(AssignmentExpression); // 3. Let arg be ? GetValue(ref).
+
+        let _temp14 = GetValue(ref);
+
+        if (_temp14 instanceof AbruptCompletion) {
+          return _temp14;
+        }
+
+        if (_temp14 instanceof Completion) {
+          _temp14 = _temp14.Value;
+        }
+
+        const arg = _temp14; // 4. Append arg to the end of precedingArgs.
+
+        precedingArgs.push(arg); // 5. Return precedingArgs.
+      }
+    }
+
+    return precedingArgs;
+  }
+
+  ArgumentListEvaluation_Arguments.section = 'https://tc39.es/ecma262/#sec-argument-lists-runtime-semantics-argumentlistevaluation';
+  function ArgumentListEvaluation(ArgumentsOrTemplateLiteral) {
+    switch (true) {
+      case Array.isArray(ArgumentsOrTemplateLiteral):
+        return ArgumentListEvaluation_Arguments(ArgumentsOrTemplateLiteral);
+
+      case ArgumentsOrTemplateLiteral.type === 'TemplateLiteral':
+        return ArgumentListEvaluation_TemplateLiteral(ArgumentsOrTemplateLiteral);
+
+      /*c8 ignore next*/
+      default:
+        throw new OutOfRange$1('ArgumentListEvaluation', ArgumentsOrTemplateLiteral);
+    }
+  }
+
+  function Evaluate_AnyFunctionBody({
+    FunctionStatementList
+  }) {
+    return Evaluate_FunctionStatementList(FunctionStatementList);
+  } // #sec-function-definitions-runtime-semantics-evaluatebody
+  // FunctionBody : FunctionStatementList
+
+  function* EvaluateBody_FunctionBody({
+    FunctionStatementList
+  }, functionObject, argumentsList) {
+    let _temp = yield* FunctionDeclarationInstantiation(functionObject, argumentsList);
+    /* c8 ignore if */
+
+
+    if (_temp instanceof AbruptCompletion) {
+      return _temp;
+    }
+    /* c8 ignore if */
+
+
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    return yield* Evaluate_FunctionStatementList(FunctionStatementList);
+  } // #sec-arrow-function-definitions-runtime-semantics-evaluation
+  // ExpressionBody : AssignmentExpression
+
+  function* Evaluate_ExpressionBody({
+    AssignmentExpression
+  }) {
+    // 1. Let exprRef be the result of evaluating AssignmentExpression.
+    const exprRef = yield* Evaluate(AssignmentExpression); // 2. Let exprValue be ? GetValue(exprRef).
+
+    let _temp2 = GetValue(exprRef);
+
+    if (_temp2 instanceof AbruptCompletion) {
+      return _temp2;
+    }
+
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
+    }
+
+    const exprValue = _temp2; // 3. Return Completion { [[Type]]: return, [[Value]]: exprValue, [[Target]]: empty }.
+
+    return new Completion({
+      Type: 'return',
+      Value: exprValue,
+      Target: undefined
+    });
+  } // #sec-arrow-function-definitions-runtime-semantics-evaluatebody
+  // ConciseBody : ExpressionBody
+
+  function* EvaluateBody_ConciseBody({
+    ExpressionBody
+  }, functionObject, argumentsList) {
+    let _temp3 = yield* FunctionDeclarationInstantiation(functionObject, argumentsList);
+
+    if (_temp3 instanceof AbruptCompletion) {
+      return _temp3;
+    }
+
+    if (_temp3 instanceof Completion) {
+      _temp3 = _temp3.Value;
+    }
+
+    return yield* Evaluate(ExpressionBody);
+  } // #sec-async-arrow-function-definitions-EvaluateBody
+  // AsyncConciseBody : ExpressionBody
+
+  function* EvaluateBody_AsyncConciseBody({
+    ExpressionBody
+  }, functionObject, argumentsList) {
+    let _temp4 = NewPromiseCapability(exports.surroundingAgent.intrinsic('%Promise%'));
+
+    Assert(!(_temp4 instanceof AbruptCompletion), "NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    if (_temp4 instanceof Completion) {
+      _temp4 = _temp4.Value;
+    }
+
+    // 1. Let promiseCapability be ! NewPromiseCapability(%Promise%).
+    const promiseCapability = _temp4; // 2. Let declResult be FunctionDeclarationInstantiation(functionObject, argumentsList).
+
+    const declResult = yield* FunctionDeclarationInstantiation(functionObject, argumentsList); // 3. If declResult is not an abrupt completion, then
+
+    if (!(declResult instanceof AbruptCompletion)) {
+      let _temp5 = AsyncFunctionStart(promiseCapability, ExpressionBody);
+
+      Assert(!(_temp5 instanceof AbruptCompletion), "AsyncFunctionStart(promiseCapability, ExpressionBody)" + ' returned an abrupt completion');
+
+      if (_temp5 instanceof Completion) {
+        _temp5 = _temp5.Value;
+      }
+    } else {
+      let _temp6 = Call(promiseCapability.Reject, Value.undefined, [declResult.Value]);
+
+      Assert(!(_temp6 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [declResult.Value])" + ' returned an abrupt completion');
+
+      if (_temp6 instanceof Completion) {
+        _temp6 = _temp6.Value;
+      }
+    } // 5. Return Completion { [[Type]]: return, [[Value]]: promiseCapability.[[Promise]], [[Target]]: empty }.
+
+
+    return new Completion({
+      Type: 'return',
+      Value: promiseCapability.Promise,
+      Target: undefined
+    });
+  } // #sec-generator-function-definitions-runtime-semantics-evaluatebody
+  // GeneratorBody : FunctionBody
+
+
+  EvaluateBody_AsyncConciseBody.section = 'https://tc39.es/ecma262/#sec-async-arrow-function-definitions-EvaluateBody';
+  function* EvaluateBody_GeneratorBody(GeneratorBody, functionObject, argumentsList) {
+    let _temp7 = yield* FunctionDeclarationInstantiation(functionObject, argumentsList);
+
+    if (_temp7 instanceof AbruptCompletion) {
+      return _temp7;
+    }
+
+    if (_temp7 instanceof Completion) {
+      _temp7 = _temp7.Value;
+    }
+
+    let _temp8 = OrdinaryCreateFromConstructor(functionObject, '%GeneratorFunction.prototype.prototype%', ['GeneratorState', 'GeneratorContext']);
+
+    if (_temp8 instanceof AbruptCompletion) {
+      return _temp8;
+    }
+
+    if (_temp8 instanceof Completion) {
+      _temp8 = _temp8.Value;
+    }
+
+    const G = _temp8; // 3. Perform GeneratorStart(G, FunctionBody).
+
+    GeneratorStart(G, GeneratorBody); // 4. Return Completion { [[Type]]: return, [[Value]]: G, [[Target]]: empty }.
+
+    return new Completion({
+      Type: 'return',
+      Value: G,
+      Target: undefined
+    });
+  } // #sec-asyncgenerator-definitions-evaluatebody
+  // AsyncGeneratorBody : FunctionBody
+
+  function* EvaluateBody_AsyncGeneratorBody(FunctionBody, functionObject, argumentsList) {
+    let _temp9 = yield* FunctionDeclarationInstantiation(functionObject, argumentsList);
+
+    if (_temp9 instanceof AbruptCompletion) {
+      return _temp9;
+    }
+
+    if (_temp9 instanceof Completion) {
+      _temp9 = _temp9.Value;
+    }
+
+    let _temp10 = OrdinaryCreateFromConstructor(functionObject, '%AsyncGeneratorFunction.prototype.prototype%', ['AsyncGeneratorState', 'AsyncGeneratorContext', 'AsyncGeneratorQueue']);
+
+    if (_temp10 instanceof AbruptCompletion) {
+      return _temp10;
+    }
+
+    if (_temp10 instanceof Completion) {
+      _temp10 = _temp10.Value;
+    }
+
+    const generator = _temp10; // 3. Perform ! AsyncGeneratorStart(generator, FunctionBody).
+
+    let _temp11 = AsyncGeneratorStart(generator, FunctionBody);
+
+    Assert(!(_temp11 instanceof AbruptCompletion), "AsyncGeneratorStart(generator, FunctionBody)" + ' returned an abrupt completion');
+
+    if (_temp11 instanceof Completion) {
+      _temp11 = _temp11.Value;
+    }
+
+    return new Completion({
+      Type: 'return',
+      Value: generator,
+      Target: undefined
+    });
+  } // #sec-async-function-definitions-EvaluateBody
+  // AsyncFunctionBody : FunctionBody
+
+  function* EvaluateBody_AsyncFunctionBody(FunctionBody, functionObject, argumentsList) {
+    let _temp12 = NewPromiseCapability(exports.surroundingAgent.intrinsic('%Promise%'));
+
+    Assert(!(_temp12 instanceof AbruptCompletion), "NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))" + ' returned an abrupt completion');
+
+    if (_temp12 instanceof Completion) {
+      _temp12 = _temp12.Value;
+    }
+
+    // 1. Let promiseCapability be ! NewPromiseCapability(%Promise%).
+    const promiseCapability = _temp12; // 2. Let declResult be FunctionDeclarationInstantiation(functionObject, argumentsList).
+
+    const declResult = yield* FunctionDeclarationInstantiation(functionObject, argumentsList); // 3. If declResult is not an abrupt completion, then
+
+    if (!(declResult instanceof AbruptCompletion)) {
+      let _temp13 = AsyncFunctionStart(promiseCapability, FunctionBody);
+
+      Assert(!(_temp13 instanceof AbruptCompletion), "AsyncFunctionStart(promiseCapability, FunctionBody)" + ' returned an abrupt completion');
+
+      if (_temp13 instanceof Completion) {
+        _temp13 = _temp13.Value;
+      }
+    } else {
+      let _temp14 = Call(promiseCapability.Reject, Value.undefined, [declResult.Value]);
+
+      Assert(!(_temp14 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [declResult.Value])" + ' returned an abrupt completion');
+
+      if (_temp14 instanceof Completion) {
+        _temp14 = _temp14.Value;
+      }
+    } // 5. Return Completion { [[Type]]: return, [[Value]]: promiseCapability.[[Promise]], [[Target]]: empty }.
+
+
+    return new Completion({
+      Type: 'return',
+      Value: promiseCapability.Promise,
+      Target: undefined
+    });
+  } // FunctionBody : FunctionStatementList
+  // ConciseBody : ExpressionBody
+  // GeneratorBody : FunctionBody
+  // AsyncGeneratorBody : FunctionBody
+  // AsyncFunctionBody : FunctionBody
+  // AsyncConciseBody : ExpressionBody
+
+  function EvaluateBody(Body, functionObject, argumentsList) {
+    switch (Body.type) {
+      case 'FunctionBody':
+        return EvaluateBody_FunctionBody(Body, functionObject, argumentsList);
+
+      case 'ConciseBody':
+        return EvaluateBody_ConciseBody(Body, functionObject, argumentsList);
+
+      case 'GeneratorBody':
+        return EvaluateBody_GeneratorBody(Body, functionObject, argumentsList);
+
+      case 'AsyncGeneratorBody':
+        return EvaluateBody_AsyncGeneratorBody(Body, functionObject, argumentsList);
+
+      case 'AsyncFunctionBody':
+        return EvaluateBody_AsyncFunctionBody(Body, functionObject, argumentsList);
+
+      case 'AsyncConciseBody':
+        return EvaluateBody_AsyncConciseBody(Body, functionObject, argumentsList);
+
+      /*c8 ignore next*/
+      default:
+        throw new OutOfRange$1('EvaluateBody', Body);
+    }
+  }
+
+  function* FunctionDeclarationInstantiation(func, argumentsList) {
+    // 1. Let calleeContext be the running execution context.
+    const calleeContext = exports.surroundingAgent.runningExecutionContext; // 2. Let code be func.[[ECMAScriptCode]].
+
+    const code = func.ECMAScriptCode; // 3. Let strict be func.[[Strict]].
+
+    const strict = func.Strict; // 4. Let formals be func.[[FormalParameters]].
+
+    const formals = func.FormalParameters; // 5. Let parameterNames be BoundNames of formals.
+
+    const parameterNames = BoundNames(formals); // 6. If parameterNames has any duplicate entries, let hasDuplicates be true. Otherwise, let hasDuplicates be false.
+
+    const hasDuplicates = new ValueSet(parameterNames).size !== parameterNames.length; // 7. Let simpleParameterList be IsSimpleParameterList of formals.
+
+    const simpleParameterList = IsSimpleParameterList(formals); // 8. Let hasParameterExpressions be ContainsExpression of formals.
+
+    const hasParameterExpressions = ContainsExpression(formals); // 9. Let varNames be the VarDeclaredNames of code.
+
+    const varNames = VarDeclaredNames(code); // 10. Let varDeclarations be the VarScopedDeclarations of code.
+
+    const varDeclarations = VarScopedDeclarations(code); // 11. Let lexicalNames be the LexicallyDeclaredNames of code.
+
+    const lexicalNames = new ValueSet(LexicallyDeclaredNames(code)); // 12. Let functionNames be a new empty List.
+
+    const functionNames = new ValueSet(); // 13. Let functionNames be a new empty List.
+
+    const functionsToInitialize = []; // 14. For each d in varDeclarations, in reverse list order, do
+
+    for (const d of [...varDeclarations].reverse()) {
+      // a. If d is neither a VariableDeclaration nor a ForBinding nor a BindingIdentifier, then
+      if (d.type !== 'VariableDeclaration' && d.type !== 'ForBinding' && d.type !== 'BindingIdentifier') {
+        // i. Assert: d is either a FunctionDeclaration, a GeneratorDeclaration, an AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration.
+        Assert(d.type === 'FunctionDeclaration' || d.type === 'GeneratorDeclaration' || d.type === 'AsyncFunctionDeclaration' || d.type === 'AsyncGeneratorDeclaration', "d.type === 'FunctionDeclaration'\n             || d.type === 'GeneratorDeclaration'\n             || d.type === 'AsyncFunctionDeclaration'\n             || d.type === 'AsyncGeneratorDeclaration'"); // ii. Let fn be the sole element of the BoundNames of d.
+
+        const fn = BoundNames(d)[0]; // iii. If fn is not an element of functionNames, then
+
+        if (!functionNames.has(fn)) {
+          // 1. Insert fn as the first element of functionNames.
+          functionNames.add(fn); // 2. NOTE: If there are multiple function declarations for the same name, the last declaration is used.
+          // 3. Insert d as the first element of functionsToInitialize.
+
+          functionsToInitialize.unshift(d);
+        }
+      }
+    } // 15. Let argumentsObjectNeeded be true.
+
+
+    let argumentsObjectNeeded = true; // If func.[[ThisMode]] is lexical, then
+
+    if (func.ThisMode === 'lexical') {
+      // a. NOTE: Arrow functions never have an arguments objects.
+      // b. Set argumentsObjectNeeded to false.
+      argumentsObjectNeeded = false;
+    } else if (new ValueSet(parameterNames).has(new Value('arguments'))) {
+      // a. Set argumentsObjectNeeded to false.
+      argumentsObjectNeeded = false;
+    } else if (hasParameterExpressions === false) {
+      // a. If "arguments" is an element of functionNames or if "arguments" is an element of lexicalNames, then
+      if (functionNames.has(new Value('arguments')) || lexicalNames.has(new Value('arguments'))) {
+        // i. Set argumentsObjectNeeded to false.
+        argumentsObjectNeeded = false;
+      }
+    }
+
+    let env; // 19. If strict is true or if hasParameterExpressions is false, then
+
+    if (strict || hasParameterExpressions === false) {
+      // a. NOTE: Only a single lexical environment is needed for the parameters and top-level vars.
+      // b. Let env be the LexicalEnvironment of calleeContext.
+      env = calleeContext.LexicalEnvironment;
+    } else {
+      // a. NOTE: A separate Environment Record is needed to ensure that bindings created by direct eval
+      //    calls in the formal parameter list are outside the environment where parameters are declared.
+      // b. Let calleeEnv be the LexicalEnvironment of calleeContext.
+      const calleeEnv = calleeContext.LexicalEnvironment; // c. Let env be NewDeclarativeEnvironment(calleeEnv).
+
+      env = NewDeclarativeEnvironment(calleeEnv); // d. Assert: The VariableEnvironment of calleeContext is calleeEnv.
+
+      Assert(calleeContext.VariableEnvironment === calleeEnv, "calleeContext.VariableEnvironment === calleeEnv"); // e. Set the LexicalEnvironment of calleeContext to env.
+
+      calleeContext.LexicalEnvironment = env;
+    } // 21. For each String paramName in parameterNames, do
+
+
+    for (const paramName of parameterNames) {
+      // a. Let alreadyDeclared be env.HasBinding(paramName).
+      const alreadyDeclared = env.HasBinding(paramName); // b. NOTE: Early errors ensure that duplicate parameter names can only occur in
+      //    non-strict functions that do not have parameter default values or rest parameters.
+      // c. If alreadyDeclared is false, then
+
+      if (alreadyDeclared === Value.false) {
+        let _temp = env.CreateMutableBinding(paramName, Value.false);
+
+        Assert(!(_temp instanceof AbruptCompletion), "env.CreateMutableBinding(paramName, Value.false)" + ' returned an abrupt completion');
+        /* c8 ignore if */
+
+        if (_temp instanceof Completion) {
+          _temp = _temp.Value;
+        }
+
+        if (hasDuplicates === true) {
+          let _temp2 = env.InitializeBinding(paramName, Value.undefined);
+
+          Assert(!(_temp2 instanceof AbruptCompletion), "env.InitializeBinding(paramName, Value.undefined)" + ' returned an abrupt completion');
+
+          if (_temp2 instanceof Completion) {
+            _temp2 = _temp2.Value;
+          }
+        }
+      }
+    } // 22. If argumentsObjectNeeded is true, then
+
+
+    let parameterBindings;
+
+    if (argumentsObjectNeeded === true) {
+      let ao; // a. If strict is true or if simpleParameterList is false, then
+
+      if (strict || simpleParameterList === false) {
+        // i. Let ao be CreateUnmappedArgumentsObject(argumentsList).
+        ao = CreateUnmappedArgumentsObject(argumentsList);
+      } else {
+        // i. NOTE: mapped argument object is only provided for non-strict functions
+        //    that don't have a rest parameter, any parameter default value initializers,
+        //    or any destructured parameters.
+        // ii. Let ao be CreateMappedArgumentsObject(func, formals, argumentsList, env).
+        ao = CreateMappedArgumentsObject(func, formals, argumentsList, env);
+      } // c. If strict is true, then
+
+
+      if (strict) {
+        let _temp3 = env.CreateImmutableBinding(new Value('arguments'), Value.false);
+
+        Assert(!(_temp3 instanceof AbruptCompletion), "env.CreateImmutableBinding(new Value('arguments'), Value.false)" + ' returned an abrupt completion');
+
+        if (_temp3 instanceof Completion) {
+          _temp3 = _temp3.Value;
+        }
+      } else {
+        let _temp4 = env.CreateMutableBinding(new Value('arguments'), Value.false);
+
+        Assert(!(_temp4 instanceof AbruptCompletion), "env.CreateMutableBinding(new Value('arguments'), Value.false)" + ' returned an abrupt completion');
+
+        if (_temp4 instanceof Completion) {
+          _temp4 = _temp4.Value;
+        }
+      } // e. Call env.InitializeBinding("arguments", ao).
+
+
+      env.InitializeBinding(new Value('arguments'), ao); // f. Let parameterBindings be a new List of parameterNames with "arguments" appended.
+
+      parameterBindings = new ValueSet([...parameterNames, new Value('arguments')]);
+    } else {
+      // a. Let parameterBindings be parameterNames.
+      parameterBindings = new ValueSet(parameterNames);
+    } // 24. Let iteratorRecord be CreateListIteratorRecord(argumentsList).
+
+
+    const iteratorRecord = CreateListIteratorRecord(argumentsList); // 25. If hasDuplicates is true, then
+
+    if (hasDuplicates) {
+      let _temp5 = yield* IteratorBindingInitialization_FormalParameters(formals, iteratorRecord, Value.undefined);
+      /* c8 ignore if */
+
+
+      if (_temp5 instanceof AbruptCompletion) {
+        return _temp5;
+      }
+      /* c8 ignore if */
+
+
+      if (_temp5 instanceof Completion) {
+        _temp5 = _temp5.Value;
+      }
+    } else {
+      let _temp6 = yield* IteratorBindingInitialization_FormalParameters(formals, iteratorRecord, env);
+
+      if (_temp6 instanceof AbruptCompletion) {
+        return _temp6;
+      }
+
+      if (_temp6 instanceof Completion) {
+        _temp6 = _temp6.Value;
+      }
+    }
+
+    let varEnv; // 27. If hasParameterExpressions is false, then
+
+    if (hasParameterExpressions === false) {
+      // a. NOTE: Only a single lexical environment is needed for the parameters and top-level vars.
+      // b. Let instantiatedVarNames be a copy of the List parameterBindings.
+      const instantiatedVarNames = new ValueSet(parameterBindings); // c. For each n in varNames, do
+
+      for (const n of varNames) {
+        // i. If n is not an element of instantiatedVarNames, then
+        if (!instantiatedVarNames.has(n)) {
+          // 1. Append n to instantiatedVarNames.
+          instantiatedVarNames.add(n); // 2. Perform ! env.CreateMutableBinding(n, false).
+
+          let _temp7 = env.CreateMutableBinding(n, Value.false);
+
+          Assert(!(_temp7 instanceof AbruptCompletion), "env.CreateMutableBinding(n, Value.false)" + ' returned an abrupt completion');
+
+          if (_temp7 instanceof Completion) {
+            _temp7 = _temp7.Value;
+          }
+
+          env.InitializeBinding(n, Value.undefined);
+        }
+      } // d. Let varEnv be env.
+
+
+      varEnv = env;
+    } else {
+      // a. NOTE: A separate Environment Record is needed to ensure that closures created by expressions
+      //    in the formal parameter list do not have visibility of declarations in the function body.
+      // b. Let varEnv be NewDeclarativeEnvironment(env).
+      varEnv = NewDeclarativeEnvironment(env); // c. Set the VariableEnvironment of calleeContext to varEnv.
+
+      calleeContext.VariableEnvironment = varEnv; // d. Let instantiatedVarNames be a new empty List.
+
+      const instantiatedVarNames = new ValueSet(); // e. For each n in varNames, do
+
+      for (const n of varNames) {
+        // If n is not an element of instantiatedVarNames, then
+        if (!instantiatedVarNames.has(n)) {
+          // 1. Append n to instantiatedVarNames.
+          instantiatedVarNames.add(n); // 2. Perform ! varEnv.CreateMutableBinding(n, false).
+
+          let _temp8 = varEnv.CreateMutableBinding(n, Value.false);
+
+          Assert(!(_temp8 instanceof AbruptCompletion), "varEnv.CreateMutableBinding(n, Value.false)" + ' returned an abrupt completion');
+
+          if (_temp8 instanceof Completion) {
+            _temp8 = _temp8.Value;
+          }
+          let initialValue; // 3. If n is not an element of parameterBindings or if n is an element of functionNames, let initialValue be undefined.
+
+          if (!parameterBindings.has(n) || functionNames.has(n)) {
+            initialValue = Value.undefined;
+          } else {
+            let _temp9 = env.GetBindingValue(n, Value.false);
+
+            Assert(!(_temp9 instanceof AbruptCompletion), "env.GetBindingValue(n, Value.false)" + ' returned an abrupt completion');
+
+            if (_temp9 instanceof Completion) {
+              _temp9 = _temp9.Value;
+            }
+
+            // a. Let initialValue be ! env.GetBindingValue(n, false).
+            initialValue = _temp9;
+          } // 5. Call varEnv.InitializeBinding(n, initialValue).
+
+
+          varEnv.InitializeBinding(n, initialValue); // 6. NOTE: vars whose names are the same as a formal parameter, initially have the same value as the corresponding initialized parameter.
+        }
+      }
+    } // 29. NOTE: Annex B.3.3.1 adds additional steps at this point.
+
+
+    let lexEnv; // 30. If strict is false, then
+
+    if (strict === false) {
+      // a. Let lexEnv be NewDeclarativeEnvironment(varEnv).
+      lexEnv = NewDeclarativeEnvironment(varEnv); // b. NOTE: Non-strict functions use a separate lexical Environment Record for top-level lexical declarations
+      //    so that a direct eval can determine whether any var scoped declarations introduced by the eval code
+      //    conflict with pre-existing top-level lexically scoped declarations. This is not needed for strict functions
+      //    because a strict direct eval always places all declarations into a new Environment Record.
+    } else {
+      // a. Else, let lexEnv be varEnv.
+      lexEnv = varEnv;
+    } // 32. Set the LexicalEnvironment of calleeContext to lexEnv.
+
+
+    calleeContext.LexicalEnvironment = lexEnv; // 33. Let lexDeclarations be the LexicallyScopedDeclarations of code.
+
+    const lexDeclarations = LexicallyScopedDeclarations(code); // 34. For each element d in lexDeclarations, do
+
+    for (const d of lexDeclarations) {
+      // a. NOTE: A lexically declared name cannot be the same as a function/generator declaration, formal
+      //    parameter, or a var name. Lexically declared names are only instantiated here but not initialized.
+      // b. For each element dn of the BoundNames of d, do
+      for (const dn of BoundNames(d)) {
+        // i. If IsConstantDeclaration of d is true, then
+        if (IsConstantDeclaration(d)) {
+          let _temp10 = lexEnv.CreateImmutableBinding(dn, Value.true);
+
+          Assert(!(_temp10 instanceof AbruptCompletion), "lexEnv.CreateImmutableBinding(dn, Value.true)" + ' returned an abrupt completion');
+
+          if (_temp10 instanceof Completion) {
+            _temp10 = _temp10.Value;
+          }
+        } else {
+          let _temp11 = lexEnv.CreateMutableBinding(dn, Value.false);
+
+          Assert(!(_temp11 instanceof AbruptCompletion), "lexEnv.CreateMutableBinding(dn, Value.false)" + ' returned an abrupt completion');
+
+          if (_temp11 instanceof Completion) {
+            _temp11 = _temp11.Value;
+          }
+        }
+      }
+    } // 35. For each Parse Node f in functionsToInitialize, do
+
+
+    for (const f of functionsToInitialize) {
+      // a. Let fn be the sole element of the BoundNames of f.
+      const fn = BoundNames(f)[0]; // b. Let fo be InstantiateFunctionObject of f with argument lexEnv.
+
+      const fo = InstantiateFunctionObject(f, lexEnv); // c. Perform ! varEnv.SetMutableBinding(fn, fo, false).
+
+      let _temp12 = varEnv.SetMutableBinding(fn, fo, Value.false);
+
+      Assert(!(_temp12 instanceof AbruptCompletion), "varEnv.SetMutableBinding(fn, fo, Value.false)" + ' returned an abrupt completion');
+
+      if (_temp12 instanceof Completion) {
+        _temp12 = _temp12.Value;
+      }
+    } // 36. Return NormalCompletion(empty).
+
+
+    return NormalCompletion(undefined);
+  }
+
+  //   FunctionStatementList : [empty]
+  //
+  // (implicit)
+  //   FunctionStatementList : StatementList
+
+  function Evaluate_FunctionStatementList(FunctionStatementList) {
+    return Evaluate_StatementList(FunctionStatementList);
+  }
+
+  // FormalParameters :
+  //   [empty]
+  //   FormalParameterList `,` FunctionRestParameter
+
+  function* IteratorBindingInitialization_FormalParameters(FormalParameters, iteratorRecord, environment) {
+    if (FormalParameters.length === 0) {
+      // 1. Return NormalCompletion(empty).
+      return NormalCompletion(undefined);
+    }
+
+    for (const FormalParameter of FormalParameters.slice(0, -1)) {
+      let _temp = yield* IteratorBindingInitialization_FormalParameter(FormalParameter, iteratorRecord, environment);
+      /* c8 ignore if */
+
+
+      if (_temp instanceof AbruptCompletion) {
+        return _temp;
+      }
+      /* c8 ignore if */
+
+
+      if (_temp instanceof Completion) {
+        _temp = _temp.Value;
+      }
+    }
+
+    const last = FormalParameters[FormalParameters.length - 1];
+
+    if (last.type === 'BindingRestElement') {
+      return yield* IteratorBindingInitialization_FunctionRestParameter(last, iteratorRecord, environment);
+    }
+
+    return yield* IteratorBindingInitialization_FormalParameter(last, iteratorRecord, environment);
+  } // FormalParameter : BindingElement
+
+  function IteratorBindingInitialization_FormalParameter(BindingElement, iteratorRecord, environment) {
+    return IteratorBindingInitialization_BindingElement(BindingElement, iteratorRecord, environment);
+  } // FunctionRestParameter : BindingRestElement
+
+
+  function IteratorBindingInitialization_FunctionRestParameter(FunctionRestParameter, iteratorRecord, environment) {
+    return IteratorBindingInitialization_BindingRestElement(FunctionRestParameter, iteratorRecord, environment);
+  } // BindingElement :
+  //   SingleNameBinding
+  //   BindingPattern
+
+
+  function IteratorBindingInitialization_BindingElement(BindingElement, iteratorRecord, environment) {
+    if (BindingElement.BindingPattern) {
+      return IteratorBindingInitialization_BindingPattern(BindingElement, iteratorRecord, environment);
+    }
+
+    return IteratorBindingInitialization_SingleNameBinding(BindingElement, iteratorRecord, environment);
+  } // SingleNameBinding : BindingIdentifier Initializer?
+
+
+  function* IteratorBindingInitialization_SingleNameBinding({
+    BindingIdentifier,
+    Initializer
+  }, iteratorRecord, environment) {
+    // 1. Let bindingId be StringValue of BindingIdentifier.
+    const bindingId = StringValue$1(BindingIdentifier); // 2. Let lhs be ? ResolveBinding(bindingId, environment).
+
+    let _temp2 = ResolveBinding(bindingId, environment, BindingIdentifier.strict);
+
+    if (_temp2 instanceof AbruptCompletion) {
+      return _temp2;
+    }
+
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
+    }
+
+    const lhs = _temp2;
+    let v; // 3. If iteratorRecord.[[Done]] is false, then
+
+    if (iteratorRecord.Done === Value.false) {
+      // a. Let next be IteratorStep(iteratorRecord).
+      let next = IteratorStep(iteratorRecord); // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
+
+      if (next instanceof AbruptCompletion) {
+        iteratorRecord.Done = Value.true;
+      } // c. ReturnIfAbrupt(next).
+
+
+      /* c8 ignore if */
+      if (next instanceof AbruptCompletion) {
+        return next;
+      }
+      /* c8 ignore if */
+
+
+      if (next instanceof Completion) {
+        next = next.Value;
+      }
+
+      if (next === Value.false) {
+        iteratorRecord.Done = Value.true;
+      } else {
+        // e. Else,
+        // i. Let v be IteratorValue(next).
+        v = IteratorValue(next); // ii. If v is an abrupt completion, set iteratorRecord.[[Done]] to true.
+
+        if (v instanceof AbruptCompletion) {
+          iteratorRecord.Done = Value.true;
+        } // iii. ReturnIfAbrupt(v).
+
+
+        if (v instanceof AbruptCompletion) {
+          return v;
+        }
+
+        if (v instanceof Completion) {
+          v = v.Value;
+        }
+      }
+    } // 4. If iteratorRecord.[[Done]] is true, let v be undefined.
+
+
+    if (iteratorRecord.Done === Value.true) {
+      v = Value.undefined;
+    } // 5. If Initializer is present and v is undefined, then
+
+
+    if (Initializer && v === Value.undefined) {
+      if (IsAnonymousFunctionDefinition(Initializer)) {
+        v = yield* NamedEvaluation(Initializer, bindingId);
+      } else {
+        const defaultValue = yield* Evaluate(Initializer);
+
+        let _temp3 = GetValue(defaultValue);
+
+        if (_temp3 instanceof AbruptCompletion) {
+          return _temp3;
+        }
+
+        if (_temp3 instanceof Completion) {
+          _temp3 = _temp3.Value;
+        }
+
+        v = _temp3;
+      }
+    } // 6. If environment is undefined, return ? PutValue(lhs, v).
+
+
+    if (environment === Value.undefined) {
+      return PutValue(lhs, v);
+    } // 7. Return InitializeReferencedBinding(lhs, v).
+
+
+    return InitializeReferencedBinding(lhs, v);
+  } // BindingRestElement :
+  //   `...` BindingIdentifier
+  //   `...` BindingPattern
+
+
+  function* IteratorBindingInitialization_BindingRestElement({
+    BindingIdentifier,
+    BindingPattern
+  }, iteratorRecord, environment) {
+    if (BindingIdentifier) {
+      let _temp4 = ResolveBinding(StringValue$1(BindingIdentifier), environment, BindingIdentifier.strict);
+
+      if (_temp4 instanceof AbruptCompletion) {
+        return _temp4;
+      }
+
+      if (_temp4 instanceof Completion) {
+        _temp4 = _temp4.Value;
+      }
+
+      // 1. Let lhs be ? ResolveBinding(StringValue of BindingIdentifier, environment).
+      const lhs = _temp4; // 2. Let A be ! ArrayCreate(0).
+
+      let _temp5 = ArrayCreate(0);
+
+      Assert(!(_temp5 instanceof AbruptCompletion), "ArrayCreate(0)" + ' returned an abrupt completion');
+      /* c8 ignore if */
+
+      if (_temp5 instanceof Completion) {
+        _temp5 = _temp5.Value;
+      }
+
+      const A = _temp5; // 3. Let n be 0.
+
+      let n = 0; // 4. Repeat,
+
+      while (true) {
+        let next; // a. If iteratorRecord.[[Done]] is false, then
+
+        if (iteratorRecord.Done === Value.false) {
+          // i. Let next be IteratorStep(iteratorRecord).
+          next = IteratorStep(iteratorRecord); // ii. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
+
+          if (next instanceof AbruptCompletion) {
+            iteratorRecord.Done = Value.true;
+          } // iii. ReturnIfAbrupt(next).
+
+
+          if (next instanceof AbruptCompletion) {
+            return next;
+          }
+
+          if (next instanceof Completion) {
+            next = next.Value;
+          }
+
+          if (next === Value.false) {
+            iteratorRecord.Done = Value.true;
+          }
+        } // b. If iteratorRecord.[[Done]] is true, then
+
+
+        if (iteratorRecord.Done === Value.true) {
+          // i. If environment is undefined, return ? PutValue(lhs, A).
+          if (environment === Value.undefined) {
+            return PutValue(lhs, A);
+          } // ii. Return InitializeReferencedBinding(lhs, A).
+
+
+          return InitializeReferencedBinding(lhs, A);
+        } // c. Let nextValue be IteratorValue(next).
+
+
+        let nextValue = IteratorValue(next); // d. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
+
+        if (nextValue instanceof AbruptCompletion) {
+          iteratorRecord.Done = Value.true;
+        } // e. ReturnIfAbrupt(nextValue).
+
+
+        if (nextValue instanceof AbruptCompletion) {
+          return nextValue;
+        }
+
+        if (nextValue instanceof Completion) {
+          nextValue = nextValue.Value;
+        }
+
+        let _temp7 = ToString(F(n));
+
+        Assert(!(_temp7 instanceof AbruptCompletion), "ToString(F(n))" + ' returned an abrupt completion');
+
+        if (_temp7 instanceof Completion) {
+          _temp7 = _temp7.Value;
+        }
+
+        let _temp6 = CreateDataPropertyOrThrow(A, _temp7, nextValue);
+
+        Assert(!(_temp6 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, X(ToString(F(n))), nextValue)" + ' returned an abrupt completion');
+
+        if (_temp6 instanceof Completion) {
+          _temp6 = _temp6.Value;
+        }
+
+        n += 1;
+      }
+    } else {
+      let _temp8 = ArrayCreate(0);
+
+      Assert(!(_temp8 instanceof AbruptCompletion), "ArrayCreate(0)" + ' returned an abrupt completion');
+
+      if (_temp8 instanceof Completion) {
+        _temp8 = _temp8.Value;
+      }
+
+      // 1. Let A be ! ArrayCreate(0).
+      const A = _temp8; // 2. Let n be 0.
+
+      let n = 0; // 3. Repeat,
+
+      while (true) {
+        let next; // a. If iteratorRecord.[[Done]] is false, then
+
+        if (iteratorRecord.Done === Value.false) {
+          // i. Let next be IteratorStep(iteratorRecord).
+          next = IteratorStep(iteratorRecord); // ii. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
+
+          if (next instanceof AbruptCompletion) {
+            iteratorRecord.Done = Value.true;
+          } // iii. ReturnIfAbrupt(next).
+
+
+          if (next instanceof AbruptCompletion) {
+            return next;
+          }
+
+          if (next instanceof Completion) {
+            next = next.Value;
+          }
+
+          if (next === Value.false) {
+            iteratorRecord.Done = Value.true;
+          }
+        } // b. If iteratorRecord.[[Done]] is true, then
+
+
+        if (iteratorRecord.Done === Value.true) {
+          // i. Return the result of performing BindingInitialization of BindingPattern with A and environment as the arguments.
+          return yield* BindingInitialization(BindingPattern, A, environment);
+        } // c. Let nextValue be IteratorValue(next).
+
+
+        let nextValue = IteratorValue(next); // d. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
+
+        if (nextValue instanceof AbruptCompletion) {
+          iteratorRecord.Done = Value.true;
+        } // e. ReturnIfAbrupt(nextValue).
+
+
+        if (nextValue instanceof AbruptCompletion) {
+          return nextValue;
+        }
+
+        if (nextValue instanceof Completion) {
+          nextValue = nextValue.Value;
+        }
+
+        let _temp10 = ToString(F(n));
+
+        Assert(!(_temp10 instanceof AbruptCompletion), "ToString(F(n))" + ' returned an abrupt completion');
+
+        if (_temp10 instanceof Completion) {
+          _temp10 = _temp10.Value;
+        }
+
+        let _temp9 = CreateDataPropertyOrThrow(A, _temp10, nextValue);
+
+        Assert(!(_temp9 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, X(ToString(F(n))), nextValue)" + ' returned an abrupt completion');
+
+        if (_temp9 instanceof Completion) {
+          _temp9 = _temp9.Value;
+        }
+
+        n += 1;
+      }
+    }
+  }
+
+  function* IteratorBindingInitialization_BindingPattern({
+    BindingPattern,
+    Initializer
+  }, iteratorRecord, environment) {
+    let v; // 1. If iteratorRecord.[[Done]] is false, then
+
+    if (iteratorRecord.Done === Value.false) {
+      // a. Let next be IteratorStep(iteratorRecord).
+      let next = IteratorStep(iteratorRecord); // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
+
+      if (next instanceof AbruptCompletion) {
+        iteratorRecord.Done = Value.true;
+      } // c. ReturnIfAbrupt(next).
+
+
+      if (next instanceof AbruptCompletion) {
+        return next;
+      }
+
+      if (next instanceof Completion) {
+        next = next.Value;
+      }
+
+      if (next === Value.false) {
+        iteratorRecord.Done = Value.true;
+      } else {
+        // e. Else,
+        // i. Let v be IteratorValue(next).
+        v = IteratorValue(next); // ii. If v is an abrupt completion, set iteratorRecord.[[Done]] to true.
+
+        if (v instanceof AbruptCompletion) {
+          iteratorRecord.Done = Value.true;
+        } // iii. ReturnIfAbrupt(v).
+
+
+        if (v instanceof AbruptCompletion) {
+          return v;
+        }
+
+        if (v instanceof Completion) {
+          v = v.Value;
+        }
+      }
+    } // 2. If iteratorRecord.[[Done]] is true, let v be undefined.
+
+
+    if (iteratorRecord.Done === Value.true) {
+      v = Value.undefined;
+    } // 3. If Initializer is present and v is undefined, then
+
+
+    if (Initializer && v === Value.undefined) {
+      // a. Let defaultValue be the result of evaluating Initializer.
+      const defaultValue = yield* Evaluate(Initializer); // b. Set v to ? GetValue(defaultValue).
+
+      let _temp11 = GetValue(defaultValue);
+
+      if (_temp11 instanceof AbruptCompletion) {
+        return _temp11;
+      }
+
+      if (_temp11 instanceof Completion) {
+        _temp11 = _temp11.Value;
+      }
+
+      v = _temp11;
+    } // 4. Return the result of performing BindingInitialization of BindingPattern with v and environment as the arguments.
+
+
+    return yield* BindingInitialization(BindingPattern, v, environment);
+  }
+
+  function IteratorDestructuringAssignmentEvaluation$1(node, iteratorRecord) {
+    Assert(node.type === 'Elision', "node.type === 'Elision'"); // 1. If iteratorRecord.[[Done]] is false, then
+
+    if (iteratorRecord.Done === Value.false) {
+      // a. Let next be IteratorStep(iteratorRecord).
+      let next = IteratorStep(iteratorRecord); // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
+
+      if (next instanceof AbruptCompletion) {
+        iteratorRecord.Done = Value.true;
+      } // c. ReturnIfAbrupt(next).
+
+
+      if (next instanceof AbruptCompletion) {
+        return next;
+      }
+
+      if (next instanceof Completion) {
+        next = next.Value;
+      }
+
+      if (next === Value.false) {
+        iteratorRecord.Done = Value.true;
+      }
+    } // 2. Return NormalCompletion(empty).
+
+
+    return NormalCompletion(undefined);
+  }
+
+  function* IteratorBindingInitialization_ArrayBindingPattern({
+    BindingElementList,
+    BindingRestElement
+  }, iteratorRecord, environment) {
+    for (const BindingElement of BindingElementList) {
+      if (BindingElement.type === 'Elision') {
+        let _temp12 = IteratorDestructuringAssignmentEvaluation$1(BindingElement, iteratorRecord);
+
+        if (_temp12 instanceof AbruptCompletion) {
+          return _temp12;
+        }
+
+        if (_temp12 instanceof Completion) {
+          _temp12 = _temp12.Value;
+        }
+      } else {
+        let _temp13 = yield* IteratorBindingInitialization_BindingElement(BindingElement, iteratorRecord, environment);
+
+        if (_temp13 instanceof AbruptCompletion) {
+          return _temp13;
+        }
+
+        if (_temp13 instanceof Completion) {
+          _temp13 = _temp13.Value;
+        }
+      }
+    }
+
+    if (BindingRestElement) {
+      return yield* IteratorBindingInitialization_BindingRestElement(BindingRestElement, iteratorRecord, environment);
+    }
+
+    return NormalCompletion(undefined);
+  }
+
+  //  ReturnStatement :
+  //    `return` `;`
+  //    `return` Expression `;`
+
+  function* Evaluate_ReturnStatement({
+    Expression
+  }) {
+    if (!Expression) {
+      // 1. Return Completion { [[Type]]: return, [[Value]]: undefined, [[Target]]: empty }.
+      return new Completion({
+        Type: 'return',
+        Value: Value.undefined,
+        Target: undefined
+      });
+    } // 1. Let exprRef be the result of evaluating Expression.
+
+
+    const exprRef = yield* Evaluate(Expression); // 1. Let exprValue be ? GetValue(exprRef).
+
+    let _temp = GetValue(exprRef);
+    /* c8 ignore if */
+
+
+    if (_temp instanceof AbruptCompletion) {
+      return _temp;
+    }
+    /* c8 ignore if */
+
+
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    let exprValue = _temp; // 1. If ! GetGeneratorKind() is async, set exprValue to ? Await(exprValue).
+
+    let _temp2 = GetGeneratorKind();
+
+    Assert(!(_temp2 instanceof AbruptCompletion), "GetGeneratorKind()" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
+    }
+
+    if (_temp2 === 'async') {
+      let _temp3 = yield* Await(exprValue);
+
+      if (_temp3 instanceof AbruptCompletion) {
+        return _temp3;
+      }
+
+      if (_temp3 instanceof Completion) {
+        _temp3 = _temp3.Value;
+      }
+
+      exprValue = _temp3;
+    } // 1. Return Completion { [[Type]]: return, [[Value]]: exprValue, [[Target]]: empty }.
+
+
+    return new Completion({
+      Type: 'return',
+      Value: exprValue,
+      Target: undefined
+    });
+  }
+
+  function* Evaluate_ParenthesizedExpression({
+    Expression
+  }) {
+    // 1. Return the result of evaluating Expression. This may be of type Reference.
+    return yield* Evaluate(Expression);
+  }
+
+  //   MemberExpression : MemberExpression `[` Expression `]`
+  //   CallExpression : CallExpression `[` Expression `]`
+
+  function* Evaluate_MemberExpression_Expression({
+    strict,
+    MemberExpression,
+    Expression
+  }) {
+    // 1. Let baseReference be the result of evaluating |MemberExpression|.
+    const baseReference = yield* Evaluate(MemberExpression); // 2. Let baseValue be ? GetValue(baseReference).
+
+    let _temp = GetValue(baseReference);
+    /* c8 ignore if */
+
+
+    if (_temp instanceof AbruptCompletion) {
+      return _temp;
+    }
+    /* c8 ignore if */
+
+
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    const baseValue = _temp; // 3. If the code matched by this |MemberExpression| is strict mode code, let strict be true; else let strict be false.
+    // 4. Return ? EvaluatePropertyAccessWithExpressionKey(baseValue, |Expression|, strict).
+
+    return yield* EvaluatePropertyAccessWithExpressionKey(baseValue, Expression, strict);
+  } // 12.3.2.1 #sec-property-accessors-runtime-semantics-evaluation
+  //   MemberExpression : MemberExpression `.` IdentifierName
+  //   CallExpression : CallExpression `.` IdentifierName
+
+
+  Evaluate_MemberExpression_Expression.section = 'https://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation';
+
+  function* Evaluate_MemberExpression_IdentifierName({
+    strict,
+    MemberExpression,
+    IdentifierName
+  }) {
+    // 1. Let baseReference be the result of evaluating |MemberExpression|.
+    const baseReference = yield* Evaluate(MemberExpression); // 2. Let baseValue be ? GetValue(baseReference).
+
+    let _temp2 = GetValue(baseReference);
+
+    if (_temp2 instanceof AbruptCompletion) {
+      return _temp2;
+    }
+
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
+    }
+
+    const baseValue = _temp2; // 3. If the code matched by this |MemberExpression| is strict mode code, let strict be true; else let strict be false.
+    // 4. Return ? EvaluatePropertyAccessWithIdentifierKey(baseValue, |IdentifierName|, strict).
+
+    return EvaluatePropertyAccessWithIdentifierKey(baseValue, IdentifierName, strict);
+  } // 12.3.2.1 #sec-property-accessors-runtime-semantics-evaluation
+  //   MemberExpression :
+  //     MemberExpression `[` Expression `]`
+  //     MemberExpression `.` IdentifierName
+  //   CallExpression :
+  //     CallExpression `[` Expression `]`
+  //     CallExpression `.` IdentifierName
+
+
+  Evaluate_MemberExpression_IdentifierName.section = 'https://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation';
+  function Evaluate_MemberExpression(MemberExpression) {
+    switch (true) {
+      case !!MemberExpression.Expression:
+        return Evaluate_MemberExpression_Expression(MemberExpression);
+
+      case !!MemberExpression.IdentifierName:
+        return Evaluate_MemberExpression_IdentifierName(MemberExpression);
+
+      /*c8 ignore next*/
+      default:
+        throw new OutOfRange$1('Evaluate_MemberExpression', MemberExpression);
+    }
+  }
+
+  function* EvaluatePropertyAccessWithExpressionKey(baseValue, expression, strict) {
+    // 1. Let propertyNameReference be the result of evaluating expression.
+    const propertyNameReference = yield* Evaluate(expression); // 2. Let propertyNameValue be ? GetValue(propertyNameReference).
+
+    let _temp = GetValue(propertyNameReference);
+    /* c8 ignore if */
+
+
+    if (_temp instanceof AbruptCompletion) {
+      return _temp;
+    }
+    /* c8 ignore if */
+
+
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    const propertyNameValue = _temp; // 3. Let bv be ? RequireObjectCoercible(baseValue).
+
+    let _temp2 = RequireObjectCoercible(baseValue);
+
+    if (_temp2 instanceof AbruptCompletion) {
+      return _temp2;
+    }
+
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
+    }
+
+    const bv = _temp2; // 4. Let propertyKey be ? ToPropertyKey(propertyNameValue).
+
+    let _temp3 = ToPropertyKey(propertyNameValue);
+
+    if (_temp3 instanceof AbruptCompletion) {
+      return _temp3;
+    }
+
+    if (_temp3 instanceof Completion) {
+      _temp3 = _temp3.Value;
+    }
+
+    const propertyKey = _temp3; // 5. Return a value of type Reference whose base value component is bv, whose
+    //    referenced name component is propertyKey, and whose strict reference flag is strict.
+
+    return new Reference({
+      BaseValue: bv,
+      ReferencedName: propertyKey,
+      StrictReference: strict ? Value.true : Value.false
+    });
+  } // #sec-evaluate-identifier-key-property-access
+
+  function EvaluatePropertyAccessWithIdentifierKey(baseValue, identifierName, strict) {
+    // 1. Assert: identifierName is an IdentifierName.
+    Assert(identifierName.type === 'IdentifierName', "identifierName.type === 'IdentifierName'"); // 2. Let bv be ? RequireObjectCoercible(baseValue).
+
+    let _temp4 = RequireObjectCoercible(baseValue);
+
+    if (_temp4 instanceof AbruptCompletion) {
+      return _temp4;
+    }
+
+    if (_temp4 instanceof Completion) {
+      _temp4 = _temp4.Value;
+    }
+
+    const bv = _temp4; // 3. Let propertyNameString be StringValue of IdentifierName
+
+    const propertyNameString = StringValue$1(identifierName); // 4. Return a value of type Reference whose base value component is bv, whose
+    //    referenced name component is propertyNameString, and whose strict reference flag is strict.
+
+    return new Reference({
+      BaseValue: bv,
+      ReferencedName: propertyNameString,
+      StrictReference: strict ? Value.true : Value.false
+    });
+  }
+
+  //   LexicalBinding :
+  //     BindingIdentifier
+  //     BindingIdentifier Initializer
+
+  function* Evaluate_LexicalBinding_BindingIdentifier({
+    BindingIdentifier,
+    Initializer,
+    strict
+  }) {
+    if (Initializer) {
+      // 1. Let bindingId be StringValue of BindingIdentifier.
+      const bindingId = StringValue$1(BindingIdentifier); // 2. Let lhs be ResolveBinding(bindingId).
+
+      let _temp = ResolveBinding(bindingId, undefined, strict);
+
+      Assert(!(_temp instanceof AbruptCompletion), "ResolveBinding(bindingId, undefined, strict)" + ' returned an abrupt completion');
+      /* c8 ignore if */
+
+      if (_temp instanceof Completion) {
+        _temp = _temp.Value;
+      }
+
+      const lhs = _temp;
+      let value; // 3. If IsAnonymousFunctionDefinition(Initializer) is true, then
+
+      if (IsAnonymousFunctionDefinition(Initializer)) {
+        // a. Let value be NamedEvaluation of Initializer with argument bindingId.
+        value = yield* NamedEvaluation(Initializer, bindingId);
+      } else {
+        // 4. Else,
+        // a. Let rhs be the result of evaluating Initializer.
+        const rhs = yield* Evaluate(Initializer); // b. Let value be ? GetValue(rhs).
+
+        let _temp2 = GetValue(rhs);
+        /* c8 ignore if */
+
+
+        if (_temp2 instanceof AbruptCompletion) {
+          return _temp2;
+        }
+        /* c8 ignore if */
+
+
+        if (_temp2 instanceof Completion) {
+          _temp2 = _temp2.Value;
+        }
+
+        value = _temp2;
+      } // 5. Return InitializeReferencedBinding(lhs, value).
+
+
+      return InitializeReferencedBinding(lhs, value);
+    } else {
+      // 1. Let lhs be ResolveBinding(StringValue of BindingIdentifier).
+      const lhs = ResolveBinding(StringValue$1(BindingIdentifier), undefined, strict); // 2. Return InitializeReferencedBinding(lhs, undefined).
+
+      return InitializeReferencedBinding(lhs, Value.undefined);
+    }
+  } // #sec-let-and-const-declarations-runtime-semantics-evaluation
+  //   LexicalBinding : BindingPattern Initializer
+
+
+  Evaluate_LexicalBinding_BindingIdentifier.section = 'https://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation';
+
+  function* Evaluate_LexicalBinding_BindingPattern(LexicalBinding) {
+    const {
+      BindingPattern,
+      Initializer
+    } = LexicalBinding;
+    const rhs = yield* Evaluate(Initializer);
+
+    let _temp3 = GetValue(rhs);
+
+    if (_temp3 instanceof AbruptCompletion) {
+      return _temp3;
+    }
+
+    if (_temp3 instanceof Completion) {
+      _temp3 = _temp3.Value;
+    }
+
+    const value = _temp3;
+    const env = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment;
+    return yield* BindingInitialization(BindingPattern, value, env);
+  }
+
+  Evaluate_LexicalBinding_BindingPattern.section = 'https://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation';
+  function* Evaluate_LexicalBinding(LexicalBinding) {
+    switch (true) {
+      case !!LexicalBinding.BindingIdentifier:
+        return yield* Evaluate_LexicalBinding_BindingIdentifier(LexicalBinding);
+
+      case !!LexicalBinding.BindingPattern:
+        return yield* Evaluate_LexicalBinding_BindingPattern(LexicalBinding);
+
+      /*c8 ignore next*/
+      default:
+        throw new OutOfRange$1('Evaluate_LexicalBinding', LexicalBinding);
+    }
+  } // #sec-let-and-const-declarations-runtime-semantics-evaluation
+  //   BindingList : BindingList `,` LexicalBinding
+  //
+  // (implicit)
+  //   BindingList : LexicalBinding
+
+  function* Evaluate_BindingList(BindingList) {
+    // 1. Let next be the result of evaluating BindingList.
+    // 2. ReturnIfAbrupt(next).
+    // 3. Return the result of evaluating LexicalBinding.
+    let next;
+
+    for (const LexicalBinding of BindingList) {
+      next = yield* Evaluate_LexicalBinding(LexicalBinding);
+
+      /* c8 ignore if */
+      if (next instanceof AbruptCompletion) {
+        return next;
+      }
+      /* c8 ignore if */
+
+
+      if (next instanceof Completion) {
+        next = next.Value;
+      }
+    }
+
+    return next;
+  } // #sec-let-and-const-declarations-runtime-semantics-evaluation
+  //   LexicalDeclaration : LetOrConst BindingList `;`
+
+  function* Evaluate_LexicalDeclaration({
+    BindingList
+  }) {
+    // 1. Let next be the result of evaluating BindingList.
+    let next = yield* Evaluate_BindingList(BindingList); // 2. ReturnIfAbrupt(next).
+
+    if (next instanceof AbruptCompletion) {
+      return next;
+    }
+
+    if (next instanceof Completion) {
+      next = next.Value;
+    }
+
+    return NormalCompletion(undefined);
+  }
+
+  //   ObjectLiteral :
+  //     `{` `}`
+  //     `{` PropertyDefinitionList `}`
+  //     `{` PropertyDefinitionList `,` `}`
+
+  function* Evaluate_ObjectLiteral({
+    PropertyDefinitionList
+  }) {
+    // 1. Let obj be OrdinaryObjectCreate(%Object.prototype%).
+    const obj = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%Object.prototype%'));
+
+    if (PropertyDefinitionList.length === 0) {
+      return obj;
+    } // 2. Perform ? PropertyDefinitionEvaluation of PropertyDefinitionList with arguments obj and true.
+
+
+    let _temp = yield* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList, obj, Value.true);
+    /* c8 ignore if */
+
+
+    if (_temp instanceof AbruptCompletion) {
+      return _temp;
+    }
+    /* c8 ignore if */
+
+
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    return obj;
+  }
+
+  //   PropertyDefinitionList :
+  //     PropertyDefinitionList `,` PropertyDefinition
+
+  function* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList, object, enumerable) {
+    let lastReturn;
+
+    for (const PropertyDefinition of PropertyDefinitionList) {
+      let _temp = yield* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, object, enumerable);
+      /* c8 ignore if */
+
+
+      if (_temp instanceof AbruptCompletion) {
+        return _temp;
+      }
+      /* c8 ignore if */
+
+
+      if (_temp instanceof Completion) {
+        _temp = _temp.Value;
+      }
+
+      lastReturn = _temp;
+    }
+
+    return lastReturn;
+  } // PropertyDefinition :
+  //   `...` AssignmentExpression
+  //   IdentifierReference
+  //   PropertyName `:` AssignmentExpression
+
+  function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, object, enumerable) {
+    var _surroundingAgent$run, _surroundingAgent$run2, _surroundingAgent$run3;
+
+    switch (PropertyDefinition.type) {
+      case 'IdentifierReference':
+        return yield* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(PropertyDefinition, object, enumerable);
+
+      case 'PropertyDefinition':
+        break;
+
+      case 'MethodDefinition':
+        return yield* PropertyDefinitionEvaluation_MethodDefinition(PropertyDefinition, object, enumerable);
+
+      case 'GeneratorMethod':
+        return yield* PropertyDefinitionEvaluation_GeneratorMethod(PropertyDefinition, object, enumerable);
+
+      case 'AsyncMethod':
+        return yield* PropertyDefinitionEvaluation_AsyncMethod(PropertyDefinition, object, enumerable);
+
+      case 'AsyncGeneratorMethod':
+        return yield* PropertyDefinitionEvaluation_AsyncGeneratorMethod(PropertyDefinition, object, enumerable);
+
+      /*c8 ignore next*/
+      default:
+        throw new OutOfRange$1('PropertyDefinitionEvaluation_PropertyDefinition', PropertyDefinition);
+    } // PropertyDefinition :
+    //   PropertyName `:` AssignmentExpression
+    //   `...` AssignmentExpression
+
+
+    const {
+      PropertyName,
+      AssignmentExpression
+    } = PropertyDefinition;
+
+    if (!PropertyName) {
+      // 1. Let exprValue be the result of evaluating AssignmentExpression.
+      const exprValue = yield* Evaluate(AssignmentExpression); // 2. Let fromValue be ? GetValue(exprValue).
+
+      let _temp2 = GetValue(exprValue);
+
+      if (_temp2 instanceof AbruptCompletion) {
+        return _temp2;
+      }
+
+      if (_temp2 instanceof Completion) {
+        _temp2 = _temp2.Value;
+      }
+
+      const fromValue = _temp2; // 3. Let excludedNames be a new empty List.
+
+      const excludedNames = []; // 4. Return ? CopyDataProperties(object, fromValue, excludedNames).
+
+      return CopyDataProperties(object, fromValue, excludedNames);
+    } // 1. Let propKey be the result of evaluating PropertyName.
+
+
+    let propKey = yield* Evaluate_PropertyName(PropertyName); // 2. ReturnIfAbrupt(propKey).
+
+    /* c8 ignore if */
+    if (propKey instanceof AbruptCompletion) {
+      return propKey;
+    }
+    /* c8 ignore if */
+
+
+    if (propKey instanceof Completion) {
+      propKey = propKey.Value;
+    }
+
+    let isProtoSetter;
+
+    if ((_surroundingAgent$run = exports.surroundingAgent.runningExecutionContext) !== null && _surroundingAgent$run !== void 0 && (_surroundingAgent$run2 = _surroundingAgent$run.HostDefined) !== null && _surroundingAgent$run2 !== void 0 && (_surroundingAgent$run3 = _surroundingAgent$run2[kInternal]) !== null && _surroundingAgent$run3 !== void 0 && _surroundingAgent$run3.json) {
+      isProtoSetter = false;
+    } else if (!IsComputedPropertyKey(PropertyName) && propKey.stringValue() === '__proto__') {
+      // 3. Else, If _propKey_ is the String value *"__proto__"* and if IsComputedPropertyKey(|PropertyName|) is *false*,
+      // a. Let isProtoSetter be true.
+      isProtoSetter = true;
+    } else {
+      // 4. Else,
+      // a. Let isProtoSetter be false.
+      isProtoSetter = false;
+    }
+
+    let propValue; // 5. If IsAnonymousFunctionDefinition(AssignmentExpression) is true and isProtoSetter is false, then
+
+    if (IsAnonymousFunctionDefinition(AssignmentExpression) && !isProtoSetter) {
+      // a. Let propValue be NamedEvaluation of AssignmentExpression with argument propKey.
+      propValue = yield* NamedEvaluation(AssignmentExpression, propKey);
+    } else {
+      // 6. Else,
+      // a. Let exprValueRef be the result of evaluating AssignmentExpression.
+      const exprValueRef = yield* Evaluate(AssignmentExpression); // b. Let propValue be ? GetValue(exprValueRef).
+
+      let _temp3 = GetValue(exprValueRef);
+
+      if (_temp3 instanceof AbruptCompletion) {
+        return _temp3;
+      }
+
+      if (_temp3 instanceof Completion) {
+        _temp3 = _temp3.Value;
+      }
+
+      propValue = _temp3;
+    } // 7. If isProtoSetter is true, then
+
+
+    if (isProtoSetter) {
+      // a. If Type(propValue) is either Object or Null, then
+      if (Type(propValue) === 'Object' || Type(propValue) === 'Null') {
+        // i. Return object.[[SetPrototypeOf]](propValue).
+        return object.SetPrototypeOf(propValue);
+      } // b. Return NormalCompletion(empty).
+
+
+      return NormalCompletion(undefined);
+    } // 8. Assert: enumerable is true.
+
+
+    Assert(enumerable === Value.true, "enumerable === Value.true"); // 9. Assert: object is an ordinary, extensible object with no non-configurable properties.
+    // 10. Return ! CreateDataPropertyOrThrow(object, propKey, propValue).
+
+    let _temp4 = CreateDataPropertyOrThrow(object, propKey, propValue);
+
+    Assert(!(_temp4 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(object, propKey, propValue)" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    if (_temp4 instanceof Completion) {
+      _temp4 = _temp4.Value;
+    }
+
+    return _temp4;
+  } // PropertyDefinition : IdentifierReference
+
+
+  function* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(IdentifierReference, object, enumerable) {
+    // 1. Let propName be StringValue of IdentifierReference.
+    const propName = StringValue$1(IdentifierReference); // 2. Let exprValue be the result of evaluating IdentifierReference.
+
+    const exprValue = yield* Evaluate(IdentifierReference); // 3. Let propValue be ? GetValue(exprValue).
+
+    let _temp5 = GetValue(exprValue);
+
+    if (_temp5 instanceof AbruptCompletion) {
+      return _temp5;
+    }
+
+    if (_temp5 instanceof Completion) {
+      _temp5 = _temp5.Value;
+    }
+
+    const propValue = _temp5; // 4. Assert: enumerable is true.
+
+    Assert(enumerable === Value.true, "enumerable === Value.true"); // 5. Assert: object is an ordinary, extensible object with no non-configurable properties.
+    // 6. Return ! CreateDataPropertyOrThrow(object, propName, propValue).
+
+    let _temp6 = CreateDataPropertyOrThrow(object, propName, propValue);
+
+    Assert(!(_temp6 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(object, propName, propValue)" + ' returned an abrupt completion');
+
+    if (_temp6 instanceof Completion) {
+      _temp6 = _temp6.Value;
+    }
+
+    return _temp6;
+  } // MethodDefinition :
+  //   PropertyName `(` UniqueFormalParameters `)` `{` FunctionBody `}`
+  //   `get` PropertyName `(` `)` `{` FunctionBody `}`
+  //   `set` PropertyName `(` PropertySetParameterList `)` `{` FunctionBody `}`
+
+
+  function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition, object, enumerable) {
+    switch (true) {
+      case !!MethodDefinition.UniqueFormalParameters:
+        {
+          let _temp7 = yield* DefineMethod(MethodDefinition, object);
+
+          if (_temp7 instanceof AbruptCompletion) {
+            return _temp7;
+          }
+
+          if (_temp7 instanceof Completion) {
+            _temp7 = _temp7.Value;
+          }
+
+          // 1. Let methodDef be ? DefineMethod of MethodDefinition with argument object.
+          const methodDef = _temp7; // 2. Perform SetFunctionName(methodDef.[[Closure]], methodDef.[[Key]]).
+
+          SetFunctionName(methodDef.Closure, methodDef.Key); // 3. Let desc be the PropertyDescriptor { [[Value]]: methodDef.[[Closure]], [[Writable]]: true, [[Enumerable]]: enumerable, [[Configurable]]: true }.
+
+          const desc = Descriptor({
+            Value: methodDef.Closure,
+            Writable: Value.true,
+            Enumerable: enumerable,
+            Configurable: Value.true
+          }); // 4. Return ? DefinePropertyOrThrow(object, methodDef.[[Key]], desc).
+
+          return DefinePropertyOrThrow(object, methodDef.Key, desc);
+        }
+
+      case !!MethodDefinition.PropertySetParameterList:
+        {
+          const {
+            PropertyName,
+            PropertySetParameterList,
+            FunctionBody
+          } = MethodDefinition; // 1. Let propKey be the result of evaluating PropertyName.
+
+          let propKey = yield* Evaluate_PropertyName(PropertyName); // 2. ReturnIfAbrupt(propKey).
+
+          if (propKey instanceof AbruptCompletion) {
+            return propKey;
+          }
+
+          if (propKey instanceof Completion) {
+            propKey = propKey.Value;
+          }
+
+          const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 4. Let sourceText be the source text matched by MethodDefinition.
+
+          const sourceText = sourceTextMatchedBy(MethodDefinition); // 5. Let closure be OrdinaryFunctionCreate(%Function.prototype%, sourceText, PropertySetParameterList, FunctionBody, non-lexical-this, scope).
+
+          const closure = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%Function.prototype%'), sourceText, PropertySetParameterList, FunctionBody, 'non-lexical-this', scope); // 6. Perform MakeMethod(closure, object).
+
+          MakeMethod(closure, object); // 7. Perform SetFunctionName(closure, propKey, "get").
+
+          SetFunctionName(closure, propKey, new Value('set')); // 8. Let desc be the PropertyDescriptor { [[Get]]: closure, [[Enumerable]]: enumerable, [[Configurable]]: true }.
+
+          const desc = Descriptor({
+            Set: closure,
+            Enumerable: enumerable,
+            Configurable: Value.true
+          }); // 9. Return ? DefinePropertyOrThrow(object, propKey, desc).
+
+          return DefinePropertyOrThrow(object, propKey, desc);
+        }
+
+      case !MethodDefinition.UniqueFormalParameters && !MethodDefinition.PropertySetParameterList:
+        {
+          const {
+            PropertyName,
+            FunctionBody
+          } = MethodDefinition; // 1. Let propKey be the result of evaluating PropertyName.
+
+          let propKey = yield* Evaluate_PropertyName(PropertyName); // 2. ReturnIfAbrupt(propKey).
+
+          if (propKey instanceof AbruptCompletion) {
+            return propKey;
+          }
+
+          if (propKey instanceof Completion) {
+            propKey = propKey.Value;
+          }
+
+          const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 4. Let formalParameterList be an instance of the production FormalParameters : [empty].
+
+          const formalParameterList = []; // 5. Let sourceText be the source text matched by MethodDefinition.
+
+          const sourceText = sourceTextMatchedBy(MethodDefinition); // 6. Let closure be OrdinaryFunctionCreate(%Function.prototype%, sourceText, formalParameterList, FunctionBody, non-lexical-this, scope).
+
+          const closure = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%Function.prototype%'), sourceText, formalParameterList, FunctionBody, 'non-lexical-this', scope); // 7. Perform MakeMethod(closure, object).
+
+          MakeMethod(closure, object); // 8. Perform SetFunctionName(closure, propKey, "get").
+
+          SetFunctionName(closure, propKey, new Value('get')); // 9. Let desc be the PropertyDescriptor { [[Get]]: closure, [[Enumerable]]: enumerable, [[Configurable]]: true }.
+
+          const desc = Descriptor({
+            Get: closure,
+            Enumerable: enumerable,
+            Configurable: Value.true
+          }); // 10. Return ? DefinePropertyOrThrow(object, propKey, desc).
+
+          return DefinePropertyOrThrow(object, propKey, desc);
+        }
+
+      /*c8 ignore next*/
+      default:
+        throw new OutOfRange$1('PropertyDefinitionEvaluation_MethodDefinition', MethodDefinition);
+    }
+  } // #sec-async-function-definitions-PropertyDefinitionEvaluation
+  //   AsyncMethod :
+  //     `async` PropertyName `(` UniqueFormalParameters `)` `{` AsyncFunctionBody `}`
+
+
+  function* PropertyDefinitionEvaluation_AsyncMethod(AsyncMethod, object, enumerable) {
+    const {
+      PropertyName,
+      UniqueFormalParameters,
+      AsyncFunctionBody
+    } = AsyncMethod; // 1. Let propKey be the result of evaluating PropertyName.
+
+    let propKey = yield* Evaluate_PropertyName(PropertyName); // 2. ReturnIfAbrupt(propKey).
+
+    if (propKey instanceof AbruptCompletion) {
+      return propKey;
+    }
+
+    if (propKey instanceof Completion) {
+      propKey = propKey.Value;
+    }
+
+    const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 4. Let sourceText be the source text matched by AsyncMethod.
+
+    const sourceText = sourceTextMatchedBy(AsyncMethod); // 5. Let closure be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, UniqueFormalParameters, AsyncFunctionBody, non-lexical-this, scope).
+
+    let _temp8 = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, UniqueFormalParameters, AsyncFunctionBody, 'non-lexical-this', scope);
+
+    Assert(!(_temp8 instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, UniqueFormalParameters, AsyncFunctionBody, 'non-lexical-this', scope)" + ' returned an abrupt completion');
+
+    if (_temp8 instanceof Completion) {
+      _temp8 = _temp8.Value;
+    }
+
+    const closure = _temp8; // 6. Perform ! MakeMethod(closure, object).
+
+    let _temp9 = MakeMethod(closure, object);
+
+    Assert(!(_temp9 instanceof AbruptCompletion), "MakeMethod(closure, object)" + ' returned an abrupt completion');
+
+    if (_temp9 instanceof Completion) {
+      _temp9 = _temp9.Value;
+    }
+
+    let _temp10 = SetFunctionName(closure, propKey);
+
+    Assert(!(_temp10 instanceof AbruptCompletion), "SetFunctionName(closure, propKey)" + ' returned an abrupt completion');
+
+    if (_temp10 instanceof Completion) {
+      _temp10 = _temp10.Value;
+    }
+
+    const desc = Descriptor({
+      Value: closure,
+      Writable: Value.true,
+      Enumerable: enumerable,
+      Configurable: Value.true
+    }); // 9. Return ? DefinePropertyOrThrow(object, propKey, desc).
+
+    return DefinePropertyOrThrow(object, propKey, desc);
+  } // #sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation
+  //   GeneratorMethod :
+  //     `*` PropertyName `(` UniqueFormalParameters `)` `{` GeneratorBody `}`
+
+
+  PropertyDefinitionEvaluation_AsyncMethod.section = 'https://tc39.es/ecma262/#sec-async-function-definitions-PropertyDefinitionEvaluation';
+
+  function* PropertyDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, enumerable) {
+    const {
+      PropertyName,
+      UniqueFormalParameters,
+      GeneratorBody
+    } = GeneratorMethod; // 1. Let propKey be the result of evaluating PropertyName.
+
+    let propKey = yield* Evaluate_PropertyName(PropertyName); // 2. ReturnIfAbrupt(propKey).
+
+    if (propKey instanceof AbruptCompletion) {
+      return propKey;
+    }
+
+    if (propKey instanceof Completion) {
+      propKey = propKey.Value;
+    }
+
+    const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 4. Let sourceText be the source text matched by GeneratorMethod.
+
+    const sourceText = sourceTextMatchedBy(GeneratorMethod); // 5. Let closure be ! OrdinaryFunctionCreate(%GeneratorFunction.prototype%, sourceText, UniqueFormalParameters, AsyncFunctionBody, non-lexical-this, scope).
+
+    let _temp11 = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%GeneratorFunction.prototype%'), sourceText, UniqueFormalParameters, GeneratorBody, 'non-lexical-this', scope);
+
+    Assert(!(_temp11 instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype%'), sourceText, UniqueFormalParameters, GeneratorBody, 'non-lexical-this', scope)" + ' returned an abrupt completion');
+
+    if (_temp11 instanceof Completion) {
+      _temp11 = _temp11.Value;
+    }
+
+    const closure = _temp11; // 6. Perform ! MakeMethod(closure, object).
+
+    let _temp12 = MakeMethod(closure, object);
+
+    Assert(!(_temp12 instanceof AbruptCompletion), "MakeMethod(closure, object)" + ' returned an abrupt completion');
+
+    if (_temp12 instanceof Completion) {
+      _temp12 = _temp12.Value;
+    }
+
+    let _temp13 = SetFunctionName(closure, propKey);
+
+    Assert(!(_temp13 instanceof AbruptCompletion), "SetFunctionName(closure, propKey)" + ' returned an abrupt completion');
+
+    if (_temp13 instanceof Completion) {
+      _temp13 = _temp13.Value;
+    }
+
+    const prototype = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%')); // 9. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
+
+    DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
+      Value: prototype,
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.false
+    })); // 10. Let desc be the PropertyDescriptor { [[Value]]: closure, [[Writable]]: true, [[Enumerable]]: enumerable, [[Configurable]]: true }.
+
+    const desc = Descriptor({
+      Value: closure,
+      Writable: Value.true,
+      Enumerable: enumerable,
+      Configurable: Value.true
+    }); // 11. Return ? DefinePropertyOrThrow(object, propKey, desc).
+
+    return DefinePropertyOrThrow(object, propKey, desc);
+  } // #sec-asyncgenerator-definitions-propertydefinitionevaluation
+  //   AsyncGeneratorMethod :
+  //     `async` `*` PropertyName `(` UniqueFormalParameters `)` `{` AsyncGeneratorBody `}`
+
+
+  PropertyDefinitionEvaluation_GeneratorMethod.section = 'https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation';
+
+  function* PropertyDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod, object, enumerable) {
+    const {
+      PropertyName,
+      UniqueFormalParameters,
+      AsyncGeneratorBody
+    } = AsyncGeneratorMethod; // 1. Let propKey be the result of evaluating PropertyName.
+
+    let propKey = yield* Evaluate_PropertyName(PropertyName); // 2. ReturnIfAbrupt(propKey).
+
+    if (propKey instanceof AbruptCompletion) {
+      return propKey;
+    }
+
+    if (propKey instanceof Completion) {
+      propKey = propKey.Value;
+    }
+
+    const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 4. Let sourceText be the source text matched by AsyncGeneratorMethod.
+
+    const sourceText = sourceTextMatchedBy(AsyncGeneratorMethod); // 5. Let closure be ! OrdinaryFunctionCreate(%AsyncGeneratorFunction.prototype%, sourceText, UniqueFormalParameters, AsyncGeneratorBody, non-lexical-this, scope).
+
+    let _temp14 = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), sourceText, UniqueFormalParameters, AsyncGeneratorBody, 'non-lexical-this', scope);
+
+    Assert(!(_temp14 instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), sourceText, UniqueFormalParameters, AsyncGeneratorBody, 'non-lexical-this', scope)" + ' returned an abrupt completion');
+
+    if (_temp14 instanceof Completion) {
+      _temp14 = _temp14.Value;
+    }
+
+    const closure = _temp14; // 6. Perform ! MakeMethod(closure, object).
+
+    let _temp15 = MakeMethod(closure, object);
+
+    Assert(!(_temp15 instanceof AbruptCompletion), "MakeMethod(closure, object)" + ' returned an abrupt completion');
+
+    if (_temp15 instanceof Completion) {
+      _temp15 = _temp15.Value;
+    }
+
+    let _temp16 = SetFunctionName(closure, propKey);
+
+    Assert(!(_temp16 instanceof AbruptCompletion), "SetFunctionName(closure, propKey)" + ' returned an abrupt completion');
+
+    if (_temp16 instanceof Completion) {
+      _temp16 = _temp16.Value;
+    }
+
+    const prototype = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%')); // 9. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
+
+    DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
+      Value: prototype,
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.false
+    })); // 10. Let desc be the PropertyDescriptor { [[Value]]: closure, [[Writable]]: true, [[Enumerable]]: enumerable, [[Configurable]]: true }.
+
+    const desc = Descriptor({
+      Value: closure,
+      Writable: Value.true,
+      Enumerable: enumerable,
+      Configurable: Value.true
+    }); // 11. Return ? DefinePropertyOrThrow(object, propKey, desc).
+
+    return DefinePropertyOrThrow(object, propKey, desc);
+  }
+
+  PropertyDefinitionEvaluation_AsyncGeneratorMethod.section = 'https://tc39.es/ecma262/#sec-asyncgenerator-definitions-propertydefinitionevaluation';
+  function PropertyDefinitionEvaluation(node, object, enumerable) {
+    switch (node.type) {
+      case 'MethodDefinition':
+        return PropertyDefinitionEvaluation_MethodDefinition(node, object, enumerable);
+
+      case 'AsyncMethod':
+        return PropertyDefinitionEvaluation_AsyncMethod(node, object, enumerable);
+
+      case 'GeneratorMethod':
+        return PropertyDefinitionEvaluation_GeneratorMethod(node, object, enumerable);
+
+      case 'AsyncGeneratorMethod':
+        return PropertyDefinitionEvaluation_AsyncGeneratorMethod(node, object, enumerable);
+
+      case 'ClassElement':
+        return PropertyDefinitionEvaluation(node.MethodDefinition, object, enumerable);
+
+      /*c8 ignore next*/
+      default:
+        throw new OutOfRange$1('PropertyDefinitionEvaluation', node);
+    }
+  }
+
+  //   FunctionExpression :
+  //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
+  //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
+
+  function* Evaluate_FunctionExpression(FunctionExpression) {
+    const {
+      BindingIdentifier,
+      FormalParameters,
+      FunctionBody
+    } = FunctionExpression;
+
+    if (!BindingIdentifier) {
+      return yield* NamedEvaluation(FunctionExpression, new Value(''));
+    } // 1. Let scope be the running execution context's LexicalEnvironment.
+
+
+    const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let funcEnv be NewDeclarativeEnvironment(scope).
+
+    const funcEnv = NewDeclarativeEnvironment(scope); // 3. Let name be StringValue of BindingIdentifier.
+
+    const name = StringValue$1(BindingIdentifier); // 4. Perform funcEnv.CreateImmutableBinding(name, false).
+
+    funcEnv.CreateImmutableBinding(name, Value.false); // 5. Let sourceText be the source text matched by FunctionExpression.
+
+    const sourceText = sourceTextMatchedBy(FunctionExpression); // 6. Let closure be OrdinaryFunctionCreate(%Function.prototype%, sourceText, FormalParameters, FunctionBody, non-lexical-this, funcEnv).
+
+    const closure = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%Function.prototype%'), sourceText, FormalParameters, FunctionBody, 'non-lexical-this', funcEnv); // 7. Perform SetFunctionName(closure, name).
+
+    SetFunctionName(closure, name); // 8. Perform MakeConstructor(closure).
+
+    MakeConstructor(closure); // 9. Perform funcEnv.InitializeBinding(name, closure).
+
+    funcEnv.InitializeBinding(name, closure); // 10. Return closure.
+
+    return closure;
+  }
+
+  //   FunctionExpression :
+  //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
+
+  function NamedEvaluation_FunctionExpression(FunctionExpression, name) {
+    const {
+      FormalParameters,
+      FunctionBody
+    } = FunctionExpression; // 1. Let scope be the LexicalEnvironment of the running execution context.
+
+    const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let sourceText be the source text matched by FunctionExpression.
+
+    const sourceText = sourceTextMatchedBy(FunctionExpression); // 3. Let closure be OrdinaryFunctionCreate(%Function.prototype%, sourceText, FormalParameters, FunctionBody, non-lexical-this, scope).
+
+    const closure = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%Function.prototype%'), sourceText, FormalParameters, FunctionBody, 'non-lexical-this', scope); // 4. Perform SetFunctionName(closure, name).
+
+    SetFunctionName(closure, name); // 5. Perform MakeConstructor(closure).
+
+    MakeConstructor(closure); // 6. Return closure.
+
+    return closure;
+  } // #sec-generator-function-definitions-runtime-semantics-namedevaluation
+  //   GeneratorExpression :
+  //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
+
+
+  NamedEvaluation_FunctionExpression.section = 'https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-namedevaluation';
+
+  function NamedEvaluation_GeneratorExpression(GeneratorExpression, name) {
+    const {
+      FormalParameters,
+      GeneratorBody
+    } = GeneratorExpression; // 1. Let scope be the LexicalEnvironment of the running execution context.
+
+    const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let sourceText be the source text matched by GeneratorExpression.
+
+    const sourceText = sourceTextMatchedBy(GeneratorExpression); // 3. Let closure be OrdinaryFunctionCreate(%GeneratorFunction.prototype%, sourceText, FormalParameters, GeneratorBody, non-lexical-this, scope).
+
+    const closure = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%GeneratorFunction.prototype%'), sourceText, FormalParameters, GeneratorBody, 'non-lexical-this', scope); // 4. Perform SetFunctionName(closure, name).
+
+    SetFunctionName(closure, name); // 5. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
+
+    const prototype = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%')); // 6. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
+
+    DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
+      Value: prototype,
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.false
+    })); // 7. Return closure.
+
+    return closure;
+  } // #sec-async-function-definitions-runtime-semantics-namedevaluation
+  //   AsyncFunctionExpression :
+  //     `async` `function` `(` FormalParameters `)` `{` AsyncFunctionBody `}`
+
+
+  NamedEvaluation_GeneratorExpression.section = 'https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-namedevaluation';
+
+  function NamedEvaluation_AsyncFunctionExpression(AsyncFunctionExpression, name) {
+    const {
+      FormalParameters,
+      AsyncFunctionBody
+    } = AsyncFunctionExpression; // 1. Let scope be the LexicalEnvironment of the running execution context.
+
+    const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let sourceText be the source text matched by AsyncFunctionExpression.
+
+    const sourceText = sourceTextMatchedBy(AsyncFunctionExpression); // 3. Let closure be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, FormalParameters, AsyncFunctionBody, non-lexical-this, scope).
+
+    let _temp = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, FormalParameters, AsyncFunctionBody, 'non-lexical-this', scope);
+
+    Assert(!(_temp instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, FormalParameters, AsyncFunctionBody, 'non-lexical-this', scope)" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    const closure = _temp; // 4. Perform SetFunctionName(closure, name).
+
+    SetFunctionName(closure, name); // 5. Return closure.
+
+    return closure;
+  } // #sec-asyncgenerator-definitions-namedevaluation
+  //   AsyncGeneratorExpression :
+  //     `async` `function` `*` `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
+
+
+  NamedEvaluation_AsyncFunctionExpression.section = 'https://tc39.es/ecma262/#sec-async-function-definitions-runtime-semantics-namedevaluation';
+
+  function NamedEvaluation_AsyncGeneratorExpression(AsyncGeneratorExpression, name) {
+    const {
+      FormalParameters,
+      AsyncGeneratorBody
+    } = AsyncGeneratorExpression; // 1. Let scope be the LexicalEnvironment of the running execution context.
+
+    const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let sourceText be the source text matched by AsyncGeneratorExpression.
+
+    const sourceText = sourceTextMatchedBy(AsyncGeneratorExpression); // 3. Let closure be OrdinaryFunctionCreate(%AsyncGeneratorFunction.prototype%, sourceText, FormalParameters, GeneratorBody, non-lexical-this, scope).
+
+    const closure = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), sourceText, FormalParameters, AsyncGeneratorBody, 'non-lexical-this', scope); // 4. Perform SetFunctionName(closure, name).
+
+    SetFunctionName(closure, name); // 5. Let prototype be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
+
+    const prototype = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%')); // 6. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
+
+    DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
+      Value: prototype,
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.false
+    })); // 7. Return closure.
+
+    return closure;
+  } // #sec-arrow-function-definitions-runtime-semantics-namedevaluation
+  //   ArrowFunction :
+  //     ArrowParameters `=>` ConciseBody
+
+
+  NamedEvaluation_AsyncGeneratorExpression.section = 'https://tc39.es/ecma262/#sec-asyncgenerator-definitions-namedevaluation';
+
+  function NamedEvaluation_ArrowFunction(ArrowFunction, name) {
+    const {
+      ArrowParameters,
+      ConciseBody
+    } = ArrowFunction; // 1. Let scope be the LexicalEnvironment of the running execution context.
+
+    const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let sourceText be the source text matched by ArrowFunction.
+
+    const sourceText = sourceTextMatchedBy(ArrowFunction); // 3. Let parameters be CoveredFormalsList of ArrowParameters.
+
+    const parameters = ArrowParameters; // 4. Let closure be OrdinaryFunctionCreate(%Function.prototype%, parameters, ConciseBody, lexical-this, scope).
+
+    const closure = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%Function.prototype%'), sourceText, parameters, ConciseBody, 'lexical-this', scope); // 5. Perform SetFunctionName(closure, name).
+
+    SetFunctionName(closure, name); // 6. Return closure.
+
+    return closure;
+  } // #sec-arrow-function-definitions-runtime-semantics-namedevaluation
+  //   AsyncArrowFunction :
+  //     ArrowParameters `=>` AsyncConciseBody
+
+
+  NamedEvaluation_ArrowFunction.section = 'https://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-namedevaluation';
+
+  function NamedEvaluation_AsyncArrowFunction(AsyncArrowFunction, name) {
+    const {
+      ArrowParameters,
+      AsyncConciseBody
+    } = AsyncArrowFunction; // 1. Let scope be the LexicalEnvironment of the running execution context.
+
+    const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let sourceText be the source text matched by ArrowFunction.
+
+    const sourceText = sourceTextMatchedBy(AsyncArrowFunction); // 3. Let head be CoveredAsyncArrowHead of CoverCallExpressionAndAsyncArrowHead.
+    // 4. Let parameters be the ArrowFormalParameters of head.
+
+    const parameters = ArrowParameters; // 5. Let closure be OrdinaryFunctionCreate(%Function.prototype%, parameters, ConciseBody, lexical-this, scope).
+
+    const closure = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, parameters, AsyncConciseBody, 'lexical-this', scope); // 6. Perform SetFunctionName(closure, name).
+
+    SetFunctionName(closure, name); // 7. Return closure.
+
+    return closure;
+  } // #sec-class-definitions-runtime-semantics-namedevaluation
+  //   ClassExpression : `class` ClassTail
+
+
+  NamedEvaluation_AsyncArrowFunction.section = 'https://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-namedevaluation';
+
+  function* NamedEvaluation_ClassExpression(ClassExpression, name) {
+    const {
+      ClassTail
+    } = ClassExpression; // 1. Let value be the result of ClassDefinitionEvaluation of ClassTail with arguments undefined and name.
+
+    let value = yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, name); // 2. ReturnIfAbrupt(value).
+
+    /* c8 ignore if */
+    if (value instanceof AbruptCompletion) {
+      return value;
+    }
+    /* c8 ignore if */
+
+
+    if (value instanceof Completion) {
+      value = value.Value;
+    }
+
+    value.SourceText = sourceTextMatchedBy(ClassExpression); // 4. Return value.
+
+    return value;
+  }
+
+  NamedEvaluation_ClassExpression.section = 'https://tc39.es/ecma262/#sec-class-definitions-runtime-semantics-namedevaluation';
+  function* NamedEvaluation(F, name) {
+    switch (F.type) {
+      case 'FunctionExpression':
+        return NamedEvaluation_FunctionExpression(F, name);
+
+      case 'GeneratorExpression':
+        return NamedEvaluation_GeneratorExpression(F, name);
+
+      case 'AsyncFunctionExpression':
+        return NamedEvaluation_AsyncFunctionExpression(F, name);
+
+      case 'AsyncGeneratorExpression':
+        return NamedEvaluation_AsyncGeneratorExpression(F, name);
+
+      case 'ArrowFunction':
+        return NamedEvaluation_ArrowFunction(F, name);
+
+      case 'AsyncArrowFunction':
+        return NamedEvaluation_AsyncArrowFunction(F, name);
+
+      case 'ClassExpression':
+        return yield* NamedEvaluation_ClassExpression(F, name);
+
+      case 'ParenthesizedExpression':
+        return yield* NamedEvaluation(F.Expression, name);
+
+      /*c8 ignore next*/
+      default:
+        throw new OutOfRange$1('NamedEvaluation', F);
+    }
+  }
+
+  //   TryStatement :
+  //     `try` Block Catch
+  //     `try` Block Finally
+  //     `try` Block Catch Finally
+
+  function Evaluate_TryStatement(TryStatement) {
+    switch (true) {
+      case !!TryStatement.Catch && !TryStatement.Finally:
+        return Evaluate_TryStatement_BlockCatch(TryStatement);
+
+      case !TryStatement.Catch && !!TryStatement.Finally:
+        return Evaluate_TryStatement_BlockFinally(TryStatement);
+
+      case !!TryStatement.Catch && !!TryStatement.Finally:
+        return Evaluate_TryStatement_BlockCatchFinally(TryStatement);
+
+      /*c8 ignore next*/
+      default:
+        throw new OutOfRange$1('Evaluate_TryStatement', TryStatement);
+    }
+  } // TryStatement : `try` Block Catch
+
+  function* Evaluate_TryStatement_BlockCatch({
+    Block,
+    Catch
+  }) {
+    // 1. Let B be the result of evaluating Block.
+    const B = EnsureCompletion(yield* Evaluate(Block)); // 2. If B.[[Type]] is throw, let C be CatchClauseEvaluation of Catch with argument B.[[Value]].
+
+    let C;
+
+    if (B.Type === 'throw') {
+      C = EnsureCompletion(yield* CatchClauseEvaluation(Catch, B.Value));
+    } else {
+      // 3. Else, let C be B.
+      C = B;
+    } // 3. Return Completion(UpdateEmpty(C, undefined)).
+
+
+    return Completion(UpdateEmpty(C, Value.undefined));
+  } // TryStatement : `try` Block Finally
+
+
+  function* Evaluate_TryStatement_BlockFinally({
+    Block,
+    Finally
+  }) {
+    // 1. Let B be the result of evaluating Block.
+    const B = EnsureCompletion(yield* Evaluate(Block)); // 1. Let F be the result of evaluating Finally.
+
+    let F = EnsureCompletion(yield* Evaluate(Finally)); // 1. If F.[[Type]] is normal, set F to B.
+
+    if (F.Type === 'normal') {
+      F = B;
+    } // 1. Return Completion(UpdateEmpty(F, undefined)).
+
+
+    return Completion(UpdateEmpty(F, Value.undefined));
+  } // TryStatement : `try` Block Catch Finally
+
+
+  function* Evaluate_TryStatement_BlockCatchFinally({
+    Block,
+    Catch,
+    Finally
+  }) {
+    // 1. Let B be the result of evaluating Block.
+    const B = EnsureCompletion(yield* Evaluate(Block)); // 2. If B.[[Type]] is throw, let C be CatchClauseEvaluation of Catch with argument B.[[Value]].
+
+    let C;
+
+    if (B.Type === 'throw') {
+      C = EnsureCompletion(yield* CatchClauseEvaluation(Catch, B.Value));
+    } else {
+      // 3. Else, let C be B.
+      C = B;
+    } // 4. Let F be the result of evaluating Finally.
+
+
+    let F = EnsureCompletion(yield* Evaluate(Finally)); // 5. If F.[[Type]] is normal, set F to C.
+
+    if (F.Type === 'normal') {
+      F = C;
+    } // 6. Return Completion(UpdateEmpty(F, undefined)).
+
+
+    return Completion(UpdateEmpty(F, Value.undefined));
+  } // #sec-runtime-semantics-catchclauseevaluation
+  //  Catch :
+  //    `catch` Block
+  //    `catch` `(` CatchParameter `)` Block
+
+
+  function* CatchClauseEvaluation({
+    CatchParameter,
+    Block
+  }, thrownValue) {
+    if (!CatchParameter) {
+      // 1. Return the result of evaluating Block.
+      return yield* Evaluate(Block);
+    } // 1. Let oldEnv be the running execution context's LexicalEnvironment.
+
+
+    const oldEnv = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let catchEnv be NewDeclarativeEnvironment(oldEnv).
+
+    const catchEnv = NewDeclarativeEnvironment(oldEnv); // 3. For each element argName of the BoundNames of CatchParameter, do
+
+    for (const argName of BoundNames(CatchParameter)) {
+      let _temp = catchEnv.CreateMutableBinding(argName, Value.false);
+
+      Assert(!(_temp instanceof AbruptCompletion), "catchEnv.CreateMutableBinding(argName, Value.false)" + ' returned an abrupt completion');
+      /* c8 ignore if */
+
+      if (_temp instanceof Completion) {
+        _temp = _temp.Value;
+      }
+    } // 4. Set the running execution context's LexicalEnvironment to catchEnv.
+
+
+    exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = catchEnv; // 5. Let status be BindingInitialization of CatchParameter with arguments thrownValue and catchEnv.
+
+    const status = yield* BindingInitialization(CatchParameter, thrownValue, catchEnv); // 6. If status is an abrupt completion, then
+
+    if (status instanceof AbruptCompletion) {
+      // a. Set the running execution context's LexicalEnvironment to oldEnv.
+      exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv; // b. Return Completion(status).
+
+      return Completion(status);
+    } // 7. Let B be the result of evaluating Block.
+
+
+    const B = EnsureCompletion(yield* Evaluate(Block)); // 8. Set the running execution context's LexicalEnvironment to oldEnv.
+
+    exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv; // 9. Return Completion(B).
+
+    return Completion(B);
+  }
+
+  CatchClauseEvaluation.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-catchclauseevaluation';
+
+  function BlockDeclarationInstantiation(code, env) {
+    // 1. Assert: env is a declarative Environment Record.
+    Assert(env instanceof DeclarativeEnvironmentRecord, "env instanceof DeclarativeEnvironmentRecord"); // 2. Let declarations be the LexicallyScopedDeclarations of code.
+
+    const declarations = LexicallyScopedDeclarations(code); // 3. For each element d in declarations, do
+
+    for (const d of declarations) {
+      // a. For each element dn of the BoundNames of d, do
+      for (const dn of BoundNames(d)) {
+        // i. If IsConstantDeclaration of d is true, then
+        if (IsConstantDeclaration(d)) {
+          let _temp = env.CreateImmutableBinding(dn, Value.true);
+
+          Assert(!(_temp instanceof AbruptCompletion), "env.CreateImmutableBinding(dn, Value.true)" + ' returned an abrupt completion');
+          /* c8 ignore if */
+
+          if (_temp instanceof Completion) {
+            _temp = _temp.Value;
+          }
+        } else {
+          let _temp2 = env.CreateMutableBinding(dn, false);
+
+          Assert(!(_temp2 instanceof AbruptCompletion), "env.CreateMutableBinding(dn, false)" + ' returned an abrupt completion');
+
+          if (_temp2 instanceof Completion) {
+            _temp2 = _temp2.Value;
+          }
+        } // b. If d is a FunctionDeclaration, a GeneratorDeclaration, an AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration, then
+
+
+        if (d.type === 'FunctionDeclaration' || d.type === 'GeneratorDeclaration' || d.type === 'AsyncFunctionDeclaration' || d.type === 'AsyncGeneratorDeclaration') {
+          // i. Let fn be the sole element of the BoundNames of d.
+          const fn = BoundNames(d)[0]; // ii. Let fo be InstantiateFunctionObject of d with argument env.
+
+          const fo = InstantiateFunctionObject(d, env); // iii. Perform env.InitializeBinding(fn, fo).
+
+          env.InitializeBinding(fn, fo);
+        }
+      }
+    }
+  } // #sec-block-runtime-semantics-evaluation
+  //  Block :
+  //    `{` `}`
+  //    `{` StatementList `}`
+
+  function* Evaluate_Block({
+    StatementList
+  }) {
+    if (StatementList.length === 0) {
+      // 1. Return NormalCompletion(empty).
+      return NormalCompletion(undefined);
+    } // 1. Let oldEnv be the running execution context's LexicalEnvironment.
+
+
+    const oldEnv = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let blockEnv be NewDeclarativeEnvironment(oldEnv).
+
+    const blockEnv = NewDeclarativeEnvironment(oldEnv); // 3. Perform BlockDeclarationInstantiation(StatementList, blockEnv).
+
+    BlockDeclarationInstantiation(StatementList, blockEnv); // 4. Set the running execution context's LexicalEnvironment to blockEnv.
+
+    exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = blockEnv; // 5. Let blockValue be the result of evaluating StatementList.
+
+    const blockValue = yield* Evaluate_StatementList(StatementList); // 6. Set the running execution context's LexicalEnvironment to oldEnv.
+
+    exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv; // 7. Return blockValue.
+
+    return blockValue;
+  }
+
+  //  Elision :
+  //    `,`
+  //    Elision `,`
+  //  ElementList :
+  //    Elision? AssignmentExpression
+  //    Elision? SpreadElement
+  //    ElementList `,` Elision? AssignmentExpression
+  //    ElementList : ElementList `,` Elision SpreadElement
+  //  SpreadElement :
+  //    `...` AssignmentExpression
+
+  function* ArrayAccumulation(ElementList, array, nextIndex) {
+    let postIndex = nextIndex;
+
+    for (const element of ElementList) {
+      switch (element.type) {
+        case 'Elision':
+          postIndex += 1;
+
+          let _temp = Set$1(array, new Value('length'), F(postIndex), Value.true);
+          /* c8 ignore if */
+
+
+          if (_temp instanceof AbruptCompletion) {
+            return _temp;
+          }
+          /* c8 ignore if */
+
+
+          if (_temp instanceof Completion) {
+            _temp = _temp.Value;
+          }
+          break;
+
+        case 'SpreadElement':
+          let _temp2 = yield* ArrayAccumulation_SpreadElement(element, array, postIndex);
+
+          if (_temp2 instanceof AbruptCompletion) {
+            return _temp2;
+          }
+
+          if (_temp2 instanceof Completion) {
+            _temp2 = _temp2.Value;
+          }
+
+          postIndex = _temp2;
+          break;
+
+        default:
+          let _temp3 = yield* ArrayAccumulation_AssignmentExpression(element, array, postIndex);
+
+          if (_temp3 instanceof AbruptCompletion) {
+            return _temp3;
+          }
+
+          if (_temp3 instanceof Completion) {
+            _temp3 = _temp3.Value;
+          }
+
+          postIndex = _temp3;
+          break;
+      }
+    }
+
+    return postIndex;
+  } // SpreadElement : `...` AssignmentExpression
+
+
+  ArrayAccumulation.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-arrayaccumulation';
+
+  function* ArrayAccumulation_SpreadElement({
+    AssignmentExpression
+  }, array, nextIndex) {
+    // 1. Let spreadRef be the result of evaluating AssignmentExpression.
+    const spreadRef = yield* Evaluate(AssignmentExpression); // 2. Let spreadObj be ? GetValue(spreadRef).
+
+    let _temp4 = GetValue(spreadRef);
+
+    if (_temp4 instanceof AbruptCompletion) {
+      return _temp4;
+    }
+
+    if (_temp4 instanceof Completion) {
+      _temp4 = _temp4.Value;
+    }
+
+    const spreadObj = _temp4; // 3. Let iteratorRecord be ? GetIterator(spreadObj).
+
+    let _temp5 = GetIterator(spreadObj);
+
+    if (_temp5 instanceof AbruptCompletion) {
+      return _temp5;
+    }
+
+    if (_temp5 instanceof Completion) {
+      _temp5 = _temp5.Value;
+    }
+
+    const iteratorRecord = _temp5; // 4. Repeat,
+
+    while (true) {
+      let _temp6 = IteratorStep(iteratorRecord);
+
+      if (_temp6 instanceof AbruptCompletion) {
+        return _temp6;
+      }
+
+      if (_temp6 instanceof Completion) {
+        _temp6 = _temp6.Value;
+      }
+
+      // a. Let next be ? IteratorStep(iteratorRecord).
+      const next = _temp6; // b. If next is false, return nextIndex.
+
+      if (next === Value.false) {
+        return nextIndex;
+      } // c. Let nextValue be ? IteratorValue(next).
+
+
+      let _temp7 = IteratorValue(next);
+
+      if (_temp7 instanceof AbruptCompletion) {
+        return _temp7;
+      }
+
+      if (_temp7 instanceof Completion) {
+        _temp7 = _temp7.Value;
+      }
+
+      const nextValue = _temp7; // d. Perform ! CreateDataPropertyOrThrow(array, ! ToString(𝔽(nextIndex)), nextValue).
+
+      let _temp9 = ToString(F(nextIndex));
+
+      Assert(!(_temp9 instanceof AbruptCompletion), "ToString(F(nextIndex))" + ' returned an abrupt completion');
+      /* c8 ignore if */
+
+      if (_temp9 instanceof Completion) {
+        _temp9 = _temp9.Value;
+      }
+
+      let _temp8 = CreateDataPropertyOrThrow(array, _temp9, nextValue);
+
+      Assert(!(_temp8 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(array, X(ToString(F(nextIndex))), nextValue)" + ' returned an abrupt completion');
+
+      if (_temp8 instanceof Completion) {
+        _temp8 = _temp8.Value;
+      }
+
+      nextIndex += 1;
+    }
+  }
+
+  function* ArrayAccumulation_AssignmentExpression(AssignmentExpression, array, nextIndex) {
+    // 2. Let initResult be the result of evaluating AssignmentExpression.
+    const initResult = yield* Evaluate(AssignmentExpression); // 3. Let initValue be ? GetValue(initResult).
+
+    let _temp10 = GetValue(initResult);
+
+    if (_temp10 instanceof AbruptCompletion) {
+      return _temp10;
+    }
+
+    if (_temp10 instanceof Completion) {
+      _temp10 = _temp10.Value;
+    }
+
+    const initValue = _temp10; // 4. Let created be ! CreateDataPropertyOrThrow(array, ! ToString(𝔽(nextIndex)), initValue).
+
+    let _temp12 = ToString(F(nextIndex));
+
+    Assert(!(_temp12 instanceof AbruptCompletion), "ToString(F(nextIndex))" + ' returned an abrupt completion');
+
+    if (_temp12 instanceof Completion) {
+      _temp12 = _temp12.Value;
+    }
+
+    let _temp11 = CreateDataPropertyOrThrow(array, _temp12, initValue);
+
+    Assert(!(_temp11 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(array, X(ToString(F(nextIndex))), initValue)" + ' returned an abrupt completion');
+
+    if (_temp11 instanceof Completion) {
+      _temp11 = _temp11.Value;
+    }
+
+    return nextIndex + 1;
+  } // #sec-array-initializer-runtime-semantics-evaluation
+  //  ArrayLiteral :
+  //    `[` Elision `]`
+  //    `[` ElementList `]`
+  //    `[` ElementList `,` Elision `]`
+
+
+  function* Evaluate_ArrayLiteral({
+    ElementList
+  }) {
+    let _temp13 = ArrayCreate(0);
+
+    Assert(!(_temp13 instanceof AbruptCompletion), "ArrayCreate(0)" + ' returned an abrupt completion');
+
+    if (_temp13 instanceof Completion) {
+      _temp13 = _temp13.Value;
+    }
+
+    // 1. Let array be ! ArrayCreate(0).
+    const array = _temp13; // 2. Let len be the result of performing ArrayAccumulation for ElementList with arguments array and 0.
+
+    let len = yield* ArrayAccumulation(ElementList, array, 0); // 3. ReturnIfAbrupt(len).
+
+    /* c8 ignore if */
+    if (len instanceof AbruptCompletion) {
+      return len;
+    }
+    /* c8 ignore if */
+
+
+    if (len instanceof Completion) {
+      len = len.Value;
+    }
+
+    return array;
+  }
+
+  //   UnaryExpression : `delete` UnaryExpression
+
+  function* Evaluate_UnaryExpression_Delete({
+    UnaryExpression
+  }) {
+    // 1. Let ref be the result of evaluating UnaryExpression.
+    let ref = yield* Evaluate(UnaryExpression); // 2. ReturnIfAbrupt(ref).
+
+    /* c8 ignore if */
+    if (ref instanceof AbruptCompletion) {
+      return ref;
+    }
+    /* c8 ignore if */
+
+
+    if (ref instanceof Completion) {
+      ref = ref.Value;
+    }
+
+    if (Type(ref) !== 'Reference') {
+      return Value.true;
+    } // 4. If IsUnresolvableReference(ref) is true, then
+
+
+    if (IsUnresolvableReference(ref) === Value.true) {
+      // a. Assert: IsStrictReference(ref) is false.
+      Assert(IsStrictReference(ref) === Value.false, "IsStrictReference(ref) === Value.false"); // b. Return true.
+
+      return Value.true;
+    } // 5. If IsPropertyReference(ref) is true, then
+
+
+    if (IsPropertyReference(ref) === Value.true) {
+      // a. If IsSuperReference(ref) is true, throw a ReferenceError exception.
+      if (IsSuperReference(ref) === Value.true) {
+        return exports.surroundingAgent.Throw('ReferenceError', 'CannotDeleteSuper');
+      } // b. Let baseObj be ! ToObject(GetBase(ref)).
+
+
+      let _temp = ToObject(GetBase(ref));
+
+      Assert(!(_temp instanceof AbruptCompletion), "ToObject(GetBase(ref))" + ' returned an abrupt completion');
+      /* c8 ignore if */
+
+      if (_temp instanceof Completion) {
+        _temp = _temp.Value;
+      }
+
+      const baseObj = _temp; // c. Let deleteStatus be ? baseObj.[[Delete]](GetReferencedName(ref)).
+
+      let _temp2 = baseObj.Delete(GetReferencedName(ref));
+      /* c8 ignore if */
+
+
+      if (_temp2 instanceof AbruptCompletion) {
+        return _temp2;
+      }
+      /* c8 ignore if */
+
+
+      if (_temp2 instanceof Completion) {
+        _temp2 = _temp2.Value;
+      }
+
+      const deleteStatus = _temp2; // d. If deleteStatus is false and IsStrictReference(ref) is true, throw a TypeError exception.
+
+      if (deleteStatus === Value.false && IsStrictReference(ref) === Value.true) {
+        return exports.surroundingAgent.Throw('TypeError', 'StrictModeDelete', GetReferencedName(ref));
+      } // e. Return deleteStatus.
+
+
+      return deleteStatus;
+    } else {
+      // 6. Else,
+      // a. Assert: ref is a Reference to an Environment Record binding.
+      // b. Let bindings be GetBase(ref).
+      const bindings = GetBase(ref); // c. Return ? bindings.DeleteBinding(GetReferencedName(ref)).
+
+      return bindings.DeleteBinding(GetReferencedName(ref));
+    }
+  } // #sec-void-operator-runtime-semantics-evaluation
+  //   UnaryExpression : `void` UnaryExpression
+
+
+  Evaluate_UnaryExpression_Delete.section = 'https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation';
+
+  function* Evaluate_UnaryExpression_Void({
+    UnaryExpression
+  }) {
+    // 1. Let expr be the result of evaluating UnaryExpression.
+    const expr = yield* Evaluate(UnaryExpression); // 2. Perform ? GetValue(expr).
+
+    let _temp3 = GetValue(expr);
+
+    if (_temp3 instanceof AbruptCompletion) {
+      return _temp3;
+    }
+
+    if (_temp3 instanceof Completion) {
+      _temp3 = _temp3.Value;
+    }
+
+    return Value.undefined;
+  } // 12.5.5.1 #sec-typeof-operator-runtime-semantics-evaluation
+  // UnaryExpression : `typeof` UnaryExpression
+
+
+  Evaluate_UnaryExpression_Void.section = 'https://tc39.es/ecma262/#sec-void-operator-runtime-semantics-evaluation';
+
+  function* Evaluate_UnaryExpression_Typeof({
+    UnaryExpression
+  }) {
+    // 1. Let val be the result of evaluating UnaryExpression.
+    let val = yield* Evaluate(UnaryExpression); // 2. If Type(val) is Reference, then
+
+    if (Type(val) === 'Reference') {
+      // a. If IsUnresolvableReference(val) is true, return "undefined".
+      if (IsUnresolvableReference(val) === Value.true) {
+        return new Value('undefined');
+      }
+    } // 3. Set val to ? GetValue(val).
+
+
+    let _temp4 = GetValue(val);
+
+    if (_temp4 instanceof AbruptCompletion) {
+      return _temp4;
+    }
+
+    if (_temp4 instanceof Completion) {
+      _temp4 = _temp4.Value;
+    }
+
+    val = _temp4; // 4. Return a String according to Table 37.
+
+    const type = Type(val);
+
+    switch (type) {
+      case 'Undefined':
+        return new Value('undefined');
+
+      case 'Null':
+        return new Value('object');
+
+      case 'Boolean':
+        return new Value('boolean');
+
+      case 'Number':
+        return new Value('number');
+
+      case 'String':
+        return new Value('string');
+
+      case 'BigInt':
+        return new Value('bigint');
+
+      case 'Symbol':
+        return new Value('symbol');
+
+      case 'Object':
+        if (IsCallable(val) === Value.true) {
+          return new Value('function');
+        }
+
+        return new Value('object');
+
+      /*c8 ignore next*/
+      default:
+        throw new OutOfRange$1('Evaluate_UnaryExpression_Typeof', type);
+    }
+  } // #sec-unary-plus-operator-runtime-semantics-evaluation
+  //   UnaryExpression : `+` UnaryExpression
+
+
+  Evaluate_UnaryExpression_Typeof.section = 'https://tc39.es/ecma262/#sec-typeof-operator-runtime-semantics-evaluation';
+
+  function* Evaluate_UnaryExpression_Plus({
+    UnaryExpression
+  }) {
+    // 1. Let expr be the result of evaluating UnaryExpression.
+    const expr = yield* Evaluate(UnaryExpression); // 2. Return ? ToNumber(? GetValue(expr)).
+
+    let _temp5 = GetValue(expr);
+
+    if (_temp5 instanceof AbruptCompletion) {
+      return _temp5;
+    }
+
+    if (_temp5 instanceof Completion) {
+      _temp5 = _temp5.Value;
+    }
+
+    return ToNumber(_temp5);
+  } // #sec-unary-minus-operator-runtime-semantics-evaluation
+  //   UnaryExpression : `-` UnaryExpression
+
+
+  Evaluate_UnaryExpression_Plus.section = 'https://tc39.es/ecma262/#sec-unary-plus-operator-runtime-semantics-evaluation';
+
+  function* Evaluate_UnaryExpression_Minus({
+    UnaryExpression
+  }) {
+    // 1. Let expr be the result of evaluating UnaryExpression.
+    const expr = yield* Evaluate(UnaryExpression); // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
+
+    let _temp8 = GetValue(expr);
+
+    if (_temp8 instanceof AbruptCompletion) {
+      return _temp8;
+    }
+
+    if (_temp8 instanceof Completion) {
+      _temp8 = _temp8.Value;
+    }
+
+    let _temp6 = ToNumeric(_temp8);
+
+    if (_temp6 instanceof AbruptCompletion) {
+      return _temp6;
+    }
+
+    if (_temp6 instanceof Completion) {
+      _temp6 = _temp6.Value;
+    }
+
+    const oldValue = _temp6; // 3. Let T be Type(oldValue).
+
+    const T = TypeForMethod(oldValue); // 4. Return ! T::unaryMinus(oldValue).
+
+    let _temp7 = T.unaryMinus(oldValue);
+
+    Assert(!(_temp7 instanceof AbruptCompletion), "T.unaryMinus(oldValue)" + ' returned an abrupt completion');
+
+    if (_temp7 instanceof Completion) {
+      _temp7 = _temp7.Value;
+    }
+
+    return _temp7;
+  } // #sec-bitwise-not-operator-runtime-semantics-evaluation
+  //   UnaryExpression : `~` UnaryExpression
+
+
+  Evaluate_UnaryExpression_Minus.section = 'https://tc39.es/ecma262/#sec-unary-minus-operator-runtime-semantics-evaluation';
+
+  function* Evaluate_UnaryExpression_Tilde({
+    UnaryExpression
+  }) {
+    // 1. Let expr be the result of evaluating UnaryExpression.
+    const expr = yield* Evaluate(UnaryExpression); // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
+
+    let _temp11 = GetValue(expr);
+
+    if (_temp11 instanceof AbruptCompletion) {
+      return _temp11;
+    }
+
+    if (_temp11 instanceof Completion) {
+      _temp11 = _temp11.Value;
+    }
+
+    let _temp9 = ToNumeric(_temp11);
+
+    if (_temp9 instanceof AbruptCompletion) {
+      return _temp9;
+    }
+
+    if (_temp9 instanceof Completion) {
+      _temp9 = _temp9.Value;
+    }
+
+    const oldValue = _temp9; // 3. Let T be Type(oldValue).
+
+    const T = TypeForMethod(oldValue); // 4. Return ! T::bitwiseNOT(oldValue).
+
+    let _temp10 = T.bitwiseNOT(oldValue);
+
+    Assert(!(_temp10 instanceof AbruptCompletion), "T.bitwiseNOT(oldValue)" + ' returned an abrupt completion');
+
+    if (_temp10 instanceof Completion) {
+      _temp10 = _temp10.Value;
+    }
+
+    return _temp10;
+  } // #sec-logical-not-operator-runtime-semantics-evaluation
+  //   UnaryExpression : `!` UnaryExpression
+
+
+  Evaluate_UnaryExpression_Tilde.section = 'https://tc39.es/ecma262/#sec-bitwise-not-operator-runtime-semantics-evaluation';
+
+  function* Evaluate_UnaryExpression_Bang({
+    UnaryExpression
+  }) {
+    // 1. Let expr be the result of evaluating UnaryExpression.
+    const expr = yield* Evaluate(UnaryExpression); // 2. Let oldValue be ! ToBoolean(? GetValue(expr)).
+
+    let _temp12 = GetValue(expr);
+
+    if (_temp12 instanceof AbruptCompletion) {
+      return _temp12;
+    }
+
+    if (_temp12 instanceof Completion) {
+      _temp12 = _temp12.Value;
+    }
+
+    const oldValue = ToBoolean(_temp12); // 3. If oldValue is true, return false.
+
+    if (oldValue === Value.true) {
+      return Value.false;
+    } // 4. Return true.
+
+
+    return Value.true;
+  } // UnaryExpression :
+  //  `delete` UnaryExpression
+  //  `void` UnaryExpression
+  //  `typeof` UnaryExpression
+  //  `+` UnaryExpression
+  //  `-` UnaryExpression
+  //  `~` UnaryExpression
+  //  `!` UnaryExpression
+
+
+  Evaluate_UnaryExpression_Bang.section = 'https://tc39.es/ecma262/#sec-logical-not-operator-runtime-semantics-evaluation';
+  function* Evaluate_UnaryExpression(UnaryExpression) {
+    switch (UnaryExpression.operator) {
+      case 'delete':
+        return yield* Evaluate_UnaryExpression_Delete(UnaryExpression);
+
+      case 'void':
+        return yield* Evaluate_UnaryExpression_Void(UnaryExpression);
+
+      case 'typeof':
+        return yield* Evaluate_UnaryExpression_Typeof(UnaryExpression);
+
+      case '+':
+        return yield* Evaluate_UnaryExpression_Plus(UnaryExpression);
+
+      case '-':
+        return yield* Evaluate_UnaryExpression_Minus(UnaryExpression);
+
+      case '~':
+        return yield* Evaluate_UnaryExpression_Tilde(UnaryExpression);
+
+      case '!':
+        return yield* Evaluate_UnaryExpression_Bang(UnaryExpression);
+
+      /*c8 ignore next*/
+      default:
+        throw new OutOfRange$1('Evaluate_UnaryExpression', UnaryExpression);
+    }
+  }
+
+  //   EqualityExpression :
+  //     EqualityExpression `==` RelationalExpression
+  //     EqualityExpression `!=` RelationalExpression
+  //     EqualityExpression `===` RelationalExpression
+  //     EqualityExpression `!==` RelationalExpression
+
+  function* Evaluate_EqualityExpression({
+    EqualityExpression,
+    operator,
+    RelationalExpression
+  }) {
+    // 1. Let lref be the result of evaluating EqualityExpression.
+    const lref = yield* Evaluate(EqualityExpression); // 2. Let lval be ? GetValue(lref).
+
+    let _temp = GetValue(lref);
+    /* c8 ignore if */
+
+
+    if (_temp instanceof AbruptCompletion) {
+      return _temp;
+    }
+    /* c8 ignore if */
+
+
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    const lval = _temp; // 3. Let rref be the result of evaluating RelationalExpression.
+
+    const rref = yield* Evaluate(RelationalExpression); // 4. Let rval be ? GetValue(rref).
+
+    let _temp2 = GetValue(rref);
+
+    if (_temp2 instanceof AbruptCompletion) {
+      return _temp2;
+    }
+
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
+    }
+
+    const rval = _temp2;
+
+    switch (operator) {
+      case '==':
+        // 5. Return the result of performing Abstract Equality Comparison rval == lval.
+        return AbstractEqualityComparison(rval, lval);
+
+      case '!=':
+        {
+          // 5. Let r be the result of performing Abstract Equality Comparison rval == lval.
+          let r = AbstractEqualityComparison(rval, lval); // 6. ReturnIfAbrupt(r).
+
+          /* c8 ignore if */
+          if (r instanceof AbruptCompletion) {
+            return r;
+          }
+          /* c8 ignore if */
+
+
+          if (r instanceof Completion) {
+            r = r.Value;
+          }
+
+          if (r === Value.true) {
+            return Value.false;
+          } else {
+            return Value.true;
+          }
+        }
+
+      case '===':
+        // 5. Return the result of performing Strict Equality Comparison rval === lval.
+        return StrictEqualityComparison(rval, lval);
+
+      case '!==':
+        {
+          let _temp3 = StrictEqualityComparison(rval, lval);
+
+          Assert(!(_temp3 instanceof AbruptCompletion), "StrictEqualityComparison(rval, lval)" + ' returned an abrupt completion');
+          /* c8 ignore if */
+
+          if (_temp3 instanceof Completion) {
+            _temp3 = _temp3.Value;
+          }
+
+          // 5. Let r be the result of performing Strict Equality Comparison rval === lval.
+          // 6. Assert: r is a normal completion.
+          const r = _temp3; // 7. If r.[[Value]] is true, return false. Otherwise, return true.
+
+          if (r === Value.true) {
+            return Value.false;
+          } else {
+            return Value.true;
+          }
+        }
+
+      /*c8 ignore next*/
+      default:
+        throw new OutOfRange$1('Evaluate_EqualityExpression', operator);
+    }
+  }
+
+  //   LogicalANDExpression :
+  //     LogicalANDExpression `&&` BitwiseORExpression
+
+  function* Evaluate_LogicalANDExpression({
+    LogicalANDExpression,
+    BitwiseORExpression
+  }) {
+    // 1. Let lref be the result of evaluating LogicalANDExpression.
+    const lref = yield* Evaluate(LogicalANDExpression); // 2. Let lval be ? GetValue(lref).
+
+    let _temp = GetValue(lref);
+    /* c8 ignore if */
+
+
+    if (_temp instanceof AbruptCompletion) {
+      return _temp;
+    }
+    /* c8 ignore if */
+
+
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    const lval = _temp; // 3. Let lbool be ! ToBoolean(lval).
+
+    let _temp2 = ToBoolean(lval);
+
+    Assert(!(_temp2 instanceof AbruptCompletion), "ToBoolean(lval)" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
+    }
+
+    const lbool = _temp2; // 4. If lbool is false, return lval.
+
+    if (lbool === Value.false) {
+      return lval;
+    } // 5. Let rref be the result of evaluating BitwiseORExpression.
+
+
+    const rref = yield* Evaluate(BitwiseORExpression); // 6. Return ? GetValue(rref).
+
+    return GetValue(rref);
+  }
+
+  //   LogicalORExpression :
+  //     LogicalORExpression `||` LogicalANDExpression
+
+  function* Evaluate_LogicalORExpression({
+    LogicalORExpression,
+    LogicalANDExpression
+  }) {
+    // 1. Let lref be the result of evaluating LogicalORExpression.
+    const lref = yield* Evaluate(LogicalORExpression); // 2. Let lval be ? GetValue(lref).
+
+    let _temp = GetValue(lref);
+    /* c8 ignore if */
+
+
+    if (_temp instanceof AbruptCompletion) {
+      return _temp;
+    }
+    /* c8 ignore if */
+
+
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    const lval = _temp; // 3. Let lbool be ! ToBoolean(lval).
+
+    let _temp2 = ToBoolean(lval);
+
+    Assert(!(_temp2 instanceof AbruptCompletion), "ToBoolean(lval)" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
+    }
+
+    const lbool = _temp2; // 4. If lbool is false, return lval.
+
+    if (lbool === Value.true) {
+      return lval;
+    } // 5. Let rref be the result of evaluating LogicalANDExpression.
+
+
+    const rref = yield* Evaluate(LogicalANDExpression); // 6. Return ? GetValue(rref).
+
+    return GetValue(rref);
+  }
+
+  function* EvaluateNew(constructExpr, args) {
+    // 1. Assert: constructExpr is either a NewExpression or a MemberExpression.
+    // 2. Assert: arguments is either empty or an Arguments.
+    Assert(args === undefined || Array.isArray(args), "args === undefined || Array.isArray(args)"); // 3. Let ref be the result of evaluating constructExpr.
+
+    const ref = yield* Evaluate(constructExpr); // 4. Let constructor be ? GetValue(ref).
+
+    let _temp = GetValue(ref);
+    /* c8 ignore if */
+
+
+    if (_temp instanceof AbruptCompletion) {
+      return _temp;
+    }
+    /* c8 ignore if */
+
+
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    const constructor = _temp;
+    let argList; // 5. If arguments is empty, let argList be a new empty List.
+
+    if (args === undefined) {
+      argList = [];
+    } else {
+      let _temp2 = yield* ArgumentListEvaluation(args);
+
+      if (_temp2 instanceof AbruptCompletion) {
+        return _temp2;
+      }
+
+      if (_temp2 instanceof Completion) {
+        _temp2 = _temp2.Value;
+      }
+
+      // 6. Else,
+      // a. Let argList be ? ArgumentListEvaluation of arguments.
+      argList = _temp2;
+    } // 7. If IsConstructor(constructor) is false, throw a TypeError exception.
+
+
+    if (IsConstructor(constructor) === Value.false) {
+      return exports.surroundingAgent.Throw('TypeError', 'NotAConstructor', constructor);
+    } // 8. Return ? Construct(constructor, argList).
+
+
+    return Construct(constructor, argList);
+  } // #sec-new-operator-runtime-semantics-evaluation
+  //   NewExpression :
+  //     `new` NewExpression
+  //     `new` MemberExpression Arguments
+
+
+  EvaluateNew.section = 'https://tc39.es/ecma262/#sec-evaluatenew';
+  function* Evaluate_NewExpression({
+    MemberExpression,
+    Arguments
+  }) {
+    if (!Arguments) {
+      // 1. Return ? EvaluateNew(NewExpression, empty).
+      return yield* EvaluateNew(MemberExpression, undefined);
+    } else {
+      // 1. Return ? EvaluateNew(MemberExpression, Arguments).
+      return yield* EvaluateNew(MemberExpression, Arguments);
+    }
+  }
+
+  //  ShiftExpression :
+  //    ShiftExpression `<<` AdditiveExpression
+  // #sec-signed-right-shift-operator-runtime-semantics-evaluation
+  //  ShiftExpression :
+  //    ShiftExpression `>>` AdditiveExpression
+  // #sec-unsigned-right-shift-operator-runtime-semantics-evaluation
+  //  ShiftExpression :
+  //    ShiftExpression `>>>` AdditiveExpression
+
+  function* Evaluate_ShiftExpression({
+    ShiftExpression,
+    operator,
+    AdditiveExpression
+  }) {
+    return yield* EvaluateStringOrNumericBinaryExpression(ShiftExpression, operator, AdditiveExpression);
+  }
+
+  // SuperCall : `super` Arguments
+
+  function* Evaluate_SuperCall({
+    Arguments
+  }) {
+    // 1. Let newTarget be GetNewTarget().
+    const newTarget = GetNewTarget(); // 2. Assert: Type(newTarget) is Object.
+
+    Assert(Type(newTarget) === 'Object', "Type(newTarget) === 'Object'"); // 3. Let func be ! GetSuperConstructor().
+
+    let _temp = GetSuperConstructor();
+
+    Assert(!(_temp instanceof AbruptCompletion), "GetSuperConstructor()" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    const func = _temp; // 4. Let argList be ? ArgumentListEvaluation of Arguments.
+
+    let _temp2 = yield* ArgumentListEvaluation(Arguments);
+    /* c8 ignore if */
+
+
+    if (_temp2 instanceof AbruptCompletion) {
+      return _temp2;
+    }
+    /* c8 ignore if */
+
+
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
+    }
+
+    const argList = _temp2; // 5. If IsConstructor(func) is false, throw a TypeError exception.
+
+    if (IsConstructor(func) === Value.false) {
+      return exports.surroundingAgent.Throw('TypeError', 'NotAConstructor', func);
+    } // 6. Let result be ? Construct(func, argList, newTarget).
+
+
+    let _temp3 = Construct(func, argList, newTarget);
+
+    if (_temp3 instanceof AbruptCompletion) {
+      return _temp3;
+    }
+
+    if (_temp3 instanceof Completion) {
+      _temp3 = _temp3.Value;
+    }
+
+    const result = _temp3; // 7. Let thisER be GetThisEnvironment().
+
+    const thisER = GetThisEnvironment(); // 8. Return ? thisER.BindThisValue(result).
+
+    return thisER.BindThisValue(result);
+  } // #sec-getsuperconstructor
+
+  function GetSuperConstructor() {
+    // 1. Let envRec be GetThisEnvironment().
+    const envRec = GetThisEnvironment(); // 2. Assert: envRec is a function Environment Record.
+
+    Assert(envRec instanceof FunctionEnvironmentRecord, "envRec instanceof FunctionEnvironmentRecord"); // 3. Let activeFunction be envRec.[[FunctionObject]].
+
+    const activeFunction = envRec.FunctionObject; // 4. Assert: activeFunction is an ECMAScript function object.
+
+    Assert(isECMAScriptFunctionObject(activeFunction), "isECMAScriptFunctionObject(activeFunction)"); // 5. Let superConstructor be ! activeFunction.[[GetPrototypeOf]]().
+
+    let _temp4 = activeFunction.GetPrototypeOf();
+
+    Assert(!(_temp4 instanceof AbruptCompletion), "activeFunction.GetPrototypeOf()" + ' returned an abrupt completion');
+
+    if (_temp4 instanceof Completion) {
+      _temp4 = _temp4.Value;
+    }
+
+    const superConstructor = _temp4; // 6. Return superConstructor.
+
+    return superConstructor;
+  }
+
+  GetSuperConstructor.section = 'https://tc39.es/ecma262/#sec-getsuperconstructor';
+
+  function MakeSuperPropertyReference(actualThis, propertyKey, strict) {
+    // 1. Let env be GetThisEnvironment().
+    const env = GetThisEnvironment(); // 2. Assert: env.HasSuperBinding() is true.
+
+    Assert(env.HasSuperBinding() === Value.true, "env.HasSuperBinding() === Value.true"); // 3. Let baseValue be ? env.GetSuperBase().
+
+    let _temp = env.GetSuperBase();
+    /* c8 ignore if */
+
+
+    if (_temp instanceof AbruptCompletion) {
+      return _temp;
+    }
+    /* c8 ignore if */
+
+
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    const baseValue = _temp; // 4. Let bv be ? RequireObjectCoercible(baseValue).
+
+    let _temp2 = RequireObjectCoercible(baseValue);
+
+    if (_temp2 instanceof AbruptCompletion) {
+      return _temp2;
+    }
+
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
+    }
+
+    const bv = _temp2; // 5. Return a value of type Reference that is a Super Reference whose base value component is bv,
+    //    whose referenced name component is propertyKey, whose thisValue component is actualThis, and
+    //    whose strict reference flag is strict.
+
+    return new SuperReference({
+      BaseValue: bv,
+      ReferencedName: propertyKey,
+      thisValue: actualThis,
+      StrictReference: strict ? Value.true : Value.false
+    });
+  } // #sec-super-keyword-runtime-semantics-evaluation
+  //  SuperProperty :
+  //    `super` `[` Expression `]`
+  //    `super` `.` IdentifierName
+
+
+  MakeSuperPropertyReference.section = 'https://tc39.es/ecma262/#sec-makesuperpropertyreference';
+  function* Evaluate_SuperProperty({
+    Expression,
+    IdentifierName,
+    strict
+  }) {
+    // 1. Let env be GetThisEnvironment().
+    const env = GetThisEnvironment(); // 2. Let actualThis be ? env.GetThisBinding().
+
+    let _temp3 = env.GetThisBinding();
+
+    if (_temp3 instanceof AbruptCompletion) {
+      return _temp3;
+    }
+
+    if (_temp3 instanceof Completion) {
+      _temp3 = _temp3.Value;
+    }
+
+    const actualThis = _temp3;
+
+    if (Expression) {
+      // 3. Let propertyNameReference be the result of evaluating Expression.
+      const propertyNameReference = yield* Evaluate(Expression); // 4. Let propertyNameReference be the result of evaluating Expression.
+
+      let _temp4 = GetValue(propertyNameReference);
+
+      if (_temp4 instanceof AbruptCompletion) {
+        return _temp4;
+      }
+
+      if (_temp4 instanceof Completion) {
+        _temp4 = _temp4.Value;
+      }
+
+      const propertyNameValue = _temp4; // 5. Let propertyNameValue be ? GetValue(propertyNameReference).
+
+      let _temp5 = ToPropertyKey(propertyNameValue);
+
+      if (_temp5 instanceof AbruptCompletion) {
+        return _temp5;
+      }
+
+      if (_temp5 instanceof Completion) {
+        _temp5 = _temp5.Value;
+      }
+
+      const propertyKey = _temp5; // 6. If the code matched by this SuperProperty is strict mode code, let strict be true; else let strict be false.
+      // 7. Return ? MakeSuperPropertyReference(actualThis, propertyKey, strict).
+
+      return MakeSuperPropertyReference(actualThis, propertyKey, strict);
+    } else {
+      // 3. Let propertyKey be StringValue of IdentifierName.
+      const propertyKey = StringValue$1(IdentifierName); // 4. const strict = SuperProperty.strict;
+      // 5. Return ? MakeSuperPropertyReference(actualThis, propertyKey, strict).
+
+      return MakeSuperPropertyReference(actualThis, propertyKey, strict);
+    }
+  }
+
+  function InitializeBoundName(name, value, environment) {
+    // 1. Assert: Either Type(name) is String or name is ~default~.
+    Assert(name === 'default' || Type(name) === 'String', "name === 'default' || Type(name) === 'String'"); // 2. If environment is not undefined, then
+
+    if (environment !== Value.undefined) {
+      // a. Perform environment.InitializeBinding(name, value).
+      environment.InitializeBinding(name, value); // b. Return NormalCompletion(undefined).
+
+      return NormalCompletion(Value.undefined);
+    } else {
+      // a. Let lhs be ResolveBinding(name).
+      const lhs = ResolveBinding(name, undefined, false); // b. Return ? PutValue(lhs, value).
+
+      return PutValue(lhs, value);
+    }
+  } // ObjectBindingPattern :
+  //   `{` `}`
+  //   `{` BindingPropertyList `}`
+  //   `{` BindingRestProperty `}`
+  //   `{` BindingPropertyList `,` BindingRestProperty `}`
+
+  function* BindingInitialization_ObjectBindingPattern({
+    BindingPropertyList,
+    BindingRestProperty
+  }, value, environment) {
+    let _temp = yield* PropertyBindingInitialization(BindingPropertyList, value, environment);
+    /* c8 ignore if */
+
+
+    if (_temp instanceof AbruptCompletion) {
+      return _temp;
+    }
+    /* c8 ignore if */
+
+
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    // 1. Perform ? PropertyBindingInitialization for BindingPropertyList using value and environment as the arguments.
+    const excludedNames = _temp;
+
+    if (BindingRestProperty) {
+      let _temp2 = RestBindingInitialization(BindingRestProperty, value, environment, excludedNames);
+
+      if (_temp2 instanceof AbruptCompletion) {
+        return _temp2;
+      }
+
+      if (_temp2 instanceof Completion) {
+        _temp2 = _temp2.Value;
+      }
+    } // 2. Return NormalCompletion(empty).
+
+
+    return NormalCompletion(undefined);
+  }
+
+  function* BindingInitialization(node, value, environment) {
+    switch (node.type) {
+      case 'ForBinding':
+        if (node.BindingIdentifier) {
+          return yield* BindingInitialization(node.BindingIdentifier, value, environment);
+        }
+
+        return yield* BindingInitialization(node.BindingPattern, value, environment);
+
+      case 'ForDeclaration':
+        return yield* BindingInitialization(node.ForBinding, value, environment);
+
+      case 'BindingIdentifier':
+        {
+          // 1. Let name be StringValue of Identifier.
+          const name = StringValue$1(node); // 2. Return ? InitializeBoundName(name, value, environment).
+
+          return InitializeBoundName(name, value, environment);
+        }
+
+      case 'ObjectBindingPattern':
+        {
+          let _temp3 = RequireObjectCoercible(value);
+
+          if (_temp3 instanceof AbruptCompletion) {
+            return _temp3;
+          }
+
+          if (_temp3 instanceof Completion) {
+            _temp3 = _temp3.Value;
+          }
+
+          return yield* BindingInitialization_ObjectBindingPattern(node, value, environment);
+        }
+
+      case 'ArrayBindingPattern':
+        {
+          let _temp4 = GetIterator(value);
+
+          if (_temp4 instanceof AbruptCompletion) {
+            return _temp4;
+          }
+
+          if (_temp4 instanceof Completion) {
+            _temp4 = _temp4.Value;
+          }
+
+          // 1. Let iteratorRecord be ? GetIterator(value).
+          const iteratorRecord = _temp4; // 2. Let result be IteratorBindingInitialization of ArrayBindingPattern with arguments iteratorRecord and environment.
+
+          const result = yield* IteratorBindingInitialization_ArrayBindingPattern(node, iteratorRecord, environment); // 3. If iteratorRecord.[[Done]] is false, return ? IteratorClose(iteratorRecord, result).
+
+          if (iteratorRecord.Done === Value.false) {
+            return IteratorClose(iteratorRecord, result);
+          } // 4. Return result.
+
+
+          return result;
+        }
+
+      /*c8 ignore next*/
+      default:
+        throw new OutOfRange$1('BindingInitialization', node);
+    }
+  }
+
+  //   AsyncFunctionExpression :
+  //     `async` `function` `(` FormalParameters `)` `{` AsyncFunctionBody `}`
+  //     `async` `function` BindingIdentifier `(` FormalParameters `)` `{` AsyncFunctionBody `}`
+
+  function* Evaluate_AsyncFunctionExpression(AsyncFunctionExpression) {
+    const {
+      BindingIdentifier,
+      FormalParameters,
+      AsyncFunctionBody
+    } = AsyncFunctionExpression;
+
+    if (!BindingIdentifier) {
+      // 1. Return the result of performing NamedEvaluation for this AsyncFunctionExpression with argument "".
+      return yield* NamedEvaluation(AsyncFunctionExpression, new Value(''));
+    } // 1. Let scope be the LexicalEnvironment of the running execution context.
+
+
+    const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let funcEnv be ! NewDeclarativeEnvironment(scope).
+
+    let _temp = NewDeclarativeEnvironment(scope);
+
+    Assert(!(_temp instanceof AbruptCompletion), "NewDeclarativeEnvironment(scope)" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    const funcEnv = _temp; // 3. Let name be StringValue of BindingIdentifier.
+
+    const name = StringValue$1(BindingIdentifier); // 4. Perform ! funcEnv.CreateImmutableBinding(name, false).
+
+    let _temp2 = funcEnv.CreateImmutableBinding(name, Value.false);
+
+    Assert(!(_temp2 instanceof AbruptCompletion), "funcEnv.CreateImmutableBinding(name, Value.false)" + ' returned an abrupt completion');
+
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
+    }
+
+    const sourceText = sourceTextMatchedBy(AsyncFunctionExpression); // 6. Let closure be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, FormalParameters, AsyncFunctionBody, non-lexical-this, funcEnv).
+
+    let _temp3 = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, FormalParameters, AsyncFunctionBody, 'non-lexical-this', funcEnv);
+
+    Assert(!(_temp3 instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, FormalParameters, AsyncFunctionBody, 'non-lexical-this', funcEnv)" + ' returned an abrupt completion');
+
+    if (_temp3 instanceof Completion) {
+      _temp3 = _temp3.Value;
+    }
+
+    const closure = _temp3; // 7. Perform ! SetFunctionName(closure, name).
+
+    let _temp4 = SetFunctionName(closure, name);
+
+    Assert(!(_temp4 instanceof AbruptCompletion), "SetFunctionName(closure, name)" + ' returned an abrupt completion');
+
+    if (_temp4 instanceof Completion) {
+      _temp4 = _temp4.Value;
+    }
+
+    let _temp5 = funcEnv.InitializeBinding(name, closure);
+
+    Assert(!(_temp5 instanceof AbruptCompletion), "funcEnv.InitializeBinding(name, closure)" + ' returned an abrupt completion');
+
+    if (_temp5 instanceof Completion) {
+      _temp5 = _temp5.Value;
+    }
+
+    return closure;
+  }
+
+  function InstanceofOperator(V, target) {
+    // 1. If Type(target) is not Object, throw a TypeError exception.
+    if (Type(target) !== 'Object') {
+      return exports.surroundingAgent.Throw('TypeError', 'NotAnObject', target);
+    } // 2. Let instOfHandler be ? GetMethod(target, @@hasInstance).
+
+
+    let _temp = GetMethod(target, wellKnownSymbols.hasInstance);
+    /* c8 ignore if */
+
+
+    if (_temp instanceof AbruptCompletion) {
+      return _temp;
+    }
+    /* c8 ignore if */
+
+
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    const instOfHandler = _temp; // 3. If instOfHandler is not undefined, then
+
+    if (instOfHandler !== Value.undefined) {
+      let _temp3 = Call(instOfHandler, target, [V]);
+
+      if (_temp3 instanceof AbruptCompletion) {
+        return _temp3;
+      }
+
+      if (_temp3 instanceof Completion) {
+        _temp3 = _temp3.Value;
+      }
+
+      let _temp2 = ToBoolean(_temp3);
+
+      Assert(!(_temp2 instanceof AbruptCompletion), "ToBoolean(Q(Call(instOfHandler, target, [V])))" + ' returned an abrupt completion');
+      /* c8 ignore if */
+
+      if (_temp2 instanceof Completion) {
+        _temp2 = _temp2.Value;
+      }
+
+      // a. Return ! ToBoolean(? Call(instOfHandler, target, « V »)).
+      return _temp2;
+    } // 4. If IsCallable(target) is false, throw a TypeError exception.
+
+
+    if (IsCallable(target) === Value.false) {
+      return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', target);
+    } // 5. Return ? OrdinaryHasInstance(target, V).
+
+
+    return OrdinaryHasInstance(target, V);
+  } // #sec-relational-operators-runtime-semantics-evaluation
+  //   RelationalExpression :
+  //     RelationalExpression `<` ShiftExpression
+  //     RelationalExpression `>` ShiftExpression
+  //     RelationalExpression `<=` ShiftExpression
+  //     RelationalExpression `>=` ShiftExpression
+  //     RelationalExpression `instanceof` ShiftExpression
+  //     RelationalExpression `in` ShiftExpression
+
+  function* Evaluate_RelationalExpression({
+    RelationalExpression,
+    operator,
+    ShiftExpression
+  }) {
+    // 1. Let lref be the result of evaluating RelationalExpression.
+    const lref = yield* Evaluate(RelationalExpression); // 2. Let lval be ? GetValue(lref).
+
+    let _temp4 = GetValue(lref);
+
+    if (_temp4 instanceof AbruptCompletion) {
+      return _temp4;
+    }
+
+    if (_temp4 instanceof Completion) {
+      _temp4 = _temp4.Value;
+    }
+
+    const lval = _temp4; // 3. Let rref be the result of evaluating ShiftExpression.
+
+    const rref = yield* Evaluate(ShiftExpression); // 4. Let rval be ? GetValue(rref).
+
+    let _temp5 = GetValue(rref);
+
+    if (_temp5 instanceof AbruptCompletion) {
+      return _temp5;
+    }
+
+    if (_temp5 instanceof Completion) {
+      _temp5 = _temp5.Value;
+    }
+
+    const rval = _temp5;
+
+    switch (operator) {
+      case '<':
+        {
+          // 5. Let r be the result of performing Abstract Relational Comparison lval < rval.
+          let r = AbstractRelationalComparison(lval, rval); // 6. ReturnIfAbrupt(r).
+
+          /* c8 ignore if */
+          if (r instanceof AbruptCompletion) {
+            return r;
+          }
+          /* c8 ignore if */
+
+
+          if (r instanceof Completion) {
+            r = r.Value;
+          }
+
+          if (r === Value.undefined) {
+            return Value.false;
+          }
+
+          return r;
+        }
+
+      case '>':
+        {
+          // 5. Let r be the result of performing Abstract Relational Comparison rval < lval with LeftFirst equal to false.
+          let r = AbstractRelationalComparison(rval, lval, false); // 6. ReturnIfAbrupt(r).
+
+          if (r instanceof AbruptCompletion) {
+            return r;
+          }
+
+          if (r instanceof Completion) {
+            r = r.Value;
+          }
+
+          if (r === Value.undefined) {
+            return Value.false;
+          }
+
+          return r;
+        }
+
+      case '<=':
+        {
+          // 5. Let r be the result of performing Abstract Relational Comparison rval < lval with LeftFirst equal to false.
+          let r = AbstractRelationalComparison(rval, lval, false); // 6. ReturnIfAbrupt(r).
+
+          if (r instanceof AbruptCompletion) {
+            return r;
+          }
+
+          if (r instanceof Completion) {
+            r = r.Value;
+          }
+
+          if (r === Value.true || r === Value.undefined) {
+            return Value.false;
+          }
+
+          return Value.true;
+        }
+
+      case '>=':
+        {
+          // 5. Let r be the result of performing Abstract Relational Comparison lval < rval.
+          let r = AbstractRelationalComparison(lval, rval); // 6. ReturnIfAbrupt(r).
+
+          if (r instanceof AbruptCompletion) {
+            return r;
+          }
+
+          if (r instanceof Completion) {
+            r = r.Value;
+          }
+
+          if (r === Value.true || r === Value.undefined) {
+            return Value.false;
+          }
+
+          return Value.true;
+        }
+
+      case 'instanceof':
+        // 5. Return ? InstanceofOperator(lval, rval).
+        return InstanceofOperator(lval, rval);
+
+      case 'in':
+        // 5. Return ? InstanceofOperator(lval, rval).
+        if (Type(rval) !== 'Object') {
+          return exports.surroundingAgent.Throw('TypeError', 'NotAnObject', rval);
+        } // 6. Return ? HasProperty(rval, ? ToPropertyKey(lval)).
+
+
+        return HasProperty(rval, ToPropertyKey(lval));
+
+      /*c8 ignore next*/
+      default:
+        throw new OutOfRange$1('Evaluate_RelationalExpression', operator);
+    }
+  }
+
+  //   BreakableStatement :
+  //     IterationStatement
+  //     SwitchStatement
+  //
+  //   IterationStatement :
+  //     (DoStatement)
+  //     (WhileStatement)
+
+  function Evaluate_BreakableStatement(BreakableStatement) {
+    // 1. Let newLabelSet be a new empty List.
+    const newLabelSet = new ValueSet(); // 2. Return the result of performing LabelledEvaluation of this BreakableStatement with argument newLabelSet.
+
+    return LabelledEvaluation(BreakableStatement, newLabelSet);
+  }
+
+  function assignProps(realmRec, obj, props) {
+    for (const item of props) {
+      if (item === undefined) {
+        continue;
+      }
+
+      const [n, v, len, descriptor] = item;
+      const name = n instanceof Value ? n : new Value(n);
+
+      if (Array.isArray(v)) {
+        // Every accessor property described in clauses 18 through 26 and in
+        // Annex B.2 has the attributes { [[Enumerable]]: false,
+        // [[Configurable]]: true } unless otherwise specified. If only a get
+        // accessor function is described, the set accessor function is the
+        // default value, undefined. If only a set accessor is described the get
+        // accessor is the default value, undefined.
+        let [getter = Value.undefined, setter = Value.undefined] = v;
+
+        if (typeof getter === 'function') {
+          getter = CreateBuiltinFunction(getter, [], realmRec);
+
+          let _temp = SetFunctionLength(getter, 0);
+
+          Assert(!(_temp instanceof AbruptCompletion), "SetFunctionLength(getter, 0)" + ' returned an abrupt completion');
+          /* c8 ignore if */
+
+          if (_temp instanceof Completion) {
+            _temp = _temp.Value;
+          }
+
+          let _temp2 = SetFunctionName(getter, name, new Value('get'));
+
+          Assert(!(_temp2 instanceof AbruptCompletion), "SetFunctionName(getter, name, new Value('get'))" + ' returned an abrupt completion');
+
+          if (_temp2 instanceof Completion) {
+            _temp2 = _temp2.Value;
+          }
+        }
+
+        if (typeof setter === 'function') {
+          setter = CreateBuiltinFunction(setter, [], realmRec);
+
+          let _temp3 = SetFunctionLength(setter, 1);
+
+          Assert(!(_temp3 instanceof AbruptCompletion), "SetFunctionLength(setter, 1)" + ' returned an abrupt completion');
+
+          if (_temp3 instanceof Completion) {
+            _temp3 = _temp3.Value;
+          }
+
+          let _temp4 = SetFunctionName(setter, name, new Value('set'));
+
+          Assert(!(_temp4 instanceof AbruptCompletion), "SetFunctionName(setter, name, new Value('set'))" + ' returned an abrupt completion');
+
+          if (_temp4 instanceof Completion) {
+            _temp4 = _temp4.Value;
+          }
+        }
+
+        let _temp5 = obj.DefineOwnProperty(name, Descriptor({
+          Get: getter,
+          Set: setter,
+          Enumerable: Value.false,
+          Configurable: Value.true,
+          ...descriptor
+        }));
+
+        Assert(!(_temp5 instanceof AbruptCompletion), "obj.DefineOwnProperty(name, Descriptor({\n        Get: getter,\n        Set: setter,\n        Enumerable: Value.false,\n        Configurable: Value.true,\n        ...descriptor,\n      }))" + ' returned an abrupt completion');
+
+        if (_temp5 instanceof Completion) {
+          _temp5 = _temp5.Value;
+        }
+      } else {
+        // Every other data property described in clauses 18 through 26 and in
+        // Annex B.2 has the attributes { [[Writable]]: true, [[Enumerable]]:
+        // false, [[Configurable]]: true } unless otherwise specified.
+        let value;
+
+        if (typeof v === 'function') {
+          Assert(typeof len === 'number', "typeof len === 'number'");
+          value = CreateBuiltinFunction(v, [], realmRec);
+
+          let _temp6 = SetFunctionLength(value, len);
+
+          Assert(!(_temp6 instanceof AbruptCompletion), "SetFunctionLength(value, len)" + ' returned an abrupt completion');
+
+          if (_temp6 instanceof Completion) {
+            _temp6 = _temp6.Value;
+          }
+
+          let _temp7 = SetFunctionName(value, name);
+
+          Assert(!(_temp7 instanceof AbruptCompletion), "SetFunctionName(value, name)" + ' returned an abrupt completion');
+
+          if (_temp7 instanceof Completion) {
+            _temp7 = _temp7.Value;
+          }
+        } else {
+          value = v;
+        }
+
+        obj.properties.set(name, Descriptor({
+          Value: value,
+          Writable: Value.true,
+          Enumerable: Value.false,
+          Configurable: Value.true,
+          ...descriptor
+        }));
+      }
+    }
+  }
+  function bootstrapPrototype(realmRec, props, Prototype, stringTag) {
+    Assert(Prototype !== undefined, "Prototype !== undefined");
+    const proto = OrdinaryObjectCreate(Prototype);
+    assignProps(realmRec, proto, props);
+
+    if (stringTag !== undefined) {
+      let _temp8 = proto.DefineOwnProperty(wellKnownSymbols.toStringTag, Descriptor({
+        Value: new Value(stringTag),
+        Writable: Value.false,
+        Enumerable: Value.false,
+        Configurable: Value.true
+      }));
+
+      Assert(!(_temp8 instanceof AbruptCompletion), "proto.DefineOwnProperty(wellKnownSymbols.toStringTag, Descriptor({\n      Value: new Value(stringTag),\n      Writable: Value.false,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    }))" + ' returned an abrupt completion');
+
+      if (_temp8 instanceof Completion) {
+        _temp8 = _temp8.Value;
+      }
+    }
+
+    return proto;
+  }
+  function bootstrapConstructor(realmRec, Constructor, name, length, Prototype, props = []) {
+    const cons = CreateBuiltinFunction(Constructor, [], realmRec, undefined, Value.true);
+    SetFunctionLength(cons, length);
+    SetFunctionName(cons, new Value(name));
+
+    let _temp9 = cons.DefineOwnProperty(new Value('prototype'), Descriptor({
+      Value: Prototype,
+      Writable: Value.false,
+      Enumerable: Value.false,
+      Configurable: Value.false
+    }));
+
+    Assert(!(_temp9 instanceof AbruptCompletion), "cons.DefineOwnProperty(new Value('prototype'), Descriptor({\n    Value: Prototype,\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
+
+    if (_temp9 instanceof Completion) {
+      _temp9 = _temp9.Value;
+    }
+
+    let _temp10 = Prototype.DefineOwnProperty(new Value('constructor'), Descriptor({
+      Value: cons,
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.true
+    }));
+
+    Assert(!(_temp10 instanceof AbruptCompletion), "Prototype.DefineOwnProperty(new Value('constructor'), Descriptor({\n    Value: cons,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
+
+    if (_temp10 instanceof Completion) {
+      _temp10 = _temp10.Value;
+    }
+    assignProps(realmRec, cons, props);
+    return cons;
+  }
+
+  function CreateForInIterator(object) {
+    // 1. Assert: Type(object) is Object.
+    Assert(Type(object) === 'Object', "Type(object) === 'Object'"); // 2. Let iterator be ObjectCreate(%ForInIteratorPrototype%, « [[Object]], [[ObjectWasVisited]], [[VisitedKeys]], [[RemainingKeys]] »).
+
+    const iterator = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%ForInIteratorPrototype%'), ['Object', 'ObjectWasVisited', 'VisitedKeys', 'RemainingKeys']); // 3. Set iterator.[[Object]] to object.
+
+    iterator.Object = object; // 4. Set iterator.[[ObjectWasVisited]] to false.
+
+    iterator.ObjectWasVisited = Value.false; // 5. Set iterator.[[VisitedKeys]] to a new empty List.
+
+    iterator.VisitedKeys = []; // 6. Set iterator.[[RemainingKeys]] to a new empty List.
+
+    iterator.RemainingKeys = []; // 7. Return iterator.
+
+    return iterator;
+  } // #sec-%foriniteratorprototype%.next
+
+  function ForInIteratorPrototype_next(args, {
+    thisValue
+  }) {
+    // 1. Let O be this value.
+    const O = thisValue; // 2. Assert: Type(O) is Object.
+
+    Assert(Type(O) === 'Object', "Type(O) === 'Object'"); // 3. Assert: O has all the internal slot sof a For-In Iterator Instance.
+
+    Assert('Object' in O && 'ObjectWasVisited' in O && 'VisitedKeys' in O && 'RemainingKeys in O', "'Object' in O && 'ObjectWasVisited' in O && 'VisitedKeys' in O && 'RemainingKeys in O'"); // 4. Let object be O.[[Object]].
+
+    let object = O.Object; // 5. Let visited be O.[[VisitedKeys]].
+
+    const visited = O.VisitedKeys; // 6. Let remaining be O.[[RemainingKeys]].
+
+    const remaining = O.RemainingKeys; // 7. Repeat,
+
+    while (true) {
+      // a. If O.[[ObjectWasVisited]] is false, then
+      if (O.ObjectWasVisited === Value.false) {
+        let _temp = object.OwnPropertyKeys();
+        /* c8 ignore if */
+
+
+        if (_temp instanceof AbruptCompletion) {
+          return _temp;
+        }
+        /* c8 ignore if */
+
+
+        if (_temp instanceof Completion) {
+          _temp = _temp.Value;
+        }
+
+        // i. Let keys be ? object.[[OwnPropertyKeys]]().
+        const keys = _temp; // ii. for each key of keys in List order, do
+
+        for (const key of keys) {
+          // 1. If Type(key) is String, then
+          if (Type(key) === 'String') {
+            // a. Append key to remaining.
+            remaining.push(key);
+          }
+        } // iii. Set O.ObjectWasVisited to true.
+
+
+        O.ObjectWasVisited = Value.true;
+      } // b. Repeat, while remaining is not empty,
+
+
+      while (remaining.length > 0) {
+        // i. Remove the first element from remaining and let r be the value of the element.
+        const r = remaining.shift(); // ii. If there does not exist an element v of visisted such that SameValue(r, v) is true, then
+
+        if (!visited.find(v => SameValue(r, v) === Value.true)) {
+          let _temp2 = object.GetOwnProperty(r);
+
+          if (_temp2 instanceof AbruptCompletion) {
+            return _temp2;
+          }
+
+          if (_temp2 instanceof Completion) {
+            _temp2 = _temp2.Value;
+          }
+
+          // 1. Let desc be ? object.[[GetOwnProperty]](r).
+          const desc = _temp2; // 2. If desc is not undefined, then,
+
+          if (desc !== Value.undefined) {
+            // a. Append r to visited.
+            visited.push(r); // b. If desc.[[Enumerable]] is true, return CreateIterResultObject(r, false).
+
+            if (desc.Enumerable === Value.true) {
+              return CreateIterResultObject(r, Value.false);
+            }
+          }
+        }
+      } // c. Set object to ? object.[[GetPrototypeOf]]().
+
+
+      let _temp3 = object.GetPrototypeOf();
+
+      if (_temp3 instanceof AbruptCompletion) {
+        return _temp3;
+      }
+
+      if (_temp3 instanceof Completion) {
+        _temp3 = _temp3.Value;
+      }
+
+      object = _temp3; // d. Set O.Object to object.
+
+      O.Object = object; // e. Set O.ObjectWasVisited to false.
+
+      O.ObjectWasVisited = Value.false; // f. If object is null, return CreateIterResultObject(undefined, true).
+
+      if (object === Value.null) {
+        return CreateIterResultObject(Value.undefined, Value.true);
+      }
+    }
+  }
+
+  ForInIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%foriniteratorprototype%.next';
+  function bootstrapForInIteratorPrototype(realmRec) {
+    const proto = bootstrapPrototype(realmRec, [['next', ForInIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%']);
+    realmRec.Intrinsics['%ForInIteratorPrototype%'] = proto;
+  }
+
+  function LoopContinues(completion, labelSet) {
+    // 1. If completion.[[Type]] is normal, return true.
+    if (completion.Type === 'normal') {
+      return Value.true;
+    } // 2. If completion.[[Type]] is not continue, return false.
+
+
+    if (completion.Type !== 'continue') {
+      return Value.false;
+    } // 3. If completion.[[Target]] is empty, return true.
+
+
+    if (completion.Target === undefined) {
+      return Value.true;
+    } // 4. If completion.[[Target]] is an element of labelSet, return true.
+
+
+    if (labelSet.has(completion.Target)) {
+      return Value.true;
+    } // 5. Return false.
+
+
+    return Value.false;
+  }
+
+  LoopContinues.section = 'https://tc39.es/ecma262/#sec-loopcontinues';
+  function LabelledEvaluation(node, labelSet) {
+    switch (node.type) {
+      case 'DoWhileStatement':
+      case 'WhileStatement':
+      case 'ForStatement':
+      case 'ForInStatement':
+      case 'ForOfStatement':
+      case 'ForAwaitStatement':
+      case 'SwitchStatement':
+        return LabelledEvaluation_BreakableStatement(node, labelSet);
+
+      case 'LabelledStatement':
+        return LabelledEvaluation_LabelledStatement(node, labelSet);
+
+      /*c8 ignore next*/
+      default:
+        throw new OutOfRange$1('LabelledEvaluation', node);
+    }
+  } // #sec-labelled-statements-runtime-semantics-labelledevaluation
+  //   LabelledStatement : LabelIdentifier `:` LabelledItem
+
+  function* LabelledEvaluation_LabelledStatement({
+    LabelIdentifier,
+    LabelledItem
+  }, labelSet) {
+    // 1. Let label be the StringValue of LabelIdentifier.
+    const label = StringValue$1(LabelIdentifier); // 2. Append label as an element of labelSet.
+
+    labelSet.add(label); // 3. Let stmtResult be LabelledEvaluation of LabelledItem with argument labelSet.
+
+    let stmtResult = EnsureCompletion(yield* LabelledEvaluation_LabelledItem(LabelledItem, labelSet)); // 4. If stmtResult.[[Type]] is break and SameValue(stmtResult.[[Target]], label) is true, then
+
+    if (stmtResult.Type === 'break' && SameValue(stmtResult.Target, label) === Value.true) {
+      // a. Set stmtResult to NormalCompletion(stmtResult.[[Value]]).
+      stmtResult = NormalCompletion(stmtResult.Value);
+    } // 5. Return Completion(stmtResult).
+
+
+    return Completion(stmtResult);
+  } // LabelledItem :
+  //   Statement
+  //   FunctionDeclaration
+
+
+  LabelledEvaluation_LabelledStatement.section = 'https://tc39.es/ecma262/#sec-labelled-statements-runtime-semantics-labelledevaluation';
+
+  function LabelledEvaluation_LabelledItem(LabelledItem, labelSet) {
+    switch (LabelledItem.type) {
+      case 'DoWhileStatement':
+      case 'WhileStatement':
+      case 'ForStatement':
+      case 'ForInStatement':
+      case 'ForOfStatement':
+      case 'SwitchStatement':
+      case 'LabelledStatement':
+        return LabelledEvaluation(LabelledItem, labelSet);
+
+      default:
+        return Evaluate(LabelledItem);
+    }
+  } // #sec-statement-semantics-runtime-semantics-labelledevaluation
+  //  BreakableStatement :
+  //    IterationStatement
+  //    SwitchStatement
+  //
+  //  IterationStatement :
+  //    (DoWhileStatement)
+  //    (WhileStatement)
+
+
+  function* LabelledEvaluation_BreakableStatement(BreakableStatement, labelSet) {
+    switch (BreakableStatement.type) {
+      case 'DoWhileStatement':
+      case 'WhileStatement':
+      case 'ForStatement':
+      case 'ForInStatement':
+      case 'ForOfStatement':
+      case 'ForAwaitStatement':
+        {
+          // 1. Let stmtResult be LabelledEvaluation of IterationStatement with argument labelSet.
+          let stmtResult = EnsureCompletion(yield* LabelledEvaluation_IterationStatement(BreakableStatement, labelSet)); // 2. If stmtResult.[[Type]] is break, then
+
+          if (stmtResult.Type === 'break') {
+            // a. If stmtResult.[[Target]] is empty, then
+            if (stmtResult.Target === undefined) {
+              // i. If stmtResult.[[Value]] is empty, set stmtResult to NormalCompletion(undefined).
+              if (stmtResult.Value === undefined) {
+                stmtResult = NormalCompletion(Value.undefined);
+              } else {
+                // ii. Else, set stmtResult to NormalCompletion(stmtResult.[[Value]]).
+                stmtResult = NormalCompletion(stmtResult.Value);
+              }
+            }
+          } // 3. Return Completion(stmtResult).
+
+
+          return Completion(stmtResult);
+        }
+
+      case 'SwitchStatement':
+        {
+          // 1. Let stmtResult be LabelledEvaluation of SwitchStatement.
+          let stmtResult = EnsureCompletion(yield* Evaluate_SwitchStatement(BreakableStatement)); // 2. If stmtResult.[[Type]] is break, then
+
+          if (stmtResult.Type === 'break') {
+            // a. If stmtResult.[[Target]] is empty, then
+            if (stmtResult.Target === undefined) {
+              // i. If stmtResult.[[Value]] is empty, set stmtResult to NormalCompletion(undefined).
+              if (stmtResult.Value === undefined) {
+                stmtResult = NormalCompletion(Value.undefined);
+              } else {
+                // ii. Else, set stmtResult to NormalCompletion(stmtResult.[[Value]]).
+                stmtResult = NormalCompletion(stmtResult.Value);
+              }
+            }
+          } // 3. Return Completion(stmtResult).
+
+
+          return Completion(stmtResult);
+        }
+
+      /*c8 ignore next*/
+      default:
+        throw new OutOfRange$1('LabelledEvaluation_BreakableStatement', BreakableStatement);
+    }
+  }
+
+  LabelledEvaluation_BreakableStatement.section = 'https://tc39.es/ecma262/#sec-statement-semantics-runtime-semantics-labelledevaluation';
+
+  function LabelledEvaluation_IterationStatement(IterationStatement, labelSet) {
+    switch (IterationStatement.type) {
+      case 'DoWhileStatement':
+        return LabelledEvaluation_IterationStatement_DoWhileStatement(IterationStatement, labelSet);
+
+      case 'WhileStatement':
+        return LabelledEvaluation_IterationStatement_WhileStatement(IterationStatement, labelSet);
+
+      case 'ForStatement':
+        return LabelledEvaluation_BreakableStatement_ForStatement(IterationStatement, labelSet);
+
+      case 'ForInStatement':
+        return LabelledEvaluation_IterationStatement_ForInStatement(IterationStatement, labelSet);
+
+      case 'ForOfStatement':
+        return LabelledEvaluation_IterationStatement_ForOfStatement(IterationStatement, labelSet);
+
+      case 'ForAwaitStatement':
+        return LabelledEvaluation_IterationStatement_ForAwaitStatement(IterationStatement, labelSet);
+
+      /*c8 ignore next*/
+      default:
+        throw new OutOfRange$1('LabelledEvaluation_IterationStatement', IterationStatement);
+    }
+  } // #sec-do-while-statement-runtime-semantics-labelledevaluation
+  //   IterationStatement :
+  //     `do` Statement `while` `(` Expression `)` `;`
+
+
+  function* LabelledEvaluation_IterationStatement_DoWhileStatement({
+    Statement,
+    Expression
+  }, labelSet) {
+    // 1. Let V be undefined.
+    let V = Value.undefined; // 2. Repeat,
+
+    while (true) {
+      // a. Let stmtResult be the result of evaluating Statement.
+      const stmtResult = EnsureCompletion(yield* Evaluate(Statement)); // b. If LoopContinues(stmtResult, labelSet) is false, return Completion(UpdateEmpty(stmtResult, V)).
+
+      if (LoopContinues(stmtResult, labelSet) === Value.false) {
+        return Completion(UpdateEmpty(stmtResult, V));
+      } // c. If stmtResult.[[Value]] is not empty, set V to stmtResult.[[Value]].
+
+
+      if (stmtResult.Value !== undefined) {
+        V = stmtResult.Value;
+      } // d. Let exprRef be the result of evaluating Expression.
+
+
+      const exprRef = yield* Evaluate(Expression); // e. Let exprValue be ? GetValue(exprRef).
+
+      let _temp = GetValue(exprRef);
+      /* c8 ignore if */
+
+
+      if (_temp instanceof AbruptCompletion) {
+        return _temp;
+      }
+      /* c8 ignore if */
+
+
+      if (_temp instanceof Completion) {
+        _temp = _temp.Value;
+      }
+
+      const exprValue = _temp; // f. If ! ToBoolean(exprValue) is false, return NormalCompletion(V).
+
+      let _temp2 = ToBoolean(exprValue);
+
+      Assert(!(_temp2 instanceof AbruptCompletion), "ToBoolean(exprValue)" + ' returned an abrupt completion');
+      /* c8 ignore if */
+
+      if (_temp2 instanceof Completion) {
+        _temp2 = _temp2.Value;
+      }
+
+      if (_temp2 === Value.false) {
+        return NormalCompletion(V);
+      }
+    }
+  } // #sec-while-statement-runtime-semantics-labelledevaluation
+  //   IterationStatement :
+  //     `while` `(` Expression `)` Statement
+
+
+  LabelledEvaluation_IterationStatement_DoWhileStatement.section = 'https://tc39.es/ecma262/#sec-do-while-statement-runtime-semantics-labelledevaluation';
+
+  function* LabelledEvaluation_IterationStatement_WhileStatement({
+    Expression,
+    Statement
+  }, labelSet) {
+    // 1. Let V be undefined.
+    let V = Value.undefined; // 2. Repeat,
+
+    while (true) {
+      // a. Let exprRef be the result of evaluating Expression.
+      const exprRef = yield* Evaluate(Expression); // b. Let exprValue be ? GetValue(exprRef).
+
+      let _temp3 = GetValue(exprRef);
+
+      if (_temp3 instanceof AbruptCompletion) {
+        return _temp3;
+      }
+
+      if (_temp3 instanceof Completion) {
+        _temp3 = _temp3.Value;
+      }
+
+      const exprValue = _temp3; // c. If ! ToBoolean(exprValue) is false, return NormalCompletion(V).
+
+      let _temp4 = ToBoolean(exprValue);
+
+      Assert(!(_temp4 instanceof AbruptCompletion), "ToBoolean(exprValue)" + ' returned an abrupt completion');
+
+      if (_temp4 instanceof Completion) {
+        _temp4 = _temp4.Value;
+      }
+
+      if (_temp4 === Value.false) {
+        return NormalCompletion(V);
+      } // d. Let stmtResult be the result of evaluating Statement.
+
+
+      const stmtResult = EnsureCompletion(yield* Evaluate(Statement)); // e. If LoopContinues(stmtResult, labelSet) is false, return Completion(UpdateEmpty(stmtResult, V)).
+
+      if (LoopContinues(stmtResult, labelSet) === Value.false) {
+        return Completion(UpdateEmpty(stmtResult, V));
+      } // f. If stmtResult.[[Value]] is not empty, set V to stmtResult.[[Value]].
+
+
+      if (stmtResult.Value !== undefined) {
+        V = stmtResult.Value;
+      }
+    }
+  } // #sec-for-statement-runtime-semantics-labelledevaluation
+  //   IterationStatement :
+  //     `for` `(` Expression? `;` Expression? `;` Expresssion? `)` Statement
+  //     `for` `(` `var` VariableDeclarationList `;` Expression? `;` Expression? `)` Statement
+  //     `for` `(` LexicalDeclaration Expression? `;` Expression? `)` Statement
+
+
+  LabelledEvaluation_IterationStatement_WhileStatement.section = 'https://tc39.es/ecma262/#sec-while-statement-runtime-semantics-labelledevaluation';
+
+  function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement, labelSet) {
+    const {
+      VariableDeclarationList,
+      LexicalDeclaration,
+      Expression_a,
+      Expression_b,
+      Expression_c,
+      Statement
+    } = ForStatement;
+
+    switch (true) {
+      case !!LexicalDeclaration:
+        {
+          // 1. Let oldEnv be the running execution context's LexicalEnvironment.
+          const oldEnv = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let loopEnv be NewDeclarativeEnvironment(oldEnv).
+
+          const loopEnv = NewDeclarativeEnvironment(oldEnv); // 3. Let isConst be IsConstantDeclaration of LexicalDeclaration.
+
+          const isConst = IsConstantDeclaration(LexicalDeclaration); // 4. Let boundNames be the BoundNames of LexicalDeclaration.
+
+          const boundNames = BoundNames(LexicalDeclaration); // 5. For each element dn of boundNames, do
+
+          for (const dn of boundNames) {
+            // a. If isConst is true, then
+            if (isConst) {
+              let _temp5 = loopEnv.CreateImmutableBinding(dn, Value.true);
+
+              Assert(!(_temp5 instanceof AbruptCompletion), "loopEnv.CreateImmutableBinding(dn, Value.true)" + ' returned an abrupt completion');
+
+              if (_temp5 instanceof Completion) {
+                _temp5 = _temp5.Value;
+              }
+            } else {
+              let _temp6 = loopEnv.CreateMutableBinding(dn, Value.false);
+
+              Assert(!(_temp6 instanceof AbruptCompletion), "loopEnv.CreateMutableBinding(dn, Value.false)" + ' returned an abrupt completion');
+
+              if (_temp6 instanceof Completion) {
+                _temp6 = _temp6.Value;
+              }
+            }
+          } // 6. Set the running execution context's LexicalEnvironment to loopEnv.
+
+
+          exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = loopEnv; // 7. Let forDcl be the result of evaluating LexicalDeclaration.
+
+          const forDcl = yield* Evaluate(LexicalDeclaration); // 8. If forDcl is an abrupt completion, then
+
+          if (forDcl instanceof AbruptCompletion) {
+            // a. Set the running execution context's LexicalEnvironment to oldEnv.
+            exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv; // b. Return Completion(forDcl).
+
+            return Completion(forDcl);
+          } // 9. If isConst is false, let perIterationLets be boundNames; otherwise let perIterationLets be « ».
+
+
+          let perIterationLets;
+
+          if (isConst === false) {
+            perIterationLets = boundNames;
+          } else {
+            perIterationLets = [];
+          } // 10. Let bodyResult be ForBodyEvaluation(the first Expression, the second Expression, Statement, perIterationLets, labelSet).
+
+
+          const bodyResult = yield* ForBodyEvaluation(Expression_a, Expression_b, Statement, perIterationLets, labelSet); // 11. Set the running execution context's LexicalEnvironment to oldEnv.
+
+          exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv; // 12. Return Completion(bodyResult).
+
+          return Completion(bodyResult);
+        }
+
+      case !!VariableDeclarationList:
+        {
+          // 1. Let varDcl be the result of evaluating VariableDeclarationList.
+          let varDcl = yield* Evaluate_VariableDeclarationList(VariableDeclarationList); // 2. ReturnIfAbrupt(varDcl).
+
+          /* c8 ignore if */
+          if (varDcl instanceof AbruptCompletion) {
+            return varDcl;
+          }
+          /* c8 ignore if */
+
+
+          if (varDcl instanceof Completion) {
+            varDcl = varDcl.Value;
+          }
+
+          return yield* ForBodyEvaluation(Expression_a, Expression_b, Statement, [], labelSet);
+        }
+
+      default:
+        {
+          // 1. If the first Expression is present, then
+          if (Expression_a) {
+            // a. Let exprRef be the result of evaluating the first Expression.
+            const exprRef = yield* Evaluate(Expression_a); // b. Perform ? GetValue(exprRef).
+
+            let _temp7 = GetValue(exprRef);
+
+            if (_temp7 instanceof AbruptCompletion) {
+              return _temp7;
+            }
+
+            if (_temp7 instanceof Completion) {
+              _temp7 = _temp7.Value;
+            }
+          } // 2. Return ? ForBodyEvaluation(the second Expression, the third Expression, Statement, « », labelSet).
+
+
+          return yield* ForBodyEvaluation(Expression_b, Expression_c, Statement, [], labelSet);
+        }
+    }
+  }
+
+  LabelledEvaluation_BreakableStatement_ForStatement.section = 'https://tc39.es/ecma262/#sec-for-statement-runtime-semantics-labelledevaluation';
+
+  function* LabelledEvaluation_IterationStatement_ForInStatement(ForInStatement, labelSet) {
+    const {
+      LeftHandSideExpression,
+      ForBinding,
+      ForDeclaration,
+      Expression,
+      Statement
+    } = ForInStatement;
+
+    switch (true) {
+      case !!LeftHandSideExpression && !!Expression:
+        {
+          let _temp8 = yield* ForInOfHeadEvaluation([], Expression, 'enumerate');
+
+          if (_temp8 instanceof AbruptCompletion) {
+            return _temp8;
+          }
+
+          if (_temp8 instanceof Completion) {
+            _temp8 = _temp8.Value;
+          }
+
+          // IterationStatement : `for` `(` LeftHandSideExpression `in` Expression `)` Statement
+          // 1. Let keyResult be ? ForIn/OfHeadEvaluation(« », Expression, enumerate).
+          const keyResult = _temp8; // 2. Return ? ForIn/OfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, enumerate, assignment, labelSet).
+
+          return yield* ForInOfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, 'enumerate', 'assignment', labelSet);
+        }
+
+      case !!ForBinding && !!Expression:
+        {
+          let _temp9 = yield* ForInOfHeadEvaluation([], Expression, 'enumerate');
+
+          if (_temp9 instanceof AbruptCompletion) {
+            return _temp9;
+          }
+
+          if (_temp9 instanceof Completion) {
+            _temp9 = _temp9.Value;
+          }
+
+          // IterationStatement :`for` `(` `var` ForBinding `in` Expression `)` Statement
+          // 1. Let keyResult be ? ForIn/OfHeadEvaluation(« », Expression, enumerate).
+          const keyResult = _temp9; // 2. Return ? ForIn/OfBodyEvaluation(ForBinding, Statement, keyResult, enumerate, varBinding, labelSet).
+
+          return yield* ForInOfBodyEvaluation(ForBinding, Statement, keyResult, 'enumerate', 'varBinding', labelSet);
+        }
+
+      case !!ForDeclaration && !!Expression:
+        {
+          let _temp10 = yield* ForInOfHeadEvaluation(BoundNames(ForDeclaration), Expression, 'enumerate');
+
+          if (_temp10 instanceof AbruptCompletion) {
+            return _temp10;
+          }
+
+          if (_temp10 instanceof Completion) {
+            _temp10 = _temp10.Value;
+          }
+
+          // IterationStatement : `for` `(` ForDeclaration `in` Expression `)` Statement
+          // 1. Let keyResult be ? ForIn/OfHeadEvaluation(BoundNames of ForDeclaration, Expression, enumerate).
+          const keyResult = _temp10; // 2. Return ? ForIn/OfBodyEvaluation(ForDeclaration, Statement, keyResult, enumerate, lexicalBinding, labelSet).
+
+          return yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'enumerate', 'lexicalBinding', labelSet);
+        }
+
+      /*c8 ignore next*/
+      default:
+        throw new OutOfRange$1('LabelledEvaluation_IterationStatement_ForInStatement', ForInStatement);
+    }
+  } // IterationStatement :
+  //   `for` `await` `(` LeftHandSideExpression `of` AssignmentExpression `)` Statement
+  //   `for` `await` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
+  //   `for` `await` `(` ForDeclaration`of` AssignmentExpression `)` Statement
+
+
+  function* LabelledEvaluation_IterationStatement_ForAwaitStatement(ForAwaitStatement, labelSet) {
+    const {
+      LeftHandSideExpression,
+      ForBinding,
+      ForDeclaration,
+      AssignmentExpression,
+      Statement
+    } = ForAwaitStatement;
+
+    switch (true) {
+      case !!LeftHandSideExpression:
+        {
+          let _temp11 = yield* ForInOfHeadEvaluation([], AssignmentExpression, 'async-iterate');
+
+          if (_temp11 instanceof AbruptCompletion) {
+            return _temp11;
+          }
+
+          if (_temp11 instanceof Completion) {
+            _temp11 = _temp11.Value;
+          }
+
+          // 1. Let keyResult be ? ForIn/OfHeadEvaluation(« », AssignmentExpression, async-iterate).
+          const keyResult = _temp11; // 2. Return ? ForIn/OfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, iterate, assignment, labelSet, async).
+
+          return yield* ForInOfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, 'iterate', 'assignment', labelSet, 'async');
+        }
+
+      case !!ForBinding:
+        {
+          let _temp12 = yield* ForInOfHeadEvaluation([], AssignmentExpression, 'async-iterate');
+
+          if (_temp12 instanceof AbruptCompletion) {
+            return _temp12;
+          }
+
+          if (_temp12 instanceof Completion) {
+            _temp12 = _temp12.Value;
+          }
+
+          // 1. Let keyResult be ? ForIn/OfHeadEvaluation(« », AssignmentExpression, async-iterate).
+          const keyResult = _temp12; // 2. Return ? ForIn/OfBodyEvaluation(ForBinding, Statement, keyResult, iterate, varBinding, labelSet, async).
+
+          return yield* ForInOfBodyEvaluation(ForBinding, Statement, keyResult, 'iterate', 'varBinding', labelSet, 'async');
+        }
+
+      case !!ForDeclaration:
+        {
+          let _temp13 = yield* ForInOfHeadEvaluation(BoundNames(ForDeclaration), AssignmentExpression, 'async-iterate');
+
+          if (_temp13 instanceof AbruptCompletion) {
+            return _temp13;
+          }
+
+          if (_temp13 instanceof Completion) {
+            _temp13 = _temp13.Value;
+          }
+
+          // 1. Let keyResult be ? ForIn/OfHeadEvaluation(BoundNames of ForDeclaration, AssignmentExpression, async-iterate).
+          const keyResult = _temp13; // 2. Return ? ForIn/OfBodyEvaluation(ForDeclaration, Statement, keyResult, iterate, lexicalBinding, labelSet, async).
+
+          return yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'iterate', 'lexicalBinding', labelSet, 'async');
+        }
+
+      /*c8 ignore next*/
+      default:
+        throw new OutOfRange$1('LabelledEvaluation_IterationStatement_ForAwaitStatement', ForAwaitStatement);
+    }
+  } // #sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation
+  // IterationStatement :
+  //   `for` `(` LeftHandSideExpression `of` AssignmentExpression `)` Statement
+  //   `for` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
+  //   `for` `(` ForDeclaration `of` AssignmentExpression `)` Statement
+
+
+  function* LabelledEvaluation_IterationStatement_ForOfStatement(ForOfStatement, labelSet) {
+    const {
+      LeftHandSideExpression,
+      ForBinding,
+      ForDeclaration,
+      AssignmentExpression,
+      Statement
+    } = ForOfStatement;
+
+    switch (true) {
+      case !!LeftHandSideExpression:
+        {
+          let _temp14 = yield* ForInOfHeadEvaluation([], AssignmentExpression, 'iterate');
+
+          if (_temp14 instanceof AbruptCompletion) {
+            return _temp14;
+          }
+
+          if (_temp14 instanceof Completion) {
+            _temp14 = _temp14.Value;
+          }
+
+          // 1. Let keyResult be ? ForIn/OfHeadEvaluation(« », AssignmentExpression, iterate).
+          const keyResult = _temp14; // 2. Return ? ForIn/OfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, iterate, assignment, labelSet).
+
+          return yield* ForInOfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, 'iterate', 'assignment', labelSet);
+        }
+
+      case !!ForBinding:
+        {
+          let _temp15 = yield* ForInOfHeadEvaluation([], AssignmentExpression, 'iterate');
+
+          if (_temp15 instanceof AbruptCompletion) {
+            return _temp15;
+          }
+
+          if (_temp15 instanceof Completion) {
+            _temp15 = _temp15.Value;
+          }
+
+          // 1. Let keyResult be ? ForIn/OfHeadEvaluation(« », AssignmentExpression, iterate).
+          const keyResult = _temp15; // 2. Return ? ForIn/OfBodyEvaluation(ForBinding, Statement, keyResult, iterate, varBinding, labelSet).
+
+          return yield* ForInOfBodyEvaluation(ForBinding, Statement, keyResult, 'iterate', 'varBinding', labelSet);
+        }
+
+      case !!ForDeclaration:
+        {
+          let _temp16 = yield* ForInOfHeadEvaluation(BoundNames(ForDeclaration), AssignmentExpression, 'iterate');
+
+          if (_temp16 instanceof AbruptCompletion) {
+            return _temp16;
+          }
+
+          if (_temp16 instanceof Completion) {
+            _temp16 = _temp16.Value;
+          }
+
+          // 1. Let keyResult be ? ForIn/OfHeadEvaluation(BoundNames of ForDeclaration, AssignmentExpression, iterate).
+          const keyResult = _temp16; // 2. Return ? ForIn/OfBodyEvaluation(ForDeclaration, Statement, keyResult, iterate, lexicalBinding, labelSet).
+
+          return yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'iterate', 'lexicalBinding', labelSet);
+        }
+
+      /*c8 ignore next*/
+      default:
+        throw new OutOfRange$1('LabelledEvaluation_BreakableStatement_ForOfStatement', ForOfStatement);
+    }
+  } // #sec-forbodyevaluation
+
+
+  LabelledEvaluation_IterationStatement_ForOfStatement.section = 'https://tc39.es/ecma262/#sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation';
+
+  function* ForBodyEvaluation(test, increment, stmt, perIterationBindings, labelSet) {
+    // 1. Let V be undefined.
+    let V = Value.undefined; // 2. Perform ? CreatePerIterationEnvironment(perIterationBindings).
+
+    let _temp17 = CreatePerIterationEnvironment(perIterationBindings);
+
+    if (_temp17 instanceof AbruptCompletion) {
+      return _temp17;
+    }
+
+    if (_temp17 instanceof Completion) {
+      _temp17 = _temp17.Value;
+    }
+
+    while (true) {
+      // a. If test is not [empty], then
+      if (test) {
+        // i. Let testRef be the result of evaluating test.
+        const testRef = yield* Evaluate(test); // ii. Let testValue be ? GetValue(testRef).
+
+        let _temp18 = GetValue(testRef);
+
+        if (_temp18 instanceof AbruptCompletion) {
+          return _temp18;
+        }
+
+        if (_temp18 instanceof Completion) {
+          _temp18 = _temp18.Value;
+        }
+
+        const testValue = _temp18; // iii. If ! ToBoolean(testValue) is false, return NormalCompletion(V).
+
+        let _temp19 = ToBoolean(testValue);
+
+        Assert(!(_temp19 instanceof AbruptCompletion), "ToBoolean(testValue)" + ' returned an abrupt completion');
+
+        if (_temp19 instanceof Completion) {
+          _temp19 = _temp19.Value;
+        }
+
+        if (_temp19 === Value.false) {
+          return NormalCompletion(V);
+        }
+      } // b. Let result be the result of evaluating stmt.
+
+
+      const result = EnsureCompletion(yield* Evaluate(stmt)); // c. If LoopContinues(result, labelSet) is false, return Completion(UpdateEmpty(result, V)).
+
+      if (LoopContinues(result, labelSet) === Value.false) {
+        return Completion(UpdateEmpty(result, V));
+      } // d. If result.[[Value]] is not empty, set V to result.[[Value]].
+
+
+      if (result.Value !== undefined) {
+        V = result.Value;
+      } // e. Perform ? CreatePerIterationEnvironment(perIterationBindings).
+
+
+      let _temp20 = CreatePerIterationEnvironment(perIterationBindings);
+
+      if (_temp20 instanceof AbruptCompletion) {
+        return _temp20;
+      }
+
+      if (_temp20 instanceof Completion) {
+        _temp20 = _temp20.Value;
+      }
+
+      if (increment) {
+        // i. Let incRef be the result of evaluating increment.
+        const incRef = yield* Evaluate(increment); // ii. Perform ? GetValue(incRef).
+
+        let _temp21 = GetValue(incRef);
+
+        if (_temp21 instanceof AbruptCompletion) {
+          return _temp21;
+        }
+
+        if (_temp21 instanceof Completion) {
+          _temp21 = _temp21.Value;
+        }
+      }
+    }
+  } // #sec-createperiterationenvironment
+
+
+  ForBodyEvaluation.section = 'https://tc39.es/ecma262/#sec-forbodyevaluation';
+
+  function CreatePerIterationEnvironment(perIterationBindings) {
+    // 1. If perIterationBindings has any elements, then
+    if (perIterationBindings.length > 0) {
+      // a. Let lastIterationEnv be the running execution context's LexicalEnvironment.
+      const lastIterationEnv = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // b. Let outer be lastIterationEnv.[[OuterEnv]].
+
+      const outer = lastIterationEnv.OuterEnv; // c. Assert: outer is not null.
+
+      Assert(outer !== Value.null, "outer !== Value.null"); // d. Let thisIterationEnv be NewDeclarativeEnvironment(outer).
+
+      const thisIterationEnv = NewDeclarativeEnvironment(outer); // e. For each element bn of perIterationBindings, do
+
+      for (const bn of perIterationBindings) {
+        let _temp22 = thisIterationEnv.CreateMutableBinding(bn, Value.false);
+
+        Assert(!(_temp22 instanceof AbruptCompletion), "thisIterationEnv.CreateMutableBinding(bn, Value.false)" + ' returned an abrupt completion');
+
+        if (_temp22 instanceof Completion) {
+          _temp22 = _temp22.Value;
+        }
+
+        let _temp23 = lastIterationEnv.GetBindingValue(bn, Value.true);
+
+        if (_temp23 instanceof AbruptCompletion) {
+          return _temp23;
+        }
+
+        if (_temp23 instanceof Completion) {
+          _temp23 = _temp23.Value;
+        }
+
+        const lastValue = _temp23; // iii. Perform thisIterationEnv.InitializeBinding(bn, lastValue).
+
+        thisIterationEnv.InitializeBinding(bn, lastValue);
+      } // f. Set the running execution context's LexicalEnvironment to thisIterationEnv.
+
+
+      exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = thisIterationEnv;
+    } // 2. Return undefined.
+
+
+    return Value.undefined;
+  } // #sec-runtime-semantics-forinofheadevaluation
+
+
+  CreatePerIterationEnvironment.section = 'https://tc39.es/ecma262/#sec-createperiterationenvironment';
+
+  function* ForInOfHeadEvaluation(uninitializedBoundNames, expr, iterationKind) {
+    // 1. Let oldEnv be the running execution context's LexicalEnvironment.
+    const oldEnv = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. If uninitializedBoundNames is not an empty List, then
+
+    if (uninitializedBoundNames.length > 0) {
+      // a. Assert: uninitializedBoundNames has no duplicate entries.
+      // b. Let newEnv be NewDeclarativeEnvironment(oldEnv).
+      const newEnv = NewDeclarativeEnvironment(oldEnv); // c. For each string name in uninitializedBoundNames, do
+
+      for (const name of uninitializedBoundNames) {
+        let _temp24 = newEnv.CreateMutableBinding(name, Value.false);
+
+        Assert(!(_temp24 instanceof AbruptCompletion), "newEnv.CreateMutableBinding(name, Value.false)" + ' returned an abrupt completion');
+
+        if (_temp24 instanceof Completion) {
+          _temp24 = _temp24.Value;
+        }
+      } // d. Set the running execution context's LexicalEnvironment to newEnv.
+
+
+      exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = newEnv;
+    } // 3. Let exprRef be the result of evaluating expr.
+
+
+    const exprRef = yield* Evaluate(expr); // 4. Set the running execution context's LexicalEnvironment to oldEnv.
+
+    exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv; // 5. Let exprValue be ? GetValue(exprRef).
+
+    let _temp25 = GetValue(exprRef);
+
+    if (_temp25 instanceof AbruptCompletion) {
+      return _temp25;
+    }
+
+    if (_temp25 instanceof Completion) {
+      _temp25 = _temp25.Value;
+    }
+
+    const exprValue = _temp25; // 6. If iterationKind is enumerate, then
+
+    if (iterationKind === 'enumerate') {
+      // a. If exprValue is undefined or null, then
+      if (exprValue === Value.undefined || exprValue === Value.null) {
+        // i. Return Completion { [[Type]]: break, [[Value]]: empty, [[Target]]: empty }.
+        return new Completion({
+          Type: 'break',
+          Value: undefined,
+          Target: undefined
+        });
+      } // b. Let obj be ! ToObject(exprValue).
+
+
+      let _temp26 = ToObject(exprValue);
+
+      Assert(!(_temp26 instanceof AbruptCompletion), "ToObject(exprValue)" + ' returned an abrupt completion');
+
+      if (_temp26 instanceof Completion) {
+        _temp26 = _temp26.Value;
+      }
+
+      const obj = _temp26; // c. Let iterator be ? EnumerateObjectProperties(obj).
+
+      let _temp27 = EnumerateObjectProperties(obj);
+
+      if (_temp27 instanceof AbruptCompletion) {
+        return _temp27;
+      }
+
+      if (_temp27 instanceof Completion) {
+        _temp27 = _temp27.Value;
+      }
+
+      const iterator = _temp27; // d. Let nextMethod be ! GetV(iterator, "next").
+
+      let _temp28 = GetV(iterator, new Value('next'));
+
+      Assert(!(_temp28 instanceof AbruptCompletion), "GetV(iterator, new Value('next'))" + ' returned an abrupt completion');
+
+      if (_temp28 instanceof Completion) {
+        _temp28 = _temp28.Value;
+      }
+
+      const nextMethod = _temp28; // e. Return the Record { [[Iterator]]: iterator, [[NextMethod]]: nextMethod, [[Done]]: false }.
+
+      return {
+        Iterator: iterator,
+        NextMethod: nextMethod,
+        Done: Value.false
+      };
+    } else {
+      // 7. Else,
+      // a. Assert: iterationKind is iterate or async-iterate.
+      Assert(iterationKind === 'iterate' || iterationKind === 'async-iterate', "iterationKind === 'iterate' || iterationKind === 'async-iterate'"); // b. If iterationKind is async-iterate, let iteratorHint be async.
+      // c. Else, let iteratorHint be sync.
+
+      const iteratorHint = iterationKind === 'async-iterate' ? 'async' : 'sync'; // d. Return ? GetIterator(exprValue, iteratorHint).
+
+      return GetIterator(exprValue, iteratorHint);
+    }
+  } // #sec-enumerate-object-properties
+
+
+  ForInOfHeadEvaluation.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-forinofheadevaluation';
+
+  function EnumerateObjectProperties(O) {
+    return CreateForInIterator(O);
+  } // #sec-runtime-semantics-forin-div-ofbodyevaluation-lhs-stmt-iterator-lhskind-labelset
+
+
+  EnumerateObjectProperties.section = 'https://tc39.es/ecma262/#sec-enumerate-object-properties';
+
+  function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKind, labelSet, iteratorKind) {
+    // 1. If iteratorKind is not present, set iteratorKind to sync.
+    if (iterationKind === undefined) {
+      iterationKind = 'sync';
+    } // 2. Let oldEnv be the running execution context's LexicalEnvironment.
+
+
+    const oldEnv = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 3. Let V be undefined.
+
+    let V = Value.undefined; // 4. Let destructuring be IsDestructuring of lhs.
+
+    const destructuring = IsDestructuring(lhs); // 5. If destructuring is true and if lhsKind is assignment, then
+
+    let assignmentPattern;
+
+    if (destructuring && lhsKind === 'assignment') {
+      // a. Assert: lhs is a LeftHandSideExpression.
+      // b. Let assignmentPattern be the AssignmentPattern that is covered by lhs.
+      assignmentPattern = refineLeftHandSideExpression(lhs);
+    } // 6. Repeat,
+
+
+    while (true) {
+      let _temp29 = Call(iteratorRecord.NextMethod, iteratorRecord.Iterator);
+
+      if (_temp29 instanceof AbruptCompletion) {
+        return _temp29;
+      }
+
+      if (_temp29 instanceof Completion) {
+        _temp29 = _temp29.Value;
+      }
+
+      // a. Let nextResult be ? Call(iteratorRecord.[[NextMethod]], iteratorRecord.[[Iterator]]).
+      let nextResult = _temp29; // b. If iteratorKind is async, then set nextResult to ? Await(nextResult).
+
+      if (iteratorKind === 'async') {
+        let _temp30 = yield* Await(nextResult);
+
+        if (_temp30 instanceof AbruptCompletion) {
+          return _temp30;
+        }
+
+        if (_temp30 instanceof Completion) {
+          _temp30 = _temp30.Value;
+        }
+
+        nextResult = _temp30;
+      } // c. If Type(nextResult) is not Object, throw a TypeError exception.
+
+
+      if (Type(nextResult) !== 'Object') {
+        return exports.surroundingAgent.Throw('TypeError', 'NotAnObject', nextResult);
+      } // d. Let done be ? IteratorComplete(nextResult).
+
+
+      let _temp31 = IteratorComplete(nextResult);
+
+      if (_temp31 instanceof AbruptCompletion) {
+        return _temp31;
+      }
+
+      if (_temp31 instanceof Completion) {
+        _temp31 = _temp31.Value;
+      }
+
+      const done = _temp31; // e. If done is true, return NormalCompletion(V).
+
+      if (done === Value.true) {
+        return NormalCompletion(V);
+      } // f. Let nextValue be ? IteratorValue(nextResult).
+
+
+      let _temp32 = IteratorValue(nextResult);
+
+      if (_temp32 instanceof AbruptCompletion) {
+        return _temp32;
+      }
+
+      if (_temp32 instanceof Completion) {
+        _temp32 = _temp32.Value;
+      }
+
+      const nextValue = _temp32; // g. If lhsKind is either assignment or varBinding, then
+
+      let lhsRef;
+      let iterationEnv;
+
+      if (lhsKind === 'assignment' || lhsKind === 'varBinding') {
+        // i. If destructuring is false, then
+        if (destructuring === false) {
+          // 1. Let lhsRef be the result of evaluating lhs. (It may be evaluated repeatedly.)
+          lhsRef = yield* Evaluate(lhs);
+        }
+      } else {
+        // h. Else,
+        // i. Assert: lhsKind is lexicalBinding.
+        Assert(lhsKind === 'lexicalBinding', "lhsKind === 'lexicalBinding'"); // ii. Assert: lhs is a ForDeclaration.
+
+        Assert(lhs.type === 'ForDeclaration', "lhs.type === 'ForDeclaration'"); // iii. Let iterationEnv be NewDeclarativeEnvironment(oldEnv).
+
+        iterationEnv = NewDeclarativeEnvironment(oldEnv); // iv. Perform BindingInstantiation for lhs passing iterationEnv as the argument.
+
+        BindingInstantiation(lhs, iterationEnv); // v. Set the running execution context's LexicalEnvironment to iterationEnv.
+
+        exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = iterationEnv; // vi. If destructuring is false, then
+
+        if (destructuring === false) {
+          // 1. Assert: lhs binds a single name.
+          // 2. Let lhsName be the sole element of BoundNames of lhs.
+          const lhsName = BoundNames(lhs)[0]; // 3. Let lhsRef be ! ResolveBinding(lhsName).
+
+          let _temp33 = ResolveBinding(lhsName, undefined, lhs.strict);
+
+          Assert(!(_temp33 instanceof AbruptCompletion), "ResolveBinding(lhsName, undefined, lhs.strict)" + ' returned an abrupt completion');
+
+          if (_temp33 instanceof Completion) {
+            _temp33 = _temp33.Value;
+          }
+
+          lhsRef = _temp33;
+        }
+      }
+
+      let status; // i. If destructuring is false, then
+
+      if (destructuring === false) {
+        // i. If lhsRef is an abrupt completion, then
+        if (lhsRef instanceof AbruptCompletion) {
+          // 1. Let status be lhsRef.
+          status = lhsRef;
+        } else if (lhsKind === 'lexicalBinding') {
+          // ii. Else is lhsKind is lexicalBinding, then
+          // 1. Let status be InitializeReferencedBinding(lhsRef, nextValue).
+          status = InitializeReferencedBinding(lhsRef, nextValue);
+        } else {
+          // iii. Else,
+          status = PutValue(lhsRef, nextValue);
+        }
+      } else {
+        // j. Else,
+        // i. If lhsKind is assignment, then
+        if (lhsKind === 'assignment') {
+          // 1. Let status be DestructuringAssignmentEvaluation of assignmentPattern with argument nextValue.
+          status = yield* DestructuringAssignmentEvaluation(assignmentPattern, nextValue);
+        } else if (lhsKind === 'varBinding') {
+          // ii. Else if lhsKind is varBinding, then
+          // 1. Assert: lhs is a ForBinding.
+          Assert(lhs.type === 'ForBinding', "lhs.type === 'ForBinding'"); // 2. Let status be BindingInitialization of lhs with arguments nextValue and undefined.
+
+          status = yield* BindingInitialization(lhs, nextValue, Value.undefined);
+        } else {
+          // iii. Else,
+          // 1. Assert: lhsKind is lexicalBinding.
+          Assert(lhsKind === 'lexicalBinding', "lhsKind === 'lexicalBinding'"); // 2. Assert: lhs is a ForDeclaration.
+
+          Assert(lhs.type === 'ForDeclaration', "lhs.type === 'ForDeclaration'"); // 3. Let status be BindingInitialization of lhs with arguments nextValue and iterationEnv.
+
+          status = yield* BindingInitialization(lhs, nextValue, iterationEnv);
+        }
+      } // k. If status is an abrupt completion, then
+
+
+      if (status instanceof AbruptCompletion) {
+        // i. Set the running execution context's LexicalEnvironment to oldEnv.
+        exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv; // ii. If iteratorKind is async, return ? AsyncIteratorClose(iteratorRecord, status).
+
+        if (iteratorKind === 'async') {
+          return yield* AsyncIteratorClose(iteratorRecord, status);
+        } // iii. if iterationKind is enumerate, then
+
+
+        if (iterationKind === 'enumerate') {
+          // 1. Return status.
+          return status;
+        } else {
+          // iv. Else,
+          // 1. Assert: iterationKind is iterate.
+          Assert(iterationKind === 'iterate', "iterationKind === 'iterate'"); // 2 .Return ? IteratorClose(iteratorRecord, status).
+
+          return IteratorClose(iteratorRecord, status);
+        }
+      } // l. Let result be the result of evaluating stmt.
+
+
+      const result = EnsureCompletion(yield* Evaluate(stmt)); // m. Set the running execution context's LexicalEnvironment to oldEnv.
+
+      exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv; // n. If LoopContinues(result, labelSet) is false, then
+
+      if (LoopContinues(result, labelSet) === Value.false) {
+        // i. If iterationKind is enumerate, then
+        if (iterationKind === 'enumerate') {
+          // 1. Return Completion(UpdateEmpty(result, V)).
+          return Completion(UpdateEmpty(result, V));
+        } else {
+          // ii. Else,
+          // 1. Assert: iterationKind is iterate.
+          Assert(iterationKind === 'iterate', "iterationKind === 'iterate'"); // 2. Set status to UpdateEmpty(result, V).
+
+          status = UpdateEmpty(result, V); // 3. If iteratorKind is async, return ? AsyncIteratorClose(iteratorRecord, status).
+
+          if (iteratorKind === 'async') {
+            return yield* AsyncIteratorClose(iteratorRecord, status);
+          } // 4. Return ? IteratorClose(iteratorRecord, status).
+
+
+          return IteratorClose(iteratorRecord, status);
+        }
+      } // o. If result.[[Value]] is not empty, set V to result.[[Value]].
+
+
+      if (result.Value !== undefined) {
+        V = result.Value;
+      }
+    }
+  } // #sec-runtime-semantics-bindinginstantiation
+  //   ForDeclaration : LetOrConst ForBinding
+
+
+  ForInOfBodyEvaluation.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-forin-div-ofbodyevaluation-lhs-stmt-iterator-lhskind-labelset';
+
+  function BindingInstantiation({
+    LetOrConst,
+    ForBinding
+  }, environment) {
+    // 1. Assert: environment is a declarative Environment Record.
+    Assert(environment instanceof DeclarativeEnvironmentRecord, "environment instanceof DeclarativeEnvironmentRecord"); // 2. For each element name of the BoundNames of ForBinding, do
+
+    for (const name of BoundNames(ForBinding)) {
+      // a. If IsConstantDeclaration of LetOrConst is true, then
+      if (IsConstantDeclaration(LetOrConst)) {
+        let _temp34 = environment.CreateImmutableBinding(name, Value.true);
+
+        Assert(!(_temp34 instanceof AbruptCompletion), "environment.CreateImmutableBinding(name, Value.true)" + ' returned an abrupt completion');
+
+        if (_temp34 instanceof Completion) {
+          _temp34 = _temp34.Value;
+        }
+      } else {
+        let _temp35 = environment.CreateMutableBinding(name, Value.false);
+
+        Assert(!(_temp35 instanceof AbruptCompletion), "environment.CreateMutableBinding(name, Value.false)" + ' returned an abrupt completion');
+
+        if (_temp35 instanceof Completion) {
+          _temp35 = _temp35.Value;
+        }
+      }
+    }
+  } // #sec-for-in-and-for-of-statements-runtime-semantics-evaluation
+  //   ForBinding : BindingIdentifier
+
+
+  BindingInstantiation.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-bindinginstantiation';
+  function Evaluate_ForBinding({
+    BindingIdentifier,
+    strict
+  }) {
+    // 1. Let bindingId be StringValue of BindingIdentifier.
+    const bindingId = StringValue$1(BindingIdentifier); // 2. Return ? ResolveBinding(bindingId).
+
+    return ResolveBinding(bindingId, undefined, strict);
+  }
+
+  //   TemplateLiteral : NoSubstitutionTemplate
+  //   SubstitutionTemplate : TemplateHead Expression TemplateSpans
+  //   TemplateSpans : TemplateTail
+  //   TemplateSpans : TemplateMiddleList TemplateTail
+  //   TemplateMiddleList : TemplateMiddle Expression
+  //   TemplateMiddleList : TemplateMiddleList TemplateMiddle Expression
+  //
+  // (implicit)
+  //   TemplateLiteral : SubstitutionTemplate
+
+  function* Evaluate_TemplateLiteral({
+    TemplateSpanList,
+    ExpressionList
+  }) {
+    let str = '';
+
+    for (let i = 0; i < TemplateSpanList.length - 1; i += 1) {
+      const Expression = ExpressionList[i];
+      const head = TV(TemplateSpanList[i]); // 2. Let subRef be the result of evaluating Expression.
+
+      const subRef = yield* Evaluate(Expression); // 3. Let sub be ? GetValue(subRef).
+
+      let _temp = GetValue(subRef);
+      /* c8 ignore if */
+
+
+      if (_temp instanceof AbruptCompletion) {
+        return _temp;
+      }
+      /* c8 ignore if */
+
+
+      if (_temp instanceof Completion) {
+        _temp = _temp.Value;
+      }
+
+      const sub = _temp; // 4. Let middle be ? ToString(sub).
+
+      let _temp2 = ToString(sub);
+
+      if (_temp2 instanceof AbruptCompletion) {
+        return _temp2;
+      }
+
+      if (_temp2 instanceof Completion) {
+        _temp2 = _temp2.Value;
+      }
+
+      const middle = _temp2;
+      str += head;
+      str += middle.stringValue();
+    }
+
+    const tail = TV(TemplateSpanList[TemplateSpanList.length - 1]);
+    return new Value(str + tail);
+  }
+
+  function* CaseClauseIsSelected(C, input) {
+    // 1. Assert: C is an instance of the production  CaseClause : `case` Expression `:` StatementList?.
+    Assert(C.type === 'CaseClause', "C.type === 'CaseClause'"); // 2. Let exprRef be the result of evaluating the Expression of C.
+
+    const exprRef = yield* Evaluate(C.Expression); // 3. Let clauseSelector be ? GetValue(exprRef).
+
+    let _temp = GetValue(exprRef);
+    /* c8 ignore if */
+
+
+    if (_temp instanceof AbruptCompletion) {
+      return _temp;
+    }
+    /* c8 ignore if */
+
+
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    const clauseSelector = _temp; // 4. Return the result of performing Strict Equality Comparison input === clauseSelector.
+
+    return StrictEqualityComparison(input, clauseSelector);
+  } // #sec-runtime-semantics-caseblockevaluation
+  //   CaseBlock :
+  //     `{` `}`
+  //     `{` CaseClauses `}`
+  //     `{` CaseClauses? DefaultClause CaseClauses? `}`
+
+
+  CaseClauseIsSelected.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-caseclauseisselected';
+
+  function* CaseBlockEvaluation({
+    CaseClauses_a,
+    DefaultClause,
+    CaseClauses_b
+  }, input) {
+    switch (true) {
+      case !CaseClauses_a && !DefaultClause && !CaseClauses_b:
+        {
+          // 1. Return NormalCompletion(undefined).
+          return NormalCompletion(Value.undefined);
+        }
+
+      case !!CaseClauses_a && !DefaultClause && !CaseClauses_b:
+        {
+          // 1. Let V be undefined.
+          let V = Value.undefined; // 2. Let A be the List of CaseClause items in CaseClauses, in source text order.
+
+          const A = CaseClauses_a; // 3. Let found be false.
+
+          let found = Value.false; // 4. For each CaseClause C in A, do
+
+          for (const C of A) {
+            // a. If found is false, then
+            if (found === Value.false) {
+              let _temp2 = yield* CaseClauseIsSelected(C, input);
+
+              if (_temp2 instanceof AbruptCompletion) {
+                return _temp2;
+              }
+
+              if (_temp2 instanceof Completion) {
+                _temp2 = _temp2.Value;
+              }
+
+              // i. Set found to ? CaseClauseIsSelected(C, input).
+              found = _temp2;
+            } // b. If found is true, them
+
+
+            if (found === Value.true) {
+              // i. Let R be the result of evaluating C.
+              const R = EnsureCompletion(yield* Evaluate(C)); // ii. If R.[[Value]] is not empty, set V to R.[[Value]].
+
+              if (R.Value !== undefined) {
+                V = R.Value;
+              } // iii. If R is an abrupt completion, return Completion(UpdateEmpty(R, V)).
+
+
+              if (R instanceof AbruptCompletion) {
+                return Completion(UpdateEmpty(R, V));
+              }
+            }
+          } // 5. Return NormalCompletion(V).
+
+
+          return NormalCompletion(V);
+        }
+
+      case !!DefaultClause:
+        {
+          // 1. Let V be undefined.
+          let V = Value.undefined; // 2. If the first CaseClauses is present, then
+
+          let A;
+
+          if (CaseClauses_a) {
+            // a. Let A be the List of CaseClause items in the first CaseClauses, in source text order.
+            A = CaseClauses_a;
+          } else {
+            // 3. Else,
+            // a. Let A be « ».
+            A = [];
+          }
+
+          let found = Value.false; // 4. For each CaseClause C in A, do
+
+          for (const C of A) {
+            // a. If found is false, then
+            if (found === Value.false) {
+              let _temp3 = yield* CaseClauseIsSelected(C, input);
+
+              if (_temp3 instanceof AbruptCompletion) {
+                return _temp3;
+              }
+
+              if (_temp3 instanceof Completion) {
+                _temp3 = _temp3.Value;
+              }
+
+              // i. Set found to ? CaseClauseIsSelected(C, input).
+              found = _temp3;
+            } // b. If found is true, them
+
+
+            if (found === Value.true) {
+              // i. Let R be the result of evaluating C.
+              const R = EnsureCompletion(yield* Evaluate(C)); // ii. If R.[[Value]] is not empty, set V to R.[[Value]].
+
+              if (R.Value !== undefined) {
+                V = R.Value;
+              } // iii. If R is an abrupt completion, return Completion(UpdateEmpty(R, V)).
+
+
+              if (R instanceof AbruptCompletion) {
+                return Completion(UpdateEmpty(R, V));
+              }
+            }
+          } // 6. Let foundInB be false.
+
+
+          let foundInB = Value.false; // 7. If the second CaseClauses is present, then
+
+          let B;
+
+          if (CaseClauses_b) {
+            // a. Let B be the List of CaseClause items in the second CaseClauses, in source text order.
+            B = CaseClauses_b;
+          } else {
+            // 8. Else,
+            // a. Let B be « ».
+            B = [];
+          } // 9. If found is false, then
+
+
+          if (found === Value.false) {
+            // a. For each CaseClause C in B, do
+            for (const C of B) {
+              // a. If foundInB is false, then
+              if (foundInB === Value.false) {
+                let _temp4 = yield* CaseClauseIsSelected(C, input);
+
+                if (_temp4 instanceof AbruptCompletion) {
+                  return _temp4;
+                }
+
+                if (_temp4 instanceof Completion) {
+                  _temp4 = _temp4.Value;
+                }
+
+                // i. Set foundInB to ? CaseClauseIsSelected(C, input).
+                foundInB = _temp4;
+              } // b. If foundInB is true, them
+
+
+              if (foundInB === Value.true) {
+                // i. Let R be the result of evaluating C.
+                const R = EnsureCompletion(yield* Evaluate(C)); // ii. If R.[[Value]] is not empty, set V to R.[[Value]].
+
+                if (R.Value !== undefined) {
+                  V = R.Value;
+                } // iii. If R is an abrupt completion, return Completion(UpdateEmpty(R, V)).
+
+
+                if (R instanceof AbruptCompletion) {
+                  return Completion(UpdateEmpty(R, V));
+                }
+              }
+            }
+          } // 10. If foundInB is true, return NormalCompletion(V).
+
+
+          if (foundInB === Value.true) {
+            return NormalCompletion(V);
+          } // 11. Let R be the result of evaluating DefaultClause.
+
+
+          const R = EnsureCompletion(yield* Evaluate(DefaultClause)); // 12. If R.[[Value]] is not empty, set V to R.[[Value]].
+
+          if (R.Value !== undefined) {
+            V = R.Value;
+          } // 13. If R is an abrupt completion, return Completion(UpdateEmpty(R, V)).
+
+
+          if (R instanceof AbruptCompletion) {
+            return Completion(UpdateEmpty(R, V));
+          } // 14. NOTE: The following is another complete iteration of the second CaseClauses.
+          // 15. For each CaseClause C in B, do
+
+
+          for (const C of B) {
+            // a. Let R be the result of evaluating CaseClause C.
+            const innerR = EnsureCompletion(yield* Evaluate(C)); // b. If R.[[Value]] is not empty, set V to R.[[Value]].
+
+            if (innerR.Value !== undefined) {
+              V = innerR.Value;
+            } // c. If R is an abrupt completion, return Completion(UpdateEmpty(R, V)).
+
+
+            if (innerR instanceof AbruptCompletion) {
+              return Completion(UpdateEmpty(innerR, V));
+            }
+          } // 16. Return NormalCompletion(V).
+          //
+
+
+          return NormalCompletion(V);
+        }
+
+      /*c8 ignore next*/
+      default:
+        throw new OutOfRange$1('CaseBlockEvaluation');
+    }
+  } // #sec-switch-statement-runtime-semantics-evaluation
+  //   SwitchStatement :
+  //     `switch` `(` Expression `)` CaseBlock
+
+
+  CaseBlockEvaluation.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-caseblockevaluation';
+  function* Evaluate_SwitchStatement({
+    Expression,
+    CaseBlock
+  }) {
+    // 1. Let exprRef be the result of evaluating Expression.
+    const exprRef = yield* Evaluate(Expression); // 2. Let switchValue be ? GetValue(exprRef).
+
+    let _temp5 = GetValue(exprRef);
+
+    if (_temp5 instanceof AbruptCompletion) {
+      return _temp5;
+    }
+
+    if (_temp5 instanceof Completion) {
+      _temp5 = _temp5.Value;
+    }
+
+    const switchValue = _temp5; // 3. Let oldEnv be the running execution context's LexicalEnvironment.
+
+    const oldEnv = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 4. Let blockEnv be NewDeclarativeEnvironment(oldEnv).
+
+    const blockEnv = NewDeclarativeEnvironment(oldEnv); // 5. Perform BlockDeclarationInstantiation(CaseBlock, blockEnv).
+
+    BlockDeclarationInstantiation(CaseBlock, blockEnv); // 6. Set the running execution context's LexicalEnvironment to blockEnv.
+
+    exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = blockEnv; // 7. Let R be CaseBlockEvaluation of CaseBlock with argument switchValue.
+
+    const R = yield* CaseBlockEvaluation(CaseBlock, switchValue); // 8. Set the running execution context's LexicalEnvironment to oldEnv.
+
+    exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv; // 9. return R.
+
+    return R;
+  } // #sec-switch-statement-runtime-semantics-evaluation
+  //   CaseClause :
+  //     `case` Expression `:`
+  //     `case` Expression `:` StatementList
+  //   DefaultClause :
+  //     `case` `default` `:`
+  //     `case` `default` `:` StatementList
+
+  function* Evaluate_CaseClause({
+    StatementList
+  }) {
+    if (!StatementList) {
+      // 1. Return NormalCompletion(empty).
+      return NormalCompletion(undefined);
+    } // 1. Return the result of evaluating StatementList.
+
+
+    return yield* Evaluate_StatementList(StatementList);
   }
 
   function i(V) {
@@ -3792,7 +11863,7 @@
   const ObjectToPrimitive = () => 'Cannot convert object to primitive value';
   const ObjectPrototypeType = () => 'Object prototype must be an Object or null';
   const ObjectSetPrototype = () => 'Could not set prototype of object';
-  const OutOfRange$1 = n => `${n} is out of range`;
+  const OutOfRange = n => `${n} is out of range`;
   const PromiseAnyRejected = () => 'No promises passed to Promise.any were fulfilled';
   const PromiseCapabilityFunctionAlreadySet = f => `Promise ${f} function already set`;
   const PromiseRejectFunction = v => `Promise reject function ${i(v)} is not callable`;
@@ -3942,7 +12013,7 @@
     ObjectToPrimitive: ObjectToPrimitive,
     ObjectPrototypeType: ObjectPrototypeType,
     ObjectSetPrototype: ObjectSetPrototype,
-    OutOfRange: OutOfRange$1,
+    OutOfRange: OutOfRange,
     PromiseAnyRejected: PromiseAnyRejected,
     PromiseCapabilityFunctionAlreadySet: PromiseCapabilityFunctionAlreadySet,
     PromiseRejectFunction: PromiseRejectFunction,
@@ -4143,7 +12214,7 @@
 
       /*c8 ignore next*/
       default:
-        throw new OutOfRange('getDeclarations', node);
+        throw new OutOfRange$1('getDeclarations', node);
     }
   }
   class Scope {
@@ -4958,7 +13029,7 @@
 
   const isClosingSyntaxCharacter = c => ')]}|'.includes(c);
 
-  const isDecimalDigit$1 = c => /[0123456789]/u.test(c);
+  const isDecimalDigit = c => /[0123456789]/u.test(c);
 
   const isControlLetter = c => /[a-zA-Z]/u.test(c);
 
@@ -5489,7 +13560,7 @@
               this.raise('Unexpected escape');
             }
 
-            if (c === '0' && !isDecimalDigit$1(this.peek())) {
+            if (c === '0' && !isDecimalDigit(this.peek())) {
               return {
                 type: 'CharacterEscape',
                 subtype: '0'
@@ -5511,12 +13582,12 @@
 
 
     maybeParseDecimalEscape() {
-      if (isDecimalDigit$1(this.source[this.position]) && this.source[this.position] !== '0') {
+      if (isDecimalDigit(this.source[this.position]) && this.source[this.position] !== '0') {
         const start = this.position;
         let buffer = this.source[this.position];
         this.position += 1;
 
-        while (isDecimalDigit$1(this.source[this.position])) {
+        while (isDecimalDigit(this.source[this.position])) {
           buffer += this.source[this.position];
           this.position += 1;
         }
@@ -5574,7 +13645,7 @@
 
               const c = this.source[this.position];
 
-              if (isDecimalDigit$1(c)) {
+              if (isDecimalDigit(c)) {
                 sawDigit = true;
                 this.position += 1;
                 LoneUnicodePropertyNameOrValue += c;
@@ -5627,7 +13698,7 @@
 
                 const c = this.source[this.position];
 
-                if (!isControlLetter(c) && !isDecimalDigit$1(c) && c !== '_') {
+                if (!isControlLetter(c) && !isDecimalDigit(c) && c !== '_') {
                   break;
                 }
 
@@ -5872,11 +13943,11 @@
     parseDecimalDigits() {
       let n = '';
 
-      if (!isDecimalDigit$1(this.peek())) {
+      if (!isDecimalDigit(this.peek())) {
         this.raise('Invalid decimal digits');
       }
 
-      while (isDecimalDigit$1(this.peek())) {
+      while (isDecimalDigit(this.peek())) {
         n += this.next();
       }
 
@@ -6892,7 +14963,7 @@
 
         const PropertyDefinition = this.parsePropertyDefinition();
 
-        if (!this.state.json && PropertyDefinition.type === 'PropertyDefinition' && PropertyDefinition.PropertyName && !IsComputedPropertyKey(PropertyDefinition.PropertyName) && PropertyDefinition.PropertyName.type !== 'NumericLiteral' && StringValue(PropertyDefinition.PropertyName).stringValue() === '__proto__') {
+        if (!this.state.json && PropertyDefinition.type === 'PropertyDefinition' && PropertyDefinition.PropertyName && !IsComputedPropertyKey(PropertyDefinition.PropertyName) && PropertyDefinition.PropertyName.type !== 'NumericLiteral' && StringValue$1(PropertyDefinition.PropertyName).stringValue() === '__proto__') {
           if (hasProto) {
             this.scope.registerObjectLiteralEarlyError(this.raiseEarly('DuplicateProto', PropertyDefinition.PropertyName));
           } else {
@@ -8829,7 +16900,7 @@
     parseModuleExportName() {
       const literal = this.parseStringLiteral();
 
-      if (!IsStringValidUnicode(StringValue(literal))) {
+      if (!IsStringWellFormedUnicode(StringValue$1(literal))) {
         this.raiseEarly('ModuleExportNameInvalidUnicode', literal);
       }
 
@@ -9110,8039 +17181,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return this.raise('UnexpectedToken', ...args);
     }
 
-  }
-
-  function parseMethodDefinition(sourceText) {
-    const parser = new Parser({
-      source: sourceText
-    });
-    return parser.scope.with({
-      superCall: true
-    }, () => parser.parseMethodDefinition());
-  } // ClassTail : ClassHeritage? `{` ClassBody? `}`
-
-
-  function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
-    const {
-      ClassHeritage,
-      ClassBody
-    } = ClassTail; // 1. Let env be the LexicalEnvironment of the running execution context.
-
-    const env = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let classScope be NewDeclarativeEnvironment(env).
-
-    const classScope = NewDeclarativeEnvironment(env); // 3. If classBinding is not undefined, then
-
-    if (classBinding !== Value.undefined) {
-      // a. Perform classScopeEnv.CreateImmutableBinding(classBinding, true).
-      classScope.CreateImmutableBinding(classBinding, Value.true);
-    }
-
-    let protoParent;
-    let constructorParent; // 4. If ClassHeritage is not present, then
-
-    if (!ClassHeritage) {
-      // a. Let protoParent be %Object.prototype%.
-      protoParent = exports.surroundingAgent.intrinsic('%Object.prototype%'); // b. Let constructorParent be %Function.prototype%.
-
-      constructorParent = exports.surroundingAgent.intrinsic('%Function.prototype%');
-    } else {
-      // 5. Else,
-      // a. Set the running execution context's LexicalEnvironment to classScope.
-      exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = classScope; // b. Let superclassRef be the result of evaluating ClassHeritage.
-
-      const superclassRef = yield* Evaluate(ClassHeritage); // c. Set the running execution context's LexicalEnvironment to env.
-
-      exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = env; // d. Let superclass be ? GetValue(superclassRef).
-
-      let _temp = GetValue(superclassRef);
-      /* c8 ignore if */
-
-
-      if (_temp instanceof AbruptCompletion) {
-        return _temp;
-      }
-      /* c8 ignore if */
-
-
-      if (_temp instanceof Completion) {
-        _temp = _temp.Value;
-      }
-
-      const superclass = _temp; // e. If superclass is null, then
-
-      if (superclass === Value.null) {
-        // i. Let protoParent be null.
-        protoParent = Value.null; // ii. Let constructorParent be %Function.prototype%.
-
-        constructorParent = exports.surroundingAgent.intrinsic('%Function.prototype%');
-      } else if (IsConstructor(superclass) === Value.false) {
-        // f. Else if IsConstructor(superclass) is false, throw a TypeError exception.
-        return exports.surroundingAgent.Throw('TypeError', 'NotAConstructor', superclass);
-      } else {
-        let _temp2 = Get(superclass, new Value('prototype'));
-
-        if (_temp2 instanceof AbruptCompletion) {
-          return _temp2;
-        }
-
-        if (_temp2 instanceof Completion) {
-          _temp2 = _temp2.Value;
-        }
-
-        // g. Else,
-        // i. Let protoParent be ? Get(superclass, "prototype").
-        protoParent = _temp2; // ii. If Type(protoParent) is neither Object nor Null, throw a TypeError exception.
-
-        if (Type(protoParent) !== 'Object' && Type(protoParent) !== 'Null') {
-          return exports.surroundingAgent.Throw('TypeError', 'ObjectPrototypeType');
-        } // iii. Let constructorParent be superclass.
-
-
-        constructorParent = superclass;
-      }
-    } // 6. Let proto be OrdinaryObjectCreate(protoParent).
-
-
-    const proto = OrdinaryObjectCreate(protoParent);
-    let constructor; // 7. If ClassBody is not present, let constructor be empty.
-
-    if (!ClassBody) {
-      constructor = undefined;
-    } else {
-      // 8. Else, let constructor be ConstructorMethod of ClassBody.
-      constructor = ConstructorMethod(ClassBody);
-    } // 9. If constructor is empty, then
-
-
-    if (constructor === undefined) {
-      // a. If ClassHeritage is present, then
-      if (ClassHeritage) {
-        // i. Set constructor to the result of parsing the source text
-        //    `constructor(...args) { super(...args); } using the syntactic grammar with the goal
-        //    symbol MethodDefinition[~Yield, ~Await].
-        constructor = parseMethodDefinition('constructor(...args) { super(...args); }');
-      } else {
-        // b. Else,
-        // i. Set constructor to the result of parsing the source text `constructor() {}` using the
-        //    syntactic grammar with the goal symbol MethodDefinition[~Yield, ~Await].
-        constructor = parseMethodDefinition('constructor() {}');
-      }
-    } // 10. Set the running execution context's LexicalEnvironment to classScope.
-
-
-    exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = classScope; // 11. Let constructorInfo be ! DefineMethod of constructor with arguments proto and constructorParent.
-
-    let _temp3 = yield* DefineMethod(constructor, proto, constructorParent);
-
-    Assert(!(_temp3 instanceof AbruptCompletion), "yield* DefineMethod(constructor, proto, constructorParent)" + ' returned an abrupt completion');
-    /* c8 ignore if */
-
-    if (_temp3 instanceof Completion) {
-      _temp3 = _temp3.Value;
-    }
-
-    const constructorInfo = _temp3; // 12. Let F be constructorInfo.[[Closure]].
-
-    const F = constructorInfo.Closure; // 13. Perform SetFunctionName(F, className).
-
-    SetFunctionName(F, className); // 14. Perform MakeConstructor(F, false, proto).
-
-    MakeConstructor(F, Value.false, proto); // 15. If ClassHeritage is present, set F.[[ConstructorKind]] to derived.
-
-    if (ClassHeritage) {
-      F.ConstructorKind = 'derived';
-    } // 16. Perform MakeClassConstructor(F).
-
-
-    MakeClassConstructor(F); // 17. Perform CreateMethodProperty(proto, "constructor", F).
-
-    let _temp4 = CreateMethodProperty(proto, new Value('constructor'), F);
-
-    Assert(!(_temp4 instanceof AbruptCompletion), "CreateMethodProperty(proto, new Value('constructor'), F)" + ' returned an abrupt completion');
-
-    if (_temp4 instanceof Completion) {
-      _temp4 = _temp4.Value;
-    }
-
-    let methods;
-
-    if (!ClassBody) {
-      methods = [];
-    } else {
-      // 19. Else, let methods be NonConstructorMethodDefinitions of ClassBody.
-      methods = NonConstructorMethodDefinitions(ClassBody);
-    } // 20. For each ClassElement m in order from methods, do
-
-
-    for (const m of methods) {
-      let status; // a. If IsStatic of m is false, then
-
-      if (IsStatic(m) === false) {
-        // i. Let status be PropertyDefinitionEvaluation of m with arguments proto and false.
-        status = yield* PropertyDefinitionEvaluation(m, proto, Value.false);
-      } else {
-        // b. Else,
-        // i. Let status be PropertyDefinitionEvaluation of m with arguments F and false.
-        status = yield* PropertyDefinitionEvaluation(m, F, Value.false);
-      } // c. If status is an abrupt completion, then
-
-
-      if (status instanceof AbruptCompletion) {
-        // i. Set the running execution context's LexicalEnvironment to env.
-        exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = env; // ii. Return Completion(status).
-
-        return Completion(status);
-      }
-    } // 21. Set the running execution context's LexicalEnvironment to env.
-
-
-    exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = env; // 22. If classBinding is not undefined, then
-
-    if (classBinding !== Value.undefined) {
-      // a. Perform classScope.InitializeBinding(classBinding, F).
-      classScope.InitializeBinding(classBinding, F);
-    } // 23. Return F.
-
-
-    return F;
-  }
-
-  function* DefineMethod_MethodDefinition(MethodDefinition, object, functionPrototype) {
-    const {
-      PropertyName,
-      UniqueFormalParameters,
-      FunctionBody
-    } = MethodDefinition; // 1. Let propKey be the result of evaluating PropertyName.
-
-    let propKey = yield* Evaluate_PropertyName(PropertyName); // 2. ReturnIfAbrupt(propKey).
-
-    /* c8 ignore if */
-    if (propKey instanceof AbruptCompletion) {
-      return propKey;
-    }
-    /* c8 ignore if */
-
-
-    if (propKey instanceof Completion) {
-      propKey = propKey.Value;
-    }
-
-    const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment;
-    let prototype; // 4. If functionPrototype is present as a parameter, then
-
-    if (functionPrototype !== undefined) {
-      // a. Let prototype be functionPrototype.
-      prototype = functionPrototype;
-    } else {
-      // 5. Else,
-      // a. Let prototype be %Function.prototype%.
-      prototype = exports.surroundingAgent.intrinsic('%Function.prototype%');
-    } // 6. Let sourceText be the source text matched by MethodDefinition.
-
-
-    const sourceText = sourceTextMatchedBy(MethodDefinition); // 7. Let closure be OrdinaryFunctionCreate(prototype, sourceText, UniqueFormalParameters, FunctionBody, non-lexical-this, scope).
-
-    const closure = OrdinaryFunctionCreate(prototype, sourceText, UniqueFormalParameters, FunctionBody, 'non-lexical-this', scope); // 8. Perform MakeMethod(closure, object).
-
-    MakeMethod(closure, object); // 9. Return the Record { [[Key]]: propKey, [[Closure]]: closure }.
-
-    return {
-      Key: propKey,
-      Closure: closure
-    };
-  }
-
-  DefineMethod_MethodDefinition.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-definemethod';
-  function DefineMethod(node, object, functionPrototype) {
-    switch (node.type) {
-      case 'MethodDefinition':
-        return DefineMethod_MethodDefinition(node, object, functionPrototype);
-
-      case 'ClassElement':
-        return DefineMethod(node.MethodDefinition, object, functionPrototype);
-
-      /*c8 ignore next*/
-      default:
-        throw new OutOfRange('DefineMethod', node);
-    }
-  }
-
-  // PropertyName :
-  //   LiteralPropertyName
-  //   ComputedPropertyName
-  // LiteralPropertyName :
-  //   IdentifierName
-  //   StringLiteral
-  //   NumericLiteral
-  // ComputedPropertyName :
-  //   `[` AssignmentExpression `]`
-
-  function* Evaluate_PropertyName(PropertyName) {
-    switch (PropertyName.type) {
-      case 'IdentifierName':
-        return StringValue(PropertyName);
-
-      case 'StringLiteral':
-        return new Value(PropertyName.value);
-
-      case 'NumericLiteral':
-        {
-          // 1. Let nbr be the NumericValue of NumericLiteral.
-          const nbr = NumericValue(PropertyName); // 2. Return ! ToString(nbr).
-
-          let _temp = ToString(nbr);
-
-          Assert(!(_temp instanceof AbruptCompletion), "ToString(nbr)" + ' returned an abrupt completion');
-          /* c8 ignore if */
-
-          if (_temp instanceof Completion) {
-            _temp = _temp.Value;
-          }
-
-          return _temp;
-        }
-
-      default:
-        {
-          // 1. Let exprValue be the result of evaluating AssignmentExpression.
-          const exprValue = yield* Evaluate(PropertyName.ComputedPropertyName); // 2. Let propName be ? GetValue(exprValue).
-
-          let _temp2 = GetValue(exprValue);
-          /* c8 ignore if */
-
-
-          if (_temp2 instanceof AbruptCompletion) {
-            return _temp2;
-          }
-          /* c8 ignore if */
-
-
-          if (_temp2 instanceof Completion) {
-            _temp2 = _temp2.Value;
-          }
-
-          const propName = _temp2; // 3. Return ? ToPropertyKey(propName).
-
-          return ToPropertyKey(propName);
-        }
-    }
-  }
-
-  //   AdditiveExpression : AdditiveExpression + MultiplicativeExpression
-
-  function* Evaluate_AdditiveExpression_Plus({
-    AdditiveExpression,
-    MultiplicativeExpression
-  }) {
-    // 1. Return ? EvaluateStringOrNumericBinaryExpression(AdditiveExpression, +, MultiplicativeExpression).
-    return yield* EvaluateStringOrNumericBinaryExpression(AdditiveExpression, '+', MultiplicativeExpression);
-  } // #sec-subtraction-operator-minus-runtime-semantics-evaluation
-
-
-  Evaluate_AdditiveExpression_Plus.section = 'https://tc39.es/ecma262/#sec-addition-operator-plus-runtime-semantics-evaluation';
-
-  function* Evaluate_AdditiveExpression_Minus({
-    AdditiveExpression,
-    MultiplicativeExpression
-  }) {
-    // 1. Return ? EvaluateStringOrNumericBinaryExpression(AdditiveExpression, -, MultiplicativeExpression).
-    return yield* EvaluateStringOrNumericBinaryExpression(AdditiveExpression, '-', MultiplicativeExpression);
-  }
-
-  Evaluate_AdditiveExpression_Minus.section = 'https://tc39.es/ecma262/#sec-subtraction-operator-minus-runtime-semantics-evaluation';
-  function* Evaluate_AdditiveExpression(AdditiveExpression) {
-    switch (AdditiveExpression.operator) {
-      case '+':
-        return yield* Evaluate_AdditiveExpression_Plus(AdditiveExpression);
-
-      case '-':
-        return yield* Evaluate_AdditiveExpression_Minus(AdditiveExpression);
-
-      /*c8 ignore next*/
-      default:
-        throw new OutOfRange('Evaluate_AdditiveExpression', AdditiveExpression);
-    }
-  }
-
-  function refineLeftHandSideExpression(node, type) {
-    switch (node.type) {
-      case 'ArrayLiteral':
-        {
-          const refinement = {
-            type: 'ArrayAssignmentPattern',
-            AssignmentElementList: [],
-            AssignmentRestElement: undefined
-          };
-          node.ElementList.forEach(n => {
-            switch (n.type) {
-              case 'SpreadElement':
-                refinement.AssignmentRestElement = {
-                  type: 'AssignmentRestElement',
-                  DestructuringAssignmentTarget: n.AssignmentExpression
-                };
-                break;
-
-              case 'ArrayLiteral':
-              case 'ObjectLiteral':
-                refinement.AssignmentElementList.push({
-                  type: 'AssignmentElement',
-                  DestructuringAssignmentTarget: n,
-                  Initializer: null
-                });
-                break;
-
-              default:
-                refinement.AssignmentElementList.push(refineLeftHandSideExpression(n, 'array'));
-                break;
-            }
-          });
-          return refinement;
-        }
-
-      case 'ObjectLiteral':
-        {
-          const refined = {
-            type: 'ObjectAssignmentPattern',
-            AssignmentPropertyList: [],
-            AssignmentRestProperty: undefined
-          };
-          node.PropertyDefinitionList.forEach(p => {
-            if (p.PropertyName === null && p.AssignmentExpression) {
-              refined.AssignmentRestProperty = {
-                type: 'AssignmentRestProperty',
-                DestructuringAssignmentTarget: p.AssignmentExpression
-              };
-            } else {
-              refined.AssignmentPropertyList.push(refineLeftHandSideExpression(p, 'object'));
-            }
-          });
-          return refined;
-        }
-
-      case 'PropertyDefinition':
-        return {
-          type: 'AssignmentProperty',
-          PropertyName: node.PropertyName,
-          AssignmentElement: node.AssignmentExpression.type === 'AssignmentExpression' ? {
-            type: 'AssignmentElement',
-            DestructuringAssignmentTarget: node.AssignmentExpression.LeftHandSideExpression,
-            Initializer: node.AssignmentExpression.AssignmentExpression
-          } : {
-            type: 'AssignmentElement',
-            DestructuringAssignmentTarget: node.AssignmentExpression,
-            Initializer: undefined
-          }
-        };
-
-      case 'IdentifierReference':
-        if (type === 'array') {
-          return {
-            type: 'AssignmentElement',
-            DestructuringAssignmentTarget: node,
-            Initializer: undefined
-          };
-        } else {
-          return {
-            type: 'AssignmentProperty',
-            IdentifierReference: node,
-            Initializer: undefined
-          };
-        }
-
-      case 'MemberExpression':
-        return {
-          type: 'AssignmentElement',
-          DestructuringAssignmentTarget: node,
-          Initializer: undefined
-        };
-
-      case 'CoverInitializedName':
-        return {
-          type: 'AssignmentProperty',
-          IdentifierReference: node.IdentifierReference,
-          Initializer: node.Initializer
-        };
-
-      case 'AssignmentExpression':
-        return {
-          type: 'AssignmentElement',
-          DestructuringAssignmentTarget: node.LeftHandSideExpression,
-          Initializer: node.AssignmentExpression
-        };
-
-      case 'Elision':
-        return {
-          type: 'Elision'
-        };
-
-      /*c8 ignore next*/
-      default:
-        throw new OutOfRange('refineLeftHandSideExpression', node.type);
-    }
-  } // #sec-assignment-operators-runtime-semantics-evaluation
-  //   AssignmentExpression :
-  //     LeftHandSideExpression `=` AssignmentExpression
-  //     LeftHandSideExpression AssignmentOperator AssignmentExpression
-  //     LeftHandSideExpression `&&=` AssignmentExpression
-  //     LeftHandSideExpression `||=` AssignmentExpression
-  //     LeftHandSideExpression `??=` AssignmentExpression
-
-  function* Evaluate_AssignmentExpression({
-    LeftHandSideExpression,
-    AssignmentOperator,
-    AssignmentExpression
-  }) {
-    if (AssignmentOperator === '=') {
-      // 1. If LeftHandSideExpression is neither an ObjectLiteral nor an ArrayLiteral, then
-      if (LeftHandSideExpression.type !== 'ObjectLiteral' && LeftHandSideExpression.type !== 'ArrayLiteral') {
-        // a. Let lref be the result of evaluating LeftHandSideExpression.
-        let lref = yield* Evaluate(LeftHandSideExpression); // b. ReturnIfAbrupt(lref).
-
-        /* c8 ignore if */
-        if (lref instanceof AbruptCompletion) {
-          return lref;
-        }
-        /* c8 ignore if */
-
-
-        if (lref instanceof Completion) {
-          lref = lref.Value;
-        }
-
-        let rval;
-
-        if (IsAnonymousFunctionDefinition(AssignmentExpression) && IsIdentifierRef(LeftHandSideExpression)) {
-          // i. Let rval be NamedEvaluation of AssignmentExpression with argument GetReferencedName(lref).
-          rval = yield* NamedEvaluation(AssignmentExpression, GetReferencedName(lref));
-        } else {
-          // d. Else,
-          // i. Let rref be the result of evaluating AssignmentExpression.
-          const rref = yield* Evaluate(AssignmentExpression); // ii. Let rval be ? GetValue(rref).
-
-          let _temp = GetValue(rref);
-          /* c8 ignore if */
-
-
-          if (_temp instanceof AbruptCompletion) {
-            return _temp;
-          }
-          /* c8 ignore if */
-
-
-          if (_temp instanceof Completion) {
-            _temp = _temp.Value;
-          }
-
-          rval = _temp;
-        } // e. Perform ? PutValue(lref, rval).
-
-
-        let _temp2 = PutValue(lref, rval);
-
-        if (_temp2 instanceof AbruptCompletion) {
-          return _temp2;
-        }
-
-        if (_temp2 instanceof Completion) {
-          _temp2 = _temp2.Value;
-        }
-
-        return rval;
-      } // 2. Let assignmentPattern be the AssignmentPattern that is covered by LeftHandSideExpression.
-
-
-      const assignmentPattern = refineLeftHandSideExpression(LeftHandSideExpression); // 3. Let rref be the result of evaluating AssignmentExpression.
-
-      const rref = yield* Evaluate(AssignmentExpression); // 3. Let rval be ? GetValue(rref).
-
-      let _temp3 = GetValue(rref);
-
-      if (_temp3 instanceof AbruptCompletion) {
-        return _temp3;
-      }
-
-      if (_temp3 instanceof Completion) {
-        _temp3 = _temp3.Value;
-      }
-
-      const rval = _temp3; // 4. Perform ? DestructuringAssignmentEvaluation of assignmentPattern using rval as the argument.
-
-      let _temp4 = yield* DestructuringAssignmentEvaluation(assignmentPattern, rval);
-
-      if (_temp4 instanceof AbruptCompletion) {
-        return _temp4;
-      }
-
-      if (_temp4 instanceof Completion) {
-        _temp4 = _temp4.Value;
-      }
-
-      return rval;
-    } else if (AssignmentOperator === '&&=') {
-      // 1. Let lref be the result of evaluating LeftHandSideExpression.
-      const lref = yield* Evaluate(LeftHandSideExpression); // 2. Let lval be ? GetValue(lref).
-
-      let _temp5 = GetValue(lref);
-
-      if (_temp5 instanceof AbruptCompletion) {
-        return _temp5;
-      }
-
-      if (_temp5 instanceof Completion) {
-        _temp5 = _temp5.Value;
-      }
-
-      const lval = _temp5; // 3. Let lbool be ! ToBoolean(lval).
-
-      let _temp6 = ToBoolean(lval);
-
-      Assert(!(_temp6 instanceof AbruptCompletion), "ToBoolean(lval)" + ' returned an abrupt completion');
-      /* c8 ignore if */
-
-      if (_temp6 instanceof Completion) {
-        _temp6 = _temp6.Value;
-      }
-
-      const lbool = _temp6; // 4. If lbool is false, return lval.
-
-      if (lbool === Value.false) {
-        return lval;
-      }
-
-      let rval; // 5. If IsAnonymousFunctionDefinition(AssignmentExpression) is true and IsIdentifierRef of LeftHandSideExpression is true, then
-
-      if (IsAnonymousFunctionDefinition(AssignmentExpression) && IsIdentifierRef(LeftHandSideExpression)) {
-        // a. Let rval be NamedEvaluation of AssignmentExpression with argument GetReferencedName(lref).
-        rval = yield* NamedEvaluation(AssignmentExpression, GetReferencedName(lref));
-      } else {
-        // 6. Else,
-        // a. Let rref be the result of evaluating AssignmentExpression.
-        const rref = yield* Evaluate(AssignmentExpression); // b. Let rval be ? GetValue(rref).
-
-        let _temp7 = GetValue(rref);
-
-        if (_temp7 instanceof AbruptCompletion) {
-          return _temp7;
-        }
-
-        if (_temp7 instanceof Completion) {
-          _temp7 = _temp7.Value;
-        }
-
-        rval = _temp7;
-      } // 7. Perform ? PutValue(lref, rval).
-
-
-      let _temp8 = PutValue(lref, rval);
-
-      if (_temp8 instanceof AbruptCompletion) {
-        return _temp8;
-      }
-
-      if (_temp8 instanceof Completion) {
-        _temp8 = _temp8.Value;
-      }
-
-      return rval;
-    } else if (AssignmentOperator === '||=') {
-      // 1. Let lref be the result of evaluating LeftHandSideExpression.
-      const lref = yield* Evaluate(LeftHandSideExpression); // 2. Let lval be ? GetValue(lref).
-
-      let _temp9 = GetValue(lref);
-
-      if (_temp9 instanceof AbruptCompletion) {
-        return _temp9;
-      }
-
-      if (_temp9 instanceof Completion) {
-        _temp9 = _temp9.Value;
-      }
-
-      const lval = _temp9; // 3. Let lbool be ! ToBoolean(lval).
-
-      let _temp10 = ToBoolean(lval);
-
-      Assert(!(_temp10 instanceof AbruptCompletion), "ToBoolean(lval)" + ' returned an abrupt completion');
-
-      if (_temp10 instanceof Completion) {
-        _temp10 = _temp10.Value;
-      }
-
-      const lbool = _temp10; // 4. If lbool is true, return lval.
-
-      if (lbool === Value.true) {
-        return lval;
-      }
-
-      let rval; // 5. If IsAnonymousFunctionDefinition(AssignmentExpression) is true and IsIdentifierRef of LeftHandSideExpression is true, then
-
-      if (IsAnonymousFunctionDefinition(AssignmentExpression) && IsIdentifierRef(LeftHandSideExpression)) {
-        // a. Let rval be NamedEvaluation of AssignmentExpression with argument GetReferencedName(lref).
-        rval = yield* NamedEvaluation(AssignmentExpression, GetReferencedName(lref));
-      } else {
-        // 6. Else,
-        // a. Let rref be the result of evaluating AssignmentExpression.
-        const rref = yield* Evaluate(AssignmentExpression); // b. Let rval be ? GetValue(rref).
-
-        let _temp11 = GetValue(rref);
-
-        if (_temp11 instanceof AbruptCompletion) {
-          return _temp11;
-        }
-
-        if (_temp11 instanceof Completion) {
-          _temp11 = _temp11.Value;
-        }
-
-        rval = _temp11;
-      } // 7. Perform ? PutValue(lref, rval).
-
-
-      let _temp12 = PutValue(lref, rval);
-
-      if (_temp12 instanceof AbruptCompletion) {
-        return _temp12;
-      }
-
-      if (_temp12 instanceof Completion) {
-        _temp12 = _temp12.Value;
-      }
-
-      return rval;
-    } else if (AssignmentOperator === '??=') {
-      // 1.Let lref be the result of evaluating LeftHandSideExpression.
-      const lref = yield* Evaluate(LeftHandSideExpression); // 2. Let lval be ? GetValue(lref).
-
-      let _temp13 = GetValue(lref);
-
-      if (_temp13 instanceof AbruptCompletion) {
-        return _temp13;
-      }
-
-      if (_temp13 instanceof Completion) {
-        _temp13 = _temp13.Value;
-      }
-
-      const lval = _temp13; // 3. If lval is not undefined nor null, return lval.
-
-      if (lval !== Value.undefined && lval !== Value.null) {
-        return lval;
-      }
-
-      let rval; // 4. If IsAnonymousFunctionDefinition(AssignmentExpression) is true and IsIdentifierRef of LeftHandSideExpression is true, then
-
-      if (IsAnonymousFunctionDefinition(AssignmentExpression) && IsIdentifierRef(LeftHandSideExpression)) {
-        // a. Let rval be NamedEvaluation of AssignmentExpression with argument GetReferencedName(lref).
-        rval = yield* NamedEvaluation(AssignmentExpression, GetReferencedName(lref));
-      } else {
-        // 5. Else,
-        // a. Let rref be the result of evaluating AssignmentExpression.
-        const rref = yield* Evaluate(AssignmentExpression); // b. Let rval be ? GetValue(rref).
-
-        let _temp14 = GetValue(rref);
-
-        if (_temp14 instanceof AbruptCompletion) {
-          return _temp14;
-        }
-
-        if (_temp14 instanceof Completion) {
-          _temp14 = _temp14.Value;
-        }
-
-        rval = _temp14;
-      } // 6. Perform ? PutValue(lref, rval).
-
-
-      let _temp15 = PutValue(lref, rval);
-
-      if (_temp15 instanceof AbruptCompletion) {
-        return _temp15;
-      }
-
-      if (_temp15 instanceof Completion) {
-        _temp15 = _temp15.Value;
-      }
-
-      return rval;
-    } else {
-      // 1. Let lref be the result of evaluating LeftHandSideExpression.
-      const lref = yield* Evaluate(LeftHandSideExpression); // 2. Let lval be ? GetValue(lref).
-
-      let _temp16 = GetValue(lref);
-
-      if (_temp16 instanceof AbruptCompletion) {
-        return _temp16;
-      }
-
-      if (_temp16 instanceof Completion) {
-        _temp16 = _temp16.Value;
-      }
-
-      const lval = _temp16; // 3. Let rref be the result of evaluating AssignmentExpression.
-
-      const rref = yield* Evaluate(AssignmentExpression); // 4. Let rval be ? GetValue(rref).
-
-      let _temp17 = GetValue(rref);
-
-      if (_temp17 instanceof AbruptCompletion) {
-        return _temp17;
-      }
-
-      if (_temp17 instanceof Completion) {
-        _temp17 = _temp17.Value;
-      }
-
-      const rval = _temp17; // 5. Let assignmentOpText be the source text matched by AssignmentOperator.
-
-      const assignmentOpText = AssignmentOperator; // 6. Let opText be the sequence of Unicode code points associated with assignmentOpText in the following table:
-
-      const opText = {
-        '**=': '**',
-        '*=': '*',
-        '/=': '/',
-        '%=': '%',
-        '+=': '+',
-        '-=': '-',
-        '<<=': '<<',
-        '>>=': '>>',
-        '>>>=': '>>>',
-        '&=': '&',
-        '^=': '^',
-        '|=': '|'
-      }[assignmentOpText]; // 7. Let r be ApplyStringOrNumericBinaryOperator(lval, opText, rval).
-
-      const r = ApplyStringOrNumericBinaryOperator(lval, opText, rval); // 8. Perform ? PutValue(lref, r).
-
-      let _temp18 = PutValue(lref, r);
-
-      if (_temp18 instanceof AbruptCompletion) {
-        return _temp18;
-      }
-
-      if (_temp18 instanceof Completion) {
-        _temp18 = _temp18.Value;
-      }
-
-      return r;
-    }
-  }
-
-  //   BitwiseANDExpression : BitwiseANDExpression `&` EqualityExpression
-  //   BitwiseXORExpression : BitwiseXORExpression `^` BitwiseANDExpression
-  //   BitwiseORExpression : BitwiseORExpression `|` BitwiseXORExpression
-  // The production A : A @ B, where @ is one of the bitwise operators in the
-  // productions above, is evaluated as follows:
-
-  function* Evaluate_BinaryBitwiseExpression({
-    A,
-    operator,
-    B
-  }) {
-    return yield* EvaluateStringOrNumericBinaryExpression(A, operator, B);
-  }
-
-  //   CoalesceExpression :
-  //     CoalesceExpressionHead `??` BitwiseORExpression
-
-  function* Evaluate_CoalesceExpression({
-    CoalesceExpressionHead,
-    BitwiseORExpression
-  }) {
-    // 1. Let lref be the result of evaluating |CoalesceExpressionHead|.
-    const lref = yield* Evaluate(CoalesceExpressionHead); // 2. Let lval be ? GetValue(lref).
-
-    let _temp = GetValue(lref);
-    /* c8 ignore if */
-
-
-    if (_temp instanceof AbruptCompletion) {
-      return _temp;
-    }
-    /* c8 ignore if */
-
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    const lval = _temp; // 3. If lval is *undefined* or *null*,
-
-    if (lval === Value.undefined || lval === Value.null) {
-      // a. Let rref be the result of evaluating |BitwiseORExpression|.
-      const rref = yield* Evaluate(BitwiseORExpression); // b. Return ? GetValue(rref).
-
-      return GetValue(rref);
-    } // 4. Otherwise, return lval.
-
-
-    return lval;
-  }
-
-  //   EmptyStatement : `;`
-
-  function Evaluate_EmptyStatement(_EmptyStatement) {
-    // 1. Return NormalCompletion(empty).
-    return NormalCompletion(undefined);
-  }
-
-  // ExponentiationExpression : UpdateExpression ** ExponentiationExpression
-
-  function* Evaluate_ExponentiationExpression({
-    UpdateExpression,
-    ExponentiationExpression
-  }) {
-    // 1. Return ? EvaluateStringOrNumericBinaryExpression(UpdateExpression, **, ExponentiationExpression).
-    return yield* EvaluateStringOrNumericBinaryExpression(UpdateExpression, '**', ExponentiationExpression);
-  }
-
-  // IfStatement :
-  //   `if` `(` Expression `)` Statement `else` Statement
-  //   `if` `(` Expression `)` Statement
-
-  function* Evaluate_IfStatement({
-    Expression,
-    Statement_a,
-    Statement_b
-  }) {
-    // 1. Let exprRef be the result of evaluating Expression.
-    const exprRef = yield* Evaluate(Expression); // 2. Let exprValue be ! ToBoolean(? GetValue(exprRef)).
-
-    let _temp = GetValue(exprRef);
-    /* c8 ignore if */
-
-
-    if (_temp instanceof AbruptCompletion) {
-      return _temp;
-    }
-    /* c8 ignore if */
-
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    const exprValue = ToBoolean(_temp);
-
-    if (Statement_b) {
-      let stmtCompletion; // 3. If exprValue is true, then
-
-      if (exprValue === Value.true) {
-        // a. Let stmtCompletion be the result of evaluating the first Statement.
-        stmtCompletion = yield* Evaluate(Statement_a);
-      } else {
-        // 4. Else,
-        // a. Let stmtCompletion be the result of evaluating the second Statement.
-        stmtCompletion = yield* Evaluate(Statement_b);
-      } // 5. Return Completion(UpdateEmpty(stmtCompletion, undefined)).
-
-
-      return Completion(UpdateEmpty(EnsureCompletion(stmtCompletion), Value.undefined));
-    } else {
-      // 3. If exprValue is false, then
-      if (exprValue === Value.false) {
-        // a. Return NormalCompletion(undefined).
-        return NormalCompletion(Value.undefined);
-      } else {
-        // 4. Else,
-        // a. Let stmtCompletion be the result of evaluating Statement.
-        const stmtCompletion = yield* Evaluate(Statement_a); // b. Return Completion(UpdateEmpty(stmtCompletion, undefined)).
-
-        return Completion(UpdateEmpty(EnsureCompletion(stmtCompletion), Value.undefined));
-      }
-    }
-  }
-
-  // ImportCall : `import` `(` AssignmentExpression `)`
-
-  function* Evaluate_ImportCall({
-    AssignmentExpression
-  }) {
-    let _temp = GetActiveScriptOrModule();
-
-    Assert(!(_temp instanceof AbruptCompletion), "GetActiveScriptOrModule()" + ' returned an abrupt completion');
-    /* c8 ignore if */
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    // 1. Let referencingScriptOrModule be ! GetActiveScriptOrModule().
-    const referencingScriptOrModule = _temp; // 2. Let argRef be the result of evaluating AssignmentExpression.
-
-    const argRef = yield* Evaluate(AssignmentExpression); // 3. Let specifier be ? GetValue(argRef).
-
-    let _temp2 = GetValue(argRef);
-    /* c8 ignore if */
-
-
-    if (_temp2 instanceof AbruptCompletion) {
-      return _temp2;
-    }
-    /* c8 ignore if */
-
-
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
-    }
-
-    const specifier = _temp2; // 4. Let promiseCapability be ! NewPromiseCapability(%Promise%).
-
-    let _temp3 = NewPromiseCapability(exports.surroundingAgent.intrinsic('%Promise%'));
-
-    Assert(!(_temp3 instanceof AbruptCompletion), "NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))" + ' returned an abrupt completion');
-
-    if (_temp3 instanceof Completion) {
-      _temp3 = _temp3.Value;
-    }
-
-    const promiseCapability = _temp3; // 5. Let specifierString be ToString(specifier).
-
-    let specifierString = ToString(specifier); // 6. IfAbruptRejectPromise(specifierString, promiseCapability).
-
-    /* c8 ignore if */
-    if (specifierString instanceof AbruptCompletion) {
-      const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [specifierString.Value]);
-
-      if (hygenicTemp2 instanceof AbruptCompletion) {
-        return hygenicTemp2;
-      }
-
-      return promiseCapability.Promise;
-    }
-    /* c8 ignore if */
-
-
-    if (specifierString instanceof Completion) {
-      specifierString = specifierString.Value;
-    }
-
-    let _temp4 = HostImportModuleDynamically(referencingScriptOrModule, specifierString, promiseCapability);
-
-    Assert(!(_temp4 instanceof AbruptCompletion), "HostImportModuleDynamically(referencingScriptOrModule, specifierString, promiseCapability)" + ' returned an abrupt completion');
-
-    if (_temp4 instanceof Completion) {
-      _temp4 = _temp4.Value;
-    }
-
-    return promiseCapability.Promise;
-  }
-
-  //   MultiplicativeExpression :
-  //     MultiplicativeExpression MultiplicativeOperator ExponentiationExpression
-
-  function* Evaluate_MultiplicativeExpression({
-    MultiplicativeExpression,
-    MultiplicativeOperator,
-    ExponentiationExpression
-  }) {
-    // 1. Let opText be the source text matched by MultiplicativeOperator.
-    const opText = MultiplicativeOperator; // 2. Return ? EvaluateStringOrNumericBinaryExpression(MultiplicativeExpression, opText, ExponentiationExpression).
-
-    return yield* EvaluateStringOrNumericBinaryExpression(MultiplicativeExpression, opText, ExponentiationExpression);
-  }
-
-  // ThrowStatement : `throw` Expression `;`
-
-  function* Evaluate_ThrowStatement({
-    Expression
-  }) {
-    // 1. Let exprRef be the result of evaluating Expression.
-    const exprRef = yield* Evaluate(Expression); // 2. Let exprValue be ? GetValue(exprRef).
-
-    let _temp = GetValue(exprRef);
-    /* c8 ignore if */
-
-
-    if (_temp instanceof AbruptCompletion) {
-      return _temp;
-    }
-    /* c8 ignore if */
-
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    const exprValue = _temp; // 3. Return ThrowCompletion(exprValue).
-
-    return ThrowCompletion(exprValue);
-  }
-
-  //   LeftHandSideExpression `++`
-  //   LeftHandSideExpression `--`
-  //   `++` UnaryExpression
-  //   `--` UnaryExpression
-
-  function* Evaluate_UpdateExpression({
-    LeftHandSideExpression,
-    operator,
-    UnaryExpression
-  }) {
-    switch (true) {
-      // UpdateExpression : LeftHandSideExpression `++`
-      case operator === '++' && !!LeftHandSideExpression:
-        {
-          // 1. Let lhs be the result of evaluating LeftHandSideExpression.
-          const lhs = yield* Evaluate(LeftHandSideExpression); // 2. Let oldValue be ? ToNumeric(? GetValue(lhs)).
-
-          let _temp4 = GetValue(lhs);
-          /* c8 ignore if */
-
-
-          if (_temp4 instanceof AbruptCompletion) {
-            return _temp4;
-          }
-          /* c8 ignore if */
-
-
-          if (_temp4 instanceof Completion) {
-            _temp4 = _temp4.Value;
-          }
-
-          let _temp = ToNumeric(_temp4);
-
-          if (_temp instanceof AbruptCompletion) {
-            return _temp;
-          }
-
-          if (_temp instanceof Completion) {
-            _temp = _temp.Value;
-          }
-
-          const oldValue = _temp; // 3. Let newValue be ! Type(oldvalue)::add(oldValue, Type(oldValue)::unit).
-
-          let _temp2 = TypeForMethod(oldValue).add(oldValue, TypeForMethod(oldValue).unit);
-
-          Assert(!(_temp2 instanceof AbruptCompletion), "TypeForMethod(oldValue).add(oldValue, TypeForMethod(oldValue).unit)" + ' returned an abrupt completion');
-          /* c8 ignore if */
-
-          if (_temp2 instanceof Completion) {
-            _temp2 = _temp2.Value;
-          }
-
-          const newValue = _temp2; // 4. Perform ? PutValue(lhs, newValue).
-
-          let _temp3 = PutValue(lhs, newValue);
-
-          if (_temp3 instanceof AbruptCompletion) {
-            return _temp3;
-          }
-
-          if (_temp3 instanceof Completion) {
-            _temp3 = _temp3.Value;
-          }
-
-          return oldValue;
-        }
-      // UpdateExpression : LeftHandSideExpression `--`
-
-      case operator === '--' && !!LeftHandSideExpression:
-        {
-          // 1. Let lhs be the result of evaluating LeftHandSideExpression.
-          const lhs = yield* Evaluate(LeftHandSideExpression); // 2. Let oldValue be ? ToNumeric(? GetValue(lhs)).
-
-          let _temp8 = GetValue(lhs);
-
-          if (_temp8 instanceof AbruptCompletion) {
-            return _temp8;
-          }
-
-          if (_temp8 instanceof Completion) {
-            _temp8 = _temp8.Value;
-          }
-
-          let _temp5 = ToNumeric(_temp8);
-
-          if (_temp5 instanceof AbruptCompletion) {
-            return _temp5;
-          }
-
-          if (_temp5 instanceof Completion) {
-            _temp5 = _temp5.Value;
-          }
-
-          const oldValue = _temp5; // 3. Let newValue be ! Type(oldvalue)::subtract(oldValue, Type(oldValue)::unit).
-
-          let _temp6 = TypeForMethod(oldValue).subtract(oldValue, TypeForMethod(oldValue).unit);
-
-          Assert(!(_temp6 instanceof AbruptCompletion), "TypeForMethod(oldValue).subtract(oldValue, TypeForMethod(oldValue).unit)" + ' returned an abrupt completion');
-
-          if (_temp6 instanceof Completion) {
-            _temp6 = _temp6.Value;
-          }
-
-          const newValue = _temp6; // 4. Perform ? PutValue(lhs, newValue).
-
-          let _temp7 = PutValue(lhs, newValue);
-
-          if (_temp7 instanceof AbruptCompletion) {
-            return _temp7;
-          }
-
-          if (_temp7 instanceof Completion) {
-            _temp7 = _temp7.Value;
-          }
-
-          return oldValue;
-        }
-      // UpdateExpression : `++` UnaryExpression
-
-      case operator === '++' && !!UnaryExpression:
-        {
-          // 1. Let expr be the result of evaluating UnaryExpression.
-          const expr = yield* Evaluate(UnaryExpression); // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
-
-          let _temp12 = GetValue(expr);
-
-          if (_temp12 instanceof AbruptCompletion) {
-            return _temp12;
-          }
-
-          if (_temp12 instanceof Completion) {
-            _temp12 = _temp12.Value;
-          }
-
-          let _temp9 = ToNumeric(_temp12);
-
-          if (_temp9 instanceof AbruptCompletion) {
-            return _temp9;
-          }
-
-          if (_temp9 instanceof Completion) {
-            _temp9 = _temp9.Value;
-          }
-
-          const oldValue = _temp9; // 3. Let newValue be ! Type(oldvalue)::add(oldValue, Type(oldValue)::unit).
-
-          let _temp10 = TypeForMethod(oldValue).add(oldValue, TypeForMethod(oldValue).unit);
-
-          Assert(!(_temp10 instanceof AbruptCompletion), "TypeForMethod(oldValue).add(oldValue, TypeForMethod(oldValue).unit)" + ' returned an abrupt completion');
-
-          if (_temp10 instanceof Completion) {
-            _temp10 = _temp10.Value;
-          }
-
-          const newValue = _temp10; // 4. Perform ? PutValue(expr, newValue).
-
-          let _temp11 = PutValue(expr, newValue);
-
-          if (_temp11 instanceof AbruptCompletion) {
-            return _temp11;
-          }
-
-          if (_temp11 instanceof Completion) {
-            _temp11 = _temp11.Value;
-          }
-
-          return newValue;
-        }
-      // UpdateExpression : `--` UnaryExpression
-
-      case operator === '--' && !!UnaryExpression:
-        {
-          // 1. Let expr be the result of evaluating UnaryExpression.
-          const expr = yield* Evaluate(UnaryExpression); // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
-
-          let _temp16 = GetValue(expr);
-
-          if (_temp16 instanceof AbruptCompletion) {
-            return _temp16;
-          }
-
-          if (_temp16 instanceof Completion) {
-            _temp16 = _temp16.Value;
-          }
-
-          let _temp13 = ToNumeric(_temp16);
-
-          if (_temp13 instanceof AbruptCompletion) {
-            return _temp13;
-          }
-
-          if (_temp13 instanceof Completion) {
-            _temp13 = _temp13.Value;
-          }
-
-          const oldValue = _temp13; // 3. Let newValue be ! Type(oldvalue)::subtract(oldValue, Type(oldValue)::unit).
-
-          let _temp14 = TypeForMethod(oldValue).subtract(oldValue, TypeForMethod(oldValue).unit);
-
-          Assert(!(_temp14 instanceof AbruptCompletion), "TypeForMethod(oldValue).subtract(oldValue, TypeForMethod(oldValue).unit)" + ' returned an abrupt completion');
-
-          if (_temp14 instanceof Completion) {
-            _temp14 = _temp14.Value;
-          }
-
-          const newValue = _temp14; // 4. Perform ? PutValue(expr, newValue).
-
-          let _temp15 = PutValue(expr, newValue);
-
-          if (_temp15 instanceof AbruptCompletion) {
-            return _temp15;
-          }
-
-          if (_temp15 instanceof Completion) {
-            _temp15 = _temp15.Value;
-          }
-
-          return newValue;
-        }
-
-      /*c8 ignore next*/
-      default:
-        throw new OutOfRange('Evaluate_UpdateExpression', operator);
-    }
-  }
-
-  function GlobalDeclarationInstantiation(script, env) {
-    // 1. Assert: env is a global Environment Record.
-    Assert(env instanceof EnvironmentRecord, "env instanceof EnvironmentRecord"); // 2. Let lexNames be the LexicallyDeclaredNames of script.
-
-    const lexNames = LexicallyDeclaredNames(script); // 3. Let varNames be the VarDeclaredNames of script.
-
-    const varNames = VarDeclaredNames(script); // 4. For each name in lexNames, do
-
-    for (const name of lexNames) {
-      // 1. If env.HasVarDeclaration(name) is true, throw a SyntaxError exception.
-      if (env.HasVarDeclaration(name) === Value.true) {
-        return exports.surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
-      } // 1. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
-
-
-      if (env.HasLexicalDeclaration(name) === Value.true) {
-        return exports.surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
-      } // 1. Let hasRestrictedGlobal be ? env.HasRestrictedGlobalProperty(name).
-
-
-      let _temp = env.HasRestrictedGlobalProperty(name);
-      /* c8 ignore if */
-
-
-      if (_temp instanceof AbruptCompletion) {
-        return _temp;
-      }
-      /* c8 ignore if */
-
-
-      if (_temp instanceof Completion) {
-        _temp = _temp.Value;
-      }
-
-      const hasRestrictedGlobal = _temp; // 1. If hasRestrictedGlobal is true, throw a SyntaxError exception.
-
-      if (hasRestrictedGlobal === Value.true) {
-        return exports.surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
-      }
-    } // 5. For each name in varNames, do
-
-
-    for (const name of varNames) {
-      // 1. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
-      if (env.HasLexicalDeclaration(name) === Value.true) {
-        return exports.surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
-      }
-    } // 6. Let varDeclarations be the VarScopedDeclarations of script.
-
-
-    const varDeclarations = VarScopedDeclarations(script); // 7. Let functionsToInitialize be a new empty List.
-
-    const functionsToInitialize = []; // 8. Let declaredFunctionNames be a new empty List.
-
-    const declaredFunctionNames = new ValueSet(); // 9. For each d in varDeclarations, in reverse list order, do
-
-    for (const d of [...varDeclarations].reverse()) {
-      // a. If d is neither a VariableDeclaration nor a ForBinding nor a BindingIdentifier, then
-      if (d.type !== 'VariableDeclaration' && d.type !== 'ForBinding' && d.type !== 'BindingIdentifier') {
-        // i. Assert: d is either a FunctionDeclaration, a GeneratorDeclaration, an AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration.
-        Assert(d.type === 'FunctionDeclaration' || d.type === 'GeneratorDeclaration' || d.type === 'AsyncFunctionDeclaration' || d.type === 'AsyncGeneratorDeclaration', "d.type === 'FunctionDeclaration'\n             || d.type === 'GeneratorDeclaration'\n             || d.type === 'AsyncFunctionDeclaration'\n             || d.type === 'AsyncGeneratorDeclaration'"); // ii. NOTE: If there are multiple function declarations for the same name, the last declaration is used.
-        // iii. Let fn be the sole element of the BoundNames of d.
-
-        const fn = BoundNames(d)[0]; // iv. If fn is not an element of declaredFunctionNames, then
-
-        if (!declaredFunctionNames.has(fn)) {
-          let _temp2 = env.CanDeclareGlobalFunction(fn);
-
-          if (_temp2 instanceof AbruptCompletion) {
-            return _temp2;
-          }
-
-          if (_temp2 instanceof Completion) {
-            _temp2 = _temp2.Value;
-          }
-
-          // 1. Let fnDefinable be ? env.CanDeclareGlobalFunction(fn).
-          const fnDefinable = _temp2; // 2. If fnDefinable is false, throw a TypeError exception.
-
-          if (fnDefinable === Value.false) {
-            return exports.surroundingAgent.Throw('TypeError', 'AlreadyDeclared', fn);
-          } // 3. Append fn to declaredFunctionNames.
-
-
-          declaredFunctionNames.add(fn); // 4. Insert d as the first element of functionsToInitialize.
-
-          functionsToInitialize.unshift(d);
-        }
-      }
-    } // 10. Let declaredVarNames be a new empty List.
-
-
-    const declaredVarNames = new ValueSet(); // 11. For each d in varDeclarations, do
-
-    for (const d of varDeclarations) {
-      // a. If d is a VariableDeclaration, a ForBinding, or a BindingIdentifier, then
-      if (d.type === 'VariableDeclaration' || d.type === 'ForBinding' || d.type === 'BindingIdentifier') {
-        // i. For each String vn in the BoundNames of d, do
-        for (const vn of BoundNames(d)) {
-          // 1. If vn is not an element of declaredFunctionNames, then
-          if (!declaredFunctionNames.has(vn)) {
-            let _temp3 = env.CanDeclareGlobalVar(vn);
-
-            if (_temp3 instanceof AbruptCompletion) {
-              return _temp3;
-            }
-
-            if (_temp3 instanceof Completion) {
-              _temp3 = _temp3.Value;
-            }
-
-            // a. Let vnDefinable be ? env.CanDeclareGlobalVar(vn).
-            const vnDefinable = _temp3; // b. If vnDefinable is false, throw a TypeError exception.
-
-            if (vnDefinable === Value.false) {
-              return exports.surroundingAgent.Throw('TypeError', 'AlreadyDeclared', vn);
-            } // c. If vn is not an element of declaredVarNames, then
-
-
-            if (!declaredVarNames.has(vn)) {
-              // i. Append vn to declaredVarNames.
-              declaredVarNames.add(vn);
-            }
-          }
-        }
-      }
-    } // 12. NOTE: No abnormal terminations occur after this algorithm step if the global object is an ordinary object. However, if the global object is a Proxy exotic object it may exhibit behaviours that cause abnormal terminations in some of the following steps.
-    // 13. NOTE: Annex B.3.3.2 adds additional steps at this point.
-    // 14. Let lexDeclarations be the LexicallyScopedDeclarations of script.
-
-
-    const lexDeclarations = LexicallyScopedDeclarations(script); // 15. For each element d in lexDeclarations, do
-
-    for (const d of lexDeclarations) {
-      // a. NOTE: Lexically declared names are only instantiated here but not initialized.
-      // b. For each element dn of the BoundNames of d, do
-      for (const dn of BoundNames(d)) {
-        // 1. If IsConstantDeclaration of d is true, then
-        if (IsConstantDeclaration(d)) {
-          let _temp4 = env.CreateImmutableBinding(dn, Value.true);
-
-          if (_temp4 instanceof AbruptCompletion) {
-            return _temp4;
-          }
-
-          if (_temp4 instanceof Completion) {
-            _temp4 = _temp4.Value;
-          }
-        } else {
-          let _temp5 = env.CreateMutableBinding(dn, Value.false);
-
-          if (_temp5 instanceof AbruptCompletion) {
-            return _temp5;
-          }
-
-          if (_temp5 instanceof Completion) {
-            _temp5 = _temp5.Value;
-          }
-        }
-      }
-    } // 16. For each Parse Node f in functionsToInitialize, do
-
-
-    for (const f of functionsToInitialize) {
-      // a. Let fn be the sole element of the BoundNames of f.
-      const fn = BoundNames(f)[0]; // b. Let fo be InstantiateFunctionObject of f with argument env.
-
-      const fo = InstantiateFunctionObject(f, env); // c. Perform ? env.CreateGlobalFunctionBinding(fn, fo, false).
-
-      let _temp6 = env.CreateGlobalFunctionBinding(fn, fo, Value.false);
-
-      if (_temp6 instanceof AbruptCompletion) {
-        return _temp6;
-      }
-
-      if (_temp6 instanceof Completion) {
-        _temp6 = _temp6.Value;
-      }
-    } // 17. For each String vn in declaredVarNames, in list order, do
-
-
-    for (const vn of declaredVarNames) {
-      let _temp7 = env.CreateGlobalVarBinding(vn, Value.false);
-
-      if (_temp7 instanceof AbruptCompletion) {
-        return _temp7;
-      }
-
-      if (_temp7 instanceof Completion) {
-        _temp7 = _temp7.Value;
-      }
-    } // 18. Return NormalCompletion(empty).
-
-
-    return NormalCompletion(undefined);
-  }
-
-  //   FunctionDeclaration :
-  //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
-  //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
-
-  function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaration, scope) {
-    const {
-      BindingIdentifier,
-      FormalParameters,
-      FunctionBody
-    } = FunctionDeclaration; // 1. Let name be StringValue of BindingIdentifier.
-
-    const name = BindingIdentifier ? StringValue(BindingIdentifier) : new Value('default'); // 2. Let sourceText be the source text matched by FunctionDeclaration.
-
-    const sourceText = sourceTextMatchedBy(FunctionDeclaration); // 3. Let F be OrdinaryFunctionCreate(%Function.prototype%, sourceText, FormalParameters, FunctionBody, non-lexical-this, scope).
-
-    let _temp = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%Function.prototype%'), sourceText, FormalParameters, FunctionBody, 'non-lexical-this', scope);
-
-    Assert(!(_temp instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), sourceText, FormalParameters, FunctionBody, 'non-lexical-this', scope)" + ' returned an abrupt completion');
-    /* c8 ignore if */
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    const F = _temp; // 4. Perform SetFunctionName(F, name).
-
-    SetFunctionName(F, name); // 5. Perform MakeConstructor(F).
-
-    MakeConstructor(F); // 6. Return F.
-
-    return F;
-  } // 14.4.11 #sec-generator-function-definitions-runtime-semantics-instantiatefunctionobject
-  //   GeneratorDeclaration :
-  //     `function` `*` BindingIdentifier `(` FormalParameters `)` `{` GeneratorBody `}`
-  //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
-
-  function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclaration, scope) {
-    const {
-      BindingIdentifier,
-      FormalParameters,
-      GeneratorBody
-    } = GeneratorDeclaration; // 1. Let name be StringValue of BindingIdentifier.
-
-    const name = BindingIdentifier ? StringValue(BindingIdentifier) : new Value('default'); // 2. Let sourceText be the source text matched by GeneratorDeclaration.
-
-    const sourceText = sourceTextMatchedBy(GeneratorDeclaration); // 3. Let F be OrdinaryFunctionCreate(%GeneratorFunction.prototype%, sourceText, FormalParameters, GeneratorBody, non-lexical-this, scope).
-
-    let _temp2 = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%GeneratorFunction.prototype%'), sourceText, FormalParameters, GeneratorBody, 'non-lexical-this', scope);
-
-    Assert(!(_temp2 instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype%'), sourceText, FormalParameters, GeneratorBody, 'non-lexical-this', scope)" + ' returned an abrupt completion');
-
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
-    }
-
-    const F = _temp2; // 4. Perform SetFunctionName(F, name).
-
-    SetFunctionName(F, name); // 5. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
-
-    let _temp3 = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%'));
-
-    Assert(!(_temp3 instanceof AbruptCompletion), "OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%'))" + ' returned an abrupt completion');
-
-    if (_temp3 instanceof Completion) {
-      _temp3 = _temp3.Value;
-    }
-
-    const prototype = _temp3; // 6. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-
-    let _temp4 = DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
-      Value: prototype,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.false
-    }));
-
-    Assert(!(_temp4 instanceof AbruptCompletion), "DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({\n    Value: prototype,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
-
-    if (_temp4 instanceof Completion) {
-      _temp4 = _temp4.Value;
-    }
-
-    return F;
-  } // #sec-async-function-definitions-InstantiateFunctionObject
-  //  AsyncFunctionDeclaration :
-  //    `async` `function` BindingIdentifier `(` FormalParameters `)` `{` AsyncFunctionBody `}`
-  //    `async` `function` `(` FormalParameters `)` `{` AsyncFunctionBody `}`
-
-  function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunctionDeclaration, scope) {
-    const {
-      BindingIdentifier,
-      FormalParameters,
-      AsyncFunctionBody
-    } = AsyncFunctionDeclaration; // 1. Let name be StringValue of BindingIdentifier.
-
-    const name = BindingIdentifier ? StringValue(BindingIdentifier) : new Value('default'); // 2. Let sourceText be the source text matched by AsyncFunctionDeclaration.
-
-    const sourceText = sourceTextMatchedBy(AsyncFunctionDeclaration); // 3. Let F be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, FormalParameters, AsyncFunctionBody, non-lexical-this, scope).
-
-    let _temp5 = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, FormalParameters, AsyncFunctionBody, 'non-lexical-this', scope);
-
-    Assert(!(_temp5 instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, FormalParameters, AsyncFunctionBody, 'non-lexical-this', scope)" + ' returned an abrupt completion');
-
-    if (_temp5 instanceof Completion) {
-      _temp5 = _temp5.Value;
-    }
-
-    const F = _temp5; // 4. Perform ! SetFunctionName(F, name).
-
-    SetFunctionName(F, name); // 5. Return F.
-
-    return F;
-  } // #sec-asyncgenerator-definitions-evaluatebody
-  //  AsyncGeneratorDeclaration :
-  //    `async` `function` `*` BindingIdentifier `(` FormalParameters`)` `{` AsyncGeneratorBody `}`
-  //    `async` `function` `*` `(` FormalParameters`)` `{` AsyncGeneratorBody `}`
-
-  function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGeneratorDeclaration, scope) {
-    const {
-      BindingIdentifier,
-      FormalParameters,
-      AsyncGeneratorBody
-    } = AsyncGeneratorDeclaration; // 1. Let name be StringValue of BindingIdentifier.
-
-    const name = BindingIdentifier ? StringValue(BindingIdentifier) : new Value('default'); // 2. Let sourceText be the source text matched by AsyncGeneratorDeclaration.
-
-    const sourceText = sourceTextMatchedBy(AsyncGeneratorDeclaration); // 3. Let F be ! OrdinaryFunctionCreate(%AsyncGeneratorFunction.prototype%, sourceText, FormalParameters, AsyncGeneratorBody, non-lexical-this, scope).
-
-    let _temp6 = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), sourceText, FormalParameters, AsyncGeneratorBody, 'non-lexical-this', scope);
-
-    Assert(!(_temp6 instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), sourceText, FormalParameters, AsyncGeneratorBody, 'non-lexical-this', scope)" + ' returned an abrupt completion');
-
-    if (_temp6 instanceof Completion) {
-      _temp6 = _temp6.Value;
-    }
-
-    const F = _temp6; // 4. Perform ! SetFunctionName(F, name).
-
-    SetFunctionName(F, name); // 5. Let prototype be ! OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
-
-    let _temp7 = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%'));
-
-    Assert(!(_temp7 instanceof AbruptCompletion), "OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%'))" + ' returned an abrupt completion');
-
-    if (_temp7 instanceof Completion) {
-      _temp7 = _temp7.Value;
-    }
-
-    const prototype = _temp7; // 6. Perform ! DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-
-    let _temp8 = DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
-      Value: prototype,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.false
-    }));
-
-    Assert(!(_temp8 instanceof AbruptCompletion), "DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({\n    Value: prototype,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
-
-    if (_temp8 instanceof Completion) {
-      _temp8 = _temp8.Value;
-    }
-
-    return F;
-  }
-  function InstantiateFunctionObject(AnyFunctionDeclaration, scope) {
-    switch (AnyFunctionDeclaration.type) {
-      case 'FunctionDeclaration':
-        return InstantiateFunctionObject_FunctionDeclaration(AnyFunctionDeclaration, scope);
-
-      case 'GeneratorDeclaration':
-        return InstantiateFunctionObject_GeneratorDeclaration(AnyFunctionDeclaration, scope);
-
-      case 'AsyncFunctionDeclaration':
-        return InstantiateFunctionObject_AsyncFunctionDeclaration(AnyFunctionDeclaration, scope);
-
-      case 'AsyncGeneratorDeclaration':
-        return InstantiateFunctionObject_AsyncGeneratorDeclaration(AnyFunctionDeclaration, scope);
-
-      /*c8 ignore next*/
-      default:
-        throw new OutOfRange('InstantiateFunctionObject', AnyFunctionDeclaration);
-    }
-  }
-
-  // Script :
-  //   [empty]
-  //   ScriptBody
-
-  function* Evaluate_Script({
-    ScriptBody
-  }) {
-    if (!ScriptBody) {
-      return NormalCompletion(Value.undefined);
-    }
-
-    return yield* Evaluate(ScriptBody);
-  }
-
-  function Evaluate_ScriptBody(ScriptBody) {
-    return Evaluate_StatementList(ScriptBody.StatementList);
-  }
-
-  function* Evaluate_StatementList(StatementList) {
-    if (StatementList.length === 0) {
-      return NormalCompletion(undefined);
-    }
-
-    let sl = yield* Evaluate(StatementList[0]);
-
-    if (StatementList.length === 1) {
-      return sl;
-    }
-
-    for (const StatementListItem of StatementList.slice(1)) {
-      /* c8 ignore if */
-      if (sl instanceof AbruptCompletion) {
-        return sl;
-      }
-      /* c8 ignore if */
-
-
-      if (sl instanceof Completion) {
-        sl = sl.Value;
-      }
-      let s = yield* Evaluate(StatementListItem); // We don't always return a Completion value, but here we actually need it
-      // to be a Completion.
-
-      s = EnsureCompletion(s);
-      sl = UpdateEmpty(s, sl);
-    }
-
-    return sl;
-  }
-
-  //   ExpressionStatement :
-  //     Expression `;`
-
-  function* Evaluate_ExpressionStatement({
-    Expression
-  }) {
-    // 1. Let exprRef be the result of evaluating Expression.
-    const exprRef = yield* Evaluate(Expression); // 2. Return ? GetValue(exprRef).
-
-    return GetValue(exprRef);
-  }
-
-  //   VariableDeclaration :
-  //     BindingIdentifier
-  //     BindingIdentifier Initializer
-  //     BindingPattern Initializer
-
-  function* Evaluate_VariableDeclaration({
-    BindingIdentifier,
-    Initializer,
-    BindingPattern
-  }) {
-    if (BindingIdentifier) {
-      if (!Initializer) {
-        // 1. Return NormalCompletion(empty).
-        return NormalCompletion(undefined);
-      } // 1. Let bindingId be StringValue of BindingIdentifier.
-
-
-      const bindingId = StringValue(BindingIdentifier); // 2. Let lhs be ? ResolveBinding(bindingId).
-
-      let _temp = ResolveBinding(bindingId, undefined, BindingIdentifier.strict);
-      /* c8 ignore if */
-
-
-      if (_temp instanceof AbruptCompletion) {
-        return _temp;
-      }
-      /* c8 ignore if */
-
-
-      if (_temp instanceof Completion) {
-        _temp = _temp.Value;
-      }
-
-      const lhs = _temp; // 3. If IsAnonymousFunctionDefinition(Initializer) is true, then
-
-      let value;
-
-      if (IsAnonymousFunctionDefinition(Initializer)) {
-        // a. Let value be NamedEvaluation of Initializer with argument bindingId.
-        value = yield* NamedEvaluation(Initializer, bindingId);
-      } else {
-        // 4. Else,
-        // a. Let rhs be the result of evaluating Initializer.
-        const rhs = yield* Evaluate(Initializer); // b. Let value be ? GetValue(rhs).
-
-        let _temp2 = GetValue(rhs);
-
-        if (_temp2 instanceof AbruptCompletion) {
-          return _temp2;
-        }
-
-        if (_temp2 instanceof Completion) {
-          _temp2 = _temp2.Value;
-        }
-
-        value = _temp2;
-      } // 5. Return ? PutValue(lhs, value).
-
-
-      return PutValue(lhs, value);
-    } // 1. Let rhs be the result of evaluating Initializer.
-
-
-    const rhs = yield* Evaluate(Initializer); // 2. Let rval be ? GetValue(rhs).
-
-    let _temp3 = GetValue(rhs);
-
-    if (_temp3 instanceof AbruptCompletion) {
-      return _temp3;
-    }
-
-    if (_temp3 instanceof Completion) {
-      _temp3 = _temp3.Value;
-    }
-
-    const rval = _temp3; // 3. Return the result of performing BindingInitialization for BindingPattern passing rval and undefined as arguments.
-
-    return yield* BindingInitialization(BindingPattern, rval, Value.undefined);
-  } // 13.3.2.4 #sec-variable-statement-runtime-semantics-evaluation
-  //   VariableDeclarationList : VariableDeclarationList `,` VariableDeclaration
-  //
-  // (implicit)
-  //   VariableDeclarationList : VariableDeclaration
-
-
-  Evaluate_VariableDeclaration.section = 'https://tc39.es/ecma262/#sec-variable-statement-runtime-semantics-evaluation';
-  function* Evaluate_VariableDeclarationList(VariableDeclarationList) {
-    let next;
-
-    for (const VariableDeclaration of VariableDeclarationList) {
-      next = yield* Evaluate_VariableDeclaration(VariableDeclaration);
-
-      /* c8 ignore if */
-      if (next instanceof AbruptCompletion) {
-        return next;
-      }
-      /* c8 ignore if */
-
-
-      if (next instanceof Completion) {
-        next = next.Value;
-      }
-    }
-
-    return next;
-  } // 13.3.2.4 #sec-variable-statement-runtime-semantics-evaluation
-  //   VariableStatement : `var` VariableDeclarationList `;`
-
-  function* Evaluate_VariableStatement({
-    VariableDeclarationList
-  }) {
-    let next = yield* Evaluate_VariableDeclarationList(VariableDeclarationList);
-
-    if (next instanceof AbruptCompletion) {
-      return next;
-    }
-
-    if (next instanceof Completion) {
-      next = next.Value;
-    }
-    return NormalCompletion(undefined);
-  }
-
-  // FunctionDeclaration :
-  //   function BindingIdentifier ( FormalParameters ) { FunctionBody }
-  //   function ( FormalParameters ) { FunctionBody }
-
-  function Evaluate_FunctionDeclaration(_FunctionDeclaration) {
-    // 1. Return NormalCompletion(empty).
-    return NormalCompletion(undefined);
-  }
-
-  // CallExpression :
-  //   CoverCallExpressionAndAsyncArrowHead
-  //   CallExpression Arguments
-
-  function* Evaluate_CallExpression(CallExpression) {
-    // 1. Let expr be CoveredCallExpression of CoverCallExpressionAndAsyncArrowHead.
-    const expr = CallExpression; // 2. Let memberExpr be the MemberExpression of expr.
-
-    const memberExpr = expr.CallExpression; // 3. Let arguments be the Arguments of expr.
-
-    const args = expr.Arguments; // 4. Let ref be the result of evaluating memberExpr.
-
-    const ref = yield* Evaluate(memberExpr); // 5. Let func be ? GetValue(ref).
-
-    let _temp = GetValue(ref);
-    /* c8 ignore if */
-
-
-    if (_temp instanceof AbruptCompletion) {
-      return _temp;
-    }
-    /* c8 ignore if */
-
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    const func = _temp; // 6. If Type(ref) is Reference, IsPropertyReference(ref) is false, and GetReferencedName(ref) is "eval", then
-
-    if (Type(ref) === 'Reference' && IsPropertyReference(ref) === Value.false && Type(GetReferencedName(ref)) === 'String' && GetReferencedName(ref).stringValue() === 'eval') {
-      // a. If SameValue(func, %eval%) is true, then
-      if (SameValue(func, exports.surroundingAgent.intrinsic('%eval%')) === Value.true) {
-        let _temp2 = yield* ArgumentListEvaluation(args);
-
-        if (_temp2 instanceof AbruptCompletion) {
-          return _temp2;
-        }
-
-        if (_temp2 instanceof Completion) {
-          _temp2 = _temp2.Value;
-        }
-
-        // i. Let argList be ? ArgumentListEvaluation of arguments.
-        const argList = _temp2; // ii. If argList has no elements, return undefined.
-
-        if (argList.length === 0) {
-          return Value.undefined;
-        } // iii. Let evalText be the first element of argList.
-
-
-        const evalText = argList[0]; // iv. If the source code matching this CallExpression is strict mode code, let strictCaller be true. Otherwise let strictCaller be false.
-
-        const strictCaller = CallExpression.strict; // v. Let evalRealm be the current Realm Record.
-
-        const evalRealm = exports.surroundingAgent.currentRealmRecord; // vi. Return ? PerformEval(evalText, evalRealm, strictCaller, true).
-
-        return PerformEval(evalText, evalRealm, strictCaller, true);
-      }
-    } // 7. Let thisCall be this CallExpression.
-
-    const tailCall = IsInTailPosition(); // 9. Return ? EvaluateCall(func, ref, arguments, tailCall).
-
-    return yield* EvaluateCall(func, ref, args, tailCall);
-  }
-
-  function* EvaluateCall(func, ref, args, tailPosition) {
-    // 1. If Type(ref) is Reference, then
-    let thisValue;
-
-    if (Type(ref) === 'Reference') {
-      // a. If IsPropertyReference(ref) is true, then
-      if (IsPropertyReference(ref) === Value.true) {
-        // i. Let thisValue be GetThisValue(ref).
-        thisValue = GetThisValue(ref);
-      } else {
-        // i. Assert: the base of ref is an Environment Record.
-        Assert(ref.BaseValue instanceof EnvironmentRecord, "ref.BaseValue instanceof EnvironmentRecord"); // ii. Let envRef be GetBase(ref).
-
-        const refEnv = GetBase(ref); // iii. Let thisValue be envRef.WithBaseObject().
-
-        thisValue = refEnv.WithBaseObject();
-      }
-    } else {
-      // a. Let thisValue be undefined.
-      thisValue = Value.undefined;
-    } // 3. Let argList be ? ArgumentListEvaluation of arguments.
-
-
-    let _temp = yield* ArgumentListEvaluation(args);
-    /* c8 ignore if */
-
-
-    if (_temp instanceof AbruptCompletion) {
-      return _temp;
-    }
-    /* c8 ignore if */
-
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    const argList = _temp; // 4. If Type(func) is not Object, throw a TypeError exception.
-
-    if (Type(func) !== 'Object') {
-      return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', func);
-    } // 5. If IsCallable(func) is false, throw a TypeError exception.
-
-
-    if (IsCallable(func) === Value.false) {
-      return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', func);
-    } // 6. If tailPosition is true, perform PrepareForTailCall().
-
-
-    if (tailPosition) {
-      PrepareForTailCall();
-    } // 7. Let result be Call(func, thisValue, argList).
-
-
-    const result = Call(func, thisValue, argList); // 8. Assert: If tailPosition is true, the above call will not return here but instead
-    //    evaluation will continue as if the following return has already occurred.
-
-    Assert(!tailPosition, "!tailPosition"); // 9. Assert: If result is not an abrupt completion, then Type(result) is an ECMAScript language type.
-
-    if (!(result instanceof AbruptCompletion)) {
-      Assert(result instanceof Value || result instanceof Completion, "result instanceof Value || result instanceof Completion");
-    } // 10. Return result.
-
-
-    return result;
-  }
-
-  function GetTemplateObject(templateLiteral) {
-    // 1. Let realm be the current Realm Record.
-    const realm = exports.surroundingAgent.currentRealmRecord; // 2. Let templateRegistry be realm.[[TemplateMap]].
-
-    const templateRegistry = realm.TemplateMap; // 3. For each element e of templateRegistry, do
-
-    for (const e of templateRegistry) {
-      // a. If e.[[Site]] is the same Parse Node as templateLiteral, then
-      if (e.Site === templateLiteral) {
-        // b. Return e.[[Array]].
-        return e.Array;
-      }
-    } // 4. Let rawStrings be TemplateStrings of templateLiteral with argument true.
-
-
-    const rawStrings = TemplateStrings(templateLiteral, true); // 5. Let cookedStrings be TemplateStrings of templateLiteral with argument false.
-
-    const cookedStrings = TemplateStrings(templateLiteral, false); // 6. Let count be the number of elements in the List cookedStrings.
-
-    const count = cookedStrings.length; // 7. Assert: count ≤ 232 - 1.
-
-    Assert(count < 2 ** 32 - 1, "count < (2 ** 32) - 1"); // 8. Let template be ! ArrayCreate(count).
-
-    let _temp = ArrayCreate(count);
-
-    Assert(!(_temp instanceof AbruptCompletion), "ArrayCreate(count)" + ' returned an abrupt completion');
-    /* c8 ignore if */
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    const template = _temp; // 9. Let template be ! ArrayCreate(count).
-
-    let _temp2 = ArrayCreate(count);
-
-    Assert(!(_temp2 instanceof AbruptCompletion), "ArrayCreate(count)" + ' returned an abrupt completion');
-
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
-    }
-
-    const rawObj = _temp2; // 10. Let index be 0.
-
-    let index = 0; // 11. Repeat, while index < count
-
-    while (index < count) {
-      let _temp3 = ToString(F(index));
-
-      Assert(!(_temp3 instanceof AbruptCompletion), "ToString(F(index))" + ' returned an abrupt completion');
-
-      if (_temp3 instanceof Completion) {
-        _temp3 = _temp3.Value;
-      }
-
-      // a. Let prop be ! ToString(𝔽(index)).
-      const prop = _temp3; // b. Let cookedValue be the String value cookedStrings[index].
-
-      const cookedValue = cookedStrings[index]; // c. Call template.[[DefineOwnProperty]](prop, PropertyDescriptor { [[Value]]: cookedValue, [[Writable]]: false, [[Enumerable]]: true, [[Configurable]]: false }).
-
-      let _temp4 = template.DefineOwnProperty(prop, Descriptor({
-        Value: cookedValue,
-        Writable: Value.false,
-        Enumerable: Value.true,
-        Configurable: Value.false
-      }));
-
-      Assert(!(_temp4 instanceof AbruptCompletion), "template.DefineOwnProperty(prop, Descriptor({\n      Value: cookedValue,\n      Writable: Value.false,\n      Enumerable: Value.true,\n      Configurable: Value.false,\n    }))" + ' returned an abrupt completion');
-
-      if (_temp4 instanceof Completion) {
-        _temp4 = _temp4.Value;
-      }
-
-      const rawValue = rawStrings[index]; // e. Call rawObj.[[DefineOwnProperty]](prop, PropertyDescriptor { [[Value]]: rawValue, [[Writable]]: false, [[Enumerable]]: true, [[Configurable]]: false }).
-
-      let _temp5 = rawObj.DefineOwnProperty(prop, Descriptor({
-        Value: rawValue,
-        Writable: Value.false,
-        Enumerable: Value.true,
-        Configurable: Value.false
-      }));
-
-      Assert(!(_temp5 instanceof AbruptCompletion), "rawObj.DefineOwnProperty(prop, Descriptor({\n      Value: rawValue,\n      Writable: Value.false,\n      Enumerable: Value.true,\n      Configurable: Value.false,\n    }))" + ' returned an abrupt completion');
-
-      if (_temp5 instanceof Completion) {
-        _temp5 = _temp5.Value;
-      }
-
-      index += 1;
-    } // 12. Perform SetIntegrityLevel(rawObj, frozen).
-
-
-    let _temp6 = SetIntegrityLevel(rawObj, 'frozen');
-
-    Assert(!(_temp6 instanceof AbruptCompletion), "SetIntegrityLevel(rawObj, 'frozen')" + ' returned an abrupt completion');
-
-    if (_temp6 instanceof Completion) {
-      _temp6 = _temp6.Value;
-    }
-
-    let _temp7 = template.DefineOwnProperty(new Value('raw'), Descriptor({
-      Value: rawObj,
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.false
-    }));
-
-    Assert(!(_temp7 instanceof AbruptCompletion), "template.DefineOwnProperty(new Value('raw'), Descriptor({\n    Value: rawObj,\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
-
-    if (_temp7 instanceof Completion) {
-      _temp7 = _temp7.Value;
-    }
-
-    let _temp8 = SetIntegrityLevel(template, 'frozen');
-
-    Assert(!(_temp8 instanceof AbruptCompletion), "SetIntegrityLevel(template, 'frozen')" + ' returned an abrupt completion');
-
-    if (_temp8 instanceof Completion) {
-      _temp8 = _temp8.Value;
-    }
-
-    templateRegistry.push({
-      Site: templateLiteral,
-      Array: template
-    }); // 16. Return template.
-
-    return template;
-  } // 12.2.9.3 #sec-template-literals-runtime-semantics-argumentlistevaluation
-  //   TemplateLiteral : NoSubstitutionTemplate
-  //
-  // https://github.com/tc39/ecma262/pull/1402
-  //   TemplateLiteral : SubstitutionTemplate
-
-
-  GetTemplateObject.section = 'https://tc39.es/ecma262/#sec-gettemplateobjec';
-
-  function* ArgumentListEvaluation_TemplateLiteral(TemplateLiteral) {
-    switch (true) {
-      case TemplateLiteral.TemplateSpanList.length === 1:
-        {
-          const templateLiteral = TemplateLiteral;
-          const siteObj = GetTemplateObject(templateLiteral);
-          return [siteObj];
-        }
-
-      case TemplateLiteral.TemplateSpanList.length > 1:
-        {
-          const templateLiteral = TemplateLiteral;
-          const siteObj = GetTemplateObject(templateLiteral);
-          const restSub = [];
-
-          for (const Expression of TemplateLiteral.ExpressionList) {
-            const subRef = yield* Evaluate(Expression);
-
-            let _temp9 = GetValue(subRef);
-            /* c8 ignore if */
-
-
-            if (_temp9 instanceof AbruptCompletion) {
-              return _temp9;
-            }
-            /* c8 ignore if */
-
-
-            if (_temp9 instanceof Completion) {
-              _temp9 = _temp9.Value;
-            }
-
-            const subValue = _temp9;
-            restSub.push(subValue);
-          }
-
-          return [siteObj, ...restSub];
-        }
-
-      /*c8 ignore next*/
-      default:
-        throw new OutOfRange('ArgumentListEvaluation_TemplateLiteral', TemplateLiteral);
-    }
-  } // 12.3.6.1 #sec-argument-lists-runtime-semantics-argumentlistevaluation
-  //   Arguments : `(` `)`
-  //   ArgumentList :
-  //     AssignmentExpression
-  //     `...` AssignmentExpression
-  //     ArgumentList `,` AssignmentExpression
-  //     ArgumentList `,` `...` AssignmentExpression
-  //
-  // (implicit)
-  //   Arguments :
-  //     `(` ArgumentList `)`
-  //     `(` ArgumentList `,` `)`
-
-
-  ArgumentListEvaluation_TemplateLiteral.section = 'https://tc39.es/ecma262/#sec-template-literals-runtime-semantics-argumentlistevaluation';
-
-  function* ArgumentListEvaluation_Arguments(Arguments) {
-    const precedingArgs = [];
-
-    for (const element of Arguments) {
-      if (element.type === 'AssignmentRestElement') {
-        const {
-          AssignmentExpression
-        } = element; // 2. Let spreadRef be the result of evaluating AssignmentExpression.
-
-        const spreadRef = yield* Evaluate(AssignmentExpression); // 3. Let spreadObj be ? GetValue(spreadRef).
-
-        let _temp10 = GetValue(spreadRef);
-
-        if (_temp10 instanceof AbruptCompletion) {
-          return _temp10;
-        }
-
-        if (_temp10 instanceof Completion) {
-          _temp10 = _temp10.Value;
-        }
-
-        const spreadObj = _temp10; // 4. Let iteratorRecord be ? GetIterator(spreadObj).
-
-        let _temp11 = GetIterator(spreadObj);
-
-        if (_temp11 instanceof AbruptCompletion) {
-          return _temp11;
-        }
-
-        if (_temp11 instanceof Completion) {
-          _temp11 = _temp11.Value;
-        }
-
-        const iteratorRecord = _temp11; // 5. Repeat,
-
-        while (true) {
-          let _temp12 = IteratorStep(iteratorRecord);
-
-          if (_temp12 instanceof AbruptCompletion) {
-            return _temp12;
-          }
-
-          if (_temp12 instanceof Completion) {
-            _temp12 = _temp12.Value;
-          }
-
-          // a. Let next be ? IteratorStep(iteratorRecord).
-          const next = _temp12; // b. If next is false, return list.
-
-          if (next === Value.false) {
-            break;
-          } // c. Let nextArg be ? IteratorValue(next).
-
-
-          let _temp13 = IteratorValue(next);
-
-          if (_temp13 instanceof AbruptCompletion) {
-            return _temp13;
-          }
-
-          if (_temp13 instanceof Completion) {
-            _temp13 = _temp13.Value;
-          }
-
-          const nextArg = _temp13; // d. Append nextArg as the last element of list.
-
-          precedingArgs.push(nextArg);
-        }
-      } else {
-        const AssignmentExpression = element; // 2. Let ref be the result of evaluating AssignmentExpression.
-
-        const ref = yield* Evaluate(AssignmentExpression); // 3. Let arg be ? GetValue(ref).
-
-        let _temp14 = GetValue(ref);
-
-        if (_temp14 instanceof AbruptCompletion) {
-          return _temp14;
-        }
-
-        if (_temp14 instanceof Completion) {
-          _temp14 = _temp14.Value;
-        }
-
-        const arg = _temp14; // 4. Append arg to the end of precedingArgs.
-
-        precedingArgs.push(arg); // 5. Return precedingArgs.
-      }
-    }
-
-    return precedingArgs;
-  }
-
-  ArgumentListEvaluation_Arguments.section = 'https://tc39.es/ecma262/#sec-argument-lists-runtime-semantics-argumentlistevaluation';
-  function ArgumentListEvaluation(ArgumentsOrTemplateLiteral) {
-    switch (true) {
-      case Array.isArray(ArgumentsOrTemplateLiteral):
-        return ArgumentListEvaluation_Arguments(ArgumentsOrTemplateLiteral);
-
-      case ArgumentsOrTemplateLiteral.type === 'TemplateLiteral':
-        return ArgumentListEvaluation_TemplateLiteral(ArgumentsOrTemplateLiteral);
-
-      /*c8 ignore next*/
-      default:
-        throw new OutOfRange('ArgumentListEvaluation', ArgumentsOrTemplateLiteral);
-    }
-  }
-
-  function Evaluate_AnyFunctionBody({
-    FunctionStatementList
-  }) {
-    return Evaluate_FunctionStatementList(FunctionStatementList);
-  } // #sec-function-definitions-runtime-semantics-evaluatebody
-  // FunctionBody : FunctionStatementList
-
-  function* EvaluateBody_FunctionBody({
-    FunctionStatementList
-  }, functionObject, argumentsList) {
-    let _temp = yield* FunctionDeclarationInstantiation(functionObject, argumentsList);
-    /* c8 ignore if */
-
-
-    if (_temp instanceof AbruptCompletion) {
-      return _temp;
-    }
-    /* c8 ignore if */
-
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    return yield* Evaluate_FunctionStatementList(FunctionStatementList);
-  } // #sec-arrow-function-definitions-runtime-semantics-evaluation
-  // ExpressionBody : AssignmentExpression
-
-  function* Evaluate_ExpressionBody({
-    AssignmentExpression
-  }) {
-    // 1. Let exprRef be the result of evaluating AssignmentExpression.
-    const exprRef = yield* Evaluate(AssignmentExpression); // 2. Let exprValue be ? GetValue(exprRef).
-
-    let _temp2 = GetValue(exprRef);
-
-    if (_temp2 instanceof AbruptCompletion) {
-      return _temp2;
-    }
-
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
-    }
-
-    const exprValue = _temp2; // 3. Return Completion { [[Type]]: return, [[Value]]: exprValue, [[Target]]: empty }.
-
-    return new Completion({
-      Type: 'return',
-      Value: exprValue,
-      Target: undefined
-    });
-  } // #sec-arrow-function-definitions-runtime-semantics-evaluatebody
-  // ConciseBody : ExpressionBody
-
-  function* EvaluateBody_ConciseBody({
-    ExpressionBody
-  }, functionObject, argumentsList) {
-    let _temp3 = yield* FunctionDeclarationInstantiation(functionObject, argumentsList);
-
-    if (_temp3 instanceof AbruptCompletion) {
-      return _temp3;
-    }
-
-    if (_temp3 instanceof Completion) {
-      _temp3 = _temp3.Value;
-    }
-
-    return yield* Evaluate(ExpressionBody);
-  } // #sec-async-arrow-function-definitions-EvaluateBody
-  // AsyncConciseBody : ExpressionBody
-
-  function* EvaluateBody_AsyncConciseBody({
-    ExpressionBody
-  }, functionObject, argumentsList) {
-    let _temp4 = NewPromiseCapability(exports.surroundingAgent.intrinsic('%Promise%'));
-
-    Assert(!(_temp4 instanceof AbruptCompletion), "NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))" + ' returned an abrupt completion');
-    /* c8 ignore if */
-
-    if (_temp4 instanceof Completion) {
-      _temp4 = _temp4.Value;
-    }
-
-    // 1. Let promiseCapability be ! NewPromiseCapability(%Promise%).
-    const promiseCapability = _temp4; // 2. Let declResult be FunctionDeclarationInstantiation(functionObject, argumentsList).
-
-    const declResult = yield* FunctionDeclarationInstantiation(functionObject, argumentsList); // 3. If declResult is not an abrupt completion, then
-
-    if (!(declResult instanceof AbruptCompletion)) {
-      let _temp5 = AsyncFunctionStart(promiseCapability, ExpressionBody);
-
-      Assert(!(_temp5 instanceof AbruptCompletion), "AsyncFunctionStart(promiseCapability, ExpressionBody)" + ' returned an abrupt completion');
-
-      if (_temp5 instanceof Completion) {
-        _temp5 = _temp5.Value;
-      }
-    } else {
-      let _temp6 = Call(promiseCapability.Reject, Value.undefined, [declResult.Value]);
-
-      Assert(!(_temp6 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [declResult.Value])" + ' returned an abrupt completion');
-
-      if (_temp6 instanceof Completion) {
-        _temp6 = _temp6.Value;
-      }
-    } // 5. Return Completion { [[Type]]: return, [[Value]]: promiseCapability.[[Promise]], [[Target]]: empty }.
-
-
-    return new Completion({
-      Type: 'return',
-      Value: promiseCapability.Promise,
-      Target: undefined
-    });
-  } // #sec-generator-function-definitions-runtime-semantics-evaluatebody
-  // GeneratorBody : FunctionBody
-
-
-  EvaluateBody_AsyncConciseBody.section = 'https://tc39.es/ecma262/#sec-async-arrow-function-definitions-EvaluateBody';
-  function* EvaluateBody_GeneratorBody(GeneratorBody, functionObject, argumentsList) {
-    let _temp7 = yield* FunctionDeclarationInstantiation(functionObject, argumentsList);
-
-    if (_temp7 instanceof AbruptCompletion) {
-      return _temp7;
-    }
-
-    if (_temp7 instanceof Completion) {
-      _temp7 = _temp7.Value;
-    }
-
-    let _temp8 = OrdinaryCreateFromConstructor(functionObject, '%GeneratorFunction.prototype.prototype%', ['GeneratorState', 'GeneratorContext']);
-
-    if (_temp8 instanceof AbruptCompletion) {
-      return _temp8;
-    }
-
-    if (_temp8 instanceof Completion) {
-      _temp8 = _temp8.Value;
-    }
-
-    const G = _temp8; // 3. Perform GeneratorStart(G, FunctionBody).
-
-    GeneratorStart(G, GeneratorBody); // 4. Return Completion { [[Type]]: return, [[Value]]: G, [[Target]]: empty }.
-
-    return new Completion({
-      Type: 'return',
-      Value: G,
-      Target: undefined
-    });
-  } // #sec-asyncgenerator-definitions-evaluatebody
-  // AsyncGeneratorBody : FunctionBody
-
-  function* EvaluateBody_AsyncGeneratorBody(FunctionBody, functionObject, argumentsList) {
-    let _temp9 = yield* FunctionDeclarationInstantiation(functionObject, argumentsList);
-
-    if (_temp9 instanceof AbruptCompletion) {
-      return _temp9;
-    }
-
-    if (_temp9 instanceof Completion) {
-      _temp9 = _temp9.Value;
-    }
-
-    let _temp10 = OrdinaryCreateFromConstructor(functionObject, '%AsyncGeneratorFunction.prototype.prototype%', ['AsyncGeneratorState', 'AsyncGeneratorContext', 'AsyncGeneratorQueue']);
-
-    if (_temp10 instanceof AbruptCompletion) {
-      return _temp10;
-    }
-
-    if (_temp10 instanceof Completion) {
-      _temp10 = _temp10.Value;
-    }
-
-    const generator = _temp10; // 3. Perform ! AsyncGeneratorStart(generator, FunctionBody).
-
-    let _temp11 = AsyncGeneratorStart(generator, FunctionBody);
-
-    Assert(!(_temp11 instanceof AbruptCompletion), "AsyncGeneratorStart(generator, FunctionBody)" + ' returned an abrupt completion');
-
-    if (_temp11 instanceof Completion) {
-      _temp11 = _temp11.Value;
-    }
-
-    return new Completion({
-      Type: 'return',
-      Value: generator,
-      Target: undefined
-    });
-  } // #sec-async-function-definitions-EvaluateBody
-  // AsyncFunctionBody : FunctionBody
-
-  function* EvaluateBody_AsyncFunctionBody(FunctionBody, functionObject, argumentsList) {
-    let _temp12 = NewPromiseCapability(exports.surroundingAgent.intrinsic('%Promise%'));
-
-    Assert(!(_temp12 instanceof AbruptCompletion), "NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))" + ' returned an abrupt completion');
-
-    if (_temp12 instanceof Completion) {
-      _temp12 = _temp12.Value;
-    }
-
-    // 1. Let promiseCapability be ! NewPromiseCapability(%Promise%).
-    const promiseCapability = _temp12; // 2. Let declResult be FunctionDeclarationInstantiation(functionObject, argumentsList).
-
-    const declResult = yield* FunctionDeclarationInstantiation(functionObject, argumentsList); // 3. If declResult is not an abrupt completion, then
-
-    if (!(declResult instanceof AbruptCompletion)) {
-      let _temp13 = AsyncFunctionStart(promiseCapability, FunctionBody);
-
-      Assert(!(_temp13 instanceof AbruptCompletion), "AsyncFunctionStart(promiseCapability, FunctionBody)" + ' returned an abrupt completion');
-
-      if (_temp13 instanceof Completion) {
-        _temp13 = _temp13.Value;
-      }
-    } else {
-      let _temp14 = Call(promiseCapability.Reject, Value.undefined, [declResult.Value]);
-
-      Assert(!(_temp14 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [declResult.Value])" + ' returned an abrupt completion');
-
-      if (_temp14 instanceof Completion) {
-        _temp14 = _temp14.Value;
-      }
-    } // 5. Return Completion { [[Type]]: return, [[Value]]: promiseCapability.[[Promise]], [[Target]]: empty }.
-
-
-    return new Completion({
-      Type: 'return',
-      Value: promiseCapability.Promise,
-      Target: undefined
-    });
-  } // FunctionBody : FunctionStatementList
-  // ConciseBody : ExpressionBody
-  // GeneratorBody : FunctionBody
-  // AsyncGeneratorBody : FunctionBody
-  // AsyncFunctionBody : FunctionBody
-  // AsyncConciseBody : ExpressionBody
-
-  function EvaluateBody(Body, functionObject, argumentsList) {
-    switch (Body.type) {
-      case 'FunctionBody':
-        return EvaluateBody_FunctionBody(Body, functionObject, argumentsList);
-
-      case 'ConciseBody':
-        return EvaluateBody_ConciseBody(Body, functionObject, argumentsList);
-
-      case 'GeneratorBody':
-        return EvaluateBody_GeneratorBody(Body, functionObject, argumentsList);
-
-      case 'AsyncGeneratorBody':
-        return EvaluateBody_AsyncGeneratorBody(Body, functionObject, argumentsList);
-
-      case 'AsyncFunctionBody':
-        return EvaluateBody_AsyncFunctionBody(Body, functionObject, argumentsList);
-
-      case 'AsyncConciseBody':
-        return EvaluateBody_AsyncConciseBody(Body, functionObject, argumentsList);
-
-      /*c8 ignore next*/
-      default:
-        throw new OutOfRange('EvaluateBody', Body);
-    }
-  }
-
-  function* FunctionDeclarationInstantiation(func, argumentsList) {
-    // 1. Let calleeContext be the running execution context.
-    const calleeContext = exports.surroundingAgent.runningExecutionContext; // 2. Let code be func.[[ECMAScriptCode]].
-
-    const code = func.ECMAScriptCode; // 3. Let strict be func.[[Strict]].
-
-    const strict = func.Strict; // 4. Let formals be func.[[FormalParameters]].
-
-    const formals = func.FormalParameters; // 5. Let parameterNames be BoundNames of formals.
-
-    const parameterNames = BoundNames(formals); // 6. If parameterNames has any duplicate entries, let hasDuplicates be true. Otherwise, let hasDuplicates be false.
-
-    const hasDuplicates = new ValueSet(parameterNames).size !== parameterNames.length; // 7. Let simpleParameterList be IsSimpleParameterList of formals.
-
-    const simpleParameterList = IsSimpleParameterList(formals); // 8. Let hasParameterExpressions be ContainsExpression of formals.
-
-    const hasParameterExpressions = ContainsExpression(formals); // 9. Let varNames be the VarDeclaredNames of code.
-
-    const varNames = VarDeclaredNames(code); // 10. Let varDeclarations be the VarScopedDeclarations of code.
-
-    const varDeclarations = VarScopedDeclarations(code); // 11. Let lexicalNames be the LexicallyDeclaredNames of code.
-
-    const lexicalNames = new ValueSet(LexicallyDeclaredNames(code)); // 12. Let functionNames be a new empty List.
-
-    const functionNames = new ValueSet(); // 13. Let functionNames be a new empty List.
-
-    const functionsToInitialize = []; // 14. For each d in varDeclarations, in reverse list order, do
-
-    for (const d of [...varDeclarations].reverse()) {
-      // a. If d is neither a VariableDeclaration nor a ForBinding nor a BindingIdentifier, then
-      if (d.type !== 'VariableDeclaration' && d.type !== 'ForBinding' && d.type !== 'BindingIdentifier') {
-        // i. Assert: d is either a FunctionDeclaration, a GeneratorDeclaration, an AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration.
-        Assert(d.type === 'FunctionDeclaration' || d.type === 'GeneratorDeclaration' || d.type === 'AsyncFunctionDeclaration' || d.type === 'AsyncGeneratorDeclaration', "d.type === 'FunctionDeclaration'\n             || d.type === 'GeneratorDeclaration'\n             || d.type === 'AsyncFunctionDeclaration'\n             || d.type === 'AsyncGeneratorDeclaration'"); // ii. Let fn be the sole element of the BoundNames of d.
-
-        const fn = BoundNames(d)[0]; // iii. If fn is not an element of functionNames, then
-
-        if (!functionNames.has(fn)) {
-          // 1. Insert fn as the first element of functionNames.
-          functionNames.add(fn); // 2. NOTE: If there are multiple function declarations for the same name, the last declaration is used.
-          // 3. Insert d as the first element of functionsToInitialize.
-
-          functionsToInitialize.unshift(d);
-        }
-      }
-    } // 15. Let argumentsObjectNeeded be true.
-
-
-    let argumentsObjectNeeded = true; // If func.[[ThisMode]] is lexical, then
-
-    if (func.ThisMode === 'lexical') {
-      // a. NOTE: Arrow functions never have an arguments objects.
-      // b. Set argumentsObjectNeeded to false.
-      argumentsObjectNeeded = false;
-    } else if (new ValueSet(parameterNames).has(new Value('arguments'))) {
-      // a. Set argumentsObjectNeeded to false.
-      argumentsObjectNeeded = false;
-    } else if (hasParameterExpressions === false) {
-      // a. If "arguments" is an element of functionNames or if "arguments" is an element of lexicalNames, then
-      if (functionNames.has(new Value('arguments')) || lexicalNames.has(new Value('arguments'))) {
-        // i. Set argumentsObjectNeeded to false.
-        argumentsObjectNeeded = false;
-      }
-    }
-
-    let env; // 19. If strict is true or if hasParameterExpressions is false, then
-
-    if (strict || hasParameterExpressions === false) {
-      // a. NOTE: Only a single lexical environment is needed for the parameters and top-level vars.
-      // b. Let env be the LexicalEnvironment of calleeContext.
-      env = calleeContext.LexicalEnvironment;
-    } else {
-      // a. NOTE: A separate Environment Record is needed to ensure that bindings created by direct eval
-      //    calls in the formal parameter list are outside the environment where parameters are declared.
-      // b. Let calleeEnv be the LexicalEnvironment of calleeContext.
-      const calleeEnv = calleeContext.LexicalEnvironment; // c. Let env be NewDeclarativeEnvironment(calleeEnv).
-
-      env = NewDeclarativeEnvironment(calleeEnv); // d. Assert: The VariableEnvironment of calleeContext is calleeEnv.
-
-      Assert(calleeContext.VariableEnvironment === calleeEnv, "calleeContext.VariableEnvironment === calleeEnv"); // e. Set the LexicalEnvironment of calleeContext to env.
-
-      calleeContext.LexicalEnvironment = env;
-    } // 21. For each String paramName in parameterNames, do
-
-
-    for (const paramName of parameterNames) {
-      // a. Let alreadyDeclared be env.HasBinding(paramName).
-      const alreadyDeclared = env.HasBinding(paramName); // b. NOTE: Early errors ensure that duplicate parameter names can only occur in
-      //    non-strict functions that do not have parameter default values or rest parameters.
-      // c. If alreadyDeclared is false, then
-
-      if (alreadyDeclared === Value.false) {
-        let _temp = env.CreateMutableBinding(paramName, Value.false);
-
-        Assert(!(_temp instanceof AbruptCompletion), "env.CreateMutableBinding(paramName, Value.false)" + ' returned an abrupt completion');
-        /* c8 ignore if */
-
-        if (_temp instanceof Completion) {
-          _temp = _temp.Value;
-        }
-
-        if (hasDuplicates === true) {
-          let _temp2 = env.InitializeBinding(paramName, Value.undefined);
-
-          Assert(!(_temp2 instanceof AbruptCompletion), "env.InitializeBinding(paramName, Value.undefined)" + ' returned an abrupt completion');
-
-          if (_temp2 instanceof Completion) {
-            _temp2 = _temp2.Value;
-          }
-        }
-      }
-    } // 22. If argumentsObjectNeeded is true, then
-
-
-    let parameterBindings;
-
-    if (argumentsObjectNeeded === true) {
-      let ao; // a. If strict is true or if simpleParameterList is false, then
-
-      if (strict || simpleParameterList === false) {
-        // i. Let ao be CreateUnmappedArgumentsObject(argumentsList).
-        ao = CreateUnmappedArgumentsObject(argumentsList);
-      } else {
-        // i. NOTE: mapped argument object is only provided for non-strict functions
-        //    that don't have a rest parameter, any parameter default value initializers,
-        //    or any destructured parameters.
-        // ii. Let ao be CreateMappedArgumentsObject(func, formals, argumentsList, env).
-        ao = CreateMappedArgumentsObject(func, formals, argumentsList, env);
-      } // c. If strict is true, then
-
-
-      if (strict) {
-        let _temp3 = env.CreateImmutableBinding(new Value('arguments'), Value.false);
-
-        Assert(!(_temp3 instanceof AbruptCompletion), "env.CreateImmutableBinding(new Value('arguments'), Value.false)" + ' returned an abrupt completion');
-
-        if (_temp3 instanceof Completion) {
-          _temp3 = _temp3.Value;
-        }
-      } else {
-        let _temp4 = env.CreateMutableBinding(new Value('arguments'), Value.false);
-
-        Assert(!(_temp4 instanceof AbruptCompletion), "env.CreateMutableBinding(new Value('arguments'), Value.false)" + ' returned an abrupt completion');
-
-        if (_temp4 instanceof Completion) {
-          _temp4 = _temp4.Value;
-        }
-      } // e. Call env.InitializeBinding("arguments", ao).
-
-
-      env.InitializeBinding(new Value('arguments'), ao); // f. Let parameterBindings be a new List of parameterNames with "arguments" appended.
-
-      parameterBindings = new ValueSet([...parameterNames, new Value('arguments')]);
-    } else {
-      // a. Let parameterBindings be parameterNames.
-      parameterBindings = new ValueSet(parameterNames);
-    } // 24. Let iteratorRecord be CreateListIteratorRecord(argumentsList).
-
-
-    const iteratorRecord = CreateListIteratorRecord(argumentsList); // 25. If hasDuplicates is true, then
-
-    if (hasDuplicates) {
-      let _temp5 = yield* IteratorBindingInitialization_FormalParameters(formals, iteratorRecord, Value.undefined);
-      /* c8 ignore if */
-
-
-      if (_temp5 instanceof AbruptCompletion) {
-        return _temp5;
-      }
-      /* c8 ignore if */
-
-
-      if (_temp5 instanceof Completion) {
-        _temp5 = _temp5.Value;
-      }
-    } else {
-      let _temp6 = yield* IteratorBindingInitialization_FormalParameters(formals, iteratorRecord, env);
-
-      if (_temp6 instanceof AbruptCompletion) {
-        return _temp6;
-      }
-
-      if (_temp6 instanceof Completion) {
-        _temp6 = _temp6.Value;
-      }
-    }
-
-    let varEnv; // 27. If hasParameterExpressions is false, then
-
-    if (hasParameterExpressions === false) {
-      // a. NOTE: Only a single lexical environment is needed for the parameters and top-level vars.
-      // b. Let instantiatedVarNames be a copy of the List parameterBindings.
-      const instantiatedVarNames = new ValueSet(parameterBindings); // c. For each n in varNames, do
-
-      for (const n of varNames) {
-        // i. If n is not an element of instantiatedVarNames, then
-        if (!instantiatedVarNames.has(n)) {
-          // 1. Append n to instantiatedVarNames.
-          instantiatedVarNames.add(n); // 2. Perform ! env.CreateMutableBinding(n, false).
-
-          let _temp7 = env.CreateMutableBinding(n, Value.false);
-
-          Assert(!(_temp7 instanceof AbruptCompletion), "env.CreateMutableBinding(n, Value.false)" + ' returned an abrupt completion');
-
-          if (_temp7 instanceof Completion) {
-            _temp7 = _temp7.Value;
-          }
-
-          env.InitializeBinding(n, Value.undefined);
-        }
-      } // d. Let varEnv be env.
-
-
-      varEnv = env;
-    } else {
-      // a. NOTE: A separate Environment Record is needed to ensure that closures created by expressions
-      //    in the formal parameter list do not have visibility of declarations in the function body.
-      // b. Let varEnv be NewDeclarativeEnvironment(env).
-      varEnv = NewDeclarativeEnvironment(env); // c. Set the VariableEnvironment of calleeContext to varEnv.
-
-      calleeContext.VariableEnvironment = varEnv; // d. Let instantiatedVarNames be a new empty List.
-
-      const instantiatedVarNames = new ValueSet(); // e. For each n in varNames, do
-
-      for (const n of varNames) {
-        // If n is not an element of instantiatedVarNames, then
-        if (!instantiatedVarNames.has(n)) {
-          // 1. Append n to instantiatedVarNames.
-          instantiatedVarNames.add(n); // 2. Perform ! varEnv.CreateMutableBinding(n, false).
-
-          let _temp8 = varEnv.CreateMutableBinding(n, Value.false);
-
-          Assert(!(_temp8 instanceof AbruptCompletion), "varEnv.CreateMutableBinding(n, Value.false)" + ' returned an abrupt completion');
-
-          if (_temp8 instanceof Completion) {
-            _temp8 = _temp8.Value;
-          }
-          let initialValue; // 3. If n is not an element of parameterBindings or if n is an element of functionNames, let initialValue be undefined.
-
-          if (!parameterBindings.has(n) || functionNames.has(n)) {
-            initialValue = Value.undefined;
-          } else {
-            let _temp9 = env.GetBindingValue(n, Value.false);
-
-            Assert(!(_temp9 instanceof AbruptCompletion), "env.GetBindingValue(n, Value.false)" + ' returned an abrupt completion');
-
-            if (_temp9 instanceof Completion) {
-              _temp9 = _temp9.Value;
-            }
-
-            // a. Let initialValue be ! env.GetBindingValue(n, false).
-            initialValue = _temp9;
-          } // 5. Call varEnv.InitializeBinding(n, initialValue).
-
-
-          varEnv.InitializeBinding(n, initialValue); // 6. NOTE: vars whose names are the same as a formal parameter, initially have the same value as the corresponding initialized parameter.
-        }
-      }
-    } // 29. NOTE: Annex B.3.3.1 adds additional steps at this point.
-
-
-    let lexEnv; // 30. If strict is false, then
-
-    if (strict === false) {
-      // a. Let lexEnv be NewDeclarativeEnvironment(varEnv).
-      lexEnv = NewDeclarativeEnvironment(varEnv); // b. NOTE: Non-strict functions use a separate lexical Environment Record for top-level lexical declarations
-      //    so that a direct eval can determine whether any var scoped declarations introduced by the eval code
-      //    conflict with pre-existing top-level lexically scoped declarations. This is not needed for strict functions
-      //    because a strict direct eval always places all declarations into a new Environment Record.
-    } else {
-      // a. Else, let lexEnv be varEnv.
-      lexEnv = varEnv;
-    } // 32. Set the LexicalEnvironment of calleeContext to lexEnv.
-
-
-    calleeContext.LexicalEnvironment = lexEnv; // 33. Let lexDeclarations be the LexicallyScopedDeclarations of code.
-
-    const lexDeclarations = LexicallyScopedDeclarations(code); // 34. For each element d in lexDeclarations, do
-
-    for (const d of lexDeclarations) {
-      // a. NOTE: A lexically declared name cannot be the same as a function/generator declaration, formal
-      //    parameter, or a var name. Lexically declared names are only instantiated here but not initialized.
-      // b. For each element dn of the BoundNames of d, do
-      for (const dn of BoundNames(d)) {
-        // i. If IsConstantDeclaration of d is true, then
-        if (IsConstantDeclaration(d)) {
-          let _temp10 = lexEnv.CreateImmutableBinding(dn, Value.true);
-
-          Assert(!(_temp10 instanceof AbruptCompletion), "lexEnv.CreateImmutableBinding(dn, Value.true)" + ' returned an abrupt completion');
-
-          if (_temp10 instanceof Completion) {
-            _temp10 = _temp10.Value;
-          }
-        } else {
-          let _temp11 = lexEnv.CreateMutableBinding(dn, Value.false);
-
-          Assert(!(_temp11 instanceof AbruptCompletion), "lexEnv.CreateMutableBinding(dn, Value.false)" + ' returned an abrupt completion');
-
-          if (_temp11 instanceof Completion) {
-            _temp11 = _temp11.Value;
-          }
-        }
-      }
-    } // 35. For each Parse Node f in functionsToInitialize, do
-
-
-    for (const f of functionsToInitialize) {
-      // a. Let fn be the sole element of the BoundNames of f.
-      const fn = BoundNames(f)[0]; // b. Let fo be InstantiateFunctionObject of f with argument lexEnv.
-
-      const fo = InstantiateFunctionObject(f, lexEnv); // c. Perform ! varEnv.SetMutableBinding(fn, fo, false).
-
-      let _temp12 = varEnv.SetMutableBinding(fn, fo, Value.false);
-
-      Assert(!(_temp12 instanceof AbruptCompletion), "varEnv.SetMutableBinding(fn, fo, Value.false)" + ' returned an abrupt completion');
-
-      if (_temp12 instanceof Completion) {
-        _temp12 = _temp12.Value;
-      }
-    } // 36. Return NormalCompletion(empty).
-
-
-    return NormalCompletion(undefined);
-  }
-
-  //   FunctionStatementList : [empty]
-  //
-  // (implicit)
-  //   FunctionStatementList : StatementList
-
-  function Evaluate_FunctionStatementList(FunctionStatementList) {
-    return Evaluate_StatementList(FunctionStatementList);
-  }
-
-  // FormalParameters :
-  //   [empty]
-  //   FormalParameterList `,` FunctionRestParameter
-
-  function* IteratorBindingInitialization_FormalParameters(FormalParameters, iteratorRecord, environment) {
-    if (FormalParameters.length === 0) {
-      // 1. Return NormalCompletion(empty).
-      return NormalCompletion(undefined);
-    }
-
-    for (const FormalParameter of FormalParameters.slice(0, -1)) {
-      let _temp = yield* IteratorBindingInitialization_FormalParameter(FormalParameter, iteratorRecord, environment);
-      /* c8 ignore if */
-
-
-      if (_temp instanceof AbruptCompletion) {
-        return _temp;
-      }
-      /* c8 ignore if */
-
-
-      if (_temp instanceof Completion) {
-        _temp = _temp.Value;
-      }
-    }
-
-    const last = FormalParameters[FormalParameters.length - 1];
-
-    if (last.type === 'BindingRestElement') {
-      return yield* IteratorBindingInitialization_FunctionRestParameter(last, iteratorRecord, environment);
-    }
-
-    return yield* IteratorBindingInitialization_FormalParameter(last, iteratorRecord, environment);
-  } // FormalParameter : BindingElement
-
-  function IteratorBindingInitialization_FormalParameter(BindingElement, iteratorRecord, environment) {
-    return IteratorBindingInitialization_BindingElement(BindingElement, iteratorRecord, environment);
-  } // FunctionRestParameter : BindingRestElement
-
-
-  function IteratorBindingInitialization_FunctionRestParameter(FunctionRestParameter, iteratorRecord, environment) {
-    return IteratorBindingInitialization_BindingRestElement(FunctionRestParameter, iteratorRecord, environment);
-  } // BindingElement :
-  //   SingleNameBinding
-  //   BindingPattern
-
-
-  function IteratorBindingInitialization_BindingElement(BindingElement, iteratorRecord, environment) {
-    if (BindingElement.BindingPattern) {
-      return IteratorBindingInitialization_BindingPattern(BindingElement, iteratorRecord, environment);
-    }
-
-    return IteratorBindingInitialization_SingleNameBinding(BindingElement, iteratorRecord, environment);
-  } // SingleNameBinding : BindingIdentifier Initializer?
-
-
-  function* IteratorBindingInitialization_SingleNameBinding({
-    BindingIdentifier,
-    Initializer
-  }, iteratorRecord, environment) {
-    // 1. Let bindingId be StringValue of BindingIdentifier.
-    const bindingId = StringValue(BindingIdentifier); // 2. Let lhs be ? ResolveBinding(bindingId, environment).
-
-    let _temp2 = ResolveBinding(bindingId, environment, BindingIdentifier.strict);
-
-    if (_temp2 instanceof AbruptCompletion) {
-      return _temp2;
-    }
-
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
-    }
-
-    const lhs = _temp2;
-    let v; // 3. If iteratorRecord.[[Done]] is false, then
-
-    if (iteratorRecord.Done === Value.false) {
-      // a. Let next be IteratorStep(iteratorRecord).
-      let next = IteratorStep(iteratorRecord); // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-
-      if (next instanceof AbruptCompletion) {
-        iteratorRecord.Done = Value.true;
-      } // c. ReturnIfAbrupt(next).
-
-
-      /* c8 ignore if */
-      if (next instanceof AbruptCompletion) {
-        return next;
-      }
-      /* c8 ignore if */
-
-
-      if (next instanceof Completion) {
-        next = next.Value;
-      }
-
-      if (next === Value.false) {
-        iteratorRecord.Done = Value.true;
-      } else {
-        // e. Else,
-        // i. Let v be IteratorValue(next).
-        v = IteratorValue(next); // ii. If v is an abrupt completion, set iteratorRecord.[[Done]] to true.
-
-        if (v instanceof AbruptCompletion) {
-          iteratorRecord.Done = Value.true;
-        } // iii. ReturnIfAbrupt(v).
-
-
-        if (v instanceof AbruptCompletion) {
-          return v;
-        }
-
-        if (v instanceof Completion) {
-          v = v.Value;
-        }
-      }
-    } // 4. If iteratorRecord.[[Done]] is true, let v be undefined.
-
-
-    if (iteratorRecord.Done === Value.true) {
-      v = Value.undefined;
-    } // 5. If Initializer is present and v is undefined, then
-
-
-    if (Initializer && v === Value.undefined) {
-      if (IsAnonymousFunctionDefinition(Initializer)) {
-        v = yield* NamedEvaluation(Initializer, bindingId);
-      } else {
-        const defaultValue = yield* Evaluate(Initializer);
-
-        let _temp3 = GetValue(defaultValue);
-
-        if (_temp3 instanceof AbruptCompletion) {
-          return _temp3;
-        }
-
-        if (_temp3 instanceof Completion) {
-          _temp3 = _temp3.Value;
-        }
-
-        v = _temp3;
-      }
-    } // 6. If environment is undefined, return ? PutValue(lhs, v).
-
-
-    if (environment === Value.undefined) {
-      return PutValue(lhs, v);
-    } // 7. Return InitializeReferencedBinding(lhs, v).
-
-
-    return InitializeReferencedBinding(lhs, v);
-  } // BindingRestElement :
-  //   `...` BindingIdentifier
-  //   `...` BindingPattern
-
-
-  function* IteratorBindingInitialization_BindingRestElement({
-    BindingIdentifier,
-    BindingPattern
-  }, iteratorRecord, environment) {
-    if (BindingIdentifier) {
-      let _temp4 = ResolveBinding(StringValue(BindingIdentifier), environment, BindingIdentifier.strict);
-
-      if (_temp4 instanceof AbruptCompletion) {
-        return _temp4;
-      }
-
-      if (_temp4 instanceof Completion) {
-        _temp4 = _temp4.Value;
-      }
-
-      // 1. Let lhs be ? ResolveBinding(StringValue of BindingIdentifier, environment).
-      const lhs = _temp4; // 2. Let A be ! ArrayCreate(0).
-
-      let _temp5 = ArrayCreate(0);
-
-      Assert(!(_temp5 instanceof AbruptCompletion), "ArrayCreate(0)" + ' returned an abrupt completion');
-      /* c8 ignore if */
-
-      if (_temp5 instanceof Completion) {
-        _temp5 = _temp5.Value;
-      }
-
-      const A = _temp5; // 3. Let n be 0.
-
-      let n = 0; // 4. Repeat,
-
-      while (true) {
-        let next; // a. If iteratorRecord.[[Done]] is false, then
-
-        if (iteratorRecord.Done === Value.false) {
-          // i. Let next be IteratorStep(iteratorRecord).
-          next = IteratorStep(iteratorRecord); // ii. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-
-          if (next instanceof AbruptCompletion) {
-            iteratorRecord.Done = Value.true;
-          } // iii. ReturnIfAbrupt(next).
-
-
-          if (next instanceof AbruptCompletion) {
-            return next;
-          }
-
-          if (next instanceof Completion) {
-            next = next.Value;
-          }
-
-          if (next === Value.false) {
-            iteratorRecord.Done = Value.true;
-          }
-        } // b. If iteratorRecord.[[Done]] is true, then
-
-
-        if (iteratorRecord.Done === Value.true) {
-          // i. If environment is undefined, return ? PutValue(lhs, A).
-          if (environment === Value.undefined) {
-            return PutValue(lhs, A);
-          } // ii. Return InitializeReferencedBinding(lhs, A).
-
-
-          return InitializeReferencedBinding(lhs, A);
-        } // c. Let nextValue be IteratorValue(next).
-
-
-        let nextValue = IteratorValue(next); // d. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
-
-        if (nextValue instanceof AbruptCompletion) {
-          iteratorRecord.Done = Value.true;
-        } // e. ReturnIfAbrupt(nextValue).
-
-
-        if (nextValue instanceof AbruptCompletion) {
-          return nextValue;
-        }
-
-        if (nextValue instanceof Completion) {
-          nextValue = nextValue.Value;
-        }
-
-        let _temp7 = ToString(F(n));
-
-        Assert(!(_temp7 instanceof AbruptCompletion), "ToString(F(n))" + ' returned an abrupt completion');
-
-        if (_temp7 instanceof Completion) {
-          _temp7 = _temp7.Value;
-        }
-
-        let _temp6 = CreateDataPropertyOrThrow(A, _temp7, nextValue);
-
-        Assert(!(_temp6 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, X(ToString(F(n))), nextValue)" + ' returned an abrupt completion');
-
-        if (_temp6 instanceof Completion) {
-          _temp6 = _temp6.Value;
-        }
-
-        n += 1;
-      }
-    } else {
-      let _temp8 = ArrayCreate(0);
-
-      Assert(!(_temp8 instanceof AbruptCompletion), "ArrayCreate(0)" + ' returned an abrupt completion');
-
-      if (_temp8 instanceof Completion) {
-        _temp8 = _temp8.Value;
-      }
-
-      // 1. Let A be ! ArrayCreate(0).
-      const A = _temp8; // 2. Let n be 0.
-
-      let n = 0; // 3. Repeat,
-
-      while (true) {
-        let next; // a. If iteratorRecord.[[Done]] is false, then
-
-        if (iteratorRecord.Done === Value.false) {
-          // i. Let next be IteratorStep(iteratorRecord).
-          next = IteratorStep(iteratorRecord); // ii. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-
-          if (next instanceof AbruptCompletion) {
-            iteratorRecord.Done = Value.true;
-          } // iii. ReturnIfAbrupt(next).
-
-
-          if (next instanceof AbruptCompletion) {
-            return next;
-          }
-
-          if (next instanceof Completion) {
-            next = next.Value;
-          }
-
-          if (next === Value.false) {
-            iteratorRecord.Done = Value.true;
-          }
-        } // b. If iteratorRecord.[[Done]] is true, then
-
-
-        if (iteratorRecord.Done === Value.true) {
-          // i. Return the result of performing BindingInitialization of BindingPattern with A and environment as the arguments.
-          return yield* BindingInitialization(BindingPattern, A, environment);
-        } // c. Let nextValue be IteratorValue(next).
-
-
-        let nextValue = IteratorValue(next); // d. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
-
-        if (nextValue instanceof AbruptCompletion) {
-          iteratorRecord.Done = Value.true;
-        } // e. ReturnIfAbrupt(nextValue).
-
-
-        if (nextValue instanceof AbruptCompletion) {
-          return nextValue;
-        }
-
-        if (nextValue instanceof Completion) {
-          nextValue = nextValue.Value;
-        }
-
-        let _temp10 = ToString(F(n));
-
-        Assert(!(_temp10 instanceof AbruptCompletion), "ToString(F(n))" + ' returned an abrupt completion');
-
-        if (_temp10 instanceof Completion) {
-          _temp10 = _temp10.Value;
-        }
-
-        let _temp9 = CreateDataPropertyOrThrow(A, _temp10, nextValue);
-
-        Assert(!(_temp9 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, X(ToString(F(n))), nextValue)" + ' returned an abrupt completion');
-
-        if (_temp9 instanceof Completion) {
-          _temp9 = _temp9.Value;
-        }
-
-        n += 1;
-      }
-    }
-  }
-
-  function* IteratorBindingInitialization_BindingPattern({
-    BindingPattern,
-    Initializer
-  }, iteratorRecord, environment) {
-    let v; // 1. If iteratorRecord.[[Done]] is false, then
-
-    if (iteratorRecord.Done === Value.false) {
-      // a. Let next be IteratorStep(iteratorRecord).
-      let next = IteratorStep(iteratorRecord); // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-
-      if (next instanceof AbruptCompletion) {
-        iteratorRecord.Done = Value.true;
-      } // c. ReturnIfAbrupt(next).
-
-
-      if (next instanceof AbruptCompletion) {
-        return next;
-      }
-
-      if (next instanceof Completion) {
-        next = next.Value;
-      }
-
-      if (next === Value.false) {
-        iteratorRecord.Done = Value.true;
-      } else {
-        // e. Else,
-        // i. Let v be IteratorValue(next).
-        v = IteratorValue(next); // ii. If v is an abrupt completion, set iteratorRecord.[[Done]] to true.
-
-        if (v instanceof AbruptCompletion) {
-          iteratorRecord.Done = Value.true;
-        } // iii. ReturnIfAbrupt(v).
-
-
-        if (v instanceof AbruptCompletion) {
-          return v;
-        }
-
-        if (v instanceof Completion) {
-          v = v.Value;
-        }
-      }
-    } // 2. If iteratorRecord.[[Done]] is true, let v be undefined.
-
-
-    if (iteratorRecord.Done === Value.true) {
-      v = Value.undefined;
-    } // 3. If Initializer is present and v is undefined, then
-
-
-    if (Initializer && v === Value.undefined) {
-      // a. Let defaultValue be the result of evaluating Initializer.
-      const defaultValue = yield* Evaluate(Initializer); // b. Set v to ? GetValue(defaultValue).
-
-      let _temp11 = GetValue(defaultValue);
-
-      if (_temp11 instanceof AbruptCompletion) {
-        return _temp11;
-      }
-
-      if (_temp11 instanceof Completion) {
-        _temp11 = _temp11.Value;
-      }
-
-      v = _temp11;
-    } // 4. Return the result of performing BindingInitialization of BindingPattern with v and environment as the arguments.
-
-
-    return yield* BindingInitialization(BindingPattern, v, environment);
-  }
-
-  function IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
-    Assert(node.type === 'Elision', "node.type === 'Elision'"); // 1. If iteratorRecord.[[Done]] is false, then
-
-    if (iteratorRecord.Done === Value.false) {
-      // a. Let next be IteratorStep(iteratorRecord).
-      let next = IteratorStep(iteratorRecord); // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-
-      if (next instanceof AbruptCompletion) {
-        iteratorRecord.Done = Value.true;
-      } // c. ReturnIfAbrupt(next).
-
-
-      if (next instanceof AbruptCompletion) {
-        return next;
-      }
-
-      if (next instanceof Completion) {
-        next = next.Value;
-      }
-
-      if (next === Value.false) {
-        iteratorRecord.Done = Value.true;
-      }
-    } // 2. Return NormalCompletion(empty).
-
-
-    return NormalCompletion(undefined);
-  }
-
-  function* IteratorBindingInitialization_ArrayBindingPattern({
-    BindingElementList,
-    BindingRestElement
-  }, iteratorRecord, environment) {
-    for (const BindingElement of BindingElementList) {
-      if (BindingElement.type === 'Elision') {
-        let _temp12 = IteratorDestructuringAssignmentEvaluation(BindingElement, iteratorRecord);
-
-        if (_temp12 instanceof AbruptCompletion) {
-          return _temp12;
-        }
-
-        if (_temp12 instanceof Completion) {
-          _temp12 = _temp12.Value;
-        }
-      } else {
-        let _temp13 = yield* IteratorBindingInitialization_BindingElement(BindingElement, iteratorRecord, environment);
-
-        if (_temp13 instanceof AbruptCompletion) {
-          return _temp13;
-        }
-
-        if (_temp13 instanceof Completion) {
-          _temp13 = _temp13.Value;
-        }
-      }
-    }
-
-    if (BindingRestElement) {
-      return yield* IteratorBindingInitialization_BindingRestElement(BindingRestElement, iteratorRecord, environment);
-    }
-
-    return NormalCompletion(undefined);
-  }
-
-  //  ReturnStatement :
-  //    `return` `;`
-  //    `return` Expression `;`
-
-  function* Evaluate_ReturnStatement({
-    Expression
-  }) {
-    if (!Expression) {
-      // 1. Return Completion { [[Type]]: return, [[Value]]: undefined, [[Target]]: empty }.
-      return new Completion({
-        Type: 'return',
-        Value: Value.undefined,
-        Target: undefined
-      });
-    } // 1. Let exprRef be the result of evaluating Expression.
-
-
-    const exprRef = yield* Evaluate(Expression); // 1. Let exprValue be ? GetValue(exprRef).
-
-    let _temp = GetValue(exprRef);
-    /* c8 ignore if */
-
-
-    if (_temp instanceof AbruptCompletion) {
-      return _temp;
-    }
-    /* c8 ignore if */
-
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    let exprValue = _temp; // 1. If ! GetGeneratorKind() is async, set exprValue to ? Await(exprValue).
-
-    let _temp2 = GetGeneratorKind();
-
-    Assert(!(_temp2 instanceof AbruptCompletion), "GetGeneratorKind()" + ' returned an abrupt completion');
-    /* c8 ignore if */
-
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
-    }
-
-    if (_temp2 === 'async') {
-      let _temp3 = yield* Await(exprValue);
-
-      if (_temp3 instanceof AbruptCompletion) {
-        return _temp3;
-      }
-
-      if (_temp3 instanceof Completion) {
-        _temp3 = _temp3.Value;
-      }
-
-      exprValue = _temp3;
-    } // 1. Return Completion { [[Type]]: return, [[Value]]: exprValue, [[Target]]: empty }.
-
-
-    return new Completion({
-      Type: 'return',
-      Value: exprValue,
-      Target: undefined
-    });
-  }
-
-  function* Evaluate_ParenthesizedExpression({
-    Expression
-  }) {
-    // 1. Return the result of evaluating Expression. This may be of type Reference.
-    return yield* Evaluate(Expression);
-  }
-
-  //   MemberExpression : MemberExpression `[` Expression `]`
-  //   CallExpression : CallExpression `[` Expression `]`
-
-  function* Evaluate_MemberExpression_Expression({
-    strict,
-    MemberExpression,
-    Expression
-  }) {
-    // 1. Let baseReference be the result of evaluating |MemberExpression|.
-    const baseReference = yield* Evaluate(MemberExpression); // 2. Let baseValue be ? GetValue(baseReference).
-
-    let _temp = GetValue(baseReference);
-    /* c8 ignore if */
-
-
-    if (_temp instanceof AbruptCompletion) {
-      return _temp;
-    }
-    /* c8 ignore if */
-
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    const baseValue = _temp; // 3. If the code matched by this |MemberExpression| is strict mode code, let strict be true; else let strict be false.
-    // 4. Return ? EvaluatePropertyAccessWithExpressionKey(baseValue, |Expression|, strict).
-
-    return yield* EvaluatePropertyAccessWithExpressionKey(baseValue, Expression, strict);
-  } // 12.3.2.1 #sec-property-accessors-runtime-semantics-evaluation
-  //   MemberExpression : MemberExpression `.` IdentifierName
-  //   CallExpression : CallExpression `.` IdentifierName
-
-
-  Evaluate_MemberExpression_Expression.section = 'https://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation';
-
-  function* Evaluate_MemberExpression_IdentifierName({
-    strict,
-    MemberExpression,
-    IdentifierName
-  }) {
-    // 1. Let baseReference be the result of evaluating |MemberExpression|.
-    const baseReference = yield* Evaluate(MemberExpression); // 2. Let baseValue be ? GetValue(baseReference).
-
-    let _temp2 = GetValue(baseReference);
-
-    if (_temp2 instanceof AbruptCompletion) {
-      return _temp2;
-    }
-
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
-    }
-
-    const baseValue = _temp2; // 3. If the code matched by this |MemberExpression| is strict mode code, let strict be true; else let strict be false.
-    // 4. Return ? EvaluatePropertyAccessWithIdentifierKey(baseValue, |IdentifierName|, strict).
-
-    return EvaluatePropertyAccessWithIdentifierKey(baseValue, IdentifierName, strict);
-  } // 12.3.2.1 #sec-property-accessors-runtime-semantics-evaluation
-  //   MemberExpression :
-  //     MemberExpression `[` Expression `]`
-  //     MemberExpression `.` IdentifierName
-  //   CallExpression :
-  //     CallExpression `[` Expression `]`
-  //     CallExpression `.` IdentifierName
-
-
-  Evaluate_MemberExpression_IdentifierName.section = 'https://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation';
-  function Evaluate_MemberExpression(MemberExpression) {
-    switch (true) {
-      case !!MemberExpression.Expression:
-        return Evaluate_MemberExpression_Expression(MemberExpression);
-
-      case !!MemberExpression.IdentifierName:
-        return Evaluate_MemberExpression_IdentifierName(MemberExpression);
-
-      /*c8 ignore next*/
-      default:
-        throw new OutOfRange('Evaluate_MemberExpression', MemberExpression);
-    }
-  }
-
-  function* EvaluatePropertyAccessWithExpressionKey(baseValue, expression, strict) {
-    // 1. Let propertyNameReference be the result of evaluating expression.
-    const propertyNameReference = yield* Evaluate(expression); // 2. Let propertyNameValue be ? GetValue(propertyNameReference).
-
-    let _temp = GetValue(propertyNameReference);
-    /* c8 ignore if */
-
-
-    if (_temp instanceof AbruptCompletion) {
-      return _temp;
-    }
-    /* c8 ignore if */
-
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    const propertyNameValue = _temp; // 3. Let bv be ? RequireObjectCoercible(baseValue).
-
-    let _temp2 = RequireObjectCoercible(baseValue);
-
-    if (_temp2 instanceof AbruptCompletion) {
-      return _temp2;
-    }
-
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
-    }
-
-    const bv = _temp2; // 4. Let propertyKey be ? ToPropertyKey(propertyNameValue).
-
-    let _temp3 = ToPropertyKey(propertyNameValue);
-
-    if (_temp3 instanceof AbruptCompletion) {
-      return _temp3;
-    }
-
-    if (_temp3 instanceof Completion) {
-      _temp3 = _temp3.Value;
-    }
-
-    const propertyKey = _temp3; // 5. Return a value of type Reference whose base value component is bv, whose
-    //    referenced name component is propertyKey, and whose strict reference flag is strict.
-
-    return new Reference({
-      BaseValue: bv,
-      ReferencedName: propertyKey,
-      StrictReference: strict ? Value.true : Value.false
-    });
-  } // #sec-evaluate-identifier-key-property-access
-
-  function EvaluatePropertyAccessWithIdentifierKey(baseValue, identifierName, strict) {
-    // 1. Assert: identifierName is an IdentifierName.
-    Assert(identifierName.type === 'IdentifierName', "identifierName.type === 'IdentifierName'"); // 2. Let bv be ? RequireObjectCoercible(baseValue).
-
-    let _temp4 = RequireObjectCoercible(baseValue);
-
-    if (_temp4 instanceof AbruptCompletion) {
-      return _temp4;
-    }
-
-    if (_temp4 instanceof Completion) {
-      _temp4 = _temp4.Value;
-    }
-
-    const bv = _temp4; // 3. Let propertyNameString be StringValue of IdentifierName
-
-    const propertyNameString = StringValue(identifierName); // 4. Return a value of type Reference whose base value component is bv, whose
-    //    referenced name component is propertyNameString, and whose strict reference flag is strict.
-
-    return new Reference({
-      BaseValue: bv,
-      ReferencedName: propertyNameString,
-      StrictReference: strict ? Value.true : Value.false
-    });
-  }
-
-  //   LexicalBinding :
-  //     BindingIdentifier
-  //     BindingIdentifier Initializer
-
-  function* Evaluate_LexicalBinding_BindingIdentifier({
-    BindingIdentifier,
-    Initializer,
-    strict
-  }) {
-    if (Initializer) {
-      // 1. Let bindingId be StringValue of BindingIdentifier.
-      const bindingId = StringValue(BindingIdentifier); // 2. Let lhs be ResolveBinding(bindingId).
-
-      let _temp = ResolveBinding(bindingId, undefined, strict);
-
-      Assert(!(_temp instanceof AbruptCompletion), "ResolveBinding(bindingId, undefined, strict)" + ' returned an abrupt completion');
-      /* c8 ignore if */
-
-      if (_temp instanceof Completion) {
-        _temp = _temp.Value;
-      }
-
-      const lhs = _temp;
-      let value; // 3. If IsAnonymousFunctionDefinition(Initializer) is true, then
-
-      if (IsAnonymousFunctionDefinition(Initializer)) {
-        // a. Let value be NamedEvaluation of Initializer with argument bindingId.
-        value = yield* NamedEvaluation(Initializer, bindingId);
-      } else {
-        // 4. Else,
-        // a. Let rhs be the result of evaluating Initializer.
-        const rhs = yield* Evaluate(Initializer); // b. Let value be ? GetValue(rhs).
-
-        let _temp2 = GetValue(rhs);
-        /* c8 ignore if */
-
-
-        if (_temp2 instanceof AbruptCompletion) {
-          return _temp2;
-        }
-        /* c8 ignore if */
-
-
-        if (_temp2 instanceof Completion) {
-          _temp2 = _temp2.Value;
-        }
-
-        value = _temp2;
-      } // 5. Return InitializeReferencedBinding(lhs, value).
-
-
-      return InitializeReferencedBinding(lhs, value);
-    } else {
-      // 1. Let lhs be ResolveBinding(StringValue of BindingIdentifier).
-      const lhs = ResolveBinding(StringValue(BindingIdentifier), undefined, strict); // 2. Return InitializeReferencedBinding(lhs, undefined).
-
-      return InitializeReferencedBinding(lhs, Value.undefined);
-    }
-  } // #sec-let-and-const-declarations-runtime-semantics-evaluation
-  //   LexicalBinding : BindingPattern Initializer
-
-
-  Evaluate_LexicalBinding_BindingIdentifier.section = 'https://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation';
-
-  function* Evaluate_LexicalBinding_BindingPattern(LexicalBinding) {
-    const {
-      BindingPattern,
-      Initializer
-    } = LexicalBinding;
-    const rhs = yield* Evaluate(Initializer);
-
-    let _temp3 = GetValue(rhs);
-
-    if (_temp3 instanceof AbruptCompletion) {
-      return _temp3;
-    }
-
-    if (_temp3 instanceof Completion) {
-      _temp3 = _temp3.Value;
-    }
-
-    const value = _temp3;
-    const env = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment;
-    return yield* BindingInitialization(BindingPattern, value, env);
-  }
-
-  Evaluate_LexicalBinding_BindingPattern.section = 'https://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation';
-  function* Evaluate_LexicalBinding(LexicalBinding) {
-    switch (true) {
-      case !!LexicalBinding.BindingIdentifier:
-        return yield* Evaluate_LexicalBinding_BindingIdentifier(LexicalBinding);
-
-      case !!LexicalBinding.BindingPattern:
-        return yield* Evaluate_LexicalBinding_BindingPattern(LexicalBinding);
-
-      /*c8 ignore next*/
-      default:
-        throw new OutOfRange('Evaluate_LexicalBinding', LexicalBinding);
-    }
-  } // #sec-let-and-const-declarations-runtime-semantics-evaluation
-  //   BindingList : BindingList `,` LexicalBinding
-  //
-  // (implicit)
-  //   BindingList : LexicalBinding
-
-  function* Evaluate_BindingList(BindingList) {
-    // 1. Let next be the result of evaluating BindingList.
-    // 2. ReturnIfAbrupt(next).
-    // 3. Return the result of evaluating LexicalBinding.
-    let next;
-
-    for (const LexicalBinding of BindingList) {
-      next = yield* Evaluate_LexicalBinding(LexicalBinding);
-
-      /* c8 ignore if */
-      if (next instanceof AbruptCompletion) {
-        return next;
-      }
-      /* c8 ignore if */
-
-
-      if (next instanceof Completion) {
-        next = next.Value;
-      }
-    }
-
-    return next;
-  } // #sec-let-and-const-declarations-runtime-semantics-evaluation
-  //   LexicalDeclaration : LetOrConst BindingList `;`
-
-  function* Evaluate_LexicalDeclaration({
-    BindingList
-  }) {
-    // 1. Let next be the result of evaluating BindingList.
-    let next = yield* Evaluate_BindingList(BindingList); // 2. ReturnIfAbrupt(next).
-
-    if (next instanceof AbruptCompletion) {
-      return next;
-    }
-
-    if (next instanceof Completion) {
-      next = next.Value;
-    }
-
-    return NormalCompletion(undefined);
-  }
-
-  //   ObjectLiteral :
-  //     `{` `}`
-  //     `{` PropertyDefinitionList `}`
-  //     `{` PropertyDefinitionList `,` `}`
-
-  function* Evaluate_ObjectLiteral({
-    PropertyDefinitionList
-  }) {
-    // 1. Let obj be OrdinaryObjectCreate(%Object.prototype%).
-    const obj = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%Object.prototype%'));
-
-    if (PropertyDefinitionList.length === 0) {
-      return obj;
-    } // 2. Perform ? PropertyDefinitionEvaluation of PropertyDefinitionList with arguments obj and true.
-
-
-    let _temp = yield* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList, obj, Value.true);
-    /* c8 ignore if */
-
-
-    if (_temp instanceof AbruptCompletion) {
-      return _temp;
-    }
-    /* c8 ignore if */
-
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    return obj;
-  }
-
-  //   PropertyDefinitionList :
-  //     PropertyDefinitionList `,` PropertyDefinition
-
-  function* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList, object, enumerable) {
-    let lastReturn;
-
-    for (const PropertyDefinition of PropertyDefinitionList) {
-      let _temp = yield* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, object, enumerable);
-      /* c8 ignore if */
-
-
-      if (_temp instanceof AbruptCompletion) {
-        return _temp;
-      }
-      /* c8 ignore if */
-
-
-      if (_temp instanceof Completion) {
-        _temp = _temp.Value;
-      }
-
-      lastReturn = _temp;
-    }
-
-    return lastReturn;
-  } // PropertyDefinition :
-  //   `...` AssignmentExpression
-  //   IdentifierReference
-  //   PropertyName `:` AssignmentExpression
-
-  function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, object, enumerable) {
-    var _surroundingAgent$run, _surroundingAgent$run2, _surroundingAgent$run3;
-
-    switch (PropertyDefinition.type) {
-      case 'IdentifierReference':
-        return yield* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(PropertyDefinition, object, enumerable);
-
-      case 'PropertyDefinition':
-        break;
-
-      case 'MethodDefinition':
-        return yield* PropertyDefinitionEvaluation_MethodDefinition(PropertyDefinition, object, enumerable);
-
-      case 'GeneratorMethod':
-        return yield* PropertyDefinitionEvaluation_GeneratorMethod(PropertyDefinition, object, enumerable);
-
-      case 'AsyncMethod':
-        return yield* PropertyDefinitionEvaluation_AsyncMethod(PropertyDefinition, object, enumerable);
-
-      case 'AsyncGeneratorMethod':
-        return yield* PropertyDefinitionEvaluation_AsyncGeneratorMethod(PropertyDefinition, object, enumerable);
-
-      /*c8 ignore next*/
-      default:
-        throw new OutOfRange('PropertyDefinitionEvaluation_PropertyDefinition', PropertyDefinition);
-    } // PropertyDefinition :
-    //   PropertyName `:` AssignmentExpression
-    //   `...` AssignmentExpression
-
-
-    const {
-      PropertyName,
-      AssignmentExpression
-    } = PropertyDefinition;
-
-    if (!PropertyName) {
-      // 1. Let exprValue be the result of evaluating AssignmentExpression.
-      const exprValue = yield* Evaluate(AssignmentExpression); // 2. Let fromValue be ? GetValue(exprValue).
-
-      let _temp2 = GetValue(exprValue);
-
-      if (_temp2 instanceof AbruptCompletion) {
-        return _temp2;
-      }
-
-      if (_temp2 instanceof Completion) {
-        _temp2 = _temp2.Value;
-      }
-
-      const fromValue = _temp2; // 3. Let excludedNames be a new empty List.
-
-      const excludedNames = []; // 4. Return ? CopyDataProperties(object, fromValue, excludedNames).
-
-      return CopyDataProperties(object, fromValue, excludedNames);
-    } // 1. Let propKey be the result of evaluating PropertyName.
-
-
-    let propKey = yield* Evaluate_PropertyName(PropertyName); // 2. ReturnIfAbrupt(propKey).
-
-    /* c8 ignore if */
-    if (propKey instanceof AbruptCompletion) {
-      return propKey;
-    }
-    /* c8 ignore if */
-
-
-    if (propKey instanceof Completion) {
-      propKey = propKey.Value;
-    }
-
-    let isProtoSetter;
-
-    if ((_surroundingAgent$run = exports.surroundingAgent.runningExecutionContext) !== null && _surroundingAgent$run !== void 0 && (_surroundingAgent$run2 = _surroundingAgent$run.HostDefined) !== null && _surroundingAgent$run2 !== void 0 && (_surroundingAgent$run3 = _surroundingAgent$run2[kInternal]) !== null && _surroundingAgent$run3 !== void 0 && _surroundingAgent$run3.json) {
-      isProtoSetter = false;
-    } else if (!IsComputedPropertyKey(PropertyName) && propKey.stringValue() === '__proto__') {
-      // 3. Else, If _propKey_ is the String value *"__proto__"* and if IsComputedPropertyKey(|PropertyName|) is *false*,
-      // a. Let isProtoSetter be true.
-      isProtoSetter = true;
-    } else {
-      // 4. Else,
-      // a. Let isProtoSetter be false.
-      isProtoSetter = false;
-    }
-
-    let propValue; // 5. If IsAnonymousFunctionDefinition(AssignmentExpression) is true and isProtoSetter is false, then
-
-    if (IsAnonymousFunctionDefinition(AssignmentExpression) && !isProtoSetter) {
-      // a. Let propValue be NamedEvaluation of AssignmentExpression with argument propKey.
-      propValue = yield* NamedEvaluation(AssignmentExpression, propKey);
-    } else {
-      // 6. Else,
-      // a. Let exprValueRef be the result of evaluating AssignmentExpression.
-      const exprValueRef = yield* Evaluate(AssignmentExpression); // b. Let propValue be ? GetValue(exprValueRef).
-
-      let _temp3 = GetValue(exprValueRef);
-
-      if (_temp3 instanceof AbruptCompletion) {
-        return _temp3;
-      }
-
-      if (_temp3 instanceof Completion) {
-        _temp3 = _temp3.Value;
-      }
-
-      propValue = _temp3;
-    } // 7. If isProtoSetter is true, then
-
-
-    if (isProtoSetter) {
-      // a. If Type(propValue) is either Object or Null, then
-      if (Type(propValue) === 'Object' || Type(propValue) === 'Null') {
-        // i. Return object.[[SetPrototypeOf]](propValue).
-        return object.SetPrototypeOf(propValue);
-      } // b. Return NormalCompletion(empty).
-
-
-      return NormalCompletion(undefined);
-    } // 8. Assert: enumerable is true.
-
-
-    Assert(enumerable === Value.true, "enumerable === Value.true"); // 9. Assert: object is an ordinary, extensible object with no non-configurable properties.
-    // 10. Return ! CreateDataPropertyOrThrow(object, propKey, propValue).
-
-    let _temp4 = CreateDataPropertyOrThrow(object, propKey, propValue);
-
-    Assert(!(_temp4 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(object, propKey, propValue)" + ' returned an abrupt completion');
-    /* c8 ignore if */
-
-    if (_temp4 instanceof Completion) {
-      _temp4 = _temp4.Value;
-    }
-
-    return _temp4;
-  } // PropertyDefinition : IdentifierReference
-
-
-  function* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(IdentifierReference, object, enumerable) {
-    // 1. Let propName be StringValue of IdentifierReference.
-    const propName = StringValue(IdentifierReference); // 2. Let exprValue be the result of evaluating IdentifierReference.
-
-    const exprValue = yield* Evaluate(IdentifierReference); // 3. Let propValue be ? GetValue(exprValue).
-
-    let _temp5 = GetValue(exprValue);
-
-    if (_temp5 instanceof AbruptCompletion) {
-      return _temp5;
-    }
-
-    if (_temp5 instanceof Completion) {
-      _temp5 = _temp5.Value;
-    }
-
-    const propValue = _temp5; // 4. Assert: enumerable is true.
-
-    Assert(enumerable === Value.true, "enumerable === Value.true"); // 5. Assert: object is an ordinary, extensible object with no non-configurable properties.
-    // 6. Return ! CreateDataPropertyOrThrow(object, propName, propValue).
-
-    let _temp6 = CreateDataPropertyOrThrow(object, propName, propValue);
-
-    Assert(!(_temp6 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(object, propName, propValue)" + ' returned an abrupt completion');
-
-    if (_temp6 instanceof Completion) {
-      _temp6 = _temp6.Value;
-    }
-
-    return _temp6;
-  } // MethodDefinition :
-  //   PropertyName `(` UniqueFormalParameters `)` `{` FunctionBody `}`
-  //   `get` PropertyName `(` `)` `{` FunctionBody `}`
-  //   `set` PropertyName `(` PropertySetParameterList `)` `{` FunctionBody `}`
-
-
-  function* PropertyDefinitionEvaluation_MethodDefinition(MethodDefinition, object, enumerable) {
-    switch (true) {
-      case !!MethodDefinition.UniqueFormalParameters:
-        {
-          let _temp7 = yield* DefineMethod(MethodDefinition, object);
-
-          if (_temp7 instanceof AbruptCompletion) {
-            return _temp7;
-          }
-
-          if (_temp7 instanceof Completion) {
-            _temp7 = _temp7.Value;
-          }
-
-          // 1. Let methodDef be ? DefineMethod of MethodDefinition with argument object.
-          const methodDef = _temp7; // 2. Perform SetFunctionName(methodDef.[[Closure]], methodDef.[[Key]]).
-
-          SetFunctionName(methodDef.Closure, methodDef.Key); // 3. Let desc be the PropertyDescriptor { [[Value]]: methodDef.[[Closure]], [[Writable]]: true, [[Enumerable]]: enumerable, [[Configurable]]: true }.
-
-          const desc = Descriptor({
-            Value: methodDef.Closure,
-            Writable: Value.true,
-            Enumerable: enumerable,
-            Configurable: Value.true
-          }); // 4. Return ? DefinePropertyOrThrow(object, methodDef.[[Key]], desc).
-
-          return DefinePropertyOrThrow(object, methodDef.Key, desc);
-        }
-
-      case !!MethodDefinition.PropertySetParameterList:
-        {
-          const {
-            PropertyName,
-            PropertySetParameterList,
-            FunctionBody
-          } = MethodDefinition; // 1. Let propKey be the result of evaluating PropertyName.
-
-          let propKey = yield* Evaluate_PropertyName(PropertyName); // 2. ReturnIfAbrupt(propKey).
-
-          if (propKey instanceof AbruptCompletion) {
-            return propKey;
-          }
-
-          if (propKey instanceof Completion) {
-            propKey = propKey.Value;
-          }
-
-          const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 4. Let sourceText be the source text matched by MethodDefinition.
-
-          const sourceText = sourceTextMatchedBy(MethodDefinition); // 5. Let closure be OrdinaryFunctionCreate(%Function.prototype%, sourceText, PropertySetParameterList, FunctionBody, non-lexical-this, scope).
-
-          const closure = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%Function.prototype%'), sourceText, PropertySetParameterList, FunctionBody, 'non-lexical-this', scope); // 6. Perform MakeMethod(closure, object).
-
-          MakeMethod(closure, object); // 7. Perform SetFunctionName(closure, propKey, "get").
-
-          SetFunctionName(closure, propKey, new Value('set')); // 8. Let desc be the PropertyDescriptor { [[Get]]: closure, [[Enumerable]]: enumerable, [[Configurable]]: true }.
-
-          const desc = Descriptor({
-            Set: closure,
-            Enumerable: enumerable,
-            Configurable: Value.true
-          }); // 9. Return ? DefinePropertyOrThrow(object, propKey, desc).
-
-          return DefinePropertyOrThrow(object, propKey, desc);
-        }
-
-      case !MethodDefinition.UniqueFormalParameters && !MethodDefinition.PropertySetParameterList:
-        {
-          const {
-            PropertyName,
-            FunctionBody
-          } = MethodDefinition; // 1. Let propKey be the result of evaluating PropertyName.
-
-          let propKey = yield* Evaluate_PropertyName(PropertyName); // 2. ReturnIfAbrupt(propKey).
-
-          if (propKey instanceof AbruptCompletion) {
-            return propKey;
-          }
-
-          if (propKey instanceof Completion) {
-            propKey = propKey.Value;
-          }
-
-          const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 4. Let formalParameterList be an instance of the production FormalParameters : [empty].
-
-          const formalParameterList = []; // 5. Let sourceText be the source text matched by MethodDefinition.
-
-          const sourceText = sourceTextMatchedBy(MethodDefinition); // 6. Let closure be OrdinaryFunctionCreate(%Function.prototype%, sourceText, formalParameterList, FunctionBody, non-lexical-this, scope).
-
-          const closure = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%Function.prototype%'), sourceText, formalParameterList, FunctionBody, 'non-lexical-this', scope); // 7. Perform MakeMethod(closure, object).
-
-          MakeMethod(closure, object); // 8. Perform SetFunctionName(closure, propKey, "get").
-
-          SetFunctionName(closure, propKey, new Value('get')); // 9. Let desc be the PropertyDescriptor { [[Get]]: closure, [[Enumerable]]: enumerable, [[Configurable]]: true }.
-
-          const desc = Descriptor({
-            Get: closure,
-            Enumerable: enumerable,
-            Configurable: Value.true
-          }); // 10. Return ? DefinePropertyOrThrow(object, propKey, desc).
-
-          return DefinePropertyOrThrow(object, propKey, desc);
-        }
-
-      /*c8 ignore next*/
-      default:
-        throw new OutOfRange('PropertyDefinitionEvaluation_MethodDefinition', MethodDefinition);
-    }
-  } // #sec-async-function-definitions-PropertyDefinitionEvaluation
-  //   AsyncMethod :
-  //     `async` PropertyName `(` UniqueFormalParameters `)` `{` AsyncFunctionBody `}`
-
-
-  function* PropertyDefinitionEvaluation_AsyncMethod(AsyncMethod, object, enumerable) {
-    const {
-      PropertyName,
-      UniqueFormalParameters,
-      AsyncFunctionBody
-    } = AsyncMethod; // 1. Let propKey be the result of evaluating PropertyName.
-
-    let propKey = yield* Evaluate_PropertyName(PropertyName); // 2. ReturnIfAbrupt(propKey).
-
-    if (propKey instanceof AbruptCompletion) {
-      return propKey;
-    }
-
-    if (propKey instanceof Completion) {
-      propKey = propKey.Value;
-    }
-
-    const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 4. Let sourceText be the source text matched by AsyncMethod.
-
-    const sourceText = sourceTextMatchedBy(AsyncMethod); // 5. Let closure be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, UniqueFormalParameters, AsyncFunctionBody, non-lexical-this, scope).
-
-    let _temp8 = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, UniqueFormalParameters, AsyncFunctionBody, 'non-lexical-this', scope);
-
-    Assert(!(_temp8 instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, UniqueFormalParameters, AsyncFunctionBody, 'non-lexical-this', scope)" + ' returned an abrupt completion');
-
-    if (_temp8 instanceof Completion) {
-      _temp8 = _temp8.Value;
-    }
-
-    const closure = _temp8; // 6. Perform ! MakeMethod(closure, object).
-
-    let _temp9 = MakeMethod(closure, object);
-
-    Assert(!(_temp9 instanceof AbruptCompletion), "MakeMethod(closure, object)" + ' returned an abrupt completion');
-
-    if (_temp9 instanceof Completion) {
-      _temp9 = _temp9.Value;
-    }
-
-    let _temp10 = SetFunctionName(closure, propKey);
-
-    Assert(!(_temp10 instanceof AbruptCompletion), "SetFunctionName(closure, propKey)" + ' returned an abrupt completion');
-
-    if (_temp10 instanceof Completion) {
-      _temp10 = _temp10.Value;
-    }
-
-    const desc = Descriptor({
-      Value: closure,
-      Writable: Value.true,
-      Enumerable: enumerable,
-      Configurable: Value.true
-    }); // 9. Return ? DefinePropertyOrThrow(object, propKey, desc).
-
-    return DefinePropertyOrThrow(object, propKey, desc);
-  } // #sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation
-  //   GeneratorMethod :
-  //     `*` PropertyName `(` UniqueFormalParameters `)` `{` GeneratorBody `}`
-
-
-  PropertyDefinitionEvaluation_AsyncMethod.section = 'https://tc39.es/ecma262/#sec-async-function-definitions-PropertyDefinitionEvaluation';
-
-  function* PropertyDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, enumerable) {
-    const {
-      PropertyName,
-      UniqueFormalParameters,
-      GeneratorBody
-    } = GeneratorMethod; // 1. Let propKey be the result of evaluating PropertyName.
-
-    let propKey = yield* Evaluate_PropertyName(PropertyName); // 2. ReturnIfAbrupt(propKey).
-
-    if (propKey instanceof AbruptCompletion) {
-      return propKey;
-    }
-
-    if (propKey instanceof Completion) {
-      propKey = propKey.Value;
-    }
-
-    const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 4. Let sourceText be the source text matched by GeneratorMethod.
-
-    const sourceText = sourceTextMatchedBy(GeneratorMethod); // 5. Let closure be ! OrdinaryFunctionCreate(%GeneratorFunction.prototype%, sourceText, UniqueFormalParameters, AsyncFunctionBody, non-lexical-this, scope).
-
-    let _temp11 = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%GeneratorFunction.prototype%'), sourceText, UniqueFormalParameters, GeneratorBody, 'non-lexical-this', scope);
-
-    Assert(!(_temp11 instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype%'), sourceText, UniqueFormalParameters, GeneratorBody, 'non-lexical-this', scope)" + ' returned an abrupt completion');
-
-    if (_temp11 instanceof Completion) {
-      _temp11 = _temp11.Value;
-    }
-
-    const closure = _temp11; // 6. Perform ! MakeMethod(closure, object).
-
-    let _temp12 = MakeMethod(closure, object);
-
-    Assert(!(_temp12 instanceof AbruptCompletion), "MakeMethod(closure, object)" + ' returned an abrupt completion');
-
-    if (_temp12 instanceof Completion) {
-      _temp12 = _temp12.Value;
-    }
-
-    let _temp13 = SetFunctionName(closure, propKey);
-
-    Assert(!(_temp13 instanceof AbruptCompletion), "SetFunctionName(closure, propKey)" + ' returned an abrupt completion');
-
-    if (_temp13 instanceof Completion) {
-      _temp13 = _temp13.Value;
-    }
-
-    const prototype = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%')); // 9. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-
-    DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
-      Value: prototype,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.false
-    })); // 10. Let desc be the PropertyDescriptor { [[Value]]: closure, [[Writable]]: true, [[Enumerable]]: enumerable, [[Configurable]]: true }.
-
-    const desc = Descriptor({
-      Value: closure,
-      Writable: Value.true,
-      Enumerable: enumerable,
-      Configurable: Value.true
-    }); // 11. Return ? DefinePropertyOrThrow(object, propKey, desc).
-
-    return DefinePropertyOrThrow(object, propKey, desc);
-  } // #sec-asyncgenerator-definitions-propertydefinitionevaluation
-  //   AsyncGeneratorMethod :
-  //     `async` `*` PropertyName `(` UniqueFormalParameters `)` `{` AsyncGeneratorBody `}`
-
-
-  PropertyDefinitionEvaluation_GeneratorMethod.section = 'https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation';
-
-  function* PropertyDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod, object, enumerable) {
-    const {
-      PropertyName,
-      UniqueFormalParameters,
-      AsyncGeneratorBody
-    } = AsyncGeneratorMethod; // 1. Let propKey be the result of evaluating PropertyName.
-
-    let propKey = yield* Evaluate_PropertyName(PropertyName); // 2. ReturnIfAbrupt(propKey).
-
-    if (propKey instanceof AbruptCompletion) {
-      return propKey;
-    }
-
-    if (propKey instanceof Completion) {
-      propKey = propKey.Value;
-    }
-
-    const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 4. Let sourceText be the source text matched by AsyncGeneratorMethod.
-
-    const sourceText = sourceTextMatchedBy(AsyncGeneratorMethod); // 5. Let closure be ! OrdinaryFunctionCreate(%AsyncGeneratorFunction.prototype%, sourceText, UniqueFormalParameters, AsyncGeneratorBody, non-lexical-this, scope).
-
-    let _temp14 = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), sourceText, UniqueFormalParameters, AsyncGeneratorBody, 'non-lexical-this', scope);
-
-    Assert(!(_temp14 instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), sourceText, UniqueFormalParameters, AsyncGeneratorBody, 'non-lexical-this', scope)" + ' returned an abrupt completion');
-
-    if (_temp14 instanceof Completion) {
-      _temp14 = _temp14.Value;
-    }
-
-    const closure = _temp14; // 6. Perform ! MakeMethod(closure, object).
-
-    let _temp15 = MakeMethod(closure, object);
-
-    Assert(!(_temp15 instanceof AbruptCompletion), "MakeMethod(closure, object)" + ' returned an abrupt completion');
-
-    if (_temp15 instanceof Completion) {
-      _temp15 = _temp15.Value;
-    }
-
-    let _temp16 = SetFunctionName(closure, propKey);
-
-    Assert(!(_temp16 instanceof AbruptCompletion), "SetFunctionName(closure, propKey)" + ' returned an abrupt completion');
-
-    if (_temp16 instanceof Completion) {
-      _temp16 = _temp16.Value;
-    }
-
-    const prototype = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%')); // 9. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-
-    DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
-      Value: prototype,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.false
-    })); // 10. Let desc be the PropertyDescriptor { [[Value]]: closure, [[Writable]]: true, [[Enumerable]]: enumerable, [[Configurable]]: true }.
-
-    const desc = Descriptor({
-      Value: closure,
-      Writable: Value.true,
-      Enumerable: enumerable,
-      Configurable: Value.true
-    }); // 11. Return ? DefinePropertyOrThrow(object, propKey, desc).
-
-    return DefinePropertyOrThrow(object, propKey, desc);
-  }
-
-  PropertyDefinitionEvaluation_AsyncGeneratorMethod.section = 'https://tc39.es/ecma262/#sec-asyncgenerator-definitions-propertydefinitionevaluation';
-  function PropertyDefinitionEvaluation(node, object, enumerable) {
-    switch (node.type) {
-      case 'MethodDefinition':
-        return PropertyDefinitionEvaluation_MethodDefinition(node, object, enumerable);
-
-      case 'AsyncMethod':
-        return PropertyDefinitionEvaluation_AsyncMethod(node, object, enumerable);
-
-      case 'GeneratorMethod':
-        return PropertyDefinitionEvaluation_GeneratorMethod(node, object, enumerable);
-
-      case 'AsyncGeneratorMethod':
-        return PropertyDefinitionEvaluation_AsyncGeneratorMethod(node, object, enumerable);
-
-      case 'ClassElement':
-        return PropertyDefinitionEvaluation(node.MethodDefinition, object, enumerable);
-
-      /*c8 ignore next*/
-      default:
-        throw new OutOfRange('PropertyDefinitionEvaluation', node);
-    }
-  }
-
-  //   FunctionExpression :
-  //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
-  //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
-
-  function* Evaluate_FunctionExpression(FunctionExpression) {
-    const {
-      BindingIdentifier,
-      FormalParameters,
-      FunctionBody
-    } = FunctionExpression;
-
-    if (!BindingIdentifier) {
-      return yield* NamedEvaluation(FunctionExpression, new Value(''));
-    } // 1. Let scope be the running execution context's LexicalEnvironment.
-
-
-    const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let funcEnv be NewDeclarativeEnvironment(scope).
-
-    const funcEnv = NewDeclarativeEnvironment(scope); // 3. Let name be StringValue of BindingIdentifier.
-
-    const name = StringValue(BindingIdentifier); // 4. Perform funcEnv.CreateImmutableBinding(name, false).
-
-    funcEnv.CreateImmutableBinding(name, Value.false); // 5. Let sourceText be the source text matched by FunctionExpression.
-
-    const sourceText = sourceTextMatchedBy(FunctionExpression); // 6. Let closure be OrdinaryFunctionCreate(%Function.prototype%, sourceText, FormalParameters, FunctionBody, non-lexical-this, funcEnv).
-
-    const closure = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%Function.prototype%'), sourceText, FormalParameters, FunctionBody, 'non-lexical-this', funcEnv); // 7. Perform SetFunctionName(closure, name).
-
-    SetFunctionName(closure, name); // 8. Perform MakeConstructor(closure).
-
-    MakeConstructor(closure); // 9. Perform funcEnv.InitializeBinding(name, closure).
-
-    funcEnv.InitializeBinding(name, closure); // 10. Return closure.
-
-    return closure;
-  }
-
-  //   FunctionExpression :
-  //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
-
-  function NamedEvaluation_FunctionExpression(FunctionExpression, name) {
-    const {
-      FormalParameters,
-      FunctionBody
-    } = FunctionExpression; // 1. Let scope be the LexicalEnvironment of the running execution context.
-
-    const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let sourceText be the source text matched by FunctionExpression.
-
-    const sourceText = sourceTextMatchedBy(FunctionExpression); // 3. Let closure be OrdinaryFunctionCreate(%Function.prototype%, sourceText, FormalParameters, FunctionBody, non-lexical-this, scope).
-
-    const closure = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%Function.prototype%'), sourceText, FormalParameters, FunctionBody, 'non-lexical-this', scope); // 4. Perform SetFunctionName(closure, name).
-
-    SetFunctionName(closure, name); // 5. Perform MakeConstructor(closure).
-
-    MakeConstructor(closure); // 6. Return closure.
-
-    return closure;
-  } // #sec-generator-function-definitions-runtime-semantics-namedevaluation
-  //   GeneratorExpression :
-  //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
-
-
-  NamedEvaluation_FunctionExpression.section = 'https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-namedevaluation';
-
-  function NamedEvaluation_GeneratorExpression(GeneratorExpression, name) {
-    const {
-      FormalParameters,
-      GeneratorBody
-    } = GeneratorExpression; // 1. Let scope be the LexicalEnvironment of the running execution context.
-
-    const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let sourceText be the source text matched by GeneratorExpression.
-
-    const sourceText = sourceTextMatchedBy(GeneratorExpression); // 3. Let closure be OrdinaryFunctionCreate(%GeneratorFunction.prototype%, sourceText, FormalParameters, GeneratorBody, non-lexical-this, scope).
-
-    const closure = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%GeneratorFunction.prototype%'), sourceText, FormalParameters, GeneratorBody, 'non-lexical-this', scope); // 4. Perform SetFunctionName(closure, name).
-
-    SetFunctionName(closure, name); // 5. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
-
-    const prototype = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%')); // 6. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-
-    DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
-      Value: prototype,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.false
-    })); // 7. Return closure.
-
-    return closure;
-  } // #sec-async-function-definitions-runtime-semantics-namedevaluation
-  //   AsyncFunctionExpression :
-  //     `async` `function` `(` FormalParameters `)` `{` AsyncFunctionBody `}`
-
-
-  NamedEvaluation_GeneratorExpression.section = 'https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-namedevaluation';
-
-  function NamedEvaluation_AsyncFunctionExpression(AsyncFunctionExpression, name) {
-    const {
-      FormalParameters,
-      AsyncFunctionBody
-    } = AsyncFunctionExpression; // 1. Let scope be the LexicalEnvironment of the running execution context.
-
-    const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let sourceText be the source text matched by AsyncFunctionExpression.
-
-    const sourceText = sourceTextMatchedBy(AsyncFunctionExpression); // 3. Let closure be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, FormalParameters, AsyncFunctionBody, non-lexical-this, scope).
-
-    let _temp = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, FormalParameters, AsyncFunctionBody, 'non-lexical-this', scope);
-
-    Assert(!(_temp instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, FormalParameters, AsyncFunctionBody, 'non-lexical-this', scope)" + ' returned an abrupt completion');
-    /* c8 ignore if */
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    const closure = _temp; // 4. Perform SetFunctionName(closure, name).
-
-    SetFunctionName(closure, name); // 5. Return closure.
-
-    return closure;
-  } // #sec-asyncgenerator-definitions-namedevaluation
-  //   AsyncGeneratorExpression :
-  //     `async` `function` `*` `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
-
-
-  NamedEvaluation_AsyncFunctionExpression.section = 'https://tc39.es/ecma262/#sec-async-function-definitions-runtime-semantics-namedevaluation';
-
-  function NamedEvaluation_AsyncGeneratorExpression(AsyncGeneratorExpression, name) {
-    const {
-      FormalParameters,
-      AsyncGeneratorBody
-    } = AsyncGeneratorExpression; // 1. Let scope be the LexicalEnvironment of the running execution context.
-
-    const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let sourceText be the source text matched by AsyncGeneratorExpression.
-
-    const sourceText = sourceTextMatchedBy(AsyncGeneratorExpression); // 3. Let closure be OrdinaryFunctionCreate(%AsyncGeneratorFunction.prototype%, sourceText, FormalParameters, GeneratorBody, non-lexical-this, scope).
-
-    const closure = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), sourceText, FormalParameters, AsyncGeneratorBody, 'non-lexical-this', scope); // 4. Perform SetFunctionName(closure, name).
-
-    SetFunctionName(closure, name); // 5. Let prototype be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
-
-    const prototype = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%')); // 6. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-
-    DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
-      Value: prototype,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.false
-    })); // 7. Return closure.
-
-    return closure;
-  } // #sec-arrow-function-definitions-runtime-semantics-namedevaluation
-  //   ArrowFunction :
-  //     ArrowParameters `=>` ConciseBody
-
-
-  NamedEvaluation_AsyncGeneratorExpression.section = 'https://tc39.es/ecma262/#sec-asyncgenerator-definitions-namedevaluation';
-
-  function NamedEvaluation_ArrowFunction(ArrowFunction, name) {
-    const {
-      ArrowParameters,
-      ConciseBody
-    } = ArrowFunction; // 1. Let scope be the LexicalEnvironment of the running execution context.
-
-    const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let sourceText be the source text matched by ArrowFunction.
-
-    const sourceText = sourceTextMatchedBy(ArrowFunction); // 3. Let parameters be CoveredFormalsList of ArrowParameters.
-
-    const parameters = ArrowParameters; // 4. Let closure be OrdinaryFunctionCreate(%Function.prototype%, parameters, ConciseBody, lexical-this, scope).
-
-    const closure = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%Function.prototype%'), sourceText, parameters, ConciseBody, 'lexical-this', scope); // 5. Perform SetFunctionName(closure, name).
-
-    SetFunctionName(closure, name); // 6. Return closure.
-
-    return closure;
-  } // #sec-arrow-function-definitions-runtime-semantics-namedevaluation
-  //   AsyncArrowFunction :
-  //     ArrowParameters `=>` AsyncConciseBody
-
-
-  NamedEvaluation_ArrowFunction.section = 'https://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-namedevaluation';
-
-  function NamedEvaluation_AsyncArrowFunction(AsyncArrowFunction, name) {
-    const {
-      ArrowParameters,
-      AsyncConciseBody
-    } = AsyncArrowFunction; // 1. Let scope be the LexicalEnvironment of the running execution context.
-
-    const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let sourceText be the source text matched by ArrowFunction.
-
-    const sourceText = sourceTextMatchedBy(AsyncArrowFunction); // 3. Let head be CoveredAsyncArrowHead of CoverCallExpressionAndAsyncArrowHead.
-    // 4. Let parameters be the ArrowFormalParameters of head.
-
-    const parameters = ArrowParameters; // 5. Let closure be OrdinaryFunctionCreate(%Function.prototype%, parameters, ConciseBody, lexical-this, scope).
-
-    const closure = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, parameters, AsyncConciseBody, 'lexical-this', scope); // 6. Perform SetFunctionName(closure, name).
-
-    SetFunctionName(closure, name); // 7. Return closure.
-
-    return closure;
-  } // #sec-class-definitions-runtime-semantics-namedevaluation
-  //   ClassExpression : `class` ClassTail
-
-
-  NamedEvaluation_AsyncArrowFunction.section = 'https://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-namedevaluation';
-
-  function* NamedEvaluation_ClassExpression(ClassExpression, name) {
-    const {
-      ClassTail
-    } = ClassExpression; // 1. Let value be the result of ClassDefinitionEvaluation of ClassTail with arguments undefined and name.
-
-    let value = yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, name); // 2. ReturnIfAbrupt(value).
-
-    /* c8 ignore if */
-    if (value instanceof AbruptCompletion) {
-      return value;
-    }
-    /* c8 ignore if */
-
-
-    if (value instanceof Completion) {
-      value = value.Value;
-    }
-
-    value.SourceText = sourceTextMatchedBy(ClassExpression); // 4. Return value.
-
-    return value;
-  }
-
-  NamedEvaluation_ClassExpression.section = 'https://tc39.es/ecma262/#sec-class-definitions-runtime-semantics-namedevaluation';
-  function* NamedEvaluation(F, name) {
-    switch (F.type) {
-      case 'FunctionExpression':
-        return NamedEvaluation_FunctionExpression(F, name);
-
-      case 'GeneratorExpression':
-        return NamedEvaluation_GeneratorExpression(F, name);
-
-      case 'AsyncFunctionExpression':
-        return NamedEvaluation_AsyncFunctionExpression(F, name);
-
-      case 'AsyncGeneratorExpression':
-        return NamedEvaluation_AsyncGeneratorExpression(F, name);
-
-      case 'ArrowFunction':
-        return NamedEvaluation_ArrowFunction(F, name);
-
-      case 'AsyncArrowFunction':
-        return NamedEvaluation_AsyncArrowFunction(F, name);
-
-      case 'ClassExpression':
-        return yield* NamedEvaluation_ClassExpression(F, name);
-
-      case 'ParenthesizedExpression':
-        return yield* NamedEvaluation(F.Expression, name);
-
-      /*c8 ignore next*/
-      default:
-        throw new OutOfRange('NamedEvaluation', F);
-    }
-  }
-
-  //   TryStatement :
-  //     `try` Block Catch
-  //     `try` Block Finally
-  //     `try` Block Catch Finally
-
-  function Evaluate_TryStatement(TryStatement) {
-    switch (true) {
-      case !!TryStatement.Catch && !TryStatement.Finally:
-        return Evaluate_TryStatement_BlockCatch(TryStatement);
-
-      case !TryStatement.Catch && !!TryStatement.Finally:
-        return Evaluate_TryStatement_BlockFinally(TryStatement);
-
-      case !!TryStatement.Catch && !!TryStatement.Finally:
-        return Evaluate_TryStatement_BlockCatchFinally(TryStatement);
-
-      /*c8 ignore next*/
-      default:
-        throw new OutOfRange('Evaluate_TryStatement', TryStatement);
-    }
-  } // TryStatement : `try` Block Catch
-
-  function* Evaluate_TryStatement_BlockCatch({
-    Block,
-    Catch
-  }) {
-    // 1. Let B be the result of evaluating Block.
-    const B = EnsureCompletion(yield* Evaluate(Block)); // 2. If B.[[Type]] is throw, let C be CatchClauseEvaluation of Catch with argument B.[[Value]].
-
-    let C;
-
-    if (B.Type === 'throw') {
-      C = EnsureCompletion(yield* CatchClauseEvaluation(Catch, B.Value));
-    } else {
-      // 3. Else, let C be B.
-      C = B;
-    } // 3. Return Completion(UpdateEmpty(C, undefined)).
-
-
-    return Completion(UpdateEmpty(C, Value.undefined));
-  } // TryStatement : `try` Block Finally
-
-
-  function* Evaluate_TryStatement_BlockFinally({
-    Block,
-    Finally
-  }) {
-    // 1. Let B be the result of evaluating Block.
-    const B = EnsureCompletion(yield* Evaluate(Block)); // 1. Let F be the result of evaluating Finally.
-
-    let F = EnsureCompletion(yield* Evaluate(Finally)); // 1. If F.[[Type]] is normal, set F to B.
-
-    if (F.Type === 'normal') {
-      F = B;
-    } // 1. Return Completion(UpdateEmpty(F, undefined)).
-
-
-    return Completion(UpdateEmpty(F, Value.undefined));
-  } // TryStatement : `try` Block Catch Finally
-
-
-  function* Evaluate_TryStatement_BlockCatchFinally({
-    Block,
-    Catch,
-    Finally
-  }) {
-    // 1. Let B be the result of evaluating Block.
-    const B = EnsureCompletion(yield* Evaluate(Block)); // 2. If B.[[Type]] is throw, let C be CatchClauseEvaluation of Catch with argument B.[[Value]].
-
-    let C;
-
-    if (B.Type === 'throw') {
-      C = EnsureCompletion(yield* CatchClauseEvaluation(Catch, B.Value));
-    } else {
-      // 3. Else, let C be B.
-      C = B;
-    } // 4. Let F be the result of evaluating Finally.
-
-
-    let F = EnsureCompletion(yield* Evaluate(Finally)); // 5. If F.[[Type]] is normal, set F to C.
-
-    if (F.Type === 'normal') {
-      F = C;
-    } // 6. Return Completion(UpdateEmpty(F, undefined)).
-
-
-    return Completion(UpdateEmpty(F, Value.undefined));
-  } // #sec-runtime-semantics-catchclauseevaluation
-  //  Catch :
-  //    `catch` Block
-  //    `catch` `(` CatchParameter `)` Block
-
-
-  function* CatchClauseEvaluation({
-    CatchParameter,
-    Block
-  }, thrownValue) {
-    if (!CatchParameter) {
-      // 1. Return the result of evaluating Block.
-      return yield* Evaluate(Block);
-    } // 1. Let oldEnv be the running execution context's LexicalEnvironment.
-
-
-    const oldEnv = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let catchEnv be NewDeclarativeEnvironment(oldEnv).
-
-    const catchEnv = NewDeclarativeEnvironment(oldEnv); // 3. For each element argName of the BoundNames of CatchParameter, do
-
-    for (const argName of BoundNames(CatchParameter)) {
-      let _temp = catchEnv.CreateMutableBinding(argName, Value.false);
-
-      Assert(!(_temp instanceof AbruptCompletion), "catchEnv.CreateMutableBinding(argName, Value.false)" + ' returned an abrupt completion');
-      /* c8 ignore if */
-
-      if (_temp instanceof Completion) {
-        _temp = _temp.Value;
-      }
-    } // 4. Set the running execution context's LexicalEnvironment to catchEnv.
-
-
-    exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = catchEnv; // 5. Let status be BindingInitialization of CatchParameter with arguments thrownValue and catchEnv.
-
-    const status = yield* BindingInitialization(CatchParameter, thrownValue, catchEnv); // 6. If status is an abrupt completion, then
-
-    if (status instanceof AbruptCompletion) {
-      // a. Set the running execution context's LexicalEnvironment to oldEnv.
-      exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv; // b. Return Completion(status).
-
-      return Completion(status);
-    } // 7. Let B be the result of evaluating Block.
-
-
-    const B = EnsureCompletion(yield* Evaluate(Block)); // 8. Set the running execution context's LexicalEnvironment to oldEnv.
-
-    exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv; // 9. Return Completion(B).
-
-    return Completion(B);
-  }
-
-  CatchClauseEvaluation.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-catchclauseevaluation';
-
-  function BlockDeclarationInstantiation(code, env) {
-    // 1. Assert: env is a declarative Environment Record.
-    Assert(env instanceof DeclarativeEnvironmentRecord, "env instanceof DeclarativeEnvironmentRecord"); // 2. Let declarations be the LexicallyScopedDeclarations of code.
-
-    const declarations = LexicallyScopedDeclarations(code); // 3. For each element d in declarations, do
-
-    for (const d of declarations) {
-      // a. For each element dn of the BoundNames of d, do
-      for (const dn of BoundNames(d)) {
-        // i. If IsConstantDeclaration of d is true, then
-        if (IsConstantDeclaration(d)) {
-          let _temp = env.CreateImmutableBinding(dn, Value.true);
-
-          Assert(!(_temp instanceof AbruptCompletion), "env.CreateImmutableBinding(dn, Value.true)" + ' returned an abrupt completion');
-          /* c8 ignore if */
-
-          if (_temp instanceof Completion) {
-            _temp = _temp.Value;
-          }
-        } else {
-          let _temp2 = env.CreateMutableBinding(dn, false);
-
-          Assert(!(_temp2 instanceof AbruptCompletion), "env.CreateMutableBinding(dn, false)" + ' returned an abrupt completion');
-
-          if (_temp2 instanceof Completion) {
-            _temp2 = _temp2.Value;
-          }
-        } // b. If d is a FunctionDeclaration, a GeneratorDeclaration, an AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration, then
-
-
-        if (d.type === 'FunctionDeclaration' || d.type === 'GeneratorDeclaration' || d.type === 'AsyncFunctionDeclaration' || d.type === 'AsyncGeneratorDeclaration') {
-          // i. Let fn be the sole element of the BoundNames of d.
-          const fn = BoundNames(d)[0]; // ii. Let fo be InstantiateFunctionObject of d with argument env.
-
-          const fo = InstantiateFunctionObject(d, env); // iii. Perform env.InitializeBinding(fn, fo).
-
-          env.InitializeBinding(fn, fo);
-        }
-      }
-    }
-  } // #sec-block-runtime-semantics-evaluation
-  //  Block :
-  //    `{` `}`
-  //    `{` StatementList `}`
-
-  function* Evaluate_Block({
-    StatementList
-  }) {
-    if (StatementList.length === 0) {
-      // 1. Return NormalCompletion(empty).
-      return NormalCompletion(undefined);
-    } // 1. Let oldEnv be the running execution context's LexicalEnvironment.
-
-
-    const oldEnv = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let blockEnv be NewDeclarativeEnvironment(oldEnv).
-
-    const blockEnv = NewDeclarativeEnvironment(oldEnv); // 3. Perform BlockDeclarationInstantiation(StatementList, blockEnv).
-
-    BlockDeclarationInstantiation(StatementList, blockEnv); // 4. Set the running execution context's LexicalEnvironment to blockEnv.
-
-    exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = blockEnv; // 5. Let blockValue be the result of evaluating StatementList.
-
-    const blockValue = yield* Evaluate_StatementList(StatementList); // 6. Set the running execution context's LexicalEnvironment to oldEnv.
-
-    exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv; // 7. Return blockValue.
-
-    return blockValue;
-  }
-
-  //  Elision :
-  //    `,`
-  //    Elision `,`
-  //  ElementList :
-  //    Elision? AssignmentExpression
-  //    Elision? SpreadElement
-  //    ElementList `,` Elision? AssignmentExpression
-  //    ElementList : ElementList `,` Elision SpreadElement
-  //  SpreadElement :
-  //    `...` AssignmentExpression
-
-  function* ArrayAccumulation(ElementList, array, nextIndex) {
-    let postIndex = nextIndex;
-
-    for (const element of ElementList) {
-      switch (element.type) {
-        case 'Elision':
-          postIndex += 1;
-
-          let _temp = Set$1(array, new Value('length'), F(postIndex), Value.true);
-          /* c8 ignore if */
-
-
-          if (_temp instanceof AbruptCompletion) {
-            return _temp;
-          }
-          /* c8 ignore if */
-
-
-          if (_temp instanceof Completion) {
-            _temp = _temp.Value;
-          }
-          break;
-
-        case 'SpreadElement':
-          let _temp2 = yield* ArrayAccumulation_SpreadElement(element, array, postIndex);
-
-          if (_temp2 instanceof AbruptCompletion) {
-            return _temp2;
-          }
-
-          if (_temp2 instanceof Completion) {
-            _temp2 = _temp2.Value;
-          }
-
-          postIndex = _temp2;
-          break;
-
-        default:
-          let _temp3 = yield* ArrayAccumulation_AssignmentExpression(element, array, postIndex);
-
-          if (_temp3 instanceof AbruptCompletion) {
-            return _temp3;
-          }
-
-          if (_temp3 instanceof Completion) {
-            _temp3 = _temp3.Value;
-          }
-
-          postIndex = _temp3;
-          break;
-      }
-    }
-
-    return postIndex;
-  } // SpreadElement : `...` AssignmentExpression
-
-
-  ArrayAccumulation.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-arrayaccumulation';
-
-  function* ArrayAccumulation_SpreadElement({
-    AssignmentExpression
-  }, array, nextIndex) {
-    // 1. Let spreadRef be the result of evaluating AssignmentExpression.
-    const spreadRef = yield* Evaluate(AssignmentExpression); // 2. Let spreadObj be ? GetValue(spreadRef).
-
-    let _temp4 = GetValue(spreadRef);
-
-    if (_temp4 instanceof AbruptCompletion) {
-      return _temp4;
-    }
-
-    if (_temp4 instanceof Completion) {
-      _temp4 = _temp4.Value;
-    }
-
-    const spreadObj = _temp4; // 3. Let iteratorRecord be ? GetIterator(spreadObj).
-
-    let _temp5 = GetIterator(spreadObj);
-
-    if (_temp5 instanceof AbruptCompletion) {
-      return _temp5;
-    }
-
-    if (_temp5 instanceof Completion) {
-      _temp5 = _temp5.Value;
-    }
-
-    const iteratorRecord = _temp5; // 4. Repeat,
-
-    while (true) {
-      let _temp6 = IteratorStep(iteratorRecord);
-
-      if (_temp6 instanceof AbruptCompletion) {
-        return _temp6;
-      }
-
-      if (_temp6 instanceof Completion) {
-        _temp6 = _temp6.Value;
-      }
-
-      // a. Let next be ? IteratorStep(iteratorRecord).
-      const next = _temp6; // b. If next is false, return nextIndex.
-
-      if (next === Value.false) {
-        return nextIndex;
-      } // c. Let nextValue be ? IteratorValue(next).
-
-
-      let _temp7 = IteratorValue(next);
-
-      if (_temp7 instanceof AbruptCompletion) {
-        return _temp7;
-      }
-
-      if (_temp7 instanceof Completion) {
-        _temp7 = _temp7.Value;
-      }
-
-      const nextValue = _temp7; // d. Perform ! CreateDataPropertyOrThrow(array, ! ToString(𝔽(nextIndex)), nextValue).
-
-      let _temp9 = ToString(F(nextIndex));
-
-      Assert(!(_temp9 instanceof AbruptCompletion), "ToString(F(nextIndex))" + ' returned an abrupt completion');
-      /* c8 ignore if */
-
-      if (_temp9 instanceof Completion) {
-        _temp9 = _temp9.Value;
-      }
-
-      let _temp8 = CreateDataPropertyOrThrow(array, _temp9, nextValue);
-
-      Assert(!(_temp8 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(array, X(ToString(F(nextIndex))), nextValue)" + ' returned an abrupt completion');
-
-      if (_temp8 instanceof Completion) {
-        _temp8 = _temp8.Value;
-      }
-
-      nextIndex += 1;
-    }
-  }
-
-  function* ArrayAccumulation_AssignmentExpression(AssignmentExpression, array, nextIndex) {
-    // 2. Let initResult be the result of evaluating AssignmentExpression.
-    const initResult = yield* Evaluate(AssignmentExpression); // 3. Let initValue be ? GetValue(initResult).
-
-    let _temp10 = GetValue(initResult);
-
-    if (_temp10 instanceof AbruptCompletion) {
-      return _temp10;
-    }
-
-    if (_temp10 instanceof Completion) {
-      _temp10 = _temp10.Value;
-    }
-
-    const initValue = _temp10; // 4. Let created be ! CreateDataPropertyOrThrow(array, ! ToString(𝔽(nextIndex)), initValue).
-
-    let _temp12 = ToString(F(nextIndex));
-
-    Assert(!(_temp12 instanceof AbruptCompletion), "ToString(F(nextIndex))" + ' returned an abrupt completion');
-
-    if (_temp12 instanceof Completion) {
-      _temp12 = _temp12.Value;
-    }
-
-    let _temp11 = CreateDataPropertyOrThrow(array, _temp12, initValue);
-
-    Assert(!(_temp11 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(array, X(ToString(F(nextIndex))), initValue)" + ' returned an abrupt completion');
-
-    if (_temp11 instanceof Completion) {
-      _temp11 = _temp11.Value;
-    }
-
-    return nextIndex + 1;
-  } // #sec-array-initializer-runtime-semantics-evaluation
-  //  ArrayLiteral :
-  //    `[` Elision `]`
-  //    `[` ElementList `]`
-  //    `[` ElementList `,` Elision `]`
-
-
-  function* Evaluate_ArrayLiteral({
-    ElementList
-  }) {
-    let _temp13 = ArrayCreate(0);
-
-    Assert(!(_temp13 instanceof AbruptCompletion), "ArrayCreate(0)" + ' returned an abrupt completion');
-
-    if (_temp13 instanceof Completion) {
-      _temp13 = _temp13.Value;
-    }
-
-    // 1. Let array be ! ArrayCreate(0).
-    const array = _temp13; // 2. Let len be the result of performing ArrayAccumulation for ElementList with arguments array and 0.
-
-    let len = yield* ArrayAccumulation(ElementList, array, 0); // 3. ReturnIfAbrupt(len).
-
-    /* c8 ignore if */
-    if (len instanceof AbruptCompletion) {
-      return len;
-    }
-    /* c8 ignore if */
-
-
-    if (len instanceof Completion) {
-      len = len.Value;
-    }
-
-    return array;
-  }
-
-  //   UnaryExpression : `delete` UnaryExpression
-
-  function* Evaluate_UnaryExpression_Delete({
-    UnaryExpression
-  }) {
-    // 1. Let ref be the result of evaluating UnaryExpression.
-    let ref = yield* Evaluate(UnaryExpression); // 2. ReturnIfAbrupt(ref).
-
-    /* c8 ignore if */
-    if (ref instanceof AbruptCompletion) {
-      return ref;
-    }
-    /* c8 ignore if */
-
-
-    if (ref instanceof Completion) {
-      ref = ref.Value;
-    }
-
-    if (Type(ref) !== 'Reference') {
-      return Value.true;
-    } // 4. If IsUnresolvableReference(ref) is true, then
-
-
-    if (IsUnresolvableReference(ref) === Value.true) {
-      // a. Assert: IsStrictReference(ref) is false.
-      Assert(IsStrictReference(ref) === Value.false, "IsStrictReference(ref) === Value.false"); // b. Return true.
-
-      return Value.true;
-    } // 5. If IsPropertyReference(ref) is true, then
-
-
-    if (IsPropertyReference(ref) === Value.true) {
-      // a. If IsSuperReference(ref) is true, throw a ReferenceError exception.
-      if (IsSuperReference(ref) === Value.true) {
-        return exports.surroundingAgent.Throw('ReferenceError', 'CannotDeleteSuper');
-      } // b. Let baseObj be ! ToObject(GetBase(ref)).
-
-
-      let _temp = ToObject(GetBase(ref));
-
-      Assert(!(_temp instanceof AbruptCompletion), "ToObject(GetBase(ref))" + ' returned an abrupt completion');
-      /* c8 ignore if */
-
-      if (_temp instanceof Completion) {
-        _temp = _temp.Value;
-      }
-
-      const baseObj = _temp; // c. Let deleteStatus be ? baseObj.[[Delete]](GetReferencedName(ref)).
-
-      let _temp2 = baseObj.Delete(GetReferencedName(ref));
-      /* c8 ignore if */
-
-
-      if (_temp2 instanceof AbruptCompletion) {
-        return _temp2;
-      }
-      /* c8 ignore if */
-
-
-      if (_temp2 instanceof Completion) {
-        _temp2 = _temp2.Value;
-      }
-
-      const deleteStatus = _temp2; // d. If deleteStatus is false and IsStrictReference(ref) is true, throw a TypeError exception.
-
-      if (deleteStatus === Value.false && IsStrictReference(ref) === Value.true) {
-        return exports.surroundingAgent.Throw('TypeError', 'StrictModeDelete', GetReferencedName(ref));
-      } // e. Return deleteStatus.
-
-
-      return deleteStatus;
-    } else {
-      // 6. Else,
-      // a. Assert: ref is a Reference to an Environment Record binding.
-      // b. Let bindings be GetBase(ref).
-      const bindings = GetBase(ref); // c. Return ? bindings.DeleteBinding(GetReferencedName(ref)).
-
-      return bindings.DeleteBinding(GetReferencedName(ref));
-    }
-  } // #sec-void-operator-runtime-semantics-evaluation
-  //   UnaryExpression : `void` UnaryExpression
-
-
-  Evaluate_UnaryExpression_Delete.section = 'https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation';
-
-  function* Evaluate_UnaryExpression_Void({
-    UnaryExpression
-  }) {
-    // 1. Let expr be the result of evaluating UnaryExpression.
-    const expr = yield* Evaluate(UnaryExpression); // 2. Perform ? GetValue(expr).
-
-    let _temp3 = GetValue(expr);
-
-    if (_temp3 instanceof AbruptCompletion) {
-      return _temp3;
-    }
-
-    if (_temp3 instanceof Completion) {
-      _temp3 = _temp3.Value;
-    }
-
-    return Value.undefined;
-  } // 12.5.5.1 #sec-typeof-operator-runtime-semantics-evaluation
-  // UnaryExpression : `typeof` UnaryExpression
-
-
-  Evaluate_UnaryExpression_Void.section = 'https://tc39.es/ecma262/#sec-void-operator-runtime-semantics-evaluation';
-
-  function* Evaluate_UnaryExpression_Typeof({
-    UnaryExpression
-  }) {
-    // 1. Let val be the result of evaluating UnaryExpression.
-    let val = yield* Evaluate(UnaryExpression); // 2. If Type(val) is Reference, then
-
-    if (Type(val) === 'Reference') {
-      // a. If IsUnresolvableReference(val) is true, return "undefined".
-      if (IsUnresolvableReference(val) === Value.true) {
-        return new Value('undefined');
-      }
-    } // 3. Set val to ? GetValue(val).
-
-
-    let _temp4 = GetValue(val);
-
-    if (_temp4 instanceof AbruptCompletion) {
-      return _temp4;
-    }
-
-    if (_temp4 instanceof Completion) {
-      _temp4 = _temp4.Value;
-    }
-
-    val = _temp4; // 4. Return a String according to Table 37.
-
-    const type = Type(val);
-
-    switch (type) {
-      case 'Undefined':
-        return new Value('undefined');
-
-      case 'Null':
-        return new Value('object');
-
-      case 'Boolean':
-        return new Value('boolean');
-
-      case 'Number':
-        return new Value('number');
-
-      case 'String':
-        return new Value('string');
-
-      case 'BigInt':
-        return new Value('bigint');
-
-      case 'Symbol':
-        return new Value('symbol');
-
-      case 'Object':
-        if (IsCallable(val) === Value.true) {
-          return new Value('function');
-        }
-
-        return new Value('object');
-
-      /*c8 ignore next*/
-      default:
-        throw new OutOfRange('Evaluate_UnaryExpression_Typeof', type);
-    }
-  } // #sec-unary-plus-operator-runtime-semantics-evaluation
-  //   UnaryExpression : `+` UnaryExpression
-
-
-  Evaluate_UnaryExpression_Typeof.section = 'https://tc39.es/ecma262/#sec-typeof-operator-runtime-semantics-evaluation';
-
-  function* Evaluate_UnaryExpression_Plus({
-    UnaryExpression
-  }) {
-    // 1. Let expr be the result of evaluating UnaryExpression.
-    const expr = yield* Evaluate(UnaryExpression); // 2. Return ? ToNumber(? GetValue(expr)).
-
-    let _temp5 = GetValue(expr);
-
-    if (_temp5 instanceof AbruptCompletion) {
-      return _temp5;
-    }
-
-    if (_temp5 instanceof Completion) {
-      _temp5 = _temp5.Value;
-    }
-
-    return ToNumber(_temp5);
-  } // #sec-unary-minus-operator-runtime-semantics-evaluation
-  //   UnaryExpression : `-` UnaryExpression
-
-
-  Evaluate_UnaryExpression_Plus.section = 'https://tc39.es/ecma262/#sec-unary-plus-operator-runtime-semantics-evaluation';
-
-  function* Evaluate_UnaryExpression_Minus({
-    UnaryExpression
-  }) {
-    // 1. Let expr be the result of evaluating UnaryExpression.
-    const expr = yield* Evaluate(UnaryExpression); // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
-
-    let _temp8 = GetValue(expr);
-
-    if (_temp8 instanceof AbruptCompletion) {
-      return _temp8;
-    }
-
-    if (_temp8 instanceof Completion) {
-      _temp8 = _temp8.Value;
-    }
-
-    let _temp6 = ToNumeric(_temp8);
-
-    if (_temp6 instanceof AbruptCompletion) {
-      return _temp6;
-    }
-
-    if (_temp6 instanceof Completion) {
-      _temp6 = _temp6.Value;
-    }
-
-    const oldValue = _temp6; // 3. Let T be Type(oldValue).
-
-    const T = TypeForMethod(oldValue); // 4. Return ! T::unaryMinus(oldValue).
-
-    let _temp7 = T.unaryMinus(oldValue);
-
-    Assert(!(_temp7 instanceof AbruptCompletion), "T.unaryMinus(oldValue)" + ' returned an abrupt completion');
-
-    if (_temp7 instanceof Completion) {
-      _temp7 = _temp7.Value;
-    }
-
-    return _temp7;
-  } // #sec-bitwise-not-operator-runtime-semantics-evaluation
-  //   UnaryExpression : `~` UnaryExpression
-
-
-  Evaluate_UnaryExpression_Minus.section = 'https://tc39.es/ecma262/#sec-unary-minus-operator-runtime-semantics-evaluation';
-
-  function* Evaluate_UnaryExpression_Tilde({
-    UnaryExpression
-  }) {
-    // 1. Let expr be the result of evaluating UnaryExpression.
-    const expr = yield* Evaluate(UnaryExpression); // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
-
-    let _temp11 = GetValue(expr);
-
-    if (_temp11 instanceof AbruptCompletion) {
-      return _temp11;
-    }
-
-    if (_temp11 instanceof Completion) {
-      _temp11 = _temp11.Value;
-    }
-
-    let _temp9 = ToNumeric(_temp11);
-
-    if (_temp9 instanceof AbruptCompletion) {
-      return _temp9;
-    }
-
-    if (_temp9 instanceof Completion) {
-      _temp9 = _temp9.Value;
-    }
-
-    const oldValue = _temp9; // 3. Let T be Type(oldValue).
-
-    const T = TypeForMethod(oldValue); // 4. Return ! T::bitwiseNOT(oldValue).
-
-    let _temp10 = T.bitwiseNOT(oldValue);
-
-    Assert(!(_temp10 instanceof AbruptCompletion), "T.bitwiseNOT(oldValue)" + ' returned an abrupt completion');
-
-    if (_temp10 instanceof Completion) {
-      _temp10 = _temp10.Value;
-    }
-
-    return _temp10;
-  } // #sec-logical-not-operator-runtime-semantics-evaluation
-  //   UnaryExpression : `!` UnaryExpression
-
-
-  Evaluate_UnaryExpression_Tilde.section = 'https://tc39.es/ecma262/#sec-bitwise-not-operator-runtime-semantics-evaluation';
-
-  function* Evaluate_UnaryExpression_Bang({
-    UnaryExpression
-  }) {
-    // 1. Let expr be the result of evaluating UnaryExpression.
-    const expr = yield* Evaluate(UnaryExpression); // 2. Let oldValue be ! ToBoolean(? GetValue(expr)).
-
-    let _temp12 = GetValue(expr);
-
-    if (_temp12 instanceof AbruptCompletion) {
-      return _temp12;
-    }
-
-    if (_temp12 instanceof Completion) {
-      _temp12 = _temp12.Value;
-    }
-
-    const oldValue = ToBoolean(_temp12); // 3. If oldValue is true, return false.
-
-    if (oldValue === Value.true) {
-      return Value.false;
-    } // 4. Return true.
-
-
-    return Value.true;
-  } // UnaryExpression :
-  //  `delete` UnaryExpression
-  //  `void` UnaryExpression
-  //  `typeof` UnaryExpression
-  //  `+` UnaryExpression
-  //  `-` UnaryExpression
-  //  `~` UnaryExpression
-  //  `!` UnaryExpression
-
-
-  Evaluate_UnaryExpression_Bang.section = 'https://tc39.es/ecma262/#sec-logical-not-operator-runtime-semantics-evaluation';
-  function* Evaluate_UnaryExpression(UnaryExpression) {
-    switch (UnaryExpression.operator) {
-      case 'delete':
-        return yield* Evaluate_UnaryExpression_Delete(UnaryExpression);
-
-      case 'void':
-        return yield* Evaluate_UnaryExpression_Void(UnaryExpression);
-
-      case 'typeof':
-        return yield* Evaluate_UnaryExpression_Typeof(UnaryExpression);
-
-      case '+':
-        return yield* Evaluate_UnaryExpression_Plus(UnaryExpression);
-
-      case '-':
-        return yield* Evaluate_UnaryExpression_Minus(UnaryExpression);
-
-      case '~':
-        return yield* Evaluate_UnaryExpression_Tilde(UnaryExpression);
-
-      case '!':
-        return yield* Evaluate_UnaryExpression_Bang(UnaryExpression);
-
-      /*c8 ignore next*/
-      default:
-        throw new OutOfRange('Evaluate_UnaryExpression', UnaryExpression);
-    }
-  }
-
-  //   EqualityExpression :
-  //     EqualityExpression `==` RelationalExpression
-  //     EqualityExpression `!=` RelationalExpression
-  //     EqualityExpression `===` RelationalExpression
-  //     EqualityExpression `!==` RelationalExpression
-
-  function* Evaluate_EqualityExpression({
-    EqualityExpression,
-    operator,
-    RelationalExpression
-  }) {
-    // 1. Let lref be the result of evaluating EqualityExpression.
-    const lref = yield* Evaluate(EqualityExpression); // 2. Let lval be ? GetValue(lref).
-
-    let _temp = GetValue(lref);
-    /* c8 ignore if */
-
-
-    if (_temp instanceof AbruptCompletion) {
-      return _temp;
-    }
-    /* c8 ignore if */
-
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    const lval = _temp; // 3. Let rref be the result of evaluating RelationalExpression.
-
-    const rref = yield* Evaluate(RelationalExpression); // 4. Let rval be ? GetValue(rref).
-
-    let _temp2 = GetValue(rref);
-
-    if (_temp2 instanceof AbruptCompletion) {
-      return _temp2;
-    }
-
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
-    }
-
-    const rval = _temp2;
-
-    switch (operator) {
-      case '==':
-        // 5. Return the result of performing Abstract Equality Comparison rval == lval.
-        return AbstractEqualityComparison(rval, lval);
-
-      case '!=':
-        {
-          // 5. Let r be the result of performing Abstract Equality Comparison rval == lval.
-          let r = AbstractEqualityComparison(rval, lval); // 6. ReturnIfAbrupt(r).
-
-          /* c8 ignore if */
-          if (r instanceof AbruptCompletion) {
-            return r;
-          }
-          /* c8 ignore if */
-
-
-          if (r instanceof Completion) {
-            r = r.Value;
-          }
-
-          if (r === Value.true) {
-            return Value.false;
-          } else {
-            return Value.true;
-          }
-        }
-
-      case '===':
-        // 5. Return the result of performing Strict Equality Comparison rval === lval.
-        return StrictEqualityComparison(rval, lval);
-
-      case '!==':
-        {
-          let _temp3 = StrictEqualityComparison(rval, lval);
-
-          Assert(!(_temp3 instanceof AbruptCompletion), "StrictEqualityComparison(rval, lval)" + ' returned an abrupt completion');
-          /* c8 ignore if */
-
-          if (_temp3 instanceof Completion) {
-            _temp3 = _temp3.Value;
-          }
-
-          // 5. Let r be the result of performing Strict Equality Comparison rval === lval.
-          // 6. Assert: r is a normal completion.
-          const r = _temp3; // 7. If r.[[Value]] is true, return false. Otherwise, return true.
-
-          if (r === Value.true) {
-            return Value.false;
-          } else {
-            return Value.true;
-          }
-        }
-
-      /*c8 ignore next*/
-      default:
-        throw new OutOfRange('Evaluate_EqualityExpression', operator);
-    }
-  }
-
-  //   LogicalANDExpression :
-  //     LogicalANDExpression `&&` BitwiseORExpression
-
-  function* Evaluate_LogicalANDExpression({
-    LogicalANDExpression,
-    BitwiseORExpression
-  }) {
-    // 1. Let lref be the result of evaluating LogicalANDExpression.
-    const lref = yield* Evaluate(LogicalANDExpression); // 2. Let lval be ? GetValue(lref).
-
-    let _temp = GetValue(lref);
-    /* c8 ignore if */
-
-
-    if (_temp instanceof AbruptCompletion) {
-      return _temp;
-    }
-    /* c8 ignore if */
-
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    const lval = _temp; // 3. Let lbool be ! ToBoolean(lval).
-
-    let _temp2 = ToBoolean(lval);
-
-    Assert(!(_temp2 instanceof AbruptCompletion), "ToBoolean(lval)" + ' returned an abrupt completion');
-    /* c8 ignore if */
-
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
-    }
-
-    const lbool = _temp2; // 4. If lbool is false, return lval.
-
-    if (lbool === Value.false) {
-      return lval;
-    } // 5. Let rref be the result of evaluating BitwiseORExpression.
-
-
-    const rref = yield* Evaluate(BitwiseORExpression); // 6. Return ? GetValue(rref).
-
-    return GetValue(rref);
-  }
-
-  //   LogicalORExpression :
-  //     LogicalORExpression `||` LogicalANDExpression
-
-  function* Evaluate_LogicalORExpression({
-    LogicalORExpression,
-    LogicalANDExpression
-  }) {
-    // 1. Let lref be the result of evaluating LogicalORExpression.
-    const lref = yield* Evaluate(LogicalORExpression); // 2. Let lval be ? GetValue(lref).
-
-    let _temp = GetValue(lref);
-    /* c8 ignore if */
-
-
-    if (_temp instanceof AbruptCompletion) {
-      return _temp;
-    }
-    /* c8 ignore if */
-
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    const lval = _temp; // 3. Let lbool be ! ToBoolean(lval).
-
-    let _temp2 = ToBoolean(lval);
-
-    Assert(!(_temp2 instanceof AbruptCompletion), "ToBoolean(lval)" + ' returned an abrupt completion');
-    /* c8 ignore if */
-
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
-    }
-
-    const lbool = _temp2; // 4. If lbool is false, return lval.
-
-    if (lbool === Value.true) {
-      return lval;
-    } // 5. Let rref be the result of evaluating LogicalANDExpression.
-
-
-    const rref = yield* Evaluate(LogicalANDExpression); // 6. Return ? GetValue(rref).
-
-    return GetValue(rref);
-  }
-
-  function* EvaluateNew(constructExpr, args) {
-    // 1. Assert: constructExpr is either a NewExpression or a MemberExpression.
-    // 2. Assert: arguments is either empty or an Arguments.
-    Assert(args === undefined || Array.isArray(args), "args === undefined || Array.isArray(args)"); // 3. Let ref be the result of evaluating constructExpr.
-
-    const ref = yield* Evaluate(constructExpr); // 4. Let constructor be ? GetValue(ref).
-
-    let _temp = GetValue(ref);
-    /* c8 ignore if */
-
-
-    if (_temp instanceof AbruptCompletion) {
-      return _temp;
-    }
-    /* c8 ignore if */
-
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    const constructor = _temp;
-    let argList; // 5. If arguments is empty, let argList be a new empty List.
-
-    if (args === undefined) {
-      argList = [];
-    } else {
-      let _temp2 = yield* ArgumentListEvaluation(args);
-
-      if (_temp2 instanceof AbruptCompletion) {
-        return _temp2;
-      }
-
-      if (_temp2 instanceof Completion) {
-        _temp2 = _temp2.Value;
-      }
-
-      // 6. Else,
-      // a. Let argList be ? ArgumentListEvaluation of arguments.
-      argList = _temp2;
-    } // 7. If IsConstructor(constructor) is false, throw a TypeError exception.
-
-
-    if (IsConstructor(constructor) === Value.false) {
-      return exports.surroundingAgent.Throw('TypeError', 'NotAConstructor', constructor);
-    } // 8. Return ? Construct(constructor, argList).
-
-
-    return Construct(constructor, argList);
-  } // #sec-new-operator-runtime-semantics-evaluation
-  //   NewExpression :
-  //     `new` NewExpression
-  //     `new` MemberExpression Arguments
-
-
-  EvaluateNew.section = 'https://tc39.es/ecma262/#sec-evaluatenew';
-  function* Evaluate_NewExpression({
-    MemberExpression,
-    Arguments
-  }) {
-    if (!Arguments) {
-      // 1. Return ? EvaluateNew(NewExpression, empty).
-      return yield* EvaluateNew(MemberExpression, undefined);
-    } else {
-      // 1. Return ? EvaluateNew(MemberExpression, Arguments).
-      return yield* EvaluateNew(MemberExpression, Arguments);
-    }
-  }
-
-  //  ShiftExpression :
-  //    ShiftExpression `<<` AdditiveExpression
-  // #sec-signed-right-shift-operator-runtime-semantics-evaluation
-  //  ShiftExpression :
-  //    ShiftExpression `>>` AdditiveExpression
-  // #sec-unsigned-right-shift-operator-runtime-semantics-evaluation
-  //  ShiftExpression :
-  //    ShiftExpression `>>>` AdditiveExpression
-
-  function* Evaluate_ShiftExpression({
-    ShiftExpression,
-    operator,
-    AdditiveExpression
-  }) {
-    return yield* EvaluateStringOrNumericBinaryExpression(ShiftExpression, operator, AdditiveExpression);
-  }
-
-  // SuperCall : `super` Arguments
-
-  function* Evaluate_SuperCall({
-    Arguments
-  }) {
-    // 1. Let newTarget be GetNewTarget().
-    const newTarget = GetNewTarget(); // 2. Assert: Type(newTarget) is Object.
-
-    Assert(Type(newTarget) === 'Object', "Type(newTarget) === 'Object'"); // 3. Let func be ! GetSuperConstructor().
-
-    let _temp = GetSuperConstructor();
-
-    Assert(!(_temp instanceof AbruptCompletion), "GetSuperConstructor()" + ' returned an abrupt completion');
-    /* c8 ignore if */
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    const func = _temp; // 4. Let argList be ? ArgumentListEvaluation of Arguments.
-
-    let _temp2 = yield* ArgumentListEvaluation(Arguments);
-    /* c8 ignore if */
-
-
-    if (_temp2 instanceof AbruptCompletion) {
-      return _temp2;
-    }
-    /* c8 ignore if */
-
-
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
-    }
-
-    const argList = _temp2; // 5. If IsConstructor(func) is false, throw a TypeError exception.
-
-    if (IsConstructor(func) === Value.false) {
-      return exports.surroundingAgent.Throw('TypeError', 'NotAConstructor', func);
-    } // 6. Let result be ? Construct(func, argList, newTarget).
-
-
-    let _temp3 = Construct(func, argList, newTarget);
-
-    if (_temp3 instanceof AbruptCompletion) {
-      return _temp3;
-    }
-
-    if (_temp3 instanceof Completion) {
-      _temp3 = _temp3.Value;
-    }
-
-    const result = _temp3; // 7. Let thisER be GetThisEnvironment().
-
-    const thisER = GetThisEnvironment(); // 8. Return ? thisER.BindThisValue(result).
-
-    return thisER.BindThisValue(result);
-  } // #sec-getsuperconstructor
-
-  function GetSuperConstructor() {
-    // 1. Let envRec be GetThisEnvironment().
-    const envRec = GetThisEnvironment(); // 2. Assert: envRec is a function Environment Record.
-
-    Assert(envRec instanceof FunctionEnvironmentRecord, "envRec instanceof FunctionEnvironmentRecord"); // 3. Let activeFunction be envRec.[[FunctionObject]].
-
-    const activeFunction = envRec.FunctionObject; // 4. Assert: activeFunction is an ECMAScript function object.
-
-    Assert(isECMAScriptFunctionObject(activeFunction), "isECMAScriptFunctionObject(activeFunction)"); // 5. Let superConstructor be ! activeFunction.[[GetPrototypeOf]]().
-
-    let _temp4 = activeFunction.GetPrototypeOf();
-
-    Assert(!(_temp4 instanceof AbruptCompletion), "activeFunction.GetPrototypeOf()" + ' returned an abrupt completion');
-
-    if (_temp4 instanceof Completion) {
-      _temp4 = _temp4.Value;
-    }
-
-    const superConstructor = _temp4; // 6. Return superConstructor.
-
-    return superConstructor;
-  }
-
-  GetSuperConstructor.section = 'https://tc39.es/ecma262/#sec-getsuperconstructor';
-
-  function MakeSuperPropertyReference(actualThis, propertyKey, strict) {
-    // 1. Let env be GetThisEnvironment().
-    const env = GetThisEnvironment(); // 2. Assert: env.HasSuperBinding() is true.
-
-    Assert(env.HasSuperBinding() === Value.true, "env.HasSuperBinding() === Value.true"); // 3. Let baseValue be ? env.GetSuperBase().
-
-    let _temp = env.GetSuperBase();
-    /* c8 ignore if */
-
-
-    if (_temp instanceof AbruptCompletion) {
-      return _temp;
-    }
-    /* c8 ignore if */
-
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    const baseValue = _temp; // 4. Let bv be ? RequireObjectCoercible(baseValue).
-
-    let _temp2 = RequireObjectCoercible(baseValue);
-
-    if (_temp2 instanceof AbruptCompletion) {
-      return _temp2;
-    }
-
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
-    }
-
-    const bv = _temp2; // 5. Return a value of type Reference that is a Super Reference whose base value component is bv,
-    //    whose referenced name component is propertyKey, whose thisValue component is actualThis, and
-    //    whose strict reference flag is strict.
-
-    return new SuperReference({
-      BaseValue: bv,
-      ReferencedName: propertyKey,
-      thisValue: actualThis,
-      StrictReference: strict ? Value.true : Value.false
-    });
-  } // #sec-super-keyword-runtime-semantics-evaluation
-  //  SuperProperty :
-  //    `super` `[` Expression `]`
-  //    `super` `.` IdentifierName
-
-
-  MakeSuperPropertyReference.section = 'https://tc39.es/ecma262/#sec-makesuperpropertyreference';
-  function* Evaluate_SuperProperty({
-    Expression,
-    IdentifierName,
-    strict
-  }) {
-    // 1. Let env be GetThisEnvironment().
-    const env = GetThisEnvironment(); // 2. Let actualThis be ? env.GetThisBinding().
-
-    let _temp3 = env.GetThisBinding();
-
-    if (_temp3 instanceof AbruptCompletion) {
-      return _temp3;
-    }
-
-    if (_temp3 instanceof Completion) {
-      _temp3 = _temp3.Value;
-    }
-
-    const actualThis = _temp3;
-
-    if (Expression) {
-      // 3. Let propertyNameReference be the result of evaluating Expression.
-      const propertyNameReference = yield* Evaluate(Expression); // 4. Let propertyNameReference be the result of evaluating Expression.
-
-      let _temp4 = GetValue(propertyNameReference);
-
-      if (_temp4 instanceof AbruptCompletion) {
-        return _temp4;
-      }
-
-      if (_temp4 instanceof Completion) {
-        _temp4 = _temp4.Value;
-      }
-
-      const propertyNameValue = _temp4; // 5. Let propertyNameValue be ? GetValue(propertyNameReference).
-
-      let _temp5 = ToPropertyKey(propertyNameValue);
-
-      if (_temp5 instanceof AbruptCompletion) {
-        return _temp5;
-      }
-
-      if (_temp5 instanceof Completion) {
-        _temp5 = _temp5.Value;
-      }
-
-      const propertyKey = _temp5; // 6. If the code matched by this SuperProperty is strict mode code, let strict be true; else let strict be false.
-      // 7. Return ? MakeSuperPropertyReference(actualThis, propertyKey, strict).
-
-      return MakeSuperPropertyReference(actualThis, propertyKey, strict);
-    } else {
-      // 3. Let propertyKey be StringValue of IdentifierName.
-      const propertyKey = StringValue(IdentifierName); // 4. const strict = SuperProperty.strict;
-      // 5. Return ? MakeSuperPropertyReference(actualThis, propertyKey, strict).
-
-      return MakeSuperPropertyReference(actualThis, propertyKey, strict);
-    }
-  }
-
-  function InitializeBoundName(name, value, environment) {
-    // 1. Assert: Either Type(name) is String or name is ~default~.
-    Assert(name === 'default' || Type(name) === 'String', "name === 'default' || Type(name) === 'String'"); // 2. If environment is not undefined, then
-
-    if (environment !== Value.undefined) {
-      // a. Perform environment.InitializeBinding(name, value).
-      environment.InitializeBinding(name, value); // b. Return NormalCompletion(undefined).
-
-      return NormalCompletion(Value.undefined);
-    } else {
-      // a. Let lhs be ResolveBinding(name).
-      const lhs = ResolveBinding(name, undefined, false); // b. Return ? PutValue(lhs, value).
-
-      return PutValue(lhs, value);
-    }
-  } // ObjectBindingPattern :
-  //   `{` `}`
-  //   `{` BindingPropertyList `}`
-  //   `{` BindingRestProperty `}`
-  //   `{` BindingPropertyList `,` BindingRestProperty `}`
-
-  function* BindingInitialization_ObjectBindingPattern({
-    BindingPropertyList,
-    BindingRestProperty
-  }, value, environment) {
-    let _temp = yield* PropertyBindingInitialization(BindingPropertyList, value, environment);
-    /* c8 ignore if */
-
-
-    if (_temp instanceof AbruptCompletion) {
-      return _temp;
-    }
-    /* c8 ignore if */
-
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    // 1. Perform ? PropertyBindingInitialization for BindingPropertyList using value and environment as the arguments.
-    const excludedNames = _temp;
-
-    if (BindingRestProperty) {
-      let _temp2 = RestBindingInitialization(BindingRestProperty, value, environment, excludedNames);
-
-      if (_temp2 instanceof AbruptCompletion) {
-        return _temp2;
-      }
-
-      if (_temp2 instanceof Completion) {
-        _temp2 = _temp2.Value;
-      }
-    } // 2. Return NormalCompletion(empty).
-
-
-    return NormalCompletion(undefined);
-  }
-
-  function* BindingInitialization(node, value, environment) {
-    switch (node.type) {
-      case 'ForBinding':
-        if (node.BindingIdentifier) {
-          return yield* BindingInitialization(node.BindingIdentifier, value, environment);
-        }
-
-        return yield* BindingInitialization(node.BindingPattern, value, environment);
-
-      case 'ForDeclaration':
-        return yield* BindingInitialization(node.ForBinding, value, environment);
-
-      case 'BindingIdentifier':
-        {
-          // 1. Let name be StringValue of Identifier.
-          const name = StringValue(node); // 2. Return ? InitializeBoundName(name, value, environment).
-
-          return InitializeBoundName(name, value, environment);
-        }
-
-      case 'ObjectBindingPattern':
-        {
-          let _temp3 = RequireObjectCoercible(value);
-
-          if (_temp3 instanceof AbruptCompletion) {
-            return _temp3;
-          }
-
-          if (_temp3 instanceof Completion) {
-            _temp3 = _temp3.Value;
-          }
-
-          return yield* BindingInitialization_ObjectBindingPattern(node, value, environment);
-        }
-
-      case 'ArrayBindingPattern':
-        {
-          let _temp4 = GetIterator(value);
-
-          if (_temp4 instanceof AbruptCompletion) {
-            return _temp4;
-          }
-
-          if (_temp4 instanceof Completion) {
-            _temp4 = _temp4.Value;
-          }
-
-          // 1. Let iteratorRecord be ? GetIterator(value).
-          const iteratorRecord = _temp4; // 2. Let result be IteratorBindingInitialization of ArrayBindingPattern with arguments iteratorRecord and environment.
-
-          const result = yield* IteratorBindingInitialization_ArrayBindingPattern(node, iteratorRecord, environment); // 3. If iteratorRecord.[[Done]] is false, return ? IteratorClose(iteratorRecord, result).
-
-          if (iteratorRecord.Done === Value.false) {
-            return IteratorClose(iteratorRecord, result);
-          } // 4. Return result.
-
-
-          return result;
-        }
-
-      /*c8 ignore next*/
-      default:
-        throw new OutOfRange('BindingInitialization', node);
-    }
-  }
-
-  //   AsyncFunctionExpression :
-  //     `async` `function` `(` FormalParameters `)` `{` AsyncFunctionBody `}`
-  //     `async` `function` BindingIdentifier `(` FormalParameters `)` `{` AsyncFunctionBody `}`
-
-  function* Evaluate_AsyncFunctionExpression(AsyncFunctionExpression) {
-    const {
-      BindingIdentifier,
-      FormalParameters,
-      AsyncFunctionBody
-    } = AsyncFunctionExpression;
-
-    if (!BindingIdentifier) {
-      // 1. Return the result of performing NamedEvaluation for this AsyncFunctionExpression with argument "".
-      return yield* NamedEvaluation(AsyncFunctionExpression, new Value(''));
-    } // 1. Let scope be the LexicalEnvironment of the running execution context.
-
-
-    const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let funcEnv be ! NewDeclarativeEnvironment(scope).
-
-    let _temp = NewDeclarativeEnvironment(scope);
-
-    Assert(!(_temp instanceof AbruptCompletion), "NewDeclarativeEnvironment(scope)" + ' returned an abrupt completion');
-    /* c8 ignore if */
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    const funcEnv = _temp; // 3. Let name be StringValue of BindingIdentifier.
-
-    const name = StringValue(BindingIdentifier); // 4. Perform ! funcEnv.CreateImmutableBinding(name, false).
-
-    let _temp2 = funcEnv.CreateImmutableBinding(name, Value.false);
-
-    Assert(!(_temp2 instanceof AbruptCompletion), "funcEnv.CreateImmutableBinding(name, Value.false)" + ' returned an abrupt completion');
-
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
-    }
-
-    const sourceText = sourceTextMatchedBy(AsyncFunctionExpression); // 6. Let closure be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, FormalParameters, AsyncFunctionBody, non-lexical-this, funcEnv).
-
-    let _temp3 = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, FormalParameters, AsyncFunctionBody, 'non-lexical-this', funcEnv);
-
-    Assert(!(_temp3 instanceof AbruptCompletion), "OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, FormalParameters, AsyncFunctionBody, 'non-lexical-this', funcEnv)" + ' returned an abrupt completion');
-
-    if (_temp3 instanceof Completion) {
-      _temp3 = _temp3.Value;
-    }
-
-    const closure = _temp3; // 7. Perform ! SetFunctionName(closure, name).
-
-    let _temp4 = SetFunctionName(closure, name);
-
-    Assert(!(_temp4 instanceof AbruptCompletion), "SetFunctionName(closure, name)" + ' returned an abrupt completion');
-
-    if (_temp4 instanceof Completion) {
-      _temp4 = _temp4.Value;
-    }
-
-    let _temp5 = funcEnv.InitializeBinding(name, closure);
-
-    Assert(!(_temp5 instanceof AbruptCompletion), "funcEnv.InitializeBinding(name, closure)" + ' returned an abrupt completion');
-
-    if (_temp5 instanceof Completion) {
-      _temp5 = _temp5.Value;
-    }
-
-    return closure;
-  }
-
-  function InstanceofOperator(V, target) {
-    // 1. If Type(target) is not Object, throw a TypeError exception.
-    if (Type(target) !== 'Object') {
-      return exports.surroundingAgent.Throw('TypeError', 'NotAnObject', target);
-    } // 2. Let instOfHandler be ? GetMethod(target, @@hasInstance).
-
-
-    let _temp = GetMethod(target, wellKnownSymbols.hasInstance);
-    /* c8 ignore if */
-
-
-    if (_temp instanceof AbruptCompletion) {
-      return _temp;
-    }
-    /* c8 ignore if */
-
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    const instOfHandler = _temp; // 3. If instOfHandler is not undefined, then
-
-    if (instOfHandler !== Value.undefined) {
-      let _temp3 = Call(instOfHandler, target, [V]);
-
-      if (_temp3 instanceof AbruptCompletion) {
-        return _temp3;
-      }
-
-      if (_temp3 instanceof Completion) {
-        _temp3 = _temp3.Value;
-      }
-
-      let _temp2 = ToBoolean(_temp3);
-
-      Assert(!(_temp2 instanceof AbruptCompletion), "ToBoolean(Q(Call(instOfHandler, target, [V])))" + ' returned an abrupt completion');
-      /* c8 ignore if */
-
-      if (_temp2 instanceof Completion) {
-        _temp2 = _temp2.Value;
-      }
-
-      // a. Return ! ToBoolean(? Call(instOfHandler, target, « V »)).
-      return _temp2;
-    } // 4. If IsCallable(target) is false, throw a TypeError exception.
-
-
-    if (IsCallable(target) === Value.false) {
-      return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', target);
-    } // 5. Return ? OrdinaryHasInstance(target, V).
-
-
-    return OrdinaryHasInstance(target, V);
-  } // #sec-relational-operators-runtime-semantics-evaluation
-  //   RelationalExpression :
-  //     RelationalExpression `<` ShiftExpression
-  //     RelationalExpression `>` ShiftExpression
-  //     RelationalExpression `<=` ShiftExpression
-  //     RelationalExpression `>=` ShiftExpression
-  //     RelationalExpression `instanceof` ShiftExpression
-  //     RelationalExpression `in` ShiftExpression
-
-  function* Evaluate_RelationalExpression({
-    RelationalExpression,
-    operator,
-    ShiftExpression
-  }) {
-    // 1. Let lref be the result of evaluating RelationalExpression.
-    const lref = yield* Evaluate(RelationalExpression); // 2. Let lval be ? GetValue(lref).
-
-    let _temp4 = GetValue(lref);
-
-    if (_temp4 instanceof AbruptCompletion) {
-      return _temp4;
-    }
-
-    if (_temp4 instanceof Completion) {
-      _temp4 = _temp4.Value;
-    }
-
-    const lval = _temp4; // 3. Let rref be the result of evaluating ShiftExpression.
-
-    const rref = yield* Evaluate(ShiftExpression); // 4. Let rval be ? GetValue(rref).
-
-    let _temp5 = GetValue(rref);
-
-    if (_temp5 instanceof AbruptCompletion) {
-      return _temp5;
-    }
-
-    if (_temp5 instanceof Completion) {
-      _temp5 = _temp5.Value;
-    }
-
-    const rval = _temp5;
-
-    switch (operator) {
-      case '<':
-        {
-          // 5. Let r be the result of performing Abstract Relational Comparison lval < rval.
-          let r = AbstractRelationalComparison(lval, rval); // 6. ReturnIfAbrupt(r).
-
-          /* c8 ignore if */
-          if (r instanceof AbruptCompletion) {
-            return r;
-          }
-          /* c8 ignore if */
-
-
-          if (r instanceof Completion) {
-            r = r.Value;
-          }
-
-          if (r === Value.undefined) {
-            return Value.false;
-          }
-
-          return r;
-        }
-
-      case '>':
-        {
-          // 5. Let r be the result of performing Abstract Relational Comparison rval < lval with LeftFirst equal to false.
-          let r = AbstractRelationalComparison(rval, lval, false); // 6. ReturnIfAbrupt(r).
-
-          if (r instanceof AbruptCompletion) {
-            return r;
-          }
-
-          if (r instanceof Completion) {
-            r = r.Value;
-          }
-
-          if (r === Value.undefined) {
-            return Value.false;
-          }
-
-          return r;
-        }
-
-      case '<=':
-        {
-          // 5. Let r be the result of performing Abstract Relational Comparison rval < lval with LeftFirst equal to false.
-          let r = AbstractRelationalComparison(rval, lval, false); // 6. ReturnIfAbrupt(r).
-
-          if (r instanceof AbruptCompletion) {
-            return r;
-          }
-
-          if (r instanceof Completion) {
-            r = r.Value;
-          }
-
-          if (r === Value.true || r === Value.undefined) {
-            return Value.false;
-          }
-
-          return Value.true;
-        }
-
-      case '>=':
-        {
-          // 5. Let r be the result of performing Abstract Relational Comparison lval < rval.
-          let r = AbstractRelationalComparison(lval, rval); // 6. ReturnIfAbrupt(r).
-
-          if (r instanceof AbruptCompletion) {
-            return r;
-          }
-
-          if (r instanceof Completion) {
-            r = r.Value;
-          }
-
-          if (r === Value.true || r === Value.undefined) {
-            return Value.false;
-          }
-
-          return Value.true;
-        }
-
-      case 'instanceof':
-        // 5. Return ? InstanceofOperator(lval, rval).
-        return InstanceofOperator(lval, rval);
-
-      case 'in':
-        // 5. Return ? InstanceofOperator(lval, rval).
-        if (Type(rval) !== 'Object') {
-          return exports.surroundingAgent.Throw('TypeError', 'NotAnObject', rval);
-        } // 6. Return ? HasProperty(rval, ? ToPropertyKey(lval)).
-
-
-        return HasProperty(rval, ToPropertyKey(lval));
-
-      /*c8 ignore next*/
-      default:
-        throw new OutOfRange('Evaluate_RelationalExpression', operator);
-    }
-  }
-
-  //   BreakableStatement :
-  //     IterationStatement
-  //     SwitchStatement
-  //
-  //   IterationStatement :
-  //     (DoStatement)
-  //     (WhileStatement)
-
-  function Evaluate_BreakableStatement(BreakableStatement) {
-    // 1. Let newLabelSet be a new empty List.
-    const newLabelSet = new ValueSet(); // 2. Return the result of performing LabelledEvaluation of this BreakableStatement with argument newLabelSet.
-
-    return LabelledEvaluation(BreakableStatement, newLabelSet);
-  }
-
-  function assignProps(realmRec, obj, props) {
-    for (const item of props) {
-      if (item === undefined) {
-        continue;
-      }
-
-      const [n, v, len, descriptor] = item;
-      const name = n instanceof Value ? n : new Value(n);
-
-      if (Array.isArray(v)) {
-        // Every accessor property described in clauses 18 through 26 and in
-        // Annex B.2 has the attributes { [[Enumerable]]: false,
-        // [[Configurable]]: true } unless otherwise specified. If only a get
-        // accessor function is described, the set accessor function is the
-        // default value, undefined. If only a set accessor is described the get
-        // accessor is the default value, undefined.
-        let [getter = Value.undefined, setter = Value.undefined] = v;
-
-        if (typeof getter === 'function') {
-          getter = CreateBuiltinFunction(getter, [], realmRec);
-
-          let _temp = SetFunctionLength(getter, 0);
-
-          Assert(!(_temp instanceof AbruptCompletion), "SetFunctionLength(getter, 0)" + ' returned an abrupt completion');
-          /* c8 ignore if */
-
-          if (_temp instanceof Completion) {
-            _temp = _temp.Value;
-          }
-
-          let _temp2 = SetFunctionName(getter, name, new Value('get'));
-
-          Assert(!(_temp2 instanceof AbruptCompletion), "SetFunctionName(getter, name, new Value('get'))" + ' returned an abrupt completion');
-
-          if (_temp2 instanceof Completion) {
-            _temp2 = _temp2.Value;
-          }
-        }
-
-        if (typeof setter === 'function') {
-          setter = CreateBuiltinFunction(setter, [], realmRec);
-
-          let _temp3 = SetFunctionLength(setter, 1);
-
-          Assert(!(_temp3 instanceof AbruptCompletion), "SetFunctionLength(setter, 1)" + ' returned an abrupt completion');
-
-          if (_temp3 instanceof Completion) {
-            _temp3 = _temp3.Value;
-          }
-
-          let _temp4 = SetFunctionName(setter, name, new Value('set'));
-
-          Assert(!(_temp4 instanceof AbruptCompletion), "SetFunctionName(setter, name, new Value('set'))" + ' returned an abrupt completion');
-
-          if (_temp4 instanceof Completion) {
-            _temp4 = _temp4.Value;
-          }
-        }
-
-        let _temp5 = obj.DefineOwnProperty(name, Descriptor({
-          Get: getter,
-          Set: setter,
-          Enumerable: Value.false,
-          Configurable: Value.true,
-          ...descriptor
-        }));
-
-        Assert(!(_temp5 instanceof AbruptCompletion), "obj.DefineOwnProperty(name, Descriptor({\n        Get: getter,\n        Set: setter,\n        Enumerable: Value.false,\n        Configurable: Value.true,\n        ...descriptor,\n      }))" + ' returned an abrupt completion');
-
-        if (_temp5 instanceof Completion) {
-          _temp5 = _temp5.Value;
-        }
-      } else {
-        // Every other data property described in clauses 18 through 26 and in
-        // Annex B.2 has the attributes { [[Writable]]: true, [[Enumerable]]:
-        // false, [[Configurable]]: true } unless otherwise specified.
-        let value;
-
-        if (typeof v === 'function') {
-          Assert(typeof len === 'number', "typeof len === 'number'");
-          value = CreateBuiltinFunction(v, [], realmRec);
-
-          let _temp6 = SetFunctionLength(value, len);
-
-          Assert(!(_temp6 instanceof AbruptCompletion), "SetFunctionLength(value, len)" + ' returned an abrupt completion');
-
-          if (_temp6 instanceof Completion) {
-            _temp6 = _temp6.Value;
-          }
-
-          let _temp7 = SetFunctionName(value, name);
-
-          Assert(!(_temp7 instanceof AbruptCompletion), "SetFunctionName(value, name)" + ' returned an abrupt completion');
-
-          if (_temp7 instanceof Completion) {
-            _temp7 = _temp7.Value;
-          }
-        } else {
-          value = v;
-        }
-
-        obj.properties.set(name, Descriptor({
-          Value: value,
-          Writable: Value.true,
-          Enumerable: Value.false,
-          Configurable: Value.true,
-          ...descriptor
-        }));
-      }
-    }
-  }
-  function bootstrapPrototype(realmRec, props, Prototype, stringTag) {
-    Assert(Prototype !== undefined, "Prototype !== undefined");
-    const proto = OrdinaryObjectCreate(Prototype);
-    assignProps(realmRec, proto, props);
-
-    if (stringTag !== undefined) {
-      let _temp8 = proto.DefineOwnProperty(wellKnownSymbols.toStringTag, Descriptor({
-        Value: new Value(stringTag),
-        Writable: Value.false,
-        Enumerable: Value.false,
-        Configurable: Value.true
-      }));
-
-      Assert(!(_temp8 instanceof AbruptCompletion), "proto.DefineOwnProperty(wellKnownSymbols.toStringTag, Descriptor({\n      Value: new Value(stringTag),\n      Writable: Value.false,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    }))" + ' returned an abrupt completion');
-
-      if (_temp8 instanceof Completion) {
-        _temp8 = _temp8.Value;
-      }
-    }
-
-    return proto;
-  }
-  function bootstrapConstructor(realmRec, Constructor, name, length, Prototype, props = []) {
-    const cons = CreateBuiltinFunction(Constructor, [], realmRec, undefined, Value.true);
-    SetFunctionLength(cons, length);
-    SetFunctionName(cons, new Value(name));
-
-    let _temp9 = cons.DefineOwnProperty(new Value('prototype'), Descriptor({
-      Value: Prototype,
-      Writable: Value.false,
-      Enumerable: Value.false,
-      Configurable: Value.false
-    }));
-
-    Assert(!(_temp9 instanceof AbruptCompletion), "cons.DefineOwnProperty(new Value('prototype'), Descriptor({\n    Value: Prototype,\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
-
-    if (_temp9 instanceof Completion) {
-      _temp9 = _temp9.Value;
-    }
-
-    let _temp10 = Prototype.DefineOwnProperty(new Value('constructor'), Descriptor({
-      Value: cons,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true
-    }));
-
-    Assert(!(_temp10 instanceof AbruptCompletion), "Prototype.DefineOwnProperty(new Value('constructor'), Descriptor({\n    Value: cons,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
-
-    if (_temp10 instanceof Completion) {
-      _temp10 = _temp10.Value;
-    }
-    assignProps(realmRec, cons, props);
-    return cons;
-  }
-
-  function CreateForInIterator(object) {
-    // 1. Assert: Type(object) is Object.
-    Assert(Type(object) === 'Object', "Type(object) === 'Object'"); // 2. Let iterator be ObjectCreate(%ForInIteratorPrototype%, « [[Object]], [[ObjectWasVisited]], [[VisitedKeys]], [[RemainingKeys]] »).
-
-    const iterator = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%ForInIteratorPrototype%'), ['Object', 'ObjectWasVisited', 'VisitedKeys', 'RemainingKeys']); // 3. Set iterator.[[Object]] to object.
-
-    iterator.Object = object; // 4. Set iterator.[[ObjectWasVisited]] to false.
-
-    iterator.ObjectWasVisited = Value.false; // 5. Set iterator.[[VisitedKeys]] to a new empty List.
-
-    iterator.VisitedKeys = []; // 6. Set iterator.[[RemainingKeys]] to a new empty List.
-
-    iterator.RemainingKeys = []; // 7. Return iterator.
-
-    return iterator;
-  } // #sec-%foriniteratorprototype%.next
-
-  function ForInIteratorPrototype_next(args, {
-    thisValue
-  }) {
-    // 1. Let O be this value.
-    const O = thisValue; // 2. Assert: Type(O) is Object.
-
-    Assert(Type(O) === 'Object', "Type(O) === 'Object'"); // 3. Assert: O has all the internal slot sof a For-In Iterator Instance.
-
-    Assert('Object' in O && 'ObjectWasVisited' in O && 'VisitedKeys' in O && 'RemainingKeys in O', "'Object' in O && 'ObjectWasVisited' in O && 'VisitedKeys' in O && 'RemainingKeys in O'"); // 4. Let object be O.[[Object]].
-
-    let object = O.Object; // 5. Let visited be O.[[VisitedKeys]].
-
-    const visited = O.VisitedKeys; // 6. Let remaining be O.[[RemainingKeys]].
-
-    const remaining = O.RemainingKeys; // 7. Repeat,
-
-    while (true) {
-      // a. If O.[[ObjectWasVisited]] is false, then
-      if (O.ObjectWasVisited === Value.false) {
-        let _temp = object.OwnPropertyKeys();
-        /* c8 ignore if */
-
-
-        if (_temp instanceof AbruptCompletion) {
-          return _temp;
-        }
-        /* c8 ignore if */
-
-
-        if (_temp instanceof Completion) {
-          _temp = _temp.Value;
-        }
-
-        // i. Let keys be ? object.[[OwnPropertyKeys]]().
-        const keys = _temp; // ii. for each key of keys in List order, do
-
-        for (const key of keys) {
-          // 1. If Type(key) is String, then
-          if (Type(key) === 'String') {
-            // a. Append key to remaining.
-            remaining.push(key);
-          }
-        } // iii. Set O.ObjectWasVisited to true.
-
-
-        O.ObjectWasVisited = Value.true;
-      } // b. Repeat, while remaining is not empty,
-
-
-      while (remaining.length > 0) {
-        // i. Remove the first element from remaining and let r be the value of the element.
-        const r = remaining.shift(); // ii. If there does not exist an element v of visisted such that SameValue(r, v) is true, then
-
-        if (!visited.find(v => SameValue(r, v) === Value.true)) {
-          let _temp2 = object.GetOwnProperty(r);
-
-          if (_temp2 instanceof AbruptCompletion) {
-            return _temp2;
-          }
-
-          if (_temp2 instanceof Completion) {
-            _temp2 = _temp2.Value;
-          }
-
-          // 1. Let desc be ? object.[[GetOwnProperty]](r).
-          const desc = _temp2; // 2. If desc is not undefined, then,
-
-          if (desc !== Value.undefined) {
-            // a. Append r to visited.
-            visited.push(r); // b. If desc.[[Enumerable]] is true, return CreateIterResultObject(r, false).
-
-            if (desc.Enumerable === Value.true) {
-              return CreateIterResultObject(r, Value.false);
-            }
-          }
-        }
-      } // c. Set object to ? object.[[GetPrototypeOf]]().
-
-
-      let _temp3 = object.GetPrototypeOf();
-
-      if (_temp3 instanceof AbruptCompletion) {
-        return _temp3;
-      }
-
-      if (_temp3 instanceof Completion) {
-        _temp3 = _temp3.Value;
-      }
-
-      object = _temp3; // d. Set O.Object to object.
-
-      O.Object = object; // e. Set O.ObjectWasVisited to false.
-
-      O.ObjectWasVisited = Value.false; // f. If object is null, return CreateIterResultObject(undefined, true).
-
-      if (object === Value.null) {
-        return CreateIterResultObject(Value.undefined, Value.true);
-      }
-    }
-  }
-
-  ForInIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%foriniteratorprototype%.next';
-  function bootstrapForInIteratorPrototype(realmRec) {
-    const proto = bootstrapPrototype(realmRec, [['next', ForInIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%']);
-    realmRec.Intrinsics['%ForInIteratorPrototype%'] = proto;
-  }
-
-  function LoopContinues(completion, labelSet) {
-    // 1. If completion.[[Type]] is normal, return true.
-    if (completion.Type === 'normal') {
-      return Value.true;
-    } // 2. If completion.[[Type]] is not continue, return false.
-
-
-    if (completion.Type !== 'continue') {
-      return Value.false;
-    } // 3. If completion.[[Target]] is empty, return true.
-
-
-    if (completion.Target === undefined) {
-      return Value.true;
-    } // 4. If completion.[[Target]] is an element of labelSet, return true.
-
-
-    if (labelSet.has(completion.Target)) {
-      return Value.true;
-    } // 5. Return false.
-
-
-    return Value.false;
-  }
-
-  LoopContinues.section = 'https://tc39.es/ecma262/#sec-loopcontinues';
-  function LabelledEvaluation(node, labelSet) {
-    switch (node.type) {
-      case 'DoWhileStatement':
-      case 'WhileStatement':
-      case 'ForStatement':
-      case 'ForInStatement':
-      case 'ForOfStatement':
-      case 'ForAwaitStatement':
-      case 'SwitchStatement':
-        return LabelledEvaluation_BreakableStatement(node, labelSet);
-
-      case 'LabelledStatement':
-        return LabelledEvaluation_LabelledStatement(node, labelSet);
-
-      /*c8 ignore next*/
-      default:
-        throw new OutOfRange('LabelledEvaluation', node);
-    }
-  } // #sec-labelled-statements-runtime-semantics-labelledevaluation
-  //   LabelledStatement : LabelIdentifier `:` LabelledItem
-
-  function* LabelledEvaluation_LabelledStatement({
-    LabelIdentifier,
-    LabelledItem
-  }, labelSet) {
-    // 1. Let label be the StringValue of LabelIdentifier.
-    const label = StringValue(LabelIdentifier); // 2. Append label as an element of labelSet.
-
-    labelSet.add(label); // 3. Let stmtResult be LabelledEvaluation of LabelledItem with argument labelSet.
-
-    let stmtResult = EnsureCompletion(yield* LabelledEvaluation_LabelledItem(LabelledItem, labelSet)); // 4. If stmtResult.[[Type]] is break and SameValue(stmtResult.[[Target]], label) is true, then
-
-    if (stmtResult.Type === 'break' && SameValue(stmtResult.Target, label) === Value.true) {
-      // a. Set stmtResult to NormalCompletion(stmtResult.[[Value]]).
-      stmtResult = NormalCompletion(stmtResult.Value);
-    } // 5. Return Completion(stmtResult).
-
-
-    return Completion(stmtResult);
-  } // LabelledItem :
-  //   Statement
-  //   FunctionDeclaration
-
-
-  LabelledEvaluation_LabelledStatement.section = 'https://tc39.es/ecma262/#sec-labelled-statements-runtime-semantics-labelledevaluation';
-
-  function LabelledEvaluation_LabelledItem(LabelledItem, labelSet) {
-    switch (LabelledItem.type) {
-      case 'DoWhileStatement':
-      case 'WhileStatement':
-      case 'ForStatement':
-      case 'ForInStatement':
-      case 'ForOfStatement':
-      case 'SwitchStatement':
-      case 'LabelledStatement':
-        return LabelledEvaluation(LabelledItem, labelSet);
-
-      default:
-        return Evaluate(LabelledItem);
-    }
-  } // #sec-statement-semantics-runtime-semantics-labelledevaluation
-  //  BreakableStatement :
-  //    IterationStatement
-  //    SwitchStatement
-  //
-  //  IterationStatement :
-  //    (DoWhileStatement)
-  //    (WhileStatement)
-
-
-  function* LabelledEvaluation_BreakableStatement(BreakableStatement, labelSet) {
-    switch (BreakableStatement.type) {
-      case 'DoWhileStatement':
-      case 'WhileStatement':
-      case 'ForStatement':
-      case 'ForInStatement':
-      case 'ForOfStatement':
-      case 'ForAwaitStatement':
-        {
-          // 1. Let stmtResult be LabelledEvaluation of IterationStatement with argument labelSet.
-          let stmtResult = EnsureCompletion(yield* LabelledEvaluation_IterationStatement(BreakableStatement, labelSet)); // 2. If stmtResult.[[Type]] is break, then
-
-          if (stmtResult.Type === 'break') {
-            // a. If stmtResult.[[Target]] is empty, then
-            if (stmtResult.Target === undefined) {
-              // i. If stmtResult.[[Value]] is empty, set stmtResult to NormalCompletion(undefined).
-              if (stmtResult.Value === undefined) {
-                stmtResult = NormalCompletion(Value.undefined);
-              } else {
-                // ii. Else, set stmtResult to NormalCompletion(stmtResult.[[Value]]).
-                stmtResult = NormalCompletion(stmtResult.Value);
-              }
-            }
-          } // 3. Return Completion(stmtResult).
-
-
-          return Completion(stmtResult);
-        }
-
-      case 'SwitchStatement':
-        {
-          // 1. Let stmtResult be LabelledEvaluation of SwitchStatement.
-          let stmtResult = EnsureCompletion(yield* Evaluate_SwitchStatement(BreakableStatement)); // 2. If stmtResult.[[Type]] is break, then
-
-          if (stmtResult.Type === 'break') {
-            // a. If stmtResult.[[Target]] is empty, then
-            if (stmtResult.Target === undefined) {
-              // i. If stmtResult.[[Value]] is empty, set stmtResult to NormalCompletion(undefined).
-              if (stmtResult.Value === undefined) {
-                stmtResult = NormalCompletion(Value.undefined);
-              } else {
-                // ii. Else, set stmtResult to NormalCompletion(stmtResult.[[Value]]).
-                stmtResult = NormalCompletion(stmtResult.Value);
-              }
-            }
-          } // 3. Return Completion(stmtResult).
-
-
-          return Completion(stmtResult);
-        }
-
-      /*c8 ignore next*/
-      default:
-        throw new OutOfRange('LabelledEvaluation_BreakableStatement', BreakableStatement);
-    }
-  }
-
-  LabelledEvaluation_BreakableStatement.section = 'https://tc39.es/ecma262/#sec-statement-semantics-runtime-semantics-labelledevaluation';
-
-  function LabelledEvaluation_IterationStatement(IterationStatement, labelSet) {
-    switch (IterationStatement.type) {
-      case 'DoWhileStatement':
-        return LabelledEvaluation_IterationStatement_DoWhileStatement(IterationStatement, labelSet);
-
-      case 'WhileStatement':
-        return LabelledEvaluation_IterationStatement_WhileStatement(IterationStatement, labelSet);
-
-      case 'ForStatement':
-        return LabelledEvaluation_BreakableStatement_ForStatement(IterationStatement, labelSet);
-
-      case 'ForInStatement':
-        return LabelledEvaluation_IterationStatement_ForInStatement(IterationStatement, labelSet);
-
-      case 'ForOfStatement':
-        return LabelledEvaluation_IterationStatement_ForOfStatement(IterationStatement, labelSet);
-
-      case 'ForAwaitStatement':
-        return LabelledEvaluation_IterationStatement_ForAwaitStatement(IterationStatement, labelSet);
-
-      /*c8 ignore next*/
-      default:
-        throw new OutOfRange('LabelledEvaluation_IterationStatement', IterationStatement);
-    }
-  } // #sec-do-while-statement-runtime-semantics-labelledevaluation
-  //   IterationStatement :
-  //     `do` Statement `while` `(` Expression `)` `;`
-
-
-  function* LabelledEvaluation_IterationStatement_DoWhileStatement({
-    Statement,
-    Expression
-  }, labelSet) {
-    // 1. Let V be undefined.
-    let V = Value.undefined; // 2. Repeat,
-
-    while (true) {
-      // a. Let stmtResult be the result of evaluating Statement.
-      const stmtResult = EnsureCompletion(yield* Evaluate(Statement)); // b. If LoopContinues(stmtResult, labelSet) is false, return Completion(UpdateEmpty(stmtResult, V)).
-
-      if (LoopContinues(stmtResult, labelSet) === Value.false) {
-        return Completion(UpdateEmpty(stmtResult, V));
-      } // c. If stmtResult.[[Value]] is not empty, set V to stmtResult.[[Value]].
-
-
-      if (stmtResult.Value !== undefined) {
-        V = stmtResult.Value;
-      } // d. Let exprRef be the result of evaluating Expression.
-
-
-      const exprRef = yield* Evaluate(Expression); // e. Let exprValue be ? GetValue(exprRef).
-
-      let _temp = GetValue(exprRef);
-      /* c8 ignore if */
-
-
-      if (_temp instanceof AbruptCompletion) {
-        return _temp;
-      }
-      /* c8 ignore if */
-
-
-      if (_temp instanceof Completion) {
-        _temp = _temp.Value;
-      }
-
-      const exprValue = _temp; // f. If ! ToBoolean(exprValue) is false, return NormalCompletion(V).
-
-      let _temp2 = ToBoolean(exprValue);
-
-      Assert(!(_temp2 instanceof AbruptCompletion), "ToBoolean(exprValue)" + ' returned an abrupt completion');
-      /* c8 ignore if */
-
-      if (_temp2 instanceof Completion) {
-        _temp2 = _temp2.Value;
-      }
-
-      if (_temp2 === Value.false) {
-        return NormalCompletion(V);
-      }
-    }
-  } // #sec-while-statement-runtime-semantics-labelledevaluation
-  //   IterationStatement :
-  //     `while` `(` Expression `)` Statement
-
-
-  LabelledEvaluation_IterationStatement_DoWhileStatement.section = 'https://tc39.es/ecma262/#sec-do-while-statement-runtime-semantics-labelledevaluation';
-
-  function* LabelledEvaluation_IterationStatement_WhileStatement({
-    Expression,
-    Statement
-  }, labelSet) {
-    // 1. Let V be undefined.
-    let V = Value.undefined; // 2. Repeat,
-
-    while (true) {
-      // a. Let exprRef be the result of evaluating Expression.
-      const exprRef = yield* Evaluate(Expression); // b. Let exprValue be ? GetValue(exprRef).
-
-      let _temp3 = GetValue(exprRef);
-
-      if (_temp3 instanceof AbruptCompletion) {
-        return _temp3;
-      }
-
-      if (_temp3 instanceof Completion) {
-        _temp3 = _temp3.Value;
-      }
-
-      const exprValue = _temp3; // c. If ! ToBoolean(exprValue) is false, return NormalCompletion(V).
-
-      let _temp4 = ToBoolean(exprValue);
-
-      Assert(!(_temp4 instanceof AbruptCompletion), "ToBoolean(exprValue)" + ' returned an abrupt completion');
-
-      if (_temp4 instanceof Completion) {
-        _temp4 = _temp4.Value;
-      }
-
-      if (_temp4 === Value.false) {
-        return NormalCompletion(V);
-      } // d. Let stmtResult be the result of evaluating Statement.
-
-
-      const stmtResult = EnsureCompletion(yield* Evaluate(Statement)); // e. If LoopContinues(stmtResult, labelSet) is false, return Completion(UpdateEmpty(stmtResult, V)).
-
-      if (LoopContinues(stmtResult, labelSet) === Value.false) {
-        return Completion(UpdateEmpty(stmtResult, V));
-      } // f. If stmtResult.[[Value]] is not empty, set V to stmtResult.[[Value]].
-
-
-      if (stmtResult.Value !== undefined) {
-        V = stmtResult.Value;
-      }
-    }
-  } // #sec-for-statement-runtime-semantics-labelledevaluation
-  //   IterationStatement :
-  //     `for` `(` Expression? `;` Expression? `;` Expresssion? `)` Statement
-  //     `for` `(` `var` VariableDeclarationList `;` Expression? `;` Expression? `)` Statement
-  //     `for` `(` LexicalDeclaration Expression? `;` Expression? `)` Statement
-
-
-  LabelledEvaluation_IterationStatement_WhileStatement.section = 'https://tc39.es/ecma262/#sec-while-statement-runtime-semantics-labelledevaluation';
-
-  function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement, labelSet) {
-    const {
-      VariableDeclarationList,
-      LexicalDeclaration,
-      Expression_a,
-      Expression_b,
-      Expression_c,
-      Statement
-    } = ForStatement;
-
-    switch (true) {
-      case !!LexicalDeclaration:
-        {
-          // 1. Let oldEnv be the running execution context's LexicalEnvironment.
-          const oldEnv = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let loopEnv be NewDeclarativeEnvironment(oldEnv).
-
-          const loopEnv = NewDeclarativeEnvironment(oldEnv); // 3. Let isConst be IsConstantDeclaration of LexicalDeclaration.
-
-          const isConst = IsConstantDeclaration(LexicalDeclaration); // 4. Let boundNames be the BoundNames of LexicalDeclaration.
-
-          const boundNames = BoundNames(LexicalDeclaration); // 5. For each element dn of boundNames, do
-
-          for (const dn of boundNames) {
-            // a. If isConst is true, then
-            if (isConst) {
-              let _temp5 = loopEnv.CreateImmutableBinding(dn, Value.true);
-
-              Assert(!(_temp5 instanceof AbruptCompletion), "loopEnv.CreateImmutableBinding(dn, Value.true)" + ' returned an abrupt completion');
-
-              if (_temp5 instanceof Completion) {
-                _temp5 = _temp5.Value;
-              }
-            } else {
-              let _temp6 = loopEnv.CreateMutableBinding(dn, Value.false);
-
-              Assert(!(_temp6 instanceof AbruptCompletion), "loopEnv.CreateMutableBinding(dn, Value.false)" + ' returned an abrupt completion');
-
-              if (_temp6 instanceof Completion) {
-                _temp6 = _temp6.Value;
-              }
-            }
-          } // 6. Set the running execution context's LexicalEnvironment to loopEnv.
-
-
-          exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = loopEnv; // 7. Let forDcl be the result of evaluating LexicalDeclaration.
-
-          const forDcl = yield* Evaluate(LexicalDeclaration); // 8. If forDcl is an abrupt completion, then
-
-          if (forDcl instanceof AbruptCompletion) {
-            // a. Set the running execution context's LexicalEnvironment to oldEnv.
-            exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv; // b. Return Completion(forDcl).
-
-            return Completion(forDcl);
-          } // 9. If isConst is false, let perIterationLets be boundNames; otherwise let perIterationLets be « ».
-
-
-          let perIterationLets;
-
-          if (isConst === false) {
-            perIterationLets = boundNames;
-          } else {
-            perIterationLets = [];
-          } // 10. Let bodyResult be ForBodyEvaluation(the first Expression, the second Expression, Statement, perIterationLets, labelSet).
-
-
-          const bodyResult = yield* ForBodyEvaluation(Expression_a, Expression_b, Statement, perIterationLets, labelSet); // 11. Set the running execution context's LexicalEnvironment to oldEnv.
-
-          exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv; // 12. Return Completion(bodyResult).
-
-          return Completion(bodyResult);
-        }
-
-      case !!VariableDeclarationList:
-        {
-          // 1. Let varDcl be the result of evaluating VariableDeclarationList.
-          let varDcl = yield* Evaluate_VariableDeclarationList(VariableDeclarationList); // 2. ReturnIfAbrupt(varDcl).
-
-          /* c8 ignore if */
-          if (varDcl instanceof AbruptCompletion) {
-            return varDcl;
-          }
-          /* c8 ignore if */
-
-
-          if (varDcl instanceof Completion) {
-            varDcl = varDcl.Value;
-          }
-
-          return yield* ForBodyEvaluation(Expression_a, Expression_b, Statement, [], labelSet);
-        }
-
-      default:
-        {
-          // 1. If the first Expression is present, then
-          if (Expression_a) {
-            // a. Let exprRef be the result of evaluating the first Expression.
-            const exprRef = yield* Evaluate(Expression_a); // b. Perform ? GetValue(exprRef).
-
-            let _temp7 = GetValue(exprRef);
-
-            if (_temp7 instanceof AbruptCompletion) {
-              return _temp7;
-            }
-
-            if (_temp7 instanceof Completion) {
-              _temp7 = _temp7.Value;
-            }
-          } // 2. Return ? ForBodyEvaluation(the second Expression, the third Expression, Statement, « », labelSet).
-
-
-          return yield* ForBodyEvaluation(Expression_b, Expression_c, Statement, [], labelSet);
-        }
-    }
-  }
-
-  LabelledEvaluation_BreakableStatement_ForStatement.section = 'https://tc39.es/ecma262/#sec-for-statement-runtime-semantics-labelledevaluation';
-
-  function* LabelledEvaluation_IterationStatement_ForInStatement(ForInStatement, labelSet) {
-    const {
-      LeftHandSideExpression,
-      ForBinding,
-      ForDeclaration,
-      Expression,
-      Statement
-    } = ForInStatement;
-
-    switch (true) {
-      case !!LeftHandSideExpression && !!Expression:
-        {
-          let _temp8 = yield* ForInOfHeadEvaluation([], Expression, 'enumerate');
-
-          if (_temp8 instanceof AbruptCompletion) {
-            return _temp8;
-          }
-
-          if (_temp8 instanceof Completion) {
-            _temp8 = _temp8.Value;
-          }
-
-          // IterationStatement : `for` `(` LeftHandSideExpression `in` Expression `)` Statement
-          // 1. Let keyResult be ? ForIn/OfHeadEvaluation(« », Expression, enumerate).
-          const keyResult = _temp8; // 2. Return ? ForIn/OfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, enumerate, assignment, labelSet).
-
-          return yield* ForInOfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, 'enumerate', 'assignment', labelSet);
-        }
-
-      case !!ForBinding && !!Expression:
-        {
-          let _temp9 = yield* ForInOfHeadEvaluation([], Expression, 'enumerate');
-
-          if (_temp9 instanceof AbruptCompletion) {
-            return _temp9;
-          }
-
-          if (_temp9 instanceof Completion) {
-            _temp9 = _temp9.Value;
-          }
-
-          // IterationStatement :`for` `(` `var` ForBinding `in` Expression `)` Statement
-          // 1. Let keyResult be ? ForIn/OfHeadEvaluation(« », Expression, enumerate).
-          const keyResult = _temp9; // 2. Return ? ForIn/OfBodyEvaluation(ForBinding, Statement, keyResult, enumerate, varBinding, labelSet).
-
-          return yield* ForInOfBodyEvaluation(ForBinding, Statement, keyResult, 'enumerate', 'varBinding', labelSet);
-        }
-
-      case !!ForDeclaration && !!Expression:
-        {
-          let _temp10 = yield* ForInOfHeadEvaluation(BoundNames(ForDeclaration), Expression, 'enumerate');
-
-          if (_temp10 instanceof AbruptCompletion) {
-            return _temp10;
-          }
-
-          if (_temp10 instanceof Completion) {
-            _temp10 = _temp10.Value;
-          }
-
-          // IterationStatement : `for` `(` ForDeclaration `in` Expression `)` Statement
-          // 1. Let keyResult be ? ForIn/OfHeadEvaluation(BoundNames of ForDeclaration, Expression, enumerate).
-          const keyResult = _temp10; // 2. Return ? ForIn/OfBodyEvaluation(ForDeclaration, Statement, keyResult, enumerate, lexicalBinding, labelSet).
-
-          return yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'enumerate', 'lexicalBinding', labelSet);
-        }
-
-      /*c8 ignore next*/
-      default:
-        throw new OutOfRange('LabelledEvaluation_IterationStatement_ForInStatement', ForInStatement);
-    }
-  } // IterationStatement :
-  //   `for` `await` `(` LeftHandSideExpression `of` AssignmentExpression `)` Statement
-  //   `for` `await` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
-  //   `for` `await` `(` ForDeclaration`of` AssignmentExpression `)` Statement
-
-
-  function* LabelledEvaluation_IterationStatement_ForAwaitStatement(ForAwaitStatement, labelSet) {
-    const {
-      LeftHandSideExpression,
-      ForBinding,
-      ForDeclaration,
-      AssignmentExpression,
-      Statement
-    } = ForAwaitStatement;
-
-    switch (true) {
-      case !!LeftHandSideExpression:
-        {
-          let _temp11 = yield* ForInOfHeadEvaluation([], AssignmentExpression, 'async-iterate');
-
-          if (_temp11 instanceof AbruptCompletion) {
-            return _temp11;
-          }
-
-          if (_temp11 instanceof Completion) {
-            _temp11 = _temp11.Value;
-          }
-
-          // 1. Let keyResult be ? ForIn/OfHeadEvaluation(« », AssignmentExpression, async-iterate).
-          const keyResult = _temp11; // 2. Return ? ForIn/OfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, iterate, assignment, labelSet, async).
-
-          return yield* ForInOfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, 'iterate', 'assignment', labelSet, 'async');
-        }
-
-      case !!ForBinding:
-        {
-          let _temp12 = yield* ForInOfHeadEvaluation([], AssignmentExpression, 'async-iterate');
-
-          if (_temp12 instanceof AbruptCompletion) {
-            return _temp12;
-          }
-
-          if (_temp12 instanceof Completion) {
-            _temp12 = _temp12.Value;
-          }
-
-          // 1. Let keyResult be ? ForIn/OfHeadEvaluation(« », AssignmentExpression, async-iterate).
-          const keyResult = _temp12; // 2. Return ? ForIn/OfBodyEvaluation(ForBinding, Statement, keyResult, iterate, varBinding, labelSet, async).
-
-          return yield* ForInOfBodyEvaluation(ForBinding, Statement, keyResult, 'iterate', 'varBinding', labelSet, 'async');
-        }
-
-      case !!ForDeclaration:
-        {
-          let _temp13 = yield* ForInOfHeadEvaluation(BoundNames(ForDeclaration), AssignmentExpression, 'async-iterate');
-
-          if (_temp13 instanceof AbruptCompletion) {
-            return _temp13;
-          }
-
-          if (_temp13 instanceof Completion) {
-            _temp13 = _temp13.Value;
-          }
-
-          // 1. Let keyResult be ? ForIn/OfHeadEvaluation(BoundNames of ForDeclaration, AssignmentExpression, async-iterate).
-          const keyResult = _temp13; // 2. Return ? ForIn/OfBodyEvaluation(ForDeclaration, Statement, keyResult, iterate, lexicalBinding, labelSet, async).
-
-          return yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'iterate', 'lexicalBinding', labelSet, 'async');
-        }
-
-      /*c8 ignore next*/
-      default:
-        throw new OutOfRange('LabelledEvaluation_IterationStatement_ForAwaitStatement', ForAwaitStatement);
-    }
-  } // #sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation
-  // IterationStatement :
-  //   `for` `(` LeftHandSideExpression `of` AssignmentExpression `)` Statement
-  //   `for` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
-  //   `for` `(` ForDeclaration `of` AssignmentExpression `)` Statement
-
-
-  function* LabelledEvaluation_IterationStatement_ForOfStatement(ForOfStatement, labelSet) {
-    const {
-      LeftHandSideExpression,
-      ForBinding,
-      ForDeclaration,
-      AssignmentExpression,
-      Statement
-    } = ForOfStatement;
-
-    switch (true) {
-      case !!LeftHandSideExpression:
-        {
-          let _temp14 = yield* ForInOfHeadEvaluation([], AssignmentExpression, 'iterate');
-
-          if (_temp14 instanceof AbruptCompletion) {
-            return _temp14;
-          }
-
-          if (_temp14 instanceof Completion) {
-            _temp14 = _temp14.Value;
-          }
-
-          // 1. Let keyResult be ? ForIn/OfHeadEvaluation(« », AssignmentExpression, iterate).
-          const keyResult = _temp14; // 2. Return ? ForIn/OfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, iterate, assignment, labelSet).
-
-          return yield* ForInOfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, 'iterate', 'assignment', labelSet);
-        }
-
-      case !!ForBinding:
-        {
-          let _temp15 = yield* ForInOfHeadEvaluation([], AssignmentExpression, 'iterate');
-
-          if (_temp15 instanceof AbruptCompletion) {
-            return _temp15;
-          }
-
-          if (_temp15 instanceof Completion) {
-            _temp15 = _temp15.Value;
-          }
-
-          // 1. Let keyResult be ? ForIn/OfHeadEvaluation(« », AssignmentExpression, iterate).
-          const keyResult = _temp15; // 2. Return ? ForIn/OfBodyEvaluation(ForBinding, Statement, keyResult, iterate, varBinding, labelSet).
-
-          return yield* ForInOfBodyEvaluation(ForBinding, Statement, keyResult, 'iterate', 'varBinding', labelSet);
-        }
-
-      case !!ForDeclaration:
-        {
-          let _temp16 = yield* ForInOfHeadEvaluation(BoundNames(ForDeclaration), AssignmentExpression, 'iterate');
-
-          if (_temp16 instanceof AbruptCompletion) {
-            return _temp16;
-          }
-
-          if (_temp16 instanceof Completion) {
-            _temp16 = _temp16.Value;
-          }
-
-          // 1. Let keyResult be ? ForIn/OfHeadEvaluation(BoundNames of ForDeclaration, AssignmentExpression, iterate).
-          const keyResult = _temp16; // 2. Return ? ForIn/OfBodyEvaluation(ForDeclaration, Statement, keyResult, iterate, lexicalBinding, labelSet).
-
-          return yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'iterate', 'lexicalBinding', labelSet);
-        }
-
-      /*c8 ignore next*/
-      default:
-        throw new OutOfRange('LabelledEvaluation_BreakableStatement_ForOfStatement', ForOfStatement);
-    }
-  } // #sec-forbodyevaluation
-
-
-  LabelledEvaluation_IterationStatement_ForOfStatement.section = 'https://tc39.es/ecma262/#sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation';
-
-  function* ForBodyEvaluation(test, increment, stmt, perIterationBindings, labelSet) {
-    // 1. Let V be undefined.
-    let V = Value.undefined; // 2. Perform ? CreatePerIterationEnvironment(perIterationBindings).
-
-    let _temp17 = CreatePerIterationEnvironment(perIterationBindings);
-
-    if (_temp17 instanceof AbruptCompletion) {
-      return _temp17;
-    }
-
-    if (_temp17 instanceof Completion) {
-      _temp17 = _temp17.Value;
-    }
-
-    while (true) {
-      // a. If test is not [empty], then
-      if (test) {
-        // i. Let testRef be the result of evaluating test.
-        const testRef = yield* Evaluate(test); // ii. Let testValue be ? GetValue(testRef).
-
-        let _temp18 = GetValue(testRef);
-
-        if (_temp18 instanceof AbruptCompletion) {
-          return _temp18;
-        }
-
-        if (_temp18 instanceof Completion) {
-          _temp18 = _temp18.Value;
-        }
-
-        const testValue = _temp18; // iii. If ! ToBoolean(testValue) is false, return NormalCompletion(V).
-
-        let _temp19 = ToBoolean(testValue);
-
-        Assert(!(_temp19 instanceof AbruptCompletion), "ToBoolean(testValue)" + ' returned an abrupt completion');
-
-        if (_temp19 instanceof Completion) {
-          _temp19 = _temp19.Value;
-        }
-
-        if (_temp19 === Value.false) {
-          return NormalCompletion(V);
-        }
-      } // b. Let result be the result of evaluating stmt.
-
-
-      const result = EnsureCompletion(yield* Evaluate(stmt)); // c. If LoopContinues(result, labelSet) is false, return Completion(UpdateEmpty(result, V)).
-
-      if (LoopContinues(result, labelSet) === Value.false) {
-        return Completion(UpdateEmpty(result, V));
-      } // d. If result.[[Value]] is not empty, set V to result.[[Value]].
-
-
-      if (result.Value !== undefined) {
-        V = result.Value;
-      } // e. Perform ? CreatePerIterationEnvironment(perIterationBindings).
-
-
-      let _temp20 = CreatePerIterationEnvironment(perIterationBindings);
-
-      if (_temp20 instanceof AbruptCompletion) {
-        return _temp20;
-      }
-
-      if (_temp20 instanceof Completion) {
-        _temp20 = _temp20.Value;
-      }
-
-      if (increment) {
-        // i. Let incRef be the result of evaluating increment.
-        const incRef = yield* Evaluate(increment); // ii. Perform ? GetValue(incRef).
-
-        let _temp21 = GetValue(incRef);
-
-        if (_temp21 instanceof AbruptCompletion) {
-          return _temp21;
-        }
-
-        if (_temp21 instanceof Completion) {
-          _temp21 = _temp21.Value;
-        }
-      }
-    }
-  } // #sec-createperiterationenvironment
-
-
-  ForBodyEvaluation.section = 'https://tc39.es/ecma262/#sec-forbodyevaluation';
-
-  function CreatePerIterationEnvironment(perIterationBindings) {
-    // 1. If perIterationBindings has any elements, then
-    if (perIterationBindings.length > 0) {
-      // a. Let lastIterationEnv be the running execution context's LexicalEnvironment.
-      const lastIterationEnv = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // b. Let outer be lastIterationEnv.[[OuterEnv]].
-
-      const outer = lastIterationEnv.OuterEnv; // c. Assert: outer is not null.
-
-      Assert(outer !== Value.null, "outer !== Value.null"); // d. Let thisIterationEnv be NewDeclarativeEnvironment(outer).
-
-      const thisIterationEnv = NewDeclarativeEnvironment(outer); // e. For each element bn of perIterationBindings, do
-
-      for (const bn of perIterationBindings) {
-        let _temp22 = thisIterationEnv.CreateMutableBinding(bn, Value.false);
-
-        Assert(!(_temp22 instanceof AbruptCompletion), "thisIterationEnv.CreateMutableBinding(bn, Value.false)" + ' returned an abrupt completion');
-
-        if (_temp22 instanceof Completion) {
-          _temp22 = _temp22.Value;
-        }
-
-        let _temp23 = lastIterationEnv.GetBindingValue(bn, Value.true);
-
-        if (_temp23 instanceof AbruptCompletion) {
-          return _temp23;
-        }
-
-        if (_temp23 instanceof Completion) {
-          _temp23 = _temp23.Value;
-        }
-
-        const lastValue = _temp23; // iii. Perform thisIterationEnv.InitializeBinding(bn, lastValue).
-
-        thisIterationEnv.InitializeBinding(bn, lastValue);
-      } // f. Set the running execution context's LexicalEnvironment to thisIterationEnv.
-
-
-      exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = thisIterationEnv;
-    } // 2. Return undefined.
-
-
-    return Value.undefined;
-  } // #sec-runtime-semantics-forinofheadevaluation
-
-
-  CreatePerIterationEnvironment.section = 'https://tc39.es/ecma262/#sec-createperiterationenvironment';
-
-  function* ForInOfHeadEvaluation(uninitializedBoundNames, expr, iterationKind) {
-    // 1. Let oldEnv be the running execution context's LexicalEnvironment.
-    const oldEnv = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. If uninitializedBoundNames is not an empty List, then
-
-    if (uninitializedBoundNames.length > 0) {
-      // a. Assert: uninitializedBoundNames has no duplicate entries.
-      // b. Let newEnv be NewDeclarativeEnvironment(oldEnv).
-      const newEnv = NewDeclarativeEnvironment(oldEnv); // c. For each string name in uninitializedBoundNames, do
-
-      for (const name of uninitializedBoundNames) {
-        let _temp24 = newEnv.CreateMutableBinding(name, Value.false);
-
-        Assert(!(_temp24 instanceof AbruptCompletion), "newEnv.CreateMutableBinding(name, Value.false)" + ' returned an abrupt completion');
-
-        if (_temp24 instanceof Completion) {
-          _temp24 = _temp24.Value;
-        }
-      } // d. Set the running execution context's LexicalEnvironment to newEnv.
-
-
-      exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = newEnv;
-    } // 3. Let exprRef be the result of evaluating expr.
-
-
-    const exprRef = yield* Evaluate(expr); // 4. Set the running execution context's LexicalEnvironment to oldEnv.
-
-    exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv; // 5. Let exprValue be ? GetValue(exprRef).
-
-    let _temp25 = GetValue(exprRef);
-
-    if (_temp25 instanceof AbruptCompletion) {
-      return _temp25;
-    }
-
-    if (_temp25 instanceof Completion) {
-      _temp25 = _temp25.Value;
-    }
-
-    const exprValue = _temp25; // 6. If iterationKind is enumerate, then
-
-    if (iterationKind === 'enumerate') {
-      // a. If exprValue is undefined or null, then
-      if (exprValue === Value.undefined || exprValue === Value.null) {
-        // i. Return Completion { [[Type]]: break, [[Value]]: empty, [[Target]]: empty }.
-        return new Completion({
-          Type: 'break',
-          Value: undefined,
-          Target: undefined
-        });
-      } // b. Let obj be ! ToObject(exprValue).
-
-
-      let _temp26 = ToObject(exprValue);
-
-      Assert(!(_temp26 instanceof AbruptCompletion), "ToObject(exprValue)" + ' returned an abrupt completion');
-
-      if (_temp26 instanceof Completion) {
-        _temp26 = _temp26.Value;
-      }
-
-      const obj = _temp26; // c. Let iterator be ? EnumerateObjectProperties(obj).
-
-      let _temp27 = EnumerateObjectProperties(obj);
-
-      if (_temp27 instanceof AbruptCompletion) {
-        return _temp27;
-      }
-
-      if (_temp27 instanceof Completion) {
-        _temp27 = _temp27.Value;
-      }
-
-      const iterator = _temp27; // d. Let nextMethod be ! GetV(iterator, "next").
-
-      let _temp28 = GetV(iterator, new Value('next'));
-
-      Assert(!(_temp28 instanceof AbruptCompletion), "GetV(iterator, new Value('next'))" + ' returned an abrupt completion');
-
-      if (_temp28 instanceof Completion) {
-        _temp28 = _temp28.Value;
-      }
-
-      const nextMethod = _temp28; // e. Return the Record { [[Iterator]]: iterator, [[NextMethod]]: nextMethod, [[Done]]: false }.
-
-      return {
-        Iterator: iterator,
-        NextMethod: nextMethod,
-        Done: Value.false
-      };
-    } else {
-      // 7. Else,
-      // a. Assert: iterationKind is iterate or async-iterate.
-      Assert(iterationKind === 'iterate' || iterationKind === 'async-iterate', "iterationKind === 'iterate' || iterationKind === 'async-iterate'"); // b. If iterationKind is async-iterate, let iteratorHint be async.
-      // c. Else, let iteratorHint be sync.
-
-      const iteratorHint = iterationKind === 'async-iterate' ? 'async' : 'sync'; // d. Return ? GetIterator(exprValue, iteratorHint).
-
-      return GetIterator(exprValue, iteratorHint);
-    }
-  } // #sec-enumerate-object-properties
-
-
-  ForInOfHeadEvaluation.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-forinofheadevaluation';
-
-  function EnumerateObjectProperties(O) {
-    return CreateForInIterator(O);
-  } // #sec-runtime-semantics-forin-div-ofbodyevaluation-lhs-stmt-iterator-lhskind-labelset
-
-
-  EnumerateObjectProperties.section = 'https://tc39.es/ecma262/#sec-enumerate-object-properties';
-
-  function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKind, labelSet, iteratorKind) {
-    // 1. If iteratorKind is not present, set iteratorKind to sync.
-    if (iterationKind === undefined) {
-      iterationKind = 'sync';
-    } // 2. Let oldEnv be the running execution context's LexicalEnvironment.
-
-
-    const oldEnv = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 3. Let V be undefined.
-
-    let V = Value.undefined; // 4. Let destructuring be IsDestructuring of lhs.
-
-    const destructuring = IsDestructuring(lhs); // 5. If destructuring is true and if lhsKind is assignment, then
-
-    let assignmentPattern;
-
-    if (destructuring && lhsKind === 'assignment') {
-      // a. Assert: lhs is a LeftHandSideExpression.
-      // b. Let assignmentPattern be the AssignmentPattern that is covered by lhs.
-      assignmentPattern = refineLeftHandSideExpression(lhs);
-    } // 6. Repeat,
-
-
-    while (true) {
-      let _temp29 = Call(iteratorRecord.NextMethod, iteratorRecord.Iterator);
-
-      if (_temp29 instanceof AbruptCompletion) {
-        return _temp29;
-      }
-
-      if (_temp29 instanceof Completion) {
-        _temp29 = _temp29.Value;
-      }
-
-      // a. Let nextResult be ? Call(iteratorRecord.[[NextMethod]], iteratorRecord.[[Iterator]]).
-      let nextResult = _temp29; // b. If iteratorKind is async, then set nextResult to ? Await(nextResult).
-
-      if (iteratorKind === 'async') {
-        let _temp30 = yield* Await(nextResult);
-
-        if (_temp30 instanceof AbruptCompletion) {
-          return _temp30;
-        }
-
-        if (_temp30 instanceof Completion) {
-          _temp30 = _temp30.Value;
-        }
-
-        nextResult = _temp30;
-      } // c. If Type(nextResult) is not Object, throw a TypeError exception.
-
-
-      if (Type(nextResult) !== 'Object') {
-        return exports.surroundingAgent.Throw('TypeError', 'NotAnObject', nextResult);
-      } // d. Let done be ? IteratorComplete(nextResult).
-
-
-      let _temp31 = IteratorComplete(nextResult);
-
-      if (_temp31 instanceof AbruptCompletion) {
-        return _temp31;
-      }
-
-      if (_temp31 instanceof Completion) {
-        _temp31 = _temp31.Value;
-      }
-
-      const done = _temp31; // e. If done is true, return NormalCompletion(V).
-
-      if (done === Value.true) {
-        return NormalCompletion(V);
-      } // f. Let nextValue be ? IteratorValue(nextResult).
-
-
-      let _temp32 = IteratorValue(nextResult);
-
-      if (_temp32 instanceof AbruptCompletion) {
-        return _temp32;
-      }
-
-      if (_temp32 instanceof Completion) {
-        _temp32 = _temp32.Value;
-      }
-
-      const nextValue = _temp32; // g. If lhsKind is either assignment or varBinding, then
-
-      let lhsRef;
-      let iterationEnv;
-
-      if (lhsKind === 'assignment' || lhsKind === 'varBinding') {
-        // i. If destructuring is false, then
-        if (destructuring === false) {
-          // 1. Let lhsRef be the result of evaluating lhs. (It may be evaluated repeatedly.)
-          lhsRef = yield* Evaluate(lhs);
-        }
-      } else {
-        // h. Else,
-        // i. Assert: lhsKind is lexicalBinding.
-        Assert(lhsKind === 'lexicalBinding', "lhsKind === 'lexicalBinding'"); // ii. Assert: lhs is a ForDeclaration.
-
-        Assert(lhs.type === 'ForDeclaration', "lhs.type === 'ForDeclaration'"); // iii. Let iterationEnv be NewDeclarativeEnvironment(oldEnv).
-
-        iterationEnv = NewDeclarativeEnvironment(oldEnv); // iv. Perform BindingInstantiation for lhs passing iterationEnv as the argument.
-
-        BindingInstantiation(lhs, iterationEnv); // v. Set the running execution context's LexicalEnvironment to iterationEnv.
-
-        exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = iterationEnv; // vi. If destructuring is false, then
-
-        if (destructuring === false) {
-          // 1. Assert: lhs binds a single name.
-          // 2. Let lhsName be the sole element of BoundNames of lhs.
-          const lhsName = BoundNames(lhs)[0]; // 3. Let lhsRef be ! ResolveBinding(lhsName).
-
-          let _temp33 = ResolveBinding(lhsName, undefined, lhs.strict);
-
-          Assert(!(_temp33 instanceof AbruptCompletion), "ResolveBinding(lhsName, undefined, lhs.strict)" + ' returned an abrupt completion');
-
-          if (_temp33 instanceof Completion) {
-            _temp33 = _temp33.Value;
-          }
-
-          lhsRef = _temp33;
-        }
-      }
-
-      let status; // i. If destructuring is false, then
-
-      if (destructuring === false) {
-        // i. If lhsRef is an abrupt completion, then
-        if (lhsRef instanceof AbruptCompletion) {
-          // 1. Let status be lhsRef.
-          status = lhsRef;
-        } else if (lhsKind === 'lexicalBinding') {
-          // ii. Else is lhsKind is lexicalBinding, then
-          // 1. Let status be InitializeReferencedBinding(lhsRef, nextValue).
-          status = InitializeReferencedBinding(lhsRef, nextValue);
-        } else {
-          // iii. Else,
-          status = PutValue(lhsRef, nextValue);
-        }
-      } else {
-        // j. Else,
-        // i. If lhsKind is assignment, then
-        if (lhsKind === 'assignment') {
-          // 1. Let status be DestructuringAssignmentEvaluation of assignmentPattern with argument nextValue.
-          status = yield* DestructuringAssignmentEvaluation(assignmentPattern, nextValue);
-        } else if (lhsKind === 'varBinding') {
-          // ii. Else if lhsKind is varBinding, then
-          // 1. Assert: lhs is a ForBinding.
-          Assert(lhs.type === 'ForBinding', "lhs.type === 'ForBinding'"); // 2. Let status be BindingInitialization of lhs with arguments nextValue and undefined.
-
-          status = yield* BindingInitialization(lhs, nextValue, Value.undefined);
-        } else {
-          // iii. Else,
-          // 1. Assert: lhsKind is lexicalBinding.
-          Assert(lhsKind === 'lexicalBinding', "lhsKind === 'lexicalBinding'"); // 2. Assert: lhs is a ForDeclaration.
-
-          Assert(lhs.type === 'ForDeclaration', "lhs.type === 'ForDeclaration'"); // 3. Let status be BindingInitialization of lhs with arguments nextValue and iterationEnv.
-
-          status = yield* BindingInitialization(lhs, nextValue, iterationEnv);
-        }
-      } // k. If status is an abrupt completion, then
-
-
-      if (status instanceof AbruptCompletion) {
-        // i. Set the running execution context's LexicalEnvironment to oldEnv.
-        exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv; // ii. If iteratorKind is async, return ? AsyncIteratorClose(iteratorRecord, status).
-
-        if (iteratorKind === 'async') {
-          return yield* AsyncIteratorClose(iteratorRecord, status);
-        } // iii. if iterationKind is enumerate, then
-
-
-        if (iterationKind === 'enumerate') {
-          // 1. Return status.
-          return status;
-        } else {
-          // iv. Else,
-          // 1. Assert: iterationKind is iterate.
-          Assert(iterationKind === 'iterate', "iterationKind === 'iterate'"); // 2 .Return ? IteratorClose(iteratorRecord, status).
-
-          return IteratorClose(iteratorRecord, status);
-        }
-      } // l. Let result be the result of evaluating stmt.
-
-
-      const result = EnsureCompletion(yield* Evaluate(stmt)); // m. Set the running execution context's LexicalEnvironment to oldEnv.
-
-      exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv; // n. If LoopContinues(result, labelSet) is false, then
-
-      if (LoopContinues(result, labelSet) === Value.false) {
-        // i. If iterationKind is enumerate, then
-        if (iterationKind === 'enumerate') {
-          // 1. Return Completion(UpdateEmpty(result, V)).
-          return Completion(UpdateEmpty(result, V));
-        } else {
-          // ii. Else,
-          // 1. Assert: iterationKind is iterate.
-          Assert(iterationKind === 'iterate', "iterationKind === 'iterate'"); // 2. Set status to UpdateEmpty(result, V).
-
-          status = UpdateEmpty(result, V); // 3. If iteratorKind is async, return ? AsyncIteratorClose(iteratorRecord, status).
-
-          if (iteratorKind === 'async') {
-            return yield* AsyncIteratorClose(iteratorRecord, status);
-          } // 4. Return ? IteratorClose(iteratorRecord, status).
-
-
-          return IteratorClose(iteratorRecord, status);
-        }
-      } // o. If result.[[Value]] is not empty, set V to result.[[Value]].
-
-
-      if (result.Value !== undefined) {
-        V = result.Value;
-      }
-    }
-  } // #sec-runtime-semantics-bindinginstantiation
-  //   ForDeclaration : LetOrConst ForBinding
-
-
-  ForInOfBodyEvaluation.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-forin-div-ofbodyevaluation-lhs-stmt-iterator-lhskind-labelset';
-
-  function BindingInstantiation({
-    LetOrConst,
-    ForBinding
-  }, environment) {
-    // 1. Assert: environment is a declarative Environment Record.
-    Assert(environment instanceof DeclarativeEnvironmentRecord, "environment instanceof DeclarativeEnvironmentRecord"); // 2. For each element name of the BoundNames of ForBinding, do
-
-    for (const name of BoundNames(ForBinding)) {
-      // a. If IsConstantDeclaration of LetOrConst is true, then
-      if (IsConstantDeclaration(LetOrConst)) {
-        let _temp34 = environment.CreateImmutableBinding(name, Value.true);
-
-        Assert(!(_temp34 instanceof AbruptCompletion), "environment.CreateImmutableBinding(name, Value.true)" + ' returned an abrupt completion');
-
-        if (_temp34 instanceof Completion) {
-          _temp34 = _temp34.Value;
-        }
-      } else {
-        let _temp35 = environment.CreateMutableBinding(name, Value.false);
-
-        Assert(!(_temp35 instanceof AbruptCompletion), "environment.CreateMutableBinding(name, Value.false)" + ' returned an abrupt completion');
-
-        if (_temp35 instanceof Completion) {
-          _temp35 = _temp35.Value;
-        }
-      }
-    }
-  } // #sec-for-in-and-for-of-statements-runtime-semantics-evaluation
-  //   ForBinding : BindingIdentifier
-
-
-  BindingInstantiation.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-bindinginstantiation';
-  function Evaluate_ForBinding({
-    BindingIdentifier,
-    strict
-  }) {
-    // 1. Let bindingId be StringValue of BindingIdentifier.
-    const bindingId = StringValue(BindingIdentifier); // 2. Return ? ResolveBinding(bindingId).
-
-    return ResolveBinding(bindingId, undefined, strict);
-  }
-
-  //   TemplateLiteral : NoSubstitutionTemplate
-  //   SubstitutionTemplate : TemplateHead Expression TemplateSpans
-  //   TemplateSpans : TemplateTail
-  //   TemplateSpans : TemplateMiddleList TemplateTail
-  //   TemplateMiddleList : TemplateMiddle Expression
-  //   TemplateMiddleList : TemplateMiddleList TemplateMiddle Expression
-  //
-  // (implicit)
-  //   TemplateLiteral : SubstitutionTemplate
-
-  function* Evaluate_TemplateLiteral({
-    TemplateSpanList,
-    ExpressionList
-  }) {
-    let str = '';
-
-    for (let i = 0; i < TemplateSpanList.length - 1; i += 1) {
-      const Expression = ExpressionList[i];
-      const head = TV(TemplateSpanList[i]); // 2. Let subRef be the result of evaluating Expression.
-
-      const subRef = yield* Evaluate(Expression); // 3. Let sub be ? GetValue(subRef).
-
-      let _temp = GetValue(subRef);
-      /* c8 ignore if */
-
-
-      if (_temp instanceof AbruptCompletion) {
-        return _temp;
-      }
-      /* c8 ignore if */
-
-
-      if (_temp instanceof Completion) {
-        _temp = _temp.Value;
-      }
-
-      const sub = _temp; // 4. Let middle be ? ToString(sub).
-
-      let _temp2 = ToString(sub);
-
-      if (_temp2 instanceof AbruptCompletion) {
-        return _temp2;
-      }
-
-      if (_temp2 instanceof Completion) {
-        _temp2 = _temp2.Value;
-      }
-
-      const middle = _temp2;
-      str += head;
-      str += middle.stringValue();
-    }
-
-    const tail = TV(TemplateSpanList[TemplateSpanList.length - 1]);
-    return new Value(str + tail);
-  }
-
-  function* CaseClauseIsSelected(C, input) {
-    // 1. Assert: C is an instance of the production  CaseClause : `case` Expression `:` StatementList?.
-    Assert(C.type === 'CaseClause', "C.type === 'CaseClause'"); // 2. Let exprRef be the result of evaluating the Expression of C.
-
-    const exprRef = yield* Evaluate(C.Expression); // 3. Let clauseSelector be ? GetValue(exprRef).
-
-    let _temp = GetValue(exprRef);
-    /* c8 ignore if */
-
-
-    if (_temp instanceof AbruptCompletion) {
-      return _temp;
-    }
-    /* c8 ignore if */
-
-
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    const clauseSelector = _temp; // 4. Return the result of performing Strict Equality Comparison input === clauseSelector.
-
-    return StrictEqualityComparison(input, clauseSelector);
-  } // #sec-runtime-semantics-caseblockevaluation
-  //   CaseBlock :
-  //     `{` `}`
-  //     `{` CaseClauses `}`
-  //     `{` CaseClauses? DefaultClause CaseClauses? `}`
-
-
-  CaseClauseIsSelected.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-caseclauseisselected';
-
-  function* CaseBlockEvaluation({
-    CaseClauses_a,
-    DefaultClause,
-    CaseClauses_b
-  }, input) {
-    switch (true) {
-      case !CaseClauses_a && !DefaultClause && !CaseClauses_b:
-        {
-          // 1. Return NormalCompletion(undefined).
-          return NormalCompletion(Value.undefined);
-        }
-
-      case !!CaseClauses_a && !DefaultClause && !CaseClauses_b:
-        {
-          // 1. Let V be undefined.
-          let V = Value.undefined; // 2. Let A be the List of CaseClause items in CaseClauses, in source text order.
-
-          const A = CaseClauses_a; // 3. Let found be false.
-
-          let found = Value.false; // 4. For each CaseClause C in A, do
-
-          for (const C of A) {
-            // a. If found is false, then
-            if (found === Value.false) {
-              let _temp2 = yield* CaseClauseIsSelected(C, input);
-
-              if (_temp2 instanceof AbruptCompletion) {
-                return _temp2;
-              }
-
-              if (_temp2 instanceof Completion) {
-                _temp2 = _temp2.Value;
-              }
-
-              // i. Set found to ? CaseClauseIsSelected(C, input).
-              found = _temp2;
-            } // b. If found is true, them
-
-
-            if (found === Value.true) {
-              // i. Let R be the result of evaluating C.
-              const R = EnsureCompletion(yield* Evaluate(C)); // ii. If R.[[Value]] is not empty, set V to R.[[Value]].
-
-              if (R.Value !== undefined) {
-                V = R.Value;
-              } // iii. If R is an abrupt completion, return Completion(UpdateEmpty(R, V)).
-
-
-              if (R instanceof AbruptCompletion) {
-                return Completion(UpdateEmpty(R, V));
-              }
-            }
-          } // 5. Return NormalCompletion(V).
-
-
-          return NormalCompletion(V);
-        }
-
-      case !!DefaultClause:
-        {
-          // 1. Let V be undefined.
-          let V = Value.undefined; // 2. If the first CaseClauses is present, then
-
-          let A;
-
-          if (CaseClauses_a) {
-            // a. Let A be the List of CaseClause items in the first CaseClauses, in source text order.
-            A = CaseClauses_a;
-          } else {
-            // 3. Else,
-            // a. Let A be « ».
-            A = [];
-          }
-
-          let found = Value.false; // 4. For each CaseClause C in A, do
-
-          for (const C of A) {
-            // a. If found is false, then
-            if (found === Value.false) {
-              let _temp3 = yield* CaseClauseIsSelected(C, input);
-
-              if (_temp3 instanceof AbruptCompletion) {
-                return _temp3;
-              }
-
-              if (_temp3 instanceof Completion) {
-                _temp3 = _temp3.Value;
-              }
-
-              // i. Set found to ? CaseClauseIsSelected(C, input).
-              found = _temp3;
-            } // b. If found is true, them
-
-
-            if (found === Value.true) {
-              // i. Let R be the result of evaluating C.
-              const R = EnsureCompletion(yield* Evaluate(C)); // ii. If R.[[Value]] is not empty, set V to R.[[Value]].
-
-              if (R.Value !== undefined) {
-                V = R.Value;
-              } // iii. If R is an abrupt completion, return Completion(UpdateEmpty(R, V)).
-
-
-              if (R instanceof AbruptCompletion) {
-                return Completion(UpdateEmpty(R, V));
-              }
-            }
-          } // 6. Let foundInB be false.
-
-
-          let foundInB = Value.false; // 7. If the second CaseClauses is present, then
-
-          let B;
-
-          if (CaseClauses_b) {
-            // a. Let B be the List of CaseClause items in the second CaseClauses, in source text order.
-            B = CaseClauses_b;
-          } else {
-            // 8. Else,
-            // a. Let B be « ».
-            B = [];
-          } // 9. If found is false, then
-
-
-          if (found === Value.false) {
-            // a. For each CaseClause C in B, do
-            for (const C of B) {
-              // a. If foundInB is false, then
-              if (foundInB === Value.false) {
-                let _temp4 = yield* CaseClauseIsSelected(C, input);
-
-                if (_temp4 instanceof AbruptCompletion) {
-                  return _temp4;
-                }
-
-                if (_temp4 instanceof Completion) {
-                  _temp4 = _temp4.Value;
-                }
-
-                // i. Set foundInB to ? CaseClauseIsSelected(C, input).
-                foundInB = _temp4;
-              } // b. If foundInB is true, them
-
-
-              if (foundInB === Value.true) {
-                // i. Let R be the result of evaluating C.
-                const R = EnsureCompletion(yield* Evaluate(C)); // ii. If R.[[Value]] is not empty, set V to R.[[Value]].
-
-                if (R.Value !== undefined) {
-                  V = R.Value;
-                } // iii. If R is an abrupt completion, return Completion(UpdateEmpty(R, V)).
-
-
-                if (R instanceof AbruptCompletion) {
-                  return Completion(UpdateEmpty(R, V));
-                }
-              }
-            }
-          } // 10. If foundInB is true, return NormalCompletion(V).
-
-
-          if (foundInB === Value.true) {
-            return NormalCompletion(V);
-          } // 11. Let R be the result of evaluating DefaultClause.
-
-
-          const R = EnsureCompletion(yield* Evaluate(DefaultClause)); // 12. If R.[[Value]] is not empty, set V to R.[[Value]].
-
-          if (R.Value !== undefined) {
-            V = R.Value;
-          } // 13. If R is an abrupt completion, return Completion(UpdateEmpty(R, V)).
-
-
-          if (R instanceof AbruptCompletion) {
-            return Completion(UpdateEmpty(R, V));
-          } // 14. NOTE: The following is another complete iteration of the second CaseClauses.
-          // 15. For each CaseClause C in B, do
-
-
-          for (const C of B) {
-            // a. Let R be the result of evaluating CaseClause C.
-            const innerR = EnsureCompletion(yield* Evaluate(C)); // b. If R.[[Value]] is not empty, set V to R.[[Value]].
-
-            if (innerR.Value !== undefined) {
-              V = innerR.Value;
-            } // c. If R is an abrupt completion, return Completion(UpdateEmpty(R, V)).
-
-
-            if (innerR instanceof AbruptCompletion) {
-              return Completion(UpdateEmpty(innerR, V));
-            }
-          } // 16. Return NormalCompletion(V).
-          //
-
-
-          return NormalCompletion(V);
-        }
-
-      /*c8 ignore next*/
-      default:
-        throw new OutOfRange('CaseBlockEvaluation');
-    }
-  } // #sec-switch-statement-runtime-semantics-evaluation
-  //   SwitchStatement :
-  //     `switch` `(` Expression `)` CaseBlock
-
-
-  CaseBlockEvaluation.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-caseblockevaluation';
-  function* Evaluate_SwitchStatement({
-    Expression,
-    CaseBlock
-  }) {
-    // 1. Let exprRef be the result of evaluating Expression.
-    const exprRef = yield* Evaluate(Expression); // 2. Let switchValue be ? GetValue(exprRef).
-
-    let _temp5 = GetValue(exprRef);
-
-    if (_temp5 instanceof AbruptCompletion) {
-      return _temp5;
-    }
-
-    if (_temp5 instanceof Completion) {
-      _temp5 = _temp5.Value;
-    }
-
-    const switchValue = _temp5; // 3. Let oldEnv be the running execution context's LexicalEnvironment.
-
-    const oldEnv = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 4. Let blockEnv be NewDeclarativeEnvironment(oldEnv).
-
-    const blockEnv = NewDeclarativeEnvironment(oldEnv); // 5. Perform BlockDeclarationInstantiation(CaseBlock, blockEnv).
-
-    BlockDeclarationInstantiation(CaseBlock, blockEnv); // 6. Set the running execution context's LexicalEnvironment to blockEnv.
-
-    exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = blockEnv; // 7. Let R be CaseBlockEvaluation of CaseBlock with argument switchValue.
-
-    const R = yield* CaseBlockEvaluation(CaseBlock, switchValue); // 8. Set the running execution context's LexicalEnvironment to oldEnv.
-
-    exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv; // 9. return R.
-
-    return R;
-  } // #sec-switch-statement-runtime-semantics-evaluation
-  //   CaseClause :
-  //     `case` Expression `:`
-  //     `case` Expression `:` StatementList
-  //   DefaultClause :
-  //     `case` `default` `:`
-  //     `case` `default` `:` StatementList
-
-  function* Evaluate_CaseClause({
-    StatementList
-  }) {
-    if (!StatementList) {
-      // 1. Return NormalCompletion(empty).
-      return NormalCompletion(undefined);
-    } // 1. Return the result of evaluating StatementList.
-
-
-    return yield* Evaluate_StatementList(StatementList);
   }
 
   function handleError(e) {
@@ -17581,7 +17619,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
         /*c8 ignore next*/
         default:
-          throw new OutOfRange('kind', kind);
+          throw new OutOfRange$1('kind', kind);
       }
     } // 21. Let proto be ? GetPrototypeFromConstructor(newTarget, fallbackProto).
 
@@ -17666,7 +17704,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     const funcEnv = NewDeclarativeEnvironment(scope); // 3. Let name be StringValue of BindingIdentifier.
 
-    const name = StringValue(BindingIdentifier); // 4. Perform funcEnv.CreateImmutableBinding(name, false).
+    const name = StringValue$1(BindingIdentifier); // 4. Perform funcEnv.CreateImmutableBinding(name, false).
 
     funcEnv.CreateImmutableBinding(name, Value.false); // 5. Let sourceText be the source text matched by GeneratorExpression.
 
@@ -17732,7 +17770,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     } // 1. Let label be the StringValue of LabelIdentifier.
 
 
-    const label = StringValue(LabelIdentifier); // 2. Return Completion { [[Type]]: break, [[Value]]: empty, [[Target]]: label }.
+    const label = StringValue$1(LabelIdentifier); // 2. Return Completion { [[Type]]: break, [[Value]]: empty, [[Target]]: label }.
 
     return new Completion({
       Type: 'break',
@@ -17762,7 +17800,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     const funcEnv = NewDeclarativeEnvironment(scope); // 3. Let name be StringValue of BindingIdentifier.
 
-    const name = StringValue(BindingIdentifier); // 4. Perform funcEnv.CreateImmutableBinding(name, false).
+    const name = StringValue$1(BindingIdentifier); // 4. Perform funcEnv.CreateImmutableBinding(name, false).
 
     funcEnv.CreateImmutableBinding(name, Value.false); // 5. Let source text be the source textmatched by AsyncGeneratorExpression.
 
@@ -18366,9 +18404,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return RegExpCreate(pattern, flags);
   }
 
-  var symbols=new Map([['A','a'],['B','b'],['C','c'],['D','d'],['E','e'],['F','f'],['G','g'],['H','h'],['I','i'],['J','j'],['K','k'],['L','l'],['M','m'],['N','n'],['O','o'],['P','p'],['Q','q'],['R','r'],['S','s'],['T','t'],['U','u'],['V','v'],['W','w'],['X','x'],['Y','y'],['Z','z'],['\xB5','\u03BC'],['\xC0','\xE0'],['\xC1','\xE1'],['\xC2','\xE2'],['\xC3','\xE3'],['\xC4','\xE4'],['\xC5','\xE5'],['\xC6','\xE6'],['\xC7','\xE7'],['\xC8','\xE8'],['\xC9','\xE9'],['\xCA','\xEA'],['\xCB','\xEB'],['\xCC','\xEC'],['\xCD','\xED'],['\xCE','\xEE'],['\xCF','\xEF'],['\xD0','\xF0'],['\xD1','\xF1'],['\xD2','\xF2'],['\xD3','\xF3'],['\xD4','\xF4'],['\xD5','\xF5'],['\xD6','\xF6'],['\xD8','\xF8'],['\xD9','\xF9'],['\xDA','\xFA'],['\xDB','\xFB'],['\xDC','\xFC'],['\xDD','\xFD'],['\xDE','\xFE'],['\u0100','\u0101'],['\u0102','\u0103'],['\u0104','\u0105'],['\u0106','\u0107'],['\u0108','\u0109'],['\u010A','\u010B'],['\u010C','\u010D'],['\u010E','\u010F'],['\u0110','\u0111'],['\u0112','\u0113'],['\u0114','\u0115'],['\u0116','\u0117'],['\u0118','\u0119'],['\u011A','\u011B'],['\u011C','\u011D'],['\u011E','\u011F'],['\u0120','\u0121'],['\u0122','\u0123'],['\u0124','\u0125'],['\u0126','\u0127'],['\u0128','\u0129'],['\u012A','\u012B'],['\u012C','\u012D'],['\u012E','\u012F'],['\u0132','\u0133'],['\u0134','\u0135'],['\u0136','\u0137'],['\u0139','\u013A'],['\u013B','\u013C'],['\u013D','\u013E'],['\u013F','\u0140'],['\u0141','\u0142'],['\u0143','\u0144'],['\u0145','\u0146'],['\u0147','\u0148'],['\u014A','\u014B'],['\u014C','\u014D'],['\u014E','\u014F'],['\u0150','\u0151'],['\u0152','\u0153'],['\u0154','\u0155'],['\u0156','\u0157'],['\u0158','\u0159'],['\u015A','\u015B'],['\u015C','\u015D'],['\u015E','\u015F'],['\u0160','\u0161'],['\u0162','\u0163'],['\u0164','\u0165'],['\u0166','\u0167'],['\u0168','\u0169'],['\u016A','\u016B'],['\u016C','\u016D'],['\u016E','\u016F'],['\u0170','\u0171'],['\u0172','\u0173'],['\u0174','\u0175'],['\u0176','\u0177'],['\u0178','\xFF'],['\u0179','\u017A'],['\u017B','\u017C'],['\u017D','\u017E'],['\u017F','s'],['\u0181','\u0253'],['\u0182','\u0183'],['\u0184','\u0185'],['\u0186','\u0254'],['\u0187','\u0188'],['\u0189','\u0256'],['\u018A','\u0257'],['\u018B','\u018C'],['\u018E','\u01DD'],['\u018F','\u0259'],['\u0190','\u025B'],['\u0191','\u0192'],['\u0193','\u0260'],['\u0194','\u0263'],['\u0196','\u0269'],['\u0197','\u0268'],['\u0198','\u0199'],['\u019C','\u026F'],['\u019D','\u0272'],['\u019F','\u0275'],['\u01A0','\u01A1'],['\u01A2','\u01A3'],['\u01A4','\u01A5'],['\u01A6','\u0280'],['\u01A7','\u01A8'],['\u01A9','\u0283'],['\u01AC','\u01AD'],['\u01AE','\u0288'],['\u01AF','\u01B0'],['\u01B1','\u028A'],['\u01B2','\u028B'],['\u01B3','\u01B4'],['\u01B5','\u01B6'],['\u01B7','\u0292'],['\u01B8','\u01B9'],['\u01BC','\u01BD'],['\u01C4','\u01C6'],['\u01C5','\u01C6'],['\u01C7','\u01C9'],['\u01C8','\u01C9'],['\u01CA','\u01CC'],['\u01CB','\u01CC'],['\u01CD','\u01CE'],['\u01CF','\u01D0'],['\u01D1','\u01D2'],['\u01D3','\u01D4'],['\u01D5','\u01D6'],['\u01D7','\u01D8'],['\u01D9','\u01DA'],['\u01DB','\u01DC'],['\u01DE','\u01DF'],['\u01E0','\u01E1'],['\u01E2','\u01E3'],['\u01E4','\u01E5'],['\u01E6','\u01E7'],['\u01E8','\u01E9'],['\u01EA','\u01EB'],['\u01EC','\u01ED'],['\u01EE','\u01EF'],['\u01F1','\u01F3'],['\u01F2','\u01F3'],['\u01F4','\u01F5'],['\u01F6','\u0195'],['\u01F7','\u01BF'],['\u01F8','\u01F9'],['\u01FA','\u01FB'],['\u01FC','\u01FD'],['\u01FE','\u01FF'],['\u0200','\u0201'],['\u0202','\u0203'],['\u0204','\u0205'],['\u0206','\u0207'],['\u0208','\u0209'],['\u020A','\u020B'],['\u020C','\u020D'],['\u020E','\u020F'],['\u0210','\u0211'],['\u0212','\u0213'],['\u0214','\u0215'],['\u0216','\u0217'],['\u0218','\u0219'],['\u021A','\u021B'],['\u021C','\u021D'],['\u021E','\u021F'],['\u0220','\u019E'],['\u0222','\u0223'],['\u0224','\u0225'],['\u0226','\u0227'],['\u0228','\u0229'],['\u022A','\u022B'],['\u022C','\u022D'],['\u022E','\u022F'],['\u0230','\u0231'],['\u0232','\u0233'],['\u023A','\u2C65'],['\u023B','\u023C'],['\u023D','\u019A'],['\u023E','\u2C66'],['\u0241','\u0242'],['\u0243','\u0180'],['\u0244','\u0289'],['\u0245','\u028C'],['\u0246','\u0247'],['\u0248','\u0249'],['\u024A','\u024B'],['\u024C','\u024D'],['\u024E','\u024F'],['\u0345','\u03B9'],['\u0370','\u0371'],['\u0372','\u0373'],['\u0376','\u0377'],['\u037F','\u03F3'],['\u0386','\u03AC'],['\u0388','\u03AD'],['\u0389','\u03AE'],['\u038A','\u03AF'],['\u038C','\u03CC'],['\u038E','\u03CD'],['\u038F','\u03CE'],['\u0391','\u03B1'],['\u0392','\u03B2'],['\u0393','\u03B3'],['\u0394','\u03B4'],['\u0395','\u03B5'],['\u0396','\u03B6'],['\u0397','\u03B7'],['\u0398','\u03B8'],['\u0399','\u03B9'],['\u039A','\u03BA'],['\u039B','\u03BB'],['\u039C','\u03BC'],['\u039D','\u03BD'],['\u039E','\u03BE'],['\u039F','\u03BF'],['\u03A0','\u03C0'],['\u03A1','\u03C1'],['\u03A3','\u03C3'],['\u03A4','\u03C4'],['\u03A5','\u03C5'],['\u03A6','\u03C6'],['\u03A7','\u03C7'],['\u03A8','\u03C8'],['\u03A9','\u03C9'],['\u03AA','\u03CA'],['\u03AB','\u03CB'],['\u03C2','\u03C3'],['\u03CF','\u03D7'],['\u03D0','\u03B2'],['\u03D1','\u03B8'],['\u03D5','\u03C6'],['\u03D6','\u03C0'],['\u03D8','\u03D9'],['\u03DA','\u03DB'],['\u03DC','\u03DD'],['\u03DE','\u03DF'],['\u03E0','\u03E1'],['\u03E2','\u03E3'],['\u03E4','\u03E5'],['\u03E6','\u03E7'],['\u03E8','\u03E9'],['\u03EA','\u03EB'],['\u03EC','\u03ED'],['\u03EE','\u03EF'],['\u03F0','\u03BA'],['\u03F1','\u03C1'],['\u03F4','\u03B8'],['\u03F5','\u03B5'],['\u03F7','\u03F8'],['\u03F9','\u03F2'],['\u03FA','\u03FB'],['\u03FD','\u037B'],['\u03FE','\u037C'],['\u03FF','\u037D'],['\u0400','\u0450'],['\u0401','\u0451'],['\u0402','\u0452'],['\u0403','\u0453'],['\u0404','\u0454'],['\u0405','\u0455'],['\u0406','\u0456'],['\u0407','\u0457'],['\u0408','\u0458'],['\u0409','\u0459'],['\u040A','\u045A'],['\u040B','\u045B'],['\u040C','\u045C'],['\u040D','\u045D'],['\u040E','\u045E'],['\u040F','\u045F'],['\u0410','\u0430'],['\u0411','\u0431'],['\u0412','\u0432'],['\u0413','\u0433'],['\u0414','\u0434'],['\u0415','\u0435'],['\u0416','\u0436'],['\u0417','\u0437'],['\u0418','\u0438'],['\u0419','\u0439'],['\u041A','\u043A'],['\u041B','\u043B'],['\u041C','\u043C'],['\u041D','\u043D'],['\u041E','\u043E'],['\u041F','\u043F'],['\u0420','\u0440'],['\u0421','\u0441'],['\u0422','\u0442'],['\u0423','\u0443'],['\u0424','\u0444'],['\u0425','\u0445'],['\u0426','\u0446'],['\u0427','\u0447'],['\u0428','\u0448'],['\u0429','\u0449'],['\u042A','\u044A'],['\u042B','\u044B'],['\u042C','\u044C'],['\u042D','\u044D'],['\u042E','\u044E'],['\u042F','\u044F'],['\u0460','\u0461'],['\u0462','\u0463'],['\u0464','\u0465'],['\u0466','\u0467'],['\u0468','\u0469'],['\u046A','\u046B'],['\u046C','\u046D'],['\u046E','\u046F'],['\u0470','\u0471'],['\u0472','\u0473'],['\u0474','\u0475'],['\u0476','\u0477'],['\u0478','\u0479'],['\u047A','\u047B'],['\u047C','\u047D'],['\u047E','\u047F'],['\u0480','\u0481'],['\u048A','\u048B'],['\u048C','\u048D'],['\u048E','\u048F'],['\u0490','\u0491'],['\u0492','\u0493'],['\u0494','\u0495'],['\u0496','\u0497'],['\u0498','\u0499'],['\u049A','\u049B'],['\u049C','\u049D'],['\u049E','\u049F'],['\u04A0','\u04A1'],['\u04A2','\u04A3'],['\u04A4','\u04A5'],['\u04A6','\u04A7'],['\u04A8','\u04A9'],['\u04AA','\u04AB'],['\u04AC','\u04AD'],['\u04AE','\u04AF'],['\u04B0','\u04B1'],['\u04B2','\u04B3'],['\u04B4','\u04B5'],['\u04B6','\u04B7'],['\u04B8','\u04B9'],['\u04BA','\u04BB'],['\u04BC','\u04BD'],['\u04BE','\u04BF'],['\u04C0','\u04CF'],['\u04C1','\u04C2'],['\u04C3','\u04C4'],['\u04C5','\u04C6'],['\u04C7','\u04C8'],['\u04C9','\u04CA'],['\u04CB','\u04CC'],['\u04CD','\u04CE'],['\u04D0','\u04D1'],['\u04D2','\u04D3'],['\u04D4','\u04D5'],['\u04D6','\u04D7'],['\u04D8','\u04D9'],['\u04DA','\u04DB'],['\u04DC','\u04DD'],['\u04DE','\u04DF'],['\u04E0','\u04E1'],['\u04E2','\u04E3'],['\u04E4','\u04E5'],['\u04E6','\u04E7'],['\u04E8','\u04E9'],['\u04EA','\u04EB'],['\u04EC','\u04ED'],['\u04EE','\u04EF'],['\u04F0','\u04F1'],['\u04F2','\u04F3'],['\u04F4','\u04F5'],['\u04F6','\u04F7'],['\u04F8','\u04F9'],['\u04FA','\u04FB'],['\u04FC','\u04FD'],['\u04FE','\u04FF'],['\u0500','\u0501'],['\u0502','\u0503'],['\u0504','\u0505'],['\u0506','\u0507'],['\u0508','\u0509'],['\u050A','\u050B'],['\u050C','\u050D'],['\u050E','\u050F'],['\u0510','\u0511'],['\u0512','\u0513'],['\u0514','\u0515'],['\u0516','\u0517'],['\u0518','\u0519'],['\u051A','\u051B'],['\u051C','\u051D'],['\u051E','\u051F'],['\u0520','\u0521'],['\u0522','\u0523'],['\u0524','\u0525'],['\u0526','\u0527'],['\u0528','\u0529'],['\u052A','\u052B'],['\u052C','\u052D'],['\u052E','\u052F'],['\u0531','\u0561'],['\u0532','\u0562'],['\u0533','\u0563'],['\u0534','\u0564'],['\u0535','\u0565'],['\u0536','\u0566'],['\u0537','\u0567'],['\u0538','\u0568'],['\u0539','\u0569'],['\u053A','\u056A'],['\u053B','\u056B'],['\u053C','\u056C'],['\u053D','\u056D'],['\u053E','\u056E'],['\u053F','\u056F'],['\u0540','\u0570'],['\u0541','\u0571'],['\u0542','\u0572'],['\u0543','\u0573'],['\u0544','\u0574'],['\u0545','\u0575'],['\u0546','\u0576'],['\u0547','\u0577'],['\u0548','\u0578'],['\u0549','\u0579'],['\u054A','\u057A'],['\u054B','\u057B'],['\u054C','\u057C'],['\u054D','\u057D'],['\u054E','\u057E'],['\u054F','\u057F'],['\u0550','\u0580'],['\u0551','\u0581'],['\u0552','\u0582'],['\u0553','\u0583'],['\u0554','\u0584'],['\u0555','\u0585'],['\u0556','\u0586'],['\u10A0','\u2D00'],['\u10A1','\u2D01'],['\u10A2','\u2D02'],['\u10A3','\u2D03'],['\u10A4','\u2D04'],['\u10A5','\u2D05'],['\u10A6','\u2D06'],['\u10A7','\u2D07'],['\u10A8','\u2D08'],['\u10A9','\u2D09'],['\u10AA','\u2D0A'],['\u10AB','\u2D0B'],['\u10AC','\u2D0C'],['\u10AD','\u2D0D'],['\u10AE','\u2D0E'],['\u10AF','\u2D0F'],['\u10B0','\u2D10'],['\u10B1','\u2D11'],['\u10B2','\u2D12'],['\u10B3','\u2D13'],['\u10B4','\u2D14'],['\u10B5','\u2D15'],['\u10B6','\u2D16'],['\u10B7','\u2D17'],['\u10B8','\u2D18'],['\u10B9','\u2D19'],['\u10BA','\u2D1A'],['\u10BB','\u2D1B'],['\u10BC','\u2D1C'],['\u10BD','\u2D1D'],['\u10BE','\u2D1E'],['\u10BF','\u2D1F'],['\u10C0','\u2D20'],['\u10C1','\u2D21'],['\u10C2','\u2D22'],['\u10C3','\u2D23'],['\u10C4','\u2D24'],['\u10C5','\u2D25'],['\u10C7','\u2D27'],['\u10CD','\u2D2D'],['\u13F8','\u13F0'],['\u13F9','\u13F1'],['\u13FA','\u13F2'],['\u13FB','\u13F3'],['\u13FC','\u13F4'],['\u13FD','\u13F5'],['\u1C80','\u0432'],['\u1C81','\u0434'],['\u1C82','\u043E'],['\u1C83','\u0441'],['\u1C84','\u0442'],['\u1C85','\u0442'],['\u1C86','\u044A'],['\u1C87','\u0463'],['\u1C88','\uA64B'],['\u1C90','\u10D0'],['\u1C91','\u10D1'],['\u1C92','\u10D2'],['\u1C93','\u10D3'],['\u1C94','\u10D4'],['\u1C95','\u10D5'],['\u1C96','\u10D6'],['\u1C97','\u10D7'],['\u1C98','\u10D8'],['\u1C99','\u10D9'],['\u1C9A','\u10DA'],['\u1C9B','\u10DB'],['\u1C9C','\u10DC'],['\u1C9D','\u10DD'],['\u1C9E','\u10DE'],['\u1C9F','\u10DF'],['\u1CA0','\u10E0'],['\u1CA1','\u10E1'],['\u1CA2','\u10E2'],['\u1CA3','\u10E3'],['\u1CA4','\u10E4'],['\u1CA5','\u10E5'],['\u1CA6','\u10E6'],['\u1CA7','\u10E7'],['\u1CA8','\u10E8'],['\u1CA9','\u10E9'],['\u1CAA','\u10EA'],['\u1CAB','\u10EB'],['\u1CAC','\u10EC'],['\u1CAD','\u10ED'],['\u1CAE','\u10EE'],['\u1CAF','\u10EF'],['\u1CB0','\u10F0'],['\u1CB1','\u10F1'],['\u1CB2','\u10F2'],['\u1CB3','\u10F3'],['\u1CB4','\u10F4'],['\u1CB5','\u10F5'],['\u1CB6','\u10F6'],['\u1CB7','\u10F7'],['\u1CB8','\u10F8'],['\u1CB9','\u10F9'],['\u1CBA','\u10FA'],['\u1CBD','\u10FD'],['\u1CBE','\u10FE'],['\u1CBF','\u10FF'],['\u1E00','\u1E01'],['\u1E02','\u1E03'],['\u1E04','\u1E05'],['\u1E06','\u1E07'],['\u1E08','\u1E09'],['\u1E0A','\u1E0B'],['\u1E0C','\u1E0D'],['\u1E0E','\u1E0F'],['\u1E10','\u1E11'],['\u1E12','\u1E13'],['\u1E14','\u1E15'],['\u1E16','\u1E17'],['\u1E18','\u1E19'],['\u1E1A','\u1E1B'],['\u1E1C','\u1E1D'],['\u1E1E','\u1E1F'],['\u1E20','\u1E21'],['\u1E22','\u1E23'],['\u1E24','\u1E25'],['\u1E26','\u1E27'],['\u1E28','\u1E29'],['\u1E2A','\u1E2B'],['\u1E2C','\u1E2D'],['\u1E2E','\u1E2F'],['\u1E30','\u1E31'],['\u1E32','\u1E33'],['\u1E34','\u1E35'],['\u1E36','\u1E37'],['\u1E38','\u1E39'],['\u1E3A','\u1E3B'],['\u1E3C','\u1E3D'],['\u1E3E','\u1E3F'],['\u1E40','\u1E41'],['\u1E42','\u1E43'],['\u1E44','\u1E45'],['\u1E46','\u1E47'],['\u1E48','\u1E49'],['\u1E4A','\u1E4B'],['\u1E4C','\u1E4D'],['\u1E4E','\u1E4F'],['\u1E50','\u1E51'],['\u1E52','\u1E53'],['\u1E54','\u1E55'],['\u1E56','\u1E57'],['\u1E58','\u1E59'],['\u1E5A','\u1E5B'],['\u1E5C','\u1E5D'],['\u1E5E','\u1E5F'],['\u1E60','\u1E61'],['\u1E62','\u1E63'],['\u1E64','\u1E65'],['\u1E66','\u1E67'],['\u1E68','\u1E69'],['\u1E6A','\u1E6B'],['\u1E6C','\u1E6D'],['\u1E6E','\u1E6F'],['\u1E70','\u1E71'],['\u1E72','\u1E73'],['\u1E74','\u1E75'],['\u1E76','\u1E77'],['\u1E78','\u1E79'],['\u1E7A','\u1E7B'],['\u1E7C','\u1E7D'],['\u1E7E','\u1E7F'],['\u1E80','\u1E81'],['\u1E82','\u1E83'],['\u1E84','\u1E85'],['\u1E86','\u1E87'],['\u1E88','\u1E89'],['\u1E8A','\u1E8B'],['\u1E8C','\u1E8D'],['\u1E8E','\u1E8F'],['\u1E90','\u1E91'],['\u1E92','\u1E93'],['\u1E94','\u1E95'],['\u1E9B','\u1E61'],['\u1EA0','\u1EA1'],['\u1EA2','\u1EA3'],['\u1EA4','\u1EA5'],['\u1EA6','\u1EA7'],['\u1EA8','\u1EA9'],['\u1EAA','\u1EAB'],['\u1EAC','\u1EAD'],['\u1EAE','\u1EAF'],['\u1EB0','\u1EB1'],['\u1EB2','\u1EB3'],['\u1EB4','\u1EB5'],['\u1EB6','\u1EB7'],['\u1EB8','\u1EB9'],['\u1EBA','\u1EBB'],['\u1EBC','\u1EBD'],['\u1EBE','\u1EBF'],['\u1EC0','\u1EC1'],['\u1EC2','\u1EC3'],['\u1EC4','\u1EC5'],['\u1EC6','\u1EC7'],['\u1EC8','\u1EC9'],['\u1ECA','\u1ECB'],['\u1ECC','\u1ECD'],['\u1ECE','\u1ECF'],['\u1ED0','\u1ED1'],['\u1ED2','\u1ED3'],['\u1ED4','\u1ED5'],['\u1ED6','\u1ED7'],['\u1ED8','\u1ED9'],['\u1EDA','\u1EDB'],['\u1EDC','\u1EDD'],['\u1EDE','\u1EDF'],['\u1EE0','\u1EE1'],['\u1EE2','\u1EE3'],['\u1EE4','\u1EE5'],['\u1EE6','\u1EE7'],['\u1EE8','\u1EE9'],['\u1EEA','\u1EEB'],['\u1EEC','\u1EED'],['\u1EEE','\u1EEF'],['\u1EF0','\u1EF1'],['\u1EF2','\u1EF3'],['\u1EF4','\u1EF5'],['\u1EF6','\u1EF7'],['\u1EF8','\u1EF9'],['\u1EFA','\u1EFB'],['\u1EFC','\u1EFD'],['\u1EFE','\u1EFF'],['\u1F08','\u1F00'],['\u1F09','\u1F01'],['\u1F0A','\u1F02'],['\u1F0B','\u1F03'],['\u1F0C','\u1F04'],['\u1F0D','\u1F05'],['\u1F0E','\u1F06'],['\u1F0F','\u1F07'],['\u1F18','\u1F10'],['\u1F19','\u1F11'],['\u1F1A','\u1F12'],['\u1F1B','\u1F13'],['\u1F1C','\u1F14'],['\u1F1D','\u1F15'],['\u1F28','\u1F20'],['\u1F29','\u1F21'],['\u1F2A','\u1F22'],['\u1F2B','\u1F23'],['\u1F2C','\u1F24'],['\u1F2D','\u1F25'],['\u1F2E','\u1F26'],['\u1F2F','\u1F27'],['\u1F38','\u1F30'],['\u1F39','\u1F31'],['\u1F3A','\u1F32'],['\u1F3B','\u1F33'],['\u1F3C','\u1F34'],['\u1F3D','\u1F35'],['\u1F3E','\u1F36'],['\u1F3F','\u1F37'],['\u1F48','\u1F40'],['\u1F49','\u1F41'],['\u1F4A','\u1F42'],['\u1F4B','\u1F43'],['\u1F4C','\u1F44'],['\u1F4D','\u1F45'],['\u1F59','\u1F51'],['\u1F5B','\u1F53'],['\u1F5D','\u1F55'],['\u1F5F','\u1F57'],['\u1F68','\u1F60'],['\u1F69','\u1F61'],['\u1F6A','\u1F62'],['\u1F6B','\u1F63'],['\u1F6C','\u1F64'],['\u1F6D','\u1F65'],['\u1F6E','\u1F66'],['\u1F6F','\u1F67'],['\u1FB8','\u1FB0'],['\u1FB9','\u1FB1'],['\u1FBA','\u1F70'],['\u1FBB','\u1F71'],['\u1FBE','\u03B9'],['\u1FC8','\u1F72'],['\u1FC9','\u1F73'],['\u1FCA','\u1F74'],['\u1FCB','\u1F75'],['\u1FD8','\u1FD0'],['\u1FD9','\u1FD1'],['\u1FDA','\u1F76'],['\u1FDB','\u1F77'],['\u1FE8','\u1FE0'],['\u1FE9','\u1FE1'],['\u1FEA','\u1F7A'],['\u1FEB','\u1F7B'],['\u1FEC','\u1FE5'],['\u1FF8','\u1F78'],['\u1FF9','\u1F79'],['\u1FFA','\u1F7C'],['\u1FFB','\u1F7D'],['\u2126','\u03C9'],['\u212A','k'],['\u212B','\xE5'],['\u2132','\u214E'],['\u2160','\u2170'],['\u2161','\u2171'],['\u2162','\u2172'],['\u2163','\u2173'],['\u2164','\u2174'],['\u2165','\u2175'],['\u2166','\u2176'],['\u2167','\u2177'],['\u2168','\u2178'],['\u2169','\u2179'],['\u216A','\u217A'],['\u216B','\u217B'],['\u216C','\u217C'],['\u216D','\u217D'],['\u216E','\u217E'],['\u216F','\u217F'],['\u2183','\u2184'],['\u24B6','\u24D0'],['\u24B7','\u24D1'],['\u24B8','\u24D2'],['\u24B9','\u24D3'],['\u24BA','\u24D4'],['\u24BB','\u24D5'],['\u24BC','\u24D6'],['\u24BD','\u24D7'],['\u24BE','\u24D8'],['\u24BF','\u24D9'],['\u24C0','\u24DA'],['\u24C1','\u24DB'],['\u24C2','\u24DC'],['\u24C3','\u24DD'],['\u24C4','\u24DE'],['\u24C5','\u24DF'],['\u24C6','\u24E0'],['\u24C7','\u24E1'],['\u24C8','\u24E2'],['\u24C9','\u24E3'],['\u24CA','\u24E4'],['\u24CB','\u24E5'],['\u24CC','\u24E6'],['\u24CD','\u24E7'],['\u24CE','\u24E8'],['\u24CF','\u24E9'],['\u2C00','\u2C30'],['\u2C01','\u2C31'],['\u2C02','\u2C32'],['\u2C03','\u2C33'],['\u2C04','\u2C34'],['\u2C05','\u2C35'],['\u2C06','\u2C36'],['\u2C07','\u2C37'],['\u2C08','\u2C38'],['\u2C09','\u2C39'],['\u2C0A','\u2C3A'],['\u2C0B','\u2C3B'],['\u2C0C','\u2C3C'],['\u2C0D','\u2C3D'],['\u2C0E','\u2C3E'],['\u2C0F','\u2C3F'],['\u2C10','\u2C40'],['\u2C11','\u2C41'],['\u2C12','\u2C42'],['\u2C13','\u2C43'],['\u2C14','\u2C44'],['\u2C15','\u2C45'],['\u2C16','\u2C46'],['\u2C17','\u2C47'],['\u2C18','\u2C48'],['\u2C19','\u2C49'],['\u2C1A','\u2C4A'],['\u2C1B','\u2C4B'],['\u2C1C','\u2C4C'],['\u2C1D','\u2C4D'],['\u2C1E','\u2C4E'],['\u2C1F','\u2C4F'],['\u2C20','\u2C50'],['\u2C21','\u2C51'],['\u2C22','\u2C52'],['\u2C23','\u2C53'],['\u2C24','\u2C54'],['\u2C25','\u2C55'],['\u2C26','\u2C56'],['\u2C27','\u2C57'],['\u2C28','\u2C58'],['\u2C29','\u2C59'],['\u2C2A','\u2C5A'],['\u2C2B','\u2C5B'],['\u2C2C','\u2C5C'],['\u2C2D','\u2C5D'],['\u2C2E','\u2C5E'],['\u2C60','\u2C61'],['\u2C62','\u026B'],['\u2C63','\u1D7D'],['\u2C64','\u027D'],['\u2C67','\u2C68'],['\u2C69','\u2C6A'],['\u2C6B','\u2C6C'],['\u2C6D','\u0251'],['\u2C6E','\u0271'],['\u2C6F','\u0250'],['\u2C70','\u0252'],['\u2C72','\u2C73'],['\u2C75','\u2C76'],['\u2C7E','\u023F'],['\u2C7F','\u0240'],['\u2C80','\u2C81'],['\u2C82','\u2C83'],['\u2C84','\u2C85'],['\u2C86','\u2C87'],['\u2C88','\u2C89'],['\u2C8A','\u2C8B'],['\u2C8C','\u2C8D'],['\u2C8E','\u2C8F'],['\u2C90','\u2C91'],['\u2C92','\u2C93'],['\u2C94','\u2C95'],['\u2C96','\u2C97'],['\u2C98','\u2C99'],['\u2C9A','\u2C9B'],['\u2C9C','\u2C9D'],['\u2C9E','\u2C9F'],['\u2CA0','\u2CA1'],['\u2CA2','\u2CA3'],['\u2CA4','\u2CA5'],['\u2CA6','\u2CA7'],['\u2CA8','\u2CA9'],['\u2CAA','\u2CAB'],['\u2CAC','\u2CAD'],['\u2CAE','\u2CAF'],['\u2CB0','\u2CB1'],['\u2CB2','\u2CB3'],['\u2CB4','\u2CB5'],['\u2CB6','\u2CB7'],['\u2CB8','\u2CB9'],['\u2CBA','\u2CBB'],['\u2CBC','\u2CBD'],['\u2CBE','\u2CBF'],['\u2CC0','\u2CC1'],['\u2CC2','\u2CC3'],['\u2CC4','\u2CC5'],['\u2CC6','\u2CC7'],['\u2CC8','\u2CC9'],['\u2CCA','\u2CCB'],['\u2CCC','\u2CCD'],['\u2CCE','\u2CCF'],['\u2CD0','\u2CD1'],['\u2CD2','\u2CD3'],['\u2CD4','\u2CD5'],['\u2CD6','\u2CD7'],['\u2CD8','\u2CD9'],['\u2CDA','\u2CDB'],['\u2CDC','\u2CDD'],['\u2CDE','\u2CDF'],['\u2CE0','\u2CE1'],['\u2CE2','\u2CE3'],['\u2CEB','\u2CEC'],['\u2CED','\u2CEE'],['\u2CF2','\u2CF3'],['\uA640','\uA641'],['\uA642','\uA643'],['\uA644','\uA645'],['\uA646','\uA647'],['\uA648','\uA649'],['\uA64A','\uA64B'],['\uA64C','\uA64D'],['\uA64E','\uA64F'],['\uA650','\uA651'],['\uA652','\uA653'],['\uA654','\uA655'],['\uA656','\uA657'],['\uA658','\uA659'],['\uA65A','\uA65B'],['\uA65C','\uA65D'],['\uA65E','\uA65F'],['\uA660','\uA661'],['\uA662','\uA663'],['\uA664','\uA665'],['\uA666','\uA667'],['\uA668','\uA669'],['\uA66A','\uA66B'],['\uA66C','\uA66D'],['\uA680','\uA681'],['\uA682','\uA683'],['\uA684','\uA685'],['\uA686','\uA687'],['\uA688','\uA689'],['\uA68A','\uA68B'],['\uA68C','\uA68D'],['\uA68E','\uA68F'],['\uA690','\uA691'],['\uA692','\uA693'],['\uA694','\uA695'],['\uA696','\uA697'],['\uA698','\uA699'],['\uA69A','\uA69B'],['\uA722','\uA723'],['\uA724','\uA725'],['\uA726','\uA727'],['\uA728','\uA729'],['\uA72A','\uA72B'],['\uA72C','\uA72D'],['\uA72E','\uA72F'],['\uA732','\uA733'],['\uA734','\uA735'],['\uA736','\uA737'],['\uA738','\uA739'],['\uA73A','\uA73B'],['\uA73C','\uA73D'],['\uA73E','\uA73F'],['\uA740','\uA741'],['\uA742','\uA743'],['\uA744','\uA745'],['\uA746','\uA747'],['\uA748','\uA749'],['\uA74A','\uA74B'],['\uA74C','\uA74D'],['\uA74E','\uA74F'],['\uA750','\uA751'],['\uA752','\uA753'],['\uA754','\uA755'],['\uA756','\uA757'],['\uA758','\uA759'],['\uA75A','\uA75B'],['\uA75C','\uA75D'],['\uA75E','\uA75F'],['\uA760','\uA761'],['\uA762','\uA763'],['\uA764','\uA765'],['\uA766','\uA767'],['\uA768','\uA769'],['\uA76A','\uA76B'],['\uA76C','\uA76D'],['\uA76E','\uA76F'],['\uA779','\uA77A'],['\uA77B','\uA77C'],['\uA77D','\u1D79'],['\uA77E','\uA77F'],['\uA780','\uA781'],['\uA782','\uA783'],['\uA784','\uA785'],['\uA786','\uA787'],['\uA78B','\uA78C'],['\uA78D','\u0265'],['\uA790','\uA791'],['\uA792','\uA793'],['\uA796','\uA797'],['\uA798','\uA799'],['\uA79A','\uA79B'],['\uA79C','\uA79D'],['\uA79E','\uA79F'],['\uA7A0','\uA7A1'],['\uA7A2','\uA7A3'],['\uA7A4','\uA7A5'],['\uA7A6','\uA7A7'],['\uA7A8','\uA7A9'],['\uA7AA','\u0266'],['\uA7AB','\u025C'],['\uA7AC','\u0261'],['\uA7AD','\u026C'],['\uA7AE','\u026A'],['\uA7B0','\u029E'],['\uA7B1','\u0287'],['\uA7B2','\u029D'],['\uA7B3','\uAB53'],['\uA7B4','\uA7B5'],['\uA7B6','\uA7B7'],['\uA7B8','\uA7B9'],['\uA7BA','\uA7BB'],['\uA7BC','\uA7BD'],['\uA7BE','\uA7BF'],['\uA7C2','\uA7C3'],['\uA7C4','\uA794'],['\uA7C5','\u0282'],['\uA7C6','\u1D8E'],['\uA7C7','\uA7C8'],['\uA7C9','\uA7CA'],['\uA7F5','\uA7F6'],['\uAB70','\u13A0'],['\uAB71','\u13A1'],['\uAB72','\u13A2'],['\uAB73','\u13A3'],['\uAB74','\u13A4'],['\uAB75','\u13A5'],['\uAB76','\u13A6'],['\uAB77','\u13A7'],['\uAB78','\u13A8'],['\uAB79','\u13A9'],['\uAB7A','\u13AA'],['\uAB7B','\u13AB'],['\uAB7C','\u13AC'],['\uAB7D','\u13AD'],['\uAB7E','\u13AE'],['\uAB7F','\u13AF'],['\uAB80','\u13B0'],['\uAB81','\u13B1'],['\uAB82','\u13B2'],['\uAB83','\u13B3'],['\uAB84','\u13B4'],['\uAB85','\u13B5'],['\uAB86','\u13B6'],['\uAB87','\u13B7'],['\uAB88','\u13B8'],['\uAB89','\u13B9'],['\uAB8A','\u13BA'],['\uAB8B','\u13BB'],['\uAB8C','\u13BC'],['\uAB8D','\u13BD'],['\uAB8E','\u13BE'],['\uAB8F','\u13BF'],['\uAB90','\u13C0'],['\uAB91','\u13C1'],['\uAB92','\u13C2'],['\uAB93','\u13C3'],['\uAB94','\u13C4'],['\uAB95','\u13C5'],['\uAB96','\u13C6'],['\uAB97','\u13C7'],['\uAB98','\u13C8'],['\uAB99','\u13C9'],['\uAB9A','\u13CA'],['\uAB9B','\u13CB'],['\uAB9C','\u13CC'],['\uAB9D','\u13CD'],['\uAB9E','\u13CE'],['\uAB9F','\u13CF'],['\uABA0','\u13D0'],['\uABA1','\u13D1'],['\uABA2','\u13D2'],['\uABA3','\u13D3'],['\uABA4','\u13D4'],['\uABA5','\u13D5'],['\uABA6','\u13D6'],['\uABA7','\u13D7'],['\uABA8','\u13D8'],['\uABA9','\u13D9'],['\uABAA','\u13DA'],['\uABAB','\u13DB'],['\uABAC','\u13DC'],['\uABAD','\u13DD'],['\uABAE','\u13DE'],['\uABAF','\u13DF'],['\uABB0','\u13E0'],['\uABB1','\u13E1'],['\uABB2','\u13E2'],['\uABB3','\u13E3'],['\uABB4','\u13E4'],['\uABB5','\u13E5'],['\uABB6','\u13E6'],['\uABB7','\u13E7'],['\uABB8','\u13E8'],['\uABB9','\u13E9'],['\uABBA','\u13EA'],['\uABBB','\u13EB'],['\uABBC','\u13EC'],['\uABBD','\u13ED'],['\uABBE','\u13EE'],['\uABBF','\u13EF'],['\uFF21','\uFF41'],['\uFF22','\uFF42'],['\uFF23','\uFF43'],['\uFF24','\uFF44'],['\uFF25','\uFF45'],['\uFF26','\uFF46'],['\uFF27','\uFF47'],['\uFF28','\uFF48'],['\uFF29','\uFF49'],['\uFF2A','\uFF4A'],['\uFF2B','\uFF4B'],['\uFF2C','\uFF4C'],['\uFF2D','\uFF4D'],['\uFF2E','\uFF4E'],['\uFF2F','\uFF4F'],['\uFF30','\uFF50'],['\uFF31','\uFF51'],['\uFF32','\uFF52'],['\uFF33','\uFF53'],['\uFF34','\uFF54'],['\uFF35','\uFF55'],['\uFF36','\uFF56'],['\uFF37','\uFF57'],['\uFF38','\uFF58'],['\uFF39','\uFF59'],['\uFF3A','\uFF5A'],['\uD801\uDC00','\uD801\uDC28'],['\uD801\uDC01','\uD801\uDC29'],['\uD801\uDC02','\uD801\uDC2A'],['\uD801\uDC03','\uD801\uDC2B'],['\uD801\uDC04','\uD801\uDC2C'],['\uD801\uDC05','\uD801\uDC2D'],['\uD801\uDC06','\uD801\uDC2E'],['\uD801\uDC07','\uD801\uDC2F'],['\uD801\uDC08','\uD801\uDC30'],['\uD801\uDC09','\uD801\uDC31'],['\uD801\uDC0A','\uD801\uDC32'],['\uD801\uDC0B','\uD801\uDC33'],['\uD801\uDC0C','\uD801\uDC34'],['\uD801\uDC0D','\uD801\uDC35'],['\uD801\uDC0E','\uD801\uDC36'],['\uD801\uDC0F','\uD801\uDC37'],['\uD801\uDC10','\uD801\uDC38'],['\uD801\uDC11','\uD801\uDC39'],['\uD801\uDC12','\uD801\uDC3A'],['\uD801\uDC13','\uD801\uDC3B'],['\uD801\uDC14','\uD801\uDC3C'],['\uD801\uDC15','\uD801\uDC3D'],['\uD801\uDC16','\uD801\uDC3E'],['\uD801\uDC17','\uD801\uDC3F'],['\uD801\uDC18','\uD801\uDC40'],['\uD801\uDC19','\uD801\uDC41'],['\uD801\uDC1A','\uD801\uDC42'],['\uD801\uDC1B','\uD801\uDC43'],['\uD801\uDC1C','\uD801\uDC44'],['\uD801\uDC1D','\uD801\uDC45'],['\uD801\uDC1E','\uD801\uDC46'],['\uD801\uDC1F','\uD801\uDC47'],['\uD801\uDC20','\uD801\uDC48'],['\uD801\uDC21','\uD801\uDC49'],['\uD801\uDC22','\uD801\uDC4A'],['\uD801\uDC23','\uD801\uDC4B'],['\uD801\uDC24','\uD801\uDC4C'],['\uD801\uDC25','\uD801\uDC4D'],['\uD801\uDC26','\uD801\uDC4E'],['\uD801\uDC27','\uD801\uDC4F'],['\uD801\uDCB0','\uD801\uDCD8'],['\uD801\uDCB1','\uD801\uDCD9'],['\uD801\uDCB2','\uD801\uDCDA'],['\uD801\uDCB3','\uD801\uDCDB'],['\uD801\uDCB4','\uD801\uDCDC'],['\uD801\uDCB5','\uD801\uDCDD'],['\uD801\uDCB6','\uD801\uDCDE'],['\uD801\uDCB7','\uD801\uDCDF'],['\uD801\uDCB8','\uD801\uDCE0'],['\uD801\uDCB9','\uD801\uDCE1'],['\uD801\uDCBA','\uD801\uDCE2'],['\uD801\uDCBB','\uD801\uDCE3'],['\uD801\uDCBC','\uD801\uDCE4'],['\uD801\uDCBD','\uD801\uDCE5'],['\uD801\uDCBE','\uD801\uDCE6'],['\uD801\uDCBF','\uD801\uDCE7'],['\uD801\uDCC0','\uD801\uDCE8'],['\uD801\uDCC1','\uD801\uDCE9'],['\uD801\uDCC2','\uD801\uDCEA'],['\uD801\uDCC3','\uD801\uDCEB'],['\uD801\uDCC4','\uD801\uDCEC'],['\uD801\uDCC5','\uD801\uDCED'],['\uD801\uDCC6','\uD801\uDCEE'],['\uD801\uDCC7','\uD801\uDCEF'],['\uD801\uDCC8','\uD801\uDCF0'],['\uD801\uDCC9','\uD801\uDCF1'],['\uD801\uDCCA','\uD801\uDCF2'],['\uD801\uDCCB','\uD801\uDCF3'],['\uD801\uDCCC','\uD801\uDCF4'],['\uD801\uDCCD','\uD801\uDCF5'],['\uD801\uDCCE','\uD801\uDCF6'],['\uD801\uDCCF','\uD801\uDCF7'],['\uD801\uDCD0','\uD801\uDCF8'],['\uD801\uDCD1','\uD801\uDCF9'],['\uD801\uDCD2','\uD801\uDCFA'],['\uD801\uDCD3','\uD801\uDCFB'],['\uD803\uDC80','\uD803\uDCC0'],['\uD803\uDC81','\uD803\uDCC1'],['\uD803\uDC82','\uD803\uDCC2'],['\uD803\uDC83','\uD803\uDCC3'],['\uD803\uDC84','\uD803\uDCC4'],['\uD803\uDC85','\uD803\uDCC5'],['\uD803\uDC86','\uD803\uDCC6'],['\uD803\uDC87','\uD803\uDCC7'],['\uD803\uDC88','\uD803\uDCC8'],['\uD803\uDC89','\uD803\uDCC9'],['\uD803\uDC8A','\uD803\uDCCA'],['\uD803\uDC8B','\uD803\uDCCB'],['\uD803\uDC8C','\uD803\uDCCC'],['\uD803\uDC8D','\uD803\uDCCD'],['\uD803\uDC8E','\uD803\uDCCE'],['\uD803\uDC8F','\uD803\uDCCF'],['\uD803\uDC90','\uD803\uDCD0'],['\uD803\uDC91','\uD803\uDCD1'],['\uD803\uDC92','\uD803\uDCD2'],['\uD803\uDC93','\uD803\uDCD3'],['\uD803\uDC94','\uD803\uDCD4'],['\uD803\uDC95','\uD803\uDCD5'],['\uD803\uDC96','\uD803\uDCD6'],['\uD803\uDC97','\uD803\uDCD7'],['\uD803\uDC98','\uD803\uDCD8'],['\uD803\uDC99','\uD803\uDCD9'],['\uD803\uDC9A','\uD803\uDCDA'],['\uD803\uDC9B','\uD803\uDCDB'],['\uD803\uDC9C','\uD803\uDCDC'],['\uD803\uDC9D','\uD803\uDCDD'],['\uD803\uDC9E','\uD803\uDCDE'],['\uD803\uDC9F','\uD803\uDCDF'],['\uD803\uDCA0','\uD803\uDCE0'],['\uD803\uDCA1','\uD803\uDCE1'],['\uD803\uDCA2','\uD803\uDCE2'],['\uD803\uDCA3','\uD803\uDCE3'],['\uD803\uDCA4','\uD803\uDCE4'],['\uD803\uDCA5','\uD803\uDCE5'],['\uD803\uDCA6','\uD803\uDCE6'],['\uD803\uDCA7','\uD803\uDCE7'],['\uD803\uDCA8','\uD803\uDCE8'],['\uD803\uDCA9','\uD803\uDCE9'],['\uD803\uDCAA','\uD803\uDCEA'],['\uD803\uDCAB','\uD803\uDCEB'],['\uD803\uDCAC','\uD803\uDCEC'],['\uD803\uDCAD','\uD803\uDCED'],['\uD803\uDCAE','\uD803\uDCEE'],['\uD803\uDCAF','\uD803\uDCEF'],['\uD803\uDCB0','\uD803\uDCF0'],['\uD803\uDCB1','\uD803\uDCF1'],['\uD803\uDCB2','\uD803\uDCF2'],['\uD806\uDCA0','\uD806\uDCC0'],['\uD806\uDCA1','\uD806\uDCC1'],['\uD806\uDCA2','\uD806\uDCC2'],['\uD806\uDCA3','\uD806\uDCC3'],['\uD806\uDCA4','\uD806\uDCC4'],['\uD806\uDCA5','\uD806\uDCC5'],['\uD806\uDCA6','\uD806\uDCC6'],['\uD806\uDCA7','\uD806\uDCC7'],['\uD806\uDCA8','\uD806\uDCC8'],['\uD806\uDCA9','\uD806\uDCC9'],['\uD806\uDCAA','\uD806\uDCCA'],['\uD806\uDCAB','\uD806\uDCCB'],['\uD806\uDCAC','\uD806\uDCCC'],['\uD806\uDCAD','\uD806\uDCCD'],['\uD806\uDCAE','\uD806\uDCCE'],['\uD806\uDCAF','\uD806\uDCCF'],['\uD806\uDCB0','\uD806\uDCD0'],['\uD806\uDCB1','\uD806\uDCD1'],['\uD806\uDCB2','\uD806\uDCD2'],['\uD806\uDCB3','\uD806\uDCD3'],['\uD806\uDCB4','\uD806\uDCD4'],['\uD806\uDCB5','\uD806\uDCD5'],['\uD806\uDCB6','\uD806\uDCD6'],['\uD806\uDCB7','\uD806\uDCD7'],['\uD806\uDCB8','\uD806\uDCD8'],['\uD806\uDCB9','\uD806\uDCD9'],['\uD806\uDCBA','\uD806\uDCDA'],['\uD806\uDCBB','\uD806\uDCDB'],['\uD806\uDCBC','\uD806\uDCDC'],['\uD806\uDCBD','\uD806\uDCDD'],['\uD806\uDCBE','\uD806\uDCDE'],['\uD806\uDCBF','\uD806\uDCDF'],['\uD81B\uDE40','\uD81B\uDE60'],['\uD81B\uDE41','\uD81B\uDE61'],['\uD81B\uDE42','\uD81B\uDE62'],['\uD81B\uDE43','\uD81B\uDE63'],['\uD81B\uDE44','\uD81B\uDE64'],['\uD81B\uDE45','\uD81B\uDE65'],['\uD81B\uDE46','\uD81B\uDE66'],['\uD81B\uDE47','\uD81B\uDE67'],['\uD81B\uDE48','\uD81B\uDE68'],['\uD81B\uDE49','\uD81B\uDE69'],['\uD81B\uDE4A','\uD81B\uDE6A'],['\uD81B\uDE4B','\uD81B\uDE6B'],['\uD81B\uDE4C','\uD81B\uDE6C'],['\uD81B\uDE4D','\uD81B\uDE6D'],['\uD81B\uDE4E','\uD81B\uDE6E'],['\uD81B\uDE4F','\uD81B\uDE6F'],['\uD81B\uDE50','\uD81B\uDE70'],['\uD81B\uDE51','\uD81B\uDE71'],['\uD81B\uDE52','\uD81B\uDE72'],['\uD81B\uDE53','\uD81B\uDE73'],['\uD81B\uDE54','\uD81B\uDE74'],['\uD81B\uDE55','\uD81B\uDE75'],['\uD81B\uDE56','\uD81B\uDE76'],['\uD81B\uDE57','\uD81B\uDE77'],['\uD81B\uDE58','\uD81B\uDE78'],['\uD81B\uDE59','\uD81B\uDE79'],['\uD81B\uDE5A','\uD81B\uDE7A'],['\uD81B\uDE5B','\uD81B\uDE7B'],['\uD81B\uDE5C','\uD81B\uDE7C'],['\uD81B\uDE5D','\uD81B\uDE7D'],['\uD81B\uDE5E','\uD81B\uDE7E'],['\uD81B\uDE5F','\uD81B\uDE7F'],['\uD83A\uDD00','\uD83A\uDD22'],['\uD83A\uDD01','\uD83A\uDD23'],['\uD83A\uDD02','\uD83A\uDD24'],['\uD83A\uDD03','\uD83A\uDD25'],['\uD83A\uDD04','\uD83A\uDD26'],['\uD83A\uDD05','\uD83A\uDD27'],['\uD83A\uDD06','\uD83A\uDD28'],['\uD83A\uDD07','\uD83A\uDD29'],['\uD83A\uDD08','\uD83A\uDD2A'],['\uD83A\uDD09','\uD83A\uDD2B'],['\uD83A\uDD0A','\uD83A\uDD2C'],['\uD83A\uDD0B','\uD83A\uDD2D'],['\uD83A\uDD0C','\uD83A\uDD2E'],['\uD83A\uDD0D','\uD83A\uDD2F'],['\uD83A\uDD0E','\uD83A\uDD30'],['\uD83A\uDD0F','\uD83A\uDD31'],['\uD83A\uDD10','\uD83A\uDD32'],['\uD83A\uDD11','\uD83A\uDD33'],['\uD83A\uDD12','\uD83A\uDD34'],['\uD83A\uDD13','\uD83A\uDD35'],['\uD83A\uDD14','\uD83A\uDD36'],['\uD83A\uDD15','\uD83A\uDD37'],['\uD83A\uDD16','\uD83A\uDD38'],['\uD83A\uDD17','\uD83A\uDD39'],['\uD83A\uDD18','\uD83A\uDD3A'],['\uD83A\uDD19','\uD83A\uDD3B'],['\uD83A\uDD1A','\uD83A\uDD3C'],['\uD83A\uDD1B','\uD83A\uDD3D'],['\uD83A\uDD1C','\uD83A\uDD3E'],['\uD83A\uDD1D','\uD83A\uDD3F'],['\uD83A\uDD1E','\uD83A\uDD40'],['\uD83A\uDD1F','\uD83A\uDD41'],['\uD83A\uDD20','\uD83A\uDD42'],['\uD83A\uDD21','\uD83A\uDD43']]);
+  var symbols$1=new Map([['A','a'],['B','b'],['C','c'],['D','d'],['E','e'],['F','f'],['G','g'],['H','h'],['I','i'],['J','j'],['K','k'],['L','l'],['M','m'],['N','n'],['O','o'],['P','p'],['Q','q'],['R','r'],['S','s'],['T','t'],['U','u'],['V','v'],['W','w'],['X','x'],['Y','y'],['Z','z'],['\xB5','\u03BC'],['\xC0','\xE0'],['\xC1','\xE1'],['\xC2','\xE2'],['\xC3','\xE3'],['\xC4','\xE4'],['\xC5','\xE5'],['\xC6','\xE6'],['\xC7','\xE7'],['\xC8','\xE8'],['\xC9','\xE9'],['\xCA','\xEA'],['\xCB','\xEB'],['\xCC','\xEC'],['\xCD','\xED'],['\xCE','\xEE'],['\xCF','\xEF'],['\xD0','\xF0'],['\xD1','\xF1'],['\xD2','\xF2'],['\xD3','\xF3'],['\xD4','\xF4'],['\xD5','\xF5'],['\xD6','\xF6'],['\xD8','\xF8'],['\xD9','\xF9'],['\xDA','\xFA'],['\xDB','\xFB'],['\xDC','\xFC'],['\xDD','\xFD'],['\xDE','\xFE'],['\u0100','\u0101'],['\u0102','\u0103'],['\u0104','\u0105'],['\u0106','\u0107'],['\u0108','\u0109'],['\u010A','\u010B'],['\u010C','\u010D'],['\u010E','\u010F'],['\u0110','\u0111'],['\u0112','\u0113'],['\u0114','\u0115'],['\u0116','\u0117'],['\u0118','\u0119'],['\u011A','\u011B'],['\u011C','\u011D'],['\u011E','\u011F'],['\u0120','\u0121'],['\u0122','\u0123'],['\u0124','\u0125'],['\u0126','\u0127'],['\u0128','\u0129'],['\u012A','\u012B'],['\u012C','\u012D'],['\u012E','\u012F'],['\u0132','\u0133'],['\u0134','\u0135'],['\u0136','\u0137'],['\u0139','\u013A'],['\u013B','\u013C'],['\u013D','\u013E'],['\u013F','\u0140'],['\u0141','\u0142'],['\u0143','\u0144'],['\u0145','\u0146'],['\u0147','\u0148'],['\u014A','\u014B'],['\u014C','\u014D'],['\u014E','\u014F'],['\u0150','\u0151'],['\u0152','\u0153'],['\u0154','\u0155'],['\u0156','\u0157'],['\u0158','\u0159'],['\u015A','\u015B'],['\u015C','\u015D'],['\u015E','\u015F'],['\u0160','\u0161'],['\u0162','\u0163'],['\u0164','\u0165'],['\u0166','\u0167'],['\u0168','\u0169'],['\u016A','\u016B'],['\u016C','\u016D'],['\u016E','\u016F'],['\u0170','\u0171'],['\u0172','\u0173'],['\u0174','\u0175'],['\u0176','\u0177'],['\u0178','\xFF'],['\u0179','\u017A'],['\u017B','\u017C'],['\u017D','\u017E'],['\u017F','s'],['\u0181','\u0253'],['\u0182','\u0183'],['\u0184','\u0185'],['\u0186','\u0254'],['\u0187','\u0188'],['\u0189','\u0256'],['\u018A','\u0257'],['\u018B','\u018C'],['\u018E','\u01DD'],['\u018F','\u0259'],['\u0190','\u025B'],['\u0191','\u0192'],['\u0193','\u0260'],['\u0194','\u0263'],['\u0196','\u0269'],['\u0197','\u0268'],['\u0198','\u0199'],['\u019C','\u026F'],['\u019D','\u0272'],['\u019F','\u0275'],['\u01A0','\u01A1'],['\u01A2','\u01A3'],['\u01A4','\u01A5'],['\u01A6','\u0280'],['\u01A7','\u01A8'],['\u01A9','\u0283'],['\u01AC','\u01AD'],['\u01AE','\u0288'],['\u01AF','\u01B0'],['\u01B1','\u028A'],['\u01B2','\u028B'],['\u01B3','\u01B4'],['\u01B5','\u01B6'],['\u01B7','\u0292'],['\u01B8','\u01B9'],['\u01BC','\u01BD'],['\u01C4','\u01C6'],['\u01C5','\u01C6'],['\u01C7','\u01C9'],['\u01C8','\u01C9'],['\u01CA','\u01CC'],['\u01CB','\u01CC'],['\u01CD','\u01CE'],['\u01CF','\u01D0'],['\u01D1','\u01D2'],['\u01D3','\u01D4'],['\u01D5','\u01D6'],['\u01D7','\u01D8'],['\u01D9','\u01DA'],['\u01DB','\u01DC'],['\u01DE','\u01DF'],['\u01E0','\u01E1'],['\u01E2','\u01E3'],['\u01E4','\u01E5'],['\u01E6','\u01E7'],['\u01E8','\u01E9'],['\u01EA','\u01EB'],['\u01EC','\u01ED'],['\u01EE','\u01EF'],['\u01F1','\u01F3'],['\u01F2','\u01F3'],['\u01F4','\u01F5'],['\u01F6','\u0195'],['\u01F7','\u01BF'],['\u01F8','\u01F9'],['\u01FA','\u01FB'],['\u01FC','\u01FD'],['\u01FE','\u01FF'],['\u0200','\u0201'],['\u0202','\u0203'],['\u0204','\u0205'],['\u0206','\u0207'],['\u0208','\u0209'],['\u020A','\u020B'],['\u020C','\u020D'],['\u020E','\u020F'],['\u0210','\u0211'],['\u0212','\u0213'],['\u0214','\u0215'],['\u0216','\u0217'],['\u0218','\u0219'],['\u021A','\u021B'],['\u021C','\u021D'],['\u021E','\u021F'],['\u0220','\u019E'],['\u0222','\u0223'],['\u0224','\u0225'],['\u0226','\u0227'],['\u0228','\u0229'],['\u022A','\u022B'],['\u022C','\u022D'],['\u022E','\u022F'],['\u0230','\u0231'],['\u0232','\u0233'],['\u023A','\u2C65'],['\u023B','\u023C'],['\u023D','\u019A'],['\u023E','\u2C66'],['\u0241','\u0242'],['\u0243','\u0180'],['\u0244','\u0289'],['\u0245','\u028C'],['\u0246','\u0247'],['\u0248','\u0249'],['\u024A','\u024B'],['\u024C','\u024D'],['\u024E','\u024F'],['\u0345','\u03B9'],['\u0370','\u0371'],['\u0372','\u0373'],['\u0376','\u0377'],['\u037F','\u03F3'],['\u0386','\u03AC'],['\u0388','\u03AD'],['\u0389','\u03AE'],['\u038A','\u03AF'],['\u038C','\u03CC'],['\u038E','\u03CD'],['\u038F','\u03CE'],['\u0391','\u03B1'],['\u0392','\u03B2'],['\u0393','\u03B3'],['\u0394','\u03B4'],['\u0395','\u03B5'],['\u0396','\u03B6'],['\u0397','\u03B7'],['\u0398','\u03B8'],['\u0399','\u03B9'],['\u039A','\u03BA'],['\u039B','\u03BB'],['\u039C','\u03BC'],['\u039D','\u03BD'],['\u039E','\u03BE'],['\u039F','\u03BF'],['\u03A0','\u03C0'],['\u03A1','\u03C1'],['\u03A3','\u03C3'],['\u03A4','\u03C4'],['\u03A5','\u03C5'],['\u03A6','\u03C6'],['\u03A7','\u03C7'],['\u03A8','\u03C8'],['\u03A9','\u03C9'],['\u03AA','\u03CA'],['\u03AB','\u03CB'],['\u03C2','\u03C3'],['\u03CF','\u03D7'],['\u03D0','\u03B2'],['\u03D1','\u03B8'],['\u03D5','\u03C6'],['\u03D6','\u03C0'],['\u03D8','\u03D9'],['\u03DA','\u03DB'],['\u03DC','\u03DD'],['\u03DE','\u03DF'],['\u03E0','\u03E1'],['\u03E2','\u03E3'],['\u03E4','\u03E5'],['\u03E6','\u03E7'],['\u03E8','\u03E9'],['\u03EA','\u03EB'],['\u03EC','\u03ED'],['\u03EE','\u03EF'],['\u03F0','\u03BA'],['\u03F1','\u03C1'],['\u03F4','\u03B8'],['\u03F5','\u03B5'],['\u03F7','\u03F8'],['\u03F9','\u03F2'],['\u03FA','\u03FB'],['\u03FD','\u037B'],['\u03FE','\u037C'],['\u03FF','\u037D'],['\u0400','\u0450'],['\u0401','\u0451'],['\u0402','\u0452'],['\u0403','\u0453'],['\u0404','\u0454'],['\u0405','\u0455'],['\u0406','\u0456'],['\u0407','\u0457'],['\u0408','\u0458'],['\u0409','\u0459'],['\u040A','\u045A'],['\u040B','\u045B'],['\u040C','\u045C'],['\u040D','\u045D'],['\u040E','\u045E'],['\u040F','\u045F'],['\u0410','\u0430'],['\u0411','\u0431'],['\u0412','\u0432'],['\u0413','\u0433'],['\u0414','\u0434'],['\u0415','\u0435'],['\u0416','\u0436'],['\u0417','\u0437'],['\u0418','\u0438'],['\u0419','\u0439'],['\u041A','\u043A'],['\u041B','\u043B'],['\u041C','\u043C'],['\u041D','\u043D'],['\u041E','\u043E'],['\u041F','\u043F'],['\u0420','\u0440'],['\u0421','\u0441'],['\u0422','\u0442'],['\u0423','\u0443'],['\u0424','\u0444'],['\u0425','\u0445'],['\u0426','\u0446'],['\u0427','\u0447'],['\u0428','\u0448'],['\u0429','\u0449'],['\u042A','\u044A'],['\u042B','\u044B'],['\u042C','\u044C'],['\u042D','\u044D'],['\u042E','\u044E'],['\u042F','\u044F'],['\u0460','\u0461'],['\u0462','\u0463'],['\u0464','\u0465'],['\u0466','\u0467'],['\u0468','\u0469'],['\u046A','\u046B'],['\u046C','\u046D'],['\u046E','\u046F'],['\u0470','\u0471'],['\u0472','\u0473'],['\u0474','\u0475'],['\u0476','\u0477'],['\u0478','\u0479'],['\u047A','\u047B'],['\u047C','\u047D'],['\u047E','\u047F'],['\u0480','\u0481'],['\u048A','\u048B'],['\u048C','\u048D'],['\u048E','\u048F'],['\u0490','\u0491'],['\u0492','\u0493'],['\u0494','\u0495'],['\u0496','\u0497'],['\u0498','\u0499'],['\u049A','\u049B'],['\u049C','\u049D'],['\u049E','\u049F'],['\u04A0','\u04A1'],['\u04A2','\u04A3'],['\u04A4','\u04A5'],['\u04A6','\u04A7'],['\u04A8','\u04A9'],['\u04AA','\u04AB'],['\u04AC','\u04AD'],['\u04AE','\u04AF'],['\u04B0','\u04B1'],['\u04B2','\u04B3'],['\u04B4','\u04B5'],['\u04B6','\u04B7'],['\u04B8','\u04B9'],['\u04BA','\u04BB'],['\u04BC','\u04BD'],['\u04BE','\u04BF'],['\u04C0','\u04CF'],['\u04C1','\u04C2'],['\u04C3','\u04C4'],['\u04C5','\u04C6'],['\u04C7','\u04C8'],['\u04C9','\u04CA'],['\u04CB','\u04CC'],['\u04CD','\u04CE'],['\u04D0','\u04D1'],['\u04D2','\u04D3'],['\u04D4','\u04D5'],['\u04D6','\u04D7'],['\u04D8','\u04D9'],['\u04DA','\u04DB'],['\u04DC','\u04DD'],['\u04DE','\u04DF'],['\u04E0','\u04E1'],['\u04E2','\u04E3'],['\u04E4','\u04E5'],['\u04E6','\u04E7'],['\u04E8','\u04E9'],['\u04EA','\u04EB'],['\u04EC','\u04ED'],['\u04EE','\u04EF'],['\u04F0','\u04F1'],['\u04F2','\u04F3'],['\u04F4','\u04F5'],['\u04F6','\u04F7'],['\u04F8','\u04F9'],['\u04FA','\u04FB'],['\u04FC','\u04FD'],['\u04FE','\u04FF'],['\u0500','\u0501'],['\u0502','\u0503'],['\u0504','\u0505'],['\u0506','\u0507'],['\u0508','\u0509'],['\u050A','\u050B'],['\u050C','\u050D'],['\u050E','\u050F'],['\u0510','\u0511'],['\u0512','\u0513'],['\u0514','\u0515'],['\u0516','\u0517'],['\u0518','\u0519'],['\u051A','\u051B'],['\u051C','\u051D'],['\u051E','\u051F'],['\u0520','\u0521'],['\u0522','\u0523'],['\u0524','\u0525'],['\u0526','\u0527'],['\u0528','\u0529'],['\u052A','\u052B'],['\u052C','\u052D'],['\u052E','\u052F'],['\u0531','\u0561'],['\u0532','\u0562'],['\u0533','\u0563'],['\u0534','\u0564'],['\u0535','\u0565'],['\u0536','\u0566'],['\u0537','\u0567'],['\u0538','\u0568'],['\u0539','\u0569'],['\u053A','\u056A'],['\u053B','\u056B'],['\u053C','\u056C'],['\u053D','\u056D'],['\u053E','\u056E'],['\u053F','\u056F'],['\u0540','\u0570'],['\u0541','\u0571'],['\u0542','\u0572'],['\u0543','\u0573'],['\u0544','\u0574'],['\u0545','\u0575'],['\u0546','\u0576'],['\u0547','\u0577'],['\u0548','\u0578'],['\u0549','\u0579'],['\u054A','\u057A'],['\u054B','\u057B'],['\u054C','\u057C'],['\u054D','\u057D'],['\u054E','\u057E'],['\u054F','\u057F'],['\u0550','\u0580'],['\u0551','\u0581'],['\u0552','\u0582'],['\u0553','\u0583'],['\u0554','\u0584'],['\u0555','\u0585'],['\u0556','\u0586'],['\u10A0','\u2D00'],['\u10A1','\u2D01'],['\u10A2','\u2D02'],['\u10A3','\u2D03'],['\u10A4','\u2D04'],['\u10A5','\u2D05'],['\u10A6','\u2D06'],['\u10A7','\u2D07'],['\u10A8','\u2D08'],['\u10A9','\u2D09'],['\u10AA','\u2D0A'],['\u10AB','\u2D0B'],['\u10AC','\u2D0C'],['\u10AD','\u2D0D'],['\u10AE','\u2D0E'],['\u10AF','\u2D0F'],['\u10B0','\u2D10'],['\u10B1','\u2D11'],['\u10B2','\u2D12'],['\u10B3','\u2D13'],['\u10B4','\u2D14'],['\u10B5','\u2D15'],['\u10B6','\u2D16'],['\u10B7','\u2D17'],['\u10B8','\u2D18'],['\u10B9','\u2D19'],['\u10BA','\u2D1A'],['\u10BB','\u2D1B'],['\u10BC','\u2D1C'],['\u10BD','\u2D1D'],['\u10BE','\u2D1E'],['\u10BF','\u2D1F'],['\u10C0','\u2D20'],['\u10C1','\u2D21'],['\u10C2','\u2D22'],['\u10C3','\u2D23'],['\u10C4','\u2D24'],['\u10C5','\u2D25'],['\u10C7','\u2D27'],['\u10CD','\u2D2D'],['\u13F8','\u13F0'],['\u13F9','\u13F1'],['\u13FA','\u13F2'],['\u13FB','\u13F3'],['\u13FC','\u13F4'],['\u13FD','\u13F5'],['\u1C80','\u0432'],['\u1C81','\u0434'],['\u1C82','\u043E'],['\u1C83','\u0441'],['\u1C84','\u0442'],['\u1C85','\u0442'],['\u1C86','\u044A'],['\u1C87','\u0463'],['\u1C88','\uA64B'],['\u1C90','\u10D0'],['\u1C91','\u10D1'],['\u1C92','\u10D2'],['\u1C93','\u10D3'],['\u1C94','\u10D4'],['\u1C95','\u10D5'],['\u1C96','\u10D6'],['\u1C97','\u10D7'],['\u1C98','\u10D8'],['\u1C99','\u10D9'],['\u1C9A','\u10DA'],['\u1C9B','\u10DB'],['\u1C9C','\u10DC'],['\u1C9D','\u10DD'],['\u1C9E','\u10DE'],['\u1C9F','\u10DF'],['\u1CA0','\u10E0'],['\u1CA1','\u10E1'],['\u1CA2','\u10E2'],['\u1CA3','\u10E3'],['\u1CA4','\u10E4'],['\u1CA5','\u10E5'],['\u1CA6','\u10E6'],['\u1CA7','\u10E7'],['\u1CA8','\u10E8'],['\u1CA9','\u10E9'],['\u1CAA','\u10EA'],['\u1CAB','\u10EB'],['\u1CAC','\u10EC'],['\u1CAD','\u10ED'],['\u1CAE','\u10EE'],['\u1CAF','\u10EF'],['\u1CB0','\u10F0'],['\u1CB1','\u10F1'],['\u1CB2','\u10F2'],['\u1CB3','\u10F3'],['\u1CB4','\u10F4'],['\u1CB5','\u10F5'],['\u1CB6','\u10F6'],['\u1CB7','\u10F7'],['\u1CB8','\u10F8'],['\u1CB9','\u10F9'],['\u1CBA','\u10FA'],['\u1CBD','\u10FD'],['\u1CBE','\u10FE'],['\u1CBF','\u10FF'],['\u1E00','\u1E01'],['\u1E02','\u1E03'],['\u1E04','\u1E05'],['\u1E06','\u1E07'],['\u1E08','\u1E09'],['\u1E0A','\u1E0B'],['\u1E0C','\u1E0D'],['\u1E0E','\u1E0F'],['\u1E10','\u1E11'],['\u1E12','\u1E13'],['\u1E14','\u1E15'],['\u1E16','\u1E17'],['\u1E18','\u1E19'],['\u1E1A','\u1E1B'],['\u1E1C','\u1E1D'],['\u1E1E','\u1E1F'],['\u1E20','\u1E21'],['\u1E22','\u1E23'],['\u1E24','\u1E25'],['\u1E26','\u1E27'],['\u1E28','\u1E29'],['\u1E2A','\u1E2B'],['\u1E2C','\u1E2D'],['\u1E2E','\u1E2F'],['\u1E30','\u1E31'],['\u1E32','\u1E33'],['\u1E34','\u1E35'],['\u1E36','\u1E37'],['\u1E38','\u1E39'],['\u1E3A','\u1E3B'],['\u1E3C','\u1E3D'],['\u1E3E','\u1E3F'],['\u1E40','\u1E41'],['\u1E42','\u1E43'],['\u1E44','\u1E45'],['\u1E46','\u1E47'],['\u1E48','\u1E49'],['\u1E4A','\u1E4B'],['\u1E4C','\u1E4D'],['\u1E4E','\u1E4F'],['\u1E50','\u1E51'],['\u1E52','\u1E53'],['\u1E54','\u1E55'],['\u1E56','\u1E57'],['\u1E58','\u1E59'],['\u1E5A','\u1E5B'],['\u1E5C','\u1E5D'],['\u1E5E','\u1E5F'],['\u1E60','\u1E61'],['\u1E62','\u1E63'],['\u1E64','\u1E65'],['\u1E66','\u1E67'],['\u1E68','\u1E69'],['\u1E6A','\u1E6B'],['\u1E6C','\u1E6D'],['\u1E6E','\u1E6F'],['\u1E70','\u1E71'],['\u1E72','\u1E73'],['\u1E74','\u1E75'],['\u1E76','\u1E77'],['\u1E78','\u1E79'],['\u1E7A','\u1E7B'],['\u1E7C','\u1E7D'],['\u1E7E','\u1E7F'],['\u1E80','\u1E81'],['\u1E82','\u1E83'],['\u1E84','\u1E85'],['\u1E86','\u1E87'],['\u1E88','\u1E89'],['\u1E8A','\u1E8B'],['\u1E8C','\u1E8D'],['\u1E8E','\u1E8F'],['\u1E90','\u1E91'],['\u1E92','\u1E93'],['\u1E94','\u1E95'],['\u1E9B','\u1E61'],['\u1EA0','\u1EA1'],['\u1EA2','\u1EA3'],['\u1EA4','\u1EA5'],['\u1EA6','\u1EA7'],['\u1EA8','\u1EA9'],['\u1EAA','\u1EAB'],['\u1EAC','\u1EAD'],['\u1EAE','\u1EAF'],['\u1EB0','\u1EB1'],['\u1EB2','\u1EB3'],['\u1EB4','\u1EB5'],['\u1EB6','\u1EB7'],['\u1EB8','\u1EB9'],['\u1EBA','\u1EBB'],['\u1EBC','\u1EBD'],['\u1EBE','\u1EBF'],['\u1EC0','\u1EC1'],['\u1EC2','\u1EC3'],['\u1EC4','\u1EC5'],['\u1EC6','\u1EC7'],['\u1EC8','\u1EC9'],['\u1ECA','\u1ECB'],['\u1ECC','\u1ECD'],['\u1ECE','\u1ECF'],['\u1ED0','\u1ED1'],['\u1ED2','\u1ED3'],['\u1ED4','\u1ED5'],['\u1ED6','\u1ED7'],['\u1ED8','\u1ED9'],['\u1EDA','\u1EDB'],['\u1EDC','\u1EDD'],['\u1EDE','\u1EDF'],['\u1EE0','\u1EE1'],['\u1EE2','\u1EE3'],['\u1EE4','\u1EE5'],['\u1EE6','\u1EE7'],['\u1EE8','\u1EE9'],['\u1EEA','\u1EEB'],['\u1EEC','\u1EED'],['\u1EEE','\u1EEF'],['\u1EF0','\u1EF1'],['\u1EF2','\u1EF3'],['\u1EF4','\u1EF5'],['\u1EF6','\u1EF7'],['\u1EF8','\u1EF9'],['\u1EFA','\u1EFB'],['\u1EFC','\u1EFD'],['\u1EFE','\u1EFF'],['\u1F08','\u1F00'],['\u1F09','\u1F01'],['\u1F0A','\u1F02'],['\u1F0B','\u1F03'],['\u1F0C','\u1F04'],['\u1F0D','\u1F05'],['\u1F0E','\u1F06'],['\u1F0F','\u1F07'],['\u1F18','\u1F10'],['\u1F19','\u1F11'],['\u1F1A','\u1F12'],['\u1F1B','\u1F13'],['\u1F1C','\u1F14'],['\u1F1D','\u1F15'],['\u1F28','\u1F20'],['\u1F29','\u1F21'],['\u1F2A','\u1F22'],['\u1F2B','\u1F23'],['\u1F2C','\u1F24'],['\u1F2D','\u1F25'],['\u1F2E','\u1F26'],['\u1F2F','\u1F27'],['\u1F38','\u1F30'],['\u1F39','\u1F31'],['\u1F3A','\u1F32'],['\u1F3B','\u1F33'],['\u1F3C','\u1F34'],['\u1F3D','\u1F35'],['\u1F3E','\u1F36'],['\u1F3F','\u1F37'],['\u1F48','\u1F40'],['\u1F49','\u1F41'],['\u1F4A','\u1F42'],['\u1F4B','\u1F43'],['\u1F4C','\u1F44'],['\u1F4D','\u1F45'],['\u1F59','\u1F51'],['\u1F5B','\u1F53'],['\u1F5D','\u1F55'],['\u1F5F','\u1F57'],['\u1F68','\u1F60'],['\u1F69','\u1F61'],['\u1F6A','\u1F62'],['\u1F6B','\u1F63'],['\u1F6C','\u1F64'],['\u1F6D','\u1F65'],['\u1F6E','\u1F66'],['\u1F6F','\u1F67'],['\u1FB8','\u1FB0'],['\u1FB9','\u1FB1'],['\u1FBA','\u1F70'],['\u1FBB','\u1F71'],['\u1FBE','\u03B9'],['\u1FC8','\u1F72'],['\u1FC9','\u1F73'],['\u1FCA','\u1F74'],['\u1FCB','\u1F75'],['\u1FD8','\u1FD0'],['\u1FD9','\u1FD1'],['\u1FDA','\u1F76'],['\u1FDB','\u1F77'],['\u1FE8','\u1FE0'],['\u1FE9','\u1FE1'],['\u1FEA','\u1F7A'],['\u1FEB','\u1F7B'],['\u1FEC','\u1FE5'],['\u1FF8','\u1F78'],['\u1FF9','\u1F79'],['\u1FFA','\u1F7C'],['\u1FFB','\u1F7D'],['\u2126','\u03C9'],['\u212A','k'],['\u212B','\xE5'],['\u2132','\u214E'],['\u2160','\u2170'],['\u2161','\u2171'],['\u2162','\u2172'],['\u2163','\u2173'],['\u2164','\u2174'],['\u2165','\u2175'],['\u2166','\u2176'],['\u2167','\u2177'],['\u2168','\u2178'],['\u2169','\u2179'],['\u216A','\u217A'],['\u216B','\u217B'],['\u216C','\u217C'],['\u216D','\u217D'],['\u216E','\u217E'],['\u216F','\u217F'],['\u2183','\u2184'],['\u24B6','\u24D0'],['\u24B7','\u24D1'],['\u24B8','\u24D2'],['\u24B9','\u24D3'],['\u24BA','\u24D4'],['\u24BB','\u24D5'],['\u24BC','\u24D6'],['\u24BD','\u24D7'],['\u24BE','\u24D8'],['\u24BF','\u24D9'],['\u24C0','\u24DA'],['\u24C1','\u24DB'],['\u24C2','\u24DC'],['\u24C3','\u24DD'],['\u24C4','\u24DE'],['\u24C5','\u24DF'],['\u24C6','\u24E0'],['\u24C7','\u24E1'],['\u24C8','\u24E2'],['\u24C9','\u24E3'],['\u24CA','\u24E4'],['\u24CB','\u24E5'],['\u24CC','\u24E6'],['\u24CD','\u24E7'],['\u24CE','\u24E8'],['\u24CF','\u24E9'],['\u2C00','\u2C30'],['\u2C01','\u2C31'],['\u2C02','\u2C32'],['\u2C03','\u2C33'],['\u2C04','\u2C34'],['\u2C05','\u2C35'],['\u2C06','\u2C36'],['\u2C07','\u2C37'],['\u2C08','\u2C38'],['\u2C09','\u2C39'],['\u2C0A','\u2C3A'],['\u2C0B','\u2C3B'],['\u2C0C','\u2C3C'],['\u2C0D','\u2C3D'],['\u2C0E','\u2C3E'],['\u2C0F','\u2C3F'],['\u2C10','\u2C40'],['\u2C11','\u2C41'],['\u2C12','\u2C42'],['\u2C13','\u2C43'],['\u2C14','\u2C44'],['\u2C15','\u2C45'],['\u2C16','\u2C46'],['\u2C17','\u2C47'],['\u2C18','\u2C48'],['\u2C19','\u2C49'],['\u2C1A','\u2C4A'],['\u2C1B','\u2C4B'],['\u2C1C','\u2C4C'],['\u2C1D','\u2C4D'],['\u2C1E','\u2C4E'],['\u2C1F','\u2C4F'],['\u2C20','\u2C50'],['\u2C21','\u2C51'],['\u2C22','\u2C52'],['\u2C23','\u2C53'],['\u2C24','\u2C54'],['\u2C25','\u2C55'],['\u2C26','\u2C56'],['\u2C27','\u2C57'],['\u2C28','\u2C58'],['\u2C29','\u2C59'],['\u2C2A','\u2C5A'],['\u2C2B','\u2C5B'],['\u2C2C','\u2C5C'],['\u2C2D','\u2C5D'],['\u2C2E','\u2C5E'],['\u2C60','\u2C61'],['\u2C62','\u026B'],['\u2C63','\u1D7D'],['\u2C64','\u027D'],['\u2C67','\u2C68'],['\u2C69','\u2C6A'],['\u2C6B','\u2C6C'],['\u2C6D','\u0251'],['\u2C6E','\u0271'],['\u2C6F','\u0250'],['\u2C70','\u0252'],['\u2C72','\u2C73'],['\u2C75','\u2C76'],['\u2C7E','\u023F'],['\u2C7F','\u0240'],['\u2C80','\u2C81'],['\u2C82','\u2C83'],['\u2C84','\u2C85'],['\u2C86','\u2C87'],['\u2C88','\u2C89'],['\u2C8A','\u2C8B'],['\u2C8C','\u2C8D'],['\u2C8E','\u2C8F'],['\u2C90','\u2C91'],['\u2C92','\u2C93'],['\u2C94','\u2C95'],['\u2C96','\u2C97'],['\u2C98','\u2C99'],['\u2C9A','\u2C9B'],['\u2C9C','\u2C9D'],['\u2C9E','\u2C9F'],['\u2CA0','\u2CA1'],['\u2CA2','\u2CA3'],['\u2CA4','\u2CA5'],['\u2CA6','\u2CA7'],['\u2CA8','\u2CA9'],['\u2CAA','\u2CAB'],['\u2CAC','\u2CAD'],['\u2CAE','\u2CAF'],['\u2CB0','\u2CB1'],['\u2CB2','\u2CB3'],['\u2CB4','\u2CB5'],['\u2CB6','\u2CB7'],['\u2CB8','\u2CB9'],['\u2CBA','\u2CBB'],['\u2CBC','\u2CBD'],['\u2CBE','\u2CBF'],['\u2CC0','\u2CC1'],['\u2CC2','\u2CC3'],['\u2CC4','\u2CC5'],['\u2CC6','\u2CC7'],['\u2CC8','\u2CC9'],['\u2CCA','\u2CCB'],['\u2CCC','\u2CCD'],['\u2CCE','\u2CCF'],['\u2CD0','\u2CD1'],['\u2CD2','\u2CD3'],['\u2CD4','\u2CD5'],['\u2CD6','\u2CD7'],['\u2CD8','\u2CD9'],['\u2CDA','\u2CDB'],['\u2CDC','\u2CDD'],['\u2CDE','\u2CDF'],['\u2CE0','\u2CE1'],['\u2CE2','\u2CE3'],['\u2CEB','\u2CEC'],['\u2CED','\u2CEE'],['\u2CF2','\u2CF3'],['\uA640','\uA641'],['\uA642','\uA643'],['\uA644','\uA645'],['\uA646','\uA647'],['\uA648','\uA649'],['\uA64A','\uA64B'],['\uA64C','\uA64D'],['\uA64E','\uA64F'],['\uA650','\uA651'],['\uA652','\uA653'],['\uA654','\uA655'],['\uA656','\uA657'],['\uA658','\uA659'],['\uA65A','\uA65B'],['\uA65C','\uA65D'],['\uA65E','\uA65F'],['\uA660','\uA661'],['\uA662','\uA663'],['\uA664','\uA665'],['\uA666','\uA667'],['\uA668','\uA669'],['\uA66A','\uA66B'],['\uA66C','\uA66D'],['\uA680','\uA681'],['\uA682','\uA683'],['\uA684','\uA685'],['\uA686','\uA687'],['\uA688','\uA689'],['\uA68A','\uA68B'],['\uA68C','\uA68D'],['\uA68E','\uA68F'],['\uA690','\uA691'],['\uA692','\uA693'],['\uA694','\uA695'],['\uA696','\uA697'],['\uA698','\uA699'],['\uA69A','\uA69B'],['\uA722','\uA723'],['\uA724','\uA725'],['\uA726','\uA727'],['\uA728','\uA729'],['\uA72A','\uA72B'],['\uA72C','\uA72D'],['\uA72E','\uA72F'],['\uA732','\uA733'],['\uA734','\uA735'],['\uA736','\uA737'],['\uA738','\uA739'],['\uA73A','\uA73B'],['\uA73C','\uA73D'],['\uA73E','\uA73F'],['\uA740','\uA741'],['\uA742','\uA743'],['\uA744','\uA745'],['\uA746','\uA747'],['\uA748','\uA749'],['\uA74A','\uA74B'],['\uA74C','\uA74D'],['\uA74E','\uA74F'],['\uA750','\uA751'],['\uA752','\uA753'],['\uA754','\uA755'],['\uA756','\uA757'],['\uA758','\uA759'],['\uA75A','\uA75B'],['\uA75C','\uA75D'],['\uA75E','\uA75F'],['\uA760','\uA761'],['\uA762','\uA763'],['\uA764','\uA765'],['\uA766','\uA767'],['\uA768','\uA769'],['\uA76A','\uA76B'],['\uA76C','\uA76D'],['\uA76E','\uA76F'],['\uA779','\uA77A'],['\uA77B','\uA77C'],['\uA77D','\u1D79'],['\uA77E','\uA77F'],['\uA780','\uA781'],['\uA782','\uA783'],['\uA784','\uA785'],['\uA786','\uA787'],['\uA78B','\uA78C'],['\uA78D','\u0265'],['\uA790','\uA791'],['\uA792','\uA793'],['\uA796','\uA797'],['\uA798','\uA799'],['\uA79A','\uA79B'],['\uA79C','\uA79D'],['\uA79E','\uA79F'],['\uA7A0','\uA7A1'],['\uA7A2','\uA7A3'],['\uA7A4','\uA7A5'],['\uA7A6','\uA7A7'],['\uA7A8','\uA7A9'],['\uA7AA','\u0266'],['\uA7AB','\u025C'],['\uA7AC','\u0261'],['\uA7AD','\u026C'],['\uA7AE','\u026A'],['\uA7B0','\u029E'],['\uA7B1','\u0287'],['\uA7B2','\u029D'],['\uA7B3','\uAB53'],['\uA7B4','\uA7B5'],['\uA7B6','\uA7B7'],['\uA7B8','\uA7B9'],['\uA7BA','\uA7BB'],['\uA7BC','\uA7BD'],['\uA7BE','\uA7BF'],['\uA7C2','\uA7C3'],['\uA7C4','\uA794'],['\uA7C5','\u0282'],['\uA7C6','\u1D8E'],['\uA7C7','\uA7C8'],['\uA7C9','\uA7CA'],['\uA7F5','\uA7F6'],['\uAB70','\u13A0'],['\uAB71','\u13A1'],['\uAB72','\u13A2'],['\uAB73','\u13A3'],['\uAB74','\u13A4'],['\uAB75','\u13A5'],['\uAB76','\u13A6'],['\uAB77','\u13A7'],['\uAB78','\u13A8'],['\uAB79','\u13A9'],['\uAB7A','\u13AA'],['\uAB7B','\u13AB'],['\uAB7C','\u13AC'],['\uAB7D','\u13AD'],['\uAB7E','\u13AE'],['\uAB7F','\u13AF'],['\uAB80','\u13B0'],['\uAB81','\u13B1'],['\uAB82','\u13B2'],['\uAB83','\u13B3'],['\uAB84','\u13B4'],['\uAB85','\u13B5'],['\uAB86','\u13B6'],['\uAB87','\u13B7'],['\uAB88','\u13B8'],['\uAB89','\u13B9'],['\uAB8A','\u13BA'],['\uAB8B','\u13BB'],['\uAB8C','\u13BC'],['\uAB8D','\u13BD'],['\uAB8E','\u13BE'],['\uAB8F','\u13BF'],['\uAB90','\u13C0'],['\uAB91','\u13C1'],['\uAB92','\u13C2'],['\uAB93','\u13C3'],['\uAB94','\u13C4'],['\uAB95','\u13C5'],['\uAB96','\u13C6'],['\uAB97','\u13C7'],['\uAB98','\u13C8'],['\uAB99','\u13C9'],['\uAB9A','\u13CA'],['\uAB9B','\u13CB'],['\uAB9C','\u13CC'],['\uAB9D','\u13CD'],['\uAB9E','\u13CE'],['\uAB9F','\u13CF'],['\uABA0','\u13D0'],['\uABA1','\u13D1'],['\uABA2','\u13D2'],['\uABA3','\u13D3'],['\uABA4','\u13D4'],['\uABA5','\u13D5'],['\uABA6','\u13D6'],['\uABA7','\u13D7'],['\uABA8','\u13D8'],['\uABA9','\u13D9'],['\uABAA','\u13DA'],['\uABAB','\u13DB'],['\uABAC','\u13DC'],['\uABAD','\u13DD'],['\uABAE','\u13DE'],['\uABAF','\u13DF'],['\uABB0','\u13E0'],['\uABB1','\u13E1'],['\uABB2','\u13E2'],['\uABB3','\u13E3'],['\uABB4','\u13E4'],['\uABB5','\u13E5'],['\uABB6','\u13E6'],['\uABB7','\u13E7'],['\uABB8','\u13E8'],['\uABB9','\u13E9'],['\uABBA','\u13EA'],['\uABBB','\u13EB'],['\uABBC','\u13EC'],['\uABBD','\u13ED'],['\uABBE','\u13EE'],['\uABBF','\u13EF'],['\uFF21','\uFF41'],['\uFF22','\uFF42'],['\uFF23','\uFF43'],['\uFF24','\uFF44'],['\uFF25','\uFF45'],['\uFF26','\uFF46'],['\uFF27','\uFF47'],['\uFF28','\uFF48'],['\uFF29','\uFF49'],['\uFF2A','\uFF4A'],['\uFF2B','\uFF4B'],['\uFF2C','\uFF4C'],['\uFF2D','\uFF4D'],['\uFF2E','\uFF4E'],['\uFF2F','\uFF4F'],['\uFF30','\uFF50'],['\uFF31','\uFF51'],['\uFF32','\uFF52'],['\uFF33','\uFF53'],['\uFF34','\uFF54'],['\uFF35','\uFF55'],['\uFF36','\uFF56'],['\uFF37','\uFF57'],['\uFF38','\uFF58'],['\uFF39','\uFF59'],['\uFF3A','\uFF5A'],['\uD801\uDC00','\uD801\uDC28'],['\uD801\uDC01','\uD801\uDC29'],['\uD801\uDC02','\uD801\uDC2A'],['\uD801\uDC03','\uD801\uDC2B'],['\uD801\uDC04','\uD801\uDC2C'],['\uD801\uDC05','\uD801\uDC2D'],['\uD801\uDC06','\uD801\uDC2E'],['\uD801\uDC07','\uD801\uDC2F'],['\uD801\uDC08','\uD801\uDC30'],['\uD801\uDC09','\uD801\uDC31'],['\uD801\uDC0A','\uD801\uDC32'],['\uD801\uDC0B','\uD801\uDC33'],['\uD801\uDC0C','\uD801\uDC34'],['\uD801\uDC0D','\uD801\uDC35'],['\uD801\uDC0E','\uD801\uDC36'],['\uD801\uDC0F','\uD801\uDC37'],['\uD801\uDC10','\uD801\uDC38'],['\uD801\uDC11','\uD801\uDC39'],['\uD801\uDC12','\uD801\uDC3A'],['\uD801\uDC13','\uD801\uDC3B'],['\uD801\uDC14','\uD801\uDC3C'],['\uD801\uDC15','\uD801\uDC3D'],['\uD801\uDC16','\uD801\uDC3E'],['\uD801\uDC17','\uD801\uDC3F'],['\uD801\uDC18','\uD801\uDC40'],['\uD801\uDC19','\uD801\uDC41'],['\uD801\uDC1A','\uD801\uDC42'],['\uD801\uDC1B','\uD801\uDC43'],['\uD801\uDC1C','\uD801\uDC44'],['\uD801\uDC1D','\uD801\uDC45'],['\uD801\uDC1E','\uD801\uDC46'],['\uD801\uDC1F','\uD801\uDC47'],['\uD801\uDC20','\uD801\uDC48'],['\uD801\uDC21','\uD801\uDC49'],['\uD801\uDC22','\uD801\uDC4A'],['\uD801\uDC23','\uD801\uDC4B'],['\uD801\uDC24','\uD801\uDC4C'],['\uD801\uDC25','\uD801\uDC4D'],['\uD801\uDC26','\uD801\uDC4E'],['\uD801\uDC27','\uD801\uDC4F'],['\uD801\uDCB0','\uD801\uDCD8'],['\uD801\uDCB1','\uD801\uDCD9'],['\uD801\uDCB2','\uD801\uDCDA'],['\uD801\uDCB3','\uD801\uDCDB'],['\uD801\uDCB4','\uD801\uDCDC'],['\uD801\uDCB5','\uD801\uDCDD'],['\uD801\uDCB6','\uD801\uDCDE'],['\uD801\uDCB7','\uD801\uDCDF'],['\uD801\uDCB8','\uD801\uDCE0'],['\uD801\uDCB9','\uD801\uDCE1'],['\uD801\uDCBA','\uD801\uDCE2'],['\uD801\uDCBB','\uD801\uDCE3'],['\uD801\uDCBC','\uD801\uDCE4'],['\uD801\uDCBD','\uD801\uDCE5'],['\uD801\uDCBE','\uD801\uDCE6'],['\uD801\uDCBF','\uD801\uDCE7'],['\uD801\uDCC0','\uD801\uDCE8'],['\uD801\uDCC1','\uD801\uDCE9'],['\uD801\uDCC2','\uD801\uDCEA'],['\uD801\uDCC3','\uD801\uDCEB'],['\uD801\uDCC4','\uD801\uDCEC'],['\uD801\uDCC5','\uD801\uDCED'],['\uD801\uDCC6','\uD801\uDCEE'],['\uD801\uDCC7','\uD801\uDCEF'],['\uD801\uDCC8','\uD801\uDCF0'],['\uD801\uDCC9','\uD801\uDCF1'],['\uD801\uDCCA','\uD801\uDCF2'],['\uD801\uDCCB','\uD801\uDCF3'],['\uD801\uDCCC','\uD801\uDCF4'],['\uD801\uDCCD','\uD801\uDCF5'],['\uD801\uDCCE','\uD801\uDCF6'],['\uD801\uDCCF','\uD801\uDCF7'],['\uD801\uDCD0','\uD801\uDCF8'],['\uD801\uDCD1','\uD801\uDCF9'],['\uD801\uDCD2','\uD801\uDCFA'],['\uD801\uDCD3','\uD801\uDCFB'],['\uD803\uDC80','\uD803\uDCC0'],['\uD803\uDC81','\uD803\uDCC1'],['\uD803\uDC82','\uD803\uDCC2'],['\uD803\uDC83','\uD803\uDCC3'],['\uD803\uDC84','\uD803\uDCC4'],['\uD803\uDC85','\uD803\uDCC5'],['\uD803\uDC86','\uD803\uDCC6'],['\uD803\uDC87','\uD803\uDCC7'],['\uD803\uDC88','\uD803\uDCC8'],['\uD803\uDC89','\uD803\uDCC9'],['\uD803\uDC8A','\uD803\uDCCA'],['\uD803\uDC8B','\uD803\uDCCB'],['\uD803\uDC8C','\uD803\uDCCC'],['\uD803\uDC8D','\uD803\uDCCD'],['\uD803\uDC8E','\uD803\uDCCE'],['\uD803\uDC8F','\uD803\uDCCF'],['\uD803\uDC90','\uD803\uDCD0'],['\uD803\uDC91','\uD803\uDCD1'],['\uD803\uDC92','\uD803\uDCD2'],['\uD803\uDC93','\uD803\uDCD3'],['\uD803\uDC94','\uD803\uDCD4'],['\uD803\uDC95','\uD803\uDCD5'],['\uD803\uDC96','\uD803\uDCD6'],['\uD803\uDC97','\uD803\uDCD7'],['\uD803\uDC98','\uD803\uDCD8'],['\uD803\uDC99','\uD803\uDCD9'],['\uD803\uDC9A','\uD803\uDCDA'],['\uD803\uDC9B','\uD803\uDCDB'],['\uD803\uDC9C','\uD803\uDCDC'],['\uD803\uDC9D','\uD803\uDCDD'],['\uD803\uDC9E','\uD803\uDCDE'],['\uD803\uDC9F','\uD803\uDCDF'],['\uD803\uDCA0','\uD803\uDCE0'],['\uD803\uDCA1','\uD803\uDCE1'],['\uD803\uDCA2','\uD803\uDCE2'],['\uD803\uDCA3','\uD803\uDCE3'],['\uD803\uDCA4','\uD803\uDCE4'],['\uD803\uDCA5','\uD803\uDCE5'],['\uD803\uDCA6','\uD803\uDCE6'],['\uD803\uDCA7','\uD803\uDCE7'],['\uD803\uDCA8','\uD803\uDCE8'],['\uD803\uDCA9','\uD803\uDCE9'],['\uD803\uDCAA','\uD803\uDCEA'],['\uD803\uDCAB','\uD803\uDCEB'],['\uD803\uDCAC','\uD803\uDCEC'],['\uD803\uDCAD','\uD803\uDCED'],['\uD803\uDCAE','\uD803\uDCEE'],['\uD803\uDCAF','\uD803\uDCEF'],['\uD803\uDCB0','\uD803\uDCF0'],['\uD803\uDCB1','\uD803\uDCF1'],['\uD803\uDCB2','\uD803\uDCF2'],['\uD806\uDCA0','\uD806\uDCC0'],['\uD806\uDCA1','\uD806\uDCC1'],['\uD806\uDCA2','\uD806\uDCC2'],['\uD806\uDCA3','\uD806\uDCC3'],['\uD806\uDCA4','\uD806\uDCC4'],['\uD806\uDCA5','\uD806\uDCC5'],['\uD806\uDCA6','\uD806\uDCC6'],['\uD806\uDCA7','\uD806\uDCC7'],['\uD806\uDCA8','\uD806\uDCC8'],['\uD806\uDCA9','\uD806\uDCC9'],['\uD806\uDCAA','\uD806\uDCCA'],['\uD806\uDCAB','\uD806\uDCCB'],['\uD806\uDCAC','\uD806\uDCCC'],['\uD806\uDCAD','\uD806\uDCCD'],['\uD806\uDCAE','\uD806\uDCCE'],['\uD806\uDCAF','\uD806\uDCCF'],['\uD806\uDCB0','\uD806\uDCD0'],['\uD806\uDCB1','\uD806\uDCD1'],['\uD806\uDCB2','\uD806\uDCD2'],['\uD806\uDCB3','\uD806\uDCD3'],['\uD806\uDCB4','\uD806\uDCD4'],['\uD806\uDCB5','\uD806\uDCD5'],['\uD806\uDCB6','\uD806\uDCD6'],['\uD806\uDCB7','\uD806\uDCD7'],['\uD806\uDCB8','\uD806\uDCD8'],['\uD806\uDCB9','\uD806\uDCD9'],['\uD806\uDCBA','\uD806\uDCDA'],['\uD806\uDCBB','\uD806\uDCDB'],['\uD806\uDCBC','\uD806\uDCDC'],['\uD806\uDCBD','\uD806\uDCDD'],['\uD806\uDCBE','\uD806\uDCDE'],['\uD806\uDCBF','\uD806\uDCDF'],['\uD81B\uDE40','\uD81B\uDE60'],['\uD81B\uDE41','\uD81B\uDE61'],['\uD81B\uDE42','\uD81B\uDE62'],['\uD81B\uDE43','\uD81B\uDE63'],['\uD81B\uDE44','\uD81B\uDE64'],['\uD81B\uDE45','\uD81B\uDE65'],['\uD81B\uDE46','\uD81B\uDE66'],['\uD81B\uDE47','\uD81B\uDE67'],['\uD81B\uDE48','\uD81B\uDE68'],['\uD81B\uDE49','\uD81B\uDE69'],['\uD81B\uDE4A','\uD81B\uDE6A'],['\uD81B\uDE4B','\uD81B\uDE6B'],['\uD81B\uDE4C','\uD81B\uDE6C'],['\uD81B\uDE4D','\uD81B\uDE6D'],['\uD81B\uDE4E','\uD81B\uDE6E'],['\uD81B\uDE4F','\uD81B\uDE6F'],['\uD81B\uDE50','\uD81B\uDE70'],['\uD81B\uDE51','\uD81B\uDE71'],['\uD81B\uDE52','\uD81B\uDE72'],['\uD81B\uDE53','\uD81B\uDE73'],['\uD81B\uDE54','\uD81B\uDE74'],['\uD81B\uDE55','\uD81B\uDE75'],['\uD81B\uDE56','\uD81B\uDE76'],['\uD81B\uDE57','\uD81B\uDE77'],['\uD81B\uDE58','\uD81B\uDE78'],['\uD81B\uDE59','\uD81B\uDE79'],['\uD81B\uDE5A','\uD81B\uDE7A'],['\uD81B\uDE5B','\uD81B\uDE7B'],['\uD81B\uDE5C','\uD81B\uDE7C'],['\uD81B\uDE5D','\uD81B\uDE7D'],['\uD81B\uDE5E','\uD81B\uDE7E'],['\uD81B\uDE5F','\uD81B\uDE7F'],['\uD83A\uDD00','\uD83A\uDD22'],['\uD83A\uDD01','\uD83A\uDD23'],['\uD83A\uDD02','\uD83A\uDD24'],['\uD83A\uDD03','\uD83A\uDD25'],['\uD83A\uDD04','\uD83A\uDD26'],['\uD83A\uDD05','\uD83A\uDD27'],['\uD83A\uDD06','\uD83A\uDD28'],['\uD83A\uDD07','\uD83A\uDD29'],['\uD83A\uDD08','\uD83A\uDD2A'],['\uD83A\uDD09','\uD83A\uDD2B'],['\uD83A\uDD0A','\uD83A\uDD2C'],['\uD83A\uDD0B','\uD83A\uDD2D'],['\uD83A\uDD0C','\uD83A\uDD2E'],['\uD83A\uDD0D','\uD83A\uDD2F'],['\uD83A\uDD0E','\uD83A\uDD30'],['\uD83A\uDD0F','\uD83A\uDD31'],['\uD83A\uDD10','\uD83A\uDD32'],['\uD83A\uDD11','\uD83A\uDD33'],['\uD83A\uDD12','\uD83A\uDD34'],['\uD83A\uDD13','\uD83A\uDD35'],['\uD83A\uDD14','\uD83A\uDD36'],['\uD83A\uDD15','\uD83A\uDD37'],['\uD83A\uDD16','\uD83A\uDD38'],['\uD83A\uDD17','\uD83A\uDD39'],['\uD83A\uDD18','\uD83A\uDD3A'],['\uD83A\uDD19','\uD83A\uDD3B'],['\uD83A\uDD1A','\uD83A\uDD3C'],['\uD83A\uDD1B','\uD83A\uDD3D'],['\uD83A\uDD1C','\uD83A\uDD3E'],['\uD83A\uDD1D','\uD83A\uDD3F'],['\uD83A\uDD1E','\uD83A\uDD40'],['\uD83A\uDD1F','\uD83A\uDD41'],['\uD83A\uDD20','\uD83A\uDD42'],['\uD83A\uDD21','\uD83A\uDD43']]);
 
-  var symbols$1=new Map([['\u1E9E','\xDF'],['\u1F88','\u1F80'],['\u1F89','\u1F81'],['\u1F8A','\u1F82'],['\u1F8B','\u1F83'],['\u1F8C','\u1F84'],['\u1F8D','\u1F85'],['\u1F8E','\u1F86'],['\u1F8F','\u1F87'],['\u1F98','\u1F90'],['\u1F99','\u1F91'],['\u1F9A','\u1F92'],['\u1F9B','\u1F93'],['\u1F9C','\u1F94'],['\u1F9D','\u1F95'],['\u1F9E','\u1F96'],['\u1F9F','\u1F97'],['\u1FA8','\u1FA0'],['\u1FA9','\u1FA1'],['\u1FAA','\u1FA2'],['\u1FAB','\u1FA3'],['\u1FAC','\u1FA4'],['\u1FAD','\u1FA5'],['\u1FAE','\u1FA6'],['\u1FAF','\u1FA7'],['\u1FBC','\u1FB3'],['\u1FCC','\u1FC3'],['\u1FFC','\u1FF3']]);
+  var symbols=new Map([['\u1E9E','\xDF'],['\u1F88','\u1F80'],['\u1F89','\u1F81'],['\u1F8A','\u1F82'],['\u1F8B','\u1F83'],['\u1F8C','\u1F84'],['\u1F8D','\u1F85'],['\u1F8E','\u1F86'],['\u1F8F','\u1F87'],['\u1F98','\u1F90'],['\u1F99','\u1F91'],['\u1F9A','\u1F92'],['\u1F9B','\u1F93'],['\u1F9C','\u1F94'],['\u1F9D','\u1F95'],['\u1F9E','\u1F96'],['\u1F9F','\u1F97'],['\u1FA8','\u1FA0'],['\u1FA9','\u1FA1'],['\u1FAA','\u1FA2'],['\u1FAB','\u1FA3'],['\u1FAC','\u1FA4'],['\u1FAD','\u1FA5'],['\u1FAE','\u1FA6'],['\u1FAF','\u1FA7'],['\u1FBC','\u1FB3'],['\u1FCC','\u1FC3'],['\u1FFC','\u1FF3']]);
 
   class State {
     constructor(endIndex, captures) {
@@ -18596,7 +18634,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
         /*c8 ignore next*/
         default:
-          throw new OutOfRange('Evaluate', node);
+          throw new OutOfRange$1('Evaluate', node);
       }
     } // #sec-disjunction
     //   Disjunction ::
@@ -19039,7 +19077,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
         /*c8 ignore next*/
         default:
-          throw new OutOfRange('Evaluate_Assertion', subtype);
+          throw new OutOfRange$1('Evaluate_Assertion', subtype);
       }
     } // #sec-runtime-semantics-wordcharacters-abstract-operation
 
@@ -19231,7 +19269,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
         /*c8 ignore next*/
         default:
-          throw new OutOfRange('Evaluate_Atom', Atom);
+          throw new OutOfRange$1('Evaluate_Atom', Atom);
       }
     } // #sec-runtime-semantics-charactersetmatcher-abstract-operation
 
@@ -19292,12 +19330,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (Unicode === true) {
         const s = String.fromCodePoint(ch); // a. If the file CaseFolding.txt of the Unicode Character Database provides a simple or common case folding mapping for ch, return the result of applying that mapping to ch.
 
-        if (symbols$1.has(s)) {
-          return symbols$1.get(s).codePointAt(0);
-        }
-
         if (symbols.has(s)) {
           return symbols.get(s).codePointAt(0);
+        }
+
+        if (symbols$1.has(s)) {
+          return symbols$1.get(s).codePointAt(0);
         } // b. Return ch.
 
 
@@ -19371,7 +19409,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
         /*c8 ignore next*/
         default:
-          throw new OutOfRange('Evaluate_AtomEscape', AtomEscape);
+          throw new OutOfRange$1('Evaluate_AtomEscape', AtomEscape);
       }
     } // #sec-backreference-matcher
 
@@ -19451,7 +19489,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
         case 'D':
           // 1. Return the set of all characters not included in the set returned by CharacterClassEscape :: `d`.
-          return new VirtualCharSet(c => !isDecimalDigit(String.fromCodePoint(c)));
+          return new VirtualCharSet(c => !isDecimalDigit$1(String.fromCodePoint(c)));
 
         case 's':
           // 1. Return the set of characters containing the characters that are on the right-hand side of the WhiteSpace or LineTerminator productions.
@@ -19491,7 +19529,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
         /*c8 ignore next*/
         default:
-          throw new OutOfRange('Evaluate_CharacterClassEscape', node);
+          throw new OutOfRange$1('Evaluate_CharacterClassEscape', node);
       }
     } // UnicodePropertyValueExpression ::
 
@@ -19621,7 +19659,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
         /*c8 ignore next*/
         default:
-          throw new OutOfRange('Evaluate_ClassAtom', ClassAtom);
+          throw new OutOfRange$1('Evaluate_ClassAtom', ClassAtom);
       }
     } // #sec-classescape
 
@@ -19641,7 +19679,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
         /*c8 ignore next*/
         default:
-          throw new OutOfRange('Evaluate_ClassEscape', ClassEscape);
+          throw new OutOfRange$1('Evaluate_ClassEscape', ClassEscape);
       }
     }
   }
@@ -19827,7 +19865,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     } // 1. Let className be StringValue of BindingIdentifier.
 
 
-    const className = StringValue(BindingIdentifier); // 2. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments className and className.
+    const className = StringValue$1(BindingIdentifier); // 2. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments className and className.
 
     let _temp2 = yield* ClassDefinitionEvaluation(ClassTail, className, className);
 
@@ -19989,7 +20027,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     if (!isDefault) {
-      throw new OutOfRange('Evaluate_ExportDeclaration', ExportDeclaration);
+      throw new OutOfRange$1('Evaluate_ExportDeclaration', ExportDeclaration);
     }
 
     if (HoistableDeclaration) {
@@ -20076,7 +20114,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return NormalCompletion(undefined);
     }
 
-    throw new OutOfRange('Evaluate_ExportDeclaration', ExportDeclaration);
+    throw new OutOfRange$1('Evaluate_ExportDeclaration', ExportDeclaration);
   }
 
   //   OptionalExpression :
@@ -20250,7 +20288,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return EvaluatePropertyAccessWithIdentifierKey(baseValue, IdentifierName, strict);
     }
 
-    throw new OutOfRange('ChainEvaluation', node);
+    throw new OutOfRange$1('ChainEvaluation', node);
   }
 
   ChainEvaluation.section = 'https://tc39.es/ecma262/#sec-optional-chaining-chain-evaluation';
@@ -20446,7 +20484,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     } // 1. Let label be the StringValue of LabelIdentifier.
 
 
-    const label = StringValue(LabelIdentifier); // 2. Return Completion { [[Type]]: continue, [[Value]]: empty, [[Target]]: label }.
+    const label = StringValue$1(LabelIdentifier); // 2. Return Completion { [[Type]]: continue, [[Value]]: empty, [[Target]]: label }.
 
     return new Completion({
       Type: 'continue',
@@ -20835,7 +20873,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return yield* BindingInitialization(node.BindingPattern, v, environment);
     } else {
       // 1. Let bindingId be StringValue of BindingIdentifier.
-      const bindingId = StringValue(node.BindingIdentifier); // 2. Let lhs be ? ResolveBinding(bindingId, environment).
+      const bindingId = StringValue$1(node.BindingIdentifier); // 2. Let lhs be ? ResolveBinding(bindingId, environment).
 
       let _temp3 = ResolveBinding(bindingId, environment, node.BindingIdentifier.strict);
 
@@ -20988,7 +21026,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     for (const AssignmentProperty of AssignmentPropertyList) {
       if (AssignmentProperty.IdentifierReference) {
         // 1. Let P be StringValue of IdentifierReference.
-        const P = StringValue(AssignmentProperty.IdentifierReference); // 2. Let lref be ? ResolveBinding(P).
+        const P = StringValue$1(AssignmentProperty.IdentifierReference); // 2. Let lref be ? ResolveBinding(P).
 
         let _temp5 = ResolveBinding(P, undefined, AssignmentProperty.IdentifierReference.strict);
 
@@ -21174,7 +21212,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let iteratorRecord be ? GetIterator(value).
     const iteratorRecord = _temp12; // 2. Let status be IteratorDestructuringAssignmentEvaluation of AssignmentElementList with argument iteratorRecord.
 
-    let status = EnsureCompletion(yield* IteratorDestructuringAssignmentEvaluation$1(AssignmentElementList, iteratorRecord)); // 3. If status is an abrupt completion, then
+    let status = EnsureCompletion(yield* IteratorDestructuringAssignmentEvaluation(AssignmentElementList, iteratorRecord)); // 3. If status is an abrupt completion, then
 
     if (status instanceof AbruptCompletion) {
       // a. If iteratorRecord.[[Done]] is false, return ? IteratorClose(iteratorRecord, status).
@@ -21191,7 +21229,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     if (AssignmentRestElement) {
       // a. Set status to the result of performing IteratorDestructuringAssignmentEvaluation of AssignmentRestElement with iteratorRecord as the argument.
-      status = EnsureCompletion(yield* IteratorDestructuringAssignmentEvaluation$1(AssignmentRestElement, iteratorRecord));
+      status = EnsureCompletion(yield* IteratorDestructuringAssignmentEvaluation(AssignmentRestElement, iteratorRecord));
     } // 6. If iteratorRecord.[[Done]] is false, return ? IteratorClose(iteratorRecord, status).
 
 
@@ -21202,10 +21240,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Completion(status);
   }
 
-  function* IteratorDestructuringAssignmentEvaluation$1(node, iteratorRecord) {
+  function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
     if (Array.isArray(node)) {
       for (const n of node) {
-        let _temp13 = yield* IteratorDestructuringAssignmentEvaluation$1(n, iteratorRecord);
+        let _temp13 = yield* IteratorDestructuringAssignmentEvaluation(n, iteratorRecord);
 
         if (_temp13 instanceof AbruptCompletion) {
           return _temp13;
@@ -21457,7 +21495,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
       /*c8 ignore next*/
       default:
-        throw new OutOfRange('IteratorDestructuringAssignmentEvaluation', node);
+        throw new OutOfRange$1('IteratorDestructuringAssignmentEvaluation', node);
     }
   }
 
@@ -21471,14 +21509,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
       /*c8 ignore next*/
       default:
-        throw new OutOfRange('DestructuringAssignmentEvaluation', node);
+        throw new OutOfRange$1('DestructuringAssignmentEvaluation', node);
     }
   }
 
   function RestBindingInitialization({
     BindingIdentifier
   }, value, environment, excludedNames) {
-    let _temp = ResolveBinding(StringValue(BindingIdentifier), environment, BindingIdentifier.strict);
+    let _temp = ResolveBinding(StringValue$1(BindingIdentifier), environment, BindingIdentifier.strict);
     /* c8 ignore if */
 
 
@@ -24015,7 +24053,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
       switch (typeof value) {
         case 'string':
-          return new StringValue$1(value);
+          return new StringValue(value);
 
         case 'number':
           return new NumberValue(value);
@@ -24028,7 +24066,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
         /*c8 ignore next*/
         default:
-          throw new OutOfRange('new Value', value);
+          throw new OutOfRange$1('new Value', value);
       }
     }
 
@@ -24077,7 +24115,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }); // #sec-ecmascript-language-types-string-type
 
-  class StringValue$1 extends PrimitiveValue {
+  class StringValue extends PrimitiveValue {
     constructor(string) {
       super();
       this.string = string;
@@ -24099,7 +24137,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   const wellKnownSymbols = Object.create(null);
 
   for (const name of ['asyncIterator', 'hasInstance', 'isConcatSpreadable', 'iterator', 'match', 'matchAll', 'replace', 'search', 'species', 'split', 'toPrimitive', 'toStringTag', 'unscopables']) {
-    const sym = new SymbolValue(new StringValue$1(`Symbol.${name}`));
+    const sym = new SymbolValue(new StringValue(`Symbol.${name}`));
     wellKnownSymbols[name] = sym;
   }
 
@@ -24474,7 +24512,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
       /*c8 ignore next*/
       default:
-        throw new OutOfRange('NumberBitwiseOp', op);
+        throw new OutOfRange$1('NumberBitwiseOp', op);
     }
   } // #sec-ecmascript-language-types-bigint-type
 
@@ -24776,7 +24814,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
       /*c8 ignore next*/
       default:
-        throw new OutOfRange('BigIntBitwiseOp', op);
+        throw new OutOfRange$1('BigIntBitwiseOp', op);
     }
   } // #sec-object-type
 
@@ -24932,7 +24970,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return 'Boolean';
     }
 
-    if (val instanceof StringValue$1) {
+    if (val instanceof StringValue) {
       return 'String';
     }
 
@@ -24972,7 +25010,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return 'Data Block';
     }
 
-    throw new OutOfRange('Type', val);
+    throw new OutOfRange$1('Type', val);
   } // Used for Type(x)::y
 
   function TypeForMethod(val) {
@@ -24980,7 +25018,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return val.constructor;
     }
 
-    throw new OutOfRange('TypeForValue', val);
+    throw new OutOfRange$1('TypeForValue', val);
   }
 
   const FEATURES = Object.freeze([{
@@ -27509,7 +27547,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return SetValueInBuffer(buffer, bufferIndex, type, numberValue, Value.false, 'Unordered', isLittleEndian);
   }
 
-  const mod = (n, m) => {
+  const mod$1 = (n, m) => {
     const r = n % m;
     return Math.floor(r >= 0 ? r : r + m);
   };
@@ -27526,25 +27564,25 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(Math.floor(t.numberValue() / msPerDay));
   }
   function TimeWithinDay(t) {
-    return F(mod(t.numberValue(), msPerDay));
+    return F(mod$1(t.numberValue(), msPerDay));
   } // 20.3.1.3 #sec-year-number
 
   function DaysInYear(y) {
     y = y.numberValue();
 
-    if (mod(y, 4) !== 0) {
+    if (mod$1(y, 4) !== 0) {
       return F(365);
     }
 
-    if (mod(y, 4) === 0 && mod(y, 100) !== 0) {
+    if (mod$1(y, 4) === 0 && mod$1(y, 100) !== 0) {
       return F(366);
     }
 
-    if (mod(y, 100) === 0 && mod(y, 400) !== 0) {
+    if (mod$1(y, 100) === 0 && mod$1(y, 400) !== 0) {
       return F(365);
     }
 
-    if (mod(y, 400) === 0) {
+    if (mod$1(y, 400) === 0) {
       return F(366);
     }
   }
@@ -27678,7 +27716,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   } // 20.3.1.6 #sec-week-day
 
   function WeekDay(t) {
-    return F(mod(Day(t).numberValue() + 4, 7));
+    return F(mod$1(Day(t).numberValue() + 4, 7));
   } // 20.3.1.7 #sec-local-time-zone-adjustment
 
   function LocalTZA(_t, _isUTC) {
@@ -27695,16 +27733,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   } // 20.3.1.10 #sec-hours-minutes-second-and-milliseconds
 
   function HourFromTime(t) {
-    return F(mod(Math.floor(t.numberValue() / msPerHour), HoursPerDay));
+    return F(mod$1(Math.floor(t.numberValue() / msPerHour), HoursPerDay));
   }
   function MinFromTime(t) {
-    return F(mod(Math.floor(t.numberValue() / msPerMinute), MinutesPerHour));
+    return F(mod$1(Math.floor(t.numberValue() / msPerMinute), MinutesPerHour));
   }
   function SecFromTime(t) {
-    return F(mod(Math.floor(t.numberValue() / msPerSecond), SecondsPerMinute));
+    return F(mod$1(Math.floor(t.numberValue() / msPerSecond), SecondsPerMinute));
   }
   function msFromTime(t) {
-    return F(mod(t.numberValue(), msPerSecond));
+    return F(mod$1(t.numberValue(), msPerSecond));
   } // 20.3.1.11 #sec-maketime
 
   function MakeTime(hour, min, sec, ms) {
@@ -27792,7 +27830,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     const dt = _temp7;
     const ym = y + Math.floor(m / 12);
-    const mn = mod(m, 12);
+    const mn = mod$1(m, 12);
     const ymday = DayFromYear(F(ym + (mn > 1 ? 1 : 0))).numberValue() - 365 * (mn > 1 ? 1 : 0) + daysWithinYearToEndOfMonth[mn];
     const t = F(ymday * msPerDay);
     return F(Day(t).numberValue() + dt - 1);
@@ -27994,17 +28032,23 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function FunctionCallSlot(thisArgument, argumentsList) {
     const F = this; // 1. Assert: F is an ECMAScript function object.
 
-    Assert(isECMAScriptFunctionObject(F), "isECMAScriptFunctionObject(F)"); // 2. If F.[[IsClassConstructor]] is true, throw a TypeError exception.
+    Assert(isECMAScriptFunctionObject(F), "isECMAScriptFunctionObject(F)"); // 2. Let callerContext be the running execution context.
+    // 3. Let calleeContext be PrepareForOrdinaryCall(F, undefined).
+
+    const calleeContext = PrepareForOrdinaryCall(F, Value.undefined); // 4. Assert: calleeContext is now the running execution context.
+
+    Assert(exports.surroundingAgent.runningExecutionContext === calleeContext, "surroundingAgent.runningExecutionContext === calleeContext"); // 5. If F.[[IsClassConstructor]] is true, then
 
     if (F.IsClassConstructor === Value.true) {
-      return exports.surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', F);
-    } // 3. Let callerContext be the running execution context.
-    // 4. Let calleeContext be PrepareForOrdinaryCall(F, undefined).
+      // a. Let error be a newly created TypeError object.
+      const error = exports.surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', F); // b. NOTE: _error_ is created in _calleeContext_ with _F_'s associated Realm Record.
+      // c. Remove _calleeContext_ from the execution context stack and restore _callerContext_ as the running execution context.
 
+      exports.surroundingAgent.executionContextStack.pop(calleeContext); // d. Return ThrowCompletion(_error_).
 
-    const calleeContext = PrepareForOrdinaryCall(F, Value.undefined); // 5. Assert: calleeContext is now the running execution context.
+      return error;
+    } // 6. Perform OrdinaryCallBindThis(F, calleeContext, thisArgument).
 
-    Assert(exports.surroundingAgent.runningExecutionContext === calleeContext, "surroundingAgent.runningExecutionContext === calleeContext"); // 6. Perform OrdinaryCallBindThis(F, calleeContext, thisArgument).
 
     OrdinaryCallBindThis(F, calleeContext, thisArgument); // 7. Let result be OrdinaryCallEvaluateBody(F, argumentsList).
 
@@ -28161,29 +28205,33 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   } // 9.2.10 #sec-makeconstructor
 
   function MakeConstructor(F, writablePrototype, prototype) {
-    var _surroundingAgent$hos2;
+    Assert(isECMAScriptFunctionObject(F) || F.Call === BuiltinFunctionCall, "isECMAScriptFunctionObject(F) || F.Call === BuiltinFunctionCall");
 
-    Assert(isECMAScriptFunctionObject(F), "isECMAScriptFunctionObject(F)");
-    Assert(IsConstructor(F) === Value.false, "IsConstructor(F) === Value.false");
+    if (isECMAScriptFunctionObject(F)) {
+      var _surroundingAgent$hos2;
 
-    let _temp5 = IsExtensible(F);
+      Assert(IsConstructor(F) === Value.false, "IsConstructor(F) === Value.false");
 
-    Assert(!(_temp5 instanceof AbruptCompletion), "IsExtensible(F)" + ' returned an abrupt completion');
+      let _temp5 = IsExtensible(F);
 
-    if (_temp5 instanceof Completion) {
-      _temp5 = _temp5.Value;
+      Assert(!(_temp5 instanceof AbruptCompletion), "IsExtensible(F)" + ' returned an abrupt completion');
+
+      if (_temp5 instanceof Completion) {
+        _temp5 = _temp5.Value;
+      }
+
+      let _temp6 = HasOwnProperty(F, new Value('prototype'));
+
+      Assert(!(_temp6 instanceof AbruptCompletion), "HasOwnProperty(F, new Value('prototype'))" + ' returned an abrupt completion');
+
+      if (_temp6 instanceof Completion) {
+        _temp6 = _temp6.Value;
+      }
+
+      Assert(_temp5 === Value.true && _temp6 === Value.false, "X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, new Value('prototype'))) === Value.false");
+      F.Construct = ((_surroundingAgent$hos2 = exports.surroundingAgent.hostDefinedOptions.boost) === null || _surroundingAgent$hos2 === void 0 ? void 0 : _surroundingAgent$hos2.constructFunction) || FunctionConstructSlot;
     }
 
-    let _temp6 = HasOwnProperty(F, new Value('prototype'));
-
-    Assert(!(_temp6 instanceof AbruptCompletion), "HasOwnProperty(F, new Value('prototype'))" + ' returned an abrupt completion');
-
-    if (_temp6 instanceof Completion) {
-      _temp6 = _temp6.Value;
-    }
-
-    Assert(_temp5 === Value.true && _temp6 === Value.false, "X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, new Value('prototype'))) === Value.false");
-    F.Construct = ((_surroundingAgent$hos2 = exports.surroundingAgent.hostDefinedOptions.boost) === null || _surroundingAgent$hos2 === void 0 ? void 0 : _surroundingAgent$hos2.constructFunction) || FunctionConstructSlot;
     F.ConstructorKind = 'base';
 
     if (writablePrototype === undefined) {
@@ -39738,7 +39786,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return array;
     }
 
-    throw new OutOfRange('ArrayConstructor', numberOfArgs);
+    throw new OutOfRange$1('ArrayConstructor', numberOfArgs);
   } // 22.1.2.1 #sec-array.from
 
 
@@ -41110,22 +41158,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     // 1. Let func be the this value.
-    const func = thisValue; // 2. If func is a built-in function object, then return an implementation-defined
-    //    String source code representation of func. The representation must have the
-    //    syntax of a NativeFunction. Additionally, if func has an [[InitialName]] internal
-    //    slot and func.[[InitialName]] is a String, the portion of the returned String
-    //    that would be matched by `NativeFunctionAccessor? PropertyName` must be the
-    //    value of func.[[InitialName]].
-
-    if ('nativeFunction' in func) {
-      if (func.InitialName !== Value.null) {
-        return new Value(`function ${func.InitialName.stringValue()}() { [native code] }`);
-      }
-
-      return new Value('function() { [native code] }');
-    } // 3. If Type(func) is Object and func has a [[SourceText]] internal slot and func.[[SourceText]]
+    const func = thisValue; // 2. If Type(func) is Object and func has a [[SourceText]] internal slot and func.[[SourceText]]
     //    is a sequence of Unicode code points and ! HostHasSourceTextAvailable(func) is true, then
-
 
     let _temp10 = HostHasSourceTextAvailable(func);
 
@@ -41138,6 +41172,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (Type(func) === 'Object' && 'SourceText' in func && _temp10 === Value.true) {
       // Return ! UTF16Encode(func.[[SourceText]]).
       return new Value(func.SourceText);
+    } // 3. If func is a built-in function object, then return an implementation-defined
+    //    String source code representation of func. The representation must have the
+    //    syntax of a NativeFunction. Additionally, if func has an [[InitialName]] internal
+    //    slot and func.[[InitialName]] is a String, the portion of the returned String
+    //    that would be matched by `NativeFunctionAccessor? PropertyName` must be the
+    //    value of func.[[InitialName]].
+
+
+    if ('nativeFunction' in func) {
+      if (func.InitialName !== Value.null) {
+        return new Value(`function ${func.InitialName.stringValue()}() { [native code] }`);
+      }
+
+      return new Value('function() { [native code] }');
     } // 4. If Type(func) is Object and IsCallable(func) is true, then return an implementation
     //    dependent String source code representation of func. The representation must have
     //    the syntax of a NativeFunction.
@@ -53372,7 +53420,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     const unfiltered = completion.Value; // 6. Assert: unfiltered is either a String, Number, Boolean, Null, or an Object that is defined by either an ArrayLiteral or an ObjectLiteral.
 
-    Assert(unfiltered instanceof StringValue$1 || unfiltered instanceof NumberValue || unfiltered instanceof BooleanValue || unfiltered instanceof NullValue || unfiltered instanceof ObjectValue, "unfiltered instanceof JSStringValue\n         || unfiltered instanceof NumberValue\n         || unfiltered instanceof BooleanValue\n         || unfiltered instanceof NullValue\n         || unfiltered instanceof ObjectValue"); // 7. If IsCallable(reviver) is true, then
+    Assert(unfiltered instanceof StringValue || unfiltered instanceof NumberValue || unfiltered instanceof BooleanValue || unfiltered instanceof NullValue || unfiltered instanceof ObjectValue, "unfiltered instanceof JSStringValue\n         || unfiltered instanceof NumberValue\n         || unfiltered instanceof BooleanValue\n         || unfiltered instanceof NullValue\n         || unfiltered instanceof ObjectValue"); // 7. If IsCallable(reviver) is true, then
 
     if (IsCallable(reviver) === Value.true) {
       // a. Let root be OrdinaryObjectCreate(%Object.prototype%).
@@ -59843,7 +59891,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
       /*c8 ignore next*/
       default:
-        throw new OutOfRange('RequireObjectCoercible', {
+        throw new OutOfRange$1('RequireObjectCoercible', {
           type,
           argument
         });
@@ -60602,7 +60650,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
       /*c8 ignore next*/
       default:
-        throw new OutOfRange('ToBoolean', {
+        throw new OutOfRange$1('ToBoolean', {
           type,
           argument
         });
@@ -60687,14 +60735,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
       /*c8 ignore next*/
       default:
-        throw new OutOfRange('ToNumber', {
+        throw new OutOfRange$1('ToNumber', {
           type,
           argument
         });
     }
   }
 
-  const mod$1 = (n, m) => {
+  const mod = (n, m) => {
     const r = n % m;
     return Math.floor(r >= 0 ? r : r + m);
   }; // 7.1.4 #sec-tointegerorinfinity
@@ -60757,7 +60805,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     const int = Math.sign(number) * Math.floor(Math.abs(number)); // 4. Let int32bit be int modulo 2^32.
 
-    const int32bit = mod$1(int, 2 ** 32); // 5. If int32bit ≥ 2^31, return 𝔽(int32bit - 2^32); otherwise return 𝔽(int32bit).
+    const int32bit = mod(int, 2 ** 32); // 5. If int32bit ≥ 2^31, return 𝔽(int32bit - 2^32); otherwise return 𝔽(int32bit).
 
     if (int32bit >= 2 ** 31) {
       return F(int32bit - 2 ** 32);
@@ -60788,7 +60836,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     const int = Math.sign(number) * Math.floor(Math.abs(number)); // 4. Let int32bit be int modulo 2^32.
 
-    const int32bit = mod$1(int, 2 ** 32); // 5. Return 𝔽(int32bit).
+    const int32bit = mod(int, 2 ** 32); // 5. Return 𝔽(int32bit).
 
     return F(int32bit);
   } // 7.1.7 #sec-toint16
@@ -60815,7 +60863,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     const int = Math.sign(number) * Math.floor(Math.abs(number)); // 4. Let int16bit be int modulo 2^16.
 
-    const int16bit = mod$1(int, 2 ** 16); // 5. If int16bit ≥ 2^31, return 𝔽(int16bit - 2^32); otherwise return 𝔽(int16bit).
+    const int16bit = mod(int, 2 ** 16); // 5. If int16bit ≥ 2^31, return 𝔽(int16bit - 2^32); otherwise return 𝔽(int16bit).
 
     if (int16bit >= 2 ** 15) {
       return F(int16bit - 2 ** 16);
@@ -60846,7 +60894,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     const int = Math.sign(number) * Math.floor(Math.abs(number)); // 4. Let int16bit be int modulo 2^16.
 
-    const int16bit = mod$1(int, 2 ** 16); // 5. Return 𝔽(int16bit).
+    const int16bit = mod(int, 2 ** 16); // 5. Return 𝔽(int16bit).
 
     return F(int16bit);
   } // 7.1.9 #sec-toint8
@@ -60873,7 +60921,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     const int = Math.sign(number) * Math.floor(Math.abs(number)); // 4. Let int8bit be int modulo 2^8.
 
-    const int8bit = mod$1(int, 2 ** 8); // 5. If int8bit ≥ 2^7, return 𝔽(int8bit - 2^8); otherwise return 𝔽(int8bit).
+    const int8bit = mod(int, 2 ** 8); // 5. If int8bit ≥ 2^7, return 𝔽(int8bit - 2^8); otherwise return 𝔽(int8bit).
 
     if (int8bit >= 2 ** 7) {
       return F(int8bit - 2 ** 8);
@@ -60904,7 +60952,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     const int = Math.sign(number) * Math.floor(Math.abs(number)); // 4. Let int8bit be int modulo 2^8.
 
-    const int8bit = mod$1(int, 2 ** 8); // 5. Return 𝔽(int8bit).
+    const int8bit = mod(int, 2 ** 8); // 5. Return 𝔽(int8bit).
 
     return F(int8bit);
   } // 7.1.11 #sec-touint8clamp
@@ -61026,7 +61074,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
       /*c8 ignore next*/
       default:
-        throw new OutOfRange('ToBigInt', argument);
+        throw new OutOfRange$1('ToBigInt', argument);
     }
   } // #sec-stringtobigint
 
@@ -61153,7 +61201,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
       /*c8 ignore next*/
       default:
-        throw new OutOfRange('ToString', {
+        throw new OutOfRange$1('ToString', {
           type,
           argument
         });
@@ -61214,7 +61262,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
       /*c8 ignore next*/
       default:
-        throw new OutOfRange('ToObject', {
+        throw new OutOfRange$1('ToObject', {
           type,
           argument
         });
@@ -62676,7 +62724,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.IsStrict = IsStrict;
   exports.IsStrictReference = IsStrictReference;
   exports.IsStringPrefix = IsStringPrefix;
-  exports.IsStringValidUnicode = IsStringValidUnicode;
+  exports.IsStringWellFormedUnicode = IsStringWellFormedUnicode;
   exports.IsSuperReference = IsSuperReference;
   exports.IsUnresolvableReference = IsUnresolvableReference;
   exports.IsValidIntegerIndex = IsValidIntegerIndex;
@@ -62688,7 +62736,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.IteratorNext = IteratorNext;
   exports.IteratorStep = IteratorStep;
   exports.IteratorValue = IteratorValue;
-  exports.JSStringValue = StringValue$1;
+  exports.JSStringValue = StringValue;
   exports.KeyedBindingInitialization = KeyedBindingInitialization;
   exports.LabelledEvaluation = LabelledEvaluation;
   exports.LengthOfArrayLike = LengthOfArrayLike;
@@ -62806,7 +62854,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.StringPad = StringPad;
   exports.StringToBigInt = StringToBigInt;
   exports.StringToCodePoints = StringToCodePoints;
-  exports.StringValue = StringValue;
+  exports.StringValue = StringValue$1;
   exports.SuperReference = SuperReference;
   exports.SymbolDescriptiveString = SymbolDescriptiveString;
   exports.SymbolValue = SymbolValue;
