@@ -4,7 +4,7 @@ import {
   ToPropertyKey,
   Assert,
 } from '../abstract-ops/all.mjs';
-import { Value, Reference } from '../value.mjs';
+import { Value, ReferenceRecord } from '../value.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { StringValue } from '../static-semantics/all.mjs';
 import { Q } from '../completion.mjs';
@@ -19,12 +19,12 @@ export function* EvaluatePropertyAccessWithExpressionKey(baseValue, expression, 
   const bv = Q(RequireObjectCoercible(baseValue));
   // 4. Let propertyKey be ? ToPropertyKey(propertyNameValue).
   const propertyKey = Q(ToPropertyKey(propertyNameValue));
-  // 5. Return a value of type Reference whose base value component is bv, whose
-  //    referenced name component is propertyKey, and whose strict reference flag is strict.
-  return new Reference({
-    BaseValue: bv,
+  // 5. Return the Reference Record { [[Base]]: bv, [[ReferencedName]]: propertyKey, [[Strict]]: strict, [[ThisValue]]: empty }.
+  return new ReferenceRecord({
+    Base: bv,
     ReferencedName: propertyKey,
-    StrictReference: strict ? Value.true : Value.false,
+    Strict: strict ? Value.true : Value.false,
+    ThisValue: undefined,
   });
 }
 
@@ -36,11 +36,11 @@ export function EvaluatePropertyAccessWithIdentifierKey(baseValue, identifierNam
   const bv = Q(RequireObjectCoercible(baseValue));
   // 3. Let propertyNameString be StringValue of IdentifierName
   const propertyNameString = StringValue(identifierName);
-  // 4. Return a value of type Reference whose base value component is bv, whose
-  //    referenced name component is propertyNameString, and whose strict reference flag is strict.
-  return new Reference({
-    BaseValue: bv,
+  // 4. Return the Reference Record { [[Base]]: bv, [[ReferencedName]]: propertyNameString, [[Strict]]: strict, [[ThisValue]]: empty }.
+  return new ReferenceRecord({
+    Base: bv,
     ReferencedName: propertyNameString,
-    StrictReference: strict ? Value.true : Value.false,
+    Strict: strict ? Value.true : Value.false,
+    ThisValue: undefined,
   });
 }

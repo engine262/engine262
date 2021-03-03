@@ -1,7 +1,6 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Type, Value } from '../value.mjs';
+import { Type, Value, ReferenceRecord } from '../value.mjs';
 import {
-  GetReferencedName,
   GetValue,
   IsPropertyReference,
   PerformEval,
@@ -28,10 +27,10 @@ export function* Evaluate_CallExpression(CallExpression) {
   // 5. Let func be ? GetValue(ref).
   const func = Q(GetValue(ref));
   // 6. If Type(ref) is Reference, IsPropertyReference(ref) is false, and GetReferencedName(ref) is "eval", then
-  if (Type(ref) === 'Reference'
+  if (ref instanceof ReferenceRecord
       && IsPropertyReference(ref) === Value.false
-      && (Type(GetReferencedName(ref)) === 'String'
-      && GetReferencedName(ref).stringValue() === 'eval')) {
+      && (Type(ref.ReferencedName) === 'String'
+      && ref.ReferencedName.stringValue() === 'eval')) {
     // a. If SameValue(func, %eval%) is true, then
     if (SameValue(func, surroundingAgent.intrinsic('%eval%')) === Value.true) {
       // i. Let argList be ? ArgumentListEvaluation of arguments.

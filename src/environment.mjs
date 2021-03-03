@@ -1,7 +1,7 @@
 import { AbstractModuleRecord } from './modules.mjs';
 import {
   Descriptor,
-  Reference,
+  ReferenceRecord,
   Type,
   Value,
   wellKnownSymbols,
@@ -869,24 +869,24 @@ export class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
 export function GetIdentifierReference(env, name, strict) {
   // 1. If lex is the value null, then
   if (env === Value.null) {
-    // a. Return a value of type Reference whose base value component is undefined, whose
-    //    referenced name component is name, and whose strict reference flag is strict.
-    return new Reference({
-      BaseValue: Value.undefined,
+    // a. Return the Reference Record { [[Base]]: unresolvable, [[ReferencedName]]: name, [[Strict]]: strict, [[ThisValue]]: empty }.
+    return new ReferenceRecord({
+      Base: 'unresolvable',
       ReferencedName: name,
-      StrictReference: strict,
+      Strict: strict,
+      ThisValue: undefined,
     });
   }
   // 2. Let exists be ? envRec.HasBinding(name).
   const exists = Q(env.HasBinding(name));
   // 3. If exists is true, then
   if (exists === Value.true) {
-    // a. Return a value of type Reference whose base value component is envRec, whose
-    //    referenced name component is name, and whose strict reference flag is strict.
-    return new Reference({
-      BaseValue: env,
+    // a. Return the Reference Record { [[Base]]: env, [[ReferencedName]]: name, [[Strict]]: strict, [[ThisValue]]: empty }.
+    return new ReferenceRecord({
+      Base: env,
       ReferencedName: name,
-      StrictReference: strict,
+      Strict: strict,
+      ThisValue: undefined,
     });
   } else {
     // a. Let outer be env.[[OuterEnv]].

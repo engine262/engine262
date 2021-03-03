@@ -718,36 +718,24 @@ export class ObjectValue extends Value {
   }
 }
 
-export class Reference {
-  constructor({ BaseValue, ReferencedName, StrictReference }) {
-    this.BaseValue = BaseValue;
-    this.ReferencedName = ReferencedName;
-    Assert(Type(StrictReference) === 'Boolean');
-    this.StrictReference = StrictReference;
-  }
-
-  // NON-SPEC
-  mark(m) {
-    m(this.BaseValue);
-    m(this.ReferencedName);
-  }
-}
-
-export class SuperReference extends Reference {
+export class ReferenceRecord {
   constructor({
-    BaseValue,
+    Base,
     ReferencedName,
-    thisValue,
-    StrictReference,
+    Strict,
+    ThisValue,
   }) {
-    super({ BaseValue, ReferencedName, StrictReference });
-    this.thisValue = thisValue;
+    this.Base = Base;
+    this.ReferencedName = ReferencedName;
+    this.Strict = Strict;
+    this.ThisValue = ThisValue;
   }
 
   // NON-SPEC
   mark(m) {
-    super.mark(m);
-    m(this.thisValue);
+    m(this.Base);
+    m(this.ReferencedName);
+    m(this.ThisValue);
   }
 }
 
@@ -823,10 +811,6 @@ export function Type(val) {
 
   if (val instanceof ObjectValue) {
     return 'Object';
-  }
-
-  if (val instanceof Reference) {
-    return 'Reference';
   }
 
   if (val instanceof Completion) {

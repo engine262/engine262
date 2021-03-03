@@ -5,7 +5,6 @@ import {
   CopyDataProperties,
   CreateDataPropertyOrThrow,
   GetIterator,
-  GetReferencedName,
   GetV,
   GetValue,
   IteratorClose,
@@ -134,7 +133,7 @@ function* KeyedDestructuringAssignmentEvaluation({
     // a. If IsAnonymousFunctionDefinition(Initializer) and IsIdentifierRef of DestructuringAssignmentTarget are both true, then
     if (IsAnonymousFunctionDefinition(Initializer) && IsIdentifierRef(DestructuringAssignmentTarget)) {
       // i. Let rhsValue be NamedEvaluation of Initializer with argument GetReferencedName(lref).
-      rhsValue = yield* NamedEvaluation(Initializer, GetReferencedName(lref));
+      rhsValue = yield* NamedEvaluation(Initializer, lref.ReferencedName);
     } else {
       // i. Let defaultValue be the result of evaluating Initializer.
       const defaultValue = yield* Evaluate(Initializer);
@@ -258,7 +257,7 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
         // a. If IsAnonymousFunctionDefinition(AssignmentExpression) is true and IsIdentifierRef of LeftHandSideExpression is true, then
         if (IsAnonymousFunctionDefinition(Initializer) && IsIdentifierRef(DestructuringAssignmentTarget)) {
           // i. Let v be NamedEvaluation of Initializer with argument GetReferencedName(lref).
-          v = yield* NamedEvaluation(Initializer, GetReferencedName(lref));
+          v = yield* NamedEvaluation(Initializer, lref.ReferencedName);
         } else { // b. Else,
           // i. Let defaultValue be the result of evaluating Initializer.
           const defaultValue = yield* Evaluate(Initializer);

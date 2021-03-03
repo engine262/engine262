@@ -1,5 +1,5 @@
 import { Evaluate } from '../evaluator.mjs';
-import { SuperReference, Value } from '../value.mjs';
+import { ReferenceRecord, Value } from '../value.mjs';
 import {
   Assert,
   GetThisEnvironment,
@@ -20,14 +20,12 @@ function MakeSuperPropertyReference(actualThis, propertyKey, strict) {
   const baseValue = Q(env.GetSuperBase());
   // 4. Let bv be ? RequireObjectCoercible(baseValue).
   const bv = Q(RequireObjectCoercible(baseValue));
-  // 5. Return a value of type Reference that is a Super Reference whose base value component is bv,
-  //    whose referenced name component is propertyKey, whose thisValue component is actualThis, and
-  //    whose strict reference flag is strict.
-  return new SuperReference({
-    BaseValue: bv,
+  // 5. Return the Reference Record { [[Base]]: bv, [[ReferencedName]]: propertyKey, [[Strict]]: strict, [[ThisValue]]: actualThis }.
+  return new ReferenceRecord({
+    Base: bv,
     ReferencedName: propertyKey,
-    thisValue: actualThis,
-    StrictReference: strict ? Value.true : Value.false,
+    Strict: strict ? Value.true : Value.false,
+    ThisValue: actualThis,
   });
 }
 
