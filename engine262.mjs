@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 23dfd7a3bb8a2f5a97f6259d82283f59703b8598
+ * engine262 0.0.1 c6a024656777cc4a5f85baf3b6fe25da8d6b7f69
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -4237,7 +4237,7 @@ function* Evaluate_AssignmentExpression({
 
       if (IsAnonymousFunctionDefinition(AssignmentExpression) && IsIdentifierRef(LeftHandSideExpression)) {
         // i. Let rval be NamedEvaluation of AssignmentExpression with argument GetReferencedName(lref).
-        rval = yield* NamedEvaluation(AssignmentExpression, GetReferencedName(lref));
+        rval = yield* NamedEvaluation(AssignmentExpression, lref.ReferencedName);
       } else {
         // d. Else,
         // i. Let rref be the result of evaluating AssignmentExpression.
@@ -4337,7 +4337,7 @@ function* Evaluate_AssignmentExpression({
 
     if (IsAnonymousFunctionDefinition(AssignmentExpression) && IsIdentifierRef(LeftHandSideExpression)) {
       // a. Let rval be NamedEvaluation of AssignmentExpression with argument GetReferencedName(lref).
-      rval = yield* NamedEvaluation(AssignmentExpression, GetReferencedName(lref));
+      rval = yield* NamedEvaluation(AssignmentExpression, lref.ReferencedName);
     } else {
       // 6. Else,
       // a. Let rref be the result of evaluating AssignmentExpression.
@@ -4402,7 +4402,7 @@ function* Evaluate_AssignmentExpression({
 
     if (IsAnonymousFunctionDefinition(AssignmentExpression) && IsIdentifierRef(LeftHandSideExpression)) {
       // a. Let rval be NamedEvaluation of AssignmentExpression with argument GetReferencedName(lref).
-      rval = yield* NamedEvaluation(AssignmentExpression, GetReferencedName(lref));
+      rval = yield* NamedEvaluation(AssignmentExpression, lref.ReferencedName);
     } else {
       // 6. Else,
       // a. Let rref be the result of evaluating AssignmentExpression.
@@ -4457,7 +4457,7 @@ function* Evaluate_AssignmentExpression({
 
     if (IsAnonymousFunctionDefinition(AssignmentExpression) && IsIdentifierRef(LeftHandSideExpression)) {
       // a. Let rval be NamedEvaluation of AssignmentExpression with argument GetReferencedName(lref).
-      rval = yield* NamedEvaluation(AssignmentExpression, GetReferencedName(lref));
+      rval = yield* NamedEvaluation(AssignmentExpression, lref.ReferencedName);
     } else {
       // 5. Else,
       // a. Let rref be the result of evaluating AssignmentExpression.
@@ -5624,7 +5624,7 @@ function* Evaluate_CallExpression(CallExpression) {
 
   const func = _temp; // 6. If Type(ref) is Reference, IsPropertyReference(ref) is false, and GetReferencedName(ref) is "eval", then
 
-  if (Type(ref) === 'Reference' && IsPropertyReference(ref) === Value.false && Type(GetReferencedName(ref)) === 'String' && GetReferencedName(ref).stringValue() === 'eval') {
+  if (ref instanceof ReferenceRecord && IsPropertyReference(ref) === Value.false && Type(ref.ReferencedName) === 'String' && ref.ReferencedName.stringValue() === 'eval') {
     // a. If SameValue(func, %eval%) is true, then
     if (SameValue(func, surroundingAgent.intrinsic('%eval%')) === Value.true) {
       let _temp2 = yield* ArgumentListEvaluation(args);
@@ -5664,16 +5664,16 @@ function* EvaluateCall(func, ref, args, tailPosition) {
   // 1. If Type(ref) is Reference, then
   let thisValue;
 
-  if (Type(ref) === 'Reference') {
+  if (ref instanceof ReferenceRecord) {
     // a. If IsPropertyReference(ref) is true, then
     if (IsPropertyReference(ref) === Value.true) {
       // i. Let thisValue be GetThisValue(ref).
       thisValue = GetThisValue(ref);
     } else {
-      // i. Assert: the base of ref is an Environment Record.
-      Assert(ref.BaseValue instanceof EnvironmentRecord, "ref.BaseValue instanceof EnvironmentRecord"); // ii. Let envRef be GetBase(ref).
+      // i. Let refEnv be ref.[[Base]].
+      const refEnv = ref.Base; // ii. Assert: refEnv is an Environment Record.
 
-      const refEnv = GetBase(ref); // iii. Let thisValue be envRef.WithBaseObject().
+      Assert(refEnv instanceof EnvironmentRecord, "refEnv instanceof EnvironmentRecord"); // iii. Let thisValue be refEnv.WithBaseObject().
 
       thisValue = refEnv.WithBaseObject();
     }
@@ -7294,13 +7294,13 @@ function* EvaluatePropertyAccessWithExpressionKey(baseValue, expression, strict)
     _temp3 = _temp3.Value;
   }
 
-  const propertyKey = _temp3; // 5. Return a value of type Reference whose base value component is bv, whose
-  //    referenced name component is propertyKey, and whose strict reference flag is strict.
+  const propertyKey = _temp3; // 5. Return the Reference Record { [[Base]]: bv, [[ReferencedName]]: propertyKey, [[Strict]]: strict, [[ThisValue]]: empty }.
 
-  return new Reference({
-    BaseValue: bv,
+  return new ReferenceRecord({
+    Base: bv,
     ReferencedName: propertyKey,
-    StrictReference: strict ? Value.true : Value.false
+    Strict: strict ? Value.true : Value.false,
+    ThisValue: undefined
   });
 } // #sec-evaluate-identifier-key-property-access
 
@@ -7320,13 +7320,13 @@ function EvaluatePropertyAccessWithIdentifierKey(baseValue, identifierName, stri
 
   const bv = _temp4; // 3. Let propertyNameString be StringValue of IdentifierName
 
-  const propertyNameString = StringValue$1(identifierName); // 4. Return a value of type Reference whose base value component is bv, whose
-  //    referenced name component is propertyNameString, and whose strict reference flag is strict.
+  const propertyNameString = StringValue$1(identifierName); // 4. Return the Reference Record { [[Base]]: bv, [[ReferencedName]]: propertyNameString, [[Strict]]: strict, [[ThisValue]]: empty }.
 
-  return new Reference({
-    BaseValue: bv,
+  return new ReferenceRecord({
+    Base: bv,
     ReferencedName: propertyNameString,
-    StrictReference: strict ? Value.true : Value.false
+    Strict: strict ? Value.true : Value.false,
+    ThisValue: undefined
   });
 }
 
@@ -8759,14 +8759,14 @@ function* Evaluate_UnaryExpression_Delete({
     ref = ref.Value;
   }
 
-  if (Type(ref) !== 'Reference') {
+  if (!(ref instanceof ReferenceRecord)) {
     return Value.true;
   } // 4. If IsUnresolvableReference(ref) is true, then
 
 
   if (IsUnresolvableReference(ref) === Value.true) {
-    // a. Assert: IsStrictReference(ref) is false.
-    Assert(IsStrictReference(ref) === Value.false, "IsStrictReference(ref) === Value.false"); // b. Return true.
+    // a. Assert: ref.[[Strict]] is false.
+    Assert(ref.Strict === Value.false, "ref.Strict === Value.false"); // b. Return true.
 
     return Value.true;
   } // 5. If IsPropertyReference(ref) is true, then
@@ -8776,21 +8776,21 @@ function* Evaluate_UnaryExpression_Delete({
     // a. If IsSuperReference(ref) is true, throw a ReferenceError exception.
     if (IsSuperReference(ref) === Value.true) {
       return surroundingAgent.Throw('ReferenceError', 'CannotDeleteSuper');
-    } // b. Let baseObj be ! ToObject(GetBase(ref)).
+    } // b. Let baseObj be ! ToObject(ref.[[Base]]).
 
 
-    let _temp = ToObject(GetBase(ref));
+    let _temp = ToObject(ref.Base);
 
-    Assert(!(_temp instanceof AbruptCompletion), "ToObject(GetBase(ref))" + ' returned an abrupt completion');
+    Assert(!(_temp instanceof AbruptCompletion), "ToObject(ref.Base)" + ' returned an abrupt completion');
     /* c8 ignore if */
 
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
     }
 
-    const baseObj = _temp; // c. Let deleteStatus be ? baseObj.[[Delete]](GetReferencedName(ref)).
+    const baseObj = _temp; // c. Let deleteStatus be ? baseObj.[[Delete]](ref.[[ReferencedName]]).
 
-    let _temp2 = baseObj.Delete(GetReferencedName(ref));
+    let _temp2 = baseObj.Delete(ref.ReferencedName);
     /* c8 ignore if */
 
 
@@ -8804,21 +8804,22 @@ function* Evaluate_UnaryExpression_Delete({
       _temp2 = _temp2.Value;
     }
 
-    const deleteStatus = _temp2; // d. If deleteStatus is false and IsStrictReference(ref) is true, throw a TypeError exception.
+    const deleteStatus = _temp2; // d. If deleteStatus is false and ref.[[Strict]] is true, throw a TypeError exception.
 
-    if (deleteStatus === Value.false && IsStrictReference(ref) === Value.true) {
-      return surroundingAgent.Throw('TypeError', 'StrictModeDelete', GetReferencedName(ref));
+    if (deleteStatus === Value.false && ref.Strict === Value.true) {
+      return surroundingAgent.Throw('TypeError', 'StrictModeDelete', ref.ReferencedName);
     } // e. Return deleteStatus.
 
 
     return deleteStatus;
   } else {
     // 6. Else,
-    // a. Assert: ref is a Reference to an Environment Record binding.
-    // b. Let bindings be GetBase(ref).
-    const bindings = GetBase(ref); // c. Return ? bindings.DeleteBinding(GetReferencedName(ref)).
+    // a. Let base be ref.[[Base]].
+    const base = ref.Base; // b. Assert: base is an Environment Record.
 
-    return bindings.DeleteBinding(GetReferencedName(ref));
+    Assert(base instanceof EnvironmentRecord, "base instanceof EnvironmentRecord"); // c. Return ? bindings.DeleteBinding(GetReferencedName(ref)).
+
+    return base.DeleteBinding(ref.ReferencedName);
   }
 } // #sec-void-operator-runtime-semantics-evaluation
 //   UnaryExpression : `void` UnaryExpression
@@ -8855,7 +8856,7 @@ function* Evaluate_UnaryExpression_Typeof({
   // 1. Let val be the result of evaluating UnaryExpression.
   let val = yield* Evaluate(UnaryExpression); // 2. If Type(val) is Reference, then
 
-  if (Type(val) === 'Reference') {
+  if (val instanceof ReferenceRecord) {
     // a. If IsUnresolvableReference(val) is true, return "undefined".
     if (IsUnresolvableReference(val) === Value.true) {
       return new Value('undefined');
@@ -9493,15 +9494,13 @@ function MakeSuperPropertyReference(actualThis, propertyKey, strict) {
     _temp2 = _temp2.Value;
   }
 
-  const bv = _temp2; // 5. Return a value of type Reference that is a Super Reference whose base value component is bv,
-  //    whose referenced name component is propertyKey, whose thisValue component is actualThis, and
-  //    whose strict reference flag is strict.
+  const bv = _temp2; // 5. Return the Reference Record { [[Base]]: bv, [[ReferencedName]]: propertyKey, [[Strict]]: strict, [[ThisValue]]: actualThis }.
 
-  return new SuperReference({
-    BaseValue: bv,
+  return new ReferenceRecord({
+    Base: bv,
     ReferencedName: propertyKey,
-    thisValue: actualThis,
-    StrictReference: strict ? Value.true : Value.false
+    Strict: strict ? Value.true : Value.false,
+    ThisValue: actualThis
   });
 } // #sec-super-keyword-runtime-semantics-evaluation
 //  SuperProperty :
@@ -21151,7 +21150,7 @@ function* KeyedDestructuringAssignmentEvaluation({
     // a. If IsAnonymousFunctionDefinition(Initializer) and IsIdentifierRef of DestructuringAssignmentTarget are both true, then
     if (IsAnonymousFunctionDefinition(Initializer) && IsIdentifierRef(DestructuringAssignmentTarget)) {
       // i. Let rhsValue be NamedEvaluation of Initializer with argument GetReferencedName(lref).
-      rhsValue = yield* NamedEvaluation(Initializer, GetReferencedName(lref));
+      rhsValue = yield* NamedEvaluation(Initializer, lref.ReferencedName);
     } else {
       // i. Let defaultValue be the result of evaluating Initializer.
       const defaultValue = yield* Evaluate(Initializer); // ii. Let rhsValue be ? GetValue(defaultValue).
@@ -21351,7 +21350,7 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
           // a. If IsAnonymousFunctionDefinition(AssignmentExpression) is true and IsIdentifierRef of LeftHandSideExpression is true, then
           if (IsAnonymousFunctionDefinition(Initializer) && IsIdentifierRef(DestructuringAssignmentTarget)) {
             // i. Let v be NamedEvaluation of Initializer with argument GetReferencedName(lref).
-            v = yield* NamedEvaluation(Initializer, GetReferencedName(lref));
+            v = yield* NamedEvaluation(Initializer, lref.ReferencedName);
           } else {
             // b. Else,
             // i. Let defaultValue be the result of evaluating Initializer.
@@ -23928,12 +23927,12 @@ class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
 function GetIdentifierReference(env, name, strict) {
   // 1. If lex is the value null, then
   if (env === Value.null) {
-    // a. Return a value of type Reference whose base value component is undefined, whose
-    //    referenced name component is name, and whose strict reference flag is strict.
-    return new Reference({
-      BaseValue: Value.undefined,
+    // a. Return the Reference Record { [[Base]]: unresolvable, [[ReferencedName]]: name, [[Strict]]: strict, [[ThisValue]]: empty }.
+    return new ReferenceRecord({
+      Base: 'unresolvable',
       ReferencedName: name,
-      StrictReference: strict
+      Strict: strict,
+      ThisValue: undefined
     });
   } // 2. Let exists be ? envRec.HasBinding(name).
 
@@ -23951,12 +23950,12 @@ function GetIdentifierReference(env, name, strict) {
   const exists = _temp19; // 3. If exists is true, then
 
   if (exists === Value.true) {
-    // a. Return a value of type Reference whose base value component is envRec, whose
-    //    referenced name component is name, and whose strict reference flag is strict.
-    return new Reference({
-      BaseValue: env,
+    // a. Return the Reference Record { [[Base]]: env, [[ReferencedName]]: name, [[Strict]]: strict, [[ThisValue]]: empty }.
+    return new ReferenceRecord({
+      Base: env,
       ReferencedName: name,
-      StrictReference: strict
+      Strict: strict,
+      ThisValue: undefined
     });
   } else {
     // a. Let outer be env.[[OuterEnv]].
@@ -24874,44 +24873,24 @@ class ObjectValue extends Value {
   }
 
 }
-class Reference {
+class ReferenceRecord {
   constructor({
-    BaseValue,
+    Base,
     ReferencedName,
-    StrictReference
+    Strict,
+    ThisValue
   }) {
-    this.BaseValue = BaseValue;
+    this.Base = Base;
     this.ReferencedName = ReferencedName;
-    Assert(Type(StrictReference) === 'Boolean', "Type(StrictReference) === 'Boolean'");
-    this.StrictReference = StrictReference;
+    this.Strict = Strict;
+    this.ThisValue = ThisValue;
   } // NON-SPEC
 
 
   mark(m) {
-    m(this.BaseValue);
+    m(this.Base);
     m(this.ReferencedName);
-  }
-
-}
-class SuperReference extends Reference {
-  constructor({
-    BaseValue,
-    ReferencedName,
-    thisValue,
-    StrictReference
-  }) {
-    super({
-      BaseValue,
-      ReferencedName,
-      StrictReference
-    });
-    this.thisValue = thisValue;
-  } // NON-SPEC
-
-
-  mark(m) {
-    super.mark(m);
-    m(this.thisValue);
+    m(this.ThisValue);
   }
 
 }
@@ -24982,10 +24961,6 @@ function Type(val) {
 
   if (val instanceof ObjectValue) {
     return 'Object';
-  }
-
-  if (val instanceof Reference) {
-    return 'Reference';
   }
 
   if (val instanceof Completion) {
@@ -58670,57 +58645,44 @@ function SetDefaultGlobalBindings(realmRec) {
   return global;
 }
 
-function GetBase(V) {
-  Assert(Type(V) === 'Reference', "Type(V) === 'Reference'");
-  return V.BaseValue;
-} // 6.2.4.2 #sec-getreferencedname
-
-function GetReferencedName(V) {
-  Assert(Type(V) === 'Reference', "Type(V) === 'Reference'");
-  return V.ReferencedName;
-} // 6.2.4.3 #sec-isstrictreference
-
-function IsStrictReference(V) {
-  Assert(Type(V) === 'Reference', "Type(V) === 'Reference'");
-  return V.StrictReference;
-} // 6.2.4.4 #sec-hasprimitivebase
-
-function HasPrimitiveBase(V) {
-  Assert(Type(V) === 'Reference', "Type(V) === 'Reference'");
-
-  if (V.BaseValue instanceof PrimitiveValue) {
-    return Value.true;
-  }
-
-  return Value.false;
-} // 6.2.4.5 #sec-ispropertyreference
-
 function IsPropertyReference(V) {
-  Assert(Type(V) === 'Reference', "Type(V) === 'Reference'");
+  // 1. Assert: V is a Reference Record.
+  Assert(V instanceof ReferenceRecord, "V instanceof ReferenceRecord"); // 2. If V.[[Base]] is unresolvable, return false.
 
-  if (Type(V.BaseValue) === 'Object' || HasPrimitiveBase(V) === Value.true) {
-    return Value.true;
+  if (V.Base === 'unresolvable') {
+    return Value.false;
+  } // 3. If Type(V.[[Base]]) is Boolean, String, Symbol, BigInt, Number, or Object, return true; otherwise return false.
+
+
+  const type = Type(V.Base);
+
+  switch (type) {
+    case 'Boolean':
+    case 'String':
+    case 'Symbol':
+    case 'BigInt':
+    case 'Number':
+    case 'Object':
+      return Value.true;
+
+    default:
+      return Value.false;
   }
-
-  return Value.false;
-} // 6.2.4.6 #sec-isunresolvablereference
+} // #sec-isunresolvablereference
 
 function IsUnresolvableReference(V) {
-  Assert(Type(V) === 'Reference', "Type(V) === 'Reference'");
+  // 1. Assert: V is a Reference Record.
+  Assert(V instanceof ReferenceRecord, "V instanceof ReferenceRecord"); // 2. If V.[[Base]] is unresolvable, return true; otherwise return false.
 
-  if (V.BaseValue === Value.undefined) {
-    return Value.true;
-  }
-
-  return Value.false;
-} // 6.2.4.7 #sec-issuperreference
+  return V.Base === 'unresolvable' ? Value.true : Value.false;
+} // #sec-issuperreference
 
 function IsSuperReference(V) {
-  // 1. Assert: Type(V) is Reference.
-  Assert(Type(V) === 'Reference', "Type(V) === 'Reference'"); // 2. If V has a thisValue component, return true; otherwise return false.
+  // 1. Assert: V is a Reference Record.
+  Assert(V instanceof ReferenceRecord, "V instanceof ReferenceRecord"); // 2. If V.[[ThisValue]] is not empty, return true; otherwise return false.
 
-  return 'thisValue' in V ? Value.true : Value.false;
-} // 6.2.4.8 #sec-getvalue
+  return V.ThisValue !== undefined ? Value.true : Value.false;
+} // #sec-getvalue
 
 function GetValue(V) {
   /* c8 ignore if */
@@ -58734,37 +58696,40 @@ function GetValue(V) {
     V = V.Value;
   }
 
-  if (Type(V) !== 'Reference') {
+  if (!(V instanceof ReferenceRecord)) {
     return V;
-  }
+  } // 3. If IsUnresolvableReference(V) is true, throw a ReferenceError exception.
 
-  let base = GetBase(V);
 
   if (IsUnresolvableReference(V) === Value.true) {
-    return surroundingAgent.Throw('ReferenceError', 'NotDefined', GetReferencedName(V));
-  }
+    return surroundingAgent.Throw('ReferenceError', 'NotDefined', V.ReferencedName);
+  } // 4. If IsPropertyReference(V) is true, then
+
 
   if (IsPropertyReference(V) === Value.true) {
-    if (HasPrimitiveBase(V) === Value.true) {
-      Assert(base !== Value.undefined && base !== Value.null, "base !== Value.undefined && base !== Value.null");
+    let _temp = ToObject(V.Base);
 
-      let _temp = ToObject(base);
+    Assert(!(_temp instanceof AbruptCompletion), "ToObject(V.Base)" + ' returned an abrupt completion');
+    /* c8 ignore if */
 
-      Assert(!(_temp instanceof AbruptCompletion), "ToObject(base)" + ' returned an abrupt completion');
-      /* c8 ignore if */
-
-      if (_temp instanceof Completion) {
-        _temp = _temp.Value;
-      }
-
-      base = _temp;
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
     }
 
-    return base.Get(GetReferencedName(V), GetThisValue(V));
+    // a. Let baseObj be ! ToObject(V.[[Base]]).
+    const baseObj = _temp; // b. Return ? baseObj.[[Get]](V.[[ReferencedName]], GetThisValue(V)).
+
+    return baseObj.Get(V.ReferencedName, GetThisValue(V));
   } else {
-    return base.GetBindingValue(GetReferencedName(V), IsStrictReference(V));
+    // 5. Else,
+    // a. Let base be V.[[Base]].
+    const base = V.Base; // b. Assert: base is an Environment Record.
+
+    Assert(base instanceof EnvironmentRecord, "base instanceof EnvironmentRecord"); // c. Return ? base.GetBindingValue(V.[[ReferencedName]], V.[[Strict]]).
+
+    return base.GetBindingValue(V.ReferencedName, V.Strict);
   }
-} // 6.2.4.9 #sec-putvalue
+} // #sec-putvalue
 
 function PutValue(V, W) {
   if (V instanceof AbruptCompletion) {
@@ -58783,35 +58748,37 @@ function PutValue(V, W) {
     W = W.Value;
   }
 
-  if (Type(V) !== 'Reference') {
-    return surroundingAgent.Throw('ReferenceError', 'NotDefined', V);
-  }
+  if (!(V instanceof ReferenceRecord)) {
+    return surroundingAgent.Throw('ReferenceError', 'InvalidAssignmentTarget');
+  } // 4. If IsUnresolvableReference(V) is true, then
 
-  let base = GetBase(V);
 
   if (IsUnresolvableReference(V) === Value.true) {
-    if (IsStrictReference(V) === Value.true) {
-      return surroundingAgent.Throw('ReferenceError', 'NotDefined', GetReferencedName(V));
+    // a. If V.[[Strict]] is true, throw a ReferenceError exception.
+    if (V.Strict === Value.true) {
+      return surroundingAgent.Throw('ReferenceError', 'NotDefined', V.ReferencedName);
+    } // b. Let globalObj be GetGlobalObject().
+
+
+    const globalObj = GetGlobalObject(); // c. Return ? Set(globalObj, V.[[ReferencedName]], W, false).
+
+    return Set$1(globalObj, V.ReferencedName, W, Value.false);
+  } // 5. If IsPropertyReference(V) is true, then
+
+
+  if (IsPropertyReference(V) === Value.true) {
+    let _temp2 = ToObject(V.Base);
+
+    Assert(!(_temp2 instanceof AbruptCompletion), "ToObject(V.Base)" + ' returned an abrupt completion');
+
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
     }
 
-    const globalObj = GetGlobalObject();
-    return Set$1(globalObj, GetReferencedName(V), W, Value.false);
-  } else if (IsPropertyReference(V) === Value.true) {
-    if (HasPrimitiveBase(V) === Value.true) {
-      Assert(Type(base) !== 'Undefined' && Type(base) !== 'Null', "Type(base) !== 'Undefined' && Type(base) !== 'Null'");
+    // a. Let baseObj be ! ToObject(V.[[Base]]).
+    const baseObj = _temp2; // b. Let succeeded be ? baseObj.[[Set]](V.[[ReferencedName]], W, GetThisValue(V)).
 
-      let _temp2 = ToObject(base);
-
-      Assert(!(_temp2 instanceof AbruptCompletion), "ToObject(base)" + ' returned an abrupt completion');
-
-      if (_temp2 instanceof Completion) {
-        _temp2 = _temp2.Value;
-      }
-
-      base = _temp2;
-    }
-
-    let _temp3 = base.Set(GetReferencedName(V), W, GetThisValue(V));
+    let _temp3 = baseObj.Set(V.ReferencedName, W, GetThisValue(V));
     /* c8 ignore if */
 
 
@@ -58825,30 +58792,35 @@ function PutValue(V, W) {
       _temp3 = _temp3.Value;
     }
 
-    const succeeded = _temp3;
+    const succeeded = _temp3; // c. If succeeded is false and V.[[Strict]] is true, throw a TypeError exception.
 
-    if (succeeded === Value.false && IsStrictReference(V) === Value.true) {
-      return surroundingAgent.Throw('TypeError', 'CannotSetProperty', GetReferencedName(V), base);
-    }
+    if (succeeded === Value.false && V.Strict === Value.true) {
+      return surroundingAgent.Throw('TypeError', 'CannotSetProperty', V.ReferencedName, V.Base);
+    } // d. Return.
+
 
     return NormalCompletion(Value.undefined);
   } else {
-    return base.SetMutableBinding(GetReferencedName(V), W, IsStrictReference(V));
+    // 6. Else,
+    // a. Let base be V.[[Base]].
+    const base = V.Base; // b. Assert: base is an Environment Record.
+
+    Assert(base instanceof EnvironmentRecord, "base instanceof EnvironmentRecord"); // c. Return ? base.SetMutableBinding(V.[[ReferencedName]], W, V.[[Strict]]) (see 9.1).
+
+    return base.SetMutableBinding(V.ReferencedName, W, V.Strict);
   }
-} // 6.2.4.10 #sec-getthisvalue
+} // #sec-getthisvalue
 
 function GetThisValue(V) {
   // 1. Assert: IsPropertyReference(V) is true.
-  Assert(IsPropertyReference(V) === Value.true, "IsPropertyReference(V) === Value.true"); // 2. If IsSuperReference(V) is true, then
+  Assert(IsPropertyReference(V) === Value.true, "IsPropertyReference(V) === Value.true"); // 2. If IsSuperReference(V) is true, return V.[[ThisValue]]; otherwise return V.[[Base]].
 
   if (IsSuperReference(V) === Value.true) {
-    // a. Return the value of the thisValue component of the reference V.
-    return V.thisValue;
-  } // 3. Return GetBase(V).
-
-
-  return GetBase(V);
-} // 6.2.4.11 #sec-initializereferencedbinding
+    return V.ThisValue;
+  } else {
+    return V.Base;
+  }
+} // #sec-initializereferencedbinding
 
 function InitializeReferencedBinding(V, W) {
   if (V instanceof AbruptCompletion) {
@@ -58866,11 +58838,16 @@ function InitializeReferencedBinding(V, W) {
   if (W instanceof Completion) {
     W = W.Value;
   }
-  Assert(Type(V) === 'Reference', "Type(V) === 'Reference'");
-  Assert(IsUnresolvableReference(V) === Value.false, "IsUnresolvableReference(V) === Value.false");
-  const base = GetBase(V);
-  Assert(Type(base) === 'EnvironmentRecord', "Type(base) === 'EnvironmentRecord'");
-  return base.InitializeBinding(GetReferencedName(V), W);
+
+  Assert(V instanceof ReferenceRecord, "V instanceof ReferenceRecord"); // 4. Assert: IsUnresolvableReference(V) is false.
+
+  Assert(IsUnresolvableReference(V) === Value.false, "IsUnresolvableReference(V) === Value.false"); // 5. Let base be V.[[Base]].
+
+  const base = V.Base; // 6. Assert: base is an Environment Record.
+
+  Assert(base instanceof EnvironmentRecord, "base instanceof EnvironmentRecord"); // 7. Return base.InitializeBinding(V.[[ReferencedName]], W).
+
+  return base.InitializeBinding(V.ReferencedName, W);
 }
 
 function RegExpAlloc(newTarget) {
@@ -62428,5 +62405,5 @@ class ManagedSourceTextModuleRecord extends SourceTextModuleRecord {
 
 }
 
-export { AbruptCompletion, AbstractEqualityComparison, AbstractModuleRecord, AbstractRelationalComparison, AddToKeptObjects, Agent, AgentSignifier, AllocateArrayBuffer, AllocateTypedArray, AllocateTypedArrayBuffer, ApplyStringOrNumericBinaryOperator, ArgumentListEvaluation, ArrayCreate, ArraySetLength, ArraySpeciesCreate, Assert, AsyncBlockStart, AsyncFromSyncIteratorContinuation, AsyncFunctionStart, AsyncGeneratorEnqueue, AsyncGeneratorStart, AsyncGeneratorYield, AsyncIteratorClose, Await, AwaitFulfilledFunctions, BigIntValue, BinaryUnicodeProperties, BindingClassDeclarationEvaluation, BindingInitialization, BlockDeclarationInstantiation, BodyText, BooleanValue, BoundNames, Call, CanonicalNumericIndexString, CharacterValue, ClassDefinitionEvaluation, CleanupFinalizationRegistry, ClearKeptObjects, CloneArrayBuffer, CodePointAt, CodePointToUTF16CodeUnits, CodePointsToString, CompletePropertyDescriptor, Completion, Construct, ConstructorMethod, ContainsExpression, CopyDataBlockBytes, CopyDataProperties, CreateArrayFromList, CreateArrayIterator, CreateAsyncFromSyncIterator, CreateBuiltinFunction, CreateByteDataBlock, CreateDataProperty, CreateDataPropertyOrThrow, CreateDefaultExportSyntheticModule, CreateDynamicFunction, CreateIntrinsics, CreateIterResultObject, CreateListFromArrayLike, CreateListIteratorRecord, CreateMappedArgumentsObject, CreateMethodProperty, CreateRealm, CreateResolvingFunctions, CreateSyntheticModule, CreateUnmappedArgumentsObject, CyclicModuleRecord, DataBlock, DateFromTime, Day, DayFromYear, DayWithinYear, DaysInYear, DeclarationPart, DeclarativeEnvironmentRecord, DefineMethod, DefinePropertyOrThrow, DeletePropertyOrThrow, Descriptor, DestructuringAssignmentEvaluation, DetachArrayBuffer, EnsureCompletion, EnumerableOwnPropertyNames, EnvironmentRecord, EscapeRegExpPattern, EvaluateBody, EvaluateBody_AsyncFunctionBody, EvaluateBody_AsyncGeneratorBody, EvaluateBody_ConciseBody, EvaluateBody_FunctionBody, EvaluateBody_GeneratorBody, EvaluateCall, EvaluatePropertyAccessWithExpressionKey, EvaluatePropertyAccessWithIdentifierKey, EvaluateStringOrNumericBinaryExpression, Evaluate_AdditiveExpression, Evaluate_AnyFunctionBody, Evaluate_ArrayLiteral, Evaluate_ArrowFunction, Evaluate_AssignmentExpression, Evaluate_AsyncArrowFunction, Evaluate_AsyncFunctionExpression, Evaluate_AsyncGeneratorExpression, Evaluate_AwaitExpression, Evaluate_BinaryBitwiseExpression, Evaluate_BindingList, Evaluate_Block, Evaluate_BreakStatement, Evaluate_BreakableStatement, Evaluate_CallExpression, Evaluate_CaseClause, Evaluate_ClassDeclaration, Evaluate_ClassExpression, Evaluate_CoalesceExpression, Evaluate_CommaOperator, Evaluate_ConditionalExpression, Evaluate_ContinueStatement, Evaluate_DebuggerStatement, Evaluate_EmptyStatement, Evaluate_EqualityExpression, Evaluate_ExponentiationExpression, Evaluate_ExportDeclaration, Evaluate_ExpressionBody, Evaluate_ExpressionStatement, Evaluate_ForBinding, Evaluate_FunctionDeclaration, Evaluate_FunctionExpression, Evaluate_FunctionStatementList, Evaluate_GeneratorExpression, Evaluate_HoistableDeclaration, Evaluate_IdentifierReference, Evaluate_IfStatement, Evaluate_ImportCall, Evaluate_ImportDeclaration, Evaluate_ImportMeta, Evaluate_LabelledStatement, Evaluate_LexicalBinding, Evaluate_LexicalDeclaration, Evaluate_Literal, Evaluate_LogicalANDExpression, Evaluate_LogicalORExpression, Evaluate_MemberExpression, Evaluate_Module, Evaluate_ModuleBody, Evaluate_MultiplicativeExpression, Evaluate_NewExpression, Evaluate_NewTarget, Evaluate_ObjectLiteral, Evaluate_OptionalExpression, Evaluate_ParenthesizedExpression, Evaluate_Pattern, Evaluate_PropertyName, Evaluate_RegularExpressionLiteral, Evaluate_RelationalExpression, Evaluate_ReturnStatement, Evaluate_Script, Evaluate_ScriptBody, Evaluate_ShiftExpression, Evaluate_StatementList, Evaluate_SuperCall, Evaluate_SuperProperty, Evaluate_SwitchStatement, Evaluate_TaggedTemplateExpression, Evaluate_TemplateLiteral, Evaluate_This, Evaluate_ThrowStatement, Evaluate_TryStatement, Evaluate_UnaryExpression, Evaluate_UpdateExpression, Evaluate_VariableDeclarationList, Evaluate_VariableStatement, Evaluate_WithStatement, Evaluate_YieldExpression, ExecutionContext, ExpectedArgumentCount, ExportEntries, ExportEntriesForModule, F, FEATURES, FlagText, FromPropertyDescriptor, FunctionDeclarationInstantiation, FunctionEnvironmentRecord, GeneratorResume, GeneratorResumeAbrupt, GeneratorStart, GeneratorValidate, GeneratorYield, Get, GetActiveScriptOrModule, GetAsyncCycleRoot, GetBase, GetFunctionRealm, GetGeneratorKind, GetGlobalObject, GetIdentifierReference, GetIterator, GetMatchIndicesArray, GetMatchString, GetMethod, GetModuleNamespace, GetNewTarget, GetPrototypeFromConstructor, GetReferencedName, GetStringIndex, GetSubstitution, GetThisEnvironment, GetThisValue, GetV, GetValue, GetValueFromBuffer, GetViewValue, GlobalDeclarationInstantiation, GlobalEnvironmentRecord, HasInitializer, HasName, HasOwnProperty, HasPrimitiveBase, HasProperty, HostCallJobCallback, HostEnqueueFinalizationRegistryCleanupJob, HostEnqueuePromiseJob, HostEnsureCanCompileStrings, HostFinalizeImportMeta, HostGetImportMetaProperties, HostHasSourceTextAvailable, HostImportModuleDynamically, HostMakeJobCallback, HostPromiseRejectionTracker, HostResolveImportedModule, HourFromTime, HoursPerDay, IfAbruptRejectPromise, ImportEntries, ImportEntriesForModule, ImportedLocalNames, InLeapYear, InitializeBoundName, InitializeReferencedBinding, InnerModuleEvaluation, InnerModuleLinking, InstanceofOperator, InstantiateFunctionObject, InstantiateFunctionObject_AsyncFunctionDeclaration, InstantiateFunctionObject_AsyncGeneratorDeclaration, InstantiateFunctionObject_FunctionDeclaration, InstantiateFunctionObject_GeneratorDeclaration, IntegerIndexedDefineOwnProperty, IntegerIndexedDelete, IntegerIndexedElementGet, IntegerIndexedElementSet, IntegerIndexedGet, IntegerIndexedGetOwnProperty, IntegerIndexedHasProperty, IntegerIndexedObjectCreate, IntegerIndexedOwnPropertyKeys, IntegerIndexedSet, Invoke, IsAccessorDescriptor, IsAnonymousFunctionDefinition, IsArray, IsBigIntElementType, IsCallable, IsCompatiblePropertyDescriptor, IsComputedPropertyKey, IsConcatSpreadable, IsConstantDeclaration, IsConstructor, IsDataDescriptor, IsDestructuring, IsDetachedBuffer, IsExtensible, IsFunctionDefinition, IsGenericDescriptor, IsIdentifierRef, IsInTailPosition, IsIntegralNumber, IsPromise, IsPropertyKey, IsPropertyReference, IsRegExp, IsSharedArrayBuffer, IsSimpleParameterList, IsStatic, IsStrict, IsStrictReference, IsStringPrefix, IsStringWellFormedUnicode, IsSuperReference, IsUnresolvableReference, IsValidIntegerIndex, IterableToList, IteratorBindingInitialization_ArrayBindingPattern, IteratorBindingInitialization_FormalParameters, IteratorClose, IteratorComplete, IteratorNext, IteratorStep, IteratorValue, StringValue as JSStringValue, KeyedBindingInitialization, LabelledEvaluation, LengthOfArrayLike, LexicallyDeclaredNames, LexicallyScopedDeclarations, LocalTZA, LocalTime, MV_StringNumericLiteral, MakeBasicObject, MakeClassConstructor, MakeConstructor, MakeDate, MakeDay, MakeIndicesArray, MakeMethod, MakeTime, ManagedRealm, MinFromTime, MinutesPerHour, ModuleEnvironmentRecord, ModuleNamespaceCreate, ModuleRequests, MonthFromTime, NamedEvaluation, NewDeclarativeEnvironment, NewFunctionEnvironment, NewGlobalEnvironment, NewModuleEnvironment, NewObjectEnvironment, NewPromiseCapability, NonConstructorMethodDefinitions, NonbinaryUnicodeProperties, NormalCompletion, NullValue, NumberToBigInt, NumberValue, NumericToRawBytes, NumericValue, ObjectEnvironmentRecord, ObjectValue, OrdinaryCallBindThis, OrdinaryCallEvaluateBody, OrdinaryCreateFromConstructor, OrdinaryDefineOwnProperty, OrdinaryDelete, OrdinaryFunctionCreate, OrdinaryGet, OrdinaryGetOwnProperty, OrdinaryGetPrototypeOf, OrdinaryHasInstance, OrdinaryHasProperty, OrdinaryIsExtensible, OrdinaryObjectCreate, OrdinaryOwnPropertyKeys, OrdinaryPreventExtensions, OrdinarySet, OrdinarySetPrototypeOf, OrdinarySetWithOwnDescriptor, OrdinaryToPrimitive, ParseJSONModule, ParseModule, ParsePattern, ParseScript, PerformEval, PerformPromiseThen, PrepareForOrdinaryCall, PrepareForTailCall, PrimitiveValue, PromiseCapabilityRecord, PromiseReactionRecord, PromiseResolve, PropName, PropertyBindingInitialization, PropertyDefinitionEvaluation, PropertyDefinitionEvaluation_PropertyDefinitionList, ProxyCreate, PutValue, Q, RawBytesToNumeric, Realm, Reference, RegExpAlloc, RegExpCreate, RegExpInitialize, State as RegExpState, RequireInternalSlot, RequireObjectCoercible, ResolveBinding, ResolveThisBinding, ResolvedBindingRecord, RestBindingInitialization, ReturnIfAbrupt, SameValue, SameValueNonNumber, SameValueZero, ScriptEvaluation, SecFromTime, SecondsPerMinute, Set$1 as Set, SetDefaultGlobalBindings, SetFunctionLength, SetFunctionName, SetImmutablePrototype, SetIntegrityLevel, SetRealmGlobalObject, SetValueInBuffer, SetViewValue, SortCompare, SourceTextModuleRecord, SpeciesConstructor, StrictEqualityComparison, StringCreate, StringGetOwnProperty, StringIndexOf, StringPad, StringToBigInt, StringToCodePoints, StringValue$1 as StringValue, SuperReference, SymbolDescriptiveString, SymbolValue, SyntheticModuleRecord, TV, TemplateStrings, TestIntegrityLevel, Throw, ThrowCompletion, TimeClip, TimeFromYear, TimeWithinDay, ToBigInt, ToBigInt64, ToBigUint64, ToBoolean, ToIndex, ToInt16, ToInt32, ToInt8, ToIntegerOrInfinity, ToLength, ToNumber, ToNumeric, ToObject, ToPrimitive, ToPropertyDescriptor, ToPropertyKey, ToString, ToUint16, ToUint32, ToUint8, ToUint8Clamp, TopLevelLexicallyDeclaredNames, TopLevelLexicallyScopedDeclarations, TopLevelVarDeclaredNames, TopLevelVarScopedDeclarations, TrimString, Type, TypeForMethod, TypedArrayCreate, TypedArraySpeciesCreate, UTC, UTF16SurrogatePairToCodePoint, UndefinedValue, UnicodeGeneralCategoryValues, UnicodeMatchProperty, UnicodeMatchPropertyValue, UnicodeScriptValues, UnicodeSets, UpdateEmpty, ValidateAndApplyPropertyDescriptor, ValidateTypedArray, Value, VarDeclaredNames, VarScopedDeclarations, WeakRefDeref, WeekDay, X, YearFromTime, Z, evaluateScript, gc, getUnicodePropertyValueSet, inspect, isArrayExoticObject, isArrayIndex, isECMAScriptFunctionObject, isFunctionObject, isIntegerIndex, isIntegerIndexedExoticObject, isNonNegativeInteger, isProxyExoticObject, isStrictModeCode, msFromTime, msPerAverageYear, msPerDay, msPerHour, msPerMinute, msPerSecond, refineLeftHandSideExpression, runJobQueue, setSurroundingAgent, sourceTextMatchedBy, surroundingAgent, typedArrayInfoByName, typedArrayInfoByType, wellKnownSymbols, wrappedParse };
+export { AbruptCompletion, AbstractEqualityComparison, AbstractModuleRecord, AbstractRelationalComparison, AddToKeptObjects, Agent, AgentSignifier, AllocateArrayBuffer, AllocateTypedArray, AllocateTypedArrayBuffer, ApplyStringOrNumericBinaryOperator, ArgumentListEvaluation, ArrayCreate, ArraySetLength, ArraySpeciesCreate, Assert, AsyncBlockStart, AsyncFromSyncIteratorContinuation, AsyncFunctionStart, AsyncGeneratorEnqueue, AsyncGeneratorStart, AsyncGeneratorYield, AsyncIteratorClose, Await, AwaitFulfilledFunctions, BigIntValue, BinaryUnicodeProperties, BindingClassDeclarationEvaluation, BindingInitialization, BlockDeclarationInstantiation, BodyText, BooleanValue, BoundNames, Call, CanonicalNumericIndexString, CharacterValue, ClassDefinitionEvaluation, CleanupFinalizationRegistry, ClearKeptObjects, CloneArrayBuffer, CodePointAt, CodePointToUTF16CodeUnits, CodePointsToString, CompletePropertyDescriptor, Completion, Construct, ConstructorMethod, ContainsExpression, CopyDataBlockBytes, CopyDataProperties, CreateArrayFromList, CreateArrayIterator, CreateAsyncFromSyncIterator, CreateBuiltinFunction, CreateByteDataBlock, CreateDataProperty, CreateDataPropertyOrThrow, CreateDefaultExportSyntheticModule, CreateDynamicFunction, CreateIntrinsics, CreateIterResultObject, CreateListFromArrayLike, CreateListIteratorRecord, CreateMappedArgumentsObject, CreateMethodProperty, CreateRealm, CreateResolvingFunctions, CreateSyntheticModule, CreateUnmappedArgumentsObject, CyclicModuleRecord, DataBlock, DateFromTime, Day, DayFromYear, DayWithinYear, DaysInYear, DeclarationPart, DeclarativeEnvironmentRecord, DefineMethod, DefinePropertyOrThrow, DeletePropertyOrThrow, Descriptor, DestructuringAssignmentEvaluation, DetachArrayBuffer, EnsureCompletion, EnumerableOwnPropertyNames, EnvironmentRecord, EscapeRegExpPattern, EvaluateBody, EvaluateBody_AsyncFunctionBody, EvaluateBody_AsyncGeneratorBody, EvaluateBody_ConciseBody, EvaluateBody_FunctionBody, EvaluateBody_GeneratorBody, EvaluateCall, EvaluatePropertyAccessWithExpressionKey, EvaluatePropertyAccessWithIdentifierKey, EvaluateStringOrNumericBinaryExpression, Evaluate_AdditiveExpression, Evaluate_AnyFunctionBody, Evaluate_ArrayLiteral, Evaluate_ArrowFunction, Evaluate_AssignmentExpression, Evaluate_AsyncArrowFunction, Evaluate_AsyncFunctionExpression, Evaluate_AsyncGeneratorExpression, Evaluate_AwaitExpression, Evaluate_BinaryBitwiseExpression, Evaluate_BindingList, Evaluate_Block, Evaluate_BreakStatement, Evaluate_BreakableStatement, Evaluate_CallExpression, Evaluate_CaseClause, Evaluate_ClassDeclaration, Evaluate_ClassExpression, Evaluate_CoalesceExpression, Evaluate_CommaOperator, Evaluate_ConditionalExpression, Evaluate_ContinueStatement, Evaluate_DebuggerStatement, Evaluate_EmptyStatement, Evaluate_EqualityExpression, Evaluate_ExponentiationExpression, Evaluate_ExportDeclaration, Evaluate_ExpressionBody, Evaluate_ExpressionStatement, Evaluate_ForBinding, Evaluate_FunctionDeclaration, Evaluate_FunctionExpression, Evaluate_FunctionStatementList, Evaluate_GeneratorExpression, Evaluate_HoistableDeclaration, Evaluate_IdentifierReference, Evaluate_IfStatement, Evaluate_ImportCall, Evaluate_ImportDeclaration, Evaluate_ImportMeta, Evaluate_LabelledStatement, Evaluate_LexicalBinding, Evaluate_LexicalDeclaration, Evaluate_Literal, Evaluate_LogicalANDExpression, Evaluate_LogicalORExpression, Evaluate_MemberExpression, Evaluate_Module, Evaluate_ModuleBody, Evaluate_MultiplicativeExpression, Evaluate_NewExpression, Evaluate_NewTarget, Evaluate_ObjectLiteral, Evaluate_OptionalExpression, Evaluate_ParenthesizedExpression, Evaluate_Pattern, Evaluate_PropertyName, Evaluate_RegularExpressionLiteral, Evaluate_RelationalExpression, Evaluate_ReturnStatement, Evaluate_Script, Evaluate_ScriptBody, Evaluate_ShiftExpression, Evaluate_StatementList, Evaluate_SuperCall, Evaluate_SuperProperty, Evaluate_SwitchStatement, Evaluate_TaggedTemplateExpression, Evaluate_TemplateLiteral, Evaluate_This, Evaluate_ThrowStatement, Evaluate_TryStatement, Evaluate_UnaryExpression, Evaluate_UpdateExpression, Evaluate_VariableDeclarationList, Evaluate_VariableStatement, Evaluate_WithStatement, Evaluate_YieldExpression, ExecutionContext, ExpectedArgumentCount, ExportEntries, ExportEntriesForModule, F, FEATURES, FlagText, FromPropertyDescriptor, FunctionDeclarationInstantiation, FunctionEnvironmentRecord, GeneratorResume, GeneratorResumeAbrupt, GeneratorStart, GeneratorValidate, GeneratorYield, Get, GetActiveScriptOrModule, GetAsyncCycleRoot, GetFunctionRealm, GetGeneratorKind, GetGlobalObject, GetIdentifierReference, GetIterator, GetMatchIndicesArray, GetMatchString, GetMethod, GetModuleNamespace, GetNewTarget, GetPrototypeFromConstructor, GetStringIndex, GetSubstitution, GetThisEnvironment, GetThisValue, GetV, GetValue, GetValueFromBuffer, GetViewValue, GlobalDeclarationInstantiation, GlobalEnvironmentRecord, HasInitializer, HasName, HasOwnProperty, HasProperty, HostCallJobCallback, HostEnqueueFinalizationRegistryCleanupJob, HostEnqueuePromiseJob, HostEnsureCanCompileStrings, HostFinalizeImportMeta, HostGetImportMetaProperties, HostHasSourceTextAvailable, HostImportModuleDynamically, HostMakeJobCallback, HostPromiseRejectionTracker, HostResolveImportedModule, HourFromTime, HoursPerDay, IfAbruptRejectPromise, ImportEntries, ImportEntriesForModule, ImportedLocalNames, InLeapYear, InitializeBoundName, InitializeReferencedBinding, InnerModuleEvaluation, InnerModuleLinking, InstanceofOperator, InstantiateFunctionObject, InstantiateFunctionObject_AsyncFunctionDeclaration, InstantiateFunctionObject_AsyncGeneratorDeclaration, InstantiateFunctionObject_FunctionDeclaration, InstantiateFunctionObject_GeneratorDeclaration, IntegerIndexedDefineOwnProperty, IntegerIndexedDelete, IntegerIndexedElementGet, IntegerIndexedElementSet, IntegerIndexedGet, IntegerIndexedGetOwnProperty, IntegerIndexedHasProperty, IntegerIndexedObjectCreate, IntegerIndexedOwnPropertyKeys, IntegerIndexedSet, Invoke, IsAccessorDescriptor, IsAnonymousFunctionDefinition, IsArray, IsBigIntElementType, IsCallable, IsCompatiblePropertyDescriptor, IsComputedPropertyKey, IsConcatSpreadable, IsConstantDeclaration, IsConstructor, IsDataDescriptor, IsDestructuring, IsDetachedBuffer, IsExtensible, IsFunctionDefinition, IsGenericDescriptor, IsIdentifierRef, IsInTailPosition, IsIntegralNumber, IsPromise, IsPropertyKey, IsPropertyReference, IsRegExp, IsSharedArrayBuffer, IsSimpleParameterList, IsStatic, IsStrict, IsStringPrefix, IsStringWellFormedUnicode, IsSuperReference, IsUnresolvableReference, IsValidIntegerIndex, IterableToList, IteratorBindingInitialization_ArrayBindingPattern, IteratorBindingInitialization_FormalParameters, IteratorClose, IteratorComplete, IteratorNext, IteratorStep, IteratorValue, StringValue as JSStringValue, KeyedBindingInitialization, LabelledEvaluation, LengthOfArrayLike, LexicallyDeclaredNames, LexicallyScopedDeclarations, LocalTZA, LocalTime, MV_StringNumericLiteral, MakeBasicObject, MakeClassConstructor, MakeConstructor, MakeDate, MakeDay, MakeIndicesArray, MakeMethod, MakeTime, ManagedRealm, MinFromTime, MinutesPerHour, ModuleEnvironmentRecord, ModuleNamespaceCreate, ModuleRequests, MonthFromTime, NamedEvaluation, NewDeclarativeEnvironment, NewFunctionEnvironment, NewGlobalEnvironment, NewModuleEnvironment, NewObjectEnvironment, NewPromiseCapability, NonConstructorMethodDefinitions, NonbinaryUnicodeProperties, NormalCompletion, NullValue, NumberToBigInt, NumberValue, NumericToRawBytes, NumericValue, ObjectEnvironmentRecord, ObjectValue, OrdinaryCallBindThis, OrdinaryCallEvaluateBody, OrdinaryCreateFromConstructor, OrdinaryDefineOwnProperty, OrdinaryDelete, OrdinaryFunctionCreate, OrdinaryGet, OrdinaryGetOwnProperty, OrdinaryGetPrototypeOf, OrdinaryHasInstance, OrdinaryHasProperty, OrdinaryIsExtensible, OrdinaryObjectCreate, OrdinaryOwnPropertyKeys, OrdinaryPreventExtensions, OrdinarySet, OrdinarySetPrototypeOf, OrdinarySetWithOwnDescriptor, OrdinaryToPrimitive, ParseJSONModule, ParseModule, ParsePattern, ParseScript, PerformEval, PerformPromiseThen, PrepareForOrdinaryCall, PrepareForTailCall, PrimitiveValue, PromiseCapabilityRecord, PromiseReactionRecord, PromiseResolve, PropName, PropertyBindingInitialization, PropertyDefinitionEvaluation, PropertyDefinitionEvaluation_PropertyDefinitionList, ProxyCreate, PutValue, Q, RawBytesToNumeric, Realm, ReferenceRecord, RegExpAlloc, RegExpCreate, RegExpInitialize, State as RegExpState, RequireInternalSlot, RequireObjectCoercible, ResolveBinding, ResolveThisBinding, ResolvedBindingRecord, RestBindingInitialization, ReturnIfAbrupt, SameValue, SameValueNonNumber, SameValueZero, ScriptEvaluation, SecFromTime, SecondsPerMinute, Set$1 as Set, SetDefaultGlobalBindings, SetFunctionLength, SetFunctionName, SetImmutablePrototype, SetIntegrityLevel, SetRealmGlobalObject, SetValueInBuffer, SetViewValue, SortCompare, SourceTextModuleRecord, SpeciesConstructor, StrictEqualityComparison, StringCreate, StringGetOwnProperty, StringIndexOf, StringPad, StringToBigInt, StringToCodePoints, StringValue$1 as StringValue, SymbolDescriptiveString, SymbolValue, SyntheticModuleRecord, TV, TemplateStrings, TestIntegrityLevel, Throw, ThrowCompletion, TimeClip, TimeFromYear, TimeWithinDay, ToBigInt, ToBigInt64, ToBigUint64, ToBoolean, ToIndex, ToInt16, ToInt32, ToInt8, ToIntegerOrInfinity, ToLength, ToNumber, ToNumeric, ToObject, ToPrimitive, ToPropertyDescriptor, ToPropertyKey, ToString, ToUint16, ToUint32, ToUint8, ToUint8Clamp, TopLevelLexicallyDeclaredNames, TopLevelLexicallyScopedDeclarations, TopLevelVarDeclaredNames, TopLevelVarScopedDeclarations, TrimString, Type, TypeForMethod, TypedArrayCreate, TypedArraySpeciesCreate, UTC, UTF16SurrogatePairToCodePoint, UndefinedValue, UnicodeGeneralCategoryValues, UnicodeMatchProperty, UnicodeMatchPropertyValue, UnicodeScriptValues, UnicodeSets, UpdateEmpty, ValidateAndApplyPropertyDescriptor, ValidateTypedArray, Value, VarDeclaredNames, VarScopedDeclarations, WeakRefDeref, WeekDay, X, YearFromTime, Z, evaluateScript, gc, getUnicodePropertyValueSet, inspect, isArrayExoticObject, isArrayIndex, isECMAScriptFunctionObject, isFunctionObject, isIntegerIndex, isIntegerIndexedExoticObject, isNonNegativeInteger, isProxyExoticObject, isStrictModeCode, msFromTime, msPerAverageYear, msPerDay, msPerHour, msPerMinute, msPerSecond, refineLeftHandSideExpression, runJobQueue, setSurroundingAgent, sourceTextMatchedBy, surroundingAgent, typedArrayInfoByName, typedArrayInfoByType, wellKnownSymbols, wrappedParse };
 //# sourceMappingURL=engine262.mjs.map
