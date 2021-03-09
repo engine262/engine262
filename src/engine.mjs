@@ -51,6 +51,11 @@ export const FEATURES = Object.freeze([
     flag: 'at-method',
     url: 'https://github.com/tc39/proposal-item-method',
   },
+  {
+    name: 'Error Cause',
+    flag: 'error-cause',
+    url: 'github.com/tc39/proposal-error-cause',
+  },
 ].map(Object.freeze));
 
 class ExecutionContextStack extends Array {

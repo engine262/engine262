@@ -6,6 +6,7 @@ import {
   IterableToList,
   OrdinaryCreateFromConstructor,
   DefinePropertyOrThrow,
+  InstallErrorCause,
   CreateArrayFromList,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
@@ -13,7 +14,7 @@ import { captureStack } from '../helpers.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
 // #sec-aggregate-error-constructor
-function AggregateErrorConstructor([errors = Value.undefined, message = Value.undefined], { NewTarget }) {
+function AggregateErrorConstructor([errors = Value.undefined, message = Value.undefined, options = Value.undefined], { NewTarget }) {
   // 1. If NewTarget is undefined, let newTarget be the active function object, else let newTarget be NewTarget.
   let newTarget;
   if (NewTarget === Value.undefined) {
@@ -41,6 +42,11 @@ function AggregateErrorConstructor([errors = Value.undefined, message = Value.un
     Writable: Value.true,
     Value: X(CreateArrayFromList(errorsList)),
   })));
+
+  if (surroundingAgent.feature('error-cause')) {
+    // (*error-cause) Perform ? InstallErrorCause(O, options).
+    Q(InstallErrorCause(O, options));
+  }
 
   // NON-SPEC
   X(captureStack(O));

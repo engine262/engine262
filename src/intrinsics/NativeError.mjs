@@ -4,6 +4,7 @@ import {
 import {
   DefinePropertyOrThrow,
   OrdinaryCreateFromConstructor,
+  InstallErrorCause,
   ToString,
 } from '../abstract-ops/all.mjs';
 import {
@@ -30,7 +31,7 @@ export function bootstrapNativeError(realmRec) {
     ], realmRec.Intrinsics['%Error.prototype%']);
 
     // #sec-nativeerror
-    const Constructor = ([message = Value.undefined], { NewTarget }) => {
+    const Constructor = ([message = Value.undefined, options = Value.undefined], { NewTarget }) => {
       // 1. If NewTarget is undefined, let newTarget be the active function object; else let newTarget be NewTarget.
       let newTarget;
       if (Type(NewTarget) === 'Undefined') {
@@ -53,6 +54,10 @@ export function bootstrapNativeError(realmRec) {
         });
         // c. Perform ! DefinePropertyOrThrow(O, "message", msgDesc).
         X(DefinePropertyOrThrow(O, new Value('message'), msgDesc));
+      }
+      if (surroundingAgent.feature('error-cause')) {
+        // (*error-cause) Perform ? InstallErrorCause(O, options).
+        Q(InstallErrorCause(O, options));
       }
       // NON-SPEC
       X(captureStack(O));
