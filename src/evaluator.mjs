@@ -199,8 +199,12 @@ export function* Evaluate(node) {
       return yield* Evaluate_CoalesceExpression(node);
     case 'EqualityExpression':
       return yield* Evaluate_EqualityExpression(node);
-    case 'CallExpression':
-      return yield* Evaluate_CallExpression(node);
+    case 'CallExpression': {
+      surroundingAgent.runningExecutionContext.callSite.setCallLocation(node);
+      const r = yield* Evaluate_CallExpression(node);
+      surroundingAgent.runningExecutionContext.callSite.setCallLocation(null);
+      return r;
+    }
     case 'NewExpression':
       return yield* Evaluate_NewExpression(node);
     case 'MemberExpression':

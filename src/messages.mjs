@@ -137,6 +137,7 @@ export const SubclassLengthTooSmall = (v) => `Subclass constructor returned a sm
 export const SubclassSameValue = (v) => `Subclass constructor returned the same object ${i(v)}`;
 export const TargetMatchesHeldValue = (v) => `heldValue ${i(v)} matches target`;
 export const TemplateInOptionalChain = () => 'Templates are not allowed in optional chains';
+export const ThisNotAFunction = (v) => `Expected 'this' value to be a function but got ${i(v)}`;
 export const TryMissingCatchOrFinally = () => 'Missing catch or finally after try';
 export const TypedArrayCreationOOB = () => 'Sum of start offset and byte length should be less than the size of underlying buffer';
 export const TypedArrayLengthAlignment = (n, m) => `Size of ${n} should be a multiple of ${m}`;

@@ -40,7 +40,7 @@ function FunctionProto_apply([thisArg = Value.undefined, argArray = Value.undefi
   const func = thisValue;
   // 2. If IsCallable(func) is false, throw a TypeError exception.
   if (IsCallable(func) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
+    return surroundingAgent.Throw('TypeError', 'ThisNotAFunction', func);
   }
   // 3. If argArray is undefined or null, then
   if (argArray === Value.undefined || argArray === Value.null) {
@@ -121,7 +121,7 @@ function FunctionProto_bind([thisArg = Value.undefined, ...args], { thisValue })
   const Target = thisValue;
   // 2. If IsCallable(Target) is false, throw a TypeError exception.
   if (IsCallable(Target) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', Target);
+    return surroundingAgent.Throw('TypeError', 'ThisNotAFunction', Target);
   }
   // 3. Let F be ? BoundFunctionCreate(Target, thisArg, args).
   const F = Q(BoundFunctionCreate(Target, thisArg, args));
@@ -172,7 +172,7 @@ function FunctionProto_call([thisArg = Value.undefined, ...args], { thisValue })
   const func = thisValue;
   // 2. If IsCallable(func) is false, throw a TypeError exception.
   if (IsCallable(func) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
+    return surroundingAgent.Throw('TypeError', 'ThisNotAFunction', func);
   }
   // 3. Let argList be a new empty List.
   const argList = [];

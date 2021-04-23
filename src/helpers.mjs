@@ -170,12 +170,16 @@ export class CallSite {
   constructor(context) {
     this.context = context;
     this.lastNode = null;
+    this.lastCallNode = null;
+    this.inheritedLastCallNode = null;
     this.constructCall = false;
   }
 
   clone(context = this.context) {
     const c = new CallSite(context);
     c.lastNode = this.lastNode;
+    c.lastCallNode = this.lastCallNode;
+    c.inheritedLastCallNode = this.inheritedLastCallNode;
     c.constructCall = this.constructCall;
     return c;
   }
@@ -221,6 +225,10 @@ export class CallSite {
     this.lastNode = node;
   }
 
+  setCallLocation(node) {
+    this.lastCallNode = node;
+  }
+
   get lineNumber() {
     if (this.lastNode) {
       return this.lastNode.location.start.line;
@@ -261,6 +269,14 @@ export class CallSite {
     const isConstructCall = this.isConstructCall();
     const isMethodCall = !isConstructCall && !this.isTopLevel();
 
+    let visualFunctionName;
+    if (this.inheritedLastCallNode?.CallExpression.type === 'IdentifierReference') {
+      visualFunctionName = this.inheritedLastCallNode.CallExpression.name;
+    }
+    if (visualFunctionName === functionName) {
+      visualFunctionName = undefined;
+    }
+
     let string = isAsync ? 'async ' : '';
 
     if (isConstructCall) {
@@ -273,8 +289,14 @@ export class CallSite {
       } else {
         string += '<anonymous>';
       }
+      if (visualFunctionName) {
+        string += ` (as ${visualFunctionName})`;
+      }
     } else if (functionName) {
       string += functionName;
+      if (visualFunctionName) {
+        string += ` (as ${visualFunctionName})`;
+      }
     } else {
       return `${string}${this.loc()}`;
     }
@@ -315,7 +337,11 @@ export function captureStack(O) {
     if (e.VariableEnvironment === undefined && e.Function === Value.null) {
       break;
     }
-    stack.push(e.callSite.clone());
+    const clone = e.callSite.clone();
+    if (stack[stack.length - 1]) {
+      stack[stack.length - 1].inheritedLastCallNode = clone.lastCallNode;
+    }
+    stack.push(clone);
     if (e.callSite.isAsync()) {
       i -= 1; // skip original execution context which has no useful information.
     }
