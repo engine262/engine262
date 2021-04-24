@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 8d6dc28c5a0c80000c9106331e0626bc052051ef
+ * engine262 0.0.1 dc84dec14e2a9ec53eb27681245648d452ae1cfe
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -67332,9 +67332,9 @@ function FinalizationRegistryConstructor([cleanupCallback = Value.undefined], {
 
   const fn = surroundingAgent.activeFunctionObject; // 5. Set finalizationGroup.[[Realm]] to fn.[[Realm]].
 
-  finalizationGroup.Realm = fn.Realm; // 6. Set finalizationGroup.[[CleanupCallback]] to cleanupCallback.
+  finalizationGroup.Realm = fn.Realm; // 6. Set finalizationGroup.[[CleanupCallback]] to HostMakeJobCallback(cleanupCallback).
 
-  finalizationGroup.CleanupCallback = cleanupCallback; // 7. Set finalizationGroup.[[Cells]] to be an empty List.
+  finalizationGroup.CleanupCallback = HostMakeJobCallback(cleanupCallback); // 7. Set finalizationGroup.[[Cells]] to be an empty List.
 
   finalizationGroup.Cells = []; // 8. Return finalizationGroup.
 
@@ -71136,9 +71136,9 @@ function CleanupFinalizationRegistry(finalizationRegistry, callback) {
 
 
     finalizationRegistry.Cells.splice(i, 1);
-    i -= 1; // c. Perform ? Call(callback, undefined, « cell.[[HeldValue]] »).
+    i -= 1; // c. Perform ? HostCallJobCallback(callback, undefined, « cell.[[HeldValue]] »).
 
-    let _temp2 = Call(callback, Value.undefined, [cell.HeldValue]);
+    let _temp2 = HostCallJobCallback(callback, Value.undefined, [cell.HeldValue]);
     /* c8 ignore if */
 
 
