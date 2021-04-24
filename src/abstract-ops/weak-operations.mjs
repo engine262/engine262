@@ -1,7 +1,7 @@
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent, HostCallJobCallback } from '../engine.mjs';
 import { Value } from '../value.mjs';
 import { NormalCompletion, Q, X } from '../completion.mjs';
-import { Assert, Call } from './all.mjs';
+import { Assert } from './all.mjs';
 
 // #sec-clear-kept-objects
 export function ClearKeptObjects() {
@@ -52,8 +52,8 @@ export function CleanupFinalizationRegistry(finalizationRegistry, callback) {
     // b. Remove cell from finalizationRegistry.[[Cells]].
     finalizationRegistry.Cells.splice(i, 1);
     i -= 1;
-    // c. Perform ? Call(callback, undefined, « cell.[[HeldValue]] »).
-    Q(Call(callback, Value.undefined, [cell.HeldValue]));
+    // c. Perform ? HostCallJobCallback(callback, undefined, « cell.[[HeldValue]] »).
+    Q(HostCallJobCallback(callback, Value.undefined, [cell.HeldValue]));
   }
   // 4. Return NormalCompletion(undefined).
   return NormalCompletion(Value.undefined);

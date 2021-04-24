@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent, HostMakeJobCallback } from '../engine.mjs';
 import { Value } from '../value.mjs';
 import { IsCallable, OrdinaryCreateFromConstructor } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
@@ -24,8 +24,8 @@ function FinalizationRegistryConstructor([cleanupCallback = Value.undefined], { 
   const fn = surroundingAgent.activeFunctionObject;
   // 5. Set finalizationGroup.[[Realm]] to fn.[[Realm]].
   finalizationGroup.Realm = fn.Realm;
-  // 6. Set finalizationGroup.[[CleanupCallback]] to cleanupCallback.
-  finalizationGroup.CleanupCallback = cleanupCallback;
+  // 6. Set finalizationGroup.[[CleanupCallback]] to HostMakeJobCallback(cleanupCallback).
+  finalizationGroup.CleanupCallback = HostMakeJobCallback(cleanupCallback);
   // 7. Set finalizationGroup.[[Cells]] to be an empty List.
   finalizationGroup.Cells = [];
   // 8. Return finalizationGroup.
