@@ -599,7 +599,10 @@ export class StatementParser extends ExpressionParser {
         node.Statement = this.parseStatement();
         return this.finishNode(node, 'ForInStatement');
       }
-      if (!(expression.type === 'IdentifierReference' && expression.name === 'async') && this.eat('of')) {
+      const isExactlyAsync = expression.type === 'IdentifierReference'
+        && !expression.escaped
+        && expression.name === 'async';
+      if ((!isExactlyAsync || isAwait) && this.eat('of')) {
         assignmentInfo.clear();
         validateLHS(expression);
         node.LeftHandSideExpression = expression;

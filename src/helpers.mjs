@@ -338,8 +338,9 @@ export function captureStack(O) {
       break;
     }
     const clone = e.callSite.clone();
-    if (stack[stack.length - 1]) {
-      stack[stack.length - 1].inheritedLastCallNode = clone.lastCallNode;
+    const parent = stack[stack.length - 1];
+    if (parent && !parent.context.poppedForTailCall) {
+      parent.inheritedLastCallNode = clone.lastCallNode;
     }
     stack.push(clone);
     if (e.callSite.isAsync()) {

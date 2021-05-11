@@ -51,7 +51,6 @@ export function* EvaluateCall(func, ref, args, tailPosition) {
   const result = Call(func, thisValue, argList);
   // 8. Assert: If tailPosition is true, the above call will not return here but instead
   //    evaluation will continue as if the following return has already occurred.
-  Assert(!tailPosition);
   // 9. Assert: If result is not an abrupt completion, then Type(result) is an ECMAScript language type.
   if (!(result instanceof AbruptCompletion)) {
     Assert(result instanceof Value || result instanceof Completion);

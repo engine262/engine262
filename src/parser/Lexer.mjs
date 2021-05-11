@@ -134,10 +134,12 @@ export class Lexer {
     this.positionForNextToken = 0;
     this.lineForNextToken = 0;
     this.columnForNextToken = 0;
+    this.escapeIndex = -1;
   }
 
   advance() {
     this.lineTerminatorBeforeNextToken = false;
+    this.escapeIndex = -1;
     const type = this.nextToken();
     return {
       type,
@@ -154,6 +156,7 @@ export class Lexer {
         || type === Token.STRING
         || type === Token.ESCAPED_KEYWORD
       ) ? this.scannedValue : RawTokens[type][1],
+      escaped: this.escapeIndex !== -1,
     };
   }
 
@@ -825,6 +828,7 @@ export class Lexer {
       return KeywordLookup[buffer];
     } else {
       this.scannedValue = buffer;
+      this.escapeIndex = escapeIndex;
       return Token.IDENTIFIER;
     }
   }

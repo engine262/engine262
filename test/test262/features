@@ -37,3 +37,6 @@ String.prototype.at = at-method
 TypedArray.prototype.at = at-method
 
 arbitrary-module-namespace-names = arbitrary-module-namespace-names
+
+# https://github.com/tc39/proposal-error-cause
+error-cause = error-cause

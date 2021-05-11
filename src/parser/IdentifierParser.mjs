@@ -80,6 +80,7 @@ export class IdentifierParser extends BaseParser {
   parseIdentifierReference() {
     const node = this.startNode();
     const token = this.next();
+    node.escaped = token.escaped;
     switch (token.type) {
       case Token.IDENTIFIER:
         node.name = token.value;
