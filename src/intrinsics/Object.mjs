@@ -14,6 +14,7 @@ import {
   EnumerableOwnPropertyNames,
   FromPropertyDescriptor,
   Get,
+  HasOwnProperty,
   IsExtensible,
   OrdinaryObjectCreate,
   OrdinaryCreateFromConstructor,
@@ -291,6 +292,16 @@ function Object_getPrototypeOf([O = Value.undefined]) {
   return Q(obj.GetPrototypeOf());
 }
 
+// #sec-object.hasown
+function Object_hasOwn([O = Value.undefined, P = Value.undefined]) {
+  // 1. 1. Let obj be ? ToObject(O).
+  const obj = Q(ToObject(O));
+  // 2. Let O be ? ToObject(this value).
+  const key = Q(ToPropertyKey(P));
+  // 3. 3. Return ? HasOwnProperty(obj, key).
+  return HasOwnProperty(obj, key);
+}
+
 // #sec-object.is
 function Object_is([value1 = Value.undefined, value2 = Value.undefined]) {
   // 1. Return SameValue(value1, value2).
@@ -415,6 +426,7 @@ export function bootstrapObject(realmRec) {
     ['getOwnPropertyNames', Object_getOwnPropertyNames, 1],
     ['getOwnPropertySymbols', Object_getOwnPropertySymbols, 1],
     ['getPrototypeOf', Object_getPrototypeOf, 1],
+    ['hasOwn', Object_hasOwn, 2],
     ['is', Object_is, 2],
     ['isExtensible', Object_isExtensible, 1],
     ['isFrozen', Object_isFrozen, 1],
