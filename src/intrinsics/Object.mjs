@@ -298,7 +298,7 @@ function Object_hasOwn([O = Value.undefined, P = Value.undefined]) {
   const obj = Q(ToObject(O));
   // 2. Let O be ? ToObject(this value).
   const key = Q(ToPropertyKey(P));
-  // 3. 3. Return ? HasOwnProperty(obj, key).
+  // 3. Return ? HasOwnProperty(obj, key).
   return HasOwnProperty(obj, key);
 }
 
