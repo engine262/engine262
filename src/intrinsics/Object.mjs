@@ -294,7 +294,7 @@ function Object_getPrototypeOf([O = Value.undefined]) {
 
 // #sec-object.hasown
 function Object_hasOwn([O = Value.undefined, P = Value.undefined]) {
-  // 1. 1. Let obj be ? ToObject(O).
+  // 1. Let obj be ? ToObject(O).
   const obj = Q(ToObject(O));
   // 2. Let O be ? ToObject(this value).
   const key = Q(ToPropertyKey(P));
