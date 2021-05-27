@@ -426,7 +426,9 @@ export function bootstrapObject(realmRec) {
     ['getOwnPropertyNames', Object_getOwnPropertyNames, 1],
     ['getOwnPropertySymbols', Object_getOwnPropertySymbols, 1],
     ['getPrototypeOf', Object_getPrototypeOf, 1],
-    ['hasOwn', Object_hasOwn, 2],
+    surroundingAgent.feature('accessible-object-hasownproperty')
+      ? ['hasOwn', Object_hasOwn, 2]
+      : undefined,
     ['is', Object_is, 2],
     ['isExtensible', Object_isExtensible, 1],
     ['isFrozen', Object_isFrozen, 1],
