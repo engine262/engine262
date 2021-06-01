@@ -292,7 +292,7 @@ function Object_getPrototypeOf([O = Value.undefined]) {
   return Q(obj.GetPrototypeOf());
 }
 
-// #sec-object.hasown
+// https://tc39.es/proposal-accessible-object-hasownproperty/#sec-object.hasown
 function Object_hasOwn([O = Value.undefined, P = Value.undefined]) {
   // 1. Let obj be ? ToObject(O).
   const obj = Q(ToObject(O));
