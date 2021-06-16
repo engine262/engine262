@@ -19,6 +19,11 @@
 -class-static-fields-private
 -class-static-methods-private
 
+-Object.hasOwn
+
+-json-modules
+-import-assertions
+
 # https://github.com/tc39/proposal-top-level-await
 top-level-await = top-level-await
 

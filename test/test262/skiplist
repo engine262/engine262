@@ -6,6 +6,27 @@
 # Paths are relative to the `test262/test` directory.
 # Paths may contain globs.
 
+# ?? looks familiar tho
+built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/tonumber-value-detached-buffer.js
+built-ins/TypedArrayConstructors/internals/DefineOwnProperty/tonumber-value-detached-buffer.js
+
+# https://github.com/tc39/ecma262/pull/2436
+built-ins/RegExp/match-indices/indices-array-non-unicode-match.js
+built-ins/RegExp/named-groups/non-unicode-match.js
+built-ins/RegExp/named-groups/non-unicode-property-names-valid.js
+built-ins/RegExp/named-groups/non-unicode-references.js
+built-ins/RegExp/named-groups/unicode-references.js
+built-ins/String/prototype/split/separator-regexp.js
+language/literals/regexp/named-groups/forward-reference.js
+
+# https://github.com/tc39/ecma262/pull/1867
+language/literals/numeric/legacy-octal-integer.js
+language/literals/numeric/non-octal-decimal-integer.js
+language/literals/string/legacy-octal-escape-sequence.js
+
+# https://github.com/tc39/proposal-top-level-await/pull/159
+language/module-code/top-level-await/dfs-invariant.js
+
 # Spec bug
 built-ins/Date/prototype/setMonth/this-value-invalid-date.js
 

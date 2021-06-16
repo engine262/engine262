@@ -20,6 +20,7 @@ const isSyntaxCharacter = (c) => '^$\\.*+?()[]{}|'.includes(c);
 const isClosingSyntaxCharacter = (c) => ')]}|'.includes(c);
 const isDecimalDigit = (c) => /[0123456789]/u.test(c);
 const isControlLetter = (c) => /[a-zA-Z]/u.test(c);
+const isIdentifierContinue = (c) => c && /\p{ID_Continue}/u.test(c);
 
 const PLUS_U = 1 << 0;
 const PLUS_N = 1 << 1;
@@ -58,11 +59,11 @@ export class RegExpParser {
   }
 
   get plusU() {
-    return (this.state & PLUS_U) > 0;
+    return (this.state & PLUS_U) === PLUS_U;
   }
 
   get plusN() {
-    return (this.state & PLUS_N) > 0;
+    return (this.state & PLUS_N) === PLUS_N;
   }
 
   raise(message, position = this.position) {
@@ -479,22 +480,28 @@ export class RegExpParser {
         };
       }
       default: {
-        const c = this.next();
+        const c = this.peek();
         if (c === undefined) {
           this.raise('Unexpected escape');
         }
-        if (c === '0' && !isDecimalDigit(this.peek())) {
+        if (c === '0' && !isDecimalDigit(this.source[this.position + 1])) {
           return {
             type: 'CharacterEscape',
-            subtype: '0',
+            subtype: this.next(),
           };
         }
-        if (this.plusU && !isSyntaxCharacter(c) && c !== '/') {
-          this.raise('Invalid identity escape');
+        if (this.plusU) {
+          if (c !== '/' && !isSyntaxCharacter(c)) {
+            this.raise('Invalid identity escape');
+          }
+        } else {
+          if (isIdentifierContinue(c)) {
+            this.raise('Invalid identity escape');
+          }
         }
         return {
           type: 'CharacterEscape',
-          IdentityEscape: c,
+          IdentityEscape: this.next(),
         };
       }
     }
