@@ -56,6 +56,11 @@ export const FEATURES = Object.freeze([
     flag: 'error-cause',
     url: 'github.com/tc39/proposal-error-cause',
   },
+  {
+    name: 'Accessible Object.prototype.hasOwnProperty',
+    flag: 'accessible-object-hasownproperty',
+    url: 'https://github.com/tc39/proposal-accessible-object-hasownproperty',
+  },
 ].map(Object.freeze));
 
 class ExecutionContextStack extends Array {
