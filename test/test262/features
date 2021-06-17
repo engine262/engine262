@@ -19,8 +19,6 @@
 -class-static-fields-private
 -class-static-methods-private
 
--Object.hasOwn
-
 -json-modules
 -import-assertions
 
