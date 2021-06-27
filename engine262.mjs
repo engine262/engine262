@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 9193f9e2afdaa900cff2a92c552b7baf091d670a
+ * engine262 0.0.1 b35460b0362e24e7c76b859303335565e1fe6cd3
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -14163,6 +14163,8 @@ class FunctionParser extends IdentifierParser {
 
 }
 
+/* eslint-disable @engine262/valid-throw */
+
 const isSyntaxCharacter = c => '^$\\.*+?()[]{}|'.includes(c);
 
 const isClosingSyntaxCharacter = c => ')]}|'.includes(c);
@@ -17910,7 +17912,7 @@ class ModuleParser extends StatementParser {
       }
 
       if (this.scope.exports.has('default')) {
-        this.raiseEarly('AlreadyDeclared', node);
+        this.raiseEarly('AlreadyDeclared', node, 'default');
       } else {
         this.scope.exports.add('default');
       }
