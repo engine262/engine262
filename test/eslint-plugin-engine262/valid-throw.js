@@ -14,6 +14,17 @@ function isThrowCall(node) {
     && node.callee.property.name === 'Throw';
 }
 
+function isRaiseCall(node) {
+  return node.callee.type === 'MemberExpression'
+    && node.callee.computed === false
+    && node.callee.object.type === 'ThisExpression'
+    && node.callee.property.type === 'Identifier'
+    && (
+      node.callee.property.name === 'raiseEarly'
+      || node.callee.property.name === 'raise'
+    );
+}
+
 const templates = {};
 
 {
@@ -35,15 +46,21 @@ module.exports = {
   create(context) {
     return {
       CallExpression(node) {
-        if (!isThrowCall(node)) {
-          return;
-        }
-        if (node.arguments.length === 1 && node.arguments[0].type !== 'Literal') {
-          return;
-        }
-        const [type, template, ...templateArgs] = node.arguments;
-        if (!type || type.type !== 'Literal') {
-          context.report(node, 'Throw must use a valid error constructor');
+        let template;
+        let templateArgs;
+        if (isThrowCall(node)) {
+          if (node.arguments.length === 1 && node.arguments[0].type !== 'Literal') {
+            return;
+          }
+          let type;
+          ([type, template, ...templateArgs] = node.arguments);
+          if (!type || type.type !== 'Literal') {
+            context.report(node, 'Throw must use a valid error constructor');
+            return;
+          }
+        } else if (isRaiseCall(node)) {
+          ([template,, ...templateArgs] = node.arguments);
+        } else {
           return;
         }
         if (!template || template.type !== 'Literal') {

@@ -153,7 +153,7 @@ export class ModuleParser extends StatementParser {
           break;
       }
       if (this.scope.exports.has('default')) {
-        this.raiseEarly('AlreadyDeclared', node);
+        this.raiseEarly('AlreadyDeclared', node, 'default');
       } else {
         this.scope.exports.add('default');
       }
