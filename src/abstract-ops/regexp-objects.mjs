@@ -12,6 +12,7 @@ import {
   DefinePropertyOrThrow,
   OrdinaryCreateFromConstructor,
   OrdinaryObjectCreate,
+  SameValue,
   Set,
   ToString,
   F as toNumberValue,
@@ -260,4 +261,29 @@ export function MakeIndicesArray(S, indices, groupNames, hasGroups) {
   }
   // 13. Return A.
   return A;
+}
+
+// #sec-regexphasflag
+export function RegExpHasFlag(R, codeUnit) {
+  // 1. If Type(R) is not Object, throw a TypeError exception.
+  if (Type(R) !== 'Object') {
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
+  }
+  // 2. If R does not have an [[OriginalFlags]] internal slot, then
+  if (!('OriginalFlags' in R)) {
+    // a. If SameValue(R, %RegExp.prototype%) is true, return undefined.
+    if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
+      return Value.undefined;
+    }
+    // b. Otherwise, throw a TypeError exception.
+    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
+  }
+  // 3. Let flags be R.[[OriginalFlags]].
+  const flags = R.OriginalFlags;
+  // 4. If flags contains codeUnit, return true.
+  if (flags.includes(codeUnit)) {
+    return Value.true;
+  }
+  // 5. Return false.
+  return Value.false;
 }

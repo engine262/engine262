@@ -30,6 +30,7 @@ import {
   ToObject,
   ToString,
   ToUint32,
+  RegExpHasFlag,
   F,
 } from '../abstract-ops/all.mjs';
 import { RegExpState as State, GetSubstitution } from '../runtime-semantics/all.mjs';
@@ -311,21 +312,12 @@ export function AdvanceStringIndex(S, index, unicode) {
 
 // 21.2.5.3 #sec-get-regexp.prototype.dotAll
 function RegExpProto_dotAllGetter(args, { thisValue }) {
+  // 1. Let R be the this value.
   const R = thisValue;
-  if (Type(R) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
-  }
-  if (!('OriginalFlags' in R)) {
-    if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
-      return Value.undefined;
-    }
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
-  }
-  const flags = R.OriginalFlags;
-  if (flags.stringValue().includes('s')) {
-    return Value.true;
-  }
-  return Value.false;
+  // 2. Let cu be the code unit 0x0073 (LATIN SMALL LETTER S).
+  const cu = 's';
+  // 3. Return ? RegExpHasFlag(R, cu).
+  return Q(RegExpHasFlag(R, cu));
 }
 
 // 21.2.5.4 #sec-get-regexp.prototype.flags
@@ -389,40 +381,22 @@ function RegExpProto_globalGetter(args, { thisValue }) {
 
 // #sec-get-regexp.prototype.hasIndices
 function RegExpProto_hasIndicesGetter(args, { thisValue }) {
+  // 1. Let R be the this value.
   const R = thisValue;
-  if (Type(R) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
-  }
-  if (!('OriginalFlags' in R)) {
-    if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
-      return Value.undefined;
-    }
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
-  }
-  const flags = R.OriginalFlags;
-  if (flags.stringValue().includes('d')) {
-    return Value.true;
-  }
-  return Value.false;
+  // 2. Let cu be the code unit 0x0073 (LATIN SMALL LETTER D).
+  const cu = 'd';
+  // 3. Return ? RegExpHasFlag(R, cu).
+  return Q(RegExpHasFlag(R, cu));
 }
 
 // 21.2.5.6 #sec-get-regexp.prototype.ignorecase
 function RegExpProto_ignoreCaseGetter(args, { thisValue }) {
+  // 1. Let R be the this value.
   const R = thisValue;
-  if (Type(R) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
-  }
-  if (!('OriginalFlags' in R)) {
-    if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
-      return Value.undefined;
-    }
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
-  }
-  const flags = R.OriginalFlags;
-  if (flags.stringValue().includes('i')) {
-    return Value.true;
-  }
-  return Value.false;
+  // 2. Let cu be the code unit 0x0069 (LATIN SMALL LETTER I).
+  const cu = 'i';
+  // 3. Return ? RegExpHasFlag(R, cu).
+  return Q(RegExpHasFlag(R, cu));
 }
 
 // #sec-regexp.prototype-@@match
@@ -514,21 +488,12 @@ function RegExpProto_matchAll([string = Value.undefined], { thisValue }) {
 
 // 21.2.5.9 #sec-get-regexp.prototype.multiline
 function RegExpProto_multilineGetter(args, { thisValue }) {
+  // 1. Let R be the this value.
   const R = thisValue;
-  if (Type(R) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
-  }
-  if (!('OriginalFlags' in R)) {
-    if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
-      return Value.undefined;
-    }
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
-  }
-  const flags = R.OriginalFlags;
-  if (flags.stringValue().includes('m')) {
-    return Value.true;
-  }
-  return Value.false;
+  // 2. Let cu be the code unit 0x006D (LATIN SMALL LETTER M).
+  const cu = 'm';
+  // 3. Return ? RegExpHasFlag(R, cu).
+  return Q(RegExpHasFlag(R, cu));
 }
 
 // 21.2.5.10 #sec-regexp.prototype-@@replace
@@ -755,21 +720,12 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
 
 // 21.2.5.14 #sec-get-regexp.prototype.sticky
 function RegExpProto_stickyGetter(args, { thisValue }) {
+  // 1. Let R be the this value.
   const R = thisValue;
-  if (Type(R) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
-  }
-  if (!('OriginalFlags' in R)) {
-    if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
-      return Value.undefined;
-    }
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
-  }
-  const flags = R.OriginalFlags;
-  if (flags.stringValue().includes('y')) {
-    return Value.true;
-  }
-  return Value.false;
+  // 2. Let cu be the code unit 0x0097 (LATIN SMALL LETTER Y).
+  const cu = 'y';
+  // 3. Return ? RegExpHasFlag(R, cu).
+  return Q(RegExpHasFlag(R, cu));
 }
 
 // 21.2.5.15 #sec-regexp.prototype.test
@@ -800,21 +756,12 @@ function RegExpProto_toString(args, { thisValue }) {
 
 // 21.2.5.17 #sec-get-regexp.prototype.unicode
 function RegExpProto_unicodeGetter(args, { thisValue }) {
+  // 1. Let R be the this value.
   const R = thisValue;
-  if (Type(R) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
-  }
-  if (!('OriginalFlags' in R)) {
-    if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
-      return Value.undefined;
-    }
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
-  }
-  const flags = R.OriginalFlags;
-  if (flags.stringValue().includes('u')) {
-    return Value.true;
-  }
-  return Value.false;
+  // 2. Let cu be the code unit 0x0075 (LATIN SMALL LETTER U).
+  const cu = 'u';
+  // 3. Return ? RegExpHasFlag(R, cu).
+  return Q(RegExpHasFlag(R, cu));
 }
 
 export function bootstrapRegExpPrototype(realmRec) {
