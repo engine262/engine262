@@ -115,7 +115,7 @@ function SetProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefin
   }
   // 4. Let entries be the List that is S.[[SetData]].
   const entries = S.SetData;
-  // 5. For each e that is an element of entries, in original insertion order, do
+  // 5. For each element _e_ of _entries_, do
   for (const e of entries) {
     // a. If e is not empty, then
     if (e !== undefined) {

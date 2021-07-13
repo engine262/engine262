@@ -252,7 +252,7 @@ function RejectPromise(promise, reason) {
 
 // #sec-triggerpromisereactions
 function TriggerPromiseReactions(reactions, argument) {
-  // 1. For each reaction in reactions, in original insertion order, do
+  // 1. For each reaction in reactions, do
   reactions.forEach((reaction) => {
     // a. Let job be NewPromiseReactionJob(reaction, argument).
     const job = NewPromiseReactionJob(reaction, argument);
