@@ -65,10 +65,9 @@ export function ParseScript(sourceText, realm, hostDefined = {}) {
   if (Array.isArray(body)) {
     return body;
   }
-  // 4. Return Script Record { [[Realm]]: realm, [[Environment]]: undefined, [[ECMAScriptCode]]: body, [[HostDefined]]: hostDefined }.
+  // 4. Return Script Record { [[Realm]]: realm, [[ECMAScriptCode]]: body, [[HostDefined]]: hostDefined }.
   return {
     Realm: realm,
-    Environment: Value.undefined,
     ECMAScriptCode: body,
     HostDefined: hostDefined,
     mark(m) {
