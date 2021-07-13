@@ -942,8 +942,8 @@ export function NewFunctionEnvironment(F, newTarget) {
 
 // #sec-newglobalenvironment
 export function NewGlobalEnvironment(G, thisValue) {
-  // 1. Let objRec be a new object Environment Record containing G as the binding object.
-  const objRec = new ObjectEnvironmentRecord(G);
+  // 1. Let objRec be NewObjectEnvironment(G, null).
+  const objRec = NewObjectEnvironment(G, Value.null);
   // 2. Let dclRec be a new declarative Environment Record containing no bindings.
   const dclRec = new DeclarativeEnvironmentRecord();
   // 3. Let env be a new global Environment Record.
