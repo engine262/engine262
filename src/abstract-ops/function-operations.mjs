@@ -6,11 +6,14 @@ import {
   Descriptor,
   Type,
   Value,
+  PrivateName,
 } from '../value.mjs';
 import {
   EnsureCompletion,
   NormalCompletion,
+  AbruptCompletion,
   ReturnIfAbrupt,
+  Completion,
   Q, X,
 } from '../completion.mjs';
 import { ExpectedArgumentCount } from '../static-semantics/all.mjs';
@@ -23,6 +26,8 @@ import {
 import { unwind } from '../helpers.mjs';
 import {
   Assert,
+  Call,
+  CreateDataPropertyOrThrow,
   DefinePropertyOrThrow,
   GetActiveScriptOrModule,
   HasOwnProperty,
@@ -32,6 +37,9 @@ import {
   OrdinaryObjectCreate,
   OrdinaryCreateFromConstructor,
   ToObject,
+  PrivateMethodOrAccessorAdd,
+  PrivateFieldAdd,
+  IsPropertyKey,
   isNonNegativeInteger,
   isStrictModeCode,
   Realm,
@@ -74,7 +82,8 @@ export function PrepareForOrdinaryCall(F, newTarget) {
   calleeContext.LexicalEnvironment = localEnv;
   // 10. Set the VariableEnvironment of calleeContext to localEnv.
   calleeContext.VariableEnvironment = localEnv;
-  // 11. Set the VariableEnvironment of calleeContext to localEnv.
+  // 11. Set the PrivateEnvironment of calleeContext to F.[[PrivateEnvironment]].
+  calleeContext.PrivateEnvironment = F.PrivateEnvironment;
   // 12. Push calleeContext onto the execution context stack; calleeContext is now the running execution context.
   surroundingAgent.executionContextStack.push(calleeContext);
   // 13. NOTE: Any exception objects produced after this point are associated with calleeRealm.
@@ -125,6 +134,50 @@ export function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
 export function OrdinaryCallEvaluateBody(F, argumentsList) {
   // 1. Return the result of EvaluateBody of the parsed code that is F.[[ECMAScriptCode]] passing F and argumentsList as the arguments.
   return EnsureCompletion(unwind(EvaluateBody(F.ECMAScriptCode, F, argumentsList)));
+}
+
+// #sec-definefield
+export function DefineField(receiver, fieldRecord) {
+  // 1. Let fieldName be fieldRecord.[[Name]].
+  const fieldName = fieldRecord.Name;
+  // 2. Let initializer be fieldRecord.[[Initializer]].
+  const initializer = fieldRecord.Initializer;
+  // 3. If initializer is not empty, then
+  let initValue;
+  if (initializer !== undefined) {
+    // a. Let initValue be ? Call(initializer, receiver).
+    initValue = Q(Call(initializer, receiver));
+  } else { // 4. Else, let initValue be undefined.
+    initValue = Value.undefined;
+  }
+  // 5. If fieldName is a Private Name, then
+  if (fieldName instanceof PrivateName) {
+    // a. Perform ? PrivateFieldAdd(fieldName, receiver, initValue).
+    Q(PrivateFieldAdd(fieldName, receiver, initValue));
+  } else { // 6. Else,
+    // a. Assert: ! IsPropertyKey(fieldName) is true.
+    Assert(X(IsPropertyKey(fieldName)));
+    // b. Perform ? CreateDataPropertyOrThrow(receiver, fieldName, initValue).
+    Q(CreateDataPropertyOrThrow(receiver, fieldName, initValue));
+  }
+}
+
+// #sec-initializeinstanceelements
+export function InitializeInstanceElements(O, constructor) {
+  // 1. Let methods be the value of constructor.[[PrivateMethods]].
+  const methods = constructor.PrivateMethods;
+  // 2. For each PrivateElement method of methods, do
+  for (const method of methods) {
+    // a. Perform ? PrivateMethodOrAccessorAdd(method, O).
+    Q(PrivateMethodOrAccessorAdd(method, O));
+  }
+  // 3. Let fields be the value of constructor.[[Fields]].
+  const fields = constructor.Fields;
+  // 4. For each element fieldRecord of fields, do
+  for (const fieldRecord of fields) {
+    // a. Perform ? DefineField(O, fieldRecord).
+    Q(DefineField(O, fieldRecord));
+  }
 }
 
 // #sec-ecmascript-function-objects-call-thisargument-argumentslist
@@ -186,9 +239,19 @@ function FunctionConstructSlot(argumentsList, newTarget) {
   // 7. Assert: calleeContext is now the running execution context.
   Assert(surroundingAgent.runningExecutionContext === calleeContext);
   surroundingAgent.runningExecutionContext.callSite.constructCall = true;
-  // 8. If kind is base, perform OrdinaryCallBindThis(F, calleeContext, thisArgument).
+  // 8. If kind is base, then
   if (kind === 'base') {
+    // a. Perform OrdinaryCallBindThis(F, calleeContext, thisArgument).
     OrdinaryCallBindThis(F, calleeContext, thisArgument);
+    // b. Let initializeResult be InitializeInstanceElements(thisArgument, F).
+    const initializeResult = InitializeInstanceElements(thisArgument, F);
+    // c. If initializeResult is an abrupt completion, then
+    if (initializeResult instanceof AbruptCompletion) {
+      // i. Remove calleeContext from the execution context stack and restore callerContext as the running execution context.
+      surroundingAgent.executionContextStack.pop(calleeContext);
+      // ii. Return Completion(initializeResult).
+      return Completion(initializeResult);
+    }
   }
   // 9. Let constructorEnv be the LexicalEnvironment of calleeContext.
   const constructorEnv = calleeContext.LexicalEnvironment;
@@ -217,11 +280,14 @@ function FunctionConstructSlot(argumentsList, newTarget) {
   return Q(constructorEnv.GetThisBinding());
 }
 
-// 9.2.3 #sec-functionallocate
-export function OrdinaryFunctionCreate(functionPrototype, sourceText, ParameterList, Body, thisMode, Scope) {
+// #sec-functionallocate
+export function OrdinaryFunctionCreate(functionPrototype, sourceText, ParameterList, Body, thisMode, Scope, PrivateScope) {
+  // 1. Assert: Type(functionPrototype) is Object.
   Assert(Type(functionPrototype) === 'Object');
+  // 2. Let internalSlotsList be the internal slots listed in Table 33.
   const internalSlotsList = [
     'Environment',
+    'PrivateEnvironment',
     'FormalParameters',
     'ECMAScriptCode',
     'ConstructorKind',
@@ -231,30 +297,55 @@ export function OrdinaryFunctionCreate(functionPrototype, sourceText, ParameterL
     'Strict',
     'HomeObject',
     'SourceText',
+    'Fields',
+    'PrivateMethods',
+    'ClassFieldInitializerName',
     'IsClassConstructor',
   ];
+  // 3. Let F be ! OrdinaryObjectCreate(functionPrototype, internalSlotsList).
   const F = X(OrdinaryObjectCreate(functionPrototype, internalSlotsList));
+  // 4. Set F.[[Call]] to the definition specified in 10.2.1.
   F.Call = surroundingAgent.hostDefinedOptions.boost?.callFunction || FunctionCallSlot;
+  // 5. Set F.[[SourceText]] to sourceText.
   F.SourceText = sourceText;
-  F.Environment = Scope;
+  // 6. Set F.[[FormalParameters]] to ParameterList.
   F.FormalParameters = ParameterList;
+  // 7. Set F.[[ECMAScriptCode]] to Body.
   F.ECMAScriptCode = Body;
+  // 8. If the source text matching Body is strict mode code, let Strict be true; else let Strict be false.
   const Strict = isStrictModeCode(Body);
+  // 9. Set F.[[Strict]] to Strict.
   F.Strict = Strict;
+  // 10. If thisMode is lexical-this, set F.[[ThisMode]] to lexical.
   if (thisMode === 'lexical-this') {
     F.ThisMode = 'lexical';
-  } else if (Strict) {
+  } else if (Strict) { // 11. Else if Strict is true, set F.[[ThisMode]] to strict.
     F.ThisMode = 'strict';
-  } else {
+  } else { // 12. Else, set F.[[ThisMode]] to global.
     F.ThisMode = 'global';
   }
+  // 13. Set F.[[IsClassConstructor]] to false.
   F.IsClassConstructor = Value.false;
+  // 14. Set F.[[Environment]] to Scope.
   F.Environment = Scope;
+  // 15. Set F.[[PrivateEnvironment]] to PrivateScope.
+  Assert(PrivateScope);
+  F.PrivateEnvironment = PrivateScope;
+  // 16. Set F.[[ScriptOrModule]] to GetActiveScriptOrModule().
   F.ScriptOrModule = GetActiveScriptOrModule();
+  // 17. Set F.[[Realm]] to the current Realm Record.
   F.Realm = surroundingAgent.currentRealmRecord;
+  // 18. Set F.[[HomeObject]] to undefined.
   F.HomeObject = Value.undefined;
+  // 19. Set F.[[ClassFieldInitializerName]] to empty.
+  F.ClassFieldInitializerName = undefined;
+  F.PrivateMethods = [];
+  F.Fields = [];
+  // 20. Let len be the ExpectedArgumentCount of ParameterList.
   const len = ExpectedArgumentCount(ParameterList);
+  // 21. Perform ! SetFunctionLength(F, len).
   X(SetFunctionLength(F, len));
+  // 22. Return F.
   return F;
 }
 
@@ -308,11 +399,7 @@ export function MakeMethod(F, homeObject) {
 export function SetFunctionName(F, name, prefix) {
   // 1. Assert: F is an extensible object that does not have a "name" own property.
   Assert(IsExtensible(F) === Value.true && HasOwnProperty(F, new Value('name')) === Value.false);
-  // 2. Assert: Type(name) is either Symbol or String.
-  Assert(Type(name) === 'Symbol' || Type(name) === 'String');
-  // 3. Assert: If prefix is present, then Type(prefix) is String.
-  Assert(!prefix || Type(prefix) === 'String');
-  // 4. If Type(name) is Symbol, then
+  // 2. If Type(name) is Symbol, then
   if (Type(name) === 'Symbol') {
     // a. Let description be name's [[Description]] value.
     const description = name.Description;
@@ -323,13 +410,16 @@ export function SetFunctionName(F, name, prefix) {
       // c. Else, set name to the string-concatenation of "[", description, and "]".
       name = new Value(`[${description.stringValue()}]`);
     }
+  } else if (name instanceof PrivateName) { // 3. Else if name is a Private Name, then
+    // a. Set name to name.[[Description]].
+    name = name.Description;
   }
-  // 5. If F has an [[InitialName]] internal slot, then
+  // 4. If F has an [[InitialName]] internal slot, then
   if ('InitialName' in F) {
     // a. Set F.[[InitialName]] to name.
     F.InitialName = name;
   }
-  // 6. If prefix is present, then
+  // 5. If prefix is present, then
   if (prefix !== undefined) {
     // a. Set name to the string-concatenation of prefix, the code unit 0x0020 (SPACE), and name.
     name = new Value(`${prefix.stringValue()} ${name.stringValue()}`);
@@ -338,7 +428,7 @@ export function SetFunctionName(F, name, prefix) {
       // i. Optionally, set F.[[InitialName]] to name.
     }
   }
-  // 7. Return ! DefinePropertyOrThrow(F, "name", PropertyDescriptor { [[Value]]: name, [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: true }).
+  // 6. Return ! DefinePropertyOrThrow(F, "name", PropertyDescriptor { [[Value]]: name, [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: true }).
   return X(DefinePropertyOrThrow(F, new Value('name'), Descriptor({
     Value: name,
     Writable: Value.false,

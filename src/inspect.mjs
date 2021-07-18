@@ -67,6 +67,7 @@ const INSPECTORS = {
     return `'${s}'`;
   },
   Symbol: (v) => `Symbol(${v.Description === Value.undefined ? '' : v.Description.stringValue()})`,
+  PrivateName: (v) => v.Description.stringValue(),
   Object: (v, ctx, i) => {
     if (ctx.inspected.includes(v)) {
       return '[Circular]';

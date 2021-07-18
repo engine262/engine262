@@ -118,6 +118,7 @@ const SingleCharTokens = {
   '|': Token.BIT_OR,
   '"': Token.STRING,
   '\'': Token.STRING,
+  '#': Token.PRIVATE_IDENTIFIER,
 };
 
 export class Lexer {
@@ -155,6 +156,7 @@ export class Lexer {
         || type === Token.BIGINT
         || type === Token.STRING
         || type === Token.ESCAPED_KEYWORD
+        || type === Token.PRIVATE_IDENTIFIER
       ) ? this.scannedValue : RawTokens[type][1],
       escaped: this.escapeIndex !== -1,
     };
@@ -539,6 +541,9 @@ export class Lexer {
           this.position -= 1;
           return this.scanIdentifierOrKeyword();
 
+        case Token.PRIVATE_IDENTIFIER:
+          return this.scanIdentifierOrKeyword(true);
+
         default:
           this.unexpected(single);
           break;
@@ -697,7 +702,6 @@ export class Lexer {
           }
           this.line += 1;
           this.columnOffset = this.position;
-          this.lineTerminatorBeforeNextToken = true;
         } else {
           buffer += this.scanEscapeSequence();
         }
@@ -779,7 +783,7 @@ export class Lexer {
     return n;
   }
 
-  scanIdentifierOrKeyword() {
+  scanIdentifierOrKeyword(isPrivate = false) {
     let buffer = '';
     let escapeIndex = -1;
     let check = isIdentifierStart;
@@ -820,7 +824,7 @@ export class Lexer {
       }
       check = isIdentifierPart;
     }
-    if (isKeywordRaw(buffer)) {
+    if (!isPrivate && isKeywordRaw(buffer)) {
       if (escapeIndex !== -1) {
         this.scannedValue = buffer;
         return Token.ESCAPED_KEYWORD;
@@ -829,7 +833,7 @@ export class Lexer {
     } else {
       this.scannedValue = buffer;
       this.escapeIndex = escapeIndex;
-      return Token.IDENTIFIER;
+      return isPrivate ? Token.PRIVATE_IDENTIFIER : Token.IDENTIFIER;
     }
   }
 

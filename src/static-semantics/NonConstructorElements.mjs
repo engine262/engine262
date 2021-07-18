@@ -1,10 +1,10 @@
 import { PropName } from './all.mjs';
 
-// #sec-static-semantics-nonconstructormethoddefinitions
+// #sec-static-semantics-nonconstructorelements
 // ClassElementList :
 //   ClassElement
 //   ClassElementList ClassElement
-export function NonConstructorMethodDefinitions(ClassElementList) {
+export function NonConstructorElements(ClassElementList) {
   return ClassElementList.filter((ClassElement) => {
     if (ClassElement.static === false && PropName(ClassElement) === 'constructor') {
       return false;

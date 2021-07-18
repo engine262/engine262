@@ -159,8 +159,8 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
   const realmF = surroundingAgent.currentRealmRecord;
   // 23. Let scope be realmF.[[GlobalEnv]].
   const scope = realmF.GlobalEnv;
-  // 24. Let F be ! OrdinaryFunctionCreate(proto, sourceText, parameters, body, non-lexical-this, scope).
-  const F = X(OrdinaryFunctionCreate(proto, sourceText, parameters, body, 'non-lexical-this', scope));
+  // 24. Let F be ! OrdinaryFunctionCreate(proto, sourceText, parameters, body, non-lexical-this, scope, null).
+  const F = X(OrdinaryFunctionCreate(proto, sourceText, parameters, body, 'non-lexical-this', scope, Value.null));
   // 25. Perform SetFunctionName(F, "anonymous").
   SetFunctionName(F, new Value('anonymous'));
   // 26. If kind is generator, then

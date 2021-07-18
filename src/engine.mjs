@@ -201,6 +201,7 @@ export class ExecutionContext {
     this.ScriptOrModule = undefined;
     this.VariableEnvironment = undefined;
     this.LexicalEnvironment = undefined;
+    this.PrivateEnvironment = undefined;
 
     // NON-SPEC
     this.callSite = new CallSite(this);
@@ -216,6 +217,7 @@ export class ExecutionContext {
     e.ScriptOrModule = this.ScriptOrModule;
     e.VariableEnvironment = this.VariableEnvironment;
     e.LexicalEnvironment = this.LexicalEnvironment;
+    e.PrivateEnvironment = this.PrivateEnvironment;
 
     e.callSite = this.callSite.clone(e);
     e.promiseCapability = this.promiseCapability;
@@ -229,6 +231,7 @@ export class ExecutionContext {
     m(this.ScriptOrModule);
     m(this.VariableEnvironment);
     m(this.LexicalEnvironment);
+    m(this.PrivateEnvironment);
     m(this.promiseCapability);
   }
 }
@@ -246,6 +249,7 @@ export function ScriptEvaluation(scriptRecord) {
   scriptContext.ScriptOrModule = scriptRecord;
   scriptContext.VariableEnvironment = globalEnv;
   scriptContext.LexicalEnvironment = globalEnv;
+  scriptContext.PrivateEnvironment = Value.null;
   scriptContext.HostDefined = scriptRecord.HostDefined;
   // Suspend runningExecutionContext
   surroundingAgent.executionContextStack.push(scriptContext);

@@ -50,6 +50,14 @@ export class Parser extends LanguageParser {
     return node;
   }
 
+  markNodeStart(node) {
+    node.location.startIndex = this.peekToken.startIndex;
+    node.location.start = {
+      line: this.peekToken.line,
+      column: this.peekToken.column,
+    };
+  }
+
   finishNode(node, type) {
     node.type = type;
     node.location.endIndex = this.currentToken.endIndex;

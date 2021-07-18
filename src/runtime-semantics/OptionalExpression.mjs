@@ -1,8 +1,8 @@
 import { Value } from '../value.mjs';
-import { GetValue } from '../abstract-ops/all.mjs';
+import { GetValue, MakePrivateReference, RequireObjectCoercible } from '../abstract-ops/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
-import { Q } from '../completion.mjs';
-import { IsInTailPosition } from '../static-semantics/all.mjs';
+import { Q, X } from '../completion.mjs';
+import { IsInTailPosition, StringValue } from '../static-semantics/all.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import {
   EvaluateCall,
@@ -34,15 +34,18 @@ export function* Evaluate_OptionalExpression({ MemberExpression, OptionalChain }
 //     `?.` Arguments
 //     `?.` `[` Expression `]`
 //     `?.` IdentifierName
+//     `?.` PrivateIdentifier
 //     OptionalChain Arguments
 //     OptionalChain `[` Expression `]`
 //     OptionalChain `.` IdentifierName
+//     OptionalChain `.` PrivateIdentifier
 function* ChainEvaluation(node, baseValue, baseReference) {
   const {
     OptionalChain,
     Arguments,
     Expression,
     IdentifierName,
+    PrivateIdentifier,
   } = node;
   if (Arguments) {
     if (OptionalChain) {
@@ -101,6 +104,28 @@ function* ChainEvaluation(node, baseValue, baseReference) {
     const strict = node.strict;
     // 2. Return ? EvaluatePropertyAccessWithIdentifierKey(baseValue, IdentifierName, strict).
     return Q(EvaluatePropertyAccessWithIdentifierKey(baseValue, IdentifierName, strict));
+  }
+  if (PrivateIdentifier) {
+    if (OptionalChain) {
+      // 1. Let optionalChain be OptionalChain.
+      const optionalChain = OptionalChain;
+      // 2. Let newReference be ? ChainEvaluation of optionalChain with arguments baseValue and baseReference.
+      const newReference = Q(yield* ChainEvaluation(optionalChain, baseValue, baseReference));
+      // 3. Let newValue be ? GetValue(newReference).
+      const newValue = Q(GetValue(newReference));
+      // 4. Let nv be ? RequireObjectCoercible(newValue).
+      const nv = Q(RequireObjectCoercible(newValue));
+      // 5. Let fieldNameString be the StringValue of PrivateIdentifier.
+      const fieldNameString = StringValue(PrivateIdentifier);
+      // 6. Return ! MakePrivateReference(nv, fieldNameString).
+      return X(MakePrivateReference(nv, fieldNameString));
+    }
+    // 1. Let bv be ? RequireObjectCoercible(baseValue).
+    const bv = Q(RequireObjectCoercible(baseValue));
+    // 2. Let fieldNameString be the StringValue of PrivateIdentifier.
+    const fieldNameString = StringValue(PrivateIdentifier);
+    // 3. Return ! MakePrivateReference(bv, fieldNameString).
+    return X(MakePrivateReference(bv, fieldNameString));
   }
   throw new OutOfRange('ChainEvaluation', node);
 }

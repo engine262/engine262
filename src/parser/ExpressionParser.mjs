@@ -3,12 +3,14 @@ import {
   PropName,
   StringValue,
   IsComputedPropertyKey,
+  ContainsArguments,
 } from '../static-semantics/all.mjs';
 import {
   Token, TokenPrecedence,
   isPropertyOrCall,
   isMember,
   isKeyword,
+  isAutomaticSemicolon,
 } from './tokens.mjs';
 import { isLineTerminator } from './Lexer.mjs';
 import { FunctionParser, FunctionKind } from './FunctionParser.mjs';
@@ -270,7 +272,19 @@ export class ExpressionParser extends FunctionParser {
     }
   }
 
-  parseBinaryExpression(precedence, x = this.parseUnaryExpression()) {
+  parseBinaryExpression(precedence, x) {
+    if (!x) {
+      if (this.test(Token.PRIVATE_IDENTIFIER)) {
+        x = this.parsePrivateIdentifier();
+        if (!this.test(Token.IN)) {
+          this.raise('UnexpectedToken');
+        }
+        this.scope.checkUndefinedPrivate(x);
+      } else {
+        x = this.parseUnaryExpression();
+      }
+    }
+
     let p = TokenPrecedence[this.peek().type];
     if (p >= precedence) {
       do {
@@ -322,7 +336,11 @@ export class ExpressionParser extends FunctionParser {
             case Token.INSTANCEOF:
             case Token.IN:
               name = 'RelationalExpression';
-              node.RelationalExpression = left;
+              if (left.type === 'PrivateIdentifier') {
+                node.PrivateIdentifier = left;
+              } else {
+                node.RelationalExpression = left;
+              }
               node.ShiftExpression = right;
               node.operator = op.value;
               break;
@@ -400,10 +418,17 @@ export class ExpressionParser extends FunctionParser {
         case Token.NOT:
           node.operator = this.next().value;
           node.UnaryExpression = this.parseUnaryExpression();
-          if (this.isStrictMode()
-              && node.operator === 'delete'
-              && node.UnaryExpression.type === 'IdentifierReference') {
-            this.raiseEarly('DeleteIdentifier', node.UnaryExpression);
+          if (node.operator === 'delete') {
+            let target = node.UnaryExpression;
+            while (target.type === 'ParenthesizedExpression') {
+              target = target.Expression;
+            }
+            if (this.isStrictMode() && target.type === 'IdentifierReference') {
+              this.raiseEarly('DeleteIdentifier', target);
+            }
+            if (target.type === 'MemberExpression' && target.PrivateIdentifier) {
+              this.raiseEarly('DeletePrivateName', target);
+            }
           }
           return this.finishNode(node, 'UnaryExpression');
         default:
@@ -529,7 +554,14 @@ export class ExpressionParser extends FunctionParser {
         case Token.PERIOD:
           this.next();
           node.MemberExpression = result;
-          node.IdentifierName = this.parseIdentifierName();
+          if (this.test(Token.PRIVATE_IDENTIFIER)) {
+            node.PrivateIdentifier = this.parsePrivateIdentifier();
+            this.scope.checkUndefinedPrivate(node.PrivateIdentifier);
+            node.IdentifierName = null;
+          } else {
+            node.IdentifierName = this.parseIdentifierName();
+            node.PrivateIdentifier = null;
+          }
           node.Expression = null;
           result = this.finishNode(node, 'MemberExpression');
           break;
@@ -580,6 +612,9 @@ export class ExpressionParser extends FunctionParser {
       this.expect(Token.RBRACK);
     } else if (this.test(Token.TEMPLATE)) {
       this.raise('TemplateInOptionalChain');
+    } else if (this.test(Token.PRIVATE_IDENTIFIER)) {
+      base.PrivateIdentifier = this.parsePrivateIdentifier();
+      this.scope.checkUndefinedPrivate(base.PrivateIdentifier);
     } else {
       base.IdentifierName = this.parseIdentifierName();
     }
@@ -600,7 +635,12 @@ export class ExpressionParser extends FunctionParser {
         this.raise('TemplateInOptionalChain');
       } else if (this.eat(Token.PERIOD)) {
         node.OptionalChain = base;
-        node.IdentifierName = this.parseIdentifierName();
+        if (this.test(Token.PRIVATE_IDENTIFIER)) {
+          node.PrivateIdentifier = this.parsePrivateIdentifier();
+          this.scope.checkUndefinedPrivate(node.PrivateIdentifier);
+        } else {
+          node.IdentifierName = this.parseIdentifierName();
+        }
         base = this.finishNode(node, 'OptionalChain');
       } else {
         return base;
@@ -870,17 +910,60 @@ export class ExpressionParser extends FunctionParser {
     if (this.eat(Token.RBRACE)) {
       node.ClassBody = null;
     } else {
-      this.scope.with({ superCall: !!node.ClassHeritage }, () => {
+      this.scope.with({
+        superCall: !!node.ClassHeritage,
+        private: true,
+      }, () => {
         node.ClassBody = [];
         let hasConstructor = false;
+        while (this.eat(Token.SEMICOLON)) {
+          // nothing
+        }
+        const staticPrivates = new Set();
+        const instancePrivates = new Set();
         while (!this.eat(Token.RBRACE)) {
-          const m = this.parseClassElement();
+          const m = this.parseBracketedDefinition('class element');
           node.ClassBody.push(m);
+          while (this.eat(Token.SEMICOLON)) {
+            // nothing
+          }
 
-          const name = PropName(m.MethodDefinition);
+          if (m.ClassElementName?.type === 'PrivateIdentifier') {
+            let type;
+            if (m.type === 'FieldDefinition') {
+              type = 'field';
+            } else if (m.UniqueFormalParameters) {
+              type = 'method';
+            } else if (m.PropertySetParameterList) {
+              type = 'set';
+            } else {
+              type = 'get';
+            }
+            if (type === 'get' || type === 'set') {
+              if (m.static) {
+                if (instancePrivates.has(m.ClassElementName.name)) {
+                  this.raiseEarly('InvalidMethodName', m, m.ClassElementName.name);
+                } else {
+                  staticPrivates.add(m.ClassElementName.name);
+                }
+              } else {
+                if (staticPrivates.has(m.ClassElementName.name)) {
+                  this.raiseEarly('InvalidMethodName', m, m.ClassElementName.name);
+                } else {
+                  instancePrivates.add(m.ClassElementName.name);
+                }
+              }
+            }
+            this.scope.declare(m.ClassElementName, 'private', type);
+            if (m.ClassElementName.name === 'constructor') {
+              this.raiseEarly('InvalidMethodName', m, m.ClassElementName.name);
+            }
+          }
+
+          const name = PropName(m);
           const isActualConstructor = !m.static
-            && !!m.MethodDefinition.UniqueFormalParameters
-            && m.MethodDefinition.type === 'MethodDefinition'
+            && !!m.UniqueFormalParameters
+            && m.type === 'MethodDefinition'
             && name === 'constructor';
           if (isActualConstructor) {
             if (hasConstructor) {
@@ -893,28 +976,14 @@ export class ExpressionParser extends FunctionParser {
               || (!m.static && !isActualConstructor && name === 'constructor')) {
             this.raiseEarly('InvalidMethodName', m, name);
           }
+          if (m.static && m.type === 'FieldDefinition' && name === 'constructor') {
+            this.raiseEarly('InvalidMethodName', m, name);
+          }
         }
       });
     }
 
     return this.finishNode(node, 'ClassTail');
-  }
-
-  // ClassElement :
-  //   `static` MethodDefinition
-  //   MethodDefinition
-  parseClassElement() {
-    const node = this.startNode();
-    node.static = this.eat('static');
-    node.MethodDefinition = this.parseMethodDefinition(node.static);
-    while (this.eat(Token.SEMICOLON)) {
-      // nothing
-    }
-    return this.finishNode(node, 'ClassElement');
-  }
-
-  parseMethodDefinition(isStatic) {
-    return this.parseBracketedDefinition('method', isStatic);
   }
 
   parseClassExpression() {
@@ -1131,6 +1200,16 @@ export class ExpressionParser extends FunctionParser {
     return this.parseIdentifierName();
   }
 
+  // ClassElementName :
+  //   PropertyName
+  //   PrivateIdentifier
+  parseClassElementName() {
+    if (this.test(Token.PRIVATE_IDENTIFIER)) {
+      return this.parsePrivateIdentifier();
+    }
+    return this.parsePropertyName();
+  }
+
   // PropertyDefinition :
   //   IdentifierReference
   //   CoverInitializedName
@@ -1138,25 +1217,41 @@ export class ExpressionParser extends FunctionParser {
   //   MethodDefinition
   //   `...` AssignmentExpression
   // MethodDefinition :
-  //   PropertyName `(` UniqueFormalParameters `)` `{` FunctionBody `}`
+  //   ClassElementName `(` UniqueFormalParameters `)` `{` FunctionBody `}`
   //   GeneratorMethod
   //   AsyncMethod
   //   AsyncGeneratorMethod
-  //   `get` PropertyName `(` `)` `{` FunctionBody `}`
-  //   `set` PropertyName `(` PropertySetParameterList `)` `{` FunctionBody `}`
+  //   `get` ClassElementName `(` `)` `{` FunctionBody `}`
+  //   `set` ClassElementName `(` PropertySetParameterList `)` `{` FunctionBody `}`
   // GeneratorMethod :
-  //   `*` PropertyName `(` UniqueFormalParameters `)` `{` GeneratorBody `}`
+  //   `*` ClassElementName `(` UniqueFormalParameters `)` `{` GeneratorBody `}`
   // AsyncMethod :
-  //   `async` [no LineTerminator here] PropertyName `(` UniqueFormalParameters `)` `{` AsyncFunctionBody `}`
+  //   `async` [no LineTerminator here] ClassElementName `(` UniqueFormalParameters `)` `{` AsyncFunctionBody `}`
   // AsyncGeneratorMethod :
-  //   `async` [no LineTerminator here] `*` Propertyname `(` UniqueFormalParameters `)` `{` AsyncGeneratorBody `}`
-  parseBracketedDefinition(type, isStatic = false) {
+  //   `async` [no LineTerminator here] `*` ClassElementName `(` UniqueFormalParameters `)` `{` AsyncGeneratorBody `}`
+  parseBracketedDefinition(type) {
     const node = this.startNode();
 
     if (type === 'property' && this.eat(Token.ELLIPSIS)) {
       node.PropertyName = null;
       node.AssignmentExpression = this.parseAssignmentExpression();
       return this.finishNode(node, 'PropertyDefinition');
+    }
+
+    let firstFirstName;
+    if (type === 'class element') {
+      if (this.test('static') && (
+        this.testAhead(Token.ASSIGN)
+        || this.testAhead(Token.SEMICOLON)
+        || this.peekAhead().hadLineTerminatorBefore
+        || isAutomaticSemicolon(this.peekAhead().type)
+      )) {
+        node.static = false;
+        firstFirstName = this.parseIdentifierName();
+      } else {
+        node.static = this.eat('static');
+        this.markNodeStart(node);
+      }
     }
 
     let isGenerator = this.eat(Token.MUL);
@@ -1172,19 +1267,42 @@ export class ExpressionParser extends FunctionParser {
         isAsync = true;
       }
     }
-    const firstName = this.parsePropertyName();
-    if (!isGenerator && !isGetter && !isSetter) {
+
+    const firstName = firstFirstName || (type === 'property'
+      ? this.parsePropertyName()
+      : this.parseClassElementName());
+
+    if (!isGenerator && isAsync) {
       isGenerator = this.eat(Token.MUL);
     }
+
     const isSpecialMethod = isGenerator || ((isSetter || isGetter || isAsync) && !this.test(Token.LPAREN));
 
-    if (!isGenerator && type === 'property') {
-      if (this.eat(Token.COLON)) {
+    if (!isGenerator) {
+      if (type === 'property' && this.eat(Token.COLON)) {
         node.PropertyName = firstName;
         node.AssignmentExpression = this.parseAssignmentExpression();
         return this.finishNode(node, 'PropertyDefinition');
       }
-      if (this.scope.assignmentInfoStack.length > 0 && this.test(Token.ASSIGN)) {
+
+      if (type === 'class element' && (
+        this.test(Token.ASSIGN)
+        || this.test(Token.SEMICOLON)
+        || this.peek().hadLineTerminatorBefore
+        || isAutomaticSemicolon(this.peek().type)
+      )) {
+        node.ClassElementName = firstName;
+        node.Initializer = this.scope.with({ superProperty: true }, () => this.parseInitializerOpt());
+        const argumentNode = node.Initializer && ContainsArguments(node.Initializer);
+        if (argumentNode) {
+          this.raiseEarly('UnexpectedToken', argumentNode);
+        }
+        this.finishNode(node, 'FieldDefinition');
+        this.semicolon();
+        return node;
+      }
+
+      if (type === 'property' && this.scope.assignmentInfoStack.length > 0 && this.test(Token.ASSIGN)) {
         node.IdentifierReference = firstName;
         node.IdentifierReference.type = 'IdentifierReference';
         node.Initializer = this.parseInitializerOpt();
@@ -1193,7 +1311,8 @@ export class ExpressionParser extends FunctionParser {
         return node;
       }
 
-      if (!isSpecialMethod
+      if (type === 'property'
+          && !isSpecialMethod
           && firstName.type === 'IdentifierName'
           && !this.test(Token.LPAREN)
           && !isKeyword(firstName.name)) {
@@ -1203,7 +1322,15 @@ export class ExpressionParser extends FunctionParser {
       }
     }
 
-    node.PropertyName = (isSpecialMethod && (!isGenerator || isAsync)) ? this.parsePropertyName() : firstName;
+    if (isSpecialMethod && (!isGenerator || isAsync)) {
+      if (type === 'property') {
+        node.ClassElementName = this.parsePropertyName();
+      } else {
+        node.ClassElementName = this.parseClassElementName();
+      }
+    } else {
+      node.ClassElementName = firstName;
+    }
 
     this.scope.with({
       lexical: true,
@@ -1229,8 +1356,8 @@ export class ExpressionParser extends FunctionParser {
 
       this.scope.with({
         superCall: !isSpecialMethod
-                   && !isStatic
-                   && (node.PropertyName.name === 'constructor' || node.PropertyName.value === 'constructor')
+                   && !node.static
+                   && (node.ClassElementName.name === 'constructor' || node.ClassElementName.value === 'constructor')
                    && this.scope.hasSuperCall(),
       }, () => {
         const body = this.parseFunctionBody(isAsync, isGenerator, false);

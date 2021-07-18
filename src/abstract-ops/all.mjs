@@ -19,6 +19,7 @@ export * from './module-records.mjs';
 export * from './notational-conventions.mjs';
 export * from './object-operations.mjs';
 export * from './objects.mjs';
+export * from './private-names.mjs';
 export * from './promise-operations.mjs';
 export * from './proxy-objects.mjs';
 export * from './realms.mjs';

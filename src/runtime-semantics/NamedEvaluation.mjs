@@ -1,34 +1,22 @@
-import { surroundingAgent } from '../engine.mjs';
-import { Value, Descriptor } from '../value.mjs';
-import {
-  OrdinaryFunctionCreate,
-  OrdinaryObjectCreate,
-  SetFunctionName,
-  MakeConstructor,
-  DefinePropertyOrThrow,
-  sourceTextMatchedBy,
-} from '../abstract-ops/all.mjs';
-import { ReturnIfAbrupt, X } from '../completion.mjs';
+import { Value } from '../value.mjs';
+import { sourceTextMatchedBy } from '../abstract-ops/all.mjs';
+import { ReturnIfAbrupt } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
-import { ClassDefinitionEvaluation } from './all.mjs';
+import {
+  ClassDefinitionEvaluation,
+  InstantiateOrdinaryFunctionExpression,
+  InstantiateAsyncFunctionExpression,
+  InstantiateGeneratorFunctionExpression,
+  InstantiateAsyncGeneratorFunctionExpression,
+  InstantiateArrowFunctionExpression,
+  InstantiateAsyncArrowFunctionExpression,
+} from './all.mjs';
 
 // #sec-function-definitions-runtime-semantics-namedevaluation
 //   FunctionExpression :
 //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
 function NamedEvaluation_FunctionExpression(FunctionExpression, name) {
-  const { FormalParameters, FunctionBody } = FunctionExpression;
-  // 1. Let scope be the LexicalEnvironment of the running execution context.
-  const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  // 2. Let sourceText be the source text matched by FunctionExpression.
-  const sourceText = sourceTextMatchedBy(FunctionExpression);
-  // 3. Let closure be OrdinaryFunctionCreate(%Function.prototype%, sourceText, FormalParameters, FunctionBody, non-lexical-this, scope).
-  const closure = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), sourceText, FormalParameters, FunctionBody, 'non-lexical-this', scope);
-  // 4. Perform SetFunctionName(closure, name).
-  SetFunctionName(closure, name);
-  // 5. Perform MakeConstructor(closure).
-  MakeConstructor(closure);
-  // 6. Return closure.
-  return closure;
+  return InstantiateOrdinaryFunctionExpression(FunctionExpression, name);
 }
 
 
@@ -36,108 +24,35 @@ function NamedEvaluation_FunctionExpression(FunctionExpression, name) {
 //   GeneratorExpression :
 //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
 function NamedEvaluation_GeneratorExpression(GeneratorExpression, name) {
-  const { FormalParameters, GeneratorBody } = GeneratorExpression;
-  // 1. Let scope be the LexicalEnvironment of the running execution context.
-  const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  // 2. Let sourceText be the source text matched by GeneratorExpression.
-  const sourceText = sourceTextMatchedBy(GeneratorExpression);
-  // 3. Let closure be OrdinaryFunctionCreate(%GeneratorFunction.prototype%, sourceText, FormalParameters, GeneratorBody, non-lexical-this, scope).
-  const closure = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype%'), sourceText, FormalParameters, GeneratorBody, 'non-lexical-this', scope);
-  // 4. Perform SetFunctionName(closure, name).
-  SetFunctionName(closure, name);
-  // 5. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
-  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%'));
-  // 6. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-  DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
-    Value: prototype,
-    Writable: Value.true,
-    Enumerable: Value.false,
-    Configurable: Value.false,
-  }));
-  // 7. Return closure.
-  return closure;
+  return InstantiateGeneratorFunctionExpression(GeneratorExpression, name);
 }
 
 // #sec-async-function-definitions-runtime-semantics-namedevaluation
 //   AsyncFunctionExpression :
 //     `async` `function` `(` FormalParameters `)` `{` AsyncFunctionBody `}`
 function NamedEvaluation_AsyncFunctionExpression(AsyncFunctionExpression, name) {
-  const { FormalParameters, AsyncFunctionBody } = AsyncFunctionExpression;
-  // 1. Let scope be the LexicalEnvironment of the running execution context.
-  const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  // 2. Let sourceText be the source text matched by AsyncFunctionExpression.
-  const sourceText = sourceTextMatchedBy(AsyncFunctionExpression);
-  // 3. Let closure be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, FormalParameters, AsyncFunctionBody, non-lexical-this, scope).
-  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, FormalParameters, AsyncFunctionBody, 'non-lexical-this', scope));
-  // 4. Perform SetFunctionName(closure, name).
-  SetFunctionName(closure, name);
-  // 5. Return closure.
-  return closure;
+  return InstantiateAsyncFunctionExpression(AsyncFunctionExpression, name);
 }
 
 // #sec-asyncgenerator-definitions-namedevaluation
 //   AsyncGeneratorExpression :
 //     `async` `function` `*` `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
 function NamedEvaluation_AsyncGeneratorExpression(AsyncGeneratorExpression, name) {
-  const { FormalParameters, AsyncGeneratorBody } = AsyncGeneratorExpression;
-  // 1. Let scope be the LexicalEnvironment of the running execution context.
-  const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  // 2. Let sourceText be the source text matched by AsyncGeneratorExpression.
-  const sourceText = sourceTextMatchedBy(AsyncGeneratorExpression);
-  // 3. Let closure be OrdinaryFunctionCreate(%AsyncGeneratorFunction.prototype%, sourceText, FormalParameters, GeneratorBody, non-lexical-this, scope).
-  const closure = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), sourceText, FormalParameters, AsyncGeneratorBody, 'non-lexical-this', scope);
-  // 4. Perform SetFunctionName(closure, name).
-  SetFunctionName(closure, name);
-  // 5. Let prototype be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
-  const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%'));
-  // 6. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-  DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
-    Value: prototype,
-    Writable: Value.true,
-    Enumerable: Value.false,
-    Configurable: Value.false,
-  }));
-  // 7. Return closure.
-  return closure;
+  return InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpression, name);
 }
 
 // #sec-arrow-function-definitions-runtime-semantics-namedevaluation
 //   ArrowFunction :
 //     ArrowParameters `=>` ConciseBody
 function NamedEvaluation_ArrowFunction(ArrowFunction, name) {
-  const { ArrowParameters, ConciseBody } = ArrowFunction;
-  // 1. Let scope be the LexicalEnvironment of the running execution context.
-  const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  // 2. Let sourceText be the source text matched by ArrowFunction.
-  const sourceText = sourceTextMatchedBy(ArrowFunction);
-  // 3. Let parameters be CoveredFormalsList of ArrowParameters.
-  const parameters = ArrowParameters;
-  // 4. Let closure be OrdinaryFunctionCreate(%Function.prototype%, parameters, ConciseBody, lexical-this, scope).
-  const closure = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), sourceText, parameters, ConciseBody, 'lexical-this', scope);
-  // 5. Perform SetFunctionName(closure, name).
-  SetFunctionName(closure, name);
-  // 6. Return closure.
-  return closure;
+  return InstantiateArrowFunctionExpression(ArrowFunction, name);
 }
 
 // #sec-arrow-function-definitions-runtime-semantics-namedevaluation
 //   AsyncArrowFunction :
 //     ArrowParameters `=>` AsyncConciseBody
 function NamedEvaluation_AsyncArrowFunction(AsyncArrowFunction, name) {
-  const { ArrowParameters, AsyncConciseBody } = AsyncArrowFunction;
-  // 1. Let scope be the LexicalEnvironment of the running execution context.
-  const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-  // 2. Let sourceText be the source text matched by ArrowFunction.
-  const sourceText = sourceTextMatchedBy(AsyncArrowFunction);
-  // 3. Let head be CoveredAsyncArrowHead of CoverCallExpressionAndAsyncArrowHead.
-  // 4. Let parameters be the ArrowFormalParameters of head.
-  const parameters = ArrowParameters;
-  // 5. Let closure be OrdinaryFunctionCreate(%Function.prototype%, parameters, ConciseBody, lexical-this, scope).
-  const closure = OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, parameters, AsyncConciseBody, 'lexical-this', scope);
-  // 6. Perform SetFunctionName(closure, name).
-  SetFunctionName(closure, name);
-  // 7. Return closure.
-  return closure;
+  return InstantiateAsyncArrowFunctionExpression(AsyncArrowFunction, name);
 }
 
 // #sec-class-definitions-runtime-semantics-namedevaluation

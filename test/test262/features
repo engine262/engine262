@@ -12,15 +12,14 @@
 
 -tail-call-optimization
 
--class-fields-public
--class-fields-private
--class-methods-private
--class-static-fields-public
--class-static-fields-private
--class-static-methods-private
-
 -json-modules
 -import-assertions
+
+-class-static-block
+
+-Temporal
+
+-resizable-arraybuffer
 
 # https://github.com/tc39/proposal-top-level-await
 top-level-await = top-level-await

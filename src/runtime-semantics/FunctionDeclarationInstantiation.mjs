@@ -253,15 +253,17 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
       }
     }
   }
-  // 35. For each Parse Node f in functionsToInitialize, do
+  // 35. Let privateEnv be the PrivateEnvironment of calleeContext.
+  const privateEnv = calleeContext.PrivateEnvironment;
+  // 36. For each Parse Node f in functionsToInitialize, do
   for (const f of functionsToInitialize) {
     // a. Let fn be the sole element of the BoundNames of f.
     const fn = BoundNames(f)[0];
-    // b. Let fo be InstantiateFunctionObject of f with argument lexEnv.
-    const fo = InstantiateFunctionObject(f, lexEnv);
+    // b. Let fo be InstantiateFunctionObject of f with argument lexEnv and privateEnv.
+    const fo = InstantiateFunctionObject(f, lexEnv, privateEnv);
     // c. Perform ! varEnv.SetMutableBinding(fn, fo, false).
     X(varEnv.SetMutableBinding(fn, fo, Value.false));
   }
-  // 36. Return NormalCompletion(empty).
+  // 37. Return NormalCompletion(empty).
   return NormalCompletion(undefined);
 }

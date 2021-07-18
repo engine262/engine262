@@ -132,6 +132,7 @@ export const RawTokens = [
   ['EXPORT', 'export'],
   ['EXTENDS', 'extends'],
   ['IMPORT', 'import'],
+  ['PRIVATE_IDENTIFIER', null],
 
   ['ENUM', 'enum'],
 

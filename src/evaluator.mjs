@@ -162,15 +162,15 @@ export function* Evaluate(node) {
     case 'ObjectLiteral':
       return yield* Evaluate_ObjectLiteral(node);
     case 'FunctionExpression':
-      return yield* Evaluate_FunctionExpression(node);
+      return Evaluate_FunctionExpression(node);
     case 'ClassExpression':
       return yield* Evaluate_ClassExpression(node);
     case 'GeneratorExpression':
-      return yield* Evaluate_GeneratorExpression(node);
+      return Evaluate_GeneratorExpression(node);
     case 'AsyncFunctionExpression':
-      return yield* Evaluate_AsyncFunctionExpression(node);
+      return Evaluate_AsyncFunctionExpression(node);
     case 'AsyncGeneratorExpression':
-      return yield* Evaluate_AsyncGeneratorExpression(node);
+      return Evaluate_AsyncGeneratorExpression(node);
     case 'TemplateLiteral':
       return yield* Evaluate_TemplateLiteral(node);
     case 'ParenthesizedExpression':
@@ -232,9 +232,9 @@ export function* Evaluate(node) {
     case 'UnaryExpression':
       return yield* Evaluate_UnaryExpression(node);
     case 'ArrowFunction':
-      return yield* Evaluate_ArrowFunction(node);
+      return Evaluate_ArrowFunction(node);
     case 'AsyncArrowFunction':
-      return yield* Evaluate_AsyncArrowFunction(node);
+      return Evaluate_AsyncArrowFunction(node);
     case 'ConditionalExpression':
       return yield* Evaluate_ConditionalExpression(node);
     case 'RegularExpressionLiteral':

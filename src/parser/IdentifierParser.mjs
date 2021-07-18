@@ -138,4 +138,12 @@ export class IdentifierParser extends BaseParser {
     node.type = 'LabelIdentifier';
     return node;
   }
+
+  // PrivateIdentifier ::
+  //   `#` IdentifierName
+  parsePrivateIdentifier() {
+    const node = this.startNode();
+    node.name = this.expect(Token.PRIVATE_IDENTIFIER).value;
+    return this.finishNode(node, 'PrivateIdentifier');
+  }
 }

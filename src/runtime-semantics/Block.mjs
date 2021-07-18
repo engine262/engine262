@@ -16,7 +16,9 @@ export function BlockDeclarationInstantiation(code, env) {
   Assert(env instanceof DeclarativeEnvironmentRecord);
   // 2. Let declarations be the LexicallyScopedDeclarations of code.
   const declarations = LexicallyScopedDeclarations(code);
-  // 3. For each element d in declarations, do
+  // 3. Let privateEnv be the running execution context's PrivateEnvironment.
+  const privateEnv = surroundingAgent.runningExecutionContext.PrivateEnvironment;
+  // 4. For each element d in declarations, do
   for (const d of declarations) {
     // a. For each element dn of the BoundNames of d, do
     for (const dn of BoundNames(d)) {
@@ -36,7 +38,7 @@ export function BlockDeclarationInstantiation(code, env) {
         // i. Let fn be the sole element of the BoundNames of d.
         const fn = BoundNames(d)[0];
         // ii. Let fo be InstantiateFunctionObject of d with argument env.
-        const fo = InstantiateFunctionObject(d, env);
+        const fo = InstantiateFunctionObject(d, env, privateEnv);
         // iii. Perform env.InitializeBinding(fn, fo).
         env.InitializeBinding(fn, fo);
       }
