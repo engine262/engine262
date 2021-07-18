@@ -426,6 +426,8 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     moduleContext.VariableEnvironment = module.Environment;
     // 15. Set the LexicalEnvironment of moduleContext to module.[[Environment]].
     moduleContext.LexicalEnvironment = module.Environment;
+    // 15. Set the PrivateEnvironment of moduleContext to null.
+    moduleContext.PrivateEnvironment = Value.null;
     // 16. Set module.[[Context]] to moduleContext.
     module.Context = moduleContext;
     // 17. Push moduleContext onto the execution context stack; moduleContext is now the running execution context.
@@ -471,7 +473,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
             || d.type === 'AsyncFunctionDeclaration'
             || d.type === 'AsyncGeneratorDeclaration') {
           // 1. Let fo be InstantiateFunctionObject of d with argument env.
-          const fo = InstantiateFunctionObject(d, env);
+          const fo = InstantiateFunctionObject(d, env, Value.null);
           // 2. Call env.InitializeBinding(dn, fo).
           env.InitializeBinding(dn, fo);
         }
@@ -585,6 +587,7 @@ export class SyntheticModuleRecord extends AbstractModuleRecord {
     moduleContext.VariableEnvironment = module.Environment;
     // 7. Set the LexicalEnvironment of moduleContext to module.[[Environment]].
     moduleContext.LexicalEnvironment = module.Environment;
+    moduleContext.PrivateEnvironment = Value.null;
     // 8. Push moduleContext on to the execution context stack; moduleContext is now the running execution context.
     surroundingAgent.executionContextStack.push(moduleContext);
     // 9. Let result be the result of performing module.[[EvaluationSteps]](module).

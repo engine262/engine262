@@ -43,6 +43,7 @@ export const ConstructorNonCallable = (f) => `${i(f)} cannot be invoked without 
 export const CouldNotResolveModule = (s) => `Could not resolve module ${i(s)}`;
 export const DataViewOOB = () => 'Offset is outside the bounds of the DataView';
 export const DeleteIdentifier = () => 'Delete of identifier in strict mode';
+export const DeletePrivateName = () => 'Private fields cannot be deleted';
 export const DateInvalidTime = () => 'Invalid time';
 export const DerivedConstructorReturnedNonObject = () => 'Derived constructors may only return object or undefined';
 export const DuplicateConstructor = () => 'A class may only have one constructor';
@@ -91,6 +92,9 @@ export const ObjectToPrimitive = () => 'Cannot convert object to primitive value
 export const ObjectPrototypeType = () => 'Object prototype must be an Object or null';
 export const ObjectSetPrototype = () => 'Could not set prototype of object';
 export const OutOfRange = (n) => `${n} is out of range`;
+export const PrivateNameNoGetter = (p) => `${i(p)} was defined without a getter`;
+export const PrivateNameNoSetter = (p) => `${i(p)} was defined without a setter`;
+export const PrivateNameIsMethod = (p) => `Private method ${i(p)} is not writable`;
 export const PromiseAnyRejected = () => 'No promises passed to Promise.any were fulfilled';
 export const PromiseCapabilityFunctionAlreadySet = (f) => `Promise ${f} function already set`;
 export const PromiseRejectFunction = (v) => `Promise reject function ${i(v)} is not callable`;
@@ -147,6 +151,7 @@ export const TypedArrayTooSmall = () => 'Derived TypedArray constructor created 
 export const UnableToSeal = (o) => `Unable to seal object ${i(o)}`;
 export const UnableToFreeze = (o) => `Unable to freeze object ${i(o)}`;
 export const UnableToPreventExtensions = (o) => `Unable to prevent extensions on object ${i(o)}`;
+export const UnknownPrivateName = (o, p) => `${i(p)} does not exist on object ${i(o)}`;
 export const UnterminatedComment = () => 'Missing */ after comment';
 export const UnterminatedRegExp = () => 'Missing / after RegExp literal';
 export const UnterminatedString = () => 'Missing \' or " after string literal';

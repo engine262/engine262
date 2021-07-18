@@ -1,7 +1,7 @@
-import { Value } from '../value.mjs';
-import { NamedEvaluation } from './all.mjs';
+import { InstantiateArrowFunctionExpression } from './all.mjs';
 
+// #sec-arrow-function-definitions-runtime-semantics-evaluation
 export function Evaluate_ArrowFunction(ArrowFunction) {
-  // 1. Return the result of performing NamedEvaluation for this ArrowFunction with argument "".
-  return NamedEvaluation(ArrowFunction, new Value(''));
+  // 1. Return InstantiateArrowFunctionExpression of ArrowFunction.
+  return InstantiateArrowFunctionExpression(ArrowFunction);
 }

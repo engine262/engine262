@@ -917,6 +917,7 @@ export function NewObjectEnvironment(O, W, E) {
   // 4. Set env.[[OuterEnv]] to E.
   env.OuterEnv = E;
   // 5. Return env.
+  return env;
 }
 
 // #sec-newfunctionenvironment
@@ -948,7 +949,7 @@ export function NewGlobalEnvironment(G, thisValue) {
   // 1. Let objRec be NewObjectEnvironment(G, false, null).
   const objRec = NewObjectEnvironment(G, Value.false, Value.null);
   // 2. Let dclRec be a new declarative Environment Record containing no bindings.
-  const dclRec = new DeclarativeEnvironmentRecord();
+  const dclRec = new DeclarativeEnvironmentRecord(Value.null);
   // 3. Let env be a new global Environment Record.
   const env = new GlobalEnvironmentRecord();
   // 4. Set env.[[ObjectRecord]] to objRec.
@@ -973,4 +974,28 @@ export function NewModuleEnvironment(E) {
   env.OuterEnv = E;
   // 3. Return env.
   return env;
+}
+
+class PrivateEnvironmentRecord {
+  constructor(init) {
+    this.OuterPrivateEnvironment = init.OuterPrivateEnvironment;
+    this.Names = init.Names;
+  }
+
+  mark(m) {
+    this.Names.forEach((name) => {
+      m(name);
+    });
+  }
+}
+
+// #sec-newprivateenvironment
+export function NewPrivateEnvironment(outerPrivEnv) {
+  // 1. Let names be a new empty List.
+  const names = [];
+  // 2. Return the PrivateEnvironment Record { [[OuterPrivateEnvironment]]: outerPrivEnv, [[Names]]: names }.
+  return new PrivateEnvironmentRecord({
+    OuterPrivateEnvironment: outerPrivEnv,
+    Names: names,
+  });
 }

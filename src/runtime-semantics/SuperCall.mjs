@@ -5,6 +5,7 @@ import {
   GetNewTarget,
   GetThisEnvironment,
   IsConstructor,
+  InitializeInstanceElements,
   isECMAScriptFunctionObject,
 } from '../abstract-ops/all.mjs';
 import { Type, Value } from '../value.mjs';
@@ -31,8 +32,16 @@ export function* Evaluate_SuperCall({ Arguments }) {
   const result = Q(Construct(func, argList, newTarget));
   // 7. Let thisER be GetThisEnvironment().
   const thisER = GetThisEnvironment();
-  // 8. Return ? thisER.BindThisValue(result).
-  return Q(thisER.BindThisValue(result));
+  // 8. Perform ? thisER.BindThisValue(result).
+  Q(thisER.BindThisValue(result));
+  // 9. Let F be thisER.[[FunctionObject]].
+  const F = thisER.FunctionObject;
+  // 10. Assert: F is an ECMAScript function object.
+  Assert(isECMAScriptFunctionObject(F));
+  // 11. Perform ? InitializeInstanceElements(result, F).
+  Q(InitializeInstanceElements(result, F));
+  // 12. Return result.
+  return result;
 }
 
 // #sec-getsuperconstructor

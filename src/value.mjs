@@ -656,10 +656,21 @@ function BigIntBitwiseOp(op, x, y) {
   }
 }
 
+// #sec-private-names
+export class PrivateName extends Value {
+  constructor(Description) {
+    super();
+
+    this.Description = Description;
+  }
+}
+
 // #sec-object-type
 export class ObjectValue extends Value {
   constructor(internalSlotsList) {
     super();
+
+    this.PrivateElements = [];
 
     this.properties = new ValueMap();
     this.internalSlotsList = internalSlotsList;
@@ -811,6 +822,10 @@ export function Type(val) {
 
   if (val instanceof ObjectValue) {
     return 'Object';
+  }
+
+  if (val instanceof PrivateName) {
+    return 'PrivateName';
   }
 
   if (val instanceof Completion) {

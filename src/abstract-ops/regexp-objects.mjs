@@ -279,7 +279,7 @@ export function RegExpHasFlag(R, codeUnit) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   // 3. Let flags be R.[[OriginalFlags]].
-  const flags = R.OriginalFlags;
+  const flags = R.OriginalFlags.stringValue();
   // 4. If flags contains codeUnit, return true.
   if (flags.includes(codeUnit)) {
     return Value.true;

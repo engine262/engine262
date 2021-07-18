@@ -84,6 +84,8 @@ export function getDeclarations(node) {
     case 'IdentifierName':
     case 'LabelIdentifier':
       return [{ name: node.name, node }];
+    case 'PrivateIdentifier':
+      return [{ name: `#${node.name}`, node }];
     case 'StringLiteral':
       return [{ name: node.value, node }];
     case 'Elision':
@@ -117,6 +119,8 @@ export class Scope {
     this.assignmentInfoStack = [];
     this.exports = new Set();
     this.undefinedExports = new Map();
+    this.privateScope = undefined;
+    this.undefinedPrivateAccesses = [];
     this.flags = 0;
   }
 
@@ -188,6 +192,13 @@ export class Scope {
       });
     }
 
+    if (flags.private) {
+      this.privateScope = {
+        outer: this.privateScope,
+        names: new Map(),
+      };
+    }
+
     const oldLabels = this.labels;
     if (flags.label === 'boundary') {
       this.labels = [];
@@ -208,6 +219,22 @@ export class Scope {
       this.labels = oldLabels;
     } else if (flags.label) {
       this.labels.pop();
+    }
+
+    if (flags.private) {
+      this.privateScope = this.privateScope.outer;
+
+      if (this.privateScope === undefined) {
+        this.undefinedPrivateAccesses.forEach(({ node, name, scope }) => {
+          while (scope) {
+            if (scope.names.has(name)) {
+              return;
+            }
+            scope = scope.outer;
+          }
+          this.parser.raiseEarly('NotDefined', node, name);
+        });
+      }
     }
 
     if (flags.lexical || flags.variable) {
@@ -283,7 +310,7 @@ export class Scope {
     throw new RangeError();
   }
 
-  declare(node, type) {
+  declare(node, type, extraType) {
     const declarations = getDeclarations(node);
     declarations.forEach((d) => {
       switch (type) {
@@ -348,6 +375,30 @@ export class Scope {
             this.exports.add(d.name);
           }
           break;
+        case 'private': {
+          const types = this.privateScope.names.get(d.name);
+          if (types) {
+            let duplicate = true;
+            switch (extraType) {
+              case 'field':
+              case 'method':
+                break;
+              case 'set':
+              case 'get':
+                duplicate = types.has(extraType) || types.has('field') || types.has('method');
+                types.add(extraType);
+                break;
+              default:
+                break;
+            }
+            if (duplicate) {
+              this.parser.raiseEarly('AlreadyDeclared', d.node, d.name);
+            }
+          } else {
+            this.privateScope.names.set(d.name, new Set([extraType]));
+          }
+          break;
+        }
         default:
           /* c8 ignore next */
           throw new RangeError(type);
@@ -362,6 +413,29 @@ export class Scope {
       if (!scope.lexicals.has(name) && !scope.variables.has(name)) {
         this.undefinedExports.set(name, n.localName);
       }
+    });
+  }
+
+  checkUndefinedPrivate(PrivateIdentifier) {
+    const [{ node, name }] = getDeclarations(PrivateIdentifier);
+
+    if (!this.privateScope) {
+      this.parser.raiseEarly('NotDefined', node, name);
+      return;
+    }
+
+    let scope = this.privateScope;
+    while (scope) {
+      if (scope.names.has(name)) {
+        return;
+      }
+      scope = scope.outer;
+    }
+
+    this.undefinedPrivateAccesses.push({
+      node,
+      name,
+      scope: this.privateScope,
     });
   }
 }
