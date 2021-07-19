@@ -10,6 +10,7 @@ import {
   IfAbruptRejectPromise,
   Q, X,
   Await,
+  NormalCompletion,
 } from '../completion.mjs';
 import {
   Assert,
@@ -23,6 +24,8 @@ import {
   OrdinaryObjectCreate,
   PerformPromiseThen,
   ToBoolean,
+  Yield,
+  CreateIteratorFromClosure,
 } from './all.mjs';
 
 // This file covers abstract operations defined in
@@ -188,34 +191,24 @@ export function CreateIterResultObject(value, done) {
 
 // 7.4.9 #sec-createlistiteratorRecord
 export function CreateListIteratorRecord(list) {
-  const iterator = OrdinaryObjectCreate(surroundingAgent.intrinsic('%IteratorPrototype%'), [
-    'IteratedList',
-    'ListNextIndex',
-  ]);
-  iterator.IteratedList = list;
-  iterator.ListNextIndex = 0;
-  const steps = ListIteratorNextSteps;
-  const next = X(CreateBuiltinFunction(steps, []));
+  // 1. Let closure be a new Abstract Closure with no parameters that captures list and performs the following steps when called:
+  const closure = function* closure() {
+    // a. For each element E of list, do
+    for (const E of list) {
+      // i. Perform ? Yield(E).
+      Q(yield* Yield(E));
+    }
+    // b. Return undefined.
+    return NormalCompletion(Value.undefined);
+  };
+  // 2. Let iterator be ! CreateIteratorFromClosure(closure, empty, %IteratorPrototype%).
+  const iterator = X(CreateIteratorFromClosure(closure, undefined, surroundingAgent.intrinsic('%IteratorPrototype%')));
+  // 3. Return Record { [[Iterator]]: iterator, [[NextMethod]]: %GeneratorFunction.prototype.prototype.next%, [[Done]]: false }.
   return {
     Iterator: iterator,
-    NextMethod: next,
+    NextMethod: surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype.next%'),
     Done: Value.false,
   };
-}
-
-// 7.4.9.1 #sec-listiterator-next
-function ListIteratorNextSteps(args, { thisValue }) {
-  const O = thisValue;
-  Assert(Type(O) === 'Object');
-  Assert('IteratedList' in O);
-  const list = O.IteratedList;
-  const index = O.ListNextIndex;
-  const len = list.length;
-  if (index >= len) {
-    return CreateIterResultObject(Value.undefined, Value.true);
-  }
-  O.ListNextIndex += 1;
-  return CreateIterResultObject(list[index], Value.false);
 }
 
 // 25.1.4.1 #sec-createasyncfromsynciterator

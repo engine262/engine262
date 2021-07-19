@@ -9,6 +9,7 @@ import {
   Assert,
   Call,
   CreateDataPropertyOrThrow,
+  CreateIteratorFromClosure,
   Get,
   GetMethod,
   Invoke,
@@ -21,6 +22,7 @@ import {
   ToString,
   ToUint32,
   StringCreate,
+  Yield,
   F,
 } from '../abstract-ops/all.mjs';
 import {
@@ -31,7 +33,6 @@ import {
 } from '../runtime-semantics/all.mjs';
 import { CodePointAt } from '../static-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
-import { CreateStringIterator } from './StringIteratorPrototype.mjs';
 import { assignProps } from './bootstrap.mjs';
 
 
@@ -674,9 +675,34 @@ function StringProto_valueOf(args, { thisValue }) {
 
 // 21.1.3.32 #sec-string.prototype-@@iterator
 function StringProto_iterator(args, { thisValue }) {
+  // 1. Let O be ? RequireObjectCoercible(this value).
   const O = Q(RequireObjectCoercible(thisValue));
-  const S = Q(ToString(O));
-  return Q(CreateStringIterator(S));
+  // 2. Let s be ? ToString(O).
+  const s = Q(ToString(O)).stringValue();
+  // 3. Let closure be a new Abstract Closure with no parameters that captures s and performs the following steps when called:
+  const closure = function* closure() {
+    // a. Let position be 0.
+    let position = 0;
+    // b. Let len be the length of s.
+    const len = s.length;
+    // c. Repeat, while position < len,
+    while (position < len) {
+      // i. Let cp be ! CodePointAt(s, position).
+      const cp = X(CodePointAt(s, position));
+      // ii. Let nextIndex be position + cp.[[CodeUnitCount]].
+      const nextIndex = position + cp.CodeUnitCount;
+      // iii. Let resultString be the substring of s from position to nextIndex.
+      const resultString = new Value(s.slice(position, nextIndex));
+      // iv. Set position to nextIndex.
+      position = nextIndex;
+      // v. Perform ? Yield(resultString).
+      Q(yield* Yield(resultString));
+    }
+    // d. Return undefined.
+    return Value.undefined;
+  };
+  // 4. Return ! CreateIteratorFromClosure(closure, "%StringIteratorPrototype%", %StringIteratorPrototype%).
+  return X(CreateIteratorFromClosure(closure, new Value('%StringIteratorPrototype%'), surroundingAgent.intrinsic('%StringIteratorPrototype%')));
 }
 
 // https://tc39.es/proposal-item-method/#sec-string.prototype.at

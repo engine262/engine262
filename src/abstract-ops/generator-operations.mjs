@@ -10,8 +10,11 @@ import { Evaluate } from '../evaluator.mjs';
 import { resume } from '../helpers.mjs';
 import {
   Assert,
+  AsyncGeneratorYield,
   CreateIterResultObject,
+  OrdinaryObjectCreate,
   RequireInternalSlot,
+  SameValue,
 } from './all.mjs';
 
 // This file covers abstract operations defined in #sec-generator-objects
@@ -27,33 +30,42 @@ export function GeneratorStart(generator, generatorBody) {
   // 4. Set the code evaluation state of genContext such that when evaluation is resumed
   //    for that execution context the following steps will be performed:
   genContext.codeEvaluationState = (function* resumer() {
-    // a. Let result be the result of evaluating generatorBody.
-    const result = EnsureCompletion(yield* Evaluate(generatorBody));
-    // b. Assert: If we return here, the generator either threw an exception or
+    // a. If generatorBody is a Parse Node, then
+    //    i. Let result be the result of evaluating generatorBody.
+    // b. Else,
+    //    i. Assert: generatorBody is an Abstract Closure.
+    //    ii. Let result be generatorBody().
+    const result = EnsureCompletion(
+      // Note: Engine262 can only perform the "If generatorBody is an Abstract Closure" check:
+      yield* typeof generatorBody === 'function'
+        ? generatorBody()
+        : Evaluate(generatorBody),
+    );
+    // c. Assert: If we return here, the generator either threw an exception or
     //    performed either an implicit or explicit return.
-    // c. Remove genContext from the execution context stack and restore the execution context
+    // d. Remove genContext from the execution context stack and restore the execution context
     //    that is at the top of the execution context stack as the running execution context.
     surroundingAgent.executionContextStack.pop(genContext);
-    // d. Set generator.[[GeneratorState]] to completed.
+    // e. Set generator.[[GeneratorState]] to completed.
     generator.GeneratorState = 'completed';
-    // e. Once a generator enters the completed state it never leaves it and its
+    // f. Once a generator enters the completed state it never leaves it and its
     //    associated execution context is never resumed. Any execution state associated
     //    with generator can be discarded at this point.
     genContext.codeEvaluationState = null;
-    // f. If result.[[Type]] is normal, let resultValue be undefined.
+    // g. If result.[[Type]] is normal, let resultValue be undefined.
     let resultValue;
     if (result.Type === 'normal') {
       resultValue = Value.undefined;
     } else if (result.Type === 'return') {
-      // g. Else if result.[[Type]] is return, let resultValue be result.[[Value]].
+      // h. Else if result.[[Type]] is return, let resultValue be result.[[Value]].
       resultValue = result.Value;
-    } else {
+    } else { // i. Else,
       // i. Assert: result.[[Type]] is throw.
       Assert(result.Type === 'throw');
       // ii. Return Completion(result).
       return Completion(result);
     }
-    // i. Return CreateIterResultObject(resultValue, true).
+    // j. Return CreateIterResultObject(resultValue, true).
     return X(CreateIterResultObject(resultValue, Value.true));
   }());
   // 5. Set generator.[[GeneratorContext]] to genContext.
@@ -64,26 +76,56 @@ export function GeneratorStart(generator, generatorBody) {
   return NormalCompletion(Value.undefined);
 }
 
+export function generatorBrandToErrorMessageType(generatorBrand) {
+  let expectedType;
+  if (generatorBrand !== undefined) {
+    expectedType = generatorBrand.stringValue();
+    if (expectedType.startsWith('%') && expectedType.endsWith('Prototype%')) {
+      expectedType = expectedType.slice(1, -10).trim();
+      if (expectedType.endsWith('Iterator')) {
+        expectedType = `${expectedType.slice(0, -8).trim()} Iterator`;
+      }
+    }
+  }
+  return expectedType;
+}
+
 // #sec-generatorvalidate
-export function GeneratorValidate(generator) {
+export function GeneratorValidate(generator, generatorBrand) {
   // 1. Perform ? RequireInternalSlot(generator, [[GeneratorState]]).
   Q(RequireInternalSlot(generator, 'GeneratorState'));
-  // 2. Assert: generator also has a [[GeneratorContext]] internal slot.
+  // 2. Perform ? RequireInternalSlot(generator, [[GeneratorBrand]]).
+  Q(RequireInternalSlot(generator, 'GeneratorBrand'));
+  // 3. If generator.[[GeneratorBrand]] is not the same value as generatorBrand, throw a TypeError exception.
+  const brand = generator.GeneratorBrand;
+  if (
+    brand === undefined || generatorBrand === undefined
+      ? brand !== generatorBrand
+      : SameValue(brand, generatorBrand) === Value.false
+  ) {
+    return surroundingAgent.Throw(
+      'TypeError',
+      'NotATypeObject',
+      generatorBrandToErrorMessageType(generatorBrand) || 'Generator',
+      generator,
+    );
+  }
+  // 4. Assert: generator also has a [[GeneratorContext]] internal slot.
   Assert('GeneratorContext' in generator);
-  // 3. Let state be generator.[[GeneratorState]].
+  // 5. Let state be generator.[[GeneratorState]].
   const state = generator.GeneratorState;
-  // 4. If state is executing, throw a TypeError exception.
+  // 6. If state is executing, throw a TypeError exception.
   if (state === 'executing') {
     return surroundingAgent.Throw('TypeError', 'GeneratorRunning');
   }
-  // 5. Return state.
+  // 7. Return state.
   return state;
 }
 
 // #sec-generatorresume
-export function GeneratorResume(generator, value) {
-  // 1. Let state be ? GeneratorValidate(generator).
-  const state = Q(GeneratorValidate(generator));
+export function GeneratorResume(generator, value, generatorBrand) {
+  // 1. Let state be ? GeneratorValidate(generator, generatorBrand).
+  const state = Q(GeneratorValidate(generator, generatorBrand));
   // 2. If state is completed, return CreateIterResultObject(undefined, true).
   if (state === 'completed') {
     return X(CreateIterResultObject(Value.undefined, Value.true));
@@ -111,9 +153,9 @@ export function GeneratorResume(generator, value) {
 }
 
 // #sec-generatorresumeabrupt
-export function GeneratorResumeAbrupt(generator, abruptCompletion) {
-  // 1. Let state be ? GeneratorValidate(generator).
-  let state = Q(GeneratorValidate(generator));
+export function GeneratorResumeAbrupt(generator, abruptCompletion, generatorBrand) {
+  // 1. Let state be ? GeneratorValidate(generator, generatorBrand).
+  let state = Q(GeneratorValidate(generator, generatorBrand));
   // 2. If state is suspendedStart, then
   if (state === 'suspendedStart') {
     // a. Set generator.[[GeneratorState]] to completed.
@@ -197,4 +239,34 @@ export function* GeneratorYield(iterNextObj) {
   // 9. Return NormalCompletion(iterNextObj).
   return resumptionValue;
   // 10. NOTE: this returns to the evaluation of the operation that had most previously resumed evaluation of genContext.
+}
+
+// #sec-yield
+export function* Yield(value) {
+  // 1. Let generatorKind be ! GetGeneratorKind().
+  const generatorKind = X(GetGeneratorKind());
+  // 2. If generatorKind is async, then return ? AsyncGeneratorYield(value).
+  if (generatorKind === 'async') {
+    return Q(yield* AsyncGeneratorYield(value));
+  }
+  // 3. Else, return ? GeneratorYield(! CreateIterResultObject(value, false)).
+  return Q(yield* GeneratorYield(X(CreateIterResultObject(value, Value.false))));
+}
+
+// #sec-createiteratorfromclosure
+export function CreateIteratorFromClosure(closure, generatorBrand, generatorPrototype) {
+  Assert(typeof closure === 'function');
+  // 1. NOTE: closure can contain uses of the Yield shorthand to yield an IteratorResult object.
+  // 2. Let internalSlotsList be « [[GeneratorState]], [[GeneratorContext]], [[GeneratorBrand]] ».
+  const internalSlotsList = ['GeneratorState', 'GeneratorContext', 'GeneratorBrand'];
+  // 3. Let generator be ! OrdinaryObjectCreate(generatorPrototype, internalSlotsList).
+  const generator = X(OrdinaryObjectCreate(generatorPrototype, internalSlotsList));
+  // 4. Set generator.[[GeneratorBrand]] to generatorBrand.
+  generator.GeneratorBrand = generatorBrand;
+  // 5. Set generator.[[GeneratorState]] to undefined.
+  generator.GeneratorState = Value.undefined;
+  // 6. Perform ! GeneratorStart(generator, closure).
+  X(GeneratorStart(generator, closure));
+  // 7. Return generator.
+  return generator;
 }

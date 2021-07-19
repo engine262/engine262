@@ -1,11 +1,10 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
   Call,
-  IsCallable,
-  OrdinaryObjectCreate,
-  SameValueZero,
-  RequireInternalSlot,
   F,
+  IsCallable,
+  RequireInternalSlot,
+  SameValueZero,
 } from '../abstract-ops/all.mjs';
 import {
   Type,
@@ -14,20 +13,7 @@ import {
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
-
-// 23.2.5.1 #sec-createsetiterator
-function CreateSetIterator(set, kind) {
-  Q(RequireInternalSlot(set, 'SetData'));
-  const iterator = OrdinaryObjectCreate(surroundingAgent.intrinsic('%SetIteratorPrototype%'), [
-    'IteratedSet',
-    'SetNextIndex',
-    'SetIterationKind',
-  ]);
-  iterator.IteratedSet = set;
-  iterator.SetNextIndex = 0;
-  iterator.SetIterationKind = kind;
-  return iterator;
-}
+import { CreateSetIterator } from './SetIteratorPrototype.mjs';
 
 // #sec-set.prototype.add
 function SetProto_add([value = Value.undefined], { thisValue }) {

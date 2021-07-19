@@ -11,14 +11,17 @@ import {
   Assert,
   Call,
   Construct,
+  CreateArrayFromList,
+  CreateIteratorFromClosure,
   Get,
   GetFunctionRealm,
   IsDataDescriptor,
   IsArray,
   IsConstructor,
+  IsDetachedBuffer,
   OrdinaryDefineOwnProperty,
   OrdinaryGetOwnProperty,
-  OrdinaryObjectCreate,
+  LengthOfArrayLike,
   MakeBasicObject,
   SameValue,
   ToBoolean,
@@ -28,6 +31,7 @@ import {
   IsPropertyKey,
   isArrayIndex,
   isNonNegativeInteger,
+  Yield,
   F,
 } from './all.mjs';
 
@@ -247,18 +251,51 @@ export function CreateArrayIterator(array, kind) {
   Assert(Type(array) === 'Object');
   // 2. Assert: kind is key+value, key, or value.
   Assert(kind === 'key+value' || kind === 'key' || kind === 'value');
-  // 3. Let iterator be ObjectCreate(%ArrayIteratorPrototype%, « [[IteratedArrayLike]], [[ArrayLikeNextIndex]], [[ArrayLikeIterationKind]] »).
-  const iterator = OrdinaryObjectCreate(surroundingAgent.intrinsic('%ArrayIterator.prototype%'), [
-    'IteratedArrayLike',
-    'ArrayLikeNextIndex',
-    'ArrayLikeIterationKind',
-  ]);
-  // 4. Set iterator.[[IteratedArrayLike]] to array.
-  iterator.IteratedArrayLike = array;
-  // 5. Set iterator.[[ArrayLikeNextIndex]] to 0.
-  iterator.ArrayLikeNextIndex = 0;
-  // 6. Set iterator.[[ArrayLikeIterationKind]] to kind.
-  iterator.ArrayLikeIterationKind = kind;
-  // 7. Return iterator.
-  return iterator;
+  // 3. Let closure be a new Abstract Closure with no parameters that captures kind and array and performs the following steps when called:
+  const closure = function* closure() {
+    // a. Let index be 0.
+    let index = 0;
+    // b. Repeat,
+    while (true) {
+      let len;
+      // i. If array has a [[TypedArrayName]] internal slot, then
+      if ('TypedArrayName' in array) {
+        // 1. If IsDetachedBuffer(array.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
+        if (IsDetachedBuffer(array.ViewedArrayBuffer) === Value.true) {
+          return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+        }
+        // 2. Let len be array.[[ArrayLength]].
+        len = array.ArrayLength;
+      } else { // ii. Else,
+        // 1. Let len be ? LengthOfArrayLike(array).
+        len = Q(LengthOfArrayLike(array));
+      }
+      // iii. If index ≥ len, return undefined.
+      if (index >= len) {
+        return Value.undefined;
+      }
+      // iv. If kind is key, perform ? Yield(𝔽(index)).
+      if (kind === 'key') {
+        Q(yield* Yield(F(index)));
+      } else { // v. Else,
+        // 1. Let elementKey be ! ToString(𝔽(index)).
+        const elementKey = X(ToString(F(index)));
+        // 2. Let elementValue be ? Get(array, elementKey).
+        const elementValue = Q(Get(array, elementKey));
+        // 3. If kind is value, perform ? Yield(elementValue).
+        if (kind === 'value') {
+          Q(yield* Yield(elementValue));
+        } else { // 4. Else,
+          // a. Assert: kind is key+value.
+          Assert(kind === 'key+value');
+          // b. Perform ? Yield(! CreateArrayFromList(« 𝔽(index), elementValue »)).
+          Q(yield* Yield(X(CreateArrayFromList([F(index), elementValue]))));
+        }
+      }
+      // vi. Set index to index + 1.
+      index += 1;
+    }
+  };
+  // 4. Return ! CreateIteratorFromClosure(closure, "%ArrayIteratorPrototype%", %ArrayIteratorPrototype%).
+  return X(CreateIteratorFromClosure(closure, new Value('%ArrayIteratorPrototype%'), surroundingAgent.intrinsic('%ArrayIteratorPrototype%')));
 }

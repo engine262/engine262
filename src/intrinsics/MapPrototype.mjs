@@ -1,11 +1,10 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
   Call,
-  IsCallable,
-  OrdinaryObjectCreate,
-  SameValueZero,
-  RequireInternalSlot,
   F,
+  IsCallable,
+  RequireInternalSlot,
+  SameValueZero,
 } from '../abstract-ops/all.mjs';
 import {
   Type,
@@ -14,20 +13,7 @@ import {
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
-
-
-function CreateMapIterator(map, kind) {
-  Q(RequireInternalSlot(map, 'MapData'));
-  const iterator = OrdinaryObjectCreate(surroundingAgent.intrinsic('%MapIteratorPrototype%'), [
-    'IteratedMap',
-    'MapNextIndex',
-    'MapIterationKind',
-  ]);
-  iterator.IteratedMap = map;
-  iterator.MapNextIndex = 0;
-  iterator.MapIterationKind = kind;
-  return iterator;
-}
+import { CreateMapIterator } from './MapIteratorPrototype.mjs';
 
 // #sec-map.prototype.clear
 function MapProto_clear(args, { thisValue }) {

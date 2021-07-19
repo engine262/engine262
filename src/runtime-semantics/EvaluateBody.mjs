@@ -80,11 +80,13 @@ function* EvaluateBody_AsyncConciseBody({ ExpressionBody }, functionObject, argu
 export function* EvaluateBody_GeneratorBody(GeneratorBody, functionObject, argumentsList) {
   // 1. Perform ? FunctionDeclarationInstantiation(functionObject, argumentsList).
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
-  // 2. Let G be ? OrdinaryCreateFromConstructor(functionObject, "%GeneratorFunction.prototype.prototype%", « [[GeneratorState]], [[GeneratorContext]] »).
-  const G = Q(OrdinaryCreateFromConstructor(functionObject, '%GeneratorFunction.prototype.prototype%', ['GeneratorState', 'GeneratorContext']));
-  // 3. Perform GeneratorStart(G, FunctionBody).
+  // 2. Let G be ? OrdinaryCreateFromConstructor(functionObject, "%GeneratorFunction.prototype.prototype%", « [[GeneratorState]], [[GeneratorContext]], [[GeneratorBrand]] »).
+  const G = Q(OrdinaryCreateFromConstructor(functionObject, '%GeneratorFunction.prototype.prototype%', ['GeneratorState', 'GeneratorContext', 'GeneratorBrand']));
+  // 3. Set G.[[GeneratorBrand]] to empty.
+  G.GeneratorBrand = undefined;
+  // 4. Perform GeneratorStart(G, FunctionBody).
   GeneratorStart(G, GeneratorBody);
-  // 4. Return Completion { [[Type]]: return, [[Value]]: G, [[Target]]: empty }.
+  // 5. Return Completion { [[Type]]: return, [[Value]]: G, [[Target]]: empty }.
   return new Completion({ Type: 'return', Value: G, Target: undefined });
 }
 
@@ -93,15 +95,18 @@ export function* EvaluateBody_GeneratorBody(GeneratorBody, functionObject, argum
 export function* EvaluateBody_AsyncGeneratorBody(FunctionBody, functionObject, argumentsList) {
   // 1. Perform ? FunctionDeclarationInstantiation(functionObject, argumentsList).
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
-  // 2. Let generator be ? OrdinaryCreateFromConstructor(functionObject, "%AsyncGeneratorFunction.prototype.prototype%", « [[AsyncGeneratorState]], [[AsyncGeneratorContext]], [[AsyncGeneratorQueue]] »).
+  // 2. Let generator be ? OrdinaryCreateFromConstructor(functionObject, "%AsyncGeneratorFunction.prototype.prototype%", « [[AsyncGeneratorState]], [[AsyncGeneratorContext]], [[AsyncGeneratorQueue]], [[GeneratorBrand]] »).
   const generator = Q(OrdinaryCreateFromConstructor(functionObject, '%AsyncGeneratorFunction.prototype.prototype%', [
     'AsyncGeneratorState',
     'AsyncGeneratorContext',
     'AsyncGeneratorQueue',
+    'GeneratorBrand',
   ]));
-  // 3. Perform ! AsyncGeneratorStart(generator, FunctionBody).
+  // 3. Set generator.[[GeneratorBrand]] to empty.
+  generator.GeneratorBrand = undefined;
+  // 4. Perform ! AsyncGeneratorStart(generator, FunctionBody).
   X(AsyncGeneratorStart(generator, FunctionBody));
-  // 4. Return Completion { [[Type]]: return, [[Value]]: generator, [[Target]]: empty }.
+  // 5. Return Completion { [[Type]]: return, [[Value]]: generator, [[Target]]: empty }.
   return new Completion({ Type: 'return', Value: generator, Target: undefined });
 }
 
