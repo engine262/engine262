@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 bda8a7a507647d9258c6ce2614303998eb5204d5
+ * engine262 0.0.1 206928332324f0ae95485aee9784dbf19e525b36
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -6840,7 +6840,7 @@
       _temp7 = _temp7.Value;
     }
 
-    let _temp8 = OrdinaryCreateFromConstructor(functionObject, '%GeneratorFunction.prototype.prototype%', ['GeneratorState', 'GeneratorContext']);
+    let _temp8 = OrdinaryCreateFromConstructor(functionObject, '%GeneratorFunction.prototype.prototype%', ['GeneratorState', 'GeneratorContext', 'GeneratorBrand']);
     /* c8 ignore if */
 
 
@@ -6856,9 +6856,11 @@
       _temp8 = _temp8.Value;
     }
 
-    const G = _temp8; // 3. Perform GeneratorStart(G, FunctionBody).
+    const G = _temp8; // 3. Set G.[[GeneratorBrand]] to empty.
 
-    GeneratorStart(G, GeneratorBody); // 4. Return Completion { [[Type]]: return, [[Value]]: G, [[Target]]: empty }.
+    G.GeneratorBrand = undefined; // 4. Perform GeneratorStart(G, FunctionBody).
+
+    GeneratorStart(G, GeneratorBody); // 5. Return Completion { [[Type]]: return, [[Value]]: G, [[Target]]: empty }.
 
     return new Completion({
       Type: 'return',
@@ -6885,7 +6887,7 @@
       _temp9 = _temp9.Value;
     }
 
-    let _temp10 = OrdinaryCreateFromConstructor(functionObject, '%AsyncGeneratorFunction.prototype.prototype%', ['AsyncGeneratorState', 'AsyncGeneratorContext', 'AsyncGeneratorQueue']);
+    let _temp10 = OrdinaryCreateFromConstructor(functionObject, '%AsyncGeneratorFunction.prototype.prototype%', ['AsyncGeneratorState', 'AsyncGeneratorContext', 'AsyncGeneratorQueue', 'GeneratorBrand']);
     /* c8 ignore if */
 
 
@@ -6901,7 +6903,9 @@
       _temp10 = _temp10.Value;
     }
 
-    const generator = _temp10; // 3. Perform ! AsyncGeneratorStart(generator, FunctionBody).
+    const generator = _temp10; // 3. Set generator.[[GeneratorBrand]] to empty.
+
+    generator.GeneratorBrand = undefined; // 4. Perform ! AsyncGeneratorStart(generator, FunctionBody).
 
     let _temp11 = AsyncGeneratorStart(generator, FunctionBody);
 
@@ -19106,21 +19110,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     hasStar,
     AssignmentExpression
   }) {
-    let _temp = GetGeneratorKind();
-
-    Assert(!(_temp instanceof AbruptCompletion), "GetGeneratorKind()" + ' returned an abrupt completion');
-    /* c8 ignore if */
-
-    /* c8 ignore if */
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    // 1. Let generatorKind be ! GetGeneratorKind().
-    const generatorKind = _temp;
-
     if (hasStar) {
-      // 2. Let exprRef be the result of evaluating AssignmentExpression.
+      let _temp = GetGeneratorKind();
+
+      Assert(!(_temp instanceof AbruptCompletion), "GetGeneratorKind()" + ' returned an abrupt completion');
+      /* c8 ignore if */
+
+      /* c8 ignore if */
+      if (_temp instanceof Completion) {
+        _temp = _temp.Value;
+      }
+
+      // 1. Let generatorKind be ! GetGeneratorKind().
+      const generatorKind = _temp; // 2. Let exprRef be the result of evaluating AssignmentExpression.
+
       const exprRef = yield* Evaluate(AssignmentExpression); // 3. Let value be ? GetValue(exprRef).
 
       let _temp2 = GetValue(exprRef);
@@ -19585,8 +19588,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     if (AssignmentExpression) {
-      // 2. Let exprRef be the result of evaluating AssignmentExpression.
-      const exprRef = yield* Evaluate(AssignmentExpression); // 3. Let value be ? GetValue(exprRef).
+      // 1. Let exprRef be the result of evaluating AssignmentExpression.
+      const exprRef = yield* Evaluate(AssignmentExpression); // 2. Let value be ? GetValue(exprRef).
 
       let _temp22 = GetValue(exprRef);
       /* c8 ignore if */
@@ -19604,23 +19607,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _temp22 = _temp22.Value;
       }
 
-      const value = _temp22; // 4. If generatorKind is async, then return ? AsyncGeneratorYield(value).
+      const value = _temp22; // 3. Return ? Yield(value).
 
-      if (generatorKind === 'async') {
-        return yield* AsyncGeneratorYield(value);
-      } // 5. Otherwise, return ? GeneratorYield(CreateIterResultObject(value, false)).
-
-
-      return yield* GeneratorYield(CreateIterResultObject(value, Value.false));
-    } // 2. If generatorKind is async, then return ? AsyncGeneratorYield(undefined).
+      return yield* Yield(value);
+    } // 1. Return ? Yield(undefined).
 
 
-    if (generatorKind === 'async') {
-      return yield* AsyncGeneratorYield(Value.undefined);
-    } // 3. Otherwise, return ? GeneratorYield(CreateIterResultObject(undefined, false)).
-
-
-    return yield* GeneratorYield(CreateIterResultObject(Value.undefined, Value.false));
+    return yield* Yield(Value.undefined);
   }
 
   function StringIndexOf(string, searchValue, fromIndex) {
@@ -29824,17 +29817,166 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Assert: Type(array) is Object.
     Assert(Type(array) === 'Object', "Type(array) === 'Object'"); // 2. Assert: kind is key+value, key, or value.
 
-    Assert(kind === 'key+value' || kind === 'key' || kind === 'value', "kind === 'key+value' || kind === 'key' || kind === 'value'"); // 3. Let iterator be ObjectCreate(%ArrayIteratorPrototype%, « [[IteratedArrayLike]], [[ArrayLikeNextIndex]], [[ArrayLikeIterationKind]] »).
+    Assert(kind === 'key+value' || kind === 'key' || kind === 'value', "kind === 'key+value' || kind === 'key' || kind === 'value'"); // 3. Let closure be a new Abstract Closure with no parameters that captures kind and array and performs the following steps when called:
 
-    const iterator = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%ArrayIterator.prototype%'), ['IteratedArrayLike', 'ArrayLikeNextIndex', 'ArrayLikeIterationKind']); // 4. Set iterator.[[IteratedArrayLike]] to array.
+    const closure = function* closure() {
+      // a. Let index be 0.
+      let index = 0; // b. Repeat,
 
-    iterator.IteratedArrayLike = array; // 5. Set iterator.[[ArrayLikeNextIndex]] to 0.
+      while (true) {
+        let len; // i. If array has a [[TypedArrayName]] internal slot, then
 
-    iterator.ArrayLikeNextIndex = 0; // 6. Set iterator.[[ArrayLikeIterationKind]] to kind.
+        if ('TypedArrayName' in array) {
+          // 1. If IsDetachedBuffer(array.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
+          if (IsDetachedBuffer(array.ViewedArrayBuffer) === Value.true) {
+            return exports.surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+          } // 2. Let len be array.[[ArrayLength]].
 
-    iterator.ArrayLikeIterationKind = kind; // 7. Return iterator.
 
-    return iterator;
+          len = array.ArrayLength;
+        } else {
+          let _temp22 = LengthOfArrayLike(array);
+          /* c8 ignore if */
+
+
+          /* c8 ignore if */
+          if (_temp22 instanceof AbruptCompletion) {
+            return _temp22;
+          }
+          /* c8 ignore if */
+
+
+          /* c8 ignore if */
+          if (_temp22 instanceof Completion) {
+            _temp22 = _temp22.Value;
+          }
+
+          // ii. Else,
+          // 1. Let len be ? LengthOfArrayLike(array).
+          len = _temp22;
+        } // iii. If index ≥ len, return undefined.
+
+
+        if (index >= len) {
+          return Value.undefined;
+        } // iv. If kind is key, perform ? Yield(𝔽(index)).
+
+
+        if (kind === 'key') {
+          let _temp23 = yield* Yield(F(index));
+          /* c8 ignore if */
+
+
+          /* c8 ignore if */
+          if (_temp23 instanceof AbruptCompletion) {
+            return _temp23;
+          }
+          /* c8 ignore if */
+
+
+          /* c8 ignore if */
+          if (_temp23 instanceof Completion) {
+            _temp23 = _temp23.Value;
+          }
+        } else {
+          let _temp24 = ToString(F(index));
+
+          Assert(!(_temp24 instanceof AbruptCompletion), "ToString(F(index))" + ' returned an abrupt completion');
+          /* c8 ignore if */
+
+          /* c8 ignore if */
+          if (_temp24 instanceof Completion) {
+            _temp24 = _temp24.Value;
+          }
+
+          // v. Else,
+          // 1. Let elementKey be ! ToString(𝔽(index)).
+          const elementKey = _temp24; // 2. Let elementValue be ? Get(array, elementKey).
+
+          let _temp25 = Get(array, elementKey);
+          /* c8 ignore if */
+
+
+          /* c8 ignore if */
+          if (_temp25 instanceof AbruptCompletion) {
+            return _temp25;
+          }
+          /* c8 ignore if */
+
+
+          /* c8 ignore if */
+          if (_temp25 instanceof Completion) {
+            _temp25 = _temp25.Value;
+          }
+
+          const elementValue = _temp25; // 3. If kind is value, perform ? Yield(elementValue).
+
+          if (kind === 'value') {
+            let _temp26 = yield* Yield(elementValue);
+            /* c8 ignore if */
+
+
+            /* c8 ignore if */
+            if (_temp26 instanceof AbruptCompletion) {
+              return _temp26;
+            }
+            /* c8 ignore if */
+
+
+            /* c8 ignore if */
+            if (_temp26 instanceof Completion) {
+              _temp26 = _temp26.Value;
+            }
+          } else {
+            // 4. Else,
+            // a. Assert: kind is key+value.
+            Assert(kind === 'key+value', "kind === 'key+value'"); // b. Perform ? Yield(! CreateArrayFromList(« 𝔽(index), elementValue »)).
+
+            let _temp28 = CreateArrayFromList([F(index), elementValue]);
+
+            Assert(!(_temp28 instanceof AbruptCompletion), "CreateArrayFromList([F(index), elementValue])" + ' returned an abrupt completion');
+            /* c8 ignore if */
+
+            /* c8 ignore if */
+            if (_temp28 instanceof Completion) {
+              _temp28 = _temp28.Value;
+            }
+
+            let _temp27 = yield* Yield(_temp28);
+            /* c8 ignore if */
+
+
+            /* c8 ignore if */
+            if (_temp27 instanceof AbruptCompletion) {
+              return _temp27;
+            }
+            /* c8 ignore if */
+
+
+            /* c8 ignore if */
+            if (_temp27 instanceof Completion) {
+              _temp27 = _temp27.Value;
+            }
+          }
+        } // vi. Set index to index + 1.
+
+
+        index += 1;
+      }
+    }; // 4. Return ! CreateIteratorFromClosure(closure, "%ArrayIteratorPrototype%", %ArrayIteratorPrototype%).
+
+
+    let _temp29 = CreateIteratorFromClosure(closure, new Value('%ArrayIteratorPrototype%'), exports.surroundingAgent.intrinsic('%ArrayIteratorPrototype%'));
+
+    Assert(!(_temp29 instanceof AbruptCompletion), "CreateIteratorFromClosure(closure, new Value('%ArrayIteratorPrototype%'), surroundingAgent.intrinsic('%ArrayIteratorPrototype%'))" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp29 instanceof Completion) {
+      _temp29 = _temp29.Value;
+    }
+
+    return _temp29;
   }
 
   function AllocateArrayBuffer(constructor, byteLength) {
@@ -30188,22 +30330,37 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
   function AsyncGeneratorStart(generator, generatorBody) {
-    // Assert: generator is an AsyncGenerator instance.
-    Assert(generator.AsyncGeneratorState === Value.undefined, "generator.AsyncGeneratorState === Value.undefined");
-    const genContext = exports.surroundingAgent.runningExecutionContext;
-    genContext.Generator = generator;
+    // 1. Assert: generator is an AsyncGenerator instance.
+    // 2. Assert: generator.[[AsyncGeneratorState]] is undefined.
+    Assert(generator.AsyncGeneratorState === Value.undefined, "generator.AsyncGeneratorState === Value.undefined"); // 3. Let genContext be the running execution context.
+
+    const genContext = exports.surroundingAgent.runningExecutionContext; // 4. Set the Generator component of genContext to generator.
+
+    genContext.Generator = generator; // 5. Set the code evaluation state of genContext such that when evaluation
+    //    is resumed for that execution context the following steps will be performed:
 
     genContext.codeEvaluationState = function* resumer() {
-      const result = EnsureCompletion(yield* Evaluate(generatorBody)); // Assert: If we return here, the async generator either threw an exception or performed either an implicit or explicit return.
+      // a. If generatorBody is a Parse Node, then
+      //     i. Let result be the result of evaluating generatorBody.
+      // b. Else,
+      //     i. Assert: generatorBody is an Abstract Closure.
+      //     ii. Let result be generatorBody().
+      const result = EnsureCompletion( // Note: Engine262 can only perform the "If generatorBody is an Abstract Closure" check:
+      yield* typeof generatorBody === 'function' ? generatorBody() : Evaluate(generatorBody)); // c. Assert: If we return here, the async generator either threw an exception or performed either an implicit or explicit return.
+      // d. Remove genContext from the execution context stack and restore the execution context
+      //    that is at the top of the execution context stack as the running execution context.
 
-      exports.surroundingAgent.executionContextStack.pop(genContext);
+      exports.surroundingAgent.executionContextStack.pop(genContext); // e. Set generator.[[AsyncGeneratorState]] to completed.
+
       generator.AsyncGeneratorState = 'completed';
-      let resultValue;
+      let resultValue; // f. If result is a normal completion, let resultValue be undefined.
 
       if (result instanceof NormalCompletion) {
         resultValue = Value.undefined;
       } else {
-        resultValue = result.Value;
+        // g. Else,
+        // i. Let resultValue be result.[[Value]].
+        resultValue = result.Value; // ii. If result.[[Type]] is not return, then
 
         if (result.Type !== 'return') {
           let _temp = AsyncGeneratorReject(generator, resultValue);
@@ -30216,9 +30373,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             _temp = _temp.Value;
           }
 
+          // 1. Return ! AsyncGeneratorReject(generator, resultValue).
           return _temp;
         }
-      }
+      } // h. Return ! AsyncGeneratorResolve(generator, resultValue, true).
+
 
       let _temp2 = AsyncGeneratorResolve(generator, resultValue, Value.true);
 
@@ -30231,68 +30390,89 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
 
       return _temp2;
-    }();
+    }(); // 6. Set generator.[[AsyncGeneratorContext]] to genContext.
 
-    generator.AsyncGeneratorContext = genContext;
-    generator.AsyncGeneratorState = 'suspendedStart';
-    generator.AsyncGeneratorQueue = [];
+
+    generator.AsyncGeneratorContext = genContext; // 7. Set generator.[[AsyncGeneratorState]] to suspendedStart.
+
+    generator.AsyncGeneratorState = 'suspendedStart'; // 8. Set generator.[[AsyncGeneratorQueue]] to a new empty List.
+
+    generator.AsyncGeneratorQueue = []; // 9. Return undefined.
+
     return Value.undefined;
-  } // 25.5.3.3 #sec-asyncgeneratorresolve
+  } // #sec-asyncgeneratorvalidate
 
-  function AsyncGeneratorResolve(generator, value, done) {
-    // Assert: generator is an AsyncGenerator instance.
-    const queue = generator.AsyncGeneratorQueue;
-    Assert(queue.length > 0, "queue.length > 0");
-    const next = queue.shift();
-    const promiseCapability = next.Capability;
-
-    let _temp3 = CreateIterResultObject(value, done);
-
-    Assert(!(_temp3 instanceof AbruptCompletion), "CreateIterResultObject(value, done)" + ' returned an abrupt completion');
+  function AsyncGeneratorValidate(generator, generatorBrand) {
+    let _temp3 = RequireInternalSlot(generator, 'AsyncGeneratorContext');
     /* c8 ignore if */
+
+
+    /* c8 ignore if */
+    if (_temp3 instanceof AbruptCompletion) {
+      return _temp3;
+    }
+    /* c8 ignore if */
+
 
     /* c8 ignore if */
     if (_temp3 instanceof Completion) {
       _temp3 = _temp3.Value;
     }
 
-    const iteratorResult = _temp3;
-
-    let _temp4 = Call(promiseCapability.Resolve, Value.undefined, [iteratorResult]);
-
-    Assert(!(_temp4 instanceof AbruptCompletion), "Call(promiseCapability.Resolve, Value.undefined, [iteratorResult])" + ' returned an abrupt completion');
+    let _temp4 = RequireInternalSlot(generator, 'AsyncGeneratorState');
     /* c8 ignore if */
+
+
+    /* c8 ignore if */
+    if (_temp4 instanceof AbruptCompletion) {
+      return _temp4;
+    }
+    /* c8 ignore if */
+
 
     /* c8 ignore if */
     if (_temp4 instanceof Completion) {
       _temp4 = _temp4.Value;
     }
 
-    let _temp5 = AsyncGeneratorResumeNext(generator);
-
-    Assert(!(_temp5 instanceof AbruptCompletion), "AsyncGeneratorResumeNext(generator)" + ' returned an abrupt completion');
+    let _temp5 = RequireInternalSlot(generator, 'AsyncGeneratorQueue');
     /* c8 ignore if */
+
+
+    /* c8 ignore if */
+    if (_temp5 instanceof AbruptCompletion) {
+      return _temp5;
+    }
+    /* c8 ignore if */
+
 
     /* c8 ignore if */
     if (_temp5 instanceof Completion) {
       _temp5 = _temp5.Value;
     }
-    return Value.undefined;
-  } // 25.5.3.4 #sec-asyncgeneratorreject
 
+    const brand = generator.GeneratorBrand;
 
-  AsyncGeneratorResolve.section = 'https://tc39.es/ecma262/#sec-asyncgeneratorresolve';
+    if (brand === undefined || generatorBrand === undefined ? brand !== generatorBrand : SameValue(brand, generatorBrand) === Value.false) {
+      return exports.surroundingAgent.Throw('TypeError', 'NotATypeObject', generatorBrandToErrorMessageType(generatorBrand) || 'AsyncGenerator', generator);
+    }
+  } // 25.5.3.3 #sec-asyncgeneratorresolve
 
-  function AsyncGeneratorReject(generator, exception) {
-    // Assert: generator is an AsyncGenerator instance.
-    const queue = generator.AsyncGeneratorQueue;
-    Assert(queue.length > 0, "queue.length > 0");
-    const next = queue.shift();
-    const promiseCapability = next.Capability;
+  function AsyncGeneratorResolve(generator, value, done) {
+    // 1. Assert: generator is an AsyncGenerator instance.
+    // 2. Let queue be generator.[[AsyncGeneratorQueue]].
+    const queue = generator.AsyncGeneratorQueue; // 3. Assert: queue is not an empty List.
 
-    let _temp6 = Call(promiseCapability.Reject, Value.undefined, [exception]);
+    Assert(queue.length > 0, "queue.length > 0"); // 4. Let next be the first element of queue.
+    // 5. Remove the first element from queue.
 
-    Assert(!(_temp6 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [exception])" + ' returned an abrupt completion');
+    const next = queue.shift(); // 6. Let promiseCapability be next.[[Capability]].
+
+    const promiseCapability = next.Capability; // 7. Let iteratorResult be ! CreateIterResultObject(value, done).
+
+    let _temp6 = CreateIterResultObject(value, done);
+
+    Assert(!(_temp6 instanceof AbruptCompletion), "CreateIterResultObject(value, done)" + ' returned an abrupt completion');
     /* c8 ignore if */
 
     /* c8 ignore if */
@@ -30300,15 +30480,66 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp6 = _temp6.Value;
     }
 
-    let _temp7 = AsyncGeneratorResumeNext(generator);
+    const iteratorResult = _temp6; // 8. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iteratorResult »).
 
-    Assert(!(_temp7 instanceof AbruptCompletion), "AsyncGeneratorResumeNext(generator)" + ' returned an abrupt completion');
+    let _temp7 = Call(promiseCapability.Resolve, Value.undefined, [iteratorResult]);
+
+    Assert(!(_temp7 instanceof AbruptCompletion), "Call(promiseCapability.Resolve, Value.undefined, [iteratorResult])" + ' returned an abrupt completion');
     /* c8 ignore if */
 
     /* c8 ignore if */
     if (_temp7 instanceof Completion) {
       _temp7 = _temp7.Value;
     }
+
+    let _temp8 = AsyncGeneratorResumeNext(generator);
+
+    Assert(!(_temp8 instanceof AbruptCompletion), "AsyncGeneratorResumeNext(generator)" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp8 instanceof Completion) {
+      _temp8 = _temp8.Value;
+    }
+
+    return Value.undefined;
+  } // 25.5.3.4 #sec-asyncgeneratorreject
+
+
+  AsyncGeneratorResolve.section = 'https://tc39.es/ecma262/#sec-asyncgeneratorresolve';
+
+  function AsyncGeneratorReject(generator, exception) {
+    // 1. Assert: generator is an AsyncGenerator instance.
+    // 2. Let queue be generator.[[AsyncGeneratorQueue]].
+    const queue = generator.AsyncGeneratorQueue; // 3. Assert: queue is not an empty List.
+
+    Assert(queue.length > 0, "queue.length > 0"); // 4. Let next be the first element of queue.
+    // 5. Remove the first element from queue.
+
+    const next = queue.shift(); // 6. Let promiseCapability be next.[[Capability]].
+
+    const promiseCapability = next.Capability; // 7. Perform ! Call(promiseCapability.[[Reject]], undefined, « exception »).
+
+    let _temp9 = Call(promiseCapability.Reject, Value.undefined, [exception]);
+
+    Assert(!(_temp9 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [exception])" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp9 instanceof Completion) {
+      _temp9 = _temp9.Value;
+    }
+
+    let _temp10 = AsyncGeneratorResumeNext(generator);
+
+    Assert(!(_temp10 instanceof AbruptCompletion), "AsyncGeneratorResumeNext(generator)" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp10 instanceof Completion) {
+      _temp10 = _temp10.Value;
+    }
+
     return Value.undefined;
   } // 25.5.3.5.1 #async-generator-resume-next-return-processor-fulfilled
 
@@ -30319,17 +30550,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const F = exports.surroundingAgent.activeFunctionObject;
     F.Generator.AsyncGeneratorState = 'completed';
 
-    let _temp8 = AsyncGeneratorResolve(F.Generator, value, Value.true);
+    let _temp11 = AsyncGeneratorResolve(F.Generator, value, Value.true);
 
-    Assert(!(_temp8 instanceof AbruptCompletion), "AsyncGeneratorResolve(F.Generator, value, Value.true)" + ' returned an abrupt completion');
+    Assert(!(_temp11 instanceof AbruptCompletion), "AsyncGeneratorResolve(F.Generator, value, Value.true)" + ' returned an abrupt completion');
     /* c8 ignore if */
 
     /* c8 ignore if */
-    if (_temp8 instanceof Completion) {
-      _temp8 = _temp8.Value;
+    if (_temp11 instanceof Completion) {
+      _temp11 = _temp11.Value;
     }
 
-    return _temp8;
+    return _temp11;
   } // 25.5.3.5.2 #async-generator-resume-next-return-processor-rejected
 
 
@@ -30337,22 +30568,21 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const F = exports.surroundingAgent.activeFunctionObject;
     F.Generator.AsyncGeneratorState = 'completed';
 
-    let _temp9 = AsyncGeneratorReject(F.Generator, reason);
+    let _temp12 = AsyncGeneratorReject(F.Generator, reason);
 
-    Assert(!(_temp9 instanceof AbruptCompletion), "AsyncGeneratorReject(F.Generator, reason)" + ' returned an abrupt completion');
+    Assert(!(_temp12 instanceof AbruptCompletion), "AsyncGeneratorReject(F.Generator, reason)" + ' returned an abrupt completion');
     /* c8 ignore if */
 
     /* c8 ignore if */
-    if (_temp9 instanceof Completion) {
-      _temp9 = _temp9.Value;
+    if (_temp12 instanceof Completion) {
+      _temp12 = _temp12.Value;
     }
 
-    return _temp9;
+    return _temp12;
   } // 25.5.3.5 #sec-asyncgeneratorresumenext
 
 
   function AsyncGeneratorResumeNext(generator) {
-    // Assert: generator is an AsyncGenerator instance.
     let state = generator.AsyncGeneratorState;
     Assert(state !== 'executing', "state !== 'executing'");
 
@@ -30380,89 +30610,89 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (completion.Type === 'return') {
           generator.AsyncGeneratorState = 'awaiting-return';
 
-          let _temp10 = PromiseResolve(exports.surroundingAgent.intrinsic('%Promise%'), completion.Value);
+          let _temp13 = PromiseResolve(exports.surroundingAgent.intrinsic('%Promise%'), completion.Value);
           /* c8 ignore if */
 
 
           /* c8 ignore if */
-          if (_temp10 instanceof AbruptCompletion) {
-            return _temp10;
+          if (_temp13 instanceof AbruptCompletion) {
+            return _temp13;
           }
           /* c8 ignore if */
 
-
-          /* c8 ignore if */
-          if (_temp10 instanceof Completion) {
-            _temp10 = _temp10.Value;
-          }
-
-          const promise = _temp10;
-          const stepsFulfilled = AsyncGeneratorResumeNextReturnProcessorFulfilledFunctions;
-
-          let _temp11 = CreateBuiltinFunction(stepsFulfilled, ['Generator']);
-
-          Assert(!(_temp11 instanceof AbruptCompletion), "CreateBuiltinFunction(stepsFulfilled, ['Generator'])" + ' returned an abrupt completion');
-          /* c8 ignore if */
-
-          /* c8 ignore if */
-          if (_temp11 instanceof Completion) {
-            _temp11 = _temp11.Value;
-          }
-
-          const onFulfilled = _temp11;
-          onFulfilled.Generator = generator;
-          const stepsRejected = AsyncGeneratorResumeNextReturnProcessorRejectedFunctions;
-
-          let _temp12 = CreateBuiltinFunction(stepsRejected, ['Generator']);
-
-          Assert(!(_temp12 instanceof AbruptCompletion), "CreateBuiltinFunction(stepsRejected, ['Generator'])" + ' returned an abrupt completion');
-          /* c8 ignore if */
-
-          /* c8 ignore if */
-          if (_temp12 instanceof Completion) {
-            _temp12 = _temp12.Value;
-          }
-
-          const onRejected = _temp12;
-          onRejected.Generator = generator;
-
-          let _temp13 = PerformPromiseThen(promise, onFulfilled, onRejected);
-
-          Assert(!(_temp13 instanceof AbruptCompletion), "PerformPromiseThen(promise, onFulfilled, onRejected)" + ' returned an abrupt completion');
-          /* c8 ignore if */
 
           /* c8 ignore if */
           if (_temp13 instanceof Completion) {
             _temp13 = _temp13.Value;
           }
-          return Value.undefined;
-        } else {
-          Assert(completion.Type === 'throw', "completion.Type === 'throw'");
 
-          let _temp14 = AsyncGeneratorReject(generator, completion.Value);
+          const promise = _temp13;
+          const stepsFulfilled = AsyncGeneratorResumeNextReturnProcessorFulfilledFunctions;
 
-          Assert(!(_temp14 instanceof AbruptCompletion), "AsyncGeneratorReject(generator, completion.Value)" + ' returned an abrupt completion');
+          let _temp14 = CreateBuiltinFunction(stepsFulfilled, ['Generator']);
+
+          Assert(!(_temp14 instanceof AbruptCompletion), "CreateBuiltinFunction(stepsFulfilled, ['Generator'])" + ' returned an abrupt completion');
           /* c8 ignore if */
 
           /* c8 ignore if */
           if (_temp14 instanceof Completion) {
             _temp14 = _temp14.Value;
           }
+
+          const onFulfilled = _temp14;
+          onFulfilled.Generator = generator;
+          const stepsRejected = AsyncGeneratorResumeNextReturnProcessorRejectedFunctions;
+
+          let _temp15 = CreateBuiltinFunction(stepsRejected, ['Generator']);
+
+          Assert(!(_temp15 instanceof AbruptCompletion), "CreateBuiltinFunction(stepsRejected, ['Generator'])" + ' returned an abrupt completion');
+          /* c8 ignore if */
+
+          /* c8 ignore if */
+          if (_temp15 instanceof Completion) {
+            _temp15 = _temp15.Value;
+          }
+
+          const onRejected = _temp15;
+          onRejected.Generator = generator;
+
+          let _temp16 = PerformPromiseThen(promise, onFulfilled, onRejected);
+
+          Assert(!(_temp16 instanceof AbruptCompletion), "PerformPromiseThen(promise, onFulfilled, onRejected)" + ' returned an abrupt completion');
+          /* c8 ignore if */
+
+          /* c8 ignore if */
+          if (_temp16 instanceof Completion) {
+            _temp16 = _temp16.Value;
+          }
+          return Value.undefined;
+        } else {
+          Assert(completion.Type === 'throw', "completion.Type === 'throw'");
+
+          let _temp17 = AsyncGeneratorReject(generator, completion.Value);
+
+          Assert(!(_temp17 instanceof AbruptCompletion), "AsyncGeneratorReject(generator, completion.Value)" + ' returned an abrupt completion');
+          /* c8 ignore if */
+
+          /* c8 ignore if */
+          if (_temp17 instanceof Completion) {
+            _temp17 = _temp17.Value;
+          }
           return Value.undefined;
         }
       }
     } else if (state === 'completed') {
-      let _temp15 = AsyncGeneratorResolve(generator, Value.undefined, Value.true);
+      let _temp18 = AsyncGeneratorResolve(generator, Value.undefined, Value.true);
 
-      Assert(!(_temp15 instanceof AbruptCompletion), "AsyncGeneratorResolve(generator, Value.undefined, Value.true)" + ' returned an abrupt completion');
+      Assert(!(_temp18 instanceof AbruptCompletion), "AsyncGeneratorResolve(generator, Value.undefined, Value.true)" + ' returned an abrupt completion');
       /* c8 ignore if */
 
       /* c8 ignore if */
-      if (_temp15 instanceof Completion) {
-        _temp15 = _temp15.Value;
+      if (_temp18 instanceof Completion) {
+        _temp18 = _temp18.Value;
       }
 
-      return _temp15;
+      return _temp18;
     }
 
     Assert(state === 'suspendedStart' || state === 'suspendedYield', "state === 'suspendedStart' || state === 'suspendedYield'");
@@ -30479,52 +30709,61 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
 
   AsyncGeneratorResumeNext.section = 'https://tc39.es/ecma262/#sec-asyncgeneratorresumenext';
-  function AsyncGeneratorEnqueue(generator, completion) {
-    Assert(completion instanceof Completion, "completion instanceof Completion");
+  function AsyncGeneratorEnqueue(generator, completion, generatorBrand) {
+    Assert(completion instanceof Completion, "completion instanceof Completion"); // 1. Let promiseCapability be ! NewPromiseCapability(%Promise%).
 
-    let _temp16 = NewPromiseCapability(exports.surroundingAgent.intrinsic('%Promise%'));
+    let _temp19 = NewPromiseCapability(exports.surroundingAgent.intrinsic('%Promise%'));
 
-    Assert(!(_temp16 instanceof AbruptCompletion), "NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))" + ' returned an abrupt completion');
+    Assert(!(_temp19 instanceof AbruptCompletion), "NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))" + ' returned an abrupt completion');
     /* c8 ignore if */
 
     /* c8 ignore if */
-    if (_temp16 instanceof Completion) {
-      _temp16 = _temp16.Value;
+    if (_temp19 instanceof Completion) {
+      _temp19 = _temp19.Value;
     }
 
-    const promiseCapability = _temp16;
+    const promiseCapability = _temp19; // 2. Let check be AsyncGeneratorValidate(generator, generatorBrand).
 
-    if (Type(generator) !== 'Object' || !('AsyncGeneratorState' in generator)) {
-      const badGeneratorError = exports.surroundingAgent.Throw('TypeError', 'NotATypeObject', 'AsyncGenerator', generator).Value;
+    const check = AsyncGeneratorValidate(generator, generatorBrand); // 3. If check is an abrupt completion, then
 
-      let _temp17 = Call(promiseCapability.Reject, Value.undefined, [badGeneratorError]);
+    if (check instanceof AbruptCompletion) {
+      // a. Let badGeneratorError be a newly created TypeError object.
+      const badGeneratorError = exports.surroundingAgent.Throw('TypeError', 'NotATypeObject', generatorBrandToErrorMessageType(generatorBrand) || 'AsyncGenerator', generator).Value; // b. Perform ! Call(promiseCapability.[[Reject]], undefined, « badGeneratorError »).
 
-      Assert(!(_temp17 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [badGeneratorError])" + ' returned an abrupt completion');
+      let _temp20 = Call(promiseCapability.Reject, Value.undefined, [badGeneratorError]);
+
+      Assert(!(_temp20 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [badGeneratorError])" + ' returned an abrupt completion');
       /* c8 ignore if */
 
       /* c8 ignore if */
-      if (_temp17 instanceof Completion) {
-        _temp17 = _temp17.Value;
+      if (_temp20 instanceof Completion) {
+        _temp20 = _temp20.Value;
       }
-      return promiseCapability.Promise;
-    }
 
-    const queue = generator.AsyncGeneratorQueue;
-    const request = new AsyncGeneratorRequestRecord(completion, promiseCapability);
-    queue.push(request);
-    const state = generator.AsyncGeneratorState;
+      return promiseCapability.Promise;
+    } // 4. Let queue be generator.[[AsyncGeneratorQueue]].
+
+
+    const queue = generator.AsyncGeneratorQueue; // 5. Let request be AsyncGeneratorRequest { [[Completion]]: completion, [[Capability]]: promiseCapability }.
+
+    const request = new AsyncGeneratorRequestRecord(completion, promiseCapability); // 6. Append request to the end of queue.
+
+    queue.push(request); // 7. Let state be generator.[[AsyncGeneratorState]].
+
+    const state = generator.AsyncGeneratorState; // 8. If state is not executing, then
 
     if (state !== 'executing') {
-      let _temp18 = AsyncGeneratorResumeNext(generator);
+      let _temp21 = AsyncGeneratorResumeNext(generator);
 
-      Assert(!(_temp18 instanceof AbruptCompletion), "AsyncGeneratorResumeNext(generator)" + ' returned an abrupt completion');
+      Assert(!(_temp21 instanceof AbruptCompletion), "AsyncGeneratorResumeNext(generator)" + ' returned an abrupt completion');
       /* c8 ignore if */
 
       /* c8 ignore if */
-      if (_temp18 instanceof Completion) {
-        _temp18 = _temp18.Value;
+      if (_temp21 instanceof Completion) {
+        _temp21 = _temp21.Value;
       }
-    }
+    } // 9. Return promiseCapability.[[Promise]].
+
 
     return promiseCapability.Promise;
   } // #sec-asyncgeneratoryield
@@ -30539,29 +30778,29 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     Assert(GetGeneratorKind() === 'async', "GetGeneratorKind() === 'async'"); // 5. Set value to ? Await(value).
 
-    let _temp19 = yield* Await(value);
+    let _temp22 = yield* Await(value);
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp19 instanceof AbruptCompletion) {
-      return _temp19;
+    if (_temp22 instanceof AbruptCompletion) {
+      return _temp22;
     }
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp19 instanceof Completion) {
-      _temp19 = _temp19.Value;
+    if (_temp22 instanceof Completion) {
+      _temp22 = _temp22.Value;
     }
 
-    value = _temp19; // 6. Set generator.[[AsyncGeneratorState]] to suspendedYield.
+    value = _temp22; // 6. Set generator.[[AsyncGeneratorState]] to suspendedYield.
 
     generator.AsyncGeneratorState = 'suspendedYield'; // 7. Remove genContext from the execution context stack and restore the execution context that is at the top of the execution context stack as the running execution context.
 
     exports.surroundingAgent.executionContextStack.pop(genContext); // 8. Set the code evaluation state of genContext such that when evaluation is resumed with a Completion resumptionValue the following steps will be performed:
 
-    const resumptionValue = EnsureCompletion(yield handleInResume(AsyncGeneratorResolve, generator, value, Value.false)); // a. If resumptionValue.[[Type]] is not return, return Completion(resumptionValue).
+    const resumptionValue = EnsureCompletion(yield handleInResume(AsyncGeneratorResolve, generator, value, Value.false, generator.GeneratorBrand)); // a. If resumptionValue.[[Type]] is not return, return Completion(resumptionValue).
 
     if (resumptionValue.Type !== 'return') {
       return Completion(resumptionValue);
@@ -30582,8 +30821,49 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       Value: awaited.Value,
       Target: undefined
     }); // f. NOTE: When one of the above steps returns, it returns to the evaluation of the YieldExpression production that originally called this abstract operation.
-    // 9. Return ! AsyncGeneratorResolve(generator, value, false).
+    // 9. Return ! AsyncGeneratorResolve(generator, value, false, generator.[[GeneratorBrand]]).
     // 10. NOTE: This returns to the evaluation of the operation that had most previously resumed evaluation of genContext.
+  } // #sec-createasynciteratorfromclosure
+
+  function CreateAsyncIteratorFromClosure(closure, generatorBrand, generatorPrototype) {
+    Assert(typeof closure === 'function', "typeof closure === 'function'"); // 1. NOTE: closure can contain uses of the Await shorthand, and uses of the Yield shorthand to yield an IteratorResult object.
+    // 2. Let internalSlotsList be « [[AsyncGeneratorState]], [[AsyncGeneratorContext]], [[AsyncGeneratorQueue]], [[GeneratorBrand]] ».
+
+    const internalSlotsList = ['AsyncGeneratorState', 'AsyncGeneratorContext', 'AsyncGeneratorQueue', 'GeneratorBrand']; // 3. Let generator be ! OrdinaryObjectCreate(generatorPrototype, internalSlotsList).
+
+    let _temp23 = OrdinaryObjectCreate(generatorPrototype, internalSlotsList);
+
+    Assert(!(_temp23 instanceof AbruptCompletion), "OrdinaryObjectCreate(generatorPrototype, internalSlotsList)" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp23 instanceof Completion) {
+      _temp23 = _temp23.Value;
+    }
+
+    const generator = _temp23; // 4. Set generator.[[GeneratorBrand]] to generatorBrand.
+
+    generator.GeneratorBrand = generatorBrand; // 5. Set generator.[[AsyncGeneratorState]] to undefined.
+
+    generator.AsyncGeneratorState = Value.undefined; // 6. Perform ? AsyncGeneratorStart(generator, closure, generatorBrand).
+
+    let _temp24 = AsyncGeneratorStart(generator, closure);
+    /* c8 ignore if */
+
+
+    /* c8 ignore if */
+    if (_temp24 instanceof AbruptCompletion) {
+      return _temp24;
+    }
+    /* c8 ignore if */
+
+
+    /* c8 ignore if */
+    if (_temp24 instanceof Completion) {
+      _temp24 = _temp24.Value;
+    }
+
+    return generator;
   }
 
   // 6 #sec-ecmascript-data-types-and-values
@@ -32033,33 +32313,39 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     //    for that execution context the following steps will be performed:
 
     genContext.codeEvaluationState = function* resumer() {
-      // a. Let result be the result of evaluating generatorBody.
-      const result = EnsureCompletion(yield* Evaluate(generatorBody)); // b. Assert: If we return here, the generator either threw an exception or
+      // a. If generatorBody is a Parse Node, then
+      //    i. Let result be the result of evaluating generatorBody.
+      // b. Else,
+      //    i. Assert: generatorBody is an Abstract Closure.
+      //    ii. Let result be generatorBody().
+      const result = EnsureCompletion( // Note: Engine262 can only perform the "If generatorBody is an Abstract Closure" check:
+      yield* typeof generatorBody === 'function' ? generatorBody() : Evaluate(generatorBody)); // c. Assert: If we return here, the generator either threw an exception or
       //    performed either an implicit or explicit return.
-      // c. Remove genContext from the execution context stack and restore the execution context
+      // d. Remove genContext from the execution context stack and restore the execution context
       //    that is at the top of the execution context stack as the running execution context.
 
-      exports.surroundingAgent.executionContextStack.pop(genContext); // d. Set generator.[[GeneratorState]] to completed.
+      exports.surroundingAgent.executionContextStack.pop(genContext); // e. Set generator.[[GeneratorState]] to completed.
 
-      generator.GeneratorState = 'completed'; // e. Once a generator enters the completed state it never leaves it and its
+      generator.GeneratorState = 'completed'; // f. Once a generator enters the completed state it never leaves it and its
       //    associated execution context is never resumed. Any execution state associated
       //    with generator can be discarded at this point.
 
-      genContext.codeEvaluationState = null; // f. If result.[[Type]] is normal, let resultValue be undefined.
+      genContext.codeEvaluationState = null; // g. If result.[[Type]] is normal, let resultValue be undefined.
 
       let resultValue;
 
       if (result.Type === 'normal') {
         resultValue = Value.undefined;
       } else if (result.Type === 'return') {
-        // g. Else if result.[[Type]] is return, let resultValue be result.[[Value]].
+        // h. Else if result.[[Type]] is return, let resultValue be result.[[Value]].
         resultValue = result.Value;
       } else {
+        // i. Else,
         // i. Assert: result.[[Type]] is throw.
         Assert(result.Type === 'throw', "result.Type === 'throw'"); // ii. Return Completion(result).
 
         return Completion(result);
-      } // i. Return CreateIterResultObject(resultValue, true).
+      } // j. Return CreateIterResultObject(resultValue, true).
 
 
       let _temp = CreateIterResultObject(resultValue, Value.true);
@@ -32081,9 +32367,26 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     generator.GeneratorState = 'suspendedStart'; // 7. Return NormalCompletion(undefined).
 
     return NormalCompletion(Value.undefined);
+  }
+  function generatorBrandToErrorMessageType(generatorBrand) {
+    let expectedType;
+
+    if (generatorBrand !== undefined) {
+      expectedType = generatorBrand.stringValue();
+
+      if (expectedType.startsWith('%') && expectedType.endsWith('Prototype%')) {
+        expectedType = expectedType.slice(1, -10).trim();
+
+        if (expectedType.endsWith('Iterator')) {
+          expectedType = `${expectedType.slice(0, -8).trim()} Iterator`;
+        }
+      }
+    }
+
+    return expectedType;
   } // #sec-generatorvalidate
 
-  function GeneratorValidate(generator) {
+  function GeneratorValidate(generator, generatorBrand) {
     let _temp2 = RequireInternalSlot(generator, 'GeneratorState');
     /* c8 ignore if */
 
@@ -32100,20 +32403,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp2 = _temp2.Value;
     }
 
-    Assert('GeneratorContext' in generator, "'GeneratorContext' in generator"); // 3. Let state be generator.[[GeneratorState]].
-
-    const state = generator.GeneratorState; // 4. If state is executing, throw a TypeError exception.
-
-    if (state === 'executing') {
-      return exports.surroundingAgent.Throw('TypeError', 'GeneratorRunning');
-    } // 5. Return state.
-
-
-    return state;
-  } // #sec-generatorresume
-
-  function GeneratorResume(generator, value) {
-    let _temp3 = GeneratorValidate(generator);
+    let _temp3 = RequireInternalSlot(generator, 'GeneratorBrand');
     /* c8 ignore if */
 
 
@@ -32129,21 +32419,57 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp3 = _temp3.Value;
     }
 
-    // 1. Let state be ? GeneratorValidate(generator).
-    const state = _temp3; // 2. If state is completed, return CreateIterResultObject(undefined, true).
+    const brand = generator.GeneratorBrand;
+
+    if (brand === undefined || generatorBrand === undefined ? brand !== generatorBrand : SameValue(brand, generatorBrand) === Value.false) {
+      return exports.surroundingAgent.Throw('TypeError', 'NotATypeObject', generatorBrandToErrorMessageType(generatorBrand) || 'Generator', generator);
+    } // 4. Assert: generator also has a [[GeneratorContext]] internal slot.
+
+
+    Assert('GeneratorContext' in generator, "'GeneratorContext' in generator"); // 5. Let state be generator.[[GeneratorState]].
+
+    const state = generator.GeneratorState; // 6. If state is executing, throw a TypeError exception.
+
+    if (state === 'executing') {
+      return exports.surroundingAgent.Throw('TypeError', 'GeneratorRunning');
+    } // 7. Return state.
+
+
+    return state;
+  } // #sec-generatorresume
+
+  function GeneratorResume(generator, value, generatorBrand) {
+    let _temp4 = GeneratorValidate(generator, generatorBrand);
+    /* c8 ignore if */
+
+
+    /* c8 ignore if */
+    if (_temp4 instanceof AbruptCompletion) {
+      return _temp4;
+    }
+    /* c8 ignore if */
+
+
+    /* c8 ignore if */
+    if (_temp4 instanceof Completion) {
+      _temp4 = _temp4.Value;
+    }
+
+    // 1. Let state be ? GeneratorValidate(generator, generatorBrand).
+    const state = _temp4; // 2. If state is completed, return CreateIterResultObject(undefined, true).
 
     if (state === 'completed') {
-      let _temp4 = CreateIterResultObject(Value.undefined, Value.true);
+      let _temp5 = CreateIterResultObject(Value.undefined, Value.true);
 
-      Assert(!(_temp4 instanceof AbruptCompletion), "CreateIterResultObject(Value.undefined, Value.true)" + ' returned an abrupt completion');
+      Assert(!(_temp5 instanceof AbruptCompletion), "CreateIterResultObject(Value.undefined, Value.true)" + ' returned an abrupt completion');
       /* c8 ignore if */
 
       /* c8 ignore if */
-      if (_temp4 instanceof Completion) {
-        _temp4 = _temp4.Value;
+      if (_temp5 instanceof Completion) {
+        _temp5 = _temp5.Value;
       }
 
-      return _temp4;
+      return _temp5;
     } // 3. Assert: state is either suspendedStart or suspendedYield.
 
 
@@ -32168,25 +32494,25 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Completion(result);
   } // #sec-generatorresumeabrupt
 
-  function GeneratorResumeAbrupt(generator, abruptCompletion) {
-    let _temp5 = GeneratorValidate(generator);
+  function GeneratorResumeAbrupt(generator, abruptCompletion, generatorBrand) {
+    let _temp6 = GeneratorValidate(generator, generatorBrand);
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp5 instanceof AbruptCompletion) {
-      return _temp5;
+    if (_temp6 instanceof AbruptCompletion) {
+      return _temp6;
     }
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp5 instanceof Completion) {
-      _temp5 = _temp5.Value;
+    if (_temp6 instanceof Completion) {
+      _temp6 = _temp6.Value;
     }
 
-    // 1. Let state be ? GeneratorValidate(generator).
-    let state = _temp5; // 2. If state is suspendedStart, then
+    // 1. Let state be ? GeneratorValidate(generator, generatorBrand).
+    let state = _temp6; // 2. If state is suspendedStart, then
 
     if (state === 'suspendedStart') {
       // a. Set generator.[[GeneratorState]] to completed.
@@ -32203,18 +32529,18 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (state === 'completed') {
       // a. If abruptCompletion.[[Type]] is return, then
       if (abruptCompletion.Type === 'return') {
-        let _temp6 = CreateIterResultObject(abruptCompletion.Value, Value.true);
+        let _temp7 = CreateIterResultObject(abruptCompletion.Value, Value.true);
 
-        Assert(!(_temp6 instanceof AbruptCompletion), "CreateIterResultObject(abruptCompletion.Value, Value.true)" + ' returned an abrupt completion');
+        Assert(!(_temp7 instanceof AbruptCompletion), "CreateIterResultObject(abruptCompletion.Value, Value.true)" + ' returned an abrupt completion');
         /* c8 ignore if */
 
         /* c8 ignore if */
-        if (_temp6 instanceof Completion) {
-          _temp6 = _temp6.Value;
+        if (_temp7 instanceof Completion) {
+          _temp7 = _temp7.Value;
         }
 
         // i. Return CreateIterResultObject(abruptCompletion.[[Value]], true).
-        return _temp6;
+        return _temp7;
       } // b. Return Completion(abruptCompletion).
 
 
@@ -32282,6 +32608,73 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const resumptionValue = yield NormalCompletion(iterNextObj); // 9. Return NormalCompletion(iterNextObj).
 
     return resumptionValue; // 10. NOTE: this returns to the evaluation of the operation that had most previously resumed evaluation of genContext.
+  } // #sec-yield
+
+  function* Yield(value) {
+    let _temp8 = GetGeneratorKind();
+
+    Assert(!(_temp8 instanceof AbruptCompletion), "GetGeneratorKind()" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp8 instanceof Completion) {
+      _temp8 = _temp8.Value;
+    }
+
+    // 1. Let generatorKind be ! GetGeneratorKind().
+    const generatorKind = _temp8; // 2. If generatorKind is async, then return ? AsyncGeneratorYield(value).
+
+    if (generatorKind === 'async') {
+      return yield* AsyncGeneratorYield(value);
+    } // 3. Else, return ? GeneratorYield(! CreateIterResultObject(value, false)).
+
+
+    let _temp9 = CreateIterResultObject(value, Value.false);
+
+    Assert(!(_temp9 instanceof AbruptCompletion), "CreateIterResultObject(value, Value.false)" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp9 instanceof Completion) {
+      _temp9 = _temp9.Value;
+    }
+
+    return yield* GeneratorYield(_temp9);
+  } // #sec-createiteratorfromclosure
+
+  function CreateIteratorFromClosure(closure, generatorBrand, generatorPrototype) {
+    Assert(typeof closure === 'function', "typeof closure === 'function'"); // 1. NOTE: closure can contain uses of the Yield shorthand to yield an IteratorResult object.
+    // 2. Let internalSlotsList be « [[GeneratorState]], [[GeneratorContext]], [[GeneratorBrand]] ».
+
+    const internalSlotsList = ['GeneratorState', 'GeneratorContext', 'GeneratorBrand']; // 3. Let generator be ! OrdinaryObjectCreate(generatorPrototype, internalSlotsList).
+
+    let _temp10 = OrdinaryObjectCreate(generatorPrototype, internalSlotsList);
+
+    Assert(!(_temp10 instanceof AbruptCompletion), "OrdinaryObjectCreate(generatorPrototype, internalSlotsList)" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp10 instanceof Completion) {
+      _temp10 = _temp10.Value;
+    }
+
+    const generator = _temp10; // 4. Set generator.[[GeneratorBrand]] to generatorBrand.
+
+    generator.GeneratorBrand = generatorBrand; // 5. Set generator.[[GeneratorState]] to undefined.
+
+    generator.GeneratorState = Value.undefined; // 6. Perform ! GeneratorStart(generator, closure).
+
+    let _temp11 = GeneratorStart(generator, closure);
+
+    Assert(!(_temp11 instanceof AbruptCompletion), "GeneratorStart(generator, closure)" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp11 instanceof Completion) {
+      _temp11 = _temp11.Value;
+    }
+
+    return generator;
   }
 
   // 18 #sec-global-object
@@ -33728,53 +34121,35 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   } // 7.4.9 #sec-createlistiteratorRecord
 
   function CreateListIteratorRecord(list) {
-    const iterator = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%IteratorPrototype%'), ['IteratedList', 'ListNextIndex']);
-    iterator.IteratedList = list;
-    iterator.ListNextIndex = 0;
-    const steps = ListIteratorNextSteps;
-
-    let _temp15 = CreateBuiltinFunction(steps, []);
-
-    Assert(!(_temp15 instanceof AbruptCompletion), "CreateBuiltinFunction(steps, [])" + ' returned an abrupt completion');
-    /* c8 ignore if */
-
-    /* c8 ignore if */
-    if (_temp15 instanceof Completion) {
-      _temp15 = _temp15.Value;
-    }
-
-    const next = _temp15;
-    return {
-      Iterator: iterator,
-      NextMethod: next,
-      Done: Value.false
-    };
-  } // 7.4.9.1 #sec-listiterator-next
-
-  function ListIteratorNextSteps(args, {
-    thisValue
-  }) {
-    const O = thisValue;
-    Assert(Type(O) === 'Object', "Type(O) === 'Object'");
-    Assert('IteratedList' in O, "'IteratedList' in O");
-    const list = O.IteratedList;
-    const index = O.ListNextIndex;
-    const len = list.length;
-
-    if (index >= len) {
-      return CreateIterResultObject(Value.undefined, Value.true);
-    }
-
-    O.ListNextIndex += 1;
-    return CreateIterResultObject(list[index], Value.false);
-  } // 25.1.4.1 #sec-createasyncfromsynciterator
+    // 1. Let closure be a new Abstract Closure with no parameters that captures list and performs the following steps when called:
+    const closure = function* closure() {
+      // a. For each element E of list, do
+      for (const E of list) {
+        let _temp15 = yield* Yield(E);
+        /* c8 ignore if */
 
 
-  ListIteratorNextSteps.section = 'https://tc39.es/ecma262/#sec-listiterator-next';
-  function CreateAsyncFromSyncIterator(syncIteratorRecord) {
-    let _temp16 = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%AsyncFromSyncIteratorPrototype%'), ['SyncIteratorRecord']);
+        /* c8 ignore if */
+        if (_temp15 instanceof AbruptCompletion) {
+          return _temp15;
+        }
+        /* c8 ignore if */
 
-    Assert(!(_temp16 instanceof AbruptCompletion), "OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncFromSyncIteratorPrototype%'), [\n    'SyncIteratorRecord',\n  ])" + ' returned an abrupt completion');
+
+        /* c8 ignore if */
+        if (_temp15 instanceof Completion) {
+          _temp15 = _temp15.Value;
+        }
+      } // b. Return undefined.
+
+
+      return NormalCompletion(Value.undefined);
+    }; // 2. Let iterator be ! CreateIteratorFromClosure(closure, empty, %IteratorPrototype%).
+
+
+    let _temp16 = CreateIteratorFromClosure(closure, undefined, exports.surroundingAgent.intrinsic('%IteratorPrototype%'));
+
+    Assert(!(_temp16 instanceof AbruptCompletion), "CreateIteratorFromClosure(closure, undefined, surroundingAgent.intrinsic('%IteratorPrototype%'))" + ' returned an abrupt completion');
     /* c8 ignore if */
 
     /* c8 ignore if */
@@ -33782,12 +34157,19 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp16 = _temp16.Value;
     }
 
-    const asyncIterator = _temp16;
-    asyncIterator.SyncIteratorRecord = syncIteratorRecord;
+    const iterator = _temp16; // 3. Return Record { [[Iterator]]: iterator, [[NextMethod]]: %GeneratorFunction.prototype.prototype.next%, [[Done]]: false }.
 
-    let _temp17 = Get(asyncIterator, new Value('next'));
+    return {
+      Iterator: iterator,
+      NextMethod: exports.surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype.next%'),
+      Done: Value.false
+    };
+  } // 25.1.4.1 #sec-createasyncfromsynciterator
 
-    Assert(!(_temp17 instanceof AbruptCompletion), "Get(asyncIterator, new Value('next'))" + ' returned an abrupt completion');
+  function CreateAsyncFromSyncIterator(syncIteratorRecord) {
+    let _temp17 = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%AsyncFromSyncIteratorPrototype%'), ['SyncIteratorRecord']);
+
+    Assert(!(_temp17 instanceof AbruptCompletion), "OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncFromSyncIteratorPrototype%'), [\n    'SyncIteratorRecord',\n  ])" + ' returned an abrupt completion');
     /* c8 ignore if */
 
     /* c8 ignore if */
@@ -33795,7 +34177,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp17 = _temp17.Value;
     }
 
-    const nextMethod = _temp17;
+    const asyncIterator = _temp17;
+    asyncIterator.SyncIteratorRecord = syncIteratorRecord;
+
+    let _temp18 = Get(asyncIterator, new Value('next'));
+
+    Assert(!(_temp18 instanceof AbruptCompletion), "Get(asyncIterator, new Value('next'))" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp18 instanceof Completion) {
+      _temp18 = _temp18.Value;
+    }
+
+    const nextMethod = _temp18;
     return {
       Iterator: asyncIterator,
       NextMethod: nextMethod,
@@ -33806,17 +34201,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function AsyncFromSyncIteratorValueUnwrapFunctions([value = Value.undefined]) {
     const F = this;
 
-    let _temp18 = CreateIterResultObject(value, F.Done);
+    let _temp19 = CreateIterResultObject(value, F.Done);
 
-    Assert(!(_temp18 instanceof AbruptCompletion), "CreateIterResultObject(value, F.Done)" + ' returned an abrupt completion');
+    Assert(!(_temp19 instanceof AbruptCompletion), "CreateIterResultObject(value, F.Done)" + ' returned an abrupt completion');
     /* c8 ignore if */
 
     /* c8 ignore if */
-    if (_temp18 instanceof Completion) {
-      _temp18 = _temp18.Value;
+    if (_temp19 instanceof Completion) {
+      _temp19 = _temp19.Value;
     }
 
-    return _temp18;
+    return _temp19;
   } // 25.1.4.4 #sec-asyncfromsynciteratorcontinuation
 
 
@@ -33884,27 +34279,27 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     const steps = AsyncFromSyncIteratorValueUnwrapFunctions;
 
-    let _temp19 = CreateBuiltinFunction(steps, ['Done']);
+    let _temp20 = CreateBuiltinFunction(steps, ['Done']);
 
-    Assert(!(_temp19 instanceof AbruptCompletion), "CreateBuiltinFunction(steps, ['Done'])" + ' returned an abrupt completion');
-    /* c8 ignore if */
-
-    /* c8 ignore if */
-    if (_temp19 instanceof Completion) {
-      _temp19 = _temp19.Value;
-    }
-
-    const onFulfilled = _temp19;
-    onFulfilled.Done = done;
-
-    let _temp20 = PerformPromiseThen(valueWrapper, onFulfilled, Value.undefined, promiseCapability);
-
-    Assert(!(_temp20 instanceof AbruptCompletion), "PerformPromiseThen(valueWrapper, onFulfilled, Value.undefined, promiseCapability)" + ' returned an abrupt completion');
+    Assert(!(_temp20 instanceof AbruptCompletion), "CreateBuiltinFunction(steps, ['Done'])" + ' returned an abrupt completion');
     /* c8 ignore if */
 
     /* c8 ignore if */
     if (_temp20 instanceof Completion) {
       _temp20 = _temp20.Value;
+    }
+
+    const onFulfilled = _temp20;
+    onFulfilled.Done = done;
+
+    let _temp21 = PerformPromiseThen(valueWrapper, onFulfilled, Value.undefined, promiseCapability);
+
+    Assert(!(_temp21 instanceof AbruptCompletion), "PerformPromiseThen(valueWrapper, onFulfilled, Value.undefined, promiseCapability)" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp21 instanceof Completion) {
+      _temp21 = _temp21.Value;
     }
     return promiseCapability.Promise;
   }
@@ -51114,139 +51509,148 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     realmRec.Intrinsics['%Date%'] = cons;
   }
 
+  const kRegExpStringIteratorPrototype = new Value('%RegExpStringIteratorPrototype%'); // 21.2.5.8.1 #sec-createregexpstringiterator
+
   function CreateRegExpStringIterator(R, S, global, fullUnicode) {
-    Assert(Type(S) === 'String', "Type(S) === 'String'");
-    Assert(Type(global) === 'Boolean', "Type(global) === 'Boolean'");
-    Assert(Type(fullUnicode) === 'Boolean', "Type(fullUnicode) === 'Boolean'");
-    const iterator = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%RegExpStringIteratorPrototype%'), ['IteratingRegExp', 'IteratedString', 'Global', 'Unicode', 'Done']);
-    iterator.IteratingRegExp = R;
-    iterator.IteratedString = S;
-    iterator.Global = global;
-    iterator.Unicode = fullUnicode;
-    iterator.Done = Value.false;
-    return iterator;
-  } // 21.2.7.1.1 #sec-%regexpstringiteratorprototype%.next
+    // 1. Assert: Type(S) is String.
+    Assert(Type(S) === 'String', "Type(S) === 'String'"); // 2. Assert: Type(global) is Boolean.
 
-  function RegExpStringIteratorPrototype_next(args, {
-    thisValue
-  }) {
-    const O = thisValue;
+    Assert(Type(global) === 'Boolean', "Type(global) === 'Boolean'"); // 3. Assert: Type(fullUnicode) is Boolean.
 
-    if (Type(O) !== 'Object') {
-      return exports.surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp String Iterator', O);
-    }
+    Assert(Type(fullUnicode) === 'Boolean', "Type(fullUnicode) === 'Boolean'"); // 4. Let closure be a new Abstract Closure with no parameters that captures R, S, global, and fullUnicode and performs the following steps when called:
 
-    if (!('IteratingRegExp' in O && 'IteratedString' in O && 'Global' in O && 'Unicode' in O && 'Done' in O)) {
-      return exports.surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp String Iterator', O);
-    }
-
-    if (O.Done === Value.true) {
-      let _temp = CreateIterResultObject(Value.undefined, Value.true);
-
-      Assert(!(_temp instanceof AbruptCompletion), "CreateIterResultObject(Value.undefined, Value.true)" + ' returned an abrupt completion');
-      /* c8 ignore if */
-
-      /* c8 ignore if */
-      if (_temp instanceof Completion) {
-        _temp = _temp.Value;
-      }
-
-      return _temp;
-    }
-
-    const R = O.IteratingRegExp;
-    const S = O.IteratedString;
-    const global = O.Global;
-    const fullUnicode = O.Unicode;
-
-    let _temp2 = RegExpExec(R, S);
-    /* c8 ignore if */
-
-
-    /* c8 ignore if */
-    if (_temp2 instanceof AbruptCompletion) {
-      return _temp2;
-    }
-    /* c8 ignore if */
-
-
-    /* c8 ignore if */
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
-    }
-
-    const match = _temp2;
-
-    if (match === Value.null) {
-      O.Done = Value.true;
-
-      let _temp3 = CreateIterResultObject(Value.undefined, Value.true);
-
-      Assert(!(_temp3 instanceof AbruptCompletion), "CreateIterResultObject(Value.undefined, Value.true)" + ' returned an abrupt completion');
-      /* c8 ignore if */
-
-      /* c8 ignore if */
-      if (_temp3 instanceof Completion) {
-        _temp3 = _temp3.Value;
-      }
-
-      return _temp3;
-    } else {
-      if (global === Value.true) {
-        let _temp4 = Get(match, new Value('0'));
+    const closure = function* closure() {
+      // a. Repeat,
+      while (true) {
+        let _temp = RegExpExec(R, S);
         /* c8 ignore if */
 
 
         /* c8 ignore if */
-        if (_temp4 instanceof AbruptCompletion) {
-          return _temp4;
+        if (_temp instanceof AbruptCompletion) {
+          return _temp;
         }
         /* c8 ignore if */
 
 
         /* c8 ignore if */
-        if (_temp4 instanceof Completion) {
-          _temp4 = _temp4.Value;
+        if (_temp instanceof Completion) {
+          _temp = _temp.Value;
         }
 
-        const matchStrValue = _temp4;
+        // i. Let match be ? RegExpExec(R, S).
+        const match = _temp; // ii. If match is null, return undefined.
 
-        let _temp5 = ToString(matchStrValue);
+        if (match === Value.null) {
+          return Value.undefined;
+        } // iii. If global is false, then
+
+
+        if (global === Value.false) {
+          let _temp2 = yield* Yield(match);
+          /* c8 ignore if */
+
+
+          /* c8 ignore if */
+          if (_temp2 instanceof AbruptCompletion) {
+            return _temp2;
+          }
+          /* c8 ignore if */
+
+
+          /* c8 ignore if */
+          if (_temp2 instanceof Completion) {
+            _temp2 = _temp2.Value;
+          }
+
+          return Value.undefined;
+        } // iv. Let matchStr be ? ToString(? Get(match, "0")).
+
+
+        let _temp9 = Get(match, new Value('0'));
         /* c8 ignore if */
 
 
         /* c8 ignore if */
-        if (_temp5 instanceof AbruptCompletion) {
-          return _temp5;
+        if (_temp9 instanceof AbruptCompletion) {
+          return _temp9;
         }
         /* c8 ignore if */
 
 
         /* c8 ignore if */
-        if (_temp5 instanceof Completion) {
-          _temp5 = _temp5.Value;
+        if (_temp9 instanceof Completion) {
+          _temp9 = _temp9.Value;
         }
 
-        const matchStr = _temp5;
+        let _temp3 = ToString(_temp9);
+        /* c8 ignore if */
+
+
+        /* c8 ignore if */
+        if (_temp3 instanceof AbruptCompletion) {
+          return _temp3;
+        }
+        /* c8 ignore if */
+
+
+        /* c8 ignore if */
+        if (_temp3 instanceof Completion) {
+          _temp3 = _temp3.Value;
+        }
+
+        const matchStr = _temp3; // v. If matchStr is the empty String, then
 
         if (matchStr.stringValue() === '') {
-          let _temp9 = Get(R, new Value('lastIndex'));
+          let _temp7 = Get(R, new Value('lastIndex'));
           /* c8 ignore if */
 
 
           /* c8 ignore if */
-          if (_temp9 instanceof AbruptCompletion) {
-            return _temp9;
+          if (_temp7 instanceof AbruptCompletion) {
+            return _temp7;
           }
           /* c8 ignore if */
 
 
           /* c8 ignore if */
-          if (_temp9 instanceof Completion) {
-            _temp9 = _temp9.Value;
+          if (_temp7 instanceof Completion) {
+            _temp7 = _temp7.Value;
           }
 
-          let _temp6 = ToLength(_temp9);
+          let _temp4 = ToLength(_temp7);
+          /* c8 ignore if */
+
+
+          /* c8 ignore if */
+          if (_temp4 instanceof AbruptCompletion) {
+            return _temp4;
+          }
+          /* c8 ignore if */
+
+
+          /* c8 ignore if */
+          if (_temp4 instanceof Completion) {
+            _temp4 = _temp4.Value;
+          }
+
+          // i. Let thisIndex be ℝ(? ToLength(? Get(R, "lastIndex"))).
+          const thisIndex = _temp4.numberValue(); // ii. Let nextIndex be ! AdvanceStringIndex(S, thisIndex, fullUnicode).
+
+
+          let _temp5 = AdvanceStringIndex(S, thisIndex, fullUnicode);
+
+          Assert(!(_temp5 instanceof AbruptCompletion), "AdvanceStringIndex(S, thisIndex, fullUnicode)" + ' returned an abrupt completion');
+          /* c8 ignore if */
+
+          /* c8 ignore if */
+          if (_temp5 instanceof Completion) {
+            _temp5 = _temp5.Value;
+          }
+
+          const nextIndex = _temp5; // iii. Perform ? Set(R, "lastIndex", 𝔽(nextIndex), true).
+
+          let _temp6 = Set$1(R, new Value('lastIndex'), F(nextIndex), Value.true);
           /* c8 ignore if */
 
 
@@ -51261,46 +51665,46 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           if (_temp6 instanceof Completion) {
             _temp6 = _temp6.Value;
           }
-
-          // i. Let thisIndex be ℝ(? ToLength(? Get(R, "lastIndex"))).
-          const thisIndex = _temp6.numberValue(); // ii. Let nextIndex be ! AdvanceStringIndex(S, thisIndex, fullUnicode).
+        } // vi. Perform ? Yield(match).
 
 
-          let _temp7 = AdvanceStringIndex(S, thisIndex, fullUnicode);
-
-          Assert(!(_temp7 instanceof AbruptCompletion), "AdvanceStringIndex(S, thisIndex, fullUnicode)" + ' returned an abrupt completion');
-          /* c8 ignore if */
-
-          /* c8 ignore if */
-          if (_temp7 instanceof Completion) {
-            _temp7 = _temp7.Value;
-          }
-
-          const nextIndex = _temp7; // iii. Perform ? Set(R, "lastIndex", 𝔽(nextIndex), true).
-
-          let _temp8 = Set$1(R, new Value('lastIndex'), F(nextIndex), Value.true);
-          /* c8 ignore if */
+        let _temp8 = yield* Yield(match);
+        /* c8 ignore if */
 
 
-          /* c8 ignore if */
-          if (_temp8 instanceof AbruptCompletion) {
-            return _temp8;
-          }
-          /* c8 ignore if */
-
-
-          /* c8 ignore if */
-          if (_temp8 instanceof Completion) {
-            _temp8 = _temp8.Value;
-          }
+        /* c8 ignore if */
+        if (_temp8 instanceof AbruptCompletion) {
+          return _temp8;
         }
+        /* c8 ignore if */
 
-        return CreateIterResultObject(match, Value.false);
-      } else {
-        O.Done = Value.true;
-        return CreateIterResultObject(match, Value.false);
+
+        /* c8 ignore if */
+        if (_temp8 instanceof Completion) {
+          _temp8 = _temp8.Value;
+        }
       }
+    }; // 4. Return ! CreateIteratorFromClosure(closure, "%RegExpStringIteratorPrototype%", %RegExpStringIteratorPrototype%).
+
+
+    let _temp10 = CreateIteratorFromClosure(closure, kRegExpStringIteratorPrototype, exports.surroundingAgent.intrinsic('%RegExpStringIteratorPrototype%'));
+
+    Assert(!(_temp10 instanceof AbruptCompletion), "CreateIteratorFromClosure(closure, kRegExpStringIteratorPrototype, surroundingAgent.intrinsic('%RegExpStringIteratorPrototype%'))" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp10 instanceof Completion) {
+      _temp10 = _temp10.Value;
     }
+
+    return _temp10;
+  } // 21.2.7.1.1 #sec-%regexpstringiteratorprototype%.next
+
+  function RegExpStringIteratorPrototype_next(args, {
+    thisValue
+  }) {
+    // 1. Return ? GeneratorResume(this value, empty, "%RegExpStringIteratorPrototype%").
+    return GeneratorResume(thisValue, undefined, kRegExpStringIteratorPrototype);
   }
 
   RegExpStringIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%regexpstringiteratorprototype%.next';
@@ -56284,79 +56688,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     realmRec.Intrinsics['%Reflect%'] = reflect;
   }
 
-  function CreateStringIterator(string) {
-    // 1. Assert: Type(string) is String.
-    Assert(Type(string) === 'String', "Type(string) === 'String'"); // 2. Let iterator be OrdinaryObjectCreate(%StringIteratorPrototype%, « [[IteratedString]], [[StringNextIndex]] »).
-
-    const iterator = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%StringIteratorPrototype%'), ['IteratedString', 'StringNextIndex']); // 3. Set iterator.[[IteratedString]] to string.
-
-    iterator.IteratedString = string; // 4. Set iterator.[[StringNextIndex]] to 0.
-
-    iterator.StringNextIndex = 0; // 5. Return iterator.
-
-    return iterator;
-  } // #sec-%stringiteratorprototype%.next
-
-  function StringIteratorPrototype_next(args, {
-    thisValue
-  }) {
-    // 1. Let O be the this value.
-    const O = thisValue; // 2. If Type(O) is not Object, throw a TypeError exception.
-
-    if (Type(O) !== 'Object') {
-      return exports.surroundingAgent.Throw('TypeError', 'NotATypeObject', 'String Iterator', O);
-    } // 3. If O does not have all of the internal slots of a String Iterator Instance (21.1.5.3), throw a TypeError exception.
-
-
-    if (!('IteratedString' in O && 'StringNextIndex' in O)) {
-      return exports.surroundingAgent.Throw('TypeError', 'NotATypeObject', 'String Iterator', O);
-    } // 4. Let s be O.[[IteratedString]].
-
-
-    const s = O.IteratedString; // 5. Let s be O.[[IteratedString]].
-
-    if (s === Value.undefined) {
-      return CreateIterResultObject(Value.undefined, Value.true);
-    } // 6. If s is undefined, return CreateIterResultObject(undefined, true).
-
-
-    const position = O.StringNextIndex; // 7. Let len be the length of s.
-
-    const len = s.stringValue().length; // 8. If position ≥ len, then
-
-    if (position >= len) {
-      // a. Set O.[[IteratedString]] to undefined.
-      O.IteratedString = Value.undefined; // b. Return CreateIterResultObject(undefined, true).
-
-      return CreateIterResultObject(Value.undefined, Value.true);
-    } // 9. Let cp be ! CodePointAt(s, position).
-
-
-    let _temp = CodePointAt(s.stringValue(), position);
-
-    Assert(!(_temp instanceof AbruptCompletion), "CodePointAt(s.stringValue(), position)" + ' returned an abrupt completion');
-    /* c8 ignore if */
-
-    /* c8 ignore if */
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-
-    const cp = _temp; // 10. Let resultString be the String value containing cp.[[CodeUnitCount]] consecutive code units from s beginning with the code unit at index position.
-
-    const resultString = new Value(s.stringValue().substr(position, cp.CodeUnitCount)); // 11. Set O.[[StringNextIndex]] to position + cp.[[CodeUnitCount]].
-
-    O.StringNextIndex = position + cp.CodeUnitCount; // 12. Return CreateIterResultObject(resultString, false).
-
-    return CreateIterResultObject(resultString, Value.false);
-  }
-
-  StringIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%stringiteratorprototype%.next';
-  function bootstrapStringIteratorPrototype(realmRec) {
-    const proto = bootstrapPrototype(realmRec, [['next', StringIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'String Iterator');
-    realmRec.Intrinsics['%StringIteratorPrototype%'] = proto;
-  }
-
   function thisStringValue(value) {
     if (Type(value) === 'String') {
       return value;
@@ -59013,7 +59344,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp115 = _temp115.Value;
     }
 
-    const O = _temp115;
+    // 1. Let O be ? RequireObjectCoercible(this value).
+    const O = _temp115; // 2. Let s be ? ToString(O).
 
     let _temp116 = ToString(O);
     /* c8 ignore if */
@@ -59031,8 +59363,68 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp116 = _temp116.Value;
     }
 
-    const S = _temp116;
-    return CreateStringIterator(S);
+    const s = _temp116.stringValue(); // 3. Let closure be a new Abstract Closure with no parameters that captures s and performs the following steps when called:
+
+
+    const closure = function* closure() {
+      // a. Let position be 0.
+      let position = 0; // b. Let len be the length of s.
+
+      const len = s.length; // c. Repeat, while position < len,
+
+      while (position < len) {
+        let _temp117 = CodePointAt(s, position);
+
+        Assert(!(_temp117 instanceof AbruptCompletion), "CodePointAt(s, position)" + ' returned an abrupt completion');
+        /* c8 ignore if */
+
+        /* c8 ignore if */
+        if (_temp117 instanceof Completion) {
+          _temp117 = _temp117.Value;
+        }
+
+        // i. Let cp be ! CodePointAt(s, position).
+        const cp = _temp117; // ii. Let nextIndex be position + cp.[[CodeUnitCount]].
+
+        const nextIndex = position + cp.CodeUnitCount; // iii. Let resultString be the substring of s from position to nextIndex.
+
+        const resultString = new Value(s.slice(position, nextIndex)); // iv. Set position to nextIndex.
+
+        position = nextIndex; // v. Perform ? Yield(resultString).
+
+        let _temp118 = yield* Yield(resultString);
+        /* c8 ignore if */
+
+
+        /* c8 ignore if */
+        if (_temp118 instanceof AbruptCompletion) {
+          return _temp118;
+        }
+        /* c8 ignore if */
+
+
+        /* c8 ignore if */
+        if (_temp118 instanceof Completion) {
+          _temp118 = _temp118.Value;
+        }
+      } // d. Return undefined.
+
+
+      return Value.undefined;
+    }; // 4. Return ! CreateIteratorFromClosure(closure, "%StringIteratorPrototype%", %StringIteratorPrototype%).
+
+
+    let _temp119 = CreateIteratorFromClosure(closure, new Value('%StringIteratorPrototype%'), exports.surroundingAgent.intrinsic('%StringIteratorPrototype%'));
+
+    Assert(!(_temp119 instanceof AbruptCompletion), "CreateIteratorFromClosure(closure, new Value('%StringIteratorPrototype%'), surroundingAgent.intrinsic('%StringIteratorPrototype%'))" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp119 instanceof Completion) {
+      _temp119 = _temp119.Value;
+    }
+
+    return _temp119;
   } // https://tc39.es/proposal-item-method/#sec-string.prototype.at
 
 
@@ -59041,62 +59433,62 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function StringProto_at([index = Value.undefined], {
     thisValue
   }) {
-    let _temp117 = RequireObjectCoercible(thisValue);
+    let _temp120 = RequireObjectCoercible(thisValue);
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp117 instanceof AbruptCompletion) {
-      return _temp117;
+    if (_temp120 instanceof AbruptCompletion) {
+      return _temp120;
     }
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp117 instanceof Completion) {
-      _temp117 = _temp117.Value;
+    if (_temp120 instanceof Completion) {
+      _temp120 = _temp120.Value;
     }
 
     // 1. Let O be ? RequireObjectCoercible(this value).
-    const O = _temp117; // 2. Let S be ? ToString(O).
+    const O = _temp120; // 2. Let S be ? ToString(O).
 
-    let _temp118 = ToString(O);
+    let _temp121 = ToString(O);
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp118 instanceof AbruptCompletion) {
-      return _temp118;
+    if (_temp121 instanceof AbruptCompletion) {
+      return _temp121;
     }
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp118 instanceof Completion) {
-      _temp118 = _temp118.Value;
+    if (_temp121 instanceof Completion) {
+      _temp121 = _temp121.Value;
     }
 
-    const S = _temp118; // 3. Let len be the length of S.
+    const S = _temp121; // 3. Let len be the length of S.
 
     const len = S.stringValue().length; // 4. Let relativeIndex be ? ToIntegerOrInfinity(index).
 
-    let _temp119 = ToIntegerOrInfinity(index);
+    let _temp122 = ToIntegerOrInfinity(index);
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp119 instanceof AbruptCompletion) {
-      return _temp119;
+    if (_temp122 instanceof AbruptCompletion) {
+      return _temp122;
     }
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp119 instanceof Completion) {
-      _temp119 = _temp119.Value;
+    if (_temp122 instanceof Completion) {
+      _temp122 = _temp122.Value;
     }
 
-    const relativeIndex = _temp119;
+    const relativeIndex = _temp122;
     let k; // 5. If relativeIndex ≥ 0, then
 
     if (relativeIndex >= 0) {
@@ -59823,295 +60215,26 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     realmRec.Intrinsics['%AsyncIteratorPrototype%'] = proto;
   }
 
+  const kArrayIteratorPrototype = new Value('%ArrayIteratorPrototype%'); // #sec-%arrayiteratorprototype%.next
+
   function ArrayIteratorPrototype_next(args, {
     thisValue
   }) {
-    // 1. Let O be the this value.
-    const O = thisValue; // 2. If Type(O) is not Object, throw a TypeError exception.
-
-    if (Type(O) !== 'Object') {
-      return exports.surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Array Iterator', O);
-    } // 3. If O does not have all of the internal slots of an Array Iterator Instance (22.1.5.3), throw a TypeError exception.
-
-
-    if (!('IteratedArrayLike' in O) || !('ArrayLikeNextIndex' in O) || !('ArrayLikeIterationKind' in O)) {
-      return exports.surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Array Iterator', O);
-    } // 4. Let a be O.[[IteratedArrayLike]].
-
-
-    const a = O.IteratedArrayLike; // 5. If a is undefined, return CreateIterResultObject(undefined, true).
-
-    if (a === Value.undefined) {
-      return CreateIterResultObject(Value.undefined, Value.true);
-    } // 6. Let index be O.[[ArrayLikeNextIndex]].
-
-
-    const index = O.ArrayLikeNextIndex; // 7. Let itemKind be O.[[ArrayLikeIterationKind]].
-
-    const itemKind = O.ArrayLikeIterationKind;
-    let len; // 8. If a has a [[TypedArrayName]] internal slot, then
-
-    if ('TypedArrayName' in a) {
-      // a. If IsDetachedBuffer(a.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
-      if (IsDetachedBuffer(a.ViewedArrayBuffer) === Value.true) {
-        return exports.surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
-      } // b. Let len be a.[[ArrayLength]].
-
-
-      len = a.ArrayLength;
-    } else {
-      let _temp = LengthOfArrayLike(a);
-      /* c8 ignore if */
-
-
-      /* c8 ignore if */
-      if (_temp instanceof AbruptCompletion) {
-        return _temp;
-      }
-      /* c8 ignore if */
-
-
-      /* c8 ignore if */
-      if (_temp instanceof Completion) {
-        _temp = _temp.Value;
-      }
-
-      // 9. Else,
-      // a. Let len be ? LengthOfArrayLike(a).
-      len = _temp;
-    } // 10. If index ≥ len, then
-
-
-    if (index >= len) {
-      // a. Set O.[[IteratedArrayLike]] to undefined.
-      O.IteratedArrayLike = Value.undefined; // b. Return CreateIterResultObject(undefined, true).
-
-      return CreateIterResultObject(Value.undefined, Value.true);
-    } // 11. Set O.[[ArrayLikeNextIndex]] to index + 1.
-
-
-    O.ArrayLikeNextIndex = index + 1; // 12. If itemKind is key, return CreateIterResultObject(index, false).
-
-    if (itemKind === 'key') {
-      return CreateIterResultObject(F(index), Value.false);
-    } // 13. Let elementKey be ! ToString(index).
-
-
-    let _temp2 = ToString(F(index));
-
-    Assert(!(_temp2 instanceof AbruptCompletion), "ToString(F(index))" + ' returned an abrupt completion');
-    /* c8 ignore if */
-
-    /* c8 ignore if */
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
-    }
-
-    const elementKey = _temp2; // 14. Let elementValue be ? Get(a, elementKey).
-
-    let _temp3 = Get(a, elementKey);
-    /* c8 ignore if */
-
-
-    /* c8 ignore if */
-    if (_temp3 instanceof AbruptCompletion) {
-      return _temp3;
-    }
-    /* c8 ignore if */
-
-
-    /* c8 ignore if */
-    if (_temp3 instanceof Completion) {
-      _temp3 = _temp3.Value;
-    }
-
-    const elementValue = _temp3; // 15. If itemKind is value, let result be elementValue.
-
-    let result; // 15. If itemKind is value, let result be elementValue.
-
-    if (itemKind === 'value') {
-      result = elementValue;
-    } else {
-      // 16. Else,
-      // a. Assert: itemKind is key+value.
-      Assert(itemKind === 'key+value', "itemKind === 'key+value'"); // b. Let result be ! CreateArrayFromList(« index, elementValue »).
-
-      let _temp4 = CreateArrayFromList([F(index), elementValue]);
-
-      Assert(!(_temp4 instanceof AbruptCompletion), "CreateArrayFromList([F(index), elementValue])" + ' returned an abrupt completion');
-      /* c8 ignore if */
-
-      /* c8 ignore if */
-      if (_temp4 instanceof Completion) {
-        _temp4 = _temp4.Value;
-      }
-
-      result = _temp4;
-    } // 17. Return CreateIterResultObject(result, false).
-
-
-    return CreateIterResultObject(result, Value.false);
+    // 1. Return ? GeneratorResume(this value, empty, "%ArrayIteratorPrototype%").
+    return GeneratorResume(thisValue, undefined, kArrayIteratorPrototype);
   }
 
-  ArrayIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%arrayiteratorprototype%-object';
+  ArrayIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%arrayiteratorprototype%.next';
   function bootstrapArrayIteratorPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['next', ArrayIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'Array Iterator');
-    realmRec.Intrinsics['%ArrayIterator.prototype%'] = proto;
+    realmRec.Intrinsics['%ArrayIteratorPrototype%'] = proto;
   }
 
-  function MapIteratorPrototype_next(args, {
-    thisValue
-  }) {
-    // 1. Let O be the this value.
-    const O = thisValue; // 2. If Type(O) is not Object, throw a TypeError exception.
-
-    if (Type(O) !== 'Object') {
-      return exports.surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Map Iterator', O);
-    } // 3. If O does not have all of the internal slots of a Map Iterator Instance (23.1.5.3), throw a TypeError exception.
-
-
-    if (!('IteratedMap' in O && 'MapNextIndex' in O && 'MapIterationKind' in O)) {
-      return exports.surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Map Iterator', O);
-    } // 4. Let m be O.[[IteratedMap]].
-
-
-    const m = O.IteratedMap; // 5. Let index be O.[[MapNextIndex]].
-
-    let index = O.MapNextIndex; // 6. Let index be O.[[MapNextIndex]].
-
-    const itemKind = O.MapIterationKind; // 7. If m is undefined, return CreateIterResultObject(undefined, true).
-
-    if (m === Value.undefined) {
-      return CreateIterResultObject(Value.undefined, Value.true);
-    } // 8. Assert: m has a [[MapData]] internal slot.
-
-
-    Assert('MapData' in m, "'MapData' in m"); // 9. Let entries be the List that is m.[[MapData]].
-
-    const entries = m.MapData; // 10. Let numEntries be the number of elements of entries.
-
-    const numEntries = entries.length; // 11. NOTE: numEntries must be redetermined each time this method is evaluated.
-    // 12. Repeat, while index is less than numEntries,
-
-    while (index < numEntries) {
-      // a. Let e be the Record { [[Key]], [[Value]] } that is the value of entries[index].
-      const e = entries[index]; // b. Set index to index + 1.
-
-      index += 1; // c. Set O.[[MapNextIndex]] to index.
-
-      O.MapNextIndex = index; // d. If e.[[Key]] is not empty, then
-
-      if (e.Key !== undefined) {
-        let result; // i. If itemKind is key, let result be e.[[Key]].
-
-        if (itemKind === 'key') {
-          result = e.Key;
-        } else if (itemKind === 'value') {
-          // ii. Else if itemKind is value, let result be e.[[Value]].
-          result = e.Value;
-        } else {
-          // iii. Else,
-          // 1. Assert: itemKind is key+value.
-          Assert(itemKind === 'key+value', "itemKind === 'key+value'"); // 2. Let result be ! CreateArrayFromList(« e.[[Key]], e.[[Value]] »).
-
-          let _temp = CreateArrayFromList([e.Key, e.Value]);
-
-          Assert(!(_temp instanceof AbruptCompletion), "CreateArrayFromList([e.Key, e.Value])" + ' returned an abrupt completion');
-          /* c8 ignore if */
-
-          /* c8 ignore if */
-          if (_temp instanceof Completion) {
-            _temp = _temp.Value;
-          }
-
-          result = _temp;
-        } // iv. Return CreateIterResultObject(result, false).
-
-
-        return CreateIterResultObject(result, Value.false);
-      }
-    } // 13. Set O.[[IteratedMap]] to undefined.
-
-
-    O.IteratedMap = Value.undefined; // 14. Return CreateIterResultObject(undefined, true).
-
-    return CreateIterResultObject(Value.undefined, Value.true);
-  }
-
-  MapIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%mapiteratorprototype%.next';
-  function bootstrapMapIteratorPrototype(realmRec) {
-    const proto = bootstrapPrototype(realmRec, [['next', MapIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'Map Iterator');
-    realmRec.Intrinsics['%MapIteratorPrototype%'] = proto;
-  }
-
-  function SetIteratorPrototype_next(args, {
-    thisValue
-  }) {
-    // 1. Let O be the this value.
-    const O = thisValue; // 2. If Type(O) is not Object, throw a TypeError exception.
-
-    if (Type(O) !== 'Object') {
-      return exports.surroundingAgent.Throw('TypeError', 'InvalidReceiver', 'Set Iterator.prototype.next', O);
-    } // 3. If O does not have all of the internal slots of a Set Iterator Instance (23.2.5.3), throw a TypeError exception.
-
-
-    if (!('IteratedSet' in O && 'SetNextIndex' in O && 'SetIterationKind' in O)) {
-      return exports.surroundingAgent.Throw('TypeError', 'InvalidReceiver', 'Set Iterator.prototype.next', O);
-    } // 4. Let s be O.[[IteratedSet]].
-
-
-    const s = O.IteratedSet; // 5. Let index be O.[[SetNextIndex]].
-
-    let index = O.SetNextIndex; // 6. Let itemKind be O.[[SetIterationKind]].
-
-    const itemKind = O.SetIterationKind; // 7. If s is undefined, return CreateIterResultObject(undefined, true).
-
-    if (s === Value.undefined) {
-      return CreateIterResultObject(Value.undefined, Value.true);
-    } // 8. Assert: s has a [[SetData]] internal slot.
-
-
-    Assert('SetData' in s, "'SetData' in s"); // 9. Let entries be the List that is s.[[SetData]].
-
-    const entries = s.SetData; // 10. Let numEntries be the number of elements of entries.
-
-    const numEntries = entries.length; // 11. NOTE: numEntries must be redetermined each time this method is evaluated.
-
-    while (index < numEntries) {
-      // a. Repeat, while index is less than numEntries,
-      const e = entries[index]; // b. Set index to index + 1.
-
-      index += 1; // c. Set O.[[SetNextIndex]] to index.
-
-      O.SetNextIndex = index; // e. If e is not empty, then
-
-      if (e !== undefined) {
-        // i. If itemKind is key+value, then
-        if (itemKind === 'key+value') {
-          // 1. If itemKind is key+value, then
-          return CreateIterResultObject(CreateArrayFromList([e, e]), Value.false);
-        } // ii. Assert: itemKind is value.
-
-
-        Assert(itemKind === 'value', "itemKind === 'value'"); // iii. Return CreateIterResultObject(e, false).
-
-        return CreateIterResultObject(e, Value.false);
-      }
-    } // 13. Set O.[[IteratedSet]] to undefined.
-
-
-    O.IteratedSet = Value.undefined; // 14. Return CreateIterResultObject(undefined, true).
-
-    return CreateIterResultObject(Value.undefined, Value.true);
-  }
-
-  SetIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%setiteratorprototype%.next';
-  function bootstrapSetIteratorPrototype(realmRec) {
-    const proto = bootstrapPrototype(realmRec, [['next', SetIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'Set Iterator');
-    realmRec.Intrinsics['%SetIteratorPrototype%'] = proto;
-  }
+  const kMapIteratorPrototype = new Value('%MapIteratorPrototype%'); // #sec-createmapiterator
 
   function CreateMapIterator(map, kind) {
+    Assert(kind === 'key+value' || kind === 'key' || kind === 'value', "kind === 'key+value' || kind === 'key' || kind === 'value'"); // 1. Perform ? RequireInternalSlot(map, [[MapData]]).
+
     let _temp = RequireInternalSlot(map, 'MapData');
     /* c8 ignore if */
 
@@ -60127,13 +60250,236 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
     }
-    const iterator = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%MapIteratorPrototype%'), ['IteratedMap', 'MapNextIndex', 'MapIterationKind']);
-    iterator.IteratedMap = map;
-    iterator.MapNextIndex = 0;
-    iterator.MapIterationKind = kind;
-    return iterator;
-  } // #sec-map.prototype.clear
 
+    const closure = function* closure() {
+      // a. Let entries be the List that is map.[[MapData]].
+      const entries = map.MapData; // b. Let index be 0.
+
+      let index = 0; // c. Let numEntries be the number of elements of entries.
+
+      let numEntries = entries.length; // d. Repeat, while index < numEntries,
+
+      while (index < numEntries) {
+        // i. Let e be the Record { [[Key]], [[Value]] } that is the value of entries[index].
+        const e = entries[index]; // ii. Set index to index + 1.
+
+        index += 1; // iii. If e.[[Key]] is not empty, then
+
+        if (e.Key !== undefined) {
+          let result; // 1. If kind is key, let result be e.[[Key]].
+
+          if (kind === 'key') {
+            result = e.Key;
+          } else if (kind === 'value') {
+            // 2. Else if kind is value, let result be e.[[Value]].
+            result = e.Value;
+          } else {
+            // 3. Else,
+            // a. Assert: kind is key+value.
+            Assert(kind === 'key+value', "kind === 'key+value'"); // b. Let result be ! CreateArrayFromList(« e.[[Key]], e.[[Value]] »).
+
+            let _temp2 = CreateArrayFromList([e.Key, e.Value]);
+
+            Assert(!(_temp2 instanceof AbruptCompletion), "CreateArrayFromList([e.Key, e.Value])" + ' returned an abrupt completion');
+            /* c8 ignore if */
+
+            /* c8 ignore if */
+            if (_temp2 instanceof Completion) {
+              _temp2 = _temp2.Value;
+            }
+
+            result = _temp2;
+          } // 4. Perform ? Yield(result).
+
+
+          let _temp3 = yield* Yield(result);
+          /* c8 ignore if */
+
+
+          /* c8 ignore if */
+          if (_temp3 instanceof AbruptCompletion) {
+            return _temp3;
+          }
+          /* c8 ignore if */
+
+
+          /* c8 ignore if */
+          if (_temp3 instanceof Completion) {
+            _temp3 = _temp3.Value;
+          }
+        } // iv. Set numEntries to the number of elements of entries.
+
+
+        numEntries = entries.length;
+      } // e. Return undefined.
+
+
+      return Value.undefined;
+    }; // 3. Return ! CreateIteratorFromClosure(closure, "%MapIteratorPrototype%", %MapIteratorPrototype%).
+
+
+    let _temp4 = CreateIteratorFromClosure(closure, kMapIteratorPrototype, exports.surroundingAgent.intrinsic('%MapIteratorPrototype%'));
+
+    Assert(!(_temp4 instanceof AbruptCompletion), "CreateIteratorFromClosure(closure, kMapIteratorPrototype, surroundingAgent.intrinsic('%MapIteratorPrototype%'))" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp4 instanceof Completion) {
+      _temp4 = _temp4.Value;
+    }
+
+    return _temp4;
+  } // #sec-%mapiteratorprototype%.next
+
+  function MapIteratorPrototype_next(args, {
+    thisValue
+  }) {
+    // 1. Return ? GeneratorResume(this value, empty, "%MapIteratorPrototype%")
+    return GeneratorResume(thisValue, undefined, kMapIteratorPrototype);
+  }
+
+  MapIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%mapiteratorprototype%.next';
+  function bootstrapMapIteratorPrototype(realmRec) {
+    const proto = bootstrapPrototype(realmRec, [['next', MapIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'Map Iterator');
+    realmRec.Intrinsics['%MapIteratorPrototype%'] = proto;
+  }
+
+  const kSetIteratorPrototype = new Value('%SetIteratorPrototype%'); // 23.2.5.1 #sec-createsetiterator
+
+  function CreateSetIterator(set, kind) {
+    // 1. Assert: kind is key+value or value.
+    Assert(kind === 'key+value' || kind === 'value', "kind === 'key+value' || kind === 'value'"); // 2. Perform ? RequireInternalSlot(set, [[SetData]]).
+
+    let _temp = RequireInternalSlot(set, 'SetData');
+    /* c8 ignore if */
+
+
+    /* c8 ignore if */
+    if (_temp instanceof AbruptCompletion) {
+      return _temp;
+    }
+    /* c8 ignore if */
+
+
+    /* c8 ignore if */
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    const closure = function* closure() {
+      // a. Let index be 0.
+      let index = 0; // b. Let entries be the List that is set.[[SetData]].
+
+      const entries = set.SetData; // c. Let numEntries be the number of elements of entries.
+
+      let numEntries = entries.length; // d. Repeat, while index < numEntries,
+
+      while (index < numEntries) {
+        // i. Let e be entries[index].
+        const e = entries[index]; // ii. Set index to index + 1.
+
+        index += 1; // iii. If e is not empty, then
+
+        if (e !== undefined) {
+          // 1. If kind is key+value, then
+          if (kind === 'key+value') {
+            let _temp3 = CreateArrayFromList([e, e]);
+
+            Assert(!(_temp3 instanceof AbruptCompletion), "CreateArrayFromList([e, e])" + ' returned an abrupt completion');
+            /* c8 ignore if */
+
+            /* c8 ignore if */
+            if (_temp3 instanceof Completion) {
+              _temp3 = _temp3.Value;
+            }
+
+            let _temp2 = yield* Yield(_temp3);
+            /* c8 ignore if */
+
+
+            /* c8 ignore if */
+            if (_temp2 instanceof AbruptCompletion) {
+              return _temp2;
+            }
+            /* c8 ignore if */
+
+
+            /* c8 ignore if */
+            if (_temp2 instanceof Completion) {
+              _temp2 = _temp2.Value;
+            }
+          } else {
+            // 2. Else,
+            // a. Assert: kind is value.
+            Assert(kind === 'value', "kind === 'value'"); // b. Perform ? Yield(e).
+
+            let _temp4 = yield* Yield(e);
+            /* c8 ignore if */
+
+
+            /* c8 ignore if */
+            if (_temp4 instanceof AbruptCompletion) {
+              return _temp4;
+            }
+            /* c8 ignore if */
+
+
+            /* c8 ignore if */
+            if (_temp4 instanceof Completion) {
+              _temp4 = _temp4.Value;
+            }
+          }
+        } // iv. Set numEntries to the number of elements of entries.
+
+
+        numEntries = entries.length;
+      } // e. Return undefined.
+
+
+      return Value.undefined;
+    }; // 4. Return ! CreateIteratorFromClosure(closure, "%SetIteratorPrototype%", %SetIteratorPrototype%).
+
+
+    let _temp5 = CreateIteratorFromClosure(closure, kSetIteratorPrototype, exports.surroundingAgent.intrinsic('%SetIteratorPrototype%'));
+
+    Assert(!(_temp5 instanceof AbruptCompletion), "CreateIteratorFromClosure(closure, kSetIteratorPrototype, surroundingAgent.intrinsic('%SetIteratorPrototype%'))" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp5 instanceof Completion) {
+      _temp5 = _temp5.Value;
+    }
+
+    return _temp5;
+  } // #sec-%setiteratorprototype%.next
+
+  function SetIteratorPrototype_next(args, {
+    thisValue
+  }) {
+    // 1. Return ? GeneratorResume(this value, empty, "%SetIteratorPrototype%").
+    return GeneratorResume(thisValue, undefined, kSetIteratorPrototype);
+  }
+
+  SetIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%setiteratorprototype%.next';
+  function bootstrapSetIteratorPrototype(realmRec) {
+    const proto = bootstrapPrototype(realmRec, [['next', SetIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'Set Iterator');
+    realmRec.Intrinsics['%SetIteratorPrototype%'] = proto;
+  }
+
+  const kStringIteratorPrototype = new Value('%StringIteratorPrototype%'); // #sec-%stringiteratorprototype%.next
+
+  function StringIteratorPrototype_next(args, {
+    thisValue
+  }) {
+    // 1. Return ? GeneratorResume(this value, empty, "%StringIteratorPrototype%").
+    return GeneratorResume(thisValue, undefined, kStringIteratorPrototype);
+  }
+
+  StringIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%stringiteratorprototype%.next';
+  function bootstrapStringIteratorPrototype(realmRec) {
+    const proto = bootstrapPrototype(realmRec, [['next', StringIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'String Iterator');
+    realmRec.Intrinsics['%StringIteratorPrototype%'] = proto;
+  }
 
   function MapProto_clear(args, {
     thisValue
@@ -60141,20 +60487,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let M be the this value.
     const M = thisValue; // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
 
-    let _temp2 = RequireInternalSlot(M, 'MapData');
+    let _temp = RequireInternalSlot(M, 'MapData');
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp2 instanceof AbruptCompletion) {
-      return _temp2;
+    if (_temp instanceof AbruptCompletion) {
+      return _temp;
     }
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
     }
 
     const entries = M.MapData; // 4. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
@@ -60179,20 +60525,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let M be the this value.
     const M = thisValue; // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
 
-    let _temp3 = RequireInternalSlot(M, 'MapData');
+    let _temp2 = RequireInternalSlot(M, 'MapData');
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp3 instanceof AbruptCompletion) {
-      return _temp3;
+    if (_temp2 instanceof AbruptCompletion) {
+      return _temp2;
     }
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp3 instanceof Completion) {
-      _temp3 = _temp3.Value;
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
     }
 
     const entries = M.MapData; // 4. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
@@ -60233,20 +60579,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let M be the this value.
     const M = thisValue; // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
 
-    let _temp4 = RequireInternalSlot(M, 'MapData');
+    let _temp3 = RequireInternalSlot(M, 'MapData');
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp4 instanceof AbruptCompletion) {
-      return _temp4;
+    if (_temp3 instanceof AbruptCompletion) {
+      return _temp3;
     }
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp4 instanceof Completion) {
-      _temp4 = _temp4.Value;
+    if (_temp3 instanceof Completion) {
+      _temp3 = _temp3.Value;
     }
 
     if (IsCallable(callbackfn) === Value.false) {
@@ -60259,20 +60605,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     for (const e of entries) {
       // a. If e.[[Key]] is not empty, then
       if (e.Key !== undefined) {
-        let _temp5 = Call(callbackfn, thisArg, [e.Value, e.Key, M]);
+        let _temp4 = Call(callbackfn, thisArg, [e.Value, e.Key, M]);
         /* c8 ignore if */
 
 
         /* c8 ignore if */
-        if (_temp5 instanceof AbruptCompletion) {
-          return _temp5;
+        if (_temp4 instanceof AbruptCompletion) {
+          return _temp4;
         }
         /* c8 ignore if */
 
 
         /* c8 ignore if */
-        if (_temp5 instanceof Completion) {
-          _temp5 = _temp5.Value;
+        if (_temp4 instanceof Completion) {
+          _temp4 = _temp4.Value;
         }
       }
     } // 6. Return undefined.
@@ -60290,20 +60636,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let M be the this value.
     const M = thisValue; // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
 
-    let _temp6 = RequireInternalSlot(M, 'MapData');
+    let _temp5 = RequireInternalSlot(M, 'MapData');
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp6 instanceof AbruptCompletion) {
-      return _temp6;
+    if (_temp5 instanceof AbruptCompletion) {
+      return _temp5;
     }
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp6 instanceof Completion) {
-      _temp6 = _temp6.Value;
+    if (_temp5 instanceof Completion) {
+      _temp5 = _temp5.Value;
     }
 
     const entries = M.MapData; // 4. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
@@ -60329,20 +60675,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let M be the this value.
     const M = thisValue; // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
 
-    let _temp7 = RequireInternalSlot(M, 'MapData');
+    let _temp6 = RequireInternalSlot(M, 'MapData');
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp7 instanceof AbruptCompletion) {
-      return _temp7;
+    if (_temp6 instanceof AbruptCompletion) {
+      return _temp6;
     }
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp7 instanceof Completion) {
-      _temp7 = _temp7.Value;
+    if (_temp6 instanceof Completion) {
+      _temp6 = _temp6.Value;
     }
 
     const entries = M.MapData; // 4. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
@@ -60379,20 +60725,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let M be the this value.
     const M = thisValue; // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
 
-    let _temp8 = RequireInternalSlot(M, 'MapData');
+    let _temp7 = RequireInternalSlot(M, 'MapData');
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp8 instanceof AbruptCompletion) {
-      return _temp8;
+    if (_temp7 instanceof AbruptCompletion) {
+      return _temp7;
     }
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp8 instanceof Completion) {
-      _temp8 = _temp8.Value;
+    if (_temp7 instanceof Completion) {
+      _temp7 = _temp7.Value;
     }
 
     const entries = M.MapData; // 4. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
@@ -60432,20 +60778,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let M be the this value.
     const M = thisValue; // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
 
-    let _temp9 = RequireInternalSlot(M, 'MapData');
+    let _temp8 = RequireInternalSlot(M, 'MapData');
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp9 instanceof AbruptCompletion) {
-      return _temp9;
+    if (_temp8 instanceof AbruptCompletion) {
+      return _temp8;
     }
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp9 instanceof Completion) {
-      _temp9 = _temp9.Value;
+    if (_temp8 instanceof Completion) {
+      _temp8 = _temp8.Value;
     }
 
     const entries = M.MapData; // 4. Let count be 0.
@@ -60479,32 +60825,37 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function bootstrapMapPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['clear', MapProto_clear, 0], ['delete', MapProto_delete, 1], ['entries', MapProto_entries, 0], ['forEach', MapProto_forEach, 1], ['get', MapProto_get, 1], ['has', MapProto_has, 1], ['keys', MapProto_keys, 0], ['set', MapProto_set, 2], ['size', [MapProto_sizeGetter]], ['values', MapProto_values, 0]], realmRec.Intrinsics['%Object.prototype%'], 'Map');
 
-    let _temp10 = proto.GetOwnProperty(new Value('entries'));
+    let _temp9 = proto.GetOwnProperty(new Value('entries'));
 
-    Assert(!(_temp10 instanceof AbruptCompletion), "proto.GetOwnProperty(new Value('entries'))" + ' returned an abrupt completion');
+    Assert(!(_temp9 instanceof AbruptCompletion), "proto.GetOwnProperty(new Value('entries'))" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp9 instanceof Completion) {
+      _temp9 = _temp9.Value;
+    }
+
+    const entriesFunc = _temp9;
+
+    let _temp10 = proto.DefineOwnProperty(wellKnownSymbols.iterator, entriesFunc);
+
+    Assert(!(_temp10 instanceof AbruptCompletion), "proto.DefineOwnProperty(wellKnownSymbols.iterator, entriesFunc)" + ' returned an abrupt completion');
     /* c8 ignore if */
 
     /* c8 ignore if */
     if (_temp10 instanceof Completion) {
       _temp10 = _temp10.Value;
     }
-
-    const entriesFunc = _temp10;
-
-    let _temp11 = proto.DefineOwnProperty(wellKnownSymbols.iterator, entriesFunc);
-
-    Assert(!(_temp11 instanceof AbruptCompletion), "proto.DefineOwnProperty(wellKnownSymbols.iterator, entriesFunc)" + ' returned an abrupt completion');
-    /* c8 ignore if */
-
-    /* c8 ignore if */
-    if (_temp11 instanceof Completion) {
-      _temp11 = _temp11.Value;
-    }
     realmRec.Intrinsics['%Map.prototype%'] = proto;
   }
 
-  function CreateSetIterator(set, kind) {
-    let _temp = RequireInternalSlot(set, 'SetData');
+  function SetProto_add([value = Value.undefined], {
+    thisValue
+  }) {
+    // 1. Let S be the this value.
+    const S = thisValue; // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
+
+    let _temp = RequireInternalSlot(S, 'SetData');
     /* c8 ignore if */
 
 
@@ -60518,37 +60869,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     /* c8 ignore if */
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
-    }
-    const iterator = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%SetIteratorPrototype%'), ['IteratedSet', 'SetNextIndex', 'SetIterationKind']);
-    iterator.IteratedSet = set;
-    iterator.SetNextIndex = 0;
-    iterator.SetIterationKind = kind;
-    return iterator;
-  } // #sec-set.prototype.add
-
-
-  CreateSetIterator.section = 'https://tc39.es/ecma262/#sec-createsetiterator';
-
-  function SetProto_add([value = Value.undefined], {
-    thisValue
-  }) {
-    // 1. Let S be the this value.
-    const S = thisValue; // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
-
-    let _temp2 = RequireInternalSlot(S, 'SetData');
-    /* c8 ignore if */
-
-
-    /* c8 ignore if */
-    if (_temp2 instanceof AbruptCompletion) {
-      return _temp2;
-    }
-    /* c8 ignore if */
-
-
-    /* c8 ignore if */
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
     }
 
     const entries = S.SetData; // 4. For each e that is an element of entries, do
@@ -60581,20 +60901,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let S be the this value.
     const S = thisValue; // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
 
-    let _temp3 = RequireInternalSlot(S, 'SetData');
+    let _temp2 = RequireInternalSlot(S, 'SetData');
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp3 instanceof AbruptCompletion) {
-      return _temp3;
+    if (_temp2 instanceof AbruptCompletion) {
+      return _temp2;
     }
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp3 instanceof Completion) {
-      _temp3 = _temp3.Value;
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
     }
 
     const entries = S.SetData; // 4. For each e that is an element of entries, do
@@ -60617,20 +60937,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let S be the this value.
     const S = thisValue; // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
 
-    let _temp4 = RequireInternalSlot(S, 'SetData');
+    let _temp3 = RequireInternalSlot(S, 'SetData');
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp4 instanceof AbruptCompletion) {
-      return _temp4;
+    if (_temp3 instanceof AbruptCompletion) {
+      return _temp3;
     }
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp4 instanceof Completion) {
-      _temp4 = _temp4.Value;
+    if (_temp3 instanceof Completion) {
+      _temp3 = _temp3.Value;
     }
 
     const entries = S.SetData; // 4. For each e that is an element of entries, do
@@ -60671,20 +60991,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let S be the this value.
     const S = thisValue; // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
 
-    let _temp5 = RequireInternalSlot(S, 'SetData');
+    let _temp4 = RequireInternalSlot(S, 'SetData');
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp5 instanceof AbruptCompletion) {
-      return _temp5;
+    if (_temp4 instanceof AbruptCompletion) {
+      return _temp4;
     }
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp5 instanceof Completion) {
-      _temp5 = _temp5.Value;
+    if (_temp4 instanceof Completion) {
+      _temp4 = _temp4.Value;
     }
 
     if (IsCallable(callbackfn) === Value.false) {
@@ -60697,20 +61017,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     for (const e of entries) {
       // a. If e is not empty, then
       if (e !== undefined) {
-        let _temp6 = Call(callbackfn, thisArg, [e, e, S]);
+        let _temp5 = Call(callbackfn, thisArg, [e, e, S]);
         /* c8 ignore if */
 
 
         /* c8 ignore if */
-        if (_temp6 instanceof AbruptCompletion) {
-          return _temp6;
+        if (_temp5 instanceof AbruptCompletion) {
+          return _temp5;
         }
         /* c8 ignore if */
 
 
         /* c8 ignore if */
-        if (_temp6 instanceof Completion) {
-          _temp6 = _temp6.Value;
+        if (_temp5 instanceof Completion) {
+          _temp5 = _temp5.Value;
         }
       }
     } // 6. Return undefined.
@@ -60728,20 +61048,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let S be the this value.
     const S = thisValue; // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
 
-    let _temp7 = RequireInternalSlot(S, 'SetData');
+    let _temp6 = RequireInternalSlot(S, 'SetData');
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp7 instanceof AbruptCompletion) {
-      return _temp7;
+    if (_temp6 instanceof AbruptCompletion) {
+      return _temp6;
     }
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp7 instanceof Completion) {
-      _temp7 = _temp7.Value;
+    if (_temp6 instanceof Completion) {
+      _temp6 = _temp6.Value;
     }
 
     const entries = S.SetData; // 4. Let entries be the List that is S.[[SetData]].
@@ -60766,20 +61086,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let S be the this value.
     const S = thisValue; // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
 
-    let _temp8 = RequireInternalSlot(S, 'SetData');
+    let _temp7 = RequireInternalSlot(S, 'SetData');
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp8 instanceof AbruptCompletion) {
-      return _temp8;
+    if (_temp7 instanceof AbruptCompletion) {
+      return _temp7;
     }
     /* c8 ignore if */
 
 
     /* c8 ignore if */
-    if (_temp8 instanceof Completion) {
-      _temp8 = _temp8.Value;
+    if (_temp7 instanceof Completion) {
+      _temp7 = _temp7.Value;
     }
 
     const entries = S.SetData; // 4. Let count be 0.
@@ -60813,9 +61133,21 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function bootstrapSetPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['add', SetProto_add, 1], ['clear', SetProto_clear, 0], ['delete', SetProto_delete, 1], ['entries', SetProto_entries, 0], ['forEach', SetProto_forEach, 1], ['has', SetProto_has, 1], ['size', [SetProto_sizeGetter]], ['values', SetProto_values, 0]], realmRec.Intrinsics['%Object.prototype%'], 'Set');
 
-    let _temp9 = proto.GetOwnProperty(new Value('values'));
+    let _temp8 = proto.GetOwnProperty(new Value('values'));
 
-    Assert(!(_temp9 instanceof AbruptCompletion), "proto.GetOwnProperty(new Value('values'))" + ' returned an abrupt completion');
+    Assert(!(_temp8 instanceof AbruptCompletion), "proto.GetOwnProperty(new Value('values'))" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp8 instanceof Completion) {
+      _temp8 = _temp8.Value;
+    }
+
+    const valuesFunc = _temp8;
+
+    let _temp9 = proto.DefineOwnProperty(new Value('keys'), valuesFunc);
+
+    Assert(!(_temp9 instanceof AbruptCompletion), "proto.DefineOwnProperty(new Value('keys'), valuesFunc)" + ' returned an abrupt completion');
     /* c8 ignore if */
 
     /* c8 ignore if */
@@ -60823,26 +61155,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp9 = _temp9.Value;
     }
 
-    const valuesFunc = _temp9;
+    let _temp10 = proto.DefineOwnProperty(wellKnownSymbols.iterator, valuesFunc);
 
-    let _temp10 = proto.DefineOwnProperty(new Value('keys'), valuesFunc);
-
-    Assert(!(_temp10 instanceof AbruptCompletion), "proto.DefineOwnProperty(new Value('keys'), valuesFunc)" + ' returned an abrupt completion');
+    Assert(!(_temp10 instanceof AbruptCompletion), "proto.DefineOwnProperty(wellKnownSymbols.iterator, valuesFunc)" + ' returned an abrupt completion');
     /* c8 ignore if */
 
     /* c8 ignore if */
     if (_temp10 instanceof Completion) {
       _temp10 = _temp10.Value;
-    }
-
-    let _temp11 = proto.DefineOwnProperty(wellKnownSymbols.iterator, valuesFunc);
-
-    Assert(!(_temp11 instanceof AbruptCompletion), "proto.DefineOwnProperty(wellKnownSymbols.iterator, valuesFunc)" + ' returned an abrupt completion');
-    /* c8 ignore if */
-
-    /* c8 ignore if */
-    if (_temp11 instanceof Completion) {
-      _temp11 = _temp11.Value;
     }
     realmRec.Intrinsics['%Set.prototype%'] = proto;
   }
@@ -60993,9 +61313,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     thisValue
   }) {
     // 1. Let g be the this value.
-    const g = thisValue; // 2. Return ? GeneratorResume(g, value).
+    const g = thisValue; // 2. Return ? GeneratorResume(g, value, empty).
 
-    return GeneratorResume(g, value);
+    return GeneratorResume(g, value, undefined);
   } // #sec-generator.prototype.return
 
 
@@ -61011,9 +61331,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       Type: 'return',
       Value: value,
       Target: undefined
-    }); // 3. Return ? GeneratorResumeAbrupt(g, C).
+    }); // 3. Return ? GeneratorResumeAbrupt(g, C, empty).
 
-    return GeneratorResumeAbrupt(g, C);
+    return GeneratorResumeAbrupt(g, C, undefined);
   } // #sec-generator.prototype.throw
 
 
@@ -61025,15 +61345,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let g be the this value.
     const g = thisValue; // 2. Let C be ThrowCompletion(exception).
 
-    const C = ThrowCompletion(exception); // 3. Return ? GeneratorResumeAbrupt(g, C).
+    const C = ThrowCompletion(exception); // 3. Return ? GeneratorResumeAbrupt(g, C, empty).
 
-    return GeneratorResumeAbrupt(g, C);
+    return GeneratorResumeAbrupt(g, C, undefined);
   }
 
   GeneratorProto_throw.section = 'https://tc39.es/ecma262/#sec-generator.prototype.throw';
   function bootstrapGeneratorFunctionPrototypePrototype(realmRec) {
     const generatorPrototype = bootstrapPrototype(realmRec, [['next', GeneratorProto_next, 1], ['return', GeneratorProto_return, 1], ['throw', GeneratorProto_throw, 1]], realmRec.Intrinsics['%IteratorPrototype%'], 'Generator');
-    realmRec.Intrinsics['%GeneratorFunction.prototype.prototype%'] = generatorPrototype;
+    realmRec.Intrinsics['%GeneratorFunction.prototype.prototype%'] = generatorPrototype; // Used by `CreateListIteratorRecord`:
+
+    realmRec.Intrinsics['%GeneratorFunction.prototype.prototype.next%'] = generatorPrototype.Get(new Value('next'));
   }
 
   function bootstrapGeneratorFunctionPrototype(realmRec) {
@@ -61134,11 +61456,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let generator be the this value.
     const generator = thisValue; // 2. Let completion be NormalCompletion(value).
 
-    const completion = NormalCompletion(value); // 3. Return ! AsyncGeneratorEnqueue(generator, completion).
+    const completion = NormalCompletion(value); // 3. Return ! AsyncGeneratorEnqueue(generator, completion, empty).
 
-    let _temp = AsyncGeneratorEnqueue(generator, completion);
+    let _temp = AsyncGeneratorEnqueue(generator, completion, undefined);
 
-    Assert(!(_temp instanceof AbruptCompletion), "AsyncGeneratorEnqueue(generator, completion)" + ' returned an abrupt completion');
+    Assert(!(_temp instanceof AbruptCompletion), "AsyncGeneratorEnqueue(generator, completion, undefined)" + ' returned an abrupt completion');
     /* c8 ignore if */
 
     /* c8 ignore if */
@@ -61162,11 +61484,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       Type: 'return',
       Value: value,
       Target: undefined
-    }); // 3. Return ! AsyncGeneratorEnqueue(generator, completion).
+    }); // 3. Return ! AsyncGeneratorEnqueue(generator, completion, empty).
 
-    let _temp2 = AsyncGeneratorEnqueue(generator, completion);
+    let _temp2 = AsyncGeneratorEnqueue(generator, completion, undefined);
 
-    Assert(!(_temp2 instanceof AbruptCompletion), "AsyncGeneratorEnqueue(generator, completion)" + ' returned an abrupt completion');
+    Assert(!(_temp2 instanceof AbruptCompletion), "AsyncGeneratorEnqueue(generator, completion, undefined)" + ' returned an abrupt completion');
     /* c8 ignore if */
 
     /* c8 ignore if */
@@ -61186,11 +61508,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let generator be the this value.
     const generator = thisValue; // 2. Let completion be ThrowCompletion(exception).
 
-    const completion = ThrowCompletion(exception); // 3. Return ! AsyncGeneratorEnqueue(generator, completion).
+    const completion = ThrowCompletion(exception); // 3. Return ! AsyncGeneratorEnqueue(generator, completion, empty).
 
-    let _temp3 = AsyncGeneratorEnqueue(generator, completion);
+    let _temp3 = AsyncGeneratorEnqueue(generator, completion, undefined);
 
-    Assert(!(_temp3 instanceof AbruptCompletion), "AsyncGeneratorEnqueue(generator, completion)" + ' returned an abrupt completion');
+    Assert(!(_temp3 instanceof AbruptCompletion), "AsyncGeneratorEnqueue(generator, completion, undefined)" + ' returned an abrupt completion');
     /* c8 ignore if */
 
     /* c8 ignore if */
@@ -73429,6 +73751,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.AsyncFunctionStart = AsyncFunctionStart;
   exports.AsyncGeneratorEnqueue = AsyncGeneratorEnqueue;
   exports.AsyncGeneratorStart = AsyncGeneratorStart;
+  exports.AsyncGeneratorValidate = AsyncGeneratorValidate;
   exports.AsyncGeneratorYield = AsyncGeneratorYield;
   exports.AsyncIteratorClose = AsyncIteratorClose;
   exports.Await = Await;
@@ -73464,6 +73787,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.CreateArrayFromList = CreateArrayFromList;
   exports.CreateArrayIterator = CreateArrayIterator;
   exports.CreateAsyncFromSyncIterator = CreateAsyncFromSyncIterator;
+  exports.CreateAsyncIteratorFromClosure = CreateAsyncIteratorFromClosure;
   exports.CreateBuiltinFunction = CreateBuiltinFunction;
   exports.CreateByteDataBlock = CreateByteDataBlock;
   exports.CreateDataProperty = CreateDataProperty;
@@ -73472,6 +73796,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.CreateDynamicFunction = CreateDynamicFunction;
   exports.CreateIntrinsics = CreateIntrinsics;
   exports.CreateIterResultObject = CreateIterResultObject;
+  exports.CreateIteratorFromClosure = CreateIteratorFromClosure;
   exports.CreateListFromArrayLike = CreateListFromArrayLike;
   exports.CreateListIteratorRecord = CreateListIteratorRecord;
   exports.CreateMappedArgumentsObject = CreateMappedArgumentsObject;
@@ -73911,9 +74236,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.WeekDay = WeekDay;
   exports.X = X;
   exports.YearFromTime = YearFromTime;
+  exports.Yield = Yield;
   exports.Z = Z;
   exports.evaluateScript = evaluateScript;
   exports.gc = gc;
+  exports.generatorBrandToErrorMessageType = generatorBrandToErrorMessageType;
   exports.getUnicodePropertyValueSet = getUnicodePropertyValueSet;
   exports.inspect = inspect;
   exports.isArrayExoticObject = isArrayExoticObject;
