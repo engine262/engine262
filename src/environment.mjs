@@ -61,7 +61,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     // 2. Assert: envRec does not already have a binding for N.
     Assert(!envRec.bindings.has(N));
     // 3. Create a mutable binding in envRec for N and record that it is uninitialized. If D
-    //    is true, record that the newly created binding may be delted by a subsequent
+    //    is true, record that the newly created binding may be deleted by a subsequent
     //    DeleteBinding call.
     this.bindings.set(N, {
       indirect: false,
@@ -128,7 +128,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
         return surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
       }
       // b. Perform envRec.CreateMutableBinding(N, true).
-      envRec.CreateMutableBinding(N, true);
+      envRec.CreateMutableBinding(N, Value.true);
       // c. Perform envRec.InitializeBinding(N, V).
       envRec.InitializeBinding(N, V);
       // d. Return NormalCompletion(empty).
