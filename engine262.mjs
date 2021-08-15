@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 cd695b5fe7326b738bab06be4b9ebbc74e9efd98
+ * engine262 0.0.1 b7cca4de128424fe0f01b3702f65306a8d4fbd91
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -15833,8 +15833,8 @@ class ExpressionParser extends FunctionParser {
             node.MemberExpression = result;
             node.IdentifierName = null;
             node.Expression = this.parseExpression();
-            result = this.finishNode(node, 'MemberExpression');
             this.expect(Token.RBRACK);
+            result = this.finishNode(node, 'MemberExpression');
             break;
           }
 
