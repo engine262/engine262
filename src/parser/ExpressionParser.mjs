@@ -547,8 +547,8 @@ export class ExpressionParser extends FunctionParser {
           node.MemberExpression = result;
           node.IdentifierName = null;
           node.Expression = this.parseExpression();
-          result = this.finishNode(node, 'MemberExpression');
           this.expect(Token.RBRACK);
+          result = this.finishNode(node, 'MemberExpression');
           break;
         }
         case Token.PERIOD:
