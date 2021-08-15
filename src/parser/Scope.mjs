@@ -124,6 +124,10 @@ export class Scope {
     this.flags = 0;
   }
 
+  has(flag) {
+    return (this.flags & Flag[flag]) !== 0;
+  }
+
   hasReturn() {
     return (this.flags & Flag.return) !== 0;
   }
