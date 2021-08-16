@@ -254,7 +254,10 @@ export class ExpressionParser extends FunctionParser {
     while (this.test(Token.NULLISH)) {
       const { type } = result;
       if (type === 'LogicalANDExpression' || type === 'LogicalORExpression') {
-        this.unexpected();
+        this.raise(
+          'MixingLogicalOperators', this.peek(),
+          result.operator, this.peek().value,
+        );
       }
       const node = this.startNode(result);
       node.CoalesceExpressionHead = result;
