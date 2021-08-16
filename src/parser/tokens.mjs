@@ -1,24 +1,24 @@
 const MaybeAssignTokens = [
   // Logical
-  ['NULLISH', '??', 3],
-  ['OR', '||', 4],
-  ['AND', '&&', 5],
+  ['NULLISH', '??'],
+  ['OR', '||'],
+  ['AND', '&&'],
 
   // Binop
-  ['BIT_OR', '|', 6],
-  ['BIT_XOR', '^', 7],
-  ['BIT_AND', '&', 8],
-  ['SHL', '<<', 11],
-  ['SAR', '>>', 11],
-  ['SHR', '>>>', 11],
-  ['MUL', '*', 13],
-  ['DIV', '/', 13],
-  ['MOD', '%', 13],
-  ['EXP', '**', 14],
+  ['BIT_OR', '|'],
+  ['BIT_XOR', '^'],
+  ['BIT_AND', '&'],
+  ['SHL', '<<'],
+  ['SAR', '>>'],
+  ['SHR', '>>>'],
+  ['MUL', '*'],
+  ['DIV', '/'],
+  ['MOD', '%'],
+  ['EXP', '**'],
 
   // Unop
-  ['ADD', '+', 12],
-  ['SUB', '-', 12],
+  ['ADD', '+'],
+  ['SUB', '-'],
 ];
 
 export const RawTokens = [
@@ -52,13 +52,13 @@ export const RawTokens = [
   // BEGIN ArrowOrAssign
   ['ARROW', '=>'],
   // BEGIN Assign
-  ['ASSIGN', '=', 2],
-  ...MaybeAssignTokens.map((t) => [`ASSIGN_${t[0]}`, `${t[1]}=`, 2]),
+  ['ASSIGN', '='],
+  ...MaybeAssignTokens.map(([n, v]) => [`ASSIGN_${n}`, `${v}=`]),
   // END Assign
   // END ArrowOrAssign
 
   // Binary operators by precidence
-  ['COMMA', ',', 1],
+  ['COMMA', ','],
 
   ...MaybeAssignTokens,
 
@@ -74,16 +74,16 @@ export const RawTokens = [
   // END IsCountOp
   // END IsUnaryOrCountOp
 
-  ['EQ', '==', 9],
-  ['EQ_STRICT', '===', 9],
-  ['NE', '!=', 9],
-  ['NE_STRICT', '!==', 9],
-  ['LT', '<', 10],
-  ['GT', '>', 10],
-  ['LTE', '<=', 10],
-  ['GTE', '>=', 10],
-  ['INSTANCEOF', 'instanceof', 10],
-  ['IN', 'in', 10],
+  ['EQ', '=='],
+  ['EQ_STRICT', '==='],
+  ['NE', '!='],
+  ['NE_STRICT', '!=='],
+  ['LT', '<'],
+  ['GT', '>'],
+  ['LTE', '<='],
+  ['GTE', '>='],
+  ['INSTANCEOF', 'instanceof'],
+  ['IN', 'in'],
 
   ['BREAK', 'break'],
   ['CASE', 'case'],
@@ -148,8 +148,6 @@ export const Token = RawTokens
 export const TokenNames = RawTokens.map((r) => r[0]);
 
 export const TokenValues = RawTokens.map((r) => r[1]);
-
-export const TokenPrecedence = RawTokens.map((r) => (r[2] || 0));
 
 const Keywords = RawTokens
   .filter(([name, raw]) => name.toLowerCase() === raw)
