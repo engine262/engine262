@@ -3,9 +3,9 @@ import isUnicodeIDContinueRegex from '@unicode/unicode-13.0.0/Binary_Property/ID
 import isSpaceSeparatorRegex from '@unicode/unicode-13.0.0/General_Category/Space_Separator/regex.js';
 import { UTF16SurrogatePairToCodePoint } from '../static-semantics/all.mjs';
 import {
-  RawTokens,
   Token,
   TokenNames,
+  TokenValues,
   KeywordLookup,
   isKeywordRaw,
 } from './tokens.mjs';
@@ -150,14 +150,7 @@ export class Lexer {
       column: this.columnForNextToken,
       hadLineTerminatorBefore: this.lineTerminatorBeforeNextToken,
       name: TokenNames[type],
-      value: (
-        type === Token.IDENTIFIER
-        || type === Token.NUMBER
-        || type === Token.BIGINT
-        || type === Token.STRING
-        || type === Token.ESCAPED_KEYWORD
-        || type === Token.PRIVATE_IDENTIFIER
-      ) ? this.scannedValue : RawTokens[type][1],
+      value: TokenValues[type] ?? this.scannedValue,
       escaped: this.escapeIndex !== -1,
     };
   }

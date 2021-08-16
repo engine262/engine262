@@ -147,6 +147,8 @@ export const Token = RawTokens
 
 export const TokenNames = RawTokens.map((r) => r[0]);
 
+export const TokenValues = RawTokens.map((r) => r[1]);
+
 export const TokenPrecedence = RawTokens.map((r) => (r[2] || 0));
 
 const Keywords = RawTokens
