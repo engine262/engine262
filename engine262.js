@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 b7cca4de128424fe0f01b3702f65306a8d4fbd91
+ * engine262 0.0.1 d2394fb44a6a15fbc094154a8e945b73e5eddb3d
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -1713,6 +1713,7 @@
     return obj;
   }, Object.create(null));
   const TokenNames = RawTokens.map(r => r[0]);
+  const TokenValues = RawTokens.map(r => r[1]);
   const TokenPrecedence = RawTokens.map(r => r[2] || 0);
   const Keywords = RawTokens.filter(([name, raw]) => name.toLowerCase() === raw).map(([, raw]) => raw);
   const KeywordLookup = Keywords.reduce((obj, kw) => {
@@ -1876,7 +1877,7 @@
         column: this.columnForNextToken,
         hadLineTerminatorBefore: this.lineTerminatorBeforeNextToken,
         name: TokenNames[type],
-        value: type === Token.IDENTIFIER || type === Token.NUMBER || type === Token.BIGINT || type === Token.STRING || type === Token.ESCAPED_KEYWORD || type === Token.PRIVATE_IDENTIFIER ? this.scannedValue : RawTokens[type][1],
+        value: TokenValues[type] ?? this.scannedValue,
         escaped: this.escapeIndex !== -1
       };
     }
