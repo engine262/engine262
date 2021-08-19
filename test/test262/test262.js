@@ -30,12 +30,12 @@ async function* readdir(dir) {
   }
 }
 
-const disabledFeatures = [];
-const featureMap = {};
+const disabledFeatures = new Set();
+const featureMap = Object.create(null);
 readList('features')
   .forEach((f) => {
     if (f.startsWith('-')) {
-      disabledFeatures.push(f.slice(1));
+      disabledFeatures.add(f.slice(1));
     }
     if (f.includes('=')) {
       const [k, v] = f.split('=');
@@ -93,20 +93,20 @@ if (!process.send) {
     longRunningWorker = createWorker();
   }
 
-  const slowlist = readListPaths('slowlist');
-  const skiplist = readListPaths('skiplist');
+  const slowlist = new Set(readListPaths('slowlist'));
+  const skiplist = new Set(readListPaths('skiplist'));
+  const isDisabled = (feature) => disabledFeatures.has(feature);
 
   let workerIndex = 0;
   const handleTest = (test) => {
     total();
 
-    if ((test.attrs.features && test.attrs.features.some((feature) => disabledFeatures.includes(feature)))
-        || skiplist.includes(test.file)) {
+    if (test.attrs.features?.some(isDisabled) || skiplist.has(test.file)) {
       skip();
       return;
     }
 
-    if (slowlist.includes(test.file)) {
+    if (slowlist.has(test.file)) {
       if (RUN_SLOW_TESTS) {
         longRunningWorker.send(test);
       } else {
