@@ -44,8 +44,12 @@ readList('features')
   });
 
 if (!process.send) {
-  // supervisor
+  supervisorProcess();
+} else {
+  workerProcess();
+}
 
+async function supervisorProcess() {
   const childProcess = require('child_process');
   const YAML = require('js-yaml');
   const {
@@ -88,10 +92,6 @@ if (!process.send) {
   };
 
   const workers = Array.from({ length: NUM_WORKERS }, () => createWorker());
-  let longRunningWorker;
-  if (RUN_SLOW_TESTS) {
-    longRunningWorker = createWorker();
-  }
 
   const slowlist = new Set(readListPaths('slowlist'));
   const skiplist = new Set(readListPaths('skiplist'));
@@ -106,12 +106,8 @@ if (!process.send) {
       return;
     }
 
-    if (slowlist.has(test.file)) {
-      if (RUN_SLOW_TESTS) {
-        longRunningWorker.send(test);
-      } else {
-        skip();
-      }
+    if (test.slow && !RUN_SLOW_TESTS) {
+      skip();
     } else {
       workers[workerIndex].send(test);
       workerIndex += 1;
@@ -121,12 +117,34 @@ if (!process.send) {
     }
   };
 
-  (async () => {
+  async function* findTestFiles() {
+    const deferred = [];
+
     for await (const file of readdir(path.join(TEST262, override || 'test'))) {
       if (/annexB|intl402|_FIXTURE/.test(file)) {
         continue;
       }
 
+      const fileRelative = path.relative(TEST262, file);
+      const item = {
+        file,
+        fileRelative,
+        slow: slowlist.has(fileRelative),
+      };
+
+      if (item.slow) {
+        deferred.push(item);
+      } else {
+        yield item;
+      }
+    }
+
+    process.stdout.write(`\n\nFound ${deferred.length} slow test sources\n\n`);
+    yield* deferred;
+  }
+
+  async function scheduleTests() {
+    for await (const { file, fileRelative, slow } of findTestFiles()) {
       const contents = await fs.promises.readFile(file, 'utf8');
       const yamlStart = contents.indexOf('/*---') + 5;
       const yamlEnd = contents.indexOf('---*/', yamlStart);
@@ -140,7 +158,8 @@ if (!process.send) {
       attrs.includes = attrs.includes || [];
 
       const test = {
-        file: path.relative(TEST262, file),
+        file: fileRelative,
+        slow,
         attrs,
         contents,
       };
@@ -163,13 +182,12 @@ if (!process.send) {
     workers.forEach((w) => {
       w.send('DONE');
     });
-    if (RUN_SLOW_TESTS) {
-      longRunningWorker.send('DONE');
-    }
-  })();
-} else {
-  // worker
+  }
 
+  scheduleTests();
+}
+
+async function workerProcess() {
   const {
     Agent,
     setSurroundingAgent,
