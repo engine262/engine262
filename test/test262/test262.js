@@ -11,6 +11,10 @@ const glob = require('glob');
 
 const TEST262 = process.env.TEST262 || path.resolve(__dirname, 'test262');
 
+// How many PASS results can each worker accumulate before reporting them
+// back to the supervisor. Reduces the amount of IPC.
+const CHUNK_SIZE = 20;
+
 const readList = (name) => {
   const source = fs.readFileSync(path.resolve(__dirname, name), 'utf8');
   return source.split('\n').filter((l) => l && !l.startsWith('#'));
@@ -74,7 +78,7 @@ async function supervisorProcess() {
           pass(message.count);
           break;
         case 'FAIL':
-          fail(message.description, message.error);
+          fail(`${message.file}\n${message.description}`, message.error);
           break;
         case 'SKIP':
           skip();
@@ -360,29 +364,39 @@ function $DONE(error) {
       process.exit(1);
     }
   };
+
   let passChunk = 0;
+  const flushAtLeast = (threshold, slow) => {
+    if (passChunk >= threshold || slow) {
+      const result = { status: 'PASS', count: passChunk };
+      process.send(result, handleSendError);
+      passChunk = 0;
+    }
+  };
+
   process.on('message', (test) => {
     if (test === 'DONE') {
-      if (passChunk > 0) {
-        process.send({ status: 'PASS', count: passChunk }, handleSendError);
-      }
-      process.exit(0);
+      flushAtLeast(1, false);
+      process.disconnect();
       return;
     }
-    const description = `${test.file}\n${test.attrs.description}`;
+    if (test.slow) {
+      // flush accumulated PASSes before starting this slow test
+      flushAtLeast(1, false);
+    }
+    let result;
     try {
-      const r = run(test);
-      if (r.status === 'PASS') {
-        passChunk += 1;
-        if (passChunk > 20) {
-          process.send({ status: 'PASS', count: passChunk }, handleSendError);
-          passChunk = 0;
-        }
-      } else {
-        process.send({ description, ...r }, handleSendError);
-      }
+      result = run(test);
     } catch (e) {
-      process.send({ description, status: 'FAIL', error: util.inspect(e) }, handleSendError);
+      result = { status: 'FAIL', error: util.inspect(e) };
+    }
+    if (result.status === 'PASS') {
+      passChunk += 1;
+      flushAtLeast(CHUNK_SIZE, test.slow);
+    } else {
+      result.description = test.attrs.description;
+      result.file = test.file;
+      process.send(result, handleSendError);
     }
   });
 }
