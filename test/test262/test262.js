@@ -15,6 +15,10 @@ const TEST262 = process.env.TEST262 || path.resolve(__dirname, 'test262');
 // back to the supervisor. Reduces the amount of IPC.
 const CHUNK_SIZE = 20;
 
+// How many tasks can each worker have in-flight. No more tasks will be
+// sent to a worker until it reports back some results.
+const MAX_PENDING = 10 + CHUNK_SIZE; // must be at least CHUNK_SIZE
+
 const readList = (name) => {
   const source = fs.readFileSync(path.resolve(__dirname, name), 'utf8');
   return source.split('\n').filter((l) => l && !l.startsWith('#'));
@@ -47,6 +51,29 @@ readList('features')
     }
   });
 
+class EventSemaphore {
+  constructor() {
+    this._promise = undefined;
+    this._resolve = undefined;
+  }
+  // Get a promise that will resolve with the next signal()
+  reset() {
+    if (!this._resolve) {
+      this._promise = new Promise((res) => {
+        this._resolve = res;
+      });
+    }
+    return this._promise;
+  }
+  // Wake up whoever's awaiting the promise from reset()
+  signal() {
+    if (this._resolve) {
+      this._resolve();
+      this._resolve = undefined;
+    }
+  }
+}
+
 if (!process.send) {
   supervisorProcess();
 } else {
@@ -70,21 +97,76 @@ async function supervisorProcess() {
     : Math.round(CPU_COUNT * 0.75);
   const RUN_SLOW_TESTS = process.argv.includes('--run-slow-tests');
 
+  const longRunningQueue = [];
+  const testQueue = [];
+  const totalQueued = () => longRunningQueue.length + testQueue.length;
+  const canQueueMore = new EventSemaphore();
+  let doneQueueing = false;
+
   const createWorker = () => {
     const c = childProcess.fork(__filename);
+    let doneSendingWork = false;
+    let numLongRunning = 0;
+    let numPending = 0;
+    const sendBatchFrom = (queue) => {
+      const limit = Math.min(
+        Math.ceil((0.75 * queue.length) / NUM_WORKERS),
+        MAX_PENDING - numPending,
+      );
+      for (let i = 0; i < limit && numLongRunning < 1; i += 1) {
+        const test = queue.shift();
+        numLongRunning += test.slow ? 1 : 0;
+        numPending += 1;
+        c.send(test);
+      }
+      if (totalQueued() < CHUNK_SIZE * NUM_WORKERS) {
+        canQueueMore.signal();
+      }
+    };
+    const checkWorkComplete = () => {
+      if (!doneQueueing
+        || doneSendingWork
+        || numPending >= CHUNK_SIZE
+        || numLongRunning > 0) {
+        return;
+      }
+      if (longRunningQueue.length === 0 && testQueue.length === 0) {
+        doneSendingWork = true;
+        c.send('DONE');
+      } else {
+        // When we get to the last remaining tests, we send fewer than
+        // CHUNK_SIZE in order to more evenly distribute the remaining
+        // ones. The PING message tells the worker to report any PASSes
+        // it collected, so that we can send more work.
+        c.send('PING');
+      }
+    };
     c.on('message', (message) => {
       switch (message.status) {
         case 'PASS':
+          numPending -= message.count;
           pass(message.count);
           break;
         case 'FAIL':
+          numPending -= 1;
           fail(`${message.file}\n${message.description}`, message.error);
           break;
         case 'SKIP':
+          numPending -= 1;
           skip();
           break;
         default:
           throw new RangeError(JSON.stringify(message));
+      }
+      // count may be zero if this is response to PING
+      if (message.slow && message.count !== 0) {
+        // every slow test is reported individually
+        numLongRunning -= 1;
+      }
+      if (!doneSendingWork && numPending < MAX_PENDING) {
+        sendBatchFrom(testQueue);
+        sendBatchFrom(longRunningQueue);
+        checkWorkComplete(); // make sure worker is not stuck
       }
     });
     c.on('exit', (code) => {
@@ -92,7 +174,19 @@ async function supervisorProcess() {
         process.exit(1);
       }
     });
-    return c;
+    return {
+      process: c,
+      checkWorkComplete,
+      send(test) {
+        if (test.slow) {
+          longRunningQueue.push(test);
+          sendBatchFrom(longRunningQueue);
+        } else {
+          testQueue.push(test);
+          sendBatchFrom(testQueue);
+        }
+      },
+    };
   };
 
   const workers = Array.from({ length: NUM_WORKERS }, () => createWorker());
@@ -181,11 +275,15 @@ async function supervisorProcess() {
           handleTest(test);
         }
       }
+
+      if (totalQueued() > MAX_PENDING * NUM_WORKERS) {
+        await canQueueMore.reset();
+      }
     }
 
-    workers.forEach((w) => {
-      w.send('DONE');
-    });
+    // make sure no worker is stuck
+    doneQueueing = true;
+    workers.forEach((w) => w.checkWorkComplete());
   }
 
   scheduleTests();
@@ -368,13 +466,18 @@ function $DONE(error) {
   let passChunk = 0;
   const flushAtLeast = (threshold, slow) => {
     if (passChunk >= threshold || slow) {
-      const result = { status: 'PASS', count: passChunk };
+      const result = { status: 'PASS', count: passChunk, slow };
       process.send(result, handleSendError);
       passChunk = 0;
     }
   };
 
   process.on('message', (test) => {
+    if (test === 'PING') {
+      // force sending a message even with zero PASSes accumulated
+      flushAtLeast(0, false);
+      return;
+    }
     if (test === 'DONE') {
       flushAtLeast(1, false);
       process.disconnect();
@@ -396,6 +499,7 @@ function $DONE(error) {
     } else {
       result.description = test.attrs.description;
       result.file = test.file;
+      result.slow = test.slow;
       process.send(result, handleSendError);
     }
   });
