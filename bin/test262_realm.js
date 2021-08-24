@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const {
   Value,
+  CreateBuiltinFunction,
   CreateDataProperty,
   DetachArrayBuffer,
   OrdinaryObjectCreate,
@@ -60,7 +61,7 @@ const createRealm = ({ printCompatMode = false } = {}) => {
     const setPrintHandle = (f) => {
       printHandle = f;
     };
-    CreateDataProperty(realm.GlobalObject, new Value('print'), new Value((args) => {
+    CreateDataProperty(realm.GlobalObject, new Value('print'), CreateBuiltinFunction((args) => {
       /* c8 ignore next */
       if (printHandle !== undefined) {
         printHandle(...args);
@@ -90,7 +91,7 @@ const createRealm = ({ printCompatMode = false } = {}) => {
         }
       }
       return Value.undefined;
-    }));
+    }, 0, new Value('print'), []));
 
     [
       ['global', realm.GlobalObject],
@@ -98,8 +99,8 @@ const createRealm = ({ printCompatMode = false } = {}) => {
         const info = createRealm();
         return info.$262;
       }],
-      ['evalScript', ([sourceText]) => realm.evaluateScript(sourceText.stringValue())],
-      ['detachArrayBuffer', ([arrayBuffer]) => DetachArrayBuffer(arrayBuffer)],
+      ['evalScript', ([sourceText]) => realm.evaluateScript(sourceText.stringValue()), 1],
+      ['detachArrayBuffer', ([arrayBuffer]) => DetachArrayBuffer(arrayBuffer), 1],
       ['gc', () => {
         gc();
         return Value.undefined;
@@ -109,9 +110,10 @@ const createRealm = ({ printCompatMode = false } = {}) => {
           return new Value(v.nativeFunction.section);
         }
         return Value.undefined;
-      }],
-    ].forEach(([name, value]) => {
-      const v = value instanceof Value ? value : new Value(value);
+      }, 1],
+    ].forEach(([name, value, length = 0]) => {
+      const v = value instanceof Value ? value
+        : CreateBuiltinFunction(value, length, new Value(name), []);
       CreateDataProperty($262, new Value(name), v);
     });
 

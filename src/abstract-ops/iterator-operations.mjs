@@ -234,15 +234,28 @@ function AsyncFromSyncIteratorValueUnwrapFunctions([value = Value.undefined]) {
 
 // 25.1.4.4 #sec-asyncfromsynciteratorcontinuation
 export function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
+  // 1. Let done be IteratorComplete(result).
   const done = IteratorComplete(result);
+  // 2. IfAbruptRejectPromise(done, promiseCapability).
   IfAbruptRejectPromise(done, promiseCapability);
+  // 3. Let value be IteratorValue(result).
   const value = IteratorValue(result);
+  // 4. IfAbruptRejectPromise(value, promiseCapability).
   IfAbruptRejectPromise(value, promiseCapability);
+  // 5. Let valueWrapper be PromiseResolve(%Promise%, value).
   const valueWrapper = PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value);
+  // 6. IfAbruptRejectPromise(valueWrapper, promiseCapability).
   IfAbruptRejectPromise(valueWrapper, promiseCapability);
+  // 7. Let steps be the algorithm steps defined in Async-from-Sync Iterator Value Unwrap Functions.
   const steps = AsyncFromSyncIteratorValueUnwrapFunctions;
-  const onFulfilled = X(CreateBuiltinFunction(steps, ['Done']));
+  // 8. Let length be the number of non-optional parameters of the function definition in Async-from-Sync Iterator Value Unwrap Functions.
+  const length = 1;
+  // 9. Let onFulfilled be ! CreateBuiltinFunction(steps, length, "", « [[Done]] »).
+  const onFulfilled = X(CreateBuiltinFunction(steps, length, new Value(''), ['Done']));
+  // 10. Set onFulfilled.[[Done]] to done.
   onFulfilled.Done = done;
+  // 11. Perform ! PerformPromiseThen(valueWrapper, onFulfilled, undefined, promiseCapability).
   X(PerformPromiseThen(valueWrapper, onFulfilled, Value.undefined, promiseCapability));
+  // 12. Return promiseCapability.[[Promise]].
   return promiseCapability.Promise;
 }
