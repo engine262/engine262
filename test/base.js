@@ -84,7 +84,7 @@ module.exports = {
   },
   skip() {
     skipped += 1;
-    handledPerSecCounter += 1;
+    // doesn't count towards testsPerSec
   },
   CPU_COUNT,
   CI,
