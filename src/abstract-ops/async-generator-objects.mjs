@@ -75,7 +75,7 @@ export function AsyncGeneratorStart(generator, generatorBody) {
     // h. Perform ! AsyncGeneratorCompleteStep(generator, result, true).
     X(AsyncGeneratorCompleteStep(generator, result, Value.true));
     // i. Perform ! AsyncGeneratorDrainQueue(generator).
-    X(AsyncGeneratorDrainQueue(generator, result, Value.true));
+    X(AsyncGeneratorDrainQueue(generator));
     // j. Return undefined.
     return Value.undefined;
   }());
