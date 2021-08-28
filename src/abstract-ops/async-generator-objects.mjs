@@ -6,6 +6,7 @@ import {
   EnsureCompletion,
   NormalCompletion,
   AbruptCompletion,
+  ThrowCompletion,
 } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { Value } from '../value.mjs';
@@ -17,7 +18,6 @@ import {
   CreateIterResultObject,
   generatorBrandToErrorMessageType,
   GetGeneratorKind,
-  NewPromiseCapability,
   OrdinaryObjectCreate,
   PerformPromiseThen,
   PromiseResolve,
@@ -26,9 +26,9 @@ import {
 } from './all.mjs';
 
 // This file covers abstract operations defined in
-// 25.5 #sec-asyncgenerator-objects
+// #sec-asyncgenerator-objects
 
-// 25.5.3.1 #sec-asyncgeneratorrequest-records
+// #sec-asyncgeneratorrequest-records
 class AsyncGeneratorRequestRecord {
   constructor(completion, promiseCapability) {
     this.Completion = completion;
@@ -36,16 +36,15 @@ class AsyncGeneratorRequestRecord {
   }
 }
 
-// 25.5.3.2 #sec-asyncgeneratorstart
+// #sec-asyncgeneratorstart
 export function AsyncGeneratorStart(generator, generatorBody) {
-  // 1. Assert: generator is an AsyncGenerator instance.
-  // 2. Assert: generator.[[AsyncGeneratorState]] is undefined.
+  // 1. Assert: generator.[[AsyncGeneratorState]] is undefined.
   Assert(generator.AsyncGeneratorState === Value.undefined);
-  // 3. Let genContext be the running execution context.
+  // 2. Let genContext be the running execution context.
   const genContext = surroundingAgent.runningExecutionContext;
-  // 4. Set the Generator component of genContext to generator.
+  // 3. Set the Generator component of genContext to generator.
   genContext.Generator = generator;
-  // 5. Set the code evaluation state of genContext such that when evaluation
+  // 4. Set the code evaluation state of genContext such that when evaluation
   //    is resumed for that execution context the following steps will be performed:
   genContext.codeEvaluationState = (function* resumer() {
     // a. If generatorBody is a Parse Node, then
@@ -53,7 +52,7 @@ export function AsyncGeneratorStart(generator, generatorBody) {
     // b. Else,
     //     i. Assert: generatorBody is an Abstract Closure.
     //     ii. Let result be generatorBody().
-    const result = EnsureCompletion(
+    let result = EnsureCompletion(
       // Note: Engine262 can only perform the "If generatorBody is an Abstract Closure" check:
       yield* typeof generatorBody === 'function'
         ? generatorBody()
@@ -65,29 +64,28 @@ export function AsyncGeneratorStart(generator, generatorBody) {
     surroundingAgent.executionContextStack.pop(genContext);
     // e. Set generator.[[AsyncGeneratorState]] to completed.
     generator.AsyncGeneratorState = 'completed';
-    let resultValue;
-    // f. If result is a normal completion, let resultValue be undefined.
-    if (result instanceof NormalCompletion) {
-      resultValue = Value.undefined;
-    } else { // g. Else,
-      // i. Let resultValue be result.[[Value]].
-      resultValue = result.Value;
-      // ii. If result.[[Type]] is not return, then
-      if (result.Type !== 'return') {
-        // 1. Return ! AsyncGeneratorReject(generator, resultValue).
-        return X(AsyncGeneratorReject(generator, resultValue));
-      }
+    // f. If result.[[Type]] is normal, set result to NormalCompletion(undefined).
+    if (result.Type === 'normal') {
+      result = NormalCompletion(Value.undefined);
     }
-    // h. Return ! AsyncGeneratorResolve(generator, resultValue, true).
-    return X(AsyncGeneratorResolve(generator, resultValue, Value.true));
+    // g. If result.[[Type]] is return, set result to NormalCompletion(result.[[Value]]).
+    if (result.Type === 'return') {
+      result = NormalCompletion(result.Value);
+    }
+    // h. Perform ! AsyncGeneratorCompleteStep(generator, result, true).
+    X(AsyncGeneratorCompleteStep(generator, result, Value.true));
+    // i. Perform ! AsyncGeneratorDrainQueue(generator).
+    X(AsyncGeneratorDrainQueue(generator, result, Value.true));
+    // j. Return undefined.
+    return Value.undefined;
   }());
-  // 6. Set generator.[[AsyncGeneratorContext]] to genContext.
+  // 5. Set generator.[[AsyncGeneratorContext]] to genContext.
   generator.AsyncGeneratorContext = genContext;
-  // 7. Set generator.[[AsyncGeneratorState]] to suspendedStart.
+  // 6. Set generator.[[AsyncGeneratorState]] to suspendedStart.
   generator.AsyncGeneratorState = 'suspendedStart';
-  // 8. Set generator.[[AsyncGeneratorQueue]] to a new empty List.
+  // 7. Set generator.[[AsyncGeneratorQueue]] to a new empty List.
   generator.AsyncGeneratorQueue = [];
-  // 9. Return undefined.
+  // 8. Return undefined.
   return Value.undefined;
 }
 
@@ -115,197 +113,91 @@ export function AsyncGeneratorValidate(generator, generatorBrand) {
   }
 }
 
-// 25.5.3.3 #sec-asyncgeneratorresolve
-function AsyncGeneratorResolve(generator, value, done) {
-  // 1. Assert: generator is an AsyncGenerator instance.
-  // 2. Let queue be generator.[[AsyncGeneratorQueue]].
-  const queue = generator.AsyncGeneratorQueue;
-  // 3. Assert: queue is not an empty List.
-  Assert(queue.length > 0);
-  // 4. Let next be the first element of queue.
-  // 5. Remove the first element from queue.
-  const next = queue.shift();
-  // 6. Let promiseCapability be next.[[Capability]].
-  const promiseCapability = next.Capability;
-  // 7. Let iteratorResult be ! CreateIterResultObject(value, done).
-  const iteratorResult = X(CreateIterResultObject(value, done));
-  // 8. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iteratorResult »).
-  X(Call(promiseCapability.Resolve, Value.undefined, [iteratorResult]));
-  // 9. Perform ! AsyncGeneratorResumeNext(generator).
-  X(AsyncGeneratorResumeNext(generator));
-  // 10. Return undefined.
-  return Value.undefined;
-}
-
-// 25.5.3.4 #sec-asyncgeneratorreject
-function AsyncGeneratorReject(generator, exception) {
-  // 1. Assert: generator is an AsyncGenerator instance.
-  // 2. Let queue be generator.[[AsyncGeneratorQueue]].
-  const queue = generator.AsyncGeneratorQueue;
-  // 3. Assert: queue is not an empty List.
-  Assert(queue.length > 0);
-  // 4. Let next be the first element of queue.
-  // 5. Remove the first element from queue.
-  const next = queue.shift();
-  // 6. Let promiseCapability be next.[[Capability]].
-  const promiseCapability = next.Capability;
-  // 7. Perform ! Call(promiseCapability.[[Reject]], undefined, « exception »).
-  X(Call(promiseCapability.Reject, Value.undefined, [exception]));
-  // 8. Perform ! AsyncGeneratorResumeNext(generator).
-  X(AsyncGeneratorResumeNext(generator));
-  // 9. Return undefined.
-  return Value.undefined;
-}
-
-// 25.5.3.5.1 #async-generator-resume-next-return-processor-fulfilled
-function AsyncGeneratorResumeNextReturnProcessorFulfilledFunctions([value = Value.undefined]) {
-  // 1. Let F be the active function object.
-  const F = surroundingAgent.activeFunctionObject;
-  // 2. Set F.[[Generator]].[[AsyncGeneratorState]] to completed.
-  F.Generator.AsyncGeneratorState = 'completed';
-  // 3. Return ! AsyncGeneratorResolve(F.[[Generator]], value, true).
-  return X(AsyncGeneratorResolve(F.Generator, value, Value.true));
-}
-
-// 25.5.3.5.2 #async-generator-resume-next-return-processor-rejected
-function AsyncGeneratorResumeNextReturnProcessorRejectedFunctions([reason = Value.undefined]) {
-  // 1. Let F be the active function object.
-  const F = surroundingAgent.activeFunctionObject;
-  // 2. Set F.[[Generator]].[[AsyncGeneratorState]] to completed.
-  F.Generator.AsyncGeneratorState = 'completed';
-  // 3. Return ! AsyncGeneratorReject(F.[[Generator]], reason).
-  return X(AsyncGeneratorReject(F.Generator, reason));
-}
-
-// 25.5.3.5 #sec-asyncgeneratorresumenext
-function AsyncGeneratorResumeNext(generator) {
-  // 1. Assert: generator is an AsyncGenerator instance.
-  // 2. Let state be generator.[[AsyncGeneratorState]].
-  let state = generator.AsyncGeneratorState;
-  // 3. Assert: state is not executing.
-  Assert(state !== 'executing');
-  // 4. If state is awaiting-return, return undefined.
-  if (state === 'awaiting-return') {
-    return Value.undefined;
-  }
-  // 5. Let queue be generator.[[AsyncGeneratorQueue]].
-  const queue = generator.AsyncGeneratorQueue;
-  // 6. If queue is an empty List, return undefined.
-  if (queue.length === 0) {
-    return Value.undefined;
-  }
-  // 7. Let next be the value of the first element of queue.
-  const next = queue[0];
-  // 8. Assert: next is an AsyncGeneratorRequest record.
-  Assert(next instanceof AsyncGeneratorRequestRecord);
-  // 9. Let completion be next.[[Completion]].
-  const completion = next.Completion;
-  // 10. If completion is an abrupt completion, then
-  if (completion instanceof AbruptCompletion) {
-    // a. If state is suspendedStart, then
-    if (state === 'suspendedStart') {
-      // i. Set generator.[[AsyncGeneratorState]] to completed.
-      generator.AsyncGeneratorState = 'completed';
-      // ii. Set state to completed.
-      state = 'completed';
-    }
-    // b. If state is completed, then
-    if (state === 'completed') {
-      // i. If completion.[[Type]] is return, then
-      if (completion.Type === 'return') {
-        // 1. Set generator.[[AsyncGeneratorState]] to awaiting-return.
-        generator.AsyncGeneratorState = 'awaiting-return';
-        // 2. Let promise be ? PromiseResolve(%Promise%, completion.[[Value]]).
-        const promise = Q(PromiseResolve(surroundingAgent.intrinsic('%Promise%'), completion.Value));
-        // 3. Let stepsFulfilled be the algorithm steps defined in AsyncGeneratorResumeNext Return Processor Fulfilled Functions.
-        const stepsFulfilled = AsyncGeneratorResumeNextReturnProcessorFulfilledFunctions;
-        // 4. Let lengthFulfilled be the number of non-optional parameters of the function definition in AsyncGeneratorResumeNext Return Processor Fulfilled Functions.
-        const lengthFulfilled = 1;
-        // 5. Let onFulfilled be ! CreateBuiltinFunction(stepsFulfilled, lengthFulfilled, "", « [[Generator]] »).
-        const onFulfilled = X(CreateBuiltinFunction(stepsFulfilled, lengthFulfilled, new Value(''), ['Generator']));
-        // 6. Set onFulfilled.[[Generator]] to generator.
-        onFulfilled.Generator = generator;
-        // 7. Let stepsRejected be the algorithm steps defined in AsyncGeneratorResumeNext Return Processor Rejected Functions.
-        const stepsRejected = AsyncGeneratorResumeNextReturnProcessorRejectedFunctions;
-        // 8. Let lengthRejected be the number of non-optional parameters of the function definition in AsyncGeneratorResumeNext Return Processor Rejected Functions.
-        const lengthRejected = 1;
-        // 9. Let onRejected be ! CreateBuiltinFunction(stepsRejected, lengthRejected, "", « [[Generator]] »).
-        const onRejected = X(CreateBuiltinFunction(stepsRejected, lengthRejected, new Value(''), ['Generator']));
-        // 10. Set onRejected.[[Generator]] to generator.
-        onRejected.Generator = generator;
-        // 11. Perform ! PerformPromiseThen(promise, onFulfilled, onRejected).
-        X(PerformPromiseThen(promise, onFulfilled, onRejected));
-        // 12. Return undefined.
-        return Value.undefined;
-      } else { // ii . Else,
-        // 1. Assert: completion.[[Type]] is throw.
-        Assert(completion.Type === 'throw');
-        // 2. Perform ! AsyncGeneratorReject(generator, completion.[[Value]]).
-        X(AsyncGeneratorReject(generator, completion.Value));
-        // 3. Return undefined.
-        return Value.undefined;
-      }
-    }
-  } else if (state === 'completed') { // 11. Else if state is completed, return ! AsyncGeneratorResolve(generator, undefined, true).
-    return X(AsyncGeneratorResolve(generator, Value.undefined, Value.true));
-  }
-  // 12. Assert: state is either suspendedStart or suspendedYield.
-  Assert(state === 'suspendedStart' || state === 'suspendedYield');
-  // 13. Let genContext be generator.[[AsyncGeneratorContext]].
-  const genContext = generator.AsyncGeneratorContext;
-  // 14. Let callerContext be the running execution context.
-  const callerContext = surroundingAgent.runningExecutionContext;
-  // 15. Suspend callerContext.
-  // 16. Set generator.[[AsyncGeneratorState]] to executing.
-  generator.AsyncGeneratorState = 'executing';
-  // 17. Push genContext onto the execution context stack; genContext is now the running execution context.
-  surroundingAgent.executionContextStack.push(genContext);
-  // 18. Resume the suspended evaluation of genContext using completion as the result of the operation that suspended it. Let result be the completion record returned by the resumed computation.
-  const result = resume(genContext, completion);
-  // 19. Assert: result is never an abrupt completion.
-  Assert(!(result instanceof AbruptCompletion));
-  // 20. Assert: When we return here, genContext has already been removed from the execution context stack and callerContext is the currently running execution context.
-  Assert(surroundingAgent.runningExecutionContext === callerContext);
-  // 21. Return undefined.
-  return Value.undefined;
-}
-
-// 25.5.3.6 #sec-asyncgeneratorenqueue
-export function AsyncGeneratorEnqueue(generator, completion, generatorBrand) {
-  Assert(completion instanceof Completion);
-  // 1. Let promiseCapability be ! NewPromiseCapability(%Promise%).
-  const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
-  // 2. Let check be AsyncGeneratorValidate(generator, generatorBrand).
-  const check = AsyncGeneratorValidate(generator, generatorBrand);
-  // 3. If check is an abrupt completion, then
-  if (check instanceof AbruptCompletion) {
-    // a. Let badGeneratorError be a newly created TypeError object.
-    const badGeneratorError = surroundingAgent.Throw(
-      'TypeError',
-      'NotATypeObject',
-      generatorBrandToErrorMessageType(generatorBrand) || 'AsyncGenerator',
-      generator,
-    ).Value;
-    // b. Perform ! Call(promiseCapability.[[Reject]], undefined, « badGeneratorError »).
-    X(Call(promiseCapability.Reject, Value.undefined, [badGeneratorError]));
-    // c. Return promiseCapability.[[Promise]].
-    return promiseCapability.Promise;
-  }
-  // 4. Let queue be generator.[[AsyncGeneratorQueue]].
-  const queue = generator.AsyncGeneratorQueue;
-  // 5. Let request be AsyncGeneratorRequest { [[Completion]]: completion, [[Capability]]: promiseCapability }.
+// #sec-asyncgeneratorenqueue
+export function AsyncGeneratorEnqueue(generator, completion, promiseCapability) {
+  // 1. Let request be AsyncGeneratorRequest { [[Completion]]: completion, [[Capability]]: promiseCapability }.
   const request = new AsyncGeneratorRequestRecord(completion, promiseCapability);
-  // 6. Append request to the end of queue.
-  queue.push(request);
-  // 7. Let state be generator.[[AsyncGeneratorState]].
-  const state = generator.AsyncGeneratorState;
-  // 8. If state is not executing, then
-  if (state !== 'executing') {
-    // a. Perform ! AsyncGeneratorResumeNext(generator).
-    X(AsyncGeneratorResumeNext(generator));
+  // 2. Append request to the end of generator.[[AsyncGeneratorQueue]].
+  generator.AsyncGeneratorQueue.push(request);
+}
+
+// #sec-asyncgeneratorcompletestep
+function AsyncGeneratorCompleteStep(generator, completion, done, realm) {
+  // 1. Let queue be generator.[[AsyncGeneratorQueue]].
+  const queue = generator.AsyncGeneratorQueue;
+  // 2. Assert: queue is not empty.
+  Assert(queue.length > 0);
+  // 3. Let next be the first element of queue.
+  // 4. Remove the first element from queue.
+  const next = queue.shift();
+  // 5. Let promiseCapability be next.[[Capability]].
+  const promiseCapability = next.Capability;
+  // 6. Let value be completion.[[Value]].
+  const value = completion.Value;
+  // 7. If completion.[[Type]] is throw, then
+  if (completion.Type === 'throw') {
+    // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « value »).
+    X(Call(promiseCapability.Reject, Value.undefined, [value]));
+  } else { // 8. Else,
+    // a. Assert: completion.[[Type]] is normal.
+    Assert(completion.Type === 'normal');
+    let iteratorResult;
+    // b. If realm is present, then
+    if (realm !== undefined) {
+      // i. Let oldRealm be the running execution context's Realm.
+      const oldRealm = surroundingAgent.runningExecutionContext.Realm;
+      // ii. Set the running execution context's Realm to realm.
+      surroundingAgent.runningExecutionContext.Realm = realm;
+      // iii. Let iteratorResult be ! CreateIterResultObject(value, done).
+      iteratorResult = X(CreateIterResultObject(value, done));
+      // iv. Set the running execution context's Realm to oldRealm.
+      surroundingAgent.runningExecutionContext.Realm = oldRealm;
+    } else { // c. Else,
+      // i. Let iteratorResult be ! CreateIterResultObject(value, done).
+      iteratorResult = X(CreateIterResultObject(value, done));
+    }
+    // d. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iteratorResult »).
+    X(Call(promiseCapability.Resolve, Value.undefined, [iteratorResult]));
   }
-  // 9. Return promiseCapability.[[Promise]].
-  return promiseCapability.Promise;
+}
+
+// #sec-asyncgeneratorresume
+export function AsyncGeneratorResume(generator, completion) {
+  // 1. Assert: generator.[[AsyncGeneratorState]] is either suspendedStart or suspendedYield.
+  Assert(generator.AsyncGeneratorState === 'suspendedStart' || generator.AsyncGeneratorState === 'suspendedYield');
+  // 2. Let genContext be generator.[[AsyncGeneratorContext]].
+  const genContext = generator.AsyncGeneratorContext;
+  // 3. Let callerContext be the running execution context.
+  const callerContext = surroundingAgent.runningExecutionContext;
+  // 4. Suspend callerContext.
+  // 5. Set generator.[[AsyncGeneratorState]] to executing.
+  generator.AsyncGeneratorState = 'executing';
+  // 6. Push genContext onto the execution context stack; genContext is now the running execution context.
+  surroundingAgent.executionContextStack.push(genContext);
+  // 7. Resume the suspended evaluation of genContext using completion as the result of the operation that suspended it. Let result be the completion record returned by the resumed computation.
+  const result = resume(genContext, completion);
+  // 8. Assert: result is never an abrupt completion.
+  Assert(!(result instanceof AbruptCompletion));
+  // 9. Assert: When we return here, genContext has already been removed from the execution context stack and callerContext is the currently running execution context.
+  Assert(surroundingAgent.runningExecutionContext === callerContext);
+}
+
+// #sec-asyncgeneratorunwrapyieldresumption
+function* AsyncGeneratorUnwrapYieldResumption(resumptionValue) {
+  // 1. If resumptionValue.[[Type]] is not return, return Completion(resumptionValue).
+  if (resumptionValue.Type !== 'return') {
+    return Completion(resumptionValue);
+  }
+  // 2. Let awaited be Await(resumptionValue.[[Value]]).
+  const awaited = EnsureCompletion(yield* Await(resumptionValue.Value));
+  // 3. If awaited.[[Type]] is throw, return Completion(awaited).
+  if (awaited.Type === 'throw') {
+    return Completion(awaited);
+  }
+  // 4. Assert: awaited.[[Type]] is normal.
+  Assert(awaited.Type === 'normal');
+  // 5. Return Completion { [[Type]]: return, [[Value]]: awaited.[[Value]], [[Target]]: empty }.
+  return new Completion({ Type: 'return', Value: awaited.Value, Target: undefined });
 }
 
 // #sec-asyncgeneratoryield
@@ -320,31 +212,131 @@ export function* AsyncGeneratorYield(value) {
   Assert(GetGeneratorKind() === 'async');
   // 5. Set value to ? Await(value).
   value = Q(yield* Await(value));
-  // 6. Set generator.[[AsyncGeneratorState]] to suspendedYield.
-  generator.AsyncGeneratorState = 'suspendedYield';
-  // 7. Remove genContext from the execution context stack and restore the execution context that is at the top of the execution context stack as the running execution context.
-  surroundingAgent.executionContextStack.pop(genContext);
-  // 8. Set the code evaluation state of genContext such that when evaluation is resumed with a Completion resumptionValue the following steps will be performed:
-  const resumptionValue = EnsureCompletion(yield handleInResume(AsyncGeneratorResolve, generator, value, Value.false, generator.GeneratorBrand));
+  // 6. Let completion be NormalCompletion(value).
+  const completion = NormalCompletion(value);
+  // 7. Assert: The execution context stack has at least two elements.
+  Assert(surroundingAgent.executionContextStack.length >= 2);
+  // 8. Let previousContext be the second to top element of the execution context stack.
+  const previousContext = surroundingAgent.executionContextStack[surroundingAgent.executionContextStack.length - 2];
+  // 9. Let previousRealm be previousContext's Realm.
+  const previousRealm = previousContext.Realm;
+  // 10. Perform ! AsyncGeneratorCompleteStep(generator, completion, false, previousRealm).
+  X(AsyncGeneratorCompleteStep(generator, completion, Value.false, previousRealm));
+  // 11. Let queue be generator.[[AsyncGeneratorQueue]].
+  const queue = generator.AsyncGeneratorQueue;
+  // 12. If queue is not empty, then
+  if (queue.length > 0) {
+    // a. NOTE: Execution continues without suspending the generator.
+    // b. Let toYield be the first element of queue.
+    const toYield = queue[0];
+    // c. Let resumptionValue be toYield.[[Completion]].
+    const resumptionValue = toYield.Completion;
+    // d. Return AsyncGeneratorUnwrapYieldResumption(resumptionValue).
+    return yield* AsyncGeneratorUnwrapYieldResumption(resumptionValue);
+  } else { // 13. Else,
+    // a. Set generator.[[AsyncGeneratorState]] to suspendedYield.
+    generator.AsyncGeneratorState = 'suspendedYield';
+    // b. Remove genContext from the execution context stack and restore the execution context that is at the top of the execution context stack as the running execution context.
+    surroundingAgent.executionContextStack.pop(genContext);
+    // c. Set the code evaluation state of genContext such that when evaluation is resumed with a Completion resumptionValue the following steps will be performed:
+    const resumptionValue = EnsureCompletion(yield handleInResume(() => Value.undefined));
+    // i. Return AsyncGeneratorUnwrapYieldResumption(resumptionValue).
+    return yield* AsyncGeneratorUnwrapYieldResumption(resumptionValue);
+    // ii. NOTE: When the above step returns, it returns to the evaluation of the YieldExpression production that originally called this abstract operation.
 
-  // a. If resumptionValue.[[Type]] is not return, return Completion(resumptionValue).
-  if (resumptionValue.Type !== 'return') {
-    return Completion(resumptionValue);
+    // d. Return undefined.
+    // e. NOTE: This returns to the evaluation of the operation that had most previously resumed evaluation of genContext.
   }
-  // b. Let awaited be Await(resumptionValue.[[Value]]).
-  const awaited = EnsureCompletion(yield* Await(resumptionValue.Value));
-  // c. If awaited.[[Type]] is throw, return Completion(awaited).
-  if (awaited.Type === 'throw') {
-    return Completion(awaited);
-  }
-  // d. Assert: awaited.[[Type]] is normal.
-  Assert(awaited.Type === 'normal');
-  // e. Return Completion { [[Type]]: return, [[Value]]: awaited.[[Value]], [[Target]]: empty }.
-  return new Completion({ Type: 'return', Value: awaited.Value, Target: undefined });
-  // f. NOTE: When one of the above steps returns, it returns to the evaluation of the YieldExpression production that originally called this abstract operation.
+}
 
-  // 9. Return ! AsyncGeneratorResolve(generator, value, false, generator.[[GeneratorBrand]]).
-  // 10. NOTE: This returns to the evaluation of the operation that had most previously resumed evaluation of genContext.
+// #sec-asyncgeneratorawaitreturn
+export function AsyncGeneratorAwaitReturn(generator) {
+  // 1. Let queue be generator.[[AsyncGeneratorQueue]].
+  const queue = generator.AsyncGeneratorQueue;
+  // 2. Assert: queue is not empty.
+  Assert(queue.length > 0);
+  // 3. Let next be the first element of queue.
+  const next = queue[0];
+  // 4. Let completion be next.[[Completion]].
+  const completion = next.Completion;
+  // 5. Assert: completion.[[Type]] is return.
+  Assert(completion.Type === 'return');
+  // 6. Let promise be ? PromiseResolve(%Promise%, completion.[[Value]]).
+  const promise = Q(PromiseResolve(surroundingAgent.intrinsic('%Promise%'), completion.Value));
+  // 7. Let fulfilledClosure be a new Abstract Closure with parameters (value) that captures generator and performs the following steps when called:
+  const fulfilledClosure = ([value = Value.undefined]) => {
+    // a. Set generator.[[AsyncGeneratorState]] to completed.
+    generator.AsyncGeneratorState = 'completed';
+    // b. Let result be NormalCompletion(value).
+    const result = NormalCompletion(value);
+    // c. Perform ! AsyncGeneratorCompleteStep(generator, result, true).
+    X(AsyncGeneratorCompleteStep(generator, result, Value.true));
+    // d. Perform ! AsyncGeneratorDrainQueue(generator).
+    X(AsyncGeneratorDrainQueue(generator));
+    // e. Return undefined.
+    return Value.undefined;
+  };
+  // 8. Let onFulfilled be ! CreateBuiltinFunction(fulfilledClosure, 1, "", « »).
+  const onFulfilled = X(CreateBuiltinFunction(fulfilledClosure, 1, new Value(''), []));
+  // 9. Let rejectedClosure be a new Abstract Closure with parameters (reason) that captures generator and performs the following steps when called:
+  const rejectedClosure = ([reason = Value.undefined]) => {
+    // a. Set generator.[[AsyncGeneratorState]] to completed.
+    generator.AsyncGeneratorState = 'completed';
+    // b. Let result be ThrowCompletion(reason).
+    const result = ThrowCompletion(reason);
+    // c. Perform ! AsyncGeneratorCompleteStep(generator, result, true).
+    X(AsyncGeneratorCompleteStep(generator, result, Value.true));
+    // d. Perform ! AsyncGeneratorDrainQueue(generator).
+    X(AsyncGeneratorDrainQueue(generator));
+    // e. Return undefined.
+    return Value.undefined;
+  };
+  // 10. Let onRejected be ! CreateBuiltinFunction(rejectedClosure, 1, "", « »).
+  const onRejected = X(CreateBuiltinFunction(rejectedClosure, 1, new Value(''), []));
+  // 11. Perform ! PerformPromiseThen(promise, onFulfilled, onRejected).
+  X(PerformPromiseThen(promise, onFulfilled, onRejected));
+}
+
+// #sec-asyncgeneratordrainqueue
+function AsyncGeneratorDrainQueue(generator) {
+  // 1. Assert: generator.[[AsyncGeneratorState]] is completed.
+  Assert(generator.AsyncGeneratorState === 'completed');
+  // 2. Let queue be generator.[[AsyncGeneratorQueue]].
+  const queue = generator.AsyncGeneratorQueue;
+  // 3. If queue is empty, return.
+  if (queue.length === 0) {
+    return;
+  }
+  // 4. Let done be false.
+  let done = false;
+  // 5. Repeat, while done is false,
+  while (done === false) {
+    // a. Let next be the first element of queue.
+    const next = queue[0];
+    // b. Let completion be next.[[Completion]].
+    let completion = next.Completion;
+    // c. If completion.[[Type]] is return, then
+    if (completion.Type === 'return') {
+      // i. Set generator.[[AsyncGeneratorState]] to awaiting-return.
+      generator.AsyncGeneratorState = 'awaiting-return';
+      // ii. Perform ! AsyncGeneratorAwaitReturn(generator).
+      X(AsyncGeneratorAwaitReturn(generator));
+      // iii. Set done to true.
+      done = true;
+    } else { // d. Else,
+      // i. If completion.[[Type]] is normal, then
+      if (completion.type === 'normal') {
+        // 1. Set completion to NormalCompletion(undefined).
+        completion = NormalCompletion(Value.undefined);
+      }
+      // ii. Perform ! AsyncGeneratorCompleteStep(generator, completion, true).
+      X(AsyncGeneratorCompleteStep(generator, completion, Value.true));
+      // iii. If queue is empty, set done to true.
+      if (queue.length === 0) {
+        done = true;
+      }
+    }
+  }
 }
 
 // #sec-createasynciteratorfromclosure
