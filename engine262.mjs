@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 8993f984cfa951ccd0adbcf5fea0e2335f5be12c
+ * engine262 0.0.1 dc376b5390c917a052a4cddd0b59745fab13a870
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -30250,8 +30250,8 @@ function AsyncFunctionStart(promiseCapability, asyncFunctionBody) {
   }
 }
 
-// 25.5 #sec-asyncgenerator-objects
-// 25.5.3.1 #sec-asyncgeneratorrequest-records
+// #sec-asyncgenerator-objects
+// #sec-asyncgeneratorrequest-records
 
 class AsyncGeneratorRequestRecord {
   constructor(completion, promiseCapability) {
@@ -30259,17 +30259,16 @@ class AsyncGeneratorRequestRecord {
     this.Capability = promiseCapability;
   }
 
-} // 25.5.3.2 #sec-asyncgeneratorstart
+} // #sec-asyncgeneratorstart
 
 
 function AsyncGeneratorStart(generator, generatorBody) {
-  // 1. Assert: generator is an AsyncGenerator instance.
-  // 2. Assert: generator.[[AsyncGeneratorState]] is undefined.
-  Assert(generator.AsyncGeneratorState === Value.undefined, "generator.AsyncGeneratorState === Value.undefined"); // 3. Let genContext be the running execution context.
+  // 1. Assert: generator.[[AsyncGeneratorState]] is undefined.
+  Assert(generator.AsyncGeneratorState === Value.undefined, "generator.AsyncGeneratorState === Value.undefined"); // 2. Let genContext be the running execution context.
 
-  const genContext = surroundingAgent.runningExecutionContext; // 4. Set the Generator component of genContext to generator.
+  const genContext = surroundingAgent.runningExecutionContext; // 3. Set the Generator component of genContext to generator.
 
-  genContext.Generator = generator; // 5. Set the code evaluation state of genContext such that when evaluation
+  genContext.Generator = generator; // 4. Set the code evaluation state of genContext such that when evaluation
   //    is resumed for that execution context the following steps will be performed:
 
   genContext.codeEvaluationState = function* resumer() {
@@ -30278,43 +30277,38 @@ function AsyncGeneratorStart(generator, generatorBody) {
     // b. Else,
     //     i. Assert: generatorBody is an Abstract Closure.
     //     ii. Let result be generatorBody().
-    const result = EnsureCompletion( // Note: Engine262 can only perform the "If generatorBody is an Abstract Closure" check:
+    let result = EnsureCompletion( // Note: Engine262 can only perform the "If generatorBody is an Abstract Closure" check:
     yield* typeof generatorBody === 'function' ? generatorBody() : Evaluate(generatorBody)); // c. Assert: If we return here, the async generator either threw an exception or performed either an implicit or explicit return.
     // d. Remove genContext from the execution context stack and restore the execution context
     //    that is at the top of the execution context stack as the running execution context.
 
     surroundingAgent.executionContextStack.pop(genContext); // e. Set generator.[[AsyncGeneratorState]] to completed.
 
-    generator.AsyncGeneratorState = 'completed';
-    let resultValue; // f. If result is a normal completion, let resultValue be undefined.
+    generator.AsyncGeneratorState = 'completed'; // f. If result.[[Type]] is normal, set result to NormalCompletion(undefined).
 
-    if (result instanceof NormalCompletion) {
-      resultValue = Value.undefined;
-    } else {
-      // g. Else,
-      // i. Let resultValue be result.[[Value]].
-      resultValue = result.Value; // ii. If result.[[Type]] is not return, then
-
-      if (result.Type !== 'return') {
-        let _temp = AsyncGeneratorReject(generator, resultValue);
-
-        Assert(!(_temp instanceof AbruptCompletion), "AsyncGeneratorReject(generator, resultValue)" + ' returned an abrupt completion');
-        /* c8 ignore if */
-
-        /* c8 ignore if */
-        if (_temp instanceof Completion) {
-          _temp = _temp.Value;
-        }
-
-        // 1. Return ! AsyncGeneratorReject(generator, resultValue).
-        return _temp;
-      }
-    } // h. Return ! AsyncGeneratorResolve(generator, resultValue, true).
+    if (result.Type === 'normal') {
+      result = NormalCompletion(Value.undefined);
+    } // g. If result.[[Type]] is return, set result to NormalCompletion(result.[[Value]]).
 
 
-    let _temp2 = AsyncGeneratorResolve(generator, resultValue, Value.true);
+    if (result.Type === 'return') {
+      result = NormalCompletion(result.Value);
+    } // h. Perform ! AsyncGeneratorCompleteStep(generator, result, true).
 
-    Assert(!(_temp2 instanceof AbruptCompletion), "AsyncGeneratorResolve(generator, resultValue, Value.true)" + ' returned an abrupt completion');
+
+    let _temp = AsyncGeneratorCompleteStep(generator, result, Value.true);
+
+    Assert(!(_temp instanceof AbruptCompletion), "AsyncGeneratorCompleteStep(generator, result, Value.true)" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    let _temp2 = AsyncGeneratorDrainQueue(generator);
+
+    Assert(!(_temp2 instanceof AbruptCompletion), "AsyncGeneratorDrainQueue(generator)" + ' returned an abrupt completion');
     /* c8 ignore if */
 
     /* c8 ignore if */
@@ -30322,15 +30316,15 @@ function AsyncGeneratorStart(generator, generatorBody) {
       _temp2 = _temp2.Value;
     }
 
-    return _temp2;
-  }(); // 6. Set generator.[[AsyncGeneratorContext]] to genContext.
+    return Value.undefined;
+  }(); // 5. Set generator.[[AsyncGeneratorContext]] to genContext.
 
 
-  generator.AsyncGeneratorContext = genContext; // 7. Set generator.[[AsyncGeneratorState]] to suspendedStart.
+  generator.AsyncGeneratorContext = genContext; // 6. Set generator.[[AsyncGeneratorState]] to suspendedStart.
 
-  generator.AsyncGeneratorState = 'suspendedStart'; // 8. Set generator.[[AsyncGeneratorQueue]] to a new empty List.
+  generator.AsyncGeneratorState = 'suspendedStart'; // 7. Set generator.[[AsyncGeneratorQueue]] to a new empty List.
 
-  generator.AsyncGeneratorQueue = []; // 9. Return undefined.
+  generator.AsyncGeneratorQueue = []; // 8. Return undefined.
 
   return Value.undefined;
 } // #sec-asyncgeneratorvalidate
@@ -30389,357 +30383,139 @@ function AsyncGeneratorValidate(generator, generatorBrand) {
   if (brand === undefined || generatorBrand === undefined ? brand !== generatorBrand : SameValue(brand, generatorBrand) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', generatorBrandToErrorMessageType(generatorBrand) || 'AsyncGenerator', generator);
   }
-} // 25.5.3.3 #sec-asyncgeneratorresolve
+} // #sec-asyncgeneratorenqueue
 
-function AsyncGeneratorResolve(generator, value, done) {
-  // 1. Assert: generator is an AsyncGenerator instance.
-  // 2. Let queue be generator.[[AsyncGeneratorQueue]].
-  const queue = generator.AsyncGeneratorQueue; // 3. Assert: queue is not an empty List.
+function AsyncGeneratorEnqueue(generator, completion, promiseCapability) {
+  // 1. Let request be AsyncGeneratorRequest { [[Completion]]: completion, [[Capability]]: promiseCapability }.
+  const request = new AsyncGeneratorRequestRecord(completion, promiseCapability); // 2. Append request to the end of generator.[[AsyncGeneratorQueue]].
 
-  Assert(queue.length > 0, "queue.length > 0"); // 4. Let next be the first element of queue.
-  // 5. Remove the first element from queue.
+  generator.AsyncGeneratorQueue.push(request);
+} // #sec-asyncgeneratorcompletestep
 
-  const next = queue.shift(); // 6. Let promiseCapability be next.[[Capability]].
+function AsyncGeneratorCompleteStep(generator, completion, done, realm) {
+  // 1. Let queue be generator.[[AsyncGeneratorQueue]].
+  const queue = generator.AsyncGeneratorQueue; // 2. Assert: queue is not empty.
 
-  const promiseCapability = next.Capability; // 7. Let iteratorResult be ! CreateIterResultObject(value, done).
+  Assert(queue.length > 0, "queue.length > 0"); // 3. Let next be the first element of queue.
+  // 4. Remove the first element from queue.
 
-  let _temp6 = CreateIterResultObject(value, done);
+  const next = queue.shift(); // 5. Let promiseCapability be next.[[Capability]].
 
-  Assert(!(_temp6 instanceof AbruptCompletion), "CreateIterResultObject(value, done)" + ' returned an abrupt completion');
-  /* c8 ignore if */
+  const promiseCapability = next.Capability; // 6. Let value be completion.[[Value]].
 
-  /* c8 ignore if */
-  if (_temp6 instanceof Completion) {
-    _temp6 = _temp6.Value;
-  }
+  const value = completion.Value; // 7. If completion.[[Type]] is throw, then
 
-  const iteratorResult = _temp6; // 8. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iteratorResult »).
+  if (completion.Type === 'throw') {
+    let _temp6 = Call(promiseCapability.Reject, Value.undefined, [value]);
 
-  let _temp7 = Call(promiseCapability.Resolve, Value.undefined, [iteratorResult]);
+    Assert(!(_temp6 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [value])" + ' returned an abrupt completion');
+    /* c8 ignore if */
 
-  Assert(!(_temp7 instanceof AbruptCompletion), "Call(promiseCapability.Resolve, Value.undefined, [iteratorResult])" + ' returned an abrupt completion');
-  /* c8 ignore if */
+    /* c8 ignore if */
+    if (_temp6 instanceof Completion) {
+      _temp6 = _temp6.Value;
+    }
+  } else {
+    // 8. Else,
+    // a. Assert: completion.[[Type]] is normal.
+    Assert(completion.Type === 'normal', "completion.Type === 'normal'");
+    let iteratorResult; // b. If realm is present, then
 
-  /* c8 ignore if */
-  if (_temp7 instanceof Completion) {
-    _temp7 = _temp7.Value;
-  }
+    if (realm !== undefined) {
+      // i. Let oldRealm be the running execution context's Realm.
+      const oldRealm = surroundingAgent.runningExecutionContext.Realm; // ii. Set the running execution context's Realm to realm.
 
-  let _temp8 = AsyncGeneratorResumeNext(generator);
+      surroundingAgent.runningExecutionContext.Realm = realm; // iii. Let iteratorResult be ! CreateIterResultObject(value, done).
 
-  Assert(!(_temp8 instanceof AbruptCompletion), "AsyncGeneratorResumeNext(generator)" + ' returned an abrupt completion');
-  /* c8 ignore if */
+      let _temp7 = CreateIterResultObject(value, done);
 
-  /* c8 ignore if */
-  if (_temp8 instanceof Completion) {
-    _temp8 = _temp8.Value;
-  }
+      Assert(!(_temp7 instanceof AbruptCompletion), "CreateIterResultObject(value, done)" + ' returned an abrupt completion');
+      /* c8 ignore if */
 
-  return Value.undefined;
-} // 25.5.3.4 #sec-asyncgeneratorreject
-
-
-AsyncGeneratorResolve.section = 'https://tc39.es/ecma262/#sec-asyncgeneratorresolve';
-
-function AsyncGeneratorReject(generator, exception) {
-  // 1. Assert: generator is an AsyncGenerator instance.
-  // 2. Let queue be generator.[[AsyncGeneratorQueue]].
-  const queue = generator.AsyncGeneratorQueue; // 3. Assert: queue is not an empty List.
-
-  Assert(queue.length > 0, "queue.length > 0"); // 4. Let next be the first element of queue.
-  // 5. Remove the first element from queue.
-
-  const next = queue.shift(); // 6. Let promiseCapability be next.[[Capability]].
-
-  const promiseCapability = next.Capability; // 7. Perform ! Call(promiseCapability.[[Reject]], undefined, « exception »).
-
-  let _temp9 = Call(promiseCapability.Reject, Value.undefined, [exception]);
-
-  Assert(!(_temp9 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [exception])" + ' returned an abrupt completion');
-  /* c8 ignore if */
-
-  /* c8 ignore if */
-  if (_temp9 instanceof Completion) {
-    _temp9 = _temp9.Value;
-  }
-
-  let _temp10 = AsyncGeneratorResumeNext(generator);
-
-  Assert(!(_temp10 instanceof AbruptCompletion), "AsyncGeneratorResumeNext(generator)" + ' returned an abrupt completion');
-  /* c8 ignore if */
-
-  /* c8 ignore if */
-  if (_temp10 instanceof Completion) {
-    _temp10 = _temp10.Value;
-  }
-
-  return Value.undefined;
-} // 25.5.3.5.1 #async-generator-resume-next-return-processor-fulfilled
-
-
-AsyncGeneratorReject.section = 'https://tc39.es/ecma262/#sec-asyncgeneratorreject';
-
-function AsyncGeneratorResumeNextReturnProcessorFulfilledFunctions([value = Value.undefined]) {
-  // 1. Let F be the active function object.
-  const F = surroundingAgent.activeFunctionObject; // 2. Set F.[[Generator]].[[AsyncGeneratorState]] to completed.
-
-  F.Generator.AsyncGeneratorState = 'completed'; // 3. Return ! AsyncGeneratorResolve(F.[[Generator]], value, true).
-
-  let _temp11 = AsyncGeneratorResolve(F.Generator, value, Value.true);
-
-  Assert(!(_temp11 instanceof AbruptCompletion), "AsyncGeneratorResolve(F.Generator, value, Value.true)" + ' returned an abrupt completion');
-  /* c8 ignore if */
-
-  /* c8 ignore if */
-  if (_temp11 instanceof Completion) {
-    _temp11 = _temp11.Value;
-  }
-
-  return _temp11;
-} // 25.5.3.5.2 #async-generator-resume-next-return-processor-rejected
-
-
-function AsyncGeneratorResumeNextReturnProcessorRejectedFunctions([reason = Value.undefined]) {
-  // 1. Let F be the active function object.
-  const F = surroundingAgent.activeFunctionObject; // 2. Set F.[[Generator]].[[AsyncGeneratorState]] to completed.
-
-  F.Generator.AsyncGeneratorState = 'completed'; // 3. Return ! AsyncGeneratorReject(F.[[Generator]], reason).
-
-  let _temp12 = AsyncGeneratorReject(F.Generator, reason);
-
-  Assert(!(_temp12 instanceof AbruptCompletion), "AsyncGeneratorReject(F.Generator, reason)" + ' returned an abrupt completion');
-  /* c8 ignore if */
-
-  /* c8 ignore if */
-  if (_temp12 instanceof Completion) {
-    _temp12 = _temp12.Value;
-  }
-
-  return _temp12;
-} // 25.5.3.5 #sec-asyncgeneratorresumenext
-
-
-function AsyncGeneratorResumeNext(generator) {
-  // 1. Assert: generator is an AsyncGenerator instance.
-  // 2. Let state be generator.[[AsyncGeneratorState]].
-  let state = generator.AsyncGeneratorState; // 3. Assert: state is not executing.
-
-  Assert(state !== 'executing', "state !== 'executing'"); // 4. If state is awaiting-return, return undefined.
-
-  if (state === 'awaiting-return') {
-    return Value.undefined;
-  } // 5. Let queue be generator.[[AsyncGeneratorQueue]].
-
-
-  const queue = generator.AsyncGeneratorQueue; // 6. If queue is an empty List, return undefined.
-
-  if (queue.length === 0) {
-    return Value.undefined;
-  } // 7. Let next be the value of the first element of queue.
-
-
-  const next = queue[0]; // 8. Assert: next is an AsyncGeneratorRequest record.
-
-  Assert(next instanceof AsyncGeneratorRequestRecord, "next instanceof AsyncGeneratorRequestRecord"); // 9. Let completion be next.[[Completion]].
-
-  const completion = next.Completion; // 10. If completion is an abrupt completion, then
-
-  if (completion instanceof AbruptCompletion) {
-    // a. If state is suspendedStart, then
-    if (state === 'suspendedStart') {
-      // i. Set generator.[[AsyncGeneratorState]] to completed.
-      generator.AsyncGeneratorState = 'completed'; // ii. Set state to completed.
-
-      state = 'completed';
-    } // b. If state is completed, then
-
-
-    if (state === 'completed') {
-      // i. If completion.[[Type]] is return, then
-      if (completion.Type === 'return') {
-        // 1. Set generator.[[AsyncGeneratorState]] to awaiting-return.
-        generator.AsyncGeneratorState = 'awaiting-return'; // 2. Let promise be ? PromiseResolve(%Promise%, completion.[[Value]]).
-
-        let _temp13 = PromiseResolve(surroundingAgent.intrinsic('%Promise%'), completion.Value);
-        /* c8 ignore if */
-
-
-        /* c8 ignore if */
-        if (_temp13 instanceof AbruptCompletion) {
-          return _temp13;
-        }
-        /* c8 ignore if */
-
-
-        /* c8 ignore if */
-        if (_temp13 instanceof Completion) {
-          _temp13 = _temp13.Value;
-        }
-
-        const promise = _temp13; // 3. Let stepsFulfilled be the algorithm steps defined in AsyncGeneratorResumeNext Return Processor Fulfilled Functions.
-
-        const stepsFulfilled = AsyncGeneratorResumeNextReturnProcessorFulfilledFunctions; // 4. Let lengthFulfilled be the number of non-optional parameters of the function definition in AsyncGeneratorResumeNext Return Processor Fulfilled Functions.
-
-        const lengthFulfilled = 1; // 5. Let onFulfilled be ! CreateBuiltinFunction(stepsFulfilled, lengthFulfilled, "", « [[Generator]] »).
-
-        let _temp14 = CreateBuiltinFunction(stepsFulfilled, lengthFulfilled, new Value(''), ['Generator']);
-
-        Assert(!(_temp14 instanceof AbruptCompletion), "CreateBuiltinFunction(stepsFulfilled, lengthFulfilled, new Value(''), ['Generator'])" + ' returned an abrupt completion');
-        /* c8 ignore if */
-
-        /* c8 ignore if */
-        if (_temp14 instanceof Completion) {
-          _temp14 = _temp14.Value;
-        }
-
-        const onFulfilled = _temp14; // 6. Set onFulfilled.[[Generator]] to generator.
-
-        onFulfilled.Generator = generator; // 7. Let stepsRejected be the algorithm steps defined in AsyncGeneratorResumeNext Return Processor Rejected Functions.
-
-        const stepsRejected = AsyncGeneratorResumeNextReturnProcessorRejectedFunctions; // 8. Let lengthRejected be the number of non-optional parameters of the function definition in AsyncGeneratorResumeNext Return Processor Rejected Functions.
-
-        const lengthRejected = 1; // 9. Let onRejected be ! CreateBuiltinFunction(stepsRejected, lengthRejected, "", « [[Generator]] »).
-
-        let _temp15 = CreateBuiltinFunction(stepsRejected, lengthRejected, new Value(''), ['Generator']);
-
-        Assert(!(_temp15 instanceof AbruptCompletion), "CreateBuiltinFunction(stepsRejected, lengthRejected, new Value(''), ['Generator'])" + ' returned an abrupt completion');
-        /* c8 ignore if */
-
-        /* c8 ignore if */
-        if (_temp15 instanceof Completion) {
-          _temp15 = _temp15.Value;
-        }
-
-        const onRejected = _temp15; // 10. Set onRejected.[[Generator]] to generator.
-
-        onRejected.Generator = generator; // 11. Perform ! PerformPromiseThen(promise, onFulfilled, onRejected).
-
-        let _temp16 = PerformPromiseThen(promise, onFulfilled, onRejected);
-
-        Assert(!(_temp16 instanceof AbruptCompletion), "PerformPromiseThen(promise, onFulfilled, onRejected)" + ' returned an abrupt completion');
-        /* c8 ignore if */
-
-        /* c8 ignore if */
-        if (_temp16 instanceof Completion) {
-          _temp16 = _temp16.Value;
-        }
-
-        return Value.undefined;
-      } else {
-        // ii . Else,
-        // 1. Assert: completion.[[Type]] is throw.
-        Assert(completion.Type === 'throw', "completion.Type === 'throw'"); // 2. Perform ! AsyncGeneratorReject(generator, completion.[[Value]]).
-
-        let _temp17 = AsyncGeneratorReject(generator, completion.Value);
-
-        Assert(!(_temp17 instanceof AbruptCompletion), "AsyncGeneratorReject(generator, completion.Value)" + ' returned an abrupt completion');
-        /* c8 ignore if */
-
-        /* c8 ignore if */
-        if (_temp17 instanceof Completion) {
-          _temp17 = _temp17.Value;
-        }
-
-        return Value.undefined;
+      /* c8 ignore if */
+      if (_temp7 instanceof Completion) {
+        _temp7 = _temp7.Value;
       }
-    }
-  } else if (state === 'completed') {
-    let _temp18 = AsyncGeneratorResolve(generator, Value.undefined, Value.true);
 
-    Assert(!(_temp18 instanceof AbruptCompletion), "AsyncGeneratorResolve(generator, Value.undefined, Value.true)" + ' returned an abrupt completion');
+      iteratorResult = _temp7; // iv. Set the running execution context's Realm to oldRealm.
+
+      surroundingAgent.runningExecutionContext.Realm = oldRealm;
+    } else {
+      let _temp8 = CreateIterResultObject(value, done);
+
+      Assert(!(_temp8 instanceof AbruptCompletion), "CreateIterResultObject(value, done)" + ' returned an abrupt completion');
+      /* c8 ignore if */
+
+      /* c8 ignore if */
+      if (_temp8 instanceof Completion) {
+        _temp8 = _temp8.Value;
+      }
+
+      // c. Else,
+      // i. Let iteratorResult be ! CreateIterResultObject(value, done).
+      iteratorResult = _temp8;
+    } // d. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iteratorResult »).
+
+
+    let _temp9 = Call(promiseCapability.Resolve, Value.undefined, [iteratorResult]);
+
+    Assert(!(_temp9 instanceof AbruptCompletion), "Call(promiseCapability.Resolve, Value.undefined, [iteratorResult])" + ' returned an abrupt completion');
     /* c8 ignore if */
 
     /* c8 ignore if */
-    if (_temp18 instanceof Completion) {
-      _temp18 = _temp18.Value;
+    if (_temp9 instanceof Completion) {
+      _temp9 = _temp9.Value;
     }
-
-    // 11. Else if state is completed, return ! AsyncGeneratorResolve(generator, undefined, true).
-    return _temp18;
-  } // 12. Assert: state is either suspendedStart or suspendedYield.
-
-
-  Assert(state === 'suspendedStart' || state === 'suspendedYield', "state === 'suspendedStart' || state === 'suspendedYield'"); // 13. Let genContext be generator.[[AsyncGeneratorContext]].
-
-  const genContext = generator.AsyncGeneratorContext; // 14. Let callerContext be the running execution context.
-
-  const callerContext = surroundingAgent.runningExecutionContext; // 15. Suspend callerContext.
-  // 16. Set generator.[[AsyncGeneratorState]] to executing.
-
-  generator.AsyncGeneratorState = 'executing'; // 17. Push genContext onto the execution context stack; genContext is now the running execution context.
-
-  surroundingAgent.executionContextStack.push(genContext); // 18. Resume the suspended evaluation of genContext using completion as the result of the operation that suspended it. Let result be the completion record returned by the resumed computation.
-
-  const result = resume(genContext, completion); // 19. Assert: result is never an abrupt completion.
-
-  Assert(!(result instanceof AbruptCompletion), "!(result instanceof AbruptCompletion)"); // 20. Assert: When we return here, genContext has already been removed from the execution context stack and callerContext is the currently running execution context.
-
-  Assert(surroundingAgent.runningExecutionContext === callerContext, "surroundingAgent.runningExecutionContext === callerContext"); // 21. Return undefined.
-
-  return Value.undefined;
-} // 25.5.3.6 #sec-asyncgeneratorenqueue
-
-
-AsyncGeneratorResumeNext.section = 'https://tc39.es/ecma262/#sec-asyncgeneratorresumenext';
-function AsyncGeneratorEnqueue(generator, completion, generatorBrand) {
-  Assert(completion instanceof Completion, "completion instanceof Completion"); // 1. Let promiseCapability be ! NewPromiseCapability(%Promise%).
-
-  let _temp19 = NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'));
-
-  Assert(!(_temp19 instanceof AbruptCompletion), "NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))" + ' returned an abrupt completion');
-  /* c8 ignore if */
-
-  /* c8 ignore if */
-  if (_temp19 instanceof Completion) {
-    _temp19 = _temp19.Value;
   }
-
-  const promiseCapability = _temp19; // 2. Let check be AsyncGeneratorValidate(generator, generatorBrand).
-
-  const check = AsyncGeneratorValidate(generator, generatorBrand); // 3. If check is an abrupt completion, then
-
-  if (check instanceof AbruptCompletion) {
-    // a. Let badGeneratorError be a newly created TypeError object.
-    const badGeneratorError = surroundingAgent.Throw('TypeError', 'NotATypeObject', generatorBrandToErrorMessageType(generatorBrand) || 'AsyncGenerator', generator).Value; // b. Perform ! Call(promiseCapability.[[Reject]], undefined, « badGeneratorError »).
-
-    let _temp20 = Call(promiseCapability.Reject, Value.undefined, [badGeneratorError]);
-
-    Assert(!(_temp20 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [badGeneratorError])" + ' returned an abrupt completion');
-    /* c8 ignore if */
-
-    /* c8 ignore if */
-    if (_temp20 instanceof Completion) {
-      _temp20 = _temp20.Value;
-    }
-
-    return promiseCapability.Promise;
-  } // 4. Let queue be generator.[[AsyncGeneratorQueue]].
+} // #sec-asyncgeneratorresume
 
 
-  const queue = generator.AsyncGeneratorQueue; // 5. Let request be AsyncGeneratorRequest { [[Completion]]: completion, [[Capability]]: promiseCapability }.
+AsyncGeneratorCompleteStep.section = 'https://tc39.es/ecma262/#sec-asyncgeneratorcompletestep';
+function AsyncGeneratorResume(generator, completion) {
+  // 1. Assert: generator.[[AsyncGeneratorState]] is either suspendedStart or suspendedYield.
+  Assert(generator.AsyncGeneratorState === 'suspendedStart' || generator.AsyncGeneratorState === 'suspendedYield', "generator.AsyncGeneratorState === 'suspendedStart' || generator.AsyncGeneratorState === 'suspendedYield'"); // 2. Let genContext be generator.[[AsyncGeneratorContext]].
 
-  const request = new AsyncGeneratorRequestRecord(completion, promiseCapability); // 6. Append request to the end of queue.
+  const genContext = generator.AsyncGeneratorContext; // 3. Let callerContext be the running execution context.
 
-  queue.push(request); // 7. Let state be generator.[[AsyncGeneratorState]].
+  const callerContext = surroundingAgent.runningExecutionContext; // 4. Suspend callerContext.
+  // 5. Set generator.[[AsyncGeneratorState]] to executing.
 
-  const state = generator.AsyncGeneratorState; // 8. If state is not executing, then
+  generator.AsyncGeneratorState = 'executing'; // 6. Push genContext onto the execution context stack; genContext is now the running execution context.
 
-  if (state !== 'executing') {
-    let _temp21 = AsyncGeneratorResumeNext(generator);
+  surroundingAgent.executionContextStack.push(genContext); // 7. Resume the suspended evaluation of genContext using completion as the result of the operation that suspended it. Let result be the completion record returned by the resumed computation.
 
-    Assert(!(_temp21 instanceof AbruptCompletion), "AsyncGeneratorResumeNext(generator)" + ' returned an abrupt completion');
-    /* c8 ignore if */
+  const result = resume(genContext, completion); // 8. Assert: result is never an abrupt completion.
 
-    /* c8 ignore if */
-    if (_temp21 instanceof Completion) {
-      _temp21 = _temp21.Value;
-    }
-  } // 9. Return promiseCapability.[[Promise]].
+  Assert(!(result instanceof AbruptCompletion), "!(result instanceof AbruptCompletion)"); // 9. Assert: When we return here, genContext has already been removed from the execution context stack and callerContext is the currently running execution context.
+
+  Assert(surroundingAgent.runningExecutionContext === callerContext, "surroundingAgent.runningExecutionContext === callerContext");
+} // #sec-asyncgeneratorunwrapyieldresumption
+
+function* AsyncGeneratorUnwrapYieldResumption(resumptionValue) {
+  // 1. If resumptionValue.[[Type]] is not return, return Completion(resumptionValue).
+  if (resumptionValue.Type !== 'return') {
+    return Completion(resumptionValue);
+  } // 2. Let awaited be Await(resumptionValue.[[Value]]).
 
 
-  return promiseCapability.Promise;
+  const awaited = EnsureCompletion(yield* Await(resumptionValue.Value)); // 3. If awaited.[[Type]] is throw, return Completion(awaited).
+
+  if (awaited.Type === 'throw') {
+    return Completion(awaited);
+  } // 4. Assert: awaited.[[Type]] is normal.
+
+
+  Assert(awaited.Type === 'normal', "awaited.Type === 'normal'"); // 5. Return Completion { [[Type]]: return, [[Value]]: awaited.[[Value]], [[Target]]: empty }.
+
+  return new Completion({
+    Type: 'return',
+    Value: awaited.Value,
+    Target: undefined
+  });
 } // #sec-asyncgeneratoryield
 
+
+AsyncGeneratorUnwrapYieldResumption.section = 'https://tc39.es/ecma262/#sec-asyncgeneratorunwrapyieldresumption';
 function* AsyncGeneratorYield(value) {
   // 1. Let genContext be the running execution context.
   const genContext = surroundingAgent.runningExecutionContext; // 2. Assert: genContext is the execution context of a generator.
@@ -30750,89 +30526,290 @@ function* AsyncGeneratorYield(value) {
 
   Assert(GetGeneratorKind() === 'async', "GetGeneratorKind() === 'async'"); // 5. Set value to ? Await(value).
 
-  let _temp22 = yield* Await(value);
+  let _temp10 = yield* Await(value);
   /* c8 ignore if */
 
 
   /* c8 ignore if */
-  if (_temp22 instanceof AbruptCompletion) {
-    return _temp22;
+  if (_temp10 instanceof AbruptCompletion) {
+    return _temp10;
   }
   /* c8 ignore if */
 
 
   /* c8 ignore if */
-  if (_temp22 instanceof Completion) {
-    _temp22 = _temp22.Value;
+  if (_temp10 instanceof Completion) {
+    _temp10 = _temp10.Value;
   }
 
-  value = _temp22; // 6. Set generator.[[AsyncGeneratorState]] to suspendedYield.
+  value = _temp10; // 6. Let completion be NormalCompletion(value).
 
-  generator.AsyncGeneratorState = 'suspendedYield'; // 7. Remove genContext from the execution context stack and restore the execution context that is at the top of the execution context stack as the running execution context.
+  const completion = NormalCompletion(value); // 7. Assert: The execution context stack has at least two elements.
 
-  surroundingAgent.executionContextStack.pop(genContext); // 8. Set the code evaluation state of genContext such that when evaluation is resumed with a Completion resumptionValue the following steps will be performed:
+  Assert(surroundingAgent.executionContextStack.length >= 2, "surroundingAgent.executionContextStack.length >= 2"); // 8. Let previousContext be the second to top element of the execution context stack.
 
-  const resumptionValue = EnsureCompletion(yield handleInResume(AsyncGeneratorResolve, generator, value, Value.false, generator.GeneratorBrand)); // a. If resumptionValue.[[Type]] is not return, return Completion(resumptionValue).
+  const previousContext = surroundingAgent.executionContextStack[surroundingAgent.executionContextStack.length - 2]; // 9. Let previousRealm be previousContext's Realm.
 
-  if (resumptionValue.Type !== 'return') {
-    return Completion(resumptionValue);
-  } // b. Let awaited be Await(resumptionValue.[[Value]]).
+  const previousRealm = previousContext.Realm; // 10. Perform ! AsyncGeneratorCompleteStep(generator, completion, false, previousRealm).
+
+  let _temp11 = AsyncGeneratorCompleteStep(generator, completion, Value.false, previousRealm);
+
+  Assert(!(_temp11 instanceof AbruptCompletion), "AsyncGeneratorCompleteStep(generator, completion, Value.false, previousRealm)" + ' returned an abrupt completion');
+  /* c8 ignore if */
+
+  /* c8 ignore if */
+  if (_temp11 instanceof Completion) {
+    _temp11 = _temp11.Value;
+  }
+
+  const queue = generator.AsyncGeneratorQueue; // 12. If queue is not empty, then
+
+  if (queue.length > 0) {
+    // a. NOTE: Execution continues without suspending the generator.
+    // b. Let toYield be the first element of queue.
+    const toYield = queue[0]; // c. Let resumptionValue be toYield.[[Completion]].
+
+    const resumptionValue = toYield.Completion; // d. Return AsyncGeneratorUnwrapYieldResumption(resumptionValue).
+
+    return yield* AsyncGeneratorUnwrapYieldResumption(resumptionValue);
+  } else {
+    // 13. Else,
+    // a. Set generator.[[AsyncGeneratorState]] to suspendedYield.
+    generator.AsyncGeneratorState = 'suspendedYield'; // b. Remove genContext from the execution context stack and restore the execution context that is at the top of the execution context stack as the running execution context.
+
+    surroundingAgent.executionContextStack.pop(genContext); // c. Set the code evaluation state of genContext such that when evaluation is resumed with a Completion resumptionValue the following steps will be performed:
+
+    const resumptionValue = EnsureCompletion(yield handleInResume(() => Value.undefined)); // i. Return AsyncGeneratorUnwrapYieldResumption(resumptionValue).
+
+    return yield* AsyncGeneratorUnwrapYieldResumption(resumptionValue); // ii. NOTE: When the above step returns, it returns to the evaluation of the YieldExpression production that originally called this abstract operation.
+    // d. Return undefined.
+    // e. NOTE: This returns to the evaluation of the operation that had most previously resumed evaluation of genContext.
+  }
+} // #sec-asyncgeneratorawaitreturn
+
+function AsyncGeneratorAwaitReturn(generator) {
+  // 1. Let queue be generator.[[AsyncGeneratorQueue]].
+  const queue = generator.AsyncGeneratorQueue; // 2. Assert: queue is not empty.
+
+  Assert(queue.length > 0, "queue.length > 0"); // 3. Let next be the first element of queue.
+
+  const next = queue[0]; // 4. Let completion be next.[[Completion]].
+
+  const completion = next.Completion; // 5. Assert: completion.[[Type]] is return.
+
+  Assert(completion.Type === 'return', "completion.Type === 'return'"); // 6. Let promise be ? PromiseResolve(%Promise%, completion.[[Value]]).
+
+  let _temp12 = PromiseResolve(surroundingAgent.intrinsic('%Promise%'), completion.Value);
+  /* c8 ignore if */
 
 
-  const awaited = EnsureCompletion(yield* Await(resumptionValue.Value)); // c. If awaited.[[Type]] is throw, return Completion(awaited).
+  /* c8 ignore if */
+  if (_temp12 instanceof AbruptCompletion) {
+    return _temp12;
+  }
+  /* c8 ignore if */
 
-  if (awaited.Type === 'throw') {
-    return Completion(awaited);
-  } // d. Assert: awaited.[[Type]] is normal.
+
+  /* c8 ignore if */
+  if (_temp12 instanceof Completion) {
+    _temp12 = _temp12.Value;
+  }
+
+  const promise = _temp12; // 7. Let fulfilledClosure be a new Abstract Closure with parameters (value) that captures generator and performs the following steps when called:
+
+  const fulfilledClosure = ([value = Value.undefined]) => {
+    // a. Set generator.[[AsyncGeneratorState]] to completed.
+    generator.AsyncGeneratorState = 'completed'; // b. Let result be NormalCompletion(value).
+
+    const result = NormalCompletion(value); // c. Perform ! AsyncGeneratorCompleteStep(generator, result, true).
+
+    let _temp13 = AsyncGeneratorCompleteStep(generator, result, Value.true);
+
+    Assert(!(_temp13 instanceof AbruptCompletion), "AsyncGeneratorCompleteStep(generator, result, Value.true)" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp13 instanceof Completion) {
+      _temp13 = _temp13.Value;
+    }
+
+    let _temp14 = AsyncGeneratorDrainQueue(generator);
+
+    Assert(!(_temp14 instanceof AbruptCompletion), "AsyncGeneratorDrainQueue(generator)" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp14 instanceof Completion) {
+      _temp14 = _temp14.Value;
+    }
+
+    return Value.undefined;
+  }; // 8. Let onFulfilled be ! CreateBuiltinFunction(fulfilledClosure, 1, "", « »).
 
 
-  Assert(awaited.Type === 'normal', "awaited.Type === 'normal'"); // e. Return Completion { [[Type]]: return, [[Value]]: awaited.[[Value]], [[Target]]: empty }.
+  let _temp15 = CreateBuiltinFunction(fulfilledClosure, 1, new Value(''), []);
 
-  return new Completion({
-    Type: 'return',
-    Value: awaited.Value,
-    Target: undefined
-  }); // f. NOTE: When one of the above steps returns, it returns to the evaluation of the YieldExpression production that originally called this abstract operation.
-  // 9. Return ! AsyncGeneratorResolve(generator, value, false, generator.[[GeneratorBrand]]).
-  // 10. NOTE: This returns to the evaluation of the operation that had most previously resumed evaluation of genContext.
+  Assert(!(_temp15 instanceof AbruptCompletion), "CreateBuiltinFunction(fulfilledClosure, 1, new Value(''), [])" + ' returned an abrupt completion');
+  /* c8 ignore if */
+
+  /* c8 ignore if */
+  if (_temp15 instanceof Completion) {
+    _temp15 = _temp15.Value;
+  }
+
+  const onFulfilled = _temp15; // 9. Let rejectedClosure be a new Abstract Closure with parameters (reason) that captures generator and performs the following steps when called:
+
+  const rejectedClosure = ([reason = Value.undefined]) => {
+    // a. Set generator.[[AsyncGeneratorState]] to completed.
+    generator.AsyncGeneratorState = 'completed'; // b. Let result be ThrowCompletion(reason).
+
+    const result = ThrowCompletion(reason); // c. Perform ! AsyncGeneratorCompleteStep(generator, result, true).
+
+    let _temp16 = AsyncGeneratorCompleteStep(generator, result, Value.true);
+
+    Assert(!(_temp16 instanceof AbruptCompletion), "AsyncGeneratorCompleteStep(generator, result, Value.true)" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp16 instanceof Completion) {
+      _temp16 = _temp16.Value;
+    }
+
+    let _temp17 = AsyncGeneratorDrainQueue(generator);
+
+    Assert(!(_temp17 instanceof AbruptCompletion), "AsyncGeneratorDrainQueue(generator)" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp17 instanceof Completion) {
+      _temp17 = _temp17.Value;
+    }
+
+    return Value.undefined;
+  }; // 10. Let onRejected be ! CreateBuiltinFunction(rejectedClosure, 1, "", « »).
+
+
+  let _temp18 = CreateBuiltinFunction(rejectedClosure, 1, new Value(''), []);
+
+  Assert(!(_temp18 instanceof AbruptCompletion), "CreateBuiltinFunction(rejectedClosure, 1, new Value(''), [])" + ' returned an abrupt completion');
+  /* c8 ignore if */
+
+  /* c8 ignore if */
+  if (_temp18 instanceof Completion) {
+    _temp18 = _temp18.Value;
+  }
+
+  const onRejected = _temp18; // 11. Perform ! PerformPromiseThen(promise, onFulfilled, onRejected).
+
+  let _temp19 = PerformPromiseThen(promise, onFulfilled, onRejected);
+
+  Assert(!(_temp19 instanceof AbruptCompletion), "PerformPromiseThen(promise, onFulfilled, onRejected)" + ' returned an abrupt completion');
+  /* c8 ignore if */
+
+  /* c8 ignore if */
+  if (_temp19 instanceof Completion) {
+    _temp19 = _temp19.Value;
+  }
+} // #sec-asyncgeneratordrainqueue
+
+function AsyncGeneratorDrainQueue(generator) {
+  // 1. Assert: generator.[[AsyncGeneratorState]] is completed.
+  Assert(generator.AsyncGeneratorState === 'completed', "generator.AsyncGeneratorState === 'completed'"); // 2. Let queue be generator.[[AsyncGeneratorQueue]].
+
+  const queue = generator.AsyncGeneratorQueue; // 3. If queue is empty, return.
+
+  if (queue.length === 0) {
+    return;
+  } // 4. Let done be false.
+
+
+  let done = false; // 5. Repeat, while done is false,
+
+  while (done === false) {
+    // a. Let next be the first element of queue.
+    const next = queue[0]; // b. Let completion be next.[[Completion]].
+
+    let completion = next.Completion; // c. If completion.[[Type]] is return, then
+
+    if (completion.Type === 'return') {
+      // i. Set generator.[[AsyncGeneratorState]] to awaiting-return.
+      generator.AsyncGeneratorState = 'awaiting-return'; // ii. Perform ! AsyncGeneratorAwaitReturn(generator).
+
+      let _temp20 = AsyncGeneratorAwaitReturn(generator);
+
+      Assert(!(_temp20 instanceof AbruptCompletion), "AsyncGeneratorAwaitReturn(generator)" + ' returned an abrupt completion');
+      /* c8 ignore if */
+
+      /* c8 ignore if */
+      if (_temp20 instanceof Completion) {
+        _temp20 = _temp20.Value;
+      }
+
+      done = true;
+    } else {
+      // d. Else,
+      // i. If completion.[[Type]] is normal, then
+      if (completion.type === 'normal') {
+        // 1. Set completion to NormalCompletion(undefined).
+        completion = NormalCompletion(Value.undefined);
+      } // ii. Perform ! AsyncGeneratorCompleteStep(generator, completion, true).
+
+
+      let _temp21 = AsyncGeneratorCompleteStep(generator, completion, Value.true);
+
+      Assert(!(_temp21 instanceof AbruptCompletion), "AsyncGeneratorCompleteStep(generator, completion, Value.true)" + ' returned an abrupt completion');
+      /* c8 ignore if */
+
+      /* c8 ignore if */
+      if (_temp21 instanceof Completion) {
+        _temp21 = _temp21.Value;
+      }
+
+      if (queue.length === 0) {
+        done = true;
+      }
+    }
+  }
 } // #sec-createasynciteratorfromclosure
 
+
+AsyncGeneratorDrainQueue.section = 'https://tc39.es/ecma262/#sec-asyncgeneratordrainqueue';
 function CreateAsyncIteratorFromClosure(closure, generatorBrand, generatorPrototype) {
   Assert(typeof closure === 'function', "typeof closure === 'function'"); // 1. NOTE: closure can contain uses of the Await shorthand, and uses of the Yield shorthand to yield an IteratorResult object.
   // 2. Let internalSlotsList be « [[AsyncGeneratorState]], [[AsyncGeneratorContext]], [[AsyncGeneratorQueue]], [[GeneratorBrand]] ».
 
   const internalSlotsList = ['AsyncGeneratorState', 'AsyncGeneratorContext', 'AsyncGeneratorQueue', 'GeneratorBrand']; // 3. Let generator be ! OrdinaryObjectCreate(generatorPrototype, internalSlotsList).
 
-  let _temp23 = OrdinaryObjectCreate(generatorPrototype, internalSlotsList);
+  let _temp22 = OrdinaryObjectCreate(generatorPrototype, internalSlotsList);
 
-  Assert(!(_temp23 instanceof AbruptCompletion), "OrdinaryObjectCreate(generatorPrototype, internalSlotsList)" + ' returned an abrupt completion');
+  Assert(!(_temp22 instanceof AbruptCompletion), "OrdinaryObjectCreate(generatorPrototype, internalSlotsList)" + ' returned an abrupt completion');
   /* c8 ignore if */
 
   /* c8 ignore if */
-  if (_temp23 instanceof Completion) {
-    _temp23 = _temp23.Value;
+  if (_temp22 instanceof Completion) {
+    _temp22 = _temp22.Value;
   }
 
-  const generator = _temp23; // 4. Set generator.[[GeneratorBrand]] to generatorBrand.
+  const generator = _temp22; // 4. Set generator.[[GeneratorBrand]] to generatorBrand.
 
   generator.GeneratorBrand = generatorBrand; // 5. Set generator.[[AsyncGeneratorState]] to undefined.
 
   generator.AsyncGeneratorState = Value.undefined; // 6. Perform ? AsyncGeneratorStart(generator, closure, generatorBrand).
 
-  let _temp24 = AsyncGeneratorStart(generator, closure);
+  let _temp23 = AsyncGeneratorStart(generator, closure);
   /* c8 ignore if */
 
 
   /* c8 ignore if */
-  if (_temp24 instanceof AbruptCompletion) {
-    return _temp24;
+  if (_temp23 instanceof AbruptCompletion) {
+    return _temp23;
   }
   /* c8 ignore if */
 
 
   /* c8 ignore if */
-  if (_temp24 instanceof Completion) {
-    _temp24 = _temp24.Value;
+  if (_temp23 instanceof Completion) {
+    _temp23 = _temp23.Value;
   }
 
   return generator;
@@ -61421,13 +61398,11 @@ function AsyncGeneratorPrototype_next([value = Value.undefined], {
   thisValue
 }) {
   // 1. Let generator be the this value.
-  const generator = thisValue; // 2. Let completion be NormalCompletion(value).
+  const generator = thisValue; // 2. Let promiseCapability be ! NewPromiseCapability(%Promise%).
 
-  const completion = NormalCompletion(value); // 3. Return ! AsyncGeneratorEnqueue(generator, completion, empty).
+  let _temp = NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'));
 
-  let _temp = AsyncGeneratorEnqueue(generator, completion, undefined);
-
-  Assert(!(_temp instanceof AbruptCompletion), "AsyncGeneratorEnqueue(generator, completion, undefined)" + ' returned an abrupt completion');
+  Assert(!(_temp instanceof AbruptCompletion), "NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))" + ' returned an abrupt completion');
   /* c8 ignore if */
 
   /* c8 ignore if */
@@ -61435,7 +61410,89 @@ function AsyncGeneratorPrototype_next([value = Value.undefined], {
     _temp = _temp.Value;
   }
 
-  return _temp;
+  const promiseCapability = _temp; // 3. Let result be AsyncGeneratorValidate(generator, empty).
+
+  let result = AsyncGeneratorValidate(generator, undefined); // 4. IfAbruptRejectPromise(result, promiseCapability).
+
+  /* c8 ignore if */
+  if (result instanceof AbruptCompletion) {
+    const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [result.Value]);
+
+    if (hygenicTemp2 instanceof AbruptCompletion) {
+      return hygenicTemp2;
+    }
+
+    return promiseCapability.Promise;
+  }
+  /* c8 ignore if */
+
+
+  /* c8 ignore if */
+  if (result instanceof Completion) {
+    result = result.Value;
+  }
+
+  // 5. Let state be generator.[[AsyncGeneratorState]].
+  const state = generator.AsyncGeneratorState; // 6. If state is completed, then
+
+  if (state === 'completed') {
+    let _temp2 = CreateIterResultObject(Value.undefined, Value.true);
+
+    Assert(!(_temp2 instanceof AbruptCompletion), "CreateIterResultObject(Value.undefined, Value.true)" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
+    }
+
+    // a. Let iteratorResult be ! CreateIterResultObject(undefined, true).
+    const iteratorResult = _temp2; // b. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iteratorResult »).
+
+    let _temp3 = Call(promiseCapability.Resolve, Value.undefined, [iteratorResult]);
+
+    Assert(!(_temp3 instanceof AbruptCompletion), "Call(promiseCapability.Resolve, Value.undefined, [iteratorResult])" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp3 instanceof Completion) {
+      _temp3 = _temp3.Value;
+    }
+
+    return promiseCapability.Promise;
+  } // 7. Let completion be NormalCompletion(value).
+
+
+  const completion = NormalCompletion(value); // 8. Perform ! AsyncGeneratorEnqueue(generator, completion, promiseCapability).
+
+  let _temp4 = AsyncGeneratorEnqueue(generator, completion, promiseCapability);
+
+  Assert(!(_temp4 instanceof AbruptCompletion), "AsyncGeneratorEnqueue(generator, completion, promiseCapability)" + ' returned an abrupt completion');
+  /* c8 ignore if */
+
+  /* c8 ignore if */
+  if (_temp4 instanceof Completion) {
+    _temp4 = _temp4.Value;
+  }
+
+  if (state === 'suspendedStart' || state === 'suspendedYield') {
+    let _temp5 = AsyncGeneratorResume(generator, completion);
+
+    Assert(!(_temp5 instanceof AbruptCompletion), "AsyncGeneratorResume(generator, completion)" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp5 instanceof Completion) {
+      _temp5 = _temp5.Value;
+    }
+  } else {
+    // 10. Else,
+    // a. Assert: state is either executing or awaiting-return.
+    Assert(state === 'executing' || state === 'awaiting-return', "state === 'executing' || state === 'awaiting-return'");
+  } // 11. Return promiseCapability.[[Promise]].
+
+
+  return promiseCapability.Promise;
 } // #sec-asyncgenerator-prototype-return
 
 
@@ -61445,25 +61502,90 @@ function AsyncGeneratorPrototype_return([value = Value.undefined], {
   thisValue
 }) {
   // 1. Let generator be the this value.
-  const generator = thisValue; // 2. Let completion be Completion { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
+  const generator = thisValue; // 2. Let promiseCapability be ! NewPromiseCapability(%Promise%).
 
+  let _temp6 = NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'));
+
+  Assert(!(_temp6 instanceof AbruptCompletion), "NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))" + ' returned an abrupt completion');
+  /* c8 ignore if */
+
+  /* c8 ignore if */
+  if (_temp6 instanceof Completion) {
+    _temp6 = _temp6.Value;
+  }
+
+  const promiseCapability = _temp6; // 3. Let result be AsyncGeneratorValidate(generator, empty).
+
+  let result = AsyncGeneratorValidate(generator, undefined); // 4. IfAbruptRejectPromise(result, promiseCapability).
+
+  /* c8 ignore if */
+  if (result instanceof AbruptCompletion) {
+    const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [result.Value]);
+
+    if (hygenicTemp2 instanceof AbruptCompletion) {
+      return hygenicTemp2;
+    }
+
+    return promiseCapability.Promise;
+  }
+  /* c8 ignore if */
+
+
+  /* c8 ignore if */
+  if (result instanceof Completion) {
+    result = result.Value;
+  }
+
+  // 5. Let completion be Completion { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
   const completion = new Completion({
     Type: 'return',
     Value: value,
     Target: undefined
-  }); // 3. Return ! AsyncGeneratorEnqueue(generator, completion, empty).
+  }); // 6. Perform ! AsyncGeneratorEnqueue(generator, completion, promiseCapability).
 
-  let _temp2 = AsyncGeneratorEnqueue(generator, completion, undefined);
+  let _temp7 = AsyncGeneratorEnqueue(generator, completion, promiseCapability);
 
-  Assert(!(_temp2 instanceof AbruptCompletion), "AsyncGeneratorEnqueue(generator, completion, undefined)" + ' returned an abrupt completion');
+  Assert(!(_temp7 instanceof AbruptCompletion), "AsyncGeneratorEnqueue(generator, completion, promiseCapability)" + ' returned an abrupt completion');
   /* c8 ignore if */
 
   /* c8 ignore if */
-  if (_temp2 instanceof Completion) {
-    _temp2 = _temp2.Value;
+  if (_temp7 instanceof Completion) {
+    _temp7 = _temp7.Value;
   }
 
-  return _temp2;
+  const state = generator.AsyncGeneratorState; // 8. If state is either suspendedStart or completed, then
+
+  if (state === 'suspendedStart' || state === 'completed') {
+    // a. Set generator.[[AsyncGeneratorState]] to awaiting-return.
+    generator.AsyncGeneratorState = 'awaiting-return'; // b. Perform ! AsyncGeneratorAwaitReturn(generator).
+
+    let _temp8 = AsyncGeneratorAwaitReturn(generator);
+
+    Assert(!(_temp8 instanceof AbruptCompletion), "AsyncGeneratorAwaitReturn(generator)" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp8 instanceof Completion) {
+      _temp8 = _temp8.Value;
+    }
+  } else if (state === 'suspendedYield') {
+    let _temp9 = AsyncGeneratorResume(generator, completion);
+
+    Assert(!(_temp9 instanceof AbruptCompletion), "AsyncGeneratorResume(generator, completion)" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp9 instanceof Completion) {
+      _temp9 = _temp9.Value;
+    }
+  } else {
+    // 10. Else,
+    // a. Assert: state is either executing or awaiting-return.
+    Assert(state === 'executing' || state === 'awaiting-return', "state === 'executing' || state === 'awaiting-return'");
+  } // 11. Return promiseCapability.[[Promise]].
+
+
+  return promiseCapability.Promise;
 } // #sec-asyncgenerator-prototype-throw
 
 
@@ -61473,21 +61595,96 @@ function AsyncGeneratorPrototype_throw([exception = Value.undefined], {
   thisValue
 }) {
   // 1. Let generator be the this value.
-  const generator = thisValue; // 2. Let completion be ThrowCompletion(exception).
+  const generator = thisValue; // 2. Let promiseCapability be ! NewPromiseCapability(%Promise%).
 
-  const completion = ThrowCompletion(exception); // 3. Return ! AsyncGeneratorEnqueue(generator, completion, empty).
+  let _temp10 = NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'));
 
-  let _temp3 = AsyncGeneratorEnqueue(generator, completion, undefined);
-
-  Assert(!(_temp3 instanceof AbruptCompletion), "AsyncGeneratorEnqueue(generator, completion, undefined)" + ' returned an abrupt completion');
+  Assert(!(_temp10 instanceof AbruptCompletion), "NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))" + ' returned an abrupt completion');
   /* c8 ignore if */
 
   /* c8 ignore if */
-  if (_temp3 instanceof Completion) {
-    _temp3 = _temp3.Value;
+  if (_temp10 instanceof Completion) {
+    _temp10 = _temp10.Value;
   }
 
-  return _temp3;
+  const promiseCapability = _temp10; // 3. Let result be AsyncGeneratorValidate(generator, empty).
+
+  let result = AsyncGeneratorValidate(generator, undefined); // 4. IfAbruptRejectPromise(result, promiseCapability).
+
+  /* c8 ignore if */
+  if (result instanceof AbruptCompletion) {
+    const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [result.Value]);
+
+    if (hygenicTemp2 instanceof AbruptCompletion) {
+      return hygenicTemp2;
+    }
+
+    return promiseCapability.Promise;
+  }
+  /* c8 ignore if */
+
+
+  /* c8 ignore if */
+  if (result instanceof Completion) {
+    result = result.Value;
+  }
+
+  // 5. Let state be generator.[[AsyncGeneratorState]].
+  let state = generator.AsyncGeneratorState; // 6. If state is suspendedStart, then
+
+  if (state === 'suspendedStart') {
+    // a. Set generator.[[AsyncGeneratorState]] to completed.
+    generator.AsyncGeneratorState = 'completed'; // b. Set state to completed.
+
+    state = 'completed';
+  } // 7. If state is completed, then
+
+
+  if (state === 'completed') {
+    let _temp11 = Call(promiseCapability.Reject, Value.undefined, [exception]);
+
+    Assert(!(_temp11 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [exception])" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp11 instanceof Completion) {
+      _temp11 = _temp11.Value;
+    }
+
+    return promiseCapability.Promise;
+  } // 8. Let completion be ThrowCompletion(exception).
+
+
+  const completion = ThrowCompletion(exception); // 9. Perform ! AsyncGeneratorEnqueue(generator, completion, promiseCapability).
+
+  let _temp12 = AsyncGeneratorEnqueue(generator, completion, promiseCapability);
+
+  Assert(!(_temp12 instanceof AbruptCompletion), "AsyncGeneratorEnqueue(generator, completion, promiseCapability)" + ' returned an abrupt completion');
+  /* c8 ignore if */
+
+  /* c8 ignore if */
+  if (_temp12 instanceof Completion) {
+    _temp12 = _temp12.Value;
+  }
+
+  if (state === 'suspendedYield') {
+    let _temp13 = AsyncGeneratorResume(generator, completion);
+
+    Assert(!(_temp13 instanceof AbruptCompletion), "AsyncGeneratorResume(generator, completion)" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    /* c8 ignore if */
+    if (_temp13 instanceof Completion) {
+      _temp13 = _temp13.Value;
+    }
+  } else {
+    // 11. Else,
+    // a. Assert: state is either executing or awaiting-return.
+    Assert(state === 'executing' || state === 'awaiting-return', "state === 'executing' || state === 'awaiting-return'");
+  } // 12. Return promiseCapability.[[Promise]].
+
+
+  return promiseCapability.Promise;
 }
 
 AsyncGeneratorPrototype_throw.section = 'https://tc39.es/ecma262/#sec-asyncgenerator-prototype-throw';
@@ -73587,5 +73784,5 @@ class ManagedSourceTextModuleRecord extends SourceTextModuleRecord {
 
 }
 
-export { AbruptCompletion, AbstractEqualityComparison, AbstractModuleRecord, AbstractRelationalComparison, AddToKeptObjects, Agent, AgentSignifier, AllocateArrayBuffer, AllocateTypedArray, AllocateTypedArrayBuffer, ApplyStringOrNumericBinaryOperator, ArgumentListEvaluation, ArrayCreate, ArraySetLength, ArraySpeciesCreate, Assert, AsyncBlockStart, AsyncFromSyncIteratorContinuation, AsyncFunctionStart, AsyncGeneratorEnqueue, AsyncGeneratorStart, AsyncGeneratorValidate, AsyncGeneratorYield, AsyncIteratorClose, Await, AwaitFulfilledFunctions, BigIntValue, BinaryUnicodeProperties, BindingClassDeclarationEvaluation, BindingInitialization, BlockDeclarationInstantiation, BodyText, BooleanValue, BoundNames, Call, CanonicalNumericIndexString, CharacterValue, ClassDefinitionEvaluation, ClassFieldDefinitionEvaluation, ClassFieldDefinitionRecord, CleanupFinalizationRegistry, ClearKeptObjects, CloneArrayBuffer, CodePointAt, CodePointToUTF16CodeUnits, CodePointsToString, CompletePropertyDescriptor, Completion, Construct, ConstructorMethod, ContainsArguments, ContainsExpression, CopyDataBlockBytes, CopyDataProperties, CreateArrayFromList, CreateArrayIterator, CreateAsyncFromSyncIterator, CreateAsyncIteratorFromClosure, CreateBuiltinFunction, CreateByteDataBlock, CreateDataProperty, CreateDataPropertyOrThrow, CreateDefaultExportSyntheticModule, CreateDynamicFunction, CreateIntrinsics, CreateIterResultObject, CreateIteratorFromClosure, CreateListFromArrayLike, CreateListIteratorRecord, CreateMappedArgumentsObject, CreateMethodProperty, CreateRealm, CreateResolvingFunctions, CreateSyntheticModule, CreateUnmappedArgumentsObject, CyclicModuleRecord, DataBlock, DateFromTime, Day, DayFromYear, DayWithinYear, DaysInYear, DeclarationPart, DeclarativeEnvironmentRecord, DefineField, DefineMethod, DefinePropertyOrThrow, DeletePropertyOrThrow, Descriptor, DestructuringAssignmentEvaluation, DetachArrayBuffer, EnsureCompletion, EnumerableOwnPropertyNames, EnvironmentRecord, EscapeRegExpPattern, EvaluateBody, EvaluateBody_AssignmentExpression, EvaluateBody_AsyncFunctionBody, EvaluateBody_AsyncGeneratorBody, EvaluateBody_ConciseBody, EvaluateBody_FunctionBody, EvaluateBody_GeneratorBody, EvaluateCall, EvaluatePropertyAccessWithExpressionKey, EvaluatePropertyAccessWithIdentifierKey, EvaluateStringOrNumericBinaryExpression, Evaluate_AdditiveExpression, Evaluate_AnyFunctionBody, Evaluate_ArrayLiteral, Evaluate_ArrowFunction, Evaluate_AssignmentExpression, Evaluate_AsyncArrowFunction, Evaluate_AsyncFunctionExpression, Evaluate_AsyncGeneratorExpression, Evaluate_AwaitExpression, Evaluate_BinaryBitwiseExpression, Evaluate_BindingList, Evaluate_Block, Evaluate_BreakStatement, Evaluate_BreakableStatement, Evaluate_CallExpression, Evaluate_CaseClause, Evaluate_ClassDeclaration, Evaluate_ClassExpression, Evaluate_CoalesceExpression, Evaluate_CommaOperator, Evaluate_ConditionalExpression, Evaluate_ContinueStatement, Evaluate_DebuggerStatement, Evaluate_EmptyStatement, Evaluate_EqualityExpression, Evaluate_ExponentiationExpression, Evaluate_ExportDeclaration, Evaluate_ExpressionBody, Evaluate_ExpressionStatement, Evaluate_ForBinding, Evaluate_FunctionDeclaration, Evaluate_FunctionExpression, Evaluate_FunctionStatementList, Evaluate_GeneratorExpression, Evaluate_HoistableDeclaration, Evaluate_IdentifierReference, Evaluate_IfStatement, Evaluate_ImportCall, Evaluate_ImportDeclaration, Evaluate_ImportMeta, Evaluate_LabelledStatement, Evaluate_LexicalBinding, Evaluate_LexicalDeclaration, Evaluate_Literal, Evaluate_LogicalANDExpression, Evaluate_LogicalORExpression, Evaluate_MemberExpression, Evaluate_Module, Evaluate_ModuleBody, Evaluate_MultiplicativeExpression, Evaluate_NewExpression, Evaluate_NewTarget, Evaluate_ObjectLiteral, Evaluate_OptionalExpression, Evaluate_ParenthesizedExpression, Evaluate_Pattern, Evaluate_PropertyName, Evaluate_RegularExpressionLiteral, Evaluate_RelationalExpression, Evaluate_RelationalExpression_PrivateIdentifier, Evaluate_ReturnStatement, Evaluate_Script, Evaluate_ScriptBody, Evaluate_ShiftExpression, Evaluate_StatementList, Evaluate_SuperCall, Evaluate_SuperProperty, Evaluate_SwitchStatement, Evaluate_TaggedTemplateExpression, Evaluate_TemplateLiteral, Evaluate_This, Evaluate_ThrowStatement, Evaluate_TryStatement, Evaluate_UnaryExpression, Evaluate_UpdateExpression, Evaluate_VariableDeclarationList, Evaluate_VariableStatement, Evaluate_WithStatement, Evaluate_YieldExpression, ExecutionContext, ExpectedArgumentCount, ExportEntries, ExportEntriesForModule, F, FEATURES, FlagText, FromPropertyDescriptor, FunctionDeclarationInstantiation, FunctionEnvironmentRecord, GeneratorResume, GeneratorResumeAbrupt, GeneratorStart, GeneratorValidate, GeneratorYield, Get, GetActiveScriptOrModule, GetAsyncCycleRoot, GetFunctionRealm, GetGeneratorKind, GetGlobalObject, GetIdentifierReference, GetIterator, GetMatchIndicesArray, GetMatchString, GetMethod, GetModuleNamespace, GetNewTarget, GetPrototypeFromConstructor, GetStringIndex, GetSubstitution, GetThisEnvironment, GetThisValue, GetV, GetValue, GetValueFromBuffer, GetViewValue, GlobalDeclarationInstantiation, GlobalEnvironmentRecord, HasInitializer, HasName, HasOwnProperty, HasProperty, HostCallJobCallback, HostEnqueueFinalizationRegistryCleanupJob, HostEnqueuePromiseJob, HostEnsureCanCompileStrings, HostFinalizeImportMeta, HostGetImportMetaProperties, HostHasSourceTextAvailable, HostImportModuleDynamically, HostMakeJobCallback, HostPromiseRejectionTracker, HostResolveImportedModule, HourFromTime, HoursPerDay, IfAbruptRejectPromise, ImportEntries, ImportEntriesForModule, ImportedLocalNames, InLeapYear, InitializeBoundName, InitializeInstanceElements, InitializeReferencedBinding, InnerModuleEvaluation, InnerModuleLinking, InstallErrorCause, InstanceofOperator, InstantiateArrowFunctionExpression, InstantiateAsyncArrowFunctionExpression, InstantiateAsyncFunctionExpression, InstantiateAsyncGeneratorFunctionExpression, InstantiateFunctionObject, InstantiateFunctionObject_AsyncFunctionDeclaration, InstantiateFunctionObject_AsyncGeneratorDeclaration, InstantiateFunctionObject_FunctionDeclaration, InstantiateFunctionObject_GeneratorDeclaration, InstantiateGeneratorFunctionExpression, InstantiateOrdinaryFunctionExpression, IntegerIndexedDefineOwnProperty, IntegerIndexedDelete, IntegerIndexedElementGet, IntegerIndexedElementSet, IntegerIndexedGet, IntegerIndexedGetOwnProperty, IntegerIndexedHasProperty, IntegerIndexedObjectCreate, IntegerIndexedOwnPropertyKeys, IntegerIndexedSet, Invoke, IsAccessorDescriptor, IsAnonymousFunctionDefinition, IsArray, IsBigIntElementType, IsCallable, IsCompatiblePropertyDescriptor, IsComputedPropertyKey, IsConcatSpreadable, IsConstantDeclaration, IsConstructor, IsDataDescriptor, IsDestructuring, IsDetachedBuffer, IsExtensible, IsFunctionDefinition, IsGenericDescriptor, IsIdentifierRef, IsInTailPosition, IsIntegralNumber, IsPrivateReference, IsPromise, IsPropertyKey, IsPropertyReference, IsRegExp, IsSharedArrayBuffer, IsSimpleParameterList, IsStatic, IsStrict, IsStringPrefix, IsStringWellFormedUnicode, IsSuperReference, IsUnresolvableReference, IsValidIntegerIndex, IterableToList, IteratorBindingInitialization_ArrayBindingPattern, IteratorBindingInitialization_FormalParameters, IteratorClose, IteratorComplete, IteratorNext, IteratorStep, IteratorValue, StringValue as JSStringValue, KeyedBindingInitialization, LabelledEvaluation, LengthOfArrayLike, LexicallyDeclaredNames, LexicallyScopedDeclarations, LocalTZA, LocalTime, MV_StringNumericLiteral, MakeBasicObject, MakeClassConstructor, MakeConstructor, MakeDate, MakeDay, MakeIndicesArray, MakeMethod, MakePrivateReference, MakeTime, ManagedRealm, MethodDefinitionEvaluation, MinFromTime, MinutesPerHour, ModuleEnvironmentRecord, ModuleNamespaceCreate, ModuleRequests, MonthFromTime, NamedEvaluation, NewDeclarativeEnvironment, NewFunctionEnvironment, NewGlobalEnvironment, NewModuleEnvironment, NewObjectEnvironment, NewPrivateEnvironment, NewPromiseCapability, NonConstructorElements, NonbinaryUnicodeProperties, NormalCompletion, NullValue, NumberToBigInt, NumberValue, NumericToRawBytes, NumericValue, ObjectEnvironmentRecord, ObjectValue, OrdinaryCallBindThis, OrdinaryCallEvaluateBody, OrdinaryCreateFromConstructor, OrdinaryDefineOwnProperty, OrdinaryDelete, OrdinaryFunctionCreate, OrdinaryGet, OrdinaryGetOwnProperty, OrdinaryGetPrototypeOf, OrdinaryHasInstance, OrdinaryHasProperty, OrdinaryIsExtensible, OrdinaryObjectCreate, OrdinaryOwnPropertyKeys, OrdinaryPreventExtensions, OrdinarySet, OrdinarySetPrototypeOf, OrdinarySetWithOwnDescriptor, OrdinaryToPrimitive, ParseJSONModule, ParseModule, ParsePattern, ParseScript, PerformEval, PerformPromiseThen, PrepareForOrdinaryCall, PrepareForTailCall, PrimitiveValue, PrivateBoundIdentifiers, PrivateElementFind, PrivateElementRecord, PrivateFieldAdd, PrivateGet, PrivateMethodOrAccessorAdd, PrivateName, PrivateSet, PromiseCapabilityRecord, PromiseReactionRecord, PromiseResolve, PropName, PropertyBindingInitialization, PropertyDefinitionEvaluation_PropertyDefinitionList, ProxyCreate, PutValue, Q, RawBytesToNumeric, Realm, ReferenceRecord, RegExpAlloc, RegExpCreate, RegExpHasFlag, RegExpInitialize, State as RegExpState, RequireInternalSlot, RequireObjectCoercible, ResolveBinding, ResolvePrivateIdentifier, ResolveThisBinding, ResolvedBindingRecord, RestBindingInitialization, ReturnIfAbrupt, SameValue, SameValueNonNumber, SameValueZero, ScriptEvaluation, SecFromTime, SecondsPerMinute, Set$1 as Set, SetDefaultGlobalBindings, SetFunctionLength, SetFunctionName, SetImmutablePrototype, SetIntegrityLevel, SetRealmGlobalObject, SetValueInBuffer, SetViewValue, SortCompare, SourceTextModuleRecord, SpeciesConstructor, StrictEqualityComparison, StringCreate, StringGetOwnProperty, StringIndexOf, StringPad, StringToBigInt, StringToCodePoints, StringValue$1 as StringValue, SymbolDescriptiveString, SymbolValue, SyntheticModuleRecord, TV, TemplateStrings, TestIntegrityLevel, Throw, ThrowCompletion, TimeClip, TimeFromYear, TimeWithinDay, ToBigInt, ToBigInt64, ToBigUint64, ToBoolean, ToIndex, ToInt16, ToInt32, ToInt8, ToIntegerOrInfinity, ToLength, ToNumber, ToNumeric, ToObject, ToPrimitive, ToPropertyDescriptor, ToPropertyKey, ToString, ToUint16, ToUint32, ToUint8, ToUint8Clamp, TopLevelLexicallyDeclaredNames, TopLevelLexicallyScopedDeclarations, TopLevelVarDeclaredNames, TopLevelVarScopedDeclarations, TrimString, Type, TypeForMethod, TypedArrayCreate, TypedArraySpeciesCreate, UTC, UTF16SurrogatePairToCodePoint, UndefinedValue, UnicodeGeneralCategoryValues, UnicodeMatchProperty, UnicodeMatchPropertyValue, UnicodeScriptValues, UnicodeSets, UpdateEmpty, ValidateAndApplyPropertyDescriptor, ValidateTypedArray, Value, VarDeclaredNames, VarScopedDeclarations, WeakRefDeref, WeekDay, X, YearFromTime, Yield, Z, evaluateScript, gc, generatorBrandToErrorMessageType, getUnicodePropertyValueSet, inspect, isArrayExoticObject, isArrayIndex, isECMAScriptFunctionObject, isFunctionObject, isIntegerIndex, isIntegerIndexedExoticObject, isNonNegativeInteger, isProxyExoticObject, isStrictModeCode, msFromTime, msPerAverageYear, msPerDay, msPerHour, msPerMinute, msPerSecond, refineLeftHandSideExpression, runJobQueue, setSurroundingAgent, sourceTextMatchedBy, surroundingAgent, typedArrayInfoByName, typedArrayInfoByType, wellKnownSymbols, wrappedParse };
+export { AbruptCompletion, AbstractEqualityComparison, AbstractModuleRecord, AbstractRelationalComparison, AddToKeptObjects, Agent, AgentSignifier, AllocateArrayBuffer, AllocateTypedArray, AllocateTypedArrayBuffer, ApplyStringOrNumericBinaryOperator, ArgumentListEvaluation, ArrayCreate, ArraySetLength, ArraySpeciesCreate, Assert, AsyncBlockStart, AsyncFromSyncIteratorContinuation, AsyncFunctionStart, AsyncGeneratorAwaitReturn, AsyncGeneratorEnqueue, AsyncGeneratorResume, AsyncGeneratorStart, AsyncGeneratorValidate, AsyncGeneratorYield, AsyncIteratorClose, Await, AwaitFulfilledFunctions, BigIntValue, BinaryUnicodeProperties, BindingClassDeclarationEvaluation, BindingInitialization, BlockDeclarationInstantiation, BodyText, BooleanValue, BoundNames, Call, CanonicalNumericIndexString, CharacterValue, ClassDefinitionEvaluation, ClassFieldDefinitionEvaluation, ClassFieldDefinitionRecord, CleanupFinalizationRegistry, ClearKeptObjects, CloneArrayBuffer, CodePointAt, CodePointToUTF16CodeUnits, CodePointsToString, CompletePropertyDescriptor, Completion, Construct, ConstructorMethod, ContainsArguments, ContainsExpression, CopyDataBlockBytes, CopyDataProperties, CreateArrayFromList, CreateArrayIterator, CreateAsyncFromSyncIterator, CreateAsyncIteratorFromClosure, CreateBuiltinFunction, CreateByteDataBlock, CreateDataProperty, CreateDataPropertyOrThrow, CreateDefaultExportSyntheticModule, CreateDynamicFunction, CreateIntrinsics, CreateIterResultObject, CreateIteratorFromClosure, CreateListFromArrayLike, CreateListIteratorRecord, CreateMappedArgumentsObject, CreateMethodProperty, CreateRealm, CreateResolvingFunctions, CreateSyntheticModule, CreateUnmappedArgumentsObject, CyclicModuleRecord, DataBlock, DateFromTime, Day, DayFromYear, DayWithinYear, DaysInYear, DeclarationPart, DeclarativeEnvironmentRecord, DefineField, DefineMethod, DefinePropertyOrThrow, DeletePropertyOrThrow, Descriptor, DestructuringAssignmentEvaluation, DetachArrayBuffer, EnsureCompletion, EnumerableOwnPropertyNames, EnvironmentRecord, EscapeRegExpPattern, EvaluateBody, EvaluateBody_AssignmentExpression, EvaluateBody_AsyncFunctionBody, EvaluateBody_AsyncGeneratorBody, EvaluateBody_ConciseBody, EvaluateBody_FunctionBody, EvaluateBody_GeneratorBody, EvaluateCall, EvaluatePropertyAccessWithExpressionKey, EvaluatePropertyAccessWithIdentifierKey, EvaluateStringOrNumericBinaryExpression, Evaluate_AdditiveExpression, Evaluate_AnyFunctionBody, Evaluate_ArrayLiteral, Evaluate_ArrowFunction, Evaluate_AssignmentExpression, Evaluate_AsyncArrowFunction, Evaluate_AsyncFunctionExpression, Evaluate_AsyncGeneratorExpression, Evaluate_AwaitExpression, Evaluate_BinaryBitwiseExpression, Evaluate_BindingList, Evaluate_Block, Evaluate_BreakStatement, Evaluate_BreakableStatement, Evaluate_CallExpression, Evaluate_CaseClause, Evaluate_ClassDeclaration, Evaluate_ClassExpression, Evaluate_CoalesceExpression, Evaluate_CommaOperator, Evaluate_ConditionalExpression, Evaluate_ContinueStatement, Evaluate_DebuggerStatement, Evaluate_EmptyStatement, Evaluate_EqualityExpression, Evaluate_ExponentiationExpression, Evaluate_ExportDeclaration, Evaluate_ExpressionBody, Evaluate_ExpressionStatement, Evaluate_ForBinding, Evaluate_FunctionDeclaration, Evaluate_FunctionExpression, Evaluate_FunctionStatementList, Evaluate_GeneratorExpression, Evaluate_HoistableDeclaration, Evaluate_IdentifierReference, Evaluate_IfStatement, Evaluate_ImportCall, Evaluate_ImportDeclaration, Evaluate_ImportMeta, Evaluate_LabelledStatement, Evaluate_LexicalBinding, Evaluate_LexicalDeclaration, Evaluate_Literal, Evaluate_LogicalANDExpression, Evaluate_LogicalORExpression, Evaluate_MemberExpression, Evaluate_Module, Evaluate_ModuleBody, Evaluate_MultiplicativeExpression, Evaluate_NewExpression, Evaluate_NewTarget, Evaluate_ObjectLiteral, Evaluate_OptionalExpression, Evaluate_ParenthesizedExpression, Evaluate_Pattern, Evaluate_PropertyName, Evaluate_RegularExpressionLiteral, Evaluate_RelationalExpression, Evaluate_RelationalExpression_PrivateIdentifier, Evaluate_ReturnStatement, Evaluate_Script, Evaluate_ScriptBody, Evaluate_ShiftExpression, Evaluate_StatementList, Evaluate_SuperCall, Evaluate_SuperProperty, Evaluate_SwitchStatement, Evaluate_TaggedTemplateExpression, Evaluate_TemplateLiteral, Evaluate_This, Evaluate_ThrowStatement, Evaluate_TryStatement, Evaluate_UnaryExpression, Evaluate_UpdateExpression, Evaluate_VariableDeclarationList, Evaluate_VariableStatement, Evaluate_WithStatement, Evaluate_YieldExpression, ExecutionContext, ExpectedArgumentCount, ExportEntries, ExportEntriesForModule, F, FEATURES, FlagText, FromPropertyDescriptor, FunctionDeclarationInstantiation, FunctionEnvironmentRecord, GeneratorResume, GeneratorResumeAbrupt, GeneratorStart, GeneratorValidate, GeneratorYield, Get, GetActiveScriptOrModule, GetAsyncCycleRoot, GetFunctionRealm, GetGeneratorKind, GetGlobalObject, GetIdentifierReference, GetIterator, GetMatchIndicesArray, GetMatchString, GetMethod, GetModuleNamespace, GetNewTarget, GetPrototypeFromConstructor, GetStringIndex, GetSubstitution, GetThisEnvironment, GetThisValue, GetV, GetValue, GetValueFromBuffer, GetViewValue, GlobalDeclarationInstantiation, GlobalEnvironmentRecord, HasInitializer, HasName, HasOwnProperty, HasProperty, HostCallJobCallback, HostEnqueueFinalizationRegistryCleanupJob, HostEnqueuePromiseJob, HostEnsureCanCompileStrings, HostFinalizeImportMeta, HostGetImportMetaProperties, HostHasSourceTextAvailable, HostImportModuleDynamically, HostMakeJobCallback, HostPromiseRejectionTracker, HostResolveImportedModule, HourFromTime, HoursPerDay, IfAbruptRejectPromise, ImportEntries, ImportEntriesForModule, ImportedLocalNames, InLeapYear, InitializeBoundName, InitializeInstanceElements, InitializeReferencedBinding, InnerModuleEvaluation, InnerModuleLinking, InstallErrorCause, InstanceofOperator, InstantiateArrowFunctionExpression, InstantiateAsyncArrowFunctionExpression, InstantiateAsyncFunctionExpression, InstantiateAsyncGeneratorFunctionExpression, InstantiateFunctionObject, InstantiateFunctionObject_AsyncFunctionDeclaration, InstantiateFunctionObject_AsyncGeneratorDeclaration, InstantiateFunctionObject_FunctionDeclaration, InstantiateFunctionObject_GeneratorDeclaration, InstantiateGeneratorFunctionExpression, InstantiateOrdinaryFunctionExpression, IntegerIndexedDefineOwnProperty, IntegerIndexedDelete, IntegerIndexedElementGet, IntegerIndexedElementSet, IntegerIndexedGet, IntegerIndexedGetOwnProperty, IntegerIndexedHasProperty, IntegerIndexedObjectCreate, IntegerIndexedOwnPropertyKeys, IntegerIndexedSet, Invoke, IsAccessorDescriptor, IsAnonymousFunctionDefinition, IsArray, IsBigIntElementType, IsCallable, IsCompatiblePropertyDescriptor, IsComputedPropertyKey, IsConcatSpreadable, IsConstantDeclaration, IsConstructor, IsDataDescriptor, IsDestructuring, IsDetachedBuffer, IsExtensible, IsFunctionDefinition, IsGenericDescriptor, IsIdentifierRef, IsInTailPosition, IsIntegralNumber, IsPrivateReference, IsPromise, IsPropertyKey, IsPropertyReference, IsRegExp, IsSharedArrayBuffer, IsSimpleParameterList, IsStatic, IsStrict, IsStringPrefix, IsStringWellFormedUnicode, IsSuperReference, IsUnresolvableReference, IsValidIntegerIndex, IterableToList, IteratorBindingInitialization_ArrayBindingPattern, IteratorBindingInitialization_FormalParameters, IteratorClose, IteratorComplete, IteratorNext, IteratorStep, IteratorValue, StringValue as JSStringValue, KeyedBindingInitialization, LabelledEvaluation, LengthOfArrayLike, LexicallyDeclaredNames, LexicallyScopedDeclarations, LocalTZA, LocalTime, MV_StringNumericLiteral, MakeBasicObject, MakeClassConstructor, MakeConstructor, MakeDate, MakeDay, MakeIndicesArray, MakeMethod, MakePrivateReference, MakeTime, ManagedRealm, MethodDefinitionEvaluation, MinFromTime, MinutesPerHour, ModuleEnvironmentRecord, ModuleNamespaceCreate, ModuleRequests, MonthFromTime, NamedEvaluation, NewDeclarativeEnvironment, NewFunctionEnvironment, NewGlobalEnvironment, NewModuleEnvironment, NewObjectEnvironment, NewPrivateEnvironment, NewPromiseCapability, NonConstructorElements, NonbinaryUnicodeProperties, NormalCompletion, NullValue, NumberToBigInt, NumberValue, NumericToRawBytes, NumericValue, ObjectEnvironmentRecord, ObjectValue, OrdinaryCallBindThis, OrdinaryCallEvaluateBody, OrdinaryCreateFromConstructor, OrdinaryDefineOwnProperty, OrdinaryDelete, OrdinaryFunctionCreate, OrdinaryGet, OrdinaryGetOwnProperty, OrdinaryGetPrototypeOf, OrdinaryHasInstance, OrdinaryHasProperty, OrdinaryIsExtensible, OrdinaryObjectCreate, OrdinaryOwnPropertyKeys, OrdinaryPreventExtensions, OrdinarySet, OrdinarySetPrototypeOf, OrdinarySetWithOwnDescriptor, OrdinaryToPrimitive, ParseJSONModule, ParseModule, ParsePattern, ParseScript, PerformEval, PerformPromiseThen, PrepareForOrdinaryCall, PrepareForTailCall, PrimitiveValue, PrivateBoundIdentifiers, PrivateElementFind, PrivateElementRecord, PrivateFieldAdd, PrivateGet, PrivateMethodOrAccessorAdd, PrivateName, PrivateSet, PromiseCapabilityRecord, PromiseReactionRecord, PromiseResolve, PropName, PropertyBindingInitialization, PropertyDefinitionEvaluation_PropertyDefinitionList, ProxyCreate, PutValue, Q, RawBytesToNumeric, Realm, ReferenceRecord, RegExpAlloc, RegExpCreate, RegExpHasFlag, RegExpInitialize, State as RegExpState, RequireInternalSlot, RequireObjectCoercible, ResolveBinding, ResolvePrivateIdentifier, ResolveThisBinding, ResolvedBindingRecord, RestBindingInitialization, ReturnIfAbrupt, SameValue, SameValueNonNumber, SameValueZero, ScriptEvaluation, SecFromTime, SecondsPerMinute, Set$1 as Set, SetDefaultGlobalBindings, SetFunctionLength, SetFunctionName, SetImmutablePrototype, SetIntegrityLevel, SetRealmGlobalObject, SetValueInBuffer, SetViewValue, SortCompare, SourceTextModuleRecord, SpeciesConstructor, StrictEqualityComparison, StringCreate, StringGetOwnProperty, StringIndexOf, StringPad, StringToBigInt, StringToCodePoints, StringValue$1 as StringValue, SymbolDescriptiveString, SymbolValue, SyntheticModuleRecord, TV, TemplateStrings, TestIntegrityLevel, Throw, ThrowCompletion, TimeClip, TimeFromYear, TimeWithinDay, ToBigInt, ToBigInt64, ToBigUint64, ToBoolean, ToIndex, ToInt16, ToInt32, ToInt8, ToIntegerOrInfinity, ToLength, ToNumber, ToNumeric, ToObject, ToPrimitive, ToPropertyDescriptor, ToPropertyKey, ToString, ToUint16, ToUint32, ToUint8, ToUint8Clamp, TopLevelLexicallyDeclaredNames, TopLevelLexicallyScopedDeclarations, TopLevelVarDeclaredNames, TopLevelVarScopedDeclarations, TrimString, Type, TypeForMethod, TypedArrayCreate, TypedArraySpeciesCreate, UTC, UTF16SurrogatePairToCodePoint, UndefinedValue, UnicodeGeneralCategoryValues, UnicodeMatchProperty, UnicodeMatchPropertyValue, UnicodeScriptValues, UnicodeSets, UpdateEmpty, ValidateAndApplyPropertyDescriptor, ValidateTypedArray, Value, VarDeclaredNames, VarScopedDeclarations, WeakRefDeref, WeekDay, X, YearFromTime, Yield, Z, evaluateScript, gc, generatorBrandToErrorMessageType, getUnicodePropertyValueSet, inspect, isArrayExoticObject, isArrayIndex, isECMAScriptFunctionObject, isFunctionObject, isIntegerIndex, isIntegerIndexedExoticObject, isNonNegativeInteger, isProxyExoticObject, isStrictModeCode, msFromTime, msPerAverageYear, msPerDay, msPerHour, msPerMinute, msPerSecond, refineLeftHandSideExpression, runJobQueue, setSurroundingAgent, sourceTextMatchedBy, surroundingAgent, typedArrayInfoByName, typedArrayInfoByType, wellKnownSymbols, wrappedParse };
 //# sourceMappingURL=engine262.mjs.map
