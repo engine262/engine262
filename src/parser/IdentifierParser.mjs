@@ -42,6 +42,9 @@ export class IdentifierParser extends BaseParser {
         node.name = 'await';
         for (let i = 0; i < this.scope.arrowInfoStack.length; i += 1) {
           const arrowInfo = this.scope.arrowInfoStack[i];
+          if (!arrowInfo) {
+            break;
+          }
           if (arrowInfo.isAsync) {
             arrowInfo.awaitIdentifiers.push(node);
             break;
@@ -100,6 +103,9 @@ export class IdentifierParser extends BaseParser {
         }
         for (let i = 0; i < this.scope.arrowInfoStack.length; i += 1) {
           const arrowInfo = this.scope.arrowInfoStack[i];
+          if (!arrowInfo) {
+            break;
+          }
           if (arrowInfo.isAsync) {
             arrowInfo.awaitIdentifiers.push(node);
             break;

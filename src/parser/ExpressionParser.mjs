@@ -215,9 +215,7 @@ export class ExpressionParser extends FunctionParser {
         }
       }
     }
-    if (this.scope.arrowInfoStack.length > 0) {
-      this.scope.arrowInfoStack[this.scope.arrowInfoStack.length - 1].yieldExpressions.push(node);
-    }
+    this.scope.arrowInfo?.yieldExpressions.push(node);
     return this.finishNode(node, 'YieldExpression');
   }
 
@@ -445,9 +443,7 @@ export class ExpressionParser extends FunctionParser {
     const node = this.startNode();
     this.expect(Token.AWAIT);
     node.UnaryExpression = this.parseUnaryExpression();
-    if (this.scope.arrowInfoStack.length > 0) {
-      this.scope.arrowInfoStack[this.scope.arrowInfoStack.length - 1].awaitExpressions.push(node);
-    }
+    this.scope.arrowInfo?.awaitExpressions.push(node);
     if (!this.scope.hasReturn()) {
       this.state.hasTopLevelAwait = true;
     }
@@ -1155,6 +1151,8 @@ export class ExpressionParser extends FunctionParser {
       node.arrowInfo = arrowInfo;
       assignmentInfo.clear();
       return this.finishNode(node, 'CoverParenthesizedExpressionAndArrowParameterList');
+    } else {
+      this.scope.arrowInfo?.merge(arrowInfo);
     }
 
     // ParenthesizedExpression :

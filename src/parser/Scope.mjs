@@ -254,11 +254,23 @@ export class Scope {
       yieldExpressions: [],
       awaitExpressions: [],
       awaitIdentifiers: [],
+      merge(other) {
+        this.yieldExpressions.push(...other.yieldExpressions);
+        this.awaitExpressions.push(...other.awaitExpressions);
+        this.awaitIdentifiers.push(...other.awaitIdentifiers);
+      },
     });
   }
 
   popArrowInfo() {
     return this.arrowInfoStack.pop();
+  }
+
+  get arrowInfo() {
+    if (this.arrowInfoStack.length > 0) {
+      return this.arrowInfoStack[this.arrowInfoStack.length - 1];
+    }
+    return undefined;
   }
 
   pushAssignmentInfo(type) {
