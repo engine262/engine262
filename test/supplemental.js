@@ -53,7 +53,7 @@ try {
 Error: owo
     at x (<anonymous>:1:32)
     at y (<anonymous>:2:16)
-    at <anonymous>:4:3`);
+    at (<anonymous>:4:3)`);
   },
   () => {
     const agent = new Agent();
@@ -85,7 +85,7 @@ try {
 TypeError: undefined is not an object
     at get (native)
     at x (<anonymous>:1:16)
-    at <anonymous>:3:3`);
+    at (<anonymous>:3:3)`);
   },
   () => {
     const agent = new Agent();
@@ -104,7 +104,7 @@ try {
 Error: owo
     at new Y (<anonymous>:1:32)
     at x (<anonymous>:2:20)
-    at <anonymous>:4:3`);
+    at (<anonymous>:4:3)`);
   },
   () => {
     const agent = new Agent();
@@ -121,7 +121,7 @@ e.stack;
 Error: owo
     at <anonymous> (<anonymous>:3:17)
     at new Promise (native)
-    at <anonymous>:2:13`);
+    at (<anonymous>:2:13)`);
   },
   () => {
     const agent = new Agent({
