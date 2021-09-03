@@ -6,7 +6,7 @@ import { EvaluateStringOrNumericBinaryExpression } from './all.mjs';
 //     MultiplicativeExpression MultiplicativeOperator ExponentiationExpression
 export function* Evaluate_MultiplicativeExpression({
   MultiplicativeExpression,
-  MultiplicativeOperator,
+  operator: MultiplicativeOperator,
   ExponentiationExpression,
 }) {
   // 1. Let opText be the source text matched by MultiplicativeOperator.

@@ -74,6 +74,7 @@ export const JSONUnexpectedToken = () => 'Unexpected token in JSON';
 export const JSONUnexpectedChar = (c) => `Unexpected character ${c} in JSON`;
 export const JSONExpected = (e, a) => `Expected character ${e} but got ${a} in JSON`;
 export const LetInLexicalBinding = () => '\'let\' is not allowed to be used as a name in lexical declarations';
+export const MixingLogicalOperators = (a, b) => `Cannot mix logical operator '${a}' with '${b}'. Add parentheses to determine precedence.`;
 export const ModuleExportNameInvalidUnicode = () => 'Export name is not valid unicode';
 export const ModuleUndefinedExport = (n) => `Export '${i(n)}' is not defined in module`;
 export const NegativeIndex = (n) => `${n} cannot be negative`;

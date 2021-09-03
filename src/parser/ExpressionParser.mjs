@@ -6,7 +6,7 @@ import {
   ContainsArguments,
 } from '../static-semantics/all.mjs';
 import {
-  Token, TokenPrecedence,
+  Token,
   isPropertyOrCall,
   isMember,
   isKeyword,
@@ -248,146 +248,217 @@ export class ExpressionParser extends FunctionParser {
   //   CoalesceExpression
   //   BitwiseORExpression
   parseShortCircuitExpression() {
-    // Start parse at BIT_OR, right above AND/OR/NULLISH
-    const expression = this.parseBinaryExpression(TokenPrecedence[Token.BIT_OR]);
-    switch (this.peek().type) {
-      case Token.AND:
-      case Token.OR:
-        // Drop into normal binary chain starting at OR
-        return this.parseBinaryExpression(TokenPrecedence[Token.OR], expression);
-      case Token.NULLISH: {
-        let x = expression;
-        while (this.eat(Token.NULLISH)) {
-          const node = this.startNode();
-          node.CoalesceExpressionHead = x;
-          node.BitwiseORExpression = this.parseBinaryExpression(TokenPrecedence[Token.BIT_OR]);
-          x = this.finishNode(node, 'CoalesceExpression');
-        }
-        return x;
+    let result = this.parseLogicalORExpression();
+    while (this.test(Token.NULLISH)) {
+      const { type } = result;
+      if (type === 'LogicalANDExpression' || type === 'LogicalORExpression') {
+        this.raise(
+          'MixingLogicalOperators', this.peek(),
+          result.operator, this.peek().value,
+        );
       }
-      default:
-        return expression;
+      const node = this.startNode(result);
+      node.CoalesceExpressionHead = result;
+      node.operator = this.next().value;
+      node.BitwiseORExpression = this.parseBitwiseORExpression();
+      result = this.finishNode(node, 'CoalesceExpression');
     }
+    return result;
   }
 
-  parseBinaryExpression(precedence, x) {
-    if (!x) {
-      if (this.test(Token.PRIVATE_IDENTIFIER)) {
-        x = this.parsePrivateIdentifier();
-        if (!this.test(Token.IN)) {
-          this.raise('UnexpectedToken');
-        }
-        this.scope.checkUndefinedPrivate(x);
-      } else {
-        x = this.parseUnaryExpression();
-      }
+  // parse a sequence of same-precedence left-associative binary operators
+  parseBinaryChain(parseArg, nodeType, leftKey, rightKey, ...operators) {
+    let result = this[parseArg]();
+    while (operators.includes(this.peek().type)) {
+      const node = this.startNode(result);
+      node[leftKey] = result;
+      node.operator = this.next().value;
+      node[rightKey] = this[parseArg]();
+      result = this.finishNode(node, nodeType);
     }
+    return result;
+  }
 
-    let p = TokenPrecedence[this.peek().type];
-    if (p >= precedence) {
-      do {
-        while (TokenPrecedence[this.peek().type] === p) {
-          const left = x;
-          if (p === TokenPrecedence[Token.EXP] && (left.type === 'UnaryExpression' || left.type === 'AwaitExpression')) {
-            return left;
-          }
-          const node = this.startNode(left);
-          if (this.peek().type === Token.IN && !this.scope.hasIn()) {
-            return left;
-          }
-          const op = this.next();
-          const right = this.parseBinaryExpression(op.type === Token.EXP ? p : p + 1);
-          let name;
-          switch (op.type) {
-            case Token.EXP:
-              name = 'ExponentiationExpression';
-              node.UpdateExpression = left;
-              node.ExponentiationExpression = right;
-              break;
-            case Token.MUL:
-            case Token.DIV:
-            case Token.MOD:
-              name = 'MultiplicativeExpression';
-              node.MultiplicativeExpression = left;
-              node.MultiplicativeOperator = op.value;
-              node.ExponentiationExpression = right;
-              break;
-            case Token.ADD:
-            case Token.SUB:
-              name = 'AdditiveExpression';
-              node.AdditiveExpression = left;
-              node.MultiplicativeExpression = right;
-              node.operator = op.value;
-              break;
-            case Token.SHL:
-            case Token.SAR:
-            case Token.SHR:
-              name = 'ShiftExpression';
-              node.ShiftExpression = left;
-              node.AdditiveExpression = right;
-              node.operator = op.value;
-              break;
-            case Token.LT:
-            case Token.GT:
-            case Token.LTE:
-            case Token.GTE:
-            case Token.INSTANCEOF:
-            case Token.IN:
-              name = 'RelationalExpression';
-              if (left.type === 'PrivateIdentifier') {
-                node.PrivateIdentifier = left;
-              } else {
-                node.RelationalExpression = left;
-              }
-              node.ShiftExpression = right;
-              node.operator = op.value;
-              break;
-            case Token.EQ:
-            case Token.NE:
-            case Token.EQ_STRICT:
-            case Token.NE_STRICT:
-              name = 'EqualityExpression';
-              node.EqualityExpression = left;
-              node.RelationalExpression = right;
-              node.operator = op.value;
-              break;
-            case Token.BIT_AND:
-              name = 'BitwiseANDExpression';
-              node.A = left;
-              node.operator = op.value;
-              node.B = right;
-              break;
-            case Token.BIT_XOR:
-              name = 'BitwiseXORExpression';
-              node.A = left;
-              node.operator = op.value;
-              node.B = right;
-              break;
-            case Token.BIT_OR:
-              name = 'BitwiseORExpression';
-              node.A = left;
-              node.operator = op.value;
-              node.B = right;
-              break;
-            case Token.AND:
-              name = 'LogicalANDExpression';
-              node.LogicalANDExpression = left;
-              node.BitwiseORExpression = right;
-              break;
-            case Token.OR:
-              name = 'LogicalORExpression';
-              node.LogicalORExpression = left;
-              node.LogicalANDExpression = right;
-              break;
-            default:
-              this.unexpected(op);
-          }
-          x = this.finishNode(node, name);
-        }
-        p -= 1;
-      } while (p >= precedence);
+  // LogicalORExpression :
+  //   LogicalANDExpression
+  //   LogicalORExpression `||` LogicalANDExpression
+  parseLogicalORExpression() {
+    return this.parseBinaryChain(
+      'parseLogicalANDExpression',
+      'LogicalORExpression',
+      'LogicalORExpression', 'LogicalANDExpression',
+      Token.OR,
+    );
+  }
+
+  // LogicalANDExpression :
+  //   BitwiseORExpression
+  //   LogicalANDExpression `&&` BitwiseORExpression
+  parseLogicalANDExpression() {
+    return this.parseBinaryChain(
+      'parseBitwiseORExpression',
+      'LogicalANDExpression',
+      'LogicalANDExpression', 'BitwiseORExpression',
+      Token.AND,
+    );
+  }
+
+  // BitwiseORExpression :
+  //   BitwiseXORExpression
+  //   BitwiseORExpression `|` BitwiseXORExpression
+  parseBitwiseORExpression() {
+    return this.parseBinaryChain(
+      'parseBitwiseXORExpression',
+      'BitwiseORExpression',
+      'A', 'B',
+      Token.BIT_OR,
+    );
+  }
+
+  // BitwiseXORExpression :
+  //   BitwiseANDExpression
+  //   BitwiseXORExpression `^` BitwiseANDExpression
+  parseBitwiseXORExpression() {
+    return this.parseBinaryChain(
+      'parseBitwiseANDExpression',
+      'BitwiseXORExpression',
+      'A', 'B',
+      Token.BIT_XOR,
+    );
+  }
+
+  // BitwiseANDExpression :
+  //   EqualityExpression
+  //   BitwiseANDExpression `&` EqualityExpression
+  parseBitwiseANDExpression() {
+    return this.parseBinaryChain(
+      'parseEqualityExpression',
+      'BitwiseANDExpression',
+      'A', 'B',
+      Token.BIT_AND,
+    );
+  }
+
+  // EqualityExpression :
+  //   RelationalExpression
+  //   EqualityExpression `==` RelationalExpression
+  //   EqualityExpression `!=` RelationalExpression
+  //   EqualityExpression `===` RelationalExpression
+  //   EqualityExpression `!==` RelationalExpression
+  parseEqualityExpression() {
+    return this.parseBinaryChain(
+      'parseRelationalExpression',
+      'EqualityExpression',
+      'EqualityExpression', 'RelationalExpression',
+      Token.EQ,
+      Token.NE,
+      Token.EQ_STRICT,
+      Token.NE_STRICT,
+    );
+  }
+
+  // RelationalExpression :
+  //   ShiftExpression
+  //   RelationalExpression `<` ShiftExpression
+  //   RelationalExpression `>` ShiftExpression
+  //   RelationalExpression `<=` ShiftExpression
+  //   RelationalExpression `>=` ShiftExpression
+  //   RelationalExpression `instanceof` ShiftExpression
+  //   [+In] RelationalExpression `in` ShiftExpression
+  //   [+In] PrivateIdentifier `in` ShiftExpression
+  parseRelationalExpression() {
+    const hasIn = this.scope.hasIn();
+    if (hasIn && this.test(Token.PRIVATE_IDENTIFIER)) {
+      const left = this.parsePrivateIdentifier();
+      this.scope.checkUndefinedPrivate(left);
+      const result = this.startNode(left);
+      result.PrivateIdentifier = left;
+      result.operator = this.expect(Token.IN).value;
+      result.ShiftExpression = this.parseShiftExpression();
+      return this.finishNode(result, 'RelationalExpression');
     }
-    return x;
+    return this.parseBinaryChain(
+      'parseShiftExpression',
+      'RelationalExpression',
+      'RelationalExpression', 'ShiftExpression',
+      Token.LT,
+      Token.GT,
+      Token.LTE,
+      Token.GTE,
+      Token.INSTANCEOF,
+      hasIn ? Token.IN : -1,
+    );
+  }
+
+  // ShiftExpression :
+  //   AdditiveExpression
+  //   ShiftExpression `<<` AdditiveExpression
+  //   ShiftExpression `>>` AdditiveExpression
+  //   ShiftExpression `>>>` AdditiveExpression
+  parseShiftExpression() {
+    return this.parseBinaryChain(
+      'parseAdditiveExpression',
+      'ShiftExpression',
+      'ShiftExpression', 'AdditiveExpression',
+      Token.SHL,
+      Token.SAR,
+      Token.SHR,
+    );
+  }
+
+  // AdditiveExpression :
+  //   MultiplicativeExpression
+  //   AdditiveExpression `+` MultiplicativeExpression
+  //   AdditiveExpression `-` MultiplicativeExpression
+  parseAdditiveExpression() {
+    return this.parseBinaryChain(
+      'parseMultiplicativeExpression',
+      'AdditiveExpression',
+      'AdditiveExpression', 'MultiplicativeExpression',
+      Token.ADD,
+      Token.SUB,
+    );
+  }
+
+  // MultiplicativeExpression :
+  //   ExponentiationExpression
+  //   MultiplicativeExpression MultiplicativeOperator ExponentiationExpression
+  //
+  // MultiplicativeOperator : one of
+  //   * / %
+  parseMultiplicativeExpression() {
+    return this.parseBinaryChain(
+      'parseExponentiationExpression',
+      'MultiplicativeExpression',
+      'MultiplicativeExpression', 'ExponentiationExpression',
+      Token.MUL,
+      Token.DIV,
+      Token.MOD,
+    );
+  }
+
+  // ExponentiationExpression :
+  //   UnaryExpression
+  //   UpdateExpression `**` ExponentiationExpression
+  parseExponentiationExpression() {
+    const expressions = [];
+    do {
+      const unary = this.parseUnaryExpression();
+      const { type } = unary;
+      expressions.push(unary);
+      if (type === 'UnaryExpression' || type === 'AwaitExpression') {
+        // not an UpdateExpression
+        break;
+      }
+    } while (this.eat(Token.EXP));
+    // exponentiation is right-associative
+    return expressions.reduceRight((right, left) => {
+      const node = this.startNode(left);
+      node.UpdateExpression = left;
+      node.operator = '**';
+      node.ExponentiationExpression = right;
+      return this.finishNode(node, 'ExponentiationExpression');
+    });
   }
 
   // UnaryExpression :
