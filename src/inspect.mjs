@@ -8,21 +8,14 @@ import { Q, X } from './completion.mjs';
 
 const bareKeyRe = /^[a-zA-Z_][a-zA-Z_0-9]*$/;
 
-const getObjectTag = (value, wrap) => {
-  let s;
+const getObjectTag = (value) => {
   try {
-    s = X(Get(value, wellKnownSymbols.toStringTag)).stringValue();
+    return X(Get(value, wellKnownSymbols.toStringTag)).stringValue();
   } catch {}
   try {
     const c = X(Get(value, new Value('constructor')));
-    s = X(Get(c, new Value('name'))).stringValue();
+    return X(Get(c, new Value('name'))).stringValue();
   } catch {}
-  if (s) {
-    if (wrap) {
-      return `[${s}] `;
-    }
-    return s;
-  }
   return '';
 };
 
@@ -33,7 +26,7 @@ const compactObject = (realm, value) => {
     if (toString.nativeFunction === objectToString.nativeFunction) {
       return X(Call(toString, value)).stringValue();
     } else {
-      const tag = getObjectTag(value, false) || 'Unknown';
+      const tag = getObjectTag(value) || 'Unknown';
       const ctor = X(Get(value, new Value('constructor')));
       if (Type(ctor) === 'Object') {
         const ctorName = X(Get(ctor, new Value('name'))).stringValue();
