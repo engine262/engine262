@@ -83,11 +83,12 @@ const INSPECTORS = {
     }
 
     if ('Call' in v) {
+      const tag = getObjectTag(v) || 'Function';
       const name = v.properties.get(new Value('name'));
       if (name !== undefined && name.Value.stringValue() !== '') {
-        return `[Function: ${name.Value.stringValue()}]`;
+        return `[${tag}: ${name.Value.stringValue()}]`;
       }
-      return '[Function]';
+      return `[${tag}]`;
     }
 
     if ('ErrorData' in v) {
