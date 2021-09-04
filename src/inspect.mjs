@@ -12,6 +12,10 @@ const getObjectTag = (value) => {
   try {
     return X(Get(value, wellKnownSymbols.toStringTag)).stringValue();
   } catch {}
+  return '';
+};
+
+const getConstructorName = (value) => {
   try {
     const c = X(Get(value, new Value('constructor')));
     return X(Get(c, new Value('name'))).stringValue();
@@ -26,15 +30,11 @@ const compactObject = (realm, value) => {
     if (toString.nativeFunction === objectToString.nativeFunction) {
       return X(Call(toString, value)).stringValue();
     } else {
-      const tag = getObjectTag(value) || 'Unknown';
-      const ctor = X(Get(value, new Value('constructor')));
-      if (Type(ctor) === 'Object') {
-        const ctorName = X(Get(ctor, new Value('name'))).stringValue();
-        if (ctorName !== '') {
-          return `#<${ctorName}>`;
-        }
-        return `[object ${tag}]`;
+      const ctorName = getConstructorName(value);
+      if (ctorName) {
+        return `#<${ctorName}>`;
       }
+      const tag = getObjectTag(value) || 'Unknown';
       return `[object ${tag}]`;
     }
   } catch (e) {
@@ -76,12 +76,18 @@ const INSPECTORS = {
     }
 
     if ('Call' in v) {
-      const tag = getObjectTag(v) || 'Function';
+      const ctorName = getConstructorName(v) || 'Function';
+      const tag = getObjectTag(v);
       const name = v.properties.get(new Value('name'));
+      let delimFuncName = ' (anonymous)';
       if (name !== undefined && name.Value.stringValue() !== '') {
-        return `[${tag}: ${name.Value.stringValue()}]`;
+        delimFuncName = `: ${name.Value.stringValue()}`;
       }
-      return `[${tag}]`;
+      let delimTag = '';
+      if (tag && tag !== ctorName) {
+        delimTag = ` [${tag}]`;
+      }
+      return `[${ctorName}${delimFuncName}]${delimTag}`;
     }
 
     if ('ErrorData' in v) {
@@ -168,8 +174,16 @@ const INSPECTORS = {
         }
       }
 
+      const ctorName = getConstructorName(v);
       const tag = getObjectTag(v);
-      let out = tag && tag !== 'Object' ? `${tag} {` : '{';
+      let out;
+      if (tag && tag !== ctorName) {
+        out = `${ctorName || 'Object'} [${tag}] {`;
+      } else if (ctorName && ctorName !== 'Object') {
+        out = `${ctorName} {`;
+      } else {
+        out = '{';
+      }
       if (cache.length > 5) {
         cache.forEach((c) => {
           out = `${out}\n${'  '.repeat(ctx.indent)}${c[0]}: ${c[1]},`;
