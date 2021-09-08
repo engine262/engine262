@@ -21,7 +21,7 @@ export const GlobalSymbolRegistry = [];
 function SymbolConstructor([description = Value.undefined], { NewTarget }) {
   // 1. If NewTarget is not undefined, throw a TypeError exception.
   if (NewTarget !== Value.undefined) {
-    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+    return surroundingAgent.Throw('TypeError', 'NotAConstructor', this);
   }
   // 2. If description is undefined, let descString be undefined.
   let descString;
