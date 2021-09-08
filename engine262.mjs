@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 49ea84fb878a3012f74f5035af0c0362101bc9a3
+ * engine262 0.0.1 14f50592362d889289e133fff4200e8e304c995a
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -48564,7 +48564,7 @@ function SymbolConstructor([description = Value.undefined], {
 }) {
   // 1. If NewTarget is not undefined, throw a TypeError exception.
   if (NewTarget !== Value.undefined) {
-    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+    return surroundingAgent.Throw('TypeError', 'NotAConstructor', this);
   } // 2. If description is undefined, let descString be undefined.
 
 
