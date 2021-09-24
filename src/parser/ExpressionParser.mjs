@@ -274,10 +274,12 @@ export class ExpressionParser extends FunctionParser {
     if (!x) {
       if (this.test(Token.PRIVATE_IDENTIFIER)) {
         x = this.parsePrivateIdentifier();
-        if (!this.test(Token.IN)) {
+        const p = TokenPrecedence[this.peek().type];
+        if (!this.test(Token.IN) || p < precedence) {
           this.raise('UnexpectedToken');
         }
         this.scope.checkUndefinedPrivate(x);
+        return this.parseBinaryExpression(p, x);
       } else {
         x = this.parseUnaryExpression();
       }
