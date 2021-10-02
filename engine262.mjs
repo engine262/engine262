@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 20598808cab10a8a38584461772e4a9aecc74ef9
+ * engine262 0.0.1 f47d7da0653c7b2f0417395794a5259c2287cc44
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -2778,6 +2778,10 @@ function TV(s) {
       i += 1;
 
       switch (s[i]) {
+        case '$':
+          buffer += '$';
+          break;
+
         case '\\':
           buffer += '\\';
           break;
