@@ -7,6 +7,9 @@ export function TV(s) {
     if (s[i] === '\\') {
       i += 1;
       switch (s[i]) {
+        case '$':
+          buffer += '$';
+          break;
         case '\\':
           buffer += '\\';
           break;
