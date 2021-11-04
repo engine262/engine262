@@ -4,14 +4,20 @@ import { FunctionKind } from './FunctionParser.mjs';
 import { getDeclarations } from './Scope.mjs';
 
 export class StatementParser extends ExpressionParser {
-  semicolon() {
+  eatSemicolonWithASI() {
     if (this.eat(Token.SEMICOLON)) {
-      return;
+      return true;
     }
     if (this.peek().hadLineTerminatorBefore || isAutomaticSemicolon(this.peek().type)) {
-      return;
+      return true;
     }
-    this.unexpected();
+    return false;
+  }
+
+  semicolon() {
+    if (!this.eatSemicolonWithASI()) {
+      this.unexpected();
+    }
   }
 
   // StatementList :
@@ -778,11 +784,8 @@ export class StatementParser extends ExpressionParser {
     }
     const node = this.startNode();
     this.expect(Token.RETURN);
-    if (this.eat(Token.SEMICOLON)) {
+    if (this.eatSemicolonWithASI()) {
       node.Expression = null;
-    } else if (this.peek().hadLineTerminatorBefore) {
-      node.Expression = null;
-      this.semicolon();
     } else {
       node.Expression = this.parseExpression();
       this.semicolon();
