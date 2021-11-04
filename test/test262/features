@@ -31,7 +31,7 @@ hashbang = hashbang
 regexp-match-indices = regexp-match-indices
 
 # https://github.com/tc39/proposal-cleanup-some
-cleanupSome = cleanup-some
+FinalizationRegistry.prototype.cleanupSome = cleanup-some
 
 # https://github.com/tc39/proposal-item-method/
 Array.prototype.at = at-method
