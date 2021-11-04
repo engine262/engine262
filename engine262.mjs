@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 94436f46216761bde3019fbe9d6077a89267aedc
+ * engine262 0.0.1 7f9324ba77a0b4501e869015fcc373445ae9a04f
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -16740,16 +16740,22 @@ class ExpressionParser extends FunctionParser {
 }
 
 class StatementParser extends ExpressionParser {
-  semicolon() {
+  eatSemicolonWithASI() {
     if (this.eat(Token.SEMICOLON)) {
-      return;
+      return true;
     }
 
     if (this.peek().hadLineTerminatorBefore || isAutomaticSemicolon(this.peek().type)) {
-      return;
+      return true;
     }
 
-    this.unexpected();
+    return false;
+  }
+
+  semicolon() {
+    if (!this.eatSemicolonWithASI()) {
+      this.unexpected();
+    }
   } // StatementList :
   //   StatementListItem
   //   StatementList StatementListItem
@@ -17640,11 +17646,8 @@ class StatementParser extends ExpressionParser {
     const node = this.startNode();
     this.expect(Token.RETURN);
 
-    if (this.eat(Token.SEMICOLON)) {
+    if (this.eatSemicolonWithASI()) {
       node.Expression = null;
-    } else if (this.peek().hadLineTerminatorBefore) {
-      node.Expression = null;
-      this.semicolon();
     } else {
       node.Expression = this.parseExpression();
       this.semicolon();
