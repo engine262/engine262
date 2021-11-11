@@ -7,7 +7,7 @@ export function IsStringWellFormedUnicode(string) {
   const strLen = string.length;
   // 2. Let k be 0.
   let k = 0;
-  // 3. Repeat, while k does not equal strLen,
+  // 3. Repeat, while k ≠ strLen,
   while (k !== strLen) {
     // a. Let cp be ! CodePointAt(string, k).
     const cp = X(CodePointAt(string, k));

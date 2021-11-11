@@ -42,11 +42,6 @@ export const FEATURES = Object.freeze([
     url: 'https://github.com/tc39/proposal-cleanup-some',
   },
   {
-    name: 'Arbitrary Module Namespace Names',
-    flag: 'arbitrary-module-namespace-names',
-    url: 'https://github.com/tc39/ecma262/pull/2154',
-  },
-  {
     name: 'At Method',
     flag: 'at-method',
     url: 'https://github.com/tc39/proposal-item-method',
