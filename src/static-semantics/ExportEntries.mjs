@@ -100,11 +100,11 @@ export function ExportEntries(node) {
         }
         case node.default && !!node.AssignmentExpression: {
           // `export` `default` AssignmentExpression `;`
-          // 1. Let entry be the ExportEntry Record { [[ModuleRequest]]: null, [[ImportName]]: null, [[LocalName]]: ~default~, [[ExportName]]: "default" }.
+          // 1. Let entry be the ExportEntry Record { [[ModuleRequest]]: null, [[ImportName]]: null, [[LocalName]]: "*default*", [[ExportName]]: "default" }.
           const entry = {
             ModuleRequest: Value.null,
             ImportName: Value.null,
-            LocalName: 'default',
+            LocalName: new Value('*default*'),
             ExportName: new Value('default'),
           };
           // 2. Return a new List containing entry.

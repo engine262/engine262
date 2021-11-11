@@ -90,28 +90,22 @@ export class ModuleParser extends StatementParser {
 
   // ImportSpecifier :
   //   ImportedBinding
-  //   IdentifierName `as` ImportedBinding
   //   ModuleExportName `as` ImportedBinding
   parseImportSpecifier() {
     const node = this.startNode();
-    if (this.feature('arbitrary-module-namespace-names') && this.test(Token.STRING)) {
-      node.ModuleExportName = this.parseModuleExportName();
+    const name = this.parseModuleExportName();
+    if (name.type === 'StringLiteral' || this.test('as')) {
       this.expect('as');
+      node.ModuleExportName = name;
       node.ImportedBinding = this.parseBindingIdentifier();
     } else {
-      const name = this.parseIdentifierName();
-      if (this.eat('as')) {
-        node.IdentifierName = name;
-        node.ImportedBinding = this.parseBindingIdentifier();
-      } else {
-        node.ImportedBinding = name;
-        node.ImportedBinding.type = 'BindingIdentifier';
-        if (isKeywordRaw(node.ImportedBinding.name)) {
-          this.raiseEarly('UnexpectedToken', node.ImportedBinding);
-        }
-        if (node.ImportedBinding.name === 'eval' || node.ImportedBinding.name === 'arguments') {
-          this.raiseEarly('UnexpectedToken', node.ImportedBinding);
-        }
+      node.ImportedBinding = name;
+      node.ImportedBinding.type = 'BindingIdentifier';
+      if (isKeywordRaw(node.ImportedBinding.name)) {
+        this.raiseEarly('UnexpectedToken', node.ImportedBinding);
+      }
+      if (node.ImportedBinding.name === 'eval' || node.ImportedBinding.name === 'arguments') {
+        this.raiseEarly('UnexpectedToken', node.ImportedBinding);
       }
     }
     return this.finishNode(node, 'ImportSpecifier');
@@ -128,7 +122,6 @@ export class ModuleParser extends StatementParser {
   //
   // ExportFromClause :
   //   `*`
-  //   `*` as IdentifierName
   //   `*` as ModuleExportName
   //   NamedExports
   parseExportDeclaration() {
@@ -196,13 +189,8 @@ export class ModuleParser extends StatementParser {
           const inner = this.startNode();
           this.next();
           if (this.eat('as')) {
-            if (this.feature('arbitrary-module-namespace-names') && this.test(Token.STRING)) {
-              inner.ModuleExportName = this.parseModuleExportName();
-              this.scope.declare(inner.ModuleExportName, 'export');
-            } else {
-              inner.IdentifierName = this.parseIdentifierName();
-              this.scope.declare(inner.IdentifierName, 'export');
-            }
+            inner.ModuleExportName = this.parseModuleExportName();
+            this.scope.declare(inner.ModuleExportName, 'export');
           }
           node.ExportFromClause = this.finishNode(inner, 'ExportFromClause');
           node.FromClause = this.parseFromClause();
@@ -243,23 +231,13 @@ export class ModuleParser extends StatementParser {
   }
 
   // ExportSpecifier :
-  //   IdentifierName
-  //   IdentifierName `as` IdentifierName
-  //   IdentifierName `as` ModuleExportName
   //   ModuleExportName
   //   ModuleExportName `as` ModuleExportName
-  //   ModuleExportName `as` IdentifierName
   parseExportSpecifier() {
     const node = this.startNode();
-    const parseName = () => {
-      if (this.feature('arbitrary-module-namespace-names') && this.test(Token.STRING)) {
-        return this.parseModuleExportName();
-      }
-      return this.parseIdentifierName();
-    };
-    node.localName = parseName();
+    node.localName = this.parseModuleExportName();
     if (this.eat('as')) {
-      node.exportName = parseName();
+      node.exportName = this.parseModuleExportName();
     } else {
       node.exportName = node.localName;
     }
@@ -267,13 +245,18 @@ export class ModuleParser extends StatementParser {
     return this.finishNode(node, 'ExportSpecifier');
   }
 
-  // ModuleExportName : StringLiteral
+  // ModuleExportName :
+  //   IdentifierName
+  //   StringLiteral
   parseModuleExportName() {
-    const literal = this.parseStringLiteral();
-    if (!IsStringWellFormedUnicode(StringValue(literal))) {
-      this.raiseEarly('ModuleExportNameInvalidUnicode', literal);
+    if (this.test(Token.STRING)) {
+      const literal = this.parseStringLiteral();
+      if (!IsStringWellFormedUnicode(StringValue(literal))) {
+        this.raiseEarly('ModuleExportNameInvalidUnicode', literal);
+      }
+      return literal;
     }
-    return literal;
+    return this.parseIdentifierName();
   }
 
   // FromClause :

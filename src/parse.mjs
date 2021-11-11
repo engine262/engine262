@@ -116,8 +116,8 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
       } else { // ii. Else,
         // 1. Let ie be the element of importEntries whose [[LocalName]] is the same as ee.[[LocalName]].
         const ie = importEntries.find((e) => e.LocalName.stringValue() === ee.LocalName.stringValue());
-        // 2. If ie.[[ImportName]] is ~star~, then
-        if (ie.ImportName === 'star') {
+        // 2. If ie.[[ImportName]] is ~namespace-object~, then
+        if (ie.ImportName === 'namespace-object') {
           // a. NOTE: This is a re-export of an imported module namespace object.
           // b. Append ee to localExportEntries.
           localExportEntries.push(ee);
@@ -132,7 +132,7 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
           });
         }
       }
-    } else if (ee.ImportName && ee.ImportName === 'star' && ee.ExportName === Value.null) { // b. Else if ee.[[ImportName]] is ~star~ and ee.[[ExportName]] is null, then
+    } else if (ee.ImportName && ee.ImportName === 'all-but-default' && ee.ExportName === Value.null) { // b. Else if ee.[[ImportName]] is ~all-but-default~ and ee.[[ExportName]] is null, then
       // i. Append ee to starExportEntries.
       starExportEntries.push(ee);
     } else { // c. Else,
