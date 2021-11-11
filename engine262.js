@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 7f9324ba77a0b4501e869015fcc373445ae9a04f
+ * engine262 0.0.1 61a471228f784b99bfdecb814901b8428828731e
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -31,10 +31,6 @@
   const kInternal = Symbol('kInternal');
 
   function convertValueForKey(key) {
-    if (typeof key === 'string') {
-      return Symbol.for(`engine262_helper_key_${key}`);
-    }
-
     switch (Type(key)) {
       case 'String':
         return key.stringValue();
@@ -692,7 +688,7 @@
           return BoundNames(node.BindingIdentifier);
         }
 
-        return ['default'];
+        return [new Value('*default*')];
 
       case 'ImportSpecifier':
         return BoundNames(node.ImportedBinding);
@@ -721,7 +717,7 @@
         }
 
         if (node.AssignmentExpression) {
-          return ['default'];
+          return [new Value('*default*')];
         }
 
         throw new OutOfRange$1('BoundNames', node);
@@ -1613,11 +1609,11 @@
           case node.default && !!node.AssignmentExpression:
             {
               // `export` `default` AssignmentExpression `;`
-              // 1. Let entry be the ExportEntry Record { [[ModuleRequest]]: null, [[ImportName]]: null, [[LocalName]]: ~default~, [[ExportName]]: "default" }.
+              // 1. Let entry be the ExportEntry Record { [[ModuleRequest]]: null, [[ImportName]]: null, [[LocalName]]: "*default*", [[ExportName]]: "default" }.
               const entry = {
                 ModuleRequest: Value.null,
                 ImportName: Value.null,
-                LocalName: 'default',
+                LocalName: new Value('*default*'),
                 ExportName: new Value('default')
               }; // 2. Return a new List containing entry.
 
@@ -2965,11 +2961,11 @@
       case 'NameSpaceImport':
         {
           // 1. Let localName be the StringValue of ImportedBinding.
-          const localName = StringValue$1(node.ImportedBinding); // 2. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~star~, [[LocalName]]: localName }.
+          const localName = StringValue$1(node.ImportedBinding); // 2. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~namespace-object~, [[LocalName]]: localName }.
 
           const entry = {
             ModuleRequest: module,
-            ImportName: 'star',
+            ImportName: 'namespace-object',
             LocalName: localName
           }; // 3. Return a new List containing entry.
 
@@ -2986,20 +2982,7 @@
         }
 
       case 'ImportSpecifier':
-        if (node.IdentifierName) {
-          // 1. Let importName be the StringValue of IdentifierName.
-          const importName = StringValue$1(node.IdentifierName); // 2. Let localName be the StringValue of ImportedBinding.
-
-          const localName = StringValue$1(node.ImportedBinding); // 3. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: importName, [[LocalName]]: localName }.
-
-          const entry = {
-            ModuleRequest: module,
-            ImportName: importName,
-            LocalName: localName
-          }; // 4. Return a new List containing entry.
-
-          return [entry];
-        } else if (node.ModuleExportName) {
+        if (node.ModuleExportName) {
           // 1. Let importName be the StringValue of ModuleExportName.
           const importName = StringValue$1(node.ModuleExportName); // 2. Let localName be the StringValue of ImportedBinding.
 
@@ -3042,35 +3025,23 @@
 
     switch (node.type) {
       case 'ExportFromClause':
-        if (node.IdentifierName) {
-          // 1. Let exportName be the StringValue of IdentifierName.
-          const exportName = StringValue$1(node.IdentifierName); // 2. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~star~, [[LocalName]]: null, [[ExportName]]: exportName }.
-
-          const entry = {
-            ModuleRequest: module,
-            ImportName: 'star',
-            LocalName: Value.null,
-            ExportName: exportName
-          }; // 3. Return a new List containing entry.
-
-          return [entry];
-        } else if (node.ModuleExportName) {
+        if (node.ModuleExportName) {
           // 1. Let exportName be the StringValue of ModuleExportName.
-          const exportName = StringValue$1(node.ModuleExportName); // 2. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~star~, [[LocalName]]: null, [[ExportName]]: exportName }.
+          const exportName = StringValue$1(node.ModuleExportName); // 2. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~all~, [[LocalName]]: null, [[ExportName]]: exportName }.
 
           const entry = {
             ModuleRequest: module,
-            ImportName: 'star',
+            ImportName: 'all',
             LocalName: Value.null,
             ExportName: exportName
           }; // 3. Return a new List containing entry.
 
           return [entry];
         } else {
-          // 1. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~star~, [[LocalName]]: null, [[ExportName]]: null }.
+          // 1. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~all-but-default~, [[LocalName]]: null, [[ExportName]]: null }.
           const entry = {
             ModuleRequest: module,
-            ImportName: 'star',
+            ImportName: 'all-but-default',
             LocalName: Value.null,
             ExportName: Value.null
           }; // 2. Return a new List containing entry.
@@ -3378,7 +3349,7 @@
 
     const strLen = string.length; // 2. Let k be 0.
 
-    let k = 0; // 3. Repeat, while k does not equal strLen,
+    let k = 0; // 3. Repeat, while k ≠ strLen,
 
     while (k !== strLen) {
       let _temp = CodePointAt(string, k);
@@ -10310,8 +10281,8 @@
   }
 
   function InitializeBoundName(name, value, environment) {
-    // 1. Assert: Either Type(name) is String or name is ~default~.
-    Assert(name === 'default' || Type(name) === 'String', "name === 'default' || Type(name) === 'String'"); // 2. If environment is not undefined, then
+    // 1. Assert: Type(name) is String.
+    Assert(Type(name) === 'String', "Type(name) === 'String'"); // 2. If environment is not undefined, then
 
     if (environment !== Value.undefined) {
       // a. Perform environment.InitializeBinding(name, value).
@@ -17934,34 +17905,27 @@
       return this.finishNode(node, 'NamedImports');
     } // ImportSpecifier :
     //   ImportedBinding
-    //   IdentifierName `as` ImportedBinding
     //   ModuleExportName `as` ImportedBinding
 
 
     parseImportSpecifier() {
       const node = this.startNode();
+      const name = this.parseModuleExportName();
 
-      if (this.feature('arbitrary-module-namespace-names') && this.test(Token.STRING)) {
-        node.ModuleExportName = this.parseModuleExportName();
+      if (name.type === 'StringLiteral' || this.test('as')) {
         this.expect('as');
+        node.ModuleExportName = name;
         node.ImportedBinding = this.parseBindingIdentifier();
       } else {
-        const name = this.parseIdentifierName();
+        node.ImportedBinding = name;
+        node.ImportedBinding.type = 'BindingIdentifier';
 
-        if (this.eat('as')) {
-          node.IdentifierName = name;
-          node.ImportedBinding = this.parseBindingIdentifier();
-        } else {
-          node.ImportedBinding = name;
-          node.ImportedBinding.type = 'BindingIdentifier';
+        if (isKeywordRaw(node.ImportedBinding.name)) {
+          this.raiseEarly('UnexpectedToken', node.ImportedBinding);
+        }
 
-          if (isKeywordRaw(node.ImportedBinding.name)) {
-            this.raiseEarly('UnexpectedToken', node.ImportedBinding);
-          }
-
-          if (node.ImportedBinding.name === 'eval' || node.ImportedBinding.name === 'arguments') {
-            this.raiseEarly('UnexpectedToken', node.ImportedBinding);
-          }
+        if (node.ImportedBinding.name === 'eval' || node.ImportedBinding.name === 'arguments') {
+          this.raiseEarly('UnexpectedToken', node.ImportedBinding);
         }
       }
 
@@ -17977,7 +17941,6 @@
     //
     // ExportFromClause :
     //   `*`
-    //   `*` as IdentifierName
     //   `*` as ModuleExportName
     //   NamedExports
 
@@ -18068,13 +18031,8 @@
               this.next();
 
               if (this.eat('as')) {
-                if (this.feature('arbitrary-module-namespace-names') && this.test(Token.STRING)) {
-                  inner.ModuleExportName = this.parseModuleExportName();
-                  this.scope.declare(inner.ModuleExportName, 'export');
-                } else {
-                  inner.IdentifierName = this.parseIdentifierName();
-                  this.scope.declare(inner.IdentifierName, 'export');
-                }
+                inner.ModuleExportName = this.parseModuleExportName();
+                this.scope.declare(inner.ModuleExportName, 'export');
               }
 
               node.ExportFromClause = this.finishNode(inner, 'ExportFromClause');
@@ -18121,46 +18079,39 @@
 
       return this.finishNode(node, 'NamedExports');
     } // ExportSpecifier :
-    //   IdentifierName
-    //   IdentifierName `as` IdentifierName
-    //   IdentifierName `as` ModuleExportName
     //   ModuleExportName
     //   ModuleExportName `as` ModuleExportName
-    //   ModuleExportName `as` IdentifierName
 
 
     parseExportSpecifier() {
       const node = this.startNode();
-
-      const parseName = () => {
-        if (this.feature('arbitrary-module-namespace-names') && this.test(Token.STRING)) {
-          return this.parseModuleExportName();
-        }
-
-        return this.parseIdentifierName();
-      };
-
-      node.localName = parseName();
+      node.localName = this.parseModuleExportName();
 
       if (this.eat('as')) {
-        node.exportName = parseName();
+        node.exportName = this.parseModuleExportName();
       } else {
         node.exportName = node.localName;
       }
 
       this.scope.declare(node.exportName, 'export');
       return this.finishNode(node, 'ExportSpecifier');
-    } // ModuleExportName : StringLiteral
+    } // ModuleExportName :
+    //   IdentifierName
+    //   StringLiteral
 
 
     parseModuleExportName() {
-      const literal = this.parseStringLiteral();
+      if (this.test(Token.STRING)) {
+        const literal = this.parseStringLiteral();
 
-      if (!IsStringWellFormedUnicode(StringValue$1(literal))) {
-        this.raiseEarly('ModuleExportNameInvalidUnicode', literal);
+        if (!IsStringWellFormedUnicode(StringValue$1(literal))) {
+          this.raiseEarly('ModuleExportNameInvalidUnicode', literal);
+        }
+
+        return literal;
       }
 
-      return literal;
+      return this.parseIdentifierName();
     } // FromClause :
     //   `from` ModuleSpecifier
 
@@ -18577,9 +18528,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         } else {
           // ii. Else,
           // 1. Let ie be the element of importEntries whose [[LocalName]] is the same as ee.[[LocalName]].
-          const ie = importEntries.find(e => e.LocalName.stringValue() === ee.LocalName.stringValue()); // 2. If ie.[[ImportName]] is ~star~, then
+          const ie = importEntries.find(e => e.LocalName.stringValue() === ee.LocalName.stringValue()); // 2. If ie.[[ImportName]] is ~namespace-object~, then
 
-          if (ie.ImportName === 'star') {
+          if (ie.ImportName === 'namespace-object') {
             // a. NOTE: This is a re-export of an imported module namespace object.
             // b. Append ee to localExportEntries.
             localExportEntries.push(ee);
@@ -18595,8 +18546,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             });
           }
         }
-      } else if (ee.ImportName && ee.ImportName === 'star' && ee.ExportName === Value.null) {
-        // b. Else if ee.[[ImportName]] is ~star~ and ee.[[ExportName]] is null, then
+      } else if (ee.ImportName && ee.ImportName === 'all-but-default' && ee.ExportName === Value.null) {
+        // b. Else if ee.[[ImportName]] is ~all-but-default~ and ee.[[ExportName]] is null, then
         // i. Append ee to starExportEntries.
         starExportEntries.push(ee);
       } else {
@@ -21426,13 +21377,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 1. Let value be ? BindingClassDeclarationEvaluation of ClassDeclaration.
       const value = _temp; // 2. Let className be the sole element of BoundNames of ClassDeclaration.
 
-      const className = BoundNames(ClassDeclaration)[0]; // If className is ~default~, then
+      const className = BoundNames(ClassDeclaration)[0]; // If className is "*default*", then
 
-      if (className === 'default') {
+      if (className.stringValue() === '*default*') {
         // a. Let env be the running execution context's LexicalEnvironment.
-        const env = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // b. Perform ? InitializeBoundName(~default~, value, env).
+        const env = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // b. Perform ? InitializeBoundName("*default*", value, env).
 
-        let _temp2 = InitializeBoundName('default', value, env);
+        let _temp2 = InitializeBoundName(new Value('*default*'), value, env);
         /* c8 ignore if */
 
 
@@ -21484,9 +21435,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       } // 3. Let env be the running execution context's LexicalEnvironment.
 
 
-      const env = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 4. Perform ? InitializeBoundName(~default~, value, env).
+      const env = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 4. Perform ? InitializeBoundName("*default*", value, env).
 
-      let _temp4 = InitializeBoundName('default', value, env);
+      let _temp4 = InitializeBoundName(new Value('*default*'), value, env);
       /* c8 ignore if */
 
 
@@ -24840,7 +24791,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       BindingName
     }) {
       Assert(Module instanceof AbstractModuleRecord, "Module instanceof AbstractModuleRecord");
-      Assert(BindingName === 'namespace' || BindingName === 'default' || Type(BindingName) === 'String', "BindingName === 'namespace' || BindingName === 'default' || Type(BindingName) === 'String'");
+      Assert(BindingName === 'namespace' || Type(BindingName) === 'String', "BindingName === 'namespace' || Type(BindingName) === 'String'");
       this.Module = Module;
       this.BindingName = BindingName;
     }
@@ -25184,9 +25135,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           }
 
           // i. Let importedModule be ? HostResolveImportedModule(module, e.[[ModuleRequest]]).
-          const importedModule = _temp6; // ii. If e.[[ImportName]] is ~star~, then
+          const importedModule = _temp6; // ii. If e.[[ImportName]] is ~all~, then
 
-          if (e.ImportName === 'star') {
+          if (e.ImportName === 'all') {
             // 1. Assert: module does not provide the direct binding for this export
             // 2. Return ResolvedBinding Record { [[Module]]: importedModule, [[BindingName]]: ~namespace~ }.
             return new ResolvedBindingRecord({
@@ -25332,9 +25283,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
         // a. Let importedModule be ! HostResolveImportedModule(module, in.[[ModuleRequest]]).
         const importedModule = _temp10; // b. NOTE: The above call cannot fail because imported module requests are a subset of module.[[RequestedModules]], and these have been resolved earlier in this algorithm.
-        // c. If in.[[ImportName]] is ~star~, then
+        // c. If in.[[ImportName]] is ~namespace-object~, then
 
-        if (ie.ImportName === 'star') {
+        if (ie.ImportName === 'namespace-object') {
           let _temp11 = GetModuleNamespace(importedModule);
           /* c8 ignore if */
 
@@ -28000,10 +27951,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     name: 'FinalizationRegistry.prototype.cleanupSome',
     flag: 'cleanup-some',
     url: 'https://github.com/tc39/proposal-cleanup-some'
-  }, {
-    name: 'Arbitrary Module Namespace Names',
-    flag: 'arbitrary-module-namespace-names',
-    url: 'https://github.com/tc39/ecma262/pull/2154'
   }, {
     name: 'At Method',
     flag: 'at-method',
