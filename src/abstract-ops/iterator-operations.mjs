@@ -225,13 +225,6 @@ export function CreateAsyncFromSyncIterator(syncIteratorRecord) {
   };
 }
 
-// 25.1.4.2.4 #sec-async-from-sync-iterator-value-unwrap-functions
-function AsyncFromSyncIteratorValueUnwrapFunctions([value = Value.undefined]) {
-  const F = this;
-
-  return X(CreateIterResultObject(value, F.Done));
-}
-
 // 25.1.4.4 #sec-asyncfromsynciteratorcontinuation
 export function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
   // 1. Let done be IteratorComplete(result).
@@ -246,16 +239,17 @@ export function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
   const valueWrapper = PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value);
   // 6. IfAbruptRejectPromise(valueWrapper, promiseCapability).
   IfAbruptRejectPromise(valueWrapper, promiseCapability);
-  // 7. Let steps be the algorithm steps defined in Async-from-Sync Iterator Value Unwrap Functions.
-  const steps = AsyncFromSyncIteratorValueUnwrapFunctions;
-  // 8. Let length be the number of non-optional parameters of the function definition in Async-from-Sync Iterator Value Unwrap Functions.
-  const length = 1;
-  // 9. Let onFulfilled be ! CreateBuiltinFunction(steps, length, "", « [[Done]] »).
-  const onFulfilled = X(CreateBuiltinFunction(steps, length, new Value(''), ['Done']));
-  // 10. Set onFulfilled.[[Done]] to done.
-  onFulfilled.Done = done;
-  // 11. Perform ! PerformPromiseThen(valueWrapper, onFulfilled, undefined, promiseCapability).
+  // 7. Let unwrap be a new Abstract Closure with parameters (value) that captures done and performs the following steps when called:
+  // eslint-disable-next-line arrow-body-style
+  const unwrap = ([valueInner = Value.undefined]) => {
+    // a. Return ! CreateIterResultObject(value, done).
+    return X(CreateIterResultObject(valueInner, done));
+  };
+  // 8. Let onFulfilled be ! CreateBuiltinFunction(unwrap, 1, "", « »).
+  const onFulfilled = X(CreateBuiltinFunction(unwrap, 1, new Value(''), ['Done']));
+  // 9. NOTE: onFulfilled is used when processing the "value" property of an IteratorResult object in order to wait for its value if it is a promise and re-package the result in a new "unwrapped" IteratorResult object.
+  // 10. Perform ! PerformPromiseThen(valueWrapper, onFulfilled, undefined, promiseCapability).
   X(PerformPromiseThen(valueWrapper, onFulfilled, Value.undefined, promiseCapability));
-  // 12. Return promiseCapability.[[Promise]].
+  // 11. Return promiseCapability.[[Promise]].
   return promiseCapability.Promise;
 }

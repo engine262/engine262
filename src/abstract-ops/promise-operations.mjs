@@ -204,14 +204,25 @@ export function NewPromiseCapability(C) {
   // 2. NOTE: C is assumed to be a constructor function that supports the parameter conventions of the Promise constructor (see 26.2.3.1).
   // 3. Let promiseCapability be the PromiseCapability Record { [[Promise]]: undefined, [[Resolve]]: undefined, [[Reject]]: undefined }.
   const promiseCapability = new PromiseCapabilityRecord();
-  // 4. Let steps be the algorithm steps defined in GetCapabilitiesExecutor Functions.
-  const steps = GetCapabilitiesExecutorFunctions;
-  // 5. Let length be the number of non-optional parameters of the function definition in GetCapabilitiesExecutor Functions.
-  const length = 2;
-  // 6. Let executor be ! CreateBuiltinFunction(steps, length, "", « [[Capability]] »).
-  const executor = X(CreateBuiltinFunction(steps, length, new Value(''), ['Capability']));
-  // 7. Set executor.[[Capability]] to promiseCapability.
-  executor.Capability = promiseCapability;
+  // 4. Let executorClosure be a new Abstract Closure with parameters (resolve, reject) that captures promiseCapability and performs the following steps when called:
+  const executorClosure = ([resolve = Value.undefined, reject = Value.undefined]) => {
+    // a. If promiseCapability.[[Resolve]] is not undefined, throw a TypeError exception.
+    if (Type(promiseCapability.Resolve) !== 'Undefined') {
+      return surroundingAgent.Throw('TypeError', 'PromiseCapabilityFunctionAlreadySet', 'resolve');
+    }
+    // b. If promiseCapability.[[Reject]] is not undefined, throw a TypeError exception.
+    if (Type(promiseCapability.Reject) !== 'Undefined') {
+      return surroundingAgent.Throw('TypeError', 'PromiseCapabilityFunctionAlreadySet', 'reject');
+    }
+    // c. Set promiseCapability.[[Resolve]] to resolve.
+    promiseCapability.Resolve = resolve;
+    // d. Set promiseCapability.[[Reject]] to reject.
+    promiseCapability.Reject = reject;
+    // e. Return undefined.
+    return Value.undefined;
+  };
+  // 5. Let executor be ! CreateBuiltinFunction(executorClosure, 2, "", « »).
+  const executor = X(CreateBuiltinFunction(executorClosure, 2, new Value(''), []));
   // 8. Let promise be ? Construct(C, « executor »).
   const promise = Q(Construct(C, [executor]));
   // 9. If IsCallable(promiseCapability.[[Resolve]]) is false, throw a TypeError exception.
@@ -226,22 +237,6 @@ export function NewPromiseCapability(C) {
   promiseCapability.Promise = promise;
   // 12. Return promiseCapability.
   return promiseCapability;
-}
-
-// 25.6.1.5.1 #sec-getcapabilitiesexecutor-functions
-function GetCapabilitiesExecutorFunctions([resolve = Value.undefined, reject = Value.undefined]) {
-  const F = this;
-
-  const promiseCapability = F.Capability;
-  if (Type(promiseCapability.Resolve) !== 'Undefined') {
-    return surroundingAgent.Throw('TypeError', 'PromiseCapabilityFunctionAlreadySet', 'resolve');
-  }
-  if (Type(promiseCapability.Reject) !== 'Undefined') {
-    return surroundingAgent.Throw('TypeError', 'PromiseCapabilityFunctionAlreadySet', 'reject');
-  }
-  promiseCapability.Resolve = resolve;
-  promiseCapability.Reject = reject;
-  return Value.undefined;
 }
 
 // 25.6.1.6 #sec-ispromise
