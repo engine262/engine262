@@ -141,43 +141,29 @@ function ExecuteAsyncModule(module) {
   module.AsyncEvaluating = Value.true;
   // 4. Let capability be ! NewPromiseCapability(%Promise%).
   const capability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
-  // 5. Let stepsFulfilled be the steps of a CallAsyncModuleFulfilled function as specified below.
-  const stepsFulfilled = CallAsyncModuleFulfilled;
-  // 6. Let lengthFulfilled be the number of non-optional parameters of a CallAsyncModuleFulfilled function as specified below.
-  const lengthFulfilled = 0;
-  // 7. Let onFulfilled be CreateBuiltinFunction(stepsFulfilled, « [[Module]] »).
-  const onFulfilled = CreateBuiltinFunction(stepsFulfilled, lengthFulfilled, new Value(''), ['Module']);
-  // 8. Set onFulfilled.[[Module]] to module.
-  onFulfilled.Module = module;
-  // 9. Let stepsRejected be the steps of a CallAsyncModuleRejected function as specified below.
-  const stepsRejected = CallAsyncModuleRejected;
-  // 10. Let lengthRejected be the number of non-optional parameters of a CallAsyncModuleFulfilled function as specified below.
-  const lengthRejected = 1;
-  // 11. Let onRejected be CreateBuiltinFunction(stepsRejected, « [[Module]] »).
-  const onRejected = CreateBuiltinFunction(stepsRejected, lengthRejected, new Value(''), ['Module']);
-  // 12. Set onRejected.[[Module]] to module.
-  onRejected.Module = module;
-  // 13. Perform ! PerformPromiseThen(capability.[[Promise]], onFulfilled, onRejected).
+  // 5. Let fulfilledClosure be a new Abstract Closure with no parameters that captures module and performs the following steps when called:
+  const fulfilledClosure = () => {
+    // a. Perform ! AsyncModuleExecutionFulfilled(module).
+    X(AsyncModuleExecutionFulfilled(module));
+    // b. Return undefined.
+    return Value.undefined;
+  };
+  // 6. Let onFulfilled be ! CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
+  const onFulfilled = CreateBuiltinFunction(fulfilledClosure, 0, new Value(''), ['Module']);
+  // 7. Let rejectedClosure be a new Abstract Closure with parameters (error) that captures module and performs the following steps when called:
+  const rejectedClosure = ([error = Value.undefined]) => {
+    // a. Perform ! AsyncModuleExecutionRejected(module, error).
+    X(AsyncModuleExecutionRejected(module, error));
+    // b. Return undefined.
+    return Value.undefined;
+  };
+  // 8. Let onRejected be ! CreateBuiltinFunction(rejectedClosure, 0, "", « »).
+  const onRejected = CreateBuiltinFunction(rejectedClosure, 0, new Value(''), ['Module']);
+  // 9. Perform ! PerformPromiseThen(capability.[[Promise]], onFulfilled, onRejected).
   X(PerformPromiseThen(capability.Promise, onFulfilled, onRejected));
-  // 14. Perform ! module.ExecuteModule(capability).
+  // 10. Perform ! module.ExecuteModule(capability).
   X(module.ExecuteModule(capability));
-  // 15. Return.
-  return Value.undefined;
-}
-
-// https://tc39.es/proposal-top-level-await/#sec-execute-async-module
-function CallAsyncModuleFulfilled() {
-  const f = surroundingAgent.activeFunctionObject;
-  const module = f.Module;
-  X(AsyncModuleExecutionFulfilled(module));
-  return Value.undefined;
-}
-
-// https://tc39.es/proposal-top-level-await/#sec-execute-async-module
-function CallAsyncModuleRejected([error = Value.undefined]) {
-  const f = surroundingAgent.activeFunctionObject;
-  const module = f.Module;
-  X(AsyncModuleExecutionRejected(module, error));
+  // 11. Return.
   return Value.undefined;
 }
 

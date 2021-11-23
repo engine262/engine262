@@ -263,12 +263,12 @@ Error: owo
     assert.strictEqual(agent1.executionContextStack.pop, agent2.executionContextStack.pop,
       "The 'agent.executionContextStack.pop' method is identical for every execution context stack.");
   },
-].forEach((test) => {
+].forEach((test, i) => {
   total();
   try {
     test();
     pass();
   } catch (e) {
-    fail('', e.stack || e);
+    fail(`Test ${i + 1}`, e.stack || e);
   }
 });

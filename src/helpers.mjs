@@ -1,7 +1,7 @@
 import { surroundingAgent } from './engine.mjs';
 import { Type, Value, Descriptor } from './value.mjs';
 import { ToString, DefinePropertyOrThrow, CreateBuiltinFunction } from './abstract-ops/all.mjs';
-import { X, AwaitFulfilledFunctions } from './completion.mjs';
+import { X } from './completion.mjs';
 
 export const kInternal = Symbol('kInternal');
 
@@ -302,6 +302,8 @@ export class CallSite {
   }
 }
 
+export const kAsyncContext = Symbol('kAsyncContext');
+
 function captureAsyncStack(stack) {
   let promise = stack[0].context.promiseCapability.Promise;
   for (let i = 0; i < 10; i += 1) {
@@ -309,8 +311,8 @@ function captureAsyncStack(stack) {
       return;
     }
     const [reaction] = promise.PromiseFulfillReactions;
-    if (reaction.Handler && reaction.Handler.Callback.nativeFunction === AwaitFulfilledFunctions) {
-      const asyncContext = reaction.Handler.Callback.AsyncContext;
+    if (reaction.Handler && reaction.Handler.Callback[kAsyncContext]) {
+      const asyncContext = reaction.Handler.Callback[kAsyncContext];
       stack.push(asyncContext.callSite.clone());
       if ('PromiseState' in asyncContext.promiseCapability.Promise) {
         promise = asyncContext.promiseCapability.Promise;

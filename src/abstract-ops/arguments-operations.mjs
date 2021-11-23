@@ -149,58 +149,27 @@ export function CreateUnmappedArgumentsObject(argumentsList) {
   return obj;
 }
 
-function ArgGetterSteps() {
-  // 1. Let f be the active function object.
-  const f = this;
-  // 2. Let name be f.[[Name]].
-  const name = f.Name;
-  // 3. Let env be f.[[Env]].
-  const env = f.Env;
-  // 4. Return env.GetBindingValue(name, false).
-  return env.GetBindingValue(name, Value.false);
-}
-
 // 9.4.4.7.1 #sec-makearggetter
 function MakeArgGetter(name, env) {
-  // 1. Let steps be the steps of an ArgGetter function as specified below.
-  const steps = ArgGetterSteps;
-  // 2. Let length be the number of non-optional parameters of an ArgGetter function as specified below.
-  const length = 0;
-  // 3. Let getter be ! CreateBuiltinFunction(steps, length, "", « [[Name]], [[Env]] »).
-  const getter = X(CreateBuiltinFunction(steps, length, new Value(''), ['Name', 'Env']));
-  // 4. Set getter.[[Name]] to name.
-  getter.Name = name;
-  // 5. Set getter.[[Env]] to env.
-  getter.Env = env;
-  // 6. Return getter.
+  // 1. Let getterClosure be a new Abstract Closure with no parameters that captures name and env and performs the following steps when called:
+  //   a. Return env.GetBindingValue(name, false).
+  const getterClosure = () => env.GetBindingValue(name, false);
+  // 2. Let getter be ! CreateBuiltinFunction(getterClosure, 0, "", « »).
+  const getter = X(CreateBuiltinFunction(getterClosure, 0, new Value(''), ['Name', 'Env']));
+  // 3. NOTE: getter is never directly accessible to ECMAScript code.
+  // 4. Return getter.
   return getter;
-}
-
-function ArgSetterSteps([value]) {
-  Assert(value !== undefined);
-  // 1. Let f be the active function object.
-  const f = this;
-  // 2. Let name be f.[[Name]].
-  const name = f.Name;
-  // 3. Let env be f.[[Env]].
-  const env = f.Env;
-  // 4. Return env.SetMutableBinding(name, value, false).
-  return env.SetMutableBinding(name, value, Value.false);
 }
 
 // 9.4.4.7.2 #sec-makeargsetter
 function MakeArgSetter(name, env) {
-  // 1. Let steps be the steps of an ArgSetter function as specified below.
-  const steps = ArgSetterSteps;
-  // 2. Let length be the number of non-optional parameters of an ArgSetter function as specified below.
-  const length = 1;
-  // 3. Let setter be ! CreateBuiltinFunction(steps, length, "", « [[Name]], [[Env]] »).
-  const setter = X(CreateBuiltinFunction(steps, length, new Value(''), ['Name', 'Env']));
-  // 4. Set setter.[[Name]] to name.
-  setter.Name = name;
-  // 5. Set setter.[[Env]] to env.
-  setter.Env = env;
-  // 6. Return setter.
+  // 1. Let setterClosure be a new Abstract Closure with parameters (value) that captures name and env and performs the following steps when called:
+  //   a. Return env.SetMutableBinding(name, value, false).
+  const setterClosure = ([value = Value.undefined]) => env.SetMutableBinding(name, value, false);
+  // 2. Let setter be ! CreateBuiltinFunction(setterClosure, 1, "", « »).
+  const setter = X(CreateBuiltinFunction(setterClosure, 1, new Value(''), ['Name', 'Env']));
+  // 3. NOTE: setter is never directly accessible to ECMAScript code.
+  // 4. Return setter.
   return setter;
 }
 
