@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 34c096890658acbb3f554536ff5e2a9a15f327b5
+ * engine262 0.0.1 a4854f82d8752447b39faf5cf1b3d8696bfb70e3
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -28609,6 +28609,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function X(_completion) {
     /* c8 skip next */
     throw new TypeError('X() requires build');
+  } // 7.4.7 #sec-ifabruptcloseiterator
+
+  function IfAbruptCloseIterator(_value, _iteratorRecord) {
+    /* c8 skip next */
+    throw new TypeError('IfAbruptCloseIterator() requires build');
   } // 25.6.1.1.1 #sec-ifabruptrejectpromise
 
   function IfAbruptRejectPromise(_value, _capability) {
@@ -39870,24 +39875,51 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (Type(nextItem) !== 'Object') {
         const error = exports.surroundingAgent.Throw('TypeError', 'NotAnObject', nextItem);
         return IteratorClose(iteratorRecord, error);
-      }
+      } // e. Let k be Get(nextItem, "0").
 
-      const k = Get(nextItem, new Value('0'));
 
+      let k = Get(nextItem, new Value('0')); // f. IfAbruptCloseIterator(k, iteratorRecord).
+
+      /* c8 ignore if */
       if (k instanceof AbruptCompletion) {
         return IteratorClose(iteratorRecord, k);
       }
+      /* c8 ignore if */
 
-      const v = Get(nextItem, new Value('1'));
 
+      /* c8 ignore if */
+      if (k instanceof Completion) {
+        k = k.Value;
+      }
+
+      // g. Let v be Get(nextItem, "1").
+      let v = Get(nextItem, new Value('1')); // h. IfAbruptCloseIterator(v, iteratorRecord).
+
+      /* c8 ignore if */
       if (v instanceof AbruptCompletion) {
         return IteratorClose(iteratorRecord, v);
       }
+      /* c8 ignore if */
 
-      const status = Call(adder, target, [k.Value, v.Value]);
 
+      /* c8 ignore if */
+      if (v instanceof Completion) {
+        v = v.Value;
+      }
+
+      // i. Let status be Call(adder, target, « k, v »).
+      let status = Call(adder, target, [k, v]); // j. IfAbruptCloseIterator(status, iteratorRecord).
+
+      /* c8 ignore if */
       if (status instanceof AbruptCompletion) {
         return IteratorClose(iteratorRecord, status);
+      }
+      /* c8 ignore if */
+
+
+      /* c8 ignore if */
+      if (status instanceof Completion) {
+        status = status.Value;
       }
     }
   } // #sec-map-iterable
@@ -46822,19 +46854,33 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (mapping) {
           mappedValue = Call(mapfn, thisArg, [nextValue, F(k)]);
 
+          /* c8 ignore if */
           if (mappedValue instanceof AbruptCompletion) {
             return IteratorClose(iteratorRecord, mappedValue);
           }
+          /* c8 ignore if */
 
-          mappedValue = mappedValue.Value;
+
+          /* c8 ignore if */
+          if (mappedValue instanceof Completion) {
+            mappedValue = mappedValue.Value;
+          }
         } else {
           mappedValue = nextValue;
         }
 
-        const defineStatus = CreateDataPropertyOrThrow(A, Pk, mappedValue);
+        let defineStatus = CreateDataPropertyOrThrow(A, Pk, mappedValue);
 
+        /* c8 ignore if */
         if (defineStatus instanceof AbruptCompletion) {
           return IteratorClose(iteratorRecord, defineStatus);
+        }
+        /* c8 ignore if */
+
+
+        /* c8 ignore if */
+        if (defineStatus instanceof Completion) {
+          defineStatus = defineStatus.Value;
         }
 
         k += 1;
@@ -61151,10 +61197,18 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
       const nextValue = _temp5; // d. Let status be Call(adder, set, « nextValue »).
 
-      const status = Call(adder, set, [nextValue]); // e. If status is an abrupt completion, return ? IteratorClose(iteratorRecord, status).
+      let status = Call(adder, set, [nextValue]); // e. IfAbruptCloseIterator(status, iteratorRecord).
 
+      /* c8 ignore if */
       if (status instanceof AbruptCompletion) {
         return IteratorClose(iteratorRecord, status);
+      }
+      /* c8 ignore if */
+
+
+      /* c8 ignore if */
+      if (status instanceof Completion) {
+        status = status.Value;
       }
     }
   } // #sec-get-set-@@species
@@ -68676,10 +68730,18 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
       const nextValue = _temp5; // d. Let status be Call(adder, set, « nextValue »).
 
-      const status = Call(adder, set, [nextValue]); // e. If status is an abrupt completion, return ? IteratorClose(iteratorRecord, status).
+      let status = Call(adder, set, [nextValue]); // e. IfAbruptCloseIterator(status, iteratorRecord).
 
+      /* c8 ignore if */
       if (status instanceof AbruptCompletion) {
         return IteratorClose(iteratorRecord, status);
+      }
+      /* c8 ignore if */
+
+
+      /* c8 ignore if */
+      if (status instanceof Completion) {
+        status = status.Value;
       }
     }
   }
@@ -73948,6 +74010,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.HostResolveImportedModule = HostResolveImportedModule;
   exports.HourFromTime = HourFromTime;
   exports.HoursPerDay = HoursPerDay;
+  exports.IfAbruptCloseIterator = IfAbruptCloseIterator;
   exports.IfAbruptRejectPromise = IfAbruptRejectPromise;
   exports.ImportEntries = ImportEntries;
   exports.ImportEntriesForModule = ImportEntriesForModule;
