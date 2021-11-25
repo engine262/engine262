@@ -58,6 +58,13 @@ module.exports = ({ types: t, template }) => {
     `);
   }
 
+  function createImportIteratorClose(file) {
+    const r = fileToImport(file, ABSTRACT_OPS_PATH);
+    return template.statement.ast`
+      import { IteratorClose } from "${r}";
+    `;
+  }
+
   function createImportValue(file) {
     const r = fileToImport(file, VALUE_PATH);
     return template.ast(`
@@ -107,6 +114,19 @@ module.exports = ({ types: t, template }) => {
       `, { preserveComments: true }),
       imports: ['Assert', 'Completion', 'AbruptCompletion'],
     },
+    IfAbruptCloseIterator: {
+      template: template(`
+      /* c8 ignore if */
+      if (%%value%% instanceof AbruptCompletion) {
+        return IteratorClose(%%iteratorRecord%%, %%value%%);
+      }
+      /* c8 ignore if */
+      if (%%value%% instanceof Completion) {
+        %%value%% = %%value%%.Value;
+      }
+      `, { preserveComments: true }),
+      imports: ['IteratorClose', 'AbruptCompletion', 'Completion'],
+    },
     IfAbruptRejectPromise: {
       template: template(`
       /* c8 ignore if */
@@ -146,6 +166,9 @@ module.exports = ({ types: t, template }) => {
           }
           if (state.needed.Call) {
             path.node.body.unshift(createImportCall(state.file));
+          }
+          if (state.needed.IteratorClose) {
+            path.unshiftContainer('body', createImportIteratorClose(state.file));
           }
           if (state.needed.Value) {
             path.node.body.unshift(createImportValue(state.file));
@@ -222,6 +245,23 @@ module.exports = ({ types: t, template }) => {
               const binding = path.scope.getBinding(argument.name);
               binding.path.parent.kind = 'let';
               statementPath.insertBefore(macro.template({ ID: argument, CAPABILITY: capability }));
+              path.remove();
+            } else if (macro === MACROS.IfAbruptCloseIterator) {
+              if (!t.isIdentifier(argument)) {
+                throw path.get('arguments.0').buildCodeFrameError('First argument to IfAbruptCloseIterator should be an identifier');
+              }
+              const iteratorRecord = path.get('arguments.1');
+              if (!iteratorRecord.isIdentifier()) {
+                throw iteratorRecord.buildCodeFrameError('Second argument to IfAbruptCloseIterator should be an identifier');
+              }
+              const binding = path.scope.getBinding(argument.name);
+              binding.path.parent.kind = 'let';
+              statementPath.insertBefore(
+                macro.template({
+                  value: argument,
+                  iteratorRecord: iteratorRecord.node,
+                }),
+              );
               path.remove();
             } else {
               const id = statementPath.scope.generateUidIdentifier();
