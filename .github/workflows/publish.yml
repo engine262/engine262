@@ -29,9 +29,9 @@ jobs:
       - run: npm run build
 
       # Publish to github registry
+      - run: npm set //npm.pkg.github.com/:_authToken ${{ github.token }}
+      - run: npm config set registry https://npm.pkg.github.com
       - run: npm publish --access=public
-        env:
-          NODE_AUTH_TOKEN: ${{github.token}}
 
       # Publish to npm registry
       - run: npm set //registry.npmjs.org/:_authToken ${{ secrets.NPM_TOKEN }}
