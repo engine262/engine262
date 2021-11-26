@@ -18,7 +18,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@master
         with:
-          node-version: 15
+          node-version: 17
           registry-url: https://npm.pkg.github.com/
           scope: '@engine262'
           always-auth: true # required if using yarn
@@ -28,10 +28,14 @@ jobs:
       - run: npm install
       - run: npm run build
 
-      # Publish built package
+      # Publish to github registry
       - run: npm publish --access=public
         env:
           NODE_AUTH_TOKEN: ${{github.token}}
+
+      # Publish to npm registry
+      - run: npm set //registry.npmjs.org/:_authToken ${{ secrets.NPM_TOKEN }}
+      - run: npm publish --access=public
 
       # Push build to to gh-pages
       - run: |
