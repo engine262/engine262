@@ -35,6 +35,7 @@ jobs:
 
       # Publish to npm registry
       - run: npm set //registry.npmjs.org/:_authToken ${{ secrets.NPM_TOKEN }}
+      - run: npm config set registry https://registry.npmjs.org
       - run: npm publish --access=public
 
       # Push build to to gh-pages
