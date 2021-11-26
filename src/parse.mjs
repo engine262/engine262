@@ -18,6 +18,8 @@ import {
 } from './static-semantics/all.mjs';
 import { ValueSet, kInternal } from './helpers.mjs';
 
+export { Parser, RegExpParser };
+
 function handleError(e) {
   if (e.name === 'SyntaxError') {
     const v = surroundingAgent.Throw('SyntaxError', 'Raw', e.message).Value;
