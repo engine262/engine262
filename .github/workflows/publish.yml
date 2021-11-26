@@ -19,9 +19,6 @@ jobs:
       - uses: actions/setup-node@master
         with:
           node-version: 17
-          registry-url: https://npm.pkg.github.com/
-          scope: '@engine262'
-          always-auth: true # required if using yarn
       - run: git submodule update --init --recursive
 
       # Run tests and whatnot
