@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 093c8cb33fc82c295390da3d9e124c21ad7e6281
+ * engine262 0.0.1 87d618ac7a3df080f966a5862b80ea66a57c1ca4
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -74153,6 +74153,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.ParseModule = ParseModule;
   exports.ParsePattern = ParsePattern;
   exports.ParseScript = ParseScript;
+  exports.Parser = Parser;
   exports.PerformEval = PerformEval;
   exports.PerformPromiseThen = PerformPromiseThen;
   exports.PrepareForOrdinaryCall = PrepareForOrdinaryCall;
@@ -74182,6 +74183,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.RegExpCreate = RegExpCreate;
   exports.RegExpHasFlag = RegExpHasFlag;
   exports.RegExpInitialize = RegExpInitialize;
+  exports.RegExpParser = RegExpParser;
   exports.RegExpState = State;
   exports.RequireInternalSlot = RequireInternalSlot;
   exports.RequireObjectCoercible = RequireObjectCoercible;
