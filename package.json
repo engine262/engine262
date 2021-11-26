@@ -29,9 +29,6 @@
     "type": "git",
     "url": "git+https://github.com/engine262/engine262.git"
   },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com/@engine262"
-  },
   "devDependencies": {
     "@babel/core": "^7.12.13",
     "@babel/eslint-parser": "^7.12.13",
