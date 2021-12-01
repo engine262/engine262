@@ -263,6 +263,26 @@ Error: owo
     assert.strictEqual(agent1.executionContextStack.pop, agent2.executionContextStack.pop,
       "The 'agent.executionContextStack.pop' method is identical for every execution context stack.");
   },
+  () => {
+    const agent = new Agent();
+    setSurroundingAgent(agent);
+    const realm = new ManagedRealm();
+    realm.evaluateScript(`
+      var foo;
+      eval(\`
+        var foo;
+        var bar;
+        var deleteMe;
+      \`);
+      delete deleteMe;
+    `);
+    const varNames = new Set();
+    for (const name of realm.GlobalEnv.VarNames) {
+      assert(!varNames.has(name.stringValue()), 'Every member of `realm.[[GlobalEnv]].[[VarNames]]` should be unique.');
+      varNames.add(name.stringValue());
+    }
+    assert(!varNames.has('deleteMe'), "`realm.[[GlobalEnv]].[[VarNames]]` shouldn't have 'deleteMe'.");
+  },
 ].forEach((test, i) => {
   total();
   try {
