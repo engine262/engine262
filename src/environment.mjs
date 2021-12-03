@@ -583,8 +583,9 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
         // i. Let varNames be envRec.[[VarNames]].
         const varNames = envRec.VarNames;
         // ii. If N is an element of varNames, remove that element from the varNames.
-        if (varNames.includes(N)) {
-          varNames.splice(varNames.indexOf(N), 1);
+        const i = varNames.findIndex((v) => v.stringValue() === N.stringValue());
+        if (i >= 0) {
+          varNames.splice(i, 1);
         }
       }
       // c. Return status.
@@ -627,7 +628,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     // 2. Let varDeclaredNames be envRec.[[VarNames]].
     const varDeclaredNames = envRec.VarNames;
     // 3. If varDeclaredNames contains N, return true.
-    if (varDeclaredNames.includes(N)) {
+    if (varDeclaredNames.some((v) => v.stringValue() === N.stringValue())) {
       return Value.true;
     }
     // 4. Return false.
@@ -735,7 +736,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     // 7. Let varDeclaredNames be envRec.[[VarNames]].
     const varDeclaredNames = envRec.VarNames;
     // 8. If varDeclaredNames does not contain N, then
-    if (!varDeclaredNames.includes(N)) {
+    if (!varDeclaredNames.some((v) => v.stringValue() === N.stringValue())) {
       // a. Append N to varDeclaredNames.
       varDeclaredNames.push(N);
     }
@@ -777,7 +778,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     // 10. Let varDeclaredNames be envRec.[[VarNames]].
     const varDeclaredNames = envRec.VarNames;
     // 11. If varDeclaredNames does not contain N, then
-    if (!varDeclaredNames.includes(N)) {
+    if (!varDeclaredNames.some((v) => v.stringValue() === N.stringValue())) {
       // a. Append N to varDeclaredNames.
       varDeclaredNames.push(N);
     }
