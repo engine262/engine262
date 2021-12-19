@@ -11,6 +11,14 @@ const glob = require('glob');
 
 const TEST262 = process.env.TEST262 || path.resolve(__dirname, 'test262');
 
+// How many PASS results can each worker accumulate before reporting them
+// back to the supervisor. Reduces the amount of IPC.
+const CHUNK_SIZE = 20;
+
+// How many tasks can each worker have in-flight. No more tasks will be
+// sent to a worker until it reports back some results.
+const MAX_PENDING = 10 + CHUNK_SIZE; // must be at least CHUNK_SIZE
+
 const readList = (name) => {
   const source = fs.readFileSync(path.resolve(__dirname, name), 'utf8');
   return source.split('\n').filter((l) => l && !l.startsWith('#'));
@@ -43,9 +51,36 @@ readList('features')
     }
   });
 
-if (!process.send) {
-  // supervisor
+class EventSemaphore {
+  constructor() {
+    this._promise = undefined;
+    this._resolve = undefined;
+  }
+  // Get a promise that will resolve with the next signal()
+  reset() {
+    if (!this._resolve) {
+      this._promise = new Promise((res) => {
+        this._resolve = res;
+      });
+    }
+    return this._promise;
+  }
+  // Wake up whoever's awaiting the promise from reset()
+  signal() {
+    if (this._resolve) {
+      this._resolve();
+      this._resolve = undefined;
+    }
+  }
+}
 
+if (!process.send) {
+  supervisorProcess();
+} else {
+  workerProcess();
+}
+
+async function supervisorProcess() {
   const childProcess = require('child_process');
   const YAML = require('js-yaml');
   const {
@@ -62,21 +97,76 @@ if (!process.send) {
     : Math.round(CPU_COUNT * 0.75);
   const RUN_SLOW_TESTS = process.argv.includes('--run-slow-tests');
 
+  const longRunningQueue = [];
+  const testQueue = [];
+  const totalQueued = () => longRunningQueue.length + testQueue.length;
+  const canQueueMore = new EventSemaphore();
+  let doneQueueing = false;
+
   const createWorker = () => {
     const c = childProcess.fork(__filename);
+    let doneSendingWork = false;
+    let numLongRunning = 0;
+    let numPending = 0;
+    const sendBatchFrom = (queue) => {
+      const limit = Math.min(
+        Math.ceil((0.75 * queue.length) / NUM_WORKERS),
+        MAX_PENDING - numPending,
+      );
+      for (let i = 0; i < limit && numLongRunning < 1; i += 1) {
+        const test = queue.shift();
+        numLongRunning += test.slow ? 1 : 0;
+        numPending += 1;
+        c.send(test);
+      }
+      if (totalQueued() < CHUNK_SIZE * NUM_WORKERS) {
+        canQueueMore.signal();
+      }
+    };
+    const checkWorkComplete = () => {
+      if (!doneQueueing
+        || doneSendingWork
+        || numPending >= CHUNK_SIZE
+        || numLongRunning > 0) {
+        return;
+      }
+      if (longRunningQueue.length === 0 && testQueue.length === 0) {
+        doneSendingWork = true;
+        c.send('DONE');
+      } else {
+        // When we get to the last remaining tests, we send fewer than
+        // CHUNK_SIZE in order to more evenly distribute the remaining
+        // ones. The PING message tells the worker to report any PASSes
+        // it collected, so that we can send more work.
+        c.send('PING');
+      }
+    };
     c.on('message', (message) => {
       switch (message.status) {
         case 'PASS':
+          numPending -= message.count;
           pass(message.count);
           break;
         case 'FAIL':
-          fail(message.description, message.error);
+          numPending -= 1;
+          fail(`${message.file}\n${message.description}`, message.error);
           break;
         case 'SKIP':
+          numPending -= 1;
           skip();
           break;
         default:
           throw new RangeError(JSON.stringify(message));
+      }
+      // count may be zero if this is response to PING
+      if (message.slow && message.count !== 0) {
+        // every slow test is reported individually
+        numLongRunning -= 1;
+      }
+      if (!doneSendingWork && numPending < MAX_PENDING) {
+        sendBatchFrom(testQueue);
+        sendBatchFrom(longRunningQueue);
+        checkWorkComplete(); // make sure worker is not stuck
       }
     });
     c.on('exit', (code) => {
@@ -84,14 +174,22 @@ if (!process.send) {
         process.exit(1);
       }
     });
-    return c;
+    return {
+      process: c,
+      checkWorkComplete,
+      send(test) {
+        if (test.slow) {
+          longRunningQueue.push(test);
+          sendBatchFrom(longRunningQueue);
+        } else {
+          testQueue.push(test);
+          sendBatchFrom(testQueue);
+        }
+      },
+    };
   };
 
   const workers = Array.from({ length: NUM_WORKERS }, () => createWorker());
-  let longRunningWorker;
-  if (RUN_SLOW_TESTS) {
-    longRunningWorker = createWorker();
-  }
 
   const slowlist = new Set(readListPaths('slowlist'));
   const skiplist = new Set(readListPaths('skiplist'));
@@ -106,12 +204,8 @@ if (!process.send) {
       return;
     }
 
-    if (slowlist.has(test.file)) {
-      if (RUN_SLOW_TESTS) {
-        longRunningWorker.send(test);
-      } else {
-        skip();
-      }
+    if (test.slow && !RUN_SLOW_TESTS) {
+      skip();
     } else {
       workers[workerIndex].send(test);
       workerIndex += 1;
@@ -121,12 +215,34 @@ if (!process.send) {
     }
   };
 
-  (async () => {
+  async function* findTestFiles() {
+    const deferred = [];
+
     for await (const file of readdir(path.join(TEST262, override || 'test'))) {
       if (/annexB|intl402|_FIXTURE/.test(file)) {
         continue;
       }
 
+      const fileRelative = path.relative(TEST262, file);
+      const item = {
+        file,
+        fileRelative,
+        slow: slowlist.has(fileRelative),
+      };
+
+      if (item.slow) {
+        deferred.push(item);
+      } else {
+        yield item;
+      }
+    }
+
+    process.stdout.write(`\n\nFound ${deferred.length} slow test sources\n\n`);
+    yield* deferred;
+  }
+
+  async function scheduleTests() {
+    for await (const { file, fileRelative, slow } of findTestFiles()) {
       const contents = await fs.promises.readFile(file, 'utf8');
       const yamlStart = contents.indexOf('/*---') + 5;
       const yamlEnd = contents.indexOf('---*/', yamlStart);
@@ -140,7 +256,8 @@ if (!process.send) {
       attrs.includes = attrs.includes || [];
 
       const test = {
-        file: path.relative(TEST262, file),
+        file: fileRelative,
+        slow,
         attrs,
         contents,
       };
@@ -158,18 +275,21 @@ if (!process.send) {
           handleTest(test);
         }
       }
+
+      if (totalQueued() > MAX_PENDING * NUM_WORKERS) {
+        await canQueueMore.reset();
+      }
     }
 
-    workers.forEach((w) => {
-      w.send('DONE');
-    });
-    if (RUN_SLOW_TESTS) {
-      longRunningWorker.send('DONE');
-    }
-  })();
-} else {
-  // worker
+    // make sure no worker is stuck
+    doneQueueing = true;
+    workers.forEach((w) => w.checkWorkComplete());
+  }
 
+  scheduleTests();
+}
+
+async function workerProcess() {
   const {
     Agent,
     setSurroundingAgent,
@@ -342,29 +462,45 @@ function $DONE(error) {
       process.exit(1);
     }
   };
+
   let passChunk = 0;
+  const flushAtLeast = (threshold, slow) => {
+    if (passChunk >= threshold || slow) {
+      const result = { status: 'PASS', count: passChunk, slow };
+      process.send(result, handleSendError);
+      passChunk = 0;
+    }
+  };
+
   process.on('message', (test) => {
-    if (test === 'DONE') {
-      if (passChunk > 0) {
-        process.send({ status: 'PASS', count: passChunk }, handleSendError);
-      }
-      process.exit(0);
+    if (test === 'PING') {
+      // force sending a message even with zero PASSes accumulated
+      flushAtLeast(0, false);
       return;
     }
-    const description = `${test.file}\n${test.attrs.description}`;
+    if (test === 'DONE') {
+      flushAtLeast(1, false);
+      process.disconnect();
+      return;
+    }
+    if (test.slow) {
+      // flush accumulated PASSes before starting this slow test
+      flushAtLeast(1, false);
+    }
+    let result;
     try {
-      const r = run(test);
-      if (r.status === 'PASS') {
-        passChunk += 1;
-        if (passChunk > 20) {
-          process.send({ status: 'PASS', count: passChunk }, handleSendError);
-          passChunk = 0;
-        }
-      } else {
-        process.send({ description, ...r }, handleSendError);
-      }
+      result = run(test);
     } catch (e) {
-      process.send({ description, status: 'FAIL', error: util.inspect(e) }, handleSendError);
+      result = { status: 'FAIL', error: util.inspect(e) };
+    }
+    if (result.status === 'PASS') {
+      passChunk += 1;
+      flushAtLeast(CHUNK_SIZE, test.slow);
+    } else {
+      result.description = test.attrs.description;
+      result.file = test.file;
+      result.slow = test.slow;
+      process.send(result, handleSendError);
     }
   });
 }
