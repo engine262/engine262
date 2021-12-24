@@ -14,6 +14,9 @@ export function isIntegerIndex(V) {
   if (numeric === Value.undefined) {
     return false;
   }
+  if (!Number.isInteger(numeric.numberValue())) {
+    return false;
+  }
   if (Object.is(numeric.numberValue(), +0)) {
     return true;
   }
