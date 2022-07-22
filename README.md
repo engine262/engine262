@@ -12,7 +12,7 @@ Non-Goals
 
 This project is bound by a [Code of Conduct][COC].
 
-Join us on [#engine262 on freenode][irc] ([web][irc-webchat]).
+Join us in `#engine262:matrix.org`.
 
 ## Why this exists
 
@@ -155,8 +155,6 @@ included here for reference, though engine262 is not based on any of them.
 [Babel]: https://babeljs.io/
 [COC]: https://github.com/engine262/engine262/blob/master/CODE_OF_CONDUCT.md
 [do expressions]: https://github.com/tc39/proposal-do-expressions
-[irc]: ircs://chat.freenode.net:6697/engine262
-[irc-webchat]: https://webchat.freenode.net/?channels=engine262
 [optional chaining]: https://github.com/tc39/proposal-optional-chaining
 [pattern matching]: https://github.com/tc39/proposal-pattern-matching
 [the pipeline operator]: https://github.com/tc39/proposal-pipeline-operator
