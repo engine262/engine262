@@ -47,7 +47,7 @@ export function RegExpInitialize(obj, pattern, flags) {
   }
   const f = F.stringValue();
   // 5. If F contains any code unit other than "d", "g", "i", "m", "s", "u", or "y" or if it contains the same code unit more than once, throw a SyntaxError exception.
-  if ((surroundingAgent.feature('regexp-match-indices') ? /^[dgimsuy]*$/ : /^[gimsuy]*$/).test(f) === false || (new globalThis.Set(f).size !== f.length)) {
+  if (/^[dgimsuy]*$/.test(f) === false || (new globalThis.Set(f).size !== f.length)) {
     return surroundingAgent.Throw('SyntaxError', 'InvalidRegExpFlags', f);
   }
   // 6. If F contains "u", let u be true; else let u be false.
@@ -152,7 +152,7 @@ export function EscapeRegExpPattern(P, _F) {
   return new Value(escaped);
 }
 
-// https://tc39.es/proposal-regexp-match-indices/#sec-getstringindex
+// #sec-getstringindex
 export function GetStringIndex(S, Input, e) {
   // 1. Assert: Type(S) is String.
   Assert(Type(S) === 'String');
@@ -178,7 +178,7 @@ export function GetStringIndex(S, Input, e) {
   return eUTF;
 }
 
-// https://tc39.es/proposal-regexp-match-indices/#sec-getmatchstring
+// #sec-getmatchstring
 export function GetMatchString(S, match) {
   // 1. Assert: Type(S) is String.
   Assert(Type(S) === 'String');
@@ -192,8 +192,8 @@ export function GetMatchString(S, match) {
   return new Value(S.stringValue().slice(match.StartIndex, match.EndIndex));
 }
 
-// https://tc39.es/proposal-regexp-match-indices/#sec-getmatchindicesarray
-export function GetMatchIndicesArray(S, match) {
+// #sec-getmatchindexpair
+export function GetMatchIndexPair(S, match) {
   // 1. Assert: Type(S) is String.
   Assert(Type(S) === 'String');
   // 2. Assert: match is a Match Record.
@@ -209,8 +209,8 @@ export function GetMatchIndicesArray(S, match) {
   ]);
 }
 
-// https://tc39.es/proposal-regexp-match-indices/#sec-makeindicesarray
-export function MakeIndicesArray(S, indices, groupNames, hasGroups) {
+// #sec-makematchindicesindexpairarray
+export function MakeMatchIndicesIndexPairArray(S, indices, groupNames, hasGroups) {
   // 1. Assert: Type(S) is String.
   Assert(Type(S) === 'String');
   // 2. Assert: indices is a List.
@@ -245,8 +245,8 @@ export function MakeIndicesArray(S, indices, groupNames, hasGroups) {
     // b. If matchIndices is not undefined, then
     let matchIndicesArray;
     if (matchIndices !== Value.undefined) {
-      // i. Let matchIndicesArray be ! GetMatchIndicesArray(S, matchIndices).
-      matchIndicesArray = X(GetMatchIndicesArray(S, matchIndices));
+      // i. Let matchIndicesArray be ! GetMatchIndexPair(S, matchIndices).
+      matchIndicesArray = X(GetMatchIndexPair(S, matchIndices));
     } else { // c. Else,
       // i. Let matchIndicesArray be undefined.
       matchIndicesArray = Value.undefined;

@@ -888,7 +888,7 @@ export class Lexer {
       }
       const c = this.source[this.position];
       if (isRegularExpressionFlagPart(c)
-          && (this.feature('regexp-match-indices') ? 'dgimsuy' : 'gimsuy').includes(c)
+          && 'dgimsuy'.includes(c)
           && !buffer.includes(c)) {
         this.position += 1;
         buffer += c;

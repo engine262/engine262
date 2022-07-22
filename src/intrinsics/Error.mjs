@@ -39,14 +39,12 @@ function ErrorConstructor([message = Value.undefined, options = Value.undefined]
     X(DefinePropertyOrThrow(O, new Value('message'), msgDesc));
   }
 
-  if (surroundingAgent.feature('error-cause')) {
-    // (*error-cause) Perform ? InstallErrorCause(O, options).
-    Q(InstallErrorCause(O, options));
-  }
+  // 4. Perform ? InstallErrorCause(O, options).
+  Q(InstallErrorCause(O, options));
 
   X(captureStack(O)); // NON-SPEC
 
-  // 4. Return O.
+  // 5. Return O.
   return O;
 }
 

@@ -43,15 +43,13 @@ function AggregateErrorConstructor([errors = Value.undefined, message = Value.un
     Value: X(CreateArrayFromList(errorsList)),
   })));
 
-  if (surroundingAgent.feature('error-cause')) {
-    // (*error-cause) Perform ? InstallErrorCause(O, options).
-    Q(InstallErrorCause(O, options));
-  }
+  // 6. Perform ? InstallErrorCause(O, options).
+  Q(InstallErrorCause(O, options));
 
   // NON-SPEC
   X(captureStack(O));
 
-  // 6. Return O.
+  // 7. Return O.
   return O;
 }
 

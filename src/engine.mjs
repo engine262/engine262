@@ -27,19 +27,9 @@ export const FEATURES = Object.freeze([
     url: 'https://github.com/tc39/proposal-hashbang',
   },
   {
-    name: 'RegExp Match Indices',
-    flag: 'regexp-match-indices',
-    url: 'https://github.com/tc39/proposal-regexp-match-indices',
-  },
-  {
     name: 'FinalizationRegistry.prototype.cleanupSome',
     flag: 'cleanup-some',
     url: 'https://github.com/tc39/proposal-cleanup-some',
-  },
-  {
-    name: 'Error Cause',
-    flag: 'error-cause',
-    url: 'https://github.com/tc39/proposal-error-cause',
   },
 ].map(Object.freeze));
 

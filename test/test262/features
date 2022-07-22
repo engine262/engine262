@@ -31,19 +31,8 @@
 
 -array-grouping
 
-# https://github.com/tc39/proposal-top-level-await
-top-level-await = top-level-await
-
 # https://github.com/tc39/proposal-hashbang
 hashbang = hashbang
 
-# https://github.com/tc39/proposal-regexp-match-indices
-regexp-match-indices = regexp-match-indices
-
 # https://github.com/tc39/proposal-cleanup-some
 FinalizationRegistry.prototype.cleanupSome = cleanup-some
-
-arbitrary-module-namespace-names = arbitrary-module-namespace-names
-
-# https://github.com/tc39/proposal-error-cause
-error-cause = error-cause

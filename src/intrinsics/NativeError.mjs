@@ -55,13 +55,11 @@ export function bootstrapNativeError(realmRec) {
         // c. Perform ! DefinePropertyOrThrow(O, "message", msgDesc).
         X(DefinePropertyOrThrow(O, new Value('message'), msgDesc));
       }
-      if (surroundingAgent.feature('error-cause')) {
-        // (*error-cause) Perform ? InstallErrorCause(O, options).
-        Q(InstallErrorCause(O, options));
-      }
+      // 4. Perform ? InstallErrorCause(O, options).
+      Q(InstallErrorCause(O, options));
       // NON-SPEC
       X(captureStack(O));
-      // 4. Return O.
+      // 5. Return O.
       return O;
     };
     Object.defineProperty(Constructor, 'name', {
