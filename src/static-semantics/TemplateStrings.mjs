@@ -44,7 +44,7 @@ export function TV(s) {
           i += 1;
           if (isHexDigit(s[i]) && isHexDigit(s[i + 1])) {
             const n = Number.parseInt(s.slice(i, i + 2), 16);
-            i += 2;
+            i += 1;
             buffer += String.fromCharCode(n);
           } else {
             return undefined;
