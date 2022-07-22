@@ -2,7 +2,6 @@ import { surroundingAgent } from '../engine.mjs';
 import {
   ReferenceRecord,
   Value,
-  Type,
   PrivateName,
 } from '../value.mjs';
 import {
@@ -23,25 +22,12 @@ import {
 
 // #sec-ispropertyreference
 export function IsPropertyReference(V) {
-  // 1. Assert: V is a Reference Record.
-  Assert(V instanceof ReferenceRecord);
-  // 2. If V.[[Base]] is unresolvable, return false.
+  // 1. If V.[[Base]] is unresolvable, return false.
   if (V.Base === 'unresolvable') {
     return Value.false;
   }
-  // 3. If Type(V.[[Base]]) is Boolean, String, Symbol, BigInt, Number, or Object, return true; otherwise return false.
-  const type = Type(V.Base);
-  switch (type) {
-    case 'Boolean':
-    case 'String':
-    case 'Symbol':
-    case 'BigInt':
-    case 'Number':
-    case 'Object':
-      return Value.true;
-    default:
-      return Value.false;
-  }
+  // 2. If V.[[Base]] is an Environment Record, return false; otherwise return true.
+  return V.Base instanceof EnvironmentRecord ? Value.false : Value.true;
 }
 
 // #sec-isunresolvablereference
@@ -82,8 +68,8 @@ export function GetValue(V) {
   }
   // 4. If IsPropertyReference(V) is true, then
   if (IsPropertyReference(V) === Value.true) {
-    // a. Let baseObj be ! ToObject(V.[[Base]]).
-    const baseObj = X(ToObject(V.Base));
+    // a. Let baseObj be ? ToObject(V.[[Base]]).
+    const baseObj = Q(ToObject(V.Base));
     // b. If IsPrivateReference(V) is true, then
     if (IsPrivateReference(V) === Value.true) {
       // i. Return ? PrivateGet(V.[[ReferencedName]], baseObj).

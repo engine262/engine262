@@ -11,6 +11,7 @@ import { OutOfRange } from '../helpers.mjs';
 import {
   Assert,
   Get,
+  IsDetachedBuffer,
   ToBoolean,
   ToNumber,
   ToNumeric,
@@ -18,7 +19,6 @@ import {
   StringToBigInt,
   isProxyExoticObject,
   isArrayExoticObject,
-  isIntegerIndexedExoticObject,
 } from './all.mjs';
 
 // This file covers abstract operations defined in
@@ -386,7 +386,9 @@ export function StrictEqualityComparison(x, y) {
 
 // #sec-isvalidintegerindex
 export function IsValidIntegerIndex(O, index) {
-  Assert(isIntegerIndexedExoticObject(O));
+  if (IsDetachedBuffer(O.ViewedArrayBuffer) === Value.true) {
+    return Value.false;
+  }
   Assert(Type(index) === 'Number');
   if (IsIntegralNumber(index) === Value.false) {
     return Value.false;

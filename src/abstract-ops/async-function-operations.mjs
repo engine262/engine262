@@ -8,7 +8,7 @@ import { Assert, Call } from './all.mjs';
 // This file covers abstract operations defined in
 // 25.7 #sec-async-function-objects
 
-// https://tc39.es/proposal-top-level-await/#sec-asyncblockstart
+// #sec-asyncblockstart
 export function AsyncBlockStart(promiseCapability, asyncBody, asyncContext) {
   asyncContext.promiseCapability = promiseCapability;
 

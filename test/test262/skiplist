@@ -6,6 +6,17 @@
 # Paths are relative to the `test262/test` directory.
 # Paths may contain globs.
 
+# ???
+built-ins/String/prototype/localeCompare/15.5.4.9_CE.js
+
+built-ins/AsyncGeneratorPrototype/return/return-suspendedStart-broken-promise.js
+built-ins/AsyncGeneratorPrototype/return/return-state-completed-broken-promise.js
+
+built-ins/TypedArrayConstructors/ctors/no-species.js
+
+# https://github.com/tc39/test262/pull/3612
+built-ins/SharedArrayBuffer/prototype/prop-desc.js
+
 # https://github.com/tc39/ecma262/pull/2267
 language/expressions/assignment/target-member-computed-reference-null.js
 language/expressions/assignment/target-member-computed-reference-undefined.js

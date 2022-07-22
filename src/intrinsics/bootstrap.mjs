@@ -31,14 +31,24 @@ export function assignProps(realmRec, obj, props) {
       ] = v;
       if (typeof getter === 'function') {
         getter = CreateBuiltinFunction(
-          getter, 0, name, [],
-          realmRec, undefined, new Value('get'),
+          getter,
+          0,
+          name,
+          [],
+          realmRec,
+          undefined,
+          new Value('get'),
         );
       }
       if (typeof setter === 'function') {
         setter = CreateBuiltinFunction(
-          setter, 1, name, [],
-          realmRec, undefined, new Value('set'),
+          setter,
+          1,
+          name,
+          [],
+          realmRec,
+          undefined,
+          new Value('set'),
         );
       }
       X(obj.DefineOwnProperty(name, Descriptor({
@@ -90,8 +100,14 @@ export function bootstrapPrototype(realmRec, props, Prototype, stringTag) {
 
 export function bootstrapConstructor(realmRec, Constructor, name, length, Prototype, props = []) {
   const cons = CreateBuiltinFunction(
-    Constructor, length, new Value(name), [],
-    realmRec, undefined, undefined, Value.true,
+    Constructor,
+    length,
+    new Value(name),
+    [],
+    realmRec,
+    undefined,
+    undefined,
+    Value.true,
   );
 
   X(cons.DefineOwnProperty(new Value('prototype'), Descriptor({

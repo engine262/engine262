@@ -2,20 +2,11 @@
 
 'use strict';
 
-/* eslint-disable import/order */
-
-try {
-  require('@snek/source-map-support/register');
-} catch {
-  // empty
-}
-
 const repl = require('repl');
 const fs = require('fs');
 const path = require('path');
 const util = require('util');
-const packageJson = require('../package.json');
-const snekparse = require('./snekparse');
+const packageJson = require('../package.json'); // eslint-disable-line import/order
 const {
   Agent,
   setSurroundingAgent,
@@ -34,6 +25,7 @@ const {
   AbruptCompletion,
   Throw,
 } = require('..');
+const snekparse = require('./snekparse');
 const { createRealm } = require('./test262_realm');
 
 const execArgv = [];
@@ -89,13 +81,13 @@ if (argv.h || argv.help) {
       flagLength = f.flag.length;
     }
   });
-  const log = (n, f, u) => {
-    process.stdout.write(`${n.padEnd(nameLength, ' ')} ${f.padEnd(flagLength, ' ')} ${u}\n`);
+  const log = (f, n, u) => {
+    process.stdout.write(`${f.padEnd(flagLength, ' ')} ${n.padEnd(nameLength, ' ')} ${u}\n`);
   };
-  log('name', 'flag', 'url');
+  log('flag', 'name', 'url');
   log('----', '----', '---');
   FEATURES.forEach((f) => {
-    log(f.name, f.flag, f.url);
+    log(f.flag, f.name, f.url);
   });
   process.exit(0);
 }

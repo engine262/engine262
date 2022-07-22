@@ -26,9 +26,7 @@ import { NamedEvaluation, MethodDefinitionEvaluation, Evaluate_PropertyName } fr
 export function* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList, object, enumerable) {
   let lastReturn;
   for (const PropertyDefinition of PropertyDefinitionList) {
-    lastReturn = Q(yield* PropertyDefinitionEvaluation_PropertyDefinition(
-      PropertyDefinition, object, enumerable,
-    ));
+    lastReturn = Q(yield* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, object, enumerable));
   }
   return lastReturn;
 }

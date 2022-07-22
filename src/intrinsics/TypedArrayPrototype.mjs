@@ -5,6 +5,7 @@ import {
   CreateArrayIterator,
   Get,
   GetValueFromBuffer,
+  IntegerIndexedElementSet,
   IsCallable,
   IsDetachedBuffer,
   IsSharedArrayBuffer,
@@ -360,192 +361,167 @@ function TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.unde
   return A;
 }
 
-// #sec-%typedarray%.prototype.set-overloaded-offset
-function TypedArrayProto_set([overloaded = Value.undefined, offset = Value.undefined], { thisValue }) {
-  if (Type(overloaded) !== 'Object' || !('TypedArrayName' in overloaded)) {
-    // #sec-%typedarray%.prototype.set-array-offset
-    const array = overloaded;
-    // 1. Assert: array is any ECMAScript language value other than an Object with a [[TypedArrayName]] internal slot.
-    // 2. Let target be the this value.
-    const target = thisValue;
-    // 3. Perform ? RequireInternalSlot(target, [[TypedArrayName]]).
-    Q(RequireInternalSlot(target, 'TypedArrayName'));
-    // 4. Assert: target has a [[ViewedArrayBuffer]] internal slot.
-    Assert('ViewedArrayBuffer' in target);
-    // 5. Let targetOffset be ? ToIntegerOrInfinity(offset).
-    const targetOffset = Q(ToIntegerOrInfinity(offset));
-    // 6. If targetOffset < 0, throw a RangeError exception.
-    if (targetOffset < 0) {
-      return surroundingAgent.Throw('RangeError', 'NegativeIndex', 'Offset');
-    }
-    // 7. Let targetBuffer be target.[[ViewedArrayBuffer]].
-    const targetBuffer = target.ViewedArrayBuffer;
-    // 8. If IsDetachedBuffer(targetBuffer) is true, throw a TypeError exception.
-    if (IsDetachedBuffer(targetBuffer) === Value.true) {
-      return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
-    }
-    // 9. Let targetLength be target.[[ArrayLength]].
-    const targetLength = target.ArrayLength;
-    // 10. Let targetName be the String value of target.[[TypedArrayName]].
-    const targetName = target.TypedArrayName.stringValue();
-    // 11. Let targetElementSize be the Element Size value specified in Table 61 for targetName.
-    const targetElementSize = typedArrayInfoByName[targetName].ElementSize;
-    // 12. Let targetType be the Element Type value in Table 61 for targetName.
-    const targetType = typedArrayInfoByName[targetName].ElementType;
-    // 13. Let targetByteOffset be target.[[ByteOffset]].
-    const targetByteOffset = target.ByteOffset;
-    // 14. Let src be ? ToObject(array).
-    const src = Q(ToObject(array));
-    // 15. Let srcLength be ? LengthOfArrayLike(src).
-    const srcLength = Q(LengthOfArrayLike(src));
-    // 16. If srcLength + targetOffset > targetLength, throw a RangeError exception.
-    if (srcLength + targetOffset > targetLength) {
-      return surroundingAgent.Throw('RangeError', 'TypedArrayOOB');
-    }
-    // 17. Let targetByteIndex be targetOffset × targetElementSize + targetByteOffset.
-    let targetByteIndex = targetOffset * targetElementSize + targetByteOffset;
-    // 18. Let k be 0.
-    let k = 0;
-    // 19. Let limit be targetByteIndex + targetElementSize × srcLength.
-    const limit = targetByteIndex + targetElementSize * srcLength;
-    // 20. Repeat, while targetByteIndex < limit
+// #sec-settypedarrayfromtypedarray
+function SetTypedArrayFromTypedArray(target, targetOffset, source) {
+  // 1. Let targetBuffer be target.[[ViewedArrayBuffer]].
+  const targetBuffer = target.ViewedArrayBuffer;
+  // 2. If IsDetachedBuffer(targetBuffer) is true, throw a TypeError exception.
+  if (IsDetachedBuffer(targetBuffer) === Value.true) {
+    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+  }
+  // 3. Let targetLength be target.[[ArrayLength]].
+  const targetLength = target.ArrayLength;
+  // 4. Let srcBuffer be source.[[ViewedArrayBuffer]].
+  let srcBuffer = source.ViewedArrayBuffer;
+  // 5. If IsDetachedBuffer(srcBuffer) is true, throw a TypeError exception.
+  if (IsDetachedBuffer(srcBuffer) === Value.true) {
+    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+  }
+  const targetName = target.TypedArrayName.stringValue();
+  // 6. Let targetType be the Element Type value in Table 61 for targetName.
+  const targetType = typedArrayInfoByName[targetName].ElementType;
+  // 7. Let targetElementSize be the Element Size value specified in Table 61 for targetName.
+  const targetElementSize = typedArrayInfoByName[targetName].ElementSize;
+  // 8. Let targetByteOffset be target.[[ByteOffset]].
+  const targetByteOffset = target.ByteOffset;
+  const srcName = source.TypedArrayName.stringValue();
+  // 9. Let srcType be the Element Type value in Table 61 for srcName.
+  const srcType = typedArrayInfoByName[srcName].ElementType;
+  // 10. Let srcElementSize be the Element Size value specified in Table 61 for srcName.
+  const srcElementSize = typedArrayInfoByName[srcName].ElementSize;
+  // 11. Let srcLength be source.[[ArrayLength]].
+  const srcLength = source.ArrayLength;
+  // 12. Let srcByteOffset be source.[[ByteOffset]].
+  const srcByteOffset = source.ByteOffset;
+  // 13. If targetOffset is +∞, throw a RangeError exception.
+  if (targetOffset === +Infinity) {
+    return surroundingAgent.Throw('RangeError', 'TypedArrayOOB');
+  }
+  // 14. If srcLength + targetOffset > targetLength, throw a RangeError exception.
+  if (srcLength + targetOffset > targetLength) {
+    return surroundingAgent.Throw('RangeError', 'TypedArrayOOB');
+  }
+  // 15. If target.[[ContentType]] is not equal to source.[[ContentType]], throw a TypeError exception.
+  if (target.ContentType !== source.ContentType) {
+    return surroundingAgent.Throw('TypeError', 'BufferContentTypeMismatch');
+  }
+  // 16. If both IsSharedArrayBuffer(srcBuffer) and IsSharedArrayBuffer(targetBuffer) are true, then
+  let same;
+  if (IsSharedArrayBuffer(srcBuffer) === Value.true && IsSharedArrayBuffer(targetBuffer) === Value.true) {
+    Assert(false);
+  } else { // 17, Else, let same be SameValue(srcBuffer, targetBuffer).
+    same = SameValue(srcBuffer, targetBuffer);
+  }
+  // 18. If same is true, then
+  let srcByteIndex;
+  if (same === Value.true) {
+    // a. Let srcByteLength be source.[[ByteLength]].
+    const srcByteLength = source.ByteLength;
+    // b. Set srcBuffer to ? CloneArrayBuffer(srcBuffer, srcByteOffset, srcByteLength, %ArrayBuffer%).
+    srcBuffer = Q(CloneArrayBuffer(srcBuffer, srcByteOffset, srcByteLength, surroundingAgent.intrinsic('%ArrayBuffer%')));
+    // c. Let srcByteIndex be 0.
+    srcByteIndex = 0;
+  } else { // 19. Else, let srcByteIndex be srcByteOffset.
+    srcByteIndex = srcByteOffset;
+  }
+  // 20. Let targetByteIndex be targetOffset × targetElementSize + targetByteOffset.
+  let targetByteIndex = targetOffset * targetElementSize + targetByteOffset;
+  // 21. Let limit be targetByteIndex + targetElementSize × srcLength.
+  const limit = targetByteIndex + targetElementSize * srcLength;
+  // 22. If srcType is the same as targetType, then
+  if (srcType === targetType) {
+    // a. NOTE: If srcType and targetType are the same, the transfer must be performed in a manner that preserves the bit-level encoding of the source data.
+    // b. Repeat, while targetByteIndex < limit
     while (targetByteIndex < limit) {
-      // a. Let Pk be ! ToString(𝔽(k)).
-      const Pk = X(ToString(F(k)));
-      // b. Let value be ? Get(src, Pk).
-      let value = Q(Get(src, Pk));
-      // c. If target.[[ContentType]] is BigInt, set value to ? ToBigInt(value).
-      // d. Otherwise, set value to ? ToNumber(value).
-      if (target.ContentType === 'BigInt') {
-        value = Q(ToBigInt(value));
-      } else {
-        value = Q(ToNumber(value));
-      }
-      // e. If IsDetachedBuffer(targetBuffer) is true, throw a TypeError exception.
-      if (IsDetachedBuffer(targetBuffer) === Value.true) {
-        return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
-      }
-      // f. Perform SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value, true, Unordered).
+      // i. Let value be GetValueFromBuffer(srcBuffer, srcByteIndex, Uint8, true, Unordered).
+      const value = GetValueFromBuffer(srcBuffer, srcByteIndex, 'Uint8', Value.true, 'Unordered');
+      // ii. Perform SetValueInBuffer(targetBuffer, targetByteIndex, Uint8, value, true, Unordered).
+      SetValueInBuffer(targetBuffer, targetByteIndex, 'Uint8', value, Value.true, 'Unordered');
+      // iii. Set srcByteIndex to srcByteIndex + 1.
+      srcByteIndex += 1;
+      // iv. Set targetByteIndex to targetByteIndex + 1.
+      targetByteIndex += 1;
+    }
+  } else { // 23. Else,
+    // a. Repeat, while targetByteIndex < limit
+    while (targetByteIndex < limit) {
+      // i. Let value be GetValueFromBuffer(srcBuffer, srcByteIndex, srcType, true, Unordered).
+      const value = GetValueFromBuffer(srcBuffer, srcByteIndex, srcType, Value.true, 'Unordered');
+      // ii. Perform SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value, true, Unordered).
       SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value, Value.true, 'Unordered');
-      // g. Set k to k + 1.
-      k += 1;
-      // h. Set targetByteIndex to targetByteIndex + targetElementSize.
+      // iii. Set srcByteIndex to srcByteIndex + srcElementSize.
+      srcByteIndex += srcElementSize;
+      // iv. Set targetByteIndex to targetByteIndex + targetElementSize.
       targetByteIndex += targetElementSize;
     }
-    // 21. Return undefined.
-    return Value.undefined;
-  } else {
-    // #sec-%typedarray%.prototype.set-typedarray-offset
-    const typedArray = overloaded;
-    // 1. Assert: typedArray has a [[TypedArrayName]] internal slot.
-    Assert('TypedArrayName' in typedArray);
-    // 2. Let target be the this value.
-    const target = thisValue;
-    // 3. Perform ? RequireInternalSlot(target, [[TypedArrayName]]).
-    Q(RequireInternalSlot(target, 'TypedArrayName'));
-    // 4. Assert: target has a [[ViewedArrayBuffer]] internal slot.
-    Assert('ViewedArrayBuffer' in target);
-    // 5. Let targetOffset be ? ToIntegerOrInfinity(offset).
-    const targetOffset = Q(ToIntegerOrInfinity(offset));
-    // 6. If targetOffset < 0, throw a RangeError exception.
-    if (targetOffset < 0) {
-      return surroundingAgent.Throw('RangeError', 'NegativeIndex', 'Offset');
-    }
-    // 7. Let targetBuffer be target.[[ViewedArrayBuffer]].
-    const targetBuffer = target.ViewedArrayBuffer;
-    // 8. If IsDetachedBuffer(targetBuffer) is true, throw a TypeError exception.
-    if (IsDetachedBuffer(targetBuffer) === Value.true) {
-      return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
-    }
-    // 9. Let targetLength be target.[[ArrayLength]].
-    const targetLength = target.ArrayLength;
-    // 10. Let srcBuffer be typedArray.[[ViewedArrayBuffer]].
-    let srcBuffer = typedArray.ViewedArrayBuffer;
-    // 11. If IsDetachedBuffer(srcBuffer) is true, throw a TypeError exception.
-    if (IsDetachedBuffer(srcBuffer) === Value.true) {
-      return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
-    }
-    // 12. Let targetName be the String value of target.[[TypedArrayName]].
-    const targetName = target.TypedArrayName.stringValue();
-    // 13. Let targetType be the Element Type value in Table 61 for targetName.
-    const targetType = typedArrayInfoByName[targetName].ElementType;
-    // 14. Let targetElementSize be the Element Size value specified in Table 61 for targetName.
-    const targetElementSize = typedArrayInfoByName[targetName].ElementSize;
-    // 15. Let targetByteOffset be target.[[ByteOffset]].
-    const targetByteOffset = target.ByteOffset;
-    // 16. Let srcName be the String value of typedArray.[[TypedArrayName]].
-    const srcName = typedArray.TypedArrayName.stringValue();
-    // 17. Let srcType be the Element Type value in Table 61 for srcName.
-    const srcType = typedArrayInfoByName[srcName].ElementType;
-    // 18. Let srcElementSize be the Element Size value specified in Table 61 for srcName.
-    const srcElementSize = typedArrayInfoByName[srcName].ElementSize;
-    // 19. Let srcLength be typedArray.[[ArrayLength]].
-    const srcLength = typedArray.ArrayLength;
-    // 20. Let srcByteOffset be typedArray.[[ByteOffset]].
-    const srcByteOffset = typedArray.ByteOffset;
-    // 21. If srcLength + targetOffset > targetLength, throw a RangeError exception.
-    if (srcLength + targetOffset > targetLength) {
-      return surroundingAgent.Throw('RangeError', 'TypedArrayOOB');
-    }
-    // 22. If target.[[ContentType]] is not equal to typedArray.[[ContentType]], throw a TypeError exception.
-    if (target.ContentType !== typedArray.ContentType) {
-      return surroundingAgent.Throw('TypeError', 'BufferContentTypeMismatch');
-    }
-    // 23. If both IsSharedArrayBuffer(srcBuffer) and IsSharedArrayBuffer(targetBuffer) are true, then
-    let same;
-    if (IsSharedArrayBuffer(srcBuffer) === Value.true && IsSharedArrayBuffer(targetBuffer) === Value.true) {
-      Assert(false);
-    } else {
-      same = SameValue(srcBuffer, targetBuffer);
-    }
-    // 25. If same is true, then
-    let srcByteIndex;
-    if (same === Value.true) {
-      // a. Let srcByteLength be typedArray.[[ByteLength]].
-      const srcByteLength = typedArray.ByteLength;
-      // b. Set srcBuffer to ? CloneArrayBuffer(srcBuffer, srcByteOffset, srcByteLength, %ArrayBuffer%).
-      srcBuffer = Q(CloneArrayBuffer(srcBuffer, srcByteOffset, srcByteLength, surroundingAgent.intrinsic('%ArrayBuffer%')));
-      // c. NOTE: %ArrayBuffer% is used to clone srcBuffer because is it known to not have any observable side-effects.
-      // d. Let srcByteIndex be 0.
-      srcByteIndex = 0;
-    } else {
-      // 26. Else, let srcByteIndex be srcByteOffset.
-      srcByteIndex = srcByteOffset;
-    }
-    // 27. Let targetByteIndex be targetOffset × targetElementSize + targetByteOffset.
-    let targetByteIndex = targetOffset * targetElementSize + targetByteOffset;
-    // 28. Let limit be targetByteIndex + targetElementSize × srcLength.
-    const limit = targetByteIndex + targetElementSize * srcLength;
-    // 29. If srcType is the same as targetType, then
-    if (srcType === targetType) {
-      // a. NOTE: If srcType and targetType are the same, the transfer must be performed in a manner that preserves the bit-level encoding of the source data.
-      // b. Repeat, while targetByteIndex < limit
-      while (targetByteIndex < limit) {
-        // i. Let value be GetValueFromBuffer(srcBuffer, srcByteIndex, Uint8, true, Unordered).
-        const value = GetValueFromBuffer(srcBuffer, srcByteIndex, 'Uint8', Value.true, 'Unordered');
-        // ii. Perform SetValueInBuffer(targetBuffer, targetByteIndex, Uint8, value, true, Unordered).
-        SetValueInBuffer(targetBuffer, targetByteIndex, 'Uint8', value, Value.true, 'Unordered');
-        // iii. Set srcByteIndex to srcByteIndex + 1.
-        srcByteIndex += 1;
-        // iv. Set targetByteIndex to targetByteIndex + 1.
-        targetByteIndex += 1;
-      }
-    } else {
-      // a. Repeat, while targetByteIndex < limit
-      while (targetByteIndex < limit) {
-        // i. Let value be GetValueFromBuffer(srcBuffer, srcByteIndex, srcType, true, Unordered).
-        const value = GetValueFromBuffer(srcBuffer, srcByteIndex, srcType, Value.true, 'Unordered');
-        // ii. Perform SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value, true, Unordered).
-        SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value, Value.true, 'Unordered');
-        // iii. Set srcByteIndex to srcByteIndex + srcElementSize.
-        srcByteIndex += srcElementSize;
-        // iv. Set targetByteIndex to targetByteIndex + targetElementSize.
-        targetByteIndex += targetElementSize;
-      }
-    }
-    // 31. Return undefined.
-    return Value.undefined;
   }
+  // 24. Return unused.
+}
+
+// #sec-settypedarrayfromarraylike
+function SetTypedArrayFromArrayLike(target, targetOffset, source) {
+  // 1. Let targetBuffer be target.[[ViewedArrayBuffer]].
+  const targetBuffer = target.ViewedArrayBuffer;
+  // 2. If IsDetachedBuffer(targetBuffer) is true, throw a TypeError exception.
+  if (IsDetachedBuffer(targetBuffer) === Value.true) {
+    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+  }
+  // 3. Let targetLength be target.[[ArrayLength]].
+  const targetLength = target.ArrayLength;
+  // 4. Let src be ? ToObject(source).
+  const src = Q(ToObject(source));
+  // 5. Let srcLength be ? LengthOfArrayLike(src).
+  const srcLength = Q(LengthOfArrayLike(src));
+  // 6. If targetOffset is +∞, throw a RangeError exception.
+  if (targetOffset === +Infinity) {
+    return surroundingAgent.Throw('RangeError', 'TypedArrayOOB');
+  }
+  // 7. If srcLength + targetOffset > targetLength, throw a RangeError exception.
+  if (srcLength + targetOffset > targetLength) {
+    return surroundingAgent.Throw('RangeError', 'TypedArrayOOB');
+  }
+  // 8. Let k be 0.
+  let k = 0;
+  // 9. Repeat, while k < srcLength,
+  while (k < srcLength) {
+    // a. Let Pk be ! ToString(𝔽(k)).
+    const Pk = X(ToString(F(k)));
+    // b. Let value be ? Get(src, Pk).
+    const value = Q(Get(src, Pk));
+    // c. Let targetIndex be 𝔽(targetOffset + k).
+    const targetIndex = F(targetOffset + k);
+    // d. Perform ? IntegerIndexedElementSet(target, targetIndex, value).
+    Q(IntegerIndexedElementSet(target, targetIndex, value));
+    // e. Set k to k + 1.
+    k += 1;
+  }
+  // 10. Return unused.
+}
+
+// #sec-%typedarray%.prototype.set-overloaded-offset
+function TypedArrayProto_set([source = Value.undefined, offset = Value.undefined], { thisValue }) {
+  // 1. Let target be the this value.
+  const target = thisValue;
+  // 2. Perform ? RequireInternalSlot(target, [[TypedArrayName]]).
+  Q(RequireInternalSlot(target, 'TypedArrayName'));
+  // 3. Assert: target has a [[ViewedArrayBuffer]] internal slot.
+  Assert('ViewedArrayBuffer' in target);
+  // 4. Let targetOffset be ? ToIntegerOrInfinity(offset).
+  const targetOffset = Q(ToIntegerOrInfinity(offset));
+  // 5. If targetOffset < 0, throw a RangeError exception.
+  if (targetOffset < 0) {
+    return surroundingAgent.Throw('RangeError', 'NegativeIndex', 'Offset');
+  }
+  // 6. If source is an Object that has a [[TypedArrayName]] internal slot, then
+  if (Type(source) === 'Object' && 'TypedArrayName' in source) {
+    // a. Perform ? SetTypedArrayFromTypedArray(target, targetOffset, source).
+    Q(SetTypedArrayFromTypedArray(target, targetOffset, source));
+  } else { // 7. Else,
+    // a. Perform ? SetTypedArrayFromArrayLike(target, targetOffset, source).
+    Q(SetTypedArrayFromArrayLike(target, targetOffset, source));
+  }
+  // 8. Return undefined.
+  return Value.undefined;
 }
 
 // #sec-%typedarray%.prototype.slice
@@ -655,15 +631,15 @@ function TypedArrayProto_sort([comparefn = Value.undefined], { thisValue }) {
   }
   // 2. Let obj be the this value.
   const obj = Q(ToObject(thisValue));
-  // 3. Let buffer be ? ValidateTypedArray(obj).
-  const buffer = Q(ValidateTypedArray(obj));
+  // 3. Perform ? ValidateTypedArray(obj).
+  Q(ValidateTypedArray(obj));
   // 4. Let len be obj.[[ArrayLength]].
   const len = obj.ArrayLength;
 
-  return ArrayProto_sortBody(obj, len, (x, y) => TypedArraySortCompare(x, y, comparefn, buffer), true);
+  return ArrayProto_sortBody(obj, len, (x, y) => TypedArraySortCompare(x, y, comparefn), true);
 }
 
-function TypedArraySortCompare(x, y, comparefn, buffer) {
+function TypedArraySortCompare(x, y, comparefn) {
   // 1. Assert: Both Type(x) and Type(y) are Number or both are BigInt.
   Assert((Type(x) === 'Number' && Type(y) === 'Number')
          || (Type(x) === 'BigInt' && Type(y) === 'BigInt'));
@@ -671,15 +647,11 @@ function TypedArraySortCompare(x, y, comparefn, buffer) {
   if (comparefn !== Value.undefined) {
     // a. Let v be ? ToNumber(? Call(comparefn, undefined, « x, y »)).
     const v = Q(ToNumber(Q(Call(comparefn, Value.undefined, [x, y]))));
-    // b. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-    if (IsDetachedBuffer(buffer) === Value.true) {
-      return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
-    }
-    // c. If v is NaN, return +0𝔽.
+    // b. If v is NaN, return +0𝔽.
     if (v.isNaN()) {
       return F(+0);
     }
-    // d. Return v.
+    // c. Return v.
     return v;
   }
   // 3. If x and y are both NaN, return +0𝔽.
@@ -797,7 +769,7 @@ function TypedArrayProto_toStringTag(args, { thisValue }) {
   return name;
 }
 
-// https://tc39.es/proposal-item-method/#sec-%typedarray%.prototype.at
+// #sec-%typedarray%.prototype.at
 function TypedArrayProto_at([index = Value.undefined], { thisValue }) {
   // 1. Let O be the this value.
   const O = thisValue;
@@ -836,9 +808,7 @@ export function bootstrapTypedArrayPrototype(realmRec) {
     ['entries', TypedArrayProto_entries, 0],
     ['fill', TypedArrayProto_fill, 1],
     ['filter', TypedArrayProto_filter, 1],
-    surroundingAgent.feature('at-method')
-      ? ['at', TypedArrayProto_at, 1]
-      : undefined,
+    ['at', TypedArrayProto_at, 1],
     ['keys', TypedArrayProto_keys, 0],
     ['length', [TypedArrayProto_length]],
     ['map', TypedArrayProto_map, 1],

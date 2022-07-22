@@ -131,7 +131,7 @@ export function InnerModuleEvaluation(module, stack, index) {
   return index;
 }
 
-// https://tc39.es/proposal-top-level-await/#sec-execute-async-module
+// #sec-execute-async-module
 function ExecuteAsyncModule(module) {
   // 1. Assert: module.[[Status]] is evaluating or evaluated.
   Assert(module.Status === 'evaluating' || module.Status === 'evaluated');
@@ -167,7 +167,7 @@ function ExecuteAsyncModule(module) {
   return Value.undefined;
 }
 
-// https://tc39.es/proposal-top-level-await/#sec-getcycleroot
+// #sec-getcycleroot
 export function GetAsyncCycleRoot(module) {
   Assert(module.Status === 'evaluated');
   if (module.AsyncParentModules.length === 0) {
@@ -183,7 +183,7 @@ export function GetAsyncCycleRoot(module) {
   return module;
 }
 
-// https://tc39.es/proposal-top-level-await/#sec-asyncmodulexecutionfulfilled
+// #sec-asyncmodulexecutionfulfilled
 function AsyncModuleExecutionFulfilled(module) {
   Assert(module.Status === 'evaluated');
   if (module.AsyncEvaluating === Value.false) {
@@ -222,7 +222,7 @@ function AsyncModuleExecutionFulfilled(module) {
   return Value.undefined;
 }
 
-// https://tc39.es/proposal-top-level-await/#sec-AsyncModuleExecutionRejected
+// #sec-AsyncModuleExecutionRejected
 function AsyncModuleExecutionRejected(module, error) {
   Assert(module.Status === 'evaluated');
   if (module.AsyncEvaluating === Value.false) {

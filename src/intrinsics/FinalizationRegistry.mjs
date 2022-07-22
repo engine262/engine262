@@ -34,8 +34,12 @@ function FinalizationRegistryConstructor([cleanupCallback = Value.undefined], { 
 
 export function bootstrapFinalizationRegistry(realmRec) {
   const cons = bootstrapConstructor(
-    realmRec, FinalizationRegistryConstructor, 'FinalizationRegistry', 1,
-    realmRec.Intrinsics['%FinalizationRegistry.prototype%'], [],
+    realmRec,
+    FinalizationRegistryConstructor,
+    'FinalizationRegistry',
+    1,
+    realmRec.Intrinsics['%FinalizationRegistry.prototype%'],
+    [],
   );
 
   realmRec.Intrinsics['%FinalizationRegistry%'] = cons;

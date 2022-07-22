@@ -39,9 +39,10 @@ module.exports = {
       argsIgnorePattern: '^_',
     }],
     'no-empty': ['error', { allowEmptyCatch: true }],
+    'no-constructor-return': 'off',
     'quote-props': ['error', 'consistent'],
     'strict': ['error', 'global'],
-
+    'default-param-last': 'off',
     'camelcase': 'off',
     'class-methods-use-this': 'off',
     'global-require': 'off',

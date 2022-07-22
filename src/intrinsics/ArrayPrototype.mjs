@@ -532,7 +532,7 @@ function ArrayProto_values(args, { thisValue }) {
   return CreateArrayIterator(O, 'value');
 }
 
-// https://tc39.es/proposal-item-method/#sec-array.prototype.at
+// #sec-array.prototype.at
 function ArrayProto_at([index = Value.undefined], { thisValue }) {
   // 1. Let O be ? ToObject(this value).
   const O = Q(ToObject(thisValue));
@@ -568,9 +568,7 @@ export function bootstrapArrayPrototype(realmRec) {
     ['filter', ArrayProto_filter, 1],
     ['flat', ArrayProto_flat, 0],
     ['flatMap', ArrayProto_flatMap, 1],
-    surroundingAgent.feature('at-method')
-      ? ['at', ArrayProto_at, 1]
-      : undefined,
+    ['at', ArrayProto_at, 1],
     ['keys', ArrayProto_keys, 0],
     ['map', ArrayProto_map, 1],
     ['pop', ArrayProto_pop, 0],

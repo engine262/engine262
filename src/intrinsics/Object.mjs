@@ -283,7 +283,7 @@ function Object_getPrototypeOf([O = Value.undefined]) {
   return Q(obj.GetPrototypeOf());
 }
 
-// https://tc39.es/proposal-accessible-object-hasownproperty/#sec-object.hasown
+// #sec-object.hasown
 function Object_hasOwn([O = Value.undefined, P = Value.undefined]) {
   // 1. Let obj be ? ToObject(O).
   const obj = Q(ToObject(O));
@@ -417,9 +417,7 @@ export function bootstrapObject(realmRec) {
     ['getOwnPropertyNames', Object_getOwnPropertyNames, 1],
     ['getOwnPropertySymbols', Object_getOwnPropertySymbols, 1],
     ['getPrototypeOf', Object_getPrototypeOf, 1],
-    surroundingAgent.feature('accessible-object-hasownproperty')
-      ? ['hasOwn', Object_hasOwn, 2]
-      : undefined,
+    ['hasOwn', Object_hasOwn, 2],
     ['is', Object_is, 2],
     ['isExtensible', Object_isExtensible, 1],
     ['isFrozen', Object_isFrozen, 1],

@@ -1,6 +1,5 @@
 'use strict';
 
-require('@snek/source-map-support/register');
 const assert = require('assert');
 const {
   Agent,
@@ -124,9 +123,7 @@ Error: owo
     at <anonymous>:2:13`);
   },
   () => {
-    const agent = new Agent({
-      features: ['WeakRefs'],
-    });
+    const agent = new Agent();
     setSurroundingAgent(agent);
     const realm = new ManagedRealm();
     const result = realm.evaluateScript(`
@@ -147,9 +144,7 @@ Error: owo
     assert.strictEqual(result.Value.PromiseResult.stringValue(), 'pass');
   },
   () => {
-    const agent = new Agent({
-      features: ['WeakRefs'],
-    });
+    const agent = new Agent();
     setSurroundingAgent(agent);
     const realm = new ManagedRealm();
     realm.scope(() => {
@@ -260,8 +255,11 @@ Error: owo
     const agent1 = new Agent();
     const agent2 = new Agent();
 
-    assert.strictEqual(agent1.executionContextStack.pop, agent2.executionContextStack.pop,
-      "The 'agent.executionContextStack.pop' method is identical for every execution context stack.");
+    assert.strictEqual(
+      agent1.executionContextStack.pop,
+      agent2.executionContextStack.pop,
+      "The 'agent.executionContextStack.pop' method is identical for every execution context stack.",
+    );
   },
   () => {
     const agent = new Agent();

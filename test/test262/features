@@ -21,6 +21,16 @@
 
 -resizable-arraybuffer
 
+-regexp-v-flag
+
+-decorators
+
+-array-find-from-last
+
+-ShadowRealm
+
+-array-grouping
+
 # https://github.com/tc39/proposal-top-level-await
 top-level-await = top-level-await
 
@@ -33,15 +43,7 @@ regexp-match-indices = regexp-match-indices
 # https://github.com/tc39/proposal-cleanup-some
 FinalizationRegistry.prototype.cleanupSome = cleanup-some
 
-# https://github.com/tc39/proposal-item-method/
-Array.prototype.at = at-method
-String.prototype.at = at-method
-TypedArray.prototype.at = at-method
-
 arbitrary-module-namespace-names = arbitrary-module-namespace-names
 
 # https://github.com/tc39/proposal-error-cause
 error-cause = error-cause
-
-# https://github.com/tc39/proposal-accessible-object-hasownproperty
-Object.hasOwn = accessible-object-hasownproperty

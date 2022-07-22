@@ -22,11 +22,6 @@ import * as messages from './messages.mjs';
 
 export const FEATURES = Object.freeze([
   {
-    name: 'Top-Level Await',
-    flag: 'top-level-await',
-    url: 'https://github.com/tc39/proposal-top-level-await',
-  },
-  {
     name: 'Hashbang Grammar',
     flag: 'hashbang',
     url: 'https://github.com/tc39/proposal-hashbang',
@@ -42,19 +37,9 @@ export const FEATURES = Object.freeze([
     url: 'https://github.com/tc39/proposal-cleanup-some',
   },
   {
-    name: 'At Method',
-    flag: 'at-method',
-    url: 'https://github.com/tc39/proposal-item-method',
-  },
-  {
     name: 'Error Cause',
     flag: 'error-cause',
-    url: 'github.com/tc39/proposal-error-cause',
-  },
-  {
-    name: 'Accessible Object.prototype.hasOwnProperty',
-    flag: 'accessible-object-hasownproperty',
-    url: 'https://github.com/tc39/proposal-accessible-object-hasownproperty',
+    url: 'https://github.com/tc39/proposal-error-cause',
   },
 ].map(Object.freeze));
 

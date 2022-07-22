@@ -4,7 +4,6 @@ import {
   Assert,
   GetThisEnvironment,
   GetValue,
-  RequireObjectCoercible,
   ToPropertyKey,
 } from '../abstract-ops/all.mjs';
 import { StringValue } from '../static-semantics/all.mjs';
@@ -18,11 +17,9 @@ function MakeSuperPropertyReference(actualThis, propertyKey, strict) {
   Assert(env.HasSuperBinding() === Value.true);
   // 3. Let baseValue be ? env.GetSuperBase().
   const baseValue = Q(env.GetSuperBase());
-  // 4. Let bv be ? RequireObjectCoercible(baseValue).
-  const bv = Q(RequireObjectCoercible(baseValue));
-  // 5. Return the Reference Record { [[Base]]: bv, [[ReferencedName]]: propertyKey, [[Strict]]: strict, [[ThisValue]]: actualThis }.
+  // 4. Return the Reference Record { [[Base]]: baseValue, [[ReferencedName]]: propertyKey, [[Strict]]: strict, [[ThisValue]]: actualThis }.
   return new ReferenceRecord({
-    Base: bv,
+    Base: baseValue,
     ReferencedName: propertyKey,
     Strict: strict ? Value.true : Value.false,
     ThisValue: actualThis,

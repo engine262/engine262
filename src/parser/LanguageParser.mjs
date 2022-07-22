@@ -42,7 +42,7 @@ export class LanguageParser extends ModuleParser {
       strict: true,
       in: true,
       importMeta: true,
-      await: this.feature('top-level-await'),
+      await: true,
       lexical: true,
       variable: true,
     }, () => {

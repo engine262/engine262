@@ -1,5 +1,5 @@
-import unicodeCaseFoldingCommon from '@unicode/unicode-13.0.0/Case_Folding/C/symbols.js';
-import unicodeCaseFoldingSimple from '@unicode/unicode-13.0.0/Case_Folding/S/symbols.js';
+import unicodeCaseFoldingCommon from '@unicode/unicode-14.0.0/Case_Folding/C/symbols.js';
+import unicodeCaseFoldingSimple from '@unicode/unicode-14.0.0/Case_Folding/S/symbols.js';
 import { surroundingAgent } from '../engine.mjs';
 import { Type, Value } from '../value.mjs';
 import { Assert, isNonNegativeInteger } from '../abstract-ops/all.mjs';
