@@ -18,7 +18,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@master
         with:
-          node-version: 17
+          node-version: 18
       - run: git submodule update --init --recursive
 
       # Run tests and whatnot
