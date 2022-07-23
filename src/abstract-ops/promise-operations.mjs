@@ -7,12 +7,13 @@ import {
 } from '../engine.mjs';
 import { Type, Value } from '../value.mjs';
 import {
-  Completion,
   AbruptCompletion,
+  Completion,
+  EnsureCompletion,
   NormalCompletion,
   Q,
-  X,
   ThrowCompletion,
+  X,
 } from '../completion.mjs';
 import {
   Assert,
@@ -118,7 +119,7 @@ function NewPromiseResolveThenableJob(promiseToResolve, thenable, then) {
     return Completion(thenCallResult);
   };
   // 2. Let getThenRealmResult be GetFunctionRealm(then.[[Callback]]).
-  const getThenRealmResult = GetFunctionRealm(then.Callback);
+  const getThenRealmResult = EnsureCompletion(GetFunctionRealm(then.Callback));
   // 3. If getThenRealmResult is a normal completion, then let thenRealm be getThenRealmResult.[[Value]].
   let thenRealm;
   if (getThenRealmResult instanceof NormalCompletion) {
@@ -344,7 +345,7 @@ function NewPromiseReactionJob(reaction, argument) {
   // 3. If reaction.[[Handler]] is not empty, then
   if (reaction.Handler !== undefined) {
     // a. Let getHandlerRealmResult be GetFunctionRealm(reaction.[[Handler]].[[Callback]]).
-    const getHandlerRealmResult = GetFunctionRealm(reaction.Handler.Callback);
+    const getHandlerRealmResult = EnsureCompletion(GetFunctionRealm(reaction.Handler.Callback));
     // b. If getHandlerRealmResult is a normal completion, then set handlerRealm to getHandlerRealmResult.[[Value]].
     if (getHandlerRealmResult instanceof NormalCompletion) {
       handlerRealm = getHandlerRealmResult.Value;
