@@ -2,15 +2,14 @@ name: publish
 
 on:
   workflow_run:
-    workflows:
-      - test
+    workflows: [test]
+    types: [completed]
     branches: [main]
-    types:
-      - completed
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       # Set everything up
       - uses: actions/checkout@v2
