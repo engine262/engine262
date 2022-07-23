@@ -486,7 +486,7 @@ export class Lexer {
           return Token.BIT_AND;
 
         case Token.BIT_OR:
-          // | || |=
+          // | || |= ||=
           if (c1 === '|') {
             this.position += 1;
             if (this.source[this.position] === '=') {
