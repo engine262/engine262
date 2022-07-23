@@ -60,7 +60,10 @@ export class FunctionParser extends IdentifierParser {
       lexical: true,
       variable: true,
       variableFunctions: true,
+      parameters: false,
     }, () => {
+      this.scope.arrowInfoStack.push(null);
+
       node.FormalParameters = this.parseFormalParameters();
 
       const body = this.parseFunctionBody(isAsync, isGenerator, false);
@@ -81,6 +84,8 @@ export class FunctionParser extends IdentifierParser {
       }
 
       this.validateFormalParameters(node.FormalParameters, body);
+
+      this.scope.arrowInfoStack.pop();
     });
 
     const name = `${isAsync ? 'Async' : ''}${isGenerator ? 'Generator' : 'Function'}${isExpression ? 'Expression' : 'Declaration'}`;

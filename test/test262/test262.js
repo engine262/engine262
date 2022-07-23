@@ -1,15 +1,12 @@
 'use strict';
 
-try {
-  require('@snek/source-map-support/register');
-} catch {}
-
 const path = require('path');
 const fs = require('fs');
 const util = require('util');
 const glob = require('glob');
 
 const TEST262 = process.env.TEST262 || path.resolve(__dirname, 'test262');
+const TEST262_TESTS = path.join(TEST262, 'test');
 
 const readList = (name) => {
   const source = fs.readFileSync(path.resolve(__dirname, name), 'utf8');
@@ -17,7 +14,7 @@ const readList = (name) => {
 };
 const readListPaths = (name) => readList(name)
   .flatMap((t) => glob.sync(path.resolve(TEST262, 'test', t)))
-  .map((f) => path.relative(TEST262, f));
+  .map((f) => path.relative(TEST262_TESTS, f));
 
 async function* readdir(dir) {
   for await (const dirent of await fs.promises.opendir(dir)) {
@@ -30,12 +27,12 @@ async function* readdir(dir) {
   }
 }
 
-const disabledFeatures = [];
-const featureMap = {};
+const disabledFeatures = new Set();
+const featureMap = Object.create(null);
 readList('features')
   .forEach((f) => {
     if (f.startsWith('-')) {
-      disabledFeatures.push(f.slice(1));
+      disabledFeatures.add(f.slice(1));
     }
     if (f.includes('=')) {
       const [k, v] = f.split('=');
@@ -67,7 +64,7 @@ if (!process.send) {
     c.on('message', (message) => {
       switch (message.status) {
         case 'PASS':
-          pass();
+          pass(message.count);
           break;
         case 'FAIL':
           fail(message.description, message.error);
@@ -93,20 +90,20 @@ if (!process.send) {
     longRunningWorker = createWorker();
   }
 
-  const slowlist = readListPaths('slowlist');
-  const skiplist = readListPaths('skiplist');
+  const slowlist = new Set(readListPaths('slowlist'));
+  const skiplist = new Set(readListPaths('skiplist'));
+  const isDisabled = (feature) => disabledFeatures.has(feature);
 
   let workerIndex = 0;
   const handleTest = (test) => {
     total();
 
-    if ((test.attrs.features && test.attrs.features.some((feature) => disabledFeatures.includes(feature)))
-        || skiplist.includes(test.file)) {
+    if (test.attrs.features?.some(isDisabled) || skiplist.has(test.file)) {
       skip();
       return;
     }
 
-    if (slowlist.includes(test.file)) {
+    if (slowlist.has(test.file)) {
       if (RUN_SLOW_TESTS) {
         longRunningWorker.send(test);
       } else {
@@ -122,7 +119,8 @@ if (!process.send) {
   };
 
   (async () => {
-    for await (const file of readdir(path.join(TEST262, override || 'test'))) {
+    const files = override ? glob.sync(path.join(TEST262_TESTS, override)) : readdir(TEST262_TESTS);
+    for await (const file of files) {
       if (/annexB|intl402|_FIXTURE/.test(file)) {
         continue;
       }
@@ -140,7 +138,7 @@ if (!process.send) {
       attrs.includes = attrs.includes || [];
 
       const test = {
-        file: path.relative(TEST262, file),
+        file: path.relative(TEST262_TESTS, file),
         attrs,
         contents,
       };
@@ -286,7 +284,7 @@ function $DONE(error) {
         });
       }
 
-      const specifier = path.resolve(TEST262, test.file);
+      const specifier = path.resolve(TEST262_TESTS, test.file);
 
       let completion;
       if (test.attrs.flags.module) {
@@ -337,26 +335,34 @@ function $DONE(error) {
     return r;
   };
 
-  let p = Promise.resolve();
   const handleSendError = (e) => {
     if (e) {
       process.exit(1);
     }
   };
+  let passChunk = 0;
   process.on('message', (test) => {
     if (test === 'DONE') {
-      p.then(() => process.exit(0));
-      p = undefined;
-    } else {
-      const description = `${test.file}\n${test.attrs.description}`;
-      p = p
-        .then(() => run(test))
-        .then((r) => {
-          process.send({ description, ...r }, handleSendError);
-        })
-        .catch((e) => {
-          process.send({ description, status: 'FAIL', error: util.inspect(e) }, handleSendError);
-        });
+      if (passChunk > 0) {
+        process.send({ status: 'PASS', count: passChunk }, handleSendError);
+      }
+      process.exit(0);
+      return;
+    }
+    const description = `${test.file}\n${test.attrs.description}`;
+    try {
+      const r = run(test);
+      if (r.status === 'PASS') {
+        passChunk += 1;
+        if (passChunk > 20) {
+          process.send({ status: 'PASS', count: passChunk }, handleSendError);
+          passChunk = 0;
+        }
+      } else {
+        process.send({ description, ...r }, handleSendError);
+      }
+    } catch (e) {
+      process.send({ description, status: 'FAIL', error: util.inspect(e) }, handleSendError);
     }
   });
 }

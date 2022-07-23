@@ -32,7 +32,7 @@ function WeakMapConstructor([iterable = Value.undefined], { NewTarget }) {
   return Q(AddEntriesFromIterable(map, iterable, adder));
 }
 
-export function BootstrapWeakMap(realmRec) {
+export function bootstrapWeakMap(realmRec) {
   const c = bootstrapConstructor(realmRec, WeakMapConstructor, 'WeakMap', 0, realmRec.Intrinsics['%WeakMap.prototype%'], []);
 
   realmRec.Intrinsics['%WeakMap%'] = c;

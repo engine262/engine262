@@ -1,12 +1,11 @@
 import { surroundingAgent } from './engine.mjs';
 import { Type, Value, Descriptor } from './value.mjs';
 import { ToString, DefinePropertyOrThrow, CreateBuiltinFunction } from './abstract-ops/all.mjs';
-import { X, AwaitFulfilledFunctions } from './completion.mjs';
+import { X } from './completion.mjs';
+
+export const kInternal = Symbol('kInternal');
 
 function convertValueForKey(key) {
-  if (typeof key === 'string') {
-    return Symbol.for(`engine262_helper_key_${key}`);
-  }
   switch (Type(key)) {
     case 'String':
       return key.stringValue();
@@ -126,7 +125,7 @@ export class ValueSet {
 }
 
 export class OutOfRange extends RangeError {
-  /* istanbul ignore next */
+  /* c8 ignore next */
   constructor(fn, detail) {
     super(`${fn}() argument out of range`);
     this.detail = detail;
@@ -140,7 +139,7 @@ export function unwind(iterator, maxSteps = 1) {
     if (done) {
       return value;
     }
-    /* istanbul ignore next */
+    /* c8 ignore next */
     steps += 1;
     if (steps > maxSteps) {
       throw new RangeError('Max steps exceeded');
@@ -168,12 +167,16 @@ export class CallSite {
   constructor(context) {
     this.context = context;
     this.lastNode = null;
+    this.lastCallNode = null;
+    this.inheritedLastCallNode = null;
     this.constructCall = false;
   }
 
   clone(context = this.context) {
     const c = new CallSite(context);
     c.lastNode = this.lastNode;
+    c.lastCallNode = this.lastCallNode;
+    c.inheritedLastCallNode = this.inheritedLastCallNode;
     c.constructCall = this.constructCall;
     return c;
   }
@@ -219,6 +222,10 @@ export class CallSite {
     this.lastNode = node;
   }
 
+  setCallLocation(node) {
+    this.lastCallNode = node;
+  }
+
   get lineNumber() {
     if (this.lastNode) {
       return this.lastNode.location.start.line;
@@ -259,6 +266,14 @@ export class CallSite {
     const isConstructCall = this.isConstructCall();
     const isMethodCall = !isConstructCall && !this.isTopLevel();
 
+    let visualFunctionName;
+    if (this.inheritedLastCallNode?.CallExpression.type === 'IdentifierReference') {
+      visualFunctionName = this.inheritedLastCallNode.CallExpression.name;
+    }
+    if (visualFunctionName === functionName) {
+      visualFunctionName = undefined;
+    }
+
     let string = isAsync ? 'async ' : '';
 
     if (isConstructCall) {
@@ -271,8 +286,14 @@ export class CallSite {
       } else {
         string += '<anonymous>';
       }
+      if (visualFunctionName) {
+        string += ` (as ${visualFunctionName})`;
+      }
     } else if (functionName) {
       string += functionName;
+      if (visualFunctionName) {
+        string += ` (as ${visualFunctionName})`;
+      }
     } else {
       return `${string}${this.loc()}`;
     }
@@ -281,6 +302,8 @@ export class CallSite {
   }
 }
 
+export const kAsyncContext = Symbol('kAsyncContext');
+
 function captureAsyncStack(stack) {
   let promise = stack[0].context.promiseCapability.Promise;
   for (let i = 0; i < 10; i += 1) {
@@ -288,8 +311,8 @@ function captureAsyncStack(stack) {
       return;
     }
     const [reaction] = promise.PromiseFulfillReactions;
-    if (reaction.Handler && reaction.Handler.Callback.nativeFunction === AwaitFulfilledFunctions) {
-      const asyncContext = reaction.Handler.Callback.AsyncContext;
+    if (reaction.Handler && reaction.Handler.Callback[kAsyncContext]) {
+      const asyncContext = reaction.Handler.Callback[kAsyncContext];
       stack.push(asyncContext.callSite.clone());
       if ('PromiseState' in asyncContext.promiseCapability.Promise) {
         promise = asyncContext.promiseCapability.Promise;
@@ -313,7 +336,12 @@ export function captureStack(O) {
     if (e.VariableEnvironment === undefined && e.Function === Value.null) {
       break;
     }
-    stack.push(e.callSite.clone());
+    const clone = e.callSite.clone();
+    const parent = stack[stack.length - 1];
+    if (parent && !parent.context.poppedForTailCall) {
+      parent.inheritedLastCallNode = clone.lastCallNode;
+    }
+    stack.push(clone);
     if (e.callSite.isAsync()) {
       i -= 1; // skip original execution context which has no useful information.
     }
@@ -325,7 +353,8 @@ export function captureStack(O) {
 
   let cache = null;
 
-  X(DefinePropertyOrThrow(O, new Value('stack'), Descriptor({
+  const name = new Value('stack');
+  X(DefinePropertyOrThrow(O, name, Descriptor({
     Get: CreateBuiltinFunction(() => {
       if (cache === null) {
         let errorString = X(ToString(O)).stringValue();
@@ -335,11 +364,11 @@ export function captureStack(O) {
         cache = new Value(errorString);
       }
       return cache;
-    }, []),
+    }, 0, name, [], undefined, undefined, new Value('get')),
     Set: CreateBuiltinFunction(([value = Value.undefined]) => {
       cache = value;
       return Value.undefined;
-    }, []),
+    }, 1, name, [], undefined, undefined, new Value('set')),
     Enumerable: Value.false,
     Configurable: Value.true,
   })));

@@ -21,7 +21,7 @@ export const GlobalSymbolRegistry = [];
 function SymbolConstructor([description = Value.undefined], { NewTarget }) {
   // 1. If NewTarget is not undefined, throw a TypeError exception.
   if (NewTarget !== Value.undefined) {
-    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+    return surroundingAgent.Throw('TypeError', 'NotAConstructor', this);
   }
   // 2. If description is undefined, let descString be undefined.
   let descString;
@@ -72,7 +72,7 @@ function Symbol_keyFor([sym = Value.undefined]) {
   return Value.undefined;
 }
 
-export function BootstrapSymbol(realmRec) {
+export function bootstrapSymbol(realmRec) {
   const symbolConstructor = bootstrapConstructor(realmRec, SymbolConstructor, 'Symbol', 0, realmRec.Intrinsics['%Symbol.prototype%'], [
     ['for', Symbol_for, 1],
     ['keyFor', Symbol_keyFor, 1],

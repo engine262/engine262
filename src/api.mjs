@@ -21,6 +21,7 @@ import {
 import {
   ParseScript,
   ParseModule,
+  ParseJSONModule,
 } from './parse.mjs';
 import { SourceTextModuleRecord } from './modules.mjs';
 
@@ -241,11 +242,11 @@ export class ManagedRealm extends Realm {
   }
 
   createSourceTextModule(specifier, sourceText) {
-    if (typeof sourceText !== 'string') {
-      throw new TypeError('sourceText must be a string');
-    }
     if (typeof specifier !== 'string') {
       throw new TypeError('specifier must be a string');
+    }
+    if (typeof sourceText !== 'string') {
+      throw new TypeError('sourceText must be a string');
     }
     const module = this.scope(() => ParseModule(sourceText, this, {
       specifier,
@@ -254,6 +255,19 @@ export class ManagedRealm extends Realm {
     if (Array.isArray(module)) {
       return ThrowCompletion(module[0]);
     }
+    return module;
+  }
+
+  createJSONModule(specifier, sourceText) {
+    if (typeof specifier !== 'string') {
+      throw new TypeError('specifier must be a string');
+    }
+    if (typeof sourceText !== 'string') {
+      throw new TypeError('sourceText must be a string');
+    }
+    const module = this.scope(() => ParseJSONModule(new Value(sourceText), this, {
+      specifier,
+    }));
     return module;
   }
 }

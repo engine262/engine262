@@ -8,6 +8,7 @@ import {
   IteratorValue,
   ToString,
   CreateDataPropertyOrThrow,
+  F,
 } from '../abstract-ops/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { ReturnIfAbrupt, Q, X } from '../completion.mjs';
@@ -29,7 +30,7 @@ function* ArrayAccumulation(ElementList, array, nextIndex) {
     switch (element.type) {
       case 'Elision':
         postIndex += 1;
-        Q(Set(array, new Value('length'), new Value(postIndex), Value.true));
+        Q(Set(array, new Value('length'), F(postIndex), Value.true));
         break;
       case 'SpreadElement':
         postIndex = Q(yield* ArrayAccumulation_SpreadElement(element, array, postIndex));
@@ -60,8 +61,8 @@ function* ArrayAccumulation_SpreadElement({ AssignmentExpression }, array, nextI
     }
     // c. Let nextValue be ? IteratorValue(next).
     const nextValue = Q(IteratorValue(next));
-    // d. Perform ! CreateDataPropertyOrThrow(array, ! ToString(nextIndex), nextValue).
-    X(CreateDataPropertyOrThrow(array, X(ToString(new Value(nextIndex))), nextValue));
+    // d. Perform ! CreateDataPropertyOrThrow(array, ! ToString(𝔽(nextIndex)), nextValue).
+    X(CreateDataPropertyOrThrow(array, X(ToString(F(nextIndex))), nextValue));
     // e. Set nextIndex to nextIndex + 1.
     nextIndex += 1;
   }
@@ -73,8 +74,8 @@ function* ArrayAccumulation_AssignmentExpression(AssignmentExpression, array, ne
   const initResult = yield* Evaluate(AssignmentExpression);
   // 3. Let initValue be ? GetValue(initResult).
   const initValue = Q(GetValue(initResult));
-  // 4. Let created be ! CreateDataPropertyOrThrow(array, ! ToString(nextIndex), initValue).
-  const _created = X(CreateDataPropertyOrThrow(array, X(ToString(new Value(nextIndex))), initValue));
+  // 4. Let created be ! CreateDataPropertyOrThrow(array, ! ToString(𝔽(nextIndex)), initValue).
+  const _created = X(CreateDataPropertyOrThrow(array, X(ToString(F(nextIndex))), initValue));
   // 5. Return nextIndex + 1.
   return nextIndex + 1;
 }
@@ -86,7 +87,7 @@ function* ArrayAccumulation_AssignmentExpression(AssignmentExpression, array, ne
 //    `[` ElementList `,` Elision `]`
 export function* Evaluate_ArrayLiteral({ ElementList }) {
   // 1. Let array be ! ArrayCreate(0).
-  const array = X(ArrayCreate(new Value(0)));
+  const array = X(ArrayCreate(0));
   // 2. Let len be the result of performing ArrayAccumulation for ElementList with arguments array and 0.
   const len = yield* ArrayAccumulation(ElementList, array, 0);
   // 3. ReturnIfAbrupt(len).

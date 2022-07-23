@@ -2,75 +2,70 @@ import { surroundingAgent } from '../engine.mjs';
 import {
   Assert,
   CreateArrayFromList,
-  CreateIterResultObject,
+  CreateIteratorFromClosure,
+  GeneratorResume,
+  RequireInternalSlot,
+  Yield,
 } from '../abstract-ops/all.mjs';
-import { Type, Value } from '../value.mjs';
-import { X } from '../completion.mjs';
+import { Q, X } from '../completion.mjs';
+import { Value } from '../value.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
+const kMapIteratorPrototype = new Value('%MapIteratorPrototype%');
+
+// #sec-createmapiterator
+export function CreateMapIterator(map, kind) {
+  Assert(kind === 'key+value' || kind === 'key' || kind === 'value');
+  // 1. Perform ? RequireInternalSlot(map, [[MapData]]).
+  Q(RequireInternalSlot(map, 'MapData'));
+  // 2. Let closure be a new Abstract Closure with no parameters that captures map and kind and performs the following steps when called:
+  const closure = function* closure() {
+    // a. Let entries be the List that is map.[[MapData]].
+    const entries = map.MapData;
+    // b. Let index be 0.
+    let index = 0;
+    // c. Let numEntries be the number of elements of entries.
+    let numEntries = entries.length;
+    // d. Repeat, while index < numEntries,
+    while (index < numEntries) {
+      // i. Let e be the Record { [[Key]], [[Value]] } that is the value of entries[index].
+      const e = entries[index];
+      // ii. Set index to index + 1.
+      index += 1;
+      // iii. If e.[[Key]] is not empty, then
+      if (e.Key !== undefined) {
+        let result;
+        // 1. If kind is key, let result be e.[[Key]].
+        if (kind === 'key') {
+          result = e.Key;
+        } else if (kind === 'value') { // 2. Else if kind is value, let result be e.[[Value]].
+          result = e.Value;
+        } else { // 3. Else,
+          // a. Assert: kind is key+value.
+          Assert(kind === 'key+value');
+          // b. Let result be ! CreateArrayFromList(« e.[[Key]], e.[[Value]] »).
+          result = X(CreateArrayFromList([e.Key, e.Value]));
+        }
+        // 4. Perform ? Yield(result).
+        Q(yield* Yield(result));
+      }
+      // iv. Set numEntries to the number of elements of entries.
+      numEntries = entries.length;
+    }
+    // e. Return undefined.
+    return Value.undefined;
+  };
+  // 3. Return ! CreateIteratorFromClosure(closure, "%MapIteratorPrototype%", %MapIteratorPrototype%).
+  return X(CreateIteratorFromClosure(closure, kMapIteratorPrototype, surroundingAgent.intrinsic('%MapIteratorPrototype%')));
+}
 
 // #sec-%mapiteratorprototype%.next
 function MapIteratorPrototype_next(args, { thisValue }) {
-  // 1. Let O be the this value.
-  const O = thisValue;
-  // 2. If Type(O) is not Object, throw a TypeError exception.
-  if (Type(O) !== 'Object') {
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Map Iterator', O);
-  }
-  // 3. If O does not have all of the internal slots of a Map Iterator Instance (23.1.5.3), throw a TypeError exception.
-  if (!('IteratedMap' in O && 'MapNextIndex' in O && 'MapIterationKind' in O)) {
-    return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Map Iterator', O);
-  }
-  // 4. Let m be O.[[IteratedMap]].
-  const m = O.IteratedMap;
-  // 5. Let index be O.[[MapNextIndex]].
-  let index = O.MapNextIndex;
-  // 6. Let index be O.[[MapNextIndex]].
-  const itemKind = O.MapIterationKind;
-  // 7. If m is undefined, return CreateIterResultObject(undefined, true).
-  if (m === Value.undefined) {
-    return CreateIterResultObject(Value.undefined, Value.true);
-  }
-  // 8. Assert: m has a [[MapData]] internal slot.
-  Assert('MapData' in m);
-  // 9. Let entries be the List that is m.[[MapData]].
-  const entries = m.MapData;
-  // 10. Let numEntries be the number of elements of entries.
-  const numEntries = entries.length;
-  // 11. NOTE: numEntries must be redetermined each time this method is evaluated.
-  // 12. Repeat, while index is less than numEntries,
-  while (index < numEntries) {
-    // a. Let e be the Record { [[Key]], [[Value]] } that is the value of entries[index].
-    const e = entries[index];
-    // b. Set index to index + 1.
-    index += 1;
-    // c. Set O.[[MapNextIndex]] to index.
-    O.MapNextIndex = index;
-    // d. If e.[[Key]] is not empty, then
-    if (e.Key !== undefined) {
-      let result;
-      // i. If itemKind is key, let result be e.[[Key]].
-      if (itemKind === 'key') {
-        result = e.Key;
-      } else if (itemKind === 'value') { // ii. Else if itemKind is value, let result be e.[[Value]].
-        result = e.Value;
-      } else { // iii. Else,
-        // 1. Assert: itemKind is key+value.
-        Assert(itemKind === 'key+value');
-        // 2. Let result be ! CreateArrayFromList(« e.[[Key]], e.[[Value]] »).
-        result = X(CreateArrayFromList([e.Key, e.Value]));
-      }
-      // iv. Return CreateIterResultObject(result, false).
-      return CreateIterResultObject(result, Value.false);
-    }
-  }
-  // 13. Set O.[[IteratedMap]] to undefined.
-  O.IteratedMap = Value.undefined;
-  // 14. Return CreateIterResultObject(undefined, true).
-  return CreateIterResultObject(Value.undefined, Value.true);
+  // 1. Return ? GeneratorResume(this value, empty, "%MapIteratorPrototype%")
+  return Q(GeneratorResume(thisValue, undefined, kMapIteratorPrototype));
 }
 
-export function BootstrapMapIteratorPrototype(realmRec) {
+export function bootstrapMapIteratorPrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [
     ['next', MapIteratorPrototype_next, 0],
   ], realmRec.Intrinsics['%IteratorPrototype%'], 'Map Iterator');

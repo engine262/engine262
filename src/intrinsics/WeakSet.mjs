@@ -8,9 +8,8 @@ import {
   GetIterator,
   IteratorStep,
   IteratorValue,
-  IteratorClose,
 } from '../abstract-ops/all.mjs';
-import { Q, AbruptCompletion } from '../completion.mjs';
+import { IfAbruptCloseIterator, Q } from '../completion.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
 // #sec-weakset-iterable
@@ -47,14 +46,12 @@ function WeakSetConstructor([iterable = Value.undefined], { NewTarget }) {
     const nextValue = Q(IteratorValue(next));
     // d. Let status be Call(adder, set, « nextValue »).
     const status = Call(adder, set, [nextValue]);
-    // e. If status is an abrupt completion, return ? IteratorClose(iteratorRecord, status).
-    if (status instanceof AbruptCompletion) {
-      return Q(IteratorClose(iteratorRecord, status));
-    }
+    // e. IfAbruptCloseIterator(status, iteratorRecord).
+    IfAbruptCloseIterator(status, iteratorRecord);
   }
 }
 
-export function BootstrapWeakSet(realmRec) {
+export function bootstrapWeakSet(realmRec) {
   const c = bootstrapConstructor(realmRec, WeakSetConstructor, 'WeakSet', 0, realmRec.Intrinsics['%WeakSet.prototype%'], []);
   realmRec.Intrinsics['%WeakSet%'] = c;
 }

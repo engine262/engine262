@@ -6,6 +6,7 @@ import {
   IterableToList,
   OrdinaryCreateFromConstructor,
   DefinePropertyOrThrow,
+  InstallErrorCause,
   CreateArrayFromList,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
@@ -13,7 +14,7 @@ import { captureStack } from '../helpers.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
 // #sec-aggregate-error-constructor
-function AggregateErrorConstructor([errors = Value.undefined, message = Value.undefined], { NewTarget }) {
+function AggregateErrorConstructor([errors = Value.undefined, message = Value.undefined, options = Value.undefined], { NewTarget }) {
   // 1. If NewTarget is undefined, let newTarget be the active function object, else let newTarget be NewTarget.
   let newTarget;
   if (NewTarget === Value.undefined) {
@@ -42,14 +43,17 @@ function AggregateErrorConstructor([errors = Value.undefined, message = Value.un
     Value: X(CreateArrayFromList(errorsList)),
   })));
 
+  // 6. Perform ? InstallErrorCause(O, options).
+  Q(InstallErrorCause(O, options));
+
   // NON-SPEC
   X(captureStack(O));
 
-  // 6. Return O.
+  // 7. Return O.
   return O;
 }
 
-export function BootstrapAggregateError(realmRec) {
+export function bootstrapAggregateError(realmRec) {
   const c = bootstrapConstructor(realmRec, AggregateErrorConstructor, 'AggregateError', 2, realmRec.Intrinsics['%AggregateError.prototype%'], []);
   c.Prototype = realmRec.Intrinsics['%Error%'];
   realmRec.Intrinsics['%AggregateError%'] = c;

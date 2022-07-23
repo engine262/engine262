@@ -3,7 +3,6 @@ import { Type, Value } from '../value.mjs';
 import {
   Assert,
   Call,
-  CreateIterResultObject,
   GeneratorYield,
   GetGeneratorKind,
   GetIterator,
@@ -14,6 +13,7 @@ import {
   IteratorValue,
   AsyncGeneratorYield,
   AsyncIteratorClose,
+  Yield,
 } from '../abstract-ops/all.mjs';
 import {
   Await,
@@ -30,9 +30,9 @@ import { Evaluate } from '../evaluator.mjs';
 //     `yield` AssignmentExpression
 //     `yield` `*` AssignmentExpression
 export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }) {
-  // 1. Let generatorKind be ! GetGeneratorKind().
-  const generatorKind = X(GetGeneratorKind());
   if (hasStar) {
+    // 1. Let generatorKind be ! GetGeneratorKind().
+    const generatorKind = X(GetGeneratorKind());
     // 2. Let exprRef be the result of evaluating AssignmentExpression.
     const exprRef = yield* Evaluate(AssignmentExpression);
     // 3. Let value be ? GetValue(exprRef).
@@ -158,21 +158,13 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }) {
     }
   }
   if (AssignmentExpression) {
-    // 2. Let exprRef be the result of evaluating AssignmentExpression.
+    // 1. Let exprRef be the result of evaluating AssignmentExpression.
     const exprRef = yield* Evaluate(AssignmentExpression);
-    // 3. Let value be ? GetValue(exprRef).
+    // 2. Let value be ? GetValue(exprRef).
     const value = Q(GetValue(exprRef));
-    // 4. If generatorKind is async, then return ? AsyncGeneratorYield(value).
-    if (generatorKind === 'async') {
-      return Q(yield* AsyncGeneratorYield(value));
-    }
-    // 5. Otherwise, return ? GeneratorYield(CreateIterResultObject(value, false)).
-    return Q(yield* GeneratorYield(CreateIterResultObject(value, Value.false)));
+    // 3. Return ? Yield(value).
+    return Q(yield* Yield(value));
   }
-  // 2. If generatorKind is async, then return ? AsyncGeneratorYield(undefined).
-  if (generatorKind === 'async') {
-    return Q(yield* AsyncGeneratorYield(Value.undefined));
-  }
-  // 3. Otherwise, return ? GeneratorYield(CreateIterResultObject(undefined, false)).
-  return Q(yield* GeneratorYield(CreateIterResultObject(Value.undefined, Value.false)));
+  // 1. Return ? Yield(undefined).
+  return Q(yield* Yield(Value.undefined));
 }

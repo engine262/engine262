@@ -11,6 +11,7 @@ import { OutOfRange } from '../helpers.mjs';
 import {
   Assert,
   Get,
+  IsDetachedBuffer,
   ToBoolean,
   ToNumber,
   ToNumeric,
@@ -18,7 +19,6 @@ import {
   StringToBigInt,
   isProxyExoticObject,
   isArrayExoticObject,
-  isIntegerIndexedExoticObject,
 } from './all.mjs';
 
 // This file covers abstract operations defined in
@@ -91,7 +91,7 @@ export function IsExtensible(O) {
 }
 
 // 7.2.6 #sec-isinteger
-export function IsInteger(argument) {
+export function IsIntegralNumber(argument) {
   if (Type(argument) !== 'Number') {
     return Value.false;
   }
@@ -207,16 +207,16 @@ export function AbstractRelationalComparison(x, y, LeftFirst = true) {
   let py;
   // 1. If the LeftFirst flag is true, then
   if (LeftFirst === true) {
-    // a. Let px be ? ToPrimitive(x, hint Number).
-    px = Q(ToPrimitive(x, 'Number'));
-    // b. Let py be ? ToPrimitive(y, hint Number).
-    py = Q(ToPrimitive(y, 'Number'));
+    // a. Let px be ? ToPrimitive(x, number).
+    px = Q(ToPrimitive(x, 'number'));
+    // b. Let py be ? ToPrimitive(y, number).
+    py = Q(ToPrimitive(y, 'number'));
   } else {
     // a. NOTE: The order of evaluation needs to be reversed to preserve left to right evaluation.
-    // b. Let py be ? ToPrimitive(y, hint Number).
-    py = Q(ToPrimitive(y, 'Number'));
-    // c. Let px be ? ToPrimitive(x, hint Number).
-    px = Q(ToPrimitive(x, 'Number'));
+    // b. Let py be ? ToPrimitive(y, number).
+    py = Q(ToPrimitive(y, 'number'));
+    // c. Let px be ? ToPrimitive(x, number).
+    px = Q(ToPrimitive(x, 'number'));
   }
   // 3. If Type(px) is String and Type(py) is String, then
   if (Type(px) === 'String' && Type(py) === 'String') {
@@ -386,27 +386,19 @@ export function StrictEqualityComparison(x, y) {
 
 // #sec-isvalidintegerindex
 export function IsValidIntegerIndex(O, index) {
-  Assert(isIntegerIndexedExoticObject(O));
+  if (IsDetachedBuffer(O.ViewedArrayBuffer) === Value.true) {
+    return Value.false;
+  }
   Assert(Type(index) === 'Number');
-  if (IsInteger(index) === Value.false) {
+  if (IsIntegralNumber(index) === Value.false) {
     return Value.false;
   }
   index = index.numberValue();
   if (Object.is(index, -0)) {
     return Value.false;
   }
-  if (index < 0 || index >= O.ArrayLength.numberValue()) {
+  if (index < 0 || index >= O.ArrayLength) {
     return Value.false;
   }
   return Value.true;
-}
-
-// #sec-isnonnegativeinteger
-export function IsNonNegativeInteger(argument) {
-  // 1. If ! IsInteger(argument) is true and argument ≥ 0, return true.
-  if (X(IsInteger(argument)) === Value.true && argument.numberValue() >= 0) {
-    return Value.true;
-  }
-  // 2. Otherwise, return false.
-  return Value.false;
 }

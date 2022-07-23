@@ -12,35 +12,23 @@ export function ExportEntriesForModule(node, module) {
   }
   switch (node.type) {
     case 'ExportFromClause':
-      if (node.IdentifierName) {
-        // 1. Let exportName be the StringValue of IdentifierName.
-        const exportName = StringValue(node.IdentifierName);
-        // 2. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~star~, [[LocalName]]: null, [[ExportName]]: exportName }.
-        const entry = {
-          ModuleRequest: module,
-          ImportName: 'star',
-          LocalName: Value.null,
-          ExportName: exportName,
-        };
-        // 3. Return a new List containing entry.
-        return [entry];
-      } else if (node.ModuleExportName) {
+      if (node.ModuleExportName) {
         // 1. Let exportName be the StringValue of ModuleExportName.
         const exportName = StringValue(node.ModuleExportName);
-        // 2. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~star~, [[LocalName]]: null, [[ExportName]]: exportName }.
+        // 2. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~all~, [[LocalName]]: null, [[ExportName]]: exportName }.
         const entry = {
           ModuleRequest: module,
-          ImportName: 'star',
+          ImportName: 'all',
           LocalName: Value.null,
           ExportName: exportName,
         };
         // 3. Return a new List containing entry.
         return [entry];
       } else {
-        // 1. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~star~, [[LocalName]]: null, [[ExportName]]: null }.
+        // 1. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~all-but-default~, [[LocalName]]: null, [[ExportName]]: null }.
         const entry = {
           ModuleRequest: module,
-          ImportName: 'star',
+          ImportName: 'all-but-default',
           LocalName: Value.null,
           ExportName: Value.null,
         };

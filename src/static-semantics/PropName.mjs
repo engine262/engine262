@@ -8,12 +8,8 @@ export function PropName(node) {
     case 'GeneratorMethod':
     case 'AsyncGeneratorMethod':
     case 'AsyncMethod':
-      return PropName(node.PropertyName);
-    case 'ClassElement':
-      if (node.MethodDefinition) {
-        return PropName(node.MethodDefinition);
-      }
-      return undefined;
+    case 'FieldDefinition':
+      return PropName(node.ClassElementName);
     default:
       return undefined;
   }

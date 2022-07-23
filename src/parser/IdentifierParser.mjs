@@ -42,6 +42,9 @@ export class IdentifierParser extends BaseParser {
         node.name = 'await';
         for (let i = 0; i < this.scope.arrowInfoStack.length; i += 1) {
           const arrowInfo = this.scope.arrowInfoStack[i];
+          if (!arrowInfo) {
+            break;
+          }
           if (arrowInfo.isAsync) {
             arrowInfo.awaitIdentifiers.push(node);
             break;
@@ -80,6 +83,7 @@ export class IdentifierParser extends BaseParser {
   parseIdentifierReference() {
     const node = this.startNode();
     const token = this.next();
+    node.escaped = token.escaped;
     switch (token.type) {
       case Token.IDENTIFIER:
         node.name = token.value;
@@ -99,6 +103,9 @@ export class IdentifierParser extends BaseParser {
         }
         for (let i = 0; i < this.scope.arrowInfoStack.length; i += 1) {
           const arrowInfo = this.scope.arrowInfoStack[i];
+          if (!arrowInfo) {
+            break;
+          }
           if (arrowInfo.isAsync) {
             arrowInfo.awaitIdentifiers.push(node);
             break;
@@ -136,5 +143,13 @@ export class IdentifierParser extends BaseParser {
     const node = this.parseIdentifierReference();
     node.type = 'LabelIdentifier';
     return node;
+  }
+
+  // PrivateIdentifier ::
+  //   `#` IdentifierName
+  parsePrivateIdentifier() {
+    const node = this.startNode();
+    node.name = this.expect(Token.PRIVATE_IDENTIFIER).value;
+    return this.finishNode(node, 'PrivateIdentifier');
   }
 }

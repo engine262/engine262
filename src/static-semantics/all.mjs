@@ -1,6 +1,6 @@
 export * from './StringValue.mjs';
 export * from './IsStatic.mjs';
-export * from './NonConstructorMethodDefinitions.mjs';
+export * from './NonConstructorElements.mjs';
 export * from './ConstructorMethod.mjs';
 export * from './PropName.mjs';
 export * from './NumericValue.mjs';
@@ -41,4 +41,7 @@ export * from './CodePointAt.mjs';
 export * from './CodePointToUTF16CodeUnits.mjs';
 export * from './StringToCodePoints.mjs';
 export * from './CodePointsToString.mjs';
-export * from './IsStringValidUnicode.mjs';
+export * from './IsStringWellFormedUnicode.mjs';
+export * from './IsComputedPropertyKey.mjs';
+export * from './PrivateBoundIdentifiers.mjs';
+export * from './ContainsArguments.mjs';

@@ -10,6 +10,7 @@ import {
   IfAbruptRejectPromise,
   Q, X,
   Await,
+  NormalCompletion,
 } from '../completion.mjs';
 import {
   Assert,
@@ -23,6 +24,8 @@ import {
   OrdinaryObjectCreate,
   PerformPromiseThen,
   ToBoolean,
+  Yield,
+  CreateIteratorFromClosure,
 } from './all.mjs';
 
 // This file covers abstract operations defined in
@@ -188,34 +191,24 @@ export function CreateIterResultObject(value, done) {
 
 // 7.4.9 #sec-createlistiteratorRecord
 export function CreateListIteratorRecord(list) {
-  const iterator = OrdinaryObjectCreate(surroundingAgent.intrinsic('%IteratorPrototype%'), [
-    'IteratedList',
-    'ListNextIndex',
-  ]);
-  iterator.IteratedList = list;
-  iterator.ListNextIndex = 0;
-  const steps = ListIteratorNextSteps;
-  const next = X(CreateBuiltinFunction(steps, []));
+  // 1. Let closure be a new Abstract Closure with no parameters that captures list and performs the following steps when called:
+  const closure = function* closure() {
+    // a. For each element E of list, do
+    for (const E of list) {
+      // i. Perform ? Yield(E).
+      Q(yield* Yield(E));
+    }
+    // b. Return undefined.
+    return NormalCompletion(Value.undefined);
+  };
+  // 2. Let iterator be ! CreateIteratorFromClosure(closure, empty, %IteratorPrototype%).
+  const iterator = X(CreateIteratorFromClosure(closure, undefined, surroundingAgent.intrinsic('%IteratorPrototype%')));
+  // 3. Return Record { [[Iterator]]: iterator, [[NextMethod]]: %GeneratorFunction.prototype.prototype.next%, [[Done]]: false }.
   return {
     Iterator: iterator,
-    NextMethod: next,
+    NextMethod: surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype.next%'),
     Done: Value.false,
   };
-}
-
-// 7.4.9.1 #sec-listiterator-next
-function ListIteratorNextSteps(args, { thisValue }) {
-  const O = thisValue;
-  Assert(Type(O) === 'Object');
-  Assert('IteratedList' in O);
-  const list = O.IteratedList;
-  const index = O.ListNextIndex;
-  const len = list.length;
-  if (index >= len) {
-    return CreateIterResultObject(Value.undefined, Value.true);
-  }
-  O.ListNextIndex += 1;
-  return CreateIterResultObject(list[index], Value.false);
 }
 
 // 25.1.4.1 #sec-createasyncfromsynciterator
@@ -232,24 +225,31 @@ export function CreateAsyncFromSyncIterator(syncIteratorRecord) {
   };
 }
 
-// 25.1.4.2.4 #sec-async-from-sync-iterator-value-unwrap-functions
-function AsyncFromSyncIteratorValueUnwrapFunctions([value = Value.undefined]) {
-  const F = this;
-
-  return X(CreateIterResultObject(value, F.Done));
-}
-
 // 25.1.4.4 #sec-asyncfromsynciteratorcontinuation
 export function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
+  // 1. Let done be IteratorComplete(result).
   const done = IteratorComplete(result);
+  // 2. IfAbruptRejectPromise(done, promiseCapability).
   IfAbruptRejectPromise(done, promiseCapability);
+  // 3. Let value be IteratorValue(result).
   const value = IteratorValue(result);
+  // 4. IfAbruptRejectPromise(value, promiseCapability).
   IfAbruptRejectPromise(value, promiseCapability);
+  // 5. Let valueWrapper be PromiseResolve(%Promise%, value).
   const valueWrapper = PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value);
+  // 6. IfAbruptRejectPromise(valueWrapper, promiseCapability).
   IfAbruptRejectPromise(valueWrapper, promiseCapability);
-  const steps = AsyncFromSyncIteratorValueUnwrapFunctions;
-  const onFulfilled = X(CreateBuiltinFunction(steps, ['Done']));
-  onFulfilled.Done = done;
+  // 7. Let unwrap be a new Abstract Closure with parameters (value) that captures done and performs the following steps when called:
+  // eslint-disable-next-line arrow-body-style
+  const unwrap = ([valueInner = Value.undefined]) => {
+    // a. Return ! CreateIterResultObject(value, done).
+    return X(CreateIterResultObject(valueInner, done));
+  };
+  // 8. Let onFulfilled be ! CreateBuiltinFunction(unwrap, 1, "", « »).
+  const onFulfilled = X(CreateBuiltinFunction(unwrap, 1, new Value(''), ['Done']));
+  // 9. NOTE: onFulfilled is used when processing the "value" property of an IteratorResult object in order to wait for its value if it is a promise and re-package the result in a new "unwrapped" IteratorResult object.
+  // 10. Perform ! PerformPromiseThen(valueWrapper, onFulfilled, undefined, promiseCapability).
   X(PerformPromiseThen(valueWrapper, onFulfilled, Value.undefined, promiseCapability));
+  // 11. Return promiseCapability.[[Promise]].
   return promiseCapability.Promise;
 }

@@ -9,6 +9,7 @@ import {
   Assert,
   Call,
   CreateDataPropertyOrThrow,
+  CreateIteratorFromClosure,
   Get,
   GetMethod,
   Invoke,
@@ -16,11 +17,13 @@ import {
   IsRegExp,
   RegExpCreate,
   RequireObjectCoercible,
-  ToInteger,
+  ToIntegerOrInfinity,
   ToNumber,
   ToString,
   ToUint32,
   StringCreate,
+  Yield,
+  F,
 } from '../abstract-ops/all.mjs';
 import {
   GetSubstitution,
@@ -30,7 +33,6 @@ import {
 } from '../runtime-semantics/all.mjs';
 import { CodePointAt } from '../static-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
-import { CreateStringIterator } from './StringIteratorPrototype.mjs';
 import { assignProps } from './bootstrap.mjs';
 
 
@@ -50,7 +52,7 @@ function thisStringValue(value) {
 function StringProto_charAt([pos = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
-  const position = Q(ToInteger(pos)).numberValue();
+  const position = Q(ToIntegerOrInfinity(pos));
   const size = S.stringValue().length;
   if (position < 0 || position >= size) {
     return new Value('');
@@ -62,25 +64,25 @@ function StringProto_charAt([pos = Value.undefined], { thisValue }) {
 function StringProto_charCodeAt([pos = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
-  const position = Q(ToInteger(pos)).numberValue();
+  const position = Q(ToIntegerOrInfinity(pos));
   const size = S.stringValue().length;
   if (position < 0 || position >= size) {
-    return new Value(NaN);
+    return F(NaN);
   }
-  return new Value(S.stringValue().charCodeAt(position));
+  return F(S.stringValue().charCodeAt(position));
 }
 
 // 21.1.3.3 #sec-string.prototype.codepointat
 function StringProto_codePointAt([pos = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
-  const position = Q(ToInteger(pos)).numberValue();
+  const position = Q(ToIntegerOrInfinity(pos));
   const size = S.stringValue().length;
   if (position < 0 || position >= size) {
     return Value.undefined;
   }
   const cp = X(CodePointAt(S.stringValue(), position));
-  return new Value(cp.CodePoint);
+  return F(cp.CodePoint);
 }
 
 // 21.1.3.4 #sec-string.prototype.concat
@@ -110,7 +112,7 @@ function StringProto_endsWith([searchString = Value.undefined, endPosition = Val
   if (endPosition === Value.undefined) {
     pos = len;
   } else {
-    pos = Q(ToInteger(endPosition)).numberValue();
+    pos = Q(ToIntegerOrInfinity(endPosition));
   }
   const end = Math.min(Math.max(pos, 0), len);
   const searchLength = searchStr.length;
@@ -135,10 +137,10 @@ function StringProto_includes([searchString = Value.undefined, position = Value.
     return surroundingAgent.Throw('TypeError', 'RegExpArgumentNotAllowed', 'String.prototype.includes');
   }
   const searchStr = Q(ToString(searchString)).stringValue();
-  const pos = Q(ToInteger(position));
-  Assert(!(position === Value.undefined) || pos.numberValue() === 0);
+  const pos = Q(ToIntegerOrInfinity(position));
+  Assert(!(position === Value.undefined) || pos === 0);
   const len = S.length;
-  const start = Math.min(Math.max(pos.numberValue(), 0), len);
+  const start = Math.min(Math.max(pos, 0), len);
   const searchLen = searchStr.length;
   let k = start;
   while (k + searchLen <= len) {
@@ -165,14 +167,14 @@ function StringProto_indexOf([searchString = Value.undefined, position = Value.u
   const S = Q(ToString(O));
   // 3. Let searchStr be ? ToString(searchString).
   const searchStr = Q(ToString(searchString));
-  // 4. Let pos be ? ToInteger(position).
-  const pos = Q(ToInteger(position));
+  // 4. Let pos be ? ToIntegerOrInfinity(position).
+  const pos = Q(ToIntegerOrInfinity(position));
   // 5. Assert: If position is undefined, then pos is 0.
-  Assert(!(position === Value.undefined) || pos.numberValue() === 0);
+  Assert(!(position === Value.undefined) || pos === 0);
   // 6. Let len be the length of S.
   const len = S.stringValue().length;
   // 7. Let start be min(max(pos, 0), len).
-  const start = Math.min(Math.max(pos.numberValue(), 0), len);
+  const start = Math.min(Math.max(pos, 0), len);
   // 8. Return ! StringIndexOf(S, searchStr, start).
   return X(StringIndexOf(S, searchStr, start));
 }
@@ -186,12 +188,12 @@ function StringProto_lastIndexOf([searchString = Value.undefined, position = Val
   Assert(!(position === Value.undefined) || numPos.isNaN());
   let pos;
   if (numPos.isNaN()) {
-    pos = new Value(Infinity);
+    pos = Infinity;
   } else {
-    pos = X(ToInteger(numPos));
+    pos = X(ToIntegerOrInfinity(numPos));
   }
   const len = S.length;
-  const start = Math.min(Math.max(pos.numberValue(), 0), len);
+  const start = Math.min(Math.max(pos, 0), len);
   const searchLen = searchStr.length;
   let k = start;
   while (k >= 0) {
@@ -204,12 +206,12 @@ function StringProto_lastIndexOf([searchString = Value.undefined, position = Val
         }
       }
       if (match) {
-        return new Value(k);
+        return F(k);
       }
     }
     k -= 1;
   }
-  return new Value(-1);
+  return F(-1);
 }
 
 // 21.1.3.10 #sec-string.prototype.localecompare
@@ -218,11 +220,11 @@ function StringProto_localeCompare([that = Value.undefined], { thisValue }) {
   const S = Q(ToString(O)).stringValue();
   const That = Q(ToString(that)).stringValue();
   if (S === That) {
-    return new Value(0);
+    return F(+0);
   } else if (S < That) {
-    return new Value(-1);
+    return F(-1);
   } else {
-    return new Value(1);
+    return F(1);
   }
 }
 
@@ -310,18 +312,18 @@ function StringProto_padStart([maxLength = Value.undefined, fillString = Value.u
 function StringProto_repeat([count = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
-  const n = Q(ToInteger(count));
-  if (n.numberValue() < 0) {
+  const n = Q(ToIntegerOrInfinity(count));
+  if (n < 0) {
     return surroundingAgent.Throw('RangeError', 'StringRepeatCount', n);
   }
-  if (n.isInfinity()) {
+  if (n === Infinity || n === -Infinity) {
     return surroundingAgent.Throw('RangeError', 'StringRepeatCount', n);
   }
-  if (n.numberValue() === 0) {
+  if (n === 0) {
     return new Value('');
   }
   let T = '';
-  for (let i = 0; i < n.numberValue(); i += 1) {
+  for (let i = 0; i < n; i += 1) {
     T += S.stringValue();
   }
   return new Value(T);
@@ -342,21 +344,21 @@ function StringProto_replace([searchValue = Value.undefined, replaceValue = Valu
   if (functionalReplace === Value.false) {
     replaceValue = Q(ToString(replaceValue));
   }
-  const pos = new Value(string.stringValue().indexOf(searchString.stringValue()));
+  const pos = string.stringValue().indexOf(searchString.stringValue());
   const matched = searchString;
-  if (pos.numberValue() === -1) {
+  if (pos === -1) {
     return string;
   }
   let replStr;
   if (functionalReplace === Value.true) {
-    const replValue = Q(Call(replaceValue, Value.undefined, [matched, pos, string]));
+    const replValue = Q(Call(replaceValue, Value.undefined, [matched, F(pos), string]));
     replStr = Q(ToString(replValue));
   } else {
     const captures = [];
     replStr = X(GetSubstitution(matched, string, pos, captures, Value.undefined, replaceValue));
   }
-  const tailPos = pos.numberValue() + matched.stringValue().length;
-  const newString = string.stringValue().slice(0, pos.numberValue()) + replStr.stringValue() + string.stringValue().slice(tailPos);
+  const tailPos = pos + matched.stringValue().length;
+  const newString = string.stringValue().slice(0, pos) + replStr.stringValue() + string.stringValue().slice(tailPos);
   return new Value(newString);
 }
 
@@ -422,15 +424,15 @@ function StringProto_replaceAll([searchValue = Value.undefined, replaceValue = V
     let replacement;
     // a. If functionalReplace is true, then
     if (functionalReplace === Value.true) {
-      // i. Let replacement be ? ToString(? Call(replaceValue, undefined, « searchString, position, string »).
-      replacement = Q(ToString(Q(Call(replaceValue, Value.undefined, [searchString, new Value(position), string]))));
+      // i. Let replacement be ? ToString(? Call(replaceValue, undefined, « searchString, 𝔽(position), string »).
+      replacement = Q(ToString(Q(Call(replaceValue, Value.undefined, [searchString, F(position), string]))));
     } else { // b. Else,
       // i. Assert: Type(replaceValue) is String.
       Assert(Type(replaceValue) === 'String');
       // ii. Let captures be a new empty List.
       const captures = [];
       // iii. Let replacement be GetSubstitution(searchString, string, position, captures, undefined, replaceValue).
-      replacement = GetSubstitution(searchString, string, new Value(position), captures, Value.undefined, replaceValue);
+      replacement = GetSubstitution(searchString, string, position, captures, Value.undefined, replaceValue);
     }
     // c. Let stringSlice be the substring of string consisting of the code units from endOfLastMatch (inclusive) up through position (exclusive).
     const stringSlice = string.stringValue().slice(endOfLastMatch, position);
@@ -469,12 +471,12 @@ function StringProto_slice([start = Value.undefined, end = Value.undefined], { t
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O)).stringValue();
   const len = S.length;
-  const intStart = Q(ToInteger(start)).numberValue();
+  const intStart = Q(ToIntegerOrInfinity(start));
   let intEnd;
   if (end === Value.undefined) {
     intEnd = len;
   } else {
-    intEnd = Q(ToInteger(end)).numberValue();
+    intEnd = Q(ToIntegerOrInfinity(end));
   }
   let from;
   if (intStart < 0) {
@@ -502,11 +504,11 @@ function StringProto_split([separator = Value.undefined, limit = Value.undefined
     }
   }
   const S = Q(ToString(O));
-  const A = X(ArrayCreate(new Value(0)));
+  const A = X(ArrayCreate(0));
   let lengthA = 0;
   let lim;
   if (limit === Value.undefined) {
-    lim = new Value((2 ** 32) - 1);
+    lim = F((2 ** 32) - 1);
   } else {
     lim = Q(ToUint32(limit));
   }
@@ -536,7 +538,7 @@ function StringProto_split([separator = Value.undefined, limit = Value.undefined
         q += 1;
       } else {
         const T = new Value(S.stringValue().substring(p, q));
-        X(CreateDataPropertyOrThrow(A, X(ToString(new Value(lengthA))), T));
+        X(CreateDataPropertyOrThrow(A, X(ToString(F(lengthA))), T));
         lengthA += 1;
         if (lengthA === lim.numberValue()) {
           return A;
@@ -547,7 +549,7 @@ function StringProto_split([separator = Value.undefined, limit = Value.undefined
     }
   }
   const T = new Value(S.stringValue().substring(p, s));
-  X(CreateDataPropertyOrThrow(A, X(ToString(new Value(lengthA))), T));
+  X(CreateDataPropertyOrThrow(A, X(ToString(F(lengthA))), T));
   return A;
 }
 
@@ -576,7 +578,7 @@ function StringProto_startsWith([searchString = Value.undefined, position = Valu
     return surroundingAgent.Throw('TypeError', 'RegExpArgumentNotAllowed', 'String.prototype.startsWith');
   }
   const searchStr = Q(ToString(searchString)).stringValue();
-  const pos = Q(ToInteger(position)).numberValue();
+  const pos = Q(ToIntegerOrInfinity(position));
   Assert(!(position === Value.undefined) || pos === 0);
   const len = S.length;
   const start = Math.min(Math.max(pos, 0), len);
@@ -597,12 +599,12 @@ function StringProto_substring([start = Value.undefined, end = Value.undefined],
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O)).stringValue();
   const len = S.length;
-  const intStart = Q(ToInteger(start)).numberValue();
+  const intStart = Q(ToIntegerOrInfinity(start));
   let intEnd;
   if (end === Value.undefined) {
     intEnd = len;
   } else {
-    intEnd = Q(ToInteger(end)).numberValue();
+    intEnd = Q(ToIntegerOrInfinity(end));
   }
   const finalStart = Math.min(Math.max(intStart, 0), len);
   const finalEnd = Math.min(Math.max(intEnd, 0), len);
@@ -673,21 +675,46 @@ function StringProto_valueOf(args, { thisValue }) {
 
 // 21.1.3.32 #sec-string.prototype-@@iterator
 function StringProto_iterator(args, { thisValue }) {
+  // 1. Let O be ? RequireObjectCoercible(this value).
   const O = Q(RequireObjectCoercible(thisValue));
-  const S = Q(ToString(O));
-  return Q(CreateStringIterator(S));
+  // 2. Let s be ? ToString(O).
+  const s = Q(ToString(O)).stringValue();
+  // 3. Let closure be a new Abstract Closure with no parameters that captures s and performs the following steps when called:
+  const closure = function* closure() {
+    // a. Let position be 0.
+    let position = 0;
+    // b. Let len be the length of s.
+    const len = s.length;
+    // c. Repeat, while position < len,
+    while (position < len) {
+      // i. Let cp be ! CodePointAt(s, position).
+      const cp = X(CodePointAt(s, position));
+      // ii. Let nextIndex be position + cp.[[CodeUnitCount]].
+      const nextIndex = position + cp.CodeUnitCount;
+      // iii. Let resultString be the substring of s from position to nextIndex.
+      const resultString = new Value(s.slice(position, nextIndex));
+      // iv. Set position to nextIndex.
+      position = nextIndex;
+      // v. Perform ? Yield(resultString).
+      Q(yield* Yield(resultString));
+    }
+    // d. Return undefined.
+    return Value.undefined;
+  };
+  // 4. Return ! CreateIteratorFromClosure(closure, "%StringIteratorPrototype%", %StringIteratorPrototype%).
+  return X(CreateIteratorFromClosure(closure, new Value('%StringIteratorPrototype%'), surroundingAgent.intrinsic('%StringIteratorPrototype%')));
 }
 
-// https://tc39.es/proposal-item-method/#sec-string.prototype.item
-function StringProto_item([index = Value.undefined], { thisValue }) {
+// #sec-string.prototype.at
+function StringProto_at([index = Value.undefined], { thisValue }) {
   // 1. Let O be ? RequireObjectCoercible(this value).
   const O = Q(RequireObjectCoercible(thisValue));
   // 2. Let S be ? ToString(O).
   const S = Q(ToString(O));
   // 3. Let len be the length of S.
   const len = S.stringValue().length;
-  // 4. Let relativeIndex be ? ToInteger(index).
-  const relativeIndex = Q(ToInteger(index)).numberValue();
+  // 4. Let relativeIndex be ? ToIntegerOrInfinity(index).
+  const relativeIndex = Q(ToIntegerOrInfinity(index));
   let k;
   // 5. If relativeIndex ≥ 0, then
   if (relativeIndex >= 0) {
@@ -705,7 +732,7 @@ function StringProto_item([index = Value.undefined], { thisValue }) {
   return new Value(S.stringValue()[k]);
 }
 
-export function BootstrapStringPrototype(realmRec) {
+export function bootstrapStringPrototype(realmRec) {
   const proto = StringCreate(new Value(''), realmRec.Intrinsics['%Object.prototype%']);
 
   assignProps(realmRec, proto, [
@@ -716,9 +743,7 @@ export function BootstrapStringPrototype(realmRec) {
     ['endsWith', StringProto_endsWith, 1],
     ['includes', StringProto_includes, 1],
     ['indexOf', StringProto_indexOf, 1],
-    surroundingAgent.feature('item-method')
-      ? ['item', StringProto_item, 1]
-      : undefined,
+    ['at', StringProto_at, 1],
     ['lastIndexOf', StringProto_lastIndexOf, 1],
     ['localeCompare', StringProto_localeCompare, 1],
     ['match', StringProto_match, 1],

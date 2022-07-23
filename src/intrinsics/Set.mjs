@@ -4,13 +4,12 @@ import {
   Get,
   GetIterator,
   IsCallable,
-  IteratorClose,
   IteratorStep,
   IteratorValue,
   OrdinaryCreateFromConstructor,
 } from '../abstract-ops/all.mjs';
 import { Value, wellKnownSymbols } from '../value.mjs';
-import { AbruptCompletion, Q } from '../completion.mjs';
+import { IfAbruptCloseIterator, Q } from '../completion.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
 // #sec-set-iterable
@@ -47,10 +46,8 @@ function SetConstructor([iterable = Value.undefined], { NewTarget }) {
     const nextValue = Q(IteratorValue(next));
     // d. Let status be Call(adder, set, « nextValue »).
     const status = Call(adder, set, [nextValue]);
-    // e. If status is an abrupt completion, return ? IteratorClose(iteratorRecord, status).
-    if (status instanceof AbruptCompletion) {
-      return Q(IteratorClose(iteratorRecord, status));
-    }
+    // e. IfAbruptCloseIterator(status, iteratorRecord).
+    IfAbruptCloseIterator(status, iteratorRecord);
   }
 }
 
@@ -60,7 +57,7 @@ function Set_speciesGetter(args, { thisValue }) {
   return thisValue;
 }
 
-export function BootstrapSet(realmRec) {
+export function bootstrapSet(realmRec) {
   const setConstructor = bootstrapConstructor(realmRec, SetConstructor, 'Set', 0, realmRec.Intrinsics['%Set.prototype%'], [
     [wellKnownSymbols.species, [Set_speciesGetter]],
   ]);

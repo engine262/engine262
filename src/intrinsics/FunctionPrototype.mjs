@@ -16,7 +16,7 @@ import {
   SameValue,
   SetFunctionLength,
   SetFunctionName,
-  ToInteger,
+  ToIntegerOrInfinity,
   CreateBuiltinFunction,
   MakeBasicObject,
 } from '../abstract-ops/all.mjs';
@@ -40,7 +40,7 @@ function FunctionProto_apply([thisArg = Value.undefined, argArray = Value.undefi
   const func = thisValue;
   // 2. If IsCallable(func) is false, throw a TypeError exception.
   if (IsCallable(func) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
+    return surroundingAgent.Throw('TypeError', 'ThisNotAFunction', func);
   }
   // 3. If argArray is undefined or null, then
   if (argArray === Value.undefined || argArray === Value.null) {
@@ -121,42 +121,48 @@ function FunctionProto_bind([thisArg = Value.undefined, ...args], { thisValue })
   const Target = thisValue;
   // 2. If IsCallable(Target) is false, throw a TypeError exception.
   if (IsCallable(Target) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', Target);
+    return surroundingAgent.Throw('TypeError', 'ThisNotAFunction', Target);
   }
-  // 3. Let args be a new (possibly empty) List consisting of all of the argument values provided after thisArg in order.
-  // 4. Let F be ? BoundFunctionCreate(Target, thisArg, args).
+  // 3. Let F be ? BoundFunctionCreate(Target, thisArg, args).
   const F = Q(BoundFunctionCreate(Target, thisArg, args));
+  // 4. Let L be 0.
+  let L = 0;
   // 5. Let targetHasLength be ? HasOwnProperty(Target, "length").
   const targetHasLength = Q(HasOwnProperty(Target, new Value('length')));
   // 6. If targetHasLength is true, then
-  let L;
   if (targetHasLength === Value.true) {
     // a. Let targetLen be ? Get(Target, "length").
-    let targetLen = Q(Get(Target, new Value('length')));
-    // b. If Type(targetLen) is not Number, let L be 0.
-    if (Type(targetLen) !== 'Number') {
-      L = 0;
-    } else { // c. Else,
-      // i. Set targetLen to ! ToInteger(targetLen).
-      targetLen = Q(ToInteger(targetLen)).numberValue();
-      // ii. Let L be the larger of 0 and the result of targetLen minus the number of elements of args.
-      L = Math.max(0, targetLen - args.length);
+    const targetLen = Q(Get(Target, new Value('length')));
+    // b. If Type(targetLen) is Number, then
+    if (Type(targetLen) === 'Number') {
+      // i. If targetLen is +∞𝔽, set L to +∞.
+      if (targetLen.numberValue() === +Infinity) {
+        L = +Infinity;
+      } else if (targetLen.numberValue() === -Infinity) { // ii. Else if targetLen is -∞𝔽, set L to 0.
+        L = 0;
+      } else { // iii. Else,
+        // 1. Set targetLen to ! ToIntegerOrInfinity(targetLen).
+        const targetLenAsInt = Q(ToIntegerOrInfinity(targetLen));
+        // 2. Assert: targetLenAsInt is finite.
+        Assert(Number.isFinite(targetLenAsInt));
+        // 3. Let argCount be the number of elements in args.
+        const argCount = args.length;
+        // 4. Set L to max(targetLenAsInt - argCount, 0).
+        L = Math.max(targetLenAsInt - argCount, 0);
+      }
     }
-  } else {
-    // 7. ELse, let L be 0.
-    L = 0;
   }
-  // 8. Perform ! SetFunctionLength(F, L).
-  X(SetFunctionLength(F, new Value(L)));
-  // 9. Let targetName be ? Get(Target, "name").
+  // 7. Perform ! SetFunctionLength(F, L).
+  X(SetFunctionLength(F, L));
+  // 8. Let targetName be ? Get(Target, "name").
   let targetName = Q(Get(Target, new Value('name')));
-  // 10. If Type(targetName) is not String, set targetName to the empty String.
+  // 9. If Type(targetName) is not String, set targetName to the empty String.
   if (Type(targetName) !== 'String') {
     targetName = new Value('');
   }
-  // 11. Perform SetFunctionName(F, targetName, "bound").
+  // 10. Perform SetFunctionName(F, targetName, "bound").
   SetFunctionName(F, targetName, new Value('bound'));
-  // 12. Return F.
+  // 11. Return F.
   return F;
 }
 
@@ -166,7 +172,7 @@ function FunctionProto_call([thisArg = Value.undefined, ...args], { thisValue })
   const func = thisValue;
   // 2. If IsCallable(func) is false, throw a TypeError exception.
   if (IsCallable(func) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
+    return surroundingAgent.Throw('TypeError', 'ThisNotAFunction', func);
   }
   // 3. Let argList be a new empty List.
   const argList = [];
@@ -184,7 +190,15 @@ function FunctionProto_call([thisArg = Value.undefined, ...args], { thisValue })
 function FunctionProto_toString(args, { thisValue }) {
   // 1. Let func be the this value.
   const func = thisValue;
-  // 2. If func is a built-in function object, then return an implementation-defined
+  // 2. If Type(func) is Object and func has a [[SourceText]] internal slot and func.[[SourceText]]
+  //    is a sequence of Unicode code points and ! HostHasSourceTextAvailable(func) is true, then
+  if (Type(func) === 'Object'
+      && 'SourceText' in func
+      && X(HostHasSourceTextAvailable(func)) === Value.true) {
+    // Return ! UTF16Encode(func.[[SourceText]]).
+    return new Value(func.SourceText);
+  }
+  // 3. If func is a built-in function object, then return an implementation-defined
   //    String source code representation of func. The representation must have the
   //    syntax of a NativeFunction. Additionally, if func has an [[InitialName]] internal
   //    slot and func.[[InitialName]] is a String, the portion of the returned String
@@ -195,14 +209,6 @@ function FunctionProto_toString(args, { thisValue }) {
       return new Value(`function ${func.InitialName.stringValue()}() { [native code] }`);
     }
     return new Value('function() { [native code] }');
-  }
-  // 3. If Type(func) is Object and func has a [[SourceText]] internal slot and func.[[SourceText]]
-  //    is a sequence of Unicode code points and ! HostHasSourceTextAvailable(func) is true, then
-  if (Type(func) === 'Object'
-      && 'SourceText' in func
-      && X(HostHasSourceTextAvailable(func)) === Value.true) {
-    // Return ! UTF16Encode(func.[[SourceText]]).
-    return new Value(func.SourceText);
   }
   // 4. If Type(func) is Object and IsCallable(func) is true, then return an implementation
   //    dependent String source code representation of func. The representation must have
@@ -222,12 +228,16 @@ function FunctionProto_hasInstance([V = Value.undefined], { thisValue }) {
   return Q(OrdinaryHasInstance(F, V));
 }
 
-export function BootstrapFunctionPrototype(realmRec) {
-  const proto = CreateBuiltinFunction(FunctionProto, [], realmRec, realmRec.Intrinsics['%Object.prototype%']);
+export function bootstrapFunctionPrototype(realmRec) {
+  const proto = CreateBuiltinFunction(
+    FunctionProto,
+    0,
+    new Value(''),
+    [],
+    realmRec,
+    realmRec.Intrinsics['%Object.prototype%'],
+  );
   realmRec.Intrinsics['%Function.prototype%'] = proto;
-
-  SetFunctionLength(proto, new Value(0));
-  SetFunctionName(proto, new Value(''));
 
   const readonly = { Writable: Value.false, Configurable: Value.false };
   assignProps(realmRec, proto, [

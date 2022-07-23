@@ -1,7 +1,9 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
+  BigIntValue,
   DataBlock,
   Descriptor,
+  NumberValue,
   Type,
   Value,
 } from '../value.mjs';
@@ -15,7 +17,19 @@ import {
   OrdinaryObjectCreate,
   ToBoolean,
 } from './all.mjs';
+import { isNonNegativeInteger } from './data-types-and-values.mjs';
 
+// #𝔽
+export function F(x) {
+  Assert(typeof x === 'number');
+  return new NumberValue(x);
+}
+
+// #ℤ
+export function Z(x) {
+  Assert(typeof x === 'bigint');
+  return new BigIntValue(x);
+}
 
 // 6.2.5.1 IsAccessorDescriptor
 export function IsAccessorDescriptor(Desc) {
@@ -172,8 +186,7 @@ export function CompletePropertyDescriptor(Desc) {
 
 // 6.2.7.1 #sec-createbytedatablock
 export function CreateByteDataBlock(size) {
-  size = size.numberValue();
-  Assert(size >= 0);
+  Assert(isNonNegativeInteger(size));
   let db;
   try {
     db = new DataBlock(size);

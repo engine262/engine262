@@ -76,7 +76,7 @@ function RegExp_speciesGetter(args, { thisValue }) {
   return thisValue;
 }
 
-export function BootstrapRegExp(realmRec) {
+export function bootstrapRegExp(realmRec) {
   const proto = realmRec.Intrinsics['%RegExp.prototype%'];
 
   const cons = bootstrapConstructor(realmRec, RegExpConstructor, 'RegExp', 2, proto, [

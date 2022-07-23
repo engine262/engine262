@@ -10,6 +10,7 @@ import {
   ArrayCreate,
   CreateDataPropertyOrThrow,
   ToString,
+  F,
 } from '../abstract-ops/all.mjs';
 import {
   AbruptCompletion,
@@ -118,14 +119,14 @@ function* IteratorBindingInitialization_SingleNameBinding({ BindingIdentifier, I
 }
 
 // BindingRestElement :
-//   `...` BindingIdentiifer
+//   `...` BindingIdentifier
 //   `...` BindingPattern
 function* IteratorBindingInitialization_BindingRestElement({ BindingIdentifier, BindingPattern }, iteratorRecord, environment) {
   if (BindingIdentifier) {
     // 1. Let lhs be ? ResolveBinding(StringValue of BindingIdentifier, environment).
     const lhs = Q(ResolveBinding(StringValue(BindingIdentifier), environment, BindingIdentifier.strict));
     // 2. Let A be ! ArrayCreate(0).
-    const A = X(ArrayCreate(new Value(0)));
+    const A = X(ArrayCreate(0));
     // 3. Let n be 0.
     let n = 0;
     // 4. Repeat,
@@ -163,14 +164,14 @@ function* IteratorBindingInitialization_BindingRestElement({ BindingIdentifier, 
       }
       // e. ReturnIfAbrupt(nextValue).
       ReturnIfAbrupt(nextValue);
-      // f. Perform ! CreateDataPropertyOrThrow(A, ! ToString(n), nextValue).
-      X(CreateDataPropertyOrThrow(A, X(ToString(new Value(n))), nextValue));
+      // f. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), nextValue).
+      X(CreateDataPropertyOrThrow(A, X(ToString(F(n))), nextValue));
       // g. Set n to n + 1.
       n += 1;
     }
   } else {
     // 1. Let A be ! ArrayCreate(0).
-    const A = X(ArrayCreate(new Value(0)));
+    const A = X(ArrayCreate(0));
     // 2. Let n be 0.
     let n = 0;
     // 3. Repeat,
@@ -204,8 +205,8 @@ function* IteratorBindingInitialization_BindingRestElement({ BindingIdentifier, 
       }
       // e. ReturnIfAbrupt(nextValue).
       ReturnIfAbrupt(nextValue);
-      // f. Perform ! CreateDataPropertyOrThrow(A, ! ToString(n), nextValue).
-      X(CreateDataPropertyOrThrow(A, X(ToString(new Value(n))), nextValue));
+      // f. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), nextValue).
+      X(CreateDataPropertyOrThrow(A, X(ToString(F(n))), nextValue));
       // g. Set n to n + 1.
       n += 1;
     }

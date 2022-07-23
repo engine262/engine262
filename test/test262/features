@@ -12,28 +12,27 @@
 
 -tail-call-optimization
 
--class-fields-public
--class-fields-private
--class-methods-private
--class-static-fields-public
--class-static-fields-private
--class-static-methods-private
+-json-modules
+-import-assertions
 
-# https://github.com/tc39/proposal-top-level-await
-top-level-await = top-level-await
+-class-static-block
+
+-Temporal
+
+-resizable-arraybuffer
+
+-regexp-v-flag
+
+-decorators
+
+-array-find-from-last
+
+-ShadowRealm
+
+-array-grouping
 
 # https://github.com/tc39/proposal-hashbang
 hashbang = hashbang
 
-# https://github.com/tc39/proposal-regexp-match-indices
-regexp-match-indices = regexp-match-indices
-
 # https://github.com/tc39/proposal-cleanup-some
-cleanupSome = cleanup-some
-
-# https://github.com/tc39/proposal-item-method/
-Array.prototype.item = item-method
-String.prototype.item = item-method
-TypedArray.prototype.item = item-method
-
-arbitrary-module-namespace-names = arbitrary-module-namespace-names
+FinalizationRegistry.prototype.cleanupSome = cleanup-some

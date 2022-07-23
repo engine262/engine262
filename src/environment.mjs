@@ -1,7 +1,7 @@
 import { AbstractModuleRecord } from './modules.mjs';
 import {
   Descriptor,
-  Reference,
+  ReferenceRecord,
   Type,
   Value,
   wellKnownSymbols,
@@ -61,7 +61,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     // 2. Assert: envRec does not already have a binding for N.
     Assert(!envRec.bindings.has(N));
     // 3. Create a mutable binding in envRec for N and record that it is uninitialized. If D
-    //    is true, record that the newly created binding may be delted by a subsequent
+    //    is true, record that the newly created binding may be deleted by a subsequent
     //    DeleteBinding call.
     this.bindings.set(N, {
       indirect: false,
@@ -128,7 +128,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
         return surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
       }
       // b. Perform envRec.CreateMutableBinding(N, true).
-      envRec.CreateMutableBinding(N, true);
+      envRec.CreateMutableBinding(N, Value.true);
       // c. Perform envRec.InitializeBinding(N, V).
       envRec.InitializeBinding(N, V);
       // d. Return NormalCompletion(empty).
@@ -215,10 +215,10 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
 
 // #sec-object-environment-records
 export class ObjectEnvironmentRecord extends EnvironmentRecord {
-  constructor(BindingObject) {
+  constructor() {
     super();
-    this.bindingObject = BindingObject;
-    this.withEnvironment = false;
+    this.BindingObject = undefined;
+    this.IsWithEnvironment = undefined;
   }
 
   // #sec-object-environment-records-hasbinding-n
@@ -226,15 +226,15 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
     // 1. Let envRec be the object Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Let bindings be the binding object for envRec.
-    const bindings = envRec.bindingObject;
+    const bindings = envRec.BindingObject;
     // 3. Let foundBinding be ? HasProperty(bindings, N).
     const foundBinding = Q(HasProperty(bindings, N));
     // 4. If foundBinding is false, return false.
     if (foundBinding === Value.false) {
       return Value.false;
     }
-    // 5. If the withEnvironment flag of envRec i s false, return true.
-    if (envRec.withEnvironment === false) {
+    // 5. If the IsWithEnvironment flag of envRec i s false, return true.
+    if (envRec.IsWithEnvironment === Value.false) {
       return Value.true;
     }
     // 6. Let unscopables be ? Get(bindings, @@unscopables).
@@ -257,7 +257,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
     // 1. Let envRec be the object Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Let envRec be the object Environment Record for which the method was invoked.
-    const bindings = envRec.bindingObject;
+    const bindings = envRec.BindingObject;
     // 3. Return ? DefinePropertyOrThrow(bindings, N, PropertyDescriptor { [[Value]]: undefined, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: D }).
     return Q(DefinePropertyOrThrow(bindings, N, Descriptor({
       Value: Value.undefined,
@@ -287,7 +287,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
     // 1. Let envRec be the object Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Let bindings be the binding object for envRec.
-    const bindings = envRec.bindingObject;
+    const bindings = envRec.BindingObject;
     // 3. Let stillExists be ? HasProperty(bindings, N).
     const stillExists = Q(HasProperty(bindings, N));
     // 4. If stillExists is false and S is true, throw a ReferenceError exception.
@@ -303,7 +303,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
     // 1. Let envRec be the object Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Let bindings be the binding object for envRec.
-    const bindings = envRec.bindingObject;
+    const bindings = envRec.BindingObject;
     // 3. Let value be ? HasProperty(bindings, N).
     const value = Q(HasProperty(bindings, N));
     // 4. If value is false, then
@@ -324,7 +324,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
     // 1. Let envRec be the object Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Let bindings be the binding object for envRec.
-    const bindings = envRec.bindingObject;
+    const bindings = envRec.BindingObject;
     // 3. Return ? bindings.[[Delete]](N).
     return Q(bindings.Delete(N));
   }
@@ -345,9 +345,9 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
   WithBaseObject() {
     // 1. Let envRec be the object Environment Record for which the method was invoked.
     const envRec = this;
-    // 2. If the withEnvironment flag of envRec is true, return the binding object for envRec.
-    if (envRec.withEnvironment === true) {
-      return envRec.bindingObject;
+    // 2. If the IsWithEnvironment flag of envRec is true, return the binding object for envRec.
+    if (envRec.IsWithEnvironment === Value.true) {
+      return envRec.BindingObject;
     }
     // 3. Otherwise, return undefined.
     return Value.undefined;
@@ -355,7 +355,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
 
   // NON-SPEC
   mark(m) {
-    m(this.bindingObject);
+    m(this.BindingObject);
   }
 }
 
@@ -366,7 +366,6 @@ export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
     this.ThisValue = undefined;
     this.ThisBindingStatus = undefined;
     this.FunctionObject = undefined;
-    this.HomeObject = Value.undefined;
     this.NewTarget = undefined;
   }
 
@@ -402,14 +401,13 @@ export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
 
   // #sec-function-environment-records-hassuperbinding
   HasSuperBinding() {
-    // 1. Let envRec be the function Environment Record for which the method was invoked.
     const envRec = this;
-    // 2. If envRec.[[ThisBindingStatus]] is lexical, return false.
+    // 1. If envRec.[[ThisBindingStatus]] is lexical, return false.
     if (envRec.ThisBindingStatus === 'lexical') {
       return Value.false;
     }
-    // 3. If envRec.[[HomeObject]] has the value undefined, return false; otherwise, return true.
-    if (Type(envRec.HomeObject) === 'Undefined') {
+    // 2. If envRec.[[FunctionObject]].[[HomeObject]] has the value undefined, return false; otherwise, return true.
+    if (envRec.FunctionObject.HomeObject === Value.undefined) {
       return Value.false;
     } else {
       return Value.true;
@@ -432,17 +430,16 @@ export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
 
   // #sec-getsuperbase
   GetSuperBase() {
-    // 1. Let envRec be the function Environment Record for which the method was invoked.
     const envRec = this;
-    // 2. Let home be envRec.[[HomeObject]].
-    const home = envRec.HomeObject;
-    // 3. If home has the value undefined, return undefined.
-    if (Type(home) === 'Undefined') {
+    // 1. Let home be envRec.[[FunctionObject]].[[HomeObject]].
+    const home = envRec.FunctionObject.HomeObject;
+    // 2. If home has the value undefined, return undefined.
+    if (home === Value.undefined) {
       return Value.undefined;
     }
-    // 4. Assert: Type(home) is Object.
+    // 3. Assert: Type(home) is Object.
     Assert(Type(home) === 'Object');
-    // 5. Return ? home.[[GetPrototypeOf]]().
+    // 4. Return ? home.[[GetPrototypeOf]]().
     return Q(home.GetPrototypeOf());
   }
 
@@ -450,7 +447,6 @@ export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
     super.mark(m);
     m(this.ThisValue);
     m(this.FunctionObject);
-    m(this.HomeObject);
     m(this.NewTarget);
   }
 }
@@ -575,7 +571,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     // 4. Let ObjRec be envRec.[[ObjectRecord]].
     const ObjRec = envRec.ObjectRecord;
     // 5. Let globalObject be the binding object for ObjRec.
-    const globalObject = ObjRec.bindingObject;
+    const globalObject = ObjRec.BindingObject;
     // 6. Let existingProp be ? HasOwnProperty(globalObject, N).
     const existingProp = Q(HasOwnProperty(globalObject, N));
     // 7. If existingProp is true, then
@@ -587,8 +583,9 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
         // i. Let varNames be envRec.[[VarNames]].
         const varNames = envRec.VarNames;
         // ii. If N is an element of varNames, remove that element from the varNames.
-        if (varNames.includes(N)) {
-          varNames.splice(varNames.indexOf(N), 1);
+        const i = varNames.findIndex((v) => v.stringValue() === N.stringValue());
+        if (i >= 0) {
+          varNames.splice(i, 1);
         }
       }
       // c. Return status.
@@ -631,7 +628,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     // 2. Let varDeclaredNames be envRec.[[VarNames]].
     const varDeclaredNames = envRec.VarNames;
     // 3. If varDeclaredNames contains N, return true.
-    if (varDeclaredNames.includes(N)) {
+    if (varDeclaredNames.some((v) => v.stringValue() === N.stringValue())) {
       return Value.true;
     }
     // 4. Return false.
@@ -655,7 +652,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     // 2. Let ObjRec be envRec.[[ObjectRecord]].
     const ObjRec = envRec.ObjectRecord;
     // 3. Let globalObject be the binding object for ObjRec.
-    const globalObject = ObjRec.bindingObject;
+    const globalObject = ObjRec.BindingObject;
     // 4. Let existingProp be ? globalObject.[[GetOwnProperty]](N).
     const existingProp = Q(globalObject.GetOwnProperty(N));
     // 5. If existingProp is undefined, return false.
@@ -677,7 +674,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     // 2. Let ObjRec be envRec.[[ObjectRecord]].
     const ObjRec = envRec.ObjectRecord;
     // 3. Let globalObject be the binding object for ObjRec.
-    const globalObject = ObjRec.bindingObject;
+    const globalObject = ObjRec.BindingObject;
     // 4. Let hasProperty be ? HasOwnProperty(globalObject, N).
     const hasProperty = Q(HasOwnProperty(globalObject, N));
     // 5. If hasProperty is true, return true.
@@ -695,7 +692,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     // 2. Let ObjRec be envRec.[[ObjectRecord]].
     const ObjRec = envRec.ObjectRecord;
     // 3. Let globalObject be the binding object for ObjRec.
-    const globalObject = ObjRec.bindingObject;
+    const globalObject = ObjRec.BindingObject;
     // 4. Let existingProp be ? globalObject.[[GetOwnProperty]](N).
     const existingProp = Q(globalObject.GetOwnProperty(N));
     // 5. If existingProp is undefined, return ? IsExtensible(globalObject).
@@ -724,7 +721,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     // 2. Let ObjRec be envRec.[[ObjectRecord]].
     const ObjRec = envRec.ObjectRecord;
     // 3. Let globalObject be the binding object for ObjRec.
-    const globalObject = ObjRec.bindingObject;
+    const globalObject = ObjRec.BindingObject;
     // 4. Let hasProperty be ? HasOwnProperty(globalObject, N).
     const hasProperty = Q(HasOwnProperty(globalObject, N));
     // 5. Let extensible be ? IsExtensible(globalObject).
@@ -739,7 +736,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     // 7. Let varDeclaredNames be envRec.[[VarNames]].
     const varDeclaredNames = envRec.VarNames;
     // 8. If varDeclaredNames does not contain N, then
-    if (!varDeclaredNames.includes(N)) {
+    if (!varDeclaredNames.some((v) => v.stringValue() === N.stringValue())) {
       // a. Append N to varDeclaredNames.
       varDeclaredNames.push(N);
     }
@@ -754,7 +751,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     // 2. Let ObjRec be envRec.[[ObjectRecord]].
     const ObjRec = envRec.ObjectRecord;
     // 3. Let globalObject be the binding object for ObjRec.
-    const globalObject = ObjRec.bindingObject;
+    const globalObject = ObjRec.BindingObject;
     // 4. Let existingProp be ? globalObject.[[GetOwnProperty]](N).
     const existingProp = Q(globalObject.GetOwnProperty(N));
     // 5. If existingProp is undefined or existingProp.[[Configurable]] is true, then
@@ -781,7 +778,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     // 10. Let varDeclaredNames be envRec.[[VarNames]].
     const varDeclaredNames = envRec.VarNames;
     // 11. If varDeclaredNames does not contain N, then
-    if (!varDeclaredNames.includes(N)) {
+    if (!varDeclaredNames.some((v) => v.stringValue() === N.stringValue())) {
       // a. Append N to varDeclaredNames.
       varDeclaredNames.push(N);
     }
@@ -873,24 +870,24 @@ export class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
 export function GetIdentifierReference(env, name, strict) {
   // 1. If lex is the value null, then
   if (env === Value.null) {
-    // a. Return a value of type Reference whose base value component is undefined, whose
-    //    referenced name component is name, and whose strict reference flag is strict.
-    return new Reference({
-      BaseValue: Value.undefined,
+    // a. Return the Reference Record { [[Base]]: unresolvable, [[ReferencedName]]: name, [[Strict]]: strict, [[ThisValue]]: empty }.
+    return new ReferenceRecord({
+      Base: 'unresolvable',
       ReferencedName: name,
-      StrictReference: strict,
+      Strict: strict,
+      ThisValue: undefined,
     });
   }
   // 2. Let exists be ? envRec.HasBinding(name).
   const exists = Q(env.HasBinding(name));
   // 3. If exists is true, then
   if (exists === Value.true) {
-    // a. Return a value of type Reference whose base value component is envRec, whose
-    //    referenced name component is name, and whose strict reference flag is strict.
-    return new Reference({
-      BaseValue: env,
+    // a. Return the Reference Record { [[Base]]: env, [[ReferencedName]]: name, [[Strict]]: strict, [[ThisValue]]: empty }.
+    return new ReferenceRecord({
+      Base: env,
       ReferencedName: name,
-      StrictReference: strict,
+      Strict: strict,
+      ThisValue: undefined,
     });
   } else {
     // a. Let outer be env.[[OuterEnv]].
@@ -911,12 +908,16 @@ export function NewDeclarativeEnvironment(E) {
 }
 
 // #sec-newobjectenvironment
-export function NewObjectEnvironment(O, E) {
-  // 1. Let env be a new object Environment Record containing O as the binding object.
-  const env = new ObjectEnvironmentRecord(O);
-  // 2. Set env.[[OuterEnv]] to E.
+export function NewObjectEnvironment(O, W, E) {
+  // 1. Let env be a new object Environment Record.
+  const env = new ObjectEnvironmentRecord();
+  // 2. Set env.[[BindingObject]] to O.
+  env.BindingObject = O;
+  // 3. Set env.[[IsWithEnvironment]] to W.
+  env.IsWithEnvironment = W;
+  // 4. Set env.[[OuterEnv]] to E.
   env.OuterEnv = E;
-  // 3. Return env.
+  // 5. Return env.
   return env;
 }
 
@@ -936,24 +937,20 @@ export function NewFunctionEnvironment(F, newTarget) {
   } else { // 6. Else, set env.[[ThisBindingStatus]] to uninitialized.
     env.ThisBindingStatus = 'uninitialized';
   }
-  // 7. Let home be F.[[HomeObject]].
-  const home = F.HomeObject;
-  // 8. Set env.[[HomeObject]] to home.
-  env.HomeObject = home;
-  // 9. Set env.[[NewTarget]] to newTarget.
+  // 7. Set env.[[NewTarget]] to newTarget.
   env.NewTarget = newTarget;
-  // 10. Set env.[[OuterEnv]] to F.[[Environment]].
+  // 8. Set env.[[OuterEnv]] to F.[[Environment]].
   env.OuterEnv = F.Environment;
-  // 11. Return env.
+  // 9. Return env.
   return env;
 }
 
 // #sec-newglobalenvironment
 export function NewGlobalEnvironment(G, thisValue) {
-  // 1. Let objRec be a new object Environment Record containing G as the binding object.
-  const objRec = new ObjectEnvironmentRecord(G);
+  // 1. Let objRec be NewObjectEnvironment(G, false, null).
+  const objRec = NewObjectEnvironment(G, Value.false, Value.null);
   // 2. Let dclRec be a new declarative Environment Record containing no bindings.
-  const dclRec = new DeclarativeEnvironmentRecord();
+  const dclRec = new DeclarativeEnvironmentRecord(Value.null);
   // 3. Let env be a new global Environment Record.
   const env = new GlobalEnvironmentRecord();
   // 4. Set env.[[ObjectRecord]] to objRec.
@@ -978,4 +975,28 @@ export function NewModuleEnvironment(E) {
   env.OuterEnv = E;
   // 3. Return env.
   return env;
+}
+
+class PrivateEnvironmentRecord {
+  constructor(init) {
+    this.OuterPrivateEnvironment = init.OuterPrivateEnvironment;
+    this.Names = init.Names;
+  }
+
+  mark(m) {
+    this.Names.forEach((name) => {
+      m(name);
+    });
+  }
+}
+
+// #sec-newprivateenvironment
+export function NewPrivateEnvironment(outerPrivEnv) {
+  // 1. Let names be a new empty List.
+  const names = [];
+  // 2. Return the PrivateEnvironment Record { [[OuterPrivateEnvironment]]: outerPrivEnv, [[Names]]: names }.
+  return new PrivateEnvironmentRecord({
+    OuterPrivateEnvironment: outerPrivEnv,
+    Names: names,
+  });
 }

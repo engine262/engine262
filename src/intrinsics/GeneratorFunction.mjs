@@ -14,7 +14,7 @@ function GeneratorFunctionConstructor(args, { NewTarget }) {
   return Q(CreateDynamicFunction(C, NewTarget, 'generator', args));
 }
 
-export function BootstrapGeneratorFunction(realmRec) {
+export function bootstrapGeneratorFunction(realmRec) {
   const generator = realmRec.Intrinsics['%GeneratorFunction.prototype%'];
 
   const cons = bootstrapConstructor(realmRec, GeneratorFunctionConstructor, 'GeneratorFunction', 1, generator, []);

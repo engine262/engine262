@@ -1,4 +1,5 @@
 import { OutOfRange } from '../helpers.mjs';
+import { Value } from '../value.mjs';
 import { StringValue } from './all.mjs';
 
 export function BoundNames(node) {
@@ -41,7 +42,7 @@ export function BoundNames(node) {
       if (node.BindingIdentifier) {
         return BoundNames(node.BindingIdentifier);
       }
-      return ['default'];
+      return [new Value('*default*')];
     case 'ImportSpecifier':
       return BoundNames(node.ImportedBinding);
     case 'ExportDeclaration':
@@ -63,7 +64,7 @@ export function BoundNames(node) {
         return declarationNames;
       }
       if (node.AssignmentExpression) {
-        return ['default'];
+        return [new Value('*default*')];
       }
       throw new OutOfRange('BoundNames', node);
     case 'SingleNameBinding':

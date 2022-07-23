@@ -58,6 +58,13 @@ module.exports = ({ types: t, template }) => {
     `);
   }
 
+  function createImportIteratorClose(file) {
+    const r = fileToImport(file, ABSTRACT_OPS_PATH);
+    return template.statement.ast`
+      import { IteratorClose } from "${r}";
+    `;
+  }
+
   function createImportValue(file) {
     const r = fileToImport(file, VALUE_PATH);
     return template.ast(`
@@ -85,11 +92,11 @@ module.exports = ({ types: t, template }) => {
     Q: {
       template: template(`
       let ID = ARGUMENT;
-      /* istanbul ignore if */
+      /* c8 ignore if */
       if (ID instanceof AbruptCompletion) {
         return ID;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
       if (ID instanceof Completion) {
         ID = ID.Value;
       }
@@ -100,16 +107,29 @@ module.exports = ({ types: t, template }) => {
       template: template(`
       let ID = ARGUMENT;
       Assert(!(ID instanceof AbruptCompletion), SOURCE + ' returned an abrupt completion');
-      /* istanbul ignore if */
+      /* c8 ignore if */
       if (ID instanceof Completion) {
         ID = ID.Value;
       }
       `, { preserveComments: true }),
       imports: ['Assert', 'Completion', 'AbruptCompletion'],
     },
+    IfAbruptCloseIterator: {
+      template: template(`
+      /* c8 ignore if */
+      if (%%value%% instanceof AbruptCompletion) {
+        return IteratorClose(%%iteratorRecord%%, %%value%%);
+      }
+      /* c8 ignore if */
+      if (%%value%% instanceof Completion) {
+        %%value%% = %%value%%.Value;
+      }
+      `, { preserveComments: true }),
+      imports: ['IteratorClose', 'AbruptCompletion', 'Completion'],
+    },
     IfAbruptRejectPromise: {
       template: template(`
-      /* istanbul ignore if */
+      /* c8 ignore if */
       if (ID instanceof AbruptCompletion) {
         const hygenicTemp2 = Call(CAPABILITY.Reject, Value.undefined, [ID.Value]);
         if (hygenicTemp2 instanceof AbruptCompletion) {
@@ -117,7 +137,7 @@ module.exports = ({ types: t, template }) => {
         }
         return CAPABILITY.Promise;
       }
-      /* istanbul ignore if */
+      /* c8 ignore if */
       if (ID instanceof Completion) {
         ID = ID.Value;
       }
@@ -146,6 +166,9 @@ module.exports = ({ types: t, template }) => {
           }
           if (state.needed.Call) {
             path.node.body.unshift(createImportCall(state.file));
+          }
+          if (state.needed.IteratorClose) {
+            path.unshiftContainer('body', createImportIteratorClose(state.file));
           }
           if (state.needed.Value) {
             path.node.body.unshift(createImportValue(state.file));
@@ -200,11 +223,11 @@ module.exports = ({ types: t, template }) => {
             const binding = path.scope.getBinding(argument.name);
             binding.path.parent.kind = 'let';
             statementPath.insertBefore(template(`
-              /* istanbul ignore if */
+              /* c8 ignore if */
               if (ID instanceof AbruptCompletion) {
                 return ID;
               }
-              /* istanbul ignore if */
+              /* c8 ignore if */
               if (ID instanceof Completion) {
                 ID = ID.Value;
               }
@@ -222,6 +245,23 @@ module.exports = ({ types: t, template }) => {
               const binding = path.scope.getBinding(argument.name);
               binding.path.parent.kind = 'let';
               statementPath.insertBefore(macro.template({ ID: argument, CAPABILITY: capability }));
+              path.remove();
+            } else if (macro === MACROS.IfAbruptCloseIterator) {
+              if (!t.isIdentifier(argument)) {
+                throw path.get('arguments.0').buildCodeFrameError('First argument to IfAbruptCloseIterator should be an identifier');
+              }
+              const iteratorRecord = path.get('arguments.1');
+              if (!iteratorRecord.isIdentifier()) {
+                throw iteratorRecord.buildCodeFrameError('Second argument to IfAbruptCloseIterator should be an identifier');
+              }
+              const binding = path.scope.getBinding(argument.name);
+              binding.path.parent.kind = 'let';
+              statementPath.insertBefore(
+                macro.template({
+                  value: argument,
+                  iteratorRecord: iteratorRecord.node,
+                }),
+              );
               path.remove();
             } else {
               const id = statementPath.scope.generateUidIdentifier();
@@ -244,7 +284,7 @@ module.exports = ({ types: t, template }) => {
         const n = path.node.consequent[0];
         if (t.isThrowStatement(n) && t.isNewExpression(n.argument) && n.argument.callee.name === 'OutOfRange') {
           path.node.leadingComments = path.node.leadingComments || [];
-          path.node.leadingComments.push({ type: 'CommentBlock', value: 'istanbul ignore next' });
+          path.node.leadingComments.push({ type: 'CommentBlock', value: 'c8 ignore next' });
         }
       },
       FunctionDeclaration(path) {

@@ -1,8 +1,7 @@
 import {
   CreateBuiltinFunction,
-  SetFunctionName,
-  SetFunctionLength,
   ToString,
+  F,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { Value } from '../value.mjs';
@@ -29,7 +28,7 @@ function ParseFloat([string = Value.undefined]) {
   }
   const multiplier = trimmedString.startsWith('-') ? -1 : 1;
   if (numberString.startsWith('Infinity')) {
-    return new Value(Infinity * multiplier);
+    return F(Infinity * multiplier);
   }
   let index = 0;
   done: { // eslint-disable-line no-labels
@@ -37,7 +36,7 @@ function ParseFloat([string = Value.undefined]) {
     while (numberString[index] === '0') {
       index += 1;
       if (index === numberString.length) {
-        return new Value(0 * multiplier);
+        return F(+0 * multiplier);
       }
     }
     // Eat integer part
@@ -70,12 +69,9 @@ function ParseFloat([string = Value.undefined]) {
       }
     }
   }
-  return new Value(parseFloat(numberString.slice(0, index)) * multiplier);
+  return F(parseFloat(numberString.slice(0, index)) * multiplier);
 }
 
-export function BootstrapParseFloat(realmRec) {
-  const fn = CreateBuiltinFunction(ParseFloat, [], realmRec);
-  X(SetFunctionName(fn, new Value('parseFloat')));
-  X(SetFunctionLength(fn, new Value(1)));
-  realmRec.Intrinsics['%parseFloat%'] = fn;
+export function bootstrapParseFloat(realmRec) {
+  realmRec.Intrinsics['%parseFloat%'] = CreateBuiltinFunction(ParseFloat, 1, new Value('parseFloat'), [], realmRec);
 }

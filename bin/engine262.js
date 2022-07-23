@@ -2,20 +2,11 @@
 
 'use strict';
 
-/* eslint-disable import/order */
-
-try {
-  require('@snek/source-map-support/register');
-} catch {
-  // empty
-}
-
 const repl = require('repl');
 const fs = require('fs');
 const path = require('path');
 const util = require('util');
-const packageJson = require('../package.json');
-const snekparse = require('./snekparse');
+const packageJson = require('../package.json'); // eslint-disable-line import/order
 const {
   Agent,
   setSurroundingAgent,
@@ -25,6 +16,7 @@ const {
 
   Value,
 
+  CreateBuiltinFunction,
   CreateDataProperty,
   OrdinaryObjectCreate,
   Type,
@@ -33,6 +25,7 @@ const {
   AbruptCompletion,
   Throw,
 } = require('..');
+const snekparse = require('./snekparse');
 const { createRealm } = require('./test262_realm');
 
 const execArgv = [];
@@ -88,13 +81,13 @@ if (argv.h || argv.help) {
       flagLength = f.flag.length;
     }
   });
-  const log = (n, f, u) => {
-    process.stdout.write(`${n.padEnd(nameLength, ' ')} ${f.padEnd(flagLength, ' ')} ${u}\n`);
+  const log = (f, n, u) => {
+    process.stdout.write(`${f.padEnd(flagLength, ' ')} ${n.padEnd(nameLength, ' ')} ${u}\n`);
   };
-  log('name', 'flag', 'url');
+  log('flag', 'name', 'url');
   log('----', '----', '---');
   FEATURES.forEach((f) => {
-    log(f.name, f.flag, f.url);
+    log(f.flag, f.name, f.url);
   });
   process.exit(0);
 }
@@ -123,25 +116,22 @@ realm.scope(() => {
     return inspect(a);
   }).join(' ');
 
-  const log = new Value((args) => {
+  const log = CreateBuiltinFunction((args) => {
     process.stdout.write(`${format(args)}\n`);
     return Value.undefined;
-  });
-
+  }, 1, new Value('log'), []);
   CreateDataProperty(console, new Value('log'), log);
 
-  const error = new Value((args) => {
+  const error = CreateBuiltinFunction((args) => {
     process.stderr.write(`${format(args)}\n`);
     return Value.undefined;
-  });
-
+  }, 1, new Value('error'), []);
   CreateDataProperty(console, new Value('error'), error);
 
-  const debug = new Value((args) => {
+  const debug = CreateBuiltinFunction((args) => {
     process.stderr.write(`${util.format(...args)}\n`);
     return Value.undefined;
-  });
-
+  }, 1, new Value('debug'), []);
   CreateDataProperty(console, new Value('debug'), debug);
 });
 

@@ -12,7 +12,6 @@ import {
   CreateBuiltinFunction,
   CreateDataProperty,
   DefinePropertyOrThrow,
-  SetFunctionLength,
   ToString,
   SameValue,
   MakeBasicObject,
@@ -27,6 +26,7 @@ import {
   HasOwnProperty,
   IsAccessorDescriptor,
   IsDataDescriptor,
+  F,
 } from './all.mjs';
 
 // This file covers abstract operations defined in
@@ -123,7 +123,7 @@ export function CreateUnmappedArgumentsObject(argumentsList) {
   const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'), ['ParameterMap']);
   obj.ParameterMap = Value.undefined;
   DefinePropertyOrThrow(obj, new Value('length'), Descriptor({
-    Value: new Value(len),
+    Value: F(len),
     Writable: Value.true,
     Enumerable: Value.false,
     Configurable: Value.true,
@@ -131,8 +131,7 @@ export function CreateUnmappedArgumentsObject(argumentsList) {
   let index = 0;
   while (index < len) {
     const val = argumentsList[index];
-    const idxStr = X(ToString(new Value(index)));
-    X(CreateDataProperty(obj, idxStr, val));
+    X(CreateDataProperty(obj, X(ToString(F(index))), val));
     index += 1;
   }
   X(DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, Descriptor({
@@ -150,37 +149,27 @@ export function CreateUnmappedArgumentsObject(argumentsList) {
   return obj;
 }
 
-function ArgGetterSteps() {
-  const f = this;
-  const name = f.Name;
-  const env = f.Env;
-  return env.GetBindingValue(name, Value.false);
-}
-
 // 9.4.4.7.1 #sec-makearggetter
 function MakeArgGetter(name, env) {
-  const steps = ArgGetterSteps;
-  const getter = X(CreateBuiltinFunction(steps, ['Name', 'Env']));
-  getter.Name = name;
-  getter.Env = env;
+  // 1. Let getterClosure be a new Abstract Closure with no parameters that captures name and env and performs the following steps when called:
+  //   a. Return env.GetBindingValue(name, false).
+  const getterClosure = () => env.GetBindingValue(name, false);
+  // 2. Let getter be ! CreateBuiltinFunction(getterClosure, 0, "", « »).
+  const getter = X(CreateBuiltinFunction(getterClosure, 0, new Value(''), ['Name', 'Env']));
+  // 3. NOTE: getter is never directly accessible to ECMAScript code.
+  // 4. Return getter.
   return getter;
-}
-
-function ArgSetterSteps([value]) {
-  Assert(value !== undefined);
-  const f = this;
-  const name = f.Name;
-  const env = f.Env;
-  return env.SetMutableBinding(name, value, Value.false);
 }
 
 // 9.4.4.7.2 #sec-makeargsetter
 function MakeArgSetter(name, env) {
-  const steps = ArgSetterSteps;
-  const setter = X(CreateBuiltinFunction(steps, ['Name', 'Env']));
-  SetFunctionLength(setter, new Value(1));
-  setter.Name = name;
-  setter.Env = env;
+  // 1. Let setterClosure be a new Abstract Closure with parameters (value) that captures name and env and performs the following steps when called:
+  //   a. Return env.SetMutableBinding(name, value, false).
+  const setterClosure = ([value = Value.undefined]) => env.SetMutableBinding(name, value, false);
+  // 2. Let setter be ! CreateBuiltinFunction(setterClosure, 1, "", « »).
+  const setter = X(CreateBuiltinFunction(setterClosure, 1, new Value(''), ['Name', 'Env']));
+  // 3. NOTE: setter is never directly accessible to ECMAScript code.
+  // 4. Return setter.
   return setter;
 }
 
@@ -203,12 +192,11 @@ export function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
   let index = 0;
   while (index < len) {
     const val = argumentsList[index];
-    const idxStr = X(ToString(new Value(index)));
-    X(CreateDataProperty(obj, idxStr, val));
+    X(CreateDataProperty(obj, X(ToString(F(index))), val));
     index += 1;
   }
   X(DefinePropertyOrThrow(obj, new Value('length'), Descriptor({
-    Value: new Value(len),
+    Value: F(len),
     Writable: Value.true,
     Enumerable: Value.false,
     Configurable: Value.true,
@@ -222,7 +210,7 @@ export function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
       if (index < len) {
         const g = MakeArgGetter(name, env);
         const p = MakeArgSetter(name, env);
-        X(map.DefineOwnProperty(X(ToString(new Value(index))), Descriptor({
+        X(map.DefineOwnProperty(X(ToString(F(index))), Descriptor({
           Set: p,
           Get: g,
           Enumerable: Value.false,

@@ -3,6 +3,11 @@
 const fs = require('fs').promises;
 const path = require('path');
 
+const rootDir = path.resolve(__dirname, '..');
+const nodeModules = path.resolve(rootDir, 'node_modules');
+const unicodeDir = path.resolve(nodeModules, '@unicode', 'unicode-14.0.0');
+const outFile = path.resolve(rootDir, 'src', 'data-gen.json');
+
 async function* scan(d) {
   for await (const dirent of await fs.opendir(d)) {
     if (dirent.isDirectory()) {
@@ -21,10 +26,10 @@ async function* scan(d) {
 (async () => {
   const data = {};
 
-  for await (const item of scan('node_modules/unicode-13.0.0')) {
-    const category = item.replace('node_modules/unicode-13.0.0/', '');
+  for await (const item of scan(unicodeDir)) {
+    const category = path.relative(unicodeDir, item).replace(/\\/g, '/');
     // eslint-disable-next-line import/no-dynamic-require
-    const cps = require(`unicode-13.0.0/${category}/code-points.js`);
+    const cps = require(`@unicode/unicode-14.0.0/${category}/code-points.js`);
     if (!Array.isArray(cps)) {
       continue;
     }
@@ -49,5 +54,5 @@ async function* scan(d) {
     data[category] = ranges;
   }
 
-  await fs.writeFile('./src/data-gen.json', JSON.stringify(data));
+  await fs.writeFile(outFile, JSON.stringify(data));
 })();

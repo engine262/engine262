@@ -20,13 +20,14 @@ const banner = `/*!
 module.exports = () => ({
   input: './src/api.mjs',
   plugins: [
-    json(),
+    json({ compact: true }),
     commonjs(),
     nodeResolve(),
     babel({
       babelHelpers: 'bundled',
       exclude: 'node_modules/**',
       plugins: [
+        '@babel/plugin-proposal-optional-chaining',
         './scripts/transform.js',
       ],
     }),

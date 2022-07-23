@@ -1,4 +1,3 @@
-import { surroundingAgent } from '../engine.mjs';
 import { Value, Type, Descriptor } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import {
@@ -14,6 +13,7 @@ import {
   OrdinaryDefineOwnProperty,
   OrdinaryGet,
   OrdinarySet,
+  OrdinaryDelete,
   GetValueFromBuffer,
   SetValueInBuffer,
   ToString,
@@ -21,6 +21,7 @@ import {
   ToBigInt,
   isIntegerIndex,
   typedArrayInfoByName,
+  F,
 } from './all.mjs';
 
 export function isIntegerIndexedExoticObject(O) {
@@ -40,18 +41,18 @@ export function IntegerIndexedGetOwnProperty(P) {
     const numericIndex = X(CanonicalNumericIndexString(P));
     // b. If numericIndex is not undefined, then
     if (numericIndex !== Value.undefined) {
-      // i. Let value be ? IntegerIndexedElementGet(O, numericIndex).
-      const value = Q(IntegerIndexedElementGet(O, numericIndex));
+      // i. Let value be ! IntegerIndexedElementGet(O, numericIndex).
+      const value = X(IntegerIndexedElementGet(O, numericIndex));
       // ii. If value is undefined, return undefined.
       if (value === Value.undefined) {
         return Value.undefined;
       }
-      // iii. Return the PropertyDescriptor { [[Value]]: value, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: false }.
+      // iii. Return the PropertyDescriptor { [[Value]]: value, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: true }.
       return Descriptor({
         Value: value,
         Writable: Value.true,
         Enumerable: Value.true,
-        Configurable: Value.false,
+        Configurable: Value.true,
       });
     }
   }
@@ -74,9 +75,9 @@ export function IntegerIndexedHasProperty(P) {
     if (numericIndex !== Value.undefined) {
       // i. Let buffer be O.[[ViewedArrayBuffer]].
       const buffer = O.ViewedArrayBuffer;
-      // ii. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+      // ii. If IsDetachedBuffer(buffer) is true, return false.
       if (IsDetachedBuffer(buffer) === Value.true) {
-        return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+        return Value.false;
       }
       // iii. If ! IsValidIntegerIndex(O, numericIndex) is false, return false.
       if (IsValidIntegerIndex(O, numericIndex) === Value.false) {
@@ -112,7 +113,7 @@ export function IntegerIndexedDefineOwnProperty(P, Desc) {
         return Value.false;
       }
       // iii. If Desc has a [[Configurable]] field and if Desc.[[Configurable]] is true, return false.
-      if (Desc.Configurable === Value.true) {
+      if (Desc.Configurable === Value.false) {
         return Value.false;
       }
       // iv. If Desc has an [[Enumerable]] field and if Desc.[[Enumerable]] is false, return false.
@@ -149,8 +150,8 @@ export function IntegerIndexedGet(P, Receiver) {
     const numericIndex = X(CanonicalNumericIndexString(P));
     // b. If numericIndex is not undefined, then
     if (numericIndex !== Value.undefined) {
-      // i. Return ? IntegerIndexedElementGet(O, numericIndex).
-      return Q(IntegerIndexedElementGet(O, numericIndex));
+      // i. Return ! IntegerIndexedElementGet(O, numericIndex).
+      return X(IntegerIndexedElementGet(O, numericIndex));
     }
   }
   // 3. Return ? OrdinaryGet(O, P, Receiver).
@@ -168,12 +169,43 @@ export function IntegerIndexedSet(P, V, Receiver) {
     const numericIndex = X(CanonicalNumericIndexString(P));
     // b. If numericIndex is not undefined, then
     if (numericIndex !== Value.undefined) {
-      // i. Return ? IntegerIndexedElementSet(O, numericIndex, V).
-      return Q(IntegerIndexedElementSet(O, numericIndex, V));
+      // i. Perform ? IntegerIndexedElementSet(O, numericIndex, V).
+      Q(IntegerIndexedElementSet(O, numericIndex, V));
+      // ii. Return true.
+      return Value.true;
     }
   }
   // 3. Return ? OrdinarySet(O, P, V, Receiver).
   return Q(OrdinarySet(O, P, V, Receiver));
+}
+
+// #sec-integer-indexed-exotic-objects-delete-p
+export function IntegerIndexedDelete(P) {
+  const O = this;
+  // 1. Assert: IsPropertyKey(P) is true.
+  Assert(IsPropertyKey(P));
+  // 2. Assert: O is an Integer-Indexed exotic object.
+  Assert(isIntegerIndexedExoticObject(O));
+  // 3. If Type(P) is String, then
+  if (Type(P) === 'String') {
+    // a. Let numericIndex be ! CanonicalNumericIndexString(P).
+    const numericIndex = X(CanonicalNumericIndexString(P));
+    // b. If numericIndex is not undefined, then
+    if (numericIndex !== Value.undefined) {
+      // i. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, return true.
+      if (IsDetachedBuffer(O.ViewedArrayBuffer) === Value.true) {
+        return Value.true;
+      }
+      // ii. If ! IsValidIntegerIndex(O, numericIndex) is false, return true.
+      if (X(IsValidIntegerIndex(O, numericIndex)) === Value.false) {
+        return Value.true;
+      }
+      // iii. Return false.
+      return Value.false;
+    }
+  }
+  // 4. Return ? OrdinaryDelete(O, P).
+  return Q(OrdinaryDelete(O, P));
 }
 
 // 9.4.5.6 #sec-integer-indexed-exotic-objects-ownpropertykeys
@@ -184,11 +216,11 @@ export function IntegerIndexedOwnPropertyKeys() {
   // 2. Assert: O is an Integer-Indexed exotic object.
   Assert(isIntegerIndexedExoticObject(O));
   // 3. Let len be O.[[ArrayLength]].
-  const len = O.ArrayLength.numberValue();
+  const len = O.ArrayLength;
   // 4. For each integer i starting with 0 such that i < len, in ascending order, do
   for (let i = 0; i < len; i += 1) {
-    // a. Add ! ToString(i) as the last element of keys.
-    keys.push(X(ToString(new Value(i))));
+    // a. Add ! ToString(𝔽(i)) as the last element of keys.
+    keys.push(X(ToString(F(i))));
   }
   // 5. For each own property key P of O such that Type(P) is String and P is not an integer index, in ascending chronological order of property creation, do
   for (const P of O.properties.keys()) {
@@ -218,9 +250,9 @@ export function IntegerIndexedElementGet(O, index) {
   Assert(Type(index) === 'Number');
   // 3. Let buffer be O.[[ViewedArrayBuffer]].
   const buffer = O.ViewedArrayBuffer;
-  // 4. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+  // 4. If IsDetachedBuffer(buffer) is true, return undefined.
   if (IsDetachedBuffer(buffer) === Value.true) {
-    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+    return Value.undefined;
   }
   // 5. If ! IsValidIntegerIndex(O, index) is false, return undefined.
   if (IsValidIntegerIndex(O, index) === Value.false) {
@@ -232,8 +264,8 @@ export function IntegerIndexedElementGet(O, index) {
   const arrayTypeName = O.TypedArrayName.stringValue();
   // 8. Let elementSize be the Element Size value specified in Table 61 for arrayTypeName.
   const elementSize = typedArrayInfoByName[arrayTypeName].ElementSize;
-  // 9. Let indexedPosition be (index × elementSize) + offset.
-  const indexedPosition = new Value((index.numberValue() * elementSize) + offset.numberValue());
+  // 9. Let indexedPosition be (ℝ(index) × elementSize) + offset.
+  const indexedPosition = (index.numberValue() * elementSize) + offset;
   // 10. Let elementType be the Element Type value in Table 61 for arrayTypeName.
   const elementType = typedArrayInfoByName[arrayTypeName].ElementType;
   // 11. Return GetValueFromBuffer(buffer, indexedPosition, elementType, true, Unordered).
@@ -256,9 +288,9 @@ export function IntegerIndexedElementSet(O, index, value) {
   }
   // 5. Let buffer be O.[[ViewedArrayBuffer]].
   const buffer = O.ViewedArrayBuffer;
-  // 6. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+  // 6. If IsDetachedBuffer(buffer) is true, return false.
   if (IsDetachedBuffer(buffer) === Value.true) {
-    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+    return Value.false;
   }
   // 7. If ! IsValidIntegerIndex(O, index) is false, return false.
   if (IsValidIntegerIndex(O, index) === Value.false) {
@@ -270,8 +302,8 @@ export function IntegerIndexedElementSet(O, index, value) {
   const arrayTypeName = O.TypedArrayName.stringValue();
   // 10. Let elementSize be the Element Size value specified in Table 61 for arrayTypeName.
   const elementSize = typedArrayInfoByName[arrayTypeName].ElementSize;
-  // 11. Let indexedPosition be (index × elementSize) + offset.
-  const indexedPosition = new Value((index.numberValue() * elementSize) + offset.numberValue());
+  // 11. Let indexedPosition be (ℝ(index) × elementSize) + offset.
+  const indexedPosition = (index.numberValue() * elementSize) + offset;
   // 12. Let elementType be the Element Type value in Table 61 for arrayTypeName.
   const elementType = typedArrayInfoByName[arrayTypeName].ElementType;
   // 13. Perform SetValueInBuffer(buffer, indexedPosition, elementType, numValue, true, Unordered).
@@ -305,10 +337,12 @@ export function IntegerIndexedObjectCreate(prototype) {
   A.Get = IntegerIndexedGet;
   // 7. Set A.[[Set]] as specified in 9.4.5.5.
   A.Set = IntegerIndexedSet;
-  // 8. Set A.[[OwnPropertyKeys]] as specified in 9.4.5.6.
+  // 8. Set A.[[Delete]] as specified in 9.4.5.6.
+  A.Delete = IntegerIndexedDelete;
+  // 9. Set A.[[OwnPropertyKeys]] as specified in 9.4.5.6.
   A.OwnPropertyKeys = IntegerIndexedOwnPropertyKeys;
-  // 9. Set A.[[Prototype]] to prototype.
+  // 10. Set A.[[Prototype]] to prototype.
   A.Prototype = prototype;
-  // 10. Return A.
+  // 11. Return A.
   return A;
 }

@@ -18,13 +18,13 @@ function DataViewConstructor([buffer = Value.undefined, byteOffset = Value.undef
   // 2. Perform ? RequireInternalSlot(buffer, [[ArrayBufferData]]).
   Q(RequireInternalSlot(buffer, 'ArrayBufferData'));
   // 3. Let offset be ? ToIndex(byteOffset).
-  const offset = Q(ToIndex(byteOffset)).numberValue();
+  const offset = Q(ToIndex(byteOffset));
   // 4. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
   if (IsDetachedBuffer(buffer) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 5. Let bufferByteLength be buffer.[[ArrayBufferByteLength]].
-  const bufferByteLength = buffer.ArrayBufferByteLength.numberValue();
+  const bufferByteLength = buffer.ArrayBufferByteLength;
   // 6. If offset > bufferByteLength, throw a RangeError exception.
   if (offset > bufferByteLength) {
     return surroundingAgent.Throw('RangeError', 'DataViewOOB');
@@ -36,7 +36,7 @@ function DataViewConstructor([buffer = Value.undefined, byteOffset = Value.undef
     viewByteLength = bufferByteLength - offset;
   } else {
     // a. Let viewByteLength be ? ToIndex(byteLength).
-    viewByteLength = Q(ToIndex(byteLength)).numberValue();
+    viewByteLength = Q(ToIndex(byteLength));
     // b. If offset + viewByteLength > bufferByteLength, throw a RangeError exception.
     if (offset + viewByteLength > bufferByteLength) {
       return surroundingAgent.Throw('RangeError', 'DataViewOOB');
@@ -51,14 +51,14 @@ function DataViewConstructor([buffer = Value.undefined, byteOffset = Value.undef
   // 11. Set O.[[ViewedArrayBuffer]] to buffer.
   O.ViewedArrayBuffer = buffer;
   // 12. Set O.[[ByteLength]] to viewByteLength.
-  O.ByteLength = new Value(viewByteLength);
+  O.ByteLength = viewByteLength;
   // 13. Set O.[[ByteOffset]] to offset.
-  O.ByteOffset = new Value(offset);
+  O.ByteOffset = offset;
   // 14. Return O.
   return O;
 }
 
-export function BootstrapDataView(realmRec) {
+export function bootstrapDataView(realmRec) {
   const dvConstructor = bootstrapConstructor(realmRec, DataViewConstructor, 'DataView', 1, realmRec.Intrinsics['%DataView.prototype%'], []);
 
   realmRec.Intrinsics['%DataView%'] = dvConstructor;

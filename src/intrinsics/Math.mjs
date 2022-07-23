@@ -6,44 +6,43 @@ import {
 } from '../value.mjs';
 import {
   CreateBuiltinFunction,
-  SetFunctionLength,
-  SetFunctionName,
   ToNumber,
+  F,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
 // 20.2.2.1 #sec-math.abs
 function Math_abs([x = Value.undefined]) {
-  x = Q(ToNumber(x));
-  if (x.isNaN()) {
-    return x;
-  } else if (Object.is(x.numberValue(), -0)) {
-    return new Value(0);
-  } else if (x.isInfinity()) {
-    return new Value(Infinity);
+  const n = Q(ToNumber(x));
+  if (n.isNaN()) {
+    return n;
+  } else if (Object.is(n.numberValue(), -0)) {
+    return F(+0);
+  } else if (n.isInfinity()) {
+    return F(Infinity);
   }
 
-  if (x.numberValue() < 0) {
-    return new Value(-x.numberValue());
+  if (n.numberValue() < 0) {
+    return F(-n.numberValue());
   }
-  return x;
+  return n;
 }
 
 // 20.2.2.2 #sec-math.acos
 function Math_acos([x = Value.undefined]) {
-  x = Q(ToNumber(x));
-  if (x.isNaN()) {
-    return x;
-  } else if (x.numberValue() > 1) {
-    return new Value(NaN);
-  } else if (x.numberValue() < -1) {
-    return new Value(NaN);
-  } else if (x.numberValue() === 1) {
-    return new Value(+0);
+  const n = Q(ToNumber(x));
+  if (n.isNaN()) {
+    return n;
+  } else if (n.numberValue() > 1) {
+    return F(NaN);
+  } else if (n.numberValue() < -1) {
+    return F(NaN);
+  } else if (n.numberValue() === 1) {
+    return F(+0);
   }
 
-  return new Value(Math.acos(x.numberValue()));
+  return F(Math.acos(n.numberValue()));
 }
 
 // #sec-math.pow
@@ -56,6 +55,7 @@ function Math_pow([base = Value.undefined, exponent = Value.undefined]) {
   return X(NumberValue.exponentiate(base, exponent));
 }
 
+/** @param {bigint} h */
 function fmix64(h) {
   h ^= h >> 33n;
   h *= 0xFF51AFD7ED558CCDn;
@@ -94,23 +94,23 @@ function Math_random() {
   // Convert to double in [0, 1) range
   big64View[0] = (s0 >> 12n) | 0x3FF0000000000000n;
   const result = floatView[0] - 1;
-  return new Value(result);
+  return F(result);
 }
 
 // 20.2 #sec-math-object
-export function BootstrapMath(realmRec) {
+export function bootstrapMath(realmRec) {
   // 20.2.1 #sec-value-properties-of-the-math-object
   const readonly = { Writable: Value.false, Configurable: Value.false };
   const valueProps = [
-    ['E', 2.7182818284590452354],
+    ['E', 2.718281828459045],
     ['LN10', 2.302585092994046],
     ['LN2', 0.6931471805599453],
     ['LOG10E', 0.4342944819032518],
     ['LOG2E', 1.4426950408889634],
-    ['PI', 3.1415926535897932],
+    ['PI', 3.141592653589793],
     ['SQRT1_2', 0.7071067811865476],
     ['SQRT2', 1.4142135623730951],
-  ].map(([name, value]) => [name, new Value(value), undefined, readonly]);
+  ].map(([name, value]) => [name, F(value), undefined, readonly]);
   // @@toStringTag is handled in the bootstrapPrototype() call.
 
   const mathObj = bootstrapPrototype(realmRec, [
@@ -162,11 +162,9 @@ export function BootstrapMath(realmRec) {
       for (let i = 0; i < args.length; i += 1) {
         args[i] = Q(ToNumber(args[i])).numberValue();
       }
-      return new Value(Math[name](...args));
+      return F(Math[name](...args));
     };
-    const func = CreateBuiltinFunction(method, [], realmRec);
-    X(SetFunctionName(func, new Value(name)));
-    X(SetFunctionLength(func, new Value(length)));
+    const func = CreateBuiltinFunction(method, length, new Value(name), [], realmRec);
     mathObj.DefineOwnProperty(new Value(name), Descriptor({
       Value: func,
       Writable: Value.true,

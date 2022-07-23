@@ -9,6 +9,8 @@ export function StringValue(node) {
     case 'IdentifierReference':
     case 'LabelIdentifier':
       return new Value(node.name);
+    case 'PrivateIdentifier':
+      return new Value(`#${node.name}`);
     case 'StringLiteral':
       return new Value(node.value);
     default:

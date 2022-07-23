@@ -129,7 +129,7 @@ function AsyncFromSyncIteratorPrototype_throw([value], { thisValue }) {
   return X(AsyncFromSyncIteratorContinuation(result, promiseCapability));
 }
 
-export function BootstrapAsyncFromSyncIteratorPrototype(realmRec) {
+export function bootstrapAsyncFromSyncIteratorPrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [
     ['next', AsyncFromSyncIteratorPrototype_next, 0],
     ['return', AsyncFromSyncIteratorPrototype_return, 0],

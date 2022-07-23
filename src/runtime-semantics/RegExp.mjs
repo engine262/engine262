@@ -1,8 +1,7 @@
-import unicodeCaseFoldingCommon from 'unicode-13.0.0/Case_Folding/C/symbols.js';
-import unicodeCaseFoldingSimple from 'unicode-13.0.0/Case_Folding/S/symbols.js';
-import { surroundingAgent } from '../engine.mjs';
+import unicodeCaseFoldingCommon from '@unicode/unicode-14.0.0/Case_Folding/C/symbols.js';
+import unicodeCaseFoldingSimple from '@unicode/unicode-14.0.0/Case_Folding/S/symbols.js';
 import { Type, Value } from '../value.mjs';
-import { Assert, IsNonNegativeInteger } from '../abstract-ops/all.mjs';
+import { Assert, isNonNegativeInteger } from '../abstract-ops/all.mjs';
 import { CharacterValue, StringToCodePoints } from '../static-semantics/all.mjs';
 import { X } from '../completion.mjs';
 import { isLineTerminator, isWhitespace, isDecimalDigit } from '../parser/Lexer.mjs';
@@ -148,9 +147,8 @@ export function Evaluate_Pattern(Pattern, flags) {
     return (str, index) => {
       // a. Assert: Type(str) is String.
       Assert(Type(str) === 'String');
-      // b. Assert: ! IsNonNegativeInteger(index) is true and index ≤ the length of str.
-      Assert(X(IsNonNegativeInteger(index)) === Value.true
-             && index.numberValue() <= str.stringValue().length);
+      // b. Assert: index is a non-negative integer which is ≤ the length of str.
+      Assert(isNonNegativeInteger(index) && index <= str.stringValue().length);
       // c. If Unicode is true, let Input be a List consisting of the sequence of code points of ! StringToCodePoints(str).
       //    Otherwise, let Input be a List consisting of the sequence of code units that are the elements of str.
       //    Input will be used throughout the algorithms in 21.2.2. Each element of Input is considered to be a character.
@@ -162,7 +160,7 @@ export function Evaluate_Pattern(Pattern, flags) {
       // d. Let InputLength be the number of characters contained in Input. This variable will be used throughout the algorithms in 21.2.2.
       InputLength = Input.length;
       // e. Let listIndex be the index into Input of the character that was obtained from element index of str.
-      const listIndex = index.numberValue();
+      const listIndex = index;
       // f. Let c be a new Continuation with parameters (y) that captures nothing and performs the following steps when called:
       const c = (y) => {
         // i. Assert: y is a State.
@@ -752,25 +750,15 @@ export function Evaluate_Pattern(Pattern, flags) {
             if (direction === +1) {
               // 1. Assert: xe ≤ ye.
               Assert(xe <= ye);
-              if (surroundingAgent.feature('regexp-match-indices')) {
-                // 2. Let r be the Range (xe, ye).
-                s = new Range(xe, ye);
-              } else {
-                // 2. Let s be a new List whose elements are the characters of Input at indices xe (inclusive) through ye (exclusive).
-                s = Input.slice(xe, ye);
-              }
+              // 2. Let r be the Range (xe, ye).
+              s = new Range(xe, ye);
             } else { // vi. Else,
               // 1. Assert: direction is equal to -1.
               Assert(direction === -1);
               // 2. Assert: ye ≤ xe.
               Assert(ye <= xe);
-              if (surroundingAgent.feature('regexp-match-indices')) {
-                // 3. Let r be the Range (ye, xe).
-                s = new Range(ye, xe);
-              } else {
-                // 3. Let s be a new List whose elements are the characters of Input at indices ye (inclusive) through xe (exclusive).
-                s = Input.slice(ye, xe);
-              }
+              // 3. Let r be the Range (ye, xe).
+              s = new Range(ye, xe);
             }
             // vii. Set cap[parenIndex + 1] to s.
             cap[parenIndex + 1] = s;
@@ -938,18 +926,12 @@ export function Evaluate_Pattern(Pattern, flags) {
       }
       // f. Let e be x's endIndex.
       const e = x.endIndex;
-      let len;
-      if (surroundingAgent.feature('regexp-match-indices')) {
-        // g. Let rs be r's startIndex.
-        const rs = s.startIndex;
-        // h. Let re be r's endIndex.
-        const re = s.endIndex;
-        // i. Let len be the number of elements in re - rs.
-        len = re - rs;
-      } else {
-        // g. Let len be the number of elements in s.
-        len = s.length;
-      }
+      // g. Let rs be r's startIndex.
+      const rs = s.startIndex;
+      // h. Let re be r's endIndex.
+      const re = s.endIndex;
+      // i. Let len be the number of elements in re - rs.
+      const len = re - rs;
       // h. Let f be e + direction × len.
       const f = e + direction * len;
       // i. If f < 0 or f > InputLength, return failure.
@@ -960,10 +942,7 @@ export function Evaluate_Pattern(Pattern, flags) {
       const g = Math.min(e, f);
       // k. If there exists an integer i between 0 (inclusive) and len (exclusive) such that Canonicalize(s[i]) is not the same character value as Canonicalize(Input[g + i]), return failure.
       for (let i = 0; i < len; i += 1) {
-        const part = surroundingAgent.feature('regexp-match-indices')
-          ? Input[s.startIndex + i]
-          : s[i];
-        if (Canonicalize(part) !== Canonicalize(Input[g + i])) {
+        if (Canonicalize(Input[s.startIndex + i]) !== Canonicalize(Input[g + i])) {
           return 'failure';
         }
       }

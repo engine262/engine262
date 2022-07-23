@@ -8,6 +8,7 @@ import {
   LexicallyScopedDeclarations,
   BoundNames,
   IsConstantDeclaration,
+  ContainsArguments,
 } from '../static-semantics/all.mjs';
 import {
   Completion,
@@ -50,7 +51,9 @@ export function PerformEval(x, callerRealm, strictCaller, direct) {
   let inMethod = false;
   // 7. Let inDerivedConstructor be false.
   let inDerivedConstructor = false;
-  // 8. If direct is true, then
+  // 8. Let inClassFieldInitializer be false.
+  let inClassFieldInitializer = false;
+  // 9. If direct is true, then
   if (direct === true) {
     // a. Let thisEnv be ! GetThisEnvironment().
     const thisEnv = X(GetThisEnvironment());
@@ -66,21 +69,43 @@ export function PerformEval(x, callerRealm, strictCaller, direct) {
       if (F.ConstructorKind === 'derived') {
         inDerivedConstructor = true;
       }
+      // v. Let classFieldIntializerName be F.[[ClassFieldInitializerName]].
+      const classFieldIntializerName = F.ClassFieldInitializerName;
+      // vi. If classFieldIntializerName is not empty, set inClassFieldInitializer to true.
+      if (classFieldIntializerName !== undefined) {
+        inClassFieldInitializer = true;
+      }
     }
   }
-  // 9. Perform the following substeps in an implementation-dependent order, possibly interleaving parsing and error detection:
-  //   a. Let script be the ECMAScript code that is the result of parsing ! UTF16DecodeString(x), for the goal symbol Script.
-  //   b. If script Contains ScriptBody is false, return undefined.
-  //   c. Let body be the ScriptBody of script.
-  //   d. If inFunction is false, and body Contains NewTarget, throw a SyntaxError exception.
-  //   e. If inMethod is false, and body Contains SuperProperty, throw a SyntaxError exception.
-  //   f. If inDerivedConstructor is false, and body Contains SuperCall, throw a SyntaxError exception.
+  // 10. Perform the following substeps in an implementation-dependent order, possibly interleaving parsing and error detection:
+  //   a. Let script be ParseText(! StringToCodePoints(x), Script).
+  //   b. If script is a List of errors, throw a SyntaxError exception.
+  //   c. If script Contains ScriptBody is false, return undefined.
+  //   d. Let body be the ScriptBody of script.
+  //   e. If inFunction is false, and body Contains NewTarget, throw a SyntaxError exception.
+  //   f. If inMethod is false, and body Contains SuperProperty, throw a SyntaxError exception.
+  //   g. If inDerivedConstructor is false, and body Contains SuperCall, throw a SyntaxError exception.
+  //   h. If inClassFieldInitializer is true, and ContainsArguments of body is true, throw a SyntaxError exception.
+  const privateIdentifiers = [];
+  let pointer = direct ? surroundingAgent.runningExecutionContext.PrivateEnvironment : Value.null;
+  while (pointer !== Value.null) {
+    for (const binding of pointer.Names) {
+      privateIdentifiers.push(binding.Description.stringValue());
+    }
+    pointer = pointer.OuterPrivateEnvironment;
+  }
   const script = wrappedParse({ source: x.stringValue() }, (parser) => parser.scope.with({
     strict: strictCaller,
     newTarget: inFunction,
     superProperty: inMethod,
     superCall: inDerivedConstructor,
-  }, () => parser.parseScript()));
+    private: privateIdentifiers.length > 0,
+  }, () => {
+    privateIdentifiers.forEach((name) => {
+      parser.scope.privateScope.names.set(name, ['field']);
+    });
+    return parser.parseScript();
+  }));
   if (Array.isArray(script)) {
     return surroundingAgent.Throw(script[0]);
   }
@@ -88,72 +113,82 @@ export function PerformEval(x, callerRealm, strictCaller, direct) {
     return Value.undefined;
   }
   const body = script.ScriptBody;
-  // 10. If strictCaller is true, let strictEval be true.
-  // 11. Else, let strictEval be IsStrict of script.
+  if (inClassFieldInitializer && ContainsArguments(body)) {
+    return surroundingAgent.Throw('SyntaxError', 'UnexpectedToken');
+  }
+  // 11. If strictCaller is true, let strictEval be true.
+  // 12. Else, let strictEval be IsStrict of script.
   let strictEval;
   if (strictCaller === true) {
     strictEval = true;
   } else {
     strictEval = IsStrict(script);
   }
-  // 12. Let runningContext be the running execution context.
+  // 13. Let runningContext be the running execution context.
   const runningContext = surroundingAgent.runningExecutionContext;
   let lexEnv;
   let varEnv;
-  // 13. NOTE: If direct is true, runningContext will be the execution context that performed the direct eval.
+  let privateEnv;
+  // 14. NOTE: If direct is true, runningContext will be the execution context that performed the direct eval.
   //     If direct is false, runningContext will be the execution context for the invocation of the eval function.
-  // 14. If direct is true, then
+  // 15. If direct is true, then
   if (direct === true) {
     // a. Let lexEnv be NewDeclarativeEnvironment(runningContext's LexicalEnvironment).
     lexEnv = NewDeclarativeEnvironment(runningContext.LexicalEnvironment);
     // b. Let varEnv be runningContext's VariableEnvironment.
     varEnv = runningContext.VariableEnvironment;
-  } else { // 15. Else,
+    // c. Let privateEnv be runningContext's PrivateEnvironment.
+    privateEnv = runningContext.PrivateEnvironment;
+  } else { // 16. Else,
     // a. Let lexEnv be NewDeclarativeEnvironment(evalRealm.[[GlobalEnv]]).
     lexEnv = NewDeclarativeEnvironment(evalRealm.GlobalEnv);
     // b. Let varEnv be evalRealm.[[GlobalEnv]].
     varEnv = evalRealm.GlobalEnv;
+    // c. Let privateEnv be null.
+    privateEnv = Value.null;
   }
-  // 16. If strictEval is true, set varEnv to lexEnv.
+  // 17. If strictEval is true, set varEnv to lexEnv.
   if (strictEval === true) {
     varEnv = lexEnv;
   }
-  // 17. If runningContext is not already suspended, suspend runningContext.
-  // 18. Let evalContext be a new ECMAScript code execution context.
+  // 18. If runningContext is not already suspended, suspend runningContext.
+  // 19. Let evalContext be a new ECMAScript code execution context.
   const evalContext = new ExecutionContext();
-  // 19. Set evalContext's Function to null.
+  // 20. Set evalContext's Function to null.
   evalContext.Function = Value.null;
-  // 20. Set evalContext's Realm to evalRealm.
+  // 21. Set evalContext's Realm to evalRealm.
   evalContext.Realm = evalRealm;
-  // 21. Set evalContext's ScriptOrModule to runningContext's ScriptOrModule.
+  // 22. Set evalContext's ScriptOrModule to runningContext's ScriptOrModule.
   evalContext.ScriptOrModule = runningContext.ScriptOrModule;
-  // 22. Set evalContext's VariableEnvironment to varEnv.
+  // 23. Set evalContext's VariableEnvironment to varEnv.
   evalContext.VariableEnvironment = varEnv;
-  // 23. Set evalContext's LexicalEnvironment to lexEnv.
+  // 24. Set evalContext's LexicalEnvironment to lexEnv.
   evalContext.LexicalEnvironment = lexEnv;
-  // 24. Push evalContext onto the execution context stack.
+  // 25. Set evalContext's PrivateEnvironment to privateEnv.
+  evalContext.PrivateEnvironment = privateEnv;
+  // 26. Push evalContext onto the execution context stack.
   surroundingAgent.executionContextStack.push(evalContext);
-  // 25. Let result be EvalDeclarationInstantiation(body, varEnv, lexEnv, strictEval).
-  let result = EnsureCompletion(EvalDeclarationInstantiation(body, varEnv, lexEnv, strictEval));
-  // 26. If result.[[Type]] is normal, then
+  // 27. Let result be EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strictEval).
+  let result = EnsureCompletion(EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strictEval));
+  // 28. If result.[[Type]] is normal, then
   if (result.Type === 'normal') {
     // a. Set result to the result of evaluating body.
     result = EnsureCompletion(unwind(Evaluate(body)));
   }
-  // 27. If result.[[Type]] is normal and result.[[Value]] is empty, then
+  // 29. If result.[[Type]] is normal and result.[[Value]] is empty, then
   if (result.Type === 'normal' && result.Value === undefined) {
     // a. Set result to NormalCompletion(undefined).
     result = NormalCompletion(Value.undefined);
   }
-  // 28. Suspend evalContext and remove it from the execution context stack.
-  // 29. Resume the context that is now on the top of the execution context stack as the running execution context.
+  // 30. Suspend evalContext and remove it from the execution context stack.
+  // 31. Resume the context that is now on the top of the execution context stack as the running execution context.
   surroundingAgent.executionContextStack.pop(evalContext);
-  // 30. Return Completion(result).
+  // 32. Return Completion(result).
   return Completion(result);
 }
 
 // 18.2.1.3 #sec-evaldeclarationinstantiation
-function EvalDeclarationInstantiation(body, varEnv, lexEnv, strict) {
+function EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strict) {
   // 1. Let varNames be the VarDeclaredNames of body.
   const varNames = VarDeclaredNames(body);
   // 2. Let varDeclarations be the VarScopedDeclarations of body.
@@ -194,11 +229,27 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, strict) {
       thisEnv = thisEnv.OuterEnv;
     }
   }
-  // 4. Let functionsToInitialize be a new empty List.
+  // 4. Let privateIdentifiers be a new empty List.
+  const privateIdentifiers = [];
+  // 5. Let pointer be privateEnv.
+  let pointer = privateEnv;
+  // 6. Repeat, while pointer is not null,
+  while (pointer !== Value.null) {
+    // a. For each Private Name binding of pointer.[[Names]], do
+    for (const binding of pointer.Names) {
+      // i. If privateIdentifiers does not contain binding.[[Description]], append binding.[[Description]] to privateIdentifiers.
+      privateIdentifiers.push(binding.Description);
+    }
+    // b. Set pointer to pointer.[[OuterPrivateEnvironment]].
+    pointer = pointer.OuterPrivateEnvironment;
+  }
+  // 7. If AllPrivateIdentifiersValid of body with argument privateIdentifiers is false, throw a SyntaxError exception.
+  Assert(true);
+  // 8. Let functionsToInitialize be a new empty List.
   const functionsToInitialize = [];
-  // 5. Let declaredFunctionNames be a new empty List.
+  // 9. Let declaredFunctionNames be a new empty List.
   const declaredFunctionNames = new ValueSet();
-  // 6. For each d in varDeclarations, in reverse list order, do
+  // 10. For each d in varDeclarations, in reverse list order, do
   for (const d of [...varDeclarations].reverse()) {
     // a. If d is neither a VariableDeclaration nor a ForBinding nor a BindingIdentifier, then
     if (d.type !== 'VariableDeclaration'
@@ -230,10 +281,10 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, strict) {
       }
     }
   }
-  // 7. NOTE: Annex B.3.3.3 adds additional steps at this point.
-  // 8. Let declaredVarNames be a new empty List.
+  // 11. NOTE: Annex B.3.3.3 adds additional steps at this point.
+  // 12. Let declaredVarNames be a new empty List.
   const declaredVarNames = new ValueSet();
-  // 9. For each d in varDeclarations, do
+  // 13. For each d in varDeclarations, do
   for (const d of varDeclarations) {
     // a. If d is a VariableDeclaration, a ForBinding, or a BindingIdentifier, then
     if (d.type === 'VariableDeclaration'
@@ -261,11 +312,11 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, strict) {
       }
     }
   }
-  // 10. NOTE: No abnormal terminations occur after this algorithm step unless
+  // 14. NOTE: No abnormal terminations occur after this algorithm step unless
   //     varEnv is a global Environment Record and the global object is a Proxy exotic object.
-  // 11. Let lexDeclarations be the LexicallyScopedDeclarations of body.
+  // 15. Let lexDeclarations be the LexicallyScopedDeclarations of body.
   const lexDeclarations = LexicallyScopedDeclarations(body);
-  // 12. For each element d in lexDeclarations, do
+  // 16. For each element d in lexDeclarations, do
   for (const d of lexDeclarations) {
     // a. NOTE: Lexically declared names are only instantiated here but not initialized.
     // b. For each element dn of the BoundNames of d, do
@@ -280,12 +331,12 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, strict) {
       }
     }
   }
-  // 13. For each Parse Node f in functionsToInitialize, do
+  // 17. For each Parse Node f in functionsToInitialize, do
   for (const f of functionsToInitialize) {
     // a. Let fn be the sole element of the BoundNames of f.
     const fn = BoundNames(f)[0];
     // b. Let fn be the sole element of the BoundNames of f.
-    const fo = InstantiateFunctionObject(f, lexEnv);
+    const fo = InstantiateFunctionObject(f, lexEnv, privateEnv);
     // c. If varEnv is a global Environment Record, then
     if (varEnv instanceof GlobalEnvironmentRecord) {
       // i. Perform ? varEnv.CreateGlobalFunctionBinding(fn, fo, true).
@@ -307,7 +358,7 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, strict) {
       }
     }
   }
-  // 14. For each String vn in declaredVarNames, in list order, do
+  // 18. For each String vn in declaredVarNames, in list order, do
   for (const vn of declaredVarNames) {
     // a. If varEnv is a global Environment Record, then
     if (varEnv instanceof GlobalEnvironmentRecord) {
@@ -327,6 +378,6 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, strict) {
       }
     }
   }
-  // 15. Return NormalCompletion(empty).
+  // 19. Return NormalCompletion(empty).
   return NormalCompletion(undefined);
 }

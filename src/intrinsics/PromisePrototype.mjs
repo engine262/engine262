@@ -11,8 +11,6 @@ import {
   NewPromiseCapability,
   PerformPromiseThen,
   PromiseResolve,
-  SetFunctionLength,
-  SetFunctionName,
   SpeciesConstructor,
 } from '../abstract-ops/all.mjs';
 import { Type, Value } from '../value.mjs';
@@ -25,34 +23,6 @@ function PromiseProto_catch([onRejected = Value.undefined], { thisValue }) {
   const promise = thisValue;
   // 2. Return ? Invoke(promise, "then", « undefined, onRejected »).
   return Q(Invoke(promise, new Value('then'), [Value.undefined, onRejected]));
-}
-
-function ThenFinallyFunctions([value = Value.undefined]) {
-  const F = surroundingAgent.activeFunctionObject;
-  const onFinally = F.OnFinally;
-  Assert(IsCallable(onFinally) === Value.true);
-  const result = Q(Call(onFinally, Value.undefined));
-  const C = F.Constructor;
-  Assert(IsConstructor(C) === Value.true);
-  const promise = Q(PromiseResolve(C, result));
-  const valueThunk = CreateBuiltinFunction(() => value, []);
-  SetFunctionLength(valueThunk, new Value(0));
-  SetFunctionName(valueThunk, new Value(''));
-  return Q(Invoke(promise, new Value('then'), [valueThunk]));
-}
-
-function CatchFinallyFunctions([reason = Value.undefined]) {
-  const F = surroundingAgent.activeFunctionObject;
-  const onFinally = F.OnFinally;
-  Assert(IsCallable(onFinally) === Value.true);
-  const result = Q(Call(onFinally, Value.undefined));
-  const C = F.Constructor;
-  Assert(IsConstructor(C) === Value.true);
-  const promise = Q(PromiseResolve(C, result));
-  const thrower = CreateBuiltinFunction(() => ThrowCompletion(reason), []);
-  SetFunctionLength(thrower, new Value(0));
-  SetFunctionName(thrower, new Value(''));
-  return Q(Invoke(promise, new Value('then'), [thrower]));
 }
 
 // #sec-promise.prototype.finally
@@ -76,26 +46,38 @@ function PromiseProto_finally([onFinally = Value.undefined], { thisValue }) {
     // b. Let catchFinally be onFinally.
     catchFinally = onFinally;
   } else { // 6. Else,
-    // a. Let stepsThenFinally be the algorithm steps defined in Then Finally Functions.
-    const stepsThenFinally = ThenFinallyFunctions;
-    // b. .Let thenFinally be ! CreateBuiltinFunction(stepsThenFinally, « [[Constructor]], [[OnFinally]] »).
-    thenFinally = X(CreateBuiltinFunction(stepsThenFinally, ['Constructor', 'OnFinally']));
-    SetFunctionLength(thenFinally, new Value(1));
-    SetFunctionName(thenFinally, new Value(''));
-    // c. Set thenFinally.[[Constructor]] to C.
-    thenFinally.Constructor = C;
-    // d. Set thenFinally.[[OnFinally]] to onFinally.
-    thenFinally.OnFinally = onFinally;
-    // e. Let stepsCatchFinally be the algorithm steps defined in Catch Finally Functions.
-    const stepsCatchFinally = CatchFinallyFunctions;
-    // f. Let catchFinally be ! CreateBuiltinFunction(stepsCatchFinally, « [[Constructor]], [[OnFinally]] »).
-    catchFinally = X(CreateBuiltinFunction(stepsCatchFinally, ['Constructor', 'OnFinally']));
-    SetFunctionLength(catchFinally, new Value(1));
-    SetFunctionName(catchFinally, new Value(''));
-    // g. Set catchFinally.[[Constructor]] to C.
-    catchFinally.Constructor = C;
-    // h. Set catchFinally.[[OnFinally]] to onFinally.
-    catchFinally.OnFinally = onFinally;
+    // a. Let thenFinallyClosure be a new Abstract Closure with parameters (value) that captures onFinally and C and performs the following steps when called:
+    const thenFinallyClosure = ([value = Value.undefined]) => {
+      // i. Let result be ? Call(onFinally, undefined).
+      const result = Q(Call(onFinally, Value.undefined));
+      // ii. Let promise be ? PromiseResolve(C, result).
+      const promiseInner = Q(PromiseResolve(C, result));
+      // iii. Let returnValue be a new Abstract Closure with no parameters that captures value and performs the following steps when called:
+      //   1. Return value.
+      const returnValue = () => value;
+      // iv. Let valueThunk be ! CreateBuiltinFunction(returnValue, 0, "", « »).
+      const valueThunk = X(CreateBuiltinFunction(returnValue, 0, new Value(''), []));
+      // v. Return ? Invoke(promise, "then", « valueThunk »).
+      return Q(Invoke(promiseInner, new Value('then'), [valueThunk]));
+    };
+    // b. Let thenFinally be ! CreateBuiltinFunction(thenFinallyClosure, 1, "", « »).
+    thenFinally = X(CreateBuiltinFunction(thenFinallyClosure, 1, new Value(''), []));
+    // c. Let catchFinallyClosure be a new Abstract Closure with parameters (reason) that captures onFinally and C and performs the following steps when called:
+    const catchFinallyClosure = ([reason = Value.undefined]) => {
+      // i. Let result be ? Call(onFinally, undefined).
+      const result = Q(Call(onFinally, Value.undefined));
+      // ii. Let promise be ? PromiseResolve(C, result).
+      const promiseInner = Q(PromiseResolve(C, result));
+      // iii. Let throwReason be a new Abstract Closure with no parameters that captures reason and performs the following steps when called:
+      //   1. Return ThrowCompletion(reason).
+      const throwReason = () => ThrowCompletion(reason);
+      // iv. Let thrower be ! CreateBuiltinFunction(throwReason, 0, "", « »).
+      const thrower = X(CreateBuiltinFunction(throwReason, 0, new Value(''), []));
+      // v. Return ? Invoke(promise, "then", « thrower »).
+      return Q(Invoke(promiseInner, new Value('then'), [thrower]));
+    };
+    // d. Let catchFinally be ! CreateBuiltinFunction(catchFinallyClosure, 1, "", « »).
+    catchFinally = X(CreateBuiltinFunction(catchFinallyClosure, 1, new Value(''), []));
   }
   // 7. Return ? Invoke(promise, "then", « thenFinally, catchFinally »).
   return Q(Invoke(promise, new Value('then'), [thenFinally, catchFinally]));
@@ -117,7 +99,7 @@ function PromiseProto_then([onFulfilled = Value.undefined, onRejected = Value.un
   return PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability);
 }
 
-export function BootstrapPromisePrototype(realmRec) {
+export function bootstrapPromisePrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [
     ['catch', PromiseProto_catch, 1],
     ['finally', PromiseProto_finally, 1],

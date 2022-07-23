@@ -7,12 +7,13 @@ import {
 } from '../engine.mjs';
 import { Type, Value } from '../value.mjs';
 import {
-  Completion,
   AbruptCompletion,
+  Completion,
+  EnsureCompletion,
   NormalCompletion,
   Q,
-  X,
   ThrowCompletion,
+  X,
 } from '../completion.mjs';
 import {
   Assert,
@@ -23,8 +24,6 @@ import {
   IsCallable,
   IsConstructor,
   SameValue,
-  SetFunctionLength,
-  SetFunctionName,
   GetFunctionRealm,
   isFunctionObject,
 } from './all.mjs';
@@ -57,19 +56,29 @@ export class PromiseReactionRecord {
 
 // 25.6.1.3 #sec-createresolvingfunctions
 export function CreateResolvingFunctions(promise) {
+  // 1. Let alreadyResolved be the Record { [[Value]]: false }.
   const alreadyResolved = { Value: false };
+  // 2. Let stepsResolve be the algorithm steps defined in Promise Resolve Functions.
   const stepsResolve = PromiseResolveFunctions;
-  const resolve = X(CreateBuiltinFunction(stepsResolve, ['Promise', 'AlreadyResolved']));
-  SetFunctionLength(resolve, new Value(1));
-  SetFunctionName(resolve, new Value(''));
+  // 3. Let lengthResolve be the number of non-optional parameters of the function definition in Promise Resolve Functions.
+  const lengthResolve = 1;
+  // 4. Let resolve be ! CreateBuiltinFunction(stepsResolve, lengthResolve, "", « [[Promise]], [[AlreadyResolved]] »).
+  const resolve = X(CreateBuiltinFunction(stepsResolve, lengthResolve, new Value(''), ['Promise', 'AlreadyResolved']));
+  // 5. Set resolve.[[Promise]] to promise.
   resolve.Promise = promise;
+  // 6. Set resolve.[[AlreadyResolved]] to alreadyResolved.
   resolve.AlreadyResolved = alreadyResolved;
+  // 7. Let stepsReject be the algorithm steps defined in Promise Reject Functions.
   const stepsReject = PromiseRejectFunctions;
-  const reject = X(CreateBuiltinFunction(stepsReject, ['Promise', 'AlreadyResolved']));
-  SetFunctionLength(reject, new Value(1));
-  SetFunctionName(reject, new Value(''));
+  // 8. Let lengthReject be the number of non-optional parameters of the function definition in Promise Reject Functions.
+  const lengthReject = 1;
+  // 9. Let reject be ! CreateBuiltinFunction(stepsReject, lengthReject, "", « [[Promise]], [[AlreadyResolved]] »).
+  const reject = X(CreateBuiltinFunction(stepsReject, lengthReject, new Value(''), ['Promise', 'AlreadyResolved']));
+  // 10. Set reject.[[Promise]] to promise.
   reject.Promise = promise;
+  // 11. Set reject.[[AlreadyResolved]] to alreadyResolved.
   reject.AlreadyResolved = alreadyResolved;
+  // 12. Return the Record { [[Resolve]]: resolve, [[Reject]]: reject }.
   return {
     Resolve: resolve,
     Reject: reject,
@@ -110,7 +119,7 @@ function NewPromiseResolveThenableJob(promiseToResolve, thenable, then) {
     return Completion(thenCallResult);
   };
   // 2. Let getThenRealmResult be GetFunctionRealm(then.[[Callback]]).
-  const getThenRealmResult = GetFunctionRealm(then.Callback);
+  const getThenRealmResult = EnsureCompletion(GetFunctionRealm(then.Callback));
   // 3. If getThenRealmResult is a normal completion, then let thenRealm be getThenRealmResult.[[Value]].
   let thenRealm;
   if (getThenRealmResult instanceof NormalCompletion) {
@@ -189,40 +198,46 @@ function FulfillPromise(promise, value) {
 
 // 25.6.1.5 #sec-newpromisecapability
 export function NewPromiseCapability(C) {
+  // 1. If IsConstructor(C) is false, throw a TypeError exception.
   if (IsConstructor(C) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
   }
+  // 2. NOTE: C is assumed to be a constructor function that supports the parameter conventions of the Promise constructor (see 26.2.3.1).
+  // 3. Let promiseCapability be the PromiseCapability Record { [[Promise]]: undefined, [[Resolve]]: undefined, [[Reject]]: undefined }.
   const promiseCapability = new PromiseCapabilityRecord();
-  const steps = GetCapabilitiesExecutorFunctions;
-  const executor = X(CreateBuiltinFunction(steps, ['Capability']));
-  SetFunctionLength(executor, new Value(2));
-  SetFunctionName(executor, new Value(''));
-  executor.Capability = promiseCapability;
+  // 4. Let executorClosure be a new Abstract Closure with parameters (resolve, reject) that captures promiseCapability and performs the following steps when called:
+  const executorClosure = ([resolve = Value.undefined, reject = Value.undefined]) => {
+    // a. If promiseCapability.[[Resolve]] is not undefined, throw a TypeError exception.
+    if (Type(promiseCapability.Resolve) !== 'Undefined') {
+      return surroundingAgent.Throw('TypeError', 'PromiseCapabilityFunctionAlreadySet', 'resolve');
+    }
+    // b. If promiseCapability.[[Reject]] is not undefined, throw a TypeError exception.
+    if (Type(promiseCapability.Reject) !== 'Undefined') {
+      return surroundingAgent.Throw('TypeError', 'PromiseCapabilityFunctionAlreadySet', 'reject');
+    }
+    // c. Set promiseCapability.[[Resolve]] to resolve.
+    promiseCapability.Resolve = resolve;
+    // d. Set promiseCapability.[[Reject]] to reject.
+    promiseCapability.Reject = reject;
+    // e. Return undefined.
+    return Value.undefined;
+  };
+  // 5. Let executor be ! CreateBuiltinFunction(executorClosure, 2, "", « »).
+  const executor = X(CreateBuiltinFunction(executorClosure, 2, new Value(''), []));
+  // 8. Let promise be ? Construct(C, « executor »).
   const promise = Q(Construct(C, [executor]));
+  // 9. If IsCallable(promiseCapability.[[Resolve]]) is false, throw a TypeError exception.
   if (IsCallable(promiseCapability.Resolve) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'PromiseResolveFunction', promiseCapability.Resolve);
   }
+  // 10. If IsCallable(promiseCapability.[[Reject]]) is false, throw a TypeError exception.
   if (IsCallable(promiseCapability.Reject) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'PromiseRejectFunction', promiseCapability.Reject);
   }
+  // 11. Set promiseCapability.[[Promise]] to promise.
   promiseCapability.Promise = promise;
+  // 12. Return promiseCapability.
   return promiseCapability;
-}
-
-// 25.6.1.5.1 #sec-getcapabilitiesexecutor-functions
-function GetCapabilitiesExecutorFunctions([resolve = Value.undefined, reject = Value.undefined]) {
-  const F = this;
-
-  const promiseCapability = F.Capability;
-  if (Type(promiseCapability.Resolve) !== 'Undefined') {
-    return surroundingAgent.Throw('TypeError', 'PromiseCapabilityFunctionAlreadySet', 'resolve');
-  }
-  if (Type(promiseCapability.Reject) !== 'Undefined') {
-    return surroundingAgent.Throw('TypeError', 'PromiseCapabilityFunctionAlreadySet', 'reject');
-  }
-  promiseCapability.Resolve = resolve;
-  promiseCapability.Reject = reject;
-  return Value.undefined;
 }
 
 // 25.6.1.6 #sec-ispromise
@@ -252,7 +267,7 @@ function RejectPromise(promise, reason) {
 
 // #sec-triggerpromisereactions
 function TriggerPromiseReactions(reactions, argument) {
-  // 1. For each reaction in reactions, in original insertion order, do
+  // 1. For each reaction in reactions, do
   reactions.forEach((reaction) => {
     // a. Let job be NewPromiseReactionJob(reaction, argument).
     const job = NewPromiseReactionJob(reaction, argument);
@@ -330,7 +345,7 @@ function NewPromiseReactionJob(reaction, argument) {
   // 3. If reaction.[[Handler]] is not empty, then
   if (reaction.Handler !== undefined) {
     // a. Let getHandlerRealmResult be GetFunctionRealm(reaction.[[Handler]].[[Callback]]).
-    const getHandlerRealmResult = GetFunctionRealm(reaction.Handler.Callback);
+    const getHandlerRealmResult = EnsureCompletion(GetFunctionRealm(reaction.Handler.Callback));
     // b. If getHandlerRealmResult is a normal completion, then set handlerRealm to getHandlerRealmResult.[[Value]].
     if (getHandlerRealmResult instanceof NormalCompletion) {
       handlerRealm = getHandlerRealmResult.Value;

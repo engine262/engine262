@@ -1,6 +1,5 @@
 'use strict';
 
-require('@snek/source-map-support/register');
 const {
   isMainThread, parentPort, workerData, Worker,
 } = require('worker_threads');

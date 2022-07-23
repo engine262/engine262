@@ -5,7 +5,6 @@ import {
   CopyDataProperties,
   CreateDataPropertyOrThrow,
   GetIterator,
-  GetReferencedName,
   GetV,
   GetValue,
   IteratorClose,
@@ -16,6 +15,7 @@ import {
   ResolveBinding,
   RequireObjectCoercible,
   ToString,
+  F,
 } from '../abstract-ops/all.mjs';
 import {
   IsAnonymousFunctionDefinition,
@@ -133,7 +133,7 @@ function* KeyedDestructuringAssignmentEvaluation({
     // a. If IsAnonymousFunctionDefinition(Initializer) and IsIdentifierRef of DestructuringAssignmentTarget are both true, then
     if (IsAnonymousFunctionDefinition(Initializer) && IsIdentifierRef(DestructuringAssignmentTarget)) {
       // i. Let rhsValue be NamedEvaluation of Initializer with argument GetReferencedName(lref).
-      rhsValue = yield* NamedEvaluation(Initializer, GetReferencedName(lref));
+      rhsValue = yield* NamedEvaluation(Initializer, lref.ReferencedName);
     } else {
       // i. Let defaultValue be the result of evaluating Initializer.
       const defaultValue = yield* Evaluate(Initializer);
@@ -257,7 +257,7 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
         // a. If IsAnonymousFunctionDefinition(AssignmentExpression) is true and IsIdentifierRef of LeftHandSideExpression is true, then
         if (IsAnonymousFunctionDefinition(Initializer) && IsIdentifierRef(DestructuringAssignmentTarget)) {
           // i. Let v be NamedEvaluation of Initializer with argument GetReferencedName(lref).
-          v = yield* NamedEvaluation(Initializer, GetReferencedName(lref));
+          v = yield* NamedEvaluation(Initializer, lref.ReferencedName);
         } else { // b. Else,
           // i. Let defaultValue be the result of evaluating Initializer.
           const defaultValue = yield* Evaluate(Initializer);
@@ -288,7 +288,7 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
         ReturnIfAbrupt(lref);
       }
       // 2. Let A be ! ArrayCreate(0).
-      const A = X(ArrayCreate(new Value(0)));
+      const A = X(ArrayCreate(0));
       // 3. Let n be 0.
       let n = 0;
       // 4. Repeat, while iteratorRecord.[[Done]] is false,
@@ -313,8 +313,8 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
           }
           // iii. ReturnIfAbrupt(nextValue).
           ReturnIfAbrupt(nextValue);
-          // iv. Perform ! CreateDataPropertyOrThrow(A, ! ToString(n), nextValue).
-          X(CreateDataPropertyOrThrow(A, X(ToString(new Value(n))), nextValue));
+          // iv. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), nextValue).
+          X(CreateDataPropertyOrThrow(A, X(ToString(F(n))), nextValue));
           // v. Set n to n + 1.
           n += 1;
         }

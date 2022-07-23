@@ -111,7 +111,9 @@ export function GlobalDeclarationInstantiation(script, env) {
   // 13. NOTE: Annex B.3.3.2 adds additional steps at this point.
   // 14. Let lexDeclarations be the LexicallyScopedDeclarations of script.
   const lexDeclarations = LexicallyScopedDeclarations(script);
-  // 15. For each element d in lexDeclarations, do
+  // 15. Let privateEnv be null.
+  const privateEnv = Value.null;
+  // 16. For each element d in lexDeclarations, do
   for (const d of lexDeclarations) {
     // a. NOTE: Lexically declared names are only instantiated here but not initialized.
     // b. For each element dn of the BoundNames of d, do
@@ -126,20 +128,20 @@ export function GlobalDeclarationInstantiation(script, env) {
       }
     }
   }
-  // 16. For each Parse Node f in functionsToInitialize, do
+  // 17. For each Parse Node f in functionsToInitialize, do
   for (const f of functionsToInitialize) {
     // a. Let fn be the sole element of the BoundNames of f.
     const fn = BoundNames(f)[0];
-    // b. Let fo be InstantiateFunctionObject of f with argument env.
-    const fo = InstantiateFunctionObject(f, env);
+    // b. Let fo be InstantiateFunctionObject of f with argument env and privateEnv.
+    const fo = InstantiateFunctionObject(f, env, privateEnv);
     // c. Perform ? env.CreateGlobalFunctionBinding(fn, fo, false).
     Q(env.CreateGlobalFunctionBinding(fn, fo, Value.false));
   }
-  // 17. For each String vn in declaredVarNames, in list order, do
+  // 18. For each String vn in declaredVarNames, in list order, do
   for (const vn of declaredVarNames) {
     // a. Perform ? env.CreateGlobalVarBinding(vn, false).
     Q(env.CreateGlobalVarBinding(vn, Value.false));
   }
-  // 18. Return NormalCompletion(empty).
+  // 19. Return NormalCompletion(empty).
   return NormalCompletion(undefined);
 }

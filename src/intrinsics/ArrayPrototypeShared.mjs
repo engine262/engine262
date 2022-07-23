@@ -3,7 +3,6 @@ import {
   Call,
   DeletePropertyOrThrow,
   Get,
-  HasOwnProperty,
   HasProperty,
   Invoke,
   IsCallable,
@@ -11,10 +10,10 @@ import {
   Set,
   StrictEqualityComparison,
   ToBoolean,
-  ToInteger,
-  ToLength,
+  ToIntegerOrInfinity,
   ToObject,
   ToString,
+  F,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
@@ -31,59 +30,41 @@ import { assignProps } from './bootstrap.mjs';
 // "The only internal methods of the this object that the algorithm may call
 // are [[Get]] and [[Set]]," a requirement of %TypedArray%.prototype.sort.
 export function ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestricted = false) {
-  len = len.numberValue();
-
-  // Collect all elements. Count how many holes we have for error checking.
-  const collected = [];
-  let holes = 0;
-  for (let k = 0; k < len; k += 1) {
-    const curProp = X(ToString(new Value(k)));
-    const prop = Q(Get(obj, curProp));
-    if (prop === Value.undefined) {
-      Assert(!internalMethodsRestricted);
-      const hasOwn = Q(HasOwnProperty(obj, curProp));
-      if (hasOwn === Value.false) {
-        holes += 1;
-      } else {
-        collected.push(prop);
-      }
+  const items = [];
+  let k = 0;
+  while (k < len) {
+    const Pk = X(ToString(F(k)));
+    if (internalMethodsRestricted) {
+      items.push(Q(Get(obj, Pk)));
     } else {
-      collected.push(prop);
+      const kPresent = Q(HasProperty(obj, Pk));
+      if (kPresent === Value.true) {
+        const kValue = Q(Get(obj, Pk));
+        items.push(kValue);
+      }
     }
+    k += 1;
   }
-  if (internalMethodsRestricted) {
-    Assert(holes === 0);
-  }
-  Assert(collected.length + holes === len);
-
-  // Get rid of holes by deleting properties at the end.
-  // See Note 1: Because non-existent property values always compare greater
-  // than undefined property values, and undefined always compares greater
-  // than any other value, undefined property values always sort to the end
-  // of the result, followed by non-existent property values.
-  for (let k = collected.length; k < len; k += 1) {
-    const curProp = X(ToString(new Value(k)));
-    Q(DeletePropertyOrThrow(obj, curProp));
-  }
+  const itemCount = items.length;
 
   // Mergesort.
   const lBuffer = [];
   const rBuffer = [];
-  for (let step = 1; step < collected.length; step *= 2) {
-    for (let start = 0; start < collected.length - 1; start += 2 * step) {
+  for (let step = 1; step < items.length; step *= 2) {
+    for (let start = 0; start < items.length - 1; start += 2 * step) {
       const sizeLeft = step;
       const mid = start + sizeLeft;
-      const sizeRight = Math.min(step, collected.length - mid);
+      const sizeRight = Math.min(step, items.length - mid);
       if (sizeRight < 0) {
         continue;
       }
 
       // Merge.
       for (let l = 0; l < sizeLeft; l += 1) {
-        lBuffer[l] = collected[start + l];
+        lBuffer[l] = items[start + l];
       }
       for (let r = 0; r < sizeRight; r += 1) {
-        rBuffer[r] = collected[mid + r];
+        rBuffer[r] = items[mid + r];
       }
 
       {
@@ -93,22 +74,22 @@ export function ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestri
         while (l < sizeLeft && r < sizeRight) {
           const cmp = Q(SortCompare(lBuffer[l], rBuffer[r])).numberValue();
           if (cmp <= 0) {
-            collected[o] = lBuffer[l];
+            items[o] = lBuffer[l];
             o += 1;
             l += 1;
           } else {
-            collected[o] = rBuffer[r];
+            items[o] = rBuffer[r];
             o += 1;
             r += 1;
           }
         }
         while (l < sizeLeft) {
-          collected[o] = lBuffer[l];
+          items[o] = lBuffer[l];
           o += 1;
           l += 1;
         }
         while (r < sizeRight) {
-          collected[o] = rBuffer[r];
+          items[o] = rBuffer[r];
           o += 1;
           r += 1;
         }
@@ -116,33 +97,36 @@ export function ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestri
     }
   }
 
-  // Copy the sorted results back to the array.
-  for (let k = 0; k < collected.length; k += 1) {
-    const curProp = X(ToString(new Value(k)));
-    Q(Set(obj, curProp, collected[k], Value.true));
+  let j = 0;
+  while (j < itemCount) {
+    Q(Set(obj, X(ToString(F(j))), items[j], Value.true));
+    j += 1;
+  }
+  while (j < len) {
+    Q(DeletePropertyOrThrow(obj, X(ToString(F(j)))));
+    j += 1;
   }
 
   return obj;
 }
 
-export function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorithm, objectToLength) {
+export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorithm, objectToLength) {
   // 22.1.3.5 #sec-array.prototype.every
   // 22.2.3.7 #sec-%typedarray%.prototype.every
   function ArrayProto_every([callbackFn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
-    const lenProp = Q(objectToLength(O));
-    const len = Q(ToLength(lenProp));
+    const len = Q(objectToLength(O));
     if (IsCallable(callbackFn) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackFn);
     }
     let k = 0;
-    while (k < len.numberValue()) {
-      const Pk = X(ToString(new Value(k)));
+    while (k < len) {
+      const Pk = X(ToString(F(k)));
       const kPresent = Q(HasProperty(O, Pk));
       if (kPresent === Value.true) {
         const kValue = Q(Get(O, Pk));
-        const testResult = ToBoolean(Q(Call(callbackFn, thisArg, [kValue, new Value(k), O])));
+        const testResult = ToBoolean(Q(Call(callbackFn, thisArg, [kValue, F(k), O])));
         if (testResult === Value.false) {
           return Value.false;
         }
@@ -157,16 +141,15 @@ export function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
   function ArrayProto_find([predicate = Value.undefined, thisArg = Value.undefined], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
-    const lenProp = Q(objectToLength(O));
-    const len = Q(ToLength(lenProp)).numberValue();
+    const len = Q(objectToLength(O));
     if (IsCallable(predicate) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
     }
     let k = 0;
     while (k < len) {
-      const Pk = X(ToString(new Value(k)));
+      const Pk = X(ToString(F(k)));
       const kValue = Q(Get(O, Pk));
-      const testResult = ToBoolean(Q(Call(predicate, thisArg, [kValue, new Value(k), O])));
+      const testResult = ToBoolean(Q(Call(predicate, thisArg, [kValue, F(k), O])));
       if (testResult === Value.true) {
         return kValue;
       }
@@ -180,22 +163,21 @@ export function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
   function ArrayProto_findIndex([predicate = Value.undefined, thisArg = Value.undefined], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
-    const lenProp = Q(objectToLength(O));
-    const len = Q(ToLength(lenProp)).numberValue();
+    const len = Q(objectToLength(O));
     if (IsCallable(predicate) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
     }
     let k = 0;
     while (k < len) {
-      const Pk = X(ToString(new Value(k)));
+      const Pk = X(ToString(F(k)));
       const kValue = Q(Get(O, Pk));
-      const testResult = ToBoolean(Q(Call(predicate, thisArg, [kValue, new Value(k), O])));
+      const testResult = ToBoolean(Q(Call(predicate, thisArg, [kValue, F(k), O])));
       if (testResult === Value.true) {
-        return new Value(k);
+        return F(k);
       }
       k += 1;
     }
-    return new Value(-1);
+    return F(-1);
   }
 
   // 22.1.3.12 #sec-array.prototype.foreach
@@ -203,18 +185,17 @@ export function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
   function ArrayProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
-    const lenProp = Q(objectToLength(O));
-    const len = Q(ToLength(lenProp)).numberValue();
+    const len = Q(objectToLength(O));
     if (IsCallable(callbackfn) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
     }
     let k = 0;
     while (k < len) {
-      const Pk = X(ToString(new Value(k)));
+      const Pk = X(ToString(F(k)));
       const kPresent = Q(HasProperty(O, Pk));
       if (kPresent === Value.true) {
         const kValue = Q(Get(O, Pk));
-        Q(Call(callbackfn, thisArg, [kValue, new Value(k), O]));
+        Q(Call(callbackfn, thisArg, [kValue, F(k), O]));
       }
       k += 1;
     }
@@ -226,12 +207,11 @@ export function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
   function ArrayProto_includes([searchElement = Value.undefined, fromIndex = Value.undefined], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
-    const lenProp = Q(objectToLength(O));
-    const len = Q(ToLength(lenProp)).numberValue();
+    const len = Q(objectToLength(O));
     if (len === 0) {
       return Value.false;
     }
-    const n = Q(ToInteger(fromIndex)).numberValue();
+    const n = Q(ToIntegerOrInfinity(fromIndex));
     if (fromIndex === Value.undefined) {
       Assert(n === 0);
     }
@@ -245,7 +225,7 @@ export function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
       }
     }
     while (k < len) {
-      const kStr = X(ToString(new Value(k)));
+      const kStr = X(ToString(F(k)));
       const elementK = Q(Get(O, kStr));
       if (SameValueZero(searchElement, elementK) === Value.true) {
         return Value.true;
@@ -260,17 +240,16 @@ export function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
   function ArrayProto_indexOf([searchElement = Value.undefined, fromIndex = Value.undefined], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
-    const lenProp = Q(objectToLength(O));
-    const len = Q(ToLength(lenProp)).numberValue();
+    const len = Q(objectToLength(O));
     if (len === 0) {
-      return new Value(-1);
+      return F(-1);
     }
-    const n = Q(ToInteger(fromIndex)).numberValue();
+    const n = Q(ToIntegerOrInfinity(fromIndex));
     if (fromIndex === Value.undefined) {
       Assert(n === 0);
     }
     if (n >= len) {
-      return new Value(-1);
+      return F(-1);
     }
     let k;
     if (n >= 0) {
@@ -282,18 +261,18 @@ export function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
       }
     }
     while (k < len) {
-      const kStr = X(ToString(new Value(k)));
+      const kStr = X(ToString(F(k)));
       const kPresent = Q(HasProperty(O, kStr));
       if (kPresent === Value.true) {
         const elementK = Q(Get(O, kStr));
         const same = StrictEqualityComparison(searchElement, elementK);
         if (same === Value.true) {
-          return new Value(k);
+          return F(k);
         }
       }
       k += 1;
     }
-    return new Value(-1);
+    return F(-1);
   }
 
   // 22.1.3.15 #sec-array.prototype.join
@@ -301,8 +280,7 @@ export function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
   function ArrayProto_join([separator = Value.undefined], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
-    const lenProp = Q(objectToLength(O));
-    const len = Q(ToLength(lenProp)).numberValue();
+    const len = Q(objectToLength(O));
     let sep;
     if (Type(separator) === 'Undefined') {
       sep = ',';
@@ -315,7 +293,7 @@ export function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
       if (k > 0) {
         R = `${R}${sep}`;
       }
-      const kStr = X(ToString(new Value(k)));
+      const kStr = X(ToString(F(k)));
       const element = Q(Get(O, kStr));
       let next;
       if (Type(element) === 'Undefined' || Type(element) === 'Null') {
@@ -334,14 +312,13 @@ export function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
   function ArrayProto_lastIndexOf([searchElement = Value.undefined, fromIndex], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
-    const lenProp = Q(objectToLength(O));
-    const len = Q(ToLength(lenProp)).numberValue();
+    const len = Q(objectToLength(O));
     if (len === 0) {
-      return new Value(-1);
+      return F(-1);
     }
     let n;
     if (fromIndex !== undefined) {
-      n = Q(ToInteger(fromIndex)).numberValue();
+      n = Q(ToIntegerOrInfinity(fromIndex));
     } else {
       n = len - 1;
     }
@@ -352,18 +329,18 @@ export function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
       k = len + n;
     }
     while (k >= 0) {
-      const kStr = X(ToString(new Value(k)));
+      const kStr = X(ToString(F(k)));
       const kPresent = Q(HasProperty(O, kStr));
       if (kPresent === Value.true) {
         const elementK = Q(Get(O, kStr));
         const same = StrictEqualityComparison(searchElement, elementK);
         if (same === Value.true) {
-          return new Value(k);
+          return F(k);
         }
       }
       k -= 1;
     }
-    return new Value(-1);
+    return F(-1);
   }
 
   // 22.1.3.21 #sec-array.prototype.reduce
@@ -371,8 +348,7 @@ export function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
   function ArrayProto_reduce([callbackfn = Value.undefined, initialValue], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
-    const lenProp = Q(objectToLength(O));
-    const len = Q(ToLength(lenProp)).numberValue();
+    const len = Q(objectToLength(O));
     if (IsCallable(callbackfn) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
     }
@@ -386,7 +362,7 @@ export function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     } else {
       let kPresent = false;
       while (kPresent === false && k < len) {
-        const Pk = X(ToString(new Value(k)));
+        const Pk = X(ToString(F(k)));
         kPresent = Q(HasProperty(O, Pk)) === Value.true;
         if (kPresent === true) {
           accumulator = Q(Get(O, Pk));
@@ -398,11 +374,11 @@ export function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
       }
     }
     while (k < len) {
-      const Pk = X(ToString(new Value(k)));
+      const Pk = X(ToString(F(k)));
       const kPresent = Q(HasProperty(O, Pk));
       if (kPresent === Value.true) {
         const kValue = Q(Get(O, Pk));
-        accumulator = Q(Call(callbackfn, Value.undefined, [accumulator, kValue, new Value(k), O]));
+        accumulator = Q(Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), O]));
       }
       k += 1;
     }
@@ -414,8 +390,7 @@ export function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
   function ArrayProto_reduceRight([callbackfn = Value.undefined, initialValue], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
-    const lenProp = Q(objectToLength(O));
-    const len = Q(ToLength(lenProp)).numberValue();
+    const len = Q(objectToLength(O));
     if (IsCallable(callbackfn) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
     }
@@ -429,7 +404,7 @@ export function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     } else {
       let kPresent = false;
       while (kPresent === false && k >= 0) {
-        const Pk = X(ToString(new Value(k)));
+        const Pk = X(ToString(F(k)));
         kPresent = Q(HasProperty(O, Pk)) === Value.true;
         if (kPresent === true) {
           accumulator = Q(Get(O, Pk));
@@ -441,11 +416,11 @@ export function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
       }
     }
     while (k >= 0) {
-      const Pk = X(ToString(new Value(k)));
+      const Pk = X(ToString(F(k)));
       const kPresent = Q(HasProperty(O, Pk));
       if (kPresent === Value.true) {
         const kValue = Q(Get(O, Pk));
-        accumulator = Q(Call(callbackfn, Value.undefined, [accumulator, kValue, new Value(k), O]));
+        accumulator = Q(Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), O]));
       }
       k -= 1;
     }
@@ -457,14 +432,13 @@ export function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
   function ArrayProto_reverse(args, { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
-    const lenProp = Q(objectToLength(O));
-    const len = Q(ToLength(lenProp)).numberValue();
+    const len = Q(objectToLength(O));
     const middle = Math.floor(len / 2);
     let lower = 0;
     while (lower !== middle) {
       const upper = len - lower - 1;
-      const upperP = X(ToString(new Value(upper)));
-      const lowerP = X(ToString(new Value(lower)));
+      const upperP = X(ToString(F(upper)));
+      const lowerP = X(ToString(F(lower)));
       const lowerExists = Q(HasProperty(O, lowerP));
       let lowerValue;
       let upperValue;
@@ -497,18 +471,17 @@ export function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
   function ArrayProto_some([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
-    const lenProp = Q(objectToLength(O));
-    const len = Q(ToLength(lenProp)).numberValue();
+    const len = Q(objectToLength(O));
     if (IsCallable(callbackfn) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
     }
     let k = 0;
     while (k < len) {
-      const Pk = X(ToString(new Value(k)));
+      const Pk = X(ToString(F(k)));
       const kPresent = Q(HasProperty(O, Pk));
       if (kPresent === Value.true) {
         const kValue = Q(Get(O, Pk));
-        const testResult = ToBoolean(Q(Call(callbackfn, thisArg, [kValue, new Value(k), O])));
+        const testResult = ToBoolean(Q(Call(callbackfn, thisArg, [kValue, F(k), O])));
         if (testResult === Value.true) {
           return Value.true;
         }
@@ -523,8 +496,7 @@ export function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
   function ArrayProto_toLocaleString(args, { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const array = Q(ToObject(thisValue));
-    const lenProp = Q(objectToLength(array));
-    const len = Q(ToLength(lenProp)).numberValue();
+    const len = Q(objectToLength(array));
     const separator = ', ';
     let R = '';
     let k = 0;
@@ -532,7 +504,7 @@ export function BootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
       if (k > 0) {
         R = `${R}${separator}`;
       }
-      const kStr = X(ToString(new Value(k)));
+      const kStr = X(ToString(F(k)));
       const nextElement = Q(Get(array, kStr));
       if (nextElement !== Value.undefined && nextElement !== Value.null) {
         const S = Q(ToString(Q(Invoke(nextElement, new Value('toLocaleString'))))).stringValue();

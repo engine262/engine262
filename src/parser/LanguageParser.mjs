@@ -1,7 +1,7 @@
-import { StatementParser } from './StatementParser.mjs';
+import { ModuleParser } from './ModuleParser.mjs';
 import { Token } from './tokens.mjs';
 
-export class LanguageParser extends StatementParser {
+export class LanguageParser extends ModuleParser {
   // Script : ScriptBody?
   parseScript() {
     if (this.feature('hashbang')) {
@@ -42,7 +42,7 @@ export class LanguageParser extends StatementParser {
       strict: true,
       in: true,
       importMeta: true,
-      await: this.feature('top-level-await'),
+      await: true,
       lexical: true,
       variable: true,
     }, () => {

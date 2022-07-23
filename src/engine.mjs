@@ -22,36 +22,32 @@ import * as messages from './messages.mjs';
 
 export const FEATURES = Object.freeze([
   {
-    name: 'Top-Level Await',
-    flag: 'top-level-await',
-    url: 'https://github.com/tc39/proposal-top-level-await',
-  },
-  {
     name: 'Hashbang Grammar',
     flag: 'hashbang',
     url: 'https://github.com/tc39/proposal-hashbang',
-  },
-  {
-    name: 'RegExp Match Indices',
-    flag: 'regexp-match-indices',
-    url: 'https://github.com/tc39/proposal-regexp-match-indices',
   },
   {
     name: 'FinalizationRegistry.prototype.cleanupSome',
     flag: 'cleanup-some',
     url: 'https://github.com/tc39/proposal-cleanup-some',
   },
-  {
-    name: 'Arbitrary Module Namespace Names',
-    flag: 'arbitrary-module-namespace-names',
-    url: 'https://github.com/tc39/ecma262/pull/2154',
-  },
-  {
-    name: 'item Method',
-    flag: 'item-method',
-    url: 'https://github.com/tc39/proposal-item-method',
-  },
 ].map(Object.freeze));
+
+class ExecutionContextStack extends Array {
+  // This ensures that only the length taking overload is supported.
+  // This is necessary to support `ArraySpeciesCreate`, which invokes
+  // the constructor with argument `length`:
+  constructor(length = 0) {
+    super(+length);
+  }
+
+  pop(ctx) {
+    if (!ctx.poppedForTailCall) {
+      const popped = super.pop();
+      Assert(popped === ctx);
+    }
+  }
+}
 
 let agentSignifier = 0;
 // #sec-agents
@@ -71,17 +67,11 @@ export class Agent {
     };
 
     // #execution-context-stack
-    this.executionContextStack = [];
-    const stackPop = this.executionContextStack.pop;
-    this.executionContextStack.pop = function pop(ctx) {
-      if (!ctx.poppedForTailCall) {
-        const popped = stackPop.call(this);
-        Assert(popped === ctx);
-      }
-    };
+    this.executionContextStack = new ExecutionContextStack();
 
     // NON-SPEC
     this.jobQueue = [];
+    this.scheduledForCleanup = new Set();
     this.hostDefinedOptions = {
       ...options,
       features: FEATURES.reduce((acc, { flag }) => {
@@ -181,6 +171,7 @@ export class ExecutionContext {
     this.ScriptOrModule = undefined;
     this.VariableEnvironment = undefined;
     this.LexicalEnvironment = undefined;
+    this.PrivateEnvironment = undefined;
 
     // NON-SPEC
     this.callSite = new CallSite(this);
@@ -196,6 +187,7 @@ export class ExecutionContext {
     e.ScriptOrModule = this.ScriptOrModule;
     e.VariableEnvironment = this.VariableEnvironment;
     e.LexicalEnvironment = this.LexicalEnvironment;
+    e.PrivateEnvironment = this.PrivateEnvironment;
 
     e.callSite = this.callSite.clone(e);
     e.promiseCapability = this.promiseCapability;
@@ -209,13 +201,14 @@ export class ExecutionContext {
     m(this.ScriptOrModule);
     m(this.VariableEnvironment);
     m(this.LexicalEnvironment);
+    m(this.PrivateEnvironment);
     m(this.promiseCapability);
   }
 }
 
 // 15.1.10 #sec-runtime-semantics-scriptevaluation
 export function ScriptEvaluation(scriptRecord) {
-  if (surroundingAgent.hostDefinedOptions.boost && surroundingAgent.hostDefinedOptions.boost.evaluateScript) {
+  if (surroundingAgent.hostDefinedOptions.boost?.evaluateScript) {
     return surroundingAgent.hostDefinedOptions.boost.evaluateScript(scriptRecord);
   }
 
@@ -226,6 +219,7 @@ export function ScriptEvaluation(scriptRecord) {
   scriptContext.ScriptOrModule = scriptRecord;
   scriptContext.VariableEnvironment = globalEnv;
   scriptContext.LexicalEnvironment = globalEnv;
+  scriptContext.PrivateEnvironment = Value.null;
   scriptContext.HostDefined = scriptRecord.HostDefined;
   // Suspend runningExecutionContext
   surroundingAgent.executionContextStack.push(scriptContext);
@@ -335,11 +329,11 @@ export function HostImportModuleDynamically(referencingScriptOrModule, specifier
         const onFulfilled = CreateBuiltinFunction(([v = Value.undefined]) => {
           finish(NormalCompletion(v));
           return Value.undefined;
-        }, []);
+        }, 1, new Value(''), []);
         const onRejected = CreateBuiltinFunction(([r = Value.undefined]) => {
           finish(ThrowCompletion(r));
           return Value.undefined;
-        }, []);
+        }, 1, new Value(''), []);
         PerformPromiseThen(maybePromise, onFulfilled, onRejected);
       } else {
         finish(NormalCompletion(undefined));
@@ -371,15 +365,14 @@ export function HostFinalizeImportMeta(importMeta, moduleRecord) {
 }
 
 // #sec-host-cleanup-finalization-registry
-const scheduledForCleanup = new Set();
 export function HostEnqueueFinalizationRegistryCleanupJob(fg) {
   if (surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry !== undefined) {
     Q(surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry(fg));
   } else {
-    if (!scheduledForCleanup.has(fg)) {
-      scheduledForCleanup.add(fg);
+    if (!surroundingAgent.scheduledForCleanup.has(fg)) {
+      surroundingAgent.scheduledForCleanup.add(fg);
       surroundingAgent.queueJob('FinalizationCleanup', () => {
-        scheduledForCleanup.delete(fg);
+        surroundingAgent.scheduledForCleanup.delete(fg);
         CleanupFinalizationRegistry(fg);
       });
     }

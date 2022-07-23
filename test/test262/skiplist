@@ -6,6 +6,50 @@
 # Paths are relative to the `test262/test` directory.
 # Paths may contain globs.
 
+# ???
+built-ins/String/prototype/localeCompare/15.5.4.9_CE.js
+
+built-ins/AsyncGeneratorPrototype/return/return-suspendedStart-broken-promise.js
+built-ins/AsyncGeneratorPrototype/return/return-state-completed-broken-promise.js
+
+built-ins/TypedArrayConstructors/ctors/no-species.js
+
+# https://github.com/tc39/test262/pull/3612
+built-ins/SharedArrayBuffer/prototype/prop-desc.js
+
+# https://github.com/tc39/ecma262/pull/2267
+language/expressions/assignment/target-member-computed-reference-null.js
+language/expressions/assignment/target-member-computed-reference-undefined.js
+language/expressions/assignment/target-member-identifier-reference-null.js
+language/expressions/assignment/target-member-identifier-reference-undefined.js
+language/expressions/assignment/target-super-computed-reference-null.js
+language/expressions/assignment/target-super-identifier-reference-null.js
+language/expressions/delete/member-computed-reference-null.js
+language/expressions/delete/member-computed-reference-undefined.js
+language/expressions/delete/member-identifier-reference-null.js
+language/expressions/delete/member-identifier-reference-undefined.js 
+
+# ?? looks familiar tho
+built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/tonumber-value-detached-buffer.js
+built-ins/TypedArrayConstructors/internals/DefineOwnProperty/tonumber-value-detached-buffer.js
+
+# https://github.com/tc39/ecma262/pull/2436
+built-ins/RegExp/match-indices/indices-array-non-unicode-match.js
+built-ins/RegExp/named-groups/non-unicode-match.js
+built-ins/RegExp/named-groups/non-unicode-property-names-valid.js
+built-ins/RegExp/named-groups/non-unicode-references.js
+built-ins/RegExp/named-groups/unicode-references.js
+built-ins/String/prototype/split/separator-regexp.js
+language/literals/regexp/named-groups/forward-reference.js
+
+# https://github.com/tc39/ecma262/pull/1867
+language/literals/numeric/legacy-octal-integer.js
+language/literals/numeric/non-octal-decimal-integer.js
+language/literals/string/legacy-octal-escape-sequence.js
+
+# https://github.com/tc39/proposal-top-level-await/pull/159
+language/module-code/top-level-await/dfs-invariant.js
+
 # Spec bug
 built-ins/Date/prototype/setMonth/this-value-invalid-date.js
 
@@ -24,11 +68,37 @@ built-ins/RegExp/CharacterClassEscapes/character-class-non-digit-class-escape-pl
 built-ins/RegExp/CharacterClassEscapes/character-class-non-whitespace-class-escape-plus-quantifier.js
 built-ins/RegExp/CharacterClassEscapes/character-class-non-word-class-escape-plus-quantifier.js
 
-# ???
-language/module-code/export-expname-from-binding-string.js
-
 # broken stuff in test262
-language/statements/function/forbidden-ext/b1/func-decl-forbidden-ext-direct-access-prop-caller.js
-language/expressions/function/forbidden-ext/b1/func-expr-forbidden-ext-direct-access-prop-caller.js
-language/statements/function/forbidden-ext/b1/func-decl-forbidden-ext-direct-access-prop-arguments.js
-language/expressions/function/forbidden-ext/b1/func-expr-forbidden-ext-direct-access-prop-arguments.js
+built-ins/Object/seal/seal-sharedarraybuffer.js
+
+# https://github.com/tc39/test262/pull/2833#issuecomment-709635850
+built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/detached-buffer.js
+built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/key-is-numericindex.js
+built-ins/TypedArrayConstructors/internals/DefineOwnProperty/detached-buffer.js
+built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-numericindex.js
+built-ins/TypedArrayConstructors/internals/DefineOwnProperty/key-is-numericindex-desc-configurable.js
+built-ins/TypedArrayConstructors/internals/GetOwnProperty/BigInt/index-prop-desc.js
+built-ins/TypedArrayConstructors/internals/GetOwnProperty/index-prop-desc.js
+built-ins/TypedArrayConstructors/internals/Set/BigInt/detached-buffer.js
+built-ins/TypedArrayConstructors/internals/Set/BigInt/detached-buffer-realm.js
+built-ins/TypedArrayConstructors/internals/Set/detached-buffer.js
+built-ins/TypedArrayConstructors/internals/Set/detached-buffer-realm.js
+built-ins/TypedArray/prototype/every/BigInt/callbackfn-detachbuffer.js
+built-ins/TypedArray/prototype/every/callbackfn-detachbuffer.js
+built-ins/TypedArray/prototype/filter/BigInt/callbackfn-detachbuffer.js
+built-ins/TypedArray/prototype/filter/callbackfn-detachbuffer.js
+built-ins/TypedArray/prototype/find/BigInt/predicate-may-detach-buffer.js
+built-ins/TypedArray/prototype/findIndex/BigInt/predicate-may-detach-buffer.js
+built-ins/TypedArray/prototype/findIndex/predicate-may-detach-buffer.js
+built-ins/TypedArray/prototype/find/predicate-may-detach-buffer.js
+built-ins/TypedArray/prototype/forEach/BigInt/callbackfn-detachbuffer.js
+built-ins/TypedArray/prototype/forEach/callbackfn-detachbuffer.js
+built-ins/TypedArray/prototype/includes/detached-buffer-tointeger.js
+built-ins/TypedArray/prototype/map/BigInt/callbackfn-detachbuffer.js
+built-ins/TypedArray/prototype/map/callbackfn-detachbuffer.js
+built-ins/TypedArray/prototype/reduce/BigInt/callbackfn-detachbuffer.js
+built-ins/TypedArray/prototype/reduce/callbackfn-detachbuffer.js
+built-ins/TypedArray/prototype/reduceRight/BigInt/callbackfn-detachbuffer.js
+built-ins/TypedArray/prototype/reduceRight/callbackfn-detachbuffer.js
+built-ins/TypedArray/prototype/some/BigInt/callbackfn-detachbuffer.js
+built-ins/TypedArray/prototype/some/callbackfn-detachbuffer.js

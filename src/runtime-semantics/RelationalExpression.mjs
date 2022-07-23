@@ -11,7 +11,10 @@ import {
   OrdinaryHasInstance,
   ToBoolean,
   ToPropertyKey,
+  ResolvePrivateIdentifier,
+  PrivateElementFind,
 } from '../abstract-ops/all.mjs';
+import { StringValue } from '../static-semantics/all.mjs';
 import {
   Type,
   Value,
@@ -42,6 +45,30 @@ export function InstanceofOperator(V, target) {
   return Q(OrdinaryHasInstance(target, V));
 }
 
+// RelationalExpression : PrivateIdentifier `in` ShiftExpression
+export function* Evaluate_RelationalExpression_PrivateIdentifier({ PrivateIdentifier, ShiftExpression }) {
+  // 1. Let privateIdentifier be the StringValue of PrivateIdentifier.
+  const privateIdentifier = StringValue(PrivateIdentifier);
+  // 2. Let rref be the result of evaluating ShiftExpression.
+  const rref = yield* Evaluate(ShiftExpression);
+  // 3. Let rval be ? GetValue(rref).
+  const rval = Q(GetValue(rref));
+  // 4. If Type(rval) is not Object, throw a TypeError exception.
+  if (Type(rval) !== 'Object') {
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', rval);
+  }
+  // 5. Let privateEnv be the running execution context's PrivateEnvironment.
+  const privateEnv = surroundingAgent.runningExecutionContext.PrivateEnvironment;
+  // 6. Let privateName be ! ResolvePrivateIdentifier(privateEnv, privateIdentifier).
+  const privateName = X(ResolvePrivateIdentifier(privateEnv, privateIdentifier));
+  // 7. If ! PrivateElementFind(privateName, rval) is not empty, return true.
+  if (X(PrivateElementFind(privateName, rval)) !== undefined) {
+    return Value.true;
+  }
+  // 8. Return false.
+  return Value.false;
+}
+
 // #sec-relational-operators-runtime-semantics-evaluation
 //   RelationalExpression :
 //     RelationalExpression `<` ShiftExpression
@@ -50,7 +77,14 @@ export function InstanceofOperator(V, target) {
 //     RelationalExpression `>=` ShiftExpression
 //     RelationalExpression `instanceof` ShiftExpression
 //     RelationalExpression `in` ShiftExpression
-export function* Evaluate_RelationalExpression({ RelationalExpression, operator, ShiftExpression }) {
+//     PrivateIdentifier `in` ShiftExpression
+export function* Evaluate_RelationalExpression(expr) {
+  if (expr.PrivateIdentifier) {
+    return yield* Evaluate_RelationalExpression_PrivateIdentifier(expr);
+  }
+
+  const { RelationalExpression, operator, ShiftExpression } = expr;
+
   // 1. Let lref be the result of evaluating RelationalExpression.
   const lref = yield* Evaluate(RelationalExpression);
   // 2. Let lval be ? GetValue(lref).

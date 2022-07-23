@@ -14,6 +14,7 @@ import {
   EnumerableOwnPropertyNames,
   FromPropertyDescriptor,
   Get,
+  HasOwnProperty,
   IsExtensible,
   OrdinaryObjectCreate,
   OrdinaryCreateFromConstructor,
@@ -185,34 +186,25 @@ function Object_freeze([O = Value.undefined]) {
   return O;
 }
 
-// #sec-create-data-property-on-object-functions
-function CreateDataPropertyOnObjectFunctions([key, value], { thisValue }) {
-  // 1. Let O be the this value.
-  const O = thisValue;
-  // 2. Assert: Type(O) is Object.
-  Assert(Type(O) === 'Object');
-  // 3. Assert: O is an extensible ordinary object.
-  Assert(O.Extensible === Value.true);
-  // 4. Let propertyKey be ? ToPropertyKey(key).
-  const propertyKey = Q(ToPropertyKey(key));
-  // 5. Perform ! CreateDataPropertyOrThrow(O, propertyKey, value).
-  X(CreateDataPropertyOrThrow(O, propertyKey, value));
-  // 6. Return undefined.
-  return Value.undefined;
-}
-
 // #sec-object.fromentries
 function Object_fromEntries([iterable = Value.undefined]) {
   // 1. Perform ? RequireObjectCoercible(iterable).
   Q(RequireObjectCoercible(iterable));
-  // 2. Let obj be OrdinaryObjectCreate(%Object.prototype%).
-  const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+  // 2. Let obj be ! OrdinaryObjectCreate(%Object.prototype%).
+  const obj = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%')));
   // 3. Assert: obj is an extensible ordinary object with no own properties.
   Assert(obj.Extensible === Value.true && obj.properties.size === 0);
-  // 4. Let stepsDefine be the algorithm steps defined in CreateDataPropertyOnObject Functions.
-  const stepsDefine = CreateDataPropertyOnObjectFunctions;
-  // 5. Let adder be ! CreateBuiltinFunction(stepsDefine, « »).
-  const adder = X(CreateBuiltinFunction(stepsDefine, []));
+  // 4. Let closure be a new Abstract Closure with parameters (key, value) that captures obj and performs the following steps when called:
+  const closure = ([key = Value.undefined, value = Value.undefined]) => {
+    // a. Let propertyKey be ? ToPropertyKey(key).
+    const propertyKey = Q(ToPropertyKey(key));
+    // b. Perform ! CreateDataPropertyOrThrow(obj, propertyKey, value).
+    X(CreateDataPropertyOrThrow(obj, propertyKey, value));
+    // c. Return undefined.
+    return Value.undefined;
+  };
+  // 5. Let adder be ! CreateBuiltinFunction(closure, 2, "", « »).
+  const adder = X(CreateBuiltinFunction(closure, 2, new Value(''), []));
   // 6. Return ? AddEntriesFromIterable(obj, iterable, adder).
   return Q(AddEntriesFromIterable(obj, iterable, adder));
 }
@@ -289,6 +281,16 @@ function Object_getPrototypeOf([O = Value.undefined]) {
   const obj = Q(ToObject(O));
   // 2. Return ? obj.[[GetPrototypeOf]]().
   return Q(obj.GetPrototypeOf());
+}
+
+// #sec-object.hasown
+function Object_hasOwn([O = Value.undefined, P = Value.undefined]) {
+  // 1. Let obj be ? ToObject(O).
+  const obj = Q(ToObject(O));
+  // 2. Let O be ? ToObject(this value).
+  const key = Q(ToPropertyKey(P));
+  // 3. Return ? HasOwnProperty(obj, key).
+  return HasOwnProperty(obj, key);
 }
 
 // #sec-object.is
@@ -401,7 +403,7 @@ function Object_values([O = Value.undefined]) {
   return CreateArrayFromList(nameList);
 }
 
-export function BootstrapObject(realmRec) {
+export function bootstrapObject(realmRec) {
   const objectConstructor = bootstrapConstructor(realmRec, ObjectConstructor, 'Object', 1, realmRec.Intrinsics['%Object.prototype%'], [
     ['assign', Object_assign, 2],
     ['create', Object_create, 2],
@@ -415,6 +417,7 @@ export function BootstrapObject(realmRec) {
     ['getOwnPropertyNames', Object_getOwnPropertyNames, 1],
     ['getOwnPropertySymbols', Object_getOwnPropertySymbols, 1],
     ['getPrototypeOf', Object_getPrototypeOf, 1],
+    ['hasOwn', Object_hasOwn, 2],
     ['is', Object_is, 2],
     ['isExtensible', Object_isExtensible, 1],
     ['isFrozen', Object_isFrozen, 1],

@@ -1,10 +1,9 @@
 import {
   Assert,
   CreateBuiltinFunction,
-  SetFunctionName,
-  SetFunctionLength,
   ToInt32,
   ToString,
+  F,
 } from '../abstract-ops/all.mjs';
 import { TrimString } from '../runtime-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
@@ -67,7 +66,7 @@ function ParseInt([string = Value.undefined, radix = Value.undefined]) {
   let stripPrefix = true;
   if (R !== 0) {
     if (R < 2 || R > 36) {
-      return new Value(NaN);
+      return F(NaN);
     }
     if (R !== 16) {
       stripPrefix = false;
@@ -83,22 +82,19 @@ function ParseInt([string = Value.undefined, radix = Value.undefined]) {
   }
   const Z = S.slice(0, searchNotRadixDigit(S, R));
   if (Z === '') {
-    return new Value(NaN);
+    return F(NaN);
   }
   const mathInt = stringToRadixNumber(Z, R);
   if (mathInt === 0) {
     if (sign === -1) {
-      return new Value(-0);
+      return F(-0);
     }
-    return new Value(+0);
+    return F(+0);
   }
   const number = mathInt;
-  return new Value(sign * number);
+  return F(sign * number);
 }
 
-export function BootstrapParseInt(realmRec) {
-  const fn = CreateBuiltinFunction(ParseInt, [], realmRec);
-  X(SetFunctionName(fn, new Value('parseInt')));
-  X(SetFunctionLength(fn, new Value(2)));
-  realmRec.Intrinsics['%parseInt%'] = fn;
+export function bootstrapParseInt(realmRec) {
+  realmRec.Intrinsics['%parseInt%'] = CreateBuiltinFunction(ParseInt, 2, new Value('parseInt'), [], realmRec);
 }

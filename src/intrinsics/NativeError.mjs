@@ -4,6 +4,7 @@ import {
 import {
   DefinePropertyOrThrow,
   OrdinaryCreateFromConstructor,
+  InstallErrorCause,
   ToString,
 } from '../abstract-ops/all.mjs';
 import {
@@ -15,7 +16,7 @@ import { Q, X } from '../completion.mjs';
 import { captureStack } from '../helpers.mjs';
 import { bootstrapConstructor, bootstrapPrototype } from './bootstrap.mjs';
 
-export function BootstrapNativeError(realmRec) {
+export function bootstrapNativeError(realmRec) {
   for (const name of [
     'EvalError',
     'RangeError',
@@ -30,7 +31,7 @@ export function BootstrapNativeError(realmRec) {
     ], realmRec.Intrinsics['%Error.prototype%']);
 
     // #sec-nativeerror
-    const Constructor = ([message = Value.undefined], { NewTarget }) => {
+    const Constructor = ([message = Value.undefined, options = Value.undefined], { NewTarget }) => {
       // 1. If NewTarget is undefined, let newTarget be the active function object; else let newTarget be NewTarget.
       let newTarget;
       if (Type(NewTarget) === 'Undefined') {
@@ -54,9 +55,11 @@ export function BootstrapNativeError(realmRec) {
         // c. Perform ! DefinePropertyOrThrow(O, "message", msgDesc).
         X(DefinePropertyOrThrow(O, new Value('message'), msgDesc));
       }
+      // 4. Perform ? InstallErrorCause(O, options).
+      Q(InstallErrorCause(O, options));
       // NON-SPEC
       X(captureStack(O));
-      // 4. Return O.
+      // 5. Return O.
       return O;
     };
     Object.defineProperty(Constructor, 'name', {

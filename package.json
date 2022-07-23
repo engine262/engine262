@@ -1,5 +1,5 @@
 {
-  "name": "engine262",
+  "name": "@engine262/engine262",
   "version": "0.0.1",
   "description": "Implementation of ECMA-262 in JavaScript",
   "author": "engine262 Contributors",
@@ -15,10 +15,10 @@
     "build:regex_data": "node scripts/gen_regex_sets.js",
     "build:engine": "rollup -c",
     "test": "bash test/test_root.sh",
-    "test:test262": "node test/test262/test262.js",
-    "test:supplemental": "node test/supplemental.js",
-    "test:json": "node test/json/json.js",
-    "coverage": "nyc --reporter=lcov npm run test",
+    "test:test262": "node --enable-source-maps test/test262/test262.js",
+    "test:supplemental": "node --enable-source-maps test/supplemental.js",
+    "test:json": "node --enable-source-maps test/json/json.js",
+    "coverage": "c8 --reporter=lcov npm run test",
     "prepublishOnly": "node scripts/tag_version_with_git_hash.js",
     "postpublish": "git reset --hard HEAD"
   },
@@ -29,28 +29,26 @@
     "type": "git",
     "url": "git+https://github.com/engine262/engine262.git"
   },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com/@engine262"
-  },
   "devDependencies": {
-    "@babel/core": "^7.11.1",
-    "@babel/eslint-parser": "^7.11.3",
-    "@rollup/plugin-babel": "^5.1.0",
-    "@rollup/plugin-commonjs": "^14.0.0",
+    "@babel/core": "^7.18.9",
+    "@babel/eslint-parser": "^7.18.9",
+    "@babel/plugin-proposal-optional-chaining": "^7.18.9",
+    "@engine262/eslint-plugin": "file:./test/eslint-plugin-engine262",
+    "@rollup/plugin-babel": "^5.3.1",
+    "@rollup/plugin-commonjs": "^22.0.1",
     "@rollup/plugin-json": "^4.1.0",
-    "@rollup/plugin-node-resolve": "^8.4.0",
-    "@snek/source-map-support": "^1.0.4",
-    "acorn": "^7.4.0",
-    "eslint": "^7.2.0",
-    "eslint-config-airbnb-base": "^14.2.0",
-    "eslint-plugin-import": "^2.22.0",
-    "glob": "^7.1.6",
-    "js-yaml": "^3.14.0",
-    "minimatch": "^3.0.4",
+    "@rollup/plugin-node-resolve": "^13.3.0",
+    "@unicode/unicode-14.0.0": "^1.2.2",
+    "acorn": "^8.8.0",
+    "c8": "^7.12.0",
+    "eslint": "^8.20.0",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "glob": "^8.0.3",
+    "js-yaml": "^4.1.0",
+    "minimatch": "^5.1.0",
     "npm-run-all": "^4.1.5",
-    "nyc": "^15.1.0",
-    "rollup": "^2.23.1",
-    "unicode-13.0.0": "^0.8.0",
-    "ws": "^7.2.3"
+    "rollup": "^2.77.0",
+    "ws": "^8.8.1"
   }
 }

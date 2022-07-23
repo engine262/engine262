@@ -2,6 +2,7 @@ import { surroundingAgent, HostResolveImportedModule } from '../engine.mjs';
 import {
   AbstractModuleRecord,
   CyclicModuleRecord,
+  SyntheticModuleRecord,
   ResolvedBindingRecord,
 } from '../modules.mjs';
 import { Value } from '../value.mjs';
@@ -130,40 +131,43 @@ export function InnerModuleEvaluation(module, stack, index) {
   return index;
 }
 
-// https://tc39.es/proposal-top-level-await/#sec-execute-async-module
+// #sec-execute-async-module
 function ExecuteAsyncModule(module) {
+  // 1. Assert: module.[[Status]] is evaluating or evaluated.
   Assert(module.Status === 'evaluating' || module.Status === 'evaluated');
+  // 2. Assert: module.[[Async]] is true.
   Assert(module.Async === Value.true);
+  // 3. Set module.[[AsyncEvaluating]] to true.
   module.AsyncEvaluating = Value.true;
+  // 4. Let capability be ! NewPromiseCapability(%Promise%).
   const capability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
-  const stepsFulfilled = CallAsyncModuleFulfilled;
-  const onFulfilled = CreateBuiltinFunction(stepsFulfilled, ['Module']);
-  onFulfilled.Module = module;
-  const stepsRejected = CallAsyncModuleRejected;
-  const onRejected = CreateBuiltinFunction(stepsRejected, ['Module']);
-  onRejected.Module = module;
+  // 5. Let fulfilledClosure be a new Abstract Closure with no parameters that captures module and performs the following steps when called:
+  const fulfilledClosure = () => {
+    // a. Perform ! AsyncModuleExecutionFulfilled(module).
+    X(AsyncModuleExecutionFulfilled(module));
+    // b. Return undefined.
+    return Value.undefined;
+  };
+  // 6. Let onFulfilled be ! CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
+  const onFulfilled = CreateBuiltinFunction(fulfilledClosure, 0, new Value(''), ['Module']);
+  // 7. Let rejectedClosure be a new Abstract Closure with parameters (error) that captures module and performs the following steps when called:
+  const rejectedClosure = ([error = Value.undefined]) => {
+    // a. Perform ! AsyncModuleExecutionRejected(module, error).
+    X(AsyncModuleExecutionRejected(module, error));
+    // b. Return undefined.
+    return Value.undefined;
+  };
+  // 8. Let onRejected be ! CreateBuiltinFunction(rejectedClosure, 0, "", « »).
+  const onRejected = CreateBuiltinFunction(rejectedClosure, 0, new Value(''), ['Module']);
+  // 9. Perform ! PerformPromiseThen(capability.[[Promise]], onFulfilled, onRejected).
   X(PerformPromiseThen(capability.Promise, onFulfilled, onRejected));
+  // 10. Perform ! module.ExecuteModule(capability).
   X(module.ExecuteModule(capability));
+  // 11. Return.
   return Value.undefined;
 }
 
-// https://tc39.es/proposal-top-level-await/#sec-execute-async-module
-function CallAsyncModuleFulfilled() {
-  const f = surroundingAgent.activeFunctionObject;
-  const module = f.Module;
-  X(AsyncModuleExecutionFulfilled(module));
-  return Value.undefined;
-}
-
-// https://tc39.es/proposal-top-level-await/#sec-execute-async-module
-function CallAsyncModuleRejected([error = Value.undefined]) {
-  const f = surroundingAgent.activeFunctionObject;
-  const module = f.Module;
-  X(AsyncModuleExecutionRejected(module, error));
-  return Value.undefined;
-}
-
-// https://tc39.es/proposal-top-level-await/#sec-getcycleroot
+// #sec-getcycleroot
 export function GetAsyncCycleRoot(module) {
   Assert(module.Status === 'evaluated');
   if (module.AsyncParentModules.length === 0) {
@@ -179,7 +183,7 @@ export function GetAsyncCycleRoot(module) {
   return module;
 }
 
-// https://tc39.es/proposal-top-level-await/#sec-asyncmodulexecutionfulfilled
+// #sec-asyncmodulexecutionfulfilled
 function AsyncModuleExecutionFulfilled(module) {
   Assert(module.Status === 'evaluated');
   if (module.AsyncEvaluating === Value.false) {
@@ -218,7 +222,7 @@ function AsyncModuleExecutionFulfilled(module) {
   return Value.undefined;
 }
 
-// https://tc39.es/proposal-top-level-await/#sec-AsyncModuleExecutionRejected
+// #sec-AsyncModuleExecutionRejected
 function AsyncModuleExecutionRejected(module, error) {
   Assert(module.Status === 'evaluated');
   if (module.AsyncEvaluating === Value.false) {
@@ -260,4 +264,34 @@ export function GetModuleNamespace(module) {
     namespace = ModuleNamespaceCreate(module, unambiguousNames);
   }
   return namespace;
+}
+
+export function CreateSyntheticModule(exportNames, evaluationSteps, realm, hostDefined) {
+  // 1. Return Synthetic Module Record {
+  //      [[Realm]]: realm,
+  //      [[Environment]]: undefined,
+  //      [[Namespace]]: undefined,
+  //      [[HostDefined]]: hostDefined,
+  //      [[ExportNames]]: exportNames,
+  //      [[EvaluationSteps]]: evaluationSteps
+  //    }.
+  return new SyntheticModuleRecord({
+    Realm: realm,
+    Environment: Value.undefined,
+    Namespace: Value.undefined,
+    HostDefined: hostDefined,
+    ExportNames: exportNames,
+    EvaluationSteps: evaluationSteps,
+  });
+}
+
+// #sec-create-default-export-synthetic-module
+export function CreateDefaultExportSyntheticModule(defaultExport, realm, hostDefined) {
+  // 1. Let closure be the a Abstract Closure with parameters (module) that captures defaultExport and performs the following steps when called:
+  const closure = (module) => { // eslint-disable-line arrow-body-style
+    // a. Return ? module.SetSyntheticExport("default", defaultExport).
+    return Q(module.SetSyntheticExport(new Value('default'), defaultExport));
+  };
+  // 2. Return CreateSyntheticModule(« "default" », closure, realm)
+  return CreateSyntheticModule([new Value('default')], closure, realm, hostDefined);
 }

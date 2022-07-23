@@ -1,10 +1,10 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
   Call,
+  F,
   IsCallable,
-  OrdinaryObjectCreate,
-  SameValueZero,
   RequireInternalSlot,
+  SameValueZero,
 } from '../abstract-ops/all.mjs';
 import {
   Type,
@@ -13,20 +13,7 @@ import {
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
-
-// 23.2.5.1 #sec-createsetiterator
-function CreateSetIterator(set, kind) {
-  Q(RequireInternalSlot(set, 'SetData'));
-  const iterator = OrdinaryObjectCreate(surroundingAgent.intrinsic('%SetIteratorPrototype%'), [
-    'IteratedSet',
-    'SetNextIndex',
-    'SetIterationKind',
-  ]);
-  iterator.IteratedSet = set;
-  iterator.SetNextIndex = 0;
-  iterator.SetIterationKind = kind;
-  return iterator;
-}
+import { CreateSetIterator } from './SetIteratorPrototype.mjs';
 
 // #sec-set.prototype.add
 function SetProto_add([value = Value.undefined], { thisValue }) {
@@ -44,9 +31,9 @@ function SetProto_add([value = Value.undefined], { thisValue }) {
       return S;
     }
   }
-  // 5. If value is -0, set value to +0.
+  // 5. If value is -0𝔽, set value to +0𝔽.
   if (Type(value) === 'Number' && Object.is(value.numberValue(), -0)) {
-    value = new Value(0);
+    value = F(+0);
   }
   // 6. Append value as the last element of entries.
   entries.push(value);
@@ -114,7 +101,7 @@ function SetProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefin
   }
   // 4. Let entries be the List that is S.[[SetData]].
   const entries = S.SetData;
-  // 5. For each e that is an element of entries, in original insertion order, do
+  // 5. For each element _e_ of _entries_, do
   for (const e of entries) {
     // a. If e is not empty, then
     if (e !== undefined) {
@@ -162,8 +149,8 @@ function SetProto_sizeGetter(args, { thisValue }) {
       count += 1;
     }
   }
-  // 6. Return count.
-  return new Value(count);
+  // 6. Return 𝔽(count).
+  return F(count);
 }
 
 // #sec-set.prototype.values
@@ -174,7 +161,7 @@ function SetProto_values(args, { thisValue }) {
   return Q(CreateSetIterator(S, 'value'));
 }
 
-export function BootstrapSetPrototype(realmRec) {
+export function bootstrapSetPrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [
     ['add', SetProto_add, 1],
     ['clear', SetProto_clear, 0],

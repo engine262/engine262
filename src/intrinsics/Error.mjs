@@ -1,6 +1,7 @@
 import {
   DefinePropertyOrThrow,
   OrdinaryCreateFromConstructor,
+  InstallErrorCause,
   ToString,
 } from '../abstract-ops/all.mjs';
 import {
@@ -13,7 +14,7 @@ import { captureStack } from '../helpers.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
 // #sec-error-constructor
-function ErrorConstructor([message = Value.undefined], { NewTarget }) {
+function ErrorConstructor([message = Value.undefined, options = Value.undefined], { NewTarget }) {
   // 1. If NewTarget is undefined, let newTarget be the active function object; else let newTarget be NewTarget.
   let newTarget;
   if (NewTarget === Value.undefined) {
@@ -38,13 +39,16 @@ function ErrorConstructor([message = Value.undefined], { NewTarget }) {
     X(DefinePropertyOrThrow(O, new Value('message'), msgDesc));
   }
 
+  // 4. Perform ? InstallErrorCause(O, options).
+  Q(InstallErrorCause(O, options));
+
   X(captureStack(O)); // NON-SPEC
 
-  // 4. Return O.
+  // 5. Return O.
   return O;
 }
 
-export function BootstrapError(realmRec) {
+export function bootstrapError(realmRec) {
   const error = bootstrapConstructor(realmRec, ErrorConstructor, 'Error', 1, realmRec.Intrinsics['%Error.prototype%'], []);
 
   realmRec.Intrinsics['%Error%'] = error;

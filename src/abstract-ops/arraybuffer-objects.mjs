@@ -3,9 +3,11 @@ import { Type, Value } from '../value.mjs';
 import { Q, X, NormalCompletion } from '../completion.mjs';
 import {
   Assert, OrdinaryCreateFromConstructor,
-  IsNonNegativeInteger, CreateByteDataBlock,
+  isNonNegativeInteger, CreateByteDataBlock,
   SameValue, IsConstructor, CopyDataBlockBytes,
   typedArrayInfoByType,
+  F,
+  Z,
 } from './all.mjs';
 
 // #sec-allocatearraybuffer
@@ -14,8 +16,8 @@ export function AllocateArrayBuffer(constructor, byteLength) {
   const obj = Q(OrdinaryCreateFromConstructor(constructor, '%ArrayBuffer.prototype%', [
     'ArrayBufferData', 'ArrayBufferByteLength', 'ArrayBufferDetachKey',
   ]));
-  // 2. Assert: ! IsNonNegativeInteger(byteLength) is true.
-  Assert(X(IsNonNegativeInteger(byteLength)) === Value.true);
+  // 2. Assert: byteLength is a non-negative integer.
+  Assert(isNonNegativeInteger(byteLength));
   // 3. Let block be ? CreateByteDataBlock(byteLength).
   const block = Q(CreateByteDataBlock(byteLength));
   // 4. Set obj.[[ArrayBufferData]] to block.
@@ -58,7 +60,7 @@ export function DetachArrayBuffer(arrayBuffer, key) {
   // 5. Set arrayBuffer.[[ArrayBufferData]] to null.
   arrayBuffer.ArrayBufferData = Value.null;
   // 6. Set arrayBuffer.[[ArrayBufferByteLength]] to 0.
-  arrayBuffer.ArrayBufferByteLength = new Value(0);
+  arrayBuffer.ArrayBufferByteLength = 0;
   // 7. Return NormalCompletion(null).
   return NormalCompletion(Value.null);
 }
@@ -84,7 +86,7 @@ export function CloneArrayBuffer(srcBuffer, srcByteOffset, srcLength, cloneConst
   // 6. Let targetBlock be targetBuffer.[[ArrayBufferData]].
   const targetBlock = targetBuffer.ArrayBufferData;
   // 7. Perform CopyDataBlockBytes(targetBlock, 0, srcBlock, srcByteOffset, srcLength).
-  CopyDataBlockBytes(targetBlock, 0, srcBlock, srcByteOffset.numberValue(), srcLength.numberValue());
+  CopyDataBlockBytes(targetBlock, 0, srcBlock, srcByteOffset, srcLength);
   // 8. Return targetBuffer.
   return targetBuffer;
 }
@@ -110,7 +112,8 @@ export function RawBytesToNumeric(type, rawBytes, isLittleEndian) {
   Assert(elementSize === rawBytes.length);
   const dataViewType = type === 'Uint8C' ? 'Uint8' : type;
   Object.assign(throwawayArray, rawBytes);
-  return new Value(throwawayDataView[`get${dataViewType}`](0, isLittleEndian === Value.true));
+  const result = throwawayDataView[`get${dataViewType}`](0, isLittleEndian === Value.true);
+  return IsBigIntElementType(type) === Value.true ? Z(result) : F(result);
 }
 
 // #sec-getvaluefrombuffer
@@ -118,8 +121,8 @@ export function GetValueFromBuffer(arrayBuffer, byteIndex, type, isTypedArray, o
   // 1. Assert: IsDetachedBuffer(arrayBuffer) is false.
   Assert(IsDetachedBuffer(arrayBuffer) === Value.false);
   // 2. Assert: There are sufficient bytes in arrayBuffer starting at byteIndex to represent a value of type.
-  // 3. Assert: ! IsNonNegativeInteger(byteIndex) is true.
-  Assert(X(IsNonNegativeInteger(byteIndex)) === Value.true);
+  // 3. Assert: byteIndex is a non-negative integer.
+  Assert(isNonNegativeInteger(byteIndex));
   // 4. Let block be arrayBuffer.[[ArrayBufferData]].
   const block = arrayBuffer.ArrayBufferData;
   // 5. Let elementSize be the Element Size value specified in Table 61 for Element Type type.
@@ -129,7 +132,7 @@ export function GetValueFromBuffer(arrayBuffer, byteIndex, type, isTypedArray, o
     Assert(false);
   }
   // 7. Else, let rawValue be a List of elementSize containing, in order, the elementSize sequence of bytes starting with block[byteIndex].
-  const rawValue = [...block.subarray(byteIndex.numberValue(), byteIndex.numberValue() + elementSize)];
+  const rawValue = [...block.subarray(byteIndex, byteIndex + elementSize)];
   // 8. If isLittleEndian is not present, set isLittleEndian to the value of the [[LittleEndian]] field of the surrounding agent's Agent Record.
   if (isLittleEndian === undefined) {
     isLittleEndian = surroundingAgent.AgentRecord.LittleEndian;
@@ -182,8 +185,8 @@ export function SetValueInBuffer(arrayBuffer, byteIndex, type, value, isTypedArr
   // 1. Assert: IsDetachedBuffer(arrayBuffer) is false.
   Assert(IsDetachedBuffer(arrayBuffer) === Value.false);
   // 2. Assert: There are sufficient bytes in arrayBuffer starting at byteIndex to represent a value of type.
-  // 3. Assert: ! IsNonNegativeInteger(byteIndex) is true.
-  Assert(X(IsNonNegativeInteger(byteIndex)) === Value.true);
+  // 3. Assert: byteIndex is a non-negative integer.
+  Assert(isNonNegativeInteger(byteIndex));
   // 4. Assert: Type(value) is BigInt if ! IsBigIntElementType(type) is true; otherwise, Type(value) is Number.
   if (X(IsBigIntElementType(type)) === Value.true) {
     Assert(Type(value) === 'BigInt');
@@ -206,7 +209,7 @@ export function SetValueInBuffer(arrayBuffer, byteIndex, type, value, isTypedArr
   }
   // 10. Else, store the individual bytes of rawBytes into block, in order, starting at block[byteIndex].
   rawBytes.forEach((byte, i) => {
-    block[byteIndex.numberValue() + i] = byte;
+    block[byteIndex + i] = byte;
   });
   // 11. Return NormalCompletion(undefined).
   return NormalCompletion(Value.undefined);

@@ -1,142 +1,203 @@
 import { surroundingAgent } from '../engine.mjs';
-import { PrimitiveValue, Type, Value } from '../value.mjs';
+import {
+  ReferenceRecord,
+  Value,
+  PrivateName,
+} from '../value.mjs';
 import {
   NormalCompletion,
   Q,
   ReturnIfAbrupt,
   X,
 } from '../completion.mjs';
+import { EnvironmentRecord } from '../environment.mjs';
 import {
   Assert,
   GetGlobalObject,
   ToObject,
   Set,
+  PrivateGet,
+  PrivateSet,
 } from './all.mjs';
 
-
-// 6.2.4.1 #sec-getbase
-export function GetBase(V) {
-  Assert(Type(V) === 'Reference');
-  return V.BaseValue;
-}
-
-// 6.2.4.2 #sec-getreferencedname
-export function GetReferencedName(V) {
-  Assert(Type(V) === 'Reference');
-  return V.ReferencedName;
-}
-
-// 6.2.4.3 #sec-isstrictreference
-export function IsStrictReference(V) {
-  Assert(Type(V) === 'Reference');
-  return V.StrictReference;
-}
-
-// 6.2.4.4 #sec-hasprimitivebase
-export function HasPrimitiveBase(V) {
-  Assert(Type(V) === 'Reference');
-  if (V.BaseValue instanceof PrimitiveValue) {
-    return Value.true;
-  }
-  return Value.false;
-}
-
-// 6.2.4.5 #sec-ispropertyreference
+// #sec-ispropertyreference
 export function IsPropertyReference(V) {
-  Assert(Type(V) === 'Reference');
-  if (Type(V.BaseValue) === 'Object' || HasPrimitiveBase(V) === Value.true) {
-    return Value.true;
+  // 1. If V.[[Base]] is unresolvable, return false.
+  if (V.Base === 'unresolvable') {
+    return Value.false;
   }
-  return Value.false;
+  // 2. If V.[[Base]] is an Environment Record, return false; otherwise return true.
+  return V.Base instanceof EnvironmentRecord ? Value.false : Value.true;
 }
 
-// 6.2.4.6 #sec-isunresolvablereference
+// #sec-isunresolvablereference
 export function IsUnresolvableReference(V) {
-  Assert(Type(V) === 'Reference');
-  if (V.BaseValue === Value.undefined) {
-    return Value.true;
-  }
-  return Value.false;
+  // 1. Assert: V is a Reference Record.
+  Assert(V instanceof ReferenceRecord);
+  // 2. If V.[[Base]] is unresolvable, return true; otherwise return false.
+  return V.Base === 'unresolvable' ? Value.true : Value.false;
 }
 
-// 6.2.4.7 #sec-issuperreference
+// #sec-issuperreference
 export function IsSuperReference(V) {
-  // 1. Assert: Type(V) is Reference.
-  Assert(Type(V) === 'Reference');
-  // 2. If V has a thisValue component, return true; otherwise return false.
-  return 'thisValue' in V ? Value.true : Value.false;
+  // 1. Assert: V is a Reference Record.
+  Assert(V instanceof ReferenceRecord);
+  // 2. If V.[[ThisValue]] is not empty, return true; otherwise return false.
+  return V.ThisValue !== undefined ? Value.true : Value.false;
 }
 
-// 6.2.4.8 #sec-getvalue
+// #sec-isprivatereference
+export function IsPrivateReference(V) {
+  // 1. Assert: V is a Reference Record.
+  Assert(V instanceof ReferenceRecord);
+  // 2. If V.[[ReferencedName]] is a Private Name, return true; otherwise return false.
+  return V.ReferencedName instanceof PrivateName ? Value.true : Value.false;
+}
+
+// #sec-getvalue
 export function GetValue(V) {
+  // 1. ReturnIfAbrupt(V).
   ReturnIfAbrupt(V);
-  if (Type(V) !== 'Reference') {
+  // 2. If V is not a Reference Record, return V.
+  if (!(V instanceof ReferenceRecord)) {
     return V;
   }
-  let base = GetBase(V);
+  // 3. If IsUnresolvableReference(V) is true, throw a ReferenceError exception.
   if (IsUnresolvableReference(V) === Value.true) {
-    return surroundingAgent.Throw('ReferenceError', 'NotDefined', GetReferencedName(V));
+    return surroundingAgent.Throw('ReferenceError', 'NotDefined', V.ReferencedName);
   }
+  // 4. If IsPropertyReference(V) is true, then
   if (IsPropertyReference(V) === Value.true) {
-    if (HasPrimitiveBase(V) === Value.true) {
-      Assert(base !== Value.undefined && base !== Value.null);
-      base = X(ToObject(base));
+    // a. Let baseObj be ? ToObject(V.[[Base]]).
+    const baseObj = Q(ToObject(V.Base));
+    // b. If IsPrivateReference(V) is true, then
+    if (IsPrivateReference(V) === Value.true) {
+      // i. Return ? PrivateGet(V.[[ReferencedName]], baseObj).
+      return Q(PrivateGet(V.ReferencedName, baseObj));
     }
-    return Q(base.Get(GetReferencedName(V), GetThisValue(V)));
-  } else {
-    return Q(base.GetBindingValue(GetReferencedName(V), IsStrictReference(V)));
+    // c. Return ? baseObj.[[Get]](V.[[ReferencedName]], GetThisValue(V)).
+    return Q(baseObj.Get(V.ReferencedName, GetThisValue(V)));
+  } else { // 5. Else,
+    // a. Let base be V.[[Base]].
+    const base = V.Base;
+    // b. Assert: base is an Environment Record.
+    Assert(base instanceof EnvironmentRecord);
+    // c. Return ? base.GetBindingValue(V.[[ReferencedName]], V.[[Strict]]).
+    return Q(base.GetBindingValue(V.ReferencedName, V.Strict));
   }
 }
 
-// 6.2.4.9 #sec-putvalue
+// #sec-putvalue
 export function PutValue(V, W) {
+  // 1. ReturnIfAbrupt(V).
   ReturnIfAbrupt(V);
+  // 2. ReturnIfAbrupt(W).
   ReturnIfAbrupt(W);
-  if (Type(V) !== 'Reference') {
-    return surroundingAgent.Throw('ReferenceError', 'NotDefined', V);
+  // 3. If V is not a Reference Record, throw a ReferenceError exception.
+  if (!(V instanceof ReferenceRecord)) {
+    return surroundingAgent.Throw('ReferenceError', 'InvalidAssignmentTarget');
   }
-  let base = GetBase(V);
+  // 4. If IsUnresolvableReference(V) is true, then
   if (IsUnresolvableReference(V) === Value.true) {
-    if (IsStrictReference(V) === Value.true) {
-      return surroundingAgent.Throw('ReferenceError', 'NotDefined', GetReferencedName(V));
+    // a. If V.[[Strict]] is true, throw a ReferenceError exception.
+    if (V.Strict === Value.true) {
+      return surroundingAgent.Throw('ReferenceError', 'NotDefined', V.ReferencedName);
     }
+    // b. Let globalObj be GetGlobalObject().
     const globalObj = GetGlobalObject();
-    return Q(Set(globalObj, GetReferencedName(V), W, Value.false));
-  } else if (IsPropertyReference(V) === Value.true) {
-    if (HasPrimitiveBase(V) === Value.true) {
-      Assert(Type(base) !== 'Undefined' && Type(base) !== 'Null');
-      base = X(ToObject(base));
+    // c. Return ? Set(globalObj, V.[[ReferencedName]], W, false).
+    return Q(Set(globalObj, V.ReferencedName, W, Value.false));
+  }
+  // 5. If IsPropertyReference(V) is true, then
+  if (IsPropertyReference(V) === Value.true) {
+    // a. Let baseObj be ! ToObject(V.[[Base]]).
+    const baseObj = X(ToObject(V.Base));
+    // b. If IsPrivateReference(V) is true, then
+    if (IsPrivateReference(V) === Value.true) {
+      // i. Return ? PrivateSet(V.[[ReferencedName]], baseObj, W).
+      return Q(PrivateSet(V.ReferencedName, baseObj, W));
     }
-    const succeeded = Q(base.Set(GetReferencedName(V), W, GetThisValue(V)));
-    if (succeeded === Value.false && IsStrictReference(V) === Value.true) {
-      return surroundingAgent.Throw('TypeError', 'CannotSetProperty', GetReferencedName(V), base);
+    // c. Let succeeded be ? baseObj.[[Set]](V.[[ReferencedName]], W, GetThisValue(V)).
+    const succeeded = Q(baseObj.Set(V.ReferencedName, W, GetThisValue(V)));
+    // d. If succeeded is false and V.[[Strict]] is true, throw a TypeError exception.
+    if (succeeded === Value.false && V.Strict === Value.true) {
+      return surroundingAgent.Throw('TypeError', 'CannotSetProperty', V.ReferencedName, V.Base);
     }
+    // e. Return.
     return NormalCompletion(Value.undefined);
-  } else {
-    return Q(base.SetMutableBinding(GetReferencedName(V), W, IsStrictReference(V)));
+  } else { // 6. Else,
+    // a. Let base be V.[[Base]].
+    const base = V.Base;
+    // b. Assert: base is an Environment Record.
+    Assert(base instanceof EnvironmentRecord);
+    // c. Return ? base.SetMutableBinding(V.[[ReferencedName]], W, V.[[Strict]]) (see 9.1).
+    return Q(base.SetMutableBinding(V.ReferencedName, W, V.Strict));
   }
 }
 
-// 6.2.4.10 #sec-getthisvalue
+// #sec-getthisvalue
 export function GetThisValue(V) {
   // 1. Assert: IsPropertyReference(V) is true.
   Assert(IsPropertyReference(V) === Value.true);
-  // 2. If IsSuperReference(V) is true, then
+  // 2. If IsSuperReference(V) is true, return V.[[ThisValue]]; otherwise return V.[[Base]].
   if (IsSuperReference(V) === Value.true) {
-    // a. Return the value of the thisValue component of the reference V.
-    return V.thisValue;
+    return V.ThisValue;
+  } else {
+    return V.Base;
   }
-  // 3. Return GetBase(V).
-  return GetBase(V);
 }
 
-// 6.2.4.11 #sec-initializereferencedbinding
+// #sec-initializereferencedbinding
 export function InitializeReferencedBinding(V, W) {
+  // 1. ReturnIfAbrupt(V).
   ReturnIfAbrupt(V);
+  // 2. ReturnIfAbrupt(W).
   ReturnIfAbrupt(W);
-  Assert(Type(V) === 'Reference');
+  // 3. Assert: V is a Reference Record.
+  Assert(V instanceof ReferenceRecord);
+  // 4. Assert: IsUnresolvableReference(V) is false.
   Assert(IsUnresolvableReference(V) === Value.false);
-  const base = GetBase(V);
-  Assert(Type(base) === 'EnvironmentRecord');
-  return base.InitializeBinding(GetReferencedName(V), W);
+  // 5. Let base be V.[[Base]].
+  const base = V.Base;
+  // 6. Assert: base is an Environment Record.
+  Assert(base instanceof EnvironmentRecord);
+  // 7. Return base.InitializeBinding(V.[[ReferencedName]], W).
+  return base.InitializeBinding(V.ReferencedName, W);
+}
+
+// #sec-makeprivatereference
+export function MakePrivateReference(baseValue, privateIdentifier) {
+  // 1. Let privEnv be the running execution context's PrivateEnvironment.
+  const privEnv = surroundingAgent.runningExecutionContext.PrivateEnvironment;
+  // 2. Assert: privEnv is not null.
+  Assert(privEnv !== Value.null);
+  // 3. Let privateName be ! ResolvePrivateIdentifier(privEnv, privateIdentifier).
+  const privateName = X(ResolvePrivateIdentifier(privEnv, privateIdentifier));
+  // 4. Return the Reference Record { [[Base]]: baseValue, [[ReferencedName]]: privateName, [[Strict]]: true, [[ThisValue]]: empty }.
+  return new ReferenceRecord({
+    Base: baseValue,
+    ReferencedName: privateName,
+    Strict: Value.true,
+    ThisValue: undefined,
+  });
+}
+
+// #sec-resolve-private-identifier
+export function ResolvePrivateIdentifier(privEnv, identifier) {
+  // 1. Let names be privEnv.[[Names]].
+  const names = privEnv.Names;
+  // 2. If names contains a Private Name whose [[Description]] is identifier, then
+  const name = names.find((n) => n.Description.stringValue() === identifier.stringValue());
+  if (name) {
+    // a. Let name be that Private Name.
+    // b. Return name.
+    return name;
+  } else { // 3. Else,
+    // a. Let outerPrivEnv be privEnv.[[OuterPrivateEnvironment]].
+    const outerPrivEnv = privEnv.OuterPrivateEnvironment;
+    // b. Assert: outerPrivEnv is not null.
+    Assert(outerPrivEnv !== Value.null);
+    // c. Return ResolvePrivateIdentifier(outerPrivEnv, identifier).
+    return ResolvePrivateIdentifier(outerPrivEnv, identifier);
+  }
 }

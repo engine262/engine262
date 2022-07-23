@@ -2,8 +2,6 @@ import {
   Assert,
   CreateBuiltinFunction,
   OrdinaryObjectCreate,
-  SetFunctionLength,
-  SetFunctionName,
 } from '../abstract-ops/all.mjs';
 import {
   Descriptor,
@@ -32,14 +30,26 @@ export function assignProps(realmRec, obj, props) {
         setter = Value.undefined,
       ] = v;
       if (typeof getter === 'function') {
-        getter = CreateBuiltinFunction(getter, [], realmRec);
-        X(SetFunctionName(getter, name, new Value('get')));
-        X(SetFunctionLength(getter, new Value(0)));
+        getter = CreateBuiltinFunction(
+          getter,
+          0,
+          name,
+          [],
+          realmRec,
+          undefined,
+          new Value('get'),
+        );
       }
       if (typeof setter === 'function') {
-        setter = CreateBuiltinFunction(setter, [], realmRec);
-        X(SetFunctionName(setter, name, new Value('set')));
-        X(SetFunctionLength(setter, new Value(1)));
+        setter = CreateBuiltinFunction(
+          setter,
+          1,
+          name,
+          [],
+          realmRec,
+          undefined,
+          new Value('set'),
+        );
       }
       X(obj.DefineOwnProperty(name, Descriptor({
         Get: getter,
@@ -55,9 +65,7 @@ export function assignProps(realmRec, obj, props) {
       let value;
       if (typeof v === 'function') {
         Assert(typeof len === 'number');
-        value = CreateBuiltinFunction(v, [], realmRec);
-        X(SetFunctionName(value, name));
-        X(SetFunctionLength(value, new Value(len)));
+        value = CreateBuiltinFunction(v, len, name, [], realmRec);
       } else {
         value = v;
       }
@@ -91,10 +99,16 @@ export function bootstrapPrototype(realmRec, props, Prototype, stringTag) {
 }
 
 export function bootstrapConstructor(realmRec, Constructor, name, length, Prototype, props = []) {
-  const cons = CreateBuiltinFunction(Constructor, [], realmRec, undefined, Value.true);
-
-  SetFunctionName(cons, new Value(name));
-  SetFunctionLength(cons, new Value(length));
+  const cons = CreateBuiltinFunction(
+    Constructor,
+    length,
+    new Value(name),
+    [],
+    realmRec,
+    undefined,
+    undefined,
+    Value.true,
+  );
 
   X(cons.DefineOwnProperty(new Value('prototype'), Descriptor({
     Value: Prototype,

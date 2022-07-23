@@ -1,11 +1,11 @@
-import isUnicodeIDStartRegex from 'unicode-13.0.0/Binary_Property/ID_Start/regex';
-import isUnicodeIDContinueRegex from 'unicode-13.0.0/Binary_Property/ID_Continue/regex';
-import isSpaceSeparatorRegex from 'unicode-13.0.0/General_Category/Space_Separator/regex';
+import isUnicodeIDStartRegex from '@unicode/unicode-14.0.0/Binary_Property/ID_Start/regex.js';
+import isUnicodeIDContinueRegex from '@unicode/unicode-14.0.0/Binary_Property/ID_Continue/regex.js';
+import isSpaceSeparatorRegex from '@unicode/unicode-14.0.0/General_Category/Space_Separator/regex.js';
 import { UTF16SurrogatePairToCodePoint } from '../static-semantics/all.mjs';
 import {
-  RawTokens,
   Token,
   TokenNames,
+  TokenValues,
   KeywordLookup,
   isKeywordRaw,
 } from './tokens.mjs';
@@ -118,6 +118,7 @@ const SingleCharTokens = {
   '|': Token.BIT_OR,
   '"': Token.STRING,
   '\'': Token.STRING,
+  '#': Token.PRIVATE_IDENTIFIER,
 };
 
 export class Lexer {
@@ -134,10 +135,12 @@ export class Lexer {
     this.positionForNextToken = 0;
     this.lineForNextToken = 0;
     this.columnForNextToken = 0;
+    this.escapeIndex = -1;
   }
 
   advance() {
     this.lineTerminatorBeforeNextToken = false;
+    this.escapeIndex = -1;
     const type = this.nextToken();
     return {
       type,
@@ -147,13 +150,8 @@ export class Lexer {
       column: this.columnForNextToken,
       hadLineTerminatorBefore: this.lineTerminatorBeforeNextToken,
       name: TokenNames[type],
-      value: (
-        type === Token.IDENTIFIER
-        || type === Token.NUMBER
-        || type === Token.BIGINT
-        || type === Token.STRING
-        || type === Token.ESCAPED_KEYWORD
-      ) ? this.scannedValue : RawTokens[type][1],
+      value: TokenValues[type] ?? this.scannedValue,
+      escaped: this.escapeIndex !== -1,
     };
   }
 
@@ -488,7 +486,7 @@ export class Lexer {
           return Token.BIT_AND;
 
         case Token.BIT_OR:
-          // | || |=
+          // | || |= ||=
           if (c1 === '|') {
             this.position += 1;
             if (this.source[this.position] === '=') {
@@ -535,6 +533,9 @@ export class Lexer {
         case Token.IDENTIFIER:
           this.position -= 1;
           return this.scanIdentifierOrKeyword();
+
+        case Token.PRIVATE_IDENTIFIER:
+          return this.scanIdentifierOrKeyword(true);
 
         default:
           this.unexpected(single);
@@ -694,7 +695,6 @@ export class Lexer {
           }
           this.line += 1;
           this.columnOffset = this.position;
-          this.lineTerminatorBeforeNextToken = true;
         } else {
           buffer += this.scanEscapeSequence();
         }
@@ -776,7 +776,7 @@ export class Lexer {
     return n;
   }
 
-  scanIdentifierOrKeyword() {
+  scanIdentifierOrKeyword(isPrivate = false) {
     let buffer = '';
     let escapeIndex = -1;
     let check = isIdentifierStart;
@@ -817,7 +817,7 @@ export class Lexer {
       }
       check = isIdentifierPart;
     }
-    if (isKeywordRaw(buffer)) {
+    if (!isPrivate && isKeywordRaw(buffer)) {
       if (escapeIndex !== -1) {
         this.scannedValue = buffer;
         return Token.ESCAPED_KEYWORD;
@@ -825,7 +825,8 @@ export class Lexer {
       return KeywordLookup[buffer];
     } else {
       this.scannedValue = buffer;
-      return Token.IDENTIFIER;
+      this.escapeIndex = escapeIndex;
+      return isPrivate ? Token.PRIVATE_IDENTIFIER : Token.IDENTIFIER;
     }
   }
 
@@ -887,7 +888,7 @@ export class Lexer {
       }
       const c = this.source[this.position];
       if (isRegularExpressionFlagPart(c)
-          && 'gimsuy'.includes(c)
+          && 'dgimsuy'.includes(c)
           && !buffer.includes(c)) {
         this.position += 1;
         buffer += c;

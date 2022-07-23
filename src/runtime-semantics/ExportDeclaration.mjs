@@ -55,12 +55,12 @@ export function* Evaluate_ExportDeclaration(ExportDeclaration) {
     const value = Q(yield* BindingClassDeclarationEvaluation(ClassDeclaration));
     // 2. Let className be the sole element of BoundNames of ClassDeclaration.
     const className = BoundNames(ClassDeclaration)[0];
-    // If className is ~default~, then
-    if (className === 'default') {
+    // If className is "*default*", then
+    if (className.stringValue() === '*default*') {
       // a. Let env be the running execution context's LexicalEnvironment.
       const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-      // b. Perform ? InitializeBoundName(~default~, value, env).
-      Q(InitializeBoundName('default', value, env));
+      // b. Perform ? InitializeBoundName("*default*", value, env).
+      Q(InitializeBoundName(new Value('*default*'), value, env));
     }
     // 3. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
@@ -79,8 +79,8 @@ export function* Evaluate_ExportDeclaration(ExportDeclaration) {
     }
     // 3. Let env be the running execution context's LexicalEnvironment.
     const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
-    // 4. Perform ? InitializeBoundName(~default~, value, env).
-    Q(InitializeBoundName('default', value, env));
+    // 4. Perform ? InitializeBoundName("*default*", value, env).
+    Q(InitializeBoundName(new Value('*default*'), value, env));
     // 5. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
   }

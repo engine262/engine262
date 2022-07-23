@@ -6,7 +6,7 @@ import {
 import {
   Get,
   GetPrototypeFromConstructor,
-  IsInteger,
+  IsIntegralNumber,
   StringCreate,
   SymbolDescriptiveString,
   LengthOfArrayLike,
@@ -14,6 +14,7 @@ import {
   ToObject,
   ToString,
   ToUint16,
+  F,
 } from '../abstract-ops/all.mjs';
 import { CodePointToUTF16CodeUnits } from '../static-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
@@ -59,7 +60,7 @@ function String_fromCodePoint(codePoints) {
   while (nextIndex < length) {
     const next = codePoints[nextIndex];
     const nextCP = Q(ToNumber(next));
-    if (X(IsInteger(nextCP)) === Value.false) {
+    if (X(IsIntegralNumber(nextCP)) === Value.false) {
       return surroundingAgent.Throw('RangeError', 'StringCodePointInvalid', next);
     }
     if (nextCP.numberValue() < 0 || nextCP.numberValue() > 0x10FFFF) {
@@ -77,7 +78,7 @@ function String_raw([template = Value.undefined, ...substitutions]) {
   const numberOfSubstitutions = substitutions.length;
   const cooked = Q(ToObject(template));
   const raw = Q(ToObject(Q(Get(cooked, new Value('raw')))));
-  const literalSegments = Q(LengthOfArrayLike(raw)).numberValue();
+  const literalSegments = Q(LengthOfArrayLike(raw));
   if (literalSegments <= 0) {
     return new Value('');
   }
@@ -85,7 +86,7 @@ function String_raw([template = Value.undefined, ...substitutions]) {
   const stringElements = [];
   let nextIndex = 0;
   while (true) {
-    const nextKey = X(ToString(new Value(nextIndex)));
+    const nextKey = X(ToString(F(nextIndex)));
     const nextSeg = Q(ToString(Q(Get(raw, nextKey))));
     stringElements.push(nextSeg.stringValue());
     if (nextIndex + 1 === literalSegments) {
@@ -103,7 +104,7 @@ function String_raw([template = Value.undefined, ...substitutions]) {
   }
 }
 
-export function BootstrapString(realmRec) {
+export function bootstrapString(realmRec) {
   const stringConstructor = bootstrapConstructor(realmRec, StringConstructor, 'String', 1, realmRec.Intrinsics['%String.prototype%'], [
     ['fromCharCode', String_fromCharCode, 1],
     ['fromCodePoint', String_fromCodePoint, 1],

@@ -1,10 +1,10 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
   Call,
+  F,
   IsCallable,
-  OrdinaryObjectCreate,
-  SameValueZero,
   RequireInternalSlot,
+  SameValueZero,
 } from '../abstract-ops/all.mjs';
 import {
   Type,
@@ -13,20 +13,7 @@ import {
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
-
-
-function CreateMapIterator(map, kind) {
-  Q(RequireInternalSlot(map, 'MapData'));
-  const iterator = OrdinaryObjectCreate(surroundingAgent.intrinsic('%MapIteratorPrototype%'), [
-    'IteratedMap',
-    'MapNextIndex',
-    'MapIterationKind',
-  ]);
-  iterator.IteratedMap = map;
-  iterator.MapNextIndex = 0;
-  iterator.MapIterationKind = kind;
-  return iterator;
-}
+import { CreateMapIterator } from './MapIteratorPrototype.mjs';
 
 // #sec-map.prototype.clear
 function MapProto_clear(args, { thisValue }) {
@@ -167,9 +154,9 @@ function MapProto_set([key = Value.undefined, value = Value.undefined], { thisVa
       return M;
     }
   }
-  // 5. If key is -0, set key to +0.
+  // 5. If key is -0𝔽, set key to +0𝔽.
   if (Type(key) === 'Number' && Object.is(key.numberValue(), -0)) {
-    key = new Value(0);
+    key = F(+0);
   }
   // 6. Let p be the Record { [[Key]]: key, [[Value]]: value }.
   const p = { Key: key, Value: value };
@@ -196,8 +183,8 @@ function MapProto_sizeGetter(args, { thisValue }) {
       count += 1;
     }
   }
-  // 6. Return count.
-  return new Value(count);
+  // 6. Return 𝔽(count).
+  return F(count);
 }
 
 // #sec-map.prototype.values
@@ -208,7 +195,7 @@ function MapProto_values(args, { thisValue }) {
   return Q(CreateMapIterator(M, 'value'));
 }
 
-export function BootstrapMapPrototype(realmRec) {
+export function bootstrapMapPrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [
     ['clear', MapProto_clear, 0],
     ['delete', MapProto_delete, 1],

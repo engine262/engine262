@@ -12,7 +12,7 @@ function FunctionConstructor(args, { NewTarget }) {
   return Q(CreateDynamicFunction(C, NewTarget, 'normal', args));
 }
 
-export function BootstrapFunction(realmRec) {
+export function bootstrapFunction(realmRec) {
   const cons = bootstrapConstructor(realmRec, FunctionConstructor, 'Function', 1, realmRec.Intrinsics['%Function.prototype%'], []);
   realmRec.Intrinsics['%Function%'] = cons;
 }

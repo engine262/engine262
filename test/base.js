@@ -72,9 +72,9 @@ module.exports = {
   total() {
     total += 1;
   },
-  pass() {
-    passed += 1;
-    handledPerSecCounter += 1;
+  pass(count = 1) {
+    passed += count;
+    handledPerSecCounter += count;
   },
   fail(name, error) {
     failed += 1;

@@ -3,15 +3,22 @@ import { RegExpParser } from './parser/RegExpParser.mjs';
 import { surroundingAgent } from './engine.mjs';
 import { SourceTextModuleRecord } from './modules.mjs';
 import { Value } from './value.mjs';
-import { Get, Set } from './abstract-ops/all.mjs';
-import { X } from './completion.mjs';
+import {
+  Get,
+  Set,
+  Call,
+  CreateDefaultExportSyntheticModule,
+} from './abstract-ops/all.mjs';
+import { Q, X } from './completion.mjs';
 import {
   ModuleRequests,
   ImportEntries,
   ExportEntries,
   ImportedLocalNames,
 } from './static-semantics/all.mjs';
-import { ValueSet } from './helpers.mjs';
+import { ValueSet, kInternal } from './helpers.mjs';
+
+export { Parser, RegExpParser };
 
 function handleError(e) {
   if (e.name === 'SyntaxError') {
@@ -51,15 +58,18 @@ export function ParseScript(sourceText, realm, hostDefined = {}) {
   //    early error detection may be interweaved in an implementation-dependent manner. If more
   //    than one parsing error or early error is present, the number and ordering of error
   //    objects in the list is implementation-dependent, but at least one must be present.
-  const body = wrappedParse({ source: sourceText, specifier: hostDefined.specifier }, (p) => p.parseScript());
+  const body = wrappedParse({
+    source: sourceText,
+    specifier: hostDefined.specifier,
+    json: hostDefined[kInternal]?.json,
+  }, (p) => p.parseScript());
   // 3. If body is a List of errors, return body.
   if (Array.isArray(body)) {
     return body;
   }
-  // 4. Return Script Record { [[Realm]]: realm, [[Environment]]: undefined, [[ECMAScriptCode]]: body, [[HostDefined]]: hostDefined }.
+  // 4. Return Script Record { [[Realm]]: realm, [[ECMAScriptCode]]: body, [[HostDefined]]: hostDefined }.
   return {
     Realm: realm,
-    Environment: Value.undefined,
     ECMAScriptCode: body,
     HostDefined: hostDefined,
     mark(m) {
@@ -108,8 +118,8 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
       } else { // ii. Else,
         // 1. Let ie be the element of importEntries whose [[LocalName]] is the same as ee.[[LocalName]].
         const ie = importEntries.find((e) => e.LocalName.stringValue() === ee.LocalName.stringValue());
-        // 2. If ie.[[ImportName]] is ~star~, then
-        if (ie.ImportName === 'star') {
+        // 2. If ie.[[ImportName]] is ~namespace-object~, then
+        if (ie.ImportName === 'namespace-object') {
           // a. NOTE: This is a re-export of an imported module namespace object.
           // b. Append ee to localExportEntries.
           localExportEntries.push(ee);
@@ -124,7 +134,7 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
           });
         }
       }
-    } else if (ee.ImportName && ee.ImportName === 'star' && ee.ExportName === Value.null) { // b. Else if ee.[[ImportName]] is ~star~ and ee.[[ExportName]] is null, then
+    } else if (ee.ImportName && ee.ImportName === 'all-but-default' && ee.ExportName === Value.null) { // b. Else if ee.[[ImportName]] is ~all-but-default~ and ee.[[ExportName]] is null, then
       // i. Append ee to starExportEntries.
       starExportEntries.push(ee);
     } else { // c. Else,
@@ -157,6 +167,16 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
     AsyncParentModules: Value.undefined,
     PendingAsyncDependencies: Value.undefined,
   });
+}
+
+// #sec-parsejsonmodule
+export function ParseJSONModule(sourceText, realm, hostDefined) {
+  // 1. Let jsonParse be realm's intrinsic object named "%JSON.parse%".
+  const jsonParse = realm.Intrinsics['%JSON.parse%'];
+  // 1. Let json be ? Call(jsonParse, undefined, « sourceText »).
+  const json = Q(Call(jsonParse, Value.undefined, [sourceText]));
+  // 1. Return CreateDefaultExportSyntheticModule(json, realm, hostDefined).
+  return CreateDefaultExportSyntheticModule(json, realm, hostDefined);
 }
 
 // #sec-parsepattern

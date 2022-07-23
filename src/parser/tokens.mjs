@@ -132,6 +132,7 @@ export const RawTokens = [
   ['EXPORT', 'export'],
   ['EXTENDS', 'extends'],
   ['IMPORT', 'import'],
+  ['PRIVATE_IDENTIFIER', null],
 
   ['ENUM', 'enum'],
 
@@ -145,6 +146,8 @@ export const Token = RawTokens
   }, Object.create(null));
 
 export const TokenNames = RawTokens.map((r) => r[0]);
+
+export const TokenValues = RawTokens.map((r) => r[1]);
 
 export const TokenPrecedence = RawTokens.map((r) => (r[2] || 0));
 

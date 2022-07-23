@@ -3,7 +3,10 @@
 let features;
 try {
   features = require('../..').FEATURES.map((f) => f.flag);
-} catch {}
+} catch {
+  // eslint-disable-next-line
+  console.error('warning: engine262/valid-feature rule is disabled due to missing build');
+}
 
 function isFeatureCall(node) {
   return node.callee.type === 'MemberExpression'
@@ -23,7 +26,7 @@ module.exports = {
           return;
         }
         const featureName = node.arguments[0].value;
-        if (!features.includes(featureName)) {
+        if (features && !features.includes(featureName)) {
           context.report(node.arguments[0], `'${featureName}' is not a valid feature. Check src/engine.mjs.`);
         }
       },

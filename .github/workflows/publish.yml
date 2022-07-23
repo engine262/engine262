@@ -1,12 +1,15 @@
-name: Publish Package
+name: publish
 
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows:
+      - test
+    branches: [main]
+    types:
+      - completed
 
 jobs:
-  publish-gpr:
+  publish:
     runs-on: ubuntu-latest
     steps:
       # Set everything up
@@ -15,30 +18,22 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@master
         with:
-          node-version: 12
-          registry-url: https://npm.pkg.github.com/
-          scope: '@engine262'
-          always-auth: true # required if using yarn
+          node-version: 18
       - run: git submodule update --init --recursive
 
       # Run tests and whatnot
       - run: npm install
       - run: npm run build
-      - run: npm run lint
-      - run: npm run coverage
-        env:
-          CONTINUOUS_INTEGRATION: 1
 
-      # Upload coverage data
-      - name: Coveralls
-        uses: coverallsapp/github-action@master
-        with:
-          github-token: ${{github.token}}
-
-      # Publish built package
+      # Publish to github registry
+      - run: npm set //npm.pkg.github.com/:_authToken ${{ github.token }}
+      - run: npm config set registry https://npm.pkg.github.com
       - run: npm publish --access=public
-        env:
-          NODE_AUTH_TOKEN: ${{github.token}}
+
+      # Publish to npm registry
+      - run: npm set //registry.npmjs.org/:_authToken ${{ secrets.NPM_TOKEN }}
+      - run: npm config set registry https://registry.npmjs.org
+      - run: npm publish --access=public
 
       # Push build to to gh-pages
       - run: |

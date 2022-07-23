@@ -1,18 +1,23 @@
-import { IsStringValidUnicode, StringValue } from '../static-semantics/all.mjs';
-import { Token, isAutomaticSemicolon, isKeywordRaw } from './tokens.mjs';
+import { Token, isAutomaticSemicolon } from './tokens.mjs';
 import { ExpressionParser } from './ExpressionParser.mjs';
 import { FunctionKind } from './FunctionParser.mjs';
 import { getDeclarations } from './Scope.mjs';
 
 export class StatementParser extends ExpressionParser {
-  semicolon() {
+  eatSemicolonWithASI() {
     if (this.eat(Token.SEMICOLON)) {
-      return;
+      return true;
     }
     if (this.peek().hadLineTerminatorBefore || isAutomaticSemicolon(this.peek().type)) {
-      return;
+      return true;
     }
-    this.unexpected();
+    return false;
+  }
+
+  semicolon() {
+    if (!this.eatSemicolonWithASI()) {
+      this.unexpected();
+    }
   }
 
   // StatementList :
@@ -396,7 +401,7 @@ export class StatementParser extends ExpressionParser {
 
   // IfStatement :
   //  `if` `(` Expression `)` Statement `else` Statement
-  //  `if` `(` Expression `)` Statement
+  //  `if` `(` Expression `)` Statement [lookahead != `else`]
   parseIfStatement() {
     const node = this.startNode();
     this.expect(Token.IF);
@@ -445,7 +450,7 @@ export class StatementParser extends ExpressionParser {
   // `for` `(` [lookahead != `let` `[`] LeftHandSideExpression `in` Expression `)` Statement
   // `for` `(` `var` ForBinding `in` Expression `)` Statement
   // `for` `(` ForDeclaration `in` Expression `)` Statement
-  // `for` `(` [lookahead != `let`] LeftHandSideExpression `of` AssignmentExpression `)` Statement
+  // `for` `(` [lookahead != { `let`, `async` `of` }] LeftHandSideExpression `of` AssignmentExpression `)` Statement
   // `for` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
   // `for` `(` ForDeclaration `of` AssignmentExpression `)` Statement
   // `for` `await` `(` [lookahead != `let`] LeftHandSideExpression `of` AssignmentExpression `)` Statement
@@ -600,7 +605,10 @@ export class StatementParser extends ExpressionParser {
         node.Statement = this.parseStatement();
         return this.finishNode(node, 'ForInStatement');
       }
-      if (this.eat('of')) {
+      const isExactlyAsync = expression.type === 'IdentifierReference'
+        && !expression.escaped
+        && expression.name === 'async';
+      if ((!isExactlyAsync || isAwait) && this.eat('of')) {
         assignmentInfo.clear();
         validateLHS(expression);
         node.LeftHandSideExpression = expression;
@@ -776,11 +784,8 @@ export class StatementParser extends ExpressionParser {
     }
     const node = this.startNode();
     this.expect(Token.RETURN);
-    if (this.eat(Token.SEMICOLON)) {
+    if (this.eatSemicolonWithASI()) {
       node.Expression = null;
-    } else if (this.peek().hadLineTerminatorBefore) {
-      node.Expression = null;
-      this.semicolon();
     } else {
       node.Expression = this.parseExpression();
       this.semicolon();
@@ -896,6 +901,7 @@ export class StatementParser extends ExpressionParser {
         }
         break;
     }
+    const startToken = this.peek();
     const node = this.startNode();
     const expression = this.parseExpression();
     if (expression.type === 'IdentifierReference' && this.eat(Token.COLON)) {
@@ -918,9 +924,16 @@ export class StatementParser extends ExpressionParser {
         default:
           break;
       }
+      if (type !== null && this.scope.labels.length > 0) {
+        const last = this.scope.labels[this.scope.labels.length - 1];
+        if (last.nextToken === startToken) {
+          last.type = type;
+        }
+      }
       this.scope.labels.push({
         name: node.LabelIdentifier.name,
         type,
+        nextToken: type === null ? this.peek() : null,
       });
 
       node.LabelledItem = this.parseStatement();
@@ -932,284 +945,5 @@ export class StatementParser extends ExpressionParser {
     node.Expression = expression;
     this.semicolon();
     return this.finishNode(node, 'ExpressionStatement');
-  }
-
-  // ImportDeclaration :
-  //   `import` ImportClause FromClause `;`
-  //   `import` ModuleSpecifier `;`
-  parseImportDeclaration() {
-    if (this.testAhead(Token.PERIOD) || this.testAhead(Token.LPAREN)) {
-      // `import` `(`
-      // `import` `.`
-      return this.parseExpressionStatement();
-    }
-    const node = this.startNode();
-    this.next();
-    if (this.test(Token.STRING)) {
-      node.ModuleSpecifier = this.parsePrimaryExpression();
-    } else {
-      node.ImportClause = this.parseImportClause();
-      this.scope.declare(node.ImportClause, 'import');
-      node.FromClause = this.parseFromClause();
-    }
-    this.semicolon();
-    return this.finishNode(node, 'ImportDeclaration');
-  }
-
-  // ImportClause :
-  //   ImportedDefaultBinding
-  //   NameSpaceImport
-  //   NamedImports
-  //   ImportedDefaultBinding `,` NameSpaceImport
-  //   ImportedDefaultBinding `,` NamedImports
-  //
-  // ImportedBinding :
-  //   BindingIdentifier
-  parseImportClause() {
-    const node = this.startNode();
-    if (this.test(Token.IDENTIFIER)) {
-      node.ImportedDefaultBinding = this.parseImportedDefaultBinding();
-      if (!this.eat(Token.COMMA)) {
-        return this.finishNode(node, 'ImportClause');
-      }
-    }
-    if (this.test(Token.MUL)) {
-      node.NameSpaceImport = this.parseNameSpaceImport();
-    } else if (this.eat(Token.LBRACE)) {
-      node.NamedImports = this.parseNamedImports();
-    } else {
-      this.unexpected();
-    }
-    return this.finishNode(node, 'ImportClause');
-  }
-
-  // ImportedDefaultBinding :
-  //   ImportedBinding
-  parseImportedDefaultBinding() {
-    const node = this.startNode();
-    node.ImportedBinding = this.parseBindingIdentifier();
-    return this.finishNode(node, 'ImportedDefaultBinding');
-  }
-
-  // NameSpaceImport :
-  //   `*` `as` ImportedBinding
-  parseNameSpaceImport() {
-    const node = this.startNode();
-    this.expect(Token.MUL);
-    this.expect('as');
-    node.ImportedBinding = this.parseBindingIdentifier();
-    return this.finishNode(node, 'NameSpaceImport');
-  }
-
-  // NamedImports :
-  //   `{` `}`
-  //   `{` ImportsList `}`
-  //   `{` ImportsList `,` `}`
-  parseNamedImports() {
-    const node = this.startNode();
-    node.ImportsList = [];
-    while (!this.eat(Token.RBRACE)) {
-      node.ImportsList.push(this.parseImportSpecifier());
-      if (this.eat(Token.RBRACE)) {
-        break;
-      }
-      this.expect(Token.COMMA);
-    }
-    return this.finishNode(node, 'NamedImports');
-  }
-
-  // ImportSpecifier :
-  //   ImportedBinding
-  //   IdentifierName `as` ImportedBinding
-  //   ModuleExportName `as` ImportedBinding
-  parseImportSpecifier() {
-    const node = this.startNode();
-    if (this.feature('arbitrary-module-namespace-names') && this.test(Token.STRING)) {
-      node.ModuleExportName = this.parseModuleExportName();
-      this.expect('as');
-      node.ImportedBinding = this.parseBindingIdentifier();
-    } else {
-      const name = this.parseIdentifierName();
-      if (this.eat('as')) {
-        node.IdentifierName = name;
-        node.ImportedBinding = this.parseBindingIdentifier();
-      } else {
-        node.ImportedBinding = name;
-        node.ImportedBinding.type = 'BindingIdentifier';
-        if (isKeywordRaw(node.ImportedBinding.name)) {
-          this.raiseEarly('UnexpectedToken', node.ImportedBinding);
-        }
-        if (node.ImportedBinding.name === 'eval' || node.ImportedBinding.name === 'arguments') {
-          this.raiseEarly('UnexpectedToken', node.ImportedBinding);
-        }
-      }
-    }
-    return this.finishNode(node, 'ImportSpecifier');
-  }
-
-  // ExportDeclaration :
-  //   `export` ExportFromClause FromClause `;`
-  //   `export` NamedExports `;`
-  //   `export` VariableStatement
-  //   `export` Declaration
-  //   `export` `default` HoistableDeclaration
-  //   `export` `default` ClassDeclaration
-  //   `export` `default` AssignmentExpression `;`
-  //
-  // ExportFromClause :
-  //   `*`
-  //   `*` as IdentifierName
-  //   `*` as ModuleExportName
-  //   NamedExports
-  parseExportDeclaration() {
-    const node = this.startNode();
-    this.expect(Token.EXPORT);
-    node.default = this.eat(Token.DEFAULT);
-    if (node.default) {
-      switch (this.peek().type) {
-        case Token.FUNCTION:
-          node.HoistableDeclaration = this.scope.with({ default: true }, () => this.parseFunctionDeclaration(FunctionKind.NORMAL));
-          break;
-        case Token.CLASS:
-          node.ClassDeclaration = this.scope.with({ default: true }, () => this.parseClassDeclaration());
-          break;
-        default:
-          if (this.test('async') && this.testAhead(Token.FUNCTION) && !this.peekAhead().hadLineTerminatorBefore) {
-            node.HoistableDeclaration = this.scope.with({ default: true }, () => this.parseFunctionDeclaration(FunctionKind.ASYNC));
-          } else {
-            node.AssignmentExpression = this.parseAssignmentExpression();
-            this.semicolon();
-          }
-          break;
-      }
-      if (this.scope.exports.has('default')) {
-        this.raiseEarly('AlreadyDeclared', node);
-      } else {
-        this.scope.exports.add('default');
-      }
-    } else {
-      switch (this.peek().type) {
-        case Token.CONST:
-          node.Declaration = this.parseLexicalDeclaration();
-          this.scope.declare(node.Declaration, 'export');
-          break;
-        case Token.CLASS:
-          node.Declaration = this.parseClassDeclaration();
-          this.scope.declare(node.Declaration, 'export');
-          break;
-        case Token.FUNCTION:
-          node.Declaration = this.parseHoistableDeclaration();
-          this.scope.declare(node.Declaration, 'export');
-          break;
-        case Token.VAR:
-          node.VariableStatement = this.parseVariableStatement();
-          this.scope.declare(node.VariableStatement, 'export');
-          break;
-        case Token.LBRACE: {
-          const NamedExports = this.parseNamedExports();
-          if (this.test('from')) {
-            node.ExportFromClause = NamedExports;
-            node.FromClause = this.parseFromClause();
-          } else {
-            NamedExports.ExportsList.forEach((n) => {
-              if (n.localName.type === 'ModuleExportName') {
-                this.raiseEarly('UnexpectedToken', n.localName);
-              }
-            });
-            node.NamedExports = NamedExports;
-            this.scope.checkUndefinedExports(node.NamedExports);
-          }
-          this.semicolon();
-          break;
-        }
-        case Token.MUL: {
-          const inner = this.startNode();
-          this.next();
-          if (this.eat('as')) {
-            if (this.feature('arbitrary-module-namespace-names') && this.test(Token.STRING)) {
-              inner.ModuleExportName = this.parseModuleExportName();
-              this.scope.declare(inner.ModuleExportName, 'export');
-            } else {
-              inner.IdentifierName = this.parseIdentifierName();
-              this.scope.declare(inner.IdentifierName, 'export');
-            }
-          }
-          node.ExportFromClause = this.finishNode(inner, 'ExportFromClause');
-          node.FromClause = this.parseFromClause();
-          this.semicolon();
-          break;
-        }
-        default:
-          if (this.test('let')) {
-            node.Declaration = this.parseLexicalDeclaration();
-            this.scope.declare(node.Declaration, 'export');
-          } else if (this.test('async') && this.testAhead(Token.FUNCTION) && !this.peekAhead().hadLineTerminatorBefore) {
-            node.Declaration = this.parseHoistableDeclaration();
-            this.scope.declare(node.Declaration, 'export');
-          } else {
-            this.unexpected();
-          }
-      }
-    }
-    return this.finishNode(node, 'ExportDeclaration');
-  }
-
-  // NamedExports :
-  //   `{` `}`
-  //   `{` ExportsList `}`
-  //   `{` ExportsList `,` `}`
-  parseNamedExports() {
-    const node = this.startNode();
-    this.expect(Token.LBRACE);
-    node.ExportsList = [];
-    while (!this.eat(Token.RBRACE)) {
-      node.ExportsList.push(this.parseExportSpecifier());
-      if (this.eat(Token.RBRACE)) {
-        break;
-      }
-      this.expect(Token.COMMA);
-    }
-    return this.finishNode(node, 'NamedExports');
-  }
-
-  // ExportSpecifier :
-  //   IdentifierName
-  //   IdentifierName `as` IdentifierName
-  //   IdentifierName `as` ModuleExportName
-  //   ModuleExportName
-  //   ModuleExportName `as` ModuleExportName
-  //   ModuleExportName `as` IdentifierName
-  parseExportSpecifier() {
-    const node = this.startNode();
-    const parseName = () => {
-      if (this.feature('arbitrary-module-namespace-names') && this.test(Token.STRING)) {
-        return this.parseModuleExportName();
-      }
-      return this.parseIdentifierName();
-    };
-    node.localName = parseName();
-    if (this.eat('as')) {
-      node.exportName = parseName();
-    } else {
-      node.exportName = node.localName;
-    }
-    this.scope.declare(node.exportName, 'export');
-    return this.finishNode(node, 'ExportSpecifier');
-  }
-
-  // ModuleExportName : StringLiteral
-  parseModuleExportName() {
-    const literal = this.parseStringLiteral();
-    if (!IsStringValidUnicode(StringValue(literal))) {
-      this.raiseEarly('ModuleExportNameInvalidUnicode', literal);
-    }
-    return literal;
-  }
-
-  // FromClause :
-  //   `from` ModuleSpecifier
-  parseFromClause() {
-    this.expect('from');
-    return this.parseStringLiteral();
   }
 }
