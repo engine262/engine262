@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 b0a02957736915702fb4f74a8a4c6ad3b502c30b
+ * engine262 0.0.1 663787ed5896c352006c3aa30cfec5a9d4d54403
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -2262,7 +2262,7 @@ class Lexer {
           return Token.BIT_AND;
 
         case Token.BIT_OR:
-          // | || |=
+          // | || |= ||=
           if (c1 === '|') {
             this.position += 1;
 
@@ -35847,7 +35847,7 @@ function NewPromiseResolveThenableJob(promiseToResolve, thenable, then) {
   }; // 2. Let getThenRealmResult be GetFunctionRealm(then.[[Callback]]).
 
 
-  const getThenRealmResult = GetFunctionRealm(then.Callback); // 3. If getThenRealmResult is a normal completion, then let thenRealm be getThenRealmResult.[[Value]].
+  const getThenRealmResult = EnsureCompletion(GetFunctionRealm(then.Callback)); // 3. If getThenRealmResult is a normal completion, then let thenRealm be getThenRealmResult.[[Value]].
 
   let thenRealm;
 
@@ -36169,7 +36169,7 @@ function NewPromiseReactionJob(reaction, argument) {
 
   if (reaction.Handler !== undefined) {
     // a. Let getHandlerRealmResult be GetFunctionRealm(reaction.[[Handler]].[[Callback]]).
-    const getHandlerRealmResult = GetFunctionRealm(reaction.Handler.Callback); // b. If getHandlerRealmResult is a normal completion, then set handlerRealm to getHandlerRealmResult.[[Value]].
+    const getHandlerRealmResult = EnsureCompletion(GetFunctionRealm(reaction.Handler.Callback)); // b. If getHandlerRealmResult is a normal completion, then set handlerRealm to getHandlerRealmResult.[[Value]].
 
     if (getHandlerRealmResult instanceof NormalCompletion) {
       handlerRealm = getHandlerRealmResult.Value;
