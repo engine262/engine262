@@ -2,6 +2,7 @@ import {
   Completion,
   NormalCompletion,
   Q, X,
+  Await,
   EnsureCompletion,
 } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
@@ -245,9 +246,9 @@ export function* GeneratorYield(iterNextObj) {
 export function* Yield(value) {
   // 1. Let generatorKind be ! GetGeneratorKind().
   const generatorKind = X(GetGeneratorKind());
-  // 2. If generatorKind is async, then return ? AsyncGeneratorYield(value).
+  // 2. If generatorKind is async, then return ? AsyncGeneratorYield(? Await(value)).
   if (generatorKind === 'async') {
-    return Q(yield* AsyncGeneratorYield(value));
+    return Q(yield* AsyncGeneratorYield(Q(yield* Await(value))));
   }
   // 3. Else, return ? GeneratorYield(! CreateIterResultObject(value, false)).
   return Q(yield* GeneratorYield(X(CreateIterResultObject(value, Value.false))));

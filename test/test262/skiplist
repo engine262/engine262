@@ -27,7 +27,7 @@ language/expressions/assignment/target-super-identifier-reference-null.js
 language/expressions/delete/member-computed-reference-null.js
 language/expressions/delete/member-computed-reference-undefined.js
 language/expressions/delete/member-identifier-reference-null.js
-language/expressions/delete/member-identifier-reference-undefined.js 
+language/expressions/delete/member-identifier-reference-undefined.js
 
 # ?? looks familiar tho
 built-ins/TypedArrayConstructors/internals/DefineOwnProperty/BigInt/tonumber-value-detached-buffer.js
@@ -102,3 +102,6 @@ built-ins/TypedArray/prototype/reduceRight/BigInt/callbackfn-detachbuffer.js
 built-ins/TypedArray/prototype/reduceRight/callbackfn-detachbuffer.js
 built-ins/TypedArray/prototype/some/BigInt/callbackfn-detachbuffer.js
 built-ins/TypedArray/prototype/some/callbackfn-detachbuffer.js
+
+# https://github.com/tc39/test262/pull/3619
+language/statements/async-generator/yield-star-return-then-getter-ticks.js

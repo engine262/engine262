@@ -210,21 +210,19 @@ export function* AsyncGeneratorYield(value) {
   const generator = genContext.Generator;
   // 4. Assert: GetGeneratorKind() is async.
   Assert(GetGeneratorKind() === 'async');
-  // 5. Set value to ? Await(value).
-  value = Q(yield* Await(value));
-  // 6. Let completion be NormalCompletion(value).
+  // 5. Let completion be NormalCompletion(value).
   const completion = NormalCompletion(value);
-  // 7. Assert: The execution context stack has at least two elements.
+  // 6. Assert: The execution context stack has at least two elements.
   Assert(surroundingAgent.executionContextStack.length >= 2);
-  // 8. Let previousContext be the second to top element of the execution context stack.
+  // 7. Let previousContext be the second to top element of the execution context stack.
   const previousContext = surroundingAgent.executionContextStack[surroundingAgent.executionContextStack.length - 2];
-  // 9. Let previousRealm be previousContext's Realm.
+  // 8. Let previousRealm be previousContext's Realm.
   const previousRealm = previousContext.Realm;
-  // 10. Perform ! AsyncGeneratorCompleteStep(generator, completion, false, previousRealm).
+  // 9. Perform ! AsyncGeneratorCompleteStep(generator, completion, false, previousRealm).
   X(AsyncGeneratorCompleteStep(generator, completion, Value.false, previousRealm));
-  // 11. Let queue be generator.[[AsyncGeneratorQueue]].
+  // 10. Let queue be generator.[[AsyncGeneratorQueue]].
   const queue = generator.AsyncGeneratorQueue;
-  // 12. If queue is not empty, then
+  // 11. If queue is not empty, then
   if (queue.length > 0) {
     // a. NOTE: Execution continues without suspending the generator.
     // b. Let toYield be the first element of queue.
@@ -233,7 +231,7 @@ export function* AsyncGeneratorYield(value) {
     const resumptionValue = toYield.Completion;
     // d. Return AsyncGeneratorUnwrapYieldResumption(resumptionValue).
     return yield* AsyncGeneratorUnwrapYieldResumption(resumptionValue);
-  } else { // 13. Else,
+  } else { // 12. Else,
     // a. Set generator.[[AsyncGeneratorState]] to suspendedYield.
     generator.AsyncGeneratorState = 'suspendedYield';
     // b. Remove genContext from the execution context stack and restore the execution context that is at the top of the execution context stack as the running execution context.
