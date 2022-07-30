@@ -214,6 +214,8 @@ export class StatementParser extends ExpressionParser {
       node.PropertyName = name;
       node.BindingElement = this.parseBindingElement();
       return this.finishNode(node, 'BindingProperty');
+    } else {
+      this.validateIdentifierReference(name.name, node);
     }
     node.BindingIdentifier = name;
     if (name.type === 'IdentifierName') {

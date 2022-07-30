@@ -105,6 +105,8 @@ export function VarScopedDeclarations(node) {
     case 'AsyncFunctionBody':
     case 'AsyncGeneratorBody':
       return TopLevelVarScopedDeclarations(node.FunctionStatementList);
+    case 'ClassStaticBlockBody':
+      return TopLevelVarScopedDeclarations(node.ClassStaticBlockStatementList);
     default:
       return [];
   }

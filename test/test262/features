@@ -15,8 +15,6 @@
 -json-modules
 -import-assertions
 
--class-static-block
-
 -Temporal
 
 -resizable-arraybuffer

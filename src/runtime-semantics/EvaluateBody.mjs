@@ -151,12 +151,22 @@ export function* EvaluateBody_AssignmentExpression(AssignmentExpression, functio
   return new Completion({ Type: 'return', Value: value, Target: undefined });
 }
 
+// #sec-runtime-semantics-evaluateclassstaticblockbody
+//    ClassStaticBlockBody : ClassStaticBlockStatementList
+function* EvaluateClassStaticBlockBody({ ClassStaticBlockStatementList }, functionObject) {
+  // 1. Perform ? FunctionDeclarationInstantiation(functionObject, « »).
+  Q(yield* FunctionDeclarationInstantiation(functionObject, []));
+  // 2. Return the result of evaluating ClassStaticBlockStatementList.
+  return yield* Evaluate_FunctionStatementList(ClassStaticBlockStatementList);
+}
+
 // FunctionBody : FunctionStatementList
 // ConciseBody : ExpressionBody
 // GeneratorBody : FunctionBody
 // AsyncGeneratorBody : FunctionBody
 // AsyncFunctionBody : FunctionBody
 // AsyncConciseBody : ExpressionBody
+// ClassStaticBlockBody : ClassStaticBlockStatementList
 export function EvaluateBody(Body, functionObject, argumentsList) {
   switch (Body.type) {
     case 'FunctionBody':
@@ -171,6 +181,8 @@ export function EvaluateBody(Body, functionObject, argumentsList) {
       return EvaluateBody_AsyncFunctionBody(Body, functionObject, argumentsList);
     case 'AsyncConciseBody':
       return EvaluateBody_AsyncConciseBody(Body, functionObject, argumentsList);
+    case 'ClassStaticBlockBody':
+      return EvaluateClassStaticBlockBody(Body, functionObject);
     default:
       return EvaluateBody_AssignmentExpression(Body, functionObject, argumentsList);
   }

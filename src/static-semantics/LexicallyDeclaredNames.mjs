@@ -16,6 +16,8 @@ export function LexicallyDeclaredNames(node) {
     case 'AsyncFunctionBody':
     case 'AsyncGeneratorBody':
       return TopLevelLexicallyDeclaredNames(node.FunctionStatementList);
+    case 'ClassStaticBlockBody':
+      return TopLevelLexicallyDeclaredNames(node.ClassStaticBlockStatementList);
     default:
       return [];
   }

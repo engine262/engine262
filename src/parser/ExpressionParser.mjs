@@ -441,6 +441,8 @@ export class ExpressionParser extends FunctionParser {
   parseAwaitExpression() {
     if (this.scope.inParameters()) {
       this.raiseEarly('AwaitInFormalParameters');
+    } else if (this.scope.inClassStaticBlock()) {
+      this.raiseEarly('AwaitInClassStaticBlock');
     }
     const node = this.startNode();
     this.expect(Token.AWAIT);
@@ -920,10 +922,13 @@ export class ExpressionParser extends FunctionParser {
         const staticPrivates = new Set();
         const instancePrivates = new Set();
         while (!this.eat(Token.RBRACE)) {
-          const m = this.parseBracketedDefinition('class element');
+          const m = this.parseClassElement();
           node.ClassBody.push(m);
           while (this.eat(Token.SEMICOLON)) {
             // nothing
+          }
+          if (m.type === 'ClassStaticBlock') {
+            continue;
           }
 
           if (m.ClassElementName?.type === 'PrivateIdentifier') {
@@ -982,6 +987,36 @@ export class ExpressionParser extends FunctionParser {
     }
 
     return this.finishNode(node, 'ClassTail');
+  }
+
+  parseClassElement() {
+    let element;
+    if (this.test('static') && this.testAhead(Token.LBRACE)) {
+      const node = this.startNode();
+      this.expect('static');
+      node.static = true;
+      this.expect(Token.LBRACE);
+      node.ClassStaticBlockBody = this.startNode();
+      node.ClassStaticBlockBody.ClassStaticBlockStatementList = this.scope.with(
+        {
+          lexical: true,
+          yield: false,
+          await: true,
+          return: false,
+          superProperty: true,
+          superCall: false,
+          newTarget: true,
+          label: 'boundary',
+          classStaticBlock: true,
+        },
+        () => this.parseStatementList(Token.RBRACE),
+      );
+      this.finishNode(node.ClassStaticBlockBody, 'ClassStaticBlockBody');
+      element = this.finishNode(node, 'ClassStaticBlock');
+    } else {
+      element = this.parseBracketedDefinition('class element');
+    }
+    return element;
   }
 
   parseClassExpression() {
@@ -1338,6 +1373,7 @@ export class ExpressionParser extends FunctionParser {
       superProperty: true,
       await: isAsync,
       yield: isGenerator,
+      classStaticBlock: false,
     }, () => {
       if (isSpecialMethod && isGetter) {
         this.expect(Token.LPAREN);

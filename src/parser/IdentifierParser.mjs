@@ -54,25 +54,10 @@ export class IdentifierParser extends BaseParser {
       default:
         this.unexpected(token);
     }
-    if (node.name === 'yield' && (this.scope.hasYield() || this.scope.isModule())) {
-      this.raiseEarly('UnexpectedReservedWordStrict', token);
+    if (this.isStrictMode() && (node.name === 'eval' || node.name === 'arguments')) {
+      this.raiseEarly('UnexpectedEvalOrArguments', token);
     }
-    if (node.name === 'await' && (this.scope.hasAwait() || this.scope.isModule())) {
-      this.raiseEarly('UnexpectedReservedWordStrict', token);
-    }
-    if (this.isStrictMode()) {
-      if (isReservedWordStrict(node.name)) {
-        this.raiseEarly('UnexpectedReservedWordStrict', token);
-      }
-      if (node.name === 'eval' || node.name === 'arguments') {
-        this.raiseEarly('UnexpectedEvalOrArguments', token);
-      }
-    }
-    if (node.name !== 'yield'
-        && node.name !== 'await'
-        && isKeywordRaw(node.name)) {
-      this.raiseEarly('UnexpectedToken', token);
-    }
+    this.validateIdentifierReference(node.name, token);
     return this.finishNode(node, 'BindingIdentifier');
   }
 
@@ -129,6 +114,9 @@ export class IdentifierParser extends BaseParser {
     }
     if (this.isStrictMode() && isReservedWordStrict(name)) {
       this.raiseEarly('UnexpectedReservedWordStrict', token);
+    }
+    if (this.scope.inClassStaticBlock() && name === 'arguments') {
+      this.raiseEarly('UnexpectedEvalOrArguments', token);
     }
     if (name !== 'yield' && name !== 'await' && isKeywordRaw(name)) {
       this.raiseEarly('UnexpectedToken', token);
