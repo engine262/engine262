@@ -597,7 +597,9 @@ export function bootstrapArrayPrototype(realmRec) {
     Assert(X(CreateDataProperty(unscopableList, new Value('entries'), Value.true)) === Value.true);
     Assert(X(CreateDataProperty(unscopableList, new Value('fill'), Value.true)) === Value.true);
     Assert(X(CreateDataProperty(unscopableList, new Value('find'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, new Value('findLast'), Value.true)) === Value.true);
     Assert(X(CreateDataProperty(unscopableList, new Value('findIndex'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, new Value('findLastIndex'), Value.true)) === Value.true);
     Assert(X(CreateDataProperty(unscopableList, new Value('flat'), Value.true)) === Value.true);
     Assert(X(CreateDataProperty(unscopableList, new Value('flatMap'), Value.true)) === Value.true);
     Assert(X(CreateDataProperty(unscopableList, new Value('includes'), Value.true)) === Value.true);

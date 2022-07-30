@@ -180,6 +180,72 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     return F(-1);
   }
 
+  // #sec-array.prototype.findlast
+  // #sec-%typedarray%.prototype.findlast
+  function ArrayProto_findLast([predicate = Value.undefined, thisArg = Value.undefined], { thisValue }) {
+    Q(priorToEvaluatingAlgorithm(thisValue));
+    // Let O be ? ToObject(this value).
+    const O = Q(ToObject(thisValue));
+    // 2. Let len be ? LengthOfArrayLike(O).
+    const len = Q(objectToLength(O));
+    // 3. If IsCallable(predicate) is false, throw a TypeError exception.
+    if (IsCallable(predicate) === Value.false) {
+      return surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
+    }
+    // 4. Let k be len - 1.
+    let k = len - 1;
+    // 5. Repeat, while k ≥ 0,
+    while (k >= 0) {
+      // a. Let Pk be ! ToString(𝔽(k)).
+      const Pk = X(ToString(F(k)));
+      // b. Let kValue be ? Get(O, Pk).
+      const kValue = Q(Get(O, Pk));
+      // c. Let testResult be ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
+      const testResult = ToBoolean(Q(Call(predicate, thisArg, [kValue, F(k), O])));
+      // d. If testResult is true, return kValue.
+      if (testResult === Value.true) {
+        return kValue;
+      }
+      // e. Set k to k - 1.
+      k -= 1;
+    }
+    // 6. Return undefined.
+    return Value.undefined;
+  }
+
+  // #sec-array.prototype.findlastindex
+  // #sec-%typedarray%.prototype.findlastindex
+  function ArrayProto_findLastIndex([predicate = Value.undefined, thisArg = Value.undefined], { thisValue }) {
+    Q(priorToEvaluatingAlgorithm(thisValue));
+    // Let O be ? ToObject(this value).
+    const O = Q(ToObject(thisValue));
+    // 2. Let len be ? LengthOfArrayLike(O).
+    const len = Q(objectToLength(O));
+    // 3. If IsCallable(predicate) is false, throw a TypeError exception.
+    if (IsCallable(predicate) === Value.false) {
+      return surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
+    }
+    // 4. Let k be len - 1.
+    let k = len - 1;
+    // 5. Repeat, while k ≥ 0,
+    while (k >= 0) {
+      // a. Let Pk be ! ToString(𝔽(k)).
+      const Pk = X(ToString(F(k)));
+      // b. Let kValue be ? Get(O, Pk).
+      const kValue = Q(Get(O, Pk));
+      // c. Let testResult be ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
+      const testResult = ToBoolean(Q(Call(predicate, thisArg, [kValue, F(k), O])));
+      // d. If testResult is true, return 𝔽(k).
+      if (testResult === Value.true) {
+        return F(k);
+      }
+      // e. Set k to k - 1.
+      k -= 1;
+    }
+    // 6. Return Return -1𝔽.
+    return F(-1);
+  }
+
   // 22.1.3.12 #sec-array.prototype.foreach
   // 22.2.3.12 #sec-%typedarray%.prototype.foreach
   function ArrayProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
@@ -519,6 +585,8 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     ['every', ArrayProto_every, 1],
     ['find', ArrayProto_find, 1],
     ['findIndex', ArrayProto_findIndex, 1],
+    ['findLast', ArrayProto_findLast, 1],
+    ['findLastIndex', ArrayProto_findLastIndex, 1],
     ['forEach', ArrayProto_forEach, 1],
     ['includes', ArrayProto_includes, 1],
     ['indexOf', ArrayProto_indexOf, 1],
