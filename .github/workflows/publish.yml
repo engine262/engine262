@@ -34,11 +34,11 @@ jobs:
           git checkout gh-pages
 
           cp dist/* .
-          git add engine262.*
 
           # check_changed_for_publish.js is in the gh-pages branch
           node ./check_changed_for_publish.js
 
+          git add engine262.*
           git commit -m "autobuild" || exit 0 # exit silently if nothing changed
           git push -u github gh-pages
 
