@@ -105,3 +105,4 @@ export * from './InstantiateArrowFunctionExpression.mjs';
 export * from './InstantiateAsyncArrowFunctionExpression.mjs';
 export * from './InstantiateAsyncFunctionExpression.mjs';
 export * from './InstantiateAsyncGeneratorFunctionExpression.mjs';
+export * from './ClassStaticBlockDefinitionEvaluation.mjs';

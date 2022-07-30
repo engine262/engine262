@@ -61,6 +61,7 @@ export class FunctionParser extends IdentifierParser {
       variable: true,
       variableFunctions: true,
       parameters: false,
+      classStaticBlock: false,
     }, () => {
       this.scope.arrowInfoStack.push(null);
 

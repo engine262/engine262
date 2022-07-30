@@ -18,6 +18,7 @@ export const ArrayPastSafeLength = () => 'Cannot make length of array-like objec
 export const ArrayEmptyReduce = () => 'Cannot reduce an empty array with no initial value';
 export const AssignmentToConstant = (n) => `Assignment to constant variable ${i(n)}`;
 export const AwaitInFormalParameters = () => 'await is not allowed in function parameters';
+export const AwaitInClassStaticBlock = () => 'await is not allowed in class static blocks';
 export const AwaitNotInAsyncFunction = () => 'await is only valid in async functions';
 export const BigIntDivideByZero = () => 'Division by zero';
 export const BigIntNegativeExponent = () => 'Exponent must be positive';

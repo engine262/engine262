@@ -30,6 +30,8 @@ export function LexicallyScopedDeclarations(node) {
     case 'AsyncFunctionBody':
     case 'AsyncGeneratorBody':
       return TopLevelLexicallyScopedDeclarations(node.FunctionStatementList);
+    case 'ClassStaticBlockBody':
+      return TopLevelLexicallyScopedDeclarations(node.ClassStaticBlockStatementList);
     case 'ImportDeclaration':
       return [];
     case 'ClassDeclaration':

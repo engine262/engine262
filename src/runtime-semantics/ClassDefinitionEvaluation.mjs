@@ -3,6 +3,7 @@ import { Value, Type, PrivateName } from '../value.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import {
   Assert,
+  Call,
   Construct,
   CreateBuiltinFunction,
   Get,
@@ -41,17 +42,21 @@ import {
   ClassFieldDefinitionEvaluation,
   PrivateElementRecord,
   ClassFieldDefinitionRecord,
+  ClassStaticBlockDefinitionEvaluation,
+  ClassStaticBlockDefinitionRecord,
 } from './all.mjs';
 
-function ClassElementEvaluation(node, object, enumerable) {
+function* ClassElementEvaluation(node, object, enumerable) {
   switch (node.type) {
     case 'MethodDefinition':
     case 'GeneratorMethod':
     case 'AsyncMethod':
     case 'AsyncGeneratorMethod':
-      return MethodDefinitionEvaluation(node, object, enumerable);
+      return yield* MethodDefinitionEvaluation(node, object, enumerable);
     case 'FieldDefinition':
-      return ClassFieldDefinitionEvaluation(node, object);
+      return yield* ClassFieldDefinitionEvaluation(node, object);
+    case 'ClassStaticBlock':
+      return ClassStaticBlockDefinitionEvaluation(node, object);
     default:
       throw new OutOfRange('ClassElementEvaluation', node);
   }
@@ -206,8 +211,8 @@ export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
   const staticPrivateMethods = [];
   // 23. Let instanceFields be a new empty List.
   const instanceFields = [];
-  // 24. Let staticFields be a new empty List.
-  const staticFields = [];
+  // 24. Let staticElements be a new empty List.
+  const staticElements = [];
   // 25. For each ClassElement e of elements, do
   for (const e of elements) {
     let field;
@@ -275,9 +280,12 @@ export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
       // i. If IsStatic of e is false, append field to instanceFields.
       if (IsStatic(e) === false) {
         instanceFields.push(field);
-      } else { // ii. Else, append field to staticFields.
-        staticFields.push(field);
+      } else { // ii. Else, append field to staticElements.
+        staticElements.push(field);
       }
+    } else if (field instanceof ClassStaticBlockDefinitionRecord) { // g. Else if element is a ClassStaticBlockDefinition Record, then
+      // i. Append element to staticElements.
+      staticElements.push(field);
     }
   }
   // 26. Set the running execution context's LexicalEnvironment to env.
@@ -296,11 +304,20 @@ export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
     // a. Perform ! PrivateMethodOrAccessorAdd(method, F).
     X(PrivateMethodOrAccessorAdd(method, F));
   }
-  // 31. For each element fieldRecord of staticFields, do
-  for (const fieldRecord of staticFields) {
-    // a. Let result be DefineField(F, fieldRecord).
-    const result = DefineField(F, fieldRecord);
-    // b. If result is an abrupt completion, then
+  // 31. For each element elementRecord of staticElements, do
+  for (const elementRecord of staticElements) {
+    let result;
+    // a. If elementRecord is a ClassFieldDefinition Record, then
+    if (elementRecord instanceof ClassFieldDefinitionRecord) {
+      // a. Let result be DefineField(F, elementRecord).
+      result = DefineField(F, elementRecord);
+    } else { // b. Else,
+      // i. Assert: elementRecord is a ClassStaticBlockDefinition Record.
+      Assert(elementRecord instanceof ClassStaticBlockDefinitionRecord);
+      // ii. Let result be Completion(Call(elementRecord.[[BodyFunction]], F)).
+      result = Completion(Call(elementRecord.BodyFunction, F));
+    }
+    // c. If result is an abrupt completion, then
     if (result instanceof AbruptCompletion) {
       // i. Set the running execution context's PrivateEnvironment to outerPrivateEnvironment.
       surroundingAgent.runningExecutionContext.PrivateEnvironment = outerPrivateEnvironment;

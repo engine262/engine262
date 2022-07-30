@@ -15,6 +15,7 @@ export const Flag = {
   'in',
   'default',
   'module',
+  'classStaticBlock',
 ].forEach((name, i) => {
   /* c8 ignore next */
   if (i > 31) {
@@ -158,6 +159,10 @@ export class Scope {
 
   inParameters() {
     return (this.flags & Flag.parameters) !== 0;
+  }
+
+  inClassStaticBlock() {
+    return (this.flags & Flag.classStaticBlock) !== 0;
   }
 
   isDefault() {
