@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 09f12343dad9236cf0ba29f97daa1ae5f478a930
+ * engine262 0.0.1 7dc03cc508d047dfeb97dbf88304cbc1e7422b53
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -605,6 +605,9 @@
       case 'AsyncGeneratorBody':
         return TopLevelLexicallyDeclaredNames(node.FunctionStatementList);
 
+      case 'ClassStaticBlockBody':
+        return TopLevelLexicallyDeclaredNames(node.ClassStaticBlockStatementList);
+
       default:
         return [];
     }
@@ -899,6 +902,9 @@
       case 'AsyncGeneratorBody':
         return TopLevelVarDeclaredNames(node.FunctionStatementList);
 
+      case 'ClassStaticBlockBody':
+        return TopLevelVarDeclaredNames(node.ClassStaticBlockStatementList);
+
       case 'ExportDeclaration':
         if (node.VariableStatement) {
           return BoundNames(node);
@@ -1089,6 +1095,9 @@
       case 'AsyncGeneratorBody':
         return TopLevelVarScopedDeclarations(node.FunctionStatementList);
 
+      case 'ClassStaticBlockBody':
+        return TopLevelVarScopedDeclarations(node.ClassStaticBlockStatementList);
+
       default:
         return [];
     }
@@ -1165,6 +1174,9 @@
       case 'AsyncFunctionBody':
       case 'AsyncGeneratorBody':
         return TopLevelLexicallyScopedDeclarations(node.FunctionStatementList);
+
+      case 'ClassStaticBlockBody':
+        return TopLevelLexicallyScopedDeclarations(node.ClassStaticBlockStatementList);
 
       case 'ImportDeclaration':
         return [];
@@ -3791,16 +3803,19 @@
     }
   }
 
-  function ClassElementEvaluation(node, object, enumerable) {
+  function* ClassElementEvaluation(node, object, enumerable) {
     switch (node.type) {
       case 'MethodDefinition':
       case 'GeneratorMethod':
       case 'AsyncMethod':
       case 'AsyncGeneratorMethod':
-        return MethodDefinitionEvaluation(node, object, enumerable);
+        return yield* MethodDefinitionEvaluation(node, object, enumerable);
 
       case 'FieldDefinition':
-        return ClassFieldDefinitionEvaluation(node, object);
+        return yield* ClassFieldDefinitionEvaluation(node, object);
+
+      case 'ClassStaticBlock':
+        return ClassStaticBlockDefinitionEvaluation(node, object);
 
       /*c8 ignore next*/
       default:
@@ -4083,9 +4098,9 @@
 
     const staticPrivateMethods = []; // 23. Let instanceFields be a new empty List.
 
-    const instanceFields = []; // 24. Let staticFields be a new empty List.
+    const instanceFields = []; // 24. Let staticElements be a new empty List.
 
-    const staticFields = []; // 25. For each ClassElement e of elements, do
+    const staticElements = []; // 25. For each ClassElement e of elements, do
 
     for (const e of elements) {
       let field; // a. If IsStatic of e is false, then
@@ -4166,9 +4181,13 @@
         if (IsStatic(e) === false) {
           instanceFields.push(field);
         } else {
-          // ii. Else, append field to staticFields.
-          staticFields.push(field);
+          // ii. Else, append field to staticElements.
+          staticElements.push(field);
         }
+      } else if (field instanceof ClassStaticBlockDefinitionRecord) {
+        // g. Else if element is a ClassStaticBlockDefinition Record, then
+        // i. Append element to staticElements.
+        staticElements.push(field);
       }
     } // 26. Set the running execution context's LexicalEnvironment to env.
 
@@ -4194,12 +4213,23 @@
       if (_temp10 instanceof Completion) {
         _temp10 = _temp10.Value;
       }
-    } // 31. For each element fieldRecord of staticFields, do
+    } // 31. For each element elementRecord of staticElements, do
 
 
-    for (const fieldRecord of staticFields) {
-      // a. Let result be DefineField(F, fieldRecord).
-      const result = DefineField(F, fieldRecord); // b. If result is an abrupt completion, then
+    for (const elementRecord of staticElements) {
+      let result; // a. If elementRecord is a ClassFieldDefinition Record, then
+
+      if (elementRecord instanceof ClassFieldDefinitionRecord) {
+        // a. Let result be DefineField(F, elementRecord).
+        result = DefineField(F, elementRecord);
+      } else {
+        // b. Else,
+        // i. Assert: elementRecord is a ClassStaticBlockDefinition Record.
+        Assert(elementRecord instanceof ClassStaticBlockDefinitionRecord, "elementRecord instanceof ClassStaticBlockDefinitionRecord"); // ii. Let result be Completion(Call(elementRecord.[[BodyFunction]], F)).
+
+        result = Completion(Call(elementRecord.BodyFunction, F));
+      } // c. If result is an abrupt completion, then
+
 
       if (result instanceof AbruptCompletion) {
         // i. Set the running execution context's PrivateEnvironment to outerPrivateEnvironment.
@@ -6802,13 +6832,37 @@
       Value: value,
       Target: undefined
     });
+  } // #sec-runtime-semantics-evaluateclassstaticblockbody
+  //    ClassStaticBlockBody : ClassStaticBlockStatementList
+
+  function* EvaluateClassStaticBlockBody({
+    ClassStaticBlockStatementList
+  }, functionObject) {
+    let _temp16 = yield* FunctionDeclarationInstantiation(functionObject, []);
+    /* c8 ignore if */
+
+
+    if (_temp16 instanceof AbruptCompletion) {
+      return _temp16;
+    }
+    /* c8 ignore if */
+
+
+    if (_temp16 instanceof Completion) {
+      _temp16 = _temp16.Value;
+    }
+
+    return yield* Evaluate_FunctionStatementList(ClassStaticBlockStatementList);
   } // FunctionBody : FunctionStatementList
   // ConciseBody : ExpressionBody
   // GeneratorBody : FunctionBody
   // AsyncGeneratorBody : FunctionBody
   // AsyncFunctionBody : FunctionBody
   // AsyncConciseBody : ExpressionBody
+  // ClassStaticBlockBody : ClassStaticBlockStatementList
 
+
+  EvaluateClassStaticBlockBody.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-evaluateclassstaticblockbody';
   function EvaluateBody(Body, functionObject, argumentsList) {
     switch (Body.type) {
       case 'FunctionBody':
@@ -6828,6 +6882,9 @@
 
       case 'AsyncConciseBody':
         return EvaluateBody_AsyncConciseBody(Body, functionObject, argumentsList);
+
+      case 'ClassStaticBlockBody':
+        return EvaluateClassStaticBlockBody(Body, functionObject);
 
       default:
         return EvaluateBody_AssignmentExpression(Body, functionObject, argumentsList);
@@ -12243,6 +12300,7 @@
   const ArrayEmptyReduce = () => 'Cannot reduce an empty array with no initial value';
   const AssignmentToConstant = n => `Assignment to constant variable ${i(n)}`;
   const AwaitInFormalParameters = () => 'await is not allowed in function parameters';
+  const AwaitInClassStaticBlock = () => 'await is not allowed in class static blocks';
   const AwaitNotInAsyncFunction = () => 'await is only valid in async functions';
   const BigIntDivideByZero = () => 'Division by zero';
   const BigIntNegativeExponent = () => 'Exponent must be positive';
@@ -12399,6 +12457,7 @@
     ArrayEmptyReduce: ArrayEmptyReduce,
     AssignmentToConstant: AssignmentToConstant,
     AwaitInFormalParameters: AwaitInFormalParameters,
+    AwaitInClassStaticBlock: AwaitInClassStaticBlock,
     AwaitNotInAsyncFunction: AwaitNotInAsyncFunction,
     BigIntDivideByZero: BigIntDivideByZero,
     BigIntNegativeExponent: BigIntNegativeExponent,
@@ -12549,7 +12608,7 @@
   const Flag = {
     __proto__: null
   };
-  ['return', 'await', 'yield', 'parameters', 'newTarget', 'importMeta', 'superCall', 'superProperty', 'in', 'default', 'module'].forEach((name, i) => {
+  ['return', 'await', 'yield', 'parameters', 'newTarget', 'importMeta', 'superCall', 'superProperty', 'in', 'default', 'module', 'classStaticBlock'].forEach((name, i) => {
     /* c8 ignore next */
     if (i > 31) {
       throw new RangeError(name);
@@ -12735,6 +12794,10 @@
 
     inParameters() {
       return (this.flags & Flag.parameters) !== 0;
+    }
+
+    inClassStaticBlock() {
+      return (this.flags & Flag.classStaticBlock) !== 0;
     }
 
     isDefault() {
@@ -13139,28 +13202,11 @@
           this.unexpected(token);
       }
 
-      if (node.name === 'yield' && (this.scope.hasYield() || this.scope.isModule())) {
-        this.raiseEarly('UnexpectedReservedWordStrict', token);
+      if (this.isStrictMode() && (node.name === 'eval' || node.name === 'arguments')) {
+        this.raiseEarly('UnexpectedEvalOrArguments', token);
       }
 
-      if (node.name === 'await' && (this.scope.hasAwait() || this.scope.isModule())) {
-        this.raiseEarly('UnexpectedReservedWordStrict', token);
-      }
-
-      if (this.isStrictMode()) {
-        if (isReservedWordStrict(node.name)) {
-          this.raiseEarly('UnexpectedReservedWordStrict', token);
-        }
-
-        if (node.name === 'eval' || node.name === 'arguments') {
-          this.raiseEarly('UnexpectedEvalOrArguments', token);
-        }
-      }
-
-      if (node.name !== 'yield' && node.name !== 'await' && isKeywordRaw(node.name)) {
-        this.raiseEarly('UnexpectedToken', token);
-      }
-
+      this.validateIdentifierReference(node.name, token);
       return this.finishNode(node, 'BindingIdentifier');
     } // IdentifierReference :
     //   Identifier
@@ -13230,6 +13276,10 @@
 
       if (this.isStrictMode() && isReservedWordStrict(name)) {
         this.raiseEarly('UnexpectedReservedWordStrict', token);
+      }
+
+      if (this.scope.inClassStaticBlock() && name === 'arguments') {
+        this.raiseEarly('UnexpectedEvalOrArguments', token);
       }
 
       if (name !== 'yield' && name !== 'await' && isKeywordRaw(name)) {
@@ -13317,7 +13367,8 @@
         lexical: true,
         variable: true,
         variableFunctions: true,
-        parameters: false
+        parameters: false,
+        classStaticBlock: false
       }, () => {
         this.scope.arrowInfoStack.push(null);
         node.FormalParameters = this.parseFormalParameters();
@@ -15173,6 +15224,8 @@
 
       if (this.scope.inParameters()) {
         this.raiseEarly('AwaitInFormalParameters');
+      } else if (this.scope.inClassStaticBlock()) {
+        this.raiseEarly('AwaitInClassStaticBlock');
       }
 
       const node = this.startNode();
@@ -15751,10 +15804,14 @@
           while (!this.eat(Token.RBRACE)) {
             var _m$ClassElementName;
 
-            const m = this.parseBracketedDefinition('class element');
+            const m = this.parseClassElement();
             node.ClassBody.push(m);
 
             while (this.eat(Token.SEMICOLON)) {// nothing
+            }
+
+            if (m.type === 'ClassStaticBlock') {
+              continue;
             }
 
             if (((_m$ClassElementName = m.ClassElementName) === null || _m$ClassElementName === void 0 ? void 0 : _m$ClassElementName.type) === 'PrivateIdentifier') {
@@ -15816,6 +15873,35 @@
       }
 
       return this.finishNode(node, 'ClassTail');
+    }
+
+    parseClassElement() {
+      let element;
+
+      if (this.test('static') && this.testAhead(Token.LBRACE)) {
+        const node = this.startNode();
+        this.expect('static');
+        node.static = true;
+        this.expect(Token.LBRACE);
+        node.ClassStaticBlockBody = this.startNode();
+        node.ClassStaticBlockBody.ClassStaticBlockStatementList = this.scope.with({
+          lexical: true,
+          yield: false,
+          await: true,
+          return: false,
+          superProperty: true,
+          superCall: false,
+          newTarget: true,
+          label: 'boundary',
+          classStaticBlock: true
+        }, () => this.parseStatementList(Token.RBRACE));
+        this.finishNode(node.ClassStaticBlockBody, 'ClassStaticBlockBody');
+        element = this.finishNode(node, 'ClassStaticBlock');
+      } else {
+        element = this.parseBracketedDefinition('class element');
+      }
+
+      return element;
     }
 
     parseClassExpression() {
@@ -16204,7 +16290,8 @@
         variable: true,
         superProperty: true,
         await: isAsync,
-        yield: isGenerator
+        yield: isGenerator,
+        classStaticBlock: false
       }, () => {
         if (isSpecialMethod && isGetter) {
           this.expect(Token.LPAREN);
@@ -16469,6 +16556,8 @@
         node.PropertyName = name;
         node.BindingElement = this.parseBindingElement();
         return this.finishNode(node, 'BindingProperty');
+      } else {
+        this.validateIdentifierReference(name.name, node);
       }
 
       node.BindingIdentifier = name;
@@ -24032,6 +24121,53 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     return closure;
+  }
+
+  class ClassStaticBlockDefinitionRecord {
+    constructor({
+      BodyFunction
+    }) {
+      this.BodyFunction = BodyFunction;
+    }
+
+  } // #sec-runtime-semantics-classstaticblockdefinitionevaluation
+  //    ClassStaticBlock : `static` `{` ClassStaticBlockBody `}`
+
+  function ClassStaticBlockDefinitionEvaluation({
+    ClassStaticBlockBody
+  }, homeObject) {
+    // 1. Let lex be the running execution context's LexicalEnvironment.
+    const lex = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment; // 2. Let privateEnv be the running execution context's PrivateEnvironment.
+
+    const privateEnv = exports.surroundingAgent.runningExecutionContext.PrivateEnvironment; // 3. Let sourceText be the empty sequence of Unicode code points.
+
+    const sourceText = ''; // 4. Let formalParameters be an instance of the production FormalParameters : [empty] .
+
+    const formalParameters = []; // 5. Let bodyFunction be OrdinaryFunctionCreate(%Function.prototype%, sourceText, formalParameters, ClassStaticBlockBody, non-lexical-this, lex, privateEnv).
+
+    let _temp = OrdinaryFunctionCreate(exports.surroundingAgent.intrinsic('%Function.prototype%'), sourceText, formalParameters, ClassStaticBlockBody, 'non-lexical-this', lex, privateEnv);
+
+    Assert(!(_temp instanceof AbruptCompletion), "OrdinaryFunctionCreate(\n    surroundingAgent.intrinsic('%Function.prototype%'),\n    sourceText,\n    formalParameters,\n    ClassStaticBlockBody,\n    'non-lexical-this',\n    lex,\n    privateEnv,\n  )" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+
+    const bodyFunction = _temp; // 6. Perform MakeMethod(bodyFunction, homeObject).
+
+    let _temp2 = MakeMethod(bodyFunction, homeObject);
+
+    Assert(!(_temp2 instanceof AbruptCompletion), "MakeMethod(bodyFunction, homeObject)" + ' returned an abrupt completion');
+    /* c8 ignore if */
+
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
+    }
+
+    return new ClassStaticBlockDefinitionRecord({
+      BodyFunction: bodyFunction
+    });
   }
 
   class ResolvedBindingRecord {
@@ -40140,13 +40276,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
 
       return F(-1);
-    } // 22.1.3.12 #sec-array.prototype.foreach
-    // 22.2.3.12 #sec-%typedarray%.prototype.foreach
+    } // #sec-array.prototype.findlast
+    // #sec-%typedarray%.prototype.findlast
 
 
     ArrayProto_findIndex.section = 'https://tc39.es/ecma262/#sec-array.prototype.findindex';
 
-    function ArrayProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefined], {
+    function ArrayProto_findLast([predicate = Value.undefined, thisArg = Value.undefined], {
       thisValue
     }) {
       let _temp29 = priorToEvaluatingAlgorithm(thisValue);
@@ -40177,7 +40313,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _temp30 = _temp30.Value;
       }
 
-      const O = _temp30;
+      const O = _temp30; // 2. Let len be ? LengthOfArrayLike(O).
 
       let _temp31 = objectToLength(O);
       /* c8 ignore if */
@@ -40193,15 +40329,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _temp31 = _temp31.Value;
       }
 
-      const len = _temp31;
+      const len = _temp31; // 3. If IsCallable(predicate) is false, throw a TypeError exception.
 
-      if (IsCallable(callbackfn) === Value.false) {
-        return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
-      }
+      if (IsCallable(predicate) === Value.false) {
+        return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
+      } // 4. Let k be len - 1.
 
-      let k = 0;
 
-      while (k < len) {
+      let k = len - 1; // 5. Repeat, while k ≥ 0,
+
+      while (k >= 0) {
         let _temp32 = ToString(F(k));
 
         Assert(!(_temp32 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion');
@@ -40211,9 +40348,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           _temp32 = _temp32.Value;
         }
 
-        const Pk = _temp32;
+        // a. Let Pk be ! ToString(𝔽(k)).
+        const Pk = _temp32; // b. Let kValue be ? Get(O, Pk).
 
-        let _temp33 = HasProperty(O, Pk);
+        let _temp33 = Get(O, Pk);
         /* c8 ignore if */
 
 
@@ -40227,37 +40365,269 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           _temp33 = _temp33.Value;
         }
 
-        const kPresent = _temp33;
+        const kValue = _temp33; // c. Let testResult be ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
+
+        let _temp34 = Call(predicate, thisArg, [kValue, F(k), O]);
+        /* c8 ignore if */
+
+
+        if (_temp34 instanceof AbruptCompletion) {
+          return _temp34;
+        }
+        /* c8 ignore if */
+
+
+        if (_temp34 instanceof Completion) {
+          _temp34 = _temp34.Value;
+        }
+
+        const testResult = ToBoolean(_temp34); // d. If testResult is true, return kValue.
+
+        if (testResult === Value.true) {
+          return kValue;
+        } // e. Set k to k - 1.
+
+
+        k -= 1;
+      } // 6. Return undefined.
+
+
+      return Value.undefined;
+    } // #sec-array.prototype.findlastindex
+    // #sec-%typedarray%.prototype.findlastindex
+
+
+    ArrayProto_findLast.section = 'https://tc39.es/ecma262/#sec-array.prototype.findlast';
+
+    function ArrayProto_findLastIndex([predicate = Value.undefined, thisArg = Value.undefined], {
+      thisValue
+    }) {
+      let _temp35 = priorToEvaluatingAlgorithm(thisValue);
+      /* c8 ignore if */
+
+
+      if (_temp35 instanceof AbruptCompletion) {
+        return _temp35;
+      }
+      /* c8 ignore if */
+
+
+      if (_temp35 instanceof Completion) {
+        _temp35 = _temp35.Value;
+      }
+
+      let _temp36 = ToObject(thisValue);
+      /* c8 ignore if */
+
+
+      if (_temp36 instanceof AbruptCompletion) {
+        return _temp36;
+      }
+      /* c8 ignore if */
+
+
+      if (_temp36 instanceof Completion) {
+        _temp36 = _temp36.Value;
+      }
+
+      const O = _temp36; // 2. Let len be ? LengthOfArrayLike(O).
+
+      let _temp37 = objectToLength(O);
+      /* c8 ignore if */
+
+
+      if (_temp37 instanceof AbruptCompletion) {
+        return _temp37;
+      }
+      /* c8 ignore if */
+
+
+      if (_temp37 instanceof Completion) {
+        _temp37 = _temp37.Value;
+      }
+
+      const len = _temp37; // 3. If IsCallable(predicate) is false, throw a TypeError exception.
+
+      if (IsCallable(predicate) === Value.false) {
+        return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
+      } // 4. Let k be len - 1.
+
+
+      let k = len - 1; // 5. Repeat, while k ≥ 0,
+
+      while (k >= 0) {
+        let _temp38 = ToString(F(k));
+
+        Assert(!(_temp38 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion');
+        /* c8 ignore if */
+
+        if (_temp38 instanceof Completion) {
+          _temp38 = _temp38.Value;
+        }
+
+        // a. Let Pk be ! ToString(𝔽(k)).
+        const Pk = _temp38; // b. Let kValue be ? Get(O, Pk).
+
+        let _temp39 = Get(O, Pk);
+        /* c8 ignore if */
+
+
+        if (_temp39 instanceof AbruptCompletion) {
+          return _temp39;
+        }
+        /* c8 ignore if */
+
+
+        if (_temp39 instanceof Completion) {
+          _temp39 = _temp39.Value;
+        }
+
+        const kValue = _temp39; // c. Let testResult be ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
+
+        let _temp40 = Call(predicate, thisArg, [kValue, F(k), O]);
+        /* c8 ignore if */
+
+
+        if (_temp40 instanceof AbruptCompletion) {
+          return _temp40;
+        }
+        /* c8 ignore if */
+
+
+        if (_temp40 instanceof Completion) {
+          _temp40 = _temp40.Value;
+        }
+
+        const testResult = ToBoolean(_temp40); // d. If testResult is true, return 𝔽(k).
+
+        if (testResult === Value.true) {
+          return F(k);
+        } // e. Set k to k - 1.
+
+
+        k -= 1;
+      } // 6. Return Return -1𝔽.
+
+
+      return F(-1);
+    } // 22.1.3.12 #sec-array.prototype.foreach
+    // 22.2.3.12 #sec-%typedarray%.prototype.foreach
+
+
+    ArrayProto_findLastIndex.section = 'https://tc39.es/ecma262/#sec-array.prototype.findlastindex';
+
+    function ArrayProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefined], {
+      thisValue
+    }) {
+      let _temp41 = priorToEvaluatingAlgorithm(thisValue);
+      /* c8 ignore if */
+
+
+      if (_temp41 instanceof AbruptCompletion) {
+        return _temp41;
+      }
+      /* c8 ignore if */
+
+
+      if (_temp41 instanceof Completion) {
+        _temp41 = _temp41.Value;
+      }
+
+      let _temp42 = ToObject(thisValue);
+      /* c8 ignore if */
+
+
+      if (_temp42 instanceof AbruptCompletion) {
+        return _temp42;
+      }
+      /* c8 ignore if */
+
+
+      if (_temp42 instanceof Completion) {
+        _temp42 = _temp42.Value;
+      }
+
+      const O = _temp42;
+
+      let _temp43 = objectToLength(O);
+      /* c8 ignore if */
+
+
+      if (_temp43 instanceof AbruptCompletion) {
+        return _temp43;
+      }
+      /* c8 ignore if */
+
+
+      if (_temp43 instanceof Completion) {
+        _temp43 = _temp43.Value;
+      }
+
+      const len = _temp43;
+
+      if (IsCallable(callbackfn) === Value.false) {
+        return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
+      }
+
+      let k = 0;
+
+      while (k < len) {
+        let _temp44 = ToString(F(k));
+
+        Assert(!(_temp44 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion');
+        /* c8 ignore if */
+
+        if (_temp44 instanceof Completion) {
+          _temp44 = _temp44.Value;
+        }
+
+        const Pk = _temp44;
+
+        let _temp45 = HasProperty(O, Pk);
+        /* c8 ignore if */
+
+
+        if (_temp45 instanceof AbruptCompletion) {
+          return _temp45;
+        }
+        /* c8 ignore if */
+
+
+        if (_temp45 instanceof Completion) {
+          _temp45 = _temp45.Value;
+        }
+
+        const kPresent = _temp45;
 
         if (kPresent === Value.true) {
-          let _temp34 = Get(O, Pk);
+          let _temp46 = Get(O, Pk);
           /* c8 ignore if */
 
 
-          if (_temp34 instanceof AbruptCompletion) {
-            return _temp34;
+          if (_temp46 instanceof AbruptCompletion) {
+            return _temp46;
           }
           /* c8 ignore if */
 
 
-          if (_temp34 instanceof Completion) {
-            _temp34 = _temp34.Value;
+          if (_temp46 instanceof Completion) {
+            _temp46 = _temp46.Value;
           }
 
-          const kValue = _temp34;
+          const kValue = _temp46;
 
-          let _temp35 = Call(callbackfn, thisArg, [kValue, F(k), O]);
+          let _temp47 = Call(callbackfn, thisArg, [kValue, F(k), O]);
           /* c8 ignore if */
 
 
-          if (_temp35 instanceof AbruptCompletion) {
-            return _temp35;
+          if (_temp47 instanceof AbruptCompletion) {
+            return _temp47;
           }
           /* c8 ignore if */
 
 
-          if (_temp35 instanceof Completion) {
-            _temp35 = _temp35.Value;
+          if (_temp47 instanceof Completion) {
+            _temp47 = _temp47.Value;
           }
         }
 
@@ -40274,71 +40644,71 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     function ArrayProto_includes([searchElement = Value.undefined, fromIndex = Value.undefined], {
       thisValue
     }) {
-      let _temp36 = priorToEvaluatingAlgorithm(thisValue);
+      let _temp48 = priorToEvaluatingAlgorithm(thisValue);
       /* c8 ignore if */
 
 
-      if (_temp36 instanceof AbruptCompletion) {
-        return _temp36;
+      if (_temp48 instanceof AbruptCompletion) {
+        return _temp48;
       }
       /* c8 ignore if */
 
 
-      if (_temp36 instanceof Completion) {
-        _temp36 = _temp36.Value;
+      if (_temp48 instanceof Completion) {
+        _temp48 = _temp48.Value;
       }
 
-      let _temp37 = ToObject(thisValue);
+      let _temp49 = ToObject(thisValue);
       /* c8 ignore if */
 
 
-      if (_temp37 instanceof AbruptCompletion) {
-        return _temp37;
-      }
-      /* c8 ignore if */
-
-
-      if (_temp37 instanceof Completion) {
-        _temp37 = _temp37.Value;
-      }
-
-      const O = _temp37;
-
-      let _temp38 = objectToLength(O);
-      /* c8 ignore if */
-
-
-      if (_temp38 instanceof AbruptCompletion) {
-        return _temp38;
+      if (_temp49 instanceof AbruptCompletion) {
+        return _temp49;
       }
       /* c8 ignore if */
 
 
-      if (_temp38 instanceof Completion) {
-        _temp38 = _temp38.Value;
+      if (_temp49 instanceof Completion) {
+        _temp49 = _temp49.Value;
       }
 
-      const len = _temp38;
+      const O = _temp49;
+
+      let _temp50 = objectToLength(O);
+      /* c8 ignore if */
+
+
+      if (_temp50 instanceof AbruptCompletion) {
+        return _temp50;
+      }
+      /* c8 ignore if */
+
+
+      if (_temp50 instanceof Completion) {
+        _temp50 = _temp50.Value;
+      }
+
+      const len = _temp50;
 
       if (len === 0) {
         return Value.false;
       }
 
-      let _temp39 = ToIntegerOrInfinity(fromIndex);
+      let _temp51 = ToIntegerOrInfinity(fromIndex);
       /* c8 ignore if */
 
 
-      if (_temp39 instanceof AbruptCompletion) {
-        return _temp39;
+      if (_temp51 instanceof AbruptCompletion) {
+        return _temp51;
       }
       /* c8 ignore if */
 
 
-      if (_temp39 instanceof Completion) {
-        _temp39 = _temp39.Value;
+      if (_temp51 instanceof Completion) {
+        _temp51 = _temp51.Value;
       }
 
-      const n = _temp39;
+      const n = _temp51;
 
       if (fromIndex === Value.undefined) {
         Assert(n === 0, "n === 0");
@@ -40357,32 +40727,32 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
 
       while (k < len) {
-        let _temp40 = ToString(F(k));
+        let _temp52 = ToString(F(k));
 
-        Assert(!(_temp40 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion');
+        Assert(!(_temp52 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion');
         /* c8 ignore if */
 
-        if (_temp40 instanceof Completion) {
-          _temp40 = _temp40.Value;
+        if (_temp52 instanceof Completion) {
+          _temp52 = _temp52.Value;
         }
 
-        const kStr = _temp40;
+        const kStr = _temp52;
 
-        let _temp41 = Get(O, kStr);
-        /* c8 ignore if */
-
-
-        if (_temp41 instanceof AbruptCompletion) {
-          return _temp41;
-        }
+        let _temp53 = Get(O, kStr);
         /* c8 ignore if */
 
 
-        if (_temp41 instanceof Completion) {
-          _temp41 = _temp41.Value;
+        if (_temp53 instanceof AbruptCompletion) {
+          return _temp53;
+        }
+        /* c8 ignore if */
+
+
+        if (_temp53 instanceof Completion) {
+          _temp53 = _temp53.Value;
         }
 
-        const elementK = _temp41;
+        const elementK = _temp53;
 
         if (SameValueZero(searchElement, elementK) === Value.true) {
           return Value.true;
@@ -40401,71 +40771,71 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     function ArrayProto_indexOf([searchElement = Value.undefined, fromIndex = Value.undefined], {
       thisValue
     }) {
-      let _temp42 = priorToEvaluatingAlgorithm(thisValue);
+      let _temp54 = priorToEvaluatingAlgorithm(thisValue);
       /* c8 ignore if */
 
 
-      if (_temp42 instanceof AbruptCompletion) {
-        return _temp42;
+      if (_temp54 instanceof AbruptCompletion) {
+        return _temp54;
       }
       /* c8 ignore if */
 
 
-      if (_temp42 instanceof Completion) {
-        _temp42 = _temp42.Value;
+      if (_temp54 instanceof Completion) {
+        _temp54 = _temp54.Value;
       }
 
-      let _temp43 = ToObject(thisValue);
+      let _temp55 = ToObject(thisValue);
       /* c8 ignore if */
 
 
-      if (_temp43 instanceof AbruptCompletion) {
-        return _temp43;
-      }
-      /* c8 ignore if */
-
-
-      if (_temp43 instanceof Completion) {
-        _temp43 = _temp43.Value;
-      }
-
-      const O = _temp43;
-
-      let _temp44 = objectToLength(O);
-      /* c8 ignore if */
-
-
-      if (_temp44 instanceof AbruptCompletion) {
-        return _temp44;
+      if (_temp55 instanceof AbruptCompletion) {
+        return _temp55;
       }
       /* c8 ignore if */
 
 
-      if (_temp44 instanceof Completion) {
-        _temp44 = _temp44.Value;
+      if (_temp55 instanceof Completion) {
+        _temp55 = _temp55.Value;
       }
 
-      const len = _temp44;
+      const O = _temp55;
+
+      let _temp56 = objectToLength(O);
+      /* c8 ignore if */
+
+
+      if (_temp56 instanceof AbruptCompletion) {
+        return _temp56;
+      }
+      /* c8 ignore if */
+
+
+      if (_temp56 instanceof Completion) {
+        _temp56 = _temp56.Value;
+      }
+
+      const len = _temp56;
 
       if (len === 0) {
         return F(-1);
       }
 
-      let _temp45 = ToIntegerOrInfinity(fromIndex);
+      let _temp57 = ToIntegerOrInfinity(fromIndex);
       /* c8 ignore if */
 
 
-      if (_temp45 instanceof AbruptCompletion) {
-        return _temp45;
+      if (_temp57 instanceof AbruptCompletion) {
+        return _temp57;
       }
       /* c8 ignore if */
 
 
-      if (_temp45 instanceof Completion) {
-        _temp45 = _temp45.Value;
+      if (_temp57 instanceof Completion) {
+        _temp57 = _temp57.Value;
       }
 
-      const n = _temp45;
+      const n = _temp57;
 
       if (fromIndex === Value.undefined) {
         Assert(n === 0, "n === 0");
@@ -40488,49 +40858,49 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
 
       while (k < len) {
-        let _temp46 = ToString(F(k));
+        let _temp58 = ToString(F(k));
 
-        Assert(!(_temp46 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion');
+        Assert(!(_temp58 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion');
         /* c8 ignore if */
 
-        if (_temp46 instanceof Completion) {
-          _temp46 = _temp46.Value;
+        if (_temp58 instanceof Completion) {
+          _temp58 = _temp58.Value;
         }
 
-        const kStr = _temp46;
+        const kStr = _temp58;
 
-        let _temp47 = HasProperty(O, kStr);
-        /* c8 ignore if */
-
-
-        if (_temp47 instanceof AbruptCompletion) {
-          return _temp47;
-        }
+        let _temp59 = HasProperty(O, kStr);
         /* c8 ignore if */
 
 
-        if (_temp47 instanceof Completion) {
-          _temp47 = _temp47.Value;
+        if (_temp59 instanceof AbruptCompletion) {
+          return _temp59;
+        }
+        /* c8 ignore if */
+
+
+        if (_temp59 instanceof Completion) {
+          _temp59 = _temp59.Value;
         }
 
-        const kPresent = _temp47;
+        const kPresent = _temp59;
 
         if (kPresent === Value.true) {
-          let _temp48 = Get(O, kStr);
+          let _temp60 = Get(O, kStr);
           /* c8 ignore if */
 
 
-          if (_temp48 instanceof AbruptCompletion) {
-            return _temp48;
+          if (_temp60 instanceof AbruptCompletion) {
+            return _temp60;
           }
           /* c8 ignore if */
 
 
-          if (_temp48 instanceof Completion) {
-            _temp48 = _temp48.Value;
+          if (_temp60 instanceof Completion) {
+            _temp60 = _temp60.Value;
           }
 
-          const elementK = _temp48;
+          const elementK = _temp60;
           const same = StrictEqualityComparison(searchElement, elementK);
 
           if (same === Value.true) {
@@ -40551,71 +40921,71 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     function ArrayProto_join([separator = Value.undefined], {
       thisValue
     }) {
-      let _temp49 = priorToEvaluatingAlgorithm(thisValue);
+      let _temp61 = priorToEvaluatingAlgorithm(thisValue);
       /* c8 ignore if */
 
 
-      if (_temp49 instanceof AbruptCompletion) {
-        return _temp49;
+      if (_temp61 instanceof AbruptCompletion) {
+        return _temp61;
       }
       /* c8 ignore if */
 
 
-      if (_temp49 instanceof Completion) {
-        _temp49 = _temp49.Value;
+      if (_temp61 instanceof Completion) {
+        _temp61 = _temp61.Value;
       }
 
-      let _temp50 = ToObject(thisValue);
+      let _temp62 = ToObject(thisValue);
       /* c8 ignore if */
 
 
-      if (_temp50 instanceof AbruptCompletion) {
-        return _temp50;
-      }
-      /* c8 ignore if */
-
-
-      if (_temp50 instanceof Completion) {
-        _temp50 = _temp50.Value;
-      }
-
-      const O = _temp50;
-
-      let _temp51 = objectToLength(O);
-      /* c8 ignore if */
-
-
-      if (_temp51 instanceof AbruptCompletion) {
-        return _temp51;
+      if (_temp62 instanceof AbruptCompletion) {
+        return _temp62;
       }
       /* c8 ignore if */
 
 
-      if (_temp51 instanceof Completion) {
-        _temp51 = _temp51.Value;
+      if (_temp62 instanceof Completion) {
+        _temp62 = _temp62.Value;
       }
 
-      const len = _temp51;
+      const O = _temp62;
+
+      let _temp63 = objectToLength(O);
+      /* c8 ignore if */
+
+
+      if (_temp63 instanceof AbruptCompletion) {
+        return _temp63;
+      }
+      /* c8 ignore if */
+
+
+      if (_temp63 instanceof Completion) {
+        _temp63 = _temp63.Value;
+      }
+
+      const len = _temp63;
       let sep;
 
       if (Type(separator) === 'Undefined') {
         sep = ',';
       } else {
-        let _temp52 = ToString(separator);
+        let _temp64 = ToString(separator);
         /* c8 ignore if */
 
 
-        if (_temp52 instanceof AbruptCompletion) {
-          return _temp52;
+        if (_temp64 instanceof AbruptCompletion) {
+          return _temp64;
         }
         /* c8 ignore if */
 
 
-        if (_temp52 instanceof Completion) {
-          _temp52 = _temp52.Value;
+        if (_temp64 instanceof Completion) {
+          _temp64 = _temp64.Value;
         }
 
-        sep = _temp52.stringValue();
+        sep = _temp64.stringValue();
       }
 
       let R = '';
@@ -40626,52 +40996,52 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           R = `${R}${sep}`;
         }
 
-        let _temp53 = ToString(F(k));
+        let _temp65 = ToString(F(k));
 
-        Assert(!(_temp53 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion');
+        Assert(!(_temp65 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion');
         /* c8 ignore if */
 
-        if (_temp53 instanceof Completion) {
-          _temp53 = _temp53.Value;
+        if (_temp65 instanceof Completion) {
+          _temp65 = _temp65.Value;
         }
 
-        const kStr = _temp53;
+        const kStr = _temp65;
 
-        let _temp54 = Get(O, kStr);
-        /* c8 ignore if */
-
-
-        if (_temp54 instanceof AbruptCompletion) {
-          return _temp54;
-        }
+        let _temp66 = Get(O, kStr);
         /* c8 ignore if */
 
 
-        if (_temp54 instanceof Completion) {
-          _temp54 = _temp54.Value;
+        if (_temp66 instanceof AbruptCompletion) {
+          return _temp66;
+        }
+        /* c8 ignore if */
+
+
+        if (_temp66 instanceof Completion) {
+          _temp66 = _temp66.Value;
         }
 
-        const element = _temp54;
+        const element = _temp66;
         let next;
 
         if (Type(element) === 'Undefined' || Type(element) === 'Null') {
           next = '';
         } else {
-          let _temp55 = ToString(element);
+          let _temp67 = ToString(element);
           /* c8 ignore if */
 
 
-          if (_temp55 instanceof AbruptCompletion) {
-            return _temp55;
+          if (_temp67 instanceof AbruptCompletion) {
+            return _temp67;
           }
           /* c8 ignore if */
 
 
-          if (_temp55 instanceof Completion) {
-            _temp55 = _temp55.Value;
+          if (_temp67 instanceof Completion) {
+            _temp67 = _temp67.Value;
           }
 
-          next = _temp55.stringValue();
+          next = _temp67.stringValue();
         }
 
         R = `${R}${next}`;
@@ -40688,51 +41058,51 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     function ArrayProto_lastIndexOf([searchElement = Value.undefined, fromIndex], {
       thisValue
     }) {
-      let _temp56 = priorToEvaluatingAlgorithm(thisValue);
+      let _temp68 = priorToEvaluatingAlgorithm(thisValue);
       /* c8 ignore if */
 
 
-      if (_temp56 instanceof AbruptCompletion) {
-        return _temp56;
+      if (_temp68 instanceof AbruptCompletion) {
+        return _temp68;
       }
       /* c8 ignore if */
 
 
-      if (_temp56 instanceof Completion) {
-        _temp56 = _temp56.Value;
+      if (_temp68 instanceof Completion) {
+        _temp68 = _temp68.Value;
       }
 
-      let _temp57 = ToObject(thisValue);
+      let _temp69 = ToObject(thisValue);
       /* c8 ignore if */
 
 
-      if (_temp57 instanceof AbruptCompletion) {
-        return _temp57;
-      }
-      /* c8 ignore if */
-
-
-      if (_temp57 instanceof Completion) {
-        _temp57 = _temp57.Value;
-      }
-
-      const O = _temp57;
-
-      let _temp58 = objectToLength(O);
-      /* c8 ignore if */
-
-
-      if (_temp58 instanceof AbruptCompletion) {
-        return _temp58;
+      if (_temp69 instanceof AbruptCompletion) {
+        return _temp69;
       }
       /* c8 ignore if */
 
 
-      if (_temp58 instanceof Completion) {
-        _temp58 = _temp58.Value;
+      if (_temp69 instanceof Completion) {
+        _temp69 = _temp69.Value;
       }
 
-      const len = _temp58;
+      const O = _temp69;
+
+      let _temp70 = objectToLength(O);
+      /* c8 ignore if */
+
+
+      if (_temp70 instanceof AbruptCompletion) {
+        return _temp70;
+      }
+      /* c8 ignore if */
+
+
+      if (_temp70 instanceof Completion) {
+        _temp70 = _temp70.Value;
+      }
+
+      const len = _temp70;
 
       if (len === 0) {
         return F(-1);
@@ -40741,21 +41111,21 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let n;
 
       if (fromIndex !== undefined) {
-        let _temp59 = ToIntegerOrInfinity(fromIndex);
+        let _temp71 = ToIntegerOrInfinity(fromIndex);
         /* c8 ignore if */
 
 
-        if (_temp59 instanceof AbruptCompletion) {
-          return _temp59;
+        if (_temp71 instanceof AbruptCompletion) {
+          return _temp71;
         }
         /* c8 ignore if */
 
 
-        if (_temp59 instanceof Completion) {
-          _temp59 = _temp59.Value;
+        if (_temp71 instanceof Completion) {
+          _temp71 = _temp71.Value;
         }
 
-        n = _temp59;
+        n = _temp71;
       } else {
         n = len - 1;
       }
@@ -40769,49 +41139,49 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
 
       while (k >= 0) {
-        let _temp60 = ToString(F(k));
+        let _temp72 = ToString(F(k));
 
-        Assert(!(_temp60 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion');
+        Assert(!(_temp72 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion');
         /* c8 ignore if */
 
-        if (_temp60 instanceof Completion) {
-          _temp60 = _temp60.Value;
+        if (_temp72 instanceof Completion) {
+          _temp72 = _temp72.Value;
         }
 
-        const kStr = _temp60;
+        const kStr = _temp72;
 
-        let _temp61 = HasProperty(O, kStr);
-        /* c8 ignore if */
-
-
-        if (_temp61 instanceof AbruptCompletion) {
-          return _temp61;
-        }
+        let _temp73 = HasProperty(O, kStr);
         /* c8 ignore if */
 
 
-        if (_temp61 instanceof Completion) {
-          _temp61 = _temp61.Value;
+        if (_temp73 instanceof AbruptCompletion) {
+          return _temp73;
+        }
+        /* c8 ignore if */
+
+
+        if (_temp73 instanceof Completion) {
+          _temp73 = _temp73.Value;
         }
 
-        const kPresent = _temp61;
+        const kPresent = _temp73;
 
         if (kPresent === Value.true) {
-          let _temp62 = Get(O, kStr);
+          let _temp74 = Get(O, kStr);
           /* c8 ignore if */
 
 
-          if (_temp62 instanceof AbruptCompletion) {
-            return _temp62;
+          if (_temp74 instanceof AbruptCompletion) {
+            return _temp74;
           }
           /* c8 ignore if */
 
 
-          if (_temp62 instanceof Completion) {
-            _temp62 = _temp62.Value;
+          if (_temp74 instanceof Completion) {
+            _temp74 = _temp74.Value;
           }
 
-          const elementK = _temp62;
+          const elementK = _temp74;
           const same = StrictEqualityComparison(searchElement, elementK);
 
           if (same === Value.true) {
@@ -40832,51 +41202,51 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     function ArrayProto_reduce([callbackfn = Value.undefined, initialValue], {
       thisValue
     }) {
-      let _temp63 = priorToEvaluatingAlgorithm(thisValue);
+      let _temp75 = priorToEvaluatingAlgorithm(thisValue);
       /* c8 ignore if */
 
 
-      if (_temp63 instanceof AbruptCompletion) {
-        return _temp63;
+      if (_temp75 instanceof AbruptCompletion) {
+        return _temp75;
       }
       /* c8 ignore if */
 
 
-      if (_temp63 instanceof Completion) {
-        _temp63 = _temp63.Value;
+      if (_temp75 instanceof Completion) {
+        _temp75 = _temp75.Value;
       }
 
-      let _temp64 = ToObject(thisValue);
+      let _temp76 = ToObject(thisValue);
       /* c8 ignore if */
 
 
-      if (_temp64 instanceof AbruptCompletion) {
-        return _temp64;
-      }
-      /* c8 ignore if */
-
-
-      if (_temp64 instanceof Completion) {
-        _temp64 = _temp64.Value;
-      }
-
-      const O = _temp64;
-
-      let _temp65 = objectToLength(O);
-      /* c8 ignore if */
-
-
-      if (_temp65 instanceof AbruptCompletion) {
-        return _temp65;
+      if (_temp76 instanceof AbruptCompletion) {
+        return _temp76;
       }
       /* c8 ignore if */
 
 
-      if (_temp65 instanceof Completion) {
-        _temp65 = _temp65.Value;
+      if (_temp76 instanceof Completion) {
+        _temp76 = _temp76.Value;
       }
 
-      const len = _temp65;
+      const O = _temp76;
+
+      let _temp77 = objectToLength(O);
+      /* c8 ignore if */
+
+
+      if (_temp77 instanceof AbruptCompletion) {
+        return _temp77;
+      }
+      /* c8 ignore if */
+
+
+      if (_temp77 instanceof Completion) {
+        _temp77 = _temp77.Value;
+      }
+
+      const len = _temp77;
 
       if (IsCallable(callbackfn) === Value.false) {
         return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
@@ -40895,49 +41265,49 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         let kPresent = false;
 
         while (kPresent === false && k < len) {
-          let _temp66 = ToString(F(k));
+          let _temp78 = ToString(F(k));
 
-          Assert(!(_temp66 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion');
+          Assert(!(_temp78 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion');
           /* c8 ignore if */
 
-          if (_temp66 instanceof Completion) {
-            _temp66 = _temp66.Value;
+          if (_temp78 instanceof Completion) {
+            _temp78 = _temp78.Value;
           }
 
-          const Pk = _temp66;
+          const Pk = _temp78;
 
-          let _temp67 = HasProperty(O, Pk);
-          /* c8 ignore if */
-
-
-          if (_temp67 instanceof AbruptCompletion) {
-            return _temp67;
-          }
+          let _temp79 = HasProperty(O, Pk);
           /* c8 ignore if */
 
 
-          if (_temp67 instanceof Completion) {
-            _temp67 = _temp67.Value;
+          if (_temp79 instanceof AbruptCompletion) {
+            return _temp79;
+          }
+          /* c8 ignore if */
+
+
+          if (_temp79 instanceof Completion) {
+            _temp79 = _temp79.Value;
           }
 
-          kPresent = _temp67 === Value.true;
+          kPresent = _temp79 === Value.true;
 
           if (kPresent === true) {
-            let _temp68 = Get(O, Pk);
+            let _temp80 = Get(O, Pk);
             /* c8 ignore if */
 
 
-            if (_temp68 instanceof AbruptCompletion) {
-              return _temp68;
+            if (_temp80 instanceof AbruptCompletion) {
+              return _temp80;
             }
             /* c8 ignore if */
 
 
-            if (_temp68 instanceof Completion) {
-              _temp68 = _temp68.Value;
+            if (_temp80 instanceof Completion) {
+              _temp80 = _temp80.Value;
             }
 
-            accumulator = _temp68;
+            accumulator = _temp80;
           }
 
           k += 1;
@@ -40949,65 +41319,65 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
 
       while (k < len) {
-        let _temp69 = ToString(F(k));
+        let _temp81 = ToString(F(k));
 
-        Assert(!(_temp69 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion');
+        Assert(!(_temp81 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion');
         /* c8 ignore if */
 
-        if (_temp69 instanceof Completion) {
-          _temp69 = _temp69.Value;
+        if (_temp81 instanceof Completion) {
+          _temp81 = _temp81.Value;
         }
 
-        const Pk = _temp69;
+        const Pk = _temp81;
 
-        let _temp70 = HasProperty(O, Pk);
-        /* c8 ignore if */
-
-
-        if (_temp70 instanceof AbruptCompletion) {
-          return _temp70;
-        }
+        let _temp82 = HasProperty(O, Pk);
         /* c8 ignore if */
 
 
-        if (_temp70 instanceof Completion) {
-          _temp70 = _temp70.Value;
+        if (_temp82 instanceof AbruptCompletion) {
+          return _temp82;
+        }
+        /* c8 ignore if */
+
+
+        if (_temp82 instanceof Completion) {
+          _temp82 = _temp82.Value;
         }
 
-        const kPresent = _temp70;
+        const kPresent = _temp82;
 
         if (kPresent === Value.true) {
-          let _temp71 = Get(O, Pk);
+          let _temp83 = Get(O, Pk);
           /* c8 ignore if */
 
 
-          if (_temp71 instanceof AbruptCompletion) {
-            return _temp71;
+          if (_temp83 instanceof AbruptCompletion) {
+            return _temp83;
           }
           /* c8 ignore if */
 
 
-          if (_temp71 instanceof Completion) {
-            _temp71 = _temp71.Value;
+          if (_temp83 instanceof Completion) {
+            _temp83 = _temp83.Value;
           }
 
-          const kValue = _temp71;
+          const kValue = _temp83;
 
-          let _temp72 = Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), O]);
+          let _temp84 = Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), O]);
           /* c8 ignore if */
 
 
-          if (_temp72 instanceof AbruptCompletion) {
-            return _temp72;
+          if (_temp84 instanceof AbruptCompletion) {
+            return _temp84;
           }
           /* c8 ignore if */
 
 
-          if (_temp72 instanceof Completion) {
-            _temp72 = _temp72.Value;
+          if (_temp84 instanceof Completion) {
+            _temp84 = _temp84.Value;
           }
 
-          accumulator = _temp72;
+          accumulator = _temp84;
         }
 
         k += 1;
@@ -41023,51 +41393,51 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     function ArrayProto_reduceRight([callbackfn = Value.undefined, initialValue], {
       thisValue
     }) {
-      let _temp73 = priorToEvaluatingAlgorithm(thisValue);
+      let _temp85 = priorToEvaluatingAlgorithm(thisValue);
       /* c8 ignore if */
 
 
-      if (_temp73 instanceof AbruptCompletion) {
-        return _temp73;
+      if (_temp85 instanceof AbruptCompletion) {
+        return _temp85;
       }
       /* c8 ignore if */
 
 
-      if (_temp73 instanceof Completion) {
-        _temp73 = _temp73.Value;
+      if (_temp85 instanceof Completion) {
+        _temp85 = _temp85.Value;
       }
 
-      let _temp74 = ToObject(thisValue);
+      let _temp86 = ToObject(thisValue);
       /* c8 ignore if */
 
 
-      if (_temp74 instanceof AbruptCompletion) {
-        return _temp74;
-      }
-      /* c8 ignore if */
-
-
-      if (_temp74 instanceof Completion) {
-        _temp74 = _temp74.Value;
-      }
-
-      const O = _temp74;
-
-      let _temp75 = objectToLength(O);
-      /* c8 ignore if */
-
-
-      if (_temp75 instanceof AbruptCompletion) {
-        return _temp75;
+      if (_temp86 instanceof AbruptCompletion) {
+        return _temp86;
       }
       /* c8 ignore if */
 
 
-      if (_temp75 instanceof Completion) {
-        _temp75 = _temp75.Value;
+      if (_temp86 instanceof Completion) {
+        _temp86 = _temp86.Value;
       }
 
-      const len = _temp75;
+      const O = _temp86;
+
+      let _temp87 = objectToLength(O);
+      /* c8 ignore if */
+
+
+      if (_temp87 instanceof AbruptCompletion) {
+        return _temp87;
+      }
+      /* c8 ignore if */
+
+
+      if (_temp87 instanceof Completion) {
+        _temp87 = _temp87.Value;
+      }
+
+      const len = _temp87;
 
       if (IsCallable(callbackfn) === Value.false) {
         return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
@@ -41086,49 +41456,49 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         let kPresent = false;
 
         while (kPresent === false && k >= 0) {
-          let _temp76 = ToString(F(k));
+          let _temp88 = ToString(F(k));
 
-          Assert(!(_temp76 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion');
+          Assert(!(_temp88 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion');
           /* c8 ignore if */
 
-          if (_temp76 instanceof Completion) {
-            _temp76 = _temp76.Value;
+          if (_temp88 instanceof Completion) {
+            _temp88 = _temp88.Value;
           }
 
-          const Pk = _temp76;
+          const Pk = _temp88;
 
-          let _temp77 = HasProperty(O, Pk);
-          /* c8 ignore if */
-
-
-          if (_temp77 instanceof AbruptCompletion) {
-            return _temp77;
-          }
+          let _temp89 = HasProperty(O, Pk);
           /* c8 ignore if */
 
 
-          if (_temp77 instanceof Completion) {
-            _temp77 = _temp77.Value;
+          if (_temp89 instanceof AbruptCompletion) {
+            return _temp89;
+          }
+          /* c8 ignore if */
+
+
+          if (_temp89 instanceof Completion) {
+            _temp89 = _temp89.Value;
           }
 
-          kPresent = _temp77 === Value.true;
+          kPresent = _temp89 === Value.true;
 
           if (kPresent === true) {
-            let _temp78 = Get(O, Pk);
+            let _temp90 = Get(O, Pk);
             /* c8 ignore if */
 
 
-            if (_temp78 instanceof AbruptCompletion) {
-              return _temp78;
+            if (_temp90 instanceof AbruptCompletion) {
+              return _temp90;
             }
             /* c8 ignore if */
 
 
-            if (_temp78 instanceof Completion) {
-              _temp78 = _temp78.Value;
+            if (_temp90 instanceof Completion) {
+              _temp90 = _temp90.Value;
             }
 
-            accumulator = _temp78;
+            accumulator = _temp90;
           }
 
           k -= 1;
@@ -41140,65 +41510,65 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
 
       while (k >= 0) {
-        let _temp79 = ToString(F(k));
+        let _temp91 = ToString(F(k));
 
-        Assert(!(_temp79 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion');
+        Assert(!(_temp91 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion');
         /* c8 ignore if */
 
-        if (_temp79 instanceof Completion) {
-          _temp79 = _temp79.Value;
+        if (_temp91 instanceof Completion) {
+          _temp91 = _temp91.Value;
         }
 
-        const Pk = _temp79;
+        const Pk = _temp91;
 
-        let _temp80 = HasProperty(O, Pk);
-        /* c8 ignore if */
-
-
-        if (_temp80 instanceof AbruptCompletion) {
-          return _temp80;
-        }
+        let _temp92 = HasProperty(O, Pk);
         /* c8 ignore if */
 
 
-        if (_temp80 instanceof Completion) {
-          _temp80 = _temp80.Value;
+        if (_temp92 instanceof AbruptCompletion) {
+          return _temp92;
+        }
+        /* c8 ignore if */
+
+
+        if (_temp92 instanceof Completion) {
+          _temp92 = _temp92.Value;
         }
 
-        const kPresent = _temp80;
+        const kPresent = _temp92;
 
         if (kPresent === Value.true) {
-          let _temp81 = Get(O, Pk);
+          let _temp93 = Get(O, Pk);
           /* c8 ignore if */
 
 
-          if (_temp81 instanceof AbruptCompletion) {
-            return _temp81;
+          if (_temp93 instanceof AbruptCompletion) {
+            return _temp93;
           }
           /* c8 ignore if */
 
 
-          if (_temp81 instanceof Completion) {
-            _temp81 = _temp81.Value;
+          if (_temp93 instanceof Completion) {
+            _temp93 = _temp93.Value;
           }
 
-          const kValue = _temp81;
+          const kValue = _temp93;
 
-          let _temp82 = Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), O]);
+          let _temp94 = Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), O]);
           /* c8 ignore if */
 
 
-          if (_temp82 instanceof AbruptCompletion) {
-            return _temp82;
+          if (_temp94 instanceof AbruptCompletion) {
+            return _temp94;
           }
           /* c8 ignore if */
 
 
-          if (_temp82 instanceof Completion) {
-            _temp82 = _temp82.Value;
+          if (_temp94 instanceof Completion) {
+            _temp94 = _temp94.Value;
           }
 
-          accumulator = _temp82;
+          accumulator = _temp94;
         }
 
         k -= 1;
@@ -41214,232 +41584,232 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     function ArrayProto_reverse(args, {
       thisValue
     }) {
-      let _temp83 = priorToEvaluatingAlgorithm(thisValue);
+      let _temp95 = priorToEvaluatingAlgorithm(thisValue);
       /* c8 ignore if */
 
 
-      if (_temp83 instanceof AbruptCompletion) {
-        return _temp83;
+      if (_temp95 instanceof AbruptCompletion) {
+        return _temp95;
       }
       /* c8 ignore if */
 
 
-      if (_temp83 instanceof Completion) {
-        _temp83 = _temp83.Value;
+      if (_temp95 instanceof Completion) {
+        _temp95 = _temp95.Value;
       }
 
-      let _temp84 = ToObject(thisValue);
+      let _temp96 = ToObject(thisValue);
       /* c8 ignore if */
 
 
-      if (_temp84 instanceof AbruptCompletion) {
-        return _temp84;
-      }
-      /* c8 ignore if */
-
-
-      if (_temp84 instanceof Completion) {
-        _temp84 = _temp84.Value;
-      }
-
-      const O = _temp84;
-
-      let _temp85 = objectToLength(O);
-      /* c8 ignore if */
-
-
-      if (_temp85 instanceof AbruptCompletion) {
-        return _temp85;
+      if (_temp96 instanceof AbruptCompletion) {
+        return _temp96;
       }
       /* c8 ignore if */
 
 
-      if (_temp85 instanceof Completion) {
-        _temp85 = _temp85.Value;
+      if (_temp96 instanceof Completion) {
+        _temp96 = _temp96.Value;
       }
 
-      const len = _temp85;
+      const O = _temp96;
+
+      let _temp97 = objectToLength(O);
+      /* c8 ignore if */
+
+
+      if (_temp97 instanceof AbruptCompletion) {
+        return _temp97;
+      }
+      /* c8 ignore if */
+
+
+      if (_temp97 instanceof Completion) {
+        _temp97 = _temp97.Value;
+      }
+
+      const len = _temp97;
       const middle = Math.floor(len / 2);
       let lower = 0;
 
       while (lower !== middle) {
         const upper = len - lower - 1;
 
-        let _temp86 = ToString(F(upper));
+        let _temp98 = ToString(F(upper));
 
-        Assert(!(_temp86 instanceof AbruptCompletion), "ToString(F(upper))" + ' returned an abrupt completion');
+        Assert(!(_temp98 instanceof AbruptCompletion), "ToString(F(upper))" + ' returned an abrupt completion');
         /* c8 ignore if */
 
-        if (_temp86 instanceof Completion) {
-          _temp86 = _temp86.Value;
+        if (_temp98 instanceof Completion) {
+          _temp98 = _temp98.Value;
         }
 
-        const upperP = _temp86;
+        const upperP = _temp98;
 
-        let _temp87 = ToString(F(lower));
+        let _temp99 = ToString(F(lower));
 
-        Assert(!(_temp87 instanceof AbruptCompletion), "ToString(F(lower))" + ' returned an abrupt completion');
+        Assert(!(_temp99 instanceof AbruptCompletion), "ToString(F(lower))" + ' returned an abrupt completion');
         /* c8 ignore if */
 
-        if (_temp87 instanceof Completion) {
-          _temp87 = _temp87.Value;
+        if (_temp99 instanceof Completion) {
+          _temp99 = _temp99.Value;
         }
 
-        const lowerP = _temp87;
+        const lowerP = _temp99;
 
-        let _temp88 = HasProperty(O, lowerP);
-        /* c8 ignore if */
-
-
-        if (_temp88 instanceof AbruptCompletion) {
-          return _temp88;
-        }
+        let _temp100 = HasProperty(O, lowerP);
         /* c8 ignore if */
 
 
-        if (_temp88 instanceof Completion) {
-          _temp88 = _temp88.Value;
+        if (_temp100 instanceof AbruptCompletion) {
+          return _temp100;
+        }
+        /* c8 ignore if */
+
+
+        if (_temp100 instanceof Completion) {
+          _temp100 = _temp100.Value;
         }
 
-        const lowerExists = _temp88;
+        const lowerExists = _temp100;
         let lowerValue;
         let upperValue;
 
         if (lowerExists === Value.true) {
-          let _temp89 = Get(O, lowerP);
+          let _temp101 = Get(O, lowerP);
           /* c8 ignore if */
 
 
-          if (_temp89 instanceof AbruptCompletion) {
-            return _temp89;
+          if (_temp101 instanceof AbruptCompletion) {
+            return _temp101;
           }
           /* c8 ignore if */
 
 
-          if (_temp89 instanceof Completion) {
-            _temp89 = _temp89.Value;
+          if (_temp101 instanceof Completion) {
+            _temp101 = _temp101.Value;
           }
 
-          lowerValue = _temp89;
+          lowerValue = _temp101;
         }
 
-        let _temp90 = HasProperty(O, upperP);
+        let _temp102 = HasProperty(O, upperP);
         /* c8 ignore if */
 
 
-        if (_temp90 instanceof AbruptCompletion) {
-          return _temp90;
+        if (_temp102 instanceof AbruptCompletion) {
+          return _temp102;
         }
         /* c8 ignore if */
 
 
-        if (_temp90 instanceof Completion) {
-          _temp90 = _temp90.Value;
+        if (_temp102 instanceof Completion) {
+          _temp102 = _temp102.Value;
         }
 
-        const upperExists = _temp90;
+        const upperExists = _temp102;
 
         if (upperExists === Value.true) {
-          let _temp91 = Get(O, upperP);
+          let _temp103 = Get(O, upperP);
           /* c8 ignore if */
 
 
-          if (_temp91 instanceof AbruptCompletion) {
-            return _temp91;
+          if (_temp103 instanceof AbruptCompletion) {
+            return _temp103;
           }
           /* c8 ignore if */
 
 
-          if (_temp91 instanceof Completion) {
-            _temp91 = _temp91.Value;
+          if (_temp103 instanceof Completion) {
+            _temp103 = _temp103.Value;
           }
 
-          upperValue = _temp91;
+          upperValue = _temp103;
         }
 
         if (lowerExists === Value.true && upperExists === Value.true) {
-          let _temp92 = Set$1(O, lowerP, upperValue, Value.true);
+          let _temp104 = Set$1(O, lowerP, upperValue, Value.true);
           /* c8 ignore if */
 
 
-          if (_temp92 instanceof AbruptCompletion) {
-            return _temp92;
+          if (_temp104 instanceof AbruptCompletion) {
+            return _temp104;
           }
           /* c8 ignore if */
 
 
-          if (_temp92 instanceof Completion) {
-            _temp92 = _temp92.Value;
+          if (_temp104 instanceof Completion) {
+            _temp104 = _temp104.Value;
           }
 
-          let _temp93 = Set$1(O, upperP, lowerValue, Value.true);
+          let _temp105 = Set$1(O, upperP, lowerValue, Value.true);
           /* c8 ignore if */
 
 
-          if (_temp93 instanceof AbruptCompletion) {
-            return _temp93;
+          if (_temp105 instanceof AbruptCompletion) {
+            return _temp105;
           }
           /* c8 ignore if */
 
 
-          if (_temp93 instanceof Completion) {
-            _temp93 = _temp93.Value;
+          if (_temp105 instanceof Completion) {
+            _temp105 = _temp105.Value;
           }
         } else if (lowerExists === Value.false && upperExists === Value.true) {
-          let _temp94 = Set$1(O, lowerP, upperValue, Value.true);
+          let _temp106 = Set$1(O, lowerP, upperValue, Value.true);
           /* c8 ignore if */
 
 
-          if (_temp94 instanceof AbruptCompletion) {
-            return _temp94;
+          if (_temp106 instanceof AbruptCompletion) {
+            return _temp106;
           }
           /* c8 ignore if */
 
 
-          if (_temp94 instanceof Completion) {
-            _temp94 = _temp94.Value;
+          if (_temp106 instanceof Completion) {
+            _temp106 = _temp106.Value;
           }
 
-          let _temp95 = DeletePropertyOrThrow(O, upperP);
+          let _temp107 = DeletePropertyOrThrow(O, upperP);
           /* c8 ignore if */
 
 
-          if (_temp95 instanceof AbruptCompletion) {
-            return _temp95;
+          if (_temp107 instanceof AbruptCompletion) {
+            return _temp107;
           }
           /* c8 ignore if */
 
 
-          if (_temp95 instanceof Completion) {
-            _temp95 = _temp95.Value;
+          if (_temp107 instanceof Completion) {
+            _temp107 = _temp107.Value;
           }
         } else if (lowerExists === Value.true && upperExists === Value.false) {
-          let _temp96 = DeletePropertyOrThrow(O, lowerP);
+          let _temp108 = DeletePropertyOrThrow(O, lowerP);
           /* c8 ignore if */
 
 
-          if (_temp96 instanceof AbruptCompletion) {
-            return _temp96;
+          if (_temp108 instanceof AbruptCompletion) {
+            return _temp108;
           }
           /* c8 ignore if */
 
 
-          if (_temp96 instanceof Completion) {
-            _temp96 = _temp96.Value;
+          if (_temp108 instanceof Completion) {
+            _temp108 = _temp108.Value;
           }
 
-          let _temp97 = Set$1(O, upperP, lowerValue, Value.true);
+          let _temp109 = Set$1(O, upperP, lowerValue, Value.true);
           /* c8 ignore if */
 
 
-          if (_temp97 instanceof AbruptCompletion) {
-            return _temp97;
+          if (_temp109 instanceof AbruptCompletion) {
+            return _temp109;
           }
           /* c8 ignore if */
 
 
-          if (_temp97 instanceof Completion) {
-            _temp97 = _temp97.Value;
+          if (_temp109 instanceof Completion) {
+            _temp109 = _temp109.Value;
           }
         } else ;
 
@@ -41456,51 +41826,51 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     function ArrayProto_some([callbackfn = Value.undefined, thisArg = Value.undefined], {
       thisValue
     }) {
-      let _temp98 = priorToEvaluatingAlgorithm(thisValue);
+      let _temp110 = priorToEvaluatingAlgorithm(thisValue);
       /* c8 ignore if */
 
 
-      if (_temp98 instanceof AbruptCompletion) {
-        return _temp98;
+      if (_temp110 instanceof AbruptCompletion) {
+        return _temp110;
       }
       /* c8 ignore if */
 
 
-      if (_temp98 instanceof Completion) {
-        _temp98 = _temp98.Value;
+      if (_temp110 instanceof Completion) {
+        _temp110 = _temp110.Value;
       }
 
-      let _temp99 = ToObject(thisValue);
+      let _temp111 = ToObject(thisValue);
       /* c8 ignore if */
 
 
-      if (_temp99 instanceof AbruptCompletion) {
-        return _temp99;
-      }
-      /* c8 ignore if */
-
-
-      if (_temp99 instanceof Completion) {
-        _temp99 = _temp99.Value;
-      }
-
-      const O = _temp99;
-
-      let _temp100 = objectToLength(O);
-      /* c8 ignore if */
-
-
-      if (_temp100 instanceof AbruptCompletion) {
-        return _temp100;
+      if (_temp111 instanceof AbruptCompletion) {
+        return _temp111;
       }
       /* c8 ignore if */
 
 
-      if (_temp100 instanceof Completion) {
-        _temp100 = _temp100.Value;
+      if (_temp111 instanceof Completion) {
+        _temp111 = _temp111.Value;
       }
 
-      const len = _temp100;
+      const O = _temp111;
+
+      let _temp112 = objectToLength(O);
+      /* c8 ignore if */
+
+
+      if (_temp112 instanceof AbruptCompletion) {
+        return _temp112;
+      }
+      /* c8 ignore if */
+
+
+      if (_temp112 instanceof Completion) {
+        _temp112 = _temp112.Value;
+      }
+
+      const len = _temp112;
 
       if (IsCallable(callbackfn) === Value.false) {
         return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
@@ -41509,65 +41879,65 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let k = 0;
 
       while (k < len) {
-        let _temp101 = ToString(F(k));
+        let _temp113 = ToString(F(k));
 
-        Assert(!(_temp101 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion');
+        Assert(!(_temp113 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion');
         /* c8 ignore if */
 
-        if (_temp101 instanceof Completion) {
-          _temp101 = _temp101.Value;
+        if (_temp113 instanceof Completion) {
+          _temp113 = _temp113.Value;
         }
 
-        const Pk = _temp101;
+        const Pk = _temp113;
 
-        let _temp102 = HasProperty(O, Pk);
-        /* c8 ignore if */
-
-
-        if (_temp102 instanceof AbruptCompletion) {
-          return _temp102;
-        }
+        let _temp114 = HasProperty(O, Pk);
         /* c8 ignore if */
 
 
-        if (_temp102 instanceof Completion) {
-          _temp102 = _temp102.Value;
+        if (_temp114 instanceof AbruptCompletion) {
+          return _temp114;
+        }
+        /* c8 ignore if */
+
+
+        if (_temp114 instanceof Completion) {
+          _temp114 = _temp114.Value;
         }
 
-        const kPresent = _temp102;
+        const kPresent = _temp114;
 
         if (kPresent === Value.true) {
-          let _temp103 = Get(O, Pk);
+          let _temp115 = Get(O, Pk);
           /* c8 ignore if */
 
 
-          if (_temp103 instanceof AbruptCompletion) {
-            return _temp103;
+          if (_temp115 instanceof AbruptCompletion) {
+            return _temp115;
           }
           /* c8 ignore if */
 
 
-          if (_temp103 instanceof Completion) {
-            _temp103 = _temp103.Value;
+          if (_temp115 instanceof Completion) {
+            _temp115 = _temp115.Value;
           }
 
-          const kValue = _temp103;
+          const kValue = _temp115;
 
-          let _temp104 = Call(callbackfn, thisArg, [kValue, F(k), O]);
+          let _temp116 = Call(callbackfn, thisArg, [kValue, F(k), O]);
           /* c8 ignore if */
 
 
-          if (_temp104 instanceof AbruptCompletion) {
-            return _temp104;
+          if (_temp116 instanceof AbruptCompletion) {
+            return _temp116;
           }
           /* c8 ignore if */
 
 
-          if (_temp104 instanceof Completion) {
-            _temp104 = _temp104.Value;
+          if (_temp116 instanceof Completion) {
+            _temp116 = _temp116.Value;
           }
 
-          const testResult = ToBoolean(_temp104);
+          const testResult = ToBoolean(_temp116);
 
           if (testResult === Value.true) {
             return Value.true;
@@ -41587,51 +41957,51 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     function ArrayProto_toLocaleString(args, {
       thisValue
     }) {
-      let _temp105 = priorToEvaluatingAlgorithm(thisValue);
+      let _temp117 = priorToEvaluatingAlgorithm(thisValue);
       /* c8 ignore if */
 
 
-      if (_temp105 instanceof AbruptCompletion) {
-        return _temp105;
+      if (_temp117 instanceof AbruptCompletion) {
+        return _temp117;
       }
       /* c8 ignore if */
 
 
-      if (_temp105 instanceof Completion) {
-        _temp105 = _temp105.Value;
+      if (_temp117 instanceof Completion) {
+        _temp117 = _temp117.Value;
       }
 
-      let _temp106 = ToObject(thisValue);
+      let _temp118 = ToObject(thisValue);
       /* c8 ignore if */
 
 
-      if (_temp106 instanceof AbruptCompletion) {
-        return _temp106;
-      }
-      /* c8 ignore if */
-
-
-      if (_temp106 instanceof Completion) {
-        _temp106 = _temp106.Value;
-      }
-
-      const array = _temp106;
-
-      let _temp107 = objectToLength(array);
-      /* c8 ignore if */
-
-
-      if (_temp107 instanceof AbruptCompletion) {
-        return _temp107;
+      if (_temp118 instanceof AbruptCompletion) {
+        return _temp118;
       }
       /* c8 ignore if */
 
 
-      if (_temp107 instanceof Completion) {
-        _temp107 = _temp107.Value;
+      if (_temp118 instanceof Completion) {
+        _temp118 = _temp118.Value;
       }
 
-      const len = _temp107;
+      const array = _temp118;
+
+      let _temp119 = objectToLength(array);
+      /* c8 ignore if */
+
+
+      if (_temp119 instanceof AbruptCompletion) {
+        return _temp119;
+      }
+      /* c8 ignore if */
+
+
+      if (_temp119 instanceof Completion) {
+        _temp119 = _temp119.Value;
+      }
+
+      const len = _temp119;
       const separator = ', ';
       let R = '';
       let k = 0;
@@ -41641,63 +42011,63 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           R = `${R}${separator}`;
         }
 
-        let _temp108 = ToString(F(k));
+        let _temp120 = ToString(F(k));
 
-        Assert(!(_temp108 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion');
+        Assert(!(_temp120 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion');
         /* c8 ignore if */
 
-        if (_temp108 instanceof Completion) {
-          _temp108 = _temp108.Value;
+        if (_temp120 instanceof Completion) {
+          _temp120 = _temp120.Value;
         }
 
-        const kStr = _temp108;
+        const kStr = _temp120;
 
-        let _temp109 = Get(array, kStr);
-        /* c8 ignore if */
-
-
-        if (_temp109 instanceof AbruptCompletion) {
-          return _temp109;
-        }
+        let _temp121 = Get(array, kStr);
         /* c8 ignore if */
 
 
-        if (_temp109 instanceof Completion) {
-          _temp109 = _temp109.Value;
+        if (_temp121 instanceof AbruptCompletion) {
+          return _temp121;
+        }
+        /* c8 ignore if */
+
+
+        if (_temp121 instanceof Completion) {
+          _temp121 = _temp121.Value;
         }
 
-        const nextElement = _temp109;
+        const nextElement = _temp121;
 
         if (nextElement !== Value.undefined && nextElement !== Value.null) {
-          let _temp111 = Invoke(nextElement, new Value('toLocaleString'));
+          let _temp123 = Invoke(nextElement, new Value('toLocaleString'));
           /* c8 ignore if */
 
 
-          if (_temp111 instanceof AbruptCompletion) {
-            return _temp111;
+          if (_temp123 instanceof AbruptCompletion) {
+            return _temp123;
           }
           /* c8 ignore if */
 
 
-          if (_temp111 instanceof Completion) {
-            _temp111 = _temp111.Value;
+          if (_temp123 instanceof Completion) {
+            _temp123 = _temp123.Value;
           }
 
-          let _temp110 = ToString(_temp111);
+          let _temp122 = ToString(_temp123);
           /* c8 ignore if */
 
 
-          if (_temp110 instanceof AbruptCompletion) {
-            return _temp110;
+          if (_temp122 instanceof AbruptCompletion) {
+            return _temp122;
           }
           /* c8 ignore if */
 
 
-          if (_temp110 instanceof Completion) {
-            _temp110 = _temp110.Value;
+          if (_temp122 instanceof Completion) {
+            _temp122 = _temp122.Value;
           }
 
-          const S = _temp110.stringValue();
+          const S = _temp122.stringValue();
 
           R = `${R}${S}`;
         }
@@ -41709,7 +42079,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     ArrayProto_toLocaleString.section = 'https://tc39.es/ecma262/#sec-array.prototype.tolocalestring';
-    assignProps(realmRec, proto, [['every', ArrayProto_every, 1], ['find', ArrayProto_find, 1], ['findIndex', ArrayProto_findIndex, 1], ['forEach', ArrayProto_forEach, 1], ['includes', ArrayProto_includes, 1], ['indexOf', ArrayProto_indexOf, 1], ['join', ArrayProto_join, 1], ['lastIndexOf', ArrayProto_lastIndexOf, 1], ['reduce', ArrayProto_reduce, 1], ['reduceRight', ArrayProto_reduceRight, 1], ['reverse', ArrayProto_reverse, 0], ['some', ArrayProto_some, 1], ['toLocaleString', ArrayProto_toLocaleString, 0]]);
+    assignProps(realmRec, proto, [['every', ArrayProto_every, 1], ['find', ArrayProto_find, 1], ['findIndex', ArrayProto_findIndex, 1], ['findLast', ArrayProto_findLast, 1], ['findLastIndex', ArrayProto_findLastIndex, 1], ['forEach', ArrayProto_forEach, 1], ['includes', ArrayProto_includes, 1], ['indexOf', ArrayProto_indexOf, 1], ['join', ArrayProto_join, 1], ['lastIndexOf', ArrayProto_lastIndexOf, 1], ['reduce', ArrayProto_reduce, 1], ['reduceRight', ArrayProto_reduceRight, 1], ['reverse', ArrayProto_reverse, 0], ['some', ArrayProto_some, 1], ['toLocaleString', ArrayProto_toLocaleString, 0]]);
   }
 
   function ArrayProto_concat(args, {
@@ -44441,97 +44811,119 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
       Assert(_temp156 === Value.true, "X(CreateDataProperty(unscopableList, new Value('find'), Value.true)) === Value.true");
 
-      let _temp157 = CreateDataProperty(unscopableList, new Value('findIndex'), Value.true);
+      let _temp157 = CreateDataProperty(unscopableList, new Value('findLast'), Value.true);
 
-      Assert(!(_temp157 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('findIndex'), Value.true)" + ' returned an abrupt completion');
+      Assert(!(_temp157 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('findLast'), Value.true)" + ' returned an abrupt completion');
       /* c8 ignore if */
 
       if (_temp157 instanceof Completion) {
         _temp157 = _temp157.Value;
       }
 
-      Assert(_temp157 === Value.true, "X(CreateDataProperty(unscopableList, new Value('findIndex'), Value.true)) === Value.true");
+      Assert(_temp157 === Value.true, "X(CreateDataProperty(unscopableList, new Value('findLast'), Value.true)) === Value.true");
 
-      let _temp158 = CreateDataProperty(unscopableList, new Value('flat'), Value.true);
+      let _temp158 = CreateDataProperty(unscopableList, new Value('findIndex'), Value.true);
 
-      Assert(!(_temp158 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('flat'), Value.true)" + ' returned an abrupt completion');
+      Assert(!(_temp158 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('findIndex'), Value.true)" + ' returned an abrupt completion');
       /* c8 ignore if */
 
       if (_temp158 instanceof Completion) {
         _temp158 = _temp158.Value;
       }
 
-      Assert(_temp158 === Value.true, "X(CreateDataProperty(unscopableList, new Value('flat'), Value.true)) === Value.true");
+      Assert(_temp158 === Value.true, "X(CreateDataProperty(unscopableList, new Value('findIndex'), Value.true)) === Value.true");
 
-      let _temp159 = CreateDataProperty(unscopableList, new Value('flatMap'), Value.true);
+      let _temp159 = CreateDataProperty(unscopableList, new Value('findLastIndex'), Value.true);
 
-      Assert(!(_temp159 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('flatMap'), Value.true)" + ' returned an abrupt completion');
+      Assert(!(_temp159 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('findLastIndex'), Value.true)" + ' returned an abrupt completion');
       /* c8 ignore if */
 
       if (_temp159 instanceof Completion) {
         _temp159 = _temp159.Value;
       }
 
-      Assert(_temp159 === Value.true, "X(CreateDataProperty(unscopableList, new Value('flatMap'), Value.true)) === Value.true");
+      Assert(_temp159 === Value.true, "X(CreateDataProperty(unscopableList, new Value('findLastIndex'), Value.true)) === Value.true");
 
-      let _temp160 = CreateDataProperty(unscopableList, new Value('includes'), Value.true);
+      let _temp160 = CreateDataProperty(unscopableList, new Value('flat'), Value.true);
 
-      Assert(!(_temp160 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('includes'), Value.true)" + ' returned an abrupt completion');
+      Assert(!(_temp160 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('flat'), Value.true)" + ' returned an abrupt completion');
       /* c8 ignore if */
 
       if (_temp160 instanceof Completion) {
         _temp160 = _temp160.Value;
       }
 
-      Assert(_temp160 === Value.true, "X(CreateDataProperty(unscopableList, new Value('includes'), Value.true)) === Value.true");
+      Assert(_temp160 === Value.true, "X(CreateDataProperty(unscopableList, new Value('flat'), Value.true)) === Value.true");
 
-      let _temp161 = CreateDataProperty(unscopableList, new Value('keys'), Value.true);
+      let _temp161 = CreateDataProperty(unscopableList, new Value('flatMap'), Value.true);
 
-      Assert(!(_temp161 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('keys'), Value.true)" + ' returned an abrupt completion');
+      Assert(!(_temp161 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('flatMap'), Value.true)" + ' returned an abrupt completion');
       /* c8 ignore if */
 
       if (_temp161 instanceof Completion) {
         _temp161 = _temp161.Value;
       }
 
-      Assert(_temp161 === Value.true, "X(CreateDataProperty(unscopableList, new Value('keys'), Value.true)) === Value.true");
+      Assert(_temp161 === Value.true, "X(CreateDataProperty(unscopableList, new Value('flatMap'), Value.true)) === Value.true");
 
-      let _temp162 = CreateDataProperty(unscopableList, new Value('values'), Value.true);
+      let _temp162 = CreateDataProperty(unscopableList, new Value('includes'), Value.true);
 
-      Assert(!(_temp162 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('values'), Value.true)" + ' returned an abrupt completion');
+      Assert(!(_temp162 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('includes'), Value.true)" + ' returned an abrupt completion');
       /* c8 ignore if */
 
       if (_temp162 instanceof Completion) {
         _temp162 = _temp162.Value;
       }
 
-      Assert(_temp162 === Value.true, "X(CreateDataProperty(unscopableList, new Value('values'), Value.true)) === Value.true");
+      Assert(_temp162 === Value.true, "X(CreateDataProperty(unscopableList, new Value('includes'), Value.true)) === Value.true");
 
-      let _temp163 = proto.DefineOwnProperty(wellKnownSymbols.unscopables, Descriptor({
+      let _temp163 = CreateDataProperty(unscopableList, new Value('keys'), Value.true);
+
+      Assert(!(_temp163 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('keys'), Value.true)" + ' returned an abrupt completion');
+      /* c8 ignore if */
+
+      if (_temp163 instanceof Completion) {
+        _temp163 = _temp163.Value;
+      }
+
+      Assert(_temp163 === Value.true, "X(CreateDataProperty(unscopableList, new Value('keys'), Value.true)) === Value.true");
+
+      let _temp164 = CreateDataProperty(unscopableList, new Value('values'), Value.true);
+
+      Assert(!(_temp164 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, new Value('values'), Value.true)" + ' returned an abrupt completion');
+      /* c8 ignore if */
+
+      if (_temp164 instanceof Completion) {
+        _temp164 = _temp164.Value;
+      }
+
+      Assert(_temp164 === Value.true, "X(CreateDataProperty(unscopableList, new Value('values'), Value.true)) === Value.true");
+
+      let _temp165 = proto.DefineOwnProperty(wellKnownSymbols.unscopables, Descriptor({
         Value: unscopableList,
         Writable: Value.false,
         Enumerable: Value.false,
         Configurable: Value.true
       }));
 
-      Assert(!(_temp163 instanceof AbruptCompletion), "proto.DefineOwnProperty(wellKnownSymbols.unscopables, Descriptor({\n      Value: unscopableList,\n      Writable: Value.false,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    }))" + ' returned an abrupt completion');
+      Assert(!(_temp165 instanceof AbruptCompletion), "proto.DefineOwnProperty(wellKnownSymbols.unscopables, Descriptor({\n      Value: unscopableList,\n      Writable: Value.false,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    }))" + ' returned an abrupt completion');
       /* c8 ignore if */
 
-      if (_temp163 instanceof Completion) {
-        _temp163 = _temp163.Value;
+      if (_temp165 instanceof Completion) {
+        _temp165 = _temp165.Value;
       }
     } // Used in `arguments` objects.
 
-    let _temp164 = Get(proto, new Value('values'));
+    let _temp166 = Get(proto, new Value('values'));
 
-    Assert(!(_temp164 instanceof AbruptCompletion), "Get(proto, new Value('values'))" + ' returned an abrupt completion');
+    Assert(!(_temp166 instanceof AbruptCompletion), "Get(proto, new Value('values'))" + ' returned an abrupt completion');
     /* c8 ignore if */
 
-    if (_temp164 instanceof Completion) {
-      _temp164 = _temp164.Value;
+    if (_temp166 instanceof Completion) {
+      _temp166 = _temp166.Value;
     }
 
-    realmRec.Intrinsics['%Array.prototype.values%'] = _temp164;
+    realmRec.Intrinsics['%Array.prototype.values%'] = _temp166;
     realmRec.Intrinsics['%Array.prototype%'] = proto;
   }
 
@@ -69971,6 +70363,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.ClassDefinitionEvaluation = ClassDefinitionEvaluation;
   exports.ClassFieldDefinitionEvaluation = ClassFieldDefinitionEvaluation;
   exports.ClassFieldDefinitionRecord = ClassFieldDefinitionRecord;
+  exports.ClassStaticBlockDefinitionEvaluation = ClassStaticBlockDefinitionEvaluation;
+  exports.ClassStaticBlockDefinitionRecord = ClassStaticBlockDefinitionRecord;
   exports.CleanupFinalizationRegistry = CleanupFinalizationRegistry;
   exports.ClearKeptObjects = ClearKeptObjects;
   exports.CloneArrayBuffer = CloneArrayBuffer;
