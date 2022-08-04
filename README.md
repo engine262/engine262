@@ -142,18 +142,23 @@ async function* numbers() {
 
 ## Testing engine262
 
-This project has its own test suite, but can also be run against [test262][]
-(which is particularly useful for developing new features and/or tests):
+This project can be run against [test262][], which is particularly useful
+for developing new features and/or tests:
 ```sh
+$ # build engine262
 $ npm build
+
 $ # update local test262 in test/test262/test262
 $ git submodule update --init --recursive
+
 $ # update local test262 to a pull request
 $ pushd test/test262/test262
 $ git fetch origin refs/pull/$PR_NUMBER/head && git checkout FETCH_HEAD
 $ popd
+
 $ # run specific tests
 $ npm run test:test262 built-ins/AsyncGenerator*
+
 $ # run all tests
 $ npm run test:test262
 ```
