@@ -58,7 +58,7 @@ if (!process.send) {
     }
   }
 
-  if (OPTS.includes('--help')) {
+  if (OPTS.includes('--help') || OPTS.includes('-h')) {
     // eslint-disable-next-line prefer-template
     const usage = `
       Usage: node ${path.relative(process.cwd(), __filename)} [--run-slow-tests] [TEST-PATTERN]...
