@@ -58,6 +58,41 @@ if (!process.send) {
     }
   }
 
+  if (OPTS.includes('--help')) {
+    // eslint-disable-next-line prefer-template
+    const usage = `
+      Usage: node ${path.relative(process.cwd(), __filename)} [--run-slow-tests] [TEST-PATTERN]...
+      Run test262 tests against engine262.
+
+      TEST-PATTERN supports glob syntax, and is interpreted relative to
+      the test262 "test" subdirectory or (if that fails for any pattern)
+      relative to the working directory. If no patterns are specified,
+      all tests are run.
+
+      Environment variables:
+        TEST262
+          The test262 directory, which contains the "test" subdirectory.
+          If empty, it defaults to the "test262" sibling of this file.
+        NUM_WORKERS
+          The count of child processes that should be created to run tests.
+          If empty, it defaults to a reasonable value based on CPU count.
+
+      Files:
+        features
+          Specifies handling of test262 features, notably which ones to skip.
+        skiplist
+          Includes patterns of test files to skip.
+        slowlist
+          Includes patterns of test files to skip in the absence of
+          --run-slow-tests.
+    `.slice(1);
+    const indent = usage.match(/^\s*/)[0];
+    process.stdout.write(
+      `${usage.trimEnd().split('\n').map((line) => line.replace(indent, '')).join('\n')}\n`
+    );
+    process.exit(64);
+  }
+
   const childProcess = require('child_process');
   const YAML = require('js-yaml');
   const {
