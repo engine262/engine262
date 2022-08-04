@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const util = require('util');
 const globby = require('globby');
+const snekparse = require('../../bin/snekparse');
 
 const TEST262 = process.env.TEST262 || path.resolve(__dirname, 'test262');
 const TEST262_TESTS = path.join(TEST262, 'test');
@@ -43,22 +44,10 @@ readList('features')
 if (!process.send) {
   // supervisor
 
-  // Partition CLI arguments (everything in argv after node and this file).
-  const OPTS = [];
-  const ARGS = [];
-  for (let i = 2; i < process.argv.length; i += 1) {
-    const arg = process.argv[i];
-    if (arg === '--') {
-      ARGS.push(...process.argv.slice(i + 1));
-      break;
-    } else if (arg.startsWith('-')) {
-      OPTS.push(arg);
-    } else {
-      ARGS.push(arg);
-    }
-  }
 
-  if (OPTS.includes('--help') || OPTS.includes('-h')) {
+  // Read everything in argv after node and this file.
+  const ARGV = snekparse(process.argv.slice(2));
+  if (ARGV.h || ARGV.help) {
     // eslint-disable-next-line prefer-template
     const usage = `
       Usage: node ${path.relative(process.cwd(), __filename)} [--run-slow-tests] [TEST-PATTERN]...
@@ -106,7 +95,7 @@ if (!process.send) {
   const NUM_WORKERS = process.env.NUM_WORKERS
     ? Number.parseInt(process.env.NUM_WORKERS, 10)
     : Math.round(CPU_COUNT * 0.75);
-  const RUN_SLOW_TESTS = OPTS.includes('--run-slow-tests');
+  const RUN_SLOW_TESTS = ARGV['run-slow-tests'];
 
   const createWorker = () => {
     const c = childProcess.fork(__filename);
@@ -169,13 +158,13 @@ if (!process.send) {
 
   (async () => {
     let files = [];
-    if (ARGS.length === 0) {
+    if (ARGV.length === 0) {
       files = readdir(TEST262_TESTS);
     } else {
       // Interpret pattern arguments relative to the tests directory,
       // falling back on the working directory if there are no matches
       // or a non-glob pattern fails to match.
-      for (const arg of ARGS) {
+      for (const arg of ARGV) {
         const matches = globby.sync(arg, { cwd: TEST262_TESTS, absolute: true });
         if (matches.length === 0 && !globby.hasMagic(arg)) {
           files = [];
@@ -185,7 +174,7 @@ if (!process.send) {
       }
       if (files.length === 0) {
         const cwd = process.cwd();
-        for (const arg of ARGS) {
+        for (const arg of ARGV) {
           const matches = globby.sync(arg, { cwd, absolute: true });
           if (matches.length === 0 && !globby.hasMagic(arg)) {
             fs.accessSync(path.resolve(cwd, arg), fs.constants.R_OK);
