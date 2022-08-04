@@ -277,7 +277,7 @@ if (!process.send) {
 
       for (const include of test.attrs.includes) {
         if (includeCache[include] === undefined) {
-          const p = path.resolve(__dirname, `./test262/harness/${include}`);
+          const p = path.resolve(TEST262, `harness/${include}`);
           includeCache[include] = {
             source: fs.readFileSync(p, 'utf8'),
             specifier: p,

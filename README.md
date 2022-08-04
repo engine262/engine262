@@ -65,7 +65,7 @@ conforming JavaScript implementations.
 
 To run engine262 itself, a engine with support for recent ECMAScript features
 is needed. Additionally, the CLI (`bin/engine262.js`) and test262 runner
-(`test/test262.js`) require a recent version of Node.js.
+(`test/test262/test262.js`) require a recent version of Node.js.
 
 ## Using engine262
 
