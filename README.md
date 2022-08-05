@@ -58,14 +58,14 @@ features can be quickly prototyped and explored. As an example, adding
 
 This simplicity applies to many other proposals, such as [optional chaining][],
 [pattern matching][], [the pipeline operator][], and more. This engine has also
-been used to find bugs in ECMA-262 and test262, the test suite for
+been used to find bugs in ECMA-262 and [test262][], the test suite for
 conforming JavaScript implementations.
 
 ## Requirements
 
 To run engine262 itself, a engine with support for recent ECMAScript features
 is needed. Additionally, the CLI (`bin/engine262.js`) and test262 runner
-(`test/test262.js`) require a recent version of Node.js.
+(`test/test262/test262.js`) require a recent version of Node.js.
 
 ## Using engine262
 
@@ -140,6 +140,30 @@ async function* numbers() {
 // a stream of numbers fills your console. it fills you with determination.
 ```
 
+## Testing engine262
+
+This project can be run against [test262][], which is particularly useful
+for developing new features and/or tests:
+```sh
+$ # build engine262
+$ npm build
+
+$ # update local test262 in test/test262/test262
+$ git submodule update --init --recursive
+
+$ # update local test262 to a pull request
+$ pushd test/test262/test262
+$ git fetch origin refs/pull/$PR_NUMBER/head && git checkout FETCH_HEAD
+$ popd
+
+$ # run specific tests
+$ npm run test:test262 built-ins/AsyncGenerator*
+
+$ # run all tests
+$ npm run test:test262
+```
+The output will indicate counts for total tests, passing tests, failing tests, and skipped tests.
+
 ## Related Projects
 
 Many people and organizations have attempted to write a JavaScript interpreter
@@ -157,5 +181,6 @@ included here for reference, though engine262 is not based on any of them.
 [do expressions]: https://github.com/tc39/proposal-do-expressions
 [optional chaining]: https://github.com/tc39/proposal-optional-chaining
 [pattern matching]: https://github.com/tc39/proposal-pattern-matching
+[test262]: https://github.com/tc39/test262
 [the pipeline operator]: https://github.com/tc39/proposal-pipeline-operator
 [GitHub Packages]: https://github.com/engine262/engine262/packages

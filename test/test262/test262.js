@@ -3,7 +3,8 @@
 const path = require('path');
 const fs = require('fs');
 const util = require('util');
-const glob = require('glob');
+const globby = require('globby');
+const snekparse = require('../../bin/snekparse');
 
 const TEST262 = process.env.TEST262 || path.resolve(__dirname, 'test262');
 const TEST262_TESTS = path.join(TEST262, 'test');
@@ -13,7 +14,7 @@ const readList = (name) => {
   return source.split('\n').filter((l) => l && !l.startsWith('#'));
 };
 const readListPaths = (name) => readList(name)
-  .flatMap((t) => glob.sync(path.resolve(TEST262, 'test', t)))
+  .flatMap((t) => globby.sync(path.resolve(TEST262, 'test', t), { absolute: true }))
   .map((f) => path.relative(TEST262_TESTS, f));
 
 async function* readdir(dir) {
@@ -43,6 +44,44 @@ readList('features')
 if (!process.send) {
   // supervisor
 
+
+  // Read everything in argv after node and this file.
+  const ARGV = snekparse(process.argv.slice(2));
+  if (ARGV.h || ARGV.help) {
+    // eslint-disable-next-line prefer-template
+    const usage = `
+      Usage: node ${path.relative(process.cwd(), __filename)} [--run-slow-tests] [TEST-PATTERN]...
+      Run test262 tests against engine262.
+
+      TEST-PATTERN supports glob syntax, and is interpreted relative to
+      the test262 "test" subdirectory or (if that fails for any pattern)
+      relative to the working directory. If no patterns are specified,
+      all tests are run.
+
+      Environment variables:
+        TEST262
+          The test262 directory, which contains the "test" subdirectory.
+          If empty, it defaults to the "test262" sibling of this file.
+        NUM_WORKERS
+          The count of child processes that should be created to run tests.
+          If empty, it defaults to a reasonable value based on CPU count.
+
+      Files:
+        features
+          Specifies handling of test262 features, notably which ones to skip.
+        skiplist
+          Includes patterns of test files to skip.
+        slowlist
+          Includes patterns of test files to skip in the absence of
+          --run-slow-tests.
+    `.slice(1);
+    const indent = usage.match(/^\s*/)[0];
+    process.stdout.write(
+      `${usage.trimEnd().split('\n').map((line) => line.replace(indent, '')).join('\n')}\n`,
+    );
+    process.exit(64);
+  }
+
   const childProcess = require('child_process');
   const YAML = require('js-yaml');
   const {
@@ -53,11 +92,10 @@ if (!process.send) {
     CPU_COUNT,
   } = require('../base');
 
-  const override = process.argv.find((e, i) => i > 1 && !e.startsWith('-'));
   const NUM_WORKERS = process.env.NUM_WORKERS
     ? Number.parseInt(process.env.NUM_WORKERS, 10)
     : Math.round(CPU_COUNT * 0.75);
-  const RUN_SLOW_TESTS = process.argv.includes('--run-slow-tests');
+  const RUN_SLOW_TESTS = ARGV['run-slow-tests'];
 
   const createWorker = () => {
     const c = childProcess.fork(__filename);
@@ -119,7 +157,34 @@ if (!process.send) {
   };
 
   (async () => {
-    const files = override ? glob.sync(path.join(TEST262_TESTS, override)) : readdir(TEST262_TESTS);
+    let files = [];
+    if (ARGV.length === 0) {
+      files = readdir(TEST262_TESTS);
+    } else {
+      // Interpret pattern arguments relative to the tests directory,
+      // falling back on the working directory if there are no matches
+      // or a non-glob pattern fails to match.
+      for (const arg of ARGV) {
+        const matches = globby.sync(arg, { cwd: TEST262_TESTS, absolute: true });
+        if (matches.length === 0 && !globby.hasMagic(arg)) {
+          files = [];
+          break;
+        }
+        files.push(...matches);
+      }
+      if (files.length === 0) {
+        const cwd = process.cwd();
+        for (const arg of ARGV) {
+          const matches = globby.sync(arg, { cwd, absolute: true });
+          if (matches.length === 0 && !globby.hasMagic(arg)) {
+            fs.accessSync(path.resolve(cwd, arg), fs.constants.R_OK);
+          }
+          files.push(...matches);
+        }
+      }
+      files = new Set(files);
+    }
+
     for await (const file of files) {
       if (/annexB|intl402|_FIXTURE/.test(file)) {
         continue;
@@ -236,7 +301,7 @@ if (!process.send) {
 
       for (const include of test.attrs.includes) {
         if (includeCache[include] === undefined) {
-          const p = path.resolve(__dirname, `./test262/harness/${include}`);
+          const p = path.resolve(TEST262, `harness/${include}`);
           includeCache[include] = {
             source: fs.readFileSync(p, 'utf8'),
             specifier: p,
