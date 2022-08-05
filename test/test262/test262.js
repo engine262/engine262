@@ -77,7 +77,7 @@ if (!process.send) {
     `.slice(1);
     const indent = usage.match(/^\s*/)[0];
     process.stdout.write(
-      `${usage.trimEnd().split('\n').map((line) => line.replace(indent, '')).join('\n')}\n`
+      `${usage.trimEnd().split('\n').map((line) => line.replace(indent, '')).join('\n')}\n`,
     );
     process.exit(64);
   }

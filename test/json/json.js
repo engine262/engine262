@@ -4,7 +4,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const glob = require('glob');
+const globby = require('globby');
 const {
   pass, fail, skip, total,
 } = require('../base');
@@ -55,8 +55,10 @@ JSON.parse(source);
   }
 }
 
-const tests = glob.sync(`${path.resolve(BASE_DIR, 'test_parsing')}/**/*.json`)
-  .concat(glob.sync(`${path.resolve(BASE_DIR, 'test_transform')}/**/*.json`));
+const tests = globby.sync(
+  'test_{parsing,transform}/**/*.json',
+  { cwd: BASE_DIR, absolute: true },
+);
 
 tests.forEach((t) => {
   total();
