@@ -1036,7 +1036,7 @@ export function Evaluate_Pattern(Pattern, flags) {
       // 2. If ! UnicodeMatchPropertyValue(General_Category, s) is identical to a List of Unicode code points that is the name of a Unicode general category or general category alias listed in the “Property value and aliases” column of Table 57, then
       if (X(UnicodeMatchPropertyValue('General_Category', s) in UnicodeGeneralCategoryValues)) {
         // a. Return the CharSet containing all Unicode code points whose character database definition includes the property “General_Category” with value s.
-        return new ConcreteCharSet(getUnicodePropertyValueSet('General_Category', s));
+        return new ConcreteCharSet(getUnicodePropertyValueSet('General_Category', UnicodeGeneralCategoryValues[s]));
       }
       // 3. Let p be ! UnicodeMatchProperty(s).
       const p = X(UnicodeMatchProperty(s));
