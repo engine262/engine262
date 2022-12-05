@@ -4,7 +4,7 @@ import {
   EnsureCompletion,
   NormalCompletion,
   ThrowCompletion,
-  Q, X,
+  Q, X, Completion,
 } from './completion.mjs';
 import {
   IsCallable,
@@ -33,6 +33,9 @@ export const FEATURES = Object.freeze([
   },
 ].map(Object.freeze));
 
+/**
+ * @extends {Array<ExecutionContext>}
+ */
 class ExecutionContextStack extends Array {
   // This ensures that only the length taking overload is supported.
   // This is necessary to support `ArraySpeciesCreate`, which invokes
@@ -41,6 +44,10 @@ class ExecutionContextStack extends Array {
     super(+length);
   }
 
+  /**
+   * @override
+   * @param {ExecutionContext} ctx
+   */
   pop(ctx) {
     if (!ctx.poppedForTailCall) {
       const popped = super.pop();
@@ -106,6 +113,13 @@ export class Agent {
   }
 
   // Generate a throw completion using message templates
+  /**
+   * @param {import('./intrinsics/Error.mjs').IntrinsicsErrorName} type
+   * @param {Template} template
+   * @param  {Parameters<(typeof messages)[Template]>} templateArgs
+   * @template {keyof typeof messages} Template
+   * @returns {Completion<Value>}
+   */
   Throw(type, template, ...templateArgs) {
     if (type instanceof Value) {
       return ThrowCompletion(type);
@@ -157,7 +171,11 @@ export class Agent {
   }
 }
 
+/** @type {Agent} */
 export let surroundingAgent;
+/**
+ * @param {Agent} a
+ */
 export function setSurroundingAgent(a) {
   surroundingAgent = a;
 }

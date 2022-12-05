@@ -1,0 +1,32 @@
+{
+    "compilerOptions": {
+        "strict": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitOverride": true,
+        "noImplicitReturns": true,
+        "useUnknownInCatchVariables": true,
+
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext",
+
+        "declaration": true,
+        // to make declaration map useful, we need to publish src
+        // but it might help when debugging
+        "declarationMap": true,
+        "emitDeclarationOnly": true,
+        "stripInternal": true,
+
+        "allowJs": true,
+        // "checkJs": true,
+
+        "forceConsistentCasingInFileNames": true,
+        "lib": ["ES2022"],
+
+        "incremental": true,
+        "declarationDir": "./declaration/",
+        "tsBuildInfoFile": "./declaration/.tsbuildinfo",
+
+        "skipLibCheck": true
+    },
+    "include": ["./src/"]
+}

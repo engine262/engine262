@@ -4,6 +4,7 @@ import {
   NumberValue,
   BigIntValue,
   wellKnownSymbols,
+  BooleanValue,
 } from '../value.mjs';
 import {
   surroundingAgent,
@@ -100,6 +101,10 @@ export function OrdinaryToPrimitive(O, hint) {
 }
 
 // 7.1.2 #sec-toboolean
+/**
+ * @param {Value} argument
+ * @returns {BooleanValue}
+ */
 export function ToBoolean(argument) {
   const type = Type(argument);
   switch (type) {

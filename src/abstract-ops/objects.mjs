@@ -56,7 +56,11 @@ export function OrdinarySetPrototypeOf(O, V) {
   return Value.true;
 }
 
-// 9.1.3.1 OrdinaryIsExtensible
+/**
+ * 9.1.3.1 OrdinaryIsExtensible
+ * @param {ObjectValue} O
+ * @returns {boolean}
+ */
 export function OrdinaryIsExtensible(O) {
   return O.Extensible;
 }
@@ -92,7 +96,12 @@ export function OrdinaryGetOwnProperty(O, P) {
   return D;
 }
 
-// 9.1.6.1 OrdinaryDefineOwnProperty
+/**
+ * 9.1.6.1 OrdinaryDefineOwnProperty
+ * @param {ObjectValue} O
+ * @param {import('../api.mjs').PropertyKeyValue} P
+ * @param {Descriptor} Desc
+ */
 export function OrdinaryDefineOwnProperty(O, P, Desc) {
   const current = Q(O.GetOwnProperty(P));
   const extensible = Q(IsExtensible(O));
@@ -400,4 +409,3 @@ export function GetPrototypeFromConstructor(constructor, intrinsicDefaultProto) 
   }
   return proto;
 }
-

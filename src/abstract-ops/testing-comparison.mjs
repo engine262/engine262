@@ -1,12 +1,16 @@
+// @ts-check
 import {
   BigIntValue,
+  BooleanValue,
+  NumberValue,
+  ObjectValue,
   Type,
   TypeForMethod,
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
 import { surroundingAgent } from '../engine.mjs';
-import { Q, X } from '../completion.mjs';
+import { Completion, Q, X } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import {
   Assert,
@@ -20,11 +24,15 @@ import {
   isProxyExoticObject,
   isArrayExoticObject,
 } from './all.mjs';
+import { JSStringValue } from '../api.mjs';
 
 // This file covers abstract operations defined in
 // 7.2 #sec-testing-and-comparison-operations
 
-// 7.2.1 #sec-requireobjectcoercible
+/**
+ * 7.2.1 #sec-requireobjectcoercible
+ * @param {Value} argument
+ */
 export function RequireObjectCoercible(argument) {
   const type = Type(argument);
   switch (type) {
@@ -44,7 +52,11 @@ export function RequireObjectCoercible(argument) {
   }
 }
 
-// 7.2.2 #sec-isarray
+/**
+ * 7.2.2 #sec-isarray
+ * @param {Value} argument
+ * @returns {BooleanValue | Completion}
+ */
 export function IsArray(argument) {
   if (Type(argument) !== 'Object') {
     return Value.false;
@@ -62,7 +74,10 @@ export function IsArray(argument) {
   return Value.false;
 }
 
-// 7.2.3 #sec-iscallable
+/**
+ * 7.2.3 #sec-iscallable
+ * @param {Value} argument
+ */
 export function IsCallable(argument) {
   if (Type(argument) !== 'Object') {
     return Value.false;
@@ -73,7 +88,10 @@ export function IsCallable(argument) {
   return Value.false;
 }
 
-// 7.2.4 #sec-isconstructor
+/**
+ * 7.2.4 #sec-isconstructor
+ * @param {Value} argument
+ */
 export function IsConstructor(argument) {
   if (Type(argument) !== 'Object') {
     return Value.false;
@@ -84,15 +102,21 @@ export function IsConstructor(argument) {
   return Value.false;
 }
 
-// 7.2.5 #sec-isextensible-o
+/**
+ * 7.2.5 #sec-isextensible-o
+ * @param {ObjectValue} O
+ */
 export function IsExtensible(O) {
   Assert(Type(O) === 'Object');
   return O.IsExtensible();
 }
 
-// 7.2.6 #sec-isinteger
+/**
+ * 7.2.6 #sec-isinteger
+ * @param {Value} argument
+ */
 export function IsIntegralNumber(argument) {
-  if (Type(argument) !== 'Number') {
+  if (!(argument instanceof NumberValue)) {
     return Value.false;
   }
   if (argument.isNaN() || argument.isInfinity()) {
@@ -104,7 +128,10 @@ export function IsIntegralNumber(argument) {
   return Value.true;
 }
 
-// 7.2.7 #sec-ispropertykey
+/**
+ * 7.2.7 #sec-ispropertykey
+ * @param {Value} argument
+ */
 export function IsPropertyKey(argument) {
   if (Type(argument) === 'String') {
     return true;
@@ -115,7 +142,10 @@ export function IsPropertyKey(argument) {
   return false;
 }
 
-// 7.2.8 #sec-isregexp
+/**
+ * 7.2.8 #sec-isregexp
+ * @param {Value} argument
+ */
 export function IsRegExp(argument) {
   if (Type(argument) !== 'Object') {
     return Value.false;
@@ -130,21 +160,29 @@ export function IsRegExp(argument) {
   return Value.false;
 }
 
-// 7.2.9 #sec-isstringprefix
+/**
+ * 7.2.9 #sec-isstringprefix
+ * @param {Value} p
+ * @param {Value} q
+ */
 export function IsStringPrefix(p, q) {
-  Assert(Type(p) === 'String');
-  Assert(Type(q) === 'String');
+  Assert(p instanceof JSStringValue);
+  Assert(q instanceof JSStringValue);
   return q.stringValue().startsWith(p.stringValue());
 }
 
-// 7.2.10 #sec-samevalue
+/**
+ * 7.2.10 #sec-samevalue
+ * @param {Value} x
+ * @param {Value} y
+ */
 export function SameValue(x, y) {
   // 1. If Type(x) is different from Type(y), return false.
   if (Type(x) !== Type(y)) {
     return Value.false;
   }
   // 2. If Type(x) is Number or BigInt, then
-  if (Type(x) === 'Number' || Type(x) === 'BigInt') {
+  if (x instanceof NumberValue || x instanceof BigIntValue) {
     // a. Return ! Type(x)::sameValue(x, y).
     return TypeForMethod(x).sameValue(x, y);
   }
@@ -152,14 +190,18 @@ export function SameValue(x, y) {
   return X(SameValueNonNumber(x, y));
 }
 
-// 7.2.11 #sec-samevaluezero
+/**
+ * 7.2.11 #sec-samevaluezero
+ * @param {Value} x
+ * @param {Value} y
+ */
 export function SameValueZero(x, y) {
   // 1. If Type(x) is different from Type(y), return false.
   if (Type(x) !== Type(y)) {
     return Value.false;
   }
   // 2. If Type(x) is Number or BigInt, then
-  if (Type(x) === 'Number' || Type(x) === 'BigInt') {
+  if (x instanceof NumberValue || x instanceof BigIntValue) {
     // a. Return ! Type(x)::sameValueZero(x, y).
     return TypeForMethod(x).sameValueZero(x, y);
   }
@@ -167,7 +209,11 @@ export function SameValueZero(x, y) {
   return X(SameValueNonNumber(x, y));
 }
 
-// 7.2.12 #sec-samevaluenonnumber
+/**
+ * 7.2.12 #sec-samevaluenonnumber
+ * @param {Value} x
+ * @param {Value} y
+ */
 export function SameValueNonNumber(x, y) {
   Assert(Type(x) !== 'Number');
   Assert(Type(x) === Type(y));
@@ -180,8 +226,8 @@ export function SameValueNonNumber(x, y) {
     return Value.true;
   }
 
-  if (Type(x) === 'String') {
-    if (x.stringValue() === y.stringValue()) {
+  if (x instanceof JSStringValue) {
+    if (x.stringValue() === /** @type {JSStringValue} */ (y).stringValue()) {
       return Value.true;
     }
     return Value.false;
@@ -201,7 +247,11 @@ export function SameValueNonNumber(x, y) {
   return x === y ? Value.true : Value.false;
 }
 
-// 7.2.13 #sec-abstract-relational-comparison
+/**
+ * 7.2.13 #sec-abstract-relational-comparison
+ * @param {Value} x
+ * @param {Value} y
+ */
 export function AbstractRelationalComparison(x, y, LeftFirst = true) {
   let px;
   let py;
@@ -258,7 +308,7 @@ export function AbstractRelationalComparison(x, y, LeftFirst = true) {
         return Value.undefined;
       }
       // iii. Return BigInt::lessThan(px, ny).
-      return BigIntValue.lessThan(px, ny);
+      return BigIntValue.lessThan(px, /** @type {BigIntValue} */ (ny));
     }
     // b. If Type(px) is String and Type(py) is BigInt, then
     if (Type(px) === 'String' && Type(py) === 'BigInt') {
@@ -269,7 +319,7 @@ export function AbstractRelationalComparison(x, y, LeftFirst = true) {
         return Value.undefined;
       }
       // iii. Return BigInt::lessThan(px, ny).
-      return BigIntValue.lessThan(nx, py);
+      return BigIntValue.lessThan(/** @type {BigIntValue} */ (nx), py);
     }
     // c. Let nx be ? ToNumeric(px). NOTE: Because px and py are primitive values evaluation order is not important.
     const nx = Q(ToNumeric(px));
@@ -300,7 +350,12 @@ export function AbstractRelationalComparison(x, y, LeftFirst = true) {
   }
 }
 
-// 7.2.14 #sec-abstract-equality-comparison
+/**
+ * 7.2.14 #sec-abstract-equality-comparison
+ * @param {Value} x
+ * @param {Value} y
+ * @returns {BooleanValue}
+ */
 export function AbstractEqualityComparison(x, y) {
   // 1. If Type(x) is the same as Type(y), then
   if (Type(x) === Type(y)) {
@@ -355,28 +410,32 @@ export function AbstractEqualityComparison(x, y) {
     return AbstractEqualityComparison(Q(ToPrimitive(x)), y);
   }
   // 12. If Type(x) is BigInt and Type(y) is Number, or if Type(x) is Number and Type(y) is BigInt, then
-  if ((Type(x) === 'BigInt' && Type(y) === 'Number') || (Type(x) === 'Number' && Type(y) === 'BigInt')) {
+  if ((x instanceof BigIntValue && y instanceof NumberValue) || (x instanceof NumberValue && y instanceof BigIntValue)) {
     // a. If x or y are any of NaN, +∞, or -∞, return false.
     if ((x.isNaN && (x.isNaN() || !x.isFinite())) || (y.isNaN && (y.isNaN() || !y.isFinite()))) {
       return Value.false;
     }
     // b. If the mathematical value of x is equal to the mathematical value of y, return true; otherwise return false.
-    const a = (x.numberValue ? x.numberValue() : x.bigintValue());
-    const b = (y.numberValue ? y.numberValue() : y.bigintValue());
+    const a = (x instanceof NumberValue ? x.numberValue() : x.bigintValue());
+    const b = (y instanceof NumberValue ? y.numberValue() : y.bigintValue());
     return a == b ? Value.true : Value.false; // eslint-disable-line eqeqeq
   }
   // 13. Return false.
   return Value.false;
 }
 
-// 7.2.15 #sec-strict-equality-comparison
+/**
+ * 7.2.15 #sec-strict-equality-comparison
+ * @param {Value} x
+ * @param {Value} y
+ */
 export function StrictEqualityComparison(x, y) {
   // 1. If Type(x) is different from Type(y), return false.
   if (Type(x) !== Type(y)) {
     return Value.false;
   }
   // 2. If Type(x) is Number or BigInt, then
-  if (Type(x) === 'Number' || Type(x) === 'BigInt') {
+  if (x instanceof NumberValue || x instanceof BigIntValue) {
     // a. Return ! Type(x)::equal(x, y).
     return X(TypeForMethod(x).equal(x, y));
   }
@@ -385,6 +444,7 @@ export function StrictEqualityComparison(x, y) {
 }
 
 // #sec-isvalidintegerindex
+// @ts-expect-error
 export function IsValidIntegerIndex(O, index) {
   if (IsDetachedBuffer(O.ViewedArrayBuffer) === Value.true) {
     return Value.false;

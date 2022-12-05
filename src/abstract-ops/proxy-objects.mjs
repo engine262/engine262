@@ -1,5 +1,5 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Type, Value } from '../value.mjs';
+import { NullValue, ObjectValue, Type, Value } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { ValueSet } from '../helpers.mjs';
 import {
@@ -532,6 +532,14 @@ function ProxyConstruct(argumentsList, newTarget) {
   return newObj;
 }
 
+/**
+ * @typedef {ObjectValue & {ProxyHandler: ObjectValue | NullValue;ProxyTarget: ObjectValue | NullValue;}} ProxyObject
+ */
+
+/**
+ * @param {Value} O
+ * @returns {O is ProxyObject}
+ */
 export function isProxyExoticObject(O) {
   return 'ProxyHandler' in O;
 }
@@ -547,6 +555,7 @@ export function ProxyCreate(target, handler) {
     return surroundingAgent.Throw('TypeError', 'CannotCreateProxyWith', 'non-object', 'handler');
   }
   // 3. Let P be ! MakeBasicObject(« [[ProxyHandler]], [[ProxyTarget]] »).
+  /** @type {ProxyObject} */
   const P = X(MakeBasicObject(['ProxyHandler', 'ProxyTarget']));
   // 4. Set P's essential internal methods, except for [[Call]] and [[Construct]], to the definitions specified in 9.5.
   P.GetPrototypeOf = ProxyGetPrototypeOf;

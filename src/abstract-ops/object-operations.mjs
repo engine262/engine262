@@ -36,6 +36,11 @@ import {
 // 7.3 #sec-operations-on-objects
 
 // #sec-makebasicobject
+/**
+ * @param {readonly T[]} internalSlotsList
+ * @template {string} T
+ * @returns {ObjectValue & {[key in T]: any}}
+ */
 export function MakeBasicObject(internalSlotsList) {
   // 1.  Assert: internalSlotsList is a List of internal slot names.
   Assert(Array.isArray(internalSlotsList));

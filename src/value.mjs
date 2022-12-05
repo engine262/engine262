@@ -1,3 +1,4 @@
+// @ts-check
 import { surroundingAgent } from './engine.mjs';
 import {
   Assert,
@@ -21,9 +22,13 @@ import {
 import { EnvironmentRecord } from './environment.mjs';
 import { Completion, X } from './completion.mjs';
 import { ValueMap, OutOfRange } from './helpers.mjs';
+import { PrivateElementRecord } from './api.mjs';
 
 // #sec-ecmascript-language-types
 export class Value {
+  /**
+   * @param {undefined | Value | string | number | bigint | ((...args: any[]) => any)} value
+   */
   constructor(value = undefined) {
     if (new.target !== Value) {
       return this;
@@ -54,8 +59,15 @@ export class NullValue extends PrimitiveValue {}
 
 // #sec-ecmascript-language-types-boolean-type
 export class BooleanValue extends PrimitiveValue {
+  /**
+   * @param {boolean} v
+   */
   constructor(v) {
     super();
+    /**
+     * @type {boolean}
+     * @readonly
+     */
     this.boolean = v;
   }
 
@@ -68,17 +80,23 @@ export class BooleanValue extends PrimitiveValue {
   }
 }
 
-Object.defineProperties(Value, {
-  undefined: { value: new UndefinedValue(), configurable: false, writable: false },
-  null: { value: new NullValue(), configurable: false, writable: false },
-  true: { value: new BooleanValue(true), configurable: false, writable: false },
-  false: { value: new BooleanValue(false), configurable: false, writable: false },
-});
+Value.undefined = new UndefinedValue();
+Value.null = new NullValue();
+Value.true = new BooleanValue(true);
+Value.false = new BooleanValue(false);
+Object.freeze(Value);
 
 // #sec-ecmascript-language-types-string-type
 class StringValue extends PrimitiveValue {
+  /**
+   * @param {string} string
+   */
   constructor(string) {
     super();
+    /**
+     * @type {string}
+     * @readonly
+     */
     this.string = string;
   }
 
@@ -91,37 +109,48 @@ export { StringValue as JSStringValue };
 
 // #sec-ecmascript-language-types-symbol-type
 export class SymbolValue extends PrimitiveValue {
+  /**
+   * @param {StringValue} Description
+   */
   constructor(Description) {
     super();
+    /**
+     * @type {StringValue}
+     * @readonly
+     */
     this.Description = Description;
   }
 }
 
-export const wellKnownSymbols = Object.create(null);
-for (const name of [
-  'asyncIterator',
-  'hasInstance',
-  'isConcatSpreadable',
-  'iterator',
-  'match',
-  'matchAll',
-  'replace',
-  'search',
-  'species',
-  'split',
-  'toPrimitive',
-  'toStringTag',
-  'unscopables',
-]) {
-  const sym = new SymbolValue(new StringValue(`Symbol.${name}`));
-  wellKnownSymbols[name] = sym;
+export const wellKnownSymbols = {
+  asyncIterator: new SymbolValue(new StringValue('Symbol.asyncIterator')),
+  hasInstance: new SymbolValue(new StringValue('Symbol.hasInstance')),
+  isConcatSpreadable: new SymbolValue(new StringValue('Symbol.isConcatSpreadable')),
+  iterator: new SymbolValue(new StringValue('Symbol.iterator')),
+  match: new SymbolValue(new StringValue('Symbol.match')),
+  matchAll: new SymbolValue(new StringValue('Symbol.matchAll')),
+  replace: new SymbolValue(new StringValue('Symbol.replace')),
+  search: new SymbolValue(new StringValue('Symbol.search')),
+  species: new SymbolValue(new StringValue('Symbol.species')),
+  split: new SymbolValue(new StringValue('Symbol.split')),
+  toPrimitive: new SymbolValue(new StringValue('Symbol.toPrimitive')),
+  toStringTag: new SymbolValue(new StringValue('Symbol.toStringTag')),
+  unscopables: new SymbolValue(new StringValue('Symbol.unscopables')),
 }
+Object.setPrototypeOf(wellKnownSymbols, null);
 Object.freeze(wellKnownSymbols);
 
 // #sec-ecmascript-language-types-number-type
 export class NumberValue extends PrimitiveValue {
+  /**
+   * @param {number} number
+   */
   constructor(number) {
     super();
+    /**
+     * @type {number}
+     * @readonly
+     */
     this.number = number;
   }
 
@@ -141,7 +170,10 @@ export class NumberValue extends PrimitiveValue {
     return Number.isFinite(this.number);
   }
 
-  // #sec-numeric-types-number-unaryMinus
+  /**
+   * #sec-numeric-types-number-unaryMinus
+   * @param {NumberValue} x
+   */
   static unaryMinus(x) {
     if (x.isNaN()) {
       return F(NaN);
@@ -149,7 +181,10 @@ export class NumberValue extends PrimitiveValue {
     return F(-x.numberValue());
   }
 
-  // #sec-numeric-types-number-bitwiseNOT
+  /**
+   * #sec-numeric-types-number-bitwiseNOT
+   * @param {NumberValue} x
+   */
   static bitwiseNOT(x) {
     // 1. Let oldValue be ! ToInt32(x).
     const oldValue = X(ToInt32(x));
@@ -157,38 +192,66 @@ export class NumberValue extends PrimitiveValue {
     return F(~oldValue.numberValue());
   }
 
-  // #sec-numeric-types-number-exponentiate
+  /**
+   * #sec-numeric-types-number-exponentiate
+   * @param {NumberValue} base
+   * @param {NumberValue} exponent
+   */
   static exponentiate(base, exponent) {
     return F(base.numberValue() ** exponent.numberValue());
   }
 
-  // #sec-numeric-types-number-multiply
+  /**
+   * #sec-numeric-types-number-multiply
+   * @param {NumberValue} x
+   * @param {NumberValue} y
+   */
   static multiply(x, y) {
     return F(x.numberValue() * y.numberValue());
   }
 
-  // #sec-numeric-types-number-divide
+  /**
+   * #sec-numeric-types-number-divide
+   * @param {NumberValue} x
+   * @param {NumberValue} y
+   */
   static divide(x, y) {
     return F(x.numberValue() / y.numberValue());
   }
 
-  // #sec-numeric-types-number-remainder
+  /**
+   * #sec-numeric-types-number-remainder
+   * @param {NumberValue} n
+   * @param {NumberValue} d
+   */
   static remainder(n, d) {
     return F(n.numberValue() % d.numberValue());
   }
 
-  // #sec-numeric-types-number-add
+  /**
+   * #sec-numeric-types-number-add
+   * @param {NumberValue} x
+   * @param {NumberValue} y
+   */
   static add(x, y) {
     return F(x.numberValue() + y.numberValue());
   }
 
-  // #sec-numeric-types-number-subtract
+  /**
+   * #sec-numeric-types-number-subtract
+   * @param {NumberValue} x
+   * @param {NumberValue} y
+   */
   static subtract(x, y) {
     // The result of - operator is x + (-y).
     return NumberValue.add(x, F(-y.numberValue()));
   }
 
-  // #sec-numeric-types-number-leftShift
+  /**
+   * #sec-numeric-types-number-leftShift
+   * @param {NumberValue} x
+   * @param {NumberValue} y
+   */
   static leftShift(x, y) {
     // 1. Let lnum be ! ToInt32(x).
     const lnum = X(ToInt32(x));
@@ -200,7 +263,11 @@ export class NumberValue extends PrimitiveValue {
     return F(lnum.numberValue() << shiftCount); // eslint-disable-line no-bitwise
   }
 
-  // #sec-numeric-types-number-signedRightShift
+  /**
+   * #sec-numeric-types-number-signedRightShift
+   * @param {NumberValue} x
+   * @param {NumberValue} y
+   */
   static signedRightShift(x, y) {
     // 1. Let lnum be ! ToInt32(x).
     const lnum = X(ToInt32(x));
@@ -213,7 +280,11 @@ export class NumberValue extends PrimitiveValue {
     return F(lnum.numberValue() >> shiftCount); // eslint-disable-line no-bitwise
   }
 
-  // #sec-numeric-types-number-unsignedRightShift
+  /**
+   * #sec-numeric-types-number-unsignedRightShift
+   * @param {NumberValue} x
+   * @param {NumberValue} y
+   */
   static unsignedRightShift(x, y) {
     // 1. Let lnum be ! ToInt32(x).
     const lnum = X(ToInt32(x));
@@ -226,7 +297,11 @@ export class NumberValue extends PrimitiveValue {
     return F(lnum.numberValue() >>> shiftCount); // eslint-disable-line no-bitwise
   }
 
-  // #sec-numeric-types-number-lessThan
+  /**
+   * #sec-numeric-types-number-lessThan
+   * @param {NumberValue} x
+   * @param {NumberValue} y
+   */
   static lessThan(x, y) {
     if (x.isNaN()) {
       return Value.undefined;
@@ -255,7 +330,11 @@ export class NumberValue extends PrimitiveValue {
     return x.numberValue() < y.numberValue() ? Value.true : Value.false;
   }
 
-  // #sec-numeric-types-number-equal
+  /**
+   * #sec-numeric-types-number-equal
+   * @param {NumberValue} x
+   * @param {NumberValue} y
+   */
   static equal(x, y) {
     if (x.isNaN()) {
       return Value.false;
@@ -277,7 +356,11 @@ export class NumberValue extends PrimitiveValue {
     return Value.false;
   }
 
-  // #sec-numeric-types-number-sameValue
+  /**
+   * #sec-numeric-types-number-sameValue
+   * @param {NumberValue} x
+   * @param {NumberValue} y
+   */
   static sameValue(x, y) {
     if (x.isNaN() && y.isNaN()) {
       return Value.true;
@@ -296,7 +379,11 @@ export class NumberValue extends PrimitiveValue {
     return Value.false;
   }
 
-  // #sec-numeric-types-number-sameValueZero
+  /**
+   * #sec-numeric-types-number-sameValueZero
+   * @param {NumberValue} x
+   * @param {NumberValue} y
+   */
   static sameValueZero(x, y) {
     if (x.isNaN() && y.isNaN()) {
       return Value.true;
@@ -315,48 +402,71 @@ export class NumberValue extends PrimitiveValue {
     return Value.false;
   }
 
-  // #sec-numeric-types-number-bitwiseAND
+  /**
+   * #sec-numeric-types-number-bitwiseAND
+   * @param {NumberValue} x
+   * @param {NumberValue} y
+   */
   static bitwiseAND(x, y) {
     // 1. Return NumberBitwiseOp(&, x, y).
     return NumberBitwiseOp('&', x, y);
   }
 
-  // #sec-numeric-types-number-bitwiseXOR
+  /**
+   * #sec-numeric-types-number-bitwiseXOR
+   * @param {NumberValue} x
+   * @param {NumberValue} y
+   */
   static bitwiseXOR(x, y) {
     // 1. Return NumberBitwiseOp(^, x, y).
     return NumberBitwiseOp('^', x, y);
   }
 
-  // #sec-numeric-types-number-bitwiseOR
+  /**
+   * #sec-numeric-types-number-bitwiseOR
+   * @param {NumberValue} x
+   * @param {NumberValue} y
+   */
   static bitwiseOR(x, y) {
     // 1. Return NumberBitwiseOp(|, x, y).
     return NumberBitwiseOp('|', x, y);
   }
 
-  // #sec-numeric-types-number-tostring
+  /**
+   * #sec-numeric-types-number-tostring
+   * @override
+   * @param {NumberValue} x
+   * @returns {StringValue}
+   */
   static toString(x) {
     if (x.isNaN()) {
-      return new Value('NaN');
+      return new StringValue('NaN');
     }
     const xVal = x.numberValue();
     if (xVal === 0) {
-      return new Value('0');
+      return new StringValue('0');
     }
     if (xVal < 0) {
       const str = X(NumberValue.toString(F(-xVal))).stringValue();
-      return new Value(`-${str}`);
+      return new StringValue(`-${str}`);
     }
     if (x.isInfinity()) {
-      return new Value('Infinity');
+      return new StringValue('Infinity');
     }
     // TODO: implement properly
-    return new Value(`${xVal}`);
+    return new StringValue(`${xVal}`);
   }
 }
 
 NumberValue.unit = new NumberValue(1);
 
-// #sec-numberbitwiseop
+/**
+ * #sec-numberbitwiseop
+ * @param {BitwiseOp} op
+ * @param {NumberValue} x
+ * @param {NumberValue} y
+ * @returns
+ */
 function NumberBitwiseOp(op, x, y) {
   // 1. Let lnum be ! ToInt32(x).
   const lnum = X(ToInt32(x));
@@ -377,8 +487,15 @@ function NumberBitwiseOp(op, x, y) {
 
 // #sec-ecmascript-language-types-bigint-type
 export class BigIntValue extends PrimitiveValue {
+  /**
+   * @param {bigint} bigint
+   */
   constructor(bigint) {
     super();
+    /**
+     * @type {bigint}
+     * @readonly
+     */
     this.bigint = bigint;
   }
 
@@ -394,20 +511,30 @@ export class BigIntValue extends PrimitiveValue {
     return true;
   }
 
-  // #sec-numeric-types-bigint-unaryMinus
-  static unaryMinus(x) {
+  /**
+   * #sec-numeric-types-bigint-unaryMinus
+   * @param {BigIntValue} x
+   */
+  static unaryMinus(/** @type {BigIntValue} */ x) {
     if (x.bigintValue() === 0n) {
       return Z(0n);
     }
     return Z(-x.bigintValue());
   }
 
-  // #sec-numeric-types-bigint-bitwiseNOT
-  static bitwiseNOT(x) {
+  /**
+   * #sec-numeric-types-bigint-bitwiseNOT
+   * @param {BigIntValue} x
+   */
+  static bitwiseNOT(/** @type {BigIntValue} */ x) {
     return Z(-x.bigintValue() - 1n);
   }
 
-  // #sec-numeric-types-bigint-exponentiate
+  /**
+   * #sec-numeric-types-bigint-exponentiate
+   * @param {BigIntValue} base
+   * @param {BigIntValue} exponent
+   */
   static exponentiate(base, exponent) {
     // 1. If exponent < 0n, throw a RangeError exception.
     if (exponent.bigintValue() < 0n) {
@@ -421,12 +548,20 @@ export class BigIntValue extends PrimitiveValue {
     return Z(base.bigintValue() ** exponent.bigintValue());
   }
 
-  // #sec-numeric-types-bigint-multiply
+  /**
+   * #sec-numeric-types-bigint-multiply
+   * @param {BigIntValue} x
+   * @param {BigIntValue} y
+   */
   static multiply(x, y) {
     return Z(x.bigintValue() * y.bigintValue());
   }
 
-  // #sec-numeric-types-bigint-divide
+  /**
+   * #sec-numeric-types-bigint-divide
+   * @param {BigIntValue} x
+   * @param {BigIntValue} y
+   */
   static divide(x, y) {
     // 1. If y is 0n, throw a RangeError exception.
     if (y.bigintValue() === 0n) {
@@ -438,8 +573,12 @@ export class BigIntValue extends PrimitiveValue {
     return Z(quotient);
   }
 
-  // #sec-numeric-types-bigint-remainder
-  static remainder(n, d) {
+  /**
+   * #sec-numeric-types-bigint-remainder
+   * @param {BigIntValue} n
+   * @param {BigIntValue} d
+   */
+  static remainder(/** @type {BigIntValue} */ n, /** @type {BigIntValue} */ d) {
     // 1. If d is 0n, throw a RangeError exception.
     if (d.bigintValue() === 0n) {
       return surroundingAgent.Throw('RangeError', 'BigIntDivideByZero');
@@ -457,86 +596,144 @@ export class BigIntValue extends PrimitiveValue {
     return r;
   }
 
-  // #sec-numeric-types-bigint-add
+  /**
+   * #sec-numeric-types-bigint-add
+   * @param {BigIntValue} x
+   * @param {BigIntValue} y
+   */
   static add(x, y) {
     return Z(x.bigintValue() + y.bigintValue());
   }
 
-  // #sec-numeric-types-bigint-subtract
+  /**
+   * #sec-numeric-types-bigint-subtract
+   * @param {BigIntValue} x
+   * @param {BigIntValue} y
+   */
   static subtract(x, y) {
     return Z(x.bigintValue() - y.bigintValue());
   }
 
-  // #sec-numeric-types-bigint-leftShift
+  /**
+   * #sec-numeric-types-bigint-leftShift
+   * @param {BigIntValue} x
+   * @param {BigIntValue} y
+   */
   static leftShift(x, y) {
     return Z(x.bigintValue() << y.bigintValue()); // eslint-disable-line no-bitwise
   }
 
-  // #sec-numeric-types-bigint-signedRightShift
+  /**
+   * #sec-numeric-types-bigint-signedRightShift
+   * @param {BigIntValue} x
+   * @param {BigIntValue} y
+   */
   static signedRightShift(x, y) {
     // 1. Return BigInt::leftShift(x, -y).
     return BigIntValue.leftShift(x, Z(-y.bigintValue()));
   }
 
   // #sec-numeric-types-bigint-unsignedRightShift
+  /**
+   * #sec-numeric-types-bigint-unsignedRightShift
+   * @param {BigIntValue} _x
+   * @param {BigIntValue} _y
+   */
   static unsignedRightShift(_x, _y) {
     return surroundingAgent.Throw('TypeError', 'BigIntUnsignedRightShift');
   }
 
-  // #sec-numeric-types-bigint-lessThan
+  /**
+   * #sec-numeric-types-bigint-lessThan
+   * @param {BigIntValue} x
+   * @param {BigIntValue} y
+   */
   static lessThan(x, y) {
     return x.bigintValue() < y.bigintValue() ? Value.true : Value.false;
   }
 
-  // #sec-numeric-types-bigint-equal
+  /**
+   * #sec-numeric-types-bigint-equal
+   * @param {BigIntValue} x
+   * @param {BigIntValue} y
+   */
   static equal(x, y) {
     // Return true if x and y have the same mathematical integer value and false otherwise.
     return x.bigintValue() === y.bigintValue() ? Value.true : Value.false;
   }
 
-  // #sec-numeric-types-bigint-sameValue
+  /**
+   * #sec-numeric-types-bigint-sameValue
+   * @param {BigIntValue} x
+   * @param {BigIntValue} y
+   */
   static sameValue(x, y) {
     // 1. Return BigInt::equal(x, y).
     return BigIntValue.equal(x, y);
   }
 
-  // #sec-numeric-types-bigint-sameValueZero
+  /**
+   * #sec-numeric-types-bigint-sameValueZero
+   * @param {BigIntValue} x
+   * @param {BigIntValue} y
+   */
   static sameValueZero(x, y) {
     // 1. Return BigInt::equal(x, y).
     return BigIntValue.equal(x, y);
   }
 
-  // #sec-numeric-types-bigint-bitwiseAND
+  /**
+   * #sec-numeric-types-bigint-bitwiseAND
+   * @param {BigIntValue} x
+   * @param {BigIntValue} y
+   */
   static bitwiseAND(x, y) {
     // 1. Return BigIntBitwiseOp(&, x, y).
     return BigIntBitwiseOp('&', x, y);
   }
 
-  // #sec-numeric-types-bigint-bitwiseXOR
+  /**
+   * #sec-numeric-types-bigint-bitwiseXOR
+   * @param {BigIntValue} x
+   * @param {BigIntValue} y
+   */
   static bitwiseXOR(x, y) {
     // 1. Return BigIntBitwiseOp(^, x, y).
     return BigIntBitwiseOp('^', x, y);
   }
 
-  // #sec-numeric-types-bigint-bitwiseOR
+  /**
+   * #sec-numeric-types-bigint-bitwiseOR
+   * @param {BigIntValue} x
+   * @param {BigIntValue} y
+   */
   static bitwiseOR(x, y) {
     // 1. Return BigIntBitwiseOp(|, x, y);
     return BigIntBitwiseOp('|', x, y);
   }
 
-  // #sec-numeric-types-bigint-tostring
+  /**
+   * #sec-numeric-types-bigint-tostring
+   * @override
+   * @param {BigIntValue} x
+   * @returns {StringValue}
+   */
   static toString(x) {
     // 1. If x is less than zero, return the string-concatenation of the String "-" and ! BigInt::toString(-x).
     if (x.bigintValue() < 0n) {
       const str = X(BigIntValue.toString(Z(-x.bigintValue()))).stringValue();
-      return new Value(`-${str}`);
+      return new StringValue(`-${str}`);
     }
     // 2. Return the String value consisting of the code units of the digits of the decimal representation of x.
-    return new Value(`${x.bigintValue()}`);
+    return new StringValue(`${x.bigintValue()}`);
   }
 }
 
 BigIntValue.unit = new BigIntValue(1n);
+
+/**
+ * @typedef {'&' | '|' | '^'} BitwiseOp
+ */
 
 /*
 // #sec-binaryand
@@ -588,7 +785,12 @@ function BinaryXor(x, y) {
 }
 */
 
-// #sec-bigintbitwiseop
+/**
+ * #sec-bigintbitwiseop
+ * @param {BitwiseOp} op
+ * @param {BigIntValue} x
+ * @param {BigIntValue} y
+ */
 function BigIntBitwiseOp(op, x, y) {
   // TODO: figure out why this doesn't work, probably the modulo.
   /*
@@ -658,21 +860,42 @@ function BigIntBitwiseOp(op, x, y) {
 
 // #sec-private-names
 export class PrivateName extends Value {
+  /**
+   * @param {StringValue} Description
+   */
   constructor(Description) {
     super();
 
+    /**
+     * @type {StringValue}
+     * @readonly
+     */
     this.Description = Description;
   }
 }
 
 // #sec-object-type
 export class ObjectValue extends Value {
+  /**
+   * @param {readonly string[]} internalSlotsList
+   */
   constructor(internalSlotsList) {
     super();
 
+    /**
+     * @type {PrivateElementRecord[]}
+     * @readonly
+     */
     this.PrivateElements = [];
-
+    /**
+     * @type {ValueMap}
+     * @readonly
+     */
     this.properties = new ValueMap();
+    /**
+     * @type {readonly string[]}
+     * @readonly
+     */
     this.internalSlotsList = internalSlotsList;
   }
 
@@ -680,6 +903,9 @@ export class ObjectValue extends Value {
     return OrdinaryGetPrototypeOf(this);
   }
 
+  /**
+   * @param {Value} V
+   */
   SetPrototypeOf(V) {
     return OrdinarySetPrototypeOf(this, V);
   }
@@ -692,26 +918,45 @@ export class ObjectValue extends Value {
     return OrdinaryPreventExtensions(this);
   }
 
+  /**
+   * @param {PropertyKeyValue} P
+   */
   GetOwnProperty(P) {
     return OrdinaryGetOwnProperty(this, P);
   }
 
+  /**
+   * @param {PropertyKeyValue} P
+   * @param {Descriptor} Desc
+   */
   DefineOwnProperty(P, Desc) {
     return OrdinaryDefineOwnProperty(this, P, Desc);
   }
 
-  HasProperty(P) {
+  HasProperty(/** @type {PropertyKeyValue} */ P) {
     return OrdinaryHasProperty(this, P);
   }
 
+  /**
+   * @param {PropertyKeyValue} P
+   * @param {Value} Receiver
+   */
   Get(P, Receiver) {
     return OrdinaryGet(this, P, Receiver);
   }
 
+  /**
+   * @param {PropertyKeyValue} P
+   * @param {Value} V
+   * @param {Value} Receiver
+   */
   Set(P, V, Receiver) {
     return OrdinarySet(this, P, V, Receiver);
   }
 
+  /**
+   * @param {PropertyKeyValue} P
+   */
   Delete(P) {
     return OrdinaryDelete(this, P);
   }
@@ -720,29 +965,59 @@ export class ObjectValue extends Value {
     return OrdinaryOwnPropertyKeys(this);
   }
 
-  // NON-SPEC
+  /**
+   * NON-SPEC
+   * @param {import('./api.mjs').GCMarkCallback} m
+   */
   mark(m) {
     m(this.properties);
     this.internalSlotsList.forEach((s) => {
+      // @ts-expect-error
       m(this[s]);
     });
   }
 }
 
 export class ReferenceRecord {
+  /**
+   * @param {object} record
+   * @param {Value | EnvironmentRecord | 'unresolvable'} record.Base
+   * @param {StringValue | SymbolValue | PrivateName} record.ReferencedName
+   * @param {boolean} record.Strict
+   * @param {Value=} record.ThisValue
+   */
   constructor({
     Base,
     ReferencedName,
     Strict,
     ThisValue,
   }) {
+    /**
+     * @type {Value | EnvironmentRecord | 'unresolvable'}
+     * @readonly
+     */
     this.Base = Base;
+    /**
+     * @type {StringValue | SymbolValue | PrivateName}
+     * @readonly
+     */
     this.ReferencedName = ReferencedName;
+    /**
+     * @type {boolean}
+     * @readonly
+     */
     this.Strict = Strict;
+    /**
+     * @type {Value=}
+     * @readonly
+     */
     this.ThisValue = ThisValue;
   }
 
-  // NON-SPEC
+  /**
+   * NON-SPEC
+   * @param {import('./api.mjs').GCMarkCallback} m
+   */
   mark(m) {
     m(this.Base);
     m(this.ReferencedName);
@@ -750,17 +1025,45 @@ export class ReferenceRecord {
   }
 }
 
+/**
+ * @param {Omit<Descriptor, 'everyFieldIsAbsent' | 'mark'>} O
+ */
 export function Descriptor(O) {
   if (new.target === undefined) {
     return new Descriptor(O);
   }
 
+  /**
+   * @type {Value=}
+   * @readonly
+   */
   this.Value = O.Value;
+  /**
+   * @type {ObjectValue=}
+   * @readonly
+   */
   this.Get = O.Get;
+  /**
+   * @type {ObjectValue=}
+   * @readonly
+   */
   this.Set = O.Set;
+  /**
+   * @type {BooleanValue=}
+   * @readonly
+   */
   this.Writable = O.Writable;
+  /**
+   * @type {BooleanValue=}
+   * @readonly
+   */
   this.Enumerable = O.Enumerable;
+  /**
+   * @type {BooleanValue=}
+   * @readonly
+   */
   this.Configurable = O.Configurable;
+  return this;
 }
 
 Descriptor.prototype.everyFieldIsAbsent = function everyFieldIsAbsent() {
@@ -772,7 +1075,10 @@ Descriptor.prototype.everyFieldIsAbsent = function everyFieldIsAbsent() {
     && this.Configurable === undefined;
 };
 
-// NON-SPEC
+/**
+ * NON-SPEC
+ * @param {import('./api.mjs').GCMarkCallback} m
+ */
 Descriptor.prototype.mark = function mark(m) {
   m(this.Value);
   m(this.Get);
@@ -780,10 +1086,12 @@ Descriptor.prototype.mark = function mark(m) {
 };
 
 export class DataBlock extends Uint8Array {
-  constructor(sizeOrBuffer, ...restArgs) {
+  /**
+   * @param {number | ArrayBuffer} sizeOrBuffer
+   */
+  constructor(sizeOrBuffer) {
     if (sizeOrBuffer instanceof ArrayBuffer) {
-      // fine.
-      super(sizeOrBuffer, ...restArgs);
+      super(sizeOrBuffer);
     } else {
       Assert(typeof sizeOrBuffer === 'number');
       super(sizeOrBuffer);
@@ -791,6 +1099,14 @@ export class DataBlock extends Uint8Array {
   }
 }
 
+/**
+ * @typedef {'Undefined' | 'Null' | 'Boolean' | 'String' | 'Symbol' | 'Number' | 'Object' | 'BigInt' | 'PrivateName' | 'Completion' | 'EnvironmentRecord' | 'Descriptor' | 'Data Block'} Type
+ */
+
+/**
+ * @param {Value} val
+ * @returns {Type}
+ */
 export function Type(val) {
   if (val instanceof UndefinedValue) {
     return 'Undefined';
@@ -847,10 +1163,24 @@ export function Type(val) {
   throw new OutOfRange('Type', val);
 }
 
-// Used for Type(x)::y
+/**
+ * Used for Type(x)::y
+ * @param {NumberValue | BigIntValue} val
+ * @returns {{
+ *  sameValue(a: Value, b: Value): BooleanValue
+ *  sameValueZero(a: Value, b: Value): BooleanValue
+ *  lessThan(a: Value, b: Value): BooleanValue
+ *  equal(a: Value, b: Value): BooleanValue
+ * }}
+ */
 export function TypeForMethod(val) {
   if (val instanceof Value) {
-    return val.constructor;
+    return /** @type {any} */ (val.constructor);
   }
   throw new OutOfRange('TypeForValue', val);
 }
+
+/**
+ * @typedef PropertyKeyValue
+ * @type {StringValue | SymbolValue}
+ */

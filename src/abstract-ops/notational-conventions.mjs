@@ -1,8 +1,13 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Type } from '../value.mjs';
+import { Value, Type } from '../value.mjs';
 
 class AssertError extends Error {}
 
+/**
+ * @param {boolean} invariant
+ * @param {string=} source
+ * @returns {asserts invariant}
+ */
 export function Assert(invariant, source) {
   /* c8 ignore next */
   if (!invariant) {
@@ -11,6 +16,10 @@ export function Assert(invariant, source) {
 }
 
 // 9.1.15 #sec-requireinternalslot
+/**
+ * @param {Value} O
+ * @param {string} internalSlot
+ */
 export function RequireInternalSlot(O, internalSlot) {
   if (Type(O) !== 'Object') {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', O);

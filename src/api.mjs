@@ -145,7 +145,13 @@ export function gc() {
   });
 }
 
+/**
+ * @callback GCMarkCallback
+ * @param {any} value
+ */
+
 // https://tc39.es/ecma262/#sec-jobs
+/** */
 export function runJobQueue() {
   if (surroundingAgent.executionContextStack.some((e) => e.ScriptOrModule !== Value.null)) {
     return;

@@ -53,3 +53,7 @@ export function bootstrapError(realmRec) {
 
   realmRec.Intrinsics['%Error%'] = error;
 }
+/**
+ * @typedef IntrinsicsErrorName
+ * @type {'RangeError' | 'TypeError' | 'AggregateError' | 'Error' | 'ReferenceError' | 'SyntaxError' | 'URIError'}
+ */

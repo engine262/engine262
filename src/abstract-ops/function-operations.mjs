@@ -7,6 +7,7 @@ import {
   Type,
   Value,
   PrivateName,
+  ObjectValue,
 } from '../value.mjs';
 import {
   EnsureCompletion,
@@ -498,7 +499,18 @@ function BuiltinFunctionConstruct(argumentsList, newTarget) {
   return result;
 }
 
-// 9.3.3 #sec-createbuiltinfunction
+/**
+ * 9.3.3 #sec-createbuiltinfunction
+ * @param {Function} steps
+ * @param {number} length
+ * @param {StringValue} name
+ * @param {readonly InternalSlots[]} internalSlotsList
+ * @param {Realm=} realm
+ * @param {Value=} prototype
+ * @param {string=} prefix
+ * @param {boolean} isConstructor
+ * @template {string} InternalSlots
+ */
 export function CreateBuiltinFunction(steps, length, name, internalSlotsList, realm, prototype, prefix, isConstructor = Value.false) {
   // 1. Assert: steps is either a set of algorithm steps or other definition of a function's behaviour provided in this specification.
   Assert(typeof steps === 'function');
@@ -513,6 +525,7 @@ export function CreateBuiltinFunction(steps, length, name, internalSlotsList, re
     prototype = realm.Intrinsics['%Function.prototype%'];
   }
   // 5. Let func be a new built-in function object that when called performs the action described by steps. The new function object has internal slots whose names are the elements of internalSlotsList.
+  /** @type {BuiltinFunctionObjectValue<InternalSlots>} */
   const func = X(MakeBasicObject(['Prototype', 'Extensible', 'Realm', 'ScriptOrModule', 'InitialName'].concat(internalSlotsList)));
   func.Call = BuiltinFunctionCall;
   if (isConstructor === Value.true) {
@@ -542,8 +555,19 @@ export function CreateBuiltinFunction(steps, length, name, internalSlotsList, re
   // 13. Return func.
   return func;
 }
+/**
+ * @typedef BuiltinFunctionObjectValue
+ * @type {ObjectValue & {
+ * Prototype: Value,
+ * Extensible: BooleanValue,
+ * Realm: Realm,
+ * ScriptOrModule: Value,
+ * InitialName: Value,
+ * } & { [key: InternalSlots]: unknown }}
+ * @template {string} [InternalSlots=never]
+ */
 
-// 14.9.3 #sec-preparefortailcall
+/** 14.9.3 #sec-preparefortailcall */
 export function PrepareForTailCall() {
   // 1. Let leafContext be the running execution context.
   const leafContext = surroundingAgent.runningExecutionContext;

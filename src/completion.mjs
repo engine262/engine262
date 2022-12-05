@@ -1,3 +1,4 @@
+// @ts-check
 import { surroundingAgent } from './engine.mjs';
 import {
   Assert,
@@ -8,7 +9,12 @@ import {
 import { Value } from './value.mjs';
 import { kAsyncContext, resume } from './helpers.mjs';
 
-// #sec-completion-record-specification-type
+/**
+ * #sec-completion-record-specification-type
+ * @template [T=unknown]
+ * @param {Pick<Completion<T>, 'Type' | 'Value' | 'Target'>} init
+ * @returns {Completion<T>}
+ */
 export function Completion(init) {
   if (new.target === undefined) {
     // 1. Assert: completionRecord is a Completion Record.
@@ -17,24 +23,43 @@ export function Completion(init) {
     return init;
   }
 
+  /**
+   * @type {'normal' | 'break' | 'continue' | 'return' | 'throw'} The type of completion that occurred.
+   * @readonly
+   */
   this.Type = init.Type;
+  /**
+   * @type {T} The value that was produced.
+   * @readonly
+   */
   this.Value = init.Value;
+  /**
+   * @type {string=} The target label for directed control transfers.
+   * @readonly
+   */
   this.Target = init.Target;
+  return this;
 }
 
-// NON-SPEC
+/**
+ * NON-SPEC
+ * @param {(callback: T) => void} m
+ */
 Completion.prototype.mark = function mark(m) {
   m(this.Value);
 };
 
-// #sec-normalcompletion
+/**
+ * #sec-normalcompletion
+ * @template T
+ * @param {T} argument
+ */
 export function NormalCompletion(argument) {
-  // 1. Return Completion { [[Type]]: normal, [[Value]]: argument, [[Target]]: empty }.
   return new Completion({ Type: 'normal', Value: argument, Target: undefined });
 }
 
 Object.defineProperty(NormalCompletion, Symbol.hasInstance, {
-  value: function hasInstance(v) {
+  value: function hasInstance(/** @type {any} */ v) {
     return v instanceof Completion && v.Type === 'normal';
   },
   writable: true,
@@ -43,18 +68,27 @@ Object.defineProperty(NormalCompletion, Symbol.hasInstance, {
 });
 
 export class AbruptCompletion {
-  static [Symbol.hasInstance](v) {
+  static [Symbol.hasInstance](/** @type {any} */ v) {
     return v instanceof Completion && v.Type !== 'normal';
   }
 }
 
-// #sec-throwcompletion
+/**
+ * #sec-throwcompletion
+ * @template T
+ * @param {T} argument
+ */
 export function ThrowCompletion(argument) {
   // 1. Return Completion { [[Type]]: throw, [[Value]]: argument, [[Target]]: empty }.
   return new Completion({ Type: 'throw', Value: argument, Target: undefined });
 }
 
-// 6.2.3.4 #sec-updateempty
+/**
+ * 6.2.3.4 #sec-updateempty
+ * @param {Completion<T>} completionRecord
+ * @param {T} value
+ * @template T
+ */
 export function UpdateEmpty(completionRecord, value) {
   Assert(completionRecord instanceof Completion);
   // 1. Assert: If completionRecord.[[Type]] is either return or throw, then completionRecord.[[Value]] is not empty.
@@ -67,40 +101,56 @@ export function UpdateEmpty(completionRecord, value) {
   return new Completion({ Type: completionRecord.Type, Value: value, Target: completionRecord.Target });
 }
 
-// #sec-returnifabrupt
+/**
+ * #sec-returnifabrupt
+ * @type {<T>(completion: T) => T extends Completion<infer U> ? U : T}
+ */
 export function ReturnIfAbrupt(_completion) {
   /* c8 skip next */
   throw new TypeError('ReturnIfAbrupt requires build');
 }
 
 // #sec-returnifabrupt-shorthands ? OperationName()
-export const Q = ReturnIfAbrupt;
+export { ReturnIfAbrupt as Q };
+const Q = ReturnIfAbrupt;
 
-// #sec-returnifabrupt-shorthands ! OperationName()
+/**
+ * #sec-returnifabrupt-shorthands ! OperationName()
+ * @type {<T>(completion: T) => T extends Completion<infer U> ? U : T}
+ */
 export function X(_completion) {
   /* c8 skip next */
   throw new TypeError('X() requires build');
 }
 
 // 7.4.7 #sec-ifabruptcloseiterator
+// @ts-expect-error
 export function IfAbruptCloseIterator(_value, _iteratorRecord) {
   /* c8 skip next */
   throw new TypeError('IfAbruptCloseIterator() requires build');
 }
 
 // 25.6.1.1.1 #sec-ifabruptrejectpromise
+// @ts-expect-error
 export function IfAbruptRejectPromise(_value, _capability) {
   /* c8 skip next */
   throw new TypeError('IfAbruptRejectPromise requires build');
 }
 
+/**
+ * @type {<T>(val: T) => T extends Completion<any> ? T : Completion<T>}
+ */
 export function EnsureCompletion(val) {
   if (val instanceof Completion) {
-    return val;
+    return /** @type {any} */ (val);
   }
-  return NormalCompletion(val);
+  return /** @type {any} */ (NormalCompletion(val));
 }
 
+/**
+ * @param {Value} value
+ * @returns {Generator<Value, Completion, Completion>}
+ */
 export function* Await(value) {
   // 1. Let asyncContext be the running execution context.
   const asyncContext = surroundingAgent.runningExecutionContext;
@@ -122,6 +172,7 @@ export function* Await(value) {
   };
   // 4. Let onFulfilled be ! CreateBuiltinFunction(fulfilledClosure, 1, "", « »).
   const onFulfilled = X(CreateBuiltinFunction(fulfilledClosure, 1, new Value(''), []));
+  // @ts-expect-error
   onFulfilled[kAsyncContext] = asyncContext;
   // 5. Let rejectedClosure be a new Abstract Closure with parameters (reason) that captures asyncContext and performs the following steps when called:
   const rejectedClosure = ([reason = Value.undefined]) => {
@@ -139,6 +190,7 @@ export function* Await(value) {
   };
   // 6. Let onRejected be ! CreateBuiltinFunction(rejectedClosure, 1, "", « »).
   const onRejected = X(CreateBuiltinFunction(rejectedClosure, 1, new Value(''), []));
+  // @ts-expect-error
   onRejected[kAsyncContext] = asyncContext;
   // 7. Perform ! PerformPromiseThen(promise, onFulfilled, onRejected).
   X(PerformPromiseThen(promise, onFulfilled, onRejected));

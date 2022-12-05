@@ -137,7 +137,11 @@ function AddRestrictedFunctionProperties(F, realm) {
   })));
 }
 
-// #sec-createintrinsics
+/**
+ * #sec-createintrinsics
+ * @param {Realm} realmRec
+ * @returns {any}
+ */
 export function CreateIntrinsics(realmRec) {
   const intrinsics = Object.create(null);
   realmRec.Intrinsics = intrinsics;
