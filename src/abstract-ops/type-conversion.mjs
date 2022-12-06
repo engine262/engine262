@@ -1,9 +1,12 @@
 import {
-  Type,
+  Type, UndefinedValue, JSStringValue, SymbolValue,
+  ObjectValue,
   Value,
   NumberValue,
   BigIntValue,
   wellKnownSymbols,
+  NullValue,
+  BooleanValue,
 } from '../value.mjs';
 import {
   surroundingAgent,
@@ -29,7 +32,7 @@ export function ToPrimitive(input, preferredType) {
   // 1. Assert: input is an ECMAScript language value.
   Assert(input instanceof Value);
   // 2. If Type(input) is Object, then
-  if (Type(input) === 'Object') {
+  if (input instanceof ObjectValue) {
     // a. Let exoticToPrim be ? GetMethod(input, @@toPrimitive).
     const exoticToPrim = Q(GetMethod(input, wellKnownSymbols.toPrimitive));
     // b. If exoticToPrim is not undefined, then
@@ -49,7 +52,7 @@ export function ToPrimitive(input, preferredType) {
       // iv. Let result be ? Call(exoticToPrim, input, « hint »).
       const result = Q(Call(exoticToPrim, input, [hint]));
       // v. If Type(result) is not Object, return result.
-      if (Type(result) !== 'Object') {
+      if (!(result instanceof ObjectValue)) {
         return result;
       }
       // vi. Throw a TypeError exception.
@@ -69,7 +72,7 @@ export function ToPrimitive(input, preferredType) {
 // 7.1.1.1 #sec-ordinarytoprimitive
 export function OrdinaryToPrimitive(O, hint) {
   // 1. Assert: Type(O) is Object.
-  Assert(Type(O) === 'Object');
+  Assert(O instanceof ObjectValue);
   // 2. Assert: hint is either string or number.
   Assert(hint === 'string' || hint === 'number');
   let methodNames;
@@ -90,7 +93,7 @@ export function OrdinaryToPrimitive(O, hint) {
       // i. Let result be ? Call(method, O).
       const result = Q(Call(method, O));
       // ii. If Type(result) is not Object, return result.
-      if (Type(result) !== 'Object') {
+      if (!(result instanceof ObjectValue)) {
         return result;
       }
     }
@@ -101,44 +104,41 @@ export function OrdinaryToPrimitive(O, hint) {
 
 // 7.1.2 #sec-toboolean
 export function ToBoolean(argument) {
-  const type = Type(argument);
-  switch (type) {
-    case 'Undefined':
-      // Return false.
+  if (argument instanceof UndefinedValue) {
+    // Return false.
+    return Value.false;
+  } else if (argument instanceof NullValue) {
+    // Return false.
+    return Value.false;
+  } else if (argument instanceof BooleanValue) {
+    // Return argument.
+    return argument;
+  } else if (argument instanceof NumberValue) {
+    // If argument is +0𝔽, -0𝔽, or NaN, return false; otherwise return true.
+    if (argument.numberValue() === 0 || argument.isNaN()) {
       return Value.false;
-    case 'Null':
-      // Return false.
+    }
+    return Value.true;
+  } else if (argument instanceof JSStringValue) {
+    // If argument is the empty String, return false; otherwise return true.
+    if (argument.stringValue().length === 0) {
       return Value.false;
-    case 'Boolean':
-      // Return argument.
-      return argument;
-    case 'Number':
-      // If argument is +0𝔽, -0𝔽, or NaN, return false; otherwise return true.
-      if (argument.numberValue() === 0 || argument.isNaN()) {
-        return Value.false;
-      }
-      return Value.true;
-    case 'String':
-      // If argument is the empty String (its length is zero), return false; otherwise return true.
-      if (argument.stringValue().length === 0) {
-        return Value.false;
-      }
-      return Value.true;
-    case 'Symbol':
-      // Return true.
-      return Value.true;
-    case 'BigInt':
-      // If argument is 0ℤ, return false; otherwise return true.
-      if (argument.bigintValue() === 0n) {
-        return Value.false;
-      }
-      return Value.true;
-    case 'Object':
-      // Return true.
-      return Value.true;
-    default:
-      throw new OutOfRange('ToBoolean', { type, argument });
+    }
+    return Value.true;
+  } else if (argument instanceof SymbolValue) {
+    // Return true.
+    return Value.true;
+  } else if (argument instanceof BigIntValue) {
+    // If argument is 0ℤ, return false; otherwise return true.
+    if (argument.bigintValue() === 0n) {
+      return Value.false;
+    }
+    return Value.true;
+  } else if (argument instanceof ObjectValue) {
+    // Return true.
+    return Value.true;
   }
+  throw new OutOfRange('ToBoolean', { type: Type(argument), argument });
 }
 
 // #sec-tonumeric
@@ -146,7 +146,7 @@ export function ToNumeric(value) {
   // 1. Let primValue be ? ToPrimitive(value, number).
   const primValue = Q(ToPrimitive(value, 'number'));
   // 2. If Type(primValue) is BigInt, return primValue.
-  if (Type(primValue) === 'BigInt') {
+  if (primValue instanceof BigIntValue) {
     return primValue;
   }
   // 3. Return ? ToNumber(primValue).
@@ -155,41 +155,37 @@ export function ToNumeric(value) {
 
 // 7.1.3 #sec-tonumber
 export function ToNumber(argument) {
-  const type = Type(argument);
-  switch (type) {
-    case 'Undefined':
-      // Return NaN.
-      return F(NaN);
-    case 'Null':
-      // Return +0𝔽.
-      return F(+0);
-    case 'Boolean':
-      // If argument is true, return 1𝔽.
-      if (argument === Value.true) {
-        return F(1);
-      }
-      // If argument is false, return +0𝔽.
-      return F(+0);
-    case 'Number':
-      // Return argument (no conversion).
-      return argument;
-    case 'String':
-      return MV_StringNumericLiteral(argument.stringValue());
-    case 'BigInt':
-      // Throw a TypeError exception.
-      return surroundingAgent.Throw('TypeError', 'CannotMixBigInts');
-    case 'Symbol':
-      // Throw a TypeError exception.
-      return surroundingAgent.Throw('TypeError', 'CannotConvertSymbol', 'number');
-    case 'Object': {
-      // 1. Let primValue be ? ToPrimitive(argument, number).
-      const primValue = Q(ToPrimitive(argument, 'number'));
-      // 2. Return ? ToNumber(primValue).
-      return Q(ToNumber(primValue));
+  if (argument instanceof UndefinedValue) {
+    // Return NaN.
+    return F(NaN);
+  } else if (argument instanceof NullValue) {
+    // Return +0𝔽.
+    return F(+0);
+  } else if (argument instanceof BooleanValue) {
+    // If argument is true, return 1𝔽.
+    if (argument === Value.true) {
+      return F(1);
     }
-    default:
-      throw new OutOfRange('ToNumber', { type, argument });
+    // If argument is false, return +0𝔽.
+    return F(+0);
+  } else if (argument instanceof NumberValue) {
+    // Return argument (no conversion).
+    return argument;
+  } else if (argument instanceof JSStringValue) {
+    return MV_StringNumericLiteral(argument.stringValue());
+  } else if (argument instanceof BigIntValue) {
+    // Throw a TypeError exception.
+    return surroundingAgent.Throw('TypeError', 'CannotMixBigInts');
+  } else if (argument instanceof SymbolValue) {
+    // Throw a TypeError exception.
+    return surroundingAgent.Throw('TypeError', 'CannotConvertSymbol', 'number');
+  } else if (argument instanceof ObjectValue) {
+    // 1. Let primValue be ? ToPrimitive(argument, number).
+    const primValue = Q(ToPrimitive(argument, 'number'));
+    // 2. Return ? ToNumber(primValue).
+    return Q(ToNumber(primValue));
   }
+  throw new OutOfRange('ToNumber', { type: Type(argument), argument });
 }
 
 const mod = (n, m) => {
@@ -364,41 +360,38 @@ export function ToBigInt(argument) {
   // 1. Let prim be ? ToPrimitive(argument, number).
   const prim = Q(ToPrimitive(argument, 'number'));
   // 2. Return the value that prim corresponds to in Table 12 (#table-tobigint).
-  switch (Type(prim)) {
-    case 'Undefined':
-      // Throw a TypeError exception.
-      return surroundingAgent.Throw('TypeError', 'CannotConvertToBigInt', prim);
-    case 'Null':
-      // Throw a TypeError exception.
-      return surroundingAgent.Throw('TypeError', 'CannotConvertToBigInt', prim);
-    case 'Boolean':
-      // Return 1ℤ if prim is true and 0ℤ if prim is false.
-      if (prim === Value.true) {
-        return Z(1n);
-      }
-      return Z(0n);
-    case 'BigInt':
-      // Return prim.
-      return prim;
-    case 'Number':
-      // Throw a TypeError exception.
-      return surroundingAgent.Throw('TypeError', 'CannotConvertToBigInt', prim);
-    case 'String': {
-      // 1. Let n be ! StringToBigInt(prim).
-      const n = X(StringToBigInt(prim));
-      // 2. If n is NaN, throw a SyntaxError exception.
-      if (Number.isNaN(n)) {
-        return surroundingAgent.Throw('SyntaxError', 'CannotConvertToBigInt', prim);
-      }
-      // 3. Return n.
-      return n;
+  if (prim instanceof UndefinedValue) {
+    // Throw a TypeError exception.
+    return surroundingAgent.Throw('TypeError', 'CannotConvertToBigInt', prim);
+  } else if (prim instanceof NullValue) {
+    // Throw a TypeError exception.
+    return surroundingAgent.Throw('TypeError', 'CannotConvertToBigInt', prim);
+  } else if (prim instanceof BooleanValue) {
+    // Return 1ℤ if prim is true and 0ℤ if prim is false.
+    if (prim === Value.true) {
+      return Z(1n);
     }
-    case 'Symbol':
-      // Throw a TypeError exception.
-      return surroundingAgent.Throw('TypeError', 'CannotConvertSymbol', 'bigint');
-    default:
-      throw new OutOfRange('ToBigInt', argument);
+    return Z(0n);
+  } else if (prim instanceof BigIntValue) {
+    // Return prim.
+    return prim;
+  } else if (prim instanceof NumberValue) {
+    // Throw a TypeError exception.
+    return surroundingAgent.Throw('TypeError', 'CannotConvertToBigInt', prim);
+  } else if (prim instanceof JSStringValue) {
+    // 1. Let n be ! StringToBigInt(prim).
+    const n = X(StringToBigInt(prim));
+    // 2. If n is NaN, throw a SyntaxError exception.
+    if (Number.isNaN(n)) {
+      return surroundingAgent.Throw('SyntaxError', 'CannotConvertToBigInt', prim);
+    }
+    // 3. Return n.
+    return n;
+  } else if (prim instanceof SymbolValue) {
+    // Throw a TypeError exception.
+    return surroundingAgent.Throw('TypeError', 'CannotConvertSymbol', 'bigint');
   }
+  throw new OutOfRange('ToBigInt', argument);
 }
 
 // #sec-stringtobigint
@@ -439,84 +432,73 @@ export function ToBigUint64(argument) {
 
 // 7.1.12 #sec-tostring
 export function ToString(argument) {
-  const type = Type(argument);
-  switch (type) {
-    case 'Undefined':
-      // Return "undefined".
-      return new Value('undefined');
-    case 'Null':
-      // Return "null".
-      return new Value('null');
-    case 'Boolean':
-      // If argument is true, return "true".
-      // If argument is false, return "false".
-      return new Value(argument === Value.true ? 'true' : 'false');
-    case 'Number':
-      // Return ! Number::toString(argument).
-      return X(NumberValue.toString(argument));
-    case 'String':
-      // Return argument.
-      return argument;
-    case 'Symbol':
-      // Throw a TypeError exception.
-      return surroundingAgent.Throw('TypeError', 'CannotConvertSymbol', 'string');
-    case 'BigInt':
-      // Return ! BigInt::toString(argument).
-      return X(BigIntValue.toString(argument));
-    case 'Object': {
-      // 1. Let primValue be ? ToPrimitive(argument, string).
-      const primValue = Q(ToPrimitive(argument, 'string'));
-      // 2. Return ? ToString(primValue).
-      return Q(ToString(primValue));
-    }
-    default:
-      throw new OutOfRange('ToString', { type, argument });
+  if (argument instanceof UndefinedValue) {
+    // Return "undefined".
+    return new JSStringValue('undefined');
+  } else if (argument instanceof NullValue) {
+    // Return "null".
+    return new JSStringValue('null');
+  } else if (argument instanceof BooleanValue) {
+    // If argument is true, return "true".
+    // If argument is false, return "false".
+    return new JSStringValue(argument === Value.true ? 'true' : 'false');
+  } else if (argument instanceof NumberValue) {
+    // Return ! Number::toString(argument).
+    return X(NumberValue.toString(argument));
+  } else if (argument instanceof JSStringValue) {
+    // Return argument.
+    return argument;
+  } else if (argument instanceof SymbolValue) {
+    // Throw a TypeError exception.
+    return surroundingAgent.Throw('TypeError', 'CannotConvertSymbol', 'string');
+  } else if (argument instanceof BigIntValue) {
+    // Return ! BigInt::toString(argument).
+    return X(BigIntValue.toString(argument));
+  } else if (argument instanceof ObjectValue) {
+    // 1. Let primValue be ? ToPrimitive(argument, string).
+    const primValue = Q(ToPrimitive(argument, 'string'));
+    // 2. Return ? ToString(primValue).
+    return Q(ToString(primValue));
   }
+  throw new OutOfRange('ToString', { type: Type(argument), argument });
 }
 
 // 7.1.13 #sec-toobject
 export function ToObject(argument) {
-  const type = Type(argument);
-  switch (type) {
-    case 'Undefined':
-      // Throw a TypeError exception.
-      return surroundingAgent.Throw('TypeError', 'CannotConvertToObject', 'undefined');
-    case 'Null':
-      // Throw a TypeError exception.
-      return surroundingAgent.Throw('TypeError', 'CannotConvertToObject', 'null');
-    case 'Boolean': {
-      // Return a new Boolean object whose [[BooleanData]] internal slot is set to argument.
-      const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Boolean.prototype%'), ['BooleanData']);
-      obj.BooleanData = argument;
-      return obj;
-    }
-    case 'Number': {
-      // Return a new Number object whose [[NumberData]] internal slot is set to argument.
-      const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Number.prototype%'), ['NumberData']);
-      obj.NumberData = argument;
-      return obj;
-    }
-    case 'String':
-      // Return a new String object whose [[StringData]] internal slot is set to argument.
-      return StringCreate(argument, surroundingAgent.intrinsic('%String.prototype%'));
-    case 'Symbol': {
-      // Return a new Symbol object whose [[SymbolData]] internal slot is set to argument.
-      const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Symbol.prototype%'), ['SymbolData']);
-      obj.SymbolData = argument;
-      return obj;
-    }
-    case 'BigInt': {
-      // Return a new BigInt object whose [[BigIntData]] internal slot is set to argument.
-      const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%BigInt.prototype%'), ['BigIntData']);
-      obj.BigIntData = argument;
-      return obj;
-    }
-    case 'Object':
-      // Return argument.
-      return argument;
-    default:
-      throw new OutOfRange('ToObject', { type, argument });
+  if (argument instanceof UndefinedValue) {
+    // Throw a TypeError exception.
+    return surroundingAgent.Throw('TypeError', 'CannotConvertToObject', 'undefined');
+  } else if (argument instanceof NullValue) {
+    // Throw a TypeError exception.
+    return surroundingAgent.Throw('TypeError', 'CannotConvertToObject', 'null');
+  } else if (argument instanceof BooleanValue) {
+    // Return a new Boolean object whose [[BooleanData]] internal slot is set to argument.
+    const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Boolean.prototype%'), ['BooleanData']);
+    obj.BooleanData = argument;
+    return obj;
+  } else if (argument instanceof NumberValue) {
+    // Return a new Number object whose [[NumberData]] internal slot is set to argument.
+    const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Number.prototype%'), ['NumberData']);
+    obj.NumberData = argument;
+    return obj;
+  } else if (argument instanceof JSStringValue) {
+    // Return a new String object whose [[StringData]] internal slot is set to argument.
+    return StringCreate(argument, surroundingAgent.intrinsic('%String.prototype%'));
+  } else if (argument instanceof SymbolValue) {
+    // Return a new Symbol object whose [[SymbolData]] internal slot is set to argument.
+    const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Symbol.prototype%'), ['SymbolData']);
+    obj.SymbolData = argument;
+    return obj;
+  } else if (argument instanceof BigIntValue) {
+    // Return a new BigInt object whose [[BigIntData]] internal slot is set to argument.
+    const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%BigInt.prototype%'), ['BigIntData']);
+    obj.BigIntData = argument;
+    return obj;
+  } else if (argument instanceof ObjectValue) {
+    // Return argument.
+    return argument;
   }
+  throw new OutOfRange('ToObject', { type: Type(argument), argument });
 }
 
 // 7.1.14 #sec-topropertykey
@@ -524,7 +506,7 @@ export function ToPropertyKey(argument) {
   // 1. Let key be ? ToPrimitive(argument, string).
   const key = Q(ToPrimitive(argument, 'string'));
   // 2. If Type(key) is Symbol, then
-  if (Type(key) === 'Symbol') {
+  if (key instanceof SymbolValue) {
     // a. Return key.
     return key;
   }
@@ -547,7 +529,7 @@ export function ToLength(argument) {
 // 7.1.16 #sec-canonicalnumericindexstring
 export function CanonicalNumericIndexString(argument) {
   // 1. Assert: Type(argument) is String.
-  Assert(Type(argument) === 'String');
+  Assert(argument instanceof JSStringValue);
   // 2. If argument is "-0", return -0𝔽.
   if (argument.stringValue() === '-0') {
     return F(-0);
@@ -565,7 +547,7 @@ export function CanonicalNumericIndexString(argument) {
 // 7.1.17 #sec-toindex
 export function ToIndex(value) {
   // 1. If value is undefined, then
-  if (Type(value) === 'Undefined') {
+  if (value instanceof UndefinedValue) {
     // a. Return 0.
     return 0;
   } else {

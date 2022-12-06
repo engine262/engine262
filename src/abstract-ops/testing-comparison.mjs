@@ -1,6 +1,10 @@
 import {
   BigIntValue,
-  Type,
+  Type, BooleanValue, NullValue, UndefinedValue,
+  SymbolValue,
+  JSStringValue,
+  NumberValue,
+  ObjectValue,
   TypeForMethod,
   Value,
   wellKnownSymbols,
@@ -46,7 +50,7 @@ export function RequireObjectCoercible(argument) {
 
 // 7.2.2 #sec-isarray
 export function IsArray(argument) {
-  if (Type(argument) !== 'Object') {
+  if (!(argument instanceof ObjectValue)) {
     return Value.false;
   }
   if (isArrayExoticObject(argument)) {
@@ -64,7 +68,7 @@ export function IsArray(argument) {
 
 // 7.2.3 #sec-iscallable
 export function IsCallable(argument) {
-  if (Type(argument) !== 'Object') {
+  if (!(argument instanceof ObjectValue)) {
     return Value.false;
   }
   if ('Call' in argument) {
@@ -75,7 +79,7 @@ export function IsCallable(argument) {
 
 // 7.2.4 #sec-isconstructor
 export function IsConstructor(argument) {
-  if (Type(argument) !== 'Object') {
+  if (!(argument instanceof ObjectValue)) {
     return Value.false;
   }
   if ('Construct' in argument) {
@@ -86,13 +90,13 @@ export function IsConstructor(argument) {
 
 // 7.2.5 #sec-isextensible-o
 export function IsExtensible(O) {
-  Assert(Type(O) === 'Object');
+  Assert(O instanceof ObjectValue);
   return O.IsExtensible();
 }
 
 // 7.2.6 #sec-isinteger
 export function IsIntegralNumber(argument) {
-  if (Type(argument) !== 'Number') {
+  if (!(argument instanceof NumberValue)) {
     return Value.false;
   }
   if (argument.isNaN() || argument.isInfinity()) {
@@ -106,10 +110,10 @@ export function IsIntegralNumber(argument) {
 
 // 7.2.7 #sec-ispropertykey
 export function IsPropertyKey(argument) {
-  if (Type(argument) === 'String') {
+  if (argument instanceof JSStringValue) {
     return true;
   }
-  if (Type(argument) === 'Symbol') {
+  if (argument instanceof SymbolValue) {
     return true;
   }
   return false;
@@ -117,7 +121,7 @@ export function IsPropertyKey(argument) {
 
 // 7.2.8 #sec-isregexp
 export function IsRegExp(argument) {
-  if (Type(argument) !== 'Object') {
+  if (!(argument instanceof ObjectValue)) {
     return Value.false;
   }
   const matcher = Q(Get(argument, wellKnownSymbols.match));
@@ -132,8 +136,8 @@ export function IsRegExp(argument) {
 
 // 7.2.9 #sec-isstringprefix
 export function IsStringPrefix(p, q) {
-  Assert(Type(p) === 'String');
-  Assert(Type(q) === 'String');
+  Assert(p instanceof JSStringValue);
+  Assert(q instanceof JSStringValue);
   return q.stringValue().startsWith(p.stringValue());
 }
 
@@ -144,7 +148,7 @@ export function SameValue(x, y) {
     return Value.false;
   }
   // 2. If Type(x) is Number or BigInt, then
-  if (Type(x) === 'Number' || Type(x) === 'BigInt') {
+  if (x instanceof NumberValue || x instanceof BigIntValue) {
     // a. Return ! Type(x)::sameValue(x, y).
     return TypeForMethod(x).sameValue(x, y);
   }
@@ -159,7 +163,7 @@ export function SameValueZero(x, y) {
     return Value.false;
   }
   // 2. If Type(x) is Number or BigInt, then
-  if (Type(x) === 'Number' || Type(x) === 'BigInt') {
+  if (x instanceof NumberValue || x instanceof BigIntValue) {
     // a. Return ! Type(x)::sameValueZero(x, y).
     return TypeForMethod(x).sameValueZero(x, y);
   }
@@ -169,32 +173,32 @@ export function SameValueZero(x, y) {
 
 // 7.2.12 #sec-samevaluenonnumber
 export function SameValueNonNumber(x, y) {
-  Assert(Type(x) !== 'Number');
+  Assert(!(x instanceof NumberValue));
   Assert(Type(x) === Type(y));
 
-  if (Type(x) === 'Undefined') {
+  if (x instanceof UndefinedValue) {
     return Value.true;
   }
 
-  if (Type(x) === 'Null') {
+  if (x instanceof NullValue) {
     return Value.true;
   }
 
-  if (Type(x) === 'String') {
+  if (x instanceof JSStringValue) {
     if (x.stringValue() === y.stringValue()) {
       return Value.true;
     }
     return Value.false;
   }
 
-  if (Type(x) === 'Boolean') {
+  if (x instanceof BooleanValue) {
     if (x === y) {
       return Value.true;
     }
     return Value.false;
   }
 
-  if (Type(x) === 'Symbol') {
+  if (x instanceof SymbolValue) {
     return x === y ? Value.true : Value.false;
   }
 
@@ -219,7 +223,7 @@ export function AbstractRelationalComparison(x, y, LeftFirst = true) {
     px = Q(ToPrimitive(x, 'number'));
   }
   // 3. If Type(px) is String and Type(py) is String, then
-  if (Type(px) === 'String' && Type(py) === 'String') {
+  if (px instanceof JSStringValue && py instanceof JSStringValue) {
     // a. If IsStringPrefix(py, px) is true, return false.
     if (IsStringPrefix(py, px)) {
       return Value.false;
@@ -250,7 +254,7 @@ export function AbstractRelationalComparison(x, y, LeftFirst = true) {
     }
   } else {
     // a. If Type(px) is BigInt and Type(py) is String, then
-    if (Type(px) === 'BigInt' && Type(py) === 'String') {
+    if (px instanceof BigIntValue && py instanceof JSStringValue) {
       // i. Let ny be ! StringToBigInt(py).
       const ny = X(StringToBigInt(py));
       // ii. If ny is NaN, return undefined.
@@ -261,7 +265,7 @@ export function AbstractRelationalComparison(x, y, LeftFirst = true) {
       return BigIntValue.lessThan(px, ny);
     }
     // b. If Type(px) is String and Type(py) is BigInt, then
-    if (Type(px) === 'String' && Type(py) === 'BigInt') {
+    if (px instanceof JSStringValue && py instanceof BigIntValue) {
       // i. Let ny be ! StringToBigInt(py).
       const nx = X(StringToBigInt(px));
       // ii. If ny is NaN, return undefined.
@@ -280,7 +284,7 @@ export function AbstractRelationalComparison(x, y, LeftFirst = true) {
       return TypeForMethod(nx).lessThan(nx, ny);
     }
     // f. Assert: Type(nx) is BigInt and Type(ny) is Number, or Type(nx) is Number and Type(ny) is BigInt.
-    Assert((Type(nx) === 'BigInt' && Type(ny) === 'Number') || (Type(nx) === 'Number' && Type(ny) === 'BigInt'));
+    Assert((nx instanceof BigIntValue && ny instanceof NumberValue) || (nx instanceof NumberValue && ny instanceof BigIntValue));
     // g. If nx or ny is NaN, return undefined.
     if ((nx.isNaN && nx.isNaN()) || (ny.isNaN && ny.isNaN())) {
       return Value.undefined;
@@ -316,15 +320,15 @@ export function AbstractEqualityComparison(x, y) {
     return Value.true;
   }
   // 4. If Type(x) is Number and Type(y) is String, return the result of the comparison x == ! ToNumber(y).
-  if (Type(x) === 'Number' && Type(y) === 'String') {
+  if (x instanceof NumberValue && y instanceof JSStringValue) {
     return AbstractEqualityComparison(x, X(ToNumber(y)));
   }
   // 5. If Type(x) is String and Type(y) is Number, return the result of the comparison ! ToNumber(x) == y.
-  if (Type(x) === 'String' && Type(y) === 'Number') {
+  if (x instanceof JSStringValue && y instanceof NumberValue) {
     return AbstractEqualityComparison(X(ToNumber(x)), y);
   }
   // 6. If Type(x) is BigInt and Type(y) is String, then
-  if (Type(x) === 'BigInt' && Type(y) === 'String') {
+  if (x instanceof BigIntValue && y instanceof JSStringValue) {
     // a. Let n be ! StringToBigInt(y).
     const n = X(StringToBigInt(y));
     // b. If n is NaN, return false.
@@ -335,27 +339,27 @@ export function AbstractEqualityComparison(x, y) {
     return AbstractEqualityComparison(x, n);
   }
   // 7. If Type(x) is String and Type(y) is BigInt, return the result of the comparison y == x.
-  if (Type(x) === 'String' && Type(y) === 'BigInt') {
+  if (x instanceof JSStringValue && y instanceof BigIntValue) {
     return AbstractEqualityComparison(y, x);
   }
   // 8. If Type(x) is Boolean, return the result of the comparison ! ToNumber(x) == y.
-  if (Type(x) === 'Boolean') {
+  if (x instanceof BooleanValue) {
     return AbstractEqualityComparison(X(ToNumber(x)), y);
   }
   // 9. If Type(y) is Boolean, return the result of the comparison x == ! ToNumber(y).
-  if (Type(y) === 'Boolean') {
+  if (y instanceof BooleanValue) {
     return AbstractEqualityComparison(x, X(ToNumber(y)));
   }
   // 10. If Type(x) is either String, Number, BigInt, or Symbol and Type(y) is Object, return the result of the comparison x == ToPrimitive(y).
-  if (['String', 'Number', 'BigInt', 'Symbol'].includes(Type(x)) && Type(y) === 'Object') {
+  if (['String', 'Number', 'BigInt', 'Symbol'].includes(Type(x)) && y instanceof ObjectValue) {
     return AbstractEqualityComparison(x, Q(ToPrimitive(y)));
   }
   // 11. If Type(x) is Object and Type(y) is either String, Number, BigInt, or Symbol, return the result of the comparison ToPrimitive(x) == y.
-  if (Type(x) === 'Object' && ['String', 'Number', 'BigInt', 'Symbol'].includes(Type(y))) {
+  if (x instanceof ObjectValue && ['String', 'Number', 'BigInt', 'Symbol'].includes(Type(y))) {
     return AbstractEqualityComparison(Q(ToPrimitive(x)), y);
   }
   // 12. If Type(x) is BigInt and Type(y) is Number, or if Type(x) is Number and Type(y) is BigInt, then
-  if ((Type(x) === 'BigInt' && Type(y) === 'Number') || (Type(x) === 'Number' && Type(y) === 'BigInt')) {
+  if ((x instanceof BigIntValue && y instanceof NumberValue) || (x instanceof NumberValue && y instanceof BigIntValue)) {
     // a. If x or y are any of NaN, +∞, or -∞, return false.
     if ((x.isNaN && (x.isNaN() || !x.isFinite())) || (y.isNaN && (y.isNaN() || !y.isFinite()))) {
       return Value.false;
@@ -376,7 +380,7 @@ export function StrictEqualityComparison(x, y) {
     return Value.false;
   }
   // 2. If Type(x) is Number or BigInt, then
-  if (Type(x) === 'Number' || Type(x) === 'BigInt') {
+  if (x instanceof NumberValue || x instanceof BigIntValue) {
     // a. Return ! Type(x)::equal(x, y).
     return X(TypeForMethod(x).equal(x, y));
   }
@@ -389,7 +393,7 @@ export function IsValidIntegerIndex(O, index) {
   if (IsDetachedBuffer(O.ViewedArrayBuffer) === Value.true) {
     return Value.false;
   }
-  Assert(Type(index) === 'Number');
+  Assert(index instanceof NumberValue);
   if (IsIntegralNumber(index) === Value.false) {
     return Value.false;
   }

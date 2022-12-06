@@ -242,7 +242,8 @@ if (!process.send) {
 
     IsCallable,
     IsDataDescriptor,
-    Type,
+    JSStringValue,
+    ObjectValue,
 
     AbruptCompletion,
     Throw,
@@ -250,11 +251,11 @@ if (!process.send) {
   const { createRealm } = require('../../bin/test262_realm');
 
   const isError = (type, value) => {
-    if (Type(value) !== 'Object') {
+    if (!(value instanceof ObjectValue)) {
       return false;
     }
     const proto = value.Prototype;
-    if (!proto || Type(proto) !== 'Object') {
+    if (!proto || !(proto instanceof ObjectValue)) {
       return false;
     }
     const ctorDesc = proto.properties.get(new Value('constructor'));
@@ -262,7 +263,7 @@ if (!process.send) {
       return false;
     }
     const ctor = ctorDesc.Value;
-    if (Type(ctor) !== 'Object' || IsCallable(ctor) !== Value.true) {
+    if (!(ctor instanceof ObjectValue) || IsCallable(ctor) !== Value.true) {
       return false;
     }
     const namePropDesc = ctor.properties.get(new Value('name'));
@@ -270,7 +271,7 @@ if (!process.send) {
       return false;
     }
     const nameProp = namePropDesc.Value;
-    return Type(nameProp) === 'String' && nameProp.stringValue() === type;
+    return nameProp instanceof JSStringValue && nameProp.stringValue() === type;
   };
 
   const includeCache = {};

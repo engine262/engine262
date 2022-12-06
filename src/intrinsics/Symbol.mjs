@@ -1,7 +1,6 @@
 import {
   Descriptor,
   SymbolValue,
-  Type,
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
@@ -57,7 +56,7 @@ function Symbol_for([key = Value.undefined]) {
 // #sec-symbol.keyfor
 function Symbol_keyFor([sym = Value.undefined]) {
   // 1. If Type(sym) is not Symbol, throw a TypeError exception.
-  if (Type(sym) !== 'Symbol') {
+  if (!(sym instanceof SymbolValue)) {
     return surroundingAgent.Throw('TypeError', 'NotASymbol', sym);
   }
   // 2. For each element e of the GlobalSymbolRegistry List, do

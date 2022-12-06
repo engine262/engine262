@@ -16,7 +16,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { StringValue } from '../static-semantics/all.mjs';
 import {
-  Type,
+  ObjectValue,
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
@@ -27,7 +27,7 @@ import { OutOfRange } from '../helpers.mjs';
 // #sec-instanceofoperator
 export function InstanceofOperator(V, target) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
-  if (Type(target) !== 'Object') {
+  if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
   // 2. Let instOfHandler be ? GetMethod(target, @@hasInstance).
@@ -54,7 +54,7 @@ export function* Evaluate_RelationalExpression_PrivateIdentifier({ PrivateIdenti
   // 3. Let rval be ? GetValue(rref).
   const rval = Q(GetValue(rref));
   // 4. If Type(rval) is not Object, throw a TypeError exception.
-  if (Type(rval) !== 'Object') {
+  if (!(rval instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', rval);
   }
   // 5. Let privateEnv be the running execution context's PrivateEnvironment.
@@ -143,7 +143,7 @@ export function* Evaluate_RelationalExpression(expr) {
       return Q(InstanceofOperator(lval, rval));
     case 'in':
       // 5. Return ? InstanceofOperator(lval, rval).
-      if (Type(rval) !== 'Object') {
+      if (!(rval instanceof ObjectValue)) {
         return surroundingAgent.Throw('TypeError', 'NotAnObject', rval);
       }
       // 6. Return ? HasProperty(rval, ? ToPropertyKey(lval)).

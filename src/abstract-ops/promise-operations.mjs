@@ -5,7 +5,7 @@ import {
   HostPromiseRejectionTracker,
   surroundingAgent,
 } from '../engine.mjs';
-import { Type, Value } from '../value.mjs';
+import { ObjectValue, Value, UndefinedValue } from '../value.mjs';
 import {
   AbruptCompletion,
   Completion,
@@ -89,7 +89,7 @@ export function CreateResolvingFunctions(promise) {
 function PromiseRejectFunctions([reason = Value.undefined]) {
   const F = this;
 
-  Assert('Promise' in F && Type(F.Promise) === 'Object');
+  Assert('Promise' in F && F.Promise instanceof ObjectValue);
   const promise = F.Promise;
   const alreadyResolved = F.AlreadyResolved;
   if (alreadyResolved.Value === true) {
@@ -138,7 +138,7 @@ function PromiseResolveFunctions([resolution = Value.undefined]) {
   // 1. Let F be the active function object.
   const F = this;
   // 2. Assert: F has a [[Promise]] internal slot whose value is an Object.
-  Assert('Promise' in F && Type(F.Promise) === 'Object');
+  Assert('Promise' in F && F.Promise instanceof ObjectValue);
   // 3. Let promise be F.[[Promise]].
   const promise = F.Promise;
   // 4. Let alreadyResolved be F.[[AlreadyResolved]].
@@ -157,7 +157,7 @@ function PromiseResolveFunctions([resolution = Value.undefined]) {
     return RejectPromise(promise, selfResolutionError);
   }
   // 8. If Type(resolution) is not Object, then
-  if (Type(resolution) !== 'Object') {
+  if (!(resolution instanceof ObjectValue)) {
     // a. Return FulfillPromise(promise, resolution).
     return FulfillPromise(promise, resolution);
   }
@@ -208,11 +208,11 @@ export function NewPromiseCapability(C) {
   // 4. Let executorClosure be a new Abstract Closure with parameters (resolve, reject) that captures promiseCapability and performs the following steps when called:
   const executorClosure = ([resolve = Value.undefined, reject = Value.undefined]) => {
     // a. If promiseCapability.[[Resolve]] is not undefined, throw a TypeError exception.
-    if (Type(promiseCapability.Resolve) !== 'Undefined') {
+    if (!(promiseCapability.Resolve instanceof UndefinedValue)) {
       return surroundingAgent.Throw('TypeError', 'PromiseCapabilityFunctionAlreadySet', 'resolve');
     }
     // b. If promiseCapability.[[Reject]] is not undefined, throw a TypeError exception.
-    if (Type(promiseCapability.Reject) !== 'Undefined') {
+    if (!(promiseCapability.Reject instanceof UndefinedValue)) {
       return surroundingAgent.Throw('TypeError', 'PromiseCapabilityFunctionAlreadySet', 'reject');
     }
     // c. Set promiseCapability.[[Resolve]] to resolve.
@@ -242,7 +242,7 @@ export function NewPromiseCapability(C) {
 
 // 25.6.1.6 #sec-ispromise
 export function IsPromise(x) {
-  if (Type(x) !== 'Object') {
+  if (!(x instanceof ObjectValue)) {
     return Value.false;
   }
   if (!('PromiseState' in x)) {
@@ -280,7 +280,7 @@ function TriggerPromiseReactions(reactions, argument) {
 
 // 25.6.4.5.1 #sec-promise-resolve
 export function PromiseResolve(C, x) {
-  Assert(Type(C) === 'Object');
+  Assert(C instanceof ObjectValue);
   if (IsPromise(x) === Value.true) {
     const xConstructor = Q(Get(x, new Value('constructor')));
     if (SameValue(xConstructor, C) === Value.true) {

@@ -31,7 +31,8 @@ import {
   F,
 } from '../abstract-ops/all.mjs';
 import {
-  Type,
+  NumberValue,
+  UndefinedValue,
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
@@ -44,7 +45,7 @@ function ArrayConstructor(argumentsList, { NewTarget }) {
   if (numberOfArgs === 0) {
     // 22.1.1.1 #sec-array-constructor-array
     Assert(numberOfArgs === 0);
-    if (Type(NewTarget) === 'Undefined') {
+    if (NewTarget instanceof UndefinedValue) {
       NewTarget = surroundingAgent.activeFunctionObject;
     }
     const proto = GetPrototypeFromConstructor(NewTarget, '%Array.prototype%');
@@ -53,13 +54,13 @@ function ArrayConstructor(argumentsList, { NewTarget }) {
     // 22.1.1.2 #sec-array-len
     const [len] = argumentsList;
     Assert(numberOfArgs === 1);
-    if (Type(NewTarget) === 'Undefined') {
+    if (NewTarget instanceof UndefinedValue) {
       NewTarget = surroundingAgent.activeFunctionObject;
     }
     const proto = GetPrototypeFromConstructor(NewTarget, '%Array.prototype%');
     const array = ArrayCreate(0, proto);
     let intLen;
-    if (Type(len) !== 'Number') {
+    if (!(len instanceof NumberValue)) {
       const defineStatus = X(CreateDataProperty(array, new Value('0'), len));
       Assert(defineStatus === Value.true);
       intLen = F(1);
@@ -75,7 +76,7 @@ function ArrayConstructor(argumentsList, { NewTarget }) {
     // 22.1.1.3 #sec-array-items
     const items = argumentsList;
     Assert(numberOfArgs >= 2);
-    if (Type(NewTarget) === 'Undefined') {
+    if (NewTarget instanceof UndefinedValue) {
       NewTarget = surroundingAgent.activeFunctionObject;
     }
     const proto = GetPrototypeFromConstructor(NewTarget, '%Array.prototype%');

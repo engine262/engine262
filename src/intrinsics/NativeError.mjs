@@ -9,7 +9,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import {
   Descriptor,
-  Type,
+  UndefinedValue,
   Value,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
@@ -34,7 +34,7 @@ export function bootstrapNativeError(realmRec) {
     const Constructor = ([message = Value.undefined, options = Value.undefined], { NewTarget }) => {
       // 1. If NewTarget is undefined, let newTarget be the active function object; else let newTarget be NewTarget.
       let newTarget;
-      if (Type(NewTarget) === 'Undefined') {
+      if (NewTarget instanceof UndefinedValue) {
         newTarget = surroundingAgent.activeFunctionObject;
       } else {
         newTarget = NewTarget;

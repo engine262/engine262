@@ -1,6 +1,9 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
-  Type,
+  BooleanValue,
+  NullValue,
+  JSStringValue,
+  ObjectValue,
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
@@ -50,13 +53,13 @@ function RegExpProto_exec([string = Value.undefined], { thisValue }) {
 
 // 21.2.5.2.1 #sec-regexpexec
 export function RegExpExec(R, S) {
-  Assert(Type(R) === 'Object');
-  Assert(Type(S) === 'String');
+  Assert(R instanceof ObjectValue);
+  Assert(S instanceof JSStringValue);
 
   const exec = Q(Get(R, new Value('exec')));
   if (IsCallable(exec) === Value.true) {
     const result = Q(Call(exec, R, [S]));
-    if (Type(result) !== 'Object' && Type(result) !== 'Null') {
+    if (!(result instanceof ObjectValue) && !(result instanceof NullValue)) {
       return surroundingAgent.Throw('TypeError', 'RegExpExecNotObject', result);
     }
     return result;
@@ -70,7 +73,7 @@ export function RegExpBuiltinExec(R, S) {
   // 1. Assert: R is an initialized RegExp instance.
   Assert('RegExpMatcher' in R);
   // 2. Assert: Type(S) is String.
-  Assert(Type(S) === 'String');
+  Assert(S instanceof JSStringValue);
   // 3. Let length be the number of code units in S.
   const length = S.stringValue().length;
   // 4. Let lastIndex be ? ℝ(ToLength(? Get(R, "lastIndex"))).
@@ -240,11 +243,11 @@ export function RegExpBuiltinExec(R, S) {
 // #sec-advancestringindex
 export function AdvanceStringIndex(S, index, unicode) {
   // 1. Assert: Type(S) is String.
-  Assert(Type(S) === 'String');
+  Assert(S instanceof JSStringValue);
   // 2. Assert: index is a non-negative integer which is ≤ 2 ** (53 - 1).
   Assert(isNonNegativeInteger(index) && index <= (2 ** 53) - 1);
   // 3. Assert: Type(unicode) is Boolean.
-  Assert(Type(unicode) === 'Boolean');
+  Assert(unicode instanceof BooleanValue);
   // 4. If unicode is false, return index + 1.
   if (unicode === Value.false) {
     return index + 1;
@@ -274,7 +277,7 @@ function RegExpProto_dotAllGetter(args, { thisValue }) {
 // 21.2.5.4 #sec-get-regexp.prototype.flags
 function RegExpProto_flagsGetter(args, { thisValue }) {
   const R = thisValue;
-  if (Type(R) !== 'Object') {
+  if (!(R instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   let result = '';
@@ -312,7 +315,7 @@ function RegExpProto_flagsGetter(args, { thisValue }) {
 // 21.2.5.5 #sec-get-regexp.prototype.global
 function RegExpProto_globalGetter(args, { thisValue }) {
   const R = thisValue;
-  if (Type(R) !== 'Object') {
+  if (!(R instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   if (!('OriginalFlags' in R)) {
@@ -353,7 +356,7 @@ function RegExpProto_match([string = Value.undefined], { thisValue }) {
   // 1. Let rx be the this value.
   const rx = thisValue;
   // 2. If Type(rx) is not Object, throw a TypeError exception.
-  if (Type(rx) !== 'Object') {
+  if (!(rx instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', rx);
   }
   // 3. Let S be ? ToString(string).
@@ -411,7 +414,7 @@ function RegExpProto_match([string = Value.undefined], { thisValue }) {
 // 21.2.5.8 #sec-regexp-prototype-matchall
 function RegExpProto_matchAll([string = Value.undefined], { thisValue }) {
   const R = thisValue;
-  if (Type(R) !== 'Object') {
+  if (!(R instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   const S = Q(ToString(string));
@@ -448,7 +451,7 @@ function RegExpProto_multilineGetter(args, { thisValue }) {
 // 21.2.5.10 #sec-regexp.prototype-@@replace
 function RegExpProto_replace([string = Value.undefined, replaceValue = Value.undefined], { thisValue }) {
   const rx = thisValue;
-  if (Type(rx) !== 'Object') {
+  if (!(rx instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', rx);
   }
   const S = Q(ToString(string));
@@ -543,7 +546,7 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
 // 21.2.5.11 #sec-regexp.prototype-@@search
 function RegExpProto_search([string = Value.undefined], { thisValue }) {
   const rx = thisValue;
-  if (Type(rx) !== 'Object') {
+  if (!(rx instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', rx);
   }
   const S = Q(ToString(string));
@@ -569,7 +572,7 @@ function RegExpProto_search([string = Value.undefined], { thisValue }) {
 // 21.2.5.12 #sec-get-regexp.prototype.source
 function RegExpProto_sourceGetter(args, { thisValue }) {
   const R = thisValue;
-  if (Type(R) !== 'Object') {
+  if (!(R instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   if (!('OriginalSource' in R)) {
@@ -587,7 +590,7 @@ function RegExpProto_sourceGetter(args, { thisValue }) {
 // 21.2.5.13 #sec-regexp.prototype-@@split
 function RegExpProto_split([string = Value.undefined, limit = Value.undefined], { thisValue }) {
   const rx = thisValue;
-  if (Type(rx) !== 'Object') {
+  if (!(rx instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', rx);
   }
   const S = Q(ToString(string));
@@ -680,7 +683,7 @@ function RegExpProto_stickyGetter(args, { thisValue }) {
 // 21.2.5.15 #sec-regexp.prototype.test
 function RegExpProto_test([S = Value.undefined], { thisValue }) {
   const R = thisValue;
-  if (Type(R) !== 'Object') {
+  if (!(R instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   const string = Q(ToString(S));
@@ -694,7 +697,7 @@ function RegExpProto_test([S = Value.undefined], { thisValue }) {
 // 21.2.5.16 #sec-regexp.prototype.tostring
 function RegExpProto_toString(args, { thisValue }) {
   const R = thisValue;
-  if (Type(R) !== 'Object') {
+  if (!(R instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   const pattern = Q(ToString(Q(Get(R, new Value('source')))));

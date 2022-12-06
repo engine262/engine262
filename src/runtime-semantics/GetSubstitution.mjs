@@ -4,17 +4,19 @@ import {
   ToString,
   isNonNegativeInteger,
 } from '../abstract-ops/all.mjs';
-import { Type, Value } from '../value.mjs';
+import {
+  ObjectValue, UndefinedValue, JSStringValue, Value,
+} from '../value.mjs';
 import { Q } from '../completion.mjs';
 
 // #sec-getsubstitution
 export function GetSubstitution(matched, str, position, captures, namedCaptures, replacement) {
   // 1. Assert: Type(matched) is String.
-  Assert(Type(matched) === 'String');
+  Assert(matched instanceof JSStringValue);
   // 2. Let matchLength be the number of code units in matched.
   const matchLength = matched.stringValue().length;
   // 3. Assert: Type(str) is String.
-  Assert(Type(str) === 'String');
+  Assert(str instanceof JSStringValue);
   // 4. Let stringLength be the number of code units in str.
   const stringLength = str.stringValue().length;
   // 5. Assert: position is a non-negative integer.
@@ -22,9 +24,9 @@ export function GetSubstitution(matched, str, position, captures, namedCaptures,
   // 6. Assert: position ≤ stringLength.
   Assert(position <= stringLength);
   // 7. Assert: captures is a possibly empty List of Strings.
-  Assert(Array.isArray(captures) && captures.every((value) => Type(value) === 'String' || Type(value) === 'Undefined'));
+  Assert(Array.isArray(captures) && captures.every((value) => value instanceof JSStringValue || value instanceof UndefinedValue));
   // 8. Assert: Type(replacement) is String.
-  Assert(Type(replacement) === 'String');
+  Assert(replacement instanceof JSStringValue);
   // 9. Let tailPos be position + matchLength.
   const tailPos = position + matchLength;
   // 10. Let m be the number of elements in captures.
@@ -87,7 +89,7 @@ export function GetSubstitution(matched, str, position, captures, namedCaptures,
           result += '$<';
           i += 2;
         } else {
-          Assert(Type(namedCaptures) === 'Object');
+          Assert(namedCaptures instanceof ObjectValue);
           const nextSign = replacementStr.indexOf('>', i);
           if (nextSign === -1) {
             result += '$<';

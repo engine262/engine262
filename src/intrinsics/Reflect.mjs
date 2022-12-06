@@ -11,7 +11,7 @@ import {
   ToPropertyDescriptor,
   ToPropertyKey,
 } from '../abstract-ops/all.mjs';
-import { Type, Value } from '../value.mjs';
+import { ObjectValue, Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
@@ -50,7 +50,7 @@ function Reflect_construct([target = Value.undefined, argumentsList = Value.unde
 // #sec-reflect.defineproperty
 function Reflect_defineProperty([target = Value.undefined, propertyKey = Value.undefined, attributes = Value.undefined]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
-  if (Type(target) !== 'Object') {
+  if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
   // 2. Let key be ? ToPropertyKey(propertyKey).
@@ -64,7 +64,7 @@ function Reflect_defineProperty([target = Value.undefined, propertyKey = Value.u
 // #sec-reflect.deleteproperty
 function Reflect_deleteProperty([target = Value.undefined, propertyKey = Value.undefined]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
-  if (Type(target) !== 'Object') {
+  if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
   // 2. Let key be ? ToPropertyKey(propertyKey).
@@ -76,7 +76,7 @@ function Reflect_deleteProperty([target = Value.undefined, propertyKey = Value.u
 // #sec-reflect.get
 function Reflect_get([target = Value.undefined, propertyKey = Value.undefined, receiver]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
-  if (Type(target) !== 'Object') {
+  if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
   // 2. Let key be ? ToPropertyKey(propertyKey).
@@ -93,7 +93,7 @@ function Reflect_get([target = Value.undefined, propertyKey = Value.undefined, r
 // #sec-reflect.getownpropertydescriptor
 function Reflect_getOwnPropertyDescriptor([target = Value.undefined, propertyKey = Value.undefined]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
-  if (Type(target) !== 'Object') {
+  if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
   // 2. Let key be ? ToPropertyKey(propertyKey).
@@ -107,7 +107,7 @@ function Reflect_getOwnPropertyDescriptor([target = Value.undefined, propertyKey
 // #sec-reflect.getprototypeof
 function Reflect_getPrototypeOf([target = Value.undefined]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
-  if (Type(target) !== 'Object') {
+  if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
   // 2. Return ? target.[[GetPrototypeOf]]().
@@ -117,7 +117,7 @@ function Reflect_getPrototypeOf([target = Value.undefined]) {
 // #sec-reflect.has
 function Reflect_has([target = Value.undefined, propertyKey = Value.undefined]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
-  if (Type(target) !== 'Object') {
+  if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
   // 2. Let key be ? ToPropertyKey(propertyKey).
@@ -129,7 +129,7 @@ function Reflect_has([target = Value.undefined, propertyKey = Value.undefined]) 
 // #sec-reflect.isextensible
 function Reflect_isExtensible([target = Value.undefined]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
-  if (Type(target) !== 'Object') {
+  if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
   // 2. Return ? target.[[IsExtensible]]().
@@ -139,7 +139,7 @@ function Reflect_isExtensible([target = Value.undefined]) {
 // #sec-reflect.ownkeys
 function Reflect_ownKeys([target = Value.undefined]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
-  if (Type(target) !== 'Object') {
+  if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
   // 2. Let keys be ? target.[[OwnPropertyKeys]]().
@@ -151,7 +151,7 @@ function Reflect_ownKeys([target = Value.undefined]) {
 // #sec-reflect.preventextensions
 function Reflect_preventExtensions([target = Value.undefined]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
-  if (Type(target) !== 'Object') {
+  if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
   // 2. Return ? target.[[PreventExtensions]]().
@@ -161,7 +161,7 @@ function Reflect_preventExtensions([target = Value.undefined]) {
 // #sec-reflect.set
 function Reflect_set([target = Value.undefined, propertyKey = Value.undefined, V = Value.undefined, receiver]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
-  if (Type(target) !== 'Object') {
+  if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
   // 2. Let key be ? ToPropertyKey(propertyKey).
@@ -177,11 +177,11 @@ function Reflect_set([target = Value.undefined, propertyKey = Value.undefined, V
 // #sec-reflect.setprototypeof
 function Reflect_setPrototypeOf([target = Value.undefined, proto = Value.undefined]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
-  if (Type(target) !== 'Object') {
+  if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
   // 2. If Type(proto) is not Object and proto is not null, throw a TypeError exception.
-  if (Type(proto) !== 'Object' && proto !== Value.null) {
+  if (!(proto instanceof ObjectValue) && proto !== Value.null) {
     return surroundingAgent.Throw('TypeError', 'ObjectPrototypeType');
   }
   // 3. Return ? target.[[SetPrototypeOf]](proto).

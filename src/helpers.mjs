@@ -1,19 +1,19 @@
 import { surroundingAgent } from './engine.mjs';
-import { Type, Value, Descriptor } from './value.mjs';
+import {
+  Value, Descriptor, JSStringValue, NumberValue,
+} from './value.mjs';
 import { ToString, DefinePropertyOrThrow, CreateBuiltinFunction } from './abstract-ops/all.mjs';
 import { X } from './completion.mjs';
 
 export const kInternal = Symbol('kInternal');
 
 function convertValueForKey(key) {
-  switch (Type(key)) {
-    case 'String':
-      return key.stringValue();
-    case 'Number':
-      return key.numberValue();
-    default:
-      return key;
+  if (key instanceof JSStringValue) {
+    return key.stringValue();
+  } else if (key instanceof NumberValue) {
+    return key.numberValue();
   }
+  return key;
 }
 
 export class ValueMap {

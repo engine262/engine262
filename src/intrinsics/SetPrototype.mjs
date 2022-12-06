@@ -7,7 +7,7 @@ import {
   SameValueZero,
 } from '../abstract-ops/all.mjs';
 import {
-  Type,
+  NumberValue,
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
@@ -32,7 +32,7 @@ function SetProto_add([value = Value.undefined], { thisValue }) {
     }
   }
   // 5. If value is -0𝔽, set value to +0𝔽.
-  if (Type(value) === 'Number' && Object.is(value.numberValue(), -0)) {
+  if (value instanceof NumberValue && Object.is(value.numberValue(), -0)) {
     value = F(+0);
   }
   // 6. Append value as the last element of entries.

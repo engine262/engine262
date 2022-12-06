@@ -3,7 +3,7 @@ import {
 } from '../engine.mjs';
 import {
   Descriptor,
-  Type,
+  ObjectValue,
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
@@ -645,7 +645,7 @@ function Promise_resolve([x = Value.undefined], { thisValue }) {
   // 1. Let C be the this value.
   const C = thisValue;
   // 2. If Type(C) is not Object, throw a TypeError exception.
-  if (Type(C) !== 'Object') {
+  if (!(C instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'InvalidReceiver', 'Promise.resolve', C);
   }
   // 3. Return ? PromiseResolve(C, x).

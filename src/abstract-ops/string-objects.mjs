@@ -1,6 +1,9 @@
 import {
   Descriptor,
-  Type,
+  ObjectValue,
+  SymbolValue,
+  JSStringValue,
+  UndefinedValue,
   Value,
 } from '../value.mjs';
 import { X } from '../completion.mjs';
@@ -24,7 +27,7 @@ function StringExoticGetOwnProperty(P) {
   const S = this;
   Assert(IsPropertyKey(P));
   const desc = OrdinaryGetOwnProperty(S, P);
-  if (Type(desc) !== 'Undefined') {
+  if (!(desc instanceof UndefinedValue)) {
     return desc;
   }
   return X(StringGetOwnProperty(S, P));
@@ -34,7 +37,7 @@ function StringExoticDefineOwnProperty(P, Desc) {
   const S = this;
   Assert(IsPropertyKey(P));
   const stringDesc = X(StringGetOwnProperty(S, P));
-  if (Type(stringDesc) !== 'Undefined') {
+  if (!(stringDesc instanceof UndefinedValue)) {
     const extensible = S.Extensible;
     return X(IsCompatiblePropertyDescriptor(extensible, Desc, stringDesc));
   }
@@ -45,7 +48,7 @@ function StringExoticOwnPropertyKeys() {
   const O = this;
   const keys = [];
   const str = O.StringData;
-  Assert(Type(str) === 'String');
+  Assert(str instanceof JSStringValue);
   const len = str.stringValue().length;
 
   // 5. For each non-negative integer i starting with 0 such that i < len, in ascending order, do
@@ -70,7 +73,7 @@ function StringExoticOwnPropertyKeys() {
   // P is not an array index, in ascending chronological order of property creation, do
   //   Add P as the last element of keys.
   for (const P of O.properties.keys()) {
-    if (Type(P) === 'String' && isArrayIndex(P) === false) {
+    if (P instanceof JSStringValue && isArrayIndex(P) === false) {
       keys.push(P);
     }
   }
@@ -79,7 +82,7 @@ function StringExoticOwnPropertyKeys() {
   // in ascending chronological order of property creation, do
   //   Add P as the last element of keys.
   for (const P of O.properties.keys()) {
-    if (Type(P) === 'Symbol') {
+    if (P instanceof SymbolValue) {
       keys.push(P);
     }
   }
@@ -90,7 +93,7 @@ function StringExoticOwnPropertyKeys() {
 // 9.4.3.4 #sec-stringcreate
 export function StringCreate(value, prototype) {
   // 1. Assert: Type(value) is String.
-  Assert(Type(value) === 'String');
+  Assert(value instanceof JSStringValue);
   // 2. Let S be ! MakeBasicObject(« [[Prototype]], [[Extensible]], [[StringData]] »).
   const S = X(MakeBasicObject(['Prototype', 'Extensible', 'StringData']));
   // 3. Set S.[[Prototype]] to prototype.
@@ -118,13 +121,13 @@ export function StringCreate(value, prototype) {
 
 // 9.4.3.5 #sec-stringgetownproperty
 export function StringGetOwnProperty(S, P) {
-  Assert(Type(S) === 'Object' && 'StringData' in S);
+  Assert(S instanceof ObjectValue && 'StringData' in S);
   Assert(IsPropertyKey(P));
-  if (Type(P) !== 'String') {
+  if (!(P instanceof JSStringValue)) {
     return Value.undefined;
   }
   const index = X(CanonicalNumericIndexString(P));
-  if (Type(index) === 'Undefined') {
+  if (index instanceof UndefinedValue) {
     return Value.undefined;
   }
   if (IsIntegralNumber(index) === Value.false) {
@@ -134,7 +137,7 @@ export function StringGetOwnProperty(S, P) {
     return Value.undefined;
   }
   const str = S.StringData;
-  Assert(Type(str) === 'String');
+  Assert(str instanceof JSStringValue);
   const len = str.stringValue().length;
   if (index.numberValue() < 0 || len <= index.numberValue()) {
     return Value.undefined;

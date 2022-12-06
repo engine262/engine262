@@ -21,7 +21,9 @@ import {
   MakeBasicObject,
 } from '../abstract-ops/all.mjs';
 import {
-  Type,
+  JSStringValue,
+  NumberValue,
+  ObjectValue,
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
@@ -83,7 +85,7 @@ function BoundFunctionExoticObjectConstruct(argumentsList, newTarget) {
 // #sec-boundfunctioncreate
 function BoundFunctionCreate(targetFunction, boundThis, boundArgs) {
   // 1. Assert: Type(targetFunction) is Object.
-  Assert(Type(targetFunction) === 'Object');
+  Assert(targetFunction instanceof ObjectValue);
   // 2. Let proto be ? targetFunction.[[GetPrototypeOf]]().
   const proto = Q(targetFunction.GetPrototypeOf());
   // 3. Let internalSlotsList be the internal slots listed in Table 30, plus [[Prototype]] and [[Extensible]].
@@ -134,7 +136,7 @@ function FunctionProto_bind([thisArg = Value.undefined, ...args], { thisValue })
     // a. Let targetLen be ? Get(Target, "length").
     const targetLen = Q(Get(Target, new Value('length')));
     // b. If Type(targetLen) is Number, then
-    if (Type(targetLen) === 'Number') {
+    if (targetLen instanceof NumberValue) {
       // i. If targetLen is +∞𝔽, set L to +∞.
       if (targetLen.numberValue() === +Infinity) {
         L = +Infinity;
@@ -157,7 +159,7 @@ function FunctionProto_bind([thisArg = Value.undefined, ...args], { thisValue })
   // 8. Let targetName be ? Get(Target, "name").
   let targetName = Q(Get(Target, new Value('name')));
   // 9. If Type(targetName) is not String, set targetName to the empty String.
-  if (Type(targetName) !== 'String') {
+  if (!(targetName instanceof JSStringValue)) {
     targetName = new Value('');
   }
   // 10. Perform SetFunctionName(F, targetName, "bound").
@@ -192,7 +194,7 @@ function FunctionProto_toString(args, { thisValue }) {
   const func = thisValue;
   // 2. If Type(func) is Object and func has a [[SourceText]] internal slot and func.[[SourceText]]
   //    is a sequence of Unicode code points and ! HostHasSourceTextAvailable(func) is true, then
-  if (Type(func) === 'Object'
+  if (func instanceof ObjectValue
       && 'SourceText' in func
       && X(HostHasSourceTextAvailable(func)) === Value.true) {
     // Return ! UTF16Encode(func.[[SourceText]]).
@@ -213,7 +215,7 @@ function FunctionProto_toString(args, { thisValue }) {
   // 4. If Type(func) is Object and IsCallable(func) is true, then return an implementation
   //    dependent String source code representation of func. The representation must have
   //    the syntax of a NativeFunction.
-  if (Type(func) === 'Object' && IsCallable(func) === Value.true) {
+  if (func instanceof ObjectValue && IsCallable(func) === Value.true) {
     return new Value('function() { [native code] }');
   }
   // 5. Throw a TypeError exception.

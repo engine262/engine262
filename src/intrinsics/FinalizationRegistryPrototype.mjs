@@ -1,5 +1,5 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Value, Type } from '../value.mjs';
+import { Value, ObjectValue } from '../value.mjs';
 import {
   CleanupFinalizationRegistry,
   IsCallable,
@@ -32,7 +32,7 @@ function FinalizationRegistryProto_register([target = Value.undefined, heldValue
   // 2. Perform ? RequireInternalSlot(finalizationRegistry, [[Cells]]).
   Q(RequireInternalSlot(finalizationRegistry, 'Cells'));
   // 3. If Type(target) is not Object, throw a TypeError exception.
-  if (Type(target) !== 'Object') {
+  if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
   // 4. If SameValue(target, heldValue), throw a TypeError exception.
@@ -40,7 +40,7 @@ function FinalizationRegistryProto_register([target = Value.undefined, heldValue
     return surroundingAgent.Throw('TypeError', 'TargetMatchesHeldValue', heldValue);
   }
   // 5. If Type(unregisterToken) is not Object,
-  if (Type(unregisterToken) !== 'Object') {
+  if (!(unregisterToken instanceof ObjectValue)) {
     // a. If unregisterToken is not undefined, throw a TypeError exception.
     if (unregisterToken !== Value.undefined) {
       return surroundingAgent.Throw('TypeError', 'NotAnObject', unregisterToken);
@@ -67,7 +67,7 @@ function FinalizationRegistryProto_unregister([unregisterToken = Value.undefined
   // 2. Perform ? RequireInternalSlot(finalizationRegistry, [[Cells]]).
   Q(RequireInternalSlot(finalizationRegistry, 'Cells'));
   // 3. If Type(unregisterToken) is not Object, throw a TypeError exception.
-  if (Type(unregisterToken) !== 'Object') {
+  if (!(unregisterToken instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', unregisterToken);
   }
   // 4. Let removed be false.

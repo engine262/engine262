@@ -1,5 +1,5 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Type, Value } from '../value.mjs';
+import { ObjectValue, Value, NumberValue } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import {
   Assert,
@@ -122,7 +122,7 @@ export function TypedArrayCreate(constructor, argumentList) {
   // 2. Perform ? ValidateTypedArray(newTypedArray).
   Q(ValidateTypedArray(newTypedArray));
   // 3. If argumentList is a List of a single Number, then
-  if (argumentList.length === 1 && Type(argumentList[0]) === 'Number') {
+  if (argumentList.length === 1 && argumentList[0] instanceof NumberValue) {
     // a. If newTypedArray.[[ArrayLength]] < argumentList[0], throw a TypeError exception.
     if (newTypedArray.ArrayLength < argumentList[0].numberValue()) {
       return surroundingAgent.Throw('TypeError', 'TypedArrayTooSmall');
@@ -168,7 +168,7 @@ export function AllocateTypedArray(constructorName, newTarget, defaultProto, len
 // #sec-allocatetypedarraybuffer
 export function AllocateTypedArrayBuffer(O, length) {
   // 1. Assert: O is an Object that has a [[ViewedArrayBuffer]] internal slot.
-  Assert(Type(O) === 'Object' && 'ViewedArrayBuffer' in O);
+  Assert(O instanceof ObjectValue && 'ViewedArrayBuffer' in O);
   // 2. Assert: O.[[ViewedArrayBuffer]] is undefined.
   Assert(O.ViewedArrayBuffer === Value.undefined);
   // 3. Assert: length is a non-negative integer.
@@ -196,7 +196,7 @@ export function AllocateTypedArrayBuffer(O, length) {
 // #typedarray-species-create
 export function TypedArraySpeciesCreate(exemplar, argumentList) {
   // 1. Assert: exemplar is an Object that has [[TypedArrayName]] and [[ContentType]] internal slots.
-  Assert(Type(exemplar) === 'Object'
+  Assert(exemplar instanceof ObjectValue
          && 'TypedArrayName' in exemplar
          && 'ContentType' in exemplar);
   // 2. Let defaultConstructor be the intrinsic object listed in column one of Table 61 for exemplar.[[TypedArrayName]].

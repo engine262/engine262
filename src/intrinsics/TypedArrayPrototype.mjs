@@ -29,7 +29,8 @@ import {
 import { Q, X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import {
-  Descriptor, Type, Value, wellKnownSymbols,
+  BigIntValue,
+  Descriptor, JSStringValue, NumberValue, ObjectValue, Value, wellKnownSymbols,
 } from '../value.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 import { ArrayProto_sortBody, bootstrapArrayPrototypeShared } from './ArrayPrototypeShared.mjs';
@@ -513,7 +514,7 @@ function TypedArrayProto_set([source = Value.undefined, offset = Value.undefined
     return surroundingAgent.Throw('RangeError', 'NegativeIndex', 'Offset');
   }
   // 6. If source is an Object that has a [[TypedArrayName]] internal slot, then
-  if (Type(source) === 'Object' && 'TypedArrayName' in source) {
+  if (source instanceof ObjectValue && 'TypedArrayName' in source) {
     // a. Perform ? SetTypedArrayFromTypedArray(target, targetOffset, source).
     Q(SetTypedArrayFromTypedArray(target, targetOffset, source));
   } else { // 7. Else,
@@ -641,8 +642,8 @@ function TypedArrayProto_sort([comparefn = Value.undefined], { thisValue }) {
 
 function TypedArraySortCompare(x, y, comparefn) {
   // 1. Assert: Both Type(x) and Type(y) are Number or both are BigInt.
-  Assert((Type(x) === 'Number' && Type(y) === 'Number')
-         || (Type(x) === 'BigInt' && Type(y) === 'BigInt'));
+  Assert((x instanceof NumberValue && y instanceof NumberValue)
+         || (x instanceof BigIntValue && y instanceof BigIntValue));
   // 2. If comparefn is not undefined, then
   if (comparefn !== Value.undefined) {
     // a. Let v be ? ToNumber(? Call(comparefn, undefined, « x, y »)).
@@ -754,7 +755,7 @@ function TypedArrayProto_toStringTag(args, { thisValue }) {
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. If Type(O) is not Object, return undefined.
-  if (Type(O) !== 'Object') {
+  if (!(O instanceof ObjectValue)) {
     return Value.undefined;
   }
   // 3. If O does not have a [[TypedArrayName]] internal slot, return undefined.
@@ -764,7 +765,7 @@ function TypedArrayProto_toStringTag(args, { thisValue }) {
   // 4. Let name be O.[[TypedArrayName]].
   const name = O.TypedArrayName;
   // 5. Assert: Type(name) is String.
-  Assert(Type(name) === 'String');
+  Assert(name instanceof JSStringValue);
   // 6. Return name.
   return name;
 }
@@ -798,7 +799,7 @@ function TypedArrayProto_at([index = Value.undefined], { thisValue }) {
 
 export function bootstrapTypedArrayPrototype(realmRec) {
   const ArrayProto_toString = X(Get(realmRec.Intrinsics['%Array.prototype%'], new Value('toString')));
-  Assert(Type(ArrayProto_toString) === 'Object');
+  Assert(ArrayProto_toString instanceof ObjectValue);
 
   const proto = bootstrapPrototype(realmRec, [
     ['buffer', [TypedArrayProto_buffer]],

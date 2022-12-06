@@ -1,5 +1,5 @@
 import { ExecutionContext, HostEnsureCanCompileStrings, surroundingAgent } from '../engine.mjs';
-import { Type, Value } from '../value.mjs';
+import { JSStringValue, Value } from '../value.mjs';
 import { InstantiateFunctionObject } from '../runtime-semantics/all.mjs';
 import {
   IsStrict,
@@ -38,7 +38,7 @@ export function PerformEval(x, callerRealm, strictCaller, direct) {
     Assert(strictCaller === false);
   }
   // 2. If Type(x) is not String, return x.
-  if (Type(x) !== 'String') {
+  if (!(x instanceof JSStringValue)) {
     return x;
   }
   // 3. Let evalRealm be the current Realm Record.

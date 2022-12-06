@@ -1,5 +1,6 @@
 import {
-  Type,
+  ObjectValue,
+  BooleanValue,
   Value,
 } from '../value.mjs';
 import {
@@ -11,13 +12,13 @@ import { bootstrapPrototype } from './bootstrap.mjs';
 
 
 function thisBooleanValue(value) {
-  if (Type(value) === 'Boolean') {
+  if (value instanceof BooleanValue) {
     return value;
   }
 
-  if (Type(value) === 'Object' && 'BooleanData' in value) {
+  if (value instanceof ObjectValue && 'BooleanData' in value) {
     const b = value.BooleanData;
-    Assert(Type(b) === 'Boolean');
+    Assert(b instanceof BooleanValue);
     return b;
   }
 

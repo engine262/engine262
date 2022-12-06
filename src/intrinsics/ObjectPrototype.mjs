@@ -1,6 +1,9 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
-  Type,
+  NullValue,
+  JSStringValue,
+  UndefinedValue,
+  ObjectValue,
   Value,
   Descriptor,
   wellKnownSymbols,
@@ -34,7 +37,7 @@ function ObjectProto_hasOwnProperty([V = Value.undefined], { thisValue }) {
 // #sec-object.prototype.isprototypeof
 function ObjectProto_isPrototypeOf([V = Value.undefined], { thisValue }) {
   // 1. If Type(V) is not Object, return false.
-  if (Type(V) !== 'Object') {
+  if (!(V instanceof ObjectValue)) {
     return Value.false;
   }
   // 2. Let O be ? ToObject(this value).
@@ -63,7 +66,7 @@ function ObjectProto_propertyIsEnumerable([V = Value.undefined], { thisValue }) 
   // 3. Let desc be ? O.[[GetOwnProperty]](P).
   const desc = Q(O.GetOwnProperty(P));
   // 4. If desc is undefined, return false.
-  if (Type(desc) === 'Undefined') {
+  if (desc instanceof UndefinedValue) {
     return Value.false;
   }
   // 5. Return desc.[[Enumerable]].
@@ -118,7 +121,7 @@ function ObjectProto_toString(argList, { thisValue }) {
   // 15. Let tag be ? Get(O, @@toStringTag).
   let tag = Q(Get(O, wellKnownSymbols.toStringTag));
   // 16. If Type(tag) is not String, set tag to builtinTag.
-  if (Type(tag) !== 'String') {
+  if (!(tag instanceof JSStringValue)) {
     tag = builtinTag;
   }
   // 17. Return the string-concatenation of "[object ", tag, and "]".
@@ -244,11 +247,11 @@ function ObjectProto__proto__Set([proto = Value.undefined], { thisValue }) {
   // 1. Let O be ? RequireObjectCoercible(this value).
   const O = Q(RequireObjectCoercible(thisValue));
   // 2. If Type(proto) is neither Object nor Null, return undefined.
-  if (Type(proto) !== 'Object' && Type(proto) !== 'Null') {
+  if (!(proto instanceof ObjectValue) && !(proto instanceof NullValue)) {
     return Value.undefined;
   }
   // 3. If Type(O) is not Object, return undefined.
-  if (Type(O) !== 'Object') {
+  if (!(O instanceof ObjectValue)) {
     return Value.undefined;
   }
   // 4. Let status be ? O.[[SetPrototypeOf]](proto).

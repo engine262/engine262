@@ -1,5 +1,7 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Type, Value, wellKnownSymbols } from '../value.mjs';
+import {
+  ObjectValue, Value, wellKnownSymbols,
+} from '../value.mjs';
 import {
   AllocateArrayBuffer,
   AllocateTypedArray,
@@ -39,11 +41,11 @@ export function bootstrapTypedArrayConstructors(realmRec) {
         const constructorName = new Value(TypedArray);
         // 3. Return ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%", 0).
         return Q(AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`, 0));
-      } else if (Type(args[0]) !== 'Object') {
+      } else if (!(args[0] instanceof ObjectValue)) {
         // #sec-typedarray-length
         const [length] = args;
         // 1. Assert: Type(length) is not Object.
-        Assert(Type(length) !== 'Object');
+        Assert(!(length instanceof ObjectValue));
         // 2. If NewTarget is undefined, throw a TypeError exception.
         if (NewTarget === Value.undefined) {
           return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
@@ -58,7 +60,7 @@ export function bootstrapTypedArrayConstructors(realmRec) {
         // #sec-typedarray-typedarray
         const [typedArray] = args;
         // 1. Assert: Type(typedArray) is Object and typedArray has a [[TypedArrayName]] internal slot.
-        Assert(Type(typedArray) === 'Object' && 'TypedArrayName' in typedArray);
+        Assert(typedArray instanceof ObjectValue && 'TypedArrayName' in typedArray);
         // 2. If NewTarget is undefined, throw a TypeError exception.
         if (NewTarget === Value.undefined) {
           return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
@@ -149,7 +151,7 @@ export function bootstrapTypedArrayConstructors(realmRec) {
         // 22.2.4.4 #sec-typedarray-object
         const [object] = args;
         // 1. Assert: Type(object) is Object and object does not have either a [[TypedArrayName]] or an [[ArrayBufferData]] internal slot.
-        Assert(Type(object) === 'Object' && !('TypedArrayName' in object) && !('ArrayBufferData' in object));
+        Assert(object instanceof ObjectValue && !('TypedArrayName' in object) && !('ArrayBufferData' in object));
         // 2. If NewTarget is undefined, throw a TypeError exception.
         if (NewTarget === Value.undefined) {
           return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
@@ -212,7 +214,7 @@ export function bootstrapTypedArrayConstructors(realmRec) {
         // #sec-typedarray-buffer-byteoffset-length
         const [buffer = Value.undefined, byteOffset = Value.undefined, length = Value.undefined] = args;
         // 1. Assert: Type(buffer) is Object and buffer has an [[ArrayBufferData]] internal slot.
-        Assert(Type(buffer) === 'Object' && 'ArrayBufferData' in buffer);
+        Assert(buffer instanceof ObjectValue && 'ArrayBufferData' in buffer);
         // 2. If NewTarget is undefined, throw a TypeError exception.
         if (NewTarget === Value.undefined) {
           return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);

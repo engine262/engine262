@@ -1,5 +1,7 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Value, Type, PrivateName } from '../value.mjs';
+import {
+  Value, NullValue, ObjectValue, PrivateName,
+} from '../value.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import {
   Assert,
@@ -124,7 +126,7 @@ export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
       // i. Let protoParent be ? Get(superclass, "prototype").
       protoParent = Q(Get(superclass, new Value('prototype')));
       // ii. If Type(protoParent) is neither Object nor Null, throw a TypeError exception.
-      if (Type(protoParent) !== 'Object' && Type(protoParent) !== 'Null') {
+      if (!(protoParent instanceof ObjectValue) && !(protoParent instanceof NullValue)) {
         return surroundingAgent.Throw('TypeError', 'ObjectPrototypeType');
       }
       // iii. Let constructorParent be superclass.

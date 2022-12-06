@@ -1,7 +1,8 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
   Descriptor,
-  Type,
+  ObjectValue,
+  JSStringValue,
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
@@ -40,7 +41,7 @@ function ArrayDefineOwnProperty(P, Desc) {
   const A = this;
 
   Assert(IsPropertyKey(P));
-  if (Type(P) === 'String' && P.stringValue() === 'length') {
+  if (P instanceof JSStringValue && P.stringValue() === 'length') {
     return Q(ArraySetLength(A, Desc));
   } else if (isArrayIndex(P)) {
     const oldLenDesc = OrdinaryGetOwnProperty(A, new Value('length'));
@@ -115,7 +116,7 @@ export function ArraySpeciesCreate(originalArray, length) {
       }
     }
   }
-  if (Type(C) === 'Object') {
+  if (C instanceof ObjectValue) {
     C = Q(Get(C, wellKnownSymbols.species));
     if (C === Value.null) {
       C = Value.undefined;
@@ -190,7 +191,7 @@ export function ArraySetLength(A, Desc) {
 
 // 22.1.3.1.1 #sec-isconcatspreadable
 export function IsConcatSpreadable(O) {
-  if (Type(O) !== 'Object') {
+  if (!(O instanceof ObjectValue)) {
     return Value.false;
   }
   const spreadable = Q(Get(O, wellKnownSymbols.isConcatSpreadable));
@@ -248,7 +249,7 @@ export function SortCompare(x, y, comparefn) {
 // 22.1.5.1 #sec-createarrayiterator
 export function CreateArrayIterator(array, kind) {
   // 1. Assert: Type(array) is Object.
-  Assert(Type(array) === 'Object');
+  Assert(array instanceof ObjectValue);
   // 2. Assert: kind is key+value, key, or value.
   Assert(kind === 'key+value' || kind === 'key' || kind === 'value');
   // 3. Let closure be a new Abstract Closure with no parameters that captures kind and array and performs the following steps when called:

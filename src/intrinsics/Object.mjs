@@ -1,5 +1,7 @@
 import {
   Type,
+  NullValue,
+  ObjectValue,
   Value,
 } from '../value.mjs';
 import {
@@ -85,7 +87,7 @@ function Object_assign([target = Value.undefined, ...sources]) {
 // #sec-object.create
 function Object_create([O = Value.undefined, Properties = Value.undefined]) {
   // 1. If Type(O) is neither Object nor Null, throw a TypeError exception.
-  if (Type(O) !== 'Object' && Type(O) !== 'Null') {
+  if (!(O instanceof ObjectValue) && !(O instanceof NullValue)) {
     return surroundingAgent.Throw('TypeError', 'ObjectPrototypeType');
   }
   // 2. Let obj be OrdinaryObjectCreate(O).
@@ -108,7 +110,7 @@ function Object_defineProperties([O = Value.undefined, Properties = Value.undefi
 // #sec-objectdefineproperties ObjectDefineProperties
 function ObjectDefineProperties(O, Properties) {
   // 1. If Type(O) is not Object, throw a TypeError exception.
-  if (Type(O) !== 'Object') {
+  if (!(O instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
   }
   // 2. Let props be ? ToObject(Properties).
@@ -147,7 +149,7 @@ function ObjectDefineProperties(O, Properties) {
 // #sec-object.defineproperty
 function Object_defineProperty([O = Value.undefined, P = Value.undefined, Attributes = Value.undefined]) {
   // 1. If Type(O) is not Object, throw a TypeError exception.
-  if (Type(O) !== 'Object') {
+  if (!(O instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
   }
   // 2. Let key be ? ToPropertyKey(P).
@@ -173,7 +175,7 @@ function Object_entries([O = Value.undefined]) {
 // #sec-object.freeze
 function Object_freeze([O = Value.undefined]) {
   // 1. If Type(O) is not Object, return O.
-  if (Type(O) !== 'Object') {
+  if (!(O instanceof ObjectValue)) {
     return O;
   }
   // 2. Let status be ? SetIntegrityLevel(O, frozen).
@@ -302,7 +304,7 @@ function Object_is([value1 = Value.undefined, value2 = Value.undefined]) {
 // #sec-object.isextensible
 function Object_isExtensible([O = Value.undefined]) {
   // 1. If Type(O) is not Object, return false.
-  if (Type(O) !== 'Object') {
+  if (!(O instanceof ObjectValue)) {
     return Value.false;
   }
   // 2. Return ? IsExtensible(O).
@@ -312,7 +314,7 @@ function Object_isExtensible([O = Value.undefined]) {
 // #sec-object.isfrozen
 function Object_isFrozen([O = Value.undefined]) {
   // 1. If Type(O) is not Object, return true.
-  if (Type(O) !== 'Object') {
+  if (!(O instanceof ObjectValue)) {
     return Value.true;
   }
   // 2. Return ? TestIntegrityLevel(O, frozen).
@@ -322,7 +324,7 @@ function Object_isFrozen([O = Value.undefined]) {
 // #sec-object.issealed
 function Object_isSealed([O = Value.undefined]) {
   // 1. If Type(O) is not Object, return true.
-  if (Type(O) !== 'Object') {
+  if (!(O instanceof ObjectValue)) {
     return Value.true;
   }
   // 2. Return ? TestIntegrityLevel(O, sealed).
@@ -342,7 +344,7 @@ function Object_keys([O = Value.undefined]) {
 // #sec-object.preventextensions
 function Object_preventExtensions([O = Value.undefined]) {
   // 1. If Type(O) is not Object, return O.
-  if (Type(O) !== 'Object') {
+  if (!(O instanceof ObjectValue)) {
     return O;
   }
   // 2. Let status be ? O.[[PreventExtensions]]().
@@ -358,7 +360,7 @@ function Object_preventExtensions([O = Value.undefined]) {
 // #sec-object.seal
 function Object_seal([O = Value.undefined]) {
   // 1. If Type(O) is not Object, return O.
-  if (Type(O) !== 'Object') {
+  if (!(O instanceof ObjectValue)) {
     return O;
   }
   // 2. Let status be ? SetIntegrityLevel(O, sealed).
@@ -376,11 +378,11 @@ function Object_setPrototypeOf([O = Value.undefined, proto = Value.undefined]) {
   // 1. Set O to ? RequireObjectCoercible(O).
   O = Q(RequireObjectCoercible(O));
   // 2. If Type(proto) is neither Object nor Null, throw a TypeError exception.
-  if (Type(proto) !== 'Object' && Type(proto) !== 'Null') {
+  if (!(proto instanceof ObjectValue) && !(proto instanceof NullValue)) {
     return surroundingAgent.Throw('TypeError', 'ObjectPrototypeType');
   }
   // 3. If Type(O) is not Object, return O.
-  if (Type(O) !== 'Object') {
+  if (!(O instanceof ObjectValue)) {
     return O;
   }
   // 4. Let status be ? O.[[SetPrototypeOf]](proto).

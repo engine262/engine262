@@ -1,5 +1,7 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Descriptor, Value, Type } from '../value.mjs';
+import {
+  Descriptor, Value, ObjectValue, BooleanValue, JSStringValue,
+} from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { Evaluate_Pattern } from '../runtime-semantics/all.mjs';
 import { ParsePattern } from '../parse.mjs';
@@ -155,7 +157,7 @@ export function EscapeRegExpPattern(P, _F) {
 // #sec-getstringindex
 export function GetStringIndex(S, Input, e) {
   // 1. Assert: Type(S) is String.
-  Assert(Type(S) === 'String');
+  Assert(S instanceof JSStringValue);
   // 2. Assert: Input is a List of the code points of S interpreted as a UTF-16 encoded string.
   Assert(Array.isArray(Input));
   // 3. Assert: e is an integer value ≥ 0.
@@ -181,7 +183,7 @@ export function GetStringIndex(S, Input, e) {
 // #sec-getmatchstring
 export function GetMatchString(S, match) {
   // 1. Assert: Type(S) is String.
-  Assert(Type(S) === 'String');
+  Assert(S instanceof JSStringValue);
   // 2. Assert: match is a Match Record.
   Assert('StartIndex' in match && 'EndIndex' in match);
   // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and ≤ the length of S.
@@ -195,7 +197,7 @@ export function GetMatchString(S, match) {
 // #sec-getmatchindexpair
 export function GetMatchIndexPair(S, match) {
   // 1. Assert: Type(S) is String.
-  Assert(Type(S) === 'String');
+  Assert(S instanceof JSStringValue);
   // 2. Assert: match is a Match Record.
   Assert('StartIndex' in match && 'EndIndex' in match);
   // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and ≤ the length of S.
@@ -212,7 +214,7 @@ export function GetMatchIndexPair(S, match) {
 // #sec-makematchindicesindexpairarray
 export function MakeMatchIndicesIndexPairArray(S, indices, groupNames, hasGroups) {
   // 1. Assert: Type(S) is String.
-  Assert(Type(S) === 'String');
+  Assert(S instanceof JSStringValue);
   // 2. Assert: indices is a List.
   Assert(Array.isArray(indices));
   // 3. Let n be the number of elements in indices.
@@ -223,7 +225,7 @@ export function MakeMatchIndicesIndexPairArray(S, indices, groupNames, hasGroups
   Assert(Array.isArray(groupNames) && groupNames.length === n - 1);
   // 6. NOTE: The groupNames List contains elements aligned with the indices List starting at indices[1].
   // 7. Assert: Type(hasGroups) is Boolean.
-  Assert(Type(hasGroups) === 'Boolean');
+  Assert(hasGroups instanceof BooleanValue);
   // 8. Set A to ! ArrayCreate(n).
   // 9. Assert: The value of A's "length" property is n.
   const A = X(ArrayCreate(n));
@@ -266,7 +268,7 @@ export function MakeMatchIndicesIndexPairArray(S, indices, groupNames, hasGroups
 // #sec-regexphasflag
 export function RegExpHasFlag(R, codeUnit) {
   // 1. If Type(R) is not Object, throw a TypeError exception.
-  if (Type(R) !== 'Object') {
+  if (!(R instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   // 2. If R does not have an [[OriginalFlags]] internal slot, then

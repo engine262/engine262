@@ -1,5 +1,5 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Type, Value, wellKnownSymbols } from '../value.mjs';
+import { ObjectValue, Value, wellKnownSymbols } from '../value.mjs';
 import { Q } from '../completion.mjs';
 import { ToIndex, AllocateArrayBuffer } from '../abstract-ops/all.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
@@ -19,7 +19,7 @@ function ArrayBufferConstructor([length = Value.undefined], { NewTarget }) {
 // #sec-arraybuffer.isview
 function ArrayBuffer_isView([arg = Value.undefined]) {
   // 1. If Type(arg) is not Object, return false.
-  if (Type(arg) !== 'Object') {
+  if (!(arg instanceof ObjectValue)) {
     return Value.false;
   }
   // 2. If arg has a [[ViewedArrayBuffer]] internal slot, return true.

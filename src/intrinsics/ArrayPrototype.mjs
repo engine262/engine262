@@ -1,7 +1,8 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
   Descriptor,
-  Type,
+  ObjectValue,
+  UndefinedValue,
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
@@ -146,7 +147,7 @@ function ArrayProto_fill([value = Value.undefined, start = Value.undefined, end 
     k = Math.min(relativeStart, len);
   }
   let relativeEnd;
-  if (Type(end) === 'Undefined') {
+  if (end instanceof UndefinedValue) {
     relativeEnd = len;
   } else {
     relativeEnd = Q(ToIntegerOrInfinity(end));
@@ -193,8 +194,8 @@ function ArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undefi
 
 // 22.1.3.10.1 #sec-flattenintoarray
 function FlattenIntoArray(target, source, sourceLen, start, depth, mapperFunction, thisArg) {
-  Assert(Type(target) === 'Object');
-  Assert(Type(source) === 'Object');
+  Assert(target instanceof ObjectValue);
+  Assert(source instanceof ObjectValue);
   Assert(sourceLen >= 0);
   Assert(start >= 0);
   // Assert: _depth_ is an integer Number, *+&infin;*, or *-&infin;*.
@@ -356,7 +357,7 @@ function ArrayProto_slice([start = Value.undefined, end = Value.undefined], { th
     k = Math.min(relativeStart, len);
   }
   let relativeEnd;
-  if (Type(end) === 'Undefined') {
+  if (end instanceof UndefinedValue) {
     relativeEnd = len;
   } else {
     relativeEnd = Q(ToIntegerOrInfinity(end));

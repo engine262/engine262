@@ -1,6 +1,7 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
-  Type,
+  BooleanValue,
+  ObjectValue,
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
@@ -52,7 +53,7 @@ export function GetIterator(obj, hint, method) {
     }
   }
   const iterator = Q(Call(method, obj));
-  if (Type(iterator) !== 'Object') {
+  if (!(iterator instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', iterator);
   }
   const nextMethod = Q(GetV(iterator, new Value('next')));
@@ -72,7 +73,7 @@ export function IteratorNext(iteratorRecord, value) {
   } else {
     result = Q(Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, [value]));
   }
-  if (Type(result) !== 'Object') {
+  if (!(result instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', result);
   }
   return EnsureCompletion(result);
@@ -80,13 +81,13 @@ export function IteratorNext(iteratorRecord, value) {
 
 // 7.4.3 #sec-iteratorcomplete
 export function IteratorComplete(iterResult) {
-  Assert(Type(iterResult) === 'Object');
+  Assert(iterResult instanceof ObjectValue);
   return EnsureCompletion(ToBoolean(Q(Get(iterResult, new Value('done')))));
 }
 
 // 7.4.4 #sec-iteratorvalue
 export function IteratorValue(iterResult) {
-  Assert(Type(iterResult) === 'Object');
+  Assert(iterResult instanceof ObjectValue);
   return EnsureCompletion(Q(Get(iterResult, new Value('value'))));
 }
 
@@ -103,7 +104,7 @@ export function IteratorStep(iteratorRecord) {
 // #sec-iteratorclose
 export function IteratorClose(iteratorRecord, completion) {
   // 1. Assert: Type(iteratorRecord.[[Iterator]]) is Object.
-  Assert(Type(iteratorRecord.Iterator) === 'Object');
+  Assert(iteratorRecord.Iterator instanceof ObjectValue);
   // 2. Assert: completion is a Completion Record.
   // TODO: completion should be a Completion Record so this should not be necessary
   completion = EnsureCompletion(completion);
@@ -132,7 +133,7 @@ export function IteratorClose(iteratorRecord, completion) {
     return Completion(innerResult);
   }
   // 8. If Type(innerResult.[[Value]]) is not Object, throw a TypeError exception.
-  if (Type(innerResult.Value) !== 'Object') {
+  if (!(innerResult.Value instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', innerResult.Value);
   }
   // 9. Return Completion(completion).
@@ -142,7 +143,7 @@ export function IteratorClose(iteratorRecord, completion) {
 // #sec-asynciteratorclose
 export function* AsyncIteratorClose(iteratorRecord, completion) {
   // 1. Assert: Type(iteratorRecord.[[Iterator]]) is Object.
-  Assert(Type(iteratorRecord.Iterator) === 'Object');
+  Assert(iteratorRecord.Iterator instanceof ObjectValue);
   // 2. Assert: completion is a Completion Record.
   Assert(completion instanceof Completion);
   // 3. Let iterator be iteratorRecord.[[Iterator]].
@@ -173,7 +174,7 @@ export function* AsyncIteratorClose(iteratorRecord, completion) {
     return Completion(innerResult);
   }
   // 8. If Type(innerResult.[[Value]]) is not Object, throw a TypeError exception.
-  if (Type(innerResult.Value) !== 'Object') {
+  if (!(innerResult.Value instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', innerResult.Value);
   }
   // 9. Return Completion(completion).
@@ -182,7 +183,7 @@ export function* AsyncIteratorClose(iteratorRecord, completion) {
 
 // 7.4.8 #sec-createiterresultobject
 export function CreateIterResultObject(value, done) {
-  Assert(Type(done) === 'Boolean');
+  Assert(done instanceof BooleanValue);
   const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   X(CreateDataProperty(obj, new Value('value'), value));
   X(CreateDataProperty(obj, new Value('done'), done));

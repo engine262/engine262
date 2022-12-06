@@ -1,5 +1,5 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Type, Value } from '../value.mjs';
+import { BooleanValue, JSStringValue, Value } from '../value.mjs';
 import {
   Assert,
   CreateIteratorFromClosure,
@@ -20,11 +20,11 @@ const kRegExpStringIteratorPrototype = new Value('%RegExpStringIteratorPrototype
 // 21.2.5.8.1 #sec-createregexpstringiterator
 export function CreateRegExpStringIterator(R, S, global, fullUnicode) {
   // 1. Assert: Type(S) is String.
-  Assert(Type(S) === 'String');
+  Assert(S instanceof JSStringValue);
   // 2. Assert: Type(global) is Boolean.
-  Assert(Type(global) === 'Boolean');
+  Assert(global instanceof BooleanValue);
   // 3. Assert: Type(fullUnicode) is Boolean.
-  Assert(Type(fullUnicode) === 'Boolean');
+  Assert(fullUnicode instanceof BooleanValue);
   // 4. Let closure be a new Abstract Closure with no parameters that captures R, S, global, and fullUnicode and performs the following steps when called:
   const closure = function* closure() {
     // a. Repeat,

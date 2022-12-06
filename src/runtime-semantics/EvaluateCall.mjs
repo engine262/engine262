@@ -1,5 +1,7 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Type, Value, ReferenceRecord } from '../value.mjs';
+import {
+  ObjectValue, Value, ReferenceRecord,
+} from '../value.mjs';
 import {
   Assert,
   IsPropertyReference,
@@ -36,7 +38,7 @@ export function* EvaluateCall(func, ref, args, tailPosition) {
   // 3. Let argList be ? ArgumentListEvaluation of arguments.
   const argList = Q(yield* ArgumentListEvaluation(args));
   // 4. If Type(func) is not Object, throw a TypeError exception.
-  if (Type(func) !== 'Object') {
+  if (!(func instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
   }
   // 5. If IsCallable(func) is false, throw a TypeError exception.

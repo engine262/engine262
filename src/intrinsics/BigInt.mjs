@@ -1,5 +1,5 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Type, Value } from '../value.mjs';
+import { NumberValue, Value } from '../value.mjs';
 import {
   ToBigInt,
   ToIndex,
@@ -20,7 +20,7 @@ function BigIntConstructor([value], { NewTarget }) {
   const prim = Q(ToPrimitive(value, 'number'));
   // 3. If Type(prim) is Number, return ? NumberToBigInt(prim).
   // 4. Otherwise, return ? ToBigInt(value).
-  if (Type(prim) === 'Number') {
+  if (prim instanceof NumberValue) {
     return Q(NumberToBigInt(prim));
   } else {
     return Q(ToBigInt(value));
