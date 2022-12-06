@@ -14,7 +14,7 @@ import {
 import { Evaluate } from '../evaluator.mjs';
 import { Q, ReturnIfAbrupt, X } from '../completion.mjs';
 import {
-  Type, TypeForMethod, Value, ReferenceRecord,
+  TypeForMethod, Value, ReferenceRecord, UndefinedValue, BigIntValue, BooleanValue, JSStringValue, NullValue, NumberValue, ObjectValue, SymbolValue,
 } from '../value.mjs';
 import { EnvironmentRecord } from '../environment.mjs';
 import { OutOfRange } from '../helpers.mjs';
@@ -89,30 +89,27 @@ function* Evaluate_UnaryExpression_Typeof({ UnaryExpression }) {
   // 3. Set val to ? GetValue(val).
   val = Q(GetValue(val));
   // 4. Return a String according to Table 37.
-  const type = Type(val);
-  switch (type) {
-    case 'Undefined':
-      return new Value('undefined');
-    case 'Null':
-      return new Value('object');
-    case 'Boolean':
-      return new Value('boolean');
-    case 'Number':
-      return new Value('number');
-    case 'String':
-      return new Value('string');
-    case 'BigInt':
-      return new Value('bigint');
-    case 'Symbol':
-      return new Value('symbol');
-    case 'Object':
-      if (IsCallable(val) === Value.true) {
-        return new Value('function');
-      }
-      return new Value('object');
-    default:
-      throw new OutOfRange('Evaluate_UnaryExpression_Typeof', type);
+  if (val instanceof UndefinedValue) {
+    return new JSStringValue('undefined');
+  } else if (val instanceof NullValue) {
+    return new JSStringValue('object');
+  } else if (val instanceof BooleanValue) {
+    return new JSStringValue('boolean');
+  } else if (val instanceof NumberValue) {
+    return new JSStringValue('number');
+  } else if (val instanceof JSStringValue) {
+    return new JSStringValue('string');
+  } else if (val instanceof BigIntValue) {
+    return new JSStringValue('bigint');
+  } else if (val instanceof SymbolValue) {
+    return new JSStringValue('symbol');
+  } else if (val instanceof ObjectValue) {
+    if (IsCallable(val) === Value.true) {
+      return new JSStringValue('function');
+    }
+    return new JSStringValue('object');
   }
+  throw new OutOfRange('Evaluate_UnaryExpression_Typeof', val);
 }
 
 // #sec-unary-plus-operator-runtime-semantics-evaluation

@@ -1,5 +1,5 @@
 import { NewModuleEnvironment } from './environment.mjs';
-import { Value, Type } from './value.mjs';
+import { Value, JSStringValue } from './value.mjs';
 import { ExecutionContext, HostResolveImportedModule, surroundingAgent } from './engine.mjs';
 import {
   Assert,
@@ -34,7 +34,7 @@ import { Evaluate } from './evaluator.mjs';
 export class ResolvedBindingRecord {
   constructor({ Module, BindingName }) {
     Assert(Module instanceof AbstractModuleRecord);
-    Assert(BindingName === 'namespace' || Type(BindingName) === 'String');
+    Assert(BindingName === 'namespace' || BindingName instanceof JSStringValue);
     this.Module = Module;
     this.BindingName = BindingName;
   }

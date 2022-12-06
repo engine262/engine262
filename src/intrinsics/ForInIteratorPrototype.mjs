@@ -1,4 +1,4 @@
-import { Value, Type } from '../value.mjs';
+import { Value, JSStringValue, ObjectValue } from '../value.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import {
   Assert,
@@ -12,7 +12,7 @@ import { bootstrapPrototype } from './bootstrap.mjs';
 // #sec-createforiniterator
 export function CreateForInIterator(object) {
   // 1. Assert: Type(object) is Object.
-  Assert(Type(object) === 'Object');
+  Assert(object instanceof ObjectValue);
   // 2. Let iterator be ObjectCreate(%ForInIteratorPrototype%, « [[Object]], [[ObjectWasVisited]], [[VisitedKeys]], [[RemainingKeys]] »).
   const iterator = OrdinaryObjectCreate(surroundingAgent.intrinsic('%ForInIteratorPrototype%'), [
     'Object',
@@ -37,7 +37,7 @@ function ForInIteratorPrototype_next(args, { thisValue }) {
   // 1. Let O be this value.
   const O = thisValue;
   // 2. Assert: Type(O) is Object.
-  Assert(Type(O) === 'Object');
+  Assert(O instanceof ObjectValue);
   // 3. Assert: O has all the internal slot sof a For-In Iterator Instance.
   Assert('Object' in O && 'ObjectWasVisited' in O && 'VisitedKeys' in O && 'RemainingKeys in O');
   // 4. Let object be O.[[Object]].
@@ -55,7 +55,7 @@ function ForInIteratorPrototype_next(args, { thisValue }) {
       // ii. for each key of keys in List order, do
       for (const key of keys) {
         // 1. If Type(key) is String, then
-        if (Type(key) === 'String') {
+        if (key instanceof JSStringValue) {
           // a. Append key to remaining.
           remaining.push(key);
         }

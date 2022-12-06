@@ -4,7 +4,9 @@ import {
 } from '../engine.mjs';
 import {
   Descriptor,
-  Type,
+  SymbolValue,
+  ObjectValue,
+  UndefinedValue,
   Value,
   PrivateName,
 } from '../value.mjs';
@@ -63,7 +65,7 @@ export function isFunctionObject(O) {
 // #sec-prepareforordinarycall
 export function PrepareForOrdinaryCall(F, newTarget) {
   // 1. Assert: Type(newTarget) is Undefined or Object.
-  Assert(Type(newTarget) === 'Undefined' || Type(newTarget) === 'Object');
+  Assert(newTarget instanceof UndefinedValue || newTarget instanceof ObjectValue);
   // 2. Let callerContext be the running execution context.
   // const callerContext = surroundingAgent.runningExecutionContext;
   // 3. Let calleeContext be a new ECMAScript code execution context.
@@ -224,7 +226,7 @@ function FunctionConstructSlot(argumentsList, newTarget) {
   // 1. Assert: F is an ECMAScript function object.
   Assert(isECMAScriptFunctionObject(F));
   // 2. Assert: Type(newTarget) is Object.
-  Assert(Type(newTarget) === 'Object');
+  Assert(newTarget instanceof ObjectValue);
   // 3. Let callerContext be the running execution context.
   // 4. Let kind be F.[[ConstructorKind]].
   const kind = F.ConstructorKind;
@@ -262,7 +264,7 @@ function FunctionConstructSlot(argumentsList, newTarget) {
   // 12. If result.[[Type]] is return, then
   if (result.Type === 'return') {
     // a. If Type(result.[[Value]]) is Object, return NormalCompletion(result.[[Value]]).
-    if (Type(result.Value) === 'Object') {
+    if (result.Value instanceof ObjectValue) {
       return NormalCompletion(result.Value);
     }
     // b. If kind is base, return NormalCompletion(thisArgument).
@@ -283,7 +285,7 @@ function FunctionConstructSlot(argumentsList, newTarget) {
 // #sec-functionallocate
 export function OrdinaryFunctionCreate(functionPrototype, sourceText, ParameterList, Body, thisMode, Scope, PrivateScope) {
   // 1. Assert: Type(functionPrototype) is Object.
-  Assert(Type(functionPrototype) === 'Object');
+  Assert(functionPrototype instanceof ObjectValue);
   // 2. Let internalSlotsList be the internal slots listed in Table 33.
   const internalSlotsList = [
     'Environment',
@@ -390,7 +392,7 @@ export function MakeClassConstructor(F) {
 // 9.2.12 #sec-makemethod
 export function MakeMethod(F, homeObject) {
   Assert(isECMAScriptFunctionObject(F));
-  Assert(Type(homeObject) === 'Object');
+  Assert(homeObject instanceof ObjectValue);
   F.HomeObject = homeObject;
   return NormalCompletion(Value.undefined);
 }
@@ -400,7 +402,7 @@ export function SetFunctionName(F, name, prefix) {
   // 1. Assert: F is an extensible object that does not have a "name" own property.
   Assert(IsExtensible(F) === Value.true && HasOwnProperty(F, new Value('name')) === Value.false);
   // 2. If Type(name) is Symbol, then
-  if (Type(name) === 'Symbol') {
+  if (name instanceof SymbolValue) {
     // a. Let description be name's [[Description]] value.
     const description = name.Description;
     // b. If description is undefined, set name to the empty String.

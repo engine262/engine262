@@ -2,7 +2,8 @@ import { AbstractModuleRecord } from './modules.mjs';
 import {
   Descriptor,
   ReferenceRecord,
-  Type,
+  UndefinedValue,
+  ObjectValue,
   Value,
   wellKnownSymbols,
 } from './value.mjs';
@@ -240,7 +241,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
     // 6. Let unscopables be ? Get(bindings, @@unscopables).
     const unscopables = Q(Get(bindings, wellKnownSymbols.unscopables));
     // 7. If Type(unscopables) is Object, then
-    if (Type(unscopables) === 'Object') {
+    if (unscopables instanceof ObjectValue) {
       // a. Let blocked be ! ToBoolean(? Get(unscopables, N)).
       const blocked = X(ToBoolean(Q(Get(unscopables, N))));
       // b. If blocked is true, return false.
@@ -438,7 +439,7 @@ export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
       return Value.undefined;
     }
     // 3. Assert: Type(home) is Object.
-    Assert(Type(home) === 'Object');
+    Assert(home instanceof ObjectValue);
     // 4. Return ? home.[[GetPrototypeOf]]().
     return Q(home.GetPrototypeOf());
   }
@@ -926,7 +927,7 @@ export function NewFunctionEnvironment(F, newTarget) {
   // 1. Assert: F is an ECMAScript function.
   Assert(isECMAScriptFunctionObject(F));
   // 2. Assert: Type(newTarget) is Undefined or Object.
-  Assert(Type(newTarget) === 'Undefined' || Type(newTarget) === 'Object');
+  Assert(newTarget instanceof UndefinedValue || newTarget instanceof ObjectValue);
   // 3. Let env be a new function Environment Record containing no bindings.
   const env = new FunctionEnvironmentRecord();
   // 4. Set env.[[FunctionObject]] to F.

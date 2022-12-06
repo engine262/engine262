@@ -1,6 +1,6 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
-  Type,
+  SymbolValue,
   Value,
 } from '../value.mjs';
 import {
@@ -26,7 +26,7 @@ function StringConstructor([value], { NewTarget }) {
   if (value === undefined) {
     s = new Value('');
   } else {
-    if (NewTarget === Value.undefined && Type(value) === 'Symbol') {
+    if (NewTarget === Value.undefined && value instanceof SymbolValue) {
       return X(SymbolDescriptiveString(value));
     }
     s = Q(ToString(value));

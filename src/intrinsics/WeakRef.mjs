@@ -1,5 +1,5 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Type, Value } from '../value.mjs';
+import { ObjectValue, Value } from '../value.mjs';
 import { AddToKeptObjects, OrdinaryCreateFromConstructor } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
@@ -11,7 +11,7 @@ function WeakRefConstructor([target = Value.undefined], { NewTarget }) {
     return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
   // 2. If Type(target) is not Object, throw a TypeError exception.
-  if (Type(target) !== 'Object') {
+  if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
   // 3. Let weakRef be ? OrdinaryCreateFromConstructor(NewTarget, "%WeakRefPrototype%", « [[WeakRefTarget]] »).

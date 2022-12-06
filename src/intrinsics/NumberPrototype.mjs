@@ -1,5 +1,5 @@
 import {
-  Type,
+  ObjectValue,
   Value,
   NumberValue,
 } from '../value.mjs';
@@ -14,12 +14,12 @@ import { Q, X } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
 function thisNumberValue(value) {
-  if (Type(value) === 'Number') {
+  if (value instanceof NumberValue) {
     return value;
   }
-  if (Type(value) === 'Object' && 'NumberData' in value) {
+  if (value instanceof ObjectValue && 'NumberData' in value) {
     const n = value.NumberData;
-    Assert(Type(n) === 'Number');
+    Assert(n instanceof NumberValue);
     return n;
   }
   return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Number', value);

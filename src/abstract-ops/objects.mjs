@@ -1,7 +1,7 @@
 import {
   Descriptor,
   ObjectValue,
-  Type,
+  SymbolValue, JSStringValue, UndefinedValue, NullValue,
   Value,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
@@ -29,7 +29,7 @@ export function OrdinaryGetPrototypeOf(O) {
 
 // 9.1.2.1 OrdinarySetPrototypeOf
 export function OrdinarySetPrototypeOf(O, V) {
-  Assert(Type(V) === 'Object' || Type(V) === 'Null');
+  Assert(V instanceof ObjectValue || V instanceof NullValue);
 
   const current = O.Prototype;
   if (SameValue(V, current) === Value.true) {
@@ -116,7 +116,7 @@ export function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, curre
     Assert(extensible === Value.true);
 
     if (IsGenericDescriptor(Desc) || IsDataDescriptor(Desc)) {
-      if (Type(O) !== 'Undefined') {
+      if (!(O instanceof UndefinedValue)) {
         O.properties.set(P, Descriptor({
           Value: Desc.Value === undefined ? Value.undefined : Desc.Value,
           Writable: Desc.Writable === undefined ? Value.false : Desc.Writable,
@@ -126,7 +126,7 @@ export function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, curre
       }
     } else {
       Assert(IsAccessorDescriptor(Desc));
-      if (Type(O) !== 'Undefined') {
+      if (!(O instanceof UndefinedValue)) {
         O.properties.set(P, Descriptor({
           Get: Desc.Get === undefined ? Value.undefined : Desc.Get,
           Set: Desc.Set === undefined ? Value.undefined : Desc.Set,
@@ -160,7 +160,7 @@ export function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, curre
       return Value.false;
     }
     if (IsDataDescriptor(current)) {
-      if (Type(O) !== 'Undefined') {
+      if (!(O instanceof UndefinedValue)) {
         const entry = O.properties.get(P);
         entry.Value = undefined;
         entry.Writable = undefined;
@@ -168,7 +168,7 @@ export function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, curre
         entry.Set = Value.undefined;
       }
     } else {
-      if (Type(O) !== 'Undefined') {
+      if (!(O instanceof UndefinedValue)) {
         const entry = O.properties.get(P);
         entry.Get = undefined;
         entry.Set = undefined;
@@ -199,7 +199,7 @@ export function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, curre
     }
   }
 
-  if (Type(O) !== 'Undefined') {
+  if (!(O instanceof UndefinedValue)) {
     const target = O.properties.get(P);
     if (Desc.Value !== undefined) {
       target.Value = Desc.Value;
@@ -229,11 +229,11 @@ export function OrdinaryHasProperty(O, P) {
   Assert(IsPropertyKey(P));
 
   const hasOwn = Q(O.GetOwnProperty(P));
-  if (Type(hasOwn) !== 'Undefined') {
+  if (!(hasOwn instanceof UndefinedValue)) {
     return Value.true;
   }
   const parent = Q(O.GetPrototypeOf());
-  if (Type(parent) !== 'Null') {
+  if (!(parent instanceof NullValue)) {
     return Q(parent.HasProperty(P));
   }
   return Value.false;
@@ -244,9 +244,9 @@ export function OrdinaryGet(O, P, Receiver) {
   Assert(IsPropertyKey(P));
 
   const desc = Q(O.GetOwnProperty(P));
-  if (Type(desc) === 'Undefined') {
+  if (desc instanceof UndefinedValue) {
     const parent = Q(O.GetPrototypeOf());
-    if (Type(parent) === 'Null') {
+    if (parent instanceof NullValue) {
       return Value.undefined;
     }
     return Q(parent.Get(P, Receiver));
@@ -256,7 +256,7 @@ export function OrdinaryGet(O, P, Receiver) {
   }
   Assert(IsAccessorDescriptor(desc));
   const getter = desc.Get;
-  if (Type(getter) === 'Undefined') {
+  if (getter instanceof UndefinedValue) {
     return Value.undefined;
   }
   return Q(Call(getter, Receiver));
@@ -273,9 +273,9 @@ export function OrdinarySet(O, P, V, Receiver) {
 export function OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc) {
   Assert(IsPropertyKey(P));
 
-  if (Type(ownDesc) === 'Undefined') {
+  if (ownDesc instanceof UndefinedValue) {
     const parent = Q(O.GetPrototypeOf());
-    if (Type(parent) !== 'Null') {
+    if (!(parent instanceof NullValue)) {
       return Q(parent.Set(P, V, Receiver));
     }
     ownDesc = Descriptor({
@@ -290,12 +290,12 @@ export function OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc) {
     if (ownDesc.Writable !== undefined && ownDesc.Writable === Value.false) {
       return Value.false;
     }
-    if (Type(Receiver) !== 'Object') {
+    if (!(Receiver instanceof ObjectValue)) {
       return Value.false;
     }
 
     const existingDescriptor = Q(Receiver.GetOwnProperty(P));
-    if (Type(existingDescriptor) !== 'Undefined') {
+    if (!(existingDescriptor instanceof UndefinedValue)) {
       if (IsAccessorDescriptor(existingDescriptor)) {
         return Value.false;
       }
@@ -310,7 +310,7 @@ export function OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc) {
 
   Assert(IsAccessorDescriptor(ownDesc));
   const setter = ownDesc.Set;
-  if (setter === undefined || Type(setter) === 'Undefined') {
+  if (setter === undefined || setter instanceof UndefinedValue) {
     return Value.false;
   }
   Q(Call(setter, Receiver, [V]));
@@ -321,7 +321,7 @@ export function OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc) {
 export function OrdinaryDelete(O, P) {
   Assert(IsPropertyKey(P));
   const desc = Q(O.GetOwnProperty(P));
-  if (Type(desc) === 'Undefined') {
+  if (desc instanceof UndefinedValue) {
     return Value.true;
   }
   if (desc.Configurable === Value.true) {
@@ -348,7 +348,7 @@ export function OrdinaryOwnPropertyKeys(O) {
   // P is not an array index, in ascending chronological order of property creation, do
   //   Add P as the last element of keys.
   for (const P of O.properties.keys()) {
-    if (Type(P) === 'String' && isArrayIndex(P) === false) {
+    if (P instanceof JSStringValue && isArrayIndex(P) === false) {
       keys.push(P);
     }
   }
@@ -357,7 +357,7 @@ export function OrdinaryOwnPropertyKeys(O) {
   // in ascending chronological order of property creation, do
   //   Add P as the last element of keys.
   for (const P of O.properties.keys()) {
-    if (Type(P) === 'Symbol') {
+    if (P instanceof SymbolValue) {
       keys.push(P);
     }
   }
@@ -394,10 +394,9 @@ export function GetPrototypeFromConstructor(constructor, intrinsicDefaultProto) 
   // is this specification's name of an intrinsic object.
   Assert(IsCallable(constructor) === Value.true);
   let proto = Q(Get(constructor, new Value('prototype')));
-  if (Type(proto) !== 'Object') {
+  if (!(proto instanceof ObjectValue)) {
     const realm = Q(GetFunctionRealm(constructor));
     proto = realm.Intrinsics[intrinsicDefaultProto];
   }
   return proto;
 }
-

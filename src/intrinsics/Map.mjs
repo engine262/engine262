@@ -11,7 +11,7 @@ import {
   OrdinaryCreateFromConstructor,
 } from '../abstract-ops/all.mjs';
 import {
-  Type,
+  ObjectValue,
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
@@ -33,7 +33,7 @@ export function AddEntriesFromIterable(target, iterable, adder) {
       return target;
     }
     const nextItem = Q(IteratorValue(next));
-    if (Type(nextItem) !== 'Object') {
+    if (!(nextItem instanceof ObjectValue)) {
       const error = surroundingAgent.Throw('TypeError', 'NotAnObject', nextItem);
       return Q(IteratorClose(iteratorRecord, error));
     }

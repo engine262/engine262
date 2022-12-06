@@ -1,5 +1,5 @@
 import { HostGetImportMetaProperties, HostFinalizeImportMeta } from '../engine.mjs';
-import { Type, Value } from '../value.mjs';
+import { ObjectValue, Value } from '../value.mjs';
 import {
   Assert,
   GetActiveScriptOrModule,
@@ -37,7 +37,7 @@ export function Evaluate_ImportMeta(_ImportMeta) {
     return importMeta;
   } else { // 5. Else,
     // a. Assert: Type(importMeta) is Object.
-    Assert(Type(importMeta) === 'Object');
+    Assert(importMeta instanceof ObjectValue);
     // b. Return importMeta.
     return importMeta;
   }

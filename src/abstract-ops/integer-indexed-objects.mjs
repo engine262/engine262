@@ -1,4 +1,6 @@
-import { Value, Type, Descriptor } from '../value.mjs';
+import {
+  Value, NumberValue, SymbolValue, JSStringValue, Descriptor,
+} from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import {
   Assert,
@@ -36,7 +38,7 @@ export function IntegerIndexedGetOwnProperty(P) {
   // 2. Assert: O is an Integer-Indexed exotic object.
   Assert(isIntegerIndexedExoticObject(O));
   // 3. If Type(P) is String, then
-  if (Type(P) === 'String') {
+  if (P instanceof JSStringValue) {
     // a. Let numericIndex be ! CanonicalNumericIndexString(P).
     const numericIndex = X(CanonicalNumericIndexString(P));
     // b. If numericIndex is not undefined, then
@@ -68,7 +70,7 @@ export function IntegerIndexedHasProperty(P) {
   // 2. Assert: O is an Integer-Indexed exotic object.
   Assert(isIntegerIndexedExoticObject(O));
   // 3. If Type(P) is String, then
-  if (Type(P) === 'String') {
+  if (P instanceof JSStringValue) {
     // a. Let numericIndex be ! CanonicalNumericIndexString(P).
     const numericIndex = X(CanonicalNumericIndexString(P));
     // b. If numericIndex is not undefined, then
@@ -99,7 +101,7 @@ export function IntegerIndexedDefineOwnProperty(P, Desc) {
   // 2. Assert: O is an Integer-Indexed exotic object.
   Assert(isIntegerIndexedExoticObject(O));
   // 3. If Type(P) is String, then
-  if (Type(P) === 'String') {
+  if (P instanceof JSStringValue) {
     // a. Let numericIndex be ! CanonicalNumericIndexString(P).
     const numericIndex = X(CanonicalNumericIndexString(P));
     // b. If numericIndex is not undefined, then
@@ -145,7 +147,7 @@ export function IntegerIndexedGet(P, Receiver) {
   // 1. Assert: IsPropertykey(P) is true.
   Assert(IsPropertyKey(P));
   // 2. If Type(P) is String, then
-  if (Type(P) === 'String') {
+  if (P instanceof JSStringValue) {
     // a. Let numericIndex be ! CanonicalNumericIndexString(P).
     const numericIndex = X(CanonicalNumericIndexString(P));
     // b. If numericIndex is not undefined, then
@@ -164,7 +166,7 @@ export function IntegerIndexedSet(P, V, Receiver) {
   // 1. Assert: IsPropertyKey(P) is true.
   Assert(IsPropertyKey(P));
   // 2. If Type(P) is String, then
-  if (Type(P) === 'String') {
+  if (P instanceof JSStringValue) {
     // a. Let numericIndex be ! CanonicalNumericIndexString(P).
     const numericIndex = X(CanonicalNumericIndexString(P));
     // b. If numericIndex is not undefined, then
@@ -187,7 +189,7 @@ export function IntegerIndexedDelete(P) {
   // 2. Assert: O is an Integer-Indexed exotic object.
   Assert(isIntegerIndexedExoticObject(O));
   // 3. If Type(P) is String, then
-  if (Type(P) === 'String') {
+  if (P instanceof JSStringValue) {
     // a. Let numericIndex be ! CanonicalNumericIndexString(P).
     const numericIndex = X(CanonicalNumericIndexString(P));
     // b. If numericIndex is not undefined, then
@@ -224,7 +226,7 @@ export function IntegerIndexedOwnPropertyKeys() {
   }
   // 5. For each own property key P of O such that Type(P) is String and P is not an integer index, in ascending chronological order of property creation, do
   for (const P of O.properties.keys()) {
-    if (Type(P) === 'String') {
+    if (P instanceof JSStringValue) {
       if (!isIntegerIndex(P)) {
         // a. Add P as the last element of keys.
         keys.push(P);
@@ -233,7 +235,7 @@ export function IntegerIndexedOwnPropertyKeys() {
   }
   // 6. For each own property key P of O such that Type(P) is Symbol, in ascending chronological order of property creation, do
   for (const P of O.properties.keys()) {
-    if (Type(P) === 'Symbol') {
+    if (P instanceof SymbolValue) {
       // a. Add P as the last element of keys.
       keys.push(P);
     }
@@ -247,7 +249,7 @@ export function IntegerIndexedElementGet(O, index) {
   // 1. Assert: O is an Integer-Indexed exotic object.
   Assert(isIntegerIndexedExoticObject(O));
   // 2. Assert: Type(index) is Number.
-  Assert(Type(index) === 'Number');
+  Assert(index instanceof NumberValue);
   // 3. Let buffer be O.[[ViewedArrayBuffer]].
   const buffer = O.ViewedArrayBuffer;
   // 4. If IsDetachedBuffer(buffer) is true, return undefined.
@@ -277,7 +279,7 @@ export function IntegerIndexedElementSet(O, index, value) {
   // 1. Assert: O is an Integer-Indexed exotic object.
   Assert(isIntegerIndexedExoticObject(O));
   // 2. Assert: Type(index) is Number.
-  Assert(Type(index) === 'Number');
+  Assert(index instanceof NumberValue);
   // 3. If O.[[ContentType]] is BigInt, let numValue be ? ToBigInt(value).
   // 4. Otherwise, let numValue be ? ToNumber(value).
   let numValue;

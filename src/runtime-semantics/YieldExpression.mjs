@@ -1,5 +1,5 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Type, Value } from '../value.mjs';
+import { ObjectValue, Value } from '../value.mjs';
 import {
   Assert,
   Call,
@@ -54,7 +54,7 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }) {
           innerResult = Q(yield* Await(innerResult));
         }
         // iii. If Type(innerResult) is not Object, throw a TypeError exception.
-        if (Type(innerResult) !== 'Object') {
+        if (!(innerResult instanceof ObjectValue)) {
           return surroundingAgent.Throw('TypeError', 'NotAnObject', innerResult);
         }
         // iv. Let done be ? IteratorComplete(innerResult).
@@ -83,7 +83,7 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }) {
           }
           // 3. NOTE: Exceptions from the inner iterator throw method are propagated. Normal completions from an inner throw method are processed similarly to an inner next.
           // 4. If Type(innerResult) is not Object, throw a TypeError exception.
-          if (Type(innerResult) !== 'Object') {
+          if (!(innerResult instanceof ObjectValue)) {
             return surroundingAgent.Throw('TypeError', 'NotAnObject', innerResult);
           }
           // 5. Let done be ? IteratorComplete(innerResult).
@@ -135,7 +135,7 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }) {
           innerReturnResult = Q(yield* Await(innerReturnResult));
         }
         // vi. If Type(innerReturnResult) is not Object, throw a TypeError exception.
-        if (Type(innerReturnResult) !== 'Object') {
+        if (!(innerReturnResult instanceof ObjectValue)) {
           return surroundingAgent.Throw('TypeError', 'NotAnObject', innerReturnResult);
         }
         // vii. Let done be ? IteratorComplete(innerReturnResult).

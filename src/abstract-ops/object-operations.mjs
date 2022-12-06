@@ -1,6 +1,6 @@
 import {
   Descriptor,
-  Type,
+  Type, JSStringValue, BooleanValue,
   Value,
   ObjectValue,
   wellKnownSymbols,
@@ -57,7 +57,7 @@ export function MakeBasicObject(internalSlotsList) {
 
 // 7.3.1 #sec-get-o-p
 export function Get(O, P) {
-  Assert(Type(O) === 'Object');
+  Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
   // TODO: This should just return Q(O.Get(P, O))
   return NormalCompletion(Q(O.Get(P, O)));
@@ -72,9 +72,9 @@ export function GetV(V, P) {
 
 // 7.3.3 #sec-set-o-p-v-throw
 export function Set(O, P, V, Throw) {
-  Assert(Type(O) === 'Object');
+  Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
-  Assert(Type(Throw) === 'Boolean');
+  Assert(Throw instanceof BooleanValue);
   const success = Q(O.Set(P, V, O));
   if (success === Value.false && Throw === Value.true) {
     return surroundingAgent.Throw('TypeError', 'CannotSetProperty', P, O);
@@ -84,7 +84,7 @@ export function Set(O, P, V, Throw) {
 
 // 7.3.4 #sec-createdataproperty
 export function CreateDataProperty(O, P, V) {
-  Assert(Type(O) === 'Object');
+  Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
 
   const newDesc = Descriptor({
@@ -98,7 +98,7 @@ export function CreateDataProperty(O, P, V) {
 
 // 7.3.5 #sec-createmethodproperty
 export function CreateMethodProperty(O, P, V) {
-  Assert(Type(O) === 'Object');
+  Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
 
   const newDesc = Descriptor({
@@ -112,7 +112,7 @@ export function CreateMethodProperty(O, P, V) {
 
 // 7.3.6 #sec-createdatapropertyorthrow
 export function CreateDataPropertyOrThrow(O, P, V) {
-  Assert(Type(O) === 'Object');
+  Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
   const success = Q(CreateDataProperty(O, P, V));
   if (success === Value.false) {
@@ -123,7 +123,7 @@ export function CreateDataPropertyOrThrow(O, P, V) {
 
 // 7.3.7 #sec-definepropertyorthrow
 export function DefinePropertyOrThrow(O, P, desc) {
-  Assert(Type(O) === 'Object');
+  Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
   const success = Q(O.DefineOwnProperty(P, desc));
   if (success === Value.false) {
@@ -134,7 +134,7 @@ export function DefinePropertyOrThrow(O, P, desc) {
 
 // 7.3.8 #sec-deletepropertyorthrow
 export function DeletePropertyOrThrow(O, P) {
-  Assert(Type(O) === 'Object');
+  Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
   const success = Q(O.Delete(P));
   if (success === Value.false) {
@@ -158,14 +158,14 @@ export function GetMethod(V, P) {
 
 // 7.3.10 #sec-hasproperty
 export function HasProperty(O, P) {
-  Assert(Type(O) === 'Object');
+  Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
   return Q(O.HasProperty(P));
 }
 
 // 7.3.11 #sec-hasownproperty
 export function HasOwnProperty(O, P) {
-  Assert(Type(O) === 'Object');
+  Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
   const desc = Q(O.GetOwnProperty(P));
   if (desc === Value.undefined) {
@@ -203,7 +203,7 @@ export function Construct(F, argumentsList, newTarget) {
 
 // 7.3.14 #sec-setintegritylevel
 export function SetIntegrityLevel(O, level) {
-  Assert(Type(O) === 'Object');
+  Assert(O instanceof ObjectValue);
   Assert(level === 'sealed' || level === 'frozen');
   const status = Q(O.PreventExtensions());
   if (status === Value.false) {
@@ -233,7 +233,7 @@ export function SetIntegrityLevel(O, level) {
 
 // 7.3.15 #sec-testintegritylevel
 export function TestIntegrityLevel(O, level) {
-  Assert(Type(O) === 'Object');
+  Assert(O instanceof ObjectValue);
   Assert(level === 'sealed' || level === 'frozen');
   const extensible = Q(IsExtensible(O));
   if (extensible === Value.true) {
@@ -278,7 +278,7 @@ export function CreateArrayFromList(elements) {
 // 7.3.17 #sec-lengthofarraylike
 export function LengthOfArrayLike(obj) {
   // 1. Assert: Type(obj) is Object.
-  Assert(Type(obj) === 'Object');
+  Assert(obj instanceof ObjectValue);
   // 2. Return ℝ(? ToLength(? Get(obj, "length"))).
   return Q(ToLength(Q(Get(obj, new Value('length'))))).numberValue();
 }
@@ -290,7 +290,7 @@ export function CreateListFromArrayLike(obj, elementTypes) {
     elementTypes = ['Undefined', 'Null', 'Boolean', 'String', 'Symbol', 'Number', 'BigInt', 'Object'];
   }
   // 2. If Type(obj) is not Object, throw a TypeError exception.
-  if (Type(obj) !== 'Object') {
+  if (!(obj instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', obj);
   }
   // 3. Let len be ? LengthOfArrayLike(obj).
@@ -337,11 +337,11 @@ export function OrdinaryHasInstance(C, O) {
     const BC = C.BoundTargetFunction;
     return Q(InstanceofOperator(O, BC));
   }
-  if (Type(O) !== 'Object') {
+  if (!(O instanceof ObjectValue)) {
     return Value.false;
   }
   const P = Q(Get(C, new Value('prototype')));
-  if (Type(P) !== 'Object') {
+  if (!(P instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', P);
   }
   while (true) {
@@ -357,12 +357,12 @@ export function OrdinaryHasInstance(C, O) {
 
 // 7.3.20 #sec-speciesconstructor
 export function SpeciesConstructor(O, defaultConstructor) {
-  Assert(Type(O) === 'Object');
+  Assert(O instanceof ObjectValue);
   const C = Q(Get(O, new Value('constructor')));
   if (C === Value.undefined) {
     return defaultConstructor;
   }
-  if (Type(C) !== 'Object') {
+  if (!(C instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', C);
   }
   const S = Q(Get(C, wellKnownSymbols.species));
@@ -377,11 +377,11 @@ export function SpeciesConstructor(O, defaultConstructor) {
 
 // 7.3.21 #sec-enumerableownpropertynames
 export function EnumerableOwnPropertyNames(O, kind) {
-  Assert(Type(O) === 'Object');
+  Assert(O instanceof ObjectValue);
   const ownKeys = Q(O.OwnPropertyKeys());
   const properties = [];
   for (const key of ownKeys) {
-    if (Type(key) === 'String') {
+    if (key instanceof JSStringValue) {
       const desc = Q(O.GetOwnProperty(key));
       if (desc !== Value.undefined && desc.Enumerable === Value.true) {
         if (kind === 'key') {
@@ -427,7 +427,7 @@ export function GetFunctionRealm(obj) {
 
 // 7.3.23 #sec-copydataproperties
 export function CopyDataProperties(target, source, excludedItems) {
-  Assert(Type(target) === 'Object');
+  Assert(target instanceof ObjectValue);
   Assert(excludedItems.every((i) => IsPropertyKey(i)));
   if (source === Value.undefined || source === Value.null) {
     return target;

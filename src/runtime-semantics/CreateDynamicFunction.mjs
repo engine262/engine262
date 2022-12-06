@@ -15,7 +15,9 @@ import {
 } from '../engine.mjs';
 import { wrappedParse } from '../parse.mjs';
 import { Token } from '../parser/tokens.mjs';
-import { Descriptor, Type, Value } from '../value.mjs';
+import {
+  Descriptor, UndefinedValue, Value,
+} from '../value.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
 // #table-dynamic-function-sourcetext-prefixes
@@ -38,7 +40,7 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
   // 5. Perform ? HostEnsureCanCompileStrings(callerRealm, calleeRealm).
   Q(HostEnsureCanCompileStrings(callerRealm, calleeRealm));
   // 6. If newTarget is undefined, set newTarget to constructor.
-  if (Type(newTarget) === 'Undefined') {
+  if (newTarget instanceof UndefinedValue) {
     newTarget = constructor;
   }
   // 7. If kind is normal, then

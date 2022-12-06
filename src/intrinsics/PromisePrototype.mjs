@@ -13,7 +13,7 @@ import {
   PromiseResolve,
   SpeciesConstructor,
 } from '../abstract-ops/all.mjs';
-import { Type, Value } from '../value.mjs';
+import { ObjectValue, Value } from '../value.mjs';
 import { Q, ThrowCompletion, X } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
@@ -30,7 +30,7 @@ function PromiseProto_finally([onFinally = Value.undefined], { thisValue }) {
   // 1. Let promise be the this value.
   const promise = thisValue;
   // 2. If Type(promise) is not Object, throw a TypeError exception.
-  if (Type(promise) !== 'Object') {
+  if (!(promise instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Promise', promise);
   }
   // 3. Let C be ? SpeciesConstructor(promise, %Promise%).

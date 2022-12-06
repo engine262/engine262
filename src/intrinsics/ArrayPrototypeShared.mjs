@@ -17,7 +17,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
-import { Type, Value } from '../value.mjs';
+import { NullValue, UndefinedValue, Value } from '../value.mjs';
 import { assignProps } from './bootstrap.mjs';
 
 // Algorithms and methods shared between %Array.prototype% and
@@ -348,7 +348,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     const O = Q(ToObject(thisValue));
     const len = Q(objectToLength(O));
     let sep;
-    if (Type(separator) === 'Undefined') {
+    if (separator instanceof UndefinedValue) {
       sep = ',';
     } else {
       sep = Q(ToString(separator)).stringValue();
@@ -362,7 +362,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
       const kStr = X(ToString(F(k)));
       const element = Q(Get(O, kStr));
       let next;
-      if (Type(element) === 'Undefined' || Type(element) === 'Null') {
+      if (element instanceof UndefinedValue || element instanceof NullValue) {
         next = '';
       } else {
         next = Q(ToString(element)).stringValue();

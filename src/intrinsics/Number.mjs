@@ -6,7 +6,8 @@ import {
 } from '../abstract-ops/all.mjs';
 import {
   Descriptor,
-  Type,
+  NumberValue,
+  BigIntValue,
   Value,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
@@ -17,7 +18,7 @@ function NumberConstructor([value], { NewTarget }) {
   let n;
   if (value !== undefined) {
     const prim = Q(ToNumeric(value));
-    if (Type(prim) === 'BigInt') {
+    if (prim instanceof BigIntValue) {
       n = F(Number(prim.bigintValue()));
     } else {
       n = prim;
@@ -35,7 +36,7 @@ function NumberConstructor([value], { NewTarget }) {
 
 // 20.1.2.2 #sec-number.isfinite
 function Number_isFinite([number = Value.undefined]) {
-  if (Type(number) !== 'Number') {
+  if (!(number instanceof NumberValue)) {
     return Value.false;
   }
 
@@ -52,7 +53,7 @@ function Number_isInteger([number = Value.undefined]) {
 
 // 20.1.2.4 #sec-number.isnan
 function Number_isNaN([number = Value.undefined]) {
-  if (Type(number) !== 'Number') {
+  if (!(number instanceof NumberValue)) {
     return Value.false;
   }
 
@@ -64,7 +65,7 @@ function Number_isNaN([number = Value.undefined]) {
 
 // 20.1.2.5 #sec-number.issafeinteger
 function Number_isSafeInteger([number = Value.undefined]) {
-  if (Type(number) !== 'Number') {
+  if (!(number instanceof NumberValue)) {
     return Value.false;
   }
 

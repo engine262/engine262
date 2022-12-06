@@ -7,7 +7,7 @@ import {
   SameValueZero,
 } from '../abstract-ops/all.mjs';
 import {
-  Type,
+  NumberValue,
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
@@ -155,7 +155,7 @@ function MapProto_set([key = Value.undefined, value = Value.undefined], { thisVa
     }
   }
   // 5. If key is -0𝔽, set key to +0𝔽.
-  if (Type(key) === 'Number' && Object.is(key.numberValue(), -0)) {
+  if (key instanceof NumberValue && Object.is(key.numberValue(), -0)) {
     key = F(+0);
   }
   // 6. Let p be the Record { [[Key]]: key, [[Value]]: value }.

@@ -8,7 +8,7 @@ import {
   NewPromiseCapability,
   Assert,
 } from '../abstract-ops/all.mjs';
-import { Type, Value } from '../value.mjs';
+import { ObjectValue, Value } from '../value.mjs';
 import { IfAbruptRejectPromise, X } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
@@ -17,7 +17,7 @@ function AsyncFromSyncIteratorPrototype_next([value], { thisValue }) {
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. Assert: Type(O) is Object and O has a [[SyncIteratorRecord]] internal slot.
-  Assert(Type(O) === 'Object' && 'SyncIteratorRecord' in O);
+  Assert(O instanceof ObjectValue && 'SyncIteratorRecord' in O);
   // 3. Let promiseCapability be ! NewPromiseCapability(%Promise%).
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
   // 4. Let syncIteratorRecord be O.[[SyncIteratorRecord]].
@@ -42,7 +42,7 @@ function AsyncFromSyncIteratorPrototype_return([value], { thisValue }) {
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. Assert: Type(O) is Object and O has a [[SyncIteratorRecord]] internal slot.
-  Assert(Type(O) === 'Object' && 'SyncIteratorRecord' in O);
+  Assert(O instanceof ObjectValue && 'SyncIteratorRecord' in O);
   // 3. Let promiseCapability be ! NewPromiseCapability(%Promise%).
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
   // 4. Let syncIterator be O.[[SyncIteratorRecord]].[[Iterator]].
@@ -72,7 +72,7 @@ function AsyncFromSyncIteratorPrototype_return([value], { thisValue }) {
   // 10. IfAbruptRejectPromise(result, promiseCapability).
   IfAbruptRejectPromise(result, promiseCapability);
   // 11. If Type(result) is not Object, then
-  if (Type(result) !== 'Object') {
+  if (!(result instanceof ObjectValue)) {
     // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
     X(Call(promiseCapability.Reject, Value.undefined, [
       surroundingAgent.Throw('TypeError', 'NotAnObject', result).Value,
@@ -89,7 +89,7 @@ function AsyncFromSyncIteratorPrototype_throw([value], { thisValue }) {
   // 1. Let O be this value.
   const O = thisValue;
   // 2. Assert: Type(O) is Object and O has a [[SyncIteratorRecord]] internal slot.
-  Assert(Type(O) === 'Object' && 'SyncIteratorRecord' in O);
+  Assert(O instanceof ObjectValue && 'SyncIteratorRecord' in O);
   // 3. Let promiseCapability be ! NewPromiseCapability(%Promise%).
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
   // 4. Let syncIterator be O.[[SyncIteratorRecord]].[[Iterator]].
@@ -117,7 +117,7 @@ function AsyncFromSyncIteratorPrototype_throw([value], { thisValue }) {
   // 10. IfAbruptRejectPromise(result, promiseCapability).
   IfAbruptRejectPromise(result, promiseCapability);
   // 11. If Type(result) is not Object, then
-  if (Type(result) !== 'Object') {
+  if (!(result instanceof ObjectValue)) {
     // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
     X(Call(promiseCapability.Reject, Value.undefined, [
       surroundingAgent.Throw('TypeError', 'NotAnObject', result).Value,

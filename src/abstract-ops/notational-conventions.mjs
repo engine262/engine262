@@ -1,5 +1,5 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Type } from '../value.mjs';
+import { ObjectValue } from '../value.mjs';
 
 class AssertError extends Error {}
 
@@ -12,7 +12,7 @@ export function Assert(invariant, source) {
 
 // 9.1.15 #sec-requireinternalslot
 export function RequireInternalSlot(O, internalSlot) {
-  if (Type(O) !== 'Object') {
+  if (!(O instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
   }
   if (!(internalSlot in O)) {

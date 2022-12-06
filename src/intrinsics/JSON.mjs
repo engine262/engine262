@@ -5,7 +5,7 @@ import {
   NumberValue,
   ObjectValue,
   JSStringValue,
-  Type,
+  UndefinedValue,
   Value,
 } from '../value.mjs';
 import {
@@ -36,7 +36,7 @@ import {
   Q, X,
 } from '../completion.mjs';
 import { ValueSet, kInternal } from '../helpers.mjs';
-import { evaluateScript, F } from '../api.mjs';
+import { BigIntValue, evaluateScript, F } from '../api.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
 const WHITESPACE = [' ', '\t', '\r', '\n'];
@@ -232,7 +232,7 @@ class JSONValidator {
 
 function InternalizeJSONProperty(holder, name, reviver) {
   const val = Q(Get(holder, name));
-  if (Type(val) === 'Object') {
+  if (val instanceof ObjectValue) {
     const isArray = Q(IsArray(val));
     if (isArray === Value.true) {
       let I = 0;
@@ -240,7 +240,7 @@ function InternalizeJSONProperty(holder, name, reviver) {
       while (I < len) {
         const Istr = X(ToString(F(I)));
         const newElement = Q(InternalizeJSONProperty(val, Istr, reviver));
-        if (Type(newElement) === 'Undefined') {
+        if (newElement instanceof UndefinedValue) {
           Q(val.Delete(Istr));
         } else {
           Q(CreateDataProperty(val, Istr, newElement));
@@ -251,7 +251,7 @@ function InternalizeJSONProperty(holder, name, reviver) {
       const keys = Q(EnumerableOwnPropertyNames(val, 'key'));
       for (const P of keys) {
         const newElement = Q(InternalizeJSONProperty(val, P, reviver));
-        if (Type(newElement) === 'Undefined') {
+        if (newElement instanceof UndefinedValue) {
           Q(val.Delete(P));
         } else {
           Q(CreateDataProperty(val, P, newElement));
@@ -312,7 +312,7 @@ const codeUnitTable = new Map([
 // #sec-serializejsonproperty
 function SerializeJSONProperty(state, key, holder) {
   let value = Q(Get(holder, key)); // eslint-disable-line no-shadow
-  if (Type(value) === 'Object' || Type(value) === 'BigInt') {
+  if (value instanceof ObjectValue || value instanceof BigIntValue) {
     const toJSON = Q(GetV(value, new Value('toJSON')));
     if (IsCallable(toJSON) === Value.true) {
       value = Q(Call(toJSON, value, [key]));
@@ -321,7 +321,7 @@ function SerializeJSONProperty(state, key, holder) {
   if (state.ReplacerFunction !== Value.undefined) {
     value = Q(Call(state.ReplacerFunction, holder, [key, value]));
   }
-  if (Type(value) === 'Object') {
+  if (value instanceof ObjectValue) {
     if ('NumberData' in value) {
       value = Q(ToNumber(value));
     } else if ('StringData' in value) {
@@ -341,19 +341,19 @@ function SerializeJSONProperty(state, key, holder) {
   if (value === Value.false) {
     return new Value('false');
   }
-  if (Type(value) === 'String') {
+  if (value instanceof JSStringValue) {
     return QuoteJSONString(value);
   }
-  if (Type(value) === 'Number') {
+  if (value instanceof NumberValue) {
     if (value.isFinite()) {
       return X(ToString(value));
     }
     return new Value('null');
   }
-  if (Type(value) === 'BigInt') {
+  if (value instanceof BigIntValue) {
     return surroundingAgent.Throw('TypeError', 'CannotJSONSerializeBigInt');
   }
-  if (Type(value) === 'Object' && IsCallable(value) === Value.false) {
+  if (value instanceof ObjectValue && IsCallable(value) === Value.false) {
     const isArray = Q(IsArray(value));
     if (isArray === Value.true) {
       return Q(SerializeJSONArray(state, value));
@@ -476,7 +476,7 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
   const indent = '';
   let PropertyList = Value.undefined;
   let ReplacerFunction = Value.undefined;
-  if (Type(replacer) === 'Object') {
+  if (replacer instanceof ObjectValue) {
     if (IsCallable(replacer) === Value.true) {
       ReplacerFunction = replacer;
     } else {
@@ -489,11 +489,11 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
           const vStr = X(ToString(F(k)));
           const v = Q(Get(replacer, vStr));
           let item = Value.undefined;
-          if (Type(v) === 'String') {
+          if (v instanceof JSStringValue) {
             item = v;
-          } else if (Type(v) === 'Number') {
+          } else if (v instanceof NumberValue) {
             item = X(ToString(v));
-          } else if (Type(v) === 'Object') {
+          } else if (v instanceof ObjectValue) {
             if ('StringData' in v || 'NumberData' in v) {
               item = Q(ToString(v));
             }
@@ -506,7 +506,7 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
       }
     }
   }
-  if (Type(space) === 'Object') {
+  if (space instanceof ObjectValue) {
     if ('NumberData' in space) {
       space = Q(ToNumber(space));
     } else if ('StringData' in space) {
@@ -514,14 +514,14 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
     }
   }
   let gap;
-  if (Type(space) === 'Number') {
+  if (space instanceof NumberValue) {
     space = Math.min(10, X(ToIntegerOrInfinity(space)));
     if (space < 1) {
       gap = '';
     } else {
       gap = ' '.repeat(space);
     }
-  } else if (Type(space) === 'String') {
+  } else if (space instanceof JSStringValue) {
     if (space.stringValue().length <= 10) {
       gap = space.stringValue();
     } else {

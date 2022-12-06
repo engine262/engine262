@@ -8,7 +8,7 @@ import {
   InitializeInstanceElements,
   isECMAScriptFunctionObject,
 } from '../abstract-ops/all.mjs';
-import { Type, Value } from '../value.mjs';
+import { ObjectValue, Value } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { FunctionEnvironmentRecord } from '../environment.mjs';
 import { ArgumentListEvaluation } from './all.mjs';
@@ -19,7 +19,7 @@ export function* Evaluate_SuperCall({ Arguments }) {
   // 1. Let newTarget be GetNewTarget().
   const newTarget = GetNewTarget();
   // 2. Assert: Type(newTarget) is Object.
-  Assert(Type(newTarget) === 'Object');
+  Assert(newTarget instanceof ObjectValue);
   // 3. Let func be ! GetSuperConstructor().
   const func = X(GetSuperConstructor());
   // 4. Let argList be ? ArgumentListEvaluation of Arguments.

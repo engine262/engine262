@@ -1,5 +1,5 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Value, Type } from '../value.mjs';
+import { Value, NullValue, ObjectValue } from '../value.mjs';
 import {
   Assert,
   GetValue,
@@ -92,7 +92,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, ob
   // 7. If isProtoSetter is true, then
   if (isProtoSetter) {
     // a. If Type(propValue) is either Object or Null, then
-    if (Type(propValue) === 'Object' || Type(propValue) === 'Null') {
+    if (propValue instanceof ObjectValue || propValue instanceof NullValue) {
       // i. Return object.[[SetPrototypeOf]](propValue).
       return object.SetPrototypeOf(propValue);
     }

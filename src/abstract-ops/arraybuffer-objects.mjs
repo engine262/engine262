@@ -1,5 +1,7 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Type, Value } from '../value.mjs';
+import {
+  NumberValue, BigIntValue, BooleanValue, ObjectValue, Value,
+} from '../value.mjs';
 import { Q, X, NormalCompletion } from '../completion.mjs';
 import {
   Assert, OrdinaryCreateFromConstructor,
@@ -31,7 +33,7 @@ export function AllocateArrayBuffer(constructor, byteLength) {
 // #sec-isdetachedbuffer
 export function IsDetachedBuffer(arrayBuffer) {
   // 1. Assert: Type(arrayBuffer) is Object and it has an [[ArrayBufferData]] internal slot.
-  Assert(Type(arrayBuffer) === 'Object' && 'ArrayBufferData' in arrayBuffer);
+  Assert(arrayBuffer instanceof ObjectValue && 'ArrayBufferData' in arrayBuffer);
   // 2. If arrayBuffer.[[ArrayBufferData]] is null, return true.
   if (arrayBuffer.ArrayBufferData === Value.null) {
     return Value.true;
@@ -43,7 +45,7 @@ export function IsDetachedBuffer(arrayBuffer) {
 // #sec-detacharraybuffer
 export function DetachArrayBuffer(arrayBuffer, key) {
   // 1. Assert: Type(arrayBuffer) is Object and it has [[ArrayBufferData]], [[ArrayBufferByteLength]], and [[ArrayBufferDetachKey]] internal slots.
-  Assert(Type(arrayBuffer) === 'Object'
+  Assert(arrayBuffer instanceof ObjectValue
          && 'ArrayBufferData' in arrayBuffer
          && 'ArrayBufferByteLength' in arrayBuffer
          && 'ArrayBufferDetachKey' in arrayBuffer);
@@ -72,7 +74,7 @@ export function IsSharedArrayBuffer(_obj) {
 
 export function CloneArrayBuffer(srcBuffer, srcByteOffset, srcLength, cloneConstructor) {
   // 1. Assert: Type(srcBuffer) is Object and it has an [[ArrayBufferData]] internal slot.
-  Assert(Type(srcBuffer) === 'Object' && 'ArrayBufferData' in srcBuffer);
+  Assert(srcBuffer instanceof ObjectValue && 'ArrayBufferData' in srcBuffer);
   // 2. Assert: IsConstructor(cloneConstructor) is true.
   Assert(IsConstructor(cloneConstructor) === Value.true);
   // 3. Let targetBuffer be ? AllocateArrayBuffer(cloneConstructor, srcLength).
@@ -148,7 +150,7 @@ const float64NaNBE = Object.freeze([127, 248, 0, 0, 0, 0, 0, 0]);
 
 // #sec-numerictorawbytes
 export function NumericToRawBytes(type, value, isLittleEndian) {
-  Assert(Type(isLittleEndian) === 'Boolean');
+  Assert(isLittleEndian instanceof BooleanValue);
   isLittleEndian = isLittleEndian === Value.true;
   let rawBytes;
   // One day, we will write our own IEEE 754 and two's complement encoder…
@@ -189,9 +191,9 @@ export function SetValueInBuffer(arrayBuffer, byteIndex, type, value, isTypedArr
   Assert(isNonNegativeInteger(byteIndex));
   // 4. Assert: Type(value) is BigInt if ! IsBigIntElementType(type) is true; otherwise, Type(value) is Number.
   if (X(IsBigIntElementType(type)) === Value.true) {
-    Assert(Type(value) === 'BigInt');
+    Assert(value instanceof BigIntValue);
   } else {
-    Assert(Type(value) === 'Number');
+    Assert(value instanceof NumberValue);
   }
   // 5. Let block be arrayBuffer.[[ArrayBufferData]].
   const block = arrayBuffer.ArrayBufferData;

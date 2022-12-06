@@ -1,5 +1,7 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Type, TypeForMethod, Value } from '../value.mjs';
+import {
+  Type, JSStringValue, TypeForMethod, Value,
+} from '../value.mjs';
 import { ToNumeric, ToPrimitive, ToString } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 
@@ -12,7 +14,7 @@ export function ApplyStringOrNumericBinaryOperator(lval, opText, rval) {
     // b. Let rprim be ? ToPrimitive(rval).
     const rprim = Q(ToPrimitive(rval));
     // c. If Type(lprim) is String or Type(rprim) is String, then
-    if (Type(lprim) === 'String' || Type(rprim) === 'String') {
+    if (lprim instanceof JSStringValue || rprim instanceof JSStringValue) {
       // i. Let lstr be ? ToString(lprim).
       const lstr = Q(ToString(lprim));
       // ii. Let rstr be ? ToString(rprim).

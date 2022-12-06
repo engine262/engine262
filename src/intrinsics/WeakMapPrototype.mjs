@@ -4,7 +4,7 @@ import {
   RequireInternalSlot,
 } from '../abstract-ops/all.mjs';
 import {
-  Type,
+  ObjectValue,
   Value,
 } from '../value.mjs';
 import { Q } from '../completion.mjs';
@@ -19,7 +19,7 @@ function WeakMapProto_delete([key = Value.undefined], { thisValue }) {
   // 3. Let entries be the List that is M.[[WeakMapData]].
   const entries = M.WeakMapData;
   // 4. If Type(key) is not Object, return false.
-  if (Type(key) !== 'Object') {
+  if (!(key instanceof ObjectValue)) {
     return Value.false;
   }
   // 5. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
@@ -48,7 +48,7 @@ function WeakMapProto_get([key = Value.undefined], { thisValue }) {
   // 3. Let entries be the List that is M.[[WeakMapData]].
   const entries = M.WeakMapData;
   // 4. If Type(key) is not Object, return undefined.
-  if (Type(key) !== 'Object') {
+  if (!(key instanceof ObjectValue)) {
     return Value.undefined;
   }
   // 5. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
@@ -71,7 +71,7 @@ function WeakMapProto_has([key = Value.undefined], { thisValue }) {
   // 3. Let entries be the List that is M.[[WeakMapData]].
   const entries = M.WeakMapData;
   // 4. If Type(key) is not Object, return false.
-  if (Type(key) !== 'Object') {
+  if (!(key instanceof ObjectValue)) {
     return Value.false;
   }
   // 5. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
@@ -94,7 +94,7 @@ function WeakMapProto_set([key = Value.undefined, value = Value.undefined], { th
   // 3. Let entries be the List that is M.[[WeakMapData]].
   const entries = M.WeakMapData;
   // 4. If Type(key) is not Object, throw a TypeError exception.
-  if (Type(key) !== 'Object') {
+  if (!(key instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'WeakCollectionNotObject', key);
   }
   // 5. For each Record { [[Key]], [[Value]] } p that is an element of entries, do

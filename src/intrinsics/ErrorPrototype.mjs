@@ -2,7 +2,7 @@ import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
-  Type,
+  ObjectValue,
   Value,
 } from '../value.mjs';
 import {
@@ -17,7 +17,7 @@ function ErrorProto_toString(args, { thisValue }) {
   // 1. Let O be this value.
   const O = thisValue;
   // 2. If Type(O) is not Object, throw a TypeError exception.
-  if (Type(O) !== 'Object') {
+  if (!(O instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
   }
   // 3. Let name be ? Get(O, "name").

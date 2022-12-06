@@ -9,7 +9,7 @@ import {
   SameValue,
 } from '../abstract-ops/all.mjs';
 import {
-  Type,
+  ObjectValue,
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
@@ -40,7 +40,7 @@ function RegExpConstructor([pattern = Value.undefined, flags = Value.undefined],
   let P;
   let F;
   // 4. If Type(pattern) is Object and pattern has a [[RegExpMatcher]] internal slot, then
-  if (Type(pattern) === 'Object' && 'RegExpMatcher' in pattern) {
+  if (pattern instanceof ObjectValue && 'RegExpMatcher' in pattern) {
     // a. Let P be pattern.[[OriginalSource]].
     P = pattern.OriginalSource;
     // b. If flags is undefined, let F be pattern.[[OriginalFlags]].

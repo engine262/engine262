@@ -5,6 +5,8 @@ import {
   Descriptor,
   NumberValue,
   Type,
+  ObjectValue,
+  UndefinedValue,
   Value,
 } from '../value.mjs';
 import { NormalCompletion, Q, X } from '../completion.mjs';
@@ -33,7 +35,7 @@ export function Z(x) {
 
 // 6.2.5.1 IsAccessorDescriptor
 export function IsAccessorDescriptor(Desc) {
-  if (Type(Desc) === 'Undefined') {
+  if (Desc instanceof UndefinedValue) {
     return false;
   }
 
@@ -46,7 +48,7 @@ export function IsAccessorDescriptor(Desc) {
 
 // 6.2.5.2 IsDataDescriptor
 export function IsDataDescriptor(Desc) {
-  if (Type(Desc) === 'Undefined') {
+  if (Desc instanceof UndefinedValue) {
     return false;
   }
 
@@ -59,7 +61,7 @@ export function IsDataDescriptor(Desc) {
 
 // 6.2.5.3 IsGenericDescriptor
 export function IsGenericDescriptor(Desc) {
-  if (Type(Desc) === 'Undefined') {
+  if (Desc instanceof UndefinedValue) {
     return false;
   }
 
@@ -72,7 +74,7 @@ export function IsGenericDescriptor(Desc) {
 
 // 6.2.5.4 #sec-frompropertydescriptor
 export function FromPropertyDescriptor(Desc) {
-  if (Type(Desc) === 'Undefined') {
+  if (Desc instanceof UndefinedValue) {
     return Value.undefined;
   }
   const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
@@ -100,7 +102,7 @@ export function FromPropertyDescriptor(Desc) {
 
 // 6.2.5.5 #sec-topropertydescriptor
 export function ToPropertyDescriptor(Obj) {
-  if (Type(Obj) !== 'Object') {
+  if (!(Obj instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', Obj);
   }
 
@@ -128,7 +130,7 @@ export function ToPropertyDescriptor(Obj) {
   const hasGet = Q(HasProperty(Obj, new Value('get')));
   if (hasGet === Value.true) {
     const getter = Q(Get(Obj, new Value('get')));
-    if (IsCallable(getter) === Value.false && Type(getter) !== 'Undefined') {
+    if (IsCallable(getter) === Value.false && !(getter instanceof UndefinedValue)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', getter);
     }
     desc.Get = getter;
@@ -136,7 +138,7 @@ export function ToPropertyDescriptor(Obj) {
   const hasSet = Q(HasProperty(Obj, new Value('set')));
   if (hasSet === Value.true) {
     const setter = Q(Get(Obj, new Value('set')));
-    if (IsCallable(setter) === Value.false && Type(setter) !== 'Undefined') {
+    if (IsCallable(setter) === Value.false && !(setter instanceof UndefinedValue)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', setter);
     }
     desc.Set = setter;
@@ -151,7 +153,7 @@ export function ToPropertyDescriptor(Obj) {
 
 // 6.2.5.6 #sec-completepropertydescriptor
 export function CompletePropertyDescriptor(Desc) {
-  Assert(Type(Desc) === 'Descriptor');
+  Assert(Desc instanceof Descriptor);
   const like = Descriptor({
     Value: Value.undefined,
     Writable: Value.false,
@@ -199,8 +201,8 @@ export function CreateByteDataBlock(size) {
 // 6.2.7.3 #sec-copydatablockbytes
 export function CopyDataBlockBytes(toBlock, toIndex, fromBlock, fromIndex, count) {
   Assert(fromBlock !== toBlock);
-  Assert(Type(fromBlock) === 'Data Block' || Type(fromBlock) === 'Shared Data Block');
-  Assert(Type(toBlock) === 'Data Block' || Type(toBlock) === 'Shared Data Block');
+  Assert(fromBlock instanceof DataBlock || Type(fromBlock) === 'Shared Data Block');
+  Assert(toBlock instanceof DataBlock || Type(toBlock) === 'Shared Data Block');
   Assert(Number.isSafeInteger(fromIndex) && fromIndex >= 0);
   Assert(Number.isSafeInteger(toIndex) && toIndex >= 0);
   Assert(Number.isSafeInteger(count) && count >= 0);

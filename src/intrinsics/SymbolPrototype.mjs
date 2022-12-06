@@ -1,5 +1,6 @@
 import {
-  Type,
+  ObjectValue,
+  SymbolValue,
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
@@ -16,15 +17,15 @@ import { bootstrapPrototype } from './bootstrap.mjs';
 // #sec-thissymbolvalue
 function thisSymbolValue(value) {
   // 1. If Type(value) is Symbol, return value.
-  if (Type(value) === 'Symbol') {
+  if (value instanceof SymbolValue) {
     return value;
   }
   // 2. If Type(value) is Object and value has a [[SymbolData]] internal slot, then
-  if (Type(value) === 'Object' && 'SymbolData' in value) {
+  if (value instanceof ObjectValue && 'SymbolData' in value) {
     // a. Let s be value.[[SymbolData]].
     const s = value.SymbolData;
     // b. Assert: Type(s) is Symbol.
-    Assert(Type(s) === 'Symbol');
+    Assert(s instanceof SymbolValue);
     // c. Return s.
     return s;
   }

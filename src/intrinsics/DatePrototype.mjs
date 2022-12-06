@@ -27,7 +27,9 @@ import {
   F,
 } from '../abstract-ops/all.mjs';
 import {
-  Type,
+  JSStringValue,
+  NumberValue,
+  ObjectValue,
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
@@ -37,7 +39,7 @@ import { bootstrapPrototype } from './bootstrap.mjs';
 
 
 export function thisTimeValue(value) {
-  if (Type(value) === 'Object' && 'DateValue' in value) {
+  if (value instanceof ObjectValue && 'DateValue' in value) {
     return value.DateValue;
   }
   return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Date', value);
@@ -473,7 +475,7 @@ function DateProto_setUTCSeconds([sec = Value.undefined, ms], { thisValue }) {
 // 20.3.4.35 #sec-date.prototype.todatestring
 function DateProto_toDateString(args, { thisValue }) {
   const O = thisValue;
-  if (Type(O) !== 'Object') {
+  if (!(O instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Date', O);
   }
   const tv = Q(thisTimeValue(O));
@@ -517,7 +519,7 @@ function DateProto_toISOString(args, { thisValue }) {
 function DateProto_toJSON(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   const tv = Q(ToPrimitive(O, 'number'));
-  if (Type(tv) === 'Number' && !Number.isFinite(tv.numberValue())) {
+  if (tv instanceof NumberValue && !Number.isFinite(tv.numberValue())) {
     return Value.null;
   }
   return Q(Invoke(O, new Value('toISOString')));
@@ -549,7 +551,7 @@ function DateProto_toString(args, { thisValue }) {
 
 // 20.3.4.41.1 #sec-timestring
 function TimeString(tv) {
-  Assert(Type(tv) === 'Number');
+  Assert(tv instanceof NumberValue);
   Assert(!tv.isNaN());
   const hour = String(HourFromTime(tv).numberValue()).padStart(2, '0');
   const minute = String(MinFromTime(tv).numberValue()).padStart(2, '0');
@@ -564,7 +566,7 @@ const monthsOfTheYear = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
 
 // 20.3.4.41.2 #sec-datestring
 function DateString(tv) {
-  Assert(Type(tv) === 'Number');
+  Assert(tv instanceof NumberValue);
   Assert(!tv.isNaN());
   const weekday = daysOfTheWeek[WeekDay(tv).numberValue()];
   const month = monthsOfTheYear[MonthFromTime(tv).numberValue()];
@@ -578,7 +580,7 @@ function DateString(tv) {
 
 // 20.3.4.41.3 #sec-timezoneestring
 export function TimeZoneString(tv) {
-  Assert(Type(tv) === 'Number');
+  Assert(tv instanceof NumberValue);
   Assert(!tv.isNaN());
   const offset = LocalTZA(tv, true);
   const offsetSign = offset >= 0 ? '+' : '-';
@@ -590,7 +592,7 @@ export function TimeZoneString(tv) {
 
 // 20.3.4.41.4 #sec-todatestring
 export function ToDateString(tv) {
-  Assert(Type(tv) === 'Number');
+  Assert(tv instanceof NumberValue);
   if (tv.isNaN()) {
     return new Value('Invalid Date');
   }
@@ -601,7 +603,7 @@ export function ToDateString(tv) {
 // 20.3.4.42 #sec-date.prototype.totimestring
 function DateProto_toTimeString(args, { thisValue }) {
   const O = thisValue;
-  if (Type(O) !== 'Object') {
+  if (!(O instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Date', O);
   }
   const tv = Q(thisTimeValue(O));
@@ -615,7 +617,7 @@ function DateProto_toTimeString(args, { thisValue }) {
 // 20.3.4.43 #sec-date.prototype.toutcstring
 function DateProto_toUTCString(args, { thisValue }) {
   const O = thisValue;
-  if (Type(O) !== 'Object') {
+  if (!(O instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Date', O);
   }
   const tv = Q(thisTimeValue(O));
@@ -640,13 +642,13 @@ function DateProto_valueOf(args, { thisValue }) {
 // 20.3.4.45 #sec-date.prototype-@@toprimitive
 function DateProto_toPrimitive([hint = Value.undefined], { thisValue }) {
   const O = thisValue;
-  if (Type(O) !== 'Object') {
+  if (!(O instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Date', O);
   }
   let tryFirst;
-  if (Type(hint) === 'String' && (hint.stringValue() === 'string' || hint.stringValue() === 'default')) {
+  if (hint instanceof JSStringValue && (hint.stringValue() === 'string' || hint.stringValue() === 'default')) {
     tryFirst = 'string';
-  } else if (Type(hint) === 'String' && hint.stringValue() === 'number') {
+  } else if (hint instanceof JSStringValue && hint.stringValue() === 'number') {
     tryFirst = 'number';
   } else {
     return surroundingAgent.Throw('TypeError', 'InvalidHint', hint);

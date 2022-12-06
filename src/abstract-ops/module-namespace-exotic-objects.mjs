@@ -2,7 +2,7 @@ import { surroundingAgent } from '../engine.mjs';
 import { Q, X } from '../completion.mjs';
 import { AbstractModuleRecord, ResolvedBindingRecord } from '../modules.mjs';
 import {
-  Type,
+  SymbolValue,
   Value,
   Descriptor,
   wellKnownSymbols,
@@ -43,7 +43,7 @@ function ModuleNamespacePreventExtensions() {
 function ModuleNamespaceGetOwnProperty(P) {
   const O = this;
 
-  if (Type(P) === 'Symbol') {
+  if (P instanceof SymbolValue) {
     return OrdinaryGetOwnProperty(O, P);
   }
   const exports = O.Exports;
@@ -62,7 +62,7 @@ function ModuleNamespaceGetOwnProperty(P) {
 function ModuleNamespaceDefineOwnProperty(P, Desc) {
   const O = this;
 
-  if (Type(P) === 'Symbol') {
+  if (P instanceof SymbolValue) {
     return OrdinaryDefineOwnProperty(O, P, Desc);
   }
 
@@ -91,7 +91,7 @@ function ModuleNamespaceDefineOwnProperty(P, Desc) {
 function ModuleNamespaceHasProperty(P) {
   const O = this;
 
-  if (Type(P) === 'Symbol') {
+  if (P instanceof SymbolValue) {
     return OrdinaryHasProperty(O, P);
   }
   const exports = O.Exports;
@@ -108,7 +108,7 @@ function ModuleNamespaceGet(P, Receiver) {
   // 1. Assert: IsPropertyKey(P) is true.
   Assert(IsPropertyKey(P));
   // 2. If Type(P) is Symbol, then
-  if (Type(P) === 'Symbol') {
+  if (P instanceof SymbolValue) {
     // a. Return ? OrdinaryGet(O, P, Receiver).
     return OrdinaryGet(O, P, Receiver);
   }
@@ -151,7 +151,7 @@ function ModuleNamespaceDelete(P) {
   const O = this;
 
   Assert(IsPropertyKey(P));
-  if (Type(P) === 'Symbol') {
+  if (P instanceof SymbolValue) {
     return Q(OrdinaryDelete(O, P));
   }
   const exports = O.Exports;

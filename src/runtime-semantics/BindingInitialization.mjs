@@ -1,4 +1,4 @@
-import { Type, Value } from '../value.mjs';
+import { JSStringValue, Value } from '../value.mjs';
 import {
   Assert,
   PutValue,
@@ -19,7 +19,7 @@ import {
 // #sec-initializeboundname
 export function InitializeBoundName(name, value, environment) {
   // 1. Assert: Type(name) is String.
-  Assert(Type(name) === 'String');
+  Assert(name instanceof JSStringValue);
   // 2. If environment is not undefined, then
   if (environment !== Value.undefined) {
     // a. Perform environment.InitializeBinding(name, value).

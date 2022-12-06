@@ -1,5 +1,7 @@
 import { surroundingAgent } from './engine.mjs';
-import { Type, Value, wellKnownSymbols } from './value.mjs';
+import {
+  Type, JSStringValue, ObjectValue, Value, wellKnownSymbols,
+} from './value.mjs';
 import {
   Call, IsArray, Get, LengthOfArrayLike,
   EscapeRegExpPattern,
@@ -35,7 +37,7 @@ const compactObject = (realm, value) => {
     } else {
       const tag = getObjectTag(value, false) || 'Unknown';
       const ctor = X(Get(value, new Value('constructor')));
-      if (Type(ctor) === 'Object') {
+      if (ctor instanceof ObjectValue) {
         const ctorName = X(Get(ctor, new Value('name'))).stringValue();
         if (ctorName !== '') {
           return `#<${ctorName}>`;
@@ -168,7 +170,7 @@ const INSPECTORS = {
         const C = X(v.GetOwnProperty(key));
         if (C.Enumerable === Value.true) {
           cache.push([
-            Type(key) === 'String' && bareKeyRe.test(key.stringValue()) ? key.stringValue() : i(key),
+            key instanceof JSStringValue && bareKeyRe.test(key.stringValue()) ? key.stringValue() : i(key),
             C.Value ? i(C.Value) : '<accessor>',
           ]);
         }

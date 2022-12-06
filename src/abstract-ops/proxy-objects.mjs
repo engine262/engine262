@@ -1,5 +1,7 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Type, Value } from '../value.mjs';
+import {
+  UndefinedValue, NullValue, ObjectValue, Value,
+} from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { ValueSet } from '../helpers.mjs';
 import {
@@ -32,14 +34,14 @@ function ProxyGetPrototypeOf() {
   if (handler === Value.null) {
     return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'getPrototypeOf');
   }
-  Assert(Type(handler) === 'Object');
+  Assert(handler instanceof ObjectValue);
   const target = O.ProxyTarget;
   const trap = Q(GetMethod(handler, new Value('getPrototypeOf')));
   if (trap === Value.undefined) {
     return Q(target.GetPrototypeOf());
   }
   const handlerProto = Q(Call(trap, handler, [target]));
-  if (Type(handlerProto) !== 'Object' && Type(handlerProto) !== 'Null') {
+  if (!(handlerProto instanceof ObjectValue) && !(handlerProto instanceof NullValue)) {
     return surroundingAgent.Throw('TypeError', 'ProxyGetPrototypeOfInvalid');
   }
   const extensibleTarget = Q(IsExtensible(target));
@@ -57,12 +59,12 @@ function ProxyGetPrototypeOf() {
 function ProxySetPrototypeOf(V) {
   const O = this;
 
-  Assert(Type(V) === 'Object' || Type(V) === 'Null');
+  Assert(V instanceof ObjectValue || V instanceof NullValue);
   const handler = O.ProxyHandler;
   if (handler === Value.null) {
     return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'setPrototypeOf');
   }
-  Assert(Type(handler) === 'Object');
+  Assert(handler instanceof ObjectValue);
   const target = O.ProxyTarget;
   const trap = Q(GetMethod(handler, new Value('setPrototypeOf')));
   if (trap === Value.undefined) {
@@ -91,7 +93,7 @@ function ProxyIsExtensible() {
   if (handler === Value.null) {
     return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'isExtensible');
   }
-  Assert(Type(handler) === 'Object');
+  Assert(handler instanceof ObjectValue);
   const target = O.ProxyTarget;
   const trap = Q(GetMethod(handler, new Value('isExtensible')));
   if (trap === Value.undefined) {
@@ -113,7 +115,7 @@ function ProxyPreventExtensions() {
   if (handler === Value.null) {
     return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'preventExtensions');
   }
-  Assert(Type(handler) === 'Object');
+  Assert(handler instanceof ObjectValue);
   const target = O.ProxyTarget;
   const trap = Q(GetMethod(handler, new Value('preventExtensions')));
   if (trap === Value.undefined) {
@@ -142,7 +144,7 @@ function ProxyGetOwnProperty(P) {
     return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'getOwnPropertyDescriptor');
   }
   // 4. Assert: Type(Handler) is Object.
-  Assert(Type(handler) === 'Object');
+  Assert(handler instanceof ObjectValue);
   // 5. Let target be O.[[ProxyTarget]].
   const target = O.ProxyTarget;
   // 6. Let trap be ? Getmethod(handler, "getOwnPropertyDescriptor").
@@ -155,7 +157,7 @@ function ProxyGetOwnProperty(P) {
   // 8. Let trapResultObj be ? Call(trap, handler, « target, P »).
   const trapResultObj = Q(Call(trap, handler, [target, P]));
   // 9. If Type(trapResultObj) is neither Object nor Undefined, throw a TypeError exception.
-  if (Type(trapResultObj) !== 'Object' && Type(trapResultObj) !== 'Undefined') {
+  if (!(trapResultObj instanceof ObjectValue) && !(trapResultObj instanceof UndefinedValue)) {
     return surroundingAgent.Throw('TypeError', 'ProxyGetOwnPropertyDescriptorInvalid', P);
   }
   // 10. Let targetDesc be ? target.[[GetOwnProperty]](P).
@@ -223,7 +225,7 @@ function ProxyDefineOwnProperty(P, Desc) {
     return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'defineProperty');
   }
   // 4. Assert: Type(handler) is Object.
-  Assert(Type(handler) === 'Object');
+  Assert(handler instanceof ObjectValue);
   // 5. Let target be O.[[ProxyTarget]].
   const target = O.ProxyTarget;
   // 6. Let trap be ? GetMethod(handler, "defineProperty").
@@ -295,7 +297,7 @@ function ProxyHasProperty(P) {
   if (handler === Value.null) {
     return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'has');
   }
-  Assert(Type(handler) === 'Object');
+  Assert(handler instanceof ObjectValue);
   const target = O.ProxyTarget;
   const trap = Q(GetMethod(handler, new Value('has')));
   if (trap === Value.undefined) {
@@ -326,7 +328,7 @@ function ProxyGet(P, Receiver) {
   if (handler === Value.null) {
     return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'get');
   }
-  Assert(Type(handler) === 'Object');
+  Assert(handler instanceof ObjectValue);
   const target = O.ProxyTarget;
   const trap = Q(GetMethod(handler, new Value('get')));
   if (trap === Value.undefined) {
@@ -358,7 +360,7 @@ function ProxySet(P, V, Receiver) {
   if (handler === Value.null) {
     return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'set');
   }
-  Assert(Type(handler) === 'Object');
+  Assert(handler instanceof ObjectValue);
   const target = O.ProxyTarget;
   const trap = Q(GetMethod(handler, new Value('set')));
   if (trap === Value.undefined) {
@@ -397,7 +399,7 @@ function ProxyDelete(P) {
     return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'deleteProperty');
   }
   // 4. Assert: Type(handler) is Object.
-  Assert(Type(handler) === 'Object');
+  Assert(handler instanceof ObjectValue);
   // 5. Let target be O.[[ProxyTarget]].
   const target = O.ProxyTarget;
   // 6. Let trap be ? GetMethod(handler, "deleteProperty").
@@ -441,7 +443,7 @@ function ProxyOwnPropertyKeys() {
   if (handler === Value.null) {
     return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'ownKeys');
   }
-  Assert(Type(handler) === 'Object');
+  Assert(handler instanceof ObjectValue);
   const target = O.ProxyTarget;
   const trap = Q(GetMethod(handler, new Value('ownKeys')));
   if (trap === Value.undefined) {
@@ -499,7 +501,7 @@ function ProxyCall(thisArgument, argumentsList) {
   if (handler === Value.null) {
     return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'apply');
   }
-  Assert(Type(handler) === 'Object');
+  Assert(handler instanceof ObjectValue);
   const target = O.ProxyTarget;
   const trap = Q(GetMethod(handler, new Value('apply')));
   if (trap === Value.undefined) {
@@ -517,7 +519,7 @@ function ProxyConstruct(argumentsList, newTarget) {
   if (handler === Value.null) {
     return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'construct');
   }
-  Assert(Type(handler) === 'Object');
+  Assert(handler instanceof ObjectValue);
   const target = O.ProxyTarget;
   Assert(IsConstructor(target) === Value.true);
   const trap = Q(GetMethod(handler, new Value('construct')));
@@ -526,7 +528,7 @@ function ProxyConstruct(argumentsList, newTarget) {
   }
   const argArray = X(CreateArrayFromList(argumentsList));
   const newObj = Q(Call(trap, handler, [target, argArray, newTarget]));
-  if (Type(newObj) !== 'Object') {
+  if (!(newObj instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', newObj);
   }
   return newObj;
@@ -539,11 +541,11 @@ export function isProxyExoticObject(O) {
 // #sec-proxycreate
 export function ProxyCreate(target, handler) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
-  if (Type(target) !== 'Object') {
+  if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'CannotCreateProxyWith', 'non-object', 'target');
   }
   // 2. If Type(handler) is not Object, throw a TypeError exception.
-  if (Type(handler) !== 'Object') {
+  if (!(handler instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'CannotCreateProxyWith', 'non-object', 'handler');
   }
   // 3. Let P be ! MakeBasicObject(« [[ProxyHandler]], [[ProxyTarget]] »).

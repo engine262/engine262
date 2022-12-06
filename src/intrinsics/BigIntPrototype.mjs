@@ -1,5 +1,7 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Type, Value } from '../value.mjs';
+import {
+  ObjectValue, BigIntValue, Value,
+} from '../value.mjs';
 import { Assert, ToIntegerOrInfinity, ToString } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
@@ -7,13 +9,13 @@ import { bootstrapPrototype } from './bootstrap.mjs';
 // #sec-thisbigintvalue
 function thisBigIntValue(value) {
   // 1. If Type(value) is BigInt, return value.
-  if (Type(value) === 'BigInt') {
+  if (value instanceof BigIntValue) {
     return value;
   }
   // 2. If Type(value) is Object and value has a [[BigIntData]] internal slot, then
-  if (Type(value) === 'Object' && 'BigIntData' in value) {
+  if (value instanceof ObjectValue && 'BigIntData' in value) {
     // a. Assert: Type(value.[[BigIntData]]) is BigInt.
-    Assert(Type(value.BigIntData) === 'BigInt');
+    Assert(value.BigIntData instanceof BigIntValue);
     // b. Return value.[[BigIntData]].
     return value.BigIntData;
   }

@@ -1,5 +1,5 @@
 import { surroundingAgent } from '../engine.mjs';
-import { Type, Value } from '../value.mjs';
+import { ObjectValue, Value } from '../value.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { NewDeclarativeEnvironment, DeclarativeEnvironmentRecord } from '../environment.mjs';
 import {
@@ -592,7 +592,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
       nextResult = Q(yield* Await(nextResult));
     }
     // c. If Type(nextResult) is not Object, throw a TypeError exception.
-    if (Type(nextResult) !== 'Object') {
+    if (!(nextResult instanceof ObjectValue)) {
       return surroundingAgent.Throw('TypeError', 'NotAnObject', nextResult);
     }
     // d. Let done be ? IteratorComplete(nextResult).
