@@ -1,6 +1,6 @@
 import { InstantiateAsyncGeneratorFunctionExpression } from './all.mjs';
 
-// #sec-asyncgenerator-definitions-evaluation
+/** http://tc39.es/ecma262/#sec-asyncgenerator-definitions-evaluation */
 //   AsyncGeneratorExpression :
 //     `async` `function` `*` `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
 //     `async` `function` `*` BindingIdentifier `(` FormalParameters `)` `{` AsyncGeneratorBody `}`

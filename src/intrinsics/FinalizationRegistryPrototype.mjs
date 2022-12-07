@@ -9,7 +9,7 @@ import {
 import { Q } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-// #sec-finalization-registry.prototype.cleanupSome
+/** http://tc39.es/ecma262/#sec-finalization-registry.prototype.cleanupSome */
 function FinalizationRegistryProto_cleanupSome([callback = Value.undefined], { thisValue }) {
   // 1. Let finalizationRegistry be the this value.
   const finalizationRegistry = thisValue;
@@ -25,7 +25,7 @@ function FinalizationRegistryProto_cleanupSome([callback = Value.undefined], { t
   return Value.undefined;
 }
 
-// #sec-finalization-registry.prototype.register
+/** http://tc39.es/ecma262/#sec-finalization-registry.prototype.register */
 function FinalizationRegistryProto_register([target = Value.undefined, heldValue = Value.undefined, unregisterToken = Value.undefined], { thisValue }) {
   // 1. Let finalizationRegistry be the this value.
   const finalizationRegistry = thisValue;
@@ -60,7 +60,7 @@ function FinalizationRegistryProto_register([target = Value.undefined, heldValue
   return Value.undefined;
 }
 
-// #sec-finalization-registry.prototype.unregister
+/** http://tc39.es/ecma262/#sec-finalization-registry.prototype.unregister */
 function FinalizationRegistryProto_unregister([unregisterToken = Value.undefined], { thisValue }) {
   // 1. Let finalizationRegistry be the this value.
   const finalizationRegistry = thisValue;

@@ -3,7 +3,7 @@ import { Evaluate } from '../evaluator.mjs';
 import { ToBoolean, GetValue } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 
-// #sec-conditional-operator-runtime-semantics-evaluation
+/** http://tc39.es/ecma262/#sec-conditional-operator-runtime-semantics-evaluation */
 //   ConditionalExpression :
 //     ShortCircuitExpression `?` AssignmentExpression `:` AssignmentExpression
 export function* Evaluate_ConditionalExpression({

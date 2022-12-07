@@ -9,7 +9,7 @@ import {
 import { X } from '../completion.mjs';
 import { SourceTextModuleRecord } from '../modules.mjs';
 
-// #sec-meta-properties
+/** http://tc39.es/ecma262/#sec-meta-properties */
 //   ImportMeta : `import` `.` `meta`
 export function Evaluate_ImportMeta(_ImportMeta) {
   // 1. Let module be ! GetActiveScriptOrModule().

@@ -122,7 +122,7 @@ export class Parser extends LanguageParser {
      *  const b 'string string string'; // a string
      *          ^^^^^^^^^^^^^^^^^^^^^^
      *  SyntaxError: unexpected token
-     */
+    */
 
     let lineStart = startIndex;
     while (!isLineTerminator(this.source[lineStart - 1]) && this.source[lineStart - 1] !== undefined) {

@@ -12,7 +12,7 @@ import { OutOfRange } from '../helpers.mjs';
 import { Descriptor, Value } from '../value.mjs';
 import { StringValue } from '../static-semantics/all.mjs';
 
-// 14.1.20 #sec-function-definitions-runtime-semantics-instantiatefunctionobject
+/** http://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-instantiatefunctionobject */
 //   FunctionDeclaration :
 //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
 //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
@@ -32,7 +32,7 @@ export function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaratio
   return F;
 }
 
-// 14.4.11 #sec-generator-function-definitions-runtime-semantics-instantiatefunctionobject
+/** http://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-instantiatefunctionobject */
 //   GeneratorDeclaration :
 //     `function` `*` BindingIdentifier `(` FormalParameters `)` `{` GeneratorBody `}`
 //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
@@ -59,7 +59,7 @@ export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclarat
   return F;
 }
 
-// #sec-async-function-definitions-InstantiateFunctionObject
+/** http://tc39.es/ecma262/#sec-async-function-definitions-InstantiateFunctionObject */
 //  AsyncFunctionDeclaration :
 //    `async` `function` BindingIdentifier `(` FormalParameters `)` `{` AsyncFunctionBody `}`
 //    `async` `function` `(` FormalParameters `)` `{` AsyncFunctionBody `}`
@@ -77,7 +77,7 @@ export function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunction
   return F;
 }
 
-// #sec-asyncgenerator-definitions-evaluatebody
+/** http://tc39.es/ecma262/#sec-asyncgenerator-definitions-evaluatebody */
 //  AsyncGeneratorDeclaration :
 //    `async` `function` `*` BindingIdentifier `(` FormalParameters`)` `{` AsyncGeneratorBody `}`
 //    `async` `function` `*` `(` FormalParameters`)` `{` AsyncGeneratorBody `}`

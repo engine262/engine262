@@ -99,7 +99,7 @@ export function OrdinaryDefineOwnProperty(O, P, Desc) {
   return ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current);
 }
 
-// 9.1.6.2 #sec-iscompatiblepropertydescriptor
+/** http://tc39.es/ecma262/#sec-iscompatiblepropertydescriptor */
 export function IsCompatiblePropertyDescriptor(Extensible, Desc, Current) {
   return ValidateAndApplyPropertyDescriptor(Value.undefined, Value.undefined, Extensible, Desc, Current);
 }
@@ -365,7 +365,7 @@ export function OrdinaryOwnPropertyKeys(O) {
   return keys;
 }
 
-// #sec-ordinaryobjectcreate
+/** http://tc39.es/ecma262/#sec-ordinaryobjectcreate */
 export function OrdinaryObjectCreate(proto, additionalInternalSlotsList) {
   // 1. Let internalSlotsList be « [[Prototype]], [[Extensible]] ».
   const internalSlotsList = ['Prototype', 'Extensible'];

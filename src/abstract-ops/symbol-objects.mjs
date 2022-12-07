@@ -1,7 +1,7 @@
 import { UndefinedValue, SymbolValue, Value } from '../value.mjs';
 import { Assert } from './all.mjs';
 
-// 19.4.3.3.1 #sec-symboldescriptivestring
+/** http://tc39.es/ecma262/#sec-symboldescriptivestring */
 export function SymbolDescriptiveString(sym) {
   Assert(sym instanceof SymbolValue);
   let desc = sym.Description;

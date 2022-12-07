@@ -36,7 +36,7 @@ import {
   F,
 } from './all.mjs';
 
-// #sec-array-exotic-objects-defineownproperty-p-desc
+/** http://tc39.es/ecma262/#sec-array-exotic-objects-defineownproperty-p-desc */
 function ArrayDefineOwnProperty(P, Desc) {
   const A = this;
 
@@ -70,7 +70,7 @@ export function isArrayExoticObject(O) {
   return O.DefineOwnProperty === ArrayDefineOwnProperty;
 }
 
-// 9.4.2.2 #sec-arraycreate
+/** http://tc39.es/ecma262/#sec-arraycreate */
 export function ArrayCreate(length, proto) {
   Assert(isNonNegativeInteger(length));
   if (Object.is(length, -0)) {
@@ -96,7 +96,7 @@ export function ArrayCreate(length, proto) {
   return A;
 }
 
-// 9.4.2.3 #sec-arrayspeciescreate
+/** http://tc39.es/ecma262/#sec-arrayspeciescreate */
 export function ArraySpeciesCreate(originalArray, length) {
   Assert(typeof length === 'number' && Number.isInteger(length) && length >= 0);
   if (Object.is(length, -0)) {
@@ -131,7 +131,7 @@ export function ArraySpeciesCreate(originalArray, length) {
   return Q(Construct(C, [F(length)]));
 }
 
-// 9.4.2.4 #sec-arraysetlength
+/** http://tc39.es/ecma262/#sec-arraysetlength */
 export function ArraySetLength(A, Desc) {
   if (Desc.Value === undefined) {
     return OrdinaryDefineOwnProperty(A, new Value('length'), Desc);
@@ -189,7 +189,7 @@ export function ArraySetLength(A, Desc) {
   return Value.true;
 }
 
-// 22.1.3.1.1 #sec-isconcatspreadable
+/** http://tc39.es/ecma262/#sec-isconcatspreadable */
 export function IsConcatSpreadable(O) {
   if (!(O instanceof ObjectValue)) {
     return Value.false;
@@ -201,7 +201,7 @@ export function IsConcatSpreadable(O) {
   return Q(IsArray(O));
 }
 
-// 22.1.3.27.1 #sec-sortcompare
+/** http://tc39.es/ecma262/#sec-sortcompare */
 export function SortCompare(x, y, comparefn) {
   // 1. If x and y are both undefined, return +0𝔽.
   if (x === Value.undefined && y === Value.undefined) {
@@ -246,7 +246,7 @@ export function SortCompare(x, y, comparefn) {
   return F(+0);
 }
 
-// 22.1.5.1 #sec-createarrayiterator
+/** http://tc39.es/ecma262/#sec-createarrayiterator */
 export function CreateArrayIterator(array, kind) {
   // 1. Assert: Type(array) is Object.
   Assert(array instanceof ObjectValue);

@@ -44,7 +44,7 @@ export class ResolvedBindingRecord {
   }
 }
 
-// 15.2.1.15 #sec-abstract-module-records
+/** http://tc39.es/ecma262/#sec-abstract-module-records */
 export class AbstractModuleRecord {
   constructor({
     Realm,
@@ -65,7 +65,7 @@ export class AbstractModuleRecord {
   }
 }
 
-// 15.2.1.16 #sec-cyclic-module-records
+/** http://tc39.es/ecma262/#sec-cyclic-module-records */
 export class CyclicModuleRecord extends AbstractModuleRecord {
   constructor(init) {
     super(init);
@@ -81,7 +81,7 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
     this.PendingAsyncDependencies = init.PendingAsyncDependencies;
   }
 
-  // #sec-moduledeclarationlinking
+  /** http://tc39.es/ecma262/#sec-moduledeclarationlinking */
   Link() {
     // 1. Let module be this Cyclic Module Record.
     const module = this;
@@ -119,7 +119,7 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
     return Value.undefined;
   }
 
-  // #sec-moduleevaluation
+  /** http://tc39.es/ecma262/#sec-moduleevaluation */
   Evaluate() {
     // 1. Assert: This call to Evaluate is not happening at the same time as another call to Evaluate within the surrounding agent.
     // 2. Let module be this Cyclic Module Record.
@@ -181,7 +181,7 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
   }
 }
 
-// 15.2.1.17 #sec-source-text-module-records
+/** http://tc39.es/ecma262/#sec-source-text-module-records */
 export class SourceTextModuleRecord extends CyclicModuleRecord {
   constructor(init) {
     super(init);
@@ -195,7 +195,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     this.StarExportEntries = init.StarExportEntries;
   }
 
-  // #sec-getexportednames
+  /** http://tc39.es/ecma262/#sec-getexportednames */
   GetExportedNames(exportStarSet) {
     // 1. If exportStarSet is not present, set exportStarSet to a new empty List.
     if (!exportStarSet) {
@@ -249,7 +249,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     return exportedNames;
   }
 
-  // #sec-resolveexport
+  /** http://tc39.es/ecma262/#sec-resolveexport */
   ResolveExport(exportName, resolveSet) {
     // 1. If resolveSet is not present, set resolveSet to a new empty List.
     if (!resolveSet) {
@@ -342,7 +342,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     return starResolution;
   }
 
-  // #sec-source-text-module-record-initialize-environment
+  /** http://tc39.es/ecma262/#sec-source-text-module-record-initialize-environment */
   InitializeEnvironment() {
     // 1. Let module be this Source Text Module Record.
     const module = this;
@@ -485,7 +485,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     return NormalCompletion(undefined);
   }
 
-  // #sec-source-text-module-record-execute-module
+  /** http://tc39.es/ecma262/#sec-source-text-module-record-execute-module */
   ExecuteModule(capability) {
     // 1. Let module be this Source Text Module Record.
     const module = this;
@@ -520,7 +520,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
   }
 }
 
-// #sec-synthetic-module-records
+/** http://tc39.es/ecma262/#sec-synthetic-module-records */
 export class SyntheticModuleRecord extends AbstractModuleRecord {
   constructor(init) {
     super(init);
@@ -529,14 +529,14 @@ export class SyntheticModuleRecord extends AbstractModuleRecord {
     this.EvaluationSteps = init.EvaluationSteps;
   }
 
-  // #sec-synthetic-module-record-getexportednames
+  /** http://tc39.es/ecma262/#sec-synthetic-module-record-getexportednames */
   GetExportedNames(_exportStarSet) {
     const module = this;
     // 1. Return module.[[ExportNames]].
     return module.ExportNames;
   }
 
-  // #sec-synthetic-module-record-resolveexport
+  /** http://tc39.es/ecma262/#sec-synthetic-module-record-resolveexport */
   ResolveExport(exportName, _resolveSet) {
     const module = this;
     // 1. If module.[[ExportNames]] does not contain exportName, return null.
@@ -549,7 +549,7 @@ export class SyntheticModuleRecord extends AbstractModuleRecord {
     return null;
   }
 
-  // #sec-synthetic-module-record-link
+  /** http://tc39.es/ecma262/#sec-synthetic-module-record-link */
   Link() {
     const module = this;
     // 1. Let realm be module.[[Realm]].
@@ -571,7 +571,7 @@ export class SyntheticModuleRecord extends AbstractModuleRecord {
     return Value.undefined;
   }
 
-  // #sec-synthetic-module-record-evaluate
+  /** http://tc39.es/ecma262/#sec-synthetic-module-record-evaluate */
   Evaluate() {
     const module = this;
     // 1. Suspend the currently running execution context.
@@ -599,7 +599,7 @@ export class SyntheticModuleRecord extends AbstractModuleRecord {
     return Completion(result);
   }
 
-  // #sec-synthetic-module-record-set-synthetic-export
+  /** http://tc39.es/ecma262/#sec-synthetic-module-record-set-synthetic-export */
   SetSyntheticExport(name, value) {
     const module = this;
     // 1. Return ? module.[[Environment]].SetMutableBinding(name, value, true).

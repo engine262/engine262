@@ -8,7 +8,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Q, X, IfAbruptRejectPromise } from '../completion.mjs';
 
-// #sec-import-calls
+/** http://tc39.es/ecma262/#sec-import-calls */
 // ImportCall : `import` `(` AssignmentExpression `)`
 export function* Evaluate_ImportCall({ AssignmentExpression }) {
   // 1. Let referencingScriptOrModule be ! GetActiveScriptOrModule().

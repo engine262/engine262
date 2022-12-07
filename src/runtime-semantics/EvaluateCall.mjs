@@ -14,7 +14,7 @@ import { Q, Completion, AbruptCompletion } from '../completion.mjs';
 import { EnvironmentRecord } from '../environment.mjs';
 import { ArgumentListEvaluation } from './all.mjs';
 
-// #sec-evaluatecall
+/** http://tc39.es/ecma262/#sec-evaluatecall */
 export function* EvaluateCall(func, ref, args, tailPosition) {
   // 1. If Type(ref) is Reference, then
   let thisValue;

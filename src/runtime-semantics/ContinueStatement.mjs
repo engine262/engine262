@@ -1,7 +1,7 @@
 import { Completion } from '../completion.mjs';
 import { StringValue } from '../static-semantics/all.mjs';
 
-// #sec-continue-statement-runtime-semantics-evaluation
+/** http://tc39.es/ecma262/#sec-continue-statement-runtime-semantics-evaluation */
 //   ContinueStatement :
 //     `continue` `;`
 //     `continue` LabelIdentifier `;`

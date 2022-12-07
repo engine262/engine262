@@ -1,7 +1,7 @@
 import { wellKnownSymbols } from '../value.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-// #sec-asynciteratorprototype-asynciterator
+/** http://tc39.es/ecma262/#sec-asynciteratorprototype-asynciterator */
 function AsyncIteratorPrototype_asyncIterator(args, { thisValue }) {
   // 1. Return the this value.
   return thisValue;

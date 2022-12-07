@@ -4,7 +4,7 @@ import { Q } from '../completion.mjs';
 import { ToIndex, AllocateArrayBuffer } from '../abstract-ops/all.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-// #sec-arraybuffer-length
+/** http://tc39.es/ecma262/#sec-arraybuffer-length */
 function ArrayBufferConstructor([length = Value.undefined], { NewTarget }) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget === Value.undefined) {
@@ -16,7 +16,7 @@ function ArrayBufferConstructor([length = Value.undefined], { NewTarget }) {
   return Q(AllocateArrayBuffer(NewTarget, byteLength));
 }
 
-// #sec-arraybuffer.isview
+/** http://tc39.es/ecma262/#sec-arraybuffer.isview */
 function ArrayBuffer_isView([arg = Value.undefined]) {
   // 1. If Type(arg) is not Object, return false.
   if (!(arg instanceof ObjectValue)) {
@@ -30,7 +30,7 @@ function ArrayBuffer_isView([arg = Value.undefined]) {
   return Value.false;
 }
 
-// #sec-get-arraybuffer-@@species
+/** http://tc39.es/ecma262/#sec-get-arraybuffer-@@species */
 function ArrayBuffer_species(a, { thisValue }) {
   return thisValue;
 }

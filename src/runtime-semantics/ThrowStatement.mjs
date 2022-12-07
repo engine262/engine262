@@ -9,7 +9,7 @@ import {
   ThrowCompletion,
 } from '../completion.mjs';
 
-// #sec-throw-statement-runtime-semantics-evaluation
+/** http://tc39.es/ecma262/#sec-throw-statement-runtime-semantics-evaluation */
 // ThrowStatement : `throw` Expression `;`
 export function* Evaluate_ThrowStatement({ Expression }) {
   // 1. Let exprRef be the result of evaluating Expression.

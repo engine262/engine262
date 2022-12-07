@@ -26,9 +26,9 @@ import {
 } from './all.mjs';
 
 // This file covers abstract operations defined in
-// 7.2 #sec-testing-and-comparison-operations
+/** http://tc39.es/ecma262/#sec-testing-and-comparison-operations */
 
-// 7.2.1 #sec-requireobjectcoercible
+/** http://tc39.es/ecma262/#sec-requireobjectcoercible */
 export function RequireObjectCoercible(argument) {
   const type = Type(argument);
   switch (type) {
@@ -48,7 +48,7 @@ export function RequireObjectCoercible(argument) {
   }
 }
 
-// 7.2.2 #sec-isarray
+/** http://tc39.es/ecma262/#sec-isarray */
 export function IsArray(argument) {
   if (!(argument instanceof ObjectValue)) {
     return Value.false;
@@ -66,7 +66,7 @@ export function IsArray(argument) {
   return Value.false;
 }
 
-// 7.2.3 #sec-iscallable
+/** http://tc39.es/ecma262/#sec-iscallable */
 export function IsCallable(argument) {
   if (!(argument instanceof ObjectValue)) {
     return Value.false;
@@ -77,7 +77,7 @@ export function IsCallable(argument) {
   return Value.false;
 }
 
-// 7.2.4 #sec-isconstructor
+/** http://tc39.es/ecma262/#sec-isconstructor */
 export function IsConstructor(argument) {
   if (!(argument instanceof ObjectValue)) {
     return Value.false;
@@ -88,13 +88,13 @@ export function IsConstructor(argument) {
   return Value.false;
 }
 
-// 7.2.5 #sec-isextensible-o
+/** http://tc39.es/ecma262/#sec-isextensible-o */
 export function IsExtensible(O) {
   Assert(O instanceof ObjectValue);
   return O.IsExtensible();
 }
 
-// 7.2.6 #sec-isinteger
+/** http://tc39.es/ecma262/#sec-isinteger */
 export function IsIntegralNumber(argument) {
   if (!(argument instanceof NumberValue)) {
     return Value.false;
@@ -108,7 +108,7 @@ export function IsIntegralNumber(argument) {
   return Value.true;
 }
 
-// 7.2.7 #sec-ispropertykey
+/** http://tc39.es/ecma262/#sec-ispropertykey */
 export function IsPropertyKey(argument) {
   if (argument instanceof JSStringValue) {
     return true;
@@ -119,7 +119,7 @@ export function IsPropertyKey(argument) {
   return false;
 }
 
-// 7.2.8 #sec-isregexp
+/** http://tc39.es/ecma262/#sec-isregexp */
 export function IsRegExp(argument) {
   if (!(argument instanceof ObjectValue)) {
     return Value.false;
@@ -134,14 +134,14 @@ export function IsRegExp(argument) {
   return Value.false;
 }
 
-// 7.2.9 #sec-isstringprefix
+/** http://tc39.es/ecma262/#sec-isstringprefix */
 export function IsStringPrefix(p, q) {
   Assert(p instanceof JSStringValue);
   Assert(q instanceof JSStringValue);
   return q.stringValue().startsWith(p.stringValue());
 }
 
-// 7.2.10 #sec-samevalue
+/** http://tc39.es/ecma262/#sec-samevalue */
 export function SameValue(x, y) {
   // 1. If Type(x) is different from Type(y), return false.
   if (Type(x) !== Type(y)) {
@@ -156,7 +156,7 @@ export function SameValue(x, y) {
   return X(SameValueNonNumber(x, y));
 }
 
-// 7.2.11 #sec-samevaluezero
+/** http://tc39.es/ecma262/#sec-samevaluezero */
 export function SameValueZero(x, y) {
   // 1. If Type(x) is different from Type(y), return false.
   if (Type(x) !== Type(y)) {
@@ -171,7 +171,7 @@ export function SameValueZero(x, y) {
   return X(SameValueNonNumber(x, y));
 }
 
-// 7.2.12 #sec-samevaluenonnumber
+/** http://tc39.es/ecma262/#sec-samevaluenonnumber */
 export function SameValueNonNumber(x, y) {
   Assert(!(x instanceof NumberValue));
   Assert(Type(x) === Type(y));
@@ -205,7 +205,7 @@ export function SameValueNonNumber(x, y) {
   return x === y ? Value.true : Value.false;
 }
 
-// 7.2.13 #sec-abstract-relational-comparison
+/** http://tc39.es/ecma262/#sec-abstract-relational-comparison */
 export function AbstractRelationalComparison(x, y, LeftFirst = true) {
   let px;
   let py;
@@ -304,7 +304,7 @@ export function AbstractRelationalComparison(x, y, LeftFirst = true) {
   }
 }
 
-// 7.2.14 #sec-abstract-equality-comparison
+/** http://tc39.es/ecma262/#sec-abstract-equality-comparison */
 export function AbstractEqualityComparison(x, y) {
   // 1. If Type(x) is the same as Type(y), then
   if (Type(x) === Type(y)) {
@@ -373,7 +373,7 @@ export function AbstractEqualityComparison(x, y) {
   return Value.false;
 }
 
-// 7.2.15 #sec-strict-equality-comparison
+/** http://tc39.es/ecma262/#sec-strict-equality-comparison */
 export function StrictEqualityComparison(x, y) {
   // 1. If Type(x) is different from Type(y), return false.
   if (Type(x) !== Type(y)) {
@@ -388,7 +388,7 @@ export function StrictEqualityComparison(x, y) {
   return SameValueNonNumber(x, y);
 }
 
-// #sec-isvalidintegerindex
+/** http://tc39.es/ecma262/#sec-isvalidintegerindex */
 export function IsValidIntegerIndex(O, index) {
   if (IsDetachedBuffer(O.ViewedArrayBuffer) === Value.true) {
     return Value.false;

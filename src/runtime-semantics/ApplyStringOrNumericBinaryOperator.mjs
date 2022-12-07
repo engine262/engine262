@@ -5,7 +5,7 @@ import {
 import { ToNumeric, ToPrimitive, ToString } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 
-// #sec-applystringornumericbinaryoperator
+/** http://tc39.es/ecma262/#sec-applystringornumericbinaryoperator */
 export function ApplyStringOrNumericBinaryOperator(lval, opText, rval) {
   // 1. If opText is +, then
   if (opText === '+') {

@@ -8,7 +8,7 @@ import {
 import { Value } from './value.mjs';
 import { kAsyncContext, resume } from './helpers.mjs';
 
-// #sec-completion-record-specification-type
+/** http://tc39.es/ecma262/#sec-completion-record-specification-type */
 export function Completion(init) {
   if (new.target === undefined) {
     // 1. Assert: completionRecord is a Completion Record.
@@ -27,7 +27,7 @@ Completion.prototype.mark = function mark(m) {
   m(this.Value);
 };
 
-// #sec-normalcompletion
+/** http://tc39.es/ecma262/#sec-normalcompletion */
 export function NormalCompletion(argument) {
   // 1. Return Completion { [[Type]]: normal, [[Value]]: argument, [[Target]]: empty }.
   return new Completion({ Type: 'normal', Value: argument, Target: undefined });
@@ -48,13 +48,13 @@ export class AbruptCompletion {
   }
 }
 
-// #sec-throwcompletion
+/** http://tc39.es/ecma262/#sec-throwcompletion */
 export function ThrowCompletion(argument) {
   // 1. Return Completion { [[Type]]: throw, [[Value]]: argument, [[Target]]: empty }.
   return new Completion({ Type: 'throw', Value: argument, Target: undefined });
 }
 
-// 6.2.3.4 #sec-updateempty
+/** http://tc39.es/ecma262/#sec-updateempty */
 export function UpdateEmpty(completionRecord, value) {
   Assert(completionRecord instanceof Completion);
   // 1. Assert: If completionRecord.[[Type]] is either return or throw, then completionRecord.[[Value]] is not empty.
@@ -67,28 +67,28 @@ export function UpdateEmpty(completionRecord, value) {
   return new Completion({ Type: completionRecord.Type, Value: value, Target: completionRecord.Target });
 }
 
-// #sec-returnifabrupt
+/** http://tc39.es/ecma262/#sec-returnifabrupt */
 export function ReturnIfAbrupt(_completion) {
   /* c8 skip next */
   throw new TypeError('ReturnIfAbrupt requires build');
 }
 
-// #sec-returnifabrupt-shorthands ? OperationName()
+/** http://tc39.es/ecma262/#sec-returnifabrupt-shorthands ? OperationName() */
 export const Q = ReturnIfAbrupt;
 
-// #sec-returnifabrupt-shorthands ! OperationName()
+/** http://tc39.es/ecma262/#sec-returnifabrupt-shorthands ! OperationName() */
 export function X(_completion) {
   /* c8 skip next */
   throw new TypeError('X() requires build');
 }
 
-// 7.4.7 #sec-ifabruptcloseiterator
+/** http://tc39.es/ecma262/#sec-ifabruptcloseiterator */
 export function IfAbruptCloseIterator(_value, _iteratorRecord) {
   /* c8 skip next */
   throw new TypeError('IfAbruptCloseIterator() requires build');
 }
 
-// 25.6.1.1.1 #sec-ifabruptrejectpromise
+/** http://tc39.es/ecma262/#sec-ifabruptrejectpromise */
 export function IfAbruptRejectPromise(_value, _capability) {
   /* c8 skip next */
   throw new TypeError('IfAbruptRejectPromise requires build');

@@ -2,7 +2,7 @@ import { Assert, RequireObjectCoercible, ToString } from '../abstract-ops/all.mj
 import { Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
 
-// #sec-trimstring
+/** http://tc39.es/ecma262/#sec-trimstring */
 export function TrimString(string, where) {
   const str = Q(RequireObjectCoercible(string));
   const S = Q(ToString(str)).stringValue();

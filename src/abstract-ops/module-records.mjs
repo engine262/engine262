@@ -18,7 +18,7 @@ import {
   Call,
 } from './all.mjs';
 
-// 15.2.1.16.1.1 #sec-InnerModuleLinking
+/** http://tc39.es/ecma262/#sec-InnerModuleLinking */
 export function InnerModuleLinking(module, stack, index) {
   if (!(module instanceof CyclicModuleRecord)) {
     Q(module.Link());
@@ -61,7 +61,7 @@ export function InnerModuleLinking(module, stack, index) {
   return index;
 }
 
-// 15.2.1.16.2.1 #sec-innermoduleevaluation
+/** http://tc39.es/ecma262/#sec-innermoduleevaluation */
 export function InnerModuleEvaluation(module, stack, index) {
   if (!(module instanceof CyclicModuleRecord)) {
     Q(module.Evaluate());
@@ -131,7 +131,7 @@ export function InnerModuleEvaluation(module, stack, index) {
   return index;
 }
 
-// #sec-execute-async-module
+/** http://tc39.es/ecma262/#sec-execute-async-module */
 function ExecuteAsyncModule(module) {
   // 1. Assert: module.[[Status]] is evaluating or evaluated.
   Assert(module.Status === 'evaluating' || module.Status === 'evaluated');
@@ -167,7 +167,7 @@ function ExecuteAsyncModule(module) {
   return Value.undefined;
 }
 
-// #sec-getcycleroot
+/** http://tc39.es/ecma262/#sec-getcycleroot */
 export function GetAsyncCycleRoot(module) {
   Assert(module.Status === 'evaluated');
   if (module.AsyncParentModules.length === 0) {
@@ -183,7 +183,7 @@ export function GetAsyncCycleRoot(module) {
   return module;
 }
 
-// #sec-asyncmodulexecutionfulfilled
+/** http://tc39.es/ecma262/#sec-asyncmodulexecutionfulfilled */
 function AsyncModuleExecutionFulfilled(module) {
   Assert(module.Status === 'evaluated');
   if (module.AsyncEvaluating === Value.false) {
@@ -222,7 +222,7 @@ function AsyncModuleExecutionFulfilled(module) {
   return Value.undefined;
 }
 
-// #sec-AsyncModuleExecutionRejected
+/** http://tc39.es/ecma262/#sec-AsyncModuleExecutionRejected */
 function AsyncModuleExecutionRejected(module, error) {
   Assert(module.Status === 'evaluated');
   if (module.AsyncEvaluating === Value.false) {
@@ -245,7 +245,7 @@ function AsyncModuleExecutionRejected(module, error) {
   return Value.undefined;
 }
 
-// 15.2.1.21 #sec-getmodulenamespace
+/** http://tc39.es/ecma262/#sec-getmodulenamespace */
 export function GetModuleNamespace(module) {
   Assert(module instanceof AbstractModuleRecord);
   if (module instanceof CyclicModuleRecord) {
@@ -285,7 +285,7 @@ export function CreateSyntheticModule(exportNames, evaluationSteps, realm, hostD
   });
 }
 
-// #sec-create-default-export-synthetic-module
+/** http://tc39.es/ecma262/#sec-create-default-export-synthetic-module */
 export function CreateDefaultExportSyntheticModule(defaultExport, realm, hostDefined) {
   // 1. Let closure be the a Abstract Closure with parameters (module) that captures defaultExport and performs the following steps when called:
   const closure = (module) => { // eslint-disable-line arrow-body-style

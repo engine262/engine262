@@ -15,7 +15,7 @@ import { ObjectValue, Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-// #sec-reflect.apply
+/** http://tc39.es/ecma262/#sec-reflect.apply */
 function Reflect_apply([target = Value.undefined, thisArgument = Value.undefined, argumentsList = Value.undefined]) {
   // 1. If IsCallable(target) is false, throw a TypeError exception.
   if (IsCallable(target) === Value.false) {
@@ -29,7 +29,7 @@ function Reflect_apply([target = Value.undefined, thisArgument = Value.undefined
   return Q(Call(target, thisArgument, args));
 }
 
-// #sec-reflect.construct
+/** http://tc39.es/ecma262/#sec-reflect.construct */
 function Reflect_construct([target = Value.undefined, argumentsList = Value.undefined, newTarget]) {
   // 1. If IsConstructor(target) is false, throw a TypeError exception.
   if (IsConstructor(target) === Value.false) {
@@ -47,7 +47,7 @@ function Reflect_construct([target = Value.undefined, argumentsList = Value.unde
   return Q(Construct(target, args, newTarget));
 }
 
-// #sec-reflect.defineproperty
+/** http://tc39.es/ecma262/#sec-reflect.defineproperty */
 function Reflect_defineProperty([target = Value.undefined, propertyKey = Value.undefined, attributes = Value.undefined]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
@@ -61,7 +61,7 @@ function Reflect_defineProperty([target = Value.undefined, propertyKey = Value.u
   return Q(target.DefineOwnProperty(key, desc));
 }
 
-// #sec-reflect.deleteproperty
+/** http://tc39.es/ecma262/#sec-reflect.deleteproperty */
 function Reflect_deleteProperty([target = Value.undefined, propertyKey = Value.undefined]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
@@ -73,7 +73,7 @@ function Reflect_deleteProperty([target = Value.undefined, propertyKey = Value.u
   return Q(target.Delete(key));
 }
 
-// #sec-reflect.get
+/** http://tc39.es/ecma262/#sec-reflect.get */
 function Reflect_get([target = Value.undefined, propertyKey = Value.undefined, receiver]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
@@ -90,7 +90,7 @@ function Reflect_get([target = Value.undefined, propertyKey = Value.undefined, r
   return Q(target.Get(key, receiver));
 }
 
-// #sec-reflect.getownpropertydescriptor
+/** http://tc39.es/ecma262/#sec-reflect.getownpropertydescriptor */
 function Reflect_getOwnPropertyDescriptor([target = Value.undefined, propertyKey = Value.undefined]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
@@ -104,7 +104,7 @@ function Reflect_getOwnPropertyDescriptor([target = Value.undefined, propertyKey
   return FromPropertyDescriptor(desc);
 }
 
-// #sec-reflect.getprototypeof
+/** http://tc39.es/ecma262/#sec-reflect.getprototypeof */
 function Reflect_getPrototypeOf([target = Value.undefined]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
@@ -114,7 +114,7 @@ function Reflect_getPrototypeOf([target = Value.undefined]) {
   return Q(target.GetPrototypeOf());
 }
 
-// #sec-reflect.has
+/** http://tc39.es/ecma262/#sec-reflect.has */
 function Reflect_has([target = Value.undefined, propertyKey = Value.undefined]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
@@ -126,7 +126,7 @@ function Reflect_has([target = Value.undefined, propertyKey = Value.undefined]) 
   return Q(target.HasProperty(key));
 }
 
-// #sec-reflect.isextensible
+/** http://tc39.es/ecma262/#sec-reflect.isextensible */
 function Reflect_isExtensible([target = Value.undefined]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
@@ -136,7 +136,7 @@ function Reflect_isExtensible([target = Value.undefined]) {
   return Q(target.IsExtensible());
 }
 
-// #sec-reflect.ownkeys
+/** http://tc39.es/ecma262/#sec-reflect.ownkeys */
 function Reflect_ownKeys([target = Value.undefined]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
@@ -148,7 +148,7 @@ function Reflect_ownKeys([target = Value.undefined]) {
   return CreateArrayFromList(keys);
 }
 
-// #sec-reflect.preventextensions
+/** http://tc39.es/ecma262/#sec-reflect.preventextensions */
 function Reflect_preventExtensions([target = Value.undefined]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
@@ -158,7 +158,7 @@ function Reflect_preventExtensions([target = Value.undefined]) {
   return Q(target.PreventExtensions());
 }
 
-// #sec-reflect.set
+/** http://tc39.es/ecma262/#sec-reflect.set */
 function Reflect_set([target = Value.undefined, propertyKey = Value.undefined, V = Value.undefined, receiver]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
@@ -174,7 +174,7 @@ function Reflect_set([target = Value.undefined, propertyKey = Value.undefined, V
   return Q(target.Set(key, V, receiver));
 }
 
-// #sec-reflect.setprototypeof
+/** http://tc39.es/ecma262/#sec-reflect.setprototypeof */
 function Reflect_setPrototypeOf([target = Value.undefined, proto = Value.undefined]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {

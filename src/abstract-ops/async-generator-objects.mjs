@@ -26,9 +26,9 @@ import {
 } from './all.mjs';
 
 // This file covers abstract operations defined in
-// #sec-asyncgenerator-objects
+/** http://tc39.es/ecma262/#sec-asyncgenerator-objects */
 
-// #sec-asyncgeneratorrequest-records
+/** http://tc39.es/ecma262/#sec-asyncgeneratorrequest-records */
 class AsyncGeneratorRequestRecord {
   constructor(completion, promiseCapability) {
     this.Completion = completion;
@@ -36,7 +36,7 @@ class AsyncGeneratorRequestRecord {
   }
 }
 
-// #sec-asyncgeneratorstart
+/** http://tc39.es/ecma262/#sec-asyncgeneratorstart */
 export function AsyncGeneratorStart(generator, generatorBody) {
   // 1. Assert: generator.[[AsyncGeneratorState]] is undefined.
   Assert(generator.AsyncGeneratorState === Value.undefined);
@@ -89,7 +89,7 @@ export function AsyncGeneratorStart(generator, generatorBody) {
   return Value.undefined;
 }
 
-// #sec-asyncgeneratorvalidate
+/** http://tc39.es/ecma262/#sec-asyncgeneratorvalidate */
 export function AsyncGeneratorValidate(generator, generatorBrand) {
   // 1. Perform ? RequireInternalSlot(generator, [[AsyncGeneratorContext]]).
   Q(RequireInternalSlot(generator, 'AsyncGeneratorContext'));
@@ -113,7 +113,7 @@ export function AsyncGeneratorValidate(generator, generatorBrand) {
   }
 }
 
-// #sec-asyncgeneratorenqueue
+/** http://tc39.es/ecma262/#sec-asyncgeneratorenqueue */
 export function AsyncGeneratorEnqueue(generator, completion, promiseCapability) {
   // 1. Let request be AsyncGeneratorRequest { [[Completion]]: completion, [[Capability]]: promiseCapability }.
   const request = new AsyncGeneratorRequestRecord(completion, promiseCapability);
@@ -121,7 +121,7 @@ export function AsyncGeneratorEnqueue(generator, completion, promiseCapability) 
   generator.AsyncGeneratorQueue.push(request);
 }
 
-// #sec-asyncgeneratorcompletestep
+/** http://tc39.es/ecma262/#sec-asyncgeneratorcompletestep */
 function AsyncGeneratorCompleteStep(generator, completion, done, realm) {
   // 1. Let queue be generator.[[AsyncGeneratorQueue]].
   const queue = generator.AsyncGeneratorQueue;
@@ -161,7 +161,7 @@ function AsyncGeneratorCompleteStep(generator, completion, done, realm) {
   }
 }
 
-// #sec-asyncgeneratorresume
+/** http://tc39.es/ecma262/#sec-asyncgeneratorresume */
 export function AsyncGeneratorResume(generator, completion) {
   // 1. Assert: generator.[[AsyncGeneratorState]] is either suspendedStart or suspendedYield.
   Assert(generator.AsyncGeneratorState === 'suspendedStart' || generator.AsyncGeneratorState === 'suspendedYield');
@@ -182,7 +182,7 @@ export function AsyncGeneratorResume(generator, completion) {
   Assert(surroundingAgent.runningExecutionContext === callerContext);
 }
 
-// #sec-asyncgeneratorunwrapyieldresumption
+/** http://tc39.es/ecma262/#sec-asyncgeneratorunwrapyieldresumption */
 function* AsyncGeneratorUnwrapYieldResumption(resumptionValue) {
   // 1. If resumptionValue.[[Type]] is not return, return Completion(resumptionValue).
   if (resumptionValue.Type !== 'return') {
@@ -200,7 +200,7 @@ function* AsyncGeneratorUnwrapYieldResumption(resumptionValue) {
   return new Completion({ Type: 'return', Value: awaited.Value, Target: undefined });
 }
 
-// #sec-asyncgeneratoryield
+/** http://tc39.es/ecma262/#sec-asyncgeneratoryield */
 export function* AsyncGeneratorYield(value) {
   // 1. Let genContext be the running execution context.
   const genContext = surroundingAgent.runningExecutionContext;
@@ -249,7 +249,7 @@ export function* AsyncGeneratorYield(value) {
   }
 }
 
-// #sec-asyncgeneratorawaitreturn
+/** http://tc39.es/ecma262/#sec-asyncgeneratorawaitreturn */
 export function AsyncGeneratorAwaitReturn(generator) {
   // 1. Let queue be generator.[[AsyncGeneratorQueue]].
   const queue = generator.AsyncGeneratorQueue;
@@ -297,7 +297,7 @@ export function AsyncGeneratorAwaitReturn(generator) {
   X(PerformPromiseThen(promise, onFulfilled, onRejected));
 }
 
-// #sec-asyncgeneratordrainqueue
+/** http://tc39.es/ecma262/#sec-asyncgeneratordrainqueue */
 function AsyncGeneratorDrainQueue(generator) {
   // 1. Assert: generator.[[AsyncGeneratorState]] is completed.
   Assert(generator.AsyncGeneratorState === 'completed');
@@ -339,7 +339,7 @@ function AsyncGeneratorDrainQueue(generator) {
   }
 }
 
-// #sec-createasynciteratorfromclosure
+/** http://tc39.es/ecma262/#sec-createasynciteratorfromclosure */
 export function CreateAsyncIteratorFromClosure(closure, generatorBrand, generatorPrototype) {
   Assert(typeof closure === 'function');
   // 1. NOTE: closure can contain uses of the Await shorthand, and uses of the Yield shorthand to yield an IteratorResult object.

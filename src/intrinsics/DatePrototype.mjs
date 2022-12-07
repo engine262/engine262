@@ -45,7 +45,7 @@ export function thisTimeValue(value) {
   return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Date', value);
 }
 
-// 20.3.4.2 #sec-date.prototype.getdate
+/** http://tc39.es/ecma262/#sec-date.prototype.getdate */
 function DateProto_getDate(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
@@ -54,7 +54,7 @@ function DateProto_getDate(args, { thisValue }) {
   return DateFromTime(LocalTime(t));
 }
 
-// 20.3.4.3 #sec-date.prototype.getday
+/** http://tc39.es/ecma262/#sec-date.prototype.getday */
 function DateProto_getDay(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
@@ -63,7 +63,7 @@ function DateProto_getDay(args, { thisValue }) {
   return WeekDay(LocalTime(t));
 }
 
-// 20.3.4.4 #sec-date.prototype.getfullyear
+/** http://tc39.es/ecma262/#sec-date.prototype.getfullyear */
 function DateProto_getFullYear(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
@@ -72,7 +72,7 @@ function DateProto_getFullYear(args, { thisValue }) {
   return YearFromTime(LocalTime(t));
 }
 
-// 20.3.4.5 #sec-date.prototype.gethours
+/** http://tc39.es/ecma262/#sec-date.prototype.gethours */
 function DateProto_getHours(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
@@ -81,7 +81,7 @@ function DateProto_getHours(args, { thisValue }) {
   return HourFromTime(LocalTime(t));
 }
 
-// 20.3.4.6 #sec-date.prototype.getmilliseconds
+/** http://tc39.es/ecma262/#sec-date.prototype.getmilliseconds */
 function DateProto_getMilliseconds(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
@@ -90,7 +90,7 @@ function DateProto_getMilliseconds(args, { thisValue }) {
   return msFromTime(LocalTime(t));
 }
 
-// 20.3.4.7 #sec-date.prototype.getminutes
+/** http://tc39.es/ecma262/#sec-date.prototype.getminutes */
 function DateProto_getMinutes(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
@@ -99,7 +99,7 @@ function DateProto_getMinutes(args, { thisValue }) {
   return MinFromTime(LocalTime(t));
 }
 
-// 20.3.4.8 #sec-date.prototype.getmonth
+/** http://tc39.es/ecma262/#sec-date.prototype.getmonth */
 function DateProto_getMonth(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
@@ -108,7 +108,7 @@ function DateProto_getMonth(args, { thisValue }) {
   return MonthFromTime(LocalTime(t));
 }
 
-// 20.3.4.9 #sec-date.prototype.getseconds
+/** http://tc39.es/ecma262/#sec-date.prototype.getseconds */
 function DateProto_getSeconds(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
@@ -117,12 +117,12 @@ function DateProto_getSeconds(args, { thisValue }) {
   return SecFromTime(LocalTime(t));
 }
 
-// 20.3.4.10 #sec-date.prototype.gettime
+/** http://tc39.es/ecma262/#sec-date.prototype.gettime */
 function DateProto_getTime(args, { thisValue }) {
   return Q(thisTimeValue(thisValue));
 }
 
-// 20.3.4.11 #sec-date.prototype.gettimezoneoffset
+/** http://tc39.es/ecma262/#sec-date.prototype.gettimezoneoffset */
 function DateProto_getTimezoneOffset(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
@@ -131,7 +131,7 @@ function DateProto_getTimezoneOffset(args, { thisValue }) {
   return F((t.numberValue() - LocalTime(t).numberValue()) / msPerMinute);
 }
 
-// 20.3.4.12 #sec-date.prototype.getutcdate
+/** http://tc39.es/ecma262/#sec-date.prototype.getutcdate */
 function DateProto_getUTCDate(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
@@ -140,7 +140,7 @@ function DateProto_getUTCDate(args, { thisValue }) {
   return DateFromTime(t);
 }
 
-// 20.3.4.13 #sec-date.prototype.getutcday
+/** http://tc39.es/ecma262/#sec-date.prototype.getutcday */
 function DateProto_getUTCDay(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
@@ -149,7 +149,7 @@ function DateProto_getUTCDay(args, { thisValue }) {
   return WeekDay(t);
 }
 
-// 20.3.4.14 #sec-date.prototype.getutcfullyear
+/** http://tc39.es/ecma262/#sec-date.prototype.getutcfullyear */
 function DateProto_getUTCFullYear(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
@@ -158,7 +158,7 @@ function DateProto_getUTCFullYear(args, { thisValue }) {
   return YearFromTime(t);
 }
 
-// 20.3.4.15 #sec-date.prototype.getutchours
+/** http://tc39.es/ecma262/#sec-date.prototype.getutchours */
 function DateProto_getUTCHours(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
@@ -167,7 +167,7 @@ function DateProto_getUTCHours(args, { thisValue }) {
   return HourFromTime(t);
 }
 
-// 20.3.4.16 #sec-date.prototype.getutcmilliseconds
+/** http://tc39.es/ecma262/#sec-date.prototype.getutcmilliseconds */
 function DateProto_getUTCMilliseconds(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
@@ -176,7 +176,7 @@ function DateProto_getUTCMilliseconds(args, { thisValue }) {
   return msFromTime(t);
 }
 
-// 20.3.4.17 #sec-date.prototype.getutcminutes
+/** http://tc39.es/ecma262/#sec-date.prototype.getutcminutes */
 function DateProto_getUTCMinutes(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
@@ -185,7 +185,7 @@ function DateProto_getUTCMinutes(args, { thisValue }) {
   return MinFromTime(t);
 }
 
-// 20.3.4.18 #sec-date.prototype.getutcmonth
+/** http://tc39.es/ecma262/#sec-date.prototype.getutcmonth */
 function DateProto_getUTCMonth(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
@@ -194,7 +194,7 @@ function DateProto_getUTCMonth(args, { thisValue }) {
   return MonthFromTime(t);
 }
 
-// 20.3.4.19 #sec-date.prototype.getutcseconds
+/** http://tc39.es/ecma262/#sec-date.prototype.getutcseconds */
 function DateProto_getUTCSeconds(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
@@ -203,7 +203,7 @@ function DateProto_getUTCSeconds(args, { thisValue }) {
   return SecFromTime(t);
 }
 
-// 20.3.4.20 #sec-date.prototype.setdate
+/** http://tc39.es/ecma262/#sec-date.prototype.setdate */
 function DateProto_setDate([date = Value.undefined], { thisValue }) {
   const t = LocalTime(Q(thisTimeValue(thisValue)));
   const dt = Q(ToNumber(date));
@@ -213,7 +213,7 @@ function DateProto_setDate([date = Value.undefined], { thisValue }) {
   return u;
 }
 
-// 20.3.4.21 #sec-date.prototype.setfullyear
+/** http://tc39.es/ecma262/#sec-date.prototype.setfullyear */
 function DateProto_setFullYear([year = Value.undefined, month, date], { thisValue }) {
   let t = Q(thisTimeValue(thisValue));
   t = t.isNaN() ? F(+0) : LocalTime(t);
@@ -236,7 +236,7 @@ function DateProto_setFullYear([year = Value.undefined, month, date], { thisValu
   return u;
 }
 
-// 20.3.4.22 #sec-date.prototype.sethours
+/** http://tc39.es/ecma262/#sec-date.prototype.sethours */
 function DateProto_setHours([hour = Value.undefined, min, sec, ms], { thisValue }) {
   const t = LocalTime(Q(thisTimeValue(thisValue)));
   const h = Q(ToNumber(hour));
@@ -264,7 +264,7 @@ function DateProto_setHours([hour = Value.undefined, min, sec, ms], { thisValue 
   return u;
 }
 
-// 20.3.4.23 #sec-date.prototype.setmilliseconds
+/** http://tc39.es/ecma262/#sec-date.prototype.setmilliseconds */
 function DateProto_setMilliseconds([ms = Value.undefined], { thisValue }) {
   const t = LocalTime(Q(thisTimeValue(thisValue)));
   ms = Q(ToNumber(ms));
@@ -274,7 +274,7 @@ function DateProto_setMilliseconds([ms = Value.undefined], { thisValue }) {
   return u;
 }
 
-// 20.3.4.24 #sec-date.prototype.setminutes
+/** http://tc39.es/ecma262/#sec-date.prototype.setminutes */
 function DateProto_setMinutes([min = Value.undefined, sec, ms], { thisValue }) {
   // 1. Let t be LocalTime(? thisTimeValue(this value)).
   const t = LocalTime(Q(thisTimeValue(thisValue)));
@@ -304,7 +304,7 @@ function DateProto_setMinutes([min = Value.undefined, sec, ms], { thisValue }) {
   return u;
 }
 
-// 20.3.4.25 #sec-date.prototype.setmonth
+/** http://tc39.es/ecma262/#sec-date.prototype.setmonth */
 function DateProto_setMonth([month = Value.undefined, date], { thisValue }) {
   const t = LocalTime(Q(thisTimeValue(thisValue)));
   const m = Q(ToNumber(month));
@@ -320,7 +320,7 @@ function DateProto_setMonth([month = Value.undefined, date], { thisValue }) {
   return u;
 }
 
-// 20.3.4.26 #sec-date.prototype.setseconds
+/** http://tc39.es/ecma262/#sec-date.prototype.setseconds */
 function DateProto_setSeconds([sec = Value.undefined, ms], { thisValue }) {
   const t = LocalTime(Q(thisTimeValue(thisValue)));
   const s = Q(ToNumber(sec));
@@ -336,7 +336,7 @@ function DateProto_setSeconds([sec = Value.undefined, ms], { thisValue }) {
   return u;
 }
 
-// 20.3.4.27 #sec-date.prototype.settime
+/** http://tc39.es/ecma262/#sec-date.prototype.settime */
 function DateProto_setTime([time = Value.undefined], { thisValue }) {
   Q(thisTimeValue(thisValue));
   const t = Q(ToNumber(time));
@@ -345,7 +345,7 @@ function DateProto_setTime([time = Value.undefined], { thisValue }) {
   return v;
 }
 
-// 20.3.4.28 #sec-date.prototype.setutcdate
+/** http://tc39.es/ecma262/#sec-date.prototype.setutcdate */
 function DateProto_setUTCDate([date = Value.undefined], { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   const dt = Q(ToNumber(date));
@@ -355,7 +355,7 @@ function DateProto_setUTCDate([date = Value.undefined], { thisValue }) {
   return v;
 }
 
-// 20.3.4.29 #sec-date.prototype.setutcfullyear
+/** http://tc39.es/ecma262/#sec-date.prototype.setutcfullyear */
 function DateProto_setUTCFullYear([year = Value.undefined, month, date], { thisValue }) {
   let t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
@@ -380,7 +380,7 @@ function DateProto_setUTCFullYear([year = Value.undefined, month, date], { thisV
   return v;
 }
 
-// 20.3.4.30 #sec-date.prototype.setutchours
+/** http://tc39.es/ecma262/#sec-date.prototype.setutchours */
 function DateProto_setUTCHours([hour = Value.undefined, min, sec, ms], { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   const h = Q(ToNumber(hour));
@@ -408,7 +408,7 @@ function DateProto_setUTCHours([hour = Value.undefined, min, sec, ms], { thisVal
   return v;
 }
 
-// 20.3.4.31 #sec-date.prototype.setutcmilliseconds
+/** http://tc39.es/ecma262/#sec-date.prototype.setutcmilliseconds */
 function DateProto_setUTCMilliseconds([ms = Value.undefined], { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   const milli = Q(ToNumber(ms));
@@ -418,7 +418,7 @@ function DateProto_setUTCMilliseconds([ms = Value.undefined], { thisValue }) {
   return v;
 }
 
-// 20.3.4.32 #sec-date.prototype.setutcminutes
+/** http://tc39.es/ecma262/#sec-date.prototype.setutcminutes */
 function DateProto_setUTCMinutes([min = Value.undefined, sec, ms], { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   const m = Q(ToNumber(min));
@@ -440,7 +440,7 @@ function DateProto_setUTCMinutes([min = Value.undefined, sec, ms], { thisValue }
   return v;
 }
 
-// 20.3.4.33 #sec-date.prototype.setutcmonth
+/** http://tc39.es/ecma262/#sec-date.prototype.setutcmonth */
 function DateProto_setUTCMonth([month = Value.undefined, date], { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   const m = Q(ToNumber(month));
@@ -456,7 +456,7 @@ function DateProto_setUTCMonth([month = Value.undefined, date], { thisValue }) {
   return v;
 }
 
-// 20.3.4.34 #sec-date.prototype.setutcseconds
+/** http://tc39.es/ecma262/#sec-date.prototype.setutcseconds */
 function DateProto_setUTCSeconds([sec = Value.undefined, ms], { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   const s = Q(ToNumber(sec));
@@ -472,7 +472,7 @@ function DateProto_setUTCSeconds([sec = Value.undefined, ms], { thisValue }) {
   return v;
 }
 
-// 20.3.4.35 #sec-date.prototype.todatestring
+/** http://tc39.es/ecma262/#sec-date.prototype.todatestring */
 function DateProto_toDateString(args, { thisValue }) {
   const O = thisValue;
   if (!(O instanceof ObjectValue)) {
@@ -486,7 +486,7 @@ function DateProto_toDateString(args, { thisValue }) {
   return DateString(t);
 }
 
-// 20.3.4.36 #sec-date.prototype.toisostring
+/** http://tc39.es/ecma262/#sec-date.prototype.toisostring */
 function DateProto_toISOString(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (!Number.isFinite(t.numberValue())) {
@@ -515,7 +515,7 @@ function DateProto_toISOString(args, { thisValue }) {
   return new Value(format);
 }
 
-// 20.3.4.37 #sec-date.prototype.tojson
+/** http://tc39.es/ecma262/#sec-date.prototype.tojson */
 function DateProto_toJSON(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   const tv = Q(ToPrimitive(O, 'number'));
@@ -525,31 +525,31 @@ function DateProto_toJSON(args, { thisValue }) {
   return Q(Invoke(O, new Value('toISOString')));
 }
 
-// 20.3.4.38 #sec-date.prototype.tolocaledatestring
+/** http://tc39.es/ecma262/#sec-date.prototype.tolocaledatestring */
 function DateProto_toLocaleDateString() {
   // TODO: implement this function.
   return surroundingAgent.Throw('Error', 'Raw', 'Date.prototype.toLocaleDateString is not implemented');
 }
 
-// 20.3.4.39 #sec-date.prototype.tolocalestring
+/** http://tc39.es/ecma262/#sec-date.prototype.tolocalestring */
 function DateProto_toLocaleString() {
   // TODO: implement this function.
   return surroundingAgent.Throw('Error', 'Raw', 'Date.prototype.toLocaleString is not implemented');
 }
 
-// 20.3.4.40 #sec-date.prototype.tolocaletimestring
+/** http://tc39.es/ecma262/#sec-date.prototype.tolocaletimestring */
 function DateProto_toLocaleTimeString() {
   // TODO: implement this function.
   return surroundingAgent.Throw('Error', 'Raw', 'Date.prototype.toLocaleTimeString is not implemented');
 }
 
-// 20.3.4.41 #sec-date.prototype.tostring
+/** http://tc39.es/ecma262/#sec-date.prototype.tostring */
 function DateProto_toString(args, { thisValue }) {
   const tv = Q(thisTimeValue(thisValue));
   return ToDateString(tv);
 }
 
-// 20.3.4.41.1 #sec-timestring
+/** http://tc39.es/ecma262/#sec-timestring */
 function TimeString(tv) {
   Assert(tv instanceof NumberValue);
   Assert(!tv.isNaN());
@@ -559,12 +559,12 @@ function TimeString(tv) {
   return new Value(`${hour}:${minute}:${second} GMT`);
 }
 
-// Table 46 #sec-todatestring-day-names
+/** http://tc39.es/ecma262/#sec-todatestring-day-names */
 const daysOfTheWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-// Table 47 #sec-todatestring-month-names
+/** http://tc39.es/ecma262/#sec-todatestring-month-names */
 const monthsOfTheYear = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-// 20.3.4.41.2 #sec-datestring
+/** http://tc39.es/ecma262/#sec-datestring */
 function DateString(tv) {
   Assert(tv instanceof NumberValue);
   Assert(!tv.isNaN());
@@ -578,7 +578,7 @@ function DateString(tv) {
   return new Value(`${weekday} ${month} ${day} ${yearSign}${paddedYear}`);
 }
 
-// 20.3.4.41.3 #sec-timezoneestring
+/** http://tc39.es/ecma262/#sec-timezoneestring */
 export function TimeZoneString(tv) {
   Assert(tv instanceof NumberValue);
   Assert(!tv.isNaN());
@@ -590,7 +590,7 @@ export function TimeZoneString(tv) {
   return new Value(`${offsetSign}${offsetHour}${offsetMin}${tzName}`);
 }
 
-// 20.3.4.41.4 #sec-todatestring
+/** http://tc39.es/ecma262/#sec-todatestring */
 export function ToDateString(tv) {
   Assert(tv instanceof NumberValue);
   if (tv.isNaN()) {
@@ -600,7 +600,7 @@ export function ToDateString(tv) {
   return new Value(`${DateString(t).stringValue()} ${TimeString(t).stringValue()}${TimeZoneString(t).stringValue()}`);
 }
 
-// 20.3.4.42 #sec-date.prototype.totimestring
+/** http://tc39.es/ecma262/#sec-date.prototype.totimestring */
 function DateProto_toTimeString(args, { thisValue }) {
   const O = thisValue;
   if (!(O instanceof ObjectValue)) {
@@ -614,7 +614,7 @@ function DateProto_toTimeString(args, { thisValue }) {
   return new Value(`${TimeString(t).stringValue()}${TimeZoneString(tv).stringValue()}`);
 }
 
-// 20.3.4.43 #sec-date.prototype.toutcstring
+/** http://tc39.es/ecma262/#sec-date.prototype.toutcstring */
 function DateProto_toUTCString(args, { thisValue }) {
   const O = thisValue;
   if (!(O instanceof ObjectValue)) {
@@ -634,12 +634,12 @@ function DateProto_toUTCString(args, { thisValue }) {
   return new Value(`${weekday}, ${day} ${month} ${yearSign}${paddedYear} ${TimeString(tv).stringValue()}`);
 }
 
-// 20.3.4.44 #sec-date.prototype.valueof
+/** http://tc39.es/ecma262/#sec-date.prototype.valueof */
 function DateProto_valueOf(args, { thisValue }) {
   return Q(thisTimeValue(thisValue));
 }
 
-// 20.3.4.45 #sec-date.prototype-@@toprimitive
+/** http://tc39.es/ecma262/#sec-date.prototype-@@toprimitive */
 function DateProto_toPrimitive([hint = Value.undefined], { thisValue }) {
   const O = thisValue;
   if (!(O instanceof ObjectValue)) {

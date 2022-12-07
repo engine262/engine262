@@ -16,7 +16,7 @@ import {
 import { Q } from '../completion.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-// #sec-regexp-constructor
+/** http://tc39.es/ecma262/#sec-regexp-constructor */
 function RegExpConstructor([pattern = Value.undefined, flags = Value.undefined], { NewTarget }) {
   // 1. Let patternIsRegExp be ? IsRegExp(pattern).
   const patternIsRegExp = Q(IsRegExp(pattern));
@@ -71,7 +71,7 @@ function RegExpConstructor([pattern = Value.undefined, flags = Value.undefined],
   return Q(RegExpInitialize(O, P, F));
 }
 
-// 21.2.4.2 #sec-get-regexp-@@species
+/** http://tc39.es/ecma262/#sec-get-regexp-@@species */
 function RegExp_speciesGetter(args, { thisValue }) {
   return thisValue;
 }

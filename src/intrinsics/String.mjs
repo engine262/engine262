@@ -20,7 +20,7 @@ import { CodePointToUTF16CodeUnits } from '../static-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-// 21.1.1.1 #sec-string-constructor-string-value
+/** http://tc39.es/ecma262/#sec-string-constructor-string-value */
 function StringConstructor([value], { NewTarget }) {
   let s;
   if (value === undefined) {
@@ -37,7 +37,7 @@ function StringConstructor([value], { NewTarget }) {
   return X(StringCreate(s, Q(GetPrototypeFromConstructor(NewTarget, '%String.prototype%'))));
 }
 
-// 21.1.2.1 #sec-string.fromcharcode
+/** http://tc39.es/ecma262/#sec-string.fromcharcode */
 function String_fromCharCode(codeUnits) {
   const length = codeUnits.length;
   const elements = [];
@@ -52,7 +52,7 @@ function String_fromCharCode(codeUnits) {
   return new Value(result);
 }
 
-// 21.1.2.2 #sec-string.fromcodepoint
+/** http://tc39.es/ecma262/#sec-string.fromcodepoint */
 function String_fromCodePoint(codePoints) {
   const length = codePoints.length;
   const elements = [];
@@ -73,7 +73,7 @@ function String_fromCodePoint(codePoints) {
   return new Value(result);
 }
 
-// 21.1.2.4 #sec-string.raw
+/** http://tc39.es/ecma262/#sec-string.raw */
 function String_raw([template = Value.undefined, ...substitutions]) {
   const numberOfSubstitutions = substitutions.length;
   const cooked = Q(ToObject(template));

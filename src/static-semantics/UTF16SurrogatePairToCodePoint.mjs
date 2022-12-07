@@ -1,7 +1,7 @@
 import { Assert } from '../abstract-ops/all.mjs';
 import { isLeadingSurrogate, isTrailingSurrogate } from '../parser/Lexer.mjs';
 
-// #sec-utf16decodesurrogatepair
+/** http://tc39.es/ecma262/#sec-utf16decodesurrogatepair */
 export function UTF16SurrogatePairToCodePoint(lead, trail) {
   // 1. Assert: lead is a leading surrogate and trail is a trailing surrogate.
   Assert(isLeadingSurrogate(lead) && isTrailingSurrogate(trail));

@@ -15,7 +15,7 @@ import {
   getUnicodePropertyValueSet,
 } from './all.mjs';
 
-// #sec-pattern
+/** http://tc39.es/ecma262/#sec-pattern */
 class State {
   constructor(endIndex, captures) {
     this.endIndex = endIndex;
@@ -115,7 +115,7 @@ class Range {
   }
 }
 
-// #sec-pattern
+/** http://tc39.es/ecma262/#sec-pattern */
 //   Pattern :: Disjunction
 export function Evaluate_Pattern(Pattern, flags) {
   // The descriptions below use the following variables:
@@ -212,7 +212,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     }
   }
 
-  // #sec-disjunction
+  /** http://tc39.es/ecma262/#sec-disjunction */
   //   Disjunction ::
   //     Alternative
   //     Alternative `|` Disjunction
@@ -244,7 +244,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     };
   }
 
-  // #sec-alternative
+  /** http://tc39.es/ecma262/#sec-alternative */
   //   Alternative ::
   //     [empty]
   //     Alternative Term
@@ -304,7 +304,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     }
   }
 
-  // #sec-term
+  /** http://tc39.es/ecma262/#sec-term */
   //   Term ::
   //     Assertion
   //     Atom
@@ -339,7 +339,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     };
   }
 
-  // #sec-runtime-semantics-repeatmatcher-abstract-operation
+  /** http://tc39.es/ecma262/#sec-runtime-semantics-repeatmatcher-abstract-operation */
   function RepeatMatcher(m, min, max, greedy, x, c, parenIndex, parenCount) {
     // 1. If max is zero, return c(x).
     if (max === 0) {
@@ -405,7 +405,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     return c(x);
   }
 
-  // #sec-assertion
+  /** http://tc39.es/ecma262/#sec-assertion */
   //   Assertion ::
   //     `^`
   //     `$`
@@ -618,7 +618,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     }
   }
 
-  // #sec-runtime-semantics-wordcharacters-abstract-operation
+  /** http://tc39.es/ecma262/#sec-runtime-semantics-wordcharacters-abstract-operation */
   function WordCharacters() {
     // 1. Let A be a set of characters containing the sixty-three characters:
     //   a b c d e f g h i j k l m n o p q r s t u v w x y z
@@ -648,7 +648,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     return A;
   }
 
-  // #sec-runtime-semantics-iswordchar-abstract-operation
+  /** http://tc39.es/ecma262/#sec-runtime-semantics-iswordchar-abstract-operation */
   function IsWordChar(e) {
     // 1. If e is -1 or e is InputLength, return false.
     if (e === -1 || e === InputLength) {
@@ -666,7 +666,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     return false;
   }
 
-  // #sec-quantifier
+  /** http://tc39.es/ecma262/#sec-quantifier */
   //   Quantifier ::
   //     QuantifierPrefix
   //     QuantifierPrefix `?`
@@ -685,7 +685,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     return [DecimalDigits_a, DecimalDigits_b || DecimalDigits_a, greedy];
   }
 
-  // #sec-atom
+  /** http://tc39.es/ecma262/#sec-atom */
   //   Atom ::
   //     PatternCharacter
   //     `.`
@@ -778,7 +778,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     }
   }
 
-  // #sec-runtime-semantics-charactersetmatcher-abstract-operation
+  /** http://tc39.es/ecma262/#sec-runtime-semantics-charactersetmatcher-abstract-operation */
   function CharacterSetMatcher(A, invert, direction) {
     // 1. Return a new Matcher with parameters (x, c) that captures A, invert, and direction and performs the following steps when called:
     return (x, c) => {
@@ -823,7 +823,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     };
   }
 
-  // #sec-runtime-semantics-canonicalize-ch
+  /** http://tc39.es/ecma262/#sec-runtime-semantics-canonicalize-ch */
   function Canonicalize(ch) {
     // 1. If IgnoreCase is false, return ch.
     if (IgnoreCase === false) {
@@ -864,7 +864,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     }
   }
 
-  // #sec-atomescape
+  /** http://tc39.es/ecma262/#sec-atomescape */
   // AtomEscape ::
   //   DecimalEscape
   //   CharacterEscape
@@ -908,7 +908,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     }
   }
 
-  // #sec-backreference-matcher
+  /** http://tc39.es/ecma262/#sec-backreference-matcher */
   function BackreferenceMatcher(n, direction) {
     // 1. Return a new Matcher with parameters (x, c) that captures n and direction and performs the following steps when called:
     return (x, c) => {
@@ -953,7 +953,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     };
   }
 
-  // #sec-characterescape
+  /** http://tc39.es/ecma262/#sec-characterescape */
   // CharacterEscape ::
   //   ControlEscape
   //   `c` ControlLetter
@@ -968,14 +968,14 @@ export function Evaluate_Pattern(Pattern, flags) {
     return cv;
   }
 
-  // #sec-decimalescape
+  /** http://tc39.es/ecma262/#sec-decimalescape */
   // DecimalEscape ::
   //   NonZeroDigit DecimalDigits?
   function Evaluate_DecimalEscape(DecimalEscape) {
     return DecimalEscape.value;
   }
 
-  // #sec-characterclassescape
+  /** http://tc39.es/ecma262/#sec-characterclassescape */
   // CharacterClassEscape ::
   //   `d`
   //   `D`
@@ -1059,7 +1059,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     return new ConcreteCharSet(getUnicodePropertyValueSet(p, v));
   }
 
-  // #sec-characterclass
+  /** http://tc39.es/ecma262/#sec-characterclass */
   //  CharacterClass ::
   //    `[` ClassRanges `]`
   //    `[` `^` ClassRanges `]`
@@ -1078,7 +1078,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     return { A, invert };
   }
 
-  // #sec-runtime-semantics-characterrange-abstract-operation
+  /** http://tc39.es/ecma262/#sec-runtime-semantics-characterrange-abstract-operation */
   function CharacterRange(A, B) {
     // 1. Assert: A and B each contain exactly one character.
     Assert(A.size === 1 && B.size === 1);
@@ -1100,7 +1100,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     return new ConcreteCharSet(set);
   }
 
-  // #sec-classatom
+  /** http://tc39.es/ecma262/#sec-classatom */
   // ClassAtom ::
   //   `-`
   //   ClassAtomNoDash
@@ -1120,7 +1120,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     }
   }
 
-  // #sec-classescape
+  /** http://tc39.es/ecma262/#sec-classescape */
   // ClassEscape ::
   //   `b`
   //   `-`

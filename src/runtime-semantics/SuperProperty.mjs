@@ -9,7 +9,7 @@ import {
 import { StringValue } from '../static-semantics/all.mjs';
 import { Q } from '../completion.mjs';
 
-// #sec-makesuperpropertyreference
+/** http://tc39.es/ecma262/#sec-makesuperpropertyreference */
 function MakeSuperPropertyReference(actualThis, propertyKey, strict) {
   // 1. Let env be GetThisEnvironment().
   const env = GetThisEnvironment();
@@ -26,7 +26,7 @@ function MakeSuperPropertyReference(actualThis, propertyKey, strict) {
   });
 }
 
-// #sec-super-keyword-runtime-semantics-evaluation
+/** http://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation */
 //  SuperProperty :
 //    `super` `[` Expression `]`
 //    `super` `.` IdentifierName

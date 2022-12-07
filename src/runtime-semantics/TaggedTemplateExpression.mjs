@@ -4,7 +4,7 @@ import { IsInTailPosition } from '../static-semantics/all.mjs';
 import { Q } from '../completion.mjs';
 import { EvaluateCall } from './all.mjs';
 
-// #sec-tagged-templates-runtime-semantics-evaluation
+/** http://tc39.es/ecma262/#sec-tagged-templates-runtime-semantics-evaluation */
 //   MemberExpression :
 //     MemberExpression TemplateLiteral
 export function* Evaluate_TaggedTemplateExpression(node) {

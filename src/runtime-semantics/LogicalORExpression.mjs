@@ -3,7 +3,7 @@ import { GetValue, ToBoolean } from '../abstract-ops/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { Q, X } from '../completion.mjs';
 
-// #sec-binary-logical-operators-runtime-semantics-evaluation
+/** http://tc39.es/ecma262/#sec-binary-logical-operators-runtime-semantics-evaluation */
 //   LogicalORExpression :
 //     LogicalORExpression `||` LogicalANDExpression
 export function* Evaluate_LogicalORExpression({ LogicalORExpression, LogicalANDExpression }) {

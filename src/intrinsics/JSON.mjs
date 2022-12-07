@@ -262,7 +262,7 @@ function InternalizeJSONProperty(holder, name, reviver) {
   return Q(Call(reviver, holder, [name, val]));
 }
 
-// #sec-json.parse
+/** http://tc39.es/ecma262/#sec-json.parse */
 function JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
   // 1. Let jsonString be ? ToString(text).
   const jsonString = Q(ToString(text));
@@ -309,7 +309,7 @@ const codeUnitTable = new Map([
   [0x005C, '\\\\'],
 ]);
 
-// #sec-serializejsonproperty
+/** http://tc39.es/ecma262/#sec-serializejsonproperty */
 function SerializeJSONProperty(state, key, holder) {
   let value = Q(Get(holder, key)); // eslint-disable-line no-shadow
   if (value instanceof ObjectValue || value instanceof BigIntValue) {
@@ -386,7 +386,7 @@ function QuoteJSONString(value) { // eslint-disable-line no-shadow
   return new Value(product);
 }
 
-// #sec-serializejsonobject
+/** http://tc39.es/ecma262/#sec-serializejsonobject */
 function SerializeJSONObject(state, value) {
   if (state.Stack.includes(value)) {
     return surroundingAgent.Throw('TypeError', 'JSONCircular');
@@ -431,7 +431,7 @@ function SerializeJSONObject(state, value) {
   return final;
 }
 
-// #sec-serializejsonarray
+/** http://tc39.es/ecma262/#sec-serializejsonarray */
 function SerializeJSONArray(state, value) {
   if (state.Stack.includes(value)) {
     return surroundingAgent.Throw('TypeError', 'JSONCircular');
@@ -470,7 +470,7 @@ function SerializeJSONArray(state, value) {
   return final;
 }
 
-// #sec-json.stringify
+/** http://tc39.es/ecma262/#sec-json.stringify */
 function JSON_stringify([value = Value.undefined, replacer = Value.undefined, space = Value.undefined]) {
   const stack = [];
   const indent = '';

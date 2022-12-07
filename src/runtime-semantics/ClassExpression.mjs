@@ -4,7 +4,7 @@ import { Q } from '../completion.mjs';
 import { StringValue } from '../static-semantics/all.mjs';
 import { ClassDefinitionEvaluation } from './all.mjs';
 
-// #sec-class-definitions-runtime-semantics-evaluation
+/** http://tc39.es/ecma262/#sec-class-definitions-runtime-semantics-evaluation */
 // ClassExpression :
 //   `class` ClassTail
 //   `class` BindingIdentifier ClassTail

@@ -11,7 +11,7 @@ import { Q } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { EvaluateCall, ArgumentListEvaluation } from './all.mjs';
 
-// #sec-function-calls-runtime-semantics-evaluation
+/** http://tc39.es/ecma262/#sec-function-calls-runtime-semantics-evaluation */
 // CallExpression :
 //   CoverCallExpressionAndAsyncArrowHead
 //   CallExpression Arguments
