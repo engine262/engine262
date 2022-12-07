@@ -10,7 +10,7 @@ import {
 import { StringValue } from '../static-semantics/all.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-instantiateordinaryfunctionexpression  */
+/** http://tc39.es/ecma262/#sec-runtime-semantics-instantiateordinaryfunctionexpression */
 //   FunctionExpression :
 //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
 //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`

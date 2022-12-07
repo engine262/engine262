@@ -25,7 +25,7 @@ function thisBooleanValue(value) {
   return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Boolean', value);
 }
 
-/** http://tc39.es/ecma262/#sec-boolean.prototype.tostring  */
+/** http://tc39.es/ecma262/#sec-boolean.prototype.tostring */
 function BooleanProto_toString(argList, { thisValue }) {
   // 1. Let b be ? thisBooleanValue(this value).
   const b = Q(thisBooleanValue(thisValue));
@@ -36,7 +36,7 @@ function BooleanProto_toString(argList, { thisValue }) {
   return new Value('false');
 }
 
-/** http://tc39.es/ecma262/#sec-boolean.prototype.valueof  */
+/** http://tc39.es/ecma262/#sec-boolean.prototype.valueof */
 function BooleanProto_valueOf(argList, { thisValue }) {
   // 1. Return ? thisBooleanValue(this value).
   return Q(thisBooleanValue(thisValue));

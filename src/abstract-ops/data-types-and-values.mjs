@@ -3,7 +3,7 @@ import { X } from '../completion.mjs';
 import { CanonicalNumericIndexString } from './all.mjs';
 
 // This file covers predicates defined in
-/** http://tc39.es/ecma262/#sec-ecmascript-data-types-and-values  */
+/** http://tc39.es/ecma262/#sec-ecmascript-data-types-and-values */
 
 // 6.1.7 #integer-index
 export function isIntegerIndex(V) {

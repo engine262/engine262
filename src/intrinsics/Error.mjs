@@ -13,7 +13,7 @@ import { surroundingAgent } from '../engine.mjs';
 import { captureStack } from '../helpers.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-error-constructor  */
+/** http://tc39.es/ecma262/#sec-error-constructor */
 function ErrorConstructor([message = Value.undefined, options = Value.undefined], { NewTarget }) {
   // 1. If NewTarget is undefined, let newTarget be the active function object; else let newTarget be NewTarget.
   let newTarget;

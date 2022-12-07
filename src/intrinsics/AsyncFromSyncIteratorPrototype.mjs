@@ -12,7 +12,7 @@ import { ObjectValue, Value } from '../value.mjs';
 import { IfAbruptRejectPromise, X } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.next  */
+/** http://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.next */
 function AsyncFromSyncIteratorPrototype_next([value], { thisValue }) {
   // 1. Let O be the this value.
   const O = thisValue;
@@ -37,7 +37,7 @@ function AsyncFromSyncIteratorPrototype_next([value], { thisValue }) {
   return X(AsyncFromSyncIteratorContinuation(result, promiseCapability));
 }
 
-/** http://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.return  */
+/** http://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.return */
 function AsyncFromSyncIteratorPrototype_return([value], { thisValue }) {
   // 1. Let O be the this value.
   const O = thisValue;
@@ -84,7 +84,7 @@ function AsyncFromSyncIteratorPrototype_return([value], { thisValue }) {
   return X(AsyncFromSyncIteratorContinuation(result, promiseCapability));
 }
 
-/** http://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.throw  */
+/** http://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.throw */
 function AsyncFromSyncIteratorPrototype_throw([value], { thisValue }) {
   // 1. Let O be this value.
   const O = thisValue;

@@ -10,7 +10,7 @@ import {
 } from '../value.mjs';
 import { X } from '../completion.mjs';
 
-/** http://tc39.es/ecma262/#sec-ecmascript-standard-built-in-objects  */
+/** http://tc39.es/ecma262/#sec-ecmascript-standard-built-in-objects */
 export function assignProps(realmRec, obj, props) {
   for (const item of props) {
     if (item === undefined) {

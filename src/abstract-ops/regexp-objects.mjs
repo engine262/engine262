@@ -20,7 +20,7 @@ import {
   F as toNumberValue,
 } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-regexpalloc  */
+/** http://tc39.es/ecma262/#sec-regexpalloc */
 export function RegExpAlloc(newTarget) {
   const obj = Q(OrdinaryCreateFromConstructor(newTarget, '%RegExp.prototype%', ['RegExpMatcher', 'OriginalSource', 'OriginalFlags']));
   X(DefinePropertyOrThrow(obj, new Value('lastIndex'), Descriptor({
@@ -31,7 +31,7 @@ export function RegExpAlloc(newTarget) {
   return obj;
 }
 
-/** http://tc39.es/ecma262/#sec-regexpinitialize  */
+/** http://tc39.es/ecma262/#sec-regexpinitialize */
 export function RegExpInitialize(obj, pattern, flags) {
   let P;
   // 1. If pattern is undefined, let P be the empty String.
@@ -85,13 +85,13 @@ export function RegExpInitialize(obj, pattern, flags) {
   return obj;
 }
 
-/** http://tc39.es/ecma262/#sec-regexpcreate  */
+/** http://tc39.es/ecma262/#sec-regexpcreate */
 export function RegExpCreate(P, F) {
   const obj = Q(RegExpAlloc(surroundingAgent.intrinsic('%RegExp%')));
   return Q(RegExpInitialize(obj, P, F));
 }
 
-/** http://tc39.es/ecma262/#sec-escaperegexppattern  */
+/** http://tc39.es/ecma262/#sec-escaperegexppattern */
 export function EscapeRegExpPattern(P, _F) {
   const source = P.stringValue();
   if (source === '') {
@@ -154,7 +154,7 @@ export function EscapeRegExpPattern(P, _F) {
   return new Value(escaped);
 }
 
-/** http://tc39.es/ecma262/#sec-getstringindex  */
+/** http://tc39.es/ecma262/#sec-getstringindex */
 export function GetStringIndex(S, Input, e) {
   // 1. Assert: Type(S) is String.
   Assert(S instanceof JSStringValue);
@@ -180,7 +180,7 @@ export function GetStringIndex(S, Input, e) {
   return eUTF;
 }
 
-/** http://tc39.es/ecma262/#sec-getmatchstring  */
+/** http://tc39.es/ecma262/#sec-getmatchstring */
 export function GetMatchString(S, match) {
   // 1. Assert: Type(S) is String.
   Assert(S instanceof JSStringValue);
@@ -194,7 +194,7 @@ export function GetMatchString(S, match) {
   return new Value(S.stringValue().slice(match.StartIndex, match.EndIndex));
 }
 
-/** http://tc39.es/ecma262/#sec-getmatchindexpair  */
+/** http://tc39.es/ecma262/#sec-getmatchindexpair */
 export function GetMatchIndexPair(S, match) {
   // 1. Assert: Type(S) is String.
   Assert(S instanceof JSStringValue);
@@ -211,7 +211,7 @@ export function GetMatchIndexPair(S, match) {
   ]);
 }
 
-/** http://tc39.es/ecma262/#sec-makematchindicesindexpairarray  */
+/** http://tc39.es/ecma262/#sec-makematchindicesindexpairarray */
 export function MakeMatchIndicesIndexPairArray(S, indices, groupNames, hasGroups) {
   // 1. Assert: Type(S) is String.
   Assert(S instanceof JSStringValue);
@@ -265,7 +265,7 @@ export function MakeMatchIndicesIndexPairArray(S, indices, groupNames, hasGroups
   return A;
 }
 
-/** http://tc39.es/ecma262/#sec-regexphasflag  */
+/** http://tc39.es/ecma262/#sec-regexphasflag */
 export function RegExpHasFlag(R, codeUnit) {
   // 1. If Type(R) is not Object, throw a TypeError exception.
   if (!(R instanceof ObjectValue)) {

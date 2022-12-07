@@ -3,7 +3,7 @@ import { OrdinaryFunctionCreate, MakeMethod, sourceTextMatchedBy } from '../abst
 import { ReturnIfAbrupt } from '../completion.mjs';
 import { Evaluate_PropertyName } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-definemethod  */
+/** http://tc39.es/ecma262/#sec-runtime-semantics-definemethod */
 export function* DefineMethod(MethodDefinition, object, functionPrototype) {
   const { ClassElementName, UniqueFormalParameters, FunctionBody } = MethodDefinition;
   // 1. Let propKey be the result of evaluating ClassElementName.

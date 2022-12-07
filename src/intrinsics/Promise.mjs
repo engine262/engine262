@@ -39,7 +39,7 @@ import {
 } from '../completion.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-promise-executor  */
+/** http://tc39.es/ecma262/#sec-promise-executor */
 function PromiseConstructor([executor = Value.undefined], { NewTarget }) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget === Value.undefined) {
@@ -80,7 +80,7 @@ function PromiseConstructor([executor = Value.undefined], { NewTarget }) {
   return promise;
 }
 
-/** http://tc39.es/ecma262/#sec-promise.all-resolve-element-functions  */
+/** http://tc39.es/ecma262/#sec-promise.all-resolve-element-functions */
 function PromiseAllResolveElementFunctions([x = Value.undefined]) {
   const F = surroundingAgent.activeFunctionObject;
   const alreadyCalled = F.AlreadyCalled;
@@ -101,7 +101,7 @@ function PromiseAllResolveElementFunctions([x = Value.undefined]) {
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-getpromiseresolve  */
+/** http://tc39.es/ecma262/#sec-getpromiseresolve */
 function GetPromiseResolve(promiseConstructor) {
   // 1. Assert: IsConstructor(promiseConstructor) is true.
   Assert(IsConstructor(promiseConstructor) === Value.true);
@@ -115,7 +115,7 @@ function GetPromiseResolve(promiseConstructor) {
   return promiseResolve;
 }
 
-/** http://tc39.es/ecma262/#sec-performpromiseall  */
+/** http://tc39.es/ecma262/#sec-performpromiseall */
 function PerformPromiseAll(iteratorRecord, constructor, resultCapability, promiseResolve) {
   // 1. Assert: IsConstructor(constructor) is true.
   Assert(IsConstructor(constructor) === Value.true);
@@ -194,7 +194,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability, promis
   }
 }
 
-/** http://tc39.es/ecma262/#sec-promise.all  */
+/** http://tc39.es/ecma262/#sec-promise.all */
 function Promise_all([iterable = Value.undefined], { thisValue }) {
   // 1. Let C be the this value.
   const C = thisValue;
@@ -269,7 +269,7 @@ function PromiseAllSettledRejectElementFunctions([x = Value.undefined]) {
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-performpromiseallsettled  */
+/** http://tc39.es/ecma262/#sec-performpromiseallsettled */
 function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability, promiseResolve) {
   // 1. Assert: ! IsConstructor(constructor) is true.
   Assert(X(IsConstructor(constructor) === Value.true));
@@ -376,7 +376,7 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability,
   }
 }
 
-/** http://tc39.es/ecma262/#sec-promise.allsettled  */
+/** http://tc39.es/ecma262/#sec-promise.allsettled */
 function Promise_allSettled([iterable = Value.undefined], { thisValue }) {
   // 1. Let C be the this value.
   const C = thisValue;
@@ -405,7 +405,7 @@ function Promise_allSettled([iterable = Value.undefined], { thisValue }) {
   return Completion(result);
 }
 
-/** http://tc39.es/ecma262/#sec-promise.any-reject-element-functions  */
+/** http://tc39.es/ecma262/#sec-promise.any-reject-element-functions */
 function PromiseAnyRejectElementFunctions([x = Value.undefined]) {
   // 1. Let F be the active function object.
   const F = surroundingAgent.activeFunctionObject;
@@ -447,7 +447,7 @@ function PromiseAnyRejectElementFunctions([x = Value.undefined]) {
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-performpromiseany  */
+/** http://tc39.es/ecma262/#sec-performpromiseany */
 function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promiseResolve) {
   // 1. Assert: ! IsConstructor(constructor) is true.
   Assert(X(IsConstructor(constructor)) === Value.true);
@@ -531,7 +531,7 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promis
   }
 }
 
-/** http://tc39.es/ecma262/#sec-promise.any  */
+/** http://tc39.es/ecma262/#sec-promise.any */
 function Promise_any([iterable = Value.undefined], { thisValue }) {
   // 1. Let C be the this value.
   const C = thisValue;
@@ -599,7 +599,7 @@ function PerformPromiseRace(iteratorRecord, constructor, resultCapability, promi
   }
 }
 
-/** http://tc39.es/ecma262/#sec-promise.race  */
+/** http://tc39.es/ecma262/#sec-promise.race */
 function Promise_race([iterable = Value.undefined], { thisValue }) {
   // 1. Let C be the this value.
   const C = thisValue;
@@ -628,7 +628,7 @@ function Promise_race([iterable = Value.undefined], { thisValue }) {
   return Completion(result);
 }
 
-/** http://tc39.es/ecma262/#sec-promise.reject  */
+/** http://tc39.es/ecma262/#sec-promise.reject */
 function Promise_reject([r = Value.undefined], { thisValue }) {
   // 1. Let C be this value.
   const C = thisValue;
@@ -640,7 +640,7 @@ function Promise_reject([r = Value.undefined], { thisValue }) {
   return promiseCapability.Promise;
 }
 
-/** http://tc39.es/ecma262/#sec-promise.resolve  */
+/** http://tc39.es/ecma262/#sec-promise.resolve */
 function Promise_resolve([x = Value.undefined], { thisValue }) {
   // 1. Let C be the this value.
   const C = thisValue;
@@ -652,7 +652,7 @@ function Promise_resolve([x = Value.undefined], { thisValue }) {
   return Q(PromiseResolve(C, x));
 }
 
-/** http://tc39.es/ecma262/#sec-get-promise-@@species  */
+/** http://tc39.es/ecma262/#sec-get-promise-@@species */
 function Promise_symbolSpecies(args, { thisValue }) {
   // 1. Return the this value.
   return thisValue;

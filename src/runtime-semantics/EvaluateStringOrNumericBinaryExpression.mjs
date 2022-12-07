@@ -3,7 +3,7 @@ import { GetValue } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 import { ApplyStringOrNumericBinaryOperator } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-evaluatestringornumericbinaryexpression  */
+/** http://tc39.es/ecma262/#sec-evaluatestringornumericbinaryexpression */
 export function* EvaluateStringOrNumericBinaryExpression(leftOperand, opText, rightOperand) {
   // 1. Let lref be the result of evaluating leftOperand.
   const lref = yield* Evaluate(leftOperand);

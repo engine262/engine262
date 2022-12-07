@@ -25,7 +25,7 @@ function thisNumberValue(value) {
   return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Number', value);
 }
 
-/** http://tc39.es/ecma262/#sec-number.prototype.toexponential  */
+/** http://tc39.es/ecma262/#sec-number.prototype.toexponential */
 function NumberProto_toExponential([fractionDigits = Value.undefined], { thisValue }) {
   const x = Q(thisNumberValue(thisValue));
   const f = Q(ToIntegerOrInfinity(fractionDigits));
@@ -39,7 +39,7 @@ function NumberProto_toExponential([fractionDigits = Value.undefined], { thisVal
   return new Value(x.numberValue().toExponential(fractionDigits === Value.undefined ? undefined : f));
 }
 
-/** http://tc39.es/ecma262/#sec-number.prototype.tofixed  */
+/** http://tc39.es/ecma262/#sec-number.prototype.tofixed */
 function NumberProto_toFixed([fractionDigits = Value.undefined], { thisValue }) {
   const x = Q(thisNumberValue(thisValue));
   const f = Q(ToIntegerOrInfinity(fractionDigits));
@@ -53,12 +53,12 @@ function NumberProto_toFixed([fractionDigits = Value.undefined], { thisValue }) 
   return new Value(x.numberValue().toFixed(f));
 }
 
-/** http://tc39.es/ecma262/#sec-number.prototype.tolocalestring  */
+/** http://tc39.es/ecma262/#sec-number.prototype.tolocalestring */
 function NumberProto_toLocaleString(args, { thisValue }) {
   return NumberProto_toString([], { thisValue });
 }
 
-/** http://tc39.es/ecma262/#sec-number.prototype.toprecision  */
+/** http://tc39.es/ecma262/#sec-number.prototype.toprecision */
 function NumberProto_toPrecision([precision = Value.undefined], { thisValue }) {
   const x = Q(thisNumberValue(thisValue));
   if (precision === Value.undefined) {
@@ -74,7 +74,7 @@ function NumberProto_toPrecision([precision = Value.undefined], { thisValue }) {
   return new Value(x.numberValue().toPrecision(p));
 }
 
-/** http://tc39.es/ecma262/#sec-number.prototype.tostring  */
+/** http://tc39.es/ecma262/#sec-number.prototype.tostring */
 function NumberProto_toString([radix = Value.undefined], { thisValue }) {
   const x = Q(thisNumberValue(thisValue));
   let radixNumber;
@@ -97,7 +97,7 @@ function NumberProto_toString([radix = Value.undefined], { thisValue }) {
   return new Value(x.numberValue().toString(radixNumber));
 }
 
-/** http://tc39.es/ecma262/#sec-number.prototype.valueof  */
+/** http://tc39.es/ecma262/#sec-number.prototype.valueof */
 function NumberProto_valueOf(args, { thisValue }) {
   return Q(thisNumberValue(thisValue));
 }

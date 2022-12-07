@@ -12,7 +12,7 @@ import { X } from '../completion.mjs';
 import { StringValue } from '../static-semantics/all.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-instantiategeneratorfunctionexpression  */
+/** http://tc39.es/ecma262/#sec-runtime-semantics-instantiategeneratorfunctionexpression */
 //   GeneratorExpression :
 //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
 //     `function` `* `BindingIdentifier `(` FormalParameters `)` `{` GeneratorBody `}`

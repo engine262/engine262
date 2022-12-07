@@ -1,7 +1,7 @@
 import { X } from '../completion.mjs';
 import { CodePointAt } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-stringtocodepoints  */
+/** http://tc39.es/ecma262/#sec-stringtocodepoints */
 export function StringToCodePoints(string) {
   // 1. Let codePoints be a new empty List.
   const codePoints = [];

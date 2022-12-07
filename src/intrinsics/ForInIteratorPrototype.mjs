@@ -9,7 +9,7 @@ import {
 import { Q } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-createforiniterator  */
+/** http://tc39.es/ecma262/#sec-createforiniterator */
 export function CreateForInIterator(object) {
   // 1. Assert: Type(object) is Object.
   Assert(object instanceof ObjectValue);
@@ -32,7 +32,7 @@ export function CreateForInIterator(object) {
   return iterator;
 }
 
-/** http://tc39.es/ecma262/#sec-%foriniteratorprototype%.next  */
+/** http://tc39.es/ecma262/#sec-%foriniteratorprototype%.next */
 function ForInIteratorPrototype_next(args, { thisValue }) {
   // 1. Let O be this value.
   const O = thisValue;

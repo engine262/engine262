@@ -2,7 +2,7 @@ import { Evaluate } from '../evaluator.mjs';
 import { GetValue } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 
-/** http://tc39.es/ecma262/#sec-comma-operator-runtime-semantics-evaluation  */
+/** http://tc39.es/ecma262/#sec-comma-operator-runtime-semantics-evaluation */
 //   Expression :
 //     AssignmentExpression
 //     Expression `,` AssignmentExpression

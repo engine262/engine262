@@ -5,7 +5,7 @@ import {
 import { Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
 
-/** http://tc39.es/ecma262/#sec-isfinite-number  */
+/** http://tc39.es/ecma262/#sec-isfinite-number */
 function IsFinite([number = Value.undefined]) {
   // 1. Let num be ? ToNumber(number).
   const num = Q(ToNumber(number));

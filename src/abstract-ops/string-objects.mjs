@@ -90,7 +90,7 @@ function StringExoticOwnPropertyKeys() {
   return keys;
 }
 
-/** http://tc39.es/ecma262/#sec-stringcreate  */
+/** http://tc39.es/ecma262/#sec-stringcreate */
 export function StringCreate(value, prototype) {
   // 1. Assert: Type(value) is String.
   Assert(value instanceof JSStringValue);
@@ -119,7 +119,7 @@ export function StringCreate(value, prototype) {
   return S;
 }
 
-/** http://tc39.es/ecma262/#sec-stringgetownproperty  */
+/** http://tc39.es/ecma262/#sec-stringgetownproperty */
 export function StringGetOwnProperty(S, P) {
   Assert(S instanceof ObjectValue && 'StringData' in S);
   Assert(IsPropertyKey(P));

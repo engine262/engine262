@@ -1,7 +1,7 @@
 import { Completion } from '../completion.mjs';
 import { StringValue } from '../static-semantics/all.mjs';
 
-/** http://tc39.es/ecma262/#sec-break-statement-runtime-semantics-evaluation  */
+/** http://tc39.es/ecma262/#sec-break-statement-runtime-semantics-evaluation */
 //   BreakStatement :
 //     `break` `;`
 //     `break` LabelIdentifier `;`

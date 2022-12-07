@@ -24,7 +24,7 @@ import {
 } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
 
-/** http://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-evaluation  */
+/** http://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-evaluation */
 //   YieldExpression :
 //     `yield`
 //     `yield` AssignmentExpression

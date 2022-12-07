@@ -8,7 +8,7 @@ import {
   EvaluatePropertyAccessWithIdentifierKey,
 } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation  */
+/** http://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation */
 //   MemberExpression : MemberExpression `[` Expression `]`
 //   CallExpression : CallExpression `[` Expression `]`
 function* Evaluate_MemberExpression_Expression({ strict, MemberExpression, Expression }) {
@@ -21,7 +21,7 @@ function* Evaluate_MemberExpression_Expression({ strict, MemberExpression, Expre
   return Q(yield* EvaluatePropertyAccessWithExpressionKey(baseValue, Expression, strict));
 }
 
-/** http://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation  */
+/** http://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation */
 //   MemberExpression : MemberExpression `.` IdentifierName
 //   CallExpression : CallExpression `.` IdentifierName
 function* Evaluate_MemberExpression_IdentifierName({ strict, MemberExpression, IdentifierName }) {
@@ -34,7 +34,7 @@ function* Evaluate_MemberExpression_IdentifierName({ strict, MemberExpression, I
   return Q(EvaluatePropertyAccessWithIdentifierKey(baseValue, IdentifierName, strict));
 }
 
-/** http://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation  */
+/** http://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation */
 //   MemberExpression : MemberExpression `.` PrivateIdentifier
 //   CallExpression : CallExpression `.` PrivateIdentifier
 function* Evaluate_MemberExpression_PrivateIdentifier({ MemberExpression, PrivateIdentifier }) {
@@ -50,7 +50,7 @@ function* Evaluate_MemberExpression_PrivateIdentifier({ MemberExpression, Privat
   return X(MakePrivateReference(bv, fieldNameString));
 }
 
-/** http://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation  */
+/** http://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation */
 //   MemberExpression :
 //     MemberExpression `[` Expression `]`
 //     MemberExpression `.` IdentifierName

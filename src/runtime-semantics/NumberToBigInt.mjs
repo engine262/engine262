@@ -2,7 +2,7 @@ import { surroundingAgent } from '../engine.mjs';
 import { Assert, IsIntegralNumber, Z } from '../abstract-ops/all.mjs';
 import { Value, NumberValue } from '../value.mjs';
 
-/** http://tc39.es/ecma262/#sec-numbertobigint  */
+/** http://tc39.es/ecma262/#sec-numbertobigint */
 export function NumberToBigInt(number) {
   // 1. Assert: Type(number) is Number.
   Assert(number instanceof NumberValue);

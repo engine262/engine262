@@ -169,7 +169,7 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
   });
 }
 
-/** http://tc39.es/ecma262/#sec-parsejsonmodule  */
+/** http://tc39.es/ecma262/#sec-parsejsonmodule */
 export function ParseJSONModule(sourceText, realm, hostDefined) {
   // 1. Let jsonParse be realm's intrinsic object named "%JSON.parse%".
   const jsonParse = realm.Intrinsics['%JSON.parse%'];
@@ -179,7 +179,7 @@ export function ParseJSONModule(sourceText, realm, hostDefined) {
   return CreateDefaultExportSyntheticModule(json, realm, hostDefined);
 }
 
-/** http://tc39.es/ecma262/#sec-parsepattern  */
+/** http://tc39.es/ecma262/#sec-parsepattern */
 export function ParsePattern(patternText, u) {
   const parse = (flags) => {
     const p = new RegExpParser(patternText);

@@ -86,7 +86,7 @@ import {
   OrdinaryObjectCreate,
 } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-code-realms  */
+/** http://tc39.es/ecma262/#sec-code-realms */
 export class Realm {
   constructor() {
     this.Intrinsics = undefined;
@@ -110,7 +110,7 @@ export class Realm {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-createrealm  */
+/** http://tc39.es/ecma262/#sec-createrealm */
 export function CreateRealm() {
   const realmRec = new Realm();
   CreateIntrinsics(realmRec);
@@ -137,7 +137,7 @@ function AddRestrictedFunctionProperties(F, realm) {
   })));
 }
 
-/** http://tc39.es/ecma262/#sec-createintrinsics  */
+/** http://tc39.es/ecma262/#sec-createintrinsics */
 export function CreateIntrinsics(realmRec) {
   const intrinsics = Object.create(null);
   realmRec.Intrinsics = intrinsics;
@@ -255,7 +255,7 @@ export function CreateIntrinsics(realmRec) {
   return intrinsics;
 }
 
-/** http://tc39.es/ecma262/#sec-setrealmglobalobject  */
+/** http://tc39.es/ecma262/#sec-setrealmglobalobject */
 export function SetRealmGlobalObject(realmRec, globalObj, thisValue) {
   const intrinsics = realmRec.Intrinsics;
   if (globalObj === Value.undefined) {
@@ -270,7 +270,7 @@ export function SetRealmGlobalObject(realmRec, globalObj, thisValue) {
   return realmRec;
 }
 
-/** http://tc39.es/ecma262/#sec-setdefaultglobalbindings  */
+/** http://tc39.es/ecma262/#sec-setdefaultglobalbindings */
 export function SetDefaultGlobalBindings(realmRec) {
   const global = realmRec.GlobalObject;
 

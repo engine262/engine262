@@ -30,13 +30,13 @@ import {
 import { Q, X } from '../completion.mjs';
 import { assignProps } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-properties-of-the-function-prototype-object  */
+/** http://tc39.es/ecma262/#sec-properties-of-the-function-prototype-object */
 function FunctionProto(_args, _meta) {
   // * accepts any arguments and returns undefined when invoked.
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-function.prototype.apply  */
+/** http://tc39.es/ecma262/#sec-function.prototype.apply */
 function FunctionProto_apply([thisArg = Value.undefined, argArray = Value.undefined], { thisValue }) {
   // 1. Let func be the this value.
   const func = thisValue;
@@ -82,7 +82,7 @@ function BoundFunctionExoticObjectConstruct(argumentsList, newTarget) {
   return Q(Construct(target, args, newTarget));
 }
 
-/** http://tc39.es/ecma262/#sec-boundfunctioncreate  */
+/** http://tc39.es/ecma262/#sec-boundfunctioncreate */
 function BoundFunctionCreate(targetFunction, boundThis, boundArgs) {
   // 1. Assert: Type(targetFunction) is Object.
   Assert(targetFunction instanceof ObjectValue);
@@ -117,7 +117,7 @@ function BoundFunctionCreate(targetFunction, boundThis, boundArgs) {
   return obj;
 }
 
-/** http://tc39.es/ecma262/#sec-function.prototype.bind  */
+/** http://tc39.es/ecma262/#sec-function.prototype.bind */
 function FunctionProto_bind([thisArg = Value.undefined, ...args], { thisValue }) {
   // 1. Let Target be the this value.
   const Target = thisValue;
@@ -168,7 +168,7 @@ function FunctionProto_bind([thisArg = Value.undefined, ...args], { thisValue })
   return F;
 }
 
-/** http://tc39.es/ecma262/#sec-function.prototype.call  */
+/** http://tc39.es/ecma262/#sec-function.prototype.call */
 function FunctionProto_call([thisArg = Value.undefined, ...args], { thisValue }) {
   // 1. Let func be the this value.
   const func = thisValue;
@@ -188,7 +188,7 @@ function FunctionProto_call([thisArg = Value.undefined, ...args], { thisValue })
   return Q(Call(func, thisArg, argList));
 }
 
-/** http://tc39.es/ecma262/#sec-function.prototype.tostring  */
+/** http://tc39.es/ecma262/#sec-function.prototype.tostring */
 function FunctionProto_toString(args, { thisValue }) {
   // 1. Let func be the this value.
   const func = thisValue;
@@ -222,7 +222,7 @@ function FunctionProto_toString(args, { thisValue }) {
   return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
 }
 
-/** http://tc39.es/ecma262/#sec-function.prototype-@@hasinstance  */
+/** http://tc39.es/ecma262/#sec-function.prototype-@@hasinstance */
 function FunctionProto_hasInstance([V = Value.undefined], { thisValue }) {
   // 1. Let F be this value.
   const F = thisValue;

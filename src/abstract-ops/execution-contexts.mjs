@@ -8,9 +8,9 @@ import { Value } from '../value.mjs';
 import { Assert } from './all.mjs';
 
 // This file covers abstract operations defined in
-/** http://tc39.es/ecma262/#sec-execution-contexts  */
+/** http://tc39.es/ecma262/#sec-execution-contexts */
 
-/** http://tc39.es/ecma262/#sec-getactivescriptormodule  */
+/** http://tc39.es/ecma262/#sec-getactivescriptormodule */
 export function GetActiveScriptOrModule() {
   for (let i = surroundingAgent.executionContextStack.length - 1; i >= 0; i -= 1) {
     const e = surroundingAgent.executionContextStack[i];
@@ -21,7 +21,7 @@ export function GetActiveScriptOrModule() {
   return Value.null;
 }
 
-/** http://tc39.es/ecma262/#sec-resolvebinding  */
+/** http://tc39.es/ecma262/#sec-resolvebinding */
 export function ResolveBinding(name, env, strict) {
   // 1. If env is not present or if env is undefined, then
   if (env === undefined || env === Value.undefined) {
@@ -35,7 +35,7 @@ export function ResolveBinding(name, env, strict) {
   return GetIdentifierReference(env, name, strict ? Value.true : Value.false);
 }
 
-/** http://tc39.es/ecma262/#sec-getthisenvironment  */
+/** http://tc39.es/ecma262/#sec-getthisenvironment */
 export function GetThisEnvironment() {
   // 1. Let env be the running execution context's LexicalEnvironment.
   let env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
@@ -56,20 +56,20 @@ export function GetThisEnvironment() {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-resolvethisbinding  */
+/** http://tc39.es/ecma262/#sec-resolvethisbinding */
 export function ResolveThisBinding() {
   const envRec = GetThisEnvironment();
   return Q(envRec.GetThisBinding());
 }
 
-/** http://tc39.es/ecma262/#sec-getnewtarget  */
+/** http://tc39.es/ecma262/#sec-getnewtarget */
 export function GetNewTarget() {
   const envRec = GetThisEnvironment();
   Assert('NewTarget' in envRec);
   return envRec.NewTarget;
 }
 
-/** http://tc39.es/ecma262/#sec-getglobalobject  */
+/** http://tc39.es/ecma262/#sec-getglobalobject */
 export function GetGlobalObject() {
   const currentRealm = surroundingAgent.currentRealmRecord;
   return currentRealm.GlobalObject;

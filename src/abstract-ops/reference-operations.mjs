@@ -20,7 +20,7 @@ import {
   PrivateSet,
 } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-ispropertyreference  */
+/** http://tc39.es/ecma262/#sec-ispropertyreference */
 export function IsPropertyReference(V) {
   // 1. If V.[[Base]] is unresolvable, return false.
   if (V.Base === 'unresolvable') {
@@ -30,7 +30,7 @@ export function IsPropertyReference(V) {
   return V.Base instanceof EnvironmentRecord ? Value.false : Value.true;
 }
 
-/** http://tc39.es/ecma262/#sec-isunresolvablereference  */
+/** http://tc39.es/ecma262/#sec-isunresolvablereference */
 export function IsUnresolvableReference(V) {
   // 1. Assert: V is a Reference Record.
   Assert(V instanceof ReferenceRecord);
@@ -38,7 +38,7 @@ export function IsUnresolvableReference(V) {
   return V.Base === 'unresolvable' ? Value.true : Value.false;
 }
 
-/** http://tc39.es/ecma262/#sec-issuperreference  */
+/** http://tc39.es/ecma262/#sec-issuperreference */
 export function IsSuperReference(V) {
   // 1. Assert: V is a Reference Record.
   Assert(V instanceof ReferenceRecord);
@@ -46,7 +46,7 @@ export function IsSuperReference(V) {
   return V.ThisValue !== undefined ? Value.true : Value.false;
 }
 
-/** http://tc39.es/ecma262/#sec-isprivatereference  */
+/** http://tc39.es/ecma262/#sec-isprivatereference */
 export function IsPrivateReference(V) {
   // 1. Assert: V is a Reference Record.
   Assert(V instanceof ReferenceRecord);
@@ -54,7 +54,7 @@ export function IsPrivateReference(V) {
   return V.ReferencedName instanceof PrivateName ? Value.true : Value.false;
 }
 
-/** http://tc39.es/ecma262/#sec-getvalue  */
+/** http://tc39.es/ecma262/#sec-getvalue */
 export function GetValue(V) {
   // 1. ReturnIfAbrupt(V).
   ReturnIfAbrupt(V);
@@ -87,7 +87,7 @@ export function GetValue(V) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-putvalue  */
+/** http://tc39.es/ecma262/#sec-putvalue */
 export function PutValue(V, W) {
   // 1. ReturnIfAbrupt(V).
   ReturnIfAbrupt(V);
@@ -135,7 +135,7 @@ export function PutValue(V, W) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-getthisvalue  */
+/** http://tc39.es/ecma262/#sec-getthisvalue */
 export function GetThisValue(V) {
   // 1. Assert: IsPropertyReference(V) is true.
   Assert(IsPropertyReference(V) === Value.true);
@@ -147,7 +147,7 @@ export function GetThisValue(V) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-initializereferencedbinding  */
+/** http://tc39.es/ecma262/#sec-initializereferencedbinding */
 export function InitializeReferencedBinding(V, W) {
   // 1. ReturnIfAbrupt(V).
   ReturnIfAbrupt(V);
@@ -165,7 +165,7 @@ export function InitializeReferencedBinding(V, W) {
   return base.InitializeBinding(V.ReferencedName, W);
 }
 
-/** http://tc39.es/ecma262/#sec-makeprivatereference  */
+/** http://tc39.es/ecma262/#sec-makeprivatereference */
 export function MakePrivateReference(baseValue, privateIdentifier) {
   // 1. Let privEnv be the running execution context's PrivateEnvironment.
   const privEnv = surroundingAgent.runningExecutionContext.PrivateEnvironment;
@@ -182,7 +182,7 @@ export function MakePrivateReference(baseValue, privateIdentifier) {
   });
 }
 
-/** http://tc39.es/ecma262/#sec-resolve-private-identifier  */
+/** http://tc39.es/ecma262/#sec-resolve-private-identifier */
 export function ResolvePrivateIdentifier(privEnv, identifier) {
   // 1. Let names be privEnv.[[Names]].
   const names = privEnv.Names;

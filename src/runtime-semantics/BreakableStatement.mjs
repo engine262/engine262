@@ -1,7 +1,7 @@
 import { ValueSet } from '../helpers.mjs';
 import { LabelledEvaluation } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-statement-semantics-runtime-semantics-evaluation  */
+/** http://tc39.es/ecma262/#sec-statement-semantics-runtime-semantics-evaluation */
 //   BreakableStatement :
 //     IterationStatement
 //     SwitchStatement

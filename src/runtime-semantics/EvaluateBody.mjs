@@ -27,7 +27,7 @@ export function Evaluate_AnyFunctionBody({ FunctionStatementList }) {
   return Evaluate_FunctionStatementList(FunctionStatementList);
 }
 
-/** http://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluatebody  */
+/** http://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluatebody */
 // FunctionBody : FunctionStatementList
 export function* EvaluateBody_FunctionBody({ FunctionStatementList }, functionObject, argumentsList) {
   // 1. Perform ? FunctionDeclarationInstantiation(functionObject, argumentsList).
@@ -36,7 +36,7 @@ export function* EvaluateBody_FunctionBody({ FunctionStatementList }, functionOb
   return yield* Evaluate_FunctionStatementList(FunctionStatementList);
 }
 
-/** http://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-evaluation  */
+/** http://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-evaluation */
 // ExpressionBody : AssignmentExpression
 export function* Evaluate_ExpressionBody({ AssignmentExpression }) {
   // 1. Let exprRef be the result of evaluating AssignmentExpression.
@@ -47,7 +47,7 @@ export function* Evaluate_ExpressionBody({ AssignmentExpression }) {
   return new Completion({ Type: 'return', Value: exprValue, Target: undefined });
 }
 
-/** http://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-evaluatebody  */
+/** http://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-evaluatebody */
 // ConciseBody : ExpressionBody
 export function* EvaluateBody_ConciseBody({ ExpressionBody }, functionObject, argumentsList) {
   // 1. Perform ? FunctionDeclarationInstantiation(functionObject, argumentsList).
@@ -56,7 +56,7 @@ export function* EvaluateBody_ConciseBody({ ExpressionBody }, functionObject, ar
   return yield* Evaluate(ExpressionBody);
 }
 
-/** http://tc39.es/ecma262/#sec-async-arrow-function-definitions-EvaluateBody  */
+/** http://tc39.es/ecma262/#sec-async-arrow-function-definitions-EvaluateBody */
 // AsyncConciseBody : ExpressionBody
 function* EvaluateBody_AsyncConciseBody({ ExpressionBody }, functionObject, argumentsList) {
   // 1. Let promiseCapability be ! NewPromiseCapability(%Promise%).
@@ -75,7 +75,7 @@ function* EvaluateBody_AsyncConciseBody({ ExpressionBody }, functionObject, argu
   return new Completion({ Type: 'return', Value: promiseCapability.Promise, Target: undefined });
 }
 
-/** http://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-evaluatebody  */
+/** http://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-evaluatebody */
 // GeneratorBody : FunctionBody
 export function* EvaluateBody_GeneratorBody(GeneratorBody, functionObject, argumentsList) {
   // 1. Perform ? FunctionDeclarationInstantiation(functionObject, argumentsList).
@@ -90,7 +90,7 @@ export function* EvaluateBody_GeneratorBody(GeneratorBody, functionObject, argum
   return new Completion({ Type: 'return', Value: G, Target: undefined });
 }
 
-/** http://tc39.es/ecma262/#sec-asyncgenerator-definitions-evaluatebody  */
+/** http://tc39.es/ecma262/#sec-asyncgenerator-definitions-evaluatebody */
 // AsyncGeneratorBody : FunctionBody
 export function* EvaluateBody_AsyncGeneratorBody(FunctionBody, functionObject, argumentsList) {
   // 1. Perform ? FunctionDeclarationInstantiation(functionObject, argumentsList).
@@ -110,7 +110,7 @@ export function* EvaluateBody_AsyncGeneratorBody(FunctionBody, functionObject, a
   return new Completion({ Type: 'return', Value: generator, Target: undefined });
 }
 
-/** http://tc39.es/ecma262/#sec-async-function-definitions-EvaluateBody  */
+/** http://tc39.es/ecma262/#sec-async-function-definitions-EvaluateBody */
 // AsyncFunctionBody : FunctionBody
 export function* EvaluateBody_AsyncFunctionBody(FunctionBody, functionObject, argumentsList) {
   // 1. Let promiseCapability be ! NewPromiseCapability(%Promise%).
@@ -151,7 +151,7 @@ export function* EvaluateBody_AssignmentExpression(AssignmentExpression, functio
   return new Completion({ Type: 'return', Value: value, Target: undefined });
 }
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-evaluateclassstaticblockbody  */
+/** http://tc39.es/ecma262/#sec-runtime-semantics-evaluateclassstaticblockbody */
 //    ClassStaticBlockBody : ClassStaticBlockStatementList
 function* EvaluateClassStaticBlockBody({ ClassStaticBlockStatementList }, functionObject) {
   // 1. Perform ? FunctionDeclarationInstantiation(functionObject, « »).

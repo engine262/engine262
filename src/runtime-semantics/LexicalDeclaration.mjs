@@ -15,7 +15,7 @@ import { IsAnonymousFunctionDefinition, StringValue } from '../static-semantics/
 import { OutOfRange } from '../helpers.mjs';
 import { NamedEvaluation, BindingInitialization } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation  */
+/** http://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation */
 //   LexicalBinding :
 //     BindingIdentifier
 //     BindingIdentifier Initializer
@@ -46,7 +46,7 @@ function* Evaluate_LexicalBinding_BindingIdentifier({ BindingIdentifier, Initial
   }
 }
 
-/** http://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation  */
+/** http://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation */
 //   LexicalBinding : BindingPattern Initializer
 function* Evaluate_LexicalBinding_BindingPattern(LexicalBinding) {
   const { BindingPattern, Initializer } = LexicalBinding;
@@ -67,7 +67,7 @@ export function* Evaluate_LexicalBinding(LexicalBinding) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation  */
+/** http://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation */
 //   BindingList : BindingList `,` LexicalBinding
 //
 // (implicit)
@@ -84,7 +84,7 @@ export function* Evaluate_BindingList(BindingList) {
   return next;
 }
 
-/** http://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation  */
+/** http://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation */
 //   LexicalDeclaration : LetOrConst BindingList `;`
 export function* Evaluate_LexicalDeclaration({ BindingList }) {
   // 1. Let next be the result of evaluating BindingList.

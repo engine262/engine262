@@ -10,7 +10,7 @@ import {
   EvaluatePropertyAccessWithIdentifierKey,
 } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-optional-chaining-evaluation  */
+/** http://tc39.es/ecma262/#sec-optional-chaining-evaluation */
 //   OptionalExpression :
 //     MemberExpression OptionalChain
 //     CallExpression OptionalChain
@@ -29,7 +29,7 @@ export function* Evaluate_OptionalExpression({ MemberExpression, OptionalChain }
   return yield* ChainEvaluation(OptionalChain, baseValue, baseReference);
 }
 
-/** http://tc39.es/ecma262/#sec-optional-chaining-chain-evaluation  */
+/** http://tc39.es/ecma262/#sec-optional-chaining-chain-evaluation */
 //   OptionalChain :
 //     `?.` Arguments
 //     `?.` `[` Expression `]`

@@ -4,7 +4,7 @@ import { GetValue, ToString } from '../abstract-ops/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { TV } from '../static-semantics/all.mjs';
 
-/** http://tc39.es/ecma262/#sec-template-literals-runtime-semantics-evaluation  */
+/** http://tc39.es/ecma262/#sec-template-literals-runtime-semantics-evaluation */
 //   TemplateLiteral : NoSubstitutionTemplate
 //   SubstitutionTemplate : TemplateHead Expression TemplateSpans
 //   TemplateSpans : TemplateTail
