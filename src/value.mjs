@@ -586,7 +586,6 @@ function BinaryXor(x, y) {
     return 0n;
   }
 }
-*/
 
 /** http://tc39.es/ecma262/#sec-bigintbitwiseop  */
 function BigIntBitwiseOp(op, x, y) {
