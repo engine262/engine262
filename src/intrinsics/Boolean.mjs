@@ -6,7 +6,7 @@ import { Value } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-// #sec-boolean-constructor-boolean-value
+/** http://tc39.es/ecma262/#sec-boolean-constructor-boolean-value  */
 function BooleanConstructor([value = Value.undefined], { NewTarget }) {
   // 1. Let b be ! ToBoolean(value).
   const b = X(ToBoolean(value));

@@ -4,7 +4,7 @@ import { AddToKeptObjects, OrdinaryCreateFromConstructor } from '../abstract-ops
 import { Q, X } from '../completion.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-// #sec-weak-ref-target
+/** http://tc39.es/ecma262/#sec-weak-ref-target  */
 function WeakRefConstructor([target = Value.undefined], { NewTarget }) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget === Value.undefined) {

@@ -10,7 +10,7 @@ import {
 import { Q } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-// #sec-weakset.prototype.add
+/** http://tc39.es/ecma262/#sec-weakset.prototype.add  */
 function WeakSetProto_add([value = Value.undefined], { thisValue }) {
   // 1. Let S be this value.
   const S = thisValue;
@@ -36,7 +36,7 @@ function WeakSetProto_add([value = Value.undefined], { thisValue }) {
   return S;
 }
 
-// #sec-weakset.prototype.delete
+/** http://tc39.es/ecma262/#sec-weakset.prototype.delete  */
 function WeakSetProto_delete([value = Value.undefined], { thisValue }) {
   // 1. Let S be the this value.`
   const S = thisValue;
@@ -63,7 +63,7 @@ function WeakSetProto_delete([value = Value.undefined], { thisValue }) {
   return Value.false;
 }
 
-// #sec-weakset.prototype.has
+/** http://tc39.es/ecma262/#sec-weakset.prototype.has  */
 function WeakSetProto_has([value = Value.undefined], { thisValue }) {
   // 1. Let S be the this value.
   const S = thisValue;

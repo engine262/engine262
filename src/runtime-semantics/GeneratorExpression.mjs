@@ -1,6 +1,6 @@
 import { InstantiateGeneratorFunctionExpression } from './all.mjs';
 
-// #sec-generator-function-definitions-runtime-semantics-evaluation
+/** http://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-evaluation  */
 //   GeneratorExpression :
 //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
 //     `function` `*` BindingIdentifier `(` FormalParameters `)` `{` GeneratorBody `}`

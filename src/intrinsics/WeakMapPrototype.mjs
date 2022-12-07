@@ -10,7 +10,7 @@ import {
 import { Q } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-// #sec-weakmap.prototype.delete
+/** http://tc39.es/ecma262/#sec-weakmap.prototype.delete  */
 function WeakMapProto_delete([key = Value.undefined], { thisValue }) {
   // 1. Let M be the this value.
   const M = thisValue;
@@ -39,7 +39,7 @@ function WeakMapProto_delete([key = Value.undefined], { thisValue }) {
   return Value.false;
 }
 
-// #sec-weakmap.prototype.get
+/** http://tc39.es/ecma262/#sec-weakmap.prototype.get  */
 function WeakMapProto_get([key = Value.undefined], { thisValue }) {
   // 1. Let m be the this value.
   const M = thisValue;
@@ -62,7 +62,7 @@ function WeakMapProto_get([key = Value.undefined], { thisValue }) {
   return Value.undefined;
 }
 
-// #sec-weakmap.prototype.has
+/** http://tc39.es/ecma262/#sec-weakmap.prototype.has  */
 function WeakMapProto_has([key = Value.undefined], { thisValue }) {
   // 1. Let M be the this value.
   const M = thisValue;
@@ -85,7 +85,7 @@ function WeakMapProto_has([key = Value.undefined], { thisValue }) {
   return Value.false;
 }
 
-// #sec-weakmap.prototype.set
+/** http://tc39.es/ecma262/#sec-weakmap.prototype.set  */
 function WeakMapProto_set([key = Value.undefined, value = Value.undefined], { thisValue }) {
   // 1. Let M be the this value.
   const M = thisValue;

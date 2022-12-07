@@ -43,7 +43,7 @@ import { bootstrapPrototype } from './bootstrap.mjs';
 import { CreateRegExpStringIterator } from './RegExpStringIteratorPrototype.mjs';
 
 
-// 21.2.5.2 #sec-regexp.prototype.exec
+/** http://tc39.es/ecma262/#sec-regexp.prototype.exec  */
 function RegExpProto_exec([string = Value.undefined], { thisValue }) {
   const R = thisValue;
   Q(RequireInternalSlot(R, 'RegExpMatcher'));
@@ -51,7 +51,7 @@ function RegExpProto_exec([string = Value.undefined], { thisValue }) {
   return Q(RegExpBuiltinExec(R, S));
 }
 
-// 21.2.5.2.1 #sec-regexpexec
+/** http://tc39.es/ecma262/#sec-regexpexec  */
 export function RegExpExec(R, S) {
   Assert(R instanceof ObjectValue);
   Assert(S instanceof JSStringValue);
@@ -68,7 +68,7 @@ export function RegExpExec(R, S) {
   return Q(RegExpBuiltinExec(R, S));
 }
 
-// #sec-regexpbuiltinexec
+/** http://tc39.es/ecma262/#sec-regexpbuiltinexec  */
 export function RegExpBuiltinExec(R, S) {
   // 1. Assert: R is an initialized RegExp instance.
   Assert('RegExpMatcher' in R);
@@ -240,7 +240,7 @@ export function RegExpBuiltinExec(R, S) {
   return A;
 }
 
-// #sec-advancestringindex
+/** http://tc39.es/ecma262/#sec-advancestringindex  */
 export function AdvanceStringIndex(S, index, unicode) {
   // 1. Assert: Type(S) is String.
   Assert(S instanceof JSStringValue);
@@ -264,7 +264,7 @@ export function AdvanceStringIndex(S, index, unicode) {
   return index + cp.CodeUnitCount;
 }
 
-// 21.2.5.3 #sec-get-regexp.prototype.dotAll
+/** http://tc39.es/ecma262/#sec-get-regexp.prototype.dotAll  */
 function RegExpProto_dotAllGetter(args, { thisValue }) {
   // 1. Let R be the this value.
   const R = thisValue;
@@ -274,7 +274,7 @@ function RegExpProto_dotAllGetter(args, { thisValue }) {
   return Q(RegExpHasFlag(R, cu));
 }
 
-// 21.2.5.4 #sec-get-regexp.prototype.flags
+/** http://tc39.es/ecma262/#sec-get-regexp.prototype.flags  */
 function RegExpProto_flagsGetter(args, { thisValue }) {
   const R = thisValue;
   if (!(R instanceof ObjectValue)) {
@@ -312,7 +312,7 @@ function RegExpProto_flagsGetter(args, { thisValue }) {
   return new Value(result);
 }
 
-// 21.2.5.5 #sec-get-regexp.prototype.global
+/** http://tc39.es/ecma262/#sec-get-regexp.prototype.global  */
 function RegExpProto_globalGetter(args, { thisValue }) {
   const R = thisValue;
   if (!(R instanceof ObjectValue)) {
@@ -331,7 +331,7 @@ function RegExpProto_globalGetter(args, { thisValue }) {
   return Value.false;
 }
 
-// #sec-get-regexp.prototype.hasIndices
+/** http://tc39.es/ecma262/#sec-get-regexp.prototype.hasIndices  */
 function RegExpProto_hasIndicesGetter(args, { thisValue }) {
   // 1. Let R be the this value.
   const R = thisValue;
@@ -341,7 +341,7 @@ function RegExpProto_hasIndicesGetter(args, { thisValue }) {
   return Q(RegExpHasFlag(R, cu));
 }
 
-// 21.2.5.6 #sec-get-regexp.prototype.ignorecase
+/** http://tc39.es/ecma262/#sec-get-regexp.prototype.ignorecase  */
 function RegExpProto_ignoreCaseGetter(args, { thisValue }) {
   // 1. Let R be the this value.
   const R = thisValue;
@@ -351,7 +351,7 @@ function RegExpProto_ignoreCaseGetter(args, { thisValue }) {
   return Q(RegExpHasFlag(R, cu));
 }
 
-// #sec-regexp.prototype-@@match
+/** http://tc39.es/ecma262/#sec-regexp.prototype-@@match  */
 function RegExpProto_match([string = Value.undefined], { thisValue }) {
   // 1. Let rx be the this value.
   const rx = thisValue;
@@ -411,7 +411,7 @@ function RegExpProto_match([string = Value.undefined], { thisValue }) {
   }
 }
 
-// 21.2.5.8 #sec-regexp-prototype-matchall
+/** http://tc39.es/ecma262/#sec-regexp-prototype-matchall  */
 function RegExpProto_matchAll([string = Value.undefined], { thisValue }) {
   const R = thisValue;
   if (!(R instanceof ObjectValue)) {
@@ -438,7 +438,7 @@ function RegExpProto_matchAll([string = Value.undefined], { thisValue }) {
   return X(CreateRegExpStringIterator(matcher, S, global, fullUnicode));
 }
 
-// 21.2.5.9 #sec-get-regexp.prototype.multiline
+/** http://tc39.es/ecma262/#sec-get-regexp.prototype.multiline  */
 function RegExpProto_multilineGetter(args, { thisValue }) {
   // 1. Let R be the this value.
   const R = thisValue;
@@ -448,7 +448,7 @@ function RegExpProto_multilineGetter(args, { thisValue }) {
   return Q(RegExpHasFlag(R, cu));
 }
 
-// 21.2.5.10 #sec-regexp.prototype-@@replace
+/** http://tc39.es/ecma262/#sec-regexp.prototype-@@replace  */
 function RegExpProto_replace([string = Value.undefined, replaceValue = Value.undefined], { thisValue }) {
   const rx = thisValue;
   if (!(rx instanceof ObjectValue)) {
@@ -543,7 +543,7 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
   return new Value(accumulatedResult + S.stringValue().substring(nextSourcePosition));
 }
 
-// 21.2.5.11 #sec-regexp.prototype-@@search
+/** http://tc39.es/ecma262/#sec-regexp.prototype-@@search  */
 function RegExpProto_search([string = Value.undefined], { thisValue }) {
   const rx = thisValue;
   if (!(rx instanceof ObjectValue)) {
@@ -569,7 +569,7 @@ function RegExpProto_search([string = Value.undefined], { thisValue }) {
   return Q(Get(result, new Value('index')));
 }
 
-// 21.2.5.12 #sec-get-regexp.prototype.source
+/** http://tc39.es/ecma262/#sec-get-regexp.prototype.source  */
 function RegExpProto_sourceGetter(args, { thisValue }) {
   const R = thisValue;
   if (!(R instanceof ObjectValue)) {
@@ -587,7 +587,7 @@ function RegExpProto_sourceGetter(args, { thisValue }) {
   return EscapeRegExpPattern(src, flags);
 }
 
-// 21.2.5.13 #sec-regexp.prototype-@@split
+/** http://tc39.es/ecma262/#sec-regexp.prototype-@@split  */
 function RegExpProto_split([string = Value.undefined, limit = Value.undefined], { thisValue }) {
   const rx = thisValue;
   if (!(rx instanceof ObjectValue)) {
@@ -670,7 +670,7 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
   return A;
 }
 
-// 21.2.5.14 #sec-get-regexp.prototype.sticky
+/** http://tc39.es/ecma262/#sec-get-regexp.prototype.sticky  */
 function RegExpProto_stickyGetter(args, { thisValue }) {
   // 1. Let R be the this value.
   const R = thisValue;
@@ -680,7 +680,7 @@ function RegExpProto_stickyGetter(args, { thisValue }) {
   return Q(RegExpHasFlag(R, cu));
 }
 
-// 21.2.5.15 #sec-regexp.prototype.test
+/** http://tc39.es/ecma262/#sec-regexp.prototype.test  */
 function RegExpProto_test([S = Value.undefined], { thisValue }) {
   const R = thisValue;
   if (!(R instanceof ObjectValue)) {
@@ -694,7 +694,7 @@ function RegExpProto_test([S = Value.undefined], { thisValue }) {
   return Value.false;
 }
 
-// 21.2.5.16 #sec-regexp.prototype.tostring
+/** http://tc39.es/ecma262/#sec-regexp.prototype.tostring  */
 function RegExpProto_toString(args, { thisValue }) {
   const R = thisValue;
   if (!(R instanceof ObjectValue)) {
@@ -706,7 +706,7 @@ function RegExpProto_toString(args, { thisValue }) {
   return new Value(result);
 }
 
-// 21.2.5.17 #sec-get-regexp.prototype.unicode
+/** http://tc39.es/ecma262/#sec-get-regexp.prototype.unicode  */
 function RegExpProto_unicodeGetter(args, { thisValue }) {
   // 1. Let R be the this value.
   const R = thisValue;

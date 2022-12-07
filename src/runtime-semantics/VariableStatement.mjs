@@ -9,7 +9,7 @@ import { StringValue, IsAnonymousFunctionDefinition } from '../static-semantics/
 import { Value } from '../value.mjs';
 import { NamedEvaluation, BindingInitialization } from './all.mjs';
 
-// 13.3.2.4 #sec-variable-statement-runtime-semantics-evaluation
+/** http://tc39.es/ecma262/#sec-variable-statement-runtime-semantics-evaluation  */
 //   VariableDeclaration :
 //     BindingIdentifier
 //     BindingIdentifier Initializer
@@ -46,7 +46,7 @@ function* Evaluate_VariableDeclaration({ BindingIdentifier, Initializer, Binding
   return yield* BindingInitialization(BindingPattern, rval, Value.undefined);
 }
 
-// 13.3.2.4 #sec-variable-statement-runtime-semantics-evaluation
+/** http://tc39.es/ecma262/#sec-variable-statement-runtime-semantics-evaluation  */
 //   VariableDeclarationList : VariableDeclarationList `,` VariableDeclaration
 //
 // (implicit)
@@ -60,7 +60,7 @@ export function* Evaluate_VariableDeclarationList(VariableDeclarationList) {
   return next;
 }
 
-// 13.3.2.4 #sec-variable-statement-runtime-semantics-evaluation
+/** http://tc39.es/ecma262/#sec-variable-statement-runtime-semantics-evaluation  */
 //   VariableStatement : `var` VariableDeclarationList `;`
 export function* Evaluate_VariableStatement({ VariableDeclarationList }) {
   const next = yield* Evaluate_VariableDeclarationList(VariableDeclarationList);

@@ -13,7 +13,7 @@ import { Q, X } from '../completion.mjs';
 import { captureStack } from '../helpers.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-// #sec-aggregate-error-constructor
+/** http://tc39.es/ecma262/#sec-aggregate-error-constructor  */
 function AggregateErrorConstructor([errors = Value.undefined, message = Value.undefined, options = Value.undefined], { NewTarget }) {
   // 1. If NewTarget is undefined, let newTarget be the active function object, else let newTarget be NewTarget.
   let newTarget;

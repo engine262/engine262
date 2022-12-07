@@ -17,9 +17,9 @@ import {
   SameValue,
 } from './all.mjs';
 
-// This file covers abstract operations defined in #sec-generator-objects
+/** http://tc39.es/ecma262/#sec-generator-objects  */
 
-// #sec-generatorstart
+/** http://tc39.es/ecma262/#sec-generatorstart  */
 export function GeneratorStart(generator, generatorBody) {
   // 1. Assert: The value of generator.[[GeneratorState]] is undefined.
   Assert(generator.GeneratorState === Value.undefined);
@@ -90,7 +90,7 @@ export function generatorBrandToErrorMessageType(generatorBrand) {
   return expectedType;
 }
 
-// #sec-generatorvalidate
+/** http://tc39.es/ecma262/#sec-generatorvalidate  */
 export function GeneratorValidate(generator, generatorBrand) {
   // 1. Perform ? RequireInternalSlot(generator, [[GeneratorState]]).
   Q(RequireInternalSlot(generator, 'GeneratorState'));
@@ -122,7 +122,7 @@ export function GeneratorValidate(generator, generatorBrand) {
   return state;
 }
 
-// #sec-generatorresume
+/** http://tc39.es/ecma262/#sec-generatorresume  */
 export function GeneratorResume(generator, value, generatorBrand) {
   // 1. Let state be ? GeneratorValidate(generator, generatorBrand).
   const state = Q(GeneratorValidate(generator, generatorBrand));
@@ -152,7 +152,7 @@ export function GeneratorResume(generator, value, generatorBrand) {
   return Completion(result);
 }
 
-// #sec-generatorresumeabrupt
+/** http://tc39.es/ecma262/#sec-generatorresumeabrupt  */
 export function GeneratorResumeAbrupt(generator, abruptCompletion, generatorBrand) {
   // 1. Let state be ? GeneratorValidate(generator, generatorBrand).
   let state = Q(GeneratorValidate(generator, generatorBrand));
@@ -199,7 +199,7 @@ export function GeneratorResumeAbrupt(generator, abruptCompletion, generatorBran
   return Completion(result);
 }
 
-// #sec-getgeneratorkind
+/** http://tc39.es/ecma262/#sec-getgeneratorkind  */
 export function GetGeneratorKind() {
   // 1. Let genContext be the running execution context.
   const genContext = surroundingAgent.runningExecutionContext;
@@ -217,7 +217,7 @@ export function GetGeneratorKind() {
   return 'sync';
 }
 
-// #sec-generatoryield
+/** http://tc39.es/ecma262/#sec-generatoryield  */
 export function* GeneratorYield(iterNextObj) {
   // 1. Assert: iterNextObj is an Object that implements the IteratorResult interface.
   // 2. Let genContext be the running execution context.
@@ -241,7 +241,7 @@ export function* GeneratorYield(iterNextObj) {
   // 10. NOTE: this returns to the evaluation of the operation that had most previously resumed evaluation of genContext.
 }
 
-// #sec-yield
+/** http://tc39.es/ecma262/#sec-yield  */
 export function* Yield(value) {
   // 1. Let generatorKind be ! GetGeneratorKind().
   const generatorKind = X(GetGeneratorKind());
@@ -253,7 +253,7 @@ export function* Yield(value) {
   return Q(yield* GeneratorYield(X(CreateIterResultObject(value, Value.false))));
 }
 
-// #sec-createiteratorfromclosure
+/** http://tc39.es/ecma262/#sec-createiteratorfromclosure  */
 export function CreateIteratorFromClosure(closure, generatorBrand, generatorPrototype) {
   Assert(typeof closure === 'function');
   // 1. NOTE: closure can contain uses of the Yield shorthand to yield an IteratorResult object.

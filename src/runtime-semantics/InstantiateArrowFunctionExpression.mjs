@@ -2,7 +2,7 @@ import { surroundingAgent } from '../engine.mjs';
 import { Value } from '../value.mjs';
 import { OrdinaryFunctionCreate, SetFunctionName, sourceTextMatchedBy } from '../abstract-ops/all.mjs';
 
-// #sec-runtime-semantics-instantiatearrowfunctionexpression
+/** http://tc39.es/ecma262/#sec-runtime-semantics-instantiatearrowfunctionexpression  */
 // ArrowFunction : ArrowParameters `=>` ConciseBody
 export function InstantiateArrowFunctionExpression(ArrowFunction, name) {
   const { ArrowParameters, ConciseBody } = ArrowFunction;

@@ -10,7 +10,7 @@ import { NumberToBigInt } from '../runtime-semantics/all.mjs';
 import { Q } from '../completion.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-// #sec-bigint-constructor
+/** http://tc39.es/ecma262/#sec-bigint-constructor  */
 function BigIntConstructor([value], { NewTarget }) {
   // 1. If NewTarget is not undefined, throw a TypeError exception.
   if (NewTarget !== Value.undefined) {
@@ -27,7 +27,7 @@ function BigIntConstructor([value], { NewTarget }) {
   }
 }
 
-// #sec-bigint.asintn
+/** http://tc39.es/ecma262/#sec-bigint.asintn  */
 function BigInt_asIntN([bits = Value.undefined, bigint = Value.undefined]) {
   // 1. Set bits to ? ToIndex(bits).
   bits = Q(ToIndex(bits));
@@ -38,7 +38,7 @@ function BigInt_asIntN([bits = Value.undefined, bigint = Value.undefined]) {
   return Z(BigInt.asIntN(bits, bigint.bigintValue()));
 }
 
-// #sec-bigint.asuintn
+/** http://tc39.es/ecma262/#sec-bigint.asuintn  */
 function BigInt_asUintN([bits = Value.undefined, bigint = Value.undefined]) {
   // 1. Set bits to ? ToIndex(bits).
   bits = Q(ToIndex(bits));

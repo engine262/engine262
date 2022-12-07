@@ -1,5 +1,5 @@
 // This file covers abstract operations defined in
-// 20.3 #sec-date-objects
+/** http://tc39.es/ecma262/#sec-date-objects  */
 
 import { X } from '../completion.mjs';
 import {
@@ -20,7 +20,7 @@ export const msPerMinute = msPerSecond * SecondsPerMinute;
 export const msPerHour = msPerMinute * MinutesPerHour;
 export const msPerDay = msPerHour * HoursPerDay;
 
-// 20.3.1.2 #sec-day-number-and-time-within-day
+/** http://tc39.es/ecma262/#sec-day-number-and-time-within-day  */
 export function Day(t) {
   return F(Math.floor(t.numberValue() / msPerDay));
 }
@@ -29,7 +29,7 @@ export function TimeWithinDay(t) {
   return F(mod(t.numberValue(), msPerDay));
 }
 
-// 20.3.1.3 #sec-year-number
+/** http://tc39.es/ecma262/#sec-year-number  */
 export function DaysInYear(y) {
   y = y.numberValue();
   if (mod(y, 4) !== 0) {
@@ -75,7 +75,7 @@ export function InLeapYear(t) {
   }
 }
 
-// 20.3.1.4 #sec-month-number
+/** http://tc39.es/ecma262/#sec-month-number  */
 export function MonthFromTime(t) {
   const dayWithinYear = DayWithinYear(t).numberValue();
   const inLeapYear = InLeapYear(t).numberValue();
@@ -121,7 +121,7 @@ export function DayWithinYear(t) {
   return F(Day(t).numberValue() - DayFromYear(YearFromTime(t)).numberValue());
 }
 
-// 20.3.1.5 #sec-date-number
+/** http://tc39.es/ecma262/#sec-date-number  */
 export function DateFromTime(t) {
   const dayWithinYear = DayWithinYear(t).numberValue();
   const monthFromTime = MonthFromTime(t).numberValue();
@@ -143,28 +143,28 @@ export function DateFromTime(t) {
   }
 }
 
-// 20.3.1.6 #sec-week-day
+/** http://tc39.es/ecma262/#sec-week-day  */
 export function WeekDay(t) {
   return F(mod(Day(t).numberValue() + 4, 7));
 }
 
-// 20.3.1.7 #sec-local-time-zone-adjustment
+/** http://tc39.es/ecma262/#sec-local-time-zone-adjustment  */
 export function LocalTZA(_t, _isUTC) {
   // TODO: implement this function properly.
   return 0;
 }
 
-// 20.3.1.8 #sec-localtime
+/** http://tc39.es/ecma262/#sec-localtime  */
 export function LocalTime(t) {
   return F(t.numberValue() + LocalTZA(t, true));
 }
 
-// 20.3.1.9 #sec-utc-t
+/** http://tc39.es/ecma262/#sec-utc-t  */
 export function UTC(t) {
   return F(t.numberValue() - LocalTZA(t, false));
 }
 
-// 20.3.1.10 #sec-hours-minutes-second-and-milliseconds
+/** http://tc39.es/ecma262/#sec-hours-minutes-second-and-milliseconds  */
 export function HourFromTime(t) {
   return F(mod(Math.floor(t.numberValue() / msPerHour), HoursPerDay));
 }
@@ -181,7 +181,7 @@ export function msFromTime(t) {
   return F(mod(t.numberValue(), msPerSecond));
 }
 
-// 20.3.1.11 #sec-maketime
+/** http://tc39.es/ecma262/#sec-maketime  */
 export function MakeTime(hour, min, sec, ms) {
   if (!Number.isFinite(hour.numberValue()) || !Number.isFinite(min.numberValue()) || !Number.isFinite(sec.numberValue()) || !Number.isFinite(ms.numberValue())) {
     return F(NaN);
@@ -196,7 +196,7 @@ export function MakeTime(hour, min, sec, ms) {
 
 const daysWithinYearToEndOfMonth = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365];
 
-// 20.3.1.12 #sec-makeday
+/** http://tc39.es/ecma262/#sec-makeday  */
 export function MakeDay(year, month, date) {
   if (!Number.isFinite(year.numberValue()) || !Number.isFinite(month.numberValue()) || !Number.isFinite(date.numberValue())) {
     return F(NaN);
@@ -211,7 +211,7 @@ export function MakeDay(year, month, date) {
   return F(Day(t).numberValue() + dt - 1);
 }
 
-// 20.3.1.13 #sec-makedate
+/** http://tc39.es/ecma262/#sec-makedate  */
 export function MakeDate(day, time) {
   if (!Number.isFinite(day.numberValue()) || !Number.isFinite(time.numberValue())) {
     return F(NaN);
@@ -219,7 +219,7 @@ export function MakeDate(day, time) {
   return F(day.numberValue() * msPerDay + time.numberValue());
 }
 
-// 20.3.1.14 #sec-timeclip
+/** http://tc39.es/ecma262/#sec-timeclip  */
 export function TimeClip(time) {
   // 1. If time is not finite, return NaN.
   if (!time.isFinite()) {

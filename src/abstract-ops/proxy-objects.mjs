@@ -26,7 +26,7 @@ import {
   IsAccessorDescriptor,
 } from './all.mjs';
 
-// #sec-proxy-object-internal-methods-and-internal-slots-getprototypeof
+/** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getprototypeof  */
 function ProxyGetPrototypeOf() {
   const O = this;
 
@@ -55,7 +55,7 @@ function ProxyGetPrototypeOf() {
   return handlerProto;
 }
 
-// #sec-proxy-object-internal-methods-and-internal-slots-setprototypeof-v
+/** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-setprototypeof-v  */
 function ProxySetPrototypeOf(V) {
   const O = this;
 
@@ -85,7 +85,7 @@ function ProxySetPrototypeOf(V) {
   return Value.true;
 }
 
-// #sec-proxy-object-internal-methods-and-internal-slots-isextensible
+/** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-isextensible  */
 function ProxyIsExtensible() {
   const O = this;
 
@@ -107,7 +107,7 @@ function ProxyIsExtensible() {
   return booleanTrapResult;
 }
 
-// #sec-proxy-object-internal-methods-and-internal-slots-preventextensions
+/** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-preventextensions  */
 function ProxyPreventExtensions() {
   const O = this;
 
@@ -131,7 +131,7 @@ function ProxyPreventExtensions() {
   return booleanTrapResult;
 }
 
-// #sec-proxy-object-internal-methods-and-internal-slots-getownproperty-p
+/** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getownproperty-p  */
 function ProxyGetOwnProperty(P) {
   const O = this;
 
@@ -212,7 +212,7 @@ function ProxyGetOwnProperty(P) {
   return resultDesc;
 }
 
-// #sec-proxy-object-internal-methods-and-internal-slots-defineownproperty-p-desc
+/** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-defineownproperty-p-desc  */
 function ProxyDefineOwnProperty(P, Desc) {
   const O = this;
 
@@ -288,7 +288,7 @@ function ProxyDefineOwnProperty(P, Desc) {
   return Value.true;
 }
 
-// #sec-proxy-object-internal-methods-and-internal-slots-hasproperty-p
+/** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-hasproperty-p  */
 function ProxyHasProperty(P) {
   const O = this;
 
@@ -319,7 +319,7 @@ function ProxyHasProperty(P) {
   return booleanTrapResult;
 }
 
-// #sec-proxy-object-internal-methods-and-internal-slots-get-p-receiver
+/** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-get-p-receiver  */
 function ProxyGet(P, Receiver) {
   const O = this;
 
@@ -351,7 +351,7 @@ function ProxyGet(P, Receiver) {
   return trapResult;
 }
 
-// #sec-proxy-object-internal-methods-and-internal-slots-set-p-v-receiver
+/** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-set-p-v-receiver  */
 function ProxySet(P, V, Receiver) {
   const O = this;
 
@@ -386,7 +386,7 @@ function ProxySet(P, V, Receiver) {
   return Value.true;
 }
 
-// #sec-proxy-object-internal-methods-and-internal-slots-delete-p
+/** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-delete-p  */
 function ProxyDelete(P) {
   const O = this;
 
@@ -435,7 +435,7 @@ function ProxyDelete(P) {
   return Value.true;
 }
 
-// #sec-proxy-object-internal-methods-and-internal-slots-ownpropertykeys
+/** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-ownpropertykeys  */
 function ProxyOwnPropertyKeys() {
   const O = this;
 
@@ -493,7 +493,7 @@ function ProxyOwnPropertyKeys() {
   return trapResult;
 }
 
-// #sec-proxy-object-internal-methods-and-internal-slots-call-thisargument-argumentslist
+/** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-call-thisargument-argumentslist  */
 function ProxyCall(thisArgument, argumentsList) {
   const O = this;
 
@@ -511,7 +511,7 @@ function ProxyCall(thisArgument, argumentsList) {
   return Q(Call(trap, handler, [target, thisArgument, argArray]));
 }
 
-// #sec-proxy-object-internal-methods-and-internal-slots-construct-argumentslist-newtarget
+/** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-construct-argumentslist-newtarget  */
 function ProxyConstruct(argumentsList, newTarget) {
   const O = this;
 
@@ -538,7 +538,7 @@ export function isProxyExoticObject(O) {
   return 'ProxyHandler' in O;
 }
 
-// #sec-proxycreate
+/** http://tc39.es/ecma262/#sec-proxycreate  */
 export function ProxyCreate(target, handler) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
@@ -564,11 +564,11 @@ export function ProxyCreate(target, handler) {
   P.OwnPropertyKeys = ProxyOwnPropertyKeys;
   // 5. If IsCallable(target) is true, then
   if (IsCallable(target) === Value.true) {
-    // a. Set P.[[Call]] as specified in #sec-proxy-object-internal-methods-and-internal-slots-call-thisargument-argumentslist.
+    /** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-call-thisargument-argumentslist.  */
     P.Call = ProxyCall;
     // b. If IsConstructor(target) is true, then
     if (IsConstructor(target) === Value.true) {
-      // i. Set P.[[Construct]] as specified in #sec-proxy-object-internal-methods-and-internal-slots-construct-argumentslist-newtarget.
+      /** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-construct-argumentslist-newtarget.  */
       P.Construct = ProxyConstruct;
     }
   }

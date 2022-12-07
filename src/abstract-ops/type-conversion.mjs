@@ -27,7 +27,7 @@ import {
   F,
 } from './all.mjs';
 
-// 7.1.1 #sec-toprimitive
+/** http://tc39.es/ecma262/#sec-toprimitive  */
 export function ToPrimitive(input, preferredType) {
   // 1. Assert: input is an ECMAScript language value.
   Assert(input instanceof Value);
@@ -69,7 +69,7 @@ export function ToPrimitive(input, preferredType) {
   return input;
 }
 
-// 7.1.1.1 #sec-ordinarytoprimitive
+/** http://tc39.es/ecma262/#sec-ordinarytoprimitive  */
 export function OrdinaryToPrimitive(O, hint) {
   // 1. Assert: Type(O) is Object.
   Assert(O instanceof ObjectValue);
@@ -102,7 +102,7 @@ export function OrdinaryToPrimitive(O, hint) {
   return surroundingAgent.Throw('TypeError', 'ObjectToPrimitive');
 }
 
-// 7.1.2 #sec-toboolean
+/** http://tc39.es/ecma262/#sec-toboolean  */
 export function ToBoolean(argument) {
   if (argument instanceof UndefinedValue) {
     // Return false.
@@ -141,7 +141,7 @@ export function ToBoolean(argument) {
   throw new OutOfRange('ToBoolean', { type: Type(argument), argument });
 }
 
-// #sec-tonumeric
+/** http://tc39.es/ecma262/#sec-tonumeric  */
 export function ToNumeric(value) {
   // 1. Let primValue be ? ToPrimitive(value, number).
   const primValue = Q(ToPrimitive(value, 'number'));
@@ -153,7 +153,7 @@ export function ToNumeric(value) {
   return Q(ToNumber(primValue));
 }
 
-// 7.1.3 #sec-tonumber
+/** http://tc39.es/ecma262/#sec-tonumber  */
 export function ToNumber(argument) {
   if (argument instanceof UndefinedValue) {
     // Return NaN.
@@ -193,7 +193,7 @@ const mod = (n, m) => {
   return Math.floor(r >= 0 ? r : r + m);
 };
 
-// 7.1.4 #sec-tointegerorinfinity
+/** http://tc39.es/ecma262/#sec-tointegerorinfinity  */
 export function ToIntegerOrInfinity(argument) {
   // 1. Let number be ? ToNumber(argument).
   const number = Q(ToNumber(argument));
@@ -216,7 +216,7 @@ export function ToIntegerOrInfinity(argument) {
   return integer;
 }
 
-// 7.1.5 #sec-toint32
+/** http://tc39.es/ecma262/#sec-toint32  */
 export function ToInt32(argument) {
   // 1. Let number be ? ToNumber(argument).
   const number = Q(ToNumber(argument)).numberValue();
@@ -235,7 +235,7 @@ export function ToInt32(argument) {
   return F(int32bit);
 }
 
-// 7.1.6 #sec-touint32
+/** http://tc39.es/ecma262/#sec-touint32  */
 export function ToUint32(argument) {
   // 1. Let number be ? ToNumber(argument).
   const number = Q(ToNumber(argument)).numberValue();
@@ -251,7 +251,7 @@ export function ToUint32(argument) {
   return F(int32bit);
 }
 
-// 7.1.7 #sec-toint16
+/** http://tc39.es/ecma262/#sec-toint16  */
 export function ToInt16(argument) {
   // 1. Let number be ? ToNumber(argument).
   const number = Q(ToNumber(argument)).numberValue();
@@ -270,7 +270,7 @@ export function ToInt16(argument) {
   return F(int16bit);
 }
 
-// 7.1.8 #sec-touint16
+/** http://tc39.es/ecma262/#sec-touint16  */
 export function ToUint16(argument) {
   // 1. Let number be ? ToNumber(argument).
   const number = Q(ToNumber(argument)).numberValue();
@@ -286,7 +286,7 @@ export function ToUint16(argument) {
   return F(int16bit);
 }
 
-// 7.1.9 #sec-toint8
+/** http://tc39.es/ecma262/#sec-toint8  */
 export function ToInt8(argument) {
   // 1. Let number be ? ToNumber(argument).
   const number = Q(ToNumber(argument)).numberValue();
@@ -305,7 +305,7 @@ export function ToInt8(argument) {
   return F(int8bit);
 }
 
-// 7.1.10 #sec-touint8
+/** http://tc39.es/ecma262/#sec-touint8  */
 export function ToUint8(argument) {
   // 1. Let number be ? ToNumber(argument).
   const number = Q(ToNumber(argument)).numberValue();
@@ -321,7 +321,7 @@ export function ToUint8(argument) {
   return F(int8bit);
 }
 
-// 7.1.11 #sec-touint8clamp
+/** http://tc39.es/ecma262/#sec-touint8clamp  */
 export function ToUint8Clamp(argument) {
   // 1. Let number be ? ToNumber(argument).
   const number = Q(ToNumber(argument)).numberValue();
@@ -355,7 +355,7 @@ export function ToUint8Clamp(argument) {
   return F(f);
 }
 
-// #sec-tobigint
+/** http://tc39.es/ecma262/#sec-tobigint  */
 export function ToBigInt(argument) {
   // 1. Let prim be ? ToPrimitive(argument, number).
   const prim = Q(ToPrimitive(argument, 'number'));
@@ -394,7 +394,7 @@ export function ToBigInt(argument) {
   throw new OutOfRange('ToBigInt', argument);
 }
 
-// #sec-stringtobigint
+/** http://tc39.es/ecma262/#sec-stringtobigint  */
 export function StringToBigInt(argument) {
   // Apply the algorithm in 7.1.4.1 (#sec-tonumber-applied-to-the-string-type) with the following changes:
   // 1. Replace the StrUnsignedDecimalLiteral production with DecimalDigits to not allow Infinity, decimal points, or exponents.
@@ -407,7 +407,7 @@ export function StringToBigInt(argument) {
   }
 }
 
-// #sec-tobigint64
+/** http://tc39.es/ecma262/#sec-tobigint64  */
 export function ToBigInt64(argument) {
   // 1. Let n be ? ToBigInt(argument).
   const n = Q(ToBigInt(argument));
@@ -420,7 +420,7 @@ export function ToBigInt64(argument) {
   return Z(int64bit);
 }
 
-// #sec-tobiguint64
+/** http://tc39.es/ecma262/#sec-tobiguint64  */
 export function ToBigUint64(argument) {
   // 1. Let n be ? ToBigInt(argument).
   const n = Q(ToBigInt(argument));
@@ -430,7 +430,7 @@ export function ToBigUint64(argument) {
   return Z(int64bit);
 }
 
-// 7.1.12 #sec-tostring
+/** http://tc39.es/ecma262/#sec-tostring  */
 export function ToString(argument) {
   if (argument instanceof UndefinedValue) {
     // Return "undefined".
@@ -463,7 +463,7 @@ export function ToString(argument) {
   throw new OutOfRange('ToString', { type: Type(argument), argument });
 }
 
-// 7.1.13 #sec-toobject
+/** http://tc39.es/ecma262/#sec-toobject  */
 export function ToObject(argument) {
   if (argument instanceof UndefinedValue) {
     // Throw a TypeError exception.
@@ -501,7 +501,7 @@ export function ToObject(argument) {
   throw new OutOfRange('ToObject', { type: Type(argument), argument });
 }
 
-// 7.1.14 #sec-topropertykey
+/** http://tc39.es/ecma262/#sec-topropertykey  */
 export function ToPropertyKey(argument) {
   // 1. Let key be ? ToPrimitive(argument, string).
   const key = Q(ToPrimitive(argument, 'string'));
@@ -514,7 +514,7 @@ export function ToPropertyKey(argument) {
   return X(ToString(key));
 }
 
-// 7.1.15 #sec-tolength
+/** http://tc39.es/ecma262/#sec-tolength  */
 export function ToLength(argument) {
   // 1. Let len be ? ToIntegerOrInfinity(argument).
   const len = Q(ToIntegerOrInfinity(argument));
@@ -526,7 +526,7 @@ export function ToLength(argument) {
   return F(Math.min(len, (2 ** 53) - 1));
 }
 
-// 7.1.16 #sec-canonicalnumericindexstring
+/** http://tc39.es/ecma262/#sec-canonicalnumericindexstring  */
 export function CanonicalNumericIndexString(argument) {
   // 1. Assert: Type(argument) is String.
   Assert(argument instanceof JSStringValue);
@@ -544,7 +544,7 @@ export function CanonicalNumericIndexString(argument) {
   return n;
 }
 
-// 7.1.17 #sec-toindex
+/** http://tc39.es/ecma262/#sec-toindex  */
 export function ToIndex(value) {
   // 1. If value is undefined, then
   if (value instanceof UndefinedValue) {

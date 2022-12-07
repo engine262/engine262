@@ -12,7 +12,7 @@ import { StringValue } from '../static-semantics/all.mjs';
 import { X } from '../completion.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
 
-// #sec-runtime-semantics-instantiateasyncgeneratorfunctionexpression
+/** http://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncgeneratorfunctionexpression  */
 //   AsyncGeneratorExpression :
 //     `async` `function` `*` `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
 //     `async` `function` `*` BindingIdentifier `(` FormalParameters `)` `{` AsyncGeneratorBody `}`

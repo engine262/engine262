@@ -1,4 +1,4 @@
-// #sec-static-semantics-isstatic
+/** http://tc39.es/ecma262/#sec-static-semantics-isstatic  */
 // ClassElement :
 //   MethodDefinition
 //   `static` MethodDefinition

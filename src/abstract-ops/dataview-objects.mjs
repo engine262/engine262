@@ -16,9 +16,9 @@ import {
 } from './all.mjs';
 
 // This file covers abstract operations defined in
-// 24.3 #sec-dataview-objects
+/** http://tc39.es/ecma262/#sec-dataview-objects  */
 
-// 24.3.1.1 #sec-getviewvalue
+/** http://tc39.es/ecma262/#sec-getviewvalue  */
 export function GetViewValue(view, requestIndex, isLittleEndian, type) {
   // 1. Perform ? RequireInternalSlot(view, [[DataView]]).
   Q(RequireInternalSlot(view, 'DataView'));
@@ -50,7 +50,7 @@ export function GetViewValue(view, requestIndex, isLittleEndian, type) {
   return GetValueFromBuffer(buffer, bufferIndex, type, Value.false, 'Unordered', isLittleEndian);
 }
 
-// 24.3.1.2 #sec-setviewvalue
+/** http://tc39.es/ecma262/#sec-setviewvalue  */
 export function SetViewValue(view, requestIndex, isLittleEndian, type, value) {
   // 1. Perform ? RequireInternalSlot(view, [[DataView]]).
   Q(RequireInternalSlot(view, 'DataView'));

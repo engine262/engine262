@@ -10,7 +10,7 @@ import {
 import { X, NormalCompletion } from '../completion.mjs';
 import { Evaluate_StatementList, InstantiateFunctionObject } from './all.mjs';
 
-// #sec-blockdeclarationinstantiation
+/** http://tc39.es/ecma262/#sec-blockdeclarationinstantiation  */
 export function BlockDeclarationInstantiation(code, env) {
   // 1. Assert: env is a declarative Environment Record.
   Assert(env instanceof DeclarativeEnvironmentRecord);
@@ -46,7 +46,7 @@ export function BlockDeclarationInstantiation(code, env) {
   }
 }
 
-// #sec-block-runtime-semantics-evaluation
+/** http://tc39.es/ecma262/#sec-block-runtime-semantics-evaluation  */
 //  Block :
 //    `{` `}`
 //    `{` StatementList `}`

@@ -13,7 +13,7 @@ import { bootstrapPrototype } from './bootstrap.mjs';
 
 const kMapIteratorPrototype = new Value('%MapIteratorPrototype%');
 
-// #sec-createmapiterator
+/** http://tc39.es/ecma262/#sec-createmapiterator  */
 export function CreateMapIterator(map, kind) {
   Assert(kind === 'key+value' || kind === 'key' || kind === 'value');
   // 1. Perform ? RequireInternalSlot(map, [[MapData]]).
@@ -59,7 +59,7 @@ export function CreateMapIterator(map, kind) {
   return X(CreateIteratorFromClosure(closure, kMapIteratorPrototype, surroundingAgent.intrinsic('%MapIteratorPrototype%')));
 }
 
-// #sec-%mapiteratorprototype%.next
+/** http://tc39.es/ecma262/#sec-%mapiteratorprototype%.next  */
 function MapIteratorPrototype_next(args, { thisValue }) {
   // 1. Return ? GeneratorResume(this value, empty, "%MapIteratorPrototype%")
   return Q(GeneratorResume(thisValue, undefined, kMapIteratorPrototype));

@@ -16,7 +16,7 @@ import { bootstrapConstructor } from './bootstrap.mjs';
 
 export const GlobalSymbolRegistry = [];
 
-// #sec-symbol-description
+/** http://tc39.es/ecma262/#sec-symbol-description  */
 function SymbolConstructor([description = Value.undefined], { NewTarget }) {
   // 1. If NewTarget is not undefined, throw a TypeError exception.
   if (NewTarget !== Value.undefined) {
@@ -33,7 +33,7 @@ function SymbolConstructor([description = Value.undefined], { NewTarget }) {
   return new SymbolValue(descString);
 }
 
-// #sec-symbol.for
+/** http://tc39.es/ecma262/#sec-symbol.for  */
 function Symbol_for([key = Value.undefined]) {
   // 1. Let stringKey be ? ToString(key).
   const stringKey = Q(ToString(key));
@@ -53,7 +53,7 @@ function Symbol_for([key = Value.undefined]) {
   return newSymbol;
 }
 
-// #sec-symbol.keyfor
+/** http://tc39.es/ecma262/#sec-symbol.keyfor  */
 function Symbol_keyFor([sym = Value.undefined]) {
   // 1. If Type(sym) is not Symbol, throw a TypeError exception.
   if (!(sym instanceof SymbolValue)) {

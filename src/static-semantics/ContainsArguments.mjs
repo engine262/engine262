@@ -1,4 +1,4 @@
-// #sec-static-semantics-containsarguments
+/** http://tc39.es/ecma262/#sec-static-semantics-containsarguments  */
 export function ContainsArguments(node) {
   switch (node.type) {
     case 'IdentifierReference':

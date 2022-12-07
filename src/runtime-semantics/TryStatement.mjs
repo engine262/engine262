@@ -13,7 +13,7 @@ import { NewDeclarativeEnvironment } from '../environment.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import { BindingInitialization } from './all.mjs';
 
-// #sec-try-statement-runtime-semantics-evaluation
+/** http://tc39.es/ecma262/#sec-try-statement-runtime-semantics-evaluation  */
 //   TryStatement :
 //     `try` Block Catch
 //     `try` Block Finally
@@ -81,7 +81,7 @@ function* Evaluate_TryStatement_BlockCatchFinally({ Block, Catch, Finally }) {
   return Completion(UpdateEmpty(F, Value.undefined));
 }
 
-// #sec-runtime-semantics-catchclauseevaluation
+/** http://tc39.es/ecma262/#sec-runtime-semantics-catchclauseevaluation  */
 //  Catch :
 //    `catch` Block
 //    `catch` `(` CatchParameter `)` Block

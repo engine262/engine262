@@ -1,6 +1,6 @@
 import { F } from '../abstract-ops/all.mjs';
 
-// 7.1.3.1.1 #sec-runtime-semantics-mv-s
+/** http://tc39.es/ecma262/#sec-runtime-semantics-mv-s  */
 //   StringNumericLiteral :::
 //     [empty]
 //     StrWhiteSpace

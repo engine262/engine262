@@ -13,7 +13,7 @@ import {
 import { Q, X } from '../completion.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-// 20.1.1.1 #sec-number-constructor-number-value
+/** http://tc39.es/ecma262/#sec-number-constructor-number-value  */
 function NumberConstructor([value], { NewTarget }) {
   let n;
   if (value !== undefined) {
@@ -34,7 +34,7 @@ function NumberConstructor([value], { NewTarget }) {
   return O;
 }
 
-// 20.1.2.2 #sec-number.isfinite
+/** http://tc39.es/ecma262/#sec-number.isfinite  */
 function Number_isFinite([number = Value.undefined]) {
   if (!(number instanceof NumberValue)) {
     return Value.false;
@@ -46,12 +46,12 @@ function Number_isFinite([number = Value.undefined]) {
   return Value.true;
 }
 
-// 20.1.2.3 #sec-number.isinteger
+/** http://tc39.es/ecma262/#sec-number.isinteger  */
 function Number_isInteger([number = Value.undefined]) {
   return X(IsIntegralNumber(number));
 }
 
-// 20.1.2.4 #sec-number.isnan
+/** http://tc39.es/ecma262/#sec-number.isnan  */
 function Number_isNaN([number = Value.undefined]) {
   if (!(number instanceof NumberValue)) {
     return Value.false;
@@ -63,7 +63,7 @@ function Number_isNaN([number = Value.undefined]) {
   return Value.false;
 }
 
-// 20.1.2.5 #sec-number.issafeinteger
+/** http://tc39.es/ecma262/#sec-number.issafeinteger  */
 function Number_isSafeInteger([number = Value.undefined]) {
   if (!(number instanceof NumberValue)) {
     return Value.false;
@@ -100,7 +100,7 @@ export function bootstrapNumber(realmRec) {
     ['isSafeInteger', Number_isSafeInteger, 1],
   ]);
 
-  // 20.1.2.12 #sec-number.parsefloat
+  /** http://tc39.es/ecma262/#sec-number.parsefloat  */
   // The value of the Number.parseFloat data property is the same built-in function object that is the value of the parseFloat property of the global object defined in 18.2.4.
   X(numberConstructor.DefineOwnProperty(new Value('parseFloat'), Descriptor({
     Value: realmRec.Intrinsics['%parseFloat%'],
@@ -109,7 +109,7 @@ export function bootstrapNumber(realmRec) {
     Configurable: Value.true,
   })));
 
-  // 20.1.2.13 #sec-number.parseint
+  /** http://tc39.es/ecma262/#sec-number.parseint  */
   // The value of the Number.parseInt data property is the same built-in function object that is the value of the parseInt property of the global object defined in 18.2.5.
   X(numberConstructor.DefineOwnProperty(new Value('parseInt'), Descriptor({
     Value: realmRec.Intrinsics['%parseInt%'],

@@ -1,6 +1,6 @@
 import { IsFunctionDefinition, HasName } from './all.mjs';
 
-// #sec-isanonymousfunctiondefinition
+/** http://tc39.es/ecma262/#sec-isanonymousfunctiondefinition  */
 export function IsAnonymousFunctionDefinition(expr) {
   // 1. If IsFunctionDefinition of expr is false, return false.
   if (!IsFunctionDefinition(expr)) {

@@ -1,7 +1,7 @@
 import { X } from '../completion.mjs';
 import { CodePointToUTF16CodeUnits } from './all.mjs';
 
-// #sec-codepointstostring
+/** http://tc39.es/ecma262/#sec-codepointstostring  */
 export function CodePointsToString(text) {
   // 1. Let result be the empty String.
   let result = '';

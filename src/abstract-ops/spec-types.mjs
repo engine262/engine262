@@ -72,7 +72,7 @@ export function IsGenericDescriptor(Desc) {
   return false;
 }
 
-// 6.2.5.4 #sec-frompropertydescriptor
+/** http://tc39.es/ecma262/#sec-frompropertydescriptor  */
 export function FromPropertyDescriptor(Desc) {
   if (Desc instanceof UndefinedValue) {
     return Value.undefined;
@@ -100,7 +100,7 @@ export function FromPropertyDescriptor(Desc) {
   return obj;
 }
 
-// 6.2.5.5 #sec-topropertydescriptor
+/** http://tc39.es/ecma262/#sec-topropertydescriptor  */
 export function ToPropertyDescriptor(Obj) {
   if (!(Obj instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', Obj);
@@ -151,7 +151,7 @@ export function ToPropertyDescriptor(Obj) {
   return desc;
 }
 
-// 6.2.5.6 #sec-completepropertydescriptor
+/** http://tc39.es/ecma262/#sec-completepropertydescriptor  */
 export function CompletePropertyDescriptor(Desc) {
   Assert(Desc instanceof Descriptor);
   const like = Descriptor({
@@ -186,7 +186,7 @@ export function CompletePropertyDescriptor(Desc) {
   return Desc;
 }
 
-// 6.2.7.1 #sec-createbytedatablock
+/** http://tc39.es/ecma262/#sec-createbytedatablock  */
 export function CreateByteDataBlock(size) {
   Assert(isNonNegativeInteger(size));
   let db;
@@ -198,7 +198,7 @@ export function CreateByteDataBlock(size) {
   return db;
 }
 
-// 6.2.7.3 #sec-copydatablockbytes
+/** http://tc39.es/ecma262/#sec-copydatablockbytes  */
 export function CopyDataBlockBytes(toBlock, toIndex, fromBlock, fromIndex, count) {
   Assert(fromBlock !== toBlock);
   Assert(fromBlock instanceof DataBlock || Type(fromBlock) === 'Shared Data Block');

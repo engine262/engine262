@@ -25,7 +25,7 @@ import {
 } from '../static-semantics/all.mjs';
 import { NamedEvaluation, BindingInitialization } from './all.mjs';
 
-// #sec-function-definitions-runtime-semantics-iteratorbindinginitialization
+/** http://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-iteratorbindinginitialization  */
 // FormalParameters :
 //   [empty]
 //   FormalParameterList `,` FunctionRestParameter

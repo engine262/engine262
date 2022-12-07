@@ -2,7 +2,7 @@ import { Value } from '../value.mjs';
 import { RegExpCreate } from '../abstract-ops/all.mjs';
 import { BodyText, FlagText } from '../static-semantics/all.mjs';
 
-// #sec-regular-expression-literals-runtime-semantics-evaluation
+/** http://tc39.es/ecma262/#sec-regular-expression-literals-runtime-semantics-evaluation  */
 //   RegularExpressionLiteral :
 //     `/` RegularExpressionBody `/` RegularExpressionFlags
 export function Evaluate_RegularExpressionLiteral(RegularExpressionLiteral) {

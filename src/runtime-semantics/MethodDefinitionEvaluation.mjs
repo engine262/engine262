@@ -15,7 +15,7 @@ import {
 import { OutOfRange } from '../helpers.mjs';
 import { DefineMethod, Evaluate_PropertyName } from './all.mjs';
 
-// #sec-privateelement-specification-type
+/** http://tc39.es/ecma262/#sec-privateelement-specification-type  */
 export class PrivateElementRecord {
   constructor(init) {
     this.Key = init.Key;
@@ -26,7 +26,7 @@ export class PrivateElementRecord {
   }
 }
 
-// #sec-definemethodproperty
+/** http://tc39.es/ecma262/#sec-definemethodproperty  */
 function DefineMethodProperty(key, homeObject, closure, enumerable) {
   // 1. If key is a Private Name, then
   if (key instanceof PrivateName) {
@@ -151,7 +151,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition, object, 
   }
 }
 
-// #sec-async-function-definitions-MethodDefinitionEvaluation
+/** http://tc39.es/ecma262/#sec-async-function-definitions-MethodDefinitionEvaluation  */
 //   AsyncMethod :
 //     `async` ClassElementName `(` UniqueFormalParameters `)` `{` AsyncFunctionBody `}`
 function* MethodDefinitionEvaluation_AsyncMethod(AsyncMethod, object, enumerable) {
@@ -176,7 +176,7 @@ function* MethodDefinitionEvaluation_AsyncMethod(AsyncMethod, object, enumerable
   return Q(DefineMethodProperty(propKey, object, closure, enumerable));
 }
 
-// #sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation
+/** http://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation  */
 //   GeneratorMethod :
 //     `*` ClassElementName `(` UniqueFormalParameters `)` `{` GeneratorBody `}`
 function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, enumerable) {
@@ -210,7 +210,7 @@ function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, en
   return Q(DefineMethodProperty(propKey, object, closure, enumerable));
 }
 
-// #sec-asyncgenerator-definitions-propertydefinitionevaluation
+/** http://tc39.es/ecma262/#sec-asyncgenerator-definitions-propertydefinitionevaluation  */
 //   AsyncGeneratorMethod :
 //     `async` `*` PropertyName `(` UniqueFormalParameters `)` `{` AsyncGeneratorBody `}`
 function* MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod, object, enumerable) {

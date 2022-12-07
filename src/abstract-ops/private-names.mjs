@@ -4,7 +4,7 @@ import { Q, X } from '../completion.mjs';
 import { PrivateElementRecord } from '../runtime-semantics/all.mjs';
 import { Assert, Call } from './all.mjs';
 
-// #sec-privateelementfind
+/** http://tc39.es/ecma262/#sec-privateelementfind  */
 export function PrivateElementFind(P, O) {
   const entry = O.PrivateElements.find((e) => e.Key === P);
   // 1. If O.[[PrivateElements]] contains a PrivateElement whose [[Key]] is P, then
@@ -17,7 +17,7 @@ export function PrivateElementFind(P, O) {
   return undefined;
 }
 
-// #sec-privateget
+/** http://tc39.es/ecma262/#sec-privateget  */
 export function PrivateGet(P, O) {
   // 1. Let entry be ! PrivateElementFind(P, O).
   const entry = X(PrivateElementFind(P, O));
@@ -70,7 +70,7 @@ export function PrivateSet(P, O, value) {
   }
 }
 
-// #sec-privatemethodoraccessoradd
+/** http://tc39.es/ecma262/#sec-privatemethodoraccessoradd  */
 export function PrivateMethodOrAccessorAdd(method, O) {
   // 1. Assert: method.[[Kind]] is either method or accessor.
   Assert(method.Kind === 'method' || method.Kind === 'accessor');
@@ -86,7 +86,7 @@ export function PrivateMethodOrAccessorAdd(method, O) {
   //          This step does not create a new copy of the method or accessor.
 }
 
-// #sec-privatefieldadd
+/** http://tc39.es/ecma262/#sec-privatefieldadd  */
 export function PrivateFieldAdd(P, O, value) {
   // 1. Let entry be ! PrivateElementFind(P, O).
   const entry = X(PrivateElementFind(P, O));

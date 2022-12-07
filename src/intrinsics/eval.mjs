@@ -7,7 +7,7 @@ import {
   PerformEval,
 } from '../abstract-ops/all.mjs';
 
-// #sec-eval-x
+/** http://tc39.es/ecma262/#sec-eval-x  */
 function Eval([x = Value.undefined]) {
   // 1. Assert: The execution context stack has at least two elements.
   Assert(surroundingAgent.executionContextStack.length >= 2);

@@ -2,7 +2,7 @@ import { surroundingAgent } from '../engine.mjs';
 import { Value } from '../value.mjs';
 import { OrdinaryFunctionCreate, SetFunctionName, sourceTextMatchedBy } from '../abstract-ops/all.mjs';
 
-// #sec-runtime-semantics-instantiateasyncarrowfunctionexpression
+/** http://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncarrowfunctionexpression  */
 // AsyncArrowFunction : ArrowParameters `=>` AsyncConciseBody
 export function InstantiateAsyncArrowFunctionExpression(AsyncArrowFunction, name) {
   const { ArrowParameters, AsyncConciseBody } = AsyncArrowFunction;

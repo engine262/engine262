@@ -10,7 +10,7 @@ import { Evaluate } from '../evaluator.mjs';
 import { Q } from '../completion.mjs';
 import { ArgumentListEvaluation } from './all.mjs';
 
-// #sec-evaluatenew
+/** http://tc39.es/ecma262/#sec-evaluatenew  */
 function* EvaluateNew(constructExpr, args) {
   // 1. Assert: constructExpr is either a NewExpression or a MemberExpression.
   // 2. Assert: arguments is either empty or an Arguments.
@@ -35,7 +35,7 @@ function* EvaluateNew(constructExpr, args) {
   return Q(Construct(constructor, argList));
 }
 
-// #sec-new-operator-runtime-semantics-evaluation
+/** http://tc39.es/ecma262/#sec-new-operator-runtime-semantics-evaluation  */
 //   NewExpression :
 //     `new` NewExpression
 //     `new` MemberExpression Arguments

@@ -30,7 +30,7 @@ import {
 } from './all.mjs';
 
 // This file covers abstract operations defined in
-// 9.4.4 #sec-arguments-exotic-objects
+/** http://tc39.es/ecma262/#sec-arguments-exotic-objects  */
 
 
 function ArgumentsGetOwnProperty(P) {
@@ -117,7 +117,7 @@ function ArgumentsDelete(P) {
   return result;
 }
 
-// 9.4.4.6 #sec-createunmappedargumentsobject
+/** http://tc39.es/ecma262/#sec-createunmappedargumentsobject  */
 export function CreateUnmappedArgumentsObject(argumentsList) {
   const len = argumentsList.length;
   const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'), ['ParameterMap']);
@@ -149,7 +149,7 @@ export function CreateUnmappedArgumentsObject(argumentsList) {
   return obj;
 }
 
-// 9.4.4.7.1 #sec-makearggetter
+/** http://tc39.es/ecma262/#sec-makearggetter  */
 function MakeArgGetter(name, env) {
   // 1. Let getterClosure be a new Abstract Closure with no parameters that captures name and env and performs the following steps when called:
   //   a. Return env.GetBindingValue(name, false).
@@ -161,7 +161,7 @@ function MakeArgGetter(name, env) {
   return getter;
 }
 
-// 9.4.4.7.2 #sec-makeargsetter
+/** http://tc39.es/ecma262/#sec-makeargsetter  */
 function MakeArgSetter(name, env) {
   // 1. Let setterClosure be a new Abstract Closure with parameters (value) that captures name and env and performs the following steps when called:
   //   a. Return env.SetMutableBinding(name, value, false).
@@ -173,7 +173,7 @@ function MakeArgSetter(name, env) {
   return setter;
 }
 
-// 9.4.4.7 #sec-createmappedargumentsobject
+/** http://tc39.es/ecma262/#sec-createmappedargumentsobject  */
 export function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
   // Assert: formals does not contain a rest parameter, any binding
   // patterns, or any initializers. It may contain duplicate identifiers.

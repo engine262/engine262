@@ -3,7 +3,7 @@ import { Q } from '../completion.mjs';
 import { CreateDynamicFunction } from '../runtime-semantics/all.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-// #sec-function-p1-p2-pn-body
+/** http://tc39.es/ecma262/#sec-function-p1-p2-pn-body  */
 function FunctionConstructor(args, { NewTarget }) {
   // 1. Let C be the active function object.
   const C = surroundingAgent.activeFunctionObject;

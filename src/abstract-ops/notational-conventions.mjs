@@ -10,7 +10,7 @@ export function Assert(invariant, source) {
   }
 }
 
-// 9.1.15 #sec-requireinternalslot
+/** http://tc39.es/ecma262/#sec-requireinternalslot  */
 export function RequireInternalSlot(O, internalSlot) {
   if (!(O instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', O);

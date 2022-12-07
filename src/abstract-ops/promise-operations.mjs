@@ -29,9 +29,9 @@ import {
 } from './all.mjs';
 
 // This file covers abstract operations defined in
-// 25.6 #sec-promise-objects
+/** http://tc39.es/ecma262/#sec-promise-objects  */
 
-// 25.6.1.1 #sec-promisecapability-records
+/** http://tc39.es/ecma262/#sec-promisecapability-records  */
 export class PromiseCapabilityRecord {
   constructor() {
     this.Promise = Value.undefined;
@@ -40,7 +40,7 @@ export class PromiseCapabilityRecord {
   }
 }
 
-// 25.6.1.2 #sec-promisereaction-records
+/** http://tc39.es/ecma262/#sec-promisereaction-records  */
 export class PromiseReactionRecord {
   constructor(O) {
     Assert(O.Capability instanceof PromiseCapabilityRecord
@@ -54,7 +54,7 @@ export class PromiseReactionRecord {
   }
 }
 
-// 25.6.1.3 #sec-createresolvingfunctions
+/** http://tc39.es/ecma262/#sec-createresolvingfunctions  */
 export function CreateResolvingFunctions(promise) {
   // 1. Let alreadyResolved be the Record { [[Value]]: false }.
   const alreadyResolved = { Value: false };
@@ -85,7 +85,7 @@ export function CreateResolvingFunctions(promise) {
   };
 }
 
-// 25.6.1.3.1 #sec-promise-reject-functions
+/** http://tc39.es/ecma262/#sec-promise-reject-functions  */
 function PromiseRejectFunctions([reason = Value.undefined]) {
   const F = this;
 
@@ -99,7 +99,7 @@ function PromiseRejectFunctions([reason = Value.undefined]) {
   return RejectPromise(promise, reason);
 }
 
-// #sec-newpromiseresolvethenablejob
+/** http://tc39.es/ecma262/#sec-newpromiseresolvethenablejob  */
 function NewPromiseResolveThenableJob(promiseToResolve, thenable, then) {
   // 1. Let job be a new Job abstract closure with no parameters that captures
   //    promiseToResolve, thenable, and then and performs the following steps when called:
@@ -133,7 +133,7 @@ function NewPromiseResolveThenableJob(promiseToResolve, thenable, then) {
   return { Job: job, Realm: thenRealm };
 }
 
-// 25.6.1.3.2 #sec-promise-resolve-functions
+/** http://tc39.es/ecma262/#sec-promise-resolve-functions  */
 function PromiseResolveFunctions([resolution = Value.undefined]) {
   // 1. Let F be the active function object.
   const F = this;
@@ -185,7 +185,7 @@ function PromiseResolveFunctions([resolution = Value.undefined]) {
   return Value.undefined;
 }
 
-// 25.6.1.4 #sec-fulfillpromise
+/** http://tc39.es/ecma262/#sec-fulfillpromise  */
 function FulfillPromise(promise, value) {
   Assert(promise.PromiseState === 'pending');
   const reactions = promise.PromiseFulfillReactions;
@@ -196,7 +196,7 @@ function FulfillPromise(promise, value) {
   return TriggerPromiseReactions(reactions, value);
 }
 
-// 25.6.1.5 #sec-newpromisecapability
+/** http://tc39.es/ecma262/#sec-newpromisecapability  */
 export function NewPromiseCapability(C) {
   // 1. If IsConstructor(C) is false, throw a TypeError exception.
   if (IsConstructor(C) === Value.false) {
@@ -240,7 +240,7 @@ export function NewPromiseCapability(C) {
   return promiseCapability;
 }
 
-// 25.6.1.6 #sec-ispromise
+/** http://tc39.es/ecma262/#sec-ispromise  */
 export function IsPromise(x) {
   if (!(x instanceof ObjectValue)) {
     return Value.false;
@@ -251,7 +251,7 @@ export function IsPromise(x) {
   return Value.true;
 }
 
-// 25.6.1.7 #sec-rejectpromise
+/** http://tc39.es/ecma262/#sec-rejectpromise  */
 function RejectPromise(promise, reason) {
   Assert(promise.PromiseState === 'pending');
   const reactions = promise.PromiseRejectReactions;
@@ -265,7 +265,7 @@ function RejectPromise(promise, reason) {
   return TriggerPromiseReactions(reactions, reason);
 }
 
-// #sec-triggerpromisereactions
+/** http://tc39.es/ecma262/#sec-triggerpromisereactions  */
 function TriggerPromiseReactions(reactions, argument) {
   // 1. For each reaction in reactions, do
   reactions.forEach((reaction) => {
@@ -278,7 +278,7 @@ function TriggerPromiseReactions(reactions, argument) {
   return Value.undefined;
 }
 
-// 25.6.4.5.1 #sec-promise-resolve
+/** http://tc39.es/ecma262/#sec-promise-resolve  */
 export function PromiseResolve(C, x) {
   Assert(C instanceof ObjectValue);
   if (IsPromise(x) === Value.true) {
@@ -292,7 +292,7 @@ export function PromiseResolve(C, x) {
   return promiseCapability.Promise;
 }
 
-// #sec-newpromisereactionjob
+/** http://tc39.es/ecma262/#sec-newpromisereactionjob  */
 function NewPromiseReactionJob(reaction, argument) {
   // 1. Let job be a new Job abstract closure with no parameters that captures
   //    reaction and argument and performs the following steps when called:
@@ -360,7 +360,7 @@ function NewPromiseReactionJob(reaction, argument) {
   return { Job: job, Realm: handlerRealm };
 }
 
-// 25.6.5.4.1 #sec-performpromisethen
+/** http://tc39.es/ecma262/#sec-performpromisethen  */
 export function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) {
   // 1. Assert: IsPromise(promise) is true.
   Assert(IsPromise(promise) === Value.true);

@@ -8,7 +8,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-// #sec-get-arraybuffer.prototype.bytelength
+/** http://tc39.es/ecma262/#sec-get-arraybuffer.prototype.bytelength  */
 function ArrayBufferProto_byteLength(args, { thisValue }) {
   // 1. Let O be this value.
   const O = thisValue;
@@ -28,7 +28,7 @@ function ArrayBufferProto_byteLength(args, { thisValue }) {
   return F(length);
 }
 
-// #sec-arraybuffer.prototype.slice
+/** http://tc39.es/ecma262/#sec-arraybuffer.prototype.slice  */
 function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined], { thisValue }) {
   // 1. Let O be the this value.
   const O = thisValue;

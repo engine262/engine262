@@ -1,7 +1,7 @@
 import { Q } from '../completion.mjs';
 import { EvaluateStringOrNumericBinaryExpression } from './all.mjs';
 
-// #sec-multiplicative-operators-runtime-semantics-evaluation
+/** http://tc39.es/ecma262/#sec-multiplicative-operators-runtime-semantics-evaluation  */
 //   MultiplicativeExpression :
 //     MultiplicativeExpression MultiplicativeOperator ExponentiationExpression
 export function* Evaluate_MultiplicativeExpression({

@@ -1,6 +1,6 @@
 import { Evaluate_StatementList } from './all.mjs';
 
-// #sec-function-definitions-runtime-semantics-evaluation
+/** http://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluation  */
 //   FunctionStatementList : [empty]
 //
 // (implicit)

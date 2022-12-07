@@ -1,6 +1,6 @@
 import { PropName } from './all.mjs';
 
-// #sec-static-semantics-nonconstructorelements
+/** http://tc39.es/ecma262/#sec-static-semantics-nonconstructorelements  */
 // ClassElementList :
 //   ClassElement
 //   ClassElementList ClassElement

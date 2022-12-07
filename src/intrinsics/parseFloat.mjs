@@ -9,7 +9,7 @@ import {
   TrimString,
 } from '../runtime-semantics/all.mjs';
 
-// #sec-parsefloat-string
+/** http://tc39.es/ecma262/#sec-parsefloat-string  */
 function ParseFloat([string = Value.undefined]) {
   // 1. Let inputString be ? ToString(string).
   const inputString = Q(ToString(string));

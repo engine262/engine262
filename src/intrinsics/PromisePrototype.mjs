@@ -17,7 +17,7 @@ import { ObjectValue, Value } from '../value.mjs';
 import { Q, ThrowCompletion, X } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-// #sec-promise.prototype.catch
+/** http://tc39.es/ecma262/#sec-promise.prototype.catch  */
 function PromiseProto_catch([onRejected = Value.undefined], { thisValue }) {
   // 1. Let promise be the this value.
   const promise = thisValue;
@@ -25,7 +25,7 @@ function PromiseProto_catch([onRejected = Value.undefined], { thisValue }) {
   return Q(Invoke(promise, new Value('then'), [Value.undefined, onRejected]));
 }
 
-// #sec-promise.prototype.finally
+/** http://tc39.es/ecma262/#sec-promise.prototype.finally  */
 function PromiseProto_finally([onFinally = Value.undefined], { thisValue }) {
   // 1. Let promise be the this value.
   const promise = thisValue;
@@ -83,7 +83,7 @@ function PromiseProto_finally([onFinally = Value.undefined], { thisValue }) {
   return Q(Invoke(promise, new Value('then'), [thenFinally, catchFinally]));
 }
 
-// #sec-promise.prototype.then
+/** http://tc39.es/ecma262/#sec-promise.prototype.then  */
 function PromiseProto_then([onFulfilled = Value.undefined, onRejected = Value.undefined], { thisValue }) {
   // 1. Let promise be the this value.
   const promise = thisValue;

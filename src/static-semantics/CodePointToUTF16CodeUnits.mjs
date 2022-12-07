@@ -1,6 +1,6 @@
 import { Assert } from '../abstract-ops/all.mjs';
 
-// #sec-codepointtoutf16codeunits
+/** http://tc39.es/ecma262/#sec-codepointtoutf16codeunits  */
 export function CodePointToUTF16CodeUnits(cp) {
   // 1. Assert: 0 ≤ cp ≤ 0x10FFFF.
   Assert(cp >= 0 && cp <= 0x10FFFF);

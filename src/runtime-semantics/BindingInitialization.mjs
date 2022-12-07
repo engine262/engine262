@@ -16,7 +16,7 @@ import {
   RestBindingInitialization,
 } from './all.mjs';
 
-// #sec-initializeboundname
+/** http://tc39.es/ecma262/#sec-initializeboundname  */
 export function InitializeBoundName(name, value, environment) {
   // 1. Assert: Type(name) is String.
   Assert(name instanceof JSStringValue);

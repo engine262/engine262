@@ -12,7 +12,7 @@ import { Value, wellKnownSymbols } from '../value.mjs';
 import { IfAbruptCloseIterator, Q } from '../completion.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-// #sec-set-iterable
+/** http://tc39.es/ecma262/#sec-set-iterable  */
 function SetConstructor([iterable = Value.undefined], { NewTarget }) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget === Value.undefined) {
@@ -51,7 +51,7 @@ function SetConstructor([iterable = Value.undefined], { NewTarget }) {
   }
 }
 
-// #sec-get-set-@@species
+/** http://tc39.es/ecma262/#sec-get-set-@@species  */
 function Set_speciesGetter(args, { thisValue }) {
   // Return the this value.
   return thisValue;

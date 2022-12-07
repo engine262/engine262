@@ -11,7 +11,7 @@ import {
   BindingClassDeclarationEvaluation,
 } from './all.mjs';
 
-// #sec-exports-runtime-semantics-evaluation
+/** http://tc39.es/ecma262/#sec-exports-runtime-semantics-evaluation  */
 //   ExportDeclaration :
 //     `export` ExportFromClause FromClause `;`
 //     `export` NamedExports `;`

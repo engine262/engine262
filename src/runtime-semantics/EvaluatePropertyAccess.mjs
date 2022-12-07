@@ -9,7 +9,7 @@ import { Evaluate } from '../evaluator.mjs';
 import { StringValue } from '../static-semantics/all.mjs';
 import { Q } from '../completion.mjs';
 
-// #sec-evaluate-expression-key-property-access
+/** http://tc39.es/ecma262/#sec-evaluate-expression-key-property-access  */
 export function* EvaluatePropertyAccessWithExpressionKey(baseValue, expression, strict) {
   // 1. Let propertyNameReference be the result of evaluating expression.
   const propertyNameReference = yield* Evaluate(expression);
@@ -28,7 +28,7 @@ export function* EvaluatePropertyAccessWithExpressionKey(baseValue, expression, 
   });
 }
 
-// #sec-evaluate-identifier-key-property-access
+/** http://tc39.es/ecma262/#sec-evaluate-identifier-key-property-access  */
 export function EvaluatePropertyAccessWithIdentifierKey(baseValue, identifierName, strict) {
   // 1. Assert: identifierName is an IdentifierName.
   Assert(identifierName.type === 'IdentifierName');

@@ -18,13 +18,13 @@ import {
 } from '../abstract-ops/all.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-// #sec-%typedarray%-intrinsic-object
+/** http://tc39.es/ecma262/#sec-%typedarray%-intrinsic-object  */
 function TypedArrayConstructor() {
   // 1. Throw a TypeError exception.
   return surroundingAgent.Throw('TypeError', 'NotAConstructor', this);
 }
 
-// #sec-%typedarray%.from
+/** http://tc39.es/ecma262/#sec-%typedarray%.from  */
 function TypedArray_from([source = Value.undefined, mapfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
   // 1. Let C be the this value.
   const C = thisValue;
@@ -100,7 +100,7 @@ function TypedArray_from([source = Value.undefined, mapfn = Value.undefined, thi
   return targetObj;
 }
 
-// #sec-%typedarray%.of
+/** http://tc39.es/ecma262/#sec-%typedarray%.of  */
 function TypedArray_of(items, { thisValue }) {
   // 1. Let len be the actual number of arguments passed to this function.
   // 2. Let items be the List of arguments passed to this function.
@@ -130,7 +130,7 @@ function TypedArray_of(items, { thisValue }) {
   return newObj;
 }
 
-// #sec-get-%typedarray%-@@species
+/** http://tc39.es/ecma262/#sec-get-%typedarray%-@@species  */
 function TypedArray_speciesGetter(args, { thisValue }) {
   return thisValue;
 }

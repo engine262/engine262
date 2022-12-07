@@ -35,7 +35,7 @@ import {
 import { bootstrapPrototype } from './bootstrap.mjs';
 import { ArrayProto_sortBody, bootstrapArrayPrototypeShared } from './ArrayPrototypeShared.mjs';
 
-// #sec-get-%typedarray%.prototype.buffer
+/** http://tc39.es/ecma262/#sec-get-%typedarray%.prototype.buffer  */
 function TypedArrayProto_buffer(args, { thisValue }) {
   // 1. Let O be the this value.
   const O = thisValue;
@@ -49,7 +49,7 @@ function TypedArrayProto_buffer(args, { thisValue }) {
   return buffer;
 }
 
-// #sec-get-%typedarray%.prototype.bytelength
+/** http://tc39.es/ecma262/#sec-get-%typedarray%.prototype.bytelength  */
 function TypedArrayProto_byteLength(args, { thisValue }) {
   // 1. Let O be the this value.
   const O = thisValue;
@@ -69,7 +69,7 @@ function TypedArrayProto_byteLength(args, { thisValue }) {
   return F(size);
 }
 
-// #sec-get-%typedarray%.prototype.byteoffset
+/** http://tc39.es/ecma262/#sec-get-%typedarray%.prototype.byteoffset  */
 function TypedArrayProto_byteOffset(args, { thisValue }) {
   // 1. Let O be the this value.
   const O = thisValue;
@@ -89,7 +89,7 @@ function TypedArrayProto_byteOffset(args, { thisValue }) {
   return F(offset);
 }
 
-// #sec-%typedarray%.prototype.copywithin
+/** http://tc39.es/ecma262/#sec-%typedarray%.prototype.copywithin  */
 function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.undefined, end = Value.undefined], { thisValue }) {
   // 1. Let O be the this value.
   const O = thisValue;
@@ -183,7 +183,7 @@ function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.und
   return O;
 }
 
-// #sec-%typedarray%.prototype.entries
+/** http://tc39.es/ecma262/#sec-%typedarray%.prototype.entries  */
 function TypedArrayProto_entries(args, { thisValue }) {
   // 1. Let O be the this value.
   const O = thisValue;
@@ -193,7 +193,7 @@ function TypedArrayProto_entries(args, { thisValue }) {
   return CreateArrayIterator(O, 'key+value');
 }
 
-// #sec-%typedarray%.prototype.fill
+/** http://tc39.es/ecma262/#sec-%typedarray%.prototype.fill  */
 function TypedArrayProto_fill([value = Value.undefined, start = Value.undefined, end = Value.undefined], { thisValue }) {
   // 1. Let O be the this value.
   const O = thisValue;
@@ -248,7 +248,7 @@ function TypedArrayProto_fill([value = Value.undefined, start = Value.undefined,
   return O;
 }
 
-// #sec-%typedarray%.prototype.filter
+/** http://tc39.es/ecma262/#sec-%typedarray%.prototype.filter  */
 function TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
   // 1. Let O be the this value.
   const O = thisValue;
@@ -299,7 +299,7 @@ function TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.u
   return A;
 }
 
-// #sec-%typedarray%.prototype.keys
+/** http://tc39.es/ecma262/#sec-%typedarray%.prototype.keys  */
 function TypedArrayProto_keys(args, { thisValue }) {
   // 1. Let O be the this value.
   const O = thisValue;
@@ -309,7 +309,7 @@ function TypedArrayProto_keys(args, { thisValue }) {
   return CreateArrayIterator(O, 'key');
 }
 
-// #sec-get-%typedarray%.prototype.length
+/** http://tc39.es/ecma262/#sec-get-%typedarray%.prototype.length  */
 function TypedArrayProto_length(args, { thisValue }) {
   // 1. Let O be the this value.
   const O = thisValue;
@@ -329,7 +329,7 @@ function TypedArrayProto_length(args, { thisValue }) {
   return F(length);
 }
 
-// #sec-%typedarray%.prototype.map
+/** http://tc39.es/ecma262/#sec-%typedarray%.prototype.map  */
 function TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
   // 1. Let O be the this value.
   const O = thisValue;
@@ -362,7 +362,7 @@ function TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.unde
   return A;
 }
 
-// #sec-settypedarrayfromtypedarray
+/** http://tc39.es/ecma262/#sec-settypedarrayfromtypedarray  */
 function SetTypedArrayFromTypedArray(target, targetOffset, source) {
   // 1. Let targetBuffer be target.[[ViewedArrayBuffer]].
   const targetBuffer = target.ViewedArrayBuffer;
@@ -459,7 +459,7 @@ function SetTypedArrayFromTypedArray(target, targetOffset, source) {
   // 24. Return unused.
 }
 
-// #sec-settypedarrayfromarraylike
+/** http://tc39.es/ecma262/#sec-settypedarrayfromarraylike  */
 function SetTypedArrayFromArrayLike(target, targetOffset, source) {
   // 1. Let targetBuffer be target.[[ViewedArrayBuffer]].
   const targetBuffer = target.ViewedArrayBuffer;
@@ -499,7 +499,7 @@ function SetTypedArrayFromArrayLike(target, targetOffset, source) {
   // 10. Return unused.
 }
 
-// #sec-%typedarray%.prototype.set-overloaded-offset
+/** http://tc39.es/ecma262/#sec-%typedarray%.prototype.set-overloaded-offset  */
 function TypedArrayProto_set([source = Value.undefined, offset = Value.undefined], { thisValue }) {
   // 1. Let target be the this value.
   const target = thisValue;
@@ -525,7 +525,7 @@ function TypedArrayProto_set([source = Value.undefined, offset = Value.undefined
   return Value.undefined;
 }
 
-// #sec-%typedarray%.prototype.slice
+/** http://tc39.es/ecma262/#sec-%typedarray%.prototype.slice  */
 function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined], { thisValue }) {
   // 1. Let O be the this value.
   const O = thisValue;
@@ -624,7 +624,7 @@ function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined],
   return A;
 }
 
-// 22.2.3.26 #sec-%typedarray%.prototype.sort
+/** http://tc39.es/ecma262/#sec-%typedarray%.prototype.sort  */
 function TypedArrayProto_sort([comparefn = Value.undefined], { thisValue }) {
   // 1. If comparefn is not undefined and IsCallable(comparefn) is false, throw a TypeError exception.
   if (comparefn !== Value.undefined && IsCallable(comparefn) === Value.false) {
@@ -689,7 +689,7 @@ function TypedArraySortCompare(x, y, comparefn) {
   return F(+0);
 }
 
-// #sec-%typedarray%.prototype.subarray
+/** http://tc39.es/ecma262/#sec-%typedarray%.prototype.subarray  */
 function TypedArrayProto_subarray([begin = Value.undefined, end = Value.undefined], { thisValue }) {
   // 1. Let O be the this value.
   const O = thisValue;
@@ -740,7 +740,7 @@ function TypedArrayProto_subarray([begin = Value.undefined, end = Value.undefine
   return Q(TypedArraySpeciesCreate(O, argumentsList));
 }
 
-// #sec-%typedarray%.prototype.values
+/** http://tc39.es/ecma262/#sec-%typedarray%.prototype.values  */
 function TypedArrayProto_values(args, { thisValue }) {
   // 1. Let o be the this value.
   const O = thisValue;
@@ -750,7 +750,7 @@ function TypedArrayProto_values(args, { thisValue }) {
   return CreateArrayIterator(O, 'value');
 }
 
-// #sec-get-%typedarray%.prototype-@@tostringtag
+/** http://tc39.es/ecma262/#sec-get-%typedarray%.prototype-@@tostringtag  */
 function TypedArrayProto_toStringTag(args, { thisValue }) {
   // 1. Let O be the this value.
   const O = thisValue;
@@ -770,7 +770,7 @@ function TypedArrayProto_toStringTag(args, { thisValue }) {
   return name;
 }
 
-// #sec-%typedarray%.prototype.at
+/** http://tc39.es/ecma262/#sec-%typedarray%.prototype.at  */
 function TypedArrayProto_at([index = Value.undefined], { thisValue }) {
   // 1. Let O be the this value.
   const O = thisValue;
@@ -831,7 +831,7 @@ export function bootstrapTypedArrayPrototype(realmRec) {
     (O) => O.ArrayLength,
   );
 
-  // 22.2.3.31 #sec-%typedarray%.prototype-@@iterator
+  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype-@@iterator  */
   {
     const fn = X(Get(proto, new Value('values')));
     X(proto.DefineOwnProperty(wellKnownSymbols.iterator, Descriptor({
