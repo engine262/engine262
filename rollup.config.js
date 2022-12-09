@@ -19,7 +19,7 @@ const banner = `/*!
 `;
 
 module.exports = () => ({
-  input: './src/api.mjs',
+  input: './src/api.mts',
   plugins: [
     json({ compact: true }),
     commonjs(),
