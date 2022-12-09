@@ -3,16 +3,26 @@
 module.exports = {
   root: true,
   extends: 'airbnb-base',
-  plugins: ['@engine262'],
-  parser: '@babel/eslint-parser',
+  plugins: ['@engine262', '@typescript-eslint'],
+  parser: '@typescript-eslint/parser',
   parserOptions: {
-    ecmaVersion: 2020,
-    requireConfigFile: false,
+    tsconfigRootDir: __dirname,
+    project: ['./tsconfig.json'],
   },
   overrides: [
     {
       files: ['*.js'],
-      parserOptions: { sourceType: 'script' },
+      parserOptions: { sourceType: 'script', project: null },
+    },
+    {
+      files: ['*.mts'],
+      rules: {
+        // checked by tsc.
+        'no-unused-vars': 'off',
+        'no-redeclare': 'off',
+        'import/export': 'off',
+        'no-dupe-class-members': 'off',
+      },
     },
   ],
   globals: {
@@ -47,6 +57,8 @@ module.exports = {
     'class-methods-use-this': 'off',
     'global-require': 'off',
     'import/extensions': 'off',
+    'import/named': 'off',
+    'import/no-unresolved': 'off',
     'import/no-cycle': 'off',
     'import/no-mutable-exports': 'off',
     'import/prefer-default-export': 'off',

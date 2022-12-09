@@ -1,6 +1,7 @@
 'use strict';
 
 const fs = require('fs');
+const path = require('path');
 const { execSync } = require('child_process');
 const { babel } = require('@rollup/plugin-babel');
 const commonjs = require('@rollup/plugin-commonjs');
@@ -22,13 +23,27 @@ module.exports = () => ({
   plugins: [
     json({ compact: true }),
     commonjs(),
+    mtsResolver(),
     nodeResolve(),
     babel({
       babelHelpers: 'bundled',
       exclude: 'node_modules/**',
+      presets: [[
+        '@babel/preset-env',
+        {
+          // this is the latest version that NOT support optional chaining
+          targets: ['chrome 79', 'firefox 73', 'safari 13'],
+          // default in babel 8, enable to avoid future surprise
+          spec: true,
+          bugfixes: true,
+        },
+      ], '@babel/preset-typescript'],
+      extensions: ['.mjs', '.mts'],
       plugins: [
-        '@babel/plugin-proposal-optional-chaining',
         './scripts/transform.js',
+        ['@babel/plugin-proposal-decorators', {
+          'version': '2022-03',
+        }],
       ],
     }),
   ],
@@ -56,3 +71,21 @@ module.exports = () => ({
     warn(warning);
   },
 });
+function mtsResolver() {
+  return {
+    name: 'mts resolver',
+    async resolveId(importee, importer) {
+      if (!importee.endsWith('.mjs') || !importer || importee[0] !== '.') {
+        return null;
+      }
+      const resolved = path.resolve(path.dirname(importer), importee);
+
+      return fs.promises.access(resolved, fs.constants.F_OK)
+        .then(() => null)
+        .catch(() => ({
+          id:
+            `${resolved.slice(0, -('.mjs'.length))}.mts`,
+        }));
+    },
+  };
+}

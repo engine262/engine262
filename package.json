@@ -10,7 +10,7 @@
   },
   "main": "dist/engine262",
   "scripts": {
-    "lint": "eslint rollup.config.js test/ src/ bin/ inspector/ scripts/ --cache --ext=js,mjs",
+    "lint": "eslint rollup.config.js test/ src/ bin/ inspector/ scripts/ --cache --ext=js,mjs,mts",
     "build": "run-s build:*",
     "build:regex_data": "node scripts/gen_regex_sets.js",
     "build:engine": "rollup -c",
@@ -30,14 +30,17 @@
     "url": "git+https://github.com/engine262/engine262.git"
   },
   "devDependencies": {
-    "@babel/core": "^7.18.9",
-    "@babel/eslint-parser": "^7.18.9",
-    "@babel/plugin-proposal-optional-chaining": "^7.18.9",
+    "@babel/core": "^7.20.5",
+    "@babel/plugin-proposal-decorators": "^7.20.5",
+    "@babel/preset-env": "^7.20.2",
+    "@babel/preset-typescript": "^7.18.6",
     "@engine262/eslint-plugin": "file:./test/eslint-plugin-engine262",
     "@rollup/plugin-babel": "^5.3.1",
     "@rollup/plugin-commonjs": "^22.0.1",
     "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^13.3.0",
+    "@typescript-eslint/eslint-plugin": "^5.45.1",
+    "@typescript-eslint/parser": "^5.45.1",
     "@unicode/unicode-14.0.0": "^1.2.2",
     "acorn": "^8.8.0",
     "c8": "^7.12.0",
@@ -49,6 +52,7 @@
     "minimatch": "^5.1.0",
     "npm-run-all": "^4.1.5",
     "rollup": "^2.77.0",
+    "typescript": "npm:@typescript-deploys/pr-build@5.0.0-pr-50820-31",
     "ws": "^8.8.1"
   }
 }
