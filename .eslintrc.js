@@ -16,14 +16,20 @@ module.exports = {
     },
     {
       files: ['*.mts'],
+      extends: 'plugin:@typescript-eslint/recommended',
       rules: {
         // checked by tsc.
-        'no-unused-vars': 'off',
+        '@typescript-eslint/no-unused-vars': 'off',
         'no-redeclare': 'off',
         'import/export': 'off',
         'no-dupe-class-members': 'off',
         // false positive
         'no-shadow': 'off',
+        // we need it for now
+        '@typescript-eslint/ban-ts-comment': 'off',
+        '@typescript-eslint/no-non-null-assertion': 'off',
+        // spec convention
+        '@typescript-eslint/no-this-alias': 'off',
       },
     },
   ],

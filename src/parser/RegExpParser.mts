@@ -18,8 +18,6 @@ import {
 } from './Lexer.mjs';
 import { ParserSyntaxError } from './Parser.mjs';
 
-/* eslint-disable @engine262/valid-throw */
-
 const isSyntaxCharacter = (c: string) => '^$\\.*+?()[]{}|'.includes(c);
 const isClosingSyntaxCharacter = (c: string) => ')]}|'.includes(c);
 const isDecimalDigit = (c: string) => /[0123456789]/u.test(c);

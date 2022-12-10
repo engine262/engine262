@@ -1,3 +1,7 @@
 !.eslintrc.js
 test/test262/test262
 test/json/JSONTestSuite
+
+# does not support stage 3 decorators
+src/completion.mts
+src/value.mts
