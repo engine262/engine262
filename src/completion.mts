@@ -1,41 +1,64 @@
-// @ts-nocheck
-import { surroundingAgent } from './engine.mjs';
+import { GCMarker, surroundingAgent } from './engine.mjs';
 import {
   Assert,
   CreateBuiltinFunction,
   PerformPromiseThen,
+  PromiseCapabilityRecord,
   PromiseResolve,
 } from './abstract-ops/all.mjs';
 import { Value } from './value.mjs';
-import { kAsyncContext, resume } from './helpers.mjs';
+import { callable, kAsyncContext, resume } from './helpers.mjs';
 
-/** http://tc39.es/ecma262/#sec-completion-record-specification-type */
-export function Completion(init) {
-  if (new.target === undefined) {
-    // 1. Assert: completionRecord is a Completion Record.
-    Assert(init instanceof Completion);
-    // 2. Return completionRecord as the Completion Record of this abstract operation.
-    return init;
-  }
-
-  this.Type = init.Type;
-  this.Value = init.Value;
-  this.Target = init.Target;
+export type CompletionType = 'normal' | 'break' | 'continue' | 'return' | 'throw';
+export type CompletionRecord<T> = Pick<Completion<T>, 'Target' | 'Type' | 'Value'>;
+export interface NormalCompletionRecord<T> {
+  Type: 'normal';
+  Value: T;
+  Target: undefined;
 }
 
-// NON-SPEC
-Completion.prototype.mark = function mark(m) {
-  m(this.Value);
-};
+/** http://tc39.es/ecma262/#sec-completion-record-specification-type */
+// @ts-expect-error
+export declare function Completion<T>(_init: NormalCompletion<T>): NormalCompletion<T>
+// @ts-expect-error
+export declare function Completion<T>(_init: Completion<T>): Completion<T>
+/** http://tc39.es/ecma262/#sec-completion-record-specification-type */
+export @callable((_CompletionClass, _thisValue, [init]: [Completion]) => {
+  // 1. Assert: completionRecord is a Completion Record.
+  Assert(init instanceof Completion);
+  // 2. Return completionRecord as the Completion Record of this abstract operation.
+  return init;
+})
+// @ts-expect-error
+class Completion<T = unknown> {
+  constructor(init: CompletionRecord<T>) {
+    this.Type = init.Type;
+    this.Value = init.Value;
+    this.Target = init.Target;
+  }
+  readonly Type: CompletionType;
+  readonly Value: T;
+  readonly Target: string | undefined;
+
+  // TODO(TS): marker function type
+  // NON-SPEC
+  mark(m: GCMarker) {
+    m(this.Value);
+  }
+}
 
 /** http://tc39.es/ecma262/#sec-normalcompletion */
-export function NormalCompletion(argument) {
+export interface NormalCompletion<T> extends Completion<T> {
+  readonly Type: 'normal';
+  readonly Target: undefined;
+}
+export function NormalCompletion<T>(argument: T): NormalCompletion<T> {
   // 1. Return Completion { [[Type]]: normal, [[Value]]: argument, [[Target]]: empty }.
-  return new Completion({ Type: 'normal', Value: argument, Target: undefined });
+  return new Completion({ Type: 'normal', Value: argument, Target: undefined }) as NormalCompletion<T>;
 }
 
 Object.defineProperty(NormalCompletion, Symbol.hasInstance, {
-  value: function hasInstance(v) {
+  value: function hasInstance(v: any) {
     return v instanceof Completion && v.Type === 'normal';
   },
   writable: true,
@@ -43,20 +66,31 @@ Object.defineProperty(NormalCompletion, Symbol.hasInstance, {
   configurable: true,
 });
 
-export class AbruptCompletion {
-  static [Symbol.hasInstance](v) {
+export abstract class AbruptCompletion<T> extends Completion<T> {
+  private constructor() {
+    Assert(false);
+    super(null!);
+  }
+  declare readonly Type: 'break' | 'continue' | 'return' | 'throw';
+  declare readonly Target: string | undefined;
+  declare readonly Value: T;
+  static [Symbol.hasInstance](v: any) {
     return v instanceof Completion && v.Type !== 'normal';
   }
 }
 
 /** http://tc39.es/ecma262/#sec-throwcompletion */
-export function ThrowCompletion(argument) {
+export function ThrowCompletion<T>(argument: T): ThrowCompletion<T> {
   // 1. Return Completion { [[Type]]: throw, [[Value]]: argument, [[Target]]: empty }.
-  return new Completion({ Type: 'throw', Value: argument, Target: undefined });
+  return new Completion({ Type: 'throw', Value: argument, Target: undefined }) as ThrowCompletion<T>;
+}
+export interface ThrowCompletion<T = unknown> extends Completion<T> {
+  readonly Type: 'throw';
+  readonly Target: undefined;
 }
 
 /** http://tc39.es/ecma262/#sec-updateempty */
-export function UpdateEmpty(completionRecord, value) {
+export function UpdateEmpty<T, Q>(completionRecord: Completion<Q>, value: T): Completion<T | Q> {
   Assert(completionRecord instanceof Completion);
   // 1. Assert: If completionRecord.[[Type]] is either return or throw, then completionRecord.[[Value]] is not empty.
   Assert(!(completionRecord.Type === 'return' || completionRecord.Type === 'throw') || completionRecord.Value !== undefined);
@@ -68,41 +102,50 @@ export function UpdateEmpty(completionRecord, value) {
   return new Completion({ Type: completionRecord.Type, Value: value, Target: completionRecord.Target });
 }
 
-/** http://tc39.es/ecma262/#sec-returnifabrupt */
-export function ReturnIfAbrupt(_completion) {
+/**
+ * http://tc39.es/ecma262/#sec-returnifabrupt
+ * http://tc39.es/ecma262/#sec-returnifabrupt-shorthands ? OperationName()
+ */
+export function ReturnIfAbrupt<T>(_completion: Completion<T> | T): T
+export function ReturnIfAbrupt<T, Q>(_completion: Completion<T> | Q): T | Q
+export function ReturnIfAbrupt<T>(_completion: Completion<T> | T): T {
   /* c8 skip next */
   throw new TypeError('ReturnIfAbrupt requires build');
 }
 
-/** http://tc39.es/ecma262/#sec-returnifabrupt-shorthands ? OperationName() */
-export const Q = ReturnIfAbrupt;
+export { ReturnIfAbrupt as Q };
+const Q = ReturnIfAbrupt;
 
 /** http://tc39.es/ecma262/#sec-returnifabrupt-shorthands ! OperationName() */
-export function X(_completion) {
+export function X<T>(_completion: Completion<T>): T
+export function X<T>(_completion: T): T
+export function X<T, Q>(_completion: Completion<T> | Q): T | Q
+export function X(_completion: any): any {
   /* c8 skip next */
   throw new TypeError('X() requires build');
 }
 
 /** http://tc39.es/ecma262/#sec-ifabruptcloseiterator */
-export function IfAbruptCloseIterator(_value, _iteratorRecord) {
+// TODO(TS):
+export function IfAbruptCloseIterator(_value: Completion, _iteratorRecord: never) {
   /* c8 skip next */
   throw new TypeError('IfAbruptCloseIterator() requires build');
 }
 
 /** http://tc39.es/ecma262/#sec-ifabruptrejectpromise */
-export function IfAbruptRejectPromise(_value, _capability) {
+export function IfAbruptRejectPromise(_value: Completion, _capability: PromiseCapabilityRecord) {
   /* c8 skip next */
   throw new TypeError('IfAbruptRejectPromise requires build');
 }
 
-export function EnsureCompletion(val) {
+export function EnsureCompletion<T>(val: T | Completion<T>): Completion<T> {
   if (val instanceof Completion) {
     return val;
   }
   return NormalCompletion(val);
 }
 
-export function* Await(value) {
+export function* Await(value: Value): Generator<Value, Completion, Completion> {
   // 1. Let asyncContext be the running execution context.
   const asyncContext = surroundingAgent.runningExecutionContext;
   // 2. Let promise be ? PromiseResolve(%Promise%, value).
@@ -122,7 +165,7 @@ export function* Await(value) {
     return Value.undefined;
   };
   // 4. Let onFulfilled be ! CreateBuiltinFunction(fulfilledClosure, 1, "", « »).
-  const onFulfilled = X(CreateBuiltinFunction(fulfilledClosure, 1, new Value(''), []));
+  const onFulfilled = X(CreateBuiltinFunction(fulfilledClosure, 1, Value.of(''), []));
   onFulfilled[kAsyncContext] = asyncContext;
   // 5. Let rejectedClosure be a new Abstract Closure with parameters (reason) that captures asyncContext and performs the following steps when called:
   const rejectedClosure = ([reason = Value.undefined]) => {
@@ -139,7 +182,7 @@ export function* Await(value) {
     return Value.undefined;
   };
   // 6. Let onRejected be ! CreateBuiltinFunction(rejectedClosure, 1, "", « »).
-  const onRejected = X(CreateBuiltinFunction(rejectedClosure, 1, new Value(''), []));
+  const onRejected = X(CreateBuiltinFunction(rejectedClosure, 1, Value.of(''), []));
   onRejected[kAsyncContext] = asyncContext;
   // 7. Perform ! PerformPromiseThen(promise, onFulfilled, onRejected).
   X(PerformPromiseThen(promise, onFulfilled, onRejected));

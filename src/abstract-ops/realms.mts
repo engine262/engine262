@@ -1,6 +1,7 @@
-// @ts-nocheck
 import {
   Descriptor,
+  ObjectValue,
+  UndefinedValue,
   Value,
 } from '../value.mjs';
 import { NewGlobalEnvironment } from '../environment.mjs';
@@ -80,15 +81,23 @@ import { bootstrapWeakRefPrototype } from '../intrinsics/WeakRefPrototype.mjs';
 import { bootstrapWeakRef } from '../intrinsics/WeakRef.mjs';
 import { bootstrapFinalizationRegistryPrototype } from '../intrinsics/FinalizationRegistryPrototype.mjs';
 import { bootstrapFinalizationRegistry } from '../intrinsics/FinalizationRegistry.mjs';
+import type { GCMarker } from '../engine.mjs';
 import {
   Assert,
   DefinePropertyOrThrow,
   F as toNumberValue,
+  FunctionObjectValue,
   OrdinaryObjectCreate,
 } from './all.mjs';
 
 /** http://tc39.es/ecma262/#sec-code-realms */
 export class Realm {
+  Intrinsics: any;
+  GlobalObject: any;
+  GlobalEnv: any;
+  TemplateMap: any;
+  HostDefined: any;
+  randomState: any;
   constructor() {
     this.Intrinsics = undefined;
     this.GlobalObject = undefined;
@@ -99,7 +108,7 @@ export class Realm {
     this.randomState = undefined;
   }
 
-  mark(m) {
+  mark(m: GCMarker) {
     m(this.GlobalObject);
     m(this.GlobalEnv);
     for (const v of Object.values(this.Intrinsics)) {
@@ -121,16 +130,16 @@ export function CreateRealm() {
   return realmRec;
 }
 
-function AddRestrictedFunctionProperties(F, realm) {
+function AddRestrictedFunctionProperties(F: FunctionObjectValue, realm: Realm) {
   Assert(realm.Intrinsics['%ThrowTypeError%']);
   const thrower = realm.Intrinsics['%ThrowTypeError%'];
-  X(DefinePropertyOrThrow(F, new Value('caller'), Descriptor({
+  X(DefinePropertyOrThrow(F, Value.of('caller'), Descriptor({
     Get: thrower,
     Set: thrower,
     Enumerable: Value.false,
     Configurable: Value.true,
   })));
-  X(DefinePropertyOrThrow(F, new Value('arguments'), Descriptor({
+  X(DefinePropertyOrThrow(F, Value.of('arguments'), Descriptor({
     Get: thrower,
     Set: thrower,
     Enumerable: Value.false,
@@ -139,7 +148,7 @@ function AddRestrictedFunctionProperties(F, realm) {
 }
 
 /** http://tc39.es/ecma262/#sec-createintrinsics */
-export function CreateIntrinsics(realmRec) {
+export function CreateIntrinsics(realmRec: Realm) {
   const intrinsics = Object.create(null);
   realmRec.Intrinsics = intrinsics;
 
@@ -257,7 +266,7 @@ export function CreateIntrinsics(realmRec) {
 }
 
 /** http://tc39.es/ecma262/#sec-setrealmglobalobject */
-export function SetRealmGlobalObject(realmRec, globalObj, thisValue) {
+export function SetRealmGlobalObject(realmRec: Realm, globalObj?: ObjectValue | UndefinedValue, thisValue?: ObjectValue | UndefinedValue) {
   const intrinsics = realmRec.Intrinsics;
   if (globalObj === Value.undefined) {
     globalObj = OrdinaryObjectCreate(intrinsics['%Object.prototype%']);
@@ -272,16 +281,16 @@ export function SetRealmGlobalObject(realmRec, globalObj, thisValue) {
 }
 
 /** http://tc39.es/ecma262/#sec-setdefaultglobalbindings */
-export function SetDefaultGlobalBindings(realmRec) {
+export function SetDefaultGlobalBindings(realmRec: Realm) {
   const global = realmRec.GlobalObject;
 
   // Value Properties of the Global Object
-  [
+  ([
     ['Infinity', toNumberValue(Infinity)],
     ['NaN', toNumberValue(NaN)],
     ['undefined', Value.undefined],
-  ].forEach(([name, value]) => {
-    Q(DefinePropertyOrThrow(global, new Value(name), Descriptor({
+  ] as const).forEach(([name, value]) => {
+    Q(DefinePropertyOrThrow(global, Value.of(name), Descriptor({
       Value: value,
       Writable: Value.false,
       Enumerable: Value.false,
@@ -289,7 +298,7 @@ export function SetDefaultGlobalBindings(realmRec) {
     })));
   });
 
-  Q(DefinePropertyOrThrow(global, new Value('globalThis'), Descriptor({
+  Q(DefinePropertyOrThrow(global, Value.of('globalThis'), Descriptor({
     Value: realmRec.GlobalEnv.GlobalThisValue,
     Writable: Value.true,
     Enumerable: Value.false,
@@ -356,7 +365,7 @@ export function SetDefaultGlobalBindings(realmRec) {
     'Math',
     'Reflect',
   ].forEach((name) => {
-    Q(DefinePropertyOrThrow(global, new Value(name), Descriptor({
+    Q(DefinePropertyOrThrow(global, Value.of(name), Descriptor({
       Value: realmRec.Intrinsics[`%${name}%`],
       Writable: Value.true,
       Enumerable: Value.false,

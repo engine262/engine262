@@ -1,29 +1,32 @@
-// @ts-nocheck
 import isUnicodeIDStartRegex from '@unicode/unicode-14.0.0/Binary_Property/ID_Start/regex.js';
 import isUnicodeIDContinueRegex from '@unicode/unicode-14.0.0/Binary_Property/ID_Continue/regex.js';
 import isSpaceSeparatorRegex from '@unicode/unicode-14.0.0/General_Category/Space_Separator/regex.js';
 import { UTF16SurrogatePairToCodePoint } from '../static-semantics/all.mjs';
+import type { Messages, MessageTemplate } from '../messages.mjs';
 import {
   Token,
   TokenNames,
   TokenValues,
   KeywordLookup,
   isKeywordRaw,
+  TokenType,
 } from './tokens.mjs';
+import type { ParseNode } from './Parser.mjs';
 
-const isUnicodeIDStart = (c) => c && isUnicodeIDStartRegex.test(c);
-const isUnicodeIDContinue = (c) => c && isUnicodeIDContinueRegex.test(c);
-export const isDecimalDigit = (c) => c && /\d/u.test(c);
-export const isHexDigit = (c) => c && /[\da-f]/ui.test(c);
-const isOctalDigit = (c) => c && /[0-7]/u.test(c);
-const isBinaryDigit = (c) => (c === '0' || c === '1');
-export const isWhitespace = (c) => c && (/[\u0009\u000B\u000C\u0020\u00A0\uFEFF]/u.test(c) || isSpaceSeparatorRegex.test(c)); // eslint-disable-line no-control-regex
-export const isLineTerminator = (c) => c && /[\r\n\u2028\u2029]/u.test(c);
-const isRegularExpressionFlagPart = (c) => c && (isUnicodeIDContinue(c) || c === '$');
-export const isIdentifierStart = (c) => SingleCharTokens[c] === Token.IDENTIFIER || isUnicodeIDStart(c);
-export const isIdentifierPart = (c) => SingleCharTokens[c] === Token.IDENTIFIER || c === '\u{200C}' || c === '\u{200D}' || isUnicodeIDContinue(c);
-export const isLeadingSurrogate = (cp) => cp >= 0xD800 && cp <= 0xDBFF;
-export const isTrailingSurrogate = (cp) => cp >= 0xDC00 && cp <= 0xDFFF;
+
+const isUnicodeIDStart = (c: string) => c && isUnicodeIDStartRegex.test(c);
+const isUnicodeIDContinue = (c: string) => c && isUnicodeIDContinueRegex.test(c);
+export const isDecimalDigit = (c: string) => c && /\d/u.test(c);
+export const isHexDigit = (c: string) => c && /[\da-f]/ui.test(c);
+const isOctalDigit = (c: string) => c && /[0-7]/u.test(c);
+const isBinaryDigit = (c: string) => (c === '0' || c === '1');
+export const isWhitespace = (c: string) => c && (/[\u0009\u000B\u000C\u0020\u00A0\uFEFF]/u.test(c) || isSpaceSeparatorRegex.test(c)); // eslint-disable-line no-control-regex
+export const isLineTerminator = (c: string) => c && /[\r\n\u2028\u2029]/u.test(c);
+const isRegularExpressionFlagPart = (c: string) => c && (isUnicodeIDContinue(c) || c === '$');
+export const isIdentifierStart = (c: string) => SingleCharTokens[c as keyof typeof SingleCharTokens] === Token.IDENTIFIER || isUnicodeIDStart(c);
+export const isIdentifierPart = (c: string) => SingleCharTokens[c as keyof typeof SingleCharTokens] === Token.IDENTIFIER || c === '\u{200C}' || c === '\u{200D}' || isUnicodeIDContinue(c);
+export const isLeadingSurrogate = (cp: number) => cp >= 0xD800 && cp <= 0xDBFF;
+export const isTrailingSurrogate = (cp: number) => cp >= 0xDC00 && cp <= 0xDFFF;
 
 const SingleCharTokens = {
   '__proto__': null,
@@ -122,24 +125,26 @@ const SingleCharTokens = {
   '#': Token.PRIVATE_IDENTIFIER,
 };
 
-export class Lexer {
-  constructor() {
-    this.currentToken = undefined;
-    this.peekToken = undefined;
-    this.peekAheadToken = undefined;
+export abstract class Lexer {
+  abstract declare source: string;
+  abstract unexpected(...args: any): never;
+  abstract raise<T extends MessageTemplate>(template: T, context?: number | ParseNode | undefined, ...templateArgs: Parameters<Messages[T]>): never;
+  abstract isStrictMode(): boolean;
 
-    this.position = 0;
-    this.line = 1;
-    this.columnOffset = 0;
-    this.scannedValue = undefined;
-    this.lineTerminatorBeforeNextToken = false;
-    this.positionForNextToken = 0;
-    this.lineForNextToken = 0;
-    this.columnForNextToken = 0;
-    this.escapeIndex = -1;
-  }
+  currentToken?: LexerToken;
+  peekToken?: LexerToken;
+  peekAheadToken?: LexerToken;
+  position = 0;
+  line = 1;
+  columnOffset = 0;
+  scannedValue?: string | number | bigint;
+  lineTerminatorBeforeNextToken = false;
+  positionForNextToken = 0;
+  lineForNextToken = 0;
+  columnForNextToken = 0;
+  escapeIndex = -1;
 
-  advance() {
+  advance(): LexerToken {
     this.lineTerminatorBeforeNextToken = false;
     this.escapeIndex = -1;
     const type = this.nextToken();
@@ -164,14 +169,14 @@ export class Lexer {
     } else {
       this.peekToken = this.advance();
     }
-    return this.currentToken;
+    return this.currentToken!;
   }
 
   peek() {
     if (this.peekToken === undefined) {
       this.next();
     }
-    return this.peekToken;
+    return this.peekToken!;
   }
 
   peekAhead() {
@@ -182,7 +187,7 @@ export class Lexer {
     return this.peekAheadToken;
   }
 
-  matches(token, peek) {
+  matches(token: TokenType | string, peek: LexerToken) {
     if (typeof token === 'string') {
       if (peek.type === Token.IDENTIFIER && peek.value === token) {
         const escapeIndex = this.source.slice(peek.startIndex, peek.endIndex).indexOf('\\');
@@ -197,15 +202,15 @@ export class Lexer {
     return peek.type === token;
   }
 
-  test(token) {
-    return this.matches(token, this.peek());
+  test(token: TokenType | string) {
+    return this.matches(token, this.peek()!);
   }
 
-  testAhead(token) {
+  testAhead(token: TokenType | string) {
     return this.matches(token, this.peekAhead());
   }
 
-  eat(token) {
+  eat(token: TokenType | string) {
     if (this.test(token)) {
       this.next();
       return true;
@@ -213,7 +218,7 @@ export class Lexer {
     return false;
   }
 
-  expect(token) {
+  expect(token: TokenType | string) {
     if (this.test(token)) {
       return this.next();
     }
@@ -292,7 +297,7 @@ export class Lexer {
     }
     this.position += 2;
     for (const match of this.source.slice(this.position, end).matchAll(/\r\n?|[\n\u2028\u2029]/ug)) {
-      this.position = match.index;
+      this.position = match.index!;
       this.line += 1;
       this.columnOffset = this.position;
       this.lineTerminatorBeforeNextToken = true;
@@ -300,7 +305,7 @@ export class Lexer {
     this.position = end + 2;
   }
 
-  nextToken() {
+  nextToken(): TokenType {
     this.skipSpace();
 
     // set token location info after skipping space
@@ -315,7 +320,7 @@ export class Lexer {
     this.position += 1;
     const c1 = this.source[this.position];
     if (c.charCodeAt(0) <= 127) {
-      const single = SingleCharTokens[c];
+      const single = SingleCharTokens[c as keyof typeof SingleCharTokens];
       switch (single) {
         case Token.LPAREN:
         case Token.RPAREN:
@@ -589,7 +594,7 @@ export class Lexer {
         10: isDecimalDigit,
         8: isOctalDigit,
         2: isBinaryDigit,
-      }[base];
+      }[base]!;
       if (base !== 10) {
         if (!check(this.source[this.position + 1])) {
           return Token.NUMBER;
@@ -667,12 +672,12 @@ export class Lexer {
       .slice(base === 10 ? start : start + 2, this.position)
       .replace(/_/g, '');
     this.scannedValue = base === 10
-      ? Number.parseFloat(buffer, base)
+      ? Number.parseFloat(buffer)
       : Number.parseInt(buffer, base);
     return Token.NUMBER;
   }
 
-  scanString(char) {
+  scanString(char: string) {
     let buffer = '';
     while (true) {
       if (this.position >= this.source.length) {
@@ -760,7 +765,7 @@ export class Lexer {
     return this.scanHex(4);
   }
 
-  scanHex(length) {
+  scanHex(length: number) {
     if (length === 0) {
       this.raise('InvalidCodePoint', this.position);
     }
@@ -777,7 +782,7 @@ export class Lexer {
     return n;
   }
 
-  scanIdentifierOrKeyword(isPrivate = false) {
+  scanIdentifierOrKeyword(isPrivate = false): TokenType {
     let buffer = '';
     let escapeIndex = -1;
     let check = isIdentifierStart;
@@ -899,4 +904,16 @@ export class Lexer {
       }
     }
   }
+}
+
+export interface LexerToken {
+  readonly type: TokenType;
+  readonly startIndex: number;
+  readonly endIndex: number;
+  readonly line: number;
+  readonly column: number;
+  readonly hadLineTerminatorBefore: boolean;
+  readonly name: string;
+  readonly value?: string | number | bigint;
+  readonly escaped: boolean;
 }

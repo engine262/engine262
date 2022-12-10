@@ -1,7 +1,8 @@
-// @ts-nocheck
+import type { ParseNode } from '../parser/Parser.mjs';
+import type { JSStringValue } from '../value.mjs';
 import { ImportEntriesForModule, ModuleRequests } from './all.mjs';
 
-export function ImportEntries(node) {
+export function ImportEntries(node: ParseNode): ImportEntry[] {
   switch (node.type) {
     case 'Module':
       if (node.ModuleBody) {
@@ -26,4 +27,10 @@ export function ImportEntries(node) {
     default:
       return [];
   }
+}
+
+export interface ImportEntry {
+  readonly LocalName: JSStringValue;
+  readonly ImportName: JSStringValue | 'namespace-object';
+  readonly ModuleRequest: JSStringValue;
 }

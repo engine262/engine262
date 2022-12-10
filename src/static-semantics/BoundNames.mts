@@ -1,11 +1,11 @@
-// @ts-nocheck
-import { OutOfRange } from '../helpers.mjs';
-import { Value } from '../value.mjs';
+import { isArray, OutOfRange } from '../helpers.mjs';
+import type { ParseNode } from '../parser/Parser.mjs';
+import { JSStringValue, Value } from '../value.mjs';
 import { StringValue } from './all.mjs';
 
-export function BoundNames(node) {
-  if (Array.isArray(node)) {
-    const names = [];
+export function BoundNames(node: ParseNode | readonly ParseNode[]): JSStringValue[] {
+  if (isArray(node)) {
+    const names: JSStringValue[] = [];
     for (const item of node) {
       names.push(...BoundNames(item));
     }
@@ -43,7 +43,7 @@ export function BoundNames(node) {
       if (node.BindingIdentifier) {
         return BoundNames(node.BindingIdentifier);
       }
-      return [new Value('*default*')];
+      return [Value.of('*default*')];
     case 'ImportSpecifier':
       return BoundNames(node.ImportedBinding);
     case 'ExportDeclaration':
@@ -65,7 +65,7 @@ export function BoundNames(node) {
         return declarationNames;
       }
       if (node.AssignmentExpression) {
-        return [new Value('*default*')];
+        return [Value.of('*default*')];
       }
       throw new OutOfRange('BoundNames', node);
     case 'SingleNameBinding':

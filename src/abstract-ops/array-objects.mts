@@ -59,7 +59,7 @@ function ArrayDefineOwnProperty(P, Desc) {
     }
     if (index.numberValue() >= oldLen.numberValue()) {
       oldLenDesc.Value = F(index.numberValue() + 1);
-      const succeeded = OrdinaryDefineOwnProperty(A, new Value('length'), oldLenDesc); // eslint-disable-line no-shadow
+      const succeeded = OrdinaryDefineOwnProperty(A, new Value('length'), oldLenDesc);
       Assert(succeeded === Value.true);
     }
     return Value.true;

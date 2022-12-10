@@ -13,6 +13,7 @@ import {
   GetAsyncCycleRoot,
   AsyncBlockStart,
   PromiseCapabilityRecord,
+  Realm,
 } from './abstract-ops/all.mjs';
 import {
   VarScopedDeclarations,
@@ -47,6 +48,8 @@ export class ResolvedBindingRecord {
 
 /** http://tc39.es/ecma262/#sec-abstract-module-records */
 export class AbstractModuleRecord {
+  HostDefined: any;
+  Realm: Realm;
   constructor({
     Realm,
     Environment,

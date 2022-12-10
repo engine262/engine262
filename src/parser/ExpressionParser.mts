@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   TV,
   PropName,
@@ -13,11 +12,19 @@ import {
   isKeyword,
   isAutomaticSemicolon,
 } from './tokens.mjs';
-import { isLineTerminator } from './Lexer.mjs';
+import { isLineTerminator, LexerToken } from './Lexer.mjs';
 import { FunctionParser, FunctionKind } from './FunctionParser.mjs';
-import { RegExpParser } from './RegExpParser.mjs';
+import { RegExpFlags, RegExpParser } from './RegExpParser.mjs';
+import { ParseNode, ParserSyntaxError } from './Parser.mjs';
+import type { PrivateFieldKind } from './Scope.mjs';
+import type { ParserState } from './BaseParser.mjs';
 
-export class ExpressionParser extends FunctionParser {
+export abstract class ExpressionParser extends FunctionParser {
+  abstract parseBindingPattern(): ParseNode;
+  abstract parseInitializerOpt(): ParseNode | null;
+  abstract markNodeStart(node: ParseNode): void;
+  abstract semicolon(): void;
+  abstract declare readonly state: ParserState;
   // Expression :
   //   AssignmentExpression
   //   Expression `,` AssignmentExpression
@@ -56,7 +63,7 @@ export class ExpressionParser extends FunctionParser {
 
     this.scope.pushAssignmentInfo('assign');
     const left = this.parseConditionalExpression();
-    const assignmentInfo = this.scope.popAssignmentInfo();
+    const assignmentInfo = this.scope.popAssignmentInfo()!;
 
     if (left.type === 'IdentifierReference') {
       // `async` [no LineTerminator here] IdentifierReference [no LineTerminator here] `=>`
@@ -120,7 +127,7 @@ export class ExpressionParser extends FunctionParser {
     }
   }
 
-  validateAssignmentTarget(node) {
+  validateAssignmentTarget(node: ParseNode) {
     switch (node.type) {
       case 'IdentifierReference':
         if (this.isStrictMode() && (node.name === 'eval' || node.name === 'arguments')) {
@@ -141,7 +148,7 @@ export class ExpressionParser extends FunctionParser {
         this.validateAssignmentTarget(node.Expression);
         return;
       case 'ArrayLiteral':
-        node.ElementList.forEach((p, i) => {
+        node.ElementList.forEach((p: ParseNode, i: number) => {
           if (p.type === 'SpreadElement' && (i !== node.ElementList.length - 1 || node.hasTrailingComma)) {
             this.raiseEarly('InvalidAssignmentTarget', p);
           }
@@ -153,7 +160,7 @@ export class ExpressionParser extends FunctionParser {
         });
         return;
       case 'ObjectLiteral':
-        node.PropertyDefinitionList.forEach((p, i) => {
+        node.PropertyDefinitionList.forEach((p: ParseNode, i: number) => {
           if (p.type === 'PropertyDefinition' && !p.PropertyName
               && i !== node.PropertyDefinitionList.length - 1) {
             this.raiseEarly('InvalidAssignmentTarget', p);
@@ -271,7 +278,7 @@ export class ExpressionParser extends FunctionParser {
     }
   }
 
-  parseBinaryExpression(precedence, x) {
+  parseBinaryExpression(precedence: number, x?: ParseNode): ParseNode {
     if (!x) {
       if (this.test(Token.PRIVATE_IDENTIFIER)) {
         x = this.parsePrivateIdentifier();
@@ -568,7 +575,7 @@ export class ExpressionParser extends FunctionParser {
           break;
         case Token.LPAREN: {
           // `async` [no LineTerminator here] `(`
-          const couldBeArrow = this.matches('async', this.currentToken)
+          const couldBeArrow = this.matches('async', this.currentToken!)
             && result.type === 'IdentifierReference'
             && !this.peek().hadLineTerminatorBefore;
           if (couldBeArrow) {
@@ -835,7 +842,7 @@ export class ExpressionParser extends FunctionParser {
     return this.parseBracketedDefinition('property');
   }
 
-  parseFunctionExpression(kind) {
+  parseFunctionExpression(kind: FunctionKind) {
     return this.parseFunction(true, kind);
   }
 
@@ -873,7 +880,7 @@ export class ExpressionParser extends FunctionParser {
   //
   // ClassExpression :
   //   `class` BindingIdentifier? ClassTail
-  parseClass(isExpression) {
+  parseClass(isExpression: boolean) {
     const node = this.startNode();
 
     this.expect(Token.CLASS);
@@ -933,7 +940,7 @@ export class ExpressionParser extends FunctionParser {
           }
 
           if (m.ClassElementName?.type === 'PrivateIdentifier') {
-            let type;
+            let type: PrivateFieldKind;
             if (m.type === 'FieldDefinition') {
               type = 'field';
             } else if (m.UniqueFormalParameters) {
@@ -1040,7 +1047,7 @@ export class ExpressionParser extends FunctionParser {
           node.TemplateSpanList.push(buffer);
           this.next();
           if (!tagged) {
-            node.TemplateSpanList.forEach((s) => {
+            node.TemplateSpanList.forEach((s: string) => {
               if (TV(s) === undefined) {
                 this.raise('InvalidTemplateEscape');
               }
@@ -1095,7 +1102,7 @@ export class ExpressionParser extends FunctionParser {
     this.scanRegularExpressionFlags();
     node.RegularExpressionFlags = this.scannedValue;
     try {
-      const parse = (flags) => {
+      const parse = (flags: RegExpFlags) => {
         const p = new RegExpParser(node.RegularExpressionBody);
         return p.scope(flags, () => p.parsePattern());
       };
@@ -1108,17 +1115,17 @@ export class ExpressionParser extends FunctionParser {
         }
       }
     } catch (e) {
-      if (e instanceof SyntaxError) {
-        this.raise('Raw', node.location.startIndex + e.position + 1, e.message);
+      if (e instanceof ParserSyntaxError) {
+        this.raise('Raw', node.location.startIndex + (e.position ?? 0) + 1, e.message);
       } else {
         throw e;
       }
     }
-    const fakeToken = {
+    const fakeToken: LexerToken = {
       endIndex: this.position - 1,
       line: this.line - 1,
       column: this.position - this.columnOffset,
-    };
+    } as any;
     this.next();
     this.currentToken = fakeToken;
     return this.finishNode(node, 'RegularExpressionLiteral');
@@ -1187,10 +1194,10 @@ export class ExpressionParser extends FunctionParser {
     if (this.test(Token.ARROW) && !this.peek().hadLineTerminatorBefore) {
       node.Arguments = expressions;
       node.arrowInfo = arrowInfo;
-      assignmentInfo.clear();
+      assignmentInfo!.clear();
       return this.finishNode(node, 'CoverParenthesizedExpressionAndArrowParameterList');
     } else {
-      this.scope.arrowInfo?.merge(arrowInfo);
+      this.scope.arrowInfo?.merge(arrowInfo!);
     }
 
     // ParenthesizedExpression :
@@ -1265,7 +1272,7 @@ export class ExpressionParser extends FunctionParser {
   //   `async` [no LineTerminator here] ClassElementName `(` UniqueFormalParameters `)` `{` AsyncFunctionBody `}`
   // AsyncGeneratorMethod :
   //   `async` [no LineTerminator here] `*` ClassElementName `(` UniqueFormalParameters `)` `{` AsyncGeneratorBody `}`
-  parseBracketedDefinition(type) {
+  parseBracketedDefinition(type: 'property' | 'class element') {
     const node = this.startNode();
 
     if (type === 'property' && this.eat(Token.ELLIPSIS)) {

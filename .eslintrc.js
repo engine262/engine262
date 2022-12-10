@@ -22,6 +22,8 @@ module.exports = {
         'no-redeclare': 'off',
         'import/export': 'off',
         'no-dupe-class-members': 'off',
+        // false positive
+        'no-shadow': 'off',
       },
     },
   ],

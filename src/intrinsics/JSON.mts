@@ -312,7 +312,7 @@ const codeUnitTable = new Map([
 
 /** http://tc39.es/ecma262/#sec-serializejsonproperty */
 function SerializeJSONProperty(state, key, holder) {
-  let value = Q(Get(holder, key)); // eslint-disable-line no-shadow
+  let value = Q(Get(holder, key));
   if (value instanceof ObjectValue || value instanceof BigIntValue) {
     const toJSON = Q(GetV(value, new Value('toJSON')));
     if (IsCallable(toJSON) === Value.true) {
@@ -370,7 +370,7 @@ function UnicodeEscape(C) {
   return `\u005Cu${n.toString(16).padStart(4, '0')}`;
 }
 
-function QuoteJSONString(value) { // eslint-disable-line no-shadow
+function QuoteJSONString(value) {
   let product = '\u0022';
   const cpList = [...value.stringValue()].map((c) => c.codePointAt(0));
   for (const C of cpList) {

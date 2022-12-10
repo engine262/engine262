@@ -37,7 +37,12 @@ module.exports = () => ({
           spec: true,
           bugfixes: true,
         },
-      ], '@babel/preset-typescript'],
+      ], [
+        '@babel/preset-typescript',
+        {
+          allowDeclareFields: true,
+        },
+      ]],
       extensions: ['.mjs', '.mts'],
       plugins: [
         './scripts/transform.js',

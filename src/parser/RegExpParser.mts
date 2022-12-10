@@ -1,4 +1,4 @@
-// @ts-nocheck
+import type { Mutable } from '../helpers.mjs';
 import {
   BinaryUnicodeProperties,
   NonbinaryUnicodeProperties,
@@ -16,30 +16,37 @@ import {
   isTrailingSurrogate,
   isHexDigit,
 } from './Lexer.mjs';
+import { ParserSyntaxError } from './Parser.mjs';
 
 /* eslint-disable @engine262/valid-throw */
 
-const isSyntaxCharacter = (c) => '^$\\.*+?()[]{}|'.includes(c);
-const isClosingSyntaxCharacter = (c) => ')]}|'.includes(c);
-const isDecimalDigit = (c) => /[0123456789]/u.test(c);
-const isControlLetter = (c) => /[a-zA-Z]/u.test(c);
-const isIdentifierContinue = (c) => c && /\p{ID_Continue}/u.test(c);
+const isSyntaxCharacter = (c: string) => '^$\\.*+?()[]{}|'.includes(c);
+const isClosingSyntaxCharacter = (c: string) => ')]}|'.includes(c);
+const isDecimalDigit = (c: string) => /[0123456789]/u.test(c);
+const isControlLetter = (c: string) => /[a-zA-Z]/u.test(c);
+const isIdentifierContinue = (c: string) => c && /\p{ID_Continue}/u.test(c);
 
 const PLUS_U = 1 << 0;
 const PLUS_N = 1 << 1;
 
+export interface RegExpFlags {
+  readonly U: boolean;
+  readonly N?: undefined | boolean;
+}
+
 export class RegExpParser {
-  constructor(source) {
+  readonly source: string;
+  position = 0;
+  readonly capturingGroups: Atom[] = [];
+  readonly groupSpecifiers: Map<string, number> = new Map();
+  readonly decimalEscapes: DecimalEscape[] = [];
+  readonly groupNameRefs: AtomEscape[] = [];
+  state = 0;
+  constructor(source: string) {
     this.source = source;
-    this.position = 0;
-    this.capturingGroups = [];
-    this.groupSpecifiers = new Map();
-    this.decimalEscapes = [];
-    this.groupNameRefs = [];
-    this.state = 0;
   }
 
-  scope(flags, f) {
+  scope<T>(flags: RegExpFlags, f: () => T) {
     const oldState = this.state;
 
     if (flags.U === true) {
@@ -69,8 +76,8 @@ export class RegExpParser {
     return (this.state & PLUS_N) === PLUS_N;
   }
 
-  raise(message, position = this.position) {
-    const e = new SyntaxError(message);
+  raise(message: string, position = this.position) {
+    const e = new ParserSyntaxError(message);
     e.position = position;
     throw e;
   }
@@ -79,11 +86,11 @@ export class RegExpParser {
     return this.source[this.position];
   }
 
-  test(c) {
+  test(c: string) {
     return this.source[this.position] === c;
   }
 
-  eat(c) {
+  eat(c: string) {
     if (this.test(c)) {
       this.next();
       return true;
@@ -97,7 +104,7 @@ export class RegExpParser {
     return c;
   }
 
-  expect(c) {
+  expect(c: string) {
     if (!this.eat(c)) {
       this.raise(`Expected ${c} but got ${this.peek()}`);
     }
@@ -105,8 +112,8 @@ export class RegExpParser {
 
   // Pattern ::
   //   Disjunction
-  parsePattern() {
-    const node = {
+  parsePattern(): PatternNode {
+    const node: Mutable<PatternNode> = {
       type: 'Pattern',
       groupSpecifiers: this.groupSpecifiers,
       capturingGroups: this.capturingGroups,
@@ -122,7 +129,7 @@ export class RegExpParser {
       }
     });
     this.groupNameRefs.forEach((g) => {
-      if (!node.groupSpecifiers.has(g.GroupName)) {
+      if (!node.groupSpecifiers.has(g.GroupName!)) {
         this.raise('Invalid group name', g.position);
       }
     });
@@ -132,8 +139,8 @@ export class RegExpParser {
   // Disjunction ::
   //   Alternative
   //   Alternative `|` Disjunction
-  parseDisjunction() {
-    const node = {
+  parseDisjunction(): Disjunction {
+    const node: Mutable<Disjunction> = {
       type: 'Disjunction',
       Alternative: undefined,
       Disjunction: undefined,
@@ -145,11 +152,12 @@ export class RegExpParser {
     return node;
   }
 
+
   // Alternative ::
   //   [empty]
   //   Term Alternative
-  parseAlternative() {
-    let node = {
+  parseAlternative(): Alternative {
+    let node: Alternative = {
       type: 'Alternative',
       Term: undefined,
       Alternative: undefined,
@@ -169,7 +177,7 @@ export class RegExpParser {
   //   Assertion
   //   Atom
   //   Atom Quantifier
-  parseTerm() {
+  parseTerm(): Assertion | Term {
     const assertion = this.maybeParseAssertion();
     if (assertion) {
       return assertion;
@@ -191,7 +199,7 @@ export class RegExpParser {
   //   `(` `?` `!` Disjunction `)`
   //   `(` `?` `<=` Disjunction `)`
   //   `(` `?` `<!` Disjunction `)`
-  maybeParseAssertion() {
+  maybeParseAssertion(): Assertion | undefined {
     if (this.eat('^')) {
       return { type: 'Assertion', subtype: '^' };
     }
@@ -266,8 +274,8 @@ export class RegExpParser {
   //   `{` DecimalDigits `}`
   //   `{` DecimalDigits `,` `}`
   //   `{` DecimalDigits `,` DecimalDigits `}`
-  maybeParseQuantifier() {
-    let QuantifierPrefix;
+  maybeParseQuantifier(): Quantifier | undefined {
+    let QuantifierPrefix: string | Mutable<QuantifierNodePrefix> | undefined;
 
     if (this.eat('*')) {
       QuantifierPrefix = '*';
@@ -312,7 +320,7 @@ export class RegExpParser {
   //   CharacterClass
   //   `(` GroupSpecifier Disjunction `)`
   //   `(` `?` `:` Disjunction `)`
-  parseAtom() {
+  parseAtom(): Atom | AtomEscape {
     if (this.eat('.')) {
       return { type: 'Atom', subtype: '.', enclosedCapturingParentheses: 0 };
     }
@@ -320,7 +328,7 @@ export class RegExpParser {
       return this.parseAtomEscape();
     }
     if (this.eat('(')) {
-      const node = {
+      const node: Mutable<Atom_Group> = {
         type: 'Atom',
         capturingParenthesesBefore: this.capturingGroups.length,
         enclosedCapturingParentheses: 0,
@@ -369,9 +377,9 @@ export class RegExpParser {
   //   CharacterClassEscape
   //   CharacterEscape
   //   [+N] `k` GroupName
-  parseAtomEscape() {
+  parseAtomEscape(): AtomEscape {
     if (this.plusN && this.eat('k')) {
-      const node = {
+      const node: AtomEscape = {
         type: 'AtomEscape',
         position: this.position,
         GroupName: this.parseGroupName(),
@@ -411,7 +419,7 @@ export class RegExpParser {
   //   [+U] SyntaxCharacter
   //   [+U] `/`
   //   [~U] SourceCharacter but not UnicodeIDContinue
-  parseCharacterEscape() {
+  parseCharacterEscape(): CharacterEscape {
     switch (this.peek()) {
       case 'f':
       case 'n':
@@ -434,7 +442,7 @@ export class RegExpParser {
             IdentityEscape: 'c',
           };
         }
-        const p = c.codePointAt(0);
+        const p = c.codePointAt(0)!;
         if ((p >= 65 && p <= 90) || (p >= 97 && p <= 122)) {
           return {
             type: 'CharacterEscape',
@@ -511,7 +519,7 @@ export class RegExpParser {
 
   // DecimalEscape ::
   //   NonZeroDigit DecimalDigits? [lookahead != DecimalDigit]
-  maybeParseDecimalEscape() {
+  maybeParseDecimalEscape(): DecimalEscape | undefined {
     if (isDecimalDigit(this.source[this.position]) && this.source[this.position] !== '0') {
       const start = this.position;
       let buffer = this.source[this.position];
@@ -520,7 +528,7 @@ export class RegExpParser {
         buffer += this.source[this.position];
         this.position += 1;
       }
-      const node = {
+      const node: DecimalEscape = {
         type: 'DecimalEscape',
         position: start,
         value: Number.parseInt(buffer, 10),
@@ -540,7 +548,7 @@ export class RegExpParser {
   //   `W`
   //   [+U] `p{` UnicodePropertyValueExpression `}`
   //   [+U] `P{` UnicodePropertyValueExpression `}`
-  maybeParseCharacterClassEscape() {
+  maybeParseCharacterClassEscape(): CharacterClassEscape | undefined {
     switch (this.peek()) {
       case 'd':
       case 'D':
@@ -658,9 +666,9 @@ export class RegExpParser {
   // CharacterClass ::
   //   `[` ClassRanges `]`
   //   `[` `^` ClassRanges `]`
-  parseCharacterClass() {
+  parseCharacterClass(): CharacterClass {
     this.expect('[');
-    const node = {
+    const node: Mutable<CharacterClass> = {
       type: 'CharacterClass',
       invert: false,
       ClassRanges: undefined,
@@ -675,7 +683,7 @@ export class RegExpParser {
   //   [empty]
   //   NonemptyClassRanges
   parseClassRanges() {
-    const ranges = [];
+    const ranges: (ClassRange | readonly [ClassRange, ClassRange])[] = [];
     while (!this.test(']')) {
       if (this.position >= this.source.length) {
         this.raise('Unexpected end of CharacterClass');
@@ -716,7 +724,7 @@ export class RegExpParser {
   //   [+U] `-`
   //   CharacterClassEscape
   //   CharacterEscape
-  parseClassAtom() {
+  parseClassAtom(): ClassEscape | CharacterClassEscape | ClassAtom {
     if (this.eat('\\')) {
       if (this.eat('b')) {
         return {
@@ -823,7 +831,7 @@ export class RegExpParser {
 
   // HexEscapeSequence ::
   //   `x` HexDigit HexDigit
-  parseHexEscapeSequence() {
+  parseHexEscapeSequence(): HexEscapeSequence {
     this.expect('x');
     const HexDigit_a = this.next();
     if (!isHexDigit(HexDigit_a)) {
@@ -840,7 +848,7 @@ export class RegExpParser {
     };
   }
 
-  scanHex(length) {
+  scanHex(length: number) {
     if (length === 0) {
       this.raise('Invalid code point');
     }
@@ -864,7 +872,7 @@ export class RegExpParser {
   //   [+U] `u` HexNonSurrogate
   //   [~U] `u` Hex4Digits
   //   [+U] `u{` CodePoint `}`
-  maybeParseRegExpUnicodeEscapeSequence() {
+  maybeParseRegExpUnicodeEscapeSequence(): RegExpUnicodeEscapeSequence | undefined {
     const start = this.position;
     if (!this.eat('u')) {
       this.position = start;
@@ -917,4 +925,117 @@ export class RegExpParser {
       Hex4Digits: lead,
     };
   }
+}
+export interface QuantifierNodePrefix {
+  readonly DecimalDigits_a: number | undefined;
+  readonly DecimalDigits_b: number | undefined;
+}
+export interface UnicodePropertyValueExpressionNode {
+  readonly type: 'UnicodePropertyValueExpression';
+  readonly LoneUnicodePropertyNameOrValue?: string
+  readonly UnicodePropertyName?: string;
+  readonly UnicodePropertyValue?: string;
+}
+export interface PatternNode {
+  readonly type: 'Pattern';
+  readonly groupSpecifiers: ReadonlyMap<string, number>;
+  readonly capturingGroups: readonly Atom[];
+  readonly Disjunction: Disjunction | undefined;
+}
+export interface Disjunction {
+  readonly type: 'Disjunction';
+  readonly Alternative: Alternative | undefined;
+  readonly Disjunction: Disjunction | undefined;
+}
+export interface Alternative {
+  readonly type: 'Alternative';
+  readonly Term: Term | Assertion | undefined;
+  readonly Alternative: Alternative | undefined;
+}
+export interface Term {
+  readonly type: 'Term';
+  readonly capturingParenthesesBefore: number;
+  readonly Atom: Atom | AtomEscape;
+  readonly Quantifier: Quantifier | undefined;
+}
+export interface Assertion {
+  readonly type: 'Assertion';
+  readonly subtype: '^' | '$' | 'b' | 'B' | '?=' | '?!' | '?<=' | '?<!';
+  readonly Disjunction?: Disjunction;
+}
+export interface Quantifier {
+  readonly type: 'Quantifier';
+  readonly QuantifierPrefix: string | QuantifierNodePrefix;
+  readonly greedy: boolean;
+}
+export type Atom = Atom_Rest | Atom_Group;
+export interface Atom_Rest {
+  readonly type: 'Atom';
+  readonly subtype?: '.';
+  readonly enclosedCapturingParentheses?: number;
+  readonly PatternCharacter?: string;
+  readonly CharacterClass?: CharacterClass;
+}
+export interface Atom_Group {
+  readonly type: 'Atom';
+  readonly capturingParenthesesBefore: number;
+  readonly enclosedCapturingParentheses: number;
+  readonly capturing: boolean;
+  readonly GroupSpecifier?: string;
+  readonly Disjunction?: Disjunction;
+}
+export interface AtomEscape {
+  readonly type: 'AtomEscape';
+  readonly position?: number;
+  readonly GroupName?: string;
+  readonly CharacterClassEscape?: CharacterClassEscape;
+  readonly DecimalEscape?: DecimalEscape;
+  readonly CharacterEscape?: CharacterEscape;
+}
+export interface CharacterEscape {
+  readonly type: 'CharacterEscape';
+  readonly ControlEscape?: string;
+  readonly IdentityEscape?: string;
+  readonly ControlLetter?: string;
+  readonly HexEscapeSequence?: HexEscapeSequence;
+  readonly subtype?: string;
+  readonly RegExpUnicodeEscapeSequence?: RegExpUnicodeEscapeSequence;
+}
+export interface DecimalEscape {
+  readonly type: 'DecimalEscape';
+  readonly position: number;
+  readonly value: number;
+}
+export interface CharacterClassEscape {
+  readonly type: 'CharacterClassEscape';
+  readonly value: string;
+  readonly UnicodePropertyValueExpression?: UnicodePropertyValueExpressionNode;
+}
+export interface CharacterClass {
+  readonly type: 'CharacterClass';
+  readonly invert: boolean;
+  readonly ClassRanges?: readonly (ClassRange | readonly [ClassRange, ClassRange])[];
+}
+export type ClassRange = ClassEscape | CharacterClassEscape | ClassAtom;
+export interface ClassEscape {
+  readonly type: 'ClassEscape';
+  readonly value?: 'b' | '-';
+  readonly CharacterEscape?: CharacterEscape;
+}
+export interface ClassAtom {
+  readonly type: 'ClassAtom';
+  readonly SourceCharacter?: string;
+  readonly value?: '-'
+}
+export interface HexEscapeSequence {
+  readonly type: 'HexEscapeSequence';
+  readonly HexDigit_a: string;
+  readonly HexDigit_b: string;
+}
+export interface RegExpUnicodeEscapeSequence {
+  readonly type: 'RegExpUnicodeEscapeSequence';
+  readonly CodePoint?: number;
+  readonly HexLeadSurrogate?: number;
+  readonly HexTrailSurrogate?: number;
+  readonly Hex4Digits?: number;
 }

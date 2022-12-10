@@ -1,8 +1,9 @@
-// @ts-nocheck
+import type { FEATURES } from '../engine.mjs';
 import { ModuleParser } from './ModuleParser.mjs';
 import { Token } from './tokens.mjs';
 
-export class LanguageParser extends ModuleParser {
+export abstract class LanguageParser extends ModuleParser {
+  abstract feature(name: FEATURES): boolean;
   // Script : ScriptBody?
   parseScript() {
     if (this.feature('hashbang')) {
@@ -26,7 +27,7 @@ export class LanguageParser extends ModuleParser {
       variable: true,
       variableFunctions: true,
     }, () => {
-      const directives = [];
+      const directives: string[] = [];
       node.StatementList = this.parseStatementList(Token.EOS, directives);
       node.strict = directives.includes('use strict');
     });

@@ -27,6 +27,7 @@ import {
   SameValue,
   GetFunctionRealm,
   isFunctionObject,
+  FunctionObjectValue,
 } from './all.mjs';
 
 // This file covers abstract operations defined in
@@ -34,6 +35,9 @@ import {
 
 /** http://tc39.es/ecma262/#sec-promisecapability-records */
 export class PromiseCapabilityRecord {
+  Promise: UndefinedValue | ObjectValue;
+  Resolve: UndefinedValue | FunctionObjectValue;
+  Reject: UndefinedValue | FunctionObjectValue;
   constructor() {
     this.Promise = Value.undefined;
     this.Resolve = Value.undefined;
@@ -362,7 +366,7 @@ function NewPromiseReactionJob(reaction, argument) {
 }
 
 /** http://tc39.es/ecma262/#sec-performpromisethen */
-export function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) {
+export function PerformPromiseThen(promise, onFulfilled: Value, onRejected: Value, resultCapability?: PromiseCapabilityRecord) {
   // 1. Assert: IsPromise(promise) is true.
   Assert(IsPromise(promise) === Value.true);
   // 2. If resultCapability is not present, then

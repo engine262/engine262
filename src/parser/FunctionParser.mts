@@ -1,15 +1,19 @@
-// @ts-nocheck
 import { IsSimpleParameterList } from '../static-semantics/all.mjs';
-import { getDeclarations } from './Scope.mjs';
+import { ArrowInfoStack, getDeclarations } from './Scope.mjs';
 import { Token } from './tokens.mjs';
 import { IdentifierParser } from './IdentifierParser.mjs';
+import type { ParseNode } from './Parser.mjs';
 
-export const FunctionKind = {
-  NORMAL: 0,
-  ASYNC: 1,
-};
+export enum FunctionKind {
+  NORMAL = 0,
+  ASYNC = 1,
+}
 
-export class FunctionParser extends IdentifierParser {
+export abstract class FunctionParser extends IdentifierParser {
+  abstract parseStatementList(endToken: number, directives?: readonly string[]): ParseNode[];
+  abstract parseAssignmentExpression(): ParseNode;
+  abstract parseBindingElement(): ParseNode;
+  abstract parseBindingRestElement(): ParseNode;
   // FunctionDeclaration :
   //   `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
   //   [+Default] `function` `(` FormalParameters `)` `{` FunctionBody `}`
@@ -30,7 +34,7 @@ export class FunctionParser extends IdentifierParser {
   //   [+Default] `async` `function` `(` FormalParameters `)` `{` AsyncFunctionBody `}`
   // Async`FunctionExpression :
   //   `async` `function` BindingIdentifier? `(` FormalParameters `)` `{` AsyncFunctionBody `}`
-  parseFunction(isExpression, kind) {
+  parseFunction(isExpression: boolean, kind: FunctionKind) {
     const isAsync = kind === FunctionKind.ASYNC;
     const node = this.startNode();
     if (isAsync) {
@@ -94,7 +98,7 @@ export class FunctionParser extends IdentifierParser {
     return this.finishNode(node, name);
   }
 
-  validateFormalParameters(parameters, body, wantsUnique = false) {
+  validateFormalParameters(parameters: readonly ParseNode[], body: ParseNode, wantsUnique = false) {
     const isStrict = body.strict;
     const hasStrictDirective = body.directives && body.directives.includes('use strict');
     if (wantsUnique === false && !IsSimpleParameterList(parameters)) {
@@ -127,7 +131,7 @@ export class FunctionParser extends IdentifierParser {
       });
   }
 
-  convertArrowParameter(node) {
+  convertArrowParameter(node: ParseNode): ParseNode {
     switch (node.type) {
       case 'IdentifierReference': {
         node.type = 'BindingIdentifier';
@@ -145,7 +149,7 @@ export class FunctionParser extends IdentifierParser {
       case 'ArrayLiteral': {
         const wrap = this.startNode();
         node.BindingElementList = [];
-        node.ElementList.forEach((p, i) => {
+        node.ElementList.forEach((p: ParseNode, i: number) => {
           const c = this.convertArrowParameter(p);
           if (c.type === 'BindingRestElement') {
             if (i !== node.ElementList.length - 1) {
@@ -165,7 +169,7 @@ export class FunctionParser extends IdentifierParser {
       case 'ObjectLiteral': {
         const wrap = this.startNode();
         node.BindingPropertyList = [];
-        node.PropertyDefinitionList.forEach((p) => {
+        node.PropertyDefinitionList.forEach((p: ParseNode) => {
           const c = this.convertArrowParameter(p);
           if (c.type === 'BindingRestProperty') {
             node.BindingRestProperty = c;
@@ -223,18 +227,18 @@ export class FunctionParser extends IdentifierParser {
     }
   }
 
-  parseArrowFunction(node, { arrowInfo, Arguments }, kind) {
+  parseArrowFunction(node: ParseNode, { arrowInfo, Arguments }: ParseNode | { arrowInfo?: ArrowInfoStack, Arguments: readonly ParseNode[] }, kind: FunctionKind) {
     const isAsync = kind === FunctionKind.ASYNC;
     this.expect(Token.ARROW);
     if (arrowInfo) {
-      arrowInfo.awaitExpressions.forEach((e) => {
+      arrowInfo.awaitExpressions.forEach((e: ParseNode) => {
         this.raiseEarly('AwaitInFormalParameters', e);
       });
-      arrowInfo.yieldExpressions.forEach((e) => {
+      arrowInfo.yieldExpressions.forEach((e: ParseNode) => {
         this.raiseEarly('YieldInFormalParameters', e);
       });
       if (isAsync) {
-        arrowInfo.awaitIdentifiers.forEach((e) => {
+        arrowInfo.awaitIdentifiers.forEach((e: ParseNode) => {
           this.raiseEarly('AwaitInFormalParameters', e);
         });
       }
@@ -247,7 +251,7 @@ export class FunctionParser extends IdentifierParser {
       this.scope.with({
         parameters: true,
       }, () => {
-        node.ArrowParameters = Arguments.map((p) => this.convertArrowParameter(p));
+        node.ArrowParameters = Arguments.map((p: ParseNode) => this.convertArrowParameter(p));
       });
       const body = this.parseConciseBody(isAsync);
       this.validateFormalParameters(node.ArrowParameters, body, true);
@@ -256,7 +260,7 @@ export class FunctionParser extends IdentifierParser {
     return this.finishNode(node, `${isAsync ? 'Async' : ''}ArrowFunction`);
   }
 
-  parseConciseBody(isAsync) {
+  parseConciseBody(isAsync: boolean) {
     if (this.test(Token.LBRACE)) {
       return this.parseFunctionBody(isAsync, false, true);
     }
@@ -279,7 +283,7 @@ export class FunctionParser extends IdentifierParser {
     if (this.eat(Token.RPAREN)) {
       return [];
     }
-    const params = [];
+    const params: ParseNode[] = [];
     this.scope.with({ parameters: true }, () => {
       while (true) {
         if (this.test(Token.ELLIPSIS)) {
@@ -309,7 +313,7 @@ export class FunctionParser extends IdentifierParser {
     return this.parseFormalParameters();
   }
 
-  parseFunctionBody(isAsync, isGenerator, isArrow) {
+  parseFunctionBody(isAsync: boolean, isGenerator: boolean, isArrow: boolean) {
     const node = this.startNode();
     this.expect(Token.LBRACE);
     this.scope.with({

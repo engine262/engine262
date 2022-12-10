@@ -367,7 +367,7 @@ export function OrdinaryOwnPropertyKeys(O) {
 }
 
 /** http://tc39.es/ecma262/#sec-ordinaryobjectcreate */
-export function OrdinaryObjectCreate(proto, additionalInternalSlotsList) {
+export function OrdinaryObjectCreate(proto, additionalInternalSlotsList?: readonly string[]) {
   // 1. Let internalSlotsList be « [[Prototype]], [[Extensible]] ».
   const internalSlotsList = ['Prototype', 'Extensible'];
   // 2. If additionalInternalSlotsList is present, append each of its elements to internalSlotsList.

@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { surroundingAgent } from './engine.mjs';
+import { GCMarker, surroundingAgent } from './engine.mjs';
 import {
   Assert,
   CreateBuiltinFunction,
@@ -18,13 +17,15 @@ import {
   ToUint32,
   Z,
   F,
+  FunctionObjectValue,
 } from './abstract-ops/all.mjs';
 import { EnvironmentRecord } from './environment.mjs';
 import { Completion, X } from './completion.mjs';
-import { ValueMap, OutOfRange } from './helpers.mjs';
+import { ValueMap, OutOfRange, callable } from './helpers.mjs';
+import type { PrivateElementRecord } from './runtime-semantics/MethodDefinitionEvaluation.mjs';
 
 /** http://tc39.es/ecma262/#sec-ecmascript-language-types */
-export class Value {
+export abstract class Value {
   constructor(value = undefined) {
     if (new.target !== Value) {
       return this;
@@ -38,14 +39,39 @@ export class Value {
       case 'bigint':
         return new BigIntValue(value);
       case 'function':
-        return CreateBuiltinFunction(value, 0, new Value(''), []);
+        return CreateBuiltinFunction(value, 0, Value.of(''), []);
       default:
         throw new OutOfRange('new Value', value);
     }
   }
+  static of(value: string): StringValue
+  static of(value: number): NumberValue
+  static of(value: bigint): BigIntValue
+  static of(value: (...args: any[]) => any): FunctionObjectValue
+  static of(value: string | number): StringValue | NumberValue
+  static of(value: any): Value {
+    switch (typeof value) {
+      case 'string':
+        return new StringValue(value);
+      case 'number':
+        return new NumberValue(value);
+      case 'bigint':
+        return new BigIntValue(value);
+      case 'function':
+        return CreateBuiltinFunction(value, 0, Value.of(''), []);
+      default:
+        throw new OutOfRange('new Value', value);
+    }
+  }
+
+  static declare readonly null: NullValue;
+  static declare readonly undefined: UndefinedValue;
+  static declare readonly true: BooleanValue;
+  static declare readonly false: BooleanValue;
 }
 
-export class PrimitiveValue extends Value {}
+export class PrimitiveValue extends Value { }
+export type PropertyKeyValue = StringValue | SymbolValue;
 
 /** http://tc39.es/ecma262/#sec-ecmascript-language-types-undefined-type */
 export class UndefinedValue extends PrimitiveValue {}
@@ -55,7 +81,8 @@ export class NullValue extends PrimitiveValue {}
 
 /** http://tc39.es/ecma262/#sec-ecmascript-language-types-boolean-type */
 export class BooleanValue extends PrimitiveValue {
-  constructor(v) {
+  readonly boolean: boolean;
+  constructor(v: boolean) {
     super();
     this.boolean = v;
   }
@@ -78,7 +105,8 @@ Object.defineProperties(Value, {
 
 /** http://tc39.es/ecma262/#sec-ecmascript-language-types-string-type */
 class StringValue extends PrimitiveValue {
-  constructor(string) {
+  readonly string: string;
+  constructor(string: string) {
     super();
     this.string = string;
   }
@@ -92,36 +120,35 @@ export { StringValue as JSStringValue };
 
 /** http://tc39.es/ecma262/#sec-ecmascript-language-types-symbol-type */
 export class SymbolValue extends PrimitiveValue {
-  constructor(Description) {
+  readonly Description: StringValue;
+  constructor(Description: StringValue) {
     super();
     this.Description = Description;
   }
 }
 
-export const wellKnownSymbols = Object.create(null);
-for (const name of [
-  'asyncIterator',
-  'hasInstance',
-  'isConcatSpreadable',
-  'iterator',
-  'match',
-  'matchAll',
-  'replace',
-  'search',
-  'species',
-  'split',
-  'toPrimitive',
-  'toStringTag',
-  'unscopables',
-]) {
-  const sym = new SymbolValue(new StringValue(`Symbol.${name}`));
-  wellKnownSymbols[name] = sym;
-}
+export const wellKnownSymbols = {
+  asyncIterator: new SymbolValue(new StringValue('Symbol.asyncIterator')),
+  hasInstance: new SymbolValue(new StringValue('Symbol.hasInstance')),
+  isConcatSpreadable: new SymbolValue(new StringValue('Symbol.isConcatSpreadable')),
+  iterator: new SymbolValue(new StringValue('Symbol.iterator')),
+  match: new SymbolValue(new StringValue('Symbol.match')),
+  matchAll: new SymbolValue(new StringValue('Symbol.matchAll')),
+  replace: new SymbolValue(new StringValue('Symbol.replace')),
+  search: new SymbolValue(new StringValue('Symbol.search')),
+  species: new SymbolValue(new StringValue('Symbol.species')),
+  split: new SymbolValue(new StringValue('Symbol.split')),
+  toPrimitive: new SymbolValue(new StringValue('Symbol.toPrimitive')),
+  toStringTag: new SymbolValue(new StringValue('Symbol.toStringTag')),
+  unscopables: new SymbolValue(new StringValue('Symbol.unscopables')),
+} as const;
+Object.setPrototypeOf(wellKnownSymbols, null);
 Object.freeze(wellKnownSymbols);
 
 /** http://tc39.es/ecma262/#sec-ecmascript-language-types-number-type */
 export class NumberValue extends PrimitiveValue {
-  constructor(number) {
+  readonly number: number;
+  constructor(number: number) {
     super();
     this.number = number;
   }
@@ -143,7 +170,7 @@ export class NumberValue extends PrimitiveValue {
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-number-unaryMinus */
-  static unaryMinus(x) {
+  static unaryMinus(x: NumberValue) {
     if (x.isNaN()) {
       return F(NaN);
     }
@@ -151,7 +178,7 @@ export class NumberValue extends PrimitiveValue {
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-number-bitwiseNOT */
-  static bitwiseNOT(x) {
+  static bitwiseNOT(x: NumberValue) {
     // 1. Let oldValue be ! ToInt32(x).
     const oldValue = X(ToInt32(x));
     // 2. Return the result of applying bitwise complement to oldValue. The result is a signed 32-bit integer.
@@ -159,38 +186,38 @@ export class NumberValue extends PrimitiveValue {
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-number-exponentiate */
-  static exponentiate(base, exponent) {
+  static exponentiate(base: NumberValue, exponent: NumberValue) {
     return F(base.numberValue() ** exponent.numberValue());
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-number-multiply */
-  static multiply(x, y) {
+  static multiply(x: NumberValue, y: NumberValue) {
     return F(x.numberValue() * y.numberValue());
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-number-divide */
-  static divide(x, y) {
+  static divide(x: NumberValue, y: NumberValue) {
     return F(x.numberValue() / y.numberValue());
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-number-remainder */
-  static remainder(n, d) {
+  static remainder(n: NumberValue, d: NumberValue) {
     return F(n.numberValue() % d.numberValue());
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-number-add */
-  static add(x, y) {
+  static add(x: NumberValue, y: NumberValue) {
     return F(x.numberValue() + y.numberValue());
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-number-subtract */
-  static subtract(x, y) {
+  static subtract(x: NumberValue, y: NumberValue) {
     // The result of - operator is x + (-y).
     return NumberValue.add(x, F(-y.numberValue()));
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-number-leftShift */
-  static leftShift(x, y) {
+  static leftShift(x: NumberValue, y: NumberValue) {
     // 1. Let lnum be ! ToInt32(x).
     const lnum = X(ToInt32(x));
     // 2. Let rnum be ! ToUint32(y).
@@ -202,7 +229,7 @@ export class NumberValue extends PrimitiveValue {
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-number-signedRightShift */
-  static signedRightShift(x, y) {
+  static signedRightShift(x: NumberValue, y: NumberValue) {
     // 1. Let lnum be ! ToInt32(x).
     const lnum = X(ToInt32(x));
     // 2. Let rnum be ! ToUint32(y).
@@ -215,7 +242,7 @@ export class NumberValue extends PrimitiveValue {
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-number-unsignedRightShift */
-  static unsignedRightShift(x, y) {
+  static unsignedRightShift(x: NumberValue, y: NumberValue) {
     // 1. Let lnum be ! ToInt32(x).
     const lnum = X(ToInt32(x));
     // 2. Let rnum be ! ToUint32(y).
@@ -228,7 +255,7 @@ export class NumberValue extends PrimitiveValue {
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-number-lessThan */
-  static lessThan(x, y) {
+  static lessThan(x: NumberValue, y: NumberValue) {
     if (x.isNaN()) {
       return Value.undefined;
     }
@@ -257,7 +284,7 @@ export class NumberValue extends PrimitiveValue {
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-number-equal */
-  static equal(x, y) {
+  static equal(x: NumberValue, y: NumberValue) {
     if (x.isNaN()) {
       return Value.false;
     }
@@ -279,7 +306,7 @@ export class NumberValue extends PrimitiveValue {
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-number-sameValue */
-  static sameValue(x, y) {
+  static sameValue(x: NumberValue, y: NumberValue) {
     if (x.isNaN() && y.isNaN()) {
       return Value.true;
     }
@@ -298,7 +325,7 @@ export class NumberValue extends PrimitiveValue {
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-number-sameValueZero */
-  static sameValueZero(x, y) {
+  static sameValueZero(x: NumberValue, y: NumberValue) {
     if (x.isNaN() && y.isNaN()) {
       return Value.true;
     }
@@ -317,48 +344,47 @@ export class NumberValue extends PrimitiveValue {
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-number-bitwiseAND */
-  static bitwiseAND(x, y) {
+  static bitwiseAND(x: NumberValue, y: NumberValue) {
     // 1. Return NumberBitwiseOp(&, x, y).
     return NumberBitwiseOp('&', x, y);
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-number-bitwiseXOR */
-  static bitwiseXOR(x, y) {
+  static bitwiseXOR(x: NumberValue, y: NumberValue) {
     // 1. Return NumberBitwiseOp(^, x, y).
     return NumberBitwiseOp('^', x, y);
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-number-bitwiseOR */
-  static bitwiseOR(x, y) {
+  static bitwiseOR(x: NumberValue, y: NumberValue) {
     // 1. Return NumberBitwiseOp(|, x, y).
     return NumberBitwiseOp('|', x, y);
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-number-tostring */
-  static toString(x) {
+  static override toString(x: NumberValue): StringValue {
     if (x.isNaN()) {
-      return new Value('NaN');
+      return Value.of('NaN');
     }
     const xVal = x.numberValue();
     if (xVal === 0) {
-      return new Value('0');
+      return Value.of('0');
     }
     if (xVal < 0) {
       const str = X(NumberValue.toString(F(-xVal))).stringValue();
-      return new Value(`-${str}`);
+      return Value.of(`-${str}`);
     }
     if (x.isInfinity()) {
-      return new Value('Infinity');
+      return Value.of('Infinity');
     }
     // TODO: implement properly
-    return new Value(`${xVal}`);
+    return Value.of(`${xVal}`);
   }
+  static readonly unit = new NumberValue(1);
 }
 
-NumberValue.unit = new NumberValue(1);
-
 /** http://tc39.es/ecma262/#sec-numberbitwiseop */
-function NumberBitwiseOp(op, x, y) {
+function NumberBitwiseOp(op: '&' | '|' | '^', x: NumberValue, y: NumberValue) {
   // 1. Let lnum be ! ToInt32(x).
   const lnum = X(ToInt32(x));
   // 2. Let rnum be ! ToUint32(y).
@@ -378,7 +404,8 @@ function NumberBitwiseOp(op, x, y) {
 
 /** http://tc39.es/ecma262/#sec-ecmascript-language-types-bigint-type */
 export class BigIntValue extends PrimitiveValue {
-  constructor(bigint) {
+  readonly bigint: bigint;
+  constructor(bigint: bigint) {
     super();
     this.bigint = bigint;
   }
@@ -396,7 +423,7 @@ export class BigIntValue extends PrimitiveValue {
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-bigint-unaryMinus */
-  static unaryMinus(x) {
+  static unaryMinus(x: BigIntValue) {
     if (x.bigintValue() === 0n) {
       return Z(0n);
     }
@@ -404,12 +431,12 @@ export class BigIntValue extends PrimitiveValue {
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseNOT */
-  static bitwiseNOT(x) {
+  static bitwiseNOT(x: BigIntValue) {
     return Z(-x.bigintValue() - 1n);
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-bigint-exponentiate */
-  static exponentiate(base, exponent) {
+  static exponentiate(base: BigIntValue, exponent: BigIntValue) {
     // 1. If exponent < 0n, throw a RangeError exception.
     if (exponent.bigintValue() < 0n) {
       return surroundingAgent.Throw('RangeError', 'BigIntNegativeExponent');
@@ -423,12 +450,12 @@ export class BigIntValue extends PrimitiveValue {
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-bigint-multiply */
-  static multiply(x, y) {
+  static multiply(x: BigIntValue, y: BigIntValue) {
     return Z(x.bigintValue() * y.bigintValue());
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-bigint-divide */
-  static divide(x, y) {
+  static divide(x: BigIntValue, y: BigIntValue) {
     // 1. If y is 0n, throw a RangeError exception.
     if (y.bigintValue() === 0n) {
       return surroundingAgent.Throw('RangeError', 'BigIntDivideByZero');
@@ -440,7 +467,7 @@ export class BigIntValue extends PrimitiveValue {
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-bigint-remainder */
-  static remainder(n, d) {
+  static remainder(n: BigIntValue, d: BigIntValue) {
     // 1. If d is 0n, throw a RangeError exception.
     if (d.bigintValue() === 0n) {
       return surroundingAgent.Throw('RangeError', 'BigIntDivideByZero');
@@ -459,85 +486,84 @@ export class BigIntValue extends PrimitiveValue {
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-bigint-add */
-  static add(x, y) {
+  static add(x: BigIntValue, y: BigIntValue) {
     return Z(x.bigintValue() + y.bigintValue());
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-bigint-subtract */
-  static subtract(x, y) {
+  static subtract(x: BigIntValue, y: BigIntValue) {
     return Z(x.bigintValue() - y.bigintValue());
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-bigint-leftShift */
-  static leftShift(x, y) {
+  static leftShift(x: BigIntValue, y: BigIntValue) {
     return Z(x.bigintValue() << y.bigintValue()); // eslint-disable-line no-bitwise
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-bigint-signedRightShift */
-  static signedRightShift(x, y) {
+  static signedRightShift(x: BigIntValue, y: BigIntValue) {
     // 1. Return BigInt::leftShift(x, -y).
     return BigIntValue.leftShift(x, Z(-y.bigintValue()));
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-bigint-unsignedRightShift */
-  static unsignedRightShift(_x, _y) {
+  static unsignedRightShift(_x: BigIntValue, _y: BigIntValue) {
     return surroundingAgent.Throw('TypeError', 'BigIntUnsignedRightShift');
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-bigint-lessThan */
-  static lessThan(x, y) {
+  static lessThan(x: BigIntValue, y: BigIntValue) {
     return x.bigintValue() < y.bigintValue() ? Value.true : Value.false;
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-bigint-equal */
-  static equal(x, y) {
+  static equal(x: BigIntValue, y: BigIntValue) {
     // Return true if x and y have the same mathematical integer value and false otherwise.
     return x.bigintValue() === y.bigintValue() ? Value.true : Value.false;
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-bigint-sameValue */
-  static sameValue(x, y) {
+  static sameValue(x: BigIntValue, y: BigIntValue) {
     // 1. Return BigInt::equal(x, y).
     return BigIntValue.equal(x, y);
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-bigint-sameValueZero */
-  static sameValueZero(x, y) {
+  static sameValueZero(x: BigIntValue, y: BigIntValue) {
     // 1. Return BigInt::equal(x, y).
     return BigIntValue.equal(x, y);
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseAND */
-  static bitwiseAND(x, y) {
+  static bitwiseAND(x: BigIntValue, y: BigIntValue) {
     // 1. Return BigIntBitwiseOp(&, x, y).
     return BigIntBitwiseOp('&', x, y);
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseXOR */
-  static bitwiseXOR(x, y) {
+  static bitwiseXOR(x: BigIntValue, y: BigIntValue) {
     // 1. Return BigIntBitwiseOp(^, x, y).
     return BigIntBitwiseOp('^', x, y);
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseOR */
-  static bitwiseOR(x, y) {
+  static bitwiseOR(x: BigIntValue, y: BigIntValue) {
     // 1. Return BigIntBitwiseOp(|, x, y);
     return BigIntBitwiseOp('|', x, y);
   }
 
   /** http://tc39.es/ecma262/#sec-numeric-types-bigint-tostring */
-  static toString(x) {
+  static override toString(x: BigIntValue): StringValue {
     // 1. If x is less than zero, return the string-concatenation of the String "-" and ! BigInt::toString(-x).
     if (x.bigintValue() < 0n) {
       const str = X(BigIntValue.toString(Z(-x.bigintValue()))).stringValue();
-      return new Value(`-${str}`);
+      return Value.of(`-${str}`);
     }
     // 2. Return the String value consisting of the code units of the digits of the decimal representation of x.
-    return new Value(`${x.bigintValue()}`);
+    return Value.of(`${x.bigintValue()}`);
   }
+  static readonly unit = new BigIntValue(1n);
 }
-
-BigIntValue.unit = new BigIntValue(1n);
 
 /*
 /** http://tc39.es/ecma262/#sec-binaryand */
@@ -589,7 +615,7 @@ BigIntValue.unit = new BigIntValue(1n);
 // }
 
 /** http://tc39.es/ecma262/#sec-bigintbitwiseop */
-function BigIntBitwiseOp(op, x, y) {
+function BigIntBitwiseOp(op: '&' | '|' | '^', x: BigIntValue, y: BigIntValue) {
   // TODO: figure out why this doesn't work, probably the modulo.
   /*
   // 1. Assert: op is "&", "|", or "^".
@@ -658,7 +684,8 @@ function BigIntBitwiseOp(op, x, y) {
 
 /** http://tc39.es/ecma262/#sec-private-names */
 export class PrivateName extends Value {
-  constructor(Description) {
+  readonly Description: StringValue;
+  constructor(Description: StringValue) {
     super();
 
     this.Description = Description;
@@ -667,11 +694,13 @@ export class PrivateName extends Value {
 
 /** http://tc39.es/ecma262/#sec-object-type */
 export class ObjectValue extends Value {
-  constructor(internalSlotsList) {
+  readonly properties: ValueMap<StringValue | SymbolValue, Descriptor>;
+  readonly internalSlotsList: readonly string[];
+  readonly PrivateElements: PrivateElementRecord[];
+  constructor(internalSlotsList: readonly string[]) {
     super();
 
     this.PrivateElements = [];
-
     this.properties = new ValueMap();
     this.internalSlotsList = internalSlotsList;
   }
@@ -680,7 +709,7 @@ export class ObjectValue extends Value {
     return OrdinaryGetPrototypeOf(this);
   }
 
-  SetPrototypeOf(V) {
+  SetPrototypeOf(V: Value) {
     return OrdinarySetPrototypeOf(this, V);
   }
 
@@ -692,27 +721,27 @@ export class ObjectValue extends Value {
     return OrdinaryPreventExtensions(this);
   }
 
-  GetOwnProperty(P) {
+  GetOwnProperty(P: PropertyKeyValue) {
     return OrdinaryGetOwnProperty(this, P);
   }
 
-  DefineOwnProperty(P, Desc) {
+  DefineOwnProperty(P: PropertyKeyValue, Desc: Descriptor) {
     return OrdinaryDefineOwnProperty(this, P, Desc);
   }
 
-  HasProperty(P) {
+  HasProperty(P: PropertyKeyValue) {
     return OrdinaryHasProperty(this, P);
   }
 
-  Get(P, Receiver) {
+  Get(P: PropertyKeyValue, Receiver: Value) {
     return OrdinaryGet(this, P, Receiver);
   }
 
-  Set(P, V, Receiver) {
+  Set(P: PropertyKeyValue, V: Value, Receiver: Value) {
     return OrdinarySet(this, P, V, Receiver);
   }
 
-  Delete(P) {
+  Delete(P: PropertyKeyValue) {
     return OrdinaryDelete(this, P);
   }
 
@@ -721,21 +750,26 @@ export class ObjectValue extends Value {
   }
 
   // NON-SPEC
-  mark(m) {
+  mark(m: GCMarker) {
     m(this.properties);
     this.internalSlotsList.forEach((s) => {
+      // @ts-ignore
       m(this[s]);
     });
   }
 }
 
 export class ReferenceRecord {
+  Base: 'unresolvable' | Value;
+  ReferencedName: StringValue | SymbolValue | PrivateName;
+  Strict: BooleanValue;
+  ThisValue: ObjectValue | undefined;
   constructor({
     Base,
     ReferencedName,
     Strict,
     ThisValue,
-  }) {
+  }: Pick<ReferenceRecord, 'Base' | 'ReferencedName' | 'Strict' | 'ThisValue'>) {
     this.Base = Base;
     this.ReferencedName = ReferencedName;
     this.Strict = Strict;
@@ -743,47 +777,51 @@ export class ReferenceRecord {
   }
 
   // NON-SPEC
-  mark(m) {
+  mark(m: GCMarker) {
     m(this.Base);
     m(this.ReferencedName);
     m(this.ThisValue);
   }
 }
 
-export function Descriptor(O) {
-  if (new.target === undefined) {
-    return new Descriptor(O);
+// @ts-expect-error
+export function Descriptor(O: Pick<Descriptor, 'Configurable' | 'Enumerable' | 'Get' | 'Set' | 'Value' | 'Writable'>): Descriptor
+// @ts-expect-error
+export @callable() class Descriptor {
+  readonly Value?: Value;
+  readonly Get?: FunctionObjectValue;
+  readonly Set?: FunctionObjectValue;
+  readonly Writable?: BooleanValue;
+  readonly Enumerable?: BooleanValue;
+  readonly Configurable?: BooleanValue;
+  constructor(O: Pick<Descriptor, 'Configurable' | 'Enumerable' | 'Get' | 'Set' | 'Value' | 'Writable'>) {
+    this.Value = O.Value;
+    this.Get = O.Get;
+    this.Set = O.Set;
+    this.Writable = O.Writable;
+    this.Enumerable = O.Enumerable;
+    this.Configurable = O.Configurable;
   }
-
-  this.Value = O.Value;
-  this.Get = O.Get;
-  this.Set = O.Set;
-  this.Writable = O.Writable;
-  this.Enumerable = O.Enumerable;
-  this.Configurable = O.Configurable;
+  everyFieldIsAbsent() {
+    return this.Value === undefined
+          && this.Get === undefined
+          && this.Set === undefined
+          && this.Writable === undefined
+          && this.Enumerable === undefined
+          && this.Configurable === undefined;
+  }
+  // NON-SPEC
+  mark(m: GCMarker) {
+    m(this.Value);
+    m(this.Get);
+    m(this.Set);
+  }
 }
 
-Descriptor.prototype.everyFieldIsAbsent = function everyFieldIsAbsent() {
-  return this.Value === undefined
-    && this.Get === undefined
-    && this.Set === undefined
-    && this.Writable === undefined
-    && this.Enumerable === undefined
-    && this.Configurable === undefined;
-};
-
-// NON-SPEC
-Descriptor.prototype.mark = function mark(m) {
-  m(this.Value);
-  m(this.Get);
-  m(this.Set);
-};
-
 export class DataBlock extends Uint8Array {
-  constructor(sizeOrBuffer, ...restArgs) {
+  constructor(sizeOrBuffer: number | ArrayBuffer, byteOffset?: number, length?: number) {
     if (sizeOrBuffer instanceof ArrayBuffer) {
-      // fine.
-      super(sizeOrBuffer, ...restArgs);
+      super(sizeOrBuffer, byteOffset, length);
     } else {
       Assert(typeof sizeOrBuffer === 'number');
       super(sizeOrBuffer);
@@ -791,7 +829,7 @@ export class DataBlock extends Uint8Array {
   }
 }
 
-export function Type(val) {
+export function Type(val: Value) {
   if (val instanceof UndefinedValue) {
     return 'Undefined';
   }
@@ -848,7 +886,7 @@ export function Type(val) {
 }
 
 // Used for Type(x)::y
-export function TypeForMethod(val) {
+export function TypeForMethod(val: Value) {
   if (val instanceof Value) {
     return val.constructor;
   }

@@ -1,5 +1,7 @@
-// @ts-nocheck
-const MaybeAssignTokens = [
+type Token = [string, string | null, (number | null)?];
+// TODO(TS): change to enum
+export type TokenType = number & { __brand: 'TokenType' };
+const MaybeAssignTokens: Token[] = [
   // Logical
   ['NULLISH', '??', 3],
   ['OR', '||', 4],
@@ -22,7 +24,7 @@ const MaybeAssignTokens = [
   ['SUB', '-', 12],
 ];
 
-export const RawTokens = [
+export const RawTokens: Token[] = [
   // BEGIN PropertyOrCall
   // BEGIN Member
   // BEGIN Template
@@ -54,7 +56,7 @@ export const RawTokens = [
   ['ARROW', '=>'],
   // BEGIN Assign
   ['ASSIGN', '=', 2],
-  ...MaybeAssignTokens.map((t) => [`ASSIGN_${t[0]}`, `${t[1]}=`, 2]),
+  ...MaybeAssignTokens.map((t): Token => [`ASSIGN_${t[0]}`, `${t[1]}=`, 2]),
   // END Assign
   // END ArrowOrAssign
 
@@ -142,9 +144,9 @@ export const RawTokens = [
 
 export const Token = RawTokens
   .reduce((obj, [name], i) => {
-    obj[name] = i;
+    obj[name] = i as TokenType;
     return obj;
-  }, Object.create(null));
+  }, Object.create(null) as Record<string, TokenType>);
 
 export const TokenNames = RawTokens.map((r) => r[0]);
 
@@ -154,22 +156,22 @@ export const TokenPrecedence = RawTokens.map((r) => (r[2] || 0));
 
 const Keywords = RawTokens
   .filter(([name, raw]) => name.toLowerCase() === raw)
-  .map(([, raw]) => raw);
+  .map(([, raw]) => raw!);
 
 export const KeywordLookup = Keywords
   .reduce((obj, kw) => {
     obj[kw] = Token[kw.toUpperCase()];
     return obj;
-  }, Object.create(null));
+  }, Object.create(null) as Record<string, TokenType>);
 
 const KeywordTokens = new Set(Object.values(KeywordLookup));
 
-const isInRange = (t, l, h) => t >= l && t <= h;
-export const isAutomaticSemicolon = (t) => isInRange(t, Token.SEMICOLON, Token.EOS);
-export const isMember = (t) => isInRange(t, Token.TEMPLATE, Token.LBRACK);
-export const isPropertyOrCall = (t) => isInRange(t, Token.TEMPLATE, Token.LPAREN);
-export const isKeyword = (t) => KeywordTokens.has(t);
-export const isKeywordRaw = (s) => Keywords.includes(s);
+const isInRange = (t: number, l: number, h: number) => t >= l && t <= h;
+export const isAutomaticSemicolon = (t: number) => isInRange(t, Token.SEMICOLON, Token.EOS);
+export const isMember = (t: number) => isInRange(t, Token.TEMPLATE, Token.LBRACK);
+export const isPropertyOrCall = (t: number) => isInRange(t, Token.TEMPLATE, Token.LPAREN);
+export const isKeyword = (t: TokenType) => KeywordTokens.has(t);
+export const isKeywordRaw = (s: string) => Keywords.includes(s);
 
 const ReservedWordsStrict = [
   'implements', 'interface', 'let',
@@ -177,4 +179,4 @@ const ReservedWordsStrict = [
   'public', 'static', 'yield',
 ];
 
-export const isReservedWordStrict = (s) => ReservedWordsStrict.includes(s);
+export const isReservedWordStrict = (s: string) => ReservedWordsStrict.includes(s);

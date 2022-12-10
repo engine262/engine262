@@ -10,6 +10,8 @@ import {
   UndefinedValue,
   Value,
   PrivateName,
+  BooleanValue,
+  NullValue,
 } from '../value.mjs';
 import {
   EnsureCompletion,
@@ -26,7 +28,10 @@ import {
   GlobalEnvironmentRecord,
   NewFunctionEnvironment,
 } from '../environment.mjs';
-import { unwind } from '../helpers.mjs';
+import { kAsyncContext, Mutable, unwind } from '../helpers.mjs';
+import type { ScriptRecord } from '../parse.mjs';
+import type { AbstractModuleRecord } from '../modules.mjs';
+import type { ParseNode } from '../parser/Parser.mjs';
 import {
   Assert,
   Call,
@@ -501,7 +506,7 @@ function BuiltinFunctionConstruct(argumentsList, newTarget) {
 }
 
 /** http://tc39.es/ecma262/#sec-createbuiltinfunction */
-export function CreateBuiltinFunction(steps, length, name, internalSlotsList, realm, prototype, prefix, isConstructor = Value.false) {
+export function CreateBuiltinFunction(steps, length, name, internalSlotsList, realm?, prototype?, prefix?, isConstructor = Value.false): FunctionObjectValue {
   // 1. Assert: steps is either a set of algorithm steps or other definition of a function's behaviour provided in this specification.
   Assert(typeof steps === 'function');
   // 2. If realm is not present, set realm to the current Realm Record.
@@ -515,7 +520,7 @@ export function CreateBuiltinFunction(steps, length, name, internalSlotsList, re
     prototype = realm.Intrinsics['%Function.prototype%'];
   }
   // 5. Let func be a new built-in function object that when called performs the action described by steps. The new function object has internal slots whose names are the elements of internalSlotsList.
-  const func = X(MakeBasicObject(['Prototype', 'Extensible', 'Realm', 'ScriptOrModule', 'InitialName'].concat(internalSlotsList)));
+  const func: Mutable<FunctionObjectValue> = X(MakeBasicObject(['Prototype', 'Extensible', 'Realm', 'ScriptOrModule', 'InitialName'].concat(internalSlotsList)));
   func.Call = BuiltinFunctionCall;
   if (isConstructor === Value.true) {
     func.Construct = BuiltinFunctionConstruct;
@@ -543,6 +548,16 @@ export function CreateBuiltinFunction(steps, length, name, internalSlotsList, re
   }
   // 13. Return func.
   return func;
+}
+
+export interface FunctionObjectValue extends ObjectValue {
+  Prototype: ObjectValue | NullValue;
+  Extensible: BooleanValue;
+  readonly Realm: Realm;
+  readonly ScriptOrModule: AbstractModuleRecord | ScriptRecord;
+  readonly ECMAScriptCode: ParseNode;
+  readonly nativeFunction: (...args: any[]) => any;
+  [kAsyncContext]: ExecutionContext;
 }
 
 /** http://tc39.es/ecma262/#sec-preparefortailcall */

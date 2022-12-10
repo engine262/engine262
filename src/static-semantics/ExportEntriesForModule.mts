@@ -1,11 +1,11 @@
-// @ts-nocheck
-import { Value } from '../value.mjs';
+import { JSStringValue, NullValue, Value } from '../value.mjs';
+import type { ParseNode } from '../parser/Parser.mjs';
 import { OutOfRange } from '../helpers.mjs';
-import { StringValue } from './all.mjs';
+import { ExportEntry, StringValue } from './all.mjs';
 
-export function ExportEntriesForModule(node, module) {
+export function ExportEntriesForModule(node: ParseNode, module: JSStringValue | NullValue): ExportEntry[] {
   if (Array.isArray(node)) {
-    const specs = [];
+    const specs: ExportEntry[] = [];
     node.forEach((n) => {
       specs.push(...ExportEntriesForModule(n, module));
     });
@@ -17,7 +17,7 @@ export function ExportEntriesForModule(node, module) {
         // 1. Let exportName be the StringValue of ModuleExportName.
         const exportName = StringValue(node.ModuleExportName);
         // 2. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~all~, [[LocalName]]: null, [[ExportName]]: exportName }.
-        const entry = {
+        const entry: ExportEntry = {
           ModuleRequest: module,
           ImportName: 'all',
           LocalName: Value.null,
@@ -27,7 +27,7 @@ export function ExportEntriesForModule(node, module) {
         return [entry];
       } else {
         // 1. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~all-but-default~, [[LocalName]]: null, [[ExportName]]: null }.
-        const entry = {
+        const entry: ExportEntry = {
           ModuleRequest: module,
           ImportName: 'all-but-default',
           LocalName: Value.null,

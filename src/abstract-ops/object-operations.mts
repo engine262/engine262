@@ -5,6 +5,7 @@ import {
   Value,
   ObjectValue,
   wellKnownSymbols,
+  PropertyKeyValue,
 } from '../value.mjs';
 import {
   surroundingAgent,
@@ -122,7 +123,7 @@ export function CreateDataPropertyOrThrow(O, P, V) {
 }
 
 /** http://tc39.es/ecma262/#sec-definepropertyorthrow */
-export function DefinePropertyOrThrow(O, P, desc) {
+export function DefinePropertyOrThrow(O: ObjectValue, P: PropertyKeyValue, desc: Descriptor) {
   Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
   const success = Q(O.DefineOwnProperty(P, desc));
@@ -189,7 +190,7 @@ export function Call(F, V, argumentsList) {
 }
 
 /** http://tc39.es/ecma262/#sec-construct */
-export function Construct(F, argumentsList, newTarget) {
+export function Construct(F, argumentsList, newTarget?) {
   if (!newTarget) {
     newTarget = F;
   }

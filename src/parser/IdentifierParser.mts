@@ -1,4 +1,4 @@
-// @ts-nocheck
+import type { Messages, MessageTemplate } from '../messages.mjs';
 import {
   Token,
   isKeyword,
@@ -6,8 +6,15 @@ import {
   isKeywordRaw,
 } from './tokens.mjs';
 import { BaseParser } from './BaseParser.mjs';
+import type { ParseNode, ParserSyntaxError } from './Parser.mjs';
+import type { Scope } from './Scope.mjs';
+import type { LexerToken } from './Lexer.mjs';
 
-export class IdentifierParser extends BaseParser {
+export abstract class IdentifierParser extends BaseParser {
+  abstract startNode(inheritStart?: ParseNode): ParseNode;
+  abstract finishNode(node: ParseNode, kind: string): ParseNode;
+  abstract raiseEarly<T extends MessageTemplate>(template: T, context?: number | LexerToken | ParseNode, ...templateArgs: Parameters<Messages[T]>): ParserSyntaxError;
+  readonly declare abstract scope: Scope;
   // IdentifierName
   parseIdentifierName() {
     const node = this.startNode();
@@ -106,7 +113,7 @@ export class IdentifierParser extends BaseParser {
     return this.finishNode(node, 'IdentifierReference');
   }
 
-  validateIdentifierReference(name, token) {
+  validateIdentifierReference(name: string, token: ParseNode | LexerToken) {
     if (name === 'yield' && (this.scope.hasYield() || this.scope.isModule())) {
       this.raiseEarly('UnexpectedReservedWordStrict', token);
     }

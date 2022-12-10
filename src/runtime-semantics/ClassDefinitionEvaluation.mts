@@ -158,7 +158,7 @@ export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
         return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', surroundingAgent.activeFunctionObject);
       }
       // iii. Let F be the active function object.
-      const F = surroundingAgent.activeFunctionObject; // eslint-disable-line no-shadow
+      const F = surroundingAgent.activeFunctionObject;
       let result;
       // iv. If F.[[ConstructorKind]] is derived, then
       if (F.ConstructorKind === 'derived') {

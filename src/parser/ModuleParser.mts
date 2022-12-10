@@ -1,10 +1,10 @@
-// @ts-nocheck
 import { IsStringWellFormedUnicode, StringValue } from '../static-semantics/all.mjs';
 import { Token, isKeywordRaw } from './tokens.mjs';
 import { StatementParser } from './StatementParser.mjs';
 import { FunctionKind } from './FunctionParser.mjs';
+import type { ParseNode } from './Parser.mjs';
 
-export class ModuleParser extends StatementParser {
+export abstract class ModuleParser extends StatementParser {
   // ImportDeclaration :
   //   `import` ImportClause FromClause `;`
   //   `import` ModuleSpecifier `;`
@@ -175,7 +175,7 @@ export class ModuleParser extends StatementParser {
             node.ExportFromClause = NamedExports;
             node.FromClause = this.parseFromClause();
           } else {
-            NamedExports.ExportsList.forEach((n) => {
+            NamedExports.ExportsList.forEach((n: ParseNode) => {
               if (n.localName.type === 'StringLiteral') {
                 this.raiseEarly('UnexpectedToken', n.localName);
               }

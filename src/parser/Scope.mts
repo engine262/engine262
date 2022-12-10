@@ -1,32 +1,25 @@
-// @ts-nocheck
-import { OutOfRange } from '../helpers.mjs';
+import { isArray, OutOfRange } from '../helpers.mjs';
+import type { LexerToken } from './Lexer.mjs';
+import type { ParseNode, Parser, ParserSyntaxError } from './Parser.mjs';
 
-export const Flag = {
-  __proto__: null,
-};
-[
-  'return',
-  'await',
-  'yield',
-  'parameters',
-  'newTarget',
-  'importMeta',
-  'superCall',
-  'superProperty',
-  'in',
-  'default',
-  'module',
-  'classStaticBlock',
-].forEach((name, i) => {
-  /* c8 ignore next */
-  if (i > 31) {
-    throw new RangeError(name);
-  }
-  Flag[name] = 1 << i;
-});
+export enum Flag {
+  none = 0,
+  return = 1 << 0,
+  await = 1 << 1,
+  yield = 1 << 2,
+  parameters = 1 << 3,
+  newTarget = 1 << 4,
+  importMeta = 1 << 5,
+  superCall = 1 << 6,
+  superProperty = 1 << 7,
+  in = 1 << 8,
+  default = 1 << 9,
+  module = 1 << 10,
+  classStaticBlock = 1 << 11,
+}
 
-export function getDeclarations(node) {
-  if (Array.isArray(node)) {
+export function getDeclarations(node: ParseNode | readonly ParseNode[]): (ParseNode | { node: ParseNode, name: string })[] {
+  if (isArray(node)) {
     return node.flatMap((n) => getDeclarations(n));
   }
   switch (node.type) {
@@ -111,19 +104,69 @@ export function getDeclarations(node) {
       throw new OutOfRange('getDeclarations', node);
   }
 }
+export type WithFlag = {
+  variableFunctions?: boolean;
+  lexical?: boolean;
+  strict?: boolean;
+  variable?: boolean;
+  private?: boolean;
+  label?: string;
+} & Partial<Record<keyof typeof Flag, boolean | undefined>>;
+export interface PrivateScope {
+  outer: PrivateScope | undefined;
+  names: Map<string, Set<PrivateFieldKind>>;
+}
+
+export interface ScopeStack {
+  flags: WithFlag;
+  lexicals: Set<string>;
+  variables: Set<string>;
+  functions: Set<string>;
+  parameters: Set<string>;
+}
+
+export interface Label {
+  type: string | null;
+  name?: string;
+  nextToken?: LexerToken | null;
+}
+
+export interface ArrowInfoStack {
+  isAsync: boolean;
+  hasTrailingComma: boolean;
+  yieldExpressions: ParseNode[];
+  awaitExpressions: ParseNode[];
+  awaitIdentifiers: ParseNode[];
+  merge(other: ArrowInfoStack): void;
+}
+
+export interface AssignInfoStack {
+  type: 'for' | 'assign' | 'arrow';
+  earlyErrors: ParserSyntaxError[];
+  clear(): void;
+}
+
+export interface UndefinedPrivateNameAccess {
+  node: ParseNode;
+  name: string;
+  scope: PrivateScope;
+}
+
+export type PrivateFieldKind = 'field' | 'method' | 'get' | 'set';
 
 export class Scope {
-  constructor(parser) {
+  readonly parser: Parser;
+  readonly scopeStack: ScopeStack[] = [];
+  labels: Label[] = [];
+  readonly arrowInfoStack: (ArrowInfoStack | null)[] = [];
+  readonly assignmentInfoStack: AssignInfoStack[] = [];
+  readonly exports = new Set<string>();
+  readonly undefinedExports = new Map<string, ParseNode>();
+  privateScope?: PrivateScope;
+  readonly undefinedPrivateAccesses: UndefinedPrivateNameAccess[] = [];
+  flags = Flag.none;
+  constructor(parser: Parser) {
     this.parser = parser;
-    this.scopeStack = [];
-    this.labels = [];
-    this.arrowInfoStack = [];
-    this.assignmentInfoStack = [];
-    this.exports = new Set();
-    this.undefinedExports = new Map();
-    this.privateScope = undefined;
-    this.undefinedPrivateAccesses = [];
-    this.flags = 0;
   }
 
   hasReturn() {
@@ -174,16 +217,16 @@ export class Scope {
     return (this.flags & Flag.module) !== 0;
   }
 
-  with(flags, f) {
+  with<T>(flags: WithFlag, f: () => T): T {
     const oldFlags = this.flags;
 
     Object.entries(flags)
       .forEach(([k, v]) => {
         if (k in Flag) {
           if (v === true) {
-            this.flags |= Flag[k];
+            this.flags |= (Flag as any)[k];
           } else if (v === false) {
-            this.flags &= ~Flag[k];
+            this.flags &= ~(Flag as any)[k];
           }
         }
       });
@@ -228,7 +271,7 @@ export class Scope {
     }
 
     if (flags.private) {
-      this.privateScope = this.privateScope.outer;
+      this.privateScope = this.privateScope!.outer;
 
       if (this.privateScope === undefined) {
         this.undefinedPrivateAccesses.forEach(({ node, name, scope }) => {
@@ -236,7 +279,7 @@ export class Scope {
             if (scope.names.has(name)) {
               return;
             }
-            scope = scope.outer;
+            scope = scope.outer!;
           }
           this.parser.raiseEarly('NotDefined', node, name);
         });
@@ -279,7 +322,7 @@ export class Scope {
     return undefined;
   }
 
-  pushAssignmentInfo(type) {
+  pushAssignmentInfo(type: AssignInfoStack['type']) {
     const parser = this.parser;
     this.assignmentInfoStack.push({
       type,
@@ -296,7 +339,7 @@ export class Scope {
     return this.assignmentInfoStack.pop();
   }
 
-  registerObjectLiteralEarlyError(error) {
+  registerObjectLiteralEarlyError(error: ParserSyntaxError) {
     for (let i = this.assignmentInfoStack.length - 1; i >= 0; i -= 1) {
       const info = this.assignmentInfoStack[i];
       info.earlyErrors.push(error);
@@ -328,7 +371,7 @@ export class Scope {
     throw new RangeError();
   }
 
-  declare(node, type, extraType) {
+  declare(node: ParseNode | readonly ParseNode[], type: 'lexical' | 'import' | 'function' | 'parameter' | 'variable' | 'export' | 'private', extraType?: PrivateFieldKind) {
     const declarations = getDeclarations(node);
     declarations.forEach((d) => {
       switch (type) {
@@ -394,7 +437,7 @@ export class Scope {
           }
           break;
         case 'private': {
-          const types = this.privateScope.names.get(d.name);
+          const types = this.privateScope!.names.get(d.name);
           if (types) {
             let duplicate = true;
             switch (extraType) {
@@ -413,7 +456,7 @@ export class Scope {
               this.parser.raiseEarly('AlreadyDeclared', d.node, d.name);
             }
           } else {
-            this.privateScope.names.set(d.name, new Set([extraType]));
+            this.privateScope!.names.set(d.name, new Set([extraType!]));
           }
           break;
         }
@@ -424,9 +467,9 @@ export class Scope {
     });
   }
 
-  checkUndefinedExports(NamedExports) {
+  checkUndefinedExports(NamedExports: ParseNode) {
     const scope = this.variableScope();
-    NamedExports.ExportsList.forEach((n) => {
+    NamedExports.ExportsList.forEach((n: ParseNode) => {
       const name = n.localName.name || n.localName.value;
       if (!scope.lexicals.has(name) && !scope.variables.has(name)) {
         this.undefinedExports.set(name, n.localName);
@@ -434,7 +477,7 @@ export class Scope {
     });
   }
 
-  checkUndefinedPrivate(PrivateIdentifier) {
+  checkUndefinedPrivate(PrivateIdentifier: ParseNode) {
     const [{ node, name }] = getDeclarations(PrivateIdentifier);
 
     if (!this.privateScope) {
@@ -442,7 +485,7 @@ export class Scope {
       return;
     }
 
-    let scope = this.privateScope;
+    let scope: PrivateScope | undefined = this.privateScope;
     while (scope) {
       if (scope.names.has(name)) {
         return;
