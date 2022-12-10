@@ -20,7 +20,7 @@ import { StringValue } from '../static-semantics/all.mjs';
 export function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaration, scope, privateScope) {
   const { BindingIdentifier, FormalParameters, FunctionBody } = FunctionDeclaration;
   // 1. Let name be StringValue of BindingIdentifier.
-  const name = BindingIdentifier ? StringValue(BindingIdentifier) : new Value('default');
+  const name = BindingIdentifier ? StringValue(BindingIdentifier) : Value.of('default');
   // 2. Let sourceText be the source text matched by FunctionDeclaration.
   const sourceText = sourceTextMatchedBy(FunctionDeclaration);
   // 3. Let F be OrdinaryFunctionCreate(%Function.prototype%, sourceText, FormalParameters, FunctionBody, non-lexical-this, scope, privateScope).
@@ -40,7 +40,7 @@ export function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaratio
 export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclaration, scope, privateScope) {
   const { BindingIdentifier, FormalParameters, GeneratorBody } = GeneratorDeclaration;
   // 1. Let name be StringValue of BindingIdentifier.
-  const name = BindingIdentifier ? StringValue(BindingIdentifier) : new Value('default');
+  const name = BindingIdentifier ? StringValue(BindingIdentifier) : Value.of('default');
   // 2. Let sourceText be the source text matched by GeneratorDeclaration.
   const sourceText = sourceTextMatchedBy(GeneratorDeclaration);
   // 3. Let F be OrdinaryFunctionCreate(%GeneratorFunction.prototype%, sourceText, FormalParameters, GeneratorBody, non-lexical-this, scope, privateScope).
@@ -50,7 +50,7 @@ export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclarat
   // 5. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
   const prototype = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%')));
   // 6. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-  X(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
+  X(DefinePropertyOrThrow(F, Value.of('prototype'), Descriptor({
     Value: prototype,
     Writable: Value.true,
     Enumerable: Value.false,
@@ -67,7 +67,7 @@ export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclarat
 export function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunctionDeclaration, scope, privateScope) {
   const { BindingIdentifier, FormalParameters, AsyncFunctionBody } = AsyncFunctionDeclaration;
   // 1. Let name be StringValue of BindingIdentifier.
-  const name = BindingIdentifier ? StringValue(BindingIdentifier) : new Value('default');
+  const name = BindingIdentifier ? StringValue(BindingIdentifier) : Value.of('default');
   // 2. Let sourceText be the source text matched by AsyncFunctionDeclaration.
   const sourceText = sourceTextMatchedBy(AsyncFunctionDeclaration);
   // 3. Let F be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, FormalParameters, AsyncFunctionBody, non-lexical-this, scope, privateScope).
@@ -85,7 +85,7 @@ export function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunction
 export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGeneratorDeclaration, scope, privateScope) {
   const { BindingIdentifier, FormalParameters, AsyncGeneratorBody } = AsyncGeneratorDeclaration;
   // 1. Let name be StringValue of BindingIdentifier.
-  const name = BindingIdentifier ? StringValue(BindingIdentifier) : new Value('default');
+  const name = BindingIdentifier ? StringValue(BindingIdentifier) : Value.of('default');
   // 2. Let sourceText be the source text matched by AsyncGeneratorDeclaration.
   const sourceText = sourceTextMatchedBy(AsyncGeneratorDeclaration);
   // 3. Let F be ! OrdinaryFunctionCreate(%AsyncGeneratorFunction.prototype%, sourceText, FormalParameters, AsyncGeneratorBody, non-lexical-this, scope, privateScope).
@@ -95,7 +95,7 @@ export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGenerat
   // 5. Let prototype be ! OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
   const prototype = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%')));
   // 6. Perform ! DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-  X(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
+  X(DefinePropertyOrThrow(F, Value.of('prototype'), Descriptor({
     Value: prototype,
     Writable: Value.true,
     Enumerable: Value.false,

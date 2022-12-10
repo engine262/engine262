@@ -110,7 +110,7 @@ export function StringCreate(value, prototype) {
   // 8. Let length be the number of code unit elements in value.
   const length = value.stringValue().length;
   // 9. Perform ! DefinePropertyOrThrow(S, "length", PropertyDescriptor { [[Value]]: length, [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: false }).
-  X(DefinePropertyOrThrow(S, new Value('length'), Descriptor({
+  X(DefinePropertyOrThrow(S, Value.of('length'), Descriptor({
     Value: F(length),
     Writable: Value.false,
     Enumerable: Value.false,
@@ -145,7 +145,7 @@ export function StringGetOwnProperty(S, P) {
   }
   const resultStr = str.stringValue()[index.numberValue()];
   return Descriptor({
-    Value: new Value(resultStr),
+    Value: Value.of(resultStr),
     Writable: Value.false,
     Enumerable: Value.true,
     Configurable: Value.false,

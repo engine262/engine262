@@ -278,7 +278,7 @@ export function AsyncGeneratorAwaitReturn(generator) {
     return Value.undefined;
   };
   // 8. Let onFulfilled be ! CreateBuiltinFunction(fulfilledClosure, 1, "", « »).
-  const onFulfilled = X(CreateBuiltinFunction(fulfilledClosure, 1, new Value(''), []));
+  const onFulfilled = X(CreateBuiltinFunction(fulfilledClosure, 1, Value.of(''), []));
   // 9. Let rejectedClosure be a new Abstract Closure with parameters (reason) that captures generator and performs the following steps when called:
   const rejectedClosure = ([reason = Value.undefined]) => {
     // a. Set generator.[[AsyncGeneratorState]] to completed.
@@ -293,7 +293,7 @@ export function AsyncGeneratorAwaitReturn(generator) {
     return Value.undefined;
   };
   // 10. Let onRejected be ! CreateBuiltinFunction(rejectedClosure, 1, "", « »).
-  const onRejected = X(CreateBuiltinFunction(rejectedClosure, 1, new Value(''), []));
+  const onRejected = X(CreateBuiltinFunction(rejectedClosure, 1, Value.of(''), []));
   // 11. Perform ! PerformPromiseThen(promise, onFulfilled, onRejected).
   X(PerformPromiseThen(promise, onFulfilled, onRejected));
 }

@@ -8,7 +8,7 @@ export function bootstrapAsyncGeneratorFunctionPrototype(realmRec) {
     ['prototype', realmRec.Intrinsics['%AsyncGeneratorFunction.prototype.prototype%'], undefined, { Writable: Value.false }],
   ], realmRec.Intrinsics['%Function.prototype%'], 'AsyncGeneratorFunction');
 
-  X(realmRec.Intrinsics['%AsyncGeneratorFunction.prototype.prototype%'].DefineOwnProperty(new Value('constructor'), Descriptor({
+  X(realmRec.Intrinsics['%AsyncGeneratorFunction.prototype.prototype%'].DefineOwnProperty(Value.of('constructor'), Descriptor({
     Value: proto,
     Writable: Value.false,
     Enumerable: Value.false,

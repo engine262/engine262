@@ -18,7 +18,7 @@ export function assignProps(realmRec, obj, props) {
       continue;
     }
     const [n, v, len, descriptor] = item;
-    const name = n instanceof Value ? n : new Value(n);
+    const name = n instanceof Value ? n : Value.of(n);
     if (Array.isArray(v)) {
       // Every accessor property described in clauses 18 through 26 and in
       // Annex B.2 has the attributes { [[Enumerable]]: false,
@@ -38,7 +38,7 @@ export function assignProps(realmRec, obj, props) {
           [],
           realmRec,
           undefined,
-          new Value('get'),
+          Value.of('get'),
         );
       }
       if (typeof setter === 'function') {
@@ -49,7 +49,7 @@ export function assignProps(realmRec, obj, props) {
           [],
           realmRec,
           undefined,
-          new Value('set'),
+          Value.of('set'),
         );
       }
       X(obj.DefineOwnProperty(name, Descriptor({
@@ -89,7 +89,7 @@ export function bootstrapPrototype(realmRec, props, Prototype, stringTag) {
 
   if (stringTag !== undefined) {
     X(proto.DefineOwnProperty(wellKnownSymbols.toStringTag, Descriptor({
-      Value: new Value(stringTag),
+      Value: Value.of(stringTag),
       Writable: Value.false,
       Enumerable: Value.false,
       Configurable: Value.true,
@@ -103,7 +103,7 @@ export function bootstrapConstructor(realmRec, Constructor, name, length, Protot
   const cons = CreateBuiltinFunction(
     Constructor,
     length,
-    new Value(name),
+    Value.of(name),
     [],
     realmRec,
     undefined,
@@ -111,14 +111,14 @@ export function bootstrapConstructor(realmRec, Constructor, name, length, Protot
     Value.true,
   );
 
-  X(cons.DefineOwnProperty(new Value('prototype'), Descriptor({
+  X(cons.DefineOwnProperty(Value.of('prototype'), Descriptor({
     Value: Prototype,
     Writable: Value.false,
     Enumerable: Value.false,
     Configurable: Value.false,
   })));
 
-  X(Prototype.DefineOwnProperty(new Value('constructor'), Descriptor({
+  X(Prototype.DefineOwnProperty(Value.of('constructor'), Descriptor({
     Value: cons,
     Writable: Value.true,
     Enumerable: Value.false,

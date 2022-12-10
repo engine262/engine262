@@ -16,5 +16,5 @@ export function TrimString(string, where) {
     Assert(where === 'start+end');
     T = S.trim();
   }
-  return new Value(T);
+  return Value.of(T);
 }

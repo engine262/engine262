@@ -210,7 +210,7 @@ export function bootstrapMapPrototype(realmRec) {
     ['values', MapProto_values, 0],
   ], realmRec.Intrinsics['%Object.prototype%'], 'Map');
 
-  const entriesFunc = X(proto.GetOwnProperty(new Value('entries')));
+  const entriesFunc = X(proto.GetOwnProperty(Value.of('entries')));
   X(proto.DefineOwnProperty(wellKnownSymbols.iterator, entriesFunc));
 
   realmRec.Intrinsics['%Map.prototype%'] = proto;

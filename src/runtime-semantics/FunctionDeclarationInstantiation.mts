@@ -83,12 +83,12 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
     // a. NOTE: Arrow functions never have an arguments objects.
     // b. Set argumentsObjectNeeded to false.
     argumentsObjectNeeded = false;
-  } else if (new ValueSet(parameterNames).has(new Value('arguments'))) {
+  } else if (new ValueSet(parameterNames).has(Value.of('arguments'))) {
     // a. Set argumentsObjectNeeded to false.
     argumentsObjectNeeded = false;
   } else if (hasParameterExpressions === false) {
     // a. If "arguments" is an element of functionNames or if "arguments" is an element of lexicalNames, then
-    if (functionNames.has(new Value('arguments')) || lexicalNames.has(new Value('arguments'))) {
+    if (functionNames.has(Value.of('arguments')) || lexicalNames.has(Value.of('arguments'))) {
       // i. Set argumentsObjectNeeded to false.
       argumentsObjectNeeded = false;
     }
@@ -146,15 +146,15 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
     // c. If strict is true, then
     if (strict) {
       // i. Perform ! env.CreateImmutableBinding("arguments", false).
-      X(env.CreateImmutableBinding(new Value('arguments'), Value.false));
+      X(env.CreateImmutableBinding(Value.of('arguments'), Value.false));
     } else {
       // i. Perform ! env.CreateMutableBinding("arguments", false).
-      X(env.CreateMutableBinding(new Value('arguments'), Value.false));
+      X(env.CreateMutableBinding(Value.of('arguments'), Value.false));
     }
     // e. Call env.InitializeBinding("arguments", ao).
-    env.InitializeBinding(new Value('arguments'), ao);
+    env.InitializeBinding(Value.of('arguments'), ao);
     // f. Let parameterBindings be a new List of parameterNames with "arguments" appended.
-    parameterBindings = new ValueSet([...parameterNames, new Value('arguments')]);
+    parameterBindings = new ValueSet([...parameterNames, Value.of('arguments')]);
   } else {
     // a. Let parameterBindings be parameterNames.
     parameterBindings = new ValueSet(parameterNames);

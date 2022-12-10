@@ -30,5 +30,5 @@ export function* Evaluate_TemplateLiteral({ TemplateSpanList, ExpressionList }) 
     str += middle.stringValue();
   }
   const tail = TV(TemplateSpanList[TemplateSpanList.length - 1]);
-  return new Value(str + tail);
+  return Value.of(str + tail);
 }

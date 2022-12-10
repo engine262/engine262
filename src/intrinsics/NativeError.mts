@@ -27,8 +27,8 @@ export function bootstrapNativeError(realmRec) {
     'URIError',
   ]) {
     const proto = bootstrapPrototype(realmRec, [
-      ['name', new Value(name)],
-      ['message', new Value('')],
+      ['name', Value.of(name)],
+      ['message', Value.of('')],
     ], realmRec.Intrinsics['%Error.prototype%']);
 
     /** http://tc39.es/ecma262/#sec-nativeerror */
@@ -54,7 +54,7 @@ export function bootstrapNativeError(realmRec) {
           Configurable: Value.true,
         });
         // c. Perform ! DefinePropertyOrThrow(O, "message", msgDesc).
-        X(DefinePropertyOrThrow(O, new Value('message'), msgDesc));
+        X(DefinePropertyOrThrow(O, Value.of('message'), msgDesc));
       }
       // 4. Perform ? InstallErrorCause(O, options).
       Q(InstallErrorCause(O, options));

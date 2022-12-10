@@ -6,7 +6,7 @@ import { Q } from '../completion.mjs';
 import { Value } from '../value.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-const kArrayIteratorPrototype = new Value('%ArrayIteratorPrototype%');
+const kArrayIteratorPrototype = Value.of('%ArrayIteratorPrototype%');
 
 /** http://tc39.es/ecma262/#sec-%arrayiteratorprototype%.next */
 function ArrayIteratorPrototype_next(args, { thisValue }) {

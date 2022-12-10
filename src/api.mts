@@ -266,7 +266,7 @@ export class ManagedRealm extends Realm {
     if (typeof sourceText !== 'string') {
       throw new TypeError('sourceText must be a string');
     }
-    const module = this.scope(() => ParseJSONModule(new Value(sourceText), this, {
+    const module = this.scope(() => ParseJSONModule(Value.of(sourceText), this, {
       specifier,
     }));
     return module;

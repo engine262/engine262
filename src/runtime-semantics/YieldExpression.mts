@@ -73,7 +73,7 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }) {
         }
       } else if (received.Type === 'throw') { // b. Else if received.[[Type]] is throw, then
         // i. Let throw be ? GetMethod(iterator, "throw").
-        const thr = Q(GetMethod(iterator, new Value('throw')));
+        const thr = Q(GetMethod(iterator, Value.of('throw')));
         // ii. If throw is not undefined, then
         if (thr !== Value.undefined) {
           // 1. Let innerResult be ? Call(throw, iterator, « received.[[Value]] »).
@@ -119,7 +119,7 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }) {
         // i. Assert: received.[[Type]] is return.
         Assert(received.Type === 'return');
         // ii. Let return be ? GetMethod(iterator, "return").
-        const ret = Q(GetMethod(iterator, new Value('return')));
+        const ret = Q(GetMethod(iterator, Value.of('return')));
         // iii. If return is undefined, then
         if (ret === Value.undefined) {
           // 1. If generatorKind is async, then set received.[[Value]] to ? Await(received.[[Value]]).

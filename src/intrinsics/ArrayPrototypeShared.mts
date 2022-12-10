@@ -371,7 +371,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
       R = `${R}${next}`;
       k += 1;
     }
-    return new Value(R);
+    return Value.of(R);
   }
 
   /** http://tc39.es/ecma262/#sec-array.prototype.lastindexof */
@@ -574,12 +574,12 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
       const kStr = X(ToString(F(k)));
       const nextElement = Q(Get(array, kStr));
       if (nextElement !== Value.undefined && nextElement !== Value.null) {
-        const S = Q(ToString(Q(Invoke(nextElement, new Value('toLocaleString'))))).stringValue();
+        const S = Q(ToString(Q(Invoke(nextElement, Value.of('toLocaleString'))))).stringValue();
         R = `${R}${S}`;
       }
       k += 1;
     }
-    return new Value(R);
+    return Value.of(R);
   }
 
   assignProps(realmRec, proto, [

@@ -45,7 +45,7 @@ function ArrayDefineOwnProperty(P, Desc) {
   if (P instanceof JSStringValue && P.stringValue() === 'length') {
     return Q(ArraySetLength(A, Desc));
   } else if (isArrayIndex(P)) {
-    const oldLenDesc = OrdinaryGetOwnProperty(A, new Value('length'));
+    const oldLenDesc = OrdinaryGetOwnProperty(A, Value.of('length'));
     Assert(X(IsDataDescriptor(oldLenDesc)));
     Assert(oldLenDesc.Configurable === Value.false);
     const oldLen = oldLenDesc.Value;
@@ -59,7 +59,7 @@ function ArrayDefineOwnProperty(P, Desc) {
     }
     if (index.numberValue() >= oldLen.numberValue()) {
       oldLenDesc.Value = F(index.numberValue() + 1);
-      const succeeded = OrdinaryDefineOwnProperty(A, new Value('length'), oldLenDesc);
+      const succeeded = OrdinaryDefineOwnProperty(A, Value.of('length'), oldLenDesc);
       Assert(succeeded === Value.true);
     }
     return Value.true;
@@ -87,7 +87,7 @@ export function ArrayCreate(length, proto) {
   A.Prototype = proto;
   A.DefineOwnProperty = ArrayDefineOwnProperty;
 
-  X(OrdinaryDefineOwnProperty(A, new Value('length'), Descriptor({
+  X(OrdinaryDefineOwnProperty(A, Value.of('length'), Descriptor({
     Value: F(length),
     Writable: Value.true,
     Enumerable: Value.false,
@@ -107,7 +107,7 @@ export function ArraySpeciesCreate(originalArray, length) {
   if (isArray === Value.false) {
     return Q(ArrayCreate(length));
   }
-  let C = Q(Get(originalArray, new Value('constructor')));
+  let C = Q(Get(originalArray, Value.of('constructor')));
   if (IsConstructor(C) === Value.true) {
     const thisRealm = surroundingAgent.currentRealmRecord;
     const realmC = Q(GetFunctionRealm(C));
@@ -135,7 +135,7 @@ export function ArraySpeciesCreate(originalArray, length) {
 /** http://tc39.es/ecma262/#sec-arraysetlength */
 export function ArraySetLength(A, Desc) {
   if (Desc.Value === undefined) {
-    return OrdinaryDefineOwnProperty(A, new Value('length'), Desc);
+    return OrdinaryDefineOwnProperty(A, Value.of('length'), Desc);
   }
   const newLenDesc = Descriptor({ ...Desc });
   const newLen = Q(ToUint32(Desc.Value)).numberValue();
@@ -144,12 +144,12 @@ export function ArraySetLength(A, Desc) {
     return surroundingAgent.Throw('RangeError', 'InvalidArrayLength', Desc.Value);
   }
   newLenDesc.Value = F(newLen);
-  const oldLenDesc = OrdinaryGetOwnProperty(A, new Value('length'));
+  const oldLenDesc = OrdinaryGetOwnProperty(A, Value.of('length'));
   Assert(X(IsDataDescriptor(oldLenDesc)));
   Assert(oldLenDesc.Configurable === Value.false);
   const oldLen = oldLenDesc.Value.numberValue();
   if (newLen >= oldLen) {
-    return OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc);
+    return OrdinaryDefineOwnProperty(A, Value.of('length'), newLenDesc);
   }
   if (oldLenDesc.Writable === Value.false) {
     return Value.false;
@@ -161,7 +161,7 @@ export function ArraySetLength(A, Desc) {
     newWritable = false;
     newLenDesc.Writable = Value.true;
   }
-  const succeeded = X(OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc));
+  const succeeded = X(OrdinaryDefineOwnProperty(A, Value.of('length'), newLenDesc));
   if (succeeded === Value.false) {
     return Value.false;
   }
@@ -179,12 +179,12 @@ export function ArraySetLength(A, Desc) {
       if (newWritable === false) {
         newLenDesc.Writable = Value.false;
       }
-      X(OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc));
+      X(OrdinaryDefineOwnProperty(A, Value.of('length'), newLenDesc));
       return Value.false;
     }
   }
   if (newWritable === false) {
-    const s = OrdinaryDefineOwnProperty(A, new Value('length'), Descriptor({ Writable: Value.false }));
+    const s = OrdinaryDefineOwnProperty(A, Value.of('length'), Descriptor({ Writable: Value.false }));
     Assert(s === Value.true);
   }
   return Value.true;
@@ -299,5 +299,5 @@ export function CreateArrayIterator(array, kind) {
     }
   };
   // 4. Return ! CreateIteratorFromClosure(closure, "%ArrayIteratorPrototype%", %ArrayIteratorPrototype%).
-  return X(CreateIteratorFromClosure(closure, new Value('%ArrayIteratorPrototype%'), surroundingAgent.intrinsic('%ArrayIteratorPrototype%')));
+  return X(CreateIteratorFromClosure(closure, Value.of('%ArrayIteratorPrototype%'), surroundingAgent.intrinsic('%ArrayIteratorPrototype%')));
 }

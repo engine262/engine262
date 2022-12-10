@@ -25,8 +25,8 @@ export function StringPad(O, maxLength, fillString, placement) {
   const stringFiller = filler.repeat(Math.ceil(fillLen / filler.length));
   const truncatedStringFiller = stringFiller.slice(0, fillLen);
   if (placement === 'start') {
-    return new Value(truncatedStringFiller + S.stringValue());
+    return Value.of(truncatedStringFiller + S.stringValue());
   } else {
-    return new Value(S.stringValue() + truncatedStringFiller);
+    return Value.of(S.stringValue() + truncatedStringFiller);
   }
 }

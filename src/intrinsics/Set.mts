@@ -28,7 +28,7 @@ function SetConstructor([iterable = Value.undefined], { NewTarget }) {
     return set;
   }
   // 5. Let adder be ? Get(set, "add").
-  const adder = Q(Get(set, new Value('add')));
+  const adder = Q(Get(set, Value.of('add')));
   // 6. If IsCallable(adder) is false, throw a TypeError exception.
   if (IsCallable(adder) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', adder);

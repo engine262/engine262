@@ -131,11 +131,11 @@ function FunctionProto_bind([thisArg = Value.undefined, ...args], { thisValue })
   // 4. Let L be 0.
   let L = 0;
   // 5. Let targetHasLength be ? HasOwnProperty(Target, "length").
-  const targetHasLength = Q(HasOwnProperty(Target, new Value('length')));
+  const targetHasLength = Q(HasOwnProperty(Target, Value.of('length')));
   // 6. If targetHasLength is true, then
   if (targetHasLength === Value.true) {
     // a. Let targetLen be ? Get(Target, "length").
-    const targetLen = Q(Get(Target, new Value('length')));
+    const targetLen = Q(Get(Target, Value.of('length')));
     // b. If Type(targetLen) is Number, then
     if (targetLen instanceof NumberValue) {
       // i. If targetLen is +∞𝔽, set L to +∞.
@@ -158,13 +158,13 @@ function FunctionProto_bind([thisArg = Value.undefined, ...args], { thisValue })
   // 7. Perform ! SetFunctionLength(F, L).
   X(SetFunctionLength(F, L));
   // 8. Let targetName be ? Get(Target, "name").
-  let targetName = Q(Get(Target, new Value('name')));
+  let targetName = Q(Get(Target, Value.of('name')));
   // 9. If Type(targetName) is not String, set targetName to the empty String.
   if (!(targetName instanceof JSStringValue)) {
-    targetName = new Value('');
+    targetName = Value.of('');
   }
   // 10. Perform SetFunctionName(F, targetName, "bound").
-  SetFunctionName(F, targetName, new Value('bound'));
+  SetFunctionName(F, targetName, Value.of('bound'));
   // 11. Return F.
   return F;
 }
@@ -199,7 +199,7 @@ function FunctionProto_toString(args, { thisValue }) {
       && 'SourceText' in func
       && X(HostHasSourceTextAvailable(func)) === Value.true) {
     // Return ! UTF16Encode(func.[[SourceText]]).
-    return new Value(func.SourceText);
+    return Value.of(func.SourceText);
   }
   // 3. If func is a built-in function object, then return an implementation-defined
   //    String source code representation of func. The representation must have the
@@ -209,15 +209,15 @@ function FunctionProto_toString(args, { thisValue }) {
   //    value of func.[[InitialName]].
   if ('nativeFunction' in func) {
     if (func.InitialName !== Value.null) {
-      return new Value(`function ${func.InitialName.stringValue()}() { [native code] }`);
+      return Value.of(`function ${func.InitialName.stringValue()}() { [native code] }`);
     }
-    return new Value('function() { [native code] }');
+    return Value.of('function() { [native code] }');
   }
   // 4. If Type(func) is Object and IsCallable(func) is true, then return an implementation
   //    dependent String source code representation of func. The representation must have
   //    the syntax of a NativeFunction.
   if (func instanceof ObjectValue && IsCallable(func) === Value.true) {
-    return new Value('function() { [native code] }');
+    return Value.of('function() { [native code] }');
   }
   // 5. Throw a TypeError exception.
   return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
@@ -235,7 +235,7 @@ export function bootstrapFunctionPrototype(realmRec) {
   const proto = CreateBuiltinFunction(
     FunctionProto,
     0,
-    new Value(''),
+    Value.of(''),
     [],
     realmRec,
     realmRec.Intrinsics['%Object.prototype%'],

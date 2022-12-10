@@ -545,7 +545,7 @@ function* ForInOfHeadEvaluation(uninitializedBoundNames, expr, iterationKind) {
     // c. Let iterator be ? EnumerateObjectProperties(obj).
     const iterator = Q(EnumerateObjectProperties(obj));
     // d. Let nextMethod be ! GetV(iterator, "next").
-    const nextMethod = X(GetV(iterator, new Value('next')));
+    const nextMethod = X(GetV(iterator, Value.of('next')));
     // e. Return the Record { [[Iterator]]: iterator, [[NextMethod]]: nextMethod, [[Done]]: false }.
     return { Iterator: iterator, NextMethod: nextMethod, Done: Value.false };
   } else { // 7. Else,

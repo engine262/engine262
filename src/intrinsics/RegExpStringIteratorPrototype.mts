@@ -16,7 +16,7 @@ import { Q, X } from '../completion.mjs';
 import { RegExpExec, AdvanceStringIndex } from './RegExpPrototype.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-const kRegExpStringIteratorPrototype = new Value('%RegExpStringIteratorPrototype%');
+const kRegExpStringIteratorPrototype = Value.of('%RegExpStringIteratorPrototype%');
 
 /** http://tc39.es/ecma262/#sec-createregexpstringiterator */
 export function CreateRegExpStringIterator(R, S, global, fullUnicode) {
@@ -44,15 +44,15 @@ export function CreateRegExpStringIterator(R, S, global, fullUnicode) {
         return Value.undefined;
       }
       // iv. Let matchStr be ? ToString(? Get(match, "0")).
-      const matchStr = Q(ToString(Q(Get(match, new Value('0')))));
+      const matchStr = Q(ToString(Q(Get(match, Value.of('0')))));
       // v. If matchStr is the empty String, then
       if (matchStr.stringValue() === '') {
         // i. Let thisIndex be ℝ(? ToLength(? Get(R, "lastIndex"))).
-        const thisIndex = Q(ToLength(Q(Get(R, new Value('lastIndex'))))).numberValue();
+        const thisIndex = Q(ToLength(Q(Get(R, Value.of('lastIndex'))))).numberValue();
         // ii. Let nextIndex be ! AdvanceStringIndex(S, thisIndex, fullUnicode).
         const nextIndex = X(AdvanceStringIndex(S, thisIndex, fullUnicode));
         // iii. Perform ? Set(R, "lastIndex", 𝔽(nextIndex), true).
-        Q(Set(R, new Value('lastIndex'), F(nextIndex), Value.true));
+        Q(Set(R, Value.of('lastIndex'), F(nextIndex), Value.true));
       }
       // vi. Perform ? Yield(match).
       Q(yield* Yield(match));

@@ -125,7 +125,7 @@ export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
       return surroundingAgent.Throw('TypeError', 'NotAConstructor', superclass);
     } else { // g. Else,
       // i. Let protoParent be ? Get(superclass, "prototype").
-      protoParent = Q(Get(superclass, new Value('prototype')));
+      protoParent = Q(Get(superclass, Value.of('prototype')));
       // ii. If Type(protoParent) is neither Object nor Null, throw a TypeError exception.
       if (!(protoParent instanceof ObjectValue) && !(protoParent instanceof NullValue)) {
         return surroundingAgent.Throw('TypeError', 'ObjectPrototypeType');
@@ -200,7 +200,7 @@ export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
     F.ConstructorKind = 'derived';
   }
   // 18. Perform CreateMethodProperty(proto, "constructor", F).
-  X(CreateMethodProperty(proto, new Value('constructor'), F));
+  X(CreateMethodProperty(proto, Value.of('constructor'), F));
   // 19. If ClassBody is not present, let elements be a new empty List.
   let elements;
   if (!ClassBody) {

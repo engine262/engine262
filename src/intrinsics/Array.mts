@@ -62,7 +62,7 @@ function ArrayConstructor(argumentsList, { NewTarget }) {
     const array = ArrayCreate(0, proto);
     let intLen;
     if (!(len instanceof NumberValue)) {
-      const defineStatus = X(CreateDataProperty(array, new Value('0'), len));
+      const defineStatus = X(CreateDataProperty(array, Value.of('0'), len));
       Assert(defineStatus === Value.true);
       intLen = F(1);
     } else {
@@ -71,7 +71,7 @@ function ArrayConstructor(argumentsList, { NewTarget }) {
         return surroundingAgent.Throw('RangeError', 'InvalidArrayLength', len);
       }
     }
-    Set(array, new Value('length'), intLen, Value.true);
+    Set(array, Value.of('length'), intLen, Value.true);
     return array;
   } else if (numberOfArgs >= 2) {
     /** http://tc39.es/ecma262/#sec-array-items */
@@ -90,7 +90,7 @@ function ArrayConstructor(argumentsList, { NewTarget }) {
       Assert(defineStatus === Value.true);
       k += 1;
     }
-    Assert(X(Get(array, new Value('length'))).numberValue() === numberOfArgs);
+    Assert(X(Get(array, Value.of('length'))).numberValue() === numberOfArgs);
     return array;
   }
 
@@ -127,7 +127,7 @@ function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg =
       const Pk = X(ToString(F(k)));
       const next = Q(IteratorStep(iteratorRecord));
       if (next === Value.false) {
-        Q(Set(A, new Value('length'), F(k), Value.true));
+        Q(Set(A, Value.of('length'), F(k), Value.true));
         return A;
       }
       const nextValue = Q(IteratorValue(next));
@@ -163,7 +163,7 @@ function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg =
     Q(CreateDataPropertyOrThrow(A, Pk, mappedValue));
     k += 1;
   }
-  Q(Set(A, new Value('length'), F(len), Value.true));
+  Q(Set(A, Value.of('length'), F(len), Value.true));
   return A;
 }
 
@@ -190,7 +190,7 @@ function Array_of(items, { thisValue }) {
     Q(CreateDataPropertyOrThrow(A, Pk, kValue));
     k += 1;
   }
-  Q(Set(A, new Value('length'), F(len), Value.true));
+  Q(Set(A, Value.of('length'), F(len), Value.true));
   return A;
 }
 

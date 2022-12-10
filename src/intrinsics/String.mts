@@ -25,7 +25,7 @@ import { bootstrapConstructor } from './bootstrap.mjs';
 function StringConstructor([value], { NewTarget }) {
   let s;
   if (value === undefined) {
-    s = new Value('');
+    s = Value.of('');
   } else {
     if (NewTarget === Value.undefined && value instanceof SymbolValue) {
       return X(SymbolDescriptiveString(value));
@@ -50,7 +50,7 @@ function String_fromCharCode(codeUnits) {
     nextIndex += 1;
   }
   const result = elements.reduce((previous, current) => previous + String.fromCharCode(current.numberValue()), '');
-  return new Value(result);
+  return Value.of(result);
 }
 
 /** http://tc39.es/ecma262/#sec-string.fromcodepoint */
@@ -71,17 +71,17 @@ function String_fromCodePoint(codePoints) {
     nextIndex += 1;
   }
   const result = elements.reduce((previous, current) => previous + String.fromCharCode(current), '');
-  return new Value(result);
+  return Value.of(result);
 }
 
 /** http://tc39.es/ecma262/#sec-string.raw */
 function String_raw([template = Value.undefined, ...substitutions]) {
   const numberOfSubstitutions = substitutions.length;
   const cooked = Q(ToObject(template));
-  const raw = Q(ToObject(Q(Get(cooked, new Value('raw')))));
+  const raw = Q(ToObject(Q(Get(cooked, Value.of('raw')))));
   const literalSegments = Q(LengthOfArrayLike(raw));
   if (literalSegments <= 0) {
-    return new Value('');
+    return Value.of('');
   }
   // Not sure why the spec uses a List, but this is really just a String.
   const stringElements = [];
@@ -91,13 +91,13 @@ function String_raw([template = Value.undefined, ...substitutions]) {
     const nextSeg = Q(ToString(Q(Get(raw, nextKey))));
     stringElements.push(nextSeg.stringValue());
     if (nextIndex + 1 === literalSegments) {
-      return new Value(stringElements.join(''));
+      return Value.of(stringElements.join(''));
     }
     let next;
     if (nextIndex < numberOfSubstitutions) {
       next = substitutions[nextIndex];
     } else {
-      next = new Value('');
+      next = Value.of('');
     }
     const nextSub = Q(ToString(next));
     stringElements.push(nextSub.stringValue());

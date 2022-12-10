@@ -68,7 +68,7 @@ export function CreateResolvingFunctions(promise) {
   // 3. Let lengthResolve be the number of non-optional parameters of the function definition in Promise Resolve Functions.
   const lengthResolve = 1;
   // 4. Let resolve be ! CreateBuiltinFunction(stepsResolve, lengthResolve, "", « [[Promise]], [[AlreadyResolved]] »).
-  const resolve = X(CreateBuiltinFunction(stepsResolve, lengthResolve, new Value(''), ['Promise', 'AlreadyResolved']));
+  const resolve = X(CreateBuiltinFunction(stepsResolve, lengthResolve, Value.of(''), ['Promise', 'AlreadyResolved']));
   // 5. Set resolve.[[Promise]] to promise.
   resolve.Promise = promise;
   // 6. Set resolve.[[AlreadyResolved]] to alreadyResolved.
@@ -78,7 +78,7 @@ export function CreateResolvingFunctions(promise) {
   // 8. Let lengthReject be the number of non-optional parameters of the function definition in Promise Reject Functions.
   const lengthReject = 1;
   // 9. Let reject be ! CreateBuiltinFunction(stepsReject, lengthReject, "", « [[Promise]], [[AlreadyResolved]] »).
-  const reject = X(CreateBuiltinFunction(stepsReject, lengthReject, new Value(''), ['Promise', 'AlreadyResolved']));
+  const reject = X(CreateBuiltinFunction(stepsReject, lengthReject, Value.of(''), ['Promise', 'AlreadyResolved']));
   // 10. Set reject.[[Promise]] to promise.
   reject.Promise = promise;
   // 11. Set reject.[[AlreadyResolved]] to alreadyResolved.
@@ -167,7 +167,7 @@ function PromiseResolveFunctions([resolution = Value.undefined]) {
     return FulfillPromise(promise, resolution);
   }
   // 9. Let then be Get(resolution, "then").
-  const then = Get(resolution, new Value('then'));
+  const then = Get(resolution, Value.of('then'));
   // 10. If then is an abrupt completion, then
   if (then instanceof AbruptCompletion) {
     // a. Return RejectPromise(promise, then.[[Value]]).
@@ -228,7 +228,7 @@ export function NewPromiseCapability(C) {
     return Value.undefined;
   };
   // 5. Let executor be ! CreateBuiltinFunction(executorClosure, 2, "", « »).
-  const executor = X(CreateBuiltinFunction(executorClosure, 2, new Value(''), []));
+  const executor = X(CreateBuiltinFunction(executorClosure, 2, Value.of(''), []));
   // 8. Let promise be ? Construct(C, « executor »).
   const promise = Q(Construct(C, [executor]));
   // 9. If IsCallable(promiseCapability.[[Resolve]]) is false, throw a TypeError exception.
@@ -287,7 +287,7 @@ function TriggerPromiseReactions(reactions, argument) {
 export function PromiseResolve(C, x) {
   Assert(C instanceof ObjectValue);
   if (IsPromise(x) === Value.true) {
-    const xConstructor = Q(Get(x, new Value('constructor')));
+    const xConstructor = Q(Get(x, Value.of('constructor')));
     if (SameValue(xConstructor, C) === Value.true) {
       return x;
     }

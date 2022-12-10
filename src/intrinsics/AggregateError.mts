@@ -32,12 +32,12 @@ function AggregateErrorConstructor([errors = Value.undefined, message = Value.un
     // a. Let msg be ? ToString(message).
     const msg = Q(ToString(message));
     // b. Perform ! CreateMethodProperty(O, "message", msg).
-    X(CreateMethodProperty(O, new Value('message'), msg));
+    X(CreateMethodProperty(O, Value.of('message'), msg));
   }
   // 4. Let errorsList be ? IterableToList(errors).
   const errorsList = Q(IterableToList(errors));
   // 5. Perform ! DefinePropertyOrThrow(O, "errors", Property Descriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: ! CreateArrayFromList(errorsList) }).
-  X(DefinePropertyOrThrow(O, new Value('errors'), Descriptor({
+  X(DefinePropertyOrThrow(O, Value.of('errors'), Descriptor({
     Configurable: Value.true,
     Enumerable: Value.false,
     Writable: Value.true,

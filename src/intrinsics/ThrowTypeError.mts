@@ -15,7 +15,7 @@ function ThrowTypeError() {
 }
 
 export function bootstrapThrowTypeError(realmRec) {
-  const f = X(CreateBuiltinFunction(ThrowTypeError, 0, new Value(''), [], realmRec));
+  const f = X(CreateBuiltinFunction(ThrowTypeError, 0, Value.of(''), [], realmRec));
   Assert(X(SetIntegrityLevel(f, 'frozen')) === Value.true);
   realmRec.Intrinsics['%ThrowTypeError%'] = f;
 }

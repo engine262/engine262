@@ -165,8 +165,8 @@ export function bootstrapMath(realmRec) {
       }
       return F(Math[name](...args));
     };
-    const func = CreateBuiltinFunction(method, length, new Value(name), [], realmRec);
-    mathObj.DefineOwnProperty(new Value(name), Descriptor({
+    const func = CreateBuiltinFunction(method, length, Value.of(name), [], realmRec);
+    mathObj.DefineOwnProperty(Value.of(name), Descriptor({
       Value: func,
       Writable: Value.true,
       Enumerable: Value.false,

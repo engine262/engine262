@@ -13,7 +13,7 @@ export function* Evaluate_ClassExpression(ClassExpression) {
   const { BindingIdentifier, ClassTail } = ClassExpression;
   if (!BindingIdentifier) {
     // 1. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments undefined and ''
-    const value = Q(yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, new Value('')));
+    const value = Q(yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, Value.of('')));
     // 2. Set value.[[SourceText]] to the source text matched by ClassExpression.
     value.SourceText = sourceTextMatchedBy(ClassExpression);
     // 3. Return value.

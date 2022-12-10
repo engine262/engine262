@@ -22,18 +22,18 @@ function ErrorProto_toString(args, { thisValue }) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
   }
   // 3. Let name be ? Get(O, "name").
-  let name = Q(Get(O, new Value('name')));
+  let name = Q(Get(O, Value.of('name')));
   // 4. If name is undefined, set name to "Error"; otherwise set name to ? ToString(name).
   if (name === Value.undefined) {
-    name = new Value('Error');
+    name = Value.of('Error');
   } else {
     name = Q(ToString(name));
   }
   // 5. Let msg be ? Get(O, "message").
-  let msg = Q(Get(O, new Value('message')));
+  let msg = Q(Get(O, Value.of('message')));
   // 6. If msg is undefined, set msg to the empty String; otherwise set msg to ? ToString(msg).
   if (msg === Value.undefined) {
-    msg = new Value('');
+    msg = Value.of('');
   } else {
     msg = Q(ToString(msg));
   }
@@ -46,14 +46,14 @@ function ErrorProto_toString(args, { thisValue }) {
     return name;
   }
   // 9. Return the string-concatenation of name, the code unit 0x003A (COLON), the code unit 0x0020 (SPACE), and msg.
-  return new Value(`${name.stringValue()}: ${msg.stringValue()}`);
+  return Value.of(`${name.stringValue()}: ${msg.stringValue()}`);
 }
 
 export function bootstrapErrorPrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [
     ['toString', ErrorProto_toString, 0],
-    ['message', new Value('')],
-    ['name', new Value('Error')],
+    ['message', Value.of('')],
+    ['name', Value.of('Error')],
   ], realmRec.Intrinsics['%Object.prototype%']);
 
   realmRec.Intrinsics['%Error.prototype%'] = proto;

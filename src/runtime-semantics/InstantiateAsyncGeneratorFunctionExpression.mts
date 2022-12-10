@@ -43,7 +43,7 @@ export function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpres
     // 11. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
     X(DefinePropertyOrThrow(
       closure,
-      new Value('prototype'),
+      Value.of('prototype'),
       Descriptor({
         Value: prototype,
         Writable: Value.true,
@@ -58,7 +58,7 @@ export function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpres
   }
   // 1. If name is not present, set name to "".
   if (name === undefined) {
-    name = new Value('');
+    name = Value.of('');
   }
   // 2. Let scope be the LexicalEnvironment of the running execution context.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
@@ -75,7 +75,7 @@ export function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpres
   // 8. Perform ! DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
   X(DefinePropertyOrThrow(
     closure,
-    new Value('prototype'),
+    Value.of('prototype'),
     Descriptor({
       Value: prototype,
       Writable: Value.true,

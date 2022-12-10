@@ -107,7 +107,7 @@ function GetPromiseResolve(promiseConstructor) {
   // 1. Assert: IsConstructor(promiseConstructor) is true.
   Assert(IsConstructor(promiseConstructor) === Value.true);
   // 2. Let promiseResolve be ? Get(promiseConstructor, "resolve").
-  const promiseResolve = Q(Get(promiseConstructor, new Value('resolve')));
+  const promiseResolve = Q(Get(promiseConstructor, Value.of('resolve')));
   // 3. If IsCallable(promiseResolve) is false, throw a TypeError exception.
   if (IsCallable(promiseResolve) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', promiseResolve);
@@ -173,7 +173,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability, promis
     // k. Let length be the number of non-optional parameters of the function definition in Promise.all Resolve Element Functions.
     const length = 1;
     // l. Let onFulfilled be ! CreateBuiltinFunction(steps, length, "", « [[AlreadyCalled]], [[Index]], [[Values]], [[Capability]], [[RemainingElements]] »).
-    const onFulfilled = X(CreateBuiltinFunction(steps, length, new Value(''), [
+    const onFulfilled = X(CreateBuiltinFunction(steps, length, Value.of(''), [
       'AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements',
     ]));
     // m. Set onFulfilled.[[AlreadyCalled]] to the Record { [[Value]]: false }.
@@ -189,7 +189,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability, promis
     // r. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] + 1.
     remainingElementsCount.Value += 1;
     // s. Perform ? Invoke(nextPromise, "then", « onFulfilled, resultCapability.[[Reject]] »).
-    Q(Invoke(nextPromise, new Value('then'), [onFulfilled, resultCapability.Reject]));
+    Q(Invoke(nextPromise, Value.of('then'), [onFulfilled, resultCapability.Reject]));
     // t. Set index to index + 1.
     index += 1;
   }
@@ -236,8 +236,8 @@ function PromiseAllSettledResolveElementFunctions([x = Value.undefined]) {
   const promiseCapability = F.Capability;
   const remainingElementsCount = F.RemainingElements;
   const obj = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%')));
-  X(CreateDataProperty(obj, new Value('status'), new Value('fulfilled')));
-  X(CreateDataProperty(obj, new Value('value'), x));
+  X(CreateDataProperty(obj, Value.of('status'), Value.of('fulfilled')));
+  X(CreateDataProperty(obj, Value.of('value'), x));
   values[index] = obj;
   remainingElementsCount.Value -= 1;
   if (remainingElementsCount.Value === 0) {
@@ -259,8 +259,8 @@ function PromiseAllSettledRejectElementFunctions([x = Value.undefined]) {
   const promiseCapability = F.Capability;
   const remainingElementsCount = F.RemainingElements;
   const obj = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%')));
-  X(CreateDataProperty(obj, new Value('status'), new Value('rejected')));
-  X(CreateDataProperty(obj, new Value('reason'), x));
+  X(CreateDataProperty(obj, Value.of('status'), Value.of('rejected')));
+  X(CreateDataProperty(obj, Value.of('reason'), x));
   values[index] = obj;
   remainingElementsCount.Value -= 1;
   if (remainingElementsCount.Value === 0) {
@@ -327,7 +327,7 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability,
     // k. Let lengthFulfilled be the number of non-optional parameters of the function definition in Promise.allSettled Resolve Element Functions.
     const lengthFulfilled = 1;
     // l. Let onFulfilled be ! CreateBuiltinFunction(stepsFulfilled, lengthFulfilled, "", « [[AlreadyCalled]], [[Index]], [[Values]], [[Capability]], [[RemainingElements]] »).
-    const onFulfilled = X(CreateBuiltinFunction(stepsFulfilled, lengthFulfilled, new Value(''), [
+    const onFulfilled = X(CreateBuiltinFunction(stepsFulfilled, lengthFulfilled, Value.of(''), [
       'AlreadyCalled',
       'Index',
       'Values',
@@ -351,7 +351,7 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability,
     // t. Let lengthRejected be the number of non-optional parameters of the function definition in Promise.allSettled Reject Element Functions.
     const lengthRejected = 1;
     // u. Let onRejected be ! CreateBuiltinFunction(stepsRejected, lengthRejected, "", « [[AlreadyCalled]], [[Index]], [[Values]], [[Capability]], [[RemainingElements]] »).
-    const onRejected = X(CreateBuiltinFunction(stepsRejected, lengthRejected, new Value(''), [
+    const onRejected = X(CreateBuiltinFunction(stepsRejected, lengthRejected, Value.of(''), [
       'AlreadyCalled',
       'Index',
       'Values',
@@ -371,7 +371,7 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability,
     // aa. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] + 1.
     remainingElementsCount.Value += 1;
     // ab. Perform ? Invoke(nextPromise, "then", « onFulfilled, onRejected »).
-    Q(Invoke(nextPromise, new Value('then'), [onFulfilled, onRejected]));
+    Q(Invoke(nextPromise, Value.of('then'), [onFulfilled, onRejected]));
     // ac. Set index to index + 1.
     index += 1;
   }
@@ -435,7 +435,7 @@ function PromiseAnyRejectElementFunctions([x = Value.undefined]) {
     // a. Let error be a newly created AggregateError object.
     const error = surroundingAgent.Throw('AggregateError', 'PromiseAnyRejected').Value;
     // b. Perform ! DefinePropertyOrThrow(error, "errors", Property Descriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: errors }).
-    X(DefinePropertyOrThrow(error, new Value('errors'), Descriptor({
+    X(DefinePropertyOrThrow(error, Value.of('errors'), Descriptor({
       Configurable: Value.true,
       Enumerable: Value.false,
       Writable: Value.true,
@@ -483,7 +483,7 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promis
         // 1. Let error be a newly created AggregateError object.
         const error = surroundingAgent.Throw('AggregateError', 'PromiseAnyRejected').Value;
         // 2. Perform ! DefinePropertyOrThrow(error, "errors", Property Descriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: errors }).
-        X(DefinePropertyOrThrow(error, new Value('errors'), Descriptor({
+        X(DefinePropertyOrThrow(error, Value.of('errors'), Descriptor({
           Configurable: Value.true,
           Enumerable: Value.false,
           Writable: Value.true,
@@ -512,7 +512,7 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promis
     // k. Let lengthRejected be the number of non-optional parameters of the function definition in Promise.any Reject Element Functions.
     const lengthRejected = 1;
     // l. Let onRejected be ! CreateBuiltinFunction(stepsRejected, lengthRejected, "", « [[AlreadyCalled]], [[Index]], [[Errors]], [[Capability]], [[RemainingElements]] »).
-    const onRejected = X(CreateBuiltinFunction(stepsRejected, lengthRejected, new Value(''), ['AlreadyCalled', 'Index', 'Errors', 'Capability', 'RemainingElements']));
+    const onRejected = X(CreateBuiltinFunction(stepsRejected, lengthRejected, Value.of(''), ['AlreadyCalled', 'Index', 'Errors', 'Capability', 'RemainingElements']));
     // m. Set onRejected.[[AlreadyCalled]] to a new Record { [[Value]]: false }.
     onRejected.AlreadyCalled = { Value: false };
     // n. Set onRejected.[[Index]] to index.
@@ -526,7 +526,7 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promis
     // r. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] + 1.
     remainingElementsCount.Value += 1;
     // s. Perform ? Invoke(nextPromise, "then", « resultCapability.[[Resolve]], onRejected »).
-    Q(Invoke(nextPromise, new Value('then'), [resultCapability.Resolve, onRejected]));
+    Q(Invoke(nextPromise, Value.of('then'), [resultCapability.Resolve, onRejected]));
     // t. Increase index by 1.
     index += 1;
   }
@@ -596,7 +596,7 @@ function PerformPromiseRace(iteratorRecord, constructor, resultCapability, promi
     // h. Let nextPromise be ? Call(promiseResolve, constructor, « nextValue »).
     const nextPromise = Q(Call(promiseResolve, constructor, [nextValue]));
     // i. Perform ? Invoke(nextPromise, "then", « resultCapability.[[Resolve]], resultCapability.[[Reject]] »).
-    Q(Invoke(nextPromise, new Value('then'), [resultCapability.Resolve, resultCapability.Reject]));
+    Q(Invoke(nextPromise, Value.of('then'), [resultCapability.Resolve, resultCapability.Reject]));
   }
 }
 
@@ -670,7 +670,7 @@ export function bootstrapPromise(realmRec) {
     [wellKnownSymbols.species, [Promise_symbolSpecies]],
   ]);
 
-  promiseConstructor.DefineOwnProperty(new Value('prototype'), Descriptor({
+  promiseConstructor.DefineOwnProperty(Value.of('prototype'), Descriptor({
     Writable: Value.false,
     Enumerable: Value.false,
     Configurable: Value.false,

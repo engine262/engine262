@@ -207,7 +207,7 @@ function Object_fromEntries([iterable = Value.undefined]) {
     return Value.undefined;
   };
   // 5. Let adder be ! CreateBuiltinFunction(closure, 2, "", « »).
-  const adder = X(CreateBuiltinFunction(closure, 2, new Value(''), []));
+  const adder = X(CreateBuiltinFunction(closure, 2, Value.of(''), []));
   // 6. Return ? AddEntriesFromIterable(obj, iterable, adder).
   return Q(AddEntriesFromIterable(obj, iterable, adder));
 }

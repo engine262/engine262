@@ -37,7 +37,7 @@ function NumberProto_toExponential([fractionDigits = Value.undefined], { thisVal
   if (f < 0 || f > 100) {
     return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toExponential');
   }
-  return new Value(x.numberValue().toExponential(fractionDigits === Value.undefined ? undefined : f));
+  return Value.of(x.numberValue().toExponential(fractionDigits === Value.undefined ? undefined : f));
 }
 
 /** http://tc39.es/ecma262/#sec-number.prototype.tofixed */
@@ -51,7 +51,7 @@ function NumberProto_toFixed([fractionDigits = Value.undefined], { thisValue }) 
   if (!x.isFinite()) {
     return X(NumberValue.toString(x));
   }
-  return new Value(x.numberValue().toFixed(f));
+  return Value.of(x.numberValue().toFixed(f));
 }
 
 /** http://tc39.es/ecma262/#sec-number.prototype.tolocalestring */
@@ -72,7 +72,7 @@ function NumberProto_toPrecision([precision = Value.undefined], { thisValue }) {
   if (p < 1 || p > 100) {
     return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toPrecision');
   }
-  return new Value(x.numberValue().toPrecision(p));
+  return Value.of(x.numberValue().toPrecision(p));
 }
 
 /** http://tc39.es/ecma262/#sec-number.prototype.tostring */
@@ -95,7 +95,7 @@ function NumberProto_toString([radix = Value.undefined], { thisValue }) {
   // used for digits with values 10 through 35. The precise algorithm
   // is implementation-dependent, however the algorithm should be a
   // generalization of that specified in 7.1.12.1.
-  return new Value(x.numberValue().toString(radixNumber));
+  return Value.of(x.numberValue().toString(radixNumber));
 }
 
 /** http://tc39.es/ecma262/#sec-number.prototype.valueof */

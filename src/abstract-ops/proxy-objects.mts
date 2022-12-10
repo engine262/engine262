@@ -37,7 +37,7 @@ function ProxyGetPrototypeOf() {
   }
   Assert(handler instanceof ObjectValue);
   const target = O.ProxyTarget;
-  const trap = Q(GetMethod(handler, new Value('getPrototypeOf')));
+  const trap = Q(GetMethod(handler, Value.of('getPrototypeOf')));
   if (trap === Value.undefined) {
     return Q(target.GetPrototypeOf());
   }
@@ -67,7 +67,7 @@ function ProxySetPrototypeOf(V) {
   }
   Assert(handler instanceof ObjectValue);
   const target = O.ProxyTarget;
-  const trap = Q(GetMethod(handler, new Value('setPrototypeOf')));
+  const trap = Q(GetMethod(handler, Value.of('setPrototypeOf')));
   if (trap === Value.undefined) {
     return Q(target.SetPrototypeOf(V));
   }
@@ -96,7 +96,7 @@ function ProxyIsExtensible() {
   }
   Assert(handler instanceof ObjectValue);
   const target = O.ProxyTarget;
-  const trap = Q(GetMethod(handler, new Value('isExtensible')));
+  const trap = Q(GetMethod(handler, Value.of('isExtensible')));
   if (trap === Value.undefined) {
     return Q(IsExtensible(target));
   }
@@ -118,7 +118,7 @@ function ProxyPreventExtensions() {
   }
   Assert(handler instanceof ObjectValue);
   const target = O.ProxyTarget;
-  const trap = Q(GetMethod(handler, new Value('preventExtensions')));
+  const trap = Q(GetMethod(handler, Value.of('preventExtensions')));
   if (trap === Value.undefined) {
     return Q(target.PreventExtensions());
   }
@@ -149,7 +149,7 @@ function ProxyGetOwnProperty(P) {
   // 5. Let target be O.[[ProxyTarget]].
   const target = O.ProxyTarget;
   // 6. Let trap be ? Getmethod(handler, "getOwnPropertyDescriptor").
-  const trap = Q(GetMethod(handler, new Value('getOwnPropertyDescriptor')));
+  const trap = Q(GetMethod(handler, Value.of('getOwnPropertyDescriptor')));
   // 7. If trap is undefined, then
   if (trap === Value.undefined) {
     // a. Return ? target.[[GetOwnProperty]](P).
@@ -230,7 +230,7 @@ function ProxyDefineOwnProperty(P, Desc) {
   // 5. Let target be O.[[ProxyTarget]].
   const target = O.ProxyTarget;
   // 6. Let trap be ? GetMethod(handler, "defineProperty").
-  const trap = Q(GetMethod(handler, new Value('defineProperty')));
+  const trap = Q(GetMethod(handler, Value.of('defineProperty')));
   // 7. If trap is undefined, then
   if (trap === Value.undefined) {
     // a. Return ? target.[[DefineOwnProperty]](P, Desc).
@@ -300,7 +300,7 @@ function ProxyHasProperty(P) {
   }
   Assert(handler instanceof ObjectValue);
   const target = O.ProxyTarget;
-  const trap = Q(GetMethod(handler, new Value('has')));
+  const trap = Q(GetMethod(handler, Value.of('has')));
   if (trap === Value.undefined) {
     return Q(target.HasProperty(P));
   }
@@ -331,7 +331,7 @@ function ProxyGet(P, Receiver) {
   }
   Assert(handler instanceof ObjectValue);
   const target = O.ProxyTarget;
-  const trap = Q(GetMethod(handler, new Value('get')));
+  const trap = Q(GetMethod(handler, Value.of('get')));
   if (trap === Value.undefined) {
     return Q(target.Get(P, Receiver));
   }
@@ -363,7 +363,7 @@ function ProxySet(P, V, Receiver) {
   }
   Assert(handler instanceof ObjectValue);
   const target = O.ProxyTarget;
-  const trap = Q(GetMethod(handler, new Value('set')));
+  const trap = Q(GetMethod(handler, Value.of('set')));
   if (trap === Value.undefined) {
     return Q(target.Set(P, V, Receiver));
   }
@@ -404,7 +404,7 @@ function ProxyDelete(P) {
   // 5. Let target be O.[[ProxyTarget]].
   const target = O.ProxyTarget;
   // 6. Let trap be ? GetMethod(handler, "deleteProperty").
-  const trap = Q(GetMethod(handler, new Value('deleteProperty')));
+  const trap = Q(GetMethod(handler, Value.of('deleteProperty')));
   // 7. If trap is undefined, then
   if (trap === Value.undefined) {
     // a. Return ? target.[[Delete]](P).
@@ -446,7 +446,7 @@ function ProxyOwnPropertyKeys() {
   }
   Assert(handler instanceof ObjectValue);
   const target = O.ProxyTarget;
-  const trap = Q(GetMethod(handler, new Value('ownKeys')));
+  const trap = Q(GetMethod(handler, Value.of('ownKeys')));
   if (trap === Value.undefined) {
     return Q(target.OwnPropertyKeys());
   }
@@ -504,7 +504,7 @@ function ProxyCall(thisArgument, argumentsList) {
   }
   Assert(handler instanceof ObjectValue);
   const target = O.ProxyTarget;
-  const trap = Q(GetMethod(handler, new Value('apply')));
+  const trap = Q(GetMethod(handler, Value.of('apply')));
   if (trap === Value.undefined) {
     return Q(Call(target, thisArgument, argumentsList));
   }
@@ -523,7 +523,7 @@ function ProxyConstruct(argumentsList, newTarget) {
   Assert(handler instanceof ObjectValue);
   const target = O.ProxyTarget;
   Assert(IsConstructor(target) === Value.true);
-  const trap = Q(GetMethod(handler, new Value('construct')));
+  const trap = Q(GetMethod(handler, Value.of('construct')));
   if (trap === Value.undefined) {
     return Q(Construct(target, argumentsList, newTarget));
   }

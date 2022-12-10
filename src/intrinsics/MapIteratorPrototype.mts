@@ -12,7 +12,7 @@ import { Q, X } from '../completion.mjs';
 import { Value } from '../value.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-const kMapIteratorPrototype = new Value('%MapIteratorPrototype%');
+const kMapIteratorPrototype = Value.of('%MapIteratorPrototype%');
 
 /** http://tc39.es/ecma262/#sec-createmapiterator */
 export function CreateMapIterator(map, kind) {

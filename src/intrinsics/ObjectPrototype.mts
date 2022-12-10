@@ -79,18 +79,18 @@ function ObjectProto_toLocaleString(argList, { thisValue }) {
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. Return ? Invoke(O, "toString").
-  return Q(Invoke(O, new Value('toString')));
+  return Q(Invoke(O, Value.of('toString')));
 }
 
 /** http://tc39.es/ecma262/#sec-object.prototype.tostring */
 function ObjectProto_toString(argList, { thisValue }) {
   // 1. If the this value is undefined, return "[object Undefined]".
   if (thisValue === Value.undefined) {
-    return new Value('[object Undefined]');
+    return Value.of('[object Undefined]');
   }
   // 2. If the this value is null, return "[object Null]".
   if (thisValue === Value.null) {
-    return new Value('[object Null]');
+    return Value.of('[object Null]');
   }
   // 3. Let O be ! ToObject(this value).
   const O = X(ToObject(thisValue));
@@ -126,7 +126,7 @@ function ObjectProto_toString(argList, { thisValue }) {
     tag = builtinTag;
   }
   // 17. Return the string-concatenation of "[object ", tag, and "]".
-  return new Value(`[object ${tag.stringValue ? tag.stringValue() : tag}]`);
+  return Value.of(`[object ${tag.stringValue ? tag.stringValue() : tag}]`);
 }
 
 /** http://tc39.es/ecma262/#sec-object.prototype.valueof */
@@ -282,6 +282,6 @@ export function bootstrapObjectPrototype(realmRec) {
     ['__proto__', [ObjectProto__proto__Get, ObjectProto__proto__Set]],
   ]);
 
-  realmRec.Intrinsics['%Object.prototype.toString%'] = X(Get(proto, new Value('toString')));
-  realmRec.Intrinsics['%Object.prototype.valueOf%'] = X(Get(proto, new Value('valueOf')));
+  realmRec.Intrinsics['%Object.prototype.toString%'] = X(Get(proto, Value.of('toString')));
+  realmRec.Intrinsics['%Object.prototype.valueOf%'] = X(Get(proto, Value.of('valueOf')));
 }

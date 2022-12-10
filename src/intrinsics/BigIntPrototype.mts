@@ -57,7 +57,7 @@ function BigIntProto_toString([radix], { thisValue }) {
   //    algorithm is implementation-dependent, however the algorithm should be a
   //    generalization of that specified in 6.1.6.2.23.
   // TODO: Implementation stringification
-  return new Value(x.bigintValue().toString(radixNumber));
+  return Value.of(x.bigintValue().toString(radixNumber));
 }
 
 /** http://tc39.es/ecma262/#sec-bigint.prototype.tostring */

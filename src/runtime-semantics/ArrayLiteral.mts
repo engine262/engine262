@@ -31,7 +31,7 @@ function* ArrayAccumulation(ElementList, array, nextIndex) {
     switch (element.type) {
       case 'Elision':
         postIndex += 1;
-        Q(Set(array, new Value('length'), F(postIndex), Value.true));
+        Q(Set(array, Value.of('length'), F(postIndex), Value.true));
         break;
       case 'SpreadElement':
         postIndex = Q(yield* ArrayAccumulation_SpreadElement(element, array, postIndex));

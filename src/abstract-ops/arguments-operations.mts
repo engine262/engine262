@@ -122,7 +122,7 @@ export function CreateUnmappedArgumentsObject(argumentsList) {
   const len = argumentsList.length;
   const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'), ['ParameterMap']);
   obj.ParameterMap = Value.undefined;
-  DefinePropertyOrThrow(obj, new Value('length'), Descriptor({
+  DefinePropertyOrThrow(obj, Value.of('length'), Descriptor({
     Value: F(len),
     Writable: Value.true,
     Enumerable: Value.false,
@@ -140,7 +140,7 @@ export function CreateUnmappedArgumentsObject(argumentsList) {
     Enumerable: Value.false,
     Configurable: Value.true,
   })));
-  X(DefinePropertyOrThrow(obj, new Value('callee'), Descriptor({
+  X(DefinePropertyOrThrow(obj, Value.of('callee'), Descriptor({
     Get: surroundingAgent.intrinsic('%ThrowTypeError%'),
     Set: surroundingAgent.intrinsic('%ThrowTypeError%'),
     Enumerable: Value.false,
@@ -155,7 +155,7 @@ function MakeArgGetter(name, env) {
   //   a. Return env.GetBindingValue(name, false).
   const getterClosure = () => env.GetBindingValue(name, false);
   // 2. Let getter be ! CreateBuiltinFunction(getterClosure, 0, "", « »).
-  const getter = X(CreateBuiltinFunction(getterClosure, 0, new Value(''), ['Name', 'Env']));
+  const getter = X(CreateBuiltinFunction(getterClosure, 0, Value.of(''), ['Name', 'Env']));
   // 3. NOTE: getter is never directly accessible to ECMAScript code.
   // 4. Return getter.
   return getter;
@@ -167,7 +167,7 @@ function MakeArgSetter(name, env) {
   //   a. Return env.SetMutableBinding(name, value, false).
   const setterClosure = ([value = Value.undefined]) => env.SetMutableBinding(name, value, false);
   // 2. Let setter be ! CreateBuiltinFunction(setterClosure, 1, "", « »).
-  const setter = X(CreateBuiltinFunction(setterClosure, 1, new Value(''), ['Name', 'Env']));
+  const setter = X(CreateBuiltinFunction(setterClosure, 1, Value.of(''), ['Name', 'Env']));
   // 3. NOTE: setter is never directly accessible to ECMAScript code.
   // 4. Return setter.
   return setter;
@@ -195,7 +195,7 @@ export function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
     X(CreateDataProperty(obj, X(ToString(F(index))), val));
     index += 1;
   }
-  X(DefinePropertyOrThrow(obj, new Value('length'), Descriptor({
+  X(DefinePropertyOrThrow(obj, Value.of('length'), Descriptor({
     Value: F(len),
     Writable: Value.true,
     Enumerable: Value.false,
@@ -226,7 +226,7 @@ export function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
     Enumerable: Value.false,
     Configurable: Value.true,
   })));
-  X(DefinePropertyOrThrow(obj, new Value('callee'), Descriptor({
+  X(DefinePropertyOrThrow(obj, Value.of('callee'), Descriptor({
     Value: func,
     Writable: Value.true,
     Enumerable: Value.false,

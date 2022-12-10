@@ -240,7 +240,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       // c. For each element n of starNames, do
       for (const n of starNames) {
         // i. If SameValue(n, "default") is false, then
-        if (SameValue(n, new Value('default')) === Value.false) {
+        if (SameValue(n, Value.of('default')) === Value.false) {
           // 1. If n is not an element of exportedNames, then
           if (!exportedNames.includes(n)) {
             // a. Append n to exportedNames.
@@ -308,7 +308,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       }
     }
     // 8. If SameValue(exportName, "default") is true, then
-    if (SameValue(exportName, new Value('default')) === Value.true) {
+    if (SameValue(exportName, Value.of('default')) === Value.true) {
       // a. Assert: A default export was not explicitly defined by this module.
       // b. Return null.
       return null;

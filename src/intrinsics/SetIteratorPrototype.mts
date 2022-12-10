@@ -12,7 +12,7 @@ import { Q, X } from '../completion.mjs';
 import { Value } from '../value.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-const kSetIteratorPrototype = new Value('%SetIteratorPrototype%');
+const kSetIteratorPrototype = Value.of('%SetIteratorPrototype%');
 
 /** http://tc39.es/ecma262/#sec-createsetiterator */
 export function CreateSetIterator(set, kind) {

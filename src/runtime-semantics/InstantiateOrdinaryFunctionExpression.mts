@@ -45,7 +45,7 @@ export function InstantiateOrdinaryFunctionExpression(FunctionExpression, name) 
   }
   // 1. If name is not present, set name to "".
   if (name === undefined) {
-    name = new Value('');
+    name = Value.of('');
   }
   // 2. Let scope be the running execution context's LexicalEnvironment.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;

@@ -17,8 +17,8 @@ const getObjectTag = (value, wrap) => {
     s = X(Get(value, wellKnownSymbols.toStringTag)).stringValue();
   } catch {}
   try {
-    const c = X(Get(value, new Value('constructor')));
-    s = X(Get(c, new Value('name'))).stringValue();
+    const c = X(Get(value, Value.of('constructor')));
+    s = X(Get(c, Value.of('name'))).stringValue();
   } catch {}
   if (s) {
     if (wrap) {
@@ -31,15 +31,15 @@ const getObjectTag = (value, wrap) => {
 
 const compactObject = (realm, value) => {
   try {
-    const toString = X(Get(value, new Value('toString')));
+    const toString = X(Get(value, Value.of('toString')));
     const objectToString = realm.Intrinsics['%Object.prototype.toString%'];
     if (toString.nativeFunction === objectToString.nativeFunction) {
       return X(Call(toString, value)).stringValue();
     } else {
       const tag = getObjectTag(value, false) || 'Unknown';
-      const ctor = X(Get(value, new Value('constructor')));
+      const ctor = X(Get(value, Value.of('constructor')));
       if (ctor instanceof ObjectValue) {
-        const ctorName = X(Get(ctor, new Value('name'))).stringValue();
+        const ctorName = X(Get(ctor, Value.of('name'))).stringValue();
         if (ctorName !== '') {
           return `#<${ctorName}>`;
         }
@@ -86,7 +86,7 @@ const INSPECTORS = {
     }
 
     if ('Call' in v) {
-      const name = v.properties.get(new Value('name'));
+      const name = v.properties.get(Value.of('name'));
       if (name !== undefined && name.Value.stringValue() !== '') {
         return `[Function: ${name.Value.stringValue()}]`;
       }
@@ -94,9 +94,9 @@ const INSPECTORS = {
     }
 
     if ('ErrorData' in v) {
-      let e = Q(Get(v, new Value('stack')));
+      let e = Q(Get(v, Value.of('stack')));
       if (!e.stringValue) {
-        const toString = Q(Get(v, new Value('toString')));
+        const toString = Q(Get(v, Value.of('toString')));
         e = X(Call(toString, v));
       }
       return e.stringValue();
@@ -149,7 +149,7 @@ const INSPECTORS = {
         };
         const out = [];
         for (let j = 0; j < length; j += 1) {
-          const elem = X(v.GetOwnProperty(new Value(j.toString())));
+          const elem = X(v.GetOwnProperty(Value.of(j.toString())));
           if (elem === Value.undefined) {
             holes += 1;
           } else {

@@ -83,7 +83,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition, object, 
       // 7. Perform MakeMethod(closure, object).
       MakeMethod(closure, object);
       // 8. Perform SetFunctionName(closure, propKey, "get").
-      SetFunctionName(closure, propKey, new Value('set'));
+      SetFunctionName(closure, propKey, Value.of('set'));
       // 9. If propKey is a Private Name, then
       if (propKey instanceof PrivateName) {
         // a. Return PrivateElement { [[Key]]: propKey, [[Kind]]: accessor, [[Get]]: undefined, [[Set]]: closure }.
@@ -125,7 +125,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition, object, 
       // 8. Perform MakeMethod(closure, object).
       MakeMethod(closure, object);
       // 9. Perform SetFunctionName(closure, propKey, "get").
-      SetFunctionName(closure, propKey, new Value('get'));
+      SetFunctionName(closure, propKey, Value.of('get'));
       // 10. If propKey is a Private Name, then
       if (propKey instanceof PrivateName) {
         return new PrivateElementRecord({
@@ -201,7 +201,7 @@ function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, en
   // 9. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
   const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%'));
   // 10. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-  DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
+  DefinePropertyOrThrow(closure, Value.of('prototype'), Descriptor({
     Value: prototype,
     Writable: Value.true,
     Enumerable: Value.false,
@@ -235,7 +235,7 @@ function* MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod, 
   // 9. Let prototype be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
   const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%'));
   // 10. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-  DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
+  DefinePropertyOrThrow(closure, Value.of('prototype'), Descriptor({
     Value: prototype,
     Writable: Value.true,
     Enumerable: Value.false,

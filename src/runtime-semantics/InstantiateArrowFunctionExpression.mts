@@ -9,7 +9,7 @@ export function InstantiateArrowFunctionExpression(ArrowFunction, name) {
   const { ArrowParameters, ConciseBody } = ArrowFunction;
   // 1. If name is not present, set name to "".
   if (name === undefined) {
-    name = new Value('');
+    name = Value.of('');
   }
   // 2. Let scope be the LexicalEnvironment of the running execution context.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;

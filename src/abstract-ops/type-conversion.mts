@@ -41,14 +41,14 @@ export function ToPrimitive(input, preferredType) {
       let hint;
       // i. If preferredType is not present, let hint be "default".
       if (preferredType === undefined) {
-        hint = new Value('default');
+        hint = Value.of('default');
       } else if (preferredType === 'string') { // ii. Else if preferredType is string, let hint be "string".
-        hint = new Value('string');
+        hint = Value.of('string');
       } else { // iii. Else,
         // 1. Assert: preferredType is number.
         Assert(preferredType === 'number');
         // 2. Let hint be "number".
-        hint = new Value('number');
+        hint = Value.of('number');
       }
       // iv. Let result be ? Call(exoticToPrim, input, « hint »).
       const result = Q(Call(exoticToPrim, input, [hint]));
@@ -80,10 +80,10 @@ export function OrdinaryToPrimitive(O, hint) {
   // 3. If hint is string, then
   if (hint === 'string') {
     // a. Let methodNames be « "toString", "valueOf" ».
-    methodNames = [new Value('toString'), new Value('valueOf')];
+    methodNames = [Value.of('toString'), Value.of('valueOf')];
   } else { // 4. Else,
     // a. Let methodNames be « "valueOf", "toString" ».
-    methodNames = [new Value('valueOf'), new Value('toString')];
+    methodNames = [Value.of('valueOf'), Value.of('toString')];
   }
   // 5. For each element name of methodNames, do
   for (const name of methodNames) {
