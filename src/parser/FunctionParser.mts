@@ -230,15 +230,16 @@ export abstract class FunctionParser extends IdentifierParser {
   parseArrowFunction(node: ParseNode, { arrowInfo, Arguments }: ParseNode | { arrowInfo?: ArrowInfoStack, Arguments: readonly ParseNode[] }, kind: FunctionKind) {
     const isAsync = kind === FunctionKind.ASYNC;
     this.expect(Token.ARROW);
-    if (arrowInfo) {
-      arrowInfo.awaitExpressions.forEach((e: ParseNode) => {
+    const _arrowInfo = arrowInfo as ArrowInfoStack;
+    if (_arrowInfo) {
+      _arrowInfo.awaitExpressions.forEach((e) => {
         this.raiseEarly('AwaitInFormalParameters', e);
       });
-      arrowInfo.yieldExpressions.forEach((e: ParseNode) => {
+      _arrowInfo.yieldExpressions.forEach((e) => {
         this.raiseEarly('YieldInFormalParameters', e);
       });
       if (isAsync) {
-        arrowInfo.awaitIdentifiers.forEach((e: ParseNode) => {
+        _arrowInfo.awaitIdentifiers.forEach((e) => {
           this.raiseEarly('AwaitInFormalParameters', e);
         });
       }

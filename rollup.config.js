@@ -31,9 +31,8 @@ module.exports = () => ({
       presets: [[
         '@babel/preset-env',
         {
-          // this is the latest version that NOT support optional chaining
-          targets: ['chrome 79', 'firefox 73', 'safari 13'],
-          // default in babel 8, enable to avoid future surprise
+          // this includes at least 1 LTS for Node.js
+          targets: ['last 2 node versions'],
           spec: true,
           bugfixes: true,
         },

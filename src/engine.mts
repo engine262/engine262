@@ -87,6 +87,7 @@ export class Agent {
   readonly AgentRecord: {
     LittleEndian: BooleanValue; CanBlock: BooleanValue; Signifier: number; IsLockFree1: BooleanValue; IsLockFree2: BooleanValue; CandidateExecution: undefined; KeptAlive: Set<unknown>;
   };
+
   constructor(options: AgentOptions = {}) {
     // #table-agent-record
     const Signifier = agentSignifier;

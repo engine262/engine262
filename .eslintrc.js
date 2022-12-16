@@ -18,6 +18,15 @@ module.exports = {
       files: ['*.mts'],
       extends: 'plugin:@typescript-eslint/recommended',
       rules: {
+        '@typescript-eslint/lines-between-class-members': ['error', 'always', {
+          'exceptAfterOverload': true,
+          'exceptAfterSingleLine': true,
+        }],
+        '@typescript-eslint/padding-line-between-statements': ['error', {
+          blankLine: 'always',
+          prev: '*',
+          next: ['interface', 'type'],
+        }],
         // checked by tsc.
         '@typescript-eslint/no-unused-vars': 'off',
         'no-redeclare': 'off',

@@ -52,7 +52,7 @@
     "minimatch": "^5.1.0",
     "npm-run-all": "^4.1.5",
     "rollup": "^2.77.0",
-    "typescript": "npm:@typescript-deploys/pr-build@5.0.0-pr-50820-31",
+    "typescript": "npm:@typescript-deploys/pr-build@5.0.0-pr-50820-54",
     "ws": "^8.8.1"
   }
 }

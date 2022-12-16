@@ -10,6 +10,7 @@ function i(V: Value): string {
 }
 
 export type InspectableValue = any;
+
 type I = InspectableValue;
 export type Messages = typeof import('./messages.mjs');
 export type MessageTemplate = keyof Messages;
