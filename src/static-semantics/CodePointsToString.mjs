@@ -1,5 +1,4 @@
-import { X } from '../completion.mjs';
-import { CodePointToUTF16CodeUnits } from './all.mjs';
+import { UTF16EncodeCodePoint } from './all.mjs';
 
 /** http://tc39.es/ecma262/#sec-codepointstostring */
 export function CodePointsToString(text) {
@@ -7,8 +6,8 @@ export function CodePointsToString(text) {
   let result = '';
   // 2. For each code point cp in text, do
   for (const cp of text) {
-    // a. Set result to the string-concatenation of result and ! CodePointToUTF16CodeUnits(cp).
-    result += X(CodePointToUTF16CodeUnits(cp)).map((c) => String.fromCodePoint(c)).join('');
+    // a. Set result to the string-concatenation of result and UTF16EncodeCodePoint(cp).
+    result += UTF16EncodeCodePoint(cp);
   }
   // 3. Return result.
   return result;

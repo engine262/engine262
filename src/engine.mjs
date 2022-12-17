@@ -22,14 +22,14 @@ import * as messages from './messages.mjs';
 
 export const FEATURES = Object.freeze([
   {
-    name: 'Hashbang Grammar',
-    flag: 'hashbang',
-    url: 'https://github.com/tc39/proposal-hashbang',
-  },
-  {
     name: 'FinalizationRegistry.prototype.cleanupSome',
     flag: 'cleanup-some',
     url: 'https://github.com/tc39/proposal-cleanup-some',
+  },
+  {
+    name: 'Well-Formed Unicode Strings',
+    flag: 'is-usv-string',
+    url: 'https://github.com/tc39/proposal-is-usv-string',
   },
 ].map(Object.freeze));
 

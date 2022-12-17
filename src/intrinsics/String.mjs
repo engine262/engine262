@@ -4,6 +4,7 @@ import {
   Value,
 } from '../value.mjs';
 import {
+  Assert,
   Get,
   GetPrototypeFromConstructor,
   IsIntegralNumber,
@@ -16,7 +17,7 @@ import {
   ToUint16,
   F,
 } from '../abstract-ops/all.mjs';
-import { CodePointToUTF16CodeUnits } from '../static-semantics/all.mjs';
+import { UTF16EncodeCodePoint } from '../static-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
@@ -54,22 +55,26 @@ function String_fromCharCode(codeUnits) {
 
 /** http://tc39.es/ecma262/#sec-string.fromcodepoint */
 function String_fromCodePoint(codePoints) {
-  const length = codePoints.length;
-  const elements = [];
-  let nextIndex = 0;
-  while (nextIndex < length) {
-    const next = codePoints[nextIndex];
+  // 1. Let result be the empty String.
+  let result = '';
+  // 2. For each element next of codePoints, do
+  for (const next of codePoints) {
+    // a. Let nextCP be ? ToNumber(next).
     const nextCP = Q(ToNumber(next));
+    // b. If IsIntegralNumber(nextCP) is false, throw a RangeError exception.
     if (X(IsIntegralNumber(nextCP)) === Value.false) {
       return surroundingAgent.Throw('RangeError', 'StringCodePointInvalid', next);
     }
+    // c. If ℝ(nextCP) < 0 or ℝ(nextCP) > 0x10FFFF, throw a RangeError exception.
     if (nextCP.numberValue() < 0 || nextCP.numberValue() > 0x10FFFF) {
       return surroundingAgent.Throw('RangeError', 'StringCodePointInvalid', nextCP);
     }
-    elements.push(...CodePointToUTF16CodeUnits(nextCP.numberValue()));
-    nextIndex += 1;
+    // d. Set result to the string-concatenation of result and UTF16EncodeCodePoint(ℝ(nextCP)).
+    result += UTF16EncodeCodePoint(nextCP.numberValue());
   }
-  const result = elements.reduce((previous, current) => previous + String.fromCharCode(current), '');
+  // 3. Assert: If codePoints is empty, then result is the empty String.
+  Assert(!(codePoints.length === 0) || result.length === 0);
+  // 4. Return result.
   return new Value(result);
 }
 

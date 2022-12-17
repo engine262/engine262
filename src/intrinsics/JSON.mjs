@@ -29,7 +29,7 @@ import {
   isTrailingSurrogate,
 } from '../parser/Lexer.mjs';
 import {
-  CodePointToUTF16CodeUnits,
+  UTF16EncodeCodePoint,
 } from '../static-semantics/all.mjs';
 import {
   NormalCompletion,
@@ -377,9 +377,9 @@ function QuoteJSONString(value) { // eslint-disable-line no-shadow
       product = `${product}${codeUnitTable.get(C)}`;
     } else if (C < 0x0020 || isLeadingSurrogate(C) || isTrailingSurrogate(C)) {
       const unit = String.fromCodePoint(C);
-      product = `${product}${UnicodeEscape(unit)}`;
+      product += UnicodeEscape(unit);
     } else {
-      product = `${product}${String.fromCodePoint(...CodePointToUTF16CodeUnits(C))}`;
+      product += UTF16EncodeCodePoint(C);
     }
   }
   product = `${product}\u0022`;

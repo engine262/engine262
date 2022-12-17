@@ -4,9 +4,7 @@ import { Token } from './tokens.mjs';
 export class LanguageParser extends ModuleParser {
   // Script : ScriptBody?
   parseScript() {
-    if (this.feature('hashbang')) {
-      this.skipHashbangComment();
-    }
+    this.skipHashbangComment();
     const node = this.startNode();
     if (this.eat(Token.EOS)) {
       node.ScriptBody = null;
@@ -34,9 +32,7 @@ export class LanguageParser extends ModuleParser {
 
   // Module : ModuleBody?
   parseModule() {
-    if (this.feature('hashbang')) {
-      this.skipHashbangComment();
-    }
+    this.skipHashbangComment();
     return this.scope.with({
       module: true,
       strict: true,

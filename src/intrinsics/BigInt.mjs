@@ -19,11 +19,11 @@ function BigIntConstructor([value], { NewTarget }) {
   // 2. Let prim be ? ToPrimitive(value, number).
   const prim = Q(ToPrimitive(value, 'number'));
   // 3. If Type(prim) is Number, return ? NumberToBigInt(prim).
-  // 4. Otherwise, return ? ToBigInt(value).
+  // 4. Otherwise, return ? ToBigInt(prim).
   if (prim instanceof NumberValue) {
     return Q(NumberToBigInt(prim));
   } else {
-    return Q(ToBigInt(value));
+    return Q(ToBigInt(prim));
   }
 }
 

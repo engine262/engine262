@@ -1,4 +1,5 @@
 import {
+  Await,
   Completion,
   NormalCompletion,
   Q, X,
@@ -243,14 +244,14 @@ export function* GeneratorYield(iterNextObj) {
 
 /** http://tc39.es/ecma262/#sec-yield */
 export function* Yield(value) {
-  // 1. Let generatorKind be ! GetGeneratorKind().
-  const generatorKind = X(GetGeneratorKind());
-  // 2. If generatorKind is async, then return ? AsyncGeneratorYield(value).
+  // 1. Let generatorKind be GetGeneratorKind().
+  const generatorKind = GetGeneratorKind();
+  // 2. If generatorKind is async, return ? AsyncGeneratorYield(? Await(value)).
   if (generatorKind === 'async') {
-    return Q(yield* AsyncGeneratorYield(value));
+    return Q(yield* AsyncGeneratorYield(Q(yield* Await(value))));
   }
-  // 3. Else, return ? GeneratorYield(! CreateIterResultObject(value, false)).
-  return Q(yield* GeneratorYield(X(CreateIterResultObject(value, Value.false))));
+  // 3. Otherwise, return ? GeneratorYield(CreateIterResultObject(value, false)).
+  return Q(yield* GeneratorYield(CreateIterResultObject(value, Value.false)));
 }
 
 /** http://tc39.es/ecma262/#sec-createiteratorfromclosure */

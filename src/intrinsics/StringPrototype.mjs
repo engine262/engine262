@@ -32,7 +32,11 @@ import {
   StringPad,
   StringIndexOf,
 } from '../runtime-semantics/all.mjs';
-import { CodePointAt } from '../static-semantics/all.mjs';
+import {
+  CodePointAt,
+  IsStringWellFormedUnicode,
+  UTF16EncodeCodePoint,
+} from '../static-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { assignProps } from './bootstrap.mjs';
 
@@ -178,6 +182,16 @@ function StringProto_indexOf([searchString = Value.undefined, position = Value.u
   const start = Math.min(Math.max(pos, 0), len);
   // 8. Return ! StringIndexOf(S, searchStr, start).
   return X(StringIndexOf(S, searchStr, start));
+}
+
+/** https://tc39.es/proposal-is-usv-string/#sec-string.prototype.iswellformed */
+function StringProto_isWellFormed(args, { thisValue }) {
+  // 1. Let O be ? RequireObjectCoercible(this value).
+  const O = Q(RequireObjectCoercible(thisValue));
+  // 2. Let S be ? ToString(O).
+  const S = Q(ToString(O));
+  // 3. Return IsStringWellFormedUnicode(S).
+  return IsStringWellFormedUnicode(S) ? Value.true : Value.false;
 }
 
 /** http://tc39.es/ecma262/#sec-string.prototype.lastindexof */
@@ -651,6 +665,37 @@ function StringProto_toUpperCase(args, { thisValue }) {
   return new Value(L);
 }
 
+/** https://tc39.es/proposal-is-usv-string/#sec-string.prototype.towellformed */
+function StringProto_toWellFormed(args, { thisValue }) {
+  // 1. Let O be ? RequireObjectCoercible(this value).
+  const O = Q(RequireObjectCoercible(thisValue));
+  // 2. Let S be ? ToString(O).
+  const S = Q(ToString(O));
+  // 3. Let strLen be the length of S.
+  const strLen = S.stringValue().length;
+  // 4. Let k be 0.
+  let k = 0;
+  // 5. Let result be the empty String.
+  let result = '';
+  // 6. Repeat, while k < strLen,
+  while (k < strLen) {
+    // a. Let cp be CodePointAt(S, k).
+    const cp = CodePointAt(S.stringValue(), k);
+    // b. If cp.[[IsUnpairedSurrogate]] is true, then
+    if (cp.IsUnpairedSurrogate) {
+      // i. Set result to the string-concatenation of result and 0xFFFD (REPLACEMENT CHARACTER).
+      result += '\uFFFD';
+    } else { // c. Else,
+      // i. Set result to the string-concatenation of result and UTF16EncodeCodePoint(cp.[[CodePoint]]).
+      result += UTF16EncodeCodePoint(cp.CodePoint);
+    }
+    // d. Set k to k + cp.[[CodeUnitCount]].
+    k += cp.CodeUnitCount;
+  }
+  // 7. Return result.
+  return new Value(result);
+}
+
 /** http://tc39.es/ecma262/#sec-string.prototype.trim */
 function StringProto_trim(args, { thisValue }) {
   const S = thisValue;
@@ -744,6 +789,9 @@ export function bootstrapStringPrototype(realmRec) {
     ['endsWith', StringProto_endsWith, 1],
     ['includes', StringProto_includes, 1],
     ['indexOf', StringProto_indexOf, 1],
+    surroundingAgent.feature('is-usv-string')
+      ? ['isWellFormed', StringProto_isWellFormed, 0]
+      : undefined,
     ['at', StringProto_at, 1],
     ['lastIndexOf', StringProto_lastIndexOf, 1],
     ['localeCompare', StringProto_localeCompare, 1],
@@ -765,6 +813,9 @@ export function bootstrapStringPrototype(realmRec) {
     ['toLowerCase', StringProto_toLowerCase, 0],
     ['toString', StringProto_toString, 0],
     ['toUpperCase', StringProto_toUpperCase, 0],
+    surroundingAgent.feature('is-usv-string')
+      ? ['toWellFormed', StringProto_toWellFormed, 0]
+      : undefined,
     ['trim', StringProto_trim, 0],
     ['trimEnd', StringProto_trimEnd, 0],
     ['trimStart', StringProto_trimStart, 0],

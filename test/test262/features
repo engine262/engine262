@@ -27,8 +27,14 @@
 
 -array-grouping
 
-# https://github.com/tc39/proposal-hashbang
-hashbang = hashbang
+-regexp-duplicate-named-groups
+
+-change-array-by-copy
+
+-symbols-as-weakmap-keys
+
+String.prototype.isWellFormed = is-usv-string
+String.prototype.toWellFormed = is-usv-string
 
 # https://github.com/tc39/proposal-cleanup-some
 FinalizationRegistry.prototype.cleanupSome = cleanup-some
