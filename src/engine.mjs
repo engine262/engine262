@@ -1,6 +1,5 @@
 import { Value } from './value.mjs';
 import {
-  AbruptCompletion,
   EnsureCompletion,
   NormalCompletion,
   ThrowCompletion,
@@ -8,16 +7,16 @@ import {
 } from './completion.mjs';
 import {
   IsCallable,
-  Call, Construct, Assert, GetModuleNamespace,
-  PerformPromiseThen, CreateBuiltinFunction,
+  Call, Construct, Assert,
   GetActiveScriptOrModule,
   CleanupFinalizationRegistry,
   CreateArrayFromList,
+  FinishLoadingImportedModule,
 } from './abstract-ops/all.mjs';
 import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
 import { Evaluate } from './evaluator.mjs';
-import { CyclicModuleRecord } from './modules.mjs';
 import { CallSite, unwind } from './helpers.mjs';
+import { runJobQueue } from './api.mjs';
 import * as messages from './messages.mjs';
 
 export const FEATURES = Object.freeze([
@@ -275,75 +274,31 @@ export function HostHasSourceTextAvailable(func) {
   return Value.true;
 }
 
-export function HostResolveImportedModule(referencingScriptOrModule, specifier) {
-  const realm = referencingScriptOrModule.Realm || surroundingAgent.currentRealmRecord;
-  if (realm.HostDefined.resolveImportedModule) {
-    specifier = specifier.stringValue();
-    if (referencingScriptOrModule !== Value.null) {
-      if (!referencingScriptOrModule.HostDefined.moduleMap) {
-        referencingScriptOrModule.HostDefined.moduleMap = new Map();
+// #sec-HostLoadImportedModule
+export function HostLoadImportedModule(referrer, specifier, hostDefined, payload) {
+  if (surroundingAgent.hostDefinedOptions.loadImportedModule) {
+    const executionContext = surroundingAgent.runningExecutionContext;
+    let result;
+    let sync = true;
+    surroundingAgent.hostDefinedOptions.loadImportedModule(referrer, specifier.stringValue(), hostDefined, (res) => {
+      result = EnsureCompletion(res);
+      if (!sync) {
+        // If this callback has been called asynchronously, restore the correct execution context and enqueue a job.
+        surroundingAgent.executionContextStack.push(executionContext);
+        surroundingAgent.queueJob('FinishLoadingImportedModule', () => {
+          FinishLoadingImportedModule(referrer, specifier, result, payload);
+        });
+        surroundingAgent.executionContextStack.pop(executionContext);
+        runJobQueue();
       }
-      if (referencingScriptOrModule.HostDefined.moduleMap.has(specifier)) {
-        return referencingScriptOrModule.HostDefined.moduleMap.get(specifier);
-      }
+    });
+    sync = false;
+    if (result !== undefined) {
+      FinishLoadingImportedModule(referrer, specifier, result, payload);
     }
-    const resolved = Q(realm.HostDefined.resolveImportedModule(referencingScriptOrModule, specifier));
-    if (referencingScriptOrModule !== Value.null) {
-      referencingScriptOrModule.HostDefined.moduleMap.set(specifier, resolved);
-    }
-    return resolved;
+  } else {
+    FinishLoadingImportedModule(referrer, specifier, surroundingAgent.Throw('Error', 'CouldNotResolveModule', specifier), payload);
   }
-  return surroundingAgent.Throw('Error', 'CouldNotResolveModule', specifier);
-}
-
-function FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, completion) {
-  // 1. If completion is an abrupt completion, then perform ! Call(promiseCapability.[[Reject]], undefined, « completion.[[Value]] »).
-  if (completion instanceof AbruptCompletion) {
-    X(Call(promiseCapability.Reject, Value.undefined, [completion.Value]));
-  } else { // 2. Else,
-    // a. Assert: completion is a normal completion and completion.[[Value]] is undefined.
-    Assert(completion instanceof NormalCompletion);
-    // b. Let moduleRecord be ! HostResolveImportedModule(referencingScriptOrModule, specifier).
-    const moduleRecord = X(HostResolveImportedModule(referencingScriptOrModule, specifier));
-    // c. Assert: Evaluate has already been invoked on moduleRecord and successfully completed.
-    // d. Let namespace be GetModuleNamespace(moduleRecord).
-    const namespace = EnsureCompletion(GetModuleNamespace(moduleRecord));
-    // e. If namespace is an abrupt completion, perform ! Call(promiseCapability.[[Reject]], undefined, « namespace.[[Value]] »).
-    if (namespace instanceof AbruptCompletion) {
-      X(Call(promiseCapability.Reject, Value.undefined, [namespace.Value]));
-    } else {
-      // f. Else, perform ! Call(promiseCapability.[[Resolve]], undefined, « namespace.[[Value]] »).
-      X(Call(promiseCapability.Resolve, Value.undefined, [namespace.Value]));
-    }
-  }
-}
-
-export function HostImportModuleDynamically(referencingScriptOrModule, specifier, promiseCapability) {
-  surroundingAgent.queueJob('ImportModuleDynamicallyJobs', () => {
-    const finish = (c) => FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, c);
-    const c = (() => {
-      const module = Q(HostResolveImportedModule(referencingScriptOrModule, specifier));
-      Q(module.Link());
-      const maybePromise = Q(module.Evaluate());
-      if (module instanceof CyclicModuleRecord) {
-        const onFulfilled = CreateBuiltinFunction(([v = Value.undefined]) => {
-          finish(NormalCompletion(v));
-          return Value.undefined;
-        }, 1, new Value(''), []);
-        const onRejected = CreateBuiltinFunction(([r = Value.undefined]) => {
-          finish(ThrowCompletion(r));
-          return Value.undefined;
-        }, 1, new Value(''), []);
-        PerformPromiseThen(maybePromise, onFulfilled, onRejected);
-      } else {
-        finish(NormalCompletion(undefined));
-      }
-    })();
-    if (c instanceof AbruptCompletion) {
-      finish(c);
-    }
-  });
-  return NormalCompletion(Value.undefined);
 }
 
 /** http://tc39.es/ecma262/#sec-hostgetimportmetaproperties */

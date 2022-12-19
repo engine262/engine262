@@ -71,10 +71,14 @@ export function ParseScript(sourceText, realm, hostDefined = {}) {
   return {
     Realm: realm,
     ECMAScriptCode: body,
+    LoadedModules: [],
     HostDefined: hostDefined,
     mark(m) {
       m(this.Realm);
       m(this.Environment);
+      for (const v of this.LoadedModules) {
+        m(v.Module);
+      }
     },
   };
 }
@@ -147,13 +151,14 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
     Realm: realm,
     Environment: Value.undefined,
     Namespace: Value.undefined,
-    Status: 'unlinked',
+    Status: 'new',
     EvaluationError: Value.undefined,
     HostDefined: hostDefined,
     ECMAScriptCode: body,
     Context: undefined,
     ImportMeta: undefined,
     RequestedModules: requestedModules,
+    LoadedModules: [],
     ImportEntries: importEntries,
     LocalExportEntries: localExportEntries,
     IndirectExportEntries: indirectExportEntries,

@@ -1,17 +1,20 @@
 import { NewModuleEnvironment } from './environment.mjs';
 import { Value, JSStringValue } from './value.mjs';
-import { ExecutionContext, HostResolveImportedModule, surroundingAgent } from './engine.mjs';
+import { ExecutionContext, surroundingAgent } from './engine.mjs';
 import {
   Assert,
   Call,
   NewPromiseCapability,
+  GetImportedModule,
   GetModuleNamespace,
   InnerModuleEvaluation,
   InnerModuleLinking,
+  InnerModuleLoading,
   SameValue,
   GetAsyncCycleRoot,
   AsyncBlockStart,
   PromiseCapabilityRecord,
+  GraphLoadingState,
 } from './abstract-ops/all.mjs';
 import {
   VarScopedDeclarations,
@@ -74,6 +77,7 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
     this.DFSIndex = init.DFSIndex;
     this.DFSAncestorIndex = init.DFSAncestorIndex;
     this.RequestedModules = init.RequestedModules;
+    this.LoadedModules = init.LoadedModules;
     this.Async = init.Async;
     this.AsyncEvaluating = init.AsyncEvaluating;
     this.TopLevelCapability = init.TopLevelCapability;
@@ -81,12 +85,29 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
     this.PendingAsyncDependencies = init.PendingAsyncDependencies;
   }
 
+  /** http://tc39.es/ecma262/#sec-LoadRequestedModules */
+  LoadRequestedModules(hostDefined = Value.undefined) {
+    const module = this;
+
+    // 2. Let pc be ! NewPromiseCapability(%Promise%).
+    const pc = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
+    // 3. Let state be a new GraphLoadingState Record { [[IsLoading]]: true, [[PendingModulesCount]]: 1, [[Visited]]: « », [[PromiseCapability]]: pc, [[HostDefined]]: hostDefined }.
+    const state = new GraphLoadingState({
+      PromiseCapability: pc,
+      HostDefined: hostDefined,
+    });
+    // 4. Perform InnerModuleLoading(state, module).
+    InnerModuleLoading(state, module);
+    // 5. Return pc.[[Promise]].
+    return pc.Promise;
+  }
+
   /** http://tc39.es/ecma262/#sec-moduledeclarationlinking */
   Link() {
     // 1. Let module be this Cyclic Module Record.
     const module = this;
     // 2. Assert: module.[[Status]] is not linking or evaluating.
-    Assert(module.Status !== 'linking' && module.Status !== 'evaluating');
+    Assert(module.Status === 'unlinked' || module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated');
     // 3. Let stack be a new empty List.
     const stack = [];
     // 4. Let result be InnerModuleLinking(module, stack, 0).
@@ -178,6 +199,9 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
   mark(m) {
     super.mark(m);
     m(this.EvaluationError);
+    for (const v of this.LoadedModules) {
+      m(v.Module);
+    }
   }
 }
 
@@ -229,11 +253,13 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     }
     // 9. For each ExportEntry Record e in module.[[StarExportEntries]], do
     for (const e of module.StarExportEntries) {
-      // a. Let requestedModule be ? HostResolveImportedModule(module, e.[[ModuleRequest]]).
-      const requestedModule = Q(HostResolveImportedModule(module, e.ModuleRequest));
-      // b. Let starNames be ? requestedModule.GetExportedNames(exportStarSet).
+      // a. Let requestedModule be GetImportedModule(module, e.[[ModuleRequest]]).
+      const requestedModule = GetImportedModule(module, e.ModuleRequest);
+      // b. Assert: requestedModule is not empty, because LoadRequestedModules must have completed successfully prior to invoking this method.
+      Assert(requestedModule !== undefined);
+      // c. Let starNames be ? requestedModule.GetExportedNames(exportStarSet).
       const starNames = Q(requestedModule.GetExportedNames(exportStarSet));
-      // c. For each element n of starNames, do
+      // d. For each element n of starNames, do
       for (const n of starNames) {
         // i. If SameValue(n, "default") is false, then
         if (SameValue(n, new Value('default')) === Value.false) {
@@ -286,9 +312,11 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     for (const e of module.IndirectExportEntries) {
       // a. If SameValue(exportName, e.[[ExportName]]) is true, then
       if (SameValue(exportName, e.ExportName) === Value.true) {
-        // i. Let importedModule be ? HostResolveImportedModule(module, e.[[ModuleRequest]]).
-        const importedModule = Q(HostResolveImportedModule(module, e.ModuleRequest));
-        // ii. If e.[[ImportName]] is ~all~, then
+        // i. Let importedModule be GetImportedModule(module, e.[[ModuleRequest]]).
+        const importedModule = GetImportedModule(module, e.ModuleRequest);
+        // ii. Assert: importedModule is not empty, because LoadRequestedModules must have completed successfully prior to invoking this method.
+        Assert(importedModule !== undefined);
+        // iii. If e.[[ImportName]] is ~all~, then
         if (e.ImportName === 'all') {
           // 1. Assert: module does not provide the direct binding for this export
           // 2. Return ResolvedBinding Record { [[Module]]: importedModule, [[BindingName]]: ~namespace~ }.
@@ -296,7 +324,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
             Module: importedModule,
             BindingName: 'namespace',
           });
-        } else { // iii. Else,
+        } else { // iv. Else,
           // 1. Assert: module imports a specific binding for this export.
           // 2. Return importedModule.ResolveExport(e.[[ImportName]], resolveSet).
           return importedModule.ResolveExport(e.ImportName, resolveSet);
@@ -314,15 +342,17 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     let starResolution = null;
     // 10. For each ExportEntry Record e in module.[[StarExportEntries]], do
     for (const e of module.StarExportEntries) {
-      // a. Let importedModule be ? HostResolveImportedModule(module, e.[[ModuleRequest]]).
-      const importedModule = Q(HostResolveImportedModule(module, e.ModuleRequest));
-      // b. Let resolution be ? importedModule.ResolveExport(exportName, resolveSet).
+      // a. Let importedModule be GetImportedModule(module, e.[[ModuleRequest]]).
+      const importedModule = GetImportedModule(module, e.ModuleRequest);
+      // b. Assert: importedModule is not empty, because LoadRequestedModules must have completed successfully prior to invoking this method.
+      Assert(importedModule !== undefined);
+      // c. Let resolution be ? importedModule.ResolveExport(exportName, resolveSet).
       const resolution = Q(importedModule.ResolveExport(exportName, resolveSet));
-      // c. If resolution is "ambiguous", return "ambiguous".
+      // d. If resolution is "ambiguous", return "ambiguous".
       if (resolution === 'ambiguous') {
         return 'ambiguous';
       }
-      // d. If resolution is not null, then
+      // e. If resolution is not null, then
       if (resolution !== null) {
         // a. Assert: resolution is a ResolvedBinding Record.
         Assert(resolution instanceof ResolvedBindingRecord);
@@ -374,10 +404,12 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     module.Environment = env;
     // 8. For each ImportEntry Record in in module.[[ImportEntries]], do
     for (const ie of module.ImportEntries) {
-      // a. Let importedModule be ! HostResolveImportedModule(module, in.[[ModuleRequest]]).
-      const importedModule = X(HostResolveImportedModule(module, ie.ModuleRequest));
-      // b. NOTE: The above call cannot fail because imported module requests are a subset of module.[[RequestedModules]], and these have been resolved earlier in this algorithm.
-      // c. If in.[[ImportName]] is ~namespace-object~, then
+      // a. Let importedModule be GetImportedModule(module, in.[[ModuleRequest]]).
+      const importedModule = GetImportedModule(module, ie.ModuleRequest);
+      // b. Assert: importedModule is not empty, because LoadRequestedModules must have completed successfully prior to invoking this method.
+      Assert(importedModule !== undefined);
+      // c. NOTE: The above call cannot fail because imported module requests are a subset of module.[[RequestedModules]], and these have been resolved earlier in this algorithm.
+      // d. If in.[[ImportName]] is ~namespace-object~, then
       if (ie.ImportName === 'namespace-object') {
         // i. Let namespace be ? GetModuleNamespace(importedModule).
         const namespace = Q(GetModuleNamespace(importedModule));
@@ -385,7 +417,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
         X(env.CreateImmutableBinding(ie.LocalName, Value.true));
         // iii. Call env.InitializeBinding(in.[[LocalName]], namespace).
         env.InitializeBinding(ie.LocalName, namespace);
-      } else { // d. Else,
+      } else { // e. Else,
         // i. Let resolution be ? importedModule.ResolveExport(in.[[ImportName]]).
         const resolution = Q(importedModule.ResolveExport(ie.ImportName));
         // ii. If resolution is null or "ambiguous", throw a SyntaxError exception.

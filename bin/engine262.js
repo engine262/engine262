@@ -8,7 +8,6 @@ const path = require('path');
 const util = require('util');
 const packageJson = require('../package.json'); // eslint-disable-line import/order
 const {
-  Agent,
   setSurroundingAgent,
 
   FEATURES,
@@ -26,7 +25,7 @@ const {
   Throw,
 } = require('..');
 const snekparse = require('./snekparse');
-const { createRealm } = require('./test262_realm');
+const { createRealm, createAgent } = require('./test262_realm');
 
 const execArgv = [];
 let entry;
@@ -101,7 +100,7 @@ if (argv.features === 'all') {
   features = [];
 }
 
-const agent = new Agent({ features });
+const agent = createAgent({ features });
 setSurroundingAgent(agent);
 
 const { realm, resolverCache } = createRealm({ printCompatMode: true });
@@ -148,7 +147,17 @@ function oneShotEval(source, filename) {
       if (!(result instanceof AbruptCompletion)) {
         const module = result;
         resolverCache.set(filename, result);
-        result = module.Link();
+        result = module.LoadRequestedModules();
+        if (!(result instanceof AbruptCompletion)) {
+          if (result.PromiseState === 'rejected') {
+            result = Throw(result.PromiseResult);
+          } else if (result.PromiseState === 'pending') {
+            throw new Error('Internal error: .LoadRequestedModules() returned a pending promise');
+          }
+        }
+        if (!(result instanceof AbruptCompletion)) {
+          result = module.Link();
+        }
         if (!(result instanceof AbruptCompletion)) {
           result = module.Evaluate();
         }

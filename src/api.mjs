@@ -192,6 +192,7 @@ export class ManagedRealm extends Realm {
     this.GlobalObject = Value.undefined;
     this.GlobalEnv = Value.undefined;
     this.TemplateMap = [];
+    this.LoadedModules = [];
 
     // InitializeHostDefinedRealm()
     const newContext = new ExecutionContext();

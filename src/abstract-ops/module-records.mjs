@@ -1,4 +1,4 @@
-import { surroundingAgent, HostResolveImportedModule } from '../engine.mjs';
+import { surroundingAgent, HostLoadImportedModule } from '../engine.mjs';
 import {
   AbstractModuleRecord,
   CyclicModuleRecord,
@@ -16,7 +16,61 @@ import {
   PerformPromiseThen,
   CreateBuiltinFunction,
   Call,
+  ContinueDynamicImport,
 } from './all.mjs';
+
+/** https://tc39.es/ecma262/#graphloadingstate-record */
+export class GraphLoadingState {
+  constructor({ PromiseCapability, HostDefined }) {
+    this.PromiseCapability = PromiseCapability;
+    this.HostDefined = HostDefined;
+    this.IsLoading = true;
+    this.Visited = new Set();
+    this.PendingModules = 1;
+  }
+}
+
+/** http://tc39.es/ecma262/#sec-InnerModuleLoading */
+export function InnerModuleLoading(state, module) {
+  Assert(state.IsLoading === true);
+  if (module instanceof CyclicModuleRecord && module.Status === 'new' && !state.Visited.has(module)) {
+    state.Visited.add(module);
+    const requestedModulesCout = module.RequestedModules.length;
+    state.PendingModules += requestedModulesCout;
+    for (const required of module.RequestedModules) {
+      const record = getRecordWithSpecifier(module.LoadedModules, required);
+      if (record !== undefined) {
+        ContinueModuleLoading(state, NormalCompletion(record.Module));
+      } else {
+        HostLoadImportedModule(module, required, state.HostDefined, state);
+      }
+    }
+  }
+  Assert(state.PendingModules >= 1);
+  state.PendingModules -= 1;
+  if (state.PendingModules === 0) {
+    state.IsLoading = false;
+    for (const loaded of state.Visited) {
+      if (loaded.Status === 'new') {
+        loaded.Status = 'unlinked';
+      }
+    }
+    X(Call(state.PromiseCapability.Resolve, Value.undefined, [Value.undefined]));
+  }
+}
+
+/** http://tc39.es/ecma262/#sec-ContinueModuleLoading */
+export function ContinueModuleLoading(state, result) {
+  if (state.IsLoading === false) {
+    return;
+  }
+  if (result instanceof NormalCompletion) {
+    InnerModuleLoading(state, result.Value);
+  } else {
+    state.IsLoading = false;
+    X(Call(state.PromiseCapability.Reject, Value.undefined, [result.Value]));
+  }
+}
 
 /** http://tc39.es/ecma262/#sec-InnerModuleLinking */
 export function InnerModuleLinking(module, stack, index) {
@@ -34,7 +88,7 @@ export function InnerModuleLinking(module, stack, index) {
   index += 1;
   stack.push(module);
   for (const required of module.RequestedModules) {
-    const requiredModule = Q(HostResolveImportedModule(module, required));
+    const requiredModule = GetImportedModule(module, required);
     index = Q(InnerModuleLinking(requiredModule, stack, index));
     if (requiredModule instanceof CyclicModuleRecord) {
       Assert(requiredModule.Status === 'linking' || requiredModule.Status === 'linked' || requiredModule.Status === 'evaluated');
@@ -86,7 +140,7 @@ export function InnerModuleEvaluation(module, stack, index) {
   index += 1;
   stack.push(module);
   for (const required of module.RequestedModules) {
-    let requiredModule = X(HostResolveImportedModule(module, required));
+    let requiredModule = GetImportedModule(module, required);
     index = Q(InnerModuleEvaluation(requiredModule, stack, index));
     if (requiredModule instanceof CyclicModuleRecord) {
       Assert(requiredModule.Status === 'evaluating' || requiredModule.Status === 'evaluated');
@@ -243,6 +297,39 @@ function AsyncModuleExecutionRejected(module, error) {
     X(Call(module.TopLevelCapability.Reject, Value.undefined, [error]));
   }
   return Value.undefined;
+}
+
+function getRecordWithSpecifier(loadedModules, specifier) {
+  for (const record of loadedModules) {
+    if (record.Specifier.stringValue() === specifier.stringValue()) {
+      return record;
+    }
+  }
+  return undefined;
+}
+
+/** http://tc39.es/ecma262/#sec-GetImportedModule */
+export function GetImportedModule(referrer, specifier) {
+  const record = getRecordWithSpecifier(referrer.LoadedModules, specifier);
+  Assert(record !== undefined);
+  return record.Module;
+}
+
+/** http://tc39.es/ecma262/#sec-FinishLoadingImportedModule */
+export function FinishLoadingImportedModule(referrer, specifier, result, state) {
+  if (result.Type === 'normal') {
+    const record = getRecordWithSpecifier(referrer.LoadedModules, specifier);
+    if (record !== undefined) {
+      Assert(record.Module === result.Value);
+    } else {
+      referrer.LoadedModules.push({ Specifier: specifier, Module: result.Value });
+    }
+  }
+  if (state instanceof GraphLoadingState) {
+    ContinueModuleLoading(state, result);
+  } else {
+    ContinueDynamicImport(state, result);
+  }
 }
 
 /** http://tc39.es/ecma262/#sec-getmodulenamespace */
