@@ -104,40 +104,33 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
 
   /** http://tc39.es/ecma262/#sec-moduledeclarationlinking */
   Link() {
-    // 1. Let module be this Cyclic Module Record.
     const module = this;
-    // 2. Assert: module.[[Status]] is not linking or evaluating.
+    // 1. Assert: module.[[Status]] is unlinked, linked, evaluating-async, or evaluated.
     Assert(module.Status === 'unlinked' || module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated');
-    // 3. Let stack be a new empty List.
+    // 2. Let stack be a new empty List.
     const stack = [];
-    // 4. Let result be InnerModuleLinking(module, stack, 0).
+    // 3. Let result be Completion(InnerModuleLinking(module, stack, 0)).
     const result = InnerModuleLinking(module, stack, 0);
     // 5. If result is an abrupt completion, then
     if (result instanceof AbruptCompletion) {
-      // a. For each Cyclic Module Record m in stack, do
+      // a. For each Cyclic Module Record m of stack, do
       for (const m of stack) {
         // i. Assert: m.[[Status]] is linking.
         Assert(m.Status === 'linking');
         // ii. Set m.[[Status]] to unlinked.
         m.Status = 'unlinked';
-        // iii. Set m.[[Environment]] to undefined.
-        m.Environment = Value.undefined;
-        // iv. Set m.[[DFSIndex]] to undefined.
-        m.DFSIndex = Value.undefined;
-        // v. Set m.[[DFSAncestorIndex]] to undefined.
-        m.DFSAncestorIndex = Value.undefined;
       }
       // b. Assert: module.[[Status]] is unlinked.
       Assert(module.Status === 'unlinked');
       // c. Return result.
       return result;
     }
-    // 6. Assert: module.[[Status]] is linked or evaluated.
-    Assert(module.Status === 'linked' || module.Status === 'evaluated');
+    // 6. Assert: module.[[Status]] is linked, evaluating-async, or evaluated.
+    Assert(module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated');
     // 7. Assert: stack is empty.
     Assert(stack.length === 0);
-    // 8. Return undefined.
-    return Value.undefined;
+    // 8. Return unused.
+    return NormalCompletion(undefined);
   }
 
   /** http://tc39.es/ecma262/#sec-moduleevaluation */
@@ -221,45 +214,42 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
 
   /** http://tc39.es/ecma262/#sec-getexportednames */
   GetExportedNames(exportStarSet) {
-    // 1. If exportStarSet is not present, set exportStarSet to a new empty List.
+    const module = this;
+    // 1. Assert: module.[[Status]] is not new.
+    Assert(module.Status !== 'new');
+    // 2. If exportStarSet is not present, set exportStarSet to a new empty List.
     if (!exportStarSet) {
       exportStarSet = [];
     }
-    // 2. Assert: exportStarSet is a List of Source Text Module Records.
-    Assert(Array.isArray(exportStarSet) && exportStarSet.every((e) => e instanceof SourceTextModuleRecord));
-    // 3. Let module be this Source Text Module Record.
-    const module = this;
-    // 4. If exportStarSet contains module, then
+    // 3. If exportStarSet contains module, then
     if (exportStarSet.includes(module)) {
       // a. Assert: We've reached the starting point of an import * circularity.
       // b. Return a new empty List.
       return [];
     }
-    // 5. Append module to exportStarSet.
+    // 4. Append module to exportStarSet.
     exportStarSet.push(module);
-    // 6. Let exportedNames be a new empty List.
+    // 5. Let exportedNames be a new empty List.
     const exportedNames = [];
-    // 7. For each ExportEntry Record e in module.[[LocalExportEntries]], do
+    // 6. For each ExportEntry Record e in module.[[LocalExportEntries]], do
     for (const e of module.LocalExportEntries) {
       // a. Assert: module provides the direct binding for this export.
       // b. Append e.[[ExportName]] to exportedNames.
       exportedNames.push(e.ExportName);
     }
-    // 8. For each ExportEntry Record e in module.[[IndirectExportEntries]], do
+    // 7. For each ExportEntry Record e in module.[[IndirectExportEntries]], do
     for (const e of module.IndirectExportEntries) {
       // a. Assert: module imports a specific binding for this export.
       // b. Append e.[[ExportName]] to exportedNames.
       exportedNames.push(e.ExportName);
     }
-    // 9. For each ExportEntry Record e in module.[[StarExportEntries]], do
+    // 8. For each ExportEntry Record e in module.[[StarExportEntries]], do
     for (const e of module.StarExportEntries) {
       // a. Let requestedModule be GetImportedModule(module, e.[[ModuleRequest]]).
       const requestedModule = GetImportedModule(module, e.ModuleRequest);
-      // b. Assert: requestedModule is not empty, because LoadRequestedModules must have completed successfully prior to invoking this method.
-      Assert(requestedModule !== undefined);
-      // c. Let starNames be ? requestedModule.GetExportedNames(exportStarSet).
-      const starNames = Q(requestedModule.GetExportedNames(exportStarSet));
-      // d. For each element n of starNames, do
+      // b. Let starNames be requestedModule.GetExportedNames(exportStarSet).
+      const starNames = requestedModule.GetExportedNames(exportStarSet);
+      // c. For each element n of starNames, do
       for (const n of starNames) {
         // i. If SameValue(n, "default") is false, then
         if (SameValue(n, new Value('default')) === Value.false) {
@@ -271,21 +261,20 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
         }
       }
     }
-    // 10. Return exportedNames.
+    // 9. Return exportedNames.
     return exportedNames;
   }
 
   /** http://tc39.es/ecma262/#sec-resolveexport */
   ResolveExport(exportName, resolveSet) {
-    // 1. If resolveSet is not present, set resolveSet to a new empty List.
+    const module = this;
+    // 1. Assert: module.[[Status]] is not new.
+    Assert(module.Status !== 'new');
+    // 2. If resolveSet is not present, set resolveSet to a new empty List.
     if (!resolveSet) {
       resolveSet = [];
     }
-    // 2. Assert: resolveSet is a List of Record { [[Module]], [[ExportName]] }.
-    Assert(Array.isArray(resolveSet) && resolveSet.every((e) => 'Module' in e && 'ExportName' in e));
-    // 3. Let module be this Source Text Module Record.
-    const module = this;
-    // 4. For each Record { [[Module]], [[ExportName]] } r in resolveSet, do
+    // 3. For each Record { [[Module]], [[ExportName]] } r in resolveSet, do
     for (const r of resolveSet) {
       // a. If module and r.[[Module]] are the same Module Record and SameValue(exportName, r.[[ExportName]]) is true, then
       if (module === r.Module && SameValue(exportName, r.ExportName) === Value.true) {
@@ -294,9 +283,9 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
         return null;
       }
     }
-    // 5. Append the Record { [[Module]]: module, [[ExportName]]: exportName } to resolveSet.
+    // 4. Append the Record { [[Module]]: module, [[ExportName]]: exportName } to resolveSet.
     resolveSet.push({ Module: module, ExportName: exportName });
-    // 6. For each ExportEntry Record e in module.[[LocalExportEntries]], do
+    // 5. For each ExportEntry Record e in module.[[LocalExportEntries]], do
     for (const e of module.LocalExportEntries) {
       // a. If SameValue(exportName, e.[[ExportName]]) is true, then
       if (SameValue(exportName, e.ExportName) === Value.true) {
@@ -308,15 +297,13 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
         });
       }
     }
-    // 7. For each ExportEntry Record e in module.[[IndirectExportEntries]], do
+    // 6. For each ExportEntry Record e in module.[[IndirectExportEntries]], do
     for (const e of module.IndirectExportEntries) {
       // a. If SameValue(exportName, e.[[ExportName]]) is true, then
       if (SameValue(exportName, e.ExportName) === Value.true) {
         // i. Let importedModule be GetImportedModule(module, e.[[ModuleRequest]]).
         const importedModule = GetImportedModule(module, e.ModuleRequest);
-        // ii. Assert: importedModule is not empty, because LoadRequestedModules must have completed successfully prior to invoking this method.
-        Assert(importedModule !== undefined);
-        // iii. If e.[[ImportName]] is ~all~, then
+        // ii. If e.[[ImportName]] is ~all~, then
         if (e.ImportName === 'all') {
           // 1. Assert: module does not provide the direct binding for this export
           // 2. Return ResolvedBinding Record { [[Module]]: importedModule, [[BindingName]]: ~namespace~ }.
@@ -331,28 +318,26 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
         }
       }
     }
-    // 8. If SameValue(exportName, "default") is true, then
+    // 7. If SameValue(exportName, "default") is true, then
     if (SameValue(exportName, new Value('default')) === Value.true) {
       // a. Assert: A default export was not explicitly defined by this module.
       // b. Return null.
       return null;
       // c. NOTE: A default export cannot be provided by an export * or export * from "mod" declaration.
     }
-    // 9. Let starResolution be null.
+    // 8. Let starResolution be null.
     let starResolution = null;
-    // 10. For each ExportEntry Record e in module.[[StarExportEntries]], do
+    // 9. For each ExportEntry Record e in module.[[StarExportEntries]], do
     for (const e of module.StarExportEntries) {
       // a. Let importedModule be GetImportedModule(module, e.[[ModuleRequest]]).
       const importedModule = GetImportedModule(module, e.ModuleRequest);
-      // b. Assert: importedModule is not empty, because LoadRequestedModules must have completed successfully prior to invoking this method.
-      Assert(importedModule !== undefined);
-      // c. Let resolution be ? importedModule.ResolveExport(exportName, resolveSet).
-      const resolution = Q(importedModule.ResolveExport(exportName, resolveSet));
-      // d. If resolution is "ambiguous", return "ambiguous".
+      // b. Let resolution be importedModule.ResolveExport(exportName, resolveSet).
+      const resolution = importedModule.ResolveExport(exportName, resolveSet);
+      // c. If resolution is "ambiguous", return "ambiguous".
       if (resolution === 'ambiguous') {
         return 'ambiguous';
       }
-      // e. If resolution is not null, then
+      // d. If resolution is not null, then
       if (resolution !== null) {
         // a. Assert: resolution is a ResolvedBinding Record.
         Assert(resolution instanceof ResolvedBindingRecord);
@@ -374,12 +359,11 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
 
   /** http://tc39.es/ecma262/#sec-source-text-module-record-initialize-environment */
   InitializeEnvironment() {
-    // 1. Let module be this Source Text Module Record.
     const module = this;
-    // 2. For each ExportEntry Record e in module.[[IndirectExportEntries]], do
+    // 1. For each ExportEntry Record e in module.[[IndirectExportEntries]], do
     for (const e of module.IndirectExportEntries) {
-      // a. Let resolution be ? module.ResolveExport(e.[[ExportName]]).
-      const resolution = Q(module.ResolveExport(e.ExportName));
+      // a. Let resolution be module.ResolveExport(e.[[ExportName]]).
+      const resolution = module.ResolveExport(e.ExportName);
       // b. If resolution is null or "ambiguous", throw a SyntaxError exception.
       if (resolution === null || resolution === 'ambiguous') {
         return surroundingAgent.Throw(
@@ -393,33 +377,30 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       // c. Assert: resolution is a ResolvedBinding Record.
       Assert(resolution instanceof ResolvedBindingRecord);
     }
-    // 3. Assert: All named exports from module are resolvable.
-    // 4. Let realm be module.[[Realm]].
+    // 2. Assert: All named exports from module are resolvable.
+    // 3. Let realm be module.[[Realm]].
     const realm = module.Realm;
-    // 5. Assert: realm is not undefined.
+    // 4. Assert: realm is not undefined.
     Assert(realm !== Value.undefined);
-    // 6. Let env be NewModuleEnvironment(realm.[[GlobalEnv]]).
+    // 5. Let env be NewModuleEnvironment(realm.[[GlobalEnv]]).
     const env = NewModuleEnvironment(realm.GlobalEnv);
-    // 7. Set module.[[Environment]] to env.
+    // 6. Set module.[[Environment]] to env.
     module.Environment = env;
-    // 8. For each ImportEntry Record in in module.[[ImportEntries]], do
+    // 7. For each ImportEntry Record in in module.[[ImportEntries]], do
     for (const ie of module.ImportEntries) {
       // a. Let importedModule be GetImportedModule(module, in.[[ModuleRequest]]).
       const importedModule = GetImportedModule(module, ie.ModuleRequest);
-      // b. Assert: importedModule is not empty, because LoadRequestedModules must have completed successfully prior to invoking this method.
-      Assert(importedModule !== undefined);
-      // c. NOTE: The above call cannot fail because imported module requests are a subset of module.[[RequestedModules]], and these have been resolved earlier in this algorithm.
-      // d. If in.[[ImportName]] is ~namespace-object~, then
+      // b. If in.[[ImportName]] is ~namespace-object~, then
       if (ie.ImportName === 'namespace-object') {
-        // i. Let namespace be ? GetModuleNamespace(importedModule).
-        const namespace = Q(GetModuleNamespace(importedModule));
+        // i. Let namespace be GetModuleNamespace(importedModule).
+        const namespace = GetModuleNamespace(importedModule);
         // ii. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
         X(env.CreateImmutableBinding(ie.LocalName, Value.true));
         // iii. Call env.InitializeBinding(in.[[LocalName]], namespace).
         env.InitializeBinding(ie.LocalName, namespace);
-      } else { // e. Else,
-        // i. Let resolution be ? importedModule.ResolveExport(in.[[ImportName]]).
-        const resolution = Q(importedModule.ResolveExport(ie.ImportName));
+      } else { // c. Else,
+        // i. Let resolution be importedModule.ResolveExport(in.[[ImportName]]).
+        const resolution = importedModule.ResolveExport(ie.ImportName);
         // ii. If resolution is null or "ambiguous", throw a SyntaxError exception.
         if (resolution === null || resolution === 'ambiguous') {
           return surroundingAgent.Throw(
@@ -432,8 +413,8 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
         }
         // iii. If resolution.[[BindingName]] is ~namespace~, then
         if (resolution.BindingName === 'namespace') {
-          // 1. Let namespace be ? GetModuleNamespace(resolution.[[Module]]).
-          const namespace = Q(GetModuleNamespace(resolution.Module));
+          // 1. Let namespace be GetModuleNamespace(resolution.[[Module]]).
+          const namespace = GetModuleNamespace(resolution.Module);
           // 2. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
           X(env.CreateImmutableBinding(ie.LocalName, Value.true));
           // 3. Call env.InitializeBinding(in.[[LocalName]], namespace).
@@ -444,19 +425,19 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
         }
       }
     }
-    // 9. Let moduleContext be a new ECMAScript code execution context.
+    // 8. Let moduleContext be a new ECMAScript code execution context.
     const moduleContext = new ExecutionContext();
-    // 10. Set the Function of moduleContext to null.
+    // 9. Set the Function of moduleContext to null.
     moduleContext.Function = Value.null;
-    // 11. Assert: module.[[Realm]] is not undefined.
+    // 10. Assert: module.[[Realm]] is not undefined.
     Assert(module.Realm !== Value.undefined);
-    // 12. Set the Realm of moduleContext to module.[[Realm]].
+    // 11. Set the Realm of moduleContext to module.[[Realm]].
     moduleContext.Realm = module.Realm;
-    // 13. Set the ScriptOrModule of moduleContext to module.
+    // 12. Set the ScriptOrModule of moduleContext to module.
     moduleContext.ScriptOrModule = module;
-    // 14. Set the VariableEnvironment of moduleContext to module.[[Environment]].
+    // 13. Set the VariableEnvironment of moduleContext to module.[[Environment]].
     moduleContext.VariableEnvironment = module.Environment;
-    // 15. Set the LexicalEnvironment of moduleContext to module.[[Environment]].
+    // 14. Set the LexicalEnvironment of moduleContext to module.[[Environment]].
     moduleContext.LexicalEnvironment = module.Environment;
     // 15. Set the PrivateEnvironment of moduleContext to null.
     moduleContext.PrivateEnvironment = Value.null;
@@ -487,7 +468,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     }
     // 22. Let lexDeclarations be the LexicallyScopedDeclarations of code.
     const lexDeclarations = LexicallyScopedDeclarations(code);
-    // 23. For each element d in lexDeclarations, do
+    // 24. For each element d in lexDeclarations, do
     for (const d of lexDeclarations) {
       // a. For each element dn of the BoundNames of d, do
       for (const dn of BoundNames(d)) {
@@ -511,9 +492,9 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
         }
       }
     }
-    // 24. Remove moduleContext from the execution context stack.
+    // 25. Remove moduleContext from the execution context stack.
     surroundingAgent.executionContextStack.pop(moduleContext);
-    // 25. Return NormalCompletion(empty).
+    // 26. Return unused.
     return NormalCompletion(undefined);
   }
 
