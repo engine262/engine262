@@ -37,7 +37,7 @@ export function ContinueDynamicImport(promiseCapability, moduleCompletion) {
     // b. If link is an abrupt completion, then
     if (link instanceof AbruptCompletion) {
       // i. Perform ! Call(promiseCapability.[[Reject]], undefined, « link.[[Value]] »).
-      X(Call(promiseCapability.Reject, Value.undefined, [module.Value]));
+      X(Call(promiseCapability.Reject, Value.undefined, [link.Value]));
       // ii. Return unused.
       return;
     }
