@@ -12,6 +12,7 @@ export * from './function-operations.mjs';
 export * from './generator-operations.mjs';
 export * from './global-object.mjs';
 export * from './immutable-prototype-objects.mjs';
+export * from './import-calls.mjs';
 export * from './integer-indexed-objects.mjs';
 export * from './iterator-operations.mjs';
 export * from './module-namespace-exotic-objects.mjs';

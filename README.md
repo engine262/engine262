@@ -97,6 +97,7 @@ const agent = new Agent({
   // onDebugger() {},
   // ensureCanCompileStrings() {},
   // hasSourceTextAvailable() {},
+  // loadImportedModule() {},
   // onNodeEvaluation() {},
   // features: [],
 });
@@ -104,7 +105,6 @@ setSurroundingAgent(agent);
 
 const realm = new ManagedRealm({
   // promiseRejectionTracker() {},
-  // resolveImportedModule() {},
   // getImportMetaProperties() {},
   // finalizeImportMeta() {},
   // randomSeed() {},

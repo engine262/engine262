@@ -1,6 +1,5 @@
-import { surroundingAgent, HostResolveImportedModule } from '../engine.mjs';
+import { surroundingAgent, HostLoadImportedModule } from '../engine.mjs';
 import {
-  AbstractModuleRecord,
   CyclicModuleRecord,
   SyntheticModuleRecord,
   ResolvedBindingRecord,
@@ -16,7 +15,96 @@ import {
   PerformPromiseThen,
   CreateBuiltinFunction,
   Call,
+  ContinueDynamicImport,
 } from './all.mjs';
+
+/** https://tc39.es/ecma262/#graphloadingstate-record */
+export class GraphLoadingState {
+  constructor({ PromiseCapability, HostDefined }) {
+    this.PromiseCapability = PromiseCapability;
+    this.HostDefined = HostDefined;
+    this.IsLoading = true;
+    this.Visited = new Set();
+    this.PendingModules = 1;
+  }
+}
+
+/** http://tc39.es/ecma262/#sec-InnerModuleLoading */
+export function InnerModuleLoading(state, module) {
+  // 1. Assert: state.[[IsLoading]] is true.
+  Assert(state.IsLoading === true);
+
+  // 2. If module is a Cyclic Module Record, module.[[Status]] is new, and state.[[Visited]] does not contain module, then
+  if (module instanceof CyclicModuleRecord && module.Status === 'new' && !state.Visited.has(module)) {
+    // a. Append module to state.[[Visited]].
+    state.Visited.add(module);
+    // b. Let requestedModulesCount be the number of elements in module.[[RequestedModules]].
+    const requestedModulesCout = module.RequestedModules.length;
+    // c. Set state.[[PendingModulesCount]] to state.[[PendingModulesCount]] + requestedModulesCount.
+    state.PendingModules += requestedModulesCout;
+    // d. For each String required of module.[[RequestedModules]], do
+    for (const required of module.RequestedModules) {
+      // i. If module.[[LoadedModules]] contains a Record whose [[Specifier]] is required, then
+      //    1. Let record be that Record.
+      const record = getRecordWithSpecifier(module.LoadedModules, required);
+      if (record !== undefined) {
+        // 2. Perform InnerModuleLoading(state, record.[[Module]]).
+        ContinueModuleLoading(state, NormalCompletion(record.Module));
+      // ii. Else,
+      } else {
+        // 1. Perform HostLoadImportedModule(module, required, state.[[HostDefined]], state).
+        HostLoadImportedModule(module, required, state.HostDefined, state);
+      }
+
+      // iii. If state.[[IsLoading]] is false, return unused.
+      if (state.IsLoading === false) {
+        return;
+      }
+    }
+  }
+
+  // 3. Assert: state.[[PendingModulesCount]] ≥ 1.
+  Assert(state.PendingModules >= 1);
+  // 4. Set state.[[PendingModulesCount]] to state.[[PendingModulesCount]] - 1.
+  state.PendingModules -= 1;
+  // 5. If state.[[PendingModulesCount]] = 0, then
+  if (state.PendingModules === 0) {
+    // a. Set state.[[IsLoading]] to false.
+    state.IsLoading = false;
+    // b. For each Cyclic Module Record loaded of state.[[Visited]], do
+    for (const loaded of state.Visited) {
+      // i. If loaded.[[Status]] is new, set loaded.[[Status]] to unlinked.
+      if (loaded.Status === 'new') {
+        loaded.Status = 'unlinked';
+      }
+    }
+    // c. Perform ! Call(state.[[PromiseCapability]].[[Resolve]], undefined, « undefined »).
+    X(Call(state.PromiseCapability.Resolve, Value.undefined, [Value.undefined]));
+  }
+
+  // 6. Return unused.
+}
+
+/** http://tc39.es/ecma262/#sec-ContinueModuleLoading */
+export function ContinueModuleLoading(state, result) {
+  // 1. If state.[[IsLoading]] is false, return unused.
+  if (state.IsLoading === false) {
+    return;
+  }
+  // 2. If moduleCompletion is a normal completion, then
+  if (result instanceof NormalCompletion) {
+    // a. Perform InnerModuleLoading(state, moduleCompletion.[[Value]]).
+    InnerModuleLoading(state, result.Value);
+  // 3. Else,
+  } else {
+    // a. Set state.[[IsLoading]] to false.
+    state.IsLoading = false;
+    // b. Perform ! Call(state.[[PromiseCapability]].[[Reject]], undefined, « moduleCompletion.[[Value]] »).
+    X(Call(state.PromiseCapability.Reject, Value.undefined, [result.Value]));
+  }
+
+  // 4. Return unused.
+}
 
 /** http://tc39.es/ecma262/#sec-InnerModuleLinking */
 export function InnerModuleLinking(module, stack, index) {
@@ -34,7 +122,7 @@ export function InnerModuleLinking(module, stack, index) {
   index += 1;
   stack.push(module);
   for (const required of module.RequestedModules) {
-    const requiredModule = Q(HostResolveImportedModule(module, required));
+    const requiredModule = GetImportedModule(module, required);
     index = Q(InnerModuleLinking(requiredModule, stack, index));
     if (requiredModule instanceof CyclicModuleRecord) {
       Assert(requiredModule.Status === 'linking' || requiredModule.Status === 'linked' || requiredModule.Status === 'evaluated');
@@ -86,7 +174,7 @@ export function InnerModuleEvaluation(module, stack, index) {
   index += 1;
   stack.push(module);
   for (const required of module.RequestedModules) {
-    let requiredModule = X(HostResolveImportedModule(module, required));
+    let requiredModule = GetImportedModule(module, required);
     index = Q(InnerModuleEvaluation(requiredModule, stack, index));
     if (requiredModule instanceof CyclicModuleRecord) {
       Assert(requiredModule.Status === 'evaluating' || requiredModule.Status === 'evaluated');
@@ -245,24 +333,77 @@ function AsyncModuleExecutionRejected(module, error) {
   return Value.undefined;
 }
 
+function getRecordWithSpecifier(loadedModules, specifier) {
+  for (const record of loadedModules) {
+    if (record.Specifier.stringValue() === specifier.stringValue()) {
+      return record;
+    }
+  }
+  return undefined;
+}
+
+/** http://tc39.es/ecma262/#sec-GetImportedModule */
+export function GetImportedModule(referrer, specifier) {
+  const record = getRecordWithSpecifier(referrer.LoadedModules, specifier);
+  Assert(record !== undefined);
+  return record.Module;
+}
+
+/** http://tc39.es/ecma262/#sec-FinishLoadingImportedModule */
+export function FinishLoadingImportedModule(referrer, specifier, result, state) {
+  // 1. If result is a normal completion, then
+  if (result.Type === 'normal') {
+    // a. If referrer.[[LoadedModules]] contains a Record whose [[Specifier]] is specifier, then
+    const record = getRecordWithSpecifier(referrer.LoadedModules, specifier);
+    if (record !== undefined) {
+      // i. Assert: That Record's [[Module]] is result.[[Value]].
+      Assert(record.Module === result.Value);
+    } else {
+    // b. Else, append the Record { [[Specifier]]: specifier, [[Module]]: result.[[Value]] } to referrer.[[LoadedModules]].
+      referrer.LoadedModules.push({ Specifier: specifier, Module: result.Value });
+    }
+  }
+
+  // 2. If payload is a GraphLoadingState Record, then
+  if (state instanceof GraphLoadingState) {
+    // a. Perform ContinueModuleLoading(payload, result).
+    ContinueModuleLoading(state, result);
+  // 3. Else,
+  } else {
+    // a. Perform ContinueDynamicImport(payload, result).
+    ContinueDynamicImport(state, result);
+  }
+
+  // 4. Return unused.
+}
+
 /** http://tc39.es/ecma262/#sec-getmodulenamespace */
 export function GetModuleNamespace(module) {
-  Assert(module instanceof AbstractModuleRecord);
+  // 1. Assert: If module is a Cyclic Module Record, then module.[[Status]] is not new or unlinked.
   if (module instanceof CyclicModuleRecord) {
-    Assert(module.Status !== 'unlinked');
+    Assert(module.Status !== 'new' && module.Status !== 'unlinked');
   }
+  // 2. Let namespace be module.[[Namespace]].
   let namespace = module.Namespace;
+  // 3. If namespace is empty, then
   if (namespace === Value.undefined) {
-    const exportedNames = Q(module.GetExportedNames());
+    // a. Let exportedNames be module.GetExportedNames().
+    const exportedNames = module.GetExportedNames();
+    // b. Let unambiguousNames be a new empty List.
     const unambiguousNames = [];
+    // c. For each element name of exportedNames, do
     for (const name of exportedNames) {
-      const resolution = Q(module.ResolveExport(name));
+      // i. Let resolution be module.ResolveExport(name).
+      const resolution = module.ResolveExport(name);
+      // ii. If resolution is a ResolvedBinding Record, append name to unambiguousNames.
       if (resolution instanceof ResolvedBindingRecord) {
         unambiguousNames.push(name);
       }
     }
+    // d. Set namespace to ModuleNamespaceCreate(module, unambiguousNames).
     namespace = ModuleNamespaceCreate(module, unambiguousNames);
   }
+  // 4. Return namespace.
   return namespace;
 }
 

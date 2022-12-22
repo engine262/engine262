@@ -234,7 +234,6 @@ if (!process.send) {
   // worker
 
   const {
-    Agent,
     setSurroundingAgent,
     inspect,
 
@@ -248,7 +247,7 @@ if (!process.send) {
     AbruptCompletion,
     Throw,
   } = require('../..');
-  const { createRealm } = require('../../bin/test262_realm');
+  const { createRealm, createAgent } = require('../../bin/test262_realm');
 
   const isError = (type, value) => {
     if (!(value instanceof ObjectValue)) {
@@ -285,7 +284,7 @@ if (!process.send) {
         }
       });
     }
-    const agent = new Agent({
+    const agent = createAgent({
       features,
     });
     setSurroundingAgent(agent);
@@ -358,7 +357,17 @@ function $DONE(error) {
         if (!(completion instanceof AbruptCompletion)) {
           const module = completion;
           resolverCache.set(specifier, module);
-          completion = module.Link();
+          completion = module.LoadRequestedModules();
+          if (!(completion instanceof AbruptCompletion)) {
+            if (completion.PromiseState === 'rejected') {
+              completion = Throw(completion.PromiseResult);
+            } else if (completion.PromiseState === 'pending') {
+              throw new Error('Internal error: .LoadRequestedModules() returned a pending promise');
+            }
+          }
+          if (!(completion instanceof AbruptCompletion)) {
+            completion = module.Link();
+          }
           if (!(completion instanceof AbruptCompletion)) {
             completion = module.Evaluate();
           }

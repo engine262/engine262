@@ -93,6 +93,7 @@ export class Realm {
     this.GlobalObject = undefined;
     this.GlobalEnv = undefined;
     this.TemplateMap = undefined;
+    this.LoadedModules = undefined;
     this.HostDefined = undefined;
 
     this.randomState = undefined;
@@ -107,6 +108,9 @@ export class Realm {
     for (const v of Object.values(this.TemplateMap)) {
       m(v);
     }
+    for (const v of this.LoadedModules) {
+      m(v.Module);
+    }
   }
 }
 
@@ -117,6 +121,7 @@ export function CreateRealm() {
   realmRec.GlobalObject = Value.undefined;
   realmRec.GlobalEnv = Value.undefined;
   realmRec.TemplateMap = [];
+  realmRec.LoadedModules = [];
   return realmRec;
 }
 
