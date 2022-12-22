@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 4390952bf2aa540076cfbae2a4390a38281f7476
+ * engine262 0.0.1 3248ccc6793a4de3ca6cab1d3a16a113ddc8d0c9
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -4140,11 +4140,15 @@
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
     }
-    // 1. Let referencingScriptOrModule be ! GetActiveScriptOrModule().
-    const referencingScriptOrModule = _temp;
-    // 2. Let argRef be the result of evaluating AssignmentExpression.
+    // 1. Let referrer be ! GetActiveScriptOrModule().
+    let referrer = _temp;
+    // 2. If referrer is null, set referrer to the current Realm Record.
+    if (referrer === null) {
+      referrer = exports.surroundingAgent.realm;
+    }
+    // 3. Let argRef be the result of evaluating AssignmentExpression.
     const argRef = yield* Evaluate(AssignmentExpression);
-    // 3. Let specifier be ? GetValue(argRef).
+    // 4. Let specifier be ? GetValue(argRef).
     let _temp2 = GetValue(argRef);
     /* c8 ignore if */
     if (_temp2 instanceof AbruptCompletion) {
@@ -4155,7 +4159,7 @@
       _temp2 = _temp2.Value;
     }
     const specifier = _temp2;
-    // 4. Let promiseCapability be ! NewPromiseCapability(%Promise%).
+    // 5. Let promiseCapability be ! NewPromiseCapability(%Promise%).
     let _temp3 = NewPromiseCapability(exports.surroundingAgent.intrinsic('%Promise%'));
     Assert(!(_temp3 instanceof AbruptCompletion), "NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))" + ' returned an abrupt completion');
     /* c8 ignore if */
@@ -4163,9 +4167,9 @@
       _temp3 = _temp3.Value;
     }
     const promiseCapability = _temp3;
-    // 5. Let specifierString be ToString(specifier).
+    // 6. Let specifierString be ToString(specifier).
     let specifierString = ToString(specifier);
-    // 6. IfAbruptRejectPromise(specifierString, promiseCapability).
+    // 7. IfAbruptRejectPromise(specifierString, promiseCapability).
     /* c8 ignore if */
     if (specifierString instanceof AbruptCompletion) {
       const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [specifierString.Value]);
@@ -4178,13 +4182,9 @@
     if (specifierString instanceof Completion) {
       specifierString = specifierString.Value;
     }
-    let _temp4 = HostImportModuleDynamically(referencingScriptOrModule, specifierString, promiseCapability);
-    Assert(!(_temp4 instanceof AbruptCompletion), "HostImportModuleDynamically(referencingScriptOrModule, specifierString, promiseCapability)" + ' returned an abrupt completion');
-    /* c8 ignore if */
-    if (_temp4 instanceof Completion) {
-      _temp4 = _temp4.Value;
-    }
-    // 8. Return promiseCapability.[[Promise]].
+    // 8. Perform HostLoadImportedModule(referrer, specifierString, ~empty~, promiseCapability).
+    HostLoadImportedModule(referrer, specifierString, Value.undefined, promiseCapability);
+    // 9. Return promiseCapability.[[Promise]].
     return promiseCapability.Promise;
   }
 
@@ -15021,10 +15021,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return {
       Realm: realm,
       ECMAScriptCode: body,
+      LoadedModules: [],
       HostDefined: hostDefined,
       mark(m) {
         m(this.Realm);
         m(this.Environment);
+        for (const v of this.LoadedModules) {
+          m(v.Module);
+        }
       }
     };
   }
@@ -15103,13 +15107,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       Realm: realm,
       Environment: Value.undefined,
       Namespace: Value.undefined,
-      Status: 'unlinked',
+      Status: 'new',
       EvaluationError: Value.undefined,
       HostDefined: hostDefined,
       ECMAScriptCode: body,
       Context: undefined,
       ImportMeta: undefined,
       RequestedModules: requestedModules,
+      LoadedModules: [],
       ImportEntries: importEntries,
       LocalExportEntries: localExportEntries,
       IndirectExportEntries: indirectExportEntries,
@@ -20231,6 +20236,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       this.DFSIndex = init.DFSIndex;
       this.DFSAncestorIndex = init.DFSAncestorIndex;
       this.RequestedModules = init.RequestedModules;
+      this.LoadedModules = init.LoadedModules;
       this.Async = init.Async;
       this.AsyncEvaluating = init.AsyncEvaluating;
       this.TopLevelCapability = init.TopLevelCapability;
@@ -20238,42 +20244,58 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       this.PendingAsyncDependencies = init.PendingAsyncDependencies;
     }
 
+    /** http://tc39.es/ecma262/#sec-LoadRequestedModules */
+    LoadRequestedModules(hostDefined = Value.undefined) {
+      const module = this;
+
+      // 2. Let pc be ! NewPromiseCapability(%Promise%).
+      let _temp = NewPromiseCapability(exports.surroundingAgent.intrinsic('%Promise%'));
+      Assert(!(_temp instanceof AbruptCompletion), "NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))" + ' returned an abrupt completion');
+      /* c8 ignore if */
+      if (_temp instanceof Completion) {
+        _temp = _temp.Value;
+      }
+      const pc = _temp;
+      // 3. Let state be a new GraphLoadingState Record { [[IsLoading]]: true, [[PendingModulesCount]]: 1, [[Visited]]: « », [[PromiseCapability]]: pc, [[HostDefined]]: hostDefined }.
+      const state = new GraphLoadingState({
+        PromiseCapability: pc,
+        HostDefined: hostDefined
+      });
+      // 4. Perform InnerModuleLoading(state, module).
+      InnerModuleLoading(state, module);
+      // 5. Return pc.[[Promise]].
+      return pc.Promise;
+    }
+
     /** http://tc39.es/ecma262/#sec-moduledeclarationlinking */
     Link() {
-      // 1. Let module be this Cyclic Module Record.
       const module = this;
-      // 2. Assert: module.[[Status]] is not linking or evaluating.
-      Assert(module.Status !== 'linking' && module.Status !== 'evaluating', "module.Status !== 'linking' && module.Status !== 'evaluating'");
-      // 3. Let stack be a new empty List.
+      // 1. Assert: module.[[Status]] is unlinked, linked, evaluating-async, or evaluated.
+      Assert(module.Status === 'unlinked' || module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated', "module.Status === 'unlinked' || module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated'");
+      // 2. Let stack be a new empty List.
       const stack = [];
-      // 4. Let result be InnerModuleLinking(module, stack, 0).
+      // 3. Let result be Completion(InnerModuleLinking(module, stack, 0)).
       const result = InnerModuleLinking(module, stack, 0);
       // 5. If result is an abrupt completion, then
       if (result instanceof AbruptCompletion) {
-        // a. For each Cyclic Module Record m in stack, do
+        // a. For each Cyclic Module Record m of stack, do
         for (const m of stack) {
           // i. Assert: m.[[Status]] is linking.
           Assert(m.Status === 'linking', "m.Status === 'linking'");
           // ii. Set m.[[Status]] to unlinked.
           m.Status = 'unlinked';
-          // iii. Set m.[[Environment]] to undefined.
-          m.Environment = Value.undefined;
-          // iv. Set m.[[DFSIndex]] to undefined.
-          m.DFSIndex = Value.undefined;
-          // v. Set m.[[DFSAncestorIndex]] to undefined.
-          m.DFSAncestorIndex = Value.undefined;
         }
         // b. Assert: module.[[Status]] is unlinked.
         Assert(module.Status === 'unlinked', "module.Status === 'unlinked'");
         // c. Return result.
         return result;
       }
-      // 6. Assert: module.[[Status]] is linked or evaluated.
-      Assert(module.Status === 'linked' || module.Status === 'evaluated', "module.Status === 'linked' || module.Status === 'evaluated'");
+      // 6. Assert: module.[[Status]] is linked, evaluating-async, or evaluated.
+      Assert(module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated', "module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated'");
       // 7. Assert: stack is empty.
       Assert(stack.length === 0, "stack.length === 0");
-      // 8. Return undefined.
-      return Value.undefined;
+      // 8. Return unused.
+      return NormalCompletion(undefined);
     }
 
     /** http://tc39.es/ecma262/#sec-moduleevaluation */
@@ -20295,13 +20317,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 4. Let stack be a new empty List.
       const stack = [];
       // (*TopLevelAwait) 6. Let capability be ! NewPromiseCapability(%Promise%).
-      let _temp = NewPromiseCapability(exports.surroundingAgent.intrinsic('%Promise%'));
-      Assert(!(_temp instanceof AbruptCompletion), "NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))" + ' returned an abrupt completion');
+      let _temp2 = NewPromiseCapability(exports.surroundingAgent.intrinsic('%Promise%'));
+      Assert(!(_temp2 instanceof AbruptCompletion), "NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))" + ' returned an abrupt completion');
       /* c8 ignore if */
-      if (_temp instanceof Completion) {
-        _temp = _temp.Value;
+      if (_temp2 instanceof Completion) {
+        _temp2 = _temp2.Value;
       }
-      const capability = _temp;
+      const capability = _temp2;
       // (*TopLevelAwait) 7. Set module.[[TopLevelCapability]] to capability.
       module.TopLevelCapability = capability;
       // 5. Let result be InnerModuleEvaluation(module, stack, 0).
@@ -20321,11 +20343,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         Assert(module.Status === 'evaluated' && module.EvaluationError === result, "module.Status === 'evaluated' && module.EvaluationError === result");
         // c. Return result.
         // c. (*TopLevelAwait) Perform ! Call(capability.[[Reject]], undefined, «result.[[Value]]»).
-        let _temp2 = Call(capability.Reject, Value.undefined, [result.Value]);
-        Assert(!(_temp2 instanceof AbruptCompletion), "Call(capability.Reject, Value.undefined, [result.Value])" + ' returned an abrupt completion');
+        let _temp3 = Call(capability.Reject, Value.undefined, [result.Value]);
+        Assert(!(_temp3 instanceof AbruptCompletion), "Call(capability.Reject, Value.undefined, [result.Value])" + ' returned an abrupt completion');
         /* c8 ignore if */
-        if (_temp2 instanceof Completion) {
-          _temp2 = _temp2.Value;
+        if (_temp3 instanceof Completion) {
+          _temp3 = _temp3.Value;
         }
       } else {
         // (*TopLevelAwait) 10. Otherwise,
@@ -20333,11 +20355,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         Assert(module.Status === 'evaluated' && module.EvaluationError === Value.undefined, "module.Status === 'evaluated' && module.EvaluationError === Value.undefined");
         // b. If module.[[AsyncEvaluating]] is false, then
         if (module.AsyncEvaluating === Value.false) {
-          let _temp3 = Call(capability.Resolve, Value.undefined, [Value.undefined]);
-          Assert(!(_temp3 instanceof AbruptCompletion), "Call(capability.Resolve, Value.undefined, [Value.undefined])" + ' returned an abrupt completion');
+          let _temp4 = Call(capability.Resolve, Value.undefined, [Value.undefined]);
+          Assert(!(_temp4 instanceof AbruptCompletion), "Call(capability.Resolve, Value.undefined, [Value.undefined])" + ' returned an abrupt completion');
           /* c8 ignore if */
-          if (_temp3 instanceof Completion) {
-            _temp3 = _temp3.Value;
+          if (_temp4 instanceof Completion) {
+            _temp4 = _temp4.Value;
           }
         }
         // c. Assert: stack is empty.
@@ -20350,6 +20372,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     mark(m) {
       super.mark(m);
       m(this.EvaluationError);
+      for (const v of this.LoadedModules) {
+        m(v.Module);
+      }
     }
   }
 
@@ -20368,60 +20393,41 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     /** http://tc39.es/ecma262/#sec-getexportednames */
     GetExportedNames(exportStarSet) {
-      // 1. If exportStarSet is not present, set exportStarSet to a new empty List.
+      const module = this;
+      // 1. Assert: module.[[Status]] is not new.
+      Assert(module.Status !== 'new', "module.Status !== 'new'");
+      // 2. If exportStarSet is not present, set exportStarSet to a new empty List.
       if (!exportStarSet) {
         exportStarSet = [];
       }
-      // 2. Assert: exportStarSet is a List of Source Text Module Records.
-      Assert(Array.isArray(exportStarSet) && exportStarSet.every(e => e instanceof SourceTextModuleRecord), "Array.isArray(exportStarSet) && exportStarSet.every((e) => e instanceof SourceTextModuleRecord)");
-      // 3. Let module be this Source Text Module Record.
-      const module = this;
-      // 4. If exportStarSet contains module, then
+      // 3. If exportStarSet contains module, then
       if (exportStarSet.includes(module)) {
         // a. Assert: We've reached the starting point of an import * circularity.
         // b. Return a new empty List.
         return [];
       }
-      // 5. Append module to exportStarSet.
+      // 4. Append module to exportStarSet.
       exportStarSet.push(module);
-      // 6. Let exportedNames be a new empty List.
+      // 5. Let exportedNames be a new empty List.
       const exportedNames = [];
-      // 7. For each ExportEntry Record e in module.[[LocalExportEntries]], do
+      // 6. For each ExportEntry Record e in module.[[LocalExportEntries]], do
       for (const e of module.LocalExportEntries) {
         // a. Assert: module provides the direct binding for this export.
         // b. Append e.[[ExportName]] to exportedNames.
         exportedNames.push(e.ExportName);
       }
-      // 8. For each ExportEntry Record e in module.[[IndirectExportEntries]], do
+      // 7. For each ExportEntry Record e in module.[[IndirectExportEntries]], do
       for (const e of module.IndirectExportEntries) {
         // a. Assert: module imports a specific binding for this export.
         // b. Append e.[[ExportName]] to exportedNames.
         exportedNames.push(e.ExportName);
       }
-      // 9. For each ExportEntry Record e in module.[[StarExportEntries]], do
+      // 8. For each ExportEntry Record e in module.[[StarExportEntries]], do
       for (const e of module.StarExportEntries) {
-        let _temp4 = HostResolveImportedModule(module, e.ModuleRequest);
-        /* c8 ignore if */
-        if (_temp4 instanceof AbruptCompletion) {
-          return _temp4;
-        }
-        /* c8 ignore if */
-        if (_temp4 instanceof Completion) {
-          _temp4 = _temp4.Value;
-        }
-        // a. Let requestedModule be ? HostResolveImportedModule(module, e.[[ModuleRequest]]).
-        const requestedModule = _temp4;
-        // b. Let starNames be ? requestedModule.GetExportedNames(exportStarSet).
-        let _temp5 = requestedModule.GetExportedNames(exportStarSet);
-        /* c8 ignore if */
-        if (_temp5 instanceof AbruptCompletion) {
-          return _temp5;
-        }
-        /* c8 ignore if */
-        if (_temp5 instanceof Completion) {
-          _temp5 = _temp5.Value;
-        }
-        const starNames = _temp5;
+        // a. Let requestedModule be GetImportedModule(module, e.[[ModuleRequest]]).
+        const requestedModule = GetImportedModule(module, e.ModuleRequest);
+        // b. Let starNames be requestedModule.GetExportedNames(exportStarSet).
+        const starNames = requestedModule.GetExportedNames(exportStarSet);
         // c. For each element n of starNames, do
         for (const n of starNames) {
           // i. If SameValue(n, "default") is false, then
@@ -20434,21 +20440,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           }
         }
       }
-      // 10. Return exportedNames.
+      // 9. Return exportedNames.
       return exportedNames;
     }
 
     /** http://tc39.es/ecma262/#sec-resolveexport */
     ResolveExport(exportName, resolveSet) {
-      // 1. If resolveSet is not present, set resolveSet to a new empty List.
+      const module = this;
+      // 1. Assert: module.[[Status]] is not new.
+      Assert(module.Status !== 'new', "module.Status !== 'new'");
+      // 2. If resolveSet is not present, set resolveSet to a new empty List.
       if (!resolveSet) {
         resolveSet = [];
       }
-      // 2. Assert: resolveSet is a List of Record { [[Module]], [[ExportName]] }.
-      Assert(Array.isArray(resolveSet) && resolveSet.every(e => 'Module' in e && 'ExportName' in e), "Array.isArray(resolveSet) && resolveSet.every((e) => 'Module' in e && 'ExportName' in e)");
-      // 3. Let module be this Source Text Module Record.
-      const module = this;
-      // 4. For each Record { [[Module]], [[ExportName]] } r in resolveSet, do
+      // 3. For each Record { [[Module]], [[ExportName]] } r in resolveSet, do
       for (const r of resolveSet) {
         // a. If module and r.[[Module]] are the same Module Record and SameValue(exportName, r.[[ExportName]]) is true, then
         if (module === r.Module && SameValue(exportName, r.ExportName) === Value.true) {
@@ -20457,12 +20462,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           return null;
         }
       }
-      // 5. Append the Record { [[Module]]: module, [[ExportName]]: exportName } to resolveSet.
+      // 4. Append the Record { [[Module]]: module, [[ExportName]]: exportName } to resolveSet.
       resolveSet.push({
         Module: module,
         ExportName: exportName
       });
-      // 6. For each ExportEntry Record e in module.[[LocalExportEntries]], do
+      // 5. For each ExportEntry Record e in module.[[LocalExportEntries]], do
       for (const e of module.LocalExportEntries) {
         // a. If SameValue(exportName, e.[[ExportName]]) is true, then
         if (SameValue(exportName, e.ExportName) === Value.true) {
@@ -20474,21 +20479,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           });
         }
       }
-      // 7. For each ExportEntry Record e in module.[[IndirectExportEntries]], do
+      // 6. For each ExportEntry Record e in module.[[IndirectExportEntries]], do
       for (const e of module.IndirectExportEntries) {
         // a. If SameValue(exportName, e.[[ExportName]]) is true, then
         if (SameValue(exportName, e.ExportName) === Value.true) {
-          let _temp6 = HostResolveImportedModule(module, e.ModuleRequest);
-          /* c8 ignore if */
-          if (_temp6 instanceof AbruptCompletion) {
-            return _temp6;
-          }
-          /* c8 ignore if */
-          if (_temp6 instanceof Completion) {
-            _temp6 = _temp6.Value;
-          }
-          // i. Let importedModule be ? HostResolveImportedModule(module, e.[[ModuleRequest]]).
-          const importedModule = _temp6;
+          // i. Let importedModule be GetImportedModule(module, e.[[ModuleRequest]]).
+          const importedModule = GetImportedModule(module, e.ModuleRequest);
           // ii. If e.[[ImportName]] is ~all~, then
           if (e.ImportName === 'all') {
             // 1. Assert: module does not provide the direct binding for this export
@@ -20498,46 +20494,28 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
               BindingName: 'namespace'
             });
           } else {
-            // iii. Else,
+            // iv. Else,
             // 1. Assert: module imports a specific binding for this export.
             // 2. Return importedModule.ResolveExport(e.[[ImportName]], resolveSet).
             return importedModule.ResolveExport(e.ImportName, resolveSet);
           }
         }
       }
-      // 8. If SameValue(exportName, "default") is true, then
+      // 7. If SameValue(exportName, "default") is true, then
       if (SameValue(exportName, new Value('default')) === Value.true) {
         // a. Assert: A default export was not explicitly defined by this module.
         // b. Return null.
         return null;
         // c. NOTE: A default export cannot be provided by an export * or export * from "mod" declaration.
       }
-      // 9. Let starResolution be null.
+      // 8. Let starResolution be null.
       let starResolution = null;
-      // 10. For each ExportEntry Record e in module.[[StarExportEntries]], do
+      // 9. For each ExportEntry Record e in module.[[StarExportEntries]], do
       for (const e of module.StarExportEntries) {
-        let _temp7 = HostResolveImportedModule(module, e.ModuleRequest);
-        /* c8 ignore if */
-        if (_temp7 instanceof AbruptCompletion) {
-          return _temp7;
-        }
-        /* c8 ignore if */
-        if (_temp7 instanceof Completion) {
-          _temp7 = _temp7.Value;
-        }
-        // a. Let importedModule be ? HostResolveImportedModule(module, e.[[ModuleRequest]]).
-        const importedModule = _temp7;
-        // b. Let resolution be ? importedModule.ResolveExport(exportName, resolveSet).
-        let _temp8 = importedModule.ResolveExport(exportName, resolveSet);
-        /* c8 ignore if */
-        if (_temp8 instanceof AbruptCompletion) {
-          return _temp8;
-        }
-        /* c8 ignore if */
-        if (_temp8 instanceof Completion) {
-          _temp8 = _temp8.Value;
-        }
-        const resolution = _temp8;
+        // a. Let importedModule be GetImportedModule(module, e.[[ModuleRequest]]).
+        const importedModule = GetImportedModule(module, e.ModuleRequest);
+        // b. Let resolution be importedModule.ResolveExport(exportName, resolveSet).
+        const resolution = importedModule.ResolveExport(exportName, resolveSet);
         // c. If resolution is "ambiguous", return "ambiguous".
         if (resolution === 'ambiguous') {
           return 'ambiguous';
@@ -20565,21 +20543,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     /** http://tc39.es/ecma262/#sec-source-text-module-record-initialize-environment */
     InitializeEnvironment() {
-      // 1. Let module be this Source Text Module Record.
       const module = this;
-      // 2. For each ExportEntry Record e in module.[[IndirectExportEntries]], do
+      // 1. For each ExportEntry Record e in module.[[IndirectExportEntries]], do
       for (const e of module.IndirectExportEntries) {
-        let _temp9 = module.ResolveExport(e.ExportName);
-        /* c8 ignore if */
-        if (_temp9 instanceof AbruptCompletion) {
-          return _temp9;
-        }
-        /* c8 ignore if */
-        if (_temp9 instanceof Completion) {
-          _temp9 = _temp9.Value;
-        }
-        // a. Let resolution be ? module.ResolveExport(e.[[ExportName]]).
-        const resolution = _temp9;
+        // a. Let resolution be module.ResolveExport(e.[[ExportName]]).
+        const resolution = module.ResolveExport(e.ExportName);
         // b. If resolution is null or "ambiguous", throw a SyntaxError exception.
         if (resolution === null || resolution === 'ambiguous') {
           return exports.surroundingAgent.Throw('SyntaxError', 'ResolutionNullOrAmbiguous', resolution, e.ExportName, module);
@@ -20587,84 +20555,50 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         // c. Assert: resolution is a ResolvedBinding Record.
         Assert(resolution instanceof ResolvedBindingRecord, "resolution instanceof ResolvedBindingRecord");
       }
-      // 3. Assert: All named exports from module are resolvable.
-      // 4. Let realm be module.[[Realm]].
+      // 2. Assert: All named exports from module are resolvable.
+      // 3. Let realm be module.[[Realm]].
       const realm = module.Realm;
-      // 5. Assert: realm is not undefined.
+      // 4. Assert: realm is not undefined.
       Assert(realm !== Value.undefined, "realm !== Value.undefined");
-      // 6. Let env be NewModuleEnvironment(realm.[[GlobalEnv]]).
+      // 5. Let env be NewModuleEnvironment(realm.[[GlobalEnv]]).
       const env = NewModuleEnvironment(realm.GlobalEnv);
-      // 7. Set module.[[Environment]] to env.
+      // 6. Set module.[[Environment]] to env.
       module.Environment = env;
-      // 8. For each ImportEntry Record in in module.[[ImportEntries]], do
+      // 7. For each ImportEntry Record in in module.[[ImportEntries]], do
       for (const ie of module.ImportEntries) {
-        let _temp10 = HostResolveImportedModule(module, ie.ModuleRequest);
-        Assert(!(_temp10 instanceof AbruptCompletion), "HostResolveImportedModule(module, ie.ModuleRequest)" + ' returned an abrupt completion');
-        /* c8 ignore if */
-        if (_temp10 instanceof Completion) {
-          _temp10 = _temp10.Value;
-        }
-        // a. Let importedModule be ! HostResolveImportedModule(module, in.[[ModuleRequest]]).
-        const importedModule = _temp10;
-        // b. NOTE: The above call cannot fail because imported module requests are a subset of module.[[RequestedModules]], and these have been resolved earlier in this algorithm.
-        // c. If in.[[ImportName]] is ~namespace-object~, then
+        // a. Let importedModule be GetImportedModule(module, in.[[ModuleRequest]]).
+        const importedModule = GetImportedModule(module, ie.ModuleRequest);
+        // b. If in.[[ImportName]] is ~namespace-object~, then
         if (ie.ImportName === 'namespace-object') {
-          let _temp11 = GetModuleNamespace(importedModule);
-          /* c8 ignore if */
-          if (_temp11 instanceof AbruptCompletion) {
-            return _temp11;
-          }
-          /* c8 ignore if */
-          if (_temp11 instanceof Completion) {
-            _temp11 = _temp11.Value;
-          }
-          // i. Let namespace be ? GetModuleNamespace(importedModule).
-          const namespace = _temp11;
+          // i. Let namespace be GetModuleNamespace(importedModule).
+          const namespace = GetModuleNamespace(importedModule);
           // ii. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
-          let _temp12 = env.CreateImmutableBinding(ie.LocalName, Value.true);
-          Assert(!(_temp12 instanceof AbruptCompletion), "env.CreateImmutableBinding(ie.LocalName, Value.true)" + ' returned an abrupt completion');
+          let _temp5 = env.CreateImmutableBinding(ie.LocalName, Value.true);
+          Assert(!(_temp5 instanceof AbruptCompletion), "env.CreateImmutableBinding(ie.LocalName, Value.true)" + ' returned an abrupt completion');
           /* c8 ignore if */
-          if (_temp12 instanceof Completion) {
-            _temp12 = _temp12.Value;
+          if (_temp5 instanceof Completion) {
+            _temp5 = _temp5.Value;
           }
           // iii. Call env.InitializeBinding(in.[[LocalName]], namespace).
           env.InitializeBinding(ie.LocalName, namespace);
         } else {
-          let _temp13 = importedModule.ResolveExport(ie.ImportName);
-          /* c8 ignore if */
-          if (_temp13 instanceof AbruptCompletion) {
-            return _temp13;
-          }
-          /* c8 ignore if */
-          if (_temp13 instanceof Completion) {
-            _temp13 = _temp13.Value;
-          }
-          // d. Else,
-          // i. Let resolution be ? importedModule.ResolveExport(in.[[ImportName]]).
-          const resolution = _temp13;
+          // c. Else,
+          // i. Let resolution be importedModule.ResolveExport(in.[[ImportName]]).
+          const resolution = importedModule.ResolveExport(ie.ImportName);
           // ii. If resolution is null or "ambiguous", throw a SyntaxError exception.
           if (resolution === null || resolution === 'ambiguous') {
             return exports.surroundingAgent.Throw('SyntaxError', 'ResolutionNullOrAmbiguous', resolution, ie.ImportName, importedModule);
           }
           // iii. If resolution.[[BindingName]] is ~namespace~, then
           if (resolution.BindingName === 'namespace') {
-            let _temp14 = GetModuleNamespace(resolution.Module);
-            /* c8 ignore if */
-            if (_temp14 instanceof AbruptCompletion) {
-              return _temp14;
-            }
-            /* c8 ignore if */
-            if (_temp14 instanceof Completion) {
-              _temp14 = _temp14.Value;
-            }
-            // 1. Let namespace be ? GetModuleNamespace(resolution.[[Module]]).
-            const namespace = _temp14;
+            // 1. Let namespace be GetModuleNamespace(resolution.[[Module]]).
+            const namespace = GetModuleNamespace(resolution.Module);
             // 2. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
-            let _temp15 = env.CreateImmutableBinding(ie.LocalName, Value.true);
-            Assert(!(_temp15 instanceof AbruptCompletion), "env.CreateImmutableBinding(ie.LocalName, Value.true)" + ' returned an abrupt completion');
+            let _temp6 = env.CreateImmutableBinding(ie.LocalName, Value.true);
+            Assert(!(_temp6 instanceof AbruptCompletion), "env.CreateImmutableBinding(ie.LocalName, Value.true)" + ' returned an abrupt completion');
             /* c8 ignore if */
-            if (_temp15 instanceof Completion) {
-              _temp15 = _temp15.Value;
+            if (_temp6 instanceof Completion) {
+              _temp6 = _temp6.Value;
             }
             // 3. Call env.InitializeBinding(in.[[LocalName]], namespace).
             env.InitializeBinding(ie.LocalName, namespace);
@@ -20675,19 +20609,19 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           }
         }
       }
-      // 9. Let moduleContext be a new ECMAScript code execution context.
+      // 8. Let moduleContext be a new ECMAScript code execution context.
       const moduleContext = new ExecutionContext();
-      // 10. Set the Function of moduleContext to null.
+      // 9. Set the Function of moduleContext to null.
       moduleContext.Function = Value.null;
-      // 11. Assert: module.[[Realm]] is not undefined.
+      // 10. Assert: module.[[Realm]] is not undefined.
       Assert(module.Realm !== Value.undefined, "module.Realm !== Value.undefined");
-      // 12. Set the Realm of moduleContext to module.[[Realm]].
+      // 11. Set the Realm of moduleContext to module.[[Realm]].
       moduleContext.Realm = module.Realm;
-      // 13. Set the ScriptOrModule of moduleContext to module.
+      // 12. Set the ScriptOrModule of moduleContext to module.
       moduleContext.ScriptOrModule = module;
-      // 14. Set the VariableEnvironment of moduleContext to module.[[Environment]].
+      // 13. Set the VariableEnvironment of moduleContext to module.[[Environment]].
       moduleContext.VariableEnvironment = module.Environment;
-      // 15. Set the LexicalEnvironment of moduleContext to module.[[Environment]].
+      // 14. Set the LexicalEnvironment of moduleContext to module.[[Environment]].
       moduleContext.LexicalEnvironment = module.Environment;
       // 15. Set the PrivateEnvironment of moduleContext to null.
       moduleContext.PrivateEnvironment = Value.null;
@@ -20707,11 +20641,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         for (const dn of BoundNames(d)) {
           // i. If dn is not an element of declaredVarNames, then
           if (!declaredVarNames.has(dn)) {
-            let _temp16 = env.CreateMutableBinding(dn, Value.false);
-            Assert(!(_temp16 instanceof AbruptCompletion), "env.CreateMutableBinding(dn, Value.false)" + ' returned an abrupt completion');
+            let _temp7 = env.CreateMutableBinding(dn, Value.false);
+            Assert(!(_temp7 instanceof AbruptCompletion), "env.CreateMutableBinding(dn, Value.false)" + ' returned an abrupt completion');
             /* c8 ignore if */
-            if (_temp16 instanceof Completion) {
-              _temp16 = _temp16.Value;
+            if (_temp7 instanceof Completion) {
+              _temp7 = _temp7.Value;
             }
             // 2. Call env.InitializeBinding(dn, undefined).
             env.InitializeBinding(dn, Value.undefined);
@@ -20722,30 +20656,30 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       // 22. Let lexDeclarations be the LexicallyScopedDeclarations of code.
       const lexDeclarations = LexicallyScopedDeclarations(code);
-      // 23. For each element d in lexDeclarations, do
+      // 24. For each element d in lexDeclarations, do
       for (const d of lexDeclarations) {
         // a. For each element dn of the BoundNames of d, do
         for (const dn of BoundNames(d)) {
           // i. If IsConstantDeclaration of d is true, then
           if (IsConstantDeclaration(d)) {
-            let _temp17 = env.CreateImmutableBinding(dn, Value.true);
+            let _temp8 = env.CreateImmutableBinding(dn, Value.true);
             /* c8 ignore if */
-            if (_temp17 instanceof AbruptCompletion) {
-              return _temp17;
+            if (_temp8 instanceof AbruptCompletion) {
+              return _temp8;
             }
             /* c8 ignore if */
-            if (_temp17 instanceof Completion) {
-              _temp17 = _temp17.Value;
+            if (_temp8 instanceof Completion) {
+              _temp8 = _temp8.Value;
             }
           } else {
-            let _temp18 = env.CreateMutableBinding(dn, Value.false);
+            let _temp9 = env.CreateMutableBinding(dn, Value.false);
             /* c8 ignore if */
-            if (_temp18 instanceof AbruptCompletion) {
-              return _temp18;
+            if (_temp9 instanceof AbruptCompletion) {
+              return _temp9;
             }
             /* c8 ignore if */
-            if (_temp18 instanceof Completion) {
-              _temp18 = _temp18.Value;
+            if (_temp9 instanceof Completion) {
+              _temp9 = _temp9.Value;
             }
           }
           // iii. If d is a FunctionDeclaration, a GeneratorDeclaration, an AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration, then
@@ -20757,9 +20691,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           }
         }
       }
-      // 24. Remove moduleContext from the execution context stack.
+      // 25. Remove moduleContext from the execution context stack.
       exports.surroundingAgent.executionContextStack.pop(moduleContext);
-      // 25. Return NormalCompletion(empty).
+      // 26. Return unused.
       return NormalCompletion(undefined);
     }
 
@@ -20786,11 +20720,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         // a. Assert: capability is a PromiseCapability Record.
         Assert(capability instanceof PromiseCapabilityRecord, "capability instanceof PromiseCapabilityRecord");
         // b. Perform ! AsyncBlockStart(capability, module.[[ECMAScriptCode]], moduleCxt).
-        let _temp19 = AsyncBlockStart(capability, module.ECMAScriptCode, moduleContext);
-        Assert(!(_temp19 instanceof AbruptCompletion), "AsyncBlockStart(capability, module.ECMAScriptCode, moduleContext)" + ' returned an abrupt completion');
+        let _temp10 = AsyncBlockStart(capability, module.ECMAScriptCode, moduleContext);
+        Assert(!(_temp10 instanceof AbruptCompletion), "AsyncBlockStart(capability, module.ECMAScriptCode, moduleContext)" + ' returned an abrupt completion');
         /* c8 ignore if */
-        if (_temp19 instanceof Completion) {
-          _temp19 = _temp19.Value;
+        if (_temp10 instanceof Completion) {
+          _temp10 = _temp10.Value;
         }
         // c. Return.
         return Value.undefined;
@@ -20847,18 +20781,18 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       module.Environment = env;
       // 5. For each exportName in module.[[ExportNames]],
       for (const exportName of module.ExportNames) {
-        let _temp20 = env.CreateMutableBinding(exportName, Value.false);
-        Assert(!(_temp20 instanceof AbruptCompletion), "env.CreateMutableBinding(exportName, Value.false)" + ' returned an abrupt completion');
+        let _temp11 = env.CreateMutableBinding(exportName, Value.false);
+        Assert(!(_temp11 instanceof AbruptCompletion), "env.CreateMutableBinding(exportName, Value.false)" + ' returned an abrupt completion');
         /* c8 ignore if */
-        if (_temp20 instanceof Completion) {
-          _temp20 = _temp20.Value;
+        if (_temp11 instanceof Completion) {
+          _temp11 = _temp11.Value;
         }
         // b. Perform ! env.InitializeBinding(exportName, undefined).
-        let _temp21 = env.InitializeBinding(exportName, Value.undefined);
-        Assert(!(_temp21 instanceof AbruptCompletion), "env.InitializeBinding(exportName, Value.undefined)" + ' returned an abrupt completion');
+        let _temp12 = env.InitializeBinding(exportName, Value.undefined);
+        Assert(!(_temp12 instanceof AbruptCompletion), "env.InitializeBinding(exportName, Value.undefined)" + ' returned an abrupt completion');
         /* c8 ignore if */
-        if (_temp21 instanceof Completion) {
-          _temp21 = _temp21.Value;
+        if (_temp12 instanceof Completion) {
+          _temp12 = _temp12.Value;
         }
       }
       // 8. Return undefined.
@@ -23158,142 +23092,45 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     return Value.true;
   }
-  function HostResolveImportedModule(referencingScriptOrModule, specifier) {
-    const realm = referencingScriptOrModule.Realm || exports.surroundingAgent.currentRealmRecord;
-    if (realm.HostDefined.resolveImportedModule) {
-      specifier = specifier.stringValue();
-      if (referencingScriptOrModule !== Value.null) {
-        if (!referencingScriptOrModule.HostDefined.moduleMap) {
-          referencingScriptOrModule.HostDefined.moduleMap = new Map();
+
+  // #sec-HostLoadImportedModule
+  function HostLoadImportedModule(referrer, specifier, hostDefined, payload) {
+    if (exports.surroundingAgent.hostDefinedOptions.loadImportedModule) {
+      const executionContext = exports.surroundingAgent.runningExecutionContext;
+      let result;
+      let sync = true;
+      exports.surroundingAgent.hostDefinedOptions.loadImportedModule(referrer, specifier.stringValue(), hostDefined, res => {
+        result = EnsureCompletion(res);
+        if (!sync) {
+          // If this callback has been called asynchronously, restore the correct execution context and enqueue a job.
+          exports.surroundingAgent.executionContextStack.push(executionContext);
+          exports.surroundingAgent.queueJob('FinishLoadingImportedModule', () => {
+            FinishLoadingImportedModule(referrer, specifier, result, payload);
+          });
+          exports.surroundingAgent.executionContextStack.pop(executionContext);
+          runJobQueue();
         }
-        if (referencingScriptOrModule.HostDefined.moduleMap.has(specifier)) {
-          return referencingScriptOrModule.HostDefined.moduleMap.get(specifier);
-        }
-      }
-      let _temp7 = realm.HostDefined.resolveImportedModule(referencingScriptOrModule, specifier);
-      /* c8 ignore if */
-      if (_temp7 instanceof AbruptCompletion) {
-        return _temp7;
-      }
-      /* c8 ignore if */
-      if (_temp7 instanceof Completion) {
-        _temp7 = _temp7.Value;
-      }
-      const resolved = _temp7;
-      if (referencingScriptOrModule !== Value.null) {
-        referencingScriptOrModule.HostDefined.moduleMap.set(specifier, resolved);
-      }
-      return resolved;
-    }
-    return exports.surroundingAgent.Throw('Error', 'CouldNotResolveModule', specifier);
-  }
-  function FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, completion) {
-    // 1. If completion is an abrupt completion, then perform ! Call(promiseCapability.[[Reject]], undefined, « completion.[[Value]] »).
-    if (completion instanceof AbruptCompletion) {
-      let _temp8 = Call(promiseCapability.Reject, Value.undefined, [completion.Value]);
-      Assert(!(_temp8 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [completion.Value])" + ' returned an abrupt completion');
-      /* c8 ignore if */
-      if (_temp8 instanceof Completion) {
-        _temp8 = _temp8.Value;
+      });
+      sync = false;
+      if (result !== undefined) {
+        FinishLoadingImportedModule(referrer, specifier, result, payload);
       }
     } else {
-      // 2. Else,
-      // a. Assert: completion is a normal completion and completion.[[Value]] is undefined.
-      Assert(completion instanceof NormalCompletion, "completion instanceof NormalCompletion");
-      // b. Let moduleRecord be ! HostResolveImportedModule(referencingScriptOrModule, specifier).
-      let _temp9 = HostResolveImportedModule(referencingScriptOrModule, specifier);
-      Assert(!(_temp9 instanceof AbruptCompletion), "HostResolveImportedModule(referencingScriptOrModule, specifier)" + ' returned an abrupt completion');
-      /* c8 ignore if */
-      if (_temp9 instanceof Completion) {
-        _temp9 = _temp9.Value;
-      }
-      const moduleRecord = _temp9;
-      // c. Assert: Evaluate has already been invoked on moduleRecord and successfully completed.
-      // d. Let namespace be GetModuleNamespace(moduleRecord).
-      const namespace = EnsureCompletion(GetModuleNamespace(moduleRecord));
-      // e. If namespace is an abrupt completion, perform ! Call(promiseCapability.[[Reject]], undefined, « namespace.[[Value]] »).
-      if (namespace instanceof AbruptCompletion) {
-        let _temp10 = Call(promiseCapability.Reject, Value.undefined, [namespace.Value]);
-        Assert(!(_temp10 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [namespace.Value])" + ' returned an abrupt completion');
-        /* c8 ignore if */
-        if (_temp10 instanceof Completion) {
-          _temp10 = _temp10.Value;
-        }
-      } else {
-        let _temp11 = Call(promiseCapability.Resolve, Value.undefined, [namespace.Value]);
-        Assert(!(_temp11 instanceof AbruptCompletion), "Call(promiseCapability.Resolve, Value.undefined, [namespace.Value])" + ' returned an abrupt completion');
-        /* c8 ignore if */
-        if (_temp11 instanceof Completion) {
-          _temp11 = _temp11.Value;
-        }
-      }
+      FinishLoadingImportedModule(referrer, specifier, exports.surroundingAgent.Throw('Error', 'CouldNotResolveModule', specifier), payload);
     }
-  }
-  function HostImportModuleDynamically(referencingScriptOrModule, specifier, promiseCapability) {
-    exports.surroundingAgent.queueJob('ImportModuleDynamicallyJobs', () => {
-      const finish = c => FinishDynamicImport(referencingScriptOrModule, specifier, promiseCapability, c);
-      const c = (() => {
-        let _temp12 = HostResolveImportedModule(referencingScriptOrModule, specifier);
-        /* c8 ignore if */
-        if (_temp12 instanceof AbruptCompletion) {
-          return _temp12;
-        }
-        /* c8 ignore if */
-        if (_temp12 instanceof Completion) {
-          _temp12 = _temp12.Value;
-        }
-        const module = _temp12;
-        let _temp13 = module.Link();
-        /* c8 ignore if */
-        if (_temp13 instanceof AbruptCompletion) {
-          return _temp13;
-        }
-        /* c8 ignore if */
-        if (_temp13 instanceof Completion) {
-          _temp13 = _temp13.Value;
-        }
-        let _temp14 = module.Evaluate();
-        /* c8 ignore if */
-        if (_temp14 instanceof AbruptCompletion) {
-          return _temp14;
-        }
-        /* c8 ignore if */
-        if (_temp14 instanceof Completion) {
-          _temp14 = _temp14.Value;
-        }
-        const maybePromise = _temp14;
-        if (module instanceof CyclicModuleRecord) {
-          const onFulfilled = CreateBuiltinFunction(([v = Value.undefined]) => {
-            finish(NormalCompletion(v));
-            return Value.undefined;
-          }, 1, new Value(''), []);
-          const onRejected = CreateBuiltinFunction(([r = Value.undefined]) => {
-            finish(ThrowCompletion(r));
-            return Value.undefined;
-          }, 1, new Value(''), []);
-          PerformPromiseThen(maybePromise, onFulfilled, onRejected);
-        } else {
-          finish(NormalCompletion(undefined));
-        }
-      })();
-      if (c instanceof AbruptCompletion) {
-        finish(c);
-      }
-    });
-    return NormalCompletion(Value.undefined);
   }
 
   /** http://tc39.es/ecma262/#sec-hostgetimportmetaproperties */
   function HostGetImportMetaProperties(moduleRecord) {
     const realm = exports.surroundingAgent.currentRealmRecord;
     if (realm.HostDefined.getImportMetaProperties) {
-      let _temp15 = realm.HostDefined.getImportMetaProperties(moduleRecord.HostDefined.public);
-      Assert(!(_temp15 instanceof AbruptCompletion), "realm.HostDefined.getImportMetaProperties(moduleRecord.HostDefined.public)" + ' returned an abrupt completion');
+      let _temp7 = realm.HostDefined.getImportMetaProperties(moduleRecord.HostDefined.public);
+      Assert(!(_temp7 instanceof AbruptCompletion), "realm.HostDefined.getImportMetaProperties(moduleRecord.HostDefined.public)" + ' returned an abrupt completion');
       /* c8 ignore if */
-      if (_temp15 instanceof Completion) {
-        _temp15 = _temp15.Value;
+      if (_temp7 instanceof Completion) {
+        _temp7 = _temp7.Value;
       }
-      return _temp15;
+      return _temp7;
     }
     return [];
   }
@@ -23302,13 +23139,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function HostFinalizeImportMeta(importMeta, moduleRecord) {
     const realm = exports.surroundingAgent.currentRealmRecord;
     if (realm.HostDefined.finalizeImportMeta) {
-      let _temp16 = realm.HostDefined.finalizeImportMeta(importMeta, moduleRecord.HostDefined.public);
-      Assert(!(_temp16 instanceof AbruptCompletion), "realm.HostDefined.finalizeImportMeta(importMeta, moduleRecord.HostDefined.public)" + ' returned an abrupt completion');
+      let _temp8 = realm.HostDefined.finalizeImportMeta(importMeta, moduleRecord.HostDefined.public);
+      Assert(!(_temp8 instanceof AbruptCompletion), "realm.HostDefined.finalizeImportMeta(importMeta, moduleRecord.HostDefined.public)" + ' returned an abrupt completion');
       /* c8 ignore if */
-      if (_temp16 instanceof Completion) {
-        _temp16 = _temp16.Value;
+      if (_temp8 instanceof Completion) {
+        _temp8 = _temp8.Value;
       }
-      return _temp16;
+      return _temp8;
     }
     return Value.undefined;
   }
@@ -23316,14 +23153,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** http://tc39.es/ecma262/#sec-host-cleanup-finalization-registry */
   function HostEnqueueFinalizationRegistryCleanupJob(fg) {
     if (exports.surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry !== undefined) {
-      let _temp17 = exports.surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry(fg);
+      let _temp9 = exports.surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry(fg);
       /* c8 ignore if */
-      if (_temp17 instanceof AbruptCompletion) {
-        return _temp17;
+      if (_temp9 instanceof AbruptCompletion) {
+        return _temp9;
       }
       /* c8 ignore if */
-      if (_temp17 instanceof Completion) {
-        _temp17 = _temp17.Value;
+      if (_temp9 instanceof Completion) {
+        _temp9 = _temp9.Value;
       }
     } else {
       if (!exports.surroundingAgent.scheduledForCleanup.has(fg)) {
@@ -27088,6 +26925,85 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Value.false;
   }
 
+  /** https://tc39.es/ecma262/#sec-ContinueDynamicImport */
+  function ContinueDynamicImport(promiseCapability, moduleCompletion) {
+    // 1. If moduleCompletion is an abrupt completion, then
+    if (moduleCompletion instanceof AbruptCompletion) {
+      let _temp = Call(promiseCapability.Reject, undefined, [moduleCompletion.Value]);
+      Assert(!(_temp instanceof AbruptCompletion), "Call(promiseCapability.Reject, undefined, [moduleCompletion.Value])" + ' returned an abrupt completion');
+      /* c8 ignore if */
+      if (_temp instanceof Completion) {
+        _temp = _temp.Value;
+      }
+      // b. Return unused.
+      return;
+    }
+    // 2. Let module be moduleCompletion.[[Value]].
+    const module = moduleCompletion.Value;
+
+    // 3. Let loadPromise be module.LoadRequestedModules().
+    const loadPromise = module.LoadRequestedModules();
+
+    // 4. Let rejectedClosure be a new Abstract Closure with parameters (reason) that captures promiseCapability and performs the following steps when called:
+    const rejectedClosure = ([reason = Value.undefined]) => {
+      let _temp2 = Call(promiseCapability.Reject, Value.undefined, [reason]);
+      Assert(!(_temp2 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [reason])" + ' returned an abrupt completion');
+      /* c8 ignore if */
+      if (_temp2 instanceof Completion) {
+        _temp2 = _temp2.Value;
+      }
+      // b. Return unused.
+    };
+    // 5. Let onRejected be CreateBuiltinFunction(rejectedClosure, 1, "", « »).
+    const onRejected = new Value(rejectedClosure);
+
+    // 6. Let linkAndEvaluateClosure be a new Abstract Closure with no parameters that captures module, promiseCapability, and onRejected and performs the following steps when called:
+    const linkAndEvaluateClosure = () => {
+      // a. Let link be Completion(module.Link()).
+      const link = module.Link();
+      // b. If link is an abrupt completion, then
+      if (link instanceof AbruptCompletion) {
+        let _temp3 = Call(promiseCapability.Reject, Value.undefined, [link.Value]);
+        Assert(!(_temp3 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [link.Value])" + ' returned an abrupt completion');
+        /* c8 ignore if */
+        if (_temp3 instanceof Completion) {
+          _temp3 = _temp3.Value;
+        }
+        // ii. Return unused.
+        return;
+      }
+
+      // c. Let evaluatePromise be module.Evaluate().
+      const evaluatePromise = module.Evaluate();
+
+      // d. Let fulfilledClosure be a new Abstract Closure with no parameters that captures module and promiseCapability and performs the following steps when called:
+      const fulfilledClosure = () => {
+        // i. Let namespace be GetModuleNamespace(module).
+        const namespace = GetModuleNamespace(module);
+        // ii. Perform ! Call(promiseCapability.[[Resolve]], undefined, « namespace »).
+        let _temp4 = Call(promiseCapability.Resolve, Value.undefined, [namespace]);
+        Assert(!(_temp4 instanceof AbruptCompletion), "Call(promiseCapability.Resolve, Value.undefined, [namespace])" + ' returned an abrupt completion');
+        /* c8 ignore if */
+        if (_temp4 instanceof Completion) {
+          _temp4 = _temp4.Value;
+        }
+        // iii. Return unused.
+      };
+      // e. Let onFulfilled be CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
+      const onFulfilled = new Value(fulfilledClosure);
+
+      // f. Perform PerformPromiseThen(evaluatePromise, onFulfilled, onRejected).
+      PerformPromiseThen(evaluatePromise, onFulfilled, onRejected);
+      // g. Return unused.
+    };
+    // 7. Let linkAndEvaluate be CreateBuiltinFunction(linkAndEvaluateClosure, 0, "", « »).
+    const linkAndEvaluate = new Value(linkAndEvaluateClosure);
+
+    // 8. Perform PerformPromiseThen(loadPromise, linkAndEvaluate, onRejected).
+    PerformPromiseThen(loadPromise, linkAndEvaluate, onRejected);
+    // 9. Return unused.
+  }
+
   function isIntegerIndexedExoticObject(O) {
     return O.GetOwnProperty === IntegerIndexedGetOwnProperty;
   }
@@ -28128,17 +28044,118 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return M;
   }
 
-  /** http://tc39.es/ecma262/#sec-InnerModuleLinking */
-  function InnerModuleLinking(module, stack, index) {
-    if (!(module instanceof CyclicModuleRecord)) {
-      let _temp = module.Link();
-      /* c8 ignore if */
-      if (_temp instanceof AbruptCompletion) {
-        return _temp;
+  /** https://tc39.es/ecma262/#graphloadingstate-record */
+  class GraphLoadingState {
+    constructor({
+      PromiseCapability,
+      HostDefined
+    }) {
+      this.PromiseCapability = PromiseCapability;
+      this.HostDefined = HostDefined;
+      this.IsLoading = true;
+      this.Visited = new Set();
+      this.PendingModules = 1;
+    }
+  }
+
+  /** http://tc39.es/ecma262/#sec-InnerModuleLoading */
+  function InnerModuleLoading(state, module) {
+    // 1. Assert: state.[[IsLoading]] is true.
+    Assert(state.IsLoading === true, "state.IsLoading === true");
+
+    // 2. If module is a Cyclic Module Record, module.[[Status]] is new, and state.[[Visited]] does not contain module, then
+    if (module instanceof CyclicModuleRecord && module.Status === 'new' && !state.Visited.has(module)) {
+      // a. Append module to state.[[Visited]].
+      state.Visited.add(module);
+      // b. Let requestedModulesCount be the number of elements in module.[[RequestedModules]].
+      const requestedModulesCout = module.RequestedModules.length;
+      // c. Set state.[[PendingModulesCount]] to state.[[PendingModulesCount]] + requestedModulesCount.
+      state.PendingModules += requestedModulesCout;
+      // d. For each String required of module.[[RequestedModules]], do
+      for (const required of module.RequestedModules) {
+        // i. If module.[[LoadedModules]] contains a Record whose [[Specifier]] is required, then
+        //    1. Let record be that Record.
+        const record = getRecordWithSpecifier(module.LoadedModules, required);
+        if (record !== undefined) {
+          // 2. Perform InnerModuleLoading(state, record.[[Module]]).
+          ContinueModuleLoading(state, NormalCompletion(record.Module));
+          // ii. Else,
+        } else {
+          // 1. Perform HostLoadImportedModule(module, required, state.[[HostDefined]], state).
+          HostLoadImportedModule(module, required, state.HostDefined, state);
+        }
+
+        // iii. If state.[[IsLoading]] is false, return unused.
+        if (state.IsLoading === false) {
+          return;
+        }
       }
+    }
+
+    // 3. Assert: state.[[PendingModulesCount]] ≥ 1.
+    Assert(state.PendingModules >= 1, "state.PendingModules >= 1");
+    // 4. Set state.[[PendingModulesCount]] to state.[[PendingModulesCount]] - 1.
+    state.PendingModules -= 1;
+    // 5. If state.[[PendingModulesCount]] = 0, then
+    if (state.PendingModules === 0) {
+      // a. Set state.[[IsLoading]] to false.
+      state.IsLoading = false;
+      // b. For each Cyclic Module Record loaded of state.[[Visited]], do
+      for (const loaded of state.Visited) {
+        // i. If loaded.[[Status]] is new, set loaded.[[Status]] to unlinked.
+        if (loaded.Status === 'new') {
+          loaded.Status = 'unlinked';
+        }
+      }
+      // c. Perform ! Call(state.[[PromiseCapability]].[[Resolve]], undefined, « undefined »).
+      let _temp = Call(state.PromiseCapability.Resolve, Value.undefined, [Value.undefined]);
+      Assert(!(_temp instanceof AbruptCompletion), "Call(state.PromiseCapability.Resolve, Value.undefined, [Value.undefined])" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
+      }
+    }
+
+    // 6. Return unused.
+  }
+
+  /** http://tc39.es/ecma262/#sec-ContinueModuleLoading */
+  function ContinueModuleLoading(state, result) {
+    // 1. If state.[[IsLoading]] is false, return unused.
+    if (state.IsLoading === false) {
+      return;
+    }
+    // 2. If moduleCompletion is a normal completion, then
+    if (result instanceof NormalCompletion) {
+      // a. Perform InnerModuleLoading(state, moduleCompletion.[[Value]]).
+      InnerModuleLoading(state, result.Value);
+      // 3. Else,
+    } else {
+      // a. Set state.[[IsLoading]] to false.
+      state.IsLoading = false;
+      // b. Perform ! Call(state.[[PromiseCapability]].[[Reject]], undefined, « moduleCompletion.[[Value]] »).
+      let _temp2 = Call(state.PromiseCapability.Reject, Value.undefined, [result.Value]);
+      Assert(!(_temp2 instanceof AbruptCompletion), "Call(state.PromiseCapability.Reject, Value.undefined, [result.Value])" + ' returned an abrupt completion');
+      /* c8 ignore if */
+      if (_temp2 instanceof Completion) {
+        _temp2 = _temp2.Value;
+      }
+    }
+
+    // 4. Return unused.
+  }
+
+  /** http://tc39.es/ecma262/#sec-InnerModuleLinking */
+  function InnerModuleLinking(module, stack, index) {
+    if (!(module instanceof CyclicModuleRecord)) {
+      let _temp3 = module.Link();
+      /* c8 ignore if */
+      if (_temp3 instanceof AbruptCompletion) {
+        return _temp3;
+      }
+      /* c8 ignore if */
+      if (_temp3 instanceof Completion) {
+        _temp3 = _temp3.Value;
       }
       return index;
     }
@@ -28152,26 +28169,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     index += 1;
     stack.push(module);
     for (const required of module.RequestedModules) {
-      let _temp2 = HostResolveImportedModule(module, required);
+      const requiredModule = GetImportedModule(module, required);
+      let _temp4 = InnerModuleLinking(requiredModule, stack, index);
       /* c8 ignore if */
-      if (_temp2 instanceof AbruptCompletion) {
-        return _temp2;
+      if (_temp4 instanceof AbruptCompletion) {
+        return _temp4;
       }
       /* c8 ignore if */
-      if (_temp2 instanceof Completion) {
-        _temp2 = _temp2.Value;
+      if (_temp4 instanceof Completion) {
+        _temp4 = _temp4.Value;
       }
-      const requiredModule = _temp2;
-      let _temp3 = InnerModuleLinking(requiredModule, stack, index);
-      /* c8 ignore if */
-      if (_temp3 instanceof AbruptCompletion) {
-        return _temp3;
-      }
-      /* c8 ignore if */
-      if (_temp3 instanceof Completion) {
-        _temp3 = _temp3.Value;
-      }
-      index = _temp3;
+      index = _temp4;
       if (requiredModule instanceof CyclicModuleRecord) {
         Assert(requiredModule.Status === 'linking' || requiredModule.Status === 'linked' || requiredModule.Status === 'evaluated', "requiredModule.Status === 'linking' || requiredModule.Status === 'linked' || requiredModule.Status === 'evaluated'");
         Assert(requiredModule.Status === 'linking' === stack.includes(requiredModule), "(requiredModule.Status === 'linking') === stack.includes(requiredModule)");
@@ -28180,14 +28188,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
       }
     }
-    let _temp4 = module.InitializeEnvironment();
+    let _temp5 = module.InitializeEnvironment();
     /* c8 ignore if */
-    if (_temp4 instanceof AbruptCompletion) {
-      return _temp4;
+    if (_temp5 instanceof AbruptCompletion) {
+      return _temp5;
     }
     /* c8 ignore if */
-    if (_temp4 instanceof Completion) {
-      _temp4 = _temp4.Value;
+    if (_temp5 instanceof Completion) {
+      _temp5 = _temp5.Value;
     }
     Assert(stack.indexOf(module) === stack.lastIndexOf(module), "stack.indexOf(module) === stack.lastIndexOf(module)");
     Assert(module.DFSAncestorIndex <= module.DFSIndex, "module.DFSAncestorIndex <= module.DFSIndex");
@@ -28208,14 +28216,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** http://tc39.es/ecma262/#sec-innermoduleevaluation */
   function InnerModuleEvaluation(module, stack, index) {
     if (!(module instanceof CyclicModuleRecord)) {
-      let _temp5 = module.Evaluate();
+      let _temp6 = module.Evaluate();
       /* c8 ignore if */
-      if (_temp5 instanceof AbruptCompletion) {
-        return _temp5;
+      if (_temp6 instanceof AbruptCompletion) {
+        return _temp6;
       }
       /* c8 ignore if */
-      if (_temp5 instanceof Completion) {
-        _temp5 = _temp5.Value;
+      if (_temp6 instanceof Completion) {
+        _temp6 = _temp6.Value;
       }
       return index;
     }
@@ -28238,13 +28246,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     index += 1;
     stack.push(module);
     for (const required of module.RequestedModules) {
-      let _temp6 = HostResolveImportedModule(module, required);
-      Assert(!(_temp6 instanceof AbruptCompletion), "HostResolveImportedModule(module, required)" + ' returned an abrupt completion');
-      /* c8 ignore if */
-      if (_temp6 instanceof Completion) {
-        _temp6 = _temp6.Value;
-      }
-      let requiredModule = _temp6;
+      let requiredModule = GetImportedModule(module, required);
       let _temp7 = InnerModuleEvaluation(requiredModule, stack, index);
       /* c8 ignore if */
       if (_temp7 instanceof AbruptCompletion) {
@@ -28486,44 +28488,81 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     return Value.undefined;
   }
+  AsyncModuleExecutionRejected.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-AsyncModuleExecutionRejected';
+  function getRecordWithSpecifier(loadedModules, specifier) {
+    for (const record of loadedModules) {
+      if (record.Specifier.stringValue() === specifier.stringValue()) {
+        return record;
+      }
+    }
+    return undefined;
+  }
+
+  /** http://tc39.es/ecma262/#sec-GetImportedModule */
+  function GetImportedModule(referrer, specifier) {
+    const record = getRecordWithSpecifier(referrer.LoadedModules, specifier);
+    Assert(record !== undefined, "record !== undefined");
+    return record.Module;
+  }
+
+  /** http://tc39.es/ecma262/#sec-FinishLoadingImportedModule */
+  function FinishLoadingImportedModule(referrer, specifier, result, state) {
+    // 1. If result is a normal completion, then
+    if (result.Type === 'normal') {
+      // a. If referrer.[[LoadedModules]] contains a Record whose [[Specifier]] is specifier, then
+      const record = getRecordWithSpecifier(referrer.LoadedModules, specifier);
+      if (record !== undefined) {
+        // i. Assert: That Record's [[Module]] is result.[[Value]].
+        Assert(record.Module === result.Value, "record.Module === result.Value");
+      } else {
+        // b. Else, append the Record { [[Specifier]]: specifier, [[Module]]: result.[[Value]] } to referrer.[[LoadedModules]].
+        referrer.LoadedModules.push({
+          Specifier: specifier,
+          Module: result.Value
+        });
+      }
+    }
+
+    // 2. If payload is a GraphLoadingState Record, then
+    if (state instanceof GraphLoadingState) {
+      // a. Perform ContinueModuleLoading(payload, result).
+      ContinueModuleLoading(state, result);
+      // 3. Else,
+    } else {
+      // a. Perform ContinueDynamicImport(payload, result).
+      ContinueDynamicImport(state, result);
+    }
+
+    // 4. Return unused.
+  }
 
   /** http://tc39.es/ecma262/#sec-getmodulenamespace */
-  AsyncModuleExecutionRejected.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-AsyncModuleExecutionRejected';
   function GetModuleNamespace(module) {
-    Assert(module instanceof AbstractModuleRecord, "module instanceof AbstractModuleRecord");
+    // 1. Assert: If module is a Cyclic Module Record, then module.[[Status]] is not new or unlinked.
     if (module instanceof CyclicModuleRecord) {
-      Assert(module.Status !== 'unlinked', "module.Status !== 'unlinked'");
+      Assert(module.Status !== 'new' && module.Status !== 'unlinked', "module.Status !== 'new' && module.Status !== 'unlinked'");
     }
+    // 2. Let namespace be module.[[Namespace]].
     let namespace = module.Namespace;
+    // 3. If namespace is empty, then
     if (namespace === Value.undefined) {
-      let _temp22 = module.GetExportedNames();
-      /* c8 ignore if */
-      if (_temp22 instanceof AbruptCompletion) {
-        return _temp22;
-      }
-      /* c8 ignore if */
-      if (_temp22 instanceof Completion) {
-        _temp22 = _temp22.Value;
-      }
-      const exportedNames = _temp22;
+      // a. Let exportedNames be module.GetExportedNames().
+      const exportedNames = module.GetExportedNames();
+      // b. Let unambiguousNames be a new empty List.
       const unambiguousNames = [];
+      // c. For each element name of exportedNames, do
       for (const name of exportedNames) {
-        let _temp23 = module.ResolveExport(name);
-        /* c8 ignore if */
-        if (_temp23 instanceof AbruptCompletion) {
-          return _temp23;
-        }
-        /* c8 ignore if */
-        if (_temp23 instanceof Completion) {
-          _temp23 = _temp23.Value;
-        }
-        const resolution = _temp23;
+        // i. Let resolution be module.ResolveExport(name).
+        const resolution = module.ResolveExport(name);
+        // ii. If resolution is a ResolvedBinding Record, append name to unambiguousNames.
         if (resolution instanceof ResolvedBindingRecord) {
           unambiguousNames.push(name);
         }
       }
+      // d. Set namespace to ModuleNamespaceCreate(module, unambiguousNames).
       namespace = ModuleNamespaceCreate(module, unambiguousNames);
     }
+    // 4. Return namespace.
     return namespace;
   }
   function CreateSyntheticModule(exportNames, evaluationSteps, realm, hostDefined) {
@@ -52657,6 +52696,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       this.GlobalObject = undefined;
       this.GlobalEnv = undefined;
       this.TemplateMap = undefined;
+      this.LoadedModules = undefined;
       this.HostDefined = undefined;
       this.randomState = undefined;
     }
@@ -52669,6 +52709,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       for (const v of Object.values(this.TemplateMap)) {
         m(v);
       }
+      for (const v of this.LoadedModules) {
+        m(v.Module);
+      }
     }
   }
 
@@ -52679,6 +52722,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     realmRec.GlobalObject = Value.undefined;
     realmRec.GlobalEnv = Value.undefined;
     realmRec.TemplateMap = [];
+    realmRec.LoadedModules = [];
     return realmRec;
   }
   function AddRestrictedFunctionProperties(F, realm) {
@@ -56119,6 +56163,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       this.GlobalObject = Value.undefined;
       this.GlobalEnv = Value.undefined;
       this.TemplateMap = [];
+      this.LoadedModules = [];
 
       // InitializeHostDefinedRealm()
       const newContext = new ExecutionContext();
@@ -56259,6 +56304,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.ConstructorMethod = ConstructorMethod;
   exports.ContainsArguments = ContainsArguments;
   exports.ContainsExpression = ContainsExpression;
+  exports.ContinueDynamicImport = ContinueDynamicImport;
+  exports.ContinueModuleLoading = ContinueModuleLoading;
   exports.CopyDataBlockBytes = CopyDataBlockBytes;
   exports.CopyDataProperties = CopyDataProperties;
   exports.CreateArrayFromList = CreateArrayFromList;
@@ -56398,6 +56445,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.ExportEntriesForModule = ExportEntriesForModule;
   exports.F = F;
   exports.FEATURES = FEATURES;
+  exports.FinishLoadingImportedModule = FinishLoadingImportedModule;
   exports.FlagText = FlagText;
   exports.FromPropertyDescriptor = FromPropertyDescriptor;
   exports.FunctionDeclarationInstantiation = FunctionDeclarationInstantiation;
@@ -56414,6 +56462,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.GetGeneratorKind = GetGeneratorKind;
   exports.GetGlobalObject = GetGlobalObject;
   exports.GetIdentifierReference = GetIdentifierReference;
+  exports.GetImportedModule = GetImportedModule;
   exports.GetIterator = GetIterator;
   exports.GetMatchIndexPair = GetMatchIndexPair;
   exports.GetMatchString = GetMatchString;
@@ -56431,6 +56480,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.GetViewValue = GetViewValue;
   exports.GlobalDeclarationInstantiation = GlobalDeclarationInstantiation;
   exports.GlobalEnvironmentRecord = GlobalEnvironmentRecord;
+  exports.GraphLoadingState = GraphLoadingState;
   exports.HasInitializer = HasInitializer;
   exports.HasName = HasName;
   exports.HasOwnProperty = HasOwnProperty;
@@ -56442,10 +56492,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.HostFinalizeImportMeta = HostFinalizeImportMeta;
   exports.HostGetImportMetaProperties = HostGetImportMetaProperties;
   exports.HostHasSourceTextAvailable = HostHasSourceTextAvailable;
-  exports.HostImportModuleDynamically = HostImportModuleDynamically;
+  exports.HostLoadImportedModule = HostLoadImportedModule;
   exports.HostMakeJobCallback = HostMakeJobCallback;
   exports.HostPromiseRejectionTracker = HostPromiseRejectionTracker;
-  exports.HostResolveImportedModule = HostResolveImportedModule;
   exports.HourFromTime = HourFromTime;
   exports.HoursPerDay = HoursPerDay;
   exports.IfAbruptCloseIterator = IfAbruptCloseIterator;
@@ -56459,6 +56508,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.InitializeReferencedBinding = InitializeReferencedBinding;
   exports.InnerModuleEvaluation = InnerModuleEvaluation;
   exports.InnerModuleLinking = InnerModuleLinking;
+  exports.InnerModuleLoading = InnerModuleLoading;
   exports.InstallErrorCause = InstallErrorCause;
   exports.InstanceofOperator = InstanceofOperator;
   exports.InstantiateArrowFunctionExpression = InstantiateArrowFunctionExpression;
