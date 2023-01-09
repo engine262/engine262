@@ -139,9 +139,9 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
     // 2. Let module be this Cyclic Module Record.
     let module = this;
     // 3. Assert: module.[[Status]] is linked or evaluated.
-    Assert(module.Status === 'linked' || module.Status === 'evaluated');
-    // (*TopLevelAwait) 3. If module.[[Status]] is "evaluated", set module to GetAsyncCycleRoot(module).
-    if (module.Status === 'evaluated') {
+    Assert(module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated');
+    // (*TopLevelAwait) 3. If module.[[Status]] is evaluating-async or evaluated, set module to GetAsyncCycleRoot(module).
+    if (module.Status === 'evaluating-async' || module.Status === 'evaluated') {
       module = GetAsyncCycleRoot(module);
     }
     // (*TopLevelAwait) 4. If module.[[TopLevelCapability]] is not undefined, then
@@ -174,14 +174,16 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
       // c. (*TopLevelAwait) Perform ! Call(capability.[[Reject]], undefined, «result.[[Value]]»).
       X(Call(capability.Reject, Value.undefined, [result.Value]));
     } else { // (*TopLevelAwait) 10. Otherwise,
-      // a. Assert: module.[[Status]] is "evaluated" and module.[[EvaluationError]] is undefined.
-      Assert(module.Status === 'evaluated' && module.EvaluationError === Value.undefined);
-      // b. If module.[[AsyncEvaluating]] is false, then
+      // a. Assert: module.[[Status]] is evaluating-async or evaluated.
+      Assert(module.Status === 'evaluating-async' || module.Status === 'evaluated');
+      // b. Assert: module.[[EvaluationError]] is undefined.
+      Assert(module.EvaluationError === Value.undefined);
+      // c. If module.[[AsyncEvaluating]] is false, then
       if (module.AsyncEvaluating === Value.false) {
         // i. Perform ! Call(capability.[[Resolve]], undefined, «undefined»).
         X(Call(capability.Resolve, Value.undefined, [Value.undefined]));
       }
-      // c. Assert: stack is empty.
+      // d. Assert: stack is empty.
       Assert(stack.length === 0);
     }
     // 9. Return undefined.
