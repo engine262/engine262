@@ -146,7 +146,7 @@ This project can be run against [test262][], which is particularly useful
 for developing new features and/or tests:
 ```sh
 $ # build engine262
-$ npm build
+$ npm run build
 
 $ # update local test262 in test/test262/test262
 $ git submodule update --init --recursive
