@@ -191,10 +191,8 @@ if (!process.send) {
       }
 
       const contents = await fs.promises.readFile(file, 'utf8');
-      const yamlStart = contents.indexOf('/*---') + 5;
-      const yamlEnd = contents.indexOf('---*/', yamlStart);
-      const yaml = contents.slice(yamlStart, yamlEnd);
-      const attrs = YAML.load(yaml);
+      const frontmatterYaml = contents.match(/\/\*---(.*?)---\*\//s)?.[1];
+      const attrs = frontmatterYaml ? YAML.load(frontmatterYaml) : {};
 
       attrs.flags = (attrs.flags || []).reduce((acc, c) => {
         acc[c] = true;
