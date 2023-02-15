@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 c3aaa5a21688abe33fc4a2726c0a4ed429243a0d
+ * engine262 0.0.1 09a6842fc709fb97b6303c42946a49a669225b78
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -20304,9 +20304,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 2. Let module be this Cyclic Module Record.
       let module = this;
       // 3. Assert: module.[[Status]] is linked or evaluated.
-      Assert(module.Status === 'linked' || module.Status === 'evaluated', "module.Status === 'linked' || module.Status === 'evaluated'");
-      // (*TopLevelAwait) 3. If module.[[Status]] is "evaluated", set module to GetAsyncCycleRoot(module).
-      if (module.Status === 'evaluated') {
+      Assert(module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated', "module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated'");
+      // (*TopLevelAwait) 3. If module.[[Status]] is evaluating-async or evaluated, set module to GetAsyncCycleRoot(module).
+      if (module.Status === 'evaluating-async' || module.Status === 'evaluated') {
         module = GetAsyncCycleRoot(module);
       }
       // (*TopLevelAwait) 4. If module.[[TopLevelCapability]] is not undefined, then
@@ -20351,9 +20351,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
       } else {
         // (*TopLevelAwait) 10. Otherwise,
-        // a. Assert: module.[[Status]] is "evaluated" and module.[[EvaluationError]] is undefined.
-        Assert(module.Status === 'evaluated' && module.EvaluationError === Value.undefined, "module.Status === 'evaluated' && module.EvaluationError === Value.undefined");
-        // b. If module.[[AsyncEvaluating]] is false, then
+        // a. Assert: module.[[Status]] is evaluating-async or evaluated.
+        Assert(module.Status === 'evaluating-async' || module.Status === 'evaluated', "module.Status === 'evaluating-async' || module.Status === 'evaluated'");
+        // b. Assert: module.[[EvaluationError]] is undefined.
+        Assert(module.EvaluationError === Value.undefined, "module.EvaluationError === Value.undefined");
+        // c. If module.[[AsyncEvaluating]] is false, then
         if (module.AsyncEvaluating === Value.false) {
           let _temp4 = Call(capability.Resolve, Value.undefined, [Value.undefined]);
           Assert(!(_temp4 instanceof AbruptCompletion), "Call(capability.Resolve, Value.undefined, [Value.undefined])" + ' returned an abrupt completion');
@@ -20362,7 +20364,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             _temp4 = _temp4.Value;
           }
         }
-        // c. Assert: stack is empty.
+        // d. Assert: stack is empty.
         Assert(stack.length === 0, "stack.length === 0");
       }
       // 9. Return undefined.
@@ -28159,7 +28161,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       return index;
     }
-    if (module.Status === 'linking' || module.Status === 'linked' || module.Status === 'evaluated') {
+    if (module.Status === 'linking' || module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated') {
       return index;
     }
     Assert(module.Status === 'unlinked', "module.Status === 'unlinked'");
@@ -28181,7 +28183,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       index = _temp4;
       if (requiredModule instanceof CyclicModuleRecord) {
-        Assert(requiredModule.Status === 'linking' || requiredModule.Status === 'linked' || requiredModule.Status === 'evaluated', "requiredModule.Status === 'linking' || requiredModule.Status === 'linked' || requiredModule.Status === 'evaluated'");
+        Assert(requiredModule.Status === 'linking' || requiredModule.Status === 'linked' || requiredModule.Status === 'evaluating-async' || requiredModule.Status === 'evaluated', "requiredModule.Status === 'linking' || requiredModule.Status === 'linked' || requiredModule.Status === 'evaluating-async' || requiredModule.Status === 'evaluated'");
         Assert(requiredModule.Status === 'linking' === stack.includes(requiredModule), "(requiredModule.Status === 'linking') === stack.includes(requiredModule)");
         if (requiredModule.Status === 'linking') {
           module.DFSAncestorIndex = Math.min(module.DFSAncestorIndex, requiredModule.DFSAncestorIndex);
@@ -28227,7 +28229,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       return index;
     }
-    if (module.Status === 'evaluated') {
+    if (module.Status === 'evaluating-async' || module.Status === 'evaluated') {
       if (module.EvaluationError === Value.undefined) {
         return index;
       } else {
@@ -28258,15 +28260,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       index = _temp7;
       if (requiredModule instanceof CyclicModuleRecord) {
-        Assert(requiredModule.Status === 'evaluating' || requiredModule.Status === 'evaluated', "requiredModule.Status === 'evaluating' || requiredModule.Status === 'evaluated'");
-        if (stack.includes(requiredModule)) {
-          Assert(requiredModule.Status === 'evaluating', "requiredModule.Status === 'evaluating'");
-        }
+        Assert(requiredModule.Status === 'evaluating' || requiredModule.Status === 'evaluating-async' || requiredModule.Status === 'evaluated', "requiredModule.Status === 'evaluating' || requiredModule.Status === 'evaluating-async' || requiredModule.Status === 'evaluated'");
+        Assert(requiredModule.Status === 'evaluating' === stack.includes(requiredModule), "(requiredModule.Status === 'evaluating') === stack.includes(requiredModule)");
         if (requiredModule.Status === 'evaluating') {
           module.DFSAncestorIndex = Math.min(module.DFSAncestorIndex, requiredModule.DFSAncestorIndex);
         } else {
           requiredModule = GetAsyncCycleRoot(requiredModule);
-          Assert(requiredModule.Status === 'evaluated', "requiredModule.Status === 'evaluated'");
+          Assert(requiredModule.Status === 'evaluating-async' || requiredModule.Status === 'evaluated', "requiredModule.Status === 'evaluating-async' || requiredModule.Status === 'evaluated'");
           if (requiredModule.EvaluationError !== Value.undefined) {
             return module.EvaluationError;
           }
@@ -28304,7 +28304,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       while (done === false) {
         const requiredModule = stack.pop();
         Assert(requiredModule instanceof CyclicModuleRecord, "requiredModule instanceof CyclicModuleRecord");
-        requiredModule.Status = 'evaluated';
+        if (requiredModule.AsyncEvaluating === Value.false) {
+          requiredModule.Status = 'evaluated';
+        } else {
+          requiredModule.Status = 'evaluating-async';
+        }
         if (requiredModule === module) {
           done = true;
         }
@@ -28315,8 +28319,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** http://tc39.es/ecma262/#sec-execute-async-module */
   function ExecuteAsyncModule(module) {
-    // 1. Assert: module.[[Status]] is evaluating or evaluated.
-    Assert(module.Status === 'evaluating' || module.Status === 'evaluated', "module.Status === 'evaluating' || module.Status === 'evaluated'");
+    // 1. Assert: module.[[Status]] is evaluating or evaluating-async.
+    Assert(module.Status === 'evaluating' || module.Status === 'evaluating-async', "module.Status === 'evaluating' || module.Status === 'evaluating-async'");
     // 2. Assert: module.[[Async]] is true.
     Assert(module.Async === Value.true, "module.Async === Value.true");
     // 3. Set module.[[AsyncEvaluating]] to true.
@@ -28376,7 +28380,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** http://tc39.es/ecma262/#sec-getcycleroot */
   ExecuteAsyncModule.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-execute-async-module';
   function GetAsyncCycleRoot(module) {
-    Assert(module.Status === 'evaluated', "module.Status === 'evaluated'");
+    Assert(module.Status === 'evaluated' || module.Status === 'evaluating-async', "module.Status === 'evaluated' || module.Status === 'evaluating-async'");
     if (module.AsyncParentModules.length === 0) {
       return module;
     }
@@ -28392,11 +28396,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** http://tc39.es/ecma262/#sec-asyncmodulexecutionfulfilled */
   function AsyncModuleExecutionFulfilled(module) {
-    Assert(module.Status === 'evaluated', "module.Status === 'evaluated'");
-    if (module.AsyncEvaluating === Value.false) {
+    if (module.Status === 'evaluated') {
       Assert(module.EvaluationError !== Value.undefined, "module.EvaluationError !== Value.undefined");
       return Value.undefined;
     }
+    Assert(module.Status === 'evaluating-async', "module.Status === 'evaluating-async'");
     Assert(module.EvaluationError === Value.undefined, "module.EvaluationError === Value.undefined");
     module.AsyncEvaluating = Value.false;
     for (const m of module.AsyncParentModules) {
@@ -28458,11 +28462,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** http://tc39.es/ecma262/#sec-AsyncModuleExecutionRejected */
   AsyncModuleExecutionFulfilled.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-asyncmodulexecutionfulfilled';
   function AsyncModuleExecutionRejected(module, error) {
-    Assert(module.Status === 'evaluated', "module.Status === 'evaluated'");
-    if (module.AsyncEvaluating === Value.false) {
+    if (module.Status === 'evaluated') {
       Assert(module.EvaluationError !== Value.undefined, "module.EvaluationError !== Value.undefined");
       return Value.undefined;
     }
+    Assert(module.Status === 'evaluating-async', "module.Status === 'evaluating-async'");
     Assert(module.EvaluationError === Value.undefined, "module.EvaluationError === Value.undefined");
     module.EvaluationError = ThrowCompletion(error);
     module.AsyncEvaluating = Value.false;
