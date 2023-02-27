@@ -226,9 +226,9 @@ export function InnerModuleEvaluation(module, stack, index) {
 function ExecuteAsyncModule(module) {
   // 1. Assert: module.[[Status]] is evaluating or evaluating-async.
   Assert(module.Status === 'evaluating' || module.Status === 'evaluating-async');
-  // 2. Assert: module.[[Async]] is true.
+  // 2. Assert: module.[[HasTLA]] is true.
   Assert(module.HasTLA === Value.true);
-  // 3. Set module.[[AsyncEvaluating]] to true.
+  // 3. Set module.[[AsyncEvaluation]] to true.
   module.AsyncEvaluation = Value.true;
   // 4. Let capability be ! NewPromiseCapability(%Promise%).
   const capability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));

@@ -178,7 +178,7 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
       Assert(module.Status === 'evaluating-async' || module.Status === 'evaluated');
       // b. Assert: module.[[EvaluationError]] is undefined.
       Assert(module.EvaluationError === Value.undefined);
-      // c. If module.[[AsyncEvaluating]] is false, then
+      // c. If module.[[AsyncEvaluation]] is false, then
       if (module.AsyncEvaluation === Value.false) {
         // i. Perform ! Call(capability.[[Resolve]], undefined, «undefined»).
         X(Call(capability.Resolve, Value.undefined, [Value.undefined]));
