@@ -11,7 +11,6 @@ import {
   InnerModuleLinking,
   InnerModuleLoading,
   SameValue,
-  GetAsyncCycleRoot,
   AsyncBlockStart,
   PromiseCapabilityRecord,
   GraphLoadingState,
@@ -78,6 +77,7 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
     this.DFSAncestorIndex = init.DFSAncestorIndex;
     this.RequestedModules = init.RequestedModules;
     this.LoadedModules = init.LoadedModules;
+    this.CycleRoot = init.CycleRoot;
     this.HasTLA = init.HasTLA;
     this.AsyncEvaluation = init.AsyncEvaluation;
     this.TopLevelCapability = init.TopLevelCapability;
@@ -140,9 +140,9 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
     let module = this;
     // 3. Assert: module.[[Status]] is linked or evaluated.
     Assert(module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated');
-    // (*TopLevelAwait) 3. If module.[[Status]] is evaluating-async or evaluated, set module to GetAsyncCycleRoot(module).
+    // (*TopLevelAwait) 3. If module.[[Status]] is evaluating-async or evaluated, set module to module.[[CycleRoot]].
     if (module.Status === 'evaluating-async' || module.Status === 'evaluated') {
-      module = GetAsyncCycleRoot(module);
+      module = module.CycleRoot;
     }
     // (*TopLevelAwait) 4. If module.[[TopLevelCapability]] is not undefined, then
     if (module.TopLevelCapability !== Value.undefined) {

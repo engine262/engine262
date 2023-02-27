@@ -182,7 +182,7 @@ export function InnerModuleEvaluation(module, stack, index) {
       if (requiredModule.Status === 'evaluating') {
         module.DFSAncestorIndex = Math.min(module.DFSAncestorIndex, requiredModule.DFSAncestorIndex);
       } else {
-        requiredModule = GetAsyncCycleRoot(requiredModule);
+        requiredModule = requiredModule.CycleRoot;
         Assert(requiredModule.Status === 'evaluating-async' || requiredModule.Status === 'evaluated');
         if (requiredModule.EvaluationError !== Value.undefined) {
           return module.EvaluationError;
@@ -216,6 +216,7 @@ export function InnerModuleEvaluation(module, stack, index) {
       if (requiredModule === module) {
         done = true;
       }
+      requiredModule.CycleRoot = module;
     }
   }
   return index;
@@ -257,22 +258,6 @@ function ExecuteAsyncModule(module) {
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-getcycleroot */
-export function GetAsyncCycleRoot(module) {
-  Assert(module.Status === 'evaluated' || module.Status === 'evaluating-async');
-  if (module.AsyncParentModules.length === 0) {
-    return module;
-  }
-  while (module.DFSIndex > module.DFSAncestorIndex) {
-    Assert(module.AsyncParentModules.length > 0);
-    const nextCycleModule = module.AsyncParentModules[0];
-    Assert(nextCycleModule.DFSAncestorIndex === module.DFSAncestorIndex);
-    module = nextCycleModule;
-  }
-  Assert(module.DFSIndex === module.DFSAncestorIndex);
-  return module;
-}
-
 /** http://tc39.es/ecma262/#sec-asyncmodulexecutionfulfilled */
 function AsyncModuleExecutionFulfilled(module) {
   if (module.Status === 'evaluated') {
@@ -289,7 +274,7 @@ function AsyncModuleExecutionFulfilled(module) {
     m.PendingAsyncDependencies -= 1;
     if (m.PendingAsyncDependencies === 0 && m.EvaluationError === Value.undefined) {
       Assert(m.AsyncEvaluation === Value.true);
-      const cycleRoot = X(GetAsyncCycleRoot(m));
+      const cycleRoot = m.CycleRoot;
       if (cycleRoot.EvaluationError !== Value.undefined) {
         return Value.undefined;
       }

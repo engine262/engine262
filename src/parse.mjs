@@ -166,6 +166,7 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
     DFSIndex: Value.undefined,
     DFSAncestorIndex: Value.undefined,
 
+    CycleRoot: Value.undefined,
     HasTLA: body.hasTopLevelAwait ? Value.true : Value.false,
     AsyncEvaluation: Value.false,
     TopLevelCapability: Value.undefined,
