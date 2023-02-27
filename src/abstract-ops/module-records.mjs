@@ -6,7 +6,7 @@ import {
 } from '../modules.mjs';
 import { Value } from '../value.mjs';
 import {
-  Q, X, NormalCompletion, ThrowCompletion,
+  Q, X, NormalCompletion, ThrowCompletion, AbruptCompletion,
 } from '../completion.mjs';
 import {
   Assert,
@@ -258,6 +258,25 @@ function ExecuteAsyncModule(module) {
   return Value.undefined;
 }
 
+/** https://tc39.es/ecma262/#sec-gather-available-ancestors */
+function GatherAvailableAncestors(module, execList) {
+  for (const m of module.AsyncParentModules) {
+    if (!execList.includes(m) && m.CycleRoot.EvaluationError === Value.undefined) {
+      Assert(m.Status === 'evaluating-async');
+      Assert(m.EvaluationError === Value.undefined);
+      Assert(m.AsyncEvaluation === Value.true);
+      Assert(m.PendingAsyncDependencies > 0);
+      m.PendingAsyncDependencies -= 1;
+      if (m.PendingAsyncDependencies === 0) {
+        execList.push(m);
+        if (m.HasTLA === Value.false) {
+          GatherAvailableAncestors(m, execList);
+        }
+      }
+    }
+  }
+}
+
 /** http://tc39.es/ecma262/#sec-asyncmodulexecutionfulfilled */
 function AsyncModuleExecutionFulfilled(module) {
   if (module.Status === 'evaluated') {
@@ -265,36 +284,39 @@ function AsyncModuleExecutionFulfilled(module) {
     return Value.undefined;
   }
   Assert(module.Status === 'evaluating-async');
+  Assert(module.AsyncEvaluation === Value.true);
   Assert(module.EvaluationError === Value.undefined);
   module.AsyncEvaluation = Value.false;
-  for (const m of module.AsyncParentModules) {
-    if (module.DFSIndex !== module.DFSAncestorIndex) {
-      Assert(m.DFSAncestorIndex === module.DFSAncestorIndex);
-    }
-    m.PendingAsyncDependencies -= 1;
-    if (m.PendingAsyncDependencies === 0 && m.EvaluationError === Value.undefined) {
-      Assert(m.AsyncEvaluation === Value.true);
-      const cycleRoot = m.CycleRoot;
-      if (cycleRoot.EvaluationError !== Value.undefined) {
-        return Value.undefined;
-      }
-      if (m.HasTLA === Value.true) {
-        X(ExecuteAsyncModule(m));
+  module.Status = 'evaluated';
+  if (module.TopLevelCapability !== Value.undefined) {
+    Assert(module.CycleRoot === module);
+    X(Call(module.TopLevelCapability.Resolve, Value.undefined, [Value.undefined]));
+  }
+  const execList = [];
+  GatherAvailableAncestors(module, execList);
+  // TODO: Sort this
+  // 10. Let sortedExecList be a List whose elements are the elements of execList, in the order in which they had their [[AsyncEvaluation]] fields set to true in InnerModuleEvaluation.
+  const sortedExecList = execList;
+  Assert(sortedExecList.every((m) => m.AsyncEvaluation === Value.true && m.PendingAsyncDependencies === 0 && m.EvaluationError === Value.undefined));
+
+  for (const m of sortedExecList) {
+    if (m.Status === 'evaluated') {
+      Assert(m.EvaluationError !== Value.undefined);
+    } else if (m.HasTLA === Value.true) {
+      ExecuteAsyncModule(m);
+    } else {
+      const result = m.ExecuteModule();
+      if (result instanceof AbruptCompletion) {
+        AsyncModuleExecutionRejected(m, result.Value);
       } else {
-        const result = m.ExecuteModule();
-        if (result instanceof NormalCompletion) {
-          X(AsyncModuleExecutionFulfilled(m));
-        } else {
-          X(AsyncModuleExecutionRejected(m, result.Value));
+        m.Status = 'evaluated';
+        if (m.TopLevelCapability !== Value.undefined) {
+          Assert(m.CycleRoot === m);
+          X(Call(m.TopLevelCapability.Resolve, Value.undefined, [Value.undefined]));
         }
       }
     }
   }
-  if (module.TopLevelCapability !== Value.undefined) {
-    Assert(module.DFSIndex === module.DFSAncestorIndex);
-    X(Call(module.TopLevelCapability.Resolve, Value.undefined, [Value.undefined]));
-  }
-  return Value.undefined;
 }
 
 /** http://tc39.es/ecma262/#sec-AsyncModuleExecutionRejected */
@@ -304,20 +326,17 @@ function AsyncModuleExecutionRejected(module, error) {
     return Value.undefined;
   }
   Assert(module.Status === 'evaluating-async');
+  Assert(module.AsyncEvaluation === Value.true);
   Assert(module.EvaluationError === Value.undefined);
   module.EvaluationError = ThrowCompletion(error);
-  module.AsyncEvaluation = Value.false;
+  module.Status = 'evaluated';
   for (const m of module.AsyncParentModules) {
-    if (module.DFSIndex !== module.DFSAncestorIndex) {
-      Assert(m.DFSAncestorIndex === module.DFSAncestorIndex);
-    }
-    X(AsyncModuleExecutionRejected(m, error));
+    AsyncModuleExecutionRejected(m, error);
   }
   if (module.TopLevelCapability !== Value.undefined) {
     Assert(module.DFSIndex === module.DFSAncestorIndex);
     X(Call(module.TopLevelCapability.Reject, Value.undefined, [error]));
   }
-  return Value.undefined;
 }
 
 function getRecordWithSpecifier(loadedModules, specifier) {
