@@ -188,15 +188,15 @@ export function InnerModuleEvaluation(module, stack, index) {
           return module.EvaluationError;
         }
       }
-      if (requiredModule.AsyncEvaluating === Value.true) {
+      if (requiredModule.AsyncEvaluation === Value.true) {
         module.PendingAsyncDependencies += 1;
         requiredModule.AsyncParentModules.push(module);
       }
     }
   }
   if (module.PendingAsyncDependencies > 0) {
-    module.AsyncEvaluating = Value.true;
-  } else if (module.Async === Value.true) {
+    module.AsyncEvaluation = Value.true;
+  } else if (module.HasTLA === Value.true) {
     X(ExecuteAsyncModule(module));
   } else {
     Q(module.ExecuteModule());
@@ -208,7 +208,7 @@ export function InnerModuleEvaluation(module, stack, index) {
     while (done === false) {
       const requiredModule = stack.pop();
       Assert(requiredModule instanceof CyclicModuleRecord);
-      if (requiredModule.AsyncEvaluating === Value.false) {
+      if (requiredModule.AsyncEvaluation === Value.false) {
         requiredModule.Status = 'evaluated';
       } else {
         requiredModule.Status = 'evaluating-async';
@@ -226,9 +226,9 @@ function ExecuteAsyncModule(module) {
   // 1. Assert: module.[[Status]] is evaluating or evaluating-async.
   Assert(module.Status === 'evaluating' || module.Status === 'evaluating-async');
   // 2. Assert: module.[[Async]] is true.
-  Assert(module.Async === Value.true);
+  Assert(module.HasTLA === Value.true);
   // 3. Set module.[[AsyncEvaluating]] to true.
-  module.AsyncEvaluating = Value.true;
+  module.AsyncEvaluation = Value.true;
   // 4. Let capability be ! NewPromiseCapability(%Promise%).
   const capability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
   // 5. Let fulfilledClosure be a new Abstract Closure with no parameters that captures module and performs the following steps when called:
@@ -281,19 +281,19 @@ function AsyncModuleExecutionFulfilled(module) {
   }
   Assert(module.Status === 'evaluating-async');
   Assert(module.EvaluationError === Value.undefined);
-  module.AsyncEvaluating = Value.false;
+  module.AsyncEvaluation = Value.false;
   for (const m of module.AsyncParentModules) {
     if (module.DFSIndex !== module.DFSAncestorIndex) {
       Assert(m.DFSAncestorIndex === module.DFSAncestorIndex);
     }
     m.PendingAsyncDependencies -= 1;
     if (m.PendingAsyncDependencies === 0 && m.EvaluationError === Value.undefined) {
-      Assert(m.AsyncEvaluating === Value.true);
+      Assert(m.AsyncEvaluation === Value.true);
       const cycleRoot = X(GetAsyncCycleRoot(m));
       if (cycleRoot.EvaluationError !== Value.undefined) {
         return Value.undefined;
       }
-      if (m.Async === Value.true) {
+      if (m.HasTLA === Value.true) {
         X(ExecuteAsyncModule(m));
       } else {
         const result = m.ExecuteModule();
@@ -321,7 +321,7 @@ function AsyncModuleExecutionRejected(module, error) {
   Assert(module.Status === 'evaluating-async');
   Assert(module.EvaluationError === Value.undefined);
   module.EvaluationError = ThrowCompletion(error);
-  module.AsyncEvaluating = Value.false;
+  module.AsyncEvaluation = Value.false;
   for (const m of module.AsyncParentModules) {
     if (module.DFSIndex !== module.DFSAncestorIndex) {
       Assert(m.DFSAncestorIndex === module.DFSAncestorIndex);

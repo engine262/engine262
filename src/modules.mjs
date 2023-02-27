@@ -78,8 +78,8 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
     this.DFSAncestorIndex = init.DFSAncestorIndex;
     this.RequestedModules = init.RequestedModules;
     this.LoadedModules = init.LoadedModules;
-    this.Async = init.Async;
-    this.AsyncEvaluating = init.AsyncEvaluating;
+    this.HasTLA = init.HasTLA;
+    this.AsyncEvaluation = init.AsyncEvaluation;
     this.TopLevelCapability = init.TopLevelCapability;
     this.AsyncParentModules = init.AsyncParentModules;
     this.PendingAsyncDependencies = init.PendingAsyncDependencies;
@@ -179,7 +179,7 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
       // b. Assert: module.[[EvaluationError]] is undefined.
       Assert(module.EvaluationError === Value.undefined);
       // c. If module.[[AsyncEvaluating]] is false, then
-      if (module.AsyncEvaluating === Value.false) {
+      if (module.AsyncEvaluation === Value.false) {
         // i. Perform ! Call(capability.[[Resolve]], undefined, «undefined»).
         X(Call(capability.Resolve, Value.undefined, [Value.undefined]));
       }
@@ -507,7 +507,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     // 2. Suspend the currently running execution context.
     // 3. Let moduleContext be module.[[Context]].
     const moduleContext = module.Context;
-    if (module.Async === Value.false) {
+    if (module.HasTLA === Value.false) {
       Assert(capability === undefined);
       // 4. Push moduleContext onto the execution context stack; moduleContext is now the running execution context.
       surroundingAgent.executionContextStack.push(moduleContext);
