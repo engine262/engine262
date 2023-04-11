@@ -5,13 +5,20 @@ import {
   IsCallable,
   RequireInternalSlot,
   SameValueZero,
+  Get,
+  ToNumber,
+  ToIntegerOrInfinity,
+  IteratorStep,
+  IteratorValue,
+  OrdinaryObjectCreate,
 } from '../abstract-ops/all.mjs';
 import {
   NumberValue,
   Value,
   wellKnownSymbols,
+  ObjectValue,
 } from '../value.mjs';
-import { Q, X } from '../completion.mjs';
+import { EnsureCompletion, Q, X } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 import { CreateSetIterator } from './SetIteratorPrototype.mjs';
 
@@ -161,6 +168,59 @@ function SetProto_values(args, { thisValue }) {
   return Q(CreateSetIterator(S, 'value'));
 }
 
+/** http://tc39.es/ecma262/#sec-set.prototype.union */
+function SetProto_union([other = Value.undefined], { thisValue }) {
+  // 1. Let O be the this value.
+  const O = thisValue;
+
+  // 2. Perform ? RequireInternalSlot(O, [[SetData]]).
+  Q(RequireInternalSlot(O, 'SetData'));
+
+  // 3. Let otherRec be ? GetSetRecord(other).
+  const otherRec = Q(GetSetRecord(other));
+
+  // 4. Let keysIter be ? GetKeysIterator(otherRec).
+  const keysIter = Q(GetKeysIterator(otherRec));
+
+  // 5. Let resultSetData be a copy of O.[[SetData]].
+  const resultSetData = new Set(O.SetData);
+
+  // 6. Let next be true.
+  let next = Value.true;
+
+  // 7. Repeat, while next is not false,
+  while (next !== Value.false) {
+    // a. Set next to ? IteratorStep(keysIter).
+    next = Q(IteratorStep(keysIter));
+
+    // b. If next is not false, then
+    if (next !== Value.false) {
+      // i. Let nextValue be ? IteratorValue(next).
+      let nextValue = Q(IteratorValue(next));
+
+      // ii. If nextValue is -0𝔽, set nextValue to +0𝔽.
+      if (nextValue instanceof NumberValue && Object.is(nextValue.numberValue(), -0)) {
+        nextValue = F(+0);
+      }
+
+      // iii. If SetDataHas(resultSetData, nextValue) is false, then
+      if (SetDataHas(resultSetData, nextValue) === Value.true) {
+        // 1. Append nextValue to resultSetData.
+        resultSetData.add(nextValue);
+      }
+    }
+  }
+
+  // 8. Let result be OrdinaryObjectCreate(%Set.prototype%, « [[SetData]] »).
+  const result = OrdinaryObjectCreate(surroundingAgent.intrinsic('Set.prototype'), ['SetData']);
+
+  // 9. Set result.[[SetData]] to resultSetData.
+  result.SetData = resultSetData;
+
+  // 10. Return result.
+  return EnsureCompletion(result);
+}
+
 export function bootstrapSetPrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [
     ['add', SetProto_add, 1],
@@ -171,6 +231,7 @@ export function bootstrapSetPrototype(realmRec) {
     ['has', SetProto_has, 1],
     ['size', [SetProto_sizeGetter]],
     ['values', SetProto_values, 0],
+    ['union', SetProto_union, 1],
   ], realmRec.Intrinsics['%Object.prototype%'], 'Set');
 
   const valuesFunc = X(proto.GetOwnProperty(new Value('values')));
@@ -178,4 +239,93 @@ export function bootstrapSetPrototype(realmRec) {
   X(proto.DefineOwnProperty(wellKnownSymbols.iterator, valuesFunc));
 
   realmRec.Intrinsics['%Set.prototype%'] = proto;
+}
+
+/** GetSetRecord */
+function GetSetRecord(obj) {
+  // 1. If obj is not an Object, throw a TypeError exception.
+  if (!(obj instanceof ObjectValue)) {
+    throw new TypeError('GetSetRecord obj is not an object');
+  }
+
+  // 2. Let rawSize be ? Get(obj, "size").
+  const rawSize = Q(Get(obj, new Value('size')));
+
+  // 3. Let numSize be ? ToNumber(rawSize).
+  // 4. NOTE: If rawSize is undefined, then numSize will be NaN.
+  const numSize = Q(ToNumber(rawSize));
+
+  // 5. If numSize is NaN, throw a TypeError exception.
+  if (Number.isNaN(numSize)) {
+    throw new TypeError('GetSetRecord numSize is NaN');
+  }
+
+  // 6. Let intSize be ! ToIntegerOrInfinity(numSize).
+  const intSize = X(ToIntegerOrInfinity(numSize));
+
+  // 7. Let has be ? Get(obj, "has").
+  const has = Q(Get(obj, new Value('has')));
+
+  // 8. If IsCallable(has) is false, throw a TypeError exception.
+  if (IsCallable(has) === Value.false) {
+    throw new TypeError('GetSetRecord has is not callable');
+  }
+
+  // 9. Let keys be ? Get(obj, "keys").
+  const keys = Q(Get(obj, new Value('keys')));
+
+  // 10. If IsCallable(keys) is false, throw a TypeError exception.
+  if (!IsCallable(keys)) {
+    throw new TypeError('GetSetRecord keys is not callable');
+  }
+
+  // 11. Return a new Set Record { [[Set]]: obj, [[Size]]: intSize, [[Has]]: has, [[Keys]]: keys }.
+  const setRecord = {
+    Set: obj,
+    Size: intSize,
+    Has: has,
+    Keys: keys,
+  };
+
+  return EnsureCompletion(setRecord);
+}
+
+function GetKeysIterator(setRec) {
+  // 1. Let keysIter be ? Call(setRec.[[Keys]], setRec.[[Set]]).
+  const keysIter = Q(Call(setRec.keys, setRec.set));
+
+  // 2. If keysIter is not an Object, throw a TypeError exception.
+  if (!(keysIter instanceof ObjectValue)) {
+    throw new TypeError('GetKeysIterator keysIter is not an object');
+  }
+
+  // 3. Let nextMethod be ? Get(keysIter, "next").
+  const nextMethod = Q(Get(keysIter, new Value('next')));
+
+  // 4. If IsCallable(nextMethod) is false, throw a TypeError exception.
+  if (IsCallable(nextMethod) === Value.false) {
+    throw new TypeError('GetKeysIterator nextMethod is not callable');
+  }
+
+  // 5. Return a new Iterator Record { [[Iterator]]: keysIter, [[NextMethod]]: nextMethod, [[Done]]: false }.
+  const iteratorRecord = {
+    Iterator: keysIter,
+    NextMethod: nextMethod,
+    Done: false,
+  };
+
+  return EnsureCompletion(iteratorRecord);
+}
+
+function SetDataHas(resultSetData, value) {
+  // 1. For each element e of resultSetData, do
+  for (const e of resultSetData) {
+    // a. If e is not empty and SameValueZero(e, value) is true, return true.
+    if (e !== undefined && SameValueZero(e, value) === Value.true) {
+      return Value.true;
+    }
+  }
+
+  // 2. Return false.
+  return Value.false;
 }
