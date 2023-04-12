@@ -204,7 +204,7 @@ function SetProto_union([other = Value.undefined], { thisValue }) {
       }
 
       // iii. If SetDataHas(resultSetData, nextValue) is false, then
-      if (SetDataHas(resultSetData, nextValue) === Value.true) {
+      if (SetDataHas(resultSetData, nextValue) === Value.false) {
         // 1. Append nextValue to resultSetData.
         resultSetData.add(nextValue);
       }
