@@ -245,7 +245,7 @@ export function bootstrapSetPrototype(realmRec) {
 function GetSetRecord(obj) {
   // 1. If obj is not an Object, throw a TypeError exception.
   if (!(obj instanceof ObjectValue)) {
-    throw new TypeError('GetSetRecord obj is not an object');
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', obj);
   }
 
   // 2. Let rawSize be ? Get(obj, "size").
@@ -257,7 +257,7 @@ function GetSetRecord(obj) {
 
   // 5. If numSize is NaN, throw a TypeError exception.
   if (Number.isNaN(numSize)) {
-    throw new TypeError('GetSetRecord numSize is NaN');
+    return surroundingAgent.Throw('TypeError', '', numSize);
   }
 
   // 6. Let intSize be ! ToIntegerOrInfinity(numSize).
@@ -268,7 +268,7 @@ function GetSetRecord(obj) {
 
   // 8. If IsCallable(has) is false, throw a TypeError exception.
   if (IsCallable(has) === Value.false) {
-    throw new TypeError('GetSetRecord has is not callable');
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', has);
   }
 
   // 9. Let keys be ? Get(obj, "keys").
@@ -276,7 +276,7 @@ function GetSetRecord(obj) {
 
   // 10. If IsCallable(keys) is false, throw a TypeError exception.
   if (!IsCallable(keys)) {
-    throw new TypeError('GetSetRecord keys is not callable');
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', keys);
   }
 
   // 11. Return a new Set Record { [[Set]]: obj, [[Size]]: intSize, [[Has]]: has, [[Keys]]: keys }.
@@ -296,7 +296,7 @@ function GetKeysIterator(setRec) {
 
   // 2. If keysIter is not an Object, throw a TypeError exception.
   if (!(keysIter instanceof ObjectValue)) {
-    throw new TypeError('GetKeysIterator keysIter is not an object');
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', keysIter);
   }
 
   // 3. Let nextMethod be ? Get(keysIter, "next").
@@ -304,14 +304,14 @@ function GetKeysIterator(setRec) {
 
   // 4. If IsCallable(nextMethod) is false, throw a TypeError exception.
   if (IsCallable(nextMethod) === Value.false) {
-    throw new TypeError('GetKeysIterator nextMethod is not callable');
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', nextMethod);
   }
 
   // 5. Return a new Iterator Record { [[Iterator]]: keysIter, [[NextMethod]]: nextMethod, [[Done]]: false }.
   const iteratorRecord = {
     Iterator: keysIter,
     NextMethod: nextMethod,
-    Done: false,
+    Done: Value.false,
   };
 
   return EnsureCompletion(iteratorRecord);
