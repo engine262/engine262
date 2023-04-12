@@ -212,7 +212,7 @@ function SetProto_union([other = Value.undefined], { thisValue }) {
   }
 
   // 8. Let result be OrdinaryObjectCreate(%Set.prototype%, « [[SetData]] »).
-  const result = OrdinaryObjectCreate(surroundingAgent.intrinsic('Set.prototype'), ['SetData']);
+  const result = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Set.prototype%'), ['SetData']);
 
   // 9. Set result.[[SetData]] to resultSetData.
   result.SetData = resultSetData;
