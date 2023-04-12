@@ -292,7 +292,7 @@ function GetSetRecord(obj) {
 
 function GetKeysIterator(setRec) {
   // 1. Let keysIter be ? Call(setRec.[[Keys]], setRec.[[Set]]).
-  const keysIter = Q(Call(setRec.keys, setRec.set));
+  const keysIter = Q(Call(setRec.Keys, setRec.Set));
 
   // 2. If keysIter is not an Object, throw a TypeError exception.
   if (!(keysIter instanceof ObjectValue)) {
