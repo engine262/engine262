@@ -256,8 +256,8 @@ function GetSetRecord(obj) {
   const numSize = Q(ToNumber(rawSize));
 
   // 5. If numSize is NaN, throw a TypeError exception.
-  if (Number.isNaN(numSize)) {
-    return surroundingAgent.Throw('TypeError', '', numSize);
+  if (numSize.isNaN()) {
+    return surroundingAgent.Throw('TypeError', 'SizeIsNaN', numSize);
   }
 
   // 6. Let intSize be ! ToIntegerOrInfinity(numSize).
