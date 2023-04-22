@@ -587,6 +587,7 @@ export function bootstrapArrayPrototype(realmRec) {
   bootstrapArrayPrototypeShared(
     realmRec,
     proto,
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     () => {},
     (O) => Q(LengthOfArrayLike(O)),
   );
