@@ -17,8 +17,6 @@ import {
   isHexDigit,
 } from './Lexer.mjs';
 
-/* eslint-disable @engine262/valid-throw */
-
 const isSyntaxCharacter = (c) => '^$\\.*+?()[]{}|'.includes(c);
 const isClosingSyntaxCharacter = (c) => ')]}|'.includes(c);
 const isDecimalDigit = (c) => /[0123456789]/u.test(c);
