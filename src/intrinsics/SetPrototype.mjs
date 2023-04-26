@@ -183,7 +183,7 @@ function SetProto_union([other = Value.undefined], { thisValue }) {
   const keysIter = Q(GetKeysIterator(otherRec));
 
   // 5. Let resultSetData be a copy of O.[[SetData]].
-  const resultSetData = new Set(O.SetData);
+  const resultSetData = [...O.SetData];
 
   // 6. Let next be true.
   let next = Value.true;
@@ -206,7 +206,7 @@ function SetProto_union([other = Value.undefined], { thisValue }) {
       // iii. If SetDataHas(resultSetData, nextValue) is false, then
       if (SetDataHas(resultSetData, nextValue) === Value.false) {
         // 1. Append nextValue to resultSetData.
-        resultSetData.add(nextValue);
+        resultSetData.push(nextValue);
       }
     }
   }
