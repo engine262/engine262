@@ -34,7 +34,7 @@ const templates = {};
   } else {
     sourceDir = path.resolve(__dirname, '../..');
   }
-  const source = fs.readFileSync(path.join(sourceDir, 'src/messages.mjs'), 'utf8');
+  const source = fs.readFileSync(path.join(sourceDir, 'src/messages.mts'), 'utf8');
   const ast = acorn.parse(source, { ecmaVersion: 2020, sourceType: 'module' });
 
   ast.body.forEach((n) => {
