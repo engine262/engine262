@@ -11,21 +11,18 @@ import { Q, X } from './completion.mjs';
 
 const bareKeyRe = /^[a-zA-Z_][a-zA-Z_0-9]*$/;
 
-const getObjectTag = (value, wrap) => {
-  let s;
+const getObjectTag = (value) => {
   try {
-    s = X(Get(value, wellKnownSymbols.toStringTag)).stringValue();
+    return X(Get(value, wellKnownSymbols.toStringTag)).stringValue();
   } catch {}
+  return '';
+};
+
+const getConstructorName = (value) => {
   try {
     const c = X(Get(value, new Value('constructor')));
-    s = X(Get(c, new Value('name'))).stringValue();
+    return X(Get(c, new Value('name'))).stringValue();
   } catch {}
-  if (s) {
-    if (wrap) {
-      return `[${s}] `;
-    }
-    return s;
-  }
   return '';
 };
 
@@ -36,15 +33,11 @@ const compactObject = (realm, value) => {
     if (toString.nativeFunction === objectToString.nativeFunction) {
       return X(Call(toString, value)).stringValue();
     } else {
-      const tag = getObjectTag(value, false) || 'Unknown';
-      const ctor = X(Get(value, new Value('constructor')));
-      if (ctor instanceof ObjectValue) {
-        const ctorName = X(Get(ctor, new Value('name'))).stringValue();
-        if (ctorName !== '') {
-          return `#<${ctorName}>`;
-        }
-        return `[object ${tag}]`;
+      const ctorName = getConstructorName(value);
+      if (ctorName) {
+        return `#<${ctorName}>`;
       }
+      const tag = getObjectTag(value) || 'Unknown';
       return `[object ${tag}]`;
     }
   } catch (e) {
@@ -86,11 +79,18 @@ const INSPECTORS = {
     }
 
     if ('Call' in v) {
+      const ctorName = getConstructorName(v) || 'Function';
+      const tag = getObjectTag(v);
       const name = v.properties.get(new Value('name'));
+      let delimFuncName = ' (anonymous)';
       if (name !== undefined && name.Value.stringValue() !== '') {
-        return `[Function: ${name.Value.stringValue()}]`;
+        delimFuncName = `: ${name.Value.stringValue()}`;
       }
-      return '[Function]';
+      let delimTag = '';
+      if (tag && tag !== ctorName) {
+        delimTag = ` [${tag}]`;
+      }
+      return `[${ctorName}${delimFuncName}]${delimTag}`;
     }
 
     if ('ErrorData' in v) {
@@ -177,8 +177,16 @@ const INSPECTORS = {
         }
       }
 
+      const ctorName = getConstructorName(v);
       const tag = getObjectTag(v);
-      let out = tag && tag !== 'Object' ? `${tag} {` : '{';
+      let out;
+      if (tag && tag !== ctorName) {
+        out = `${ctorName || 'Object'} [${tag}] {`;
+      } else if (ctorName && ctorName !== 'Object') {
+        out = `${ctorName} {`;
+      } else {
+        out = '{';
+      }
       if (cache.length > 5) {
         cache.forEach((c) => {
           out = `${out}\n${'  '.repeat(ctx.indent)}${c[0]}: ${c[1]},`;
