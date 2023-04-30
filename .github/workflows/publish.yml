@@ -10,6 +10,10 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
     steps:
       # Set everything up
       - uses: actions/checkout@v2
@@ -24,6 +28,16 @@ jobs:
       - run: npm install
       - run: npm run build
 
+      # Publish to github registry
+      - run: npm set //npm.pkg.github.com/:_authToken ${{ github.token }}
+      - run: npm config set registry https://npm.pkg.github.com
+      - run: npm publish --access=public
+
+      # Publish to npm registry
+      - run: npm set //registry.npmjs.org/:_authToken ${{ secrets.NPM_TOKEN }}
+      - run: npm config set registry https://registry.npmjs.org
+      - run: npm exec npm@latest -- publish --provenance --access public
+
       # Push build to to gh-pages
       - run: |
           git config --global user.email "gha@example.com"
@@ -35,25 +49,7 @@ jobs:
 
           cp dist/* .
           git add engine262.*
-
-          # check_changed_for_publish.js is in the gh-pages branch
-          node ./check_changed_for_publish.js
-
           git commit -m "autobuild" || exit 0 # exit silently if nothing changed
           git push -u github gh-pages
-
-          # reset for npm publish scripts
-          rm engine262.*
-          git checkout main
         env:
           BETTER_GITHUB_TOKEN: ${{secrets.BETTER_GITHUB_TOKEN}}
-
-      # Publish to github registry
-      - run: npm set //npm.pkg.github.com/:_authToken ${{ github.token }}
-      - run: npm config set registry https://npm.pkg.github.com
-      - run: npm publish --access=public
-
-      # Publish to npm registry
-      - run: npm set //registry.npmjs.org/:_authToken ${{ secrets.NPM_TOKEN }}
-      - run: npm config set registry https://registry.npmjs.org
-      - run: npm publish --access=public

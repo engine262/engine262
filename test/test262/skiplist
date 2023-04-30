@@ -102,3 +102,6 @@ built-ins/TypedArray/prototype/reduceRight/BigInt/callbackfn-detachbuffer.js
 built-ins/TypedArray/prototype/reduceRight/callbackfn-detachbuffer.js
 built-ins/TypedArray/prototype/some/BigInt/callbackfn-detachbuffer.js
 built-ins/TypedArray/prototype/some/callbackfn-detachbuffer.js
+
+# https://github.com/tc39/test262/pull/3753
+built-ins/FinalizationRegistry/prototype/cleanupSome/not-a-constructor.js

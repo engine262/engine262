@@ -163,6 +163,7 @@ Error: owo
           })
           .then(() => 'pass');
       `);
+      module.LoadRequestedModules();
       module.Link();
       module.Evaluate();
       const result = Get(realm.GlobalObject, new Value('result'));
@@ -170,7 +171,7 @@ Error: owo
     });
   },
   () => {
-    const agent = new Agent({
+    const agent = test262realm.createAgent({
       features: FEATURES.map((f) => f.name),
     });
     setSurroundingAgent(agent);
