@@ -1,5 +1,7 @@
 test
 src
+declaration/.tsbuildinfo
+declaration/**/*.map
 scripts
 coverage
 rollup.config.js

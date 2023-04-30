@@ -7,7 +7,10 @@ function snekparse(args) {
   const argv = [];
   for (let i = 0; i < args.length; i += 1) {
     const arg = args[i];
-    if (/^--.+=/.test(arg)) {
+    if (arg === '--') {
+      argv.push(...args.slice(i + 1));
+      break;
+    } else if (/^--.+=/.test(arg)) {
       const match = arg.match(/^--([^=]+)=([\s\S]*)$/);
       argv[match[1]] = match[2];
     } else if (/^--no-.+/.test(arg)) {

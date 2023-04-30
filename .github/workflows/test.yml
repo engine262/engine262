@@ -12,13 +12,25 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-node@master
         with:
-          node-version: 15
+          node-version: 18
       - run: git submodule update --init --recursive
 
-      # Run tests and whatnot
+      # build and lint
       - run: npm install
       - run: npm run build
       - run: npm run lint
+
+      # upload build artifacts
+      - uses: actions/upload-artifact@v3
+        with:
+          name: engine262-dist
+          path: |
+            dist/engine262.js
+            dist/engine262.js.map
+            dist/engine262.mjs
+            dist/engine262.mjs.map
+
+      # run tests/coverage
       - run: npm run coverage
         env:
           CONTINUOUS_INTEGRATION: 1
