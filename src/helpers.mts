@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { surroundingAgent } from './engine.mjs';
-import { Type, Value } from './value.mjs';
+import { Value } from './value.mjs';
 import {
   RequireInternalSlot,
   StackFramePositionRecord,
