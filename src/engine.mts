@@ -351,3 +351,4 @@ export function HostCallJobCallback(jobCallback, V, argumentsList) {
   // 1. Return ? Call(jobCallback.[[Callback]], V, argumentsList).
   return Q(Call(jobCallback.Callback, V, argumentsList));
 }
+export type GCMarker = (value: unknown) => void;

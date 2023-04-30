@@ -1,10 +1,11 @@
 // @ts-nocheck
+import type { ThrowCompletion, Value } from '../api.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { ObjectValue } from '../value.mjs';
 
 class AssertError extends Error {}
 
-export function Assert(invariant, source) {
+export function Assert(invariant: boolean, source?: string): asserts invariant {
   /* c8 ignore next */
   if (!invariant) {
     throw new AssertError(source);
@@ -12,7 +13,7 @@ export function Assert(invariant, source) {
 }
 
 /** http://tc39.es/ecma262/#sec-requireinternalslot */
-export function RequireInternalSlot(O, internalSlot) {
+export function RequireInternalSlot(O: Value, internalSlot: string): ThrowCompletion<ObjectValue> | undefined {
   if (!(O instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
   }

@@ -362,7 +362,7 @@ function NewPromiseReactionJob(reaction, argument) {
 }
 
 /** http://tc39.es/ecma262/#sec-performpromisethen */
-export function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) {
+export function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability?) {
   // 1. Assert: IsPromise(promise) is true.
   Assert(IsPromise(promise) === Value.true);
   // 2. If resultCapability is not present, then
