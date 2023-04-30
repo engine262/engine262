@@ -1,5 +1,6 @@
 node_modules
 dist
+declaration
 test.mjs
 test.js
 .eslintcache

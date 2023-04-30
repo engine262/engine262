@@ -3,16 +3,43 @@
 module.exports = {
   root: true,
   extends: 'airbnb-base',
-  plugins: ['@engine262'],
-  parser: '@babel/eslint-parser',
+  plugins: ['@engine262', '@typescript-eslint'],
+  parser: '@typescript-eslint/parser',
   parserOptions: {
-    ecmaVersion: 2020,
-    requireConfigFile: false,
+    tsconfigRootDir: __dirname,
+    project: ['./tsconfig.json'],
   },
   overrides: [
     {
       files: ['*.js'],
-      parserOptions: { sourceType: 'script' },
+      parserOptions: { sourceType: 'script', project: null },
+    },
+    {
+      files: ['*.mts'],
+      extends: 'plugin:@typescript-eslint/recommended',
+      rules: {
+        '@typescript-eslint/lines-between-class-members': ['error', 'always', {
+          'exceptAfterOverload': true,
+          'exceptAfterSingleLine': true,
+        }],
+        '@typescript-eslint/padding-line-between-statements': ['error', {
+          blankLine: 'always',
+          prev: '*',
+          next: ['interface', 'type'],
+        }],
+        // checked by tsc.
+        '@typescript-eslint/no-unused-vars': 'off',
+        'no-redeclare': 'off',
+        'import/export': 'off',
+        'no-dupe-class-members': 'off',
+        // false positive
+        'no-shadow': 'off',
+        // we need it for now
+        '@typescript-eslint/ban-ts-comment': 'off',
+        '@typescript-eslint/no-non-null-assertion': 'off',
+        // spec convention
+        '@typescript-eslint/no-this-alias': 'off',
+      },
     },
   ],
   globals: {
@@ -25,7 +52,6 @@ module.exports = {
   rules: {
     '@engine262/no-use-in-def': 'error',
     '@engine262/valid-feature': 'error',
-    '@engine262/valid-throw': 'error',
     'arrow-parens': ['error', 'always'],
     'brace-style': ['error', '1tbs', { allowSingleLine: false }],
     'curly': ['error', 'all'],
@@ -47,6 +73,8 @@ module.exports = {
     'class-methods-use-this': 'off',
     'global-require': 'off',
     'import/extensions': 'off',
+    'import/named': 'off',
+    'import/no-unresolved': 'off',
     'import/no-cycle': 'off',
     'import/no-mutable-exports': 'off',
     'import/prefer-default-export': 'off',
