@@ -502,7 +502,7 @@ function BuiltinFunctionConstruct(argumentsList, newTarget) {
 }
 
 /** http://tc39.es/ecma262/#sec-createbuiltinfunction */
-export function CreateBuiltinFunction(steps, length, name, internalSlotsList, realm, prototype, prefix, isConstructor = Value.false) {
+export function CreateBuiltinFunction(steps, length, name, internalSlotsList, realm?, prototype?, prefix?, isConstructor = Value.false) {
   // 1. Assert: steps is either a set of algorithm steps or other definition of a function's behaviour provided in this specification.
   Assert(typeof steps === 'function');
   // 2. If realm is not present, set realm to the current Realm Record.
