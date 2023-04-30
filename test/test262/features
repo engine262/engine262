@@ -15,33 +15,26 @@
 -json-modules
 -import-assertions
 
--class-static-block
-
 -Temporal
 
 -resizable-arraybuffer
 
-# https://github.com/tc39/proposal-top-level-await
-top-level-await = top-level-await
+-regexp-v-flag
 
-# https://github.com/tc39/proposal-hashbang
-hashbang = hashbang
+-decorators
 
-# https://github.com/tc39/proposal-regexp-match-indices
-regexp-match-indices = regexp-match-indices
+-ShadowRealm
+
+-array-grouping
+
+-regexp-duplicate-named-groups
+
+-change-array-by-copy
+
+-symbols-as-weakmap-keys
+
+String.prototype.isWellFormed = is-usv-string
+String.prototype.toWellFormed = is-usv-string
 
 # https://github.com/tc39/proposal-cleanup-some
-cleanupSome = cleanup-some
-
-# https://github.com/tc39/proposal-item-method/
-Array.prototype.at = at-method
-String.prototype.at = at-method
-TypedArray.prototype.at = at-method
-
-arbitrary-module-namespace-names = arbitrary-module-namespace-names
-
-# https://github.com/tc39/proposal-error-cause
-error-cause = error-cause
-
-# https://github.com/tc39/proposal-accessible-object-hasownproperty
-Object.hasOwn = accessible-object-hasownproperty
+FinalizationRegistry.prototype.cleanupSome = cleanup-some

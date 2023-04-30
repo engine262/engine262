@@ -1,6 +1,5 @@
 'use strict';
 
-require('@snek/source-map-support/register');
 const assert = require('assert');
 const {
   Agent,
@@ -124,9 +123,7 @@ Error: owo
     at (<anonymous>:2:13)`);
   },
   () => {
-    const agent = new Agent({
-      features: ['WeakRefs'],
-    });
+    const agent = new Agent();
     setSurroundingAgent(agent);
     const realm = new ManagedRealm();
     const result = realm.evaluateScript(`
@@ -147,9 +144,7 @@ Error: owo
     assert.strictEqual(result.Value.PromiseResult.stringValue(), 'pass');
   },
   () => {
-    const agent = new Agent({
-      features: ['WeakRefs'],
-    });
+    const agent = new Agent();
     setSurroundingAgent(agent);
     const realm = new ManagedRealm();
     realm.scope(() => {
@@ -168,6 +163,7 @@ Error: owo
           })
           .then(() => 'pass');
       `);
+      module.LoadRequestedModules();
       module.Link();
       module.Evaluate();
       const result = Get(realm.GlobalObject, new Value('result'));
@@ -175,7 +171,7 @@ Error: owo
     });
   },
   () => {
-    const agent = new Agent({
+    const agent = test262realm.createAgent({
       features: FEATURES.map((f) => f.name),
     });
     setSurroundingAgent(agent);
@@ -260,15 +256,38 @@ Error: owo
     const agent1 = new Agent();
     const agent2 = new Agent();
 
-    assert.strictEqual(agent1.executionContextStack.pop, agent2.executionContextStack.pop,
-      "The 'agent.executionContextStack.pop' method is identical for every execution context stack.");
+    assert.strictEqual(
+      agent1.executionContextStack.pop,
+      agent2.executionContextStack.pop,
+      "The 'agent.executionContextStack.pop' method is identical for every execution context stack.",
+    );
   },
-].forEach((test) => {
+  () => {
+    const agent = new Agent();
+    setSurroundingAgent(agent);
+    const realm = new ManagedRealm();
+    realm.evaluateScript(`
+      var foo;
+      eval(\`
+        var foo;
+        var bar;
+        var deleteMe;
+      \`);
+      delete deleteMe;
+    `);
+    const varNames = new Set();
+    for (const name of realm.GlobalEnv.VarNames) {
+      assert(!varNames.has(name.stringValue()), 'Every member of `realm.[[GlobalEnv]].[[VarNames]]` should be unique.');
+      varNames.add(name.stringValue());
+    }
+    assert(!varNames.has('deleteMe'), "`realm.[[GlobalEnv]].[[VarNames]]` shouldn't have 'deleteMe'.");
+  },
+].forEach((test, i) => {
   total();
   try {
     test();
     pass();
   } catch (e) {
-    fail('', e.stack || e);
+    fail(`Test ${i + 1}`, e.stack || e);
   }
 });
