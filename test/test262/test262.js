@@ -1,23 +1,21 @@
 'use strict';
 
-try {
-  require('@snek/source-map-support/register');
-} catch {}
-
 const path = require('path');
 const fs = require('fs');
 const util = require('util');
-const glob = require('glob');
+const globby = require('globby');
+const snekparse = require('../../bin/snekparse');
 
 const TEST262 = process.env.TEST262 || path.resolve(__dirname, 'test262');
+const TEST262_TESTS = path.join(TEST262, 'test');
 
 const readList = (name) => {
   const source = fs.readFileSync(path.resolve(__dirname, name), 'utf8');
   return source.split('\n').filter((l) => l && !l.startsWith('#'));
 };
 const readListPaths = (name) => readList(name)
-  .flatMap((t) => glob.sync(path.resolve(TEST262, 'test', t)))
-  .map((f) => path.relative(TEST262, f));
+  .flatMap((t) => globby.sync(path.resolve(TEST262, 'test', t), { absolute: true }))
+  .map((f) => path.relative(TEST262_TESTS, f));
 
 async function* readdir(dir) {
   for await (const dirent of await fs.promises.opendir(dir)) {
@@ -30,12 +28,12 @@ async function* readdir(dir) {
   }
 }
 
-const disabledFeatures = [];
-const featureMap = {};
+const disabledFeatures = new Set();
+const featureMap = Object.create(null);
 readList('features')
   .forEach((f) => {
     if (f.startsWith('-')) {
-      disabledFeatures.push(f.slice(1));
+      disabledFeatures.add(f.slice(1));
     }
     if (f.includes('=')) {
       const [k, v] = f.split('=');
@@ -45,6 +43,44 @@ readList('features')
 
 if (!process.send) {
   // supervisor
+
+
+  // Read everything in argv after node and this file.
+  const ARGV = snekparse(process.argv.slice(2));
+  if (ARGV.h || ARGV.help) {
+    // eslint-disable-next-line prefer-template
+    const usage = `
+      Usage: node ${path.relative(process.cwd(), __filename)} [--run-slow-tests] [TEST-PATTERN]...
+      Run test262 tests against engine262.
+
+      TEST-PATTERN supports glob syntax, and is interpreted relative to
+      the test262 "test" subdirectory or (if that fails for any pattern)
+      relative to the working directory. If no patterns are specified,
+      all tests are run.
+
+      Environment variables:
+        TEST262
+          The test262 directory, which contains the "test" subdirectory.
+          If empty, it defaults to the "test262" sibling of this file.
+        NUM_WORKERS
+          The count of child processes that should be created to run tests.
+          If empty, it defaults to a reasonable value based on CPU count.
+
+      Files:
+        features
+          Specifies handling of test262 features, notably which ones to skip.
+        skiplist
+          Includes patterns of test files to skip.
+        slowlist
+          Includes patterns of test files to skip in the absence of
+          --run-slow-tests.
+    `.slice(1);
+    const indent = usage.match(/^\s*/)[0];
+    process.stdout.write(
+      `${usage.trimEnd().split('\n').map((line) => line.replace(indent, '')).join('\n')}\n`,
+    );
+    process.exit(64);
+  }
 
   const childProcess = require('child_process');
   const YAML = require('js-yaml');
@@ -56,11 +92,10 @@ if (!process.send) {
     CPU_COUNT,
   } = require('../base');
 
-  const override = process.argv.find((e, i) => i > 1 && !e.startsWith('-'));
   const NUM_WORKERS = process.env.NUM_WORKERS
     ? Number.parseInt(process.env.NUM_WORKERS, 10)
     : Math.round(CPU_COUNT * 0.75);
-  const RUN_SLOW_TESTS = process.argv.includes('--run-slow-tests');
+  const RUN_SLOW_TESTS = ARGV['run-slow-tests'];
 
   const createWorker = () => {
     const c = childProcess.fork(__filename);
@@ -93,20 +128,20 @@ if (!process.send) {
     longRunningWorker = createWorker();
   }
 
-  const slowlist = readListPaths('slowlist');
-  const skiplist = readListPaths('skiplist');
+  const slowlist = new Set(readListPaths('slowlist'));
+  const skiplist = new Set(readListPaths('skiplist'));
+  const isDisabled = (feature) => disabledFeatures.has(feature);
 
   let workerIndex = 0;
   const handleTest = (test) => {
     total();
 
-    if ((test.attrs.features && test.attrs.features.some((feature) => disabledFeatures.includes(feature)))
-        || skiplist.includes(test.file)) {
+    if (test.attrs.features?.some(isDisabled) || skiplist.has(test.file)) {
       skip();
       return;
     }
 
-    if (slowlist.includes(test.file)) {
+    if (slowlist.has(test.file)) {
       if (RUN_SLOW_TESTS) {
         longRunningWorker.send(test);
       } else {
@@ -122,16 +157,42 @@ if (!process.send) {
   };
 
   (async () => {
-    for await (const file of readdir(path.join(TEST262, override || 'test'))) {
+    let files = [];
+    if (ARGV.length === 0) {
+      files = readdir(TEST262_TESTS);
+    } else {
+      // Interpret pattern arguments relative to the tests directory,
+      // falling back on the working directory if there are no matches
+      // or a non-glob pattern fails to match.
+      for (const arg of ARGV) {
+        const matches = globby.sync(arg, { cwd: TEST262_TESTS, absolute: true });
+        if (matches.length === 0 && !globby.hasMagic(arg)) {
+          files = [];
+          break;
+        }
+        files.push(...matches);
+      }
+      if (files.length === 0) {
+        const cwd = process.cwd();
+        for (const arg of ARGV) {
+          const matches = globby.sync(arg, { cwd, absolute: true });
+          if (matches.length === 0 && !globby.hasMagic(arg)) {
+            fs.accessSync(path.resolve(cwd, arg), fs.constants.R_OK);
+          }
+          files.push(...matches);
+        }
+      }
+      files = new Set(files);
+    }
+
+    for await (const file of files) {
       if (/annexB|intl402|_FIXTURE/.test(file)) {
         continue;
       }
 
       const contents = await fs.promises.readFile(file, 'utf8');
-      const yamlStart = contents.indexOf('/*---') + 5;
-      const yamlEnd = contents.indexOf('---*/', yamlStart);
-      const yaml = contents.slice(yamlStart, yamlEnd);
-      const attrs = YAML.load(yaml);
+      const frontmatterYaml = contents.match(/\/\*---(.*?)---\*\//s)?.[1];
+      const attrs = frontmatterYaml ? YAML.load(frontmatterYaml) : {};
 
       attrs.flags = (attrs.flags || []).reduce((acc, c) => {
         acc[c] = true;
@@ -140,7 +201,7 @@ if (!process.send) {
       attrs.includes = attrs.includes || [];
 
       const test = {
-        file: path.relative(TEST262, file),
+        file: path.relative(TEST262_TESTS, file),
         attrs,
         contents,
       };
@@ -171,7 +232,6 @@ if (!process.send) {
   // worker
 
   const {
-    Agent,
     setSurroundingAgent,
     inspect,
 
@@ -179,19 +239,20 @@ if (!process.send) {
 
     IsCallable,
     IsDataDescriptor,
-    Type,
+    JSStringValue,
+    ObjectValue,
 
     AbruptCompletion,
     Throw,
   } = require('../..');
-  const { createRealm } = require('../../bin/test262_realm');
+  const { createRealm, createAgent } = require('../../bin/test262_realm');
 
   const isError = (type, value) => {
-    if (Type(value) !== 'Object') {
+    if (!(value instanceof ObjectValue)) {
       return false;
     }
     const proto = value.Prototype;
-    if (!proto || Type(proto) !== 'Object') {
+    if (!proto || !(proto instanceof ObjectValue)) {
       return false;
     }
     const ctorDesc = proto.properties.get(new Value('constructor'));
@@ -199,7 +260,7 @@ if (!process.send) {
       return false;
     }
     const ctor = ctorDesc.Value;
-    if (Type(ctor) !== 'Object' || IsCallable(ctor) !== Value.true) {
+    if (!(ctor instanceof ObjectValue) || IsCallable(ctor) !== Value.true) {
       return false;
     }
     const namePropDesc = ctor.properties.get(new Value('name'));
@@ -207,7 +268,7 @@ if (!process.send) {
       return false;
     }
     const nameProp = namePropDesc.Value;
-    return Type(nameProp) === 'String' && nameProp.stringValue() === type;
+    return nameProp instanceof JSStringValue && nameProp.stringValue() === type;
   };
 
   const includeCache = {};
@@ -221,7 +282,7 @@ if (!process.send) {
         }
       });
     }
-    const agent = new Agent({
+    const agent = createAgent({
       features,
     });
     setSurroundingAgent(agent);
@@ -238,7 +299,7 @@ if (!process.send) {
 
       for (const include of test.attrs.includes) {
         if (includeCache[include] === undefined) {
-          const p = path.resolve(__dirname, `./test262/harness/${include}`);
+          const p = path.resolve(TEST262, `harness/${include}`);
           includeCache[include] = {
             source: fs.readFileSync(p, 'utf8'),
             specifier: p,
@@ -286,7 +347,7 @@ function $DONE(error) {
         });
       }
 
-      const specifier = path.resolve(TEST262, test.file);
+      const specifier = path.resolve(TEST262_TESTS, test.file);
 
       let completion;
       if (test.attrs.flags.module) {
@@ -294,7 +355,17 @@ function $DONE(error) {
         if (!(completion instanceof AbruptCompletion)) {
           const module = completion;
           resolverCache.set(specifier, module);
-          completion = module.Link();
+          completion = module.LoadRequestedModules();
+          if (!(completion instanceof AbruptCompletion)) {
+            if (completion.PromiseState === 'rejected') {
+              completion = Throw(completion.PromiseResult);
+            } else if (completion.PromiseState === 'pending') {
+              throw new Error('Internal error: .LoadRequestedModules() returned a pending promise');
+            }
+          }
+          if (!(completion instanceof AbruptCompletion)) {
+            completion = module.Link();
+          }
           if (!(completion instanceof AbruptCompletion)) {
             completion = module.Evaluate();
           }

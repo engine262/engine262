@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const {
   Value,
+  CreateBuiltinFunction,
   CreateDataProperty,
   DetachArrayBuffer,
   OrdinaryObjectCreate,
@@ -14,11 +15,40 @@ const {
   ManagedRealm,
   inspect,
   gc,
+  Agent,
+  Realm,
 } = require('..');
 
+const createAgent = ({ features = [] }) => new Agent({
+  features,
+  loadImportedModule(referrer, specifier, hostDefined, finish) {
+    if (referrer instanceof Realm) {
+      throw new Error('Internal error: loadImportedModule called without a SriptOrModule referrer.');
+    }
+    const realm = referrer.Realm;
+
+    try {
+      const base = path.dirname(referrer.HostDefined.specifier);
+      const resolved = path.resolve(base, specifier);
+      if (realm.HostDefined.resolverCache.has(resolved)) {
+        finish(realm.HostDefined.resolverCache.get(resolved));
+        return;
+      }
+      const source = fs.readFileSync(resolved, 'utf8');
+      const m = resolved.endsWith('.json')
+        ? realm.createJSONModule(resolved, source)
+        : realm.createSourceTextModule(resolved, source);
+      realm.HostDefined.resolverCache.set(resolved, m);
+      finish(m);
+    } catch (e) {
+      finish(Throw(e.name, 'Raw', e.message));
+    }
+  },
+});
+
 const createRealm = ({ printCompatMode = false } = {}) => {
-  const resolverCache = new Map();
   const trackedPromises = new Set();
+  const resolverCache = new Map();
 
   const realm = new ManagedRealm({
     promiseRejectionTracker(promise, operation) {
@@ -34,23 +64,7 @@ const createRealm = ({ printCompatMode = false } = {}) => {
           throw new RangeError('promiseRejectionTracker', operation);
       }
     },
-    resolveImportedModule(referencingScriptOrModule, specifier) {
-      try {
-        const base = path.dirname(referencingScriptOrModule.HostDefined.specifier);
-        const resolved = path.resolve(base, specifier);
-        if (resolverCache.has(resolved)) {
-          return resolverCache.get(resolved);
-        }
-        const source = fs.readFileSync(resolved, 'utf8');
-        const m = resolved.endsWith('.json')
-          ? realm.createJSONModule(resolved, source)
-          : realm.createSourceTextModule(resolved, source);
-        resolverCache.set(resolved, m);
-        return m;
-      } catch (e) {
-        return Throw(e.name, 'Raw', e.message);
-      }
-    },
+    resolverCache,
   });
 
   return realm.scope(() => {
@@ -60,7 +74,7 @@ const createRealm = ({ printCompatMode = false } = {}) => {
     const setPrintHandle = (f) => {
       printHandle = f;
     };
-    CreateDataProperty(realm.GlobalObject, new Value('print'), new Value((args) => {
+    CreateDataProperty(realm.GlobalObject, new Value('print'), CreateBuiltinFunction((args) => {
       /* c8 ignore next */
       if (printHandle !== undefined) {
         printHandle(...args);
@@ -90,7 +104,7 @@ const createRealm = ({ printCompatMode = false } = {}) => {
         }
       }
       return Value.undefined;
-    }));
+    }, 0, new Value('print'), []));
 
     [
       ['global', realm.GlobalObject],
@@ -98,8 +112,8 @@ const createRealm = ({ printCompatMode = false } = {}) => {
         const info = createRealm();
         return info.$262;
       }],
-      ['evalScript', ([sourceText]) => realm.evaluateScript(sourceText.stringValue())],
-      ['detachArrayBuffer', ([arrayBuffer]) => DetachArrayBuffer(arrayBuffer)],
+      ['evalScript', ([sourceText]) => realm.evaluateScript(sourceText.stringValue()), 1],
+      ['detachArrayBuffer', ([arrayBuffer]) => DetachArrayBuffer(arrayBuffer), 1],
       ['gc', () => {
         gc();
         return Value.undefined;
@@ -109,9 +123,10 @@ const createRealm = ({ printCompatMode = false } = {}) => {
           return new Value(v.nativeFunction.section);
         }
         return Value.undefined;
-      }],
-    ].forEach(([name, value]) => {
-      const v = value instanceof Value ? value : new Value(value);
+      }, 1],
+    ].forEach(([name, value, length = 0]) => {
+      const v = value instanceof Value ? value
+        : CreateBuiltinFunction(value, length, new Value(name), []);
       CreateDataProperty($262, new Value(name), v);
     });
 
@@ -128,4 +143,4 @@ const createRealm = ({ printCompatMode = false } = {}) => {
   });
 };
 
-module.exports = { createRealm };
+module.exports = { createAgent, createRealm };

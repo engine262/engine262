@@ -28,7 +28,13 @@ function isRaiseCall(node) {
 const templates = {};
 
 {
-  const source = fs.readFileSync(path.join(__dirname, '../../src/messages.mjs'), 'utf8');
+  let sourceDir;
+  if (__dirname.includes('node_modules')) {
+    sourceDir = __dirname.slice(0, __dirname.indexOf('node_modules'));
+  } else {
+    sourceDir = path.resolve(__dirname, '../..');
+  }
+  const source = fs.readFileSync(path.join(sourceDir, 'src/messages.mts'), 'utf8');
   const ast = acorn.parse(source, { ecmaVersion: 2020, sourceType: 'module' });
 
   ast.body.forEach((n) => {
