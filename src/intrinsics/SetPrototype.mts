@@ -242,7 +242,7 @@ export function bootstrapSetPrototype(realmRec) {
   realmRec.Intrinsics['%Set.prototype%'] = proto;
 }
 
-/** GetSetRecord */
+/** https://tc39.es/proposal-set-methods/#sec-getsetrecord */
 function GetSetRecord(obj) {
   // 1. If obj is not an Object, throw a TypeError exception.
   if (!(obj instanceof ObjectValue)) {
@@ -291,6 +291,7 @@ function GetSetRecord(obj) {
   return EnsureCompletion(setRecord);
 }
 
+/** https://tc39.es/proposal-set-methods/#sec-getkeysiterator */
 function GetKeysIterator(setRec) {
   // 1. Let keysIter be ? Call(setRec.[[Keys]], setRec.[[Set]]).
   const keysIter = Q(Call(setRec.Keys, setRec.Set));
@@ -318,6 +319,7 @@ function GetKeysIterator(setRec) {
   return EnsureCompletion(iteratorRecord);
 }
 
+/** https://tc39.es/proposal-set-methods/#sec-setdatahas */
 function SetDataHas(resultSetData, value) {
   // 1. For each element e of resultSetData, do
   for (const e of resultSetData) {
