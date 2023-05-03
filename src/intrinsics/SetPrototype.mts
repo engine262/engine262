@@ -169,7 +169,7 @@ function SetProto_values(args, { thisValue }) {
   return Q(CreateSetIterator(S, 'value'));
 }
 
-/** http://tc39.es/ecma262/#sec-set.prototype.union */
+/** https://tc39.es/proposal-set-methods/#sec-set.prototype.union */
 function SetProto_union([other = Value.undefined], { thisValue }) {
   // 1. Let O be the this value.
   const O = thisValue;
