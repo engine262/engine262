@@ -7,6 +7,7 @@ import {
 import { X } from '../completion.mjs';
 
 export class ClassStaticBlockDefinitionRecord {
+  BodyFunction;
   constructor({ BodyFunction }) {
     this.BodyFunction = BodyFunction;
   }

@@ -31,6 +31,8 @@ import {
 
 /** http://tc39.es/ecma262/#sec-asyncgeneratorrequest-records */
 class AsyncGeneratorRequestRecord {
+  Completion;
+  Capability;
   constructor(completion, promiseCapability) {
     this.Completion = completion;
     this.Capability = promiseCapability;

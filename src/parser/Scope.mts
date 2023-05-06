@@ -113,17 +113,18 @@ export function getDeclarations(node) {
 }
 
 export class Scope {
+  parser;
+  scopeStack = [];
+  labels = [];
+  arrowInfoStack = [];
+  assignmentInfoStack = [];
+  exports = new Set();
+  undefinedExports = new Map();
+  privateScope;
+  undefinedPrivateAccesses = [];
+  flags = 0;
   constructor(parser) {
     this.parser = parser;
-    this.scopeStack = [];
-    this.labels = [];
-    this.arrowInfoStack = [];
-    this.assignmentInfoStack = [];
-    this.exports = new Set();
-    this.undefinedExports = new Map();
-    this.privateScope = undefined;
-    this.undefinedPrivateAccesses = [];
-    this.flags = 0;
   }
 
   hasReturn() {

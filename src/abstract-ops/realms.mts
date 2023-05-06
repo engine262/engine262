@@ -89,16 +89,13 @@ import {
 
 /** http://tc39.es/ecma262/#sec-code-realms */
 export class Realm {
-  constructor() {
-    this.Intrinsics = undefined;
-    this.GlobalObject = undefined;
-    this.GlobalEnv = undefined;
-    this.TemplateMap = undefined;
-    this.LoadedModules = undefined;
-    this.HostDefined = undefined;
-
-    this.randomState = undefined;
-  }
+  Intrinsics;
+  GlobalObject;
+  GlobalEnv;
+  TemplateMap;
+  LoadedModules;
+  HostDefined;
+  randomState;
 
   mark(m) {
     m(this.GlobalObject);

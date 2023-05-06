@@ -27,9 +27,7 @@ import { ValueMap } from './helpers.mjs';
 
 /** http://tc39.es/ecma262/#sec-environment-records */
 export class EnvironmentRecord {
-  constructor() {
-    this.OuterEnv = undefined;
-  }
+  OuterEnv;
 
   // NON-SPEC
   mark(m) {
@@ -39,10 +37,7 @@ export class EnvironmentRecord {
 
 /** http://tc39.es/ecma262/#sec-declarative-environment-records */
 export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
-  constructor() {
-    super();
-    this.bindings = new ValueMap();
-  }
+  bindings = new ValueMap();
 
   /** http://tc39.es/ecma262/#sec-declarative-environment-records-hasbinding-n */
   HasBinding(N) {
@@ -217,11 +212,8 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
 
 /** http://tc39.es/ecma262/#sec-object-environment-records */
 export class ObjectEnvironmentRecord extends EnvironmentRecord {
-  constructor() {
-    super();
-    this.BindingObject = undefined;
-    this.IsWithEnvironment = undefined;
-  }
+  BindingObject;
+  IsWithEnvironment;
 
   /** http://tc39.es/ecma262/#sec-object-environment-records-hasbinding-n */
   HasBinding(N) {
@@ -363,13 +355,10 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
 
 /** http://tc39.es/ecma262/#sec-function-environment-records */
 export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
-  constructor() {
-    super();
-    this.ThisValue = undefined;
-    this.ThisBindingStatus = undefined;
-    this.FunctionObject = undefined;
-    this.NewTarget = undefined;
-  }
+  ThisValue;
+  ThisBindingStatus;
+  FunctionObject;
+  NewTarget;
 
   /** http://tc39.es/ecma262/#sec-bindthisvalue */
   BindThisValue(V) {
@@ -455,13 +444,10 @@ export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
 
 /** http://tc39.es/ecma262/#sec-global-environment-records */
 export class GlobalEnvironmentRecord extends EnvironmentRecord {
-  constructor() {
-    super();
-    this.ObjectRecord = undefined;
-    this.GlobalThisValue = undefined;
-    this.DeclarativeRecord = undefined;
-    this.VarNames = undefined;
-  }
+  ObjectRecord;
+  GlobalThisValue;
+  DeclarativeRecord;
+  VarNames;
 
   /** http://tc39.es/ecma262/#sec-global-environment-records-hasbinding-n */
   HasBinding(N) {
@@ -980,6 +966,8 @@ export function NewModuleEnvironment(E) {
 }
 
 class PrivateEnvironmentRecord {
+  OuterPrivateEnvironment;
+  Names;
   constructor(init) {
     this.OuterPrivateEnvironment = init.OuterPrivateEnvironment;
     this.Names = init.Names;

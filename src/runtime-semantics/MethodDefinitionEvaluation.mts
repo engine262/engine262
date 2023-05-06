@@ -18,6 +18,11 @@ import { DefineMethod, Evaluate_PropertyName } from './all.mjs';
 
 /** http://tc39.es/ecma262/#sec-privateelement-specification-type */
 export class PrivateElementRecord {
+  Key;
+  Kind;
+  Value;
+  Get;
+  Set;
   constructor(init) {
     this.Key = init.Key;
     this.Kind = init.Kind;
