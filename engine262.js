@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 76d53c749d89f36580401db4f8ed45eea48bb3d0
+ * engine262 0.0.1 feee93540bcd10b4469fc363980945d8bdffbb1e
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -11122,7 +11122,6 @@
     }
   }
 
-  // @ts-nocheck
   class BaseParser extends Lexer {}
 
   // @ts-nocheck
