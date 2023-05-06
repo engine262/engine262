@@ -240,7 +240,7 @@ function ExecuteAsyncModule(module) {
     return Value.undefined;
   };
   // 6. Let onFulfilled be ! CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
-  const onFulfilled = CreateBuiltinFunction(fulfilledClosure, 0, new Value(''), ['Module']);
+  const onFulfilled = CreateBuiltinFunction(fulfilledClosure, 0, Value(''), ['Module']);
   // 7. Let rejectedClosure be a new Abstract Closure with parameters (error) that captures module and performs the following steps when called:
   const rejectedClosure = ([error = Value.undefined]) => {
     // a. Perform ! AsyncModuleExecutionRejected(module, error).
@@ -249,7 +249,7 @@ function ExecuteAsyncModule(module) {
     return Value.undefined;
   };
   // 8. Let onRejected be ! CreateBuiltinFunction(rejectedClosure, 0, "", « »).
-  const onRejected = CreateBuiltinFunction(rejectedClosure, 0, new Value(''), ['Module']);
+  const onRejected = CreateBuiltinFunction(rejectedClosure, 0, Value(''), ['Module']);
   // 9. Perform ! PerformPromiseThen(capability.[[Promise]], onFulfilled, onRejected).
   X(PerformPromiseThen(capability.Promise, onFulfilled, onRejected));
   // 10. Perform ! module.ExecuteModule(capability).
@@ -434,8 +434,8 @@ export function CreateDefaultExportSyntheticModule(defaultExport, realm, hostDef
   // 1. Let closure be the a Abstract Closure with parameters (module) that captures defaultExport and performs the following steps when called:
   const closure = (module) => { // eslint-disable-line arrow-body-style
     // a. Return ? module.SetSyntheticExport("default", defaultExport).
-    return Q(module.SetSyntheticExport(new Value('default'), defaultExport));
+    return Q(module.SetSyntheticExport(Value('default'), defaultExport));
   };
   // 2. Return CreateSyntheticModule(« "default" », closure, realm)
-  return CreateSyntheticModule([new Value('default')], closure, realm, hostDefined);
+  return CreateSyntheticModule([Value('default')], closure, realm, hostDefined);
 }

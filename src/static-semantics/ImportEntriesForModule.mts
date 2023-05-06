@@ -38,7 +38,7 @@ export function ImportEntriesForModule(node, module) {
       // 2. Let defaultEntry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: "default", [[LocalName]]: localName }.
       const defaultEntry = {
         ModuleRequest: module,
-        ImportName: new Value('default'),
+        ImportName: Value('default'),
         LocalName: localName,
       };
       // 3. Return a new List containing defaultEntry.

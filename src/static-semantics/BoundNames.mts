@@ -43,7 +43,7 @@ export function BoundNames(node) {
       if (node.BindingIdentifier) {
         return BoundNames(node.BindingIdentifier);
       }
-      return [new Value('*default*')];
+      return [Value('*default*')];
     case 'ImportSpecifier':
       return BoundNames(node.ImportedBinding);
     case 'ExportDeclaration':
@@ -65,7 +65,7 @@ export function BoundNames(node) {
         return declarationNames;
       }
       if (node.AssignmentExpression) {
-        return [new Value('*default*')];
+        return [Value('*default*')];
       }
       throw new OutOfRange('BoundNames', node);
     case 'SingleNameBinding':

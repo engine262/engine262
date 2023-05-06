@@ -14,7 +14,7 @@ export function* BindingClassDeclarationEvaluation(ClassDeclaration) {
   const { BindingIdentifier, ClassTail } = ClassDeclaration;
   if (!BindingIdentifier) {
     // 1. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments undefined and "default".
-    const value = Q(yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, new Value('default')));
+    const value = Q(yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, Value('default')));
     // 2. Set value.[[SourceText]] to the source text matched by ClassDeclaration.
     value.SourceText = sourceTextMatchedBy(ClassDeclaration);
     // 3. Return value.

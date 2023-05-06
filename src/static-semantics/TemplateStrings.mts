@@ -96,13 +96,13 @@ export function TV(s) {
 
 export function TemplateStrings(node, raw) {
   if (raw) {
-    return node.TemplateSpanList.map((s) => new Value(s));
+    return node.TemplateSpanList.map((s) => Value(s));
   }
   return node.TemplateSpanList.map((v) => {
     const tv = TV(v);
     if (tv === undefined) {
       return Value.undefined;
     }
-    return new Value(tv);
+    return Value(tv);
   });
 }

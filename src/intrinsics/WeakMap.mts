@@ -28,7 +28,7 @@ function WeakMapConstructor([iterable = Value.undefined], { NewTarget }) {
     return map;
   }
   // 5. Let adder be ? Get(map, "set").
-  const adder = Q(Get(map, new Value('set')));
+  const adder = Q(Get(map, Value('set')));
   // 6. Return ? AddEntriesFromIterable(map, iterable, adder).
   return Q(AddEntriesFromIterable(map, iterable, adder));
 }

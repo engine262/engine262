@@ -121,7 +121,7 @@ function Encode(string, unescapedSet) {
   while (true) {
     // a. If k equals strLen, return R.
     if (k === strLen) {
-      return new Value(R);
+      return Value(R);
     }
     // b. Let C be the code unit at index k within string.
     const C = string[k];
@@ -167,7 +167,7 @@ function Decode(string, reservedSet) {
   while (true) {
     // a. If k equals strLen, return R.
     if (k === strLen) {
-      return new Value(R);
+      return Value(R);
     }
     // b. Let C be the code unit at index k within string.
     const C = string[k];
@@ -316,6 +316,6 @@ export function bootstrapURIHandling(realmRec) {
     ['encodeURI', encodeURI, 1],
     ['encodeURIComponent', encodeURIComponent, 1],
   ].forEach(([name, f, length]) => {
-    realmRec.Intrinsics[`%${name}%`] = CreateBuiltinFunction(f, length, new Value(name), [], realmRec);
+    realmRec.Intrinsics[`%${name}%`] = CreateBuiltinFunction(f, length, Value(name), [], realmRec);
   });
 }

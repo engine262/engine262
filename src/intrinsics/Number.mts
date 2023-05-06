@@ -103,7 +103,7 @@ export function bootstrapNumber(realmRec) {
 
   /** http://tc39.es/ecma262/#sec-number.parsefloat */
   // The value of the Number.parseFloat data property is the same built-in function object that is the value of the parseFloat property of the global object defined in 18.2.4.
-  X(numberConstructor.DefineOwnProperty(new Value('parseFloat'), Descriptor({
+  X(numberConstructor.DefineOwnProperty(Value('parseFloat'), Descriptor({
     Value: realmRec.Intrinsics['%parseFloat%'],
     Writable: Value.true,
     Enumerable: Value.false,
@@ -112,7 +112,7 @@ export function bootstrapNumber(realmRec) {
 
   /** http://tc39.es/ecma262/#sec-number.parseint */
   // The value of the Number.parseInt data property is the same built-in function object that is the value of the parseInt property of the global object defined in 18.2.5.
-  X(numberConstructor.DefineOwnProperty(new Value('parseInt'), Descriptor({
+  X(numberConstructor.DefineOwnProperty(Value('parseInt'), Descriptor({
     Value: realmRec.Intrinsics['%parseInt%'],
     Writable: Value.true,
     Enumerable: Value.false,

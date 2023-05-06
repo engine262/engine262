@@ -289,7 +289,7 @@ function JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
     // a. Let root be OrdinaryObjectCreate(%Object.prototype%).
     const root = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
     // b. Let rootName be the empty String.
-    const rootName = new Value('');
+    const rootName = Value('');
     // c. Perform ! CreateDataPropertyOrThrow(root, rootName, unfiltered).
     X(CreateDataPropertyOrThrow(root, rootName, unfiltered));
     // d. Return ? InternalizeJSONProperty(root, rootName, reviver).
@@ -314,7 +314,7 @@ const codeUnitTable = new Map([
 function SerializeJSONProperty(state, key, holder) {
   let value = Q(Get(holder, key)); // eslint-disable-line no-shadow
   if (value instanceof ObjectValue || value instanceof BigIntValue) {
-    const toJSON = Q(GetV(value, new Value('toJSON')));
+    const toJSON = Q(GetV(value, Value('toJSON')));
     if (IsCallable(toJSON) === Value.true) {
       value = Q(Call(toJSON, value, [key]));
     }
@@ -334,13 +334,13 @@ function SerializeJSONProperty(state, key, holder) {
     }
   }
   if (value === Value.null) {
-    return new Value('null');
+    return Value('null');
   }
   if (value === Value.true) {
-    return new Value('true');
+    return Value('true');
   }
   if (value === Value.false) {
-    return new Value('false');
+    return Value('false');
   }
   if (value instanceof JSStringValue) {
     return QuoteJSONString(value);
@@ -349,7 +349,7 @@ function SerializeJSONProperty(state, key, holder) {
     if (value.isFinite()) {
       return X(ToString(value));
     }
-    return new Value('null');
+    return Value('null');
   }
   if (value instanceof BigIntValue) {
     return surroundingAgent.Throw('TypeError', 'CannotJSONSerializeBigInt');
@@ -384,7 +384,7 @@ function QuoteJSONString(value) { // eslint-disable-line no-shadow
     }
   }
   product = `${product}\u0022`;
-  return new Value(product);
+  return Value(product);
 }
 
 /** http://tc39.es/ecma262/#sec-serializejsonobject */
@@ -416,15 +416,15 @@ function SerializeJSONObject(state, value) {
   }
   let final;
   if (partial.length === 0) {
-    final = new Value('{}');
+    final = Value('{}');
   } else {
     if (state.Gap === '') {
       const properties = partial.join(',');
-      final = new Value(`{${properties}}`);
+      final = Value(`{${properties}}`);
     } else {
       const separator = `,\u000A${state.Indent}`;
       const properties = partial.join(separator);
-      final = new Value(`{\u000A${state.Indent}${properties}\u000A${stepback}}`);
+      final = Value(`{\u000A${state.Indent}${properties}\u000A${stepback}}`);
     }
   }
   state.Stack.pop();
@@ -455,15 +455,15 @@ function SerializeJSONArray(state, value) {
   }
   let final;
   if (partial.length === 0) {
-    final = new Value('[]');
+    final = Value('[]');
   } else {
     if (state.Gap === '') {
       const properties = partial.join(',');
-      final = new Value(`[${properties}]`);
+      final = Value(`[${properties}]`);
     } else {
       const separator = `,\u000A${state.Indent}`;
       const properties = partial.join(separator);
-      final = new Value(`[\u000A${state.Indent}${properties}\u000A${stepback}]`);
+      final = Value(`[\u000A${state.Indent}${properties}\u000A${stepback}]`);
     }
   }
   state.Stack.pop();
@@ -532,11 +532,11 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
     gap = '';
   }
   const wrapper = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
-  X(CreateDataPropertyOrThrow(wrapper, new Value(''), value));
+  X(CreateDataPropertyOrThrow(wrapper, Value(''), value));
   const state = {
     ReplacerFunction, Stack: stack, Indent: indent, Gap: gap, PropertyList,
   };
-  return Q(SerializeJSONProperty(state, new Value(''), wrapper));
+  return Q(SerializeJSONProperty(state, Value(''), wrapper));
 }
 
 export function bootstrapJSON(realmRec) {
@@ -546,5 +546,5 @@ export function bootstrapJSON(realmRec) {
   ], realmRec.Intrinsics['%Object.prototype%'], 'JSON');
 
   realmRec.Intrinsics['%JSON%'] = json;
-  realmRec.Intrinsics['%JSON.parse%'] = X(Get(json, new Value('parse')));
+  realmRec.Intrinsics['%JSON.parse%'] = X(Get(json, Value('parse')));
 }

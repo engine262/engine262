@@ -112,11 +112,11 @@ const realm = new ManagedRealm({
 
 realm.scope(() => {
   // Add print function from host
-  const print = new Value((args) => {
+  const print = Value((args) => {
     console.log(...args.map((tmp) => inspect(tmp)));
     return Value.undefined;
   });
-  CreateDataProperty(realm.GlobalObject, new Value('print'), print);
+  CreateDataProperty(realm.GlobalObject, Value('print'), print);
 });
 
 realm.evaluateScript(`

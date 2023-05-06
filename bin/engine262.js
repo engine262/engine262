@@ -106,7 +106,7 @@ setSurroundingAgent(agent);
 const { realm, resolverCache } = createRealm({ printCompatMode: true });
 realm.scope(() => {
   const console = OrdinaryObjectCreate(realm.Intrinsics['%Object.prototype%']);
-  CreateDataProperty(realm.GlobalObject, new Value('console'), console);
+  CreateDataProperty(realm.GlobalObject, Value('console'), console);
 
   const format = (args) => args.map((a, i) => {
     if (i === 0 && Type(a) === 'String') {
@@ -118,20 +118,20 @@ realm.scope(() => {
   const log = CreateBuiltinFunction((args) => {
     process.stdout.write(`${format(args)}\n`);
     return Value.undefined;
-  }, 1, new Value('log'), []);
-  CreateDataProperty(console, new Value('log'), log);
+  }, 1, Value('log'), []);
+  CreateDataProperty(console, Value('log'), log);
 
   const error = CreateBuiltinFunction((args) => {
     process.stderr.write(`${format(args)}\n`);
     return Value.undefined;
-  }, 1, new Value('error'), []);
-  CreateDataProperty(console, new Value('error'), error);
+  }, 1, Value('error'), []);
+  CreateDataProperty(console, Value('error'), error);
 
   const debug = CreateBuiltinFunction((args) => {
     process.stderr.write(`${util.format(...args)}\n`);
     return Value.undefined;
-  }, 1, new Value('debug'), []);
-  CreateDataProperty(console, new Value('debug'), debug);
+  }, 1, Value('debug'), []);
+  CreateDataProperty(console, Value('debug'), debug);
 });
 
 if (argv.inspector) {

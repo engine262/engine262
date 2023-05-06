@@ -129,13 +129,13 @@ export function CreateRealm() {
 function AddRestrictedFunctionProperties(F, realm) {
   Assert(realm.Intrinsics['%ThrowTypeError%']);
   const thrower = realm.Intrinsics['%ThrowTypeError%'];
-  X(DefinePropertyOrThrow(F, new Value('caller'), Descriptor({
+  X(DefinePropertyOrThrow(F, Value('caller'), Descriptor({
     Get: thrower,
     Set: thrower,
     Enumerable: Value.false,
     Configurable: Value.true,
   })));
-  X(DefinePropertyOrThrow(F, new Value('arguments'), Descriptor({
+  X(DefinePropertyOrThrow(F, Value('arguments'), Descriptor({
     Get: thrower,
     Set: thrower,
     Enumerable: Value.false,
@@ -286,7 +286,7 @@ export function SetDefaultGlobalBindings(realmRec) {
     ['NaN', toNumberValue(NaN)],
     ['undefined', Value.undefined],
   ].forEach(([name, value]) => {
-    Q(DefinePropertyOrThrow(global, new Value(name), Descriptor({
+    Q(DefinePropertyOrThrow(global, Value(name), Descriptor({
       Value: value,
       Writable: Value.false,
       Enumerable: Value.false,
@@ -294,7 +294,7 @@ export function SetDefaultGlobalBindings(realmRec) {
     })));
   });
 
-  Q(DefinePropertyOrThrow(global, new Value('globalThis'), Descriptor({
+  Q(DefinePropertyOrThrow(global, Value('globalThis'), Descriptor({
     Value: realmRec.GlobalEnv.GlobalThisValue,
     Writable: Value.true,
     Enumerable: Value.false,
@@ -361,7 +361,7 @@ export function SetDefaultGlobalBindings(realmRec) {
     'Math',
     'Reflect',
   ].forEach((name) => {
-    Q(DefinePropertyOrThrow(global, new Value(name), Descriptor({
+    Q(DefinePropertyOrThrow(global, Value(name), Descriptor({
       Value: realmRec.Intrinsics[`%${name}%`],
       Writable: Value.true,
       Enumerable: Value.false,

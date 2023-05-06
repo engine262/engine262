@@ -39,7 +39,7 @@ export function bootstrapTypedArrayConstructors(realmRec) {
           return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
         }
         // 2. Let constructorName be the String value of the Constructor Name value specified in Table 61 for this TypedArray constructor.
-        const constructorName = new Value(TypedArray);
+        const constructorName = Value(TypedArray);
         // 3. Return ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%", 0).
         return Q(AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`, 0));
       } else if (!(args[0] instanceof ObjectValue)) {
@@ -54,7 +54,7 @@ export function bootstrapTypedArrayConstructors(realmRec) {
         // 3. Let elementLength be ? ToIndex(length).
         const elementLength = Q(ToIndex(length));
         // 4. Let constructorName be the String value of the Constructor Name value specified in Table 61 for this TypedArray constructor.
-        const constructorName = new Value(TypedArray);
+        const constructorName = Value(TypedArray);
         // 5. Return ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%", elementLength).
         return Q(AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`, elementLength));
       } else if ('TypedArrayName' in args[0]) {
@@ -67,7 +67,7 @@ export function bootstrapTypedArrayConstructors(realmRec) {
           return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
         }
         // 3. Let constructorName be the String value of the Constructor Name value specified in Table 61 for this TypedArray constructor.
-        const constructorName = new Value(TypedArray);
+        const constructorName = Value(TypedArray);
         // 4. Let O be ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%").
         const O = Q(AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`));
         // 5. Let srcArray be typedArray.
@@ -79,13 +79,13 @@ export function bootstrapTypedArrayConstructors(realmRec) {
           return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
         }
         // 8. Let elementType be the Element Type value in Table 61 for constructorName.
-        const elementType = new Value(info.ElementType);
+        const elementType = Value(info.ElementType);
         // 9. Let elementLength be srcArray.[[ArrayLength]].
         const elementLength = srcArray.ArrayLength;
         // 10. Let srcName be the String value of srcArray.[[TypedArrayName]].
         const srcName = srcArray.TypedArrayName.stringValue();
         // 11. Let srcType be the Element Type value in Table 61 for srcName.
-        const srcType = new Value(typedArrayInfoByName[srcName].ElementType);
+        const srcType = Value(typedArrayInfoByName[srcName].ElementType);
         // 12. Let srcElementSize be the Element Size value specified in Table 61 for srcName.
         const srcElementSize = typedArrayInfoByName[srcName].ElementSize;
         // 13. Let srcByteOffset be srcArray.[[ByteOffset]].
@@ -158,7 +158,7 @@ export function bootstrapTypedArrayConstructors(realmRec) {
           return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
         }
         // 3. Let constructorName be the String value of the Constructor Name value specified in Table 61 for this TypedArray constructor.
-        const constructorName = new Value(TypedArray);
+        const constructorName = Value(TypedArray);
         // 4. Let O be ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%").
         const O = Q(AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`));
         // 5. Let usingIterator be ? GetMethod(object, @@iterator).
@@ -221,7 +221,7 @@ export function bootstrapTypedArrayConstructors(realmRec) {
           return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
         }
         // 3. Let constructorName be the String value of the Constructor Name value specified in Table 61 for this TypedArray constructor.
-        const constructorName = new Value(TypedArray);
+        const constructorName = Value(TypedArray);
         // 4. Let O be ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%").
         const O = Q(AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`));
         // 5. Let elementSize be the Element Size value specified in Table 61 for constructorName.

@@ -84,7 +84,7 @@ function* Evaluate_UnaryExpression_Typeof({ UnaryExpression }) {
   if (val instanceof ReferenceRecord) {
     // a. If IsUnresolvableReference(val) is true, return "undefined".
     if (IsUnresolvableReference(val) === Value.true) {
-      return new Value('undefined');
+      return Value('undefined');
     }
   }
   // 3. Set val to ? GetValue(val).

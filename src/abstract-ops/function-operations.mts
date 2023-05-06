@@ -357,7 +357,7 @@ export function MakeConstructor(F, writablePrototype, prototype) {
   Assert(isECMAScriptFunctionObject(F) || F.Call === BuiltinFunctionCall);
   if (isECMAScriptFunctionObject(F)) {
     Assert(IsConstructor(F) === Value.false);
-    Assert(X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, new Value('prototype'))) === Value.false);
+    Assert(X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, Value('prototype'))) === Value.false);
     F.Construct = surroundingAgent.hostDefinedOptions.boost?.constructFunction || FunctionConstructSlot;
   }
   F.ConstructorKind = 'base';
@@ -366,14 +366,14 @@ export function MakeConstructor(F, writablePrototype, prototype) {
   }
   if (prototype === undefined) {
     prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
-    X(DefinePropertyOrThrow(prototype, new Value('constructor'), Descriptor({
+    X(DefinePropertyOrThrow(prototype, Value('constructor'), Descriptor({
       Value: F,
       Writable: writablePrototype,
       Enumerable: Value.false,
       Configurable: Value.true,
     })));
   }
-  X(DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
+  X(DefinePropertyOrThrow(F, Value('prototype'), Descriptor({
     Value: prototype,
     Writable: writablePrototype,
     Enumerable: Value.false,
@@ -401,17 +401,17 @@ export function MakeMethod(F, homeObject) {
 /** http://tc39.es/ecma262/#sec-setfunctionname */
 export function SetFunctionName(F, name, prefix) {
   // 1. Assert: F is an extensible object that does not have a "name" own property.
-  Assert(IsExtensible(F) === Value.true && HasOwnProperty(F, new Value('name')) === Value.false);
+  Assert(IsExtensible(F) === Value.true && HasOwnProperty(F, Value('name')) === Value.false);
   // 2. If Type(name) is Symbol, then
   if (name instanceof SymbolValue) {
     // a. Let description be name's [[Description]] value.
     const description = name.Description;
     // b. If description is undefined, set name to the empty String.
     if (description === Value.undefined) {
-      name = new Value('');
+      name = Value('');
     } else {
       // c. Else, set name to the string-concatenation of "[", description, and "]".
-      name = new Value(`[${description.stringValue()}]`);
+      name = Value(`[${description.stringValue()}]`);
     }
   } else if (name instanceof PrivateName) { // 3. Else if name is a Private Name, then
     // a. Set name to name.[[Description]].
@@ -425,14 +425,14 @@ export function SetFunctionName(F, name, prefix) {
   // 5. If prefix is present, then
   if (prefix !== undefined) {
     // a. Set name to the string-concatenation of prefix, the code unit 0x0020 (SPACE), and name.
-    name = new Value(`${prefix.stringValue()} ${name.stringValue()}`);
+    name = Value(`${prefix.stringValue()} ${name.stringValue()}`);
     // b. If F has an [[InitialName]] internal slot, then
     if ('InitialName' in F) {
       // i. Optionally, set F.[[InitialName]] to name.
     }
   }
   // 6. Return ! DefinePropertyOrThrow(F, "name", PropertyDescriptor { [[Value]]: name, [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: true }).
-  return X(DefinePropertyOrThrow(F, new Value('name'), Descriptor({
+  return X(DefinePropertyOrThrow(F, Value('name'), Descriptor({
     Value: name,
     Writable: Value.false,
     Enumerable: Value.false,
@@ -444,9 +444,9 @@ export function SetFunctionName(F, name, prefix) {
 export function SetFunctionLength(F, length) {
   Assert(isNonNegativeInteger(length) || length === Infinity);
   // 1. Assert: F is an extensible object that does not have a "length" own property.
-  Assert(IsExtensible(F) === Value.true && HasOwnProperty(F, new Value('length')) === Value.false);
+  Assert(IsExtensible(F) === Value.true && HasOwnProperty(F, Value('length')) === Value.false);
   // 2. Return ! DefinePropertyOrThrow(F, "length", PropertyDescriptor { [[Value]]: 𝔽(length), [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: true }).
-  return X(DefinePropertyOrThrow(F, new Value('length'), Descriptor({
+  return X(DefinePropertyOrThrow(F, Value('length'), Descriptor({
     Value: toNumberValue(length),
     Writable: Value.false,
     Enumerable: Value.false,

@@ -25,10 +25,10 @@ function handleError(e) {
   if (e.name === 'SyntaxError') {
     const v = surroundingAgent.Throw('SyntaxError', 'Raw', e.message).Value;
     if (e.decoration) {
-      const stackString = new Value('stack');
+      const stackString = Value('stack');
       const stack = X(Get(v, stackString)).stringValue();
       const newStackString = `${e.decoration}\n${stack}`;
-      X(Set(v, stackString, new Value(newStackString), Value.true));
+      X(Set(v, stackString, Value(newStackString), Value.true));
     }
     return v;
   } else {

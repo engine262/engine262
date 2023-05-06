@@ -255,7 +255,7 @@ if (!process.send) {
     if (!proto || !(proto instanceof ObjectValue)) {
       return false;
     }
-    const ctorDesc = proto.properties.get(new Value('constructor'));
+    const ctorDesc = proto.properties.get(Value('constructor'));
     if (!ctorDesc || !IsDataDescriptor(ctorDesc)) {
       return false;
     }
@@ -263,7 +263,7 @@ if (!process.send) {
     if (!(ctor instanceof ObjectValue) || IsCallable(ctor) !== Value.true) {
       return false;
     }
-    const namePropDesc = ctor.properties.get(new Value('name'));
+    const namePropDesc = ctor.properties.get(Value('name'));
     if (!namePropDesc || !IsDataDescriptor(namePropDesc)) {
       return false;
     }

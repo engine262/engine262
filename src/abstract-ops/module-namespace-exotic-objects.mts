@@ -210,7 +210,7 @@ export function ModuleNamespaceCreate(module, exports) {
     Writable: Value.false,
     Enumerable: Value.false,
     Configurable: Value.false,
-    Value: new Value('Module'),
+    Value: Value('Module'),
   }));
   // 12. Set module.[[Namespace]] to M.
   module.Namespace = M;

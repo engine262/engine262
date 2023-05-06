@@ -26,7 +26,7 @@ export function* Evaluate_PropertyName(PropertyName) {
     case 'IdentifierName':
       return StringValue(PropertyName);
     case 'StringLiteral':
-      return new Value(PropertyName.value);
+      return Value(PropertyName.value);
     case 'NumericLiteral': {
       // 1. Let nbr be the NumericValue of NumericLiteral.
       const nbr = NumericValue(PropertyName);

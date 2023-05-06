@@ -210,7 +210,7 @@ export class CallSite {
 
   getFunctionName() {
     if (!(this.context.Function instanceof NullValue)) {
-      const name = this.context.Function.properties.get(new Value('name'));
+      const name = this.context.Function.properties.get(Value('name'));
       if (name) {
         return X(ToString(name.Value)).stringValue();
       }

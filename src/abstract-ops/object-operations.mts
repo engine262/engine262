@@ -281,7 +281,7 @@ export function LengthOfArrayLike(obj) {
   // 1. Assert: Type(obj) is Object.
   Assert(obj instanceof ObjectValue);
   // 2. Return ℝ(? ToLength(? Get(obj, "length"))).
-  return Q(ToLength(Q(Get(obj, new Value('length'))))).numberValue();
+  return Q(ToLength(Q(Get(obj, Value('length'))))).numberValue();
 }
 
 /** http://tc39.es/ecma262/#sec-createlistfromarraylike */
@@ -341,7 +341,7 @@ export function OrdinaryHasInstance(C, O) {
   if (!(O instanceof ObjectValue)) {
     return Value.false;
   }
-  const P = Q(Get(C, new Value('prototype')));
+  const P = Q(Get(C, Value('prototype')));
   if (!(P instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', P);
   }
@@ -359,7 +359,7 @@ export function OrdinaryHasInstance(C, O) {
 /** http://tc39.es/ecma262/#sec-speciesconstructor */
 export function SpeciesConstructor(O, defaultConstructor) {
   Assert(O instanceof ObjectValue);
-  const C = Q(Get(O, new Value('constructor')));
+  const C = Q(Get(O, Value('constructor')));
   if (C === Value.undefined) {
     return defaultConstructor;
   }

@@ -70,7 +70,7 @@ function ArrayProto_concat(args, { thisValue }) {
       n += 1;
     }
   }
-  Q(Set(A, new Value('length'), F(n), Value.true));
+  Q(Set(A, Value('length'), F(n), Value.true));
   return A;
 }
 
@@ -290,14 +290,14 @@ function ArrayProto_pop(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
   if (len === 0) {
-    Q(Set(O, new Value('length'), F(+0), Value.true));
+    Q(Set(O, Value('length'), F(+0), Value.true));
     return Value.undefined;
   } else {
     const newLen = len - 1;
     const index = Q(ToString(F(newLen)));
     const element = Q(Get(O, index));
     Q(DeletePropertyOrThrow(O, index));
-    Q(Set(O, new Value('length'), F(newLen), Value.true));
+    Q(Set(O, Value('length'), F(newLen), Value.true));
     return element;
   }
 }
@@ -315,7 +315,7 @@ function ArrayProto_push(items, { thisValue }) {
     Q(Set(O, X(ToString(F(len))), E, Value.true));
     len += 1;
   }
-  Q(Set(O, new Value('length'), F(len), Value.true));
+  Q(Set(O, Value('length'), F(len), Value.true));
   return F(len);
 }
 
@@ -324,10 +324,10 @@ function ArrayProto_shift(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
   if (len === 0) {
-    Q(Set(O, new Value('length'), F(+0), Value.true));
+    Q(Set(O, Value('length'), F(+0), Value.true));
     return Value.undefined;
   }
-  const first = Q(Get(O, new Value('0')));
+  const first = Q(Get(O, Value('0')));
   let k = 1;
   while (k < len) {
     const from = X(ToString(F(k)));
@@ -342,7 +342,7 @@ function ArrayProto_shift(args, { thisValue }) {
     k += 1;
   }
   Q(DeletePropertyOrThrow(O, X(ToString(F(len - 1)))));
-  Q(Set(O, new Value('length'), F(len - 1), Value.true));
+  Q(Set(O, Value('length'), F(len - 1), Value.true));
   return first;
 }
 
@@ -383,7 +383,7 @@ function ArrayProto_slice([start = Value.undefined, end = Value.undefined], { th
     k += 1;
     n += 1;
   }
-  Q(Set(A, new Value('length'), F(n), Value.true));
+  Q(Set(A, Value('length'), F(n), Value.true));
   return A;
 }
 
@@ -437,7 +437,7 @@ function ArrayProto_splice(args, { thisValue }) {
     }
     k += 1;
   }
-  Q(Set(A, new Value('length'), F(actualDeleteCount), Value.true));
+  Q(Set(A, Value('length'), F(actualDeleteCount), Value.true));
   const itemCount = items.length;
   if (itemCount < actualDeleteCount) {
     k = actualStart;
@@ -479,14 +479,14 @@ function ArrayProto_splice(args, { thisValue }) {
     Q(Set(O, X(ToString(F(k))), E, Value.true));
     k += 1;
   }
-  Q(Set(O, new Value('length'), F(len - actualDeleteCount + itemCount), Value.true));
+  Q(Set(O, Value('length'), F(len - actualDeleteCount + itemCount), Value.true));
   return A;
 }
 
 /** http://tc39.es/ecma262/#sec-array.prototype.tostring */
 function ArrayProto_toString(a, { thisValue }) {
   const array = Q(ToObject(thisValue));
-  let func = Q(Get(array, new Value('join')));
+  let func = Q(Get(array, Value('join')));
   if (IsCallable(func) === Value.false) {
     func = surroundingAgent.intrinsic('%Object.prototype.toString%');
   }
@@ -524,7 +524,7 @@ function ArrayProto_unshift(args, { thisValue }) {
       j += 1;
     }
   }
-  Q(Set(O, new Value('length'), F(len + argCount), Value.true));
+  Q(Set(O, Value('length'), F(len + argCount), Value.true));
   return F(len + argCount);
 }
 
@@ -592,22 +592,22 @@ export function bootstrapArrayPrototype(realmRec) {
     (O) => Q(LengthOfArrayLike(O)),
   );
 
-  proto.DefineOwnProperty(wellKnownSymbols.iterator, proto.GetOwnProperty(new Value('values')));
+  proto.DefineOwnProperty(wellKnownSymbols.iterator, proto.GetOwnProperty(Value('values')));
 
   {
     const unscopableList = OrdinaryObjectCreate(Value.null);
-    Assert(X(CreateDataProperty(unscopableList, new Value('copyWithin'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, new Value('entries'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, new Value('fill'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, new Value('find'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, new Value('findLast'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, new Value('findIndex'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, new Value('findLastIndex'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, new Value('flat'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, new Value('flatMap'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, new Value('includes'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, new Value('keys'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, new Value('values'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, Value('copyWithin'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, Value('entries'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, Value('fill'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, Value('find'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, Value('findLast'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, Value('findIndex'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, Value('findLastIndex'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, Value('flat'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, Value('flatMap'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, Value('includes'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, Value('keys'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, Value('values'), Value.true)) === Value.true);
     X(proto.DefineOwnProperty(wellKnownSymbols.unscopables, Descriptor({
       Value: unscopableList,
       Writable: Value.false,
@@ -617,7 +617,7 @@ export function bootstrapArrayPrototype(realmRec) {
   }
 
   // Used in `arguments` objects.
-  realmRec.Intrinsics['%Array.prototype.values%'] = X(Get(proto, new Value('values')));
+  realmRec.Intrinsics['%Array.prototype.values%'] = X(Get(proto, Value('values')));
 
   realmRec.Intrinsics['%Array.prototype%'] = proto;
 }

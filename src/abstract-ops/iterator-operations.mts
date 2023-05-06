@@ -57,7 +57,7 @@ export function GetIterator(obj, hint, method) {
   if (!(iterator instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', iterator);
   }
-  const nextMethod = Q(GetV(iterator, new Value('next')));
+  const nextMethod = Q(GetV(iterator, Value('next')));
   const iteratorRecord = {
     Iterator: iterator,
     NextMethod: nextMethod,
@@ -83,13 +83,13 @@ export function IteratorNext(iteratorRecord, value) {
 /** http://tc39.es/ecma262/#sec-iteratorcomplete */
 export function IteratorComplete(iterResult) {
   Assert(iterResult instanceof ObjectValue);
-  return EnsureCompletion(ToBoolean(Q(Get(iterResult, new Value('done')))));
+  return EnsureCompletion(ToBoolean(Q(Get(iterResult, Value('done')))));
 }
 
 /** http://tc39.es/ecma262/#sec-iteratorvalue */
 export function IteratorValue(iterResult) {
   Assert(iterResult instanceof ObjectValue);
-  return EnsureCompletion(Q(Get(iterResult, new Value('value'))));
+  return EnsureCompletion(Q(Get(iterResult, Value('value'))));
 }
 
 /** http://tc39.es/ecma262/#sec-iteratorstep */
@@ -113,7 +113,7 @@ export function IteratorClose(iteratorRecord, completion) {
   // 3. Let iterator be iteratorRecord.[[Iterator]].
   const iterator = iteratorRecord.Iterator;
   // 4. Let innerResult be GetMethod(iterator, "return").
-  let innerResult = EnsureCompletion(GetMethod(iterator, new Value('return')));
+  let innerResult = EnsureCompletion(GetMethod(iterator, Value('return')));
   // 5. If innerResult.[[Type]] is normal, then
   if (innerResult.Type === 'normal') {
     // a. Let return be innerResult.[[Value]].
@@ -150,7 +150,7 @@ export function* AsyncIteratorClose(iteratorRecord, completion) {
   // 3. Let iterator be iteratorRecord.[[Iterator]].
   const iterator = iteratorRecord.Iterator;
   // 4. Let innerResult be GetMethod(iterator, "return").
-  let innerResult = EnsureCompletion(GetMethod(iterator, new Value('return')));
+  let innerResult = EnsureCompletion(GetMethod(iterator, Value('return')));
   // 5. If innerResult.[[Type]] is normal, then
   if (innerResult.Type === 'normal') {
     // a. Let return be innerResult.[[Value]].
@@ -186,8 +186,8 @@ export function* AsyncIteratorClose(iteratorRecord, completion) {
 export function CreateIterResultObject(value, done) {
   Assert(done instanceof BooleanValue);
   const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
-  X(CreateDataProperty(obj, new Value('value'), value));
-  X(CreateDataProperty(obj, new Value('done'), done));
+  X(CreateDataProperty(obj, Value('value'), value));
+  X(CreateDataProperty(obj, Value('done'), done));
   return obj;
 }
 
@@ -219,7 +219,7 @@ export function CreateAsyncFromSyncIterator(syncIteratorRecord) {
     'SyncIteratorRecord',
   ]));
   asyncIterator.SyncIteratorRecord = syncIteratorRecord;
-  const nextMethod = X(Get(asyncIterator, new Value('next')));
+  const nextMethod = X(Get(asyncIterator, Value('next')));
   return {
     Iterator: asyncIterator,
     NextMethod: nextMethod,
@@ -248,7 +248,7 @@ export function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
     return X(CreateIterResultObject(valueInner, done));
   };
   // 8. Let onFulfilled be ! CreateBuiltinFunction(unwrap, 1, "", « »).
-  const onFulfilled = X(CreateBuiltinFunction(unwrap, 1, new Value(''), ['Done']));
+  const onFulfilled = X(CreateBuiltinFunction(unwrap, 1, Value(''), ['Done']));
   // 9. NOTE: onFulfilled is used when processing the "value" property of an IteratorResult object in order to wait for its value if it is a promise and re-package the result in a new "unwrapped" IteratorResult object.
   // 10. Perform ! PerformPromiseThen(valueWrapper, onFulfilled, undefined, promiseCapability).
   X(PerformPromiseThen(valueWrapper, onFulfilled, Value.undefined, promiseCapability));

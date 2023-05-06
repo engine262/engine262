@@ -32,9 +32,9 @@ function BooleanProto_toString(argList, { thisValue }) {
   const b = Q(thisBooleanValue(thisValue));
   // 2. If b is true, return "true"; else return "false".
   if (b === Value.true) {
-    return new Value('true');
+    return Value('true');
   }
-  return new Value('false');
+  return Value('false');
 }
 
 /** http://tc39.es/ecma262/#sec-boolean.prototype.valueof */

@@ -74,5 +74,5 @@ function ParseFloat([string = Value.undefined]) {
 }
 
 export function bootstrapParseFloat(realmRec) {
-  realmRec.Intrinsics['%parseFloat%'] = CreateBuiltinFunction(ParseFloat, 1, new Value('parseFloat'), [], realmRec);
+  realmRec.Intrinsics['%parseFloat%'] = CreateBuiltinFunction(ParseFloat, 1, Value('parseFloat'), [], realmRec);
 }

@@ -41,7 +41,7 @@ export function InstantiateGeneratorFunctionExpression(GeneratorExpression, name
     // 10. Let prototype be ! OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
     const prototype = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%')));
     // 11. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-    DefinePropertyOrThrow(closure, new Value('prototype'), new Descriptor({
+    DefinePropertyOrThrow(closure, Value('prototype'), new Descriptor({
       Value: prototype,
       Writable: Value.true,
       Enumerable: Value.false,
@@ -54,7 +54,7 @@ export function InstantiateGeneratorFunctionExpression(GeneratorExpression, name
   }
   // 1. If name is not present, set name to "".
   if (name === undefined) {
-    name = new Value('');
+    name = Value('');
   }
   // 2. Let scope be the running execution context's LexicalEnvironment.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
@@ -69,7 +69,7 @@ export function InstantiateGeneratorFunctionExpression(GeneratorExpression, name
   // 7. Let prototype be ! OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
   const prototype = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%')));
   // 8. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-  DefinePropertyOrThrow(closure, new Value('prototype'), new Descriptor({
+  DefinePropertyOrThrow(closure, Value('prototype'), new Descriptor({
     Value: prototype,
     Writable: Value.true,
     Enumerable: Value.false,

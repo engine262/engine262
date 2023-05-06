@@ -74,7 +74,7 @@ const createRealm = ({ printCompatMode = false } = {}) => {
     const setPrintHandle = (f) => {
       printHandle = f;
     };
-    CreateDataProperty(realm.GlobalObject, new Value('print'), CreateBuiltinFunction((args) => {
+    CreateDataProperty(realm.GlobalObject, Value('print'), CreateBuiltinFunction((args) => {
       /* c8 ignore next */
       if (printHandle !== undefined) {
         printHandle(...args);
@@ -104,7 +104,7 @@ const createRealm = ({ printCompatMode = false } = {}) => {
         }
       }
       return Value.undefined;
-    }, 0, new Value('print'), []));
+    }, 0, Value('print'), []));
 
     [
       ['global', realm.GlobalObject],
@@ -120,18 +120,18 @@ const createRealm = ({ printCompatMode = false } = {}) => {
       }],
       ['spec', ([v]) => {
         if (v.nativeFunction && v.nativeFunction.section) {
-          return new Value(v.nativeFunction.section);
+          return Value(v.nativeFunction.section);
         }
         return Value.undefined;
       }, 1],
     ].forEach(([name, value, length = 0]) => {
       const v = value instanceof Value ? value
-        : CreateBuiltinFunction(value, length, new Value(name), []);
-      CreateDataProperty($262, new Value(name), v);
+        : CreateBuiltinFunction(value, length, Value(name), []);
+      CreateDataProperty($262, Value(name), v);
     });
 
-    CreateDataProperty(realm.GlobalObject, new Value('$262'), $262);
-    CreateDataProperty(realm.GlobalObject, new Value('$'), $262);
+    CreateDataProperty(realm.GlobalObject, Value('$262'), $262);
+    CreateDataProperty(realm.GlobalObject, Value('$'), $262);
 
     return {
       realm,

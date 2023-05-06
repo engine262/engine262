@@ -799,7 +799,7 @@ function TypedArrayProto_at([index = Value.undefined], { thisValue }) {
 }
 
 export function bootstrapTypedArrayPrototype(realmRec) {
-  const ArrayProto_toString = X(Get(realmRec.Intrinsics['%Array.prototype%'], new Value('toString')));
+  const ArrayProto_toString = X(Get(realmRec.Intrinsics['%Array.prototype%'], Value('toString')));
   Assert(ArrayProto_toString instanceof ObjectValue);
 
   const proto = bootstrapPrototype(realmRec, [
@@ -834,7 +834,7 @@ export function bootstrapTypedArrayPrototype(realmRec) {
 
   /** http://tc39.es/ecma262/#sec-%typedarray%.prototype-@@iterator */
   {
-    const fn = X(Get(proto, new Value('values')));
+    const fn = X(Get(proto, Value('values')));
     X(proto.DefineOwnProperty(wellKnownSymbols.iterator, Descriptor({
       Value: fn,
       Writable: Value.true,

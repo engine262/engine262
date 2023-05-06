@@ -76,7 +76,7 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
   // 13. If argCount = 0, let bodyArg be the empty String.
   let bodyArg;
   if (argCount === 0) {
-    bodyArg = new Value('');
+    bodyArg = Value('');
   } else if (argCount === 1) { // 14. Else if argCount = 1, let bodyArg be args[0].
     bodyArg = args[0];
   } else { // 15. Else,
@@ -165,13 +165,13 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
   // 24. Let F be ! OrdinaryFunctionCreate(proto, sourceText, parameters, body, non-lexical-this, scope, null).
   const F = X(OrdinaryFunctionCreate(proto, sourceText, parameters, body, 'non-lexical-this', scope, Value.null));
   // 25. Perform SetFunctionName(F, "anonymous").
-  SetFunctionName(F, new Value('anonymous'));
+  SetFunctionName(F, Value('anonymous'));
   // 26. If kind is generator, then
   if (kind === 'generator') {
     // a. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
     const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%'));
     // b. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-    DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
+    DefinePropertyOrThrow(F, Value('prototype'), Descriptor({
       Value: prototype,
       Writable: Value.true,
       Enumerable: Value.false,
@@ -181,7 +181,7 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
     // a. Let prototype be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
     const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%'));
     // b. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-    DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
+    DefinePropertyOrThrow(F, Value('prototype'), Descriptor({
       Value: prototype,
       Writable: Value.true,
       Enumerable: Value.false,

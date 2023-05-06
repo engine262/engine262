@@ -54,7 +54,7 @@ export @callable((_target, _thisArg, [value]) => {
   }
 }) // @ts-expect-error callable class
 abstract class Value {
-  /** @deprecated Use Value() instead of new Value() */
+  /** @deprecated Use Value() instead of Value() */
   constructor(value?: never) {
     if (new.target !== Value) {
       return this;

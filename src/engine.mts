@@ -116,10 +116,10 @@ export class Agent {
     if (type === 'AggregateError') {
       error = X(Construct(cons, [
         X(CreateArrayFromList([])),
-        new Value(message),
+        Value(message),
       ]));
     } else {
-      error = X(Construct(cons, [new Value(message)]));
+      error = X(Construct(cons, [Value(message)]));
     }
     return ThrowCompletion(error);
   }

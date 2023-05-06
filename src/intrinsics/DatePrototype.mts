@@ -481,7 +481,7 @@ function DateProto_toDateString(args, { thisValue }) {
   }
   const tv = Q(thisTimeValue(O));
   if (tv.isNaN()) {
-    return new Value('Invalid Date');
+    return Value('Invalid Date');
   }
   const t = LocalTime(tv);
   return DateString(t);
@@ -513,7 +513,7 @@ function DateProto_toISOString(args, { thisValue }) {
   const ss = String(sec).padStart(2, '0');
   const sss = String(ms).padStart(3, '0');
   const format = `${YYYY}-${MM}-${DD}T${HH}:${mm}:${ss}.${sss}Z`;
-  return new Value(format);
+  return Value(format);
 }
 
 /** http://tc39.es/ecma262/#sec-date.prototype.tojson */
@@ -523,7 +523,7 @@ function DateProto_toJSON(args, { thisValue }) {
   if (tv instanceof NumberValue && !Number.isFinite(tv.numberValue())) {
     return Value.null;
   }
-  return Q(Invoke(O, new Value('toISOString')));
+  return Q(Invoke(O, Value('toISOString')));
 }
 
 /** http://tc39.es/ecma262/#sec-date.prototype.tolocaledatestring */
@@ -557,7 +557,7 @@ function TimeString(tv) {
   const hour = String(HourFromTime(tv).numberValue()).padStart(2, '0');
   const minute = String(MinFromTime(tv).numberValue()).padStart(2, '0');
   const second = String(SecFromTime(tv).numberValue()).padStart(2, '0');
-  return new Value(`${hour}:${minute}:${second} GMT`);
+  return Value(`${hour}:${minute}:${second} GMT`);
 }
 
 /** http://tc39.es/ecma262/#sec-todatestring-day-names */
@@ -574,9 +574,9 @@ function DateString(tv) {
   const day = String(DateFromTime(tv).numberValue()).padStart(2, '0');
   const yv = YearFromTime(tv).numberValue();
   const yearSign = yv >= 0 ? '' : '-';
-  const year = new Value(String(Math.abs(yv)));
-  const paddedYear = X(StringPad(year, F(4), new Value('0'), 'start')).stringValue();
-  return new Value(`${weekday} ${month} ${day} ${yearSign}${paddedYear}`);
+  const year = Value(String(Math.abs(yv)));
+  const paddedYear = X(StringPad(year, F(4), Value('0'), 'start')).stringValue();
+  return Value(`${weekday} ${month} ${day} ${yearSign}${paddedYear}`);
 }
 
 /** http://tc39.es/ecma262/#sec-timezoneestring */
@@ -588,17 +588,17 @@ export function TimeZoneString(tv) {
   const offsetMin = String(MinFromTime(F(Math.abs(offset))).numberValue()).padStart(2, '0');
   const offsetHour = String(HourFromTime(F(Math.abs(offset))).numberValue()).padStart(2, '0');
   const tzName = '';
-  return new Value(`${offsetSign}${offsetHour}${offsetMin}${tzName}`);
+  return Value(`${offsetSign}${offsetHour}${offsetMin}${tzName}`);
 }
 
 /** http://tc39.es/ecma262/#sec-todatestring */
 export function ToDateString(tv) {
   Assert(tv instanceof NumberValue);
   if (tv.isNaN()) {
-    return new Value('Invalid Date');
+    return Value('Invalid Date');
   }
   const t = LocalTime(tv);
-  return new Value(`${DateString(t).stringValue()} ${TimeString(t).stringValue()}${TimeZoneString(t).stringValue()}`);
+  return Value(`${DateString(t).stringValue()} ${TimeString(t).stringValue()}${TimeZoneString(t).stringValue()}`);
 }
 
 /** http://tc39.es/ecma262/#sec-date.prototype.totimestring */
@@ -609,10 +609,10 @@ function DateProto_toTimeString(args, { thisValue }) {
   }
   const tv = Q(thisTimeValue(O));
   if (tv.isNaN()) {
-    return new Value('Invalid Date');
+    return Value('Invalid Date');
   }
   const t = LocalTime(tv);
-  return new Value(`${TimeString(t).stringValue()}${TimeZoneString(tv).stringValue()}`);
+  return Value(`${TimeString(t).stringValue()}${TimeZoneString(tv).stringValue()}`);
 }
 
 /** http://tc39.es/ecma262/#sec-date.prototype.toutcstring */
@@ -623,16 +623,16 @@ function DateProto_toUTCString(args, { thisValue }) {
   }
   const tv = Q(thisTimeValue(O));
   if (tv.isNaN()) {
-    return new Value('Invalid Date');
+    return Value('Invalid Date');
   }
   const weekday = daysOfTheWeek[WeekDay(tv).numberValue()];
   const month = monthsOfTheYear[MonthFromTime(tv).numberValue()];
   const day = String(DateFromTime(tv).numberValue()).padStart(2, '0');
   const yv = YearFromTime(tv).numberValue();
   const yearSign = yv >= 0 ? '' : '-';
-  const year = new Value(String(Math.abs(yv)));
-  const paddedYear = X(StringPad(year, F(4), new Value('0'), 'start')).stringValue();
-  return new Value(`${weekday}, ${day} ${month} ${yearSign}${paddedYear} ${TimeString(tv).stringValue()}`);
+  const year = Value(String(Math.abs(yv)));
+  const paddedYear = X(StringPad(year, F(4), Value('0'), 'start')).stringValue();
+  return Value(`${weekday}, ${day} ${month} ${yearSign}${paddedYear} ${TimeString(tv).stringValue()}`);
 }
 
 /** http://tc39.es/ecma262/#sec-date.prototype.valueof */

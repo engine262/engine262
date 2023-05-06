@@ -61,9 +61,9 @@ function StringProto_charAt([pos = Value.undefined], { thisValue }) {
   const position = Q(ToIntegerOrInfinity(pos));
   const size = S.stringValue().length;
   if (position < 0 || position >= size) {
-    return new Value('');
+    return Value('');
   }
-  return new Value(S.stringValue()[position]);
+  return Value(S.stringValue()[position]);
 }
 
 /** http://tc39.es/ecma262/#sec-string.prototype.charcodeat */
@@ -101,7 +101,7 @@ function StringProto_concat(args, { thisValue }) {
     const nextString = Q(ToString(next));
     R = `${R}${nextString.stringValue()}`;
   }
-  return new Value(R);
+  return Value(R);
 }
 
 /** http://tc39.es/ecma262/#sec-string.prototype.endswith */
@@ -271,7 +271,7 @@ function StringProto_matchAll([regexp = Value.undefined], { thisValue }) {
     // b. If isRegExp is true, then
     if (isRegExp === Value.true) {
       // i. Let flags be ? Get(regexp, "flags").
-      const flags = Q(Get(regexp, new Value('flags')));
+      const flags = Q(Get(regexp, Value('flags')));
       // ii. Perform ? RequireObjectCoercible(flags).
       Q(RequireObjectCoercible(flags));
       // iii. If ? ToString(flags) does not contain "g", throw a TypeError exception.
@@ -290,7 +290,7 @@ function StringProto_matchAll([regexp = Value.undefined], { thisValue }) {
   // 3. Let S be ? ToString(O).
   const S = Q(ToString(O));
   // 4. Let rx be ? RegExpCreate(regexp, "g").
-  const rx = Q(RegExpCreate(regexp, new Value('g')));
+  const rx = Q(RegExpCreate(regexp, Value('g')));
   // 5. Return ? Invoke(rx, @@matchAll, « S »).
   return Q(Invoke(rx, wellKnownSymbols.matchAll, [S]));
 }
@@ -300,7 +300,7 @@ function StringProto_normalize([form = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
   if (form === Value.undefined) {
-    form = new Value('NFC');
+    form = Value('NFC');
   } else {
     form = Q(ToString(form));
   }
@@ -309,7 +309,7 @@ function StringProto_normalize([form = Value.undefined], { thisValue }) {
     return surroundingAgent.Throw('RangeError', 'NormalizeInvalidForm');
   }
   const ns = S.stringValue().normalize(f);
-  return new Value(ns);
+  return Value(ns);
 }
 
 /** http://tc39.es/ecma262/#sec-string.prototype.padend */
@@ -336,13 +336,13 @@ function StringProto_repeat([count = Value.undefined], { thisValue }) {
     return surroundingAgent.Throw('RangeError', 'StringRepeatCount', n);
   }
   if (n === 0) {
-    return new Value('');
+    return Value('');
   }
   let T = '';
   for (let i = 0; i < n; i += 1) {
     T += S.stringValue();
   }
-  return new Value(T);
+  return Value(T);
 }
 
 /** http://tc39.es/ecma262/#sec-string.prototype.replace */
@@ -375,7 +375,7 @@ function StringProto_replace([searchValue = Value.undefined, replaceValue = Valu
   }
   const tailPos = pos + matched.stringValue().length;
   const newString = string.stringValue().slice(0, pos) + replStr.stringValue() + string.stringValue().slice(tailPos);
-  return new Value(newString);
+  return Value(newString);
 }
 
 /** http://tc39.es/ecma262/#sec-string.prototype.replaceall */
@@ -389,7 +389,7 @@ function StringProto_replaceAll([searchValue = Value.undefined, replaceValue = V
     // b. If isRegExp is true, then
     if (isRegExp === Value.true) {
       // i. Let flags be ? Get(searchValue, "flags").
-      const flags = Q(Get(searchValue, new Value('flags')));
+      const flags = Q(Get(searchValue, Value('flags')));
       // ii. Perform ? RequireObjectCoercible(flags).
       Q(RequireObjectCoercible(flags));
       // iii. If ? ToString(flags) does not contain "g", throw a TypeError exception.
@@ -463,7 +463,7 @@ function StringProto_replaceAll([searchValue = Value.undefined, replaceValue = V
     result += string.stringValue().slice(endOfLastMatch);
   }
   // 16. Return result.
-  return new Value(result);
+  return Value(result);
 }
 
 /** http://tc39.es/ecma262/#sec-string.prototype.slice */
@@ -507,7 +507,7 @@ function StringProto_slice([start = Value.undefined, end = Value.undefined], { t
     to = Math.min(intEnd, len);
   }
   const span = Math.max(to - from, 0);
-  return new Value(S.slice(from, from + span));
+  return Value(S.slice(from, from + span));
 }
 
 /** http://tc39.es/ecma262/#sec-string.prototype.split */
@@ -535,12 +535,12 @@ function StringProto_split([separator = Value.undefined, limit = Value.undefined
     return A;
   }
   if (separator === Value.undefined) {
-    X(CreateDataPropertyOrThrow(A, new Value('0'), S));
+    X(CreateDataPropertyOrThrow(A, Value('0'), S));
     return A;
   }
   if (s === 0) {
     if (R.stringValue() !== '') {
-      X(CreateDataPropertyOrThrow(A, new Value('0'), S));
+      X(CreateDataPropertyOrThrow(A, Value('0'), S));
     }
     return A;
   }
@@ -553,7 +553,7 @@ function StringProto_split([separator = Value.undefined, limit = Value.undefined
       if (e === p) {
         q += 1;
       } else {
-        const T = new Value(S.stringValue().substring(p, q));
+        const T = Value(S.stringValue().substring(p, q));
         X(CreateDataPropertyOrThrow(A, X(ToString(F(lengthA))), T));
         lengthA += 1;
         if (lengthA === lim.numberValue()) {
@@ -564,7 +564,7 @@ function StringProto_split([separator = Value.undefined, limit = Value.undefined
       }
     }
   }
-  const T = new Value(S.stringValue().substring(p, s));
+  const T = Value(S.stringValue().substring(p, s));
   X(CreateDataPropertyOrThrow(A, X(ToString(F(lengthA))), T));
   return A;
 }
@@ -626,7 +626,7 @@ function StringProto_substring([start = Value.undefined, end = Value.undefined],
   const finalEnd = Math.min(Math.max(intEnd, 0), len);
   const from = Math.min(finalStart, finalEnd);
   const to = Math.max(finalStart, finalEnd);
-  return new Value(S.slice(from, to));
+  return Value(S.slice(from, to));
 }
 
 /** http://tc39.es/ecma262/#sec-string.prototype.tolocalelowercase */
@@ -634,7 +634,7 @@ function StringProto_toLocaleLowerCase(args, { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
   const L = S.stringValue().toLocaleLowerCase();
-  return new Value(L);
+  return Value(L);
 }
 
 /** http://tc39.es/ecma262/#sec-string.prototype.tolocaleuppercase */
@@ -642,7 +642,7 @@ function StringProto_toLocaleUpperCase(args, { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
   const L = S.stringValue().toLocaleUpperCase();
-  return new Value(L);
+  return Value(L);
 }
 
 /** http://tc39.es/ecma262/#sec-string.prototype.tolowercase */
@@ -650,7 +650,7 @@ function StringProto_toLowerCase(args, { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
   const L = S.stringValue().toLowerCase();
-  return new Value(L);
+  return Value(L);
 }
 
 /** http://tc39.es/ecma262/#sec-string.prototype.tostring */
@@ -663,7 +663,7 @@ function StringProto_toUpperCase(args, { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
   const L = S.stringValue().toUpperCase();
-  return new Value(L);
+  return Value(L);
 }
 
 /** https://tc39.es/proposal-is-usv-string/#sec-string.prototype.towellformed */
@@ -694,7 +694,7 @@ function StringProto_toWellFormed(args, { thisValue }) {
     k += cp.CodeUnitCount;
   }
   // 7. Return result.
-  return new Value(result);
+  return Value(result);
 }
 
 /** http://tc39.es/ecma262/#sec-string.prototype.trim */
@@ -739,7 +739,7 @@ function StringProto_iterator(args, { thisValue }) {
       // ii. Let nextIndex be position + cp.[[CodeUnitCount]].
       const nextIndex = position + cp.CodeUnitCount;
       // iii. Let resultString be the substring of s from position to nextIndex.
-      const resultString = new Value(s.slice(position, nextIndex));
+      const resultString = Value(s.slice(position, nextIndex));
       // iv. Set position to nextIndex.
       position = nextIndex;
       // v. Perform ? Yield(resultString).
@@ -749,7 +749,7 @@ function StringProto_iterator(args, { thisValue }) {
     return Value.undefined;
   };
   // 4. Return ! CreateIteratorFromClosure(closure, "%StringIteratorPrototype%", %StringIteratorPrototype%).
-  return X(CreateIteratorFromClosure(closure, new Value('%StringIteratorPrototype%'), surroundingAgent.intrinsic('%StringIteratorPrototype%')));
+  return X(CreateIteratorFromClosure(closure, Value('%StringIteratorPrototype%'), surroundingAgent.intrinsic('%StringIteratorPrototype%')));
 }
 
 /** http://tc39.es/ecma262/#sec-string.prototype.at */
@@ -776,11 +776,11 @@ function StringProto_at([index = Value.undefined], { thisValue }) {
     return Value.undefined;
   }
   // 8. Return the String value consisting of only the code unit at position k in S.
-  return new Value(S.stringValue()[k]);
+  return Value(S.stringValue()[k]);
 }
 
 export function bootstrapStringPrototype(realmRec) {
-  const proto = StringCreate(new Value(''), realmRec.Intrinsics['%Object.prototype%']);
+  const proto = StringCreate(Value(''), realmRec.Intrinsics['%Object.prototype%']);
 
   assignProps(realmRec, proto, [
     ['charAt', StringProto_charAt, 1],

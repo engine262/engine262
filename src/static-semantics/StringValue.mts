@@ -9,11 +9,11 @@ export function StringValue(node) {
     case 'BindingIdentifier':
     case 'IdentifierReference':
     case 'LabelIdentifier':
-      return new Value(node.name);
+      return Value(node.name);
     case 'PrivateIdentifier':
-      return new Value(`#${node.name}`);
+      return Value(`#${node.name}`);
     case 'StringLiteral':
-      return new Value(node.value);
+      return Value(node.value);
     default:
       throw new OutOfRange('StringValue', node);
   }

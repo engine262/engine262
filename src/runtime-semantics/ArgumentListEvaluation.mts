@@ -73,7 +73,7 @@ function GetTemplateObject(templateLiteral) {
   // 12. Perform SetIntegrityLevel(rawObj, frozen).
   X(SetIntegrityLevel(rawObj, 'frozen'));
   // 13. Perform SetIntegrityLevel(rawObj, frozen).
-  X(template.DefineOwnProperty(new Value('raw'), Descriptor({
+  X(template.DefineOwnProperty(Value('raw'), Descriptor({
     Value: rawObj,
     Writable: Value.false,
     Enumerable: Value.false,

@@ -6,7 +6,7 @@ import { Q } from '../completion.mjs';
 import { Value } from '../value.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-const kStringIteratorPrototype = new Value('%StringIteratorPrototype%');
+const kStringIteratorPrototype = Value('%StringIteratorPrototype%');
 
 /** http://tc39.es/ecma262/#sec-%stringiteratorprototype%.next */
 function StringIteratorPrototype_next(args, { thisValue }) {

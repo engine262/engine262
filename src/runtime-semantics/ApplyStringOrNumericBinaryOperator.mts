@@ -21,7 +21,7 @@ export function ApplyStringOrNumericBinaryOperator(lval, opText, rval) {
       // ii. Let rstr be ? ToString(rprim).
       const rstr = Q(ToString(rprim));
       // iii. Return the string-concatenation of lstr and rstr.
-      return new Value(lstr.stringValue() + rstr.stringValue());
+      return Value(lstr.stringValue() + rstr.stringValue());
     }
     // d. Set lval to lprim.
     lval = lprim;

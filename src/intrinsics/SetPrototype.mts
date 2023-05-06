@@ -174,8 +174,8 @@ export function bootstrapSetPrototype(realmRec) {
     ['values', SetProto_values, 0],
   ], realmRec.Intrinsics['%Object.prototype%'], 'Set');
 
-  const valuesFunc = X(proto.GetOwnProperty(new Value('values')));
-  X(proto.DefineOwnProperty(new Value('keys'), valuesFunc));
+  const valuesFunc = X(proto.GetOwnProperty(Value('values')));
+  X(proto.DefineOwnProperty(Value('keys'), valuesFunc));
   X(proto.DefineOwnProperty(wellKnownSymbols.iterator, valuesFunc));
 
   realmRec.Intrinsics['%Set.prototype%'] = proto;

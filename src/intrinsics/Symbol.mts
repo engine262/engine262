@@ -79,7 +79,7 @@ export function bootstrapSymbol(realmRec) {
   ]);
 
   for (const [name, sym] of Object.entries(wellKnownSymbols)) {
-    symbolConstructor.DefineOwnProperty(new Value(name), Descriptor({
+    symbolConstructor.DefineOwnProperty(Value(name), Descriptor({
       Value: sym,
       Writable: Value.false,
       Enumerable: Value.false,
@@ -87,7 +87,7 @@ export function bootstrapSymbol(realmRec) {
     }));
   }
 
-  symbolConstructor.DefineOwnProperty(new Value('prototype'), Descriptor({
+  symbolConstructor.DefineOwnProperty(Value('prototype'), Descriptor({
     Value: realmRec.Intrinsics['%Symbol.prototype%'],
     Writable: Value.true,
     Enumerable: Value.false,

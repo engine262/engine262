@@ -82,7 +82,7 @@ export function ExportEntries(node) {
             ModuleRequest: Value.null,
             ImportName: Value.null,
             LocalName: localName,
-            ExportName: new Value('default'),
+            ExportName: Value('default'),
           }];
         }
         case node.default && !!node.ClassDeclaration: {
@@ -96,7 +96,7 @@ export function ExportEntries(node) {
             ModuleRequest: Value.null,
             ImportName: Value.null,
             LocalName: localName,
-            ExportName: new Value('default'),
+            ExportName: Value('default'),
           }];
         }
         case node.default && !!node.AssignmentExpression: {
@@ -105,8 +105,8 @@ export function ExportEntries(node) {
           const entry = {
             ModuleRequest: Value.null,
             ImportName: Value.null,
-            LocalName: new Value('*default*'),
-            ExportName: new Value('default'),
+            LocalName: Value('*default*'),
+            ExportName: Value('default'),
           };
           // 2. Return a new List containing entry.
           return [entry];

@@ -27,7 +27,7 @@ const { total, pass, fail } = require('./base');
   () => {
     const agent = new Agent({
       onDebugger() {
-        return new Value(42);
+        return Value(42);
       },
     });
     setSurroundingAgent(agent);
@@ -166,7 +166,7 @@ Error: owo
       module.LoadRequestedModules();
       module.Link();
       module.Evaluate();
-      const result = Get(realm.GlobalObject, new Value('result'));
+      const result = Get(realm.GlobalObject, Value('result'));
       assert.strictEqual(result.Value.PromiseResult.stringValue(), 'pass');
     });
   },
@@ -179,19 +179,19 @@ Error: owo
     realm.scope(() => {
       CreateDataProperty(
         realm.GlobalObject,
-        new Value('fail'),
-        new Value(([path]) => {
+        Value('fail'),
+        Value(([path]) => {
           throw new Error(`${path.stringValue()} did not have a section`);
         }),
       );
       const targets = [];
       Object.entries(realm.Intrinsics)
         .forEach(([k, v]) => {
-          targets.push(CreateArrayFromList([new Value(k), v]));
+          targets.push(CreateArrayFromList([Value(k), v]));
         });
       CreateDataProperty(
         realm.GlobalObject,
-        new Value('targets'),
+        Value('targets'),
         CreateArrayFromList(targets),
       );
     });

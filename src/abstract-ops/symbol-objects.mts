@@ -7,7 +7,7 @@ export function SymbolDescriptiveString(sym) {
   Assert(sym instanceof SymbolValue);
   let desc = sym.Description;
   if (desc instanceof UndefinedValue) {
-    desc = new Value('');
+    desc = Value('');
   }
-  return new Value(`Symbol(${desc.stringValue()})`);
+  return Value(`Symbol(${desc.stringValue()})`);
 }
