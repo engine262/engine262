@@ -21,12 +21,14 @@ import {
 
 /** https://tc39.es/ecma262/#graphloadingstate-record */
 export class GraphLoadingState {
+  PromiseCapability;
+  HostDefined;
+  IsLoading = true;
+  Visited = new Set();
+  PendingModules = 1;
   constructor({ PromiseCapability, HostDefined }) {
     this.PromiseCapability = PromiseCapability;
     this.HostDefined = HostDefined;
-    this.IsLoading = true;
-    this.Visited = new Set();
-    this.PendingModules = 1;
   }
 }
 

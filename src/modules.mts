@@ -36,6 +36,8 @@ import { Evaluate } from './evaluator.mjs';
 
 // #resolvedbinding-record
 export class ResolvedBindingRecord {
+  Module;
+  BindingName;
   constructor({ Module, BindingName }) {
     Assert(Module instanceof AbstractModuleRecord);
     Assert(BindingName === 'namespace' || BindingName instanceof JSStringValue);
@@ -50,6 +52,10 @@ export class ResolvedBindingRecord {
 
 /** http://tc39.es/ecma262/#sec-abstract-module-records */
 export class AbstractModuleRecord {
+  Realm;
+  Environment;
+  Namespace;
+  HostDefined;
   constructor({
     Realm,
     Environment,
@@ -71,6 +77,17 @@ export class AbstractModuleRecord {
 
 /** http://tc39.es/ecma262/#sec-cyclic-module-records */
 export class CyclicModuleRecord extends AbstractModuleRecord {
+  Status;
+  EvaluationError;
+  DFSIndex;
+  DFSAncestorIndex;
+  RequestedModules;
+  LoadedModules;
+  Async;
+  AsyncEvaluating;
+  TopLevelCapability;
+  AsyncParentModules;
+  PendingAsyncDependencies;
   constructor(init) {
     super(init);
     this.Status = init.Status;
@@ -203,6 +220,13 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
 
 /** http://tc39.es/ecma262/#sec-source-text-module-records */
 export class SourceTextModuleRecord extends CyclicModuleRecord {
+  ImportMeta;
+  ECMAScriptCode;
+  Context;
+  ImportEntries;
+  LocalExportEntries;
+  IndirectExportEntries;
+  StarExportEntries;
   constructor(init) {
     super(init);
 
@@ -538,6 +562,8 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
 
 /** http://tc39.es/ecma262/#sec-synthetic-module-records */
 export class SyntheticModuleRecord extends AbstractModuleRecord {
+  ExportNames;
+  EvaluationSteps;
   constructor(init) {
     super(init);
 

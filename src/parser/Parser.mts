@@ -7,6 +7,11 @@ import { Scope } from './Scope.mjs';
 import { isLineTerminator } from './Lexer.mjs';
 
 export class Parser extends LanguageParser {
+  source;
+  specifier;
+  earlyErrors;
+  state;
+  scope = new Scope(this);
   constructor({ source, specifier, json = false }) {
     super();
     this.source = source;

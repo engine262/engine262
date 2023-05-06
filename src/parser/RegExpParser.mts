@@ -27,14 +27,15 @@ const PLUS_U = 1 << 0;
 const PLUS_N = 1 << 1;
 
 export class RegExpParser {
+  source;
+  position = 0;
+  capturingGroups = [];
+  groupSpecifiers = new Map();
+  decimalEscapes = [];
+  groupNameRefs = [];
+  state = 0;
   constructor(source) {
     this.source = source;
-    this.position = 0;
-    this.capturingGroups = [];
-    this.groupSpecifiers = new Map();
-    this.decimalEscapes = [];
-    this.groupNameRefs = [];
-    this.state = 0;
   }
 
   scope(flags, f) {

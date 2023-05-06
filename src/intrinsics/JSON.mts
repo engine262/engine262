@@ -46,9 +46,11 @@ const VALID_HEX = [...NUMERIC, 'A', 'B', 'C', 'D', 'E', 'F', 'a', 'b', 'c', 'd',
 const ESCAPABLE = ['"', '\\', '/', 'b', 'f', 'n', 'r', 't'];
 
 class JSONValidator {
+  input;
+  pos = 0;
+  char;
   constructor(input) {
     this.input = input;
-    this.pos = 0;
     this.char = input.charAt(0);
   }
 

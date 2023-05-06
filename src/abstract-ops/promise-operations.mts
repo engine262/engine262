@@ -34,6 +34,9 @@ import {
 
 /** http://tc39.es/ecma262/#sec-promisecapability-records */
 export class PromiseCapabilityRecord {
+  Promise;
+  Resolve;
+  Reject;
   constructor() {
     this.Promise = Value.undefined;
     this.Resolve = Value.undefined;
@@ -43,6 +46,9 @@ export class PromiseCapabilityRecord {
 
 /** http://tc39.es/ecma262/#sec-promisereaction-records */
 export class PromiseReactionRecord {
+  Capability;
+  Type;
+  Handler;
   constructor(O) {
     Assert(O.Capability instanceof PromiseCapabilityRecord
         || O.Capability === Value.undefined);

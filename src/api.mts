@@ -186,6 +186,8 @@ export function evaluateScript(sourceText, realm, hostDefined) {
 }
 
 export class ManagedRealm extends Realm {
+  topContext;
+  active = false;
   constructor(HostDefined = {}) {
     super();
     // CreateRealm()
@@ -208,7 +210,6 @@ export class ManagedRealm extends Realm {
     surroundingAgent.executionContextStack.pop(newContext);
     this.HostDefined = HostDefined;
     this.topContext = newContext;
-    this.active = false;
   }
 
   scope(cb) {
