@@ -12,7 +12,6 @@ import {
   InnerModuleLinking,
   InnerModuleLoading,
   SameValue,
-  GetAsyncCycleRoot,
   AsyncBlockStart,
   PromiseCapabilityRecord,
   GraphLoadingState,
@@ -96,8 +95,9 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
     this.DFSAncestorIndex = init.DFSAncestorIndex;
     this.RequestedModules = init.RequestedModules;
     this.LoadedModules = init.LoadedModules;
-    this.Async = init.Async;
-    this.AsyncEvaluating = init.AsyncEvaluating;
+    this.CycleRoot = init.CycleRoot;
+    this.HasTLA = init.HasTLA;
+    this.AsyncEvaluation = init.AsyncEvaluation;
     this.TopLevelCapability = init.TopLevelCapability;
     this.AsyncParentModules = init.AsyncParentModules;
     this.PendingAsyncDependencies = init.PendingAsyncDependencies;
@@ -158,9 +158,9 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
     let module = this;
     // 3. Assert: module.[[Status]] is linked or evaluated.
     Assert(module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated');
-    // (*TopLevelAwait) 3. If module.[[Status]] is evaluating-async or evaluated, set module to GetAsyncCycleRoot(module).
+    // (*TopLevelAwait) 3. If module.[[Status]] is evaluating-async or evaluated, set module to module.[[CycleRoot]].
     if (module.Status === 'evaluating-async' || module.Status === 'evaluated') {
-      module = GetAsyncCycleRoot(module);
+      module = module.CycleRoot;
     }
     // (*TopLevelAwait) 4. If module.[[TopLevelCapability]] is not undefined, then
     if (module.TopLevelCapability !== Value.undefined) {
@@ -196,8 +196,8 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
       Assert(module.Status === 'evaluating-async' || module.Status === 'evaluated');
       // b. Assert: module.[[EvaluationError]] is undefined.
       Assert(module.EvaluationError === Value.undefined);
-      // c. If module.[[AsyncEvaluating]] is false, then
-      if (module.AsyncEvaluating === Value.false) {
+      // c. If module.[[AsyncEvaluation]] is false, then
+      if (module.AsyncEvaluation === Value.false) {
         // i. Perform ! Call(capability.[[Resolve]], undefined, «undefined»).
         X(Call(capability.Resolve, Value.undefined, [Value.undefined]));
       }
@@ -532,7 +532,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
     // 2. Suspend the currently running execution context.
     // 3. Let moduleContext be module.[[Context]].
     const moduleContext = module.Context;
-    if (module.Async === Value.false) {
+    if (module.HasTLA === Value.false) {
       Assert(capability === undefined);
       // 4. Push moduleContext onto the execution context stack; moduleContext is now the running execution context.
       surroundingAgent.executionContextStack.push(moduleContext);

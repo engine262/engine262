@@ -7,7 +7,7 @@ import {
 } from '../modules.mjs';
 import { Value } from '../value.mjs';
 import {
-  Q, X, NormalCompletion, ThrowCompletion,
+  Q, X, NormalCompletion, ThrowCompletion, AbruptCompletion,
 } from '../completion.mjs';
 import {
   Assert,
@@ -185,21 +185,21 @@ export function InnerModuleEvaluation(module, stack, index) {
       if (requiredModule.Status === 'evaluating') {
         module.DFSAncestorIndex = Math.min(module.DFSAncestorIndex, requiredModule.DFSAncestorIndex);
       } else {
-        requiredModule = GetAsyncCycleRoot(requiredModule);
+        requiredModule = requiredModule.CycleRoot;
         Assert(requiredModule.Status === 'evaluating-async' || requiredModule.Status === 'evaluated');
         if (requiredModule.EvaluationError !== Value.undefined) {
           return module.EvaluationError;
         }
       }
-      if (requiredModule.AsyncEvaluating === Value.true) {
+      if (requiredModule.AsyncEvaluation === Value.true) {
         module.PendingAsyncDependencies += 1;
         requiredModule.AsyncParentModules.push(module);
       }
     }
   }
   if (module.PendingAsyncDependencies > 0) {
-    module.AsyncEvaluating = Value.true;
-  } else if (module.Async === Value.true) {
+    module.AsyncEvaluation = Value.true;
+  } else if (module.HasTLA === Value.true) {
     X(ExecuteAsyncModule(module));
   } else {
     Q(module.ExecuteModule());
@@ -211,7 +211,7 @@ export function InnerModuleEvaluation(module, stack, index) {
     while (done === false) {
       const requiredModule = stack.pop();
       Assert(requiredModule instanceof CyclicModuleRecord);
-      if (requiredModule.AsyncEvaluating === Value.false) {
+      if (requiredModule.AsyncEvaluation === Value.false) {
         requiredModule.Status = 'evaluated';
       } else {
         requiredModule.Status = 'evaluating-async';
@@ -219,6 +219,7 @@ export function InnerModuleEvaluation(module, stack, index) {
       if (requiredModule === module) {
         done = true;
       }
+      requiredModule.CycleRoot = module;
     }
   }
   return index;
@@ -228,10 +229,10 @@ export function InnerModuleEvaluation(module, stack, index) {
 function ExecuteAsyncModule(module) {
   // 1. Assert: module.[[Status]] is evaluating or evaluating-async.
   Assert(module.Status === 'evaluating' || module.Status === 'evaluating-async');
-  // 2. Assert: module.[[Async]] is true.
-  Assert(module.Async === Value.true);
-  // 3. Set module.[[AsyncEvaluating]] to true.
-  module.AsyncEvaluating = Value.true;
+  // 2. Assert: module.[[HasTLA]] is true.
+  Assert(module.HasTLA === Value.true);
+  // 3. Set module.[[AsyncEvaluation]] to true.
+  module.AsyncEvaluation = Value.true;
   // 4. Let capability be ! NewPromiseCapability(%Promise%).
   const capability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
   // 5. Let fulfilledClosure be a new Abstract Closure with no parameters that captures module and performs the following steps when called:
@@ -260,20 +261,23 @@ function ExecuteAsyncModule(module) {
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-getcycleroot */
-export function GetAsyncCycleRoot(module) {
-  Assert(module.Status === 'evaluated' || module.Status === 'evaluating-async');
-  if (module.AsyncParentModules.length === 0) {
-    return module;
+/** https://tc39.es/ecma262/#sec-gather-available-ancestors */
+function GatherAvailableAncestors(module, execList) {
+  for (const m of module.AsyncParentModules) {
+    if (!execList.includes(m) && m.CycleRoot.EvaluationError === Value.undefined) {
+      Assert(m.Status === 'evaluating-async');
+      Assert(m.EvaluationError === Value.undefined);
+      Assert(m.AsyncEvaluation === Value.true);
+      Assert(m.PendingAsyncDependencies > 0);
+      m.PendingAsyncDependencies -= 1;
+      if (m.PendingAsyncDependencies === 0) {
+        execList.push(m);
+        if (m.HasTLA === Value.false) {
+          GatherAvailableAncestors(m, execList);
+        }
+      }
+    }
   }
-  while (module.DFSIndex > module.DFSAncestorIndex) {
-    Assert(module.AsyncParentModules.length > 0);
-    const nextCycleModule = module.AsyncParentModules[0];
-    Assert(nextCycleModule.DFSAncestorIndex === module.DFSAncestorIndex);
-    module = nextCycleModule;
-  }
-  Assert(module.DFSIndex === module.DFSAncestorIndex);
-  return module;
 }
 
 /** http://tc39.es/ecma262/#sec-asyncmodulexecutionfulfilled */
@@ -283,36 +287,39 @@ function AsyncModuleExecutionFulfilled(module) {
     return Value.undefined;
   }
   Assert(module.Status === 'evaluating-async');
+  Assert(module.AsyncEvaluation === Value.true);
   Assert(module.EvaluationError === Value.undefined);
-  module.AsyncEvaluating = Value.false;
-  for (const m of module.AsyncParentModules) {
-    if (module.DFSIndex !== module.DFSAncestorIndex) {
-      Assert(m.DFSAncestorIndex === module.DFSAncestorIndex);
-    }
-    m.PendingAsyncDependencies -= 1;
-    if (m.PendingAsyncDependencies === 0 && m.EvaluationError === Value.undefined) {
-      Assert(m.AsyncEvaluating === Value.true);
-      const cycleRoot = X(GetAsyncCycleRoot(m));
-      if (cycleRoot.EvaluationError !== Value.undefined) {
-        return Value.undefined;
-      }
-      if (m.Async === Value.true) {
-        X(ExecuteAsyncModule(m));
+  module.AsyncEvaluation = Value.false;
+  module.Status = 'evaluated';
+  if (module.TopLevelCapability !== Value.undefined) {
+    Assert(module.CycleRoot === module);
+    X(Call(module.TopLevelCapability.Resolve, Value.undefined, [Value.undefined]));
+  }
+  const execList = [];
+  GatherAvailableAncestors(module, execList);
+  // TODO: Sort this
+  // 10. Let sortedExecList be a List whose elements are the elements of execList, in the order in which they had their [[AsyncEvaluation]] fields set to true in InnerModuleEvaluation.
+  const sortedExecList = execList;
+  Assert(sortedExecList.every((m) => m.AsyncEvaluation === Value.true && m.PendingAsyncDependencies === 0 && m.EvaluationError === Value.undefined));
+
+  for (const m of sortedExecList) {
+    if (m.Status === 'evaluated') {
+      Assert(m.EvaluationError !== Value.undefined);
+    } else if (m.HasTLA === Value.true) {
+      ExecuteAsyncModule(m);
+    } else {
+      const result = m.ExecuteModule();
+      if (result instanceof AbruptCompletion) {
+        AsyncModuleExecutionRejected(m, result.Value);
       } else {
-        const result = m.ExecuteModule();
-        if (result instanceof NormalCompletion) {
-          X(AsyncModuleExecutionFulfilled(m));
-        } else {
-          X(AsyncModuleExecutionRejected(m, result.Value));
+        m.Status = 'evaluated';
+        if (m.TopLevelCapability !== Value.undefined) {
+          Assert(m.CycleRoot === m);
+          X(Call(m.TopLevelCapability.Resolve, Value.undefined, [Value.undefined]));
         }
       }
     }
   }
-  if (module.TopLevelCapability !== Value.undefined) {
-    Assert(module.DFSIndex === module.DFSAncestorIndex);
-    X(Call(module.TopLevelCapability.Resolve, Value.undefined, [Value.undefined]));
-  }
-  return Value.undefined;
 }
 
 /** http://tc39.es/ecma262/#sec-AsyncModuleExecutionRejected */
@@ -322,20 +329,17 @@ function AsyncModuleExecutionRejected(module, error) {
     return Value.undefined;
   }
   Assert(module.Status === 'evaluating-async');
+  Assert(module.AsyncEvaluation === Value.true);
   Assert(module.EvaluationError === Value.undefined);
   module.EvaluationError = ThrowCompletion(error);
-  module.AsyncEvaluating = Value.false;
+  module.Status = 'evaluated';
   for (const m of module.AsyncParentModules) {
-    if (module.DFSIndex !== module.DFSAncestorIndex) {
-      Assert(m.DFSAncestorIndex === module.DFSAncestorIndex);
-    }
-    X(AsyncModuleExecutionRejected(m, error));
+    AsyncModuleExecutionRejected(m, error);
   }
   if (module.TopLevelCapability !== Value.undefined) {
     Assert(module.DFSIndex === module.DFSAncestorIndex);
     X(Call(module.TopLevelCapability.Reject, Value.undefined, [error]));
   }
-  return Value.undefined;
 }
 
 function getRecordWithSpecifier(loadedModules, specifier) {
