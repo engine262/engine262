@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 feee93540bcd10b4469fc363980945d8bdffbb1e
+ * engine262 0.0.1 590edfd772812dc2ed7ba3547d821ca21106fbae
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -1774,20 +1774,18 @@ const SingleCharTokens = {
   '#': Token.PRIVATE_IDENTIFIER
 };
 class Lexer {
-  constructor() {
-    this.currentToken = undefined;
-    this.peekToken = undefined;
-    this.peekAheadToken = undefined;
-    this.position = 0;
-    this.line = 1;
-    this.columnOffset = 0;
-    this.scannedValue = undefined;
-    this.lineTerminatorBeforeNextToken = false;
-    this.positionForNextToken = 0;
-    this.lineForNextToken = 0;
-    this.columnForNextToken = 0;
-    this.escapeIndex = -1;
-  }
+  currentToken;
+  peekToken;
+  peekAheadToken;
+  position = 0;
+  line = 1;
+  columnOffset = 0;
+  scannedValue;
+  lineTerminatorBeforeNextToken = false;
+  positionForNextToken = 0;
+  lineForNextToken = 0;
+  columnForNextToken = 0;
+  escapeIndex = -1;
   advance() {
     this.lineTerminatorBeforeNextToken = false;
     this.escapeIndex = -1;
@@ -10804,17 +10802,18 @@ function getDeclarations(node) {
   }
 }
 class Scope {
+  parser;
+  scopeStack = [];
+  labels = [];
+  arrowInfoStack = [];
+  assignmentInfoStack = [];
+  exports = new Set();
+  undefinedExports = new Map();
+  privateScope;
+  undefinedPrivateAccesses = [];
+  flags = 0;
   constructor(parser) {
     this.parser = parser;
-    this.scopeStack = [];
-    this.labels = [];
-    this.arrowInfoStack = [];
-    this.assignmentInfoStack = [];
-    this.exports = new Set();
-    this.undefinedExports = new Map();
-    this.privateScope = undefined;
-    this.undefinedPrivateAccesses = [];
-    this.flags = 0;
   }
   hasReturn() {
     return (this.flags & Flag.return) !== 0;
@@ -11579,14 +11578,15 @@ const isIdentifierContinue = c => c && /\p{ID_Continue}/u.test(c);
 const PLUS_U = 1 << 0;
 const PLUS_N = 1 << 1;
 class RegExpParser {
+  source;
+  position = 0;
+  capturingGroups = [];
+  groupSpecifiers = new Map();
+  decimalEscapes = [];
+  groupNameRefs = [];
+  state = 0;
   constructor(source) {
     this.source = source;
-    this.position = 0;
-    this.capturingGroups = [];
-    this.groupSpecifiers = new Map();
-    this.decimalEscapes = [];
-    this.groupNameRefs = [];
-    this.state = 0;
   }
   scope(flags, f) {
     const oldState = this.state;
@@ -15122,6 +15122,11 @@ class LanguageParser extends ModuleParser {
 
 // @ts-nocheck
 class Parser extends LanguageParser {
+  source;
+  specifier;
+  earlyErrors;
+  state;
+  scope = new Scope(this);
   constructor({
     source,
     specifier,
@@ -16298,6 +16303,8 @@ var unicodeCaseFoldingSimple = /*@__PURE__*/getDefaultExportFromCjs(symbols);
 
 /** http://tc39.es/ecma262/#sec-pattern */
 class State {
+  endIndex;
+  captures;
   constructor(endIndex, captures) {
     this.endIndex = endIndex;
     this.captures = captures;
@@ -16332,6 +16339,8 @@ class CharSet {
   }
 }
 class UnionCharSet extends CharSet {
+  concrete;
+  fns;
   constructor(concrete, fns) {
     super();
     this.concrete = concrete;
@@ -16350,6 +16359,7 @@ class UnionCharSet extends CharSet {
   }
 }
 class ConcreteCharSet extends CharSet {
+  concrete;
   constructor(items) {
     super();
     this.concrete = items instanceof Set ? items : new Set(items);
@@ -16366,6 +16376,7 @@ class ConcreteCharSet extends CharSet {
   }
 }
 class VirtualCharSet extends CharSet {
+  fn;
   constructor(fn) {
     super();
     this.fn = fn;
@@ -16375,6 +16386,8 @@ class VirtualCharSet extends CharSet {
   }
 }
 class Range {
+  startIndex;
+  endIndex;
   constructor(startIndex, endIndex) {
     Assert(startIndex <= endIndex, "startIndex <= endIndex");
     this.startIndex = startIndex;
@@ -19685,6 +19698,11 @@ function getUnicodePropertyValueSet(property, value) {
 
 /** http://tc39.es/ecma262/#sec-privateelement-specification-type */
 class PrivateElementRecord {
+  Key;
+  Kind;
+  Value;
+  Get;
+  Set;
   constructor(init) {
     this.Key = init.Key;
     this.Kind = init.Kind;
@@ -20077,6 +20095,8 @@ function MethodDefinitionEvaluation(node, object, enumerable) {
 }
 
 class ClassFieldDefinitionRecord {
+  Name;
+  Initializer;
   constructor(init) {
     this.Name = init.Name;
     this.Initializer = init.Initializer;
@@ -20504,6 +20524,7 @@ function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpression, n
 }
 
 class ClassStaticBlockDefinitionRecord {
+  BodyFunction;
   constructor({
     BodyFunction
   }) {
@@ -20549,6 +20570,8 @@ function ClassStaticBlockDefinitionEvaluation({
 
 // #resolvedbinding-record
 class ResolvedBindingRecord {
+  Module;
+  BindingName;
   constructor({
     Module,
     BindingName
@@ -20565,6 +20588,10 @@ class ResolvedBindingRecord {
 
 /** http://tc39.es/ecma262/#sec-abstract-module-records */
 class AbstractModuleRecord {
+  Realm;
+  Environment;
+  Namespace;
+  HostDefined;
   constructor({
     Realm,
     Environment,
@@ -20585,6 +20612,17 @@ class AbstractModuleRecord {
 
 /** http://tc39.es/ecma262/#sec-cyclic-module-records */
 class CyclicModuleRecord extends AbstractModuleRecord {
+  Status;
+  EvaluationError;
+  DFSIndex;
+  DFSAncestorIndex;
+  RequestedModules;
+  LoadedModules;
+  Async;
+  AsyncEvaluating;
+  TopLevelCapability;
+  AsyncParentModules;
+  PendingAsyncDependencies;
   constructor(init) {
     super(init);
     this.Status = init.Status;
@@ -20738,6 +20776,13 @@ class CyclicModuleRecord extends AbstractModuleRecord {
 
 /** http://tc39.es/ecma262/#sec-source-text-module-records */
 class SourceTextModuleRecord extends CyclicModuleRecord {
+  ImportMeta;
+  ECMAScriptCode;
+  Context;
+  ImportEntries;
+  LocalExportEntries;
+  IndirectExportEntries;
+  StarExportEntries;
   constructor(init) {
     super(init);
     this.ImportMeta = init.ImportMeta;
@@ -21097,6 +21142,8 @@ class SourceTextModuleRecord extends CyclicModuleRecord {
 
 /** http://tc39.es/ecma262/#sec-synthetic-module-records */
 class SyntheticModuleRecord extends AbstractModuleRecord {
+  ExportNames;
+  EvaluationSteps;
   constructor(init) {
     super(init);
     this.ExportNames = init.ExportNames;
@@ -21195,9 +21242,7 @@ class SyntheticModuleRecord extends AbstractModuleRecord {
 
 /** http://tc39.es/ecma262/#sec-environment-records */
 class EnvironmentRecord {
-  constructor() {
-    this.OuterEnv = undefined;
-  }
+  OuterEnv;
 
   // NON-SPEC
   mark(m) {
@@ -21207,10 +21252,7 @@ class EnvironmentRecord {
 
 /** http://tc39.es/ecma262/#sec-declarative-environment-records */
 class DeclarativeEnvironmentRecord extends EnvironmentRecord {
-  constructor() {
-    super();
-    this.bindings = new ValueMap();
-  }
+  bindings = new ValueMap();
 
   /** http://tc39.es/ecma262/#sec-declarative-environment-records-hasbinding-n */
   HasBinding(N) {
@@ -21385,11 +21427,8 @@ class DeclarativeEnvironmentRecord extends EnvironmentRecord {
 
 /** http://tc39.es/ecma262/#sec-object-environment-records */
 class ObjectEnvironmentRecord extends EnvironmentRecord {
-  constructor() {
-    super();
-    this.BindingObject = undefined;
-    this.IsWithEnvironment = undefined;
-  }
+  BindingObject;
+  IsWithEnvironment;
 
   /** http://tc39.es/ecma262/#sec-object-environment-records-hasbinding-n */
   HasBinding(N) {
@@ -21582,13 +21621,10 @@ class ObjectEnvironmentRecord extends EnvironmentRecord {
 
 /** http://tc39.es/ecma262/#sec-function-environment-records */
 class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
-  constructor() {
-    super();
-    this.ThisValue = undefined;
-    this.ThisBindingStatus = undefined;
-    this.FunctionObject = undefined;
-    this.NewTarget = undefined;
-  }
+  ThisValue;
+  ThisBindingStatus;
+  FunctionObject;
+  NewTarget;
 
   /** http://tc39.es/ecma262/#sec-bindthisvalue */
   BindThisValue(V) {
@@ -21673,13 +21709,10 @@ class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
 
 /** http://tc39.es/ecma262/#sec-global-environment-records */
 class GlobalEnvironmentRecord extends EnvironmentRecord {
-  constructor() {
-    super();
-    this.ObjectRecord = undefined;
-    this.GlobalThisValue = undefined;
-    this.DeclarativeRecord = undefined;
-    this.VarNames = undefined;
-  }
+  ObjectRecord;
+  GlobalThisValue;
+  DeclarativeRecord;
+  VarNames;
 
   /** http://tc39.es/ecma262/#sec-global-environment-records-hasbinding-n */
   HasBinding(N) {
@@ -22307,6 +22340,8 @@ function NewModuleEnvironment(E) {
   return env;
 }
 class PrivateEnvironmentRecord {
+  OuterPrivateEnvironment;
+  Names;
   constructor(init) {
     this.OuterPrivateEnvironment = init.OuterPrivateEnvironment;
     this.Names = init.Names;
@@ -23273,6 +23308,13 @@ class ExecutionContextStack extends Array {
 let agentSignifier = 0;
 /** http://tc39.es/ecma262/#sec-agents */
 class Agent {
+  AgentRecord;
+  // #execution-context-stack
+  executionContextStack = new ExecutionContextStack();
+  // NON-SPEC
+  jobQueue = [];
+  scheduledForCleanup = new Set();
+  hostDefinedOptions;
   constructor(options = {}) {
     // #table-agent-record
     const Signifier = agentSignifier;
@@ -23286,13 +23328,6 @@ class Agent {
       CandidateExecution: undefined,
       KeptAlive: new Set()
     };
-
-    // #execution-context-stack
-    this.executionContextStack = new ExecutionContextStack();
-
-    // NON-SPEC
-    this.jobQueue = [];
-    this.scheduledForCleanup = new Set();
     this.hostDefinedOptions = {
       ...options,
       features: FEATURES.reduce((acc, {
@@ -23400,20 +23435,17 @@ function setSurroundingAgent(a) {
 
 /** http://tc39.es/ecma262/#sec-execution-contexts */
 class ExecutionContext {
-  constructor() {
-    this.codeEvaluationState = undefined;
-    this.Function = undefined;
-    this.Realm = undefined;
-    this.ScriptOrModule = undefined;
-    this.VariableEnvironment = undefined;
-    this.LexicalEnvironment = undefined;
-    this.PrivateEnvironment = undefined;
-
-    // NON-SPEC
-    this.callSite = new CallSite(this);
-    this.promiseCapability = undefined;
-    this.poppedForTailCall = false;
-  }
+  codeEvaluationState;
+  Function;
+  Realm;
+  ScriptOrModule;
+  VariableEnvironment;
+  LexicalEnvironment;
+  PrivateEnvironment;
+  // NON-SPEC
+  callSite = new CallSite(this);
+  promiseCapability;
+  poppedForTailCall = false;
   copy() {
     const e = new ExecutionContext();
     e.codeEvaluationState = this.codeEvaluationState;
@@ -24940,6 +24972,8 @@ function AsyncFunctionStart(promiseCapability, asyncFunctionBody) {
 
 /** http://tc39.es/ecma262/#sec-asyncgeneratorrequest-records */
 class AsyncGeneratorRequestRecord {
+  Completion;
+  Capability;
   constructor(completion, promiseCapability) {
     this.Completion = completion;
     this.Capability = promiseCapability;
@@ -28503,15 +28537,17 @@ function ModuleNamespaceCreate(module, exports) {
 
 /** https://tc39.es/ecma262/#graphloadingstate-record */
 class GraphLoadingState {
+  PromiseCapability;
+  HostDefined;
+  IsLoading = true;
+  Visited = new Set();
+  PendingModules = 1;
   constructor({
     PromiseCapability,
     HostDefined
   }) {
     this.PromiseCapability = PromiseCapability;
     this.HostDefined = HostDefined;
-    this.IsLoading = true;
-    this.Visited = new Set();
-    this.PendingModules = 1;
   }
 }
 
@@ -30479,6 +30515,9 @@ function PrivateFieldAdd(P, O, value) {
 
 /** http://tc39.es/ecma262/#sec-promisecapability-records */
 class PromiseCapabilityRecord {
+  Promise;
+  Resolve;
+  Reject;
   constructor() {
     this.Promise = _Value.undefined;
     this.Resolve = _Value.undefined;
@@ -30488,6 +30527,9 @@ class PromiseCapabilityRecord {
 
 /** http://tc39.es/ecma262/#sec-promisereaction-records */
 class PromiseReactionRecord {
+  Capability;
+  Type;
+  Handler;
   constructor(O) {
     Assert(O.Capability instanceof PromiseCapabilityRecord || O.Capability === _Value.undefined, "O.Capability instanceof PromiseCapabilityRecord\n        || O.Capability === Value.undefined");
     Assert(O.Type === 'Fulfill' || O.Type === 'Reject', "O.Type === 'Fulfill' || O.Type === 'Reject'");
@@ -48218,9 +48260,11 @@ const NUMERIC = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 const VALID_HEX = [...NUMERIC, 'A', 'B', 'C', 'D', 'E', 'F', 'a', 'b', 'c', 'd', 'e', 'f'];
 const ESCAPABLE = ['"', '\\', '/', 'b', 'f', 'n', 'r', 't'];
 class JSONValidator {
+  input;
+  pos = 0;
+  char;
   constructor(input) {
     this.input = input;
-    this.pos = 0;
     this.char = input.charAt(0);
   }
   validate() {
@@ -53176,15 +53220,13 @@ function bootstrapFinalizationRegistry(realmRec) {
 
 /** http://tc39.es/ecma262/#sec-code-realms */
 class Realm {
-  constructor() {
-    this.Intrinsics = undefined;
-    this.GlobalObject = undefined;
-    this.GlobalEnv = undefined;
-    this.TemplateMap = undefined;
-    this.LoadedModules = undefined;
-    this.HostDefined = undefined;
-    this.randomState = undefined;
-  }
+  Intrinsics;
+  GlobalObject;
+  GlobalEnv;
+  TemplateMap;
+  LoadedModules;
+  HostDefined;
+  randomState;
   mark(m) {
     m(this.GlobalObject);
     m(this.GlobalEnv);
@@ -56642,6 +56684,8 @@ function evaluateScript(sourceText, realm, hostDefined) {
   return EnsureCompletion(ScriptEvaluation(s));
 }
 class ManagedRealm extends Realm {
+  topContext;
+  active = false;
   constructor(HostDefined = {}) {
     super();
     // CreateRealm()
@@ -56664,7 +56708,6 @@ class ManagedRealm extends Realm {
     surroundingAgent.executionContextStack.pop(newContext);
     this.HostDefined = HostDefined;
     this.topContext = newContext;
-    this.active = false;
   }
   scope(cb) {
     if (this.active) {
