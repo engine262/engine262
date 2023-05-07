@@ -3,11 +3,9 @@ import { surroundingAgent } from '../engine.mjs';
 import {
   SameValue,
   RequireInternalSlot,
+  HasIdentity,
 } from '../abstract-ops/all.mjs';
-import {
-  ObjectValue,
-  Value,
-} from '../value.mjs';
+import { Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
@@ -20,7 +18,8 @@ function WeakMapProto_delete([key = Value.undefined], { thisValue }) {
   // 3. Let entries be the List that is M.[[WeakMapData]].
   const entries = M.WeakMapData;
   // 4. If Type(key) is not Object, return false.
-  if (!(key instanceof ObjectValue)) {
+  // (*SymbolsAsWeakMapKeys) 4. If HasIdentity(key) is false, return false.
+  if (HasIdentity(key) === Value.false) {
     return Value.false;
   }
   // 5. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
@@ -49,7 +48,8 @@ function WeakMapProto_get([key = Value.undefined], { thisValue }) {
   // 3. Let entries be the List that is M.[[WeakMapData]].
   const entries = M.WeakMapData;
   // 4. If Type(key) is not Object, return undefined.
-  if (!(key instanceof ObjectValue)) {
+  // (*SymbolsAsWeakMapKeys) 4. If HasIdentity(key) is false, return undefined.
+  if (HasIdentity(key) === Value.false) {
     return Value.undefined;
   }
   // 5. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
@@ -72,7 +72,8 @@ function WeakMapProto_has([key = Value.undefined], { thisValue }) {
   // 3. Let entries be the List that is M.[[WeakMapData]].
   const entries = M.WeakMapData;
   // 4. If Type(key) is not Object, return false.
-  if (!(key instanceof ObjectValue)) {
+  // (*SymbolsAsWeakMapKeys) 4. If HasIdentity(key) is false, return false.
+  if (HasIdentity(key) === Value.false) {
     return Value.false;
   }
   // 5. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
@@ -95,7 +96,8 @@ function WeakMapProto_set([key = Value.undefined, value = Value.undefined], { th
   // 3. Let entries be the List that is M.[[WeakMapData]].
   const entries = M.WeakMapData;
   // 4. If Type(key) is not Object, throw a TypeError exception.
-  if (!(key instanceof ObjectValue)) {
+  // (*SymbolsAsWeakMapKeys) 4. If HasIdentity(key) is false, throw a TypeError exception.
+  if (HasIdentity(key) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'WeakCollectionNotObject', key);
   }
   // 5. For each Record { [[Key]], [[Value]] } p that is an element of entries, do

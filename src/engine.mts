@@ -31,6 +31,11 @@ export const FEATURES = Object.freeze([
     flag: 'is-usv-string',
     url: 'https://github.com/tc39/proposal-is-usv-string',
   },
+  {
+    name: 'Symbols as WeakMap keys',
+    flag: 'symbols-as-weakmap-keys',
+    url: 'https://github.com/tc39/proposal-symbols-as-weakmap-keys',
+  },
 ].map(Object.freeze));
 
 class ExecutionContextStack extends Array {

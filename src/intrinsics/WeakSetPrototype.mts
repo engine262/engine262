@@ -3,11 +3,9 @@ import { surroundingAgent } from '../engine.mjs';
 import {
   SameValue,
   RequireInternalSlot,
+  HasIdentity,
 } from '../abstract-ops/all.mjs';
-import {
-  ObjectValue,
-  Value,
-} from '../value.mjs';
+import { Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
@@ -18,7 +16,8 @@ function WeakSetProto_add([value = Value.undefined], { thisValue }) {
   // 2. Perform ? RequireInternalSlot(S, [[WeakSetData]]).
   Q(RequireInternalSlot(S, 'WeakSetData'));
   // 3. If Type(value) is not Object, throw a TypeError exception.
-  if (!(value instanceof ObjectValue)) {
+  // (*SymbolsAsWeakMapKeys) 3. If HasIdentity(value) is false, throw a TypeError exception.
+  if (HasIdentity(value) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'WeakCollectionNotObject', value);
   }
   // 4. Let entries be the List that is S.[[WeakSetData]].
@@ -44,7 +43,8 @@ function WeakSetProto_delete([value = Value.undefined], { thisValue }) {
   // 2. Perform ? RequireInternalSlot(S, [[WeakSetData]]).
   Q(RequireInternalSlot(S, 'WeakSetData'));
   // 3. If Type(value) is not Object, return false.
-  if (!(value instanceof ObjectValue)) {
+  // (*SymbolsAsWeakMapKeys) 3. If HasIdentity(value) is false, return false.
+  if (HasIdentity(value) === Value.false) {
     return Value.false;
   }
   // 4. Let entries be the List that is S.[[WeakSetData]].
@@ -73,7 +73,8 @@ function WeakSetProto_has([value = Value.undefined], { thisValue }) {
   // 3. Let entries be the List that is S.[[WeakSetData]].
   const entries = S.WeakSetData;
   // 4. If Type(value) is not Object, return false.
-  if (!(value instanceof ObjectValue)) {
+  // (*SymbolsAsWeakMapKeys) 4. If HasIdentity(value) is false, return false.
+  if (HasIdentity(value) === Value.false) {
     return Value.false;
   }
   // 5. For each e that is an element of entries, do
