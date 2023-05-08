@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 590edfd772812dc2ed7ba3547d821ca21106fbae
+ * engine262 0.0.1 29a28e5329bfe814199d3beafbad19e7a28c0485
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -599,7 +599,7 @@
   }
 
   // @ts-nocheck
-  /** http://tc39.es/ecma262/#sec-static-semantics-isstatic */
+  /** https://tc39.es/ecma262/#sec-static-semantics-isstatic */
   // ClassElement :
   //   MethodDefinition
   //   `static` MethodDefinition
@@ -610,7 +610,7 @@
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-static-semantics-nonconstructorelements */
+  /** https://tc39.es/ecma262/#sec-static-semantics-nonconstructorelements */
   // ClassElementList :
   //   ClassElement
   //   ClassElementList ClassElement
@@ -625,7 +625,7 @@
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-static-semantics-constructormethod */
+  /** https://tc39.es/ecma262/#sec-static-semantics-constructormethod */
   // ClassElementList :
   //   ClassElement
   //   ClassElementList ClassElement
@@ -652,14 +652,14 @@
   }
 
   // @ts-nocheck
-  /** http://tc39.es/ecma262/#sec-numericvalue */
+  /** https://tc39.es/ecma262/#sec-numericvalue */
   function NumericValue(node) {
     return exports.Value(node.value);
   }
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-isanonymousfunctiondefinition */
+  /** https://tc39.es/ecma262/#sec-isanonymousfunctiondefinition */
   function IsAnonymousFunctionDefinition(expr) {
     // 1. If IsFunctionDefinition of expr is false, return false.
     if (!IsFunctionDefinition(expr)) {
@@ -1332,7 +1332,7 @@
   }
 
   // @ts-nocheck
-  /** http://tc39.es/ecma262/#sec-static-semantics-isstrict */
+  /** https://tc39.es/ecma262/#sec-static-semantics-isstrict */
   function IsStrict({
     ScriptBody
   }) {
@@ -1341,14 +1341,14 @@
   }
 
   // @ts-nocheck
-  /** http://tc39.es/ecma262/#sec-static-semantics-bodytext */
+  /** https://tc39.es/ecma262/#sec-static-semantics-bodytext */
   //  RegularExpressionLiteral :: `/` RegularExpressionBody `/` RegularExpressionFlags
   function BodyText(RegularExpressionLiteral) {
     return RegularExpressionLiteral.RegularExpressionBody;
   }
 
   // @ts-nocheck
-  /** http://tc39.es/ecma262/#sec-static-semantics-flagtext */
+  /** https://tc39.es/ecma262/#sec-static-semantics-flagtext */
   //   RegularExpressionLiteral :: `/` RegularExpressionBody `/` RegularExpressionFlags
   function FlagText(RegularExpressionLiteral) {
     return RegularExpressionLiteral.RegularExpressionFlags;
@@ -1541,7 +1541,7 @@
   }
 
   // @ts-nocheck
-  /** http://tc39.es/ecma262/#sec-importedlocalnames */
+  /** https://tc39.es/ecma262/#sec-importedlocalnames */
   function ImportedLocalNames(importEntries) {
     // 1. Let localNames be a new empty List.
     const localNames = [];
@@ -2864,7 +2864,7 @@
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-utf16decodesurrogatepair */
+  /** https://tc39.es/ecma262/#sec-utf16decodesurrogatepair */
   function UTF16SurrogatePairToCodePoint(lead, trail) {
     // 1. Assert: lead is a leading surrogate and trail is a trailing surrogate.
     Assert(isLeadingSurrogate(lead) && isTrailingSurrogate(trail), "isLeadingSurrogate(lead) && isTrailingSurrogate(trail)");
@@ -2874,7 +2874,7 @@
     return cp;
   }
 
-  /** http://tc39.es/ecma262/#sec-codepointat */
+  /** https://tc39.es/ecma262/#sec-codepointat */
   function CodePointAt(string, position) {
     // 1 .Let size be the length of string.
     const size = string.length;
@@ -2929,7 +2929,7 @@
     };
   }
 
-  /** http://tc39.es/ecma262/#sec-stringtocodepoints */
+  /** https://tc39.es/ecma262/#sec-stringtocodepoints */
   function StringToCodePoints(string) {
     // 1. Let codePoints be a new empty List.
     const codePoints = [];
@@ -2958,7 +2958,7 @@
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-codepointstostring */
+  /** https://tc39.es/ecma262/#sec-codepointstostring */
   function CodePointsToString(text) {
     // 1. Let result be the empty String.
     let result = '';
@@ -3005,7 +3005,7 @@
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-static-semantics-privateboundidentifiers */
+  /** https://tc39.es/ecma262/#sec-static-semantics-privateboundidentifiers */
   function PrivateBoundIdentifiers(node) {
     if (Array.isArray(node)) {
       return node.flatMap(n => PrivateBoundIdentifiers(n));
@@ -3025,7 +3025,7 @@
   }
 
   // @ts-nocheck
-  /** http://tc39.es/ecma262/#sec-static-semantics-containsarguments */
+  /** https://tc39.es/ecma262/#sec-static-semantics-containsarguments */
   function ContainsArguments(node) {
     switch (node.type) {
       case 'IdentifierReference':
@@ -3076,7 +3076,7 @@
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-identifiers-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-identifiers-runtime-semantics-evaluation */
   // IdentifierReference :
   //   Identifier
   //   `yield`
@@ -3088,7 +3088,7 @@
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-this-keyword-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-this-keyword-runtime-semantics-evaluation */
   // PrimaryExpression : `this`
   function Evaluate_This(_PrimaryExpression) {
     return ResolveThisBinding();
@@ -3096,7 +3096,7 @@
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-literals-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-literals-runtime-semantics-evaluation */
   // Literal :
   //   NullLiteral
   //   BooleanLiteral
@@ -3127,7 +3127,7 @@
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-class-definitions-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-class-definitions-runtime-semantics-evaluation */
   // ClassExpression :
   //   `class` ClassTail
   //   `class` BindingIdentifier ClassTail
@@ -3724,7 +3724,7 @@
     return F;
   }
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-definemethod */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-definemethod */
   function* DefineMethod(MethodDefinition, object, functionPrototype) {
     const {
       ClassElementName,
@@ -3769,7 +3769,7 @@
     };
   }
 
-  /** http://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-evaluation */
   // PropertyName :
   //   LiteralPropertyName
   //   ComputedPropertyName
@@ -3836,7 +3836,7 @@
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-addition-operator-plus-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-addition-operator-plus-runtime-semantics-evaluation */
   //   AdditiveExpression : AdditiveExpression + MultiplicativeExpression
   function* Evaluate_AdditiveExpression_Plus({
     AdditiveExpression,
@@ -3846,8 +3846,8 @@
     return yield* EvaluateStringOrNumericBinaryExpression(AdditiveExpression, '+', MultiplicativeExpression);
   }
 
-  /** http://tc39.es/ecma262/#sec-subtraction-operator-minus-runtime-semantics-evaluation */
-  Evaluate_AdditiveExpression_Plus.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-addition-operator-plus-runtime-semantics-evaluation';
+  /** https://tc39.es/ecma262/#sec-subtraction-operator-minus-runtime-semantics-evaluation */
+  Evaluate_AdditiveExpression_Plus.section = 'https://tc39.es/ecma262/#sec-addition-operator-plus-runtime-semantics-evaluation';
   function* Evaluate_AdditiveExpression_Minus({
     AdditiveExpression,
     MultiplicativeExpression
@@ -3855,7 +3855,7 @@
     // 1. Return ? EvaluateStringOrNumericBinaryExpression(AdditiveExpression, -, MultiplicativeExpression).
     return yield* EvaluateStringOrNumericBinaryExpression(AdditiveExpression, '-', MultiplicativeExpression);
   }
-  Evaluate_AdditiveExpression_Minus.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-subtraction-operator-minus-runtime-semantics-evaluation';
+  Evaluate_AdditiveExpression_Minus.section = 'https://tc39.es/ecma262/#sec-subtraction-operator-minus-runtime-semantics-evaluation';
   function* Evaluate_AdditiveExpression(AdditiveExpression) {
     switch (AdditiveExpression.operator) {
       case '+':
@@ -3867,7 +3867,7 @@
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-destructuring-assignment */
+  /** https://tc39.es/ecma262/#sec-destructuring-assignment */
   function refineLeftHandSideExpression(node, type) {
     switch (node.type) {
       case 'ArrayLiteral':
@@ -3974,7 +3974,7 @@
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-assignment-operators-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-assignment-operators-runtime-semantics-evaluation */
   //   AssignmentExpression :
   //     LeftHandSideExpression `=` AssignmentExpression
   //     LeftHandSideExpression AssignmentOperator AssignmentExpression
@@ -4293,7 +4293,7 @@
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-binary-bitwise-operators-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-binary-bitwise-operators-runtime-semantics-evaluation */
   //   BitwiseANDExpression : BitwiseANDExpression `&` EqualityExpression
   //   BitwiseXORExpression : BitwiseXORExpression `^` BitwiseANDExpression
   //   BitwiseORExpression : BitwiseORExpression `|` BitwiseXORExpression
@@ -4307,7 +4307,7 @@
     return yield* EvaluateStringOrNumericBinaryExpression(A, operator, B);
   }
 
-  /** http://tc39.es/ecma262/#sec-binary-logical-operators-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-binary-logical-operators-runtime-semantics-evaluation */
   //   CoalesceExpression :
   //     CoalesceExpressionHead `??` BitwiseORExpression
   function* Evaluate_CoalesceExpression({
@@ -4340,7 +4340,7 @@
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-empty-statement-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-empty-statement-runtime-semantics-evaluation */
   //   EmptyStatement : `;`
   function Evaluate_EmptyStatement(_EmptyStatement) {
     // 1. Return NormalCompletion(empty).
@@ -4349,7 +4349,7 @@
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-exp-operator-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-exp-operator-runtime-semantics-evaluation */
   // ExponentiationExpression : UpdateExpression ** ExponentiationExpression
   function* Evaluate_ExponentiationExpression({
     UpdateExpression,
@@ -4359,7 +4359,7 @@
     return yield* EvaluateStringOrNumericBinaryExpression(UpdateExpression, '**', ExponentiationExpression);
   }
 
-  /** http://tc39.es/ecma262/#sec-if-statement-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-if-statement-runtime-semantics-evaluation */
   // IfStatement :
   //   `if` `(` Expression `)` Statement `else` Statement
   //   `if` `(` Expression `)` Statement
@@ -4409,7 +4409,7 @@
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-import-calls */
+  /** https://tc39.es/ecma262/#sec-import-calls */
   // ImportCall : `import` `(` AssignmentExpression `)`
   function* Evaluate_ImportCall({
     AssignmentExpression
@@ -4470,7 +4470,7 @@
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-multiplicative-operators-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-multiplicative-operators-runtime-semantics-evaluation */
   //   MultiplicativeExpression :
   //     MultiplicativeExpression MultiplicativeOperator ExponentiationExpression
   function* Evaluate_MultiplicativeExpression({
@@ -4484,7 +4484,7 @@
     return yield* EvaluateStringOrNumericBinaryExpression(MultiplicativeExpression, opText, ExponentiationExpression);
   }
 
-  /** http://tc39.es/ecma262/#sec-throw-statement-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-throw-statement-runtime-semantics-evaluation */
   // ThrowStatement : `throw` Expression `;`
   function* Evaluate_ThrowStatement({
     Expression
@@ -4890,7 +4890,7 @@
     return NormalCompletion(undefined);
   }
 
-  /** http://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-instantiatefunctionobject */
+  /** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-instantiatefunctionobject */
   //   FunctionDeclaration :
   //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
   //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
@@ -4920,7 +4920,7 @@
     return F;
   }
 
-  /** http://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-instantiatefunctionobject */
+  /** https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-instantiatefunctionobject */
   //   GeneratorDeclaration :
   //     `function` `*` BindingIdentifier `(` FormalParameters `)` `{` GeneratorBody `}`
   //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
@@ -4968,7 +4968,7 @@
     return F;
   }
 
-  /** http://tc39.es/ecma262/#sec-async-function-definitions-InstantiateFunctionObject */
+  /** https://tc39.es/ecma262/#sec-async-function-definitions-InstantiateFunctionObject */
   //  AsyncFunctionDeclaration :
   //    `async` `function` BindingIdentifier `(` FormalParameters `)` `{` AsyncFunctionBody `}`
   //    `async` `function` `(` FormalParameters `)` `{` AsyncFunctionBody `}`
@@ -4996,7 +4996,7 @@
     return F;
   }
 
-  /** http://tc39.es/ecma262/#sec-asyncgenerator-definitions-evaluatebody */
+  /** https://tc39.es/ecma262/#sec-asyncgenerator-definitions-evaluatebody */
   //  AsyncGeneratorDeclaration :
   //    `async` `function` `*` BindingIdentifier `(` FormalParameters`)` `{` AsyncGeneratorBody `}`
   //    `async` `function` `*` `(` FormalParameters`)` `{` AsyncGeneratorBody `}`
@@ -5060,7 +5060,7 @@
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-script-semantics-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-script-semantics-runtime-semantics-evaluation */
   // Script :
   //   [empty]
   //   ScriptBody
@@ -5080,7 +5080,7 @@
     return Evaluate_StatementList(ScriptBody.StatementList);
   }
 
-  /** http://tc39.es/ecma262/#sec-block-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-block-runtime-semantics-evaluation */
   function* Evaluate_StatementList(StatementList) {
     if (StatementList.length === 0) {
       return NormalCompletion(undefined);
@@ -5109,7 +5109,7 @@
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-expression-statement-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-expression-statement-runtime-semantics-evaluation */
   //   ExpressionStatement :
   //     Expression `;`
   function* Evaluate_ExpressionStatement({
@@ -5121,7 +5121,7 @@
     return GetValue(exprRef);
   }
 
-  /** http://tc39.es/ecma262/#sec-variable-statement-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-variable-statement-runtime-semantics-evaluation */
   //   VariableDeclaration :
   //     BindingIdentifier
   //     BindingIdentifier Initializer
@@ -5190,12 +5190,12 @@
     return yield* BindingInitialization(BindingPattern, rval, exports.Value.undefined);
   }
 
-  /** http://tc39.es/ecma262/#sec-variable-statement-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-variable-statement-runtime-semantics-evaluation */
   //   VariableDeclarationList : VariableDeclarationList `,` VariableDeclaration
   //
   // (implicit)
   //   VariableDeclarationList : VariableDeclaration
-  Evaluate_VariableDeclaration.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-variable-statement-runtime-semantics-evaluation';
+  Evaluate_VariableDeclaration.section = 'https://tc39.es/ecma262/#sec-variable-statement-runtime-semantics-evaluation';
   function* Evaluate_VariableDeclarationList(VariableDeclarationList) {
     let next;
     for (const VariableDeclaration of VariableDeclarationList) {
@@ -5212,7 +5212,7 @@
     return next;
   }
 
-  /** http://tc39.es/ecma262/#sec-variable-statement-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-variable-statement-runtime-semantics-evaluation */
   //   VariableStatement : `var` VariableDeclarationList `;`
   function* Evaluate_VariableStatement({
     VariableDeclarationList
@@ -5231,7 +5231,7 @@
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluation */
   // FunctionDeclaration :
   //   function BindingIdentifier ( FormalParameters ) { FunctionBody }
   //   function ( FormalParameters ) { FunctionBody }
@@ -5240,7 +5240,7 @@
     return NormalCompletion(undefined);
   }
 
-  /** http://tc39.es/ecma262/#sec-function-calls-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-function-calls-runtime-semantics-evaluation */
   // CallExpression :
   //   CoverCallExpressionAndAsyncArrowHead
   //   CallExpression Arguments
@@ -5301,7 +5301,7 @@
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-evaluatecall */
+  /** https://tc39.es/ecma262/#sec-evaluatecall */
   function* EvaluateCall(func, ref, args, tailPosition) {
     // 1. If Type(ref) is Reference, then
     let thisValue;
@@ -5357,7 +5357,7 @@
     return result;
   }
 
-  /** http://tc39.es/ecma262/#sec-gettemplateobjec */
+  /** https://tc39.es/ecma262/#sec-gettemplateobjec */
   function GetTemplateObject(templateLiteral) {
     // 1. Let realm be the current Realm Record.
     const realm = exports.surroundingAgent.currentRealmRecord;
@@ -5473,12 +5473,12 @@
     return template;
   }
 
-  /** http://tc39.es/ecma262/#sec-template-literals-runtime-semantics-argumentlistevaluation */
+  /** https://tc39.es/ecma262/#sec-template-literals-runtime-semantics-argumentlistevaluation */
   //   TemplateLiteral : NoSubstitutionTemplate
   //
   // https://github.com/tc39/ecma262/pull/1402
   //   TemplateLiteral : SubstitutionTemplate
-  GetTemplateObject.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-gettemplateobjec';
+  GetTemplateObject.section = 'https://tc39.es/ecma262/#sec-gettemplateobjec';
   function* ArgumentListEvaluation_TemplateLiteral(TemplateLiteral) {
     switch (true) {
       case TemplateLiteral.TemplateSpanList.length === 1:
@@ -5513,7 +5513,7 @@
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-argument-lists-runtime-semantics-argumentlistevaluation */
+  /** https://tc39.es/ecma262/#sec-argument-lists-runtime-semantics-argumentlistevaluation */
   //   Arguments : `(` `)`
   //   ArgumentList :
   //     AssignmentExpression
@@ -5525,7 +5525,7 @@
   //   Arguments :
   //     `(` ArgumentList `)`
   //     `(` ArgumentList `,` `)`
-  ArgumentListEvaluation_TemplateLiteral.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-template-literals-runtime-semantics-argumentlistevaluation';
+  ArgumentListEvaluation_TemplateLiteral.section = 'https://tc39.es/ecma262/#sec-template-literals-runtime-semantics-argumentlistevaluation';
   function* ArgumentListEvaluation_Arguments(Arguments) {
     const precedingArgs = [];
     for (const element of Arguments) {
@@ -5611,7 +5611,7 @@
 
     return precedingArgs;
   }
-  ArgumentListEvaluation_Arguments.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-argument-lists-runtime-semantics-argumentlistevaluation';
+  ArgumentListEvaluation_Arguments.section = 'https://tc39.es/ecma262/#sec-argument-lists-runtime-semantics-argumentlistevaluation';
   function ArgumentListEvaluation(ArgumentsOrTemplateLiteral) {
     switch (true) {
       case Array.isArray(ArgumentsOrTemplateLiteral):
@@ -5630,7 +5630,7 @@
     return Evaluate_FunctionStatementList(FunctionStatementList);
   }
 
-  /** http://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluatebody */
+  /** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluatebody */
   // FunctionBody : FunctionStatementList
   function* EvaluateBody_FunctionBody({
     FunctionStatementList
@@ -5648,7 +5648,7 @@
     return yield* Evaluate_FunctionStatementList(FunctionStatementList);
   }
 
-  /** http://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-evaluation */
   // ExpressionBody : AssignmentExpression
   function* Evaluate_ExpressionBody({
     AssignmentExpression
@@ -5674,7 +5674,7 @@
     });
   }
 
-  /** http://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-evaluatebody */
+  /** https://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-evaluatebody */
   // ConciseBody : ExpressionBody
   function* EvaluateBody_ConciseBody({
     ExpressionBody
@@ -5692,7 +5692,7 @@
     return yield* Evaluate(ExpressionBody);
   }
 
-  /** http://tc39.es/ecma262/#sec-async-arrow-function-definitions-EvaluateBody */
+  /** https://tc39.es/ecma262/#sec-async-arrow-function-definitions-EvaluateBody */
   // AsyncConciseBody : ExpressionBody
   function* EvaluateBody_AsyncConciseBody({
     ExpressionBody
@@ -5731,9 +5731,9 @@
     });
   }
 
-  /** http://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-evaluatebody */
+  /** https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-evaluatebody */
   // GeneratorBody : FunctionBody
-  EvaluateBody_AsyncConciseBody.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-async-arrow-function-definitions-EvaluateBody';
+  EvaluateBody_AsyncConciseBody.section = 'https://tc39.es/ecma262/#sec-async-arrow-function-definitions-EvaluateBody';
   function* EvaluateBody_GeneratorBody(GeneratorBody, functionObject, argumentsList) {
     let _temp7 = yield* FunctionDeclarationInstantiation(functionObject, argumentsList);
     /* c8 ignore if */
@@ -5767,7 +5767,7 @@
     });
   }
 
-  /** http://tc39.es/ecma262/#sec-asyncgenerator-definitions-evaluatebody */
+  /** https://tc39.es/ecma262/#sec-asyncgenerator-definitions-evaluatebody */
   // AsyncGeneratorBody : FunctionBody
   function* EvaluateBody_AsyncGeneratorBody(FunctionBody, functionObject, argumentsList) {
     let _temp9 = yield* FunctionDeclarationInstantiation(functionObject, argumentsList);
@@ -5807,7 +5807,7 @@
     });
   }
 
-  /** http://tc39.es/ecma262/#sec-async-function-definitions-EvaluateBody */
+  /** https://tc39.es/ecma262/#sec-async-function-definitions-EvaluateBody */
   // AsyncFunctionBody : FunctionBody
   function* EvaluateBody_AsyncFunctionBody(FunctionBody, functionObject, argumentsList) {
     let _temp12 = NewPromiseCapability(exports.surroundingAgent.intrinsic('%Promise%'));
@@ -5880,7 +5880,7 @@
     });
   }
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-evaluateclassstaticblockbody */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-evaluateclassstaticblockbody */
   //    ClassStaticBlockBody : ClassStaticBlockStatementList
   function* EvaluateClassStaticBlockBody({
     ClassStaticBlockStatementList
@@ -5905,7 +5905,7 @@
   // AsyncFunctionBody : FunctionBody
   // AsyncConciseBody : ExpressionBody
   // ClassStaticBlockBody : ClassStaticBlockStatementList
-  EvaluateClassStaticBlockBody.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-runtime-semantics-evaluateclassstaticblockbody';
+  EvaluateClassStaticBlockBody.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-evaluateclassstaticblockbody';
   function EvaluateBody(Body, functionObject, argumentsList) {
     switch (Body.type) {
       case 'FunctionBody':
@@ -5927,7 +5927,7 @@
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-functiondeclarationinstantiation */
+  /** https://tc39.es/ecma262/#sec-functiondeclarationinstantiation */
   function* FunctionDeclarationInstantiation(func, argumentsList) {
     // 1. Let calleeContext be the running execution context.
     const calleeContext = exports.surroundingAgent.runningExecutionContext;
@@ -6227,7 +6227,7 @@
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluation */
   //   FunctionStatementList : [empty]
   //
   // (implicit)
@@ -6236,7 +6236,7 @@
     return Evaluate_StatementList(FunctionStatementList);
   }
 
-  /** http://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-iteratorbindinginitialization */
+  /** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-iteratorbindinginitialization */
   // FormalParameters :
   //   [empty]
   //   FormalParameterList `,` FunctionRestParameter
@@ -6666,7 +6666,7 @@
     return NormalCompletion(undefined);
   }
 
-  /** http://tc39.es/ecma262/#sec-return-statement-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-return-statement-runtime-semantics-evaluation */
   //  ReturnStatement :
   //    `return` `;`
   //    `return` Expression `;`
@@ -6723,7 +6723,7 @@
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-grouping-operator-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-grouping-operator-runtime-semantics-evaluation */
   function* Evaluate_ParenthesizedExpression({
     Expression
   }) {
@@ -6731,7 +6731,7 @@
     return yield* Evaluate(Expression);
   }
 
-  /** http://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation */
   //   MemberExpression : MemberExpression `[` Expression `]`
   //   CallExpression : CallExpression `[` Expression `]`
   function* Evaluate_MemberExpression_Expression({
@@ -6757,10 +6757,10 @@
     return yield* EvaluatePropertyAccessWithExpressionKey(baseValue, Expression, strict);
   }
 
-  /** http://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation */
   //   MemberExpression : MemberExpression `.` IdentifierName
   //   CallExpression : CallExpression `.` IdentifierName
-  Evaluate_MemberExpression_Expression.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation';
+  Evaluate_MemberExpression_Expression.section = 'https://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation';
   function* Evaluate_MemberExpression_IdentifierName({
     strict,
     MemberExpression,
@@ -6784,10 +6784,10 @@
     return EvaluatePropertyAccessWithIdentifierKey(baseValue, IdentifierName, strict);
   }
 
-  /** http://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation */
   //   MemberExpression : MemberExpression `.` PrivateIdentifier
   //   CallExpression : CallExpression `.` PrivateIdentifier
-  Evaluate_MemberExpression_IdentifierName.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation';
+  Evaluate_MemberExpression_IdentifierName.section = 'https://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation';
   function* Evaluate_MemberExpression_PrivateIdentifier({
     MemberExpression,
     PrivateIdentifier
@@ -6828,14 +6828,14 @@
     return _temp5;
   }
 
-  /** http://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation */
   //   MemberExpression :
   //     MemberExpression `[` Expression `]`
   //     MemberExpression `.` IdentifierName
   //   CallExpression :
   //     CallExpression `[` Expression `]`
   //     CallExpression `.` IdentifierName
-  Evaluate_MemberExpression_PrivateIdentifier.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation';
+  Evaluate_MemberExpression_PrivateIdentifier.section = 'https://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation';
   function Evaluate_MemberExpression(MemberExpression) {
     switch (true) {
       case !!MemberExpression.Expression:
@@ -6849,7 +6849,7 @@
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-evaluate-expression-key-property-access */
+  /** https://tc39.es/ecma262/#sec-evaluate-expression-key-property-access */
   function* EvaluatePropertyAccessWithExpressionKey(baseValue, expression, strict) {
     // 1. Let propertyNameReference be the result of evaluating expression.
     const propertyNameReference = yield* Evaluate(expression);
@@ -6895,7 +6895,7 @@
     });
   }
 
-  /** http://tc39.es/ecma262/#sec-evaluate-identifier-key-property-access */
+  /** https://tc39.es/ecma262/#sec-evaluate-identifier-key-property-access */
   function EvaluatePropertyAccessWithIdentifierKey(baseValue, identifierName, strict) {
     // 1. Assert: identifierName is an IdentifierName.
     Assert(identifierName.type === 'IdentifierName', "identifierName.type === 'IdentifierName'");
@@ -6921,7 +6921,7 @@
     });
   }
 
-  /** http://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation */
   //   LexicalBinding :
   //     BindingIdentifier
   //     BindingIdentifier Initializer
@@ -6972,9 +6972,9 @@
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation */
   //   LexicalBinding : BindingPattern Initializer
-  Evaluate_LexicalBinding_BindingIdentifier.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation';
+  Evaluate_LexicalBinding_BindingIdentifier.section = 'https://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation';
   function* Evaluate_LexicalBinding_BindingPattern(LexicalBinding) {
     const {
       BindingPattern,
@@ -6994,7 +6994,7 @@
     const env = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment;
     return yield* BindingInitialization(BindingPattern, value, env);
   }
-  Evaluate_LexicalBinding_BindingPattern.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation';
+  Evaluate_LexicalBinding_BindingPattern.section = 'https://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation';
   function* Evaluate_LexicalBinding(LexicalBinding) {
     switch (true) {
       case !!LexicalBinding.BindingIdentifier:
@@ -7006,7 +7006,7 @@
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation */
   //   BindingList : BindingList `,` LexicalBinding
   //
   // (implicit)
@@ -7030,7 +7030,7 @@
     return next;
   }
 
-  /** http://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation */
   //   LexicalDeclaration : LetOrConst BindingList `;`
   function* Evaluate_LexicalDeclaration({
     BindingList
@@ -7050,7 +7050,7 @@
     return NormalCompletion(undefined);
   }
 
-  /** http://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-evaluation */
   //   ObjectLiteral :
   //     `{` `}`
   //     `{` PropertyDefinitionList `}`
@@ -7077,7 +7077,7 @@
     return obj;
   }
 
-  /** http://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-propertydefinitionevaluation */
+  /** https://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-propertydefinitionevaluation */
   //   PropertyDefinitionList :
   //     PropertyDefinitionList `,` PropertyDefinition
   function* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList, object, enumerable) {
@@ -7241,7 +7241,7 @@
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluation */
   //   FunctionExpression :
   //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
   //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
@@ -7250,56 +7250,56 @@
     return InstantiateOrdinaryFunctionExpression(FunctionExpression);
   }
 
-  /** http://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-namedevaluation */
+  /** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-namedevaluation */
   //   FunctionExpression :
   //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
   function NamedEvaluation_FunctionExpression(FunctionExpression, name) {
     return InstantiateOrdinaryFunctionExpression(FunctionExpression, name);
   }
 
-  /** http://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-namedevaluation */
+  /** https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-namedevaluation */
   //   GeneratorExpression :
   //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
-  NamedEvaluation_FunctionExpression.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-namedevaluation';
+  NamedEvaluation_FunctionExpression.section = 'https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-namedevaluation';
   function NamedEvaluation_GeneratorExpression(GeneratorExpression, name) {
     return InstantiateGeneratorFunctionExpression(GeneratorExpression, name);
   }
 
-  /** http://tc39.es/ecma262/#sec-async-function-definitions-runtime-semantics-namedevaluation */
+  /** https://tc39.es/ecma262/#sec-async-function-definitions-runtime-semantics-namedevaluation */
   //   AsyncFunctionExpression :
   //     `async` `function` `(` FormalParameters `)` `{` AsyncFunctionBody `}`
-  NamedEvaluation_GeneratorExpression.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-namedevaluation';
+  NamedEvaluation_GeneratorExpression.section = 'https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-namedevaluation';
   function NamedEvaluation_AsyncFunctionExpression(AsyncFunctionExpression, name) {
     return InstantiateAsyncFunctionExpression(AsyncFunctionExpression, name);
   }
 
-  /** http://tc39.es/ecma262/#sec-asyncgenerator-definitions-namedevaluation */
+  /** https://tc39.es/ecma262/#sec-asyncgenerator-definitions-namedevaluation */
   //   AsyncGeneratorExpression :
   //     `async` `function` `*` `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
-  NamedEvaluation_AsyncFunctionExpression.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-async-function-definitions-runtime-semantics-namedevaluation';
+  NamedEvaluation_AsyncFunctionExpression.section = 'https://tc39.es/ecma262/#sec-async-function-definitions-runtime-semantics-namedevaluation';
   function NamedEvaluation_AsyncGeneratorExpression(AsyncGeneratorExpression, name) {
     return InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpression, name);
   }
 
-  /** http://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-namedevaluation */
+  /** https://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-namedevaluation */
   //   ArrowFunction :
   //     ArrowParameters `=>` ConciseBody
-  NamedEvaluation_AsyncGeneratorExpression.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-asyncgenerator-definitions-namedevaluation';
+  NamedEvaluation_AsyncGeneratorExpression.section = 'https://tc39.es/ecma262/#sec-asyncgenerator-definitions-namedevaluation';
   function NamedEvaluation_ArrowFunction(ArrowFunction, name) {
     return InstantiateArrowFunctionExpression(ArrowFunction, name);
   }
 
-  /** http://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-namedevaluation */
+  /** https://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-namedevaluation */
   //   AsyncArrowFunction :
   //     ArrowParameters `=>` AsyncConciseBody
-  NamedEvaluation_ArrowFunction.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-namedevaluation';
+  NamedEvaluation_ArrowFunction.section = 'https://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-namedevaluation';
   function NamedEvaluation_AsyncArrowFunction(AsyncArrowFunction, name) {
     return InstantiateAsyncArrowFunctionExpression(AsyncArrowFunction, name);
   }
 
-  /** http://tc39.es/ecma262/#sec-class-definitions-runtime-semantics-namedevaluation */
+  /** https://tc39.es/ecma262/#sec-class-definitions-runtime-semantics-namedevaluation */
   //   ClassExpression : `class` ClassTail
-  NamedEvaluation_AsyncArrowFunction.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-namedevaluation';
+  NamedEvaluation_AsyncArrowFunction.section = 'https://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-namedevaluation';
   function* NamedEvaluation_ClassExpression(ClassExpression, name) {
     const {
       ClassTail
@@ -7320,7 +7320,7 @@
     // 4. Return value.
     return value;
   }
-  NamedEvaluation_ClassExpression.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-class-definitions-runtime-semantics-namedevaluation';
+  NamedEvaluation_ClassExpression.section = 'https://tc39.es/ecma262/#sec-class-definitions-runtime-semantics-namedevaluation';
   function* NamedEvaluation(F, name) {
     switch (F.type) {
       case 'FunctionExpression':
@@ -7344,7 +7344,7 @@
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-try-statement-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-try-statement-runtime-semantics-evaluation */
   //   TryStatement :
   //     `try` Block Catch
   //     `try` Block Finally
@@ -7424,7 +7424,7 @@
     return exports.Completion(UpdateEmpty(F, exports.Value.undefined));
   }
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-catchclauseevaluation */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-catchclauseevaluation */
   //  Catch :
   //    `catch` Block
   //    `catch` `(` CatchParameter `)` Block
@@ -7467,9 +7467,9 @@
     // 9. Return Completion(B).
     return exports.Completion(B);
   }
-  CatchClauseEvaluation.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-runtime-semantics-catchclauseevaluation';
+  CatchClauseEvaluation.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-catchclauseevaluation';
 
-  /** http://tc39.es/ecma262/#sec-blockdeclarationinstantiation */
+  /** https://tc39.es/ecma262/#sec-blockdeclarationinstantiation */
   function BlockDeclarationInstantiation(code, env) {
     // 1. Assert: env is a declarative Environment Record.
     Assert(env instanceof DeclarativeEnvironmentRecord, "env instanceof DeclarativeEnvironmentRecord");
@@ -7510,7 +7510,7 @@
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-block-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-block-runtime-semantics-evaluation */
   //  Block :
   //    `{` `}`
   //    `{` StatementList `}`
@@ -7537,7 +7537,7 @@
     return blockValue;
   }
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-arrayaccumulation */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-arrayaccumulation */
   //  Elision :
   //    `,`
   //    Elision `,`
@@ -7594,7 +7594,7 @@
   }
 
   // SpreadElement : `...` AssignmentExpression
-  ArrayAccumulation.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-runtime-semantics-arrayaccumulation';
+  ArrayAccumulation.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-arrayaccumulation';
   function* ArrayAccumulation_SpreadElement({
     AssignmentExpression
   }, array, nextIndex) {
@@ -7698,7 +7698,7 @@
     return nextIndex + 1;
   }
 
-  /** http://tc39.es/ecma262/#sec-array-initializer-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-array-initializer-runtime-semantics-evaluation */
   //  ArrayLiteral :
   //    `[` Elision `]`
   //    `[` ElementList `]`
@@ -7729,7 +7729,7 @@
     return array;
   }
 
-  /** http://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation */
   //   UnaryExpression : `delete` UnaryExpression
   function* Evaluate_UnaryExpression_Delete({
     UnaryExpression
@@ -7798,9 +7798,9 @@
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-void-operator-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-void-operator-runtime-semantics-evaluation */
   //   UnaryExpression : `void` UnaryExpression
-  Evaluate_UnaryExpression_Delete.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation';
+  Evaluate_UnaryExpression_Delete.section = 'https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation';
   function* Evaluate_UnaryExpression_Void({
     UnaryExpression
   }) {
@@ -7820,9 +7820,9 @@
     return exports.Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-typeof-operator-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-typeof-operator-runtime-semantics-evaluation */
   // UnaryExpression : `typeof` UnaryExpression
-  Evaluate_UnaryExpression_Void.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-void-operator-runtime-semantics-evaluation';
+  Evaluate_UnaryExpression_Void.section = 'https://tc39.es/ecma262/#sec-void-operator-runtime-semantics-evaluation';
   function* Evaluate_UnaryExpression_Typeof({
     UnaryExpression
   }) {
@@ -7870,9 +7870,9 @@
     throw new OutOfRange$1('Evaluate_UnaryExpression_Typeof', val);
   }
 
-  /** http://tc39.es/ecma262/#sec-unary-plus-operator-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-unary-plus-operator-runtime-semantics-evaluation */
   //   UnaryExpression : `+` UnaryExpression
-  Evaluate_UnaryExpression_Typeof.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-typeof-operator-runtime-semantics-evaluation';
+  Evaluate_UnaryExpression_Typeof.section = 'https://tc39.es/ecma262/#sec-typeof-operator-runtime-semantics-evaluation';
   function* Evaluate_UnaryExpression_Plus({
     UnaryExpression
   }) {
@@ -7891,9 +7891,9 @@
     return ToNumber(_temp5);
   }
 
-  /** http://tc39.es/ecma262/#sec-unary-minus-operator-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-unary-minus-operator-runtime-semantics-evaluation */
   //   UnaryExpression : `-` UnaryExpression
-  Evaluate_UnaryExpression_Plus.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-unary-plus-operator-runtime-semantics-evaluation';
+  Evaluate_UnaryExpression_Plus.section = 'https://tc39.es/ecma262/#sec-unary-plus-operator-runtime-semantics-evaluation';
   function* Evaluate_UnaryExpression_Minus({
     UnaryExpression
   }) {
@@ -7931,9 +7931,9 @@
     return _temp7;
   }
 
-  /** http://tc39.es/ecma262/#sec-bitwise-not-operator-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-bitwise-not-operator-runtime-semantics-evaluation */
   //   UnaryExpression : `~` UnaryExpression
-  Evaluate_UnaryExpression_Minus.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-unary-minus-operator-runtime-semantics-evaluation';
+  Evaluate_UnaryExpression_Minus.section = 'https://tc39.es/ecma262/#sec-unary-minus-operator-runtime-semantics-evaluation';
   function* Evaluate_UnaryExpression_Tilde({
     UnaryExpression
   }) {
@@ -7971,9 +7971,9 @@
     return _temp10;
   }
 
-  /** http://tc39.es/ecma262/#sec-logical-not-operator-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-logical-not-operator-runtime-semantics-evaluation */
   //   UnaryExpression : `!` UnaryExpression
-  Evaluate_UnaryExpression_Tilde.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-bitwise-not-operator-runtime-semantics-evaluation';
+  Evaluate_UnaryExpression_Tilde.section = 'https://tc39.es/ecma262/#sec-bitwise-not-operator-runtime-semantics-evaluation';
   function* Evaluate_UnaryExpression_Bang({
     UnaryExpression
   }) {
@@ -8006,7 +8006,7 @@
   //  `-` UnaryExpression
   //  `~` UnaryExpression
   //  `!` UnaryExpression
-  Evaluate_UnaryExpression_Bang.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-logical-not-operator-runtime-semantics-evaluation';
+  Evaluate_UnaryExpression_Bang.section = 'https://tc39.es/ecma262/#sec-logical-not-operator-runtime-semantics-evaluation';
   function* Evaluate_UnaryExpression(UnaryExpression) {
     switch (UnaryExpression.operator) {
       case 'delete':
@@ -8028,7 +8028,7 @@
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-equality-operators-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-equality-operators-runtime-semantics-evaluation */
   //   EqualityExpression :
   //     EqualityExpression `==` RelationalExpression
   //     EqualityExpression `!=` RelationalExpression
@@ -8115,7 +8115,7 @@
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-binary-logical-operators-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-binary-logical-operators-runtime-semantics-evaluation */
   //   LogicalANDExpression :
   //     LogicalANDExpression `&&` BitwiseORExpression
   function* Evaluate_LogicalANDExpression({
@@ -8153,7 +8153,7 @@
     return GetValue(rref);
   }
 
-  /** http://tc39.es/ecma262/#sec-binary-logical-operators-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-binary-logical-operators-runtime-semantics-evaluation */
   //   LogicalORExpression :
   //     LogicalORExpression `||` LogicalANDExpression
   function* Evaluate_LogicalORExpression({
@@ -8191,7 +8191,7 @@
     return GetValue(rref);
   }
 
-  /** http://tc39.es/ecma262/#sec-evaluatenew */
+  /** https://tc39.es/ecma262/#sec-evaluatenew */
   function* EvaluateNew(constructExpr, args) {
     // 1. Assert: constructExpr is either a NewExpression or a MemberExpression.
     // 2. Assert: arguments is either empty or an Arguments.
@@ -8235,11 +8235,11 @@
     return Construct(constructor, argList);
   }
 
-  /** http://tc39.es/ecma262/#sec-new-operator-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-new-operator-runtime-semantics-evaluation */
   //   NewExpression :
   //     `new` NewExpression
   //     `new` MemberExpression Arguments
-  EvaluateNew.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-evaluatenew';
+  EvaluateNew.section = 'https://tc39.es/ecma262/#sec-evaluatenew';
   function* Evaluate_NewExpression({
     MemberExpression,
     Arguments
@@ -8255,13 +8255,13 @@
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-left-shift-operator-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-left-shift-operator-runtime-semantics-evaluation */
   //  ShiftExpression :
   //    ShiftExpression `<<` AdditiveExpression
-  /** http://tc39.es/ecma262/#sec-signed-right-shift-operator-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-signed-right-shift-operator-runtime-semantics-evaluation */
   //  ShiftExpression :
   //    ShiftExpression `>>` AdditiveExpression
-  /** http://tc39.es/ecma262/#sec-unsigned-right-shift-operator-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-unsigned-right-shift-operator-runtime-semantics-evaluation */
   //  ShiftExpression :
   //    ShiftExpression `>>>` AdditiveExpression
   function* Evaluate_ShiftExpression({
@@ -8272,7 +8272,7 @@
     return yield* EvaluateStringOrNumericBinaryExpression(ShiftExpression, operator, AdditiveExpression);
   }
 
-  /** http://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation */
   // SuperCall : `super` Arguments
   function* Evaluate_SuperCall({
     Arguments
@@ -8345,7 +8345,7 @@
     return result;
   }
 
-  /** http://tc39.es/ecma262/#sec-getsuperconstructor */
+  /** https://tc39.es/ecma262/#sec-getsuperconstructor */
   function GetSuperConstructor() {
     // 1. Let envRec be GetThisEnvironment().
     const envRec = GetThisEnvironment();
@@ -8366,9 +8366,9 @@
     // 6. Return superConstructor.
     return superConstructor;
   }
-  GetSuperConstructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-getsuperconstructor';
+  GetSuperConstructor.section = 'https://tc39.es/ecma262/#sec-getsuperconstructor';
 
-  /** http://tc39.es/ecma262/#sec-makesuperpropertyreference */
+  /** https://tc39.es/ecma262/#sec-makesuperpropertyreference */
   function MakeSuperPropertyReference(actualThis, propertyKey, strict) {
     // 1. Let env be GetThisEnvironment().
     const env = GetThisEnvironment();
@@ -8394,11 +8394,11 @@
     });
   }
 
-  /** http://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation */
   //  SuperProperty :
   //    `super` `[` Expression `]`
   //    `super` `.` IdentifierName
-  MakeSuperPropertyReference.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-makesuperpropertyreference';
+  MakeSuperPropertyReference.section = 'https://tc39.es/ecma262/#sec-makesuperpropertyreference';
   function* Evaluate_SuperProperty({
     Expression,
     IdentifierName,
@@ -8454,7 +8454,7 @@
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-initializeboundname */
+  /** https://tc39.es/ecma262/#sec-initializeboundname */
   function InitializeBoundName(name, value, environment) {
     // 1. Assert: Type(name) is String.
     Assert(name instanceof StringValue, "name instanceof JSStringValue");
@@ -8565,7 +8565,7 @@
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-async-function-definitions-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-async-function-definitions-runtime-semantics-evaluation */
   //   AsyncFunctionExpression :
   //     `async` `function` `(` FormalParameters `)` `{` AsyncFunctionBody `}`
   //     `async` `function` BindingIdentifier `(` FormalParameters `)` `{` AsyncFunctionBody `}`
@@ -8574,7 +8574,7 @@
     return InstantiateAsyncFunctionExpression(AsyncFunctionExpression);
   }
 
-  /** http://tc39.es/ecma262/#sec-instanceofoperator */
+  /** https://tc39.es/ecma262/#sec-instanceofoperator */
   function InstanceofOperator(V, target) {
     // 1. If Type(target) is not Object, throw a TypeError exception.
     if (!(target instanceof ObjectValue)) {
@@ -8667,7 +8667,7 @@
     return exports.Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-relational-operators-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-relational-operators-runtime-semantics-evaluation */
   //   RelationalExpression :
   //     RelationalExpression `<` ShiftExpression
   //     RelationalExpression `>` ShiftExpression
@@ -8806,7 +8806,7 @@
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-statement-semantics-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-statement-semantics-runtime-semantics-evaluation */
   //   BreakableStatement :
   //     IterationStatement
   //     SwitchStatement
@@ -8821,7 +8821,7 @@
     return LabelledEvaluation(BreakableStatement, newLabelSet);
   }
 
-  /** http://tc39.es/ecma262/#sec-ecmascript-standard-built-in-objects */
+  /** https://tc39.es/ecma262/#sec-ecmascript-standard-built-in-objects */
   function assignProps(realmRec, obj, props) {
     for (const item of props) {
       if (item === undefined) {
@@ -8923,7 +8923,7 @@
     return cons;
   }
 
-  /** http://tc39.es/ecma262/#sec-createforiniterator */
+  /** https://tc39.es/ecma262/#sec-createforiniterator */
   function CreateForInIterator(object) {
     // 1. Assert: Type(object) is Object.
     Assert(object instanceof ObjectValue, "object instanceof ObjectValue");
@@ -8941,7 +8941,7 @@
     return iterator;
   }
 
-  /** http://tc39.es/ecma262/#sec-%foriniteratorprototype%.next */
+  /** https://tc39.es/ecma262/#sec-%foriniteratorprototype%.next */
   function ForInIteratorPrototype_next(args, {
     thisValue
   }) {
@@ -9032,7 +9032,7 @@
       }
     }
   }
-  ForInIteratorPrototype_next.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-%foriniteratorprototype%.next';
+  ForInIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%foriniteratorprototype%.next';
   function bootstrapForInIteratorPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['next', ForInIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%']);
     realmRec.Intrinsics['%ForInIteratorPrototype%'] = proto;
@@ -9040,7 +9040,7 @@
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-loopcontinues */
+  /** https://tc39.es/ecma262/#sec-loopcontinues */
   function LoopContinues(completion, labelSet) {
     // 1. If completion.[[Type]] is normal, return true.
     if (completion.Type === 'normal') {
@@ -9061,7 +9061,7 @@
     // 5. Return false.
     return exports.Value.false;
   }
-  LoopContinues.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-loopcontinues';
+  LoopContinues.section = 'https://tc39.es/ecma262/#sec-loopcontinues';
   function LabelledEvaluation(node, labelSet) {
     switch (node.type) {
       case 'DoWhileStatement':
@@ -9079,7 +9079,7 @@
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-labelled-statements-runtime-semantics-labelledevaluation */
+  /** https://tc39.es/ecma262/#sec-labelled-statements-runtime-semantics-labelledevaluation */
   //   LabelledStatement : LabelIdentifier `:` LabelledItem
   function* LabelledEvaluation_LabelledStatement({
     LabelIdentifier,
@@ -9103,7 +9103,7 @@
   // LabelledItem :
   //   Statement
   //   FunctionDeclaration
-  LabelledEvaluation_LabelledStatement.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-labelled-statements-runtime-semantics-labelledevaluation';
+  LabelledEvaluation_LabelledStatement.section = 'https://tc39.es/ecma262/#sec-labelled-statements-runtime-semantics-labelledevaluation';
   function LabelledEvaluation_LabelledItem(LabelledItem, labelSet) {
     switch (LabelledItem.type) {
       case 'DoWhileStatement':
@@ -9119,7 +9119,7 @@
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-statement-semantics-runtime-semantics-labelledevaluation */
+  /** https://tc39.es/ecma262/#sec-statement-semantics-runtime-semantics-labelledevaluation */
   //  BreakableStatement :
   //    IterationStatement
   //    SwitchStatement
@@ -9178,7 +9178,7 @@
         throw new OutOfRange$1('LabelledEvaluation_BreakableStatement', BreakableStatement);
     }
   }
-  LabelledEvaluation_BreakableStatement.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-statement-semantics-runtime-semantics-labelledevaluation';
+  LabelledEvaluation_BreakableStatement.section = 'https://tc39.es/ecma262/#sec-statement-semantics-runtime-semantics-labelledevaluation';
   function LabelledEvaluation_IterationStatement(IterationStatement, labelSet) {
     switch (IterationStatement.type) {
       case 'DoWhileStatement':
@@ -9198,7 +9198,7 @@
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-do-while-statement-runtime-semantics-labelledevaluation */
+  /** https://tc39.es/ecma262/#sec-do-while-statement-runtime-semantics-labelledevaluation */
   //   IterationStatement :
   //     `do` Statement `while` `(` Expression `)` `;`
   function* LabelledEvaluation_IterationStatement_DoWhileStatement({
@@ -9245,10 +9245,10 @@
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-while-statement-runtime-semantics-labelledevaluation */
+  /** https://tc39.es/ecma262/#sec-while-statement-runtime-semantics-labelledevaluation */
   //   IterationStatement :
   //     `while` `(` Expression `)` Statement
-  LabelledEvaluation_IterationStatement_DoWhileStatement.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-do-while-statement-runtime-semantics-labelledevaluation';
+  LabelledEvaluation_IterationStatement_DoWhileStatement.section = 'https://tc39.es/ecma262/#sec-do-while-statement-runtime-semantics-labelledevaluation';
   function* LabelledEvaluation_IterationStatement_WhileStatement({
     Expression,
     Statement
@@ -9293,12 +9293,12 @@
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-for-statement-runtime-semantics-labelledevaluation */
+  /** https://tc39.es/ecma262/#sec-for-statement-runtime-semantics-labelledevaluation */
   //   IterationStatement :
   //     `for` `(` Expression? `;` Expression? `;` Expresssion? `)` Statement
   //     `for` `(` `var` VariableDeclarationList `;` Expression? `;` Expression? `)` Statement
   //     `for` `(` LexicalDeclaration Expression? `;` Expression? `)` Statement
-  LabelledEvaluation_IterationStatement_WhileStatement.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-while-statement-runtime-semantics-labelledevaluation';
+  LabelledEvaluation_IterationStatement_WhileStatement.section = 'https://tc39.es/ecma262/#sec-while-statement-runtime-semantics-labelledevaluation';
   function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement, labelSet) {
     const {
       VariableDeclarationList,
@@ -9401,7 +9401,7 @@
         }
     }
   }
-  LabelledEvaluation_BreakableStatement_ForStatement.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-for-statement-runtime-semantics-labelledevaluation';
+  LabelledEvaluation_BreakableStatement_ForStatement.section = 'https://tc39.es/ecma262/#sec-for-statement-runtime-semantics-labelledevaluation';
   function* LabelledEvaluation_IterationStatement_ForInStatement(ForInStatement, labelSet) {
     const {
       LeftHandSideExpression,
@@ -9533,7 +9533,7 @@
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation */
+  /** https://tc39.es/ecma262/#sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation */
   // IterationStatement :
   //   `for` `(` LeftHandSideExpression `of` AssignmentExpression `)` Statement
   //   `for` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
@@ -9600,8 +9600,8 @@
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-forbodyevaluation */
-  LabelledEvaluation_IterationStatement_ForOfStatement.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation';
+  /** https://tc39.es/ecma262/#sec-forbodyevaluation */
+  LabelledEvaluation_IterationStatement_ForOfStatement.section = 'https://tc39.es/ecma262/#sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation';
   function* ForBodyEvaluation(test, increment, stmt, perIterationBindings, labelSet) {
     // 1. Let V be undefined.
     let V = exports.Value.undefined;
@@ -9681,8 +9681,8 @@
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-createperiterationenvironment */
-  ForBodyEvaluation.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-forbodyevaluation';
+  /** https://tc39.es/ecma262/#sec-createperiterationenvironment */
+  ForBodyEvaluation.section = 'https://tc39.es/ecma262/#sec-forbodyevaluation';
   function CreatePerIterationEnvironment(perIterationBindings) {
     // 1. If perIterationBindings has any elements, then
     if (perIterationBindings.length > 0) {
@@ -9723,8 +9723,8 @@
     return exports.Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-forinofheadevaluation */
-  CreatePerIterationEnvironment.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-createperiterationenvironment';
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-forinofheadevaluation */
+  CreatePerIterationEnvironment.section = 'https://tc39.es/ecma262/#sec-createperiterationenvironment';
   function* ForInOfHeadEvaluation(uninitializedBoundNames, expr, iterationKind) {
     // 1. Let oldEnv be the running execution context's LexicalEnvironment.
     const oldEnv = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment;
@@ -9816,14 +9816,14 @@
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-enumerate-object-properties */
-  ForInOfHeadEvaluation.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-runtime-semantics-forinofheadevaluation';
+  /** https://tc39.es/ecma262/#sec-enumerate-object-properties */
+  ForInOfHeadEvaluation.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-forinofheadevaluation';
   function EnumerateObjectProperties(O) {
     return CreateForInIterator(O);
   }
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-forin-div-ofbodyevaluation-lhs-stmt-iterator-lhskind-labelset */
-  EnumerateObjectProperties.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-enumerate-object-properties';
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-forin-div-ofbodyevaluation-lhs-stmt-iterator-lhskind-labelset */
+  EnumerateObjectProperties.section = 'https://tc39.es/ecma262/#sec-enumerate-object-properties';
   function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKind, labelSet, iteratorKind) {
     // 1. If iteratorKind is not present, set iteratorKind to sync.
     if (iterationKind === undefined) {
@@ -10022,9 +10022,9 @@
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-bindinginstantiation */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-bindinginstantiation */
   //   ForDeclaration : LetOrConst ForBinding
-  ForInOfBodyEvaluation.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-runtime-semantics-forin-div-ofbodyevaluation-lhs-stmt-iterator-lhskind-labelset';
+  ForInOfBodyEvaluation.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-forin-div-ofbodyevaluation-lhs-stmt-iterator-lhskind-labelset';
   function BindingInstantiation({
     LetOrConst,
     ForBinding
@@ -10052,9 +10052,9 @@
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-for-in-and-for-of-statements-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-for-in-and-for-of-statements-runtime-semantics-evaluation */
   //   ForBinding : BindingIdentifier
-  BindingInstantiation.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-runtime-semantics-bindinginstantiation';
+  BindingInstantiation.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-bindinginstantiation';
   function Evaluate_ForBinding({
     BindingIdentifier,
     strict
@@ -10065,7 +10065,7 @@
     return ResolveBinding(bindingId, undefined, strict);
   }
 
-  /** http://tc39.es/ecma262/#sec-template-literals-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-template-literals-runtime-semantics-evaluation */
   //   TemplateLiteral : NoSubstitutionTemplate
   //   SubstitutionTemplate : TemplateHead Expression TemplateSpans
   //   TemplateSpans : TemplateTail
@@ -10116,7 +10116,7 @@
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-caseclauseisselected */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-caseclauseisselected */
   function* CaseClauseIsSelected(C, input) {
     // 1. Assert: C is an instance of the production  CaseClause : `case` Expression `:` StatementList?.
     Assert(C.type === 'CaseClause', "C.type === 'CaseClause'");
@@ -10137,12 +10137,12 @@
     return StrictEqualityComparison(input, clauseSelector);
   }
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-caseblockevaluation */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-caseblockevaluation */
   //   CaseBlock :
   //     `{` `}`
   //     `{` CaseClauses `}`
   //     `{` CaseClauses? DefaultClause CaseClauses? `}`
-  CaseClauseIsSelected.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-runtime-semantics-caseclauseisselected';
+  CaseClauseIsSelected.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-caseclauseisselected';
   function* CaseBlockEvaluation({
     CaseClauses_a,
     DefaultClause,
@@ -10322,10 +10322,10 @@
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-switch-statement-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-switch-statement-runtime-semantics-evaluation */
   //   SwitchStatement :
   //     `switch` `(` Expression `)` CaseBlock
-  CaseBlockEvaluation.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-runtime-semantics-caseblockevaluation';
+  CaseBlockEvaluation.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-caseblockevaluation';
   function* Evaluate_SwitchStatement({
     Expression,
     CaseBlock
@@ -10359,7 +10359,7 @@
     return R;
   }
 
-  /** http://tc39.es/ecma262/#sec-switch-statement-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-switch-statement-runtime-semantics-evaluation */
   //   CaseClause :
   //     `case` Expression `:`
   //     `case` Expression `:` StatementList
@@ -13317,7 +13317,7 @@
       };
     }
 
-    /** http://tc39.es/ecma262/#sec-class-definitions */
+    /** https://tc39.es/ecma262/#sec-class-definitions */
     // ClassDeclaration :
     //   `class` BindingIdentifier ClassTail
     //   [+Default] `class` ClassTail
@@ -15448,7 +15448,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     });
   }
 
-  /** http://tc39.es/ecma262/#sec-parsejsonmodule */
+  /** https://tc39.es/ecma262/#sec-parsejsonmodule */
   function ParseJSONModule(sourceText, realm, hostDefined) {
     // 1. Let jsonParse be realm's intrinsic object named "%JSON.parse%".
     const jsonParse = realm.Intrinsics['%JSON.parse%'];
@@ -15467,7 +15467,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return CreateDefaultExportSyntheticModule(json, realm, hostDefined);
   }
 
-  /** http://tc39.es/ecma262/#sec-parsepattern */
+  /** https://tc39.es/ecma262/#sec-parsepattern */
   function ParsePattern(patternText, u) {
     const parse = flags => {
       const p = new RegExpParser(patternText);
@@ -15736,7 +15736,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-evaluation */
   //   GeneratorExpression :
   //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
   //     `function` `*` BindingIdentifier `(` FormalParameters `)` `{` GeneratorBody `}`
@@ -15747,7 +15747,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-evaluation */
   function Evaluate_ArrowFunction(ArrowFunction) {
     // 1. Return InstantiateArrowFunctionExpression of ArrowFunction.
     return InstantiateArrowFunctionExpression(ArrowFunction);
@@ -15755,7 +15755,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-async-arrow-function-definitions-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-async-arrow-function-definitions-runtime-semantics-evaluation */
   function Evaluate_AsyncArrowFunction(AsyncArrowFunction) {
     // 1. Return InstantiateAsyncArrowFunctionExpression of AsyncArrowFunction.
     return InstantiateAsyncArrowFunctionExpression(AsyncArrowFunction);
@@ -15763,7 +15763,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-break-statement-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-break-statement-runtime-semantics-evaluation */
   //   BreakStatement :
   //     `break` `;`
   //     `break` LabelIdentifier `;`
@@ -15790,7 +15790,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-asyncgenerator-definitions-evaluation */
+  /** https://tc39.es/ecma262/#sec-asyncgenerator-definitions-evaluation */
   //   AsyncGeneratorExpression :
   //     `async` `function` `*` `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
   //     `async` `function` `*` BindingIdentifier `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
@@ -15801,7 +15801,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-statement-semantics-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-statement-semantics-runtime-semantics-evaluation */
   //   HoistableDeclaration :
   //     GeneratorDeclaration
   //     AsyncFunctionDeclaration
@@ -15811,7 +15811,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return NormalCompletion(undefined);
   }
 
-  /** http://tc39.es/ecma262/#sec-comma-operator-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-comma-operator-runtime-semantics-evaluation */
   //   Expression :
   //     AssignmentExpression
   //     Expression `,` AssignmentExpression
@@ -15835,7 +15835,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return result;
   }
 
-  /** http://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-evaluation */
   //   YieldExpression :
   //     `yield`
   //     `yield` AssignmentExpression
@@ -16231,7 +16231,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-numbertobigint */
+  /** https://tc39.es/ecma262/#sec-numbertobigint */
   function NumberToBigInt(number) {
     // 1. Assert: Type(number) is Number.
     Assert(number instanceof NumberValue, "number instanceof NumberValue");
@@ -16243,7 +16243,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Z(BigInt(number.numberValue()));
   }
 
-  /** http://tc39.es/ecma262/#sec-conditional-operator-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-conditional-operator-runtime-semantics-evaluation */
   //   ConditionalExpression :
   //     ShortCircuitExpression `?` AssignmentExpression `:` AssignmentExpression
   function* Evaluate_ConditionalExpression({
@@ -16287,7 +16287,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-regular-expression-literals-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-regular-expression-literals-runtime-semantics-evaluation */
   //   RegularExpressionLiteral :
   //     `/` RegularExpressionBody `/` RegularExpressionFlags
   function Evaluate_RegularExpressionLiteral(RegularExpressionLiteral) {
@@ -16307,7 +16307,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   var unicodeCaseFoldingSimple = /*@__PURE__*/getDefaultExportFromCjs(symbols);
 
-  /** http://tc39.es/ecma262/#sec-pattern */
+  /** https://tc39.es/ecma262/#sec-pattern */
   class State {
     endIndex;
     captures;
@@ -16401,7 +16401,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-pattern */
+  /** https://tc39.es/ecma262/#sec-pattern */
   //   Pattern :: Disjunction
   function Evaluate_Pattern(Pattern, flags) {
     // The descriptions below use the following variables:
@@ -16504,7 +16504,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
     }
 
-    /** http://tc39.es/ecma262/#sec-disjunction */
+    /** https://tc39.es/ecma262/#sec-disjunction */
     //   Disjunction ::
     //     Alternative
     //     Alternative `|` Disjunction
@@ -17331,7 +17331,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return new ConcreteCharSet(getUnicodePropertyValueSet(p, v));
     }
 
-    /** http://tc39.es/ecma262/#sec-characterclass */
+    /** https://tc39.es/ecma262/#sec-characterclass */
     //  CharacterClass ::
     //    `[` ClassRanges `]`
     //    `[` `^` ClassRanges `]`
@@ -17406,7 +17406,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-stringpad */
+  /** https://tc39.es/ecma262/#sec-stringpad */
   function StringPad(O, maxLength, fillString, placement) {
     Assert(placement === 'start' || placement === 'end', "placement === 'start' || placement === 'end'");
     let _temp = ToString(O);
@@ -17461,7 +17461,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-trimstring */
+  /** https://tc39.es/ecma262/#sec-trimstring */
   function TrimString(string, where) {
     let _temp = RequireObjectCoercible(string);
     /* c8 ignore if */
@@ -17497,14 +17497,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-meta-properties-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-meta-properties-runtime-semantics-evaluation */
   // NewTarget : `new` `.` `target`
   function Evaluate_NewTarget() {
     // 1. Return GetNewTarget().
     return GetNewTarget();
   }
 
-  /** http://tc39.es/ecma262/#sec-async-function-definitions-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-async-function-definitions-runtime-semantics-evaluation */
   //   AwaitExpression : `await` UnaryExpression
   function* Evaluate_AwaitExpression({
     UnaryExpression
@@ -17526,7 +17526,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return yield* Await(value);
   }
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-bindingclassdeclarationevaluation */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-bindingclassdeclarationevaluation */
   //   ClassDeclaration :
   //     `class` BindingIdentifier ClassTail
   //     `class` ClassTail
@@ -17583,7 +17583,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return value;
   }
 
-  /** http://tc39.es/ecma262/#sec-class-definitions-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-class-definitions-runtime-semantics-evaluation */
   //   ClassDeclaration : `class` BindingIdentifier ClassTAil
   function* Evaluate_ClassDeclaration(ClassDeclaration) {
     let _temp4 = yield* BindingClassDeclarationEvaluation(ClassDeclaration);
@@ -17599,7 +17599,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return NormalCompletion(undefined);
   }
 
-  /** http://tc39.es/ecma262/#sec-with-statement-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-with-statement-runtime-semantics-evaluation */
   //   WithStatement : `with` `(` Expression `)` Statement
   function* Evaluate_WithStatement({
     Expression,
@@ -17643,7 +17643,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-module-semantics-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-module-semantics-runtime-semantics-evaluation */
   // Module :
   //   [empty]
   //   ModuleBody
@@ -17658,7 +17658,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-module-semantics-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-module-semantics-runtime-semantics-evaluation */
   // ModuleBody : ModuleItemList
   function Evaluate_ModuleBody({
     ModuleItemList
@@ -17668,14 +17668,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-module-semantics-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-module-semantics-runtime-semantics-evaluation */
   // ModuleItem : ImportDeclaration
   function Evaluate_ImportDeclaration(_ImportDeclaration) {
     // 1. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
   }
 
-  /** http://tc39.es/ecma262/#sec-exports-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-exports-runtime-semantics-evaluation */
   //   ExportDeclaration :
   //     `export` ExportFromClause FromClause `;`
   //     `export` NamedExports `;`
@@ -17786,7 +17786,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     throw new OutOfRange$1('Evaluate_ExportDeclaration', ExportDeclaration);
   }
 
-  /** http://tc39.es/ecma262/#sec-optional-chaining-evaluation */
+  /** https://tc39.es/ecma262/#sec-optional-chaining-evaluation */
   //   OptionalExpression :
   //     MemberExpression OptionalChain
   //     CallExpression OptionalChain
@@ -17817,7 +17817,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return yield* ChainEvaluation(OptionalChain, baseValue, baseReference);
   }
 
-  /** http://tc39.es/ecma262/#sec-optional-chaining-chain-evaluation */
+  /** https://tc39.es/ecma262/#sec-optional-chaining-chain-evaluation */
   //   OptionalChain :
   //     `?.` Arguments
   //     `?.` `[` Expression `]`
@@ -18015,9 +18015,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     throw new OutOfRange$1('ChainEvaluation', node);
   }
-  ChainEvaluation.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-optional-chaining-chain-evaluation';
+  ChainEvaluation.section = 'https://tc39.es/ecma262/#sec-optional-chaining-chain-evaluation';
 
-  /** http://tc39.es/ecma262/#sec-tagged-templates-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-tagged-templates-runtime-semantics-evaluation */
   //   MemberExpression :
   //     MemberExpression TemplateLiteral
   function* Evaluate_TaggedTemplateExpression(node) {
@@ -18044,7 +18044,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return yield* EvaluateCall(tagFunc, tagRef, TemplateLiteral, tailCall);
   }
 
-  /** http://tc39.es/ecma262/#sec-getsubstitution */
+  /** https://tc39.es/ecma262/#sec-getsubstitution */
   function GetSubstitution(matched, str, position, captures, namedCaptures, replacement) {
     // 1. Assert: Type(matched) is String.
     Assert(matched instanceof StringValue, "matched instanceof JSStringValue");
@@ -18167,7 +18167,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-continue-statement-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-continue-statement-runtime-semantics-evaluation */
   //   ContinueStatement :
   //     `continue` `;`
   //     `continue` LabelIdentifier `;`
@@ -18194,7 +18194,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-labelled-statements-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-labelled-statements-runtime-semantics-evaluation */
   function Evaluate_LabelledStatement(LabelledStatement) {
     // 1. Let newLabelSet be a new empty List.
     const newLabelSet = new ValueSet();
@@ -18204,7 +18204,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-mv-s */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-mv-s */
   //   StringNumericLiteral :::
   //     [empty]
   //     StrWhiteSpace
@@ -18213,7 +18213,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(Number(StringNumericLiteral));
   }
 
-  /** http://tc39.es/ecma262/#sec-applystringornumericbinaryoperator */
+  /** https://tc39.es/ecma262/#sec-applystringornumericbinaryoperator */
   function ApplyStringOrNumericBinaryOperator(lval, opText, rval) {
     // 1. If opText is +, then
     if (opText === '+') {
@@ -18319,7 +18319,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return operation(lnum, rnum);
   }
 
-  /** http://tc39.es/ecma262/#sec-evaluatestringornumericbinaryexpression */
+  /** https://tc39.es/ecma262/#sec-evaluatestringornumericbinaryexpression */
   function* EvaluateStringOrNumericBinaryExpression(leftOperand, opText, rightOperand) {
     // 1. Let lref be the result of evaluating leftOperand.
     const lref = yield* Evaluate(leftOperand);
@@ -18351,7 +18351,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return ApplyStringOrNumericBinaryOperator(lval, opText, rval);
   }
 
-  /** http://tc39.es/ecma262/#sec-meta-properties */
+  /** https://tc39.es/ecma262/#sec-meta-properties */
   //   ImportMeta : `import` `.` `meta`
   function Evaluate_ImportMeta(_ImportMeta) {
     let _temp = GetActiveScriptOrModule();
@@ -18415,7 +18415,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-debugger-statement-runtime-semantics-evaluation */
+  /** https://tc39.es/ecma262/#sec-debugger-statement-runtime-semantics-evaluation */
   // DebuggerStatement : `debugger` `;`
   function Evaluate_DebuggerStatement() {
     let result;
@@ -18432,7 +18432,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return result;
   }
 
-  /** http://tc39.es/ecma262/#sec-destructuring-binding-patterns-runtime-semantics-propertybindinginitialization */
+  /** https://tc39.es/ecma262/#sec-destructuring-binding-patterns-runtime-semantics-propertybindinginitialization */
   // BindingPropertyList : BIndingPropertyList `,` BindingProperty
   // BindingProperty :
   //   SingleNameBinding
@@ -18501,7 +18501,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-keyedbindinginitialization */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-keyedbindinginitialization */
   function* KeyedBindingInitialization(node, value, environment, propertyName) {
     if (node.type === 'BindingElement') {
       let _temp = GetV(value, propertyName);
@@ -18633,7 +18633,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return NormalCompletion(undefined);
   }
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-restdestructuringassignmentevaluation */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-restdestructuringassignmentevaluation */
   // AssignmentRestProperty : `...` DestructuringAssignmentTarget
   function* RestDestructuringAssignmentEvaluation({
     DestructuringAssignmentTarget
@@ -18664,7 +18664,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 5. Return PutValue(lref, restObj).
     return PutValue(lref, restObj);
   }
-  RestDestructuringAssignmentEvaluation.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-runtime-semantics-restdestructuringassignmentevaluation';
+  RestDestructuringAssignmentEvaluation.section = 'https://tc39.es/ecma262/#sec-runtime-semantics-restdestructuringassignmentevaluation';
   function* PropertyDestructuringAssignmentEvaluation(AssignmentPropertyList, value) {
     const propertyNames = [];
     for (const AssignmentProperty of AssignmentPropertyList) {
@@ -19666,7 +19666,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     Zanb: 'Zanabazar_Square'
   };
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-unicodematchproperty-p */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-unicodematchproperty-p */
   function UnicodeMatchProperty(p) {
     // 1. Assert: p is a List of Unicode code points that is identical to a List of Unicode code points that is a Unicode property name or property alias listed in the “Property name and aliases” column of Table 55 or Table 56.
     Assert(p in NonbinaryUnicodeProperties || p in BinaryUnicodeProperties, "p in NonbinaryUnicodeProperties || p in BinaryUnicodeProperties");
@@ -19676,7 +19676,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return c;
   }
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-unicodematchpropertyvalue-p-v */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-unicodematchpropertyvalue-p-v */
   function UnicodeMatchPropertyValue(p, v) {
     // 1. Assert: p is a List of Unicode code points that is identical to a List of Unicode code points that is a canonical, unaliased Unicode property name listed in the “Canonical property name” column of Table 55.
     Assert(p in NonbinaryUnicodeProperties, "p in NonbinaryUnicodeProperties");
@@ -19702,7 +19702,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return expandedSets.get(path);
   }
 
-  /** http://tc39.es/ecma262/#sec-privateelement-specification-type */
+  /** https://tc39.es/ecma262/#sec-privateelement-specification-type */
   class PrivateElementRecord {
     Key;
     Kind;
@@ -19718,7 +19718,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-definemethodproperty */
+  /** https://tc39.es/ecma262/#sec-definemethodproperty */
   function DefineMethodProperty(key, homeObject, closure, enumerable) {
     // 1. If key is a Private Name, then
     if (key instanceof PrivateName) {
@@ -19756,7 +19756,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   //   ClassElementName `(` UniqueFormalParameters `)` `{` FunctionBody `}`
   //   `get` ClassElementName `(` `)` `{` FunctionBody `}`
   //   `set` ClassElementName `(` PropertySetParameterList `)` `{` FunctionBody `}`
-  DefineMethodProperty.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-definemethodproperty';
+  DefineMethodProperty.section = 'https://tc39.es/ecma262/#sec-definemethodproperty';
   function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition, object, enumerable) {
     switch (true) {
       case !!MethodDefinition.UniqueFormalParameters:
@@ -19909,7 +19909,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-async-function-definitions-MethodDefinitionEvaluation */
+  /** https://tc39.es/ecma262/#sec-async-function-definitions-MethodDefinitionEvaluation */
   //   AsyncMethod :
   //     `async` ClassElementName `(` UniqueFormalParameters `)` `{` AsyncFunctionBody `}`
   function* MethodDefinitionEvaluation_AsyncMethod(AsyncMethod, object, enumerable) {
@@ -19961,10 +19961,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return DefineMethodProperty(propKey, object, closure, enumerable);
   }
 
-  /** http://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation */
+  /** https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation */
   //   GeneratorMethod :
   //     `*` ClassElementName `(` UniqueFormalParameters `)` `{` GeneratorBody `}`
-  MethodDefinitionEvaluation_AsyncMethod.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-async-function-definitions-MethodDefinitionEvaluation';
+  MethodDefinitionEvaluation_AsyncMethod.section = 'https://tc39.es/ecma262/#sec-async-function-definitions-MethodDefinitionEvaluation';
   function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, enumerable) {
     const {
       ClassElementName,
@@ -20023,10 +20023,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return DefineMethodProperty(propKey, object, closure, enumerable);
   }
 
-  /** http://tc39.es/ecma262/#sec-asyncgenerator-definitions-propertydefinitionevaluation */
+  /** https://tc39.es/ecma262/#sec-asyncgenerator-definitions-propertydefinitionevaluation */
   //   AsyncGeneratorMethod :
   //     `async` `*` PropertyName `(` UniqueFormalParameters `)` `{` AsyncGeneratorBody `}`
-  MethodDefinitionEvaluation_GeneratorMethod.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation';
+  MethodDefinitionEvaluation_GeneratorMethod.section = 'https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation';
   function* MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod, object, enumerable) {
     const {
       ClassElementName,
@@ -20084,7 +20084,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 11. Return ? DefineMethodProperty(propKey, object, closure, enumerable).
     return DefineMethodProperty(propKey, object, closure, enumerable);
   }
-  MethodDefinitionEvaluation_AsyncGeneratorMethod.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-asyncgenerator-definitions-propertydefinitionevaluation';
+  MethodDefinitionEvaluation_AsyncGeneratorMethod.section = 'https://tc39.es/ecma262/#sec-asyncgenerator-definitions-propertydefinitionevaluation';
   function MethodDefinitionEvaluation(node, object, enumerable) {
     switch (node.type) {
       case 'MethodDefinition':
@@ -20161,7 +20161,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-instantiateordinaryfunctionexpression */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateordinaryfunctionexpression */
   //   FunctionExpression :
   //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
   //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
@@ -20217,7 +20217,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return closure;
   }
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-instantiategeneratorfunctionexpression */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiategeneratorfunctionexpression */
   //   GeneratorExpression :
   //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
   //     `function` `* `BindingIdentifier `(` FormalParameters `)` `{` GeneratorBody `}`
@@ -20301,7 +20301,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-instantiatearrowfunctionexpression */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiatearrowfunctionexpression */
   // ArrowFunction : ArrowParameters `=>` ConciseBody
   function InstantiateArrowFunctionExpression(ArrowFunction, name) {
     const {
@@ -20328,7 +20328,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncarrowfunctionexpression */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncarrowfunctionexpression */
   // AsyncArrowFunction : ArrowParameters `=>` AsyncConciseBody
   function InstantiateAsyncArrowFunctionExpression(AsyncArrowFunction, name) {
     const {
@@ -20355,7 +20355,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return closure;
   }
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncfunctionexpression */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncfunctionexpression */
   function InstantiateAsyncFunctionExpression(AsyncFunctionExpression, name) {
     const {
       BindingIdentifier,
@@ -20437,7 +20437,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return closure;
   }
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncgeneratorfunctionexpression */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncgeneratorfunctionexpression */
   //   AsyncGeneratorExpression :
   //     `async` `function` `*` `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
   //     `async` `function` `*` BindingIdentifier `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
@@ -20538,7 +20538,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-classstaticblockdefinitionevaluation */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-classstaticblockdefinitionevaluation */
   //    ClassStaticBlock : `static` `{` ClassStaticBlockBody `}`
   function ClassStaticBlockDefinitionEvaluation({
     ClassStaticBlockBody
@@ -20592,7 +20592,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-abstract-module-records */
+  /** https://tc39.es/ecma262/#sec-abstract-module-records */
   class AbstractModuleRecord {
     Realm;
     Environment;
@@ -20616,7 +20616,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-cyclic-module-records */
+  /** https://tc39.es/ecma262/#sec-cyclic-module-records */
   class CyclicModuleRecord extends AbstractModuleRecord {
     Status;
     EvaluationError;
@@ -20644,7 +20644,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       this.PendingAsyncDependencies = init.PendingAsyncDependencies;
     }
 
-    /** http://tc39.es/ecma262/#sec-LoadRequestedModules */
+    /** https://tc39.es/ecma262/#sec-LoadRequestedModules */
     LoadRequestedModules(hostDefined = exports.Value.undefined) {
       const module = this;
 
@@ -20667,7 +20667,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return pc.Promise;
     }
 
-    /** http://tc39.es/ecma262/#sec-moduledeclarationlinking */
+    /** https://tc39.es/ecma262/#sec-moduledeclarationlinking */
     Link() {
       const module = this;
       // 1. Assert: module.[[Status]] is unlinked, linked, evaluating-async, or evaluated.
@@ -20698,7 +20698,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return NormalCompletion(undefined);
     }
 
-    /** http://tc39.es/ecma262/#sec-moduleevaluation */
+    /** https://tc39.es/ecma262/#sec-moduleevaluation */
     Evaluate() {
       // 1. Assert: This call to Evaluate is not happening at the same time as another call to Evaluate within the surrounding agent.
       // 2. Let module be this Cyclic Module Record.
@@ -20780,7 +20780,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-source-text-module-records */
+  /** https://tc39.es/ecma262/#sec-source-text-module-records */
   class SourceTextModuleRecord extends CyclicModuleRecord {
     ImportMeta;
     ECMAScriptCode;
@@ -20800,7 +20800,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       this.StarExportEntries = init.StarExportEntries;
     }
 
-    /** http://tc39.es/ecma262/#sec-getexportednames */
+    /** https://tc39.es/ecma262/#sec-getexportednames */
     GetExportedNames(exportStarSet) {
       const module = this;
       // 1. Assert: module.[[Status]] is not new.
@@ -20853,7 +20853,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return exportedNames;
     }
 
-    /** http://tc39.es/ecma262/#sec-resolveexport */
+    /** https://tc39.es/ecma262/#sec-resolveexport */
     ResolveExport(exportName, resolveSet) {
       const module = this;
       // 1. Assert: module.[[Status]] is not new.
@@ -20950,7 +20950,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return starResolution;
     }
 
-    /** http://tc39.es/ecma262/#sec-source-text-module-record-initialize-environment */
+    /** https://tc39.es/ecma262/#sec-source-text-module-record-initialize-environment */
     InitializeEnvironment() {
       const module = this;
       // 1. For each ExportEntry Record e in module.[[IndirectExportEntries]], do
@@ -21106,7 +21106,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return NormalCompletion(undefined);
     }
 
-    /** http://tc39.es/ecma262/#sec-source-text-module-record-execute-module */
+    /** https://tc39.es/ecma262/#sec-source-text-module-record-execute-module */
     ExecuteModule(capability) {
       // 1. Let module be this Source Text Module Record.
       const module = this;
@@ -21146,7 +21146,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-synthetic-module-records */
+  /** https://tc39.es/ecma262/#sec-synthetic-module-records */
   class SyntheticModuleRecord extends AbstractModuleRecord {
     ExportNames;
     EvaluationSteps;
@@ -21156,14 +21156,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       this.EvaluationSteps = init.EvaluationSteps;
     }
 
-    /** http://tc39.es/ecma262/#sec-synthetic-module-record-getexportednames */
+    /** https://tc39.es/ecma262/#sec-synthetic-module-record-getexportednames */
     GetExportedNames(_exportStarSet) {
       const module = this;
       // 1. Return module.[[ExportNames]].
       return module.ExportNames;
     }
 
-    /** http://tc39.es/ecma262/#sec-synthetic-module-record-resolveexport */
+    /** https://tc39.es/ecma262/#sec-synthetic-module-record-resolveexport */
     ResolveExport(exportName, _resolveSet) {
       const module = this;
       // 1. If module.[[ExportNames]] does not contain exportName, return null.
@@ -21179,7 +21179,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return null;
     }
 
-    /** http://tc39.es/ecma262/#sec-synthetic-module-record-link */
+    /** https://tc39.es/ecma262/#sec-synthetic-module-record-link */
     Link() {
       const module = this;
       // 1. Let realm be module.[[Realm]].
@@ -21210,7 +21210,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return exports.Value.undefined;
     }
 
-    /** http://tc39.es/ecma262/#sec-synthetic-module-record-evaluate */
+    /** https://tc39.es/ecma262/#sec-synthetic-module-record-evaluate */
     Evaluate() {
       const module = this;
       // 1. Suspend the currently running execution context.
@@ -21238,7 +21238,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return exports.Completion(result);
     }
 
-    /** http://tc39.es/ecma262/#sec-synthetic-module-record-set-synthetic-export */
+    /** https://tc39.es/ecma262/#sec-synthetic-module-record-set-synthetic-export */
     SetSyntheticExport(name, value) {
       const module = this;
       // 1. Return ? module.[[Environment]].SetMutableBinding(name, value, true).
@@ -21246,7 +21246,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-environment-records */
+  /** https://tc39.es/ecma262/#sec-environment-records */
   class EnvironmentRecord {
     OuterEnv;
 
@@ -21256,11 +21256,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-declarative-environment-records */
+  /** https://tc39.es/ecma262/#sec-declarative-environment-records */
   class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     bindings = new ValueMap();
 
-    /** http://tc39.es/ecma262/#sec-declarative-environment-records-hasbinding-n */
+    /** https://tc39.es/ecma262/#sec-declarative-environment-records-hasbinding-n */
     HasBinding(N) {
       // 1. Let envRec be the declarative Environment Record for which the method was invoked.
       const envRec = this;
@@ -21272,7 +21272,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return exports.Value.false;
     }
 
-    /** http://tc39.es/ecma262/#sec-declarative-environment-records-createmutablebinding-n-d */
+    /** https://tc39.es/ecma262/#sec-declarative-environment-records-createmutablebinding-n-d */
     CreateMutableBinding(N, D) {
       // 1. Let envRec be the declarative Environment Record for which the method was invoked.
       const envRec = this;
@@ -21296,7 +21296,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return NormalCompletion(undefined);
     }
 
-    /** http://tc39.es/ecma262/#sec-declarative-environment-records-createimmutablebinding-n-s */
+    /** https://tc39.es/ecma262/#sec-declarative-environment-records-createimmutablebinding-n-s */
     CreateImmutableBinding(N, S) {
       // 1. Let envRec be the declarative Environment Record for which the method was invoked.
       const envRec = this;
@@ -21319,7 +21319,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return NormalCompletion(undefined);
     }
 
-    /** http://tc39.es/ecma262/#sec-declarative-environment-records-initializebinding-n-v */
+    /** https://tc39.es/ecma262/#sec-declarative-environment-records-initializebinding-n-v */
     InitializeBinding(N, V) {
       // 1. Let envRec be the declarative Environment Record for which the method was invoked.
       const envRec = this;
@@ -21334,7 +21334,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return NormalCompletion(undefined);
     }
 
-    /** http://tc39.es/ecma262/#sec-declarative-environment-records-setmutablebinding-n-v-s */
+    /** https://tc39.es/ecma262/#sec-declarative-environment-records-setmutablebinding-n-v-s */
     SetMutableBinding(N, V, S) {
       Assert(IsPropertyKey(N), "IsPropertyKey(N)");
       // 1. Let envRec be the declarative Environment Record for which the method was invoked.
@@ -21375,7 +21375,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return NormalCompletion(undefined);
     }
 
-    /** http://tc39.es/ecma262/#sec-declarative-environment-records-getbindingvalue-n-s */
+    /** https://tc39.es/ecma262/#sec-declarative-environment-records-getbindingvalue-n-s */
     GetBindingValue(N) {
       // 1. Let envRec be the declarative Environment Record for which the method was invoked.
       const envRec = this;
@@ -21390,7 +21390,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return binding.value;
     }
 
-    /** http://tc39.es/ecma262/#sec-declarative-environment-records-deletebinding-n */
+    /** https://tc39.es/ecma262/#sec-declarative-environment-records-deletebinding-n */
     DeleteBinding(N) {
       // 1. Let envRec be the declarative Environment Record for which the method was invoked.
       const envRec = this;
@@ -21407,19 +21407,19 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return exports.Value.true;
     }
 
-    /** http://tc39.es/ecma262/#sec-declarative-environment-records-hasthisbinding */
+    /** https://tc39.es/ecma262/#sec-declarative-environment-records-hasthisbinding */
     HasThisBinding() {
       // 1. Return false.
       return exports.Value.false;
     }
 
-    /** http://tc39.es/ecma262/#sec-declarative-environment-records-hassuperbinding */
+    /** https://tc39.es/ecma262/#sec-declarative-environment-records-hassuperbinding */
     HasSuperBinding() {
       // 1. Return false.
       return exports.Value.false;
     }
 
-    /** http://tc39.es/ecma262/#sec-declarative-environment-records-withbaseobject */
+    /** https://tc39.es/ecma262/#sec-declarative-environment-records-withbaseobject */
     WithBaseObject() {
       // 1. Return undefined.
       return exports.Value.undefined;
@@ -21431,12 +21431,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-object-environment-records */
+  /** https://tc39.es/ecma262/#sec-object-environment-records */
   class ObjectEnvironmentRecord extends EnvironmentRecord {
     BindingObject;
     IsWithEnvironment;
 
-    /** http://tc39.es/ecma262/#sec-object-environment-records-hasbinding-n */
+    /** https://tc39.es/ecma262/#sec-object-environment-records-hasbinding-n */
     HasBinding(N) {
       // 1. Let envRec be the object Environment Record for which the method was invoked.
       const envRec = this;
@@ -21500,7 +21500,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return exports.Value.true;
     }
 
-    /** http://tc39.es/ecma262/#sec-object-environment-records-createmutablebinding-n-d */
+    /** https://tc39.es/ecma262/#sec-object-environment-records-createmutablebinding-n-d */
     CreateMutableBinding(N, D) {
       // 1. Let envRec be the object Environment Record for which the method was invoked.
       const envRec = this;
@@ -21515,12 +21515,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }));
     }
 
-    /** http://tc39.es/ecma262/#sec-object-environment-records-createimmutablebinding-n-s */
+    /** https://tc39.es/ecma262/#sec-object-environment-records-createimmutablebinding-n-s */
     CreateImmutableBinding(_N, _S) {
       Assert(false, 'CreateImmutableBinding called on an Object Environment Record');
     }
 
-    /** http://tc39.es/ecma262/#sec-object-environment-records-initializebinding-n-v */
+    /** https://tc39.es/ecma262/#sec-object-environment-records-initializebinding-n-v */
     InitializeBinding(N, V) {
       // 1. Let envRec be the object Environment Record for which the method was invoked.
       const envRec = this;
@@ -21530,7 +21530,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return envRec.SetMutableBinding(N, V, exports.Value.false);
     }
 
-    /** http://tc39.es/ecma262/#sec-object-environment-records-setmutablebinding-n-v-s */
+    /** https://tc39.es/ecma262/#sec-object-environment-records-setmutablebinding-n-v-s */
     SetMutableBinding(N, V, S) {
       // 1. Let envRec be the object Environment Record for which the method was invoked.
       const envRec = this;
@@ -21555,7 +21555,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return Set$1(bindings, N, V, S);
     }
 
-    /** http://tc39.es/ecma262/#sec-object-environment-records-getbindingvalue-n-s */
+    /** https://tc39.es/ecma262/#sec-object-environment-records-getbindingvalue-n-s */
     GetBindingValue(N, S) {
       // 1. Let envRec be the object Environment Record for which the method was invoked.
       const envRec = this;
@@ -21585,7 +21585,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return Get(bindings, N);
     }
 
-    /** http://tc39.es/ecma262/#sec-object-environment-records-deletebinding-n */
+    /** https://tc39.es/ecma262/#sec-object-environment-records-deletebinding-n */
     DeleteBinding(N) {
       // 1. Let envRec be the object Environment Record for which the method was invoked.
       const envRec = this;
@@ -21595,19 +21595,19 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return bindings.Delete(N);
     }
 
-    /** http://tc39.es/ecma262/#sec-object-environment-records-hasthisbinding */
+    /** https://tc39.es/ecma262/#sec-object-environment-records-hasthisbinding */
     HasThisBinding() {
       // 1. Return false.
       return exports.Value.false;
     }
 
-    /** http://tc39.es/ecma262/#sec-object-environment-records-hassuperbinding */
+    /** https://tc39.es/ecma262/#sec-object-environment-records-hassuperbinding */
     HasSuperBinding() {
       // 1. Return falase.
       return exports.Value.false;
     }
 
-    /** http://tc39.es/ecma262/#sec-object-environment-records-withbaseobject */
+    /** https://tc39.es/ecma262/#sec-object-environment-records-withbaseobject */
     WithBaseObject() {
       // 1. Let envRec be the object Environment Record for which the method was invoked.
       const envRec = this;
@@ -21625,14 +21625,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-function-environment-records */
+  /** https://tc39.es/ecma262/#sec-function-environment-records */
   class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
     ThisValue;
     ThisBindingStatus;
     FunctionObject;
     NewTarget;
 
-    /** http://tc39.es/ecma262/#sec-bindthisvalue */
+    /** https://tc39.es/ecma262/#sec-bindthisvalue */
     BindThisValue(V) {
       // 1. Let envRec be the function Environment Record for which the method was invoked.
       const envRec = this;
@@ -21650,7 +21650,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return V;
     }
 
-    /** http://tc39.es/ecma262/#sec-function-environment-records-hasthisbinding */
+    /** https://tc39.es/ecma262/#sec-function-environment-records-hasthisbinding */
     HasThisBinding() {
       // 1. Let envRec be the function Environment Record for which the method was invoked.
       const envRec = this;
@@ -21662,7 +21662,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
     }
 
-    /** http://tc39.es/ecma262/#sec-function-environment-records-hassuperbinding */
+    /** https://tc39.es/ecma262/#sec-function-environment-records-hassuperbinding */
     HasSuperBinding() {
       const envRec = this;
       // 1. If envRec.[[ThisBindingStatus]] is lexical, return false.
@@ -21677,7 +21677,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
     }
 
-    /** http://tc39.es/ecma262/#sec-function-environment-records-getthisbinding */
+    /** https://tc39.es/ecma262/#sec-function-environment-records-getthisbinding */
     GetThisBinding() {
       // 1. Let envRec be the function Environment Record for which the method was invoked.
       const envRec = this;
@@ -21691,7 +21691,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return envRec.ThisValue;
     }
 
-    /** http://tc39.es/ecma262/#sec-getsuperbase */
+    /** https://tc39.es/ecma262/#sec-getsuperbase */
     GetSuperBase() {
       const envRec = this;
       // 1. Let home be envRec.[[FunctionObject]].[[HomeObject]].
@@ -21713,14 +21713,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-global-environment-records */
+  /** https://tc39.es/ecma262/#sec-global-environment-records */
   class GlobalEnvironmentRecord extends EnvironmentRecord {
     ObjectRecord;
     GlobalThisValue;
     DeclarativeRecord;
     VarNames;
 
-    /** http://tc39.es/ecma262/#sec-global-environment-records-hasbinding-n */
+    /** https://tc39.es/ecma262/#sec-global-environment-records-hasbinding-n */
     HasBinding(N) {
       // 1. Let envRec be the global Environment Record for which the method was invoked.
       const envRec = this;
@@ -21736,7 +21736,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return ObjRec.HasBinding(N);
     }
 
-    /** http://tc39.es/ecma262/#sec-global-environment-records-createmutablebinding-n-d */
+    /** https://tc39.es/ecma262/#sec-global-environment-records-createmutablebinding-n-d */
     CreateMutableBinding(N, D) {
       // 1. Let envRec be the global Environment Record for which the method was invoked.
       const envRec = this;
@@ -21750,7 +21750,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return DclRec.CreateMutableBinding(N, D);
     }
 
-    /** http://tc39.es/ecma262/#sec-global-environment-records-createimmutablebinding-n-s */
+    /** https://tc39.es/ecma262/#sec-global-environment-records-createimmutablebinding-n-s */
     CreateImmutableBinding(N, S) {
       // 1. Let envRec be the global Environment Record for which the method was invoked.
       const envRec = this;
@@ -21764,7 +21764,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return DclRec.CreateImmutableBinding(N, S);
     }
 
-    /** http://tc39.es/ecma262/#sec-global-environment-records-initializebinding-n-v */
+    /** https://tc39.es/ecma262/#sec-global-environment-records-initializebinding-n-v */
     InitializeBinding(N, V) {
       // 1. Let envRec be the global Environment Record for which the method was invoked.
       const envRec = this;
@@ -21782,7 +21782,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return ObjRec.InitializeBinding(N, V);
     }
 
-    /** http://tc39.es/ecma262/#sec-global-environment-records-setmutablebinding-n-v-s */
+    /** https://tc39.es/ecma262/#sec-global-environment-records-setmutablebinding-n-v-s */
     SetMutableBinding(N, V, S) {
       // 1. Let envRec be the global Environment Record for which the method was invoked.
       const envRec = this;
@@ -21799,7 +21799,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return ObjRec.SetMutableBinding(N, V, S);
     }
 
-    /** http://tc39.es/ecma262/#sec-global-environment-records-getbindingvalue-n-s */
+    /** https://tc39.es/ecma262/#sec-global-environment-records-getbindingvalue-n-s */
     GetBindingValue(N, S) {
       // 1. Let envRec be the global Environment Record for which the method was invoked.
       const envRec = this;
@@ -21816,7 +21816,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return ObjRec.GetBindingValue(N, S);
     }
 
-    /** http://tc39.es/ecma262/#sec-global-environment-records-deletebinding-n */
+    /** https://tc39.es/ecma262/#sec-global-environment-records-deletebinding-n */
     DeleteBinding(N) {
       // 1. Let envRec be the global Environment Record for which the method was invoked.
       const envRec = this;
@@ -21872,25 +21872,25 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return exports.Value.true;
     }
 
-    /** http://tc39.es/ecma262/#sec-global-environment-records-hasthisbinding */
+    /** https://tc39.es/ecma262/#sec-global-environment-records-hasthisbinding */
     HasThisBinding() {
       // Return true.
       return exports.Value.true;
     }
 
-    /** http://tc39.es/ecma262/#sec-global-environment-records-hassuperbinding */
+    /** https://tc39.es/ecma262/#sec-global-environment-records-hassuperbinding */
     HasSuperBinding() {
       // 1. Return false.
       return exports.Value.false;
     }
 
-    /** http://tc39.es/ecma262/#sec-global-environment-records-withbaseobject */
+    /** https://tc39.es/ecma262/#sec-global-environment-records-withbaseobject */
     WithBaseObject() {
       // 1. Return undefined.
       return exports.Value.undefined;
     }
 
-    /** http://tc39.es/ecma262/#sec-global-environment-records-getthisbinding */
+    /** https://tc39.es/ecma262/#sec-global-environment-records-getthisbinding */
     GetThisBinding() {
       // 1. Let envRec be the global Environment Record for which the method was invoked.
       const envRec = this;
@@ -21898,7 +21898,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return envRec.GlobalThisValue;
     }
 
-    /** http://tc39.es/ecma262/#sec-hasvardeclaration */
+    /** https://tc39.es/ecma262/#sec-hasvardeclaration */
     HasVarDeclaration(N) {
       // 1. Let envRec be the global Environment Record for which the method was invoked.
       const envRec = this;
@@ -21912,7 +21912,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return exports.Value.false;
     }
 
-    /** http://tc39.es/ecma262/#sec-haslexicaldeclaration */
+    /** https://tc39.es/ecma262/#sec-haslexicaldeclaration */
     HasLexicalDeclaration(N) {
       // 1. Let envRec be the global Environment Record for which the method was invoked.
       const envRec = this;
@@ -21922,7 +21922,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return DclRec.HasBinding(N);
     }
 
-    /** http://tc39.es/ecma262/#sec-hasrestrictedglobalproperty */
+    /** https://tc39.es/ecma262/#sec-hasrestrictedglobalproperty */
     HasRestrictedGlobalProperty(N) {
       // 1. Let envRec be the global Environment Record for which the method was invoked.
       const envRec = this;
@@ -21953,7 +21953,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return exports.Value.true;
     }
 
-    /** http://tc39.es/ecma262/#sec-candeclareglobalvar */
+    /** https://tc39.es/ecma262/#sec-candeclareglobalvar */
     CanDeclareGlobalVar(N) {
       // 1. Let envRec be the global Environment Record for which the method was invoked.
       const envRec = this;
@@ -21980,7 +21980,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return IsExtensible(globalObject);
     }
 
-    /** http://tc39.es/ecma262/#sec-candeclareglobalfunction */
+    /** https://tc39.es/ecma262/#sec-candeclareglobalfunction */
     CanDeclareGlobalFunction(N) {
       // 1. Let envRec be the global Environment Record for which the method was invoked.
       const envRec = this;
@@ -22016,7 +22016,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return exports.Value.false;
     }
 
-    /** http://tc39.es/ecma262/#sec-createglobalvarbinding */
+    /** https://tc39.es/ecma262/#sec-createglobalvarbinding */
     CreateGlobalVarBinding(N, D) {
       // 1. Let envRec be the global Environment Record for which the method was invoked.
       const envRec = this;
@@ -22079,7 +22079,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return NormalCompletion(undefined);
     }
 
-    /** http://tc39.es/ecma262/#sec-createglobalfunctionbinding */
+    /** https://tc39.es/ecma262/#sec-createglobalfunctionbinding */
     CreateGlobalFunctionBinding(N, V, D) {
       // 1. Let envRec be the global Environment Record for which the method was invoked.
       const envRec = this;
@@ -22152,9 +22152,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-module-environment-records */
+  /** https://tc39.es/ecma262/#sec-module-environment-records */
   class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
-    /** http://tc39.es/ecma262/#sec-module-environment-records-getbindingvalue-n-s */
+    /** https://tc39.es/ecma262/#sec-module-environment-records-getbindingvalue-n-s */
     GetBindingValue(N, S) {
       // 1. Assert: S is true.
       Assert(S === exports.Value.true, "S === Value.true");
@@ -22184,24 +22184,24 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return binding.value;
     }
 
-    /** http://tc39.es/ecma262/#sec-module-environment-records-deletebinding-n */
+    /** https://tc39.es/ecma262/#sec-module-environment-records-deletebinding-n */
     DeleteBinding() {
       Assert(false, 'This method is never invoked. See #sec-delete-operator-static-semantics-early-errors');
     }
 
-    /** http://tc39.es/ecma262/#sec-module-environment-records-hasthisbinding */
+    /** https://tc39.es/ecma262/#sec-module-environment-records-hasthisbinding */
     HasThisBinding() {
       // Return true.
       return exports.Value.true;
     }
 
-    /** http://tc39.es/ecma262/#sec-module-environment-records-getthisbinding */
+    /** https://tc39.es/ecma262/#sec-module-environment-records-getthisbinding */
     GetThisBinding() {
       // Return undefined.
       return exports.Value.undefined;
     }
 
-    /** http://tc39.es/ecma262/#sec-createimportbinding */
+    /** https://tc39.es/ecma262/#sec-createimportbinding */
     CreateImportBinding(N, M, N2) {
       // 1. Let envRec be the module Environment Record for which the method was invoked.
       const envRec = this;
@@ -22225,7 +22225,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-getidentifierreference */
+  /** https://tc39.es/ecma262/#sec-getidentifierreference */
   function GetIdentifierReference(env, name, strict) {
     // 1. If lex is the value null, then
     if (env === exports.Value.null) {
@@ -22265,7 +22265,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-newdeclarativeenvironment */
+  /** https://tc39.es/ecma262/#sec-newdeclarativeenvironment */
   function NewDeclarativeEnvironment(E) {
     // 1. Let env be a new declarative Environment Record containing O as the binding object.
     const env = new DeclarativeEnvironmentRecord();
@@ -22275,7 +22275,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return env;
   }
 
-  /** http://tc39.es/ecma262/#sec-newobjectenvironment */
+  /** https://tc39.es/ecma262/#sec-newobjectenvironment */
   function NewObjectEnvironment(O, W, E) {
     // 1. Let env be a new object Environment Record.
     const env = new ObjectEnvironmentRecord();
@@ -22289,7 +22289,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return env;
   }
 
-  /** http://tc39.es/ecma262/#sec-newfunctionenvironment */
+  /** https://tc39.es/ecma262/#sec-newfunctionenvironment */
   function NewFunctionEnvironment(F, newTarget) {
     // 1. Assert: F is an ECMAScript function.
     Assert(isECMAScriptFunctionObject(F), "isECMAScriptFunctionObject(F)");
@@ -22314,7 +22314,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return env;
   }
 
-  /** http://tc39.es/ecma262/#sec-newglobalenvironment */
+  /** https://tc39.es/ecma262/#sec-newglobalenvironment */
   function NewGlobalEnvironment(G, thisValue) {
     // 1. Let objRec be NewObjectEnvironment(G, false, null).
     const objRec = NewObjectEnvironment(G, exports.Value.false, exports.Value.null);
@@ -22336,7 +22336,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return env;
   }
 
-  /** http://tc39.es/ecma262/#sec-newmoduleenvironment */
+  /** https://tc39.es/ecma262/#sec-newmoduleenvironment */
   function NewModuleEnvironment(E) {
     // 1. Let env be a new module Environment Record containing no bindings.
     const env = new ModuleEnvironmentRecord();
@@ -22359,7 +22359,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-newprivateenvironment */
+  /** https://tc39.es/ecma262/#sec-newprivateenvironment */
   function NewPrivateEnvironment(outerPrivEnv) {
     // 1. Let names be a new empty List.
     const names = [];
@@ -22401,7 +22401,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   });
   // @ts-expect-error callable class
-  /** http://tc39.es/ecma262/#sec-ecmascript-language-types */
+  /** https://tc39.es/ecma262/#sec-ecmascript-language-types */
   new class extends _identity {
     static {
       class Value {
@@ -22422,13 +22422,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }();
   class PrimitiveValue extends exports.Value {}
-  /** http://tc39.es/ecma262/#sec-ecmascript-language-types-undefined-type */
+  /** https://tc39.es/ecma262/#sec-ecmascript-language-types-undefined-type */
   class UndefinedValue extends PrimitiveValue {}
 
-  /** http://tc39.es/ecma262/#sec-ecmascript-language-types-null-type */
+  /** https://tc39.es/ecma262/#sec-ecmascript-language-types-null-type */
   class NullValue extends PrimitiveValue {}
 
-  /** http://tc39.es/ecma262/#sec-ecmascript-language-types-boolean-type */
+  /** https://tc39.es/ecma262/#sec-ecmascript-language-types-boolean-type */
   class BooleanValue extends PrimitiveValue {
     boolean;
     constructor(v) {
@@ -22465,7 +22465,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   });
 
-  /** http://tc39.es/ecma262/#sec-ecmascript-language-types-string-type */
+  /** https://tc39.es/ecma262/#sec-ecmascript-language-types-string-type */
   class StringValue extends PrimitiveValue {
     string;
     constructor(string) {
@@ -22477,7 +22477,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-ecmascript-language-types-symbol-type */
+  /** https://tc39.es/ecma262/#sec-ecmascript-language-types-symbol-type */
   class SymbolValue extends PrimitiveValue {
     Description;
     constructor(Description) {
@@ -22503,7 +22503,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   Object.setPrototypeOf(wellKnownSymbols, null);
   Object.freeze(wellKnownSymbols);
 
-  /** http://tc39.es/ecma262/#sec-ecmascript-language-types-number-type */
+  /** https://tc39.es/ecma262/#sec-ecmascript-language-types-number-type */
   class NumberValue extends PrimitiveValue {
     number;
     constructor(number) {
@@ -22523,7 +22523,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return Number.isFinite(this.number);
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-number-unaryMinus */
+    /** https://tc39.es/ecma262/#sec-numeric-types-number-unaryMinus */
     static unaryMinus(x) {
       if (x.isNaN()) {
         return F(NaN);
@@ -22531,7 +22531,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return F(-x.numberValue());
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-number-bitwiseNOT */
+    /** https://tc39.es/ecma262/#sec-numeric-types-number-bitwiseNOT */
     static bitwiseNOT(x) {
       let _temp = ToInt32(x);
       Assert(!(_temp instanceof AbruptCompletion), "ToInt32(x)" + ' returned an abrupt completion');
@@ -22545,38 +22545,38 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return F(~oldValue.numberValue());
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-number-exponentiate */
+    /** https://tc39.es/ecma262/#sec-numeric-types-number-exponentiate */
     static exponentiate(base, exponent) {
       return F(base.numberValue() ** exponent.numberValue());
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-number-multiply */
+    /** https://tc39.es/ecma262/#sec-numeric-types-number-multiply */
     static multiply(x, y) {
       return F(x.numberValue() * y.numberValue());
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-number-divide */
+    /** https://tc39.es/ecma262/#sec-numeric-types-number-divide */
     static divide(x, y) {
       return F(x.numberValue() / y.numberValue());
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-number-remainder */
+    /** https://tc39.es/ecma262/#sec-numeric-types-number-remainder */
     static remainder(n, d) {
       return F(n.numberValue() % d.numberValue());
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-number-add */
+    /** https://tc39.es/ecma262/#sec-numeric-types-number-add */
     static add(x, y) {
       return F(x.numberValue() + y.numberValue());
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-number-subtract */
+    /** https://tc39.es/ecma262/#sec-numeric-types-number-subtract */
     static subtract(x, y) {
       // The result of - operator is x + (-y).
       return NumberValue.add(x, F(-y.numberValue()));
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-number-leftShift */
+    /** https://tc39.es/ecma262/#sec-numeric-types-number-leftShift */
     static leftShift(x, y) {
       let _temp2 = ToInt32(x);
       Assert(!(_temp2 instanceof AbruptCompletion), "ToInt32(x)" + ' returned an abrupt completion');
@@ -22600,7 +22600,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return F(lnum.numberValue() << shiftCount); // eslint-disable-line no-bitwise
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-number-signedRightShift */
+    /** https://tc39.es/ecma262/#sec-numeric-types-number-signedRightShift */
     static signedRightShift(x, y) {
       let _temp4 = ToInt32(x);
       Assert(!(_temp4 instanceof AbruptCompletion), "ToInt32(x)" + ' returned an abrupt completion');
@@ -22625,7 +22625,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return F(lnum.numberValue() >> shiftCount); // eslint-disable-line no-bitwise
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-number-unsignedRightShift */
+    /** https://tc39.es/ecma262/#sec-numeric-types-number-unsignedRightShift */
     static unsignedRightShift(x, y) {
       let _temp6 = ToInt32(x);
       Assert(!(_temp6 instanceof AbruptCompletion), "ToInt32(x)" + ' returned an abrupt completion');
@@ -22650,7 +22650,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return F(lnum.numberValue() >>> shiftCount); // eslint-disable-line no-bitwise
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-number-lessThan */
+    /** https://tc39.es/ecma262/#sec-numeric-types-number-lessThan */
     static lessThan(x, y) {
       if (x.isNaN()) {
         return exports.Value.undefined;
@@ -22679,7 +22679,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return x.numberValue() < y.numberValue() ? exports.Value.true : exports.Value.false;
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-number-equal */
+    /** https://tc39.es/ecma262/#sec-numeric-types-number-equal */
     static equal(x, y) {
       if (x.isNaN()) {
         return exports.Value.false;
@@ -22701,7 +22701,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return exports.Value.false;
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-number-sameValue */
+    /** https://tc39.es/ecma262/#sec-numeric-types-number-sameValue */
     static sameValue(x, y) {
       if (x.isNaN() && y.isNaN()) {
         return exports.Value.true;
@@ -22720,7 +22720,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return exports.Value.false;
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-number-sameValueZero */
+    /** https://tc39.es/ecma262/#sec-numeric-types-number-sameValueZero */
     static sameValueZero(x, y) {
       if (x.isNaN() && y.isNaN()) {
         return exports.Value.true;
@@ -22739,25 +22739,25 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return exports.Value.false;
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-number-bitwiseAND */
+    /** https://tc39.es/ecma262/#sec-numeric-types-number-bitwiseAND */
     static bitwiseAND(x, y) {
       // 1. Return NumberBitwiseOp(&, x, y).
       return NumberBitwiseOp('&', x, y);
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-number-bitwiseXOR */
+    /** https://tc39.es/ecma262/#sec-numeric-types-number-bitwiseXOR */
     static bitwiseXOR(x, y) {
       // 1. Return NumberBitwiseOp(^, x, y).
       return NumberBitwiseOp('^', x, y);
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-number-bitwiseOR */
+    /** https://tc39.es/ecma262/#sec-numeric-types-number-bitwiseOR */
     static bitwiseOR(x, y) {
       // 1. Return NumberBitwiseOp(|, x, y).
       return NumberBitwiseOp('|', x, y);
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-number-tostring */
+    /** https://tc39.es/ecma262/#sec-numeric-types-number-tostring */
     static toString(x) {
       if (x.isNaN()) {
         return exports.Value('NaN');
@@ -22785,7 +22785,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     static unit = new NumberValue(1);
   }
 
-  /** http://tc39.es/ecma262/#sec-numberbitwiseop */
+  /** https://tc39.es/ecma262/#sec-numberbitwiseop */
   function NumberBitwiseOp(op, x, y) {
     let _temp9 = ToInt32(x);
     Assert(!(_temp9 instanceof AbruptCompletion), "ToInt32(x)" + ' returned an abrupt completion');
@@ -22816,8 +22816,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-ecmascript-language-types-bigint-type */
-  NumberBitwiseOp.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-numberbitwiseop';
+  /** https://tc39.es/ecma262/#sec-ecmascript-language-types-bigint-type */
+  NumberBitwiseOp.section = 'https://tc39.es/ecma262/#sec-numberbitwiseop';
   class BigIntValue extends PrimitiveValue {
     bigint;
     constructor(bigint) {
@@ -22834,7 +22834,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return true;
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-bigint-unaryMinus */
+    /** https://tc39.es/ecma262/#sec-numeric-types-bigint-unaryMinus */
     static unaryMinus(x) {
       if (x.bigintValue() === 0n) {
         return Z(0n);
@@ -22842,12 +22842,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return Z(-x.bigintValue());
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseNOT */
+    /** https://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseNOT */
     static bitwiseNOT(x) {
       return Z(-x.bigintValue() - 1n);
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-bigint-exponentiate */
+    /** https://tc39.es/ecma262/#sec-numeric-types-bigint-exponentiate */
     static exponentiate(base, exponent) {
       // 1. If exponent < 0n, throw a RangeError exception.
       if (exponent.bigintValue() < 0n) {
@@ -22861,12 +22861,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return Z(base.bigintValue() ** exponent.bigintValue());
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-bigint-multiply */
+    /** https://tc39.es/ecma262/#sec-numeric-types-bigint-multiply */
     static multiply(x, y) {
       return Z(x.bigintValue() * y.bigintValue());
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-bigint-divide */
+    /** https://tc39.es/ecma262/#sec-numeric-types-bigint-divide */
     static divide(x, y) {
       // 1. If y is 0n, throw a RangeError exception.
       if (y.bigintValue() === 0n) {
@@ -22878,7 +22878,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return Z(quotient);
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-bigint-remainder */
+    /** https://tc39.es/ecma262/#sec-numeric-types-bigint-remainder */
     static remainder(n, d) {
       // 1. If d is 0n, throw a RangeError exception.
       if (d.bigintValue() === 0n) {
@@ -22897,74 +22897,74 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return r;
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-bigint-add */
+    /** https://tc39.es/ecma262/#sec-numeric-types-bigint-add */
     static add(x, y) {
       return Z(x.bigintValue() + y.bigintValue());
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-bigint-subtract */
+    /** https://tc39.es/ecma262/#sec-numeric-types-bigint-subtract */
     static subtract(x, y) {
       return Z(x.bigintValue() - y.bigintValue());
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-bigint-leftShift */
+    /** https://tc39.es/ecma262/#sec-numeric-types-bigint-leftShift */
     static leftShift(x, y) {
       return Z(x.bigintValue() << y.bigintValue()); // eslint-disable-line no-bitwise
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-bigint-signedRightShift */
+    /** https://tc39.es/ecma262/#sec-numeric-types-bigint-signedRightShift */
     static signedRightShift(x, y) {
       // 1. Return BigInt::leftShift(x, -y).
       return BigIntValue.leftShift(x, Z(-y.bigintValue()));
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-bigint-unsignedRightShift */
+    /** https://tc39.es/ecma262/#sec-numeric-types-bigint-unsignedRightShift */
     static unsignedRightShift(_x, _y) {
       return exports.surroundingAgent.Throw('TypeError', 'BigIntUnsignedRightShift');
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-bigint-lessThan */
+    /** https://tc39.es/ecma262/#sec-numeric-types-bigint-lessThan */
     static lessThan(x, y) {
       return x.bigintValue() < y.bigintValue() ? exports.Value.true : exports.Value.false;
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-bigint-equal */
+    /** https://tc39.es/ecma262/#sec-numeric-types-bigint-equal */
     static equal(x, y) {
       // Return true if x and y have the same mathematical integer value and false otherwise.
       return x.bigintValue() === y.bigintValue() ? exports.Value.true : exports.Value.false;
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-bigint-sameValue */
+    /** https://tc39.es/ecma262/#sec-numeric-types-bigint-sameValue */
     static sameValue(x, y) {
       // 1. Return BigInt::equal(x, y).
       return BigIntValue.equal(x, y);
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-bigint-sameValueZero */
+    /** https://tc39.es/ecma262/#sec-numeric-types-bigint-sameValueZero */
     static sameValueZero(x, y) {
       // 1. Return BigInt::equal(x, y).
       return BigIntValue.equal(x, y);
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseAND */
+    /** https://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseAND */
     static bitwiseAND(x, y) {
       // 1. Return BigIntBitwiseOp(&, x, y).
       return BigIntBitwiseOp('&', x, y);
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseXOR */
+    /** https://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseXOR */
     static bitwiseXOR(x, y) {
       // 1. Return BigIntBitwiseOp(^, x, y).
       return BigIntBitwiseOp('^', x, y);
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseOR */
+    /** https://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseOR */
     static bitwiseOR(x, y) {
       // 1. Return BigIntBitwiseOp(|, x, y);
       return BigIntBitwiseOp('|', x, y);
     }
 
-    /** http://tc39.es/ecma262/#sec-numeric-types-bigint-tostring */
+    /** https://tc39.es/ecma262/#sec-numeric-types-bigint-tostring */
     static toString(x) {
       // 1. If x is less than zero, return the string-concatenation of the String "-" and ! BigInt::toString(-x).
       if (x.bigintValue() < 0n) {
@@ -22984,7 +22984,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   /*
-  /** http://tc39.es/ecma262/#sec-binaryand */
+  /** https://tc39.es/ecma262/#sec-binaryand */
   // function BinaryAnd(x, y) {
   //   // 1. Assert: x is 0 or 1.
   //   Assert(x === 0n || x === 1n);
@@ -22999,7 +22999,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   //   }
   // }
 
-  /** http://tc39.es/ecma262/#sec-binaryor */
+  /** https://tc39.es/ecma262/#sec-binaryor */
   // function BinaryOr(x, y) {
   //   // 1. Assert: x is 0 or 1.
   //   Assert(x === 0n || x === 1n);
@@ -23014,7 +23014,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   //   }
   // }
 
-  /** http://tc39.es/ecma262/#sec-binaryxor */
+  /** https://tc39.es/ecma262/#sec-binaryxor */
   // function BinaryXor(x, y) {
   //   // 1. Assert: x is 0 or 1.
   //   Assert(x === 0n || x === 1n);
@@ -23032,7 +23032,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   //   }
   // }
 
-  /** http://tc39.es/ecma262/#sec-bigintbitwiseop */
+  /** https://tc39.es/ecma262/#sec-bigintbitwiseop */
   function BigIntBitwiseOp(op, x, y) {
     // TODO: figure out why this doesn't work, probably the modulo.
     /*
@@ -23100,8 +23100,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-private-names */
-  BigIntBitwiseOp.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-binaryand';
+  /** https://tc39.es/ecma262/#sec-private-names */
+  BigIntBitwiseOp.section = 'https://tc39.es/ecma262/#sec-binaryand';
   class PrivateName extends exports.Value {
     Description;
     constructor(Description) {
@@ -23110,7 +23110,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-object-type */
+  /** https://tc39.es/ecma262/#sec-object-type */
   class ObjectValue extends exports.Value {
     properties;
     internalSlotsList;
@@ -23312,7 +23312,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
   let agentSignifier = 0;
-  /** http://tc39.es/ecma262/#sec-agents */
+  /** https://tc39.es/ecma262/#sec-agents */
   class Agent {
     AgentRecord;
     // #execution-context-stack
@@ -23439,7 +23439,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     exports.surroundingAgent = a;
   }
 
-  /** http://tc39.es/ecma262/#sec-execution-contexts */
+  /** https://tc39.es/ecma262/#sec-execution-contexts */
   class ExecutionContext {
     codeEvaluationState;
     Function;
@@ -23478,7 +23478,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-scriptevaluation */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-scriptevaluation */
   function ScriptEvaluation(scriptRecord) {
     if (exports.surroundingAgent.hostDefinedOptions.boost?.evaluateScript) {
       return exports.surroundingAgent.hostDefinedOptions.boost.evaluateScript(scriptRecord);
@@ -23510,12 +23510,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return result;
   }
 
-  /** http://tc39.es/ecma262/#sec-hostenqueuepromisejob */
+  /** https://tc39.es/ecma262/#sec-hostenqueuepromisejob */
   function HostEnqueuePromiseJob(job, _realm) {
     exports.surroundingAgent.queueJob('PromiseJobs', job);
   }
 
-  /** http://tc39.es/ecma262/#sec-agentsignifier */
+  /** https://tc39.es/ecma262/#sec-agentsignifier */
   function AgentSignifier() {
     // 1. Let AR be the Agent Record of the surrounding agent.
     const AR = exports.surroundingAgent.AgentRecord;
@@ -23587,7 +23587,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-hostgetimportmetaproperties */
+  /** https://tc39.es/ecma262/#sec-hostgetimportmetaproperties */
   function HostGetImportMetaProperties(moduleRecord) {
     const realm = exports.surroundingAgent.currentRealmRecord;
     if (realm.HostDefined.getImportMetaProperties) {
@@ -23602,7 +23602,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return [];
   }
 
-  /** http://tc39.es/ecma262/#sec-hostfinalizeimportmeta */
+  /** https://tc39.es/ecma262/#sec-hostfinalizeimportmeta */
   function HostFinalizeImportMeta(importMeta, moduleRecord) {
     const realm = exports.surroundingAgent.currentRealmRecord;
     if (realm.HostDefined.finalizeImportMeta) {
@@ -23617,7 +23617,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-host-cleanup-finalization-registry */
+  /** https://tc39.es/ecma262/#sec-host-cleanup-finalization-registry */
   function HostEnqueueFinalizationRegistryCleanupJob(fg) {
     if (exports.surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry !== undefined) {
       let _temp9 = exports.surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry(fg);
@@ -23641,7 +23641,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return NormalCompletion(undefined);
   }
 
-  /** http://tc39.es/ecma262/#sec-hostmakejobcallback */
+  /** https://tc39.es/ecma262/#sec-hostmakejobcallback */
   function HostMakeJobCallback(callback) {
     // 1. Assert: IsCallable(callback) is true.
     Assert(IsCallable(callback) === exports.Value.true, "IsCallable(callback) === Value.true");
@@ -23652,7 +23652,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     };
   }
 
-  /** http://tc39.es/ecma262/#sec-hostcalljobcallback */
+  /** https://tc39.es/ecma262/#sec-hostcalljobcallback */
   function HostCallJobCallback(jobCallback, V, argumentsList) {
     // 1. Assert: IsCallable(jobCallback.[[Callback]]) is true.
     Assert(IsCallable(jobCallback.Callback) === exports.Value.true, "IsCallable(jobCallback.Callback) === Value.true");
@@ -23662,7 +23662,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   var _initClass, _dec;
 
-  /** http://tc39.es/ecma262/#sec-completion-record-specification-type */ // @ts-expect-error
+  /** https://tc39.es/ecma262/#sec-completion-record-specification-type */ // @ts-expect-error
   // @ts-expect-error
   exports.Completion = void 0;
   _dec = callable((_CompletionClass, _thisValue, [init]) => {
@@ -23671,7 +23671,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 2. Return completionRecord as the Completion Record of this abstract operation.
     return init;
   });
-  /** http://tc39.es/ecma262/#sec-completion-record-specification-type */
+  /** https://tc39.es/ecma262/#sec-completion-record-specification-type */
   class Completion {
     static {
       [exports.Completion, _initClass] = _applyDecs2203R(this, [], [_dec]).c;
@@ -23718,7 +23718,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return v instanceof exports.Completion && v.Type !== 'normal';
     }
   }
-  /** http://tc39.es/ecma262/#sec-throwcompletion */
+  /** https://tc39.es/ecma262/#sec-throwcompletion */
   function ThrowCompletion(argument) {
     // 1. Return Completion { [[Type]]: throw, [[Value]]: argument, [[Target]]: empty }.
     return new exports.Completion({
@@ -23728,7 +23728,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     });
   }
 
-  /** http://tc39.es/ecma262/#sec-updateempty */
+  /** https://tc39.es/ecma262/#sec-updateempty */
   function UpdateEmpty(completionRecord, value) {
     Assert(completionRecord instanceof exports.Completion, "completionRecord instanceof Completion");
     // 1. Assert: If completionRecord.[[Type]] is either return or throw, then completionRecord.[[Value]] is not empty.
@@ -23746,8 +23746,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   /**
-   * http://tc39.es/ecma262/#sec-returnifabrupt
-   * http://tc39.es/ecma262/#sec-returnifabrupt-shorthands ? OperationName()
+   * https://tc39.es/ecma262/#sec-returnifabrupt
+   * https://tc39.es/ecma262/#sec-returnifabrupt-shorthands ? OperationName()
    */
 
   function ReturnIfAbrupt(_completion) {
@@ -23755,21 +23755,21 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     throw new TypeError('ReturnIfAbrupt requires build');
   }
 
-  /** http://tc39.es/ecma262/#sec-returnifabrupt-shorthands ! OperationName() */
+  /** https://tc39.es/ecma262/#sec-returnifabrupt-shorthands ! OperationName() */
 
   function X(_completion) {
     /* c8 skip next */
     throw new TypeError('X() requires build');
   }
 
-  /** http://tc39.es/ecma262/#sec-ifabruptcloseiterator */
+  /** https://tc39.es/ecma262/#sec-ifabruptcloseiterator */
   // TODO(TS):
   function IfAbruptCloseIterator(_value, _iteratorRecord) {
     /* c8 skip next */
     throw new TypeError('IfAbruptCloseIterator() requires build');
   }
 
-  /** http://tc39.es/ecma262/#sec-ifabruptrejectpromise */
+  /** https://tc39.es/ecma262/#sec-ifabruptrejectpromise */
   function IfAbruptRejectPromise(_value, _capability) {
     /* c8 skip next */
     throw new TypeError('IfAbruptRejectPromise requires build');
@@ -23859,7 +23859,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   // This file covers abstract operations defined in
-  /** http://tc39.es/ecma262/#sec-arguments-exotic-objects */
+  /** https://tc39.es/ecma262/#sec-arguments-exotic-objects */
 
   function ArgumentsGetOwnProperty(P) {
     const args = this;
@@ -23880,7 +23880,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     return desc;
   }
-  ArgumentsGetOwnProperty.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-arguments-exotic-objects';
+  ArgumentsGetOwnProperty.section = 'https://tc39.es/ecma262/#sec-arguments-exotic-objects';
   function ArgumentsDefineOwnProperty(P, Desc) {
     const args = this;
     const map = args.ParameterMap;
@@ -23998,7 +23998,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return result;
   }
 
-  /** http://tc39.es/ecma262/#sec-createunmappedargumentsobject */
+  /** https://tc39.es/ecma262/#sec-createunmappedargumentsobject */
   function CreateUnmappedArgumentsObject(argumentsList) {
     const len = argumentsList.length;
     const obj = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%Object.prototype%'), ['ParameterMap']);
@@ -24051,7 +24051,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return obj;
   }
 
-  /** http://tc39.es/ecma262/#sec-makearggetter */
+  /** https://tc39.es/ecma262/#sec-makearggetter */
   function MakeArgGetter(name, env) {
     // 1. Let getterClosure be a new Abstract Closure with no parameters that captures name and env and performs the following steps when called:
     //   a. Return env.GetBindingValue(name, false).
@@ -24069,8 +24069,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return getter;
   }
 
-  /** http://tc39.es/ecma262/#sec-makeargsetter */
-  MakeArgGetter.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-makearggetter';
+  /** https://tc39.es/ecma262/#sec-makeargsetter */
+  MakeArgGetter.section = 'https://tc39.es/ecma262/#sec-makearggetter';
   function MakeArgSetter(name, env) {
     // 1. Let setterClosure be a new Abstract Closure with parameters (value) that captures name and env and performs the following steps when called:
     //   a. Return env.SetMutableBinding(name, value, false).
@@ -24088,8 +24088,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return setter;
   }
 
-  /** http://tc39.es/ecma262/#sec-createmappedargumentsobject */
-  MakeArgSetter.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-makeargsetter';
+  /** https://tc39.es/ecma262/#sec-createmappedargumentsobject */
+  MakeArgSetter.section = 'https://tc39.es/ecma262/#sec-makeargsetter';
   function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
     // Assert: formals does not contain a rest parameter, any binding
     // patterns, or any initializers. It may contain duplicate identifiers.
@@ -24194,7 +24194,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return obj;
   }
 
-  /** http://tc39.es/ecma262/#sec-array-exotic-objects-defineownproperty-p-desc */
+  /** https://tc39.es/ecma262/#sec-array-exotic-objects-defineownproperty-p-desc */
   function ArrayDefineOwnProperty(P, Desc) {
     const A = this;
     Assert(IsPropertyKey(P), "IsPropertyKey(P)");
@@ -24240,12 +24240,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     return OrdinaryDefineOwnProperty(A, P, Desc);
   }
-  ArrayDefineOwnProperty.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array-exotic-objects-defineownproperty-p-desc';
+  ArrayDefineOwnProperty.section = 'https://tc39.es/ecma262/#sec-array-exotic-objects-defineownproperty-p-desc';
   function isArrayExoticObject(O) {
     return O.DefineOwnProperty === ArrayDefineOwnProperty;
   }
 
-  /** http://tc39.es/ecma262/#sec-arraycreate */
+  /** https://tc39.es/ecma262/#sec-arraycreate */
   function ArrayCreate(length, proto) {
     Assert(isNonNegativeInteger(length), "isNonNegativeInteger(length)");
     if (Object.is(length, -0)) {
@@ -24280,7 +24280,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return A;
   }
 
-  /** http://tc39.es/ecma262/#sec-arrayspeciescreate */
+  /** https://tc39.es/ecma262/#sec-arrayspeciescreate */
   function ArraySpeciesCreate(originalArray, length) {
     Assert(typeof length === 'number' && Number.isInteger(length) && length >= 0, "typeof length === 'number' && Number.isInteger(length) && length >= 0");
     if (Object.is(length, -0)) {
@@ -24351,7 +24351,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Construct(C, [F(length)]);
   }
 
-  /** http://tc39.es/ecma262/#sec-arraysetlength */
+  /** https://tc39.es/ecma262/#sec-arraysetlength */
   function ArraySetLength(A, Desc) {
     if (Desc.Value === undefined) {
       return OrdinaryDefineOwnProperty(A, exports.Value('length'), Desc);
@@ -24460,7 +24460,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.true;
   }
 
-  /** http://tc39.es/ecma262/#sec-isconcatspreadable */
+  /** https://tc39.es/ecma262/#sec-isconcatspreadable */
   function IsConcatSpreadable(O) {
     if (!(O instanceof ObjectValue)) {
       return exports.Value.false;
@@ -24481,7 +24481,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return IsArray(O);
   }
 
-  /** http://tc39.es/ecma262/#sec-sortcompare */
+  /** https://tc39.es/ecma262/#sec-sortcompare */
   function SortCompare(x, y, comparefn) {
     // 1. If x and y are both undefined, return +0𝔽.
     if (x === exports.Value.undefined && y === exports.Value.undefined) {
@@ -24562,7 +24562,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(+0);
   }
 
-  /** http://tc39.es/ecma262/#sec-createarrayiterator */
+  /** https://tc39.es/ecma262/#sec-createarrayiterator */
   function CreateArrayIterator(array, kind) {
     // 1. Assert: Type(array) is Object.
     Assert(array instanceof ObjectValue, "array instanceof ObjectValue");
@@ -24680,7 +24680,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return _temp29;
   }
 
-  /** http://tc39.es/ecma262/#sec-allocatearraybuffer */
+  /** https://tc39.es/ecma262/#sec-allocatearraybuffer */
   function AllocateArrayBuffer(constructor, byteLength) {
     let _temp = OrdinaryCreateFromConstructor(constructor, '%ArrayBuffer.prototype%', ['ArrayBufferData', 'ArrayBufferByteLength', 'ArrayBufferDetachKey']);
     /* c8 ignore if */
@@ -24714,7 +24714,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return obj;
   }
 
-  /** http://tc39.es/ecma262/#sec-isdetachedbuffer */
+  /** https://tc39.es/ecma262/#sec-isdetachedbuffer */
   function IsDetachedBuffer(arrayBuffer) {
     // 1. Assert: Type(arrayBuffer) is Object and it has an [[ArrayBufferData]] internal slot.
     Assert(arrayBuffer instanceof ObjectValue && 'ArrayBufferData' in arrayBuffer, "arrayBuffer instanceof ObjectValue && 'ArrayBufferData' in arrayBuffer");
@@ -24726,7 +24726,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-detacharraybuffer */
+  /** https://tc39.es/ecma262/#sec-detacharraybuffer */
   function DetachArrayBuffer(arrayBuffer, key) {
     // 1. Assert: Type(arrayBuffer) is Object and it has [[ArrayBufferData]], [[ArrayBufferByteLength]], and [[ArrayBufferDetachKey]] internal slots.
     Assert(arrayBuffer instanceof ObjectValue && 'ArrayBufferData' in arrayBuffer && 'ArrayBufferByteLength' in arrayBuffer && 'ArrayBufferDetachKey' in arrayBuffer, "arrayBuffer instanceof ObjectValue\n         && 'ArrayBufferData' in arrayBuffer\n         && 'ArrayBufferByteLength' in arrayBuffer\n         && 'ArrayBufferDetachKey' in arrayBuffer");
@@ -24748,7 +24748,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return NormalCompletion(exports.Value.null);
   }
 
-  /** http://tc39.es/ecma262/#sec-issharedarraybuffer */
+  /** https://tc39.es/ecma262/#sec-issharedarraybuffer */
   function IsSharedArrayBuffer(_obj) {
     return exports.Value.false;
   }
@@ -24782,7 +24782,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return targetBuffer;
   }
 
-  /** http://tc39.es/ecma262/#sec-isbigintelementtype */
+  /** https://tc39.es/ecma262/#sec-isbigintelementtype */
   function IsBigIntElementType(type) {
     // 1. If type is BigUint64 or BigInt64, return true.
     if (type === 'BigUint64' || type === 'BigInt64') {
@@ -24795,7 +24795,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   const throwawayDataView = new DataView(throwawayBuffer);
   const throwawayArray = new Uint8Array(throwawayBuffer);
 
-  /** http://tc39.es/ecma262/#sec-rawbytestonumeric */
+  /** https://tc39.es/ecma262/#sec-rawbytestonumeric */
   function RawBytesToNumeric(type, rawBytes, isLittleEndian) {
     // 1. Let elementSize be the Element Size value specified in Table 61 for Element Type type.
     const elementSize = typedArrayInfoByType[type].ElementSize;
@@ -24806,7 +24806,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return IsBigIntElementType(type) === exports.Value.true ? Z(result) : F(result);
   }
 
-  /** http://tc39.es/ecma262/#sec-getvaluefrombuffer */
+  /** https://tc39.es/ecma262/#sec-getvaluefrombuffer */
   function GetValueFromBuffer(arrayBuffer, byteIndex, type, isTypedArray, order, isLittleEndian) {
     // 1. Assert: IsDetachedBuffer(arrayBuffer) is false.
     Assert(IsDetachedBuffer(arrayBuffer) === exports.Value.false, "IsDetachedBuffer(arrayBuffer) === Value.false");
@@ -24835,7 +24835,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   const float64NaNLE = Object.freeze([0, 0, 0, 0, 0, 0, 248, 127]);
   const float64NaNBE = Object.freeze([127, 248, 0, 0, 0, 0, 0, 0]);
 
-  /** http://tc39.es/ecma262/#sec-numerictorawbytes */
+  /** https://tc39.es/ecma262/#sec-numerictorawbytes */
   function NumericToRawBytes(type, value, isLittleEndian) {
     Assert(isLittleEndian instanceof BooleanValue, "isLittleEndian instanceof BooleanValue");
     isLittleEndian = isLittleEndian === exports.Value.true;
@@ -24875,7 +24875,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return rawBytes;
   }
 
-  /** http://tc39.es/ecma262/#sec-setvalueinbuffer */
+  /** https://tc39.es/ecma262/#sec-setvalueinbuffer */
   function SetValueInBuffer(arrayBuffer, byteIndex, type, value, isTypedArray, order, isLittleEndian) {
     // 1. Assert: IsDetachedBuffer(arrayBuffer) is false.
     Assert(IsDetachedBuffer(arrayBuffer) === exports.Value.false, "IsDetachedBuffer(arrayBuffer) === Value.false");
@@ -24917,9 +24917,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   // This file covers abstract operations defined in
-  /** http://tc39.es/ecma262/#sec-async-function-objects */
+  /** https://tc39.es/ecma262/#sec-async-function-objects */
 
-  /** http://tc39.es/ecma262/#sec-asyncblockstart */
+  /** https://tc39.es/ecma262/#sec-asyncblockstart */
   function AsyncBlockStart(promiseCapability, asyncBody, asyncContext) {
     asyncContext.promiseCapability = promiseCapability;
     const runningContext = exports.surroundingAgent.runningExecutionContext;
@@ -24959,7 +24959,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-async-functions-abstract-operations-async-function-start */
+  /** https://tc39.es/ecma262/#sec-async-functions-abstract-operations-async-function-start */
   function AsyncFunctionStart(promiseCapability, asyncFunctionBody) {
     const runningContext = exports.surroundingAgent.runningExecutionContext;
     const asyncContext = runningContext.copy();
@@ -24974,9 +24974,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   // @ts-nocheck
 
   // This file covers abstract operations defined in
-  /** http://tc39.es/ecma262/#sec-asyncgenerator-objects */
+  /** https://tc39.es/ecma262/#sec-asyncgenerator-objects */
 
-  /** http://tc39.es/ecma262/#sec-asyncgeneratorrequest-records */
+  /** https://tc39.es/ecma262/#sec-asyncgeneratorrequest-records */
   class AsyncGeneratorRequestRecord {
     Completion;
     Capability;
@@ -24986,7 +24986,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-asyncgeneratorstart */
+  /** https://tc39.es/ecma262/#sec-asyncgeneratorstart */
   function AsyncGeneratorStart(generator, generatorBody) {
     // 1. Assert: generator.[[AsyncGeneratorState]] is undefined.
     Assert(generator.AsyncGeneratorState === exports.Value.undefined, "generator.AsyncGeneratorState === Value.undefined");
@@ -25046,7 +25046,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-asyncgeneratorvalidate */
+  /** https://tc39.es/ecma262/#sec-asyncgeneratorvalidate */
   function AsyncGeneratorValidate(generator, generatorBrand) {
     let _temp3 = RequireInternalSlot(generator, 'AsyncGeneratorContext');
     /* c8 ignore if */
@@ -25084,7 +25084,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-asyncgeneratorenqueue */
+  /** https://tc39.es/ecma262/#sec-asyncgeneratorenqueue */
   function AsyncGeneratorEnqueue(generator, completion, promiseCapability) {
     // 1. Let request be AsyncGeneratorRequest { [[Completion]]: completion, [[Capability]]: promiseCapability }.
     const request = new AsyncGeneratorRequestRecord(completion, promiseCapability);
@@ -25092,7 +25092,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     generator.AsyncGeneratorQueue.push(request);
   }
 
-  /** http://tc39.es/ecma262/#sec-asyncgeneratorcompletestep */
+  /** https://tc39.es/ecma262/#sec-asyncgeneratorcompletestep */
   function AsyncGeneratorCompleteStep(generator, completion, done, realm) {
     // 1. Let queue be generator.[[AsyncGeneratorQueue]].
     const queue = generator.AsyncGeneratorQueue;
@@ -25155,8 +25155,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-asyncgeneratorresume */
-  AsyncGeneratorCompleteStep.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-asyncgeneratorcompletestep';
+  /** https://tc39.es/ecma262/#sec-asyncgeneratorresume */
+  AsyncGeneratorCompleteStep.section = 'https://tc39.es/ecma262/#sec-asyncgeneratorcompletestep';
   function AsyncGeneratorResume(generator, completion) {
     // 1. Assert: generator.[[AsyncGeneratorState]] is either suspendedStart or suspendedYield.
     Assert(generator.AsyncGeneratorState === 'suspendedStart' || generator.AsyncGeneratorState === 'suspendedYield', "generator.AsyncGeneratorState === 'suspendedStart' || generator.AsyncGeneratorState === 'suspendedYield'");
@@ -25177,7 +25177,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     Assert(exports.surroundingAgent.runningExecutionContext === callerContext, "surroundingAgent.runningExecutionContext === callerContext");
   }
 
-  /** http://tc39.es/ecma262/#sec-asyncgeneratorunwrapyieldresumption */
+  /** https://tc39.es/ecma262/#sec-asyncgeneratorunwrapyieldresumption */
   function* AsyncGeneratorUnwrapYieldResumption(resumptionValue) {
     // 1. If resumptionValue.[[Type]] is not return, return Completion(resumptionValue).
     if (resumptionValue.Type !== 'return') {
@@ -25199,8 +25199,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     });
   }
 
-  /** http://tc39.es/ecma262/#sec-asyncgeneratoryield */
-  AsyncGeneratorUnwrapYieldResumption.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-asyncgeneratorunwrapyieldresumption';
+  /** https://tc39.es/ecma262/#sec-asyncgeneratoryield */
+  AsyncGeneratorUnwrapYieldResumption.section = 'https://tc39.es/ecma262/#sec-asyncgeneratorunwrapyieldresumption';
   function* AsyncGeneratorYield(value) {
     // 1. Let genContext be the running execution context.
     const genContext = exports.surroundingAgent.runningExecutionContext;
@@ -25253,7 +25253,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-asyncgeneratorawaitreturn */
+  /** https://tc39.es/ecma262/#sec-asyncgeneratorawaitreturn */
   function AsyncGeneratorAwaitReturn(generator) {
     // 1. Let queue be generator.[[AsyncGeneratorQueue]].
     const queue = generator.AsyncGeneratorQueue;
@@ -25347,7 +25347,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-asyncgeneratordrainqueue */
+  /** https://tc39.es/ecma262/#sec-asyncgeneratordrainqueue */
   function AsyncGeneratorDrainQueue(generator) {
     // 1. Assert: generator.[[AsyncGeneratorState]] is completed.
     Assert(generator.AsyncGeneratorState === 'completed', "generator.AsyncGeneratorState === 'completed'");
@@ -25400,8 +25400,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-createasynciteratorfromclosure */
-  AsyncGeneratorDrainQueue.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-asyncgeneratordrainqueue';
+  /** https://tc39.es/ecma262/#sec-createasynciteratorfromclosure */
+  AsyncGeneratorDrainQueue.section = 'https://tc39.es/ecma262/#sec-asyncgeneratordrainqueue';
   function CreateAsyncIteratorFromClosure(closure, generatorBrand, generatorPrototype) {
     Assert(typeof closure === 'function', "typeof closure === 'function'");
     // 1. NOTE: closure can contain uses of the Await shorthand, and uses of the Yield shorthand to yield an IteratorResult object.
@@ -25434,7 +25434,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   // This file covers predicates defined in
-  /** http://tc39.es/ecma262/#sec-ecmascript-data-types-and-values */
+  /** https://tc39.es/ecma262/#sec-ecmascript-data-types-and-values */
 
   // 6.1.7 #integer-index
   function isIntegerIndex(V) {
@@ -25485,9 +25485,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   // This file covers abstract operations defined in
-  /** http://tc39.es/ecma262/#sec-dataview-objects */
+  /** https://tc39.es/ecma262/#sec-dataview-objects */
 
-  /** http://tc39.es/ecma262/#sec-getviewvalue */
+  /** https://tc39.es/ecma262/#sec-getviewvalue */
   function GetViewValue(view, requestIndex, isLittleEndian, type) {
     let _temp = RequireInternalSlot(view, 'DataView');
     /* c8 ignore if */
@@ -25541,7 +25541,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return GetValueFromBuffer(buffer, bufferIndex, type, exports.Value.false, 'Unordered', isLittleEndian);
   }
 
-  /** http://tc39.es/ecma262/#sec-setviewvalue */
+  /** https://tc39.es/ecma262/#sec-setviewvalue */
   function SetViewValue(view, requestIndex, isLittleEndian, type, value) {
     let _temp4 = RequireInternalSlot(view, 'DataView');
     /* c8 ignore if */
@@ -25639,7 +25639,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   const msPerHour = msPerMinute * MinutesPerHour;
   const msPerDay = msPerHour * HoursPerDay;
 
-  /** http://tc39.es/ecma262/#sec-day-number-and-time-within-day */
+  /** https://tc39.es/ecma262/#sec-day-number-and-time-within-day */
   function Day(t) {
     return F(Math.floor(t.numberValue() / msPerDay));
   }
@@ -25647,7 +25647,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(mod$1(t.numberValue(), msPerDay));
   }
 
-  /** http://tc39.es/ecma262/#sec-year-number */
+  /** https://tc39.es/ecma262/#sec-year-number */
   function DaysInYear(y) {
     y = y.numberValue();
     if (mod$1(y, 4) !== 0) {
@@ -25688,7 +25688,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-month-number */
+  /** https://tc39.es/ecma262/#sec-month-number */
   function MonthFromTime(t) {
     const dayWithinYear = DayWithinYear(t).numberValue();
     const inLeapYear = InLeapYear(t).numberValue();
@@ -25733,7 +25733,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(Day(t).numberValue() - DayFromYear(YearFromTime(t)).numberValue());
   }
 
-  /** http://tc39.es/ecma262/#sec-date-number */
+  /** https://tc39.es/ecma262/#sec-date-number */
   function DateFromTime(t) {
     const dayWithinYear = DayWithinYear(t).numberValue();
     const monthFromTime = MonthFromTime(t).numberValue();
@@ -25766,28 +25766,28 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-week-day */
+  /** https://tc39.es/ecma262/#sec-week-day */
   function WeekDay(t) {
     return F(mod$1(Day(t).numberValue() + 4, 7));
   }
 
-  /** http://tc39.es/ecma262/#sec-local-time-zone-adjustment */
+  /** https://tc39.es/ecma262/#sec-local-time-zone-adjustment */
   function LocalTZA(_t, _isUTC) {
     // TODO: implement this function properly.
     return 0;
   }
 
-  /** http://tc39.es/ecma262/#sec-localtime */
+  /** https://tc39.es/ecma262/#sec-localtime */
   function LocalTime(t) {
     return F(t.numberValue() + LocalTZA());
   }
 
-  /** http://tc39.es/ecma262/#sec-utc-t */
+  /** https://tc39.es/ecma262/#sec-utc-t */
   function UTC(t) {
     return F(t.numberValue() - LocalTZA());
   }
 
-  /** http://tc39.es/ecma262/#sec-hours-minutes-second-and-milliseconds */
+  /** https://tc39.es/ecma262/#sec-hours-minutes-second-and-milliseconds */
   function HourFromTime(t) {
     return F(mod$1(Math.floor(t.numberValue() / msPerHour), HoursPerDay));
   }
@@ -25801,7 +25801,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(mod$1(t.numberValue(), msPerSecond));
   }
 
-  /** http://tc39.es/ecma262/#sec-maketime */
+  /** https://tc39.es/ecma262/#sec-maketime */
   function MakeTime(hour, min, sec, ms) {
     if (!Number.isFinite(hour.numberValue()) || !Number.isFinite(min.numberValue()) || !Number.isFinite(sec.numberValue()) || !Number.isFinite(ms.numberValue())) {
       return F(NaN);
@@ -25839,7 +25839,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
   const daysWithinYearToEndOfMonth = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365];
 
-  /** http://tc39.es/ecma262/#sec-makeday */
+  /** https://tc39.es/ecma262/#sec-makeday */
   function MakeDay(year, month, date) {
     if (!Number.isFinite(year.numberValue()) || !Number.isFinite(month.numberValue()) || !Number.isFinite(date.numberValue())) {
       return F(NaN);
@@ -25872,7 +25872,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(Day(t).numberValue() + dt - 1);
   }
 
-  /** http://tc39.es/ecma262/#sec-makedate */
+  /** https://tc39.es/ecma262/#sec-makedate */
   function MakeDate(day, time) {
     if (!Number.isFinite(day.numberValue()) || !Number.isFinite(time.numberValue())) {
       return F(NaN);
@@ -25880,7 +25880,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(day.numberValue() * msPerDay + time.numberValue());
   }
 
-  /** http://tc39.es/ecma262/#sec-timeclip */
+  /** https://tc39.es/ecma262/#sec-timeclip */
   function TimeClip(time) {
     // 1. If time is not finite, return NaN.
     if (!time.isFinite()) {
@@ -25900,7 +25900,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(_temp8);
   }
 
-  /** http://tc39.es/ecma262/#sec-errorobjects-install-error-cause */
+  /** https://tc39.es/ecma262/#sec-errorobjects-install-error-cause */
   function InstallErrorCause(O, options) {
     // 1. If Type(options) is Object and ? HasProperty(options, "cause") is true, then
     if (options instanceof ObjectValue) {
@@ -25947,9 +25947,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   // @ts-nocheck
 
   // This file covers abstract operations defined in
-  /** http://tc39.es/ecma262/#sec-execution-contexts */
+  /** https://tc39.es/ecma262/#sec-execution-contexts */
 
-  /** http://tc39.es/ecma262/#sec-getactivescriptormodule */
+  /** https://tc39.es/ecma262/#sec-getactivescriptormodule */
   function GetActiveScriptOrModule() {
     for (let i = exports.surroundingAgent.executionContextStack.length - 1; i >= 0; i -= 1) {
       const e = exports.surroundingAgent.executionContextStack[i];
@@ -25960,7 +25960,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.null;
   }
 
-  /** http://tc39.es/ecma262/#sec-resolvebinding */
+  /** https://tc39.es/ecma262/#sec-resolvebinding */
   function ResolveBinding(name, env, strict) {
     // 1. If env is not present or if env is undefined, then
     if (env === undefined || env === exports.Value.undefined) {
@@ -25974,7 +25974,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return GetIdentifierReference(env, name, strict ? exports.Value.true : exports.Value.false);
   }
 
-  /** http://tc39.es/ecma262/#sec-getthisenvironment */
+  /** https://tc39.es/ecma262/#sec-getthisenvironment */
   function GetThisEnvironment() {
     // 1. Let env be the running execution context's LexicalEnvironment.
     let env = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment;
@@ -25995,20 +25995,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-resolvethisbinding */
+  /** https://tc39.es/ecma262/#sec-resolvethisbinding */
   function ResolveThisBinding() {
     const envRec = GetThisEnvironment();
     return envRec.GetThisBinding();
   }
 
-  /** http://tc39.es/ecma262/#sec-getnewtarget */
+  /** https://tc39.es/ecma262/#sec-getnewtarget */
   function GetNewTarget() {
     const envRec = GetThisEnvironment();
     Assert('NewTarget' in envRec, "'NewTarget' in envRec");
     return envRec.NewTarget;
   }
 
-  /** http://tc39.es/ecma262/#sec-getglobalobject */
+  /** https://tc39.es/ecma262/#sec-getglobalobject */
   function GetGlobalObject() {
     const currentRealm = exports.surroundingAgent.currentRealmRecord;
     return currentRealm.GlobalObject;
@@ -26017,10 +26017,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   // @ts-nocheck
 
   // This file covers abstract operations defined in
-  /** http://tc39.es/ecma262/#sec-ecmascript-function-objects */
-  /** http://tc39.es/ecma262/#sec-built-in-function-objects */
+  /** https://tc39.es/ecma262/#sec-ecmascript-function-objects */
+  /** https://tc39.es/ecma262/#sec-built-in-function-objects */
   // and
-  /** http://tc39.es/ecma262/#sec-tail-position-calls */
+  /** https://tc39.es/ecma262/#sec-tail-position-calls */
 
   function isECMAScriptFunctionObject(O) {
     return 'ECMAScriptCode' in O;
@@ -26029,7 +26029,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return 'Call' in O;
   }
 
-  /** http://tc39.es/ecma262/#sec-prepareforordinarycall */
+  /** https://tc39.es/ecma262/#sec-prepareforordinarycall */
   function PrepareForOrdinaryCall(F, newTarget) {
     // 1. Assert: Type(newTarget) is Undefined or Object.
     Assert(newTarget instanceof UndefinedValue || newTarget instanceof ObjectValue, "newTarget instanceof UndefinedValue || newTarget instanceof ObjectValue");
@@ -26060,7 +26060,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return calleeContext;
   }
 
-  /** http://tc39.es/ecma262/#sec-ordinarycallbindthis */
+  /** https://tc39.es/ecma262/#sec-ordinarycallbindthis */
   function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
     // 1. Let thisMode be F.[[ThisMode]].
     const thisMode = F.ThisMode;
@@ -26107,13 +26107,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return localEnv.BindThisValue(thisValue);
   }
 
-  /** http://tc39.es/ecma262/#sec-ordinarycallevaluatebody */
+  /** https://tc39.es/ecma262/#sec-ordinarycallevaluatebody */
   function OrdinaryCallEvaluateBody(F, argumentsList) {
     // 1. Return the result of EvaluateBody of the parsed code that is F.[[ECMAScriptCode]] passing F and argumentsList as the arguments.
     return EnsureCompletion(unwind(EvaluateBody(F.ECMAScriptCode, F, argumentsList)));
   }
 
-  /** http://tc39.es/ecma262/#sec-definefield */
+  /** https://tc39.es/ecma262/#sec-definefield */
   function DefineField(receiver, fieldRecord) {
     // 1. Let fieldName be fieldRecord.[[Name]].
     const fieldName = fieldRecord.Name;
@@ -26171,7 +26171,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-initializeinstanceelements */
+  /** https://tc39.es/ecma262/#sec-initializeinstanceelements */
   function InitializeInstanceElements(O, constructor) {
     // 1. Let methods be the value of constructor.[[PrivateMethods]].
     const methods = constructor.PrivateMethods;
@@ -26203,7 +26203,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-ecmascript-function-objects-call-thisargument-argumentslist */
+  /** https://tc39.es/ecma262/#sec-ecmascript-function-objects-call-thisargument-argumentslist */
   function FunctionCallSlot(thisArgument, argumentsList) {
     const F = this;
 
@@ -26247,8 +26247,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return NormalCompletion(exports.Value.undefined);
   }
 
-  /** http://tc39.es/ecma262/#sec-ecmascript-function-objects-construct-argumentslist-newtarget */
-  FunctionCallSlot.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-ecmascript-function-objects-call-thisargument-argumentslist';
+  /** https://tc39.es/ecma262/#sec-ecmascript-function-objects-construct-argumentslist-newtarget */
+  FunctionCallSlot.section = 'https://tc39.es/ecma262/#sec-ecmascript-function-objects-call-thisargument-argumentslist';
   function FunctionConstructSlot(argumentsList, newTarget) {
     const F = this;
 
@@ -26327,8 +26327,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return constructorEnv.GetThisBinding();
   }
 
-  /** http://tc39.es/ecma262/#sec-functionallocate */
-  FunctionConstructSlot.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-ecmascript-function-objects-construct-argumentslist-newtarget';
+  /** https://tc39.es/ecma262/#sec-functionallocate */
+  FunctionConstructSlot.section = 'https://tc39.es/ecma262/#sec-ecmascript-function-objects-construct-argumentslist-newtarget';
   function OrdinaryFunctionCreate(functionPrototype, sourceText, ParameterList, Body, thisMode, Scope, PrivateScope) {
     // 1. Assert: Type(functionPrototype) is Object.
     Assert(functionPrototype instanceof ObjectValue, "functionPrototype instanceof ObjectValue");
@@ -26394,7 +26394,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F;
   }
 
-  /** http://tc39.es/ecma262/#sec-makeconstructor */
+  /** https://tc39.es/ecma262/#sec-makeconstructor */
   function MakeConstructor(F, writablePrototype, prototype) {
     Assert(isECMAScriptFunctionObject(F) || F.Call === BuiltinFunctionCall, "isECMAScriptFunctionObject(F) || F.Call === BuiltinFunctionCall");
     if (isECMAScriptFunctionObject(F)) {
@@ -26446,7 +26446,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return NormalCompletion(exports.Value.undefined);
   }
 
-  /** http://tc39.es/ecma262/#sec-makeclassconstructor */
+  /** https://tc39.es/ecma262/#sec-makeclassconstructor */
   function MakeClassConstructor(F) {
     Assert(isECMAScriptFunctionObject(F), "isECMAScriptFunctionObject(F)");
     Assert(F.IsClassConstructor === exports.Value.false, "F.IsClassConstructor === Value.false");
@@ -26454,7 +26454,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return NormalCompletion(exports.Value.undefined);
   }
 
-  /** http://tc39.es/ecma262/#sec-makemethod */
+  /** https://tc39.es/ecma262/#sec-makemethod */
   function MakeMethod(F, homeObject) {
     Assert(isECMAScriptFunctionObject(F), "isECMAScriptFunctionObject(F)");
     Assert(homeObject instanceof ObjectValue, "homeObject instanceof ObjectValue");
@@ -26462,7 +26462,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return NormalCompletion(exports.Value.undefined);
   }
 
-  /** http://tc39.es/ecma262/#sec-setfunctionname */
+  /** https://tc39.es/ecma262/#sec-setfunctionname */
   function SetFunctionName(F, name, prefix) {
     // 1. Assert: F is an extensible object that does not have a "name" own property.
     Assert(IsExtensible(F) === exports.Value.true && HasOwnProperty(F, exports.Value('name')) === exports.Value.false, "IsExtensible(F) === Value.true && HasOwnProperty(F, Value('name')) === Value.false");
@@ -26507,7 +26507,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return _temp15;
   }
 
-  /** http://tc39.es/ecma262/#sec-setfunctionlength */
+  /** https://tc39.es/ecma262/#sec-setfunctionlength */
   function SetFunctionLength(F$1, length) {
     Assert(isNonNegativeInteger(length) || length === Infinity, "isNonNegativeInteger(length) || length === Infinity");
     // 1. Assert: F is an extensible object that does not have a "length" own property.
@@ -26570,7 +26570,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return result;
   }
 
-  /** http://tc39.es/ecma262/#sec-createbuiltinfunction */
+  /** https://tc39.es/ecma262/#sec-createbuiltinfunction */
   function CreateBuiltinFunction(steps, length, name, internalSlotsList, realm, prototype, prefix, isConstructor = exports.Value.false) {
     // 1. Assert: steps is either a set of algorithm steps or other definition of a function's behaviour provided in this specification.
     Assert(typeof steps === 'function', "typeof steps === 'function'");
@@ -26634,7 +26634,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return func;
   }
 
-  /** http://tc39.es/ecma262/#sec-preparefortailcall */
+  /** https://tc39.es/ecma262/#sec-preparefortailcall */
   function PrepareForTailCall() {
     // 1. Let leafContext be the running execution context.
     const leafContext = exports.surroundingAgent.runningExecutionContext;
@@ -26645,9 +26645,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     leafContext.poppedForTailCall = true;
   }
 
-  /** http://tc39.es/ecma262/#sec-generator-objects */
+  /** https://tc39.es/ecma262/#sec-generator-objects */
 
-  /** http://tc39.es/ecma262/#sec-generatorstart */
+  /** https://tc39.es/ecma262/#sec-generatorstart */
   function GeneratorStart(generator, generatorBody) {
     // 1. Assert: The value of generator.[[GeneratorState]] is undefined.
     Assert(generator.GeneratorState === exports.Value.undefined, "generator.GeneratorState === Value.undefined");
@@ -26721,7 +26721,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return expectedType;
   }
 
-  /** http://tc39.es/ecma262/#sec-generatorvalidate */
+  /** https://tc39.es/ecma262/#sec-generatorvalidate */
   function GeneratorValidate(generator, generatorBrand) {
     let _temp2 = RequireInternalSlot(generator, 'GeneratorState');
     /* c8 ignore if */
@@ -26759,7 +26759,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return state;
   }
 
-  /** http://tc39.es/ecma262/#sec-generatorresume */
+  /** https://tc39.es/ecma262/#sec-generatorresume */
   function GeneratorResume(generator, value, generatorBrand) {
     let _temp4 = GeneratorValidate(generator, generatorBrand);
     /* c8 ignore if */
@@ -26804,7 +26804,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Completion(result);
   }
 
-  /** http://tc39.es/ecma262/#sec-generatorresumeabrupt */
+  /** https://tc39.es/ecma262/#sec-generatorresumeabrupt */
   function GeneratorResumeAbrupt(generator, abruptCompletion, generatorBrand) {
     let _temp6 = GeneratorValidate(generator, generatorBrand);
     /* c8 ignore if */
@@ -26866,7 +26866,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Completion(result);
   }
 
-  /** http://tc39.es/ecma262/#sec-getgeneratorkind */
+  /** https://tc39.es/ecma262/#sec-getgeneratorkind */
   function GetGeneratorKind() {
     // 1. Let genContext be the running execution context.
     const genContext = exports.surroundingAgent.runningExecutionContext;
@@ -26884,7 +26884,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return 'sync';
   }
 
-  /** http://tc39.es/ecma262/#sec-generatoryield */
+  /** https://tc39.es/ecma262/#sec-generatoryield */
   function* GeneratorYield(iterNextObj) {
     // 1. Assert: iterNextObj is an Object that implements the IteratorResult interface.
     // 2. Let genContext be the running execution context.
@@ -26908,7 +26908,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 10. NOTE: this returns to the evaluation of the operation that had most previously resumed evaluation of genContext.
   }
 
-  /** http://tc39.es/ecma262/#sec-yield */
+  /** https://tc39.es/ecma262/#sec-yield */
   function* Yield(value) {
     // 1. Let generatorKind be GetGeneratorKind().
     const generatorKind = GetGeneratorKind();
@@ -26929,7 +26929,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return yield* GeneratorYield(CreateIterResultObject(value, exports.Value.false));
   }
 
-  /** http://tc39.es/ecma262/#sec-createiteratorfromclosure */
+  /** https://tc39.es/ecma262/#sec-createiteratorfromclosure */
   function CreateIteratorFromClosure(closure, generatorBrand, generatorPrototype) {
     Assert(typeof closure === 'function', "typeof closure === 'function'");
     // 1. NOTE: closure can contain uses of the Yield shorthand to yield an IteratorResult object.
@@ -26961,9 +26961,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   // @ts-nocheck
 
   // This file covers abstract operations defined in
-  /** http://tc39.es/ecma262/#sec-global-object */
+  /** https://tc39.es/ecma262/#sec-global-object */
 
-  /** http://tc39.es/ecma262/#sec-performeval */
+  /** https://tc39.es/ecma262/#sec-performeval */
   function PerformEval(x, callerRealm, strictCaller, direct) {
     // 1. Assert: If direct is false, then strictCaller is also false.
     if (direct === false) {
@@ -27136,7 +27136,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Completion(result);
   }
 
-  /** http://tc39.es/ecma262/#sec-evaldeclarationinstantiation */
+  /** https://tc39.es/ecma262/#sec-evaldeclarationinstantiation */
   function EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strict) {
     // 1. Let varNames be the VarDeclaredNames of body.
     const varNames = VarDeclaredNames(body);
@@ -27397,9 +27397,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 19. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
   }
-  EvalDeclarationInstantiation.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-evaldeclarationinstantiation';
+  EvalDeclarationInstantiation.section = 'https://tc39.es/ecma262/#sec-evaldeclarationinstantiation';
 
-  /** http://tc39.es/ecma262/#sec-set-immutable-prototype */
+  /** https://tc39.es/ecma262/#sec-set-immutable-prototype */
   function SetImmutablePrototype(O, V) {
     // 1. Assert: Either Type(V) is Object or Type(V) is Null.
     Assert(V instanceof ObjectValue || V instanceof NullValue, "V instanceof ObjectValue || V instanceof NullValue");
@@ -27505,7 +27505,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return O.GetOwnProperty === IntegerIndexedGetOwnProperty;
   }
 
-  /** http://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-getownproperty-p */
+  /** https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-getownproperty-p */
   function IntegerIndexedGetOwnProperty(P) {
     const O = this;
     // 1. Assert: IsPropertyKey(P) is true.
@@ -27549,7 +27549,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return OrdinaryGetOwnProperty(O, P);
   }
 
-  /** http://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-hasproperty-p */
+  /** https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-hasproperty-p */
   function IntegerIndexedHasProperty(P) {
     const O = this;
     // 1. Assert: IsPropertyKey(P) is true.
@@ -27586,7 +27586,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return OrdinaryHasProperty(O, P);
   }
 
-  /** http://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-defineownproperty-p-desc */
+  /** https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-defineownproperty-p-desc */
   function IntegerIndexedDefineOwnProperty(P, Desc) {
     const O = this;
     // 1. Assert: IsPropertyKey(P) is true.
@@ -27640,7 +27640,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return OrdinaryDefineOwnProperty(O, P, Desc);
   }
 
-  /** http://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-get-p-receiver */
+  /** https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-get-p-receiver */
   function IntegerIndexedGet(P, Receiver) {
     const O = this;
     // 1. Assert: IsPropertykey(P) is true.
@@ -27671,7 +27671,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return OrdinaryGet(O, P, Receiver);
   }
 
-  /** http://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-set-p-v-receiver */
+  /** https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-set-p-v-receiver */
   function IntegerIndexedSet(P, V, Receiver) {
     const O = this;
     // 1. Assert: IsPropertyKey(P) is true.
@@ -27705,7 +27705,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return OrdinarySet(O, P, V, Receiver);
   }
 
-  /** http://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-delete-p */
+  /** https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-delete-p */
   function IntegerIndexedDelete(P) {
     const O = this;
     // 1. Assert: IsPropertyKey(P) is true.
@@ -27746,7 +27746,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return OrdinaryDelete(O, P);
   }
 
-  /** http://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-ownpropertykeys */
+  /** https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-ownpropertykeys */
   function IntegerIndexedOwnPropertyKeys() {
     const O = this;
     // 1. Let keys be a new empty List.
@@ -27786,7 +27786,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return keys;
   }
 
-  /** http://tc39.es/ecma262/#sec-integerindexedelementget */
+  /** https://tc39.es/ecma262/#sec-integerindexedelementget */
   function IntegerIndexedElementGet(O, index) {
     // 1. Assert: O is an Integer-Indexed exotic object.
     Assert(isIntegerIndexedExoticObject(O), "isIntegerIndexedExoticObject(O)");
@@ -27816,7 +27816,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return GetValueFromBuffer(buffer, indexedPosition, elementType, exports.Value.true);
   }
 
-  /** http://tc39.es/ecma262/#sec-integerindexedelementset */
+  /** https://tc39.es/ecma262/#sec-integerindexedelementset */
   function IntegerIndexedElementSet(O, index, value) {
     // 1. Assert: O is an Integer-Indexed exotic object.
     Assert(isIntegerIndexedExoticObject(O), "isIntegerIndexedExoticObject(O)");
@@ -27879,7 +27879,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.true;
   }
 
-  /** http://tc39.es/ecma262/#sec-integerindexedobjectcreate */
+  /** https://tc39.es/ecma262/#sec-integerindexedobjectcreate */
   function IntegerIndexedObjectCreate(prototype) {
     // 1. Let internalSlotsList be « [[Prototype]], [[Extensible]], [[ViewedArrayBuffer]], [[TypedArrayName]], [[ContentType]], [[ByteLength]], [[ByteOffset]], [[ArrayLength]] ».
     const internalSlotsList = ['Prototype', 'Extensible', 'ViewedArrayBuffer', 'TypedArrayName', 'ContentType', 'ByteLength', 'ByteOffset', 'ArrayLength'];
@@ -27912,11 +27912,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   // This file covers abstract operations defined in
-  /** http://tc39.es/ecma262/#sec-operations-on-iterator-objects */
+  /** https://tc39.es/ecma262/#sec-operations-on-iterator-objects */
   // and
-  /** http://tc39.es/ecma262/#sec-iteration */
+  /** https://tc39.es/ecma262/#sec-iteration */
 
-  /** http://tc39.es/ecma262/#sec-getiterator */
+  /** https://tc39.es/ecma262/#sec-getiterator */
   function GetIterator(obj, hint, method) {
     if (!hint) {
       hint = 'sync';
@@ -28001,7 +28001,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return EnsureCompletion(iteratorRecord);
   }
 
-  /** http://tc39.es/ecma262/#sec-iteratornext */
+  /** https://tc39.es/ecma262/#sec-iteratornext */
   function IteratorNext(iteratorRecord, value) {
     let result;
     if (!value) {
@@ -28033,7 +28033,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return EnsureCompletion(result);
   }
 
-  /** http://tc39.es/ecma262/#sec-iteratorcomplete */
+  /** https://tc39.es/ecma262/#sec-iteratorcomplete */
   function IteratorComplete(iterResult) {
     Assert(iterResult instanceof ObjectValue, "iterResult instanceof ObjectValue");
     let _temp9 = Get(iterResult, exports.Value('done'));
@@ -28048,7 +28048,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return EnsureCompletion(ToBoolean(_temp9));
   }
 
-  /** http://tc39.es/ecma262/#sec-iteratorvalue */
+  /** https://tc39.es/ecma262/#sec-iteratorvalue */
   function IteratorValue(iterResult) {
     Assert(iterResult instanceof ObjectValue, "iterResult instanceof ObjectValue");
     let _temp10 = Get(iterResult, exports.Value('value'));
@@ -28063,7 +28063,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return EnsureCompletion(_temp10);
   }
 
-  /** http://tc39.es/ecma262/#sec-iteratorstep */
+  /** https://tc39.es/ecma262/#sec-iteratorstep */
   function IteratorStep(iteratorRecord) {
     let _temp11 = IteratorNext(iteratorRecord);
     /* c8 ignore if */
@@ -28091,7 +28091,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return EnsureCompletion(result);
   }
 
-  /** http://tc39.es/ecma262/#sec-iteratorclose */
+  /** https://tc39.es/ecma262/#sec-iteratorclose */
   function IteratorClose(iteratorRecord, completion) {
     // 1. Assert: Type(iteratorRecord.[[Iterator]]) is Object.
     Assert(iteratorRecord.Iterator instanceof ObjectValue, "iteratorRecord.Iterator instanceof ObjectValue");
@@ -28130,7 +28130,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Completion(completion);
   }
 
-  /** http://tc39.es/ecma262/#sec-asynciteratorclose */
+  /** https://tc39.es/ecma262/#sec-asynciteratorclose */
   function* AsyncIteratorClose(iteratorRecord, completion) {
     // 1. Assert: Type(iteratorRecord.[[Iterator]]) is Object.
     Assert(iteratorRecord.Iterator instanceof ObjectValue, "iteratorRecord.Iterator instanceof ObjectValue");
@@ -28171,7 +28171,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Completion(completion);
   }
 
-  /** http://tc39.es/ecma262/#sec-createiterresultobject */
+  /** https://tc39.es/ecma262/#sec-createiterresultobject */
   function CreateIterResultObject(value, done) {
     Assert(done instanceof BooleanValue, "done instanceof BooleanValue");
     const obj = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%Object.prototype%'));
@@ -28190,7 +28190,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return obj;
   }
 
-  /** http://tc39.es/ecma262/#sec-createlistiteratorRecord */
+  /** https://tc39.es/ecma262/#sec-createlistiteratorRecord */
   function CreateListIteratorRecord(list) {
     // 1. Let closure be a new Abstract Closure with no parameters that captures list and performs the following steps when called:
     const closure = function* closure() {
@@ -28225,7 +28225,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     };
   }
 
-  /** http://tc39.es/ecma262/#sec-createasyncfromsynciterator */
+  /** https://tc39.es/ecma262/#sec-createasyncfromsynciterator */
   function CreateAsyncFromSyncIterator(syncIteratorRecord) {
     let _temp17 = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%AsyncFromSyncIteratorPrototype%'), ['SyncIteratorRecord']);
     Assert(!(_temp17 instanceof AbruptCompletion), "OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncFromSyncIteratorPrototype%'), [\n    'SyncIteratorRecord',\n  ])" + ' returned an abrupt completion');
@@ -28249,7 +28249,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     };
   }
 
-  /** http://tc39.es/ecma262/#sec-asyncfromsynciteratorcontinuation */
+  /** https://tc39.es/ecma262/#sec-asyncfromsynciteratorcontinuation */
   function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
     // 1. Let done be IteratorComplete(result).
     let done = IteratorComplete(result);
@@ -28411,7 +28411,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-module-namespace-exotic-objects-get-p-receiver */
+  /** https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-get-p-receiver */
   function ModuleNamespaceGet(P, Receiver) {
     const O = this;
 
@@ -28452,7 +28452,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 13. Return ? targetEnv.GetBindingValue(binding.[[BindingName]], true).
     return targetEnv.GetBindingValue(binding.BindingName, exports.Value.true);
   }
-  ModuleNamespaceGet.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-module-namespace-exotic-objects-get-p-receiver';
+  ModuleNamespaceGet.section = 'https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-get-p-receiver';
   function ModuleNamespaceSet() {
     return exports.Value.false;
   }
@@ -28482,7 +28482,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports$1;
   }
 
-  /** http://tc39.es/ecma262/#sec-modulenamespacecreate */
+  /** https://tc39.es/ecma262/#sec-modulenamespacecreate */
   function ModuleNamespaceCreate(module, exports$1) {
     // 1. Assert: module is a Module Record.
     Assert(module instanceof AbstractModuleRecord, "module instanceof AbstractModuleRecord");
@@ -28500,7 +28500,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp4 = _temp4.Value;
     }
     const M = _temp4;
-    /** http://tc39.es/ecma262/#sec-module-namespace-exotic-objects */
+    /** https://tc39.es/ecma262/#sec-module-namespace-exotic-objects */
     M.SetPrototypeOf = ModuleNamespaceSetPrototypeOf;
     M.IsExtensible = ModuleNamespaceIsExtensible;
     M.PreventExtensions = ModuleNamespacePreventExtensions;
@@ -28557,7 +28557,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-InnerModuleLoading */
+  /** https://tc39.es/ecma262/#sec-InnerModuleLoading */
   function InnerModuleLoading(state, module) {
     // 1. Assert: state.[[IsLoading]] is true.
     Assert(state.IsLoading === true, "state.IsLoading === true");
@@ -28618,7 +28618,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 6. Return unused.
   }
 
-  /** http://tc39.es/ecma262/#sec-ContinueModuleLoading */
+  /** https://tc39.es/ecma262/#sec-ContinueModuleLoading */
   function ContinueModuleLoading(state, result) {
     // 1. If state.[[IsLoading]] is false, return unused.
     if (state.IsLoading === false) {
@@ -28644,7 +28644,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 4. Return unused.
   }
 
-  /** http://tc39.es/ecma262/#sec-InnerModuleLinking */
+  /** https://tc39.es/ecma262/#sec-InnerModuleLinking */
   function InnerModuleLinking(module, stack, index) {
     if (!(module instanceof CyclicModuleRecord)) {
       let _temp3 = module.Link();
@@ -28712,7 +28712,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return index;
   }
 
-  /** http://tc39.es/ecma262/#sec-innermoduleevaluation */
+  /** https://tc39.es/ecma262/#sec-innermoduleevaluation */
   function InnerModuleEvaluation(module, stack, index) {
     if (!(module instanceof CyclicModuleRecord)) {
       let _temp6 = module.Evaluate();
@@ -28814,7 +28814,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return index;
   }
 
-  /** http://tc39.es/ecma262/#sec-execute-async-module */
+  /** https://tc39.es/ecma262/#sec-execute-async-module */
   function ExecuteAsyncModule(module) {
     // 1. Assert: module.[[Status]] is evaluating or evaluating-async.
     Assert(module.Status === 'evaluating' || module.Status === 'evaluating-async', "module.Status === 'evaluating' || module.Status === 'evaluating-async'");
@@ -28874,8 +28874,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-getcycleroot */
-  ExecuteAsyncModule.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-execute-async-module';
+  /** https://tc39.es/ecma262/#sec-getcycleroot */
+  ExecuteAsyncModule.section = 'https://tc39.es/ecma262/#sec-execute-async-module';
   function GetAsyncCycleRoot(module) {
     Assert(module.Status === 'evaluated' || module.Status === 'evaluating-async', "module.Status === 'evaluated' || module.Status === 'evaluating-async'");
     if (module.AsyncParentModules.length === 0) {
@@ -28891,7 +28891,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return module;
   }
 
-  /** http://tc39.es/ecma262/#sec-asyncmodulexecutionfulfilled */
+  /** https://tc39.es/ecma262/#sec-asyncmodulexecutionfulfilled */
   function AsyncModuleExecutionFulfilled(module) {
     if (module.Status === 'evaluated') {
       Assert(module.EvaluationError !== exports.Value.undefined, "module.EvaluationError !== Value.undefined");
@@ -28956,8 +28956,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-AsyncModuleExecutionRejected */
-  AsyncModuleExecutionFulfilled.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-asyncmodulexecutionfulfilled';
+  /** https://tc39.es/ecma262/#sec-AsyncModuleExecutionRejected */
+  AsyncModuleExecutionFulfilled.section = 'https://tc39.es/ecma262/#sec-asyncmodulexecutionfulfilled';
   function AsyncModuleExecutionRejected(module, error) {
     if (module.Status === 'evaluated') {
       Assert(module.EvaluationError !== exports.Value.undefined, "module.EvaluationError !== Value.undefined");
@@ -28989,7 +28989,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     return exports.Value.undefined;
   }
-  AsyncModuleExecutionRejected.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-AsyncModuleExecutionRejected';
+  AsyncModuleExecutionRejected.section = 'https://tc39.es/ecma262/#sec-AsyncModuleExecutionRejected';
   function getRecordWithSpecifier(loadedModules, specifier) {
     for (const record of loadedModules) {
       if (record.Specifier.stringValue() === specifier.stringValue()) {
@@ -28999,14 +28999,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-GetImportedModule */
+  /** https://tc39.es/ecma262/#sec-GetImportedModule */
   function GetImportedModule(referrer, specifier) {
     const record = getRecordWithSpecifier(referrer.LoadedModules, specifier);
     Assert(record !== undefined, "record !== undefined");
     return record.Module;
   }
 
-  /** http://tc39.es/ecma262/#sec-FinishLoadingImportedModule */
+  /** https://tc39.es/ecma262/#sec-FinishLoadingImportedModule */
   function FinishLoadingImportedModule(referrer, specifier, result, state) {
     // 1. If result is a normal completion, then
     if (result.Type === 'normal') {
@@ -29037,7 +29037,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 4. Return unused.
   }
 
-  /** http://tc39.es/ecma262/#sec-getmodulenamespace */
+  /** https://tc39.es/ecma262/#sec-getmodulenamespace */
   function GetModuleNamespace(module) {
     // 1. Assert: If module is a Cyclic Module Record, then module.[[Status]] is not new or unlinked.
     if (module instanceof CyclicModuleRecord) {
@@ -29085,7 +29085,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     });
   }
 
-  /** http://tc39.es/ecma262/#sec-create-default-export-synthetic-module */
+  /** https://tc39.es/ecma262/#sec-create-default-export-synthetic-module */
   function CreateDefaultExportSyntheticModule(defaultExport, realm, hostDefined) {
     // 1. Let closure be the a Abstract Closure with parameters (module) that captures defaultExport and performs the following steps when called:
     const closure = module => {
@@ -29107,7 +29107,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-requireinternalslot */
+  /** https://tc39.es/ecma262/#sec-requireinternalslot */
   function RequireInternalSlot(O, internalSlot) {
     if (!(O instanceof ObjectValue)) {
       return exports.surroundingAgent.Throw('TypeError', 'NotAnObject', O);
@@ -29146,9 +29146,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   // This file covers abstract operations defined in
-  /** http://tc39.es/ecma262/#sec-operations-on-objects */
+  /** https://tc39.es/ecma262/#sec-operations-on-objects */
 
-  /** http://tc39.es/ecma262/#sec-makebasicobject */
+  /** https://tc39.es/ecma262/#sec-makebasicobject */
   function MakeBasicObject(internalSlotsList) {
     // 1.  Assert: internalSlotsList is a List of internal slot names.
     Assert(Array.isArray(internalSlotsList), "Array.isArray(internalSlotsList)");
@@ -29168,7 +29168,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return obj;
   }
 
-  /** http://tc39.es/ecma262/#sec-get-o-p */
+  /** https://tc39.es/ecma262/#sec-get-o-p */
   function Get(O, P) {
     Assert(O instanceof ObjectValue, "O instanceof ObjectValue");
     Assert(IsPropertyKey(P), "IsPropertyKey(P)");
@@ -29185,7 +29185,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return NormalCompletion(_temp);
   }
 
-  /** http://tc39.es/ecma262/#sec-getv */
+  /** https://tc39.es/ecma262/#sec-getv */
   function GetV(V, P) {
     Assert(IsPropertyKey(P), "IsPropertyKey(P)");
     let _temp2 = ToObject(V);
@@ -29201,7 +29201,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return O.Get(P, V);
   }
 
-  /** http://tc39.es/ecma262/#sec-set-o-p-v-throw */
+  /** https://tc39.es/ecma262/#sec-set-o-p-v-throw */
   function Set$1(O, P, V, Throw) {
     Assert(O instanceof ObjectValue, "O instanceof ObjectValue");
     Assert(IsPropertyKey(P), "IsPropertyKey(P)");
@@ -29222,7 +29222,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return success;
   }
 
-  /** http://tc39.es/ecma262/#sec-createdataproperty */
+  /** https://tc39.es/ecma262/#sec-createdataproperty */
   function CreateDataProperty(O, P, V) {
     Assert(O instanceof ObjectValue, "O instanceof ObjectValue");
     Assert(IsPropertyKey(P), "IsPropertyKey(P)");
@@ -29235,7 +29235,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return O.DefineOwnProperty(P, newDesc);
   }
 
-  /** http://tc39.es/ecma262/#sec-createmethodproperty */
+  /** https://tc39.es/ecma262/#sec-createmethodproperty */
   function CreateMethodProperty(O, P, V) {
     Assert(O instanceof ObjectValue, "O instanceof ObjectValue");
     Assert(IsPropertyKey(P), "IsPropertyKey(P)");
@@ -29248,7 +29248,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return O.DefineOwnProperty(P, newDesc);
   }
 
-  /** http://tc39.es/ecma262/#sec-createdatapropertyorthrow */
+  /** https://tc39.es/ecma262/#sec-createdatapropertyorthrow */
   function CreateDataPropertyOrThrow(O, P, V) {
     Assert(O instanceof ObjectValue, "O instanceof ObjectValue");
     Assert(IsPropertyKey(P), "IsPropertyKey(P)");
@@ -29268,7 +29268,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return success;
   }
 
-  /** http://tc39.es/ecma262/#sec-definepropertyorthrow */
+  /** https://tc39.es/ecma262/#sec-definepropertyorthrow */
   function DefinePropertyOrThrow(O, P, desc) {
     Assert(O instanceof ObjectValue, "O instanceof ObjectValue");
     Assert(IsPropertyKey(P), "IsPropertyKey(P)");
@@ -29288,7 +29288,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return success;
   }
 
-  /** http://tc39.es/ecma262/#sec-deletepropertyorthrow */
+  /** https://tc39.es/ecma262/#sec-deletepropertyorthrow */
   function DeletePropertyOrThrow(O, P) {
     Assert(O instanceof ObjectValue, "O instanceof ObjectValue");
     Assert(IsPropertyKey(P), "IsPropertyKey(P)");
@@ -29308,7 +29308,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return success;
   }
 
-  /** http://tc39.es/ecma262/#sec-getmethod */
+  /** https://tc39.es/ecma262/#sec-getmethod */
   function GetMethod(V, P) {
     Assert(IsPropertyKey(P), "IsPropertyKey(P)");
     let _temp7 = GetV(V, P);
@@ -29330,14 +29330,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return func;
   }
 
-  /** http://tc39.es/ecma262/#sec-hasproperty */
+  /** https://tc39.es/ecma262/#sec-hasproperty */
   function HasProperty(O, P) {
     Assert(O instanceof ObjectValue, "O instanceof ObjectValue");
     Assert(IsPropertyKey(P), "IsPropertyKey(P)");
     return O.HasProperty(P);
   }
 
-  /** http://tc39.es/ecma262/#sec-hasownproperty */
+  /** https://tc39.es/ecma262/#sec-hasownproperty */
   function HasOwnProperty(O, P) {
     Assert(O instanceof ObjectValue, "O instanceof ObjectValue");
     Assert(IsPropertyKey(P), "IsPropertyKey(P)");
@@ -29357,7 +29357,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.true;
   }
 
-  /** http://tc39.es/ecma262/#sec-call */
+  /** https://tc39.es/ecma262/#sec-call */
   function Call(F, V, argumentsList) {
     if (!argumentsList) {
       argumentsList = [];
@@ -29378,7 +29378,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return EnsureCompletion(_temp9);
   }
 
-  /** http://tc39.es/ecma262/#sec-construct */
+  /** https://tc39.es/ecma262/#sec-construct */
   function Construct(F, argumentsList, newTarget) {
     if (!newTarget) {
       newTarget = F;
@@ -29391,7 +29391,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F.Construct(argumentsList, newTarget);
   }
 
-  /** http://tc39.es/ecma262/#sec-setintegritylevel */
+  /** https://tc39.es/ecma262/#sec-setintegritylevel */
   function SetIntegrityLevel(O, level) {
     Assert(O instanceof ObjectValue, "O instanceof ObjectValue");
     Assert(level === 'sealed' || level === 'frozen', "level === 'sealed' || level === 'frozen'");
@@ -29471,7 +29471,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.true;
   }
 
-  /** http://tc39.es/ecma262/#sec-testintegritylevel */
+  /** https://tc39.es/ecma262/#sec-testintegritylevel */
   function TestIntegrityLevel(O, level) {
     Assert(O instanceof ObjectValue, "O instanceof ObjectValue");
     Assert(level === 'sealed' || level === 'frozen', "level === 'sealed' || level === 'frozen'");
@@ -29523,7 +29523,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.true;
   }
 
-  /** http://tc39.es/ecma262/#sec-createarrayfromlist */
+  /** https://tc39.es/ecma262/#sec-createarrayfromlist */
   function CreateArrayFromList(elements) {
     // 1. Assert: elements is a List whose elements are all ECMAScript language values.
     Assert(elements.every(e => e instanceof exports.Value), "elements.every((e) => e instanceof Value)");
@@ -29558,7 +29558,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return array;
   }
 
-  /** http://tc39.es/ecma262/#sec-lengthofarraylike */
+  /** https://tc39.es/ecma262/#sec-lengthofarraylike */
   function LengthOfArrayLike(obj) {
     // 1. Assert: Type(obj) is Object.
     Assert(obj instanceof ObjectValue, "obj instanceof ObjectValue");
@@ -29584,7 +29584,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return _temp21.numberValue();
   }
 
-  /** http://tc39.es/ecma262/#sec-createlistfromarraylike */
+  /** https://tc39.es/ecma262/#sec-createlistfromarraylike */
   function CreateListFromArrayLike(obj, elementTypes) {
     // 1. If elementTypes is not present, set elementTypes to « Undefined, Null, Boolean, String, Symbol, Number, BigInt, Object ».
     if (!elementTypes) {
@@ -29643,7 +29643,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return list;
   }
 
-  /** http://tc39.es/ecma262/#sec-invoke */
+  /** https://tc39.es/ecma262/#sec-invoke */
   function Invoke(V, P, argumentsList) {
     Assert(IsPropertyKey(P), "IsPropertyKey(P)");
     if (!argumentsList) {
@@ -29662,7 +29662,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Call(func, V, argumentsList);
   }
 
-  /** http://tc39.es/ecma262/#sec-ordinaryhasinstance */
+  /** https://tc39.es/ecma262/#sec-ordinaryhasinstance */
   function OrdinaryHasInstance(C, O) {
     if (IsCallable(C) === exports.Value.false) {
       return exports.Value.false;
@@ -29707,7 +29707,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-speciesconstructor */
+  /** https://tc39.es/ecma262/#sec-speciesconstructor */
   function SpeciesConstructor(O, defaultConstructor) {
     Assert(O instanceof ObjectValue, "O instanceof ObjectValue");
     let _temp29 = Get(O, exports.Value('constructor'));
@@ -29745,7 +29745,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.surroundingAgent.Throw('TypeError', 'SpeciesNotConstructor');
   }
 
-  /** http://tc39.es/ecma262/#sec-enumerableownpropertynames */
+  /** https://tc39.es/ecma262/#sec-enumerableownpropertynames */
   function EnumerableOwnPropertyNames(O, kind) {
     Assert(O instanceof ObjectValue, "O instanceof ObjectValue");
     let _temp31 = O.OwnPropertyKeys();
@@ -29805,7 +29805,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return properties;
   }
 
-  /** http://tc39.es/ecma262/#sec-getfunctionrealm */
+  /** https://tc39.es/ecma262/#sec-getfunctionrealm */
   function GetFunctionRealm(obj) {
     let _temp35 = IsCallable(obj);
     Assert(!(_temp35 instanceof AbruptCompletion), "IsCallable(obj)" + ' returned an abrupt completion');
@@ -29831,7 +29831,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.surroundingAgent.currentRealmRecord;
   }
 
-  /** http://tc39.es/ecma262/#sec-copydataproperties */
+  /** https://tc39.es/ecma262/#sec-copydataproperties */
   function CopyDataProperties(target, source, excludedItems) {
     Assert(target instanceof ObjectValue, "target instanceof ObjectValue");
     Assert(excludedItems.every(i => IsPropertyKey(i)), "excludedItems.every((i) => IsPropertyKey(i))");
@@ -29985,7 +29985,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current);
   }
 
-  /** http://tc39.es/ecma262/#sec-iscompatiblepropertydescriptor */
+  /** https://tc39.es/ecma262/#sec-iscompatiblepropertydescriptor */
   function IsCompatiblePropertyDescriptor(Extensible, Desc, Current) {
     return ValidateAndApplyPropertyDescriptor(exports.Value.undefined, exports.Value.undefined, Extensible, Desc, Current);
   }
@@ -30314,7 +30314,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return keys;
   }
 
-  /** http://tc39.es/ecma262/#sec-ordinaryobjectcreate */
+  /** https://tc39.es/ecma262/#sec-ordinaryobjectcreate */
   function OrdinaryObjectCreate(proto, additionalInternalSlotsList) {
     // 1. Let internalSlotsList be « [[Prototype]], [[Extensible]] ».
     const internalSlotsList = ['Prototype', 'Extensible'];
@@ -30383,7 +30383,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return proto;
   }
 
-  /** http://tc39.es/ecma262/#sec-privateelementfind */
+  /** https://tc39.es/ecma262/#sec-privateelementfind */
   function PrivateElementFind(P, O) {
     const entry = O.PrivateElements.find(e => e.Key === P);
     // 1. If O.[[PrivateElements]] contains a PrivateElement whose [[Key]] is P, then
@@ -30396,7 +30396,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-privateget */
+  /** https://tc39.es/ecma262/#sec-privateget */
   function PrivateGet(P, O) {
     let _temp = PrivateElementFind(P, O);
     Assert(!(_temp instanceof AbruptCompletion), "PrivateElementFind(P, O)" + ' returned an abrupt completion');
@@ -30470,7 +30470,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-privatemethodoraccessoradd */
+  /** https://tc39.es/ecma262/#sec-privatemethodoraccessoradd */
   function PrivateMethodOrAccessorAdd(method, O) {
     // 1. Assert: method.[[Kind]] is either method or accessor.
     Assert(method.Kind === 'method' || method.Kind === 'accessor', "method.Kind === 'method' || method.Kind === 'accessor'");
@@ -30492,7 +30492,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     //          This step does not create a new copy of the method or accessor.
   }
 
-  /** http://tc39.es/ecma262/#sec-privatefieldadd */
+  /** https://tc39.es/ecma262/#sec-privatefieldadd */
   function PrivateFieldAdd(P, O, value) {
     let _temp5 = PrivateElementFind(P, O);
     Assert(!(_temp5 instanceof AbruptCompletion), "PrivateElementFind(P, O)" + ' returned an abrupt completion');
@@ -30517,9 +30517,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   // @ts-nocheck
 
   // This file covers abstract operations defined in
-  /** http://tc39.es/ecma262/#sec-promise-objects */
+  /** https://tc39.es/ecma262/#sec-promise-objects */
 
-  /** http://tc39.es/ecma262/#sec-promisecapability-records */
+  /** https://tc39.es/ecma262/#sec-promisecapability-records */
   class PromiseCapabilityRecord {
     Promise;
     Resolve;
@@ -30531,7 +30531,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-promisereaction-records */
+  /** https://tc39.es/ecma262/#sec-promisereaction-records */
   class PromiseReactionRecord {
     Capability;
     Type;
@@ -30546,7 +30546,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-createresolvingfunctions */
+  /** https://tc39.es/ecma262/#sec-createresolvingfunctions */
   function CreateResolvingFunctions(promise) {
     // 1. Let alreadyResolved be the Record { [[Value]]: false }.
     const alreadyResolved = {
@@ -30591,7 +30591,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     };
   }
 
-  /** http://tc39.es/ecma262/#sec-promise-reject-functions */
+  /** https://tc39.es/ecma262/#sec-promise-reject-functions */
   function PromiseRejectFunctions([reason = exports.Value.undefined]) {
     const F = this;
     Assert('Promise' in F && F.Promise instanceof ObjectValue, "'Promise' in F && F.Promise instanceof ObjectValue");
@@ -30604,8 +30604,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return RejectPromise(promise, reason);
   }
 
-  /** http://tc39.es/ecma262/#sec-newpromiseresolvethenablejob */
-  PromiseRejectFunctions.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-promise-reject-functions';
+  /** https://tc39.es/ecma262/#sec-newpromiseresolvethenablejob */
+  PromiseRejectFunctions.section = 'https://tc39.es/ecma262/#sec-promise-reject-functions';
   function NewPromiseResolveThenableJob(promiseToResolve, thenable, then) {
     // 1. Let job be a new Job abstract closure with no parameters that captures
     //    promiseToResolve, thenable, and then and performs the following steps when called:
@@ -30642,8 +30642,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     };
   }
 
-  /** http://tc39.es/ecma262/#sec-promise-resolve-functions */
-  NewPromiseResolveThenableJob.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-newpromiseresolvethenablejob';
+  /** https://tc39.es/ecma262/#sec-promise-resolve-functions */
+  NewPromiseResolveThenableJob.section = 'https://tc39.es/ecma262/#sec-newpromiseresolvethenablejob';
   function PromiseResolveFunctions([resolution = exports.Value.undefined]) {
     // 1. Let F be the active function object.
     const F = this;
@@ -30695,8 +30695,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-fulfillpromise */
-  PromiseResolveFunctions.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-promise-resolve-functions';
+  /** https://tc39.es/ecma262/#sec-fulfillpromise */
+  PromiseResolveFunctions.section = 'https://tc39.es/ecma262/#sec-promise-resolve-functions';
   function FulfillPromise(promise, value) {
     Assert(promise.PromiseState === 'pending', "promise.PromiseState === 'pending'");
     const reactions = promise.PromiseFulfillReactions;
@@ -30707,8 +30707,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return TriggerPromiseReactions(reactions, value);
   }
 
-  /** http://tc39.es/ecma262/#sec-newpromisecapability */
-  FulfillPromise.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-fulfillpromise';
+  /** https://tc39.es/ecma262/#sec-newpromisecapability */
+  FulfillPromise.section = 'https://tc39.es/ecma262/#sec-fulfillpromise';
   function NewPromiseCapability(C) {
     // 1. If IsConstructor(C) is false, throw a TypeError exception.
     if (IsConstructor(C) === exports.Value.false) {
@@ -30767,7 +30767,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return promiseCapability;
   }
 
-  /** http://tc39.es/ecma262/#sec-ispromise */
+  /** https://tc39.es/ecma262/#sec-ispromise */
   function IsPromise(x) {
     if (!(x instanceof ObjectValue)) {
       return exports.Value.false;
@@ -30778,7 +30778,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.true;
   }
 
-  /** http://tc39.es/ecma262/#sec-rejectpromise */
+  /** https://tc39.es/ecma262/#sec-rejectpromise */
   function RejectPromise(promise, reason) {
     Assert(promise.PromiseState === 'pending', "promise.PromiseState === 'pending'");
     const reactions = promise.PromiseRejectReactions;
@@ -30792,8 +30792,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return TriggerPromiseReactions(reactions, reason);
   }
 
-  /** http://tc39.es/ecma262/#sec-triggerpromisereactions */
-  RejectPromise.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-rejectpromise';
+  /** https://tc39.es/ecma262/#sec-triggerpromisereactions */
+  RejectPromise.section = 'https://tc39.es/ecma262/#sec-rejectpromise';
   function TriggerPromiseReactions(reactions, argument) {
     // 1. For each reaction in reactions, do
     reactions.forEach(reaction => {
@@ -30806,8 +30806,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-promise-resolve */
-  TriggerPromiseReactions.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-triggerpromisereactions';
+  /** https://tc39.es/ecma262/#sec-promise-resolve */
+  TriggerPromiseReactions.section = 'https://tc39.es/ecma262/#sec-triggerpromisereactions';
   function PromiseResolve(C, x) {
     Assert(C instanceof ObjectValue, "C instanceof ObjectValue");
     if (IsPromise(x) === exports.Value.true) {
@@ -30847,7 +30847,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return promiseCapability.Promise;
   }
 
-  /** http://tc39.es/ecma262/#sec-newpromisereactionjob */
+  /** https://tc39.es/ecma262/#sec-newpromisereactionjob */
   function NewPromiseReactionJob(reaction, argument) {
     // 1. Let job be a new Job abstract closure with no parameters that captures
     //    reaction and argument and performs the following steps when called:
@@ -30918,8 +30918,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     };
   }
 
-  /** http://tc39.es/ecma262/#sec-performpromisethen */
-  NewPromiseReactionJob.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-newpromisereactionjob';
+  /** https://tc39.es/ecma262/#sec-performpromisethen */
+  NewPromiseReactionJob.section = 'https://tc39.es/ecma262/#sec-newpromisereactionjob';
   function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) {
     // 1. Assert: IsPromise(promise) is true.
     Assert(IsPromise(promise) === exports.Value.true, "IsPromise(promise) === Value.true");
@@ -30999,7 +30999,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getprototypeof */
+  /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getprototypeof */
   function ProxyGetPrototypeOf() {
     const O = this;
     const handler = O.ProxyHandler;
@@ -31063,8 +31063,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return handlerProto;
   }
 
-  /** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-setprototypeof-v */
-  ProxyGetPrototypeOf.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getprototypeof';
+  /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-setprototypeof-v */
+  ProxyGetPrototypeOf.section = 'https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getprototypeof';
   function ProxySetPrototypeOf(V) {
     const O = this;
     Assert(V instanceof ObjectValue || V instanceof NullValue, "V instanceof ObjectValue || V instanceof NullValue");
@@ -31129,8 +31129,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.true;
   }
 
-  /** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-isextensible */
-  ProxySetPrototypeOf.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-setprototypeof-v';
+  /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-isextensible */
+  ProxySetPrototypeOf.section = 'https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-setprototypeof-v';
   function ProxyIsExtensible() {
     const O = this;
     const handler = O.ProxyHandler;
@@ -31178,8 +31178,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return booleanTrapResult;
   }
 
-  /** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-preventextensions */
-  ProxyIsExtensible.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-isextensible';
+  /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-preventextensions */
+  ProxyIsExtensible.section = 'https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-isextensible';
   function ProxyPreventExtensions() {
     const O = this;
     const handler = O.ProxyHandler;
@@ -31229,8 +31229,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return booleanTrapResult;
   }
 
-  /** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getownproperty-p */
-  ProxyPreventExtensions.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-preventextensions';
+  /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getownproperty-p */
+  ProxyPreventExtensions.section = 'https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-preventextensions';
   function ProxyGetOwnProperty(P) {
     const O = this;
 
@@ -31365,8 +31365,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return resultDesc;
   }
 
-  /** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-defineownproperty-p-desc */
-  ProxyGetOwnProperty.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getownproperty-p';
+  /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-defineownproperty-p-desc */
+  ProxyGetOwnProperty.section = 'https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getownproperty-p';
   function ProxyDefineOwnProperty(P, Desc) {
     const O = this;
 
@@ -31476,8 +31476,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.true;
   }
 
-  /** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-hasproperty-p */
-  ProxyDefineOwnProperty.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-defineownproperty-p-desc';
+  /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-hasproperty-p */
+  ProxyDefineOwnProperty.section = 'https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-defineownproperty-p-desc';
   function ProxyHasProperty(P) {
     const O = this;
     Assert(IsPropertyKey(P), "IsPropertyKey(P)");
@@ -31543,8 +31543,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return booleanTrapResult;
   }
 
-  /** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-get-p-receiver */
-  ProxyHasProperty.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-hasproperty-p';
+  /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-get-p-receiver */
+  ProxyHasProperty.section = 'https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-hasproperty-p';
   function ProxyGet(P, Receiver) {
     const O = this;
     Assert(IsPropertyKey(P), "IsPropertyKey(P)");
@@ -31602,8 +31602,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return trapResult;
   }
 
-  /** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-set-p-v-receiver */
-  ProxyGet.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-get-p-receiver';
+  /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-set-p-v-receiver */
+  ProxyGet.section = 'https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-get-p-receiver';
   function ProxySet(P, V, Receiver) {
     const O = this;
     Assert(IsPropertyKey(P), "IsPropertyKey(P)");
@@ -31664,8 +31664,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.true;
   }
 
-  /** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-delete-p */
-  ProxySet.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-set-p-v-receiver';
+  /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-delete-p */
+  ProxySet.section = 'https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-set-p-v-receiver';
   function ProxyDelete(P) {
     const O = this;
 
@@ -31750,8 +31750,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.true;
   }
 
-  /** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-ownpropertykeys */
-  ProxyDelete.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-delete-p';
+  /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-ownpropertykeys */
+  ProxyDelete.section = 'https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-delete-p';
   function ProxyOwnPropertyKeys() {
     const O = this;
     const handler = O.ProxyHandler;
@@ -31862,8 +31862,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return trapResult;
   }
 
-  /** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-call-thisargument-argumentslist */
-  ProxyOwnPropertyKeys.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-ownpropertykeys';
+  /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-call-thisargument-argumentslist */
+  ProxyOwnPropertyKeys.section = 'https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-ownpropertykeys';
   function ProxyCall(thisArgument, argumentsList) {
     const O = this;
     const handler = O.ProxyHandler;
@@ -31895,8 +31895,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Call(trap, handler, [target, thisArgument, argArray]);
   }
 
-  /** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-construct-argumentslist-newtarget */
-  ProxyCall.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-call-thisargument-argumentslist';
+  /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-construct-argumentslist-newtarget */
+  ProxyCall.section = 'https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-call-thisargument-argumentslist';
   function ProxyConstruct(argumentsList, newTarget) {
     const O = this;
     const handler = O.ProxyHandler;
@@ -31941,12 +31941,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     return newObj;
   }
-  ProxyConstruct.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-construct-argumentslist-newtarget';
+  ProxyConstruct.section = 'https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-construct-argumentslist-newtarget';
   function isProxyExoticObject(O) {
     return 'ProxyHandler' in O;
   }
 
-  /** http://tc39.es/ecma262/#sec-proxycreate */
+  /** https://tc39.es/ecma262/#sec-proxycreate */
   function ProxyCreate(target, handler) {
     // 1. If Type(target) is not Object, throw a TypeError exception.
     if (!(target instanceof ObjectValue)) {
@@ -31978,11 +31978,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     P.OwnPropertyKeys = ProxyOwnPropertyKeys;
     // 5. If IsCallable(target) is true, then
     if (IsCallable(target) === exports.Value.true) {
-      /** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-call-thisargument-argumentslist. */
+      /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-call-thisargument-argumentslist. */
       P.Call = ProxyCall;
       // b. If IsConstructor(target) is true, then
       if (IsConstructor(target) === exports.Value.true) {
-        /** http://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-construct-argumentslist-newtarget. */
+        /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-construct-argumentslist-newtarget. */
         P.Construct = ProxyConstruct;
       }
     }
@@ -31994,7 +31994,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return P;
   }
 
-  /** http://tc39.es/ecma262/#sec-object.prototype.hasownproperty */
+  /** https://tc39.es/ecma262/#sec-object.prototype.hasownproperty */
   function ObjectProto_hasOwnProperty([V = exports.Value.undefined], {
     thisValue
   }) {
@@ -32024,8 +32024,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return HasOwnProperty(O, P);
   }
 
-  /** http://tc39.es/ecma262/#sec-object.prototype.isprototypeof */
-  ObjectProto_hasOwnProperty.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.prototype.hasownproperty';
+  /** https://tc39.es/ecma262/#sec-object.prototype.isprototypeof */
+  ObjectProto_hasOwnProperty.section = 'https://tc39.es/ecma262/#sec-object.prototype.hasownproperty';
   function ObjectProto_isPrototypeOf([V = exports.Value.undefined], {
     thisValue
   }) {
@@ -32068,8 +32068,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-object.prototype.propertyisenumerable */
-  ObjectProto_isPrototypeOf.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.prototype.isprototypeof';
+  /** https://tc39.es/ecma262/#sec-object.prototype.propertyisenumerable */
+  ObjectProto_isPrototypeOf.section = 'https://tc39.es/ecma262/#sec-object.prototype.isprototypeof';
   function ObjectProto_propertyIsEnumerable([V = exports.Value.undefined], {
     thisValue
   }) {
@@ -32114,8 +32114,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return desc.Enumerable;
   }
 
-  /** http://tc39.es/ecma262/#sec-object.prototype.tolocalestring */
-  ObjectProto_propertyIsEnumerable.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.prototype.propertyisenumerable';
+  /** https://tc39.es/ecma262/#sec-object.prototype.tolocalestring */
+  ObjectProto_propertyIsEnumerable.section = 'https://tc39.es/ecma262/#sec-object.prototype.propertyisenumerable';
   function ObjectProto_toLocaleString(argList, {
     thisValue
   }) {
@@ -32125,8 +32125,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Invoke(O, exports.Value('toString'));
   }
 
-  /** http://tc39.es/ecma262/#sec-object.prototype.tostring */
-  ObjectProto_toLocaleString.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.prototype.tolocalestring';
+  /** https://tc39.es/ecma262/#sec-object.prototype.tostring */
+  ObjectProto_toLocaleString.section = 'https://tc39.es/ecma262/#sec-object.prototype.tolocalestring';
   function ObjectProto_toString(argList, {
     thisValue
   }) {
@@ -32208,8 +32208,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(`[object ${tag.stringValue ? tag.stringValue() : tag}]`);
   }
 
-  /** http://tc39.es/ecma262/#sec-object.prototype.valueof */
-  ObjectProto_toString.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.prototype.tostring';
+  /** https://tc39.es/ecma262/#sec-object.prototype.valueof */
+  ObjectProto_toString.section = 'https://tc39.es/ecma262/#sec-object.prototype.tostring';
   function ObjectProto_valueOf(argList, {
     thisValue
   }) {
@@ -32217,8 +32217,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return ToObject(thisValue);
   }
 
-  /** http://tc39.es/ecma262/#sec-object.prototype.__defineGetter__ */
-  ObjectProto_valueOf.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.prototype.valueof';
+  /** https://tc39.es/ecma262/#sec-object.prototype.__defineGetter__ */
+  ObjectProto_valueOf.section = 'https://tc39.es/ecma262/#sec-object.prototype.valueof';
   function ObjectProto__defineGetter__([P = exports.Value.undefined, getter = exports.Value.undefined], {
     thisValue
   }) {
@@ -32268,8 +32268,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-object.prototype.__defineSetter__ */
-  ObjectProto__defineGetter__.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.prototype.__defineGetter__';
+  /** https://tc39.es/ecma262/#sec-object.prototype.__defineSetter__ */
+  ObjectProto__defineGetter__.section = 'https://tc39.es/ecma262/#sec-object.prototype.__defineGetter__';
   function ObjectProto__defineSetter__([P = exports.Value.undefined, setter = exports.Value.undefined], {
     thisValue
   }) {
@@ -32319,8 +32319,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-object.prototype.__lookupGetter__ */
-  ObjectProto__defineSetter__.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.prototype.__defineSetter__';
+  /** https://tc39.es/ecma262/#sec-object.prototype.__lookupGetter__ */
+  ObjectProto__defineSetter__.section = 'https://tc39.es/ecma262/#sec-object.prototype.__defineSetter__';
   function ObjectProto__lookupGetter__([P = exports.Value.undefined], {
     thisValue
   }) {
@@ -32386,8 +32386,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-object.prototype.__lookupSetter__ */
-  ObjectProto__lookupGetter__.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.prototype.__lookupGetter__';
+  /** https://tc39.es/ecma262/#sec-object.prototype.__lookupSetter__ */
+  ObjectProto__lookupGetter__.section = 'https://tc39.es/ecma262/#sec-object.prototype.__lookupGetter__';
   function ObjectProto__lookupSetter__([P = exports.Value.undefined], {
     thisValue
   }) {
@@ -32453,8 +32453,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-get-object.prototype.__proto__ */
-  ObjectProto__lookupSetter__.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.prototype.__lookupSetter__';
+  /** https://tc39.es/ecma262/#sec-get-object.prototype.__proto__ */
+  ObjectProto__lookupSetter__.section = 'https://tc39.es/ecma262/#sec-object.prototype.__lookupSetter__';
   function ObjectProto__proto__Get(args, {
     thisValue
   }) {
@@ -32473,8 +32473,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return O.GetPrototypeOf();
   }
 
-  /** http://tc39.es/ecma262/#sec-set-object.prototype.__proto__ */
-  ObjectProto__proto__Get.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-get-object.prototype.__proto__';
+  /** https://tc39.es/ecma262/#sec-set-object.prototype.__proto__ */
+  ObjectProto__proto__Get.section = 'https://tc39.es/ecma262/#sec-get-object.prototype.__proto__';
   function ObjectProto__proto__Set([proto = exports.Value.undefined], {
     thisValue
   }) {
@@ -32515,7 +32515,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 6. Return undefined.
     return exports.Value.undefined;
   }
-  ObjectProto__proto__Set.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-set-object.prototype.__proto__';
+  ObjectProto__proto__Set.section = 'https://tc39.es/ecma262/#sec-set-object.prototype.__proto__';
   function bootstrapObjectPrototype(realmRec) {
     const proto = realmRec.Intrinsics['%Object.prototype%'];
     assignProps(realmRec, proto, [['hasOwnProperty', ObjectProto_hasOwnProperty, 1], ['isPrototypeOf', ObjectProto_isPrototypeOf, 1], ['propertyIsEnumerable', ObjectProto_propertyIsEnumerable, 1], ['toLocaleString', ObjectProto_toLocaleString, 0], ['toString', ObjectProto_toString, 0], ['valueOf', ObjectProto_valueOf, 0], ['__defineGetter__', ObjectProto__defineGetter__, 2], ['__defineSetter__', ObjectProto__defineSetter__, 2], ['__lookupGetter__', ObjectProto__lookupGetter__, 1], ['__lookupSetter__', ObjectProto__lookupSetter__, 1], ['__proto__', [ObjectProto__proto__Get, ObjectProto__proto__Set]]]);
@@ -32614,7 +32614,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-map-iterable */
+  /** https://tc39.es/ecma262/#sec-map-iterable */
   function MapConstructor([iterable = exports.Value.undefined], {
     NewTarget
   }) {
@@ -32654,21 +32654,21 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return AddEntriesFromIterable(map, iterable, adder);
   }
 
-  /** http://tc39.es/ecma262/#sec-get-map-@@species */
-  MapConstructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-map-iterable';
+  /** https://tc39.es/ecma262/#sec-get-map-@@species */
+  MapConstructor.section = 'https://tc39.es/ecma262/#sec-map-iterable';
   function Map_speciesGetter(args, {
     thisValue
   }) {
     // 1. Return the this value.
     return thisValue;
   }
-  Map_speciesGetter.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-get-map-@@species';
+  Map_speciesGetter.section = 'https://tc39.es/ecma262/#sec-get-map-@@species';
   function bootstrapMap(realmRec) {
     const mapConstructor = bootstrapConstructor(realmRec, MapConstructor, 'Map', 0, realmRec.Intrinsics['%Map.prototype%'], [[wellKnownSymbols.species, [Map_speciesGetter]]]);
     realmRec.Intrinsics['%Map%'] = mapConstructor;
   }
 
-  /** http://tc39.es/ecma262/#sec-object-value */
+  /** https://tc39.es/ecma262/#sec-object-value */
   function ObjectConstructor([value = exports.Value.undefined], {
     NewTarget
   }) {
@@ -32691,8 +32691,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return _temp;
   }
 
-  /** http://tc39.es/ecma262/#sec-object.assign */
-  ObjectConstructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object-value';
+  /** https://tc39.es/ecma262/#sec-object.assign */
+  ObjectConstructor.section = 'https://tc39.es/ecma262/#sec-object-value';
   function Object_assign([target = exports.Value.undefined, ...sources]) {
     let _temp2 = ToObject(target);
     /* c8 ignore if */
@@ -32777,8 +32777,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return to;
   }
 
-  /** http://tc39.es/ecma262/#sec-object.create */
-  Object_assign.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.assign';
+  /** https://tc39.es/ecma262/#sec-object.create */
+  Object_assign.section = 'https://tc39.es/ecma262/#sec-object.assign';
   function Object_create([O = exports.Value.undefined, Properties = exports.Value.undefined]) {
     // 1. If Type(O) is neither Object nor Null, throw a TypeError exception.
     if (!(O instanceof ObjectValue) && !(O instanceof NullValue)) {
@@ -32795,15 +32795,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return obj;
   }
 
-  /** http://tc39.es/ecma262/#sec-object.defineproperties */
-  Object_create.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.create';
+  /** https://tc39.es/ecma262/#sec-object.defineproperties */
+  Object_create.section = 'https://tc39.es/ecma262/#sec-object.create';
   function Object_defineProperties([O = exports.Value.undefined, Properties = exports.Value.undefined]) {
     // 1. Return ? ObjectDefineProperties(O, Properties).
     return ObjectDefineProperties(O, Properties);
   }
 
-  /** http://tc39.es/ecma262/#sec-objectdefineproperties ObjectDefineProperties */
-  Object_defineProperties.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.defineproperties';
+  /** https://tc39.es/ecma262/#sec-objectdefineproperties ObjectDefineProperties */
+  Object_defineProperties.section = 'https://tc39.es/ecma262/#sec-object.defineproperties';
   function ObjectDefineProperties(O, Properties) {
     // 1. If Type(O) is not Object, throw a TypeError exception.
     if (!(O instanceof ObjectValue)) {
@@ -32895,8 +32895,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return O;
   }
 
-  /** http://tc39.es/ecma262/#sec-object.defineproperty */
-  ObjectDefineProperties.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-objectdefineproperties';
+  /** https://tc39.es/ecma262/#sec-object.defineproperty */
+  ObjectDefineProperties.section = 'https://tc39.es/ecma262/#sec-objectdefineproperties';
   function Object_defineProperty([O = exports.Value.undefined, P = exports.Value.undefined, Attributes = exports.Value.undefined]) {
     // 1. If Type(O) is not Object, throw a TypeError exception.
     if (!(O instanceof ObjectValue)) {
@@ -32938,8 +32938,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return O;
   }
 
-  /** http://tc39.es/ecma262/#sec-object.entries */
-  Object_defineProperty.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.defineproperty';
+  /** https://tc39.es/ecma262/#sec-object.entries */
+  Object_defineProperty.section = 'https://tc39.es/ecma262/#sec-object.defineproperty';
   function Object_entries([O = exports.Value.undefined]) {
     let _temp17 = ToObject(O);
     /* c8 ignore if */
@@ -32967,8 +32967,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return CreateArrayFromList(nameList);
   }
 
-  /** http://tc39.es/ecma262/#sec-object.freeze */
-  Object_entries.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.entries';
+  /** https://tc39.es/ecma262/#sec-object.freeze */
+  Object_entries.section = 'https://tc39.es/ecma262/#sec-object.entries';
   function Object_freeze([O = exports.Value.undefined]) {
     // 1. If Type(O) is not Object, return O.
     if (!(O instanceof ObjectValue)) {
@@ -32993,8 +32993,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return O;
   }
 
-  /** http://tc39.es/ecma262/#sec-object.fromentries */
-  Object_freeze.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.freeze';
+  /** https://tc39.es/ecma262/#sec-object.fromentries */
+  Object_freeze.section = 'https://tc39.es/ecma262/#sec-object.freeze';
   function Object_fromEntries([iterable = exports.Value.undefined]) {
     let _temp20 = RequireObjectCoercible(iterable);
     /* c8 ignore if */
@@ -33050,8 +33050,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return AddEntriesFromIterable(obj, iterable, adder);
   }
 
-  /** http://tc39.es/ecma262/#sec-object.getownpropertydescriptor */
-  Object_fromEntries.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.fromentries';
+  /** https://tc39.es/ecma262/#sec-object.getownpropertydescriptor */
+  Object_fromEntries.section = 'https://tc39.es/ecma262/#sec-object.fromentries';
   function Object_getOwnPropertyDescriptor([O = exports.Value.undefined, P = exports.Value.undefined]) {
     let _temp25 = ToObject(O);
     /* c8 ignore if */
@@ -33090,8 +33090,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return FromPropertyDescriptor(desc);
   }
 
-  /** http://tc39.es/ecma262/#sec-object.getownpropertydescriptors */
-  Object_getOwnPropertyDescriptor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.getownpropertydescriptor';
+  /** https://tc39.es/ecma262/#sec-object.getownpropertydescriptors */
+  Object_getOwnPropertyDescriptor.section = 'https://tc39.es/ecma262/#sec-object.getownpropertydescriptor';
   function Object_getOwnPropertyDescriptors([O = exports.Value.undefined]) {
     let _temp28 = ToObject(O);
     /* c8 ignore if */
@@ -33158,8 +33158,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return descriptors;
   }
 
-  /** http://tc39.es/ecma262/#sec-getownpropertykeys */
-  Object_getOwnPropertyDescriptors.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.getownpropertydescriptors';
+  /** https://tc39.es/ecma262/#sec-getownpropertykeys */
+  Object_getOwnPropertyDescriptors.section = 'https://tc39.es/ecma262/#sec-object.getownpropertydescriptors';
   function GetOwnPropertyKeys(O, type) {
     let _temp34 = ToObject(O);
     /* c8 ignore if */
@@ -33196,22 +33196,22 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return CreateArrayFromList(nameList);
   }
 
-  /** http://tc39.es/ecma262/#sec-object.getownpropertynames */
-  GetOwnPropertyKeys.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-getownpropertykeys';
+  /** https://tc39.es/ecma262/#sec-object.getownpropertynames */
+  GetOwnPropertyKeys.section = 'https://tc39.es/ecma262/#sec-getownpropertykeys';
   function Object_getOwnPropertyNames([O = exports.Value.undefined]) {
     // 1. Return ? GetOwnPropertyKeys(O, string).
     return GetOwnPropertyKeys(O, 'String');
   }
 
-  /** http://tc39.es/ecma262/#sec-object.getownpropertysymbols */
-  Object_getOwnPropertyNames.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.getownpropertynames';
+  /** https://tc39.es/ecma262/#sec-object.getownpropertysymbols */
+  Object_getOwnPropertyNames.section = 'https://tc39.es/ecma262/#sec-object.getownpropertynames';
   function Object_getOwnPropertySymbols([O = exports.Value.undefined]) {
     // 1. Return ? GetOwnPropertyKeys(O, symbol).
     return GetOwnPropertyKeys(O, 'Symbol');
   }
 
-  /** http://tc39.es/ecma262/#sec-object.getprototypeof */
-  Object_getOwnPropertySymbols.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.getownpropertysymbols';
+  /** https://tc39.es/ecma262/#sec-object.getprototypeof */
+  Object_getOwnPropertySymbols.section = 'https://tc39.es/ecma262/#sec-object.getownpropertysymbols';
   function Object_getPrototypeOf([O = exports.Value.undefined]) {
     let _temp36 = ToObject(O);
     /* c8 ignore if */
@@ -33228,8 +33228,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return obj.GetPrototypeOf();
   }
 
-  /** http://tc39.es/ecma262/#sec-object.hasown */
-  Object_getPrototypeOf.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.getprototypeof';
+  /** https://tc39.es/ecma262/#sec-object.hasown */
+  Object_getPrototypeOf.section = 'https://tc39.es/ecma262/#sec-object.getprototypeof';
   function Object_hasOwn([O = exports.Value.undefined, P = exports.Value.undefined]) {
     let _temp37 = ToObject(O);
     /* c8 ignore if */
@@ -33257,15 +33257,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return HasOwnProperty(obj, key);
   }
 
-  /** http://tc39.es/ecma262/#sec-object.is */
-  Object_hasOwn.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.hasown';
+  /** https://tc39.es/ecma262/#sec-object.is */
+  Object_hasOwn.section = 'https://tc39.es/ecma262/#sec-object.hasown';
   function Object_is([value1 = exports.Value.undefined, value2 = exports.Value.undefined]) {
     // 1. Return SameValue(value1, value2).
     return SameValue(value1, value2);
   }
 
-  /** http://tc39.es/ecma262/#sec-object.isextensible */
-  Object_is.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.is';
+  /** https://tc39.es/ecma262/#sec-object.isextensible */
+  Object_is.section = 'https://tc39.es/ecma262/#sec-object.is';
   function Object_isExtensible([O = exports.Value.undefined]) {
     // 1. If Type(O) is not Object, return false.
     if (!(O instanceof ObjectValue)) {
@@ -33275,8 +33275,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return IsExtensible(O);
   }
 
-  /** http://tc39.es/ecma262/#sec-object.isfrozen */
-  Object_isExtensible.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.isextensible';
+  /** https://tc39.es/ecma262/#sec-object.isfrozen */
+  Object_isExtensible.section = 'https://tc39.es/ecma262/#sec-object.isextensible';
   function Object_isFrozen([O = exports.Value.undefined]) {
     // 1. If Type(O) is not Object, return true.
     if (!(O instanceof ObjectValue)) {
@@ -33286,8 +33286,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return TestIntegrityLevel(O, 'frozen');
   }
 
-  /** http://tc39.es/ecma262/#sec-object.issealed */
-  Object_isFrozen.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.isfrozen';
+  /** https://tc39.es/ecma262/#sec-object.issealed */
+  Object_isFrozen.section = 'https://tc39.es/ecma262/#sec-object.isfrozen';
   function Object_isSealed([O = exports.Value.undefined]) {
     // 1. If Type(O) is not Object, return true.
     if (!(O instanceof ObjectValue)) {
@@ -33297,8 +33297,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return TestIntegrityLevel(O, 'sealed');
   }
 
-  /** http://tc39.es/ecma262/#sec-object.keys */
-  Object_isSealed.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.issealed';
+  /** https://tc39.es/ecma262/#sec-object.keys */
+  Object_isSealed.section = 'https://tc39.es/ecma262/#sec-object.issealed';
   function Object_keys([O = exports.Value.undefined]) {
     let _temp39 = ToObject(O);
     /* c8 ignore if */
@@ -33326,8 +33326,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return CreateArrayFromList(nameList);
   }
 
-  /** http://tc39.es/ecma262/#sec-object.preventextensions */
-  Object_keys.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.keys';
+  /** https://tc39.es/ecma262/#sec-object.preventextensions */
+  Object_keys.section = 'https://tc39.es/ecma262/#sec-object.keys';
   function Object_preventExtensions([O = exports.Value.undefined]) {
     // 1. If Type(O) is not Object, return O.
     if (!(O instanceof ObjectValue)) {
@@ -33352,8 +33352,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return O;
   }
 
-  /** http://tc39.es/ecma262/#sec-object.seal */
-  Object_preventExtensions.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.preventextensions';
+  /** https://tc39.es/ecma262/#sec-object.seal */
+  Object_preventExtensions.section = 'https://tc39.es/ecma262/#sec-object.preventextensions';
   function Object_seal([O = exports.Value.undefined]) {
     // 1. If Type(O) is not Object, return O.
     if (!(O instanceof ObjectValue)) {
@@ -33378,8 +33378,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return O;
   }
 
-  /** http://tc39.es/ecma262/#sec-object.setprototypeof */
-  Object_seal.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.seal';
+  /** https://tc39.es/ecma262/#sec-object.setprototypeof */
+  Object_seal.section = 'https://tc39.es/ecma262/#sec-object.seal';
   function Object_setPrototypeOf([O = exports.Value.undefined, proto = exports.Value.undefined]) {
     let _temp43 = RequireObjectCoercible(O);
     /* c8 ignore if */
@@ -33419,8 +33419,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return O;
   }
 
-  /** http://tc39.es/ecma262/#sec-object.values */
-  Object_setPrototypeOf.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.setprototypeof';
+  /** https://tc39.es/ecma262/#sec-object.values */
+  Object_setPrototypeOf.section = 'https://tc39.es/ecma262/#sec-object.setprototypeof';
   function Object_values([O = exports.Value.undefined]) {
     let _temp45 = ToObject(O);
     /* c8 ignore if */
@@ -33447,7 +33447,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 3. Return CreateArrayFromList(nameList).
     return CreateArrayFromList(nameList);
   }
-  Object_values.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-object.values';
+  Object_values.section = 'https://tc39.es/ecma262/#sec-object.values';
   function bootstrapObject(realmRec) {
     const objectConstructor = bootstrapConstructor(realmRec, ObjectConstructor, 'Object', 1, realmRec.Intrinsics['%Object.prototype%'], [['assign', Object_assign, 2], ['create', Object_create, 2], ['defineProperties', Object_defineProperties, 2], ['defineProperty', Object_defineProperty, 3], ['entries', Object_entries, 1], ['freeze', Object_freeze, 1], ['fromEntries', Object_fromEntries, 1], ['getOwnPropertyDescriptor', Object_getOwnPropertyDescriptor, 2], ['getOwnPropertyDescriptors', Object_getOwnPropertyDescriptors, 1], ['getOwnPropertyNames', Object_getOwnPropertyNames, 1], ['getOwnPropertySymbols', Object_getOwnPropertySymbols, 1], ['getPrototypeOf', Object_getPrototypeOf, 1], ['hasOwn', Object_hasOwn, 2], ['is', Object_is, 2], ['isExtensible', Object_isExtensible, 1], ['isFrozen', Object_isFrozen, 1], ['isSealed', Object_isSealed, 1], ['keys', Object_keys, 1], ['preventExtensions', Object_preventExtensions, 1], ['seal', Object_seal, 1], ['setPrototypeOf', Object_setPrototypeOf, 2], ['values', Object_values, 1]]);
     realmRec.Intrinsics['%Object%'] = objectConstructor;
@@ -33456,8 +33456,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   // Algorithms and methods shared between %Array.prototype% and
   // %TypedArray.prototype%.
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.sort */
-  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.sort */
+  /** https://tc39.es/ecma262/#sec-array.prototype.sort */
+  /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.sort */
   //
   // If internalMethodsRestricted is true, then Asserts are used to ensure that
   // "The only internal methods of the this object that the algorithm may call
@@ -33610,8 +33610,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return obj;
   }
   function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorithm, objectToLength) {
-    /** http://tc39.es/ecma262/#sec-array.prototype.every */
-    /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.every */
+    /** https://tc39.es/ecma262/#sec-array.prototype.every */
+    /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.every */
     function ArrayProto_every([callbackFn = exports.Value.undefined, thisArg = exports.Value.undefined], {
       thisValue
     }) {
@@ -33696,9 +33696,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return exports.Value.true;
     }
 
-    /** http://tc39.es/ecma262/#sec-array.prototype.find */
-    /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.find */
-    ArrayProto_every.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.every';
+    /** https://tc39.es/ecma262/#sec-array.prototype.find */
+    /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.find */
+    ArrayProto_every.section = 'https://tc39.es/ecma262/#sec-array.prototype.every';
     function ArrayProto_find([predicate = exports.Value.undefined, thisArg = exports.Value.undefined], {
       thisValue
     }) {
@@ -33771,9 +33771,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return exports.Value.undefined;
     }
 
-    /** http://tc39.es/ecma262/#sec-array.prototype.findindex */
-    /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.findindex */
-    ArrayProto_find.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.find';
+    /** https://tc39.es/ecma262/#sec-array.prototype.findindex */
+    /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.findindex */
+    ArrayProto_find.section = 'https://tc39.es/ecma262/#sec-array.prototype.find';
     function ArrayProto_findIndex([predicate = exports.Value.undefined, thisArg = exports.Value.undefined], {
       thisValue
     }) {
@@ -33846,9 +33846,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return F(-1);
     }
 
-    /** http://tc39.es/ecma262/#sec-array.prototype.findlast */
-    /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.findlast */
-    ArrayProto_findIndex.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.findindex';
+    /** https://tc39.es/ecma262/#sec-array.prototype.findlast */
+    /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.findlast */
+    ArrayProto_findIndex.section = 'https://tc39.es/ecma262/#sec-array.prototype.findindex';
     function ArrayProto_findLast([predicate = exports.Value.undefined, thisArg = exports.Value.undefined], {
       thisValue
     }) {
@@ -33932,9 +33932,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return exports.Value.undefined;
     }
 
-    /** http://tc39.es/ecma262/#sec-array.prototype.findlastindex */
-    /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.findlastindex */
-    ArrayProto_findLast.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.findlast';
+    /** https://tc39.es/ecma262/#sec-array.prototype.findlastindex */
+    /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.findlastindex */
+    ArrayProto_findLast.section = 'https://tc39.es/ecma262/#sec-array.prototype.findlast';
     function ArrayProto_findLastIndex([predicate = exports.Value.undefined, thisArg = exports.Value.undefined], {
       thisValue
     }) {
@@ -34018,9 +34018,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return F(-1);
     }
 
-    /** http://tc39.es/ecma262/#sec-array.prototype.foreach */
-    /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.foreach */
-    ArrayProto_findLastIndex.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.findlastindex';
+    /** https://tc39.es/ecma262/#sec-array.prototype.foreach */
+    /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.foreach */
+    ArrayProto_findLastIndex.section = 'https://tc39.es/ecma262/#sec-array.prototype.findlastindex';
     function ArrayProto_forEach([callbackfn = exports.Value.undefined, thisArg = exports.Value.undefined], {
       thisValue
     }) {
@@ -34101,9 +34101,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return exports.Value.undefined;
     }
 
-    /** http://tc39.es/ecma262/#sec-array.prototype.includes */
-    /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.includes */
-    ArrayProto_forEach.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.foreach';
+    /** https://tc39.es/ecma262/#sec-array.prototype.includes */
+    /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.includes */
+    ArrayProto_forEach.section = 'https://tc39.es/ecma262/#sec-array.prototype.foreach';
     function ArrayProto_includes([searchElement = exports.Value.undefined, fromIndex = exports.Value.undefined], {
       thisValue
     }) {
@@ -34187,9 +34187,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return exports.Value.false;
     }
 
-    /** http://tc39.es/ecma262/#sec-array.prototype.indexof */
-    /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.indexof */
-    ArrayProto_includes.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.includes';
+    /** https://tc39.es/ecma262/#sec-array.prototype.indexof */
+    /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.indexof */
+    ArrayProto_includes.section = 'https://tc39.es/ecma262/#sec-array.prototype.includes';
     function ArrayProto_indexOf([searchElement = exports.Value.undefined, fromIndex = exports.Value.undefined], {
       thisValue
     }) {
@@ -34289,9 +34289,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return F(-1);
     }
 
-    /** http://tc39.es/ecma262/#sec-array.prototype.join */
-    /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.join */
-    ArrayProto_indexOf.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.indexof';
+    /** https://tc39.es/ecma262/#sec-array.prototype.join */
+    /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.join */
+    ArrayProto_indexOf.section = 'https://tc39.es/ecma262/#sec-array.prototype.indexof';
     function ArrayProto_join([separator = exports.Value.undefined], {
       thisValue
     }) {
@@ -34383,9 +34383,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return exports.Value(R);
     }
 
-    /** http://tc39.es/ecma262/#sec-array.prototype.lastindexof */
-    /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.lastindexof */
-    ArrayProto_join.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.join';
+    /** https://tc39.es/ecma262/#sec-array.prototype.lastindexof */
+    /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.lastindexof */
+    ArrayProto_join.section = 'https://tc39.es/ecma262/#sec-array.prototype.join';
     function ArrayProto_lastIndexOf([searchElement = exports.Value.undefined, fromIndex], {
       thisValue
     }) {
@@ -34481,9 +34481,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return F(-1);
     }
 
-    /** http://tc39.es/ecma262/#sec-array.prototype.reduce */
-    /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.reduce */
-    ArrayProto_lastIndexOf.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.lastindexof';
+    /** https://tc39.es/ecma262/#sec-array.prototype.reduce */
+    /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.reduce */
+    ArrayProto_lastIndexOf.section = 'https://tc39.es/ecma262/#sec-array.prototype.lastindexof';
     function ArrayProto_reduce([callbackfn = exports.Value.undefined, initialValue], {
       thisValue
     }) {
@@ -34609,9 +34609,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return accumulator;
     }
 
-    /** http://tc39.es/ecma262/#sec-array.prototype.reduceright */
-    /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.reduceright */
-    ArrayProto_reduce.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.reduce';
+    /** https://tc39.es/ecma262/#sec-array.prototype.reduceright */
+    /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.reduceright */
+    ArrayProto_reduce.section = 'https://tc39.es/ecma262/#sec-array.prototype.reduce';
     function ArrayProto_reduceRight([callbackfn = exports.Value.undefined, initialValue], {
       thisValue
     }) {
@@ -34737,9 +34737,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return accumulator;
     }
 
-    /** http://tc39.es/ecma262/#sec-array.prototype.reverse */
-    /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.reverse */
-    ArrayProto_reduceRight.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.reduceright';
+    /** https://tc39.es/ecma262/#sec-array.prototype.reverse */
+    /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.reverse */
+    ArrayProto_reduceRight.section = 'https://tc39.es/ecma262/#sec-array.prototype.reduceright';
     function ArrayProto_reverse(args, {
       thisValue
     }) {
@@ -34899,9 +34899,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return O;
     }
 
-    /** http://tc39.es/ecma262/#sec-array.prototype.some */
-    /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.some */
-    ArrayProto_reverse.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.reverse';
+    /** https://tc39.es/ecma262/#sec-array.prototype.some */
+    /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.some */
+    ArrayProto_reverse.section = 'https://tc39.es/ecma262/#sec-array.prototype.reverse';
     function ArrayProto_some([callbackfn = exports.Value.undefined, thisArg = exports.Value.undefined], {
       thisValue
     }) {
@@ -34986,9 +34986,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return exports.Value.false;
     }
 
-    /** http://tc39.es/ecma262/#sec-array.prototype.tolocalestring */
-    /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.tolocalestring */
-    ArrayProto_some.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.some';
+    /** https://tc39.es/ecma262/#sec-array.prototype.tolocalestring */
+    /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.tolocalestring */
+    ArrayProto_some.section = 'https://tc39.es/ecma262/#sec-array.prototype.some';
     function ArrayProto_toLocaleString(args, {
       thisValue
     }) {
@@ -35071,11 +35071,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       return exports.Value(R);
     }
-    ArrayProto_toLocaleString.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.tolocalestring';
+    ArrayProto_toLocaleString.section = 'https://tc39.es/ecma262/#sec-array.prototype.tolocalestring';
     assignProps(realmRec, proto, [['every', ArrayProto_every, 1], ['find', ArrayProto_find, 1], ['findIndex', ArrayProto_findIndex, 1], ['findLast', ArrayProto_findLast, 1], ['findLastIndex', ArrayProto_findLastIndex, 1], ['forEach', ArrayProto_forEach, 1], ['includes', ArrayProto_includes, 1], ['indexOf', ArrayProto_indexOf, 1], ['join', ArrayProto_join, 1], ['lastIndexOf', ArrayProto_lastIndexOf, 1], ['reduce', ArrayProto_reduce, 1], ['reduceRight', ArrayProto_reduceRight, 1], ['reverse', ArrayProto_reverse, 0], ['some', ArrayProto_some, 1], ['toLocaleString', ArrayProto_toLocaleString, 0]]);
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.concat */
+  /** https://tc39.es/ecma262/#sec-array.prototype.concat */
   function ArrayProto_concat(args, {
     thisValue
   }) {
@@ -35212,8 +35212,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return A;
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.copywithin */
-  ArrayProto_concat.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.concat';
+  /** https://tc39.es/ecma262/#sec-array.prototype.copywithin */
+  ArrayProto_concat.section = 'https://tc39.es/ecma262/#sec-array.prototype.concat';
   function ArrayProto_copyWithin([target = exports.Value.undefined, start = exports.Value.undefined, end = exports.Value.undefined], {
     thisValue
   }) {
@@ -35362,8 +35362,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return O;
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.entries */
-  ArrayProto_copyWithin.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.copywithin';
+  /** https://tc39.es/ecma262/#sec-array.prototype.entries */
+  ArrayProto_copyWithin.section = 'https://tc39.es/ecma262/#sec-array.prototype.copywithin';
   function ArrayProto_entries(args, {
     thisValue
   }) {
@@ -35380,8 +35380,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return CreateArrayIterator(O, 'key+value');
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.fill */
-  ArrayProto_entries.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.entries';
+  /** https://tc39.es/ecma262/#sec-array.prototype.fill */
+  ArrayProto_entries.section = 'https://tc39.es/ecma262/#sec-array.prototype.entries';
   function ArrayProto_fill([value = exports.Value.undefined, start = exports.Value.undefined, end = exports.Value.undefined], {
     thisValue
   }) {
@@ -35464,8 +35464,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return O;
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.filter */
-  ArrayProto_fill.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.fill';
+  /** https://tc39.es/ecma262/#sec-array.prototype.filter */
+  ArrayProto_fill.section = 'https://tc39.es/ecma262/#sec-array.prototype.fill';
   function ArrayProto_filter([callbackfn = exports.Value.undefined, thisArg = exports.Value.undefined], {
     thisValue
   }) {
@@ -35567,8 +35567,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return A;
   }
 
-  /** http://tc39.es/ecma262/#sec-flattenintoarray */
-  ArrayProto_filter.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.filter';
+  /** https://tc39.es/ecma262/#sec-flattenintoarray */
+  ArrayProto_filter.section = 'https://tc39.es/ecma262/#sec-array.prototype.filter';
   function FlattenIntoArray(target, source, sourceLen, start, depth, mapperFunction, thisArg) {
     Assert(target instanceof ObjectValue, "target instanceof ObjectValue");
     Assert(source instanceof ObjectValue, "source instanceof ObjectValue");
@@ -35681,8 +35681,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return targetIndex;
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.flat */
-  FlattenIntoArray.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-flattenintoarray';
+  /** https://tc39.es/ecma262/#sec-array.prototype.flat */
+  FlattenIntoArray.section = 'https://tc39.es/ecma262/#sec-flattenintoarray';
   function ArrayProto_flat([depth = exports.Value.undefined], {
     thisValue
   }) {
@@ -35741,8 +35741,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return A;
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.flatmap */
-  ArrayProto_flat.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.flat';
+  /** https://tc39.es/ecma262/#sec-array.prototype.flatmap */
+  ArrayProto_flat.section = 'https://tc39.es/ecma262/#sec-array.prototype.flat';
   function ArrayProto_flatMap([mapperFunction = exports.Value.undefined, thisArg = exports.Value.undefined], {
     thisValue
   }) {
@@ -35797,8 +35797,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return A;
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.keys */
-  ArrayProto_flatMap.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.flatmap';
+  /** https://tc39.es/ecma262/#sec-array.prototype.keys */
+  ArrayProto_flatMap.section = 'https://tc39.es/ecma262/#sec-array.prototype.flatmap';
   function ArrayProto_keys(args, {
     thisValue
   }) {
@@ -35815,8 +35815,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return CreateArrayIterator(O, 'key');
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.map */
-  ArrayProto_keys.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.keys';
+  /** https://tc39.es/ecma262/#sec-array.prototype.map */
+  ArrayProto_keys.section = 'https://tc39.es/ecma262/#sec-array.prototype.keys';
   function ArrayProto_map([callbackfn = exports.Value.undefined, thisArg = exports.Value.undefined], {
     thisValue
   }) {
@@ -35908,8 +35908,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return A;
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.pop */
-  ArrayProto_map.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.map';
+  /** https://tc39.es/ecma262/#sec-array.prototype.pop */
+  ArrayProto_map.section = 'https://tc39.es/ecma262/#sec-array.prototype.map';
   function ArrayProto_pop(args, {
     thisValue
   }) {
@@ -35988,8 +35988,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.push */
-  ArrayProto_pop.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.pop';
+  /** https://tc39.es/ecma262/#sec-array.prototype.push */
+  ArrayProto_pop.section = 'https://tc39.es/ecma262/#sec-array.prototype.pop';
   function ArrayProto_push(items, {
     thisValue
   }) {
@@ -36048,8 +36048,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(len);
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.shift */
-  ArrayProto_push.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.push';
+  /** https://tc39.es/ecma262/#sec-array.prototype.shift */
+  ArrayProto_push.section = 'https://tc39.es/ecma262/#sec-array.prototype.push';
   function ArrayProto_shift(args, {
     thisValue
   }) {
@@ -36181,8 +36181,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return first;
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.slice */
-  ArrayProto_shift.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.shift';
+  /** https://tc39.es/ecma262/#sec-array.prototype.slice */
+  ArrayProto_shift.section = 'https://tc39.es/ecma262/#sec-array.prototype.shift';
   function ArrayProto_slice([start = exports.Value.undefined, end = exports.Value.undefined], {
     thisValue
   }) {
@@ -36316,8 +36316,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return A;
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.sort */
-  ArrayProto_slice.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.slice';
+  /** https://tc39.es/ecma262/#sec-array.prototype.sort */
+  ArrayProto_slice.section = 'https://tc39.es/ecma262/#sec-array.prototype.slice';
   function ArrayProto_sort([comparefn = exports.Value.undefined], {
     thisValue
   }) {
@@ -36347,8 +36347,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return ArrayProto_sortBody(obj, len, (x, y) => SortCompare(x, y, comparefn));
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.splice */
-  ArrayProto_sort.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.sort';
+  /** https://tc39.es/ecma262/#sec-array.prototype.splice */
+  ArrayProto_sort.section = 'https://tc39.es/ecma262/#sec-array.prototype.sort';
   function ArrayProto_splice(args, {
     thisValue
   }) {
@@ -36654,8 +36654,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return A;
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.tostring */
-  ArrayProto_splice.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.splice';
+  /** https://tc39.es/ecma262/#sec-array.prototype.tostring */
+  ArrayProto_splice.section = 'https://tc39.es/ecma262/#sec-array.prototype.splice';
   function ArrayProto_toString(a, {
     thisValue
   }) {
@@ -36685,8 +36685,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Call(func, array);
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.unshift */
-  ArrayProto_toString.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.tostring';
+  /** https://tc39.es/ecma262/#sec-array.prototype.unshift */
+  ArrayProto_toString.section = 'https://tc39.es/ecma262/#sec-array.prototype.tostring';
   function ArrayProto_unshift(args, {
     thisValue
   }) {
@@ -36809,8 +36809,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(len + argCount);
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.values */
-  ArrayProto_unshift.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.unshift';
+  /** https://tc39.es/ecma262/#sec-array.prototype.values */
+  ArrayProto_unshift.section = 'https://tc39.es/ecma262/#sec-array.prototype.unshift';
   function ArrayProto_values(args, {
     thisValue
   }) {
@@ -36827,8 +36827,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return CreateArrayIterator(O, 'value');
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.at */
-  ArrayProto_values.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.values';
+  /** https://tc39.es/ecma262/#sec-array.prototype.at */
+  ArrayProto_values.section = 'https://tc39.es/ecma262/#sec-array.prototype.values';
   function ArrayProto_at([index = exports.Value.undefined], {
     thisValue
   }) {
@@ -36888,7 +36888,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     return Get(O, _temp151);
   }
-  ArrayProto_at.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.prototype.at';
+  ArrayProto_at.section = 'https://tc39.es/ecma262/#sec-array.prototype.at';
   function bootstrapArrayPrototype(realmRec) {
     let _temp152 = ArrayCreate(0, realmRec.Intrinsics['%Object.prototype%']);
     Assert(!(_temp152 instanceof AbruptCompletion), "ArrayCreate(0, realmRec.Intrinsics['%Object.prototype%'])" + ' returned an abrupt completion');
@@ -37012,13 +37012,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     realmRec.Intrinsics['%Array.prototype%'] = proto;
   }
 
-  /** http://tc39.es/ecma262/#sec-array-constructor */
+  /** https://tc39.es/ecma262/#sec-array-constructor */
   function ArrayConstructor(argumentsList, {
     NewTarget
   }) {
     const numberOfArgs = argumentsList.length;
     if (numberOfArgs === 0) {
-      /** http://tc39.es/ecma262/#sec-array-constructor-array */
+      /** https://tc39.es/ecma262/#sec-array-constructor-array */
       Assert(numberOfArgs === 0, "numberOfArgs === 0");
       if (NewTarget instanceof UndefinedValue) {
         NewTarget = exports.surroundingAgent.activeFunctionObject;
@@ -37026,7 +37026,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const proto = GetPrototypeFromConstructor(NewTarget, '%Array.prototype%');
       return ArrayCreate(0, proto);
     } else if (numberOfArgs === 1) {
-      /** http://tc39.es/ecma262/#sec-array-len */
+      /** https://tc39.es/ecma262/#sec-array-len */
       const [len] = argumentsList;
       Assert(numberOfArgs === 1, "numberOfArgs === 1");
       if (NewTarget instanceof UndefinedValue) {
@@ -37060,7 +37060,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       Set$1(array, exports.Value('length'), intLen, exports.Value.true);
       return array;
     } else if (numberOfArgs >= 2) {
-      /** http://tc39.es/ecma262/#sec-array-items */
+      /** https://tc39.es/ecma262/#sec-array-items */
       const items = argumentsList;
       Assert(numberOfArgs >= 2, "numberOfArgs >= 2");
       if (NewTarget instanceof UndefinedValue) {
@@ -37100,8 +37100,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     throw new OutOfRange$1('ArrayConstructor', numberOfArgs);
   }
 
-  /** http://tc39.es/ecma262/#sec-array.from */
-  ArrayConstructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array-constructor';
+  /** https://tc39.es/ecma262/#sec-array.from */
+  ArrayConstructor.section = 'https://tc39.es/ecma262/#sec-array-constructor';
   function Array_from([items = exports.Value.undefined, mapfn = exports.Value.undefined, thisArg = exports.Value.undefined], {
     thisValue
   }) {
@@ -37326,14 +37326,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return A;
   }
 
-  /** http://tc39.es/ecma262/#sec-array.isarray */
-  Array_from.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.from';
+  /** https://tc39.es/ecma262/#sec-array.isarray */
+  Array_from.section = 'https://tc39.es/ecma262/#sec-array.from';
   function Array_isArray([arg = exports.Value.undefined]) {
     return IsArray(arg);
   }
 
-  /** http://tc39.es/ecma262/#sec-array.of */
-  Array_isArray.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.isarray';
+  /** https://tc39.es/ecma262/#sec-array.of */
+  Array_isArray.section = 'https://tc39.es/ecma262/#sec-array.isarray';
   function Array_of(items, {
     thisValue
   }) {
@@ -37397,21 +37397,21 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return A;
   }
 
-  /** http://tc39.es/ecma262/#sec-get-array-@@species */
-  Array_of.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-array.of';
+  /** https://tc39.es/ecma262/#sec-get-array-@@species */
+  Array_of.section = 'https://tc39.es/ecma262/#sec-array.of';
   function Array_speciesGetter(args, {
     thisValue
   }) {
     return thisValue;
   }
-  Array_speciesGetter.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-get-array-@@species';
+  Array_speciesGetter.section = 'https://tc39.es/ecma262/#sec-get-array-@@species';
   function bootstrapArray(realmRec) {
     const proto = realmRec.Intrinsics['%Array.prototype%'];
     const cons = bootstrapConstructor(realmRec, ArrayConstructor, 'Array', 1, proto, [['from', Array_from, 1], ['isArray', Array_isArray, 1], ['of', Array_of, 0], [wellKnownSymbols.species, [Array_speciesGetter]]]);
     realmRec.Intrinsics['%Array%'] = cons;
   }
 
-  /** http://tc39.es/ecma262/#sec-bigint-constructor */
+  /** https://tc39.es/ecma262/#sec-bigint-constructor */
   function BigIntConstructor([value], {
     NewTarget
   }) {
@@ -37439,8 +37439,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-bigint.asintn */
-  BigIntConstructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-bigint-constructor';
+  /** https://tc39.es/ecma262/#sec-bigint.asintn */
+  BigIntConstructor.section = 'https://tc39.es/ecma262/#sec-bigint-constructor';
   function BigInt_asIntN([bits = exports.Value.undefined, bigint = exports.Value.undefined]) {
     let _temp2 = ToIndex(bits);
     /* c8 ignore if */
@@ -37469,8 +37469,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Z(BigInt.asIntN(bits, bigint.bigintValue()));
   }
 
-  /** http://tc39.es/ecma262/#sec-bigint.asuintn */
-  BigInt_asIntN.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-bigint.asintn';
+  /** https://tc39.es/ecma262/#sec-bigint.asuintn */
+  BigInt_asIntN.section = 'https://tc39.es/ecma262/#sec-bigint.asintn';
   function BigInt_asUintN([bits = exports.Value.undefined, bigint = exports.Value.undefined]) {
     let _temp4 = ToIndex(bits);
     /* c8 ignore if */
@@ -37498,13 +37498,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 4. If mod ≥ 2 ** (bits - 1), return Z(mod - 2 ** bits); otherwise, return Z(mod).
     return Z(BigInt.asUintN(bits, bigint.bigintValue()));
   }
-  BigInt_asUintN.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-bigint.asuintn';
+  BigInt_asUintN.section = 'https://tc39.es/ecma262/#sec-bigint.asuintn';
   function bootstrapBigInt(realmRec) {
     const bigintConstructor = bootstrapConstructor(realmRec, BigIntConstructor, 'BigInt', 1, realmRec.Intrinsics['%BigInt.prototype%'], [['asIntN', BigInt_asIntN, 2], ['asUintN', BigInt_asUintN, 2]]);
     realmRec.Intrinsics['%BigInt%'] = bigintConstructor;
   }
 
-  /** http://tc39.es/ecma262/#sec-thisbigintvalue */
+  /** https://tc39.es/ecma262/#sec-thisbigintvalue */
   function thisBigIntValue(value) {
     // 1. If Type(value) is BigInt, return value.
     if (value instanceof BigIntValue) {
@@ -37521,8 +37521,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.surroundingAgent.Throw('TypeError', 'NotATypeObject', 'BigInt', value);
   }
 
-  /** http://tc39.es/ecma262/#sec-bigint.prototype.tolocalestring */
-  thisBigIntValue.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-thisbigintvalue';
+  /** https://tc39.es/ecma262/#sec-bigint.prototype.tolocalestring */
+  thisBigIntValue.section = 'https://tc39.es/ecma262/#sec-thisbigintvalue';
   function BigIntProto_toLocalString(args, {
     thisValue
   }) {
@@ -37531,8 +37531,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     });
   }
 
-  /** http://tc39.es/ecma262/#sec-bigint.prototype.tostring */
-  BigIntProto_toLocalString.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-bigint.prototype.tolocalestring';
+  /** https://tc39.es/ecma262/#sec-bigint.prototype.tostring */
+  BigIntProto_toLocalString.section = 'https://tc39.es/ecma262/#sec-bigint.prototype.tolocalestring';
   function BigIntProto_toString([radix], {
     thisValue
   }) {
@@ -37589,15 +37589,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(x.bigintValue().toString(radixNumber));
   }
 
-  /** http://tc39.es/ecma262/#sec-bigint.prototype.tostring */
-  BigIntProto_toString.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-bigint.prototype.tostring';
+  /** https://tc39.es/ecma262/#sec-bigint.prototype.tostring */
+  BigIntProto_toString.section = 'https://tc39.es/ecma262/#sec-bigint.prototype.tostring';
   function BigIntProto_valueOf(args, {
     thisValue
   }) {
     // Return ? thisBigIntValue(this value).
     return thisBigIntValue(thisValue);
   }
-  BigIntProto_valueOf.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-bigint.prototype.tostring';
+  BigIntProto_valueOf.section = 'https://tc39.es/ecma262/#sec-bigint.prototype.tostring';
   function bootstrapBigIntPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['toLocaleString', BigIntProto_toLocalString, 0], ['toString', BigIntProto_toString, 0], ['valueOf', BigIntProto_valueOf, 0]], realmRec.Intrinsics['%Object.prototype%'], 'BigInt');
     realmRec.Intrinsics['%BigInt.prototype%'] = proto;
@@ -37615,7 +37615,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Boolean', value);
   }
 
-  /** http://tc39.es/ecma262/#sec-boolean.prototype.tostring */
+  /** https://tc39.es/ecma262/#sec-boolean.prototype.tostring */
   function BooleanProto_toString(argList, {
     thisValue
   }) {
@@ -37637,22 +37637,22 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value('false');
   }
 
-  /** http://tc39.es/ecma262/#sec-boolean.prototype.valueof */
-  BooleanProto_toString.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-boolean.prototype.tostring';
+  /** https://tc39.es/ecma262/#sec-boolean.prototype.valueof */
+  BooleanProto_toString.section = 'https://tc39.es/ecma262/#sec-boolean.prototype.tostring';
   function BooleanProto_valueOf(argList, {
     thisValue
   }) {
     // 1. Return ? thisBooleanValue(this value).
     return thisBooleanValue(thisValue);
   }
-  BooleanProto_valueOf.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-boolean.prototype.valueof';
+  BooleanProto_valueOf.section = 'https://tc39.es/ecma262/#sec-boolean.prototype.valueof';
   function bootstrapBooleanPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['toString', BooleanProto_toString, 0], ['valueOf', BooleanProto_valueOf, 0]], realmRec.Intrinsics['%Object.prototype%']);
     proto.BooleanData = exports.Value.false;
     realmRec.Intrinsics['%Boolean.prototype%'] = proto;
   }
 
-  /** http://tc39.es/ecma262/#sec-boolean-constructor-boolean-value */
+  /** https://tc39.es/ecma262/#sec-boolean-constructor-boolean-value */
   function BooleanConstructor([value = exports.Value.undefined], {
     NewTarget
   }) {
@@ -37684,7 +37684,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 5. Return O.
     return O;
   }
-  BooleanConstructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-boolean-constructor-boolean-value';
+  BooleanConstructor.section = 'https://tc39.es/ecma262/#sec-boolean-constructor-boolean-value';
   function bootstrapBoolean(realmRec) {
     const cons = bootstrapConstructor(realmRec, BooleanConstructor, 'Boolean', 1, realmRec.Intrinsics['%Boolean.prototype%'], []);
     realmRec.Intrinsics['%Boolean%'] = cons;
@@ -37702,7 +37702,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Number', value);
   }
 
-  /** http://tc39.es/ecma262/#sec-number.prototype.toexponential */
+  /** https://tc39.es/ecma262/#sec-number.prototype.toexponential */
   function NumberProto_toExponential([fractionDigits = exports.Value.undefined], {
     thisValue
   }) {
@@ -37736,8 +37736,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(x.numberValue().toExponential(fractionDigits === exports.Value.undefined ? undefined : f));
   }
 
-  /** http://tc39.es/ecma262/#sec-number.prototype.tofixed */
-  NumberProto_toExponential.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-number.prototype.toexponential';
+  /** https://tc39.es/ecma262/#sec-number.prototype.tofixed */
+  NumberProto_toExponential.section = 'https://tc39.es/ecma262/#sec-number.prototype.toexponential';
   function NumberProto_toFixed([fractionDigits = exports.Value.undefined], {
     thisValue
   }) {
@@ -37777,8 +37777,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(x.numberValue().toFixed(f));
   }
 
-  /** http://tc39.es/ecma262/#sec-number.prototype.tolocalestring */
-  NumberProto_toFixed.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-number.prototype.tofixed';
+  /** https://tc39.es/ecma262/#sec-number.prototype.tolocalestring */
+  NumberProto_toFixed.section = 'https://tc39.es/ecma262/#sec-number.prototype.tofixed';
   function NumberProto_toLocaleString(args, {
     thisValue
   }) {
@@ -37787,8 +37787,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     });
   }
 
-  /** http://tc39.es/ecma262/#sec-number.prototype.toprecision */
-  NumberProto_toLocaleString.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-number.prototype.tolocalestring';
+  /** https://tc39.es/ecma262/#sec-number.prototype.toprecision */
+  NumberProto_toLocaleString.section = 'https://tc39.es/ecma262/#sec-number.prototype.tolocalestring';
   function NumberProto_toPrecision([precision = exports.Value.undefined], {
     thisValue
   }) {
@@ -37836,8 +37836,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(x.numberValue().toPrecision(p));
   }
 
-  /** http://tc39.es/ecma262/#sec-number.prototype.tostring */
-  NumberProto_toPrecision.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-number.prototype.toprecision';
+  /** https://tc39.es/ecma262/#sec-number.prototype.tostring */
+  NumberProto_toPrecision.section = 'https://tc39.es/ecma262/#sec-number.prototype.toprecision';
   function NumberProto_toString([radix = exports.Value.undefined], {
     thisValue
   }) {
@@ -37886,21 +37886,21 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(x.numberValue().toString(radixNumber));
   }
 
-  /** http://tc39.es/ecma262/#sec-number.prototype.valueof */
-  NumberProto_toString.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-number.prototype.tostring';
+  /** https://tc39.es/ecma262/#sec-number.prototype.valueof */
+  NumberProto_toString.section = 'https://tc39.es/ecma262/#sec-number.prototype.tostring';
   function NumberProto_valueOf(args, {
     thisValue
   }) {
     return thisNumberValue(thisValue);
   }
-  NumberProto_valueOf.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-number.prototype.valueof';
+  NumberProto_valueOf.section = 'https://tc39.es/ecma262/#sec-number.prototype.valueof';
   function bootstrapNumberPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['toExponential', NumberProto_toExponential, 1], ['toFixed', NumberProto_toFixed, 1], ['toLocaleString', NumberProto_toLocaleString, 0], ['toPrecision', NumberProto_toPrecision, 1], ['toString', NumberProto_toString, 1], ['valueOf', NumberProto_valueOf, 0]], realmRec.Intrinsics['%Object.prototype%']);
     proto.NumberData = F(+0);
     realmRec.Intrinsics['%Number.prototype%'] = proto;
   }
 
-  /** http://tc39.es/ecma262/#sec-number-constructor-number-value */
+  /** https://tc39.es/ecma262/#sec-number-constructor-number-value */
   function NumberConstructor([value], {
     NewTarget
   }) {
@@ -37932,8 +37932,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return O;
   }
 
-  /** http://tc39.es/ecma262/#sec-number.isfinite */
-  NumberConstructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-number-constructor-number-value';
+  /** https://tc39.es/ecma262/#sec-number.isfinite */
+  NumberConstructor.section = 'https://tc39.es/ecma262/#sec-number-constructor-number-value';
   function Number_isFinite([number = exports.Value.undefined]) {
     if (!(number instanceof NumberValue)) {
       return exports.Value.false;
@@ -37944,8 +37944,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.true;
   }
 
-  /** http://tc39.es/ecma262/#sec-number.isinteger */
-  Number_isFinite.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-number.isfinite';
+  /** https://tc39.es/ecma262/#sec-number.isinteger */
+  Number_isFinite.section = 'https://tc39.es/ecma262/#sec-number.isfinite';
   function Number_isInteger([number = exports.Value.undefined]) {
     let _temp2 = IsIntegralNumber(number);
     Assert(!(_temp2 instanceof AbruptCompletion), "IsIntegralNumber(number)" + ' returned an abrupt completion');
@@ -37956,8 +37956,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return _temp2;
   }
 
-  /** http://tc39.es/ecma262/#sec-number.isnan */
-  Number_isInteger.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-number.isinteger';
+  /** https://tc39.es/ecma262/#sec-number.isnan */
+  Number_isInteger.section = 'https://tc39.es/ecma262/#sec-number.isinteger';
   function Number_isNaN([number = exports.Value.undefined]) {
     if (!(number instanceof NumberValue)) {
       return exports.Value.false;
@@ -37968,8 +37968,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-number.issafeinteger */
-  Number_isNaN.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-number.isnan';
+  /** https://tc39.es/ecma262/#sec-number.issafeinteger */
+  Number_isNaN.section = 'https://tc39.es/ecma262/#sec-number.isnan';
   function Number_isSafeInteger([number = exports.Value.undefined]) {
     if (!(number instanceof NumberValue)) {
       return exports.Value.false;
@@ -37987,7 +37987,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     return exports.Value.false;
   }
-  Number_isSafeInteger.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-number.issafeinteger';
+  Number_isSafeInteger.section = 'https://tc39.es/ecma262/#sec-number.issafeinteger';
   function bootstrapNumber(realmRec) {
     const override = {
       Writable: exports.Value.false,
@@ -37996,7 +37996,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     };
     const numberConstructor = bootstrapConstructor(realmRec, NumberConstructor, 'Number', 1, realmRec.Intrinsics['%Number.prototype%'], [['EPSILON', F(Number.EPSILON), undefined, override], ['MAX_SAFE_INTEGER', F(Number.MAX_SAFE_INTEGER), undefined, override], ['MAX_VALUE', F(Number.MAX_VALUE), undefined, override], ['MIN_SAFE_INTEGER', F(Number.MIN_SAFE_INTEGER), undefined, override], ['MIN_VALUE', F(Number.MIN_VALUE), undefined, override], ['NaN', F(NaN), undefined, override], ['NEGATIVE_INFINITY', F(-Infinity), undefined, override], ['POSITIVE_INFINITY', F(+Infinity), undefined, override], ['isFinite', Number_isFinite, 1], ['isInteger', Number_isInteger, 1], ['isNaN', Number_isNaN, 1], ['isSafeInteger', Number_isSafeInteger, 1]]);
 
-    /** http://tc39.es/ecma262/#sec-number.parsefloat */
+    /** https://tc39.es/ecma262/#sec-number.parsefloat */
     // The value of the Number.parseFloat data property is the same built-in function object that is the value of the parseFloat property of the global object defined in 18.2.4.
     let _temp4 = numberConstructor.DefineOwnProperty(exports.Value('parseFloat'), exports.Descriptor({
       Value: realmRec.Intrinsics['%parseFloat%'],
@@ -38010,7 +38010,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp4 = _temp4.Value;
     }
 
-    /** http://tc39.es/ecma262/#sec-number.parseint */
+    /** https://tc39.es/ecma262/#sec-number.parseint */
     // The value of the Number.parseInt data property is the same built-in function object that is the value of the parseInt property of the global object defined in 18.2.5.
     let _temp5 = numberConstructor.DefineOwnProperty(exports.Value('parseInt'), exports.Descriptor({
       Value: realmRec.Intrinsics['%parseInt%'],
@@ -38026,14 +38026,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     realmRec.Intrinsics['%Number%'] = numberConstructor;
   }
 
-  /** http://tc39.es/ecma262/#sec-properties-of-the-function-prototype-object */
+  /** https://tc39.es/ecma262/#sec-properties-of-the-function-prototype-object */
   function FunctionProto(_args, _meta) {
     // * accepts any arguments and returns undefined when invoked.
     return exports.Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-function.prototype.apply */
-  FunctionProto.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-properties-of-the-function-prototype-object';
+  /** https://tc39.es/ecma262/#sec-function.prototype.apply */
+  FunctionProto.section = 'https://tc39.es/ecma262/#sec-properties-of-the-function-prototype-object';
   function FunctionProto_apply([thisArg = exports.Value.undefined, argArray = exports.Value.undefined], {
     thisValue
   }) {
@@ -38066,7 +38066,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 6. Return ? Call(func, thisArg, argList).
     return Call(func, thisArg, argList);
   }
-  FunctionProto_apply.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-function.prototype.apply';
+  FunctionProto_apply.section = 'https://tc39.es/ecma262/#sec-function.prototype.apply';
   function BoundFunctionExoticObjectCall(thisArgument, argumentsList) {
     const F = this;
     const target = F.BoundTargetFunction;
@@ -38087,7 +38087,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Construct(target, args, newTarget);
   }
 
-  /** http://tc39.es/ecma262/#sec-boundfunctioncreate */
+  /** https://tc39.es/ecma262/#sec-boundfunctioncreate */
   function BoundFunctionCreate(targetFunction, boundThis, boundArgs) {
     // 1. Assert: Type(targetFunction) is Object.
     Assert(targetFunction instanceof ObjectValue, "targetFunction instanceof ObjectValue");
@@ -38131,8 +38131,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return obj;
   }
 
-  /** http://tc39.es/ecma262/#sec-function.prototype.bind */
-  BoundFunctionCreate.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-boundfunctioncreate';
+  /** https://tc39.es/ecma262/#sec-function.prototype.bind */
+  BoundFunctionCreate.section = 'https://tc39.es/ecma262/#sec-boundfunctioncreate';
   function FunctionProto_bind([thisArg = exports.Value.undefined, ...args], {
     thisValue
   }) {
@@ -38237,8 +38237,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F;
   }
 
-  /** http://tc39.es/ecma262/#sec-function.prototype.call */
-  FunctionProto_bind.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-function.prototype.bind';
+  /** https://tc39.es/ecma262/#sec-function.prototype.call */
+  FunctionProto_bind.section = 'https://tc39.es/ecma262/#sec-function.prototype.bind';
   function FunctionProto_call([thisArg = exports.Value.undefined, ...args], {
     thisValue
   }) {
@@ -38260,8 +38260,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Call(func, thisArg, argList);
   }
 
-  /** http://tc39.es/ecma262/#sec-function.prototype.tostring */
-  FunctionProto_call.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-function.prototype.call';
+  /** https://tc39.es/ecma262/#sec-function.prototype.tostring */
+  FunctionProto_call.section = 'https://tc39.es/ecma262/#sec-function.prototype.call';
   function FunctionProto_toString(args, {
     thisValue
   }) {
@@ -38301,8 +38301,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', func);
   }
 
-  /** http://tc39.es/ecma262/#sec-function.prototype-@@hasinstance */
-  FunctionProto_toString.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-function.prototype.tostring';
+  /** https://tc39.es/ecma262/#sec-function.prototype-@@hasinstance */
+  FunctionProto_toString.section = 'https://tc39.es/ecma262/#sec-function.prototype.tostring';
   function FunctionProto_hasInstance([V = exports.Value.undefined], {
     thisValue
   }) {
@@ -38311,7 +38311,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 2. Return ? OrdinaryHasInstance(F, V).
     return OrdinaryHasInstance(F, V);
   }
-  FunctionProto_hasInstance.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-function.prototype-@@hasinstance';
+  FunctionProto_hasInstance.section = 'https://tc39.es/ecma262/#sec-function.prototype-@@hasinstance';
   function bootstrapFunctionPrototype(realmRec) {
     const proto = CreateBuiltinFunction(FunctionProto, 0, exports.Value(''), [], realmRec, realmRec.Intrinsics['%Object.prototype%']);
     realmRec.Intrinsics['%Function.prototype%'] = proto;
@@ -38324,7 +38324,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-function-p1-p2-pn-body */
+  /** https://tc39.es/ecma262/#sec-function-p1-p2-pn-body */
   function FunctionConstructor(args, {
     NewTarget
   }) {
@@ -38334,13 +38334,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 3. Return ? CreateDynamicFunction(C, NewTarget, normal, args).
     return CreateDynamicFunction(C, NewTarget, 'normal', args);
   }
-  FunctionConstructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-function-p1-p2-pn-body';
+  FunctionConstructor.section = 'https://tc39.es/ecma262/#sec-function-p1-p2-pn-body';
   function bootstrapFunction(realmRec) {
     const cons = bootstrapConstructor(realmRec, FunctionConstructor, 'Function', 1, realmRec.Intrinsics['%Function.prototype%'], []);
     realmRec.Intrinsics['%Function%'] = cons;
   }
 
-  /** http://tc39.es/ecma262/#sec-thissymbolvalue */
+  /** https://tc39.es/ecma262/#sec-thissymbolvalue */
   function thisSymbolValue(value) {
     // 1. If Type(value) is Symbol, return value.
     if (value instanceof SymbolValue) {
@@ -38359,8 +38359,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Symbol', value);
   }
 
-  /** http://tc39.es/ecma262/#sec-symbol.prototype.description */
-  thisSymbolValue.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-thissymbolvalue';
+  /** https://tc39.es/ecma262/#sec-symbol.prototype.description */
+  thisSymbolValue.section = 'https://tc39.es/ecma262/#sec-thissymbolvalue';
   function SymbolProto_descriptionGetter(argList, {
     thisValue
   }) {
@@ -38381,8 +38381,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return sym.Description;
   }
 
-  /** http://tc39.es/ecma262/#sec-symbol.prototype.tostring */
-  SymbolProto_descriptionGetter.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-symbol.prototype.description';
+  /** https://tc39.es/ecma262/#sec-symbol.prototype.tostring */
+  SymbolProto_descriptionGetter.section = 'https://tc39.es/ecma262/#sec-symbol.prototype.description';
   function SymbolProto_toString(argList, {
     thisValue
   }) {
@@ -38401,8 +38401,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return SymbolDescriptiveString(sym);
   }
 
-  /** http://tc39.es/ecma262/#sec-symbol.prototype.valueof */
-  SymbolProto_toString.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-symbol.prototype.tostring';
+  /** https://tc39.es/ecma262/#sec-symbol.prototype.valueof */
+  SymbolProto_toString.section = 'https://tc39.es/ecma262/#sec-symbol.prototype.tostring';
   function SymbolProto_valueOf(argList, {
     thisValue
   }) {
@@ -38410,15 +38410,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return thisSymbolValue(thisValue);
   }
 
-  /** http://tc39.es/ecma262/#sec-symbol.prototype-@@toprimitive */
-  SymbolProto_valueOf.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-symbol.prototype.valueof';
+  /** https://tc39.es/ecma262/#sec-symbol.prototype-@@toprimitive */
+  SymbolProto_valueOf.section = 'https://tc39.es/ecma262/#sec-symbol.prototype.valueof';
   function SymbolProto_toPrimitive(argList, {
     thisValue
   }) {
     // 1. Return ? thisSymbolValue(this value).
     return thisSymbolValue(thisValue);
   }
-  SymbolProto_toPrimitive.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-symbol.prototype-@@toprimitive';
+  SymbolProto_toPrimitive.section = 'https://tc39.es/ecma262/#sec-symbol.prototype-@@toprimitive';
   function bootstrapSymbolPrototype(realmRec) {
     const override = {
       Writable: exports.Value.false,
@@ -38431,7 +38431,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   const GlobalSymbolRegistry = [];
 
-  /** http://tc39.es/ecma262/#sec-symbol-description */
+  /** https://tc39.es/ecma262/#sec-symbol-description */
   function SymbolConstructor([description = exports.Value.undefined], {
     NewTarget
   }) {
@@ -38460,8 +38460,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return new SymbolValue(descString);
   }
 
-  /** http://tc39.es/ecma262/#sec-symbol.for */
-  SymbolConstructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-symbol-description';
+  /** https://tc39.es/ecma262/#sec-symbol.for */
+  SymbolConstructor.section = 'https://tc39.es/ecma262/#sec-symbol-description';
   function Symbol_for([key = exports.Value.undefined]) {
     let _temp2 = ToString(key);
     /* c8 ignore if */
@@ -38493,8 +38493,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return newSymbol;
   }
 
-  /** http://tc39.es/ecma262/#sec-symbol.keyfor */
-  Symbol_for.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-symbol.for';
+  /** https://tc39.es/ecma262/#sec-symbol.keyfor */
+  Symbol_for.section = 'https://tc39.es/ecma262/#sec-symbol.for';
   function Symbol_keyFor([sym = exports.Value.undefined]) {
     // 1. If Type(sym) is not Symbol, throw a TypeError exception.
     if (!(sym instanceof SymbolValue)) {
@@ -38511,7 +38511,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 4. Return undefined.
     return exports.Value.undefined;
   }
-  Symbol_keyFor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-symbol.keyfor';
+  Symbol_keyFor.section = 'https://tc39.es/ecma262/#sec-symbol.keyfor';
   function bootstrapSymbol(realmRec) {
     const symbolConstructor = bootstrapConstructor(realmRec, SymbolConstructor, 'Symbol', 0, realmRec.Intrinsics['%Symbol.prototype%'], [['for', Symbol_for, 1], ['keyFor', Symbol_keyFor, 1]]);
     for (const [name, sym] of Object.entries(wellKnownSymbols)) {
@@ -38531,7 +38531,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     realmRec.Intrinsics['%Symbol%'] = symbolConstructor;
   }
 
-  /** http://tc39.es/ecma262/#sec-math.abs */
+  /** https://tc39.es/ecma262/#sec-math.abs */
   function Math_abs([x = exports.Value.undefined]) {
     let _temp = ToNumber(x);
     /* c8 ignore if */
@@ -38556,8 +38556,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return n;
   }
 
-  /** http://tc39.es/ecma262/#sec-math.acos */
-  Math_abs.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-math.abs';
+  /** https://tc39.es/ecma262/#sec-math.acos */
+  Math_abs.section = 'https://tc39.es/ecma262/#sec-math.abs';
   function Math_acos([x = exports.Value.undefined]) {
     let _temp2 = ToNumber(x);
     /* c8 ignore if */
@@ -38581,8 +38581,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(Math.acos(n.numberValue()));
   }
 
-  /** http://tc39.es/ecma262/#sec-math.pow */
-  Math_acos.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-math.acos';
+  /** https://tc39.es/ecma262/#sec-math.pow */
+  Math_acos.section = 'https://tc39.es/ecma262/#sec-math.acos';
   function Math_pow([base = exports.Value.undefined, exponent = exports.Value.undefined]) {
     let _temp3 = ToNumber(base);
     /* c8 ignore if */
@@ -38617,7 +38617,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   /** @param {bigint} h */
-  Math_pow.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-math.pow';
+  Math_pow.section = 'https://tc39.es/ecma262/#sec-math.pow';
   function fmix64(h) {
     h ^= h >> 33n;
     h *= 0xFF51AFD7ED558CCDn;
@@ -38628,7 +38628,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
   const floatView = new Float64Array(1);
   const big64View = new BigUint64Array(floatView.buffer);
-  /** http://tc39.es/ecma262/#sec-math.random */
+  /** https://tc39.es/ecma262/#sec-math.random */
   function Math_random() {
     const realm = exports.surroundingAgent.currentRealmRecord;
     if (realm.randomState === undefined) {
@@ -38664,10 +38664,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(result);
   }
 
-  /** http://tc39.es/ecma262/#sec-math-object */
-  Math_random.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-math.random';
+  /** https://tc39.es/ecma262/#sec-math-object */
+  Math_random.section = 'https://tc39.es/ecma262/#sec-math.random';
   function bootstrapMath(realmRec) {
-    /** http://tc39.es/ecma262/#sec-value-properties-of-the-math-object */
+    /** https://tc39.es/ecma262/#sec-value-properties-of-the-math-object */
     const readonly = {
       Writable: exports.Value.false,
       Configurable: exports.Value.false
@@ -38677,11 +38677,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     const mathObj = bootstrapPrototype(realmRec, [...valueProps, ['abs', Math_abs, 1], ['acos', Math_acos, 1], ['pow', Math_pow, 2], ['random', Math_random, 0]], realmRec.Intrinsics['%Object.prototype%'], 'Math');
 
-    /** http://tc39.es/ecma262/#sec-function-properties-of-the-math-object */
+    /** https://tc39.es/ecma262/#sec-function-properties-of-the-math-object */
 
     [['acosh', 1], ['asin', 1], ['asinh', 1], ['atan', 1], ['atanh', 1], ['atan2', 2], ['cbrt', 1], ['ceil', 1], ['clz32', 1], ['cos', 1], ['cosh', 1], ['exp', 1], ['expm1', 1], ['floor', 1], ['fround', 1], ['hypot', 2], ['imul', 2], ['log', 1], ['log1p', 1], ['log10', 1], ['log2', 1], ['max', 2], ['min', 2], ['round', 1], ['sign', 1], ['sin', 1], ['sinh', 1], ['sqrt', 1], ['tan', 1], ['tanh', 1], ['trunc', 1]].forEach(([name, length]) => {
       // TODO(18): Math
-      /** http://tc39.es/ecma262/#sec-function-properties-of-the-math-object */
+      /** https://tc39.es/ecma262/#sec-function-properties-of-the-math-object */
       const method = args => {
         for (let i = 0; i < args.length; i += 1) {
           let _temp7 = ToNumber(args[i]);
@@ -38697,7 +38697,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
         return F(Math[name](...args));
       };
-      method.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-function-properties-of-the-math-object';
+      method.section = 'https://tc39.es/ecma262/#sec-function-properties-of-the-math-object';
       const func = CreateBuiltinFunction(method, length, exports.Value(name), [], realmRec);
       mathObj.DefineOwnProperty(exports.Value(name), exports.Descriptor({
         Value: func,
@@ -38716,7 +38716,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Date', value);
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.getdate */
+  /** https://tc39.es/ecma262/#sec-date.prototype.getdate */
   function DateProto_getDate(args, {
     thisValue
   }) {
@@ -38736,8 +38736,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return DateFromTime(LocalTime(t));
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.getday */
-  DateProto_getDate.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.getdate';
+  /** https://tc39.es/ecma262/#sec-date.prototype.getday */
+  DateProto_getDate.section = 'https://tc39.es/ecma262/#sec-date.prototype.getdate';
   function DateProto_getDay(args, {
     thisValue
   }) {
@@ -38757,8 +38757,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return WeekDay(LocalTime(t));
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.getfullyear */
-  DateProto_getDay.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.getday';
+  /** https://tc39.es/ecma262/#sec-date.prototype.getfullyear */
+  DateProto_getDay.section = 'https://tc39.es/ecma262/#sec-date.prototype.getday';
   function DateProto_getFullYear(args, {
     thisValue
   }) {
@@ -38778,8 +38778,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return YearFromTime(LocalTime(t));
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.gethours */
-  DateProto_getFullYear.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.getfullyear';
+  /** https://tc39.es/ecma262/#sec-date.prototype.gethours */
+  DateProto_getFullYear.section = 'https://tc39.es/ecma262/#sec-date.prototype.getfullyear';
   function DateProto_getHours(args, {
     thisValue
   }) {
@@ -38799,8 +38799,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return HourFromTime(LocalTime(t));
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.getmilliseconds */
-  DateProto_getHours.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.gethours';
+  /** https://tc39.es/ecma262/#sec-date.prototype.getmilliseconds */
+  DateProto_getHours.section = 'https://tc39.es/ecma262/#sec-date.prototype.gethours';
   function DateProto_getMilliseconds(args, {
     thisValue
   }) {
@@ -38820,8 +38820,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return msFromTime(LocalTime(t));
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.getminutes */
-  DateProto_getMilliseconds.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.getmilliseconds';
+  /** https://tc39.es/ecma262/#sec-date.prototype.getminutes */
+  DateProto_getMilliseconds.section = 'https://tc39.es/ecma262/#sec-date.prototype.getmilliseconds';
   function DateProto_getMinutes(args, {
     thisValue
   }) {
@@ -38841,8 +38841,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return MinFromTime(LocalTime(t));
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.getmonth */
-  DateProto_getMinutes.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.getminutes';
+  /** https://tc39.es/ecma262/#sec-date.prototype.getmonth */
+  DateProto_getMinutes.section = 'https://tc39.es/ecma262/#sec-date.prototype.getminutes';
   function DateProto_getMonth(args, {
     thisValue
   }) {
@@ -38862,8 +38862,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return MonthFromTime(LocalTime(t));
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.getseconds */
-  DateProto_getMonth.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.getmonth';
+  /** https://tc39.es/ecma262/#sec-date.prototype.getseconds */
+  DateProto_getMonth.section = 'https://tc39.es/ecma262/#sec-date.prototype.getmonth';
   function DateProto_getSeconds(args, {
     thisValue
   }) {
@@ -38883,16 +38883,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return SecFromTime(LocalTime(t));
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.gettime */
-  DateProto_getSeconds.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.getseconds';
+  /** https://tc39.es/ecma262/#sec-date.prototype.gettime */
+  DateProto_getSeconds.section = 'https://tc39.es/ecma262/#sec-date.prototype.getseconds';
   function DateProto_getTime(args, {
     thisValue
   }) {
     return thisTimeValue(thisValue);
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.gettimezoneoffset */
-  DateProto_getTime.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.gettime';
+  /** https://tc39.es/ecma262/#sec-date.prototype.gettimezoneoffset */
+  DateProto_getTime.section = 'https://tc39.es/ecma262/#sec-date.prototype.gettime';
   function DateProto_getTimezoneOffset(args, {
     thisValue
   }) {
@@ -38912,8 +38912,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F((t.numberValue() - LocalTime(t).numberValue()) / msPerMinute);
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.getutcdate */
-  DateProto_getTimezoneOffset.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.gettimezoneoffset';
+  /** https://tc39.es/ecma262/#sec-date.prototype.getutcdate */
+  DateProto_getTimezoneOffset.section = 'https://tc39.es/ecma262/#sec-date.prototype.gettimezoneoffset';
   function DateProto_getUTCDate(args, {
     thisValue
   }) {
@@ -38933,8 +38933,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return DateFromTime(t);
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.getutcday */
-  DateProto_getUTCDate.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.getutcdate';
+  /** https://tc39.es/ecma262/#sec-date.prototype.getutcday */
+  DateProto_getUTCDate.section = 'https://tc39.es/ecma262/#sec-date.prototype.getutcdate';
   function DateProto_getUTCDay(args, {
     thisValue
   }) {
@@ -38954,8 +38954,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return WeekDay(t);
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.getutcfullyear */
-  DateProto_getUTCDay.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.getutcday';
+  /** https://tc39.es/ecma262/#sec-date.prototype.getutcfullyear */
+  DateProto_getUTCDay.section = 'https://tc39.es/ecma262/#sec-date.prototype.getutcday';
   function DateProto_getUTCFullYear(args, {
     thisValue
   }) {
@@ -38975,8 +38975,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return YearFromTime(t);
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.getutchours */
-  DateProto_getUTCFullYear.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.getutcfullyear';
+  /** https://tc39.es/ecma262/#sec-date.prototype.getutchours */
+  DateProto_getUTCFullYear.section = 'https://tc39.es/ecma262/#sec-date.prototype.getutcfullyear';
   function DateProto_getUTCHours(args, {
     thisValue
   }) {
@@ -38996,8 +38996,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return HourFromTime(t);
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.getutcmilliseconds */
-  DateProto_getUTCHours.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.getutchours';
+  /** https://tc39.es/ecma262/#sec-date.prototype.getutcmilliseconds */
+  DateProto_getUTCHours.section = 'https://tc39.es/ecma262/#sec-date.prototype.getutchours';
   function DateProto_getUTCMilliseconds(args, {
     thisValue
   }) {
@@ -39017,8 +39017,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return msFromTime(t);
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.getutcminutes */
-  DateProto_getUTCMilliseconds.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.getutcmilliseconds';
+  /** https://tc39.es/ecma262/#sec-date.prototype.getutcminutes */
+  DateProto_getUTCMilliseconds.section = 'https://tc39.es/ecma262/#sec-date.prototype.getutcmilliseconds';
   function DateProto_getUTCMinutes(args, {
     thisValue
   }) {
@@ -39038,8 +39038,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return MinFromTime(t);
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.getutcmonth */
-  DateProto_getUTCMinutes.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.getutcminutes';
+  /** https://tc39.es/ecma262/#sec-date.prototype.getutcmonth */
+  DateProto_getUTCMinutes.section = 'https://tc39.es/ecma262/#sec-date.prototype.getutcminutes';
   function DateProto_getUTCMonth(args, {
     thisValue
   }) {
@@ -39059,8 +39059,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return MonthFromTime(t);
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.getutcseconds */
-  DateProto_getUTCMonth.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.getutcmonth';
+  /** https://tc39.es/ecma262/#sec-date.prototype.getutcseconds */
+  DateProto_getUTCMonth.section = 'https://tc39.es/ecma262/#sec-date.prototype.getutcmonth';
   function DateProto_getUTCSeconds(args, {
     thisValue
   }) {
@@ -39080,8 +39080,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return SecFromTime(t);
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.setdate */
-  DateProto_getUTCSeconds.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.getutcseconds';
+  /** https://tc39.es/ecma262/#sec-date.prototype.setdate */
+  DateProto_getUTCSeconds.section = 'https://tc39.es/ecma262/#sec-date.prototype.getutcseconds';
   function DateProto_setDate([date = exports.Value.undefined], {
     thisValue
   }) {
@@ -39111,8 +39111,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return u;
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.setfullyear */
-  DateProto_setDate.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.setdate';
+  /** https://tc39.es/ecma262/#sec-date.prototype.setfullyear */
+  DateProto_setDate.section = 'https://tc39.es/ecma262/#sec-date.prototype.setdate';
   function DateProto_setFullYear([year = exports.Value.undefined, month, date], {
     thisValue
   }) {
@@ -39173,8 +39173,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return u;
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.sethours */
-  DateProto_setFullYear.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.setfullyear';
+  /** https://tc39.es/ecma262/#sec-date.prototype.sethours */
+  DateProto_setFullYear.section = 'https://tc39.es/ecma262/#sec-date.prototype.setfullyear';
   function DateProto_setHours([hour = exports.Value.undefined, min, sec, ms], {
     thisValue
   }) {
@@ -39249,8 +39249,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return u;
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.setmilliseconds */
-  DateProto_setHours.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.sethours';
+  /** https://tc39.es/ecma262/#sec-date.prototype.setmilliseconds */
+  DateProto_setHours.section = 'https://tc39.es/ecma262/#sec-date.prototype.sethours';
   function DateProto_setMilliseconds([ms = exports.Value.undefined], {
     thisValue
   }) {
@@ -39280,8 +39280,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return u;
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.setminutes */
-  DateProto_setMilliseconds.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.setmilliseconds';
+  /** https://tc39.es/ecma262/#sec-date.prototype.setminutes */
+  DateProto_setMilliseconds.section = 'https://tc39.es/ecma262/#sec-date.prototype.setmilliseconds';
   function DateProto_setMinutes([min = exports.Value.undefined, sec, ms], {
     thisValue
   }) {
@@ -39349,8 +39349,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return u;
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.setmonth */
-  DateProto_setMinutes.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.setminutes';
+  /** https://tc39.es/ecma262/#sec-date.prototype.setmonth */
+  DateProto_setMinutes.section = 'https://tc39.es/ecma262/#sec-date.prototype.setminutes';
   function DateProto_setMonth([month = exports.Value.undefined, date], {
     thisValue
   }) {
@@ -39395,8 +39395,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return u;
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.setseconds */
-  DateProto_setMonth.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.setmonth';
+  /** https://tc39.es/ecma262/#sec-date.prototype.setseconds */
+  DateProto_setMonth.section = 'https://tc39.es/ecma262/#sec-date.prototype.setmonth';
   function DateProto_setSeconds([sec = exports.Value.undefined, ms], {
     thisValue
   }) {
@@ -39441,8 +39441,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return u;
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.settime */
-  DateProto_setSeconds.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.setseconds';
+  /** https://tc39.es/ecma262/#sec-date.prototype.settime */
+  DateProto_setSeconds.section = 'https://tc39.es/ecma262/#sec-date.prototype.setseconds';
   function DateProto_setTime([time = exports.Value.undefined], {
     thisValue
   }) {
@@ -39470,8 +39470,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return v;
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.setutcdate */
-  DateProto_setTime.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.settime';
+  /** https://tc39.es/ecma262/#sec-date.prototype.setutcdate */
+  DateProto_setTime.section = 'https://tc39.es/ecma262/#sec-date.prototype.settime';
   function DateProto_setUTCDate([date = exports.Value.undefined], {
     thisValue
   }) {
@@ -39501,8 +39501,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return v;
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.setutcfullyear */
-  DateProto_setUTCDate.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.setutcdate';
+  /** https://tc39.es/ecma262/#sec-date.prototype.setutcfullyear */
+  DateProto_setUTCDate.section = 'https://tc39.es/ecma262/#sec-date.prototype.setutcdate';
   function DateProto_setUTCFullYear([year = exports.Value.undefined, month, date], {
     thisValue
   }) {
@@ -39565,8 +39565,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return v;
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.setutchours */
-  DateProto_setUTCFullYear.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.setutcfullyear';
+  /** https://tc39.es/ecma262/#sec-date.prototype.setutchours */
+  DateProto_setUTCFullYear.section = 'https://tc39.es/ecma262/#sec-date.prototype.setutcfullyear';
   function DateProto_setUTCHours([hour = exports.Value.undefined, min, sec, ms], {
     thisValue
   }) {
@@ -39641,8 +39641,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return v;
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.setutcmilliseconds */
-  DateProto_setUTCHours.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.setutchours';
+  /** https://tc39.es/ecma262/#sec-date.prototype.setutcmilliseconds */
+  DateProto_setUTCHours.section = 'https://tc39.es/ecma262/#sec-date.prototype.setutchours';
   function DateProto_setUTCMilliseconds([ms = exports.Value.undefined], {
     thisValue
   }) {
@@ -39672,8 +39672,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return v;
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.setutcminutes */
-  DateProto_setUTCMilliseconds.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.setutcmilliseconds';
+  /** https://tc39.es/ecma262/#sec-date.prototype.setutcminutes */
+  DateProto_setUTCMilliseconds.section = 'https://tc39.es/ecma262/#sec-date.prototype.setutcmilliseconds';
   function DateProto_setUTCMinutes([min = exports.Value.undefined, sec, ms], {
     thisValue
   }) {
@@ -39733,8 +39733,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return v;
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.setutcmonth */
-  DateProto_setUTCMinutes.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.setutcminutes';
+  /** https://tc39.es/ecma262/#sec-date.prototype.setutcmonth */
+  DateProto_setUTCMinutes.section = 'https://tc39.es/ecma262/#sec-date.prototype.setutcminutes';
   function DateProto_setUTCMonth([month = exports.Value.undefined, date], {
     thisValue
   }) {
@@ -39779,8 +39779,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return v;
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.setutcseconds */
-  DateProto_setUTCMonth.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.setutcmonth';
+  /** https://tc39.es/ecma262/#sec-date.prototype.setutcseconds */
+  DateProto_setUTCMonth.section = 'https://tc39.es/ecma262/#sec-date.prototype.setutcmonth';
   function DateProto_setUTCSeconds([sec = exports.Value.undefined, ms], {
     thisValue
   }) {
@@ -39825,8 +39825,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return v;
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.todatestring */
-  DateProto_setUTCSeconds.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.setutcseconds';
+  /** https://tc39.es/ecma262/#sec-date.prototype.todatestring */
+  DateProto_setUTCSeconds.section = 'https://tc39.es/ecma262/#sec-date.prototype.setutcseconds';
   function DateProto_toDateString(args, {
     thisValue
   }) {
@@ -39851,8 +39851,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return DateString(t);
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.toisostring */
-  DateProto_toDateString.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.todatestring';
+  /** https://tc39.es/ecma262/#sec-date.prototype.toisostring */
+  DateProto_toDateString.section = 'https://tc39.es/ecma262/#sec-date.prototype.todatestring';
   function DateProto_toISOString(args, {
     thisValue
   }) {
@@ -39892,8 +39892,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(format);
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.tojson */
-  DateProto_toISOString.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.toisostring';
+  /** https://tc39.es/ecma262/#sec-date.prototype.tojson */
+  DateProto_toISOString.section = 'https://tc39.es/ecma262/#sec-date.prototype.toisostring';
   function DateProto_toJSON(args, {
     thisValue
   }) {
@@ -39923,29 +39923,29 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Invoke(O, exports.Value('toISOString'));
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.tolocaledatestring */
-  DateProto_toJSON.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.tojson';
+  /** https://tc39.es/ecma262/#sec-date.prototype.tolocaledatestring */
+  DateProto_toJSON.section = 'https://tc39.es/ecma262/#sec-date.prototype.tojson';
   function DateProto_toLocaleDateString() {
     // TODO: implement this function.
     return exports.surroundingAgent.Throw('Error', 'Raw', 'Date.prototype.toLocaleDateString is not implemented');
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.tolocalestring */
-  DateProto_toLocaleDateString.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.tolocaledatestring';
+  /** https://tc39.es/ecma262/#sec-date.prototype.tolocalestring */
+  DateProto_toLocaleDateString.section = 'https://tc39.es/ecma262/#sec-date.prototype.tolocaledatestring';
   function DateProto_toLocaleString() {
     // TODO: implement this function.
     return exports.surroundingAgent.Throw('Error', 'Raw', 'Date.prototype.toLocaleString is not implemented');
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.tolocaletimestring */
-  DateProto_toLocaleString.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.tolocalestring';
+  /** https://tc39.es/ecma262/#sec-date.prototype.tolocaletimestring */
+  DateProto_toLocaleString.section = 'https://tc39.es/ecma262/#sec-date.prototype.tolocalestring';
   function DateProto_toLocaleTimeString() {
     // TODO: implement this function.
     return exports.surroundingAgent.Throw('Error', 'Raw', 'Date.prototype.toLocaleTimeString is not implemented');
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.tostring */
-  DateProto_toLocaleTimeString.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.tolocaletimestring';
+  /** https://tc39.es/ecma262/#sec-date.prototype.tostring */
+  DateProto_toLocaleTimeString.section = 'https://tc39.es/ecma262/#sec-date.prototype.tolocaletimestring';
   function DateProto_toString(args, {
     thisValue
   }) {
@@ -39962,8 +39962,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return ToDateString(tv);
   }
 
-  /** http://tc39.es/ecma262/#sec-timestring */
-  DateProto_toString.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.tostring';
+  /** https://tc39.es/ecma262/#sec-timestring */
+  DateProto_toString.section = 'https://tc39.es/ecma262/#sec-date.prototype.tostring';
   function TimeString(tv) {
     Assert(tv instanceof NumberValue, "tv instanceof NumberValue");
     Assert(!tv.isNaN(), "!tv.isNaN()");
@@ -39973,13 +39973,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(`${hour}:${minute}:${second} GMT`);
   }
 
-  /** http://tc39.es/ecma262/#sec-todatestring-day-names */
-  TimeString.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-timestring';
+  /** https://tc39.es/ecma262/#sec-todatestring-day-names */
+  TimeString.section = 'https://tc39.es/ecma262/#sec-timestring';
   const daysOfTheWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  /** http://tc39.es/ecma262/#sec-todatestring-month-names */
+  /** https://tc39.es/ecma262/#sec-todatestring-month-names */
   const monthsOfTheYear = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-  /** http://tc39.es/ecma262/#sec-datestring */
+  /** https://tc39.es/ecma262/#sec-datestring */
   function DateString(tv) {
     Assert(tv instanceof NumberValue, "tv instanceof NumberValue");
     Assert(!tv.isNaN(), "!tv.isNaN()");
@@ -39999,8 +39999,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(`${weekday} ${month} ${day} ${yearSign}${paddedYear}`);
   }
 
-  /** http://tc39.es/ecma262/#sec-timezoneestring */
-  DateString.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-datestring';
+  /** https://tc39.es/ecma262/#sec-timezoneestring */
+  DateString.section = 'https://tc39.es/ecma262/#sec-datestring';
   function TimeZoneString(tv) {
     Assert(tv instanceof NumberValue, "tv instanceof NumberValue");
     Assert(!tv.isNaN(), "!tv.isNaN()");
@@ -40012,7 +40012,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(`${offsetSign}${offsetHour}${offsetMin}${tzName}`);
   }
 
-  /** http://tc39.es/ecma262/#sec-todatestring */
+  /** https://tc39.es/ecma262/#sec-todatestring */
   function ToDateString(tv) {
     Assert(tv instanceof NumberValue, "tv instanceof NumberValue");
     if (tv.isNaN()) {
@@ -40022,7 +40022,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(`${DateString(t).stringValue()} ${TimeString(t).stringValue()}${TimeZoneString(t).stringValue()}`);
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.totimestring */
+  /** https://tc39.es/ecma262/#sec-date.prototype.totimestring */
   function DateProto_toTimeString(args, {
     thisValue
   }) {
@@ -40047,8 +40047,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(`${TimeString(t).stringValue()}${TimeZoneString(tv).stringValue()}`);
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.toutcstring */
-  DateProto_toTimeString.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.totimestring';
+  /** https://tc39.es/ecma262/#sec-date.prototype.toutcstring */
+  DateProto_toTimeString.section = 'https://tc39.es/ecma262/#sec-date.prototype.totimestring';
   function DateProto_toUTCString(args, {
     thisValue
   }) {
@@ -40085,16 +40085,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(`${weekday}, ${day} ${month} ${yearSign}${paddedYear} ${TimeString(tv).stringValue()}`);
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype.valueof */
-  DateProto_toUTCString.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.toutcstring';
+  /** https://tc39.es/ecma262/#sec-date.prototype.valueof */
+  DateProto_toUTCString.section = 'https://tc39.es/ecma262/#sec-date.prototype.toutcstring';
   function DateProto_valueOf(args, {
     thisValue
   }) {
     return thisTimeValue(thisValue);
   }
 
-  /** http://tc39.es/ecma262/#sec-date.prototype-@@toprimitive */
-  DateProto_valueOf.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype.valueof';
+  /** https://tc39.es/ecma262/#sec-date.prototype-@@toprimitive */
+  DateProto_valueOf.section = 'https://tc39.es/ecma262/#sec-date.prototype.valueof';
   function DateProto_toPrimitive([hint = exports.Value.undefined], {
     thisValue
   }) {
@@ -40112,7 +40112,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     return OrdinaryToPrimitive(O, tryFirst);
   }
-  DateProto_toPrimitive.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.prototype-@@toprimitive';
+  DateProto_toPrimitive.section = 'https://tc39.es/ecma262/#sec-date.prototype-@@toprimitive';
   function bootstrapDatePrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['getDate', DateProto_getDate, 0], ['getDay', DateProto_getDay, 0], ['getFullYear', DateProto_getFullYear, 0], ['getHours', DateProto_getHours, 0], ['getMilliseconds', DateProto_getMilliseconds, 0], ['getMinutes', DateProto_getMinutes, 0], ['getMonth', DateProto_getMonth, 0], ['getSeconds', DateProto_getSeconds, 0], ['getTime', DateProto_getTime, 0], ['getTimezoneOffset', DateProto_getTimezoneOffset, 0], ['getUTCDate', DateProto_getUTCDate, 0], ['getUTCDay', DateProto_getUTCDay, 0], ['getUTCFullYear', DateProto_getUTCFullYear, 0], ['getUTCHours', DateProto_getUTCHours, 0], ['getUTCMilliseconds', DateProto_getUTCMilliseconds, 0], ['getUTCMinutes', DateProto_getUTCMinutes, 0], ['getUTCMonth', DateProto_getUTCMonth, 0], ['getUTCSeconds', DateProto_getUTCSeconds, 0], ['setDate', DateProto_setDate, 1], ['setFullYear', DateProto_setFullYear, 3], ['setHours', DateProto_setHours, 4], ['setMilliseconds', DateProto_setMilliseconds, 1], ['setMinutes', DateProto_setMinutes, 3], ['setMonth', DateProto_setMonth, 2], ['setSeconds', DateProto_setSeconds, 2], ['setTime', DateProto_setTime, 1], ['setUTCDate', DateProto_setUTCDate, 1], ['setUTCFullYear', DateProto_setUTCFullYear, 3], ['setUTCHours', DateProto_setUTCHours, 4], ['setUTCMilliseconds', DateProto_setUTCMilliseconds, 1], ['setUTCMinutes', DateProto_setUTCMinutes, 3], ['setUTCMonth', DateProto_setUTCMonth, 2], ['setUTCSeconds', DateProto_setUTCSeconds, 2], ['toDateString', DateProto_toDateString, 0], ['toISOString', DateProto_toISOString, 0], ['toJSON', DateProto_toJSON, 1], ['toLocaleDateString', DateProto_toLocaleDateString, 0], ['toLocaleString', DateProto_toLocaleString, 0], ['toLocaleTimeString', DateProto_toLocaleTimeString, 0], ['toString', DateProto_toString, 0], ['toTimeString', DateProto_toTimeString, 0], ['toUTCString', DateProto_toUTCString, 0], ['valueOf', DateProto_valueOf, 0], [wellKnownSymbols.toPrimitive, DateProto_toPrimitive, 1, {
       Writable: exports.Value.false,
@@ -40122,13 +40122,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     realmRec.Intrinsics['%Date.prototype%'] = proto;
   }
 
-  /** http://tc39.es/ecma262/#sec-date-constructor */
+  /** https://tc39.es/ecma262/#sec-date-constructor */
   function DateConstructor(args, {
     NewTarget
   }) {
     const numberOfArgs = args.length;
     if (numberOfArgs >= 2) {
-      /** http://tc39.es/ecma262/#sec-date-year-month-date-hours-minutes-seconds-ms */
+      /** https://tc39.es/ecma262/#sec-date-year-month-date-hours-minutes-seconds-ms */
       const [year, month, date, hours, minutes, seconds, ms] = args;
       Assert(numberOfArgs >= 2, "numberOfArgs >= 2");
       if (NewTarget === exports.Value.undefined) {
@@ -40263,7 +40263,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
     } else if (numberOfArgs === 1) {
       const [value] = args;
-      /** http://tc39.es/ecma262/#sec-date-value */
+      /** https://tc39.es/ecma262/#sec-date-value */
       Assert(numberOfArgs === 1, "numberOfArgs === 1");
       if (NewTarget === exports.Value.undefined) {
         const now = Date.now();
@@ -40313,7 +40313,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         return O;
       }
     } else {
-      /** http://tc39.es/ecma262/#sec-date-constructor-date */
+      /** https://tc39.es/ecma262/#sec-date-constructor-date */
       Assert(numberOfArgs === 0, "numberOfArgs === 0");
       if (NewTarget === exports.Value.undefined) {
         const now = Date.now();
@@ -40335,15 +40335,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-date.now */
-  DateConstructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date-constructor';
+  /** https://tc39.es/ecma262/#sec-date.now */
+  DateConstructor.section = 'https://tc39.es/ecma262/#sec-date-constructor';
   function Date_now() {
     const now = Date.now();
     return F(now);
   }
 
-  /** http://tc39.es/ecma262/#sec-date.parse */
-  Date_now.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.now';
+  /** https://tc39.es/ecma262/#sec-date.parse */
+  Date_now.section = 'https://tc39.es/ecma262/#sec-date.now';
   function Date_parse([string = exports.Value.undefined]) {
     const str = ToString(string);
     if (str instanceof AbruptCompletion) {
@@ -40352,8 +40352,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return parseDate(str);
   }
 
-  /** http://tc39.es/ecma262/#sec-date.utc */
-  Date_parse.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.parse';
+  /** https://tc39.es/ecma262/#sec-date.utc */
+  Date_parse.section = 'https://tc39.es/ecma262/#sec-date.parse';
   function Date_UTC([year = exports.Value.undefined, month, date, hours, minutes, seconds, ms]) {
     let _temp14 = ToNumber(year);
     /* c8 ignore if */
@@ -40474,9 +40474,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     return TimeClip(MakeDate(MakeDay(yr, m, dt), MakeTime(h, min, s, milli)));
   }
-  Date_UTC.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-date.utc';
+  Date_UTC.section = 'https://tc39.es/ecma262/#sec-date.utc';
   function parseDate(dateTimeString) {
-    /** http://tc39.es/ecma262/#sec-date-time-string-format */
+    /** https://tc39.es/ecma262/#sec-date-time-string-format */
     // TODO: implement parsing without the host.
     const parsed = Date.parse(dateTimeString.stringValue());
     return F(parsed);
@@ -40488,7 +40488,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   const kRegExpStringIteratorPrototype = exports.Value('%RegExpStringIteratorPrototype%');
 
-  /** http://tc39.es/ecma262/#sec-createregexpstringiterator */
+  /** https://tc39.es/ecma262/#sec-createregexpstringiterator */
   function CreateRegExpStringIterator(R, S, global, fullUnicode) {
     // 1. Assert: Type(S) is String.
     Assert(S instanceof StringValue, "S instanceof JSStringValue");
@@ -40612,20 +40612,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return _temp10;
   }
 
-  /** http://tc39.es/ecma262/#sec-%regexpstringiteratorprototype%.next */
+  /** https://tc39.es/ecma262/#sec-%regexpstringiteratorprototype%.next */
   function RegExpStringIteratorPrototype_next(args, {
     thisValue
   }) {
     // 1. Return ? GeneratorResume(this value, empty, "%RegExpStringIteratorPrototype%").
     return GeneratorResume(thisValue, undefined, kRegExpStringIteratorPrototype);
   }
-  RegExpStringIteratorPrototype_next.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-%regexpstringiteratorprototype%.next';
+  RegExpStringIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%regexpstringiteratorprototype%.next';
   function bootstrapRegExpStringIteratorPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['next', RegExpStringIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'RegExp String Iterator');
     realmRec.Intrinsics['%RegExpStringIteratorPrototype%'] = proto;
   }
 
-  /** http://tc39.es/ecma262/#sec-regexp.prototype.exec */
+  /** https://tc39.es/ecma262/#sec-regexp.prototype.exec */
   function RegExpProto_exec([string = exports.Value.undefined], {
     thisValue
   }) {
@@ -40652,8 +40652,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return RegExpBuiltinExec(R, S);
   }
 
-  /** http://tc39.es/ecma262/#sec-regexpexec */
-  RegExpProto_exec.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-regexp.prototype.exec';
+  /** https://tc39.es/ecma262/#sec-regexpexec */
+  RegExpProto_exec.section = 'https://tc39.es/ecma262/#sec-regexp.prototype.exec';
   function RegExpExec(R, S) {
     Assert(R instanceof ObjectValue, "R instanceof ObjectValue");
     Assert(S instanceof StringValue, "S instanceof JSStringValue");
@@ -40695,7 +40695,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return RegExpBuiltinExec(R, S);
   }
 
-  /** http://tc39.es/ecma262/#sec-regexpbuiltinexec */
+  /** https://tc39.es/ecma262/#sec-regexpbuiltinexec */
   function RegExpBuiltinExec(R, S) {
     // 1. Assert: R is an initialized RegExp instance.
     Assert('RegExpMatcher' in R, "'RegExpMatcher' in R");
@@ -40998,7 +40998,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return A;
   }
 
-  /** http://tc39.es/ecma262/#sec-advancestringindex */
+  /** https://tc39.es/ecma262/#sec-advancestringindex */
   function AdvanceStringIndex(S, index, unicode) {
     // 1. Assert: Type(S) is String.
     Assert(S instanceof StringValue, "S instanceof JSStringValue");
@@ -41028,7 +41028,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return index + cp.CodeUnitCount;
   }
 
-  /** http://tc39.es/ecma262/#sec-get-regexp.prototype.dotAll */
+  /** https://tc39.es/ecma262/#sec-get-regexp.prototype.dotAll */
   function RegExpProto_dotAllGetter(args, {
     thisValue
   }) {
@@ -41040,8 +41040,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return RegExpHasFlag(R, cu);
   }
 
-  /** http://tc39.es/ecma262/#sec-get-regexp.prototype.flags */
-  RegExpProto_dotAllGetter.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-get-regexp.prototype.dotAll';
+  /** https://tc39.es/ecma262/#sec-get-regexp.prototype.flags */
+  RegExpProto_dotAllGetter.section = 'https://tc39.es/ecma262/#sec-get-regexp.prototype.dotAll';
   function RegExpProto_flagsGetter(args, {
     thisValue
   }) {
@@ -41144,8 +41144,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(result);
   }
 
-  /** http://tc39.es/ecma262/#sec-get-regexp.prototype.global */
-  RegExpProto_flagsGetter.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-get-regexp.prototype.flags';
+  /** https://tc39.es/ecma262/#sec-get-regexp.prototype.global */
+  RegExpProto_flagsGetter.section = 'https://tc39.es/ecma262/#sec-get-regexp.prototype.flags';
   function RegExpProto_globalGetter(args, {
     thisValue
   }) {
@@ -41166,8 +41166,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-get-regexp.prototype.hasIndices */
-  RegExpProto_globalGetter.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-get-regexp.prototype.global';
+  /** https://tc39.es/ecma262/#sec-get-regexp.prototype.hasIndices */
+  RegExpProto_globalGetter.section = 'https://tc39.es/ecma262/#sec-get-regexp.prototype.global';
   function RegExpProto_hasIndicesGetter(args, {
     thisValue
   }) {
@@ -41179,8 +41179,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return RegExpHasFlag(R, cu);
   }
 
-  /** http://tc39.es/ecma262/#sec-get-regexp.prototype.ignorecase */
-  RegExpProto_hasIndicesGetter.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-get-regexp.prototype.hasIndices';
+  /** https://tc39.es/ecma262/#sec-get-regexp.prototype.ignorecase */
+  RegExpProto_hasIndicesGetter.section = 'https://tc39.es/ecma262/#sec-get-regexp.prototype.hasIndices';
   function RegExpProto_ignoreCaseGetter(args, {
     thisValue
   }) {
@@ -41192,8 +41192,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return RegExpHasFlag(R, cu);
   }
 
-  /** http://tc39.es/ecma262/#sec-regexp.prototype-@@match */
-  RegExpProto_ignoreCaseGetter.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-get-regexp.prototype.ignorecase';
+  /** https://tc39.es/ecma262/#sec-regexp.prototype-@@match */
+  RegExpProto_ignoreCaseGetter.section = 'https://tc39.es/ecma262/#sec-get-regexp.prototype.ignorecase';
   function RegExpProto_match([string = exports.Value.undefined], {
     thisValue
   }) {
@@ -41360,8 +41360,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-regexp-prototype-matchall */
-  RegExpProto_match.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-regexp.prototype-@@match';
+  /** https://tc39.es/ecma262/#sec-regexp-prototype-matchall */
+  RegExpProto_match.section = 'https://tc39.es/ecma262/#sec-regexp.prototype-@@match';
   function RegExpProto_matchAll([string = exports.Value.undefined], {
     thisValue
   }) {
@@ -41467,8 +41467,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return _temp53;
   }
 
-  /** http://tc39.es/ecma262/#sec-get-regexp.prototype.multiline */
-  RegExpProto_matchAll.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-regexp-prototype-matchall';
+  /** https://tc39.es/ecma262/#sec-get-regexp.prototype.multiline */
+  RegExpProto_matchAll.section = 'https://tc39.es/ecma262/#sec-regexp-prototype-matchall';
   function RegExpProto_multilineGetter(args, {
     thisValue
   }) {
@@ -41480,8 +41480,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return RegExpHasFlag(R, cu);
   }
 
-  /** http://tc39.es/ecma262/#sec-regexp.prototype-@@replace */
-  RegExpProto_multilineGetter.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-get-regexp.prototype.multiline';
+  /** https://tc39.es/ecma262/#sec-regexp.prototype-@@replace */
+  RegExpProto_multilineGetter.section = 'https://tc39.es/ecma262/#sec-get-regexp.prototype.multiline';
   function RegExpProto_replace([string = exports.Value.undefined, replaceValue = exports.Value.undefined], {
     thisValue
   }) {
@@ -41843,8 +41843,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(accumulatedResult + S.stringValue().substring(nextSourcePosition));
   }
 
-  /** http://tc39.es/ecma262/#sec-regexp.prototype-@@search */
-  RegExpProto_replace.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-regexp.prototype-@@replace';
+  /** https://tc39.es/ecma262/#sec-regexp.prototype-@@search */
+  RegExpProto_replace.section = 'https://tc39.es/ecma262/#sec-regexp.prototype-@@replace';
   function RegExpProto_search([string = exports.Value.undefined], {
     thisValue
   }) {
@@ -41920,8 +41920,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Get(result, exports.Value('index'));
   }
 
-  /** http://tc39.es/ecma262/#sec-get-regexp.prototype.source */
-  RegExpProto_search.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-regexp.prototype-@@search';
+  /** https://tc39.es/ecma262/#sec-get-regexp.prototype.source */
+  RegExpProto_search.section = 'https://tc39.es/ecma262/#sec-regexp.prototype-@@search';
   function RegExpProto_sourceGetter(args, {
     thisValue
   }) {
@@ -41941,8 +41941,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return EscapeRegExpPattern(src);
   }
 
-  /** http://tc39.es/ecma262/#sec-regexp.prototype-@@split */
-  RegExpProto_sourceGetter.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-get-regexp.prototype.source';
+  /** https://tc39.es/ecma262/#sec-regexp.prototype-@@split */
+  RegExpProto_sourceGetter.section = 'https://tc39.es/ecma262/#sec-get-regexp.prototype.source';
   function RegExpProto_split([string = exports.Value.undefined, limit = exports.Value.undefined], {
     thisValue
   }) {
@@ -42185,8 +42185,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return A;
   }
 
-  /** http://tc39.es/ecma262/#sec-get-regexp.prototype.sticky */
-  RegExpProto_split.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-regexp.prototype-@@split';
+  /** https://tc39.es/ecma262/#sec-get-regexp.prototype.sticky */
+  RegExpProto_split.section = 'https://tc39.es/ecma262/#sec-regexp.prototype-@@split';
   function RegExpProto_stickyGetter(args, {
     thisValue
   }) {
@@ -42198,8 +42198,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return RegExpHasFlag(R, cu);
   }
 
-  /** http://tc39.es/ecma262/#sec-regexp.prototype.test */
-  RegExpProto_stickyGetter.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-get-regexp.prototype.sticky';
+  /** https://tc39.es/ecma262/#sec-regexp.prototype.test */
+  RegExpProto_stickyGetter.section = 'https://tc39.es/ecma262/#sec-get-regexp.prototype.sticky';
   function RegExpProto_test([S = exports.Value.undefined], {
     thisValue
   }) {
@@ -42233,8 +42233,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-regexp.prototype.tostring */
-  RegExpProto_test.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-regexp.prototype.test';
+  /** https://tc39.es/ecma262/#sec-regexp.prototype.tostring */
+  RegExpProto_test.section = 'https://tc39.es/ecma262/#sec-regexp.prototype.test';
   function RegExpProto_toString(args, {
     thisValue
   }) {
@@ -42284,8 +42284,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(result);
   }
 
-  /** http://tc39.es/ecma262/#sec-get-regexp.prototype.unicode */
-  RegExpProto_toString.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-regexp.prototype.tostring';
+  /** https://tc39.es/ecma262/#sec-get-regexp.prototype.unicode */
+  RegExpProto_toString.section = 'https://tc39.es/ecma262/#sec-regexp.prototype.tostring';
   function RegExpProto_unicodeGetter(args, {
     thisValue
   }) {
@@ -42296,13 +42296,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 3. Return ? RegExpHasFlag(R, cu).
     return RegExpHasFlag(R, cu);
   }
-  RegExpProto_unicodeGetter.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-get-regexp.prototype.unicode';
+  RegExpProto_unicodeGetter.section = 'https://tc39.es/ecma262/#sec-get-regexp.prototype.unicode';
   function bootstrapRegExpPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['exec', RegExpProto_exec, 1], ['dotAll', [RegExpProto_dotAllGetter]], ['flags', [RegExpProto_flagsGetter]], ['global', [RegExpProto_globalGetter]], ['hasIndices', [RegExpProto_hasIndicesGetter]], ['ignoreCase', [RegExpProto_ignoreCaseGetter]], [wellKnownSymbols.match, RegExpProto_match, 1], [wellKnownSymbols.matchAll, RegExpProto_matchAll, 1], ['multiline', [RegExpProto_multilineGetter]], [wellKnownSymbols.replace, RegExpProto_replace, 2], [wellKnownSymbols.search, RegExpProto_search, 1], ['source', [RegExpProto_sourceGetter]], [wellKnownSymbols.split, RegExpProto_split, 2], ['sticky', [RegExpProto_stickyGetter]], ['test', RegExpProto_test, 1], ['toString', RegExpProto_toString, 0], ['unicode', [RegExpProto_unicodeGetter]]], realmRec.Intrinsics['%Object.prototype%']);
     realmRec.Intrinsics['%RegExp.prototype%'] = proto;
   }
 
-  /** http://tc39.es/ecma262/#sec-regexp-constructor */
+  /** https://tc39.es/ecma262/#sec-regexp-constructor */
   function RegExpConstructor([pattern = exports.Value.undefined, flags = exports.Value.undefined], {
     NewTarget
   }) {
@@ -42409,21 +42409,21 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return RegExpInitialize(O, P, F);
   }
 
-  /** http://tc39.es/ecma262/#sec-get-regexp-@@species */
-  RegExpConstructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-regexp-constructor';
+  /** https://tc39.es/ecma262/#sec-get-regexp-@@species */
+  RegExpConstructor.section = 'https://tc39.es/ecma262/#sec-regexp-constructor';
   function RegExp_speciesGetter(args, {
     thisValue
   }) {
     return thisValue;
   }
-  RegExp_speciesGetter.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-get-regexp-@@species';
+  RegExp_speciesGetter.section = 'https://tc39.es/ecma262/#sec-get-regexp-@@species';
   function bootstrapRegExp(realmRec) {
     const proto = realmRec.Intrinsics['%RegExp.prototype%'];
     const cons = bootstrapConstructor(realmRec, RegExpConstructor, 'RegExp', 2, proto, [[wellKnownSymbols.species, [RegExp_speciesGetter]]]);
     realmRec.Intrinsics['%RegExp%'] = cons;
   }
 
-  /** http://tc39.es/ecma262/#sec-promise.prototype.catch */
+  /** https://tc39.es/ecma262/#sec-promise.prototype.catch */
   function PromiseProto_catch([onRejected = exports.Value.undefined], {
     thisValue
   }) {
@@ -42433,8 +42433,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Invoke(promise, exports.Value('then'), [exports.Value.undefined, onRejected]);
   }
 
-  /** http://tc39.es/ecma262/#sec-promise.prototype.finally */
-  PromiseProto_catch.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-promise.prototype.catch';
+  /** https://tc39.es/ecma262/#sec-promise.prototype.finally */
+  PromiseProto_catch.section = 'https://tc39.es/ecma262/#sec-promise.prototype.catch';
   function PromiseProto_finally([onFinally = exports.Value.undefined], {
     thisValue
   }) {
@@ -42555,8 +42555,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Invoke(promise, exports.Value('then'), [thenFinally, catchFinally]);
   }
 
-  /** http://tc39.es/ecma262/#sec-promise.prototype.then */
-  PromiseProto_finally.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-promise.prototype.finally';
+  /** https://tc39.es/ecma262/#sec-promise.prototype.then */
+  PromiseProto_finally.section = 'https://tc39.es/ecma262/#sec-promise.prototype.finally';
   function PromiseProto_then([onFulfilled = exports.Value.undefined, onRejected = exports.Value.undefined], {
     thisValue
   }) {
@@ -42591,7 +42591,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 5. Return PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability).
     return PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability);
   }
-  PromiseProto_then.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-promise.prototype.then';
+  PromiseProto_then.section = 'https://tc39.es/ecma262/#sec-promise.prototype.then';
   function bootstrapPromisePrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['catch', PromiseProto_catch, 1], ['finally', PromiseProto_finally, 1], ['then', PromiseProto_then, 2]], realmRec.Intrinsics['%Object.prototype%'], 'Promise');
     let _temp11 = Get(proto, exports.Value('then'));
@@ -42606,7 +42606,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-promise-executor */
+  /** https://tc39.es/ecma262/#sec-promise-executor */
   function PromiseConstructor([executor = exports.Value.undefined], {
     NewTarget
   }) {
@@ -42657,8 +42657,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return promise;
   }
 
-  /** http://tc39.es/ecma262/#sec-promise.all-resolve-element-functions */
-  PromiseConstructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-promise-executor';
+  /** https://tc39.es/ecma262/#sec-promise.all-resolve-element-functions */
+  PromiseConstructor.section = 'https://tc39.es/ecma262/#sec-promise-executor';
   function PromiseAllResolveElementFunctions([x = exports.Value.undefined]) {
     const F = exports.surroundingAgent.activeFunctionObject;
     const alreadyCalled = F.AlreadyCalled;
@@ -42679,8 +42679,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-getpromiseresolve */
-  PromiseAllResolveElementFunctions.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-promise.all-resolve-element-functions';
+  /** https://tc39.es/ecma262/#sec-getpromiseresolve */
+  PromiseAllResolveElementFunctions.section = 'https://tc39.es/ecma262/#sec-promise.all-resolve-element-functions';
   function GetPromiseResolve(promiseConstructor) {
     // 1. Assert: IsConstructor(promiseConstructor) is true.
     Assert(IsConstructor(promiseConstructor) === exports.Value.true, "IsConstructor(promiseConstructor) === Value.true");
@@ -42703,8 +42703,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return promiseResolve;
   }
 
-  /** http://tc39.es/ecma262/#sec-performpromiseall */
-  GetPromiseResolve.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-getpromiseresolve';
+  /** https://tc39.es/ecma262/#sec-performpromiseall */
+  GetPromiseResolve.section = 'https://tc39.es/ecma262/#sec-getpromiseresolve';
   function PerformPromiseAll(iteratorRecord, constructor, resultCapability, promiseResolve) {
     // 1. Assert: IsConstructor(constructor) is true.
     Assert(IsConstructor(constructor) === exports.Value.true, "IsConstructor(constructor) === Value.true");
@@ -42830,8 +42830,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-promise.all */
-  PerformPromiseAll.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-performpromiseall';
+  /** https://tc39.es/ecma262/#sec-promise.all */
+  PerformPromiseAll.section = 'https://tc39.es/ecma262/#sec-performpromiseall';
   function Promise_all([iterable = exports.Value.undefined], {
     thisValue
   }) {
@@ -42903,7 +42903,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 9. Return Completion(result).
     return exports.Completion(result);
   }
-  Promise_all.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-promise.all';
+  Promise_all.section = 'https://tc39.es/ecma262/#sec-promise.all';
   function PromiseAllSettledResolveElementFunctions([x = exports.Value.undefined]) {
     const F = exports.surroundingAgent.activeFunctionObject;
     const alreadyCalled = F.AlreadyCalled;
@@ -42993,7 +42993,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-performpromiseallsettled */
+  /** https://tc39.es/ecma262/#sec-performpromiseallsettled */
   function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability, promiseResolve) {
     let _temp17 = IsConstructor(constructor) === exports.Value.true;
     Assert(!(_temp17 instanceof AbruptCompletion), "IsConstructor(constructor) === Value.true" + ' returned an abrupt completion');
@@ -43155,8 +43155,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-promise.allsettled */
-  PerformPromiseAllSettled.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-performpromiseallsettled';
+  /** https://tc39.es/ecma262/#sec-promise.allsettled */
+  PerformPromiseAllSettled.section = 'https://tc39.es/ecma262/#sec-performpromiseallsettled';
   function Promise_allSettled([iterable = exports.Value.undefined], {
     thisValue
   }) {
@@ -43229,8 +43229,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Completion(result);
   }
 
-  /** http://tc39.es/ecma262/#sec-promise.any-reject-element-functions */
-  Promise_allSettled.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-promise.allsettled';
+  /** https://tc39.es/ecma262/#sec-promise.any-reject-element-functions */
+  Promise_allSettled.section = 'https://tc39.es/ecma262/#sec-promise.allsettled';
   function PromiseAnyRejectElementFunctions([x = exports.Value.undefined]) {
     // 1. Let F be the active function object.
     const F = exports.surroundingAgent.activeFunctionObject;
@@ -43283,8 +43283,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-performpromiseany */
-  PromiseAnyRejectElementFunctions.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-promise.any-reject-element-functions';
+  /** https://tc39.es/ecma262/#sec-performpromiseany */
+  PromiseAnyRejectElementFunctions.section = 'https://tc39.es/ecma262/#sec-promise.any-reject-element-functions';
   function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promiseResolve) {
     let _temp27 = IsConstructor(constructor);
     Assert(!(_temp27 instanceof AbruptCompletion), "IsConstructor(constructor)" + ' returned an abrupt completion');
@@ -43432,8 +43432,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-promise.any */
-  PerformPromiseAny.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-performpromiseany';
+  /** https://tc39.es/ecma262/#sec-promise.any */
+  PerformPromiseAny.section = 'https://tc39.es/ecma262/#sec-performpromiseany';
   function Promise_any([iterable = exports.Value.undefined], {
     thisValue
   }) {
@@ -43505,7 +43505,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 9. Return Completion(result).
     return exports.Completion(result);
   }
-  Promise_any.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-promise.any';
+  Promise_any.section = 'https://tc39.es/ecma262/#sec-promise.any';
   function PerformPromiseRace(iteratorRecord, constructor, resultCapability, promiseResolve) {
     // 1. Assert: IsConstructor(constructor) is true.
     Assert(IsConstructor(constructor) === exports.Value.true, "IsConstructor(constructor) === Value.true");
@@ -43576,7 +43576,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-promise.race */
+  /** https://tc39.es/ecma262/#sec-promise.race */
   function Promise_race([iterable = exports.Value.undefined], {
     thisValue
   }) {
@@ -43649,8 +43649,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Completion(result);
   }
 
-  /** http://tc39.es/ecma262/#sec-promise.reject */
-  Promise_race.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-promise.race';
+  /** https://tc39.es/ecma262/#sec-promise.reject */
+  Promise_race.section = 'https://tc39.es/ecma262/#sec-promise.race';
   function Promise_reject([r = exports.Value.undefined], {
     thisValue
   }) {
@@ -43681,8 +43681,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return promiseCapability.Promise;
   }
 
-  /** http://tc39.es/ecma262/#sec-promise.resolve */
-  Promise_reject.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-promise.reject';
+  /** https://tc39.es/ecma262/#sec-promise.resolve */
+  Promise_reject.section = 'https://tc39.es/ecma262/#sec-promise.reject';
   function Promise_resolve([x = exports.Value.undefined], {
     thisValue
   }) {
@@ -43696,15 +43696,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return PromiseResolve(C, x);
   }
 
-  /** http://tc39.es/ecma262/#sec-get-promise-@@species */
-  Promise_resolve.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-promise.resolve';
+  /** https://tc39.es/ecma262/#sec-get-promise-@@species */
+  Promise_resolve.section = 'https://tc39.es/ecma262/#sec-promise.resolve';
   function Promise_symbolSpecies(args, {
     thisValue
   }) {
     // 1. Return the this value.
     return thisValue;
   }
-  Promise_symbolSpecies.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-get-promise-@@species';
+  Promise_symbolSpecies.section = 'https://tc39.es/ecma262/#sec-get-promise-@@species';
   function bootstrapPromise(realmRec) {
     const promiseConstructor = bootstrapConstructor(realmRec, PromiseConstructor, 'Promise', 1, realmRec.Intrinsics['%Promise.prototype%'], [['all', Promise_all, 1], ['allSettled', Promise_allSettled, 1], ['any', Promise_any, 1], ['race', Promise_race, 1], ['reject', Promise_reject, 1], ['resolve', Promise_resolve, 1], [wellKnownSymbols.species, [Promise_symbolSpecies]]]);
     promiseConstructor.DefineOwnProperty(exports.Value('prototype'), exports.Descriptor({
@@ -43715,7 +43715,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     realmRec.Intrinsics['%Promise%'] = promiseConstructor;
   }
 
-  /** http://tc39.es/ecma262/#sec-proxy-target-handler */
+  /** https://tc39.es/ecma262/#sec-proxy-target-handler */
   function ProxyConstructor([target = exports.Value.undefined, handler = exports.Value.undefined], {
     NewTarget
   }) {
@@ -43727,8 +43727,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return ProxyCreate(target, handler);
   }
 
-  /** http://tc39.es/ecma262/#sec-proxy-revocation-functions */
-  ProxyConstructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-proxy-target-handler';
+  /** https://tc39.es/ecma262/#sec-proxy-revocation-functions */
+  ProxyConstructor.section = 'https://tc39.es/ecma262/#sec-proxy-target-handler';
   function ProxyRevocationFunctions() {
     // 1. Let F be the active function object.
     const F = exports.surroundingAgent.activeFunctionObject;
@@ -43750,8 +43750,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-proxy.revocable */
-  ProxyRevocationFunctions.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-proxy-revocation-functions';
+  /** https://tc39.es/ecma262/#sec-proxy.revocable */
+  ProxyRevocationFunctions.section = 'https://tc39.es/ecma262/#sec-proxy-revocation-functions';
   function Proxy_revocable([target = exports.Value.undefined, handler = exports.Value.undefined]) {
     let _temp = ProxyCreate(target, handler);
     /* c8 ignore if */
@@ -43764,7 +43764,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     // 1. Let p be ? ProxyCreate(target, handler).
     const p = _temp;
-    /** http://tc39.es/ecma262/#sec-proxy-revocation-functions. */
+    /** https://tc39.es/ecma262/#sec-proxy-revocation-functions. */
     const steps = ProxyRevocationFunctions;
     // 3. Let length be the number of non-optional parameters of the function definition in Proxy Revocation Functions.
     const length = 0;
@@ -43797,14 +43797,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 9. Return result.
     return result;
   }
-  Proxy_revocable.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-proxy.revocable';
+  Proxy_revocable.section = 'https://tc39.es/ecma262/#sec-proxy.revocable';
   function bootstrapProxy(realmRec) {
     const proxyConstructor = CreateBuiltinFunction(ProxyConstructor, 2, exports.Value('Proxy'), [], realmRec, undefined, undefined, exports.Value.true);
     assignProps(realmRec, proxyConstructor, [['revocable', Proxy_revocable, 2]]);
     realmRec.Intrinsics['%Proxy%'] = proxyConstructor;
   }
 
-  /** http://tc39.es/ecma262/#sec-reflect.apply */
+  /** https://tc39.es/ecma262/#sec-reflect.apply */
   function Reflect_apply([target = exports.Value.undefined, thisArgument = exports.Value.undefined, argumentsList = exports.Value.undefined]) {
     // 1. If IsCallable(target) is false, throw a TypeError exception.
     if (IsCallable(target) === exports.Value.false) {
@@ -43827,8 +43827,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Call(target, thisArgument, args);
   }
 
-  /** http://tc39.es/ecma262/#sec-reflect.construct */
-  Reflect_apply.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-reflect.apply';
+  /** https://tc39.es/ecma262/#sec-reflect.construct */
+  Reflect_apply.section = 'https://tc39.es/ecma262/#sec-reflect.apply';
   function Reflect_construct([target = exports.Value.undefined, argumentsList = exports.Value.undefined, newTarget]) {
     // 1. If IsConstructor(target) is false, throw a TypeError exception.
     if (IsConstructor(target) === exports.Value.false) {
@@ -43856,8 +43856,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Construct(target, args, newTarget);
   }
 
-  /** http://tc39.es/ecma262/#sec-reflect.defineproperty */
-  Reflect_construct.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-reflect.construct';
+  /** https://tc39.es/ecma262/#sec-reflect.defineproperty */
+  Reflect_construct.section = 'https://tc39.es/ecma262/#sec-reflect.construct';
   function Reflect_defineProperty([target = exports.Value.undefined, propertyKey = exports.Value.undefined, attributes = exports.Value.undefined]) {
     // 1. If Type(target) is not Object, throw a TypeError exception.
     if (!(target instanceof ObjectValue)) {
@@ -43889,8 +43889,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return target.DefineOwnProperty(key, desc);
   }
 
-  /** http://tc39.es/ecma262/#sec-reflect.deleteproperty */
-  Reflect_defineProperty.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-reflect.defineproperty';
+  /** https://tc39.es/ecma262/#sec-reflect.deleteproperty */
+  Reflect_defineProperty.section = 'https://tc39.es/ecma262/#sec-reflect.defineproperty';
   function Reflect_deleteProperty([target = exports.Value.undefined, propertyKey = exports.Value.undefined]) {
     // 1. If Type(target) is not Object, throw a TypeError exception.
     if (!(target instanceof ObjectValue)) {
@@ -43911,8 +43911,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return target.Delete(key);
   }
 
-  /** http://tc39.es/ecma262/#sec-reflect.get */
-  Reflect_deleteProperty.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-reflect.deleteproperty';
+  /** https://tc39.es/ecma262/#sec-reflect.get */
+  Reflect_deleteProperty.section = 'https://tc39.es/ecma262/#sec-reflect.deleteproperty';
   function Reflect_get([target = exports.Value.undefined, propertyKey = exports.Value.undefined, receiver]) {
     // 1. If Type(target) is not Object, throw a TypeError exception.
     if (!(target instanceof ObjectValue)) {
@@ -43938,8 +43938,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return target.Get(key, receiver);
   }
 
-  /** http://tc39.es/ecma262/#sec-reflect.getownpropertydescriptor */
-  Reflect_get.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-reflect.get';
+  /** https://tc39.es/ecma262/#sec-reflect.getownpropertydescriptor */
+  Reflect_get.section = 'https://tc39.es/ecma262/#sec-reflect.get';
   function Reflect_getOwnPropertyDescriptor([target = exports.Value.undefined, propertyKey = exports.Value.undefined]) {
     // 1. If Type(target) is not Object, throw a TypeError exception.
     if (!(target instanceof ObjectValue)) {
@@ -43971,8 +43971,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return FromPropertyDescriptor(desc);
   }
 
-  /** http://tc39.es/ecma262/#sec-reflect.getprototypeof */
-  Reflect_getOwnPropertyDescriptor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-reflect.getownpropertydescriptor';
+  /** https://tc39.es/ecma262/#sec-reflect.getprototypeof */
+  Reflect_getOwnPropertyDescriptor.section = 'https://tc39.es/ecma262/#sec-reflect.getownpropertydescriptor';
   function Reflect_getPrototypeOf([target = exports.Value.undefined]) {
     // 1. If Type(target) is not Object, throw a TypeError exception.
     if (!(target instanceof ObjectValue)) {
@@ -43982,8 +43982,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return target.GetPrototypeOf();
   }
 
-  /** http://tc39.es/ecma262/#sec-reflect.has */
-  Reflect_getPrototypeOf.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-reflect.getprototypeof';
+  /** https://tc39.es/ecma262/#sec-reflect.has */
+  Reflect_getPrototypeOf.section = 'https://tc39.es/ecma262/#sec-reflect.getprototypeof';
   function Reflect_has([target = exports.Value.undefined, propertyKey = exports.Value.undefined]) {
     // 1. If Type(target) is not Object, throw a TypeError exception.
     if (!(target instanceof ObjectValue)) {
@@ -44004,8 +44004,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return target.HasProperty(key);
   }
 
-  /** http://tc39.es/ecma262/#sec-reflect.isextensible */
-  Reflect_has.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-reflect.has';
+  /** https://tc39.es/ecma262/#sec-reflect.isextensible */
+  Reflect_has.section = 'https://tc39.es/ecma262/#sec-reflect.has';
   function Reflect_isExtensible([target = exports.Value.undefined]) {
     // 1. If Type(target) is not Object, throw a TypeError exception.
     if (!(target instanceof ObjectValue)) {
@@ -44015,8 +44015,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return target.IsExtensible();
   }
 
-  /** http://tc39.es/ecma262/#sec-reflect.ownkeys */
-  Reflect_isExtensible.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-reflect.isextensible';
+  /** https://tc39.es/ecma262/#sec-reflect.ownkeys */
+  Reflect_isExtensible.section = 'https://tc39.es/ecma262/#sec-reflect.isextensible';
   function Reflect_ownKeys([target = exports.Value.undefined]) {
     // 1. If Type(target) is not Object, throw a TypeError exception.
     if (!(target instanceof ObjectValue)) {
@@ -44037,8 +44037,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return CreateArrayFromList(keys);
   }
 
-  /** http://tc39.es/ecma262/#sec-reflect.preventextensions */
-  Reflect_ownKeys.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-reflect.ownkeys';
+  /** https://tc39.es/ecma262/#sec-reflect.preventextensions */
+  Reflect_ownKeys.section = 'https://tc39.es/ecma262/#sec-reflect.ownkeys';
   function Reflect_preventExtensions([target = exports.Value.undefined]) {
     // 1. If Type(target) is not Object, throw a TypeError exception.
     if (!(target instanceof ObjectValue)) {
@@ -44048,8 +44048,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return target.PreventExtensions();
   }
 
-  /** http://tc39.es/ecma262/#sec-reflect.set */
-  Reflect_preventExtensions.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-reflect.preventextensions';
+  /** https://tc39.es/ecma262/#sec-reflect.set */
+  Reflect_preventExtensions.section = 'https://tc39.es/ecma262/#sec-reflect.preventextensions';
   function Reflect_set([target = exports.Value.undefined, propertyKey = exports.Value.undefined, V = exports.Value.undefined, receiver]) {
     // 1. If Type(target) is not Object, throw a TypeError exception.
     if (!(target instanceof ObjectValue)) {
@@ -44074,8 +44074,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return target.Set(key, V, receiver);
   }
 
-  /** http://tc39.es/ecma262/#sec-reflect.setprototypeof */
-  Reflect_set.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-reflect.set';
+  /** https://tc39.es/ecma262/#sec-reflect.setprototypeof */
+  Reflect_set.section = 'https://tc39.es/ecma262/#sec-reflect.set';
   function Reflect_setPrototypeOf([target = exports.Value.undefined, proto = exports.Value.undefined]) {
     // 1. If Type(target) is not Object, throw a TypeError exception.
     if (!(target instanceof ObjectValue)) {
@@ -44088,7 +44088,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 3. Return ? target.[[SetPrototypeOf]](proto).
     return target.SetPrototypeOf(proto);
   }
-  Reflect_setPrototypeOf.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-reflect.setprototypeof';
+  Reflect_setPrototypeOf.section = 'https://tc39.es/ecma262/#sec-reflect.setprototypeof';
   function bootstrapReflect(realmRec) {
     const reflect = bootstrapPrototype(realmRec, [['apply', Reflect_apply, 3], ['construct', Reflect_construct, 2], ['defineProperty', Reflect_defineProperty, 3], ['deleteProperty', Reflect_deleteProperty, 2], ['get', Reflect_get, 2], ['getOwnPropertyDescriptor', Reflect_getOwnPropertyDescriptor, 2], ['getPrototypeOf', Reflect_getPrototypeOf, 1], ['has', Reflect_has, 2], ['isExtensible', Reflect_isExtensible, 1], ['ownKeys', Reflect_ownKeys, 1], ['preventExtensions', Reflect_preventExtensions, 1], ['set', Reflect_set, 3], ['setPrototypeOf', Reflect_setPrototypeOf, 2]], realmRec.Intrinsics['%Object.prototype%'], 'Reflect');
     realmRec.Intrinsics['%Reflect%'] = reflect;
@@ -44106,7 +44106,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.surroundingAgent.Throw('TypeError', 'NotATypeObject', 'String', value);
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.charat */
+  /** https://tc39.es/ecma262/#sec-string.prototype.charat */
   function StringProto_charAt([pos = exports.Value.undefined], {
     thisValue
   }) {
@@ -44147,8 +44147,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(S.stringValue()[position]);
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.charcodeat */
-  StringProto_charAt.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.charat';
+  /** https://tc39.es/ecma262/#sec-string.prototype.charcodeat */
+  StringProto_charAt.section = 'https://tc39.es/ecma262/#sec-string.prototype.charat';
   function StringProto_charCodeAt([pos = exports.Value.undefined], {
     thisValue
   }) {
@@ -44189,8 +44189,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(S.stringValue().charCodeAt(position));
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.codepointat */
-  StringProto_charCodeAt.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.charcodeat';
+  /** https://tc39.es/ecma262/#sec-string.prototype.codepointat */
+  StringProto_charCodeAt.section = 'https://tc39.es/ecma262/#sec-string.prototype.charcodeat';
   function StringProto_codePointAt([pos = exports.Value.undefined], {
     thisValue
   }) {
@@ -44238,8 +44238,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(cp.CodePoint);
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.concat */
-  StringProto_codePointAt.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.codepointat';
+  /** https://tc39.es/ecma262/#sec-string.prototype.concat */
+  StringProto_codePointAt.section = 'https://tc39.es/ecma262/#sec-string.prototype.codepointat';
   function StringProto_concat(args, {
     thisValue
   }) {
@@ -44281,8 +44281,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(R);
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.endswith */
-  StringProto_concat.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.concat';
+  /** https://tc39.es/ecma262/#sec-string.prototype.endswith */
+  StringProto_concat.section = 'https://tc39.es/ecma262/#sec-string.prototype.concat';
   function StringProto_endsWith([searchString = exports.Value.undefined, endPosition = exports.Value.undefined], {
     thisValue
   }) {
@@ -44359,8 +44359,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.true;
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.includes */
-  StringProto_endsWith.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.endswith';
+  /** https://tc39.es/ecma262/#sec-string.prototype.includes */
+  StringProto_endsWith.section = 'https://tc39.es/ecma262/#sec-string.prototype.endswith';
   function StringProto_includes([searchString = exports.Value.undefined, position = exports.Value.undefined], {
     thisValue
   }) {
@@ -44438,8 +44438,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.indexof */
-  StringProto_includes.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.includes';
+  /** https://tc39.es/ecma262/#sec-string.prototype.indexof */
+  StringProto_includes.section = 'https://tc39.es/ecma262/#sec-string.prototype.includes';
   function StringProto_indexOf([searchString = exports.Value.undefined, position = exports.Value.undefined], {
     thisValue
   }) {
@@ -44504,7 +44504,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   /** https://tc39.es/proposal-is-usv-string/#sec-string.prototype.iswellformed */
-  StringProto_indexOf.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.indexof';
+  StringProto_indexOf.section = 'https://tc39.es/ecma262/#sec-string.prototype.indexof';
   function StringProto_isWellFormed(args, {
     thisValue
   }) {
@@ -44534,7 +44534,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return IsStringWellFormedUnicode(S) ? exports.Value.true : exports.Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.lastindexof */
+  /** https://tc39.es/ecma262/#sec-string.prototype.lastindexof */
   StringProto_isWellFormed.section = 'https://tc39.es/proposal-is-usv-string/#sec-string.prototype.iswellformed';
   function StringProto_lastIndexOf([searchString = exports.Value.undefined, position = exports.Value.undefined], {
     thisValue
@@ -44614,8 +44614,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(-1);
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.localecompare */
-  StringProto_lastIndexOf.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.lastindexof';
+  /** https://tc39.es/ecma262/#sec-string.prototype.localecompare */
+  StringProto_lastIndexOf.section = 'https://tc39.es/ecma262/#sec-string.prototype.lastindexof';
   function StringProto_localeCompare([that = exports.Value.undefined], {
     thisValue
   }) {
@@ -44658,8 +44658,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.match */
-  StringProto_localeCompare.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.localecompare';
+  /** https://tc39.es/ecma262/#sec-string.prototype.match */
+  StringProto_localeCompare.section = 'https://tc39.es/ecma262/#sec-string.prototype.localecompare';
   function StringProto_match([regexp = exports.Value.undefined], {
     thisValue
   }) {
@@ -44711,8 +44711,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Invoke(rx, wellKnownSymbols.match, [S]);
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.matchall */
-  StringProto_match.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.match';
+  /** https://tc39.es/ecma262/#sec-string.prototype.matchall */
+  StringProto_match.section = 'https://tc39.es/ecma262/#sec-string.prototype.match';
   function StringProto_matchAll([regexp = exports.Value.undefined], {
     thisValue
   }) {
@@ -44820,8 +44820,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Invoke(rx, wellKnownSymbols.matchAll, [S]);
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.normalize */
-  StringProto_matchAll.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.matchall';
+  /** https://tc39.es/ecma262/#sec-string.prototype.normalize */
+  StringProto_matchAll.section = 'https://tc39.es/ecma262/#sec-string.prototype.matchall';
   function StringProto_normalize([form = exports.Value.undefined], {
     thisValue
   }) {
@@ -44867,8 +44867,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(ns);
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.padend */
-  StringProto_normalize.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.normalize';
+  /** https://tc39.es/ecma262/#sec-string.prototype.padend */
+  StringProto_normalize.section = 'https://tc39.es/ecma262/#sec-string.prototype.normalize';
   function StringProto_padEnd([maxLength = exports.Value.undefined, fillString = exports.Value.undefined], {
     thisValue
   }) {
@@ -44885,8 +44885,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return StringPad(O, maxLength, fillString, 'end');
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.padstart */
-  StringProto_padEnd.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.padend';
+  /** https://tc39.es/ecma262/#sec-string.prototype.padstart */
+  StringProto_padEnd.section = 'https://tc39.es/ecma262/#sec-string.prototype.padend';
   function StringProto_padStart([maxLength = exports.Value.undefined, fillString = exports.Value.undefined], {
     thisValue
   }) {
@@ -44903,8 +44903,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return StringPad(O, maxLength, fillString, 'start');
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.repeat */
-  StringProto_padStart.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.padstart';
+  /** https://tc39.es/ecma262/#sec-string.prototype.repeat */
+  StringProto_padStart.section = 'https://tc39.es/ecma262/#sec-string.prototype.padstart';
   function StringProto_repeat([count = exports.Value.undefined], {
     thisValue
   }) {
@@ -44954,8 +44954,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(T);
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.replace */
-  StringProto_repeat.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.repeat';
+  /** https://tc39.es/ecma262/#sec-string.prototype.replace */
+  StringProto_repeat.section = 'https://tc39.es/ecma262/#sec-string.prototype.repeat';
   function StringProto_replace([searchValue = exports.Value.undefined, replaceValue = exports.Value.undefined], {
     thisValue
   }) {
@@ -45059,8 +45059,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(newString);
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.replaceall */
-  StringProto_replace.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.replace';
+  /** https://tc39.es/ecma262/#sec-string.prototype.replaceall */
+  StringProto_replace.section = 'https://tc39.es/ecma262/#sec-string.prototype.replace';
   function StringProto_replaceAll([searchValue = exports.Value.undefined, replaceValue = exports.Value.undefined], {
     thisValue
   }) {
@@ -45261,8 +45261,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(result);
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.slice */
-  StringProto_replaceAll.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.replaceall';
+  /** https://tc39.es/ecma262/#sec-string.prototype.slice */
+  StringProto_replaceAll.section = 'https://tc39.es/ecma262/#sec-string.prototype.replaceall';
   function StringProto_search([regexp = exports.Value.undefined], {
     thisValue
   }) {
@@ -45314,8 +45314,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Invoke(rx, wellKnownSymbols.search, [string]);
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.slice */
-  StringProto_search.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.slice';
+  /** https://tc39.es/ecma262/#sec-string.prototype.slice */
+  StringProto_search.section = 'https://tc39.es/ecma262/#sec-string.prototype.slice';
   function StringProto_slice([start = exports.Value.undefined, end = exports.Value.undefined], {
     thisValue
   }) {
@@ -45381,8 +45381,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(S.slice(from, from + span));
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.split */
-  StringProto_slice.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.slice';
+  /** https://tc39.es/ecma262/#sec-string.prototype.split */
+  StringProto_slice.section = 'https://tc39.es/ecma262/#sec-string.prototype.slice';
   function StringProto_split([separator = exports.Value.undefined, limit = exports.Value.undefined], {
     thisValue
   }) {
@@ -45526,8 +45526,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return A;
   }
 
-  /** http://tc39.es/ecma262/#sec-splitmatch */
-  StringProto_split.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.split';
+  /** https://tc39.es/ecma262/#sec-splitmatch */
+  StringProto_split.section = 'https://tc39.es/ecma262/#sec-string.prototype.split';
   function SplitMatch(S, q, R) {
     Assert(R instanceof StringValue, "R instanceof JSStringValue");
     const r = R.stringValue().length;
@@ -45543,8 +45543,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return q + r;
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.startswith */
-  SplitMatch.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-splitmatch';
+  /** https://tc39.es/ecma262/#sec-string.prototype.startswith */
+  SplitMatch.section = 'https://tc39.es/ecma262/#sec-splitmatch';
   function StringProto_startsWith([searchString = exports.Value.undefined, position = exports.Value.undefined], {
     thisValue
   }) {
@@ -45616,8 +45616,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.true;
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.substring */
-  StringProto_startsWith.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.startswith';
+  /** https://tc39.es/ecma262/#sec-string.prototype.substring */
+  StringProto_startsWith.section = 'https://tc39.es/ecma262/#sec-string.prototype.startswith';
   function StringProto_substring([start = exports.Value.undefined, end = exports.Value.undefined], {
     thisValue
   }) {
@@ -45674,8 +45674,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(S.slice(from, to));
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.tolocalelowercase */
-  StringProto_substring.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.substring';
+  /** https://tc39.es/ecma262/#sec-string.prototype.tolocalelowercase */
+  StringProto_substring.section = 'https://tc39.es/ecma262/#sec-string.prototype.substring';
   function StringProto_toLocaleLowerCase(args, {
     thisValue
   }) {
@@ -45703,8 +45703,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(L);
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.tolocaleuppercase */
-  StringProto_toLocaleLowerCase.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.tolocalelowercase';
+  /** https://tc39.es/ecma262/#sec-string.prototype.tolocaleuppercase */
+  StringProto_toLocaleLowerCase.section = 'https://tc39.es/ecma262/#sec-string.prototype.tolocalelowercase';
   function StringProto_toLocaleUpperCase(args, {
     thisValue
   }) {
@@ -45732,8 +45732,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(L);
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.tolowercase */
-  StringProto_toLocaleUpperCase.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.tolocaleuppercase';
+  /** https://tc39.es/ecma262/#sec-string.prototype.tolowercase */
+  StringProto_toLocaleUpperCase.section = 'https://tc39.es/ecma262/#sec-string.prototype.tolocaleuppercase';
   function StringProto_toLowerCase(args, {
     thisValue
   }) {
@@ -45761,16 +45761,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(L);
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.tostring */
-  StringProto_toLowerCase.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.tolowercase';
+  /** https://tc39.es/ecma262/#sec-string.prototype.tostring */
+  StringProto_toLowerCase.section = 'https://tc39.es/ecma262/#sec-string.prototype.tolowercase';
   function StringProto_toString(args, {
     thisValue
   }) {
     return thisStringValue(thisValue);
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.touppercase */
-  StringProto_toString.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.tostring';
+  /** https://tc39.es/ecma262/#sec-string.prototype.touppercase */
+  StringProto_toString.section = 'https://tc39.es/ecma262/#sec-string.prototype.tostring';
   function StringProto_toUpperCase(args, {
     thisValue
   }) {
@@ -45799,7 +45799,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   /** https://tc39.es/proposal-is-usv-string/#sec-string.prototype.towellformed */
-  StringProto_toUpperCase.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.touppercase';
+  StringProto_toUpperCase.section = 'https://tc39.es/ecma262/#sec-string.prototype.touppercase';
   function StringProto_toWellFormed(args, {
     thisValue
   }) {
@@ -45851,7 +45851,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(result);
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.trim */
+  /** https://tc39.es/ecma262/#sec-string.prototype.trim */
   StringProto_toWellFormed.section = 'https://tc39.es/proposal-is-usv-string/#sec-string.prototype.towellformed';
   function StringProto_trim(args, {
     thisValue
@@ -45860,8 +45860,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return TrimString(S, 'start+end');
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.trimend */
-  StringProto_trim.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.trim';
+  /** https://tc39.es/ecma262/#sec-string.prototype.trimend */
+  StringProto_trim.section = 'https://tc39.es/ecma262/#sec-string.prototype.trim';
   function StringProto_trimEnd(args, {
     thisValue
   }) {
@@ -45869,8 +45869,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return TrimString(S, 'end');
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.trimstart */
-  StringProto_trimEnd.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.trimend';
+  /** https://tc39.es/ecma262/#sec-string.prototype.trimstart */
+  StringProto_trimEnd.section = 'https://tc39.es/ecma262/#sec-string.prototype.trimend';
   function StringProto_trimStart(args, {
     thisValue
   }) {
@@ -45878,16 +45878,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return TrimString(S, 'start');
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.valueof */
-  StringProto_trimStart.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.trimstart';
+  /** https://tc39.es/ecma262/#sec-string.prototype.valueof */
+  StringProto_trimStart.section = 'https://tc39.es/ecma262/#sec-string.prototype.trimstart';
   function StringProto_valueOf(args, {
     thisValue
   }) {
     return thisStringValue(thisValue);
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype-@@iterator */
-  StringProto_valueOf.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.valueof';
+  /** https://tc39.es/ecma262/#sec-string.prototype-@@iterator */
+  StringProto_valueOf.section = 'https://tc39.es/ecma262/#sec-string.prototype.valueof';
   function StringProto_iterator(args, {
     thisValue
   }) {
@@ -45959,8 +45959,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return _temp123;
   }
 
-  /** http://tc39.es/ecma262/#sec-string.prototype.at */
-  StringProto_iterator.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype-@@iterator';
+  /** https://tc39.es/ecma262/#sec-string.prototype.at */
+  StringProto_iterator.section = 'https://tc39.es/ecma262/#sec-string.prototype-@@iterator';
   function StringProto_at([index = exports.Value.undefined], {
     thisValue
   }) {
@@ -46016,14 +46016,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 8. Return the String value consisting of only the code unit at position k in S.
     return exports.Value(S.stringValue()[k]);
   }
-  StringProto_at.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.prototype.at';
+  StringProto_at.section = 'https://tc39.es/ecma262/#sec-string.prototype.at';
   function bootstrapStringPrototype(realmRec) {
     const proto = StringCreate(exports.Value(''), realmRec.Intrinsics['%Object.prototype%']);
     assignProps(realmRec, proto, [['charAt', StringProto_charAt, 1], ['charCodeAt', StringProto_charCodeAt, 1], ['codePointAt', StringProto_codePointAt, 1], ['concat', StringProto_concat, 1], ['endsWith', StringProto_endsWith, 1], ['includes', StringProto_includes, 1], ['indexOf', StringProto_indexOf, 1], exports.surroundingAgent.feature('is-usv-string') ? ['isWellFormed', StringProto_isWellFormed, 0] : undefined, ['at', StringProto_at, 1], ['lastIndexOf', StringProto_lastIndexOf, 1], ['localeCompare', StringProto_localeCompare, 1], ['match', StringProto_match, 1], ['matchAll', StringProto_matchAll, 1], ['normalize', StringProto_normalize, 0], ['padEnd', StringProto_padEnd, 1], ['padStart', StringProto_padStart, 1], ['repeat', StringProto_repeat, 1], ['replace', StringProto_replace, 2], ['replaceAll', StringProto_replaceAll, 2], ['search', StringProto_search, 1], ['slice', StringProto_slice, 2], ['split', StringProto_split, 2], ['startsWith', StringProto_startsWith, 1], ['substring', StringProto_substring, 2], ['toLocaleLowerCase', StringProto_toLocaleLowerCase, 0], ['toLocaleUpperCase', StringProto_toLocaleUpperCase, 0], ['toLowerCase', StringProto_toLowerCase, 0], ['toString', StringProto_toString, 0], ['toUpperCase', StringProto_toUpperCase, 0], exports.surroundingAgent.feature('is-usv-string') ? ['toWellFormed', StringProto_toWellFormed, 0] : undefined, ['trim', StringProto_trim, 0], ['trimEnd', StringProto_trimEnd, 0], ['trimStart', StringProto_trimStart, 0], ['valueOf', StringProto_valueOf, 0], [wellKnownSymbols.iterator, StringProto_iterator, 0]]);
     realmRec.Intrinsics['%String.prototype%'] = proto;
   }
 
-  /** http://tc39.es/ecma262/#sec-string-constructor-string-value */
+  /** https://tc39.es/ecma262/#sec-string-constructor-string-value */
   function StringConstructor([value], {
     NewTarget
   }) {
@@ -46072,8 +46072,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return _temp3;
   }
 
-  /** http://tc39.es/ecma262/#sec-string.fromcharcode */
-  StringConstructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string-constructor-string-value';
+  /** https://tc39.es/ecma262/#sec-string.fromcharcode */
+  StringConstructor.section = 'https://tc39.es/ecma262/#sec-string-constructor-string-value';
   function String_fromCharCode(codeUnits) {
     const length = codeUnits.length;
     const elements = [];
@@ -46097,8 +46097,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(result);
   }
 
-  /** http://tc39.es/ecma262/#sec-string.fromcodepoint */
-  String_fromCharCode.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.fromcharcode';
+  /** https://tc39.es/ecma262/#sec-string.fromcodepoint */
+  String_fromCharCode.section = 'https://tc39.es/ecma262/#sec-string.fromcharcode';
   function String_fromCodePoint(codePoints) {
     // 1. Let result be the empty String.
     let result = '';
@@ -46138,8 +46138,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(result);
   }
 
-  /** http://tc39.es/ecma262/#sec-string.raw */
-  String_fromCodePoint.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.fromcodepoint';
+  /** https://tc39.es/ecma262/#sec-string.raw */
+  String_fromCodePoint.section = 'https://tc39.es/ecma262/#sec-string.fromcodepoint';
   function String_raw([template = exports.Value.undefined, ...substitutions]) {
     const numberOfSubstitutions = substitutions.length;
     let _temp8 = ToObject(template);
@@ -46238,13 +46238,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       nextIndex += 1;
     }
   }
-  String_raw.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-string.raw';
+  String_raw.section = 'https://tc39.es/ecma262/#sec-string.raw';
   function bootstrapString(realmRec) {
     const stringConstructor = bootstrapConstructor(realmRec, StringConstructor, 'String', 1, realmRec.Intrinsics['%String.prototype%'], [['fromCharCode', String_fromCharCode, 1], ['fromCodePoint', String_fromCodePoint, 1], ['raw', String_raw, 1]]);
     realmRec.Intrinsics['%String%'] = stringConstructor;
   }
 
-  /** http://tc39.es/ecma262/#sec-error.prototype.tostring */
+  /** https://tc39.es/ecma262/#sec-error.prototype.tostring */
   function ErrorProto_toString(args, {
     thisValue
   }) {
@@ -46317,13 +46317,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 9. Return the string-concatenation of name, the code unit 0x003A (COLON), the code unit 0x0020 (SPACE), and msg.
     return exports.Value(`${name.stringValue()}: ${msg.stringValue()}`);
   }
-  ErrorProto_toString.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-error.prototype.tostring';
+  ErrorProto_toString.section = 'https://tc39.es/ecma262/#sec-error.prototype.tostring';
   function bootstrapErrorPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['toString', ErrorProto_toString, 0], ['message', exports.Value('')], ['name', exports.Value('Error')]], realmRec.Intrinsics['%Object.prototype%']);
     realmRec.Intrinsics['%Error.prototype%'] = proto;
   }
 
-  /** http://tc39.es/ecma262/#sec-error-constructor */
+  /** https://tc39.es/ecma262/#sec-error-constructor */
   function ErrorConstructor([message = exports.Value.undefined, options = exports.Value.undefined], {
     NewTarget
   }) {
@@ -46394,7 +46394,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 5. Return O.
     return O;
   }
-  ErrorConstructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-error-constructor';
+  ErrorConstructor.section = 'https://tc39.es/ecma262/#sec-error-constructor';
   function bootstrapError(realmRec) {
     const error = bootstrapConstructor(realmRec, ErrorConstructor, 'Error', 1, realmRec.Intrinsics['%Error.prototype%'], []);
     realmRec.Intrinsics['%Error%'] = error;
@@ -46404,7 +46404,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     for (const name of ['EvalError', 'RangeError', 'ReferenceError', 'SyntaxError', 'TypeError', 'URIError']) {
       const proto = bootstrapPrototype(realmRec, [['name', exports.Value(name)], ['message', exports.Value('')]], realmRec.Intrinsics['%Error.prototype%']);
 
-      /** http://tc39.es/ecma262/#sec-nativeerror */
+      /** https://tc39.es/ecma262/#sec-nativeerror */
       const Constructor = ([message = exports.Value.undefined, options = exports.Value.undefined], {
         NewTarget
       }) => {
@@ -46474,7 +46474,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         // 5. Return O.
         return O;
       };
-      Constructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-nativeerror';
+      Constructor.section = 'https://tc39.es/ecma262/#sec-nativeerror';
       Object.defineProperty(Constructor, 'name', {
         value: `${name}Constructor`,
         configurable: true
@@ -46488,14 +46488,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-%iteratorprototype%-@@iterator */
+  /** https://tc39.es/ecma262/#sec-%iteratorprototype%-@@iterator */
   function IteratorPrototype_iterator(args, {
     thisValue
   }) {
     // 1. Return this value.
     return thisValue;
   }
-  IteratorPrototype_iterator.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-%iteratorprototype%-@@iterator';
+  IteratorPrototype_iterator.section = 'https://tc39.es/ecma262/#sec-%iteratorprototype%-@@iterator';
   function bootstrapIteratorPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [[wellKnownSymbols.iterator, IteratorPrototype_iterator, 0]], realmRec.Intrinsics['%Object.prototype%']);
     realmRec.Intrinsics['%IteratorPrototype%'] = proto;
@@ -46503,14 +46503,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-asynciteratorprototype-asynciterator */
+  /** https://tc39.es/ecma262/#sec-asynciteratorprototype-asynciterator */
   function AsyncIteratorPrototype_asyncIterator(args, {
     thisValue
   }) {
     // 1. Return the this value.
     return thisValue;
   }
-  AsyncIteratorPrototype_asyncIterator.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-asynciteratorprototype-asynciterator';
+  AsyncIteratorPrototype_asyncIterator.section = 'https://tc39.es/ecma262/#sec-asynciteratorprototype-asynciterator';
   function bootstrapAsyncIteratorPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [[wellKnownSymbols.asyncIterator, AsyncIteratorPrototype_asyncIterator, 0]], realmRec.Intrinsics['%Object.prototype%']);
     realmRec.Intrinsics['%AsyncIteratorPrototype%'] = proto;
@@ -46519,14 +46519,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   // @ts-nocheck
   const kArrayIteratorPrototype = exports.Value('%ArrayIteratorPrototype%');
 
-  /** http://tc39.es/ecma262/#sec-%arrayiteratorprototype%.next */
+  /** https://tc39.es/ecma262/#sec-%arrayiteratorprototype%.next */
   function ArrayIteratorPrototype_next(args, {
     thisValue
   }) {
     // 1. Return ? GeneratorResume(this value, empty, "%ArrayIteratorPrototype%").
     return GeneratorResume(thisValue, undefined, kArrayIteratorPrototype);
   }
-  ArrayIteratorPrototype_next.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-%arrayiteratorprototype%.next';
+  ArrayIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%arrayiteratorprototype%.next';
   function bootstrapArrayIteratorPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['next', ArrayIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'Array Iterator');
     realmRec.Intrinsics['%ArrayIteratorPrototype%'] = proto;
@@ -46534,7 +46534,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   const kMapIteratorPrototype = exports.Value('%MapIteratorPrototype%');
 
-  /** http://tc39.es/ecma262/#sec-createmapiterator */
+  /** https://tc39.es/ecma262/#sec-createmapiterator */
   function CreateMapIterator(map, kind) {
     Assert(kind === 'key+value' || kind === 'key' || kind === 'value', "kind === 'key+value' || kind === 'key' || kind === 'value'");
     // 1. Perform ? RequireInternalSlot(map, [[MapData]]).
@@ -46610,14 +46610,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return _temp4;
   }
 
-  /** http://tc39.es/ecma262/#sec-%mapiteratorprototype%.next */
+  /** https://tc39.es/ecma262/#sec-%mapiteratorprototype%.next */
   function MapIteratorPrototype_next(args, {
     thisValue
   }) {
     // 1. Return ? GeneratorResume(this value, empty, "%MapIteratorPrototype%")
     return GeneratorResume(thisValue, undefined, kMapIteratorPrototype);
   }
-  MapIteratorPrototype_next.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-%mapiteratorprototype%.next';
+  MapIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%mapiteratorprototype%.next';
   function bootstrapMapIteratorPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['next', MapIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'Map Iterator');
     realmRec.Intrinsics['%MapIteratorPrototype%'] = proto;
@@ -46625,7 +46625,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   const kSetIteratorPrototype = exports.Value('%SetIteratorPrototype%');
 
-  /** http://tc39.es/ecma262/#sec-createsetiterator */
+  /** https://tc39.es/ecma262/#sec-createsetiterator */
   function CreateSetIterator(set, kind) {
     // 1. Assert: kind is key+value or value.
     Assert(kind === 'key+value' || kind === 'value', "kind === 'key+value' || kind === 'value'");
@@ -46704,14 +46704,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return _temp5;
   }
 
-  /** http://tc39.es/ecma262/#sec-%setiteratorprototype%.next */
+  /** https://tc39.es/ecma262/#sec-%setiteratorprototype%.next */
   function SetIteratorPrototype_next(args, {
     thisValue
   }) {
     // 1. Return ? GeneratorResume(this value, empty, "%SetIteratorPrototype%").
     return GeneratorResume(thisValue, undefined, kSetIteratorPrototype);
   }
-  SetIteratorPrototype_next.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-%setiteratorprototype%.next';
+  SetIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%setiteratorprototype%.next';
   function bootstrapSetIteratorPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['next', SetIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'Set Iterator');
     realmRec.Intrinsics['%SetIteratorPrototype%'] = proto;
@@ -46720,20 +46720,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   // @ts-nocheck
   const kStringIteratorPrototype = exports.Value('%StringIteratorPrototype%');
 
-  /** http://tc39.es/ecma262/#sec-%stringiteratorprototype%.next */
+  /** https://tc39.es/ecma262/#sec-%stringiteratorprototype%.next */
   function StringIteratorPrototype_next(args, {
     thisValue
   }) {
     // 1. Return ? GeneratorResume(this value, empty, "%StringIteratorPrototype%").
     return GeneratorResume(thisValue, undefined, kStringIteratorPrototype);
   }
-  StringIteratorPrototype_next.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-%stringiteratorprototype%.next';
+  StringIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%stringiteratorprototype%.next';
   function bootstrapStringIteratorPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['next', StringIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'String Iterator');
     realmRec.Intrinsics['%StringIteratorPrototype%'] = proto;
   }
 
-  /** http://tc39.es/ecma262/#sec-map.prototype.clear */
+  /** https://tc39.es/ecma262/#sec-map.prototype.clear */
   function MapProto_clear(args, {
     thisValue
   }) {
@@ -46762,8 +46762,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-map.prototype.delete */
-  MapProto_clear.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-map.prototype.clear';
+  /** https://tc39.es/ecma262/#sec-map.prototype.delete */
+  MapProto_clear.section = 'https://tc39.es/ecma262/#sec-map.prototype.clear';
   function MapProto_delete([key = exports.Value.undefined], {
     thisValue
   }) {
@@ -46796,8 +46796,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-map.prototype.entries */
-  MapProto_delete.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-map.prototype.delete';
+  /** https://tc39.es/ecma262/#sec-map.prototype.entries */
+  MapProto_delete.section = 'https://tc39.es/ecma262/#sec-map.prototype.delete';
   function MapProto_entries(args, {
     thisValue
   }) {
@@ -46807,8 +46807,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return CreateMapIterator(M, 'key+value');
   }
 
-  /** http://tc39.es/ecma262/#sec-map.prototype.foreach */
-  MapProto_entries.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-map.prototype.entries';
+  /** https://tc39.es/ecma262/#sec-map.prototype.foreach */
+  MapProto_entries.section = 'https://tc39.es/ecma262/#sec-map.prototype.entries';
   function MapProto_forEach([callbackfn = exports.Value.undefined, thisArg = exports.Value.undefined], {
     thisValue
   }) {
@@ -46849,8 +46849,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-map.prototype.get */
-  MapProto_forEach.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-map.prototype.foreach';
+  /** https://tc39.es/ecma262/#sec-map.prototype.get */
+  MapProto_forEach.section = 'https://tc39.es/ecma262/#sec-map.prototype.foreach';
   function MapProto_get([key = exports.Value.undefined], {
     thisValue
   }) {
@@ -46880,8 +46880,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-map.prototype.has */
-  MapProto_get.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-map.prototype.get';
+  /** https://tc39.es/ecma262/#sec-map.prototype.has */
+  MapProto_get.section = 'https://tc39.es/ecma262/#sec-map.prototype.get';
   function MapProto_has([key = exports.Value.undefined], {
     thisValue
   }) {
@@ -46910,8 +46910,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-map.prototype.keys */
-  MapProto_has.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-map.prototype.has';
+  /** https://tc39.es/ecma262/#sec-map.prototype.keys */
+  MapProto_has.section = 'https://tc39.es/ecma262/#sec-map.prototype.has';
   function MapProto_keys(args, {
     thisValue
   }) {
@@ -46921,8 +46921,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return CreateMapIterator(M, 'key');
   }
 
-  /** http://tc39.es/ecma262/#sec-map.prototype.set */
-  MapProto_keys.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-map.prototype.keys';
+  /** https://tc39.es/ecma262/#sec-map.prototype.set */
+  MapProto_keys.section = 'https://tc39.es/ecma262/#sec-map.prototype.keys';
   function MapProto_set([key = exports.Value.undefined, value = exports.Value.undefined], {
     thisValue
   }) {
@@ -46965,8 +46965,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return M;
   }
 
-  /** http://tc39.es/ecma262/#sec-get-map.prototype.size */
-  MapProto_set.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-map.prototype.set';
+  /** https://tc39.es/ecma262/#sec-get-map.prototype.size */
+  MapProto_set.section = 'https://tc39.es/ecma262/#sec-map.prototype.set';
   function MapProto_sizeGetter(args, {
     thisValue
   }) {
@@ -46997,8 +46997,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(count);
   }
 
-  /** http://tc39.es/ecma262/#sec-map.prototype.values */
-  MapProto_sizeGetter.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-get-map.prototype.size';
+  /** https://tc39.es/ecma262/#sec-map.prototype.values */
+  MapProto_sizeGetter.section = 'https://tc39.es/ecma262/#sec-get-map.prototype.size';
   function MapProto_values(args, {
     thisValue
   }) {
@@ -47007,7 +47007,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 2. Return ? CreateMapIterator(M, value).
     return CreateMapIterator(M, 'value');
   }
-  MapProto_values.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-map.prototype.values';
+  MapProto_values.section = 'https://tc39.es/ecma262/#sec-map.prototype.values';
   function bootstrapMapPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['clear', MapProto_clear, 0], ['delete', MapProto_delete, 1], ['entries', MapProto_entries, 0], ['forEach', MapProto_forEach, 1], ['get', MapProto_get, 1], ['has', MapProto_has, 1], ['keys', MapProto_keys, 0], ['set', MapProto_set, 2], ['size', [MapProto_sizeGetter]], ['values', MapProto_values, 0]], realmRec.Intrinsics['%Object.prototype%'], 'Map');
     let _temp9 = proto.GetOwnProperty(exports.Value('entries'));
@@ -47026,7 +47026,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     realmRec.Intrinsics['%Map.prototype%'] = proto;
   }
 
-  /** http://tc39.es/ecma262/#sec-set.prototype.add */
+  /** https://tc39.es/ecma262/#sec-set.prototype.add */
   function SetProto_add([value = exports.Value.undefined], {
     thisValue
   }) {
@@ -47062,8 +47062,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return S;
   }
 
-  /** http://tc39.es/ecma262/#sec-set.prototype.clear */
-  SetProto_add.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-set.prototype.add';
+  /** https://tc39.es/ecma262/#sec-set.prototype.clear */
+  SetProto_add.section = 'https://tc39.es/ecma262/#sec-set.prototype.add';
   function SetProto_clear(args, {
     thisValue
   }) {
@@ -47090,8 +47090,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-set.prototype.delete */
-  SetProto_clear.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-set.prototype.clear';
+  /** https://tc39.es/ecma262/#sec-set.prototype.delete */
+  SetProto_clear.section = 'https://tc39.es/ecma262/#sec-set.prototype.clear';
   function SetProto_delete([value = exports.Value.undefined], {
     thisValue
   }) {
@@ -47124,8 +47124,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-set.prototype.entries */
-  SetProto_delete.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-set.prototype.delete';
+  /** https://tc39.es/ecma262/#sec-set.prototype.entries */
+  SetProto_delete.section = 'https://tc39.es/ecma262/#sec-set.prototype.delete';
   function SetProto_entries(args, {
     thisValue
   }) {
@@ -47135,8 +47135,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return CreateSetIterator(S, 'key+value');
   }
 
-  /** http://tc39.es/ecma262/#sec-set.prototype.foreach */
-  SetProto_entries.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-set.prototype.entries';
+  /** https://tc39.es/ecma262/#sec-set.prototype.foreach */
+  SetProto_entries.section = 'https://tc39.es/ecma262/#sec-set.prototype.entries';
   function SetProto_forEach([callbackfn = exports.Value.undefined, thisArg = exports.Value.undefined], {
     thisValue
   }) {
@@ -47177,8 +47177,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-set.prototype.has */
-  SetProto_forEach.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-set.prototype.foreach';
+  /** https://tc39.es/ecma262/#sec-set.prototype.has */
+  SetProto_forEach.section = 'https://tc39.es/ecma262/#sec-set.prototype.foreach';
   function SetProto_has([value = exports.Value.undefined], {
     thisValue
   }) {
@@ -47207,8 +47207,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-get-set.prototype.size */
-  SetProto_has.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-set.prototype.has';
+  /** https://tc39.es/ecma262/#sec-get-set.prototype.size */
+  SetProto_has.section = 'https://tc39.es/ecma262/#sec-set.prototype.has';
   function SetProto_sizeGetter(args, {
     thisValue
   }) {
@@ -47239,8 +47239,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(count);
   }
 
-  /** http://tc39.es/ecma262/#sec-set.prototype.values */
-  SetProto_sizeGetter.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-get-set.prototype.size';
+  /** https://tc39.es/ecma262/#sec-set.prototype.values */
+  SetProto_sizeGetter.section = 'https://tc39.es/ecma262/#sec-get-set.prototype.size';
   function SetProto_values(args, {
     thisValue
   }) {
@@ -47249,7 +47249,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 2. Return ? CreateSetIterator(S, value).
     return CreateSetIterator(S, 'value');
   }
-  SetProto_values.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-set.prototype.values';
+  SetProto_values.section = 'https://tc39.es/ecma262/#sec-set.prototype.values';
   function bootstrapSetPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['add', SetProto_add, 1], ['clear', SetProto_clear, 0], ['delete', SetProto_delete, 1], ['entries', SetProto_entries, 0], ['forEach', SetProto_forEach, 1], ['has', SetProto_has, 1], ['size', [SetProto_sizeGetter]], ['values', SetProto_values, 0]], realmRec.Intrinsics['%Object.prototype%'], 'Set');
     let _temp8 = proto.GetOwnProperty(exports.Value('values'));
@@ -47274,7 +47274,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     realmRec.Intrinsics['%Set.prototype%'] = proto;
   }
 
-  /** http://tc39.es/ecma262/#sec-set-iterable */
+  /** https://tc39.es/ecma262/#sec-set-iterable */
   function SetConstructor([iterable = exports.Value.undefined], {
     NewTarget
   }) {
@@ -47367,15 +47367,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-get-set-@@species */
-  SetConstructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-set-iterable';
+  /** https://tc39.es/ecma262/#sec-get-set-@@species */
+  SetConstructor.section = 'https://tc39.es/ecma262/#sec-set-iterable';
   function Set_speciesGetter(args, {
     thisValue
   }) {
     // Return the this value.
     return thisValue;
   }
-  Set_speciesGetter.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-get-set-@@species';
+  Set_speciesGetter.section = 'https://tc39.es/ecma262/#sec-get-set-@@species';
   function bootstrapSet(realmRec) {
     const setConstructor = bootstrapConstructor(realmRec, SetConstructor, 'Set', 0, realmRec.Intrinsics['%Set.prototype%'], [[wellKnownSymbols.species, [Set_speciesGetter]]]);
     realmRec.Intrinsics['%Set%'] = setConstructor;
@@ -47383,7 +47383,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-generator.prototype.next */
+  /** https://tc39.es/ecma262/#sec-generator.prototype.next */
   function GeneratorProto_next([value = exports.Value.undefined], {
     thisValue
   }) {
@@ -47393,8 +47393,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return GeneratorResume(g, value, undefined);
   }
 
-  /** http://tc39.es/ecma262/#sec-generator.prototype.return */
-  GeneratorProto_next.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-generator.prototype.next';
+  /** https://tc39.es/ecma262/#sec-generator.prototype.return */
+  GeneratorProto_next.section = 'https://tc39.es/ecma262/#sec-generator.prototype.next';
   function GeneratorProto_return([value = exports.Value.undefined], {
     thisValue
   }) {
@@ -47410,8 +47410,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return GeneratorResumeAbrupt(g, C, undefined);
   }
 
-  /** http://tc39.es/ecma262/#sec-generator.prototype.throw */
-  GeneratorProto_return.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-generator.prototype.return';
+  /** https://tc39.es/ecma262/#sec-generator.prototype.throw */
+  GeneratorProto_return.section = 'https://tc39.es/ecma262/#sec-generator.prototype.return';
   function GeneratorProto_throw([exception = exports.Value.undefined], {
     thisValue
   }) {
@@ -47422,7 +47422,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 3. Return ? GeneratorResumeAbrupt(g, C, empty).
     return GeneratorResumeAbrupt(g, C, undefined);
   }
-  GeneratorProto_throw.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-generator.prototype.throw';
+  GeneratorProto_throw.section = 'https://tc39.es/ecma262/#sec-generator.prototype.throw';
   function bootstrapGeneratorFunctionPrototypePrototype(realmRec) {
     const generatorPrototype = bootstrapPrototype(realmRec, [['next', GeneratorProto_next, 1], ['return', GeneratorProto_return, 1], ['throw', GeneratorProto_throw, 1]], realmRec.Intrinsics['%IteratorPrototype%'], 'Generator');
     realmRec.Intrinsics['%GeneratorFunction.prototype.prototype%'] = generatorPrototype;
@@ -47450,7 +47450,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     realmRec.Intrinsics['%GeneratorFunction.prototype%'] = generator;
   }
 
-  /** http://tc39.es/ecma262/#sec-generatorfunction */
+  /** https://tc39.es/ecma262/#sec-generatorfunction */
   function GeneratorFunctionConstructor(args, {
     NewTarget
   }) {
@@ -47460,7 +47460,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 3. Return ? CreateDynamicFunction(C, NewTarget, generator, args).
     return CreateDynamicFunction(C, NewTarget, 'generator', args);
   }
-  GeneratorFunctionConstructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-generatorfunction';
+  GeneratorFunctionConstructor.section = 'https://tc39.es/ecma262/#sec-generatorfunction';
   function bootstrapGeneratorFunction(realmRec) {
     const generator = realmRec.Intrinsics['%GeneratorFunction.prototype%'];
     const cons = bootstrapConstructor(realmRec, GeneratorFunctionConstructor, 'GeneratorFunction', 1, generator, []);
@@ -47492,7 +47492,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-async-function-constructor-arguments */
+  /** https://tc39.es/ecma262/#sec-async-function-constructor-arguments */
   function AsyncFunctionConstructor(args, {
     NewTarget
   }) {
@@ -47502,7 +47502,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 3. Return CreateDynamicFunction(C, NewTarget, async, args).
     return CreateDynamicFunction(C, NewTarget, 'async', args);
   }
-  AsyncFunctionConstructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-async-function-constructor-arguments';
+  AsyncFunctionConstructor.section = 'https://tc39.es/ecma262/#sec-async-function-constructor-arguments';
   function bootstrapAsyncFunction(realmRec) {
     const cons = bootstrapConstructor(realmRec, AsyncFunctionConstructor, 'AsyncFunction', 1, realmRec.Intrinsics['%AsyncFunction.prototype%'], []);
     cons.DefineOwnProperty(exports.Value('prototype'), exports.Descriptor({
@@ -47514,7 +47514,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     realmRec.Intrinsics['%AsyncFunction%'] = cons;
   }
 
-  /** http://tc39.es/ecma262/#sec-asyncgenerator-prototype-next */
+  /** https://tc39.es/ecma262/#sec-asyncgenerator-prototype-next */
   function AsyncGeneratorPrototype_next([value = exports.Value.undefined], {
     thisValue
   }) {
@@ -47591,8 +47591,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return promiseCapability.Promise;
   }
 
-  /** http://tc39.es/ecma262/#sec-asyncgenerator-prototype-return */
-  AsyncGeneratorPrototype_next.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-asyncgenerator-prototype-next';
+  /** https://tc39.es/ecma262/#sec-asyncgenerator-prototype-return */
+  AsyncGeneratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-asyncgenerator-prototype-next';
   function AsyncGeneratorPrototype_return([value = exports.Value.undefined], {
     thisValue
   }) {
@@ -47663,8 +47663,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return promiseCapability.Promise;
   }
 
-  /** http://tc39.es/ecma262/#sec-asyncgenerator-prototype-throw */
-  AsyncGeneratorPrototype_return.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-asyncgenerator-prototype-return';
+  /** https://tc39.es/ecma262/#sec-asyncgenerator-prototype-throw */
+  AsyncGeneratorPrototype_return.section = 'https://tc39.es/ecma262/#sec-asyncgenerator-prototype-return';
   function AsyncGeneratorPrototype_throw([exception = exports.Value.undefined], {
     thisValue
   }) {
@@ -47738,7 +47738,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 12. Return promiseCapability.[[Promise]].
     return promiseCapability.Promise;
   }
-  AsyncGeneratorPrototype_throw.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-asyncgenerator-prototype-throw';
+  AsyncGeneratorPrototype_throw.section = 'https://tc39.es/ecma262/#sec-asyncgenerator-prototype-throw';
   function bootstrapAsyncGeneratorFunctionPrototypePrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['next', AsyncGeneratorPrototype_next, 1], ['return', AsyncGeneratorPrototype_return, 1], ['throw', AsyncGeneratorPrototype_throw, 1]], realmRec.Intrinsics['%AsyncIteratorPrototype%'], 'AsyncGenerator');
     realmRec.Intrinsics['%AsyncGeneratorFunction.prototype.prototype%'] = proto;
@@ -47762,7 +47762,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'] = proto;
   }
 
-  /** http://tc39.es/ecma262/#sec-asyncgeneratorfunction */
+  /** https://tc39.es/ecma262/#sec-asyncgeneratorfunction */
   function AsyncGeneratorFunctionConstructor(args, {
     NewTarget
   }) {
@@ -47772,7 +47772,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 3. Return ? CreateDynamicFunction(C, NewTarget, asyncGenerator, args).
     return CreateDynamicFunction(C, NewTarget, 'asyncGenerator', args);
   }
-  AsyncGeneratorFunctionConstructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-asyncgeneratorfunction';
+  AsyncGeneratorFunctionConstructor.section = 'https://tc39.es/ecma262/#sec-asyncgeneratorfunction';
   function bootstrapAsyncGeneratorFunction(realmRec) {
     const cons = bootstrapConstructor(realmRec, AsyncGeneratorFunctionConstructor, 'AsyncGeneratorFunction', 1, realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'], []);
     let _temp = cons.DefineOwnProperty(exports.Value('prototype'), exports.Descriptor({
@@ -47799,7 +47799,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     realmRec.Intrinsics['%AsyncGeneratorFunction%'] = cons;
   }
 
-  /** http://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.next */
+  /** https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.next */
   function AsyncFromSyncIteratorPrototype_next([value], {
     thisValue
   }) {
@@ -47850,8 +47850,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return _temp2;
   }
 
-  /** http://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.return */
-  AsyncFromSyncIteratorPrototype_next.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.next';
+  /** https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.return */
+  AsyncFromSyncIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.next';
   function AsyncFromSyncIteratorPrototype_return([value], {
     thisValue
   }) {
@@ -47948,8 +47948,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return _temp7;
   }
 
-  /** http://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.throw */
-  AsyncFromSyncIteratorPrototype_return.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.return';
+  /** https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.throw */
+  AsyncFromSyncIteratorPrototype_return.section = 'https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.return';
   function AsyncFromSyncIteratorPrototype_throw([value], {
     thisValue
   }) {
@@ -48036,13 +48036,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     return _temp11;
   }
-  AsyncFromSyncIteratorPrototype_throw.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.throw';
+  AsyncFromSyncIteratorPrototype_throw.section = 'https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.throw';
   function bootstrapAsyncFromSyncIteratorPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['next', AsyncFromSyncIteratorPrototype_next, 0], ['return', AsyncFromSyncIteratorPrototype_return, 0], ['throw', AsyncFromSyncIteratorPrototype_throw, 0]], realmRec.Intrinsics['%AsyncIteratorPrototype%']);
     realmRec.Intrinsics['%AsyncFromSyncIteratorPrototype%'] = proto;
   }
 
-  /** http://tc39.es/ecma262/#sec-arraybuffer-length */
+  /** https://tc39.es/ecma262/#sec-arraybuffer-length */
   function ArrayBufferConstructor([length = exports.Value.undefined], {
     NewTarget
   }) {
@@ -48065,8 +48065,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return AllocateArrayBuffer(NewTarget, byteLength);
   }
 
-  /** http://tc39.es/ecma262/#sec-arraybuffer.isview */
-  ArrayBufferConstructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-arraybuffer-length';
+  /** https://tc39.es/ecma262/#sec-arraybuffer.isview */
+  ArrayBufferConstructor.section = 'https://tc39.es/ecma262/#sec-arraybuffer-length';
   function ArrayBuffer_isView([arg = exports.Value.undefined]) {
     // 1. If Type(arg) is not Object, return false.
     if (!(arg instanceof ObjectValue)) {
@@ -48080,20 +48080,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-get-arraybuffer-@@species */
-  ArrayBuffer_isView.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-arraybuffer.isview';
+  /** https://tc39.es/ecma262/#sec-get-arraybuffer-@@species */
+  ArrayBuffer_isView.section = 'https://tc39.es/ecma262/#sec-arraybuffer.isview';
   function ArrayBuffer_species(a, {
     thisValue
   }) {
     return thisValue;
   }
-  ArrayBuffer_species.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-get-arraybuffer-@@species';
+  ArrayBuffer_species.section = 'https://tc39.es/ecma262/#sec-get-arraybuffer-@@species';
   function bootstrapArrayBuffer(realmRec) {
     const c = bootstrapConstructor(realmRec, ArrayBufferConstructor, 'ArrayBuffer', 1, realmRec.Intrinsics['%ArrayBuffer.prototype%'], [['isView', ArrayBuffer_isView, 1], [wellKnownSymbols.species, [ArrayBuffer_species]]]);
     realmRec.Intrinsics['%ArrayBuffer%'] = c;
   }
 
-  /** http://tc39.es/ecma262/#sec-get-arraybuffer.prototype.bytelength */
+  /** https://tc39.es/ecma262/#sec-get-arraybuffer.prototype.bytelength */
   function ArrayBufferProto_byteLength(args, {
     thisValue
   }) {
@@ -48123,8 +48123,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(length);
   }
 
-  /** http://tc39.es/ecma262/#sec-arraybuffer.prototype.slice */
-  ArrayBufferProto_byteLength.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-get-arraybuffer.prototype.bytelength';
+  /** https://tc39.es/ecma262/#sec-arraybuffer.prototype.slice */
+  ArrayBufferProto_byteLength.section = 'https://tc39.es/ecma262/#sec-get-arraybuffer.prototype.bytelength';
   function ArrayBufferProto_slice([start = exports.Value.undefined, end = exports.Value.undefined], {
     thisValue
   }) {
@@ -48255,7 +48255,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 23. Return new.
     return newO;
   }
-  ArrayBufferProto_slice.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-arraybuffer.prototype.slice';
+  ArrayBufferProto_slice.section = 'https://tc39.es/ecma262/#sec-arraybuffer.prototype.slice';
   function bootstrapArrayBufferPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['byteLength', [ArrayBufferProto_byteLength]], ['slice', ArrayBufferProto_slice, 2]], realmRec.Intrinsics['%Object.prototype%'], 'ArrayBuffer');
     realmRec.Intrinsics['%ArrayBuffer.prototype%'] = proto;
@@ -48908,7 +48908,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Call(reviver, holder, [name, val]);
   }
 
-  /** http://tc39.es/ecma262/#sec-json.parse */
+  /** https://tc39.es/ecma262/#sec-json.parse */
   function JSON_parse([text = exports.Value.undefined, reviver = exports.Value.undefined]) {
     let _temp62 = ToString(text);
     /* c8 ignore if */
@@ -48966,10 +48966,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return unfiltered;
     }
   }
-  JSON_parse.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-json.parse';
+  JSON_parse.section = 'https://tc39.es/ecma262/#sec-json.parse';
   const codeUnitTable = new Map([[0x0008, '\\b'], [0x0009, '\\t'], [0x000A, '\\n'], [0x000C, '\\f'], [0x000D, '\\r'], [0x0022, '\\"'], [0x005C, '\\\\']]);
 
-  /** http://tc39.es/ecma262/#sec-serializejsonproperty */
+  /** https://tc39.es/ecma262/#sec-serializejsonproperty */
   function SerializeJSONProperty(state, key, holder) {
     let _temp65 = Get(holder, key);
     /* c8 ignore if */
@@ -49091,7 +49091,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     return exports.Value.undefined;
   }
-  SerializeJSONProperty.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-serializejsonproperty';
+  SerializeJSONProperty.section = 'https://tc39.es/ecma262/#sec-serializejsonproperty';
   function UnicodeEscape(C) {
     const n = C.charCodeAt(0);
     Assert(n < 0xFFFF, "n < 0xFFFF");
@@ -49115,7 +49115,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(product);
   }
 
-  /** http://tc39.es/ecma262/#sec-serializejsonobject */
+  /** https://tc39.es/ecma262/#sec-serializejsonobject */
   function SerializeJSONObject(state, value) {
     if (state.Stack.includes(value)) {
       return exports.surroundingAgent.Throw('TypeError', 'JSONCircular');
@@ -49178,8 +49178,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return final;
   }
 
-  /** http://tc39.es/ecma262/#sec-serializejsonarray */
-  SerializeJSONObject.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-serializejsonobject';
+  /** https://tc39.es/ecma262/#sec-serializejsonarray */
+  SerializeJSONObject.section = 'https://tc39.es/ecma262/#sec-serializejsonobject';
   function SerializeJSONArray(state, value) {
     if (state.Stack.includes(value)) {
       return exports.surroundingAgent.Throw('TypeError', 'JSONCircular');
@@ -49242,8 +49242,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return final;
   }
 
-  /** http://tc39.es/ecma262/#sec-json.stringify */
-  SerializeJSONArray.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-serializejsonarray';
+  /** https://tc39.es/ecma262/#sec-json.stringify */
+  SerializeJSONArray.section = 'https://tc39.es/ecma262/#sec-serializejsonarray';
   function JSON_stringify([value = exports.Value.undefined, replacer = exports.Value.undefined, space = exports.Value.undefined]) {
     const stack = [];
     const indent = '';
@@ -49391,7 +49391,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     };
     return SerializeJSONProperty(state, exports.Value(''), wrapper);
   }
-  JSON_stringify.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-json.stringify';
+  JSON_stringify.section = 'https://tc39.es/ecma262/#sec-json.stringify';
   function bootstrapJSON(realmRec) {
     const json = bootstrapPrototype(realmRec, [['parse', JSON_parse, 2], ['stringify', JSON_stringify, 3]], realmRec.Intrinsics['%Object.prototype%'], 'JSON');
     realmRec.Intrinsics['%JSON%'] = json;
@@ -49406,7 +49406,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-eval-x */
+  /** https://tc39.es/ecma262/#sec-eval-x */
   function Eval([x = exports.Value.undefined]) {
     // 1. Assert: The execution context stack has at least two elements.
     Assert(exports.surroundingAgent.executionContextStack.length >= 2, "surroundingAgent.executionContextStack.length >= 2");
@@ -49417,12 +49417,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 4. Return ? PerformEval(x, callerRealm, false, false).
     return PerformEval(x, callerRealm, false, false);
   }
-  Eval.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-eval-x';
+  Eval.section = 'https://tc39.es/ecma262/#sec-eval-x';
   function bootstrapEval(realmRec) {
     realmRec.Intrinsics['%eval%'] = CreateBuiltinFunction(Eval, 1, exports.Value('eval'), [], realmRec);
   }
 
-  /** http://tc39.es/ecma262/#sec-isfinite-number */
+  /** https://tc39.es/ecma262/#sec-isfinite-number */
   function IsFinite([number = exports.Value.undefined]) {
     let _temp = ToNumber(number);
     /* c8 ignore if */
@@ -49442,12 +49442,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 3. Otherwise, return true.
     return exports.Value.true;
   }
-  IsFinite.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-isfinite-number';
+  IsFinite.section = 'https://tc39.es/ecma262/#sec-isfinite-number';
   function bootstrapIsFinite(realmRec) {
     realmRec.Intrinsics['%isFinite%'] = CreateBuiltinFunction(IsFinite, 1, exports.Value('isFinite'), [], realmRec);
   }
 
-  /** http://tc39.es/ecma262/#sec-isnan-number */
+  /** https://tc39.es/ecma262/#sec-isnan-number */
   function IsNaN([number = exports.Value.undefined]) {
     let _temp = ToNumber(number);
     /* c8 ignore if */
@@ -49467,12 +49467,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 3. Otherwise, return false.
     return exports.Value.false;
   }
-  IsNaN.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-isnan-number';
+  IsNaN.section = 'https://tc39.es/ecma262/#sec-isnan-number';
   function bootstrapIsNaN(realmRec) {
     realmRec.Intrinsics['%isNaN%'] = CreateBuiltinFunction(IsNaN, 1, exports.Value('isNaN'), [], realmRec);
   }
 
-  /** http://tc39.es/ecma262/#sec-parsefloat-string */
+  /** https://tc39.es/ecma262/#sec-parsefloat-string */
   function ParseFloat([string = exports.Value.undefined]) {
     let _temp = ToString(string);
     /* c8 ignore if */
@@ -49552,7 +49552,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     return F(parseFloat(numberString.slice(0, index)) * multiplier);
   }
-  ParseFloat.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-parsefloat-string';
+  ParseFloat.section = 'https://tc39.es/ecma262/#sec-parsefloat-string';
   function bootstrapParseFloat(realmRec) {
     realmRec.Intrinsics['%parseFloat%'] = CreateBuiltinFunction(ParseFloat, 1, exports.Value('parseFloat'), [], realmRec);
   }
@@ -49596,7 +49596,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return str.length;
   }
 
-  /** http://tc39.es/ecma262/#sec-parseint-string-radix */
+  /** https://tc39.es/ecma262/#sec-parseint-string-radix */
   function ParseInt([string = exports.Value.undefined, radix = exports.Value.undefined]) {
     let _temp = ToString(string);
     /* c8 ignore if */
@@ -49663,7 +49663,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const number = mathInt;
     return F(sign * number);
   }
-  ParseInt.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-parseint-string-radix';
+  ParseInt.section = 'https://tc39.es/ecma262/#sec-parseint-string-radix';
   function bootstrapParseInt(realmRec) {
     realmRec.Intrinsics['%parseInt%'] = CreateBuiltinFunction(ParseInt, 2, exports.Value('parseInt'), [], realmRec);
   }
@@ -49741,7 +49741,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   const DecimalDigit = '0123456789';
   const uriUnescaped = uriAlpha + DecimalDigit + uriMark;
 
-  /** http://tc39.es/ecma262/#sec-encode */
+  /** https://tc39.es/ecma262/#sec-encode */
   function Encode(string, unescapedSet) {
     string = string.stringValue();
     // 1. Let strLen be the number of code units in string.
@@ -49794,8 +49794,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-decode */
-  Encode.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-encode';
+  /** https://tc39.es/ecma262/#sec-decode */
+  Encode.section = 'https://tc39.es/ecma262/#sec-encode';
   function Decode(string, reservedSet) {
     string = string.stringValue();
     // 1. Let strLen be the number of code units in string.
@@ -49913,8 +49913,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-decodeuri-encodeduri */
-  Decode.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-decode';
+  /** https://tc39.es/ecma262/#sec-decodeuri-encodeduri */
+  Decode.section = 'https://tc39.es/ecma262/#sec-decode';
   function decodeURI([encodedURI = exports.Value.undefined]) {
     let _temp2 = ToString(encodedURI);
     /* c8 ignore if */
@@ -49933,8 +49933,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Decode(uriString, reservedURISet);
   }
 
-  /** http://tc39.es/ecma262/#sec-decodeuricomponent-encodeduricomponent */
-  decodeURI.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-decodeuri-encodeduri';
+  /** https://tc39.es/ecma262/#sec-decodeuricomponent-encodeduricomponent */
+  decodeURI.section = 'https://tc39.es/ecma262/#sec-decodeuri-encodeduri';
   function decodeURIComponent([encodedURIComponent = exports.Value.undefined]) {
     let _temp3 = ToString(encodedURIComponent);
     /* c8 ignore if */
@@ -49953,8 +49953,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Decode(componentString, reservedURIComponentSet);
   }
 
-  /** http://tc39.es/ecma262/#sec-encodeuri-uri */
-  decodeURIComponent.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-decodeuricomponent-encodeduricomponent';
+  /** https://tc39.es/ecma262/#sec-encodeuri-uri */
+  decodeURIComponent.section = 'https://tc39.es/ecma262/#sec-decodeuricomponent-encodeduricomponent';
   function encodeURI([uri = exports.Value.undefined]) {
     let _temp4 = ToString(uri);
     /* c8 ignore if */
@@ -49973,8 +49973,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Encode(uriString, unescapedURISet);
   }
 
-  /** http://tc39.es/ecma262/#sec-encodeuricomponent-uricomponent */
-  encodeURI.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-encodeuri-uri';
+  /** https://tc39.es/ecma262/#sec-encodeuricomponent-uricomponent */
+  encodeURI.section = 'https://tc39.es/ecma262/#sec-encodeuri-uri';
   function encodeURIComponent([uriComponent = exports.Value.undefined]) {
     let _temp5 = ToString(uriComponent);
     /* c8 ignore if */
@@ -49992,19 +49992,19 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 3. Return ? Encode(componentString, unescapedURIComponentSet).
     return Encode(componentString, unescapedURIComponentSet);
   }
-  encodeURIComponent.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-encodeuricomponent-uricomponent';
+  encodeURIComponent.section = 'https://tc39.es/ecma262/#sec-encodeuricomponent-uricomponent';
   function bootstrapURIHandling(realmRec) {
     [['decodeURI', decodeURI, 1], ['decodeURIComponent', decodeURIComponent, 1], ['encodeURI', encodeURI, 1], ['encodeURIComponent', encodeURIComponent, 1]].forEach(([name, f, length]) => {
       realmRec.Intrinsics[`%${name}%`] = CreateBuiltinFunction(f, length, exports.Value(name), [], realmRec);
     });
   }
 
-  /** http://tc39.es/ecma262/#sec-%throwtypeerror% */
+  /** https://tc39.es/ecma262/#sec-%throwtypeerror% */
   function ThrowTypeError() {
     // 1. Throw a TypeError exception.
     return exports.surroundingAgent.Throw('TypeError', 'StrictPoisonPill');
   }
-  ThrowTypeError.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-%throwtypeerror%';
+  ThrowTypeError.section = 'https://tc39.es/ecma262/#sec-%throwtypeerror%';
   function bootstrapThrowTypeError(realmRec) {
     let _temp = CreateBuiltinFunction(ThrowTypeError, 0, exports.Value(''), [], realmRec);
     Assert(!(_temp instanceof AbruptCompletion), "CreateBuiltinFunction(ThrowTypeError, 0, Value(''), [], realmRec)" + ' returned an abrupt completion');
@@ -50023,14 +50023,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     realmRec.Intrinsics['%ThrowTypeError%'] = f;
   }
 
-  /** http://tc39.es/ecma262/#sec-%typedarray%-intrinsic-object */
+  /** https://tc39.es/ecma262/#sec-%typedarray%-intrinsic-object */
   function TypedArrayConstructor() {
     // 1. Throw a TypeError exception.
     return exports.surroundingAgent.Throw('TypeError', 'NotAConstructor', this);
   }
 
-  /** http://tc39.es/ecma262/#sec-%typedarray%.from */
-  TypedArrayConstructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-%typedarray%-intrinsic-object';
+  /** https://tc39.es/ecma262/#sec-%typedarray%.from */
+  TypedArrayConstructor.section = 'https://tc39.es/ecma262/#sec-%typedarray%-intrinsic-object';
   function TypedArray_from([source = exports.Value.undefined, mapfn = exports.Value.undefined, thisArg = exports.Value.undefined], {
     thisValue
   }) {
@@ -50214,8 +50214,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return targetObj;
   }
 
-  /** http://tc39.es/ecma262/#sec-%typedarray%.of */
-  TypedArray_from.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-%typedarray%.from';
+  /** https://tc39.es/ecma262/#sec-%typedarray%.of */
+  TypedArray_from.section = 'https://tc39.es/ecma262/#sec-%typedarray%.from';
   function TypedArray_of(items, {
     thisValue
   }) {
@@ -50270,20 +50270,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return newObj;
   }
 
-  /** http://tc39.es/ecma262/#sec-get-%typedarray%-@@species */
-  TypedArray_of.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-%typedarray%.of';
+  /** https://tc39.es/ecma262/#sec-get-%typedarray%-@@species */
+  TypedArray_of.section = 'https://tc39.es/ecma262/#sec-%typedarray%.of';
   function TypedArray_speciesGetter(args, {
     thisValue
   }) {
     return thisValue;
   }
-  TypedArray_speciesGetter.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-get-%typedarray%-@@species';
+  TypedArray_speciesGetter.section = 'https://tc39.es/ecma262/#sec-get-%typedarray%-@@species';
   function bootstrapTypedArray(realmRec) {
     const typedArrayConstructor = bootstrapConstructor(realmRec, TypedArrayConstructor, 'TypedArray', 0, realmRec.Intrinsics['%TypedArray.prototype%'], [['from', TypedArray_from, 1], ['of', TypedArray_of, 0], [wellKnownSymbols.species, [TypedArray_speciesGetter]]]);
     realmRec.Intrinsics['%TypedArray%'] = typedArrayConstructor;
   }
 
-  /** http://tc39.es/ecma262/#sec-get-%typedarray%.prototype.buffer */
+  /** https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.buffer */
   function TypedArrayProto_buffer(args, {
     thisValue
   }) {
@@ -50307,8 +50307,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return buffer;
   }
 
-  /** http://tc39.es/ecma262/#sec-get-%typedarray%.prototype.bytelength */
-  TypedArrayProto_buffer.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-get-%typedarray%.prototype.buffer';
+  /** https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.bytelength */
+  TypedArrayProto_buffer.section = 'https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.buffer';
   function TypedArrayProto_byteLength(args, {
     thisValue
   }) {
@@ -50338,8 +50338,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(size);
   }
 
-  /** http://tc39.es/ecma262/#sec-get-%typedarray%.prototype.byteoffset */
-  TypedArrayProto_byteLength.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-get-%typedarray%.prototype.bytelength';
+  /** https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.byteoffset */
+  TypedArrayProto_byteLength.section = 'https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.bytelength';
   function TypedArrayProto_byteOffset(args, {
     thisValue
   }) {
@@ -50369,8 +50369,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(offset);
   }
 
-  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.copywithin */
-  TypedArrayProto_byteOffset.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-get-%typedarray%.prototype.byteoffset';
+  /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.copywithin */
+  TypedArrayProto_byteOffset.section = 'https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.byteoffset';
   function TypedArrayProto_copyWithin([target = exports.Value.undefined, start = exports.Value.undefined, end = exports.Value.undefined], {
     thisValue
   }) {
@@ -50501,8 +50501,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return O;
   }
 
-  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.entries */
-  TypedArrayProto_copyWithin.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-%typedarray%.prototype.copywithin';
+  /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.entries */
+  TypedArrayProto_copyWithin.section = 'https://tc39.es/ecma262/#sec-%typedarray%.prototype.copywithin';
   function TypedArrayProto_entries(args, {
     thisValue
   }) {
@@ -50522,8 +50522,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return CreateArrayIterator(O, 'key+value');
   }
 
-  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.fill */
-  TypedArrayProto_entries.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-%typedarray%.prototype.entries';
+  /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.fill */
+  TypedArrayProto_entries.section = 'https://tc39.es/ecma262/#sec-%typedarray%.prototype.entries';
   function TypedArrayProto_fill([value = exports.Value.undefined, start = exports.Value.undefined, end = exports.Value.undefined], {
     thisValue
   }) {
@@ -50635,8 +50635,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return O;
   }
 
-  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.filter */
-  TypedArrayProto_fill.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-%typedarray%.prototype.fill';
+  /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.filter */
+  TypedArrayProto_fill.section = 'https://tc39.es/ecma262/#sec-%typedarray%.prototype.fill';
   function TypedArrayProto_filter([callbackfn = exports.Value.undefined, thisArg = exports.Value.undefined], {
     thisValue
   }) {
@@ -50740,8 +50740,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return A;
   }
 
-  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.keys */
-  TypedArrayProto_filter.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-%typedarray%.prototype.filter';
+  /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.keys */
+  TypedArrayProto_filter.section = 'https://tc39.es/ecma262/#sec-%typedarray%.prototype.filter';
   function TypedArrayProto_keys(args, {
     thisValue
   }) {
@@ -50761,8 +50761,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return CreateArrayIterator(O, 'key');
   }
 
-  /** http://tc39.es/ecma262/#sec-get-%typedarray%.prototype.length */
-  TypedArrayProto_keys.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-%typedarray%.prototype.keys';
+  /** https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.length */
+  TypedArrayProto_keys.section = 'https://tc39.es/ecma262/#sec-%typedarray%.prototype.keys';
   function TypedArrayProto_length(args, {
     thisValue
   }) {
@@ -50792,8 +50792,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(length);
   }
 
-  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.map */
-  TypedArrayProto_length.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-get-%typedarray%.prototype.length';
+  /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.map */
+  TypedArrayProto_length.section = 'https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.length';
   function TypedArrayProto_map([callbackfn = exports.Value.undefined, thisArg = exports.Value.undefined], {
     thisValue
   }) {
@@ -50877,8 +50877,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return A;
   }
 
-  /** http://tc39.es/ecma262/#sec-settypedarrayfromtypedarray */
-  TypedArrayProto_map.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-%typedarray%.prototype.map';
+  /** https://tc39.es/ecma262/#sec-settypedarrayfromtypedarray */
+  TypedArrayProto_map.section = 'https://tc39.es/ecma262/#sec-%typedarray%.prototype.map';
   function SetTypedArrayFromTypedArray(target, targetOffset, source) {
     // 1. Let targetBuffer be target.[[ViewedArrayBuffer]].
     const targetBuffer = target.ViewedArrayBuffer;
@@ -50987,8 +50987,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 24. Return unused.
   }
 
-  /** http://tc39.es/ecma262/#sec-settypedarrayfromarraylike */
-  SetTypedArrayFromTypedArray.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-settypedarrayfromtypedarray';
+  /** https://tc39.es/ecma262/#sec-settypedarrayfromarraylike */
+  SetTypedArrayFromTypedArray.section = 'https://tc39.es/ecma262/#sec-settypedarrayfromtypedarray';
   function SetTypedArrayFromArrayLike(target, targetOffset, source) {
     // 1. Let targetBuffer be target.[[ViewedArrayBuffer]].
     const targetBuffer = target.ViewedArrayBuffer;
@@ -51069,8 +51069,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 10. Return unused.
   }
 
-  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.set-overloaded-offset */
-  SetTypedArrayFromArrayLike.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-settypedarrayfromarraylike';
+  /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.set-overloaded-offset */
+  SetTypedArrayFromArrayLike.section = 'https://tc39.es/ecma262/#sec-settypedarrayfromarraylike';
   function TypedArrayProto_set([source = exports.Value.undefined, offset = exports.Value.undefined], {
     thisValue
   }) {
@@ -51129,8 +51129,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.slice */
-  TypedArrayProto_set.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-%typedarray%.prototype.set-overloaded-offset';
+  /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.slice */
+  TypedArrayProto_set.section = 'https://tc39.es/ecma262/#sec-%typedarray%.prototype.set-overloaded-offset';
   function TypedArrayProto_slice([start = exports.Value.undefined, end = exports.Value.undefined], {
     thisValue
   }) {
@@ -51290,8 +51290,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return A;
   }
 
-  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.sort */
-  TypedArrayProto_slice.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-%typedarray%.prototype.slice';
+  /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.sort */
+  TypedArrayProto_slice.section = 'https://tc39.es/ecma262/#sec-%typedarray%.prototype.slice';
   function TypedArrayProto_sort([comparefn = exports.Value.undefined], {
     thisValue
   }) {
@@ -51324,7 +51324,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const len = obj.ArrayLength;
     return ArrayProto_sortBody(obj, len, (x, y) => TypedArraySortCompare(x, y, comparefn), true);
   }
-  TypedArrayProto_sort.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-%typedarray%.prototype.sort';
+  TypedArrayProto_sort.section = 'https://tc39.es/ecma262/#sec-%typedarray%.prototype.sort';
   function TypedArraySortCompare(x, y, comparefn) {
     // 1. Assert: Both Type(x) and Type(y) are Number or both are BigInt.
     Assert(x instanceof NumberValue && y instanceof NumberValue || x instanceof BigIntValue && y instanceof BigIntValue, "(x instanceof NumberValue && y instanceof NumberValue)\n         || (x instanceof BigIntValue && y instanceof BigIntValue)");
@@ -51391,7 +51391,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(+0);
   }
 
-  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.subarray */
+  /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.subarray */
   function TypedArrayProto_subarray([begin = exports.Value.undefined, end = exports.Value.undefined], {
     thisValue
   }) {
@@ -51470,8 +51470,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return TypedArraySpeciesCreate(O, argumentsList);
   }
 
-  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.values */
-  TypedArrayProto_subarray.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-%typedarray%.prototype.subarray';
+  /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.values */
+  TypedArrayProto_subarray.section = 'https://tc39.es/ecma262/#sec-%typedarray%.prototype.subarray';
   function TypedArrayProto_values(args, {
     thisValue
   }) {
@@ -51491,8 +51491,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return CreateArrayIterator(O, 'value');
   }
 
-  /** http://tc39.es/ecma262/#sec-get-%typedarray%.prototype-@@tostringtag */
-  TypedArrayProto_values.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-%typedarray%.prototype.values';
+  /** https://tc39.es/ecma262/#sec-get-%typedarray%.prototype-@@tostringtag */
+  TypedArrayProto_values.section = 'https://tc39.es/ecma262/#sec-%typedarray%.prototype.values';
   function TypedArrayProto_toStringTag(args, {
     thisValue
   }) {
@@ -51514,8 +51514,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return name;
   }
 
-  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.at */
-  TypedArrayProto_toStringTag.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-get-%typedarray%.prototype-@@tostringtag';
+  /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.at */
+  TypedArrayProto_toStringTag.section = 'https://tc39.es/ecma262/#sec-get-%typedarray%.prototype-@@tostringtag';
   function TypedArrayProto_at([index = exports.Value.undefined], {
     thisValue
   }) {
@@ -51567,7 +51567,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     return Get(O, _temp59);
   }
-  TypedArrayProto_at.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-%typedarray%.prototype.at';
+  TypedArrayProto_at.section = 'https://tc39.es/ecma262/#sec-%typedarray%.prototype.at';
   function bootstrapTypedArrayPrototype(realmRec) {
     let _temp60 = Get(realmRec.Intrinsics['%Array.prototype%'], exports.Value('toString'));
     Assert(!(_temp60 instanceof AbruptCompletion), "Get(realmRec.Intrinsics['%Array.prototype%'], Value('toString'))" + ' returned an abrupt completion');
@@ -51590,7 +51590,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
     }, O => O.ArrayLength);
 
-    /** http://tc39.es/ecma262/#sec-%typedarray%.prototype-@@iterator */
+    /** https://tc39.es/ecma262/#sec-%typedarray%.prototype-@@iterator */
     {
       let _temp62 = Get(proto, exports.Value('values'));
       Assert(!(_temp62 instanceof AbruptCompletion), "Get(proto, Value('values'))" + ' returned an abrupt completion');
@@ -51616,12 +51616,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   function bootstrapTypedArrayConstructors(realmRec) {
     Object.entries(typedArrayInfoByName).forEach(([TypedArray, info]) => {
-      /** http://tc39.es/ecma262/#sec-typedarray-constructors */
+      /** https://tc39.es/ecma262/#sec-typedarray-constructors */
       function TypedArrayConstructor(args, {
         NewTarget
       }) {
         if (args.length === 0) {
-          /** http://tc39.es/ecma262/#sec-typedarray */
+          /** https://tc39.es/ecma262/#sec-typedarray */
           // 1. If NewTarget is undefined, throw a TypeError exception.
           if (NewTarget === exports.Value.undefined) {
             return exports.surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
@@ -51631,7 +51631,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           // 3. Return ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%", 0).
           return AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`, 0);
         } else if (!(args[0] instanceof ObjectValue)) {
-          /** http://tc39.es/ecma262/#sec-typedarray-length */
+          /** https://tc39.es/ecma262/#sec-typedarray-length */
           const [length] = args;
           // 1. Assert: Type(length) is not Object.
           Assert(!(length instanceof ObjectValue), "!(length instanceof ObjectValue)");
@@ -51655,7 +51655,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           // 5. Return ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%", elementLength).
           return AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`, elementLength);
         } else if ('TypedArrayName' in args[0]) {
-          /** http://tc39.es/ecma262/#sec-typedarray-typedarray */
+          /** https://tc39.es/ecma262/#sec-typedarray-typedarray */
           const [typedArray] = args;
           // 1. Assert: Type(typedArray) is Object and typedArray has a [[TypedArrayName]] internal slot.
           Assert(typedArray instanceof ObjectValue && 'TypedArrayName' in typedArray, "typedArray instanceof ObjectValue && 'TypedArrayName' in typedArray");
@@ -51782,7 +51782,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           // 24. Return O.
           return O;
         } else if (!('TypedArrayName' in args[0]) && !('ArrayBufferData' in args[0])) {
-          /** http://tc39.es/ecma262/#sec-typedarray-object */
+          /** https://tc39.es/ecma262/#sec-typedarray-object */
           const [object] = args;
           // 1. Assert: Type(object) is Object and object does not have either a [[TypedArrayName]] or an [[ArrayBufferData]] internal slot.
           Assert(object instanceof ObjectValue && !('TypedArrayName' in object) && !('ArrayBufferData' in object), "object instanceof ObjectValue && !('TypedArrayName' in object) && !('ArrayBufferData' in object)");
@@ -51934,7 +51934,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           // 13. Return O.
           return O;
         } else {
-          /** http://tc39.es/ecma262/#sec-typedarray-buffer-byteoffset-length */
+          /** https://tc39.es/ecma262/#sec-typedarray-buffer-byteoffset-length */
           const [buffer = exports.Value.undefined, byteOffset = exports.Value.undefined, length = exports.Value.undefined] = args;
           // 1. Assert: Type(buffer) is Object and buffer has an [[ArrayBufferData]] internal slot.
           Assert(buffer instanceof ObjectValue && 'ArrayBufferData' in buffer, "buffer instanceof ObjectValue && 'ArrayBufferData' in buffer");
@@ -52026,7 +52026,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           return O;
         }
       }
-      TypedArrayConstructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-typedarray-constructors';
+      TypedArrayConstructor.section = 'https://tc39.es/ecma262/#sec-typedarray-constructors';
       const taConstructor = bootstrapConstructor(realmRec, TypedArrayConstructor, TypedArray, 3, realmRec.Intrinsics[`%${TypedArray}.prototype%`], [['BYTES_PER_ELEMENT', F(info.ElementSize), undefined, {
         Writable: exports.Value.false,
         Configurable: exports.Value.false
@@ -52043,7 +52043,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-properties-of-typedarray-prototype-objects */
+  /** https://tc39.es/ecma262/#sec-properties-of-typedarray-prototype-objects */
   function bootstrapTypedArrayPrototypes(realmRec) {
     Object.entries(typedArrayInfoByName).forEach(([TypedArray, info]) => {
       const proto = bootstrapPrototype(realmRec, [['BYTES_PER_ELEMENT', F(info.ElementSize), undefined, {
@@ -52054,7 +52054,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     });
   }
 
-  /** http://tc39.es/ecma262/#sec-dataview-constructor */
+  /** https://tc39.es/ecma262/#sec-dataview-constructor */
   function DataViewConstructor([buffer = exports.Value.undefined, byteOffset = exports.Value.undefined, byteLength = exports.Value.undefined], {
     NewTarget
   }) {
@@ -52139,13 +52139,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 14. Return O.
     return O;
   }
-  DataViewConstructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-dataview-constructor';
+  DataViewConstructor.section = 'https://tc39.es/ecma262/#sec-dataview-constructor';
   function bootstrapDataView(realmRec) {
     const dvConstructor = bootstrapConstructor(realmRec, DataViewConstructor, 'DataView', 1, realmRec.Intrinsics['%DataView.prototype%'], []);
     realmRec.Intrinsics['%DataView%'] = dvConstructor;
   }
 
-  /** http://tc39.es/ecma262/#sec-get-dataview.prototype.buffer */
+  /** https://tc39.es/ecma262/#sec-get-dataview.prototype.buffer */
   function DataViewProto_buffer(args, {
     thisValue
   }) {
@@ -52169,8 +52169,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return buffer;
   }
 
-  /** http://tc39.es/ecma262/#sec-get-dataview.prototype.bytelength */
-  DataViewProto_buffer.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-get-dataview.prototype.buffer';
+  /** https://tc39.es/ecma262/#sec-get-dataview.prototype.bytelength */
+  DataViewProto_buffer.section = 'https://tc39.es/ecma262/#sec-get-dataview.prototype.buffer';
   function DataViewProto_byteLength(args, {
     thisValue
   }) {
@@ -52200,8 +52200,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(size);
   }
 
-  /** http://tc39.es/ecma262/#sec-get-dataview.prototype.byteoffset */
-  DataViewProto_byteLength.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-get-dataview.prototype.bytelength';
+  /** https://tc39.es/ecma262/#sec-get-dataview.prototype.byteoffset */
+  DataViewProto_byteLength.section = 'https://tc39.es/ecma262/#sec-get-dataview.prototype.bytelength';
   function DataViewProto_byteOffset(args, {
     thisValue
   }) {
@@ -52231,8 +52231,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(offset);
   }
 
-  /** http://tc39.es/ecma262/#sec-dataview.prototype.getbigint64 */
-  DataViewProto_byteOffset.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-get-dataview.prototype.byteoffset';
+  /** https://tc39.es/ecma262/#sec-dataview.prototype.getbigint64 */
+  DataViewProto_byteOffset.section = 'https://tc39.es/ecma262/#sec-get-dataview.prototype.byteoffset';
   function DataViewProto_getBigInt64([byteOffset = exports.Value.undefined, littleEndian = exports.Value.undefined], {
     thisValue
   }) {
@@ -52242,8 +52242,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return GetViewValue(v, byteOffset, littleEndian, 'BigInt64');
   }
 
-  /** http://tc39.es/ecma262/#sec-dataview.prototype.getbiguint64 */
-  DataViewProto_getBigInt64.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-dataview.prototype.getbigint64';
+  /** https://tc39.es/ecma262/#sec-dataview.prototype.getbiguint64 */
+  DataViewProto_getBigInt64.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.getbigint64';
   function DataViewProto_getBigUint64([byteOffset = exports.Value.undefined, littleEndian = exports.Value.undefined], {
     thisValue
   }) {
@@ -52253,8 +52253,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return GetViewValue(v, byteOffset, littleEndian, 'BigUint64');
   }
 
-  /** http://tc39.es/ecma262/#sec-dataview.prototype.getfloat32 */
-  DataViewProto_getBigUint64.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-dataview.prototype.getbiguint64';
+  /** https://tc39.es/ecma262/#sec-dataview.prototype.getfloat32 */
+  DataViewProto_getBigUint64.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.getbiguint64';
   function DataViewProto_getFloat32([byteOffset = exports.Value.undefined, littleEndian], {
     thisValue
   }) {
@@ -52265,8 +52265,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return GetViewValue(v, byteOffset, littleEndian, 'Float32');
   }
 
-  /** http://tc39.es/ecma262/#sec-dataview.prototype.getfloat64 */
-  DataViewProto_getFloat32.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-dataview.prototype.getfloat32';
+  /** https://tc39.es/ecma262/#sec-dataview.prototype.getfloat64 */
+  DataViewProto_getFloat32.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.getfloat32';
   function DataViewProto_getFloat64([byteOffset = exports.Value.undefined, littleEndian], {
     thisValue
   }) {
@@ -52277,8 +52277,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return GetViewValue(v, byteOffset, littleEndian, 'Float64');
   }
 
-  /** http://tc39.es/ecma262/#sec-dataview.prototype.getint8 */
-  DataViewProto_getFloat64.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-dataview.prototype.getfloat64';
+  /** https://tc39.es/ecma262/#sec-dataview.prototype.getint8 */
+  DataViewProto_getFloat64.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.getfloat64';
   function DataViewProto_getInt8([byteOffset = exports.Value.undefined], {
     thisValue
   }) {
@@ -52286,8 +52286,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return GetViewValue(v, byteOffset, exports.Value.true, 'Int8');
   }
 
-  /** http://tc39.es/ecma262/#sec-dataview.prototype.getint16 */
-  DataViewProto_getInt8.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-dataview.prototype.getint8';
+  /** https://tc39.es/ecma262/#sec-dataview.prototype.getint16 */
+  DataViewProto_getInt8.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.getint8';
   function DataViewProto_getInt16([byteOffset = exports.Value.undefined, littleEndian], {
     thisValue
   }) {
@@ -52298,8 +52298,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return GetViewValue(v, byteOffset, littleEndian, 'Int16');
   }
 
-  /** http://tc39.es/ecma262/#sec-dataview.prototype.getint32 */
-  DataViewProto_getInt16.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-dataview.prototype.getint16';
+  /** https://tc39.es/ecma262/#sec-dataview.prototype.getint32 */
+  DataViewProto_getInt16.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.getint16';
   function DataViewProto_getInt32([byteOffset = exports.Value.undefined, littleEndian], {
     thisValue
   }) {
@@ -52310,8 +52310,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return GetViewValue(v, byteOffset, littleEndian, 'Int32');
   }
 
-  /** http://tc39.es/ecma262/#sec-dataview.prototype.getuint8 */
-  DataViewProto_getInt32.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-dataview.prototype.getint32';
+  /** https://tc39.es/ecma262/#sec-dataview.prototype.getuint8 */
+  DataViewProto_getInt32.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.getint32';
   function DataViewProto_getUint8([byteOffset = exports.Value.undefined], {
     thisValue
   }) {
@@ -52319,8 +52319,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return GetViewValue(v, byteOffset, exports.Value.true, 'Uint8');
   }
 
-  /** http://tc39.es/ecma262/#sec-dataview.prototype.getuint16 */
-  DataViewProto_getUint8.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-dataview.prototype.getuint8';
+  /** https://tc39.es/ecma262/#sec-dataview.prototype.getuint16 */
+  DataViewProto_getUint8.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.getuint8';
   function DataViewProto_getUint16([byteOffset = exports.Value.undefined, littleEndian], {
     thisValue
   }) {
@@ -52331,8 +52331,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return GetViewValue(v, byteOffset, littleEndian, 'Uint16');
   }
 
-  /** http://tc39.es/ecma262/#sec-dataview.prototype.getuint32 */
-  DataViewProto_getUint16.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-dataview.prototype.getuint16';
+  /** https://tc39.es/ecma262/#sec-dataview.prototype.getuint32 */
+  DataViewProto_getUint16.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.getuint16';
   function DataViewProto_getUint32([byteOffset = exports.Value.undefined, littleEndian], {
     thisValue
   }) {
@@ -52343,8 +52343,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return GetViewValue(v, byteOffset, littleEndian, 'Uint32');
   }
 
-  /** http://tc39.es/ecma262/#sec-dataview.prototype.setbigint64 */
-  DataViewProto_getUint32.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-dataview.prototype.getuint32';
+  /** https://tc39.es/ecma262/#sec-dataview.prototype.setbigint64 */
+  DataViewProto_getUint32.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.getuint32';
   function DataViewProto_setBigInt64([byteOffset = exports.Value.undefined, value = exports.Value.undefined, littleEndian], {
     thisValue
   }) {
@@ -52358,8 +52358,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return SetViewValue(v, byteOffset, littleEndian, 'BigInt64', value);
   }
 
-  /** http://tc39.es/ecma262/#sec-dataview.prototype.setbiguint64 */
-  DataViewProto_setBigInt64.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-dataview.prototype.setbigint64';
+  /** https://tc39.es/ecma262/#sec-dataview.prototype.setbiguint64 */
+  DataViewProto_setBigInt64.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setbigint64';
   function DataViewProto_setBigUint64([byteOffset = exports.Value.undefined, value = exports.Value.undefined, littleEndian], {
     thisValue
   }) {
@@ -52373,8 +52373,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return SetViewValue(v, byteOffset, littleEndian, 'BigUint64', value);
   }
 
-  /** http://tc39.es/ecma262/#sec-dataview.prototype.setfloat32 */
-  DataViewProto_setBigUint64.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-dataview.prototype.setbiguint64';
+  /** https://tc39.es/ecma262/#sec-dataview.prototype.setfloat32 */
+  DataViewProto_setBigUint64.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setbiguint64';
   function DataViewProto_setFloat32([byteOffset = exports.Value.undefined, value = exports.Value.undefined, littleEndian], {
     thisValue
   }) {
@@ -52385,8 +52385,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return SetViewValue(v, byteOffset, littleEndian, 'Float32', value);
   }
 
-  /** http://tc39.es/ecma262/#sec-dataview.prototype.setfloat64 */
-  DataViewProto_setFloat32.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-dataview.prototype.setfloat32';
+  /** https://tc39.es/ecma262/#sec-dataview.prototype.setfloat64 */
+  DataViewProto_setFloat32.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setfloat32';
   function DataViewProto_setFloat64([byteOffset = exports.Value.undefined, value = exports.Value.undefined, littleEndian], {
     thisValue
   }) {
@@ -52397,8 +52397,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return SetViewValue(v, byteOffset, littleEndian, 'Float64', value);
   }
 
-  /** http://tc39.es/ecma262/#sec-dataview.prototype.setint8 */
-  DataViewProto_setFloat64.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-dataview.prototype.setfloat64';
+  /** https://tc39.es/ecma262/#sec-dataview.prototype.setint8 */
+  DataViewProto_setFloat64.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setfloat64';
   function DataViewProto_setInt8([byteOffset = exports.Value.undefined, value = exports.Value.undefined], {
     thisValue
   }) {
@@ -52406,8 +52406,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return SetViewValue(v, byteOffset, exports.Value.true, 'Int8', value);
   }
 
-  /** http://tc39.es/ecma262/#sec-dataview.prototype.setint16 */
-  DataViewProto_setInt8.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-dataview.prototype.setint8';
+  /** https://tc39.es/ecma262/#sec-dataview.prototype.setint16 */
+  DataViewProto_setInt8.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setint8';
   function DataViewProto_setInt16([byteOffset = exports.Value.undefined, value = exports.Value.undefined, littleEndian], {
     thisValue
   }) {
@@ -52418,8 +52418,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return SetViewValue(v, byteOffset, littleEndian, 'Int16', value);
   }
 
-  /** http://tc39.es/ecma262/#sec-dataview.prototype.setint32 */
-  DataViewProto_setInt16.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-dataview.prototype.setint16';
+  /** https://tc39.es/ecma262/#sec-dataview.prototype.setint32 */
+  DataViewProto_setInt16.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setint16';
   function DataViewProto_setInt32([byteOffset = exports.Value.undefined, value = exports.Value.undefined, littleEndian], {
     thisValue
   }) {
@@ -52430,8 +52430,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return SetViewValue(v, byteOffset, littleEndian, 'Int32', value);
   }
 
-  /** http://tc39.es/ecma262/#sec-dataview.prototype.setuint8 */
-  DataViewProto_setInt32.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-dataview.prototype.setint32';
+  /** https://tc39.es/ecma262/#sec-dataview.prototype.setuint8 */
+  DataViewProto_setInt32.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setint32';
   function DataViewProto_setUint8([byteOffset = exports.Value.undefined, value = exports.Value.undefined], {
     thisValue
   }) {
@@ -52439,8 +52439,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return SetViewValue(v, byteOffset, exports.Value.true, 'Uint8', value);
   }
 
-  /** http://tc39.es/ecma262/#sec-dataview.prototype.setuint16 */
-  DataViewProto_setUint8.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-dataview.prototype.setuint8';
+  /** https://tc39.es/ecma262/#sec-dataview.prototype.setuint16 */
+  DataViewProto_setUint8.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setuint8';
   function DataViewProto_setUint16([byteOffset = exports.Value.undefined, value = exports.Value.undefined, littleEndian], {
     thisValue
   }) {
@@ -52451,8 +52451,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return SetViewValue(v, byteOffset, littleEndian, 'Uint16', value);
   }
 
-  /** http://tc39.es/ecma262/#sec-dataview.prototype.setuint32 */
-  DataViewProto_setUint16.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-dataview.prototype.setuint16';
+  /** https://tc39.es/ecma262/#sec-dataview.prototype.setuint32 */
+  DataViewProto_setUint16.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setuint16';
   function DataViewProto_setUint32([byteOffset = exports.Value.undefined, value = exports.Value.undefined, littleEndian], {
     thisValue
   }) {
@@ -52462,13 +52462,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     return SetViewValue(v, byteOffset, littleEndian, 'Uint32', value);
   }
-  DataViewProto_setUint32.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-dataview.prototype.setuint32';
+  DataViewProto_setUint32.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setuint32';
   function bootstrapDataViewPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['buffer', [DataViewProto_buffer]], ['byteLength', [DataViewProto_byteLength]], ['byteOffset', [DataViewProto_byteOffset]], ['getBigInt64', DataViewProto_getBigInt64, 1], ['getBigUint64', DataViewProto_getBigUint64, 1], ['getFloat32', DataViewProto_getFloat32, 1], ['getFloat64', DataViewProto_getFloat64, 1], ['getInt8', DataViewProto_getInt8, 1], ['getInt16', DataViewProto_getInt16, 1], ['getInt32', DataViewProto_getInt32, 1], ['getUint8', DataViewProto_getUint8, 1], ['getUint16', DataViewProto_getUint16, 1], ['getUint32', DataViewProto_getUint32, 1], ['setBigInt64', DataViewProto_setBigInt64, 2], ['setBigUint64', DataViewProto_setBigUint64, 2], ['setFloat32', DataViewProto_setFloat32, 2], ['setFloat64', DataViewProto_setFloat64, 2], ['setInt8', DataViewProto_setInt8, 2], ['setInt16', DataViewProto_setInt16, 2], ['setInt32', DataViewProto_setInt32, 2], ['setUint8', DataViewProto_setUint8, 2], ['setUint16', DataViewProto_setUint16, 2], ['setUint32', DataViewProto_setUint32, 2]], realmRec.Intrinsics['%Object.prototype%'], 'DataView');
     realmRec.Intrinsics['%DataView.prototype%'] = proto;
   }
 
-  /** http://tc39.es/ecma262/#sec-weakmap.prototype.delete */
+  /** https://tc39.es/ecma262/#sec-weakmap.prototype.delete */
   function WeakMapProto_delete([key = exports.Value.undefined], {
     thisValue
   }) {
@@ -52507,8 +52507,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-weakmap.prototype.get */
-  WeakMapProto_delete.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-weakmap.prototype.delete';
+  /** https://tc39.es/ecma262/#sec-weakmap.prototype.get */
+  WeakMapProto_delete.section = 'https://tc39.es/ecma262/#sec-weakmap.prototype.delete';
   function WeakMapProto_get([key = exports.Value.undefined], {
     thisValue
   }) {
@@ -52541,8 +52541,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-weakmap.prototype.has */
-  WeakMapProto_get.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-weakmap.prototype.get';
+  /** https://tc39.es/ecma262/#sec-weakmap.prototype.has */
+  WeakMapProto_get.section = 'https://tc39.es/ecma262/#sec-weakmap.prototype.get';
   function WeakMapProto_has([key = exports.Value.undefined], {
     thisValue
   }) {
@@ -52575,8 +52575,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-weakmap.prototype.set */
-  WeakMapProto_has.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-weakmap.prototype.has';
+  /** https://tc39.es/ecma262/#sec-weakmap.prototype.set */
+  WeakMapProto_has.section = 'https://tc39.es/ecma262/#sec-weakmap.prototype.has';
   function WeakMapProto_set([key = exports.Value.undefined, value = exports.Value.undefined], {
     thisValue
   }) {
@@ -52618,13 +52618,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 8. Return M.
     return M;
   }
-  WeakMapProto_set.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-weakmap.prototype.set';
+  WeakMapProto_set.section = 'https://tc39.es/ecma262/#sec-weakmap.prototype.set';
   function bootstrapWeakMapPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['delete', WeakMapProto_delete, 1], ['get', WeakMapProto_get, 1], ['has', WeakMapProto_has, 1], ['set', WeakMapProto_set, 2]], realmRec.Intrinsics['%Object.prototype%'], 'WeakMap');
     realmRec.Intrinsics['%WeakMap.prototype%'] = proto;
   }
 
-  /** http://tc39.es/ecma262/#sec-weakmap-constructor */
+  /** https://tc39.es/ecma262/#sec-weakmap-constructor */
   function WeakMapConstructor([iterable = exports.Value.undefined], {
     NewTarget
   }) {
@@ -52663,13 +52663,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 6. Return ? AddEntriesFromIterable(map, iterable, adder).
     return AddEntriesFromIterable(map, iterable, adder);
   }
-  WeakMapConstructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-weakmap-constructor';
+  WeakMapConstructor.section = 'https://tc39.es/ecma262/#sec-weakmap-constructor';
   function bootstrapWeakMap(realmRec) {
     const c = bootstrapConstructor(realmRec, WeakMapConstructor, 'WeakMap', 0, realmRec.Intrinsics['%WeakMap.prototype%'], []);
     realmRec.Intrinsics['%WeakMap%'] = c;
   }
 
-  /** http://tc39.es/ecma262/#sec-weakset.prototype.add */
+  /** https://tc39.es/ecma262/#sec-weakset.prototype.add */
   function WeakSetProto_add([value = exports.Value.undefined], {
     thisValue
   }) {
@@ -52705,8 +52705,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return S;
   }
 
-  /** http://tc39.es/ecma262/#sec-weakset.prototype.delete */
-  WeakSetProto_add.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-weakset.prototype.add';
+  /** https://tc39.es/ecma262/#sec-weakset.prototype.delete */
+  WeakSetProto_add.section = 'https://tc39.es/ecma262/#sec-weakset.prototype.add';
   function WeakSetProto_delete([value = exports.Value.undefined], {
     thisValue
   }) {
@@ -52743,8 +52743,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-weakset.prototype.has */
-  WeakSetProto_delete.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-weakset.prototype.delete';
+  /** https://tc39.es/ecma262/#sec-weakset.prototype.has */
+  WeakSetProto_delete.section = 'https://tc39.es/ecma262/#sec-weakset.prototype.delete';
   function WeakSetProto_has([value = exports.Value.undefined], {
     thisValue
   }) {
@@ -52776,13 +52776,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 6. Return false.
     return exports.Value.false;
   }
-  WeakSetProto_has.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-weakset.prototype.has';
+  WeakSetProto_has.section = 'https://tc39.es/ecma262/#sec-weakset.prototype.has';
   function bootstrapWeakSetPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['add', WeakSetProto_add, 1], ['delete', WeakSetProto_delete, 1], ['has', WeakSetProto_has, 1]], realmRec.Intrinsics['%Object.prototype%'], 'WeakSet');
     realmRec.Intrinsics['%WeakSet.prototype%'] = proto;
   }
 
-  /** http://tc39.es/ecma262/#sec-weakset-iterable */
+  /** https://tc39.es/ecma262/#sec-weakset-iterable */
   function WeakSetConstructor([iterable = exports.Value.undefined], {
     NewTarget
   }) {
@@ -52874,13 +52874,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
     }
   }
-  WeakSetConstructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-weakset-iterable';
+  WeakSetConstructor.section = 'https://tc39.es/ecma262/#sec-weakset-iterable';
   function bootstrapWeakSet(realmRec) {
     const c = bootstrapConstructor(realmRec, WeakSetConstructor, 'WeakSet', 0, realmRec.Intrinsics['%WeakSet.prototype%'], []);
     realmRec.Intrinsics['%WeakSet%'] = c;
   }
 
-  /** http://tc39.es/ecma262/#sec-aggregate-error-constructor */
+  /** https://tc39.es/ecma262/#sec-aggregate-error-constructor */
   function AggregateErrorConstructor([errors = exports.Value.undefined, message = exports.Value.undefined, options = exports.Value.undefined], {
     NewTarget
   }) {
@@ -52975,7 +52975,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 7. Return O.
     return O;
   }
-  AggregateErrorConstructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-aggregate-error-constructor';
+  AggregateErrorConstructor.section = 'https://tc39.es/ecma262/#sec-aggregate-error-constructor';
   function bootstrapAggregateError(realmRec) {
     const c = bootstrapConstructor(realmRec, AggregateErrorConstructor, 'AggregateError', 2, realmRec.Intrinsics['%AggregateError.prototype%'], []);
     c.Prototype = realmRec.Intrinsics['%Error%'];
@@ -52988,7 +52988,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     realmRec.Intrinsics['%AggregateError.prototype%'] = proto;
   }
 
-  /** http://tc39.es/ecma262/#sec-weak-ref.prototype.deref */
+  /** https://tc39.es/ecma262/#sec-weak-ref.prototype.deref */
   function WeakRefProto_deref(args, {
     thisValue
   }) {
@@ -53013,13 +53013,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     return _temp2;
   }
-  WeakRefProto_deref.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-weak-ref.prototype.deref';
+  WeakRefProto_deref.section = 'https://tc39.es/ecma262/#sec-weak-ref.prototype.deref';
   function bootstrapWeakRefPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [['deref', WeakRefProto_deref, 0]], realmRec.Intrinsics['%Object.prototype%'], 'WeakRef');
     realmRec.Intrinsics['%WeakRef.prototype%'] = proto;
   }
 
-  /** http://tc39.es/ecma262/#sec-weak-ref-target */
+  /** https://tc39.es/ecma262/#sec-weak-ref-target */
   function WeakRefConstructor([target = exports.Value.undefined], {
     NewTarget
   }) {
@@ -53054,13 +53054,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 6. Return weakRef
     return weakRef;
   }
-  WeakRefConstructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-weak-ref-target';
+  WeakRefConstructor.section = 'https://tc39.es/ecma262/#sec-weak-ref-target';
   function bootstrapWeakRef(realmRec) {
     const bigintConstructor = bootstrapConstructor(realmRec, WeakRefConstructor, 'WeakRef', 1, realmRec.Intrinsics['%WeakRef.prototype%'], []);
     realmRec.Intrinsics['%WeakRef%'] = bigintConstructor;
   }
 
-  /** http://tc39.es/ecma262/#sec-finalization-registry.prototype.cleanupSome */
+  /** https://tc39.es/ecma262/#sec-finalization-registry.prototype.cleanupSome */
   function FinalizationRegistryProto_cleanupSome([callback = exports.Value.undefined], {
     thisValue
   }) {
@@ -53094,8 +53094,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-finalization-registry.prototype.register */
-  FinalizationRegistryProto_cleanupSome.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-finalization-registry.prototype.cleanupSome';
+  /** https://tc39.es/ecma262/#sec-finalization-registry.prototype.register */
+  FinalizationRegistryProto_cleanupSome.section = 'https://tc39.es/ecma262/#sec-finalization-registry.prototype.cleanupSome';
   function FinalizationRegistryProto_register([target = exports.Value.undefined, heldValue = exports.Value.undefined, unregisterToken = exports.Value.undefined], {
     thisValue
   }) {
@@ -53140,8 +53140,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-finalization-registry.prototype.unregister */
-  FinalizationRegistryProto_register.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-finalization-registry.prototype.register';
+  /** https://tc39.es/ecma262/#sec-finalization-registry.prototype.unregister */
+  FinalizationRegistryProto_register.section = 'https://tc39.es/ecma262/#sec-finalization-registry.prototype.register';
   function FinalizationRegistryProto_unregister([unregisterToken = exports.Value.undefined], {
     thisValue
   }) {
@@ -53178,13 +53178,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 6. Return removed.
     return removed;
   }
-  FinalizationRegistryProto_unregister.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-finalization-registry.prototype.unregister';
+  FinalizationRegistryProto_unregister.section = 'https://tc39.es/ecma262/#sec-finalization-registry.prototype.unregister';
   function bootstrapFinalizationRegistryPrototype(realmRec) {
     const proto = bootstrapPrototype(realmRec, [exports.surroundingAgent.feature('cleanup-some') ? ['cleanupSome', FinalizationRegistryProto_cleanupSome, 0] : undefined, ['register', FinalizationRegistryProto_register, 2], ['unregister', FinalizationRegistryProto_unregister, 1]], realmRec.Intrinsics['%Object.prototype%'], 'FinalizationRegistry');
     realmRec.Intrinsics['%FinalizationRegistry.prototype%'] = proto;
   }
 
-  /** http://tc39.es/ecma262/#sec-finalization-registry-cleanup-callback */
+  /** https://tc39.es/ecma262/#sec-finalization-registry-cleanup-callback */
   function FinalizationRegistryConstructor([cleanupCallback = exports.Value.undefined], {
     NewTarget
   }) {
@@ -53218,13 +53218,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 8. Return finalizationGroup.
     return finalizationGroup;
   }
-  FinalizationRegistryConstructor.section = 'https://tc39.es/ecma262/http://tc39.es/ecma262/#sec-finalization-registry-cleanup-callback';
+  FinalizationRegistryConstructor.section = 'https://tc39.es/ecma262/#sec-finalization-registry-cleanup-callback';
   function bootstrapFinalizationRegistry(realmRec) {
     const cons = bootstrapConstructor(realmRec, FinalizationRegistryConstructor, 'FinalizationRegistry', 1, realmRec.Intrinsics['%FinalizationRegistry.prototype%'], []);
     realmRec.Intrinsics['%FinalizationRegistry%'] = cons;
   }
 
-  /** http://tc39.es/ecma262/#sec-code-realms */
+  /** https://tc39.es/ecma262/#sec-code-realms */
   class Realm {
     Intrinsics;
     GlobalObject;
@@ -53248,7 +53248,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-createrealm */
+  /** https://tc39.es/ecma262/#sec-createrealm */
   function CreateRealm() {
     const realmRec = new Realm();
     CreateIntrinsics(realmRec);
@@ -53285,7 +53285,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-createintrinsics */
+  /** https://tc39.es/ecma262/#sec-createintrinsics */
   function CreateIntrinsics(realmRec) {
     const intrinsics = Object.create(null);
     realmRec.Intrinsics = intrinsics;
@@ -53369,7 +53369,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return intrinsics;
   }
 
-  /** http://tc39.es/ecma262/#sec-setrealmglobalobject */
+  /** https://tc39.es/ecma262/#sec-setrealmglobalobject */
   function SetRealmGlobalObject(realmRec, globalObj, thisValue) {
     const intrinsics = realmRec.Intrinsics;
     if (globalObj === exports.Value.undefined) {
@@ -53384,7 +53384,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return realmRec;
   }
 
-  /** http://tc39.es/ecma262/#sec-setdefaultglobalbindings */
+  /** https://tc39.es/ecma262/#sec-setdefaultglobalbindings */
   function SetDefaultGlobalBindings(realmRec) {
     const global = realmRec.GlobalObject;
 
@@ -53447,7 +53447,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return global;
   }
 
-  /** http://tc39.es/ecma262/#sec-ispropertyreference */
+  /** https://tc39.es/ecma262/#sec-ispropertyreference */
   function IsPropertyReference(V) {
     // 1. If V.[[Base]] is unresolvable, return false.
     if (V.Base === 'unresolvable') {
@@ -53457,7 +53457,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return V.Base instanceof EnvironmentRecord ? exports.Value.false : exports.Value.true;
   }
 
-  /** http://tc39.es/ecma262/#sec-isunresolvablereference */
+  /** https://tc39.es/ecma262/#sec-isunresolvablereference */
   function IsUnresolvableReference(V) {
     // 1. Assert: V is a Reference Record.
     Assert(V instanceof ReferenceRecord, "V instanceof ReferenceRecord");
@@ -53465,7 +53465,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return V.Base === 'unresolvable' ? exports.Value.true : exports.Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-issuperreference */
+  /** https://tc39.es/ecma262/#sec-issuperreference */
   function IsSuperReference(V) {
     // 1. Assert: V is a Reference Record.
     Assert(V instanceof ReferenceRecord, "V instanceof ReferenceRecord");
@@ -53473,7 +53473,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return V.ThisValue !== undefined ? exports.Value.true : exports.Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-isprivatereference */
+  /** https://tc39.es/ecma262/#sec-isprivatereference */
   function IsPrivateReference(V) {
     // 1. Assert: V is a Reference Record.
     Assert(V instanceof ReferenceRecord, "V instanceof ReferenceRecord");
@@ -53481,7 +53481,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return V.ReferencedName instanceof PrivateName ? exports.Value.true : exports.Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-getvalue */
+  /** https://tc39.es/ecma262/#sec-getvalue */
   function GetValue(V) {
     /* c8 ignore if */
     if (V instanceof AbruptCompletion) {
@@ -53530,7 +53530,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-putvalue */
+  /** https://tc39.es/ecma262/#sec-putvalue */
   function PutValue(V, W) {
     /* c8 ignore if */
     if (V instanceof AbruptCompletion) {
@@ -53607,7 +53607,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-getthisvalue */
+  /** https://tc39.es/ecma262/#sec-getthisvalue */
   function GetThisValue(V) {
     // 1. Assert: IsPropertyReference(V) is true.
     Assert(IsPropertyReference(V) === exports.Value.true, "IsPropertyReference(V) === Value.true");
@@ -53619,7 +53619,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-initializereferencedbinding */
+  /** https://tc39.es/ecma262/#sec-initializereferencedbinding */
   function InitializeReferencedBinding(V, W) {
     /* c8 ignore if */
     if (V instanceof AbruptCompletion) {
@@ -53650,7 +53650,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return base.InitializeBinding(V.ReferencedName, W);
   }
 
-  /** http://tc39.es/ecma262/#sec-makeprivatereference */
+  /** https://tc39.es/ecma262/#sec-makeprivatereference */
   function MakePrivateReference(baseValue, privateIdentifier) {
     // 1. Let privEnv be the running execution context's PrivateEnvironment.
     const privEnv = exports.surroundingAgent.runningExecutionContext.PrivateEnvironment;
@@ -53673,7 +53673,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     });
   }
 
-  /** http://tc39.es/ecma262/#sec-resolve-private-identifier */
+  /** https://tc39.es/ecma262/#sec-resolve-private-identifier */
   function ResolvePrivateIdentifier(privEnv, identifier) {
     // 1. Let names be privEnv.[[Names]].
     const names = privEnv.Names;
@@ -53694,7 +53694,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-regexpalloc */
+  /** https://tc39.es/ecma262/#sec-regexpalloc */
   function RegExpAlloc(newTarget) {
     let _temp = OrdinaryCreateFromConstructor(newTarget, '%RegExp.prototype%', ['RegExpMatcher', 'OriginalSource', 'OriginalFlags']);
     /* c8 ignore if */
@@ -53719,7 +53719,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return obj;
   }
 
-  /** http://tc39.es/ecma262/#sec-regexpinitialize */
+  /** https://tc39.es/ecma262/#sec-regexpinitialize */
   function RegExpInitialize(obj, pattern, flags) {
     let P;
     // 1. If pattern is undefined, let P be the empty String.
@@ -53801,7 +53801,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return obj;
   }
 
-  /** http://tc39.es/ecma262/#sec-regexpcreate */
+  /** https://tc39.es/ecma262/#sec-regexpcreate */
   function RegExpCreate(P, F) {
     let _temp6 = RegExpAlloc(exports.surroundingAgent.intrinsic('%RegExp%'));
     /* c8 ignore if */
@@ -53816,7 +53816,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return RegExpInitialize(obj, P, F);
   }
 
-  /** http://tc39.es/ecma262/#sec-escaperegexppattern */
+  /** https://tc39.es/ecma262/#sec-escaperegexppattern */
   function EscapeRegExpPattern(P, _F) {
     const source = P.stringValue();
     if (source === '') {
@@ -53877,7 +53877,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(escaped);
   }
 
-  /** http://tc39.es/ecma262/#sec-getstringindex */
+  /** https://tc39.es/ecma262/#sec-getstringindex */
   function GetStringIndex(S, Input, e) {
     // 1. Assert: Type(S) is String.
     Assert(S instanceof StringValue, "S instanceof JSStringValue");
@@ -53903,7 +53903,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return eUTF;
   }
 
-  /** http://tc39.es/ecma262/#sec-getmatchstring */
+  /** https://tc39.es/ecma262/#sec-getmatchstring */
   function GetMatchString(S, match) {
     // 1. Assert: Type(S) is String.
     Assert(S instanceof StringValue, "S instanceof JSStringValue");
@@ -53917,7 +53917,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(S.stringValue().slice(match.StartIndex, match.EndIndex));
   }
 
-  /** http://tc39.es/ecma262/#sec-getmatchindexpair */
+  /** https://tc39.es/ecma262/#sec-getmatchindexpair */
   function GetMatchIndexPair(S, match) {
     // 1. Assert: Type(S) is String.
     Assert(S instanceof StringValue, "S instanceof JSStringValue");
@@ -53931,7 +53931,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return CreateArrayFromList([F(match.StartIndex), F(match.EndIndex)]);
   }
 
-  /** http://tc39.es/ecma262/#sec-makematchindicesindexpairarray */
+  /** https://tc39.es/ecma262/#sec-makematchindicesindexpairarray */
   function MakeMatchIndicesIndexPairArray(S, indices, groupNames, hasGroups) {
     // 1. Assert: Type(S) is String.
     Assert(S instanceof StringValue, "S instanceof JSStringValue");
@@ -54025,7 +54025,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return A;
   }
 
-  /** http://tc39.es/ecma262/#sec-regexphasflag */
+  /** https://tc39.es/ecma262/#sec-regexphasflag */
   function RegExpHasFlag(R, codeUnit) {
     // 1. If Type(R) is not Object, throw a TypeError exception.
     if (!(R instanceof ObjectValue)) {
@@ -54095,7 +54095,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return false;
   }
 
-  /** http://tc39.es/ecma262/#sec-frompropertydescriptor */
+  /** https://tc39.es/ecma262/#sec-frompropertydescriptor */
   function FromPropertyDescriptor(Desc) {
     if (Desc instanceof UndefinedValue) {
       return exports.Value.undefined;
@@ -54153,7 +54153,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return obj;
   }
 
-  /** http://tc39.es/ecma262/#sec-topropertydescriptor */
+  /** https://tc39.es/ecma262/#sec-topropertydescriptor */
   function ToPropertyDescriptor(Obj) {
     if (!(Obj instanceof ObjectValue)) {
       return exports.surroundingAgent.Throw('TypeError', 'NotAnObject', Obj);
@@ -54311,7 +54311,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return desc;
   }
 
-  /** http://tc39.es/ecma262/#sec-completepropertydescriptor */
+  /** https://tc39.es/ecma262/#sec-completepropertydescriptor */
   function CompletePropertyDescriptor(Desc) {
     Assert(Desc instanceof exports.Descriptor, "Desc instanceof Descriptor");
     const like = exports.Descriptor({
@@ -54346,7 +54346,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Desc;
   }
 
-  /** http://tc39.es/ecma262/#sec-createbytedatablock */
+  /** https://tc39.es/ecma262/#sec-createbytedatablock */
   function CreateByteDataBlock(size) {
     Assert(isNonNegativeInteger(size), "isNonNegativeInteger(size)");
     let db;
@@ -54358,7 +54358,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return db;
   }
 
-  /** http://tc39.es/ecma262/#sec-copydatablockbytes */
+  /** https://tc39.es/ecma262/#sec-copydatablockbytes */
   function CopyDataBlockBytes(toBlock, toIndex, fromBlock, fromIndex, count) {
     Assert(fromBlock !== toBlock, "fromBlock !== toBlock");
     Assert(fromBlock instanceof DataBlock || Type(fromBlock) === 'Shared Data Block', "fromBlock instanceof DataBlock || Type(fromBlock) === 'Shared Data Block'");
@@ -54484,7 +54484,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return keys;
   }
 
-  /** http://tc39.es/ecma262/#sec-stringcreate */
+  /** https://tc39.es/ecma262/#sec-stringcreate */
   function StringCreate(value, prototype) {
     // 1. Assert: Type(value) is String.
     Assert(value instanceof StringValue, "value instanceof JSStringValue");
@@ -54524,7 +54524,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return S;
   }
 
-  /** http://tc39.es/ecma262/#sec-stringgetownproperty */
+  /** https://tc39.es/ecma262/#sec-stringgetownproperty */
   function StringGetOwnProperty(S, P) {
     Assert(S instanceof ObjectValue && 'StringData' in S, "S instanceof ObjectValue && 'StringData' in S");
     Assert(IsPropertyKey(P), "IsPropertyKey(P)");
@@ -54564,7 +54564,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
-  /** http://tc39.es/ecma262/#sec-symboldescriptivestring */
+  /** https://tc39.es/ecma262/#sec-symboldescriptivestring */
   function SymbolDescriptiveString(sym) {
     Assert(sym instanceof SymbolValue, "sym instanceof SymbolValue");
     let desc = sym.Description;
@@ -54575,9 +54575,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   // This file covers abstract operations defined in
-  /** http://tc39.es/ecma262/#sec-testing-and-comparison-operations */
+  /** https://tc39.es/ecma262/#sec-testing-and-comparison-operations */
 
-  /** http://tc39.es/ecma262/#sec-requireobjectcoercible */
+  /** https://tc39.es/ecma262/#sec-requireobjectcoercible */
   function RequireObjectCoercible(argument) {
     const type = Type(argument);
     switch (type) {
@@ -54600,7 +54600,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-isarray */
+  /** https://tc39.es/ecma262/#sec-isarray */
   function IsArray(argument) {
     if (!(argument instanceof ObjectValue)) {
       return exports.Value.false;
@@ -54618,7 +54618,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-iscallable */
+  /** https://tc39.es/ecma262/#sec-iscallable */
   function IsCallable(argument) {
     if (!(argument instanceof ObjectValue)) {
       return exports.Value.false;
@@ -54629,7 +54629,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-isconstructor */
+  /** https://tc39.es/ecma262/#sec-isconstructor */
   function IsConstructor(argument) {
     if (!(argument instanceof ObjectValue)) {
       return exports.Value.false;
@@ -54640,13 +54640,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-isextensible-o */
+  /** https://tc39.es/ecma262/#sec-isextensible-o */
   function IsExtensible(O) {
     Assert(O instanceof ObjectValue, "O instanceof ObjectValue");
     return O.IsExtensible();
   }
 
-  /** http://tc39.es/ecma262/#sec-isinteger */
+  /** https://tc39.es/ecma262/#sec-isinteger */
   function IsIntegralNumber(argument) {
     if (!(argument instanceof NumberValue)) {
       return exports.Value.false;
@@ -54660,7 +54660,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.true;
   }
 
-  /** http://tc39.es/ecma262/#sec-ispropertykey */
+  /** https://tc39.es/ecma262/#sec-ispropertykey */
   function IsPropertyKey(argument) {
     if (argument instanceof StringValue) {
       return true;
@@ -54671,7 +54671,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return false;
   }
 
-  /** http://tc39.es/ecma262/#sec-isregexp */
+  /** https://tc39.es/ecma262/#sec-isregexp */
   function IsRegExp(argument) {
     if (!(argument instanceof ObjectValue)) {
       return exports.Value.false;
@@ -54695,14 +54695,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-isstringprefix */
+  /** https://tc39.es/ecma262/#sec-isstringprefix */
   function IsStringPrefix(p, q) {
     Assert(p instanceof StringValue, "p instanceof JSStringValue");
     Assert(q instanceof StringValue, "q instanceof JSStringValue");
     return q.stringValue().startsWith(p.stringValue());
   }
 
-  /** http://tc39.es/ecma262/#sec-samevalue */
+  /** https://tc39.es/ecma262/#sec-samevalue */
   function SameValue(x, y) {
     // 1. If Type(x) is different from Type(y), return false.
     if (Type(x) !== Type(y)) {
@@ -54723,7 +54723,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return _temp2;
   }
 
-  /** http://tc39.es/ecma262/#sec-samevaluezero */
+  /** https://tc39.es/ecma262/#sec-samevaluezero */
   function SameValueZero(x, y) {
     // 1. If Type(x) is different from Type(y), return false.
     if (Type(x) !== Type(y)) {
@@ -54744,7 +54744,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return _temp3;
   }
 
-  /** http://tc39.es/ecma262/#sec-samevaluenonnumber */
+  /** https://tc39.es/ecma262/#sec-samevaluenonnumber */
   function SameValueNonNumber(x, y) {
     Assert(!(x instanceof NumberValue), "!(x instanceof NumberValue)");
     Assert(Type(x) === Type(y), "Type(x) === Type(y)");
@@ -54772,7 +54772,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return x === y ? exports.Value.true : exports.Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-abstract-relational-comparison */
+  /** https://tc39.es/ecma262/#sec-abstract-relational-comparison */
   function AbstractRelationalComparison(x, y, LeftFirst = true) {
     let px;
     let py;
@@ -54937,7 +54937,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-abstract-equality-comparison */
+  /** https://tc39.es/ecma262/#sec-abstract-equality-comparison */
   function AbstractEqualityComparison(x, y) {
     // 1. If Type(x) is the same as Type(y), then
     if (Type(x) === Type(y)) {
@@ -55054,7 +55054,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-strict-equality-comparison */
+  /** https://tc39.es/ecma262/#sec-strict-equality-comparison */
   function StrictEqualityComparison(x, y) {
     // 1. If Type(x) is different from Type(y), return false.
     if (Type(x) !== Type(y)) {
@@ -55075,7 +55075,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return SameValueNonNumber(x, y);
   }
 
-  /** http://tc39.es/ecma262/#sec-isvalidintegerindex */
+  /** https://tc39.es/ecma262/#sec-isvalidintegerindex */
   function IsValidIntegerIndex(O, index) {
     if (IsDetachedBuffer(O.ViewedArrayBuffer) === exports.Value.true) {
       return exports.Value.false;
@@ -55094,7 +55094,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.true;
   }
 
-  /** http://tc39.es/ecma262/#sec-toprimitive */
+  /** https://tc39.es/ecma262/#sec-toprimitive */
   function ToPrimitive(input, preferredType) {
     // 1. Assert: input is an ECMAScript language value.
     Assert(input instanceof exports.Value, "input instanceof Value");
@@ -55156,7 +55156,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return input;
   }
 
-  /** http://tc39.es/ecma262/#sec-ordinarytoprimitive */
+  /** https://tc39.es/ecma262/#sec-ordinarytoprimitive */
   function OrdinaryToPrimitive(O, hint) {
     // 1. Assert: Type(O) is Object.
     Assert(O instanceof ObjectValue, "O instanceof ObjectValue");
@@ -55208,7 +55208,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.surroundingAgent.Throw('TypeError', 'ObjectToPrimitive');
   }
 
-  /** http://tc39.es/ecma262/#sec-toboolean */
+  /** https://tc39.es/ecma262/#sec-toboolean */
   function ToBoolean(argument) {
     if (argument instanceof UndefinedValue) {
       // Return false.
@@ -55250,7 +55250,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     });
   }
 
-  /** http://tc39.es/ecma262/#sec-tonumeric */
+  /** https://tc39.es/ecma262/#sec-tonumeric */
   function ToNumeric(value) {
     let _temp5 = ToPrimitive(value, 'number');
     /* c8 ignore if */
@@ -55271,7 +55271,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return ToNumber(primValue);
   }
 
-  /** http://tc39.es/ecma262/#sec-tonumber */
+  /** https://tc39.es/ecma262/#sec-tonumber */
   function ToNumber(argument) {
     if (argument instanceof UndefinedValue) {
       // Return NaN.
@@ -55322,7 +55322,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Math.floor(r >= 0 ? r : r + m);
   };
 
-  /** http://tc39.es/ecma262/#sec-tointegerorinfinity */
+  /** https://tc39.es/ecma262/#sec-tointegerorinfinity */
   function ToIntegerOrInfinity(argument) {
     let _temp7 = ToNumber(argument);
     /* c8 ignore if */
@@ -55354,7 +55354,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return integer;
   }
 
-  /** http://tc39.es/ecma262/#sec-toint32 */
+  /** https://tc39.es/ecma262/#sec-toint32 */
   function ToInt32(argument) {
     let _temp8 = ToNumber(argument);
     /* c8 ignore if */
@@ -55382,7 +55382,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(int32bit);
   }
 
-  /** http://tc39.es/ecma262/#sec-touint32 */
+  /** https://tc39.es/ecma262/#sec-touint32 */
   function ToUint32(argument) {
     let _temp9 = ToNumber(argument);
     /* c8 ignore if */
@@ -55407,7 +55407,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(int32bit);
   }
 
-  /** http://tc39.es/ecma262/#sec-toint16 */
+  /** https://tc39.es/ecma262/#sec-toint16 */
   function ToInt16(argument) {
     let _temp10 = ToNumber(argument);
     /* c8 ignore if */
@@ -55435,7 +55435,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(int16bit);
   }
 
-  /** http://tc39.es/ecma262/#sec-touint16 */
+  /** https://tc39.es/ecma262/#sec-touint16 */
   function ToUint16(argument) {
     let _temp11 = ToNumber(argument);
     /* c8 ignore if */
@@ -55460,7 +55460,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(int16bit);
   }
 
-  /** http://tc39.es/ecma262/#sec-toint8 */
+  /** https://tc39.es/ecma262/#sec-toint8 */
   function ToInt8(argument) {
     let _temp12 = ToNumber(argument);
     /* c8 ignore if */
@@ -55488,7 +55488,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(int8bit);
   }
 
-  /** http://tc39.es/ecma262/#sec-touint8 */
+  /** https://tc39.es/ecma262/#sec-touint8 */
   function ToUint8(argument) {
     let _temp13 = ToNumber(argument);
     /* c8 ignore if */
@@ -55513,7 +55513,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(int8bit);
   }
 
-  /** http://tc39.es/ecma262/#sec-touint8clamp */
+  /** https://tc39.es/ecma262/#sec-touint8clamp */
   function ToUint8Clamp(argument) {
     let _temp14 = ToNumber(argument);
     /* c8 ignore if */
@@ -55556,7 +55556,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(f);
   }
 
-  /** http://tc39.es/ecma262/#sec-tobigint */
+  /** https://tc39.es/ecma262/#sec-tobigint */
   function ToBigInt(argument) {
     let _temp15 = ToPrimitive(argument, 'number');
     /* c8 ignore if */
@@ -55610,7 +55610,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     throw new OutOfRange$1('ToBigInt', argument);
   }
 
-  /** http://tc39.es/ecma262/#sec-stringtobigint */
+  /** https://tc39.es/ecma262/#sec-stringtobigint */
   function StringToBigInt(argument) {
     // Apply the algorithm in 7.1.4.1 (#sec-tonumber-applied-to-the-string-type) with the following changes:
     // 1. Replace the StrUnsignedDecimalLiteral production with DecimalDigits to not allow Infinity, decimal points, or exponents.
@@ -55623,7 +55623,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-tobigint64 */
+  /** https://tc39.es/ecma262/#sec-tobigint64 */
   function ToBigInt64(argument) {
     let _temp17 = ToBigInt(argument);
     /* c8 ignore if */
@@ -55645,7 +55645,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Z(int64bit);
   }
 
-  /** http://tc39.es/ecma262/#sec-tobiguint64 */
+  /** https://tc39.es/ecma262/#sec-tobiguint64 */
   function ToBigUint64(argument) {
     let _temp18 = ToBigInt(argument);
     /* c8 ignore if */
@@ -55664,7 +55664,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Z(int64bit);
   }
 
-  /** http://tc39.es/ecma262/#sec-tostring */
+  /** https://tc39.es/ecma262/#sec-tostring */
   function ToString(argument) {
     if (argument instanceof UndefinedValue) {
       // Return "undefined".
@@ -55721,7 +55721,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     });
   }
 
-  /** http://tc39.es/ecma262/#sec-toobject */
+  /** https://tc39.es/ecma262/#sec-toobject */
   function ToObject(argument) {
     if (argument instanceof UndefinedValue) {
       // Throw a TypeError exception.
@@ -55762,7 +55762,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     });
   }
 
-  /** http://tc39.es/ecma262/#sec-topropertykey */
+  /** https://tc39.es/ecma262/#sec-topropertykey */
   function ToPropertyKey(argument) {
     let _temp22 = ToPrimitive(argument, 'string');
     /* c8 ignore if */
@@ -55790,7 +55790,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return _temp23;
   }
 
-  /** http://tc39.es/ecma262/#sec-tolength */
+  /** https://tc39.es/ecma262/#sec-tolength */
   function ToLength(argument) {
     let _temp24 = ToIntegerOrInfinity(argument);
     /* c8 ignore if */
@@ -55811,7 +55811,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return F(Math.min(len, 2 ** 53 - 1));
   }
 
-  /** http://tc39.es/ecma262/#sec-canonicalnumericindexstring */
+  /** https://tc39.es/ecma262/#sec-canonicalnumericindexstring */
   function CanonicalNumericIndexString(argument) {
     // 1. Assert: Type(argument) is String.
     Assert(argument instanceof StringValue, "argument instanceof JSStringValue");
@@ -55841,7 +55841,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return n;
   }
 
-  /** http://tc39.es/ecma262/#sec-toindex */
+  /** https://tc39.es/ecma262/#sec-toindex */
   function ToIndex(value) {
     // 1. If value is undefined, then
     if (value instanceof UndefinedValue) {
@@ -55959,7 +55959,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     typedArrayInfoByType[v.ElementType] = v;
   });
 
-  /** http://tc39.es/ecma262/#sec-validatetypedarray */
+  /** https://tc39.es/ecma262/#sec-validatetypedarray */
   function ValidateTypedArray(O) {
     let _temp = RequireInternalSlot(O, 'TypedArrayName');
     /* c8 ignore if */
@@ -56016,7 +56016,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return newTypedArray;
   }
 
-  /** http://tc39.es/ecma262/#sec-allocatetypedarray */
+  /** https://tc39.es/ecma262/#sec-allocatetypedarray */
   function AllocateTypedArray(constructorName, newTarget, defaultProto, length) {
     let _temp4 = GetPrototypeFromConstructor(newTarget, defaultProto);
     /* c8 ignore if */
@@ -56071,7 +56071,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return obj;
   }
 
-  /** http://tc39.es/ecma262/#sec-allocatetypedarraybuffer */
+  /** https://tc39.es/ecma262/#sec-allocatetypedarraybuffer */
   function AllocateTypedArrayBuffer(O, length) {
     // 1. Assert: O is an Object that has a [[ViewedArrayBuffer]] internal slot.
     Assert(O instanceof ObjectValue && 'ViewedArrayBuffer' in O, "O instanceof ObjectValue && 'ViewedArrayBuffer' in O");
@@ -56146,7 +56146,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return result;
   }
 
-  /** http://tc39.es/ecma262/#sec-iterabletolist */
+  /** https://tc39.es/ecma262/#sec-iterabletolist */
   function IterableToList(items, method) {
     let _temp10 = GetIterator(items, 'sync', method);
     /* c8 ignore if */
@@ -56197,7 +56197,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return values;
   }
 
-  /** http://tc39.es/ecma262/#sec-clear-kept-objects */
+  /** https://tc39.es/ecma262/#sec-clear-kept-objects */
   function ClearKeptObjects() {
     // 1. Let agentRecord be the surrounding agent's Agent Record.
     const agentRecord = exports.surroundingAgent.AgentRecord;
@@ -56205,7 +56205,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     agentRecord.KeptAlive = new Set();
   }
 
-  /** http://tc39.es/ecma262/#sec-addtokeptobjects */
+  /** https://tc39.es/ecma262/#sec-addtokeptobjects */
   function AddToKeptObjects(object) {
     // 1. Let agentRecord be the surrounding agent's Agent Record.
     const agentRecord = exports.surroundingAgent.AgentRecord;
@@ -56213,7 +56213,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     agentRecord.KeptAlive.add(object);
   }
 
-  /** http://tc39.es/ecma262/#sec-weakrefderef */
+  /** https://tc39.es/ecma262/#sec-weakrefderef */
   function WeakRefDeref(weakRef) {
     // 1. Let target be weakRef.[[WeakRefTarget]].
     const target = weakRef.WeakRefTarget;
@@ -56232,7 +56232,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-cleanup-finalization-registry */
+  /** https://tc39.es/ecma262/#sec-cleanup-finalization-registry */
   function CleanupFinalizationRegistry(finalizationRegistry, callback) {
     // 1. Assert: finalizationRegistry has [[Cells]] and [[CleanupCallback]] internal slots.
     Assert('Cells' in finalizationRegistry && 'CleanupCallback' in finalizationRegistry, "'Cells' in finalizationRegistry && 'CleanupCallback' in finalizationRegistry");
@@ -56546,7 +56546,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.surroundingAgent.Throw(...args);
   }
 
-  /** http://tc39.es/ecma262/#sec-weakref-execution */
+  /** https://tc39.es/ecma262/#sec-weakref-execution */
   function gc() {
     // At any time, if a set of objects S is not live, an ECMAScript implementation may perform the following steps atomically:
     // 1. For each obj of S, do
