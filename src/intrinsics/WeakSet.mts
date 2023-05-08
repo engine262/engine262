@@ -13,7 +13,7 @@ import {
 import { IfAbruptCloseIterator, Q } from '../completion.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-weakset-iterable */
+/** https://tc39.es/ecma262/#sec-weakset-iterable */
 function WeakSetConstructor([iterable = Value.undefined], { NewTarget }) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget === Value.undefined) {

@@ -12,7 +12,7 @@ import {
 } from '../completion.mjs';
 import { Value } from '../api.mjs';
 
-/** http://tc39.es/ecma262/#sec-import-calls */
+/** https://tc39.es/ecma262/#sec-import-calls */
 // ImportCall : `import` `(` AssignmentExpression `)`
 export function* Evaluate_ImportCall({ AssignmentExpression }) {
   // 1. Let referrer be ! GetActiveScriptOrModule().

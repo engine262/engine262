@@ -108,7 +108,7 @@ const uriMark = '-_.!~*\'()';
 const DecimalDigit = '0123456789';
 const uriUnescaped = uriAlpha + DecimalDigit + uriMark;
 
-/** http://tc39.es/ecma262/#sec-encode */
+/** https://tc39.es/ecma262/#sec-encode */
 function Encode(string, unescapedSet) {
   string = string.stringValue();
   // 1. Let strLen be the number of code units in string.
@@ -154,7 +154,7 @@ function Encode(string, unescapedSet) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-decode */
+/** https://tc39.es/ecma262/#sec-decode */
 function Decode(string, reservedSet) {
   string = string.stringValue();
   // 1. Let strLen be the number of code units in string.
@@ -269,7 +269,7 @@ function Decode(string, reservedSet) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-decodeuri-encodeduri */
+/** https://tc39.es/ecma262/#sec-decodeuri-encodeduri */
 function decodeURI([encodedURI = Value.undefined]) {
   // 1. Let uriString be ? ToString(encodedURI).
   const uriString = Q(ToString(encodedURI));
@@ -279,7 +279,7 @@ function decodeURI([encodedURI = Value.undefined]) {
   return Q(Decode(uriString, reservedURISet));
 }
 
-/** http://tc39.es/ecma262/#sec-decodeuricomponent-encodeduricomponent */
+/** https://tc39.es/ecma262/#sec-decodeuricomponent-encodeduricomponent */
 function decodeURIComponent([encodedURIComponent = Value.undefined]) {
   // 1. Let componentString be ? ToString(encodedURIComponent).
   const componentString = Q(ToString(encodedURIComponent));
@@ -289,7 +289,7 @@ function decodeURIComponent([encodedURIComponent = Value.undefined]) {
   return Q(Decode(componentString, reservedURIComponentSet));
 }
 
-/** http://tc39.es/ecma262/#sec-encodeuri-uri */
+/** https://tc39.es/ecma262/#sec-encodeuri-uri */
 function encodeURI([uri = Value.undefined]) {
   // 1. Let uriString be ? ToString(uri).
   const uriString = Q(ToString(uri));
@@ -299,7 +299,7 @@ function encodeURI([uri = Value.undefined]) {
   return Q(Encode(uriString, unescapedURISet));
 }
 
-/** http://tc39.es/ecma262/#sec-encodeuricomponent-uricomponent */
+/** https://tc39.es/ecma262/#sec-encodeuricomponent-uricomponent */
 function encodeURIComponent([uriComponent = Value.undefined]) {
   // 1. Let componentString be ? ToString(uriComponent).
   const componentString = Q(ToString(uriComponent));

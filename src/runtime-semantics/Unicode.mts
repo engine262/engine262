@@ -516,7 +516,7 @@ export const UnicodeScriptValues = {
   Zanb: 'Zanabazar_Square',
 };
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-unicodematchproperty-p */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-unicodematchproperty-p */
 export function UnicodeMatchProperty(p) {
   // 1. Assert: p is a List of Unicode code points that is identical to a List of Unicode code points that is a Unicode property name or property alias listed in the “Property name and aliases” column of Table 55 or Table 56.
   Assert(p in NonbinaryUnicodeProperties || p in BinaryUnicodeProperties);
@@ -526,7 +526,7 @@ export function UnicodeMatchProperty(p) {
   return c;
 }
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-unicodematchpropertyvalue-p-v */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-unicodematchpropertyvalue-p-v */
 export function UnicodeMatchPropertyValue(p, v) {
   // 1. Assert: p is a List of Unicode code points that is identical to a List of Unicode code points that is a canonical, unaliased Unicode property name listed in the “Canonical property name” column of Table 55.
   Assert(p in NonbinaryUnicodeProperties);

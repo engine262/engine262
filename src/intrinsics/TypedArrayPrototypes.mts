@@ -3,7 +3,7 @@ import { typedArrayInfoByName, F } from '../abstract-ops/all.mjs';
 import { Value } from '../value.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-properties-of-typedarray-prototype-objects */
+/** https://tc39.es/ecma262/#sec-properties-of-typedarray-prototype-objects */
 export function bootstrapTypedArrayPrototypes(realmRec) {
   Object.entries(typedArrayInfoByName).forEach(([TypedArray, info]) => {
     const proto = bootstrapPrototype(realmRec, [

@@ -5,7 +5,7 @@ import { CreateDynamicFunction } from '../runtime-semantics/all.mjs';
 import { Descriptor, Value } from '../value.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-async-function-constructor-arguments */
+/** https://tc39.es/ecma262/#sec-async-function-constructor-arguments */
 function AsyncFunctionConstructor(args, { NewTarget }) {
   // 1. Let C be the active function object.
   const C = surroundingAgent.activeFunctionObject;

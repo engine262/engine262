@@ -2,7 +2,7 @@
 import { wellKnownSymbols } from '../value.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-%iteratorprototype%-@@iterator */
+/** https://tc39.es/ecma262/#sec-%iteratorprototype%-@@iterator */
 function IteratorPrototype_iterator(args, { thisValue }) {
   // 1. Return this value.
   return thisValue;

@@ -13,7 +13,7 @@ import {
 } from '../completion.mjs';
 import { Value } from '../value.mjs';
 
-/** http://tc39.es/ecma262/#sec-if-statement-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-if-statement-runtime-semantics-evaluation */
 // IfStatement :
 //   `if` `(` Expression `)` Statement `else` Statement
 //   `if` `(` Expression `)` Statement

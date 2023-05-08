@@ -16,7 +16,7 @@ import { Q, X } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 import { CreateSetIterator } from './SetIteratorPrototype.mjs';
 
-/** http://tc39.es/ecma262/#sec-set.prototype.add */
+/** https://tc39.es/ecma262/#sec-set.prototype.add */
 function SetProto_add([value = Value.undefined], { thisValue }) {
   // 1. Let S be the this value.
   const S = thisValue;
@@ -42,7 +42,7 @@ function SetProto_add([value = Value.undefined], { thisValue }) {
   return S;
 }
 
-/** http://tc39.es/ecma262/#sec-set.prototype.clear */
+/** https://tc39.es/ecma262/#sec-set.prototype.clear */
 function SetProto_clear(args, { thisValue }) {
   // 1. Let S be the this value.
   const S = thisValue;
@@ -59,7 +59,7 @@ function SetProto_clear(args, { thisValue }) {
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-set.prototype.delete */
+/** https://tc39.es/ecma262/#sec-set.prototype.delete */
 function SetProto_delete([value = Value.undefined], { thisValue }) {
   // 1. Let S be the this value.
   const S = thisValue;
@@ -82,7 +82,7 @@ function SetProto_delete([value = Value.undefined], { thisValue }) {
   return Value.false;
 }
 
-/** http://tc39.es/ecma262/#sec-set.prototype.entries */
+/** https://tc39.es/ecma262/#sec-set.prototype.entries */
 function SetProto_entries(args, { thisValue }) {
   // 1. Let S be the this value.
   const S = thisValue;
@@ -90,7 +90,7 @@ function SetProto_entries(args, { thisValue }) {
   return Q(CreateSetIterator(S, 'key+value'));
 }
 
-/** http://tc39.es/ecma262/#sec-set.prototype.foreach */
+/** https://tc39.es/ecma262/#sec-set.prototype.foreach */
 function SetProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
   // 1. Let S be the this value.
   const S = thisValue;
@@ -114,7 +114,7 @@ function SetProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefin
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-set.prototype.has */
+/** https://tc39.es/ecma262/#sec-set.prototype.has */
 function SetProto_has([value = Value.undefined], { thisValue }) {
   // 1. Let S be the this value.
   const S = thisValue;
@@ -133,7 +133,7 @@ function SetProto_has([value = Value.undefined], { thisValue }) {
   return Value.false;
 }
 
-/** http://tc39.es/ecma262/#sec-get-set.prototype.size */
+/** https://tc39.es/ecma262/#sec-get-set.prototype.size */
 function SetProto_sizeGetter(args, { thisValue }) {
   // 1. Let S be the this value.
   const S = thisValue;
@@ -154,7 +154,7 @@ function SetProto_sizeGetter(args, { thisValue }) {
   return F(count);
 }
 
-/** http://tc39.es/ecma262/#sec-set.prototype.values */
+/** https://tc39.es/ecma262/#sec-set.prototype.values */
 function SetProto_values(args, { thisValue }) {
   // 1. Let S be the this value.
   const S = thisValue;

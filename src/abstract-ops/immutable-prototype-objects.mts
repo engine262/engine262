@@ -3,7 +3,7 @@ import { NullValue, ObjectValue, Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
 import { Assert, SameValue } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-set-immutable-prototype */
+/** https://tc39.es/ecma262/#sec-set-immutable-prototype */
 export function SetImmutablePrototype(O, V) {
   // 1. Assert: Either Type(V) is Object or Type(V) is Null.
   Assert(V instanceof ObjectValue || V instanceof NullValue);

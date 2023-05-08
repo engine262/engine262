@@ -13,7 +13,7 @@ export class ClassStaticBlockDefinitionRecord {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-classstaticblockdefinitionevaluation */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-classstaticblockdefinitionevaluation */
 //    ClassStaticBlock : `static` `{` ClassStaticBlockBody `}`
 export function ClassStaticBlockDefinitionEvaluation({ ClassStaticBlockBody }, homeObject) {
   // 1. Let lex be the running execution context's LexicalEnvironment.

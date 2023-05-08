@@ -41,7 +41,7 @@ export function Throw(...args) {
   return surroundingAgent.Throw(...args);
 }
 
-/** http://tc39.es/ecma262/#sec-weakref-execution */
+/** https://tc39.es/ecma262/#sec-weakref-execution */
 export function gc() {
   // At any time, if a set of objects S is not live, an ECMAScript implementation may perform the following steps atomically:
   // 1. For each obj of S, do

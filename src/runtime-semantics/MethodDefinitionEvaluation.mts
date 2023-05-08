@@ -16,7 +16,7 @@ import {
 import { OutOfRange } from '../helpers.mjs';
 import { DefineMethod, Evaluate_PropertyName } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-privateelement-specification-type */
+/** https://tc39.es/ecma262/#sec-privateelement-specification-type */
 export class PrivateElementRecord {
   Key;
   Kind;
@@ -32,7 +32,7 @@ export class PrivateElementRecord {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-definemethodproperty */
+/** https://tc39.es/ecma262/#sec-definemethodproperty */
 function DefineMethodProperty(key, homeObject, closure, enumerable) {
   // 1. If key is a Private Name, then
   if (key instanceof PrivateName) {
@@ -157,7 +157,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition, object, 
   }
 }
 
-/** http://tc39.es/ecma262/#sec-async-function-definitions-MethodDefinitionEvaluation */
+/** https://tc39.es/ecma262/#sec-async-function-definitions-MethodDefinitionEvaluation */
 //   AsyncMethod :
 //     `async` ClassElementName `(` UniqueFormalParameters `)` `{` AsyncFunctionBody `}`
 function* MethodDefinitionEvaluation_AsyncMethod(AsyncMethod, object, enumerable) {
@@ -182,7 +182,7 @@ function* MethodDefinitionEvaluation_AsyncMethod(AsyncMethod, object, enumerable
   return Q(DefineMethodProperty(propKey, object, closure, enumerable));
 }
 
-/** http://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation */
+/** https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation */
 //   GeneratorMethod :
 //     `*` ClassElementName `(` UniqueFormalParameters `)` `{` GeneratorBody `}`
 function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, enumerable) {
@@ -216,7 +216,7 @@ function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, en
   return Q(DefineMethodProperty(propKey, object, closure, enumerable));
 }
 
-/** http://tc39.es/ecma262/#sec-asyncgenerator-definitions-propertydefinitionevaluation */
+/** https://tc39.es/ecma262/#sec-asyncgenerator-definitions-propertydefinitionevaluation */
 //   AsyncGeneratorMethod :
 //     `async` `*` PropertyName `(` UniqueFormalParameters `)` `{` AsyncGeneratorBody `}`
 function* MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod, object, enumerable) {

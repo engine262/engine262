@@ -3,7 +3,7 @@ import { ResolveBinding } from '../abstract-ops/all.mjs';
 import { StringValue } from '../static-semantics/all.mjs';
 import { Q } from '../completion.mjs';
 
-/** http://tc39.es/ecma262/#sec-identifiers-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-identifiers-runtime-semantics-evaluation */
 // IdentifierReference :
 //   Identifier
 //   `yield`

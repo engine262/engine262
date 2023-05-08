@@ -15,7 +15,7 @@ import {
 import { Q } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-thissymbolvalue */
+/** https://tc39.es/ecma262/#sec-thissymbolvalue */
 function thisSymbolValue(value) {
   // 1. If Type(value) is Symbol, return value.
   if (value instanceof SymbolValue) {
@@ -34,7 +34,7 @@ function thisSymbolValue(value) {
   return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Symbol', value);
 }
 
-/** http://tc39.es/ecma262/#sec-symbol.prototype.description */
+/** https://tc39.es/ecma262/#sec-symbol.prototype.description */
 function SymbolProto_descriptionGetter(argList, { thisValue }) {
   // 1. Let s be the this value.
   const s = thisValue;
@@ -44,7 +44,7 @@ function SymbolProto_descriptionGetter(argList, { thisValue }) {
   return sym.Description;
 }
 
-/** http://tc39.es/ecma262/#sec-symbol.prototype.tostring */
+/** https://tc39.es/ecma262/#sec-symbol.prototype.tostring */
 function SymbolProto_toString(argList, { thisValue }) {
   // 1. Let sym be ? thisSymbolValue(this value).
   const sym = Q(thisSymbolValue(thisValue));
@@ -52,13 +52,13 @@ function SymbolProto_toString(argList, { thisValue }) {
   return SymbolDescriptiveString(sym);
 }
 
-/** http://tc39.es/ecma262/#sec-symbol.prototype.valueof */
+/** https://tc39.es/ecma262/#sec-symbol.prototype.valueof */
 function SymbolProto_valueOf(argList, { thisValue }) {
   // 1. Return ? thisSymbolValue(this value).
   return Q(thisSymbolValue(thisValue));
 }
 
-/** http://tc39.es/ecma262/#sec-symbol.prototype-@@toprimitive */
+/** https://tc39.es/ecma262/#sec-symbol.prototype-@@toprimitive */
 function SymbolProto_toPrimitive(argList, { thisValue }) {
   // 1. Return ? thisSymbolValue(this value).
   return Q(thisSymbolValue(thisValue));

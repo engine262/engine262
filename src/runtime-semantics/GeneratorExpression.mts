@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { InstantiateGeneratorFunctionExpression } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-evaluation */
 //   GeneratorExpression :
 //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
 //     `function` `*` BindingIdentifier `(` FormalParameters `)` `{` GeneratorBody `}`

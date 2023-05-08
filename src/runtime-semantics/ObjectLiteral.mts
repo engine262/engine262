@@ -7,7 +7,7 @@ import {
   PropertyDefinitionEvaluation_PropertyDefinitionList,
 } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-evaluation */
 //   ObjectLiteral :
 //     `{` `}`
 //     `{` PropertyDefinitionList `}`

@@ -40,11 +40,11 @@ import {
 import { OutOfRange } from '../helpers.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-array-constructor */
+/** https://tc39.es/ecma262/#sec-array-constructor */
 function ArrayConstructor(argumentsList, { NewTarget }) {
   const numberOfArgs = argumentsList.length;
   if (numberOfArgs === 0) {
-    /** http://tc39.es/ecma262/#sec-array-constructor-array */
+    /** https://tc39.es/ecma262/#sec-array-constructor-array */
     Assert(numberOfArgs === 0);
     if (NewTarget instanceof UndefinedValue) {
       NewTarget = surroundingAgent.activeFunctionObject;
@@ -52,7 +52,7 @@ function ArrayConstructor(argumentsList, { NewTarget }) {
     const proto = GetPrototypeFromConstructor(NewTarget, '%Array.prototype%');
     return ArrayCreate(0, proto);
   } else if (numberOfArgs === 1) {
-    /** http://tc39.es/ecma262/#sec-array-len */
+    /** https://tc39.es/ecma262/#sec-array-len */
     const [len] = argumentsList;
     Assert(numberOfArgs === 1);
     if (NewTarget instanceof UndefinedValue) {
@@ -74,7 +74,7 @@ function ArrayConstructor(argumentsList, { NewTarget }) {
     Set(array, Value('length'), intLen, Value.true);
     return array;
   } else if (numberOfArgs >= 2) {
-    /** http://tc39.es/ecma262/#sec-array-items */
+    /** https://tc39.es/ecma262/#sec-array-items */
     const items = argumentsList;
     Assert(numberOfArgs >= 2);
     if (NewTarget instanceof UndefinedValue) {
@@ -97,7 +97,7 @@ function ArrayConstructor(argumentsList, { NewTarget }) {
   throw new OutOfRange('ArrayConstructor', numberOfArgs);
 }
 
-/** http://tc39.es/ecma262/#sec-array.from */
+/** https://tc39.es/ecma262/#sec-array.from */
 function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
   const C = thisValue;
   let mapping;
@@ -167,12 +167,12 @@ function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg =
   return A;
 }
 
-/** http://tc39.es/ecma262/#sec-array.isarray */
+/** https://tc39.es/ecma262/#sec-array.isarray */
 function Array_isArray([arg = Value.undefined]) {
   return Q(IsArray(arg));
 }
 
-/** http://tc39.es/ecma262/#sec-array.of */
+/** https://tc39.es/ecma262/#sec-array.of */
 function Array_of(items, { thisValue }) {
   const len = items.length;
   // Let items be the List of arguments passed to this function.
@@ -194,7 +194,7 @@ function Array_of(items, { thisValue }) {
   return A;
 }
 
-/** http://tc39.es/ecma262/#sec-get-array-@@species */
+/** https://tc39.es/ecma262/#sec-get-array-@@species */
 function Array_speciesGetter(args, { thisValue }) {
   return thisValue;
 }

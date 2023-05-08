@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { UTF16EncodeCodePoint } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-codepointstostring */
+/** https://tc39.es/ecma262/#sec-codepointstostring */
 export function CodePointsToString(text) {
   // 1. Let result be the empty String.
   let result = '';

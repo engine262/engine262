@@ -21,10 +21,10 @@ export interface NormalCompletionRecord<T> extends CompletionRecord<T> {
   readonly Target: undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-completion-record-specification-type */ // @ts-expect-error
+/** https://tc39.es/ecma262/#sec-completion-record-specification-type */ // @ts-expect-error
 export declare function Completion<T>(_init: NormalCompletion<T>): NormalCompletion<T> // @ts-expect-error
 export declare function Completion<T>(_init: Completion<T>): Completion<T>
-/** http://tc39.es/ecma262/#sec-completion-record-specification-type */
+/** https://tc39.es/ecma262/#sec-completion-record-specification-type */
 export @callable((_CompletionClass, _thisValue, [init]) => {
   // 1. Assert: completionRecord is a Completion Record.
   Assert(init instanceof Completion);
@@ -48,7 +48,7 @@ class Completion<T = unknown> {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-normalcompletion */
+/** https://tc39.es/ecma262/#sec-normalcompletion */
 export interface NormalCompletion<T> extends Completion<T> {
   readonly Type: 'normal';
   readonly Target: undefined;
@@ -85,13 +85,13 @@ export interface ThrowCompletion<T = unknown> extends Completion<T> {
   readonly Type: 'throw';
   readonly Target: undefined;
 }
-/** http://tc39.es/ecma262/#sec-throwcompletion */
+/** https://tc39.es/ecma262/#sec-throwcompletion */
 export function ThrowCompletion<T>(argument: T): ThrowCompletion<T> {
   // 1. Return Completion { [[Type]]: throw, [[Value]]: argument, [[Target]]: empty }.
   return new Completion({ Type: 'throw', Value: argument, Target: undefined }) as ThrowCompletion<T>;
 }
 
-/** http://tc39.es/ecma262/#sec-updateempty */
+/** https://tc39.es/ecma262/#sec-updateempty */
 export function UpdateEmpty<T, Q>(completionRecord: Completion<Q>, value: T): Completion<T | Q> {
   Assert(completionRecord instanceof Completion);
   // 1. Assert: If completionRecord.[[Type]] is either return or throw, then completionRecord.[[Value]] is not empty.
@@ -105,8 +105,8 @@ export function UpdateEmpty<T, Q>(completionRecord: Completion<Q>, value: T): Co
 }
 
 /**
- * http://tc39.es/ecma262/#sec-returnifabrupt
- * http://tc39.es/ecma262/#sec-returnifabrupt-shorthands ? OperationName()
+ * https://tc39.es/ecma262/#sec-returnifabrupt
+ * https://tc39.es/ecma262/#sec-returnifabrupt-shorthands ? OperationName()
  */
 export function ReturnIfAbrupt<T>(_completion: Completion<T> | T): T
 export function ReturnIfAbrupt<T, Q>(_completion: Completion<T> | Q): T | Q
@@ -117,7 +117,7 @@ export function ReturnIfAbrupt<T>(_completion: Completion<T> | T): never {
 
 export { ReturnIfAbrupt as Q };
 
-/** http://tc39.es/ecma262/#sec-returnifabrupt-shorthands ! OperationName() */
+/** https://tc39.es/ecma262/#sec-returnifabrupt-shorthands ! OperationName() */
 export function X<T>(_completion: NormalCompletion<T> | AbruptCompletion<unknown>): T
 export function X<T>(_completion: T): T
 export function X<T, Q>(_completion: NormalCompletion<T> | AbruptCompletion<unknown> | Q): T | Q
@@ -126,14 +126,14 @@ export function X(_completion: unknown): never {
   throw new TypeError('X() requires build');
 }
 
-/** http://tc39.es/ecma262/#sec-ifabruptcloseiterator */
+/** https://tc39.es/ecma262/#sec-ifabruptcloseiterator */
 // TODO(TS):
 export function IfAbruptCloseIterator(_value: Completion, _iteratorRecord: unknown) {
   /* c8 skip next */
   throw new TypeError('IfAbruptCloseIterator() requires build');
 }
 
-/** http://tc39.es/ecma262/#sec-ifabruptrejectpromise */
+/** https://tc39.es/ecma262/#sec-ifabruptrejectpromise */
 export function IfAbruptRejectPromise(_value: Completion, _capability: PromiseCapabilityRecord) {
   /* c8 skip next */
   throw new TypeError('IfAbruptRejectPromise requires build');

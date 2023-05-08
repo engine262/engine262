@@ -31,7 +31,7 @@ export function bootstrapNativeError(realmRec) {
       ['message', Value('')],
     ], realmRec.Intrinsics['%Error.prototype%']);
 
-    /** http://tc39.es/ecma262/#sec-nativeerror */
+    /** https://tc39.es/ecma262/#sec-nativeerror */
     const Constructor = ([message = Value.undefined, options = Value.undefined], { NewTarget }) => {
       // 1. If NewTarget is undefined, let newTarget be the active function object; else let newTarget be NewTarget.
       let newTarget;

@@ -12,7 +12,7 @@ export function Assert(invariant: boolean, source?: string): asserts invariant {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-requireinternalslot */
+/** https://tc39.es/ecma262/#sec-requireinternalslot */
 export function RequireInternalSlot(O: Value, internalSlot: string): ThrowCompletion<ObjectValue> | undefined {
   if (!(O instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', O);

@@ -100,7 +100,7 @@ Object.values(typedArrayInfoByName).forEach((v) => {
   typedArrayInfoByType[v.ElementType] = v;
 });
 
-/** http://tc39.es/ecma262/#sec-validatetypedarray */
+/** https://tc39.es/ecma262/#sec-validatetypedarray */
 export function ValidateTypedArray(O) {
   // 1. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
   Q(RequireInternalSlot(O, 'TypedArrayName'));
@@ -133,7 +133,7 @@ export function TypedArrayCreate(constructor, argumentList) {
   return newTypedArray;
 }
 
-/** http://tc39.es/ecma262/#sec-allocatetypedarray */
+/** https://tc39.es/ecma262/#sec-allocatetypedarray */
 export function AllocateTypedArray(constructorName, newTarget, defaultProto, length) {
   // 1. Let proto be ? GetPrototypeFromConstructor(newTarget, defaultProto).
   const proto = Q(GetPrototypeFromConstructor(newTarget, defaultProto));
@@ -166,7 +166,7 @@ export function AllocateTypedArray(constructorName, newTarget, defaultProto, len
   return obj;
 }
 
-/** http://tc39.es/ecma262/#sec-allocatetypedarraybuffer */
+/** https://tc39.es/ecma262/#sec-allocatetypedarraybuffer */
 export function AllocateTypedArrayBuffer(O, length) {
   // 1. Assert: O is an Object that has a [[ViewedArrayBuffer]] internal slot.
   Assert(O instanceof ObjectValue && 'ViewedArrayBuffer' in O);
@@ -216,7 +216,7 @@ export function TypedArraySpeciesCreate(exemplar, argumentList) {
   return result;
 }
 
-/** http://tc39.es/ecma262/#sec-iterabletolist */
+/** https://tc39.es/ecma262/#sec-iterabletolist */
 export function IterableToList(items, method) {
   // 1. Let iteratorRecord be ? GetIterator(items, sync, method).
   const iteratorRecord = Q(GetIterator(items, 'sync', method));

@@ -21,7 +21,7 @@ import {
 import { OutOfRange, kInternal } from '../helpers.mjs';
 import { NamedEvaluation, MethodDefinitionEvaluation, Evaluate_PropertyName } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-propertydefinitionevaluation */
+/** https://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-propertydefinitionevaluation */
 //   PropertyDefinitionList :
 //     PropertyDefinitionList `,` PropertyDefinition
 export function* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList, object, enumerable) {

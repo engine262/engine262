@@ -30,9 +30,9 @@ import { unwind, ValueSet } from '../helpers.mjs';
 import { Assert, GetThisEnvironment } from './all.mjs';
 
 // This file covers abstract operations defined in
-/** http://tc39.es/ecma262/#sec-global-object */
+/** https://tc39.es/ecma262/#sec-global-object */
 
-/** http://tc39.es/ecma262/#sec-performeval */
+/** https://tc39.es/ecma262/#sec-performeval */
 export function PerformEval(x, callerRealm, strictCaller, direct) {
   // 1. Assert: If direct is false, then strictCaller is also false.
   if (direct === false) {
@@ -188,7 +188,7 @@ export function PerformEval(x, callerRealm, strictCaller, direct) {
   return Completion(result);
 }
 
-/** http://tc39.es/ecma262/#sec-evaldeclarationinstantiation */
+/** https://tc39.es/ecma262/#sec-evaldeclarationinstantiation */
 function EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strict) {
   // 1. Let varNames be the VarDeclaredNames of body.
   const varNames = VarDeclaredNames(body);

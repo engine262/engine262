@@ -35,7 +35,7 @@ import { Q, X } from '../completion.mjs';
 import { assignProps } from './bootstrap.mjs';
 import { ArrayProto_sortBody, bootstrapArrayPrototypeShared } from './ArrayPrototypeShared.mjs';
 
-/** http://tc39.es/ecma262/#sec-array.prototype.concat */
+/** https://tc39.es/ecma262/#sec-array.prototype.concat */
 function ArrayProto_concat(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   const A = Q(ArraySpeciesCreate(O, 0));
@@ -74,7 +74,7 @@ function ArrayProto_concat(args, { thisValue }) {
   return A;
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.copywithin */
+/** https://tc39.es/ecma262/#sec-array.prototype.copywithin */
 function ArrayProto_copyWithin([target = Value.undefined, start = Value.undefined, end = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
@@ -130,13 +130,13 @@ function ArrayProto_copyWithin([target = Value.undefined, start = Value.undefine
   return O;
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.entries */
+/** https://tc39.es/ecma262/#sec-array.prototype.entries */
 function ArrayProto_entries(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   return CreateArrayIterator(O, 'key+value');
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.fill */
+/** https://tc39.es/ecma262/#sec-array.prototype.fill */
 function ArrayProto_fill([value = Value.undefined, start = Value.undefined, end = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
@@ -167,7 +167,7 @@ function ArrayProto_fill([value = Value.undefined, start = Value.undefined, end 
   return O;
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.filter */
+/** https://tc39.es/ecma262/#sec-array.prototype.filter */
 function ArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
@@ -193,7 +193,7 @@ function ArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undefi
   return A;
 }
 
-/** http://tc39.es/ecma262/#sec-flattenintoarray */
+/** https://tc39.es/ecma262/#sec-flattenintoarray */
 function FlattenIntoArray(target, source, sourceLen, start, depth, mapperFunction, thisArg) {
   Assert(target instanceof ObjectValue);
   Assert(source instanceof ObjectValue);
@@ -232,7 +232,7 @@ function FlattenIntoArray(target, source, sourceLen, start, depth, mapperFunctio
   return targetIndex;
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.flat */
+/** https://tc39.es/ecma262/#sec-array.prototype.flat */
 function ArrayProto_flat([depth = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const sourceLen = Q(LengthOfArrayLike(O));
@@ -245,7 +245,7 @@ function ArrayProto_flat([depth = Value.undefined], { thisValue }) {
   return A;
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.flatmap */
+/** https://tc39.es/ecma262/#sec-array.prototype.flatmap */
 function ArrayProto_flatMap([mapperFunction = Value.undefined, thisArg = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const sourceLen = Q(LengthOfArrayLike(O));
@@ -257,13 +257,13 @@ function ArrayProto_flatMap([mapperFunction = Value.undefined, thisArg = Value.u
   return A;
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.keys */
+/** https://tc39.es/ecma262/#sec-array.prototype.keys */
 function ArrayProto_keys(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   return CreateArrayIterator(O, 'key');
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.map */
+/** https://tc39.es/ecma262/#sec-array.prototype.map */
 function ArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
@@ -285,7 +285,7 @@ function ArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefined
   return A;
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.pop */
+/** https://tc39.es/ecma262/#sec-array.prototype.pop */
 function ArrayProto_pop(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
@@ -302,7 +302,7 @@ function ArrayProto_pop(args, { thisValue }) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.push */
+/** https://tc39.es/ecma262/#sec-array.prototype.push */
 function ArrayProto_push(items, { thisValue }) {
   const O = Q(ToObject(thisValue));
   let len = Q(LengthOfArrayLike(O));
@@ -319,7 +319,7 @@ function ArrayProto_push(items, { thisValue }) {
   return F(len);
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.shift */
+/** https://tc39.es/ecma262/#sec-array.prototype.shift */
 function ArrayProto_shift(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
@@ -346,7 +346,7 @@ function ArrayProto_shift(args, { thisValue }) {
   return first;
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.slice */
+/** https://tc39.es/ecma262/#sec-array.prototype.slice */
 function ArrayProto_slice([start = Value.undefined, end = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
@@ -387,7 +387,7 @@ function ArrayProto_slice([start = Value.undefined, end = Value.undefined], { th
   return A;
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.sort */
+/** https://tc39.es/ecma262/#sec-array.prototype.sort */
 function ArrayProto_sort([comparefn = Value.undefined], { thisValue }) {
   if (comparefn !== Value.undefined && IsCallable(comparefn) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', comparefn);
@@ -398,7 +398,7 @@ function ArrayProto_sort([comparefn = Value.undefined], { thisValue }) {
   return ArrayProto_sortBody(obj, len, (x, y) => SortCompare(x, y, comparefn));
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.splice */
+/** https://tc39.es/ecma262/#sec-array.prototype.splice */
 function ArrayProto_splice(args, { thisValue }) {
   const [start = Value.undefined, deleteCount = Value.undefined, ...items] = args;
   const O = Q(ToObject(thisValue));
@@ -483,7 +483,7 @@ function ArrayProto_splice(args, { thisValue }) {
   return A;
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.tostring */
+/** https://tc39.es/ecma262/#sec-array.prototype.tostring */
 function ArrayProto_toString(a, { thisValue }) {
   const array = Q(ToObject(thisValue));
   let func = Q(Get(array, Value('join')));
@@ -493,7 +493,7 @@ function ArrayProto_toString(a, { thisValue }) {
   return Q(Call(func, array));
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.unshift */
+/** https://tc39.es/ecma262/#sec-array.prototype.unshift */
 function ArrayProto_unshift(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
@@ -528,13 +528,13 @@ function ArrayProto_unshift(args, { thisValue }) {
   return F(len + argCount);
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.values */
+/** https://tc39.es/ecma262/#sec-array.prototype.values */
 function ArrayProto_values(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   return CreateArrayIterator(O, 'value');
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.at */
+/** https://tc39.es/ecma262/#sec-array.prototype.at */
 function ArrayProto_at([index = Value.undefined], { thisValue }) {
   // 1. Let O be ? ToObject(this value).
   const O = Q(ToObject(thisValue));

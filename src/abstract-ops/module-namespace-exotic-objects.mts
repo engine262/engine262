@@ -102,7 +102,7 @@ function ModuleNamespaceHasProperty(P) {
   return Value.false;
 }
 
-/** http://tc39.es/ecma262/#sec-module-namespace-exotic-objects-get-p-receiver */
+/** https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-get-p-receiver */
 function ModuleNamespaceGet(P, Receiver) {
   const O = this;
 
@@ -171,7 +171,7 @@ function ModuleNamespaceOwnPropertyKeys() {
   return exports;
 }
 
-/** http://tc39.es/ecma262/#sec-modulenamespacecreate */
+/** https://tc39.es/ecma262/#sec-modulenamespacecreate */
 export function ModuleNamespaceCreate(module, exports) {
   // 1. Assert: module is a Module Record.
   Assert(module instanceof AbstractModuleRecord);
@@ -183,7 +183,7 @@ export function ModuleNamespaceCreate(module, exports) {
   const internalSlotsList = ['Module', 'Exports', 'Prototype'];
   // 5. Let M be ! MakeBasicObject(internalSlotsList).
   const M = X(MakeBasicObject(internalSlotsList));
-  /** http://tc39.es/ecma262/#sec-module-namespace-exotic-objects */
+  /** https://tc39.es/ecma262/#sec-module-namespace-exotic-objects */
   M.SetPrototypeOf = ModuleNamespaceSetPrototypeOf;
   M.IsExtensible = ModuleNamespaceIsExtensible;
   M.PreventExtensions = ModuleNamespacePreventExtensions;

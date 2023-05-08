@@ -13,7 +13,7 @@ import {
   Z,
 } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-allocatearraybuffer */
+/** https://tc39.es/ecma262/#sec-allocatearraybuffer */
 export function AllocateArrayBuffer(constructor, byteLength) {
   // 1. Let obj be ? OrdinaryCreateFromConstructor(constructor, "%ArrayBuffer.prototype%", « [[ArrayBufferData]], [[ArrayBufferByteLength]], [[ArrayBufferDetachKey]] »).
   const obj = Q(OrdinaryCreateFromConstructor(constructor, '%ArrayBuffer.prototype%', [
@@ -31,7 +31,7 @@ export function AllocateArrayBuffer(constructor, byteLength) {
   return obj;
 }
 
-/** http://tc39.es/ecma262/#sec-isdetachedbuffer */
+/** https://tc39.es/ecma262/#sec-isdetachedbuffer */
 export function IsDetachedBuffer(arrayBuffer) {
   // 1. Assert: Type(arrayBuffer) is Object and it has an [[ArrayBufferData]] internal slot.
   Assert(arrayBuffer instanceof ObjectValue && 'ArrayBufferData' in arrayBuffer);
@@ -43,7 +43,7 @@ export function IsDetachedBuffer(arrayBuffer) {
   return Value.false;
 }
 
-/** http://tc39.es/ecma262/#sec-detacharraybuffer */
+/** https://tc39.es/ecma262/#sec-detacharraybuffer */
 export function DetachArrayBuffer(arrayBuffer, key) {
   // 1. Assert: Type(arrayBuffer) is Object and it has [[ArrayBufferData]], [[ArrayBufferByteLength]], and [[ArrayBufferDetachKey]] internal slots.
   Assert(arrayBuffer instanceof ObjectValue
@@ -68,7 +68,7 @@ export function DetachArrayBuffer(arrayBuffer, key) {
   return NormalCompletion(Value.null);
 }
 
-/** http://tc39.es/ecma262/#sec-issharedarraybuffer */
+/** https://tc39.es/ecma262/#sec-issharedarraybuffer */
 export function IsSharedArrayBuffer(_obj) {
   return Value.false;
 }
@@ -94,7 +94,7 @@ export function CloneArrayBuffer(srcBuffer, srcByteOffset, srcLength, cloneConst
   return targetBuffer;
 }
 
-/** http://tc39.es/ecma262/#sec-isbigintelementtype */
+/** https://tc39.es/ecma262/#sec-isbigintelementtype */
 export function IsBigIntElementType(type) {
   // 1. If type is BigUint64 or BigInt64, return true.
   if (type === 'BigUint64' || type === 'BigInt64') {
@@ -108,7 +108,7 @@ const throwawayBuffer = new ArrayBuffer(8);
 const throwawayDataView = new DataView(throwawayBuffer);
 const throwawayArray = new Uint8Array(throwawayBuffer);
 
-/** http://tc39.es/ecma262/#sec-rawbytestonumeric */
+/** https://tc39.es/ecma262/#sec-rawbytestonumeric */
 export function RawBytesToNumeric(type, rawBytes, isLittleEndian) {
   // 1. Let elementSize be the Element Size value specified in Table 61 for Element Type type.
   const elementSize = typedArrayInfoByType[type].ElementSize;
@@ -119,7 +119,7 @@ export function RawBytesToNumeric(type, rawBytes, isLittleEndian) {
   return IsBigIntElementType(type) === Value.true ? Z(result) : F(result);
 }
 
-/** http://tc39.es/ecma262/#sec-getvaluefrombuffer */
+/** https://tc39.es/ecma262/#sec-getvaluefrombuffer */
 export function GetValueFromBuffer(arrayBuffer, byteIndex, type, isTypedArray, order, isLittleEndian) {
   // 1. Assert: IsDetachedBuffer(arrayBuffer) is false.
   Assert(IsDetachedBuffer(arrayBuffer) === Value.false);
@@ -149,7 +149,7 @@ const float32NaNBE = Object.freeze([127, 192, 0, 0]);
 const float64NaNLE = Object.freeze([0, 0, 0, 0, 0, 0, 248, 127]);
 const float64NaNBE = Object.freeze([127, 248, 0, 0, 0, 0, 0, 0]);
 
-/** http://tc39.es/ecma262/#sec-numerictorawbytes */
+/** https://tc39.es/ecma262/#sec-numerictorawbytes */
 export function NumericToRawBytes(type, value, isLittleEndian) {
   Assert(isLittleEndian instanceof BooleanValue);
   isLittleEndian = isLittleEndian === Value.true;
@@ -183,7 +183,7 @@ export function NumericToRawBytes(type, value, isLittleEndian) {
   return rawBytes;
 }
 
-/** http://tc39.es/ecma262/#sec-setvalueinbuffer */
+/** https://tc39.es/ecma262/#sec-setvalueinbuffer */
 export function SetValueInBuffer(arrayBuffer, byteIndex, type, value, isTypedArray, order, isLittleEndian) {
   // 1. Assert: IsDetachedBuffer(arrayBuffer) is false.
   Assert(IsDetachedBuffer(arrayBuffer) === Value.false);

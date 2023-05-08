@@ -7,7 +7,7 @@ import {
   NormalCompletion,
 } from '../completion.mjs';
 
-/** http://tc39.es/ecma262/#sec-block-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-block-runtime-semantics-evaluation */
 export function* Evaluate_StatementList(StatementList) {
   if (StatementList.length === 0) {
     return NormalCompletion(undefined);

@@ -13,7 +13,7 @@ import {
 import { Q } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-error.prototype.tostring */
+/** https://tc39.es/ecma262/#sec-error.prototype.tostring */
 function ErrorProto_toString(args, { thisValue }) {
   // 1. Let O be this value.
   const O = thisValue;

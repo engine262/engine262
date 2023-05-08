@@ -54,7 +54,7 @@ function thisStringValue(value) {
   return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'String', value);
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.charat */
+/** https://tc39.es/ecma262/#sec-string.prototype.charat */
 function StringProto_charAt([pos = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
@@ -66,7 +66,7 @@ function StringProto_charAt([pos = Value.undefined], { thisValue }) {
   return Value(S.stringValue()[position]);
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.charcodeat */
+/** https://tc39.es/ecma262/#sec-string.prototype.charcodeat */
 function StringProto_charCodeAt([pos = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
@@ -78,7 +78,7 @@ function StringProto_charCodeAt([pos = Value.undefined], { thisValue }) {
   return F(S.stringValue().charCodeAt(position));
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.codepointat */
+/** https://tc39.es/ecma262/#sec-string.prototype.codepointat */
 function StringProto_codePointAt([pos = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
@@ -91,7 +91,7 @@ function StringProto_codePointAt([pos = Value.undefined], { thisValue }) {
   return F(cp.CodePoint);
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.concat */
+/** https://tc39.es/ecma262/#sec-string.prototype.concat */
 function StringProto_concat(args, { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
@@ -104,7 +104,7 @@ function StringProto_concat(args, { thisValue }) {
   return Value(R);
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.endswith */
+/** https://tc39.es/ecma262/#sec-string.prototype.endswith */
 function StringProto_endsWith([searchString = Value.undefined, endPosition = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O)).stringValue();
@@ -134,7 +134,7 @@ function StringProto_endsWith([searchString = Value.undefined, endPosition = Val
   return Value.true;
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.includes */
+/** https://tc39.es/ecma262/#sec-string.prototype.includes */
 function StringProto_includes([searchString = Value.undefined, position = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O)).stringValue();
@@ -165,7 +165,7 @@ function StringProto_includes([searchString = Value.undefined, position = Value.
   return Value.false;
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.indexof */
+/** https://tc39.es/ecma262/#sec-string.prototype.indexof */
 function StringProto_indexOf([searchString = Value.undefined, position = Value.undefined], { thisValue }) {
   // 1. Let O be ? RequireObjectCoercible(this value).
   const O = Q(RequireObjectCoercible(thisValue));
@@ -195,7 +195,7 @@ function StringProto_isWellFormed(args, { thisValue }) {
   return IsStringWellFormedUnicode(S) ? Value.true : Value.false;
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.lastindexof */
+/** https://tc39.es/ecma262/#sec-string.prototype.lastindexof */
 function StringProto_lastIndexOf([searchString = Value.undefined, position = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O)).stringValue();
@@ -230,7 +230,7 @@ function StringProto_lastIndexOf([searchString = Value.undefined, position = Val
   return F(-1);
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.localecompare */
+/** https://tc39.es/ecma262/#sec-string.prototype.localecompare */
 function StringProto_localeCompare([that = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O)).stringValue();
@@ -244,7 +244,7 @@ function StringProto_localeCompare([that = Value.undefined], { thisValue }) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.match */
+/** https://tc39.es/ecma262/#sec-string.prototype.match */
 function StringProto_match([regexp = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
 
@@ -260,7 +260,7 @@ function StringProto_match([regexp = Value.undefined], { thisValue }) {
   return Q(Invoke(rx, wellKnownSymbols.match, [S]));
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.matchall */
+/** https://tc39.es/ecma262/#sec-string.prototype.matchall */
 function StringProto_matchAll([regexp = Value.undefined], { thisValue }) {
   // 1. Let O be ? RequireObjectCoercible(this value).
   const O = Q(RequireObjectCoercible(thisValue));
@@ -295,7 +295,7 @@ function StringProto_matchAll([regexp = Value.undefined], { thisValue }) {
   return Q(Invoke(rx, wellKnownSymbols.matchAll, [S]));
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.normalize */
+/** https://tc39.es/ecma262/#sec-string.prototype.normalize */
 function StringProto_normalize([form = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
@@ -312,19 +312,19 @@ function StringProto_normalize([form = Value.undefined], { thisValue }) {
   return Value(ns);
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.padend */
+/** https://tc39.es/ecma262/#sec-string.prototype.padend */
 function StringProto_padEnd([maxLength = Value.undefined, fillString = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   return Q(StringPad(O, maxLength, fillString, 'end'));
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.padstart */
+/** https://tc39.es/ecma262/#sec-string.prototype.padstart */
 function StringProto_padStart([maxLength = Value.undefined, fillString = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   return Q(StringPad(O, maxLength, fillString, 'start'));
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.repeat */
+/** https://tc39.es/ecma262/#sec-string.prototype.repeat */
 function StringProto_repeat([count = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
@@ -345,7 +345,7 @@ function StringProto_repeat([count = Value.undefined], { thisValue }) {
   return Value(T);
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.replace */
+/** https://tc39.es/ecma262/#sec-string.prototype.replace */
 function StringProto_replace([searchValue = Value.undefined, replaceValue = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   if (searchValue !== Value.undefined && searchValue !== Value.null) {
@@ -378,7 +378,7 @@ function StringProto_replace([searchValue = Value.undefined, replaceValue = Valu
   return Value(newString);
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.replaceall */
+/** https://tc39.es/ecma262/#sec-string.prototype.replaceall */
 function StringProto_replaceAll([searchValue = Value.undefined, replaceValue = Value.undefined], { thisValue }) {
   // 1. Let O be ? RequireObjectCoercible(this value).
   const O = Q(RequireObjectCoercible(thisValue));
@@ -466,7 +466,7 @@ function StringProto_replaceAll([searchValue = Value.undefined, replaceValue = V
   return Value(result);
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.slice */
+/** https://tc39.es/ecma262/#sec-string.prototype.slice */
 function StringProto_search([regexp = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
 
@@ -482,7 +482,7 @@ function StringProto_search([regexp = Value.undefined], { thisValue }) {
   return Q(Invoke(rx, wellKnownSymbols.search, [string]));
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.slice */
+/** https://tc39.es/ecma262/#sec-string.prototype.slice */
 function StringProto_slice([start = Value.undefined, end = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O)).stringValue();
@@ -510,7 +510,7 @@ function StringProto_slice([start = Value.undefined, end = Value.undefined], { t
   return Value(S.slice(from, from + span));
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.split */
+/** https://tc39.es/ecma262/#sec-string.prototype.split */
 function StringProto_split([separator = Value.undefined, limit = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   if (separator !== Value.undefined && separator !== Value.null) {
@@ -569,7 +569,7 @@ function StringProto_split([separator = Value.undefined, limit = Value.undefined
   return A;
 }
 
-/** http://tc39.es/ecma262/#sec-splitmatch */
+/** https://tc39.es/ecma262/#sec-splitmatch */
 function SplitMatch(S, q, R) {
   Assert(R instanceof JSStringValue);
   const r = R.stringValue().length;
@@ -585,7 +585,7 @@ function SplitMatch(S, q, R) {
   return q + r;
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.startswith */
+/** https://tc39.es/ecma262/#sec-string.prototype.startswith */
 function StringProto_startsWith([searchString = Value.undefined, position = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O)).stringValue();
@@ -610,7 +610,7 @@ function StringProto_startsWith([searchString = Value.undefined, position = Valu
   return Value.true;
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.substring */
+/** https://tc39.es/ecma262/#sec-string.prototype.substring */
 function StringProto_substring([start = Value.undefined, end = Value.undefined], { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O)).stringValue();
@@ -629,7 +629,7 @@ function StringProto_substring([start = Value.undefined, end = Value.undefined],
   return Value(S.slice(from, to));
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.tolocalelowercase */
+/** https://tc39.es/ecma262/#sec-string.prototype.tolocalelowercase */
 function StringProto_toLocaleLowerCase(args, { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
@@ -637,7 +637,7 @@ function StringProto_toLocaleLowerCase(args, { thisValue }) {
   return Value(L);
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.tolocaleuppercase */
+/** https://tc39.es/ecma262/#sec-string.prototype.tolocaleuppercase */
 function StringProto_toLocaleUpperCase(args, { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
@@ -645,7 +645,7 @@ function StringProto_toLocaleUpperCase(args, { thisValue }) {
   return Value(L);
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.tolowercase */
+/** https://tc39.es/ecma262/#sec-string.prototype.tolowercase */
 function StringProto_toLowerCase(args, { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
@@ -653,12 +653,12 @@ function StringProto_toLowerCase(args, { thisValue }) {
   return Value(L);
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.tostring */
+/** https://tc39.es/ecma262/#sec-string.prototype.tostring */
 function StringProto_toString(args, { thisValue }) {
   return Q(thisStringValue(thisValue));
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.touppercase */
+/** https://tc39.es/ecma262/#sec-string.prototype.touppercase */
 function StringProto_toUpperCase(args, { thisValue }) {
   const O = Q(RequireObjectCoercible(thisValue));
   const S = Q(ToString(O));
@@ -697,30 +697,30 @@ function StringProto_toWellFormed(args, { thisValue }) {
   return Value(result);
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.trim */
+/** https://tc39.es/ecma262/#sec-string.prototype.trim */
 function StringProto_trim(args, { thisValue }) {
   const S = thisValue;
   return Q(TrimString(S, 'start+end'));
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.trimend */
+/** https://tc39.es/ecma262/#sec-string.prototype.trimend */
 function StringProto_trimEnd(args, { thisValue }) {
   const S = thisValue;
   return Q(TrimString(S, 'end'));
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.trimstart */
+/** https://tc39.es/ecma262/#sec-string.prototype.trimstart */
 function StringProto_trimStart(args, { thisValue }) {
   const S = thisValue;
   return Q(TrimString(S, 'start'));
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.valueof */
+/** https://tc39.es/ecma262/#sec-string.prototype.valueof */
 function StringProto_valueOf(args, { thisValue }) {
   return Q(thisStringValue(thisValue));
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype-@@iterator */
+/** https://tc39.es/ecma262/#sec-string.prototype-@@iterator */
 function StringProto_iterator(args, { thisValue }) {
   // 1. Let O be ? RequireObjectCoercible(this value).
   const O = Q(RequireObjectCoercible(thisValue));
@@ -752,7 +752,7 @@ function StringProto_iterator(args, { thisValue }) {
   return X(CreateIteratorFromClosure(closure, Value('%StringIteratorPrototype%'), surroundingAgent.intrinsic('%StringIteratorPrototype%')));
 }
 
-/** http://tc39.es/ecma262/#sec-string.prototype.at */
+/** https://tc39.es/ecma262/#sec-string.prototype.at */
 function StringProto_at([index = Value.undefined], { thisValue }) {
   // 1. Let O be ? RequireObjectCoercible(this value).
   const O = Q(RequireObjectCoercible(thisValue));

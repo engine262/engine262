@@ -8,7 +8,7 @@ import {
 import { Value } from '../value.mjs';
 import { X } from '../completion.mjs';
 
-/** http://tc39.es/ecma262/#sec-%throwtypeerror% */
+/** https://tc39.es/ecma262/#sec-%throwtypeerror% */
 function ThrowTypeError() {
   // 1. Throw a TypeError exception.
   return surroundingAgent.Throw('TypeError', 'StrictPoisonPill');

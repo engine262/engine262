@@ -11,7 +11,7 @@ import {
   Q,
 } from '../completion.mjs';
 
-/** http://tc39.es/ecma262/#sec-with-statement-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-with-statement-runtime-semantics-evaluation */
 //   WithStatement : `with` `(` Expression `)` Statement
 export function* Evaluate_WithStatement({ Expression, Statement }) {
   // 1. Let val be the result of evaluating Expression.

@@ -31,11 +31,11 @@ import {
 } from './all.mjs';
 
 // This file covers abstract operations defined in
-/** http://tc39.es/ecma262/#sec-operations-on-iterator-objects */
+/** https://tc39.es/ecma262/#sec-operations-on-iterator-objects */
 // and
-/** http://tc39.es/ecma262/#sec-iteration */
+/** https://tc39.es/ecma262/#sec-iteration */
 
-/** http://tc39.es/ecma262/#sec-getiterator */
+/** https://tc39.es/ecma262/#sec-getiterator */
 export function GetIterator(obj, hint, method) {
   if (!hint) {
     hint = 'sync';
@@ -66,7 +66,7 @@ export function GetIterator(obj, hint, method) {
   return EnsureCompletion(iteratorRecord);
 }
 
-/** http://tc39.es/ecma262/#sec-iteratornext */
+/** https://tc39.es/ecma262/#sec-iteratornext */
 export function IteratorNext(iteratorRecord, value) {
   let result;
   if (!value) {
@@ -80,19 +80,19 @@ export function IteratorNext(iteratorRecord, value) {
   return EnsureCompletion(result);
 }
 
-/** http://tc39.es/ecma262/#sec-iteratorcomplete */
+/** https://tc39.es/ecma262/#sec-iteratorcomplete */
 export function IteratorComplete(iterResult) {
   Assert(iterResult instanceof ObjectValue);
   return EnsureCompletion(ToBoolean(Q(Get(iterResult, Value('done')))));
 }
 
-/** http://tc39.es/ecma262/#sec-iteratorvalue */
+/** https://tc39.es/ecma262/#sec-iteratorvalue */
 export function IteratorValue(iterResult) {
   Assert(iterResult instanceof ObjectValue);
   return EnsureCompletion(Q(Get(iterResult, Value('value'))));
 }
 
-/** http://tc39.es/ecma262/#sec-iteratorstep */
+/** https://tc39.es/ecma262/#sec-iteratorstep */
 export function IteratorStep(iteratorRecord) {
   const result = Q(IteratorNext(iteratorRecord));
   const done = Q(IteratorComplete(result));
@@ -102,7 +102,7 @@ export function IteratorStep(iteratorRecord) {
   return EnsureCompletion(result);
 }
 
-/** http://tc39.es/ecma262/#sec-iteratorclose */
+/** https://tc39.es/ecma262/#sec-iteratorclose */
 export function IteratorClose(iteratorRecord, completion) {
   // 1. Assert: Type(iteratorRecord.[[Iterator]]) is Object.
   Assert(iteratorRecord.Iterator instanceof ObjectValue);
@@ -141,7 +141,7 @@ export function IteratorClose(iteratorRecord, completion) {
   return Completion(completion);
 }
 
-/** http://tc39.es/ecma262/#sec-asynciteratorclose */
+/** https://tc39.es/ecma262/#sec-asynciteratorclose */
 export function* AsyncIteratorClose(iteratorRecord, completion) {
   // 1. Assert: Type(iteratorRecord.[[Iterator]]) is Object.
   Assert(iteratorRecord.Iterator instanceof ObjectValue);
@@ -182,7 +182,7 @@ export function* AsyncIteratorClose(iteratorRecord, completion) {
   return Completion(completion);
 }
 
-/** http://tc39.es/ecma262/#sec-createiterresultobject */
+/** https://tc39.es/ecma262/#sec-createiterresultobject */
 export function CreateIterResultObject(value, done) {
   Assert(done instanceof BooleanValue);
   const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
@@ -191,7 +191,7 @@ export function CreateIterResultObject(value, done) {
   return obj;
 }
 
-/** http://tc39.es/ecma262/#sec-createlistiteratorRecord */
+/** https://tc39.es/ecma262/#sec-createlistiteratorRecord */
 export function CreateListIteratorRecord(list) {
   // 1. Let closure be a new Abstract Closure with no parameters that captures list and performs the following steps when called:
   const closure = function* closure() {
@@ -213,7 +213,7 @@ export function CreateListIteratorRecord(list) {
   };
 }
 
-/** http://tc39.es/ecma262/#sec-createasyncfromsynciterator */
+/** https://tc39.es/ecma262/#sec-createasyncfromsynciterator */
 export function CreateAsyncFromSyncIterator(syncIteratorRecord) {
   const asyncIterator = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncFromSyncIteratorPrototype%'), [
     'SyncIteratorRecord',
@@ -227,7 +227,7 @@ export function CreateAsyncFromSyncIterator(syncIteratorRecord) {
   };
 }
 
-/** http://tc39.es/ecma262/#sec-asyncfromsynciteratorcontinuation */
+/** https://tc39.es/ecma262/#sec-asyncfromsynciteratorcontinuation */
 export function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
   // 1. Let done be IteratorComplete(result).
   const done = IteratorComplete(result);

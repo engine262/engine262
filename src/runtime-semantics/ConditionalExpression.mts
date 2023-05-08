@@ -4,7 +4,7 @@ import { Evaluate } from '../evaluator.mjs';
 import { ToBoolean, GetValue } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 
-/** http://tc39.es/ecma262/#sec-conditional-operator-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-conditional-operator-runtime-semantics-evaluation */
 //   ConditionalExpression :
 //     ShortCircuitExpression `?` AssignmentExpression `:` AssignmentExpression
 export function* Evaluate_ConditionalExpression({

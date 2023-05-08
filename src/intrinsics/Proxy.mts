@@ -14,7 +14,7 @@ import { Value } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { assignProps } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-proxy-target-handler */
+/** https://tc39.es/ecma262/#sec-proxy-target-handler */
 function ProxyConstructor([target = Value.undefined, handler = Value.undefined], { NewTarget }) {
   // 1. f NewTarget is undefined, throw a TypeError exception.
   if (NewTarget === Value.undefined) {
@@ -24,7 +24,7 @@ function ProxyConstructor([target = Value.undefined, handler = Value.undefined],
   return Q(ProxyCreate(target, handler));
 }
 
-/** http://tc39.es/ecma262/#sec-proxy-revocation-functions */
+/** https://tc39.es/ecma262/#sec-proxy-revocation-functions */
 function ProxyRevocationFunctions() {
   // 1. Let F be the active function object.
   const F = surroundingAgent.activeFunctionObject;
@@ -46,11 +46,11 @@ function ProxyRevocationFunctions() {
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-proxy.revocable */
+/** https://tc39.es/ecma262/#sec-proxy.revocable */
 function Proxy_revocable([target = Value.undefined, handler = Value.undefined]) {
   // 1. Let p be ? ProxyCreate(target, handler).
   const p = Q(ProxyCreate(target, handler));
-  /** http://tc39.es/ecma262/#sec-proxy-revocation-functions. */
+  /** https://tc39.es/ecma262/#sec-proxy-revocation-functions. */
   const steps = ProxyRevocationFunctions;
   // 3. Let length be the number of non-optional parameters of the function definition in Proxy Revocation Functions.
   const length = 0;

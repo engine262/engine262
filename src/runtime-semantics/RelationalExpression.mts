@@ -25,7 +25,7 @@ import { Q, X, ReturnIfAbrupt } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
-/** http://tc39.es/ecma262/#sec-instanceofoperator */
+/** https://tc39.es/ecma262/#sec-instanceofoperator */
 export function InstanceofOperator(V, target) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
@@ -70,7 +70,7 @@ export function* Evaluate_RelationalExpression_PrivateIdentifier({ PrivateIdenti
   return Value.false;
 }
 
-/** http://tc39.es/ecma262/#sec-relational-operators-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-relational-operators-runtime-semantics-evaluation */
 //   RelationalExpression :
 //     RelationalExpression `<` ShiftExpression
 //     RelationalExpression `>` ShiftExpression

@@ -25,7 +25,7 @@ import {
 import { Q, X } from '../completion.mjs';
 import { assignProps } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-object.prototype.hasownproperty */
+/** https://tc39.es/ecma262/#sec-object.prototype.hasownproperty */
 function ObjectProto_hasOwnProperty([V = Value.undefined], { thisValue }) {
   // 1. Let P be ? ToPropertyKey(V).
   const P = Q(ToPropertyKey(V));
@@ -35,7 +35,7 @@ function ObjectProto_hasOwnProperty([V = Value.undefined], { thisValue }) {
   return HasOwnProperty(O, P);
 }
 
-/** http://tc39.es/ecma262/#sec-object.prototype.isprototypeof */
+/** https://tc39.es/ecma262/#sec-object.prototype.isprototypeof */
 function ObjectProto_isPrototypeOf([V = Value.undefined], { thisValue }) {
   // 1. If Type(V) is not Object, return false.
   if (!(V instanceof ObjectValue)) {
@@ -58,7 +58,7 @@ function ObjectProto_isPrototypeOf([V = Value.undefined], { thisValue }) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-object.prototype.propertyisenumerable */
+/** https://tc39.es/ecma262/#sec-object.prototype.propertyisenumerable */
 function ObjectProto_propertyIsEnumerable([V = Value.undefined], { thisValue }) {
   // 1. Let P be ? ToPropertyKey(V).
   const P = Q(ToPropertyKey(V));
@@ -74,7 +74,7 @@ function ObjectProto_propertyIsEnumerable([V = Value.undefined], { thisValue }) 
   return desc.Enumerable;
 }
 
-/** http://tc39.es/ecma262/#sec-object.prototype.tolocalestring */
+/** https://tc39.es/ecma262/#sec-object.prototype.tolocalestring */
 function ObjectProto_toLocaleString(argList, { thisValue }) {
   // 1. Let O be the this value.
   const O = thisValue;
@@ -82,7 +82,7 @@ function ObjectProto_toLocaleString(argList, { thisValue }) {
   return Q(Invoke(O, Value('toString')));
 }
 
-/** http://tc39.es/ecma262/#sec-object.prototype.tostring */
+/** https://tc39.es/ecma262/#sec-object.prototype.tostring */
 function ObjectProto_toString(argList, { thisValue }) {
   // 1. If the this value is undefined, return "[object Undefined]".
   if (thisValue === Value.undefined) {
@@ -129,13 +129,13 @@ function ObjectProto_toString(argList, { thisValue }) {
   return Value(`[object ${tag.stringValue ? tag.stringValue() : tag}]`);
 }
 
-/** http://tc39.es/ecma262/#sec-object.prototype.valueof */
+/** https://tc39.es/ecma262/#sec-object.prototype.valueof */
 function ObjectProto_valueOf(argList, { thisValue }) {
   // 1. Return ? ToObject(this value).
   return Q(ToObject(thisValue));
 }
 
-/** http://tc39.es/ecma262/#sec-object.prototype.__defineGetter__ */
+/** https://tc39.es/ecma262/#sec-object.prototype.__defineGetter__ */
 function ObjectProto__defineGetter__([P = Value.undefined, getter = Value.undefined], { thisValue }) {
   // 1. Let O be ? ToObject(this value).
   const O = Q(ToObject(thisValue));
@@ -157,7 +157,7 @@ function ObjectProto__defineGetter__([P = Value.undefined, getter = Value.undefi
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-object.prototype.__defineSetter__ */
+/** https://tc39.es/ecma262/#sec-object.prototype.__defineSetter__ */
 function ObjectProto__defineSetter__([P = Value.undefined, setter = Value.undefined], { thisValue }) {
   // 1. Let O be ? ToObject(this value).
   const O = Q(ToObject(thisValue));
@@ -179,7 +179,7 @@ function ObjectProto__defineSetter__([P = Value.undefined, setter = Value.undefi
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-object.prototype.__lookupGetter__ */
+/** https://tc39.es/ecma262/#sec-object.prototype.__lookupGetter__ */
 function ObjectProto__lookupGetter__([P = Value.undefined], { thisValue }) {
   // 1. Let O be ? ToObject(this value).
   let O = Q(ToObject(thisValue));
@@ -207,7 +207,7 @@ function ObjectProto__lookupGetter__([P = Value.undefined], { thisValue }) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-object.prototype.__lookupSetter__ */
+/** https://tc39.es/ecma262/#sec-object.prototype.__lookupSetter__ */
 function ObjectProto__lookupSetter__([P = Value.undefined], { thisValue }) {
   // 1. Let O be ? ToObject(this value).
   let O = Q(ToObject(thisValue));
@@ -235,7 +235,7 @@ function ObjectProto__lookupSetter__([P = Value.undefined], { thisValue }) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-get-object.prototype.__proto__ */
+/** https://tc39.es/ecma262/#sec-get-object.prototype.__proto__ */
 function ObjectProto__proto__Get(args, { thisValue }) {
   // 1. Let O be ? ToObject(this value).
   const O = Q(ToObject(thisValue));
@@ -243,7 +243,7 @@ function ObjectProto__proto__Get(args, { thisValue }) {
   return Q(O.GetPrototypeOf());
 }
 
-/** http://tc39.es/ecma262/#sec-set-object.prototype.__proto__ */
+/** https://tc39.es/ecma262/#sec-set-object.prototype.__proto__ */
 function ObjectProto__proto__Set([proto = Value.undefined], { thisValue }) {
   // 1. Let O be ? RequireObjectCoercible(this value).
   const O = Q(RequireObjectCoercible(thisValue));

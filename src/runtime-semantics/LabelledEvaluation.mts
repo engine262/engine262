@@ -46,7 +46,7 @@ import {
   refineLeftHandSideExpression,
 } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-loopcontinues */
+/** https://tc39.es/ecma262/#sec-loopcontinues */
 function LoopContinues(completion, labelSet) {
   // 1. If completion.[[Type]] is normal, return true.
   if (completion.Type === 'normal') {
@@ -85,7 +85,7 @@ export function LabelledEvaluation(node, labelSet) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-labelled-statements-runtime-semantics-labelledevaluation */
+/** https://tc39.es/ecma262/#sec-labelled-statements-runtime-semantics-labelledevaluation */
 //   LabelledStatement : LabelIdentifier `:` LabelledItem
 function* LabelledEvaluation_LabelledStatement({ LabelIdentifier, LabelledItem }, labelSet) {
   // 1. Let label be the StringValue of LabelIdentifier.
@@ -121,7 +121,7 @@ function LabelledEvaluation_LabelledItem(LabelledItem, labelSet) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-statement-semantics-runtime-semantics-labelledevaluation */
+/** https://tc39.es/ecma262/#sec-statement-semantics-runtime-semantics-labelledevaluation */
 //  BreakableStatement :
 //    IterationStatement
 //    SwitchStatement
@@ -196,7 +196,7 @@ function LabelledEvaluation_IterationStatement(IterationStatement, labelSet) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-do-while-statement-runtime-semantics-labelledevaluation */
+/** https://tc39.es/ecma262/#sec-do-while-statement-runtime-semantics-labelledevaluation */
 //   IterationStatement :
 //     `do` Statement `while` `(` Expression `)` `;`
 function* LabelledEvaluation_IterationStatement_DoWhileStatement({ Statement, Expression }, labelSet) {
@@ -226,7 +226,7 @@ function* LabelledEvaluation_IterationStatement_DoWhileStatement({ Statement, Ex
 }
 
 
-/** http://tc39.es/ecma262/#sec-while-statement-runtime-semantics-labelledevaluation */
+/** https://tc39.es/ecma262/#sec-while-statement-runtime-semantics-labelledevaluation */
 //   IterationStatement :
 //     `while` `(` Expression `)` Statement
 function* LabelledEvaluation_IterationStatement_WhileStatement({ Expression, Statement }, labelSet) {
@@ -255,7 +255,7 @@ function* LabelledEvaluation_IterationStatement_WhileStatement({ Expression, Sta
   }
 }
 
-/** http://tc39.es/ecma262/#sec-for-statement-runtime-semantics-labelledevaluation */
+/** https://tc39.es/ecma262/#sec-for-statement-runtime-semantics-labelledevaluation */
 //   IterationStatement :
 //     `for` `(` Expression? `;` Expression? `;` Expresssion? `)` Statement
 //     `for` `(` `var` VariableDeclarationList `;` Expression? `;` Expression? `)` Statement
@@ -405,7 +405,7 @@ function* LabelledEvaluation_IterationStatement_ForAwaitStatement(ForAwaitStatem
   }
 }
 
-/** http://tc39.es/ecma262/#sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation */
+/** https://tc39.es/ecma262/#sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation */
 // IterationStatement :
 //   `for` `(` LeftHandSideExpression `of` AssignmentExpression `)` Statement
 //   `for` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
@@ -442,7 +442,7 @@ function* LabelledEvaluation_IterationStatement_ForOfStatement(ForOfStatement, l
   }
 }
 
-/** http://tc39.es/ecma262/#sec-forbodyevaluation */
+/** https://tc39.es/ecma262/#sec-forbodyevaluation */
 function* ForBodyEvaluation(test, increment, stmt, perIterationBindings, labelSet) {
   // 1. Let V be undefined.
   let V = Value.undefined;
@@ -483,7 +483,7 @@ function* ForBodyEvaluation(test, increment, stmt, perIterationBindings, labelSe
   }
 }
 
-/** http://tc39.es/ecma262/#sec-createperiterationenvironment */
+/** https://tc39.es/ecma262/#sec-createperiterationenvironment */
 function CreatePerIterationEnvironment(perIterationBindings) {
   // 1. If perIterationBindings has any elements, then
   if (perIterationBindings.length > 0) {
@@ -511,7 +511,7 @@ function CreatePerIterationEnvironment(perIterationBindings) {
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-forinofheadevaluation */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-forinofheadevaluation */
 function* ForInOfHeadEvaluation(uninitializedBoundNames, expr, iterationKind) {
   // 1. Let oldEnv be the running execution context's LexicalEnvironment.
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
@@ -560,12 +560,12 @@ function* ForInOfHeadEvaluation(uninitializedBoundNames, expr, iterationKind) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-enumerate-object-properties */
+/** https://tc39.es/ecma262/#sec-enumerate-object-properties */
 function EnumerateObjectProperties(O) {
   return CreateForInIterator(O);
 }
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-forin-div-ofbodyevaluation-lhs-stmt-iterator-lhskind-labelset */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-forin-div-ofbodyevaluation-lhs-stmt-iterator-lhskind-labelset */
 function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKind, labelSet, iteratorKind) {
   // 1. If iteratorKind is not present, set iteratorKind to sync.
   if (iterationKind === undefined) {
@@ -714,7 +714,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
   }
 }
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-bindinginstantiation */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-bindinginstantiation */
 //   ForDeclaration : LetOrConst ForBinding
 function BindingInstantiation({ LetOrConst, ForBinding }, environment) {
   // 1. Assert: environment is a declarative Environment Record.
@@ -732,7 +732,7 @@ function BindingInstantiation({ LetOrConst, ForBinding }, environment) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-for-in-and-for-of-statements-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-for-in-and-for-of-statements-runtime-semantics-evaluation */
 //   ForBinding : BindingIdentifier
 export function Evaluate_ForBinding({ BindingIdentifier, strict }) {
   // 1. Let bindingId be StringValue of BindingIdentifier.

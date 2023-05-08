@@ -14,7 +14,7 @@ import {
 import { Evaluate } from '../evaluator.mjs';
 import { ReturnIfAbrupt, Q, X } from '../completion.mjs';
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-arrayaccumulation */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-arrayaccumulation */
 //  Elision :
 //    `,`
 //    Elision `,`
@@ -81,7 +81,7 @@ function* ArrayAccumulation_AssignmentExpression(AssignmentExpression, array, ne
   return nextIndex + 1;
 }
 
-/** http://tc39.es/ecma262/#sec-array-initializer-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-array-initializer-runtime-semantics-evaluation */
 //  ArrayLiteral :
 //    `[` Elision `]`
 //    `[` ElementList `]`

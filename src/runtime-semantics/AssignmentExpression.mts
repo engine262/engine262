@@ -18,7 +18,7 @@ import {
   DestructuringAssignmentEvaluation,
 } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-destructuring-assignment */
+/** https://tc39.es/ecma262/#sec-destructuring-assignment */
 export function refineLeftHandSideExpression(node, type) {
   switch (node.type) {
     case 'ArrayLiteral': {
@@ -123,7 +123,7 @@ export function refineLeftHandSideExpression(node, type) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-assignment-operators-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-assignment-operators-runtime-semantics-evaluation */
 //   AssignmentExpression :
 //     LeftHandSideExpression `=` AssignmentExpression
 //     LeftHandSideExpression AssignmentOperator AssignmentExpression

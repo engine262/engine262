@@ -50,7 +50,7 @@ class ExecutionContextStack extends Array {
 }
 
 let agentSignifier = 0;
-/** http://tc39.es/ecma262/#sec-agents */
+/** https://tc39.es/ecma262/#sec-agents */
 export class Agent {
   AgentRecord;
   // #execution-context-stack
@@ -163,7 +163,7 @@ export function setSurroundingAgent(a) {
   surroundingAgent = a;
 }
 
-/** http://tc39.es/ecma262/#sec-execution-contexts */
+/** https://tc39.es/ecma262/#sec-execution-contexts */
 export class ExecutionContext {
   codeEvaluationState;
   Function;
@@ -204,7 +204,7 @@ export class ExecutionContext {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-scriptevaluation */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-scriptevaluation */
 export function ScriptEvaluation(scriptRecord) {
   if (surroundingAgent.hostDefinedOptions.boost?.evaluateScript) {
     return surroundingAgent.hostDefinedOptions.boost.evaluateScript(scriptRecord);
@@ -239,12 +239,12 @@ export function ScriptEvaluation(scriptRecord) {
   return result;
 }
 
-/** http://tc39.es/ecma262/#sec-hostenqueuepromisejob */
+/** https://tc39.es/ecma262/#sec-hostenqueuepromisejob */
 export function HostEnqueuePromiseJob(job, _realm) {
   surroundingAgent.queueJob('PromiseJobs', job);
 }
 
-/** http://tc39.es/ecma262/#sec-agentsignifier */
+/** https://tc39.es/ecma262/#sec-agentsignifier */
 export function AgentSignifier() {
   // 1. Let AR be the Agent Record of the surrounding agent.
   const AR = surroundingAgent.AgentRecord;
@@ -300,7 +300,7 @@ export function HostLoadImportedModule(referrer, specifier, hostDefined, payload
   }
 }
 
-/** http://tc39.es/ecma262/#sec-hostgetimportmetaproperties */
+/** https://tc39.es/ecma262/#sec-hostgetimportmetaproperties */
 export function HostGetImportMetaProperties(moduleRecord) {
   const realm = surroundingAgent.currentRealmRecord;
   if (realm.HostDefined.getImportMetaProperties) {
@@ -309,7 +309,7 @@ export function HostGetImportMetaProperties(moduleRecord) {
   return [];
 }
 
-/** http://tc39.es/ecma262/#sec-hostfinalizeimportmeta */
+/** https://tc39.es/ecma262/#sec-hostfinalizeimportmeta */
 export function HostFinalizeImportMeta(importMeta, moduleRecord) {
   const realm = surroundingAgent.currentRealmRecord;
   if (realm.HostDefined.finalizeImportMeta) {
@@ -318,7 +318,7 @@ export function HostFinalizeImportMeta(importMeta, moduleRecord) {
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-host-cleanup-finalization-registry */
+/** https://tc39.es/ecma262/#sec-host-cleanup-finalization-registry */
 export function HostEnqueueFinalizationRegistryCleanupJob(fg) {
   if (surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry !== undefined) {
     Q(surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry(fg));
@@ -334,7 +334,7 @@ export function HostEnqueueFinalizationRegistryCleanupJob(fg) {
   return NormalCompletion(undefined);
 }
 
-/** http://tc39.es/ecma262/#sec-hostmakejobcallback */
+/** https://tc39.es/ecma262/#sec-hostmakejobcallback */
 export function HostMakeJobCallback(callback) {
   // 1. Assert: IsCallable(callback) is true.
   Assert(IsCallable(callback) === Value.true);
@@ -342,7 +342,7 @@ export function HostMakeJobCallback(callback) {
   return { Callback: callback, HostDefined: undefined };
 }
 
-/** http://tc39.es/ecma262/#sec-hostcalljobcallback */
+/** https://tc39.es/ecma262/#sec-hostcalljobcallback */
 export function HostCallJobCallback(jobCallback, V, argumentsList) {
   // 1. Assert: IsCallable(jobCallback.[[Callback]]) is true.
   Assert(IsCallable(jobCallback.Callback) === Value.true);

@@ -18,7 +18,7 @@ import {
   Evaluate_StatementList,
 } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-caseclauseisselected */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-caseclauseisselected */
 function* CaseClauseIsSelected(C, input) {
   // 1. Assert: C is an instance of the production  CaseClause : `case` Expression `:` StatementList?.
   Assert(C.type === 'CaseClause');
@@ -30,7 +30,7 @@ function* CaseClauseIsSelected(C, input) {
   return StrictEqualityComparison(input, clauseSelector);
 }
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-caseblockevaluation */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-caseblockevaluation */
 //   CaseBlock :
 //     `{` `}`
 //     `{` CaseClauses `}`
@@ -178,7 +178,7 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, i
   }
 }
 
-/** http://tc39.es/ecma262/#sec-switch-statement-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-switch-statement-runtime-semantics-evaluation */
 //   SwitchStatement :
 //     `switch` `(` Expression `)` CaseBlock
 export function* Evaluate_SwitchStatement({ Expression, CaseBlock }) {
@@ -202,7 +202,7 @@ export function* Evaluate_SwitchStatement({ Expression, CaseBlock }) {
   return R;
 }
 
-/** http://tc39.es/ecma262/#sec-switch-statement-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-switch-statement-runtime-semantics-evaluation */
 //   CaseClause :
 //     `case` Expression `:`
 //     `case` Expression `:` StatementList

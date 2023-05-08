@@ -25,7 +25,7 @@ import {
   IteratorBindingInitialization_FormalParameters,
 } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-functiondeclarationinstantiation */
+/** https://tc39.es/ecma262/#sec-functiondeclarationinstantiation */
 export function* FunctionDeclarationInstantiation(func, argumentsList) {
   // 1. Let calleeContext be the running execution context.
   const calleeContext = surroundingAgent.runningExecutionContext;

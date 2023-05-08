@@ -866,7 +866,7 @@ export class ExpressionParser extends FunctionParser {
     return { Arguments, trailingComma };
   }
 
-  /** http://tc39.es/ecma262/#sec-class-definitions */
+  /** https://tc39.es/ecma262/#sec-class-definitions */
   // ClassDeclaration :
   //   `class` BindingIdentifier ClassTail
   //   [+Default] `class` ClassTail

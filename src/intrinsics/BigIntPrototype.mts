@@ -7,7 +7,7 @@ import { Assert, ToIntegerOrInfinity, ToString } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-thisbigintvalue */
+/** https://tc39.es/ecma262/#sec-thisbigintvalue */
 function thisBigIntValue(value) {
   // 1. If Type(value) is BigInt, return value.
   if (value instanceof BigIntValue) {
@@ -24,12 +24,12 @@ function thisBigIntValue(value) {
   return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'BigInt', value);
 }
 
-/** http://tc39.es/ecma262/#sec-bigint.prototype.tolocalestring */
+/** https://tc39.es/ecma262/#sec-bigint.prototype.tolocalestring */
 function BigIntProto_toLocalString(args, { thisValue }) {
   return BigIntProto_toString(args, { thisValue });
 }
 
-/** http://tc39.es/ecma262/#sec-bigint.prototype.tostring */
+/** https://tc39.es/ecma262/#sec-bigint.prototype.tostring */
 function BigIntProto_toString([radix], { thisValue }) {
   // 1. Let x be ? thisBigIntValue(this value).
   const x = Q(thisBigIntValue(thisValue));
@@ -60,7 +60,7 @@ function BigIntProto_toString([radix], { thisValue }) {
   return Value(x.bigintValue().toString(radixNumber));
 }
 
-/** http://tc39.es/ecma262/#sec-bigint.prototype.tostring */
+/** https://tc39.es/ecma262/#sec-bigint.prototype.tostring */
 function BigIntProto_valueOf(args, { thisValue }) {
   // Return ? thisBigIntValue(this value).
   return Q(thisBigIntValue(thisValue));

@@ -20,7 +20,7 @@ import {
 import { EnvironmentRecord } from '../environment.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
-/** http://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation */
 //   UnaryExpression : `delete` UnaryExpression
 function* Evaluate_UnaryExpression_Delete({ UnaryExpression }) {
   // 1. Let ref be the result of evaluating UnaryExpression.
@@ -64,7 +64,7 @@ function* Evaluate_UnaryExpression_Delete({ UnaryExpression }) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-void-operator-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-void-operator-runtime-semantics-evaluation */
 //   UnaryExpression : `void` UnaryExpression
 function* Evaluate_UnaryExpression_Void({ UnaryExpression }) {
   // 1. Let expr be the result of evaluating UnaryExpression.
@@ -75,7 +75,7 @@ function* Evaluate_UnaryExpression_Void({ UnaryExpression }) {
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-typeof-operator-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-typeof-operator-runtime-semantics-evaluation */
 // UnaryExpression : `typeof` UnaryExpression
 function* Evaluate_UnaryExpression_Typeof({ UnaryExpression }) {
   // 1. Let val be the result of evaluating UnaryExpression.
@@ -113,7 +113,7 @@ function* Evaluate_UnaryExpression_Typeof({ UnaryExpression }) {
   throw new OutOfRange('Evaluate_UnaryExpression_Typeof', val);
 }
 
-/** http://tc39.es/ecma262/#sec-unary-plus-operator-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-unary-plus-operator-runtime-semantics-evaluation */
 //   UnaryExpression : `+` UnaryExpression
 function* Evaluate_UnaryExpression_Plus({ UnaryExpression }) {
   // 1. Let expr be the result of evaluating UnaryExpression.
@@ -122,7 +122,7 @@ function* Evaluate_UnaryExpression_Plus({ UnaryExpression }) {
   return Q(ToNumber(Q(GetValue(expr))));
 }
 
-/** http://tc39.es/ecma262/#sec-unary-minus-operator-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-unary-minus-operator-runtime-semantics-evaluation */
 //   UnaryExpression : `-` UnaryExpression
 function* Evaluate_UnaryExpression_Minus({ UnaryExpression }) {
   // 1. Let expr be the result of evaluating UnaryExpression.
@@ -135,7 +135,7 @@ function* Evaluate_UnaryExpression_Minus({ UnaryExpression }) {
   return X(T.unaryMinus(oldValue));
 }
 
-/** http://tc39.es/ecma262/#sec-bitwise-not-operator-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-bitwise-not-operator-runtime-semantics-evaluation */
 //   UnaryExpression : `~` UnaryExpression
 function* Evaluate_UnaryExpression_Tilde({ UnaryExpression }) {
   // 1. Let expr be the result of evaluating UnaryExpression.
@@ -148,7 +148,7 @@ function* Evaluate_UnaryExpression_Tilde({ UnaryExpression }) {
   return X(T.bitwiseNOT(oldValue));
 }
 
-/** http://tc39.es/ecma262/#sec-logical-not-operator-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-logical-not-operator-runtime-semantics-evaluation */
 //   UnaryExpression : `!` UnaryExpression
 function* Evaluate_UnaryExpression_Bang({ UnaryExpression }) {
   // 1. Let expr be the result of evaluating UnaryExpression.

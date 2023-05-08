@@ -11,7 +11,7 @@ import {
 import { Value } from '../value.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-generator.prototype.next */
+/** https://tc39.es/ecma262/#sec-generator.prototype.next */
 function GeneratorProto_next([value = Value.undefined], { thisValue }) {
   // 1. Let g be the this value.
   const g = thisValue;
@@ -19,7 +19,7 @@ function GeneratorProto_next([value = Value.undefined], { thisValue }) {
   return Q(GeneratorResume(g, value, undefined));
 }
 
-/** http://tc39.es/ecma262/#sec-generator.prototype.return */
+/** https://tc39.es/ecma262/#sec-generator.prototype.return */
 function GeneratorProto_return([value = Value.undefined], { thisValue }) {
   // 1. Let g be the this value.
   const g = thisValue;
@@ -29,7 +29,7 @@ function GeneratorProto_return([value = Value.undefined], { thisValue }) {
   return Q(GeneratorResumeAbrupt(g, C, undefined));
 }
 
-/** http://tc39.es/ecma262/#sec-generator.prototype.throw */
+/** https://tc39.es/ecma262/#sec-generator.prototype.throw */
 function GeneratorProto_throw([exception = Value.undefined], { thisValue }) {
   // 1. Let g be the this value.
   const g = thisValue;

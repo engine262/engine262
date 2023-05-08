@@ -1,5 +1,5 @@
 // @ts-nocheck
-/** http://tc39.es/ecma262/#sec-static-semantics-containsarguments */
+/** https://tc39.es/ecma262/#sec-static-semantics-containsarguments */
 export function ContainsArguments(node) {
   switch (node.type) {
     case 'IdentifierReference':

@@ -3,7 +3,7 @@ import { Value } from '../value.mjs';
 import { StringValue, NumericValue } from '../static-semantics/all.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
-/** http://tc39.es/ecma262/#sec-literals-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-literals-runtime-semantics-evaluation */
 // Literal :
 //   NullLiteral
 //   BooleanLiteral

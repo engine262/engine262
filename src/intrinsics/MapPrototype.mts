@@ -16,7 +16,7 @@ import { Q, X } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 import { CreateMapIterator } from './MapIteratorPrototype.mjs';
 
-/** http://tc39.es/ecma262/#sec-map.prototype.clear */
+/** https://tc39.es/ecma262/#sec-map.prototype.clear */
 function MapProto_clear(args, { thisValue }) {
   // 1. Let M be the this value.
   const M = thisValue;
@@ -35,7 +35,7 @@ function MapProto_clear(args, { thisValue }) {
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-map.prototype.delete */
+/** https://tc39.es/ecma262/#sec-map.prototype.delete */
 function MapProto_delete([key = Value.undefined], { thisValue }) {
   // 1. Let M be the this value.
   const M = thisValue;
@@ -58,7 +58,7 @@ function MapProto_delete([key = Value.undefined], { thisValue }) {
   return Value.false;
 }
 
-/** http://tc39.es/ecma262/#sec-map.prototype.entries */
+/** https://tc39.es/ecma262/#sec-map.prototype.entries */
 function MapProto_entries(args, { thisValue }) {
   // 1. Let M be the this value.
   const M = thisValue;
@@ -66,7 +66,7 @@ function MapProto_entries(args, { thisValue }) {
   return Q(CreateMapIterator(M, 'key+value'));
 }
 
-/** http://tc39.es/ecma262/#sec-map.prototype.foreach */
+/** https://tc39.es/ecma262/#sec-map.prototype.foreach */
 function MapProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
   // 1. Let M be the this value.
   const M = thisValue;
@@ -90,7 +90,7 @@ function MapProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefin
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-map.prototype.get */
+/** https://tc39.es/ecma262/#sec-map.prototype.get */
 function MapProto_get([key = Value.undefined], { thisValue }) {
   // 1. Let M be the this value.
   const M = thisValue;
@@ -110,7 +110,7 @@ function MapProto_get([key = Value.undefined], { thisValue }) {
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-map.prototype.has */
+/** https://tc39.es/ecma262/#sec-map.prototype.has */
 function MapProto_has([key = Value.undefined], { thisValue }) {
   // 1. Let M be the this value.
   const M = thisValue;
@@ -129,7 +129,7 @@ function MapProto_has([key = Value.undefined], { thisValue }) {
   return Value.false;
 }
 
-/** http://tc39.es/ecma262/#sec-map.prototype.keys */
+/** https://tc39.es/ecma262/#sec-map.prototype.keys */
 function MapProto_keys(args, { thisValue }) {
   // 1. Let M be the this value.
   const M = thisValue;
@@ -137,7 +137,7 @@ function MapProto_keys(args, { thisValue }) {
   return Q(CreateMapIterator(M, 'key'));
 }
 
-/** http://tc39.es/ecma262/#sec-map.prototype.set */
+/** https://tc39.es/ecma262/#sec-map.prototype.set */
 function MapProto_set([key = Value.undefined, value = Value.undefined], { thisValue }) {
   // 1. Let M be the this value.
   const M = thisValue;
@@ -167,7 +167,7 @@ function MapProto_set([key = Value.undefined, value = Value.undefined], { thisVa
   return M;
 }
 
-/** http://tc39.es/ecma262/#sec-get-map.prototype.size */
+/** https://tc39.es/ecma262/#sec-get-map.prototype.size */
 function MapProto_sizeGetter(args, { thisValue }) {
   // 1. Let M be the this value.
   const M = thisValue;
@@ -188,7 +188,7 @@ function MapProto_sizeGetter(args, { thisValue }) {
   return F(count);
 }
 
-/** http://tc39.es/ecma262/#sec-map.prototype.values */
+/** https://tc39.es/ecma262/#sec-map.prototype.values */
 function MapProto_values(args, { thisValue }) {
   // 1. Let M be the this value.
   const M = thisValue;

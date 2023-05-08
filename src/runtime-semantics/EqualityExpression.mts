@@ -9,7 +9,7 @@ import { Evaluate } from '../evaluator.mjs';
 import { Value } from '../value.mjs';
 import { OutOfRange } from '../helpers.mjs';
 
-/** http://tc39.es/ecma262/#sec-equality-operators-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-equality-operators-runtime-semantics-evaluation */
 //   EqualityExpression :
 //     EqualityExpression `==` RelationalExpression
 //     EqualityExpression `!=` RelationalExpression

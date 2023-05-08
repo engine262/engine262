@@ -16,7 +16,7 @@ import {
   getUnicodePropertyValueSet,
 } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-pattern */
+/** https://tc39.es/ecma262/#sec-pattern */
 class State {
   endIndex;
   captures;
@@ -124,7 +124,7 @@ class Range {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-pattern */
+/** https://tc39.es/ecma262/#sec-pattern */
 //   Pattern :: Disjunction
 export function Evaluate_Pattern(Pattern, flags) {
   // The descriptions below use the following variables:
@@ -221,7 +221,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-disjunction */
+  /** https://tc39.es/ecma262/#sec-disjunction */
   //   Disjunction ::
   //     Alternative
   //     Alternative `|` Disjunction
@@ -253,7 +253,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     };
   }
 
-  /** http://tc39.es/ecma262/#sec-alternative */
+  /** https://tc39.es/ecma262/#sec-alternative */
   //   Alternative ::
   //     [empty]
   //     Alternative Term
@@ -313,7 +313,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-term */
+  /** https://tc39.es/ecma262/#sec-term */
   //   Term ::
   //     Assertion
   //     Atom
@@ -348,7 +348,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     };
   }
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-repeatmatcher-abstract-operation */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-repeatmatcher-abstract-operation */
   function RepeatMatcher(m, min, max, greedy, x, c, parenIndex, parenCount) {
     // 1. If max is zero, return c(x).
     if (max === 0) {
@@ -414,7 +414,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     return c(x);
   }
 
-  /** http://tc39.es/ecma262/#sec-assertion */
+  /** https://tc39.es/ecma262/#sec-assertion */
   //   Assertion ::
   //     `^`
   //     `$`
@@ -627,7 +627,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-wordcharacters-abstract-operation */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-wordcharacters-abstract-operation */
   function WordCharacters() {
     // 1. Let A be a set of characters containing the sixty-three characters:
     //   a b c d e f g h i j k l m n o p q r s t u v w x y z
@@ -657,7 +657,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     return A;
   }
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-iswordchar-abstract-operation */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-iswordchar-abstract-operation */
   function IsWordChar(e) {
     // 1. If e is -1 or e is InputLength, return false.
     if (e === -1 || e === InputLength) {
@@ -675,7 +675,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     return false;
   }
 
-  /** http://tc39.es/ecma262/#sec-quantifier */
+  /** https://tc39.es/ecma262/#sec-quantifier */
   //   Quantifier ::
   //     QuantifierPrefix
   //     QuantifierPrefix `?`
@@ -694,7 +694,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     return [DecimalDigits_a, DecimalDigits_b || DecimalDigits_a, greedy];
   }
 
-  /** http://tc39.es/ecma262/#sec-atom */
+  /** https://tc39.es/ecma262/#sec-atom */
   //   Atom ::
   //     PatternCharacter
   //     `.`
@@ -787,7 +787,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-charactersetmatcher-abstract-operation */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-charactersetmatcher-abstract-operation */
   function CharacterSetMatcher(A, invert, direction) {
     // 1. Return a new Matcher with parameters (x, c) that captures A, invert, and direction and performs the following steps when called:
     return (x, c) => {
@@ -832,7 +832,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     };
   }
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-canonicalize-ch */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-canonicalize-ch */
   function Canonicalize(ch) {
     // 1. If IgnoreCase is false, return ch.
     if (IgnoreCase === false) {
@@ -873,7 +873,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-atomescape */
+  /** https://tc39.es/ecma262/#sec-atomescape */
   // AtomEscape ::
   //   DecimalEscape
   //   CharacterEscape
@@ -917,7 +917,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-backreference-matcher */
+  /** https://tc39.es/ecma262/#sec-backreference-matcher */
   function BackreferenceMatcher(n, direction) {
     // 1. Return a new Matcher with parameters (x, c) that captures n and direction and performs the following steps when called:
     return (x, c) => {
@@ -962,7 +962,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     };
   }
 
-  /** http://tc39.es/ecma262/#sec-characterescape */
+  /** https://tc39.es/ecma262/#sec-characterescape */
   // CharacterEscape ::
   //   ControlEscape
   //   `c` ControlLetter
@@ -977,14 +977,14 @@ export function Evaluate_Pattern(Pattern, flags) {
     return cv;
   }
 
-  /** http://tc39.es/ecma262/#sec-decimalescape */
+  /** https://tc39.es/ecma262/#sec-decimalescape */
   // DecimalEscape ::
   //   NonZeroDigit DecimalDigits?
   function Evaluate_DecimalEscape(DecimalEscape) {
     return DecimalEscape.value;
   }
 
-  /** http://tc39.es/ecma262/#sec-characterclassescape */
+  /** https://tc39.es/ecma262/#sec-characterclassescape */
   // CharacterClassEscape ::
   //   `d`
   //   `D`
@@ -1068,7 +1068,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     return new ConcreteCharSet(getUnicodePropertyValueSet(p, v));
   }
 
-  /** http://tc39.es/ecma262/#sec-characterclass */
+  /** https://tc39.es/ecma262/#sec-characterclass */
   //  CharacterClass ::
   //    `[` ClassRanges `]`
   //    `[` `^` ClassRanges `]`
@@ -1087,7 +1087,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     return { A, invert };
   }
 
-  /** http://tc39.es/ecma262/#sec-runtime-semantics-characterrange-abstract-operation */
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-characterrange-abstract-operation */
   function CharacterRange(A, B) {
     // 1. Assert: A and B each contain exactly one character.
     Assert(A.size === 1 && B.size === 1);
@@ -1109,7 +1109,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     return new ConcreteCharSet(set);
   }
 
-  /** http://tc39.es/ecma262/#sec-classatom */
+  /** https://tc39.es/ecma262/#sec-classatom */
   // ClassAtom ::
   //   `-`
   //   ClassAtomNoDash
@@ -1129,7 +1129,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     }
   }
 
-  /** http://tc39.es/ecma262/#sec-classescape */
+  /** https://tc39.es/ecma262/#sec-classescape */
   // ClassEscape ::
   //   `b`
   //   `-`

@@ -3,7 +3,7 @@ import { ObjectValue, Value, Descriptor } from '../value.mjs';
 import { Q, X, NormalCompletion } from '../completion.mjs';
 import { HasProperty, Get, DefinePropertyOrThrow } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-errorobjects-install-error-cause */
+/** https://tc39.es/ecma262/#sec-errorobjects-install-error-cause */
 export function InstallErrorCause(O, options) {
   // 1. If Type(options) is Object and ? HasProperty(options, "cause") is true, then
   if (options instanceof ObjectValue) {

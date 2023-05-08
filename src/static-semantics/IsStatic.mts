@@ -1,5 +1,5 @@
 // @ts-nocheck
-/** http://tc39.es/ecma262/#sec-static-semantics-isstatic */
+/** https://tc39.es/ecma262/#sec-static-semantics-isstatic */
 // ClassElement :
 //   MethodDefinition
 //   `static` MethodDefinition

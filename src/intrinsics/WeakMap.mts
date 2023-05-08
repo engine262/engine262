@@ -13,7 +13,7 @@ import {
 import { AddEntriesFromIterable } from './Map.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-weakmap-constructor */
+/** https://tc39.es/ecma262/#sec-weakmap-constructor */
 function WeakMapConstructor([iterable = Value.undefined], { NewTarget }) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget === Value.undefined) {

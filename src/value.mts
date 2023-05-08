@@ -33,7 +33,7 @@ export declare function Value(value: null): NullValue; // @ts-expect-error calla
 // TODO(ts): define a FunctionObjectValue type.
 export declare function Value(value: (...args: unknown[]) => unknown): ObjectValue; // @ts-expect-error callable class
 export declare function Value(value: string | number): StringValue | NumberValue;
-/** http://tc39.es/ecma262/#sec-ecmascript-language-types */
+/** https://tc39.es/ecma262/#sec-ecmascript-language-types */
 export @callable((_target, _thisArg, [value]) => {
   if (value === null) {
     return Value.null;
@@ -71,13 +71,13 @@ abstract class Value {
 export class PrimitiveValue extends Value { }
 export type PropertyKeyValue = StringValue | SymbolValue;
 
-/** http://tc39.es/ecma262/#sec-ecmascript-language-types-undefined-type */
+/** https://tc39.es/ecma262/#sec-ecmascript-language-types-undefined-type */
 export class UndefinedValue extends PrimitiveValue { }
 
-/** http://tc39.es/ecma262/#sec-ecmascript-language-types-null-type */
+/** https://tc39.es/ecma262/#sec-ecmascript-language-types-null-type */
 export class NullValue extends PrimitiveValue { }
 
-/** http://tc39.es/ecma262/#sec-ecmascript-language-types-boolean-type */
+/** https://tc39.es/ecma262/#sec-ecmascript-language-types-boolean-type */
 export class BooleanValue extends PrimitiveValue {
   readonly boolean: boolean;
   constructor(v: boolean) {
@@ -101,7 +101,7 @@ Object.defineProperties(Value, {
   false: { value: new BooleanValue(false), configurable: false, writable: false },
 });
 
-/** http://tc39.es/ecma262/#sec-ecmascript-language-types-string-type */
+/** https://tc39.es/ecma262/#sec-ecmascript-language-types-string-type */
 class StringValue extends PrimitiveValue {
   readonly string: string;
   constructor(string: string) {
@@ -116,7 +116,7 @@ class StringValue extends PrimitiveValue {
 // rename for static semantics StringValue() conflict
 export { StringValue as JSStringValue };
 
-/** http://tc39.es/ecma262/#sec-ecmascript-language-types-symbol-type */
+/** https://tc39.es/ecma262/#sec-ecmascript-language-types-symbol-type */
 export class SymbolValue extends PrimitiveValue {
   readonly Description: StringValue;
   constructor(Description: StringValue) {
@@ -143,7 +143,7 @@ export const wellKnownSymbols = {
 Object.setPrototypeOf(wellKnownSymbols, null);
 Object.freeze(wellKnownSymbols);
 
-/** http://tc39.es/ecma262/#sec-ecmascript-language-types-number-type */
+/** https://tc39.es/ecma262/#sec-ecmascript-language-types-number-type */
 export class NumberValue extends PrimitiveValue {
   readonly number: number;
   constructor(number: number) {
@@ -167,7 +167,7 @@ export class NumberValue extends PrimitiveValue {
     return Number.isFinite(this.number);
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-number-unaryMinus */
+  /** https://tc39.es/ecma262/#sec-numeric-types-number-unaryMinus */
   static unaryMinus(x: NumberValue) {
     if (x.isNaN()) {
       return F(NaN);
@@ -175,7 +175,7 @@ export class NumberValue extends PrimitiveValue {
     return F(-x.numberValue());
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-number-bitwiseNOT */
+  /** https://tc39.es/ecma262/#sec-numeric-types-number-bitwiseNOT */
   static bitwiseNOT(x: NumberValue) {
     // 1. Let oldValue be ! ToInt32(x).
     const oldValue = X(ToInt32(x));
@@ -183,38 +183,38 @@ export class NumberValue extends PrimitiveValue {
     return F(~oldValue.numberValue());
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-number-exponentiate */
+  /** https://tc39.es/ecma262/#sec-numeric-types-number-exponentiate */
   static exponentiate(base: NumberValue, exponent: NumberValue) {
     return F(base.numberValue() ** exponent.numberValue());
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-number-multiply */
+  /** https://tc39.es/ecma262/#sec-numeric-types-number-multiply */
   static multiply(x: NumberValue, y: NumberValue) {
     return F(x.numberValue() * y.numberValue());
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-number-divide */
+  /** https://tc39.es/ecma262/#sec-numeric-types-number-divide */
   static divide(x: NumberValue, y: NumberValue) {
     return F(x.numberValue() / y.numberValue());
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-number-remainder */
+  /** https://tc39.es/ecma262/#sec-numeric-types-number-remainder */
   static remainder(n: NumberValue, d: NumberValue) {
     return F(n.numberValue() % d.numberValue());
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-number-add */
+  /** https://tc39.es/ecma262/#sec-numeric-types-number-add */
   static add(x: NumberValue, y: NumberValue) {
     return F(x.numberValue() + y.numberValue());
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-number-subtract */
+  /** https://tc39.es/ecma262/#sec-numeric-types-number-subtract */
   static subtract(x: NumberValue, y: NumberValue) {
     // The result of - operator is x + (-y).
     return NumberValue.add(x, F(-y.numberValue()));
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-number-leftShift */
+  /** https://tc39.es/ecma262/#sec-numeric-types-number-leftShift */
   static leftShift(x: NumberValue, y: NumberValue) {
     // 1. Let lnum be ! ToInt32(x).
     const lnum = X(ToInt32(x));
@@ -226,7 +226,7 @@ export class NumberValue extends PrimitiveValue {
     return F(lnum.numberValue() << shiftCount); // eslint-disable-line no-bitwise
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-number-signedRightShift */
+  /** https://tc39.es/ecma262/#sec-numeric-types-number-signedRightShift */
   static signedRightShift(x: NumberValue, y: NumberValue) {
     // 1. Let lnum be ! ToInt32(x).
     const lnum = X(ToInt32(x));
@@ -239,7 +239,7 @@ export class NumberValue extends PrimitiveValue {
     return F(lnum.numberValue() >> shiftCount); // eslint-disable-line no-bitwise
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-number-unsignedRightShift */
+  /** https://tc39.es/ecma262/#sec-numeric-types-number-unsignedRightShift */
   static unsignedRightShift(x: NumberValue, y: NumberValue) {
     // 1. Let lnum be ! ToInt32(x).
     const lnum = X(ToInt32(x));
@@ -252,7 +252,7 @@ export class NumberValue extends PrimitiveValue {
     return F(lnum.numberValue() >>> shiftCount); // eslint-disable-line no-bitwise
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-number-lessThan */
+  /** https://tc39.es/ecma262/#sec-numeric-types-number-lessThan */
   static lessThan(x: NumberValue, y: NumberValue) {
     if (x.isNaN()) {
       return Value.undefined;
@@ -281,7 +281,7 @@ export class NumberValue extends PrimitiveValue {
     return x.numberValue() < y.numberValue() ? Value.true : Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-number-equal */
+  /** https://tc39.es/ecma262/#sec-numeric-types-number-equal */
   static equal(x: NumberValue, y: NumberValue) {
     if (x.isNaN()) {
       return Value.false;
@@ -303,7 +303,7 @@ export class NumberValue extends PrimitiveValue {
     return Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-number-sameValue */
+  /** https://tc39.es/ecma262/#sec-numeric-types-number-sameValue */
   static sameValue(x: NumberValue, y: NumberValue) {
     if (x.isNaN() && y.isNaN()) {
       return Value.true;
@@ -322,7 +322,7 @@ export class NumberValue extends PrimitiveValue {
     return Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-number-sameValueZero */
+  /** https://tc39.es/ecma262/#sec-numeric-types-number-sameValueZero */
   static sameValueZero(x: NumberValue, y: NumberValue) {
     if (x.isNaN() && y.isNaN()) {
       return Value.true;
@@ -341,25 +341,25 @@ export class NumberValue extends PrimitiveValue {
     return Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-number-bitwiseAND */
+  /** https://tc39.es/ecma262/#sec-numeric-types-number-bitwiseAND */
   static bitwiseAND(x: NumberValue, y: NumberValue) {
     // 1. Return NumberBitwiseOp(&, x, y).
     return NumberBitwiseOp('&', x, y);
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-number-bitwiseXOR */
+  /** https://tc39.es/ecma262/#sec-numeric-types-number-bitwiseXOR */
   static bitwiseXOR(x: NumberValue, y: NumberValue) {
     // 1. Return NumberBitwiseOp(^, x, y).
     return NumberBitwiseOp('^', x, y);
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-number-bitwiseOR */
+  /** https://tc39.es/ecma262/#sec-numeric-types-number-bitwiseOR */
   static bitwiseOR(x: NumberValue, y: NumberValue) {
     // 1. Return NumberBitwiseOp(|, x, y).
     return NumberBitwiseOp('|', x, y);
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-number-tostring */
+  /** https://tc39.es/ecma262/#sec-numeric-types-number-tostring */
   static override toString(x: NumberValue): StringValue {
     if (x.isNaN()) {
       return Value('NaN');
@@ -382,7 +382,7 @@ export class NumberValue extends PrimitiveValue {
   static readonly unit = new NumberValue(1);
 }
 
-/** http://tc39.es/ecma262/#sec-numberbitwiseop */
+/** https://tc39.es/ecma262/#sec-numberbitwiseop */
 function NumberBitwiseOp(op: '&' | '|' | '^', x: NumberValue, y: NumberValue) {
   // 1. Let lnum be ! ToInt32(x).
   const lnum = X(ToInt32(x));
@@ -401,7 +401,7 @@ function NumberBitwiseOp(op: '&' | '|' | '^', x: NumberValue, y: NumberValue) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-ecmascript-language-types-bigint-type */
+/** https://tc39.es/ecma262/#sec-ecmascript-language-types-bigint-type */
 export class BigIntValue extends PrimitiveValue {
   readonly bigint: bigint;
   constructor(bigint: bigint) {
@@ -421,7 +421,7 @@ export class BigIntValue extends PrimitiveValue {
     return true;
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-bigint-unaryMinus */
+  /** https://tc39.es/ecma262/#sec-numeric-types-bigint-unaryMinus */
   static unaryMinus(x: BigIntValue) {
     if (x.bigintValue() === 0n) {
       return Z(0n);
@@ -429,12 +429,12 @@ export class BigIntValue extends PrimitiveValue {
     return Z(-x.bigintValue());
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseNOT */
+  /** https://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseNOT */
   static bitwiseNOT(x: BigIntValue) {
     return Z(-x.bigintValue() - 1n);
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-bigint-exponentiate */
+  /** https://tc39.es/ecma262/#sec-numeric-types-bigint-exponentiate */
   static exponentiate(base: BigIntValue, exponent: BigIntValue) {
     // 1. If exponent < 0n, throw a RangeError exception.
     if (exponent.bigintValue() < 0n) {
@@ -448,12 +448,12 @@ export class BigIntValue extends PrimitiveValue {
     return Z(base.bigintValue() ** exponent.bigintValue());
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-bigint-multiply */
+  /** https://tc39.es/ecma262/#sec-numeric-types-bigint-multiply */
   static multiply(x: BigIntValue, y: BigIntValue) {
     return Z(x.bigintValue() * y.bigintValue());
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-bigint-divide */
+  /** https://tc39.es/ecma262/#sec-numeric-types-bigint-divide */
   static divide(x: BigIntValue, y: BigIntValue) {
     // 1. If y is 0n, throw a RangeError exception.
     if (y.bigintValue() === 0n) {
@@ -465,7 +465,7 @@ export class BigIntValue extends PrimitiveValue {
     return Z(quotient);
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-bigint-remainder */
+  /** https://tc39.es/ecma262/#sec-numeric-types-bigint-remainder */
   static remainder(n: BigIntValue, d: BigIntValue) {
     // 1. If d is 0n, throw a RangeError exception.
     if (d.bigintValue() === 0n) {
@@ -484,74 +484,74 @@ export class BigIntValue extends PrimitiveValue {
     return r;
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-bigint-add */
+  /** https://tc39.es/ecma262/#sec-numeric-types-bigint-add */
   static add(x: BigIntValue, y: BigIntValue) {
     return Z(x.bigintValue() + y.bigintValue());
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-bigint-subtract */
+  /** https://tc39.es/ecma262/#sec-numeric-types-bigint-subtract */
   static subtract(x: BigIntValue, y: BigIntValue) {
     return Z(x.bigintValue() - y.bigintValue());
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-bigint-leftShift */
+  /** https://tc39.es/ecma262/#sec-numeric-types-bigint-leftShift */
   static leftShift(x: BigIntValue, y: BigIntValue) {
     return Z(x.bigintValue() << y.bigintValue()); // eslint-disable-line no-bitwise
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-bigint-signedRightShift */
+  /** https://tc39.es/ecma262/#sec-numeric-types-bigint-signedRightShift */
   static signedRightShift(x: BigIntValue, y: BigIntValue) {
     // 1. Return BigInt::leftShift(x, -y).
     return BigIntValue.leftShift(x, Z(-y.bigintValue()));
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-bigint-unsignedRightShift */
+  /** https://tc39.es/ecma262/#sec-numeric-types-bigint-unsignedRightShift */
   static unsignedRightShift(_x: BigIntValue, _y: BigIntValue) {
     return surroundingAgent.Throw('TypeError', 'BigIntUnsignedRightShift');
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-bigint-lessThan */
+  /** https://tc39.es/ecma262/#sec-numeric-types-bigint-lessThan */
   static lessThan(x: BigIntValue, y: BigIntValue) {
     return x.bigintValue() < y.bigintValue() ? Value.true : Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-bigint-equal */
+  /** https://tc39.es/ecma262/#sec-numeric-types-bigint-equal */
   static equal(x: BigIntValue, y: BigIntValue) {
     // Return true if x and y have the same mathematical integer value and false otherwise.
     return x.bigintValue() === y.bigintValue() ? Value.true : Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-bigint-sameValue */
+  /** https://tc39.es/ecma262/#sec-numeric-types-bigint-sameValue */
   static sameValue(x: BigIntValue, y: BigIntValue) {
     // 1. Return BigInt::equal(x, y).
     return BigIntValue.equal(x, y);
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-bigint-sameValueZero */
+  /** https://tc39.es/ecma262/#sec-numeric-types-bigint-sameValueZero */
   static sameValueZero(x: BigIntValue, y: BigIntValue) {
     // 1. Return BigInt::equal(x, y).
     return BigIntValue.equal(x, y);
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseAND */
+  /** https://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseAND */
   static bitwiseAND(x: BigIntValue, y: BigIntValue) {
     // 1. Return BigIntBitwiseOp(&, x, y).
     return BigIntBitwiseOp('&', x, y);
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseXOR */
+  /** https://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseXOR */
   static bitwiseXOR(x: BigIntValue, y: BigIntValue) {
     // 1. Return BigIntBitwiseOp(^, x, y).
     return BigIntBitwiseOp('^', x, y);
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseOR */
+  /** https://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseOR */
   static bitwiseOR(x: BigIntValue, y: BigIntValue) {
     // 1. Return BigIntBitwiseOp(|, x, y);
     return BigIntBitwiseOp('|', x, y);
   }
 
-  /** http://tc39.es/ecma262/#sec-numeric-types-bigint-tostring */
+  /** https://tc39.es/ecma262/#sec-numeric-types-bigint-tostring */
   static override toString(x: BigIntValue): StringValue {
     // 1. If x is less than zero, return the string-concatenation of the String "-" and ! BigInt::toString(-x).
     if (x.bigintValue() < 0n) {
@@ -566,7 +566,7 @@ export class BigIntValue extends PrimitiveValue {
 }
 
 /*
-/** http://tc39.es/ecma262/#sec-binaryand */
+/** https://tc39.es/ecma262/#sec-binaryand */
 // function BinaryAnd(x, y) {
 //   // 1. Assert: x is 0 or 1.
 //   Assert(x === 0n || x === 1n);
@@ -581,7 +581,7 @@ export class BigIntValue extends PrimitiveValue {
 //   }
 // }
 
-/** http://tc39.es/ecma262/#sec-binaryor */
+/** https://tc39.es/ecma262/#sec-binaryor */
 // function BinaryOr(x, y) {
 //   // 1. Assert: x is 0 or 1.
 //   Assert(x === 0n || x === 1n);
@@ -596,7 +596,7 @@ export class BigIntValue extends PrimitiveValue {
 //   }
 // }
 
-/** http://tc39.es/ecma262/#sec-binaryxor */
+/** https://tc39.es/ecma262/#sec-binaryxor */
 // function BinaryXor(x, y) {
 //   // 1. Assert: x is 0 or 1.
 //   Assert(x === 0n || x === 1n);
@@ -614,7 +614,7 @@ export class BigIntValue extends PrimitiveValue {
 //   }
 // }
 
-/** http://tc39.es/ecma262/#sec-bigintbitwiseop */
+/** https://tc39.es/ecma262/#sec-bigintbitwiseop */
 function BigIntBitwiseOp(op: '&' | '|' | '^', x: BigIntValue, y: BigIntValue) {
   // TODO: figure out why this doesn't work, probably the modulo.
   /*
@@ -682,7 +682,7 @@ function BigIntBitwiseOp(op: '&' | '|' | '^', x: BigIntValue, y: BigIntValue) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-private-names */
+/** https://tc39.es/ecma262/#sec-private-names */
 export class PrivateName extends Value {
   readonly Description: StringValue;
   constructor(Description: StringValue) {
@@ -692,7 +692,7 @@ export class PrivateName extends Value {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-object-type */
+/** https://tc39.es/ecma262/#sec-object-type */
 export class ObjectValue extends Value {
   readonly properties: ValueMap<StringValue | SymbolValue, Descriptor>;
   readonly internalSlotsList: readonly string[];

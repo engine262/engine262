@@ -1,6 +1,6 @@
 // @ts-nocheck
 // This file covers abstract operations defined in
-// http://tc39.es/ecma262/#sec-import-calls
+// https://tc39.es/ecma262/#sec-import-calls
 
 import {
   Call, GetModuleNamespace, PerformPromiseThen, Value,

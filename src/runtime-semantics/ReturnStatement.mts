@@ -8,7 +8,7 @@ import {
   Q, X,
 } from '../completion.mjs';
 
-/** http://tc39.es/ecma262/#sec-return-statement-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-return-statement-runtime-semantics-evaluation */
 //  ReturnStatement :
 //    `return` `;`
 //    `return` Expression `;`

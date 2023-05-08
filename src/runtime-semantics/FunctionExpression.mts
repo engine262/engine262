@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { InstantiateOrdinaryFunctionExpression } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluation */
 //   FunctionExpression :
 //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
 //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`

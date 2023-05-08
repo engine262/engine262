@@ -19,13 +19,13 @@ import {
 } from '../abstract-ops/all.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-%typedarray%-intrinsic-object */
+/** https://tc39.es/ecma262/#sec-%typedarray%-intrinsic-object */
 function TypedArrayConstructor() {
   // 1. Throw a TypeError exception.
   return surroundingAgent.Throw('TypeError', 'NotAConstructor', this);
 }
 
-/** http://tc39.es/ecma262/#sec-%typedarray%.from */
+/** https://tc39.es/ecma262/#sec-%typedarray%.from */
 function TypedArray_from([source = Value.undefined, mapfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
   // 1. Let C be the this value.
   const C = thisValue;
@@ -101,7 +101,7 @@ function TypedArray_from([source = Value.undefined, mapfn = Value.undefined, thi
   return targetObj;
 }
 
-/** http://tc39.es/ecma262/#sec-%typedarray%.of */
+/** https://tc39.es/ecma262/#sec-%typedarray%.of */
 function TypedArray_of(items, { thisValue }) {
   // 1. Let len be the actual number of arguments passed to this function.
   // 2. Let items be the List of arguments passed to this function.
@@ -131,7 +131,7 @@ function TypedArray_of(items, { thisValue }) {
   return newObj;
 }
 
-/** http://tc39.es/ecma262/#sec-get-%typedarray%-@@species */
+/** https://tc39.es/ecma262/#sec-get-%typedarray%-@@species */
 function TypedArray_speciesGetter(args, { thisValue }) {
   return thisValue;
 }

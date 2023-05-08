@@ -2,7 +2,7 @@
 import { surroundingAgent } from '../engine.mjs';
 import { NormalCompletion, EnsureCompletion } from '../completion.mjs';
 
-/** http://tc39.es/ecma262/#sec-debugger-statement-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-debugger-statement-runtime-semantics-evaluation */
 // DebuggerStatement : `debugger` `;`
 export function Evaluate_DebuggerStatement() {
   let result;

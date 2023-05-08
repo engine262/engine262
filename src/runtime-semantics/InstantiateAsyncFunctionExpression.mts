@@ -11,7 +11,7 @@ import { StringValue } from '../static-semantics/all.mjs';
 import { X } from '../completion.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncfunctionexpression */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncfunctionexpression */
 export function InstantiateAsyncFunctionExpression(AsyncFunctionExpression, name) {
   const { BindingIdentifier, FormalParameters, AsyncFunctionBody } = AsyncFunctionExpression;
   if (BindingIdentifier) {

@@ -6,7 +6,7 @@ import { StringValue } from '../static-semantics/all.mjs';
 import { Q, NormalCompletion } from '../completion.mjs';
 import { InitializeBoundName, ClassDefinitionEvaluation } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-bindingclassdeclarationevaluation */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-bindingclassdeclarationevaluation */
 //   ClassDeclaration :
 //     `class` BindingIdentifier ClassTail
 //     `class` ClassTail
@@ -34,7 +34,7 @@ export function* BindingClassDeclarationEvaluation(ClassDeclaration) {
   return value;
 }
 
-/** http://tc39.es/ecma262/#sec-class-definitions-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-class-definitions-runtime-semantics-evaluation */
 //   ClassDeclaration : `class` BindingIdentifier ClassTAil
 export function* Evaluate_ClassDeclaration(ClassDeclaration) {
   // 1. Perform ? BindingClassDeclarationEvaluation of this ClassDeclaration.

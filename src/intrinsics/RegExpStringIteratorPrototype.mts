@@ -18,7 +18,7 @@ import { bootstrapPrototype } from './bootstrap.mjs';
 
 const kRegExpStringIteratorPrototype = Value('%RegExpStringIteratorPrototype%');
 
-/** http://tc39.es/ecma262/#sec-createregexpstringiterator */
+/** https://tc39.es/ecma262/#sec-createregexpstringiterator */
 export function CreateRegExpStringIterator(R, S, global, fullUnicode) {
   // 1. Assert: Type(S) is String.
   Assert(S instanceof JSStringValue);
@@ -62,7 +62,7 @@ export function CreateRegExpStringIterator(R, S, global, fullUnicode) {
   return X(CreateIteratorFromClosure(closure, kRegExpStringIteratorPrototype, surroundingAgent.intrinsic('%RegExpStringIteratorPrototype%')));
 }
 
-/** http://tc39.es/ecma262/#sec-%regexpstringiteratorprototype%.next */
+/** https://tc39.es/ecma262/#sec-%regexpstringiteratorprototype%.next */
 function RegExpStringIteratorPrototype_next(args, { thisValue }) {
   // 1. Return ? GeneratorResume(this value, empty, "%RegExpStringIteratorPrototype%").
   return Q(GeneratorResume(thisValue, undefined, kRegExpStringIteratorPrototype));

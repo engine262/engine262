@@ -3,7 +3,7 @@ import { BoundNames } from '../static-semantics/all.mjs';
 import { Q, ReturnIfAbrupt } from '../completion.mjs';
 import { Evaluate_PropertyName, KeyedBindingInitialization } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-destructuring-binding-patterns-runtime-semantics-propertybindinginitialization */
+/** https://tc39.es/ecma262/#sec-destructuring-binding-patterns-runtime-semantics-propertybindinginitialization */
 // BindingPropertyList : BIndingPropertyList `,` BindingProperty
 // BindingProperty :
 //   SingleNameBinding

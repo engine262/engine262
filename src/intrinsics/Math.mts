@@ -13,7 +13,7 @@ import {
 import { Q, X } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-math.abs */
+/** https://tc39.es/ecma262/#sec-math.abs */
 function Math_abs([x = Value.undefined]) {
   const n = Q(ToNumber(x));
   if (n.isNaN()) {
@@ -30,7 +30,7 @@ function Math_abs([x = Value.undefined]) {
   return n;
 }
 
-/** http://tc39.es/ecma262/#sec-math.acos */
+/** https://tc39.es/ecma262/#sec-math.acos */
 function Math_acos([x = Value.undefined]) {
   const n = Q(ToNumber(x));
   if (n.isNaN()) {
@@ -46,7 +46,7 @@ function Math_acos([x = Value.undefined]) {
   return F(Math.acos(n.numberValue()));
 }
 
-/** http://tc39.es/ecma262/#sec-math.pow */
+/** https://tc39.es/ecma262/#sec-math.pow */
 function Math_pow([base = Value.undefined, exponent = Value.undefined]) {
   // 1. Set base to ? ToNumber(base).
   base = Q(ToNumber(base));
@@ -68,7 +68,7 @@ function fmix64(h) {
 
 const floatView = new Float64Array(1);
 const big64View = new BigUint64Array(floatView.buffer);
-/** http://tc39.es/ecma262/#sec-math.random */
+/** https://tc39.es/ecma262/#sec-math.random */
 function Math_random() {
   const realm = surroundingAgent.currentRealmRecord;
   if (realm.randomState === undefined) {
@@ -98,9 +98,9 @@ function Math_random() {
   return F(result);
 }
 
-/** http://tc39.es/ecma262/#sec-math-object */
+/** https://tc39.es/ecma262/#sec-math-object */
 export function bootstrapMath(realmRec) {
-  /** http://tc39.es/ecma262/#sec-value-properties-of-the-math-object */
+  /** https://tc39.es/ecma262/#sec-value-properties-of-the-math-object */
   const readonly = { Writable: Value.false, Configurable: Value.false };
   const valueProps = [
     ['E', 2.718281828459045],
@@ -122,7 +122,7 @@ export function bootstrapMath(realmRec) {
     ['random', Math_random, 0],
   ], realmRec.Intrinsics['%Object.prototype%'], 'Math');
 
-  /** http://tc39.es/ecma262/#sec-function-properties-of-the-math-object */
+  /** https://tc39.es/ecma262/#sec-function-properties-of-the-math-object */
 
   [
     ['acosh', 1],
@@ -158,7 +158,7 @@ export function bootstrapMath(realmRec) {
     ['trunc', 1],
   ].forEach(([name, length]) => {
     // TODO(18): Math
-    /** http://tc39.es/ecma262/#sec-function-properties-of-the-math-object */
+    /** https://tc39.es/ecma262/#sec-function-properties-of-the-math-object */
     const method = (args) => {
       for (let i = 0; i < args.length; i += 1) {
         args[i] = Q(ToNumber(args[i])).numberValue();

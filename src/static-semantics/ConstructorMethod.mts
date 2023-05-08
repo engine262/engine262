@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { PropName } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-static-semantics-constructormethod */
+/** https://tc39.es/ecma262/#sec-static-semantics-constructormethod */
 // ClassElementList :
 //   ClassElement
 //   ClassElementList ClassElement

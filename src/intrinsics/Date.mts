@@ -21,11 +21,11 @@ import {
 import { bootstrapConstructor } from './bootstrap.mjs';
 import { ToDateString, thisTimeValue } from './DatePrototype.mjs';
 
-/** http://tc39.es/ecma262/#sec-date-constructor */
+/** https://tc39.es/ecma262/#sec-date-constructor */
 function DateConstructor(args, { NewTarget }) {
   const numberOfArgs = args.length;
   if (numberOfArgs >= 2) {
-    /** http://tc39.es/ecma262/#sec-date-year-month-date-hours-minutes-seconds-ms */
+    /** https://tc39.es/ecma262/#sec-date-year-month-date-hours-minutes-seconds-ms */
     const [year, month, date, hours, minutes, seconds, ms] = args;
     Assert(numberOfArgs >= 2);
     if (NewTarget === Value.undefined) {
@@ -82,7 +82,7 @@ function DateConstructor(args, { NewTarget }) {
     }
   } else if (numberOfArgs === 1) {
     const [value] = args;
-    /** http://tc39.es/ecma262/#sec-date-value */
+    /** https://tc39.es/ecma262/#sec-date-value */
     Assert(numberOfArgs === 1);
     if (NewTarget === Value.undefined) {
       const now = Date.now();
@@ -105,7 +105,7 @@ function DateConstructor(args, { NewTarget }) {
       return O;
     }
   } else {
-    /** http://tc39.es/ecma262/#sec-date-constructor-date */
+    /** https://tc39.es/ecma262/#sec-date-constructor-date */
     Assert(numberOfArgs === 0);
     if (NewTarget === Value.undefined) {
       const now = Date.now();
@@ -118,13 +118,13 @@ function DateConstructor(args, { NewTarget }) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-date.now */
+/** https://tc39.es/ecma262/#sec-date.now */
 function Date_now() {
   const now = Date.now();
   return F(now);
 }
 
-/** http://tc39.es/ecma262/#sec-date.parse */
+/** https://tc39.es/ecma262/#sec-date.parse */
 function Date_parse([string = Value.undefined]) {
   const str = ToString(string);
   if (str instanceof AbruptCompletion) {
@@ -133,7 +133,7 @@ function Date_parse([string = Value.undefined]) {
   return parseDate(str);
 }
 
-/** http://tc39.es/ecma262/#sec-date.utc */
+/** https://tc39.es/ecma262/#sec-date.utc */
 function Date_UTC([year = Value.undefined, month, date, hours, minutes, seconds, ms]) {
   const y = Q(ToNumber(year));
   let m;
@@ -189,7 +189,7 @@ function Date_UTC([year = Value.undefined, month, date, hours, minutes, seconds,
 }
 
 function parseDate(dateTimeString) {
-  /** http://tc39.es/ecma262/#sec-date-time-string-format */
+  /** https://tc39.es/ecma262/#sec-date-time-string-format */
   // TODO: implement parsing without the host.
   const parsed = Date.parse(dateTimeString.stringValue());
   return F(parsed);

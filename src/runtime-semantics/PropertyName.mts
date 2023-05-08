@@ -11,7 +11,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 
-/** http://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-evaluation */
 // PropertyName :
 //   LiteralPropertyName
 //   ComputedPropertyName

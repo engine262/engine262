@@ -24,8 +24,8 @@ import { assignProps } from './bootstrap.mjs';
 // Algorithms and methods shared between %Array.prototype% and
 // %TypedArray.prototype%.
 
-/** http://tc39.es/ecma262/#sec-array.prototype.sort */
-/** http://tc39.es/ecma262/#sec-%typedarray%.prototype.sort */
+/** https://tc39.es/ecma262/#sec-array.prototype.sort */
+/** https://tc39.es/ecma262/#sec-%typedarray%.prototype.sort */
 //
 // If internalMethodsRestricted is true, then Asserts are used to ensure that
 // "The only internal methods of the this object that the algorithm may call
@@ -112,8 +112,8 @@ export function ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestri
 }
 
 export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorithm, objectToLength) {
-  /** http://tc39.es/ecma262/#sec-array.prototype.every */
-  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.every */
+  /** https://tc39.es/ecma262/#sec-array.prototype.every */
+  /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.every */
   function ArrayProto_every([callbackFn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
@@ -137,8 +137,8 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     return Value.true;
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.find */
-  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.find */
+  /** https://tc39.es/ecma262/#sec-array.prototype.find */
+  /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.find */
   function ArrayProto_find([predicate = Value.undefined, thisArg = Value.undefined], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
@@ -159,8 +159,8 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     return Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.findindex */
-  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.findindex */
+  /** https://tc39.es/ecma262/#sec-array.prototype.findindex */
+  /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.findindex */
   function ArrayProto_findIndex([predicate = Value.undefined, thisArg = Value.undefined], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
@@ -181,8 +181,8 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     return F(-1);
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.findlast */
-  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.findlast */
+  /** https://tc39.es/ecma262/#sec-array.prototype.findlast */
+  /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.findlast */
   function ArrayProto_findLast([predicate = Value.undefined, thisArg = Value.undefined], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     // Let O be ? ToObject(this value).
@@ -214,8 +214,8 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     return Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.findlastindex */
-  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.findlastindex */
+  /** https://tc39.es/ecma262/#sec-array.prototype.findlastindex */
+  /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.findlastindex */
   function ArrayProto_findLastIndex([predicate = Value.undefined, thisArg = Value.undefined], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     // Let O be ? ToObject(this value).
@@ -247,8 +247,8 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     return F(-1);
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.foreach */
-  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.foreach */
+  /** https://tc39.es/ecma262/#sec-array.prototype.foreach */
+  /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.foreach */
   function ArrayProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
@@ -269,8 +269,8 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     return Value.undefined;
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.includes */
-  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.includes */
+  /** https://tc39.es/ecma262/#sec-array.prototype.includes */
+  /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.includes */
   function ArrayProto_includes([searchElement = Value.undefined, fromIndex = Value.undefined], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
@@ -302,8 +302,8 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     return Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.indexof */
-  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.indexof */
+  /** https://tc39.es/ecma262/#sec-array.prototype.indexof */
+  /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.indexof */
   function ArrayProto_indexOf([searchElement = Value.undefined, fromIndex = Value.undefined], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
@@ -342,8 +342,8 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     return F(-1);
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.join */
-  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.join */
+  /** https://tc39.es/ecma262/#sec-array.prototype.join */
+  /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.join */
   function ArrayProto_join([separator = Value.undefined], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
@@ -374,8 +374,8 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     return Value(R);
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.lastindexof */
-  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.lastindexof */
+  /** https://tc39.es/ecma262/#sec-array.prototype.lastindexof */
+  /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.lastindexof */
   function ArrayProto_lastIndexOf([searchElement = Value.undefined, fromIndex], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
@@ -410,8 +410,8 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     return F(-1);
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.reduce */
-  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.reduce */
+  /** https://tc39.es/ecma262/#sec-array.prototype.reduce */
+  /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.reduce */
   function ArrayProto_reduce([callbackfn = Value.undefined, initialValue], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
@@ -452,8 +452,8 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     return accumulator;
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.reduceright */
-  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.reduceright */
+  /** https://tc39.es/ecma262/#sec-array.prototype.reduceright */
+  /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.reduceright */
   function ArrayProto_reduceRight([callbackfn = Value.undefined, initialValue], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
@@ -494,8 +494,8 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     return accumulator;
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.reverse */
-  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.reverse */
+  /** https://tc39.es/ecma262/#sec-array.prototype.reverse */
+  /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.reverse */
   function ArrayProto_reverse(args, { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
@@ -533,8 +533,8 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     return O;
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.some */
-  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.some */
+  /** https://tc39.es/ecma262/#sec-array.prototype.some */
+  /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.some */
   function ArrayProto_some([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
@@ -558,8 +558,8 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     return Value.false;
   }
 
-  /** http://tc39.es/ecma262/#sec-array.prototype.tolocalestring */
-  /** http://tc39.es/ecma262/#sec-%typedarray%.prototype.tolocalestring */
+  /** https://tc39.es/ecma262/#sec-array.prototype.tolocalestring */
+  /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.tolocalestring */
   function ArrayProto_toLocaleString(args, { thisValue }) {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const array = Q(ToObject(thisValue));

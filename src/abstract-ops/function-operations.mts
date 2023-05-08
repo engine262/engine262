@@ -50,10 +50,10 @@ import {
 } from './all.mjs';
 
 // This file covers abstract operations defined in
-/** http://tc39.es/ecma262/#sec-ecmascript-function-objects */
-/** http://tc39.es/ecma262/#sec-built-in-function-objects */
+/** https://tc39.es/ecma262/#sec-ecmascript-function-objects */
+/** https://tc39.es/ecma262/#sec-built-in-function-objects */
 // and
-/** http://tc39.es/ecma262/#sec-tail-position-calls */
+/** https://tc39.es/ecma262/#sec-tail-position-calls */
 
 export function isECMAScriptFunctionObject(O) {
   return 'ECMAScriptCode' in O;
@@ -63,7 +63,7 @@ export function isFunctionObject(O) {
   return 'Call' in O;
 }
 
-/** http://tc39.es/ecma262/#sec-prepareforordinarycall */
+/** https://tc39.es/ecma262/#sec-prepareforordinarycall */
 export function PrepareForOrdinaryCall(F, newTarget) {
   // 1. Assert: Type(newTarget) is Undefined or Object.
   Assert(newTarget instanceof UndefinedValue || newTarget instanceof ObjectValue);
@@ -94,7 +94,7 @@ export function PrepareForOrdinaryCall(F, newTarget) {
   return calleeContext;
 }
 
-/** http://tc39.es/ecma262/#sec-ordinarycallbindthis */
+/** https://tc39.es/ecma262/#sec-ordinarycallbindthis */
 export function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
   // 1. Let thisMode be F.[[ThisMode]].
   const thisMode = F.ThisMode;
@@ -133,13 +133,13 @@ export function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
   return localEnv.BindThisValue(thisValue);
 }
 
-/** http://tc39.es/ecma262/#sec-ordinarycallevaluatebody */
+/** https://tc39.es/ecma262/#sec-ordinarycallevaluatebody */
 export function OrdinaryCallEvaluateBody(F, argumentsList) {
   // 1. Return the result of EvaluateBody of the parsed code that is F.[[ECMAScriptCode]] passing F and argumentsList as the arguments.
   return EnsureCompletion(unwind(EvaluateBody(F.ECMAScriptCode, F, argumentsList)));
 }
 
-/** http://tc39.es/ecma262/#sec-definefield */
+/** https://tc39.es/ecma262/#sec-definefield */
 export function DefineField(receiver, fieldRecord) {
   // 1. Let fieldName be fieldRecord.[[Name]].
   const fieldName = fieldRecord.Name;
@@ -165,7 +165,7 @@ export function DefineField(receiver, fieldRecord) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-initializeinstanceelements */
+/** https://tc39.es/ecma262/#sec-initializeinstanceelements */
 export function InitializeInstanceElements(O, constructor) {
   // 1. Let methods be the value of constructor.[[PrivateMethods]].
   const methods = constructor.PrivateMethods;
@@ -183,7 +183,7 @@ export function InitializeInstanceElements(O, constructor) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-ecmascript-function-objects-call-thisargument-argumentslist */
+/** https://tc39.es/ecma262/#sec-ecmascript-function-objects-call-thisargument-argumentslist */
 function FunctionCallSlot(thisArgument, argumentsList) {
   const F = this;
 
@@ -220,7 +220,7 @@ function FunctionCallSlot(thisArgument, argumentsList) {
   return NormalCompletion(Value.undefined);
 }
 
-/** http://tc39.es/ecma262/#sec-ecmascript-function-objects-construct-argumentslist-newtarget */
+/** https://tc39.es/ecma262/#sec-ecmascript-function-objects-construct-argumentslist-newtarget */
 function FunctionConstructSlot(argumentsList, newTarget) {
   const F = this;
 
@@ -283,7 +283,7 @@ function FunctionConstructSlot(argumentsList, newTarget) {
   return Q(constructorEnv.GetThisBinding());
 }
 
-/** http://tc39.es/ecma262/#sec-functionallocate */
+/** https://tc39.es/ecma262/#sec-functionallocate */
 export function OrdinaryFunctionCreate(functionPrototype, sourceText, ParameterList, Body, thisMode, Scope, PrivateScope) {
   // 1. Assert: Type(functionPrototype) is Object.
   Assert(functionPrototype instanceof ObjectValue);
@@ -352,7 +352,7 @@ export function OrdinaryFunctionCreate(functionPrototype, sourceText, ParameterL
   return F;
 }
 
-/** http://tc39.es/ecma262/#sec-makeconstructor */
+/** https://tc39.es/ecma262/#sec-makeconstructor */
 export function MakeConstructor(F, writablePrototype, prototype) {
   Assert(isECMAScriptFunctionObject(F) || F.Call === BuiltinFunctionCall);
   if (isECMAScriptFunctionObject(F)) {
@@ -382,7 +382,7 @@ export function MakeConstructor(F, writablePrototype, prototype) {
   return NormalCompletion(Value.undefined);
 }
 
-/** http://tc39.es/ecma262/#sec-makeclassconstructor */
+/** https://tc39.es/ecma262/#sec-makeclassconstructor */
 export function MakeClassConstructor(F) {
   Assert(isECMAScriptFunctionObject(F));
   Assert(F.IsClassConstructor === Value.false);
@@ -390,7 +390,7 @@ export function MakeClassConstructor(F) {
   return NormalCompletion(Value.undefined);
 }
 
-/** http://tc39.es/ecma262/#sec-makemethod */
+/** https://tc39.es/ecma262/#sec-makemethod */
 export function MakeMethod(F, homeObject) {
   Assert(isECMAScriptFunctionObject(F));
   Assert(homeObject instanceof ObjectValue);
@@ -398,7 +398,7 @@ export function MakeMethod(F, homeObject) {
   return NormalCompletion(Value.undefined);
 }
 
-/** http://tc39.es/ecma262/#sec-setfunctionname */
+/** https://tc39.es/ecma262/#sec-setfunctionname */
 export function SetFunctionName(F, name, prefix) {
   // 1. Assert: F is an extensible object that does not have a "name" own property.
   Assert(IsExtensible(F) === Value.true && HasOwnProperty(F, Value('name')) === Value.false);
@@ -440,7 +440,7 @@ export function SetFunctionName(F, name, prefix) {
   })));
 }
 
-/** http://tc39.es/ecma262/#sec-setfunctionlength */
+/** https://tc39.es/ecma262/#sec-setfunctionlength */
 export function SetFunctionLength(F, length) {
   Assert(isNonNegativeInteger(length) || length === Infinity);
   // 1. Assert: F is an extensible object that does not have a "length" own property.
@@ -501,7 +501,7 @@ function BuiltinFunctionConstruct(argumentsList, newTarget) {
   return result;
 }
 
-/** http://tc39.es/ecma262/#sec-createbuiltinfunction */
+/** https://tc39.es/ecma262/#sec-createbuiltinfunction */
 export function CreateBuiltinFunction(steps, length, name, internalSlotsList, realm?, prototype?, prefix?, isConstructor = Value.false) {
   // 1. Assert: steps is either a set of algorithm steps or other definition of a function's behaviour provided in this specification.
   Assert(typeof steps === 'function');
@@ -546,7 +546,7 @@ export function CreateBuiltinFunction(steps, length, name, internalSlotsList, re
   return func;
 }
 
-/** http://tc39.es/ecma262/#sec-preparefortailcall */
+/** https://tc39.es/ecma262/#sec-preparefortailcall */
 export function PrepareForTailCall() {
   // 1. Let leafContext be the running execution context.
   const leafContext = surroundingAgent.runningExecutionContext;

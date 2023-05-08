@@ -44,7 +44,7 @@ import { bootstrapPrototype } from './bootstrap.mjs';
 import { CreateRegExpStringIterator } from './RegExpStringIteratorPrototype.mjs';
 
 
-/** http://tc39.es/ecma262/#sec-regexp.prototype.exec */
+/** https://tc39.es/ecma262/#sec-regexp.prototype.exec */
 function RegExpProto_exec([string = Value.undefined], { thisValue }) {
   const R = thisValue;
   Q(RequireInternalSlot(R, 'RegExpMatcher'));
@@ -52,7 +52,7 @@ function RegExpProto_exec([string = Value.undefined], { thisValue }) {
   return Q(RegExpBuiltinExec(R, S));
 }
 
-/** http://tc39.es/ecma262/#sec-regexpexec */
+/** https://tc39.es/ecma262/#sec-regexpexec */
 export function RegExpExec(R, S) {
   Assert(R instanceof ObjectValue);
   Assert(S instanceof JSStringValue);
@@ -69,7 +69,7 @@ export function RegExpExec(R, S) {
   return Q(RegExpBuiltinExec(R, S));
 }
 
-/** http://tc39.es/ecma262/#sec-regexpbuiltinexec */
+/** https://tc39.es/ecma262/#sec-regexpbuiltinexec */
 export function RegExpBuiltinExec(R, S) {
   // 1. Assert: R is an initialized RegExp instance.
   Assert('RegExpMatcher' in R);
@@ -241,7 +241,7 @@ export function RegExpBuiltinExec(R, S) {
   return A;
 }
 
-/** http://tc39.es/ecma262/#sec-advancestringindex */
+/** https://tc39.es/ecma262/#sec-advancestringindex */
 export function AdvanceStringIndex(S, index, unicode) {
   // 1. Assert: Type(S) is String.
   Assert(S instanceof JSStringValue);
@@ -265,7 +265,7 @@ export function AdvanceStringIndex(S, index, unicode) {
   return index + cp.CodeUnitCount;
 }
 
-/** http://tc39.es/ecma262/#sec-get-regexp.prototype.dotAll */
+/** https://tc39.es/ecma262/#sec-get-regexp.prototype.dotAll */
 function RegExpProto_dotAllGetter(args, { thisValue }) {
   // 1. Let R be the this value.
   const R = thisValue;
@@ -275,7 +275,7 @@ function RegExpProto_dotAllGetter(args, { thisValue }) {
   return Q(RegExpHasFlag(R, cu));
 }
 
-/** http://tc39.es/ecma262/#sec-get-regexp.prototype.flags */
+/** https://tc39.es/ecma262/#sec-get-regexp.prototype.flags */
 function RegExpProto_flagsGetter(args, { thisValue }) {
   const R = thisValue;
   if (!(R instanceof ObjectValue)) {
@@ -313,7 +313,7 @@ function RegExpProto_flagsGetter(args, { thisValue }) {
   return Value(result);
 }
 
-/** http://tc39.es/ecma262/#sec-get-regexp.prototype.global */
+/** https://tc39.es/ecma262/#sec-get-regexp.prototype.global */
 function RegExpProto_globalGetter(args, { thisValue }) {
   const R = thisValue;
   if (!(R instanceof ObjectValue)) {
@@ -332,7 +332,7 @@ function RegExpProto_globalGetter(args, { thisValue }) {
   return Value.false;
 }
 
-/** http://tc39.es/ecma262/#sec-get-regexp.prototype.hasIndices */
+/** https://tc39.es/ecma262/#sec-get-regexp.prototype.hasIndices */
 function RegExpProto_hasIndicesGetter(args, { thisValue }) {
   // 1. Let R be the this value.
   const R = thisValue;
@@ -342,7 +342,7 @@ function RegExpProto_hasIndicesGetter(args, { thisValue }) {
   return Q(RegExpHasFlag(R, cu));
 }
 
-/** http://tc39.es/ecma262/#sec-get-regexp.prototype.ignorecase */
+/** https://tc39.es/ecma262/#sec-get-regexp.prototype.ignorecase */
 function RegExpProto_ignoreCaseGetter(args, { thisValue }) {
   // 1. Let R be the this value.
   const R = thisValue;
@@ -352,7 +352,7 @@ function RegExpProto_ignoreCaseGetter(args, { thisValue }) {
   return Q(RegExpHasFlag(R, cu));
 }
 
-/** http://tc39.es/ecma262/#sec-regexp.prototype-@@match */
+/** https://tc39.es/ecma262/#sec-regexp.prototype-@@match */
 function RegExpProto_match([string = Value.undefined], { thisValue }) {
   // 1. Let rx be the this value.
   const rx = thisValue;
@@ -410,7 +410,7 @@ function RegExpProto_match([string = Value.undefined], { thisValue }) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-regexp-prototype-matchall */
+/** https://tc39.es/ecma262/#sec-regexp-prototype-matchall */
 function RegExpProto_matchAll([string = Value.undefined], { thisValue }) {
   const R = thisValue;
   if (!(R instanceof ObjectValue)) {
@@ -437,7 +437,7 @@ function RegExpProto_matchAll([string = Value.undefined], { thisValue }) {
   return X(CreateRegExpStringIterator(matcher, S, global, fullUnicode));
 }
 
-/** http://tc39.es/ecma262/#sec-get-regexp.prototype.multiline */
+/** https://tc39.es/ecma262/#sec-get-regexp.prototype.multiline */
 function RegExpProto_multilineGetter(args, { thisValue }) {
   // 1. Let R be the this value.
   const R = thisValue;
@@ -447,7 +447,7 @@ function RegExpProto_multilineGetter(args, { thisValue }) {
   return Q(RegExpHasFlag(R, cu));
 }
 
-/** http://tc39.es/ecma262/#sec-regexp.prototype-@@replace */
+/** https://tc39.es/ecma262/#sec-regexp.prototype-@@replace */
 function RegExpProto_replace([string = Value.undefined, replaceValue = Value.undefined], { thisValue }) {
   // 1. Let rx be the this value.
   const rx = thisValue;
@@ -593,7 +593,7 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
   return Value(accumulatedResult + S.stringValue().substring(nextSourcePosition));
 }
 
-/** http://tc39.es/ecma262/#sec-regexp.prototype-@@search */
+/** https://tc39.es/ecma262/#sec-regexp.prototype-@@search */
 function RegExpProto_search([string = Value.undefined], { thisValue }) {
   const rx = thisValue;
   if (!(rx instanceof ObjectValue)) {
@@ -619,7 +619,7 @@ function RegExpProto_search([string = Value.undefined], { thisValue }) {
   return Q(Get(result, Value('index')));
 }
 
-/** http://tc39.es/ecma262/#sec-get-regexp.prototype.source */
+/** https://tc39.es/ecma262/#sec-get-regexp.prototype.source */
 function RegExpProto_sourceGetter(args, { thisValue }) {
   const R = thisValue;
   if (!(R instanceof ObjectValue)) {
@@ -637,7 +637,7 @@ function RegExpProto_sourceGetter(args, { thisValue }) {
   return EscapeRegExpPattern(src, flags);
 }
 
-/** http://tc39.es/ecma262/#sec-regexp.prototype-@@split */
+/** https://tc39.es/ecma262/#sec-regexp.prototype-@@split */
 function RegExpProto_split([string = Value.undefined, limit = Value.undefined], { thisValue }) {
   const rx = thisValue;
   if (!(rx instanceof ObjectValue)) {
@@ -720,7 +720,7 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
   return A;
 }
 
-/** http://tc39.es/ecma262/#sec-get-regexp.prototype.sticky */
+/** https://tc39.es/ecma262/#sec-get-regexp.prototype.sticky */
 function RegExpProto_stickyGetter(args, { thisValue }) {
   // 1. Let R be the this value.
   const R = thisValue;
@@ -730,7 +730,7 @@ function RegExpProto_stickyGetter(args, { thisValue }) {
   return Q(RegExpHasFlag(R, cu));
 }
 
-/** http://tc39.es/ecma262/#sec-regexp.prototype.test */
+/** https://tc39.es/ecma262/#sec-regexp.prototype.test */
 function RegExpProto_test([S = Value.undefined], { thisValue }) {
   const R = thisValue;
   if (!(R instanceof ObjectValue)) {
@@ -744,7 +744,7 @@ function RegExpProto_test([S = Value.undefined], { thisValue }) {
   return Value.false;
 }
 
-/** http://tc39.es/ecma262/#sec-regexp.prototype.tostring */
+/** https://tc39.es/ecma262/#sec-regexp.prototype.tostring */
 function RegExpProto_toString(args, { thisValue }) {
   const R = thisValue;
   if (!(R instanceof ObjectValue)) {
@@ -756,7 +756,7 @@ function RegExpProto_toString(args, { thisValue }) {
   return Value(result);
 }
 
-/** http://tc39.es/ecma262/#sec-get-regexp.prototype.unicode */
+/** https://tc39.es/ecma262/#sec-get-regexp.prototype.unicode */
 function RegExpProto_unicodeGetter(args, { thisValue }) {
   // 1. Let R be the this value.
   const R = thisValue;

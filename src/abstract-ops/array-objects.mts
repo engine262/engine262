@@ -37,7 +37,7 @@ import {
   F,
 } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-array-exotic-objects-defineownproperty-p-desc */
+/** https://tc39.es/ecma262/#sec-array-exotic-objects-defineownproperty-p-desc */
 function ArrayDefineOwnProperty(P, Desc) {
   const A = this;
 
@@ -71,7 +71,7 @@ export function isArrayExoticObject(O) {
   return O.DefineOwnProperty === ArrayDefineOwnProperty;
 }
 
-/** http://tc39.es/ecma262/#sec-arraycreate */
+/** https://tc39.es/ecma262/#sec-arraycreate */
 export function ArrayCreate(length, proto) {
   Assert(isNonNegativeInteger(length));
   if (Object.is(length, -0)) {
@@ -97,7 +97,7 @@ export function ArrayCreate(length, proto) {
   return A;
 }
 
-/** http://tc39.es/ecma262/#sec-arrayspeciescreate */
+/** https://tc39.es/ecma262/#sec-arrayspeciescreate */
 export function ArraySpeciesCreate(originalArray, length) {
   Assert(typeof length === 'number' && Number.isInteger(length) && length >= 0);
   if (Object.is(length, -0)) {
@@ -132,7 +132,7 @@ export function ArraySpeciesCreate(originalArray, length) {
   return Q(Construct(C, [F(length)]));
 }
 
-/** http://tc39.es/ecma262/#sec-arraysetlength */
+/** https://tc39.es/ecma262/#sec-arraysetlength */
 export function ArraySetLength(A, Desc) {
   if (Desc.Value === undefined) {
     return OrdinaryDefineOwnProperty(A, Value('length'), Desc);
@@ -190,7 +190,7 @@ export function ArraySetLength(A, Desc) {
   return Value.true;
 }
 
-/** http://tc39.es/ecma262/#sec-isconcatspreadable */
+/** https://tc39.es/ecma262/#sec-isconcatspreadable */
 export function IsConcatSpreadable(O) {
   if (!(O instanceof ObjectValue)) {
     return Value.false;
@@ -202,7 +202,7 @@ export function IsConcatSpreadable(O) {
   return Q(IsArray(O));
 }
 
-/** http://tc39.es/ecma262/#sec-sortcompare */
+/** https://tc39.es/ecma262/#sec-sortcompare */
 export function SortCompare(x, y, comparefn) {
   // 1. If x and y are both undefined, return +0𝔽.
   if (x === Value.undefined && y === Value.undefined) {
@@ -247,7 +247,7 @@ export function SortCompare(x, y, comparefn) {
   return F(+0);
 }
 
-/** http://tc39.es/ecma262/#sec-createarrayiterator */
+/** https://tc39.es/ecma262/#sec-createarrayiterator */
 export function CreateArrayIterator(array, kind) {
   // 1. Assert: Type(array) is Object.
   Assert(array instanceof ObjectValue);

@@ -22,7 +22,7 @@ import { UTF16EncodeCodePoint } from '../static-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-string-constructor-string-value */
+/** https://tc39.es/ecma262/#sec-string-constructor-string-value */
 function StringConstructor([value], { NewTarget }) {
   let s;
   if (value === undefined) {
@@ -39,7 +39,7 @@ function StringConstructor([value], { NewTarget }) {
   return X(StringCreate(s, Q(GetPrototypeFromConstructor(NewTarget, '%String.prototype%'))));
 }
 
-/** http://tc39.es/ecma262/#sec-string.fromcharcode */
+/** https://tc39.es/ecma262/#sec-string.fromcharcode */
 function String_fromCharCode(codeUnits) {
   const length = codeUnits.length;
   const elements = [];
@@ -54,7 +54,7 @@ function String_fromCharCode(codeUnits) {
   return Value(result);
 }
 
-/** http://tc39.es/ecma262/#sec-string.fromcodepoint */
+/** https://tc39.es/ecma262/#sec-string.fromcodepoint */
 function String_fromCodePoint(codePoints) {
   // 1. Let result be the empty String.
   let result = '';
@@ -79,7 +79,7 @@ function String_fromCodePoint(codePoints) {
   return Value(result);
 }
 
-/** http://tc39.es/ecma262/#sec-string.raw */
+/** https://tc39.es/ecma262/#sec-string.raw */
 function String_raw([template = Value.undefined, ...substitutions]) {
   const numberOfSubstitutions = substitutions.length;
   const cooked = Q(ToObject(template));

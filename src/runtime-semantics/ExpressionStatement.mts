@@ -3,7 +3,7 @@ import { GetValue } from '../abstract-ops/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { Q } from '../completion.mjs';
 
-/** http://tc39.es/ecma262/#sec-expression-statement-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-expression-statement-runtime-semantics-evaluation */
 //   ExpressionStatement :
 //     Expression `;`
 export function* Evaluate_ExpressionStatement({ Expression }) {

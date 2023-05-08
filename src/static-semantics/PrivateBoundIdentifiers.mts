@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { StringValue } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-static-semantics-privateboundidentifiers */
+/** https://tc39.es/ecma262/#sec-static-semantics-privateboundidentifiers */
 export function PrivateBoundIdentifiers(node) {
   if (Array.isArray(node)) {
     return node.flatMap((n) => PrivateBoundIdentifiers(n));

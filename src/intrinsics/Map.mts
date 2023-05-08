@@ -53,7 +53,7 @@ export function AddEntriesFromIterable(target, iterable, adder) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-map-iterable */
+/** https://tc39.es/ecma262/#sec-map-iterable */
 function MapConstructor([iterable = Value.undefined], { NewTarget }) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget === Value.undefined) {
@@ -73,7 +73,7 @@ function MapConstructor([iterable = Value.undefined], { NewTarget }) {
   return Q(AddEntriesFromIterable(map, iterable, adder));
 }
 
-/** http://tc39.es/ecma262/#sec-get-map-@@species */
+/** https://tc39.es/ecma262/#sec-get-map-@@species */
 function Map_speciesGetter(args, { thisValue }) {
   // 1. Return the this value.
   return thisValue;

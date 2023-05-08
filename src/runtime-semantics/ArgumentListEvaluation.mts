@@ -17,7 +17,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { TemplateStrings } from '../static-semantics/all.mjs';
 
-/** http://tc39.es/ecma262/#sec-gettemplateobjec */
+/** https://tc39.es/ecma262/#sec-gettemplateobjec */
 function GetTemplateObject(templateLiteral) {
   // 1. Let realm be the current Realm Record.
   const realm = surroundingAgent.currentRealmRecord;
@@ -87,7 +87,7 @@ function GetTemplateObject(templateLiteral) {
   return template;
 }
 
-/** http://tc39.es/ecma262/#sec-template-literals-runtime-semantics-argumentlistevaluation */
+/** https://tc39.es/ecma262/#sec-template-literals-runtime-semantics-argumentlistevaluation */
 //   TemplateLiteral : NoSubstitutionTemplate
 //
 // https://github.com/tc39/ecma262/pull/1402
@@ -117,7 +117,7 @@ function* ArgumentListEvaluation_TemplateLiteral(TemplateLiteral) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-argument-lists-runtime-semantics-argumentlistevaluation */
+/** https://tc39.es/ecma262/#sec-argument-lists-runtime-semantics-argumentlistevaluation */
 //   Arguments : `(` `)`
 //   ArgumentList :
 //     AssignmentExpression

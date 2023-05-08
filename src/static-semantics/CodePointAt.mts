@@ -4,7 +4,7 @@ import { X } from '../completion.mjs';
 import { isLeadingSurrogate, isTrailingSurrogate } from '../parser/Lexer.mjs';
 import { UTF16SurrogatePairToCodePoint } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-codepointat */
+/** https://tc39.es/ecma262/#sec-codepointat */
 export function CodePointAt(string, position) {
   // 1 .Let size be the length of string.
   const size = string.length;
