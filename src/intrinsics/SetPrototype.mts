@@ -276,7 +276,7 @@ function GetSetRecord(obj) {
   const keys = Q(Get(obj, new Value('keys')));
 
   // 10. If IsCallable(keys) is false, throw a TypeError exception.
-  if (!IsCallable(keys)) {
+  if (IsCallable(keys) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', keys);
   }
 
