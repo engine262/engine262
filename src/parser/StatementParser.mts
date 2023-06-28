@@ -1,10 +1,10 @@
-// @ts-nocheck
 import { Token, isAutomaticSemicolon } from './tokens.mjs';
 import { ExpressionParser } from './ExpressionParser.mjs';
 import { FunctionKind } from './FunctionParser.mjs';
 import { getDeclarations } from './Scope.mjs';
+import type { ParseNode } from './ParseNode.mjs';
 
-export class StatementParser extends ExpressionParser {
+export abstract class StatementParser extends ExpressionParser {
   eatSemicolonWithASI() {
     if (this.eat(Token.SEMICOLON)) {
       return true;
@@ -24,8 +24,8 @@ export class StatementParser extends ExpressionParser {
   // StatementList :
   //   StatementListItem
   //   StatementList StatementListItem
-  parseStatementList(endToken, directives) {
-    const statementList = [];
+  parseStatementList(endToken: string | Token, directives?: string[]): ParseNode.StatementList {
+    const statementList: ParseNode.StatementList = [];
     const oldStrict = this.state.strict;
     const directiveData = [];
     while (!this.eat(endToken)) {
@@ -63,7 +63,7 @@ export class StatementParser extends ExpressionParser {
   //   HoistableDeclaration
   //   ClassDeclaration
   //   LexicalDeclaration
-  parseStatementListItem() {
+  parseStatementListItem(): ParseNode.StatementListItem {
     switch (this.peek().type) {
       case Token.FUNCTION:
         return this.parseHoistableDeclaration();
@@ -96,7 +96,7 @@ export class StatementParser extends ExpressionParser {
   //   GeneratorDeclaration
   //   AsyncFunctionDeclaration
   //   AsyncGeneratorDeclaration
-  parseHoistableDeclaration() {
+  parseHoistableDeclaration(): ParseNode.HoistableDeclaration {
     switch (this.peek().type) {
       case Token.FUNCTION:
         return this.parseFunctionDeclaration(FunctionKind.NORMAL);
@@ -111,15 +111,15 @@ export class StatementParser extends ExpressionParser {
   // ClassDeclaration :
   //   `class` BindingIdentifier ClassTail
   //   [+Default] `class` ClassTail
-  parseClassDeclaration() {
-    return this.parseClass(false);
+  parseClassDeclaration(): ParseNode.ClassDeclaration {
+    return this.parseClass(false) as ParseNode.ClassDeclaration;
   }
 
   // LexicalDeclaration : LetOrConst BindingList `;`
-  parseLexicalDeclaration() {
-    const node = this.startNode();
-    const letOrConst = this.eat('let') || this.expect(Token.CONST);
-    node.LetOrConst = letOrConst.type === Token.CONST ? 'const' : 'let';
+  parseLexicalDeclaration(): ParseNode.LexicalDeclarationLike {
+    const node = this.startNode<ParseNode.LexicalDeclaration>();
+    const letOrConst = this.eat('let') ? 'let' : this.expect(Token.CONST) && 'const';
+    node.LetOrConst = letOrConst;
     node.BindingList = this.parseBindingList();
     this.semicolon();
 
@@ -140,12 +140,11 @@ export class StatementParser extends ExpressionParser {
   // LexicalBinding :
   //   BindingIdentifier Initializer?
   //   BindingPattern Initializer
-  parseBindingList() {
-    const bindingList = [];
+  parseBindingList(): ParseNode.BindingList {
+    const bindingList: ParseNode.BindingList = [];
     do {
       const node = this.parseBindingElement();
-      node.type = 'LexicalBinding';
-      bindingList.push(node);
+      bindingList.push(this.repurpose(node, 'LexicalBinding') as ParseNode.LexicalBinding);
     } while (this.eat(Token.COMMA));
     return bindingList;
   }
@@ -155,8 +154,8 @@ export class StatementParser extends ExpressionParser {
   //   BindingPattern Initializer?
   // SingleNameBinding :
   //   BindingIdentifier Initializer?
-  parseBindingElement() {
-    const node = this.startNode();
+  parseBindingElement(): ParseNode.BindingElementOrHigher {
+    const node = this.startNode<ParseNode.BindingElementOrHigher>();
     if (this.test(Token.LBRACE) || this.test(Token.LBRACK)) {
       node.BindingPattern = this.parseBindingPattern();
     } else {
@@ -169,7 +168,7 @@ export class StatementParser extends ExpressionParser {
   // BindingPattern:
   //   ObjectBindingPattern
   //   ArrayBindingPattern
-  parseBindingPattern() {
+  parseBindingPattern(): ParseNode.BindingPattern {
     switch (this.peek().type) {
       case Token.LBRACE:
         return this.parseObjectBindingPattern();
@@ -185,8 +184,8 @@ export class StatementParser extends ExpressionParser {
   //   `{` BindingRestProperty `}`
   //   `{` BindingPropertyList `}`
   //   `{` BindingPropertyList `,` BindingRestProperty? `}`
-  parseObjectBindingPattern() {
-    const node = this.startNode();
+  parseObjectBindingPattern(): ParseNode.ObjectBindingPattern {
+    const node = this.startNode<ParseNode.ObjectBindingPattern>();
     this.expect(Token.LBRACE);
     node.BindingPropertyList = [];
     while (!this.eat(Token.RBRACE)) {
@@ -208,30 +207,28 @@ export class StatementParser extends ExpressionParser {
   // BindingProperty :
   //   SingleNameBinding
   //   PropertyName : BindingElement
-  parseBindingProperty() {
-    const node = this.startNode();
+  parseBindingProperty(): ParseNode.BindingPropertyLike {
+    const node = this.startNode<ParseNode.BindingProperty | ParseNode.SingleNameBinding>();
     const name = this.parsePropertyName();
     if (this.eat(Token.COLON)) {
       node.PropertyName = name;
       node.BindingElement = this.parseBindingElement();
       return this.finishNode(node, 'BindingProperty');
     } else {
+      if (name.type !== 'IdentifierName') {
+        this.unexpected(name);
+      }
       this.validateIdentifierReference(name.name, node);
     }
-    node.BindingIdentifier = name;
-    if (name.type === 'IdentifierName') {
-      name.type = 'BindingIdentifier';
-    } else {
-      this.unexpected(name);
-    }
+    node.BindingIdentifier = this.repurpose(name, 'BindingIdentifier') as ParseNode.BindingIdentifier;
     node.Initializer = this.parseInitializerOpt();
     return this.finishNode(node, 'SingleNameBinding');
   }
 
   // BindingRestProperty :
   //  `...` BindingIdentifier
-  parseBindingRestProperty() {
-    const node = this.startNode();
+  parseBindingRestProperty(): ParseNode.BindingRestProperty {
+    const node = this.startNode<ParseNode.BindingRestProperty>();
     this.expect(Token.ELLIPSIS);
     node.BindingIdentifier = this.parseBindingIdentifier();
     return this.finishNode(node, 'BindingRestProperty');
@@ -241,13 +238,13 @@ export class StatementParser extends ExpressionParser {
   //   `[` Elision? BindingRestElement `]`
   //   `[` BindingElementList `]`
   //   `[` BindingElementList `,` Elision? BindingRestElement `]`
-  parseArrayBindingPattern() {
-    const node = this.startNode();
+  parseArrayBindingPattern(): ParseNode.ArrayBindingPattern {
+    const node = this.startNode<ParseNode.ArrayBindingPattern>();
     this.expect(Token.LBRACK);
     node.BindingElementList = [];
     while (true) {
       while (this.test(Token.COMMA)) {
-        const elision = this.startNode();
+        const elision = this.startNode<ParseNode.Elision>();
         this.next();
         node.BindingElementList.push(this.finishNode(elision, 'Elision'));
       }
@@ -272,8 +269,8 @@ export class StatementParser extends ExpressionParser {
   // BindingRestElement :
   //   `...` BindingIdentifier
   //   `...` BindingPattern
-  parseBindingRestElement() {
-    const node = this.startNode();
+  parseBindingRestElement(): ParseNode.BindingRestElement {
+    const node = this.startNode<ParseNode.BindingRestElement>();
     this.expect(Token.ELLIPSIS);
     switch (this.peek().type) {
       case Token.LBRACE:
@@ -288,7 +285,7 @@ export class StatementParser extends ExpressionParser {
   }
 
   // Initializer : `=` AssignmentExpression
-  parseInitializerOpt() {
+  parseInitializerOpt(): ParseNode.Initializer | null {
     if (this.eat(Token.ASSIGN)) {
       return this.parseAssignmentExpression();
     }
@@ -296,20 +293,20 @@ export class StatementParser extends ExpressionParser {
   }
 
   // FunctionDeclaration
-  parseFunctionDeclaration(kind) {
-    return this.parseFunction(false, kind);
+  parseFunctionDeclaration(kind: FunctionKind): ParseNode.FunctionDeclarationLike {
+    return this.parseFunction(false, kind) as ParseNode.FunctionDeclarationLike;
   }
 
   // Statement :
   //   ...
-  parseStatement() {
+  parseStatement(): ParseNode.Statement {
     switch (this.peek().type) {
       case Token.LBRACE:
         return this.parseBlockStatement();
       case Token.VAR:
         return this.parseVariableStatement();
       case Token.SEMICOLON: {
-        const node = this.startNode();
+        const node = this.startNode<ParseNode.EmptyStatement>();
         this.next();
         return this.finishNode(node, 'EmptyStatement');
       }
@@ -342,23 +339,21 @@ export class StatementParser extends ExpressionParser {
   }
 
   // BlockStatement : Block
-  parseBlockStatement() {
+  parseBlockStatement(): ParseNode.BlockStatement {
     return this.parseBlock();
   }
 
   // Block : `{` StatementList `}`
-  parseBlock(lexical = true) {
-    const node = this.startNode();
+  parseBlock(lexical = true): ParseNode.Block {
+    const node = this.startNode<ParseNode.Block>();
     this.expect(Token.LBRACE);
-    this.scope.with({ lexical }, () => {
-      node.StatementList = this.parseStatementList(Token.RBRACE);
-    });
+    node.StatementList = this.scope.with({ lexical }, () => this.parseStatementList(Token.RBRACE));
     return this.finishNode(node, 'Block');
   }
 
   // VariableStatement : `var` VariableDeclarationList `;`
-  parseVariableStatement() {
-    const node = this.startNode();
+  parseVariableStatement(): ParseNode.VariableStatement {
+    const node = this.startNode<ParseNode.VariableStatement>();
     this.expect(Token.VAR);
     node.VariableDeclarationList = this.parseVariableDeclarationList();
     this.semicolon();
@@ -369,8 +364,8 @@ export class StatementParser extends ExpressionParser {
   // VariableDeclarationList :
   //   VariableDeclaration
   //   VariableDeclarationList `,` VariableDeclaration
-  parseVariableDeclarationList(firstDeclarationRequiresInit = true) {
-    const declarationList = [];
+  parseVariableDeclarationList(firstDeclarationRequiresInit = true): ParseNode.VariableDeclarationList {
+    const declarationList: ParseNode.VariableDeclarationList = [];
     do {
       const node = this.parseVariableDeclaration(firstDeclarationRequiresInit);
       declarationList.push(node);
@@ -381,8 +376,8 @@ export class StatementParser extends ExpressionParser {
   // VariableDeclaration :
   //   BindingIdentifier Initializer?
   //   BindingPattern Initializer
-  parseVariableDeclaration(firstDeclarationRequiresInit) {
-    const node = this.startNode();
+  parseVariableDeclaration(firstDeclarationRequiresInit: boolean): ParseNode.VariableDeclaration {
+    const node = this.startNode<ParseNode.VariableDeclaration>();
     switch (this.peek().type) {
       case Token.LBRACE:
       case Token.LBRACK:
@@ -405,8 +400,8 @@ export class StatementParser extends ExpressionParser {
   // IfStatement :
   //  `if` `(` Expression `)` Statement `else` Statement
   //  `if` `(` Expression `)` Statement [lookahead != `else`]
-  parseIfStatement() {
-    const node = this.startNode();
+  parseIfStatement(): ParseNode.IfStatement {
+    const node = this.startNode<ParseNode.IfStatement>();
     this.expect(Token.IF);
     this.expect(Token.LPAREN);
     node.Expression = this.parseExpression();
@@ -419,8 +414,8 @@ export class StatementParser extends ExpressionParser {
   }
 
   // `while` `(` Expression `)` Statement
-  parseWhileStatement() {
-    const node = this.startNode();
+  parseWhileStatement(): ParseNode.WhileStatement {
+    const node = this.startNode<ParseNode.WhileStatement>();
     this.expect(Token.WHILE);
     this.expect(Token.LPAREN);
     node.Expression = this.parseExpression();
@@ -432,12 +427,10 @@ export class StatementParser extends ExpressionParser {
   }
 
   // `do` Statement `while` `(` Expression `)` `;`
-  parseDoWhileStatement() {
-    const node = this.startNode();
+  parseDoWhileStatement(): ParseNode.DoWhileStatement {
+    const node = this.startNode<ParseNode.DoWhileStatement>();
     this.expect(Token.DO);
-    this.scope.with({ label: 'loop' }, () => {
-      node.Statement = this.parseStatement();
-    });
+    node.Statement = this.scope.with({ label: 'loop' }, () => this.parseStatement());
     this.expect(Token.WHILE);
     this.expect(Token.LPAREN);
     node.Expression = this.parseExpression();
@@ -461,12 +454,12 @@ export class StatementParser extends ExpressionParser {
   // `for` `await` `(` ForDeclaration `of` AssignmentExpression `)` Statement
   //
   // ForDeclaration : LetOrConst ForBinding
-  parseForStatement() {
+  parseForStatement(): ParseNode.ForStatement | ParseNode.ForInOfStatement {
     return this.scope.with({
       lexical: true,
       label: 'loop',
     }, () => {
-      const node = this.startNode();
+      const node = this.startNode<ParseNode.ForStatement | ParseNode.ForInOfStatement>();
       this.expect(Token.FOR);
       const isAwait = this.scope.hasAwait() && this.eat(Token.AWAIT);
       if (isAwait && !this.scope.hasReturn()) {
@@ -501,7 +494,7 @@ export class StatementParser extends ExpressionParser {
         }
       };
       if ((this.test('let') || this.test(Token.CONST)) && isLexicalStart()) {
-        const inner = this.startNode();
+        const inner = this.startNode<ParseNode.LexicalDeclaration | ParseNode.ForDeclaration>();
         if (this.eat('let')) {
           inner.LetOrConst = 'let';
         } else {
@@ -525,10 +518,9 @@ export class StatementParser extends ExpressionParser {
           node.Statement = this.parseStatement();
           return this.finishNode(node, 'ForStatement');
         }
-        inner.ForBinding = list[0];
-        inner.ForBinding.type = 'ForBinding';
-        if (inner.ForBinding.Initializer) {
-          this.unexpected(inner.ForBinding.Initializer);
+        inner.ForBinding = this.repurpose(list[0], 'ForBinding') as ParseNode.ForBinding;
+        if (list[0].Initializer) {
+          this.unexpected(list[0].Initializer);
         }
         node.ForDeclaration = this.finishNode(inner, 'ForDeclaration');
         getDeclarations(node.ForDeclaration)
@@ -573,10 +565,9 @@ export class StatementParser extends ExpressionParser {
           node.Statement = this.parseStatement();
           return this.finishNode(node, 'ForStatement');
         }
-        node.ForBinding = list[0];
-        node.ForBinding.type = 'ForBinding';
-        if (node.ForBinding.Initializer) {
-          this.unexpected(node.ForBinding.Initializer);
+        node.ForBinding = this.repurpose(list[0], 'ForBinding') as ParseNode.ForBinding;
+        if (list[0].Initializer) {
+          this.unexpected(list[0].Initializer);
         }
         if (this.eat('of')) {
           node.AssignmentExpression = this.parseAssignmentExpression();
@@ -591,7 +582,7 @@ export class StatementParser extends ExpressionParser {
 
       this.scope.pushAssignmentInfo('for');
       const expression = this.scope.with({ in: false }, () => this.parseExpression());
-      const validateLHS = (n) => {
+      const validateLHS = (n: ParseNode) => {
         if (n.type === 'AssignmentExpression') {
           this.raiseEarly('UnexpectedToken', n);
         } else {
@@ -602,7 +593,7 @@ export class StatementParser extends ExpressionParser {
       if (!isAwait && this.eat(Token.IN)) {
         assignmentInfo.clear();
         validateLHS(expression);
-        node.LeftHandSideExpression = expression;
+        node.LeftHandSideExpression = expression as ParseNode.LeftHandSideExpression; // NOTE: unsound cast
         node.Expression = this.parseExpression();
         this.expect(Token.RPAREN);
         node.Statement = this.parseStatement();
@@ -614,7 +605,7 @@ export class StatementParser extends ExpressionParser {
       if ((!isExactlyAsync || isAwait) && this.eat('of')) {
         assignmentInfo.clear();
         validateLHS(expression);
-        node.LeftHandSideExpression = expression;
+        node.LeftHandSideExpression = expression as ParseNode.LeftHandSideExpression; // NOTE: unsound cast
         node.AssignmentExpression = this.parseAssignmentExpression();
         this.expect(Token.RPAREN);
         node.Statement = this.parseStatement();
@@ -642,8 +633,8 @@ export class StatementParser extends ExpressionParser {
   // ForBinding :
   //   BindingIdentifier
   //   BindingPattern
-  parseForBinding() {
-    const node = this.startNode();
+  parseForBinding(): ParseNode.ForBinding {
+    const node = this.startNode<ParseNode.ForBinding>();
     switch (this.peek().type) {
       case Token.LBRACE:
       case Token.LBRACK:
@@ -659,8 +650,8 @@ export class StatementParser extends ExpressionParser {
 
   // SwitchStatement :
   //   `switch` `(` Expression `)` CaseBlock
-  parseSwitchStatement() {
-    const node = this.startNode();
+  parseSwitchStatement(): ParseNode.SwitchStatement {
+    const node = this.startNode<ParseNode.SwitchStatement>();
     this.expect(Token.SWITCH);
     this.expect(Token.LPAREN);
     node.Expression = this.parseExpression();
@@ -684,14 +675,14 @@ export class StatementParser extends ExpressionParser {
   //   `case` Expression `:` StatementList?
   // DefaultClause :
   //   `default` `:` StatementList?
-  parseCaseBlock() {
-    const node = this.startNode();
+  parseCaseBlock(): ParseNode.CaseBlock {
+    const node = this.startNode<ParseNode.CaseBlock>();
     this.expect(Token.LBRACE);
     while (!this.eat(Token.RBRACE)) {
       switch (this.peek().type) {
         case Token.CASE:
         case Token.DEFAULT: {
-          const inner = this.startNode();
+          const inner = this.startNode<ParseNode.CaseClause | ParseNode.DefaultClause>();
           const t = this.next().type;
           if (t === Token.DEFAULT && node.DefaultClause) {
             this.unexpected();
@@ -737,8 +728,8 @@ export class StatementParser extends ExpressionParser {
   // ContinueStatement :
   //   `continue` `;`
   //   `continue` [no LineTerminator here] LabelIdentifier `;`
-  parseBreakContinueStatement() {
-    const node = this.startNode();
+  parseBreakContinueStatement(): ParseNode.BreakStatement | ParseNode.ContinueStatement {
+    const node = this.startNode<ParseNode.BreakStatement | ParseNode.ContinueStatement>();
     const isBreak = this.eat(Token.BREAK);
     if (!isBreak) {
       this.expect(Token.CONTINUE);
@@ -760,7 +751,7 @@ export class StatementParser extends ExpressionParser {
     return this.finishNode(node, isBreak ? 'BreakStatement' : 'ContinueStatement');
   }
 
-  verifyBreakContinue(node, isBreak) {
+  verifyBreakContinue(node: ParseNode.Unfinished<ParseNode.BreakStatement | ParseNode.ContinueStatement>, isBreak: boolean) {
     let i = 0;
     for (; i < this.scope.labels.length; i += 1) {
       const label = this.scope.labels[i];
@@ -781,11 +772,11 @@ export class StatementParser extends ExpressionParser {
   // ReturnStatement :
   //   `return` `;`
   //   `return` [no LineTerminator here] Expression `;`
-  parseReturnStatement() {
+  parseReturnStatement(): ParseNode.ReturnStatement {
     if (!this.scope.hasReturn()) {
       this.unexpected();
     }
-    const node = this.startNode();
+    const node = this.startNode<ParseNode.ReturnStatement>();
     this.expect(Token.RETURN);
     if (this.eatSemicolonWithASI()) {
       node.Expression = null;
@@ -798,11 +789,11 @@ export class StatementParser extends ExpressionParser {
 
   // WithStatement :
   //   `with` `(` Expression `)` Statement
-  parseWithStatement() {
+  parseWithStatement(): ParseNode.WithStatement {
     if (this.isStrictMode()) {
       this.raiseEarly('UnexpectedToken');
     }
-    const node = this.startNode();
+    const node = this.startNode<ParseNode.WithStatement>();
     this.expect(Token.WITH);
     this.expect(Token.LPAREN);
     node.Expression = this.parseExpression();
@@ -813,8 +804,8 @@ export class StatementParser extends ExpressionParser {
 
   // ThrowStatement :
   //   `throw` [no LineTerminator here] Expression `;`
-  parseThrowStatement() {
-    const node = this.startNode();
+  parseThrowStatement(): ParseNode.ThrowStatement {
+    const node = this.startNode<ParseNode.ThrowStatement>();
     this.expect(Token.THROW);
     if (this.peek().hadLineTerminatorBefore) {
       this.raise('NewlineAfterThrow', node);
@@ -839,13 +830,13 @@ export class StatementParser extends ExpressionParser {
   // CatchParameter :
   //   BindingIdentifier
   //   BindingPattern
-  parseTryStatement() {
-    const node = this.startNode();
+  parseTryStatement(): ParseNode.TryStatement {
+    const node = this.startNode<ParseNode.TryStatement>();
     this.expect(Token.TRY);
     node.Block = this.parseBlock();
     if (this.eat(Token.CATCH)) {
       this.scope.with({ lexical: true }, () => {
-        const clause = this.startNode();
+        const clause = this.startNode<ParseNode.Catch>();
         if (this.eat(Token.LPAREN)) {
           switch (this.peek().type) {
             case Token.LBRACE:
@@ -879,8 +870,8 @@ export class StatementParser extends ExpressionParser {
   }
 
   // DebuggerStatement : `debugger` `;`
-  parseDebuggerStatement() {
-    const node = this.startNode();
+  parseDebuggerStatement(): ParseNode.DebuggerStatement {
+    const node = this.startNode<ParseNode.DebuggerStatement>();
     this.expect(Token.DEBUGGER);
     this.semicolon();
     return this.finishNode(node, 'DebuggerStatement');
@@ -888,7 +879,7 @@ export class StatementParser extends ExpressionParser {
 
   // ExpressionStatement :
   //   [lookahead != `{`, `function`, `async` [no LineTerminator here] `function`, `class`, `let` `[` ] Expression `;`
-  parseExpressionStatement() {
+  parseExpressionStatement(): ParseNode.ExpressionStatement | ParseNode.LabelledStatement {
     switch (this.peek().type) {
       case Token.LBRACE:
       case Token.FUNCTION:
@@ -905,13 +896,13 @@ export class StatementParser extends ExpressionParser {
         break;
     }
     const startToken = this.peek();
-    const node = this.startNode();
+    const node = this.startNode<ParseNode.ExpressionStatement | ParseNode.LabelledStatement>();
     const expression = this.parseExpression();
     if (expression.type === 'IdentifierReference' && this.eat(Token.COLON)) {
-      expression.type = 'LabelIdentifier';
-      node.LabelIdentifier = expression;
+      const LabelIdentifier = this.repurpose(expression, 'LabelIdentifier') as ParseNode.LabelIdentifier;
+      node.LabelIdentifier = LabelIdentifier;
 
-      if (this.scope.labels.find((l) => l.name === node.LabelIdentifier.name)) {
+      if (this.scope.labels.find((l) => l.name === LabelIdentifier.name)) {
         this.raiseEarly('AlreadyDeclared', node.LabelIdentifier, node.LabelIdentifier.name);
       }
       let type = null;
