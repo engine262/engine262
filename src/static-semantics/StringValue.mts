@@ -8,11 +8,11 @@ export function StringValue(node: ParseNode) {
     case 'BindingIdentifier':
     case 'IdentifierReference':
     case 'LabelIdentifier':
-      return Value((node as ParseNode.IdentifierName | ParseNode.BindingIdentifier | ParseNode.IdentifierReference | ParseNode.LabelIdentifier).name);
+      return Value(node.name);
     case 'PrivateIdentifier':
-      return Value(`#${(node as ParseNode.PrivateIdentifier).name}`);
+      return Value(`#${node.name}`);
     case 'StringLiteral':
-      return Value((node as ParseNode.StringLiteral).value);
+      return Value(node.value);
     default:
       throw new OutOfRange('StringValue', node);
   }
