@@ -1394,6 +1394,7 @@ export abstract class ExpressionParser extends FunctionParser {
       }
 
       if (type === 'property' && this.scope.assignmentInfoStack.length > 0 && this.test(Token.ASSIGN)) {
+        // NOTE: The next line is unsafe because firstName could be something other than IdentifierName
         node.IdentifierReference = this.repurpose(firstName, 'IdentifierReference');
         node.Initializer = this.parseInitializerOpt();
         const finished = this.finishNode(node, 'CoverInitializedName');
@@ -1405,7 +1406,9 @@ export abstract class ExpressionParser extends FunctionParser {
           && !isSpecialMethod
           && firstName.type === 'IdentifierName'
           && !this.test(Token.LPAREN)
-          && !isKeywordRaw(firstName.name)) {
+          && (!isKeywordRaw(firstName.name)
+            || (firstName.name === "yield" && !this.scope.hasYield)
+            || (firstName.name === "await" && !this.scope.hasAwait))) {
         const IdentifierReference = this.repurpose(firstName, 'IdentifierReference');
         this.validateIdentifierReference(firstName.name, firstName);
         return IdentifierReference;
