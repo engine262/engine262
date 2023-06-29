@@ -1415,8 +1415,8 @@ export abstract class ExpressionParser extends FunctionParser {
           && firstName.type === 'IdentifierName'
           && !this.test(Token.LPAREN)
           && (!isKeywordRaw(firstName.name)
-            || (firstName.name === 'yield' && !this.scope.hasYield)
-            || (firstName.name === 'await' && !this.scope.hasAwait))) {
+            || (firstName.name === 'yield' && !this.scope.hasYield())
+            || (firstName.name === 'await' && !this.scope.hasAwait()))) {
         const IdentifierReference = this.repurpose(firstName, 'IdentifierReference');
         this.validateIdentifierReference(firstName.name, firstName);
         return IdentifierReference;
