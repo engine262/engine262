@@ -10,14 +10,14 @@ import {
   KeywordLookup,
   isKeywordRaw,
 } from './tokens.mjs';
-import type { Location, ParseNode, Position } from './ParseNode.mjs';
+import type { Location, Position } from './ParseNode.mjs';
 
 export type Locatable =
   | TokenData
   | Position
   | Location
-  | ParseNode
-  | ParseNode.Unfinished<ParseNode>;
+  | { readonly location: Location };
+
 const isUnicodeIDStart = (c: string) => c && isUnicodeIDStartRegex.test(c);
 const isUnicodeIDContinue = (c: string) => c && isUnicodeIDContinueRegex.test(c);
 export const isDecimalDigit = (c: string) => c && /\d/u.test(c);

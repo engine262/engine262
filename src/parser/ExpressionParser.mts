@@ -23,8 +23,9 @@ export abstract class ExpressionParser extends FunctionParser {
     strict: boolean;
     json: boolean;
   };
+
   abstract parseBindingPattern(): ParseNode.BindingPattern;
-  abstract markNodeStart(node: ParseNode | ParseNode.Unfinished<ParseNode>): void;
+  abstract markNodeStart(node: ParseNode.BaseParseNode | ParseNode.Unfinished): void;
   abstract parseInitializerOpt(): ParseNode.Initializer | null;
   abstract semicolon(): void;
 
@@ -140,26 +141,26 @@ export abstract class ExpressionParser extends FunctionParser {
   validateAssignmentTarget(node: ParseNode) {
     switch (node.type) {
       case 'IdentifierReference':
-        if (this.isStrictMode() && ((node as ParseNode.IdentifierReference).name === 'eval' || (node as ParseNode.IdentifierReference).name === 'arguments')) {
+        if (this.isStrictMode() && (node.name === 'eval' || node.name === 'arguments')) {
           break;
         }
         return;
       case 'CoverInitializedName':
-        this.validateAssignmentTarget((node as ParseNode.CoverInitializedName).IdentifierReference);
+        this.validateAssignmentTarget(node.IdentifierReference);
         return;
       case 'MemberExpression':
         return;
       case 'SuperProperty':
         return;
       case 'ParenthesizedExpression':
-        if ((node as ParseNode.ParenthesizedExpression).Expression.type === 'ObjectLiteral' || (node as ParseNode.ParenthesizedExpression).Expression.type === 'ArrayLiteral') {
+        if (node.Expression.type === 'ObjectLiteral' || node.Expression.type === 'ArrayLiteral') {
           break;
         }
-        this.validateAssignmentTarget((node as ParseNode.ParenthesizedExpression).Expression);
+        this.validateAssignmentTarget(node.Expression);
         return;
       case 'ArrayLiteral':
-        (node as ParseNode.ArrayLiteral).ElementList.forEach((p, i) => {
-          if (p.type === 'SpreadElement' && (i !== (node as ParseNode.ArrayLiteral).ElementList.length - 1 || (node as ParseNode.ArrayLiteral).hasTrailingComma)) {
+        node.ElementList.forEach((p, i) => {
+          if (p.type === 'SpreadElement' && (i !== node.ElementList.length - 1 || node.hasTrailingComma)) {
             this.raiseEarly('InvalidAssignmentTarget', p);
           }
           if (p.type === 'AssignmentExpression') {
@@ -170,33 +171,29 @@ export abstract class ExpressionParser extends FunctionParser {
         });
         return;
       case 'ObjectLiteral':
-        (node as ParseNode.ObjectLiteral).PropertyDefinitionList.forEach((p, i) => {
+        node.PropertyDefinitionList.forEach((p, i) => {
           if (p.type === 'PropertyDefinition' && !p.PropertyName
-              && i !== (node as ParseNode.ObjectLiteral).PropertyDefinitionList.length - 1) {
+              && i !== node.PropertyDefinitionList.length - 1) {
             this.raiseEarly('InvalidAssignmentTarget', p);
           }
           this.validateAssignmentTarget(p);
         });
         return;
-      case 'PropertyDefinition': {
-        const PropertyDefinition = node as ParseNode.PropertyDefinition;
-        if (PropertyDefinition.AssignmentExpression.type === 'AssignmentExpression') {
-          this.validateAssignmentTarget(PropertyDefinition.AssignmentExpression.LeftHandSideExpression);
+      case 'PropertyDefinition':
+        if (node.AssignmentExpression.type === 'AssignmentExpression') {
+          this.validateAssignmentTarget(node.AssignmentExpression.LeftHandSideExpression);
         } else {
-          this.validateAssignmentTarget(PropertyDefinition.AssignmentExpression);
+          this.validateAssignmentTarget(node.AssignmentExpression);
         }
         return;
-      }
       case 'Elision':
         return;
-      case 'SpreadElement': {
-        const SpreadElement = node as ParseNode.SpreadElement;
-        if (SpreadElement.AssignmentExpression.type === 'AssignmentExpression') {
+      case 'SpreadElement':
+        if (node.AssignmentExpression.type === 'AssignmentExpression') {
           break;
         }
-        this.validateAssignmentTarget(SpreadElement.AssignmentExpression);
+        this.validateAssignmentTarget(node.AssignmentExpression);
         return;
-      }
       default:
         break;
     }
@@ -519,7 +516,7 @@ export abstract class ExpressionParser extends FunctionParser {
     if (!this.peek().hadLineTerminatorBefore) {
       if (this.test(Token.INC) || this.test(Token.DEC)) {
         this.validateAssignmentTarget(argument);
-        const node = this.startNode(argument) as ParseNode.UpdateExpression;
+        const node = this.startNode<ParseNode.UpdateExpression>(argument);
         node.operator = this.next().value as ParseNode.UpdateExpression['operator']; // NOTE: unsound cast
         node.LeftHandSideExpression = argument;
         node.UnaryExpression = null;
@@ -531,7 +528,7 @@ export abstract class ExpressionParser extends FunctionParser {
 
   // LeftHandSideExpression
   parseLeftHandSideExpression(allowCalls = true): ParseNode.LeftHandSideExpression {
-    let result: ParseNode.LeftHandSideExpression;
+    let result: ParseNode.CallExpressionOrHigher | ParseNode.MemberExpressionOrHigher;
     switch (this.peek().type) {
       case Token.NEW:
         result = this.parseNewExpression();
@@ -586,7 +583,7 @@ export abstract class ExpressionParser extends FunctionParser {
 
     const check = allowCalls ? isPropertyOrCall : isMember;
     while (check(this.peek().type)) {
-      let finished: ParseNode.LeftHandSideExpression;
+      let finished: ParseNode.CallExpressionOrHigher | ParseNode.MemberExpressionOrHigher;
       switch (this.peek().type) {
         case Token.LBRACK: {
           const node = this.startNode<ParseNode.MemberExpression>(result);
@@ -637,8 +634,7 @@ export abstract class ExpressionParser extends FunctionParser {
           const node = this.startNode<ParseNode.OptionalExpression>(result);
           node.MemberExpression = result;
           node.OptionalChain = this.parseOptionalChain();
-          finished = this.finishNode(node, 'OptionalExpression');
-          break;
+          return this.finishNode(node, 'OptionalExpression');
         }
         case Token.TEMPLATE: {
           const node = this.startNode<ParseNode.TaggedTemplateExpression>(result);
@@ -651,7 +647,7 @@ export abstract class ExpressionParser extends FunctionParser {
           this.unexpected();
       }
       // NOTE: unwinds ParseNode.Finish type alias to avoid circularity issues in type checker
-      result = finished as ParseNode.LeftHandSideExpression;
+      result = finished as ParseNode.CallExpressionOrHigher | ParseNode.MemberExpressionOrHigher;
     }
     return result;
   }
@@ -886,7 +882,7 @@ export abstract class ExpressionParser extends FunctionParser {
     return this.finishNode(node, 'ObjectLiteral');
   }
 
-  parsePropertyDefinition(): ParseNode.PropertyDefinitionListElement {
+  parsePropertyDefinition(): ParseNode.PropertyDefinitionLike {
     return this.parseBracketedDefinition('property');
   }
 
@@ -1204,7 +1200,7 @@ export abstract class ExpressionParser extends FunctionParser {
     this.scope.pushArrowInfo();
     this.scope.pushAssignmentInfo('arrow');
 
-    const expressions = [];
+    const expressions: (ParseNode.ArgumentListElement | ParseNode.BindingRestElement)[] = [];
     let rparenAfterComma;
     while (true) {
       if (this.test(Token.ELLIPSIS)) {
@@ -1322,10 +1318,10 @@ export abstract class ExpressionParser extends FunctionParser {
   // AsyncGeneratorMethod :
   //   `async` [no LineTerminator here] `*` ClassElementName `(` UniqueFormalParameters `)` `{` AsyncGeneratorBody `}`
   parseBracketedDefinition(type: 'class element'): ParseNode.ClassElement;
-  parseBracketedDefinition(type: 'property'): ParseNode.PropertyDefinitionListElement;
-  parseBracketedDefinition(type: 'property' | 'class element'): ParseNode.PropertyDefinitionListElement | ParseNode.ClassElement;
-  parseBracketedDefinition(type: 'property' | 'class element'): ParseNode.PropertyDefinitionListElement | ParseNode.ClassElement {
-    const node = this.startNode<ParseNode.PropertyDefinitionListElement | ParseNode.ClassElement>();
+  parseBracketedDefinition(type: 'property'): ParseNode.PropertyDefinitionLike;
+  parseBracketedDefinition(type: 'property' | 'class element'): ParseNode.PropertyDefinitionLike | ParseNode.ClassElement;
+  parseBracketedDefinition(type: 'property' | 'class element'): ParseNode.PropertyDefinitionLike | ParseNode.ClassElement {
+    const node = this.startNode<ParseNode.PropertyDefinitionLike | ParseNode.ClassElement>();
 
     if (type === 'property' && this.eat(Token.ELLIPSIS)) {
       node.PropertyName = null;
@@ -1398,7 +1394,7 @@ export abstract class ExpressionParser extends FunctionParser {
       }
 
       if (type === 'property' && this.scope.assignmentInfoStack.length > 0 && this.test(Token.ASSIGN)) {
-        node.IdentifierReference = this.repurpose(firstName, 'IdentifierReference') as ParseNode.IdentifierReference;
+        node.IdentifierReference = this.repurpose(firstName, 'IdentifierReference');
         node.Initializer = this.parseInitializerOpt();
         const finished = this.finishNode(node, 'CoverInitializedName');
         this.scope.registerObjectLiteralEarlyError(this.raiseEarly('UnexpectedToken', finished));
@@ -1410,7 +1406,7 @@ export abstract class ExpressionParser extends FunctionParser {
           && firstName.type === 'IdentifierName'
           && !this.test(Token.LPAREN)
           && !isKeywordRaw(firstName.name)) {
-        const IdentifierReference = this.repurpose(firstName, 'IdentifierReference') as ParseNode.IdentifierReference;
+        const IdentifierReference = this.repurpose(firstName, 'IdentifierReference');
         this.validateIdentifierReference(firstName.name, firstName);
         return IdentifierReference;
       }
@@ -1467,7 +1463,7 @@ export abstract class ExpressionParser extends FunctionParser {
       });
     });
 
-    const name = `${isAsync ? 'Async' : ''}${isGenerator ? 'Generator' : ''}Method${isAsync || isGenerator ? '' : 'Definition'}` as ParseNode.MethodLike['type'];
+    const name = `${isAsync ? 'Async' : ''}${isGenerator ? 'Generator' : ''}Method${isAsync || isGenerator ? '' : 'Definition'}` as ParseNode.MethodDefinitionLike['type'];
     return this.finishNode(node, name);
   }
 }

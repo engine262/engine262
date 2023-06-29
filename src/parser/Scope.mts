@@ -31,97 +31,86 @@ export function getDeclarations(node: ParseNode | ParseNode[]): DeclarationInfo[
     case 'LexicalBinding':
     case 'VariableDeclaration':
     case 'BindingRestElement':
-    case 'ForBinding': {
-      const typedNode = node as ParseNode.LexicalBinding | ParseNode.VariableDeclaration | ParseNode.BindingRestElement | ParseNode.ForBinding;
-      if (typedNode.BindingIdentifier) {
-        return getDeclarations(typedNode.BindingIdentifier);
+    case 'ForBinding':
+      if (node.BindingIdentifier) {
+        return getDeclarations(node.BindingIdentifier);
       }
-      if (typedNode.BindingPattern) {
-        return getDeclarations(typedNode.BindingPattern);
-      }
-      return [];
-    }
-    case 'BindingRestProperty': {
-      const typedNode = node as ParseNode.BindingRestProperty;
-      if (typedNode.BindingIdentifier) {
-        return getDeclarations(typedNode.BindingIdentifier);
+      if (node.BindingPattern) {
+        return getDeclarations(node.BindingPattern);
       }
       return [];
-    }
+    case 'BindingRestProperty':
+      if (node.BindingIdentifier) {
+        return getDeclarations(node.BindingIdentifier);
+      }
+      return [];
     case 'SingleNameBinding':
-      return getDeclarations((node as ParseNode.SingleNameBinding).BindingIdentifier);
+      return getDeclarations(node.BindingIdentifier);
     case 'ImportClause': {
-      const typedNode = node as ParseNode.ImportClause;
       const d = [];
-      if (typedNode.ImportedDefaultBinding) {
-        d.push(...getDeclarations(typedNode.ImportedDefaultBinding));
+      if (node.ImportedDefaultBinding) {
+        d.push(...getDeclarations(node.ImportedDefaultBinding));
       }
-      if (typedNode.NameSpaceImport) {
-        d.push(...getDeclarations(typedNode.NameSpaceImport));
+      if (node.NameSpaceImport) {
+        d.push(...getDeclarations(node.NameSpaceImport));
       }
-      if (typedNode.NamedImports) {
-        d.push(...getDeclarations(typedNode.NamedImports));
+      if (node.NamedImports) {
+        d.push(...getDeclarations(node.NamedImports));
       }
       return d;
     }
     case 'ImportSpecifier':
-      return getDeclarations((node as ParseNode.ImportSpecifier).ImportedBinding);
+      return getDeclarations(node.ImportedBinding);
     case 'ImportedDefaultBinding':
     case 'NameSpaceImport':
-      return getDeclarations((node as ParseNode.ImportedDefaultBinding | ParseNode.NameSpaceImport).ImportedBinding);
+      return getDeclarations(node.ImportedBinding);
     case 'NamedImports':
-      return getDeclarations((node as ParseNode.NamedImports).ImportsList);
+      return getDeclarations(node.ImportsList);
     case 'ObjectBindingPattern': {
-      const typedNode = node as ParseNode.ObjectBindingPattern;
-      const declarations = getDeclarations(typedNode.BindingPropertyList);
-      if (typedNode.BindingRestProperty) {
-        declarations.push(...getDeclarations(typedNode.BindingRestProperty));
+      const declarations = getDeclarations(node.BindingPropertyList);
+      if (node.BindingRestProperty) {
+        declarations.push(...getDeclarations(node.BindingRestProperty));
       }
       return declarations;
     }
     case 'ArrayBindingPattern': {
-      const typedNode = node as ParseNode.ArrayBindingPattern;
-      const declarations = getDeclarations(typedNode.BindingElementList);
-      if (typedNode.BindingRestElement) {
-        declarations.push(...getDeclarations(typedNode.BindingRestElement));
+      const declarations = getDeclarations(node.BindingElementList);
+      if (node.BindingRestElement) {
+        declarations.push(...getDeclarations(node.BindingRestElement));
       }
       return declarations;
     }
     case 'BindingElement':
-      return getDeclarations((node as ParseNode.BindingElement).BindingPattern);
+      return getDeclarations(node.BindingPattern);
     case 'BindingProperty':
-      return getDeclarations((node as ParseNode.BindingProperty).BindingElement);
+      return getDeclarations(node.BindingElement);
     case 'BindingIdentifier':
     case 'IdentifierName':
     case 'LabelIdentifier':
-      return [{ name: (node as ParseNode.BindingIdentifier | ParseNode.IdentifierName | ParseNode.LabelIdentifier).name, node }];
+      return [{ name: node.name, node }];
     case 'PrivateIdentifier':
-      return [{ name: `#${(node as ParseNode.PrivateIdentifier).name}`, node }];
+      return [{ name: `#${node.name}`, node }];
     case 'StringLiteral':
-      return [{ name: (node as ParseNode.StringLiteral).value, node }];
+      return [{ name: node.value, node }];
     case 'Elision':
       return [];
     case 'ForDeclaration':
-      return getDeclarations((node as ParseNode.ForDeclaration).ForBinding);
+      return getDeclarations(node.ForBinding);
     case 'ExportSpecifier':
-      return getDeclarations((node as ParseNode.ExportSpecifier).exportName);
+      return getDeclarations(node.exportName);
     case 'FunctionDeclaration':
     case 'GeneratorDeclaration':
     case 'AsyncFunctionDeclaration':
-    case 'AsyncGeneratorDeclaration': {
-      const typedNode = node as ParseNode.FunctionDeclarationLike;
-      Assert(!!typedNode.BindingIdentifier);
-      return getDeclarations(typedNode.BindingIdentifier);
-    }
+    case 'AsyncGeneratorDeclaration':
+      Assert(!!node.BindingIdentifier);
+      return getDeclarations(node.BindingIdentifier);
     case 'LexicalDeclaration':
-      return getDeclarations((node as ParseNode.LexicalDeclaration).BindingList);
+      return getDeclarations(node.BindingList);
     case 'VariableStatement':
-      return getDeclarations((node as ParseNode.VariableStatement).VariableDeclarationList);
-    case 'ClassDeclaration': {
-      const typedNode = node as ParseNode.ClassDeclaration;
-      Assert(!!typedNode.BindingIdentifier);
-      return getDeclarations(typedNode.BindingIdentifier);
-    }
+      return getDeclarations(node.VariableDeclarationList);
+    case 'ClassDeclaration':
+      Assert(!!node.BindingIdentifier);
+      return getDeclarations(node.BindingIdentifier);
     default:
       throw new OutOfRange('getDeclarations', node);
   }

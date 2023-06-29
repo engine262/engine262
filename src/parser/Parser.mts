@@ -1,10 +1,15 @@
 import { surroundingAgent } from '../engine.mjs';
 import * as messages from '../messages.mjs';
 import { LanguageParser } from './LanguageParser.mjs';
-import { Token } from './tokens.mjs';
-import { Scope } from './Scope.mjs';
 import { isLineTerminator, type Locatable } from './Lexer.mjs';
-import type { Location, ParseNode, Position } from './ParseNode.mjs';
+import type {
+  Location,
+  ParseNode,
+  ParseNodesByType,
+  Position,
+} from './ParseNode.mjs';
+import { Scope } from './Scope.mjs';
+import { Token } from './tokens.mjs';
 
 export class Parser extends LanguageParser {
   source: string;
@@ -39,11 +44,10 @@ export class Parser extends LanguageParser {
     return surroundingAgent.feature(name);
   }
 
-  startNode(inheritStart?: ParseNode): ParseNode;
-  startNode<T extends ParseNode>(inheritStart?: ParseNode): ParseNode.Unfinished<T>;
-  startNode(inheritStart: ParseNode | undefined = undefined): ParseNode.Unfinished<ParseNode> | ParseNode {
+  startNode<T extends ParseNode>(inheritStart?: ParseNode.BaseParseNode): ParseNode.Unfinished<T>;
+  startNode(inheritStart?: ParseNode.BaseParseNode): ParseNode.Unfinished {
     this.peek();
-    const node: ParseNode = {
+    const node: ParseNode.BaseParseNode = {
       type: undefined!,
       location: {
         startIndex: inheritStart ? inheritStart.location.startIndex : this.peekToken.startIndex,
@@ -63,7 +67,7 @@ export class Parser extends LanguageParser {
     return node;
   }
 
-  markNodeStart(node: ParseNode.Unfinished<ParseNode> | ParseNode) {
+  markNodeStart(node: ParseNode.Unfinished) {
     node.location.startIndex = this.peekToken.startIndex;
     node.location.start = {
       line: this.peekToken.line,
@@ -71,9 +75,8 @@ export class Parser extends LanguageParser {
     };
   }
 
-  finishNode<T extends ParseNode.Unfinished<ParseNode>, K extends T['type']>(node: T, type: K): ParseNode.Finished<T, K>;
-  finishNode<T extends ParseNode>(node: T, type: string): T;
-  finishNode(node: ParseNode, type: string) {
+  finishNode<T extends ParseNode.Unfinished, K extends T['type'] & ParseNode['type']>(node: T, type: K): ParseNodesByType[K];
+  finishNode(node: ParseNode.Unfinished, type: ParseNode['type']) {
     node.type = type;
     node.location.endIndex = this.currentToken.endIndex;
     node.location.end.line = this.currentToken.line;

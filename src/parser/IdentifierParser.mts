@@ -131,7 +131,7 @@ export abstract class IdentifierParser extends BaseParser {
   //   [~Await] `await`
   parseLabelIdentifier() {
     const node = this.parseIdentifierReference();
-    return this.repurpose(node, 'LabelIdentifier') as ParseNode.LabelIdentifier;
+    return this.repurpose(node, 'LabelIdentifier');
   }
 
   // PrivateIdentifier ::

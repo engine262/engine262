@@ -28,7 +28,7 @@ type ConvertArrowParameterResult<T> =
 export abstract class FunctionParser extends IdentifierParser {
   abstract parseStatementList(token: string | Token, directives?: string[]): ParseNode.StatementList;
   abstract parseAssignmentExpression(): ParseNode.AssignmentExpressionOrHigher;
-  abstract parseBindingElement(): ParseNode.BindingElementOrHigher;
+  abstract parseBindingElement(): ParseNode.BindingElementLike;
   abstract parseBindingRestElement(): ParseNode.BindingRestElement;
 
   // FunctionDeclaration :
@@ -115,7 +115,7 @@ export abstract class FunctionParser extends IdentifierParser {
     return this.finishNode(node, name);
   }
 
-  validateFormalParameters(parameters: ParseNode.FormalParameters, body: ParseNode.FunctionBodyLike | ParseNode.ConciseBodyLike, wantsUnique = false) {
+  validateFormalParameters(parameters: ParseNode.FormalParameters, body: ParseNode.FunctionBodyLike | ParseNode.ConciseBody | ParseNode.AsyncConciseBody, wantsUnique = false) {
     const isStrict = body.strict;
     const hasStrictDirective = body.directives && body.directives.includes('use strict');
     if (wantsUnique === false && !IsSimpleParameterList(parameters)) {
@@ -152,12 +152,11 @@ export abstract class FunctionParser extends IdentifierParser {
   convertArrowParameter(node: ParseNode) {
     switch (node.type) {
       case 'IdentifierReference': {
-        const IdentifierReference = node as ParseNode.IdentifierReference;
-        const BindingIdentifier = this.repurpose(IdentifierReference, 'BindingIdentifier') as ParseNode.BindingIdentifier;
-        const SingleNameBinding = this.startNode<ParseNode.SingleNameBinding>(IdentifierReference);
+        const BindingIdentifier = this.repurpose(node, 'BindingIdentifier');
+        const SingleNameBinding = this.startNode<ParseNode.SingleNameBinding>(node);
         SingleNameBinding.BindingIdentifier = BindingIdentifier;
         SingleNameBinding.Initializer = null;
-        this.scope.declare(IdentifierReference, 'parameter');
+        this.scope.declare(node, 'parameter');
         return this.finishNode(SingleNameBinding, 'SingleNameBinding');
       }
       case 'BindingRestElement':
@@ -166,89 +165,87 @@ export abstract class FunctionParser extends IdentifierParser {
       case 'Elision':
         return node;
       case 'ArrayLiteral': {
-        const ArrayLiteral = node as ParseNode.ArrayLiteral;
-        const BindingPattern = this.repurpose(ArrayLiteral, 'ArrayBindingPattern') as ParseNode.ArrayBindingPattern;
-        BindingPattern.BindingElementList = [];
-        ArrayLiteral.ElementList.forEach((p, i) => {
-          const c = this.convertArrowParameter(p);
-          if (c.type === 'BindingRestElement') {
-            if (i !== ArrayLiteral.ElementList.length - 1) {
-              this.raiseEarly('UnexpectedToken', c);
+        const BindingPattern = this.repurpose(node, 'ArrayBindingPattern', (asNew, asOld, asPartial) => {
+          asNew.BindingElementList = [];
+          for (const [i, p] of asOld.ElementList.entries()) {
+            const c = this.convertArrowParameter(p);
+            if (c.type === 'BindingRestElement') {
+              if (i !== asOld.ElementList.length - 1) {
+                this.raiseEarly('UnexpectedToken', c);
+              }
+              asNew.BindingRestElement = c;
+            } else {
+              asNew.BindingElementList.push(c);
             }
-            BindingPattern.BindingRestElement = c;
-          } else {
-            BindingPattern.BindingElementList.push(c);
           }
+          delete asPartial.ElementList;
         });
-        delete (ArrayLiteral as Partial<ParseNode.ArrayLiteral>).ElementList;
-        const BindingElement = this.startNode<ParseNode.BindingElement>(ArrayLiteral);
+        const BindingElement = this.startNode<ParseNode.BindingElement>(node);
         BindingElement.BindingPattern = BindingPattern;
         BindingElement.Initializer = null;
         return this.finishNode(BindingElement, 'BindingElement');
       }
       case 'ObjectLiteral': {
-        const ObjectLiteral = node as ParseNode.ObjectLiteral;
-        const BindingPattern = this.repurpose(ObjectLiteral, 'ObjectBindingPattern') as ParseNode.ObjectBindingPattern;
-        BindingPattern.BindingPropertyList = [];
-        ObjectLiteral.PropertyDefinitionList.forEach((p) => {
-          const c = this.convertArrowParameter(p);
-          if (c.type === 'BindingRestProperty') {
-            BindingPattern.BindingRestProperty = c;
-          } else {
-            BindingPattern.BindingPropertyList.push(c);
+        const BindingPattern = this.repurpose(node, 'ObjectBindingPattern', (asNew, asOld, asPartial) => {
+          asNew.BindingPropertyList = [];
+          for (const p of asOld.PropertyDefinitionList) {
+            const c = this.convertArrowParameter(p);
+            if (c.type === 'BindingRestProperty') {
+              asNew.BindingRestProperty = c;
+            } else {
+              asNew.BindingPropertyList.push(c);
+            }
           }
+          delete asPartial.PropertyDefinitionList;
         });
-        delete (ObjectLiteral as Partial<ParseNode.ObjectLiteral>).PropertyDefinitionList;
-        const BindingElement = this.startNode<ParseNode.BindingElement>(ObjectLiteral);
+        const BindingElement = this.startNode<ParseNode.BindingElement>(node);
         BindingElement.BindingPattern = BindingPattern;
         BindingElement.Initializer = null;
         return this.finishNode(BindingElement, 'BindingElement');
       }
       case 'AssignmentExpression': {
-        const AssignmentExpression = node as ParseNode.AssignmentExpression;
-        const result = this.convertArrowParameter(AssignmentExpression.LeftHandSideExpression);
-        result.Initializer = AssignmentExpression.AssignmentExpression;
-        return result;
+        const result = this.convertArrowParameter(node.LeftHandSideExpression) as ParseNode.Unfinished<ParseNode.SingleNameBinding | ParseNode.BindingElement>;
+        result.Initializer = node.AssignmentExpression;
+        return result as ParseNode.SingleNameBinding | ParseNode.BindingElement;
       }
       case 'CoverInitializedName': {
-        const CoverInitializedName = node as ParseNode.CoverInitializedName;
-        const { IdentifierReference } = CoverInitializedName;
-        const BindingIdentifier = this.repurpose(IdentifierReference, 'BindingIdentifier') as ParseNode.BindingIdentifier;
-        const SingleNameBinding = this.repurpose(CoverInitializedName, 'SingleNameBinding') as ParseNode.SingleNameBinding;
-        SingleNameBinding.BindingIdentifier = BindingIdentifier;
-        delete (CoverInitializedName as Partial<ParseNode.CoverInitializedName>).IdentifierReference;
+        const SingleNameBinding = this.repurpose(node, 'SingleNameBinding', (asNew, asOld, asPartial) => {
+          asNew.BindingIdentifier = this.repurpose(asOld.IdentifierReference, 'BindingIdentifier');
+          delete asPartial.IdentifierReference;
+        });
         this.scope.declare(SingleNameBinding, 'parameter');
         return SingleNameBinding;
       }
       case 'PropertyDefinition': {
-        const PropertyDefinition = node as ParseNode.PropertyDefinition;
-        const { AssignmentExpression } = PropertyDefinition;
         let BindingProperty: ParseNode.BindingProperty | ParseNode.BindingRestProperty;
-        if (PropertyDefinition.PropertyName === null) {
-          BindingProperty = this.repurpose(PropertyDefinition, 'BindingRestProperty') as ParseNode.BindingRestProperty;
-          BindingProperty.BindingIdentifier = this.repurpose(AssignmentExpression, 'BindingIdentifier') as ParseNode.BindingIdentifier;
+        if (node.PropertyName === null) {
+          BindingProperty = this.repurpose(node, 'BindingRestProperty', (asNew, asOld, asPartial) => {
+            asNew.BindingIdentifier = this.repurpose(asOld.AssignmentExpression, 'BindingIdentifier');
+            delete asPartial.AssignmentExpression;
+          });
         } else {
-          BindingProperty = this.repurpose(PropertyDefinition, 'BindingProperty') as ParseNode.BindingProperty;
-          BindingProperty.BindingElement = this.convertArrowParameter(AssignmentExpression);
+          BindingProperty = this.repurpose(node, 'BindingProperty', (asNew, asOld, asPartial) => {
+            asNew.BindingElement = this.convertArrowParameter(asOld.AssignmentExpression);
+            delete asPartial.AssignmentExpression;
+          });
         }
-        this.scope.declare(PropertyDefinition, 'parameter');
-        delete (PropertyDefinition as Partial<ParseNode.PropertyDefinition>).AssignmentExpression;
+        this.scope.declare(node, 'parameter');
         return BindingProperty;
       }
       case 'SpreadElement':
       case 'AssignmentRestElement': {
-        const SpreadElementOrAssignmentRestElement = node as ParseNode.SpreadElement | ParseNode.AssignmentRestElement;
-        const { AssignmentExpression } = SpreadElementOrAssignmentRestElement;
-        const BindingRestElement = this.repurpose(SpreadElementOrAssignmentRestElement, 'BindingRestElement') as ParseNode.BindingRestElement;
-        if (AssignmentExpression.type === 'AssignmentExpression') {
-          this.raiseEarly('UnexpectedToken', SpreadElementOrAssignmentRestElement);
-        } else if (AssignmentExpression.type === 'IdentifierReference') {
-          BindingRestElement.BindingIdentifier = this.repurpose(AssignmentExpression, 'BindingIdentifier') as ParseNode.BindingIdentifier;
-        } else {
-          BindingRestElement.BindingPattern = this.convertArrowParameter(AssignmentExpression).BindingPattern;
-        }
+        const BindingRestElement = this.repurpose(node, 'BindingRestElement', (asNew, asOld, asPartial) => {
+          const { AssignmentExpression } = asOld;
+          if (AssignmentExpression.type === 'AssignmentExpression') {
+            this.raiseEarly('UnexpectedToken', node);
+          } else if (AssignmentExpression.type === 'IdentifierReference') {
+            asNew.BindingIdentifier = this.repurpose(AssignmentExpression, 'BindingIdentifier');
+          } else {
+            asNew.BindingPattern = this.convertArrowParameter(AssignmentExpression).BindingPattern;
+          }
+          delete asPartial.AssignmentExpression;
+        });
         this.scope.declare(BindingRestElement, 'parameter');
-        delete (SpreadElementOrAssignmentRestElement as Partial<ParseNode.SpreadElement | ParseNode.AssignmentRestElement>).AssignmentExpression;
         return BindingRestElement;
       }
       default:
@@ -257,7 +254,7 @@ export abstract class FunctionParser extends IdentifierParser {
     }
   }
 
-  parseArrowFunction(node: ParseNode.Unfinished<ParseNode.ArrowFunctionLike>, { arrowInfo, Arguments }: { arrowInfo?: ArrowInfo, Arguments: ParseNode.CoverParenthesizedExpressionAndArrowParameterList['Arguments'] }, kind: FunctionKind): ParseNode.ArrowFunctionLike {
+  parseArrowFunction(node: ParseNode.Unfinished<ParseNode.ArrowFunction | ParseNode.AsyncArrowFunction>, { arrowInfo, Arguments }: { arrowInfo?: ArrowInfo, Arguments: ParseNode.CoverParenthesizedExpressionAndArrowParameterList['Arguments'] }, kind: FunctionKind): ParseNode.ArrowFunction | ParseNode.AsyncArrowFunction {
     const isAsync = kind === FunctionKind.ASYNC;
     this.expect(Token.ARROW);
     if (arrowInfo) {
@@ -290,11 +287,11 @@ export abstract class FunctionParser extends IdentifierParser {
     return this.finishNode(node, `${isAsync ? 'Async' : ''}ArrowFunction`);
   }
 
-  parseConciseBody(isAsync: boolean): ParseNode.ConciseBodyLikeOrHigher {
+  parseConciseBody(isAsync: boolean): ParseNode.ConciseBody | ParseNode.FunctionBody | ParseNode.AsyncConciseBody | ParseNode.AsyncFunctionBody {
     if (this.test(Token.LBRACE)) {
       return this.parseFunctionBody(isAsync, false, true) as ParseNode.FunctionBody | ParseNode.AsyncFunctionBody;
     }
-    const asyncBody = this.startNode<ParseNode.ConciseBodyLike>();
+    const asyncBody = this.startNode<ParseNode.ConciseBody | ParseNode.AsyncConciseBody>();
     const exprBody = this.startNode<ParseNode.ExpressionBody>();
     this.scope.with({ await: isAsync }, () => {
       exprBody.AssignmentExpression = this.parseAssignmentExpression();

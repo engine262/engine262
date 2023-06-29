@@ -144,7 +144,7 @@ export abstract class StatementParser extends ExpressionParser {
     const bindingList: ParseNode.BindingList = [];
     do {
       const node = this.parseBindingElement();
-      bindingList.push(this.repurpose(node, 'LexicalBinding') as ParseNode.LexicalBinding);
+      bindingList.push(this.repurpose(node, 'LexicalBinding'));
     } while (this.eat(Token.COMMA));
     return bindingList;
   }
@@ -154,8 +154,8 @@ export abstract class StatementParser extends ExpressionParser {
   //   BindingPattern Initializer?
   // SingleNameBinding :
   //   BindingIdentifier Initializer?
-  parseBindingElement(): ParseNode.BindingElementOrHigher {
-    const node = this.startNode<ParseNode.BindingElementOrHigher>();
+  parseBindingElement(): ParseNode.BindingElementLike {
+    const node = this.startNode<ParseNode.BindingElementLike>();
     if (this.test(Token.LBRACE) || this.test(Token.LBRACK)) {
       node.BindingPattern = this.parseBindingPattern();
     } else {
@@ -220,7 +220,7 @@ export abstract class StatementParser extends ExpressionParser {
       }
       this.validateIdentifierReference(name.name, node);
     }
-    node.BindingIdentifier = this.repurpose(name, 'BindingIdentifier') as ParseNode.BindingIdentifier;
+    node.BindingIdentifier = this.repurpose(name, 'BindingIdentifier');
     node.Initializer = this.parseInitializerOpt();
     return this.finishNode(node, 'SingleNameBinding');
   }
@@ -518,10 +518,11 @@ export abstract class StatementParser extends ExpressionParser {
           node.Statement = this.parseStatement();
           return this.finishNode(node, 'ForStatement');
         }
-        inner.ForBinding = this.repurpose(list[0], 'ForBinding') as ParseNode.ForBinding;
-        if (list[0].Initializer) {
-          this.unexpected(list[0].Initializer);
-        }
+        inner.ForBinding = this.repurpose(list[0], 'ForBinding', (_, oldNode) => {
+          if (oldNode.Initializer) {
+            this.unexpected(oldNode.Initializer);
+          }
+        });
         node.ForDeclaration = this.finishNode(inner, 'ForDeclaration');
         getDeclarations(node.ForDeclaration)
           .forEach((d) => {
@@ -565,10 +566,11 @@ export abstract class StatementParser extends ExpressionParser {
           node.Statement = this.parseStatement();
           return this.finishNode(node, 'ForStatement');
         }
-        node.ForBinding = this.repurpose(list[0], 'ForBinding') as ParseNode.ForBinding;
-        if (list[0].Initializer) {
-          this.unexpected(list[0].Initializer);
-        }
+        node.ForBinding = this.repurpose(list[0], 'ForBinding', (_, oldNode) => {
+          if (oldNode.Initializer) {
+            this.unexpected(oldNode.Initializer);
+          }
+        });
         if (this.eat('of')) {
           node.AssignmentExpression = this.parseAssignmentExpression();
         } else {
@@ -899,7 +901,7 @@ export abstract class StatementParser extends ExpressionParser {
     const node = this.startNode<ParseNode.ExpressionStatement | ParseNode.LabelledStatement>();
     const expression = this.parseExpression();
     if (expression.type === 'IdentifierReference' && this.eat(Token.COLON)) {
-      const LabelIdentifier = this.repurpose(expression, 'LabelIdentifier') as ParseNode.LabelIdentifier;
+      const LabelIdentifier = this.repurpose(expression, 'LabelIdentifier');
       node.LabelIdentifier = LabelIdentifier;
 
       if (this.scope.labels.find((l) => l.name === LabelIdentifier.name)) {

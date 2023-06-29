@@ -100,7 +100,7 @@ export abstract class ModuleParser extends StatementParser {
       node.ModuleExportName = name;
       node.ImportedBinding = this.parseBindingIdentifier();
     } else {
-      node.ImportedBinding = this.repurpose(name, 'BindingIdentifier') as ParseNode.BindingIdentifier;
+      node.ImportedBinding = this.repurpose(name, 'BindingIdentifier');
       if (isKeywordRaw(node.ImportedBinding.name)) {
         this.raiseEarly('UnexpectedToken', node.ImportedBinding);
       }
