@@ -530,7 +530,7 @@ export abstract class ExpressionParser extends FunctionParser {
 
   // LeftHandSideExpression
   parseLeftHandSideExpression(allowCalls = true): ParseNode.LeftHandSideExpression {
-    let result: ParseNode.CallExpressionOrHigher | ParseNode.MemberExpressionOrHigher;
+    let result: ParseNode.LeftHandSideExpression;
     switch (this.peek().type) {
       case Token.NEW:
         result = this.parseNewExpression();
@@ -585,7 +585,7 @@ export abstract class ExpressionParser extends FunctionParser {
 
     const check = allowCalls ? isPropertyOrCall : isMember;
     while (check(this.peek().type)) {
-      let finished: ParseNode.CallExpressionOrHigher | ParseNode.MemberExpressionOrHigher;
+      let finished: ParseNode.LeftHandSideExpression;
       switch (this.peek().type) {
         case Token.LBRACK: {
           const node = this.startNode<ParseNode.MemberExpression>(result);
@@ -636,7 +636,8 @@ export abstract class ExpressionParser extends FunctionParser {
           const node = this.startNode<ParseNode.OptionalExpression>(result);
           node.MemberExpression = result;
           node.OptionalChain = this.parseOptionalChain();
-          return this.finishNode(node, 'OptionalExpression');
+          finished = this.finishNode(node, 'OptionalExpression');
+          break;
         }
         case Token.TEMPLATE: {
           const node = this.startNode<ParseNode.TaggedTemplateExpression>(result);
