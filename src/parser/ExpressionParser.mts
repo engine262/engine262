@@ -5,6 +5,7 @@ import {
   IsComputedPropertyKey,
   ContainsArguments,
 } from '../static-semantics/all.mjs';
+import type { Mutable } from '../helpers.mjs';
 import {
   Token, TokenPrecedence,
   isPropertyOrCall,
@@ -36,10 +37,11 @@ export abstract class ExpressionParser extends FunctionParser {
     const AssignmentExpression = this.parseAssignmentExpression();
     if (this.eat(Token.COMMA)) {
       const CommaOperator = this.startNode<ParseNode.CommaOperator>(AssignmentExpression);
-      CommaOperator.ExpressionList = [AssignmentExpression];
+      const ExpressionList = [AssignmentExpression];
       do {
-        CommaOperator.ExpressionList.push(this.parseAssignmentExpression());
+        ExpressionList.push(this.parseAssignmentExpression());
       } while (this.eat(Token.COMMA));
+      CommaOperator.ExpressionList = ExpressionList;
       return this.finishNode(CommaOperator, 'CommaOperator');
     }
     return AssignmentExpression;
@@ -818,13 +820,14 @@ export abstract class ExpressionParser extends FunctionParser {
   parseArrayLiteral(): ParseNode.ArrayLiteral {
     const node = this.startNode<ParseNode.ArrayLiteral>();
     this.expect(Token.LBRACK);
-    node.ElementList = [];
+    const ElementList: Mutable<ParseNode.ElementList> = [];
+    node.ElementList = ElementList;
     node.hasTrailingComma = false;
     while (true) {
       while (this.test(Token.COMMA)) {
         const elision = this.startNode<ParseNode.Elision>();
         this.next();
-        node.ElementList.push(this.finishNode(elision, 'Elision'));
+        ElementList.push(this.finishNode(elision, 'Elision'));
       }
       if (this.eat(Token.RBRACK)) {
         break;
@@ -833,9 +836,9 @@ export abstract class ExpressionParser extends FunctionParser {
         const spread = this.startNode<ParseNode.SpreadElement>();
         this.next();
         spread.AssignmentExpression = this.parseAssignmentExpression();
-        node.ElementList.push(this.finishNode(spread, 'SpreadElement'));
+        ElementList.push(this.finishNode(spread, 'SpreadElement'));
       } else {
-        node.ElementList.push(this.parseAssignmentExpression());
+        ElementList.push(this.parseAssignmentExpression());
       }
       if (this.eat(Token.RBRACK)) {
         node.hasTrailingComma = false;
@@ -854,7 +857,8 @@ export abstract class ExpressionParser extends FunctionParser {
   parseObjectLiteral(): ParseNode.ObjectLiteral {
     const node = this.startNode<ParseNode.ObjectLiteral>();
     this.expect(Token.LBRACE);
-    node.PropertyDefinitionList = [];
+    const PropertyDefinitionList: Mutable<ParseNode.PropertyDefinitionList> = [];
+    node.PropertyDefinitionList = PropertyDefinitionList;
     let hasProto = false;
     while (true) {
       if (this.eat(Token.RBRACE)) {
@@ -873,7 +877,7 @@ export abstract class ExpressionParser extends FunctionParser {
           hasProto = true;
         }
       }
-      node.PropertyDefinitionList.push(PropertyDefinition);
+      PropertyDefinitionList.push(PropertyDefinition);
       if (this.eat(Token.RBRACE)) {
         break;
       }
@@ -895,7 +899,7 @@ export abstract class ExpressionParser extends FunctionParser {
     if (this.eat(Token.RPAREN)) {
       return { Arguments: [], trailingComma: false };
     }
-    const Arguments: ParseNode.Arguments = [];
+    const Arguments: Mutable<ParseNode.Arguments> = [];
     let trailingComma = false;
     while (true) {
       const node = this.startNode<ParseNode.AssignmentRestElement>();
@@ -962,11 +966,11 @@ export abstract class ExpressionParser extends FunctionParser {
     if (this.eat(Token.RBRACE)) {
       node.ClassBody = null;
     } else {
-      this.scope.with({
+      node.ClassBody = this.scope.with({
         superCall: !!node.ClassHeritage,
         private: true,
       }, () => {
-        node.ClassBody = [];
+        const ClassBody: Mutable<ParseNode.ClassElementList> = [];
         let hasConstructor = false;
         while (this.eat(Token.SEMICOLON)) {
           // nothing
@@ -975,7 +979,7 @@ export abstract class ExpressionParser extends FunctionParser {
         const instancePrivates = new Set();
         while (!this.eat(Token.RBRACE)) {
           const m = this.parseClassElement();
-          node.ClassBody.push(m);
+          ClassBody.push(m);
           while (this.eat(Token.SEMICOLON)) {
             // nothing
           }
@@ -1035,6 +1039,7 @@ export abstract class ExpressionParser extends FunctionParser {
             this.raiseEarly('InvalidMethodName', m, name);
           }
         }
+        return ClassBody;
       });
     }
 
@@ -1077,8 +1082,8 @@ export abstract class ExpressionParser extends FunctionParser {
 
   parseTemplateLiteral(tagged = false): ParseNode.TemplateLiteral {
     const node = this.startNode<ParseNode.TemplateLiteral>();
-    node.TemplateSpanList = [];
-    node.ExpressionList = [];
+    const TemplateSpanList: string[] = [];
+    const ExpressionList: ParseNode.Expression[] = [];
     let buffer = '';
     while (true) {
       if (this.position >= this.source.length) {
@@ -1088,24 +1093,26 @@ export abstract class ExpressionParser extends FunctionParser {
       switch (c) {
         case '`':
           this.position += 1;
-          node.TemplateSpanList.push(buffer);
+          TemplateSpanList.push(buffer);
           this.next();
           if (!tagged) {
-            node.TemplateSpanList.forEach((s) => {
+            TemplateSpanList.forEach((s) => {
               if (TV(s) === undefined) {
                 this.raise('InvalidTemplateEscape');
               }
             });
           }
+          node.TemplateSpanList = TemplateSpanList;
+          node.ExpressionList = ExpressionList;
           return this.finishNode(node, 'TemplateLiteral');
         case '$':
           this.position += 1;
           if (this.source[this.position] === '{') {
             this.position += 1;
-            node.TemplateSpanList.push(buffer);
+            TemplateSpanList.push(buffer);
             buffer = '';
             this.next();
-            node.ExpressionList.push(this.parseExpression());
+            ExpressionList.push(this.parseExpression());
             break;
           }
           buffer += c;
@@ -1407,8 +1414,8 @@ export abstract class ExpressionParser extends FunctionParser {
           && firstName.type === 'IdentifierName'
           && !this.test(Token.LPAREN)
           && (!isKeywordRaw(firstName.name)
-            || (firstName.name === "yield" && !this.scope.hasYield)
-            || (firstName.name === "await" && !this.scope.hasAwait))) {
+            || (firstName.name === 'yield' && !this.scope.hasYield)
+            || (firstName.name === 'await' && !this.scope.hasAwait))) {
         const IdentifierReference = this.repurpose(firstName, 'IdentifierReference');
         this.validateIdentifierReference(firstName.name, firstName);
         return IdentifierReference;

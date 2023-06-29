@@ -1,3 +1,4 @@
+import type { Mutable } from '../helpers.mjs';
 import { Token, isAutomaticSemicolon } from './tokens.mjs';
 import { ExpressionParser } from './ExpressionParser.mjs';
 import { FunctionKind } from './FunctionParser.mjs';
@@ -25,7 +26,7 @@ export abstract class StatementParser extends ExpressionParser {
   //   StatementListItem
   //   StatementList StatementListItem
   parseStatementList(endToken: string | Token, directives?: string[]): ParseNode.StatementList {
-    const statementList: ParseNode.StatementList = [];
+    const statementList: Mutable<ParseNode.StatementList> = [];
     const oldStrict = this.state.strict;
     const directiveData = [];
     while (!this.eat(endToken)) {
@@ -141,7 +142,7 @@ export abstract class StatementParser extends ExpressionParser {
   //   BindingIdentifier Initializer?
   //   BindingPattern Initializer
   parseBindingList(): ParseNode.BindingList {
-    const bindingList: ParseNode.BindingList = [];
+    const bindingList: Mutable<ParseNode.BindingList> = [];
     do {
       const node = this.parseBindingElement();
       bindingList.push(this.repurpose(node, 'LexicalBinding'));
@@ -187,14 +188,15 @@ export abstract class StatementParser extends ExpressionParser {
   parseObjectBindingPattern(): ParseNode.ObjectBindingPattern {
     const node = this.startNode<ParseNode.ObjectBindingPattern>();
     this.expect(Token.LBRACE);
-    node.BindingPropertyList = [];
+    const BindingPropertyList: Mutable<ParseNode.BindingPropertyList> = [];
+    node.BindingPropertyList = BindingPropertyList;
     while (!this.eat(Token.RBRACE)) {
       if (this.test(Token.ELLIPSIS)) {
         node.BindingRestProperty = this.parseBindingRestProperty();
         this.expect(Token.RBRACE);
         break;
       } else {
-        node.BindingPropertyList.push(this.parseBindingProperty());
+        BindingPropertyList.push(this.parseBindingProperty());
         if (!this.eat(Token.COMMA)) {
           this.expect(Token.RBRACE);
           break;
@@ -241,12 +243,13 @@ export abstract class StatementParser extends ExpressionParser {
   parseArrayBindingPattern(): ParseNode.ArrayBindingPattern {
     const node = this.startNode<ParseNode.ArrayBindingPattern>();
     this.expect(Token.LBRACK);
-    node.BindingElementList = [];
+    const BindingElementList: Mutable<ParseNode.BindingElementList> = [];
+    node.BindingElementList = BindingElementList;
     while (true) {
       while (this.test(Token.COMMA)) {
         const elision = this.startNode<ParseNode.Elision>();
         this.next();
-        node.BindingElementList.push(this.finishNode(elision, 'Elision'));
+        BindingElementList.push(this.finishNode(elision, 'Elision'));
       }
       if (this.eat(Token.RBRACK)) {
         break;
@@ -256,7 +259,7 @@ export abstract class StatementParser extends ExpressionParser {
         this.expect(Token.RBRACK);
         break;
       } else {
-        node.BindingElementList.push(this.parseBindingElement());
+        BindingElementList.push(this.parseBindingElement());
       }
       if (this.eat(Token.RBRACK)) {
         break;
@@ -365,7 +368,7 @@ export abstract class StatementParser extends ExpressionParser {
   //   VariableDeclaration
   //   VariableDeclarationList `,` VariableDeclaration
   parseVariableDeclarationList(firstDeclarationRequiresInit = true): ParseNode.VariableDeclarationList {
-    const declarationList: ParseNode.VariableDeclarationList = [];
+    const declarationList: Mutable<ParseNode.VariableDeclarationList> = [];
     do {
       const node = this.parseVariableDeclaration(firstDeclarationRequiresInit);
       declarationList.push(node);
@@ -679,6 +682,8 @@ export abstract class StatementParser extends ExpressionParser {
   //   `default` `:` StatementList?
   parseCaseBlock(): ParseNode.CaseBlock {
     const node = this.startNode<ParseNode.CaseBlock>();
+    let CaseClauses_a: Mutable<ParseNode.CaseClauses> | undefined;
+    let CaseClauses_b: Mutable<ParseNode.CaseClauses> | undefined;
     this.expect(Token.LBRACE);
     while (!this.eat(Token.RBRACE)) {
       switch (this.peek().type) {
@@ -693,25 +698,29 @@ export abstract class StatementParser extends ExpressionParser {
             inner.Expression = this.parseExpression();
           }
           this.expect(Token.COLON);
+          let StatementList: Mutable<ParseNode.StatementList> | undefined;
           while (!(this.test(Token.CASE) || this.test(Token.DEFAULT) || this.test(Token.RBRACE))) {
-            if (!inner.StatementList) {
-              inner.StatementList = [];
+            if (!StatementList) {
+              StatementList = [];
+              inner.StatementList = StatementList;
             }
-            inner.StatementList.push(this.parseStatementListItem());
+            StatementList.push(this.parseStatementListItem());
           }
           if (t === Token.DEFAULT) {
             node.DefaultClause = this.finishNode(inner, 'DefaultClause');
           } else {
             if (node.DefaultClause) {
-              if (!node.CaseClauses_b) {
-                node.CaseClauses_b = [];
+              if (!CaseClauses_b) {
+                CaseClauses_b = [];
+                node.CaseClauses_b = CaseClauses_b;
               }
-              node.CaseClauses_b.push(this.finishNode(inner, 'CaseClause'));
+              CaseClauses_b.push(this.finishNode(inner, 'CaseClause'));
             } else {
-              if (!node.CaseClauses_a) {
-                node.CaseClauses_a = [];
+              if (!CaseClauses_a) {
+                CaseClauses_a = [];
+                node.CaseClauses_a = CaseClauses_a;
               }
-              node.CaseClauses_a.push(this.finishNode(inner, 'CaseClause'));
+              CaseClauses_a.push(this.finishNode(inner, 'CaseClause'));
             }
           }
           break;

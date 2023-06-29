@@ -23,8 +23,8 @@ export interface DeclarationInfo {
   node: ParseNode;
 }
 
-export function getDeclarations(node: ParseNode | ParseNode[]): DeclarationInfo[] {
-  if (Array.isArray(node)) {
+export function getDeclarations(node: ParseNode | readonly ParseNode[]): DeclarationInfo[] {
+  if ((Array.isArray as (ar: unknown) => ar is readonly unknown[])(node)) {
     return node.flatMap((n) => getDeclarations(n));
   }
   switch (node.type) {
@@ -388,9 +388,9 @@ export class Scope {
     throw new RangeError();
   }
 
-  declare(node: ParseNode | ParseNode[], type: 'private', extraType?: 'field' | 'method' | 'get' | 'set'): void;
-  declare(node: ParseNode | ParseNode[], type: 'lexical' | 'import' | 'function' | 'parameter' | 'variable' | 'export'): void;
-  declare(node: ParseNode | ParseNode[], type: 'lexical' | 'import' | 'function' | 'parameter' | 'variable' | 'export' | 'private', extraType?: 'field' | 'method' | 'get' | 'set') {
+  declare(node: ParseNode | readonly ParseNode[], type: 'private', extraType?: 'field' | 'method' | 'get' | 'set'): void;
+  declare(node: ParseNode | readonly ParseNode[], type: 'lexical' | 'import' | 'function' | 'parameter' | 'variable' | 'export'): void;
+  declare(node: ParseNode | readonly ParseNode[], type: 'lexical' | 'import' | 'function' | 'parameter' | 'variable' | 'export' | 'private', extraType?: 'field' | 'method' | 'get' | 'set') {
     const declarations = getDeclarations(node);
     declarations.forEach((d) => {
       switch (type) {

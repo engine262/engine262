@@ -1,3 +1,4 @@
+import type { Mutable } from '../helpers.mjs';
 import { ModuleParser } from './ModuleParser.mjs';
 import type { ParseNode } from './ParseNode.mjs';
 import { Token } from './tokens.mjs';
@@ -74,7 +75,7 @@ export abstract class LanguageParser extends ModuleParser {
   //   ExportDeclaration
   //   StatementListItem
   parseModuleItemList(): ParseNode.ModuleItemList {
-    const moduleItemList: ParseNode.ModuleItemList = [];
+    const moduleItemList: Mutable<ParseNode.ModuleItemList> = [];
     while (!this.eat(Token.EOS)) {
       switch (this.peek().type) {
         case Token.IMPORT:

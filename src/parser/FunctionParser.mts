@@ -1,4 +1,5 @@
 import { IsSimpleParameterList } from '../static-semantics/all.mjs';
+import type { Mutable } from '../helpers.mjs';
 import { getDeclarations, type ArrowInfo } from './Scope.mjs';
 import { Token } from './tokens.mjs';
 import { IdentifierParser } from './IdentifierParser.mjs';
@@ -166,7 +167,8 @@ export abstract class FunctionParser extends IdentifierParser {
         return node;
       case 'ArrayLiteral': {
         const BindingPattern = this.repurpose(node, 'ArrayBindingPattern', (asNew, asOld, asPartial) => {
-          asNew.BindingElementList = [];
+          const BindingElementList: Mutable<ParseNode.BindingElementList> = [];
+          asNew.BindingElementList = BindingElementList;
           for (const [i, p] of asOld.ElementList.entries()) {
             const c = this.convertArrowParameter(p);
             if (c.type === 'BindingRestElement') {
@@ -175,7 +177,7 @@ export abstract class FunctionParser extends IdentifierParser {
               }
               asNew.BindingRestElement = c;
             } else {
-              asNew.BindingElementList.push(c);
+              BindingElementList.push(c);
             }
           }
           delete asPartial.ElementList;
@@ -187,13 +189,14 @@ export abstract class FunctionParser extends IdentifierParser {
       }
       case 'ObjectLiteral': {
         const BindingPattern = this.repurpose(node, 'ObjectBindingPattern', (asNew, asOld, asPartial) => {
-          asNew.BindingPropertyList = [];
+          const BindingPropertyList: Mutable<ParseNode.BindingPropertyList> = [];
+          asNew.BindingPropertyList = BindingPropertyList;
           for (const p of asOld.PropertyDefinitionList) {
             const c = this.convertArrowParameter(p);
             if (c.type === 'BindingRestProperty') {
               asNew.BindingRestProperty = c;
             } else {
-              asNew.BindingPropertyList.push(c);
+              BindingPropertyList.push(c);
             }
           }
           delete asPartial.PropertyDefinitionList;
@@ -301,16 +304,16 @@ export abstract class FunctionParser extends IdentifierParser {
   }
 
   // FormalParameter : BindingElement
-  parseFormalParameter() {
+  parseFormalParameter(): ParseNode.FormalParameter {
     return this.parseBindingElement() as ParseNode.FormalParameter;
   }
 
-  parseFormalParameters() {
+  parseFormalParameters(): ParseNode.FormalParameters {
     this.expect(Token.LPAREN);
     if (this.eat(Token.RPAREN)) {
       return [];
     }
-    const params: ParseNode.FormalParameters = [];
+    const params: Mutable<ParseNode.FormalParameters> = [];
     this.scope.with({ parameters: true }, () => {
       while (true) {
         if (this.test(Token.ELLIPSIS)) {
@@ -336,7 +339,7 @@ export abstract class FunctionParser extends IdentifierParser {
     return params;
   }
 
-  parseUniqueFormalParameters() {
+  parseUniqueFormalParameters(): ParseNode.UniqueFormalParameters {
     return this.parseFormalParameters() as ParseNode.UniqueFormalParameters;
   }
 

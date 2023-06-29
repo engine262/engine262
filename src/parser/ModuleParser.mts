@@ -1,4 +1,5 @@
 import { IsStringWellFormedUnicode, StringValue } from '../static-semantics/all.mjs';
+import type { Mutable } from '../helpers.mjs';
 import { Token, isKeywordRaw } from './tokens.mjs';
 import { StatementParser } from './StatementParser.mjs';
 import { FunctionKind } from './FunctionParser.mjs';
@@ -78,9 +79,10 @@ export abstract class ModuleParser extends StatementParser {
   //   `{` ImportsList `,` `}`
   parseNamedImports(): ParseNode.NamedImports {
     const node = this.startNode<ParseNode.NamedImports>();
-    node.ImportsList = [];
+    const ImportsList: Mutable<ParseNode.ImportsList> = [];
+    node.ImportsList = ImportsList;
     while (!this.eat(Token.RBRACE)) {
-      node.ImportsList.push(this.parseImportSpecifier());
+      ImportsList.push(this.parseImportSpecifier());
       if (this.eat(Token.RBRACE)) {
         break;
       }
@@ -219,9 +221,10 @@ export abstract class ModuleParser extends StatementParser {
   parseNamedExports(): ParseNode.NamedExports {
     const node = this.startNode<ParseNode.NamedExports>();
     this.expect(Token.LBRACE);
-    node.ExportsList = [];
+    const ExportsList: Mutable<ParseNode.ExportsList> = [];
+    node.ExportsList = ExportsList;
     while (!this.eat(Token.RBRACE)) {
-      node.ExportsList.push(this.parseExportSpecifier());
+      ExportsList.push(this.parseExportSpecifier());
       if (this.eat(Token.RBRACE)) {
         break;
       }

@@ -168,7 +168,7 @@ export namespace ParseNode {
   //   `(` Expression `.` `...` BindingPattern `)`
   export interface CoverParenthesizedExpressionAndArrowParameterList extends BaseParseNode {
     readonly type: 'CoverParenthesizedExpressionAndArrowParameterList';
-    readonly Arguments: (ArgumentListElement | BindingRestElement)[];
+    readonly Arguments: readonly (ArgumentListElement | BindingRestElement)[];
     readonly arrowInfo?: ArrowInfo;
   }
 
@@ -210,7 +210,7 @@ export namespace ParseNode {
   //   Elision? SpreadElement
   //   ElementList `,` Elision? AssignmentExpression
   //   ElementList `,` Elision? SpreadElement
-  export type ElementList = ElementListElement[];
+  export type ElementList = readonly ElementListElement[];
 
   // NON-SPEC
   export type ElementListElement =
@@ -244,7 +244,7 @@ export namespace ParseNode {
   // PropertyDefinitionList :
   //   PropertyDefinition
   //   PropertyDefinitionList `,` PropertyDefinition
-  export type PropertyDefinitionList = PropertyDefinitionLike[];
+  export type PropertyDefinitionList = readonly PropertyDefinitionLike[];
 
   // PropertyDefinition :
   //   IdentifierReference
@@ -322,8 +322,8 @@ export namespace ParseNode {
   //   TemplateMiddleList TemplateMiddle Expression
   export interface TemplateLiteral extends BaseParseNode {
     readonly type: 'TemplateLiteral';
-    readonly TemplateSpanList: string[];
-    readonly ExpressionList: Expression[];
+    readonly TemplateSpanList: readonly string[];
+    readonly ExpressionList: readonly Expression[];
   }
 
   // MemberExpression :
@@ -487,7 +487,7 @@ export namespace ParseNode {
   //   `...` AssignmentExpression
   //   ArgumentList `,` AssignmentExpression
   //   ArgumentList `,` `...` AssignmentExpression
-  export type Arguments = ArgumentListElement[];
+  export type Arguments = readonly ArgumentListElement[];
 
   // NON-SPEC
   export type ArgumentListElement =
@@ -937,7 +937,7 @@ export namespace ParseNode {
   //   Expression `,` AssignmentExpression
   export interface CommaOperator extends BaseParseNode {
     readonly type: 'CommaOperator';
-    readonly ExpressionList: AssignmentExpressionOrHigher[];
+    readonly ExpressionList: readonly AssignmentExpressionOrHigher[];
   }
 
   // A.3 Statements
@@ -1016,7 +1016,7 @@ export namespace ParseNode {
   // StatementList :
   //   StatementListItem
   //   StatementList StatementListItem
-  export type StatementList = StatementListItem[];
+  export type StatementList = readonly StatementListItem[];
 
   // StatementListItem :
   //   Statement
@@ -1048,7 +1048,7 @@ export namespace ParseNode {
   // BindingList :
   //   LexicalBinding
   //   BindingList `,` LexicalBinding
-  export type BindingList = LexicalBinding[];
+  export type BindingList = readonly LexicalBinding[];
 
   // LexicalBinding :
   //   BindingIdentifier Initializer?
@@ -1075,7 +1075,7 @@ export namespace ParseNode {
   // VariableDeclarationList :
   //   VariableDeclaration
   //   VariableDeclarationList `,` VariableDeclaration
-  export type VariableDeclarationList = VariableDeclaration[];
+  export type VariableDeclarationList = readonly VariableDeclaration[];
 
   // VariableDeclaration :
   //   BindingIdentifier Initializer?
@@ -1125,12 +1125,12 @@ export namespace ParseNode {
   // BindingPropertyList :
   //   BindingProperty
   //   BindingPropertyList BindingProperty
-  export type BindingPropertyList = BindingPropertyLike[];
+  export type BindingPropertyList = readonly BindingPropertyLike[];
 
   // BindingElementList :
   //   BindingElisionElement
   //   BindingElementList `,` BindingElisionElement
-  export type BindingElementList = BindingElisionElement[];
+  export type BindingElementList = readonly BindingElisionElement[];
 
   // BindingElisionElement :
   //   Elision? BindingElement
@@ -1445,7 +1445,7 @@ export namespace ParseNode {
   // CaseClauses :
   //   CaseClause
   //   CaseClauses CauseClause
-  export type CaseClauses = CaseClause[];
+  export type CaseClauses = readonly CaseClause[];
 
   // CaseClause :
   //   `case` Expression `:` StatementList?
@@ -1540,7 +1540,7 @@ export namespace ParseNode {
   //   FormalParameterList
   //   FormalParameterList `,`
   //   FormalParameterList `,` FunctionRestParameter
-  export type FormalParameters = FormalParametersElement[];
+  export type FormalParameters = readonly FormalParametersElement[];
 
   // NON-SPEC
   export type FormalParametersElement = FormalParameterList[number] | FunctionRestParameter;
@@ -1548,7 +1548,7 @@ export namespace ParseNode {
   // FormalParameterList :
   //   FormalParameter
   //   FormalParameterList `,` FormalParameterList
-  export type FormalParameterList = FormalParameter[];
+  export type FormalParameterList = readonly FormalParameter[];
 
   // FunctionRestParameter :
   //   BindingRestElement
@@ -1901,7 +1901,7 @@ export namespace ParseNode {
   // ClassElementList :
   //   ClassElement
   //   ClassElementList ClassElement
-  export type ClassElementList = ClassElement[];
+  export type ClassElementList = readonly ClassElement[];
 
   // ClassElement :
   //   MethodDefinition
@@ -1987,7 +1987,7 @@ export namespace ParseNode {
   // ModuleItemList :
   //   ModuleItem
   //   ModuleItemList ModuleItem
-  export type ModuleItemList = ModuleItem[];
+  export type ModuleItemList = readonly ModuleItem[];
 
   // ModuleItem :
   //   ImportDeclaration
@@ -2059,7 +2059,7 @@ export namespace ParseNode {
   // ImportsList :
   //   ImportSpecifier
   //   ImportsList `,` ImportSpecifier
-  export type ImportsList = ImportSpecifier[];
+  export type ImportsList = readonly ImportSpecifier[];
 
   // ImportSpecifier :
   //   ImportedBinding
@@ -2129,7 +2129,7 @@ export namespace ParseNode {
   // ExportsList :
   //   ExportSpecifier
   //   ExportsList `,` ExportSpecifier
-  export type ExportsList = ExportSpecifier[];
+  export type ExportsList = readonly ExportSpecifier[];
 
   // ExportSpecifier :
   //   ModuleExportName
@@ -2171,7 +2171,9 @@ export namespace ParseNode {
     }
 
     // ...includes all properties of all potential types, with each property marked as optional
-    & { -readonly [K in Exclude<AllKeysOf<T>, 'location' | 'strict' | 'sourceText'>]?: AllValuesOf<T, K>; }
+    & {
+      -readonly [K in Exclude<AllKeysOf<T>, 'location' | 'strict' | 'sourceText'>]?: AllValuesOf<T, K>;
+    }
   );
 
   // NON-SPEC
