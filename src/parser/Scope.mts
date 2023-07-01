@@ -147,11 +147,11 @@ export interface UndefinedPrivateAccessInfo {
 }
 
 export interface ArrowInfo {
-  isAsync: boolean;
+  readonly isAsync: boolean;
   hasTrailingComma: boolean;
-  yieldExpressions: ParseNode[];
-  awaitExpressions: ParseNode[];
-  awaitIdentifiers: ParseNode[];
+  readonly yieldExpressions: ParseNode[];
+  readonly awaitExpressions: ParseNode[];
+  readonly awaitIdentifiers: ParseNode[];
   merge(other: ArrowInfo): void;
 }
 

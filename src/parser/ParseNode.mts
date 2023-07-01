@@ -448,6 +448,7 @@ export namespace ParseNode {
     readonly type: 'CallExpression';
     readonly CallExpression: CallExpressionOrHigher | MemberExpressionOrHigher;
     readonly Arguments: Arguments;
+    // NON-SPEC
     readonly arrowInfo?: ArrowInfo;
   }
 
@@ -460,6 +461,7 @@ export namespace ParseNode {
     readonly type: 'TaggedTemplateExpression';
     readonly MemberExpression: CallExpressionOrHigher | MemberExpressionOrHigher;
     readonly TemplateLiteral: TemplateLiteral;
+    // NON-SPEC
     readonly arrowInfo?: ArrowInfo;
   }
 
