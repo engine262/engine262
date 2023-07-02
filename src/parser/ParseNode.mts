@@ -719,6 +719,7 @@ export namespace ParseNode {
   //   RelationalExpression `>=` ShiftExpression
   //   RelationalExpression `instanceof` ShiftExpression
   //   RelationalExpression `in` ShiftExpression
+  //   PrivateIdentifier `in` ShiftExpression
   export interface RelationalExpression extends BaseParseNode {
     readonly type: 'RelationalExpression';
     readonly operator: '<' | '>' | '<=' | '>=' | 'instanceof' | 'in';

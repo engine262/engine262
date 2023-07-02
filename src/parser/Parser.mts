@@ -15,13 +15,13 @@ export class Parser extends LanguageParser {
   source: string;
   specifier: string;
   earlyErrors: Set<SyntaxError>;
-  state: {
+  readonly state: {
     hasTopLevelAwait: boolean;
     strict: boolean;
     json: boolean;
   };
 
-  scope = new Scope(this);
+  readonly scope = new Scope(this);
   constructor({ source, specifier, json = false }: { source: string, specifier: string, json?: boolean }) {
     super();
     this.source = source;
@@ -32,7 +32,6 @@ export class Parser extends LanguageParser {
       strict: false,
       json,
     };
-    this.scope = new Scope(this);
   }
 
   isStrictMode() {
