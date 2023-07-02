@@ -25,6 +25,10 @@ export abstract class StatementParser extends ExpressionParser {
   // StatementList :
   //   StatementListItem
   //   StatementList StatementListItem
+  /**
+   * @param endToken endToken
+   * @param directives directives, this array will be mutated.
+   */
   parseStatementList(endToken: string | Token, directives?: string[]): ParseNode.StatementList {
     const statementList: Mutable<ParseNode.StatementList> = [];
     const oldStrict = this.state.strict;

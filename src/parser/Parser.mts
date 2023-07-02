@@ -12,9 +12,9 @@ import { Scope } from './Scope.mjs';
 import { Token } from './tokens.mjs';
 
 export class Parser extends LanguageParser {
-  source: string;
-  specifier: string;
-  earlyErrors: Set<SyntaxError>;
+  protected readonly source: string;
+  protected readonly specifier: string;
+  readonly earlyErrors: Set<SyntaxError>;
   readonly state: {
     hasTopLevelAwait: boolean;
     strict: boolean;

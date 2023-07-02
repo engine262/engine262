@@ -130,15 +130,15 @@ const SingleCharTokens: { [key: string]: number } = {
 };
 
 export class TokenData {
-  type: Token;
-  startIndex: number;
-  endIndex: number;
-  line: number;
-  column: number;
-  hadLineTerminatorBefore: boolean;
-  name: string;
-  value: string | number | bigint | boolean | null;
-  escaped: boolean;
+  readonly type: Token;
+  readonly startIndex: number;
+  readonly endIndex: number;
+  readonly line: number;
+  readonly column: number;
+  readonly hadLineTerminatorBefore: boolean;
+  readonly name: string;
+  readonly value: string | number | bigint | boolean | null;
+  readonly escaped: boolean;
 
   constructor({
     type,
@@ -179,21 +179,21 @@ export class TokenData {
 }
 
 export abstract class Lexer {
-  abstract source: string;
+  protected abstract readonly source: string;
 
-  currentToken!: TokenData; // NOTE: unsound definite assignment operator (`!`)
-  peekToken!: TokenData; // NOTE: unsound definite assignment operator (`!`)
-  peekAheadToken: TokenData | undefined;
+  protected currentToken!: TokenData; // NOTE: unsound definite assignment operator (`!`)
+  protected peekToken!: TokenData; // NOTE: unsound definite assignment operator (`!`)
+  protected peekAheadToken: TokenData | undefined;
 
-  position = 0;
-  line = 1;
-  columnOffset = 0;
-  scannedValue!: string | number | Token | bigint | boolean; // NOTE: unsound definite assignment operator (`!`)
-  lineTerminatorBeforeNextToken = false;
-  positionForNextToken = 0;
-  lineForNextToken = 0;
-  columnForNextToken = 0;
-  escapeIndex = -1;
+  protected position = 0;
+  protected line = 1;
+  protected columnOffset = 0;
+  protected scannedValue!: string | number | Token | bigint | boolean; // NOTE: unsound definite assignment operator (`!`)
+  protected lineTerminatorBeforeNextToken = false;
+  protected positionForNextToken = 0;
+  protected lineForNextToken = 0;
+  protected columnForNextToken = 0;
+  protected escapeIndex = -1;
 
   abstract isStrictMode(): boolean;
   abstract createSyntaxError<K extends keyof typeof import('../messages.mjs')>(context: number | Locatable | undefined, template: K, templateArgs: Parameters<typeof import('../messages.mjs')[K]>): SyntaxError;

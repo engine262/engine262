@@ -19,7 +19,7 @@ import { RegExpParser } from './RegExpParser.mjs';
 import type { ParseNode } from './ParseNode.mjs';
 
 export abstract class ExpressionParser extends FunctionParser {
-  abstract readonly state: {
+  protected abstract readonly state: {
     hasTopLevelAwait: boolean;
     strict: boolean;
     json: boolean;
