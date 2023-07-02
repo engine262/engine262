@@ -1,9 +1,9 @@
 import { IsSimpleParameterList } from '../static-semantics/all.mjs';
-import { unreachable, type Mutable } from '../helpers.mjs';
+import { type Mutable } from '../helpers.mjs';
 import { getDeclarations, type ArrowInfo } from './Scope.mjs';
 import { Token } from './tokens.mjs';
 import { IdentifierParser } from './IdentifierParser.mjs';
-import type { ParseNode } from './ParseNode.mjs';
+import type { ParseNode, ParseNodesByType } from './ParseNode.mjs';
 
 export enum FunctionKind {
   NORMAL = 0,
@@ -25,6 +25,11 @@ interface ArrowParameterConversions {
 
 type ConvertArrowParameterResult<T> =
   T extends keyof ArrowParameterConversions ? ArrowParameterConversions[T] : never;
+
+interface ConciseBodyInfo {
+  'ConciseBody': ParseNode.ConciseBodyLike;
+  'AsyncConciseBody': ParseNode.AsyncConciseBodyLike;
+}
 
 export abstract class FunctionParser extends IdentifierParser {
   abstract parseStatementList(token: string | Token, directives?: readonly string[]): ParseNode.StatementList;
@@ -49,9 +54,9 @@ export abstract class FunctionParser extends IdentifierParser {
   //   `async` `function` BindingIdentifier? `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
   // AsyncFunctionDeclaration :
   //   `async` `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
-  //   [+Default] `async` `function` `(` FormalParameters `)` `{` AsyncFunctionBody `}`
+  //   [+Default] `async` `function` `(` FormalParameters `)` `{` AsyncBody `}`
   // Async`FunctionExpression :
-  //   `async` `function` BindingIdentifier? `(` FormalParameters `)` `{` AsyncFunctionBody `}`
+  //   `async` `function` BindingIdentifier? `(` FormalParameters `)` `{` AsyncBody `}`
   parseFunction(isExpression: boolean, kind: FunctionKind) {
     const isAsync = kind === FunctionKind.ASYNC;
     const node = this.startNode<ParseNode.FunctionLike>();
@@ -89,17 +94,7 @@ export abstract class FunctionParser extends IdentifierParser {
       node.FormalParameters = this.parseFormalParameters();
 
       const body = this.parseFunctionBody(isAsync, isGenerator, false);
-      if (body.type === 'AsyncFunctionBody') {
-        node.AsyncBody = body;
-      } else if (body.type === 'AsyncGeneratorBody') {
-        node.AsyncGeneratorBody = body;
-      } else if (body.type === 'FunctionBody') {
-        node.FunctionBody = body;
-      } else if (body.type === 'GeneratorBody') {
-        node.GeneratorBody = body;
-      } else {
-        unreachable(body);
-      }
+      this.setFunctionBodyGeneric(node, body.type, body);
 
       if (node.BindingIdentifier) {
         if (body.strict && (node.BindingIdentifier.name === 'eval' || node.BindingIdentifier.name === 'arguments')) {
@@ -122,6 +117,10 @@ export abstract class FunctionParser extends IdentifierParser {
 
     const name = `${isAsync ? 'Async' : ''}${isGenerator ? 'Generator' : 'Function'}${isExpression ? 'Expression' : 'Declaration'}` as const;
     return this.finishNode(node, name);
+  }
+
+  private setFunctionBodyGeneric<T extends ParseNode.FunctionBodyLike['type']>(node: { [P in T]?: ParseNodesByType[T] }, type: T, body: ParseNodesByType[T]) {
+    node[type] = body;
   }
 
   validateFormalParameters(parameters: ParseNode.FormalParameters, body: ParseNode.FunctionBodyLike | ParseNode.ConciseBody | ParseNode.AsyncConciseBody, wantsUnique = false) {
@@ -291,19 +290,19 @@ export abstract class FunctionParser extends IdentifierParser {
       }, () => Arguments.map((p) => this.convertArrowParameter(p)));
       const body = this.parseConciseBody(isAsync);
       this.validateFormalParameters(node.ArrowParameters, body, true);
-      // Unsafe cast
-      if (isAsync) {
-        node.AsyncConciseBody = body as ParseNode.AsyncConciseBody;
-      } else {
-        node.ConciseBody = body as ParseNode.ConciseBody;
-      }
+      const bodyType = body.type === 'FunctionBody' ? 'ConciseBody' : body.type === 'AsyncBody' ? 'AsyncConciseBody' : body.type;
+      this.setConciseBodyGeneric(node, bodyType, body);
     });
     return this.finishNode(node, `${isAsync ? 'Async' : ''}ArrowFunction`);
   }
 
-  parseConciseBody(isAsync: boolean): ParseNode.ConciseBody | ParseNode.FunctionBody | ParseNode.AsyncConciseBody | ParseNode.AsyncFunctionBody {
+  private setConciseBodyGeneric<T extends 'ConciseBody' | 'AsyncConciseBody'>(node: { [P in T]?: ConciseBodyInfo[T] }, type: T, body: ConciseBodyInfo[T]) {
+    node[type] = body;
+  }
+
+  parseConciseBody(isAsync: boolean): ParseNode.ConciseBody | ParseNode.FunctionBody | ParseNode.AsyncConciseBody | ParseNode.AsyncBody {
     if (this.test(Token.LBRACE)) {
-      return this.parseFunctionBody(isAsync, false, true) as ParseNode.FunctionBody | ParseNode.AsyncFunctionBody;
+      return this.parseFunctionBody(isAsync, false, true) as ParseNode.FunctionBody | ParseNode.AsyncBody;
     }
     const asyncBody = this.startNode<ParseNode.ConciseBody | ParseNode.AsyncConciseBody>();
     const exprBody = this.startNode<ParseNode.ExpressionBody>();
@@ -368,7 +367,11 @@ export abstract class FunctionParser extends IdentifierParser {
       node.FunctionStatementList = this.parseStatementList(Token.RBRACE, node.directives);
       node.strict = node.strict || node.directives.includes('use strict');
     });
-    const name = `${isAsync ? 'Async' : ''}${isGenerator ? 'Generator' : 'Function'}Body` as const;
+    const name =
+      isAsync && isGenerator ? 'AsyncGeneratorBody' :
+      isAsync ? 'AsyncBody' :
+      isGenerator ? 'GeneratorBody' :
+      'FunctionBody';
     return this.finishNode(node, name);
   }
 }

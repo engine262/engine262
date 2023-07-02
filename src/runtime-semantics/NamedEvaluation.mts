@@ -30,7 +30,7 @@ function NamedEvaluation_GeneratorExpression(GeneratorExpression, name) {
 
 /** https://tc39.es/ecma262/#sec-async-function-definitions-runtime-semantics-namedevaluation */
 //   AsyncFunctionExpression :
-//     `async` `function` `(` FormalParameters `)` `{` AsyncFunctionBody `}`
+//     `async` `function` `(` FormalParameters `)` `{` AsyncBody `}`
 function NamedEvaluation_AsyncFunctionExpression(AsyncFunctionExpression, name) {
   return InstantiateAsyncFunctionExpression(AsyncFunctionExpression, name);
 }

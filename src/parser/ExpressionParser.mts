@@ -1321,7 +1321,7 @@ export abstract class ExpressionParser extends FunctionParser {
   // GeneratorMethod :
   //   `*` ClassElementName `(` UniqueFormalParameters `)` `{` GeneratorBody `}`
   // AsyncMethod :
-  //   `async` [no LineTerminator here] ClassElementName `(` UniqueFormalParameters `)` `{` AsyncFunctionBody `}`
+  //   `async` [no LineTerminator here] ClassElementName `(` UniqueFormalParameters `)` `{` AsyncBody `}`
   // AsyncGeneratorMethod :
   //   `async` [no LineTerminator here] `*` ClassElementName `(` UniqueFormalParameters `)` `{` AsyncGeneratorBody `}`
   parseBracketedDefinition(type: 'class element'): ParseNode.ClassElement;
@@ -1468,7 +1468,7 @@ export abstract class ExpressionParser extends FunctionParser {
         if (!isAsync && !isGenerator) {
           (node as ParseNode.Unfinished<ParseNode.MethodDefinition>).FunctionBody = body as ParseNode.FunctionBody;
         } else if (isAsync && !isGenerator) {
-          (node as ParseNode.Unfinished<ParseNode.AsyncMethod>).AsyncBody = body as ParseNode.AsyncFunctionBody;
+          (node as ParseNode.Unfinished<ParseNode.AsyncMethod>).AsyncBody = body as ParseNode.AsyncBody;
         } else if (!isAsync && isGenerator) {
           (node as ParseNode.Unfinished<ParseNode.GeneratorMethod>).GeneratorBody = body as ParseNode.GeneratorBody;
         } else if (isAsync && isGenerator) {

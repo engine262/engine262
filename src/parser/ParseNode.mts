@@ -1586,7 +1586,7 @@ export namespace ParseNode {
   export type FunctionBodyLike =
     | FunctionBody
     | GeneratorBody
-    | AsyncFunctionBody
+    | AsyncBody
     | AsyncGeneratorBody;
 
   // FunctionDeclaration :
@@ -1626,7 +1626,7 @@ export namespace ParseNode {
   export interface ArrowFunction extends BaseParseNode {
     readonly type: 'ArrowFunction';
     readonly ArrowParameters: ArrowParameters;
-    readonly ConciseBody: ConciseBodyOrHigher;
+    readonly ConciseBody: ConciseBodyLike;
   }
 
   // ArrowParameters :
@@ -1641,7 +1641,7 @@ export namespace ParseNode {
   // ConciseBody :
   //   ExpressionBody
   //   `{` FunctionBody `}`
-  export type ConciseBodyOrHigher =
+  export type ConciseBodyLike =
     | FunctionBody
     | ConciseBody;
 
@@ -1683,10 +1683,10 @@ export namespace ParseNode {
 
   // AsyncConciseBody :
   //   ExpressionBody
-  //   `{` AsyncFunctionBody `}`
+  //   `{` AsyncBody `}`
   export type AsyncConciseBodyLike =
     | AsyncConciseBody
-    | AsyncFunctionBody;
+    | AsyncBody;
 
   // AsyncConciseBody (partial) :
   //   ExpressionBody
@@ -1821,7 +1821,7 @@ export namespace ParseNode {
     readonly type: 'AsyncFunctionDeclaration';
     readonly BindingIdentifier: BindingIdentifier | null;
     readonly FormalParameters: FormalParameters;
-    readonly AsyncBody: AsyncFunctionBody;
+    readonly AsyncBody: AsyncBody;
   }
 
   // AsyncFunctionExpression :
@@ -1830,7 +1830,7 @@ export namespace ParseNode {
     readonly type: 'AsyncFunctionExpression';
     readonly BindingIdentifier: BindingIdentifier | null;
     readonly FormalParameters: FormalParameters;
-    readonly AsyncBody: AsyncFunctionBody;
+    readonly AsyncBody: AsyncBody;
   }
 
   // AsyncMethod :
@@ -1841,13 +1841,13 @@ export namespace ParseNode {
     readonly ClassElementName: ClassElementName;
     readonly PropertySetParameterList: null;
     readonly UniqueFormalParameters: UniqueFormalParameters;
-    readonly AsyncBody: AsyncFunctionBody;
+    readonly AsyncBody: AsyncBody;
   }
 
   // AsyncBody :
   //   FunctionBody
-  export interface AsyncFunctionBody extends BaseParseNode {
-    readonly type: 'AsyncFunctionBody';
+  export interface AsyncBody extends BaseParseNode {
+    readonly type: 'AsyncBody';
     readonly directives: string[];
     readonly strict: boolean;
     readonly FunctionStatementList: FunctionStatementList;
@@ -2231,7 +2231,7 @@ export type ParseNode =
   | ParseNode.AsyncFunctionDeclaration
   | ParseNode.AsyncFunctionExpression
   | ParseNode.AsyncMethod
-  | ParseNode.AsyncFunctionBody
+  | ParseNode.AsyncBody
   | ParseNode.AsyncArrowFunction
   | ParseNode.AsyncConciseBody
   | ParseNode.RegularExpressionLiteral

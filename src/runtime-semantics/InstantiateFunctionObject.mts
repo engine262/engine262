@@ -62,16 +62,16 @@ export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclarat
 
 /** https://tc39.es/ecma262/#sec-async-function-definitions-InstantiateFunctionObject */
 //  AsyncFunctionDeclaration :
-//    `async` `function` BindingIdentifier `(` FormalParameters `)` `{` AsyncFunctionBody `}`
-//    `async` `function` `(` FormalParameters `)` `{` AsyncFunctionBody `}`
+//    `async` `function` BindingIdentifier `(` FormalParameters `)` `{` AsyncBody `}`
+//    `async` `function` `(` FormalParameters `)` `{` AsyncBody `}`
 export function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunctionDeclaration, scope, privateScope) {
-  const { BindingIdentifier, FormalParameters, AsyncFunctionBody } = AsyncFunctionDeclaration;
+  const { BindingIdentifier, FormalParameters, AsyncBody } = AsyncFunctionDeclaration;
   // 1. Let name be StringValue of BindingIdentifier.
   const name = BindingIdentifier ? StringValue(BindingIdentifier) : Value('default');
   // 2. Let sourceText be the source text matched by AsyncFunctionDeclaration.
   const sourceText = sourceTextMatchedBy(AsyncFunctionDeclaration);
-  // 3. Let F be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, FormalParameters, AsyncFunctionBody, non-lexical-this, scope, privateScope).
-  const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, FormalParameters, AsyncFunctionBody, 'non-lexical-this', scope, privateScope));
+  // 3. Let F be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, FormalParameters, AsyncBody, non-lexical-this, scope, privateScope).
+  const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, FormalParameters, AsyncBody, 'non-lexical-this', scope, privateScope));
   // 4. Perform ! SetFunctionName(F, name).
   SetFunctionName(F, name);
   // 5. Return F.

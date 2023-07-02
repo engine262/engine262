@@ -28,7 +28,7 @@ export function LexicallyScopedDeclarations(node) {
       return LexicallyScopedDeclarations(node.ModuleItemList);
     case 'FunctionBody':
     case 'GeneratorBody':
-    case 'AsyncFunctionBody':
+    case 'AsyncBody':
     case 'AsyncGeneratorBody':
       return TopLevelLexicallyScopedDeclarations(node.FunctionStatementList);
     case 'ClassStaticBlockBody':
