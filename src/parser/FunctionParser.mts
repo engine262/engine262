@@ -1,5 +1,5 @@
 import { IsSimpleParameterList } from '../static-semantics/all.mjs';
-import type { Mutable } from '../helpers.mjs';
+import { unreachable, type Mutable } from '../helpers.mjs';
 import { getDeclarations, type ArrowInfo } from './Scope.mjs';
 import { Token } from './tokens.mjs';
 import { IdentifierParser } from './IdentifierParser.mjs';
@@ -27,7 +27,7 @@ type ConvertArrowParameterResult<T> =
   T extends keyof ArrowParameterConversions ? ArrowParameterConversions[T] : never;
 
 export abstract class FunctionParser extends IdentifierParser {
-  abstract parseStatementList(token: string | Token, directives?: string[]): ParseNode.StatementList;
+  abstract parseStatementList(token: string | Token, directives?: readonly string[]): ParseNode.StatementList;
   abstract parseAssignmentExpression(): ParseNode.AssignmentExpressionOrHigher;
   abstract parseBindingElement(): ParseNode.BindingElementLike;
   abstract parseBindingRestElement(): ParseNode.BindingRestElement;
@@ -89,9 +89,11 @@ export abstract class FunctionParser extends IdentifierParser {
       node.FormalParameters = this.parseFormalParameters();
 
       const body = this.parseFunctionBody(isAsync, isGenerator, false);
-      // NOTE: since `body` is a union, it is unsound to write to `node` in this fashion
-      // @ts-expect-error
-      node[body.type] = body;
+      if (body.type === 'AsyncFunctionBody') node.AsyncBody = body;
+      else if (body.type === 'AsyncGeneratorBody') node.AsyncGeneratorBody = body;
+      else if (body.type === 'FunctionBody') node.FunctionBody = body;
+      else if (body.type === 'GeneratorBody') node.GeneratorBody = body;
+      else unreachable(body);
 
       if (node.BindingIdentifier) {
         if (body.strict && (node.BindingIdentifier.name === 'eval' || node.BindingIdentifier.name === 'arguments')) {
@@ -283,9 +285,9 @@ export abstract class FunctionParser extends IdentifierParser {
       }, () => Arguments.map((p) => this.convertArrowParameter(p)));
       const body = this.parseConciseBody(isAsync);
       this.validateFormalParameters(node.ArrowParameters, body, true);
-      // NOTE: since `body` is a union, it is unsound to write to `node` in this fashion
-      // @ts-expect-error
-      node[`${isAsync ? 'Async' : ''}ConciseBody`] = body;
+      // Unsafe cast
+      if (isAsync) node.AsyncConciseBody = body as ParseNode.AsyncConciseBody;
+      else node.ConciseBody = body as ParseNode.ConciseBody;
     });
     return this.finishNode(node, `${isAsync ? 'Async' : ''}ArrowFunction`);
   }
