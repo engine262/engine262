@@ -290,7 +290,14 @@ export abstract class FunctionParser extends IdentifierParser {
       }, () => Arguments.map((p) => this.convertArrowParameter(p)));
       const body = this.parseConciseBody(isAsync);
       this.validateFormalParameters(node.ArrowParameters, body, true);
-      const bodyType = body.type === 'FunctionBody' ? 'ConciseBody' : body.type === 'AsyncBody' ? 'AsyncConciseBody' : body.type;
+      let bodyType: 'ConciseBody' | 'AsyncConciseBody';
+      if (body.type === 'FunctionBody') {
+        bodyType = 'ConciseBody';
+      } else if (body.type === 'AsyncBody') {
+        bodyType = 'AsyncConciseBody';
+      } else {
+        bodyType = body.type;
+      }
       this.setConciseBodyGeneric(node, bodyType, body);
     });
     return this.finishNode(node, `${isAsync ? 'Async' : ''}ArrowFunction`);
@@ -367,11 +374,12 @@ export abstract class FunctionParser extends IdentifierParser {
       node.FunctionStatementList = this.parseStatementList(Token.RBRACE, node.directives);
       node.strict = node.strict || node.directives.includes('use strict');
     });
-    const name =
-      isAsync && isGenerator ? 'AsyncGeneratorBody' :
-      isAsync ? 'AsyncBody' :
-      isGenerator ? 'GeneratorBody' :
-      'FunctionBody';
+    let name: ParseNode.FunctionBodyLike['type'];
+    if (isAsync) {
+      name = isGenerator ? 'AsyncGeneratorBody' : 'AsyncBody';
+    } else {
+      name = isGenerator ? 'GeneratorBody' : 'FunctionBody';
+    }
     return this.finishNode(node, name);
   }
 }
