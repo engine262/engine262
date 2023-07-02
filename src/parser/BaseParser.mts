@@ -3,7 +3,7 @@ import type { ParseNode, ParseNodesByType } from './ParseNode.mjs';
 import type { Scope } from './Scope.mjs';
 
 export abstract class BaseParser extends Lexer {
-  abstract scope: Scope;
+  protected abstract scope: Scope;
 
   abstract startNode<T extends ParseNode>(inheritStart?: ParseNode): ParseNode.Unfinished<T>;
   abstract finishNode<T extends ParseNode.Unfinished, K extends T['type'] & ParseNode['type']>(node: T, type: K): ParseNodesByType[K];

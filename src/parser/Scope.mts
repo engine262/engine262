@@ -1,4 +1,5 @@
 import { Assert, Parser } from '../api.mjs';
+import { isArray } from '../helpers.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import type { TokenData } from './Lexer.mjs';
 import type { ParseNode } from './ParseNode.mjs';
@@ -19,12 +20,12 @@ export enum Flag {
 }
 
 export interface DeclarationInfo {
-  name: string;
-  node: ParseNode;
+  readonly name: string;
+  readonly node: ParseNode;
 }
 
 export function getDeclarations(node: ParseNode | readonly ParseNode[]): DeclarationInfo[] {
-  if ((Array.isArray as (ar: unknown) => ar is readonly unknown[])(node)) {
+  if (isArray(node)) {
     return node.flatMap((n) => getDeclarations(n));
   }
   switch (node.type) {
@@ -117,33 +118,33 @@ export function getDeclarations(node: ParseNode | readonly ParseNode[]): Declara
 }
 
 export type ScopeFlagSetters =
-  & { [P in (keyof typeof Flag) & string]?: boolean; }
+  & { readonly [P in (keyof typeof Flag) & string]?: boolean; }
   & {
-    lexical?: boolean;
-    variable?: boolean;
-    variableFunctions?: boolean;
-    private?: boolean;
-    label?: string;
-    strict?: boolean;
+    readonly lexical?: boolean;
+    readonly variable?: boolean;
+    readonly variableFunctions?: boolean;
+    readonly private?: boolean;
+    readonly label?: string;
+    readonly strict?: boolean;
   };
 
 export interface ScopeInfo {
-  flags: ScopeFlagSetters;
-  lexicals: Set<string>;
-  variables: Set<string>;
-  functions: Set<string>;
-  parameters: Set<string>;
+  readonly flags: ScopeFlagSetters;
+  readonly lexicals: Set<string>;
+  readonly variables: Set<string>;
+  readonly functions: Set<string>;
+  readonly parameters: Set<string>;
 }
 
 export interface PrivateScopeInfo {
-  outer: PrivateScopeInfo | undefined;
-  names: Map<string, Set<'field' | 'method' | 'get' | 'set'>>;
+  readonly outer: PrivateScopeInfo | undefined;
+  readonly names: Map<string, Set<'field' | 'method' | 'get' | 'set'>>;
 }
 
 export interface UndefinedPrivateAccessInfo {
-  node: ParseNode;
-  name: string;
-  scope: PrivateScopeInfo | undefined;
+  readonly node: ParseNode;
+  readonly name: string;
+  readonly scope: PrivateScopeInfo | undefined;
 }
 
 export interface ArrowInfo {
@@ -156,28 +157,28 @@ export interface ArrowInfo {
 }
 
 export interface AssignmentInfo {
-  type: 'assign' | 'arrow' | 'for';
-  earlyErrors: SyntaxError[];
+  readonly type: 'assign' | 'arrow' | 'for';
+  readonly earlyErrors: SyntaxError[];
   clear(): void;
 }
 
 export interface Label {
   type: string | null;
-  name?: string;
-  nextToken?: TokenData | null;
+  readonly name?: string;
+  readonly nextToken?: TokenData | null;
 }
 
 export class Scope {
-  parser: Parser;
-  scopeStack: ScopeInfo[] = [];
+  private readonly parser: Parser;
+  private readonly scopeStack: ScopeInfo[] = [];
   labels: Label[] = [];
-  arrowInfoStack: (ArrowInfo | null)[] = [];
-  assignmentInfoStack: AssignmentInfo[] = [];
-  exports = new Set<string>();
-  undefinedExports = new Map<string, ParseNode.ModuleExportName>();
-  privateScope: PrivateScopeInfo | undefined;
-  undefinedPrivateAccesses: UndefinedPrivateAccessInfo[] = [];
-  flags: Flag = 0 as Flag;
+  readonly arrowInfoStack: (ArrowInfo | null)[] = [];
+  readonly assignmentInfoStack: AssignmentInfo[] = [];
+  readonly exports = new Set<string>();
+  readonly undefinedExports = new Map<string, ParseNode.ModuleExportName>();
+  private privateScope: PrivateScopeInfo | undefined;
+  private readonly undefinedPrivateAccesses: UndefinedPrivateAccessInfo[] = [];
+  private flags: Flag = 0 as Flag;
   constructor(parser: Parser) {
     this.parser = parser;
   }

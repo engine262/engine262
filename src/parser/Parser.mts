@@ -21,7 +21,7 @@ export class Parser extends LanguageParser {
     json: boolean;
   };
 
-  readonly scope = new Scope(this);
+  protected readonly scope = new Scope(this);
   constructor({ source, specifier, json = false }: { source: string, specifier: string, json?: boolean }) {
     super();
     this.source = source;
