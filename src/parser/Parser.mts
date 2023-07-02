@@ -182,5 +182,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 declare global {
   interface SyntaxError {
     decoration?: string;
+    position?: number
   }
 }

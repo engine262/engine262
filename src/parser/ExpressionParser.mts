@@ -1168,8 +1168,7 @@ export abstract class ExpressionParser extends FunctionParser {
       }
     } catch (e) {
       if (e instanceof SyntaxError) {
-        // @ts-expect-error
-        this.raise('Raw', node.location.startIndex + e.position + 1, e.message);
+        this.raise('Raw', node.location.startIndex + e.position! + 1, e.message);
       } else {
         throw e;
       }
@@ -1465,16 +1464,23 @@ export abstract class ExpressionParser extends FunctionParser {
                    && this.scope.hasSuperCall(),
       }, () => {
         const body = this.parseFunctionBody(isAsync, isGenerator, false);
-        // NOTE: since the property name below is a union, it is unsound to write to `node` in this fashion
-        // @ts-expect-error
-        node[`${isAsync ? 'Async' : ''}${isGenerator ? 'Generator' : 'Function'}Body`] = body;
+        // Unsafe cast below
+        if (!isAsync && !isGenerator) {
+          (node as ParseNode.Unfinished<ParseNode.MethodDefinition>).FunctionBody = body as ParseNode.FunctionBody;
+        } else if (isAsync && !isGenerator) {
+          (node as ParseNode.Unfinished<ParseNode.AsyncMethod>).AsyncBody = body as ParseNode.AsyncFunctionBody;
+        } else if (!isAsync && isGenerator) {
+          (node as ParseNode.Unfinished<ParseNode.GeneratorMethod>).GeneratorBody = body as ParseNode.GeneratorBody;
+        } else if (isAsync && isGenerator) {
+          (node as ParseNode.Unfinished<ParseNode.AsyncGeneratorMethod>).AsyncGeneratorBody = body as ParseNode.AsyncGeneratorBody;
+        }
         if (node.UniqueFormalParameters || node.PropertySetParameterList) {
           this.validateFormalParameters(node.UniqueFormalParameters || node.PropertySetParameterList!, body, true);
         }
       });
     });
 
-    const name = `${isAsync ? 'Async' : ''}${isGenerator ? 'Generator' : ''}Method${isAsync || isGenerator ? '' : 'Definition'}` as ParseNode.MethodDefinitionLike['type'];
+    const name: ParseNode.MethodDefinitionLike['type'] = isAsync ? isGenerator ? 'AsyncGeneratorMethod' : 'AsyncMethod' : isGenerator ? 'GeneratorMethod' : 'MethodDefinition';
     return this.finishNode(node, name);
   }
 }
