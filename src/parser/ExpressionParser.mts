@@ -1480,7 +1480,12 @@ export abstract class ExpressionParser extends FunctionParser {
       });
     });
 
-    const name: ParseNode.MethodDefinitionLike['type'] = isAsync ? isGenerator ? 'AsyncGeneratorMethod' : 'AsyncMethod' : isGenerator ? 'GeneratorMethod' : 'MethodDefinition';
+    let name: ParseNode.MethodDefinitionLike['type'];
+    if (isAsync) {
+      name = isGenerator ? 'AsyncGeneratorMethod' : 'AsyncMethod';
+    } else {
+      name = isGenerator ? 'GeneratorMethod' : 'MethodDefinition';
+    }
     return this.finishNode(node, name);
   }
 }

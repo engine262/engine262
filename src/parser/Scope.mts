@@ -1,6 +1,5 @@
 import { Assert, Parser } from '../api.mjs';
-import { isArray } from '../helpers.mjs';
-import { OutOfRange } from '../helpers.mjs';
+import { isArray, OutOfRange } from '../helpers.mjs';
 import type { TokenData } from './Lexer.mjs';
 import type { ParseNode } from './ParseNode.mjs';
 

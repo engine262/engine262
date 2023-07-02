@@ -89,11 +89,17 @@ export abstract class FunctionParser extends IdentifierParser {
       node.FormalParameters = this.parseFormalParameters();
 
       const body = this.parseFunctionBody(isAsync, isGenerator, false);
-      if (body.type === 'AsyncFunctionBody') node.AsyncBody = body;
-      else if (body.type === 'AsyncGeneratorBody') node.AsyncGeneratorBody = body;
-      else if (body.type === 'FunctionBody') node.FunctionBody = body;
-      else if (body.type === 'GeneratorBody') node.GeneratorBody = body;
-      else unreachable(body);
+      if (body.type === 'AsyncFunctionBody') {
+        node.AsyncBody = body;
+      } else if (body.type === 'AsyncGeneratorBody') {
+        node.AsyncGeneratorBody = body;
+      } else if (body.type === 'FunctionBody') {
+        node.FunctionBody = body;
+      } else if (body.type === 'GeneratorBody') {
+        node.GeneratorBody = body;
+      } else {
+        unreachable(body);
+      }
 
       if (node.BindingIdentifier) {
         if (body.strict && (node.BindingIdentifier.name === 'eval' || node.BindingIdentifier.name === 'arguments')) {
@@ -286,8 +292,11 @@ export abstract class FunctionParser extends IdentifierParser {
       const body = this.parseConciseBody(isAsync);
       this.validateFormalParameters(node.ArrowParameters, body, true);
       // Unsafe cast
-      if (isAsync) node.AsyncConciseBody = body as ParseNode.AsyncConciseBody;
-      else node.ConciseBody = body as ParseNode.ConciseBody;
+      if (isAsync) {
+        node.AsyncConciseBody = body as ParseNode.AsyncConciseBody;
+      } else {
+        node.ConciseBody = body as ParseNode.ConciseBody;
+      }
     });
     return this.finishNode(node, `${isAsync ? 'Async' : ''}ArrowFunction`);
   }
