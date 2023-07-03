@@ -112,7 +112,7 @@ export function* EvaluateBody_AsyncGeneratorBody(FunctionBody, functionObject, a
 }
 
 /** https://tc39.es/ecma262/#sec-async-function-definitions-EvaluateBody */
-// AsyncFunctionBody : FunctionBody
+// AsyncBody : FunctionBody
 export function* EvaluateBody_AsyncFunctionBody(FunctionBody, functionObject, argumentsList) {
   // 1. Let promiseCapability be ! NewPromiseCapability(%Promise%).
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
@@ -165,7 +165,7 @@ function* EvaluateClassStaticBlockBody({ ClassStaticBlockStatementList }, functi
 // ConciseBody : ExpressionBody
 // GeneratorBody : FunctionBody
 // AsyncGeneratorBody : FunctionBody
-// AsyncFunctionBody : FunctionBody
+// AsyncBody : FunctionBody
 // AsyncConciseBody : ExpressionBody
 // ClassStaticBlockBody : ClassStaticBlockStatementList
 export function EvaluateBody(Body, functionObject, argumentsList) {
@@ -178,7 +178,7 @@ export function EvaluateBody(Body, functionObject, argumentsList) {
       return EvaluateBody_GeneratorBody(Body, functionObject, argumentsList);
     case 'AsyncGeneratorBody':
       return EvaluateBody_AsyncGeneratorBody(Body, functionObject, argumentsList);
-    case 'AsyncFunctionBody':
+    case 'AsyncBody':
       return EvaluateBody_AsyncFunctionBody(Body, functionObject, argumentsList);
     case 'AsyncConciseBody':
       return EvaluateBody_AsyncConciseBody(Body, functionObject, argumentsList);

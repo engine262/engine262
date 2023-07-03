@@ -103,7 +103,7 @@ export function VarScopedDeclarations(node) {
       return VarScopedDeclarations(node.ModuleItemList);
     case 'FunctionBody':
     case 'GeneratorBody':
-    case 'AsyncFunctionBody':
+    case 'AsyncBody':
     case 'AsyncGeneratorBody':
       return TopLevelVarScopedDeclarations(node.FunctionStatementList);
     case 'ClassStaticBlockBody':

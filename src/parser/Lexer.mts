@@ -1,8 +1,8 @@
-// @ts-nocheck
 import isUnicodeIDStartRegex from '@unicode/unicode-15.0.0/Binary_Property/ID_Start/regex.js';
 import isUnicodeIDContinueRegex from '@unicode/unicode-15.0.0/Binary_Property/ID_Continue/regex.js';
 import isSpaceSeparatorRegex from '@unicode/unicode-15.0.0/General_Category/Space_Separator/regex.js';
 import { UTF16SurrogatePairToCodePoint } from '../static-semantics/all.mjs';
+import { Assert } from '../api.mjs';
 import {
   Token,
   TokenNames,
@@ -10,23 +10,30 @@ import {
   KeywordLookup,
   isKeywordRaw,
 } from './tokens.mjs';
+import type { Location, Position } from './ParseNode.mjs';
 
-const isUnicodeIDStart = (c) => c && isUnicodeIDStartRegex.test(c);
-const isUnicodeIDContinue = (c) => c && isUnicodeIDContinueRegex.test(c);
-export const isDecimalDigit = (c) => c && /\d/u.test(c);
-export const isHexDigit = (c) => c && /[\da-f]/ui.test(c);
-const isOctalDigit = (c) => c && /[0-7]/u.test(c);
-const isBinaryDigit = (c) => (c === '0' || c === '1');
-export const isWhitespace = (c) => c && (/[\u0009\u000B\u000C\u0020\u00A0\uFEFF]/u.test(c) || isSpaceSeparatorRegex.test(c)); // eslint-disable-line no-control-regex
-export const isLineTerminator = (c) => c && /[\r\n\u2028\u2029]/u.test(c);
-const isRegularExpressionFlagPart = (c) => c && (isUnicodeIDContinue(c) || c === '$');
-export const isIdentifierStart = (c) => SingleCharTokens[c] === Token.IDENTIFIER || isUnicodeIDStart(c);
-export const isIdentifierPart = (c) => SingleCharTokens[c] === Token.IDENTIFIER || c === '\u{200C}' || c === '\u{200D}' || isUnicodeIDContinue(c);
-export const isLeadingSurrogate = (cp) => cp >= 0xD800 && cp <= 0xDBFF;
-export const isTrailingSurrogate = (cp) => cp >= 0xDC00 && cp <= 0xDFFF;
+export type Locatable =
+  | TokenData
+  | Position
+  | Location
+  | { readonly location: Location };
 
-const SingleCharTokens = {
-  '__proto__': null,
+const isUnicodeIDStart = (c: string) => c && isUnicodeIDStartRegex.test(c);
+const isUnicodeIDContinue = (c: string) => c && isUnicodeIDContinueRegex.test(c);
+export const isDecimalDigit = (c: string) => c && /\d/u.test(c);
+export const isHexDigit = (c: string) => c && /[\da-f]/ui.test(c);
+const isOctalDigit = (c: string) => c && /[0-7]/u.test(c);
+const isBinaryDigit = (c: string) => (c === '0' || c === '1');
+export const isWhitespace = (c: string) => c && (/[\u0009\u000B\u000C\u0020\u00A0\uFEFF]/u.test(c) || isSpaceSeparatorRegex.test(c)); // eslint-disable-line no-control-regex
+export const isLineTerminator = (c: string) => c && /[\r\n\u2028\u2029]/u.test(c);
+const isRegularExpressionFlagPart = (c: string) => c && (isUnicodeIDContinue(c) || c === '$');
+export const isIdentifierStart = (c: string) => SingleCharTokens[c] === Token.IDENTIFIER || isUnicodeIDStart(c);
+export const isIdentifierPart = (c: string) => SingleCharTokens[c] === Token.IDENTIFIER || c === '\u{200C}' || c === '\u{200D}' || isUnicodeIDContinue(c);
+export const isLeadingSurrogate = (cp: number) => cp >= 0xD800 && cp <= 0xDBFF;
+export const isTrailingSurrogate = (cp: number) => cp >= 0xDC00 && cp <= 0xDFFF;
+
+const SingleCharTokens: { [key: string]: number } = {
+  '__proto__': null!,
   '0': Token.NUMBER,
   '1': Token.NUMBER,
   '2': Token.NUMBER,
@@ -122,26 +129,83 @@ const SingleCharTokens = {
   '#': Token.PRIVATE_IDENTIFIER,
 };
 
-export class Lexer {
-  currentToken;
-  peekToken;
-  peekAheadToken;
+export class TokenData {
+  readonly type: Token;
+  readonly startIndex: number;
+  readonly endIndex: number;
+  readonly line: number;
+  readonly column: number;
+  readonly hadLineTerminatorBefore: boolean;
+  readonly name: string;
+  readonly value: string | number | bigint | boolean | null;
+  readonly escaped: boolean;
 
-  position = 0;
-  line = 1;
-  columnOffset = 0;
-  scannedValue;
-  lineTerminatorBeforeNextToken = false;
-  positionForNextToken = 0;
-  lineForNextToken = 0;
-  columnForNextToken = 0;
-  escapeIndex = -1;
+  constructor({
+    type,
+    startIndex,
+    endIndex,
+    line,
+    column,
+    hadLineTerminatorBefore,
+    name,
+    value,
+    escaped,
+  }: Pick<TokenData, 'type' | 'startIndex' | 'endIndex' | 'line' | 'column' | 'hadLineTerminatorBefore' | 'name' | 'value' | 'escaped'>) {
+    this.type = type;
+    this.startIndex = startIndex;
+    this.endIndex = endIndex;
+    this.line = line;
+    this.column = column;
+    this.hadLineTerminatorBefore = hadLineTerminatorBefore;
+    this.name = name;
+    this.value = value;
+    this.escaped = escaped;
+  }
 
-  advance() {
+  valueAsString() {
+    Assert(typeof this.value === 'string');
+    return this.value;
+  }
+
+  valueAsNumeric() {
+    Assert(typeof this.value === 'number' || typeof this.value === 'bigint');
+    return this.value;
+  }
+
+  valueAsBoolean() {
+    Assert(typeof this.value === 'boolean');
+    return this.value;
+  }
+}
+
+export abstract class Lexer {
+  protected abstract readonly source: string;
+
+  protected currentToken!: TokenData; // NOTE: unsound definite assignment operator (`!`)
+  protected peekToken!: TokenData; // NOTE: unsound definite assignment operator (`!`)
+  protected peekAheadToken: TokenData | undefined;
+
+  protected position = 0;
+  protected line = 1;
+  protected columnOffset = 0;
+  protected scannedValue!: string | number | Token | bigint | boolean; // NOTE: unsound definite assignment operator (`!`)
+  protected lineTerminatorBeforeNextToken = false;
+  protected positionForNextToken = 0;
+  protected lineForNextToken = 0;
+  protected columnForNextToken = 0;
+  protected escapeIndex = -1;
+
+  abstract isStrictMode(): boolean;
+  abstract createSyntaxError<K extends keyof typeof import('../messages.mjs')>(context: number | Locatable | undefined, template: K, templateArgs: Parameters<typeof import('../messages.mjs')[K]>): SyntaxError;
+  abstract raiseEarly<K extends keyof typeof import('../messages.mjs')>(template: K, context?: number | Locatable, ...templateArgs: Parameters<typeof import('../messages.mjs')[K]>): SyntaxError;
+  abstract raise<K extends keyof typeof import('../messages.mjs')>(template: K, context?: number | Locatable, ...templateArgs: Parameters<typeof import('../messages.mjs')[K]>): never;
+  abstract unexpected(...args: [(number | Locatable)?, ...Parameters<typeof import('../messages.mjs')['UnexpectedToken']>]): never;
+
+  advance(): TokenData {
     this.lineTerminatorBeforeNextToken = false;
     this.escapeIndex = -1;
-    const type = this.nextToken();
-    return {
+    const type = this.nextToken()!;
+    return new TokenData({
       type,
       startIndex: this.positionForNextToken,
       endIndex: this.position,
@@ -151,7 +215,7 @@ export class Lexer {
       name: TokenNames[type],
       value: TokenValues[type] ?? this.scannedValue,
       escaped: this.escapeIndex !== -1,
-    };
+    });
   }
 
   next() {
@@ -180,7 +244,7 @@ export class Lexer {
     return this.peekAheadToken;
   }
 
-  matches(token, peek) {
+  matches(token: string | Token, peek: TokenData) {
     if (typeof token === 'string') {
       if (peek.type === Token.IDENTIFIER && peek.value === token) {
         const escapeIndex = this.source.slice(peek.startIndex, peek.endIndex).indexOf('\\');
@@ -195,15 +259,15 @@ export class Lexer {
     return peek.type === token;
   }
 
-  test(token) {
+  test(token: string | Token) {
     return this.matches(token, this.peek());
   }
 
-  testAhead(token) {
+  testAhead(token: string | Token) {
     return this.matches(token, this.peekAhead());
   }
 
-  eat(token) {
+  eat(token: string | Token) {
     if (this.test(token)) {
       this.next();
       return true;
@@ -211,7 +275,7 @@ export class Lexer {
     return false;
   }
 
-  expect(token) {
+  expect(token: string | Token) {
     if (this.test(token)) {
       return this.next();
     }
@@ -290,7 +354,7 @@ export class Lexer {
     }
     this.position += 2;
     for (const match of this.source.slice(this.position, end).matchAll(/\r\n?|[\n\u2028\u2029]/ug)) {
-      this.position = match.index;
+      this.position = match.index!;
       this.line += 1;
       this.columnOffset = this.position;
       this.lineTerminatorBeforeNextToken = true;
@@ -553,7 +617,7 @@ export class Lexer {
 
   scanNumber() {
     const start = this.position;
-    let base = 10;
+    let base: 2 | 8 | 10 | 16 = 10;
     let check = isDecimalDigit;
     if (this.source[this.position] === '0') {
       this.scannedValue = 0;
@@ -665,12 +729,12 @@ export class Lexer {
       .slice(base === 10 ? start : start + 2, this.position)
       .replace(/_/g, '');
     this.scannedValue = base === 10
-      ? Number.parseFloat(buffer, base)
+      ? Number.parseFloat(buffer)
       : Number.parseInt(buffer, base);
     return Token.NUMBER;
   }
 
-  scanString(char) {
+  scanString(char: string) {
     let buffer = '';
     while (true) {
       if (this.position >= this.source.length) {
@@ -758,7 +822,7 @@ export class Lexer {
     return this.scanHex(4);
   }
 
-  scanHex(length) {
+  scanHex(length: number) {
     if (length === 0) {
       this.raise('InvalidCodePoint', this.position);
     }

@@ -199,7 +199,7 @@ export class CallSite {
   isAsync() {
     if (!(this.context.Function instanceof NullValue) && this.context.Function.ECMAScriptCode) {
       const code = this.context.Function.ECMAScriptCode;
-      return code.type === 'AsyncFunctionBody' || code.type === 'AsyncGeneratorBody';
+      return code.type === 'AsyncBody' || code.type === 'AsyncGeneratorBody';
     }
     return false;
   }
@@ -394,3 +394,6 @@ export type Mutable<T> = {
 }
 
 export const isArray: (arg: unknown) => arg is readonly unknown[] = Array.isArray;
+export function unreachable(_: never): never {
+  throw new Error('Unreachable');
+}

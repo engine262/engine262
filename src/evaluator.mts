@@ -240,7 +240,7 @@ export function* Evaluate(node) {
       return yield* Evaluate_ConditionalExpression(node);
     case 'RegularExpressionLiteral':
       return Evaluate_RegularExpressionLiteral(node);
-    case 'AsyncFunctionBody':
+    case 'AsyncBody':
     case 'GeneratorBody':
     case 'AsyncGeneratorBody':
       return yield* Evaluate_AnyFunctionBody(node);

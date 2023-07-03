@@ -57,7 +57,7 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
     // c. Let fallbackProto be "%GeneratorFunction.prototype%".
     fallbackProto = '%GeneratorFunction.prototype%';
   } else if (kind === 'async') { // 9. Else if kind is async, then
-    // a. Let goal be the grammar symbol AsyncFunctionBody.
+    // a. Let goal be the grammar symbol AsyncBody.
     // b. Let parameterGoal be the grammar symbol FormalParameters[~Yield, +Await].
     // c. Let fallbackProto be "%AsyncFunction.prototype%".
     fallbackProto = '%AsyncFunction.prototype%';
@@ -147,7 +147,7 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
         body = f.GeneratorBody;
         break;
       case 'async':
-        body = f.AsyncFunctionBody;
+        body = f.AsyncBody;
         break;
       case 'asyncGenerator':
         body = f.AsyncGeneratorBody;

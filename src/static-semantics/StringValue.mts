@@ -1,10 +1,9 @@
-// @ts-nocheck
 import { Value } from '../value.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
-export function StringValue(node) {
+export function StringValue(node: ParseNode) {
   switch (node.type) {
-    case 'Identifier':
     case 'IdentifierName':
     case 'BindingIdentifier':
     case 'IdentifierReference':

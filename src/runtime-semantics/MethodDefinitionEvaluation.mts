@@ -159,9 +159,9 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition, object, 
 
 /** https://tc39.es/ecma262/#sec-async-function-definitions-MethodDefinitionEvaluation */
 //   AsyncMethod :
-//     `async` ClassElementName `(` UniqueFormalParameters `)` `{` AsyncFunctionBody `}`
+//     `async` ClassElementName `(` UniqueFormalParameters `)` `{` AsyncBody `}`
 function* MethodDefinitionEvaluation_AsyncMethod(AsyncMethod, object, enumerable) {
-  const { ClassElementName, UniqueFormalParameters, AsyncFunctionBody } = AsyncMethod;
+  const { ClassElementName, UniqueFormalParameters, AsyncBody } = AsyncMethod;
   // 1. Let propKey be the result of evaluating ClassElementName.
   const propKey = yield* Evaluate_PropertyName(ClassElementName);
   // 2. ReturnIfAbrupt(propKey).
@@ -172,8 +172,8 @@ function* MethodDefinitionEvaluation_AsyncMethod(AsyncMethod, object, enumerable
   const privateScope = surroundingAgent.runningExecutionContext.PrivateEnvironment;
   // 5. Let sourceText be the source text matched by AsyncMethod.
   const sourceText = sourceTextMatchedBy(AsyncMethod);
-  // 6. Let closure be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, UniqueFormalParameters, AsyncFunctionBody, non-lexical-this, scope, privateScope).
-  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, UniqueFormalParameters, AsyncFunctionBody, 'non-lexical-this', scope, privateScope));
+  // 6. Let closure be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, UniqueFormalParameters, AsyncBody, non-lexical-this, scope, privateScope).
+  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, UniqueFormalParameters, AsyncBody, 'non-lexical-this', scope, privateScope));
   // 7. Perform ! MakeMethod(closure, object).
   X(MakeMethod(closure, object));
   // 8. Perform ! SetFunctionName(closure, propKey).
@@ -197,7 +197,7 @@ function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, en
   const privateScope = surroundingAgent.runningExecutionContext.PrivateEnvironment;
   // 5. Let sourceText be the source text matched by GeneratorMethod.
   const sourceText = sourceTextMatchedBy(GeneratorMethod);
-  // 6. Let closure be ! OrdinaryFunctionCreate(%GeneratorFunction.prototype%, sourceText, UniqueFormalParameters, AsyncFunctionBody, non-lexical-this, scope, privateScope).
+  // 6. Let closure be ! OrdinaryFunctionCreate(%GeneratorFunction.prototype%, sourceText, UniqueFormalParameters, AsyncBody, non-lexical-this, scope, privateScope).
   const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype%'), sourceText, UniqueFormalParameters, GeneratorBody, 'non-lexical-this', scope, privateScope));
   // 7. Perform ! MakeMethod(closure, object).
   X(MakeMethod(closure, object));

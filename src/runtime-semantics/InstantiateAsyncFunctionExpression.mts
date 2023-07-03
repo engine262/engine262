@@ -13,7 +13,7 @@ import { NewDeclarativeEnvironment } from '../environment.mjs';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncfunctionexpression */
 export function InstantiateAsyncFunctionExpression(AsyncFunctionExpression, name) {
-  const { BindingIdentifier, FormalParameters, AsyncFunctionBody } = AsyncFunctionExpression;
+  const { BindingIdentifier, FormalParameters, AsyncBody } = AsyncFunctionExpression;
   if (BindingIdentifier) {
     // 1. Assert: name is not present.
     Assert(name === undefined);
@@ -29,12 +29,12 @@ export function InstantiateAsyncFunctionExpression(AsyncFunctionExpression, name
     const privateScope = surroundingAgent.runningExecutionContext.PrivateEnvironment;
     // 7. Let sourceText be the source text matched by AsyncFunctionExpression.
     const sourceText = sourceTextMatchedBy(AsyncFunctionExpression);
-    // 8. Let closure be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, FormalParameters, AsyncFunctionBody, non-lexical-this, funcEnv, privateScope).
+    // 8. Let closure be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, FormalParameters, AsyncBody, non-lexical-this, funcEnv, privateScope).
     const closure = X(OrdinaryFunctionCreate(
       surroundingAgent.intrinsic('%AsyncFunction.prototype%'),
       sourceText,
       FormalParameters,
-      AsyncFunctionBody,
+      AsyncBody,
       'non-lexical-this',
       funcEnv,
       privateScope,
@@ -56,12 +56,12 @@ export function InstantiateAsyncFunctionExpression(AsyncFunctionExpression, name
   const privateScope = surroundingAgent.runningExecutionContext.PrivateEnvironment;
   // 4. Let sourceText be the source text matched by AsyncFunctionExpression.
   const sourceText = sourceTextMatchedBy(AsyncFunctionExpression);
-  // 5. Let closure be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, FormalParameters, AsyncFunctionBody, non-lexical-this, scope, privateScope).
+  // 5. Let closure be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, FormalParameters, AsyncBody, non-lexical-this, scope, privateScope).
   const closure = X(OrdinaryFunctionCreate(
     surroundingAgent.intrinsic('%AsyncFunction.prototype%'),
     sourceText,
     FormalParameters,
-    AsyncFunctionBody,
+    AsyncBody,
     'non-lexical-this',
     scope,
     privateScope,

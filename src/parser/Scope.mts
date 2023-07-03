@@ -1,45 +1,47 @@
-// @ts-nocheck
-import { OutOfRange } from '../helpers.mjs';
+import { Assert, Parser } from '../api.mjs';
+import { isArray, OutOfRange } from '../helpers.mjs';
+import type { TokenData } from './Lexer.mjs';
+import type { ParseNode } from './ParseNode.mjs';
 
-export const Flag = {
-  __proto__: null,
-};
-[
-  'return',
-  'await',
-  'yield',
-  'parameters',
-  'newTarget',
-  'importMeta',
-  'superCall',
-  'superProperty',
-  'in',
-  'default',
-  'module',
-  'classStaticBlock',
-].forEach((name, i) => {
-  /* c8 ignore next */
-  if (i > 31) {
-    throw new RangeError(name);
-  }
-  Flag[name] = 1 << i;
-});
+export enum Flag {
+  return = 1 << 0,
+  await = 1 << 1,
+  yield = 1 << 2,
+  parameters = 1 << 3,
+  newTarget = 1 << 4,
+  importMeta = 1 << 5,
+  superCall = 1 << 6,
+  superProperty = 1 << 7,
+  in = 1 << 8,
+  default = 1 << 9,
+  module = 1 << 10,
+  classStaticBlock = 1 << 11,
+}
 
-export function getDeclarations(node) {
-  if (Array.isArray(node)) {
+export interface DeclarationInfo {
+  readonly name: string;
+  readonly node: ParseNode;
+}
+
+export function getDeclarations(node: ParseNode | readonly ParseNode[]): DeclarationInfo[] {
+  if (isArray(node)) {
     return node.flatMap((n) => getDeclarations(n));
   }
   switch (node.type) {
     case 'LexicalBinding':
     case 'VariableDeclaration':
     case 'BindingRestElement':
-    case 'BindingRestProperty':
     case 'ForBinding':
       if (node.BindingIdentifier) {
         return getDeclarations(node.BindingIdentifier);
       }
       if (node.BindingPattern) {
         return getDeclarations(node.BindingPattern);
+      }
+      return [];
+    case 'BindingRestProperty':
+      if (node.BindingIdentifier) {
+        return getDeclarations(node.BindingIdentifier);
       }
       return [];
     case 'SingleNameBinding':
@@ -100,30 +102,83 @@ export function getDeclarations(node) {
     case 'GeneratorDeclaration':
     case 'AsyncFunctionDeclaration':
     case 'AsyncGeneratorDeclaration':
+      Assert(!!node.BindingIdentifier);
       return getDeclarations(node.BindingIdentifier);
     case 'LexicalDeclaration':
       return getDeclarations(node.BindingList);
     case 'VariableStatement':
       return getDeclarations(node.VariableDeclarationList);
     case 'ClassDeclaration':
+      Assert(!!node.BindingIdentifier);
       return getDeclarations(node.BindingIdentifier);
     default:
       throw new OutOfRange('getDeclarations', node);
   }
 }
 
+export type ScopeFlagSetters =
+  & { readonly [P in (keyof typeof Flag) & string]?: boolean; }
+  & {
+    readonly lexical?: boolean;
+    readonly variable?: boolean;
+    readonly variableFunctions?: boolean;
+    readonly private?: boolean;
+    readonly label?: string;
+    readonly strict?: boolean;
+  };
+
+export interface ScopeInfo {
+  readonly flags: ScopeFlagSetters;
+  readonly lexicals: Set<string>;
+  readonly variables: Set<string>;
+  readonly functions: Set<string>;
+  readonly parameters: Set<string>;
+}
+
+export interface PrivateScopeInfo {
+  readonly outer: PrivateScopeInfo | undefined;
+  readonly names: Map<string, Set<'field' | 'method' | 'get' | 'set'>>;
+}
+
+export interface UndefinedPrivateAccessInfo {
+  readonly node: ParseNode;
+  readonly name: string;
+  readonly scope: PrivateScopeInfo | undefined;
+}
+
+export interface ArrowInfo {
+  readonly isAsync: boolean;
+  hasTrailingComma: boolean;
+  readonly yieldExpressions: ParseNode[];
+  readonly awaitExpressions: ParseNode[];
+  readonly awaitIdentifiers: ParseNode[];
+  merge(other: ArrowInfo): void;
+}
+
+export interface AssignmentInfo {
+  readonly type: 'assign' | 'arrow' | 'for';
+  readonly earlyErrors: SyntaxError[];
+  clear(): void;
+}
+
+export interface Label {
+  type: string | null;
+  readonly name?: string;
+  readonly nextToken?: TokenData | null;
+}
+
 export class Scope {
-  parser;
-  scopeStack = [];
-  labels = [];
-  arrowInfoStack = [];
-  assignmentInfoStack = [];
-  exports = new Set();
-  undefinedExports = new Map();
-  privateScope;
-  undefinedPrivateAccesses = [];
-  flags = 0;
-  constructor(parser) {
+  private readonly parser: Parser;
+  private readonly scopeStack: ScopeInfo[] = [];
+  labels: Label[] = [];
+  readonly arrowInfoStack: (ArrowInfo | null)[] = [];
+  readonly assignmentInfoStack: AssignmentInfo[] = [];
+  readonly exports = new Set<string>();
+  readonly undefinedExports = new Map<string, ParseNode.ModuleExportName>();
+  private privateScope: PrivateScopeInfo | undefined;
+  private readonly undefinedPrivateAccesses: UndefinedPrivateAccessInfo[] = [];
+  private flags: Flag = 0 as Flag;
+  constructor(parser: Parser) {
     this.parser = parser;
   }
 
@@ -175,16 +230,16 @@ export class Scope {
     return (this.flags & Flag.module) !== 0;
   }
 
-  with(flags, f) {
+  with<R>(flags: ScopeFlagSetters, f: () => R) {
     const oldFlags = this.flags;
 
     Object.entries(flags)
       .forEach(([k, v]) => {
-        if (k in Flag) {
+        if (k in Flag && typeof Flag[k as keyof typeof Flag] === 'number') {
           if (v === true) {
-            this.flags |= Flag[k];
+            this.flags |= Flag[k as keyof typeof Flag];
           } else if (v === false) {
-            this.flags &= ~Flag[k];
+            this.flags &= ~Flag[k as keyof typeof Flag];
           }
         }
       });
@@ -229,7 +284,7 @@ export class Scope {
     }
 
     if (flags.private) {
-      this.privateScope = this.privateScope.outer;
+      this.privateScope = this.privateScope!.outer;
 
       if (this.privateScope === undefined) {
         this.undefinedPrivateAccesses.forEach(({ node, name, scope }) => {
@@ -270,7 +325,9 @@ export class Scope {
   }
 
   popArrowInfo() {
-    return this.arrowInfoStack.pop();
+    const arrowInfo = this.arrowInfoStack.pop();
+    Assert(!!arrowInfo);
+    return arrowInfo;
   }
 
   get arrowInfo() {
@@ -280,7 +337,7 @@ export class Scope {
     return undefined;
   }
 
-  pushAssignmentInfo(type) {
+  pushAssignmentInfo(type: 'assign' | 'arrow' | 'for') {
     const parser = this.parser;
     this.assignmentInfoStack.push({
       type,
@@ -294,10 +351,12 @@ export class Scope {
   }
 
   popAssignmentInfo() {
-    return this.assignmentInfoStack.pop();
+    const assignmentInfo = this.assignmentInfoStack.pop();
+    Assert(!!assignmentInfo);
+    return assignmentInfo;
   }
 
-  registerObjectLiteralEarlyError(error) {
+  registerObjectLiteralEarlyError(error: SyntaxError) {
     for (let i = this.assignmentInfoStack.length - 1; i >= 0; i -= 1) {
       const info = this.assignmentInfoStack[i];
       info.earlyErrors.push(error);
@@ -329,7 +388,9 @@ export class Scope {
     throw new RangeError();
   }
 
-  declare(node, type, extraType) {
+  declare(node: ParseNode | readonly ParseNode[], type: 'private', extraType?: 'field' | 'method' | 'get' | 'set'): void;
+  declare(node: ParseNode | readonly ParseNode[], type: 'lexical' | 'import' | 'function' | 'parameter' | 'variable' | 'export'): void;
+  declare(node: ParseNode | readonly ParseNode[], type: 'lexical' | 'import' | 'function' | 'parameter' | 'variable' | 'export' | 'private', extraType?: 'field' | 'method' | 'get' | 'set') {
     const declarations = getDeclarations(node);
     declarations.forEach((d) => {
       switch (type) {
@@ -395,7 +456,7 @@ export class Scope {
           }
           break;
         case 'private': {
-          const types = this.privateScope.names.get(d.name);
+          const types = this.privateScope!.names.get(d.name);
           if (types) {
             let duplicate = true;
             switch (extraType) {
@@ -413,8 +474,8 @@ export class Scope {
             if (duplicate) {
               this.parser.raiseEarly('AlreadyDeclared', d.node, d.name);
             }
-          } else {
-            this.privateScope.names.set(d.name, new Set([extraType]));
+          } else if (extraType) {
+            this.privateScope!.names.set(d.name, new Set([extraType]));
           }
           break;
         }
@@ -425,17 +486,17 @@ export class Scope {
     });
   }
 
-  checkUndefinedExports(NamedExports) {
+  checkUndefinedExports(NamedExports: ParseNode.NamedExports) {
     const scope = this.variableScope();
     NamedExports.ExportsList.forEach((n) => {
-      const name = n.localName.name || n.localName.value;
+      const name = n.localName.type === 'IdentifierName' ? n.localName.name : n.localName.value;
       if (!scope.lexicals.has(name) && !scope.variables.has(name)) {
         this.undefinedExports.set(name, n.localName);
       }
     });
   }
 
-  checkUndefinedPrivate(PrivateIdentifier) {
+  checkUndefinedPrivate(PrivateIdentifier: ParseNode.PrivateIdentifier) {
     const [{ node, name }] = getDeclarations(PrivateIdentifier);
 
     if (!this.privateScope) {
@@ -443,7 +504,7 @@ export class Scope {
       return;
     }
 
-    let scope = this.privateScope;
+    let scope: PrivateScopeInfo | undefined = this.privateScope;
     while (scope) {
       if (scope.names.has(name)) {
         return;
