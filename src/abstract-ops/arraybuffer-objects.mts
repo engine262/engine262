@@ -77,7 +77,7 @@ export function CloneArrayBuffer(srcBuffer, srcByteOffset, srcLength, cloneConst
   // 1. Assert: Type(srcBuffer) is Object and it has an [[ArrayBufferData]] internal slot.
   Assert(srcBuffer instanceof ObjectValue && 'ArrayBufferData' in srcBuffer);
   // 2. Assert: IsConstructor(cloneConstructor) is true.
-  Assert(IsConstructor(cloneConstructor) === Value.true);
+  Assert(IsConstructor(cloneConstructor));
   // 3. Let targetBuffer be ? AllocateArrayBuffer(cloneConstructor, srcLength).
   const targetBuffer = Q(AllocateArrayBuffer(cloneConstructor, srcLength));
   // 4. If IsDetachedBuffer(srcBuffer) is true, throw a TypeError exception.

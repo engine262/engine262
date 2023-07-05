@@ -522,7 +522,7 @@ function ProxyConstruct(argumentsList, newTarget) {
   }
   Assert(handler instanceof ObjectValue);
   const target = O.ProxyTarget;
-  Assert(IsConstructor(target) === Value.true);
+  Assert(IsConstructor(target));
   const trap = Q(GetMethod(handler, Value('construct')));
   if (trap === Value.undefined) {
     return Q(Construct(target, argumentsList, newTarget));
@@ -564,11 +564,11 @@ export function ProxyCreate(target, handler) {
   P.Delete = ProxyDelete;
   P.OwnPropertyKeys = ProxyOwnPropertyKeys;
   // 5. If IsCallable(target) is true, then
-  if (IsCallable(target) === Value.true) {
+  if (IsCallable(target)) {
     /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-call-thisargument-argumentslist. */
     P.Call = ProxyCall;
     // b. If IsConstructor(target) is true, then
-    if (IsConstructor(target) === Value.true) {
+    if (IsConstructor(target)) {
       /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-construct-argumentslist-newtarget. */
       P.Construct = ProxyConstruct;
     }

@@ -108,7 +108,7 @@ export function ArraySpeciesCreate(originalArray, length) {
     return Q(ArrayCreate(length));
   }
   let C = Q(Get(originalArray, Value('constructor')));
-  if (IsConstructor(C) === Value.true) {
+  if (IsConstructor(C)) {
     const thisRealm = surroundingAgent.currentRealmRecord;
     const realmC = Q(GetFunctionRealm(C));
     if (thisRealm !== realmC) {
@@ -126,7 +126,7 @@ export function ArraySpeciesCreate(originalArray, length) {
   if (C === Value.undefined) {
     return Q(ArrayCreate(length));
   }
-  if (IsConstructor(C) === Value.false) {
+  if (!IsConstructor(C)) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
   }
   return Q(Construct(C, [F(length)]));

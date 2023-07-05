@@ -105,14 +105,14 @@ function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg =
   if (mapfn === Value.undefined) {
     mapping = false;
   } else {
-    if (IsCallable(mapfn) === Value.false) {
+    if (!IsCallable(mapfn)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', mapfn);
     }
     mapping = true;
   }
   const usingIterator = Q(GetMethod(items, wellKnownSymbols.iterator));
   if (usingIterator !== Value.undefined) {
-    if (IsConstructor(C) === Value.true) {
+    if (IsConstructor(C)) {
       A = Q(Construct(C));
     } else {
       A = X(ArrayCreate(0));
@@ -145,7 +145,7 @@ function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg =
   }
   const arrayLike = X(ToObject(items));
   const len = Q(LengthOfArrayLike(arrayLike));
-  if (IsConstructor(C) === Value.true) {
+  if (IsConstructor(C)) {
     A = Q(Construct(C, [F(len)]));
   } else {
     A = Q(ArrayCreate(len));
@@ -178,7 +178,7 @@ function Array_of(items, { thisValue }) {
   // Let items be the List of arguments passed to this function.
   const C = thisValue;
   let A;
-  if (IsConstructor(C) === Value.true) {
+  if (IsConstructor(C)) {
     A = Q(Construct(C, [F(len)]));
   } else {
     A = Q(ArrayCreate(len));

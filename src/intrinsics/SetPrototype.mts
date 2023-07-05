@@ -97,7 +97,7 @@ function SetProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefin
   // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
   Q(RequireInternalSlot(S, 'SetData'));
   // 3. If IsCallable(callbackfn) is false, throw a TypeError exception
-  if (IsCallable(callbackfn) === Value.false) {
+  if (!IsCallable(callbackfn)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
   // 4. Let entries be the List that is S.[[SetData]].

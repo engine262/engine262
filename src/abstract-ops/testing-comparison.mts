@@ -70,23 +70,23 @@ export function IsArray(argument) {
 /** https://tc39.es/ecma262/#sec-iscallable */
 export function IsCallable(argument) {
   if (!(argument instanceof ObjectValue)) {
-    return Value.false;
+    return false;
   }
   if ('Call' in argument) {
-    return Value.true;
+    return true;
   }
-  return Value.false;
+  return false;
 }
 
 /** https://tc39.es/ecma262/#sec-isconstructor */
 export function IsConstructor(argument) {
   if (!(argument instanceof ObjectValue)) {
-    return Value.false;
+    return false;
   }
   if ('Construct' in argument) {
-    return Value.true;
+    return true;
   }
-  return Value.false;
+  return false;
 }
 
 /** https://tc39.es/ecma262/#sec-isextensible-o */

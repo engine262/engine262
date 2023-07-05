@@ -26,7 +26,7 @@ export function* Evaluate_SuperCall({ Arguments }) {
   // 4. Let argList be ? ArgumentListEvaluation of Arguments.
   const argList = Q(yield* ArgumentListEvaluation(Arguments));
   // 5. If IsConstructor(func) is false, throw a TypeError exception.
-  if (IsConstructor(func) === Value.false) {
+  if (!IsConstructor(func)) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', func);
   }
   // 6. Let result be ? Construct(func, argList, newTarget).

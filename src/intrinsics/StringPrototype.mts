@@ -357,7 +357,7 @@ function StringProto_replace([searchValue = Value.undefined, replaceValue = Valu
   const string = Q(ToString(O));
   const searchString = Q(ToString(searchValue));
   const functionalReplace = IsCallable(replaceValue);
-  if (functionalReplace === Value.false) {
+  if (functionalReplace === false) {
     replaceValue = Q(ToString(replaceValue));
   }
   const pos = string.stringValue().indexOf(searchString.stringValue());
@@ -366,7 +366,7 @@ function StringProto_replace([searchValue = Value.undefined, replaceValue = Valu
     return string;
   }
   let replStr;
-  if (functionalReplace === Value.true) {
+  if (functionalReplace === true) {
     const replValue = Q(Call(replaceValue, Value.undefined, [matched, F(pos), string]));
     replStr = Q(ToString(replValue));
   } else {
@@ -412,7 +412,7 @@ function StringProto_replaceAll([searchValue = Value.undefined, replaceValue = V
   // 5. Let functionalReplace be IsCallable(replaceValue).
   const functionalReplace = IsCallable(replaceValue);
   // 6. If functionalReplace is false, then
-  if (functionalReplace === Value.false) {
+  if (functionalReplace === false) {
     // a. Let replaceValue be ? ToString(replaceValue).
     replaceValue = Q(ToString(replaceValue));
   }
@@ -439,7 +439,7 @@ function StringProto_replaceAll([searchValue = Value.undefined, replaceValue = V
   for (position of matchPositions) {
     let replacement;
     // a. If functionalReplace is true, then
-    if (functionalReplace === Value.true) {
+    if (functionalReplace === true) {
       // i. Let replacement be ? ToString(? Call(replaceValue, undefined, « searchString, 𝔽(position), string »).
       replacement = Q(ToString(Q(Call(replaceValue, Value.undefined, [searchString, F(position), string]))));
     } else { // b. Else,

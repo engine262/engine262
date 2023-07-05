@@ -29,7 +29,7 @@ function* EvaluateNew(constructExpr, args) {
     argList = Q(yield* ArgumentListEvaluation(args));
   }
   // 7. If IsConstructor(constructor) is false, throw a TypeError exception.
-  if (IsConstructor(constructor) === Value.false) {
+  if (!IsConstructor(constructor)) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', constructor);
   }
   // 8. Return ? Construct(constructor, argList).

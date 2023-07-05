@@ -258,7 +258,7 @@ function TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.u
   // 3. Let len be O.[[ArrayLength]].
   const len = O.ArrayLength;
   // 4. If IsCallable(callbackfn) is false, throw a TypeError exception.
-  if (IsCallable(callbackfn) === Value.false) {
+  if (!IsCallable(callbackfn)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
   // 5. Let kept be a new empty List.
@@ -339,7 +339,7 @@ function TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.unde
   // 3. Let len be O.[[ArrayLength]].
   const len = O.ArrayLength;
   // 4. If IsCallable(callbackfn) is false, throw a TypeError exception.
-  if (IsCallable(callbackfn) === Value.false) {
+  if (!IsCallable(callbackfn)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
   // 5. Let A be ? TypedArraySpeciesCreate(O, « 𝔽(len) »).
@@ -628,7 +628,7 @@ function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined],
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.sort */
 function TypedArrayProto_sort([comparefn = Value.undefined], { thisValue }) {
   // 1. If comparefn is not undefined and IsCallable(comparefn) is false, throw a TypeError exception.
-  if (comparefn !== Value.undefined && IsCallable(comparefn) === Value.false) {
+  if (comparefn !== Value.undefined && !IsCallable(comparefn)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', comparefn);
   }
   // 2. Let obj be the this value.

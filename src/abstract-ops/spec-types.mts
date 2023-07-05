@@ -131,7 +131,7 @@ export function ToPropertyDescriptor(Obj) {
   const hasGet = Q(HasProperty(Obj, Value('get')));
   if (hasGet === Value.true) {
     const getter = Q(Get(Obj, Value('get')));
-    if (IsCallable(getter) === Value.false && !(getter instanceof UndefinedValue)) {
+    if (!IsCallable(getter) && !(getter instanceof UndefinedValue)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', getter);
     }
     desc.Get = getter;
@@ -139,7 +139,7 @@ export function ToPropertyDescriptor(Obj) {
   const hasSet = Q(HasProperty(Obj, Value('set')));
   if (hasSet === Value.true) {
     const setter = Q(Get(Obj, Value('set')));
-    if (IsCallable(setter) === Value.false && !(setter instanceof UndefinedValue)) {
+    if (!IsCallable(setter) && !(setter instanceof UndefinedValue)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', setter);
     }
     desc.Set = setter;

@@ -47,7 +47,7 @@ function PromiseConstructor([executor = Value.undefined], { NewTarget }) {
     return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
   // 2. If IsCallable(executor) is false, throw a TypeError exception.
-  if (IsCallable(executor) === Value.false) {
+  if (!IsCallable(executor)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', executor);
   }
   // 3. Let promise be ? OrdinaryCreateFromConstructor(NewTarget, "%Promise.prototype%", « [[PromiseState]], [[PromiseResult]], [[PromiseFulfillReactions]], [[PromiseRejectReactions]], [[PromiseIsHandled]] »).
@@ -105,11 +105,11 @@ function PromiseAllResolveElementFunctions([x = Value.undefined]) {
 /** https://tc39.es/ecma262/#sec-getpromiseresolve */
 function GetPromiseResolve(promiseConstructor) {
   // 1. Assert: IsConstructor(promiseConstructor) is true.
-  Assert(IsConstructor(promiseConstructor) === Value.true);
+  Assert(IsConstructor(promiseConstructor));
   // 2. Let promiseResolve be ? Get(promiseConstructor, "resolve").
   const promiseResolve = Q(Get(promiseConstructor, Value('resolve')));
   // 3. If IsCallable(promiseResolve) is false, throw a TypeError exception.
-  if (IsCallable(promiseResolve) === Value.false) {
+  if (!IsCallable(promiseResolve)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', promiseResolve);
   }
   // 4. Return promiseResolve.
@@ -119,11 +119,11 @@ function GetPromiseResolve(promiseConstructor) {
 /** https://tc39.es/ecma262/#sec-performpromiseall */
 function PerformPromiseAll(iteratorRecord, constructor, resultCapability, promiseResolve) {
   // 1. Assert: IsConstructor(constructor) is true.
-  Assert(IsConstructor(constructor) === Value.true);
+  Assert(IsConstructor(constructor));
   // 2. Assert: resultCapability is a PromiseCapability Record.
   Assert(resultCapability instanceof PromiseCapabilityRecord);
   // 3. Assert: IsCallable(promiseResolve) is true.
-  Assert(IsCallable(promiseResolve) === Value.true);
+  Assert(IsCallable(promiseResolve));
   // 4. Let values be a new empty List.
   const values = [];
   // 5. Let remainingElementsCount be the Record { [[Value]]: 1 }.
@@ -273,11 +273,11 @@ function PromiseAllSettledRejectElementFunctions([x = Value.undefined]) {
 /** https://tc39.es/ecma262/#sec-performpromiseallsettled */
 function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability, promiseResolve) {
   // 1. Assert: ! IsConstructor(constructor) is true.
-  Assert(X(IsConstructor(constructor) === Value.true));
+  Assert(X(IsConstructor(constructor)));
   // 2. Assert: resultCapability is a PromiseCapability Record.
   Assert(resultCapability instanceof PromiseCapabilityRecord);
   // 3. Assert: IsCallable(promiseResolve) is true.
-  Assert(IsCallable(promiseResolve) === Value.true);
+  Assert(IsCallable(promiseResolve));
   // 4. Let values be a new empty List.
   const values = [];
   // 5. Let remainingElementsCount be the Record { [[Value]]: 1 }.
@@ -451,11 +451,11 @@ function PromiseAnyRejectElementFunctions([x = Value.undefined]) {
 /** https://tc39.es/ecma262/#sec-performpromiseany */
 function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promiseResolve) {
   // 1. Assert: ! IsConstructor(constructor) is true.
-  Assert(X(IsConstructor(constructor)) === Value.true);
+  Assert(IsConstructor(constructor));
   // 2. Assert: resultCapability is a PromiseCapability Record.
   Assert(resultCapability instanceof PromiseCapabilityRecord);
   // 3. Assert: ! IsCallable(promiseResolve) is true.
-  Assert(X(IsCallable(promiseResolve)) === Value.true);
+  Assert(IsCallable(promiseResolve));
   // 4. Let errors be a new empty List.
   const errors = [];
   // 5. Let remainingElementsCount be a new Record { [[Value]]: 1 }.
@@ -563,11 +563,11 @@ function Promise_any([iterable = Value.undefined], { thisValue }) {
 
 function PerformPromiseRace(iteratorRecord, constructor, resultCapability, promiseResolve) {
   // 1. Assert: IsConstructor(constructor) is true.
-  Assert(IsConstructor(constructor) === Value.true);
+  Assert(IsConstructor(constructor));
   // 2. Assert: resultCapability is a PromiseCapability Record.
   Assert(resultCapability instanceof PromiseCapabilityRecord);
   // 3. Assert: IsCallable(promiseResolve) is true.
-  Assert(IsCallable(promiseResolve) === Value.true);
+  Assert(IsCallable(promiseResolve));
   // 4. Repeat,
   while (true) {
     // a. Let next be IteratorStep(iteratorRecord).

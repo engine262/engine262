@@ -30,7 +30,7 @@ function TypedArray_from([source = Value.undefined, mapfn = Value.undefined, thi
   // 1. Let C be the this value.
   const C = thisValue;
   // 2. If IsConstructor(C) is false, throw a TypeError exception.
-  if (IsConstructor(C) === Value.false) {
+  if (!IsConstructor(C)) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
   }
   // 3. If mapfn is undefined, let mapping be false.
@@ -39,7 +39,7 @@ function TypedArray_from([source = Value.undefined, mapfn = Value.undefined, thi
     mapping = false;
   } else {
     // a. If IsCallable(mapfn) is false, throw a TypeError exception.
-    if (IsCallable(mapfn) === Value.false) {
+    if (!IsCallable(mapfn)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', mapfn);
     }
     // b. Let mapping be true.
@@ -109,7 +109,7 @@ function TypedArray_of(items, { thisValue }) {
   // 3. Let C be the this value.
   const C = thisValue;
   // 4. If IsConstructor(C) is false, throw a TypeError exception.
-  if (IsConstructor(C) === Value.false) {
+  if (!IsConstructor(C)) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
   }
   // 5. Let newObj be ? TypedArrayCreate(C, « 𝔽(len) »).

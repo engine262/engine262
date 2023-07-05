@@ -356,7 +356,7 @@ export function OrdinaryFunctionCreate(functionPrototype, sourceText, ParameterL
 export function MakeConstructor(F, writablePrototype, prototype) {
   Assert(isECMAScriptFunctionObject(F) || F.Call === BuiltinFunctionCall);
   if (isECMAScriptFunctionObject(F)) {
-    Assert(IsConstructor(F) === Value.false);
+    Assert(!IsConstructor(F));
     Assert(X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, Value('prototype'))) === Value.false);
     F.Construct = surroundingAgent.hostDefinedOptions.boost?.constructFunction || FunctionConstructSlot;
   }
