@@ -21,7 +21,7 @@ import {
   ToIntegerOrInfinity,
   ToString,
   isArrayIndex,
-  F,
+  𝔽, ℝ,
 } from './all.mjs';
 
 function StringExoticGetOwnProperty(P) {
@@ -55,7 +55,7 @@ function StringExoticOwnPropertyKeys() {
   // 5. For each non-negative integer i starting with 0 such that i < len, in ascending order, do
   for (let i = 0; i < len; i += 1) {
     // a. Add ! ToString(𝔽(i)) as the last element of keys.
-    keys.push(X(ToString(F(i))));
+    keys.push(X(ToString(𝔽(i))));
   }
 
   // For each own property key P of O such that P is an array index and
@@ -111,7 +111,7 @@ export function StringCreate(value, prototype) {
   const length = value.stringValue().length;
   // 9. Perform ! DefinePropertyOrThrow(S, "length", PropertyDescriptor { [[Value]]: length, [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: false }).
   X(DefinePropertyOrThrow(S, Value('length'), Descriptor({
-    Value: F(length),
+    Value: 𝔽(length),
     Writable: Value.false,
     Enumerable: Value.false,
     Configurable: Value.false,
@@ -134,16 +134,16 @@ export function StringGetOwnProperty(S, P) {
   if (IsIntegralNumber(index) === Value.false) {
     return Value.undefined;
   }
-  if (Object.is(index.numberValue(), -0)) {
+  if (Object.is(ℝ(index), -0)) {
     return Value.undefined;
   }
   const str = S.StringData;
   Assert(str instanceof JSStringValue);
   const len = str.stringValue().length;
-  if (index.numberValue() < 0 || len <= index.numberValue()) {
+  if (ℝ(index) < 0 || len <= ℝ(index)) {
     return Value.undefined;
   }
-  const resultStr = str.stringValue()[index.numberValue()];
+  const resultStr = str.stringValue()[ℝ(index)];
   return Descriptor({
     Value: Value(resultStr),
     Writable: Value.false,

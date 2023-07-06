@@ -23,7 +23,7 @@ import {
   ToPrimitive,
   StringToBigInt,
   isProxyExoticObject,
-  isArrayExoticObject,
+  isArrayExoticObject, ℝ,
 } from './all.mjs';
 
 // This file covers abstract operations defined in
@@ -103,7 +103,7 @@ export function IsIntegralNumber(argument) {
   if (argument.isNaN() || argument.isInfinity()) {
     return Value.false;
   }
-  if (Math.floor(Math.abs(argument.numberValue())) !== Math.abs(argument.numberValue())) {
+  if (Math.floor(Math.abs(ℝ(argument))) !== Math.abs(ℝ(argument))) {
     return Value.false;
   }
   return Value.true;
@@ -291,16 +291,16 @@ export function AbstractRelationalComparison(x, y, LeftFirst = true) {
       return Value.undefined;
     }
     // h. If nx is -∞ or ny is +∞, return true.
-    if ((nx.numberValue && nx.numberValue() === -Infinity) || (ny.numberValue && ny.numberValue() === +Infinity)) {
+    if ((nx.numberValue && ℝ(nx) === -Infinity) || (ny.numberValue && ℝ(ny) === +Infinity)) {
       return Value.true;
     }
     // i. If nx is +∞ or ny is -∞, return false.
-    if ((nx.numberValue && nx.numberValue() === +Infinity) || (ny.numberValue && ny.numberValue() === -Infinity)) {
+    if ((nx.numberValue && ℝ(nx) === +Infinity) || (ny.numberValue && ℝ(ny) === -Infinity)) {
       return Value.false;
     }
     // j. If the mathematical value of nx is less than the mathematical value of ny, return true; otherwise return false.
-    const a = nx.numberValue ? nx.numberValue() : nx.bigintValue();
-    const b = ny.numberValue ? ny.numberValue() : ny.bigintValue();
+    const a = nx.numberValue ? ℝ(nx) : ℝ(nx);
+    const b = ny.numberValue ? ℝ(ny) : ℝ(ny);
     return a < b ? Value.true : Value.false;
   }
 }
@@ -366,8 +366,8 @@ export function AbstractEqualityComparison(x, y) {
       return Value.false;
     }
     // b. If the mathematical value of x is equal to the mathematical value of y, return true; otherwise return false.
-    const a = (x.numberValue ? x.numberValue() : x.bigintValue());
-    const b = (y.numberValue ? y.numberValue() : y.bigintValue());
+    const a = (x.numberValue ? ℝ(x) : ℝ(x));
+    const b = (y.numberValue ? ℝ(y) : ℝ(y));
     return a == b ? Value.true : Value.false; // eslint-disable-line eqeqeq
   }
   // 13. Return false.
@@ -398,7 +398,7 @@ export function IsValidIntegerIndex(O, index) {
   if (IsIntegralNumber(index) === Value.false) {
     return Value.false;
   }
-  index = index.numberValue();
+  index = ℝ(index);
   if (Object.is(index, -0)) {
     return Value.false;
   }

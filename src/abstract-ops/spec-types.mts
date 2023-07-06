@@ -28,11 +28,29 @@ export function F(x) {
   return new NumberValue(x);
 }
 
+export { F as 𝔽 };
+
 // #ℤ
 export function Z(x) {
   Assert(typeof x === 'bigint');
   return new BigIntValue(x);
 }
+
+export { Z as ℤ };
+
+// #ℝ
+export function R(x: NumberValue): number;
+export function R(x: BigIntValue): bigint;
+export function R(x: BigIntValue | NumberValue): bigint | number;
+export function R(x) {
+  if (x instanceof BigIntValue) {
+    return x.bigintValue(); // eslint-disable-line @engine262/mathematical-value
+  }
+  Assert(x instanceof NumberValue);
+  return x.numberValue(); // eslint-disable-line @engine262/mathematical-value
+}
+
+export { R as ℝ };
 
 // 6.2.5.1 IsAccessorDescriptor
 export function IsAccessorDescriptor(Desc) {

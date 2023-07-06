@@ -18,7 +18,7 @@ import {
   SameValue,
   Set,
   ToString,
-  F as toNumberValue,
+  𝔽,
 } from './all.mjs';
 
 /** https://tc39.es/ecma262/#sec-regexpalloc */
@@ -81,7 +81,7 @@ export function RegExpInitialize(obj, pattern, flags) {
   const evaluatePattern = surroundingAgent.hostDefinedOptions.boost?.evaluatePattern || Evaluate_Pattern;
   obj.RegExpMatcher = evaluatePattern(parseResult, F.stringValue());
   // 15. Perform ? Set(obj, "lastIndex", +0𝔽, true).
-  Q(Set(obj, Value('lastIndex'), toNumberValue(+0), Value.true));
+  Q(Set(obj, Value('lastIndex'), 𝔽(+0), Value.true));
   // 16. Return obj.
   return obj;
 }
@@ -207,8 +207,8 @@ export function GetMatchIndexPair(S, match) {
   Assert(match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length);
   // 1. Return CreateArrayFromList(« 𝔽(match.[[StartIndex]]), 𝔽(match.[[EndIndex]]) »).
   return CreateArrayFromList([
-    toNumberValue(match.StartIndex),
-    toNumberValue(match.EndIndex),
+    𝔽(match.StartIndex),
+    𝔽(match.EndIndex),
   ]);
 }
 
@@ -255,7 +255,7 @@ export function MakeMatchIndicesIndexPairArray(S, indices, groupNames, hasGroups
       matchIndicesArray = Value.undefined;
     }
     // d. Perform ! CreateDataProperty(A, ! ToString(𝔽(i)), matchIndicesArray).
-    X(CreateDataPropertyOrThrow(A, X(ToString(toNumberValue(i))), matchIndicesArray));
+    X(CreateDataPropertyOrThrow(A, X(ToString(𝔽(i))), matchIndicesArray));
     // e. If i > 0 and groupNames[i - 1] is not undefined, then
     if (i > 0 && groupNames[i - 1] !== Value.undefined) {
       // i. Perform ! CreateDataProperty(groups, groupNames[i - 1], matchIndicesArray).

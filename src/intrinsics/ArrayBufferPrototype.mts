@@ -5,7 +5,7 @@ import { Q } from '../completion.mjs';
 import {
   RequireInternalSlot, IsDetachedBuffer, IsSharedArrayBuffer,
   SpeciesConstructor, Construct, ToIntegerOrInfinity, SameValue, CopyDataBlockBytes,
-  F,
+  𝔽,
 } from '../abstract-ops/all.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
@@ -21,12 +21,12 @@ function ArrayBufferProto_byteLength(args, { thisValue }) {
   }
   // 4. If IsDetachedBuffer(O) is true, return +0𝔽.
   if (IsDetachedBuffer(O) === Value.true) {
-    return F(+0);
+    return 𝔽(+0);
   }
   // 5. Let length be O.[[ArrayBufferByteLength]].
   const length = O.ArrayBufferByteLength;
   // 6. Return length.
-  return F(length);
+  return 𝔽(length);
 }
 
 /** https://tc39.es/ecma262/#sec-arraybuffer.prototype.slice */
@@ -73,7 +73,7 @@ function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]
   // 11. Let ctor be ? SpeciesConstructor(O, %ArrayBuffer%).
   const ctor = Q(SpeciesConstructor(O, surroundingAgent.intrinsic('%ArrayBuffer%')));
   // 12. Let new be ? Construct(ctor, « newLen »).
-  const newO = Q(Construct(ctor, [F(newLen)]));
+  const newO = Q(Construct(ctor, [𝔽(newLen)]));
   // 13. Perform ? RequireInternalSlot(new, [[ArrayBufferData]]).
   Q(RequireInternalSlot(newO, 'ArrayBufferData'));
   // 14. If IsSharedArrayBuffer(new) is true, throw a TypeError exception.

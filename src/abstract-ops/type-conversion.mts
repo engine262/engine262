@@ -24,8 +24,8 @@ import {
   OrdinaryObjectCreate,
   SameValue,
   StringCreate,
-  Z,
-  F,
+  ℤ,
+  𝔽, ℝ,
 } from './all.mjs';
 
 /** https://tc39.es/ecma262/#sec-toprimitive */
@@ -116,7 +116,7 @@ export function ToBoolean(argument) {
     return argument;
   } else if (argument instanceof NumberValue) {
     // If argument is +0𝔽, -0𝔽, or NaN, return false; otherwise return true.
-    if (argument.numberValue() === 0 || argument.isNaN()) {
+    if (ℝ(argument) === 0 || argument.isNaN()) {
       return Value.false;
     }
     return Value.true;
@@ -131,7 +131,7 @@ export function ToBoolean(argument) {
     return Value.true;
   } else if (argument instanceof BigIntValue) {
     // If argument is 0ℤ, return false; otherwise return true.
-    if (argument.bigintValue() === 0n) {
+    if (ℝ(argument) === 0n) {
       return Value.false;
     }
     return Value.true;
@@ -158,17 +158,17 @@ export function ToNumeric(value) {
 export function ToNumber(argument) {
   if (argument instanceof UndefinedValue) {
     // Return NaN.
-    return F(NaN);
+    return 𝔽(NaN);
   } else if (argument instanceof NullValue) {
     // Return +0𝔽.
-    return F(+0);
+    return 𝔽(+0);
   } else if (argument instanceof BooleanValue) {
     // If argument is true, return 1𝔽.
     if (argument === Value.true) {
-      return F(1);
+      return 𝔽(1);
     }
     // If argument is false, return +0𝔽.
-    return F(+0);
+    return 𝔽(+0);
   } else if (argument instanceof NumberValue) {
     // Return argument (no conversion).
     return argument;
@@ -199,18 +199,18 @@ export function ToIntegerOrInfinity(argument) {
   // 1. Let number be ? ToNumber(argument).
   const number = Q(ToNumber(argument));
   // 2. If number is NaN, +0𝔽, or -0𝔽, return 0.
-  if (number.isNaN() || number.numberValue() === 0) {
+  if (number.isNaN() || ℝ(number) === 0) {
     return +0;
   }
   // 3. If number is +∞𝔽, return +∞.
   // 4. If number is -∞𝔽, return -∞.
   if (!number.isFinite()) {
-    return number.numberValue();
+    return ℝ(number);
   }
   // 4. Let integer be floor(abs(ℝ(number))).
-  let integer = Math.floor(Math.abs(number.numberValue()));
+  let integer = Math.floor(Math.abs(ℝ(number)));
   // 5. If number < +0𝔽, set integer to -integer.
-  if (number.numberValue() < 0 && integer !== 0) {
+  if (ℝ(number) < 0 && integer !== 0) {
     integer = -integer;
   }
   // 6. Return integer.
@@ -220,140 +220,140 @@ export function ToIntegerOrInfinity(argument) {
 /** https://tc39.es/ecma262/#sec-toint32 */
 export function ToInt32(argument) {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument)).numberValue();
+  const number = Q(ToNumber(argument));
   // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
-  if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
-    return F(+0);
+  if (number.isNaN() || ℝ(number) === 0 || !number.isFinite()) {
+    return 𝔽(+0);
   }
   // 3. Let int be the mathematical value that is the same sign as number and whose magnitude is floor(abs(ℝ(number))).
-  const int = Math.sign(number) * Math.floor(Math.abs(number));
+  const int = Math.sign(ℝ(number)) * Math.floor(Math.abs(ℝ(number)));
   // 4. Let int32bit be int modulo 2^32.
   const int32bit = mod(int, 2 ** 32);
   // 5. If int32bit ≥ 2^31, return 𝔽(int32bit - 2^32); otherwise return 𝔽(int32bit).
   if (int32bit >= (2 ** 31)) {
-    return F(int32bit - (2 ** 32));
+    return 𝔽(int32bit - (2 ** 32));
   }
-  return F(int32bit);
+  return 𝔽(int32bit);
 }
 
 /** https://tc39.es/ecma262/#sec-touint32 */
 export function ToUint32(argument) {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument)).numberValue();
+  const number = Q(ToNumber(argument));
   // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
-  if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
-    return F(+0);
+  if (number.isNaN() || ℝ(number) === 0 || !number.isFinite()) {
+    return 𝔽(+0);
   }
   // 3. Let int be the mathematical value that is the same sign as number and whose magnitude is floor(abs(ℝ(number))).
-  const int = Math.sign(number) * Math.floor(Math.abs(number));
+  const int = Math.sign(ℝ(number)) * Math.floor(Math.abs(ℝ(number)));
   // 4. Let int32bit be int modulo 2^32.
   const int32bit = mod(int, 2 ** 32);
   // 5. Return 𝔽(int32bit).
-  return F(int32bit);
+  return 𝔽(int32bit);
 }
 
 /** https://tc39.es/ecma262/#sec-toint16 */
 export function ToInt16(argument) {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument)).numberValue();
+  const number = Q(ToNumber(argument));
   // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
-  if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
-    return F(+0);
+  if (number.isNaN() || ℝ(number) === 0 || !number.isFinite()) {
+    return 𝔽(+0);
   }
   // 3. Let int be the mathematical value that is the same sign as number and whose magnitude is floor(abs(ℝ(number))).
-  const int = Math.sign(number) * Math.floor(Math.abs(number));
+  const int = Math.sign(ℝ(number)) * Math.floor(Math.abs(ℝ(number)));
   // 4. Let int16bit be int modulo 2^16.
   const int16bit = mod(int, 2 ** 16);
   // 5. If int16bit ≥ 2^31, return 𝔽(int16bit - 2^32); otherwise return 𝔽(int16bit).
   if (int16bit >= (2 ** 15)) {
-    return F(int16bit - (2 ** 16));
+    return 𝔽(int16bit - (2 ** 16));
   }
-  return F(int16bit);
+  return 𝔽(int16bit);
 }
 
 /** https://tc39.es/ecma262/#sec-touint16 */
 export function ToUint16(argument) {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument)).numberValue();
+  const number = Q(ToNumber(argument));
   // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
-  if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
-    return F(+0);
+  if (number.isNaN() || ℝ(number) === 0 || !number.isFinite()) {
+    return 𝔽(+0);
   }
   // 3. Let int be the mathematical value that is the same sign as number and whose magnitude is floor(abs(ℝ(number))).
-  const int = Math.sign(number) * Math.floor(Math.abs(number));
+  const int = Math.sign(ℝ(number)) * Math.floor(Math.abs(ℝ(number)));
   // 4. Let int16bit be int modulo 2^16.
   const int16bit = mod(int, 2 ** 16);
   // 5. Return 𝔽(int16bit).
-  return F(int16bit);
+  return 𝔽(int16bit);
 }
 
 /** https://tc39.es/ecma262/#sec-toint8 */
 export function ToInt8(argument) {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument)).numberValue();
+  const number = Q(ToNumber(argument));
   // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
-  if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
-    return F(+0);
+  if (number.isNaN() || ℝ(number) === 0 || !number.isFinite()) {
+    return 𝔽(+0);
   }
   // 3. Let int be the mathematical value that is the same sign as number and whose magnitude is floor(abs(ℝ(number))).
-  const int = Math.sign(number) * Math.floor(Math.abs(number));
+  const int = Math.sign(ℝ(number)) * Math.floor(Math.abs(ℝ(number)));
   // 4. Let int8bit be int modulo 2^8.
   const int8bit = mod(int, 2 ** 8);
   // 5. If int8bit ≥ 2^7, return 𝔽(int8bit - 2^8); otherwise return 𝔽(int8bit).
   if (int8bit >= (2 ** 7)) {
-    return F(int8bit - (2 ** 8));
+    return 𝔽(int8bit - (2 ** 8));
   }
-  return F(int8bit);
+  return 𝔽(int8bit);
 }
 
 /** https://tc39.es/ecma262/#sec-touint8 */
 export function ToUint8(argument) {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument)).numberValue();
+  const number = Q(ToNumber(argument));
   // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
-  if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
-    return F(+0);
+  if (number.isNaN() || ℝ(number) === 0 || !number.isFinite()) {
+    return 𝔽(+0);
   }
   // 3. Let int be the mathematical value that is the same sign as number and whose magnitude is floor(abs(ℝ(number))).
-  const int = Math.sign(number) * Math.floor(Math.abs(number));
+  const int = Math.sign(ℝ(number)) * Math.floor(Math.abs(ℝ(number)));
   // 4. Let int8bit be int modulo 2^8.
   const int8bit = mod(int, 2 ** 8);
   // 5. Return 𝔽(int8bit).
-  return F(int8bit);
+  return 𝔽(int8bit);
 }
 
 /** https://tc39.es/ecma262/#sec-touint8clamp */
 export function ToUint8Clamp(argument) {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument)).numberValue();
+  const number = Q(ToNumber(argument));
   // 2. If number is NaN, return +0𝔽.
-  if (Number.isNaN(number)) {
-    return F(+0);
+  if (number.isNaN()) {
+    return 𝔽(+0);
   }
   // 3. If ℝ(number) ≤ 0, return +0𝔽.
-  if (number <= 0) {
-    return F(+0);
+  if (ℝ(number) <= 0) {
+    return 𝔽(+0);
   }
   // 4. If ℝ(number) ≥ 255, return 255𝔽.
-  if (number >= 255) {
-    return F(255);
+  if (ℝ(number) >= 255) {
+    return 𝔽(255);
   }
   // 5. Let f be floor(ℝ(number)).
-  const f = Math.floor(number);
+  const f = Math.floor(ℝ(number));
   // 6. If f + 0.5 < ℝ(number), return 𝔽(f + 1).
-  if (f + 0.5 < number) {
-    return F(f + 1);
+  if (f + 0.5 < ℝ(number)) {
+    return 𝔽(f + 1);
   }
   // 7. If ℝ(number) < f + 0.5, return 𝔽(f).
-  if (number < f + 0.5) {
-    return F(f);
+  if (ℝ(number) < f + 0.5) {
+    return 𝔽(f);
   }
   // 8. If f is odd, return 𝔽(f + 1).
   if (f % 2 === 1) {
-    return F(f + 1);
+    return 𝔽(f + 1);
   }
   // 9. Return 𝔽(f).
-  return F(f);
+  return 𝔽(f);
 }
 
 /** https://tc39.es/ecma262/#sec-tobigint */
@@ -370,9 +370,9 @@ export function ToBigInt(argument) {
   } else if (prim instanceof BooleanValue) {
     // Return 1ℤ if prim is true and 0ℤ if prim is false.
     if (prim === Value.true) {
-      return Z(1n);
+      return ℤ(1n);
     }
-    return Z(0n);
+    return ℤ(0n);
   } else if (prim instanceof BigIntValue) {
     // Return prim.
     return prim;
@@ -402,7 +402,7 @@ export function StringToBigInt(argument) {
   // 2. If the MV is NaN, return NaN, otherwise return the BigInt which exactly corresponds to the MV, rather than rounding to a Number.
   // TODO: Adapt nearley grammar for this.
   try {
-    return Z(BigInt(argument.stringValue()));
+    return ℤ(BigInt(argument.stringValue()));
   } catch {
     return NaN;
   }
@@ -413,12 +413,12 @@ export function ToBigInt64(argument) {
   // 1. Let n be ? ToBigInt(argument).
   const n = Q(ToBigInt(argument));
   // 2. Let int64bit be ℝ(n) modulo 2^64.
-  const int64bit = n.bigintValue() % (2n ** 64n);
+  const int64bit = ℝ(n) % (2n ** 64n);
   // 3. If int64bit ≥ 2^63, return ℤ(int64bit - 2^64); otherwise return ℤ(int64bit).
   if (int64bit >= 2n ** 63n) {
-    return Z(int64bit - (2n ** 64n));
+    return ℤ(int64bit - (2n ** 64n));
   }
-  return Z(int64bit);
+  return ℤ(int64bit);
 }
 
 /** https://tc39.es/ecma262/#sec-tobiguint64 */
@@ -426,9 +426,9 @@ export function ToBigUint64(argument) {
   // 1. Let n be ? ToBigInt(argument).
   const n = Q(ToBigInt(argument));
   // 2. Let int64bit be ℝ(n) modulo 2^64.
-  const int64bit = n.bigintValue() % (2n ** 64n);
+  const int64bit = ℝ(n) % (2n ** 64n);
   // 3. Return ℤ(int64bit).
-  return Z(int64bit);
+  return ℤ(int64bit);
 }
 
 /** https://tc39.es/ecma262/#sec-tostring */
@@ -521,10 +521,10 @@ export function ToLength(argument) {
   const len = Q(ToIntegerOrInfinity(argument));
   // 2. If len ≤ 0, return +0𝔽.
   if (len <= 0) {
-    return F(+0);
+    return 𝔽(+0);
   }
   // 3. Return 𝔽(min(len, 253 - 1)).
-  return F(Math.min(len, (2 ** 53) - 1));
+  return 𝔽(Math.min(len, (2 ** 53) - 1));
 }
 
 /** https://tc39.es/ecma262/#sec-canonicalnumericindexstring */
@@ -533,7 +533,7 @@ export function CanonicalNumericIndexString(argument) {
   Assert(argument instanceof JSStringValue);
   // 2. If argument is "-0", return -0𝔽.
   if (argument.stringValue() === '-0') {
-    return F(-0);
+    return 𝔽(-0);
   }
   // 3. Let n be ! ToNumber(argument).
   const n = X(ToNumber(argument));
@@ -553,9 +553,9 @@ export function ToIndex(value) {
     return 0;
   } else {
     // a. Let integerIndex be 𝔽(? ToIntegerOrInfinity(value)).
-    const integerIndex = F(Q(ToIntegerOrInfinity(value)));
+    const integerIndex = 𝔽(Q(ToIntegerOrInfinity(value)));
     // b. If integerIndex < +0𝔽, throw a RangeError exception.
-    if (integerIndex.numberValue() < 0) {
+    if (ℝ(integerIndex) < 0) {
       return surroundingAgent.Throw('RangeError', 'NegativeIndex', 'Index');
     }
     // c. Let index be ! ToLength(integerIndex).
@@ -565,6 +565,6 @@ export function ToIndex(value) {
       return surroundingAgent.Throw('RangeError', 'OutOfRange', 'Index');
     }
     // e. Return ℝ(index).
-    return index.numberValue();
+    return ℝ(index);
   }
 }

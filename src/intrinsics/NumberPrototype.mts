@@ -8,7 +8,7 @@ import {
   Assert,
   ToIntegerOrInfinity,
   ToString,
-  F,
+  𝔽, ℝ,
 } from '../abstract-ops/all.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { Q, X } from '../completion.mjs';
@@ -37,7 +37,7 @@ function NumberProto_toExponential([fractionDigits = Value.undefined], { thisVal
   if (f < 0 || f > 100) {
     return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toExponential');
   }
-  return Value(x.numberValue().toExponential(fractionDigits === Value.undefined ? undefined : f));
+  return Value(ℝ(x).toExponential(fractionDigits === Value.undefined ? undefined : f));
 }
 
 /** https://tc39.es/ecma262/#sec-number.prototype.tofixed */
@@ -51,7 +51,7 @@ function NumberProto_toFixed([fractionDigits = Value.undefined], { thisValue }) 
   if (!x.isFinite()) {
     return X(NumberValue.toString(x));
   }
-  return Value(x.numberValue().toFixed(f));
+  return Value(ℝ(x).toFixed(f));
 }
 
 /** https://tc39.es/ecma262/#sec-number.prototype.tolocalestring */
@@ -72,7 +72,7 @@ function NumberProto_toPrecision([precision = Value.undefined], { thisValue }) {
   if (p < 1 || p > 100) {
     return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toPrecision');
   }
-  return Value(x.numberValue().toPrecision(p));
+  return Value(ℝ(x).toPrecision(p));
 }
 
 /** https://tc39.es/ecma262/#sec-number.prototype.tostring */
@@ -95,7 +95,7 @@ function NumberProto_toString([radix = Value.undefined], { thisValue }) {
   // used for digits with values 10 through 35. The precise algorithm
   // is implementation-dependent, however the algorithm should be a
   // generalization of that specified in 7.1.12.1.
-  return Value(x.numberValue().toString(radixNumber));
+  return Value(ℝ(x).toString(radixNumber));
 }
 
 /** https://tc39.es/ecma262/#sec-number.prototype.valueof */
@@ -113,7 +113,7 @@ export function bootstrapNumberPrototype(realmRec) {
     ['valueOf', NumberProto_valueOf, 0],
   ], realmRec.Intrinsics['%Object.prototype%']);
 
-  proto.NumberData = F(+0);
+  proto.NumberData = 𝔽(+0);
 
   realmRec.Intrinsics['%Number.prototype%'] = proto;
 }

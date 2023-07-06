@@ -4,7 +4,7 @@ import {
   CreateBuiltinFunction,
   ToInt32,
   ToString,
-  F,
+  𝔽, ℝ,
 } from '../abstract-ops/all.mjs';
 import { TrimString } from '../runtime-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
@@ -63,11 +63,11 @@ function ParseInt([string = Value.undefined, radix = Value.undefined]) {
     S = S.slice(1);
   }
 
-  let R = Q(ToInt32(radix)).numberValue();
+  let R = ℝ(Q(ToInt32(radix)));
   let stripPrefix = true;
   if (R !== 0) {
     if (R < 2 || R > 36) {
-      return F(NaN);
+      return 𝔽(NaN);
     }
     if (R !== 16) {
       stripPrefix = false;
@@ -83,17 +83,17 @@ function ParseInt([string = Value.undefined, radix = Value.undefined]) {
   }
   const Z = S.slice(0, searchNotRadixDigit(S, R));
   if (Z === '') {
-    return F(NaN);
+    return 𝔽(NaN);
   }
   const mathInt = stringToRadixNumber(Z, R);
   if (mathInt === 0) {
     if (sign === -1) {
-      return F(-0);
+      return 𝔽(-0);
     }
-    return F(+0);
+    return 𝔽(+0);
   }
   const number = mathInt;
-  return F(sign * number);
+  return 𝔽(sign * number);
 }
 
 export function bootstrapParseInt(realmRec) {

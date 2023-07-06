@@ -37,7 +37,7 @@ import {
   Q, X,
 } from '../completion.mjs';
 import { ValueSet, kInternal } from '../helpers.mjs';
-import { BigIntValue, evaluateScript, F } from '../api.mjs';
+import { BigIntValue, evaluateScript, 𝔽 } from '../api.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
 const WHITESPACE = [' ', '\t', '\r', '\n'];
@@ -241,7 +241,7 @@ function InternalizeJSONProperty(holder, name, reviver) {
       let I = 0;
       const len = Q(LengthOfArrayLike(val));
       while (I < len) {
-        const Istr = X(ToString(F(I)));
+        const Istr = X(ToString(𝔽(I)));
         const newElement = Q(InternalizeJSONProperty(val, Istr, reviver));
         if (newElement instanceof UndefinedValue) {
           Q(val.Delete(Istr));
@@ -446,7 +446,7 @@ function SerializeJSONArray(state, value) {
   const len = Q(LengthOfArrayLike(value));
   let index = 0;
   while (index < len) {
-    const indexStr = X(ToString(F(index)));
+    const indexStr = X(ToString(𝔽(index)));
     const strP = Q(SerializeJSONProperty(state, indexStr, value));
     if (strP === Value.undefined) {
       partial.push('null');
@@ -489,7 +489,7 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
         const len = Q(LengthOfArrayLike(replacer));
         let k = 0;
         while (k < len) {
-          const vStr = X(ToString(F(k)));
+          const vStr = X(ToString(𝔽(k)));
           const v = Q(Get(replacer, vStr));
           let item = Value.undefined;
           if (v instanceof JSStringValue) {

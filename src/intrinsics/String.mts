@@ -16,7 +16,7 @@ import {
   ToObject,
   ToString,
   ToUint16,
-  F,
+  𝔽, ℝ,
 } from '../abstract-ops/all.mjs';
 import { UTF16EncodeCodePoint } from '../static-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
@@ -50,7 +50,7 @@ function String_fromCharCode(codeUnits) {
     elements.push(nextCU);
     nextIndex += 1;
   }
-  const result = elements.reduce((previous, current) => previous + String.fromCharCode(current.numberValue()), '');
+  const result = elements.reduce((previous, current) => previous + String.fromCharCode(ℝ(current)), '');
   return Value(result);
 }
 
@@ -67,11 +67,11 @@ function String_fromCodePoint(codePoints) {
       return surroundingAgent.Throw('RangeError', 'StringCodePointInvalid', next);
     }
     // c. If ℝ(nextCP) < 0 or ℝ(nextCP) > 0x10FFFF, throw a RangeError exception.
-    if (nextCP.numberValue() < 0 || nextCP.numberValue() > 0x10FFFF) {
+    if (ℝ(nextCP) < 0 || ℝ(nextCP) > 0x10FFFF) {
       return surroundingAgent.Throw('RangeError', 'StringCodePointInvalid', nextCP);
     }
     // d. Set result to the string-concatenation of result and UTF16EncodeCodePoint(ℝ(nextCP)).
-    result += UTF16EncodeCodePoint(nextCP.numberValue());
+    result += UTF16EncodeCodePoint(ℝ(nextCP));
   }
   // 3. Assert: If codePoints is empty, then result is the empty String.
   Assert(!(codePoints.length === 0) || result.length === 0);
@@ -92,7 +92,7 @@ function String_raw([template = Value.undefined, ...substitutions]) {
   const stringElements = [];
   let nextIndex = 0;
   while (true) {
-    const nextKey = X(ToString(F(nextIndex)));
+    const nextKey = X(ToString(𝔽(nextIndex)));
     const nextSeg = Q(ToString(Q(Get(raw, nextKey))));
     stringElements.push(nextSeg.stringValue());
     if (nextIndex + 1 === literalSegments) {

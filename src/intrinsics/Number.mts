@@ -3,7 +3,7 @@ import {
   IsIntegralNumber,
   OrdinaryCreateFromConstructor,
   ToNumeric,
-  F,
+  𝔽, ℝ,
 } from '../abstract-ops/all.mjs';
 import {
   Descriptor,
@@ -20,12 +20,12 @@ function NumberConstructor([value], { NewTarget }) {
   if (value !== undefined) {
     const prim = Q(ToNumeric(value));
     if (prim instanceof BigIntValue) {
-      n = F(Number(prim.bigintValue()));
+      n = 𝔽(Number(ℝ(prim)));
     } else {
       n = prim;
     }
   } else {
-    n = F(+0);
+    n = 𝔽(+0);
   }
   if (NewTarget === Value.undefined) {
     return n;
@@ -71,7 +71,7 @@ function Number_isSafeInteger([number = Value.undefined]) {
   }
 
   if (X(IsIntegralNumber(number)) === Value.true) {
-    if (Math.abs(number.numberValue()) <= (2 ** 53) - 1) {
+    if (Math.abs(ℝ(number)) <= (2 ** 53) - 1) {
       return Value.true;
     }
   }
@@ -86,14 +86,14 @@ export function bootstrapNumber(realmRec) {
     Configurable: Value.false,
   };
   const numberConstructor = bootstrapConstructor(realmRec, NumberConstructor, 'Number', 1, realmRec.Intrinsics['%Number.prototype%'], [
-    ['EPSILON', F(Number.EPSILON), undefined, override],
-    ['MAX_SAFE_INTEGER', F(Number.MAX_SAFE_INTEGER), undefined, override],
-    ['MAX_VALUE', F(Number.MAX_VALUE), undefined, override],
-    ['MIN_SAFE_INTEGER', F(Number.MIN_SAFE_INTEGER), undefined, override],
-    ['MIN_VALUE', F(Number.MIN_VALUE), undefined, override],
-    ['NaN', F(NaN), undefined, override],
-    ['NEGATIVE_INFINITY', F(-Infinity), undefined, override],
-    ['POSITIVE_INFINITY', F(+Infinity), undefined, override],
+    ['EPSILON', 𝔽(Number.EPSILON), undefined, override],
+    ['MAX_SAFE_INTEGER', 𝔽(Number.MAX_SAFE_INTEGER), undefined, override],
+    ['MAX_VALUE', 𝔽(Number.MAX_VALUE), undefined, override],
+    ['MIN_SAFE_INTEGER', 𝔽(Number.MIN_SAFE_INTEGER), undefined, override],
+    ['MIN_VALUE', 𝔽(Number.MIN_VALUE), undefined, override],
+    ['NaN', 𝔽(NaN), undefined, override],
+    ['NEGATIVE_INFINITY', 𝔽(-Infinity), undefined, override],
+    ['POSITIVE_INFINITY', 𝔽(+Infinity), undefined, override],
 
     ['isFinite', Number_isFinite, 1],
     ['isInteger', Number_isInteger, 1],

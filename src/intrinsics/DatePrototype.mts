@@ -25,7 +25,7 @@ import {
   UTC,
   WeekDay,
   YearFromTime,
-  F,
+  𝔽, ℝ,
 } from '../abstract-ops/all.mjs';
 import {
   JSStringValue,
@@ -50,7 +50,7 @@ export function thisTimeValue(value) {
 function DateProto_getDate(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
-    return F(NaN);
+    return 𝔽(NaN);
   }
   return DateFromTime(LocalTime(t));
 }
@@ -59,7 +59,7 @@ function DateProto_getDate(args, { thisValue }) {
 function DateProto_getDay(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
-    return F(NaN);
+    return 𝔽(NaN);
   }
   return WeekDay(LocalTime(t));
 }
@@ -68,7 +68,7 @@ function DateProto_getDay(args, { thisValue }) {
 function DateProto_getFullYear(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
-    return F(NaN);
+    return 𝔽(NaN);
   }
   return YearFromTime(LocalTime(t));
 }
@@ -77,7 +77,7 @@ function DateProto_getFullYear(args, { thisValue }) {
 function DateProto_getHours(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
-    return F(NaN);
+    return 𝔽(NaN);
   }
   return HourFromTime(LocalTime(t));
 }
@@ -86,7 +86,7 @@ function DateProto_getHours(args, { thisValue }) {
 function DateProto_getMilliseconds(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
-    return F(NaN);
+    return 𝔽(NaN);
   }
   return msFromTime(LocalTime(t));
 }
@@ -95,7 +95,7 @@ function DateProto_getMilliseconds(args, { thisValue }) {
 function DateProto_getMinutes(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
-    return F(NaN);
+    return 𝔽(NaN);
   }
   return MinFromTime(LocalTime(t));
 }
@@ -104,7 +104,7 @@ function DateProto_getMinutes(args, { thisValue }) {
 function DateProto_getMonth(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
-    return F(NaN);
+    return 𝔽(NaN);
   }
   return MonthFromTime(LocalTime(t));
 }
@@ -113,7 +113,7 @@ function DateProto_getMonth(args, { thisValue }) {
 function DateProto_getSeconds(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
-    return F(NaN);
+    return 𝔽(NaN);
   }
   return SecFromTime(LocalTime(t));
 }
@@ -127,16 +127,16 @@ function DateProto_getTime(args, { thisValue }) {
 function DateProto_getTimezoneOffset(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
-    return F(NaN);
+    return 𝔽(NaN);
   }
-  return F((t.numberValue() - LocalTime(t).numberValue()) / msPerMinute);
+  return 𝔽((ℝ(t) - ℝ(LocalTime(t))) / msPerMinute);
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getutcdate */
 function DateProto_getUTCDate(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
-    return F(NaN);
+    return 𝔽(NaN);
   }
   return DateFromTime(t);
 }
@@ -145,7 +145,7 @@ function DateProto_getUTCDate(args, { thisValue }) {
 function DateProto_getUTCDay(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
-    return F(NaN);
+    return 𝔽(NaN);
   }
   return WeekDay(t);
 }
@@ -154,7 +154,7 @@ function DateProto_getUTCDay(args, { thisValue }) {
 function DateProto_getUTCFullYear(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
-    return F(NaN);
+    return 𝔽(NaN);
   }
   return YearFromTime(t);
 }
@@ -163,7 +163,7 @@ function DateProto_getUTCFullYear(args, { thisValue }) {
 function DateProto_getUTCHours(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
-    return F(NaN);
+    return 𝔽(NaN);
   }
   return HourFromTime(t);
 }
@@ -172,7 +172,7 @@ function DateProto_getUTCHours(args, { thisValue }) {
 function DateProto_getUTCMilliseconds(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
-    return F(NaN);
+    return 𝔽(NaN);
   }
   return msFromTime(t);
 }
@@ -181,7 +181,7 @@ function DateProto_getUTCMilliseconds(args, { thisValue }) {
 function DateProto_getUTCMinutes(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
-    return F(NaN);
+    return 𝔽(NaN);
   }
   return MinFromTime(t);
 }
@@ -190,7 +190,7 @@ function DateProto_getUTCMinutes(args, { thisValue }) {
 function DateProto_getUTCMonth(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
-    return F(NaN);
+    return 𝔽(NaN);
   }
   return MonthFromTime(t);
 }
@@ -199,7 +199,7 @@ function DateProto_getUTCMonth(args, { thisValue }) {
 function DateProto_getUTCSeconds(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
-    return F(NaN);
+    return 𝔽(NaN);
   }
   return SecFromTime(t);
 }
@@ -217,7 +217,7 @@ function DateProto_setDate([date = Value.undefined], { thisValue }) {
 /** https://tc39.es/ecma262/#sec-date.prototype.setfullyear */
 function DateProto_setFullYear([year = Value.undefined, month, date], { thisValue }) {
   let t = Q(thisTimeValue(thisValue));
-  t = t.isNaN() ? F(+0) : LocalTime(t);
+  t = t.isNaN() ? 𝔽(+0) : LocalTime(t);
   const y = Q(ToNumber(year));
   let m;
   if (month !== undefined) {
@@ -360,7 +360,7 @@ function DateProto_setUTCDate([date = Value.undefined], { thisValue }) {
 function DateProto_setUTCFullYear([year = Value.undefined, month, date], { thisValue }) {
   let t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
-    t = F(+0);
+    t = 𝔽(+0);
   }
   const y = Q(ToNumber(year));
   let m;
@@ -490,16 +490,16 @@ function DateProto_toDateString(args, { thisValue }) {
 /** https://tc39.es/ecma262/#sec-date.prototype.toisostring */
 function DateProto_toISOString(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
-  if (!Number.isFinite(t.numberValue())) {
+  if (!Number.isFinite(ℝ(t))) {
     return surroundingAgent.Throw('RangeError', 'DateInvalidTime');
   }
-  const year = YearFromTime(t).numberValue();
-  const month = MonthFromTime(t).numberValue() + 1;
-  const date = DateFromTime(t).numberValue();
-  const hour = HourFromTime(t).numberValue();
-  const min = MinFromTime(t).numberValue();
-  const sec = SecFromTime(t).numberValue();
-  const ms = msFromTime(t).numberValue();
+  const year = ℝ(YearFromTime(t));
+  const month = ℝ(MonthFromTime(t)) + 1;
+  const date = ℝ(DateFromTime(t));
+  const hour = ℝ(HourFromTime(t));
+  const min = ℝ(MinFromTime(t));
+  const sec = ℝ(SecFromTime(t));
+  const ms = ℝ(msFromTime(t));
 
   // TODO: figure out if there can be invalid years.
   let YYYY = String(year);
@@ -520,7 +520,7 @@ function DateProto_toISOString(args, { thisValue }) {
 function DateProto_toJSON(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   const tv = Q(ToPrimitive(O, 'number'));
-  if (tv instanceof NumberValue && !Number.isFinite(tv.numberValue())) {
+  if (tv instanceof NumberValue && !Number.isFinite(ℝ(tv))) {
     return Value.null;
   }
   return Q(Invoke(O, Value('toISOString')));
@@ -554,9 +554,9 @@ function DateProto_toString(args, { thisValue }) {
 function TimeString(tv) {
   Assert(tv instanceof NumberValue);
   Assert(!tv.isNaN());
-  const hour = String(HourFromTime(tv).numberValue()).padStart(2, '0');
-  const minute = String(MinFromTime(tv).numberValue()).padStart(2, '0');
-  const second = String(SecFromTime(tv).numberValue()).padStart(2, '0');
+  const hour = String(ℝ(HourFromTime(tv))).padStart(2, '0');
+  const minute = String(ℝ(MinFromTime(tv))).padStart(2, '0');
+  const second = String(ℝ(SecFromTime(tv))).padStart(2, '0');
   return Value(`${hour}:${minute}:${second} GMT`);
 }
 
@@ -569,13 +569,13 @@ const monthsOfTheYear = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
 function DateString(tv) {
   Assert(tv instanceof NumberValue);
   Assert(!tv.isNaN());
-  const weekday = daysOfTheWeek[WeekDay(tv).numberValue()];
-  const month = monthsOfTheYear[MonthFromTime(tv).numberValue()];
-  const day = String(DateFromTime(tv).numberValue()).padStart(2, '0');
-  const yv = YearFromTime(tv).numberValue();
+  const weekday = daysOfTheWeek[ℝ(WeekDay(tv))];
+  const month = monthsOfTheYear[ℝ(MonthFromTime(tv))];
+  const day = String(ℝ(DateFromTime(tv))).padStart(2, '0');
+  const yv = ℝ(YearFromTime(tv));
   const yearSign = yv >= 0 ? '' : '-';
   const year = Value(String(Math.abs(yv)));
-  const paddedYear = X(StringPad(year, F(4), Value('0'), 'start')).stringValue();
+  const paddedYear = X(StringPad(year, 𝔽(4), Value('0'), 'start')).stringValue();
   return Value(`${weekday} ${month} ${day} ${yearSign}${paddedYear}`);
 }
 
@@ -585,8 +585,8 @@ export function TimeZoneString(tv) {
   Assert(!tv.isNaN());
   const offset = LocalTZA(tv, true);
   const offsetSign = offset >= 0 ? '+' : '-';
-  const offsetMin = String(MinFromTime(F(Math.abs(offset))).numberValue()).padStart(2, '0');
-  const offsetHour = String(HourFromTime(F(Math.abs(offset))).numberValue()).padStart(2, '0');
+  const offsetMin = String(ℝ(MinFromTime(𝔽(Math.abs(offset))))).padStart(2, '0');
+  const offsetHour = String(ℝ(HourFromTime(𝔽(Math.abs(offset))))).padStart(2, '0');
   const tzName = '';
   return Value(`${offsetSign}${offsetHour}${offsetMin}${tzName}`);
 }
@@ -625,13 +625,13 @@ function DateProto_toUTCString(args, { thisValue }) {
   if (tv.isNaN()) {
     return Value('Invalid Date');
   }
-  const weekday = daysOfTheWeek[WeekDay(tv).numberValue()];
-  const month = monthsOfTheYear[MonthFromTime(tv).numberValue()];
-  const day = String(DateFromTime(tv).numberValue()).padStart(2, '0');
-  const yv = YearFromTime(tv).numberValue();
+  const weekday = daysOfTheWeek[ℝ(WeekDay(tv))];
+  const month = monthsOfTheYear[ℝ(MonthFromTime(tv))];
+  const day = String(ℝ(DateFromTime(tv))).padStart(2, '0');
+  const yv = ℝ(YearFromTime(tv));
   const yearSign = yv >= 0 ? '' : '-';
   const year = Value(String(Math.abs(yv)));
-  const paddedYear = X(StringPad(year, F(4), Value('0'), 'start')).stringValue();
+  const paddedYear = X(StringPad(year, 𝔽(4), Value('0'), 'start')).stringValue();
   return Value(`${weekday}, ${day} ${month} ${yearSign}${paddedYear} ${TimeString(tv).stringValue()}`);
 }
 

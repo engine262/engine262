@@ -24,7 +24,7 @@ import {
   ToBigInt,
   isIntegerIndex,
   typedArrayInfoByName,
-  F,
+  𝔽, ℝ,
 } from './all.mjs';
 
 export function isIntegerIndexedExoticObject(O) {
@@ -223,7 +223,7 @@ export function IntegerIndexedOwnPropertyKeys() {
   // 4. For each integer i starting with 0 such that i < len, in ascending order, do
   for (let i = 0; i < len; i += 1) {
     // a. Add ! ToString(𝔽(i)) as the last element of keys.
-    keys.push(X(ToString(F(i))));
+    keys.push(X(ToString(𝔽(i))));
   }
   // 5. For each own property key P of O such that Type(P) is String and P is not an integer index, in ascending chronological order of property creation, do
   for (const P of O.properties.keys()) {
@@ -268,7 +268,7 @@ export function IntegerIndexedElementGet(O, index) {
   // 8. Let elementSize be the Element Size value specified in Table 61 for arrayTypeName.
   const elementSize = typedArrayInfoByName[arrayTypeName].ElementSize;
   // 9. Let indexedPosition be (ℝ(index) × elementSize) + offset.
-  const indexedPosition = (index.numberValue() * elementSize) + offset;
+  const indexedPosition = (ℝ(index) * elementSize) + offset;
   // 10. Let elementType be the Element Type value in Table 61 for arrayTypeName.
   const elementType = typedArrayInfoByName[arrayTypeName].ElementType;
   // 11. Return GetValueFromBuffer(buffer, indexedPosition, elementType, true, Unordered).
@@ -306,7 +306,7 @@ export function IntegerIndexedElementSet(O, index, value) {
   // 10. Let elementSize be the Element Size value specified in Table 61 for arrayTypeName.
   const elementSize = typedArrayInfoByName[arrayTypeName].ElementSize;
   // 11. Let indexedPosition be (ℝ(index) × elementSize) + offset.
-  const indexedPosition = (index.numberValue() * elementSize) + offset;
+  const indexedPosition = (ℝ(index) * elementSize) + offset;
   // 12. Let elementType be the Element Type value in Table 61 for arrayTypeName.
   const elementType = typedArrayInfoByName[arrayTypeName].ElementType;
   // 13. Perform SetValueInBuffer(buffer, indexedPosition, elementType, numValue, true, Unordered).

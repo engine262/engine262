@@ -52,6 +52,9 @@ module.exports = {
   rules: {
     '@engine262/no-use-in-def': 'error',
     '@engine262/valid-feature': 'error',
+    '@engine262/number-value': 'error',
+    '@engine262/bigint-value': 'error',
+    '@engine262/mathematical-value': 'error',
     'arrow-parens': ['error', 'always'],
     'brace-style': ['error', '1tbs', { allowSingleLine: false }],
     'curly': ['error', 'all'],

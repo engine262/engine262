@@ -15,8 +15,8 @@ import {
   OrdinarySetPrototypeOf,
   ToInt32,
   ToUint32,
-  Z,
-  F,
+  ℤ,
+  𝔽, ℝ,
 } from './abstract-ops/all.mjs';
 import { EnvironmentRecord } from './environment.mjs';
 import { Completion, X } from './completion.mjs';
@@ -170,9 +170,9 @@ export class NumberValue extends PrimitiveValue {
   /** https://tc39.es/ecma262/#sec-numeric-types-number-unaryMinus */
   static unaryMinus(x: NumberValue) {
     if (x.isNaN()) {
-      return F(NaN);
+      return 𝔽(NaN);
     }
-    return F(-x.numberValue());
+    return 𝔽(-ℝ(x));
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-bitwiseNOT */
@@ -180,38 +180,38 @@ export class NumberValue extends PrimitiveValue {
     // 1. Let oldValue be ! ToInt32(x).
     const oldValue = X(ToInt32(x));
     // 2. Return the result of applying bitwise complement to oldValue. The result is a signed 32-bit integer.
-    return F(~oldValue.numberValue());
+    return 𝔽(~ℝ(oldValue));
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-exponentiate */
   static exponentiate(base: NumberValue, exponent: NumberValue) {
-    return F(base.numberValue() ** exponent.numberValue());
+    return 𝔽(ℝ(base) ** ℝ(exponent));
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-multiply */
   static multiply(x: NumberValue, y: NumberValue) {
-    return F(x.numberValue() * y.numberValue());
+    return 𝔽(ℝ(x) * ℝ(y));
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-divide */
   static divide(x: NumberValue, y: NumberValue) {
-    return F(x.numberValue() / y.numberValue());
+    return 𝔽(ℝ(x) / ℝ(y));
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-remainder */
   static remainder(n: NumberValue, d: NumberValue) {
-    return F(n.numberValue() % d.numberValue());
+    return 𝔽(ℝ(n) % ℝ(d));
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-add */
   static add(x: NumberValue, y: NumberValue) {
-    return F(x.numberValue() + y.numberValue());
+    return 𝔽(ℝ(x) + ℝ(y));
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-subtract */
   static subtract(x: NumberValue, y: NumberValue) {
     // The result of - operator is x + (-y).
-    return NumberValue.add(x, F(-y.numberValue()));
+    return NumberValue.add(x, 𝔽(-ℝ(y)));
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-leftShift */
@@ -221,9 +221,9 @@ export class NumberValue extends PrimitiveValue {
     // 2. Let rnum be ! ToUint32(y).
     const rnum = X(ToUint32(y));
     // 3. Let shiftCount be the result of masking out all but the least significant 5 bits of rnum, that is, compute rnum & 0x1F.
-    const shiftCount = rnum.numberValue() & 0x1F; // eslint-disable-line no-bitwise
+    const shiftCount = ℝ(rnum) & 0x1F; // eslint-disable-line no-bitwise
     // 4. Return the result of left shifting lnum by shiftCount bits. The result is a signed 32-bit integer.
-    return F(lnum.numberValue() << shiftCount); // eslint-disable-line no-bitwise
+    return 𝔽(ℝ(lnum) << shiftCount); // eslint-disable-line no-bitwise
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-signedRightShift */
@@ -233,10 +233,10 @@ export class NumberValue extends PrimitiveValue {
     // 2. Let rnum be ! ToUint32(y).
     const rnum = X(ToUint32(y));
     // 3. Let shiftCount be the result of masking out all but the least significant 5 bits of rnum, that is, compute rnum & 0x1F.
-    const shiftCount = rnum.numberValue() & 0x1F; // eslint-disable-line no-bitwise
+    const shiftCount = ℝ(rnum) & 0x1F; // eslint-disable-line no-bitwise
     // 4. Return the result of performing a sign-extending right shift of lnum by shiftCount bits.
     //    The most significant bit is propagated. The result is a signed 32-bit integer.
-    return F(lnum.numberValue() >> shiftCount); // eslint-disable-line no-bitwise
+    return 𝔽(ℝ(lnum) >> shiftCount); // eslint-disable-line no-bitwise
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-unsignedRightShift */
@@ -246,10 +246,10 @@ export class NumberValue extends PrimitiveValue {
     // 2. Let rnum be ! ToUint32(y).
     const rnum = X(ToUint32(y));
     // 3. Let shiftCount be the result of masking out all but the least significant 5 bits of rnum, that is, compute rnum & 0x1F.
-    const shiftCount = rnum.numberValue() & 0x1F; // eslint-disable-line no-bitwise
+    const shiftCount = ℝ(rnum) & 0x1F; // eslint-disable-line no-bitwise
     // 4. Return the result of performing a zero-filling right shift of lnum by shiftCount bits.
     //    Vacated bits are filled with zero. The result is an unsigned 32-bit integer.
-    return F(lnum.numberValue() >>> shiftCount); // eslint-disable-line no-bitwise
+    return 𝔽(ℝ(lnum) >>> shiftCount); // eslint-disable-line no-bitwise
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-lessThan */
@@ -263,22 +263,22 @@ export class NumberValue extends PrimitiveValue {
     // If nx and ny are the same Number value, return false.
     // If nx is +0 and ny is -0, return false.
     // If nx is -0 and ny is +0, return false.
-    if (x.numberValue() === y.numberValue()) {
+    if (ℝ(x) === ℝ(y)) {
       return Value.false;
     }
-    if (x.numberValue() === +Infinity) {
+    if (ℝ(x) === +Infinity) {
       return Value.false;
     }
-    if (y.numberValue() === +Infinity) {
+    if (ℝ(y) === +Infinity) {
       return Value.true;
     }
-    if (y.numberValue() === -Infinity) {
+    if (ℝ(y) === -Infinity) {
       return Value.false;
     }
-    if (x.numberValue() === -Infinity) {
+    if (ℝ(x) === -Infinity) {
       return Value.true;
     }
-    return x.numberValue() < y.numberValue() ? Value.true : Value.false;
+    return ℝ(x) < ℝ(y) ? Value.true : Value.false;
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-equal */
@@ -289,8 +289,8 @@ export class NumberValue extends PrimitiveValue {
     if (y.isNaN()) {
       return Value.false;
     }
-    const xVal = x.numberValue();
-    const yVal = y.numberValue();
+    const xVal = ℝ(x);
+    const yVal = ℝ(y);
     if (xVal === yVal) {
       return Value.true;
     }
@@ -308,8 +308,8 @@ export class NumberValue extends PrimitiveValue {
     if (x.isNaN() && y.isNaN()) {
       return Value.true;
     }
-    const xVal = x.numberValue();
-    const yVal = y.numberValue();
+    const xVal = ℝ(x);
+    const yVal = ℝ(y);
     if (Object.is(xVal, 0) && Object.is(yVal, -0)) {
       return Value.false;
     }
@@ -327,8 +327,8 @@ export class NumberValue extends PrimitiveValue {
     if (x.isNaN() && y.isNaN()) {
       return Value.true;
     }
-    const xVal = x.numberValue();
-    const yVal = y.numberValue();
+    const xVal = ℝ(x);
+    const yVal = ℝ(y);
     if (Object.is(xVal, 0) && Object.is(yVal, -0)) {
       return Value.true;
     }
@@ -364,12 +364,12 @@ export class NumberValue extends PrimitiveValue {
     if (x.isNaN()) {
       return Value('NaN');
     }
-    const xVal = x.numberValue();
+    const xVal = ℝ(x);
     if (xVal === 0) {
       return Value('0');
     }
     if (xVal < 0) {
-      const str = X(NumberValue.toString(F(-xVal))).stringValue();
+      const str = X(NumberValue.toString(𝔽(-xVal))).stringValue();
       return Value(`-${str}`);
     }
     if (x.isInfinity()) {
@@ -391,11 +391,11 @@ function NumberBitwiseOp(op: '&' | '|' | '^', x: NumberValue, y: NumberValue) {
   // 3. Return the result of applying the bitwise operator op to lnum and rnum. The result is a signed 32-bit integer.
   switch (op) {
     case '&':
-      return F(lnum.numberValue() & rnum.numberValue());
+      return 𝔽(ℝ(lnum) & ℝ(rnum));
     case '|':
-      return F(lnum.numberValue() | rnum.numberValue());
+      return 𝔽(ℝ(lnum) | ℝ(rnum));
     case '^':
-      return F(lnum.numberValue() ^ rnum.numberValue());
+      return 𝔽(ℝ(lnum) ^ ℝ(rnum));
     default:
       throw new OutOfRange('NumberBitwiseOp', op);
   }
@@ -423,86 +423,86 @@ export class BigIntValue extends PrimitiveValue {
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-unaryMinus */
   static unaryMinus(x: BigIntValue) {
-    if (x.bigintValue() === 0n) {
-      return Z(0n);
+    if (ℝ(x) === 0n) {
+      return ℤ(0n);
     }
-    return Z(-x.bigintValue());
+    return ℤ(-ℝ(x));
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseNOT */
   static bitwiseNOT(x: BigIntValue) {
-    return Z(-x.bigintValue() - 1n);
+    return ℤ(-ℝ(x) - 1n);
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-exponentiate */
   static exponentiate(base: BigIntValue, exponent: BigIntValue) {
     // 1. If exponent < 0n, throw a RangeError exception.
-    if (exponent.bigintValue() < 0n) {
+    if (ℝ(exponent) < 0n) {
       return surroundingAgent.Throw('RangeError', 'BigIntNegativeExponent');
     }
     // 2. If base is 0n and exponent is 0n, return 1n.
-    if (base.bigintValue() === 0n && exponent.bigintValue() === 0n) {
-      return Z(1n);
+    if (ℝ(base) === 0n && ℝ(exponent) === 0n) {
+      return ℤ(1n);
     }
     // 3. Return the BigInt value that represents the mathematical value of base raised to the power exponent.
-    return Z(base.bigintValue() ** exponent.bigintValue());
+    return ℤ(ℝ(base) ** ℝ(exponent));
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-multiply */
   static multiply(x: BigIntValue, y: BigIntValue) {
-    return Z(x.bigintValue() * y.bigintValue());
+    return ℤ(ℝ(x) * ℝ(y));
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-divide */
   static divide(x: BigIntValue, y: BigIntValue) {
     // 1. If y is 0n, throw a RangeError exception.
-    if (y.bigintValue() === 0n) {
+    if (ℝ(y) === 0n) {
       return surroundingAgent.Throw('RangeError', 'BigIntDivideByZero');
     }
     // 2. Let quotient be the mathematical value of x divided by y.
-    const quotient = x.bigintValue() / y.bigintValue();
+    const quotient = ℝ(x) / ℝ(y);
     // 3. Return the BigInt value that represents quotient rounded towards 0 to the next integral value.
-    return Z(quotient);
+    return ℤ(quotient);
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-remainder */
   static remainder(n: BigIntValue, d: BigIntValue) {
     // 1. If d is 0n, throw a RangeError exception.
-    if (d.bigintValue() === 0n) {
+    if (ℝ(d) === 0n) {
       return surroundingAgent.Throw('RangeError', 'BigIntDivideByZero');
     }
     // 2. If n is 0n, return 0n.
-    if (n.bigintValue() === 0n) {
-      return Z(0n);
+    if (ℝ(n) === 0n) {
+      return ℤ(0n);
     }
     // 3. Let r be the BigInt defined by the mathematical relation r = n - (d × q)
     //   where q is a BigInt that is negative only if n/d is negative and positive
     //   only if n/d is positive, and whose magnitude is as large as possible without
     //   exceeding the magnitude of the true mathematical quotient of n and d.
-    const r = Z(n.bigintValue() % d.bigintValue());
+    const r = ℤ(ℝ(n) % ℝ(d));
     // 4. Return r.
     return r;
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-add */
   static add(x: BigIntValue, y: BigIntValue) {
-    return Z(x.bigintValue() + y.bigintValue());
+    return ℤ(ℝ(x) + ℝ(y));
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-subtract */
   static subtract(x: BigIntValue, y: BigIntValue) {
-    return Z(x.bigintValue() - y.bigintValue());
+    return ℤ(ℝ(x) - ℝ(y));
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-leftShift */
   static leftShift(x: BigIntValue, y: BigIntValue) {
-    return Z(x.bigintValue() << y.bigintValue()); // eslint-disable-line no-bitwise
+    return ℤ(ℝ(x) << ℝ(y)); // eslint-disable-line no-bitwise
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-signedRightShift */
   static signedRightShift(x: BigIntValue, y: BigIntValue) {
     // 1. Return BigInt::leftShift(x, -y).
-    return BigIntValue.leftShift(x, Z(-y.bigintValue()));
+    return BigIntValue.leftShift(x, ℤ(-ℝ(y)));
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-unsignedRightShift */
@@ -512,13 +512,13 @@ export class BigIntValue extends PrimitiveValue {
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-lessThan */
   static lessThan(x: BigIntValue, y: BigIntValue) {
-    return x.bigintValue() < y.bigintValue() ? Value.true : Value.false;
+    return ℝ(x) < ℝ(y) ? Value.true : Value.false;
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-equal */
   static equal(x: BigIntValue, y: BigIntValue) {
     // Return true if x and y have the same mathematical integer value and false otherwise.
-    return x.bigintValue() === y.bigintValue() ? Value.true : Value.false;
+    return ℝ(x) === ℝ(y) ? Value.true : Value.false;
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-sameValue */
@@ -554,12 +554,12 @@ export class BigIntValue extends PrimitiveValue {
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-tostring */
   static override toString(x: BigIntValue): StringValue {
     // 1. If x is less than zero, return the string-concatenation of the String "-" and ! BigInt::toString(-x).
-    if (x.bigintValue() < 0n) {
-      const str = X(BigIntValue.toString(Z(-x.bigintValue()))).stringValue();
+    if (ℝ(x) < 0n) {
+      const str = X(BigIntValue.toString(ℤ(-ℝ(x)))).stringValue();
       return Value(`-${str}`);
     }
     // 2. Return the String value consisting of the code units of the digits of the decimal representation of x.
-    return Value(`${x.bigintValue()}`);
+    return Value(`${ℝ(x)}`);
   }
 
   static readonly unit = new BigIntValue(1n);
@@ -672,11 +672,11 @@ function BigIntBitwiseOp(op: '&' | '|' | '^', x: BigIntValue, y: BigIntValue) {
  */
   switch (op) {
     case '&':
-      return Z(x.bigintValue() & y.bigintValue());
+      return ℤ(ℝ(x) & ℝ(y));
     case '|':
-      return Z(x.bigintValue() | y.bigintValue());
+      return ℤ(ℝ(x) | ℝ(y));
     case '^':
-      return Z(x.bigintValue() ^ y.bigintValue());
+      return ℤ(ℝ(x) ^ ℝ(y));
     default:
       throw new OutOfRange('BigIntBitwiseOp', op);
   }

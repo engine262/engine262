@@ -2,7 +2,7 @@
 import {
   CreateBuiltinFunction,
   ToString,
-  F,
+  𝔽,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { Value } from '../value.mjs';
@@ -29,7 +29,7 @@ function ParseFloat([string = Value.undefined]) {
   }
   const multiplier = trimmedString.startsWith('-') ? -1 : 1;
   if (numberString.startsWith('Infinity')) {
-    return F(Infinity * multiplier);
+    return 𝔽(Infinity * multiplier);
   }
   let index = 0;
   done: { // eslint-disable-line no-labels
@@ -37,7 +37,7 @@ function ParseFloat([string = Value.undefined]) {
     while (numberString[index] === '0') {
       index += 1;
       if (index === numberString.length) {
-        return F(+0 * multiplier);
+        return 𝔽(+0 * multiplier);
       }
     }
     // Eat integer part
@@ -70,7 +70,7 @@ function ParseFloat([string = Value.undefined]) {
       }
     }
   }
-  return F(parseFloat(numberString.slice(0, index)) * multiplier);
+  return 𝔽(parseFloat(numberString.slice(0, index)) * multiplier);
 }
 
 export function bootstrapParseFloat(realmRec) {

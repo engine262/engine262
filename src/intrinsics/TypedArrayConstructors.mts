@@ -23,7 +23,7 @@ import {
   ToIndex,
   ToString,
   typedArrayInfoByName,
-  F,
+  𝔽,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
@@ -176,7 +176,7 @@ export function bootstrapTypedArrayConstructors(realmRec) {
           // e. Repeat, while k < len
           while (k < len) {
             // i. Let Pk be ! ToString(𝔽(k)).
-            const Pk = X(ToString(F(k)));
+            const Pk = X(ToString(𝔽(k)));
             // ii. Let kValue be the first element of values and remove that element from values.
             const kValue = values.shift();
             // iii. Perform ? Set(O, Pk, kValue, true).
@@ -201,7 +201,7 @@ export function bootstrapTypedArrayConstructors(realmRec) {
         // 12. Repeat, while k < len.
         while (k < len) {
           // a. Let Pk be ! ToString(𝔽(k)).
-          const Pk = X(ToString(F(k)));
+          const Pk = X(ToString(𝔽(k)));
           // b. Let kValue be ? Get(arrayLike, Pk).
           const kValue = Q(Get(arrayLike, Pk));
           // c. Perform ? Set(O, Pk, kValue, true).
@@ -279,7 +279,7 @@ export function bootstrapTypedArrayConstructors(realmRec) {
     }
 
     const taConstructor = bootstrapConstructor(realmRec, TypedArrayConstructor, TypedArray, 3, realmRec.Intrinsics[`%${TypedArray}.prototype%`], [
-      ['BYTES_PER_ELEMENT', F(info.ElementSize), undefined, {
+      ['BYTES_PER_ELEMENT', 𝔽(info.ElementSize), undefined, {
         Writable: Value.false,
         Configurable: Value.false,
       }],

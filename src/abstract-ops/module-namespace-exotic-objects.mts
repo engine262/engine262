@@ -23,7 +23,7 @@ import {
   OrdinaryGet,
   OrdinaryDelete,
   OrdinaryOwnPropertyKeys,
-  GetModuleNamespace,
+  GetModuleNamespace, ℝ,
 } from './all.mjs';
 
 
@@ -201,7 +201,7 @@ export function ModuleNamespaceCreate(module, exports) {
   // 9. Let sortedExports be a new List containing the same values as the list exports where the values are ordered as if an Array of the same values had been sorted using Array.prototype.sort using undefined as comparefn.
   const sortedExports = [...exports].sort((x, y) => {
     const result = X(SortCompare(x, y, Value.undefined));
-    return result.numberValue();
+    return ℝ(result);
   });
   // 10. Set M.[[Exports]] to sortedExports.
   M.Exports = new ValueSet(sortedExports);

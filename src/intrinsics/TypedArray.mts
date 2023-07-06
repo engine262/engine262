@@ -15,7 +15,7 @@ import {
   ToObject,
   ToString,
   TypedArrayCreate,
-  F,
+  𝔽,
 } from '../abstract-ops/all.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
@@ -51,14 +51,14 @@ function TypedArray_from([source = Value.undefined, mapfn = Value.undefined, thi
   if (usingIterator !== Value.undefined) {
     const values = Q(IterableToList(source, usingIterator));
     const len = values.length;
-    const targetObj = Q(TypedArrayCreate(C, [F(len)]));
+    const targetObj = Q(TypedArrayCreate(C, [𝔽(len)]));
     let k = 0;
     while (k < len) {
-      const Pk = X(ToString(F(k)));
+      const Pk = X(ToString(𝔽(k)));
       const kValue = values.shift();
       let mappedValue;
       if (mapping) {
-        mappedValue = Q(Call(mapfn, thisArg, [kValue, F(k)]));
+        mappedValue = Q(Call(mapfn, thisArg, [kValue, 𝔽(k)]));
       } else {
         mappedValue = kValue;
       }
@@ -74,20 +74,20 @@ function TypedArray_from([source = Value.undefined, mapfn = Value.undefined, thi
   // 9. Let len be ? LengthOfArrayLike(arrayLike).
   const len = Q(LengthOfArrayLike(arrayLike));
   // 10. Let targetObj be ? TypedArrayCreate(C, « 𝔽(len) »).
-  const targetObj = Q(TypedArrayCreate(C, [F(len)]));
+  const targetObj = Q(TypedArrayCreate(C, [𝔽(len)]));
   // 11. Let k be 0.
   let k = 0;
   // 12. Repeat, while k < len
   while (k < len) {
     // a. Let Pk be ! ToString(𝔽(k)).
-    const Pk = X(ToString(F(k)));
+    const Pk = X(ToString(𝔽(k)));
     // b. Let kValue be ? Get(arrayLike, Pk).
     const kValue = Q(Get(arrayLike, Pk));
     let mappedValue;
     // c. If mapping is true, then
     if (mapping) {
       // i. Let mappedValue be ? Call(mapfn, thisArg, « kValue, 𝔽(k) »).
-      mappedValue = Q(Call(mapfn, thisArg, [kValue, F(k)]));
+      mappedValue = Q(Call(mapfn, thisArg, [kValue, 𝔽(k)]));
     } else {
       // d. Else, let mappedValue be kValue.
       mappedValue = kValue;
@@ -113,7 +113,7 @@ function TypedArray_of(items, { thisValue }) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
   }
   // 5. Let newObj be ? TypedArrayCreate(C, « 𝔽(len) »).
-  const newObj = Q(TypedArrayCreate(C, [F(len)]));
+  const newObj = Q(TypedArrayCreate(C, [𝔽(len)]));
   // 6. Let k be 0.
   let k = 0;
   // 7. Repeat, while k < len
@@ -121,7 +121,7 @@ function TypedArray_of(items, { thisValue }) {
     // a. Let kValue be items[k].
     const kValue = items[k];
     // b. Let Pk be ! ToString(𝔽(k)).
-    const Pk = X(ToString(F(k)));
+    const Pk = X(ToString(𝔽(k)));
     // c. Perform ? Set(newObj, Pk, kValue, true).
     Q(Set(newObj, Pk, kValue, Value.true));
     // d. Set k to k + 1.

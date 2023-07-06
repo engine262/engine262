@@ -46,7 +46,7 @@ import {
   isNonNegativeInteger,
   isStrictModeCode,
   Realm,
-  F as toNumberValue,
+  𝔽,
 } from './all.mjs';
 
 // This file covers abstract operations defined in
@@ -447,7 +447,7 @@ export function SetFunctionLength(F, length) {
   Assert(IsExtensible(F) === Value.true && HasOwnProperty(F, Value('length')) === Value.false);
   // 2. Return ! DefinePropertyOrThrow(F, "length", PropertyDescriptor { [[Value]]: 𝔽(length), [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: true }).
   return X(DefinePropertyOrThrow(F, Value('length'), Descriptor({
-    Value: toNumberValue(length),
+    Value: 𝔽(length),
     Writable: Value.false,
     Enumerable: Value.false,
     Configurable: Value.true,

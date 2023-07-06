@@ -34,7 +34,7 @@ import {
   isArrayIndex,
   isNonNegativeInteger,
   Yield,
-  F,
+  𝔽, ℝ,
 } from './all.mjs';
 
 /** https://tc39.es/ecma262/#sec-array-exotic-objects-defineownproperty-p-desc */
@@ -50,15 +50,15 @@ function ArrayDefineOwnProperty(P, Desc) {
     Assert(oldLenDesc.Configurable === Value.false);
     const oldLen = oldLenDesc.Value;
     const index = X(ToUint32(P));
-    if (index.numberValue() >= oldLen.numberValue() && oldLenDesc.Writable === Value.false) {
+    if (ℝ(index) >= ℝ(oldLen) && oldLenDesc.Writable === Value.false) {
       return Value.false;
     }
     const succeeded = X(OrdinaryDefineOwnProperty(A, P, Desc));
     if (succeeded === Value.false) {
       return Value.false;
     }
-    if (index.numberValue() >= oldLen.numberValue()) {
-      oldLenDesc.Value = F(index.numberValue() + 1);
+    if (ℝ(index) >= ℝ(oldLen)) {
+      oldLenDesc.Value = 𝔽(ℝ(index) + 1);
       const succeeded = OrdinaryDefineOwnProperty(A, Value('length'), oldLenDesc); // eslint-disable-line no-shadow
       Assert(succeeded === Value.true);
     }
@@ -88,7 +88,7 @@ export function ArrayCreate(length, proto) {
   A.DefineOwnProperty = ArrayDefineOwnProperty;
 
   X(OrdinaryDefineOwnProperty(A, Value('length'), Descriptor({
-    Value: F(length),
+    Value: 𝔽(length),
     Writable: Value.true,
     Enumerable: Value.false,
     Configurable: Value.false,
@@ -129,7 +129,7 @@ export function ArraySpeciesCreate(originalArray, length) {
   if (IsConstructor(C) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
   }
-  return Q(Construct(C, [F(length)]));
+  return Q(Construct(C, [𝔽(length)]));
 }
 
 /** https://tc39.es/ecma262/#sec-arraysetlength */
@@ -138,16 +138,16 @@ export function ArraySetLength(A, Desc) {
     return OrdinaryDefineOwnProperty(A, Value('length'), Desc);
   }
   const newLenDesc = Descriptor({ ...Desc });
-  const newLen = Q(ToUint32(Desc.Value)).numberValue();
-  const numberLen = Q(ToNumber(Desc.Value)).numberValue();
+  const newLen = ℝ(Q(ToUint32(Desc.Value)));
+  const numberLen = ℝ(Q(ToNumber(Desc.Value)));
   if (newLen !== numberLen) {
     return surroundingAgent.Throw('RangeError', 'InvalidArrayLength', Desc.Value);
   }
-  newLenDesc.Value = F(newLen);
+  newLenDesc.Value = 𝔽(newLen);
   const oldLenDesc = OrdinaryGetOwnProperty(A, Value('length'));
   Assert(X(IsDataDescriptor(oldLenDesc)));
   Assert(oldLenDesc.Configurable === Value.false);
-  const oldLen = oldLenDesc.Value.numberValue();
+  const oldLen = ℝ(oldLenDesc.Value);
   if (newLen >= oldLen) {
     return OrdinaryDefineOwnProperty(A, Value('length'), newLenDesc);
   }
@@ -175,7 +175,7 @@ export function ArraySetLength(A, Desc) {
   for (const P of keys) {
     const deleteSucceeded = X(A.Delete(P));
     if (deleteSucceeded === Value.false) {
-      newLenDesc.Value = F(X(ToUint32(P)).numberValue() + 1);
+      newLenDesc.Value = 𝔽(ℝ(X(ToUint32(P))) + 1);
       if (newWritable === false) {
         newLenDesc.Writable = Value.false;
       }
@@ -206,15 +206,15 @@ export function IsConcatSpreadable(O) {
 export function SortCompare(x, y, comparefn) {
   // 1. If x and y are both undefined, return +0𝔽.
   if (x === Value.undefined && y === Value.undefined) {
-    return F(+0);
+    return 𝔽(+0);
   }
   // 2. If x is undefined, return 1𝔽.
   if (x === Value.undefined) {
-    return F(1);
+    return 𝔽(1);
   }
   // 3. If y is undefined, return -1𝔽.
   if (y === Value.undefined) {
-    return F(-1);
+    return 𝔽(-1);
   }
   // 4. If comparefn is not undefined, then
   if (comparefn !== Value.undefined) {
@@ -222,7 +222,7 @@ export function SortCompare(x, y, comparefn) {
     const v = Q(ToNumber(Q(Call(comparefn, Value.undefined, [x, y]))));
     // b. If v is NaN, return +0𝔽.
     if (v.isNaN()) {
-      return F(+0);
+      return 𝔽(+0);
     }
     // c. Return v.
     return v;
@@ -235,16 +235,16 @@ export function SortCompare(x, y, comparefn) {
   const xSmaller = AbstractRelationalComparison(xString, yString);
   // 8. If xSmaller is true, return -1𝔽.
   if (xSmaller === Value.true) {
-    return F(-1);
+    return 𝔽(-1);
   }
   // 9. Let ySmaller be the result of performing Abstract Relational Comparison yString < xString.
   const ySmaller = AbstractRelationalComparison(yString, xString);
   // 10. If ySmaller is true, return 1𝔽.
   if (ySmaller === Value.true) {
-    return F(1);
+    return 𝔽(1);
   }
   // 11. Return +0𝔽.
-  return F(+0);
+  return 𝔽(+0);
 }
 
 /** https://tc39.es/ecma262/#sec-createarrayiterator */
@@ -278,10 +278,10 @@ export function CreateArrayIterator(array, kind) {
       }
       // iv. If kind is key, perform ? Yield(𝔽(index)).
       if (kind === 'key') {
-        Q(yield* Yield(F(index)));
+        Q(yield* Yield(𝔽(index)));
       } else { // v. Else,
         // 1. Let elementKey be ! ToString(𝔽(index)).
-        const elementKey = X(ToString(F(index)));
+        const elementKey = X(ToString(𝔽(index)));
         // 2. Let elementValue be ? Get(array, elementKey).
         const elementValue = Q(Get(array, elementKey));
         // 3. If kind is value, perform ? Yield(elementValue).
@@ -291,7 +291,7 @@ export function CreateArrayIterator(array, kind) {
           // a. Assert: kind is key+value.
           Assert(kind === 'key+value');
           // b. Perform ? Yield(! CreateArrayFromList(« 𝔽(index), elementValue »)).
-          Q(yield* Yield(X(CreateArrayFromList([F(index), elementValue]))));
+          Q(yield* Yield(X(CreateArrayFromList([𝔽(index), elementValue]))));
         }
       }
       // vi. Set index to index + 1.

@@ -2,10 +2,10 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
   Call,
-  F,
+  𝔽,
   IsCallable,
   RequireInternalSlot,
-  SameValueZero,
+  SameValueZero, ℝ,
 } from '../abstract-ops/all.mjs';
 import {
   NumberValue,
@@ -156,8 +156,8 @@ function MapProto_set([key = Value.undefined, value = Value.undefined], { thisVa
     }
   }
   // 5. If key is -0𝔽, set key to +0𝔽.
-  if (key instanceof NumberValue && Object.is(key.numberValue(), -0)) {
-    key = F(+0);
+  if (key instanceof NumberValue && Object.is(ℝ(key), -0)) {
+    key = 𝔽(+0);
   }
   // 6. Let p be the Record { [[Key]]: key, [[Value]]: value }.
   const p = { Key: key, Value: value };
@@ -185,7 +185,7 @@ function MapProto_sizeGetter(args, { thisValue }) {
     }
   }
   // 6. Return 𝔽(count).
-  return F(count);
+  return 𝔽(count);
 }
 
 /** https://tc39.es/ecma262/#sec-map.prototype.values */

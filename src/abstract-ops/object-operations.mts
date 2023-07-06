@@ -29,7 +29,7 @@ import {
   ToObject,
   ToString,
   isProxyExoticObject,
-  F as toNumberValue,
+  𝔽, ℝ,
 } from './all.mjs';
 
 
@@ -268,7 +268,7 @@ export function CreateArrayFromList(elements) {
   // 4. For each element e of elements, do
   for (const e of elements) {
     // a. Perform ! CreateDataPropertyOrThrow(array, ! ToString(𝔽(n)), e).
-    X(CreateDataPropertyOrThrow(array, X(ToString(toNumberValue(n))), e));
+    X(CreateDataPropertyOrThrow(array, X(ToString(𝔽(n))), e));
     // b. Set n to n + 1.
     n += 1;
   }
@@ -281,7 +281,7 @@ export function LengthOfArrayLike(obj) {
   // 1. Assert: Type(obj) is Object.
   Assert(obj instanceof ObjectValue);
   // 2. Return ℝ(? ToLength(? Get(obj, "length"))).
-  return Q(ToLength(Q(Get(obj, Value('length'))))).numberValue();
+  return ℝ(Q(ToLength(Q(Get(obj, Value('length'))))));
 }
 
 /** https://tc39.es/ecma262/#sec-createlistfromarraylike */
@@ -303,7 +303,7 @@ export function CreateListFromArrayLike(obj, elementTypes) {
   // 6. Repeat, while index < len,
   while (index < len) {
     // a. Let indexName be ! ToString(𝔽(index)).
-    const indexName = X(ToString(toNumberValue(index)));
+    const indexName = X(ToString(𝔽(index)));
     // b. Let next be ? Get(obj, indexName).
     const next = Q(Get(obj, indexName));
     // c. If Type(next) is not an element of elementTypes, throw a TypeError exception.

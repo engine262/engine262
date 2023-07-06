@@ -8,7 +8,7 @@ import {
 import {
   CreateBuiltinFunction,
   ToNumber,
-  F,
+  𝔽, ℝ,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
@@ -18,14 +18,14 @@ function Math_abs([x = Value.undefined]) {
   const n = Q(ToNumber(x));
   if (n.isNaN()) {
     return n;
-  } else if (Object.is(n.numberValue(), -0)) {
-    return F(+0);
+  } else if (Object.is(ℝ(n), -0)) {
+    return 𝔽(+0);
   } else if (n.isInfinity()) {
-    return F(Infinity);
+    return 𝔽(Infinity);
   }
 
-  if (n.numberValue() < 0) {
-    return F(-n.numberValue());
+  if (ℝ(n) < 0) {
+    return 𝔽(-ℝ(n));
   }
   return n;
 }
@@ -35,15 +35,15 @@ function Math_acos([x = Value.undefined]) {
   const n = Q(ToNumber(x));
   if (n.isNaN()) {
     return n;
-  } else if (n.numberValue() > 1) {
-    return F(NaN);
-  } else if (n.numberValue() < -1) {
-    return F(NaN);
-  } else if (n.numberValue() === 1) {
-    return F(+0);
+  } else if (ℝ(n) > 1) {
+    return 𝔽(NaN);
+  } else if (ℝ(n) < -1) {
+    return 𝔽(NaN);
+  } else if (ℝ(n) === 1) {
+    return 𝔽(+0);
   }
 
-  return F(Math.acos(n.numberValue()));
+  return 𝔽(Math.acos(ℝ(n)));
 }
 
 /** https://tc39.es/ecma262/#sec-math.pow */
@@ -95,7 +95,7 @@ function Math_random() {
   // Convert to double in [0, 1) range
   big64View[0] = (s0 >> 12n) | 0x3FF0000000000000n;
   const result = floatView[0] - 1;
-  return F(result);
+  return 𝔽(result);
 }
 
 /** https://tc39.es/ecma262/#sec-math-object */
@@ -111,7 +111,7 @@ export function bootstrapMath(realmRec) {
     ['PI', 3.141592653589793],
     ['SQRT1_2', 0.7071067811865476],
     ['SQRT2', 1.4142135623730951],
-  ].map(([name, value]) => [name, F(value), undefined, readonly]);
+  ].map(([name, value]) => [name, 𝔽(value), undefined, readonly]);
   // @@toStringTag is handled in the bootstrapPrototype() call.
 
   const mathObj = bootstrapPrototype(realmRec, [
@@ -161,9 +161,9 @@ export function bootstrapMath(realmRec) {
     /** https://tc39.es/ecma262/#sec-function-properties-of-the-math-object */
     const method = (args) => {
       for (let i = 0; i < args.length; i += 1) {
-        args[i] = Q(ToNumber(args[i])).numberValue();
+        args[i] = ℝ(Q(ToNumber(args[i])));
       }
-      return F(Math[name](...args));
+      return 𝔽(Math[name](...args));
     };
     const func = CreateBuiltinFunction(method, length, Value(name), [], realmRec);
     mathObj.DefineOwnProperty(Value(name), Descriptor({

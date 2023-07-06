@@ -11,7 +11,7 @@ import {
   ArrayCreate,
   CreateDataPropertyOrThrow,
   ToString,
-  F,
+  𝔽,
 } from '../abstract-ops/all.mjs';
 import {
   AbruptCompletion,
@@ -166,7 +166,7 @@ function* IteratorBindingInitialization_BindingRestElement({ BindingIdentifier, 
       // e. ReturnIfAbrupt(nextValue).
       ReturnIfAbrupt(nextValue);
       // f. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), nextValue).
-      X(CreateDataPropertyOrThrow(A, X(ToString(F(n))), nextValue));
+      X(CreateDataPropertyOrThrow(A, X(ToString(𝔽(n))), nextValue));
       // g. Set n to n + 1.
       n += 1;
     }
@@ -207,7 +207,7 @@ function* IteratorBindingInitialization_BindingRestElement({ BindingIdentifier, 
       // e. ReturnIfAbrupt(nextValue).
       ReturnIfAbrupt(nextValue);
       // f. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), nextValue).
-      X(CreateDataPropertyOrThrow(A, X(ToString(F(n))), nextValue));
+      X(CreateDataPropertyOrThrow(A, X(ToString(𝔽(n))), nextValue));
       // g. Set n to n + 1.
       n += 1;
     }

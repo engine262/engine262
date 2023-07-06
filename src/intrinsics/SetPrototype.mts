@@ -2,10 +2,10 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
   Call,
-  F,
+  𝔽,
   IsCallable,
   RequireInternalSlot,
-  SameValueZero,
+  SameValueZero, ℝ,
 } from '../abstract-ops/all.mjs';
 import {
   NumberValue,
@@ -33,8 +33,8 @@ function SetProto_add([value = Value.undefined], { thisValue }) {
     }
   }
   // 5. If value is -0𝔽, set value to +0𝔽.
-  if (value instanceof NumberValue && Object.is(value.numberValue(), -0)) {
-    value = F(+0);
+  if (value instanceof NumberValue && Object.is(ℝ(value), -0)) {
+    value = 𝔽(+0);
   }
   // 6. Append value as the last element of entries.
   entries.push(value);
@@ -151,7 +151,7 @@ function SetProto_sizeGetter(args, { thisValue }) {
     }
   }
   // 6. Return 𝔽(count).
-  return F(count);
+  return 𝔽(count);
 }
 
 /** https://tc39.es/ecma262/#sec-set.prototype.values */
