@@ -260,7 +260,7 @@ if (!process.send) {
       return false;
     }
     const ctor = ctorDesc.Value;
-    if (!(ctor instanceof ObjectValue) || IsCallable(ctor) !== Value.true) {
+    if (!(ctor instanceof ObjectValue) || !IsCallable(ctor)) {
       return false;
     }
     const namePropDesc = ctor.properties.get(Value('name'));
