@@ -48,7 +48,7 @@ export type Value =
   | ObjectValue;
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types */
-export const Value = (function () {
+export const Value = (() => {
   // NOTE: Using IIFE so that the class does not conflict with the type of the same name
   @callable((_target, _thisArg, [value]) => {
     if (value === null) {
@@ -75,7 +75,7 @@ export const Value = (function () {
   }
   return Value;
 })() as typeof BaseValue & {
-  <T extends null | undefined | boolean | string | number | bigint>(value: T):
+  <T extends null | undefined | boolean | string | number | bigint>(value: T): // eslint-disable-line @engine262/no-use-in-def
     T extends null ? NullValue :
     T extends undefined ? UndefinedValue :
     T extends boolean ? BooleanValue<T> :
@@ -101,7 +101,7 @@ export type PrimitiveValue =
   | BigIntValue;
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types */
-export const PrimitiveValue = (function () {
+export const PrimitiveValue = (() => {
   // NOTE: Using IIFE so that the class does not conflict with the type of the same name
   abstract class PrimitiveValue extends Value {
   }
@@ -113,7 +113,7 @@ export class UndefinedValue extends PrimitiveValue {
   declare readonly type: 'Undefined';
   declare readonly value: undefined;
 
-  private constructor() {
+  private constructor() { // eslint-disable-line no-useless-constructor
     super();
   }
 
@@ -129,7 +129,7 @@ export class NullValue extends PrimitiveValue {
   declare readonly type: 'Null';
   declare readonly value: null;
 
-  private constructor() {
+  private constructor() { // eslint-disable-line no-useless-constructor
     super();
   }
 
@@ -175,7 +175,7 @@ export interface StringValue extends InstanceType<typeof PrimitiveValue> {
 /**
  * https://tc39.es/ecma262/#sec-static-semantics-stringvalue
  */
-export const StringValue = (function () {
+export const StringValue = (() => {
   // NOTE: Using IIFE so that the class does not conflict with the type of the same name
   /** https://tc39.es/ecma262/#sec-static-semantics-stringvalue */
   @callable((_target, _thisArg, [value]) => {
@@ -211,7 +211,7 @@ export const StringValue = (function () {
     static {
       Object.defineProperty(this, 'name', { value: 'StringValue' });
       Object.defineProperty(this.prototype, 'type', { value: 'String', configurable: true });
-      createStringValue = value => new this(value);
+      createStringValue = (value) => new this(value);
     }
   }
 
@@ -501,7 +501,7 @@ export class NumberValue extends PrimitiveValue {
 
   static {
     Object.defineProperty(this.prototype, 'type', { value: 'Number', configurable: true });
-    createNumberValue = value => new NumberValue(value);
+    createNumberValue = (value) => new NumberValue(value);
   }
 }
 
@@ -695,7 +695,7 @@ export class BigIntValue extends PrimitiveValue {
 
   static {
     Object.defineProperty(this.prototype, 'type', { value: 'BigInt', configurable: true });
-    createBigIntValue = value => new BigIntValue(value);
+    createBigIntValue = (value) => new BigIntValue(value);
   }
 }
 
