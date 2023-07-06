@@ -34,6 +34,18 @@ export function Z(x) {
   return new BigIntValue(x);
 }
 
+// #ℝ
+export function R(x: NumberValue): number;
+export function R(x: BigIntValue): bigint;
+export function R(x: BigIntValue | NumberValue): bigint | number;
+export function R(x) {
+  if (x instanceof BigIntValue) {
+    return x.bigintValue(); // eslint-disable-line @engine262/mathematical-value
+  }
+  Assert(x instanceof NumberValue);
+  return x.numberValue(); // eslint-disable-line @engine262/mathematical-value
+}
+
 // 6.2.5.1 IsAccessorDescriptor
 export function IsAccessorDescriptor(Desc) {
   if (Desc instanceof UndefinedValue) {

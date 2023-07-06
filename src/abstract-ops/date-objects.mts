@@ -5,7 +5,7 @@
 import { X } from '../completion.mjs';
 import {
   ToIntegerOrInfinity,
-  F,
+  F, R,
 } from './all.mjs';
 
 const mod = (n, m) => {
@@ -23,16 +23,16 @@ export const msPerDay = msPerHour * HoursPerDay;
 
 /** https://tc39.es/ecma262/#sec-day-number-and-time-within-day */
 export function Day(t) {
-  return F(Math.floor(t.numberValue() / msPerDay));
+  return F(Math.floor(R(t) / msPerDay));
 }
 
 export function TimeWithinDay(t) {
-  return F(mod(t.numberValue(), msPerDay));
+  return F(mod(R(t), msPerDay));
 }
 
 /** https://tc39.es/ecma262/#sec-year-number */
 export function DaysInYear(y) {
-  y = y.numberValue();
+  y = R(y);
   if (mod(y, 4) !== 0) {
     return F(365);
   }
@@ -48,38 +48,38 @@ export function DaysInYear(y) {
 }
 
 export function DayFromYear(y) {
-  y = y.numberValue();
+  y = R(y);
   return F(365 * (y - 1970) + Math.floor((y - 1969) / 4) - Math.floor((y - 1901) / 100) + Math.floor((y - 1601) / 400));
 }
 
 export function TimeFromYear(y) {
-  return F(msPerDay * DayFromYear(y).numberValue());
+  return F(msPerDay * R(DayFromYear(y)));
 }
 
 export const msPerAverageYear = 12 * 30.436875 * msPerDay;
 
 export function YearFromTime(t) {
-  t = t.numberValue();
+  t = R(t);
   let year = Math.floor((t + msPerAverageYear / 2) / msPerAverageYear) + 1970;
-  if (TimeFromYear(F(year)).numberValue() > t) {
+  if (R(TimeFromYear(F(year))) > t) {
     year -= 1;
   }
   return F(year);
 }
 
 export function InLeapYear(t) {
-  if (DaysInYear(YearFromTime(t)).numberValue() === 365) {
+  if (R(DaysInYear(YearFromTime(t))) === 365) {
     return F(+0);
   }
-  if (DaysInYear(YearFromTime(t)).numberValue() === 366) {
+  if (R(DaysInYear(YearFromTime(t))) === 366) {
     return F(1);
   }
 }
 
 /** https://tc39.es/ecma262/#sec-month-number */
 export function MonthFromTime(t) {
-  const dayWithinYear = DayWithinYear(t).numberValue();
-  const inLeapYear = InLeapYear(t).numberValue();
+  const dayWithinYear = R(DayWithinYear(t));
+  const inLeapYear = R(InLeapYear(t));
   if (dayWithinYear >= 0 && dayWithinYear < 31) {
     return F(+0);
   }
@@ -119,14 +119,14 @@ export function MonthFromTime(t) {
 }
 
 export function DayWithinYear(t) {
-  return F(Day(t).numberValue() - DayFromYear(YearFromTime(t)).numberValue());
+  return F(R(Day(t)) - R(DayFromYear(YearFromTime(t))));
 }
 
 /** https://tc39.es/ecma262/#sec-date-number */
 export function DateFromTime(t) {
-  const dayWithinYear = DayWithinYear(t).numberValue();
-  const monthFromTime = MonthFromTime(t).numberValue();
-  const inLeapYear = InLeapYear(t).numberValue();
+  const dayWithinYear = R(DayWithinYear(t));
+  const monthFromTime = R(MonthFromTime(t));
+  const inLeapYear = R(InLeapYear(t));
   switch (monthFromTime) {
     case 0: return F(dayWithinYear + 1);
     case 1: return F(dayWithinYear - 30);
@@ -146,7 +146,7 @@ export function DateFromTime(t) {
 
 /** https://tc39.es/ecma262/#sec-week-day */
 export function WeekDay(t) {
-  return F(mod(Day(t).numberValue() + 4, 7));
+  return F(mod(R(Day(t)) + 4, 7));
 }
 
 /** https://tc39.es/ecma262/#sec-local-time-zone-adjustment */
@@ -157,34 +157,34 @@ export function LocalTZA(_t, _isUTC) {
 
 /** https://tc39.es/ecma262/#sec-localtime */
 export function LocalTime(t) {
-  return F(t.numberValue() + LocalTZA(t, true));
+  return F(R(t) + LocalTZA(t, true));
 }
 
 /** https://tc39.es/ecma262/#sec-utc-t */
 export function UTC(t) {
-  return F(t.numberValue() - LocalTZA(t, false));
+  return F(R(t) - LocalTZA(t, false));
 }
 
 /** https://tc39.es/ecma262/#sec-hours-minutes-second-and-milliseconds */
 export function HourFromTime(t) {
-  return F(mod(Math.floor(t.numberValue() / msPerHour), HoursPerDay));
+  return F(mod(Math.floor(R(t) / msPerHour), HoursPerDay));
 }
 
 export function MinFromTime(t) {
-  return F(mod(Math.floor(t.numberValue() / msPerMinute), MinutesPerHour));
+  return F(mod(Math.floor(R(t) / msPerMinute), MinutesPerHour));
 }
 
 export function SecFromTime(t) {
-  return F(mod(Math.floor(t.numberValue() / msPerSecond), SecondsPerMinute));
+  return F(mod(Math.floor(R(t) / msPerSecond), SecondsPerMinute));
 }
 
 export function msFromTime(t) {
-  return F(mod(t.numberValue(), msPerSecond));
+  return F(mod(R(t), msPerSecond));
 }
 
 /** https://tc39.es/ecma262/#sec-maketime */
 export function MakeTime(hour, min, sec, ms) {
-  if (!Number.isFinite(hour.numberValue()) || !Number.isFinite(min.numberValue()) || !Number.isFinite(sec.numberValue()) || !Number.isFinite(ms.numberValue())) {
+  if (!Number.isFinite(R(hour)) || !Number.isFinite(R(min)) || !Number.isFinite(R(sec)) || !Number.isFinite(R(ms))) {
     return F(NaN);
   }
   const h = X(ToIntegerOrInfinity(hour));
@@ -199,7 +199,7 @@ const daysWithinYearToEndOfMonth = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273,
 
 /** https://tc39.es/ecma262/#sec-makeday */
 export function MakeDay(year, month, date) {
-  if (!Number.isFinite(year.numberValue()) || !Number.isFinite(month.numberValue()) || !Number.isFinite(date.numberValue())) {
+  if (!Number.isFinite(R(year)) || !Number.isFinite(R(month)) || !Number.isFinite(R(date))) {
     return F(NaN);
   }
   const y = X(ToIntegerOrInfinity(year));
@@ -207,17 +207,17 @@ export function MakeDay(year, month, date) {
   const dt = X(ToIntegerOrInfinity(date));
   const ym = y + Math.floor(m / 12);
   const mn = mod(m, 12);
-  const ymday = DayFromYear(F(ym + (mn > 1 ? 1 : 0))).numberValue() - 365 * (mn > 1 ? 1 : 0) + daysWithinYearToEndOfMonth[mn];
+  const ymday = R(DayFromYear(F(ym + (mn > 1 ? 1 : 0)))) - 365 * (mn > 1 ? 1 : 0) + daysWithinYearToEndOfMonth[mn];
   const t = F(ymday * msPerDay);
-  return F(Day(t).numberValue() + dt - 1);
+  return F(R(Day(t)) + dt - 1);
 }
 
 /** https://tc39.es/ecma262/#sec-makedate */
 export function MakeDate(day, time) {
-  if (!Number.isFinite(day.numberValue()) || !Number.isFinite(time.numberValue())) {
+  if (!Number.isFinite(R(day)) || !Number.isFinite(R(time))) {
     return F(NaN);
   }
-  return F(day.numberValue() * msPerDay + time.numberValue());
+  return F(R(day) * msPerDay + R(time));
 }
 
 /** https://tc39.es/ecma262/#sec-timeclip */
@@ -227,7 +227,7 @@ export function TimeClip(time) {
     return F(NaN);
   }
   // 2. If abs(ℝ(time)) > 8.64 × 1015, return NaN.
-  if (Math.abs(time.numberValue()) > 8.64e15) {
+  if (Math.abs(R(time)) > 8.64e15) {
     return F(NaN);
   }
   // 3. Return 𝔽(! ToIntegerOrInfinity(time)).

@@ -21,7 +21,7 @@ import {
   ToIntegerOrInfinity,
   ToString,
   isArrayIndex,
-  F,
+  F, R,
 } from './all.mjs';
 
 function StringExoticGetOwnProperty(P) {
@@ -134,16 +134,16 @@ export function StringGetOwnProperty(S, P) {
   if (IsIntegralNumber(index) === Value.false) {
     return Value.undefined;
   }
-  if (Object.is(index.numberValue(), -0)) {
+  if (Object.is(R(index), -0)) {
     return Value.undefined;
   }
   const str = S.StringData;
   Assert(str instanceof JSStringValue);
   const len = str.stringValue().length;
-  if (index.numberValue() < 0 || len <= index.numberValue()) {
+  if (R(index) < 0 || len <= R(index)) {
     return Value.undefined;
   }
-  const resultStr = str.stringValue()[index.numberValue()];
+  const resultStr = str.stringValue()[R(index)];
   return Descriptor({
     Value: Value(resultStr),
     Writable: Value.false,

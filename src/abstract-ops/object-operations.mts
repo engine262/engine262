@@ -29,7 +29,7 @@ import {
   ToObject,
   ToString,
   isProxyExoticObject,
-  F as toNumberValue,
+  F as toNumberValue, R,
 } from './all.mjs';
 
 
@@ -281,7 +281,7 @@ export function LengthOfArrayLike(obj) {
   // 1. Assert: Type(obj) is Object.
   Assert(obj instanceof ObjectValue);
   // 2. Return ℝ(? ToLength(? Get(obj, "length"))).
-  return Q(ToLength(Q(Get(obj, Value('length'))))).numberValue();
+  return R(Q(ToLength(Q(Get(obj, Value('length'))))));
 }
 
 /** https://tc39.es/ecma262/#sec-createlistfromarraylike */

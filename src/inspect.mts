@@ -5,7 +5,7 @@ import {
 } from './value.mjs';
 import {
   Call, IsArray, Get, LengthOfArrayLike,
-  EscapeRegExpPattern,
+  EscapeRegExpPattern, R,
 } from './abstract-ops/all.mjs';
 import { Q, X } from './completion.mjs';
 
@@ -58,13 +58,13 @@ const INSPECTORS = {
   Undefined: () => 'undefined',
   Boolean: (v) => v.boolean.toString(),
   Number: (v) => {
-    const n = v.numberValue();
+    const n = R(v);
     if (n === 0 && Object.is(n, -0)) {
       return '-0';
     }
     return n.toString();
   },
-  BigInt: (v) => `${v.bigintValue()}n`,
+  BigInt: (v) => `${R(v)}n`,
   String: (v) => {
     const s = JSON.stringify(v.stringValue()).slice(1, -1);
     return `'${s}'`;
@@ -109,7 +109,7 @@ const INSPECTORS = {
     }
 
     if ('DateValue' in v) {
-      const d = new Date(v.DateValue.numberValue());
+      const d = new Date(R(v.DateValue));
       if (Number.isNaN(d.getTime())) {
         return '[Date Invalid]';
       }

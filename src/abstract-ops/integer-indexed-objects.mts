@@ -24,7 +24,7 @@ import {
   ToBigInt,
   isIntegerIndex,
   typedArrayInfoByName,
-  F,
+  F, R,
 } from './all.mjs';
 
 export function isIntegerIndexedExoticObject(O) {
@@ -268,7 +268,7 @@ export function IntegerIndexedElementGet(O, index) {
   // 8. Let elementSize be the Element Size value specified in Table 61 for arrayTypeName.
   const elementSize = typedArrayInfoByName[arrayTypeName].ElementSize;
   // 9. Let indexedPosition be (ℝ(index) × elementSize) + offset.
-  const indexedPosition = (index.numberValue() * elementSize) + offset;
+  const indexedPosition = (R(index) * elementSize) + offset;
   // 10. Let elementType be the Element Type value in Table 61 for arrayTypeName.
   const elementType = typedArrayInfoByName[arrayTypeName].ElementType;
   // 11. Return GetValueFromBuffer(buffer, indexedPosition, elementType, true, Unordered).
@@ -306,7 +306,7 @@ export function IntegerIndexedElementSet(O, index, value) {
   // 10. Let elementSize be the Element Size value specified in Table 61 for arrayTypeName.
   const elementSize = typedArrayInfoByName[arrayTypeName].ElementSize;
   // 11. Let indexedPosition be (ℝ(index) × elementSize) + offset.
-  const indexedPosition = (index.numberValue() * elementSize) + offset;
+  const indexedPosition = (R(index) * elementSize) + offset;
   // 12. Let elementType be the Element Type value in Table 61 for arrayTypeName.
   const elementType = typedArrayInfoByName[arrayTypeName].ElementType;
   // 13. Perform SetValueInBuffer(buffer, indexedPosition, elementType, numValue, true, Unordered).

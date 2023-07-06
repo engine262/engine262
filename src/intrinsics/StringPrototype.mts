@@ -25,7 +25,7 @@ import {
   ToUint32,
   StringCreate,
   Yield,
-  F,
+  F, R, R as MathematicalValue,
 } from '../abstract-ops/all.mjs';
 import {
   GetSubstitution,
@@ -423,13 +423,13 @@ function StringProto_replaceAll([searchValue = Value.undefined, replaceValue = V
   // 9. Let matchPositions be a new empty List.
   const matchPositions = [];
   // 10. Let position be ! StringIndexOf(string, searchString, 0).
-  let position = X(StringIndexOf(string, searchString, 0)).numberValue();
+  let position = R(X(StringIndexOf(string, searchString, 0)));
   // 11. Repeat, while position is not -1
   while (position !== -1) {
     // a. Append position to the end of matchPositions.
     matchPositions.push(position);
     // b. Let position be ! StringIndexOf(string, searchString, position + advanceBy).
-    position = X(StringIndexOf(string, searchString, position + advanceBy)).numberValue();
+    position = R(X(StringIndexOf(string, searchString, position + advanceBy)));
   }
   // 12. Let endOfLastMatch be 0.
   let endOfLastMatch = 0;
@@ -531,7 +531,7 @@ function StringProto_split([separator = Value.undefined, limit = Value.undefined
   const s = S.stringValue().length;
   let p = 0;
   const R = Q(ToString(separator));
-  if (lim.numberValue() === 0) {
+  if (MathematicalValue(lim) === 0) {
     return A;
   }
   if (separator === Value.undefined) {
@@ -556,7 +556,7 @@ function StringProto_split([separator = Value.undefined, limit = Value.undefined
         const T = Value(S.stringValue().substring(p, q));
         X(CreateDataPropertyOrThrow(A, X(ToString(F(lengthA))), T));
         lengthA += 1;
-        if (lengthA === lim.numberValue()) {
+        if (lengthA === MathematicalValue(lim)) {
           return A;
         }
         p = e;

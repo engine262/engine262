@@ -33,7 +33,7 @@ const { total, pass, fail } = require('./base');
     setSurroundingAgent(agent);
     const realm = new ManagedRealm();
     const result = realm.evaluateScript('debugger;');
-    assert.strictEqual(result.Value.numberValue(), 42);
+    assert.strictEqual(result.Value.numberValue(), 42); // eslint-disable-line @engine262/mathematical-value
   },
   () => {
     const agent = new Agent();

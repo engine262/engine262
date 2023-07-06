@@ -3,7 +3,9 @@ import { surroundingAgent } from '../engine.mjs';
 import {
   ObjectValue, BigIntValue, Value,
 } from '../value.mjs';
-import { Assert, ToIntegerOrInfinity, ToString } from '../abstract-ops/all.mjs';
+import {
+  Assert, ToIntegerOrInfinity, ToString, R,
+} from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
@@ -57,7 +59,7 @@ function BigIntProto_toString([radix], { thisValue }) {
   //    algorithm is implementation-dependent, however the algorithm should be a
   //    generalization of that specified in 6.1.6.2.23.
   // TODO: Implementation stringification
-  return Value(x.bigintValue().toString(radixNumber));
+  return Value(R(x).toString(radixNumber));
 }
 
 /** https://tc39.es/ecma262/#sec-bigint.prototype.tostring */

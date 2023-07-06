@@ -4,7 +4,7 @@ import {
   CreateBuiltinFunction,
   ToInt32,
   ToString,
-  F,
+  F, R, R as MathematicalValue,
 } from '../abstract-ops/all.mjs';
 import { TrimString } from '../runtime-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
@@ -63,7 +63,7 @@ function ParseInt([string = Value.undefined, radix = Value.undefined]) {
     S = S.slice(1);
   }
 
-  let R = Q(ToInt32(radix)).numberValue();
+  let R = MathematicalValue(Q(ToInt32(radix)));
   let stripPrefix = true;
   if (R !== 0) {
     if (R < 2 || R > 36) {
