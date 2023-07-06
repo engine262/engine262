@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { Value, JSStringValue, ObjectValue } from '../value.mjs';
+import { Value, StringValue, ObjectValue } from '../value.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import {
   Assert,
@@ -56,7 +56,7 @@ function ForInIteratorPrototype_next(args, { thisValue }) {
       // ii. for each key of keys in List order, do
       for (const key of keys) {
         // 1. If Type(key) is String, then
-        if (key instanceof JSStringValue) {
+        if (key instanceof StringValue) {
           // a. Append key to remaining.
           remaining.push(key);
         }

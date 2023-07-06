@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { surroundingAgent } from '../engine.mjs';
 import {
-  Descriptor, Value, ObjectValue, BooleanValue, JSStringValue,
+  Descriptor, Value, ObjectValue, BooleanValue, StringValue,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { Evaluate_Pattern } from '../runtime-semantics/all.mjs';
@@ -158,7 +158,7 @@ export function EscapeRegExpPattern(P, _F) {
 /** https://tc39.es/ecma262/#sec-getstringindex */
 export function GetStringIndex(S, Input, e) {
   // 1. Assert: Type(S) is String.
-  Assert(S instanceof JSStringValue);
+  Assert(S instanceof StringValue);
   // 2. Assert: Input is a List of the code points of S interpreted as a UTF-16 encoded string.
   Assert(Array.isArray(Input));
   // 3. Assert: e is an integer value ≥ 0.
@@ -184,7 +184,7 @@ export function GetStringIndex(S, Input, e) {
 /** https://tc39.es/ecma262/#sec-getmatchstring */
 export function GetMatchString(S, match) {
   // 1. Assert: Type(S) is String.
-  Assert(S instanceof JSStringValue);
+  Assert(S instanceof StringValue);
   // 2. Assert: match is a Match Record.
   Assert('StartIndex' in match && 'EndIndex' in match);
   // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and ≤ the length of S.
@@ -198,7 +198,7 @@ export function GetMatchString(S, match) {
 /** https://tc39.es/ecma262/#sec-getmatchindexpair */
 export function GetMatchIndexPair(S, match) {
   // 1. Assert: Type(S) is String.
-  Assert(S instanceof JSStringValue);
+  Assert(S instanceof StringValue);
   // 2. Assert: match is a Match Record.
   Assert('StartIndex' in match && 'EndIndex' in match);
   // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and ≤ the length of S.
@@ -215,7 +215,7 @@ export function GetMatchIndexPair(S, match) {
 /** https://tc39.es/ecma262/#sec-makematchindicesindexpairarray */
 export function MakeMatchIndicesIndexPairArray(S, indices, groupNames, hasGroups) {
   // 1. Assert: Type(S) is String.
-  Assert(S instanceof JSStringValue);
+  Assert(S instanceof StringValue);
   // 2. Assert: indices is a List.
   Assert(Array.isArray(indices));
   // 3. Let n be the number of elements in indices.

@@ -1,7 +1,7 @@
 // @ts-nocheck
 import {
   Descriptor,
-  Type, JSStringValue, BooleanValue,
+  Type, StringValue, BooleanValue,
   Value,
   ObjectValue,
   wellKnownSymbols,
@@ -382,7 +382,7 @@ export function EnumerableOwnPropertyNames(O, kind) {
   const ownKeys = Q(O.OwnPropertyKeys());
   const properties = [];
   for (const key of ownKeys) {
-    if (key instanceof JSStringValue) {
+    if (key instanceof StringValue) {
       const desc = Q(O.GetOwnProperty(key));
       if (desc !== Value.undefined && desc.Enumerable === Value.true) {
         if (kind === 'key') {

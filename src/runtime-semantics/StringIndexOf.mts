@@ -1,13 +1,13 @@
 // @ts-nocheck
-import { JSStringValue } from '../value.mjs';
+import { StringValue } from '../value.mjs';
 import { Assert, F, isNonNegativeInteger } from '../abstract-ops/all.mjs';
 
 // https://tc39.es/proposal-string-replaceall/#sec-stringindexof
 export function StringIndexOf(string, searchValue, fromIndex) {
   // 1. Assert: Type(string) is String.
-  Assert(string instanceof JSStringValue);
+  Assert(string instanceof StringValue);
   // 2. Assert: Type(searchValue) is String.
-  Assert(searchValue instanceof JSStringValue);
+  Assert(searchValue instanceof StringValue);
   // 3. Assert: fromIndex is a non-negative integer.
   Assert(isNonNegativeInteger(fromIndex));
   const stringStr = string.stringValue();

@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { ExecutionContext, type GCMarker, surroundingAgent } from './engine.mjs';
 import {
-  Value, Descriptor, JSStringValue, NumberValue, ObjectValue, UndefinedValue, NullValue,
+  Value, Descriptor, StringValue, NumberValue, ObjectValue, UndefinedValue, NullValue,
 } from './value.mjs';
 import {
   ToString, DefinePropertyOrThrow, CreateBuiltinFunction,
@@ -10,8 +10,8 @@ import { Completion, X } from './completion.mjs';
 
 export const kInternal = Symbol('kInternal');
 
-function convertValueForKey<T>(key: JSStringValue | NumberValue | T): string | number | T {
-  if (key instanceof JSStringValue) {
+function convertValueForKey<T>(key: StringValue | NumberValue | T): string | number | T {
+  if (key instanceof StringValue) {
     return key.stringValue();
   } else if (key instanceof NumberValue) {
     return key.numberValue();
@@ -56,7 +56,7 @@ export class ValueMap<K, V> {
     return this[Symbol.iterator]();
   }
 
-  forEach(cb: (value: V, key: K | JSStringValue | NumberValue, thisValue: ValueMap<K, V>) => void) {
+  forEach(cb: (value: V, key: K | StringValue | NumberValue, thisValue: ValueMap<K, V>) => void) {
     for (const [key, value] of this.entries()) {
       cb(value, key, this);
     }
@@ -358,7 +358,7 @@ export function captureStack(O: ObjectValue) {
     captureAsyncStack(stack);
   }
 
-  let cache: null | JSStringValue | UndefinedValue = null;
+  let cache: null | StringValue | UndefinedValue = null;
 
   const name = Value('stack');
   X(DefinePropertyOrThrow(O, name, Descriptor({

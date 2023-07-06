@@ -3,7 +3,7 @@ import {
   BigIntValue,
   Type, BooleanValue, NullValue, UndefinedValue,
   SymbolValue,
-  JSStringValue,
+  StringValue,
   NumberValue,
   ObjectValue,
   TypeForMethod,
@@ -111,7 +111,7 @@ export function IsIntegralNumber(argument) {
 
 /** https://tc39.es/ecma262/#sec-ispropertykey */
 export function IsPropertyKey(argument) {
-  if (argument instanceof JSStringValue) {
+  if (argument instanceof StringValue) {
     return true;
   }
   if (argument instanceof SymbolValue) {
@@ -137,8 +137,8 @@ export function IsRegExp(argument) {
 
 /** https://tc39.es/ecma262/#sec-isstringprefix */
 export function IsStringPrefix(p, q) {
-  Assert(p instanceof JSStringValue);
-  Assert(q instanceof JSStringValue);
+  Assert(p instanceof StringValue);
+  Assert(q instanceof StringValue);
   return q.stringValue().startsWith(p.stringValue());
 }
 
@@ -185,7 +185,7 @@ export function SameValueNonNumber(x, y) {
     return Value.true;
   }
 
-  if (x instanceof JSStringValue) {
+  if (x instanceof StringValue) {
     if (x.stringValue() === y.stringValue()) {
       return Value.true;
     }
@@ -224,7 +224,7 @@ export function AbstractRelationalComparison(x, y, LeftFirst = true) {
     px = Q(ToPrimitive(x, 'number'));
   }
   // 3. If Type(px) is String and Type(py) is String, then
-  if (px instanceof JSStringValue && py instanceof JSStringValue) {
+  if (px instanceof StringValue && py instanceof StringValue) {
     // a. If IsStringPrefix(py, px) is true, return false.
     if (IsStringPrefix(py, px)) {
       return Value.false;
@@ -255,7 +255,7 @@ export function AbstractRelationalComparison(x, y, LeftFirst = true) {
     }
   } else {
     // a. If Type(px) is BigInt and Type(py) is String, then
-    if (px instanceof BigIntValue && py instanceof JSStringValue) {
+    if (px instanceof BigIntValue && py instanceof StringValue) {
       // i. Let ny be ! StringToBigInt(py).
       const ny = X(StringToBigInt(py));
       // ii. If ny is NaN, return undefined.
@@ -266,7 +266,7 @@ export function AbstractRelationalComparison(x, y, LeftFirst = true) {
       return BigIntValue.lessThan(px, ny);
     }
     // b. If Type(px) is String and Type(py) is BigInt, then
-    if (px instanceof JSStringValue && py instanceof BigIntValue) {
+    if (px instanceof StringValue && py instanceof BigIntValue) {
       // i. Let ny be ! StringToBigInt(py).
       const nx = X(StringToBigInt(px));
       // ii. If ny is NaN, return undefined.
@@ -321,15 +321,15 @@ export function AbstractEqualityComparison(x, y) {
     return Value.true;
   }
   // 4. If Type(x) is Number and Type(y) is String, return the result of the comparison x == ! ToNumber(y).
-  if (x instanceof NumberValue && y instanceof JSStringValue) {
+  if (x instanceof NumberValue && y instanceof StringValue) {
     return AbstractEqualityComparison(x, X(ToNumber(y)));
   }
   // 5. If Type(x) is String and Type(y) is Number, return the result of the comparison ! ToNumber(x) == y.
-  if (x instanceof JSStringValue && y instanceof NumberValue) {
+  if (x instanceof StringValue && y instanceof NumberValue) {
     return AbstractEqualityComparison(X(ToNumber(x)), y);
   }
   // 6. If Type(x) is BigInt and Type(y) is String, then
-  if (x instanceof BigIntValue && y instanceof JSStringValue) {
+  if (x instanceof BigIntValue && y instanceof StringValue) {
     // a. Let n be ! StringToBigInt(y).
     const n = X(StringToBigInt(y));
     // b. If n is NaN, return false.
@@ -340,7 +340,7 @@ export function AbstractEqualityComparison(x, y) {
     return AbstractEqualityComparison(x, n);
   }
   // 7. If Type(x) is String and Type(y) is BigInt, return the result of the comparison y == x.
-  if (x instanceof JSStringValue && y instanceof BigIntValue) {
+  if (x instanceof StringValue && y instanceof BigIntValue) {
     return AbstractEqualityComparison(y, x);
   }
   // 8. If Type(x) is Boolean, return the result of the comparison ! ToNumber(x) == y.

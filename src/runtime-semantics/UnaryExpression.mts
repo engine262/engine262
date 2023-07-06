@@ -15,7 +15,7 @@ import {
 import { Evaluate } from '../evaluator.mjs';
 import { Q, ReturnIfAbrupt, X } from '../completion.mjs';
 import {
-  TypeForMethod, Value, ReferenceRecord, UndefinedValue, BigIntValue, BooleanValue, JSStringValue, NullValue, NumberValue, ObjectValue, SymbolValue,
+  TypeForMethod, Value, ReferenceRecord, UndefinedValue, BigIntValue, BooleanValue, StringValue, NullValue, NumberValue, ObjectValue, SymbolValue,
 } from '../value.mjs';
 import { EnvironmentRecord } from '../environment.mjs';
 import { OutOfRange } from '../helpers.mjs';
@@ -91,24 +91,24 @@ function* Evaluate_UnaryExpression_Typeof({ UnaryExpression }) {
   val = Q(GetValue(val));
   // 4. Return a String according to Table 37.
   if (val instanceof UndefinedValue) {
-    return new JSStringValue('undefined');
+    return new StringValue('undefined');
   } else if (val instanceof NullValue) {
-    return new JSStringValue('object');
+    return new StringValue('object');
   } else if (val instanceof BooleanValue) {
-    return new JSStringValue('boolean');
+    return new StringValue('boolean');
   } else if (val instanceof NumberValue) {
-    return new JSStringValue('number');
-  } else if (val instanceof JSStringValue) {
-    return new JSStringValue('string');
+    return new StringValue('number');
+  } else if (val instanceof StringValue) {
+    return new StringValue('string');
   } else if (val instanceof BigIntValue) {
-    return new JSStringValue('bigint');
+    return new StringValue('bigint');
   } else if (val instanceof SymbolValue) {
-    return new JSStringValue('symbol');
+    return new StringValue('symbol');
   } else if (val instanceof ObjectValue) {
     if (IsCallable(val) === Value.true) {
-      return new JSStringValue('function');
+      return new StringValue('function');
     }
-    return new JSStringValue('object');
+    return new StringValue('object');
   }
   throw new OutOfRange('Evaluate_UnaryExpression_Typeof', val);
 }

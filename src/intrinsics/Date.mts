@@ -13,7 +13,7 @@ import {
   TimeClip,
   F,
 } from '../abstract-ops/all.mjs';
-import { Value, JSStringValue, ObjectValue } from '../value.mjs';
+import { Value, StringValue, ObjectValue } from '../value.mjs';
 import {
   AbruptCompletion,
   Q, X,
@@ -93,7 +93,7 @@ function DateConstructor(args, { NewTarget }) {
         tv = thisTimeValue(value);
       } else {
         const v = Q(ToPrimitive(value));
-        if (v instanceof JSStringValue) {
+        if (v instanceof StringValue) {
           // Assert: The next step never returns an abrupt completion because Type(v) is String.
           tv = parseDate(v);
         } else {

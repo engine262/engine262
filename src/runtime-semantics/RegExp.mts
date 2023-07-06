@@ -1,7 +1,7 @@
 // @ts-nocheck
 import unicodeCaseFoldingCommon from '@unicode/unicode-15.0.0/Case_Folding/C/symbols.js';
 import unicodeCaseFoldingSimple from '@unicode/unicode-15.0.0/Case_Folding/S/symbols.js';
-import { JSStringValue, Value } from '../value.mjs';
+import { StringValue, Value } from '../value.mjs';
 import { Assert, isNonNegativeInteger } from '../abstract-ops/all.mjs';
 import { CharacterValue, StringToCodePoints } from '../static-semantics/all.mjs';
 import { X } from '../completion.mjs';
@@ -155,7 +155,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     // 2. Return a new abstract closure with parameters (str, index) that captures m and performs the following steps when called:
     return (str, index) => {
       // a. Assert: Type(str) is String.
-      Assert(str instanceof JSStringValue);
+      Assert(str instanceof StringValue);
       // b. Assert: index is a non-negative integer which is ≤ the length of str.
       Assert(isNonNegativeInteger(index) && index <= str.stringValue().length);
       // c. If Unicode is true, let Input be a List consisting of the sequence of code points of ! StringToCodePoints(str).

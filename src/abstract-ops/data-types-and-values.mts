@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { JSStringValue, Value } from '../value.mjs';
+import { StringValue, Value } from '../value.mjs';
 import { X } from '../completion.mjs';
 import { CanonicalNumericIndexString } from './all.mjs';
 
@@ -8,7 +8,7 @@ import { CanonicalNumericIndexString } from './all.mjs';
 
 // 6.1.7 #integer-index
 export function isIntegerIndex(V) {
-  if (!(V instanceof JSStringValue)) {
+  if (!(V instanceof StringValue)) {
     return false;
   }
   const numeric = X(CanonicalNumericIndexString(V));
@@ -23,7 +23,7 @@ export function isIntegerIndex(V) {
 
 // 6.1.7 #array-index
 export function isArrayIndex(V) {
-  if (!(V instanceof JSStringValue)) {
+  if (!(V instanceof StringValue)) {
     return false;
   }
   const numeric = X(CanonicalNumericIndexString(V));

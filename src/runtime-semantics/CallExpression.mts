@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { surroundingAgent } from '../engine.mjs';
-import { Value, ReferenceRecord, JSStringValue } from '../value.mjs';
+import { Value, ReferenceRecord, StringValue } from '../value.mjs';
 import {
   GetValue,
   IsPropertyReference,
@@ -30,7 +30,7 @@ export function* Evaluate_CallExpression(CallExpression) {
   // 6. If Type(ref) is Reference, IsPropertyReference(ref) is false, and GetReferencedName(ref) is "eval", then
   if (ref instanceof ReferenceRecord
       && IsPropertyReference(ref) === Value.false
-      && (ref.ReferencedName instanceof JSStringValue
+      && (ref.ReferencedName instanceof StringValue
       && ref.ReferencedName.stringValue() === 'eval')) {
     // a. If SameValue(func, %eval%) is true, then
     if (SameValue(func, surroundingAgent.intrinsic('%eval%')) === Value.true) {

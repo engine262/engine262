@@ -22,7 +22,7 @@ import {
   MakeBasicObject,
 } from '../abstract-ops/all.mjs';
 import {
-  JSStringValue,
+  StringValue,
   NumberValue,
   ObjectValue,
   Value,
@@ -160,7 +160,7 @@ function FunctionProto_bind([thisArg = Value.undefined, ...args], { thisValue })
   // 8. Let targetName be ? Get(Target, "name").
   let targetName = Q(Get(Target, Value('name')));
   // 9. If Type(targetName) is not String, set targetName to the empty String.
-  if (!(targetName instanceof JSStringValue)) {
+  if (!(targetName instanceof StringValue)) {
     targetName = Value('');
   }
   // 10. Perform SetFunctionName(F, targetName, "bound").

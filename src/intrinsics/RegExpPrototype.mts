@@ -3,7 +3,7 @@ import { surroundingAgent } from '../engine.mjs';
 import {
   BooleanValue,
   NullValue,
-  JSStringValue,
+  StringValue,
   ObjectValue,
   Value,
   wellKnownSymbols,
@@ -55,7 +55,7 @@ function RegExpProto_exec([string = Value.undefined], { thisValue }) {
 /** https://tc39.es/ecma262/#sec-regexpexec */
 export function RegExpExec(R, S) {
   Assert(R instanceof ObjectValue);
-  Assert(S instanceof JSStringValue);
+  Assert(S instanceof StringValue);
 
   const exec = Q(Get(R, Value('exec')));
   if (IsCallable(exec) === Value.true) {
@@ -74,7 +74,7 @@ export function RegExpBuiltinExec(R, S) {
   // 1. Assert: R is an initialized RegExp instance.
   Assert('RegExpMatcher' in R);
   // 2. Assert: Type(S) is String.
-  Assert(S instanceof JSStringValue);
+  Assert(S instanceof StringValue);
   // 3. Let length be the number of code units in S.
   const length = S.stringValue().length;
   // 4. Let lastIndex be ? ℝ(ToLength(? Get(R, "lastIndex"))).
@@ -244,7 +244,7 @@ export function RegExpBuiltinExec(R, S) {
 /** https://tc39.es/ecma262/#sec-advancestringindex */
 export function AdvanceStringIndex(S, index, unicode) {
   // 1. Assert: Type(S) is String.
-  Assert(S instanceof JSStringValue);
+  Assert(S instanceof StringValue);
   // 2. Assert: index is a non-negative integer which is ≤ 2 ** (53 - 1).
   Assert(isNonNegativeInteger(index) && index <= (2 ** 53) - 1);
   // 3. Assert: Type(unicode) is Boolean.

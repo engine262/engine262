@@ -28,7 +28,7 @@ import {
   F,
 } from '../abstract-ops/all.mjs';
 import {
-  JSStringValue,
+  StringValue,
   NumberValue,
   ObjectValue,
   Value,
@@ -647,9 +647,9 @@ function DateProto_toPrimitive([hint = Value.undefined], { thisValue }) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Date', O);
   }
   let tryFirst;
-  if (hint instanceof JSStringValue && (hint.stringValue() === 'string' || hint.stringValue() === 'default')) {
+  if (hint instanceof StringValue && (hint.stringValue() === 'string' || hint.stringValue() === 'default')) {
     tryFirst = 'string';
-  } else if (hint instanceof JSStringValue && hint.stringValue() === 'number') {
+  } else if (hint instanceof StringValue && hint.stringValue() === 'number') {
     tryFirst = 'number';
   } else {
     return surroundingAgent.Throw('TypeError', 'InvalidHint', hint);

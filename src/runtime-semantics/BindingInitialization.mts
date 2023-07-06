@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { JSStringValue, Value } from '../value.mjs';
+import { StringValue, Value } from '../value.mjs';
 import {
   Assert,
   PutValue,
@@ -8,7 +8,6 @@ import {
   GetIterator,
   IteratorClose,
 } from '../abstract-ops/all.mjs';
-import { StringValue } from '../static-semantics/all.mjs';
 import { NormalCompletion, Q } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import {
@@ -20,7 +19,7 @@ import {
 /** https://tc39.es/ecma262/#sec-initializeboundname */
 export function InitializeBoundName(name, value, environment) {
   // 1. Assert: Type(name) is String.
-  Assert(name instanceof JSStringValue);
+  Assert(name instanceof StringValue);
   // 2. If environment is not undefined, then
   if (environment !== Value.undefined) {
     // a. Perform environment.InitializeBinding(name, value).
