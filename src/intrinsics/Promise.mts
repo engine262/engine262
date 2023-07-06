@@ -273,7 +273,7 @@ function PromiseAllSettledRejectElementFunctions([x = Value.undefined]) {
 /** https://tc39.es/ecma262/#sec-performpromiseallsettled */
 function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability, promiseResolve) {
   // 1. Assert: ! IsConstructor(constructor) is true.
-  Assert(X(IsConstructor(constructor)));
+  Assert(IsConstructor(constructor));
   // 2. Assert: resultCapability is a PromiseCapability Record.
   Assert(resultCapability instanceof PromiseCapabilityRecord);
   // 3. Assert: IsCallable(promiseResolve) is true.
