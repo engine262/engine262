@@ -1,6 +1,6 @@
 // @ts-nocheck
 import {
-  Type, UndefinedValue, StringValue, SymbolValue,
+  Type, UndefinedValue, JSStringValue, SymbolValue,
   ObjectValue,
   Value,
   NumberValue,
@@ -120,7 +120,7 @@ export function ToBoolean(argument) {
       return Value.false;
     }
     return Value.true;
-  } else if (argument instanceof StringValue) {
+  } else if (argument instanceof JSStringValue) {
     // If argument is the empty String, return false; otherwise return true.
     if (argument.stringValue().length === 0) {
       return Value.false;
@@ -172,7 +172,7 @@ export function ToNumber(argument) {
   } else if (argument instanceof NumberValue) {
     // Return argument (no conversion).
     return argument;
-  } else if (argument instanceof StringValue) {
+  } else if (argument instanceof JSStringValue) {
     return MV_StringNumericLiteral(argument.stringValue());
   } else if (argument instanceof BigIntValue) {
     // Throw a TypeError exception.
@@ -379,7 +379,7 @@ export function ToBigInt(argument) {
   } else if (prim instanceof NumberValue) {
     // Throw a TypeError exception.
     return surroundingAgent.Throw('TypeError', 'CannotConvertToBigInt', prim);
-  } else if (prim instanceof StringValue) {
+  } else if (prim instanceof JSStringValue) {
     // 1. Let n be ! StringToBigInt(prim).
     const n = X(StringToBigInt(prim));
     // 2. If n is NaN, throw a SyntaxError exception.
@@ -435,18 +435,18 @@ export function ToBigUint64(argument) {
 export function ToString(argument) {
   if (argument instanceof UndefinedValue) {
     // Return "undefined".
-    return new StringValue('undefined');
+    return Value('undefined');
   } else if (argument instanceof NullValue) {
     // Return "null".
-    return new StringValue('null');
+    return Value('null');
   } else if (argument instanceof BooleanValue) {
     // If argument is true, return "true".
     // If argument is false, return "false".
-    return new StringValue(argument === Value.true ? 'true' : 'false');
+    return Value(argument === Value.true ? 'true' : 'false');
   } else if (argument instanceof NumberValue) {
     // Return ! Number::toString(argument).
     return X(NumberValue.toString(argument));
-  } else if (argument instanceof StringValue) {
+  } else if (argument instanceof JSStringValue) {
     // Return argument.
     return argument;
   } else if (argument instanceof SymbolValue) {
@@ -482,7 +482,7 @@ export function ToObject(argument) {
     const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Number.prototype%'), ['NumberData']);
     obj.NumberData = argument;
     return obj;
-  } else if (argument instanceof StringValue) {
+  } else if (argument instanceof JSStringValue) {
     // Return a new String object whose [[StringData]] internal slot is set to argument.
     return StringCreate(argument, surroundingAgent.intrinsic('%String.prototype%'));
   } else if (argument instanceof SymbolValue) {
@@ -530,7 +530,7 @@ export function ToLength(argument) {
 /** https://tc39.es/ecma262/#sec-canonicalnumericindexstring */
 export function CanonicalNumericIndexString(argument) {
   // 1. Assert: Type(argument) is String.
-  Assert(argument instanceof StringValue);
+  Assert(argument instanceof JSStringValue);
   // 2. If argument is "-0", return -0𝔽.
   if (argument.stringValue() === '-0') {
     return F(-0);

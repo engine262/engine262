@@ -2,7 +2,7 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
   NullValue,
-  StringValue,
+  JSStringValue,
   UndefinedValue,
   ObjectValue,
   Value,
@@ -122,7 +122,7 @@ function ObjectProto_toString(argList, { thisValue }) {
   // 15. Let tag be ? Get(O, @@toStringTag).
   let tag = Q(Get(O, wellKnownSymbols.toStringTag));
   // 16. If Type(tag) is not String, set tag to builtinTag.
-  if (!(tag instanceof StringValue)) {
+  if (!(tag instanceof JSStringValue)) {
     tag = builtinTag;
   }
   // 17. Return the string-concatenation of "[object ", tag, and "]".

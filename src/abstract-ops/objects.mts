@@ -2,7 +2,7 @@
 import {
   Descriptor,
   ObjectValue,
-  SymbolValue, StringValue, UndefinedValue, NullValue,
+  SymbolValue, JSStringValue, UndefinedValue, NullValue,
   Value,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
@@ -349,7 +349,7 @@ export function OrdinaryOwnPropertyKeys(O) {
   // P is not an array index, in ascending chronological order of property creation, do
   //   Add P as the last element of keys.
   for (const P of O.properties.keys()) {
-    if (P instanceof StringValue && isArrayIndex(P) === false) {
+    if (P instanceof JSStringValue && isArrayIndex(P) === false) {
       keys.push(P);
     }
   }

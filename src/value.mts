@@ -21,18 +21,17 @@ import { EnvironmentRecord } from './environment.mjs';
 import { Completion, X } from './completion.mjs';
 import { ValueMap, OutOfRange, callable } from './helpers.mjs';
 import type { PrivateElementRecord } from './runtime-semantics/MethodDefinitionEvaluation.mjs';
-import type { ParseNode } from './parser/ParseNode.mjs';
 
-let createStringValue: (value: string) => StringValue;
-let createNumberValue: (value: number) => NumberValue;
-let createBigIntValue: (value: bigint) => BigIntValue;
+let createStringValue: (value: string) => JSStringValue; // set by static block in StringValue for privileged access to constructor
+let createNumberValue: (value: number) => NumberValue; // set by static block in NumberValue for privileged access to constructor
+let createBigIntValue: (value: bigint) => BigIntValue; // set by static block in BigIntValue for privileged access to constructor
 
 abstract class BaseValue {
-  static declare readonly null: NullValue;
-  static declare readonly undefined: UndefinedValue;
-  static declare readonly true: BooleanValue<true>;
-  static declare readonly false: BooleanValue<false>;
-  abstract type: Value['type'];
+  static declare readonly null: NullValue; // defined in static block of NullValue
+  static declare readonly undefined: UndefinedValue; // defined in static block of UndefinedValue
+  static declare readonly true: BooleanValue<true>; // defined in static block of BooleanValue
+  static declare readonly false: BooleanValue<false>; // defined in static block of BooleanValue
+  abstract type: Value['type']; // ensures new `Value` subtypes must be added to `Value` union
 }
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types */
@@ -40,11 +39,10 @@ export type Value =
   | UndefinedValue
   | NullValue
   | BooleanValue
-  | StringValue
+  | JSStringValue
   | SymbolValue
   | NumberValue
   | BigIntValue
-  | PrivateName
   | ObjectValue;
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types */
@@ -79,7 +77,7 @@ export const Value = (() => {
     T extends null ? NullValue :
     T extends undefined ? UndefinedValue :
     T extends boolean ? BooleanValue<T> :
-    T extends string ? StringValue :
+    T extends string ? JSStringValue :
     T extends number ? NumberValue :
     T extends bigint ? BigIntValue :
     never;
@@ -87,7 +85,7 @@ export const Value = (() => {
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types */
 export type PropertyKeyValue =
-  | StringValue
+  | JSStringValue
   | SymbolValue;
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types */
@@ -95,7 +93,7 @@ export type PrimitiveValue =
   | UndefinedValue
   | NullValue
   | BooleanValue
-  | StringValue
+  | JSStringValue
   | SymbolValue
   | NumberValue
   | BigIntValue;
@@ -103,6 +101,7 @@ export type PrimitiveValue =
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types */
 export const PrimitiveValue = (() => {
   // NOTE: Using IIFE so that the class does not conflict with the type of the same name
+  // NOTE: Only using IIFE because TypeScript errors when `abstract` is used on class expressions
   abstract class PrimitiveValue extends Value {
   }
   return PrimitiveValue;
@@ -110,39 +109,39 @@ export const PrimitiveValue = (() => {
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-undefined-type */
 export class UndefinedValue extends PrimitiveValue {
-  declare readonly type: 'Undefined';
-  declare readonly value: undefined;
+  declare readonly type: 'Undefined'; // defined on prototype by static block
+  declare readonly value: undefined; // defined on prototype by static block
 
-  private constructor() { // eslint-disable-line no-useless-constructor
+  private constructor() { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
     super();
   }
 
   static {
-    Object.defineProperty(this.prototype, 'type', { value: 'Undefined', configurable: true });
-    Object.defineProperty(this.prototype, 'value', { value: undefined, configurable: true });
-    Object.defineProperty(Value, 'undefined', { value: new this(), configurable: true });
+    Object.defineProperty(this.prototype, 'type', { value: 'Undefined' });
+    Object.defineProperty(this.prototype, 'value', { value: undefined });
+    Object.defineProperty(Value, 'undefined', { value: new this() });
   }
 }
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-null-type */
 export class NullValue extends PrimitiveValue {
-  declare readonly type: 'Null';
-  declare readonly value: null;
+  declare readonly type: 'Null'; // defined on prototype by static block
+  declare readonly value: null; // defined on prototype by static block
 
-  private constructor() { // eslint-disable-line no-useless-constructor
+  private constructor() { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
     super();
   }
 
   static {
-    Object.defineProperty(this.prototype, 'type', { value: 'Null', configurable: true });
-    Object.defineProperty(this.prototype, 'value', { value: null, configurable: true });
-    Object.defineProperty(Value, 'null', { value: new this(), configurable: true });
+    Object.defineProperty(this.prototype, 'type', { value: 'Null' });
+    Object.defineProperty(this.prototype, 'value', { value: null });
+    Object.defineProperty(Value, 'null', { value: new this() });
   }
 }
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-boolean-type */
 export class BooleanValue<T extends boolean = boolean> extends PrimitiveValue {
-  declare readonly type: 'Boolean';
+  declare readonly type: 'Boolean'; // defined on prototype by static block
   readonly value: T;
 
   private constructor(value: T) {
@@ -159,109 +158,69 @@ export class BooleanValue<T extends boolean = boolean> extends PrimitiveValue {
   }
 
   static {
-    Object.defineProperty(this.prototype, 'type', { value: 'Boolean', configurable: true });
-    Object.defineProperty(Value, 'true', { value: new this(true), configurable: true });
-    Object.defineProperty(Value, 'false', { value: new this(false), configurable: true });
+    Object.defineProperty(this.prototype, 'type', { value: 'Boolean' });
+    Object.defineProperty(Value, 'true', { value: new this(true) });
+    Object.defineProperty(Value, 'false', { value: new this(false) });
   }
 }
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-string-type */
-export interface StringValue extends InstanceType<typeof PrimitiveValue> {
-  readonly type: 'String';
+export class JSStringValue extends PrimitiveValue {
+  declare readonly type: 'String'; // defined on prototype by static block
   readonly value: string;
-  stringValue(): string;
-}
 
-/**
- * https://tc39.es/ecma262/#sec-static-semantics-stringvalue
- */
-export const StringValue = (() => {
-  // NOTE: Using IIFE so that the class does not conflict with the type of the same name
-  /** https://tc39.es/ecma262/#sec-static-semantics-stringvalue */
-  @callable((_target, _thisArg, [value]) => {
-    const node = value as ParseNode; // NOTE: unsound cast
-    switch (node.type) {
-      case 'IdentifierName':
-      case 'BindingIdentifier':
-      case 'IdentifierReference':
-      case 'LabelIdentifier':
-        return Value(node.name);
-      case 'PrivateIdentifier':
-        return Value(`#${node.name}`);
-      case 'StringLiteral':
-        return Value(node.value);
-      default:
-        throw new OutOfRange('StringValue', node);
-    }
-  })
-  /** https://tc39.es/ecma262/#sec-ecmascript-language-types-string-type */
-  class StringValue extends PrimitiveValue {
-    declare readonly type: 'String';
-    readonly value: string;
-
-    constructor(value: string) {
-      super();
-      this.value = value;
-    }
-
-    stringValue() {
-      return this.value;
-    }
-
-    static {
-      Object.defineProperty(this, 'name', { value: 'StringValue' });
-      Object.defineProperty(this.prototype, 'type', { value: 'String', configurable: true });
-      createStringValue = (value) => new this(value);
-    }
+  private constructor(value: string) {
+    super();
+    this.value = value;
   }
 
-  return StringValue;
-})() as unknown as {
-  /** https://tc39.es/ecma262/#sec-static-semantics-stringvalue */
-  (node: ParseNode): StringValue;
+  stringValue() {
+    return this.value;
+  }
 
-  /** https://tc39.es/ecma262/#sec-ecmascript-language-types-string-type */
-  new (...args: never): StringValue;
-  readonly prototype: StringValue;
-};
+  static {
+    Object.defineProperty(this.prototype, 'type', { value: 'String' });
+    createStringValue = (value) => new this(value);
+  }
+}
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-symbol-type */
 export class SymbolValue extends PrimitiveValue {
-  declare readonly type: 'Symbol';
-  readonly Description: StringValue;
+  declare readonly type: 'Symbol'; // defined on prototype by static block
+  readonly Description: JSStringValue;
 
-  constructor(Description: StringValue) {
+  constructor(Description: JSStringValue) {
     super();
     this.Description = Description;
   }
 
   static {
-    Object.defineProperty(this.prototype, 'type', { value: 'Symbol', configurable: true });
+    Object.defineProperty(this.prototype, 'type', { value: 'Symbol' });
   }
 }
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-symbol-type */
 export const wellKnownSymbols = {
-  asyncIterator: new SymbolValue(createStringValue('Symbol.asyncIterator')),
-  hasInstance: new SymbolValue(createStringValue('Symbol.hasInstance')),
-  isConcatSpreadable: new SymbolValue(createStringValue('Symbol.isConcatSpreadable')),
-  iterator: new SymbolValue(createStringValue('Symbol.iterator')),
-  match: new SymbolValue(createStringValue('Symbol.match')),
-  matchAll: new SymbolValue(createStringValue('Symbol.matchAll')),
-  replace: new SymbolValue(createStringValue('Symbol.replace')),
-  search: new SymbolValue(createStringValue('Symbol.search')),
-  species: new SymbolValue(createStringValue('Symbol.species')),
-  split: new SymbolValue(createStringValue('Symbol.split')),
-  toPrimitive: new SymbolValue(createStringValue('Symbol.toPrimitive')),
-  toStringTag: new SymbolValue(createStringValue('Symbol.toStringTag')),
-  unscopables: new SymbolValue(createStringValue('Symbol.unscopables')),
+  asyncIterator: new SymbolValue(Value('Symbol.asyncIterator')),
+  hasInstance: new SymbolValue(Value('Symbol.hasInstance')),
+  isConcatSpreadable: new SymbolValue(Value('Symbol.isConcatSpreadable')),
+  iterator: new SymbolValue(Value('Symbol.iterator')),
+  match: new SymbolValue(Value('Symbol.match')),
+  matchAll: new SymbolValue(Value('Symbol.matchAll')),
+  replace: new SymbolValue(Value('Symbol.replace')),
+  search: new SymbolValue(Value('Symbol.search')),
+  species: new SymbolValue(Value('Symbol.species')),
+  split: new SymbolValue(Value('Symbol.split')),
+  toPrimitive: new SymbolValue(Value('Symbol.toPrimitive')),
+  toStringTag: new SymbolValue(Value('Symbol.toStringTag')),
+  unscopables: new SymbolValue(Value('Symbol.unscopables')),
 } as const;
 Object.setPrototypeOf(wellKnownSymbols, null);
 Object.freeze(wellKnownSymbols);
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-number-type */
 export class NumberValue extends PrimitiveValue {
-  declare readonly type: 'Number';
+  declare readonly type: 'Number'; // defined on prototype by static block
   readonly value: number;
 
   private constructor(value: number) {
@@ -478,7 +437,7 @@ export class NumberValue extends PrimitiveValue {
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-tostring */
-  static override toString(x: NumberValue): StringValue {
+  static override toString(x: NumberValue): JSStringValue {
     if (x.isNaN()) {
       return Value('NaN');
     }
@@ -500,7 +459,7 @@ export class NumberValue extends PrimitiveValue {
   static readonly unit = new NumberValue(1);
 
   static {
-    Object.defineProperty(this.prototype, 'type', { value: 'Number', configurable: true });
+    Object.defineProperty(this.prototype, 'type', { value: 'Number' });
     createNumberValue = (value) => new NumberValue(value);
   }
 }
@@ -526,7 +485,7 @@ function NumberBitwiseOp(op: '&' | '|' | '^', x: NumberValue, y: NumberValue) {
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-bigint-type */
 export class BigIntValue extends PrimitiveValue {
-  declare readonly type: 'BigInt';
+  declare readonly type: 'BigInt'; // defined on prototype by static block
   readonly value: bigint;
 
   private constructor(value: bigint) {
@@ -539,10 +498,6 @@ export class BigIntValue extends PrimitiveValue {
   }
 
   isNaN() {
-    return false;
-  }
-
-  isInfinity() {
     return false;
   }
 
@@ -681,7 +636,7 @@ export class BigIntValue extends PrimitiveValue {
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-tostring */
-  static override toString(x: BigIntValue): StringValue {
+  static override toString(x: BigIntValue): JSStringValue {
     // 1. If x is less than zero, return the string-concatenation of the String "-" and ! BigInt::toString(-x).
     if (x.bigintValue() < 0n) {
       const str = X(BigIntValue.toString(Z(-x.bigintValue()))).stringValue();
@@ -694,7 +649,7 @@ export class BigIntValue extends PrimitiveValue {
   static readonly unit = new BigIntValue(1n);
 
   static {
-    Object.defineProperty(this.prototype, 'type', { value: 'BigInt', configurable: true });
+    Object.defineProperty(this.prototype, 'type', { value: 'BigInt' });
     createBigIntValue = (value) => new BigIntValue(value);
   }
 }
@@ -767,31 +722,13 @@ function BigIntBitwiseOp(op: '&' | '|' | '^', x: BigIntValue, y: BigIntValue) {
   }
 }
 
-/** https://tc39.es/ecma262/#sec-private-names */
-export class PrivateName extends Value {
-  declare readonly type: 'PrivateName';
-  readonly Description: StringValue;
-
-  constructor(description: StringValue) {
-    super();
-    this.Description = description;
-  }
-
-  static {
-    Object.defineProperty(this.prototype, 'type', { value: 'PrivateName', configurable: true });
-  }
-}
-
 /** https://tc39.es/ecma262/#sec-object-type */
 export class ObjectValue extends Value {
-  static {
-    Object.defineProperty(this.prototype, 'type', { value: 'Object', configurable: true });
-  }
-
-  declare readonly type: 'Object';
-  readonly properties: ValueMap<StringValue | SymbolValue, Descriptor>;
+  declare readonly type: 'Object'; // defined on prototype by static block
+  readonly properties: ValueMap<JSStringValue | SymbolValue, Descriptor>;
   readonly internalSlotsList: readonly string[];
   readonly PrivateElements: PrivateElementRecord[];
+
   constructor(internalSlotsList: readonly string[]) {
     super();
 
@@ -852,11 +789,27 @@ export class ObjectValue extends Value {
       m(this[s]);
     });
   }
+
+  static {
+    Object.defineProperty(this.prototype, 'type', { value: 'Object' });
+  }
+}
+
+/** https://tc39.es/ecma262/#sec-private-names */
+export class PrivateName {
+  // NOTE: The following declaration distinguishes `PrivateName` from `SymbolValue` so that type guards can properly
+  //       remove it from unions with `SymbolValue` due to structural overlap.
+  declare private _: never;
+  readonly Description: JSStringValue;
+
+  constructor(description: JSStringValue) {
+    this.Description = description;
+  }
 }
 
 export class ReferenceRecord {
   Base: 'unresolvable' | Value;
-  ReferencedName: StringValue | SymbolValue | PrivateName;
+  ReferencedName: JSStringValue | SymbolValue | PrivateName;
   Strict: BooleanValue;
   ThisValue: ObjectValue | undefined;
   constructor({
@@ -927,37 +880,9 @@ export class DataBlock extends Uint8Array {
   }
 }
 
-export function Type(val: Value | Completion | EnvironmentRecord | Descriptor | DataBlock) {
-  if (val instanceof UndefinedValue) {
-    return 'Undefined';
-  }
-
-  if (val instanceof NullValue) {
-    return 'Null';
-  }
-
-  if (val instanceof BooleanValue) {
-    return 'Boolean';
-  }
-
-  if (val instanceof StringValue) {
-    return 'String';
-  }
-
-  if (val instanceof NumberValue) {
-    return 'Number';
-  }
-
-  if (val instanceof BigIntValue) {
-    return 'BigInt';
-  }
-
-  if (val instanceof SymbolValue) {
-    return 'Symbol';
-  }
-
-  if (val instanceof ObjectValue) {
-    return 'Object';
+export function Type(val: Value | PrivateName | Completion | EnvironmentRecord | Descriptor | DataBlock) {
+  if (val instanceof Value) {
+    return val.type;
   }
 
   if (val instanceof PrivateName) {

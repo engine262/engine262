@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { NewModuleEnvironment } from './environment.mjs';
-import { Value, StringValue } from './value.mjs';
+import { Value, JSStringValue } from './value.mjs';
 import { ExecutionContext, surroundingAgent } from './engine.mjs';
 import {
   Assert,
@@ -40,7 +40,7 @@ export class ResolvedBindingRecord {
   BindingName;
   constructor({ Module, BindingName }) {
     Assert(Module instanceof AbstractModuleRecord);
-    Assert(BindingName === 'namespace' || BindingName instanceof StringValue);
+    Assert(BindingName === 'namespace' || BindingName instanceof JSStringValue);
     this.Module = Module;
     this.BindingName = BindingName;
   }

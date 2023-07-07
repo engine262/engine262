@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { surroundingAgent } from '../engine.mjs';
-import { BooleanValue, StringValue, Value } from '../value.mjs';
+import { BooleanValue, JSStringValue, Value } from '../value.mjs';
 import {
   Assert,
   CreateIteratorFromClosure,
@@ -21,7 +21,7 @@ const kRegExpStringIteratorPrototype = Value('%RegExpStringIteratorPrototype%');
 /** https://tc39.es/ecma262/#sec-createregexpstringiterator */
 export function CreateRegExpStringIterator(R, S, global, fullUnicode) {
   // 1. Assert: Type(S) is String.
-  Assert(S instanceof StringValue);
+  Assert(S instanceof JSStringValue);
   // 2. Assert: Type(global) is Boolean.
   Assert(global instanceof BooleanValue);
   // 3. Assert: Type(fullUnicode) is Boolean.

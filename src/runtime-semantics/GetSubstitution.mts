@@ -6,18 +6,18 @@ import {
   isNonNegativeInteger,
 } from '../abstract-ops/all.mjs';
 import {
-  ObjectValue, UndefinedValue, StringValue, Value,
+  ObjectValue, UndefinedValue, JSStringValue, Value,
 } from '../value.mjs';
 import { Q } from '../completion.mjs';
 
 /** https://tc39.es/ecma262/#sec-getsubstitution */
 export function GetSubstitution(matched, str, position, captures, namedCaptures, replacement) {
   // 1. Assert: Type(matched) is String.
-  Assert(matched instanceof StringValue);
+  Assert(matched instanceof JSStringValue);
   // 2. Let matchLength be the number of code units in matched.
   const matchLength = matched.stringValue().length;
   // 3. Assert: Type(str) is String.
-  Assert(str instanceof StringValue);
+  Assert(str instanceof JSStringValue);
   // 4. Let stringLength be the number of code units in str.
   const stringLength = str.stringValue().length;
   // 5. Assert: position is a non-negative integer.
@@ -25,9 +25,9 @@ export function GetSubstitution(matched, str, position, captures, namedCaptures,
   // 6. Assert: position ≤ stringLength.
   Assert(position <= stringLength);
   // 7. Assert: captures is a possibly empty List of Strings.
-  Assert(Array.isArray(captures) && captures.every((value) => value instanceof StringValue || value instanceof UndefinedValue));
+  Assert(Array.isArray(captures) && captures.every((value) => value instanceof JSStringValue || value instanceof UndefinedValue));
   // 8. Assert: Type(replacement) is String.
-  Assert(replacement instanceof StringValue);
+  Assert(replacement instanceof JSStringValue);
   // 9. Let tailPos be position + matchLength.
   const tailPos = position + matchLength;
   // 10. Let m be the number of elements in captures.

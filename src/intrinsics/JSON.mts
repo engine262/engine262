@@ -5,7 +5,7 @@ import {
   NullValue,
   NumberValue,
   ObjectValue,
-  StringValue,
+  JSStringValue,
   UndefinedValue,
   Value,
 } from '../value.mjs';
@@ -281,7 +281,7 @@ function JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
   // 5. Let unfiltered be completion.[[Value]].
   const unfiltered = completion.Value;
   // 6. Assert: unfiltered is either a String, Number, Boolean, Null, or an Object that is defined by either an ArrayLiteral or an ObjectLiteral.
-  Assert(unfiltered instanceof StringValue
+  Assert(unfiltered instanceof JSStringValue
          || unfiltered instanceof NumberValue
          || unfiltered instanceof BooleanValue
          || unfiltered instanceof NullValue
@@ -344,7 +344,7 @@ function SerializeJSONProperty(state, key, holder) {
   if (value === Value.false) {
     return Value('false');
   }
-  if (value instanceof StringValue) {
+  if (value instanceof JSStringValue) {
     return QuoteJSONString(value);
   }
   if (value instanceof NumberValue) {
@@ -492,7 +492,7 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
           const vStr = X(ToString(F(k)));
           const v = Q(Get(replacer, vStr));
           let item = Value.undefined;
-          if (v instanceof StringValue) {
+          if (v instanceof JSStringValue) {
             item = v;
           } else if (v instanceof NumberValue) {
             item = X(ToString(v));
@@ -524,7 +524,7 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
     } else {
       gap = ' '.repeat(space);
     }
-  } else if (space instanceof StringValue) {
+  } else if (space instanceof JSStringValue) {
     if (space.stringValue().length <= 10) {
       gap = space.stringValue();
     } else {

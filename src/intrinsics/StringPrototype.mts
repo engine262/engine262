@@ -2,7 +2,7 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
   ObjectValue,
-  StringValue,
+  JSStringValue,
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
@@ -43,12 +43,12 @@ import { assignProps } from './bootstrap.mjs';
 
 
 function thisStringValue(value) {
-  if (value instanceof StringValue) {
+  if (value instanceof JSStringValue) {
     return value;
   }
   if (value instanceof ObjectValue && 'StringData' in value) {
     const s = value.StringData;
-    Assert(s instanceof StringValue);
+    Assert(s instanceof JSStringValue);
     return s;
   }
   return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'String', value);
@@ -444,7 +444,7 @@ function StringProto_replaceAll([searchValue = Value.undefined, replaceValue = V
       replacement = Q(ToString(Q(Call(replaceValue, Value.undefined, [searchString, F(position), string]))));
     } else { // b. Else,
       // i. Assert: Type(replaceValue) is String.
-      Assert(replaceValue instanceof StringValue);
+      Assert(replaceValue instanceof JSStringValue);
       // ii. Let captures be a new empty List.
       const captures = [];
       // iii. Let replacement be GetSubstitution(searchString, string, position, captures, undefined, replaceValue).
@@ -571,7 +571,7 @@ function StringProto_split([separator = Value.undefined, limit = Value.undefined
 
 /** https://tc39.es/ecma262/#sec-splitmatch */
 function SplitMatch(S, q, R) {
-  Assert(R instanceof StringValue);
+  Assert(R instanceof JSStringValue);
   const r = R.stringValue().length;
   const s = S.stringValue().length;
   if (q + r > s) {

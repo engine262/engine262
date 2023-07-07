@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { surroundingAgent } from './engine.mjs';
 import {
-  Type, StringValue, ObjectValue, Value, wellKnownSymbols,
+  Type, JSStringValue, ObjectValue, Value, wellKnownSymbols,
 } from './value.mjs';
 import {
   Call, IsArray, Get, LengthOfArrayLike,
@@ -171,7 +171,7 @@ const INSPECTORS = {
         const C = X(v.GetOwnProperty(key));
         if (C.Enumerable === Value.true) {
           cache.push([
-            key instanceof StringValue && bareKeyRe.test(key.stringValue()) ? key.stringValue() : i(key),
+            key instanceof JSStringValue && bareKeyRe.test(key.stringValue()) ? key.stringValue() : i(key),
             C.Value ? i(C.Value) : '<accessor>',
           ]);
         }

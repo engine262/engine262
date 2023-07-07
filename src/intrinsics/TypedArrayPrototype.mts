@@ -31,7 +31,7 @@ import { Q, X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import {
   BigIntValue,
-  Descriptor, StringValue, NumberValue, ObjectValue, Value, wellKnownSymbols,
+  Descriptor, JSStringValue, NumberValue, ObjectValue, Value, wellKnownSymbols,
 } from '../value.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 import { ArrayProto_sortBody, bootstrapArrayPrototypeShared } from './ArrayPrototypeShared.mjs';
@@ -766,7 +766,7 @@ function TypedArrayProto_toStringTag(args, { thisValue }) {
   // 4. Let name be O.[[TypedArrayName]].
   const name = O.TypedArrayName;
   // 5. Assert: Type(name) is String.
-  Assert(name instanceof StringValue);
+  Assert(name instanceof JSStringValue);
   // 6. Return name.
   return name;
 }

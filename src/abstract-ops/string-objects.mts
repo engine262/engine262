@@ -3,7 +3,7 @@ import {
   Descriptor,
   ObjectValue,
   SymbolValue,
-  StringValue,
+  JSStringValue,
   UndefinedValue,
   Value,
 } from '../value.mjs';
@@ -49,7 +49,7 @@ function StringExoticOwnPropertyKeys() {
   const O = this;
   const keys = [];
   const str = O.StringData;
-  Assert(str instanceof StringValue);
+  Assert(str instanceof JSStringValue);
   const len = str.stringValue().length;
 
   // 5. For each non-negative integer i starting with 0 such that i < len, in ascending order, do
@@ -74,7 +74,7 @@ function StringExoticOwnPropertyKeys() {
   // P is not an array index, in ascending chronological order of property creation, do
   //   Add P as the last element of keys.
   for (const P of O.properties.keys()) {
-    if (P instanceof StringValue && isArrayIndex(P) === false) {
+    if (P instanceof JSStringValue && isArrayIndex(P) === false) {
       keys.push(P);
     }
   }
@@ -94,7 +94,7 @@ function StringExoticOwnPropertyKeys() {
 /** https://tc39.es/ecma262/#sec-stringcreate */
 export function StringCreate(value, prototype) {
   // 1. Assert: Type(value) is String.
-  Assert(value instanceof StringValue);
+  Assert(value instanceof JSStringValue);
   // 2. Let S be ! MakeBasicObject(« [[Prototype]], [[Extensible]], [[StringData]] »).
   const S = X(MakeBasicObject(['Prototype', 'Extensible', 'StringData']));
   // 3. Set S.[[Prototype]] to prototype.
@@ -124,7 +124,7 @@ export function StringCreate(value, prototype) {
 export function StringGetOwnProperty(S, P) {
   Assert(S instanceof ObjectValue && 'StringData' in S);
   Assert(IsPropertyKey(P));
-  if (!(P instanceof StringValue)) {
+  if (!(P instanceof JSStringValue)) {
     return Value.undefined;
   }
   const index = X(CanonicalNumericIndexString(P));
@@ -138,7 +138,7 @@ export function StringGetOwnProperty(S, P) {
     return Value.undefined;
   }
   const str = S.StringData;
-  Assert(str instanceof StringValue);
+  Assert(str instanceof JSStringValue);
   const len = str.stringValue().length;
   if (index.numberValue() < 0 || len <= index.numberValue()) {
     return Value.undefined;

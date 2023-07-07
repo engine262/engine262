@@ -3,7 +3,7 @@ import { surroundingAgent } from '../engine.mjs';
 import {
   Descriptor,
   ObjectValue,
-  StringValue,
+  JSStringValue,
   Value,
   wellKnownSymbols,
 } from '../value.mjs';
@@ -42,7 +42,7 @@ function ArrayDefineOwnProperty(P, Desc) {
   const A = this;
 
   Assert(IsPropertyKey(P));
-  if (P instanceof StringValue && P.stringValue() === 'length') {
+  if (P instanceof JSStringValue && P.stringValue() === 'length') {
     return Q(ArraySetLength(A, Desc));
   } else if (isArrayIndex(P)) {
     const oldLenDesc = OrdinaryGetOwnProperty(A, Value('length'));
