@@ -6,6 +6,7 @@ const {
   setSurroundingAgent,
   ManagedRealm,
   Value,
+  CreateBuiltinFunction,
   FEATURES,
   Get,
   CreateArrayFromList,
@@ -180,9 +181,9 @@ Error: owo
       CreateDataProperty(
         realm.GlobalObject,
         Value('fail'),
-        Value(([path]) => {
+        CreateBuiltinFunction(([path]) => {
           throw new Error(`${path.stringValue()} did not have a section`);
-        }),
+        }, 1, Value(''), []),
       );
       const targets = [];
       Object.entries(realm.Intrinsics)
