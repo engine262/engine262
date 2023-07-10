@@ -4,6 +4,7 @@ import {
   ObjectValue,
   SymbolValue, JSStringValue, UndefinedValue, NullValue,
   Value,
+  BooleanValue,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import {
@@ -21,6 +22,7 @@ import {
   SameValue,
   MakeBasicObject,
   isArrayIndex,
+  type BasicObjectValue,
 } from './all.mjs';
 
 // 9.1.1.1 OrdinaryGetPrototypeOf
@@ -366,10 +368,15 @@ export function OrdinaryOwnPropertyKeys(O) {
   return keys;
 }
 
+export type OrdinaryObjectValue<InternalSlots extends Record<string, unknown>> = BasicObjectValue<{
+  Prototype: ObjectValue | NullValue;
+  Extensible: BooleanValue;
+} & InternalSlots>;
+
 /** https://tc39.es/ecma262/#sec-ordinaryobjectcreate */
-export function OrdinaryObjectCreate(proto, additionalInternalSlotsList) {
+export function OrdinaryObjectCreate<S extends string>(proto: ObjectValue | NullValue, additionalInternalSlotsList?: readonly S[]): OrdinaryObjectValue<Record<S, unknown>> {
   // 1. Let internalSlotsList be « [[Prototype]], [[Extensible]] ».
-  const internalSlotsList = ['Prototype', 'Extensible'];
+  const internalSlotsList: ('Prototype' | 'Extensible' | S)[] = ['Prototype', 'Extensible'];
   // 2. If additionalInternalSlotsList is present, append each of its elements to internalSlotsList.
   if (additionalInternalSlotsList !== undefined) {
     internalSlotsList.push(...additionalInternalSlotsList);
@@ -383,7 +390,7 @@ export function OrdinaryObjectCreate(proto, additionalInternalSlotsList) {
 }
 
 // 9.1.13 OrdinaryCreateFromConstructor
-export function OrdinaryCreateFromConstructor(constructor, intrinsicDefaultProto, internalSlotsList) {
+export function OrdinaryCreateFromConstructor<S extends string>(constructor: ObjectValue, intrinsicDefaultProto, internalSlotsList: readonly S[]) {
   // Assert: intrinsicDefaultProto is a String value that is this specification's name of an intrinsic object.
   const proto = Q(GetPrototypeFromConstructor(constructor, intrinsicDefaultProto));
   return OrdinaryObjectCreate(proto, internalSlotsList);

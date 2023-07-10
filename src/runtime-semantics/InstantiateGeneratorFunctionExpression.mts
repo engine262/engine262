@@ -48,7 +48,7 @@ export function InstantiateGeneratorFunctionExpression(GeneratorExpression, name
       Configurable: Value.false,
     }));
     // 12. Perform funcEnv.InitializeBinding(name, closure).
-    funcEnv.InitializeBinding(name, closure);
+    funcEnv.InitializeBinding(name, closure, 'normal');
     // 13. Return closure.
     return closure;
   }

@@ -7,6 +7,8 @@ export function IsDestructuring(node) {
     case 'ArrayLiteral':
       return true;
     case 'ForDeclaration':
+    case 'ForUsingDeclaration':
+    case 'ForAwaitUsingDeclaration':
       return IsDestructuring(node.ForBinding);
     case 'ForBinding':
       if (node.BindingIdentifier) {

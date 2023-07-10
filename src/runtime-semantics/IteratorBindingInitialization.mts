@@ -116,7 +116,7 @@ function* IteratorBindingInitialization_SingleNameBinding({ BindingIdentifier, I
     return Q(PutValue(lhs, v));
   }
   // 7. Return InitializeReferencedBinding(lhs, v).
-  return InitializeReferencedBinding(lhs, v);
+  return InitializeReferencedBinding(lhs, v, 'normal');
 }
 
 // BindingRestElement :
@@ -155,7 +155,7 @@ function* IteratorBindingInitialization_BindingRestElement({ BindingIdentifier, 
           return Q(PutValue(lhs, A));
         }
         // ii. Return InitializeReferencedBinding(lhs, A).
-        return InitializeReferencedBinding(lhs, A);
+        return InitializeReferencedBinding(lhs, A, 'normal');
       }
       // c. Let nextValue be IteratorValue(next).
       const nextValue = IteratorValue(next);

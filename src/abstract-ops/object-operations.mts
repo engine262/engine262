@@ -36,8 +36,10 @@ import {
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-operations-on-objects */
 
+export type BasicObjectValue<InternalSlots extends Record<string, unknown>> = ObjectValue & InternalSlots;
+
 /** https://tc39.es/ecma262/#sec-makebasicobject */
-export function MakeBasicObject(internalSlotsList) {
+export function MakeBasicObject<S extends string>(internalSlotsList: readonly S[]): BasicObjectValue<Record<S, unknown>> {
   // 1.  Assert: internalSlotsList is a List of internal slot names.
   Assert(Array.isArray(internalSlotsList));
   // 2.  Let obj be a newly created object with an internal slot for each name in internalSlotsList.

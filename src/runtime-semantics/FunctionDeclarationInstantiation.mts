@@ -124,7 +124,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
       // ii. If hasDuplicates is true, then
       if (hasDuplicates === true) {
         // 1. Perform ! env.InitializeBinding(paramName, undefined).
-        X(env.InitializeBinding(paramName, Value.undefined));
+        X(env.InitializeBinding(paramName, Value.undefined, 'normal'));
       }
     }
   }
@@ -152,7 +152,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
       X(env.CreateMutableBinding(Value('arguments'), Value.false));
     }
     // e. Call env.InitializeBinding("arguments", ao).
-    env.InitializeBinding(Value('arguments'), ao);
+    env.InitializeBinding(Value('arguments'), ao, 'normal');
     // f. Let parameterBindings be a new List of parameterNames with "arguments" appended.
     parameterBindings = new ValueSet([...parameterNames, Value('arguments')]);
   } else {
@@ -184,7 +184,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
         // 2. Perform ! env.CreateMutableBinding(n, false).
         X(env.CreateMutableBinding(n, Value.false));
         // 3. Call env.InitializeBinding(n, undefined).
-        env.InitializeBinding(n, Value.undefined);
+        env.InitializeBinding(n, Value.undefined, 'normal');
       }
     }
     // d. Let varEnv be env.
@@ -215,7 +215,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
           initialValue = X(env.GetBindingValue(n, Value.false));
         }
         // 5. Call varEnv.InitializeBinding(n, initialValue).
-        varEnv.InitializeBinding(n, initialValue);
+        varEnv.InitializeBinding(n, initialValue, 'normal');
         // 6. NOTE: vars whose names are the same as a formal parameter, initially have the same value as the corresponding initialized parameter.
       }
     }

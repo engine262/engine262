@@ -149,7 +149,9 @@ export function GetThisValue(V) {
 }
 
 /** https://tc39.es/ecma262/#sec-initializereferencedbinding */
-export function InitializeReferencedBinding(V, W) {
+export function InitializeReferencedBinding(V, W, hint: 'normal' | 'sync-dispose' | 'async-dispose') {
+  // TODO(rbuckton): remove
+  Assert(!!hint); // NON-SPEC
   // 1. ReturnIfAbrupt(V).
   ReturnIfAbrupt(V);
   // 2. ReturnIfAbrupt(W).
@@ -163,7 +165,7 @@ export function InitializeReferencedBinding(V, W) {
   // 6. Assert: base is an Environment Record.
   Assert(base instanceof EnvironmentRecord);
   // 7. Return base.InitializeBinding(V.[[ReferencedName]], W).
-  return base.InitializeBinding(V.ReferencedName, W);
+  return base.InitializeBinding(V.ReferencedName, W, hint);
 }
 
 /** https://tc39.es/ecma262/#sec-makeprivatereference */

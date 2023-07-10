@@ -42,7 +42,8 @@ export const CannotMixBigInts = () => 'Cannot mix BigInt and other types, use ex
 export const CannotResolvePromiseWithItself = () => 'Cannot resolve a promise with itself';
 export const CannotSetProperty = (p, o) => `Cannot set property ${i(p)} on ${i(o)}`;
 export const ClassMissingBindingIdentifier = () => 'Class declaration missing binding identifier';
-export const ConstDeclarationMissingInitializer = () => 'Missing initialization of const declaration';
+export const DeclarationMissingInitializer = (s /*: 'const' | 'using' | 'await using' */) => `Missing initialization of ${s} declaration`;
+export const DeclarationNotAllowedInScript = (s /*: 'using' | 'await using' */) => `${s} declaration is not allowed at the top level of a Script`;
 export const ConstructorNonCallable = (f) => `${i(f)} cannot be invoked without new`;
 export const CouldNotResolveModule = (s) => `Could not resolve module ${i(s)}`;
 export const DataViewOOB = () => 'Offset is outside the bounds of the DataView';
@@ -53,6 +54,7 @@ export const DerivedConstructorReturnedNonObject = () => 'Derived constructors m
 export const DuplicateConstructor = () => 'A class may only have one constructor';
 export const DuplicateExports = () => 'Module cannot contain duplicate exports';
 export const DuplicateProto = () => 'An object literal may only have one __proto__ property';
+export const DisposalErrorSuppression = () => 'An error was suppressed during disposal';
 export const FunctionDeclarationStatement = () => 'Functions can only be declared at top level or inside a block';
 export const GeneratorRunning = () => 'Cannot manipulate a running generator';
 export const IllegalBreakContinue = (isBreak) => `Illegal ${isBreak ? 'break' : 'continue'} statement`;
@@ -95,6 +97,7 @@ export const NumberFormatRange = (m) => `Invalid format range for ${m}`;
 export const ObjectToPrimitive = () => 'Cannot convert object to primitive value';
 export const ObjectPrototypeType = () => 'Object prototype must be an Object or null';
 export const ObjectSetPrototype = () => 'Could not set prototype of object';
+export const ObjectIsDisposed = () => 'Object is disposed';
 export const OutOfRange = (n) => `${n} is out of range`;
 export const PrivateNameNoGetter = (p) => `${i(p)} was defined without a getter`;
 export const PrivateNameNoSetter = (p) => `${i(p)} was defined without a setter`;

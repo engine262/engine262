@@ -10,10 +10,12 @@ import { surroundingAgent } from '../engine.mjs';
 import { Value } from '../value.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { resume } from '../helpers.mjs';
+import { DeclarativeEnvironmentRecord } from '../environment.mjs';
 import {
   Assert,
   AsyncGeneratorYield,
   CreateIterResultObject,
+  DisposeResources,
   OrdinaryObjectCreate,
   RequireInternalSlot,
   SameValue,
@@ -21,7 +23,10 @@ import {
 
 /** https://tc39.es/ecma262/#sec-generator-objects */
 
-/** https://tc39.es/ecma262/#sec-generatorstart */
+/**
+ * https://tc39.es/ecma262/#sec-generatorstart
+ * https://tc39.es/proposal-explicit-resource-management/#sec-generatorstart
+ */
 export function GeneratorStart(generator, generatorBody) {
   // 1. Assert: The value of generator.[[GeneratorState]] is undefined.
   Assert(generator.GeneratorState === Value.undefined);
@@ -37,7 +42,7 @@ export function GeneratorStart(generator, generatorBody) {
     // b. Else,
     //    i. Assert: generatorBody is an Abstract Closure.
     //    ii. Let result be generatorBody().
-    const result = EnsureCompletion(
+    let result = EnsureCompletion(
       // Note: Engine262 can only perform the "If generatorBody is an Abstract Closure" check:
       yield* typeof generatorBody === 'function'
         ? generatorBody()
@@ -45,6 +50,18 @@ export function GeneratorStart(generator, generatorBody) {
     );
     // c. Assert: If we return here, the generator either threw an exception or
     //    performed either an implicit or explicit return.
+    // TODO(rbuckton): Fix spec to move these steps before genContext is removed from the stack
+    // *. Let env be genContext's LexicalEnvironment.
+    const env = genContext.LexicalEnvironment;
+    // TODO(rbuckton): Fix the proposal spec for this
+    // NON-SPEC, handles case where generatorBody is an abstract closure
+    // *. If env is not undefined, then
+    if (env !== undefined) {
+      // *. Assert: env is a Declarative Environment Record.
+      Assert(env instanceof DeclarativeEnvironmentRecord, typeof env);
+      // *. Set result to DisposeResources(env.[[DisposeCapability]], result).
+      result = yield* DisposeResources(env.DisposeCapability, result);
+    }
     // d. Remove genContext from the execution context stack and restore the execution context
     //    that is at the top of the execution context stack as the running execution context.
     surroundingAgent.executionContextStack.pop(genContext);

@@ -1,23 +1,39 @@
-// @ts-nocheck
 import {
   Assert,
   CreateBuiltinFunction,
   OrdinaryObjectCreate,
+  type NativeAsyncFunctionSteps,
+  type NativeFunctionSteps,
+  type Realm,
 } from '../abstract-ops/all.mjs';
+import { X } from '../completion.mjs';
 import {
   Descriptor,
+  ObjectValue,
+  PrivateName,
   Value,
   wellKnownSymbols,
+  type PropertyKeyValue,
 } from '../value.mjs';
-import { X } from '../completion.mjs';
 
 /** https://tc39.es/ecma262/#sec-ecmascript-standard-built-in-objects */
-export function assignProps(realmRec, obj, props) {
+
+export type MethodPropValue = NativeFunctionSteps;
+export type AsyncMethodPropValue = NativeAsyncFunctionSteps;
+export type AccessorPropValue = readonly [getter?: Value | NativeFunctionSteps, setter?: Value | NativeFunctionSteps];
+export type MethodProp = readonly [name: PropertyKeyValue | PrivateName | string, value: NativeFunctionSteps, length: number, descriptor?: Partial<Pick<Descriptor, 'Enumerable' | 'Configurable' | 'Writable'>>, async?: false];
+export type AsyncMethodProp = readonly [name: PropertyKeyValue | PrivateName | string, value: NativeAsyncFunctionSteps, length: number, descriptor: Partial<Pick<Descriptor, 'Enumerable' | 'Configurable' | 'Writable'>> | undefined, async: true];
+export type AccessorProp = readonly [name: PropertyKeyValue | PrivateName | string, value: AccessorPropValue, length?: undefined, descriptor?: Partial<Pick<Descriptor, 'Enumerable' | 'Configurable'>>, async?: false];
+export type DataProp = readonly [name: PropertyKeyValue | PrivateName | string, value: Value, length?: undefined, descriptor?: Partial<Pick<Descriptor, 'Enumerable' | 'Configurable' | 'Writable'>>, async?: false];
+export type Prop = AccessorProp | MethodProp | AsyncMethodProp | DataProp;
+export type Props = readonly (Prop | undefined)[];
+
+export function assignProps(realmRec: Realm, obj: ObjectValue, props: Props) {
   for (const item of props) {
     if (item === undefined) {
       continue;
     }
-    const [n, v, len, descriptor] = item;
+    const [n, v, len, descriptor, async] = item;
     const name = n instanceof Value ? n : Value(n);
     if (Array.isArray(v)) {
       // Every accessor property described in clauses 18 through 26 and in
@@ -66,7 +82,7 @@ export function assignProps(realmRec, obj, props) {
       let value;
       if (typeof v === 'function') {
         Assert(typeof len === 'number');
-        value = CreateBuiltinFunction(v, len, name, [], realmRec);
+        value = CreateBuiltinFunction(v, len, name, [], realmRec, undefined, undefined, undefined, async ? Value.true : Value.false);
       } else {
         value = v;
       }
@@ -81,7 +97,7 @@ export function assignProps(realmRec, obj, props) {
   }
 }
 
-export function bootstrapPrototype(realmRec, props, Prototype, stringTag) {
+export function bootstrapPrototype(realmRec: Realm, props: Props, Prototype: ObjectValue, stringTag: string) {
   Assert(Prototype !== undefined);
   const proto = OrdinaryObjectCreate(Prototype);
 
@@ -99,7 +115,7 @@ export function bootstrapPrototype(realmRec, props, Prototype, stringTag) {
   return proto;
 }
 
-export function bootstrapConstructor(realmRec, Constructor, name, length, Prototype, props = []) {
+export function bootstrapConstructor(realmRec: Realm, Constructor: NativeFunctionSteps, name: string, length: number, Prototype: ObjectValue, props: Props = []) {
   const cons = CreateBuiltinFunction(
     Constructor,
     length,

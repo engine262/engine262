@@ -15,6 +15,8 @@ export function BoundNames(node) {
     case 'BindingIdentifier':
       return [StringValue(node)];
     case 'LexicalDeclaration':
+    case 'UsingDeclaration':
+    case 'AwaitUsingDeclaration':
       return BoundNames(node.BindingList);
     case 'LexicalBinding':
       if (node.BindingIdentifier) {
@@ -29,6 +31,8 @@ export function BoundNames(node) {
       }
       return BoundNames(node.BindingPattern);
     case 'ForDeclaration':
+    case 'ForUsingDeclaration':
+    case 'ForAwaitUsingDeclaration':
       return BoundNames(node.ForBinding);
     case 'ForBinding':
       if (node.BindingIdentifier) {

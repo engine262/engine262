@@ -5,6 +5,7 @@ import {
   PerformPromiseThen,
   PromiseCapabilityRecord,
   PromiseResolve,
+  type NativeFunctionSteps,
 } from './abstract-ops/all.mjs';
 import { Value } from './value.mjs';
 import { callable, kAsyncContext, resume } from './helpers.mjs';
@@ -119,6 +120,7 @@ export { ReturnIfAbrupt as Q };
 
 /** https://tc39.es/ecma262/#sec-returnifabrupt-shorthands ! OperationName() */
 export function X<T>(_completion: NormalCompletion<T> | AbruptCompletion<unknown>): T
+export function X<T>(_completion: NormalCompletion<T> | AbruptCompletion<unknown>): T
 export function X<T>(_completion: T): T
 export function X<T, Q>(_completion: NormalCompletion<T> | AbruptCompletion<unknown> | Q): T | Q
 export function X(_completion: unknown): never {
@@ -146,13 +148,13 @@ export function EnsureCompletion<T>(val: T | Completion<T>): Completion<T> {
   return NormalCompletion(val);
 }
 
-export function* Await(value: Value): Generator<Value, Completion, Completion> {
+export function* Await(value: Value): Generator<Value, Completion<Value>, Completion<Value>> {
   // 1. Let asyncContext be the running execution context.
   const asyncContext = surroundingAgent.runningExecutionContext;
   // 2. Let promise be ? PromiseResolve(%Promise%, value).
   const promise = ReturnIfAbrupt(PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value));
   // 3. Let fulfilledClosure be a new Abstract Closure with parameters (value) that captures asyncContext and performs the following steps when called:
-  const fulfilledClosure = ([valueInner = Value.undefined]) => {
+  const fulfilledClosure: NativeFunctionSteps = ([valueInner = Value.undefined]) => {
     // a. Let prevContext be the running execution context.
     const prevContext = surroundingAgent.runningExecutionContext;
     // b. Suspend prevContext.
@@ -170,7 +172,7 @@ export function* Await(value: Value): Generator<Value, Completion, Completion> {
   // @ts-expect-error TODO(ts): CreateBuiltinFunction should return a specalized type FunctionObjectValue that has a kAsyncContext on it.
   onFulfilled[kAsyncContext] = asyncContext;
   // 5. Let rejectedClosure be a new Abstract Closure with parameters (reason) that captures asyncContext and performs the following steps when called:
-  const rejectedClosure = ([reason = Value.undefined]) => {
+  const rejectedClosure: NativeFunctionSteps = ([reason = Value.undefined]) => {
     // a. Let prevContext be the running execution context.
     const prevContext = surroundingAgent.runningExecutionContext;
     // b. Suspend prevContext.

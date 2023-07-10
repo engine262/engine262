@@ -21,6 +21,9 @@ import {
   Set,
   ToBoolean,
   isECMAScriptFunctionObject,
+  AddDisposableResource,
+  DisposeCapabilityRecord,
+  NewDisposeCapability,
 } from './abstract-ops/all.mjs';
 import { NormalCompletion, Q, X } from './completion.mjs';
 import { ValueMap } from './helpers.mjs';
@@ -38,6 +41,7 @@ export class EnvironmentRecord {
 /** https://tc39.es/ecma262/#sec-declarative-environment-records */
 export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   bindings = new ValueMap();
+  DisposeCapability: DisposeCapabilityRecord | undefined;
 
   /** https://tc39.es/ecma262/#sec-declarative-environment-records-hasbinding-n */
   HasBinding(N) {
@@ -98,13 +102,22 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     return NormalCompletion(undefined);
   }
 
-  /** https://tc39.es/ecma262/#sec-declarative-environment-records-initializebinding-n-v */
-  InitializeBinding(N, V) {
+  /**
+   * https://tc39.es/ecma262/#sec-declarative-environment-records-initializebinding-n-v
+   * https://tc39.es/proposal-explicit-resource-management/#sec-declarative-environment-records-initializebinding-n-v
+   */
+  InitializeBinding(N, V, hint: 'normal' | 'sync-dispose' | 'async-dispose') {
+    // TODO(rbuckton): remove
+    Assert(!!hint); // NON-SPEC
     // 1. Let envRec be the declarative Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Assert: envRec must have an uninitialized binding for N.
     const binding = envRec.bindings.get(N);
     Assert(binding !== undefined && binding.initialized === false);
+    // *2. If hint is not normal, perform ? AddDisposableResource(envRec.[[DisposeCapability]], V, hint).
+    if (hint !== 'normal') {
+      Q(AddDisposableResource(envRec.DisposeCapability, V, hint));
+    }
     // 3. Set the bound value for N in envRec to V.
     binding.value = V;
     // 4. Record that the binding for N in envRec has been initialized.
@@ -127,7 +140,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
       // b. Perform envRec.CreateMutableBinding(N, true).
       envRec.CreateMutableBinding(N, Value.true);
       // c. Perform envRec.InitializeBinding(N, V).
-      envRec.InitializeBinding(N, V);
+      envRec.InitializeBinding(N, V, 'normal');
       // d. Return NormalCompletion(empty).
       return NormalCompletion(undefined);
     }
@@ -266,12 +279,17 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
     Assert(false, 'CreateImmutableBinding called on an Object Environment Record');
   }
 
-  /** https://tc39.es/ecma262/#sec-object-environment-records-initializebinding-n-v */
-  InitializeBinding(N, V) {
+  /**
+   * https://tc39.es/ecma262/#sec-object-environment-records-initializebinding-n-v
+   * https://tc39.es/proposal-explicit-resource-management/#sec-object-environment-records-initializebinding-n-v
+   */
+  InitializeBinding(N, V, hint: 'normal' | 'sync-dispose' | 'async-dispose') {
     // 1. Let envRec be the object Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Assert: envRec must have an uninitialized binding for N.
     // 3. Record that the binding for N in envRec has been initialized.
+    // *. Assert: hint is normal.
+    Assert(hint === 'normal');
     // 4. Return ? envRec.SetMutableBinding(N, V, false).
     return Q(envRec.SetMutableBinding(N, V, Value.false));
   }
@@ -493,22 +511,27 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     return DclRec.CreateImmutableBinding(N, S);
   }
 
-  /** https://tc39.es/ecma262/#sec-global-environment-records-initializebinding-n-v */
-  InitializeBinding(N, V) {
+  /**
+   * https://tc39.es/ecma262/#sec-global-environment-records-initializebinding-n-v
+   * https://tc39.es/proposal-explicit-resource-management/#sec-global-environment-records-initializebinding-n-v
+   */
+  InitializeBinding(N, V, hint: 'normal' | 'sync-dispose' | 'async-dispose') {
     // 1. Let envRec be the global Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Let DclRec be envRec.[[DeclarativeRecord]].
     const DclRec = envRec.DeclarativeRecord;
     // 3. If DclRec.HasBinding(N) is true, then
     if (DclRec.HasBinding(N) === Value.true) {
-      // a. Return DclRec.InitializeBinding(N, V).
-      return DclRec.InitializeBinding(N, V);
+      // a. Return DclRec.InitializeBinding(N, V, hint).
+      return DclRec.InitializeBinding(N, V, hint);
     }
     // 4. Assert: If the binding exists, it must be in the object Environment Record.
+    // *. Assert: hint is normal.
+    Assert(hint === 'normal');
     // 5. Let ObjRec be envRec.[[ObjectRecord]].
     const ObjRec = envRec.ObjectRecord;
     // 6. Return ? ObjRec.InitializeBinding(N, V).
-    return ObjRec.InitializeBinding(N, V);
+    return ObjRec.InitializeBinding(N, V, 'normal');
   }
 
   /** https://tc39.es/ecma262/#sec-global-environment-records-setmutablebinding-n-v-s */
@@ -719,7 +742,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
       // a. Perform ? ObjRec.CreateMutableBinding(N, D).
       Q(ObjRec.CreateMutableBinding(N, D));
       // b. Perform ? ObjRec.InitializeBinding(N, undefined).
-      Q(ObjRec.InitializeBinding(N, Value.undefined));
+      Q(ObjRec.InitializeBinding(N, Value.undefined, 'normal'));
     }
     // 7. Let varDeclaredNames be envRec.[[VarNames]].
     const varDeclaredNames = envRec.VarNames;
@@ -885,12 +908,17 @@ export function GetIdentifierReference(env, name, strict) {
   }
 }
 
-/** https://tc39.es/ecma262/#sec-newdeclarativeenvironment */
+/**
+ * https://tc39.es/ecma262/#sec-newdeclarativeenvironment
+ * https://tc39.es/proposal-explicit-resource-management/#sec-newdeclarativeenvironment
+ */
 export function NewDeclarativeEnvironment(E) {
   // 1. Let env be a new declarative Environment Record containing O as the binding object.
   const env = new DeclarativeEnvironmentRecord();
   // 2. Set env.[[OuterEnv]] to E.
   env.OuterEnv = E;
+  // *. Set env.[[DisposeCapability]] to NewDisposeCapability().
+  env.DisposeCapability = NewDisposeCapability();
   // 3. Return env.
   return env;
 }
@@ -929,6 +957,8 @@ export function NewFunctionEnvironment(F, newTarget) {
   env.NewTarget = newTarget;
   // 8. Set env.[[OuterEnv]] to F.[[Environment]].
   env.OuterEnv = F.Environment;
+  // *. Set env.[[DisposeCapability]] to NewDisposeCapability().
+  env.DisposeCapability = NewDisposeCapability();
   // 9. Return env.
   return env;
 }
@@ -937,8 +967,8 @@ export function NewFunctionEnvironment(F, newTarget) {
 export function NewGlobalEnvironment(G, thisValue) {
   // 1. Let objRec be NewObjectEnvironment(G, false, null).
   const objRec = NewObjectEnvironment(G, Value.false, Value.null);
-  // 2. Let dclRec be a new declarative Environment Record containing no bindings.
-  const dclRec = new DeclarativeEnvironmentRecord(Value.null);
+  // 2. Let dclRec be NewDeclarativeEnvironment(null).
+  const dclRec = NewDeclarativeEnvironment(Value.null);
   // 3. Let env be a new global Environment Record.
   const env = new GlobalEnvironmentRecord();
   // 4. Set env.[[ObjectRecord]] to objRec.
@@ -961,6 +991,8 @@ export function NewModuleEnvironment(E) {
   const env = new ModuleEnvironmentRecord();
   // 2. Set env.[[OuterEnv]] to E.
   env.OuterEnv = E;
+  // *. Set env.[[DisposeCapability]] to NewDisposeCapability().
+  env.DisposeCapability = NewDisposeCapability();
   // 3. Return env.
   return env;
 }

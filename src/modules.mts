@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { NewModuleEnvironment } from './environment.mjs';
+import { ModuleEnvironmentRecord, NewModuleEnvironment } from './environment.mjs';
 import { Value, JSStringValue } from './value.mjs';
 import { ExecutionContext, surroundingAgent } from './engine.mjs';
 import {
@@ -16,6 +16,7 @@ import {
   AsyncBlockStart,
   PromiseCapabilityRecord,
   GraphLoadingState,
+  DisposeResources,
 } from './abstract-ops/all.mjs';
 import {
   VarScopedDeclarations,
@@ -424,7 +425,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
         // ii. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
         X(env.CreateImmutableBinding(ie.LocalName, Value.true));
         // iii. Call env.InitializeBinding(in.[[LocalName]], namespace).
-        env.InitializeBinding(ie.LocalName, namespace);
+        env.InitializeBinding(ie.LocalName, namespace, 'normal');
       } else { // c. Else,
         // i. Let resolution be importedModule.ResolveExport(in.[[ImportName]]).
         const resolution = importedModule.ResolveExport(ie.ImportName);
@@ -445,7 +446,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
           // 2. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
           X(env.CreateImmutableBinding(ie.LocalName, Value.true));
           // 3. Call env.InitializeBinding(in.[[LocalName]], namespace).
-          env.InitializeBinding(ie.LocalName, namespace);
+          env.InitializeBinding(ie.LocalName, namespace, 'normal');
         } else { // iv. Else,
           // 1. Call env.CreateImportBinding(in.[[LocalName]], resolution.[[Module]], resolution.[[BindingName]]).
           env.CreateImportBinding(ie.LocalName, resolution.Module, resolution.BindingName);
@@ -487,7 +488,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
           // 1. Perform ! env.CreateMutableBinding(dn, false).
           X(env.CreateMutableBinding(dn, Value.false));
           // 2. Call env.InitializeBinding(dn, undefined).
-          env.InitializeBinding(dn, Value.undefined);
+          env.InitializeBinding(dn, Value.undefined, 'normal');
           // 3. Append dn to declaredVarNames.
           declaredVarNames.add(dn);
         }
@@ -515,7 +516,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
           // 1. Let fo be InstantiateFunctionObject of d with argument env.
           const fo = InstantiateFunctionObject(d, env, Value.null);
           // 2. Call env.InitializeBinding(dn, fo).
-          env.InitializeBinding(dn, fo);
+          env.InitializeBinding(dn, fo, 'normal');
         }
       }
     }
@@ -537,7 +538,16 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       // 4. Push moduleContext onto the execution context stack; moduleContext is now the running execution context.
       surroundingAgent.executionContextStack.push(moduleContext);
       // 5. Let result be the result of evaluating module.[[ECMAScriptCode]].
-      const result = EnsureCompletion(unwind(Evaluate(module.ECMAScriptCode)));
+      let result = EnsureCompletion(unwind(Evaluate(module.ECMAScriptCode)));
+      // *. Set result to Completion(DisposeResources(env.[[DisposeCapability]], result)).
+      result = EnsureCompletion(unwind(DisposeResources(module.Environment.DisposeCapability, result)));
+      // NON-SPEC
+      // TODO(rbuckton): Remove this
+      if (!(module.Environment instanceof ModuleEnvironmentRecord)) {
+        // Nothing should have been added to the function environment's DisposeCapability
+        Assert(module.Environment.OuterEnv instanceof ModuleEnvironmentRecord);
+        Assert(!module.Environment.OuterEnv.DisposeCapability?.DisposableResourceStack.length);
+      }
       // 6. Suspend moduleContext and remove it from the execution context stack.
       // 7. Resume the context that is now on the top of the execution context stack as the running execution context.
       surroundingAgent.executionContextStack.pop(moduleContext);
@@ -607,7 +617,7 @@ export class SyntheticModuleRecord extends AbstractModuleRecord {
       // a. Perform ! env.CreateMutableBinding(exportName, false).
       X(env.CreateMutableBinding(exportName, Value.false));
       // b. Perform ! env.InitializeBinding(exportName, undefined).
-      X(env.InitializeBinding(exportName, Value.undefined));
+      X(env.InitializeBinding(exportName, Value.undefined, 'normal'));
     }
     // 8. Return undefined.
     return Value.undefined;

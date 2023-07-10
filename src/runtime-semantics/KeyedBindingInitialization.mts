@@ -53,6 +53,6 @@ export function* KeyedBindingInitialization(node, value, environment, propertyNa
       return Q(PutValue(lhs, v));
     }
     // 6. Return InitializeReferencedBinding(lhs, v).
-    return InitializeReferencedBinding(lhs, v);
+    return InitializeReferencedBinding(lhs, v, 'normal');
   }
 }

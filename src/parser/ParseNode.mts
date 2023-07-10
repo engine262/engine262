@@ -605,10 +605,11 @@ export namespace ParseNode {
   //   `-` UnaryExpression
   //   `~` UnaryExpression
   //   `!` UnaryExpression
-  //   [+Await] AwaitExpression
+  //   [+Await] CoverAwaitExpressionAndAwaitUsingDeclarationHead
   export type UnaryExpressionOrHigher =
     | UpdateExpressionOrHigher
     | UnaryExpression
+    | CoverAwaitExpressionAndAwaitUsingDeclarationHead
     | AwaitExpression;
 
   // UnaryExpression (partial) :
@@ -1028,7 +1029,9 @@ export namespace ParseNode {
   // LexicalDeclaration :
   //   LetOrConst BindingList `;`
   export type LexicalDeclarationLike =
-    | LexicalDeclaration;
+    | LexicalDeclaration
+    | UsingDeclaration
+    | AwaitUsingDeclaration;
 
   // LexicalDeclaration :
   //   LetOrConst BindingList `;`
@@ -1036,6 +1039,20 @@ export namespace ParseNode {
     readonly type: 'LexicalDeclaration';
     readonly LetOrConst: LetOrConst;
     readonly BindingList: BindingList;
+  }
+
+  // UsingDeclaration :
+  //   `using` [no LineTerminator here] BindingList `;`
+  export interface UsingDeclaration extends BaseParseNode {
+      readonly type: 'UsingDeclaration';
+      readonly BindingList: BindingList;
+  }
+
+  // AwaitUsingDeclaration :
+  //   CoverAwaitExpressionAndAwaitUsingDeclarationHead [no LineTerminator here] BindingList `;`
+  export interface AwaitUsingDeclaration extends BaseParseNode {
+      readonly type: 'AwaitUsingDeclaration';
+      readonly BindingList: BindingList;
   }
 
   // LetOrConst :
@@ -1372,15 +1389,33 @@ export namespace ParseNode {
 
   // ForDeclaration :
   //   LetOrConst ForBinding
+  //   `using` ForBinding
+  //   [+Await] CoverAwaitExpressionAndAwaitUsingDeclarationHead ForBinding
   export type ForDeclarationLike =
-    | ForDeclaration;
+    | ForDeclaration
+    | ForUsingDeclaration
+    | ForAwaitUsingDeclaration;
 
-  // ForDeclaration :
+  // ForDeclaration (partial) :
   //   LetOrConst ForBinding
   export interface ForDeclaration extends BaseParseNode {
     readonly type: 'ForDeclaration';
     readonly LetOrConst: LetOrConst;
     readonly ForBinding: ForBinding;
+  }
+
+  // ForDeclaration (partial) :
+  //   `using` ForBinding
+  export interface ForUsingDeclaration extends BaseParseNode {
+      readonly type: 'ForUsingDeclaration';
+      readonly ForBinding: ForBinding;
+  }
+
+  // ForDeclaration (partial) :
+  //   [+Await] CoverAwaitExpressionAndAwaitUsingDeclarationHead ForBinding
+  export interface ForAwaitUsingDeclaration extends BaseParseNode {
+      readonly type: 'ForAwaitUsingDeclaration';
+      readonly ForBinding: ForBinding;
   }
 
   // ForBinding :
@@ -1850,6 +1885,12 @@ export namespace ParseNode {
     readonly FunctionStatementList: FunctionStatementList;
   }
 
+  // CoverAwaitExpressionAndAwaitUsingDeclarationHead : `await` UnaryExpression
+  export interface CoverAwaitExpressionAndAwaitUsingDeclarationHead extends BaseParseNode {
+      readonly type: 'CoverAwaitExpressionAndAwaitUsingDeclarationHead';
+      readonly UnaryExpression: UnaryExpressionOrHigher;
+  }
+
   // AwaitExpression : `await` UnaryExpression
   export interface AwaitExpression extends BaseParseNode {
     readonly type: 'AwaitExpression';
@@ -2249,6 +2290,7 @@ export type ParseNode =
   | ParseNode.OptionalChain
   | ParseNode.AssignmentRestElement
   | ParseNode.UpdateExpression
+  | ParseNode.CoverAwaitExpressionAndAwaitUsingDeclarationHead
   | ParseNode.AwaitExpression
   | ParseNode.UnaryExpression
   | ParseNode.ExponentiationExpression
@@ -2267,6 +2309,8 @@ export type ParseNode =
   | ParseNode.AssignmentExpression
   | ParseNode.CommaOperator
   | ParseNode.LexicalDeclaration
+  | ParseNode.UsingDeclaration
+  | ParseNode.AwaitUsingDeclaration
   | ParseNode.LexicalBinding
   | ParseNode.ObjectBindingPattern
   | ParseNode.ArrayBindingPattern
@@ -2287,6 +2331,8 @@ export type ParseNode =
   | ParseNode.ForInStatement
   | ParseNode.ForOfStatement
   | ParseNode.ForDeclaration
+  | ParseNode.ForUsingDeclaration
+  | ParseNode.ForAwaitUsingDeclaration
   | ParseNode.ForBinding
   | ParseNode.ForAwaitStatement
   | ParseNode.SwitchStatement

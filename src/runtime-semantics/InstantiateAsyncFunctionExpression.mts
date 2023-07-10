@@ -42,7 +42,7 @@ export function InstantiateAsyncFunctionExpression(AsyncFunctionExpression, name
     // 9. Perform ! SetFunctionName(closure, name).
     X(SetFunctionName(closure, name));
     // 10. Perform ! funcEnv.InitializeBinding(name, closure).
-    X(funcEnv.InitializeBinding(name, closure));
+    X(funcEnv.InitializeBinding(name, closure, 'normal'));
     // 11. Return closure.
     return closure;
   }

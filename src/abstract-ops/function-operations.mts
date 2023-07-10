@@ -10,11 +10,16 @@ import {
   UndefinedValue,
   Value,
   PrivateName,
+  type PropertyKeyValue,
+  type NullValue,
+  type JSStringValue,
+  type BooleanValue,
 } from '../value.mjs';
 import {
   EnsureCompletion,
   NormalCompletion,
   AbruptCompletion,
+  ThrowCompletion,
   ReturnIfAbrupt,
   Completion,
   Q, X,
@@ -26,7 +31,7 @@ import {
   GlobalEnvironmentRecord,
   NewFunctionEnvironment,
 } from '../environment.mjs';
-import { unwind } from '../helpers.mjs';
+import { isGeneratorFunction, resume, unwind } from '../helpers.mjs';
 import {
   Assert,
   Call,
@@ -47,6 +52,10 @@ import {
   isStrictModeCode,
   Realm,
   F as toNumberValue,
+  type BasicObjectValue,
+  NewPromiseCapability,
+  PromiseCapabilityRecord,
+  AsyncFunctionStart,
 } from './all.mjs';
 
 // This file covers abstract operations defined in
@@ -454,15 +463,26 @@ export function SetFunctionLength(F, length) {
   })));
 }
 
+export type ArgumentList = readonly Value[];
 
-function nativeCall(F, argumentsList, thisArgument, newTarget) {
+export interface NativeFunctionContext {
+  thisValue: Value;
+  NewTarget: ObjectValue | UndefinedValue;
+}
+
+export type NativeFunctionSteps = (this: BuiltinFunctionObjectValue, args: ArgumentList, { thisValue, NewTarget }: NativeFunctionContext) => Value | NormalCompletion<Value> | ThrowCompletion<Value>;
+export type NativeAsyncFunctionSteps = (this: BuiltinFunctionObjectValue, args: ArgumentList, { thisValue, NewTarget }: NativeFunctionContext) => Generator<Value, Completion<Value>, Value | NormalCompletion<Value> | ThrowCompletion<Value>>;
+
+function nativeCall(F: BuiltinFunctionObjectValue, argumentsList: ArgumentList, thisArgument: Value | undefined, newTarget: ObjectValue | UndefinedValue | undefined): Value | Completion<Value>;
+function nativeCall(F: BuiltinAsyncFunctionObjectValue, argumentsList: ArgumentList, thisArgument: Value | undefined, newTarget: ObjectValue | UndefinedValue | undefined): Generator<Value, Completion<value>, Value | Completion<Value>>;
+function nativeCall(F: BuiltinAsyncFunctionObjectValue | BuiltinFunctionObjectValue, argumentsList: ArgumentList, thisArgument: Value | undefined, newTarget: ObjectValue | UndefinedValue | undefined) {
   return F.nativeFunction(argumentsList, {
     thisValue: thisArgument || Value.undefined,
     NewTarget: newTarget || Value.undefined,
   });
 }
 
-function BuiltinFunctionCall(thisArgument, argumentsList) {
+function BuiltinFunctionCall(this: BuiltinFunctionObjectValue, thisArgument: Value, argumentsList: ArgumentList) {
   const F = this;
 
   // const callerContext = surroundingAgent.runningExecutionContext;
@@ -481,7 +501,7 @@ function BuiltinFunctionCall(thisArgument, argumentsList) {
   return result;
 }
 
-function BuiltinFunctionConstruct(argumentsList, newTarget) {
+function BuiltinFunctionConstruct(this: BuiltinFunctionObjectValue, argumentsList: ArgumentList, newTarget: ObjectValue) {
   const F = this;
 
   // const callerContext = surroundingAgent.runningExecutionContext;
@@ -501,10 +521,87 @@ function BuiltinFunctionConstruct(argumentsList, newTarget) {
   return result;
 }
 
-/** https://tc39.es/ecma262/#sec-createbuiltinfunction */
-export function CreateBuiltinFunction(steps, length, name, internalSlotsList, realm?, prototype?, prefix?, isConstructor = Value.false) {
+/** https://arai-a.github.io/ecma262-compare/?pr=2942#sec-built-in-async-function-objects-call */
+function BuiltinAsyncFunctionCall(this: BuiltinAsyncFunctionObjectValue, thisArgument: Value, argumentsList: ArgumentList) {
+  const F = this;
+
+  // 1. Let callerContext be the running execution context.
+  // const callerContext = surroundingAgent.runningExecutionContext;
+  // 2. If callerContext is not already suspended, suspend callerContext.
+  // 3. Let calleeContext be a new execution context.
+  const calleeContext = new ExecutionContext();
+  // 4. Set the Function of calleeContext to F.
+  calleeContext.Function = F;
+  // 5. Let calleeRealm be F.[[Realm]]
+  const calleeRealm = F.Realm;
+  // 6. Set the Realm of calleeContext to calleeRealm.
+  calleeContext.Realm = calleeRealm;
+  // 7. Set the ScriptOrModule of calleeContext to null.
+  calleeContext.ScriptOrModule = Value.null;
+  // 8. Perform any necessary implementation-defined initialization of calleeContext.
+  // 9. Push calleeContext onto the execution context stack; calleeContext is now the running execution context.
+  surroundingAgent.executionContextStack.push(calleeContext);
+  // 10. Let promiseCapability be ! NewPromiseCapability(%Promise%).
+  const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
+  // 11. Let resultsClosure be a new Abstract Closure with no parameters that captures F, thisArgument, and argumentsList and performs the following steps when called:
+  const resultsClosure = () => { // eslint-disable-line arrow-body-style
+    // a. Return the Completion Record that is the result of evaluating F in a manner that conforms to the specification of F.
+    //    thisArgument is the this value, argumentsList provides the named parameters, and the NewTarget value is undefined.
+    return nativeCall(F, argumentsList, thisArgument, Value.undefined);
+  };
+  // 12. Perform AsyncFunctionStart(promiseCapability, resultsClosure).
+  AsyncFunctionStart(promiseCapability, resultsClosure);
+  // 13. Remove calleeContext from the execution context stack and restore callerContext as the running execution context.
+  surroundingAgent.executionContextStack.pop(calleeContext);
+  // 14. Return promiseCapability.[[Promise]].
+  return promiseCapability.Promise;
+}
+
+/** https://arai-a.github.io/ecma262-compare/?pr=2942#sec-built-in-async-function-objects-call */
+function BuiltinAsyncFunctionConstruct(this: BuiltinAsyncFunctionObjectValue, thisArgument: Value, argumentsList: ArgumentList) {
+  return surroundingAgent.Throw('TypeError', 'NotAConstructor', this);
+}
+
+export type BuiltinFunctionObjectValue<InternalSlots extends Record<string, unknown> = Record<string, unknown>> =
+  & BasicObjectValue<{
+    Prototype: ObjectValue | NullValue;
+    Extensible: BooleanValue;
+    Realm: Realm;
+    ScriptOrModule: Value;
+    InitialName: Value;
+  } & InternalSlots>
+  & {
+    nativeFunction: NativeFunctionSteps;
+    nativeFunctionIsAsync: false;
+    Call: (this: BuiltinFunctionObjectValue<InternalSlots>, thisArgument: Value, argumentList: ArgumentList) => Value | NormalCompletion<Value> | ThrowCompletion;
+    Construct?: (this: BuiltinFunctionObjectValue<InternalSlots>, argumentList: ArgumentList, newTarget: ObjectValue) => Value | NormalCompletion<Value> | ThrowCompletion;
+  };
+
+export type BuiltinAsyncFunctionObjectValue<InternalSlots extends Record<string, unknown> = Record<string, unknown>> =
+  & BasicObjectValue<{
+    Prototype: ObjectValue | NullValue;
+    Extensible: BooleanValue;
+    Realm: Realm;
+    ScriptOrModule: Value;
+    InitialName: Value;
+  } & InternalSlots>
+  & {
+    nativeFunction: NativeAsyncFunctionSteps;
+    nativeFunctionIsAsync: true;
+    Call: (this: BuiltinAsyncFunctionObjectValue<InternalSlots>, thisArgument: Value, argumentList: ArgumentList) => Value | NormalCompletion<Value> | ThrowCompletion;
+    Construct?: (this: BuiltinAsyncFunctionObjectValue<InternalSlots>, argumentList: ArgumentList, newTarget: ObjectValue) => Value | NormalCompletion<Value> | ThrowCompletion;
+  };
+
+/**
+ * https://tc39.es/ecma262/#sec-createbuiltinfunction
+ * https://arai-a.github.io/ecma262-compare/?pr=2942#sec-createbuiltinfunction
+ */
+export function CreateBuiltinFunction<S extends string>(behaviour: NativeFunctionSteps, length: number, name: PropertyKeyValue | PrivateName, internalSlotsList: readonly S[], realm?: Realm, prototype?: ObjectValue | NullValue, prefix?: JSStringValue, isConstructor?: BooleanValue, isAsync?: BooleanValue<false>): BuiltinFunctionObjectValue<Record<S, unknown>>;
+export function CreateBuiltinFunction<S extends string>(behaviour: NativeAsyncFunctionSteps, length: number, name: PropertyKeyValue | PrivateName, internalSlotsList: readonly S[], realm: Realm | undefined, prototype: ObjectValue | NullValue | undefined, prefix: JSStringValue | undefined, isConstructor: BooleanValue | undefined, isAsync: BooleanValue<true>): BuiltinAsyncFunctionObjectValue<Record<S, unknown>>;
+export function CreateBuiltinFunction<S extends string>(behaviour: NativeAsyncFunctionSteps | NativeFunctionSteps, length: number, name: PropertyKeyValue | PrivateName, internalSlotsList: readonly S[], realm: Realm | undefined, prototype: ObjectValue | NullValue | undefined, prefix: JSStringValue | undefined, isConstructor: BooleanValue | undefined, isAsync?: BooleanValue): BuiltinFunctionObjectValue<Record<S, unknown>> | BuiltinAsyncFunctionObjectValue<Record<S, unknown>>;
+export function CreateBuiltinFunction<S extends string>(behaviour: NativeAsyncFunctionSteps | NativeFunctionSteps, length: number, name: PropertyKeyValue | PrivateName, internalSlotsList: readonly S[], realm?: Realm, prototype?: ObjectValue | NullValue, prefix?: JSStringValue, isConstructor: BooleanValue = Value.false, isAsync: BooleanValue = Value.false) {
   // 1. Assert: steps is either a set of algorithm steps or other definition of a function's behaviour provided in this specification.
-  Assert(typeof steps === 'function');
+  Assert(typeof behaviour === 'function');
   // 2. If realm is not present, set realm to the current Realm Record.
   if (realm === undefined) {
     realm = surroundingAgent.currentRealmRecord;
@@ -515,26 +612,46 @@ export function CreateBuiltinFunction(steps, length, name, internalSlotsList, re
   if (prototype === undefined) {
     prototype = realm.Intrinsics['%Function.prototype%'];
   }
-  // 5. Let func be a new built-in function object that when called performs the action described by steps. The new function object has internal slots whose names are the elements of internalSlotsList.
-  const func = X(MakeBasicObject(['Prototype', 'Extensible', 'Realm', 'ScriptOrModule', 'InitialName'].concat(internalSlotsList)));
-  func.Call = BuiltinFunctionCall;
-  if (isConstructor === Value.true) {
-    func.Construct = BuiltinFunctionConstruct;
+  let func: BuiltinFunctionObjectValue<Record<S, unknown>> | BuiltinAsyncFunctionObjectValue<Record<S, unknown>>;
+  // 5. If behaviour is described as async, then
+  if (isAsync === Value.true) {
+    // NON-SPEC
+    Assert(isGeneratorFunction(behaviour));
+
+    // a. Let func be a new built-in function object that when called performs the action described by steps. The new function object has internal slots whose names are the elements of internalSlotsList.
+    func = X(MakeBasicObject(['Prototype', 'Extensible', 'Realm', 'ScriptOrModule', 'InitialName'].concat(internalSlotsList))) as BuiltinAsyncFunctionObjectValue<Record<S, unknown>>;
+    func.nativeFunction = behaviour;
+    func.nativeFunctionIsAsync = true;
+    func.Call = BuiltinAsyncFunctionCall;
+    if (isConstructor === Value.true) {
+      func.Construct = BuiltinAsyncFunctionConstruct;
+    }
+  } else { // 6. Else,
+    // NON-SPEC
+    Assert(!isGeneratorFunction(behaviour));
+
+    // a. Let func be a new built-in function object that when called performs the action described by steps. The new function object has internal slots whose names are the elements of internalSlotsList.
+    func = X(MakeBasicObject(['Prototype', 'Extensible', 'Realm', 'ScriptOrModule', 'InitialName'].concat(internalSlotsList))) as BuiltinFunctionObjectValue<Record<S, unknown>>;
+    func.nativeFunction = behaviour;
+    func.nativeFunctionIsAsync = false;
+    func.Call = BuiltinFunctionCall;
+    if (isConstructor === Value.true) {
+      func.Construct = BuiltinFunctionConstruct;
+    }
   }
-  func.nativeFunction = steps;
-  // 6. Set func.[[Realm]] to realm.
+  // 7. Set func.[[Realm]] to realm.
   func.Realm = realm;
-  // 7. Set func.[[Prototype]] to prototype.
+  // 8. Set func.[[Prototype]] to prototype.
   func.Prototype = prototype;
-  // 8. Set func.[[Extensible]] to true.
+  // 9. Set func.[[Extensible]] to true.
   func.Extensible = Value.true;
-  // 9. Set func.[[ScriptOrModule]] to null.
+  // 10. Set func.[[ScriptOrModule]] to null.
   func.ScriptOrModule = Value.null;
-  // 10. Set func.[[InitialName]] to null.
+  // 11. Set func.[[InitialName]] to null.
   func.InitialName = Value.null;
-  // 11. Perform ! SetFunctionLength(func, length).
+  // 12. Perform ! SetFunctionLength(func, length).
   X(SetFunctionLength(func, length));
-  // 12. If prefix is not present, then
+  // 13. If prefix is not present, then
   if (prefix === undefined) {
     // a. Perform ! SetFunctionName(func, name).
     X(SetFunctionName(func, name));
@@ -542,7 +659,7 @@ export function CreateBuiltinFunction(steps, length, name, internalSlotsList, re
     // a. Perform ! SetFunctionName(func, name, prefix).
     X(SetFunctionName(func, name, prefix));
   }
-  // 13. Return func.
+  // 14. Return func.
   return func;
 }
 

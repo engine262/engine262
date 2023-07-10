@@ -12,6 +12,32 @@ export abstract class LanguageParser extends ModuleParser {
       node.ScriptBody = null;
     } else {
       node.ScriptBody = this.parseScriptBody();
+      node.ScriptBody.StatementList.forEach((statement) => {
+        switch (statement.type) {
+          case 'UsingDeclaration':
+            // https://tc39.es/proposal-explicit-resource-management/#sec-let-and-const-declarations-static-semantics-early-errors
+            //
+            // UsingDeclaration : `using` BindingList `;`
+            //
+            // - It is a Syntax Error if the goal symbol is Script and UsingDeclaration is not contained, either
+            //   directly or indirectly, within a Block, CaseBlock, ForStatement, ForInOfStatement, FunctionBody,
+            //   GeneratorBody, AsyncGeneratorBody, AsyncFunctionBody, ClassStaticBlockBody, or ClassBody.
+            this.raiseEarly('DeclarationNotAllowedInScript', statement, 'using');
+            break;
+          case 'AwaitUsingDeclaration':
+            // https://tc39.es/proposal-explicit-resource-management/#sec-let-and-const-declarations-static-semantics-early-errors
+            //
+            // AwaitUsingDeclaration : CoverAwaitExpressionAndAwaitUsingDeclarationHead BindingList `;`
+            //
+            // - It is a Syntax Error if the goal symbol is Script and AwaitUsingDeclaration is not contained, either
+            //   directly or indirectly, within a Block, CaseBlock, ForStatement, ForInOfStatement, FunctionBody,
+            //   GeneratorBody, AsyncGeneratorBody, AsyncFunctionBody, ClassStaticBlockBody, or ClassBody.
+            this.raiseEarly('DeclarationNotAllowedInScript', statement, 'await using');
+            break;
+          default:
+            break;
+        }
+      });
     }
     return this.finishNode(node, 'Script');
   }

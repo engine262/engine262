@@ -16,6 +16,7 @@ export enum Flag {
   default = 1 << 9,
   module = 1 << 10,
   classStaticBlock = 1 << 11,
+  pattern = 1 << 12,
 }
 
 export interface DeclarationInfo {
@@ -95,6 +96,8 @@ export function getDeclarations(node: ParseNode | readonly ParseNode[]): Declara
     case 'Elision':
       return [];
     case 'ForDeclaration':
+    case 'ForUsingDeclaration':
+    case 'ForAwaitUsingDeclaration':
       return getDeclarations(node.ForBinding);
     case 'ExportSpecifier':
       return getDeclarations(node.exportName);
@@ -105,6 +108,8 @@ export function getDeclarations(node: ParseNode | readonly ParseNode[]): Declara
       Assert(!!node.BindingIdentifier);
       return getDeclarations(node.BindingIdentifier);
     case 'LexicalDeclaration':
+    case 'UsingDeclaration':
+    case 'AwaitUsingDeclaration':
       return getDeclarations(node.BindingList);
     case 'VariableStatement':
       return getDeclarations(node.VariableDeclarationList);
@@ -212,6 +217,10 @@ export class Scope {
 
   hasIn() {
     return (this.flags & Flag.in) !== 0;
+  }
+
+  hasPattern() {
+    return (this.flags & Flag.pattern) !== 0;
   }
 
   inParameters() {

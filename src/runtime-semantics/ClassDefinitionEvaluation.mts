@@ -296,7 +296,7 @@ export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
   // 27. If classBinding is not undefined, then
   if (classBinding !== Value.undefined) {
     // a. Perform classScope.InitializeBinding(classBinding, F).
-    classScope.InitializeBinding(classBinding, F);
+    classScope.InitializeBinding(classBinding, F, 'normal');
   }
   // 28. Set F.[[PrivateMethods]] to instancePrivateMethods.
   F.PrivateMethods = instancePrivateMethods;

@@ -12,6 +12,8 @@ export function TopLevelVarDeclaredNames(node) {
   switch (node.type) {
     case 'ClassDeclaration':
     case 'LexicalDeclaration':
+    case 'UsingDeclaration':
+    case 'AwaitUsingDeclaration':
       return [];
     case 'FunctionDeclaration':
     case 'GeneratorDeclaration':

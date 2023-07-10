@@ -37,6 +37,8 @@ export function LexicallyScopedDeclarations(node) {
       return [];
     case 'ClassDeclaration':
     case 'LexicalDeclaration':
+    case 'UsingDeclaration':
+    case 'AwaitUsingDeclaration':
     case 'FunctionDeclaration':
     case 'GeneratorDeclaration':
     case 'AsyncFunctionDeclaration':

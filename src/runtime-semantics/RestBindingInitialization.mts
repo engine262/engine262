@@ -24,5 +24,5 @@ export function RestBindingInitialization({ BindingIdentifier }, value, environm
     return PutValue(lhs, restObj);
   }
   // 5. Return InitializeReferencedBinding(lhs, restObj).
-  return InitializeReferencedBinding(lhs, restObj);
+  return InitializeReferencedBinding(lhs, restObj, 'normal');
 }

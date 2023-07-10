@@ -2,7 +2,7 @@
 import { surroundingAgent } from '../engine.mjs';
 import { Value } from '../value.mjs';
 import { NewDeclarativeEnvironment, DeclarativeEnvironmentRecord } from '../environment.mjs';
-import { Assert } from '../abstract-ops/all.mjs';
+import { Assert, DisposeResources } from '../abstract-ops/all.mjs';
 import {
   LexicallyScopedDeclarations,
   IsConstantDeclaration,
@@ -41,7 +41,7 @@ export function BlockDeclarationInstantiation(code, env) {
         // ii. Let fo be InstantiateFunctionObject of d with argument env.
         const fo = InstantiateFunctionObject(d, env, privateEnv);
         // iii. Perform env.InitializeBinding(fn, fo).
-        env.InitializeBinding(fn, fo);
+        env.InitializeBinding(fn, fo, 'normal');
       }
     }
   }
@@ -65,7 +65,9 @@ export function* Evaluate_Block({ StatementList }) {
   // 4. Set the running execution context's LexicalEnvironment to blockEnv.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = blockEnv;
   // 5. Let blockValue be the result of evaluating StatementList.
-  const blockValue = yield* Evaluate_StatementList(StatementList);
+  let blockValue = yield* Evaluate_StatementList(StatementList);
+  // *6. Set blockValue to DisposeResources(blockEnv.[[DisposeCapability]], blockValue).
+  blockValue = yield* DisposeResources(blockEnv.DisposeCapability, blockValue);
   // 6. Set the running execution context's LexicalEnvironment to oldEnv.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
   // 7. Return blockValue.

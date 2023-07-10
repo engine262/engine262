@@ -10,6 +10,8 @@ export function TopLevelLexicallyScopedDeclarations(node) {
   switch (node.type) {
     case 'ClassDeclaration':
     case 'LexicalDeclaration':
+    case 'UsingDeclaration':
+    case 'AwaitUsingDeclaration':
       return [node];
     default:
       return [];

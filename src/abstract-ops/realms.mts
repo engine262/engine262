@@ -80,6 +80,12 @@ import { bootstrapWeakRefPrototype } from '../intrinsics/WeakRefPrototype.mjs';
 import { bootstrapWeakRef } from '../intrinsics/WeakRef.mjs';
 import { bootstrapFinalizationRegistryPrototype } from '../intrinsics/FinalizationRegistryPrototype.mjs';
 import { bootstrapFinalizationRegistry } from '../intrinsics/FinalizationRegistry.mjs';
+import { bootstrapAsyncDisposableStack } from '../intrinsics/AsyncDisposableStack.mjs';
+import { bootstrapAsyncDisposableStackPrototype } from '../intrinsics/AsyncDisposableStackPrototype.mjs';
+import { bootstrapDisposableStack } from '../intrinsics/DisposableStack.mjs';
+import { bootstrapDisposableStackPrototype } from '../intrinsics/DisposableStackPrototype.mjs';
+import { bootstrapSuppressedError } from '../intrinsics/SuppressedError.mjs';
+import { bootstrapSuppressedErrorPrototype } from '../intrinsics/SuppressedErrorPrototype.mjs';
 import {
   Assert,
   DefinePropertyOrThrow,
@@ -165,6 +171,8 @@ export function CreateIntrinsics(realmRec) {
   bootstrapNativeError(realmRec);
   bootstrapAggregateErrorPrototype(realmRec);
   bootstrapAggregateError(realmRec);
+  bootstrapSuppressedErrorPrototype(realmRec);
+  bootstrapSuppressedError(realmRec);
 
   bootstrapFunction(realmRec);
 
@@ -253,6 +261,12 @@ export function CreateIntrinsics(realmRec) {
   bootstrapFinalizationRegistryPrototype(realmRec);
   bootstrapFinalizationRegistry(realmRec);
 
+  bootstrapAsyncDisposableStackPrototype(realmRec);
+  bootstrapAsyncDisposableStack(realmRec);
+
+  bootstrapDisposableStackPrototype(realmRec);
+  bootstrapDisposableStack(realmRec);
+
   AddRestrictedFunctionProperties(intrinsics['%Function.prototype%'], realmRec);
 
   return intrinsics;
@@ -314,12 +328,14 @@ export function SetDefaultGlobalBindings(realmRec) {
     'AggregateError',
     'Array',
     'ArrayBuffer',
+    'AsyncDisposableStack',
     'Boolean',
     'BigInt',
     'BigInt64Array',
     'BigUint64Array',
     'DataView',
     'Date',
+    'DisposableStack',
     'Error',
     'EvalError',
     'FinalizationRegistry',
@@ -340,6 +356,7 @@ export function SetDefaultGlobalBindings(realmRec) {
     'Set',
     // 'SharedArrayBuffer',
     'String',
+    'SuppressedError',
     'Symbol',
     'SyntaxError',
     'TypeError',

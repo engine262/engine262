@@ -39,7 +39,7 @@ export function InstantiateOrdinaryFunctionExpression(FunctionExpression, name) 
     // 10. Perform MakeConstructor(closure).
     MakeConstructor(closure);
     // 11. Perform funcEnv.InitializeBinding(name, closure).
-    funcEnv.InitializeBinding(name, closure);
+    funcEnv.InitializeBinding(name, closure, 'normal');
     // 12. Return closure.
     return closure;
   }

@@ -24,7 +24,7 @@ export function InitializeBoundName(name, value, environment) {
   // 2. If environment is not undefined, then
   if (environment !== Value.undefined) {
     // a. Perform environment.InitializeBinding(name, value).
-    environment.InitializeBinding(name, value);
+    environment.InitializeBinding(name, value, 'normal');
     // b. Return NormalCompletion(undefined).
     return NormalCompletion(Value.undefined);
   } else {
@@ -58,6 +58,8 @@ export function* BindingInitialization(node, value, environment) {
       }
       return yield* BindingInitialization(node.BindingPattern, value, environment);
     case 'ForDeclaration':
+    case 'ForUsingDeclaration':
+    case 'ForAwaitUsingDeclaration':
       return yield* BindingInitialization(node.ForBinding, value, environment);
     case 'BindingIdentifier': {
       // 1. Let name be StringValue of Identifier.

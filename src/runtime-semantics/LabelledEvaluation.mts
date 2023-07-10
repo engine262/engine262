@@ -19,11 +19,14 @@ import {
   ToBoolean,
   ToObject,
   SameValue,
+  DisposeResources,
 } from '../abstract-ops/all.mjs';
 import {
   BoundNames,
+  IsAwaitUsingDeclaration,
   IsConstantDeclaration,
   IsDestructuring,
+  IsUsingDeclaration,
   StringValue,
 } from '../static-semantics/all.mjs';
 import { CreateForInIterator } from '../intrinsics/ForInIteratorPrototype.mjs';
@@ -38,6 +41,7 @@ import {
   Q, X,
 } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import {
   Evaluate_SwitchStatement,
   Evaluate_VariableDeclarationList,
@@ -290,9 +294,13 @@ function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement, label
       // 6. Set the running execution context's LexicalEnvironment to loopEnv.
       surroundingAgent.runningExecutionContext.LexicalEnvironment = loopEnv;
       // 7. Let forDcl be the result of evaluating LexicalDeclaration.
-      const forDcl = yield* Evaluate(LexicalDeclaration);
+      let forDcl = yield* Evaluate(LexicalDeclaration);
       // 8. If forDcl is an abrupt completion, then
       if (forDcl instanceof AbruptCompletion) {
+        // *a. Set forDcl to Completion(DisposeResources(loopEnv.[[DisposeCapability]], forDcl)).
+        forDcl = yield* DisposeResources(loopEnv.DisposeCapability, forDcl);
+        // *b. Assert: forDcl is an abrupt completion.
+        Assert(forDcl instanceof AbruptCompletion);
         // a. Set the running execution context's LexicalEnvironment to oldEnv.
         surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
         // b. Return Completion(forDcl).
@@ -306,7 +314,11 @@ function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement, label
         perIterationLets = [];
       }
       // 10. Let bodyResult be ForBodyEvaluation(the first Expression, the second Expression, Statement, perIterationLets, labelSet).
-      const bodyResult = yield* ForBodyEvaluation(Expression_a, Expression_b, Statement, perIterationLets, labelSet);
+      let bodyResult = yield* ForBodyEvaluation(Expression_a, Expression_b, Statement, perIterationLets, labelSet);
+      // *13. Set bodyResult to Completion(DisposeResources(loopEnv.[[DisposeCapability]], bodyResult)).
+      bodyResult = yield* DisposeResources(loopEnv.DisposeCapability, bodyResult);
+      // *14. Assert: If bodyResult.[[Type]] is normal, then bodyResult.[[Value]] is not empty.
+      Assert(bodyResult.Type !== 'normal' || bodyResult.Value !== undefined);
       // 11. Set the running execution context's LexicalEnvironment to oldEnv.
       surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
       // 12. Return Completion(bodyResult).
@@ -502,7 +514,7 @@ function CreatePerIterationEnvironment(perIterationBindings) {
       // ii. Let lastValue be ? lastIterationEnv.GetBindingValue(bn, true).
       const lastValue = Q(lastIterationEnv.GetBindingValue(bn, Value.true));
       // iii. Perform thisIterationEnv.InitializeBinding(bn, lastValue).
-      thisIterationEnv.InitializeBinding(bn, lastValue);
+      thisIterationEnv.InitializeBinding(bn, lastValue, 'normal');
     }
     // f. Set the running execution context's LexicalEnvironment to thisIterationEnv.
     surroundingAgent.runningExecutionContext.LexicalEnvironment = thisIterationEnv;
@@ -575,6 +587,14 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 3. Let V be undefined.
   let V = Value.undefined;
+  let hint: 'normal' | 'sync-dispose' | 'async-dispose';
+  if (IsAwaitUsingDeclaration(lhs) === true) {
+    hint = 'async-dispose';
+  } else if (IsUsingDeclaration(lhs) === true) {
+    hint = 'sync-dispose';
+  } else {
+    hint = 'normal';
+  }
   // 4. Let destructuring be IsDestructuring of lhs.
   const destructuring = IsDestructuring(lhs);
   // 5. If destructuring is true and if lhsKind is assignment, then
@@ -607,66 +627,108 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
     // g. If lhsKind is either assignment or varBinding, then
     let lhsRef;
     let iterationEnv;
-    if (lhsKind === 'assignment' || lhsKind === 'varBinding') {
-      // i. If destructuring is false, then
-      if (destructuring === false) {
-        // 1. Let lhsRef be the result of evaluating lhs. (It may be evaluated repeatedly.)
-        lhsRef = yield* Evaluate(lhs);
-      }
-    } else { // h. Else,
-      // i. Assert: lhsKind is lexicalBinding.
-      Assert(lhsKind === 'lexicalBinding');
-      // ii. Assert: lhs is a ForDeclaration.
-      Assert(lhs.type === 'ForDeclaration');
-      // iii. Let iterationEnv be NewDeclarativeEnvironment(oldEnv).
-      iterationEnv = NewDeclarativeEnvironment(oldEnv);
-      // iv. Perform BindingInstantiation for lhs passing iterationEnv as the argument.
-      BindingInstantiation(lhs, iterationEnv);
-      // v. Set the running execution context's LexicalEnvironment to iterationEnv.
-      surroundingAgent.runningExecutionContext.LexicalEnvironment = iterationEnv;
-      // vi. If destructuring is false, then
-      if (destructuring === false) {
-        // 1. Assert: lhs binds a single name.
-        // 2. Let lhsName be the sole element of BoundNames of lhs.
-        const lhsName = BoundNames(lhs)[0];
-        // 3. Let lhsRef be ! ResolveBinding(lhsName).
-        lhsRef = X(ResolveBinding(lhsName, undefined, lhs.strict));
-      }
-    }
     let status;
-    // i. If destructuring is false, then
-    if (destructuring === false) {
-      // i. If lhsRef is an abrupt completion, then
-      if (lhsRef instanceof AbruptCompletion) {
-        // 1. Let status be lhsRef.
-        status = lhsRef;
-      } else if (lhsKind === 'lexicalBinding') { // ii. Else is lhsKind is lexicalBinding, then
-        // 1. Let status be InitializeReferencedBinding(lhsRef, nextValue).
-        status = InitializeReferencedBinding(lhsRef, nextValue);
-      } else { // iii. Else,
-        status = PutValue(lhsRef, nextValue);
+    if (lhsKind === 'assignment' || lhsKind === 'varBinding') {
+      if (destructuring === true) {
+        if (lhsKind === 'assignment') {
+          status = yield* DestructuringAssignmentEvaluation(assignmentPattern, nextValue);
+        } else {
+          Assert(lhsKind === 'varBinding');
+          Assert(lhs.type === 'ForBinding');
+          status = yield* BindingInitialization(lhs, nextValue, Value.undefined);
+        }
+      } else {
+        lhsRef = yield* Evaluate(lhs);
+        if (lhsRef instanceof AbruptCompletion) {
+          status = lhsRef;
+        } else {
+          status = PutValue(lhsRef, nextValue);
+        }
+        iterationEnv = Value.undefined;
       }
-    } else { // j. Else,
-      // i. If lhsKind is assignment, then
-      if (lhsKind === 'assignment') {
-        // 1. Let status be DestructuringAssignmentEvaluation of assignmentPattern with argument nextValue.
-        status = yield* DestructuringAssignmentEvaluation(assignmentPattern, nextValue);
-      } else if (lhsKind === 'varBinding') { // ii. Else if lhsKind is varBinding, then
-        // 1. Assert: lhs is a ForBinding.
-        Assert(lhs.type === 'ForBinding');
-        // 2. Let status be BindingInitialization of lhs with arguments nextValue and undefined.
-        status = yield* BindingInitialization(lhs, nextValue, Value.undefined);
-      } else { // iii. Else,
-        // 1. Assert: lhsKind is lexicalBinding.
-        Assert(lhsKind === 'lexicalBinding');
-        // 2. Assert: lhs is a ForDeclaration.
-        Assert(lhs.type === 'ForDeclaration');
-        // 3. Let status be BindingInitialization of lhs with arguments nextValue and iterationEnv.
+    } else {
+      Assert(lhsKind === 'lexicalBinding');
+      Assert(lhs.type === 'ForDeclaration'
+        || lhs.type === 'ForUsingDeclaration'
+        || lhs.type === 'ForAwaitUsingDeclaration');
+      iterationEnv = NewDeclarativeEnvironment(oldEnv);
+      ForDeclarationBindingInstantiation(lhs, iterationEnv);
+      surroundingAgent.runningExecutionContext.LexicalEnvironment = iterationEnv;
+      if (destructuring === true) {
         status = yield* BindingInitialization(lhs, nextValue, iterationEnv);
+      } else {
+        const lhsName = BoundNames(lhs)[0];
+        lhsRef = X(ResolveBinding(lhsName, undefined, lhs.strict));
+        status = InitializeReferencedBinding(lhsRef, nextValue, hint);
       }
     }
+
+    // // old
+    // if (lhsKind === 'assignment' || lhsKind === 'varBinding') {
+    //   // i. If destructuring is false, then
+    //   if (destructuring === false) {
+    //     // 1. Let lhsRef be the result of evaluating lhs. (It may be evaluated repeatedly.)
+    //     lhsRef = yield* Evaluate(lhs);
+    //   }
+    // } else { // h. Else,
+    //   // i. Assert: lhsKind is lexicalBinding.
+    //   Assert(lhsKind === 'lexicalBinding');
+    //   // ii. Assert: lhs is a ForDeclaration.
+    //   Assert(lhs.type === 'ForDeclaration');
+    //   // iii. Let iterationEnv be NewDeclarativeEnvironment(oldEnv).
+    //   iterationEnv = NewDeclarativeEnvironment(oldEnv);
+    //   // iv. Perform BindingInstantiation for lhs passing iterationEnv as the argument.
+    //   BindingInstantiation(lhs, iterationEnv);
+    //   // v. Set the running execution context's LexicalEnvironment to iterationEnv.
+    //   surroundingAgent.runningExecutionContext.LexicalEnvironment = iterationEnv;
+    //   // vi. If destructuring is false, then
+    //   if (destructuring === false) {
+    //     // 1. Assert: lhs binds a single name.
+    //     // 2. Let lhsName be the sole element of BoundNames of lhs.
+    //     const lhsName = BoundNames(lhs)[0];
+    //     // 3. Let lhsRef be ! ResolveBinding(lhsName).
+    //     lhsRef = X(ResolveBinding(lhsName, undefined, lhs.strict));
+    //   }
+    // }
+    // // i. If destructuring is false, then
+    // if (destructuring === false) {
+    //   // i. If lhsRef is an abrupt completion, then
+    //   if (lhsRef instanceof AbruptCompletion) {
+    //     // 1. Let status be lhsRef.
+    //     status = lhsRef;
+    //   } else if (lhsKind === 'lexicalBinding') { // ii. Else is lhsKind is lexicalBinding, then
+    //     // 1. Let status be InitializeReferencedBinding(lhsRef, nextValue).
+    //     status = InitializeReferencedBinding(lhsRef, nextValue);
+    //   } else { // iii. Else,
+    //     status = PutValue(lhsRef, nextValue);
+    //   }
+    // } else { // j. Else,
+    //   // i. If lhsKind is assignment, then
+    //   if (lhsKind === 'assignment') {
+    //     // 1. Let status be DestructuringAssignmentEvaluation of assignmentPattern with argument nextValue.
+    //     status = yield* DestructuringAssignmentEvaluation(assignmentPattern, nextValue);
+    //   } else if (lhsKind === 'varBinding') { // ii. Else if lhsKind is varBinding, then
+    //     // 1. Assert: lhs is a ForBinding.
+    //     Assert(lhs.type === 'ForBinding');
+    //     // 2. Let status be BindingInitialization of lhs with arguments nextValue and undefined.
+    //     status = yield* BindingInitialization(lhs, nextValue, Value.undefined);
+    //   } else { // iii. Else,
+    //     // 1. Assert: lhsKind is lexicalBinding.
+    //     Assert(lhsKind === 'lexicalBinding');
+    //     // 2. Assert: lhs is a ForDeclaration.
+    //     Assert(lhs.type === 'ForDeclaration');
+    //     // 3. Let status be BindingInitialization of lhs with arguments nextValue and iterationEnv.
+    //     status = yield* BindingInitialization(lhs, nextValue, iterationEnv);
+    //   }
+    // }
+
     // k. If status is an abrupt completion, then
     if (status instanceof AbruptCompletion) {
+      if (iterationEnv !== Value.undefined) {
+        status = EnsureCompletion(yield* DisposeResources(iterationEnv.DisposeCapability, status));
+        Assert(status instanceof AbruptCompletion);
+      }
+
       // i. Set the running execution context's LexicalEnvironment to oldEnv.
       surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
       // ii. If iteratorKind is async, return ? AsyncIteratorClose(iteratorRecord, status).
@@ -685,7 +747,10 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
       }
     }
     // l. Let result be the result of evaluating stmt.
-    const result = EnsureCompletion(yield* Evaluate(stmt));
+    let result = EnsureCompletion(yield* Evaluate(stmt));
+    if (iterationEnv !== Value.undefined) {
+      result = EnsureCompletion(yield* DisposeResources(iterationEnv.DisposeCapability, result));
+    }
     // m. Set the running execution context's LexicalEnvironment to oldEnv.
     surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
     // n. If LoopContinues(result, labelSet) is false, then
@@ -716,7 +781,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-bindinginstantiation */
 //   ForDeclaration : LetOrConst ForBinding
-function BindingInstantiation({ LetOrConst, ForBinding }, environment) {
+function ForDeclarationBindingInstantiation_LetOrConst({ LetOrConst, ForBinding }: ParseNode.ForDeclaration, environment) {
   // 1. Assert: environment is a declarative Environment Record.
   Assert(environment instanceof DeclarativeEnvironmentRecord);
   // 2. For each element name of the BoundNames of ForBinding, do
@@ -729,6 +794,37 @@ function BindingInstantiation({ LetOrConst, ForBinding }, environment) {
       // i. Perform ! environment.CreateMutableBinding(name, false).
       X(environment.CreateMutableBinding(name, Value.false));
     }
+  }
+}
+
+/** https://tc39.es/ecma262/#sec-runtime-semantics-bindinginstantiation */
+//   ForDeclaration :
+//     `using` ForBinding
+//     `await` `using` ForBinding
+function ForDeclarationBindingInstantiation_UsingOrAwaitUsing({ ForBinding }: ParseNode.ForUsingDeclaration | ParseNode.ForAwaitUsingDeclaration, environment) {
+  // 1. Assert: environment is a declarative Environment Record.
+  Assert(environment instanceof DeclarativeEnvironmentRecord);
+  // 2. For each element name of the BoundNames of ForBinding, do
+  for (const name of BoundNames(ForBinding)) {
+    // i. Perform ! environment.CreateImmutableBinding(name, true).
+    X(environment.CreateImmutableBinding(name, Value.true));
+  }
+}
+
+/** https://tc39.es/ecma262/#sec-runtime-semantics-bindinginstantiation */
+//   ForDeclaration :
+//     LetOrConst ForBinding
+//     `using` ForBinding
+//     `await` `using` ForBinding
+function ForDeclarationBindingInstantiation(ForDeclaration: ParseNode.ForDeclarationLike, environment) {
+  switch (ForDeclaration.type) {
+    case 'ForDeclaration':
+      return ForDeclarationBindingInstantiation_LetOrConst(ForDeclaration, environment);
+    case 'ForUsingDeclaration':
+    case 'ForAwaitUsingDeclaration':
+      return ForDeclarationBindingInstantiation_UsingOrAwaitUsing(ForDeclaration, environment);
+    default:
+      throw new OutOfRange('ForDeclarationBindingInstantiation', ForDeclaration);
   }
 }
 

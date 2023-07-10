@@ -352,7 +352,7 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strict) 
         // 2. Assert: status is not an abrupt completion because of validation preceding step 12.
         Assert(!(status instanceof AbruptCompletion));
         // 3. Perform ! varEnv.InitializeBinding(fn, fo).
-        X(varEnv.InitializeBinding(fn, fo));
+        X(varEnv.InitializeBinding(fn, fo, 'normal'));
       } else { // iii. Else,
         // 1. Perform ! varEnv.SetMutableBinding(fn, fo, false).
         X(varEnv.SetMutableBinding(fn, fo, Value.false));
@@ -375,7 +375,7 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strict) 
         // 2. Assert: status is not an abrupt completion because of validation preceding step 12.
         Assert(!(status instanceof AbruptCompletion));
         // 3. Perform ! varEnv.InitializeBinding(vn, undefined).
-        X(varEnv.InitializeBinding(vn, Value.undefined));
+        X(varEnv.InitializeBinding(vn, Value.undefined, 'normal'));
       }
     }
   }

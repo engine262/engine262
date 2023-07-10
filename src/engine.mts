@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { Value } from './value.mjs';
+import { NullValue, ObjectValue, Value } from './value.mjs';
 import {
   EnsureCompletion,
   NormalCompletion,
@@ -13,11 +13,12 @@ import {
   CleanupFinalizationRegistry,
   CreateArrayFromList,
   FinishLoadingImportedModule,
+  type Realm,
 } from './abstract-ops/all.mjs';
 import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
 import { Evaluate } from './evaluator.mjs';
 import { CallSite, unwind } from './helpers.mjs';
-import { runJobQueue } from './api.mjs';
+import { EnvironmentRecord, runJobQueue } from './api.mjs';
 import * as messages from './messages.mjs';
 
 export const FEATURES = Object.freeze([
@@ -33,7 +34,7 @@ export const FEATURES = Object.freeze([
   },
 ].map(Object.freeze));
 
-class ExecutionContextStack extends Array {
+class ExecutionContextStack extends Array<ExecutionContext> {
   // This ensures that only the length taking overload is supported.
   // This is necessary to support `ArraySpeciesCreate`, which invokes
   // the constructor with argument `length`:
@@ -41,7 +42,7 @@ class ExecutionContextStack extends Array {
     super(+length);
   }
 
-  pop(ctx) {
+  pop(ctx: ExecutionContext) {
     if (!ctx.poppedForTailCall) {
       const popped = super.pop();
       Assert(popped === ctx);
@@ -107,7 +108,7 @@ export class Agent {
   }
 
   // Generate a throw completion using message templates
-  Throw(type, template, ...templateArgs) {
+  Throw<K extends keyof typeof messages>(type, template: K, ...templateArgs: Parameters<typeof messages[K]>) {
     if (type instanceof Value) {
       return ThrowCompletion(type);
     }
@@ -117,6 +118,12 @@ export class Agent {
     if (type === 'AggregateError') {
       error = X(Construct(cons, [
         X(CreateArrayFromList([])),
+        Value(message),
+      ]));
+    } else if (type === 'SuppressedError') {
+      error = X(Construct(cons, [
+        Value.undefined,
+        Value.undefined,
         Value(message),
       ]));
     } else {
@@ -158,19 +165,19 @@ export class Agent {
   }
 }
 
-export let surroundingAgent;
-export function setSurroundingAgent(a) {
+export let surroundingAgent: Agent;
+export function setSurroundingAgent(a: Agent) {
   surroundingAgent = a;
 }
 
 /** https://tc39.es/ecma262/#sec-execution-contexts */
 export class ExecutionContext {
   codeEvaluationState;
-  Function;
-  Realm;
+  Function: ObjectValue | NullValue;
+  Realm: Realm;
   ScriptOrModule;
-  VariableEnvironment;
-  LexicalEnvironment;
+  VariableEnvironment!: EnvironmentRecord;
+  LexicalEnvironment!: EnvironmentRecord;
   PrivateEnvironment;
   // NON-SPEC
   callSite = new CallSite(this);

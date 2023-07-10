@@ -9,11 +9,11 @@ export abstract class ModuleParser extends StatementParser {
   // ImportDeclaration :
   //   `import` ImportClause FromClause `;`
   //   `import` ModuleSpecifier `;`
-  parseImportDeclaration(): ParseNode.ImportDeclaration | ParseNode.ExpressionStatement | ParseNode.LabelledStatement {
+  parseImportDeclaration(): ParseNode.ImportDeclaration | ParseNode.ExpressionStatement | ParseNode.LabelledStatement | ParseNode.AwaitUsingDeclaration {
     if (this.testAhead(Token.PERIOD) || this.testAhead(Token.LPAREN)) {
       // `import` `(`
       // `import` `.`
-      return this.parseExpressionStatement();
+      return this.parseExpressionStatement(/* canParseAwaitUsingDeclaration */ true);
     }
     const node = this.startNode<ParseNode.ImportDeclaration>();
     this.next();

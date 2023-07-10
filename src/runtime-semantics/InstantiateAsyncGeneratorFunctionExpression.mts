@@ -52,7 +52,7 @@ export function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpres
       }),
     ));
     // 12. Perform funcEnv.InitializeBinding(name, closure).
-    funcEnv.InitializeBinding(name, closure);
+    funcEnv.InitializeBinding(name, closure, 'normal');
     // 13. Return closure.
     return closure;
   }

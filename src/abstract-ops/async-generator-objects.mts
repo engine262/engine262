@@ -12,11 +12,13 @@ import {
 import { Evaluate } from '../evaluator.mjs';
 import { Value } from '../value.mjs';
 import { resume, handleInResume } from '../helpers.mjs';
+import { DeclarativeEnvironmentRecord } from '../environment.mjs';
 import {
   Assert,
   Call,
   CreateBuiltinFunction,
   CreateIterResultObject,
+  DisposeResources,
   generatorBrandToErrorMessageType,
   GetGeneratorKind,
   OrdinaryObjectCreate,
@@ -39,7 +41,10 @@ class AsyncGeneratorRequestRecord {
   }
 }
 
-/** https://tc39.es/ecma262/#sec-asyncgeneratorstart */
+/**
+ * https://tc39.es/ecma262/#sec-asyncgeneratorstart
+ * https://tc39.es/proposal-explicit-resource-management/#sec-asyncgeneratorstart
+ */
 export function AsyncGeneratorStart(generator, generatorBody) {
   // 1. Assert: generator.[[AsyncGeneratorState]] is undefined.
   Assert(generator.AsyncGeneratorState === Value.undefined);
@@ -62,6 +67,18 @@ export function AsyncGeneratorStart(generator, generatorBody) {
         : Evaluate(generatorBody),
     );
     // c. Assert: If we return here, the async generator either threw an exception or performed either an implicit or explicit return.
+    // TODO(rbuckton): Fix spec to move these steps before genContext is removed from the stack
+    // *. Let env be genContext's LexicalEnvironment.
+    const env = genContext.LexicalEnvironment;
+    // TODO(rbuckton): Fix the proposal spec for this
+    // NON-SPEC, handles case where generatorBody is an abstract closure
+    // *. If env is not undefined, then
+    if (env !== undefined) {
+      // *. Assert: env is a Declarative Environment Record.
+      Assert(env instanceof DeclarativeEnvironmentRecord, typeof env);
+      // *. Set result to DisposeResources(env.[[DisposeCapability]], result).
+      result = yield* DisposeResources(env.DisposeCapability, result);
+    }
     // d. Remove genContext from the execution context stack and restore the execution context
     //    that is at the top of the execution context stack as the running execution context.
     surroundingAgent.executionContextStack.pop(genContext);

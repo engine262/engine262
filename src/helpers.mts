@@ -394,3 +394,9 @@ export type Mutable<T> = {
 }
 
 export const isArray: (arg: unknown) => arg is readonly unknown[] = Array.isArray;
+
+const GeneratorFunction = Object.getPrototypeOf(function* gen() { /* does nothing */ }).constructor;
+
+export function isGeneratorFunction(f: Function): boolean { // eslint-disable-line @typescript-eslint/ban-types
+  return f instanceof GeneratorFunction;
+}

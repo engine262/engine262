@@ -10,6 +10,7 @@ import {
   OrdinaryCreateFromConstructor,
   AsyncGeneratorStart,
   GetValue,
+  DisposeResources,
 } from '../abstract-ops/all.mjs';
 import {
   Completion,
@@ -18,6 +19,7 @@ import {
 } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { IsAnonymousFunctionDefinition } from '../static-semantics/all.mjs';
+import { FunctionEnvironmentRecord } from '../environment.mjs';
 import {
   Evaluate_FunctionStatementList,
   FunctionDeclarationInstantiation,
@@ -33,8 +35,21 @@ export function Evaluate_AnyFunctionBody({ FunctionStatementList }) {
 export function* EvaluateBody_FunctionBody({ FunctionStatementList }, functionObject, argumentsList) {
   // 1. Perform ? FunctionDeclarationInstantiation(functionObject, argumentsList).
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
-  // 2. Return the result of evaluating FunctionStatementList.
-  return yield* Evaluate_FunctionStatementList(FunctionStatementList);
+  // ~~2. Return the result of evaluating FunctionStatementList.~~
+  // *3. Let result be Completion(Evaluation of FunctionStatementList).
+  let result = yield* Evaluate_FunctionStatementList(FunctionStatementList);
+  // *4. Let env be the running execution context's LexicalEnvironment.
+  const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+  // *5. Return ? DisposeResources(env.[[DisposeCapability]], result).
+  result = yield* DisposeResources(env.DisposeCapability, result);
+  // NON-SPEC
+  // TODO(rbuckton): Remove this
+  if (!(env instanceof FunctionEnvironmentRecord)) {
+    // Nothing should have been added to the function environment's DisposeCapability
+    Assert(env.OuterEnv instanceof FunctionEnvironmentRecord);
+    Assert(!env.OuterEnv.DisposeCapability?.DisposableResourceStack.length);
+  }
+  return result;
 }
 
 /** https://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-evaluation */
@@ -157,8 +172,13 @@ export function* EvaluateBody_AssignmentExpression(AssignmentExpression, functio
 function* EvaluateClassStaticBlockBody({ ClassStaticBlockStatementList }, functionObject) {
   // 1. Perform ? FunctionDeclarationInstantiation(functionObject, « »).
   Q(yield* FunctionDeclarationInstantiation(functionObject, []));
-  // 2. Return the result of evaluating ClassStaticBlockStatementList.
-  return yield* Evaluate_FunctionStatementList(ClassStaticBlockStatementList);
+  // ~~2. Return the result of evaluating ClassStaticBlockStatementList.~~
+  // *3. Let result be Completion(Evaluation of ClassStaticBlockStatementList).
+  const result = yield* Evaluate_FunctionStatementList(ClassStaticBlockStatementList);
+  // *4. Let env be the running execution context's LexicalEnvironment.
+  const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
+  // *5. Return ? DisposeResources(env.[[DisposeCapability]], result).
+  return yield* DisposeResources(env.DisposeCapability, result);
 }
 
 // FunctionBody : FunctionStatementList

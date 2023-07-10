@@ -34,3 +34,4 @@ export * from './testing-comparison.mjs';
 export * from './type-conversion.mjs';
 export * from './typedarray-objects.mjs';
 export * from './weak-operations.mjs';
+export * from './disposable-operations.mjs';

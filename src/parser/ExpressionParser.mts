@@ -313,7 +313,7 @@ export abstract class ExpressionParser extends FunctionParser {
       do {
         while (TokenPrecedence[this.peek().type] === p) {
           const left = x;
-          if (p === TokenPrecedence[Token.EXP] && (left.type === 'UnaryExpression' || left.type === 'AwaitExpression')) {
+          if (p === TokenPrecedence[Token.EXP] && (left.type === 'UnaryExpression' || left.type === 'AwaitExpression' || left.type === 'CoverAwaitExpressionAndAwaitUsingDeclarationHead')) {
             return left;
           }
           let node: ParseNode.Unfinished<ParseNode.BinaryExpression>;
@@ -445,11 +445,11 @@ export abstract class ExpressionParser extends FunctionParser {
   //   `-` UnaryExpression
   //   `~` UnaryExpression
   //   `!` UnaryExpression
-  //   [+Await] AwaitExpression
+  //   [+Await] CoverAwaitExpressionAndAwaitUsingDeclarationHead
   parseUnaryExpression(): ParseNode.UnaryExpressionOrHigher {
     return this.scope.with({ in: true }, () => {
       if (this.test(Token.AWAIT) && this.scope.hasAwait()) {
-        return this.parseAwaitExpression();
+        return this.parseCoverAwaitExpressionAndAwaitUsingDeclarationHead();
       }
       switch (this.peek().type) {
         case Token.DELETE:
@@ -483,19 +483,40 @@ export abstract class ExpressionParser extends FunctionParser {
   }
 
   // AwaitExpression : `await` UnaryExpression
-  parseAwaitExpression(): ParseNode.AwaitExpression {
+  parseCoverAwaitExpressionAndAwaitUsingDeclarationHead(): ParseNode.AwaitExpression | ParseNode.CoverAwaitExpressionAndAwaitUsingDeclarationHead {
     if (this.scope.inParameters()) {
       this.raiseEarly('AwaitInFormalParameters');
     } else if (this.scope.inClassStaticBlock()) {
       this.raiseEarly('AwaitInClassStaticBlock');
     }
-    const node = this.startNode<ParseNode.AwaitExpression>();
+    const node = this.startNode<ParseNode.AwaitExpression | ParseNode.CoverAwaitExpressionAndAwaitUsingDeclarationHead>();
     this.expect(Token.AWAIT);
-    node.UnaryExpression = this.parseUnaryExpression();
-    this.scope.arrowInfo?.awaitExpressions.push(node as ParseNode.AwaitExpression);
+
+    const hadLineTerminator = this.peek().hadLineTerminatorBefore;
+    const UnaryExpression = this.parseUnaryExpression();
     if (!this.scope.hasReturn()) {
       this.state.hasTopLevelAwait = true;
     }
+
+    if (UnaryExpression.type === 'IdentifierReference'
+        && UnaryExpression.name === 'using'
+        && !hadLineTerminator
+        && !this.peek().hadLineTerminatorBefore) {
+      switch (this.peek().type) {
+        case Token.IDENTIFIER:
+        case Token.YIELD:
+        case Token.AWAIT:
+          node.UnaryExpression = UnaryExpression;
+          return this.finishNode(node, 'CoverAwaitExpressionAndAwaitUsingDeclarationHead');
+        default:
+          this.unexpected();
+          break;
+      }
+    }
+
+    // AwaitExpression : `await` UnaryExpression
+    node.UnaryExpression = UnaryExpression;
+    this.scope.arrowInfo?.awaitExpressions.push(node as ParseNode.AwaitExpression);
     return this.finishNode(node, 'AwaitExpression');
   }
 

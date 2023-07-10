@@ -2,7 +2,9 @@
 import { surroundingAgent } from '../engine.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
-import { Assert, GetValue, StrictEqualityComparison } from '../abstract-ops/all.mjs';
+import {
+  Assert, DisposeResources, GetValue, StrictEqualityComparison,
+} from '../abstract-ops/all.mjs';
 import { Value } from '../value.mjs';
 import {
   Completion,
@@ -195,7 +197,11 @@ export function* Evaluate_SwitchStatement({ Expression, CaseBlock }) {
   // 6. Set the running execution context's LexicalEnvironment to blockEnv.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = blockEnv;
   // 7. Let R be CaseBlockEvaluation of CaseBlock with argument switchValue.
-  const R = yield* CaseBlockEvaluation(CaseBlock, switchValue);
+  let R = yield* CaseBlockEvaluation(CaseBlock, switchValue);
+  // *8. Set R to Completion(DisposeResources(blockEnv.[[DisposeCapability]], R)).
+  R = yield* DisposeResources(blockEnv.DisposeCapability, R);
+  // *9. Assert: If R.[[Type]] is normal, then R.[[Value]] is not empty.
+  Assert(R.Type !== 'normal' || R.Value !== undefined);
   // 8. Set the running execution context's LexicalEnvironment to oldEnv.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
   // 9. return R.

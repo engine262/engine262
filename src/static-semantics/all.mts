@@ -20,6 +20,8 @@ export * from './DeclarationPart.mjs';
 export * from './LexicallyScopedDeclarations.mjs';
 export * from './TopLevelLexicallyScopedDeclarations.mjs';
 export * from './IsConstantDeclaration.mjs';
+export * from './IsUsingDeclaration.mjs';
+export * from './IsAwaitUsingDeclaration.mjs';
 export * from './IsInTailPosition.mjs';
 export * from './ExpectedArgumentCount.mjs';
 export * from './HasInitializer.mjs';

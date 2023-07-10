@@ -12,6 +12,8 @@ export function TopLevelLexicallyDeclaredNames(node) {
   switch (node.type) {
     case 'ClassDeclaration':
     case 'LexicalDeclaration':
+    case 'UsingDeclaration':
+    case 'AwaitUsingDeclaration':
       return BoundNames(node);
     default:
       return [];

@@ -17,9 +17,13 @@ import {
   ToUint32,
   Z,
   F,
+  type NativeFunctionSteps,
+  type ArgumentList,
 } from './abstract-ops/all.mjs';
 import { EnvironmentRecord } from './environment.mjs';
-import { Completion, X } from './completion.mjs';
+import {
+  Completion, NormalCompletion, ThrowCompletion, X,
+} from './completion.mjs';
 import { ValueMap, OutOfRange, callable } from './helpers.mjs';
 import type { PrivateElementRecord } from './runtime-semantics/MethodDefinitionEvaluation.mjs';
 
@@ -48,7 +52,7 @@ export @callable((_target, _thisArg, [value]) => {
     case 'bigint':
       return new BigIntValue(value);
     case 'function':
-      return CreateBuiltinFunction(value, 0, Value(''), []);
+      return CreateBuiltinFunction(value as NativeFunctionSteps, 0, Value(''), []);
     default:
       throw new OutOfRange('new Value', value);
   }
@@ -64,8 +68,8 @@ abstract class Value {
 
   static declare readonly null: NullValue;
   static declare readonly undefined: UndefinedValue;
-  static declare readonly true: BooleanValue;
-  static declare readonly false: BooleanValue;
+  static declare readonly true: BooleanValue<true>;
+  static declare readonly false: BooleanValue<false>;
 }
 
 export class PrimitiveValue extends Value { }
@@ -78,9 +82,9 @@ export class UndefinedValue extends PrimitiveValue { }
 export class NullValue extends PrimitiveValue { }
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-boolean-type */
-export class BooleanValue extends PrimitiveValue {
-  readonly boolean: boolean;
-  constructor(v: boolean) {
+export class BooleanValue<T extends boolean = boolean> extends PrimitiveValue {
+  readonly boolean: T;
+  constructor(v: T) {
     super();
     this.boolean = v;
   }
@@ -126,7 +130,9 @@ export class SymbolValue extends PrimitiveValue {
 }
 
 export const wellKnownSymbols = {
+  asyncDispose: new SymbolValue(new StringValue('Symbol.asyncDispose')),
   asyncIterator: new SymbolValue(new StringValue('Symbol.asyncIterator')),
+  dispose: new SymbolValue(new StringValue('Symbol.dispose')),
   hasInstance: new SymbolValue(new StringValue('Symbol.hasInstance')),
   isConcatSpreadable: new SymbolValue(new StringValue('Symbol.isConcatSpreadable')),
   iterator: new SymbolValue(new StringValue('Symbol.iterator')),
@@ -705,6 +711,9 @@ export class ObjectValue extends Value {
     this.internalSlotsList = internalSlotsList;
   }
 
+  declare Call?: (this: ObjectValue, thisArgument: Value, argumentList: ArgumentList) => Value | NormalCompletion<Value> | ThrowCompletion;
+  declare Construct?: (this: ObjectValue, argumentList: ArgumentList, newTarget: ObjectValue) => Value | NormalCompletion<Value> | ThrowCompletion;
+
   GetPrototypeOf() {
     return OrdinaryGetPrototypeOf(this);
   }
@@ -733,7 +742,7 @@ export class ObjectValue extends Value {
     return OrdinaryHasProperty(this, P);
   }
 
-  Get(P: PropertyKeyValue, Receiver: Value) {
+  Get(P: PropertyKeyValue, Receiver: Value): unknown {
     return OrdinaryGet(this, P, Receiver);
   }
 
