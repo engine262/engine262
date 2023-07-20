@@ -56,9 +56,9 @@ type CompletionInit<T> =
 
 /** https://tc39.es/ecma262/#sec-completion-record-specification-type */
 export class CompletionRecord<C extends CompletionInit<any>> {
-  readonly Type: C["Type"];
-  readonly Value: C["Value"];
-  readonly Target: C["Target"];
+  readonly Type: C['Type'];
+  readonly Value: C['Value'];
+  readonly Target: C['Target'];
 
   constructor(init: C) {
     this.Type = init.Type;
