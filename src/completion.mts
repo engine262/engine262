@@ -131,6 +131,9 @@ export function Completion<T extends Completion<unknown>>(completionRecord: T): 
   return completionRecord;
 }
 
+/** @deprecated Use `value instanceof CompletionRecord` instead of `value instanceof Completion` */
+Object.defineProperty(Completion, Symbol.hasInstance, { configurable: true, value: (value: unknown) => value instanceof CompletionRecord });
+
 /**
  * https://tc39.es/ecma262/#sec-completion-record-specification-type
  *
