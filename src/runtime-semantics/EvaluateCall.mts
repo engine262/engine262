@@ -11,7 +11,7 @@ import {
   PrepareForTailCall,
   Call,
 } from '../abstract-ops/all.mjs';
-import { Q, Completion, AbruptCompletion } from '../completion.mjs';
+import { Q, isAbruptCompletion, CompletionRecord } from '../completion.mjs';
 import { EnvironmentRecord } from '../environment.mjs';
 import { ArgumentListEvaluation } from './all.mjs';
 
@@ -55,8 +55,8 @@ export function* EvaluateCall(func, ref, args, tailPosition) {
   // 8. Assert: If tailPosition is true, the above call will not return here but instead
   //    evaluation will continue as if the following return has already occurred.
   // 9. Assert: If result is not an abrupt completion, then Type(result) is an ECMAScript language type.
-  if (!(result instanceof AbruptCompletion)) {
-    Assert(result instanceof Value || result instanceof Completion);
+  if (!isAbruptCompletion(result)) {
+    Assert(result instanceof Value || result instanceof CompletionRecord);
   }
   // 10. Return result.
   return result;

@@ -14,10 +14,9 @@ import {
 import {
   EnsureCompletion,
   NormalCompletion,
-  AbruptCompletion,
   ReturnIfAbrupt,
   Completion,
-  Q, X,
+  Q, X, isAbruptCompletion,
 } from '../completion.mjs';
 import { ExpectedArgumentCount } from '../static-semantics/all.mjs';
 import { EvaluateBody } from '../runtime-semantics/all.mjs';
@@ -249,7 +248,7 @@ function FunctionConstructSlot(argumentsList, newTarget) {
     // b. Let initializeResult be InitializeInstanceElements(thisArgument, F).
     const initializeResult = InitializeInstanceElements(thisArgument, F);
     // c. If initializeResult is an abrupt completion, then
-    if (initializeResult instanceof AbruptCompletion) {
+    if (isAbruptCompletion(initializeResult)) {
       // i. Remove calleeContext from the execution context stack and restore callerContext as the running execution context.
       surroundingAgent.executionContextStack.pop(calleeContext);
       // ii. Return Completion(initializeResult).

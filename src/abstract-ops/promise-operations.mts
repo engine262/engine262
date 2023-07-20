@@ -8,9 +8,9 @@ import {
 } from '../engine.mjs';
 import { ObjectValue, Value, UndefinedValue } from '../value.mjs';
 import {
-  AbruptCompletion,
   Completion,
   EnsureCompletion,
+  isAbruptCompletion,
   NormalCompletion,
   Q,
   ThrowCompletion,
@@ -116,7 +116,7 @@ function NewPromiseResolveThenableJob(promiseToResolve, thenable, then) {
     // b. Let thenCallResult be HostCallJobCallback(then, thenable, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »).
     const thenCallResult = HostCallJobCallback(then, thenable, [resolvingFunctions.Resolve, resolvingFunctions.Reject]);
     // c. If thenCallResult is an abrupt completion, then
-    if (thenCallResult instanceof AbruptCompletion) {
+    if (isAbruptCompletion(thenCallResult)) {
       // i .Let status be Call(resolvingFunctions.[[Reject]], undefined, « thenCallResult.[[Value]] »).
       const status = Call(resolvingFunctions.Reject, Value.undefined, [thenCallResult.Value]);
       // ii. Return Completion(status).
@@ -129,7 +129,7 @@ function NewPromiseResolveThenableJob(promiseToResolve, thenable, then) {
   const getThenRealmResult = EnsureCompletion(GetFunctionRealm(then.Callback));
   // 3. If getThenRealmResult is a normal completion, then let thenRealm be getThenRealmResult.[[Value]].
   let thenRealm;
-  if (getThenRealmResult instanceof NormalCompletion) {
+  if (isNormalCompletion(getThenRealmResult)) {
     thenRealm = getThenRealmResult.Value;
   } else {
     // 4. Else, let _thenRealm_ be the current Realm Record.
@@ -171,7 +171,7 @@ function PromiseResolveFunctions([resolution = Value.undefined]) {
   // 9. Let then be Get(resolution, "then").
   const then = Get(resolution, Value('then'));
   // 10. If then is an abrupt completion, then
-  if (then instanceof AbruptCompletion) {
+  if (isAbruptCompletion(then)) {
     // a. Return RejectPromise(promise, then.[[Value]]).
     return RejectPromise(promise, then.Value);
   }
@@ -331,13 +331,13 @@ function NewPromiseReactionJob(reaction, argument) {
     // g. If promiseCapability is undefined, then
     if (promiseCapability === Value.undefined) {
       // i. Assert: handlerResult is not an abrupt completion.
-      Assert(!(handlerResult instanceof AbruptCompletion));
+      Assert(!isAbruptCompletion(handlerResult));
       // ii. Return NormalCompletion(empty).
       return NormalCompletion(undefined);
     }
     let status;
     // h. If handlerResult is an abrupt completion, then
-    if (handlerResult instanceof AbruptCompletion) {
+    if (isAbruptCompletion(handlerResult)) {
       // i. Let status be Call(promiseCapability.[[Reject]], undefined, « handlerResult.[[Value]] »).
       status = Call(promiseCapability.Reject, Value.undefined, [handlerResult.Value]);
     } else {
@@ -354,7 +354,7 @@ function NewPromiseReactionJob(reaction, argument) {
     // a. Let getHandlerRealmResult be GetFunctionRealm(reaction.[[Handler]].[[Callback]]).
     const getHandlerRealmResult = EnsureCompletion(GetFunctionRealm(reaction.Handler.Callback));
     // b. If getHandlerRealmResult is a normal completion, then set handlerRealm to getHandlerRealmResult.[[Value]].
-    if (getHandlerRealmResult instanceof NormalCompletion) {
+    if (isNormalCompletion(getHandlerRealmResult)) {
       handlerRealm = getHandlerRealmResult.Value;
     } else {
       // c. Else, set _handlerRealm_ to the current Realm Record.

@@ -4,9 +4,9 @@ import {
   GeneratorResumeAbrupt,
 } from '../abstract-ops/all.mjs';
 import {
-  Completion,
   ThrowCompletion,
   Q,
+  CompletionRecord,
 } from '../completion.mjs';
 import { Value } from '../value.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
@@ -23,8 +23,8 @@ function GeneratorProto_next([value = Value.undefined], { thisValue }) {
 function GeneratorProto_return([value = Value.undefined], { thisValue }) {
   // 1. Let g be the this value.
   const g = thisValue;
-  // 2. Let C be Completion { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
-  const C = new Completion({ Type: 'return', Value: value, Target: undefined });
+  // 2. Let C be Completion Record { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
+  const C = new CompletionRecord({ Type: 'return', Value: value, Target: undefined });
   // 3. Return ? GeneratorResumeAbrupt(g, C, empty).
   return Q(GeneratorResumeAbrupt(g, C, undefined));
 }

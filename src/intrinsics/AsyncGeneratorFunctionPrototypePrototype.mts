@@ -2,10 +2,10 @@
 import { surroundingAgent } from '../engine.mjs';
 import {
   X,
-  Completion,
   NormalCompletion,
   ThrowCompletion,
   IfAbruptRejectPromise,
+  CompletionRecord,
 } from '../completion.mjs';
 import { Value } from '../value.mjs';
 import {
@@ -67,8 +67,8 @@ function AsyncGeneratorPrototype_return([value = Value.undefined], { thisValue }
   const result = AsyncGeneratorValidate(generator, undefined);
   // 4. IfAbruptRejectPromise(result, promiseCapability).
   IfAbruptRejectPromise(result, promiseCapability);
-  // 5. Let completion be Completion { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
-  const completion = new Completion({ Type: 'return', Value: value, Target: undefined });
+  // 5. Let completion be Completion Record { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
+  const completion = new CompletionRecord({ Type: 'return', Value: value, Target: undefined });
   // 6. Perform ! AsyncGeneratorEnqueue(generator, completion, promiseCapability).
   X(AsyncGeneratorEnqueue(generator, completion, promiseCapability));
   // 7. Let state be generator.[[AsyncGeneratorState]].

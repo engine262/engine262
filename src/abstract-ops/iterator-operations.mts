@@ -13,6 +13,7 @@ import {
   Q, X,
   Await,
   NormalCompletion,
+  CompletionRecord,
 } from '../completion.mjs';
 import {
   Assert,
@@ -109,7 +110,7 @@ export function IteratorClose(iteratorRecord, completion) {
   // 2. Assert: completion is a Completion Record.
   // TODO: completion should be a Completion Record so this should not be necessary
   completion = EnsureCompletion(completion);
-  Assert(completion instanceof Completion);
+  Assert(completion instanceof CompletionRecord);
   // 3. Let iterator be iteratorRecord.[[Iterator]].
   const iterator = iteratorRecord.Iterator;
   // 4. Let innerResult be GetMethod(iterator, "return").
@@ -146,7 +147,7 @@ export function* AsyncIteratorClose(iteratorRecord, completion) {
   // 1. Assert: Type(iteratorRecord.[[Iterator]]) is Object.
   Assert(iteratorRecord.Iterator instanceof ObjectValue);
   // 2. Assert: completion is a Completion Record.
-  Assert(completion instanceof Completion);
+  Assert(completion instanceof CompletionRecord);
   // 3. Let iterator be iteratorRecord.[[Iterator]].
   const iterator = iteratorRecord.Iterator;
   // 4. Let innerResult be GetMethod(iterator, "return").

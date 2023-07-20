@@ -36,7 +36,7 @@ if (isMainThread) {
     Agent,
     setSurroundingAgent,
     ManagedRealm,
-    AbruptCompletion,
+    isAbruptCompletion,
     inspect,
   } = require('..');
 
@@ -56,7 +56,7 @@ if (isMainThread) {
 
   realm.scope(() => {
     const completion = realm.evaluateScript(workerData.source);
-    if (completion instanceof AbruptCompletion) {
+    if (isAbruptCompletion(completion)) {
       process.stdout.write(`${inspect(completion, realm)}\n`);
     }
   });

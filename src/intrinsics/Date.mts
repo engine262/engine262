@@ -15,7 +15,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Value, JSStringValue, ObjectValue } from '../value.mjs';
 import {
-  AbruptCompletion,
+  isAbruptCompletion,
   Q, X,
 } from '../completion.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
@@ -127,7 +127,7 @@ function Date_now() {
 /** https://tc39.es/ecma262/#sec-date.parse */
 function Date_parse([string = Value.undefined]) {
   const str = ToString(string);
-  if (str instanceof AbruptCompletion) {
+  if (isAbruptCompletion(str)) {
     return str;
   }
   return parseDate(str);

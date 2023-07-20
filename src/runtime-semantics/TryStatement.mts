@@ -4,7 +4,7 @@ import { Value } from '../value.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import {
   Completion,
-  AbruptCompletion,
+  isAbruptCompletion,
   UpdateEmpty,
   EnsureCompletion,
   X,
@@ -105,7 +105,7 @@ function* CatchClauseEvaluation({ CatchParameter, Block }, thrownValue) {
   // 5. Let status be BindingInitialization of CatchParameter with arguments thrownValue and catchEnv.
   const status = yield* BindingInitialization(CatchParameter, thrownValue, catchEnv);
   // 6. If status is an abrupt completion, then
-  if (status instanceof AbruptCompletion) {
+  if (isAbruptCompletion(status)) {
     // a. Set the running execution context's LexicalEnvironment to oldEnv.
     surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
     // b. Return Completion(status).

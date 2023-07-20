@@ -242,7 +242,7 @@ if (!process.send) {
     JSStringValue,
     ObjectValue,
 
-    AbruptCompletion,
+    isAbruptCompletion,
     Throw,
   } = require('../..');
   const { createRealm, createAgent } = require('../../bin/test262_realm');
@@ -307,7 +307,7 @@ if (!process.send) {
         }
         const entry = includeCache[include];
         const completion = realm.evaluateScript(entry.source, { specifier: entry.specifier });
-        if (completion instanceof AbruptCompletion) {
+        if (isAbruptCompletion(completion)) {
           return { status: 'FAIL', error: inspect(completion) };
         }
       }
@@ -330,7 +330,7 @@ function $DONE(error) {
     __consolePrintHandle__('Test262:AsyncTestComplete');
   }
 }`);
-        if (completion instanceof AbruptCompletion) {
+        if (isAbruptCompletion(completion)) {
           return { status: 'FAIL', error: inspect(completion) };
         }
       }
@@ -352,24 +352,24 @@ function $DONE(error) {
       let completion;
       if (test.attrs.flags.module) {
         completion = realm.createSourceTextModule(specifier, test.contents);
-        if (!(completion instanceof AbruptCompletion)) {
+        if (!isAbruptCompletion(completion)) {
           const module = completion;
           resolverCache.set(specifier, module);
           completion = module.LoadRequestedModules();
-          if (!(completion instanceof AbruptCompletion)) {
+          if (!isAbruptCompletion(completion)) {
             if (completion.PromiseState === 'rejected') {
               completion = Throw(completion.PromiseResult);
             } else if (completion.PromiseState === 'pending') {
               throw new Error('Internal error: .LoadRequestedModules() returned a pending promise');
             }
           }
-          if (!(completion instanceof AbruptCompletion)) {
+          if (!isAbruptCompletion(completion)) {
             completion = module.Link();
           }
-          if (!(completion instanceof AbruptCompletion)) {
+          if (!isAbruptCompletion(completion)) {
             completion = module.Evaluate();
           }
-          if (!(completion instanceof AbruptCompletion)) {
+          if (!isAbruptCompletion(completion)) {
             if (completion.PromiseState === 'rejected') {
               completion = Throw(completion.PromiseResult);
             }
@@ -379,7 +379,7 @@ function $DONE(error) {
         completion = realm.evaluateScript(test.contents, { specifier });
       }
 
-      if (completion instanceof AbruptCompletion) {
+      if (isAbruptCompletion(completion)) {
         if (test.attrs.negative && isError(test.attrs.negative.type, completion.Value)) {
           return { status: 'PASS' };
         } else {

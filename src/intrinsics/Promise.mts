@@ -31,12 +31,12 @@ import {
   PromiseResolve,
 } from '../abstract-ops/all.mjs';
 import {
-  AbruptCompletion, Completion,
+  Completion,
   ThrowCompletion,
   IfAbruptRejectPromise,
   ReturnIfAbrupt,
   EnsureCompletion,
-  Q, X,
+  Q, X, isAbruptCompletion,
 } from '../completion.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
@@ -73,7 +73,7 @@ function PromiseConstructor([executor = Value.undefined], { NewTarget }) {
     resolvingFunctions.Resolve, resolvingFunctions.Reject,
   ]);
   // 10. If completion is an abrupt completion, then
-  if (completion instanceof AbruptCompletion) {
+  if (isAbruptCompletion(completion)) {
     // a. Perform ? Call(resolvingFunctions.[[Reject]], undefined, « completion.[[Value]] »).
     Q(Call(resolvingFunctions.Reject, Value.undefined, [completion.Value]));
   }
@@ -135,7 +135,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability, promis
     // a. Let next be IteratorStep(iteratorRecord).
     const next = IteratorStep(iteratorRecord);
     // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-    if (next instanceof AbruptCompletion) {
+    if (isAbruptCompletion(next)) {
       iteratorRecord.Done = Value.true;
     }
     // c. ReturnIfAbrupt(next).
@@ -159,7 +159,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability, promis
     // e. Let nextValue be IteratorValue(next).
     const nextValue = IteratorValue(next);
     // f. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
-    if (nextValue instanceof AbruptCompletion) {
+    if (isAbruptCompletion(nextValue)) {
       iteratorRecord.Done = Value.true;
     }
     // g. ReturnIfAbrupt(nextValue).
@@ -212,7 +212,7 @@ function Promise_all([iterable = Value.undefined], { thisValue }) {
   // 7. Let result be PerformPromiseAll(iteratorRecord, C, promiseCapability, promiseResolve).
   let result = EnsureCompletion(PerformPromiseAll(iteratorRecord, C, promiseCapability, promiseResolve));
   // 8. If result is an abrupt completion, then
-  if (result instanceof AbruptCompletion) {
+  if (isAbruptCompletion(result)) {
     // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
     if (iteratorRecord.Done === Value.false) {
       result = IteratorClose(iteratorRecord, result);
@@ -289,7 +289,7 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability,
     // a. Let next be IteratorStep(iteratorRecord).
     const next = IteratorStep(iteratorRecord);
     // b. Let next be IteratorStep(iteratorRecord).
-    if (next instanceof AbruptCompletion) {
+    if (isAbruptCompletion(next)) {
       iteratorRecord.Done = Value.true;
     }
     // c. ReturnIfAbrupt(next).
@@ -313,7 +313,7 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability,
     // e. Let nextValue be IteratorValue(next).
     const nextValue = IteratorValue(next);
     // f. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
-    if (nextValue instanceof AbruptCompletion) {
+    if (isAbruptCompletion(nextValue)) {
       iteratorRecord.Done = Value.true;
     }
     // g. ReturnIfAbrupt(nextValue).
@@ -394,7 +394,7 @@ function Promise_allSettled([iterable = Value.undefined], { thisValue }) {
   // 7. Let result be PerformPromiseAllSettled(iteratorRecord, C, promiseCapability, promiseResolve).
   let result = EnsureCompletion(PerformPromiseAllSettled(iteratorRecord, C, promiseCapability, promiseResolve));
   // 8. If result is an abrupt completion, then
-  if (result instanceof AbruptCompletion) {
+  if (isAbruptCompletion(result)) {
     // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
     if (iteratorRecord.Done === Value.false) {
       result = IteratorClose(iteratorRecord, result);
@@ -467,7 +467,7 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promis
     // a. Let next be IteratorStep(iteratorRecord).
     const next = IteratorStep(iteratorRecord);
     // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-    if (next instanceof AbruptCompletion) {
+    if (isAbruptCompletion(next)) {
       iteratorRecord.Done = Value.true;
     }
     // c. ReturnIfAbrupt(next).
@@ -498,7 +498,7 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promis
     // e. Let nextValue be IteratorValue(next).
     const nextValue = IteratorValue(next);
     // f. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
-    if (nextValue instanceof AbruptCompletion) {
+    if (isAbruptCompletion(nextValue)) {
       iteratorRecord.Done = Value.true;
     }
     // g. ReturnIfAbrupt(nextValue).
@@ -549,7 +549,7 @@ function Promise_any([iterable = Value.undefined], { thisValue }) {
   // 7. Let result be PerformPromiseAny(iteratorRecord, C, promiseCapability).
   let result = EnsureCompletion(PerformPromiseAny(iteratorRecord, C, promiseCapability, promiseResolve));
   // 8. If result is an abrupt completion, then
-  if (result instanceof AbruptCompletion) {
+  if (isAbruptCompletion(result)) {
     // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
     if (iteratorRecord.Done === Value.false) {
       result = IteratorClose(iteratorRecord, result);
@@ -573,7 +573,7 @@ function PerformPromiseRace(iteratorRecord, constructor, resultCapability, promi
     // a. Let next be IteratorStep(iteratorRecord).
     const next = IteratorStep(iteratorRecord);
     // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-    if (next instanceof AbruptCompletion) {
+    if (isAbruptCompletion(next)) {
       iteratorRecord.Done = Value.true;
     }
     // c. ReturnIfAbrupt(next).
@@ -588,7 +588,7 @@ function PerformPromiseRace(iteratorRecord, constructor, resultCapability, promi
     // e. Let nextValue be IteratorValue(next).
     const nextValue = IteratorValue(next);
     // f. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
-    if (nextValue instanceof AbruptCompletion) {
+    if (isAbruptCompletion(nextValue)) {
       iteratorRecord.Done = Value.true;
     }
     // g. ReturnIfAbrupt(nextValue).
@@ -617,7 +617,7 @@ function Promise_race([iterable = Value.undefined], { thisValue }) {
   // 7. Let result be PerformPromiseRace(iteratorRecord, C, promiseCapability, promiseResolve).
   let result = EnsureCompletion(PerformPromiseRace(iteratorRecord, C, promiseCapability, promiseResolve));
   // 8. If result is an abrupt completion, then
-  if (result instanceof AbruptCompletion) {
+  if (isAbruptCompletion(result)) {
     // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
     if (iteratorRecord.Done === Value.false) {
       result = IteratorClose(iteratorRecord, result);

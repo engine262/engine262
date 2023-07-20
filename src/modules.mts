@@ -27,9 +27,8 @@ import { InstantiateFunctionObject } from './runtime-semantics/all.mjs';
 import {
   Completion,
   NormalCompletion,
-  AbruptCompletion,
   EnsureCompletion,
-  Q, X,
+  Q, X, isAbruptCompletion,
 } from './completion.mjs';
 import { ValueSet, unwind } from './helpers.mjs';
 import { Evaluate } from './evaluator.mjs';
@@ -130,7 +129,7 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
     // 3. Let result be Completion(InnerModuleLinking(module, stack, 0)).
     const result = InnerModuleLinking(module, stack, 0);
     // 5. If result is an abrupt completion, then
-    if (result instanceof AbruptCompletion) {
+    if (isAbruptCompletion(result)) {
       // a. For each Cyclic Module Record m of stack, do
       for (const m of stack) {
         // i. Assert: m.[[Status]] is linking.
@@ -176,7 +175,7 @@ export class CyclicModuleRecord extends AbstractModuleRecord {
     // 5. Let result be InnerModuleEvaluation(module, stack, 0).
     const result = InnerModuleEvaluation(module, stack, 0);
     // 6. If result is an abrupt completion, then
-    if (result instanceof AbruptCompletion) {
+    if (isAbruptCompletion(result)) {
       // a. For each Cyclic Module Record m in stack, do
       for (const m of stack) {
         // i. Assert: m.[[Status]] is evaluating.

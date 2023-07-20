@@ -21,7 +21,7 @@ import {
   Completion,
   NormalCompletion,
   EnsureCompletion,
-  Q, X,
+  Q, X, CompletionRecord,
 } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
 
@@ -145,8 +145,8 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }) {
         if (done === Value.true) {
           // 1. Let value be ? IteratorValue(innerReturnResult).
           const innerValue = Q(IteratorValue(innerReturnResult));
-          // 2. Return Completion { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
-          return new Completion({ Type: 'return', Value: innerValue, Target: undefined });
+          // 2. Return Completion Record { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
+          return new CompletionRecord({ Type: 'return', Value: innerValue, Target: undefined });
         }
         // ix. If generatorKind is async, then set received to AsyncGeneratorYield(? IteratorValue(innerResult)).
         if (generatorKind === 'async') {

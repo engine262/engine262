@@ -142,13 +142,13 @@ class InspectorContext {
     let p = object;
     while (p !== engine262.Value.null) {
       const keys = p.OwnPropertyKeys();
-      if (keys instanceof engine262.AbruptCompletion) {
+      if (engine262.isAbruptCompletion(keys)) {
         return keys;
       }
 
       for (const key of keys) {
         const desc = p.GetOwnProperty(key);
-        if (desc instanceof engine262.AbruptCompletion) {
+        if (engine262.isAbruptCompletion(desc)) {
           return desc;
         }
         if (options.accessorPropertiesOnly && desc.Value) {
@@ -175,7 +175,7 @@ class InspectorContext {
         break;
       }
       p = p.GetPrototypeOf();
-      if (p instanceof engine262.AbruptCompletion) {
+      if (engine262.isAbruptCompletion(p)) {
         return p;
       }
     }
@@ -201,14 +201,14 @@ class InspectorContext {
     const wrap = (v) => this.toRemoteObject(v, options);
 
     const keys = object.OwnPropertyKeys();
-    if (keys instanceof engine262.AbruptCompletion) {
+    if (engine262.isAbruptCompletion(keys)) {
       return keys;
     }
 
     const properties = [];
     for (const key of keys) {
       const desc = object.GetOwnProperty(key);
-      if (desc instanceof engine262.AbruptCompletion) {
+      if (engine262.isAbruptCompletion(desc)) {
         return desc;
       }
       const descriptor = {
@@ -302,7 +302,7 @@ class InspectorContext {
   }
 
   createEvaluationResult(completion, options) {
-    if (completion instanceof engine262.AbruptCompletion) {
+    if (engine262.isAbruptCompletion(completion)) {
       return {
         exceptionDetails: {
           text: 'uh oh',

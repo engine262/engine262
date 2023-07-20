@@ -14,7 +14,7 @@ import {
   F,
 } from '../abstract-ops/all.mjs';
 import {
-  AbruptCompletion,
+  isAbruptCompletion,
   NormalCompletion,
   ReturnIfAbrupt,
   Q, X,
@@ -79,7 +79,7 @@ function* IteratorBindingInitialization_SingleNameBinding({ BindingIdentifier, I
     // a. Let next be IteratorStep(iteratorRecord).
     const next = IteratorStep(iteratorRecord);
     // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-    if (next instanceof AbruptCompletion) {
+    if (isAbruptCompletion(next)) {
       iteratorRecord.Done = Value.true;
     }
     // c. ReturnIfAbrupt(next).
@@ -91,7 +91,7 @@ function* IteratorBindingInitialization_SingleNameBinding({ BindingIdentifier, I
       // i. Let v be IteratorValue(next).
       v = IteratorValue(next);
       // ii. If v is an abrupt completion, set iteratorRecord.[[Done]] to true.
-      if (v instanceof AbruptCompletion) {
+      if (isAbruptCompletion(v)) {
         iteratorRecord.Done = Value.true;
       }
       // iii. ReturnIfAbrupt(v).
@@ -138,7 +138,7 @@ function* IteratorBindingInitialization_BindingRestElement({ BindingIdentifier, 
         // i. Let next be IteratorStep(iteratorRecord).
         next = IteratorStep(iteratorRecord);
         // ii. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-        if (next instanceof AbruptCompletion) {
+        if (isAbruptCompletion(next)) {
           iteratorRecord.Done = Value.true;
         }
         // iii. ReturnIfAbrupt(next).
@@ -160,7 +160,7 @@ function* IteratorBindingInitialization_BindingRestElement({ BindingIdentifier, 
       // c. Let nextValue be IteratorValue(next).
       const nextValue = IteratorValue(next);
       // d. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
-      if (nextValue instanceof AbruptCompletion) {
+      if (isAbruptCompletion(nextValue)) {
         iteratorRecord.Done = Value.true;
       }
       // e. ReturnIfAbrupt(nextValue).
@@ -183,7 +183,7 @@ function* IteratorBindingInitialization_BindingRestElement({ BindingIdentifier, 
         // i. Let next be IteratorStep(iteratorRecord).
         next = IteratorStep(iteratorRecord);
         // ii. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-        if (next instanceof AbruptCompletion) {
+        if (isAbruptCompletion(next)) {
           iteratorRecord.Done = Value.true;
         }
         // iii. ReturnIfAbrupt(next).
@@ -201,7 +201,7 @@ function* IteratorBindingInitialization_BindingRestElement({ BindingIdentifier, 
       // c. Let nextValue be IteratorValue(next).
       const nextValue = IteratorValue(next);
       // d. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
-      if (nextValue instanceof AbruptCompletion) {
+      if (isAbruptCompletion(nextValue)) {
         iteratorRecord.Done = Value.true;
       }
       // e. ReturnIfAbrupt(nextValue).
@@ -221,7 +221,7 @@ function* IteratorBindingInitialization_BindingPattern({ BindingPattern, Initial
     // a. Let next be IteratorStep(iteratorRecord).
     const next = IteratorStep(iteratorRecord);
     // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-    if (next instanceof AbruptCompletion) {
+    if (isAbruptCompletion(next)) {
       iteratorRecord.Done = Value.true;
     }
     // c. ReturnIfAbrupt(next).
@@ -233,7 +233,7 @@ function* IteratorBindingInitialization_BindingPattern({ BindingPattern, Initial
       // i. Let v be IteratorValue(next).
       v = IteratorValue(next);
       // ii. If v is an abrupt completion, set iteratorRecord.[[Done]] to true.
-      if (v instanceof AbruptCompletion) {
+      if (isAbruptCompletion(v)) {
         iteratorRecord.Done = Value.true;
       }
       // iii. ReturnIfAbrupt(v).
@@ -262,7 +262,7 @@ function IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
     // a. Let next be IteratorStep(iteratorRecord).
     const next = IteratorStep(iteratorRecord);
     // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-    if (next instanceof AbruptCompletion) {
+    if (isAbruptCompletion(next)) {
       iteratorRecord.Done = Value.true;
     }
     // c. ReturnIfAbrupt(next).

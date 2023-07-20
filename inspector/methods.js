@@ -67,7 +67,7 @@ module.exports = {
       const object = context.getObject(options.objectId);
 
       const properties = context.getProperties(object, options);
-      if (properties instanceof engine262.AbruptCompletion) {
+      if (engine262.isAbruptCompletion(properties)) {
         return context.createEvaluationResult(properties, options);
       }
 

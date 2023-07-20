@@ -34,7 +34,7 @@ import {
 } from '../environment.mjs';
 import {
   Q, X,
-  AbruptCompletion,
+  isAbruptCompletion,
   Completion,
   EnsureCompletion,
 } from '../completion.mjs';
@@ -228,7 +228,7 @@ export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
       field = yield* ClassElementEvaluation(e, F, Value.false);
     }
     // c. If field is an abrupt completion, then
-    if (field instanceof AbruptCompletion) {
+    if (isAbruptCompletion(field)) {
       // i. Set the running execution context's LexicalEnvironment to env.
       surroundingAgent.runningExecutionContext.LexicalEnvironment = env;
       // ii. Set the running execution context's PrivateEnvironment to outerPrivateEnvironment.
@@ -321,7 +321,7 @@ export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
       result = Completion(Call(elementRecord.BodyFunction, F));
     }
     // c. If result is an abrupt completion, then
-    if (result instanceof AbruptCompletion) {
+    if (isAbruptCompletion(result)) {
       // i. Set the running execution context's PrivateEnvironment to outerPrivateEnvironment.
       surroundingAgent.runningExecutionContext.PrivateEnvironment = outerPrivateEnvironment;
       // ii. Return result.

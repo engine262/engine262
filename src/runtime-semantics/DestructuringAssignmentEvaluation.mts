@@ -27,10 +27,10 @@ import { Evaluate } from '../evaluator.mjs';
 import {
   Q, X,
   Completion,
-  AbruptCompletion,
   NormalCompletion,
   ReturnIfAbrupt,
   EnsureCompletion,
+  isAbruptCompletion,
 } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import {
@@ -166,7 +166,7 @@ function* DestructuringAssignmentEvaluation_ArrayAssignmentPattern({ AssignmentE
   // 2. Let status be IteratorDestructuringAssignmentEvaluation of AssignmentElementList with argument iteratorRecord.
   let status = EnsureCompletion(yield* IteratorDestructuringAssignmentEvaluation(AssignmentElementList, iteratorRecord));
   // 3. If status is an abrupt completion, then
-  if (status instanceof AbruptCompletion) {
+  if (isAbruptCompletion(status)) {
     // a. If iteratorRecord.[[Done]] is false, return ? IteratorClose(iteratorRecord, status).
     if (iteratorRecord.Done === Value.false) {
       return Q(IteratorClose(iteratorRecord, status));
@@ -202,7 +202,7 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
         // a. Let next be IteratorStep(iteratorRecord).
         const next = IteratorStep(iteratorRecord);
         // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-        if (next instanceof AbruptCompletion) {
+        if (isAbruptCompletion(next)) {
           iteratorRecord.Done = Value.true;
         }
         // c. ReturnIfAbrupt(next)
@@ -229,7 +229,7 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
         // a. Let next be IteratorStep(iteratorRecord).
         const next = IteratorStep(iteratorRecord);
         // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-        if (next instanceof AbruptCompletion) {
+        if (isAbruptCompletion(next)) {
           iteratorRecord.Done = Value.true;
         }
         // c. ReturnIfAbrupt(next);
@@ -241,7 +241,7 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
           // i. Let value be IteratorValue(next).
           value = IteratorValue(next);
           // ii. If value is an abrupt completion, set iteratorRecord.[[Done]] to true.
-          if (value instanceof AbruptCompletion) {
+          if (isAbruptCompletion(value)) {
             iteratorRecord.Done = Value.true;
           }
           // iii. ReturnIfAbrupt(value).
@@ -297,7 +297,7 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
         // a. Let next be IteratorStep(iteratorRecord).
         const next = IteratorStep(iteratorRecord);
         // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-        if (next instanceof AbruptCompletion) {
+        if (isAbruptCompletion(next)) {
           iteratorRecord.Done = Value.true;
         }
         // c. ReturnIfAbrupt(next);
@@ -309,7 +309,7 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
           // i. Let nextValue be IteratorValue(next).
           const nextValue = IteratorValue(next);
           // ii. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
-          if (nextValue instanceof AbruptCompletion) {
+          if (isAbruptCompletion(nextValue)) {
             iteratorRecord.Done = Value.true;
           }
           // iii. ReturnIfAbrupt(nextValue).

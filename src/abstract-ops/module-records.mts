@@ -7,7 +7,7 @@ import {
 } from '../modules.mjs';
 import { Value } from '../value.mjs';
 import {
-  Q, X, NormalCompletion, ThrowCompletion,
+  Q, X, NormalCompletion, ThrowCompletion, isNormalCompletion,
 } from '../completion.mjs';
 import {
   Assert,
@@ -95,7 +95,7 @@ export function ContinueModuleLoading(state, result) {
     return;
   }
   // 2. If moduleCompletion is a normal completion, then
-  if (result instanceof NormalCompletion) {
+  if (isNormalCompletion(result)) {
     // a. Perform InnerModuleLoading(state, moduleCompletion.[[Value]]).
     InnerModuleLoading(state, result.Value);
   // 3. Else,
@@ -300,7 +300,7 @@ function AsyncModuleExecutionFulfilled(module) {
         X(ExecuteAsyncModule(m));
       } else {
         const result = m.ExecuteModule();
-        if (result instanceof NormalCompletion) {
+        if (isNormalCompletion(result)) {
           X(AsyncModuleExecutionFulfilled(m));
         } else {
           X(AsyncModuleExecutionRejected(m, result.Value));

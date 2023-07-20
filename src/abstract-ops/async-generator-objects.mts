@@ -6,8 +6,9 @@ import {
   Completion,
   EnsureCompletion,
   NormalCompletion,
-  AbruptCompletion,
   ThrowCompletion,
+  isAbruptCompletion,
+  CompletionRecord,
 } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { Value } from '../value.mjs';
@@ -180,7 +181,7 @@ export function AsyncGeneratorResume(generator, completion) {
   // 7. Resume the suspended evaluation of genContext using completion as the result of the operation that suspended it. Let result be the completion record returned by the resumed computation.
   const result = resume(genContext, completion);
   // 8. Assert: result is never an abrupt completion.
-  Assert(!(result instanceof AbruptCompletion));
+  Assert(!isAbruptCompletion(result));
   // 9. Assert: When we return here, genContext has already been removed from the execution context stack and callerContext is the currently running execution context.
   Assert(surroundingAgent.runningExecutionContext === callerContext);
 }
@@ -199,8 +200,8 @@ function* AsyncGeneratorUnwrapYieldResumption(resumptionValue) {
   }
   // 4. Assert: awaited.[[Type]] is normal.
   Assert(awaited.Type === 'normal');
-  // 5. Return Completion { [[Type]]: return, [[Value]]: awaited.[[Value]], [[Target]]: empty }.
-  return new Completion({ Type: 'return', Value: awaited.Value, Target: undefined });
+  // 5. Return Completion Record { [[Type]]: return, [[Value]]: awaited.[[Value]], [[Target]]: empty }.
+  return new CompletionRecord({ Type: 'return', Value: awaited.Value, Target: undefined });
 }
 
 /** https://tc39.es/ecma262/#sec-asyncgeneratoryield */

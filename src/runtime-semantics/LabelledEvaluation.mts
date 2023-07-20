@@ -30,12 +30,12 @@ import { CreateForInIterator } from '../intrinsics/ForInIteratorPrototype.mjs';
 import {
   Completion,
   NormalCompletion,
-  AbruptCompletion,
+  isAbruptCompletion,
   UpdateEmpty,
   EnsureCompletion,
   ReturnIfAbrupt,
   Await,
-  Q, X,
+  Q, X, CompletionRecord,
 } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import {
@@ -292,7 +292,7 @@ function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement, label
       // 7. Let forDcl be the result of evaluating LexicalDeclaration.
       const forDcl = yield* Evaluate(LexicalDeclaration);
       // 8. If forDcl is an abrupt completion, then
-      if (forDcl instanceof AbruptCompletion) {
+      if (isAbruptCompletion(forDcl)) {
         // a. Set the running execution context's LexicalEnvironment to oldEnv.
         surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
         // b. Return Completion(forDcl).
@@ -538,8 +538,8 @@ function* ForInOfHeadEvaluation(uninitializedBoundNames, expr, iterationKind) {
   if (iterationKind === 'enumerate') {
     // a. If exprValue is undefined or null, then
     if (exprValue === Value.undefined || exprValue === Value.null) {
-      // i. Return Completion { [[Type]]: break, [[Value]]: empty, [[Target]]: empty }.
-      return new Completion({ Type: 'break', Value: undefined, Target: undefined });
+      // i. Return Completion Record { [[Type]]: break, [[Value]]: empty, [[Target]]: empty }.
+      return new CompletionRecord({ Type: 'break', Value: undefined, Target: undefined });
     }
     // b. Let obj be ! ToObject(exprValue).
     const obj = X(ToObject(exprValue));
@@ -637,7 +637,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
     // i. If destructuring is false, then
     if (destructuring === false) {
       // i. If lhsRef is an abrupt completion, then
-      if (lhsRef instanceof AbruptCompletion) {
+      if (isAbruptCompletion(lhsRef)) {
         // 1. Let status be lhsRef.
         status = lhsRef;
       } else if (lhsKind === 'lexicalBinding') { // ii. Else is lhsKind is lexicalBinding, then
@@ -666,7 +666,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
       }
     }
     // k. If status is an abrupt completion, then
-    if (status instanceof AbruptCompletion) {
+    if (isAbruptCompletion(status)) {
       // i. Set the running execution context's LexicalEnvironment to oldEnv.
       surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
       // ii. If iteratorKind is async, return ? AsyncIteratorClose(iteratorRecord, status).

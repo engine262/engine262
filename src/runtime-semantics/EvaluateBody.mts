@@ -12,8 +12,8 @@ import {
   GetValue,
 } from '../abstract-ops/all.mjs';
 import {
-  Completion,
-  AbruptCompletion,
+  CompletionRecord,
+  isAbruptCompletion,
   Q, X,
 } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
@@ -44,8 +44,8 @@ export function* Evaluate_ExpressionBody({ AssignmentExpression }) {
   const exprRef = yield* Evaluate(AssignmentExpression);
   // 2. Let exprValue be ? GetValue(exprRef).
   const exprValue = Q(GetValue(exprRef));
-  // 3. Return Completion { [[Type]]: return, [[Value]]: exprValue, [[Target]]: empty }.
-  return new Completion({ Type: 'return', Value: exprValue, Target: undefined });
+  // 3. Return Completion Record { [[Type]]: return, [[Value]]: exprValue, [[Target]]: empty }.
+  return new CompletionRecord({ Type: 'return', Value: exprValue, Target: undefined });
 }
 
 /** https://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-evaluatebody */
@@ -65,15 +65,15 @@ function* EvaluateBody_AsyncConciseBody({ ExpressionBody }, functionObject, argu
   // 2. Let declResult be FunctionDeclarationInstantiation(functionObject, argumentsList).
   const declResult = yield* FunctionDeclarationInstantiation(functionObject, argumentsList);
   // 3. If declResult is not an abrupt completion, then
-  if (!(declResult instanceof AbruptCompletion)) {
+  if (!isAbruptCompletion(declResult)) {
     // a. Perform ! AsyncFunctionStart(promiseCapability, ExpressionBody).
     X(AsyncFunctionStart(promiseCapability, ExpressionBody));
   } else { // 4. Else
     // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « declResult.[[Value]] »).
     X(Call(promiseCapability.Reject, Value.undefined, [declResult.Value]));
   }
-  // 5. Return Completion { [[Type]]: return, [[Value]]: promiseCapability.[[Promise]], [[Target]]: empty }.
-  return new Completion({ Type: 'return', Value: promiseCapability.Promise, Target: undefined });
+  // 5. Return Completion Record { [[Type]]: return, [[Value]]: promiseCapability.[[Promise]], [[Target]]: empty }.
+  return new CompletionRecord({ Type: 'return', Value: promiseCapability.Promise, Target: undefined });
 }
 
 /** https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-evaluatebody */
@@ -87,8 +87,8 @@ export function* EvaluateBody_GeneratorBody(GeneratorBody, functionObject, argum
   G.GeneratorBrand = undefined;
   // 4. Perform GeneratorStart(G, FunctionBody).
   GeneratorStart(G, GeneratorBody);
-  // 5. Return Completion { [[Type]]: return, [[Value]]: G, [[Target]]: empty }.
-  return new Completion({ Type: 'return', Value: G, Target: undefined });
+  // 5. Return Completion Record { [[Type]]: return, [[Value]]: G, [[Target]]: empty }.
+  return new CompletionRecord({ Type: 'return', Value: G, Target: undefined });
 }
 
 /** https://tc39.es/ecma262/#sec-asyncgenerator-definitions-evaluatebody */
@@ -107,8 +107,8 @@ export function* EvaluateBody_AsyncGeneratorBody(FunctionBody, functionObject, a
   generator.GeneratorBrand = undefined;
   // 4. Perform ! AsyncGeneratorStart(generator, FunctionBody).
   X(AsyncGeneratorStart(generator, FunctionBody));
-  // 5. Return Completion { [[Type]]: return, [[Value]]: generator, [[Target]]: empty }.
-  return new Completion({ Type: 'return', Value: generator, Target: undefined });
+  // 5. Return Completion Record { [[Type]]: return, [[Value]]: generator, [[Target]]: empty }.
+  return new CompletionRecord({ Type: 'return', Value: generator, Target: undefined });
 }
 
 /** https://tc39.es/ecma262/#sec-async-function-definitions-EvaluateBody */
@@ -119,15 +119,15 @@ export function* EvaluateBody_AsyncFunctionBody(FunctionBody, functionObject, ar
   // 2. Let declResult be FunctionDeclarationInstantiation(functionObject, argumentsList).
   const declResult = yield* FunctionDeclarationInstantiation(functionObject, argumentsList);
   // 3. If declResult is not an abrupt completion, then
-  if (!(declResult instanceof AbruptCompletion)) {
+  if (!isAbruptCompletion(declResult)) {
     // a. Perform ! AsyncFunctionStart(promiseCapability, FunctionBody).
     X(AsyncFunctionStart(promiseCapability, FunctionBody));
   } else { // 4. Else,
     // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « declResult.[[Value]] »).
     X(Call(promiseCapability.Reject, Value.undefined, [declResult.Value]));
   }
-  // 5. Return Completion { [[Type]]: return, [[Value]]: promiseCapability.[[Promise]], [[Target]]: empty }.
-  return new Completion({ Type: 'return', Value: promiseCapability.Promise, Target: undefined });
+  // 5. Return Completion Record { [[Type]]: return, [[Value]]: promiseCapability.[[Promise]], [[Target]]: empty }.
+  return new CompletionRecord({ Type: 'return', Value: promiseCapability.Promise, Target: undefined });
 }
 
 // Initializer :
@@ -148,8 +148,8 @@ export function* EvaluateBody_AssignmentExpression(AssignmentExpression, functio
     // b. Let value be ? GetValue(rhs).
     value = Q(GetValue(rhs));
   }
-  // 5. Return Completion { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
-  return new Completion({ Type: 'return', Value: value, Target: undefined });
+  // 5. Return Completion Record { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
+  return new CompletionRecord({ Type: 'return', Value: value, Target: undefined });
 }
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-evaluateclassstaticblockbody */

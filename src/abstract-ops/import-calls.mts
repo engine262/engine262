@@ -5,12 +5,12 @@
 import {
   Call, GetModuleNamespace, PerformPromiseThen, Value,
 } from '../api.mjs';
-import { AbruptCompletion, X } from '../completion.mjs';
+import { isAbruptCompletion, X } from '../completion.mjs';
 
 /** https://tc39.es/ecma262/#sec-ContinueDynamicImport */
 export function ContinueDynamicImport(promiseCapability, moduleCompletion) {
   // 1. If moduleCompletion is an abrupt completion, then
-  if (moduleCompletion instanceof AbruptCompletion) {
+  if (isAbruptCompletion(moduleCompletion)) {
     // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « moduleCompletion.[[Value]] »).
     X(Call(promiseCapability.Reject, undefined, [moduleCompletion.Value]));
     // b. Return unused.
@@ -36,7 +36,7 @@ export function ContinueDynamicImport(promiseCapability, moduleCompletion) {
     // a. Let link be Completion(module.Link()).
     const link = module.Link();
     // b. If link is an abrupt completion, then
-    if (link instanceof AbruptCompletion) {
+    if (isAbruptCompletion(link)) {
       // i. Perform ! Call(promiseCapability.[[Reject]], undefined, « link.[[Value]] »).
       X(Call(promiseCapability.Reject, Value.undefined, [link.Value]));
       // ii. Return unused.

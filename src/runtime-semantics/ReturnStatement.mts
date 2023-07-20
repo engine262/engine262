@@ -3,9 +3,8 @@ import { Value } from '../value.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { GetValue, GetGeneratorKind } from '../abstract-ops/all.mjs';
 import {
-  Completion,
   Await,
-  Q, X,
+  Q, X, CompletionRecord,
 } from '../completion.mjs';
 
 /** https://tc39.es/ecma262/#sec-return-statement-runtime-semantics-evaluation */
@@ -14,8 +13,8 @@ import {
 //    `return` Expression `;`
 export function* Evaluate_ReturnStatement({ Expression }) {
   if (!Expression) {
-    // 1. Return Completion { [[Type]]: return, [[Value]]: undefined, [[Target]]: empty }.
-    return new Completion({ Type: 'return', Value: Value.undefined, Target: undefined });
+    // 1. Return Completion Record { [[Type]]: return, [[Value]]: undefined, [[Target]]: empty }.
+    return new CompletionRecord({ Type: 'return', Value: Value.undefined, Target: undefined });
   }
   // 1. Let exprRef be the result of evaluating Expression.
   const exprRef = yield* Evaluate(Expression);
@@ -25,6 +24,6 @@ export function* Evaluate_ReturnStatement({ Expression }) {
   if (X(GetGeneratorKind()) === 'async') {
     exprValue = Q(yield* Await(exprValue));
   }
-  // 1. Return Completion { [[Type]]: return, [[Value]]: exprValue, [[Target]]: empty }.
-  return new Completion({ Type: 'return', Value: exprValue, Target: undefined });
+  // 1. Return Completion Record { [[Type]]: return, [[Value]]: exprValue, [[Target]]: empty }.
+  return new CompletionRecord({ Type: 'return', Value: exprValue, Target: undefined });
 }

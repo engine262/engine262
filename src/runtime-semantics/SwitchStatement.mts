@@ -6,7 +6,7 @@ import { Assert, GetValue, StrictEqualityComparison } from '../abstract-ops/all.
 import { Value } from '../value.mjs';
 import {
   Completion,
-  AbruptCompletion,
+  isAbruptCompletion,
   NormalCompletion,
   EnsureCompletion,
   UpdateEmpty,
@@ -64,7 +64,7 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, i
             V = R.Value;
           }
           // iii. If R is an abrupt completion, return Completion(UpdateEmpty(R, V)).
-          if (R instanceof AbruptCompletion) {
+          if (isAbruptCompletion(R)) {
             return Completion(UpdateEmpty(R, V));
           }
         }
@@ -101,7 +101,7 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, i
             V = R.Value;
           }
           // iii. If R is an abrupt completion, return Completion(UpdateEmpty(R, V)).
-          if (R instanceof AbruptCompletion) {
+          if (isAbruptCompletion(R)) {
             return Completion(UpdateEmpty(R, V));
           }
         }
@@ -135,7 +135,7 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, i
               V = R.Value;
             }
             // iii. If R is an abrupt completion, return Completion(UpdateEmpty(R, V)).
-            if (R instanceof AbruptCompletion) {
+            if (isAbruptCompletion(R)) {
               return Completion(UpdateEmpty(R, V));
             }
           }
@@ -152,7 +152,7 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, i
         V = R.Value;
       }
       // 13. If R is an abrupt completion, return Completion(UpdateEmpty(R, V)).
-      if (R instanceof AbruptCompletion) {
+      if (isAbruptCompletion(R)) {
         return Completion(UpdateEmpty(R, V));
       }
       // 14. NOTE: The following is another complete iteration of the second CaseClauses.
@@ -165,7 +165,7 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, i
           V = innerR.Value;
         }
         // c. If R is an abrupt completion, return Completion(UpdateEmpty(R, V)).
-        if (innerR instanceof AbruptCompletion) {
+        if (isAbruptCompletion(innerR)) {
           return Completion(UpdateEmpty(innerR, V));
         }
       }

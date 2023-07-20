@@ -19,7 +19,7 @@ import {
   F,
 } from './abstract-ops/all.mjs';
 import { EnvironmentRecord } from './environment.mjs';
-import { Completion, X } from './completion.mjs';
+import { CompletionRecord, X } from './completion.mjs';
 import { ValueMap, OutOfRange, callable } from './helpers.mjs';
 import type { PrivateElementRecord } from './runtime-semantics/MethodDefinitionEvaluation.mjs';
 
@@ -869,7 +869,7 @@ export function Type(val: Value) {
     return 'PrivateName';
   }
 
-  if (val instanceof Completion) {
+  if (val instanceof CompletionRecord) {
     return 'Completion';
   }
 

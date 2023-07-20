@@ -13,10 +13,9 @@ import {
 } from '../static-semantics/all.mjs';
 import {
   Completion,
-  AbruptCompletion,
   NormalCompletion,
   EnsureCompletion,
-  Q, X,
+  Q, X, isAbruptCompletion,
 } from '../completion.mjs';
 import { wrappedParse } from '../parse.mjs';
 import {
@@ -350,7 +349,7 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strict) 
         // 1. Let status be ! varEnv.CreateMutableBinding(fn, true).
         const status = X(varEnv.CreateMutableBinding(fn, Value.true));
         // 2. Assert: status is not an abrupt completion because of validation preceding step 12.
-        Assert(!(status instanceof AbruptCompletion));
+        Assert(!isAbruptCompletion(status));
         // 3. Perform ! varEnv.InitializeBinding(fn, fo).
         X(varEnv.InitializeBinding(fn, fo));
       } else { // iii. Else,
@@ -373,7 +372,7 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strict) 
         // 1. Let status be ! varEnv.CreateMutableBinding(vn, true).
         const status = X(varEnv.CreateMutableBinding(vn, Value.true));
         // 2. Assert: status is not an abrupt completion because of validation preceding step 12.
-        Assert(!(status instanceof AbruptCompletion));
+        Assert(!isAbruptCompletion(status));
         // 3. Perform ! varEnv.InitializeBinding(vn, undefined).
         X(varEnv.InitializeBinding(vn, Value.undefined));
       }

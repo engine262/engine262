@@ -30,17 +30,17 @@ function getEnclosingConditionalExpression(path) {
 }
 
 module.exports = ({ types: t, template }) => {
-  function createImportCompletion(file) {
+  function createImportCompletionRecord(file) {
     const r = fileToImport(file, COMPLETION_PATH);
     return template.ast(`
-      import { Completion } from "${r}";
+      import { CompletionRecord } from "${r}";
     `);
   }
 
-  function createImportAbruptCompletion(file) {
+  function createImportIsAbruptCompletion(file) {
     const r = fileToImport(file, COMPLETION_PATH);
     return template.ast(`
-      import { AbruptCompletion } from "${r}";
+      import { isAbruptCompletion } from "${r}";
     `);
   }
 
@@ -93,56 +93,56 @@ module.exports = ({ types: t, template }) => {
       template: template(`
       let ID = ARGUMENT;
       /* c8 ignore if */
-      if (ID instanceof AbruptCompletion) {
+      if (isAbruptCompletion(ID)) {
         return ID;
       }
       /* c8 ignore if */
-      if (ID instanceof Completion) {
+      if (ID instanceof CompletionRecord) {
         ID = ID.Value;
       }
       `, { preserveComments: true }),
-      imports: ['AbruptCompletion', 'Completion'],
+      imports: ['isAbruptCompletion', 'CompletionRecord'],
     },
     X: {
       template: template(`
       let ID = ARGUMENT;
-      Assert(!(ID instanceof AbruptCompletion), SOURCE + ' returned an abrupt completion');
+      Assert(!isAbruptCompletion(ID), SOURCE + ' returned an abrupt completion');
       /* c8 ignore if */
-      if (ID instanceof Completion) {
+      if (ID instanceof CompletionRecord) {
         ID = ID.Value;
       }
       `, { preserveComments: true }),
-      imports: ['Assert', 'Completion', 'AbruptCompletion'],
+      imports: ['Assert', 'CompletionRecord', 'isAbruptCompletion'],
     },
     IfAbruptCloseIterator: {
       template: template(`
       /* c8 ignore if */
-      if (%%value%% instanceof AbruptCompletion) {
+      if (isAbruptCompletion(%%value%%)) {
         return IteratorClose(%%iteratorRecord%%, %%value%%);
       }
       /* c8 ignore if */
-      if (%%value%% instanceof Completion) {
+      if (%%value%% instanceof CompletionRecord) {
         %%value%% = %%value%%.Value;
       }
       `, { preserveComments: true }),
-      imports: ['IteratorClose', 'AbruptCompletion', 'Completion'],
+      imports: ['IteratorClose', 'isAbruptCompletion', 'CompletionRecord'],
     },
     IfAbruptRejectPromise: {
       template: template(`
       /* c8 ignore if */
-      if (ID instanceof AbruptCompletion) {
+      if (isAbruptCompletion(ID)) {
         const hygenicTemp2 = Call(CAPABILITY.Reject, Value.undefined, [ID.Value]);
-        if (hygenicTemp2 instanceof AbruptCompletion) {
+        if (isAbruptCompletion(hygenicTemp2)) {
           return hygenicTemp2;
         }
         return CAPABILITY.Promise;
       }
       /* c8 ignore if */
-      if (ID instanceof Completion) {
+      if (ID instanceof CompletionRecord) {
         ID = ID.Value;
       }
       `, { preserveComments: true }),
-      imports: ['Call', 'Value', 'AbruptCompletion', 'Completion'],
+      imports: ['Call', 'Value', 'isAbruptCompletion', 'CompletionRecord'],
     },
   };
   MACROS.ReturnIfAbrupt = MACROS.Q;
@@ -155,11 +155,11 @@ module.exports = ({ types: t, template }) => {
           state.needed = {};
         },
         exit(path, state) {
-          if (state.needed.Completion && !state.file.opts.filename.endsWith('completion.mjs')) {
-            path.node.body.unshift(createImportCompletion(state.file));
+          if (state.needed.CompletionRecord && !state.file.opts.filename.endsWith('completion.mjs')) {
+            path.node.body.unshift(createImportCompletionRecord(state.file));
           }
-          if (state.needed.AbruptCompletion && !state.file.opts.filename.endsWith('completion.mjs')) {
-            path.node.body.unshift(createImportAbruptCompletion(state.file));
+          if (state.needed.isAbruptCompletion && !state.file.opts.filename.endsWith('completion.mjs')) {
+            path.node.body.unshift(createImportIsAbruptCompletion(state.file));
           }
           if (state.needed.Assert) {
             path.node.body.unshift(createImportAssert(state.file));
@@ -224,11 +224,11 @@ module.exports = ({ types: t, template }) => {
             binding.path.parent.kind = 'let';
             statementPath.insertBefore(template(`
               /* c8 ignore if */
-              if (ID instanceof AbruptCompletion) {
+              if (isAbruptCompletion(ID)) {
                 return ID;
               }
               /* c8 ignore if */
-              if (ID instanceof Completion) {
+              if (ID instanceof CompletionRecord) {
                 ID = ID.Value;
               }
             `, { preserveComments: true })({ ID: argument }));

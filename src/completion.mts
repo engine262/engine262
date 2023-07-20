@@ -8,132 +8,110 @@ import {
 } from './abstract-ops/all.mjs';
 import { JSStringValue, Value } from './value.mjs';
 import {
-  callable,
   kAsyncContext,
-  OutOfRange,
   resume,
 } from './helpers.mjs';
 
-let createNormalCompletion: <T>(init: NormalCompletionInit<T>) => NormalCompletionImpl<T>;
-let createBreakCompletion: <T>(init: BreakCompletionInit<T>) => BreakCompletion<T>;
-let createContinueCompletion: <T>(init: ContinueCompletionInit<T>) => ContinueCompletion<T>;
-let createReturnCompletion: (init: ReturnCompletionInit) => ReturnCompletion;
-let createThrowCompletion: (init: ThrowCompletionInit) => ThrowCompletionImpl;
+/** https://tc39.es/ecma262/#sec-completion-record-specification-type */
+interface NormalCompletionInit<T> {
+  readonly Type: 'normal';
+  readonly Value: T;
+  readonly Target: undefined;
+}
 
-type NormalCompletionInit<T> = Pick<NormalCompletion<T>, 'Type' | 'Value' | 'Target'>;
+/** https://tc39.es/ecma262/#sec-completion-record-specification-type */
+interface BreakCompletionInit<T> {
+  readonly Type: 'break';
+  readonly Value: T;
+  readonly Target: JSStringValue | undefined;
+}
 
-type BreakCompletionInit<T> = Pick<BreakCompletion<T>, 'Type' | 'Value' | 'Target'>;
+/** https://tc39.es/ecma262/#sec-completion-record-specification-type */
+interface ContinueCompletionInit<T> {
+  readonly Type: 'continue';
+  readonly Value: T;
+  readonly Target: JSStringValue | undefined;
+}
 
-type ContinueCompletionInit<T> = Pick<ContinueCompletion<T>, 'Type' | 'Value' | 'Target'>;
+/** https://tc39.es/ecma262/#sec-completion-record-specification-type */
+interface ReturnCompletionInit {
+  readonly Type: 'return';
+  readonly Value: Value;
+  readonly Target: undefined;
+}
 
-type ReturnCompletionInit = Pick<ReturnCompletion, 'Type' | 'Value' | 'Target'>;
+/** https://tc39.es/ecma262/#sec-completion-record-specification-type */
+interface ThrowCompletionInit {
+  readonly Type: 'throw';
+  readonly Value: Value;
+  readonly Target: undefined;
+}
 
-type ThrowCompletionInit = Pick<ThrowCompletion, 'Type' | 'Value' | 'Target'>;
-
-type AbruptCompletionInit<T> =
+type CompletionInit<T> =
+  | NormalCompletionInit<T>
   | BreakCompletionInit<T>
   | ContinueCompletionInit<T>
   | ReturnCompletionInit
   | ThrowCompletionInit;
 
-type CompletionInit<T> =
-  | NormalCompletionInit<T>
-  | AbruptCompletionInit<T>;
+/** https://tc39.es/ecma262/#sec-completion-record-specification-type */
+export class CompletionRecord<C extends CompletionInit<any>> {
+  readonly Type: C["Type"];
+  readonly Value: C["Value"];
+  readonly Target: C["Target"];
 
-@callable((_target, _thisArg, [completionRecord]) => {
-  // 1. Assert: completionRecord is a Completion Record.
-  Assert(completionRecord instanceof Completion);
-  // 2. Return completionRecord as the Completion Record of this abstract operation.
-  return completionRecord;
-})
-class CompletionImpl<const T> {
-  declare readonly Type: 'normal' | 'break' | 'continue' | 'return' | 'throw';
-  readonly Value!: T | Value;
-  readonly Target!: JSStringValue | undefined;
-
-  constructor(init: CompletionInit<T>) {
-    if (new.target === CompletionImpl) {
-      switch (init.Type) {
-        case 'normal':
-          return createNormalCompletion(init);
-        case 'break':
-          return createBreakCompletion(init);
-        case 'continue':
-          return createContinueCompletion(init);
-        case 'return':
-          return createReturnCompletion(init) as CompletionImpl<T>;
-        case 'throw':
-          return createThrowCompletion(init) as CompletionImpl<T>;
-        default:
-          throw new OutOfRange('new Completion', init);
-      }
-    }
-
-    const { Type, Value, Target } = init;
-    Assert(new.target.prototype.Type === Type);
-    this.Value = Value;
-    this.Target = Target;
+  constructor(init: C) {
+    this.Type = init.Type;
+    this.Value = init.Value;
+    this.Target = init.Target;
   }
 
   // NON-SPEC
   mark(m: GCMarker) {
     m(this.Value);
   }
-
-  static {
-    Object.defineProperty(this, 'name', { value: 'Completion' });
-  }
 }
 
-/** https://tc39.es/ecma262/#sec-completion-record-specification-type */
-export type Completion<T = unknown> =
-  | NormalCompletion<T>
-  | AbruptCompletion<T>;
+/**
+ * https://tc39.es/ecma262/#sec-completion-record-specification-type
+ *
+ * > - _normal completion_ refers to any Completion Record with a [[Type]] value of `normal`.
+ */
+export type NormalCompletion<T> = CompletionRecord<NormalCompletionInit<T>>;
 
-/** https://tc39.es/ecma262/#sec-completion-ao */
-export const Completion = CompletionImpl as {
-  /** https://tc39.es/ecma262/#sec-completion-ao */
-  <T extends Completion<unknown>>(completionRecord: T): T;
+/**
+ * https://tc39.es/ecma262/#sec-completion-record-specification-type
+ *
+ * > - _break completion_ refers to any Completion Record with a [[Type]] value of `break`.
+ */
+export type BreakCompletion<T> = CompletionRecord<BreakCompletionInit<T>>;
 
-  /** https://tc39.es/ecma262/#sec-completion-record-specification-type */
-  new <const T>(completion: { Type: 'normal', Value: T, Target: undefined }): NormalCompletion<T>;
-  new <const T>(completion: { Type: 'break', Value: T, Target: JSStringValue | undefined }): BreakCompletion<T>;
-  new <const T>(completion: { Type: 'continue', Value: T, Target: JSStringValue | undefined }): ContinueCompletion<T>;
-  new (completion: { Type: 'return', Value: Value, Target: undefined }): ReturnCompletion;
-  new (completion: { Type: 'throw', Value: Value, Target: undefined }): ThrowCompletion;
-  readonly prototype: CompletionImpl<unknown>;
-};
+/**
+ * https://tc39.es/ecma262/#sec-completion-record-specification-type
+ *
+ * > - _continue completion_ refers to any Completion Record with a [[Type]] value of `continue`.
+ */
+export type ContinueCompletion<T> = CompletionRecord<ContinueCompletionInit<T>>;
 
-@callable((_target, _thisArg, [value]) => { // eslint-disable-line arrow-body-style -- Preserve algorithm steps comments
-  // 1. Return Completion { [[Type]]: normal, [[Value]]: value, [[Target]]: empty }.
-  return new Completion({ Type: 'normal', Value: value, Target: undefined });
-})
-class NormalCompletionImpl<const T> extends CompletionImpl<T> {
-  declare readonly Type: 'normal';
-  declare readonly Value: T;
-  declare readonly Target: undefined;
+/**
+ * https://tc39.es/ecma262/#sec-completion-record-specification-type
+ *
+ * > - _return completion_ refers to any Completion Record with a [[Type]] value of `return`.
+ */
+export type ReturnCompletion = CompletionRecord<ReturnCompletionInit>;
 
-  private constructor(init: NormalCompletionInit<T>) { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
-    super(init);
-  }
+/**
+ * https://tc39.es/ecma262/#sec-completion-record-specification-type
+ *
+ * > - _throw completion_ refers to any Completion Record with a [[Type]] value of `throw`.
+ */
+export type ThrowCompletion = CompletionRecord<ThrowCompletionInit>;
 
-  static {
-    Object.defineProperty(this, 'name', { value: 'NormalCompletion' });
-    Object.defineProperty(this.prototype, 'Type', { value: 'normal' });
-    createNormalCompletion = (init) => new NormalCompletionImpl(init);
-  }
-}
-
-/** https://tc39.es/ecma262/#sec-completion-record-specification-type */
-export type NormalCompletion<T> = NormalCompletionImpl<T>;
-
-/** https://tc39.es/ecma262/#sec-normalcompletion */
-export const NormalCompletion = NormalCompletionImpl as typeof NormalCompletionImpl & {
-  /** https://tc39.es/ecma262/#sec-normalcompletion */
-  <const T>(value: T): NormalCompletion<T>;
-};
-
-/** https://tc39.es/ecma262/#sec-completion-record-specification-type */
+/**
+ * https://tc39.es/ecma262/#sec-completion-record-specification-type
+ *
+ * > _abrupt completion_ refers to any Completion Record with a [[Type]] value other than `normal`.
+ */
 export type AbruptCompletion<T = unknown> =
   | ThrowCompletion
   | ReturnCompletion
@@ -141,103 +119,53 @@ export type AbruptCompletion<T = unknown> =
   | ContinueCompletion<T>;
 
 /** https://tc39.es/ecma262/#sec-completion-record-specification-type */
-export const AbruptCompletion = (() => {
-  abstract class AbruptCompletion<const T> extends CompletionImpl<T | Value> {
-    declare readonly Type: 'break' | 'continue' | 'return' | 'throw';
-    declare readonly Value: T | Value;
-    declare readonly Target: JSStringValue | undefined;
+export type Completion<T = unknown> =
+  | NormalCompletion<T>
+  | AbruptCompletion<T>;
 
-    constructor(init: AbruptCompletionInit<T>) { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
-      super(init);
-    }
-
-    static {
-      Object.defineProperty(this, 'name', { value: 'AbruptCompletion' });
-    }
-  }
-
-  return AbruptCompletion;
-})();
-
-/** https://tc39.es/ecma262/#sec-completion-record-specification-type */
-export class BreakCompletion<const T> extends AbruptCompletion<T> {
-  declare readonly Type: 'break';
-  declare readonly Value: T;
-
-  private constructor(init: BreakCompletionInit<T>) { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
-    super(init);
-  }
-
-  static {
-    Object.defineProperty(this, 'name', { value: 'BreakCompletion' });
-    Object.defineProperty(this.prototype, 'Type', { value: 'break' });
-    createBreakCompletion = (init) => new BreakCompletion(init);
-  }
+/** https://tc39.es/ecma262/#sec-completion-ao */
+export function Completion<T extends Completion<unknown>>(completionRecord: T): T {
+  // 1. Assert: completionRecord is a Completion Record.
+  Assert(completionRecord instanceof CompletionRecord);
+  // 2. Return completionRecord as the Completion Record of this abstract operation.
+  return completionRecord;
 }
 
-/** https://tc39.es/ecma262/#sec-completion-record-specification-type */
-export class ContinueCompletion<const T> extends AbruptCompletion<T> {
-  declare readonly Type: 'continue';
-  declare readonly Value: T;
-  declare readonly Target: JSStringValue | undefined;
-
-  private constructor(init: ContinueCompletionInit<T>) { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
-    super(init);
-  }
-
-  static {
-    Object.defineProperty(this, 'name', { value: 'ContinueCompletion' });
-    Object.defineProperty(this.prototype, 'Type', { value: 'continue' });
-    createContinueCompletion = (init) => new ContinueCompletion(init);
-  }
+/**
+ * https://tc39.es/ecma262/#sec-completion-record-specification-type
+ *
+ * > _normal completion_ refers to any Completion Record with a [[Type]] value of `normal`.
+ */
+export function isNormalCompletion(value: unknown): value is NormalCompletion<unknown> {
+  return value instanceof CompletionRecord && value.Type === 'normal';
 }
 
-/** https://tc39.es/ecma262/#sec-completion-record-specification-type */
-export class ReturnCompletion extends AbruptCompletion<Value> {
-  declare readonly Type: 'return';
-  declare readonly Value: Value;
-  declare readonly Target: undefined;
+/** @deprecated Use `value.Type === 'normal'` or `isNormalCompletion(value)` instead of `value instanceof NormalCompletion` */
+Object.defineProperty(NormalCompletion, Symbol.hasInstance, { configurable: true, value: isNormalCompletion });
 
-  private constructor(init: ReturnCompletionInit) { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
-    super(init);
-  }
-
-  static {
-    Object.defineProperty(this, 'name', { value: 'ReturnCompletion' });
-    Object.defineProperty(this.prototype, 'Type', { value: 'return' });
-    createReturnCompletion = (init) => new ReturnCompletion(init);
-  }
+/**
+ * https://tc39.es/ecma262/#sec-completion-record-specification-type
+ *
+ * > _abrupt completion_ refers to any Completion Record with a [[Type]] value other than `normal`.
+ */
+export function isAbruptCompletion(value: unknown): value is AbruptCompletion<unknown> {
+  return value instanceof CompletionRecord && value.Type !== 'normal';
 }
 
-@callable((_target, _thisArg, [value]) => {
-  Assert(value instanceof Value);
-  // 1. Return Completion { [[Type]]: throw, [[Value]]: value, [[Target]]: empty }.
-  return new Completion({ Type: 'throw', Value: value, Target: undefined });
-})
-class ThrowCompletionImpl extends AbruptCompletion<Value> {
-  declare readonly Type: 'throw';
-  declare readonly Value: Value;
-  declare readonly Target: undefined;
+/** @deprecated Use `value.Type !== 'normal'` or `isAbruptCompletion(value)` instead of `value instanceof AbruptCompletion` */
+export const AbruptCompletion = { [Symbol.hasInstance]: isAbruptCompletion };
 
-  private constructor(init: Pick<ThrowCompletionImpl, 'Type' | 'Value' | 'Target'>) { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
-    super(init);
-  }
-
-  static {
-    Object.defineProperty(this, 'name', { value: 'ThrowCompletion' });
-    Object.defineProperty(this.prototype, 'Type', { value: 'throw' });
-    createThrowCompletion = (init) => new ThrowCompletionImpl(init);
-  }
+/** https://tc39.es/ecma262/#sec-normalcompletion */
+export function NormalCompletion<T>(value: T): NormalCompletion<T> {
+  // 1. Return Completion Record { [[Type]]: normal, [[Value]]: value, [[Target]]: empty }.
+  return new CompletionRecord({ Type: 'normal', Value: value, Target: undefined });
 }
-
-/** https://tc39.es/ecma262/#sec-completion-record-specification-type */
-export type ThrowCompletion = ThrowCompletionImpl;
 
 /** https://tc39.es/ecma262/#sec-throwcompletion */
-export const ThrowCompletion = ThrowCompletionImpl as typeof ThrowCompletionImpl & {
-  /** https://tc39.es/ecma262/#sec-throwcompletion */
-  (value: Value): ThrowCompletion;
-};
+export function ThrowCompletion(value: Value): ThrowCompletion {
+  // 1. Return Completion Record { [[Type]]: throw, [[Value]]: value, [[Target]]: empty }.
+  return new CompletionRecord({ Type: 'throw', Value: value, Target: undefined });
+}
 
 /** https://tc39.es/ecma262/#sec-updateempty */
 export type UpdateEmpty<T extends Completion<unknown>, U> =
@@ -257,8 +185,8 @@ export function UpdateEmpty<C extends Completion, const T>(completionRecord: C, 
   if (completionRecord.Value !== undefined) {
     return Completion(completionRecord);
   }
-  // 3. Return Completion { [[Type]]: completionRecord.[[Type]], [[Value]]: value, [[Target]]: completionRecord.[[Target]] }.
-  return new CompletionImpl({ Type: completionRecord.Type, Value: value, Target: completionRecord.Target } as unknown as CompletionInit<unknown>); // NOTE: unsound cast
+  // 3. Return Completion Record { [[Type]]: completionRecord.[[Type]], [[Value]]: value, [[Target]]: completionRecord.[[Target]] }.
+  return new CompletionRecord({ Type: completionRecord.Type, Value: value, Target: completionRecord.Target } as unknown as CompletionInit<unknown>); // NOTE: unsound cast
 }
 
 /** https://tc39.es/ecma262/#sec-returnifabrupt */
@@ -297,6 +225,7 @@ export function IfAbruptRejectPromise(_value: Completion, _capability: PromiseCa
   throw new TypeError('IfAbruptRejectPromise requires build');
 }
 
+/** https://tc39.es/ecma262/#sec-implicit-normal-completion */
 export type EnsureCompletion<T> = EnsureCompletionWorker<T, T>;
 
 // Distribute over `T`s that are `Completion`s, but don't distribute over `T`s that aren't `Completion`s
@@ -305,7 +234,7 @@ type EnsureCompletionWorker<T, _T> = T extends Completion ? T : NormalCompletion
 /** https://tc39.es/ecma262/#sec-implicit-normal-completion */
 export function EnsureCompletion<const T>(val: T): EnsureCompletion<T>;
 export function EnsureCompletion<const T>(val: T) {
-  if (val instanceof Completion) {
+  if (val instanceof CompletionRecord) {
     return val;
   }
   return NormalCompletion(val);

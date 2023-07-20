@@ -12,7 +12,7 @@ const {
   Agent,
   setSurroundingAgent,
   ManagedRealm,
-  AbruptCompletion,
+  isAbruptCompletion,
   inspect,
 } = require('../..');
 
@@ -38,7 +38,7 @@ JSON.parse(source);
 
   const testName = path.basename(filename);
 
-  if (!result || result instanceof AbruptCompletion) {
+  if (!result || isAbruptCompletion(result)) {
     if (testName.startsWith('n_')) {
       pass();
     } else if (testName.startsWith('i_')) {

@@ -9,8 +9,8 @@ import {
 import {
   X,
   ThrowCompletion,
-  AbruptCompletion,
   EnsureCompletion,
+  isAbruptCompletion,
 } from './completion.mjs';
 import {
   Realm,
@@ -237,7 +237,7 @@ export class ManagedRealm extends Realm {
       });
     });
 
-    if (!(res instanceof AbruptCompletion)) {
+    if (!isAbruptCompletion(res)) {
       runJobQueue();
     }
 
@@ -278,7 +278,7 @@ export class ManagedRealm extends Realm {
 class ManagedSourceTextModuleRecord extends SourceTextModuleRecord {
   Evaluate() {
     const r = super.Evaluate();
-    if (!(r instanceof AbruptCompletion)) {
+    if (!isAbruptCompletion(r)) {
       runJobQueue();
     }
     return r;

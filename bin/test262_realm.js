@@ -11,7 +11,7 @@ const {
   ToString,
   Type,
   Throw,
-  AbruptCompletion,
+  isAbruptCompletion,
   ManagedRealm,
   inspect,
   gc,
@@ -83,7 +83,7 @@ const createRealm = ({ printCompatMode = false } = {}) => {
           for (let i = 0; i < args.length; i += 1) {
             const arg = args[i];
             const s = ToString(arg);
-            if (s instanceof AbruptCompletion) {
+            if (isAbruptCompletion(s)) {
               return s;
             }
             process.stdout.write(s.stringValue());
