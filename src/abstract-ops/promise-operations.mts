@@ -11,6 +11,7 @@ import {
   Completion,
   EnsureCompletion,
   isAbruptCompletion,
+  isNormalCompletion,
   NormalCompletion,
   Q,
   ThrowCompletion,
