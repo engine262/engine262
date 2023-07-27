@@ -19,6 +19,9 @@ function isUsedInDef(reference) {
   const location = reference.identifier.range[1];
 
   while (node) {
+    if (node.type === 'TSTypeParameter') {
+      return false;
+    }
     if (node.type === 'VariableDeclarator') {
       if (isInRange(node.init, location)) {
         return true;
