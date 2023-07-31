@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 e5f31535ddaf5fde95bbde3008615516e6de9d0e
+ * engine262 0.0.1 ba103a6e08da80d4502873f3549566ca7fa0453c
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -226,7 +226,7 @@
     if (key instanceof StringValue) {
       return key.stringValue();
     } else if (key instanceof NumberValue) {
-      return key.numberValue();
+      return R(key);
     }
     return key;
   }
@@ -16399,7 +16399,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return exports.surroundingAgent.Throw('RangeError', 'CannotConvertDecimalToBigInt', number);
     }
     // 3. Return the BigInt value that represents the mathematical value of number.
-    return Z(BigInt(number.numberValue()));
+    return Z(BigInt(R(number)));
   }
 
   /** https://tc39.es/ecma262/#sec-conditional-operator-runtime-semantics-evaluation */
@@ -17587,7 +17587,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
     }
-    const intMaxLength = _temp2.numberValue();
+    const intMaxLength = R(_temp2);
     const stringLength = S.stringValue().length;
     if (intMaxLength <= stringLength) {
       return S;
@@ -22687,7 +22687,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (x.isNaN()) {
         return F(NaN);
       }
-      return F(-x.numberValue());
+      return F(-R(x));
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-number-bitwiseNOT */
@@ -22701,38 +22701,38 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 1. Let oldValue be ! ToInt32(x).
       const oldValue = _temp;
       // 2. Return the result of applying bitwise complement to oldValue. The result is a signed 32-bit integer.
-      return F(~oldValue.numberValue());
+      return F(~R(oldValue));
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-number-exponentiate */
     static exponentiate(base, exponent) {
-      return F(base.numberValue() ** exponent.numberValue());
+      return F(R(base) ** R(exponent));
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-number-multiply */
     static multiply(x, y) {
-      return F(x.numberValue() * y.numberValue());
+      return F(R(x) * R(y));
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-number-divide */
     static divide(x, y) {
-      return F(x.numberValue() / y.numberValue());
+      return F(R(x) / R(y));
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-number-remainder */
     static remainder(n, d) {
-      return F(n.numberValue() % d.numberValue());
+      return F(R(n) % R(d));
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-number-add */
     static add(x, y) {
-      return F(x.numberValue() + y.numberValue());
+      return F(R(x) + R(y));
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-number-subtract */
     static subtract(x, y) {
       // The result of - operator is x + (-y).
-      return NumberValue.add(x, F(-y.numberValue()));
+      return NumberValue.add(x, F(-R(y)));
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-number-leftShift */
@@ -22754,9 +22754,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const rnum = _temp3;
       // 3. Let shiftCount be the result of masking out all but the least significant 5 bits of rnum, that is, compute rnum & 0x1F.
-      const shiftCount = rnum.numberValue() & 0x1F; // eslint-disable-line no-bitwise
+      const shiftCount = R(rnum) & 0x1F; // eslint-disable-line no-bitwise
       // 4. Return the result of left shifting lnum by shiftCount bits. The result is a signed 32-bit integer.
-      return F(lnum.numberValue() << shiftCount); // eslint-disable-line no-bitwise
+      return F(R(lnum) << shiftCount); // eslint-disable-line no-bitwise
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-number-signedRightShift */
@@ -22778,10 +22778,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const rnum = _temp5;
       // 3. Let shiftCount be the result of masking out all but the least significant 5 bits of rnum, that is, compute rnum & 0x1F.
-      const shiftCount = rnum.numberValue() & 0x1F; // eslint-disable-line no-bitwise
+      const shiftCount = R(rnum) & 0x1F; // eslint-disable-line no-bitwise
       // 4. Return the result of performing a sign-extending right shift of lnum by shiftCount bits.
       //    The most significant bit is propagated. The result is a signed 32-bit integer.
-      return F(lnum.numberValue() >> shiftCount); // eslint-disable-line no-bitwise
+      return F(R(lnum) >> shiftCount); // eslint-disable-line no-bitwise
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-number-unsignedRightShift */
@@ -22803,10 +22803,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const rnum = _temp7;
       // 3. Let shiftCount be the result of masking out all but the least significant 5 bits of rnum, that is, compute rnum & 0x1F.
-      const shiftCount = rnum.numberValue() & 0x1F; // eslint-disable-line no-bitwise
+      const shiftCount = R(rnum) & 0x1F; // eslint-disable-line no-bitwise
       // 4. Return the result of performing a zero-filling right shift of lnum by shiftCount bits.
       //    Vacated bits are filled with zero. The result is an unsigned 32-bit integer.
-      return F(lnum.numberValue() >>> shiftCount); // eslint-disable-line no-bitwise
+      return F(R(lnum) >>> shiftCount); // eslint-disable-line no-bitwise
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-number-lessThan */
@@ -22820,22 +22820,22 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // If nx and ny are the same Number value, return false.
       // If nx is +0 and ny is -0, return false.
       // If nx is -0 and ny is +0, return false.
-      if (x.numberValue() === y.numberValue()) {
+      if (R(x) === R(y)) {
         return exports.Value.false;
       }
-      if (x.numberValue() === +Infinity) {
+      if (R(x) === +Infinity) {
         return exports.Value.false;
       }
-      if (y.numberValue() === +Infinity) {
+      if (R(y) === +Infinity) {
         return exports.Value.true;
       }
-      if (y.numberValue() === -Infinity) {
+      if (R(y) === -Infinity) {
         return exports.Value.false;
       }
-      if (x.numberValue() === -Infinity) {
+      if (R(x) === -Infinity) {
         return exports.Value.true;
       }
-      return x.numberValue() < y.numberValue() ? exports.Value.true : exports.Value.false;
+      return R(x) < R(y) ? exports.Value.true : exports.Value.false;
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-number-equal */
@@ -22846,8 +22846,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (y.isNaN()) {
         return exports.Value.false;
       }
-      const xVal = x.numberValue();
-      const yVal = y.numberValue();
+      const xVal = R(x);
+      const yVal = R(y);
       if (xVal === yVal) {
         return exports.Value.true;
       }
@@ -22865,8 +22865,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (x.isNaN() && y.isNaN()) {
         return exports.Value.true;
       }
-      const xVal = x.numberValue();
-      const yVal = y.numberValue();
+      const xVal = R(x);
+      const yVal = R(y);
       if (Object.is(xVal, 0) && Object.is(yVal, -0)) {
         return exports.Value.false;
       }
@@ -22884,8 +22884,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (x.isNaN() && y.isNaN()) {
         return exports.Value.true;
       }
-      const xVal = x.numberValue();
-      const yVal = y.numberValue();
+      const xVal = R(x);
+      const yVal = R(y);
       if (Object.is(xVal, 0) && Object.is(yVal, -0)) {
         return exports.Value.true;
       }
@@ -22921,7 +22921,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (x.isNaN()) {
         return exports.Value('NaN');
       }
-      const xVal = x.numberValue();
+      const xVal = R(x);
       if (xVal === 0) {
         return exports.Value('0');
       }
@@ -22965,11 +22965,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 3. Return the result of applying the bitwise operator op to lnum and rnum. The result is a signed 32-bit integer.
     switch (op) {
       case '&':
-        return F(lnum.numberValue() & rnum.numberValue());
+        return F(R(lnum) & R(rnum));
       case '|':
-        return F(lnum.numberValue() | rnum.numberValue());
+        return F(R(lnum) | R(rnum));
       case '^':
-        return F(lnum.numberValue() ^ rnum.numberValue());
+        return F(R(lnum) ^ R(rnum));
       /*c8 ignore next*/default:
         throw new OutOfRange$1('NumberBitwiseOp', op);
     }
@@ -22995,44 +22995,44 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-unaryMinus */
     static unaryMinus(x) {
-      if (x.bigintValue() === 0n) {
+      if (R(x) === 0n) {
         return Z(0n);
       }
-      return Z(-x.bigintValue());
+      return Z(-R(x));
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-bitwiseNOT */
     static bitwiseNOT(x) {
-      return Z(-x.bigintValue() - 1n);
+      return Z(-R(x) - 1n);
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-exponentiate */
     static exponentiate(base, exponent) {
       // 1. If exponent < 0n, throw a RangeError exception.
-      if (exponent.bigintValue() < 0n) {
+      if (R(exponent) < 0n) {
         return exports.surroundingAgent.Throw('RangeError', 'BigIntNegativeExponent');
       }
       // 2. If base is 0n and exponent is 0n, return 1n.
-      if (base.bigintValue() === 0n && exponent.bigintValue() === 0n) {
+      if (R(base) === 0n && R(exponent) === 0n) {
         return Z(1n);
       }
       // 3. Return the BigInt value that represents the mathematical value of base raised to the power exponent.
-      return Z(base.bigintValue() ** exponent.bigintValue());
+      return Z(R(base) ** R(exponent));
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-multiply */
     static multiply(x, y) {
-      return Z(x.bigintValue() * y.bigintValue());
+      return Z(R(x) * R(y));
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-divide */
     static divide(x, y) {
       // 1. If y is 0n, throw a RangeError exception.
-      if (y.bigintValue() === 0n) {
+      if (R(y) === 0n) {
         return exports.surroundingAgent.Throw('RangeError', 'BigIntDivideByZero');
       }
       // 2. Let quotient be the mathematical value of x divided by y.
-      const quotient = x.bigintValue() / y.bigintValue();
+      const quotient = R(x) / R(y);
       // 3. Return the BigInt value that represents quotient rounded towards 0 to the next integral value.
       return Z(quotient);
     }
@@ -23040,41 +23040,41 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-remainder */
     static remainder(n, d) {
       // 1. If d is 0n, throw a RangeError exception.
-      if (d.bigintValue() === 0n) {
+      if (R(d) === 0n) {
         return exports.surroundingAgent.Throw('RangeError', 'BigIntDivideByZero');
       }
       // 2. If n is 0n, return 0n.
-      if (n.bigintValue() === 0n) {
+      if (R(n) === 0n) {
         return Z(0n);
       }
       // 3. Let r be the BigInt defined by the mathematical relation r = n - (d × q)
       //   where q is a BigInt that is negative only if n/d is negative and positive
       //   only if n/d is positive, and whose magnitude is as large as possible without
       //   exceeding the magnitude of the true mathematical quotient of n and d.
-      const r = Z(n.bigintValue() % d.bigintValue());
+      const r = Z(R(n) % R(d));
       // 4. Return r.
       return r;
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-add */
     static add(x, y) {
-      return Z(x.bigintValue() + y.bigintValue());
+      return Z(R(x) + R(y));
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-subtract */
     static subtract(x, y) {
-      return Z(x.bigintValue() - y.bigintValue());
+      return Z(R(x) - R(y));
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-leftShift */
     static leftShift(x, y) {
-      return Z(x.bigintValue() << y.bigintValue()); // eslint-disable-line no-bitwise
+      return Z(R(x) << R(y)); // eslint-disable-line no-bitwise
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-signedRightShift */
     static signedRightShift(x, y) {
       // 1. Return BigInt::leftShift(x, -y).
-      return BigIntValue.leftShift(x, Z(-y.bigintValue()));
+      return BigIntValue.leftShift(x, Z(-R(y)));
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-unsignedRightShift */
@@ -23084,13 +23084,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-lessThan */
     static lessThan(x, y) {
-      return x.bigintValue() < y.bigintValue() ? exports.Value.true : exports.Value.false;
+      return R(x) < R(y) ? exports.Value.true : exports.Value.false;
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-equal */
     static equal(x, y) {
       // Return true if x and y have the same mathematical integer value and false otherwise.
-      return x.bigintValue() === y.bigintValue() ? exports.Value.true : exports.Value.false;
+      return R(x) === R(y) ? exports.Value.true : exports.Value.false;
     }
 
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-sameValue */
@@ -23126,9 +23126,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     /** https://tc39.es/ecma262/#sec-numeric-types-bigint-tostring */
     static toString(x) {
       // 1. If x is less than zero, return the string-concatenation of the String "-" and ! BigInt::toString(-x).
-      if (x.bigintValue() < 0n) {
-        let _temp11 = BigIntValue.toString(Z(-x.bigintValue()));
-        Assert(!(_temp11 instanceof AbruptCompletion), "BigIntValue.toString(Z(-x.bigintValue()))" + ' returned an abrupt completion');
+      if (R(x) < 0n) {
+        let _temp11 = BigIntValue.toString(Z(-R(x)));
+        Assert(!(_temp11 instanceof AbruptCompletion), "BigIntValue.toString(Z(-R(x)))" + ' returned an abrupt completion');
         /* c8 ignore if */
         if (_temp11 instanceof Completion) {
           _temp11 = _temp11.Value;
@@ -23137,7 +23137,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         return exports.Value(`-${str}`);
       }
       // 2. Return the String value consisting of the code units of the digits of the decimal representation of x.
-      return exports.Value(`${x.bigintValue()}`);
+      return exports.Value(`${R(x)}`);
     }
     static unit = new BigIntValue(1n);
   }
@@ -23249,11 +23249,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     */
     switch (op) {
       case '&':
-        return Z(x.bigintValue() & y.bigintValue());
+        return Z(R(x) & R(y));
       case '|':
-        return Z(x.bigintValue() | y.bigintValue());
+        return Z(R(x) | R(y));
       case '^':
-        return Z(x.bigintValue() ^ y.bigintValue());
+        return Z(R(x) ^ R(y));
       /*c8 ignore next*/default:
         throw new OutOfRange$1('BigIntBitwiseOp', op);
     }
@@ -24525,7 +24525,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _temp2 = _temp2.Value;
       }
       const index = _temp2;
-      if (index.numberValue() >= oldLen.numberValue() && oldLenDesc.Writable === exports.Value.false) {
+      if (R(index) >= R(oldLen) && oldLenDesc.Writable === exports.Value.false) {
         return exports.Value.false;
       }
       let _temp3 = OrdinaryDefineOwnProperty(A, P, Desc);
@@ -24538,8 +24538,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (succeeded === exports.Value.false) {
         return exports.Value.false;
       }
-      if (index.numberValue() >= oldLen.numberValue()) {
-        oldLenDesc.Value = F(index.numberValue() + 1);
+      if (R(index) >= R(oldLen)) {
+        oldLenDesc.Value = F(R(index) + 1);
         const succeeded = OrdinaryDefineOwnProperty(A, exports.Value('length'), oldLenDesc); // eslint-disable-line no-shadow
         Assert(succeeded === exports.Value.true, "succeeded === Value.true");
       }
@@ -24675,7 +24675,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp10 instanceof Completion) {
       _temp10 = _temp10.Value;
     }
-    const newLen = _temp10.numberValue();
+    const newLen = R(_temp10);
     let _temp11 = ToNumber(Desc.Value);
     /* c8 ignore if */
     if (_temp11 instanceof AbruptCompletion) {
@@ -24685,7 +24685,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp11 instanceof Completion) {
       _temp11 = _temp11.Value;
     }
-    const numberLen = _temp11.numberValue();
+    const numberLen = R(_temp11);
     if (newLen !== numberLen) {
       return exports.surroundingAgent.Throw('RangeError', 'InvalidArrayLength', Desc.Value);
     }
@@ -24699,7 +24699,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     Assert(_temp12, "X(IsDataDescriptor(oldLenDesc))");
     Assert(oldLenDesc.Configurable === exports.Value.false, "oldLenDesc.Configurable === Value.false");
-    const oldLen = oldLenDesc.Value.numberValue();
+    const oldLen = R(oldLenDesc.Value);
     if (newLen >= oldLen) {
       return OrdinaryDefineOwnProperty(A, exports.Value('length'), newLenDesc);
     }
@@ -24745,7 +24745,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (_temp15 instanceof Completion) {
           _temp15 = _temp15.Value;
         }
-        newLenDesc.Value = F(_temp15.numberValue() + 1);
+        newLenDesc.Value = F(R(_temp15) + 1);
         if (newWritable === false) {
           newLenDesc.Writable = exports.Value.false;
         }
@@ -25149,17 +25149,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let rawBytes;
     // One day, we will write our own IEEE 754 and two's complement encoder…
     if (type === 'Float32') {
-      if (Number.isNaN(value.numberValue())) {
+      if (Number.isNaN(R(value))) {
         rawBytes = isLittleEndian ? [...float32NaNLE] : [...float32NaNBE];
       } else {
-        throwawayDataView.setFloat32(0, value.numberValue(), isLittleEndian);
+        throwawayDataView.setFloat32(0, R(value), isLittleEndian);
         rawBytes = [...throwawayArray.subarray(0, 4)];
       }
     } else if (type === 'Float64') {
-      if (Number.isNaN(value.numberValue())) {
+      if (Number.isNaN(R(value))) {
         rawBytes = isLittleEndian ? [...float64NaNLE] : [...float64NaNBE];
       } else {
-        throwawayDataView.setFloat64(0, value.numberValue(), isLittleEndian);
+        throwawayDataView.setFloat64(0, R(value), isLittleEndian);
         rawBytes = [...throwawayArray.subarray(0, 8)];
       }
     } else {
@@ -25176,7 +25176,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const intValue = _temp4;
       const dataViewType = type === 'Uint8C' ? 'Uint8' : type;
-      throwawayDataView[`set${dataViewType}`](0, intValue.bigintValue ? intValue.bigintValue() : intValue.numberValue(), isLittleEndian);
+      throwawayDataView[`set${dataViewType}`](0, intValue.bigintValue ? R(intValue) : R(intValue), isLittleEndian);
       rawBytes = [...throwawayArray.subarray(0, n)];
     }
     return rawBytes;
@@ -25758,10 +25758,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (numeric === exports.Value.undefined) {
       return false;
     }
-    if (Object.is(numeric.numberValue(), +0)) {
+    if (Object.is(R(numeric), +0)) {
       return true;
     }
-    return numeric.numberValue() > 0 && Number.isSafeInteger(numeric.numberValue());
+    return R(numeric) > 0 && Number.isSafeInteger(R(numeric));
   }
 
   // 6.1.7 #array-index
@@ -25779,13 +25779,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (numeric === exports.Value.undefined) {
       return false;
     }
-    if (!Number.isInteger(numeric.numberValue())) {
+    if (!Number.isInteger(R(numeric))) {
       return false;
     }
-    if (Object.is(numeric.numberValue(), +0)) {
+    if (Object.is(R(numeric), +0)) {
       return true;
     }
-    return numeric.numberValue() > 0 && numeric.numberValue() < 2 ** 32 - 1;
+    return R(numeric) > 0 && R(numeric) < 2 ** 32 - 1;
   }
   function isNonNegativeInteger(argument) {
     return Number.isInteger(argument) && argument >= 0;
@@ -25948,15 +25948,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-day-number-and-time-within-day */
   function Day(t) {
-    return F(Math.floor(t.numberValue() / msPerDay));
+    return F(Math.floor(R(t) / msPerDay));
   }
   function TimeWithinDay(t) {
-    return F(mod$1(t.numberValue(), msPerDay));
+    return F(mod$1(R(t), msPerDay));
   }
 
   /** https://tc39.es/ecma262/#sec-year-number */
   function DaysInYear(y) {
-    y = y.numberValue();
+    y = R(y);
     if (mod$1(y, 4) !== 0) {
       return F(365);
     }
@@ -25971,34 +25971,34 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
   function DayFromYear(y) {
-    y = y.numberValue();
+    y = R(y);
     return F(365 * (y - 1970) + Math.floor((y - 1969) / 4) - Math.floor((y - 1901) / 100) + Math.floor((y - 1601) / 400));
   }
   function TimeFromYear(y) {
-    return F(msPerDay * DayFromYear(y).numberValue());
+    return F(msPerDay * R(DayFromYear(y)));
   }
   const msPerAverageYear = 12 * 30.436875 * msPerDay;
   function YearFromTime(t) {
-    t = t.numberValue();
+    t = R(t);
     let year = Math.floor((t + msPerAverageYear / 2) / msPerAverageYear) + 1970;
-    if (TimeFromYear(F(year)).numberValue() > t) {
+    if (R(TimeFromYear(F(year))) > t) {
       year -= 1;
     }
     return F(year);
   }
   function InLeapYear(t) {
-    if (DaysInYear(YearFromTime(t)).numberValue() === 365) {
+    if (R(DaysInYear(YearFromTime(t))) === 365) {
       return F(+0);
     }
-    if (DaysInYear(YearFromTime(t)).numberValue() === 366) {
+    if (R(DaysInYear(YearFromTime(t))) === 366) {
       return F(1);
     }
   }
 
   /** https://tc39.es/ecma262/#sec-month-number */
   function MonthFromTime(t) {
-    const dayWithinYear = DayWithinYear(t).numberValue();
-    const inLeapYear = InLeapYear(t).numberValue();
+    const dayWithinYear = R(DayWithinYear(t));
+    const inLeapYear = R(InLeapYear(t));
     if (dayWithinYear >= 0 && dayWithinYear < 31) {
       return F(+0);
     }
@@ -26037,14 +26037,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
   function DayWithinYear(t) {
-    return F(Day(t).numberValue() - DayFromYear(YearFromTime(t)).numberValue());
+    return F(R(Day(t)) - R(DayFromYear(YearFromTime(t))));
   }
 
   /** https://tc39.es/ecma262/#sec-date-number */
   function DateFromTime(t) {
-    const dayWithinYear = DayWithinYear(t).numberValue();
-    const monthFromTime = MonthFromTime(t).numberValue();
-    const inLeapYear = InLeapYear(t).numberValue();
+    const dayWithinYear = R(DayWithinYear(t));
+    const monthFromTime = R(MonthFromTime(t));
+    const inLeapYear = R(InLeapYear(t));
     switch (monthFromTime) {
       case 0:
         return F(dayWithinYear + 1);
@@ -26075,7 +26075,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-week-day */
   function WeekDay(t) {
-    return F(mod$1(Day(t).numberValue() + 4, 7));
+    return F(mod$1(R(Day(t)) + 4, 7));
   }
 
   /** https://tc39.es/ecma262/#sec-local-time-zone-adjustment */
@@ -26086,31 +26086,31 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-localtime */
   function LocalTime(t) {
-    return F(t.numberValue() + LocalTZA());
+    return F(R(t) + LocalTZA());
   }
 
   /** https://tc39.es/ecma262/#sec-utc-t */
   function UTC(t) {
-    return F(t.numberValue() - LocalTZA());
+    return F(R(t) - LocalTZA());
   }
 
   /** https://tc39.es/ecma262/#sec-hours-minutes-second-and-milliseconds */
   function HourFromTime(t) {
-    return F(mod$1(Math.floor(t.numberValue() / msPerHour), HoursPerDay));
+    return F(mod$1(Math.floor(R(t) / msPerHour), HoursPerDay));
   }
   function MinFromTime(t) {
-    return F(mod$1(Math.floor(t.numberValue() / msPerMinute), MinutesPerHour));
+    return F(mod$1(Math.floor(R(t) / msPerMinute), MinutesPerHour));
   }
   function SecFromTime(t) {
-    return F(mod$1(Math.floor(t.numberValue() / msPerSecond), SecondsPerMinute));
+    return F(mod$1(Math.floor(R(t) / msPerSecond), SecondsPerMinute));
   }
   function msFromTime(t) {
-    return F(mod$1(t.numberValue(), msPerSecond));
+    return F(mod$1(R(t), msPerSecond));
   }
 
   /** https://tc39.es/ecma262/#sec-maketime */
   function MakeTime(hour, min, sec, ms) {
-    if (!Number.isFinite(hour.numberValue()) || !Number.isFinite(min.numberValue()) || !Number.isFinite(sec.numberValue()) || !Number.isFinite(ms.numberValue())) {
+    if (!Number.isFinite(R(hour)) || !Number.isFinite(R(min)) || !Number.isFinite(R(sec)) || !Number.isFinite(R(ms))) {
       return F(NaN);
     }
     let _temp = ToIntegerOrInfinity(hour);
@@ -26148,7 +26148,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-makeday */
   function MakeDay(year, month, date) {
-    if (!Number.isFinite(year.numberValue()) || !Number.isFinite(month.numberValue()) || !Number.isFinite(date.numberValue())) {
+    if (!Number.isFinite(R(year)) || !Number.isFinite(R(month)) || !Number.isFinite(R(date))) {
       return F(NaN);
     }
     let _temp5 = ToIntegerOrInfinity(year);
@@ -26174,17 +26174,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const dt = _temp7;
     const ym = y + Math.floor(m / 12);
     const mn = mod$1(m, 12);
-    const ymday = DayFromYear(F(ym + (mn > 1 ? 1 : 0))).numberValue() - 365 * (mn > 1 ? 1 : 0) + daysWithinYearToEndOfMonth[mn];
+    const ymday = R(DayFromYear(F(ym + (mn > 1 ? 1 : 0)))) - 365 * (mn > 1 ? 1 : 0) + daysWithinYearToEndOfMonth[mn];
     const t = F(ymday * msPerDay);
-    return F(Day(t).numberValue() + dt - 1);
+    return F(R(Day(t)) + dt - 1);
   }
 
   /** https://tc39.es/ecma262/#sec-makedate */
   function MakeDate(day, time) {
-    if (!Number.isFinite(day.numberValue()) || !Number.isFinite(time.numberValue())) {
+    if (!Number.isFinite(R(day)) || !Number.isFinite(R(time))) {
       return F(NaN);
     }
-    return F(day.numberValue() * msPerDay + time.numberValue());
+    return F(R(day) * msPerDay + R(time));
   }
 
   /** https://tc39.es/ecma262/#sec-timeclip */
@@ -26194,7 +26194,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return F(NaN);
     }
     // 2. If abs(ℝ(time)) > 8.64 × 1015, return NaN.
-    if (Math.abs(time.numberValue()) > 8.64e15) {
+    if (Math.abs(R(time)) > 8.64e15) {
       return F(NaN);
     }
     // 3. Return 𝔽(! ToIntegerOrInfinity(time)).
@@ -28116,7 +28116,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 8. Let elementSize be the Element Size value specified in Table 61 for arrayTypeName.
     const elementSize = typedArrayInfoByName[arrayTypeName].ElementSize;
     // 9. Let indexedPosition be (ℝ(index) × elementSize) + offset.
-    const indexedPosition = index.numberValue() * elementSize + offset;
+    const indexedPosition = R(index) * elementSize + offset;
     // 10. Let elementType be the Element Type value in Table 61 for arrayTypeName.
     const elementType = typedArrayInfoByName[arrayTypeName].ElementType;
     // 11. Return GetValueFromBuffer(buffer, indexedPosition, elementType, true, Unordered).
@@ -28172,7 +28172,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 10. Let elementSize be the Element Size value specified in Table 61 for arrayTypeName.
     const elementSize = typedArrayInfoByName[arrayTypeName].ElementSize;
     // 11. Let indexedPosition be (ℝ(index) × elementSize) + offset.
-    const indexedPosition = index.numberValue() * elementSize + offset;
+    const indexedPosition = R(index) * elementSize + offset;
     // 12. Let elementType be the Element Type value in Table 61 for arrayTypeName.
     const elementType = typedArrayInfoByName[arrayTypeName].ElementType;
     // 13. Perform SetValueInBuffer(buffer, indexedPosition, elementType, numValue, true, Unordered).
@@ -28831,7 +28831,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _temp5 = _temp5.Value;
       }
       const result = _temp5;
-      return result.numberValue();
+      return R(result);
     });
     // 10. Set M.[[Exports]] to sortedExports.
     M.Exports = new ValueSet(sortedExports);
@@ -29888,7 +29888,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp21 instanceof Completion) {
       _temp21 = _temp21.Value;
     }
-    return _temp21.numberValue();
+    return R(_temp21);
   }
 
   /** https://tc39.es/ecma262/#sec-createlistfromarraylike */
@@ -33853,7 +33853,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             if (_temp5 instanceof Completion) {
               _temp5 = _temp5.Value;
             }
-            const cmp = _temp5.numberValue();
+            const cmp = R(_temp5);
             if (cmp <= 0) {
               items[o] = lBuffer[l];
               o += 1;
@@ -37360,7 +37360,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           _temp2 = _temp2.Value;
         }
         intLen = _temp2;
-        if (intLen.numberValue() !== len.numberValue()) {
+        if (R(intLen) !== R(len)) {
           return exports.surroundingAgent.Throw('RangeError', 'InvalidArrayLength', len);
         }
       }
@@ -37401,7 +37401,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_temp5 instanceof Completion) {
         _temp5 = _temp5.Value;
       }
-      Assert(_temp5.numberValue() === numberOfArgs, "X(Get(array, Value('length'))).numberValue() === numberOfArgs");
+      Assert(R(_temp5) === numberOfArgs, "R(X(Get(array, Value('length')))) === numberOfArgs");
       return array;
     }
     throw new OutOfRange$1('ArrayConstructor', numberOfArgs);
@@ -37773,7 +37773,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     bigint = _temp3;
     // 3. Let mod be the BigInt value that represents bigint modulo 2bits.
     // 4. If mod ≥ 2^bits - 1, return mod - 2^bits; otherwise, return mod.
-    return Z(BigInt.asIntN(bits, bigint.bigintValue()));
+    return Z(BigInt.asIntN(bits, R(bigint)));
   }
 
   /** https://tc39.es/ecma262/#sec-bigint.asuintn */
@@ -37803,7 +37803,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     bigint = _temp5;
     // 3. Let mod be ℝ(bigint) modulo 2 ** bits.
     // 4. If mod ≥ 2 ** (bits - 1), return Z(mod - 2 ** bits); otherwise, return Z(mod).
-    return Z(BigInt.asUintN(bits, bigint.bigintValue()));
+    return Z(BigInt.asUintN(bits, R(bigint)));
   }
   BigInt_asUintN.section = 'https://tc39.es/ecma262/#sec-bigint.asuintn';
   function bootstrapBigInt(realmRec) {
@@ -37893,7 +37893,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     //    algorithm is implementation-dependent, however the algorithm should be a
     //    generalization of that specified in 6.1.6.2.23.
     // TODO: Implementation stringification
-    return exports.Value(x.bigintValue().toString(radixNumber));
+    return exports.Value(R(x).toString(radixNumber));
   }
 
   /** https://tc39.es/ecma262/#sec-bigint.prototype.tostring */
@@ -38040,7 +38040,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (f < 0 || f > 100) {
       return exports.surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toExponential');
     }
-    return exports.Value(x.numberValue().toExponential(fractionDigits === exports.Value.undefined ? undefined : f));
+    return exports.Value(R(x).toExponential(fractionDigits === exports.Value.undefined ? undefined : f));
   }
 
   /** https://tc39.es/ecma262/#sec-number.prototype.tofixed */
@@ -38081,7 +38081,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       return _temp5;
     }
-    return exports.Value(x.numberValue().toFixed(f));
+    return exports.Value(R(x).toFixed(f));
   }
 
   /** https://tc39.es/ecma262/#sec-number.prototype.tolocalestring */
@@ -38140,7 +38140,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (p < 1 || p > 100) {
       return exports.surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toPrecision');
     }
-    return exports.Value(x.numberValue().toPrecision(p));
+    return exports.Value(R(x).toPrecision(p));
   }
 
   /** https://tc39.es/ecma262/#sec-number.prototype.tostring */
@@ -38190,7 +38190,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // used for digits with values 10 through 35. The precise algorithm
     // is implementation-dependent, however the algorithm should be a
     // generalization of that specified in 7.1.12.1.
-    return exports.Value(x.numberValue().toString(radixNumber));
+    return exports.Value(R(x).toString(radixNumber));
   }
 
   /** https://tc39.es/ecma262/#sec-number.prototype.valueof */
@@ -38224,7 +38224,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const prim = _temp;
       if (prim instanceof BigIntValue) {
-        n = F(Number(prim.bigintValue()));
+        n = F(Number(R(prim)));
       } else {
         n = prim;
       }
@@ -38288,7 +38288,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp3 = _temp3.Value;
     }
     if (_temp3 === exports.Value.true) {
-      if (Math.abs(number.numberValue()) <= 2 ** 53 - 1) {
+      if (Math.abs(R(number)) <= 2 ** 53 - 1) {
         return exports.Value.true;
       }
     }
@@ -38489,9 +38489,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // b. If Type(targetLen) is Number, then
       if (targetLen instanceof NumberValue) {
         // i. If targetLen is +∞𝔽, set L to +∞.
-        if (targetLen.numberValue() === +Infinity) {
+        if (R(targetLen) === +Infinity) {
           L = +Infinity;
-        } else if (targetLen.numberValue() === -Infinity) {
+        } else if (R(targetLen) === -Infinity) {
           // ii. Else if targetLen is -∞𝔽, set L to 0.
           L = 0;
         } else {
@@ -38852,13 +38852,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const n = _temp;
     if (n.isNaN()) {
       return n;
-    } else if (Object.is(n.numberValue(), -0)) {
+    } else if (Object.is(R(n), -0)) {
       return F(+0);
     } else if (n.isInfinity()) {
       return F(Infinity);
     }
-    if (n.numberValue() < 0) {
-      return F(-n.numberValue());
+    if (R(n) < 0) {
+      return F(-R(n));
     }
     return n;
   }
@@ -38878,14 +38878,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const n = _temp2;
     if (n.isNaN()) {
       return n;
-    } else if (n.numberValue() > 1) {
+    } else if (R(n) > 1) {
       return F(NaN);
-    } else if (n.numberValue() < -1) {
+    } else if (R(n) < -1) {
       return F(NaN);
-    } else if (n.numberValue() === 1) {
+    } else if (R(n) === 1) {
       return F(+0);
     }
-    return F(Math.acos(n.numberValue()));
+    return F(Math.acos(R(n)));
   }
 
   /** https://tc39.es/ecma262/#sec-math.pow */
@@ -39000,7 +39000,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           if (_temp7 instanceof Completion) {
             _temp7 = _temp7.Value;
           }
-          args[i] = _temp7.numberValue();
+          args[i] = R(_temp7);
         }
         return F(Math[name](...args));
       };
@@ -39216,7 +39216,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (t.isNaN()) {
       return F(NaN);
     }
-    return F((t.numberValue() - LocalTime(t).numberValue()) / msPerMinute);
+    return F((R(t) - R(LocalTime(t))) / msPerMinute);
   }
 
   /** https://tc39.es/ecma262/#sec-date.prototype.getutcdate */
@@ -40173,16 +40173,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp67 = _temp67.Value;
     }
     const t = _temp67;
-    if (!Number.isFinite(t.numberValue())) {
+    if (!Number.isFinite(R(t))) {
       return exports.surroundingAgent.Throw('RangeError', 'DateInvalidTime');
     }
-    const year = YearFromTime(t).numberValue();
-    const month = MonthFromTime(t).numberValue() + 1;
-    const date = DateFromTime(t).numberValue();
-    const hour = HourFromTime(t).numberValue();
-    const min = MinFromTime(t).numberValue();
-    const sec = SecFromTime(t).numberValue();
-    const ms = msFromTime(t).numberValue();
+    const year = R(YearFromTime(t));
+    const month = R(MonthFromTime(t)) + 1;
+    const date = R(DateFromTime(t));
+    const hour = R(HourFromTime(t));
+    const min = R(MinFromTime(t));
+    const sec = R(SecFromTime(t));
+    const ms = R(msFromTime(t));
 
     // TODO: figure out if there can be invalid years.
     let YYYY = String(year);
@@ -40224,7 +40224,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp69 = _temp69.Value;
     }
     const tv = _temp69;
-    if (tv instanceof NumberValue && !Number.isFinite(tv.numberValue())) {
+    if (tv instanceof NumberValue && !Number.isFinite(R(tv))) {
       return exports.Value.null;
     }
     return Invoke(O, exports.Value('toISOString'));
@@ -40274,9 +40274,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function TimeString(tv) {
     Assert(tv instanceof NumberValue, "tv instanceof NumberValue");
     Assert(!tv.isNaN(), "!tv.isNaN()");
-    const hour = String(HourFromTime(tv).numberValue()).padStart(2, '0');
-    const minute = String(MinFromTime(tv).numberValue()).padStart(2, '0');
-    const second = String(SecFromTime(tv).numberValue()).padStart(2, '0');
+    const hour = String(R(HourFromTime(tv))).padStart(2, '0');
+    const minute = String(R(MinFromTime(tv))).padStart(2, '0');
+    const second = String(R(SecFromTime(tv))).padStart(2, '0');
     return exports.Value(`${hour}:${minute}:${second} GMT`);
   }
 
@@ -40290,10 +40290,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function DateString(tv) {
     Assert(tv instanceof NumberValue, "tv instanceof NumberValue");
     Assert(!tv.isNaN(), "!tv.isNaN()");
-    const weekday = daysOfTheWeek[WeekDay(tv).numberValue()];
-    const month = monthsOfTheYear[MonthFromTime(tv).numberValue()];
-    const day = String(DateFromTime(tv).numberValue()).padStart(2, '0');
-    const yv = YearFromTime(tv).numberValue();
+    const weekday = daysOfTheWeek[R(WeekDay(tv))];
+    const month = monthsOfTheYear[R(MonthFromTime(tv))];
+    const day = String(R(DateFromTime(tv))).padStart(2, '0');
+    const yv = R(YearFromTime(tv));
     const yearSign = yv >= 0 ? '' : '-';
     const year = exports.Value(String(Math.abs(yv)));
     let _temp71 = StringPad(year, F(4), exports.Value('0'), 'start');
@@ -40313,8 +40313,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     Assert(!tv.isNaN(), "!tv.isNaN()");
     const offset = LocalTZA();
     const offsetSign = '+' ;
-    const offsetMin = String(MinFromTime(F(Math.abs(offset))).numberValue()).padStart(2, '0');
-    const offsetHour = String(HourFromTime(F(Math.abs(offset))).numberValue()).padStart(2, '0');
+    const offsetMin = String(R(MinFromTime(F(Math.abs(offset))))).padStart(2, '0');
+    const offsetHour = String(R(HourFromTime(F(Math.abs(offset))))).padStart(2, '0');
     const tzName = '';
     return exports.Value(`${offsetSign}${offsetHour}${offsetMin}${tzName}`);
   }
@@ -40376,10 +40376,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (tv.isNaN()) {
       return exports.Value('Invalid Date');
     }
-    const weekday = daysOfTheWeek[WeekDay(tv).numberValue()];
-    const month = monthsOfTheYear[MonthFromTime(tv).numberValue()];
-    const day = String(DateFromTime(tv).numberValue()).padStart(2, '0');
-    const yv = YearFromTime(tv).numberValue();
+    const weekday = daysOfTheWeek[R(WeekDay(tv))];
+    const month = monthsOfTheYear[R(MonthFromTime(tv))];
+    const day = String(R(DateFromTime(tv))).padStart(2, '0');
+    const yv = R(YearFromTime(tv));
     const yearSign = yv >= 0 ? '' : '-';
     const year = exports.Value(String(Math.abs(yv)));
     let _temp74 = StringPad(year, F(4), exports.Value('0'), 'start');
@@ -40796,7 +40796,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   const kRegExpStringIteratorPrototype = exports.Value('%RegExpStringIteratorPrototype%');
 
   /** https://tc39.es/ecma262/#sec-createregexpstringiterator */
-  function CreateRegExpStringIterator(R, S, global, fullUnicode) {
+  function CreateRegExpStringIterator(R$1, S, global, fullUnicode) {
     // 1. Assert: Type(S) is String.
     Assert(S instanceof StringValue, "S instanceof JSStringValue");
     // 2. Assert: Type(global) is Boolean.
@@ -40807,7 +40807,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const closure = function* closure() {
       // a. Repeat,
       while (true) {
-        let _temp = RegExpExec(R, S);
+        let _temp = RegExpExec(R$1, S);
         /* c8 ignore if */
         if (_temp instanceof AbruptCompletion) {
           return _temp;
@@ -40858,7 +40858,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         const matchStr = _temp3;
         // v. If matchStr is the empty String, then
         if (matchStr.stringValue() === '') {
-          let _temp7 = Get(R, exports.Value('lastIndex'));
+          let _temp7 = Get(R$1, exports.Value('lastIndex'));
           /* c8 ignore if */
           if (_temp7 instanceof AbruptCompletion) {
             return _temp7;
@@ -40877,7 +40877,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             _temp4 = _temp4.Value;
           }
           // i. Let thisIndex be ℝ(? ToLength(? Get(R, "lastIndex"))).
-          const thisIndex = _temp4.numberValue();
+          const thisIndex = R(_temp4);
           // ii. Let nextIndex be ! AdvanceStringIndex(S, thisIndex, fullUnicode).
           let _temp5 = AdvanceStringIndex(S, thisIndex, fullUnicode);
           Assert(!(_temp5 instanceof AbruptCompletion), "AdvanceStringIndex(S, thisIndex, fullUnicode)" + ' returned an abrupt completion');
@@ -40887,7 +40887,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           }
           const nextIndex = _temp5;
           // iii. Perform ? Set(R, "lastIndex", 𝔽(nextIndex), true).
-          let _temp6 = Set$1(R, exports.Value('lastIndex'), F(nextIndex), exports.Value.true);
+          let _temp6 = Set$1(R$1, exports.Value('lastIndex'), F(nextIndex), exports.Value.true);
           /* c8 ignore if */
           if (_temp6 instanceof AbruptCompletion) {
             return _temp6;
@@ -41003,15 +41003,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   /** https://tc39.es/ecma262/#sec-regexpbuiltinexec */
-  function RegExpBuiltinExec(R, S) {
+  function RegExpBuiltinExec(R$1, S) {
     // 1. Assert: R is an initialized RegExp instance.
-    Assert('RegExpMatcher' in R, "'RegExpMatcher' in R");
+    Assert('RegExpMatcher' in R$1, "'RegExpMatcher' in R");
     // 2. Assert: Type(S) is String.
     Assert(S instanceof StringValue, "S instanceof JSStringValue");
     // 3. Let length be the number of code units in S.
     const length = S.stringValue().length;
     // 4. Let lastIndex be ? ℝ(ToLength(? Get(R, "lastIndex"))).
-    let _temp25 = Get(R, exports.Value('lastIndex'));
+    let _temp25 = Get(R$1, exports.Value('lastIndex'));
     /* c8 ignore if */
     if (_temp25 instanceof AbruptCompletion) {
       return _temp25;
@@ -41029,9 +41029,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp6 instanceof Completion) {
       _temp6 = _temp6.Value;
     }
-    let lastIndex = _temp6.numberValue();
+    let lastIndex = R(_temp6);
     // 5. Let flags be R.[[OriginalFlags]].
-    const flags = R.OriginalFlags.stringValue();
+    const flags = R$1.OriginalFlags.stringValue();
     // 6. If flags contains "g", let global be true; else let global be false.
     const global = flags.includes('g');
     // 7. If flags contains "y", let sticky be true; else let sticky be false.
@@ -41043,7 +41043,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       lastIndex = 0;
     }
     // 10. Let matcher be R.[[RegExpMatcher]].
-    const matcher = R.RegExpMatcher;
+    const matcher = R$1.RegExpMatcher;
     // 11. If flags contains "u", let fullUnicode be true; else let fullUnicode be false.
     const fullUnicode = flags.includes('u');
     // 12. Let matchSucceeded be false.
@@ -41055,7 +41055,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (lastIndex > length) {
         // i. If global is true or sticky is true, then
         if (global || sticky) {
-          let _temp7 = Set$1(R, exports.Value('lastIndex'), F(+0), exports.Value.true);
+          let _temp7 = Set$1(R$1, exports.Value('lastIndex'), F(+0), exports.Value.true);
           /* c8 ignore if */
           if (_temp7 instanceof AbruptCompletion) {
             return _temp7;
@@ -41074,7 +41074,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (r === 'failure') {
         // i. If sticky is true, then
         if (sticky) {
-          let _temp8 = Set$1(R, exports.Value('lastIndex'), F(+0), exports.Value.true);
+          let _temp8 = Set$1(R$1, exports.Value('lastIndex'), F(+0), exports.Value.true);
           /* c8 ignore if */
           if (_temp8 instanceof AbruptCompletion) {
             return _temp8;
@@ -41112,7 +41112,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     // 16. If global is true or sticky is true, then
     if (global || sticky) {
-      let _temp10 = Set$1(R, exports.Value('lastIndex'), F(e), exports.Value.true);
+      let _temp10 = Set$1(R$1, exports.Value('lastIndex'), F(e), exports.Value.true);
       /* c8 ignore if */
       if (_temp10 instanceof AbruptCompletion) {
         return _temp10;
@@ -41125,7 +41125,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 17. Let n be the number of elements in r's captures List.
     const n = r.captures.length - 1;
     // 18. Assert: n = R.[[RegExpRecord]].[[CapturingGroupsCount]].
-    Assert(n === R.parsedPattern.capturingGroups.length, "n === R.parsedPattern.capturingGroups.length");
+    Assert(n === R$1.parsedPattern.capturingGroups.length, "n === R.parsedPattern.capturingGroups.length");
     // 19. Assert: n < 2^32 - 1.
     Assert(n < 2 ** 32 - 1, "n < (2 ** 32) - 1");
     // 20. Let A be ! ArrayCreate(n + 1).
@@ -41143,7 +41143,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp12 instanceof Completion) {
       _temp12 = _temp12.Value;
     }
-    Assert(_temp12.numberValue() === n + 1, "X(Get(A, Value('length'))).numberValue() === n + 1");
+    Assert(R(_temp12) === n + 1, "MathematicalValue(X(Get(A, Value('length')))) === n + 1");
     // 22. Perform ! CreateDataPropertyOrThrow(A, "index", 𝔽(lastIndex)).
     let _temp13 = CreateDataPropertyOrThrow(A, exports.Value('index'), F(lastIndex));
     Assert(!(_temp13 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, Value('index'), F(lastIndex))" + ' returned an abrupt completion');
@@ -41187,7 +41187,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let groups;
     let hasGroups;
     // 30. If R contains any GroupName, then
-    if (R.parsedPattern.groupSpecifiers.size > 0) {
+    if (R$1.parsedPattern.groupSpecifiers.size > 0) {
       // a. Let groups be OrdinaryObjectCreate(null).
       groups = OrdinaryObjectCreate(exports.Value.null);
       // b. Let hasGroups be true.
@@ -41272,9 +41272,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _temp21 = _temp21.Value;
       }
       // f. If the ith capture of R was defined with a GroupName, then
-      if (R.parsedPattern.capturingGroups[i - 1].GroupSpecifier) {
+      if (R$1.parsedPattern.capturingGroups[i - 1].GroupSpecifier) {
         // i. Let s be the StringValue of the corresponding RegExpIdentifierName.
-        const s = exports.Value(R.parsedPattern.capturingGroups[i - 1].GroupSpecifier);
+        const s = exports.Value(R$1.parsedPattern.capturingGroups[i - 1].GroupSpecifier);
         // ii. Perform ! CreateDataPropertyOrThrow(groups, s, capturedValue).
         let _temp22 = CreateDataPropertyOrThrow(groups, s, capturedValue);
         Assert(!(_temp22 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(groups, s, capturedValue)" + ' returned an abrupt completion');
@@ -41646,7 +41646,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
               _temp41 = _temp41.Value;
             }
             // a. Let thisIndex be ℝ(? ToLength(? Get(rx, "lastIndex"))).
-            const thisIndex = _temp41.numberValue();
+            const thisIndex = R(_temp41);
             // b. Let nextIndex be AdvanceStringIndex(S, thisIndex, fullUnicode).
             const nextIndex = AdvanceStringIndex(S, thisIndex, fullUnicode);
             // c. Perform ? Set(rx, "lastIndex", 𝔽(nextIndex), true).
@@ -41935,7 +41935,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
               _temp62 = _temp62.Value;
             }
             // a. Let thisIndex be ℝ(? ToLength(? Get(rx, "lastIndex"))).
-            const thisIndex = _temp62.numberValue();
+            const thisIndex = R(_temp62);
             // b. Let nextIndex be AdvanceStringIndex(S, thisIndex, fullUnicode).
             const nextIndex = AdvanceStringIndex(S, thisIndex, fullUnicode);
             // c. Perform ? Set(rx, "lastIndex", 𝔽(nextIndex), true).
@@ -42330,7 +42330,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_temp92 instanceof Completion) {
         _temp92 = _temp92.Value;
       }
-      lim = _temp92.numberValue();
+      lim = R(_temp92);
     }
     const size = S.stringValue().length;
     let p = 0;
@@ -42402,7 +42402,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (_temp98 instanceof Completion) {
           _temp98 = _temp98.Value;
         }
-        let e = _temp98.numberValue();
+        let e = R(_temp98);
         e = Math.min(e, size);
         if (e === p) {
           q = AdvanceStringIndex(S, q, unicodeMatching);
@@ -45500,7 +45500,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp76 instanceof Completion) {
       _temp76 = _temp76.Value;
     }
-    let position = _temp76.numberValue();
+    let position = R(_temp76);
     // 11. Repeat, while position is not -1
     while (position !== -1) {
       // a. Append position to the end of matchPositions.
@@ -45512,7 +45512,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_temp77 instanceof Completion) {
         _temp77 = _temp77.Value;
       }
-      position = _temp77.numberValue();
+      position = R(_temp77);
     }
     // 12. Let endOfLastMatch be 0.
     let endOfLastMatch = 0;
@@ -45762,8 +45762,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp93 instanceof Completion) {
       _temp93 = _temp93.Value;
     }
-    const R = _temp93;
-    if (lim.numberValue() === 0) {
+    const R$1 = _temp93;
+    if (R(lim) === 0) {
       return A;
     }
     if (separator === exports.Value.undefined) {
@@ -45776,7 +45776,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return A;
     }
     if (s === 0) {
-      if (R.stringValue() !== '') {
+      if (R$1.stringValue() !== '') {
         let _temp95 = CreateDataPropertyOrThrow(A, exports.Value('0'), S);
         Assert(!(_temp95 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, Value('0'), S)" + ' returned an abrupt completion');
         /* c8 ignore if */
@@ -45788,7 +45788,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     let q = p;
     while (q !== s) {
-      const e = SplitMatch(S, q, R);
+      const e = SplitMatch(S, q, R$1);
       if (e === false) {
         q += 1;
       } else {
@@ -45809,7 +45809,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             _temp96 = _temp96.Value;
           }
           lengthA += 1;
-          if (lengthA === lim.numberValue()) {
+          if (lengthA === R(lim)) {
             return A;
           }
           p = e;
@@ -46400,7 +46400,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       elements.push(nextCU);
       nextIndex += 1;
     }
-    const result = elements.reduce((previous, current) => previous + String.fromCharCode(current.numberValue()), '');
+    const result = elements.reduce((previous, current) => previous + String.fromCharCode(R(current)), '');
     return exports.Value(result);
   }
 
@@ -46433,11 +46433,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         return exports.surroundingAgent.Throw('RangeError', 'StringCodePointInvalid', next);
       }
       // c. If ℝ(nextCP) < 0 or ℝ(nextCP) > 0x10FFFF, throw a RangeError exception.
-      if (nextCP.numberValue() < 0 || nextCP.numberValue() > 0x10FFFF) {
+      if (R(nextCP) < 0 || R(nextCP) > 0x10FFFF) {
         return exports.surroundingAgent.Throw('RangeError', 'StringCodePointInvalid', nextCP);
       }
       // d. Set result to the string-concatenation of result and UTF16EncodeCodePoint(ℝ(nextCP)).
-      result += UTF16EncodeCodePoint(nextCP.numberValue());
+      result += UTF16EncodeCodePoint(R(nextCP));
     }
     // 3. Assert: If codePoints is empty, then result is the empty String.
     Assert(!(codePoints.length === 0) || result.length === 0, "!(codePoints.length === 0) || result.length === 0");
@@ -47258,7 +47258,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
     }
     // 5. If key is -0𝔽, set key to +0𝔽.
-    if (key instanceof NumberValue && Object.is(key.numberValue(), -0)) {
+    if (key instanceof NumberValue && Object.is(R(key), -0)) {
       key = F(+0);
     }
     // 6. Let p be the Record { [[Key]]: key, [[Value]]: value }.
@@ -47360,7 +47360,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
     }
     // 5. If value is -0𝔽, set value to +0𝔽.
-    if (value instanceof NumberValue && Object.is(value.numberValue(), -0)) {
+    if (value instanceof NumberValue && Object.is(R(value), -0)) {
       value = F(+0);
     }
     // 6. Append value as the last element of entries.
@@ -49938,29 +49938,29 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp3 instanceof Completion) {
       _temp3 = _temp3.Value;
     }
-    let R = _temp3.numberValue();
+    let R$1 = R(_temp3);
     let stripPrefix = true;
-    if (R !== 0) {
-      if (R < 2 || R > 36) {
+    if (R$1 !== 0) {
+      if (R$1 < 2 || R$1 > 36) {
         return F(NaN);
       }
-      if (R !== 16) {
+      if (R$1 !== 16) {
         stripPrefix = false;
       }
     } else {
-      R = 10;
+      R$1 = 10;
     }
     if (stripPrefix === true) {
       if (S.length >= 2 && (S.startsWith('0x') || S.startsWith('0X'))) {
         S = S.slice(2);
-        R = 16;
+        R$1 = 16;
       }
     }
-    const Z = S.slice(0, searchNotRadixDigit(S, R));
+    const Z = S.slice(0, searchNotRadixDigit(S, R$1));
     if (Z === '') {
       return F(NaN);
     }
-    const mathInt = stringToRadixNumber(Z, R);
+    const mathInt = stringToRadixNumber(Z, R$1);
     if (mathInt === 0) {
       if (sign === -1) {
         return F(-0);
@@ -51676,8 +51676,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (y.isNaN()) {
       return F(-1);
     }
-    x = x.numberValue ? x.numberValue() : x.bigintValue();
-    y = y.numberValue ? y.numberValue() : y.bigintValue();
+    x = x.numberValue ? R(x) : R(x);
+    y = y.numberValue ? R(y) : R(y);
     // 6. If x < y, return -1𝔽.
     if (x < y) {
       return F(-1);
@@ -54369,6 +54369,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return new BigIntValue(x);
   }
 
+  // #ℝ
+
+  function R(x) {
+    if (x instanceof BigIntValue) {
+      return x.bigintValue(); // eslint-disable-line @engine262/mathematical-value
+    }
+
+    Assert(x instanceof NumberValue, "x instanceof NumberValue");
+    return x.numberValue(); // eslint-disable-line @engine262/mathematical-value
+  }
+
   // 6.2.5.1 IsAccessorDescriptor
   function IsAccessorDescriptor(Desc) {
     if (Desc instanceof UndefinedValue) {
@@ -54851,16 +54862,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (IsIntegralNumber(index) === exports.Value.false) {
       return exports.Value.undefined;
     }
-    if (Object.is(index.numberValue(), -0)) {
+    if (Object.is(R(index), -0)) {
       return exports.Value.undefined;
     }
     const str = S.StringData;
     Assert(str instanceof StringValue, "str instanceof JSStringValue");
     const len = str.stringValue().length;
-    if (index.numberValue() < 0 || len <= index.numberValue()) {
+    if (R(index) < 0 || len <= R(index)) {
       return exports.Value.undefined;
     }
-    const resultStr = str.stringValue()[index.numberValue()];
+    const resultStr = str.stringValue()[R(index)];
     return exports.Descriptor({
       Value: exports.Value(resultStr),
       Writable: exports.Value.false,
@@ -54961,7 +54972,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (argument.isNaN() || argument.isInfinity()) {
       return exports.Value.false;
     }
-    if (Math.floor(Math.abs(argument.numberValue())) !== Math.abs(argument.numberValue())) {
+    if (Math.floor(Math.abs(R(argument))) !== Math.abs(R(argument))) {
       return exports.Value.false;
     }
     return exports.Value.true;
@@ -55230,16 +55241,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         return exports.Value.undefined;
       }
       // h. If nx is -∞ or ny is +∞, return true.
-      if (nx.numberValue && nx.numberValue() === -Infinity || ny.numberValue && ny.numberValue() === +Infinity) {
+      if (nx.numberValue && R(nx) === -Infinity || ny.numberValue && R(ny) === +Infinity) {
         return exports.Value.true;
       }
       // i. If nx is +∞ or ny is -∞, return false.
-      if (nx.numberValue && nx.numberValue() === +Infinity || ny.numberValue && ny.numberValue() === -Infinity) {
+      if (nx.numberValue && R(nx) === +Infinity || ny.numberValue && R(ny) === -Infinity) {
         return exports.Value.false;
       }
       // j. If the mathematical value of nx is less than the mathematical value of ny, return true; otherwise return false.
-      const a = nx.numberValue ? nx.numberValue() : nx.bigintValue();
-      const b = ny.numberValue ? ny.numberValue() : ny.bigintValue();
+      const a = nx.numberValue ? R(nx) : R(nx);
+      const b = ny.numberValue ? R(ny) : R(ny);
       return a < b ? exports.Value.true : exports.Value.false;
     }
   }
@@ -55353,8 +55364,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         return exports.Value.false;
       }
       // b. If the mathematical value of x is equal to the mathematical value of y, return true; otherwise return false.
-      const a = x.numberValue ? x.numberValue() : x.bigintValue();
-      const b = y.numberValue ? y.numberValue() : y.bigintValue();
+      const a = x.numberValue ? R(x) : R(x);
+      const b = y.numberValue ? R(y) : R(y);
       return a == b ? exports.Value.true : exports.Value.false; // eslint-disable-line eqeqeq
     }
     // 13. Return false.
@@ -55391,7 +55402,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (IsIntegralNumber(index) === exports.Value.false) {
       return exports.Value.false;
     }
-    index = index.numberValue();
+    index = R(index);
     if (Object.is(index, -0)) {
       return exports.Value.false;
     }
@@ -55528,7 +55539,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return argument;
     } else if (argument instanceof NumberValue) {
       // If argument is +0𝔽, -0𝔽, or NaN, return false; otherwise return true.
-      if (argument.numberValue() === 0 || argument.isNaN()) {
+      if (R(argument) === 0 || argument.isNaN()) {
         return exports.Value.false;
       }
       return exports.Value.true;
@@ -55543,7 +55554,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return exports.Value.true;
     } else if (argument instanceof BigIntValue) {
       // If argument is 0ℤ, return false; otherwise return true.
-      if (argument.bigintValue() === 0n) {
+      if (R(argument) === 0n) {
         return exports.Value.false;
       }
       return exports.Value.true;
@@ -55643,18 +55654,18 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let number be ? ToNumber(argument).
     const number = _temp7;
     // 2. If number is NaN, +0𝔽, or -0𝔽, return 0.
-    if (number.isNaN() || number.numberValue() === 0) {
+    if (number.isNaN() || R(number) === 0) {
       return +0;
     }
     // 3. If number is +∞𝔽, return +∞.
     // 4. If number is -∞𝔽, return -∞.
     if (!number.isFinite()) {
-      return number.numberValue();
+      return R(number);
     }
     // 4. Let integer be floor(abs(ℝ(number))).
-    let integer = Math.floor(Math.abs(number.numberValue()));
+    let integer = Math.floor(Math.abs(R(number)));
     // 5. If number < +0𝔽, set integer to -integer.
-    if (number.numberValue() < 0 && integer !== 0) {
+    if (R(number) < 0 && integer !== 0) {
       integer = -integer;
     }
     // 6. Return integer.
@@ -55673,7 +55684,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp8 = _temp8.Value;
     }
     // 1. Let number be ? ToNumber(argument).
-    const number = _temp8.numberValue();
+    const number = R(_temp8);
     // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
     if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
       return F(+0);
@@ -55701,7 +55712,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp9 = _temp9.Value;
     }
     // 1. Let number be ? ToNumber(argument).
-    const number = _temp9.numberValue();
+    const number = R(_temp9);
     // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
     if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
       return F(+0);
@@ -55726,7 +55737,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp10 = _temp10.Value;
     }
     // 1. Let number be ? ToNumber(argument).
-    const number = _temp10.numberValue();
+    const number = R(_temp10);
     // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
     if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
       return F(+0);
@@ -55754,7 +55765,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp11 = _temp11.Value;
     }
     // 1. Let number be ? ToNumber(argument).
-    const number = _temp11.numberValue();
+    const number = R(_temp11);
     // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
     if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
       return F(+0);
@@ -55779,7 +55790,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp12 = _temp12.Value;
     }
     // 1. Let number be ? ToNumber(argument).
-    const number = _temp12.numberValue();
+    const number = R(_temp12);
     // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
     if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
       return F(+0);
@@ -55807,7 +55818,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp13 = _temp13.Value;
     }
     // 1. Let number be ? ToNumber(argument).
-    const number = _temp13.numberValue();
+    const number = R(_temp13);
     // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
     if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
       return F(+0);
@@ -55832,7 +55843,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp14 = _temp14.Value;
     }
     // 1. Let number be ? ToNumber(argument).
-    const number = _temp14.numberValue();
+    const number = R(_temp14);
     // 2. If number is NaN, return +0𝔽.
     if (Number.isNaN(number)) {
       return F(+0);
@@ -55944,7 +55955,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let n be ? ToBigInt(argument).
     const n = _temp17;
     // 2. Let int64bit be ℝ(n) modulo 2^64.
-    const int64bit = n.bigintValue() % 2n ** 64n;
+    const int64bit = R(n) % 2n ** 64n;
     // 3. If int64bit ≥ 2^63, return ℤ(int64bit - 2^64); otherwise return ℤ(int64bit).
     if (int64bit >= 2n ** 63n) {
       return Z(int64bit - 2n ** 64n);
@@ -55966,7 +55977,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let n be ? ToBigInt(argument).
     const n = _temp18;
     // 2. Let int64bit be ℝ(n) modulo 2^64.
-    const int64bit = n.bigintValue() % 2n ** 64n;
+    const int64bit = R(n) % 2n ** 64n;
     // 3. Return ℤ(int64bit).
     return Z(int64bit);
   }
@@ -56167,7 +56178,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // a. Let integerIndex be 𝔽(? ToIntegerOrInfinity(value)).
       const integerIndex = F(_temp27);
       // b. If integerIndex < +0𝔽, throw a RangeError exception.
-      if (integerIndex.numberValue() < 0) {
+      if (R(integerIndex) < 0) {
         return exports.surroundingAgent.Throw('RangeError', 'NegativeIndex', 'Index');
       }
       // c. Let index be ! ToLength(integerIndex).
@@ -56189,7 +56200,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         return exports.surroundingAgent.Throw('RangeError', 'OutOfRange', 'Index');
       }
       // e. Return ℝ(index).
-      return index.numberValue();
+      return R(index);
     }
   }
 
@@ -56315,7 +56326,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 3. If argumentList is a List of a single Number, then
     if (argumentList.length === 1 && argumentList[0] instanceof NumberValue) {
       // a. If newTypedArray.[[ArrayLength]] < argumentList[0], throw a TypeError exception.
-      if (newTypedArray.ArrayLength < argumentList[0].numberValue()) {
+      if (newTypedArray.ArrayLength < R(argumentList[0])) {
         return exports.surroundingAgent.Throw('TypeError', 'TypedArrayTooSmall');
       }
     }
@@ -56660,13 +56671,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     Undefined: () => 'undefined',
     Boolean: v => v.boolean.toString(),
     Number: v => {
-      const n = v.numberValue();
+      const n = R(v);
       if (n === 0 && Object.is(n, -0)) {
         return '-0';
       }
       return n.toString();
     },
-    BigInt: v => `${v.bigintValue()}n`,
+    BigInt: v => `${R(v)}n`,
     String: v => {
       const s = JSON.stringify(v.stringValue()).slice(1, -1);
       return `'${s}'`;
@@ -56731,7 +56742,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         return `/${P}/${F}`;
       }
       if ('DateValue' in v) {
-        const d = new Date(v.DateValue.numberValue());
+        const d = new Date(R(v.DateValue));
         if (Number.isNaN(d.getTime())) {
           return '[Date Invalid]';
         }
@@ -57507,6 +57518,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.ProxyCreate = ProxyCreate;
   exports.PutValue = PutValue;
   exports.Q = ReturnIfAbrupt;
+  exports.R = R;
   exports.RawBytesToNumeric = RawBytesToNumeric;
   exports.Realm = Realm;
   exports.ReferenceRecord = ReferenceRecord;
