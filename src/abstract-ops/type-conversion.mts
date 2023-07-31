@@ -25,7 +25,7 @@ import {
   SameValue,
   StringCreate,
   Z,
-  F,
+  F, R,
 } from './all.mjs';
 
 /** https://tc39.es/ecma262/#sec-toprimitive */
@@ -116,7 +116,7 @@ export function ToBoolean(argument) {
     return argument;
   } else if (argument instanceof NumberValue) {
     // If argument is +0𝔽, -0𝔽, or NaN, return false; otherwise return true.
-    if (argument.numberValue() === 0 || argument.isNaN()) {
+    if (R(argument) === 0 || argument.isNaN()) {
       return Value.false;
     }
     return Value.true;
@@ -131,7 +131,7 @@ export function ToBoolean(argument) {
     return Value.true;
   } else if (argument instanceof BigIntValue) {
     // If argument is 0ℤ, return false; otherwise return true.
-    if (argument.bigintValue() === 0n) {
+    if (R(argument) === 0n) {
       return Value.false;
     }
     return Value.true;
@@ -199,18 +199,18 @@ export function ToIntegerOrInfinity(argument) {
   // 1. Let number be ? ToNumber(argument).
   const number = Q(ToNumber(argument));
   // 2. If number is NaN, +0𝔽, or -0𝔽, return 0.
-  if (number.isNaN() || number.numberValue() === 0) {
+  if (number.isNaN() || R(number) === 0) {
     return +0;
   }
   // 3. If number is +∞𝔽, return +∞.
   // 4. If number is -∞𝔽, return -∞.
   if (!number.isFinite()) {
-    return number.numberValue();
+    return R(number);
   }
   // 4. Let integer be floor(abs(ℝ(number))).
-  let integer = Math.floor(Math.abs(number.numberValue()));
+  let integer = Math.floor(Math.abs(R(number)));
   // 5. If number < +0𝔽, set integer to -integer.
-  if (number.numberValue() < 0 && integer !== 0) {
+  if (R(number) < 0 && integer !== 0) {
     integer = -integer;
   }
   // 6. Return integer.
@@ -220,7 +220,7 @@ export function ToIntegerOrInfinity(argument) {
 /** https://tc39.es/ecma262/#sec-toint32 */
 export function ToInt32(argument) {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument)).numberValue();
+  const number = R(Q(ToNumber(argument)));
   // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(+0);
@@ -239,7 +239,7 @@ export function ToInt32(argument) {
 /** https://tc39.es/ecma262/#sec-touint32 */
 export function ToUint32(argument) {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument)).numberValue();
+  const number = R(Q(ToNumber(argument)));
   // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(+0);
@@ -255,7 +255,7 @@ export function ToUint32(argument) {
 /** https://tc39.es/ecma262/#sec-toint16 */
 export function ToInt16(argument) {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument)).numberValue();
+  const number = R(Q(ToNumber(argument)));
   // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(+0);
@@ -274,7 +274,7 @@ export function ToInt16(argument) {
 /** https://tc39.es/ecma262/#sec-touint16 */
 export function ToUint16(argument) {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument)).numberValue();
+  const number = R(Q(ToNumber(argument)));
   // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(+0);
@@ -290,7 +290,7 @@ export function ToUint16(argument) {
 /** https://tc39.es/ecma262/#sec-toint8 */
 export function ToInt8(argument) {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument)).numberValue();
+  const number = R(Q(ToNumber(argument)));
   // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(+0);
@@ -309,7 +309,7 @@ export function ToInt8(argument) {
 /** https://tc39.es/ecma262/#sec-touint8 */
 export function ToUint8(argument) {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument)).numberValue();
+  const number = R(Q(ToNumber(argument)));
   // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(+0);
@@ -325,7 +325,7 @@ export function ToUint8(argument) {
 /** https://tc39.es/ecma262/#sec-touint8clamp */
 export function ToUint8Clamp(argument) {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument)).numberValue();
+  const number = R(Q(ToNumber(argument)));
   // 2. If number is NaN, return +0𝔽.
   if (Number.isNaN(number)) {
     return F(+0);
@@ -413,7 +413,7 @@ export function ToBigInt64(argument) {
   // 1. Let n be ? ToBigInt(argument).
   const n = Q(ToBigInt(argument));
   // 2. Let int64bit be ℝ(n) modulo 2^64.
-  const int64bit = n.bigintValue() % (2n ** 64n);
+  const int64bit = R(n) % (2n ** 64n);
   // 3. If int64bit ≥ 2^63, return ℤ(int64bit - 2^64); otherwise return ℤ(int64bit).
   if (int64bit >= 2n ** 63n) {
     return Z(int64bit - (2n ** 64n));
@@ -426,7 +426,7 @@ export function ToBigUint64(argument) {
   // 1. Let n be ? ToBigInt(argument).
   const n = Q(ToBigInt(argument));
   // 2. Let int64bit be ℝ(n) modulo 2^64.
-  const int64bit = n.bigintValue() % (2n ** 64n);
+  const int64bit = R(n) % (2n ** 64n);
   // 3. Return ℤ(int64bit).
   return Z(int64bit);
 }
@@ -555,7 +555,7 @@ export function ToIndex(value) {
     // a. Let integerIndex be 𝔽(? ToIntegerOrInfinity(value)).
     const integerIndex = F(Q(ToIntegerOrInfinity(value)));
     // b. If integerIndex < +0𝔽, throw a RangeError exception.
-    if (integerIndex.numberValue() < 0) {
+    if (R(integerIndex) < 0) {
       return surroundingAgent.Throw('RangeError', 'NegativeIndex', 'Index');
     }
     // c. Let index be ! ToLength(integerIndex).
@@ -565,6 +565,6 @@ export function ToIndex(value) {
       return surroundingAgent.Throw('RangeError', 'OutOfRange', 'Index');
     }
     // e. Return ℝ(index).
-    return index.numberValue();
+    return R(index);
   }
 }

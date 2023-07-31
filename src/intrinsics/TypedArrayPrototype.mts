@@ -25,7 +25,7 @@ import {
   RequireInternalSlot,
   typedArrayInfoByName,
   typedArrayInfoByType,
-  F,
+  F, R,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
@@ -668,8 +668,8 @@ function TypedArraySortCompare(x, y, comparefn) {
   if (y.isNaN()) {
     return F(-1);
   }
-  x = x.numberValue ? x.numberValue() : x.bigintValue();
-  y = y.numberValue ? y.numberValue() : y.bigintValue();
+  x = x.numberValue ? R(x) : R(x);
+  y = y.numberValue ? R(y) : R(y);
   // 6. If x < y, return -1𝔽.
   if (x < y) {
     return F(-1);

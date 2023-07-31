@@ -83,7 +83,7 @@ class InspectorContext {
         break;
       case 'Number': {
         result.type = 'number';
-        const v = object.numberValue();
+        const v = object.numberValue(); // eslint-disable-line @engine262/mathematical-value
         if (!Number.isFinite(v)) {
           result.unserializableValue = v.toString();
         } else {
@@ -97,7 +97,7 @@ class InspectorContext {
         break;
       case 'BigInt':
         result.type = 'bigint';
-        result.unserializableValue = `${object.bigintValue().toString()}n`;
+        result.unserializableValue = `${object.bigintValue().toString()}n`; // eslint-disable-line @engine262/mathematical-value
         break;
       case 'Symbol':
         result.type = 'symbol';
@@ -262,7 +262,7 @@ class InspectorContext {
             break;
           case 'Number': {
             descriptor.type = 'number';
-            descriptor.value = desc.Value.numberValue().toString();
+            descriptor.value = desc.Value.numberValue().toString(); // eslint-disable-line @engine262/mathematical-value
             break;
           }
           case 'Boolean':
@@ -271,7 +271,7 @@ class InspectorContext {
             break;
           case 'BigInt':
             descriptor.type = 'bigint';
-            descriptor.value = `${desc.Value.bigintValue().toString()}n`;
+            descriptor.value = `${desc.Value.bigintValue().toString()}n`; // eslint-disable-line @engine262/mathematical-value
             break;
           case 'Symbol': {
             descriptor.type = 'symbol';

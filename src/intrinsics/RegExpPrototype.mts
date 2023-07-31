@@ -35,7 +35,7 @@ import {
   ToString,
   ToUint32,
   RegExpHasFlag,
-  F,
+  F, R, R as MathematicalValue,
 } from '../abstract-ops/all.mjs';
 import { RegExpState as State, GetSubstitution } from '../runtime-semantics/all.mjs';
 import { CodePointAt } from '../static-semantics/all.mjs';
@@ -78,7 +78,7 @@ export function RegExpBuiltinExec(R, S) {
   // 3. Let length be the number of code units in S.
   const length = S.stringValue().length;
   // 4. Let lastIndex be ? ℝ(ToLength(? Get(R, "lastIndex"))).
-  let lastIndex = Q(ToLength(Q(Get(R, Value('lastIndex'))))).numberValue();
+  let lastIndex = MathematicalValue(Q(ToLength(Q(Get(R, Value('lastIndex'))))));
   // 5. Let flags be R.[[OriginalFlags]].
   const flags = R.OriginalFlags.stringValue();
   // 6. If flags contains "g", let global be true; else let global be false.
@@ -152,7 +152,7 @@ export function RegExpBuiltinExec(R, S) {
   // 20. Let A be ! ArrayCreate(n + 1).
   const A = X(ArrayCreate(n + 1));
   // 21. Assert: The mathematical value of A's "length" property is n + 1.
-  Assert(X(Get(A, Value('length'))).numberValue() === n + 1);
+  Assert(MathematicalValue(X(Get(A, Value('length')))) === n + 1);
   // 22. Perform ! CreateDataPropertyOrThrow(A, "index", 𝔽(lastIndex)).
   X(CreateDataPropertyOrThrow(A, Value('index'), F(lastIndex)));
   // 23. Perform ! CreateDataPropertyOrThrow(A, "input", S).
@@ -397,7 +397,7 @@ function RegExpProto_match([string = Value.undefined], { thisValue }) {
         // 3. If matchStr is the empty String, then
         if (matchStr.stringValue() === '') {
           // a. Let thisIndex be ℝ(? ToLength(? Get(rx, "lastIndex"))).
-          const thisIndex = Q(ToLength(Q(Get(rx, Value('lastIndex'))))).numberValue();
+          const thisIndex = R(Q(ToLength(Q(Get(rx, Value('lastIndex'))))));
           // b. Let nextIndex be AdvanceStringIndex(S, thisIndex, fullUnicode).
           const nextIndex = AdvanceStringIndex(S, thisIndex, fullUnicode);
           // c. Perform ? Set(rx, "lastIndex", 𝔽(nextIndex), true).
@@ -501,7 +501,7 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
         // 2. If matchStr is the empty String, then
         if (matchStr.stringValue() === '') {
           // a. Let thisIndex be ℝ(? ToLength(? Get(rx, "lastIndex"))).
-          const thisIndex = Q(ToLength(Q(Get(rx, Value('lastIndex'))))).numberValue();
+          const thisIndex = R(Q(ToLength(Q(Get(rx, Value('lastIndex'))))));
           // b. Let nextIndex be AdvanceStringIndex(S, thisIndex, fullUnicode).
           const nextIndex = AdvanceStringIndex(S, thisIndex, fullUnicode);
           // c. Perform ? Set(rx, "lastIndex", 𝔽(nextIndex), true).
@@ -659,7 +659,7 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
   if (limit === Value.undefined) {
     lim = (2 ** 32) - 1;
   } else {
-    lim = Q(ToUint32(limit)).numberValue();
+    lim = R(Q(ToUint32(limit)));
   }
 
   const size = S.stringValue().length;
@@ -686,7 +686,7 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined], 
       q = AdvanceStringIndex(S, q, unicodeMatching);
     } else {
       const lastIndex = Q(Get(splitter, Value('lastIndex')));
-      let e = Q(ToLength(lastIndex)).numberValue();
+      let e = R(Q(ToLength(lastIndex)));
       e = Math.min(e, size);
       if (e === p) {
         q = AdvanceStringIndex(S, q, unicodeMatching);

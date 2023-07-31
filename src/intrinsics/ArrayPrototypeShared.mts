@@ -14,7 +14,7 @@ import {
   ToIntegerOrInfinity,
   ToObject,
   ToString,
-  F,
+  F, R,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { surroundingAgent } from '../engine.mjs';
@@ -73,7 +73,7 @@ export function ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestri
         let r = 0;
         let o = start;
         while (l < sizeLeft && r < sizeRight) {
-          const cmp = Q(SortCompare(lBuffer[l], rBuffer[r])).numberValue();
+          const cmp = R(Q(SortCompare(lBuffer[l], rBuffer[r])));
           if (cmp <= 0) {
             items[o] = lBuffer[l];
             o += 1;

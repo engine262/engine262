@@ -4,7 +4,7 @@ import {
   Value, Descriptor, JSStringValue, NumberValue, ObjectValue, UndefinedValue, NullValue,
 } from './value.mjs';
 import {
-  ToString, DefinePropertyOrThrow, CreateBuiltinFunction,
+  ToString, DefinePropertyOrThrow, CreateBuiltinFunction, R,
 } from './abstract-ops/all.mjs';
 import { Completion, X } from './completion.mjs';
 
@@ -14,7 +14,7 @@ function convertValueForKey<T>(key: JSStringValue | NumberValue | T): string | n
   if (key instanceof JSStringValue) {
     return key.stringValue();
   } else if (key instanceof NumberValue) {
-    return key.numberValue();
+    return R(key);
   }
   return key;
 }

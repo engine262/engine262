@@ -25,7 +25,7 @@ import {
   UTC,
   WeekDay,
   YearFromTime,
-  F,
+  F, R,
 } from '../abstract-ops/all.mjs';
 import {
   JSStringValue,
@@ -129,7 +129,7 @@ function DateProto_getTimezoneOffset(args, { thisValue }) {
   if (t.isNaN()) {
     return F(NaN);
   }
-  return F((t.numberValue() - LocalTime(t).numberValue()) / msPerMinute);
+  return F((R(t) - R(LocalTime(t))) / msPerMinute);
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getutcdate */
@@ -490,16 +490,16 @@ function DateProto_toDateString(args, { thisValue }) {
 /** https://tc39.es/ecma262/#sec-date.prototype.toisostring */
 function DateProto_toISOString(args, { thisValue }) {
   const t = Q(thisTimeValue(thisValue));
-  if (!Number.isFinite(t.numberValue())) {
+  if (!Number.isFinite(R(t))) {
     return surroundingAgent.Throw('RangeError', 'DateInvalidTime');
   }
-  const year = YearFromTime(t).numberValue();
-  const month = MonthFromTime(t).numberValue() + 1;
-  const date = DateFromTime(t).numberValue();
-  const hour = HourFromTime(t).numberValue();
-  const min = MinFromTime(t).numberValue();
-  const sec = SecFromTime(t).numberValue();
-  const ms = msFromTime(t).numberValue();
+  const year = R(YearFromTime(t));
+  const month = R(MonthFromTime(t)) + 1;
+  const date = R(DateFromTime(t));
+  const hour = R(HourFromTime(t));
+  const min = R(MinFromTime(t));
+  const sec = R(SecFromTime(t));
+  const ms = R(msFromTime(t));
 
   // TODO: figure out if there can be invalid years.
   let YYYY = String(year);
@@ -520,7 +520,7 @@ function DateProto_toISOString(args, { thisValue }) {
 function DateProto_toJSON(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   const tv = Q(ToPrimitive(O, 'number'));
-  if (tv instanceof NumberValue && !Number.isFinite(tv.numberValue())) {
+  if (tv instanceof NumberValue && !Number.isFinite(R(tv))) {
     return Value.null;
   }
   return Q(Invoke(O, Value('toISOString')));
@@ -554,9 +554,9 @@ function DateProto_toString(args, { thisValue }) {
 function TimeString(tv) {
   Assert(tv instanceof NumberValue);
   Assert(!tv.isNaN());
-  const hour = String(HourFromTime(tv).numberValue()).padStart(2, '0');
-  const minute = String(MinFromTime(tv).numberValue()).padStart(2, '0');
-  const second = String(SecFromTime(tv).numberValue()).padStart(2, '0');
+  const hour = String(R(HourFromTime(tv))).padStart(2, '0');
+  const minute = String(R(MinFromTime(tv))).padStart(2, '0');
+  const second = String(R(SecFromTime(tv))).padStart(2, '0');
   return Value(`${hour}:${minute}:${second} GMT`);
 }
 
@@ -569,10 +569,10 @@ const monthsOfTheYear = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug',
 function DateString(tv) {
   Assert(tv instanceof NumberValue);
   Assert(!tv.isNaN());
-  const weekday = daysOfTheWeek[WeekDay(tv).numberValue()];
-  const month = monthsOfTheYear[MonthFromTime(tv).numberValue()];
-  const day = String(DateFromTime(tv).numberValue()).padStart(2, '0');
-  const yv = YearFromTime(tv).numberValue();
+  const weekday = daysOfTheWeek[R(WeekDay(tv))];
+  const month = monthsOfTheYear[R(MonthFromTime(tv))];
+  const day = String(R(DateFromTime(tv))).padStart(2, '0');
+  const yv = R(YearFromTime(tv));
   const yearSign = yv >= 0 ? '' : '-';
   const year = Value(String(Math.abs(yv)));
   const paddedYear = X(StringPad(year, F(4), Value('0'), 'start')).stringValue();
@@ -585,8 +585,8 @@ export function TimeZoneString(tv) {
   Assert(!tv.isNaN());
   const offset = LocalTZA(tv, true);
   const offsetSign = offset >= 0 ? '+' : '-';
-  const offsetMin = String(MinFromTime(F(Math.abs(offset))).numberValue()).padStart(2, '0');
-  const offsetHour = String(HourFromTime(F(Math.abs(offset))).numberValue()).padStart(2, '0');
+  const offsetMin = String(R(MinFromTime(F(Math.abs(offset))))).padStart(2, '0');
+  const offsetHour = String(R(HourFromTime(F(Math.abs(offset))))).padStart(2, '0');
   const tzName = '';
   return Value(`${offsetSign}${offsetHour}${offsetMin}${tzName}`);
 }
@@ -625,10 +625,10 @@ function DateProto_toUTCString(args, { thisValue }) {
   if (tv.isNaN()) {
     return Value('Invalid Date');
   }
-  const weekday = daysOfTheWeek[WeekDay(tv).numberValue()];
-  const month = monthsOfTheYear[MonthFromTime(tv).numberValue()];
-  const day = String(DateFromTime(tv).numberValue()).padStart(2, '0');
-  const yv = YearFromTime(tv).numberValue();
+  const weekday = daysOfTheWeek[R(WeekDay(tv))];
+  const month = monthsOfTheYear[R(MonthFromTime(tv))];
+  const day = String(R(DateFromTime(tv))).padStart(2, '0');
+  const yv = R(YearFromTime(tv));
   const yearSign = yv >= 0 ? '' : '-';
   const year = Value(String(Math.abs(yv)));
   const paddedYear = X(StringPad(year, F(4), Value('0'), 'start')).stringValue();

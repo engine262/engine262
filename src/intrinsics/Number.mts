@@ -3,7 +3,7 @@ import {
   IsIntegralNumber,
   OrdinaryCreateFromConstructor,
   ToNumeric,
-  F,
+  F, R,
 } from '../abstract-ops/all.mjs';
 import {
   Descriptor,
@@ -20,7 +20,7 @@ function NumberConstructor([value], { NewTarget }) {
   if (value !== undefined) {
     const prim = Q(ToNumeric(value));
     if (prim instanceof BigIntValue) {
-      n = F(Number(prim.bigintValue()));
+      n = F(Number(R(prim)));
     } else {
       n = prim;
     }
@@ -71,7 +71,7 @@ function Number_isSafeInteger([number = Value.undefined]) {
   }
 
   if (X(IsIntegralNumber(number)) === Value.true) {
-    if (Math.abs(number.numberValue()) <= (2 ** 53) - 1) {
+    if (Math.abs(R(number)) <= (2 ** 53) - 1) {
       return Value.true;
     }
   }
