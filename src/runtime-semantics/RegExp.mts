@@ -15,6 +15,7 @@ import {
   NonbinaryUnicodeProperties,
   getUnicodePropertyValueSet,
 } from './all.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
 /** https://tc39.es/ecma262/#sec-pattern */
 class State {
@@ -186,7 +187,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     };
   }
 
-  function Evaluate(node, ...args) {
+  function Evaluate(node: ParseNode.RegExp.RegExpParseNode, ...args) {
     switch (node.type) {
       case 'Disjunction':
         return Evaluate_Disjunction(node, ...args);

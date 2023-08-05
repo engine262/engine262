@@ -2188,6 +2188,153 @@ export namespace ParseNode {
     T;
 }
 
+/** https://tc39.es/ecma262/multipage/text-processing.html#sec-patterns */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ParseNode.RegExp {
+  // NON-SPEC
+  export type Mutable<T> = {
+    -readonly [K in keyof T]: T[K];
+  }
+  export interface Pattern {
+    readonly type: 'Pattern';
+    readonly Disjunction: Disjunction;
+    readonly groupSpecifiers: ReadonlyMap<string, number>;
+    readonly capturingGroups: readonly Atom_Group[];
+  }
+  export interface Disjunction {
+    readonly type: 'Disjunction';
+    readonly Alternative: Alternative;
+    readonly Disjunction: Disjunction | undefined;
+  }
+  export interface Alternative {
+    readonly type: 'Alternative';
+    readonly Term: Term | undefined;
+    readonly Alternative: Alternative | undefined;
+  }
+  export type Term = Assertion | Term_Atom;
+  export interface Term_Atom {
+    readonly type: 'Term';
+    readonly Atom: Atom;
+    readonly Quantifier: Quantifier | undefined;
+    readonly capturingParenthesesBefore: number;
+  }
+  export interface Assertion {
+    readonly type: 'Assertion';
+    readonly subtype: '^' | '$' | 'b' | 'B' | '?=' | '?!' | '?<=' | '?<!';
+    readonly Disjunction?: Disjunction | undefined;
+  }
+  export interface Quantifier {
+    readonly type: 'Quantifier';
+    readonly QuantifierPrefix: '*' | '+' | '?' | QuantifierCount | undefined;
+    readonly greedy: boolean;
+  }
+  export interface QuantifierCount {
+    readonly DecimalDigits_a: number;
+    readonly DecimalDigits_b: number | undefined;
+  }
+  export type Atom = Atom_Dot | AtomEscape | Atom_Group | Atom_Rest;
+  export interface Atom_Dot {
+    readonly type: 'Atom';
+    readonly subtype: '.';
+    readonly enclosedCapturingParentheses: number;
+  }
+  export interface Atom_Group {
+    readonly type: 'Atom';
+    readonly capturingParenthesesBefore: number;
+    readonly enclosedCapturingParentheses: number;
+    readonly capturing: boolean;
+    readonly GroupSpecifier: string | undefined;
+    readonly Disjunction: Disjunction | undefined;
+  }
+  export interface Atom_Rest {
+    readonly type: 'Atom';
+    readonly CharacterClass?: CharacterClass | undefined;
+    readonly PatternCharacter?: string | undefined;
+  }
+  export interface AtomEscape {
+    readonly type: 'AtomEscape';
+    readonly position?: number | undefined;
+    readonly GroupName?: string | undefined;
+    readonly CharacterClassEscape?: CharacterClassEscape | undefined;
+    readonly DecimalEscape?: DecimalEscape | undefined;
+    readonly CharacterEscape?: CharacterEscape | undefined;
+  }
+  export interface CharacterEscape {
+    readonly type: 'CharacterEscape';
+    readonly subtype?: string | undefined;
+    readonly ControlEscape?: string | undefined;
+    readonly IdentityEscape?: string | undefined;
+    readonly ControlLetter?: string | undefined;
+    readonly HexEscapeSequence?: HexEscapeSequence | undefined;
+    readonly RegExpUnicodeEscapeSequence?: RegExpUnicodeEscapeSequence | undefined;
+  }
+  export interface DecimalEscape {
+    readonly type: 'DecimalEscape';
+    readonly position: number;
+    readonly value: number;
+  }
+  export interface CharacterClassEscape {
+    readonly type: 'CharacterClassEscape';
+    readonly value: string;
+    readonly UnicodePropertyValueExpression?: UnicodePropertyValueExpression | undefined;
+  }
+  export interface UnicodePropertyValueExpression {
+    readonly type: 'UnicodePropertyValueExpression';
+    readonly LoneUnicodePropertyNameOrValue?: string | undefined;
+    readonly UnicodePropertyName?: string | undefined;
+    readonly UnicodePropertyValue?: string | undefined;
+  }
+  export interface CharacterClass {
+    readonly type: 'CharacterClass';
+    readonly invert: boolean;
+    readonly ClassRanges: readonly ClassRange[];
+  }
+  export type ClassRange = ClassAtom | [ClassAtom, ClassAtom];
+  export type ClassAtom = ClassAtom_SourceCharacter | ClassEscape | CharacterClassEscape;
+  export interface ClassAtom_SourceCharacter {
+    readonly type: 'ClassAtom';
+    readonly SourceCharacter?: string | undefined;
+    readonly value?: '-' | undefined;
+  }
+  export interface ClassEscape {
+    readonly type: 'ClassEscape';
+    readonly value?: 'b' | '-' | undefined;
+    readonly CharacterEscape?: CharacterEscape | undefined;
+  }
+  export interface RegExpUnicodeEscapeSequence {
+    readonly type: 'RegExpUnicodeEscapeSequence';
+    readonly CodePoint?: number;
+    readonly HexLeadSurrogate?: number | undefined;
+    readonly HexTrailSurrogate?: number | undefined;
+    readonly Hex4Digits?: number | undefined;
+  }
+  export interface HexEscapeSequence {
+    readonly type: 'HexEscapeSequence';
+    readonly HexDigit_a: string;
+    readonly HexDigit_b: string;
+  }
+  export type RegExpParseNode =
+    | Pattern
+    | Disjunction
+    | Alternative
+    | Term_Atom
+    | Assertion
+    | Quantifier
+    | Atom_Dot
+    | AtomEscape
+    | Atom_Group
+    | Atom_Rest
+    | CharacterClass
+    | ClassAtom_SourceCharacter
+    | ClassEscape
+    | RegExpUnicodeEscapeSequence
+    | HexEscapeSequence
+    | CharacterEscape
+    | DecimalEscape
+    | CharacterClassEscape
+    | UnicodePropertyValueExpression;
+}
+
 export type ParseNode =
   | ParseNode.PrivateIdentifier
   | ParseNode.IdentifierName
