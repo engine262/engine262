@@ -7,6 +7,7 @@ import { CharacterValue, StringToCodePoints } from '../static-semantics/all.mjs'
 import { X } from '../completion.mjs';
 import { isLineTerminator, isWhitespace, isDecimalDigit } from '../parser/Lexer.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import {
   UnicodeMatchProperty,
   UnicodeMatchPropertyValue,
@@ -15,7 +16,6 @@ import {
   NonbinaryUnicodeProperties,
   getUnicodePropertyValueSet,
 } from './all.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
 
 /** https://tc39.es/ecma262/#sec-pattern */
 class State {

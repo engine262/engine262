@@ -1150,7 +1150,8 @@ export abstract class ExpressionParser extends FunctionParser {
   parseRegularExpressionLiteral(): ParseNode.RegularExpressionLiteral {
     const node = this.startNode<ParseNode.RegularExpressionLiteral>();
     this.scanRegularExpressionBody();
-    const body = node.RegularExpressionBody = this.scannedValue as string; // NOTE: unsound cast
+    const body = this.scannedValue as string; // NOTE: unsound cast
+    node.RegularExpressionBody = body;
     this.scanRegularExpressionFlags();
     node.RegularExpressionFlags = this.scannedValue as string; // NOTE: unsound cast
     try {
