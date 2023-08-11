@@ -23,7 +23,7 @@ import {
   isNonNegativeInteger,
   IntegerIndexedObjectCreate,
   GetPrototypeFromConstructor,
-  AllocateArrayBuffer,
+  AllocateArrayBuffer, R,
 } from './all.mjs';
 
 export const typedArrayInfoByName = {
@@ -125,7 +125,7 @@ export function TypedArrayCreate(constructor, argumentList) {
   // 3. If argumentList is a List of a single Number, then
   if (argumentList.length === 1 && argumentList[0] instanceof NumberValue) {
     // a. If newTypedArray.[[ArrayLength]] < argumentList[0], throw a TypeError exception.
-    if (newTypedArray.ArrayLength < argumentList[0].numberValue()) {
+    if (newTypedArray.ArrayLength < R(argumentList[0])) {
       return surroundingAgent.Throw('TypeError', 'TypedArrayTooSmall');
     }
   }

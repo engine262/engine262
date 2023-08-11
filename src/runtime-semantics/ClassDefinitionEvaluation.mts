@@ -39,6 +39,7 @@ import {
   EnsureCompletion,
 } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import {
   DefineMethod,
   MethodDefinitionEvaluation,
@@ -49,7 +50,7 @@ import {
   ClassStaticBlockDefinitionRecord,
 } from './all.mjs';
 
-function* ClassElementEvaluation(node, object, enumerable) {
+function* ClassElementEvaluation(node: ParseNode.MethodDefinition | ParseNode.GeneratorMethod | ParseNode.AsyncMethod | ParseNode.FieldDefinition | ParseNode.ClassStaticBlock, object, enumerable) {
   switch (node.type) {
     case 'MethodDefinition':
     case 'GeneratorMethod':
@@ -66,7 +67,7 @@ function* ClassElementEvaluation(node, object, enumerable) {
 }
 
 // ClassTail : ClassHeritage? `{` ClassBody? `}`
-export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
+export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, classBinding, className) {
   const { ClassHeritage, ClassBody } = ClassTail;
   // 1. Let env be the LexicalEnvironment of the running execution context.
   const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;

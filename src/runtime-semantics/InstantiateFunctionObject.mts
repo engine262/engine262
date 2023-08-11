@@ -12,12 +12,13 @@ import { surroundingAgent } from '../engine.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import { Descriptor, Value } from '../value.mjs';
 import { StringValue } from '../static-semantics/all.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
 /** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-instantiatefunctionobject */
 //   FunctionDeclaration :
 //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
 //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
-export function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaration, scope, privateScope) {
+export function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaration: ParseNode.FunctionDeclaration, scope, privateScope) {
   const { BindingIdentifier, FormalParameters, FunctionBody } = FunctionDeclaration;
   // 1. Let name be StringValue of BindingIdentifier.
   const name = BindingIdentifier ? StringValue(BindingIdentifier) : Value('default');
@@ -37,7 +38,7 @@ export function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaratio
 //   GeneratorDeclaration :
 //     `function` `*` BindingIdentifier `(` FormalParameters `)` `{` GeneratorBody `}`
 //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
-export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclaration, scope, privateScope) {
+export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclaration: ParseNode.GeneratorDeclaration, scope, privateScope) {
   const { BindingIdentifier, FormalParameters, GeneratorBody } = GeneratorDeclaration;
   // 1. Let name be StringValue of BindingIdentifier.
   const name = BindingIdentifier ? StringValue(BindingIdentifier) : Value('default');
@@ -64,7 +65,7 @@ export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclarat
 //  AsyncFunctionDeclaration :
 //    `async` `function` BindingIdentifier `(` FormalParameters `)` `{` AsyncBody `}`
 //    `async` `function` `(` FormalParameters `)` `{` AsyncBody `}`
-export function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunctionDeclaration, scope, privateScope) {
+export function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunctionDeclaration: ParseNode.AsyncFunctionDeclaration, scope, privateScope) {
   const { BindingIdentifier, FormalParameters, AsyncBody } = AsyncFunctionDeclaration;
   // 1. Let name be StringValue of BindingIdentifier.
   const name = BindingIdentifier ? StringValue(BindingIdentifier) : Value('default');
@@ -82,7 +83,7 @@ export function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunction
 //  AsyncGeneratorDeclaration :
 //    `async` `function` `*` BindingIdentifier `(` FormalParameters`)` `{` AsyncGeneratorBody `}`
 //    `async` `function` `*` `(` FormalParameters`)` `{` AsyncGeneratorBody `}`
-export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGeneratorDeclaration, scope, privateScope) {
+export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGeneratorDeclaration: ParseNode.AsyncGeneratorDeclaration, scope, privateScope) {
   const { BindingIdentifier, FormalParameters, AsyncGeneratorBody } = AsyncGeneratorDeclaration;
   // 1. Let name be StringValue of BindingIdentifier.
   const name = BindingIdentifier ? StringValue(BindingIdentifier) : Value('default');
@@ -105,7 +106,7 @@ export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGenerat
   return F;
 }
 
-export function InstantiateFunctionObject(AnyFunctionDeclaration, scope, privateScope) {
+export function InstantiateFunctionObject(AnyFunctionDeclaration: ParseNode.FunctionDeclaration | ParseNode.GeneratorDeclaration | ParseNode.AsyncFunctionDeclaration | ParseNode.AsyncGeneratorDeclaration, scope, privateScope) {
   switch (AnyFunctionDeclaration.type) {
     case 'FunctionDeclaration':
       return InstantiateFunctionObject_FunctionDeclaration(AnyFunctionDeclaration, scope, privateScope);

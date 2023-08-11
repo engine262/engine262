@@ -38,6 +38,7 @@ import {
   Q, X,
 } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import {
   Evaluate_SwitchStatement,
   Evaluate_VariableDeclarationList,
@@ -68,7 +69,7 @@ function LoopContinues(completion, labelSet) {
   return Value.false;
 }
 
-export function LabelledEvaluation(node, labelSet) {
+export function LabelledEvaluation(node: ParseNode.LabelledStatement | ParseNode.BreakableStatement, labelSet) {
   switch (node.type) {
     case 'DoWhileStatement':
     case 'WhileStatement':
@@ -87,7 +88,7 @@ export function LabelledEvaluation(node, labelSet) {
 
 /** https://tc39.es/ecma262/#sec-labelled-statements-runtime-semantics-labelledevaluation */
 //   LabelledStatement : LabelIdentifier `:` LabelledItem
-function* LabelledEvaluation_LabelledStatement({ LabelIdentifier, LabelledItem }, labelSet) {
+function* LabelledEvaluation_LabelledStatement({ LabelIdentifier, LabelledItem }: ParseNode.LabelledStatement, labelSet) {
   // 1. Let label be the StringValue of LabelIdentifier.
   const label = StringValue(LabelIdentifier);
   // 2. Append label as an element of labelSet.
@@ -106,7 +107,7 @@ function* LabelledEvaluation_LabelledStatement({ LabelIdentifier, LabelledItem }
 // LabelledItem :
 //   Statement
 //   FunctionDeclaration
-function LabelledEvaluation_LabelledItem(LabelledItem, labelSet) {
+function LabelledEvaluation_LabelledItem(LabelledItem: ParseNode.LabelledItem, labelSet) {
   switch (LabelledItem.type) {
     case 'DoWhileStatement':
     case 'WhileStatement':
@@ -129,7 +130,7 @@ function LabelledEvaluation_LabelledItem(LabelledItem, labelSet) {
 //  IterationStatement :
 //    (DoWhileStatement)
 //    (WhileStatement)
-function* LabelledEvaluation_BreakableStatement(BreakableStatement, labelSet) {
+function* LabelledEvaluation_BreakableStatement(BreakableStatement: ParseNode.BreakableStatement, labelSet) {
   switch (BreakableStatement.type) {
     case 'DoWhileStatement':
     case 'WhileStatement':
@@ -177,7 +178,7 @@ function* LabelledEvaluation_BreakableStatement(BreakableStatement, labelSet) {
   }
 }
 
-function LabelledEvaluation_IterationStatement(IterationStatement, labelSet) {
+function LabelledEvaluation_IterationStatement(IterationStatement: ParseNode.IterationStatement, labelSet) {
   switch (IterationStatement.type) {
     case 'DoWhileStatement':
       return LabelledEvaluation_IterationStatement_DoWhileStatement(IterationStatement, labelSet);
@@ -199,7 +200,7 @@ function LabelledEvaluation_IterationStatement(IterationStatement, labelSet) {
 /** https://tc39.es/ecma262/#sec-do-while-statement-runtime-semantics-labelledevaluation */
 //   IterationStatement :
 //     `do` Statement `while` `(` Expression `)` `;`
-function* LabelledEvaluation_IterationStatement_DoWhileStatement({ Statement, Expression }, labelSet) {
+function* LabelledEvaluation_IterationStatement_DoWhileStatement({ Statement, Expression }: ParseNode.DoWhileStatement, labelSet) {
   // 1. Let V be undefined.
   let V = Value.undefined;
   // 2. Repeat,
@@ -229,7 +230,7 @@ function* LabelledEvaluation_IterationStatement_DoWhileStatement({ Statement, Ex
 /** https://tc39.es/ecma262/#sec-while-statement-runtime-semantics-labelledevaluation */
 //   IterationStatement :
 //     `while` `(` Expression `)` Statement
-function* LabelledEvaluation_IterationStatement_WhileStatement({ Expression, Statement }, labelSet) {
+function* LabelledEvaluation_IterationStatement_WhileStatement({ Expression, Statement }: ParseNode.WhileStatement, labelSet) {
   // 1. Let V be undefined.
   let V = Value.undefined;
   // 2. Repeat,
@@ -260,7 +261,7 @@ function* LabelledEvaluation_IterationStatement_WhileStatement({ Expression, Sta
 //     `for` `(` Expression? `;` Expression? `;` Expresssion? `)` Statement
 //     `for` `(` `var` VariableDeclarationList `;` Expression? `;` Expression? `)` Statement
 //     `for` `(` LexicalDeclaration Expression? `;` Expression? `)` Statement
-function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement, labelSet) {
+function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement: ParseNode.ForStatement, labelSet) {
   const {
     VariableDeclarationList, LexicalDeclaration,
     Expression_a, Expression_b, Expression_c,
@@ -334,7 +335,7 @@ function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement, label
   }
 }
 
-function* LabelledEvaluation_IterationStatement_ForInStatement(ForInStatement, labelSet) {
+function* LabelledEvaluation_IterationStatement_ForInStatement(ForInStatement: ParseNode.ForInStatement, labelSet) {
   const {
     LeftHandSideExpression,
     ForBinding,
@@ -373,7 +374,7 @@ function* LabelledEvaluation_IterationStatement_ForInStatement(ForInStatement, l
 //   `for` `await` `(` LeftHandSideExpression `of` AssignmentExpression `)` Statement
 //   `for` `await` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
 //   `for` `await` `(` ForDeclaration`of` AssignmentExpression `)` Statement
-function* LabelledEvaluation_IterationStatement_ForAwaitStatement(ForAwaitStatement, labelSet) {
+function* LabelledEvaluation_IterationStatement_ForAwaitStatement(ForAwaitStatement: ParseNode.ForAwaitStatement, labelSet) {
   const {
     LeftHandSideExpression,
     ForBinding,
@@ -410,7 +411,7 @@ function* LabelledEvaluation_IterationStatement_ForAwaitStatement(ForAwaitStatem
 //   `for` `(` LeftHandSideExpression `of` AssignmentExpression `)` Statement
 //   `for` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
 //   `for` `(` ForDeclaration `of` AssignmentExpression `)` Statement
-function* LabelledEvaluation_IterationStatement_ForOfStatement(ForOfStatement, labelSet) {
+function* LabelledEvaluation_IterationStatement_ForOfStatement(ForOfStatement: ParseNode.ForOfStatement, labelSet) {
   const {
     LeftHandSideExpression,
     ForBinding,
@@ -716,7 +717,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-bindinginstantiation */
 //   ForDeclaration : LetOrConst ForBinding
-function BindingInstantiation({ LetOrConst, ForBinding }, environment) {
+function BindingInstantiation({ LetOrConst, ForBinding }: ParseNode.ForDeclaration, environment) {
   // 1. Assert: environment is a declarative Environment Record.
   Assert(environment instanceof DeclarativeEnvironmentRecord);
   // 2. For each element name of the BoundNames of ForBinding, do
@@ -734,7 +735,7 @@ function BindingInstantiation({ LetOrConst, ForBinding }, environment) {
 
 /** https://tc39.es/ecma262/#sec-for-in-and-for-of-statements-runtime-semantics-evaluation */
 //   ForBinding : BindingIdentifier
-export function Evaluate_ForBinding({ BindingIdentifier, strict }) {
+export function Evaluate_ForBinding({ BindingIdentifier, strict }: ParseNode.ForBinding) {
   // 1. Let bindingId be StringValue of BindingIdentifier.
   const bindingId = StringValue(BindingIdentifier);
   // 2. Return ? ResolveBinding(bindingId).

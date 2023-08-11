@@ -10,7 +10,7 @@ import {
   Get,
   Set,
   Yield,
-  F,
+  F, R, R as MathematicalValue,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { RegExpExec, AdvanceStringIndex } from './RegExpPrototype.mjs';
@@ -48,7 +48,7 @@ export function CreateRegExpStringIterator(R, S, global, fullUnicode) {
       // v. If matchStr is the empty String, then
       if (matchStr.stringValue() === '') {
         // i. Let thisIndex be ℝ(? ToLength(? Get(R, "lastIndex"))).
-        const thisIndex = Q(ToLength(Q(Get(R, Value('lastIndex'))))).numberValue();
+        const thisIndex = MathematicalValue(Q(ToLength(Q(Get(R, Value('lastIndex'))))));
         // ii. Let nextIndex be ! AdvanceStringIndex(S, thisIndex, fullUnicode).
         const nextIndex = X(AdvanceStringIndex(S, thisIndex, fullUnicode));
         // iii. Perform ? Set(R, "lastIndex", 𝔽(nextIndex), true).

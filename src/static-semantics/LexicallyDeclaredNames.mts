@@ -1,9 +1,10 @@
-// @ts-nocheck
+import type { ParseNode } from '../parser/ParseNode.mjs';
+import type { JSStringValue } from '../value.mjs';
 import {
   TopLevelLexicallyDeclaredNames,
 } from './all.mjs';
 
-export function LexicallyDeclaredNames(node) {
+export function LexicallyDeclaredNames(node: ParseNode): JSStringValue[] {
   switch (node.type) {
     case 'Script':
       if (node.ScriptBody) {

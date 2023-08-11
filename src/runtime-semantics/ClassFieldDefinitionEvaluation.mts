@@ -2,6 +2,7 @@
 import { surroundingAgent } from '../engine.mjs';
 import { X, ReturnIfAbrupt } from '../completion.mjs';
 import { MakeMethod, OrdinaryFunctionCreate } from '../abstract-ops/all.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import { Evaluate_PropertyName } from './PropertyName.mjs';
 
 export class ClassFieldDefinitionRecord {
@@ -13,7 +14,7 @@ export class ClassFieldDefinitionRecord {
   }
 }
 
-export function* ClassFieldDefinitionEvaluation(FieldDefinition, homeObject) {
+export function* ClassFieldDefinitionEvaluation(FieldDefinition: ParseNode.FieldDefinition, homeObject) {
   const { ClassElementName, Initializer } = FieldDefinition;
   // 1. Let name be the result of evaluating ClassElementName.
   const name = yield* Evaluate_PropertyName(ClassElementName);

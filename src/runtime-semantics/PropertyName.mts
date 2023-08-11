@@ -10,6 +10,7 @@ import {
   ToPropertyKey,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
 /** https://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-evaluation */
 // PropertyName :
@@ -21,7 +22,7 @@ import { Q, X } from '../completion.mjs';
 //   NumericLiteral
 // ComputedPropertyName :
 //   `[` AssignmentExpression `]`
-export function* Evaluate_PropertyName(PropertyName) {
+export function* Evaluate_PropertyName(PropertyName: ParseNode.PropertyNameLike | ParseNode.PrivateIdentifier) {
   switch (PropertyName.type) {
     case 'IdentifierName':
       return StringValue(PropertyName);

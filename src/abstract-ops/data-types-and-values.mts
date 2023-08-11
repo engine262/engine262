@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { JSStringValue, Value } from '../value.mjs';
 import { X } from '../completion.mjs';
-import { CanonicalNumericIndexString } from './all.mjs';
+import { CanonicalNumericIndexString, R } from './all.mjs';
 
 // This file covers predicates defined in
 /** https://tc39.es/ecma262/#sec-ecmascript-data-types-and-values */
@@ -15,10 +15,10 @@ export function isIntegerIndex(V) {
   if (numeric === Value.undefined) {
     return false;
   }
-  if (Object.is(numeric.numberValue(), +0)) {
+  if (Object.is(R(numeric), +0)) {
     return true;
   }
-  return numeric.numberValue() > 0 && Number.isSafeInteger(numeric.numberValue());
+  return R(numeric) > 0 && Number.isSafeInteger(R(numeric));
 }
 
 // 6.1.7 #array-index
@@ -30,13 +30,13 @@ export function isArrayIndex(V) {
   if (numeric === Value.undefined) {
     return false;
   }
-  if (!Number.isInteger(numeric.numberValue())) {
+  if (!Number.isInteger(R(numeric))) {
     return false;
   }
-  if (Object.is(numeric.numberValue(), +0)) {
+  if (Object.is(R(numeric), +0)) {
     return true;
   }
-  return numeric.numberValue() > 0 && numeric.numberValue() < (2 ** 32) - 1;
+  return R(numeric) > 0 && R(numeric) < (2 ** 32) - 1;
 }
 
 export function isNonNegativeInteger(argument) {

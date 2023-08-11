@@ -12,12 +12,13 @@ import {
 import { StringValue } from '../static-semantics/all.mjs';
 import { X } from '../completion.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncgeneratorfunctionexpression */
 //   AsyncGeneratorExpression :
 //     `async` `function` `*` `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
 //     `async` `function` `*` BindingIdentifier `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
-export function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpression, name) {
+export function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpression: ParseNode.AsyncGeneratorExpression, name?) {
   const { BindingIdentifier, FormalParameters, AsyncGeneratorBody } = AsyncGeneratorExpression;
   if (BindingIdentifier) {
     // 1. Assert: name is not present.

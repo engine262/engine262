@@ -11,6 +11,7 @@ import {
 import { StringValue } from '../api.mjs';
 import { NormalCompletion, Q } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import {
   IteratorBindingInitialization_ArrayBindingPattern,
   PropertyBindingInitialization,
@@ -18,7 +19,7 @@ import {
 } from './all.mjs';
 
 /** https://tc39.es/ecma262/#sec-initializeboundname */
-export function InitializeBoundName(name, value, environment) {
+export function InitializeBoundName(name: JSStringValue, value, environment) {
   // 1. Assert: Type(name) is String.
   Assert(name instanceof JSStringValue);
   // 2. If environment is not undefined, then
@@ -40,7 +41,7 @@ export function InitializeBoundName(name, value, environment) {
 //   `{` BindingPropertyList `}`
 //   `{` BindingRestProperty `}`
 //   `{` BindingPropertyList `,` BindingRestProperty `}`
-function* BindingInitialization_ObjectBindingPattern({ BindingPropertyList, BindingRestProperty }, value, environment) {
+function* BindingInitialization_ObjectBindingPattern({ BindingPropertyList, BindingRestProperty }: ParseNode.ObjectBindingPattern, value, environment) {
   // 1. Perform ? PropertyBindingInitialization for BindingPropertyList using value and environment as the arguments.
   const excludedNames = Q(yield* PropertyBindingInitialization(BindingPropertyList, value, environment));
   if (BindingRestProperty) {
@@ -50,7 +51,7 @@ function* BindingInitialization_ObjectBindingPattern({ BindingPropertyList, Bind
   return NormalCompletion(undefined);
 }
 
-export function* BindingInitialization(node, value, environment) {
+export function* BindingInitialization(node: ParseNode.ForBinding | ParseNode.ForDeclaration | ParseNode.BindingIdentifier | ParseNode.ObjectBindingPattern | ParseNode.ArrayBindingPattern, value, environment) {
   switch (node.type) {
     case 'ForBinding':
       if (node.BindingIdentifier) {

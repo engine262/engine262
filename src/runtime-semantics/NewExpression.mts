@@ -9,6 +9,7 @@ import {
 import { Value } from '../value.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { Q } from '../completion.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import { ArgumentListEvaluation } from './all.mjs';
 
 /** https://tc39.es/ecma262/#sec-evaluatenew */
@@ -40,7 +41,7 @@ function* EvaluateNew(constructExpr, args) {
 //   NewExpression :
 //     `new` NewExpression
 //     `new` MemberExpression Arguments
-export function* Evaluate_NewExpression({ MemberExpression, Arguments }) {
+export function* Evaluate_NewExpression({ MemberExpression, Arguments }: ParseNode.NewExpression) {
   if (!Arguments) {
     // 1. Return ? EvaluateNew(NewExpression, empty).
     return Q(yield* EvaluateNew(MemberExpression, undefined));

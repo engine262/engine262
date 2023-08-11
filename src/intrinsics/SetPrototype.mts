@@ -5,7 +5,7 @@ import {
   F,
   IsCallable,
   RequireInternalSlot,
-  SameValueZero,
+  SameValueZero, R,
 } from '../abstract-ops/all.mjs';
 import {
   NumberValue,
@@ -33,7 +33,7 @@ function SetProto_add([value = Value.undefined], { thisValue }) {
     }
   }
   // 5. If value is -0𝔽, set value to +0𝔽.
-  if (value instanceof NumberValue && Object.is(value.numberValue(), -0)) {
+  if (value instanceof NumberValue && Object.is(R(value), -0)) {
     value = F(+0);
   }
   // 6. Append value as the last element of entries.

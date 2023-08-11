@@ -3,6 +3,7 @@ import { Value } from '../value.mjs';
 import { sourceTextMatchedBy } from '../abstract-ops/all.mjs';
 import { ReturnIfAbrupt } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import {
   ClassDefinitionEvaluation,
   InstantiateOrdinaryFunctionExpression,
@@ -16,7 +17,7 @@ import {
 /** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-namedevaluation */
 //   FunctionExpression :
 //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
-function NamedEvaluation_FunctionExpression(FunctionExpression, name) {
+function NamedEvaluation_FunctionExpression(FunctionExpression: ParseNode.FunctionExpression, name) {
   return InstantiateOrdinaryFunctionExpression(FunctionExpression, name);
 }
 
@@ -24,41 +25,41 @@ function NamedEvaluation_FunctionExpression(FunctionExpression, name) {
 /** https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-namedevaluation */
 //   GeneratorExpression :
 //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
-function NamedEvaluation_GeneratorExpression(GeneratorExpression, name) {
+function NamedEvaluation_GeneratorExpression(GeneratorExpression: ParseNode.GeneratorExpression, name) {
   return InstantiateGeneratorFunctionExpression(GeneratorExpression, name);
 }
 
 /** https://tc39.es/ecma262/#sec-async-function-definitions-runtime-semantics-namedevaluation */
 //   AsyncFunctionExpression :
 //     `async` `function` `(` FormalParameters `)` `{` AsyncBody `}`
-function NamedEvaluation_AsyncFunctionExpression(AsyncFunctionExpression, name) {
+function NamedEvaluation_AsyncFunctionExpression(AsyncFunctionExpression: ParseNode.AsyncFunctionExpression, name) {
   return InstantiateAsyncFunctionExpression(AsyncFunctionExpression, name);
 }
 
 /** https://tc39.es/ecma262/#sec-asyncgenerator-definitions-namedevaluation */
 //   AsyncGeneratorExpression :
 //     `async` `function` `*` `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
-function NamedEvaluation_AsyncGeneratorExpression(AsyncGeneratorExpression, name) {
+function NamedEvaluation_AsyncGeneratorExpression(AsyncGeneratorExpression: ParseNode.AsyncGeneratorExpression, name) {
   return InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpression, name);
 }
 
 /** https://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-namedevaluation */
 //   ArrowFunction :
 //     ArrowParameters `=>` ConciseBody
-function NamedEvaluation_ArrowFunction(ArrowFunction, name) {
+function NamedEvaluation_ArrowFunction(ArrowFunction: ParseNode.ArrowFunction, name) {
   return InstantiateArrowFunctionExpression(ArrowFunction, name);
 }
 
 /** https://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-namedevaluation */
 //   AsyncArrowFunction :
 //     ArrowParameters `=>` AsyncConciseBody
-function NamedEvaluation_AsyncArrowFunction(AsyncArrowFunction, name) {
+function NamedEvaluation_AsyncArrowFunction(AsyncArrowFunction: ParseNode.AsyncArrowFunction, name) {
   return InstantiateAsyncArrowFunctionExpression(AsyncArrowFunction, name);
 }
 
 /** https://tc39.es/ecma262/#sec-class-definitions-runtime-semantics-namedevaluation */
 //   ClassExpression : `class` ClassTail
-function* NamedEvaluation_ClassExpression(ClassExpression, name) {
+function* NamedEvaluation_ClassExpression(ClassExpression: ParseNode.ClassExpression, name) {
   const { ClassTail } = ClassExpression;
   // 1. Let value be the result of ClassDefinitionEvaluation of ClassTail with arguments undefined and name.
   const value = yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, name);
@@ -70,7 +71,7 @@ function* NamedEvaluation_ClassExpression(ClassExpression, name) {
   return value;
 }
 
-export function* NamedEvaluation(F, name) {
+export function* NamedEvaluation(F: ParseNode.FunctionExpression | ParseNode.GeneratorExpression | ParseNode.AsyncFunctionExpression | ParseNode.AsyncGeneratorExpression | ParseNode.AsyncArrowFunction | ParseNode.ClassExpression | ParseNode.ParenthesizedExpression, name) {
   switch (F.type) {
     case 'FunctionExpression':
       return NamedEvaluation_FunctionExpression(F, name);

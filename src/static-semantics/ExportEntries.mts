@@ -1,11 +1,11 @@
-// @ts-nocheck
-import { Value } from '../value.mjs';
-import { OutOfRange } from '../helpers.mjs';
+import { JSStringValue, NullValue, Value } from '../value.mjs';
+import { OutOfRange, isArray } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import { BoundNames, ModuleRequests, ExportEntriesForModule } from './all.mjs';
 
-export function ExportEntries(node) {
-  if (Array.isArray(node)) {
-    const entries = [];
+export function ExportEntries(node: ParseNode | readonly ParseNode[]): ExportEntry[] {
+  if (isArray(node)) {
+    const entries: ExportEntry[] = [];
     node.forEach((n) => {
       entries.push(...ExportEntries(n));
     });
@@ -24,21 +24,21 @@ export function ExportEntries(node) {
         case !!node.ExportFromClause && !!node.FromClause: {
           // `export` ExportFromClause FromClause `;`
           // 1. Let module be the sole element of ModuleRequests of FromClause.
-          const module = ModuleRequests(node.FromClause)[0];
+          const module = ModuleRequests(node.FromClause!)[0];
           // 2. Return ExportEntriesForModule(ExportFromClause, module).
-          return ExportEntriesForModule(node.ExportFromClause, module);
+          return ExportEntriesForModule(node.ExportFromClause!, module);
         }
         case !!node.NamedExports: {
           // `export` NamedExports `;`
           // 1. Return ExportEntriesForModule(NamedExports, null).
-          return ExportEntriesForModule(node.NamedExports, Value.null);
+          return ExportEntriesForModule(node.NamedExports!, Value.null);
         }
         case !!node.VariableStatement: {
           // `export` VariableStatement
           // 1. Let entries be a new empty List.
           const entries = [];
           // 2. Let names be the BoundNames of VariableStatement.
-          const names = BoundNames(node.VariableStatement);
+          const names = BoundNames(node.VariableStatement!);
           // 3. For each name in names, do
           for (const name of names) {
             // a. Append the ExportEntry Record { [[ModuleRequest]]: null, [[ImportName]]: null, [[LocalName]]: name, [[ExportName]]: name } to entries.
@@ -55,9 +55,9 @@ export function ExportEntries(node) {
         case !!node.Declaration: {
           // `export` Declaration
           // 1. Let entries be a new empty List.
-          const entries = [];
+          const entries: ExportEntry[] = [];
           // 2. Let names be the BoundNames of Declaration.
-          const names = BoundNames(node.Declaration);
+          const names = BoundNames(node.Declaration!);
           // 3. For each name in names, do
           for (const name of names) {
             // a. Append the ExportEntry Record { [[ModuleRequest]]: null, [[ImportName]]: null, [[LocalName]]: name, [[ExportName]]: name } to entries.
@@ -74,7 +74,7 @@ export function ExportEntries(node) {
         case node.default && !!node.HoistableDeclaration: {
           // `export` `default` HoistableDeclaration
           // 1. Let names be BoundNames of HoistableDeclaration.
-          const names = BoundNames(node.HoistableDeclaration);
+          const names = BoundNames(node.HoistableDeclaration!);
           // 2. Let localName be the sole element of names.
           const localName = names[0];
           // 3. Return a new List containing the ExportEntry Record { [[ModuleRequest]]: null, [[ImportName]]: null, [[LocalName]]: localName, [[ExportName]]: "default" }.
@@ -88,7 +88,7 @@ export function ExportEntries(node) {
         case node.default && !!node.ClassDeclaration: {
           // `export` `default` ClassDeclaration
           // 1. Let names be BoundNames of ClassDeclaration.
-          const names = BoundNames(node.ClassDeclaration);
+          const names = BoundNames(node.ClassDeclaration!);
           // 2. Let localName be the sole element of names.
           const localName = names[0];
           // 3. Return a new List containing the ExportEntry Record { [[ModuleRequest]]: null, [[ImportName]]: null, [[LocalName]]: localName, [[ExportName]]: "default" }.
@@ -117,4 +117,11 @@ export function ExportEntries(node) {
     default:
       return [];
   }
+}
+
+export interface ExportEntry {
+  readonly ModuleRequest: JSStringValue | NullValue;
+  readonly ImportName: JSStringValue | NullValue | 'all' | 'all-but-default';
+  readonly LocalName: JSStringValue | NullValue;
+  readonly ExportName: JSStringValue | NullValue;
 }

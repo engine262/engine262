@@ -3,7 +3,7 @@ import { surroundingAgent } from '../engine.mjs';
 import { Value, Descriptor } from '../value.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { Q, X } from '../completion.mjs';
-import { OutOfRange } from '../helpers.mjs';
+import { OutOfRange, isArray } from '../helpers.mjs';
 import {
   Assert,
   ArrayCreate,
@@ -16,9 +16,10 @@ import {
   F,
 } from '../abstract-ops/all.mjs';
 import { TemplateStrings } from '../static-semantics/all.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
 /** https://tc39.es/ecma262/#sec-gettemplateobjec */
-function GetTemplateObject(templateLiteral) {
+function GetTemplateObject(templateLiteral: ParseNode.TemplateLiteral) {
   // 1. Let realm be the current Realm Record.
   const realm = surroundingAgent.currentRealmRecord;
   // 2. Let templateRegistry be realm.[[TemplateMap]].
@@ -92,7 +93,7 @@ function GetTemplateObject(templateLiteral) {
 //
 // https://github.com/tc39/ecma262/pull/1402
 //   TemplateLiteral : SubstitutionTemplate
-function* ArgumentListEvaluation_TemplateLiteral(TemplateLiteral) {
+function* ArgumentListEvaluation_TemplateLiteral(TemplateLiteral: ParseNode.TemplateLiteral) {
   switch (true) {
     case TemplateLiteral.TemplateSpanList.length === 1: {
       const templateLiteral = TemplateLiteral;
@@ -129,7 +130,7 @@ function* ArgumentListEvaluation_TemplateLiteral(TemplateLiteral) {
 //   Arguments :
 //     `(` ArgumentList `)`
 //     `(` ArgumentList `,` `)`
-function* ArgumentListEvaluation_Arguments(Arguments) {
+function* ArgumentListEvaluation_Arguments(Arguments: ParseNode.Arguments) {
   const precedingArgs = [];
   for (const element of Arguments) {
     if (element.type === 'AssignmentRestElement') {
@@ -167,9 +168,9 @@ function* ArgumentListEvaluation_Arguments(Arguments) {
   return precedingArgs;
 }
 
-export function ArgumentListEvaluation(ArgumentsOrTemplateLiteral) {
+export function ArgumentListEvaluation(ArgumentsOrTemplateLiteral: ParseNode.Arguments | ParseNode.TemplateLiteral) {
   switch (true) {
-    case Array.isArray(ArgumentsOrTemplateLiteral):
+    case isArray(ArgumentsOrTemplateLiteral):
       return ArgumentListEvaluation_Arguments(ArgumentsOrTemplateLiteral);
     case ArgumentsOrTemplateLiteral.type === 'TemplateLiteral':
       return ArgumentListEvaluation_TemplateLiteral(ArgumentsOrTemplateLiteral);

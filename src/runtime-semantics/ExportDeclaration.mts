@@ -6,6 +6,7 @@ import { GetValue } from '../abstract-ops/all.mjs';
 import { BoundNames, IsAnonymousFunctionDefinition } from '../static-semantics/all.mjs';
 import { NormalCompletion, Q } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import {
   NamedEvaluation,
   InitializeBoundName,
@@ -21,7 +22,7 @@ import {
 //     `export` `default` HoistableDeclaration
 //     `export` `default` ClassDeclaration
 //     `export` `default` AssignmentExpression `;`
-export function* Evaluate_ExportDeclaration(ExportDeclaration) {
+export function* Evaluate_ExportDeclaration(ExportDeclaration: ParseNode.ExportDeclaration) {
   const {
     FromClause, NamedExports,
     VariableStatement,

@@ -9,10 +9,11 @@ import {
   BoundNames,
 } from '../static-semantics/all.mjs';
 import { X, NormalCompletion } from '../completion.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import { Evaluate_StatementList, InstantiateFunctionObject } from './all.mjs';
 
 /** https://tc39.es/ecma262/#sec-blockdeclarationinstantiation */
-export function BlockDeclarationInstantiation(code, env) {
+export function BlockDeclarationInstantiation(code, env: DeclarativeEnvironmentRecord) {
   // 1. Assert: env is a declarative Environment Record.
   Assert(env instanceof DeclarativeEnvironmentRecord);
   // 2. Let declarations be the LexicallyScopedDeclarations of code.
@@ -51,7 +52,7 @@ export function BlockDeclarationInstantiation(code, env) {
 //  Block :
 //    `{` `}`
 //    `{` StatementList `}`
-export function* Evaluate_Block({ StatementList }) {
+export function* Evaluate_Block({ StatementList }: ParseNode.Block) {
   if (StatementList.length === 0) {
     // 1. Return NormalCompletion(empty).
     return NormalCompletion(undefined);

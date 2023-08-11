@@ -4,6 +4,7 @@ import { Evaluate } from '../evaluator.mjs';
 import { Q, X } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import { StringValue } from '../static-semantics/all.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import {
   EvaluatePropertyAccessWithExpressionKey,
   EvaluatePropertyAccessWithIdentifierKey,
@@ -12,7 +13,7 @@ import {
 /** https://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation */
 //   MemberExpression : MemberExpression `[` Expression `]`
 //   CallExpression : CallExpression `[` Expression `]`
-function* Evaluate_MemberExpression_Expression({ strict, MemberExpression, Expression }) {
+function* Evaluate_MemberExpression_Expression({ strict, MemberExpression, Expression }: ParseNode.MemberExpression) {
   // 1. Let baseReference be the result of evaluating |MemberExpression|.
   const baseReference = yield* Evaluate(MemberExpression);
   // 2. Let baseValue be ? GetValue(baseReference).
@@ -25,7 +26,7 @@ function* Evaluate_MemberExpression_Expression({ strict, MemberExpression, Expre
 /** https://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation */
 //   MemberExpression : MemberExpression `.` IdentifierName
 //   CallExpression : CallExpression `.` IdentifierName
-function* Evaluate_MemberExpression_IdentifierName({ strict, MemberExpression, IdentifierName }) {
+function* Evaluate_MemberExpression_IdentifierName({ strict, MemberExpression, IdentifierName }: ParseNode.MemberExpression) {
   // 1. Let baseReference be the result of evaluating |MemberExpression|.
   const baseReference = yield* Evaluate(MemberExpression);
   // 2. Let baseValue be ? GetValue(baseReference).
@@ -38,7 +39,7 @@ function* Evaluate_MemberExpression_IdentifierName({ strict, MemberExpression, I
 /** https://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation */
 //   MemberExpression : MemberExpression `.` PrivateIdentifier
 //   CallExpression : CallExpression `.` PrivateIdentifier
-function* Evaluate_MemberExpression_PrivateIdentifier({ MemberExpression, PrivateIdentifier }) {
+function* Evaluate_MemberExpression_PrivateIdentifier({ MemberExpression, PrivateIdentifier }: ParseNode.MemberExpression) {
   // 1. Let baseReference be the result of evaluating MemberExpression.
   const baseReference = yield* Evaluate(MemberExpression);
   // 2. Let baseValue be ? GetValue(baseReference).
@@ -58,7 +59,7 @@ function* Evaluate_MemberExpression_PrivateIdentifier({ MemberExpression, Privat
 //   CallExpression :
 //     CallExpression `[` Expression `]`
 //     CallExpression `.` IdentifierName
-export function Evaluate_MemberExpression(MemberExpression) {
+export function Evaluate_MemberExpression(MemberExpression: ParseNode.MemberExpression) {
   switch (true) {
     case !!MemberExpression.Expression:
       return Evaluate_MemberExpression_Expression(MemberExpression);

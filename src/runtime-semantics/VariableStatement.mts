@@ -6,6 +6,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { NormalCompletion, Q, ReturnIfAbrupt } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import { StringValue, IsAnonymousFunctionDefinition } from '../static-semantics/all.mjs';
 import { Value } from '../value.mjs';
 import { NamedEvaluation, BindingInitialization } from './all.mjs';
@@ -15,7 +16,7 @@ import { NamedEvaluation, BindingInitialization } from './all.mjs';
 //     BindingIdentifier
 //     BindingIdentifier Initializer
 //     BindingPattern Initializer
-function* Evaluate_VariableDeclaration({ BindingIdentifier, Initializer, BindingPattern }) {
+function* Evaluate_VariableDeclaration({ BindingIdentifier, Initializer, BindingPattern }: ParseNode.VariableDeclaration) {
   if (BindingIdentifier) {
     if (!Initializer) {
       // 1. Return NormalCompletion(empty).
@@ -52,7 +53,7 @@ function* Evaluate_VariableDeclaration({ BindingIdentifier, Initializer, Binding
 //
 // (implicit)
 //   VariableDeclarationList : VariableDeclaration
-export function* Evaluate_VariableDeclarationList(VariableDeclarationList) {
+export function* Evaluate_VariableDeclarationList(VariableDeclarationList: ParseNode.VariableDeclarationList) {
   let next;
   for (const VariableDeclaration of VariableDeclarationList) {
     next = yield* Evaluate_VariableDeclaration(VariableDeclaration);
@@ -63,7 +64,7 @@ export function* Evaluate_VariableDeclarationList(VariableDeclarationList) {
 
 /** https://tc39.es/ecma262/#sec-variable-statement-runtime-semantics-evaluation */
 //   VariableStatement : `var` VariableDeclarationList `;`
-export function* Evaluate_VariableStatement({ VariableDeclarationList }) {
+export function* Evaluate_VariableStatement({ VariableDeclarationList }: ParseNode.VariableStatement) {
   const next = yield* Evaluate_VariableDeclarationList(VariableDeclarationList);
   ReturnIfAbrupt(next);
   return NormalCompletion(undefined);

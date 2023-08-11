@@ -19,7 +19,7 @@ import {
   SetFunctionName,
   ToIntegerOrInfinity,
   CreateBuiltinFunction,
-  MakeBasicObject,
+  MakeBasicObject, R,
 } from '../abstract-ops/all.mjs';
 import {
   JSStringValue,
@@ -139,9 +139,9 @@ function FunctionProto_bind([thisArg = Value.undefined, ...args], { thisValue })
     // b. If Type(targetLen) is Number, then
     if (targetLen instanceof NumberValue) {
       // i. If targetLen is +∞𝔽, set L to +∞.
-      if (targetLen.numberValue() === +Infinity) {
+      if (R(targetLen) === +Infinity) {
         L = +Infinity;
-      } else if (targetLen.numberValue() === -Infinity) { // ii. Else if targetLen is -∞𝔽, set L to 0.
+      } else if (R(targetLen) === -Infinity) { // ii. Else if targetLen is -∞𝔽, set L to 0.
         L = 0;
       } else { // iii. Else,
         // 1. Set targetLen to ! ToIntegerOrInfinity(targetLen).

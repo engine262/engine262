@@ -3,7 +3,7 @@ import { JSStringValue } from '../value.mjs';
 import { Assert, F, isNonNegativeInteger } from '../abstract-ops/all.mjs';
 
 // https://tc39.es/proposal-string-replaceall/#sec-stringindexof
-export function StringIndexOf(string, searchValue, fromIndex) {
+export function StringIndexOf(string: JSStringValue, searchValue: JSStringValue, fromIndex: number) {
   // 1. Assert: Type(string) is String.
   Assert(string instanceof JSStringValue);
   // 2. Assert: Type(searchValue) is String.

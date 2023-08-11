@@ -2,10 +2,11 @@
 import { surroundingAgent } from '../engine.mjs';
 import { Value } from '../value.mjs';
 import { OrdinaryFunctionCreate, SetFunctionName, sourceTextMatchedBy } from '../abstract-ops/all.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncarrowfunctionexpression */
 // AsyncArrowFunction : ArrowParameters `=>` AsyncConciseBody
-export function InstantiateAsyncArrowFunctionExpression(AsyncArrowFunction, name) {
+export function InstantiateAsyncArrowFunctionExpression(AsyncArrowFunction: ParseNode.AsyncArrowFunction, name?) {
   const { ArrowParameters, AsyncConciseBody } = AsyncArrowFunction;
   // 1. If name is not present, set name to "".
   if (name === undefined) {

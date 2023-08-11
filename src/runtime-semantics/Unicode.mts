@@ -6,18 +6,17 @@ export { UnicodeSets };
 
 // #table-nonbinary-unicode-properties
 export const NonbinaryUnicodeProperties = {
-  __proto__: null,
   General_Category: 'General_Category',
   gc: 'General_Category',
   Script: 'Script',
   sc: 'Script',
   Script_Extensions: 'Script_Extensions',
   scx: 'Script_Extensions',
-};
+} as const;
+Object.setPrototypeOf(NonbinaryUnicodeProperties, null);
 
 // #table-binary-unicode-properties
 export const BinaryUnicodeProperties = {
-  __proto__: null,
   ASCII: 'ASCII',
   ASCII_Hex_Digit: 'ASCII_Hex_Digit',
   AHex: 'ASCII_Hex_Digit',
@@ -116,11 +115,11 @@ export const BinaryUnicodeProperties = {
   XIDC: 'XID_Continue',
   XID_Start: 'XID_Start',
   XIDS: 'XID_Start',
-};
+} as const;
+Object.setPrototypeOf(BinaryUnicodeProperties, null);
 
 // #table-unicode-general-category-values
 export const UnicodeGeneralCategoryValues = {
-  __proto__: null,
   Cased_Letter: 'Cased_Letter',
   LC: 'Cased_Letter',
   Close_Punctuation: 'Close_Punctuation',
@@ -201,11 +200,11 @@ export const UnicodeGeneralCategoryValues = {
   Cn: 'Unassigned',
   Uppercase_Letter: 'Uppercase_Letter',
   Lu: 'Uppercase_Letter',
-};
+} as const;
+Object.setPrototypeOf(UnicodeGeneralCategoryValues, null);
 
 // #table-unicode-script-values
 export const UnicodeScriptValues = {
-  __proto__: null,
   Adlam: 'Adlam',
   Adlm: 'Adlam',
   Ahom: 'Ahom',
@@ -514,10 +513,11 @@ export const UnicodeScriptValues = {
   Yiii: 'Yi',
   Zanabazar_Square: 'Zanabazar_Square',
   Zanb: 'Zanabazar_Square',
-};
+} as const;
+Object.setPrototypeOf(UnicodeScriptValues, null);
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-unicodematchproperty-p */
-export function UnicodeMatchProperty(p) {
+export function UnicodeMatchProperty(p: string): string {
   // 1. Assert: p is a List of Unicode code points that is identical to a List of Unicode code points that is a Unicode property name or property alias listed in the “Property name and aliases” column of Table 55 or Table 56.
   Assert(p in NonbinaryUnicodeProperties || p in BinaryUnicodeProperties);
   // 2. Let c be the canonical property name of p as given in the “Canonical property name” column of the corresponding row.
@@ -527,7 +527,7 @@ export function UnicodeMatchProperty(p) {
 }
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-unicodematchpropertyvalue-p-v */
-export function UnicodeMatchPropertyValue(p, v) {
+export function UnicodeMatchPropertyValue(p: string, v) {
   // 1. Assert: p is a List of Unicode code points that is identical to a List of Unicode code points that is a canonical, unaliased Unicode property name listed in the “Canonical property name” column of Table 55.
   Assert(p in NonbinaryUnicodeProperties);
   // 2. Assert: v is a List of Unicode code points that is identical to a List of Unicode code points that is a property value or property value alias for Unicode property p listed in the “Property value and aliases” column of Table 57 or Table 58.

@@ -16,7 +16,7 @@ import { EnvironmentRecord } from '../environment.mjs';
 import { ArgumentListEvaluation } from './all.mjs';
 
 /** https://tc39.es/ecma262/#sec-evaluatecall */
-export function* EvaluateCall(func, ref, args, tailPosition) {
+export function* EvaluateCall(func, ref, args, tailPosition: boolean) {
   // 1. If Type(ref) is Reference, then
   let thisValue;
   if (ref instanceof ReferenceRecord) {

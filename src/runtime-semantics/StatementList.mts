@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Evaluate } from '../evaluator.mjs';
 import {
   EnsureCompletion,
@@ -6,9 +5,10 @@ import {
   UpdateEmpty,
   NormalCompletion,
 } from '../completion.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
 /** https://tc39.es/ecma262/#sec-block-runtime-semantics-evaluation */
-export function* Evaluate_StatementList(StatementList) {
+export function* Evaluate_StatementList(StatementList: ParseNode.StatementList) {
   if (StatementList.length === 0) {
     return NormalCompletion(undefined);
   }

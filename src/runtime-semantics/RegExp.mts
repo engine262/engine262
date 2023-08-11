@@ -7,6 +7,7 @@ import { CharacterValue, StringToCodePoints } from '../static-semantics/all.mjs'
 import { X } from '../completion.mjs';
 import { isLineTerminator, isWhitespace, isDecimalDigit } from '../parser/Lexer.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import {
   UnicodeMatchProperty,
   UnicodeMatchPropertyValue,
@@ -126,7 +127,7 @@ class Range {
 
 /** https://tc39.es/ecma262/#sec-pattern */
 //   Pattern :: Disjunction
-export function Evaluate_Pattern(Pattern, flags) {
+export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
   // The descriptions below use the following variables:
   //   * Input is a List consisting of all of the characters, in order, of the String being matched
   //     by the regular expression pattern. Each character is either a code unit or a code point,
@@ -141,8 +142,8 @@ export function Evaluate_Pattern(Pattern, flags) {
   //   * IgnoreCase is true if the RegExp object's [[OriginalFlags]] internal slot contains "i" and otherwise is false.
   //   * Multiline is true if the RegExp object's [[OriginalFlags]] internal slot contains "m" and otherwise is false.
   //   * Unicode is true if the RegExp object's [[OriginalFlags]] internal slot contains "u" and otherwise is false.
-  let Input;
-  let InputLength;
+  let Input: string;
+  let InputLength: number;
   const NcapturingParens = Pattern.capturingGroups.length;
   const DotAll = flags.includes('s');
   const IgnoreCase = flags.includes('i');
@@ -153,7 +154,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     // 1. Evaluate Disjunction with +1 as its direction argument to obtain a Matcher m.
     const m = Evaluate(Pattern.Disjunction, +1);
     // 2. Return a new abstract closure with parameters (str, index) that captures m and performs the following steps when called:
-    return (str, index) => {
+    return (str: JSStringValue, index: number) => {
       // a. Assert: Type(str) is String.
       Assert(str instanceof JSStringValue);
       // b. Assert: index is a non-negative integer which is ≤ the length of str.
@@ -186,7 +187,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     };
   }
 
-  function Evaluate(node, ...args) {
+  function Evaluate(node: ParseNode.RegExp.RegExpParseNode, ...args) {
     switch (node.type) {
       case 'Disjunction':
         return Evaluate_Disjunction(node, ...args);
@@ -225,7 +226,7 @@ export function Evaluate_Pattern(Pattern, flags) {
   //   Disjunction ::
   //     Alternative
   //     Alternative `|` Disjunction
-  function Evaluate_Disjunction({ Alternative, Disjunction }, direction) {
+  function Evaluate_Disjunction({ Alternative, Disjunction }: ParseNode.RegExp.Disjunction, direction) {
     if (!Disjunction) {
       // 1. Evaluate Alternative with argument direction to obtain a Matcher m.
       const m = Evaluate(Alternative, direction);
@@ -257,7 +258,7 @@ export function Evaluate_Pattern(Pattern, flags) {
   //   Alternative ::
   //     [empty]
   //     Alternative Term
-  function Evaluate_Alternative({ Alternative, Term }, direction) {
+  function Evaluate_Alternative({ Alternative, Term }: ParseNode.RegExp.Alternative, direction) {
     if (!Alternative && !Term) {
       // 1. Return a new Matcher with parameters (x, c) that captures nothing and performs the following steps when called:
       return (x, c) => {
@@ -318,7 +319,7 @@ export function Evaluate_Pattern(Pattern, flags) {
   //     Assertion
   //     Atom
   //     Atom Quantifier
-  function Evaluate_Term(Term, direction) {
+  function Evaluate_Term(Term: ParseNode.RegExp.Term, direction) {
     const { Atom, Quantifier } = Term;
     if (!Quantifier) {
       // 1. Return the Matcher that is the result of evaluating Atom with argument direction.
@@ -349,7 +350,7 @@ export function Evaluate_Pattern(Pattern, flags) {
   }
 
   /** https://tc39.es/ecma262/#sec-runtime-semantics-repeatmatcher-abstract-operation */
-  function RepeatMatcher(m, min, max, greedy, x, c, parenIndex, parenCount) {
+  function RepeatMatcher(m, min: number, max: number, greedy, x, c, parenIndex: number, parenCount: number) {
     // 1. If max is zero, return c(x).
     if (max === 0) {
       return c(x);
@@ -424,7 +425,7 @@ export function Evaluate_Pattern(Pattern, flags) {
   //     `(` `?` `!` Disjunction `)`
   //     `(` `?` `<=` Disjunction `)`
   //     `(` `?` `<!` Disjunction `)`
-  function Evaluate_Assertion({ subtype, Disjunction }) {
+  function Evaluate_Assertion({ subtype, Disjunction }: ParseNode.RegExp.Assertion) {
     switch (subtype) {
       case '^':
         // 1. Return a new Matcher with parameters (x, c) that captures nothing and performs the following steps when called:
@@ -658,7 +659,7 @@ export function Evaluate_Pattern(Pattern, flags) {
   }
 
   /** https://tc39.es/ecma262/#sec-runtime-semantics-iswordchar-abstract-operation */
-  function IsWordChar(e) {
+  function IsWordChar(e: number) {
     // 1. If e is -1 or e is InputLength, return false.
     if (e === -1 || e === InputLength) {
       return false;
@@ -679,7 +680,7 @@ export function Evaluate_Pattern(Pattern, flags) {
   //   Quantifier ::
   //     QuantifierPrefix
   //     QuantifierPrefix `?`
-  function Evaluate_Quantifier({ QuantifierPrefix, greedy }) {
+  function Evaluate_Quantifier({ QuantifierPrefix, greedy }: ParseNode.RegExp.Quantifier) {
     switch (QuantifierPrefix) {
       case '*':
         return [0, Infinity, greedy];
@@ -702,7 +703,7 @@ export function Evaluate_Pattern(Pattern, flags) {
   //     CharacterClass
   //     `(` GroupSpecifier Disjunction `)`
   //     `(` `?` `:` Disjunction `)`
-  function Evaluate_Atom(Atom, direction) {
+  function Evaluate_Atom(Atom: ParseNode.RegExp.Atom, direction) {
     switch (true) {
       case !!Atom.PatternCharacter: {
         // 1. Let ch be the character matched by PatternCharacter.
@@ -790,7 +791,7 @@ export function Evaluate_Pattern(Pattern, flags) {
   /** https://tc39.es/ecma262/#sec-runtime-semantics-charactersetmatcher-abstract-operation */
   function CharacterSetMatcher(A, invert, direction) {
     // 1. Return a new Matcher with parameters (x, c) that captures A, invert, and direction and performs the following steps when called:
-    return (x, c) => {
+    return (x: State, c) => {
       // a. Assert: x is a State.
       Assert(x instanceof State);
       // b. Assert: c is a Continuation.
@@ -833,7 +834,7 @@ export function Evaluate_Pattern(Pattern, flags) {
   }
 
   /** https://tc39.es/ecma262/#sec-runtime-semantics-canonicalize-ch */
-  function Canonicalize(ch) {
+  function Canonicalize(ch: number) {
     // 1. If IgnoreCase is false, return ch.
     if (IgnoreCase === false) {
       return ch;
@@ -879,7 +880,7 @@ export function Evaluate_Pattern(Pattern, flags) {
   //   CharacterEscape
   //   CharacterClassEscape
   //   `k` GroupName
-  function Evaluate_AtomEscape(AtomEscape, direction) {
+  function Evaluate_AtomEscape(AtomEscape: ParseNode.RegExp.AtomEscape, direction) {
     switch (true) {
       case !!AtomEscape.DecimalEscape: {
         // 1. Evaluate DecimalEscape to obtain an integer n.
@@ -970,7 +971,7 @@ export function Evaluate_Pattern(Pattern, flags) {
   //   HexEscapeSequence
   //   RegExpUnicodeEscapeSequence
   //   IdentityEscape
-  function Evaluate_CharacterEscape(CharacterEscape) {
+  function Evaluate_CharacterEscape(CharacterEscape: ParseNode.RegExp.CharacterEscape) {
     // 1. Let cv be the CharacterValue of this CharacterEscape.
     const cv = CharacterValue(CharacterEscape);
     // 2. Return the character whose character value is cv.
@@ -980,7 +981,7 @@ export function Evaluate_Pattern(Pattern, flags) {
   /** https://tc39.es/ecma262/#sec-decimalescape */
   // DecimalEscape ::
   //   NonZeroDigit DecimalDigits?
-  function Evaluate_DecimalEscape(DecimalEscape) {
+  function Evaluate_DecimalEscape(DecimalEscape: ParseNode.RegExp.DecimalEscape) {
     return DecimalEscape.value;
   }
 
@@ -994,7 +995,7 @@ export function Evaluate_Pattern(Pattern, flags) {
   //   `W`
   //   `p{` UnicodePropertyValueExpression `}`
   //   `P{` UnicodePropertyValueExpression `}`
-  function Evaluate_CharacterClassEscape(node) {
+  function Evaluate_CharacterClassEscape(node: ParseNode.RegExp.CharacterClassEscape) {
     switch (node.value) {
       case 'd':
         // 1. Return the ten-element set of characters containing the characters 0 through 9 inclusive.
@@ -1038,7 +1039,7 @@ export function Evaluate_Pattern(Pattern, flags) {
   // UnicodePropertyValueExpression ::
   //   UnicodePropertyName `=` UnicodePropertyValue
   //   LoneUnicodePropertyNameOrValue
-  function Evaluate_UnicodePropertyValueExpression(UnicodePropertyValueExpression) {
+  function Evaluate_UnicodePropertyValueExpression(UnicodePropertyValueExpression: ParseNode.RegExp.UnicodePropertyValueExpression) {
     if (UnicodePropertyValueExpression.LoneUnicodePropertyNameOrValue) {
       // 1. Let s be SourceText of LoneUnicodePropertyNameOrValue.
       const s = UnicodePropertyValueExpression.LoneUnicodePropertyNameOrValue;
@@ -1072,7 +1073,7 @@ export function Evaluate_Pattern(Pattern, flags) {
   //  CharacterClass ::
   //    `[` ClassRanges `]`
   //    `[` `^` ClassRanges `]`
-  function Evaluate_CharacterClass({ invert, ClassRanges }) {
+  function Evaluate_CharacterClass({ invert, ClassRanges }: ParseNode.RegExp.CharacterClass) {
     let A = new ConcreteCharSet([]);
     for (const range of ClassRanges) {
       if (Array.isArray(range)) {
@@ -1116,7 +1117,7 @@ export function Evaluate_Pattern(Pattern, flags) {
   // ClassAtomNoDash ::
   //   SourceCharacter
   //   `\` ClassEscape
-  function Evaluate_ClassAtom(ClassAtom) {
+  function Evaluate_ClassAtom(ClassAtom: ParseNode.RegExp.ClassAtom) {
     switch (true) {
       case !!ClassAtom.SourceCharacter:
         // 1. Return the CharSet containing the character matched by SourceCharacter.
@@ -1135,7 +1136,7 @@ export function Evaluate_Pattern(Pattern, flags) {
   //   `-`
   //   CharacterEscape
   //   CharacterClassEscape
-  function Evaluate_ClassEscape(ClassEscape) {
+  function Evaluate_ClassEscape(ClassEscape: ParseNode.RegExp.ClassEscape) {
     switch (true) {
       case ClassEscape.value === 'b':
       case ClassEscape.value === '-':

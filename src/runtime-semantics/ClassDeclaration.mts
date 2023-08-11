@@ -4,13 +4,14 @@ import { Value } from '../value.mjs';
 import { sourceTextMatchedBy } from '../abstract-ops/all.mjs';
 import { StringValue } from '../static-semantics/all.mjs';
 import { Q, NormalCompletion } from '../completion.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import { InitializeBoundName, ClassDefinitionEvaluation } from './all.mjs';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-bindingclassdeclarationevaluation */
 //   ClassDeclaration :
 //     `class` BindingIdentifier ClassTail
 //     `class` ClassTail
-export function* BindingClassDeclarationEvaluation(ClassDeclaration) {
+export function* BindingClassDeclarationEvaluation(ClassDeclaration: ParseNode.ClassDeclaration) {
   const { BindingIdentifier, ClassTail } = ClassDeclaration;
   if (!BindingIdentifier) {
     // 1. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments undefined and "default".
@@ -36,7 +37,7 @@ export function* BindingClassDeclarationEvaluation(ClassDeclaration) {
 
 /** https://tc39.es/ecma262/#sec-class-definitions-runtime-semantics-evaluation */
 //   ClassDeclaration : `class` BindingIdentifier ClassTAil
-export function* Evaluate_ClassDeclaration(ClassDeclaration) {
+export function* Evaluate_ClassDeclaration(ClassDeclaration: ParseNode.ClassDeclaration) {
   // 1. Perform ? BindingClassDeclarationEvaluation of this ClassDeclaration.
   Q(yield* BindingClassDeclarationEvaluation(ClassDeclaration));
   // 2. Return NormalCompletion(empty).

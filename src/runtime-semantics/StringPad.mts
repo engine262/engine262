@@ -1,13 +1,15 @@
 // @ts-nocheck
 import { Value } from '../value.mjs';
-import { Assert, ToString, ToLength } from '../abstract-ops/all.mjs';
+import {
+  Assert, ToString, ToLength, R,
+} from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 
 /** https://tc39.es/ecma262/#sec-stringpad */
-export function StringPad(O, maxLength, fillString, placement) {
+export function StringPad(O, maxLength, fillString, placement: 'start' | 'end') {
   Assert(placement === 'start' || placement === 'end');
   const S = Q(ToString(O));
-  const intMaxLength = Q(ToLength(maxLength)).numberValue();
+  const intMaxLength = R(Q(ToLength(maxLength)));
   const stringLength = S.stringValue().length;
   if (intMaxLength <= stringLength) {
     return S;

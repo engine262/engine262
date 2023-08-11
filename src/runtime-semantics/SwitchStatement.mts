@@ -13,13 +13,14 @@ import {
   Q,
 } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import {
   BlockDeclarationInstantiation,
   Evaluate_StatementList,
 } from './all.mjs';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-caseclauseisselected */
-function* CaseClauseIsSelected(C, input) {
+function* CaseClauseIsSelected(C: ParseNode.CaseClause, input) {
   // 1. Assert: C is an instance of the production  CaseClause : `case` Expression `:` StatementList?.
   Assert(C.type === 'CaseClause');
   // 2. Let exprRef be the result of evaluating the Expression of C.
@@ -35,7 +36,7 @@ function* CaseClauseIsSelected(C, input) {
 //     `{` `}`
 //     `{` CaseClauses `}`
 //     `{` CaseClauses? DefaultClause CaseClauses? `}`
-function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, input) {
+function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }: ParseNode.CaseBlock, input) {
   switch (true) {
     case !CaseClauses_a && !DefaultClause && !CaseClauses_b: {
       // 1. Return NormalCompletion(undefined).
@@ -181,7 +182,7 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, i
 /** https://tc39.es/ecma262/#sec-switch-statement-runtime-semantics-evaluation */
 //   SwitchStatement :
 //     `switch` `(` Expression `)` CaseBlock
-export function* Evaluate_SwitchStatement({ Expression, CaseBlock }) {
+export function* Evaluate_SwitchStatement({ Expression, CaseBlock }: ParseNode.SwitchStatement) {
   // 1. Let exprRef be the result of evaluating Expression.
   const exprRef = yield* Evaluate(Expression);
   // 2. Let switchValue be ? GetValue(exprRef).
@@ -209,7 +210,7 @@ export function* Evaluate_SwitchStatement({ Expression, CaseBlock }) {
 //   DefaultClause :
 //     `case` `default` `:`
 //     `case` `default` `:` StatementList
-export function* Evaluate_CaseClause({ StatementList }) {
+export function* Evaluate_CaseClause({ StatementList }: ParseNode.CaseClause) {
   if (!StatementList) {
     // 1. Return NormalCompletion(empty).
     return NormalCompletion(undefined);

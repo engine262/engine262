@@ -29,7 +29,7 @@ import {
   ToObject,
   ToString,
   ToUint32,
-  F,
+  F, R,
 } from '../abstract-ops/all.mjs';
 import {
   NumberValue,
@@ -67,7 +67,7 @@ function ArrayConstructor(argumentsList, { NewTarget }) {
       intLen = F(1);
     } else {
       intLen = X(ToUint32(len));
-      if (intLen.numberValue() !== len.numberValue()) {
+      if (R(intLen) !== R(len)) {
         return surroundingAgent.Throw('RangeError', 'InvalidArrayLength', len);
       }
     }
@@ -90,7 +90,7 @@ function ArrayConstructor(argumentsList, { NewTarget }) {
       Assert(defineStatus === Value.true);
       k += 1;
     }
-    Assert(X(Get(array, Value('length'))).numberValue() === numberOfArgs);
+    Assert(R(X(Get(array, Value('length')))) === numberOfArgs);
     return array;
   }
 

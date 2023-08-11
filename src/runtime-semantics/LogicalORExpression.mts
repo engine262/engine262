@@ -3,11 +3,12 @@ import { Value } from '../value.mjs';
 import { GetValue, ToBoolean } from '../abstract-ops/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { Q, X } from '../completion.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
 /** https://tc39.es/ecma262/#sec-binary-logical-operators-runtime-semantics-evaluation */
 //   LogicalORExpression :
 //     LogicalORExpression `||` LogicalANDExpression
-export function* Evaluate_LogicalORExpression({ LogicalORExpression, LogicalANDExpression }) {
+export function* Evaluate_LogicalORExpression({ LogicalORExpression, LogicalANDExpression }: ParseNode.LogicalORExpression) {
   // 1. Let lref be the result of evaluating LogicalORExpression.
   const lref = yield* Evaluate(LogicalORExpression);
   // 2. Let lval be ? GetValue(lref).

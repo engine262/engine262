@@ -10,12 +10,13 @@ import {
 } from '../abstract-ops/all.mjs';
 import { StringValue } from '../static-semantics/all.mjs';
 import { NewDeclarativeEnvironment } from '../environment.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateordinaryfunctionexpression */
 //   FunctionExpression :
 //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
 //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
-export function InstantiateOrdinaryFunctionExpression(FunctionExpression, name) {
+export function InstantiateOrdinaryFunctionExpression(FunctionExpression: ParseNode.FunctionExpression, name?) {
   const { BindingIdentifier, FormalParameters, FunctionBody } = FunctionExpression;
   if (BindingIdentifier) {
     // 1. Assert: name is not present.

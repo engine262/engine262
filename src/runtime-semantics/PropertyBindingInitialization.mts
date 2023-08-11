@@ -1,6 +1,8 @@
 // @ts-nocheck
 import { BoundNames } from '../static-semantics/all.mjs';
 import { Q, ReturnIfAbrupt } from '../completion.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
+import { isArray } from '../helpers.mjs';
 import { Evaluate_PropertyName, KeyedBindingInitialization } from './all.mjs';
 
 /** https://tc39.es/ecma262/#sec-destructuring-binding-patterns-runtime-semantics-propertybindinginitialization */
@@ -8,8 +10,8 @@ import { Evaluate_PropertyName, KeyedBindingInitialization } from './all.mjs';
 // BindingProperty :
 //   SingleNameBinding
 //   PropertyName `:` BindingElement
-export function* PropertyBindingInitialization(node, value, environment) {
-  if (Array.isArray(node)) {
+export function* PropertyBindingInitialization(node: ParseNode.BindingPropertyList | ParseNode.BindingPropertyLike, value, environment) {
+  if (isArray(node)) {
     // 1. Let boundNames be ? PropertyBindingInitialization of BindingPropertyList with arguments value and environment.
     // 2. Let nextNames be ? PropertyBindingInitialization of BindingProperty with arguments value and environment.
     // 3. Append each item in nextNames to the end of boundNames.

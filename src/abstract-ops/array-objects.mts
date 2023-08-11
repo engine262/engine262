@@ -34,7 +34,7 @@ import {
   isArrayIndex,
   isNonNegativeInteger,
   Yield,
-  F,
+  F, R,
 } from './all.mjs';
 
 /** https://tc39.es/ecma262/#sec-array-exotic-objects-defineownproperty-p-desc */
@@ -50,15 +50,15 @@ function ArrayDefineOwnProperty(P, Desc) {
     Assert(oldLenDesc.Configurable === Value.false);
     const oldLen = oldLenDesc.Value;
     const index = X(ToUint32(P));
-    if (index.numberValue() >= oldLen.numberValue() && oldLenDesc.Writable === Value.false) {
+    if (R(index) >= R(oldLen) && oldLenDesc.Writable === Value.false) {
       return Value.false;
     }
     const succeeded = X(OrdinaryDefineOwnProperty(A, P, Desc));
     if (succeeded === Value.false) {
       return Value.false;
     }
-    if (index.numberValue() >= oldLen.numberValue()) {
-      oldLenDesc.Value = F(index.numberValue() + 1);
+    if (R(index) >= R(oldLen)) {
+      oldLenDesc.Value = F(R(index) + 1);
       const succeeded = OrdinaryDefineOwnProperty(A, Value('length'), oldLenDesc); // eslint-disable-line no-shadow
       Assert(succeeded === Value.true);
     }
@@ -138,8 +138,8 @@ export function ArraySetLength(A, Desc) {
     return OrdinaryDefineOwnProperty(A, Value('length'), Desc);
   }
   const newLenDesc = Descriptor({ ...Desc });
-  const newLen = Q(ToUint32(Desc.Value)).numberValue();
-  const numberLen = Q(ToNumber(Desc.Value)).numberValue();
+  const newLen = R(Q(ToUint32(Desc.Value)));
+  const numberLen = R(Q(ToNumber(Desc.Value)));
   if (newLen !== numberLen) {
     return surroundingAgent.Throw('RangeError', 'InvalidArrayLength', Desc.Value);
   }
@@ -147,7 +147,7 @@ export function ArraySetLength(A, Desc) {
   const oldLenDesc = OrdinaryGetOwnProperty(A, Value('length'));
   Assert(X(IsDataDescriptor(oldLenDesc)));
   Assert(oldLenDesc.Configurable === Value.false);
-  const oldLen = oldLenDesc.Value.numberValue();
+  const oldLen = R(oldLenDesc.Value);
   if (newLen >= oldLen) {
     return OrdinaryDefineOwnProperty(A, Value('length'), newLenDesc);
   }
@@ -175,7 +175,7 @@ export function ArraySetLength(A, Desc) {
   for (const P of keys) {
     const deleteSucceeded = X(A.Delete(P));
     if (deleteSucceeded === Value.false) {
-      newLenDesc.Value = F(X(ToUint32(P)).numberValue() + 1);
+      newLenDesc.Value = F(R(X(ToUint32(P))) + 1);
       if (newWritable === false) {
         newLenDesc.Writable = Value.false;
       }

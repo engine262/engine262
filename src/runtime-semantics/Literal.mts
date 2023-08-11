@@ -2,6 +2,7 @@
 import { Value } from '../value.mjs';
 import { StringValue, NumericValue } from '../static-semantics/all.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
 /** https://tc39.es/ecma262/#sec-literals-runtime-semantics-evaluation */
 // Literal :
@@ -9,7 +10,7 @@ import { OutOfRange } from '../helpers.mjs';
 //   BooleanLiteral
 //   NumericLiteral
 //   StringLiteral
-export function Evaluate_Literal(Literal) {
+export function Evaluate_Literal(Literal: ParseNode.Literal) {
   switch (Literal.type) {
     case 'NullLiteral':
       // 1. Return null.

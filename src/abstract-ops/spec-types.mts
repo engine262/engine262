@@ -23,15 +23,27 @@ import {
 import { isNonNegativeInteger } from './data-types-and-values.mjs';
 
 // #𝔽
-export function F(x) {
+export function F(x: number) {
   Assert(typeof x === 'number');
   return new NumberValue(x);
 }
 
 // #ℤ
-export function Z(x) {
+export function Z(x: bigint) {
   Assert(typeof x === 'bigint');
   return new BigIntValue(x);
+}
+
+// #ℝ
+export function R(x: NumberValue): number;
+export function R(x: BigIntValue): bigint;
+export function R(x: BigIntValue | NumberValue): bigint | number;
+export function R(x) {
+  if (x instanceof BigIntValue) {
+    return x.bigintValue(); // eslint-disable-line @engine262/mathematical-value
+  }
+  Assert(x instanceof NumberValue);
+  return x.numberValue(); // eslint-disable-line @engine262/mathematical-value
 }
 
 // 6.2.5.1 IsAccessorDescriptor

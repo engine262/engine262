@@ -1,4 +1,3 @@
-// @ts-nocheck
 export * from './IdentifierReference.mjs';
 export * from './This.mjs';
 export * from './Literal.mjs';

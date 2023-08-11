@@ -7,12 +7,13 @@ import {
   Await,
   Q, X,
 } from '../completion.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
 /** https://tc39.es/ecma262/#sec-return-statement-runtime-semantics-evaluation */
 //  ReturnStatement :
 //    `return` `;`
 //    `return` Expression `;`
-export function* Evaluate_ReturnStatement({ Expression }) {
+export function* Evaluate_ReturnStatement({ Expression }: ParseNode.ReturnStatement) {
   if (!Expression) {
     // 1. Return Completion { [[Type]]: return, [[Value]]: undefined, [[Target]]: empty }.
     return new Completion({ Type: 'return', Value: Value.undefined, Target: undefined });

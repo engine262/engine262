@@ -1,12 +1,12 @@
-// @ts-nocheck
 import { Completion } from '../completion.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import { StringValue } from '../static-semantics/all.mjs';
 
 /** https://tc39.es/ecma262/#sec-continue-statement-runtime-semantics-evaluation */
 //   ContinueStatement :
 //     `continue` `;`
 //     `continue` LabelIdentifier `;`
-export function Evaluate_ContinueStatement({ LabelIdentifier }) {
+export function Evaluate_ContinueStatement({ LabelIdentifier }: ParseNode.ContinueStatement) {
   if (!LabelIdentifier) {
     // 1. Return Completion { [[Type]]: continue, [[Value]]: empty, [[Target]]: empty }.
     return new Completion({ Type: 'continue', Value: undefined, Target: undefined });

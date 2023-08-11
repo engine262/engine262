@@ -8,7 +8,7 @@ import {
 import {
   CreateBuiltinFunction,
   ToNumber,
-  F,
+  F, R,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
@@ -18,14 +18,14 @@ function Math_abs([x = Value.undefined]) {
   const n = Q(ToNumber(x));
   if (n.isNaN()) {
     return n;
-  } else if (Object.is(n.numberValue(), -0)) {
+  } else if (Object.is(R(n), -0)) {
     return F(+0);
   } else if (n.isInfinity()) {
     return F(Infinity);
   }
 
-  if (n.numberValue() < 0) {
-    return F(-n.numberValue());
+  if (R(n) < 0) {
+    return F(-R(n));
   }
   return n;
 }
@@ -35,15 +35,15 @@ function Math_acos([x = Value.undefined]) {
   const n = Q(ToNumber(x));
   if (n.isNaN()) {
     return n;
-  } else if (n.numberValue() > 1) {
+  } else if (R(n) > 1) {
     return F(NaN);
-  } else if (n.numberValue() < -1) {
+  } else if (R(n) < -1) {
     return F(NaN);
-  } else if (n.numberValue() === 1) {
+  } else if (R(n) === 1) {
     return F(+0);
   }
 
-  return F(Math.acos(n.numberValue()));
+  return F(Math.acos(R(n)));
 }
 
 /** https://tc39.es/ecma262/#sec-math.pow */
@@ -161,7 +161,7 @@ export function bootstrapMath(realmRec) {
     /** https://tc39.es/ecma262/#sec-function-properties-of-the-math-object */
     const method = (args) => {
       for (let i = 0; i < args.length; i += 1) {
-        args[i] = Q(ToNumber(args[i])).numberValue();
+        args[i] = R(Q(ToNumber(args[i])));
       }
       return F(Math[name](...args));
     };
