@@ -8,7 +8,7 @@ import {
   GetIterator,
   IteratorClose,
 } from '../abstract-ops/all.mjs';
-import { StringValue } from '../static-semantics/all.mjs';
+import { StringValue } from '../api.mjs';
 import { NormalCompletion, Q } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import type { ParseNode } from '../parser/ParseNode.mjs';

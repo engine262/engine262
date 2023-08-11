@@ -1,7 +1,6 @@
 import { type GCMarker, surroundingAgent } from './engine.mjs';
 import {
   Assert,
-  CreateBuiltinFunction,
   OrdinaryDefineOwnProperty,
   OrdinaryDelete,
   OrdinaryGet,
@@ -23,148 +22,226 @@ import { Completion, X } from './completion.mjs';
 import { ValueMap, OutOfRange, callable } from './helpers.mjs';
 import type { PrivateElementRecord } from './runtime-semantics/MethodDefinitionEvaluation.mjs';
 
+let createStringValue: (value: string) => JSStringValue; // set by static block in StringValue for privileged access to constructor
+let createNumberValue: (value: number) => NumberValue; // set by static block in NumberValue for privileged access to constructor
+let createBigIntValue: (value: bigint) => BigIntValue; // set by static block in BigIntValue for privileged access to constructor
 
-// @ts-expect-error callable class
-export declare function Value(value: string): StringValue; // @ts-expect-error callable class
-export declare function Value(value: number): NumberValue; // @ts-expect-error callable class
-export declare function Value(value: bigint): BigIntValue; // @ts-expect-error callable class
-export declare function Value(value: undefined): UndefinedValue; // @ts-expect-error callable class
-export declare function Value(value: null): NullValue; // @ts-expect-error callable class
-// TODO(ts): define a FunctionObjectValue type.
-export declare function Value(value: (...args: unknown[]) => unknown): ObjectValue; // @ts-expect-error callable class
-export declare function Value(value: string | number): StringValue | NumberValue;
-/** https://tc39.es/ecma262/#sec-ecmascript-language-types */
-export @callable((_target, _thisArg, [value]) => {
-  if (value === null) {
-    return Value.null;
-  }
-  switch (typeof value) {
-    case 'undefined':
-      return Value.undefined;
-    case 'string':
-      return new StringValue(value);
-    case 'number':
-      return new NumberValue(value);
-    case 'bigint':
-      return new BigIntValue(value);
-    case 'function':
-      return CreateBuiltinFunction(value, 0, Value(''), []);
-    default:
-      throw new OutOfRange('new Value', value);
-  }
-}) // @ts-expect-error callable class
-abstract class Value {
-  /** @deprecated Use Value() instead of Value() */
-  constructor(value?: never) {
-    if (new.target !== Value) {
-      return this;
-    }
-    return Value(value);
-  }
-
-  static declare readonly null: NullValue;
-  static declare readonly undefined: UndefinedValue;
-  static declare readonly true: BooleanValue;
-  static declare readonly false: BooleanValue;
+abstract class BaseValue {
+  static declare readonly null: NullValue; // defined in static block of NullValue
+  static declare readonly undefined: UndefinedValue; // defined in static block of UndefinedValue
+  static declare readonly true: BooleanValue<true>; // defined in static block of BooleanValue
+  static declare readonly false: BooleanValue<false>; // defined in static block of BooleanValue
+  abstract type: Value['type']; // ensures new `Value` subtypes must be added to `Value` union
 }
 
-export class PrimitiveValue extends Value { }
-export type PropertyKeyValue = StringValue | SymbolValue;
+/** https://tc39.es/ecma262/#sec-ecmascript-language-types */
+export type Value =
+  | UndefinedValue
+  | NullValue
+  | BooleanValue
+  | JSStringValue
+  | SymbolValue
+  | NumberValue
+  | BigIntValue
+  | ObjectValue;
+
+/** https://tc39.es/ecma262/#sec-ecmascript-language-types */
+export const Value = (() => {
+  // NOTE: Using IIFE so that the class does not conflict with the type of the same name
+  @callable((_target, _thisArg, [value]) => {
+    if (value === null) {
+      return Value.null;
+    } else if (value === undefined) {
+      return Value.undefined;
+    } else if (value === true) {
+      return Value.true;
+    } else if (value === false) {
+      return Value.false;
+    }
+    switch (typeof value) {
+      case 'string':
+        return createStringValue(value);
+      case 'number':
+        return createNumberValue(value);
+      case 'bigint':
+        return createBigIntValue(value);
+      default:
+        throw new OutOfRange('new Value', value);
+    }
+  })
+  abstract class Value extends BaseValue {
+  }
+  return Value;
+})() as typeof BaseValue & {
+  <T extends null | undefined | boolean | string | number | bigint>(value: T): // eslint-disable-line @engine262/no-use-in-def
+    T extends null ? NullValue :
+    T extends undefined ? UndefinedValue :
+    T extends boolean ? BooleanValue<T> :
+    T extends string ? JSStringValue :
+    T extends number ? NumberValue :
+    T extends bigint ? BigIntValue :
+    never;
+};
+
+/** https://tc39.es/ecma262/#sec-ecmascript-language-types */
+export type PropertyKeyValue =
+  | JSStringValue
+  | SymbolValue;
+
+/** https://tc39.es/ecma262/#sec-ecmascript-language-types */
+export type PrimitiveValue =
+  | UndefinedValue
+  | NullValue
+  | BooleanValue
+  | JSStringValue
+  | SymbolValue
+  | NumberValue
+  | BigIntValue;
+
+/** https://tc39.es/ecma262/#sec-ecmascript-language-types */
+export const PrimitiveValue = (() => {
+  // NOTE: Using IIFE so that the class does not conflict with the type of the same name
+  // NOTE: Only using IIFE because TypeScript errors when `abstract` is used on class expressions
+  abstract class PrimitiveValue extends Value {
+  }
+  return PrimitiveValue;
+})();
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-undefined-type */
-export class UndefinedValue extends PrimitiveValue { }
+export class UndefinedValue extends PrimitiveValue {
+  declare readonly type: 'Undefined'; // defined on prototype by static block
+  declare readonly value: undefined; // defined on prototype by static block
+
+  private constructor() { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
+    super();
+  }
+
+  static {
+    Object.defineProperty(this.prototype, 'type', { value: 'Undefined' });
+    Object.defineProperty(this.prototype, 'value', { value: undefined });
+    Object.defineProperty(Value, 'undefined', { value: new this() });
+  }
+}
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-null-type */
-export class NullValue extends PrimitiveValue { }
+export class NullValue extends PrimitiveValue {
+  declare readonly type: 'Null'; // defined on prototype by static block
+  declare readonly value: null; // defined on prototype by static block
+
+  private constructor() { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
+    super();
+  }
+
+  static {
+    Object.defineProperty(this.prototype, 'type', { value: 'Null' });
+    Object.defineProperty(this.prototype, 'value', { value: null });
+    Object.defineProperty(Value, 'null', { value: new this() });
+  }
+}
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-boolean-type */
-export class BooleanValue extends PrimitiveValue {
-  readonly boolean: boolean;
-  constructor(v: boolean) {
+export class BooleanValue<T extends boolean = boolean> extends PrimitiveValue {
+  declare readonly type: 'Boolean'; // defined on prototype by static block
+  readonly value: T;
+
+  private constructor(value: T) {
     super();
-    this.boolean = v;
+    this.value = value;
   }
 
   booleanValue() {
-    return this.boolean;
+    return this.value;
   }
 
   [Symbol.for('nodejs.util.inspect.custom')]() {
-    return `Boolean { ${this.boolean} }`;
+    return `Boolean { ${this.value} }`;
+  }
+
+  static {
+    Object.defineProperty(this.prototype, 'type', { value: 'Boolean' });
+    Object.defineProperty(Value, 'true', { value: new this(true) });
+    Object.defineProperty(Value, 'false', { value: new this(false) });
   }
 }
 
-Object.defineProperties(Value, {
-  undefined: { value: new UndefinedValue(), configurable: false, writable: false },
-  null: { value: new NullValue(), configurable: false, writable: false },
-  true: { value: new BooleanValue(true), configurable: false, writable: false },
-  false: { value: new BooleanValue(false), configurable: false, writable: false },
-});
-
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-string-type */
-class StringValue extends PrimitiveValue {
-  readonly string: string;
-  constructor(string: string) {
+export class JSStringValue extends PrimitiveValue {
+  declare readonly type: 'String'; // defined on prototype by static block
+  readonly value: string;
+
+  private constructor(value: string) {
     super();
-    this.string = string;
+    this.value = value;
   }
 
   stringValue() {
-    return this.string;
+    return this.value;
+  }
+
+  static {
+    Object.defineProperty(this.prototype, 'type', { value: 'String' });
+    createStringValue = (value) => new this(value);
   }
 }
-// rename for static semantics StringValue() conflict
-export { StringValue as JSStringValue };
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-symbol-type */
 export class SymbolValue extends PrimitiveValue {
-  readonly Description: StringValue;
-  constructor(Description: StringValue) {
+  declare readonly type: 'Symbol'; // defined on prototype by static block
+  readonly Description: JSStringValue;
+
+  constructor(Description: JSStringValue) {
     super();
     this.Description = Description;
   }
+
+  static {
+    Object.defineProperty(this.prototype, 'type', { value: 'Symbol' });
+  }
 }
 
+/** https://tc39.es/ecma262/#sec-ecmascript-language-types-symbol-type */
 export const wellKnownSymbols = {
-  asyncIterator: new SymbolValue(new StringValue('Symbol.asyncIterator')),
-  hasInstance: new SymbolValue(new StringValue('Symbol.hasInstance')),
-  isConcatSpreadable: new SymbolValue(new StringValue('Symbol.isConcatSpreadable')),
-  iterator: new SymbolValue(new StringValue('Symbol.iterator')),
-  match: new SymbolValue(new StringValue('Symbol.match')),
-  matchAll: new SymbolValue(new StringValue('Symbol.matchAll')),
-  replace: new SymbolValue(new StringValue('Symbol.replace')),
-  search: new SymbolValue(new StringValue('Symbol.search')),
-  species: new SymbolValue(new StringValue('Symbol.species')),
-  split: new SymbolValue(new StringValue('Symbol.split')),
-  toPrimitive: new SymbolValue(new StringValue('Symbol.toPrimitive')),
-  toStringTag: new SymbolValue(new StringValue('Symbol.toStringTag')),
-  unscopables: new SymbolValue(new StringValue('Symbol.unscopables')),
+  asyncIterator: new SymbolValue(Value('Symbol.asyncIterator')),
+  hasInstance: new SymbolValue(Value('Symbol.hasInstance')),
+  isConcatSpreadable: new SymbolValue(Value('Symbol.isConcatSpreadable')),
+  iterator: new SymbolValue(Value('Symbol.iterator')),
+  match: new SymbolValue(Value('Symbol.match')),
+  matchAll: new SymbolValue(Value('Symbol.matchAll')),
+  replace: new SymbolValue(Value('Symbol.replace')),
+  search: new SymbolValue(Value('Symbol.search')),
+  species: new SymbolValue(Value('Symbol.species')),
+  split: new SymbolValue(Value('Symbol.split')),
+  toPrimitive: new SymbolValue(Value('Symbol.toPrimitive')),
+  toStringTag: new SymbolValue(Value('Symbol.toStringTag')),
+  unscopables: new SymbolValue(Value('Symbol.unscopables')),
 } as const;
 Object.setPrototypeOf(wellKnownSymbols, null);
 Object.freeze(wellKnownSymbols);
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-number-type */
 export class NumberValue extends PrimitiveValue {
-  readonly number: number;
-  constructor(number: number) {
+  declare readonly type: 'Number'; // defined on prototype by static block
+  readonly value: number;
+
+  private constructor(value: number) {
     super();
-    this.number = number;
+    this.value = value;
   }
 
   numberValue() {
-    return this.number;
+    return this.value;
   }
 
   isNaN() {
-    return Number.isNaN(this.number);
+    return Number.isNaN(this.value);
   }
 
   isInfinity() {
-    return !Number.isFinite(this.number) && !this.isNaN();
+    return !Number.isFinite(this.value) && !this.isNaN();
   }
 
   isFinite() {
-    return Number.isFinite(this.number);
+    return Number.isFinite(this.value);
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-unaryMinus */
@@ -360,7 +437,7 @@ export class NumberValue extends PrimitiveValue {
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-tostring */
-  static override toString(x: NumberValue): StringValue {
+  static override toString(x: NumberValue): JSStringValue {
     if (x.isNaN()) {
       return Value('NaN');
     }
@@ -380,6 +457,11 @@ export class NumberValue extends PrimitiveValue {
   }
 
   static readonly unit = new NumberValue(1);
+
+  static {
+    Object.defineProperty(this.prototype, 'type', { value: 'Number' });
+    createNumberValue = (value) => new NumberValue(value);
+  }
 }
 
 /** https://tc39.es/ecma262/#sec-numberbitwiseop */
@@ -403,14 +485,16 @@ function NumberBitwiseOp(op: '&' | '|' | '^', x: NumberValue, y: NumberValue) {
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-bigint-type */
 export class BigIntValue extends PrimitiveValue {
-  readonly bigint: bigint;
-  constructor(bigint: bigint) {
+  declare readonly type: 'BigInt'; // defined on prototype by static block
+  readonly value: bigint;
+
+  private constructor(value: bigint) {
     super();
-    this.bigint = bigint;
+    this.value = value;
   }
 
   bigintValue() {
-    return this.bigint;
+    return this.value;
   }
 
   isNaN() {
@@ -552,7 +636,7 @@ export class BigIntValue extends PrimitiveValue {
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-tostring */
-  static override toString(x: BigIntValue): StringValue {
+  static override toString(x: BigIntValue): JSStringValue {
     // 1. If x is less than zero, return the string-concatenation of the String "-" and ! BigInt::toString(-x).
     if (R(x) < 0n) {
       const str = X(BigIntValue.toString(Z(-R(x)))).stringValue();
@@ -563,56 +647,12 @@ export class BigIntValue extends PrimitiveValue {
   }
 
   static readonly unit = new BigIntValue(1n);
+
+  static {
+    Object.defineProperty(this.prototype, 'type', { value: 'BigInt' });
+    createBigIntValue = (value) => new BigIntValue(value);
+  }
 }
-
-/*
-/** https://tc39.es/ecma262/#sec-binaryand */
-// function BinaryAnd(x, y) {
-//   // 1. Assert: x is 0 or 1.
-//   Assert(x === 0n || x === 1n);
-//   // 2. Assert: y is 0 or 1.
-//   Assert(x === 0n || x === 1n);
-//   // 3. If x is 1 and y is 1, return 1.
-//   if (x === 1n && y === 1n) {
-//     return 1n;
-//   } else {
-//     // 4. Else, return 0.
-//     return 0n;
-//   }
-// }
-
-/** https://tc39.es/ecma262/#sec-binaryor */
-// function BinaryOr(x, y) {
-//   // 1. Assert: x is 0 or 1.
-//   Assert(x === 0n || x === 1n);
-//   // 2. Assert: y is 0 or 1.
-//   Assert(x === 0n || x === 1n);
-//   // 3. If x is 1 or y is 1, return 1.
-//   if (x === 1n || y === 1n) {
-//     return 1n;
-//   } else {
-//     // 4. Else, return 0.
-//     return 0n;
-//   }
-// }
-
-/** https://tc39.es/ecma262/#sec-binaryxor */
-// function BinaryXor(x, y) {
-//   // 1. Assert: x is 0 or 1.
-//   Assert(x === 0n || x === 1n);
-//   // 2. Assert: y is 0 or 1.
-//   Assert(x === 0n || x === 1n);
-//   // 3. If x is 1 and y is 0, return 1.
-//   if (x === 1n && y === 0n) {
-//     return 1n;
-//   } else if (x === 0n && y === 1n) {
-//     // Else if x is 0 and y is 1, return 1.
-//     return 1n;
-//   } else {
-//     // 4. Else, return 0.
-//     return 0n;
-//   }
-// }
 
 /** https://tc39.es/ecma262/#sec-bigintbitwiseop */
 function BigIntBitwiseOp(op: '&' | '|' | '^', x: BigIntValue, y: BigIntValue) {
@@ -682,21 +722,13 @@ function BigIntBitwiseOp(op: '&' | '|' | '^', x: BigIntValue, y: BigIntValue) {
   }
 }
 
-/** https://tc39.es/ecma262/#sec-private-names */
-export class PrivateName extends Value {
-  readonly Description: StringValue;
-  constructor(Description: StringValue) {
-    super();
-
-    this.Description = Description;
-  }
-}
-
 /** https://tc39.es/ecma262/#sec-object-type */
 export class ObjectValue extends Value {
-  readonly properties: ValueMap<StringValue | SymbolValue, Descriptor>;
+  declare readonly type: 'Object'; // defined on prototype by static block
+  readonly properties: ValueMap<JSStringValue | SymbolValue, Descriptor>;
   readonly internalSlotsList: readonly string[];
   readonly PrivateElements: PrivateElementRecord[];
+
   constructor(internalSlotsList: readonly string[]) {
     super();
 
@@ -757,11 +789,27 @@ export class ObjectValue extends Value {
       m(this[s]);
     });
   }
+
+  static {
+    Object.defineProperty(this.prototype, 'type', { value: 'Object' });
+  }
+}
+
+/** https://tc39.es/ecma262/#sec-private-names */
+export class PrivateName {
+  // NOTE: The following declaration distinguishes `PrivateName` from `SymbolValue` so that type guards can properly
+  //       remove it from unions with `SymbolValue` due to structural overlap.
+  declare private _: never;
+  readonly Description: JSStringValue;
+
+  constructor(description: JSStringValue) {
+    this.Description = description;
+  }
 }
 
 export class ReferenceRecord {
   Base: 'unresolvable' | Value;
-  ReferencedName: StringValue | SymbolValue | PrivateName;
+  ReferencedName: JSStringValue | SymbolValue | PrivateName;
   Strict: BooleanValue;
   ThisValue: ObjectValue | undefined;
   constructor({
@@ -832,37 +880,9 @@ export class DataBlock extends Uint8Array {
   }
 }
 
-export function Type(val: Value) {
-  if (val instanceof UndefinedValue) {
-    return 'Undefined';
-  }
-
-  if (val instanceof NullValue) {
-    return 'Null';
-  }
-
-  if (val instanceof BooleanValue) {
-    return 'Boolean';
-  }
-
-  if (val instanceof StringValue) {
-    return 'String';
-  }
-
-  if (val instanceof NumberValue) {
-    return 'Number';
-  }
-
-  if (val instanceof BigIntValue) {
-    return 'BigInt';
-  }
-
-  if (val instanceof SymbolValue) {
-    return 'Symbol';
-  }
-
-  if (val instanceof ObjectValue) {
-    return 'Object';
+export function Type(val: Value | PrivateName | Completion | EnvironmentRecord | Descriptor | DataBlock) {
+  if (val instanceof Value) {
+    return val.type;
   }
 
   if (val instanceof PrivateName) {

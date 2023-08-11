@@ -435,14 +435,14 @@ export function ToBigUint64(argument) {
 export function ToString(argument) {
   if (argument instanceof UndefinedValue) {
     // Return "undefined".
-    return new JSStringValue('undefined');
+    return Value('undefined');
   } else if (argument instanceof NullValue) {
     // Return "null".
-    return new JSStringValue('null');
+    return Value('null');
   } else if (argument instanceof BooleanValue) {
     // If argument is true, return "true".
     // If argument is false, return "false".
-    return new JSStringValue(argument === Value.true ? 'true' : 'false');
+    return Value(argument === Value.true ? 'true' : 'false');
   } else if (argument instanceof NumberValue) {
     // Return ! Number::toString(argument).
     return X(NumberValue.toString(argument));

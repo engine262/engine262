@@ -212,7 +212,7 @@ export class ReturnCompletion extends AbruptCompletion<Value> {
 @callable((_target, _thisArg, [value]) => {
   Assert(value instanceof Value);
   // 1. Return Completion { [[Type]]: throw, [[Value]]: value, [[Target]]: empty }.
-  return new Completion({ Type: 'throw', Value: value, Target: undefined });
+  return new Completion({ Type: 'throw', Value: value as Value, Target: undefined });
 })
 class ThrowCompletionImpl extends AbruptCompletion<Value> {
   declare readonly Type: 'throw';

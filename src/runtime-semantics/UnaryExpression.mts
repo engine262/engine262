@@ -92,24 +92,24 @@ function* Evaluate_UnaryExpression_Typeof({ UnaryExpression }: ParseNode.UnaryEx
   val = Q(GetValue(val));
   // 4. Return a String according to Table 37.
   if (val instanceof UndefinedValue) {
-    return new JSStringValue('undefined');
+    return Value('undefined');
   } else if (val instanceof NullValue) {
-    return new JSStringValue('object');
+    return Value('object');
   } else if (val instanceof BooleanValue) {
-    return new JSStringValue('boolean');
+    return Value('boolean');
   } else if (val instanceof NumberValue) {
-    return new JSStringValue('number');
+    return Value('number');
   } else if (val instanceof JSStringValue) {
-    return new JSStringValue('string');
+    return Value('string');
   } else if (val instanceof BigIntValue) {
-    return new JSStringValue('bigint');
+    return Value('bigint');
   } else if (val instanceof SymbolValue) {
-    return new JSStringValue('symbol');
+    return Value('symbol');
   } else if (val instanceof ObjectValue) {
     if (IsCallable(val) === Value.true) {
-      return new JSStringValue('function');
+      return Value('function');
     }
-    return new JSStringValue('object');
+    return Value('object');
   }
   throw new OutOfRange('Evaluate_UnaryExpression_Typeof', val);
 }
