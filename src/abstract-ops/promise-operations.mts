@@ -178,7 +178,7 @@ function PromiseResolveFunctions([resolution = Value.undefined]) {
   // 11. Let thenAction be then.[[Value]].
   const thenAction = then.Value;
   // 12. If IsCallable(thenAction) is false, then
-  if (IsCallable(thenAction) === Value.false) {
+  if (!IsCallable(thenAction)) {
     // a. Return FulfillPromise(promise, resolution).
     return FulfillPromise(promise, resolution);
   }
@@ -206,7 +206,7 @@ function FulfillPromise(promise, value) {
 /** https://tc39.es/ecma262/#sec-newpromisecapability */
 export function NewPromiseCapability(C) {
   // 1. If IsConstructor(C) is false, throw a TypeError exception.
-  if (IsConstructor(C) === Value.false) {
+  if (!IsConstructor(C)) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
   }
   // 2. NOTE: C is assumed to be a constructor function that supports the parameter conventions of the Promise constructor (see 26.2.3.1).
@@ -234,11 +234,11 @@ export function NewPromiseCapability(C) {
   // 8. Let promise be ? Construct(C, « executor »).
   const promise = Q(Construct(C, [executor]));
   // 9. If IsCallable(promiseCapability.[[Resolve]]) is false, throw a TypeError exception.
-  if (IsCallable(promiseCapability.Resolve) === Value.false) {
+  if (!IsCallable(promiseCapability.Resolve)) {
     return surroundingAgent.Throw('TypeError', 'PromiseResolveFunction', promiseCapability.Resolve);
   }
   // 10. If IsCallable(promiseCapability.[[Reject]]) is false, throw a TypeError exception.
-  if (IsCallable(promiseCapability.Reject) === Value.false) {
+  if (!IsCallable(promiseCapability.Reject)) {
     return surroundingAgent.Throw('TypeError', 'PromiseRejectFunction', promiseCapability.Reject);
   }
   // 11. Set promiseCapability.[[Promise]] to promise.
@@ -378,7 +378,7 @@ export function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapab
   }
   let onFulfilledJobCallback;
   // 3. If IsCallable(onFulfilled) is false, then
-  if (IsCallable(onFulfilled) === Value.false) {
+  if (!IsCallable(onFulfilled)) {
     // a. Let onFulfilledJobCallback be empty.
     onFulfilledJobCallback = undefined;
   } else { // 4. Else,
@@ -387,7 +387,7 @@ export function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapab
   }
   let onRejectedJobCallback;
   // 5. If IsCallable(onRejected) is false, then
-  if (IsCallable(onRejected) === Value.false) {
+  if (!IsCallable(onRejected)) {
     // a. Let onRejectedJobCallback be empty.
     onRejectedJobCallback = undefined;
   } else { // 6. Else,

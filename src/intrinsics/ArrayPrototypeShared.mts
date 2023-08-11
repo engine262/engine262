@@ -118,7 +118,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const len = Q(objectToLength(O));
-    if (IsCallable(callbackFn) === Value.false) {
+    if (!IsCallable(callbackFn)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackFn);
     }
     let k = 0;
@@ -143,7 +143,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const len = Q(objectToLength(O));
-    if (IsCallable(predicate) === Value.false) {
+    if (!IsCallable(predicate)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
     }
     let k = 0;
@@ -165,7 +165,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const len = Q(objectToLength(O));
-    if (IsCallable(predicate) === Value.false) {
+    if (!IsCallable(predicate)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
     }
     let k = 0;
@@ -190,7 +190,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     // 2. Let len be ? LengthOfArrayLike(O).
     const len = Q(objectToLength(O));
     // 3. If IsCallable(predicate) is false, throw a TypeError exception.
-    if (IsCallable(predicate) === Value.false) {
+    if (!IsCallable(predicate)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
     }
     // 4. Let k be len - 1.
@@ -223,7 +223,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     // 2. Let len be ? LengthOfArrayLike(O).
     const len = Q(objectToLength(O));
     // 3. If IsCallable(predicate) is false, throw a TypeError exception.
-    if (IsCallable(predicate) === Value.false) {
+    if (!IsCallable(predicate)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
     }
     // 4. Let k be len - 1.
@@ -253,7 +253,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const len = Q(objectToLength(O));
-    if (IsCallable(callbackfn) === Value.false) {
+    if (!IsCallable(callbackfn)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
     }
     let k = 0;
@@ -416,7 +416,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const len = Q(objectToLength(O));
-    if (IsCallable(callbackfn) === Value.false) {
+    if (!IsCallable(callbackfn)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
     }
     if (len === 0 && initialValue === undefined) {
@@ -458,7 +458,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const len = Q(objectToLength(O));
-    if (IsCallable(callbackfn) === Value.false) {
+    if (!IsCallable(callbackfn)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
     }
     if (len === 0 && initialValue === undefined) {
@@ -539,7 +539,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const len = Q(objectToLength(O));
-    if (IsCallable(callbackfn) === Value.false) {
+    if (!IsCallable(callbackfn)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
     }
     let k = 0;

@@ -90,7 +90,7 @@ export function OrdinaryToPrimitive(O, hint) {
     // a. Let method be ? Get(O, name).
     const method = Q(Get(O, name));
     // b. If IsCallable(method) is true, then
-    if (IsCallable(method) === Value.true) {
+    if (IsCallable(method)) {
       // i. Let result be ? Call(method, O).
       const result = Q(Call(method, O));
       // ii. If Type(result) is not Object, return result.

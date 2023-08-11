@@ -337,7 +337,7 @@ export function HostEnqueueFinalizationRegistryCleanupJob(fg) {
 /** https://tc39.es/ecma262/#sec-hostmakejobcallback */
 export function HostMakeJobCallback(callback) {
   // 1. Assert: IsCallable(callback) is true.
-  Assert(IsCallable(callback) === Value.true);
+  Assert(IsCallable(callback));
   // 2. Return the JobCallback Record { [[Callback]]: callback, [[HostDefined]]: empty }.
   return { Callback: callback, HostDefined: undefined };
 }
@@ -345,7 +345,7 @@ export function HostMakeJobCallback(callback) {
 /** https://tc39.es/ecma262/#sec-hostcalljobcallback */
 export function HostCallJobCallback(jobCallback, V, argumentsList) {
   // 1. Assert: IsCallable(jobCallback.[[Callback]]) is true.
-  Assert(IsCallable(jobCallback.Callback) === Value.true);
+  Assert(IsCallable(jobCallback.Callback));
   // 1. Return ? Call(jobCallback.[[Callback]], V, argumentsList).
   return Q(Call(jobCallback.Callback, V, argumentsList));
 }

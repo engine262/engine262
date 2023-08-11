@@ -140,7 +140,7 @@ function ObjectProto__defineGetter__([P = Value.undefined, getter = Value.undefi
   // 1. Let O be ? ToObject(this value).
   const O = Q(ToObject(thisValue));
   // 2. If IsCallable(getter) is false, throw a TypeError exception.
-  if (IsCallable(getter) === Value.false) {
+  if (!IsCallable(getter)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', getter);
   }
   // 3. Let desc be PropertyDescriptor { [[Get]]: getter, [[Enumerable]]: true, [[Configurable]]: true }.
@@ -162,7 +162,7 @@ function ObjectProto__defineSetter__([P = Value.undefined, setter = Value.undefi
   // 1. Let O be ? ToObject(this value).
   const O = Q(ToObject(thisValue));
   // 2. If IsCallable(setter) is false, throw a TypeError exception.
-  if (IsCallable(setter) === Value.false) {
+  if (!IsCallable(setter)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', setter);
   }
   // 3. Let desc be PropertyDescriptor { [[Set]]: setter, [[Enumerable]]: true, [[Configurable]]: true }.

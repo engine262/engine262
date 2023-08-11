@@ -151,7 +151,7 @@ export function GetMethod(V, P) {
   if (func === Value.null || func === Value.undefined) {
     return Value.undefined;
   }
-  if (IsCallable(func) === Value.false) {
+  if (!IsCallable(func)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
   }
   return func;
@@ -182,7 +182,7 @@ export function Call(F, V, argumentsList) {
   }
   Assert(argumentsList.every((a) => a instanceof Value));
 
-  if (IsCallable(F) === Value.false) {
+  if (!IsCallable(F)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', F);
   }
 
@@ -197,8 +197,8 @@ export function Construct(F, argumentsList, newTarget) {
   if (!argumentsList) {
     argumentsList = [];
   }
-  Assert(IsConstructor(F) === Value.true);
-  Assert(IsConstructor(newTarget) === Value.true);
+  Assert(IsConstructor(F));
+  Assert(IsConstructor(newTarget));
   return Q(F.Construct(argumentsList, newTarget));
 }
 
@@ -331,7 +331,7 @@ export function Invoke(V, P, argumentsList) {
 
 /** https://tc39.es/ecma262/#sec-ordinaryhasinstance */
 export function OrdinaryHasInstance(C, O) {
-  if (IsCallable(C) === Value.false) {
+  if (!IsCallable(C)) {
     return Value.false;
   }
   if ('BoundTargetFunction' in C) {
@@ -370,7 +370,7 @@ export function SpeciesConstructor(O, defaultConstructor) {
   if (S === Value.undefined || S === Value.null) {
     return defaultConstructor;
   }
-  if (IsConstructor(S) === Value.true) {
+  if (IsConstructor(S)) {
     return S;
   }
   return surroundingAgent.Throw('TypeError', 'SpeciesNotConstructor');
@@ -405,7 +405,7 @@ export function EnumerableOwnPropertyNames(O, kind) {
 
 /** https://tc39.es/ecma262/#sec-getfunctionrealm */
 export function GetFunctionRealm(obj) {
-  Assert(X(IsCallable(obj)) === Value.true);
+  Assert(IsCallable(obj));
   if ('Realm' in obj) {
     return obj.Realm;
   }

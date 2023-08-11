@@ -171,7 +171,7 @@ function ArrayProto_fill([value = Value.undefined, start = Value.undefined, end 
 function ArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
-  if (IsCallable(callbackfn) === Value.false) {
+  if (!IsCallable(callbackfn)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
   const A = Q(ArraySpeciesCreate(O, 0));
@@ -200,7 +200,7 @@ function FlattenIntoArray(target, source, sourceLen, start, depth, mapperFunctio
   Assert(sourceLen >= 0);
   Assert(start >= 0);
   // Assert: _depth_ is an integer Number, *+&infin;*, or *-&infin;*.
-  // Assert(mapperFunction === undefined || (X(IsCallable(mapperFunction)) === Value.true && thisArg !== undefined && depth === 1));
+  // Assert(mapperFunction === undefined || (IsCallable(mapperFunction) && thisArg !== undefined && depth === 1));
   let targetIndex = start;
   let sourceIndex = 0;
   while (sourceIndex < sourceLen) {
@@ -249,7 +249,7 @@ function ArrayProto_flat([depth = Value.undefined], { thisValue }) {
 function ArrayProto_flatMap([mapperFunction = Value.undefined, thisArg = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const sourceLen = Q(LengthOfArrayLike(O));
-  if (X(IsCallable(mapperFunction)) === Value.false) {
+  if (!IsCallable(mapperFunction)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', mapperFunction);
   }
   const A = Q(ArraySpeciesCreate(O, 0));
@@ -267,7 +267,7 @@ function ArrayProto_keys(args, { thisValue }) {
 function ArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
-  if (IsCallable(callbackfn) === Value.false) {
+  if (!IsCallable(callbackfn)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
   const A = Q(ArraySpeciesCreate(O, len));
@@ -389,7 +389,7 @@ function ArrayProto_slice([start = Value.undefined, end = Value.undefined], { th
 
 /** https://tc39.es/ecma262/#sec-array.prototype.sort */
 function ArrayProto_sort([comparefn = Value.undefined], { thisValue }) {
-  if (comparefn !== Value.undefined && IsCallable(comparefn) === Value.false) {
+  if (comparefn !== Value.undefined && !IsCallable(comparefn)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', comparefn);
   }
   const obj = Q(ToObject(thisValue));
@@ -487,7 +487,7 @@ function ArrayProto_splice(args, { thisValue }) {
 function ArrayProto_toString(a, { thisValue }) {
   const array = Q(ToObject(thisValue));
   let func = Q(Get(array, Value('join')));
-  if (IsCallable(func) === Value.false) {
+  if (!IsCallable(func)) {
     func = surroundingAgent.intrinsic('%Object.prototype.toString%');
   }
   return Q(Call(func, array));

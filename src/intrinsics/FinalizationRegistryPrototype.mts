@@ -17,7 +17,7 @@ function FinalizationRegistryProto_cleanupSome([callback = Value.undefined], { t
   // 2. Perform ? RequireInternalSlot(finalizationRegistry, [[Cells]]).
   Q(RequireInternalSlot(finalizationRegistry, 'Cells'));
   // 3. If callback is present and IsCallable(callback) is false, throw a TypeError exception.
-  if (callback !== Value.undefined && IsCallable(callback) === Value.false) {
+  if (callback !== Value.undefined && !IsCallable(callback)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callback);
   }
   // 4. Perform ? CleanupFinalizationRegistry(finalizationRegistry, callback).

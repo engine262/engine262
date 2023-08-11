@@ -106,7 +106,7 @@ function* Evaluate_UnaryExpression_Typeof({ UnaryExpression }: ParseNode.UnaryEx
   } else if (val instanceof SymbolValue) {
     return new JSStringValue('symbol');
   } else if (val instanceof ObjectValue) {
-    if (IsCallable(val) === Value.true) {
+    if (IsCallable(val)) {
       return new JSStringValue('function');
     }
     return new JSStringValue('object');

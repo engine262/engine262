@@ -121,7 +121,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
       protoParent = Value.null;
       // ii. Let constructorParent be %Function.prototype%.
       constructorParent = surroundingAgent.intrinsic('%Function.prototype%');
-    } else if (IsConstructor(superclass) === Value.false) {
+    } else if (!IsConstructor(superclass)) {
       // f. Else if IsConstructor(superclass) is false, throw a TypeError exception.
       return surroundingAgent.Throw('TypeError', 'NotAConstructor', superclass);
     } else { // g. Else,
@@ -169,7 +169,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
         // 2. Let func be ! F.[[GetPrototypeOf]]().
         const func = X(F.GetPrototypeOf());
         // 3. If IsConstructor(func) is false, throw a TypeError exception.
-        if (IsConstructor(func) === Value.false) {
+        if (!IsConstructor(func)) {
           return surroundingAgent.Throw('TypeError', 'NotAConstructor', func);
         }
         // 4. Let result be ? Construct(func, args, NewTarget).

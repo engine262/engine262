@@ -30,7 +30,7 @@ function WeakSetConstructor([iterable = Value.undefined], { NewTarget }) {
   // 5. Let adder be ? Get(set, "add").
   const adder = Q(Get(set, Value('add')));
   // 6. If IsCallable(adder) is false, throw a TypeError exception.
-  if (IsCallable(adder) === Value.false) {
+  if (!IsCallable(adder)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', adder);
   }
   // 7. Let iteratorRecord be ? GetIterator(iterable).

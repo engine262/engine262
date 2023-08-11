@@ -12,7 +12,7 @@ function FinalizationRegistryConstructor([cleanupCallback = Value.undefined], { 
     return surroundingAgent.Throw('TypeError', 'NotAFunction', 'FinalizationRegistry');
   }
   // 2. If IsCallable(cleanupCallback) is false, throw a TypeError exception.
-  if (IsCallable(cleanupCallback) === Value.false) {
+  if (!IsCallable(cleanupCallback)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', cleanupCallback);
   }
   // 3. Let finalizationGroup be ? OrdinaryCreateFromConstructor(NewTarget, "%FinalizationRegistryPrototype%", « [[Realm]], [[CleanupCallback]], [[Cells]] »).

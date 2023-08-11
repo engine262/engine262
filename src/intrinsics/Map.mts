@@ -23,7 +23,7 @@ import {
 import { bootstrapConstructor } from './bootstrap.mjs';
 
 export function AddEntriesFromIterable(target, iterable, adder) {
-  if (IsCallable(adder) === Value.false) {
+  if (!IsCallable(adder)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', adder);
   }
   Assert(iterable !== undefined && iterable !== Value.undefined && iterable !== Value.null);

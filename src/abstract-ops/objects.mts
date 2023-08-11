@@ -393,7 +393,7 @@ export function OrdinaryCreateFromConstructor(constructor, intrinsicDefaultProto
 export function GetPrototypeFromConstructor(constructor, intrinsicDefaultProto) {
   // Assert: intrinsicDefaultProto is a String value that
   // is this specification's name of an intrinsic object.
-  Assert(IsCallable(constructor) === Value.true);
+  Assert(IsCallable(constructor));
   let proto = Q(Get(constructor, Value('prototype')));
   if (!(proto instanceof ObjectValue)) {
     const realm = Q(GetFunctionRealm(constructor));

@@ -287,7 +287,7 @@ function JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
          || unfiltered instanceof NullValue
          || unfiltered instanceof ObjectValue);
   // 7. If IsCallable(reviver) is true, then
-  if (IsCallable(reviver) === Value.true) {
+  if (IsCallable(reviver)) {
     // a. Let root be OrdinaryObjectCreate(%Object.prototype%).
     const root = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
     // b. Let rootName be the empty String.
@@ -317,7 +317,7 @@ function SerializeJSONProperty(state, key, holder) {
   let value = Q(Get(holder, key)); // eslint-disable-line no-shadow
   if (value instanceof ObjectValue || value instanceof BigIntValue) {
     const toJSON = Q(GetV(value, Value('toJSON')));
-    if (IsCallable(toJSON) === Value.true) {
+    if (IsCallable(toJSON)) {
       value = Q(Call(toJSON, value, [key]));
     }
   }
@@ -356,7 +356,7 @@ function SerializeJSONProperty(state, key, holder) {
   if (value instanceof BigIntValue) {
     return surroundingAgent.Throw('TypeError', 'CannotJSONSerializeBigInt');
   }
-  if (value instanceof ObjectValue && IsCallable(value) === Value.false) {
+  if (value instanceof ObjectValue && !IsCallable(value)) {
     const isArray = Q(IsArray(value));
     if (isArray === Value.true) {
       return Q(SerializeJSONArray(state, value));
@@ -480,7 +480,7 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
   let PropertyList = Value.undefined;
   let ReplacerFunction = Value.undefined;
   if (replacer instanceof ObjectValue) {
-    if (IsCallable(replacer) === Value.true) {
+    if (IsCallable(replacer)) {
       ReplacerFunction = replacer;
     } else {
       const isArray = Q(IsArray(replacer));
