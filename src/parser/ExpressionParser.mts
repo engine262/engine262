@@ -15,7 +15,7 @@ import {
 } from './tokens.mjs';
 import { isLineTerminator, type TokenData } from './Lexer.mjs';
 import { FunctionParser, FunctionKind } from './FunctionParser.mjs';
-import { RegExpParser } from './RegExpParser.mjs';
+import { RegExpParser, type RegExpParserContext } from './RegExpParser.mjs';
 import type { ParseNode } from './ParseNode.mjs';
 
 export abstract class ExpressionParser extends FunctionParser {
@@ -1150,12 +1150,13 @@ export abstract class ExpressionParser extends FunctionParser {
   parseRegularExpressionLiteral(): ParseNode.RegularExpressionLiteral {
     const node = this.startNode<ParseNode.RegularExpressionLiteral>();
     this.scanRegularExpressionBody();
-    node.RegularExpressionBody = this.scannedValue as string; // NOTE: unsound cast
+    const body = this.scannedValue as string; // NOTE: unsound cast
+    node.RegularExpressionBody = body;
     this.scanRegularExpressionFlags();
     node.RegularExpressionFlags = this.scannedValue as string; // NOTE: unsound cast
     try {
-      const parse = (flags: { U: boolean; N: boolean; }) => {
-        const p = new RegExpParser(node.RegularExpressionBody);
+      const parse = (flags: RegExpParserContext) => {
+        const p = new RegExpParser(body);
         return p.scope(flags, () => p.parsePattern());
       };
       if (node.RegularExpressionFlags.includes('u')) {

@@ -7,6 +7,7 @@ import { CharacterValue, StringToCodePoints } from '../static-semantics/all.mjs'
 import { X } from '../completion.mjs';
 import { isLineTerminator, isWhitespace, isDecimalDigit } from '../parser/Lexer.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import {
   UnicodeMatchProperty,
   UnicodeMatchPropertyValue,
@@ -186,7 +187,7 @@ export function Evaluate_Pattern(Pattern, flags) {
     };
   }
 
-  function Evaluate(node, ...args) {
+  function Evaluate(node: ParseNode.RegExp.RegExpParseNode, ...args) {
     switch (node.type) {
       case 'Disjunction':
         return Evaluate_Disjunction(node, ...args);

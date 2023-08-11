@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { Parser } from './parser/Parser.mjs';
-import { RegExpParser } from './parser/RegExpParser.mjs';
+import { RegExpParser, type RegExpParserContext } from './parser/RegExpParser.mjs';
 import { surroundingAgent } from './engine.mjs';
 import { SourceTextModuleRecord } from './modules.mjs';
 import { Value } from './value.mjs';
@@ -187,7 +187,7 @@ export function ParseJSONModule(sourceText, realm, hostDefined) {
 
 /** https://tc39.es/ecma262/#sec-parsepattern */
 export function ParsePattern(patternText, u) {
-  const parse = (flags) => {
+  const parse = (flags: RegExpParserContext) => {
     const p = new RegExpParser(patternText);
     return p.scope(flags, () => p.parsePattern());
   };
