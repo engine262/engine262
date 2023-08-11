@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { F } from '../abstract-ops/all.mjs';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-mv-s */
@@ -6,6 +5,6 @@ import { F } from '../abstract-ops/all.mjs';
 //     [empty]
 //     StrWhiteSpace
 //     StrWhiteSpace_opt StrNumericLiteral StrWhiteSpace_opt
-export function MV_StringNumericLiteral(StringNumericLiteral) {
+export function MV_StringNumericLiteral(StringNumericLiteral: string) {
   return F(Number(StringNumericLiteral));
 }

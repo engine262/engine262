@@ -10,10 +10,11 @@ import {
   EnsureCompletion,
   Q,
 } from '../completion.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
 /** https://tc39.es/ecma262/#sec-with-statement-runtime-semantics-evaluation */
 //   WithStatement : `with` `(` Expression `)` Statement
-export function* Evaluate_WithStatement({ Expression, Statement }) {
+export function* Evaluate_WithStatement({ Expression, Statement }: ParseNode.WithStatement) {
   // 1. Let val be the result of evaluating Expression.
   const val = yield* Evaluate(Expression);
   // 2. Let obj be ? ToObject(? GetValue(val)).

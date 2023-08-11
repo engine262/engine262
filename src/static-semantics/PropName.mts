@@ -1,5 +1,6 @@
-// @ts-nocheck
-export function PropName(node) {
+import type { ParseNode } from '../parser/ParseNode.mjs';
+
+export function PropName(node: ParseNode): string | undefined {
   switch (node.type) {
     case 'IdentifierName':
       return node.name;

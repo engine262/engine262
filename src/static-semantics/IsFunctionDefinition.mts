@@ -1,5 +1,6 @@
-// @ts-nocheck
-export function IsFunctionDefinition(node) {
+import type { ParseNode } from '../parser/ParseNode.mjs';
+
+export function IsFunctionDefinition(node: ParseNode): boolean {
   if (node.type === 'ParenthesizedExpression') {
     return IsFunctionDefinition(node.Expression);
   }

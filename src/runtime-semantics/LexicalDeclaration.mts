@@ -14,13 +14,14 @@ import {
 } from '../abstract-ops/all.mjs';
 import { IsAnonymousFunctionDefinition, StringValue } from '../static-semantics/all.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import { NamedEvaluation, BindingInitialization } from './all.mjs';
 
 /** https://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation */
 //   LexicalBinding :
 //     BindingIdentifier
 //     BindingIdentifier Initializer
-function* Evaluate_LexicalBinding_BindingIdentifier({ BindingIdentifier, Initializer, strict }) {
+function* Evaluate_LexicalBinding_BindingIdentifier({ BindingIdentifier, Initializer, strict }: ParseNode.LexicalBinding) {
   if (Initializer) {
     // 1. Let bindingId be StringValue of BindingIdentifier.
     const bindingId = StringValue(BindingIdentifier);
@@ -49,7 +50,7 @@ function* Evaluate_LexicalBinding_BindingIdentifier({ BindingIdentifier, Initial
 
 /** https://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation */
 //   LexicalBinding : BindingPattern Initializer
-function* Evaluate_LexicalBinding_BindingPattern(LexicalBinding) {
+function* Evaluate_LexicalBinding_BindingPattern(LexicalBinding: ParseNode.LexicalBinding) {
   const { BindingPattern, Initializer } = LexicalBinding;
   const rhs = yield* Evaluate(Initializer);
   const value = Q(GetValue(rhs));
@@ -57,7 +58,7 @@ function* Evaluate_LexicalBinding_BindingPattern(LexicalBinding) {
   return yield* BindingInitialization(BindingPattern, value, env);
 }
 
-export function* Evaluate_LexicalBinding(LexicalBinding) {
+export function* Evaluate_LexicalBinding(LexicalBinding: ParseNode.LexicalBinding) {
   switch (true) {
     case !!LexicalBinding.BindingIdentifier:
       return yield* Evaluate_LexicalBinding_BindingIdentifier(LexicalBinding);
@@ -73,7 +74,7 @@ export function* Evaluate_LexicalBinding(LexicalBinding) {
 //
 // (implicit)
 //   BindingList : LexicalBinding
-export function* Evaluate_BindingList(BindingList) {
+export function* Evaluate_BindingList(BindingList: ParseNode.BindingList) {
   // 1. Let next be the result of evaluating BindingList.
   // 2. ReturnIfAbrupt(next).
   // 3. Return the result of evaluating LexicalBinding.
@@ -87,7 +88,7 @@ export function* Evaluate_BindingList(BindingList) {
 
 /** https://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation */
 //   LexicalDeclaration : LetOrConst BindingList `;`
-export function* Evaluate_LexicalDeclaration({ BindingList }) {
+export function* Evaluate_LexicalDeclaration({ BindingList }: ParseNode.LexicalDeclaration) {
   // 1. Let next be the result of evaluating BindingList.
   const next = yield* Evaluate_BindingList(BindingList);
   // 2. ReturnIfAbrupt(next).

@@ -11,7 +11,7 @@ import {
 import { Q } from '../completion.mjs';
 
 /** https://tc39.es/ecma262/#sec-getsubstitution */
-export function GetSubstitution(matched, str, position, captures, namedCaptures, replacement) {
+export function GetSubstitution(matched: JSStringValue, str: JSStringValue, position: number, captures: readonly (JSStringValue | UndefinedValue)[], namedCaptures, replacement: JSStringValue) {
   // 1. Assert: Type(matched) is String.
   Assert(matched instanceof JSStringValue);
   // 2. Let matchLength be the number of code units in matched.

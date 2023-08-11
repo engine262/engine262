@@ -13,6 +13,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { ReturnIfAbrupt, Q, X } from '../completion.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-arrayaccumulation */
 //  Elision :
@@ -25,7 +26,7 @@ import { ReturnIfAbrupt, Q, X } from '../completion.mjs';
 //    ElementList : ElementList `,` Elision SpreadElement
 //  SpreadElement :
 //    `...` AssignmentExpression
-function* ArrayAccumulation(ElementList, array, nextIndex) {
+function* ArrayAccumulation(ElementList: ParseNode.ElementList, array, nextIndex: number) {
   let postIndex = nextIndex;
   for (const element of ElementList) {
     switch (element.type) {
@@ -45,7 +46,7 @@ function* ArrayAccumulation(ElementList, array, nextIndex) {
 }
 
 // SpreadElement : `...` AssignmentExpression
-function* ArrayAccumulation_SpreadElement({ AssignmentExpression }, array, nextIndex) {
+function* ArrayAccumulation_SpreadElement({ AssignmentExpression }: ParseNode.SpreadElement, array, nextIndex: number) {
   // 1. Let spreadRef be the result of evaluating AssignmentExpression.
   const spreadRef = yield* Evaluate(AssignmentExpression);
   // 2. Let spreadObj be ? GetValue(spreadRef).
@@ -70,7 +71,7 @@ function* ArrayAccumulation_SpreadElement({ AssignmentExpression }, array, nextI
 }
 
 
-function* ArrayAccumulation_AssignmentExpression(AssignmentExpression, array, nextIndex) {
+function* ArrayAccumulation_AssignmentExpression(AssignmentExpression: ParseNode.AssignmentExpression, array, nextIndex: number) {
   // 2. Let initResult be the result of evaluating AssignmentExpression.
   const initResult = yield* Evaluate(AssignmentExpression);
   // 3. Let initValue be ? GetValue(initResult).
@@ -86,7 +87,7 @@ function* ArrayAccumulation_AssignmentExpression(AssignmentExpression, array, ne
 //    `[` Elision `]`
 //    `[` ElementList `]`
 //    `[` ElementList `,` Elision `]`
-export function* Evaluate_ArrayLiteral({ ElementList }) {
+export function* Evaluate_ArrayLiteral({ ElementList }: ParseNode.ArrayLiteral) {
   // 1. Let array be ! ArrayCreate(0).
   const array = X(ArrayCreate(0));
   // 2. Let len be the result of performing ArrayAccumulation for ElementList with arguments array and 0.

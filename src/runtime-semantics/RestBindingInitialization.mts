@@ -10,9 +10,10 @@ import {
 } from '../abstract-ops/all.mjs';
 import { StringValue } from '../static-semantics/all.mjs';
 import { Q } from '../completion.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
 // BindingRestProperty : `...` BindingIdentifier
-export function RestBindingInitialization({ BindingIdentifier }, value, environment, excludedNames) {
+export function RestBindingInitialization({ BindingIdentifier }: ParseNode.Initializer, value, environment, excludedNames) {
   // 1. Let lhs be ? ResolveBinding(StringValue of BindingIdentifier, environment).
   const lhs = Q(ResolveBinding(StringValue(BindingIdentifier), environment, BindingIdentifier.strict));
   // 2. Let restObj be OrdinaryObjectCreate(%Object.prototype%).

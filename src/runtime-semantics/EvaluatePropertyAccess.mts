@@ -9,9 +9,10 @@ import { Value, ReferenceRecord } from '../value.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { StringValue } from '../static-semantics/all.mjs';
 import { Q } from '../completion.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
 /** https://tc39.es/ecma262/#sec-evaluate-expression-key-property-access */
-export function* EvaluatePropertyAccessWithExpressionKey(baseValue, expression, strict) {
+export function* EvaluatePropertyAccessWithExpressionKey(baseValue, expression: ParseNode.Expression, strict: boolean) {
   // 1. Let propertyNameReference be the result of evaluating expression.
   const propertyNameReference = yield* Evaluate(expression);
   // 2. Let propertyNameValue be ? GetValue(propertyNameReference).
@@ -30,7 +31,7 @@ export function* EvaluatePropertyAccessWithExpressionKey(baseValue, expression, 
 }
 
 /** https://tc39.es/ecma262/#sec-evaluate-identifier-key-property-access */
-export function EvaluatePropertyAccessWithIdentifierKey(baseValue, identifierName, strict) {
+export function EvaluatePropertyAccessWithIdentifierKey(baseValue, identifierName: ParseNode.IdentifierName, strict: boolean) {
   // 1. Assert: identifierName is an IdentifierName.
   Assert(identifierName.type === 'IdentifierName');
   // 2. Let bv be ? RequireObjectCoercible(baseValue).

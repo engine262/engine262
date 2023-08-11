@@ -2,10 +2,11 @@
 import { surroundingAgent } from '../engine.mjs';
 import { OrdinaryFunctionCreate, MakeMethod, sourceTextMatchedBy } from '../abstract-ops/all.mjs';
 import { ReturnIfAbrupt } from '../completion.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import { Evaluate_PropertyName } from './all.mjs';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-definemethod */
-export function* DefineMethod(MethodDefinition, object, functionPrototype) {
+export function* DefineMethod(MethodDefinition: ParseNode.MethodDefinition, object, functionPrototype) {
   const { ClassElementName, UniqueFormalParameters, FunctionBody } = MethodDefinition;
   // 1. Let propKey be the result of evaluating ClassElementName.
   const propKey = yield* Evaluate_PropertyName(ClassElementName);

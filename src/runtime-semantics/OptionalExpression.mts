@@ -5,6 +5,7 @@ import { Evaluate } from '../evaluator.mjs';
 import { Q, X } from '../completion.mjs';
 import { IsInTailPosition, StringValue } from '../static-semantics/all.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import {
   EvaluateCall,
   EvaluatePropertyAccessWithExpressionKey,
@@ -16,7 +17,7 @@ import {
 //     MemberExpression OptionalChain
 //     CallExpression OptionalChain
 //     OptionalExpression OptionalChain
-export function* Evaluate_OptionalExpression({ MemberExpression, OptionalChain }) {
+export function* Evaluate_OptionalExpression({ MemberExpression, OptionalChain }: ParseNode.OptionalExpression) {
   // 1. Let baseReference be the result of evaluating MemberExpression.
   const baseReference = yield* Evaluate(MemberExpression);
   // 2. Let baseValue be ? GetValue(baseReference).
@@ -40,7 +41,7 @@ export function* Evaluate_OptionalExpression({ MemberExpression, OptionalChain }
 //     OptionalChain `[` Expression `]`
 //     OptionalChain `.` IdentifierName
 //     OptionalChain `.` PrivateIdentifier
-function* ChainEvaluation(node, baseValue, baseReference) {
+function* ChainEvaluation(node: ParseNode.OptionalChain, baseValue, baseReference) {
   const {
     OptionalChain,
     Arguments,

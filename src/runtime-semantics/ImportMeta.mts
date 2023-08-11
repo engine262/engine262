@@ -9,10 +9,11 @@ import {
 } from '../abstract-ops/all.mjs';
 import { X } from '../completion.mjs';
 import { SourceTextModuleRecord } from '../modules.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
 /** https://tc39.es/ecma262/#sec-meta-properties */
 //   ImportMeta : `import` `.` `meta`
-export function Evaluate_ImportMeta(_ImportMeta) {
+export function Evaluate_ImportMeta(_ImportMeta: ParseNode.ImportMeta) {
   // 1. Let module be ! GetActiveScriptOrModule().
   const module = X(GetActiveScriptOrModule());
   // 2. Assert: module is a Source Text Module Record.

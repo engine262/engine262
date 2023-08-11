@@ -12,6 +12,7 @@ import {
 } from '../static-semantics/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import {
   NamedEvaluation,
   ApplyStringOrNumericBinaryOperator,
@@ -19,7 +20,7 @@ import {
 } from './all.mjs';
 
 /** https://tc39.es/ecma262/#sec-destructuring-assignment */
-export function refineLeftHandSideExpression(node, type) {
+export function refineLeftHandSideExpression(node: ParseNode.ArrayLiteral | ParseNode.ObjectLiteral | ParseNode.PropertyDefinition | ParseNode.MemberExpression | ParseNode.CoverInitializedName | ParseNode.AssignmentExpression | ParseNode.Elision, type) {
   switch (node.type) {
     case 'ArrayLiteral': {
       const refinement = {
@@ -132,7 +133,7 @@ export function refineLeftHandSideExpression(node, type) {
 //     LeftHandSideExpression `??=` AssignmentExpression
 export function* Evaluate_AssignmentExpression({
   LeftHandSideExpression, AssignmentOperator, AssignmentExpression,
-}) {
+}: ParseNode.AssignmentExpression) {
   if (AssignmentOperator === '=') {
     // 1. If LeftHandSideExpression is neither an ObjectLiteral nor an ArrayLiteral, then
     if (LeftHandSideExpression.type !== 'ObjectLiteral' && LeftHandSideExpression.type !== 'ArrayLiteral') {

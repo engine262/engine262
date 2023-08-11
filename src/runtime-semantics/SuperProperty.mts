@@ -9,6 +9,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { StringValue } from '../static-semantics/all.mjs';
 import { Q } from '../completion.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
 /** https://tc39.es/ecma262/#sec-makesuperpropertyreference */
 function MakeSuperPropertyReference(actualThis, propertyKey, strict) {
@@ -31,7 +32,7 @@ function MakeSuperPropertyReference(actualThis, propertyKey, strict) {
 //  SuperProperty :
 //    `super` `[` Expression `]`
 //    `super` `.` IdentifierName
-export function* Evaluate_SuperProperty({ Expression, IdentifierName, strict }) {
+export function* Evaluate_SuperProperty({ Expression, IdentifierName, strict }: ParseNode.SuperProperty) {
   // 1. Let env be GetThisEnvironment().
   const env = GetThisEnvironment();
   // 2. Let actualThis be ? env.GetThisBinding().

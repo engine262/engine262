@@ -24,13 +24,14 @@ import {
   Q, X,
 } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
 /** https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-evaluation */
 //   YieldExpression :
 //     `yield`
 //     `yield` AssignmentExpression
 //     `yield` `*` AssignmentExpression
-export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }) {
+export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }: ParseNode.YieldExpression) {
   if (hasStar) {
     // 1. Let generatorKind be ! GetGeneratorKind().
     const generatorKind = X(GetGeneratorKind());

@@ -14,6 +14,7 @@ import {
   ReturnIfAbrupt,
 } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import { DefineMethod, Evaluate_PropertyName } from './all.mjs';
 
 /** https://tc39.es/ecma262/#sec-privateelement-specification-type */
@@ -61,7 +62,7 @@ function DefineMethodProperty(key, homeObject, closure, enumerable) {
 //   ClassElementName `(` UniqueFormalParameters `)` `{` FunctionBody `}`
 //   `get` ClassElementName `(` `)` `{` FunctionBody `}`
 //   `set` ClassElementName `(` PropertySetParameterList `)` `{` FunctionBody `}`
-function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition, object, enumerable) {
+function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNode.MethodDefinition, object, enumerable) {
   switch (true) {
     case !!MethodDefinition.UniqueFormalParameters: {
       // 1. Let methodDef be ? DefineMethod of MethodDefinition with argument object.
@@ -160,7 +161,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition, object, 
 /** https://tc39.es/ecma262/#sec-async-function-definitions-MethodDefinitionEvaluation */
 //   AsyncMethod :
 //     `async` ClassElementName `(` UniqueFormalParameters `)` `{` AsyncBody `}`
-function* MethodDefinitionEvaluation_AsyncMethod(AsyncMethod, object, enumerable) {
+function* MethodDefinitionEvaluation_AsyncMethod(AsyncMethod: ParseNode.AsyncMethod, object, enumerable) {
   const { ClassElementName, UniqueFormalParameters, AsyncBody } = AsyncMethod;
   // 1. Let propKey be the result of evaluating ClassElementName.
   const propKey = yield* Evaluate_PropertyName(ClassElementName);
@@ -185,7 +186,7 @@ function* MethodDefinitionEvaluation_AsyncMethod(AsyncMethod, object, enumerable
 /** https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation */
 //   GeneratorMethod :
 //     `*` ClassElementName `(` UniqueFormalParameters `)` `{` GeneratorBody `}`
-function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, enumerable) {
+function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod: ParseNode.GeneratorMethod, object, enumerable) {
   const { ClassElementName, UniqueFormalParameters, GeneratorBody } = GeneratorMethod;
   // 1. Let propKey be the result of evaluating ClassElementName.
   const propKey = yield* Evaluate_PropertyName(ClassElementName);
@@ -219,7 +220,7 @@ function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, en
 /** https://tc39.es/ecma262/#sec-asyncgenerator-definitions-propertydefinitionevaluation */
 //   AsyncGeneratorMethod :
 //     `async` `*` PropertyName `(` UniqueFormalParameters `)` `{` AsyncGeneratorBody `}`
-function* MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod, object, enumerable) {
+function* MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod: ParseNode.AsyncGeneratorMethod, object, enumerable) {
   const { ClassElementName, UniqueFormalParameters, AsyncGeneratorBody } = AsyncGeneratorMethod;
   // 1. Let propKey be the result of evaluating ClassElementName.
   const propKey = yield* Evaluate_PropertyName(ClassElementName);
@@ -250,7 +251,7 @@ function* MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod, 
   return Q(DefineMethodProperty(propKey, object, closure, enumerable));
 }
 
-export function MethodDefinitionEvaluation(node, object, enumerable) {
+export function MethodDefinitionEvaluation(node: ParseNode.MethodDefinitionLike, object, enumerable) {
   switch (node.type) {
     case 'MethodDefinition':
       return MethodDefinitionEvaluation_MethodDefinition(node, object, enumerable);

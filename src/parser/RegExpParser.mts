@@ -72,7 +72,7 @@ export class RegExpParser {
     return (this.state & ParserContext.N) === ParserContext.N;
   }
 
-  private raise(message: string, position = this.position) {
+  private raise(message: string, position = this.position): never {
     const e = new SyntaxError(message);
     e.position = position;
     throw e;

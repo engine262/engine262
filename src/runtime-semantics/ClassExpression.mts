@@ -3,13 +3,14 @@ import { Value } from '../value.mjs';
 import { sourceTextMatchedBy } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 import { StringValue } from '../static-semantics/all.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import { ClassDefinitionEvaluation } from './all.mjs';
 
 /** https://tc39.es/ecma262/#sec-class-definitions-runtime-semantics-evaluation */
 // ClassExpression :
 //   `class` ClassTail
 //   `class` BindingIdentifier ClassTail
-export function* Evaluate_ClassExpression(ClassExpression) {
+export function* Evaluate_ClassExpression(ClassExpression: ParseNode.ClassExpression) {
   const { BindingIdentifier, ClassTail } = ClassExpression;
   if (!BindingIdentifier) {
     // 1. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments undefined and ''

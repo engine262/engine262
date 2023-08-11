@@ -10,13 +10,14 @@ import {
 import { IsInTailPosition } from '../static-semantics/all.mjs';
 import { Q } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import { EvaluateCall, ArgumentListEvaluation } from './all.mjs';
 
 /** https://tc39.es/ecma262/#sec-function-calls-runtime-semantics-evaluation */
 // CallExpression :
 //   CoverCallExpressionAndAsyncArrowHead
 //   CallExpression Arguments
-export function* Evaluate_CallExpression(CallExpression) {
+export function* Evaluate_CallExpression(CallExpression: ParseNode.CallExpression) {
   // 1. Let expr be CoveredCallExpression of CoverCallExpressionAndAsyncArrowHead.
   const expr = CallExpression;
   // 2. Let memberExpr be the MemberExpression of expr.
