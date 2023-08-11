@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 c851d58c547f7df3986f30eb8c9dc60e81c534e0
+ * engine262 0.0.1 caa04a6ef8d8c84089f9539f1c3461e6ddd5ce5b
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -597,7 +597,6 @@
     }
   }
 
-  // @ts-nocheck
   /** https://tc39.es/ecma262/#sec-static-semantics-isstatic */
   // ClassElement :
   //   MethodDefinition
@@ -606,8 +605,6 @@
   function IsStatic(ClassElement) {
     return ClassElement.static;
   }
-
-  // @ts-nocheck
 
   /** https://tc39.es/ecma262/#sec-static-semantics-nonconstructorelements */
   // ClassElementList :
@@ -622,8 +619,6 @@
     });
   }
 
-  // @ts-nocheck
-
   /** https://tc39.es/ecma262/#sec-static-semantics-constructormethod */
   // ClassElementList :
   //   ClassElement
@@ -632,7 +627,6 @@
     return ClassElementList.find(ClassElement => ClassElement.static === false && PropName(ClassElement) === 'constructor');
   }
 
-  // @ts-nocheck
   function PropName(node) {
     switch (node.type) {
       case 'IdentifierName':
@@ -652,11 +646,10 @@
 
   // @ts-nocheck
   /** https://tc39.es/ecma262/#sec-numericvalue */
+
   function NumericValue(node) {
     return exports.Value(node.value);
   }
-
-  // @ts-nocheck
 
   /** https://tc39.es/ecma262/#sec-isanonymousfunctiondefinition */
   function IsAnonymousFunctionDefinition(expr) {
@@ -674,7 +667,6 @@
     return true;
   }
 
-  // @ts-nocheck
   function IsFunctionDefinition(node) {
     if (node.type === 'ParenthesizedExpression') {
       return IsFunctionDefinition(node.Expression);
@@ -682,20 +674,17 @@
     return node.type === 'FunctionExpression' || node.type === 'GeneratorExpression' || node.type === 'AsyncGeneratorExpression' || node.type === 'AsyncFunctionExpression' || node.type === 'ClassExpression' || node.type === 'ArrowFunction' || node.type === 'AsyncArrowFunction';
   }
 
-  // @ts-nocheck
   function HasName(node) {
     if (node.type === 'ParenthesizedExpression') {
       return HasName(node.Expression);
     }
-    return !!node.BindingIdentifier;
+    return 'BindingIdentifier' in node && !!node.BindingIdentifier;
   }
 
-  // @ts-nocheck
   function IsIdentifierRef(node) {
     return node.type === 'IdentifierReference';
   }
 
-  // @ts-nocheck
   function LexicallyDeclaredNames(node) {
     switch (node.type) {
       case 'Script':
@@ -717,9 +706,8 @@
     }
   }
 
-  // @ts-nocheck
   function TopLevelLexicallyDeclaredNames(node) {
-    if (Array.isArray(node)) {
+    if (isArray(node)) {
       const names = [];
       for (const StatementListItem of node) {
         names.push(...TopLevelLexicallyDeclaredNames(StatementListItem));
@@ -735,9 +723,8 @@
     }
   }
 
-  // @ts-nocheck
   function BoundNames(node) {
-    if (Array.isArray(node)) {
+    if (isArray(node)) {
       const names = [];
       for (const item of node) {
         names.push(...BoundNames(item));
@@ -835,9 +822,8 @@
     }
   }
 
-  // @ts-nocheck
   function VarDeclaredNames(node) {
-    if (Array.isArray(node)) {
+    if (isArray(node)) {
       const names = [];
       for (const item of node) {
         names.push(...VarDeclaredNames(item));
@@ -946,9 +932,8 @@
     }
   }
 
-  // @ts-nocheck
   function TopLevelVarDeclaredNames(node) {
-    if (Array.isArray(node)) {
+    if (isArray(node)) {
       const names = [];
       for (const item of node) {
         names.push(...TopLevelVarDeclaredNames(item));
@@ -969,9 +954,8 @@
     }
   }
 
-  // @ts-nocheck
   function VarScopedDeclarations(node) {
-    if (Array.isArray(node)) {
+    if (isArray(node)) {
       const declarations = [];
       for (const item of node) {
         declarations.push(...VarScopedDeclarations(item));
@@ -1087,9 +1071,8 @@
     }
   }
 
-  // @ts-nocheck
   function TopLevelVarScopedDeclarations(node) {
-    if (Array.isArray(node)) {
+    if (isArray(node)) {
       const declarations = [];
       for (const item of node) {
         declarations.push(...TopLevelVarScopedDeclarations(item));
@@ -1110,14 +1093,12 @@
     }
   }
 
-  // @ts-nocheck
   function DeclarationPart(node) {
     return node;
   }
 
-  // @ts-nocheck
   function LexicallyScopedDeclarations(node) {
-    if (Array.isArray(node)) {
+    if (isArray(node)) {
       const declarations = [];
       for (const item of node) {
         declarations.push(...LexicallyScopedDeclarations(item));
@@ -1196,9 +1177,8 @@
     }
   }
 
-  // @ts-nocheck
   function TopLevelLexicallyScopedDeclarations(node) {
-    if (Array.isArray(node)) {
+    if (isArray(node)) {
       const declarations = [];
       for (const item of node) {
         declarations.push(...TopLevelLexicallyScopedDeclarations(item));
@@ -1214,17 +1194,15 @@
     }
   }
 
-  // @ts-nocheck
   function IsConstantDeclaration(node) {
+    // TODO(ts): node === 'const' looks like a typo?
     return node === 'const' || node.LetOrConst === 'const';
   }
 
-  // @ts-nocheck
   function IsInTailPosition(_node) {
     return false;
   }
 
-  // @ts-nocheck
   function ExpectedArgumentCount(FormalParameterList) {
     if (FormalParameterList.length === 0) {
       return 0;
@@ -1247,14 +1225,12 @@
     return count + 1;
   }
 
-  // @ts-nocheck
   function HasInitializer(node) {
-    return !!node.Initializer;
+    return 'Initializer' in node && !!node.Initializer;
   }
 
-  // @ts-nocheck
   function IsSimpleParameterList(node) {
-    if (Array.isArray(node)) {
+    if (isArray(node)) {
       for (const n of node) {
         if (!IsSimpleParameterList(n)) {
           return false;
@@ -1274,9 +1250,8 @@
     }
   }
 
-  // @ts-nocheck
   function ContainsExpression(node) {
-    if (Array.isArray(node)) {
+    if (isArray(node)) {
       for (const n of node) {
         if (ContainsExpression(n)) {
           return true;
@@ -1301,7 +1276,7 @@
         }
         return false;
       case 'BindingProperty':
-        if (node.PropertyName && node.PropertyName.ComputedPropertyName) {
+        if (node.PropertyName && 'ComputedPropertyName' in node.PropertyName && node.PropertyName.ComputedPropertyName) {
           return true;
         }
         return ContainsExpression(node.BindingElement);
@@ -1309,6 +1284,8 @@
         if (node.BindingIdentifier) {
           return false;
         }
+        // TODO(ts): BindingRestProperty and BindingElement is different. Is there missing a case?
+        // @ts-expect-error
         return ContainsExpression(node.BindingPattern);
       case 'ArrayBindingPattern':
         if (ContainsExpression(node.BindingElementList)) {
@@ -1330,7 +1307,6 @@
     }
   }
 
-  // @ts-nocheck
   /** https://tc39.es/ecma262/#sec-static-semantics-isstrict */
   function IsStrict({
     ScriptBody
@@ -1339,21 +1315,16 @@
     return ScriptBody.strict;
   }
 
-  // @ts-nocheck
-  /** https://tc39.es/ecma262/#sec-static-semantics-bodytext */
-  //  RegularExpressionLiteral :: `/` RegularExpressionBody `/` RegularExpressionFlags
+  /** https://tc39.es/ecma262/#sec-static-semantics-bodytext */ //  RegularExpressionLiteral :: `/` RegularExpressionBody `/` RegularExpressionFlags
   function BodyText(RegularExpressionLiteral) {
     return RegularExpressionLiteral.RegularExpressionBody;
   }
 
-  // @ts-nocheck
-  /** https://tc39.es/ecma262/#sec-static-semantics-flagtext */
-  //   RegularExpressionLiteral :: `/` RegularExpressionBody `/` RegularExpressionFlags
+  /** https://tc39.es/ecma262/#sec-static-semantics-flagtext */ //   RegularExpressionLiteral :: `/` RegularExpressionBody `/` RegularExpressionFlags
   function FlagText(RegularExpressionLiteral) {
     return RegularExpressionLiteral.RegularExpressionFlags;
   }
 
-  // @ts-nocheck
   function ModuleRequests(node) {
     switch (node.type) {
       case 'Module':
@@ -1386,7 +1357,6 @@
     }
   }
 
-  // @ts-nocheck
   function ImportEntries(node) {
     switch (node.type) {
       case 'Module':
@@ -1415,9 +1385,8 @@
     }
   }
 
-  // @ts-nocheck
   function ExportEntries(node) {
-    if (Array.isArray(node)) {
+    if (isArray(node)) {
       const entries = [];
       node.forEach(n => {
         entries.push(...ExportEntries(n));
@@ -1539,7 +1508,6 @@
     }
   }
 
-  // @ts-nocheck
   /** https://tc39.es/ecma262/#sec-importedlocalnames */
   function ImportedLocalNames(importEntries) {
     // 1. Let localNames be a new empty List.
@@ -1553,7 +1521,6 @@
     return localNames;
   }
 
-  // @ts-nocheck
   function IsDestructuring(node) {
     switch (node.type) {
       case 'ObjectBindingPattern':
@@ -2550,7 +2517,6 @@
     }
   }
 
-  // @ts-nocheck
   function TV(s) {
     let buffer = '';
     for (let i = 0; i < s.length; i += 1) {
@@ -2654,7 +2620,6 @@
     });
   }
 
-  // @ts-nocheck
   function ImportEntriesForModule(node, module) {
     switch (node.type) {
       case 'ImportClause':
@@ -2751,9 +2716,8 @@
     }
   }
 
-  // @ts-nocheck
   function ExportEntriesForModule(node, module) {
-    if (Array.isArray(node)) {
+    if (isArray(node)) {
       const specs = [];
       node.forEach(n => {
         specs.push(...ExportEntriesForModule(n, module));
@@ -2813,7 +2777,6 @@
     }
   }
 
-  // @ts-nocheck
   function CharacterValue(node) {
     switch (node.type) {
       case 'CharacterEscape':
@@ -2905,8 +2868,6 @@
         throw new OutOfRange$1('CharacterValue', node);
     }
   }
-
-  // @ts-nocheck
 
   /** https://tc39.es/ecma262/#sec-utf16decodesurrogatepair */
   function UTF16SurrogatePairToCodePoint(lead, trail) {
@@ -3000,8 +2961,6 @@
     return codePoints;
   }
 
-  // @ts-nocheck
-
   /** https://tc39.es/ecma262/#sec-codepointstostring */
   function CodePointsToString(text) {
     // 1. Let result be the empty String.
@@ -3009,14 +2968,16 @@
     // 2. For each code point cp in text, do
     for (const cp of text) {
       // a. Set result to the string-concatenation of result and UTF16EncodeCodePoint(cp).
+      // TODO(ts): Argument of type 'string' is not assignable to parameter of type 'number'. Is this a mistake?
+      // @ts-expect-error
       result += UTF16EncodeCodePoint(cp);
     }
     // 3. Return result.
     return result;
   }
 
-  function IsStringWellFormedUnicode(string) {
-    string = string.stringValue();
+  function IsStringWellFormedUnicode(string_) {
+    const string = string_.stringValue();
     // 1. Let _strLen_ be the number of code units in string.
     const strLen = string.length;
     // 2. Let k be 0.
@@ -3046,11 +3007,9 @@
     return node.type !== 'IdentifierName' && node.type !== 'StringLiteral' && node.type !== 'NumericLiteral';
   }
 
-  // @ts-nocheck
-
   /** https://tc39.es/ecma262/#sec-static-semantics-privateboundidentifiers */
   function PrivateBoundIdentifiers(node) {
-    if (Array.isArray(node)) {
+    if (isArray(node)) {
       return node.flatMap(n => PrivateBoundIdentifiers(n));
     }
     switch (node.type) {
@@ -3067,7 +3026,6 @@
     }
   }
 
-  // @ts-nocheck
   /** https://tc39.es/ecma262/#sec-static-semantics-containsarguments */
   function ContainsArguments(node) {
     switch (node.type) {
@@ -3088,6 +3046,7 @@
         return null;
       default:
         for (const value of Object.values(node)) {
+          // TODO(ts): This function does not accept a ParseNode[], when isArray(value), ContainsArguments should never return a result?
           if (value?.type || Array.isArray(value)) {
             const maybe = ContainsArguments(value);
             if (maybe) {
@@ -3098,8 +3057,6 @@
         return null;
     }
   }
-
-  // @ts-nocheck
 
   /** https://tc39.es/ecma262/#sec-utf16encodecodepoint */
   function UTF16EncodeCodePoint(cp) {
@@ -3118,7 +3075,6 @@
   }
 
   // @ts-nocheck
-
   /** https://tc39.es/ecma262/#sec-identifiers-runtime-semantics-evaluation */
   // IdentifierReference :
   //   Identifier
@@ -3130,15 +3086,12 @@
   }
 
   // @ts-nocheck
-
-  /** https://tc39.es/ecma262/#sec-this-keyword-runtime-semantics-evaluation */
-  // PrimaryExpression : `this`
+  /** https://tc39.es/ecma262/#sec-this-keyword-runtime-semantics-evaluation */ // PrimaryExpression : `this`
   function Evaluate_This(_PrimaryExpression) {
     return ResolveThisBinding();
   }
 
   // @ts-nocheck
-
   /** https://tc39.es/ecma262/#sec-literals-runtime-semantics-evaluation */
   // Literal :
   //   NullLiteral
@@ -3216,6 +3169,7 @@
   }
 
   // @ts-nocheck
+
   function* Evaluate(node) {
     exports.surroundingAgent.runningExecutionContext.callSite.setLocation(node);
     if (exports.surroundingAgent.hostDefinedOptions.onNodeEvaluation) {
@@ -4381,16 +4335,11 @@
     return lval;
   }
 
-  // @ts-nocheck
-
-  /** https://tc39.es/ecma262/#sec-empty-statement-runtime-semantics-evaluation */
-  //   EmptyStatement : `;`
+  /** https://tc39.es/ecma262/#sec-empty-statement-runtime-semantics-evaluation */ //   EmptyStatement : `;`
   function Evaluate_EmptyStatement(_EmptyStatement) {
     // 1. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
   }
-
-  // @ts-nocheck
 
   /** https://tc39.es/ecma262/#sec-exp-operator-runtime-semantics-evaluation */
   // ExponentiationExpression : UpdateExpression ** ExponentiationExpression
@@ -4452,8 +4401,7 @@
     }
   }
 
-  /** https://tc39.es/ecma262/#sec-import-calls */
-  // ImportCall : `import` `(` AssignmentExpression `)`
+  /** https://tc39.es/ecma262/#sec-import-calls */ // ImportCall : `import` `(` AssignmentExpression `)`
   function* Evaluate_ImportCall({
     AssignmentExpression
   }) {
@@ -4527,8 +4475,7 @@
     return yield* EvaluateStringOrNumericBinaryExpression(MultiplicativeExpression, opText, ExponentiationExpression);
   }
 
-  /** https://tc39.es/ecma262/#sec-throw-statement-runtime-semantics-evaluation */
-  // ThrowStatement : `throw` Expression `;`
+  /** https://tc39.es/ecma262/#sec-throw-statement-runtime-semantics-evaluation */ // ThrowStatement : `throw` Expression `;`
   function* Evaluate_ThrowStatement({
     Expression
   }) {
@@ -5101,8 +5048,6 @@
     }
   }
 
-  // @ts-nocheck
-
   /** https://tc39.es/ecma262/#sec-script-semantics-runtime-semantics-evaluation */
   // Script :
   //   [empty]
@@ -5115,8 +5060,6 @@
     }
     return yield* Evaluate(ScriptBody);
   }
-
-  // @ts-nocheck
 
   // ScriptBody : StatementList
   function Evaluate_ScriptBody(ScriptBody) {
@@ -5151,7 +5094,6 @@
   }
 
   // @ts-nocheck
-
   /** https://tc39.es/ecma262/#sec-expression-statement-runtime-semantics-evaluation */
   //   ExpressionStatement :
   //     Expression `;`
@@ -5271,8 +5213,6 @@
     }
     return NormalCompletion(undefined);
   }
-
-  // @ts-nocheck
 
   /** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluation */
   // FunctionDeclaration :
@@ -5657,7 +5597,7 @@
   ArgumentListEvaluation_Arguments.section = 'https://tc39.es/ecma262/#sec-argument-lists-runtime-semantics-argumentlistevaluation';
   function ArgumentListEvaluation(ArgumentsOrTemplateLiteral) {
     switch (true) {
-      case Array.isArray(ArgumentsOrTemplateLiteral):
+      case isArray(ArgumentsOrTemplateLiteral):
         return ArgumentListEvaluation_Arguments(ArgumentsOrTemplateLiteral);
       case ArgumentsOrTemplateLiteral.type === 'TemplateLiteral':
         return ArgumentListEvaluation_TemplateLiteral(ArgumentsOrTemplateLiteral);
@@ -6270,6 +6210,7 @@
 
   // @ts-nocheck
 
+
   /** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluation */
   //   FunctionStatementList : [empty]
   //
@@ -6765,7 +6706,6 @@
   }
 
   // @ts-nocheck
-
   /** https://tc39.es/ecma262/#sec-grouping-operator-runtime-semantics-evaluation */
   function* Evaluate_ParenthesizedExpression({
     Expression
@@ -7284,6 +7224,7 @@
 
   // @ts-nocheck
 
+
   /** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluation */
   //   FunctionExpression :
   //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
@@ -7772,8 +7713,7 @@
     return array;
   }
 
-  /** https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation */
-  //   UnaryExpression : `delete` UnaryExpression
+  /** https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation */ //   UnaryExpression : `delete` UnaryExpression
   function* Evaluate_UnaryExpression_Delete({
     UnaryExpression
   }) {
@@ -8296,8 +8236,6 @@
     }
   }
 
-  // @ts-nocheck
-
   /** https://tc39.es/ecma262/#sec-left-shift-operator-runtime-semantics-evaluation */
   //  ShiftExpression :
   //    ShiftExpression `<<` AdditiveExpression
@@ -8605,8 +8543,6 @@
         throw new OutOfRange$1('BindingInitialization', node);
     }
   }
-
-  // @ts-nocheck
 
   /** https://tc39.es/ecma262/#sec-async-function-definitions-runtime-semantics-evaluation */
   //   AsyncFunctionExpression :
@@ -15898,6 +15834,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // @ts-nocheck
 
+
   /** https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-evaluation */
   //   GeneratorExpression :
   //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
@@ -15907,23 +15844,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return InstantiateGeneratorFunctionExpression(GeneratorExpression);
   }
 
-  // @ts-nocheck
-
   /** https://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-evaluation */
   function Evaluate_ArrowFunction(ArrowFunction) {
     // 1. Return InstantiateArrowFunctionExpression of ArrowFunction.
     return InstantiateArrowFunctionExpression(ArrowFunction);
   }
 
-  // @ts-nocheck
-
   /** https://tc39.es/ecma262/#sec-async-arrow-function-definitions-runtime-semantics-evaluation */
   function Evaluate_AsyncArrowFunction(AsyncArrowFunction) {
     // 1. Return InstantiateAsyncArrowFunctionExpression of AsyncArrowFunction.
     return InstantiateAsyncArrowFunctionExpression(AsyncArrowFunction);
   }
-
-  // @ts-nocheck
 
   /** https://tc39.es/ecma262/#sec-break-statement-runtime-semantics-evaluation */
   //   BreakStatement :
@@ -15950,8 +15881,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     });
   }
 
-  // @ts-nocheck
-
   /** https://tc39.es/ecma262/#sec-asyncgenerator-definitions-evaluation */
   //   AsyncGeneratorExpression :
   //     `async` `function` `*` `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
@@ -15960,8 +15889,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Return InstantiateAsyncGeneratorFunctionExpression of AsyncGeneratorExpression.
     return InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpression);
   }
-
-  // @ts-nocheck
 
   /** https://tc39.es/ecma262/#sec-statement-semantics-runtime-semantics-evaluation */
   //   HoistableDeclaration :
@@ -16448,7 +16375,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   // @ts-nocheck
-
   /** https://tc39.es/ecma262/#sec-regular-expression-literals-runtime-semantics-evaluation */
   //   RegularExpressionLiteral :
   //     `/` RegularExpressionBody `/` RegularExpressionFlags
@@ -17657,8 +17583,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(T);
   }
 
-  // @ts-nocheck
-
   /** https://tc39.es/ecma262/#sec-meta-properties-runtime-semantics-evaluation */
   // NewTarget : `new` `.` `target`
   function Evaluate_NewTarget() {
@@ -17666,8 +17590,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return GetNewTarget();
   }
 
-  /** https://tc39.es/ecma262/#sec-async-function-definitions-runtime-semantics-evaluation */
-  //   AwaitExpression : `await` UnaryExpression
+  /** https://tc39.es/ecma262/#sec-async-function-definitions-runtime-semantics-evaluation */ //   AwaitExpression : `await` UnaryExpression
   function* Evaluate_AwaitExpression({
     UnaryExpression
   }) {
@@ -17761,8 +17684,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return NormalCompletion(undefined);
   }
 
-  /** https://tc39.es/ecma262/#sec-with-statement-runtime-semantics-evaluation */
-  //   WithStatement : `with` `(` Expression `)` Statement
+  /** https://tc39.es/ecma262/#sec-with-statement-runtime-semantics-evaluation */ //   WithStatement : `with` `(` Expression `)` Statement
   function* Evaluate_WithStatement({
     Expression,
     Statement
@@ -17803,8 +17725,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Completion(UpdateEmpty(C, exports.Value.undefined));
   }
 
-  // @ts-nocheck
-
   /** https://tc39.es/ecma262/#sec-module-semantics-runtime-semantics-evaluation */
   // Module :
   //   [empty]
@@ -17818,20 +17738,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return yield* Evaluate(ModuleBody);
   }
 
-  // @ts-nocheck
-
   /** https://tc39.es/ecma262/#sec-module-semantics-runtime-semantics-evaluation */
   // ModuleBody : ModuleItemList
   function Evaluate_ModuleBody({
     ModuleItemList
   }) {
+    // TODO(ts): ModuleItemList might contain ImportDeclaration or ExportDeclaration which is not accepted by Evaluate_StatementList.
+    // @ts-expect-error
     return Evaluate_StatementList(ModuleItemList);
   }
 
-  // @ts-nocheck
-
-  /** https://tc39.es/ecma262/#sec-module-semantics-runtime-semantics-evaluation */
-  // ModuleItem : ImportDeclaration
+  /** https://tc39.es/ecma262/#sec-module-semantics-runtime-semantics-evaluation */ // ModuleItem : ImportDeclaration
   function Evaluate_ImportDeclaration(_ImportDeclaration) {
     // 1. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
@@ -18327,8 +18244,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return exports.Value(result);
   }
 
-  // @ts-nocheck
-
   /** https://tc39.es/ecma262/#sec-continue-statement-runtime-semantics-evaluation */
   //   ContinueStatement :
   //     `continue` `;`
@@ -18363,8 +18278,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 2. Return LabelledEvaluation of this LabelledStatement with argument newLabelSet.
     return LabelledEvaluation(LabelledStatement, newLabelSet);
   }
-
-  // @ts-nocheck
 
   /** https://tc39.es/ecma262/#sec-runtime-semantics-mv-s */
   //   StringNumericLiteral :::
@@ -18513,8 +18426,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return ApplyStringOrNumericBinaryOperator(lval, opText, rval);
   }
 
-  /** https://tc39.es/ecma262/#sec-meta-properties */
-  //   ImportMeta : `import` `.` `meta`
+  /** https://tc39.es/ecma262/#sec-meta-properties */ //   ImportMeta : `import` `.` `meta`
   function Evaluate_ImportMeta(_ImportMeta) {
     let _temp = GetActiveScriptOrModule();
     Assert(!(_temp instanceof AbruptCompletion), "GetActiveScriptOrModule()" + ' returned an abrupt completion');
@@ -18600,7 +18512,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   //   SingleNameBinding
   //   PropertyName `:` BindingElement
   function* PropertyBindingInitialization(node, value, environment) {
-    if (Array.isArray(node)) {
+    if (isArray(node)) {
       // 1. Let boundNames be ? PropertyBindingInitialization of BindingPropertyList with arguments value and environment.
       // 2. Let nextNames be ? PropertyBindingInitialization of BindingProperty with arguments value and environment.
       // 3. Append each item in nextNames to the end of boundNames.
@@ -19318,7 +19230,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   // #table-nonbinary-unicode-properties
   const NonbinaryUnicodeProperties = {
-    __proto__: null,
     General_Category: 'General_Category',
     gc: 'General_Category',
     Script: 'Script',
@@ -19326,10 +19237,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     Script_Extensions: 'Script_Extensions',
     scx: 'Script_Extensions'
   };
+  Object.setPrototypeOf(NonbinaryUnicodeProperties, null);
 
   // #table-binary-unicode-properties
   const BinaryUnicodeProperties = {
-    __proto__: null,
     ASCII: 'ASCII',
     ASCII_Hex_Digit: 'ASCII_Hex_Digit',
     AHex: 'ASCII_Hex_Digit',
@@ -19429,10 +19340,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     XID_Start: 'XID_Start',
     XIDS: 'XID_Start'
   };
+  Object.setPrototypeOf(BinaryUnicodeProperties, null);
 
   // #table-unicode-general-category-values
   const UnicodeGeneralCategoryValues = {
-    __proto__: null,
     Cased_Letter: 'Cased_Letter',
     LC: 'Cased_Letter',
     Close_Punctuation: 'Close_Punctuation',
@@ -19514,10 +19425,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     Uppercase_Letter: 'Uppercase_Letter',
     Lu: 'Uppercase_Letter'
   };
+  Object.setPrototypeOf(UnicodeGeneralCategoryValues, null);
 
   // #table-unicode-script-values
   const UnicodeScriptValues = {
-    __proto__: null,
     Adlam: 'Adlam',
     Adlm: 'Adlam',
     Ahom: 'Ahom',
@@ -19827,6 +19738,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     Zanabazar_Square: 'Zanabazar_Square',
     Zanb: 'Zanabazar_Square'
   };
+  Object.setPrototypeOf(UnicodeScriptValues, null);
 
   /** https://tc39.es/ecma262/#sec-runtime-semantics-unicodematchproperty-p */
   function UnicodeMatchProperty(p) {
@@ -20322,7 +20234,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   // @ts-nocheck
-
   /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateordinaryfunctionexpression */
   //   FunctionExpression :
   //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
@@ -20462,9 +20373,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   // @ts-nocheck
-
-  /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiatearrowfunctionexpression */
-  // ArrowFunction : ArrowParameters `=>` ConciseBody
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiatearrowfunctionexpression */ // ArrowFunction : ArrowParameters `=>` ConciseBody
   function InstantiateArrowFunctionExpression(ArrowFunction, name) {
     const {
       ArrowParameters,
@@ -20489,9 +20398,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   // @ts-nocheck
-
-  /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncarrowfunctionexpression */
-  // AsyncArrowFunction : ArrowParameters `=>` AsyncConciseBody
+  /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncarrowfunctionexpression */ // AsyncArrowFunction : ArrowParameters `=>` AsyncConciseBody
   function InstantiateAsyncArrowFunctionExpression(AsyncArrowFunction, name) {
     const {
       ArrowParameters,
