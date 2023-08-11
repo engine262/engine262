@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 caa04a6ef8d8c84089f9539f1c3461e6ddd5ce5b
+ * engine262 0.0.1 4aa42b6dee32eec63062a0480c7375220d835f7d
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -217,7 +217,7 @@ function _identity(x) {
 
 const kInternal = Symbol('kInternal');
 function convertValueForKey(key) {
-  if (key instanceof StringValue) {
+  if (key instanceof JSStringValue) {
     return key.stringValue();
   } else if (key instanceof NumberValue) {
     return R(key);
@@ -261,7 +261,7 @@ class ValueMap {
   *[Symbol.iterator]() {
     for (const [key, value] of this.map.entries()) {
       if (typeof key === 'string' || typeof key === 'number') {
-        yield [_Value(key), value];
+        yield [Value(key), value];
       } else {
         yield [key, value];
       }
@@ -303,7 +303,7 @@ class ValueSet {
   *[Symbol.iterator]() {
     for (const key of this.set.values()) {
       if (typeof key === 'string' || typeof key === 'number') {
-        yield _Value(key);
+        yield Value(key);
       } else {
         yield key;
       }
@@ -379,7 +379,7 @@ class CallSite {
     return c;
   }
   isTopLevel() {
-    return this.context.Function === _Value.null;
+    return this.context.Function === Value.null;
   }
   isConstructCall() {
     return this.constructCall;
@@ -396,7 +396,7 @@ class CallSite {
   }
   getFunctionName() {
     if (!(this.context.Function instanceof NullValue)) {
-      const name = this.context.Function.properties.get(_Value('name'));
+      const name = this.context.Function.properties.get(Value('name'));
       if (name) {
         let _temp2 = ToString(name.Value);
         Assert(!(_temp2 instanceof AbruptCompletion), "ToString(name.Value)" + ' returned an abrupt completion');
@@ -504,7 +504,7 @@ function captureAsyncStack(stack) {
       } else {
         return;
       }
-    } else if (reaction.Capability !== _Value.undefined) {
+    } else if (reaction.Capability !== Value.undefined) {
       if ('PromiseState' in reaction.Capability.Promise) {
         promise = reaction.Capability.Promise;
       } else {
@@ -517,7 +517,7 @@ function captureStack(O) {
   const stack = [];
   for (let i = surroundingAgent.executionContextStack.length - 2; i >= 0; i -= 1) {
     const e = surroundingAgent.executionContextStack[i];
-    if (e.VariableEnvironment === undefined && e.Function === _Value.null) {
+    if (e.VariableEnvironment === undefined && e.Function === Value.null) {
       break;
     }
     const clone = e.callSite.clone();
@@ -535,7 +535,7 @@ function captureStack(O) {
     captureAsyncStack(stack);
   }
   let cache = null;
-  const name = _Value('stack');
+  const name = Value('stack');
   let _temp3 = DefinePropertyOrThrow(O, name, _Descriptor({
     Get: CreateBuiltinFunction(() => {
       if (cache === null) {
@@ -549,16 +549,16 @@ function captureStack(O) {
         stack.forEach(s => {
           errorString = `${errorString}\n    at ${s.toString()}`;
         });
-        cache = _Value(errorString);
+        cache = Value(errorString);
       }
       return cache;
-    }, 0, name, [], undefined, undefined, _Value('get')),
-    Set: CreateBuiltinFunction(([value = _Value.undefined]) => {
+    }, 0, name, [], undefined, undefined, Value('get')),
+    Set: CreateBuiltinFunction(([value = Value.undefined]) => {
       cache = value;
-      return _Value.undefined;
-    }, 1, name, [], undefined, undefined, _Value('set')),
-    Enumerable: _Value.false,
-    Configurable: _Value.true
+      return Value.undefined;
+    }, 1, name, [], undefined, undefined, Value('set')),
+    Enumerable: Value.false,
+    Configurable: Value.true
   }));
   Assert(!(_temp3 instanceof AbruptCompletion), "DefinePropertyOrThrow(O, name, Descriptor({\n    Get: CreateBuiltinFunction(() => {\n      if (cache === null) {\n        let errorString = X(ToString(O)).stringValue();\n        stack.forEach((s) => {\n          errorString = `${errorString}\\n    at ${s.toString()}`;\n        });\n        cache = Value(errorString);\n      }\n      return cache;\n    }, 0, name, [], undefined, undefined, Value('get')),\n    Set: CreateBuiltinFunction(([value = Value.undefined]) => {\n      cache = value;\n      return Value.undefined;\n    }, 1, name, [], undefined, undefined, Value('set')),\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
   /* c8 ignore if */
@@ -575,17 +575,17 @@ function callable(onCalled = (target, _thisArg, args) => Reflect.construct(targe
 }
 const isArray = Array.isArray;
 
-function StringValue$1(node) {
+function StringValue(node) {
   switch (node.type) {
     case 'IdentifierName':
     case 'BindingIdentifier':
     case 'IdentifierReference':
     case 'LabelIdentifier':
-      return _Value(node.name);
+      return Value(node.name);
     case 'PrivateIdentifier':
-      return _Value(`#${node.name}`);
+      return Value(`#${node.name}`);
     case 'StringLiteral':
-      return _Value(node.value);
+      return Value(node.value);
     /*c8 ignore next*/default:
       throw new OutOfRange$1('StringValue', node);
   }
@@ -642,7 +642,7 @@ function PropName(node) {
 /** https://tc39.es/ecma262/#sec-numericvalue */
 
 function NumericValue(node) {
-  return _Value(node.value);
+  return Value(node.value);
 }
 
 /** https://tc39.es/ecma262/#sec-isanonymousfunctiondefinition */
@@ -727,7 +727,7 @@ function BoundNames(node) {
   }
   switch (node.type) {
     case 'BindingIdentifier':
-      return [StringValue$1(node)];
+      return [StringValue(node)];
     case 'LexicalDeclaration':
       return BoundNames(node.BindingList);
     case 'LexicalBinding':
@@ -757,7 +757,7 @@ function BoundNames(node) {
       if (node.BindingIdentifier) {
         return BoundNames(node.BindingIdentifier);
       }
-      return [_Value('*default*')];
+      return [Value('*default*')];
     case 'ImportSpecifier':
       return BoundNames(node.ImportedBinding);
     case 'ExportDeclaration':
@@ -779,7 +779,7 @@ function BoundNames(node) {
         return declarationNames;
       }
       if (node.AssignmentExpression) {
-        return [_Value('*default*')];
+        return [Value('*default*')];
       }
       throw new OutOfRange$1('BoundNames', node);
     case 'SingleNameBinding':
@@ -1338,14 +1338,14 @@ function ModuleRequests(node) {
       if (node.FromClause) {
         return ModuleRequests(node.FromClause);
       }
-      return [StringValue$1(node.ModuleSpecifier)];
+      return [StringValue(node.ModuleSpecifier)];
     case 'ExportDeclaration':
       if (node.FromClause) {
         return ModuleRequests(node.FromClause);
       }
       return [];
     case 'StringLiteral':
-      return [StringValue$1(node)];
+      return [StringValue(node)];
     default:
       return [];
   }
@@ -1409,7 +1409,7 @@ function ExportEntries(node) {
           {
             // `export` NamedExports `;`
             // 1. Return ExportEntriesForModule(NamedExports, null).
-            return ExportEntriesForModule(node.NamedExports, _Value.null);
+            return ExportEntriesForModule(node.NamedExports, Value.null);
           }
         case !!node.VariableStatement:
           {
@@ -1422,8 +1422,8 @@ function ExportEntries(node) {
             for (const name of names) {
               // a. Append the ExportEntry Record { [[ModuleRequest]]: null, [[ImportName]]: null, [[LocalName]]: name, [[ExportName]]: name } to entries.
               entries.push({
-                ModuleRequest: _Value.null,
-                ImportName: _Value.null,
+                ModuleRequest: Value.null,
+                ImportName: Value.null,
                 LocalName: name,
                 ExportName: name
               });
@@ -1442,8 +1442,8 @@ function ExportEntries(node) {
             for (const name of names) {
               // a. Append the ExportEntry Record { [[ModuleRequest]]: null, [[ImportName]]: null, [[LocalName]]: name, [[ExportName]]: name } to entries.
               entries.push({
-                ModuleRequest: _Value.null,
-                ImportName: _Value.null,
+                ModuleRequest: Value.null,
+                ImportName: Value.null,
                 LocalName: name,
                 ExportName: name
               });
@@ -1460,10 +1460,10 @@ function ExportEntries(node) {
             const localName = names[0];
             // 3. Return a new List containing the ExportEntry Record { [[ModuleRequest]]: null, [[ImportName]]: null, [[LocalName]]: localName, [[ExportName]]: "default" }.
             return [{
-              ModuleRequest: _Value.null,
-              ImportName: _Value.null,
+              ModuleRequest: Value.null,
+              ImportName: Value.null,
               LocalName: localName,
-              ExportName: _Value('default')
+              ExportName: Value('default')
             }];
           }
         case node.default && !!node.ClassDeclaration:
@@ -1475,10 +1475,10 @@ function ExportEntries(node) {
             const localName = names[0];
             // 3. Return a new List containing the ExportEntry Record { [[ModuleRequest]]: null, [[ImportName]]: null, [[LocalName]]: localName, [[ExportName]]: "default" }.
             return [{
-              ModuleRequest: _Value.null,
-              ImportName: _Value.null,
+              ModuleRequest: Value.null,
+              ImportName: Value.null,
               LocalName: localName,
-              ExportName: _Value('default')
+              ExportName: Value('default')
             }];
           }
         case node.default && !!node.AssignmentExpression:
@@ -1486,10 +1486,10 @@ function ExportEntries(node) {
             // `export` `default` AssignmentExpression `;`
             // 1. Let entry be the ExportEntry Record { [[ModuleRequest]]: null, [[ImportName]]: null, [[LocalName]]: "*default*", [[ExportName]]: "default" }.
             const entry = {
-              ModuleRequest: _Value.null,
-              ImportName: _Value.null,
-              LocalName: _Value('*default*'),
-              ExportName: _Value('default')
+              ModuleRequest: Value.null,
+              ImportName: Value.null,
+              LocalName: Value('*default*'),
+              ExportName: Value('default')
             };
             // 2. Return a new List containing entry.
             return [entry];
@@ -2603,14 +2603,14 @@ function TV(s) {
 }
 function TemplateStrings(node, raw) {
   if (raw) {
-    return node.TemplateSpanList.map(s => _Value(s));
+    return node.TemplateSpanList.map(s => Value(s));
   }
   return node.TemplateSpanList.map(v => {
     const tv = TV(v);
     if (tv === undefined) {
-      return _Value.undefined;
+      return Value.undefined;
     }
-    return _Value(tv);
+    return Value(tv);
   });
 }
 
@@ -2652,7 +2652,7 @@ function ImportEntriesForModule(node, module) {
         // 2. Let defaultEntry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: "default", [[LocalName]]: localName }.
         const defaultEntry = {
           ModuleRequest: module,
-          ImportName: _Value('default'),
+          ImportName: Value('default'),
           LocalName: localName
         };
         // 3. Return a new List containing defaultEntry.
@@ -2661,7 +2661,7 @@ function ImportEntriesForModule(node, module) {
     case 'NameSpaceImport':
       {
         // 1. Let localName be the StringValue of ImportedBinding.
-        const localName = StringValue$1(node.ImportedBinding);
+        const localName = StringValue(node.ImportedBinding);
         // 2. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~namespace-object~, [[LocalName]]: localName }.
         const entry = {
           ModuleRequest: module,
@@ -2682,9 +2682,9 @@ function ImportEntriesForModule(node, module) {
     case 'ImportSpecifier':
       if (node.ModuleExportName) {
         // 1. Let importName be the StringValue of ModuleExportName.
-        const importName = StringValue$1(node.ModuleExportName);
+        const importName = StringValue(node.ModuleExportName);
         // 2. Let localName be the StringValue of ImportedBinding.
-        const localName = StringValue$1(node.ImportedBinding);
+        const localName = StringValue(node.ImportedBinding);
         // 3. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: importName, [[LocalName]]: localName }.
         const entry = {
           ModuleRequest: module,
@@ -2722,12 +2722,12 @@ function ExportEntriesForModule(node, module) {
     case 'ExportFromClause':
       if (node.ModuleExportName) {
         // 1. Let exportName be the StringValue of ModuleExportName.
-        const exportName = StringValue$1(node.ModuleExportName);
+        const exportName = StringValue(node.ModuleExportName);
         // 2. Let entry be the ExportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~all~, [[LocalName]]: null, [[ExportName]]: exportName }.
         const entry = {
           ModuleRequest: module,
           ImportName: 'all',
-          LocalName: _Value.null,
+          LocalName: Value.null,
           ExportName: exportName
         };
         // 3. Return a new List containing entry.
@@ -2737,24 +2737,24 @@ function ExportEntriesForModule(node, module) {
         const entry = {
           ModuleRequest: module,
           ImportName: 'all-but-default',
-          LocalName: _Value.null,
-          ExportName: _Value.null
+          LocalName: Value.null,
+          ExportName: Value.null
         };
         // 2. Return a new List containing entry.
         return [entry];
       }
     case 'ExportSpecifier':
       {
-        const sourceName = StringValue$1(node.localName);
-        const exportName = StringValue$1(node.exportName);
+        const sourceName = StringValue(node.localName);
+        const exportName = StringValue(node.exportName);
         let localName;
         let importName;
-        if (module === _Value.null) {
+        if (module === Value.null) {
           localName = sourceName;
-          importName = _Value.null;
+          importName = Value.null;
         } else {
           // 4. Else,
-          localName = _Value.null;
+          localName = Value.null;
           importName = sourceName;
         }
         return [{
@@ -3008,7 +3008,7 @@ function PrivateBoundIdentifiers(node) {
   }
   switch (node.type) {
     case 'PrivateIdentifier':
-      return [StringValue$1(node)];
+      return [StringValue(node)];
     case 'MethodDefinition':
     case 'GeneratorMethod':
     case 'AsyncMethod':
@@ -3076,7 +3076,7 @@ function UTF16EncodeCodePoint(cp) {
 //   `await`
 function Evaluate_IdentifierReference(IdentifierReference) {
   // 1. Return ? ResolveBinding(StringValue of Identifier).
-  return ResolveBinding(StringValue$1(IdentifierReference), undefined, IdentifierReference.strict);
+  return ResolveBinding(StringValue(IdentifierReference), undefined, IdentifierReference.strict);
 }
 
 // @ts-nocheck
@@ -3096,22 +3096,22 @@ function Evaluate_Literal(Literal) {
   switch (Literal.type) {
     case 'NullLiteral':
       // 1. Return null.
-      return _Value.null;
+      return Value.null;
     case 'BooleanLiteral':
       // 1. If BooleanLiteral is the token false, return false.
       if (Literal.value === false) {
-        return _Value.false;
+        return Value.false;
       }
       // 2. If BooleanLiteral is the token true, return true.
       if (Literal.value === true) {
-        return _Value.true;
+        return Value.true;
       }
       throw new OutOfRange$1('Evaluate_Literal', Literal);
     case 'NumericLiteral':
       // 1. Return the NumericValue of NumericLiteral as defined in 11.8.3.
       return NumericValue(Literal);
     case 'StringLiteral':
-      return StringValue$1(Literal);
+      return StringValue(Literal);
     /*c8 ignore next*/default:
       throw new OutOfRange$1('Evaluate_Literal', Literal);
   }
@@ -3127,7 +3127,7 @@ function* Evaluate_ClassExpression(ClassExpression) {
     ClassTail
   } = ClassExpression;
   if (!BindingIdentifier) {
-    let _temp = yield* ClassDefinitionEvaluation(ClassTail, _Value.undefined, _Value(''));
+    let _temp = yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, Value(''));
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) {
       return _temp;
@@ -3144,7 +3144,7 @@ function* Evaluate_ClassExpression(ClassExpression) {
     return value;
   }
   // 1. Let className be StringValue of BindingIdentifier.
-  const className = StringValue$1(BindingIdentifier);
+  const className = StringValue(BindingIdentifier);
   // 2. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments className and className.
   let _temp2 = yield* ClassDefinitionEvaluation(ClassTail, className, className);
   /* c8 ignore if */
@@ -3368,9 +3368,9 @@ function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
   // 2. Let classScope be NewDeclarativeEnvironment(env).
   const classScope = NewDeclarativeEnvironment(env);
   // 3. If classBinding is not undefined, then
-  if (classBinding !== _Value.undefined) {
+  if (classBinding !== Value.undefined) {
     // a. Perform classScopeEnv.CreateImmutableBinding(classBinding, true).
-    classScope.CreateImmutableBinding(classBinding, _Value.true);
+    classScope.CreateImmutableBinding(classBinding, Value.true);
   }
   // 4. Let outerPrivateEnvironment be the running execution context's PrivateEnvironment.
   const outerPrivateEnvironment = surroundingAgent.runningExecutionContext.PrivateEnvironment;
@@ -3419,16 +3419,16 @@ function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
     }
     const superclass = _temp;
     // e. If superclass is null, then
-    if (superclass === _Value.null) {
+    if (superclass === Value.null) {
       // i. Let protoParent be null.
-      protoParent = _Value.null;
+      protoParent = Value.null;
       // ii. Let constructorParent be %Function.prototype%.
       constructorParent = surroundingAgent.intrinsic('%Function.prototype%');
-    } else if (IsConstructor(superclass) === _Value.false) {
+    } else if (IsConstructor(superclass) === Value.false) {
       // f. Else if IsConstructor(superclass) is false, throw a TypeError exception.
       return surroundingAgent.Throw('TypeError', 'NotAConstructor', superclass);
     } else {
-      let _temp2 = Get(superclass, _Value('prototype'));
+      let _temp2 = Get(superclass, Value('prototype'));
       /* c8 ignore if */
       if (_temp2 instanceof AbruptCompletion) {
         return _temp2;
@@ -3471,7 +3471,7 @@ function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
     }) => {
       // i. Let args be the List of arguments that was passed to this function by [[Call]] or [[Construct]].
       // ii. If NewTarget is undefined, throw a TypeError exception.
-      if (NewTarget === _Value.undefined) {
+      if (NewTarget === Value.undefined) {
         return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', surroundingAgent.activeFunctionObject);
       }
       // iii. Let F be the active function object.
@@ -3491,7 +3491,7 @@ function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
         // 2. Let func be ! F.[[GetPrototypeOf]]().
         const func = _temp3;
         // 3. If IsConstructor(func) is false, throw a TypeError exception.
-        if (IsConstructor(func) === _Value.false) {
+        if (IsConstructor(func) === Value.false) {
           return surroundingAgent.Throw('TypeError', 'NotAConstructor', func);
         }
         // 4. Let result be ? Construct(func, args, NewTarget).
@@ -3532,7 +3532,7 @@ function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
       return result;
     };
     // b. ! CreateBuiltinFunction(defaultConstructor, 0, className, « [[ConstructorKind]], [[SourceText]] », the current Realm Record, constructorParent).
-    let _temp7 = CreateBuiltinFunction(defaultConstructor, 0, className, ['ConstructorKind', 'SourceText'], undefined, constructorParent, undefined, _Value.true);
+    let _temp7 = CreateBuiltinFunction(defaultConstructor, 0, className, ['ConstructorKind', 'SourceText'], undefined, constructorParent, undefined, Value.true);
     Assert(!(_temp7 instanceof AbruptCompletion), "CreateBuiltinFunction(defaultConstructor, 0, className, ['ConstructorKind', 'SourceText'], undefined, constructorParent, undefined, Value.true)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp7 instanceof Completion) {
@@ -3557,13 +3557,13 @@ function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
     SetFunctionName(F, className);
   }
   // 16. Perform MakeConstructor(F, false, proto).
-  MakeConstructor(F, _Value.false, proto);
+  MakeConstructor(F, Value.false, proto);
   // 17. If ClassHeritage is present, set F.[[ConstructorKind]] to derived.
   if (ClassHeritage) {
     F.ConstructorKind = 'derived';
   }
   // 18. Perform CreateMethodProperty(proto, "constructor", F).
-  let _temp9 = CreateMethodProperty(proto, _Value('constructor'), F);
+  let _temp9 = CreateMethodProperty(proto, Value('constructor'), F);
   Assert(!(_temp9 instanceof AbruptCompletion), "CreateMethodProperty(proto, Value('constructor'), F)" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp9 instanceof Completion) {
@@ -3591,11 +3591,11 @@ function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
     // a. If IsStatic of e is false, then
     if (IsStatic(e) === false) {
       // i. Let field be ClassElementEvaluation of e with arguments proto and false.
-      field = yield* ClassElementEvaluation(e, proto, _Value.false);
+      field = yield* ClassElementEvaluation(e, proto, Value.false);
     } else {
       // b. Else,
       // i. Let field be ClassElementEvaluation of e with arguments F and false.
-      field = yield* ClassElementEvaluation(e, F, _Value.false);
+      field = yield* ClassElementEvaluation(e, F, Value.false);
     }
     // c. If field is an abrupt completion, then
     if (field instanceof AbruptCompletion) {
@@ -3629,7 +3629,7 @@ function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
         Assert(field.Kind === 'accessor' && existing.Kind === 'accessor', "field.Kind === 'accessor' && existing.Kind === 'accessor'");
         // 3. If field.[[Get]] is undefined, then
         let combined;
-        if (field.Get === _Value.undefined) {
+        if (field.Get === Value.undefined) {
           combined = new PrivateElementRecord({
             Key: field.Key,
             Kind: 'accessor',
@@ -3670,7 +3670,7 @@ function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
   // 26. Set the running execution context's LexicalEnvironment to env.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = env;
   // 27. If classBinding is not undefined, then
-  if (classBinding !== _Value.undefined) {
+  if (classBinding !== Value.undefined) {
     // a. Perform classScope.InitializeBinding(classBinding, F).
     classScope.InitializeBinding(classBinding, F);
   }
@@ -3773,9 +3773,9 @@ function* DefineMethod(MethodDefinition, object, functionPrototype) {
 function* Evaluate_PropertyName(PropertyName) {
   switch (PropertyName.type) {
     case 'IdentifierName':
-      return StringValue$1(PropertyName);
+      return StringValue(PropertyName);
     case 'StringLiteral':
-      return _Value(PropertyName.value);
+      return Value(PropertyName.value);
     case 'NumericLiteral':
       {
         // 1. Let nbr be the NumericValue of NumericLiteral.
@@ -3792,7 +3792,7 @@ function* Evaluate_PropertyName(PropertyName) {
     case 'PrivateIdentifier':
       {
         // 1. Let privateIdentifier be StringValue of PrivateIdentifier.
-        const privateIdentifier = StringValue$1(PropertyName);
+        const privateIdentifier = StringValue(PropertyName);
         // 2. Let privateEnvRec be the running execution context's PrivateEnvironment.
         const privateEnvRec = surroundingAgent.runningExecutionContext.PrivateEnvironment;
         // 3. Let names be privateEnvRec.[[Names]].
@@ -4075,7 +4075,7 @@ function* Evaluate_AssignmentExpression({
     }
     const lbool = _temp6;
     // 4. If lbool is false, return lval.
-    if (lbool === _Value.false) {
+    if (lbool === Value.false) {
       return lval;
     }
     let rval;
@@ -4134,7 +4134,7 @@ function* Evaluate_AssignmentExpression({
     }
     const lbool = _temp10;
     // 4. If lbool is true, return lval.
-    if (lbool === _Value.true) {
+    if (lbool === Value.true) {
       return lval;
     }
     let rval;
@@ -4185,7 +4185,7 @@ function* Evaluate_AssignmentExpression({
     }
     const lval = _temp13;
     // 3. If lval is not undefined nor null, return lval.
-    if (lval !== _Value.undefined && lval !== _Value.null) {
+    if (lval !== Value.undefined && lval !== Value.null) {
       return lval;
     }
     let rval;
@@ -4319,7 +4319,7 @@ function* Evaluate_CoalesceExpression({
   }
   const lval = _temp;
   // 3. If lval is *undefined* or *null*,
-  if (lval === _Value.undefined || lval === _Value.null) {
+  if (lval === Value.undefined || lval === Value.null) {
     // a. Let rref be the result of evaluating |BitwiseORExpression|.
     const rref = yield* Evaluate(BitwiseORExpression);
     // b. Return ? GetValue(rref).
@@ -4370,7 +4370,7 @@ function* Evaluate_IfStatement({
   if (Statement_b) {
     let stmtCompletion;
     // 3. If exprValue is true, then
-    if (exprValue === _Value.true) {
+    if (exprValue === Value.true) {
       // a. Let stmtCompletion be the result of evaluating the first Statement.
       stmtCompletion = yield* Evaluate(Statement_a);
     } else {
@@ -4379,18 +4379,18 @@ function* Evaluate_IfStatement({
       stmtCompletion = yield* Evaluate(Statement_b);
     }
     // 5. Return Completion(UpdateEmpty(stmtCompletion, undefined)).
-    return Completion(UpdateEmpty(EnsureCompletion(stmtCompletion), _Value.undefined));
+    return Completion(UpdateEmpty(EnsureCompletion(stmtCompletion), Value.undefined));
   } else {
     // 3. If exprValue is false, then
-    if (exprValue === _Value.false) {
+    if (exprValue === Value.false) {
       // a. Return NormalCompletion(undefined).
-      return NormalCompletion(_Value.undefined);
+      return NormalCompletion(Value.undefined);
     } else {
       // 4. Else,
       // a. Let stmtCompletion be the result of evaluating Statement.
       const stmtCompletion = yield* Evaluate(Statement_a);
       // b. Return Completion(UpdateEmpty(stmtCompletion, undefined)).
-      return Completion(UpdateEmpty(EnsureCompletion(stmtCompletion), _Value.undefined));
+      return Completion(UpdateEmpty(EnsureCompletion(stmtCompletion), Value.undefined));
     }
   }
 }
@@ -4437,7 +4437,7 @@ function* Evaluate_ImportCall({
   // 7. IfAbruptRejectPromise(specifierString, promiseCapability).
   /* c8 ignore if */
   if (specifierString instanceof AbruptCompletion) {
-    const hygenicTemp2 = Call(promiseCapability.Reject, _Value.undefined, [specifierString.Value]);
+    const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [specifierString.Value]);
     if (hygenicTemp2 instanceof AbruptCompletion) {
       return hygenicTemp2;
     }
@@ -4448,7 +4448,7 @@ function* Evaluate_ImportCall({
     specifierString = specifierString.Value;
   }
   // 8. Perform HostLoadImportedModule(referrer, specifierString, ~empty~, promiseCapability).
-  HostLoadImportedModule(referrer, specifierString, _Value.undefined, promiseCapability);
+  HostLoadImportedModule(referrer, specifierString, Value.undefined, promiseCapability);
   // 9. Return promiseCapability.[[Promise]].
   return promiseCapability.Promise;
 }
@@ -4703,11 +4703,11 @@ function GlobalDeclarationInstantiation(script, env) {
   // 4. For each name in lexNames, do
   for (const name of lexNames) {
     // 1. If env.HasVarDeclaration(name) is true, throw a SyntaxError exception.
-    if (env.HasVarDeclaration(name) === _Value.true) {
+    if (env.HasVarDeclaration(name) === Value.true) {
       return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
     }
     // 1. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
-    if (env.HasLexicalDeclaration(name) === _Value.true) {
+    if (env.HasLexicalDeclaration(name) === Value.true) {
       return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
     }
     // 1. Let hasRestrictedGlobal be ? env.HasRestrictedGlobalProperty(name).
@@ -4722,14 +4722,14 @@ function GlobalDeclarationInstantiation(script, env) {
     }
     const hasRestrictedGlobal = _temp;
     // 1. If hasRestrictedGlobal is true, throw a SyntaxError exception.
-    if (hasRestrictedGlobal === _Value.true) {
+    if (hasRestrictedGlobal === Value.true) {
       return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
     }
   }
   // 5. For each name in varNames, do
   for (const name of varNames) {
     // 1. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
-    if (env.HasLexicalDeclaration(name) === _Value.true) {
+    if (env.HasLexicalDeclaration(name) === Value.true) {
       return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
     }
   }
@@ -4762,7 +4762,7 @@ function GlobalDeclarationInstantiation(script, env) {
         // 1. Let fnDefinable be ? env.CanDeclareGlobalFunction(fn).
         const fnDefinable = _temp2;
         // 2. If fnDefinable is false, throw a TypeError exception.
-        if (fnDefinable === _Value.false) {
+        if (fnDefinable === Value.false) {
           return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', fn);
         }
         // 3. Append fn to declaredFunctionNames.
@@ -4794,7 +4794,7 @@ function GlobalDeclarationInstantiation(script, env) {
           // a. Let vnDefinable be ? env.CanDeclareGlobalVar(vn).
           const vnDefinable = _temp3;
           // b. If vnDefinable is false, throw a TypeError exception.
-          if (vnDefinable === _Value.false) {
+          if (vnDefinable === Value.false) {
             return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', vn);
           }
           // c. If vn is not an element of declaredVarNames, then
@@ -4811,7 +4811,7 @@ function GlobalDeclarationInstantiation(script, env) {
   // 14. Let lexDeclarations be the LexicallyScopedDeclarations of script.
   const lexDeclarations = LexicallyScopedDeclarations(script);
   // 15. Let privateEnv be null.
-  const privateEnv = _Value.null;
+  const privateEnv = Value.null;
   // 16. For each element d in lexDeclarations, do
   for (const d of lexDeclarations) {
     // a. NOTE: Lexically declared names are only instantiated here but not initialized.
@@ -4819,7 +4819,7 @@ function GlobalDeclarationInstantiation(script, env) {
     for (const dn of BoundNames(d)) {
       // 1. If IsConstantDeclaration of d is true, then
       if (IsConstantDeclaration(d)) {
-        let _temp4 = env.CreateImmutableBinding(dn, _Value.true);
+        let _temp4 = env.CreateImmutableBinding(dn, Value.true);
         /* c8 ignore if */
         if (_temp4 instanceof AbruptCompletion) {
           return _temp4;
@@ -4829,7 +4829,7 @@ function GlobalDeclarationInstantiation(script, env) {
           _temp4 = _temp4.Value;
         }
       } else {
-        let _temp5 = env.CreateMutableBinding(dn, _Value.false);
+        let _temp5 = env.CreateMutableBinding(dn, Value.false);
         /* c8 ignore if */
         if (_temp5 instanceof AbruptCompletion) {
           return _temp5;
@@ -4848,7 +4848,7 @@ function GlobalDeclarationInstantiation(script, env) {
     // b. Let fo be InstantiateFunctionObject of f with argument env and privateEnv.
     const fo = InstantiateFunctionObject(f, env, privateEnv);
     // c. Perform ? env.CreateGlobalFunctionBinding(fn, fo, false).
-    let _temp6 = env.CreateGlobalFunctionBinding(fn, fo, _Value.false);
+    let _temp6 = env.CreateGlobalFunctionBinding(fn, fo, Value.false);
     /* c8 ignore if */
     if (_temp6 instanceof AbruptCompletion) {
       return _temp6;
@@ -4860,7 +4860,7 @@ function GlobalDeclarationInstantiation(script, env) {
   }
   // 18. For each String vn in declaredVarNames, in list order, do
   for (const vn of declaredVarNames) {
-    let _temp7 = env.CreateGlobalVarBinding(vn, _Value.false);
+    let _temp7 = env.CreateGlobalVarBinding(vn, Value.false);
     /* c8 ignore if */
     if (_temp7 instanceof AbruptCompletion) {
       return _temp7;
@@ -4885,7 +4885,7 @@ function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaration, scop
     FunctionBody
   } = FunctionDeclaration;
   // 1. Let name be StringValue of BindingIdentifier.
-  const name = BindingIdentifier ? StringValue$1(BindingIdentifier) : _Value('default');
+  const name = BindingIdentifier ? StringValue(BindingIdentifier) : Value('default');
   // 2. Let sourceText be the source text matched by FunctionDeclaration.
   const sourceText = sourceTextMatchedBy(FunctionDeclaration);
   // 3. Let F be OrdinaryFunctionCreate(%Function.prototype%, sourceText, FormalParameters, FunctionBody, non-lexical-this, scope, privateScope).
@@ -4915,7 +4915,7 @@ function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclaration, sc
     GeneratorBody
   } = GeneratorDeclaration;
   // 1. Let name be StringValue of BindingIdentifier.
-  const name = BindingIdentifier ? StringValue$1(BindingIdentifier) : _Value('default');
+  const name = BindingIdentifier ? StringValue(BindingIdentifier) : Value('default');
   // 2. Let sourceText be the source text matched by GeneratorDeclaration.
   const sourceText = sourceTextMatchedBy(GeneratorDeclaration);
   // 3. Let F be OrdinaryFunctionCreate(%GeneratorFunction.prototype%, sourceText, FormalParameters, GeneratorBody, non-lexical-this, scope, privateScope).
@@ -4937,11 +4937,11 @@ function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclaration, sc
   }
   const prototype = _temp3;
   // 6. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-  let _temp4 = DefinePropertyOrThrow(F, _Value('prototype'), _Descriptor({
+  let _temp4 = DefinePropertyOrThrow(F, Value('prototype'), _Descriptor({
     Value: prototype,
-    Writable: _Value.true,
-    Enumerable: _Value.false,
-    Configurable: _Value.false
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.false
   }));
   Assert(!(_temp4 instanceof AbruptCompletion), "DefinePropertyOrThrow(F, Value('prototype'), Descriptor({\n    Value: prototype,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
   /* c8 ignore if */
@@ -4963,7 +4963,7 @@ function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunctionDeclara
     AsyncBody
   } = AsyncFunctionDeclaration;
   // 1. Let name be StringValue of BindingIdentifier.
-  const name = BindingIdentifier ? StringValue$1(BindingIdentifier) : _Value('default');
+  const name = BindingIdentifier ? StringValue(BindingIdentifier) : Value('default');
   // 2. Let sourceText be the source text matched by AsyncFunctionDeclaration.
   const sourceText = sourceTextMatchedBy(AsyncFunctionDeclaration);
   // 3. Let F be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, FormalParameters, AsyncBody, non-lexical-this, scope, privateScope).
@@ -4991,7 +4991,7 @@ function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGeneratorDecla
     AsyncGeneratorBody
   } = AsyncGeneratorDeclaration;
   // 1. Let name be StringValue of BindingIdentifier.
-  const name = BindingIdentifier ? StringValue$1(BindingIdentifier) : _Value('default');
+  const name = BindingIdentifier ? StringValue(BindingIdentifier) : Value('default');
   // 2. Let sourceText be the source text matched by AsyncGeneratorDeclaration.
   const sourceText = sourceTextMatchedBy(AsyncGeneratorDeclaration);
   // 3. Let F be ! OrdinaryFunctionCreate(%AsyncGeneratorFunction.prototype%, sourceText, FormalParameters, AsyncGeneratorBody, non-lexical-this, scope, privateScope).
@@ -5013,11 +5013,11 @@ function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGeneratorDecla
   }
   const prototype = _temp7;
   // 6. Perform ! DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-  let _temp8 = DefinePropertyOrThrow(F, _Value('prototype'), _Descriptor({
+  let _temp8 = DefinePropertyOrThrow(F, Value('prototype'), _Descriptor({
     Value: prototype,
-    Writable: _Value.true,
-    Enumerable: _Value.false,
-    Configurable: _Value.false
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.false
   }));
   Assert(!(_temp8 instanceof AbruptCompletion), "DefinePropertyOrThrow(F, Value('prototype'), Descriptor({\n    Value: prototype,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
   /* c8 ignore if */
@@ -5050,7 +5050,7 @@ function* Evaluate_Script({
   ScriptBody
 }) {
   if (!ScriptBody) {
-    return NormalCompletion(_Value.undefined);
+    return NormalCompletion(Value.undefined);
   }
   return yield* Evaluate(ScriptBody);
 }
@@ -5116,7 +5116,7 @@ function* Evaluate_VariableDeclaration({
       return NormalCompletion(undefined);
     }
     // 1. Let bindingId be StringValue of BindingIdentifier.
-    const bindingId = StringValue$1(BindingIdentifier);
+    const bindingId = StringValue(BindingIdentifier);
     // 2. Let lhs be ? ResolveBinding(bindingId).
     let _temp = ResolveBinding(bindingId, undefined, BindingIdentifier.strict);
     /* c8 ignore if */
@@ -5166,7 +5166,7 @@ function* Evaluate_VariableDeclaration({
   }
   const rval = _temp3;
   // 3. Return the result of performing BindingInitialization for BindingPattern passing rval and undefined as arguments.
-  return yield* BindingInitialization(BindingPattern, rval, _Value.undefined);
+  return yield* BindingInitialization(BindingPattern, rval, Value.undefined);
 }
 
 /** https://tc39.es/ecma262/#sec-variable-statement-runtime-semantics-evaluation */
@@ -5242,9 +5242,9 @@ function* Evaluate_CallExpression(CallExpression) {
   }
   const func = _temp;
   // 6. If Type(ref) is Reference, IsPropertyReference(ref) is false, and GetReferencedName(ref) is "eval", then
-  if (ref instanceof ReferenceRecord && IsPropertyReference(ref) === _Value.false && ref.ReferencedName instanceof StringValue && ref.ReferencedName.stringValue() === 'eval') {
+  if (ref instanceof ReferenceRecord && IsPropertyReference(ref) === Value.false && ref.ReferencedName instanceof JSStringValue && ref.ReferencedName.stringValue() === 'eval') {
     // a. If SameValue(func, %eval%) is true, then
-    if (SameValue(func, surroundingAgent.intrinsic('%eval%')) === _Value.true) {
+    if (SameValue(func, surroundingAgent.intrinsic('%eval%')) === Value.true) {
       let _temp2 = yield* ArgumentListEvaluation(args);
       /* c8 ignore if */
       if (_temp2 instanceof AbruptCompletion) {
@@ -5258,7 +5258,7 @@ function* Evaluate_CallExpression(CallExpression) {
       const argList = _temp2;
       // ii. If argList has no elements, return undefined.
       if (argList.length === 0) {
-        return _Value.undefined;
+        return Value.undefined;
       }
       // iii. Let evalText be the first element of argList.
       const evalText = argList[0];
@@ -5284,7 +5284,7 @@ function* EvaluateCall(func, ref, args, tailPosition) {
   let thisValue;
   if (ref instanceof ReferenceRecord) {
     // a. If IsPropertyReference(ref) is true, then
-    if (IsPropertyReference(ref) === _Value.true) {
+    if (IsPropertyReference(ref) === Value.true) {
       // i. Let thisValue be GetThisValue(ref).
       thisValue = GetThisValue(ref);
     } else {
@@ -5297,7 +5297,7 @@ function* EvaluateCall(func, ref, args, tailPosition) {
     }
   } else {
     // a. Let thisValue be undefined.
-    thisValue = _Value.undefined;
+    thisValue = Value.undefined;
   }
   // 3. Let argList be ? ArgumentListEvaluation of arguments.
   let _temp = yield* ArgumentListEvaluation(args);
@@ -5315,7 +5315,7 @@ function* EvaluateCall(func, ref, args, tailPosition) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
   }
   // 5. If IsCallable(func) is false, throw a TypeError exception.
-  if (IsCallable(func) === _Value.false) {
+  if (IsCallable(func) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
   }
   // 6. If tailPosition is true, perform PrepareForTailCall().
@@ -5328,7 +5328,7 @@ function* EvaluateCall(func, ref, args, tailPosition) {
   //    evaluation will continue as if the following return has already occurred.
   // 9. Assert: If result is not an abrupt completion, then Type(result) is an ECMAScript language type.
   if (!(result instanceof AbruptCompletion)) {
-    Assert(result instanceof _Value || result instanceof Completion, "result instanceof Value || result instanceof Completion");
+    Assert(result instanceof Value || result instanceof Completion, "result instanceof Value || result instanceof Completion");
   }
   // 10. Return result.
   return result;
@@ -5389,9 +5389,9 @@ function GetTemplateObject(templateLiteral) {
     // c. Call template.[[DefineOwnProperty]](prop, PropertyDescriptor { [[Value]]: cookedValue, [[Writable]]: false, [[Enumerable]]: true, [[Configurable]]: false }).
     let _temp4 = template.DefineOwnProperty(prop, _Descriptor({
       Value: cookedValue,
-      Writable: _Value.false,
-      Enumerable: _Value.true,
-      Configurable: _Value.false
+      Writable: Value.false,
+      Enumerable: Value.true,
+      Configurable: Value.false
     }));
     Assert(!(_temp4 instanceof AbruptCompletion), "template.DefineOwnProperty(prop, Descriptor({\n      Value: cookedValue,\n      Writable: Value.false,\n      Enumerable: Value.true,\n      Configurable: Value.false,\n    }))" + ' returned an abrupt completion');
     /* c8 ignore if */
@@ -5403,9 +5403,9 @@ function GetTemplateObject(templateLiteral) {
     // e. Call rawObj.[[DefineOwnProperty]](prop, PropertyDescriptor { [[Value]]: rawValue, [[Writable]]: false, [[Enumerable]]: true, [[Configurable]]: false }).
     let _temp5 = rawObj.DefineOwnProperty(prop, _Descriptor({
       Value: rawValue,
-      Writable: _Value.false,
-      Enumerable: _Value.true,
-      Configurable: _Value.false
+      Writable: Value.false,
+      Enumerable: Value.true,
+      Configurable: Value.false
     }));
     Assert(!(_temp5 instanceof AbruptCompletion), "rawObj.DefineOwnProperty(prop, Descriptor({\n      Value: rawValue,\n      Writable: Value.false,\n      Enumerable: Value.true,\n      Configurable: Value.false,\n    }))" + ' returned an abrupt completion');
     /* c8 ignore if */
@@ -5423,11 +5423,11 @@ function GetTemplateObject(templateLiteral) {
     _temp6 = _temp6.Value;
   }
   // 13. Perform SetIntegrityLevel(rawObj, frozen).
-  let _temp7 = template.DefineOwnProperty(_Value('raw'), _Descriptor({
+  let _temp7 = template.DefineOwnProperty(Value('raw'), _Descriptor({
     Value: rawObj,
-    Writable: _Value.false,
-    Enumerable: _Value.false,
-    Configurable: _Value.false
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.false
   }));
   Assert(!(_temp7 instanceof AbruptCompletion), "template.DefineOwnProperty(Value('raw'), Descriptor({\n    Value: rawObj,\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
   /* c8 ignore if */
@@ -5548,7 +5548,7 @@ function* ArgumentListEvaluation_Arguments(Arguments) {
         // a. Let next be ? IteratorStep(iteratorRecord).
         const next = _temp12;
         // b. If next is false, return list.
-        if (next === _Value.false) {
+        if (next === Value.false) {
           break;
         }
         // c. Let nextArg be ? IteratorValue(next).
@@ -5693,7 +5693,7 @@ function* EvaluateBody_AsyncConciseBody({
       _temp5 = _temp5.Value;
     }
   } else {
-    let _temp6 = Call(promiseCapability.Reject, _Value.undefined, [declResult.Value]);
+    let _temp6 = Call(promiseCapability.Reject, Value.undefined, [declResult.Value]);
     Assert(!(_temp6 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [declResult.Value])" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp6 instanceof Completion) {
@@ -5806,7 +5806,7 @@ function* EvaluateBody_AsyncFunctionBody(FunctionBody, functionObject, arguments
       _temp13 = _temp13.Value;
     }
   } else {
-    let _temp14 = Call(promiseCapability.Reject, _Value.undefined, [declResult.Value]);
+    let _temp14 = Call(promiseCapability.Reject, Value.undefined, [declResult.Value]);
     Assert(!(_temp14 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [declResult.Value])" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp14 instanceof Completion) {
@@ -5957,12 +5957,12 @@ function* FunctionDeclarationInstantiation(func, argumentsList) {
     // a. NOTE: Arrow functions never have an arguments objects.
     // b. Set argumentsObjectNeeded to false.
     argumentsObjectNeeded = false;
-  } else if (new ValueSet(parameterNames).has(_Value('arguments'))) {
+  } else if (new ValueSet(parameterNames).has(Value('arguments'))) {
     // a. Set argumentsObjectNeeded to false.
     argumentsObjectNeeded = false;
   } else if (hasParameterExpressions === false) {
     // a. If "arguments" is an element of functionNames or if "arguments" is an element of lexicalNames, then
-    if (functionNames.has(_Value('arguments')) || lexicalNames.has(_Value('arguments'))) {
+    if (functionNames.has(Value('arguments')) || lexicalNames.has(Value('arguments'))) {
       // i. Set argumentsObjectNeeded to false.
       argumentsObjectNeeded = false;
     }
@@ -5992,8 +5992,8 @@ function* FunctionDeclarationInstantiation(func, argumentsList) {
     // b. NOTE: Early errors ensure that duplicate parameter names can only occur in
     //    non-strict functions that do not have parameter default values or rest parameters.
     // c. If alreadyDeclared is false, then
-    if (alreadyDeclared === _Value.false) {
-      let _temp = env.CreateMutableBinding(paramName, _Value.false);
+    if (alreadyDeclared === Value.false) {
+      let _temp = env.CreateMutableBinding(paramName, Value.false);
       Assert(!(_temp instanceof AbruptCompletion), "env.CreateMutableBinding(paramName, Value.false)" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp instanceof Completion) {
@@ -6001,7 +6001,7 @@ function* FunctionDeclarationInstantiation(func, argumentsList) {
       }
       // ii. If hasDuplicates is true, then
       if (hasDuplicates === true) {
-        let _temp2 = env.InitializeBinding(paramName, _Value.undefined);
+        let _temp2 = env.InitializeBinding(paramName, Value.undefined);
         Assert(!(_temp2 instanceof AbruptCompletion), "env.InitializeBinding(paramName, Value.undefined)" + ' returned an abrupt completion');
         /* c8 ignore if */
         if (_temp2 instanceof Completion) {
@@ -6027,14 +6027,14 @@ function* FunctionDeclarationInstantiation(func, argumentsList) {
     }
     // c. If strict is true, then
     if (strict) {
-      let _temp3 = env.CreateImmutableBinding(_Value('arguments'), _Value.false);
+      let _temp3 = env.CreateImmutableBinding(Value('arguments'), Value.false);
       Assert(!(_temp3 instanceof AbruptCompletion), "env.CreateImmutableBinding(Value('arguments'), Value.false)" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp3 instanceof Completion) {
         _temp3 = _temp3.Value;
       }
     } else {
-      let _temp4 = env.CreateMutableBinding(_Value('arguments'), _Value.false);
+      let _temp4 = env.CreateMutableBinding(Value('arguments'), Value.false);
       Assert(!(_temp4 instanceof AbruptCompletion), "env.CreateMutableBinding(Value('arguments'), Value.false)" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp4 instanceof Completion) {
@@ -6042,9 +6042,9 @@ function* FunctionDeclarationInstantiation(func, argumentsList) {
       }
     }
     // e. Call env.InitializeBinding("arguments", ao).
-    env.InitializeBinding(_Value('arguments'), ao);
+    env.InitializeBinding(Value('arguments'), ao);
     // f. Let parameterBindings be a new List of parameterNames with "arguments" appended.
-    parameterBindings = new ValueSet([...parameterNames, _Value('arguments')]);
+    parameterBindings = new ValueSet([...parameterNames, Value('arguments')]);
   } else {
     // a. Let parameterBindings be parameterNames.
     parameterBindings = new ValueSet(parameterNames);
@@ -6053,7 +6053,7 @@ function* FunctionDeclarationInstantiation(func, argumentsList) {
   const iteratorRecord = CreateListIteratorRecord(argumentsList);
   // 25. If hasDuplicates is true, then
   if (hasDuplicates) {
-    let _temp5 = yield* IteratorBindingInitialization_FormalParameters(formals, iteratorRecord, _Value.undefined);
+    let _temp5 = yield* IteratorBindingInitialization_FormalParameters(formals, iteratorRecord, Value.undefined);
     /* c8 ignore if */
     if (_temp5 instanceof AbruptCompletion) {
       return _temp5;
@@ -6086,14 +6086,14 @@ function* FunctionDeclarationInstantiation(func, argumentsList) {
         // 1. Append n to instantiatedVarNames.
         instantiatedVarNames.add(n);
         // 2. Perform ! env.CreateMutableBinding(n, false).
-        let _temp7 = env.CreateMutableBinding(n, _Value.false);
+        let _temp7 = env.CreateMutableBinding(n, Value.false);
         Assert(!(_temp7 instanceof AbruptCompletion), "env.CreateMutableBinding(n, Value.false)" + ' returned an abrupt completion');
         /* c8 ignore if */
         if (_temp7 instanceof Completion) {
           _temp7 = _temp7.Value;
         }
         // 3. Call env.InitializeBinding(n, undefined).
-        env.InitializeBinding(n, _Value.undefined);
+        env.InitializeBinding(n, Value.undefined);
       }
     }
     // d. Let varEnv be env.
@@ -6114,7 +6114,7 @@ function* FunctionDeclarationInstantiation(func, argumentsList) {
         // 1. Append n to instantiatedVarNames.
         instantiatedVarNames.add(n);
         // 2. Perform ! varEnv.CreateMutableBinding(n, false).
-        let _temp8 = varEnv.CreateMutableBinding(n, _Value.false);
+        let _temp8 = varEnv.CreateMutableBinding(n, Value.false);
         Assert(!(_temp8 instanceof AbruptCompletion), "varEnv.CreateMutableBinding(n, Value.false)" + ' returned an abrupt completion');
         /* c8 ignore if */
         if (_temp8 instanceof Completion) {
@@ -6123,9 +6123,9 @@ function* FunctionDeclarationInstantiation(func, argumentsList) {
         let initialValue;
         // 3. If n is not an element of parameterBindings or if n is an element of functionNames, let initialValue be undefined.
         if (!parameterBindings.has(n) || functionNames.has(n)) {
-          initialValue = _Value.undefined;
+          initialValue = Value.undefined;
         } else {
-          let _temp9 = env.GetBindingValue(n, _Value.false);
+          let _temp9 = env.GetBindingValue(n, Value.false);
           Assert(!(_temp9 instanceof AbruptCompletion), "env.GetBindingValue(n, Value.false)" + ' returned an abrupt completion');
           /* c8 ignore if */
           if (_temp9 instanceof Completion) {
@@ -6166,14 +6166,14 @@ function* FunctionDeclarationInstantiation(func, argumentsList) {
     for (const dn of BoundNames(d)) {
       // i. If IsConstantDeclaration of d is true, then
       if (IsConstantDeclaration(d)) {
-        let _temp10 = lexEnv.CreateImmutableBinding(dn, _Value.true);
+        let _temp10 = lexEnv.CreateImmutableBinding(dn, Value.true);
         Assert(!(_temp10 instanceof AbruptCompletion), "lexEnv.CreateImmutableBinding(dn, Value.true)" + ' returned an abrupt completion');
         /* c8 ignore if */
         if (_temp10 instanceof Completion) {
           _temp10 = _temp10.Value;
         }
       } else {
-        let _temp11 = lexEnv.CreateMutableBinding(dn, _Value.false);
+        let _temp11 = lexEnv.CreateMutableBinding(dn, Value.false);
         Assert(!(_temp11 instanceof AbruptCompletion), "lexEnv.CreateMutableBinding(dn, Value.false)" + ' returned an abrupt completion');
         /* c8 ignore if */
         if (_temp11 instanceof Completion) {
@@ -6191,7 +6191,7 @@ function* FunctionDeclarationInstantiation(func, argumentsList) {
     // b. Let fo be InstantiateFunctionObject of f with argument lexEnv and privateEnv.
     const fo = InstantiateFunctionObject(f, lexEnv, privateEnv);
     // c. Perform ! varEnv.SetMutableBinding(fn, fo, false).
-    let _temp12 = varEnv.SetMutableBinding(fn, fo, _Value.false);
+    let _temp12 = varEnv.SetMutableBinding(fn, fo, Value.false);
     Assert(!(_temp12 instanceof AbruptCompletion), "varEnv.SetMutableBinding(fn, fo, Value.false)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp12 instanceof Completion) {
@@ -6267,7 +6267,7 @@ function* IteratorBindingInitialization_SingleNameBinding({
   Initializer
 }, iteratorRecord, environment) {
   // 1. Let bindingId be StringValue of BindingIdentifier.
-  const bindingId = StringValue$1(BindingIdentifier);
+  const bindingId = StringValue(BindingIdentifier);
   // 2. Let lhs be ? ResolveBinding(bindingId, environment).
   let _temp2 = ResolveBinding(bindingId, environment, BindingIdentifier.strict);
   /* c8 ignore if */
@@ -6281,12 +6281,12 @@ function* IteratorBindingInitialization_SingleNameBinding({
   const lhs = _temp2;
   let v;
   // 3. If iteratorRecord.[[Done]] is false, then
-  if (iteratorRecord.Done === _Value.false) {
+  if (iteratorRecord.Done === Value.false) {
     // a. Let next be IteratorStep(iteratorRecord).
     let next = IteratorStep(iteratorRecord);
     // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
     if (next instanceof AbruptCompletion) {
-      iteratorRecord.Done = _Value.true;
+      iteratorRecord.Done = Value.true;
     }
     // c. ReturnIfAbrupt(next).
     /* c8 ignore if */
@@ -6298,15 +6298,15 @@ function* IteratorBindingInitialization_SingleNameBinding({
       next = next.Value;
     }
     // d. If next is false, set iteratorRecord.[[Done]] to true.
-    if (next === _Value.false) {
-      iteratorRecord.Done = _Value.true;
+    if (next === Value.false) {
+      iteratorRecord.Done = Value.true;
     } else {
       // e. Else,
       // i. Let v be IteratorValue(next).
       v = IteratorValue(next);
       // ii. If v is an abrupt completion, set iteratorRecord.[[Done]] to true.
       if (v instanceof AbruptCompletion) {
-        iteratorRecord.Done = _Value.true;
+        iteratorRecord.Done = Value.true;
       }
       // iii. ReturnIfAbrupt(v).
       /* c8 ignore if */
@@ -6320,11 +6320,11 @@ function* IteratorBindingInitialization_SingleNameBinding({
     }
   }
   // 4. If iteratorRecord.[[Done]] is true, let v be undefined.
-  if (iteratorRecord.Done === _Value.true) {
-    v = _Value.undefined;
+  if (iteratorRecord.Done === Value.true) {
+    v = Value.undefined;
   }
   // 5. If Initializer is present and v is undefined, then
-  if (Initializer && v === _Value.undefined) {
+  if (Initializer && v === Value.undefined) {
     if (IsAnonymousFunctionDefinition(Initializer)) {
       v = yield* NamedEvaluation(Initializer, bindingId);
     } else {
@@ -6342,7 +6342,7 @@ function* IteratorBindingInitialization_SingleNameBinding({
     }
   }
   // 6. If environment is undefined, return ? PutValue(lhs, v).
-  if (environment === _Value.undefined) {
+  if (environment === Value.undefined) {
     return PutValue(lhs, v);
   }
   // 7. Return InitializeReferencedBinding(lhs, v).
@@ -6357,7 +6357,7 @@ function* IteratorBindingInitialization_BindingRestElement({
   BindingPattern
 }, iteratorRecord, environment) {
   if (BindingIdentifier) {
-    let _temp4 = ResolveBinding(StringValue$1(BindingIdentifier), environment, BindingIdentifier.strict);
+    let _temp4 = ResolveBinding(StringValue(BindingIdentifier), environment, BindingIdentifier.strict);
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) {
       return _temp4;
@@ -6382,12 +6382,12 @@ function* IteratorBindingInitialization_BindingRestElement({
     while (true) {
       let next;
       // a. If iteratorRecord.[[Done]] is false, then
-      if (iteratorRecord.Done === _Value.false) {
+      if (iteratorRecord.Done === Value.false) {
         // i. Let next be IteratorStep(iteratorRecord).
         next = IteratorStep(iteratorRecord);
         // ii. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
         if (next instanceof AbruptCompletion) {
-          iteratorRecord.Done = _Value.true;
+          iteratorRecord.Done = Value.true;
         }
         // iii. ReturnIfAbrupt(next).
         /* c8 ignore if */
@@ -6399,14 +6399,14 @@ function* IteratorBindingInitialization_BindingRestElement({
           next = next.Value;
         }
         // iv. If next is false, set iteratorRecord.[[Done]] to true.
-        if (next === _Value.false) {
-          iteratorRecord.Done = _Value.true;
+        if (next === Value.false) {
+          iteratorRecord.Done = Value.true;
         }
       }
       // b. If iteratorRecord.[[Done]] is true, then
-      if (iteratorRecord.Done === _Value.true) {
+      if (iteratorRecord.Done === Value.true) {
         // i. If environment is undefined, return ? PutValue(lhs, A).
-        if (environment === _Value.undefined) {
+        if (environment === Value.undefined) {
           return PutValue(lhs, A);
         }
         // ii. Return InitializeReferencedBinding(lhs, A).
@@ -6416,7 +6416,7 @@ function* IteratorBindingInitialization_BindingRestElement({
       let nextValue = IteratorValue(next);
       // d. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
       if (nextValue instanceof AbruptCompletion) {
-        iteratorRecord.Done = _Value.true;
+        iteratorRecord.Done = Value.true;
       }
       // e. ReturnIfAbrupt(nextValue).
       /* c8 ignore if */
@@ -6458,12 +6458,12 @@ function* IteratorBindingInitialization_BindingRestElement({
     while (true) {
       let next;
       // a. If iteratorRecord.[[Done]] is false, then
-      if (iteratorRecord.Done === _Value.false) {
+      if (iteratorRecord.Done === Value.false) {
         // i. Let next be IteratorStep(iteratorRecord).
         next = IteratorStep(iteratorRecord);
         // ii. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
         if (next instanceof AbruptCompletion) {
-          iteratorRecord.Done = _Value.true;
+          iteratorRecord.Done = Value.true;
         }
         // iii. ReturnIfAbrupt(next).
         /* c8 ignore if */
@@ -6475,12 +6475,12 @@ function* IteratorBindingInitialization_BindingRestElement({
           next = next.Value;
         }
         // iv. If next is false, set iteratorRecord.[[Done]] to true.
-        if (next === _Value.false) {
-          iteratorRecord.Done = _Value.true;
+        if (next === Value.false) {
+          iteratorRecord.Done = Value.true;
         }
       }
       // b. If iteratorRecord.[[Done]] is true, then
-      if (iteratorRecord.Done === _Value.true) {
+      if (iteratorRecord.Done === Value.true) {
         // i. Return the result of performing BindingInitialization of BindingPattern with A and environment as the arguments.
         return yield* BindingInitialization(BindingPattern, A, environment);
       }
@@ -6488,7 +6488,7 @@ function* IteratorBindingInitialization_BindingRestElement({
       let nextValue = IteratorValue(next);
       // d. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
       if (nextValue instanceof AbruptCompletion) {
-        iteratorRecord.Done = _Value.true;
+        iteratorRecord.Done = Value.true;
       }
       // e. ReturnIfAbrupt(nextValue).
       /* c8 ignore if */
@@ -6523,12 +6523,12 @@ function* IteratorBindingInitialization_BindingPattern({
 }, iteratorRecord, environment) {
   let v;
   // 1. If iteratorRecord.[[Done]] is false, then
-  if (iteratorRecord.Done === _Value.false) {
+  if (iteratorRecord.Done === Value.false) {
     // a. Let next be IteratorStep(iteratorRecord).
     let next = IteratorStep(iteratorRecord);
     // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
     if (next instanceof AbruptCompletion) {
-      iteratorRecord.Done = _Value.true;
+      iteratorRecord.Done = Value.true;
     }
     // c. ReturnIfAbrupt(next).
     /* c8 ignore if */
@@ -6540,15 +6540,15 @@ function* IteratorBindingInitialization_BindingPattern({
       next = next.Value;
     }
     // d. If next is false, set iteratorRecord.[[Done]] to true.
-    if (next === _Value.false) {
-      iteratorRecord.Done = _Value.true;
+    if (next === Value.false) {
+      iteratorRecord.Done = Value.true;
     } else {
       // e. Else,
       // i. Let v be IteratorValue(next).
       v = IteratorValue(next);
       // ii. If v is an abrupt completion, set iteratorRecord.[[Done]] to true.
       if (v instanceof AbruptCompletion) {
-        iteratorRecord.Done = _Value.true;
+        iteratorRecord.Done = Value.true;
       }
       // iii. ReturnIfAbrupt(v).
       /* c8 ignore if */
@@ -6562,11 +6562,11 @@ function* IteratorBindingInitialization_BindingPattern({
     }
   }
   // 2. If iteratorRecord.[[Done]] is true, let v be undefined.
-  if (iteratorRecord.Done === _Value.true) {
-    v = _Value.undefined;
+  if (iteratorRecord.Done === Value.true) {
+    v = Value.undefined;
   }
   // 3. If Initializer is present and v is undefined, then
-  if (Initializer && v === _Value.undefined) {
+  if (Initializer && v === Value.undefined) {
     // a. Let defaultValue be the result of evaluating Initializer.
     const defaultValue = yield* Evaluate(Initializer);
     // b. Set v to ? GetValue(defaultValue).
@@ -6587,12 +6587,12 @@ function* IteratorBindingInitialization_BindingPattern({
 function IteratorDestructuringAssignmentEvaluation$1(node, iteratorRecord) {
   Assert(node.type === 'Elision', "node.type === 'Elision'");
   // 1. If iteratorRecord.[[Done]] is false, then
-  if (iteratorRecord.Done === _Value.false) {
+  if (iteratorRecord.Done === Value.false) {
     // a. Let next be IteratorStep(iteratorRecord).
     let next = IteratorStep(iteratorRecord);
     // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
     if (next instanceof AbruptCompletion) {
-      iteratorRecord.Done = _Value.true;
+      iteratorRecord.Done = Value.true;
     }
     // c. ReturnIfAbrupt(next).
     /* c8 ignore if */
@@ -6604,8 +6604,8 @@ function IteratorDestructuringAssignmentEvaluation$1(node, iteratorRecord) {
       next = next.Value;
     }
     // d. If next is false, set iteratorRecord.[[Done]] to true.
-    if (next === _Value.false) {
-      iteratorRecord.Done = _Value.true;
+    if (next === Value.false) {
+      iteratorRecord.Done = Value.true;
     }
   }
   // 2. Return NormalCompletion(empty).
@@ -6655,7 +6655,7 @@ function* Evaluate_ReturnStatement({
     // 1. Return Completion { [[Type]]: return, [[Value]]: undefined, [[Target]]: empty }.
     return new Completion({
       Type: 'return',
-      Value: _Value.undefined,
+      Value: Value.undefined,
       Target: undefined
     });
   }
@@ -6794,7 +6794,7 @@ function* Evaluate_MemberExpression_PrivateIdentifier({
   }
   const bv = _temp4;
   // 4. Let fieldNameString be the StringValue of PrivateIdentifier.
-  const fieldNameString = StringValue$1(PrivateIdentifier);
+  const fieldNameString = StringValue(PrivateIdentifier);
   // 5. Return ! MakePrivateReference(bv, fieldNameString).
   let _temp5 = MakePrivateReference(bv, fieldNameString);
   Assert(!(_temp5 instanceof AbruptCompletion), "MakePrivateReference(bv, fieldNameString)" + ' returned an abrupt completion');
@@ -6867,7 +6867,7 @@ function* EvaluatePropertyAccessWithExpressionKey(baseValue, expression, strict)
   return new ReferenceRecord({
     Base: bv,
     ReferencedName: propertyKey,
-    Strict: strict ? _Value.true : _Value.false,
+    Strict: strict ? Value.true : Value.false,
     ThisValue: undefined
   });
 }
@@ -6888,12 +6888,12 @@ function EvaluatePropertyAccessWithIdentifierKey(baseValue, identifierName, stri
   }
   const bv = _temp4;
   // 3. Let propertyNameString be StringValue of IdentifierName
-  const propertyNameString = StringValue$1(identifierName);
+  const propertyNameString = StringValue(identifierName);
   // 4. Return the Reference Record { [[Base]]: bv, [[ReferencedName]]: propertyNameString, [[Strict]]: strict, [[ThisValue]]: empty }.
   return new ReferenceRecord({
     Base: bv,
     ReferencedName: propertyNameString,
-    Strict: strict ? _Value.true : _Value.false,
+    Strict: strict ? Value.true : Value.false,
     ThisValue: undefined
   });
 }
@@ -6909,7 +6909,7 @@ function* Evaluate_LexicalBinding_BindingIdentifier({
 }) {
   if (Initializer) {
     // 1. Let bindingId be StringValue of BindingIdentifier.
-    const bindingId = StringValue$1(BindingIdentifier);
+    const bindingId = StringValue(BindingIdentifier);
     // 2. Let lhs be ResolveBinding(bindingId).
     let _temp = ResolveBinding(bindingId, undefined, strict);
     Assert(!(_temp instanceof AbruptCompletion), "ResolveBinding(bindingId, undefined, strict)" + ' returned an abrupt completion');
@@ -6943,9 +6943,9 @@ function* Evaluate_LexicalBinding_BindingIdentifier({
     return InitializeReferencedBinding(lhs, value);
   } else {
     // 1. Let lhs be ResolveBinding(StringValue of BindingIdentifier).
-    const lhs = ResolveBinding(StringValue$1(BindingIdentifier), undefined, strict);
+    const lhs = ResolveBinding(StringValue(BindingIdentifier), undefined, strict);
     // 2. Return InitializeReferencedBinding(lhs, undefined).
-    return InitializeReferencedBinding(lhs, _Value.undefined);
+    return InitializeReferencedBinding(lhs, Value.undefined);
   }
 }
 
@@ -7041,7 +7041,7 @@ function* Evaluate_ObjectLiteral({
     return obj;
   }
   // 2. Perform ? PropertyDefinitionEvaluation of PropertyDefinitionList with arguments obj and true.
-  let _temp = yield* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList, obj, _Value.true);
+  let _temp = yield* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList, obj, Value.true);
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) {
     return _temp;
@@ -7174,7 +7174,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, ob
     return NormalCompletion(undefined);
   }
   // 8. Assert: enumerable is true.
-  Assert(enumerable === _Value.true, "enumerable === Value.true");
+  Assert(enumerable === Value.true, "enumerable === Value.true");
   // 9. Assert: object is an ordinary, extensible object with no non-configurable properties.
   // 10. Return ! CreateDataPropertyOrThrow(object, propKey, propValue).
   let _temp4 = CreateDataPropertyOrThrow(object, propKey, propValue);
@@ -7189,7 +7189,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, ob
 // PropertyDefinition : IdentifierReference
 function* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(IdentifierReference, object, enumerable) {
   // 1. Let propName be StringValue of IdentifierReference.
-  const propName = StringValue$1(IdentifierReference);
+  const propName = StringValue(IdentifierReference);
   // 2. Let exprValue be the result of evaluating IdentifierReference.
   const exprValue = yield* Evaluate(IdentifierReference);
   // 3. Let propValue be ? GetValue(exprValue).
@@ -7204,7 +7204,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(Id
   }
   const propValue = _temp5;
   // 4. Assert: enumerable is true.
-  Assert(enumerable === _Value.true, "enumerable === Value.true");
+  Assert(enumerable === Value.true, "enumerable === Value.true");
   // 5. Assert: object is an ordinary, extensible object with no non-configurable properties.
   // 6. Return ! CreateDataPropertyOrThrow(object, propName, propValue).
   let _temp6 = CreateDataPropertyOrThrow(object, propName, propValue);
@@ -7283,7 +7283,7 @@ function* NamedEvaluation_ClassExpression(ClassExpression, name) {
     ClassTail
   } = ClassExpression;
   // 1. Let value be the result of ClassDefinitionEvaluation of ClassTail with arguments undefined and name.
-  let value = yield* ClassDefinitionEvaluation(ClassTail, _Value.undefined, name);
+  let value = yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, name);
   // 2. ReturnIfAbrupt(value).
   /* c8 ignore if */
   if (value instanceof AbruptCompletion) {
@@ -7356,7 +7356,7 @@ function* Evaluate_TryStatement_BlockCatch({
     C = B;
   }
   // 3. Return Completion(UpdateEmpty(C, undefined)).
-  return Completion(UpdateEmpty(C, _Value.undefined));
+  return Completion(UpdateEmpty(C, Value.undefined));
 }
 
 // TryStatement : `try` Block Finally
@@ -7373,7 +7373,7 @@ function* Evaluate_TryStatement_BlockFinally({
     F = B;
   }
   // 1. Return Completion(UpdateEmpty(F, undefined)).
-  return Completion(UpdateEmpty(F, _Value.undefined));
+  return Completion(UpdateEmpty(F, Value.undefined));
 }
 
 // TryStatement : `try` Block Catch Finally
@@ -7399,7 +7399,7 @@ function* Evaluate_TryStatement_BlockCatchFinally({
     F = C;
   }
   // 6. Return Completion(UpdateEmpty(F, undefined)).
-  return Completion(UpdateEmpty(F, _Value.undefined));
+  return Completion(UpdateEmpty(F, Value.undefined));
 }
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-catchclauseevaluation */
@@ -7420,7 +7420,7 @@ function* CatchClauseEvaluation({
   const catchEnv = NewDeclarativeEnvironment(oldEnv);
   // 3. For each element argName of the BoundNames of CatchParameter, do
   for (const argName of BoundNames(CatchParameter)) {
-    let _temp = catchEnv.CreateMutableBinding(argName, _Value.false);
+    let _temp = catchEnv.CreateMutableBinding(argName, Value.false);
     Assert(!(_temp instanceof AbruptCompletion), "catchEnv.CreateMutableBinding(argName, Value.false)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp instanceof Completion) {
@@ -7461,7 +7461,7 @@ function BlockDeclarationInstantiation(code, env) {
     for (const dn of BoundNames(d)) {
       // i. If IsConstantDeclaration of d is true, then
       if (IsConstantDeclaration(d)) {
-        let _temp = env.CreateImmutableBinding(dn, _Value.true);
+        let _temp = env.CreateImmutableBinding(dn, Value.true);
         Assert(!(_temp instanceof AbruptCompletion), "env.CreateImmutableBinding(dn, Value.true)" + ' returned an abrupt completion');
         /* c8 ignore if */
         if (_temp instanceof Completion) {
@@ -7532,7 +7532,7 @@ function* ArrayAccumulation(ElementList, array, nextIndex) {
     switch (element.type) {
       case 'Elision':
         postIndex += 1;
-        let _temp = Set$1(array, _Value('length'), F(postIndex), _Value.true);
+        let _temp = Set$1(array, Value('length'), F(postIndex), Value.true);
         /* c8 ignore if */
         if (_temp instanceof AbruptCompletion) {
           return _temp;
@@ -7614,7 +7614,7 @@ function* ArrayAccumulation_SpreadElement({
     // a. Let next be ? IteratorStep(iteratorRecord).
     const next = _temp6;
     // b. If next is false, return nextIndex.
-    if (next === _Value.false) {
+    if (next === Value.false) {
       return nextIndex;
     }
     // c. Let nextValue be ? IteratorValue(next).
@@ -7724,19 +7724,19 @@ function* Evaluate_UnaryExpression_Delete({
   }
   // 3. If ref is not a Reference Record, return true.
   if (!(ref instanceof ReferenceRecord)) {
-    return _Value.true;
+    return Value.true;
   }
   // 4. If IsUnresolvableReference(ref) is true, then
-  if (IsUnresolvableReference(ref) === _Value.true) {
+  if (IsUnresolvableReference(ref) === Value.true) {
     // a. Assert: ref.[[Strict]] is false.
-    Assert(ref.Strict === _Value.false, "ref.Strict === Value.false");
+    Assert(ref.Strict === Value.false, "ref.Strict === Value.false");
     // b. Return true.
-    return _Value.true;
+    return Value.true;
   }
   // 5. If IsPropertyReference(ref) is true, then
-  if (IsPropertyReference(ref) === _Value.true) {
+  if (IsPropertyReference(ref) === Value.true) {
     // a. If IsSuperReference(ref) is true, throw a ReferenceError exception.
-    if (IsSuperReference(ref) === _Value.true) {
+    if (IsSuperReference(ref) === Value.true) {
       return surroundingAgent.Throw('ReferenceError', 'CannotDeleteSuper');
     }
     // b. Let baseObj be ! ToObject(ref.[[Base]]).
@@ -7759,7 +7759,7 @@ function* Evaluate_UnaryExpression_Delete({
     }
     const deleteStatus = _temp2;
     // d. If deleteStatus is false and ref.[[Strict]] is true, throw a TypeError exception.
-    if (deleteStatus === _Value.false && ref.Strict === _Value.true) {
+    if (deleteStatus === Value.false && ref.Strict === Value.true) {
       return surroundingAgent.Throw('TypeError', 'StrictModeDelete', ref.ReferencedName);
     }
     // e. Return deleteStatus.
@@ -7794,7 +7794,7 @@ function* Evaluate_UnaryExpression_Void({
     _temp3 = _temp3.Value;
   }
   // 3. Return undefined.
-  return _Value.undefined;
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-typeof-operator-runtime-semantics-evaluation */
@@ -7808,8 +7808,8 @@ function* Evaluate_UnaryExpression_Typeof({
   // 2. If Type(val) is Reference, then
   if (val instanceof ReferenceRecord) {
     // a. If IsUnresolvableReference(val) is true, return "undefined".
-    if (IsUnresolvableReference(val) === _Value.true) {
-      return _Value('undefined');
+    if (IsUnresolvableReference(val) === Value.true) {
+      return Value('undefined');
     }
   }
   // 3. Set val to ? GetValue(val).
@@ -7825,24 +7825,24 @@ function* Evaluate_UnaryExpression_Typeof({
   val = _temp4;
   // 4. Return a String according to Table 37.
   if (val instanceof UndefinedValue) {
-    return new StringValue('undefined');
+    return Value('undefined');
   } else if (val instanceof NullValue) {
-    return new StringValue('object');
+    return Value('object');
   } else if (val instanceof BooleanValue) {
-    return new StringValue('boolean');
+    return Value('boolean');
   } else if (val instanceof NumberValue) {
-    return new StringValue('number');
-  } else if (val instanceof StringValue) {
-    return new StringValue('string');
+    return Value('number');
+  } else if (val instanceof JSStringValue) {
+    return Value('string');
   } else if (val instanceof BigIntValue) {
-    return new StringValue('bigint');
+    return Value('bigint');
   } else if (val instanceof SymbolValue) {
-    return new StringValue('symbol');
+    return Value('symbol');
   } else if (val instanceof ObjectValue) {
-    if (IsCallable(val) === _Value.true) {
-      return new StringValue('function');
+    if (IsCallable(val) === Value.true) {
+      return Value('function');
     }
-    return new StringValue('object');
+    return Value('object');
   }
   throw new OutOfRange$1('Evaluate_UnaryExpression_Typeof', val);
 }
@@ -7968,11 +7968,11 @@ function* Evaluate_UnaryExpression_Bang({
   }
   const oldValue = ToBoolean(_temp12);
   // 3. If oldValue is true, return false.
-  if (oldValue === _Value.true) {
-    return _Value.false;
+  if (oldValue === Value.true) {
+    return Value.false;
   }
   // 4. Return true.
-  return _Value.true;
+  return Value.true;
 }
 
 // UnaryExpression :
@@ -8060,10 +8060,10 @@ function* Evaluate_EqualityExpression({
           r = r.Value;
         }
         // 7. If r is true, return false. Otherwise, return true.
-        if (r === _Value.true) {
-          return _Value.false;
+        if (r === Value.true) {
+          return Value.false;
         } else {
-          return _Value.true;
+          return Value.true;
         }
       }
     case '===':
@@ -8081,10 +8081,10 @@ function* Evaluate_EqualityExpression({
         // 6. Assert: r is a normal completion.
         const r = _temp3;
         // 7. If r.[[Value]] is true, return false. Otherwise, return true.
-        if (r === _Value.true) {
-          return _Value.false;
+        if (r === Value.true) {
+          return Value.false;
         } else {
-          return _Value.true;
+          return Value.true;
         }
       }
     /*c8 ignore next*/default:
@@ -8121,7 +8121,7 @@ function* Evaluate_LogicalANDExpression({
   }
   const lbool = _temp2;
   // 4. If lbool is false, return lval.
-  if (lbool === _Value.false) {
+  if (lbool === Value.false) {
     return lval;
   }
   // 5. Let rref be the result of evaluating BitwiseORExpression.
@@ -8159,7 +8159,7 @@ function* Evaluate_LogicalORExpression({
   }
   const lbool = _temp2;
   // 4. If lbool is false, return lval.
-  if (lbool === _Value.true) {
+  if (lbool === Value.true) {
     return lval;
   }
   // 5. Let rref be the result of evaluating LogicalANDExpression.
@@ -8205,7 +8205,7 @@ function* EvaluateNew(constructExpr, args) {
     argList = _temp2;
   }
   // 7. If IsConstructor(constructor) is false, throw a TypeError exception.
-  if (IsConstructor(constructor) === _Value.false) {
+  if (IsConstructor(constructor) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', constructor);
   }
   // 8. Return ? Construct(constructor, argList).
@@ -8276,7 +8276,7 @@ function* Evaluate_SuperCall({
   }
   const argList = _temp2;
   // 5. If IsConstructor(func) is false, throw a TypeError exception.
-  if (IsConstructor(func) === _Value.false) {
+  if (IsConstructor(func) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', func);
   }
   // 6. Let result be ? Construct(func, argList, newTarget).
@@ -8348,7 +8348,7 @@ function MakeSuperPropertyReference(actualThis, propertyKey, strict) {
   // 1. Let env be GetThisEnvironment().
   const env = GetThisEnvironment();
   // 2. Assert: env.HasSuperBinding() is true.
-  Assert(env.HasSuperBinding() === _Value.true, "env.HasSuperBinding() === Value.true");
+  Assert(env.HasSuperBinding() === Value.true, "env.HasSuperBinding() === Value.true");
   // 3. Let baseValue be ? env.GetSuperBase().
   let _temp = env.GetSuperBase();
   /* c8 ignore if */
@@ -8364,7 +8364,7 @@ function MakeSuperPropertyReference(actualThis, propertyKey, strict) {
   return new ReferenceRecord({
     Base: baseValue,
     ReferencedName: propertyKey,
-    Strict: strict ? _Value.true : _Value.false,
+    Strict: strict ? Value.true : Value.false,
     ThisValue: actualThis
   });
 }
@@ -8422,7 +8422,7 @@ function* Evaluate_SuperProperty({
     return MakeSuperPropertyReference(actualThis, propertyKey, strict);
   } else {
     // 3. Let propertyKey be StringValue of IdentifierName.
-    const propertyKey = StringValue$1(IdentifierName);
+    const propertyKey = StringValue(IdentifierName);
     // 4. const strict = SuperProperty.strict;
     // 5. Return ? MakeSuperPropertyReference(actualThis, propertyKey, strict).
     return MakeSuperPropertyReference(actualThis, propertyKey, strict);
@@ -8432,13 +8432,13 @@ function* Evaluate_SuperProperty({
 /** https://tc39.es/ecma262/#sec-initializeboundname */
 function InitializeBoundName(name, value, environment) {
   // 1. Assert: Type(name) is String.
-  Assert(name instanceof StringValue, "name instanceof JSStringValue");
+  Assert(name instanceof JSStringValue, "name instanceof JSStringValue");
   // 2. If environment is not undefined, then
-  if (environment !== _Value.undefined) {
+  if (environment !== Value.undefined) {
     // a. Perform environment.InitializeBinding(name, value).
     environment.InitializeBinding(name, value);
     // b. Return NormalCompletion(undefined).
-    return NormalCompletion(_Value.undefined);
+    return NormalCompletion(Value.undefined);
   } else {
     // a. Let lhs be ResolveBinding(name).
     const lhs = ResolveBinding(name, undefined, false);
@@ -8493,7 +8493,7 @@ function* BindingInitialization(node, value, environment) {
     case 'BindingIdentifier':
       {
         // 1. Let name be StringValue of Identifier.
-        const name = StringValue$1(node);
+        const name = StringValue(node);
         // 2. Return ? InitializeBoundName(name, value, environment).
         return InitializeBoundName(name, value, environment);
       }
@@ -8527,7 +8527,7 @@ function* BindingInitialization(node, value, environment) {
         // 2. Let result be IteratorBindingInitialization of ArrayBindingPattern with arguments iteratorRecord and environment.
         const result = yield* IteratorBindingInitialization_ArrayBindingPattern(node, iteratorRecord, environment);
         // 3. If iteratorRecord.[[Done]] is false, return ? IteratorClose(iteratorRecord, result).
-        if (iteratorRecord.Done === _Value.false) {
+        if (iteratorRecord.Done === Value.false) {
           return IteratorClose(iteratorRecord, result);
         }
         // 4. Return result.
@@ -8565,7 +8565,7 @@ function InstanceofOperator(V, target) {
   }
   const instOfHandler = _temp;
   // 3. If instOfHandler is not undefined, then
-  if (instOfHandler !== _Value.undefined) {
+  if (instOfHandler !== Value.undefined) {
     let _temp3 = Call(instOfHandler, target, [V]);
     /* c8 ignore if */
     if (_temp3 instanceof AbruptCompletion) {
@@ -8585,7 +8585,7 @@ function InstanceofOperator(V, target) {
     return _temp2;
   }
   // 4. If IsCallable(target) is false, throw a TypeError exception.
-  if (IsCallable(target) === _Value.false) {
+  if (IsCallable(target) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', target);
   }
   // 5. Return ? OrdinaryHasInstance(target, V).
@@ -8598,7 +8598,7 @@ function* Evaluate_RelationalExpression_PrivateIdentifier({
   ShiftExpression
 }) {
   // 1. Let privateIdentifier be the StringValue of PrivateIdentifier.
-  const privateIdentifier = StringValue$1(PrivateIdentifier);
+  const privateIdentifier = StringValue(PrivateIdentifier);
   // 2. Let rref be the result of evaluating ShiftExpression.
   const rref = yield* Evaluate(ShiftExpression);
   // 3. Let rval be ? GetValue(rref).
@@ -8634,10 +8634,10 @@ function* Evaluate_RelationalExpression_PrivateIdentifier({
     _temp6 = _temp6.Value;
   }
   if (_temp6 !== undefined) {
-    return _Value.true;
+    return Value.true;
   }
   // 8. Return false.
-  return _Value.false;
+  return Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-relational-operators-runtime-semantics-evaluation */
@@ -8700,8 +8700,8 @@ function* Evaluate_RelationalExpression(expr) {
           r = r.Value;
         }
         // 7. If r is undefined, return false. Otherwise, return r.
-        if (r === _Value.undefined) {
-          return _Value.false;
+        if (r === Value.undefined) {
+          return Value.false;
         }
         return r;
       }
@@ -8719,8 +8719,8 @@ function* Evaluate_RelationalExpression(expr) {
           r = r.Value;
         }
         // 7. If r is undefined, return false. Otherwise, return r.
-        if (r === _Value.undefined) {
-          return _Value.false;
+        if (r === Value.undefined) {
+          return Value.false;
         }
         return r;
       }
@@ -8738,10 +8738,10 @@ function* Evaluate_RelationalExpression(expr) {
           r = r.Value;
         }
         // 7. If r is true or undefined, return false. Otherwise, return true.
-        if (r === _Value.true || r === _Value.undefined) {
-          return _Value.false;
+        if (r === Value.true || r === Value.undefined) {
+          return Value.false;
         }
-        return _Value.true;
+        return Value.true;
       }
     case '>=':
       {
@@ -8757,10 +8757,10 @@ function* Evaluate_RelationalExpression(expr) {
           r = r.Value;
         }
         // 7. If r is true or undefined, return false. Otherwise, return true.
-        if (r === _Value.true || r === _Value.undefined) {
-          return _Value.false;
+        if (r === Value.true || r === Value.undefined) {
+          return Value.false;
         }
-        return _Value.true;
+        return Value.true;
       }
     case 'instanceof':
       // 5. Return ? InstanceofOperator(lval, rval).
@@ -8801,7 +8801,7 @@ function assignProps(realmRec, obj, props) {
       continue;
     }
     const [n, v, len, descriptor] = item;
-    const name = n instanceof _Value ? n : _Value(n);
+    const name = n instanceof Value ? n : Value(n);
     if (Array.isArray(v)) {
       // Every accessor property described in clauses 18 through 26 and in
       // Annex B.2 has the attributes { [[Enumerable]]: false,
@@ -8809,18 +8809,18 @@ function assignProps(realmRec, obj, props) {
       // accessor function is described, the set accessor function is the
       // default value, undefined. If only a set accessor is described the get
       // accessor is the default value, undefined.
-      let [getter = _Value.undefined, setter = _Value.undefined] = v;
+      let [getter = Value.undefined, setter = Value.undefined] = v;
       if (typeof getter === 'function') {
-        getter = CreateBuiltinFunction(getter, 0, name, [], realmRec, undefined, _Value('get'));
+        getter = CreateBuiltinFunction(getter, 0, name, [], realmRec, undefined, Value('get'));
       }
       if (typeof setter === 'function') {
-        setter = CreateBuiltinFunction(setter, 1, name, [], realmRec, undefined, _Value('set'));
+        setter = CreateBuiltinFunction(setter, 1, name, [], realmRec, undefined, Value('set'));
       }
       let _temp = obj.DefineOwnProperty(name, _Descriptor({
         Get: getter,
         Set: setter,
-        Enumerable: _Value.false,
-        Configurable: _Value.true,
+        Enumerable: Value.false,
+        Configurable: Value.true,
         ...descriptor
       }));
       Assert(!(_temp instanceof AbruptCompletion), "obj.DefineOwnProperty(name, Descriptor({\n        Get: getter,\n        Set: setter,\n        Enumerable: Value.false,\n        Configurable: Value.true,\n        ...descriptor,\n      }))" + ' returned an abrupt completion');
@@ -8841,9 +8841,9 @@ function assignProps(realmRec, obj, props) {
       }
       obj.properties.set(name, _Descriptor({
         Value: value,
-        Writable: _Value.true,
-        Enumerable: _Value.false,
-        Configurable: _Value.true,
+        Writable: Value.true,
+        Enumerable: Value.false,
+        Configurable: Value.true,
         ...descriptor
       }));
     }
@@ -8855,10 +8855,10 @@ function bootstrapPrototype(realmRec, props, Prototype, stringTag) {
   assignProps(realmRec, proto, props);
   if (stringTag !== undefined) {
     let _temp2 = proto.DefineOwnProperty(wellKnownSymbols.toStringTag, _Descriptor({
-      Value: _Value(stringTag),
-      Writable: _Value.false,
-      Enumerable: _Value.false,
-      Configurable: _Value.true
+      Value: Value(stringTag),
+      Writable: Value.false,
+      Enumerable: Value.false,
+      Configurable: Value.true
     }));
     Assert(!(_temp2 instanceof AbruptCompletion), "proto.DefineOwnProperty(wellKnownSymbols.toStringTag, Descriptor({\n      Value: Value(stringTag),\n      Writable: Value.false,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    }))" + ' returned an abrupt completion');
     /* c8 ignore if */
@@ -8869,23 +8869,23 @@ function bootstrapPrototype(realmRec, props, Prototype, stringTag) {
   return proto;
 }
 function bootstrapConstructor(realmRec, Constructor, name, length, Prototype, props = []) {
-  const cons = CreateBuiltinFunction(Constructor, length, _Value(name), [], realmRec, undefined, undefined, _Value.true);
-  let _temp3 = cons.DefineOwnProperty(_Value('prototype'), _Descriptor({
+  const cons = CreateBuiltinFunction(Constructor, length, Value(name), [], realmRec, undefined, undefined, Value.true);
+  let _temp3 = cons.DefineOwnProperty(Value('prototype'), _Descriptor({
     Value: Prototype,
-    Writable: _Value.false,
-    Enumerable: _Value.false,
-    Configurable: _Value.false
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.false
   }));
   Assert(!(_temp3 instanceof AbruptCompletion), "cons.DefineOwnProperty(Value('prototype'), Descriptor({\n    Value: Prototype,\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp3 instanceof Completion) {
     _temp3 = _temp3.Value;
   }
-  let _temp4 = Prototype.DefineOwnProperty(_Value('constructor'), _Descriptor({
+  let _temp4 = Prototype.DefineOwnProperty(Value('constructor'), _Descriptor({
     Value: cons,
-    Writable: _Value.true,
-    Enumerable: _Value.false,
-    Configurable: _Value.true
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.true
   }));
   Assert(!(_temp4 instanceof AbruptCompletion), "Prototype.DefineOwnProperty(Value('constructor'), Descriptor({\n    Value: cons,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
   /* c8 ignore if */
@@ -8905,7 +8905,7 @@ function CreateForInIterator(object) {
   // 3. Set iterator.[[Object]] to object.
   iterator.Object = object;
   // 4. Set iterator.[[ObjectWasVisited]] to false.
-  iterator.ObjectWasVisited = _Value.false;
+  iterator.ObjectWasVisited = Value.false;
   // 5. Set iterator.[[VisitedKeys]] to a new empty List.
   iterator.VisitedKeys = [];
   // 6. Set iterator.[[RemainingKeys]] to a new empty List.
@@ -8933,7 +8933,7 @@ function ForInIteratorPrototype_next(args, {
   // 7. Repeat,
   while (true) {
     // a. If O.[[ObjectWasVisited]] is false, then
-    if (O.ObjectWasVisited === _Value.false) {
+    if (O.ObjectWasVisited === Value.false) {
       let _temp = object.OwnPropertyKeys();
       /* c8 ignore if */
       if (_temp instanceof AbruptCompletion) {
@@ -8948,20 +8948,20 @@ function ForInIteratorPrototype_next(args, {
       // ii. for each key of keys in List order, do
       for (const key of keys) {
         // 1. If Type(key) is String, then
-        if (key instanceof StringValue) {
+        if (key instanceof JSStringValue) {
           // a. Append key to remaining.
           remaining.push(key);
         }
       }
       // iii. Set O.ObjectWasVisited to true.
-      O.ObjectWasVisited = _Value.true;
+      O.ObjectWasVisited = Value.true;
     }
     // b. Repeat, while remaining is not empty,
     while (remaining.length > 0) {
       // i. Remove the first element from remaining and let r be the value of the element.
       const r = remaining.shift();
       // ii. If there does not exist an element v of visisted such that SameValue(r, v) is true, then
-      if (!visited.find(v => SameValue(r, v) === _Value.true)) {
+      if (!visited.find(v => SameValue(r, v) === Value.true)) {
         let _temp2 = object.GetOwnProperty(r);
         /* c8 ignore if */
         if (_temp2 instanceof AbruptCompletion) {
@@ -8974,12 +8974,12 @@ function ForInIteratorPrototype_next(args, {
         // 1. Let desc be ? object.[[GetOwnProperty]](r).
         const desc = _temp2;
         // 2. If desc is not undefined, then,
-        if (desc !== _Value.undefined) {
+        if (desc !== Value.undefined) {
           // a. Append r to visited.
           visited.push(r);
           // b. If desc.[[Enumerable]] is true, return CreateIterResultObject(r, false).
-          if (desc.Enumerable === _Value.true) {
-            return CreateIterResultObject(r, _Value.false);
+          if (desc.Enumerable === Value.true) {
+            return CreateIterResultObject(r, Value.false);
           }
         }
       }
@@ -8998,10 +8998,10 @@ function ForInIteratorPrototype_next(args, {
     // d. Set O.Object to object.
     O.Object = object;
     // e. Set O.ObjectWasVisited to false.
-    O.ObjectWasVisited = _Value.false;
+    O.ObjectWasVisited = Value.false;
     // f. If object is null, return CreateIterResultObject(undefined, true).
-    if (object === _Value.null) {
-      return CreateIterResultObject(_Value.undefined, _Value.true);
+    if (object === Value.null) {
+      return CreateIterResultObject(Value.undefined, Value.true);
     }
   }
 }
@@ -9017,22 +9017,22 @@ function bootstrapForInIteratorPrototype(realmRec) {
 function LoopContinues(completion, labelSet) {
   // 1. If completion.[[Type]] is normal, return true.
   if (completion.Type === 'normal') {
-    return _Value.true;
+    return Value.true;
   }
   // 2. If completion.[[Type]] is not continue, return false.
   if (completion.Type !== 'continue') {
-    return _Value.false;
+    return Value.false;
   }
   // 3. If completion.[[Target]] is empty, return true.
   if (completion.Target === undefined) {
-    return _Value.true;
+    return Value.true;
   }
   // 4. If completion.[[Target]] is an element of labelSet, return true.
   if (labelSet.has(completion.Target)) {
-    return _Value.true;
+    return Value.true;
   }
   // 5. Return false.
-  return _Value.false;
+  return Value.false;
 }
 LoopContinues.section = 'https://tc39.es/ecma262/#sec-loopcontinues';
 function LabelledEvaluation(node, labelSet) {
@@ -9059,13 +9059,13 @@ function* LabelledEvaluation_LabelledStatement({
   LabelledItem
 }, labelSet) {
   // 1. Let label be the StringValue of LabelIdentifier.
-  const label = StringValue$1(LabelIdentifier);
+  const label = StringValue(LabelIdentifier);
   // 2. Append label as an element of labelSet.
   labelSet.add(label);
   // 3. Let stmtResult be LabelledEvaluation of LabelledItem with argument labelSet.
   let stmtResult = EnsureCompletion(yield* LabelledEvaluation_LabelledItem(LabelledItem, labelSet));
   // 4. If stmtResult.[[Type]] is break and SameValue(stmtResult.[[Target]], label) is true, then
-  if (stmtResult.Type === 'break' && SameValue(stmtResult.Target, label) === _Value.true) {
+  if (stmtResult.Type === 'break' && SameValue(stmtResult.Target, label) === Value.true) {
     // a. Set stmtResult to NormalCompletion(stmtResult.[[Value]]).
     stmtResult = NormalCompletion(stmtResult.Value);
   }
@@ -9117,7 +9117,7 @@ function* LabelledEvaluation_BreakableStatement(BreakableStatement, labelSet) {
           if (stmtResult.Target === undefined) {
             // i. If stmtResult.[[Value]] is empty, set stmtResult to NormalCompletion(undefined).
             if (stmtResult.Value === undefined) {
-              stmtResult = NormalCompletion(_Value.undefined);
+              stmtResult = NormalCompletion(Value.undefined);
             } else {
               // ii. Else, set stmtResult to NormalCompletion(stmtResult.[[Value]]).
               stmtResult = NormalCompletion(stmtResult.Value);
@@ -9137,7 +9137,7 @@ function* LabelledEvaluation_BreakableStatement(BreakableStatement, labelSet) {
           if (stmtResult.Target === undefined) {
             // i. If stmtResult.[[Value]] is empty, set stmtResult to NormalCompletion(undefined).
             if (stmtResult.Value === undefined) {
-              stmtResult = NormalCompletion(_Value.undefined);
+              stmtResult = NormalCompletion(Value.undefined);
             } else {
               // ii. Else, set stmtResult to NormalCompletion(stmtResult.[[Value]]).
               stmtResult = NormalCompletion(stmtResult.Value);
@@ -9179,13 +9179,13 @@ function* LabelledEvaluation_IterationStatement_DoWhileStatement({
   Expression
 }, labelSet) {
   // 1. Let V be undefined.
-  let V = _Value.undefined;
+  let V = Value.undefined;
   // 2. Repeat,
   while (true) {
     // a. Let stmtResult be the result of evaluating Statement.
     const stmtResult = EnsureCompletion(yield* Evaluate(Statement));
     // b. If LoopContinues(stmtResult, labelSet) is false, return Completion(UpdateEmpty(stmtResult, V)).
-    if (LoopContinues(stmtResult, labelSet) === _Value.false) {
+    if (LoopContinues(stmtResult, labelSet) === Value.false) {
       return Completion(UpdateEmpty(stmtResult, V));
     }
     // c. If stmtResult.[[Value]] is not empty, set V to stmtResult.[[Value]].
@@ -9212,7 +9212,7 @@ function* LabelledEvaluation_IterationStatement_DoWhileStatement({
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
     }
-    if (_temp2 === _Value.false) {
+    if (_temp2 === Value.false) {
       return NormalCompletion(V);
     }
   }
@@ -9227,7 +9227,7 @@ function* LabelledEvaluation_IterationStatement_WhileStatement({
   Statement
 }, labelSet) {
   // 1. Let V be undefined.
-  let V = _Value.undefined;
+  let V = Value.undefined;
   // 2. Repeat,
   while (true) {
     // a. Let exprRef be the result of evaluating Expression.
@@ -9250,13 +9250,13 @@ function* LabelledEvaluation_IterationStatement_WhileStatement({
     if (_temp4 instanceof Completion) {
       _temp4 = _temp4.Value;
     }
-    if (_temp4 === _Value.false) {
+    if (_temp4 === Value.false) {
       return NormalCompletion(V);
     }
     // d. Let stmtResult be the result of evaluating Statement.
     const stmtResult = EnsureCompletion(yield* Evaluate(Statement));
     // e. If LoopContinues(stmtResult, labelSet) is false, return Completion(UpdateEmpty(stmtResult, V)).
-    if (LoopContinues(stmtResult, labelSet) === _Value.false) {
+    if (LoopContinues(stmtResult, labelSet) === Value.false) {
       return Completion(UpdateEmpty(stmtResult, V));
     }
     // f. If stmtResult.[[Value]] is not empty, set V to stmtResult.[[Value]].
@@ -9296,14 +9296,14 @@ function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement, label
         for (const dn of boundNames) {
           // a. If isConst is true, then
           if (isConst) {
-            let _temp5 = loopEnv.CreateImmutableBinding(dn, _Value.true);
+            let _temp5 = loopEnv.CreateImmutableBinding(dn, Value.true);
             Assert(!(_temp5 instanceof AbruptCompletion), "loopEnv.CreateImmutableBinding(dn, Value.true)" + ' returned an abrupt completion');
             /* c8 ignore if */
             if (_temp5 instanceof Completion) {
               _temp5 = _temp5.Value;
             }
           } else {
-            let _temp6 = loopEnv.CreateMutableBinding(dn, _Value.false);
+            let _temp6 = loopEnv.CreateMutableBinding(dn, Value.false);
             Assert(!(_temp6 instanceof AbruptCompletion), "loopEnv.CreateMutableBinding(dn, Value.false)" + ' returned an abrupt completion');
             /* c8 ignore if */
             if (_temp6 instanceof Completion) {
@@ -9577,7 +9577,7 @@ function* LabelledEvaluation_IterationStatement_ForOfStatement(ForOfStatement, l
 LabelledEvaluation_IterationStatement_ForOfStatement.section = 'https://tc39.es/ecma262/#sec-for-in-and-for-of-statements-runtime-semantics-labelledevaluation';
 function* ForBodyEvaluation(test, increment, stmt, perIterationBindings, labelSet) {
   // 1. Let V be undefined.
-  let V = _Value.undefined;
+  let V = Value.undefined;
   // 2. Perform ? CreatePerIterationEnvironment(perIterationBindings).
   let _temp17 = CreatePerIterationEnvironment(perIterationBindings);
   /* c8 ignore if */
@@ -9612,14 +9612,14 @@ function* ForBodyEvaluation(test, increment, stmt, perIterationBindings, labelSe
       if (_temp19 instanceof Completion) {
         _temp19 = _temp19.Value;
       }
-      if (_temp19 === _Value.false) {
+      if (_temp19 === Value.false) {
         return NormalCompletion(V);
       }
     }
     // b. Let result be the result of evaluating stmt.
     const result = EnsureCompletion(yield* Evaluate(stmt));
     // c. If LoopContinues(result, labelSet) is false, return Completion(UpdateEmpty(result, V)).
-    if (LoopContinues(result, labelSet) === _Value.false) {
+    if (LoopContinues(result, labelSet) === Value.false) {
       return Completion(UpdateEmpty(result, V));
     }
     // d. If result.[[Value]] is not empty, set V to result.[[Value]].
@@ -9664,19 +9664,19 @@ function CreatePerIterationEnvironment(perIterationBindings) {
     // b. Let outer be lastIterationEnv.[[OuterEnv]].
     const outer = lastIterationEnv.OuterEnv;
     // c. Assert: outer is not null.
-    Assert(outer !== _Value.null, "outer !== Value.null");
+    Assert(outer !== Value.null, "outer !== Value.null");
     // d. Let thisIterationEnv be NewDeclarativeEnvironment(outer).
     const thisIterationEnv = NewDeclarativeEnvironment(outer);
     // e. For each element bn of perIterationBindings, do
     for (const bn of perIterationBindings) {
-      let _temp22 = thisIterationEnv.CreateMutableBinding(bn, _Value.false);
+      let _temp22 = thisIterationEnv.CreateMutableBinding(bn, Value.false);
       Assert(!(_temp22 instanceof AbruptCompletion), "thisIterationEnv.CreateMutableBinding(bn, Value.false)" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp22 instanceof Completion) {
         _temp22 = _temp22.Value;
       }
       // ii. Let lastValue be ? lastIterationEnv.GetBindingValue(bn, true).
-      let _temp23 = lastIterationEnv.GetBindingValue(bn, _Value.true);
+      let _temp23 = lastIterationEnv.GetBindingValue(bn, Value.true);
       /* c8 ignore if */
       if (_temp23 instanceof AbruptCompletion) {
         return _temp23;
@@ -9693,7 +9693,7 @@ function CreatePerIterationEnvironment(perIterationBindings) {
     surroundingAgent.runningExecutionContext.LexicalEnvironment = thisIterationEnv;
   }
   // 2. Return undefined.
-  return _Value.undefined;
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-forinofheadevaluation */
@@ -9708,7 +9708,7 @@ function* ForInOfHeadEvaluation(uninitializedBoundNames, expr, iterationKind) {
     const newEnv = NewDeclarativeEnvironment(oldEnv);
     // c. For each string name in uninitializedBoundNames, do
     for (const name of uninitializedBoundNames) {
-      let _temp24 = newEnv.CreateMutableBinding(name, _Value.false);
+      let _temp24 = newEnv.CreateMutableBinding(name, Value.false);
       Assert(!(_temp24 instanceof AbruptCompletion), "newEnv.CreateMutableBinding(name, Value.false)" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp24 instanceof Completion) {
@@ -9736,7 +9736,7 @@ function* ForInOfHeadEvaluation(uninitializedBoundNames, expr, iterationKind) {
   // 6. If iterationKind is enumerate, then
   if (iterationKind === 'enumerate') {
     // a. If exprValue is undefined or null, then
-    if (exprValue === _Value.undefined || exprValue === _Value.null) {
+    if (exprValue === Value.undefined || exprValue === Value.null) {
       // i. Return Completion { [[Type]]: break, [[Value]]: empty, [[Target]]: empty }.
       return new Completion({
         Type: 'break',
@@ -9764,7 +9764,7 @@ function* ForInOfHeadEvaluation(uninitializedBoundNames, expr, iterationKind) {
     }
     const iterator = _temp27;
     // d. Let nextMethod be ! GetV(iterator, "next").
-    let _temp28 = GetV(iterator, _Value('next'));
+    let _temp28 = GetV(iterator, Value('next'));
     Assert(!(_temp28 instanceof AbruptCompletion), "GetV(iterator, Value('next'))" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp28 instanceof Completion) {
@@ -9775,7 +9775,7 @@ function* ForInOfHeadEvaluation(uninitializedBoundNames, expr, iterationKind) {
     return {
       Iterator: iterator,
       NextMethod: nextMethod,
-      Done: _Value.false
+      Done: Value.false
     };
   } else {
     // 7. Else,
@@ -9805,7 +9805,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
   // 2. Let oldEnv be the running execution context's LexicalEnvironment.
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 3. Let V be undefined.
-  let V = _Value.undefined;
+  let V = Value.undefined;
   // 4. Let destructuring be IsDestructuring of lhs.
   const destructuring = IsDestructuring(lhs);
   // 5. If destructuring is true and if lhsKind is assignment, then
@@ -9857,7 +9857,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
     }
     const done = _temp31;
     // e. If done is true, return NormalCompletion(V).
-    if (done === _Value.true) {
+    if (done === Value.true) {
       return NormalCompletion(V);
     }
     // f. Let nextValue be ? IteratorValue(nextResult).
@@ -9933,7 +9933,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
         // 1. Assert: lhs is a ForBinding.
         Assert(lhs.type === 'ForBinding', "lhs.type === 'ForBinding'");
         // 2. Let status be BindingInitialization of lhs with arguments nextValue and undefined.
-        status = yield* BindingInitialization(lhs, nextValue, _Value.undefined);
+        status = yield* BindingInitialization(lhs, nextValue, Value.undefined);
       } else {
         // iii. Else,
         // 1. Assert: lhsKind is lexicalBinding.
@@ -9969,7 +9969,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
     // m. Set the running execution context's LexicalEnvironment to oldEnv.
     surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
     // n. If LoopContinues(result, labelSet) is false, then
-    if (LoopContinues(result, labelSet) === _Value.false) {
+    if (LoopContinues(result, labelSet) === Value.false) {
       // i. If iterationKind is enumerate, then
       if (iterationKind === 'enumerate') {
         // 1. Return Completion(UpdateEmpty(result, V)).
@@ -10008,14 +10008,14 @@ function BindingInstantiation({
   for (const name of BoundNames(ForBinding)) {
     // a. If IsConstantDeclaration of LetOrConst is true, then
     if (IsConstantDeclaration(LetOrConst)) {
-      let _temp34 = environment.CreateImmutableBinding(name, _Value.true);
+      let _temp34 = environment.CreateImmutableBinding(name, Value.true);
       Assert(!(_temp34 instanceof AbruptCompletion), "environment.CreateImmutableBinding(name, Value.true)" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp34 instanceof Completion) {
         _temp34 = _temp34.Value;
       }
     } else {
-      let _temp35 = environment.CreateMutableBinding(name, _Value.false);
+      let _temp35 = environment.CreateMutableBinding(name, Value.false);
       Assert(!(_temp35 instanceof AbruptCompletion), "environment.CreateMutableBinding(name, Value.false)" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp35 instanceof Completion) {
@@ -10033,7 +10033,7 @@ function Evaluate_ForBinding({
   strict
 }) {
   // 1. Let bindingId be StringValue of BindingIdentifier.
-  const bindingId = StringValue$1(BindingIdentifier);
+  const bindingId = StringValue(BindingIdentifier);
   // 2. Return ? ResolveBinding(bindingId).
   return ResolveBinding(bindingId, undefined, strict);
 }
@@ -10084,7 +10084,7 @@ function* Evaluate_TemplateLiteral({
     str += middle.stringValue();
   }
   const tail = TV(TemplateSpanList[TemplateSpanList.length - 1]);
-  return _Value(str + tail);
+  return Value(str + tail);
 }
 
 // @ts-nocheck
@@ -10125,20 +10125,20 @@ function* CaseBlockEvaluation({
     case !CaseClauses_a && !DefaultClause && !CaseClauses_b:
       {
         // 1. Return NormalCompletion(undefined).
-        return NormalCompletion(_Value.undefined);
+        return NormalCompletion(Value.undefined);
       }
     case !!CaseClauses_a && !DefaultClause && !CaseClauses_b:
       {
         // 1. Let V be undefined.
-        let V = _Value.undefined;
+        let V = Value.undefined;
         // 2. Let A be the List of CaseClause items in CaseClauses, in source text order.
         const A = CaseClauses_a;
         // 3. Let found be false.
-        let found = _Value.false;
+        let found = Value.false;
         // 4. For each CaseClause C in A, do
         for (const C of A) {
           // a. If found is false, then
-          if (found === _Value.false) {
+          if (found === Value.false) {
             let _temp2 = yield* CaseClauseIsSelected(C, input);
             /* c8 ignore if */
             if (_temp2 instanceof AbruptCompletion) {
@@ -10152,7 +10152,7 @@ function* CaseBlockEvaluation({
             found = _temp2;
           }
           // b. If found is true, them
-          if (found === _Value.true) {
+          if (found === Value.true) {
             // i. Let R be the result of evaluating C.
             const R = EnsureCompletion(yield* Evaluate(C));
             // ii. If R.[[Value]] is not empty, set V to R.[[Value]].
@@ -10171,7 +10171,7 @@ function* CaseBlockEvaluation({
     case !!DefaultClause:
       {
         // 1. Let V be undefined.
-        let V = _Value.undefined;
+        let V = Value.undefined;
         // 2. If the first CaseClauses is present, then
         let A;
         if (CaseClauses_a) {
@@ -10182,11 +10182,11 @@ function* CaseBlockEvaluation({
           // a. Let A be « ».
           A = [];
         }
-        let found = _Value.false;
+        let found = Value.false;
         // 4. For each CaseClause C in A, do
         for (const C of A) {
           // a. If found is false, then
-          if (found === _Value.false) {
+          if (found === Value.false) {
             let _temp3 = yield* CaseClauseIsSelected(C, input);
             /* c8 ignore if */
             if (_temp3 instanceof AbruptCompletion) {
@@ -10200,7 +10200,7 @@ function* CaseBlockEvaluation({
             found = _temp3;
           }
           // b. If found is true, them
-          if (found === _Value.true) {
+          if (found === Value.true) {
             // i. Let R be the result of evaluating C.
             const R = EnsureCompletion(yield* Evaluate(C));
             // ii. If R.[[Value]] is not empty, set V to R.[[Value]].
@@ -10214,7 +10214,7 @@ function* CaseBlockEvaluation({
           }
         }
         // 6. Let foundInB be false.
-        let foundInB = _Value.false;
+        let foundInB = Value.false;
         // 7. If the second CaseClauses is present, then
         let B;
         if (CaseClauses_b) {
@@ -10226,11 +10226,11 @@ function* CaseBlockEvaluation({
           B = [];
         }
         // 9. If found is false, then
-        if (found === _Value.false) {
+        if (found === Value.false) {
           // a. For each CaseClause C in B, do
           for (const C of B) {
             // a. If foundInB is false, then
-            if (foundInB === _Value.false) {
+            if (foundInB === Value.false) {
               let _temp4 = yield* CaseClauseIsSelected(C, input);
               /* c8 ignore if */
               if (_temp4 instanceof AbruptCompletion) {
@@ -10244,7 +10244,7 @@ function* CaseBlockEvaluation({
               foundInB = _temp4;
             }
             // b. If foundInB is true, them
-            if (foundInB === _Value.true) {
+            if (foundInB === Value.true) {
               // i. Let R be the result of evaluating C.
               const R = EnsureCompletion(yield* Evaluate(C));
               // ii. If R.[[Value]] is not empty, set V to R.[[Value]].
@@ -10259,7 +10259,7 @@ function* CaseBlockEvaluation({
           }
         }
         // 10. If foundInB is true, return NormalCompletion(V).
-        if (foundInB === _Value.true) {
+        if (foundInB === Value.true) {
           return NormalCompletion(V);
         }
         // 11. Let R be the result of evaluating DefaultClause.
@@ -10353,7 +10353,7 @@ function* Evaluate_CaseClause({
 // @ts-nocheck
 
 function i(V) {
-  if (V instanceof _Value) {
+  if (V instanceof Value) {
     return inspect(V, surroundingAgent.currentRealmRecord);
   }
   return `${V}`;
@@ -13335,7 +13335,7 @@ class ExpressionParser extends FunctionParser {
         break;
       }
       const PropertyDefinition = this.parsePropertyDefinition();
-      if (!this.state.json && PropertyDefinition.type === 'PropertyDefinition' && PropertyDefinition.PropertyName && !IsComputedPropertyKey(PropertyDefinition.PropertyName) && PropertyDefinition.PropertyName.type !== 'NumericLiteral' && StringValue$1(PropertyDefinition.PropertyName).stringValue() === '__proto__') {
+      if (!this.state.json && PropertyDefinition.type === 'PropertyDefinition' && PropertyDefinition.PropertyName && !IsComputedPropertyKey(PropertyDefinition.PropertyName) && PropertyDefinition.PropertyName.type !== 'NumericLiteral' && StringValue(PropertyDefinition.PropertyName).stringValue() === '__proto__') {
         if (hasProto) {
           this.scope.registerObjectLiteralEarlyError(this.raiseEarly('DuplicateProto', PropertyDefinition.PropertyName));
         } else {
@@ -15113,7 +15113,7 @@ class ModuleParser extends StatementParser {
   parseModuleExportName() {
     if (this.test(Token.STRING)) {
       const literal = this.parseStringLiteral();
-      if (!IsStringWellFormedUnicode(StringValue$1(literal))) {
+      if (!IsStringWellFormedUnicode(StringValue(literal))) {
         this.raiseEarly('ModuleExportNameInvalidUnicode', literal);
       }
       return literal;
@@ -15377,7 +15377,7 @@ function handleError(e) {
   if (e.name === 'SyntaxError') {
     const v = surroundingAgent.Throw('SyntaxError', 'Raw', e.message).Value;
     if (e.decoration) {
-      const stackString = _Value('stack');
+      const stackString = Value('stack');
       let _temp = Get(v, stackString);
       Assert(!(_temp instanceof AbruptCompletion), "Get(v, stackString)" + ' returned an abrupt completion');
       /* c8 ignore if */
@@ -15386,7 +15386,7 @@ function handleError(e) {
       }
       const stack = _temp.stringValue();
       const newStackString = `${e.decoration}\n${stack}`;
-      let _temp2 = Set$1(v, stackString, _Value(newStackString), _Value.true);
+      let _temp2 = Set$1(v, stackString, Value(newStackString), Value.true);
       Assert(!(_temp2 instanceof AbruptCompletion), "Set(v, stackString, Value(newStackString), Value.true)" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp2 instanceof Completion) {
@@ -15477,7 +15477,7 @@ function ParseModule(sourceText, realm, hostDefined = {}) {
   // 11. For each ExportEntry Record ee in exportEntries, do
   for (const ee of exportEntries) {
     // a. If ee.[[ModuleRequest]] is null, then
-    if (ee.ModuleRequest === _Value.null) {
+    if (ee.ModuleRequest === Value.null) {
       // i. If ee.[[LocalName]] is not an element of importedBoundNames, then
       if (!importedBoundNames.has(ee.LocalName)) {
         // 1. Append ee to localExportEntries.
@@ -15498,12 +15498,12 @@ function ParseModule(sourceText, realm, hostDefined = {}) {
           indirectExportEntries.push({
             ModuleRequest: ie.ModuleRequest,
             ImportName: ie.ImportName,
-            LocalName: _Value.null,
+            LocalName: Value.null,
             ExportName: ee.ExportName
           });
         }
       }
-    } else if (ee.ImportName && ee.ImportName === 'all-but-default' && ee.ExportName === _Value.null) {
+    } else if (ee.ImportName && ee.ImportName === 'all-but-default' && ee.ExportName === Value.null) {
       // b. Else if ee.[[ImportName]] is ~all-but-default~ and ee.[[ExportName]] is null, then
       // i. Append ee to starExportEntries.
       starExportEntries.push(ee);
@@ -15516,10 +15516,10 @@ function ParseModule(sourceText, realm, hostDefined = {}) {
   // 12. Return Source Text Module Record { [[Realm]]: realm, [[Environment]]: undefined, [[Namespace]]: undefined, [[Status]]: unlinked, [[EvaluationError]]: undefined, [[HostDefined]]: hostDefined, [[ECMAScriptCode]]: body, [[Context]]: empty, [[ImportMeta]]: empty, [[RequestedModules]]: requestedModules, [[ImportEntries]]: importEntries, [[LocalExportEntries]]: localExportEntries, [[IndirectExportEntries]]: indirectExportEntries, [[StarExportEntries]]: starExportEntries, [[DFSIndex]]: undefined, [[DFSAncestorIndex]]: undefined }.
   return new (hostDefined.SourceTextModuleRecord || SourceTextModuleRecord)({
     Realm: realm,
-    Environment: _Value.undefined,
-    Namespace: _Value.undefined,
+    Environment: Value.undefined,
+    Namespace: Value.undefined,
     Status: 'new',
-    EvaluationError: _Value.undefined,
+    EvaluationError: Value.undefined,
     HostDefined: hostDefined,
     ECMAScriptCode: body,
     Context: undefined,
@@ -15530,13 +15530,13 @@ function ParseModule(sourceText, realm, hostDefined = {}) {
     LocalExportEntries: localExportEntries,
     IndirectExportEntries: indirectExportEntries,
     StarExportEntries: starExportEntries,
-    DFSIndex: _Value.undefined,
-    DFSAncestorIndex: _Value.undefined,
-    Async: body.hasTopLevelAwait ? _Value.true : _Value.false,
-    AsyncEvaluating: _Value.false,
-    TopLevelCapability: _Value.undefined,
-    AsyncParentModules: _Value.undefined,
-    PendingAsyncDependencies: _Value.undefined
+    DFSIndex: Value.undefined,
+    DFSAncestorIndex: Value.undefined,
+    Async: body.hasTopLevelAwait ? Value.true : Value.false,
+    AsyncEvaluating: Value.false,
+    TopLevelCapability: Value.undefined,
+    AsyncParentModules: Value.undefined,
+    PendingAsyncDependencies: Value.undefined
   });
 }
 
@@ -15545,7 +15545,7 @@ function ParseJSONModule(sourceText, realm, hostDefined) {
   // 1. Let jsonParse be realm's intrinsic object named "%JSON.parse%".
   const jsonParse = realm.Intrinsics['%JSON.parse%'];
   // 1. Let json be ? Call(jsonParse, undefined, « sourceText »).
-  let _temp3 = Call(jsonParse, _Value.undefined, [sourceText]);
+  let _temp3 = Call(jsonParse, Value.undefined, [sourceText]);
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) {
     return _temp3;
@@ -15659,7 +15659,7 @@ function CreateDynamicFunction(constructor, newTarget, kind, args) {
   // 13. If argCount = 0, let bodyArg be the empty String.
   let bodyArg;
   if (argCount === 0) {
-    bodyArg = _Value('');
+    bodyArg = Value('');
   } else if (argCount === 1) {
     // 14. Else if argCount = 1, let bodyArg be args[0].
     bodyArg = args[0];
@@ -15786,7 +15786,7 @@ function CreateDynamicFunction(constructor, newTarget, kind, args) {
   // 23. Let scope be realmF.[[GlobalEnv]].
   const scope = realmF.GlobalEnv;
   // 24. Let F be ! OrdinaryFunctionCreate(proto, sourceText, parameters, body, non-lexical-this, scope, null).
-  let _temp6 = OrdinaryFunctionCreate(proto, sourceText, parameters, body, 'non-lexical-this', scope, _Value.null);
+  let _temp6 = OrdinaryFunctionCreate(proto, sourceText, parameters, body, 'non-lexical-this', scope, Value.null);
   Assert(!(_temp6 instanceof AbruptCompletion), "OrdinaryFunctionCreate(proto, sourceText, parameters, body, 'non-lexical-this', scope, Value.null)" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp6 instanceof Completion) {
@@ -15794,28 +15794,28 @@ function CreateDynamicFunction(constructor, newTarget, kind, args) {
   }
   const F = _temp6;
   // 25. Perform SetFunctionName(F, "anonymous").
-  SetFunctionName(F, _Value('anonymous'));
+  SetFunctionName(F, Value('anonymous'));
   // 26. If kind is generator, then
   if (kind === 'generator') {
     // a. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
     const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%'));
     // b. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-    DefinePropertyOrThrow(F, _Value('prototype'), _Descriptor({
+    DefinePropertyOrThrow(F, Value('prototype'), _Descriptor({
       Value: prototype,
-      Writable: _Value.true,
-      Enumerable: _Value.false,
-      Configurable: _Value.false
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.false
     }));
   } else if (kind === 'asyncGenerator') {
     // 27. Else if kind is asyncGenerator, then
     // a. Let prototype be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
     const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%'));
     // b. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-    DefinePropertyOrThrow(F, _Value('prototype'), _Descriptor({
+    DefinePropertyOrThrow(F, Value('prototype'), _Descriptor({
       Value: prototype,
-      Writable: _Value.true,
-      Enumerable: _Value.false,
-      Configurable: _Value.false
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.false
     }));
   } else if (kind === 'normal') {
     // 28. Else if kind is normal, then perform MakeConstructor(F).
@@ -15866,7 +15866,7 @@ function Evaluate_BreakStatement({
     });
   }
   // 1. Let label be the StringValue of LabelIdentifier.
-  const label = StringValue$1(LabelIdentifier);
+  const label = StringValue(LabelIdentifier);
   // 2. Return Completion { [[Type]]: break, [[Value]]: empty, [[Target]]: label }.
   return new Completion({
     Type: 'break',
@@ -15963,7 +15963,7 @@ function* Evaluate_YieldExpression({
     // 5. Let iterator be iteratorRecord.[[Iterator]].
     const iterator = iteratorRecord.Iterator;
     // 6. Let received be NormalCompletion(undefined).
-    let received = NormalCompletion(_Value.undefined);
+    let received = NormalCompletion(Value.undefined);
     // 7. Repeat,
     while (true) {
       // a. If received.[[Type]] is normal, then
@@ -16008,7 +16008,7 @@ function* Evaluate_YieldExpression({
         }
         const done = _temp6;
         // v. If done is true, then
-        if (done === _Value.true) {
+        if (done === Value.true) {
           // 1. Return ? IteratorValue(innerResult).
           return IteratorValue(innerResult);
         }
@@ -16029,7 +16029,7 @@ function* Evaluate_YieldExpression({
           received = yield* GeneratorYield(innerResult);
         }
       } else if (received.Type === 'throw') {
-        let _temp8 = GetMethod(iterator, _Value('throw'));
+        let _temp8 = GetMethod(iterator, Value('throw'));
         /* c8 ignore if */
         if (_temp8 instanceof AbruptCompletion) {
           return _temp8;
@@ -16042,7 +16042,7 @@ function* Evaluate_YieldExpression({
         // i. Let throw be ? GetMethod(iterator, "throw").
         const thr = _temp8;
         // ii. If throw is not undefined, then
-        if (thr !== _Value.undefined) {
+        if (thr !== Value.undefined) {
           let _temp9 = Call(thr, iterator, [received.Value]);
           /* c8 ignore if */
           if (_temp9 instanceof AbruptCompletion) {
@@ -16084,7 +16084,7 @@ function* Evaluate_YieldExpression({
           }
           const done = _temp11;
           // 6. If done is true, then
-          if (done === _Value.true) {
+          if (done === Value.true) {
             // a. Return ? IteratorValue(innerResult).
             return IteratorValue(innerResult);
           }
@@ -16141,7 +16141,7 @@ function* Evaluate_YieldExpression({
         // i. Assert: received.[[Type]] is return.
         Assert(received.Type === 'return', "received.Type === 'return'");
         // ii. Let return be ? GetMethod(iterator, "return").
-        let _temp15 = GetMethod(iterator, _Value('return'));
+        let _temp15 = GetMethod(iterator, Value('return'));
         /* c8 ignore if */
         if (_temp15 instanceof AbruptCompletion) {
           return _temp15;
@@ -16152,7 +16152,7 @@ function* Evaluate_YieldExpression({
         }
         const ret = _temp15;
         // iii. If return is undefined, then
-        if (ret === _Value.undefined) {
+        if (ret === Value.undefined) {
           // 1. If generatorKind is async, then set received.[[Value]] to ? Await(received.[[Value]]).
           if (generatorKind === 'async') {
             let _temp16 = yield* Await(received.Value);
@@ -16209,7 +16209,7 @@ function* Evaluate_YieldExpression({
         }
         const done = _temp19;
         // viii. If done is true, then
-        if (done === _Value.true) {
+        if (done === Value.true) {
           let _temp20 = IteratorValue(innerReturnResult);
           /* c8 ignore if */
           if (_temp20 instanceof AbruptCompletion) {
@@ -16266,7 +16266,7 @@ function* Evaluate_YieldExpression({
     return yield* Yield(value);
   }
   // 1. Return ? Yield(undefined).
-  return yield* Yield(_Value.undefined);
+  return yield* Yield(Value.undefined);
 }
 
 // @ts-nocheck
@@ -16274,9 +16274,9 @@ function* Evaluate_YieldExpression({
 // https://tc39.es/proposal-string-replaceall/#sec-stringindexof
 function StringIndexOf(string, searchValue, fromIndex) {
   // 1. Assert: Type(string) is String.
-  Assert(string instanceof StringValue, "string instanceof JSStringValue");
+  Assert(string instanceof JSStringValue, "string instanceof JSStringValue");
   // 2. Assert: Type(searchValue) is String.
-  Assert(searchValue instanceof StringValue, "searchValue instanceof JSStringValue");
+  Assert(searchValue instanceof JSStringValue, "searchValue instanceof JSStringValue");
   // 3. Assert: fromIndex is a non-negative integer.
   Assert(isNonNegativeInteger(fromIndex), "isNonNegativeInteger(fromIndex)");
   const stringStr = string.stringValue();
@@ -16319,7 +16319,7 @@ function NumberToBigInt(number) {
   // 1. Assert: Type(number) is Number.
   Assert(number instanceof NumberValue, "number instanceof NumberValue");
   // 2. If IsIntegralNumber(number) is false, throw a RangeError exception.
-  if (IsIntegralNumber(number) === _Value.false) {
+  if (IsIntegralNumber(number) === Value.false) {
     return surroundingAgent.Throw('RangeError', 'CannotConvertDecimalToBigInt', number);
   }
   // 3. Return the BigInt value that represents the mathematical value of number.
@@ -16354,7 +16354,7 @@ function* Evaluate_ConditionalExpression({
   }
   const lval = _temp;
   // 3. If lval is true, then
-  if (lval === _Value.true) {
+  if (lval === Value.true) {
     // a. Let trueRef be the result of evaluating the first AssignmentExpression.
     const trueRef = yield* Evaluate(AssignmentExpression_a);
     // b. Return ? GetValue(trueRef).
@@ -16374,9 +16374,9 @@ function* Evaluate_ConditionalExpression({
 //     `/` RegularExpressionBody `/` RegularExpressionFlags
 function Evaluate_RegularExpressionLiteral(RegularExpressionLiteral) {
   // 1. Let pattern be ! UTF16Encode(BodyText of RegularExpressionLiteral).
-  const pattern = _Value(BodyText(RegularExpressionLiteral));
+  const pattern = Value(BodyText(RegularExpressionLiteral));
   // 2. Let flags be ! UTF16Encode(FlagText of RegularExpressionLiteral).
-  const flags = _Value(FlagText(RegularExpressionLiteral));
+  const flags = Value(FlagText(RegularExpressionLiteral));
   // 3. Return RegExpCreate(pattern, flags).
   return RegExpCreate(pattern, flags);
 }
@@ -16513,7 +16513,7 @@ function Evaluate_Pattern(Pattern, flags) {
     // 2. Return a new abstract closure with parameters (str, index) that captures m and performs the following steps when called:
     return (str, index) => {
       // a. Assert: Type(str) is String.
-      Assert(str instanceof StringValue, "str instanceof JSStringValue");
+      Assert(str instanceof JSStringValue, "str instanceof JSStringValue");
       // b. Assert: index is a non-negative integer which is ≤ the length of str.
       Assert(isNonNegativeInteger(index) && index <= str.stringValue().length, "isNonNegativeInteger(index) && index <= str.stringValue().length");
       // c. If Unicode is true, let Input be a List consisting of the sequence of code points of ! StringToCodePoints(str).
@@ -16544,7 +16544,7 @@ function Evaluate_Pattern(Pattern, flags) {
       // g. Let cap be a List of NcapturingParens undefined values, indexed 1 through NcapturingParens.
       const cap = Array.from({
         length: NcapturingParens + 1
-      }, () => _Value.undefined);
+      }, () => Value.undefined);
       // h. Let x be the State (listIndex, cap).
       const x = new State(listIndex, cap);
       // i. Call m(x, c) and return its result.
@@ -16745,7 +16745,7 @@ function Evaluate_Pattern(Pattern, flags) {
     const cap = [...x.captures];
     // 4. For each integer k that satisfies parenIndex < k and k ≤ parenIndex + parenCount, set cap[k] to undefined.
     for (let k = parenIndex + 1; k <= parenIndex + parenCount; k += 1) {
-      cap[k] = _Value.undefined;
+      cap[k] = Value.undefined;
     }
     // 5. Let e be x's endIndex.
     const e = x.endIndex;
@@ -17277,7 +17277,7 @@ function Evaluate_Pattern(Pattern, flags) {
       // d. Let s be cap[n].
       const s = cap[n];
       // e. If s is undefined, return c(x).
-      if (s === _Value.undefined) {
+      if (s === Value.undefined) {
         return c(x);
       }
       // f. Let e be x's endIndex.
@@ -17516,7 +17516,7 @@ function StringPad(O, maxLength, fillString, placement) {
     return S;
   }
   let filler;
-  if (fillString === _Value.undefined) {
+  if (fillString === Value.undefined) {
     filler = ' ';
   } else {
     let _temp3 = ToString(fillString);
@@ -17537,9 +17537,9 @@ function StringPad(O, maxLength, fillString, placement) {
   const stringFiller = filler.repeat(Math.ceil(fillLen / filler.length));
   const truncatedStringFiller = stringFiller.slice(0, fillLen);
   if (placement === 'start') {
-    return _Value(truncatedStringFiller + S.stringValue());
+    return Value(truncatedStringFiller + S.stringValue());
   } else {
-    return _Value(S.stringValue() + truncatedStringFiller);
+    return Value(S.stringValue() + truncatedStringFiller);
   }
 }
 
@@ -17574,7 +17574,7 @@ function TrimString(string, where) {
     Assert(where === 'start+end', "where === 'start+end'");
     T = S.trim();
   }
-  return _Value(T);
+  return Value(T);
 }
 
 /** https://tc39.es/ecma262/#sec-meta-properties-runtime-semantics-evaluation */
@@ -17615,7 +17615,7 @@ function* BindingClassDeclarationEvaluation(ClassDeclaration) {
     ClassTail
   } = ClassDeclaration;
   if (!BindingIdentifier) {
-    let _temp = yield* ClassDefinitionEvaluation(ClassTail, _Value.undefined, _Value('default'));
+    let _temp = yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, Value('default'));
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) {
       return _temp;
@@ -17632,7 +17632,7 @@ function* BindingClassDeclarationEvaluation(ClassDeclaration) {
     return value;
   }
   // 1. Let className be StringValue of BindingIdentifier.
-  const className = StringValue$1(BindingIdentifier);
+  const className = StringValue(BindingIdentifier);
   // 2. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments className and className.
   let _temp2 = yield* ClassDefinitionEvaluation(ClassTail, className, className);
   /* c8 ignore if */
@@ -17708,7 +17708,7 @@ function* Evaluate_WithStatement({
   // 3. Let oldEnv be the running execution context's LexicalEnvironment.
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 4. Let newEnv be NewObjectEnvironment(obj, true, oldEnv).
-  const newEnv = NewObjectEnvironment(obj, _Value.true, oldEnv);
+  const newEnv = NewObjectEnvironment(obj, Value.true, oldEnv);
   // 5. Set the running execution context's LexicalEnvironment to newEnv.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = newEnv;
   // 6. Let C be the result of evaluating Statement.
@@ -17716,7 +17716,7 @@ function* Evaluate_WithStatement({
   // 7. Set the running execution context's LexicalEnvironment to oldEnv.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
   // 8. Return Completion(UpdateEmpty(C, undefined)).
-  return Completion(UpdateEmpty(C, _Value.undefined));
+  return Completion(UpdateEmpty(C, Value.undefined));
 }
 
 /** https://tc39.es/ecma262/#sec-module-semantics-runtime-semantics-evaluation */
@@ -17727,7 +17727,7 @@ function* Evaluate_Module({
   ModuleBody
 }) {
   if (!ModuleBody) {
-    return NormalCompletion(_Value.undefined);
+    return NormalCompletion(Value.undefined);
   }
   return yield* Evaluate(ModuleBody);
 }
@@ -17806,7 +17806,7 @@ function* Evaluate_ExportDeclaration(ExportDeclaration) {
       // a. Let env be the running execution context's LexicalEnvironment.
       const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
       // b. Perform ? InitializeBoundName("*default*", value, env).
-      let _temp2 = InitializeBoundName(_Value('*default*'), value, env);
+      let _temp2 = InitializeBoundName(Value('*default*'), value, env);
       /* c8 ignore if */
       if (_temp2 instanceof AbruptCompletion) {
         return _temp2;
@@ -17824,7 +17824,7 @@ function* Evaluate_ExportDeclaration(ExportDeclaration) {
     // 1. If IsAnonymousFunctionDefinition(AssignmentExpression) is true, then
     if (IsAnonymousFunctionDefinition(AssignmentExpression)) {
       // a. Let value be NamedEvaluation of AssignmentExpression with argument "default".
-      value = yield* NamedEvaluation(AssignmentExpression, _Value('default'));
+      value = yield* NamedEvaluation(AssignmentExpression, Value('default'));
     } else {
       // 2. Else,
       // a. Let rhs be the result of evaluating AssignmentExpression.
@@ -17844,7 +17844,7 @@ function* Evaluate_ExportDeclaration(ExportDeclaration) {
     // 3. Let env be the running execution context's LexicalEnvironment.
     const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
     // 4. Perform ? InitializeBoundName("*default*", value, env).
-    let _temp4 = InitializeBoundName(_Value('*default*'), value, env);
+    let _temp4 = InitializeBoundName(Value('*default*'), value, env);
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) {
       return _temp4;
@@ -17882,9 +17882,9 @@ function* Evaluate_OptionalExpression({
   }
   const baseValue = _temp;
   // 3. If baseValue is undefined or null, then
-  if (baseValue === _Value.undefined || baseValue === _Value.null) {
+  if (baseValue === Value.undefined || baseValue === Value.null) {
     // a. Return undefined.
-    return _Value.undefined;
+    return Value.undefined;
   }
   // 4. Return the result of performing ChainEvaluation of OptionalChain with arguments baseValue and baseReference.
   return yield* ChainEvaluation(OptionalChain, baseValue, baseReference);
@@ -18054,7 +18054,7 @@ function* ChainEvaluation(node, baseValue, baseReference) {
       }
       const nv = _temp10;
       // 5. Let fieldNameString be the StringValue of PrivateIdentifier.
-      const fieldNameString = StringValue$1(PrivateIdentifier);
+      const fieldNameString = StringValue(PrivateIdentifier);
       // 6. Return ! MakePrivateReference(nv, fieldNameString).
       let _temp11 = MakePrivateReference(nv, fieldNameString);
       Assert(!(_temp11 instanceof AbruptCompletion), "MakePrivateReference(nv, fieldNameString)" + ' returned an abrupt completion');
@@ -18076,7 +18076,7 @@ function* ChainEvaluation(node, baseValue, baseReference) {
     }
     const bv = _temp12;
     // 2. Let fieldNameString be the StringValue of PrivateIdentifier.
-    const fieldNameString = StringValue$1(PrivateIdentifier);
+    const fieldNameString = StringValue(PrivateIdentifier);
     // 3. Return ! MakePrivateReference(bv, fieldNameString).
     let _temp13 = MakePrivateReference(bv, fieldNameString);
     Assert(!(_temp13 instanceof AbruptCompletion), "MakePrivateReference(bv, fieldNameString)" + ' returned an abrupt completion');
@@ -18120,11 +18120,11 @@ function* Evaluate_TaggedTemplateExpression(node) {
 /** https://tc39.es/ecma262/#sec-getsubstitution */
 function GetSubstitution(matched, str, position, captures, namedCaptures, replacement) {
   // 1. Assert: Type(matched) is String.
-  Assert(matched instanceof StringValue, "matched instanceof JSStringValue");
+  Assert(matched instanceof JSStringValue, "matched instanceof JSStringValue");
   // 2. Let matchLength be the number of code units in matched.
   const matchLength = matched.stringValue().length;
   // 3. Assert: Type(str) is String.
-  Assert(str instanceof StringValue, "str instanceof JSStringValue");
+  Assert(str instanceof JSStringValue, "str instanceof JSStringValue");
   // 4. Let stringLength be the number of code units in str.
   const stringLength = str.stringValue().length;
   // 5. Assert: position is a non-negative integer.
@@ -18132,9 +18132,9 @@ function GetSubstitution(matched, str, position, captures, namedCaptures, replac
   // 6. Assert: position ≤ stringLength.
   Assert(position <= stringLength, "position <= stringLength");
   // 7. Assert: captures is a possibly empty List of Strings.
-  Assert(Array.isArray(captures) && captures.every(value => value instanceof StringValue || value instanceof UndefinedValue), "Array.isArray(captures) && captures.every((value) => value instanceof JSStringValue || value instanceof UndefinedValue)");
+  Assert(Array.isArray(captures) && captures.every(value => value instanceof JSStringValue || value instanceof UndefinedValue), "Array.isArray(captures) && captures.every((value) => value instanceof JSStringValue || value instanceof UndefinedValue)");
   // 8. Assert: Type(replacement) is String.
-  Assert(replacement instanceof StringValue, "replacement instanceof JSStringValue");
+  Assert(replacement instanceof JSStringValue, "replacement instanceof JSStringValue");
   // 9. Let tailPos be position + matchLength.
   const tailPos = position + matchLength;
   // 10. Let m be the number of elements in captures.
@@ -18169,7 +18169,7 @@ function GetSubstitution(matched, str, position, captures, namedCaptures, replac
         const n = Number(nextChar);
         if (n <= m) {
           const capture = captures[n - 1];
-          if (capture !== _Value.undefined) {
+          if (capture !== Value.undefined) {
             result += capture.stringValue();
           }
         } else {
@@ -18181,7 +18181,7 @@ function GetSubstitution(matched, str, position, captures, namedCaptures, replac
         const n = Number(nextChar + nextNextChar);
         if (n !== 0 && n <= m) {
           const capture = captures[n - 1];
-          if (capture !== _Value.undefined) {
+          if (capture !== Value.undefined) {
             result += capture.stringValue();
           }
         } else {
@@ -18189,7 +18189,7 @@ function GetSubstitution(matched, str, position, captures, namedCaptures, replac
         }
         i += 3;
       } else if (nextChar === '<') {
-        if (namedCaptures === _Value.undefined) {
+        if (namedCaptures === Value.undefined) {
           result += '$<';
           i += 2;
         } else {
@@ -18199,7 +18199,7 @@ function GetSubstitution(matched, str, position, captures, namedCaptures, replac
             result += '$<';
             i += 2;
           } else {
-            const groupName = _Value(replacementStr.substring(i + 2, nextSign));
+            const groupName = Value(replacementStr.substring(i + 2, nextSign));
             let _temp = Get(namedCaptures, groupName);
             /* c8 ignore if */
             if (_temp instanceof AbruptCompletion) {
@@ -18210,7 +18210,7 @@ function GetSubstitution(matched, str, position, captures, namedCaptures, replac
               _temp = _temp.Value;
             }
             const capture = _temp;
-            if (capture === _Value.undefined) ; else {
+            if (capture === Value.undefined) ; else {
               let _temp2 = ToString(capture);
               /* c8 ignore if */
               if (_temp2 instanceof AbruptCompletion) {
@@ -18235,7 +18235,7 @@ function GetSubstitution(matched, str, position, captures, namedCaptures, replac
     }
   }
   // 12. Return result.
-  return _Value(result);
+  return Value(result);
 }
 
 /** https://tc39.es/ecma262/#sec-continue-statement-runtime-semantics-evaluation */
@@ -18254,7 +18254,7 @@ function Evaluate_ContinueStatement({
     });
   }
   // 1. Let label be the StringValue of LabelIdentifier.
-  const label = StringValue$1(LabelIdentifier);
+  const label = StringValue(LabelIdentifier);
   // 2. Return Completion { [[Type]]: continue, [[Value]]: empty, [[Target]]: label }.
   return new Completion({
     Type: 'continue',
@@ -18309,7 +18309,7 @@ function ApplyStringOrNumericBinaryOperator(lval, opText, rval) {
     }
     const rprim = _temp2;
     // c. If Type(lprim) is String or Type(rprim) is String, then
-    if (lprim instanceof StringValue || rprim instanceof StringValue) {
+    if (lprim instanceof JSStringValue || rprim instanceof JSStringValue) {
       let _temp3 = ToString(lprim);
       /* c8 ignore if */
       if (_temp3 instanceof AbruptCompletion) {
@@ -18333,7 +18333,7 @@ function ApplyStringOrNumericBinaryOperator(lval, opText, rval) {
       }
       const rstr = _temp4;
       // iii. Return the string-concatenation of lstr and rstr.
-      return _Value(lstr.stringValue() + rstr.stringValue());
+      return Value(lstr.stringValue() + rstr.stringValue());
     }
     // d. Set lval to lprim.
     lval = lprim;
@@ -18436,7 +18436,7 @@ function Evaluate_ImportMeta(_ImportMeta) {
   let importMeta = module.ImportMeta;
   // 4. If importMeta is empty, then
   if (importMeta === undefined) {
-    let _temp2 = OrdinaryObjectCreate(_Value.null);
+    let _temp2 = OrdinaryObjectCreate(Value.null);
     Assert(!(_temp2 instanceof AbruptCompletion), "OrdinaryObjectCreate(Value.null)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp2 instanceof Completion) {
@@ -18584,7 +18584,7 @@ function* KeyedBindingInitialization(node, value, environment, propertyName) {
     // 1. Let v be ? GetV(value, propertyName).
     let v = _temp;
     // 2. If Initializer is present and v is undefined, then
-    if (node.Initializer && v === _Value.undefined) {
+    if (node.Initializer && v === Value.undefined) {
       // a. Let defaultValue be the result of evaluating Initializer.
       const defaultValue = yield* Evaluate(node.Initializer);
       // b. Set v to ? GetValue(defaultValue).
@@ -18603,7 +18603,7 @@ function* KeyedBindingInitialization(node, value, environment, propertyName) {
     return yield* BindingInitialization(node.BindingPattern, v, environment);
   } else {
     // 1. Let bindingId be StringValue of BindingIdentifier.
-    const bindingId = StringValue$1(node.BindingIdentifier);
+    const bindingId = StringValue(node.BindingIdentifier);
     // 2. Let lhs be ? ResolveBinding(bindingId, environment).
     let _temp3 = ResolveBinding(bindingId, environment, node.BindingIdentifier.strict);
     /* c8 ignore if */
@@ -18626,7 +18626,7 @@ function* KeyedBindingInitialization(node, value, environment, propertyName) {
       _temp4 = _temp4.Value;
     }
     let v = _temp4;
-    if (node.Initializer && v === _Value.undefined) {
+    if (node.Initializer && v === Value.undefined) {
       // a. If IsAnonymousFunctionDefinition(Initializer) is true, then
       if (IsAnonymousFunctionDefinition(node.Initializer)) {
         // i. Set v to the result of performing NamedEvaluation for Initializer with argument bindingId.
@@ -18649,7 +18649,7 @@ function* KeyedBindingInitialization(node, value, environment, propertyName) {
       }
     }
     // 5. If environment is undefined, return ? PutValue(lhs, v).
-    if (environment === _Value.undefined) {
+    if (environment === Value.undefined) {
       return PutValue(lhs, v);
     }
     // 6. Return InitializeReferencedBinding(lhs, v).
@@ -18738,7 +18738,7 @@ function* PropertyDestructuringAssignmentEvaluation(AssignmentPropertyList, valu
   for (const AssignmentProperty of AssignmentPropertyList) {
     if (AssignmentProperty.IdentifierReference) {
       // 1. Let P be StringValue of IdentifierReference.
-      const P = StringValue$1(AssignmentProperty.IdentifierReference);
+      const P = StringValue(AssignmentProperty.IdentifierReference);
       // 2. Let lref be ? ResolveBinding(P).
       let _temp5 = ResolveBinding(P, undefined, AssignmentProperty.IdentifierReference.strict);
       /* c8 ignore if */
@@ -18762,7 +18762,7 @@ function* PropertyDestructuringAssignmentEvaluation(AssignmentPropertyList, valu
       }
       let v = _temp6;
       // 4. If Initializer? is present and v is undefined, then
-      if (AssignmentProperty.Initializer && v === _Value.undefined) {
+      if (AssignmentProperty.Initializer && v === Value.undefined) {
         // a. If IsAnonymousFunctionDefinition(Initializer) is true, then
         if (IsAnonymousFunctionDefinition(AssignmentProperty.Initializer)) {
           // i. Set v to the result of performing NamedEvaluation for Initializer with argument P.
@@ -18858,7 +18858,7 @@ function* KeyedDestructuringAssignmentEvaluation({
   const v = _temp10;
   // 3. If Initializer is present and v is undefined, then
   let rhsValue;
-  if (Initializer && v === _Value.undefined) {
+  if (Initializer && v === Value.undefined) {
     // a. If IsAnonymousFunctionDefinition(Initializer) and IsIdentifierRef of DestructuringAssignmentTarget are both true, then
     if (IsAnonymousFunctionDefinition(Initializer) && IsIdentifierRef(DestructuringAssignmentTarget)) {
       // i. Let rhsValue be NamedEvaluation of Initializer with argument GetReferencedName(lref).
@@ -18917,7 +18917,7 @@ function* DestructuringAssignmentEvaluation_ArrayAssignmentPattern({
   // 3. If status is an abrupt completion, then
   if (status instanceof AbruptCompletion) {
     // a. If iteratorRecord.[[Done]] is false, return ? IteratorClose(iteratorRecord, status).
-    if (iteratorRecord.Done === _Value.false) {
+    if (iteratorRecord.Done === Value.false) {
       return IteratorClose(iteratorRecord, status);
     }
     // b. Return Completion(status).
@@ -18931,7 +18931,7 @@ function* DestructuringAssignmentEvaluation_ArrayAssignmentPattern({
     status = EnsureCompletion(yield* IteratorDestructuringAssignmentEvaluation(AssignmentRestElement, iteratorRecord));
   }
   // 6. If iteratorRecord.[[Done]] is false, return ? IteratorClose(iteratorRecord, status).
-  if (iteratorRecord.Done === _Value.false) {
+  if (iteratorRecord.Done === Value.false) {
     return IteratorClose(iteratorRecord, status);
   }
   return Completion(status);
@@ -18954,12 +18954,12 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
   switch (node.type) {
     case 'Elision':
       // 1. If iteratorRecord.[[Done]] is false, then
-      if (iteratorRecord.Done === _Value.false) {
+      if (iteratorRecord.Done === Value.false) {
         // a. Let next be IteratorStep(iteratorRecord).
         let next = IteratorStep(iteratorRecord);
         // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
         if (next instanceof AbruptCompletion) {
-          iteratorRecord.Done = _Value.true;
+          iteratorRecord.Done = Value.true;
         }
         // c. ReturnIfAbrupt(next)
         /* c8 ignore if */
@@ -18971,8 +18971,8 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
           next = next.Value;
         }
         // d. If next is false, set iteratorRecord.[[Done]] to true.
-        if (next === _Value.false) {
-          iteratorRecord.Done = _Value.true;
+        if (next === Value.false) {
+          iteratorRecord.Done = Value.true;
         }
       }
       // 2. Return NormalCompletion(empty).
@@ -18998,12 +18998,12 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
         }
         let value;
         // 2. If iteratorRecord.[[Done]] is false, then
-        if (iteratorRecord.Done === _Value.false) {
+        if (iteratorRecord.Done === Value.false) {
           // a. Let next be IteratorStep(iteratorRecord).
           let next = IteratorStep(iteratorRecord);
           // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
           if (next instanceof AbruptCompletion) {
-            iteratorRecord.Done = _Value.true;
+            iteratorRecord.Done = Value.true;
           }
           // c. ReturnIfAbrupt(next);
           /* c8 ignore if */
@@ -19015,15 +19015,15 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
             next = next.Value;
           }
           // d. If next is false, set iteratorRecord.[[Done]] to true.
-          if (next === _Value.false) {
-            iteratorRecord.Done = _Value.true;
+          if (next === Value.false) {
+            iteratorRecord.Done = Value.true;
           } else {
             // e. Else,
             // i. Let value be IteratorValue(next).
             value = IteratorValue(next);
             // ii. If value is an abrupt completion, set iteratorRecord.[[Done]] to true.
             if (value instanceof AbruptCompletion) {
-              iteratorRecord.Done = _Value.true;
+              iteratorRecord.Done = Value.true;
             }
             // iii. ReturnIfAbrupt(value).
             /* c8 ignore if */
@@ -19037,12 +19037,12 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
           }
         }
         // 3. If iteratorRecord.[[Done]] is true, let value be undefined.
-        if (iteratorRecord.Done === _Value.true) {
-          value = _Value.undefined;
+        if (iteratorRecord.Done === Value.true) {
+          value = Value.undefined;
         }
         let v;
         // 4. If Initializer is present and value is undefined, then
-        if (Initializer && value === _Value.undefined) {
+        if (Initializer && value === Value.undefined) {
           // a. If IsAnonymousFunctionDefinition(AssignmentExpression) is true and IsIdentifierRef of LeftHandSideExpression is true, then
           if (IsAnonymousFunctionDefinition(Initializer) && IsIdentifierRef(DestructuringAssignmentTarget)) {
             // i. Let v be NamedEvaluation of Initializer with argument GetReferencedName(lref).
@@ -19106,12 +19106,12 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
         // 3. Let n be 0.
         let n = 0;
         // 4. Repeat, while iteratorRecord.[[Done]] is false,
-        while (iteratorRecord.Done === _Value.false) {
+        while (iteratorRecord.Done === Value.false) {
           // a. Let next be IteratorStep(iteratorRecord).
           let next = IteratorStep(iteratorRecord);
           // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
           if (next instanceof AbruptCompletion) {
-            iteratorRecord.Done = _Value.true;
+            iteratorRecord.Done = Value.true;
           }
           // c. ReturnIfAbrupt(next);
           /* c8 ignore if */
@@ -19123,15 +19123,15 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
             next = next.Value;
           }
           // d. If next is false, set iteratorRecord.[[Done]] to true.
-          if (next === _Value.false) {
-            iteratorRecord.Done = _Value.true;
+          if (next === Value.false) {
+            iteratorRecord.Done = Value.true;
           } else {
             // e. Else,
             // i. Let nextValue be IteratorValue(next).
             let nextValue = IteratorValue(next);
             // ii. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
             if (nextValue instanceof AbruptCompletion) {
-              iteratorRecord.Done = _Value.true;
+              iteratorRecord.Done = Value.true;
             }
             // iii. ReturnIfAbrupt(nextValue).
             /* c8 ignore if */
@@ -19187,7 +19187,7 @@ function DestructuringAssignmentEvaluation(node, value) {
 function RestBindingInitialization({
   BindingIdentifier
 }, value, environment, excludedNames) {
-  let _temp = ResolveBinding(StringValue$1(BindingIdentifier), environment, BindingIdentifier.strict);
+  let _temp = ResolveBinding(StringValue(BindingIdentifier), environment, BindingIdentifier.strict);
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) {
     return _temp;
@@ -19211,7 +19211,7 @@ function RestBindingInitialization({
     _temp2 = _temp2.Value;
   }
   // 4. If environment is undefined, return PutValue(lhs, restObj).
-  if (environment === _Value.undefined) {
+  if (environment === Value.undefined) {
     return PutValue(lhs, restObj);
   }
   // 5. Return InitializeReferencedBinding(lhs, restObj).
@@ -19801,9 +19801,9 @@ function DefineMethodProperty(key, homeObject, closure, enumerable) {
     // a. Let desc be the PropertyDescriptor { [[Value]]: closure, [[Writable]]: true, [[Enumerable]]: enumerable, [[Configurable]]: true }.
     const desc = _Descriptor({
       Value: closure,
-      Writable: _Value.true,
+      Writable: Value.true,
       Enumerable: enumerable,
-      Configurable: _Value.true
+      Configurable: Value.true
     });
     // b. Perform ? DefinePropertyOrThrow(homeObject, key, desc).
     let _temp = DefinePropertyOrThrow(homeObject, key, desc);
@@ -19879,14 +19879,14 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition, object, 
         // 7. Perform MakeMethod(closure, object).
         MakeMethod(closure, object);
         // 8. Perform SetFunctionName(closure, propKey, "get").
-        SetFunctionName(closure, propKey, _Value('set'));
+        SetFunctionName(closure, propKey, Value('set'));
         // 9. If propKey is a Private Name, then
         if (propKey instanceof PrivateName) {
           // a. Return PrivateElement { [[Key]]: propKey, [[Kind]]: accessor, [[Get]]: undefined, [[Set]]: closure }.
           return new PrivateElementRecord({
             Key: propKey,
             Kind: 'accessor',
-            Get: _Value.undefined,
+            Get: Value.undefined,
             Set: closure
           });
         } else {
@@ -19895,7 +19895,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition, object, 
           const desc = _Descriptor({
             Set: closure,
             Enumerable: enumerable,
-            Configurable: _Value.true
+            Configurable: Value.true
           });
           // b. Perform ? DefinePropertyOrThrow(object, propKey, desc).
           let _temp4 = DefinePropertyOrThrow(object, propKey, desc);
@@ -19941,14 +19941,14 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition, object, 
         // 8. Perform MakeMethod(closure, object).
         MakeMethod(closure, object);
         // 9. Perform SetFunctionName(closure, propKey, "get").
-        SetFunctionName(closure, propKey, _Value('get'));
+        SetFunctionName(closure, propKey, Value('get'));
         // 10. If propKey is a Private Name, then
         if (propKey instanceof PrivateName) {
           return new PrivateElementRecord({
             Key: propKey,
             Kind: 'accessor',
             Get: closure,
-            Set: _Value.undefined
+            Set: Value.undefined
           });
         } else {
           // 11. Else,
@@ -19956,7 +19956,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition, object, 
           const desc = _Descriptor({
             Get: closure,
             Enumerable: enumerable,
-            Configurable: _Value.true
+            Configurable: Value.true
           });
           // b. Perform ? DefinePropertyOrThrow(object, propKey, desc).
           let _temp5 = DefinePropertyOrThrow(object, propKey, desc);
@@ -20081,11 +20081,11 @@ function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, en
   // 9. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
   const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%'));
   // 10. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-  DefinePropertyOrThrow(closure, _Value('prototype'), _Descriptor({
+  DefinePropertyOrThrow(closure, Value('prototype'), _Descriptor({
     Value: prototype,
-    Writable: _Value.true,
-    Enumerable: _Value.false,
-    Configurable: _Value.false
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.false
   }));
   // 11. Return ? DefineMethodProperty(propKey, object, closure, enumerable).
   return DefineMethodProperty(propKey, object, closure, enumerable);
@@ -20143,11 +20143,11 @@ function* MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod, 
   // 9. Let prototype be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
   const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%'));
   // 10. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-  DefinePropertyOrThrow(closure, _Value('prototype'), _Descriptor({
+  DefinePropertyOrThrow(closure, Value('prototype'), _Descriptor({
     Value: prototype,
-    Writable: _Value.true,
-    Enumerable: _Value.false,
-    Configurable: _Value.false
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.false
   }));
   // 11. Return ? DefineMethodProperty(propKey, object, closure, enumerable).
   return DefineMethodProperty(propKey, object, closure, enumerable);
@@ -20242,13 +20242,13 @@ function InstantiateOrdinaryFunctionExpression(FunctionExpression, name) {
     // 1. Assert: name is not present.
     Assert(name === undefined, "name === undefined");
     // 2. Set name to StringValue of BindingIdentifier.
-    name = StringValue$1(BindingIdentifier);
+    name = StringValue(BindingIdentifier);
     // 3. Let scope be the running execution context's LexicalEnvironment.
     const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
     // 4. Let funcEnv be NewDeclarativeEnvironment(scope).
     const funcEnv = NewDeclarativeEnvironment(scope);
     // 5. Perform funcEnv.CreateImmutableBinding(name, false).
-    funcEnv.CreateImmutableBinding(name, _Value.false);
+    funcEnv.CreateImmutableBinding(name, Value.false);
     // 6. Let privateScope be the running execution context's PrivateEnvironment.
     const privateScope = surroundingAgent.runningExecutionContext.PrivateEnvironment;
     // 7. Let sourceText be the source text matched by FunctionExpression.
@@ -20266,7 +20266,7 @@ function InstantiateOrdinaryFunctionExpression(FunctionExpression, name) {
   }
   // 1. If name is not present, set name to "".
   if (name === undefined) {
-    name = _Value('');
+    name = Value('');
   }
   // 2. Let scope be the running execution context's LexicalEnvironment.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
@@ -20298,13 +20298,13 @@ function InstantiateGeneratorFunctionExpression(GeneratorExpression, name) {
     // 1. Assert: name is not present.
     Assert(name === undefined, "name === undefined");
     // 2. Set name to StringValue of BindingIdentifier.
-    name = StringValue$1(BindingIdentifier);
+    name = StringValue(BindingIdentifier);
     // 3. Let scope be the running execution context's LexicalEnvironment.
     const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
     // 4. Let funcEnv be NewDeclarativeEnvironment(scope).
     const funcEnv = NewDeclarativeEnvironment(scope);
     // 5. Perform funcEnv.CreateImmutableBinding(name, false).
-    funcEnv.CreateImmutableBinding(name, _Value.false);
+    funcEnv.CreateImmutableBinding(name, Value.false);
     // 6. Let privateScope be the running execution context's PrivateEnvironment.
     const privateScope = surroundingAgent.runningExecutionContext.PrivateEnvironment;
     // 7. Let sourceText be the source text matched by GeneratorExpression.
@@ -20322,11 +20322,11 @@ function InstantiateGeneratorFunctionExpression(GeneratorExpression, name) {
     }
     const prototype = _temp;
     // 11. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-    DefinePropertyOrThrow(closure, _Value('prototype'), new _Descriptor({
+    DefinePropertyOrThrow(closure, Value('prototype'), new _Descriptor({
       Value: prototype,
-      Writable: _Value.true,
-      Enumerable: _Value.false,
-      Configurable: _Value.false
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.false
     }));
     // 12. Perform funcEnv.InitializeBinding(name, closure).
     funcEnv.InitializeBinding(name, closure);
@@ -20335,7 +20335,7 @@ function InstantiateGeneratorFunctionExpression(GeneratorExpression, name) {
   }
   // 1. If name is not present, set name to "".
   if (name === undefined) {
-    name = _Value('');
+    name = Value('');
   }
   // 2. Let scope be the running execution context's LexicalEnvironment.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
@@ -20356,11 +20356,11 @@ function InstantiateGeneratorFunctionExpression(GeneratorExpression, name) {
   }
   const prototype = _temp2;
   // 8. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-  DefinePropertyOrThrow(closure, _Value('prototype'), new _Descriptor({
+  DefinePropertyOrThrow(closure, Value('prototype'), new _Descriptor({
     Value: prototype,
-    Writable: _Value.true,
-    Enumerable: _Value.false,
-    Configurable: _Value.false
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.false
   }));
   // 9. Return closure.
   return closure;
@@ -20375,7 +20375,7 @@ function InstantiateArrowFunctionExpression(ArrowFunction, name) {
   } = ArrowFunction;
   // 1. If name is not present, set name to "".
   if (name === undefined) {
-    name = _Value('');
+    name = Value('');
   }
   // 2. Let scope be the LexicalEnvironment of the running execution context.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
@@ -20400,7 +20400,7 @@ function InstantiateAsyncArrowFunctionExpression(AsyncArrowFunction, name) {
   } = AsyncArrowFunction;
   // 1. If name is not present, set name to "".
   if (name === undefined) {
-    name = _Value('');
+    name = Value('');
   }
   // 2. Let scope be the LexicalEnvironment of the running execution context.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
@@ -20429,7 +20429,7 @@ function InstantiateAsyncFunctionExpression(AsyncFunctionExpression, name) {
     // 1. Assert: name is not present.
     Assert(name === undefined, "name === undefined");
     // 2. Set name to StringValue of BindingIdentifier.
-    name = StringValue$1(BindingIdentifier);
+    name = StringValue(BindingIdentifier);
     // 3. Let scope be the LexicalEnvironment of the running execution context.
     const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
     // 4. Let funcEnv be ! NewDeclarativeEnvironment(scope).
@@ -20441,7 +20441,7 @@ function InstantiateAsyncFunctionExpression(AsyncFunctionExpression, name) {
     }
     const funcEnv = _temp;
     // 5. Perform ! funcEnv.CreateImmutableBinding(name, false).
-    let _temp2 = funcEnv.CreateImmutableBinding(name, _Value.false);
+    let _temp2 = funcEnv.CreateImmutableBinding(name, Value.false);
     Assert(!(_temp2 instanceof AbruptCompletion), "funcEnv.CreateImmutableBinding(name, Value.false)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp2 instanceof Completion) {
@@ -20478,7 +20478,7 @@ function InstantiateAsyncFunctionExpression(AsyncFunctionExpression, name) {
   }
   // 1. If name is not present, set name to "".
   if (name === undefined) {
-    name = _Value('');
+    name = Value('');
   }
   // 2. Let scope be the LexicalEnvironment of the running execution context.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
@@ -20514,13 +20514,13 @@ function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpression, n
     // 1. Assert: name is not present.
     Assert(name === undefined, "name === undefined");
     // 2. Set name to StringValue of BindingIdentifier.
-    name = StringValue$1(BindingIdentifier);
+    name = StringValue(BindingIdentifier);
     // 3. Let scope be the running execution context's LexicalEnvironment.
     const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
     // 4. Let funcEnv be NewDeclarativeEnvironment(scope).
     const funcEnv = NewDeclarativeEnvironment(scope);
     // 5. Perform funcEnv.CreateImmutableBinding(name, false).
-    funcEnv.CreateImmutableBinding(name, _Value.false);
+    funcEnv.CreateImmutableBinding(name, Value.false);
     // 6. Let privateScope be the running execution context's PrivateEnvironment.
     const privateScope = surroundingAgent.runningExecutionContext.PrivateEnvironment;
     // 7. Let source text be the source textmatched by AsyncGeneratorExpression.
@@ -20538,11 +20538,11 @@ function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpression, n
     // 10. Let prototype be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
     const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%'));
     // 11. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-    let _temp2 = DefinePropertyOrThrow(closure, _Value('prototype'), _Descriptor({
+    let _temp2 = DefinePropertyOrThrow(closure, Value('prototype'), _Descriptor({
       Value: prototype,
-      Writable: _Value.true,
-      Enumerable: _Value.false,
-      Configurable: _Value.false
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.false
     }));
     Assert(!(_temp2 instanceof AbruptCompletion), "DefinePropertyOrThrow(\n      closure,\n      Value('prototype'),\n      Descriptor({\n        Value: prototype,\n        Writable: Value.true,\n        Enumerable: Value.false,\n        Configurable: Value.false,\n      }),\n    )" + ' returned an abrupt completion');
     /* c8 ignore if */
@@ -20556,7 +20556,7 @@ function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpression, n
   }
   // 1. If name is not present, set name to "".
   if (name === undefined) {
-    name = _Value('');
+    name = Value('');
   }
   // 2. Let scope be the LexicalEnvironment of the running execution context.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
@@ -20577,11 +20577,11 @@ function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpression, n
   // 7. Let prototype be ! OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
   const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%'));
   // 8. Perform ! DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-  let _temp4 = DefinePropertyOrThrow(closure, _Value('prototype'), _Descriptor({
+  let _temp4 = DefinePropertyOrThrow(closure, Value('prototype'), _Descriptor({
     Value: prototype,
-    Writable: _Value.true,
-    Enumerable: _Value.false,
-    Configurable: _Value.false
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.false
   }));
   Assert(!(_temp4 instanceof AbruptCompletion), "DefinePropertyOrThrow(\n    closure,\n    Value('prototype'),\n    Descriptor({\n      Value: prototype,\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.false,\n    }),\n  )" + ' returned an abrupt completion');
   /* c8 ignore if */
@@ -20646,7 +20646,7 @@ class ResolvedBindingRecord {
     BindingName
   }) {
     Assert(Module instanceof AbstractModuleRecord, "Module instanceof AbstractModuleRecord");
-    Assert(BindingName === 'namespace' || BindingName instanceof StringValue, "BindingName === 'namespace' || BindingName instanceof JSStringValue");
+    Assert(BindingName === 'namespace' || BindingName instanceof JSStringValue, "BindingName === 'namespace' || BindingName instanceof JSStringValue");
     this.Module = Module;
     this.BindingName = BindingName;
   }
@@ -20708,7 +20708,7 @@ class CyclicModuleRecord extends AbstractModuleRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-LoadRequestedModules */
-  LoadRequestedModules(hostDefined = _Value.undefined) {
+  LoadRequestedModules(hostDefined = Value.undefined) {
     const module = this;
 
     // 2. Let pc be ! NewPromiseCapability(%Promise%).
@@ -20773,7 +20773,7 @@ class CyclicModuleRecord extends AbstractModuleRecord {
       module = GetAsyncCycleRoot(module);
     }
     // (*TopLevelAwait) 4. If module.[[TopLevelCapability]] is not undefined, then
-    if (module.TopLevelCapability !== _Value.undefined) {
+    if (module.TopLevelCapability !== Value.undefined) {
       // a. Return module.[[TopLevelCapability]].[[Promise]].
       return module.TopLevelCapability.Promise;
     }
@@ -20806,7 +20806,7 @@ class CyclicModuleRecord extends AbstractModuleRecord {
       Assert(module.Status === 'evaluated' && module.EvaluationError === result, "module.Status === 'evaluated' && module.EvaluationError === result");
       // c. Return result.
       // c. (*TopLevelAwait) Perform ! Call(capability.[[Reject]], undefined, «result.[[Value]]»).
-      let _temp3 = Call(capability.Reject, _Value.undefined, [result.Value]);
+      let _temp3 = Call(capability.Reject, Value.undefined, [result.Value]);
       Assert(!(_temp3 instanceof AbruptCompletion), "Call(capability.Reject, Value.undefined, [result.Value])" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp3 instanceof Completion) {
@@ -20817,10 +20817,10 @@ class CyclicModuleRecord extends AbstractModuleRecord {
       // a. Assert: module.[[Status]] is evaluating-async or evaluated.
       Assert(module.Status === 'evaluating-async' || module.Status === 'evaluated', "module.Status === 'evaluating-async' || module.Status === 'evaluated'");
       // b. Assert: module.[[EvaluationError]] is undefined.
-      Assert(module.EvaluationError === _Value.undefined, "module.EvaluationError === Value.undefined");
+      Assert(module.EvaluationError === Value.undefined, "module.EvaluationError === Value.undefined");
       // c. If module.[[AsyncEvaluating]] is false, then
-      if (module.AsyncEvaluating === _Value.false) {
-        let _temp4 = Call(capability.Resolve, _Value.undefined, [_Value.undefined]);
+      if (module.AsyncEvaluating === Value.false) {
+        let _temp4 = Call(capability.Resolve, Value.undefined, [Value.undefined]);
         Assert(!(_temp4 instanceof AbruptCompletion), "Call(capability.Resolve, Value.undefined, [Value.undefined])" + ' returned an abrupt completion');
         /* c8 ignore if */
         if (_temp4 instanceof Completion) {
@@ -20903,7 +20903,7 @@ class SourceTextModuleRecord extends CyclicModuleRecord {
       // c. For each element n of starNames, do
       for (const n of starNames) {
         // i. If SameValue(n, "default") is false, then
-        if (SameValue(n, _Value('default')) === _Value.false) {
+        if (SameValue(n, Value('default')) === Value.false) {
           // 1. If n is not an element of exportedNames, then
           if (!exportedNames.includes(n)) {
             // a. Append n to exportedNames.
@@ -20928,7 +20928,7 @@ class SourceTextModuleRecord extends CyclicModuleRecord {
     // 3. For each Record { [[Module]], [[ExportName]] } r in resolveSet, do
     for (const r of resolveSet) {
       // a. If module and r.[[Module]] are the same Module Record and SameValue(exportName, r.[[ExportName]]) is true, then
-      if (module === r.Module && SameValue(exportName, r.ExportName) === _Value.true) {
+      if (module === r.Module && SameValue(exportName, r.ExportName) === Value.true) {
         // i. Assert: This is a circular import request.
         // ii. Return null.
         return null;
@@ -20942,7 +20942,7 @@ class SourceTextModuleRecord extends CyclicModuleRecord {
     // 5. For each ExportEntry Record e in module.[[LocalExportEntries]], do
     for (const e of module.LocalExportEntries) {
       // a. If SameValue(exportName, e.[[ExportName]]) is true, then
-      if (SameValue(exportName, e.ExportName) === _Value.true) {
+      if (SameValue(exportName, e.ExportName) === Value.true) {
         // i. Assert: module provides the direct binding for this export.
         // ii. Return ResolvedBinding Record { [[Module]]: module, [[BindingName]]: e.[[LocalName]] }.
         return new ResolvedBindingRecord({
@@ -20954,7 +20954,7 @@ class SourceTextModuleRecord extends CyclicModuleRecord {
     // 6. For each ExportEntry Record e in module.[[IndirectExportEntries]], do
     for (const e of module.IndirectExportEntries) {
       // a. If SameValue(exportName, e.[[ExportName]]) is true, then
-      if (SameValue(exportName, e.ExportName) === _Value.true) {
+      if (SameValue(exportName, e.ExportName) === Value.true) {
         // i. Let importedModule be GetImportedModule(module, e.[[ModuleRequest]]).
         const importedModule = GetImportedModule(module, e.ModuleRequest);
         // ii. If e.[[ImportName]] is ~all~, then
@@ -20974,7 +20974,7 @@ class SourceTextModuleRecord extends CyclicModuleRecord {
       }
     }
     // 7. If SameValue(exportName, "default") is true, then
-    if (SameValue(exportName, _Value('default')) === _Value.true) {
+    if (SameValue(exportName, Value('default')) === Value.true) {
       // a. Assert: A default export was not explicitly defined by this module.
       // b. Return null.
       return null;
@@ -21003,7 +21003,7 @@ class SourceTextModuleRecord extends CyclicModuleRecord {
           // c. Else,
           // 1. Assert: There is more than one * import that includes the requested name.
           // 2. If resolution.[[Module]] and starResolution.[[Module]] are not the same Module Record or SameValue(resolution.[[BindingName]], starResolution.[[BindingName]]) is false, return "ambiguous".
-          if (resolution.Module !== starResolution.Module || SameValue(resolution.BindingName, starResolution.BindingName) === _Value.false) {
+          if (resolution.Module !== starResolution.Module || SameValue(resolution.BindingName, starResolution.BindingName) === Value.false) {
             return 'ambiguous';
           }
         }
@@ -21031,7 +21031,7 @@ class SourceTextModuleRecord extends CyclicModuleRecord {
     // 3. Let realm be module.[[Realm]].
     const realm = module.Realm;
     // 4. Assert: realm is not undefined.
-    Assert(realm !== _Value.undefined, "realm !== Value.undefined");
+    Assert(realm !== Value.undefined, "realm !== Value.undefined");
     // 5. Let env be NewModuleEnvironment(realm.[[GlobalEnv]]).
     const env = NewModuleEnvironment(realm.GlobalEnv);
     // 6. Set module.[[Environment]] to env.
@@ -21045,7 +21045,7 @@ class SourceTextModuleRecord extends CyclicModuleRecord {
         // i. Let namespace be GetModuleNamespace(importedModule).
         const namespace = GetModuleNamespace(importedModule);
         // ii. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
-        let _temp5 = env.CreateImmutableBinding(ie.LocalName, _Value.true);
+        let _temp5 = env.CreateImmutableBinding(ie.LocalName, Value.true);
         Assert(!(_temp5 instanceof AbruptCompletion), "env.CreateImmutableBinding(ie.LocalName, Value.true)" + ' returned an abrupt completion');
         /* c8 ignore if */
         if (_temp5 instanceof Completion) {
@@ -21066,7 +21066,7 @@ class SourceTextModuleRecord extends CyclicModuleRecord {
           // 1. Let namespace be GetModuleNamespace(resolution.[[Module]]).
           const namespace = GetModuleNamespace(resolution.Module);
           // 2. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
-          let _temp6 = env.CreateImmutableBinding(ie.LocalName, _Value.true);
+          let _temp6 = env.CreateImmutableBinding(ie.LocalName, Value.true);
           Assert(!(_temp6 instanceof AbruptCompletion), "env.CreateImmutableBinding(ie.LocalName, Value.true)" + ' returned an abrupt completion');
           /* c8 ignore if */
           if (_temp6 instanceof Completion) {
@@ -21084,9 +21084,9 @@ class SourceTextModuleRecord extends CyclicModuleRecord {
     // 8. Let moduleContext be a new ECMAScript code execution context.
     const moduleContext = new ExecutionContext();
     // 9. Set the Function of moduleContext to null.
-    moduleContext.Function = _Value.null;
+    moduleContext.Function = Value.null;
     // 10. Assert: module.[[Realm]] is not undefined.
-    Assert(module.Realm !== _Value.undefined, "module.Realm !== Value.undefined");
+    Assert(module.Realm !== Value.undefined, "module.Realm !== Value.undefined");
     // 11. Set the Realm of moduleContext to module.[[Realm]].
     moduleContext.Realm = module.Realm;
     // 12. Set the ScriptOrModule of moduleContext to module.
@@ -21096,7 +21096,7 @@ class SourceTextModuleRecord extends CyclicModuleRecord {
     // 14. Set the LexicalEnvironment of moduleContext to module.[[Environment]].
     moduleContext.LexicalEnvironment = module.Environment;
     // 15. Set the PrivateEnvironment of moduleContext to null.
-    moduleContext.PrivateEnvironment = _Value.null;
+    moduleContext.PrivateEnvironment = Value.null;
     // 16. Set module.[[Context]] to moduleContext.
     module.Context = moduleContext;
     // 17. Push moduleContext onto the execution context stack; moduleContext is now the running execution context.
@@ -21113,14 +21113,14 @@ class SourceTextModuleRecord extends CyclicModuleRecord {
       for (const dn of BoundNames(d)) {
         // i. If dn is not an element of declaredVarNames, then
         if (!declaredVarNames.has(dn)) {
-          let _temp7 = env.CreateMutableBinding(dn, _Value.false);
+          let _temp7 = env.CreateMutableBinding(dn, Value.false);
           Assert(!(_temp7 instanceof AbruptCompletion), "env.CreateMutableBinding(dn, Value.false)" + ' returned an abrupt completion');
           /* c8 ignore if */
           if (_temp7 instanceof Completion) {
             _temp7 = _temp7.Value;
           }
           // 2. Call env.InitializeBinding(dn, undefined).
-          env.InitializeBinding(dn, _Value.undefined);
+          env.InitializeBinding(dn, Value.undefined);
           // 3. Append dn to declaredVarNames.
           declaredVarNames.add(dn);
         }
@@ -21134,7 +21134,7 @@ class SourceTextModuleRecord extends CyclicModuleRecord {
       for (const dn of BoundNames(d)) {
         // i. If IsConstantDeclaration of d is true, then
         if (IsConstantDeclaration(d)) {
-          let _temp8 = env.CreateImmutableBinding(dn, _Value.true);
+          let _temp8 = env.CreateImmutableBinding(dn, Value.true);
           /* c8 ignore if */
           if (_temp8 instanceof AbruptCompletion) {
             return _temp8;
@@ -21144,7 +21144,7 @@ class SourceTextModuleRecord extends CyclicModuleRecord {
             _temp8 = _temp8.Value;
           }
         } else {
-          let _temp9 = env.CreateMutableBinding(dn, _Value.false);
+          let _temp9 = env.CreateMutableBinding(dn, Value.false);
           /* c8 ignore if */
           if (_temp9 instanceof AbruptCompletion) {
             return _temp9;
@@ -21157,7 +21157,7 @@ class SourceTextModuleRecord extends CyclicModuleRecord {
         // iii. If d is a FunctionDeclaration, a GeneratorDeclaration, an AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration, then
         if (d.type === 'FunctionDeclaration' || d.type === 'GeneratorDeclaration' || d.type === 'AsyncFunctionDeclaration' || d.type === 'AsyncGeneratorDeclaration') {
           // 1. Let fo be InstantiateFunctionObject of d with argument env.
-          const fo = InstantiateFunctionObject(d, env, _Value.null);
+          const fo = InstantiateFunctionObject(d, env, Value.null);
           // 2. Call env.InitializeBinding(dn, fo).
           env.InitializeBinding(dn, fo);
         }
@@ -21176,7 +21176,7 @@ class SourceTextModuleRecord extends CyclicModuleRecord {
     // 2. Suspend the currently running execution context.
     // 3. Let moduleContext be module.[[Context]].
     const moduleContext = module.Context;
-    if (module.Async === _Value.false) {
+    if (module.Async === Value.false) {
       Assert(capability === undefined, "capability === undefined");
       // 4. Push moduleContext onto the execution context stack; moduleContext is now the running execution context.
       surroundingAgent.executionContextStack.push(moduleContext);
@@ -21199,7 +21199,7 @@ class SourceTextModuleRecord extends CyclicModuleRecord {
         _temp10 = _temp10.Value;
       }
       // c. Return.
-      return _Value.undefined;
+      return Value.undefined;
     }
   }
   mark(m) {
@@ -21232,7 +21232,7 @@ class SyntheticModuleRecord extends AbstractModuleRecord {
     // 1. If module.[[ExportNames]] does not contain exportName, return null.
     // 2. Return ResolvedBinding Record { [[Module]]: module, [[BindingName]]: exportName }.
     for (const e of module.ExportNames) {
-      if (SameValue(e, exportName) === _Value.true) {
+      if (SameValue(e, exportName) === Value.true) {
         return new ResolvedBindingRecord({
           Module: module,
           BindingName: exportName
@@ -21248,21 +21248,21 @@ class SyntheticModuleRecord extends AbstractModuleRecord {
     // 1. Let realm be module.[[Realm]].
     const realm = module.Realm;
     // 2. Assert: realm is not undefined.
-    Assert(realm !== _Value.undefined, "realm !== Value.undefined");
+    Assert(realm !== Value.undefined, "realm !== Value.undefined");
     // 3. Let env be NewModuleEnvironment(realm.[[GlobalEnv]]).
     const env = NewModuleEnvironment(realm.GlobalEnv);
     // 4. Set module.[[Environment]] to env.
     module.Environment = env;
     // 5. For each exportName in module.[[ExportNames]],
     for (const exportName of module.ExportNames) {
-      let _temp11 = env.CreateMutableBinding(exportName, _Value.false);
+      let _temp11 = env.CreateMutableBinding(exportName, Value.false);
       Assert(!(_temp11 instanceof AbruptCompletion), "env.CreateMutableBinding(exportName, Value.false)" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp11 instanceof Completion) {
         _temp11 = _temp11.Value;
       }
       // b. Perform ! env.InitializeBinding(exportName, undefined).
-      let _temp12 = env.InitializeBinding(exportName, _Value.undefined);
+      let _temp12 = env.InitializeBinding(exportName, Value.undefined);
       Assert(!(_temp12 instanceof AbruptCompletion), "env.InitializeBinding(exportName, Value.undefined)" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp12 instanceof Completion) {
@@ -21270,7 +21270,7 @@ class SyntheticModuleRecord extends AbstractModuleRecord {
       }
     }
     // 8. Return undefined.
-    return _Value.undefined;
+    return Value.undefined;
   }
 
   /** https://tc39.es/ecma262/#sec-synthetic-module-record-evaluate */
@@ -21280,7 +21280,7 @@ class SyntheticModuleRecord extends AbstractModuleRecord {
     // 2. Let moduleContext be a new ECMAScript code execution context.
     const moduleContext = new ExecutionContext();
     // 3. Set the Function of moduleContext to null.
-    moduleContext.Function = _Value.null;
+    moduleContext.Function = Value.null;
     // 4. Set the Realm of moduleContext to module.[[Realm]].
     moduleContext.Realm = module.Realm;
     // 5. Set the ScriptOrModule of moduleContext to module.
@@ -21289,7 +21289,7 @@ class SyntheticModuleRecord extends AbstractModuleRecord {
     moduleContext.VariableEnvironment = module.Environment;
     // 7. Set the LexicalEnvironment of moduleContext to module.[[Environment]].
     moduleContext.LexicalEnvironment = module.Environment;
-    moduleContext.PrivateEnvironment = _Value.null;
+    moduleContext.PrivateEnvironment = Value.null;
     // 8. Push moduleContext on to the execution context stack; moduleContext is now the running execution context.
     surroundingAgent.executionContextStack.push(moduleContext);
     // 9. Let result be the result of performing module.[[EvaluationSteps]](module).
@@ -21305,7 +21305,7 @@ class SyntheticModuleRecord extends AbstractModuleRecord {
   SetSyntheticExport(name, value) {
     const module = this;
     // 1. Return ? module.[[Environment]].SetMutableBinding(name, value, true).
-    return module.Environment.SetMutableBinding(name, value, _Value.true);
+    return module.Environment.SetMutableBinding(name, value, Value.true);
   }
 }
 
@@ -21329,10 +21329,10 @@ class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     const envRec = this;
     // 2. If envRec has a binding for the name that is the value of N, return true.
     if (envRec.bindings.has(N)) {
-      return _Value.true;
+      return Value.true;
     }
     // 3. Return false.
-    return _Value.false;
+    return Value.false;
   }
 
   /** https://tc39.es/ecma262/#sec-declarative-environment-records-createmutablebinding-n-d */
@@ -21349,7 +21349,7 @@ class DeclarativeEnvironmentRecord extends EnvironmentRecord {
       initialized: false,
       mutable: true,
       strict: undefined,
-      deletable: D === _Value.true,
+      deletable: D === Value.true,
       value: undefined,
       mark(m) {
         m(this.value);
@@ -21371,7 +21371,7 @@ class DeclarativeEnvironmentRecord extends EnvironmentRecord {
       indirect: false,
       initialized: false,
       mutable: false,
-      strict: S === _Value.true,
+      strict: S === Value.true,
       deletable: false,
       value: undefined,
       mark(m) {
@@ -21405,11 +21405,11 @@ class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     // 2. If envRec does not have a binding for N, then
     if (!envRec.bindings.has(N)) {
       // a. If S is true, throw a ReferenceError exception.
-      if (S === _Value.true) {
+      if (S === Value.true) {
         return surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
       }
       // b. Perform envRec.CreateMutableBinding(N, true).
-      envRec.CreateMutableBinding(N, _Value.true);
+      envRec.CreateMutableBinding(N, Value.true);
       // c. Perform envRec.InitializeBinding(N, V).
       envRec.InitializeBinding(N, V);
       // d. Return NormalCompletion(empty).
@@ -21418,7 +21418,7 @@ class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     const binding = this.bindings.get(N);
     // 3. If the binding for N in envRec is a strict binding, set S to true.
     if (binding.strict === true) {
-      S = _Value.true;
+      S = Value.true;
     }
     // 4. If the binding for N in envRec has not yet been initialized, throw a ReferenceError exception.
     if (binding.initialized === false) {
@@ -21430,7 +21430,7 @@ class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     } else {
       // a. Assert: This is an attempt to change the value of an immutable binding.
       // b. If S is true, throw a TypeError exception.
-      if (S === _Value.true) {
+      if (S === Value.true) {
         return surroundingAgent.Throw('TypeError', 'AssignmentToConstant', N);
       }
     }
@@ -21462,30 +21462,30 @@ class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     Assert(binding !== undefined, "binding !== undefined");
     // 3. If the binding for N in envRec cannot be deleted, return false.
     if (binding.deletable === false) {
-      return _Value.false;
+      return Value.false;
     }
     // 4. Remove the binding for N from envRec.
     envRec.bindings.delete(N);
     // 5. Return true.
-    return _Value.true;
+    return Value.true;
   }
 
   /** https://tc39.es/ecma262/#sec-declarative-environment-records-hasthisbinding */
   HasThisBinding() {
     // 1. Return false.
-    return _Value.false;
+    return Value.false;
   }
 
   /** https://tc39.es/ecma262/#sec-declarative-environment-records-hassuperbinding */
   HasSuperBinding() {
     // 1. Return false.
-    return _Value.false;
+    return Value.false;
   }
 
   /** https://tc39.es/ecma262/#sec-declarative-environment-records-withbaseobject */
   WithBaseObject() {
     // 1. Return undefined.
-    return _Value.undefined;
+    return Value.undefined;
   }
 
   // NON-SPEC
@@ -21517,12 +21517,12 @@ class ObjectEnvironmentRecord extends EnvironmentRecord {
     }
     const foundBinding = _temp;
     // 4. If foundBinding is false, return false.
-    if (foundBinding === _Value.false) {
-      return _Value.false;
+    if (foundBinding === Value.false) {
+      return Value.false;
     }
     // 5. If the IsWithEnvironment flag of envRec i s false, return true.
-    if (envRec.IsWithEnvironment === _Value.false) {
-      return _Value.true;
+    if (envRec.IsWithEnvironment === Value.false) {
+      return Value.true;
     }
     // 6. Let unscopables be ? Get(bindings, @@unscopables).
     let _temp2 = Get(bindings, wellKnownSymbols.unscopables);
@@ -21555,12 +21555,12 @@ class ObjectEnvironmentRecord extends EnvironmentRecord {
       // a. Let blocked be ! ToBoolean(? Get(unscopables, N)).
       const blocked = _temp3;
       // b. If blocked is true, return false.
-      if (blocked === _Value.true) {
-        return _Value.false;
+      if (blocked === Value.true) {
+        return Value.false;
       }
     }
     // 8. Return true.
-    return _Value.true;
+    return Value.true;
   }
 
   /** https://tc39.es/ecma262/#sec-object-environment-records-createmutablebinding-n-d */
@@ -21571,9 +21571,9 @@ class ObjectEnvironmentRecord extends EnvironmentRecord {
     const bindings = envRec.BindingObject;
     // 3. Return ? DefinePropertyOrThrow(bindings, N, PropertyDescriptor { [[Value]]: undefined, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: D }).
     return DefinePropertyOrThrow(bindings, N, _Descriptor({
-      Value: _Value.undefined,
-      Writable: _Value.true,
-      Enumerable: _Value.true,
+      Value: Value.undefined,
+      Writable: Value.true,
+      Enumerable: Value.true,
       Configurable: D
     }));
   }
@@ -21590,7 +21590,7 @@ class ObjectEnvironmentRecord extends EnvironmentRecord {
     // 2. Assert: envRec must have an uninitialized binding for N.
     // 3. Record that the binding for N in envRec has been initialized.
     // 4. Return ? envRec.SetMutableBinding(N, V, false).
-    return envRec.SetMutableBinding(N, V, _Value.false);
+    return envRec.SetMutableBinding(N, V, Value.false);
   }
 
   /** https://tc39.es/ecma262/#sec-object-environment-records-setmutablebinding-n-v-s */
@@ -21611,7 +21611,7 @@ class ObjectEnvironmentRecord extends EnvironmentRecord {
     }
     const stillExists = _temp5;
     // 4. If stillExists is false and S is true, throw a ReferenceError exception.
-    if (stillExists === _Value.false && S === _Value.true) {
+    if (stillExists === Value.false && S === Value.true) {
       return surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
     }
     // 5. Return ? Set(bindings, N, V, S).
@@ -21636,10 +21636,10 @@ class ObjectEnvironmentRecord extends EnvironmentRecord {
     }
     const value = _temp6;
     // 4. If value is false, then
-    if (value === _Value.false) {
+    if (value === Value.false) {
       // a. If S is false, return the value undefined; otherwise throw a ReferenceError exception.
-      if (S === _Value.false) {
-        return _Value.undefined;
+      if (S === Value.false) {
+        return Value.undefined;
       } else {
         return surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
       }
@@ -21661,13 +21661,13 @@ class ObjectEnvironmentRecord extends EnvironmentRecord {
   /** https://tc39.es/ecma262/#sec-object-environment-records-hasthisbinding */
   HasThisBinding() {
     // 1. Return false.
-    return _Value.false;
+    return Value.false;
   }
 
   /** https://tc39.es/ecma262/#sec-object-environment-records-hassuperbinding */
   HasSuperBinding() {
     // 1. Return falase.
-    return _Value.false;
+    return Value.false;
   }
 
   /** https://tc39.es/ecma262/#sec-object-environment-records-withbaseobject */
@@ -21675,11 +21675,11 @@ class ObjectEnvironmentRecord extends EnvironmentRecord {
     // 1. Let envRec be the object Environment Record for which the method was invoked.
     const envRec = this;
     // 2. If the IsWithEnvironment flag of envRec is true, return the binding object for envRec.
-    if (envRec.IsWithEnvironment === _Value.true) {
+    if (envRec.IsWithEnvironment === Value.true) {
       return envRec.BindingObject;
     }
     // 3. Otherwise, return undefined.
-    return _Value.undefined;
+    return Value.undefined;
   }
 
   // NON-SPEC
@@ -21719,9 +21719,9 @@ class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
     const envRec = this;
     // 2. If envRec.[[ThisBindingStatus]] is lexical, return false; otherwise, return true.
     if (envRec.ThisBindingStatus === 'lexical') {
-      return _Value.false;
+      return Value.false;
     } else {
-      return _Value.true;
+      return Value.true;
     }
   }
 
@@ -21730,13 +21730,13 @@ class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
     const envRec = this;
     // 1. If envRec.[[ThisBindingStatus]] is lexical, return false.
     if (envRec.ThisBindingStatus === 'lexical') {
-      return _Value.false;
+      return Value.false;
     }
     // 2. If envRec.[[FunctionObject]].[[HomeObject]] has the value undefined, return false; otherwise, return true.
-    if (envRec.FunctionObject.HomeObject === _Value.undefined) {
-      return _Value.false;
+    if (envRec.FunctionObject.HomeObject === Value.undefined) {
+      return Value.false;
     } else {
-      return _Value.true;
+      return Value.true;
     }
   }
 
@@ -21760,8 +21760,8 @@ class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
     // 1. Let home be envRec.[[FunctionObject]].[[HomeObject]].
     const home = envRec.FunctionObject.HomeObject;
     // 2. If home has the value undefined, return undefined.
-    if (home === _Value.undefined) {
-      return _Value.undefined;
+    if (home === Value.undefined) {
+      return Value.undefined;
     }
     // 3. Assert: Type(home) is Object.
     Assert(home instanceof ObjectValue, "home instanceof ObjectValue");
@@ -21790,8 +21790,8 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     // 2. Let DclRec be envRec.[[DeclarativeRecord]].
     const DclRec = envRec.DeclarativeRecord;
     // 3. If DclRec.HasBinding(N) is true, return true.
-    if (DclRec.HasBinding(N) === _Value.true) {
-      return _Value.true;
+    if (DclRec.HasBinding(N) === Value.true) {
+      return Value.true;
     }
     // 4. If DclRec.HasBinding(N) is true, return true.
     const ObjRec = envRec.ObjectRecord;
@@ -21806,7 +21806,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     // 2. Let DclRec be envRec.[[DeclarativeRecord]].
     const DclRec = envRec.DeclarativeRecord;
     // 3. If DclRec.HasBinding(N) is true, throw a TypeError exception.
-    if (DclRec.HasBinding(N) === _Value.true) {
+    if (DclRec.HasBinding(N) === Value.true) {
       return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', N);
     }
     // 4. Return DclRec.CreateMutableBinding(N, D).
@@ -21820,7 +21820,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     // 2. Let DclRec be envRec.[[DeclarativeRecord]].
     const DclRec = envRec.DeclarativeRecord;
     // 3. If DclRec.HasBinding(N) is true, throw a TypeError exception.
-    if (DclRec.HasBinding(N) === _Value.true) {
+    if (DclRec.HasBinding(N) === Value.true) {
       return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', N);
     }
     // Return DclRec.CreateImmutableBinding(N, S).
@@ -21834,7 +21834,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     // 2. Let DclRec be envRec.[[DeclarativeRecord]].
     const DclRec = envRec.DeclarativeRecord;
     // 3. If DclRec.HasBinding(N) is true, then
-    if (DclRec.HasBinding(N) === _Value.true) {
+    if (DclRec.HasBinding(N) === Value.true) {
       // a. Return DclRec.InitializeBinding(N, V).
       return DclRec.InitializeBinding(N, V);
     }
@@ -21852,7 +21852,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     // 2. Let DclRec be envRec.[[DeclarativeRecord]].
     const DclRec = envRec.DeclarativeRecord;
     // 3. If DclRec.HasBinding(N) is true, then
-    if (DclRec.HasBinding(N) === _Value.true) {
+    if (DclRec.HasBinding(N) === Value.true) {
       // a. Return DclRec.SetMutableBinding(N, V, S).
       return DclRec.SetMutableBinding(N, V, S);
     }
@@ -21869,7 +21869,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     // 2. Let DclRec be envRec.[[DeclarativeRecord]].
     const DclRec = envRec.DeclarativeRecord;
     // 3. If DclRec.HasBinding(N) is true, then
-    if (DclRec.HasBinding(N) === _Value.true) {
+    if (DclRec.HasBinding(N) === Value.true) {
       // a. Return DclRec.GetBindingValue(N, S).
       return DclRec.GetBindingValue(N, S);
     }
@@ -21886,7 +21886,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     // 2. Let DclRec be envRec.[[DeclarativeRecord]].
     const DclRec = this.DeclarativeRecord;
     // 3. Let DclRec be envRec.[[DeclarativeRecord]].
-    if (DclRec.HasBinding(N) === _Value.true) {
+    if (DclRec.HasBinding(N) === Value.true) {
       // a. Return DclRec.DeleteBinding(N).
       return DclRec.DeleteBinding(N);
     }
@@ -21906,7 +21906,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     }
     const existingProp = _temp7;
     // 7. If existingProp is true, then
-    if (existingProp === _Value.true) {
+    if (existingProp === Value.true) {
       let _temp8 = ObjRec.DeleteBinding(N);
       /* c8 ignore if */
       if (_temp8 instanceof AbruptCompletion) {
@@ -21919,7 +21919,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
       // a. Let status be ? ObjRec.DeleteBinding(N).
       const status = _temp8;
       // b. If status is true, then
-      if (status === _Value.true) {
+      if (status === Value.true) {
         // i. Let varNames be envRec.[[VarNames]].
         const varNames = envRec.VarNames;
         // ii. If N is an element of varNames, remove that element from the varNames.
@@ -21932,25 +21932,25 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
       return status;
     }
     // 8. Return true.
-    return _Value.true;
+    return Value.true;
   }
 
   /** https://tc39.es/ecma262/#sec-global-environment-records-hasthisbinding */
   HasThisBinding() {
     // Return true.
-    return _Value.true;
+    return Value.true;
   }
 
   /** https://tc39.es/ecma262/#sec-global-environment-records-hassuperbinding */
   HasSuperBinding() {
     // 1. Return false.
-    return _Value.false;
+    return Value.false;
   }
 
   /** https://tc39.es/ecma262/#sec-global-environment-records-withbaseobject */
   WithBaseObject() {
     // 1. Return undefined.
-    return _Value.undefined;
+    return Value.undefined;
   }
 
   /** https://tc39.es/ecma262/#sec-global-environment-records-getthisbinding */
@@ -21969,10 +21969,10 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     const varDeclaredNames = envRec.VarNames;
     // 3. If varDeclaredNames contains N, return true.
     if (varDeclaredNames.some(v => v.stringValue() === N.stringValue())) {
-      return _Value.true;
+      return Value.true;
     }
     // 4. Return false.
-    return _Value.false;
+    return Value.false;
   }
 
   /** https://tc39.es/ecma262/#sec-haslexicaldeclaration */
@@ -22005,15 +22005,15 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     }
     const existingProp = _temp9;
     // 5. If existingProp is undefined, return false.
-    if (existingProp === _Value.undefined) {
-      return _Value.false;
+    if (existingProp === Value.undefined) {
+      return Value.false;
     }
     // 6. If existingProp.[[Configurable]] is true, return false.
-    if (existingProp.Configurable === _Value.true) {
-      return _Value.false;
+    if (existingProp.Configurable === Value.true) {
+      return Value.false;
     }
     // Return true.
-    return _Value.true;
+    return Value.true;
   }
 
   /** https://tc39.es/ecma262/#sec-candeclareglobalvar */
@@ -22036,8 +22036,8 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     }
     const hasProperty = _temp10;
     // 5. If hasProperty is true, return true.
-    if (hasProperty === _Value.true) {
-      return _Value.true;
+    if (hasProperty === Value.true) {
+      return Value.true;
     }
     // 6. Return ? IsExtensible(globalObject).
     return IsExtensible(globalObject);
@@ -22063,20 +22063,20 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     }
     const existingProp = _temp11;
     // 5. If existingProp is undefined, return ? IsExtensible(globalObject).
-    if (existingProp === _Value.undefined) {
+    if (existingProp === Value.undefined) {
       return IsExtensible(globalObject);
     }
     // 6. If existingProp.[[Configurable]] is true, return true.
-    if (existingProp.Configurable === _Value.true) {
-      return _Value.true;
+    if (existingProp.Configurable === Value.true) {
+      return Value.true;
     }
     // 7. If IsDataDescriptor(existingProp) is true and existingProp has attribute values
     //    { [[Writable]]: true, [[Enumerable]]: true }, return true.
-    if (IsDataDescriptor(existingProp) === true && existingProp.Writable === _Value.true && existingProp.Enumerable === _Value.true) {
-      return _Value.true;
+    if (IsDataDescriptor(existingProp) === true && existingProp.Writable === Value.true && existingProp.Enumerable === Value.true) {
+      return Value.true;
     }
     // 8. Return false.
-    return _Value.false;
+    return Value.false;
   }
 
   /** https://tc39.es/ecma262/#sec-createglobalvarbinding */
@@ -22110,7 +22110,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     }
     const extensible = _temp13;
     // 6. If hasProperty is false and extensible is true, then
-    if (hasProperty === _Value.false && extensible === _Value.true) {
+    if (hasProperty === Value.false && extensible === Value.true) {
       let _temp14 = ObjRec.CreateMutableBinding(N, D);
       /* c8 ignore if */
       if (_temp14 instanceof AbruptCompletion) {
@@ -22121,7 +22121,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
         _temp14 = _temp14.Value;
       }
       // b. Perform ? ObjRec.InitializeBinding(N, undefined).
-      let _temp15 = ObjRec.InitializeBinding(N, _Value.undefined);
+      let _temp15 = ObjRec.InitializeBinding(N, Value.undefined);
       /* c8 ignore if */
       if (_temp15 instanceof AbruptCompletion) {
         return _temp15;
@@ -22163,12 +22163,12 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     const existingProp = _temp16;
     // 5. If existingProp is undefined or existingProp.[[Configurable]] is true, then
     let desc;
-    if (existingProp === _Value.undefined || existingProp.Configurable === _Value.true) {
+    if (existingProp === Value.undefined || existingProp.Configurable === Value.true) {
       // a. Let desc be the PropertyDescriptor { [[Value]]: V, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: D }.
       desc = _Descriptor({
         Value: V,
-        Writable: _Value.true,
-        Enumerable: _Value.true,
+        Writable: Value.true,
+        Enumerable: Value.true,
         Configurable: D
       });
     } else {
@@ -22189,7 +22189,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     }
     // 8. Record that the binding for N in ObjRec has been initialized.
     // 9. Perform ? Set(globalObject, N, V, false).
-    let _temp18 = Set$1(globalObject, N, V, _Value.false);
+    let _temp18 = Set$1(globalObject, N, V, Value.false);
     /* c8 ignore if */
     if (_temp18 instanceof AbruptCompletion) {
       return _temp18;
@@ -22220,7 +22220,7 @@ class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
   /** https://tc39.es/ecma262/#sec-module-environment-records-getbindingvalue-n-s */
   GetBindingValue(N, S) {
     // 1. Assert: S is true.
-    Assert(S === _Value.true, "S === Value.true");
+    Assert(S === Value.true, "S === Value.true");
     // 2. Let envRec be the module Environment Record for which the method was invoked.
     const envRec = this;
     // 3. Assert: envRec has a binding for N.
@@ -22233,11 +22233,11 @@ class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
       // b.Let targetEnv be M.[[Environment]].
       const targetEnv = M.Environment;
       // c. If targetEnv is undefined, throw a ReferenceError exception.
-      if (targetEnv === _Value.undefined) {
+      if (targetEnv === Value.undefined) {
         return surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
       }
       // d. Return ? targetEnv.GetBindingValue(N2, true).
-      return targetEnv.GetBindingValue(N2, _Value.true);
+      return targetEnv.GetBindingValue(N2, Value.true);
     }
     // 5. If the binding for N in envRec is an uninitialized binding, throw a ReferenceError exception.
     if (binding.initialized === false) {
@@ -22255,13 +22255,13 @@ class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
   /** https://tc39.es/ecma262/#sec-module-environment-records-hasthisbinding */
   HasThisBinding() {
     // Return true.
-    return _Value.true;
+    return Value.true;
   }
 
   /** https://tc39.es/ecma262/#sec-module-environment-records-getthisbinding */
   GetThisBinding() {
     // Return undefined.
-    return _Value.undefined;
+    return Value.undefined;
   }
 
   /** https://tc39.es/ecma262/#sec-createimportbinding */
@@ -22269,7 +22269,7 @@ class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
     // 1. Let envRec be the module Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Assert: envRec does not already have a binding for N.
-    Assert(envRec.HasBinding(N) === _Value.false, "envRec.HasBinding(N) === Value.false");
+    Assert(envRec.HasBinding(N) === Value.false, "envRec.HasBinding(N) === Value.false");
     // 3. Assert: M is a Module Record.
     Assert(M instanceof AbstractModuleRecord, "M instanceof AbstractModuleRecord");
     // 4. Assert: When M.[[Environment]] is instantiated it will have a direct binding for N2.
@@ -22291,7 +22291,7 @@ class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
 /** https://tc39.es/ecma262/#sec-getidentifierreference */
 function GetIdentifierReference(env, name, strict) {
   // 1. If lex is the value null, then
-  if (env === _Value.null) {
+  if (env === Value.null) {
     // a. Return the Reference Record { [[Base]]: unresolvable, [[ReferencedName]]: name, [[Strict]]: strict, [[ThisValue]]: empty }.
     return new ReferenceRecord({
       Base: 'unresolvable',
@@ -22312,7 +22312,7 @@ function GetIdentifierReference(env, name, strict) {
   }
   const exists = _temp19;
   // 3. If exists is true, then
-  if (exists === _Value.true) {
+  if (exists === Value.true) {
     // a. Return the Reference Record { [[Base]]: env, [[ReferencedName]]: name, [[Strict]]: strict, [[ThisValue]]: empty }.
     return new ReferenceRecord({
       Base: env,
@@ -22380,9 +22380,9 @@ function NewFunctionEnvironment(F, newTarget) {
 /** https://tc39.es/ecma262/#sec-newglobalenvironment */
 function NewGlobalEnvironment(G, thisValue) {
   // 1. Let objRec be NewObjectEnvironment(G, false, null).
-  const objRec = NewObjectEnvironment(G, _Value.false, _Value.null);
+  const objRec = NewObjectEnvironment(G, Value.false, Value.null);
   // 2. Let dclRec be a new declarative Environment Record containing no bindings.
-  const dclRec = new DeclarativeEnvironmentRecord(_Value.null);
+  const dclRec = new DeclarativeEnvironmentRecord(Value.null);
   // 3. Let env be a new global Environment Record.
   const env = new GlobalEnvironmentRecord();
   // 4. Set env.[[ObjectRecord]] to objRec.
@@ -22394,7 +22394,7 @@ function NewGlobalEnvironment(G, thisValue) {
   // 7. Set env.[[VarNames]] to a new empty List.
   env.VarNames = [];
   // 8. Set env.[[OuterEnv]] to null.
-  env.OuterEnv = _Value.null;
+  env.OuterEnv = Value.null;
   // 9. Return env.
   return env;
 }
@@ -22433,157 +22433,205 @@ function NewPrivateEnvironment(outerPrivEnv) {
   });
 }
 
-var _initClass$1, _dec$1, _initClass2$1, _dec2$1;
+var _initClass2$1, _dec2$1;
+let createStringValue; // set by static block in StringValue for privileged access to constructor
+let createNumberValue; // set by static block in NumberValue for privileged access to constructor
+let createBigIntValue; // set by static block in BigIntValue for privileged access to constructor
 
-// @ts-expect-error callable class
-// @ts-expect-error callable class
-// @ts-expect-error callable class
-// @ts-expect-error callable class
-// @ts-expect-error callable class
-// @ts-expect-error callable class
-// TODO(ts): define a FunctionObjectValue type.
-// @ts-expect-error callable class
-let _Value;
-_dec$1 = callable((_target, _thisArg, [value]) => {
-  if (value === null) {
-    return _Value.null;
-  }
-  switch (typeof value) {
-    case 'undefined':
-      return _Value.undefined;
-    case 'string':
-      return new StringValue(value);
-    case 'number':
-      return new NumberValue(value);
-    case 'bigint':
-      return new BigIntValue(value);
-    case 'function':
-      return CreateBuiltinFunction(value, 0, _Value(''), []);
-    /*c8 ignore next*/default:
-      throw new OutOfRange$1('new Value', value);
-  }
-});
-// @ts-expect-error callable class
+class BaseValue {}
+
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types */
-new class extends _identity {
-  static {
-    class Value {
-      static {
-        [_Value, _initClass$1] = _applyDecs2203R(this, [], [_dec$1]).c;
-      }
-      /** @deprecated Use Value() instead of Value() */
-      constructor(value) {
-        if (new.target !== _Value) {
-          return this;
-        }
-        return _Value(value);
-      }
+
+/** https://tc39.es/ecma262/#sec-ecmascript-language-types */
+const Value = ((_initClass, _dec) => {
+  let _Value;
+  _dec = callable((_target, _thisArg, [value]) => {
+    if (value === null) {
+      return _Value.null;
+    } else if (value === undefined) {
+      return _Value.undefined;
+    } else if (value === true) {
+      return _Value.true;
+    } else if (value === false) {
+      return _Value.false;
+    }
+    switch (typeof value) {
+      case 'string':
+        return createStringValue(value);
+      case 'number':
+        return createNumberValue(value);
+      case 'bigint':
+        return createBigIntValue(value);
+      /*c8 ignore next*/default:
+        throw new OutOfRange$1('new Value', value);
+    }
+  });
+  class Value extends BaseValue {
+    static {
+      [_Value, _initClass] = _applyDecs2203R(this, [], [_dec]).c;
+    }
+    static {
+      _initClass();
     }
   }
-  constructor() {
-    super(_Value), _initClass$1();
-  }
-}();
-class PrimitiveValue extends _Value {}
+  return _Value;
+})();
+
+/** https://tc39.es/ecma262/#sec-ecmascript-language-types */
+
+/** https://tc39.es/ecma262/#sec-ecmascript-language-types */
+
+/** https://tc39.es/ecma262/#sec-ecmascript-language-types */
+const PrimitiveValue = (() => {
+  // NOTE: Using IIFE so that the class does not conflict with the type of the same name
+  // NOTE: Only using IIFE because TypeScript errors when `abstract` is used on class expressions
+  class PrimitiveValue extends Value {}
+  return PrimitiveValue;
+})();
+
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-undefined-type */
-class UndefinedValue extends PrimitiveValue {}
+class UndefinedValue extends PrimitiveValue {
+  // defined on prototype by static block
+  // defined on prototype by static block
+
+  constructor() {
+    // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
+    super();
+  }
+  static {
+    Object.defineProperty(this.prototype, 'type', {
+      value: 'Undefined'
+    });
+    Object.defineProperty(this.prototype, 'value', {
+      value: undefined
+    });
+    Object.defineProperty(Value, 'undefined', {
+      value: new this()
+    });
+  }
+}
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-null-type */
-class NullValue extends PrimitiveValue {}
+class NullValue extends PrimitiveValue {
+  // defined on prototype by static block
+  // defined on prototype by static block
+
+  constructor() {
+    // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
+    super();
+  }
+  static {
+    Object.defineProperty(this.prototype, 'type', {
+      value: 'Null'
+    });
+    Object.defineProperty(this.prototype, 'value', {
+      value: null
+    });
+    Object.defineProperty(Value, 'null', {
+      value: new this()
+    });
+  }
+}
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-boolean-type */
 class BooleanValue extends PrimitiveValue {
-  boolean;
-  constructor(v) {
+  // defined on prototype by static block
+  value;
+  constructor(value) {
     super();
-    this.boolean = v;
+    this.value = value;
   }
   booleanValue() {
-    return this.boolean;
+    return this.value;
   }
   [Symbol.for('nodejs.util.inspect.custom')]() {
-    return `Boolean { ${this.boolean} }`;
+    return `Boolean { ${this.value} }`;
+  }
+  static {
+    Object.defineProperty(this.prototype, 'type', {
+      value: 'Boolean'
+    });
+    Object.defineProperty(Value, 'true', {
+      value: new this(true)
+    });
+    Object.defineProperty(Value, 'false', {
+      value: new this(false)
+    });
   }
 }
-Object.defineProperties(_Value, {
-  undefined: {
-    value: new UndefinedValue(),
-    configurable: false,
-    writable: false
-  },
-  null: {
-    value: new NullValue(),
-    configurable: false,
-    writable: false
-  },
-  true: {
-    value: new BooleanValue(true),
-    configurable: false,
-    writable: false
-  },
-  false: {
-    value: new BooleanValue(false),
-    configurable: false,
-    writable: false
-  }
-});
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-string-type */
-class StringValue extends PrimitiveValue {
-  string;
-  constructor(string) {
+class JSStringValue extends PrimitiveValue {
+  // defined on prototype by static block
+  value;
+  constructor(value) {
     super();
-    this.string = string;
+    this.value = value;
   }
   stringValue() {
-    return this.string;
+    return this.value;
+  }
+  static {
+    Object.defineProperty(this.prototype, 'type', {
+      value: 'String'
+    });
+    createStringValue = value => new this(value);
   }
 }
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-symbol-type */
 class SymbolValue extends PrimitiveValue {
+  // defined on prototype by static block
   Description;
   constructor(Description) {
     super();
     this.Description = Description;
   }
+  static {
+    Object.defineProperty(this.prototype, 'type', {
+      value: 'Symbol'
+    });
+  }
 }
+
+/** https://tc39.es/ecma262/#sec-ecmascript-language-types-symbol-type */
 const wellKnownSymbols = {
-  asyncIterator: new SymbolValue(new StringValue('Symbol.asyncIterator')),
-  hasInstance: new SymbolValue(new StringValue('Symbol.hasInstance')),
-  isConcatSpreadable: new SymbolValue(new StringValue('Symbol.isConcatSpreadable')),
-  iterator: new SymbolValue(new StringValue('Symbol.iterator')),
-  match: new SymbolValue(new StringValue('Symbol.match')),
-  matchAll: new SymbolValue(new StringValue('Symbol.matchAll')),
-  replace: new SymbolValue(new StringValue('Symbol.replace')),
-  search: new SymbolValue(new StringValue('Symbol.search')),
-  species: new SymbolValue(new StringValue('Symbol.species')),
-  split: new SymbolValue(new StringValue('Symbol.split')),
-  toPrimitive: new SymbolValue(new StringValue('Symbol.toPrimitive')),
-  toStringTag: new SymbolValue(new StringValue('Symbol.toStringTag')),
-  unscopables: new SymbolValue(new StringValue('Symbol.unscopables'))
+  asyncIterator: new SymbolValue(Value('Symbol.asyncIterator')),
+  hasInstance: new SymbolValue(Value('Symbol.hasInstance')),
+  isConcatSpreadable: new SymbolValue(Value('Symbol.isConcatSpreadable')),
+  iterator: new SymbolValue(Value('Symbol.iterator')),
+  match: new SymbolValue(Value('Symbol.match')),
+  matchAll: new SymbolValue(Value('Symbol.matchAll')),
+  replace: new SymbolValue(Value('Symbol.replace')),
+  search: new SymbolValue(Value('Symbol.search')),
+  species: new SymbolValue(Value('Symbol.species')),
+  split: new SymbolValue(Value('Symbol.split')),
+  toPrimitive: new SymbolValue(Value('Symbol.toPrimitive')),
+  toStringTag: new SymbolValue(Value('Symbol.toStringTag')),
+  unscopables: new SymbolValue(Value('Symbol.unscopables'))
 };
 Object.setPrototypeOf(wellKnownSymbols, null);
 Object.freeze(wellKnownSymbols);
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-number-type */
 class NumberValue extends PrimitiveValue {
-  number;
-  constructor(number) {
+  // defined on prototype by static block
+  value;
+  constructor(value) {
     super();
-    this.number = number;
+    this.value = value;
   }
   numberValue() {
-    return this.number;
+    return this.value;
   }
   isNaN() {
-    return Number.isNaN(this.number);
+    return Number.isNaN(this.value);
   }
   isInfinity() {
-    return !Number.isFinite(this.number) && !this.isNaN();
+    return !Number.isFinite(this.value) && !this.isNaN();
   }
   isFinite() {
-    return Number.isFinite(this.number);
+    return Number.isFinite(this.value);
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-unaryMinus */
@@ -22716,90 +22764,90 @@ class NumberValue extends PrimitiveValue {
   /** https://tc39.es/ecma262/#sec-numeric-types-number-lessThan */
   static lessThan(x, y) {
     if (x.isNaN()) {
-      return _Value.undefined;
+      return Value.undefined;
     }
     if (y.isNaN()) {
-      return _Value.undefined;
+      return Value.undefined;
     }
     // If nx and ny are the same Number value, return false.
     // If nx is +0 and ny is -0, return false.
     // If nx is -0 and ny is +0, return false.
     if (R(x) === R(y)) {
-      return _Value.false;
+      return Value.false;
     }
     if (R(x) === +Infinity) {
-      return _Value.false;
+      return Value.false;
     }
     if (R(y) === +Infinity) {
-      return _Value.true;
+      return Value.true;
     }
     if (R(y) === -Infinity) {
-      return _Value.false;
+      return Value.false;
     }
     if (R(x) === -Infinity) {
-      return _Value.true;
+      return Value.true;
     }
-    return R(x) < R(y) ? _Value.true : _Value.false;
+    return R(x) < R(y) ? Value.true : Value.false;
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-equal */
   static equal(x, y) {
     if (x.isNaN()) {
-      return _Value.false;
+      return Value.false;
     }
     if (y.isNaN()) {
-      return _Value.false;
+      return Value.false;
     }
     const xVal = R(x);
     const yVal = R(y);
     if (xVal === yVal) {
-      return _Value.true;
+      return Value.true;
     }
     if (Object.is(xVal, 0) && Object.is(yVal, -0)) {
-      return _Value.true;
+      return Value.true;
     }
     if (Object.is(xVal, -0) && Object.is(yVal, 0)) {
-      return _Value.true;
+      return Value.true;
     }
-    return _Value.false;
+    return Value.false;
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-sameValue */
   static sameValue(x, y) {
     if (x.isNaN() && y.isNaN()) {
-      return _Value.true;
+      return Value.true;
     }
     const xVal = R(x);
     const yVal = R(y);
     if (Object.is(xVal, 0) && Object.is(yVal, -0)) {
-      return _Value.false;
+      return Value.false;
     }
     if (Object.is(xVal, -0) && Object.is(yVal, 0)) {
-      return _Value.false;
+      return Value.false;
     }
     if (xVal === yVal) {
-      return _Value.true;
+      return Value.true;
     }
-    return _Value.false;
+    return Value.false;
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-sameValueZero */
   static sameValueZero(x, y) {
     if (x.isNaN() && y.isNaN()) {
-      return _Value.true;
+      return Value.true;
     }
     const xVal = R(x);
     const yVal = R(y);
     if (Object.is(xVal, 0) && Object.is(yVal, -0)) {
-      return _Value.true;
+      return Value.true;
     }
     if (Object.is(xVal, -0) && Object.is(yVal, 0)) {
-      return _Value.true;
+      return Value.true;
     }
     if (xVal === yVal) {
-      return _Value.true;
+      return Value.true;
     }
-    return _Value.false;
+    return Value.false;
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-bitwiseAND */
@@ -22823,11 +22871,11 @@ class NumberValue extends PrimitiveValue {
   /** https://tc39.es/ecma262/#sec-numeric-types-number-tostring */
   static toString(x) {
     if (x.isNaN()) {
-      return _Value('NaN');
+      return Value('NaN');
     }
     const xVal = R(x);
     if (xVal === 0) {
-      return _Value('0');
+      return Value('0');
     }
     if (xVal < 0) {
       let _temp8 = NumberValue.toString(F(-xVal));
@@ -22837,15 +22885,21 @@ class NumberValue extends PrimitiveValue {
         _temp8 = _temp8.Value;
       }
       const str = _temp8.stringValue();
-      return _Value(`-${str}`);
+      return Value(`-${str}`);
     }
     if (x.isInfinity()) {
-      return _Value('Infinity');
+      return Value('Infinity');
     }
     // TODO: implement properly
-    return _Value(`${xVal}`);
+    return Value(`${xVal}`);
   }
   static unit = new NumberValue(1);
+  static {
+    Object.defineProperty(this.prototype, 'type', {
+      value: 'Number'
+    });
+    createNumberValue = value => new NumberValue(value);
+  }
 }
 
 /** https://tc39.es/ecma262/#sec-numberbitwiseop */
@@ -22882,13 +22936,14 @@ function NumberBitwiseOp(op, x, y) {
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-bigint-type */
 NumberBitwiseOp.section = 'https://tc39.es/ecma262/#sec-numberbitwiseop';
 class BigIntValue extends PrimitiveValue {
-  bigint;
-  constructor(bigint) {
+  // defined on prototype by static block
+  value;
+  constructor(value) {
     super();
-    this.bigint = bigint;
+    this.value = value;
   }
   bigintValue() {
-    return this.bigint;
+    return this.value;
   }
   isNaN() {
     return false;
@@ -22988,13 +23043,13 @@ class BigIntValue extends PrimitiveValue {
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-lessThan */
   static lessThan(x, y) {
-    return R(x) < R(y) ? _Value.true : _Value.false;
+    return R(x) < R(y) ? Value.true : Value.false;
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-equal */
   static equal(x, y) {
     // Return true if x and y have the same mathematical integer value and false otherwise.
-    return R(x) === R(y) ? _Value.true : _Value.false;
+    return R(x) === R(y) ? Value.true : Value.false;
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-sameValue */
@@ -23038,62 +23093,19 @@ class BigIntValue extends PrimitiveValue {
         _temp11 = _temp11.Value;
       }
       const str = _temp11.stringValue();
-      return _Value(`-${str}`);
+      return Value(`-${str}`);
     }
     // 2. Return the String value consisting of the code units of the digits of the decimal representation of x.
-    return _Value(`${R(x)}`);
+    return Value(`${R(x)}`);
   }
   static unit = new BigIntValue(1n);
+  static {
+    Object.defineProperty(this.prototype, 'type', {
+      value: 'BigInt'
+    });
+    createBigIntValue = value => new BigIntValue(value);
+  }
 }
-
-/*
-/** https://tc39.es/ecma262/#sec-binaryand */
-// function BinaryAnd(x, y) {
-//   // 1. Assert: x is 0 or 1.
-//   Assert(x === 0n || x === 1n);
-//   // 2. Assert: y is 0 or 1.
-//   Assert(x === 0n || x === 1n);
-//   // 3. If x is 1 and y is 1, return 1.
-//   if (x === 1n && y === 1n) {
-//     return 1n;
-//   } else {
-//     // 4. Else, return 0.
-//     return 0n;
-//   }
-// }
-
-/** https://tc39.es/ecma262/#sec-binaryor */
-// function BinaryOr(x, y) {
-//   // 1. Assert: x is 0 or 1.
-//   Assert(x === 0n || x === 1n);
-//   // 2. Assert: y is 0 or 1.
-//   Assert(x === 0n || x === 1n);
-//   // 3. If x is 1 or y is 1, return 1.
-//   if (x === 1n || y === 1n) {
-//     return 1n;
-//   } else {
-//     // 4. Else, return 0.
-//     return 0n;
-//   }
-// }
-
-/** https://tc39.es/ecma262/#sec-binaryxor */
-// function BinaryXor(x, y) {
-//   // 1. Assert: x is 0 or 1.
-//   Assert(x === 0n || x === 1n);
-//   // 2. Assert: y is 0 or 1.
-//   Assert(x === 0n || x === 1n);
-//   // 3. If x is 1 and y is 0, return 1.
-//   if (x === 1n && y === 0n) {
-//     return 1n;
-//   } else if (x === 0n && y === 1n) {
-//     // Else if x is 0 and y is 1, return 1.
-//     return 1n;
-//   } else {
-//     // 4. Else, return 0.
-//     return 0n;
-//   }
-// }
 
 /** https://tc39.es/ecma262/#sec-bigintbitwiseop */
 function BigIntBitwiseOp(op, x, y) {
@@ -23163,18 +23175,10 @@ function BigIntBitwiseOp(op, x, y) {
   }
 }
 
-/** https://tc39.es/ecma262/#sec-private-names */
-BigIntBitwiseOp.section = 'https://tc39.es/ecma262/#sec-binaryand';
-class PrivateName extends _Value {
-  Description;
-  constructor(Description) {
-    super();
-    this.Description = Description;
-  }
-}
-
 /** https://tc39.es/ecma262/#sec-object-type */
-class ObjectValue extends _Value {
+BigIntBitwiseOp.section = 'https://tc39.es/ecma262/#sec-bigintbitwiseop';
+class ObjectValue extends Value {
+  // defined on prototype by static block
   properties;
   internalSlotsList;
   PrivateElements;
@@ -23225,6 +23229,22 @@ class ObjectValue extends _Value {
       // @ts-ignore
       m(this[s]);
     });
+  }
+  static {
+    Object.defineProperty(this.prototype, 'type', {
+      value: 'Object'
+    });
+  }
+}
+
+/** https://tc39.es/ecma262/#sec-private-names */
+class PrivateName {
+  // NOTE: The following declaration distinguishes `PrivateName` from `SymbolValue` so that type guards can properly
+  //       remove it from unions with `SymbolValue` due to structural overlap.
+
+  Description;
+  constructor(description) {
+    this.Description = description;
   }
 }
 class ReferenceRecord {
@@ -23301,29 +23321,8 @@ class DataBlock extends Uint8Array {
   }
 }
 function Type(val) {
-  if (val instanceof UndefinedValue) {
-    return 'Undefined';
-  }
-  if (val instanceof NullValue) {
-    return 'Null';
-  }
-  if (val instanceof BooleanValue) {
-    return 'Boolean';
-  }
-  if (val instanceof StringValue) {
-    return 'String';
-  }
-  if (val instanceof NumberValue) {
-    return 'Number';
-  }
-  if (val instanceof BigIntValue) {
-    return 'BigInt';
-  }
-  if (val instanceof SymbolValue) {
-    return 'Symbol';
-  }
-  if (val instanceof ObjectValue) {
-    return 'Object';
+  if (val instanceof Value) {
+    return val.type;
   }
   if (val instanceof PrivateName) {
     return 'PrivateName';
@@ -23345,7 +23344,7 @@ function Type(val) {
 
 // Used for Type(x)::y
 function TypeForMethod(val) {
-  if (val instanceof _Value) {
+  if (val instanceof Value) {
     return val.constructor;
   }
   throw new OutOfRange$1('TypeForValue', val);
@@ -23389,11 +23388,11 @@ class Agent {
     const Signifier = agentSignifier;
     agentSignifier += 1;
     this.AgentRecord = {
-      LittleEndian: _Value.true,
-      CanBlock: _Value.true,
+      LittleEndian: Value.true,
+      CanBlock: Value.true,
       Signifier,
-      IsLockFree1: _Value.true,
-      IsLockFree2: _Value.true,
+      IsLockFree1: Value.true,
+      IsLockFree2: Value.true,
       CandidateExecution: undefined,
       KeptAlive: new Set()
     };
@@ -23434,7 +23433,7 @@ class Agent {
 
   // Generate a throw completion using message templates
   Throw(type, template, ...templateArgs) {
-    if (type instanceof _Value) {
+    if (type instanceof Value) {
       return ThrowCompletion(type);
     }
     const message = messages[template](...templateArgs);
@@ -23447,7 +23446,7 @@ class Agent {
       if (_temp2 instanceof Completion) {
         _temp2 = _temp2.Value;
       }
-      let _temp = Construct(cons, [_temp2, _Value(message)]);
+      let _temp = Construct(cons, [_temp2, Value(message)]);
       Assert(!(_temp instanceof AbruptCompletion), "Construct(cons, [\n        X(CreateArrayFromList([])),\n        Value(message),\n      ])" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp instanceof Completion) {
@@ -23455,7 +23454,7 @@ class Agent {
       }
       error = _temp;
     } else {
-      let _temp3 = Construct(cons, [_Value(message)]);
+      let _temp3 = Construct(cons, [Value(message)]);
       Assert(!(_temp3 instanceof AbruptCompletion), "Construct(cons, [Value(message)])" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp3 instanceof Completion) {
@@ -23548,12 +23547,12 @@ function ScriptEvaluation(scriptRecord) {
   }
   const globalEnv = scriptRecord.Realm.GlobalEnv;
   const scriptContext = new ExecutionContext();
-  scriptContext.Function = _Value.null;
+  scriptContext.Function = Value.null;
   scriptContext.Realm = scriptRecord.Realm;
   scriptContext.ScriptOrModule = scriptRecord;
   scriptContext.VariableEnvironment = globalEnv;
   scriptContext.LexicalEnvironment = globalEnv;
-  scriptContext.PrivateEnvironment = _Value.null;
+  scriptContext.PrivateEnvironment = Value.null;
   scriptContext.HostDefined = scriptRecord.HostDefined;
   // Suspend runningExecutionContext
   surroundingAgent.executionContextStack.push(scriptContext);
@@ -23563,7 +23562,7 @@ function ScriptEvaluation(scriptRecord) {
     result = EnsureCompletion(unwind(Evaluate(scriptBody)));
   }
   if (result.Type === 'normal' && !result.Value) {
-    result = NormalCompletion(_Value.undefined);
+    result = NormalCompletion(Value.undefined);
   }
 
   // Suspend scriptCtx
@@ -23620,7 +23619,7 @@ function HostHasSourceTextAvailable(func) {
     }
     return _temp6;
   }
-  return _Value.true;
+  return Value.true;
 }
 
 // #sec-HostLoadImportedModule
@@ -23677,7 +23676,7 @@ function HostFinalizeImportMeta(importMeta, moduleRecord) {
     }
     return _temp8;
   }
-  return _Value.undefined;
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-host-cleanup-finalization-registry */
@@ -23707,7 +23706,7 @@ function HostEnqueueFinalizationRegistryCleanupJob(fg) {
 /** https://tc39.es/ecma262/#sec-hostmakejobcallback */
 function HostMakeJobCallback(callback) {
   // 1. Assert: IsCallable(callback) is true.
-  Assert(IsCallable(callback) === _Value.true, "IsCallable(callback) === Value.true");
+  Assert(IsCallable(callback) === Value.true, "IsCallable(callback) === Value.true");
   // 2. Return the JobCallback Record { [[Callback]]: callback, [[HostDefined]]: empty }.
   return {
     Callback: callback,
@@ -23718,7 +23717,7 @@ function HostMakeJobCallback(callback) {
 /** https://tc39.es/ecma262/#sec-hostcalljobcallback */
 function HostCallJobCallback(jobCallback, V, argumentsList) {
   // 1. Assert: IsCallable(jobCallback.[[Callback]]) is true.
-  Assert(IsCallable(jobCallback.Callback) === _Value.true, "IsCallable(jobCallback.Callback) === Value.true");
+  Assert(IsCallable(jobCallback.Callback) === Value.true, "IsCallable(jobCallback.Callback) === Value.true");
   // 1. Return ? Call(jobCallback.[[Callback]], V, argumentsList).
   return Call(jobCallback.Callback, V, argumentsList);
 }
@@ -23896,7 +23895,7 @@ class ReturnCompletion extends AbruptCompletion {
 }
 let _ThrowCompletionImpl;
 _dec3 = callable((_target, _thisArg, [value]) => {
-  Assert(value instanceof _Value, "value instanceof Value");
+  Assert(value instanceof Value, "value instanceof Value");
   // 1. Return Completion { [[Type]]: throw, [[Value]]: value, [[Target]]: empty }.
   return new Completion({
     Type: 'throw',
@@ -24006,7 +24005,7 @@ function* Await(value) {
   }
   const promise = _temp;
   // 3. Let fulfilledClosure be a new Abstract Closure with parameters (value) that captures asyncContext and performs the following steps when called:
-  const fulfilledClosure = ([valueInner = _Value.undefined]) => {
+  const fulfilledClosure = ([valueInner = Value.undefined]) => {
     // a. Let prevContext be the running execution context.
     const prevContext = surroundingAgent.runningExecutionContext;
     // b. Suspend prevContext.
@@ -24017,10 +24016,10 @@ function* Await(value) {
     // e. Assert: When we reach this step, asyncContext has already been removed from the execution context stack and prevContext is the currently running execution context.
     Assert(surroundingAgent.runningExecutionContext === prevContext, "surroundingAgent.runningExecutionContext === prevContext");
     // f. Return undefined.
-    return _Value.undefined;
+    return Value.undefined;
   };
   // 4. Let onFulfilled be ! CreateBuiltinFunction(fulfilledClosure, 1, "", « »).
-  let _temp2 = CreateBuiltinFunction(fulfilledClosure, 1, _Value(''), []);
+  let _temp2 = CreateBuiltinFunction(fulfilledClosure, 1, Value(''), []);
   Assert(!(_temp2 instanceof AbruptCompletion), "CreateBuiltinFunction(fulfilledClosure, 1, Value(''), [])" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp2 instanceof Completion) {
@@ -24030,7 +24029,7 @@ function* Await(value) {
   // @ts-expect-error TODO(ts): CreateBuiltinFunction should return a specalized type FunctionObjectValue that has a kAsyncContext on it.
   onFulfilled[kAsyncContext] = asyncContext;
   // 5. Let rejectedClosure be a new Abstract Closure with parameters (reason) that captures asyncContext and performs the following steps when called:
-  const rejectedClosure = ([reason = _Value.undefined]) => {
+  const rejectedClosure = ([reason = Value.undefined]) => {
     // a. Let prevContext be the running execution context.
     const prevContext = surroundingAgent.runningExecutionContext;
     // b. Suspend prevContext.
@@ -24041,10 +24040,10 @@ function* Await(value) {
     // e. Assert: When we reach this step, asyncContext has already been removed from the execution context stack and prevContext is the currently running execution context.
     Assert(surroundingAgent.runningExecutionContext === prevContext, "surroundingAgent.runningExecutionContext === prevContext");
     // f. Return undefined.
-    return _Value.undefined;
+    return Value.undefined;
   };
   // 6. Let onRejected be ! CreateBuiltinFunction(rejectedClosure, 1, "", « »).
-  let _temp3 = CreateBuiltinFunction(rejectedClosure, 1, _Value(''), []);
+  let _temp3 = CreateBuiltinFunction(rejectedClosure, 1, Value(''), []);
   Assert(!(_temp3 instanceof AbruptCompletion), "CreateBuiltinFunction(rejectedClosure, 1, Value(''), [])" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp3 instanceof Completion) {
@@ -24063,7 +24062,7 @@ function* Await(value) {
   // 8. Remove asyncContext from the execution context stack and restore the execution context that is at the top of the execution context stack as the running execution context.
   surroundingAgent.executionContextStack.pop(asyncContext);
   // 9. Set the code evaluation state of asyncContext such that when evaluation is resumed with a Completion completion, the following steps of the algorithm that invoked Await will be performed, with completion available.
-  const completion = yield _Value.undefined;
+  const completion = yield Value.undefined;
   // 10. Return.
   return completion;
   // 11. NOTE: This returns to the evaluation of the operation that had most previously resumed evaluation of asyncContext.
@@ -24075,7 +24074,7 @@ function* Await(value) {
 function ArgumentsGetOwnProperty(P) {
   const args = this;
   const desc = OrdinaryGetOwnProperty(args, P);
-  if (desc === _Value.undefined) {
+  if (desc === Value.undefined) {
     return desc;
   }
   const map = args.ParameterMap;
@@ -24086,7 +24085,7 @@ function ArgumentsGetOwnProperty(P) {
     _temp = _temp.Value;
   }
   const isMapped = _temp;
-  if (isMapped === _Value.true) {
+  if (isMapped === Value.true) {
     desc.Value = Get(map, P);
   }
   return desc;
@@ -24103,8 +24102,8 @@ function ArgumentsDefineOwnProperty(P, Desc) {
   }
   const isMapped = _temp2;
   let newArgDesc = Desc;
-  if (isMapped === _Value.true && IsDataDescriptor(Desc) === true) {
-    if (Desc.Value === undefined && Desc.Writable !== undefined && Desc.Writable === _Value.false) {
+  if (isMapped === Value.true && IsDataDescriptor(Desc) === true) {
+    if (Desc.Value === undefined && Desc.Writable !== undefined && Desc.Writable === Value.false) {
       newArgDesc = _Descriptor({
         ...Desc
       });
@@ -24127,23 +24126,23 @@ function ArgumentsDefineOwnProperty(P, Desc) {
     _temp4 = _temp4.Value;
   }
   const allowed = _temp4;
-  if (allowed === _Value.false) {
-    return _Value.false;
+  if (allowed === Value.false) {
+    return Value.false;
   }
-  if (isMapped === _Value.true) {
+  if (isMapped === Value.true) {
     if (IsAccessorDescriptor(Desc) === true) {
       map.Delete(P);
     } else {
       if (Desc.Value !== undefined) {
-        const setStatus = Set$1(map, P, Desc.Value, _Value.false);
-        Assert(setStatus === _Value.true, "setStatus === Value.true");
+        const setStatus = Set$1(map, P, Desc.Value, Value.false);
+        Assert(setStatus === Value.true, "setStatus === Value.true");
       }
-      if (Desc.Writable !== undefined && Desc.Writable === _Value.false) {
+      if (Desc.Writable !== undefined && Desc.Writable === Value.false) {
         map.Delete(P);
       }
     }
   }
-  return _Value.true;
+  return Value.true;
 }
 function ArgumentsGet(P, Receiver) {
   const args = this;
@@ -24155,7 +24154,7 @@ function ArgumentsGet(P, Receiver) {
     _temp5 = _temp5.Value;
   }
   const isMapped = _temp5;
-  if (isMapped === _Value.false) {
+  if (isMapped === Value.false) {
     return OrdinaryGet(args, P, Receiver);
   } else {
     return Get(map, P);
@@ -24165,7 +24164,7 @@ function ArgumentsSet(P, V, Receiver) {
   const args = this;
   let isMapped;
   let map;
-  if (SameValue(args, Receiver) === _Value.false) {
+  if (SameValue(args, Receiver) === Value.false) {
     isMapped = false;
   } else {
     map = args.ParameterMap;
@@ -24175,11 +24174,11 @@ function ArgumentsSet(P, V, Receiver) {
     if (_temp6 instanceof Completion) {
       _temp6 = _temp6.Value;
     }
-    isMapped = _temp6 === _Value.true;
+    isMapped = _temp6 === Value.true;
   }
   if (isMapped) {
-    const setStatus = Set$1(map, P, V, _Value.false);
-    Assert(setStatus === _Value.true, "setStatus === Value.true");
+    const setStatus = Set$1(map, P, V, Value.false);
+    Assert(setStatus === Value.true, "setStatus === Value.true");
   }
   return OrdinarySet(args, P, V, Receiver);
 }
@@ -24203,7 +24202,7 @@ function ArgumentsDelete(P) {
     _temp8 = _temp8.Value;
   }
   const result = _temp8;
-  if (result === _Value.true && isMapped === _Value.true) {
+  if (result === Value.true && isMapped === Value.true) {
     map.Delete(P);
   }
   return result;
@@ -24213,12 +24212,12 @@ function ArgumentsDelete(P) {
 function CreateUnmappedArgumentsObject(argumentsList) {
   const len = argumentsList.length;
   const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'), ['ParameterMap']);
-  obj.ParameterMap = _Value.undefined;
-  DefinePropertyOrThrow(obj, _Value('length'), _Descriptor({
+  obj.ParameterMap = Value.undefined;
+  DefinePropertyOrThrow(obj, Value('length'), _Descriptor({
     Value: F(len),
-    Writable: _Value.true,
-    Enumerable: _Value.false,
-    Configurable: _Value.true
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.true
   }));
   let index = 0;
   while (index < len) {
@@ -24239,20 +24238,20 @@ function CreateUnmappedArgumentsObject(argumentsList) {
   }
   let _temp11 = DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, _Descriptor({
     Value: surroundingAgent.intrinsic('%Array.prototype.values%'),
-    Writable: _Value.true,
-    Enumerable: _Value.false,
-    Configurable: _Value.true
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.true
   }));
   Assert(!(_temp11 instanceof AbruptCompletion), "DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, Descriptor({\n    Value: surroundingAgent.intrinsic('%Array.prototype.values%'),\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp11 instanceof Completion) {
     _temp11 = _temp11.Value;
   }
-  let _temp12 = DefinePropertyOrThrow(obj, _Value('callee'), _Descriptor({
+  let _temp12 = DefinePropertyOrThrow(obj, Value('callee'), _Descriptor({
     Get: surroundingAgent.intrinsic('%ThrowTypeError%'),
     Set: surroundingAgent.intrinsic('%ThrowTypeError%'),
-    Enumerable: _Value.false,
-    Configurable: _Value.false
+    Enumerable: Value.false,
+    Configurable: Value.false
   }));
   Assert(!(_temp12 instanceof AbruptCompletion), "DefinePropertyOrThrow(obj, Value('callee'), Descriptor({\n    Get: surroundingAgent.intrinsic('%ThrowTypeError%'),\n    Set: surroundingAgent.intrinsic('%ThrowTypeError%'),\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
   /* c8 ignore if */
@@ -24268,7 +24267,7 @@ function MakeArgGetter(name, env) {
   //   a. Return env.GetBindingValue(name, false).
   const getterClosure = () => env.GetBindingValue(name, false);
   // 2. Let getter be ! CreateBuiltinFunction(getterClosure, 0, "", « »).
-  let _temp13 = CreateBuiltinFunction(getterClosure, 0, _Value(''), ['Name', 'Env']);
+  let _temp13 = CreateBuiltinFunction(getterClosure, 0, Value(''), ['Name', 'Env']);
   Assert(!(_temp13 instanceof AbruptCompletion), "CreateBuiltinFunction(getterClosure, 0, Value(''), ['Name', 'Env'])" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp13 instanceof Completion) {
@@ -24285,9 +24284,9 @@ MakeArgGetter.section = 'https://tc39.es/ecma262/#sec-makearggetter';
 function MakeArgSetter(name, env) {
   // 1. Let setterClosure be a new Abstract Closure with parameters (value) that captures name and env and performs the following steps when called:
   //   a. Return env.SetMutableBinding(name, value, false).
-  const setterClosure = ([value = _Value.undefined]) => env.SetMutableBinding(name, value, false);
+  const setterClosure = ([value = Value.undefined]) => env.SetMutableBinding(name, value, false);
   // 2. Let setter be ! CreateBuiltinFunction(setterClosure, 1, "", « »).
-  let _temp14 = CreateBuiltinFunction(setterClosure, 1, _Value(''), ['Name', 'Env']);
+  let _temp14 = CreateBuiltinFunction(setterClosure, 1, Value(''), ['Name', 'Env']);
   Assert(!(_temp14 instanceof AbruptCompletion), "CreateBuiltinFunction(setterClosure, 1, Value(''), ['Name', 'Env'])" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp14 instanceof Completion) {
@@ -24318,7 +24317,7 @@ function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
   obj.Set = ArgumentsSet;
   obj.Delete = ArgumentsDelete;
   obj.Prototype = surroundingAgent.intrinsic('%Object.prototype%');
-  const map = OrdinaryObjectCreate(_Value.null);
+  const map = OrdinaryObjectCreate(Value.null);
   obj.ParameterMap = map;
   const parameterNames = BoundNames(formals);
   const numberOfParameters = parameterNames.length;
@@ -24339,11 +24338,11 @@ function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
     }
     index += 1;
   }
-  let _temp18 = DefinePropertyOrThrow(obj, _Value('length'), _Descriptor({
+  let _temp18 = DefinePropertyOrThrow(obj, Value('length'), _Descriptor({
     Value: F(len),
-    Writable: _Value.true,
-    Enumerable: _Value.false,
-    Configurable: _Value.true
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.true
   }));
   Assert(!(_temp18 instanceof AbruptCompletion), "DefinePropertyOrThrow(obj, Value('length'), Descriptor({\n    Value: F(len),\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
   /* c8 ignore if */
@@ -24368,8 +24367,8 @@ function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
         let _temp19 = map.DefineOwnProperty(_temp20, _Descriptor({
           Set: p,
           Get: g,
-          Enumerable: _Value.false,
-          Configurable: _Value.true
+          Enumerable: Value.false,
+          Configurable: Value.true
         }));
         Assert(!(_temp19 instanceof AbruptCompletion), "map.DefineOwnProperty(X(ToString(F(index))), Descriptor({\n          Set: p,\n          Get: g,\n          Enumerable: Value.false,\n          Configurable: Value.true,\n        }))" + ' returned an abrupt completion');
         /* c8 ignore if */
@@ -24382,20 +24381,20 @@ function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
   }
   let _temp21 = DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, _Descriptor({
     Value: surroundingAgent.intrinsic('%Array.prototype.values%'),
-    Writable: _Value.true,
-    Enumerable: _Value.false,
-    Configurable: _Value.true
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.true
   }));
   Assert(!(_temp21 instanceof AbruptCompletion), "DefinePropertyOrThrow(obj, wellKnownSymbols.iterator, Descriptor({\n    Value: surroundingAgent.intrinsic('%Array.prototype.values%'),\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp21 instanceof Completion) {
     _temp21 = _temp21.Value;
   }
-  let _temp22 = DefinePropertyOrThrow(obj, _Value('callee'), _Descriptor({
+  let _temp22 = DefinePropertyOrThrow(obj, Value('callee'), _Descriptor({
     Value: func,
-    Writable: _Value.true,
-    Enumerable: _Value.false,
-    Configurable: _Value.true
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.true
   }));
   Assert(!(_temp22 instanceof AbruptCompletion), "DefinePropertyOrThrow(obj, Value('callee'), Descriptor({\n    Value: func,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
   /* c8 ignore if */
@@ -24409,10 +24408,10 @@ function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
 function ArrayDefineOwnProperty(P, Desc) {
   const A = this;
   Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-  if (P instanceof StringValue && P.stringValue() === 'length') {
+  if (P instanceof JSStringValue && P.stringValue() === 'length') {
     return ArraySetLength(A, Desc);
   } else if (isArrayIndex(P)) {
-    const oldLenDesc = OrdinaryGetOwnProperty(A, _Value('length'));
+    const oldLenDesc = OrdinaryGetOwnProperty(A, Value('length'));
     let _temp = IsDataDescriptor(oldLenDesc);
     Assert(!(_temp instanceof AbruptCompletion), "IsDataDescriptor(oldLenDesc)" + ' returned an abrupt completion');
     /* c8 ignore if */
@@ -24420,7 +24419,7 @@ function ArrayDefineOwnProperty(P, Desc) {
       _temp = _temp.Value;
     }
     Assert(_temp, "X(IsDataDescriptor(oldLenDesc))");
-    Assert(oldLenDesc.Configurable === _Value.false, "oldLenDesc.Configurable === Value.false");
+    Assert(oldLenDesc.Configurable === Value.false, "oldLenDesc.Configurable === Value.false");
     const oldLen = oldLenDesc.Value;
     let _temp2 = ToUint32(P);
     Assert(!(_temp2 instanceof AbruptCompletion), "ToUint32(P)" + ' returned an abrupt completion');
@@ -24429,8 +24428,8 @@ function ArrayDefineOwnProperty(P, Desc) {
       _temp2 = _temp2.Value;
     }
     const index = _temp2;
-    if (R(index) >= R(oldLen) && oldLenDesc.Writable === _Value.false) {
-      return _Value.false;
+    if (R(index) >= R(oldLen) && oldLenDesc.Writable === Value.false) {
+      return Value.false;
     }
     let _temp3 = OrdinaryDefineOwnProperty(A, P, Desc);
     Assert(!(_temp3 instanceof AbruptCompletion), "OrdinaryDefineOwnProperty(A, P, Desc)" + ' returned an abrupt completion');
@@ -24439,15 +24438,15 @@ function ArrayDefineOwnProperty(P, Desc) {
       _temp3 = _temp3.Value;
     }
     const succeeded = _temp3;
-    if (succeeded === _Value.false) {
-      return _Value.false;
+    if (succeeded === Value.false) {
+      return Value.false;
     }
     if (R(index) >= R(oldLen)) {
       oldLenDesc.Value = F(R(index) + 1);
-      const succeeded = OrdinaryDefineOwnProperty(A, _Value('length'), oldLenDesc); // eslint-disable-line no-shadow
-      Assert(succeeded === _Value.true, "succeeded === Value.true");
+      const succeeded = OrdinaryDefineOwnProperty(A, Value('length'), oldLenDesc); // eslint-disable-line no-shadow
+      Assert(succeeded === Value.true, "succeeded === Value.true");
     }
-    return _Value.true;
+    return Value.true;
   }
   return OrdinaryDefineOwnProperty(A, P, Desc);
 }
@@ -24477,11 +24476,11 @@ function ArrayCreate(length, proto) {
   const A = _temp4;
   A.Prototype = proto;
   A.DefineOwnProperty = ArrayDefineOwnProperty;
-  let _temp5 = OrdinaryDefineOwnProperty(A, _Value('length'), _Descriptor({
+  let _temp5 = OrdinaryDefineOwnProperty(A, Value('length'), _Descriptor({
     Value: F(length),
-    Writable: _Value.true,
-    Enumerable: _Value.false,
-    Configurable: _Value.false
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.false
   }));
   Assert(!(_temp5 instanceof AbruptCompletion), "OrdinaryDefineOwnProperty(A, Value('length'), Descriptor({\n    Value: F(length),\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
   /* c8 ignore if */
@@ -24507,10 +24506,10 @@ function ArraySpeciesCreate(originalArray, length) {
     _temp6 = _temp6.Value;
   }
   const isArray = _temp6;
-  if (isArray === _Value.false) {
+  if (isArray === Value.false) {
     return ArrayCreate(length);
   }
-  let _temp7 = Get(originalArray, _Value('constructor'));
+  let _temp7 = Get(originalArray, Value('constructor'));
   /* c8 ignore if */
   if (_temp7 instanceof AbruptCompletion) {
     return _temp7;
@@ -24520,7 +24519,7 @@ function ArraySpeciesCreate(originalArray, length) {
     _temp7 = _temp7.Value;
   }
   let C = _temp7;
-  if (IsConstructor(C) === _Value.true) {
+  if (IsConstructor(C) === Value.true) {
     const thisRealm = surroundingAgent.currentRealmRecord;
     let _temp8 = GetFunctionRealm(C);
     /* c8 ignore if */
@@ -24533,8 +24532,8 @@ function ArraySpeciesCreate(originalArray, length) {
     }
     const realmC = _temp8;
     if (thisRealm !== realmC) {
-      if (SameValue(C, realmC.Intrinsics['%Array%']) === _Value.true) {
-        C = _Value.undefined;
+      if (SameValue(C, realmC.Intrinsics['%Array%']) === Value.true) {
+        C = Value.undefined;
       }
     }
   }
@@ -24549,14 +24548,14 @@ function ArraySpeciesCreate(originalArray, length) {
       _temp9 = _temp9.Value;
     }
     C = _temp9;
-    if (C === _Value.null) {
-      C = _Value.undefined;
+    if (C === Value.null) {
+      C = Value.undefined;
     }
   }
-  if (C === _Value.undefined) {
+  if (C === Value.undefined) {
     return ArrayCreate(length);
   }
-  if (IsConstructor(C) === _Value.false) {
+  if (IsConstructor(C) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
   }
   return Construct(C, [F(length)]);
@@ -24565,7 +24564,7 @@ function ArraySpeciesCreate(originalArray, length) {
 /** https://tc39.es/ecma262/#sec-arraysetlength */
 function ArraySetLength(A, Desc) {
   if (Desc.Value === undefined) {
-    return OrdinaryDefineOwnProperty(A, _Value('length'), Desc);
+    return OrdinaryDefineOwnProperty(A, Value('length'), Desc);
   }
   const newLenDesc = _Descriptor({
     ...Desc
@@ -24594,7 +24593,7 @@ function ArraySetLength(A, Desc) {
     return surroundingAgent.Throw('RangeError', 'InvalidArrayLength', Desc.Value);
   }
   newLenDesc.Value = F(newLen);
-  const oldLenDesc = OrdinaryGetOwnProperty(A, _Value('length'));
+  const oldLenDesc = OrdinaryGetOwnProperty(A, Value('length'));
   let _temp12 = IsDataDescriptor(oldLenDesc);
   Assert(!(_temp12 instanceof AbruptCompletion), "IsDataDescriptor(oldLenDesc)" + ' returned an abrupt completion');
   /* c8 ignore if */
@@ -24602,30 +24601,30 @@ function ArraySetLength(A, Desc) {
     _temp12 = _temp12.Value;
   }
   Assert(_temp12, "X(IsDataDescriptor(oldLenDesc))");
-  Assert(oldLenDesc.Configurable === _Value.false, "oldLenDesc.Configurable === Value.false");
+  Assert(oldLenDesc.Configurable === Value.false, "oldLenDesc.Configurable === Value.false");
   const oldLen = R(oldLenDesc.Value);
   if (newLen >= oldLen) {
-    return OrdinaryDefineOwnProperty(A, _Value('length'), newLenDesc);
+    return OrdinaryDefineOwnProperty(A, Value('length'), newLenDesc);
   }
-  if (oldLenDesc.Writable === _Value.false) {
-    return _Value.false;
+  if (oldLenDesc.Writable === Value.false) {
+    return Value.false;
   }
   let newWritable;
-  if (newLenDesc.Writable === undefined || newLenDesc.Writable === _Value.true) {
+  if (newLenDesc.Writable === undefined || newLenDesc.Writable === Value.true) {
     newWritable = true;
   } else {
     newWritable = false;
-    newLenDesc.Writable = _Value.true;
+    newLenDesc.Writable = Value.true;
   }
-  let _temp13 = OrdinaryDefineOwnProperty(A, _Value('length'), newLenDesc);
+  let _temp13 = OrdinaryDefineOwnProperty(A, Value('length'), newLenDesc);
   Assert(!(_temp13 instanceof AbruptCompletion), "OrdinaryDefineOwnProperty(A, Value('length'), newLenDesc)" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp13 instanceof Completion) {
     _temp13 = _temp13.Value;
   }
   const succeeded = _temp13;
-  if (succeeded === _Value.false) {
-    return _Value.false;
+  if (succeeded === Value.false) {
+    return Value.false;
   }
   const keys = [];
   A.properties.forEach((value, key) => {
@@ -24642,7 +24641,7 @@ function ArraySetLength(A, Desc) {
       _temp14 = _temp14.Value;
     }
     const deleteSucceeded = _temp14;
-    if (deleteSucceeded === _Value.false) {
+    if (deleteSucceeded === Value.false) {
       let _temp15 = ToUint32(P);
       Assert(!(_temp15 instanceof AbruptCompletion), "ToUint32(P)" + ' returned an abrupt completion');
       /* c8 ignore if */
@@ -24651,30 +24650,30 @@ function ArraySetLength(A, Desc) {
       }
       newLenDesc.Value = F(R(_temp15) + 1);
       if (newWritable === false) {
-        newLenDesc.Writable = _Value.false;
+        newLenDesc.Writable = Value.false;
       }
-      let _temp16 = OrdinaryDefineOwnProperty(A, _Value('length'), newLenDesc);
+      let _temp16 = OrdinaryDefineOwnProperty(A, Value('length'), newLenDesc);
       Assert(!(_temp16 instanceof AbruptCompletion), "OrdinaryDefineOwnProperty(A, Value('length'), newLenDesc)" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp16 instanceof Completion) {
         _temp16 = _temp16.Value;
       }
-      return _Value.false;
+      return Value.false;
     }
   }
   if (newWritable === false) {
-    const s = OrdinaryDefineOwnProperty(A, _Value('length'), _Descriptor({
-      Writable: _Value.false
+    const s = OrdinaryDefineOwnProperty(A, Value('length'), _Descriptor({
+      Writable: Value.false
     }));
-    Assert(s === _Value.true, "s === Value.true");
+    Assert(s === Value.true, "s === Value.true");
   }
-  return _Value.true;
+  return Value.true;
 }
 
 /** https://tc39.es/ecma262/#sec-isconcatspreadable */
 function IsConcatSpreadable(O) {
   if (!(O instanceof ObjectValue)) {
-    return _Value.false;
+    return Value.false;
   }
   let _temp17 = Get(O, wellKnownSymbols.isConcatSpreadable);
   /* c8 ignore if */
@@ -24686,7 +24685,7 @@ function IsConcatSpreadable(O) {
     _temp17 = _temp17.Value;
   }
   const spreadable = _temp17;
-  if (spreadable !== _Value.undefined) {
+  if (spreadable !== Value.undefined) {
     return ToBoolean(spreadable);
   }
   return IsArray(O);
@@ -24695,20 +24694,20 @@ function IsConcatSpreadable(O) {
 /** https://tc39.es/ecma262/#sec-sortcompare */
 function SortCompare(x, y, comparefn) {
   // 1. If x and y are both undefined, return +0𝔽.
-  if (x === _Value.undefined && y === _Value.undefined) {
+  if (x === Value.undefined && y === Value.undefined) {
     return F(+0);
   }
   // 2. If x is undefined, return 1𝔽.
-  if (x === _Value.undefined) {
+  if (x === Value.undefined) {
     return F(1);
   }
   // 3. If y is undefined, return -1𝔽.
-  if (y === _Value.undefined) {
+  if (y === Value.undefined) {
     return F(-1);
   }
   // 4. If comparefn is not undefined, then
-  if (comparefn !== _Value.undefined) {
-    let _temp19 = Call(comparefn, _Value.undefined, [x, y]);
+  if (comparefn !== Value.undefined) {
+    let _temp19 = Call(comparefn, Value.undefined, [x, y]);
     /* c8 ignore if */
     if (_temp19 instanceof AbruptCompletion) {
       return _temp19;
@@ -24760,13 +24759,13 @@ function SortCompare(x, y, comparefn) {
   // 7. Let xSmaller be the result of performing Abstract Relational Comparison xString < yString.
   const xSmaller = AbstractRelationalComparison(xString, yString);
   // 8. If xSmaller is true, return -1𝔽.
-  if (xSmaller === _Value.true) {
+  if (xSmaller === Value.true) {
     return F(-1);
   }
   // 9. Let ySmaller be the result of performing Abstract Relational Comparison yString < xString.
   const ySmaller = AbstractRelationalComparison(yString, xString);
   // 10. If ySmaller is true, return 1𝔽.
-  if (ySmaller === _Value.true) {
+  if (ySmaller === Value.true) {
     return F(1);
   }
   // 11. Return +0𝔽.
@@ -24789,7 +24788,7 @@ function CreateArrayIterator(array, kind) {
       // i. If array has a [[TypedArrayName]] internal slot, then
       if ('TypedArrayName' in array) {
         // 1. If IsDetachedBuffer(array.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
-        if (IsDetachedBuffer(array.ViewedArrayBuffer) === _Value.true) {
+        if (IsDetachedBuffer(array.ViewedArrayBuffer) === Value.true) {
           return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
         }
         // 2. Let len be array.[[ArrayLength]].
@@ -24810,7 +24809,7 @@ function CreateArrayIterator(array, kind) {
       }
       // iii. If index ≥ len, return undefined.
       if (index >= len) {
-        return _Value.undefined;
+        return Value.undefined;
       }
       // iv. If kind is key, perform ? Yield(𝔽(index)).
       if (kind === 'key') {
@@ -24882,7 +24881,7 @@ function CreateArrayIterator(array, kind) {
     }
   };
   // 4. Return ! CreateIteratorFromClosure(closure, "%ArrayIteratorPrototype%", %ArrayIteratorPrototype%).
-  let _temp29 = CreateIteratorFromClosure(closure, _Value('%ArrayIteratorPrototype%'), surroundingAgent.intrinsic('%ArrayIteratorPrototype%'));
+  let _temp29 = CreateIteratorFromClosure(closure, Value('%ArrayIteratorPrototype%'), surroundingAgent.intrinsic('%ArrayIteratorPrototype%'));
   Assert(!(_temp29 instanceof AbruptCompletion), "CreateIteratorFromClosure(closure, Value('%ArrayIteratorPrototype%'), surroundingAgent.intrinsic('%ArrayIteratorPrototype%'))" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp29 instanceof Completion) {
@@ -24930,11 +24929,11 @@ function IsDetachedBuffer(arrayBuffer) {
   // 1. Assert: Type(arrayBuffer) is Object and it has an [[ArrayBufferData]] internal slot.
   Assert(arrayBuffer instanceof ObjectValue && 'ArrayBufferData' in arrayBuffer, "arrayBuffer instanceof ObjectValue && 'ArrayBufferData' in arrayBuffer");
   // 2. If arrayBuffer.[[ArrayBufferData]] is null, return true.
-  if (arrayBuffer.ArrayBufferData === _Value.null) {
-    return _Value.true;
+  if (arrayBuffer.ArrayBufferData === Value.null) {
+    return Value.true;
   }
   // 3. Return false.
-  return _Value.false;
+  return Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-detacharraybuffer */
@@ -24942,32 +24941,32 @@ function DetachArrayBuffer(arrayBuffer, key) {
   // 1. Assert: Type(arrayBuffer) is Object and it has [[ArrayBufferData]], [[ArrayBufferByteLength]], and [[ArrayBufferDetachKey]] internal slots.
   Assert(arrayBuffer instanceof ObjectValue && 'ArrayBufferData' in arrayBuffer && 'ArrayBufferByteLength' in arrayBuffer && 'ArrayBufferDetachKey' in arrayBuffer, "arrayBuffer instanceof ObjectValue\n         && 'ArrayBufferData' in arrayBuffer\n         && 'ArrayBufferByteLength' in arrayBuffer\n         && 'ArrayBufferDetachKey' in arrayBuffer");
   // 2. Assert: IsSharedArrayBuffer(arrayBuffer) is false.
-  Assert(IsSharedArrayBuffer() === _Value.false, "IsSharedArrayBuffer(arrayBuffer) === Value.false");
+  Assert(IsSharedArrayBuffer() === Value.false, "IsSharedArrayBuffer(arrayBuffer) === Value.false");
   // 3. If key is not present, set key to undefined.
   if (key === undefined) {
-    key = _Value.undefined;
+    key = Value.undefined;
   }
   // 4. If SameValue(arrayBuffer.[[ArrayBufferDetachKey]], key) is false, throw a TypeError exception.
-  if (SameValue(arrayBuffer.ArrayBufferDetachKey, key) === _Value.false) {
+  if (SameValue(arrayBuffer.ArrayBufferDetachKey, key) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'BufferDetachKeyMismatch', key, arrayBuffer);
   }
   // 5. Set arrayBuffer.[[ArrayBufferData]] to null.
-  arrayBuffer.ArrayBufferData = _Value.null;
+  arrayBuffer.ArrayBufferData = Value.null;
   // 6. Set arrayBuffer.[[ArrayBufferByteLength]] to 0.
   arrayBuffer.ArrayBufferByteLength = 0;
   // 7. Return NormalCompletion(null).
-  return NormalCompletion(_Value.null);
+  return NormalCompletion(Value.null);
 }
 
 /** https://tc39.es/ecma262/#sec-issharedarraybuffer */
 function IsSharedArrayBuffer(_obj) {
-  return _Value.false;
+  return Value.false;
 }
 function CloneArrayBuffer(srcBuffer, srcByteOffset, srcLength, cloneConstructor) {
   // 1. Assert: Type(srcBuffer) is Object and it has an [[ArrayBufferData]] internal slot.
   Assert(srcBuffer instanceof ObjectValue && 'ArrayBufferData' in srcBuffer, "srcBuffer instanceof ObjectValue && 'ArrayBufferData' in srcBuffer");
   // 2. Assert: IsConstructor(cloneConstructor) is true.
-  Assert(IsConstructor(cloneConstructor) === _Value.true, "IsConstructor(cloneConstructor) === Value.true");
+  Assert(IsConstructor(cloneConstructor) === Value.true, "IsConstructor(cloneConstructor) === Value.true");
   // 3. Let targetBuffer be ? AllocateArrayBuffer(cloneConstructor, srcLength).
   let _temp3 = AllocateArrayBuffer(cloneConstructor, srcLength);
   /* c8 ignore if */
@@ -24980,7 +24979,7 @@ function CloneArrayBuffer(srcBuffer, srcByteOffset, srcLength, cloneConstructor)
   }
   const targetBuffer = _temp3;
   // 4. If IsDetachedBuffer(srcBuffer) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(srcBuffer) === _Value.true) {
+  if (IsDetachedBuffer(srcBuffer) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 5. Let srcBlock be srcBuffer.[[ArrayBufferData]].
@@ -24997,10 +24996,10 @@ function CloneArrayBuffer(srcBuffer, srcByteOffset, srcLength, cloneConstructor)
 function IsBigIntElementType(type) {
   // 1. If type is BigUint64 or BigInt64, return true.
   if (type === 'BigUint64' || type === 'BigInt64') {
-    return _Value.true;
+    return Value.true;
   }
   // 2. Return false
-  return _Value.false;
+  return Value.false;
 }
 const throwawayBuffer = new ArrayBuffer(8);
 const throwawayDataView = new DataView(throwawayBuffer);
@@ -25013,14 +25012,14 @@ function RawBytesToNumeric(type, rawBytes, isLittleEndian) {
   Assert(elementSize === rawBytes.length, "elementSize === rawBytes.length");
   const dataViewType = type === 'Uint8C' ? 'Uint8' : type;
   Object.assign(throwawayArray, rawBytes);
-  const result = throwawayDataView[`get${dataViewType}`](0, isLittleEndian === _Value.true);
-  return IsBigIntElementType(type) === _Value.true ? Z(result) : F(result);
+  const result = throwawayDataView[`get${dataViewType}`](0, isLittleEndian === Value.true);
+  return IsBigIntElementType(type) === Value.true ? Z(result) : F(result);
 }
 
 /** https://tc39.es/ecma262/#sec-getvaluefrombuffer */
 function GetValueFromBuffer(arrayBuffer, byteIndex, type, isTypedArray, order, isLittleEndian) {
   // 1. Assert: IsDetachedBuffer(arrayBuffer) is false.
-  Assert(IsDetachedBuffer(arrayBuffer) === _Value.false, "IsDetachedBuffer(arrayBuffer) === Value.false");
+  Assert(IsDetachedBuffer(arrayBuffer) === Value.false, "IsDetachedBuffer(arrayBuffer) === Value.false");
   // 2. Assert: There are sufficient bytes in arrayBuffer starting at byteIndex to represent a value of type.
   // 3. Assert: byteIndex is a non-negative integer.
   Assert(isNonNegativeInteger(byteIndex), "isNonNegativeInteger(byteIndex)");
@@ -25029,7 +25028,7 @@ function GetValueFromBuffer(arrayBuffer, byteIndex, type, isTypedArray, order, i
   // 5. Let elementSize be the Element Size value specified in Table 61 for Element Type type.
   const elementSize = typedArrayInfoByType[type].ElementSize;
   // 6. If IsSharedArrayBuffer(arrayBuffer) is true, then
-  if (IsSharedArrayBuffer() === _Value.true) {
+  if (IsSharedArrayBuffer() === Value.true) {
     Assert(false, "false");
   }
   // 7. Else, let rawValue be a List of elementSize containing, in order, the elementSize sequence of bytes starting with block[byteIndex].
@@ -25049,7 +25048,7 @@ const float64NaNBE = Object.freeze([127, 248, 0, 0, 0, 0, 0, 0]);
 /** https://tc39.es/ecma262/#sec-numerictorawbytes */
 function NumericToRawBytes(type, value, isLittleEndian) {
   Assert(isLittleEndian instanceof BooleanValue, "isLittleEndian instanceof BooleanValue");
-  isLittleEndian = isLittleEndian === _Value.true;
+  isLittleEndian = isLittleEndian === Value.true;
   let rawBytes;
   // One day, we will write our own IEEE 754 and two's complement encoder…
   if (type === 'Float32') {
@@ -25089,7 +25088,7 @@ function NumericToRawBytes(type, value, isLittleEndian) {
 /** https://tc39.es/ecma262/#sec-setvalueinbuffer */
 function SetValueInBuffer(arrayBuffer, byteIndex, type, value, isTypedArray, order, isLittleEndian) {
   // 1. Assert: IsDetachedBuffer(arrayBuffer) is false.
-  Assert(IsDetachedBuffer(arrayBuffer) === _Value.false, "IsDetachedBuffer(arrayBuffer) === Value.false");
+  Assert(IsDetachedBuffer(arrayBuffer) === Value.false, "IsDetachedBuffer(arrayBuffer) === Value.false");
   // 2. Assert: There are sufficient bytes in arrayBuffer starting at byteIndex to represent a value of type.
   // 3. Assert: byteIndex is a non-negative integer.
   Assert(isNonNegativeInteger(byteIndex), "isNonNegativeInteger(byteIndex)");
@@ -25100,7 +25099,7 @@ function SetValueInBuffer(arrayBuffer, byteIndex, type, value, isTypedArray, ord
   if (_temp5 instanceof Completion) {
     _temp5 = _temp5.Value;
   }
-  if (_temp5 === _Value.true) {
+  if (_temp5 === Value.true) {
     Assert(value instanceof BigIntValue, "value instanceof BigIntValue");
   } else {
     Assert(value instanceof NumberValue, "value instanceof NumberValue");
@@ -25116,7 +25115,7 @@ function SetValueInBuffer(arrayBuffer, byteIndex, type, value, isTypedArray, ord
   // 8. Let rawBytes be NumericToRawBytes(type, value, isLittleEndian).
   const rawBytes = NumericToRawBytes(type, value, isLittleEndian);
   // 9. If IsSharedArrayBuffer(arrayBuffer) is true, then
-  if (IsSharedArrayBuffer() === _Value.true) {
+  if (IsSharedArrayBuffer() === Value.true) {
     Assert(false, "false");
   }
   // 10. Else, store the individual bytes of rawBytes into block, in order, starting at block[byteIndex].
@@ -25124,7 +25123,7 @@ function SetValueInBuffer(arrayBuffer, byteIndex, type, value, isTypedArray, ord
     block[byteIndex + i] = byte;
   });
   // 11. Return NormalCompletion(undefined).
-  return NormalCompletion(_Value.undefined);
+  return NormalCompletion(Value.undefined);
 }
 
 // This file covers abstract operations defined in
@@ -25139,14 +25138,14 @@ function AsyncBlockStart(promiseCapability, asyncBody, asyncContext) {
     // Assert: If we return here, the async function either threw an exception or performed an implicit or explicit return; all awaiting is done.
     surroundingAgent.executionContextStack.pop(asyncContext);
     if (result.Type === 'normal') {
-      let _temp = Call(promiseCapability.Resolve, _Value.undefined, [_Value.undefined]);
+      let _temp = Call(promiseCapability.Resolve, Value.undefined, [Value.undefined]);
       Assert(!(_temp instanceof AbruptCompletion), "Call(promiseCapability.Resolve, Value.undefined, [Value.undefined])" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
       }
     } else if (result.Type === 'return') {
-      let _temp2 = Call(promiseCapability.Resolve, _Value.undefined, [result.Value]);
+      let _temp2 = Call(promiseCapability.Resolve, Value.undefined, [result.Value]);
       Assert(!(_temp2 instanceof AbruptCompletion), "Call(promiseCapability.Resolve, Value.undefined, [result.Value])" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp2 instanceof Completion) {
@@ -25154,20 +25153,20 @@ function AsyncBlockStart(promiseCapability, asyncBody, asyncContext) {
       }
     } else {
       Assert(result.Type === 'throw', "result.Type === 'throw'");
-      let _temp3 = Call(promiseCapability.Reject, _Value.undefined, [result.Value]);
+      let _temp3 = Call(promiseCapability.Reject, Value.undefined, [result.Value]);
       Assert(!(_temp3 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [result.Value])" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp3 instanceof Completion) {
         _temp3 = _temp3.Value;
       }
     }
-    return _Value.undefined;
+    return Value.undefined;
   }();
   surroundingAgent.executionContextStack.push(asyncContext);
   const result = EnsureCompletion(resume(asyncContext, undefined));
   Assert(surroundingAgent.runningExecutionContext === runningContext, "surroundingAgent.runningExecutionContext === runningContext");
-  Assert(result.Type === 'normal' && result.Value === _Value.undefined, "result.Type === 'normal' && result.Value === Value.undefined");
-  return _Value.undefined;
+  Assert(result.Type === 'normal' && result.Value === Value.undefined, "result.Type === 'normal' && result.Value === Value.undefined");
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-async-functions-abstract-operations-async-function-start */
@@ -25200,7 +25199,7 @@ class AsyncGeneratorRequestRecord {
 /** https://tc39.es/ecma262/#sec-asyncgeneratorstart */
 function AsyncGeneratorStart(generator, generatorBody) {
   // 1. Assert: generator.[[AsyncGeneratorState]] is undefined.
-  Assert(generator.AsyncGeneratorState === _Value.undefined, "generator.AsyncGeneratorState === Value.undefined");
+  Assert(generator.AsyncGeneratorState === Value.undefined, "generator.AsyncGeneratorState === Value.undefined");
   // 2. Let genContext be the running execution context.
   const genContext = surroundingAgent.runningExecutionContext;
   // 3. Set the Generator component of genContext to generator.
@@ -25224,14 +25223,14 @@ function AsyncGeneratorStart(generator, generatorBody) {
     generator.AsyncGeneratorState = 'completed';
     // f. If result.[[Type]] is normal, set result to NormalCompletion(undefined).
     if (result.Type === 'normal') {
-      result = NormalCompletion(_Value.undefined);
+      result = NormalCompletion(Value.undefined);
     }
     // g. If result.[[Type]] is return, set result to NormalCompletion(result.[[Value]]).
     if (result.Type === 'return') {
       result = NormalCompletion(result.Value);
     }
     // h. Perform ! AsyncGeneratorCompleteStep(generator, result, true).
-    let _temp = AsyncGeneratorCompleteStep(generator, result, _Value.true);
+    let _temp = AsyncGeneratorCompleteStep(generator, result, Value.true);
     Assert(!(_temp instanceof AbruptCompletion), "AsyncGeneratorCompleteStep(generator, result, Value.true)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp instanceof Completion) {
@@ -25245,7 +25244,7 @@ function AsyncGeneratorStart(generator, generatorBody) {
       _temp2 = _temp2.Value;
     }
     // j. Return undefined.
-    return _Value.undefined;
+    return Value.undefined;
   }();
   // 5. Set generator.[[AsyncGeneratorContext]] to genContext.
   generator.AsyncGeneratorContext = genContext;
@@ -25254,7 +25253,7 @@ function AsyncGeneratorStart(generator, generatorBody) {
   // 7. Set generator.[[AsyncGeneratorQueue]] to a new empty List.
   generator.AsyncGeneratorQueue = [];
   // 8. Return undefined.
-  return _Value.undefined;
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-asyncgeneratorvalidate */
@@ -25290,7 +25289,7 @@ function AsyncGeneratorValidate(generator, generatorBrand) {
   }
   // 4. If generator.[[GeneratorBrand]] is not the same value as generatorBrand, throw a TypeError exception.
   const brand = generator.GeneratorBrand;
-  if (brand === undefined || generatorBrand === undefined ? brand !== generatorBrand : SameValue(brand, generatorBrand) === _Value.false) {
+  if (brand === undefined || generatorBrand === undefined ? brand !== generatorBrand : SameValue(brand, generatorBrand) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', generatorBrandToErrorMessageType(generatorBrand) || 'AsyncGenerator', generator);
   }
 }
@@ -25318,7 +25317,7 @@ function AsyncGeneratorCompleteStep(generator, completion, done, realm) {
   const value = completion.Value;
   // 7. If completion.[[Type]] is throw, then
   if (completion.Type === 'throw') {
-    let _temp6 = Call(promiseCapability.Reject, _Value.undefined, [value]);
+    let _temp6 = Call(promiseCapability.Reject, Value.undefined, [value]);
     Assert(!(_temp6 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [value])" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp6 instanceof Completion) {
@@ -25357,7 +25356,7 @@ function AsyncGeneratorCompleteStep(generator, completion, done, realm) {
       iteratorResult = _temp8;
     }
     // d. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iteratorResult »).
-    let _temp9 = Call(promiseCapability.Resolve, _Value.undefined, [iteratorResult]);
+    let _temp9 = Call(promiseCapability.Resolve, Value.undefined, [iteratorResult]);
     Assert(!(_temp9 instanceof AbruptCompletion), "Call(promiseCapability.Resolve, Value.undefined, [iteratorResult])" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp9 instanceof Completion) {
@@ -25416,7 +25415,7 @@ function* AsyncGeneratorYield(value) {
   // 1. Let genContext be the running execution context.
   const genContext = surroundingAgent.runningExecutionContext;
   // 2. Assert: genContext is the execution context of a generator.
-  Assert(genContext.Generator !== _Value.undefined, "genContext.Generator !== Value.undefined");
+  Assert(genContext.Generator !== Value.undefined, "genContext.Generator !== Value.undefined");
   // 3. Let generator be the value of the Generator component of genContext.
   const generator = genContext.Generator;
   // 4. Assert: GetGeneratorKind() is async.
@@ -25430,7 +25429,7 @@ function* AsyncGeneratorYield(value) {
   // 8. Let previousRealm be previousContext's Realm.
   const previousRealm = previousContext.Realm;
   // 9. Perform ! AsyncGeneratorCompleteStep(generator, completion, false, previousRealm).
-  let _temp10 = AsyncGeneratorCompleteStep(generator, completion, _Value.false, previousRealm);
+  let _temp10 = AsyncGeneratorCompleteStep(generator, completion, Value.false, previousRealm);
   Assert(!(_temp10 instanceof AbruptCompletion), "AsyncGeneratorCompleteStep(generator, completion, Value.false, previousRealm)" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp10 instanceof Completion) {
@@ -25454,7 +25453,7 @@ function* AsyncGeneratorYield(value) {
     // b. Remove genContext from the execution context stack and restore the execution context that is at the top of the execution context stack as the running execution context.
     surroundingAgent.executionContextStack.pop(genContext);
     // c. Set the code evaluation state of genContext such that when evaluation is resumed with a Completion resumptionValue the following steps will be performed:
-    const resumptionValue = EnsureCompletion(yield handleInResume(() => _Value.undefined));
+    const resumptionValue = EnsureCompletion(yield handleInResume(() => Value.undefined));
     // i. Return AsyncGeneratorUnwrapYieldResumption(resumptionValue).
     return yield* AsyncGeneratorUnwrapYieldResumption(resumptionValue);
     // ii. NOTE: When the above step returns, it returns to the evaluation of the YieldExpression production that originally called this abstract operation.
@@ -25488,13 +25487,13 @@ function AsyncGeneratorAwaitReturn(generator) {
   }
   const promise = _temp11;
   // 7. Let fulfilledClosure be a new Abstract Closure with parameters (value) that captures generator and performs the following steps when called:
-  const fulfilledClosure = ([value = _Value.undefined]) => {
+  const fulfilledClosure = ([value = Value.undefined]) => {
     // a. Set generator.[[AsyncGeneratorState]] to completed.
     generator.AsyncGeneratorState = 'completed';
     // b. Let result be NormalCompletion(value).
     const result = NormalCompletion(value);
     // c. Perform ! AsyncGeneratorCompleteStep(generator, result, true).
-    let _temp12 = AsyncGeneratorCompleteStep(generator, result, _Value.true);
+    let _temp12 = AsyncGeneratorCompleteStep(generator, result, Value.true);
     Assert(!(_temp12 instanceof AbruptCompletion), "AsyncGeneratorCompleteStep(generator, result, Value.true)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp12 instanceof Completion) {
@@ -25508,10 +25507,10 @@ function AsyncGeneratorAwaitReturn(generator) {
       _temp13 = _temp13.Value;
     }
     // e. Return undefined.
-    return _Value.undefined;
+    return Value.undefined;
   };
   // 8. Let onFulfilled be ! CreateBuiltinFunction(fulfilledClosure, 1, "", « »).
-  let _temp14 = CreateBuiltinFunction(fulfilledClosure, 1, _Value(''), []);
+  let _temp14 = CreateBuiltinFunction(fulfilledClosure, 1, Value(''), []);
   Assert(!(_temp14 instanceof AbruptCompletion), "CreateBuiltinFunction(fulfilledClosure, 1, Value(''), [])" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp14 instanceof Completion) {
@@ -25519,13 +25518,13 @@ function AsyncGeneratorAwaitReturn(generator) {
   }
   const onFulfilled = _temp14;
   // 9. Let rejectedClosure be a new Abstract Closure with parameters (reason) that captures generator and performs the following steps when called:
-  const rejectedClosure = ([reason = _Value.undefined]) => {
+  const rejectedClosure = ([reason = Value.undefined]) => {
     // a. Set generator.[[AsyncGeneratorState]] to completed.
     generator.AsyncGeneratorState = 'completed';
     // b. Let result be ThrowCompletion(reason).
     const result = ThrowCompletion(reason);
     // c. Perform ! AsyncGeneratorCompleteStep(generator, result, true).
-    let _temp15 = AsyncGeneratorCompleteStep(generator, result, _Value.true);
+    let _temp15 = AsyncGeneratorCompleteStep(generator, result, Value.true);
     Assert(!(_temp15 instanceof AbruptCompletion), "AsyncGeneratorCompleteStep(generator, result, Value.true)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp15 instanceof Completion) {
@@ -25539,10 +25538,10 @@ function AsyncGeneratorAwaitReturn(generator) {
       _temp16 = _temp16.Value;
     }
     // e. Return undefined.
-    return _Value.undefined;
+    return Value.undefined;
   };
   // 10. Let onRejected be ! CreateBuiltinFunction(rejectedClosure, 1, "", « »).
-  let _temp17 = CreateBuiltinFunction(rejectedClosure, 1, _Value(''), []);
+  let _temp17 = CreateBuiltinFunction(rejectedClosure, 1, Value(''), []);
   Assert(!(_temp17 instanceof AbruptCompletion), "CreateBuiltinFunction(rejectedClosure, 1, Value(''), [])" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp17 instanceof Completion) {
@@ -25594,10 +25593,10 @@ function AsyncGeneratorDrainQueue(generator) {
       // i. If completion.[[Type]] is normal, then
       if (completion.type === 'normal') {
         // 1. Set completion to NormalCompletion(undefined).
-        completion = NormalCompletion(_Value.undefined);
+        completion = NormalCompletion(Value.undefined);
       }
       // ii. Perform ! AsyncGeneratorCompleteStep(generator, completion, true).
-      let _temp20 = AsyncGeneratorCompleteStep(generator, completion, _Value.true);
+      let _temp20 = AsyncGeneratorCompleteStep(generator, completion, Value.true);
       Assert(!(_temp20 instanceof AbruptCompletion), "AsyncGeneratorCompleteStep(generator, completion, Value.true)" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp20 instanceof Completion) {
@@ -25629,7 +25628,7 @@ function CreateAsyncIteratorFromClosure(closure, generatorBrand, generatorProtot
   // 4. Set generator.[[GeneratorBrand]] to generatorBrand.
   generator.GeneratorBrand = generatorBrand;
   // 5. Set generator.[[AsyncGeneratorState]] to undefined.
-  generator.AsyncGeneratorState = _Value.undefined;
+  generator.AsyncGeneratorState = Value.undefined;
   // 6. Perform ? AsyncGeneratorStart(generator, closure, generatorBrand).
   let _temp22 = AsyncGeneratorStart(generator, closure);
   /* c8 ignore if */
@@ -25649,7 +25648,7 @@ function CreateAsyncIteratorFromClosure(closure, generatorBrand, generatorProtot
 
 // 6.1.7 #integer-index
 function isIntegerIndex(V) {
-  if (!(V instanceof StringValue)) {
+  if (!(V instanceof JSStringValue)) {
     return false;
   }
   let _temp = CanonicalNumericIndexString(V);
@@ -25659,7 +25658,7 @@ function isIntegerIndex(V) {
     _temp = _temp.Value;
   }
   const numeric = _temp;
-  if (numeric === _Value.undefined) {
+  if (numeric === Value.undefined) {
     return false;
   }
   if (Object.is(R(numeric), +0)) {
@@ -25670,7 +25669,7 @@ function isIntegerIndex(V) {
 
 // 6.1.7 #array-index
 function isArrayIndex(V) {
-  if (!(V instanceof StringValue)) {
+  if (!(V instanceof JSStringValue)) {
     return false;
   }
   let _temp2 = CanonicalNumericIndexString(V);
@@ -25680,7 +25679,7 @@ function isArrayIndex(V) {
     _temp2 = _temp2.Value;
   }
   const numeric = _temp2;
-  if (numeric === _Value.undefined) {
+  if (numeric === Value.undefined) {
     return false;
   }
   if (!Number.isInteger(R(numeric))) {
@@ -25733,7 +25732,7 @@ function GetViewValue(view, requestIndex, isLittleEndian, type) {
   // 5. Let buffer be view.[[ViewedArrayBuffer]].
   const buffer = view.ViewedArrayBuffer;
   // 6. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(buffer) === _Value.true) {
+  if (IsDetachedBuffer(buffer) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 7. Let viewOffset be view.[[ByteOffset]].
@@ -25749,7 +25748,7 @@ function GetViewValue(view, requestIndex, isLittleEndian, type) {
   // 11. Let bufferIndex be getIndex + viewOffset.
   const bufferIndex = getIndex + viewOffset;
   // 12. Return GetValueFromBuffer(buffer, bufferIndex, type, false, Unordered, isLittleEndian).
-  return GetValueFromBuffer(buffer, bufferIndex, type, _Value.false, 'Unordered', isLittleEndian);
+  return GetValueFromBuffer(buffer, bufferIndex, type, Value.false, 'Unordered', isLittleEndian);
 }
 
 /** https://tc39.es/ecma262/#sec-setviewvalue */
@@ -25785,7 +25784,7 @@ function SetViewValue(view, requestIndex, isLittleEndian, type, value) {
   if (_temp6 instanceof Completion) {
     _temp6 = _temp6.Value;
   }
-  if (_temp6 === _Value.true) {
+  if (_temp6 === Value.true) {
     let _temp7 = ToBigInt(value);
     /* c8 ignore if */
     if (_temp7 instanceof AbruptCompletion) {
@@ -25819,7 +25818,7 @@ function SetViewValue(view, requestIndex, isLittleEndian, type, value) {
   // 7. Let buffer be view.[[ViewedArrayBuffer]].
   const buffer = view.ViewedArrayBuffer;
   // 8. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(buffer) === _Value.true) {
+  if (IsDetachedBuffer(buffer) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 9. Let viewOffset be view.[[ByteOffset]].
@@ -25835,7 +25834,7 @@ function SetViewValue(view, requestIndex, isLittleEndian, type, value) {
   // 13. Let bufferIndex be getIndex + viewOffset.
   const bufferIndex = getIndex + viewOffset;
   // 14. Return SetValueInBuffer(buffer, bufferIndex, type, numberValue, false, Unordered, isLittleEndian).
-  return SetValueInBuffer(buffer, bufferIndex, type, numberValue, _Value.false, 'Unordered', isLittleEndian);
+  return SetValueInBuffer(buffer, bufferIndex, type, numberValue, Value.false, 'Unordered', isLittleEndian);
 }
 
 const mod$1 = (n, m) => {
@@ -26115,7 +26114,7 @@ function TimeClip(time) {
 function InstallErrorCause(O, options) {
   // 1. If Type(options) is Object and ? HasProperty(options, "cause") is true, then
   if (options instanceof ObjectValue) {
-    let _temp = HasProperty(options, _Value('cause'));
+    let _temp = HasProperty(options, Value('cause'));
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) {
       return _temp;
@@ -26125,8 +26124,8 @@ function InstallErrorCause(O, options) {
       _temp = _temp.Value;
     }
     // nested if statement due to macro expansion
-    if (_temp === _Value.true) {
-      let _temp2 = Get(options, _Value('cause'));
+    if (_temp === Value.true) {
+      let _temp2 = Get(options, Value('cause'));
       /* c8 ignore if */
       if (_temp2 instanceof AbruptCompletion) {
         return _temp2;
@@ -26138,11 +26137,11 @@ function InstallErrorCause(O, options) {
       // a. Let cause be ? Get(options, "cause").
       const cause = _temp2;
       // b. Perform ! CreateNonEnumerableDataPropertyOrThrow(O, "cause", cause).
-      let _temp3 = DefinePropertyOrThrow(O, _Value('cause'), _Descriptor({
+      let _temp3 = DefinePropertyOrThrow(O, Value('cause'), _Descriptor({
         Value: cause,
-        Writable: _Value.true,
-        Enumerable: _Value.false,
-        Configurable: _Value.true
+        Writable: Value.true,
+        Enumerable: Value.false,
+        Configurable: Value.true
       }));
       Assert(!(_temp3 instanceof AbruptCompletion), "DefinePropertyOrThrow(O, Value('cause'), Descriptor({\n        Value: cause,\n        Writable: Value.true,\n        Enumerable: Value.false,\n        Configurable: Value.true,\n      }))" + ' returned an abrupt completion');
       /* c8 ignore if */
@@ -26152,7 +26151,7 @@ function InstallErrorCause(O, options) {
     }
   }
   // 2. Return NormalCompletion(undefined).
-  return NormalCompletion(_Value.undefined);
+  return NormalCompletion(Value.undefined);
 }
 
 // @ts-nocheck
@@ -26164,17 +26163,17 @@ function InstallErrorCause(O, options) {
 function GetActiveScriptOrModule() {
   for (let i = surroundingAgent.executionContextStack.length - 1; i >= 0; i -= 1) {
     const e = surroundingAgent.executionContextStack[i];
-    if (e.ScriptOrModule !== _Value.null) {
+    if (e.ScriptOrModule !== Value.null) {
       return e.ScriptOrModule;
     }
   }
-  return _Value.null;
+  return Value.null;
 }
 
 /** https://tc39.es/ecma262/#sec-resolvebinding */
 function ResolveBinding(name, env, strict) {
   // 1. If env is not present or if env is undefined, then
-  if (env === undefined || env === _Value.undefined) {
+  if (env === undefined || env === Value.undefined) {
     // a. Set env to the running execution context's LexicalEnvironment.
     env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   }
@@ -26182,7 +26181,7 @@ function ResolveBinding(name, env, strict) {
   Assert(env instanceof EnvironmentRecord, "env instanceof EnvironmentRecord");
   // 3. If the code matching the syntactic production that is being evaluated is contained in strict mode code, let strict be true; else let strict be false.
   // 4. Return ? GetIdentifierReference(env, name, strict).
-  return GetIdentifierReference(env, name, strict ? _Value.true : _Value.false);
+  return GetIdentifierReference(env, name, strict ? Value.true : Value.false);
 }
 
 /** https://tc39.es/ecma262/#sec-getthisenvironment */
@@ -26194,13 +26193,13 @@ function GetThisEnvironment() {
     // a. Let exists be env.HasThisBinding().
     const exists = env.HasThisBinding();
     // b. If exists is true, return envRec.
-    if (exists === _Value.true) {
+    if (exists === Value.true) {
       return env;
     }
     // c. Let outer be env.[[OuterEnv]].
     const outer = env.OuterEnv;
     // d. Assert: outer is not null.
-    Assert(outer !== _Value.null, "outer !== Value.null");
+    Assert(outer !== Value.null, "outer !== Value.null");
     // e. Set env to outer.
     env = outer;
   }
@@ -26277,7 +26276,7 @@ function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
   const thisMode = F.ThisMode;
   // 2. If thisMode is lexical, return NormalCompletion(undefined).
   if (thisMode === 'lexical') {
-    return NormalCompletion(_Value.undefined);
+    return NormalCompletion(Value.undefined);
   }
   // 3. Let calleeRealm be F.[[Realm]].
   const calleeRealm = F.Realm;
@@ -26290,7 +26289,7 @@ function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
   } else {
     // 6. Else,
     // a. If thisArgument is undefined or null, then
-    if (thisArgument === _Value.undefined || thisArgument === _Value.null) {
+    if (thisArgument === Value.undefined || thisArgument === Value.null) {
       // i. Let globalEnv be calleeRealm.[[GlobalEnv]].
       const globalEnv = calleeRealm.GlobalEnv;
       // ii. Assert: globalEnv is a global Environment Record.
@@ -26346,7 +26345,7 @@ function DefineField(receiver, fieldRecord) {
     initValue = _temp2;
   } else {
     // 4. Else, let initValue be undefined.
-    initValue = _Value.undefined;
+    initValue = Value.undefined;
   }
   // 5. If fieldName is a Private Name, then
   if (fieldName instanceof PrivateName) {
@@ -26422,11 +26421,11 @@ function FunctionCallSlot(thisArgument, argumentsList) {
   Assert(isECMAScriptFunctionObject(F), "isECMAScriptFunctionObject(F)");
   // 2. Let callerContext be the running execution context.
   // 3. Let calleeContext be PrepareForOrdinaryCall(F, undefined).
-  const calleeContext = PrepareForOrdinaryCall(F, _Value.undefined);
+  const calleeContext = PrepareForOrdinaryCall(F, Value.undefined);
   // 4. Assert: calleeContext is now the running execution context.
   Assert(surroundingAgent.runningExecutionContext === calleeContext, "surroundingAgent.runningExecutionContext === calleeContext");
   // 5. If F.[[IsClassConstructor]] is true, then
-  if (F.IsClassConstructor === _Value.true) {
+  if (F.IsClassConstructor === Value.true) {
     // a. Let error be a newly created TypeError object.
     const error = surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', F);
     // b. NOTE: _error_ is created in _calleeContext_ with _F_'s associated Realm Record.
@@ -26455,7 +26454,7 @@ function FunctionCallSlot(thisArgument, argumentsList) {
     result = result.Value;
   }
   // 11. Return NormalCompletion(undefined).
-  return NormalCompletion(_Value.undefined);
+  return NormalCompletion(Value.undefined);
 }
 
 /** https://tc39.es/ecma262/#sec-ecmascript-function-objects-construct-argumentslist-newtarget */
@@ -26521,7 +26520,7 @@ function FunctionConstructSlot(argumentsList, newTarget) {
       return NormalCompletion(thisArgument);
     }
     // c. If result.[[Value]] is not undefined, throw a TypeError exception.
-    if (result.Value !== _Value.undefined) {
+    if (result.Value !== Value.undefined) {
       return surroundingAgent.Throw('TypeError', 'DerivedConstructorReturnedNonObject');
     }
   } else {
@@ -26576,7 +26575,7 @@ function OrdinaryFunctionCreate(functionPrototype, sourceText, ParameterList, Bo
     F.ThisMode = 'global';
   }
   // 13. Set F.[[IsClassConstructor]] to false.
-  F.IsClassConstructor = _Value.false;
+  F.IsClassConstructor = Value.false;
   // 14. Set F.[[Environment]] to Scope.
   F.Environment = Scope;
   // 15. Set F.[[PrivateEnvironment]] to PrivateScope.
@@ -26587,7 +26586,7 @@ function OrdinaryFunctionCreate(functionPrototype, sourceText, ParameterList, Bo
   // 17. Set F.[[Realm]] to the current Realm Record.
   F.Realm = surroundingAgent.currentRealmRecord;
   // 18. Set F.[[HomeObject]] to undefined.
-  F.HomeObject = _Value.undefined;
+  F.HomeObject = Value.undefined;
   // 19. Set F.[[ClassFieldInitializerName]] to empty.
   F.ClassFieldInitializerName = undefined;
   F.PrivateMethods = [];
@@ -26609,33 +26608,33 @@ function OrdinaryFunctionCreate(functionPrototype, sourceText, ParameterList, Bo
 function MakeConstructor(F, writablePrototype, prototype) {
   Assert(isECMAScriptFunctionObject(F) || F.Call === BuiltinFunctionCall, "isECMAScriptFunctionObject(F) || F.Call === BuiltinFunctionCall");
   if (isECMAScriptFunctionObject(F)) {
-    Assert(IsConstructor(F) === _Value.false, "IsConstructor(F) === Value.false");
+    Assert(IsConstructor(F) === Value.false, "IsConstructor(F) === Value.false");
     let _temp11 = IsExtensible(F);
     Assert(!(_temp11 instanceof AbruptCompletion), "IsExtensible(F)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp11 instanceof Completion) {
       _temp11 = _temp11.Value;
     }
-    let _temp12 = HasOwnProperty(F, _Value('prototype'));
+    let _temp12 = HasOwnProperty(F, Value('prototype'));
     Assert(!(_temp12 instanceof AbruptCompletion), "HasOwnProperty(F, Value('prototype'))" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp12 instanceof Completion) {
       _temp12 = _temp12.Value;
     }
-    Assert(_temp11 === _Value.true && _temp12 === _Value.false, "X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, Value('prototype'))) === Value.false");
+    Assert(_temp11 === Value.true && _temp12 === Value.false, "X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, Value('prototype'))) === Value.false");
     F.Construct = surroundingAgent.hostDefinedOptions.boost?.constructFunction || FunctionConstructSlot;
   }
   F.ConstructorKind = 'base';
   if (writablePrototype === undefined) {
-    writablePrototype = _Value.true;
+    writablePrototype = Value.true;
   }
   if (prototype === undefined) {
     prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
-    let _temp13 = DefinePropertyOrThrow(prototype, _Value('constructor'), _Descriptor({
+    let _temp13 = DefinePropertyOrThrow(prototype, Value('constructor'), _Descriptor({
       Value: F,
       Writable: writablePrototype,
-      Enumerable: _Value.false,
-      Configurable: _Value.true
+      Enumerable: Value.false,
+      Configurable: Value.true
     }));
     Assert(!(_temp13 instanceof AbruptCompletion), "DefinePropertyOrThrow(prototype, Value('constructor'), Descriptor({\n      Value: F,\n      Writable: writablePrototype,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    }))" + ' returned an abrupt completion');
     /* c8 ignore if */
@@ -26643,26 +26642,26 @@ function MakeConstructor(F, writablePrototype, prototype) {
       _temp13 = _temp13.Value;
     }
   }
-  let _temp14 = DefinePropertyOrThrow(F, _Value('prototype'), _Descriptor({
+  let _temp14 = DefinePropertyOrThrow(F, Value('prototype'), _Descriptor({
     Value: prototype,
     Writable: writablePrototype,
-    Enumerable: _Value.false,
-    Configurable: _Value.false
+    Enumerable: Value.false,
+    Configurable: Value.false
   }));
   Assert(!(_temp14 instanceof AbruptCompletion), "DefinePropertyOrThrow(F, Value('prototype'), Descriptor({\n    Value: prototype,\n    Writable: writablePrototype,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp14 instanceof Completion) {
     _temp14 = _temp14.Value;
   }
-  return NormalCompletion(_Value.undefined);
+  return NormalCompletion(Value.undefined);
 }
 
 /** https://tc39.es/ecma262/#sec-makeclassconstructor */
 function MakeClassConstructor(F) {
   Assert(isECMAScriptFunctionObject(F), "isECMAScriptFunctionObject(F)");
-  Assert(F.IsClassConstructor === _Value.false, "F.IsClassConstructor === Value.false");
-  F.IsClassConstructor = _Value.true;
-  return NormalCompletion(_Value.undefined);
+  Assert(F.IsClassConstructor === Value.false, "F.IsClassConstructor === Value.false");
+  F.IsClassConstructor = Value.true;
+  return NormalCompletion(Value.undefined);
 }
 
 /** https://tc39.es/ecma262/#sec-makemethod */
@@ -26670,23 +26669,23 @@ function MakeMethod(F, homeObject) {
   Assert(isECMAScriptFunctionObject(F), "isECMAScriptFunctionObject(F)");
   Assert(homeObject instanceof ObjectValue, "homeObject instanceof ObjectValue");
   F.HomeObject = homeObject;
-  return NormalCompletion(_Value.undefined);
+  return NormalCompletion(Value.undefined);
 }
 
 /** https://tc39.es/ecma262/#sec-setfunctionname */
 function SetFunctionName(F, name, prefix) {
   // 1. Assert: F is an extensible object that does not have a "name" own property.
-  Assert(IsExtensible(F) === _Value.true && HasOwnProperty(F, _Value('name')) === _Value.false, "IsExtensible(F) === Value.true && HasOwnProperty(F, Value('name')) === Value.false");
+  Assert(IsExtensible(F) === Value.true && HasOwnProperty(F, Value('name')) === Value.false, "IsExtensible(F) === Value.true && HasOwnProperty(F, Value('name')) === Value.false");
   // 2. If Type(name) is Symbol, then
   if (name instanceof SymbolValue) {
     // a. Let description be name's [[Description]] value.
     const description = name.Description;
     // b. If description is undefined, set name to the empty String.
-    if (description === _Value.undefined) {
-      name = _Value('');
+    if (description === Value.undefined) {
+      name = Value('');
     } else {
       // c. Else, set name to the string-concatenation of "[", description, and "]".
-      name = _Value(`[${description.stringValue()}]`);
+      name = Value(`[${description.stringValue()}]`);
     }
   } else if (name instanceof PrivateName) {
     // 3. Else if name is a Private Name, then
@@ -26701,14 +26700,14 @@ function SetFunctionName(F, name, prefix) {
   // 5. If prefix is present, then
   if (prefix !== undefined) {
     // a. Set name to the string-concatenation of prefix, the code unit 0x0020 (SPACE), and name.
-    name = _Value(`${prefix.stringValue()} ${name.stringValue()}`);
+    name = Value(`${prefix.stringValue()} ${name.stringValue()}`);
   }
   // 6. Return ! DefinePropertyOrThrow(F, "name", PropertyDescriptor { [[Value]]: name, [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: true }).
-  let _temp15 = DefinePropertyOrThrow(F, _Value('name'), _Descriptor({
+  let _temp15 = DefinePropertyOrThrow(F, Value('name'), _Descriptor({
     Value: name,
-    Writable: _Value.false,
-    Enumerable: _Value.false,
-    Configurable: _Value.true
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.true
   }));
   Assert(!(_temp15 instanceof AbruptCompletion), "DefinePropertyOrThrow(F, Value('name'), Descriptor({\n    Value: name,\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
   /* c8 ignore if */
@@ -26722,13 +26721,13 @@ function SetFunctionName(F, name, prefix) {
 function SetFunctionLength(F$1, length) {
   Assert(isNonNegativeInteger(length) || length === Infinity, "isNonNegativeInteger(length) || length === Infinity");
   // 1. Assert: F is an extensible object that does not have a "length" own property.
-  Assert(IsExtensible(F$1) === _Value.true && HasOwnProperty(F$1, _Value('length')) === _Value.false, "IsExtensible(F) === Value.true && HasOwnProperty(F, Value('length')) === Value.false");
+  Assert(IsExtensible(F$1) === Value.true && HasOwnProperty(F$1, Value('length')) === Value.false, "IsExtensible(F) === Value.true && HasOwnProperty(F, Value('length')) === Value.false");
   // 2. Return ! DefinePropertyOrThrow(F, "length", PropertyDescriptor { [[Value]]: 𝔽(length), [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: true }).
-  let _temp16 = DefinePropertyOrThrow(F$1, _Value('length'), _Descriptor({
+  let _temp16 = DefinePropertyOrThrow(F$1, Value('length'), _Descriptor({
     Value: F(length),
-    Writable: _Value.false,
-    Enumerable: _Value.false,
-    Configurable: _Value.true
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.true
   }));
   Assert(!(_temp16 instanceof AbruptCompletion), "DefinePropertyOrThrow(F, Value('length'), Descriptor({\n    Value: toNumberValue(length),\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
   /* c8 ignore if */
@@ -26739,8 +26738,8 @@ function SetFunctionLength(F$1, length) {
 }
 function nativeCall(F, argumentsList, thisArgument, newTarget) {
   return F.nativeFunction(argumentsList, {
-    thisValue: thisArgument || _Value.undefined,
-    NewTarget: newTarget || _Value.undefined
+    thisValue: thisArgument || Value.undefined,
+    NewTarget: newTarget || Value.undefined
   });
 }
 function BuiltinFunctionCall(thisArgument, argumentsList) {
@@ -26755,7 +26754,7 @@ function BuiltinFunctionCall(thisArgument, argumentsList) {
   calleeContext.ScriptOrModule = F.ScriptOrModule;
   // 8. Perform any necessary implementation-defined initialization of calleeContext.
   surroundingAgent.executionContextStack.push(calleeContext);
-  const result = nativeCall(F, argumentsList, thisArgument, _Value.undefined);
+  const result = nativeCall(F, argumentsList, thisArgument, Value.undefined);
   // Remove calleeContext from the execution context stack and
   // restore callerContext as the running execution context.
   surroundingAgent.executionContextStack.pop(calleeContext);
@@ -26782,7 +26781,7 @@ function BuiltinFunctionConstruct(argumentsList, newTarget) {
 }
 
 /** https://tc39.es/ecma262/#sec-createbuiltinfunction */
-function CreateBuiltinFunction(steps, length, name, internalSlotsList, realm, prototype, prefix, isConstructor = _Value.false) {
+function CreateBuiltinFunction(steps, length, name, internalSlotsList, realm, prototype, prefix, isConstructor = Value.false) {
   // 1. Assert: steps is either a set of algorithm steps or other definition of a function's behaviour provided in this specification.
   Assert(typeof steps === 'function', "typeof steps === 'function'");
   // 2. If realm is not present, set realm to the current Realm Record.
@@ -26804,7 +26803,7 @@ function CreateBuiltinFunction(steps, length, name, internalSlotsList, realm, pr
   }
   const func = _temp17;
   func.Call = BuiltinFunctionCall;
-  if (isConstructor === _Value.true) {
+  if (isConstructor === Value.true) {
     func.Construct = BuiltinFunctionConstruct;
   }
   func.nativeFunction = steps;
@@ -26813,11 +26812,11 @@ function CreateBuiltinFunction(steps, length, name, internalSlotsList, realm, pr
   // 7. Set func.[[Prototype]] to prototype.
   func.Prototype = prototype;
   // 8. Set func.[[Extensible]] to true.
-  func.Extensible = _Value.true;
+  func.Extensible = Value.true;
   // 9. Set func.[[ScriptOrModule]] to null.
-  func.ScriptOrModule = _Value.null;
+  func.ScriptOrModule = Value.null;
   // 10. Set func.[[InitialName]] to null.
-  func.InitialName = _Value.null;
+  func.InitialName = Value.null;
   // 11. Perform ! SetFunctionLength(func, length).
   let _temp18 = SetFunctionLength(func, length);
   Assert(!(_temp18 instanceof AbruptCompletion), "SetFunctionLength(func, length)" + ' returned an abrupt completion');
@@ -26861,7 +26860,7 @@ function PrepareForTailCall() {
 /** https://tc39.es/ecma262/#sec-generatorstart */
 function GeneratorStart(generator, generatorBody) {
   // 1. Assert: The value of generator.[[GeneratorState]] is undefined.
-  Assert(generator.GeneratorState === _Value.undefined, "generator.GeneratorState === Value.undefined");
+  Assert(generator.GeneratorState === Value.undefined, "generator.GeneratorState === Value.undefined");
   // 2. Let genContext be the running execution context.
   const genContext = surroundingAgent.runningExecutionContext;
   // 3. Set the Generator component of genContext to generator.
@@ -26891,7 +26890,7 @@ function GeneratorStart(generator, generatorBody) {
     // g. If result.[[Type]] is normal, let resultValue be undefined.
     let resultValue;
     if (result.Type === 'normal') {
-      resultValue = _Value.undefined;
+      resultValue = Value.undefined;
     } else if (result.Type === 'return') {
       // h. Else if result.[[Type]] is return, let resultValue be result.[[Value]].
       resultValue = result.Value;
@@ -26903,7 +26902,7 @@ function GeneratorStart(generator, generatorBody) {
       return Completion(result);
     }
     // j. Return CreateIterResultObject(resultValue, true).
-    let _temp = CreateIterResultObject(resultValue, _Value.true);
+    let _temp = CreateIterResultObject(resultValue, Value.true);
     Assert(!(_temp instanceof AbruptCompletion), "CreateIterResultObject(resultValue, Value.true)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp instanceof Completion) {
@@ -26916,7 +26915,7 @@ function GeneratorStart(generator, generatorBody) {
   // 6. Set generator.[[GeneratorState]] to suspendedStart.
   generator.GeneratorState = 'suspendedStart';
   // 7. Return NormalCompletion(undefined).
-  return NormalCompletion(_Value.undefined);
+  return NormalCompletion(Value.undefined);
 }
 function generatorBrandToErrorMessageType(generatorBrand) {
   let expectedType;
@@ -26955,7 +26954,7 @@ function GeneratorValidate(generator, generatorBrand) {
   }
   // 3. If generator.[[GeneratorBrand]] is not the same value as generatorBrand, throw a TypeError exception.
   const brand = generator.GeneratorBrand;
-  if (brand === undefined || generatorBrand === undefined ? brand !== generatorBrand : SameValue(brand, generatorBrand) === _Value.false) {
+  if (brand === undefined || generatorBrand === undefined ? brand !== generatorBrand : SameValue(brand, generatorBrand) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', generatorBrandToErrorMessageType(generatorBrand) || 'Generator', generator);
   }
   // 4. Assert: generator also has a [[GeneratorContext]] internal slot.
@@ -26985,7 +26984,7 @@ function GeneratorResume(generator, value, generatorBrand) {
   const state = _temp4;
   // 2. If state is completed, return CreateIterResultObject(undefined, true).
   if (state === 'completed') {
-    let _temp5 = CreateIterResultObject(_Value.undefined, _Value.true);
+    let _temp5 = CreateIterResultObject(Value.undefined, Value.true);
     Assert(!(_temp5 instanceof AbruptCompletion), "CreateIterResultObject(Value.undefined, Value.true)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp5 instanceof Completion) {
@@ -27043,7 +27042,7 @@ function GeneratorResumeAbrupt(generator, abruptCompletion, generatorBrand) {
   if (state === 'completed') {
     // a. If abruptCompletion.[[Type]] is return, then
     if (abruptCompletion.Type === 'return') {
-      let _temp7 = CreateIterResultObject(abruptCompletion.Value, _Value.true);
+      let _temp7 = CreateIterResultObject(abruptCompletion.Value, Value.true);
       Assert(!(_temp7 instanceof AbruptCompletion), "CreateIterResultObject(abruptCompletion.Value, Value.true)" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp7 instanceof Completion) {
@@ -27137,7 +27136,7 @@ function* Yield(value) {
     return yield* AsyncGeneratorYield(_temp8);
   }
   // 3. Otherwise, return ? GeneratorYield(CreateIterResultObject(value, false)).
-  return yield* GeneratorYield(CreateIterResultObject(value, _Value.false));
+  return yield* GeneratorYield(CreateIterResultObject(value, Value.false));
 }
 
 /** https://tc39.es/ecma262/#sec-createiteratorfromclosure */
@@ -27157,7 +27156,7 @@ function CreateIteratorFromClosure(closure, generatorBrand, generatorPrototype) 
   // 4. Set generator.[[GeneratorBrand]] to generatorBrand.
   generator.GeneratorBrand = generatorBrand;
   // 5. Set generator.[[GeneratorState]] to undefined.
-  generator.GeneratorState = _Value.undefined;
+  generator.GeneratorState = Value.undefined;
   // 6. Perform ! GeneratorStart(generator, closure).
   let _temp10 = GeneratorStart(generator, closure);
   Assert(!(_temp10 instanceof AbruptCompletion), "GeneratorStart(generator, closure)" + ' returned an abrupt completion');
@@ -27181,7 +27180,7 @@ function PerformEval(x, callerRealm, strictCaller, direct) {
     Assert(strictCaller === false, "strictCaller === false");
   }
   // 2. If Type(x) is not String, return x.
-  if (!(x instanceof StringValue)) {
+  if (!(x instanceof JSStringValue)) {
     return x;
   }
   // 3. Let evalRealm be the current Realm Record.
@@ -27221,7 +27220,7 @@ function PerformEval(x, callerRealm, strictCaller, direct) {
       // ii. Let inFunction be true.
       inFunction = true;
       // iii. Let inMethod be thisEnv.HasSuperBinding().
-      inMethod = thisEnv.HasSuperBinding() === _Value.true;
+      inMethod = thisEnv.HasSuperBinding() === Value.true;
       // iv. If F.[[ConstructorKind]] is derived, set inDerivedConstructor to true.
       if (F.ConstructorKind === 'derived') {
         inDerivedConstructor = true;
@@ -27244,8 +27243,8 @@ function PerformEval(x, callerRealm, strictCaller, direct) {
   //   g. If inDerivedConstructor is false, and body Contains SuperCall, throw a SyntaxError exception.
   //   h. If inClassFieldInitializer is true, and ContainsArguments of body is true, throw a SyntaxError exception.
   const privateIdentifiers = [];
-  let pointer = direct ? surroundingAgent.runningExecutionContext.PrivateEnvironment : _Value.null;
-  while (pointer !== _Value.null) {
+  let pointer = direct ? surroundingAgent.runningExecutionContext.PrivateEnvironment : Value.null;
+  while (pointer !== Value.null) {
     for (const binding of pointer.Names) {
       privateIdentifiers.push(binding.Description.stringValue());
     }
@@ -27269,7 +27268,7 @@ function PerformEval(x, callerRealm, strictCaller, direct) {
     return surroundingAgent.Throw(script[0]);
   }
   if (!script.ScriptBody) {
-    return _Value.undefined;
+    return Value.undefined;
   }
   const body = script.ScriptBody;
   if (inClassFieldInitializer && ContainsArguments(body)) {
@@ -27305,7 +27304,7 @@ function PerformEval(x, callerRealm, strictCaller, direct) {
     // b. Let varEnv be evalRealm.[[GlobalEnv]].
     varEnv = evalRealm.GlobalEnv;
     // c. Let privateEnv be null.
-    privateEnv = _Value.null;
+    privateEnv = Value.null;
   }
   // 17. If strictEval is true, set varEnv to lexEnv.
   if (strictEval === true) {
@@ -27315,7 +27314,7 @@ function PerformEval(x, callerRealm, strictCaller, direct) {
   // 19. Let evalContext be a new ECMAScript code execution context.
   const evalContext = new ExecutionContext();
   // 20. Set evalContext's Function to null.
-  evalContext.Function = _Value.null;
+  evalContext.Function = Value.null;
   // 21. Set evalContext's Realm to evalRealm.
   evalContext.Realm = evalRealm;
   // 22. Set evalContext's ScriptOrModule to runningContext's ScriptOrModule.
@@ -27338,7 +27337,7 @@ function PerformEval(x, callerRealm, strictCaller, direct) {
   // 29. If result.[[Type]] is normal and result.[[Value]] is empty, then
   if (result.Type === 'normal' && result.Value === undefined) {
     // a. Set result to NormalCompletion(undefined).
-    result = NormalCompletion(_Value.undefined);
+    result = NormalCompletion(Value.undefined);
   }
   // 30. Suspend evalContext and remove it from the execution context stack.
   // 31. Resume the context that is now on the top of the execution context stack as the running execution context.
@@ -27360,7 +27359,7 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strict) 
       // i. For each name in varNames, do
       for (const name of varNames) {
         // 1. If varEnv.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
-        if (varEnv.HasLexicalDeclaration(name) === _Value.true) {
+        if (varEnv.HasLexicalDeclaration(name) === Value.true) {
           return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
         }
         // 2. NOTE: eval will not create a global var declaration that would be shadowed by a global lexical declaration.
@@ -27377,7 +27376,7 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strict) 
         // 2. For each name in varNames, do
         for (const name of varNames) {
           // a. If thisEnv.HasBinding(name) is true, then
-          if (thisEnv.HasBinding(name) === _Value.true) {
+          if (thisEnv.HasBinding(name) === Value.true) {
             // i. Throw a SyntaxError exception.
             return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
             // ii. NOTE: Annex B.3.5 defines alternate semantics for the above step.
@@ -27394,7 +27393,7 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strict) 
   // 5. Let pointer be privateEnv.
   let pointer = privateEnv;
   // 6. Repeat, while pointer is not null,
-  while (pointer !== _Value.null) {
+  while (pointer !== Value.null) {
     // a. For each Private Name binding of pointer.[[Names]], do
     for (const binding of pointer.Names) {
       // i. If privateIdentifiers does not contain binding.[[Description]], append binding.[[Description]] to privateIdentifiers.
@@ -27434,7 +27433,7 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strict) 
           // a. Let fnDefinable be ? varEnv.CanDeclareGlobalFunction(fn).
           const fnDefinable = _temp3;
           // b. Let fnDefinable be ? varEnv.CanDeclareGlobalFunction(fn).
-          if (fnDefinable === _Value.false) {
+          if (fnDefinable === Value.false) {
             return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', fn);
           }
         }
@@ -27470,7 +27469,7 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strict) 
             // i. Let vnDefinable be ? varEnv.CanDeclareGlobalVar(vn).
             const vnDefinable = _temp4;
             // ii. If vnDefinable is false, throw a TypeError exception.
-            if (vnDefinable === _Value.false) {
+            if (vnDefinable === Value.false) {
               return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', vn);
             }
           }
@@ -27494,7 +27493,7 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strict) 
     for (const dn of BoundNames(d)) {
       // i. If IsConstantDeclaration of d is true, then
       if (IsConstantDeclaration(d)) {
-        let _temp5 = lexEnv.CreateImmutableBinding(dn, _Value.true);
+        let _temp5 = lexEnv.CreateImmutableBinding(dn, Value.true);
         /* c8 ignore if */
         if (_temp5 instanceof AbruptCompletion) {
           return _temp5;
@@ -27504,7 +27503,7 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strict) 
           _temp5 = _temp5.Value;
         }
       } else {
-        let _temp6 = lexEnv.CreateMutableBinding(dn, _Value.false);
+        let _temp6 = lexEnv.CreateMutableBinding(dn, Value.false);
         /* c8 ignore if */
         if (_temp6 instanceof AbruptCompletion) {
           return _temp6;
@@ -27524,7 +27523,7 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strict) 
     const fo = InstantiateFunctionObject(f, lexEnv, privateEnv);
     // c. If varEnv is a global Environment Record, then
     if (varEnv instanceof GlobalEnvironmentRecord) {
-      let _temp7 = varEnv.CreateGlobalFunctionBinding(fn, fo, _Value.true);
+      let _temp7 = varEnv.CreateGlobalFunctionBinding(fn, fo, Value.true);
       /* c8 ignore if */
       if (_temp7 instanceof AbruptCompletion) {
         return _temp7;
@@ -27538,8 +27537,8 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strict) 
       // i. Let bindingExists be varEnv.HasBinding(fn).
       const bindingExists = varEnv.HasBinding(fn);
       // ii. If bindingExists is false, then
-      if (bindingExists === _Value.false) {
-        let _temp8 = varEnv.CreateMutableBinding(fn, _Value.true);
+      if (bindingExists === Value.false) {
+        let _temp8 = varEnv.CreateMutableBinding(fn, Value.true);
         Assert(!(_temp8 instanceof AbruptCompletion), "varEnv.CreateMutableBinding(fn, Value.true)" + ' returned an abrupt completion');
         /* c8 ignore if */
         if (_temp8 instanceof Completion) {
@@ -27557,7 +27556,7 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strict) 
           _temp9 = _temp9.Value;
         }
       } else {
-        let _temp10 = varEnv.SetMutableBinding(fn, fo, _Value.false);
+        let _temp10 = varEnv.SetMutableBinding(fn, fo, Value.false);
         Assert(!(_temp10 instanceof AbruptCompletion), "varEnv.SetMutableBinding(fn, fo, Value.false)" + ' returned an abrupt completion');
         /* c8 ignore if */
         if (_temp10 instanceof Completion) {
@@ -27570,7 +27569,7 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strict) 
   for (const vn of declaredVarNames) {
     // a. If varEnv is a global Environment Record, then
     if (varEnv instanceof GlobalEnvironmentRecord) {
-      let _temp11 = varEnv.CreateGlobalVarBinding(vn, _Value.true);
+      let _temp11 = varEnv.CreateGlobalVarBinding(vn, Value.true);
       /* c8 ignore if */
       if (_temp11 instanceof AbruptCompletion) {
         return _temp11;
@@ -27584,8 +27583,8 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strict) 
       // i. Let bindingExists be varEnv.HasBinding(vn).
       const bindingExists = varEnv.HasBinding(vn);
       // ii. If bindingExists is false, then
-      if (bindingExists === _Value.false) {
-        let _temp12 = varEnv.CreateMutableBinding(vn, _Value.true);
+      if (bindingExists === Value.false) {
+        let _temp12 = varEnv.CreateMutableBinding(vn, Value.true);
         Assert(!(_temp12 instanceof AbruptCompletion), "varEnv.CreateMutableBinding(vn, Value.true)" + ' returned an abrupt completion');
         /* c8 ignore if */
         if (_temp12 instanceof Completion) {
@@ -27596,7 +27595,7 @@ function EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strict) 
         // 2. Assert: status is not an abrupt completion because of validation preceding step 12.
         Assert(!(status instanceof AbruptCompletion), "!(status instanceof AbruptCompletion)");
         // 3. Perform ! varEnv.InitializeBinding(vn, undefined).
-        let _temp13 = varEnv.InitializeBinding(vn, _Value.undefined);
+        let _temp13 = varEnv.InitializeBinding(vn, Value.undefined);
         Assert(!(_temp13 instanceof AbruptCompletion), "varEnv.InitializeBinding(vn, Value.undefined)" + ' returned an abrupt completion');
         /* c8 ignore if */
         if (_temp13 instanceof Completion) {
@@ -27626,11 +27625,11 @@ function SetImmutablePrototype(O, V) {
   }
   const current = _temp;
   // 3. If SameValue(V, current) is true, return true.
-  if (SameValue(V, current) === _Value.true) {
-    return _Value.true;
+  if (SameValue(V, current) === Value.true) {
+    return Value.true;
   }
   // 4. Return false.
-  return _Value.false;
+  return Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-ContinueDynamicImport */
@@ -27653,8 +27652,8 @@ function ContinueDynamicImport(promiseCapability, moduleCompletion) {
   const loadPromise = module.LoadRequestedModules();
 
   // 4. Let rejectedClosure be a new Abstract Closure with parameters (reason) that captures promiseCapability and performs the following steps when called:
-  const rejectedClosure = ([reason = _Value.undefined]) => {
-    let _temp2 = Call(promiseCapability.Reject, _Value.undefined, [reason]);
+  const rejectedClosure = ([reason = Value.undefined]) => {
+    let _temp2 = Call(promiseCapability.Reject, Value.undefined, [reason]);
     Assert(!(_temp2 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [reason])" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp2 instanceof Completion) {
@@ -27663,7 +27662,7 @@ function ContinueDynamicImport(promiseCapability, moduleCompletion) {
     // b. Return unused.
   };
   // 5. Let onRejected be CreateBuiltinFunction(rejectedClosure, 1, "", « »).
-  const onRejected = _Value(rejectedClosure);
+  const onRejected = CreateBuiltinFunction(rejectedClosure, 1, Value(''), []);
 
   // 6. Let linkAndEvaluateClosure be a new Abstract Closure with no parameters that captures module, promiseCapability, and onRejected and performs the following steps when called:
   const linkAndEvaluateClosure = () => {
@@ -27671,7 +27670,7 @@ function ContinueDynamicImport(promiseCapability, moduleCompletion) {
     const link = module.Link();
     // b. If link is an abrupt completion, then
     if (link instanceof AbruptCompletion) {
-      let _temp3 = Call(promiseCapability.Reject, _Value.undefined, [link.Value]);
+      let _temp3 = Call(promiseCapability.Reject, Value.undefined, [link.Value]);
       Assert(!(_temp3 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [link.Value])" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp3 instanceof Completion) {
@@ -27689,7 +27688,7 @@ function ContinueDynamicImport(promiseCapability, moduleCompletion) {
       // i. Let namespace be GetModuleNamespace(module).
       const namespace = GetModuleNamespace(module);
       // ii. Perform ! Call(promiseCapability.[[Resolve]], undefined, « namespace »).
-      let _temp4 = Call(promiseCapability.Resolve, _Value.undefined, [namespace]);
+      let _temp4 = Call(promiseCapability.Resolve, Value.undefined, [namespace]);
       Assert(!(_temp4 instanceof AbruptCompletion), "Call(promiseCapability.Resolve, Value.undefined, [namespace])" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp4 instanceof Completion) {
@@ -27698,14 +27697,14 @@ function ContinueDynamicImport(promiseCapability, moduleCompletion) {
       // iii. Return unused.
     };
     // e. Let onFulfilled be CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
-    const onFulfilled = _Value(fulfilledClosure);
+    const onFulfilled = CreateBuiltinFunction(fulfilledClosure, 0, Value(''), []);
 
     // f. Perform PerformPromiseThen(evaluatePromise, onFulfilled, onRejected).
     PerformPromiseThen(evaluatePromise, onFulfilled, onRejected);
     // g. Return unused.
   };
   // 7. Let linkAndEvaluate be CreateBuiltinFunction(linkAndEvaluateClosure, 0, "", « »).
-  const linkAndEvaluate = _Value(linkAndEvaluateClosure);
+  const linkAndEvaluate = CreateBuiltinFunction(linkAndEvaluateClosure, 0, Value(''), []);
 
   // 8. Perform PerformPromiseThen(loadPromise, linkAndEvaluate, onRejected).
   PerformPromiseThen(loadPromise, linkAndEvaluate, onRejected);
@@ -27724,7 +27723,7 @@ function IntegerIndexedGetOwnProperty(P) {
   // 2. Assert: O is an Integer-Indexed exotic object.
   Assert(isIntegerIndexedExoticObject(O), "isIntegerIndexedExoticObject(O)");
   // 3. If Type(P) is String, then
-  if (P instanceof StringValue) {
+  if (P instanceof JSStringValue) {
     let _temp = CanonicalNumericIndexString(P);
     Assert(!(_temp instanceof AbruptCompletion), "CanonicalNumericIndexString(P)" + ' returned an abrupt completion');
     /* c8 ignore if */
@@ -27734,7 +27733,7 @@ function IntegerIndexedGetOwnProperty(P) {
     // a. Let numericIndex be ! CanonicalNumericIndexString(P).
     const numericIndex = _temp;
     // b. If numericIndex is not undefined, then
-    if (numericIndex !== _Value.undefined) {
+    if (numericIndex !== Value.undefined) {
       let _temp2 = IntegerIndexedElementGet(O, numericIndex);
       Assert(!(_temp2 instanceof AbruptCompletion), "IntegerIndexedElementGet(O, numericIndex)" + ' returned an abrupt completion');
       /* c8 ignore if */
@@ -27744,15 +27743,15 @@ function IntegerIndexedGetOwnProperty(P) {
       // i. Let value be ! IntegerIndexedElementGet(O, numericIndex).
       const value = _temp2;
       // ii. If value is undefined, return undefined.
-      if (value === _Value.undefined) {
-        return _Value.undefined;
+      if (value === Value.undefined) {
+        return Value.undefined;
       }
       // iii. Return the PropertyDescriptor { [[Value]]: value, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: true }.
       return _Descriptor({
         Value: value,
-        Writable: _Value.true,
-        Enumerable: _Value.true,
-        Configurable: _Value.true
+        Writable: Value.true,
+        Enumerable: Value.true,
+        Configurable: Value.true
       });
     }
   }
@@ -27768,7 +27767,7 @@ function IntegerIndexedHasProperty(P) {
   // 2. Assert: O is an Integer-Indexed exotic object.
   Assert(isIntegerIndexedExoticObject(O), "isIntegerIndexedExoticObject(O)");
   // 3. If Type(P) is String, then
-  if (P instanceof StringValue) {
+  if (P instanceof JSStringValue) {
     let _temp3 = CanonicalNumericIndexString(P);
     Assert(!(_temp3 instanceof AbruptCompletion), "CanonicalNumericIndexString(P)" + ' returned an abrupt completion');
     /* c8 ignore if */
@@ -27778,19 +27777,19 @@ function IntegerIndexedHasProperty(P) {
     // a. Let numericIndex be ! CanonicalNumericIndexString(P).
     const numericIndex = _temp3;
     // b. If numericIndex is not undefined, then
-    if (numericIndex !== _Value.undefined) {
+    if (numericIndex !== Value.undefined) {
       // i. Let buffer be O.[[ViewedArrayBuffer]].
       const buffer = O.ViewedArrayBuffer;
       // ii. If IsDetachedBuffer(buffer) is true, return false.
-      if (IsDetachedBuffer(buffer) === _Value.true) {
-        return _Value.false;
+      if (IsDetachedBuffer(buffer) === Value.true) {
+        return Value.false;
       }
       // iii. If ! IsValidIntegerIndex(O, numericIndex) is false, return false.
-      if (IsValidIntegerIndex(O, numericIndex) === _Value.false) {
-        return _Value.false;
+      if (IsValidIntegerIndex(O, numericIndex) === Value.false) {
+        return Value.false;
       }
       // iv. Return true.
-      return _Value.true;
+      return Value.true;
     }
   }
   // 4. Return ? OrdinaryHasProperty(O, P)
@@ -27805,7 +27804,7 @@ function IntegerIndexedDefineOwnProperty(P, Desc) {
   // 2. Assert: O is an Integer-Indexed exotic object.
   Assert(isIntegerIndexedExoticObject(O), "isIntegerIndexedExoticObject(O)");
   // 3. If Type(P) is String, then
-  if (P instanceof StringValue) {
+  if (P instanceof JSStringValue) {
     let _temp4 = CanonicalNumericIndexString(P);
     Assert(!(_temp4 instanceof AbruptCompletion), "CanonicalNumericIndexString(P)" + ' returned an abrupt completion');
     /* c8 ignore if */
@@ -27815,26 +27814,26 @@ function IntegerIndexedDefineOwnProperty(P, Desc) {
     // a. Let numericIndex be ! CanonicalNumericIndexString(P).
     const numericIndex = _temp4;
     // b. If numericIndex is not undefined, then
-    if (numericIndex !== _Value.undefined) {
+    if (numericIndex !== Value.undefined) {
       // i. If ! IsValidIntegerIndex(O, numericIndex) is false, return false.
-      if (IsValidIntegerIndex(O, numericIndex) === _Value.false) {
-        return _Value.false;
+      if (IsValidIntegerIndex(O, numericIndex) === Value.false) {
+        return Value.false;
       }
       // ii. If IsAccessorDescriptor(Desc) is true, return false.
       if (IsAccessorDescriptor(Desc)) {
-        return _Value.false;
+        return Value.false;
       }
       // iii. If Desc has a [[Configurable]] field and if Desc.[[Configurable]] is true, return false.
-      if (Desc.Configurable === _Value.false) {
-        return _Value.false;
+      if (Desc.Configurable === Value.false) {
+        return Value.false;
       }
       // iv. If Desc has an [[Enumerable]] field and if Desc.[[Enumerable]] is false, return false.
-      if (Desc.Enumerable === _Value.false) {
-        return _Value.false;
+      if (Desc.Enumerable === Value.false) {
+        return Value.false;
       }
       // v. If Desc has a [[Writable]] field and if Desc.[[Writable]] is false, return false.
-      if (Desc.Writable === _Value.false) {
-        return _Value.false;
+      if (Desc.Writable === Value.false) {
+        return Value.false;
       }
       // vi. If Desc has a [[Value]] field, then
       if (Desc.Value !== undefined) {
@@ -27844,7 +27843,7 @@ function IntegerIndexedDefineOwnProperty(P, Desc) {
         return IntegerIndexedElementSet(O, numericIndex, value);
       }
       // vii. Return true.
-      return _Value.true;
+      return Value.true;
     }
   }
   // 4. Return ! OrdinaryDefineOwnProperty(O, P, Desc).
@@ -27857,7 +27856,7 @@ function IntegerIndexedGet(P, Receiver) {
   // 1. Assert: IsPropertykey(P) is true.
   Assert(IsPropertyKey(P), "IsPropertyKey(P)");
   // 2. If Type(P) is String, then
-  if (P instanceof StringValue) {
+  if (P instanceof JSStringValue) {
     let _temp5 = CanonicalNumericIndexString(P);
     Assert(!(_temp5 instanceof AbruptCompletion), "CanonicalNumericIndexString(P)" + ' returned an abrupt completion');
     /* c8 ignore if */
@@ -27867,7 +27866,7 @@ function IntegerIndexedGet(P, Receiver) {
     // a. Let numericIndex be ! CanonicalNumericIndexString(P).
     const numericIndex = _temp5;
     // b. If numericIndex is not undefined, then
-    if (numericIndex !== _Value.undefined) {
+    if (numericIndex !== Value.undefined) {
       let _temp6 = IntegerIndexedElementGet(O, numericIndex);
       Assert(!(_temp6 instanceof AbruptCompletion), "IntegerIndexedElementGet(O, numericIndex)" + ' returned an abrupt completion');
       /* c8 ignore if */
@@ -27888,7 +27887,7 @@ function IntegerIndexedSet(P, V, Receiver) {
   // 1. Assert: IsPropertyKey(P) is true.
   Assert(IsPropertyKey(P), "IsPropertyKey(P)");
   // 2. If Type(P) is String, then
-  if (P instanceof StringValue) {
+  if (P instanceof JSStringValue) {
     let _temp7 = CanonicalNumericIndexString(P);
     Assert(!(_temp7 instanceof AbruptCompletion), "CanonicalNumericIndexString(P)" + ' returned an abrupt completion');
     /* c8 ignore if */
@@ -27898,7 +27897,7 @@ function IntegerIndexedSet(P, V, Receiver) {
     // a. Let numericIndex be ! CanonicalNumericIndexString(P).
     const numericIndex = _temp7;
     // b. If numericIndex is not undefined, then
-    if (numericIndex !== _Value.undefined) {
+    if (numericIndex !== Value.undefined) {
       let _temp8 = IntegerIndexedElementSet(O, numericIndex, V);
       /* c8 ignore if */
       if (_temp8 instanceof AbruptCompletion) {
@@ -27909,7 +27908,7 @@ function IntegerIndexedSet(P, V, Receiver) {
         _temp8 = _temp8.Value;
       }
       // ii. Return true.
-      return _Value.true;
+      return Value.true;
     }
   }
   // 3. Return ? OrdinarySet(O, P, V, Receiver).
@@ -27924,7 +27923,7 @@ function IntegerIndexedDelete(P) {
   // 2. Assert: O is an Integer-Indexed exotic object.
   Assert(isIntegerIndexedExoticObject(O), "isIntegerIndexedExoticObject(O)");
   // 3. If Type(P) is String, then
-  if (P instanceof StringValue) {
+  if (P instanceof JSStringValue) {
     let _temp9 = CanonicalNumericIndexString(P);
     Assert(!(_temp9 instanceof AbruptCompletion), "CanonicalNumericIndexString(P)" + ' returned an abrupt completion');
     /* c8 ignore if */
@@ -27934,10 +27933,10 @@ function IntegerIndexedDelete(P) {
     // a. Let numericIndex be ! CanonicalNumericIndexString(P).
     const numericIndex = _temp9;
     // b. If numericIndex is not undefined, then
-    if (numericIndex !== _Value.undefined) {
+    if (numericIndex !== Value.undefined) {
       // i. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, return true.
-      if (IsDetachedBuffer(O.ViewedArrayBuffer) === _Value.true) {
-        return _Value.true;
+      if (IsDetachedBuffer(O.ViewedArrayBuffer) === Value.true) {
+        return Value.true;
       }
       // ii. If ! IsValidIntegerIndex(O, numericIndex) is false, return true.
       let _temp10 = IsValidIntegerIndex(O, numericIndex);
@@ -27946,11 +27945,11 @@ function IntegerIndexedDelete(P) {
       if (_temp10 instanceof Completion) {
         _temp10 = _temp10.Value;
       }
-      if (_temp10 === _Value.false) {
-        return _Value.true;
+      if (_temp10 === Value.false) {
+        return Value.true;
       }
       // iii. Return false.
-      return _Value.false;
+      return Value.false;
     }
   }
   // 4. Return ? OrdinaryDelete(O, P).
@@ -27979,7 +27978,7 @@ function IntegerIndexedOwnPropertyKeys() {
   }
   // 5. For each own property key P of O such that Type(P) is String and P is not an integer index, in ascending chronological order of property creation, do
   for (const P of O.properties.keys()) {
-    if (P instanceof StringValue) {
+    if (P instanceof JSStringValue) {
       if (!isIntegerIndex(P)) {
         // a. Add P as the last element of keys.
         keys.push(P);
@@ -28006,12 +28005,12 @@ function IntegerIndexedElementGet(O, index) {
   // 3. Let buffer be O.[[ViewedArrayBuffer]].
   const buffer = O.ViewedArrayBuffer;
   // 4. If IsDetachedBuffer(buffer) is true, return undefined.
-  if (IsDetachedBuffer(buffer) === _Value.true) {
-    return _Value.undefined;
+  if (IsDetachedBuffer(buffer) === Value.true) {
+    return Value.undefined;
   }
   // 5. If ! IsValidIntegerIndex(O, index) is false, return undefined.
-  if (IsValidIntegerIndex(O, index) === _Value.false) {
-    return _Value.undefined;
+  if (IsValidIntegerIndex(O, index) === Value.false) {
+    return Value.undefined;
   }
   // 6. Let offset be O.[[ByteOffset]].
   const offset = O.ByteOffset;
@@ -28024,7 +28023,7 @@ function IntegerIndexedElementGet(O, index) {
   // 10. Let elementType be the Element Type value in Table 61 for arrayTypeName.
   const elementType = typedArrayInfoByName[arrayTypeName].ElementType;
   // 11. Return GetValueFromBuffer(buffer, indexedPosition, elementType, true, Unordered).
-  return GetValueFromBuffer(buffer, indexedPosition, elementType, _Value.true);
+  return GetValueFromBuffer(buffer, indexedPosition, elementType, Value.true);
 }
 
 /** https://tc39.es/ecma262/#sec-integerindexedelementset */
@@ -28062,12 +28061,12 @@ function IntegerIndexedElementSet(O, index, value) {
   // 5. Let buffer be O.[[ViewedArrayBuffer]].
   const buffer = O.ViewedArrayBuffer;
   // 6. If IsDetachedBuffer(buffer) is true, return false.
-  if (IsDetachedBuffer(buffer) === _Value.true) {
-    return _Value.false;
+  if (IsDetachedBuffer(buffer) === Value.true) {
+    return Value.false;
   }
   // 7. If ! IsValidIntegerIndex(O, index) is false, return false.
-  if (IsValidIntegerIndex(O, index) === _Value.false) {
-    return _Value.false;
+  if (IsValidIntegerIndex(O, index) === Value.false) {
+    return Value.false;
   }
   // 8. Let offset be O.[[ByteOffset]].
   const offset = O.ByteOffset;
@@ -28080,14 +28079,14 @@ function IntegerIndexedElementSet(O, index, value) {
   // 12. Let elementType be the Element Type value in Table 61 for arrayTypeName.
   const elementType = typedArrayInfoByName[arrayTypeName].ElementType;
   // 13. Perform SetValueInBuffer(buffer, indexedPosition, elementType, numValue, true, Unordered).
-  let _temp14 = SetValueInBuffer(buffer, indexedPosition, elementType, numValue, _Value.true);
+  let _temp14 = SetValueInBuffer(buffer, indexedPosition, elementType, numValue, Value.true);
   Assert(!(_temp14 instanceof AbruptCompletion), "SetValueInBuffer(buffer, indexedPosition, elementType, numValue, Value.true, 'Unordered')" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp14 instanceof Completion) {
     _temp14 = _temp14.Value;
   }
   // 14. Return true.
-  return _Value.true;
+  return Value.true;
 }
 
 /** https://tc39.es/ecma262/#sec-integerindexedobjectcreate */
@@ -28145,7 +28144,7 @@ function GetIterator(obj, hint, method) {
         _temp = _temp.Value;
       }
       method = _temp;
-      if (method === _Value.undefined) {
+      if (method === Value.undefined) {
         let _temp2 = GetMethod(obj, wellKnownSymbols.iterator);
         /* c8 ignore if */
         if (_temp2 instanceof AbruptCompletion) {
@@ -28194,7 +28193,7 @@ function GetIterator(obj, hint, method) {
   if (!(iterator instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', iterator);
   }
-  let _temp6 = GetV(iterator, _Value('next'));
+  let _temp6 = GetV(iterator, Value('next'));
   /* c8 ignore if */
   if (_temp6 instanceof AbruptCompletion) {
     return _temp6;
@@ -28207,7 +28206,7 @@ function GetIterator(obj, hint, method) {
   const iteratorRecord = {
     Iterator: iterator,
     NextMethod: nextMethod,
-    Done: _Value.false
+    Done: Value.false
   };
   return EnsureCompletion(iteratorRecord);
 }
@@ -28247,7 +28246,7 @@ function IteratorNext(iteratorRecord, value) {
 /** https://tc39.es/ecma262/#sec-iteratorcomplete */
 function IteratorComplete(iterResult) {
   Assert(iterResult instanceof ObjectValue, "iterResult instanceof ObjectValue");
-  let _temp9 = Get(iterResult, _Value('done'));
+  let _temp9 = Get(iterResult, Value('done'));
   /* c8 ignore if */
   if (_temp9 instanceof AbruptCompletion) {
     return _temp9;
@@ -28262,7 +28261,7 @@ function IteratorComplete(iterResult) {
 /** https://tc39.es/ecma262/#sec-iteratorvalue */
 function IteratorValue(iterResult) {
   Assert(iterResult instanceof ObjectValue, "iterResult instanceof ObjectValue");
-  let _temp10 = Get(iterResult, _Value('value'));
+  let _temp10 = Get(iterResult, Value('value'));
   /* c8 ignore if */
   if (_temp10 instanceof AbruptCompletion) {
     return _temp10;
@@ -28296,8 +28295,8 @@ function IteratorStep(iteratorRecord) {
     _temp12 = _temp12.Value;
   }
   const done = _temp12;
-  if (done === _Value.true) {
-    return EnsureCompletion(_Value.false);
+  if (done === Value.true) {
+    return EnsureCompletion(Value.false);
   }
   return EnsureCompletion(result);
 }
@@ -28313,13 +28312,13 @@ function IteratorClose(iteratorRecord, completion) {
   // 3. Let iterator be iteratorRecord.[[Iterator]].
   const iterator = iteratorRecord.Iterator;
   // 4. Let innerResult be GetMethod(iterator, "return").
-  let innerResult = EnsureCompletion(GetMethod(iterator, _Value('return')));
+  let innerResult = EnsureCompletion(GetMethod(iterator, Value('return')));
   // 5. If innerResult.[[Type]] is normal, then
   if (innerResult.Type === 'normal') {
     // a. Let return be innerResult.[[Value]].
     const ret = innerResult.Value;
     // b. If return is undefined, return Completion(completion).
-    if (ret === _Value.undefined) {
+    if (ret === Value.undefined) {
       return Completion(completion);
     }
     // c. Set innerResult to Call(return, iterator).
@@ -28350,13 +28349,13 @@ function* AsyncIteratorClose(iteratorRecord, completion) {
   // 3. Let iterator be iteratorRecord.[[Iterator]].
   const iterator = iteratorRecord.Iterator;
   // 4. Let innerResult be GetMethod(iterator, "return").
-  let innerResult = EnsureCompletion(GetMethod(iterator, _Value('return')));
+  let innerResult = EnsureCompletion(GetMethod(iterator, Value('return')));
   // 5. If innerResult.[[Type]] is normal, then
   if (innerResult.Type === 'normal') {
     // a. Let return be innerResult.[[Value]].
     const ret = innerResult.Value;
     // b. If return is undefined, return Completion(completion).
-    if (ret === _Value.undefined) {
+    if (ret === Value.undefined) {
       return Completion(completion);
     }
     // c. Set innerResult to Call(return, iterator).
@@ -28386,13 +28385,13 @@ function* AsyncIteratorClose(iteratorRecord, completion) {
 function CreateIterResultObject(value, done) {
   Assert(done instanceof BooleanValue, "done instanceof BooleanValue");
   const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
-  let _temp13 = CreateDataProperty(obj, _Value('value'), value);
+  let _temp13 = CreateDataProperty(obj, Value('value'), value);
   Assert(!(_temp13 instanceof AbruptCompletion), "CreateDataProperty(obj, Value('value'), value)" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp13 instanceof Completion) {
     _temp13 = _temp13.Value;
   }
-  let _temp14 = CreateDataProperty(obj, _Value('done'), done);
+  let _temp14 = CreateDataProperty(obj, Value('done'), done);
   Assert(!(_temp14 instanceof AbruptCompletion), "CreateDataProperty(obj, Value('done'), done)" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp14 instanceof Completion) {
@@ -28418,7 +28417,7 @@ function CreateListIteratorRecord(list) {
       }
     }
     // b. Return undefined.
-    return NormalCompletion(_Value.undefined);
+    return NormalCompletion(Value.undefined);
   };
   // 2. Let iterator be ! CreateIteratorFromClosure(closure, empty, %IteratorPrototype%).
   let _temp16 = CreateIteratorFromClosure(closure, undefined, surroundingAgent.intrinsic('%IteratorPrototype%'));
@@ -28432,7 +28431,7 @@ function CreateListIteratorRecord(list) {
   return {
     Iterator: iterator,
     NextMethod: surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype.next%'),
-    Done: _Value.false
+    Done: Value.false
   };
 }
 
@@ -28446,7 +28445,7 @@ function CreateAsyncFromSyncIterator(syncIteratorRecord) {
   }
   const asyncIterator = _temp17;
   asyncIterator.SyncIteratorRecord = syncIteratorRecord;
-  let _temp18 = Get(asyncIterator, _Value('next'));
+  let _temp18 = Get(asyncIterator, Value('next'));
   Assert(!(_temp18 instanceof AbruptCompletion), "Get(asyncIterator, Value('next'))" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp18 instanceof Completion) {
@@ -28456,7 +28455,7 @@ function CreateAsyncFromSyncIterator(syncIteratorRecord) {
   return {
     Iterator: asyncIterator,
     NextMethod: nextMethod,
-    Done: _Value.false
+    Done: Value.false
   };
 }
 
@@ -28467,7 +28466,7 @@ function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
   // 2. IfAbruptRejectPromise(done, promiseCapability).
   /* c8 ignore if */
   if (done instanceof AbruptCompletion) {
-    const hygenicTemp2 = Call(promiseCapability.Reject, _Value.undefined, [done.Value]);
+    const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [done.Value]);
     if (hygenicTemp2 instanceof AbruptCompletion) {
       return hygenicTemp2;
     }
@@ -28482,7 +28481,7 @@ function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
   // 4. IfAbruptRejectPromise(value, promiseCapability).
   /* c8 ignore if */
   if (value instanceof AbruptCompletion) {
-    const hygenicTemp2 = Call(promiseCapability.Reject, _Value.undefined, [value.Value]);
+    const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [value.Value]);
     if (hygenicTemp2 instanceof AbruptCompletion) {
       return hygenicTemp2;
     }
@@ -28497,7 +28496,7 @@ function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
   // 6. IfAbruptRejectPromise(valueWrapper, promiseCapability).
   /* c8 ignore if */
   if (valueWrapper instanceof AbruptCompletion) {
-    const hygenicTemp2 = Call(promiseCapability.Reject, _Value.undefined, [valueWrapper.Value]);
+    const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [valueWrapper.Value]);
     if (hygenicTemp2 instanceof AbruptCompletion) {
       return hygenicTemp2;
     }
@@ -28509,7 +28508,7 @@ function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
   }
   // 7. Let unwrap be a new Abstract Closure with parameters (value) that captures done and performs the following steps when called:
   // eslint-disable-next-line arrow-body-style
-  const unwrap = ([valueInner = _Value.undefined]) => {
+  const unwrap = ([valueInner = Value.undefined]) => {
     let _temp19 = CreateIterResultObject(valueInner, done);
     Assert(!(_temp19 instanceof AbruptCompletion), "CreateIterResultObject(valueInner, done)" + ' returned an abrupt completion');
     /* c8 ignore if */
@@ -28520,7 +28519,7 @@ function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
     return _temp19;
   };
   // 8. Let onFulfilled be ! CreateBuiltinFunction(unwrap, 1, "", « »).
-  let _temp20 = CreateBuiltinFunction(unwrap, 1, _Value(''), ['Done']);
+  let _temp20 = CreateBuiltinFunction(unwrap, 1, Value(''), ['Done']);
   Assert(!(_temp20 instanceof AbruptCompletion), "CreateBuiltinFunction(unwrap, 1, Value(''), ['Done'])" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp20 instanceof Completion) {
@@ -28529,7 +28528,7 @@ function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
   const onFulfilled = _temp20;
   // 9. NOTE: onFulfilled is used when processing the "value" property of an IteratorResult object in order to wait for its value if it is a promise and re-package the result in a new "unwrapped" IteratorResult object.
   // 10. Perform ! PerformPromiseThen(valueWrapper, onFulfilled, undefined, promiseCapability).
-  let _temp21 = PerformPromiseThen(valueWrapper, onFulfilled, _Value.undefined, promiseCapability);
+  let _temp21 = PerformPromiseThen(valueWrapper, onFulfilled, Value.undefined, promiseCapability);
   Assert(!(_temp21 instanceof AbruptCompletion), "PerformPromiseThen(valueWrapper, onFulfilled, Value.undefined, promiseCapability)" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp21 instanceof Completion) {
@@ -28544,10 +28543,10 @@ function ModuleNamespaceSetPrototypeOf(V) {
   return SetImmutablePrototype(O, V);
 }
 function ModuleNamespaceIsExtensible() {
-  return _Value.false;
+  return Value.false;
 }
 function ModuleNamespacePreventExtensions() {
-  return _Value.true;
+  return Value.true;
 }
 function ModuleNamespaceGetOwnProperty(P) {
   const O = this;
@@ -28556,7 +28555,7 @@ function ModuleNamespaceGetOwnProperty(P) {
   }
   const exports = O.Exports;
   if (!exports.has(P)) {
-    return _Value.undefined;
+    return Value.undefined;
   }
   let _temp = O.Get(P, O);
   /* c8 ignore if */
@@ -28570,9 +28569,9 @@ function ModuleNamespaceGetOwnProperty(P) {
   const value = _temp;
   return _Descriptor({
     Value: value,
-    Writable: _Value.true,
-    Enumerable: _Value.true,
-    Configurable: _Value.false
+    Writable: Value.true,
+    Enumerable: Value.true,
+    Configurable: Value.false
   });
 }
 function ModuleNamespaceDefineOwnProperty(P, Desc) {
@@ -28590,25 +28589,25 @@ function ModuleNamespaceDefineOwnProperty(P, Desc) {
     _temp2 = _temp2.Value;
   }
   const current = _temp2;
-  if (current === _Value.undefined) {
-    return _Value.false;
+  if (current === Value.undefined) {
+    return Value.false;
   }
   if (IsAccessorDescriptor(Desc)) {
-    return _Value.false;
+    return Value.false;
   }
-  if (Desc.Writable !== undefined && Desc.Writable === _Value.false) {
-    return _Value.false;
+  if (Desc.Writable !== undefined && Desc.Writable === Value.false) {
+    return Value.false;
   }
-  if (Desc.Enumerable !== undefined && Desc.Enumerable === _Value.false) {
-    return _Value.false;
+  if (Desc.Enumerable !== undefined && Desc.Enumerable === Value.false) {
+    return Value.false;
   }
-  if (Desc.Configurable !== undefined && Desc.Configurable === _Value.true) {
-    return _Value.false;
+  if (Desc.Configurable !== undefined && Desc.Configurable === Value.true) {
+    return Value.false;
   }
   if (Desc.Value !== undefined) {
     return SameValue(Desc.Value, current.Value);
   }
-  return _Value.true;
+  return Value.true;
 }
 function ModuleNamespaceHasProperty(P) {
   const O = this;
@@ -28617,9 +28616,9 @@ function ModuleNamespaceHasProperty(P) {
   }
   const exports = O.Exports;
   if (exports.has(P)) {
-    return _Value.true;
+    return Value.true;
   }
-  return _Value.false;
+  return Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-get-p-receiver */
@@ -28637,7 +28636,7 @@ function ModuleNamespaceGet(P, Receiver) {
   const exports = O.Exports;
   // 4. If P is not an element of exports, return undefined.
   if (!exports.has(P)) {
-    return _Value.undefined;
+    return Value.undefined;
   }
   // 5. Let m be O.[[Module]].
   const m = O.Module;
@@ -28648,7 +28647,7 @@ function ModuleNamespaceGet(P, Receiver) {
   // 8. Let targetModule be binding.[[Module]].
   const targetModule = binding.Module;
   // 9. Assert: targetModule is not undefined.
-  Assert(targetModule !== _Value.undefined, "targetModule !== Value.undefined");
+  Assert(targetModule !== Value.undefined, "targetModule !== Value.undefined");
   // 10. If binding.[[BindingName]] is ~namespace~, then
   if (binding.BindingName === 'namespace') {
     // a. Return ? GetModuleNamespace(targetModule).
@@ -28657,15 +28656,15 @@ function ModuleNamespaceGet(P, Receiver) {
   // 11. Let targetEnv be targetModule.[[Environment]].
   const targetEnv = targetModule.Environment;
   // 12. If targetEnv is undefined, throw a ReferenceError exception.
-  if (targetEnv === _Value.undefined) {
+  if (targetEnv === Value.undefined) {
     return surroundingAgent.Throw('ReferenceError', 'NotDefined', P);
   }
   // 13. Return ? targetEnv.GetBindingValue(binding.[[BindingName]], true).
-  return targetEnv.GetBindingValue(binding.BindingName, _Value.true);
+  return targetEnv.GetBindingValue(binding.BindingName, Value.true);
 }
 ModuleNamespaceGet.section = 'https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-get-p-receiver';
 function ModuleNamespaceSet() {
-  return _Value.false;
+  return Value.false;
 }
 function ModuleNamespaceDelete(P) {
   const O = this;
@@ -28675,9 +28674,9 @@ function ModuleNamespaceDelete(P) {
   }
   const exports = O.Exports;
   if (exports.has(P)) {
-    return _Value.false;
+    return Value.false;
   }
-  return _Value.true;
+  return Value.true;
 }
 function ModuleNamespaceOwnPropertyKeys() {
   const O = this;
@@ -28698,7 +28697,7 @@ function ModuleNamespaceCreate(module, exports) {
   // 1. Assert: module is a Module Record.
   Assert(module instanceof AbstractModuleRecord, "module instanceof AbstractModuleRecord");
   // 2. Assert: module.[[Namespace]] is undefined.
-  Assert(module.Namespace === _Value.undefined, "module.Namespace === Value.undefined");
+  Assert(module.Namespace === Value.undefined, "module.Namespace === Value.undefined");
   // 3. Assert: exports is a List of String values.
   Assert(Array.isArray(exports), "Array.isArray(exports)");
   // 4. Let internalSlotsList be the internal slots listed in Table 31.
@@ -28723,12 +28722,12 @@ function ModuleNamespaceCreate(module, exports) {
   M.Delete = ModuleNamespaceDelete;
   M.OwnPropertyKeys = ModuleNamespaceOwnPropertyKeys;
   // 7. Set M.[[Prototype]] to null.
-  M.Prototype = _Value.null;
+  M.Prototype = Value.null;
   // 8. Set M.[[Module]] to module.
   M.Module = module;
   // 9. Let sortedExports be a new List containing the same values as the list exports where the values are ordered as if an Array of the same values had been sorted using Array.prototype.sort using undefined as comparefn.
   const sortedExports = [...exports].sort((x, y) => {
-    let _temp5 = SortCompare(x, y, _Value.undefined);
+    let _temp5 = SortCompare(x, y, Value.undefined);
     Assert(!(_temp5 instanceof AbruptCompletion), "SortCompare(x, y, Value.undefined)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp5 instanceof Completion) {
@@ -28741,10 +28740,10 @@ function ModuleNamespaceCreate(module, exports) {
   M.Exports = new ValueSet(sortedExports);
   // 11. Create own properties of M corresponding to the definitions in 26.3.
   M.properties.set(wellKnownSymbols.toStringTag, _Descriptor({
-    Writable: _Value.false,
-    Enumerable: _Value.false,
-    Configurable: _Value.false,
-    Value: _Value('Module')
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.false,
+    Value: Value('Module')
   }));
   // 12. Set module.[[Namespace]] to M.
   module.Namespace = M;
@@ -28818,7 +28817,7 @@ function InnerModuleLoading(state, module) {
       }
     }
     // c. Perform ! Call(state.[[PromiseCapability]].[[Resolve]], undefined, « undefined »).
-    let _temp = Call(state.PromiseCapability.Resolve, _Value.undefined, [_Value.undefined]);
+    let _temp = Call(state.PromiseCapability.Resolve, Value.undefined, [Value.undefined]);
     Assert(!(_temp instanceof AbruptCompletion), "Call(state.PromiseCapability.Resolve, Value.undefined, [Value.undefined])" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp instanceof Completion) {
@@ -28844,7 +28843,7 @@ function ContinueModuleLoading(state, result) {
     // a. Set state.[[IsLoading]] to false.
     state.IsLoading = false;
     // b. Perform ! Call(state.[[PromiseCapability]].[[Reject]], undefined, « moduleCompletion.[[Value]] »).
-    let _temp2 = Call(state.PromiseCapability.Reject, _Value.undefined, [result.Value]);
+    let _temp2 = Call(state.PromiseCapability.Reject, Value.undefined, [result.Value]);
     Assert(!(_temp2 instanceof AbruptCompletion), "Call(state.PromiseCapability.Reject, Value.undefined, [result.Value])" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp2 instanceof Completion) {
@@ -28938,7 +28937,7 @@ function InnerModuleEvaluation(module, stack, index) {
     return index;
   }
   if (module.Status === 'evaluating-async' || module.Status === 'evaluated') {
-    if (module.EvaluationError === _Value.undefined) {
+    if (module.EvaluationError === Value.undefined) {
       return index;
     } else {
       return module.EvaluationError;
@@ -28975,19 +28974,19 @@ function InnerModuleEvaluation(module, stack, index) {
       } else {
         requiredModule = GetAsyncCycleRoot(requiredModule);
         Assert(requiredModule.Status === 'evaluating-async' || requiredModule.Status === 'evaluated', "requiredModule.Status === 'evaluating-async' || requiredModule.Status === 'evaluated'");
-        if (requiredModule.EvaluationError !== _Value.undefined) {
+        if (requiredModule.EvaluationError !== Value.undefined) {
           return module.EvaluationError;
         }
       }
-      if (requiredModule.AsyncEvaluating === _Value.true) {
+      if (requiredModule.AsyncEvaluating === Value.true) {
         module.PendingAsyncDependencies += 1;
         requiredModule.AsyncParentModules.push(module);
       }
     }
   }
   if (module.PendingAsyncDependencies > 0) {
-    module.AsyncEvaluating = _Value.true;
-  } else if (module.Async === _Value.true) {
+    module.AsyncEvaluating = Value.true;
+  } else if (module.Async === Value.true) {
     let _temp8 = ExecuteAsyncModule(module);
     Assert(!(_temp8 instanceof AbruptCompletion), "ExecuteAsyncModule(module)" + ' returned an abrupt completion');
     /* c8 ignore if */
@@ -29012,7 +29011,7 @@ function InnerModuleEvaluation(module, stack, index) {
     while (done === false) {
       const requiredModule = stack.pop();
       Assert(requiredModule instanceof CyclicModuleRecord, "requiredModule instanceof CyclicModuleRecord");
-      if (requiredModule.AsyncEvaluating === _Value.false) {
+      if (requiredModule.AsyncEvaluating === Value.false) {
         requiredModule.Status = 'evaluated';
       } else {
         requiredModule.Status = 'evaluating-async';
@@ -29030,9 +29029,9 @@ function ExecuteAsyncModule(module) {
   // 1. Assert: module.[[Status]] is evaluating or evaluating-async.
   Assert(module.Status === 'evaluating' || module.Status === 'evaluating-async', "module.Status === 'evaluating' || module.Status === 'evaluating-async'");
   // 2. Assert: module.[[Async]] is true.
-  Assert(module.Async === _Value.true, "module.Async === Value.true");
+  Assert(module.Async === Value.true, "module.Async === Value.true");
   // 3. Set module.[[AsyncEvaluating]] to true.
-  module.AsyncEvaluating = _Value.true;
+  module.AsyncEvaluating = Value.true;
   // 4. Let capability be ! NewPromiseCapability(%Promise%).
   let _temp10 = NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'));
   Assert(!(_temp10 instanceof AbruptCompletion), "NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))" + ' returned an abrupt completion');
@@ -29050,12 +29049,12 @@ function ExecuteAsyncModule(module) {
       _temp11 = _temp11.Value;
     }
     // b. Return undefined.
-    return _Value.undefined;
+    return Value.undefined;
   };
   // 6. Let onFulfilled be ! CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
-  const onFulfilled = CreateBuiltinFunction(fulfilledClosure, 0, _Value(''), ['Module']);
+  const onFulfilled = CreateBuiltinFunction(fulfilledClosure, 0, Value(''), ['Module']);
   // 7. Let rejectedClosure be a new Abstract Closure with parameters (error) that captures module and performs the following steps when called:
-  const rejectedClosure = ([error = _Value.undefined]) => {
+  const rejectedClosure = ([error = Value.undefined]) => {
     let _temp12 = AsyncModuleExecutionRejected(module, error);
     Assert(!(_temp12 instanceof AbruptCompletion), "AsyncModuleExecutionRejected(module, error)" + ' returned an abrupt completion');
     /* c8 ignore if */
@@ -29063,10 +29062,10 @@ function ExecuteAsyncModule(module) {
       _temp12 = _temp12.Value;
     }
     // b. Return undefined.
-    return _Value.undefined;
+    return Value.undefined;
   };
   // 8. Let onRejected be ! CreateBuiltinFunction(rejectedClosure, 0, "", « »).
-  const onRejected = CreateBuiltinFunction(rejectedClosure, 0, _Value(''), ['Module']);
+  const onRejected = CreateBuiltinFunction(rejectedClosure, 0, Value(''), ['Module']);
   // 9. Perform ! PerformPromiseThen(capability.[[Promise]], onFulfilled, onRejected).
   let _temp13 = PerformPromiseThen(capability.Promise, onFulfilled, onRejected);
   Assert(!(_temp13 instanceof AbruptCompletion), "PerformPromiseThen(capability.Promise, onFulfilled, onRejected)" + ' returned an abrupt completion');
@@ -29082,7 +29081,7 @@ function ExecuteAsyncModule(module) {
     _temp14 = _temp14.Value;
   }
   // 11. Return.
-  return _Value.undefined;
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-getcycleroot */
@@ -29105,19 +29104,19 @@ function GetAsyncCycleRoot(module) {
 /** https://tc39.es/ecma262/#sec-asyncmodulexecutionfulfilled */
 function AsyncModuleExecutionFulfilled(module) {
   if (module.Status === 'evaluated') {
-    Assert(module.EvaluationError !== _Value.undefined, "module.EvaluationError !== Value.undefined");
-    return _Value.undefined;
+    Assert(module.EvaluationError !== Value.undefined, "module.EvaluationError !== Value.undefined");
+    return Value.undefined;
   }
   Assert(module.Status === 'evaluating-async', "module.Status === 'evaluating-async'");
-  Assert(module.EvaluationError === _Value.undefined, "module.EvaluationError === Value.undefined");
-  module.AsyncEvaluating = _Value.false;
+  Assert(module.EvaluationError === Value.undefined, "module.EvaluationError === Value.undefined");
+  module.AsyncEvaluating = Value.false;
   for (const m of module.AsyncParentModules) {
     if (module.DFSIndex !== module.DFSAncestorIndex) {
       Assert(m.DFSAncestorIndex === module.DFSAncestorIndex, "m.DFSAncestorIndex === module.DFSAncestorIndex");
     }
     m.PendingAsyncDependencies -= 1;
-    if (m.PendingAsyncDependencies === 0 && m.EvaluationError === _Value.undefined) {
-      Assert(m.AsyncEvaluating === _Value.true, "m.AsyncEvaluating === Value.true");
+    if (m.PendingAsyncDependencies === 0 && m.EvaluationError === Value.undefined) {
+      Assert(m.AsyncEvaluating === Value.true, "m.AsyncEvaluating === Value.true");
       let _temp15 = GetAsyncCycleRoot(m);
       Assert(!(_temp15 instanceof AbruptCompletion), "GetAsyncCycleRoot(m)" + ' returned an abrupt completion');
       /* c8 ignore if */
@@ -29125,10 +29124,10 @@ function AsyncModuleExecutionFulfilled(module) {
         _temp15 = _temp15.Value;
       }
       const cycleRoot = _temp15;
-      if (cycleRoot.EvaluationError !== _Value.undefined) {
-        return _Value.undefined;
+      if (cycleRoot.EvaluationError !== Value.undefined) {
+        return Value.undefined;
       }
-      if (m.Async === _Value.true) {
+      if (m.Async === Value.true) {
         let _temp16 = ExecuteAsyncModule(m);
         Assert(!(_temp16 instanceof AbruptCompletion), "ExecuteAsyncModule(m)" + ' returned an abrupt completion');
         /* c8 ignore if */
@@ -29155,29 +29154,29 @@ function AsyncModuleExecutionFulfilled(module) {
       }
     }
   }
-  if (module.TopLevelCapability !== _Value.undefined) {
+  if (module.TopLevelCapability !== Value.undefined) {
     Assert(module.DFSIndex === module.DFSAncestorIndex, "module.DFSIndex === module.DFSAncestorIndex");
-    let _temp19 = Call(module.TopLevelCapability.Resolve, _Value.undefined, [_Value.undefined]);
+    let _temp19 = Call(module.TopLevelCapability.Resolve, Value.undefined, [Value.undefined]);
     Assert(!(_temp19 instanceof AbruptCompletion), "Call(module.TopLevelCapability.Resolve, Value.undefined, [Value.undefined])" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp19 instanceof Completion) {
       _temp19 = _temp19.Value;
     }
   }
-  return _Value.undefined;
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-AsyncModuleExecutionRejected */
 AsyncModuleExecutionFulfilled.section = 'https://tc39.es/ecma262/#sec-asyncmodulexecutionfulfilled';
 function AsyncModuleExecutionRejected(module, error) {
   if (module.Status === 'evaluated') {
-    Assert(module.EvaluationError !== _Value.undefined, "module.EvaluationError !== Value.undefined");
-    return _Value.undefined;
+    Assert(module.EvaluationError !== Value.undefined, "module.EvaluationError !== Value.undefined");
+    return Value.undefined;
   }
   Assert(module.Status === 'evaluating-async', "module.Status === 'evaluating-async'");
-  Assert(module.EvaluationError === _Value.undefined, "module.EvaluationError === Value.undefined");
+  Assert(module.EvaluationError === Value.undefined, "module.EvaluationError === Value.undefined");
   module.EvaluationError = ThrowCompletion(error);
-  module.AsyncEvaluating = _Value.false;
+  module.AsyncEvaluating = Value.false;
   for (const m of module.AsyncParentModules) {
     if (module.DFSIndex !== module.DFSAncestorIndex) {
       Assert(m.DFSAncestorIndex === module.DFSAncestorIndex, "m.DFSAncestorIndex === module.DFSAncestorIndex");
@@ -29189,16 +29188,16 @@ function AsyncModuleExecutionRejected(module, error) {
       _temp20 = _temp20.Value;
     }
   }
-  if (module.TopLevelCapability !== _Value.undefined) {
+  if (module.TopLevelCapability !== Value.undefined) {
     Assert(module.DFSIndex === module.DFSAncestorIndex, "module.DFSIndex === module.DFSAncestorIndex");
-    let _temp21 = Call(module.TopLevelCapability.Reject, _Value.undefined, [error]);
+    let _temp21 = Call(module.TopLevelCapability.Reject, Value.undefined, [error]);
     Assert(!(_temp21 instanceof AbruptCompletion), "Call(module.TopLevelCapability.Reject, Value.undefined, [error])" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp21 instanceof Completion) {
       _temp21 = _temp21.Value;
     }
   }
-  return _Value.undefined;
+  return Value.undefined;
 }
 AsyncModuleExecutionRejected.section = 'https://tc39.es/ecma262/#sec-AsyncModuleExecutionRejected';
 function getRecordWithSpecifier(loadedModules, specifier) {
@@ -29257,7 +29256,7 @@ function GetModuleNamespace(module) {
   // 2. Let namespace be module.[[Namespace]].
   let namespace = module.Namespace;
   // 3. If namespace is empty, then
-  if (namespace === _Value.undefined) {
+  if (namespace === Value.undefined) {
     // a. Let exportedNames be module.GetExportedNames().
     const exportedNames = module.GetExportedNames();
     // b. Let unambiguousNames be a new empty List.
@@ -29288,8 +29287,8 @@ function CreateSyntheticModule(exportNames, evaluationSteps, realm, hostDefined)
   //    }.
   return new SyntheticModuleRecord({
     Realm: realm,
-    Environment: _Value.undefined,
-    Namespace: _Value.undefined,
+    Environment: Value.undefined,
+    Namespace: Value.undefined,
     HostDefined: hostDefined,
     ExportNames: exportNames,
     EvaluationSteps: evaluationSteps
@@ -29302,10 +29301,10 @@ function CreateDefaultExportSyntheticModule(defaultExport, realm, hostDefined) {
   const closure = module => {
     // eslint-disable-line arrow-body-style
     // a. Return ? module.SetSyntheticExport("default", defaultExport).
-    return module.SetSyntheticExport(_Value('default'), defaultExport);
+    return module.SetSyntheticExport(Value('default'), defaultExport);
   };
   // 2. Return CreateSyntheticModule(« "default" », closure, realm)
-  return CreateSyntheticModule([_Value('default')], closure, realm, hostDefined);
+  return CreateSyntheticModule([Value('default')], closure, realm, hostDefined);
 }
 
 // @ts-nocheck
@@ -29367,13 +29366,13 @@ function MakeBasicObject(internalSlotsList) {
   // 3.  Set obj's essential internal methods to the default ordinary object definitions specified in 9.1.
   const obj = new ObjectValue(internalSlotsList);
   internalSlotsList.forEach(s => {
-    obj[s] = _Value.undefined;
+    obj[s] = Value.undefined;
   });
   // 4.  Assert: If the caller will not be overriding both obj's [[GetPrototypeOf]] and [[SetPrototypeOf]] essential internal methods, then internalSlotsList contains [[Prototype]].
   // 5.  Assert: If the caller will not be overriding all of obj's [[SetPrototypeOf]], [[IsExtensible]], and [[PreventExtensions]] essential internal methods, then internalSlotsList contains [[Extensible]].
   // 6.  If internalSlotsList contains [[Extensible]], then set obj.[[Extensible]] to true.
   if (internalSlotsList.includes('Extensible')) {
-    obj.Extensible = _Value.true;
+    obj.Extensible = Value.true;
   }
   // 7.  Return obj.
   return obj;
@@ -29427,7 +29426,7 @@ function Set$1(O, P, V, Throw) {
     _temp3 = _temp3.Value;
   }
   const success = _temp3;
-  if (success === _Value.false && Throw === _Value.true) {
+  if (success === Value.false && Throw === Value.true) {
     return surroundingAgent.Throw('TypeError', 'CannotSetProperty', P, O);
   }
   return success;
@@ -29439,9 +29438,9 @@ function CreateDataProperty(O, P, V) {
   Assert(IsPropertyKey(P), "IsPropertyKey(P)");
   const newDesc = _Descriptor({
     Value: V,
-    Writable: _Value.true,
-    Enumerable: _Value.true,
-    Configurable: _Value.true
+    Writable: Value.true,
+    Enumerable: Value.true,
+    Configurable: Value.true
   });
   return O.DefineOwnProperty(P, newDesc);
 }
@@ -29452,9 +29451,9 @@ function CreateMethodProperty(O, P, V) {
   Assert(IsPropertyKey(P), "IsPropertyKey(P)");
   const newDesc = _Descriptor({
     Value: V,
-    Writable: _Value.true,
-    Enumerable: _Value.false,
-    Configurable: _Value.true
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.true
   });
   return O.DefineOwnProperty(P, newDesc);
 }
@@ -29473,7 +29472,7 @@ function CreateDataPropertyOrThrow(O, P, V) {
     _temp4 = _temp4.Value;
   }
   const success = _temp4;
-  if (success === _Value.false) {
+  if (success === Value.false) {
     return surroundingAgent.Throw('TypeError', 'CannotDefineProperty', P);
   }
   return success;
@@ -29493,7 +29492,7 @@ function DefinePropertyOrThrow(O, P, desc) {
     _temp5 = _temp5.Value;
   }
   const success = _temp5;
-  if (success === _Value.false) {
+  if (success === Value.false) {
     return surroundingAgent.Throw('TypeError', 'CannotDefineProperty', P);
   }
   return success;
@@ -29513,7 +29512,7 @@ function DeletePropertyOrThrow(O, P) {
     _temp6 = _temp6.Value;
   }
   const success = _temp6;
-  if (success === _Value.false) {
+  if (success === Value.false) {
     return surroundingAgent.Throw('TypeError', 'CannotDeleteProperty', P);
   }
   return success;
@@ -29532,10 +29531,10 @@ function GetMethod(V, P) {
     _temp7 = _temp7.Value;
   }
   const func = _temp7;
-  if (func === _Value.null || func === _Value.undefined) {
-    return _Value.undefined;
+  if (func === Value.null || func === Value.undefined) {
+    return Value.undefined;
   }
-  if (IsCallable(func) === _Value.false) {
+  if (IsCallable(func) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
   }
   return func;
@@ -29562,10 +29561,10 @@ function HasOwnProperty(O, P) {
     _temp8 = _temp8.Value;
   }
   const desc = _temp8;
-  if (desc === _Value.undefined) {
-    return _Value.false;
+  if (desc === Value.undefined) {
+    return Value.false;
   }
-  return _Value.true;
+  return Value.true;
 }
 
 /** https://tc39.es/ecma262/#sec-call */
@@ -29573,8 +29572,8 @@ function Call(F, V, argumentsList) {
   if (!argumentsList) {
     argumentsList = [];
   }
-  Assert(argumentsList.every(a => a instanceof _Value), "argumentsList.every((a) => a instanceof Value)");
-  if (IsCallable(F) === _Value.false) {
+  Assert(argumentsList.every(a => a instanceof Value), "argumentsList.every((a) => a instanceof Value)");
+  if (IsCallable(F) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', F);
   }
   let _temp9 = F.Call(V, argumentsList);
@@ -29597,8 +29596,8 @@ function Construct(F, argumentsList, newTarget) {
   if (!argumentsList) {
     argumentsList = [];
   }
-  Assert(IsConstructor(F) === _Value.true, "IsConstructor(F) === Value.true");
-  Assert(IsConstructor(newTarget) === _Value.true, "IsConstructor(newTarget) === Value.true");
+  Assert(IsConstructor(F) === Value.true, "IsConstructor(F) === Value.true");
+  Assert(IsConstructor(newTarget) === Value.true, "IsConstructor(newTarget) === Value.true");
   return F.Construct(argumentsList, newTarget);
 }
 
@@ -29616,8 +29615,8 @@ function SetIntegrityLevel(O, level) {
     _temp10 = _temp10.Value;
   }
   const status = _temp10;
-  if (status === _Value.false) {
-    return _Value.false;
+  if (status === Value.false) {
+    return Value.false;
   }
   let _temp11 = O.OwnPropertyKeys();
   /* c8 ignore if */
@@ -29632,7 +29631,7 @@ function SetIntegrityLevel(O, level) {
   if (level === 'sealed') {
     for (const k of keys) {
       let _temp12 = DefinePropertyOrThrow(O, k, _Descriptor({
-        Configurable: _Value.false
+        Configurable: Value.false
       }));
       /* c8 ignore if */
       if (_temp12 instanceof AbruptCompletion) {
@@ -29655,16 +29654,16 @@ function SetIntegrityLevel(O, level) {
         _temp13 = _temp13.Value;
       }
       const currentDesc = _temp13;
-      if (currentDesc !== _Value.undefined) {
+      if (currentDesc !== Value.undefined) {
         let desc;
         if (IsAccessorDescriptor(currentDesc) === true) {
           desc = _Descriptor({
-            Configurable: _Value.false
+            Configurable: Value.false
           });
         } else {
           desc = _Descriptor({
-            Configurable: _Value.false,
-            Writable: _Value.false
+            Configurable: Value.false,
+            Writable: Value.false
           });
         }
         let _temp14 = DefinePropertyOrThrow(O, k, desc);
@@ -29679,7 +29678,7 @@ function SetIntegrityLevel(O, level) {
       }
     }
   }
-  return _Value.true;
+  return Value.true;
 }
 
 /** https://tc39.es/ecma262/#sec-testintegritylevel */
@@ -29696,8 +29695,8 @@ function TestIntegrityLevel(O, level) {
     _temp15 = _temp15.Value;
   }
   const extensible = _temp15;
-  if (extensible === _Value.true) {
-    return _Value.false;
+  if (extensible === Value.true) {
+    return Value.false;
   }
   let _temp16 = O.OwnPropertyKeys();
   /* c8 ignore if */
@@ -29720,24 +29719,24 @@ function TestIntegrityLevel(O, level) {
       _temp17 = _temp17.Value;
     }
     const currentDesc = _temp17;
-    if (currentDesc !== _Value.undefined) {
-      if (currentDesc.Configurable === _Value.true) {
-        return _Value.false;
+    if (currentDesc !== Value.undefined) {
+      if (currentDesc.Configurable === Value.true) {
+        return Value.false;
       }
       if (level === 'frozen' && IsDataDescriptor(currentDesc)) {
-        if (currentDesc.Writable === _Value.true) {
-          return _Value.false;
+        if (currentDesc.Writable === Value.true) {
+          return Value.false;
         }
       }
     }
   }
-  return _Value.true;
+  return Value.true;
 }
 
 /** https://tc39.es/ecma262/#sec-createarrayfromlist */
 function CreateArrayFromList(elements) {
   // 1. Assert: elements is a List whose elements are all ECMAScript language values.
-  Assert(elements.every(e => e instanceof _Value), "elements.every((e) => e instanceof Value)");
+  Assert(elements.every(e => e instanceof Value), "elements.every((e) => e instanceof Value)");
   // 2. Let array be ! ArrayCreate(0).
   let _temp18 = ArrayCreate(0);
   Assert(!(_temp18 instanceof AbruptCompletion), "ArrayCreate(0)" + ' returned an abrupt completion');
@@ -29774,7 +29773,7 @@ function LengthOfArrayLike(obj) {
   // 1. Assert: Type(obj) is Object.
   Assert(obj instanceof ObjectValue, "obj instanceof ObjectValue");
   // 2. Return ℝ(? ToLength(? Get(obj, "length"))).
-  let _temp22 = Get(obj, _Value('length'));
+  let _temp22 = Get(obj, Value('length'));
   /* c8 ignore if */
   if (_temp22 instanceof AbruptCompletion) {
     return _temp22;
@@ -29875,17 +29874,17 @@ function Invoke(V, P, argumentsList) {
 
 /** https://tc39.es/ecma262/#sec-ordinaryhasinstance */
 function OrdinaryHasInstance(C, O) {
-  if (IsCallable(C) === _Value.false) {
-    return _Value.false;
+  if (IsCallable(C) === Value.false) {
+    return Value.false;
   }
   if ('BoundTargetFunction' in C) {
     const BC = C.BoundTargetFunction;
     return InstanceofOperator(O, BC);
   }
   if (!(O instanceof ObjectValue)) {
-    return _Value.false;
+    return Value.false;
   }
-  let _temp27 = Get(C, _Value('prototype'));
+  let _temp27 = Get(C, Value('prototype'));
   /* c8 ignore if */
   if (_temp27 instanceof AbruptCompletion) {
     return _temp27;
@@ -29909,11 +29908,11 @@ function OrdinaryHasInstance(C, O) {
       _temp28 = _temp28.Value;
     }
     O = _temp28;
-    if (O === _Value.null) {
-      return _Value.false;
+    if (O === Value.null) {
+      return Value.false;
     }
-    if (SameValue(P, O) === _Value.true) {
-      return _Value.true;
+    if (SameValue(P, O) === Value.true) {
+      return Value.true;
     }
   }
 }
@@ -29921,7 +29920,7 @@ function OrdinaryHasInstance(C, O) {
 /** https://tc39.es/ecma262/#sec-speciesconstructor */
 function SpeciesConstructor(O, defaultConstructor) {
   Assert(O instanceof ObjectValue, "O instanceof ObjectValue");
-  let _temp29 = Get(O, _Value('constructor'));
+  let _temp29 = Get(O, Value('constructor'));
   /* c8 ignore if */
   if (_temp29 instanceof AbruptCompletion) {
     return _temp29;
@@ -29931,7 +29930,7 @@ function SpeciesConstructor(O, defaultConstructor) {
     _temp29 = _temp29.Value;
   }
   const C = _temp29;
-  if (C === _Value.undefined) {
+  if (C === Value.undefined) {
     return defaultConstructor;
   }
   if (!(C instanceof ObjectValue)) {
@@ -29947,10 +29946,10 @@ function SpeciesConstructor(O, defaultConstructor) {
     _temp30 = _temp30.Value;
   }
   const S = _temp30;
-  if (S === _Value.undefined || S === _Value.null) {
+  if (S === Value.undefined || S === Value.null) {
     return defaultConstructor;
   }
-  if (IsConstructor(S) === _Value.true) {
+  if (IsConstructor(S) === Value.true) {
     return S;
   }
   return surroundingAgent.Throw('TypeError', 'SpeciesNotConstructor');
@@ -29971,7 +29970,7 @@ function EnumerableOwnPropertyNames(O, kind) {
   const ownKeys = _temp31;
   const properties = [];
   for (const key of ownKeys) {
-    if (key instanceof StringValue) {
+    if (key instanceof JSStringValue) {
       let _temp32 = O.GetOwnProperty(key);
       /* c8 ignore if */
       if (_temp32 instanceof AbruptCompletion) {
@@ -29982,7 +29981,7 @@ function EnumerableOwnPropertyNames(O, kind) {
         _temp32 = _temp32.Value;
       }
       const desc = _temp32;
-      if (desc !== _Value.undefined && desc.Enumerable === _Value.true) {
+      if (desc !== Value.undefined && desc.Enumerable === Value.true) {
         if (kind === 'key') {
           properties.push(key);
         } else {
@@ -30024,7 +30023,7 @@ function GetFunctionRealm(obj) {
   if (_temp35 instanceof Completion) {
     _temp35 = _temp35.Value;
   }
-  Assert(_temp35 === _Value.true, "X(IsCallable(obj)) === Value.true");
+  Assert(_temp35 === Value.true, "X(IsCallable(obj)) === Value.true");
   if ('Realm' in obj) {
     return obj.Realm;
   }
@@ -30033,7 +30032,7 @@ function GetFunctionRealm(obj) {
     return GetFunctionRealm(target);
   }
   if (isProxyExoticObject(obj)) {
-    if (obj.ProxyHandler === _Value.null) {
+    if (obj.ProxyHandler === Value.null) {
       return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'GetFunctionRealm');
     }
     const proxyTarget = obj.ProxyTarget;
@@ -30046,7 +30045,7 @@ function GetFunctionRealm(obj) {
 function CopyDataProperties(target, source, excludedItems) {
   Assert(target instanceof ObjectValue, "target instanceof ObjectValue");
   Assert(excludedItems.every(i => IsPropertyKey(i)), "excludedItems.every((i) => IsPropertyKey(i))");
-  if (source === _Value.undefined || source === _Value.null) {
+  if (source === Value.undefined || source === Value.null) {
     return target;
   }
   let _temp36 = ToObject(source);
@@ -30069,7 +30068,7 @@ function CopyDataProperties(target, source, excludedItems) {
   for (const nextKey of keys) {
     let excluded = false;
     for (const e of excludedItems) {
-      if (SameValue(e, nextKey) === _Value.true) {
+      if (SameValue(e, nextKey) === Value.true) {
         excluded = true;
       }
     }
@@ -30084,7 +30083,7 @@ function CopyDataProperties(target, source, excludedItems) {
         _temp38 = _temp38.Value;
       }
       const desc = _temp38;
-      if (desc !== _Value.undefined && desc.Enumerable === _Value.true) {
+      if (desc !== Value.undefined && desc.Enumerable === Value.true) {
         let _temp39 = Get(from, nextKey);
         /* c8 ignore if */
         if (_temp39 instanceof AbruptCompletion) {
@@ -30116,20 +30115,20 @@ function OrdinaryGetPrototypeOf(O) {
 function OrdinarySetPrototypeOf(O, V) {
   Assert(V instanceof ObjectValue || V instanceof NullValue, "V instanceof ObjectValue || V instanceof NullValue");
   const current = O.Prototype;
-  if (SameValue(V, current) === _Value.true) {
-    return _Value.true;
+  if (SameValue(V, current) === Value.true) {
+    return Value.true;
   }
   const extensible = O.Extensible;
-  if (extensible === _Value.false) {
-    return _Value.false;
+  if (extensible === Value.false) {
+    return Value.false;
   }
   let p = V;
   let done = false;
   while (done === false) {
-    if (p === _Value.null) {
+    if (p === Value.null) {
       done = true;
-    } else if (SameValue(p, O) === _Value.true) {
-      return _Value.false;
+    } else if (SameValue(p, O) === Value.true) {
+      return Value.false;
     } else if (p.GetPrototypeOf !== ObjectValue.prototype.GetPrototypeOf) {
       done = true;
     } else {
@@ -30137,7 +30136,7 @@ function OrdinarySetPrototypeOf(O, V) {
     }
   }
   O.Prototype = V;
-  return _Value.true;
+  return Value.true;
 }
 
 // 9.1.3.1 OrdinaryIsExtensible
@@ -30147,15 +30146,15 @@ function OrdinaryIsExtensible(O) {
 
 // 9.1.4.1 OrdinaryPreventExtensions
 function OrdinaryPreventExtensions(O) {
-  O.Extensible = _Value.false;
-  return _Value.true;
+  O.Extensible = Value.false;
+  return Value.true;
 }
 
 // 9.1.5.1 OrdinaryGetOwnProperty
 function OrdinaryGetOwnProperty(O, P) {
   Assert(IsPropertyKey(P), "IsPropertyKey(P)");
   if (!O.properties.has(P)) {
-    return _Value.undefined;
+    return Value.undefined;
   }
   const D = _Descriptor({});
   const x = O.properties.get(P);
@@ -30198,91 +30197,91 @@ function OrdinaryDefineOwnProperty(O, P, Desc) {
 
 /** https://tc39.es/ecma262/#sec-iscompatiblepropertydescriptor */
 function IsCompatiblePropertyDescriptor(Extensible, Desc, Current) {
-  return ValidateAndApplyPropertyDescriptor(_Value.undefined, _Value.undefined, Extensible, Desc, Current);
+  return ValidateAndApplyPropertyDescriptor(Value.undefined, Value.undefined, Extensible, Desc, Current);
 }
 
 // 9.1.6.3 ValidateAndApplyPropertyDescriptor
 function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current) {
-  Assert(O === _Value.undefined || IsPropertyKey(P), "O === Value.undefined || IsPropertyKey(P)");
-  if (current === _Value.undefined) {
-    if (extensible === _Value.false) {
-      return _Value.false;
+  Assert(O === Value.undefined || IsPropertyKey(P), "O === Value.undefined || IsPropertyKey(P)");
+  if (current === Value.undefined) {
+    if (extensible === Value.false) {
+      return Value.false;
     }
-    Assert(extensible === _Value.true, "extensible === Value.true");
+    Assert(extensible === Value.true, "extensible === Value.true");
     if (IsGenericDescriptor(Desc) || IsDataDescriptor(Desc)) {
       if (!(O instanceof UndefinedValue)) {
         O.properties.set(P, _Descriptor({
-          Value: Desc.Value === undefined ? _Value.undefined : Desc.Value,
-          Writable: Desc.Writable === undefined ? _Value.false : Desc.Writable,
-          Enumerable: Desc.Enumerable === undefined ? _Value.false : Desc.Enumerable,
-          Configurable: Desc.Configurable === undefined ? _Value.false : Desc.Configurable
+          Value: Desc.Value === undefined ? Value.undefined : Desc.Value,
+          Writable: Desc.Writable === undefined ? Value.false : Desc.Writable,
+          Enumerable: Desc.Enumerable === undefined ? Value.false : Desc.Enumerable,
+          Configurable: Desc.Configurable === undefined ? Value.false : Desc.Configurable
         }));
       }
     } else {
       Assert(IsAccessorDescriptor(Desc), "IsAccessorDescriptor(Desc)");
       if (!(O instanceof UndefinedValue)) {
         O.properties.set(P, _Descriptor({
-          Get: Desc.Get === undefined ? _Value.undefined : Desc.Get,
-          Set: Desc.Set === undefined ? _Value.undefined : Desc.Set,
-          Enumerable: Desc.Enumerable === undefined ? _Value.false : Desc.Enumerable,
-          Configurable: Desc.Configurable === undefined ? _Value.false : Desc.Configurable
+          Get: Desc.Get === undefined ? Value.undefined : Desc.Get,
+          Set: Desc.Set === undefined ? Value.undefined : Desc.Set,
+          Enumerable: Desc.Enumerable === undefined ? Value.false : Desc.Enumerable,
+          Configurable: Desc.Configurable === undefined ? Value.false : Desc.Configurable
         }));
       }
     }
-    return _Value.true;
+    return Value.true;
   }
   if (Desc.everyFieldIsAbsent()) {
-    return _Value.true;
+    return Value.true;
   }
-  if (current.Configurable === _Value.false) {
-    if (Desc.Configurable !== undefined && Desc.Configurable === _Value.true) {
-      return _Value.false;
+  if (current.Configurable === Value.false) {
+    if (Desc.Configurable !== undefined && Desc.Configurable === Value.true) {
+      return Value.false;
     }
     if (Desc.Enumerable !== undefined && Desc.Enumerable !== current.Enumerable) {
-      return _Value.false;
+      return Value.false;
     }
   }
   if (IsGenericDescriptor(Desc)) ; else if (IsDataDescriptor(current) !== IsDataDescriptor(Desc)) {
-    if (current.Configurable === _Value.false) {
-      return _Value.false;
+    if (current.Configurable === Value.false) {
+      return Value.false;
     }
     if (IsDataDescriptor(current)) {
       if (!(O instanceof UndefinedValue)) {
         const entry = O.properties.get(P);
         entry.Value = undefined;
         entry.Writable = undefined;
-        entry.Get = _Value.undefined;
-        entry.Set = _Value.undefined;
+        entry.Get = Value.undefined;
+        entry.Set = Value.undefined;
       }
     } else {
       if (!(O instanceof UndefinedValue)) {
         const entry = O.properties.get(P);
         entry.Get = undefined;
         entry.Set = undefined;
-        entry.Value = _Value.undefined;
-        entry.Writable = _Value.false;
+        entry.Value = Value.undefined;
+        entry.Writable = Value.false;
       }
     }
   } else if (IsDataDescriptor(current) && IsDataDescriptor(Desc)) {
-    if (current.Configurable === _Value.false && current.Writable === _Value.false) {
-      if (Desc.Writable !== undefined && Desc.Writable === _Value.true) {
-        return _Value.false;
+    if (current.Configurable === Value.false && current.Writable === Value.false) {
+      if (Desc.Writable !== undefined && Desc.Writable === Value.true) {
+        return Value.false;
       }
-      if (Desc.Value !== undefined && SameValue(Desc.Value, current.Value) === _Value.false) {
-        return _Value.false;
+      if (Desc.Value !== undefined && SameValue(Desc.Value, current.Value) === Value.false) {
+        return Value.false;
       }
-      return _Value.true;
+      return Value.true;
     }
   } else {
     Assert(IsAccessorDescriptor(current) && IsAccessorDescriptor(Desc), "IsAccessorDescriptor(current) && IsAccessorDescriptor(Desc)");
-    if (current.Configurable === _Value.false) {
-      if (Desc.Set !== undefined && SameValue(Desc.Set, current.Set) === _Value.false) {
-        return _Value.false;
+    if (current.Configurable === Value.false) {
+      if (Desc.Set !== undefined && SameValue(Desc.Set, current.Set) === Value.false) {
+        return Value.false;
       }
-      if (Desc.Get !== undefined && SameValue(Desc.Get, current.Get) === _Value.false) {
-        return _Value.false;
+      if (Desc.Get !== undefined && SameValue(Desc.Get, current.Get) === Value.false) {
+        return Value.false;
       }
-      return _Value.true;
+      return Value.true;
     }
   }
   if (!(O instanceof UndefinedValue)) {
@@ -30306,7 +30305,7 @@ function ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current) {
       target.Configurable = Desc.Configurable;
     }
   }
-  return _Value.true;
+  return Value.true;
 }
 
 // 9.1.7.1 OrdinaryHasProperty
@@ -30323,7 +30322,7 @@ function OrdinaryHasProperty(O, P) {
   }
   const hasOwn = _temp3;
   if (!(hasOwn instanceof UndefinedValue)) {
-    return _Value.true;
+    return Value.true;
   }
   let _temp4 = O.GetPrototypeOf();
   /* c8 ignore if */
@@ -30338,7 +30337,7 @@ function OrdinaryHasProperty(O, P) {
   if (!(parent instanceof NullValue)) {
     return parent.HasProperty(P);
   }
-  return _Value.false;
+  return Value.false;
 }
 
 // 9.1.8.1
@@ -30366,7 +30365,7 @@ function OrdinaryGet(O, P, Receiver) {
     }
     const parent = _temp6;
     if (parent instanceof NullValue) {
-      return _Value.undefined;
+      return Value.undefined;
     }
     return parent.Get(P, Receiver);
   }
@@ -30376,7 +30375,7 @@ function OrdinaryGet(O, P, Receiver) {
   Assert(IsAccessorDescriptor(desc), "IsAccessorDescriptor(desc)");
   const getter = desc.Get;
   if (getter instanceof UndefinedValue) {
-    return _Value.undefined;
+    return Value.undefined;
   }
   return Call(getter, Receiver);
 }
@@ -30415,18 +30414,18 @@ function OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc) {
       return parent.Set(P, V, Receiver);
     }
     ownDesc = _Descriptor({
-      Value: _Value.undefined,
-      Writable: _Value.true,
-      Enumerable: _Value.true,
-      Configurable: _Value.true
+      Value: Value.undefined,
+      Writable: Value.true,
+      Enumerable: Value.true,
+      Configurable: Value.true
     });
   }
   if (IsDataDescriptor(ownDesc)) {
-    if (ownDesc.Writable !== undefined && ownDesc.Writable === _Value.false) {
-      return _Value.false;
+    if (ownDesc.Writable !== undefined && ownDesc.Writable === Value.false) {
+      return Value.false;
     }
     if (!(Receiver instanceof ObjectValue)) {
-      return _Value.false;
+      return Value.false;
     }
     let _temp9 = Receiver.GetOwnProperty(P);
     /* c8 ignore if */
@@ -30440,10 +30439,10 @@ function OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc) {
     const existingDescriptor = _temp9;
     if (!(existingDescriptor instanceof UndefinedValue)) {
       if (IsAccessorDescriptor(existingDescriptor)) {
-        return _Value.false;
+        return Value.false;
       }
-      if (existingDescriptor.Writable === _Value.false) {
-        return _Value.false;
+      if (existingDescriptor.Writable === Value.false) {
+        return Value.false;
       }
       const valueDesc = _Descriptor({
         Value: V
@@ -30455,7 +30454,7 @@ function OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc) {
   Assert(IsAccessorDescriptor(ownDesc), "IsAccessorDescriptor(ownDesc)");
   const setter = ownDesc.Set;
   if (setter === undefined || setter instanceof UndefinedValue) {
-    return _Value.false;
+    return Value.false;
   }
   let _temp10 = Call(setter, Receiver, [V]);
   /* c8 ignore if */
@@ -30466,7 +30465,7 @@ function OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc) {
   if (_temp10 instanceof Completion) {
     _temp10 = _temp10.Value;
   }
-  return _Value.true;
+  return Value.true;
 }
 
 // 9.1.10.1 OrdinaryDelete
@@ -30483,13 +30482,13 @@ function OrdinaryDelete(O, P) {
   }
   const desc = _temp11;
   if (desc instanceof UndefinedValue) {
-    return _Value.true;
+    return Value.true;
   }
-  if (desc.Configurable === _Value.true) {
+  if (desc.Configurable === Value.true) {
     O.properties.delete(P);
-    return _Value.true;
+    return Value.true;
   }
-  return _Value.false;
+  return Value.false;
 }
 
 // 9.1.11.1
@@ -30509,7 +30508,7 @@ function OrdinaryOwnPropertyKeys(O) {
   // P is not an array index, in ascending chronological order of property creation, do
   //   Add P as the last element of keys.
   for (const P of O.properties.keys()) {
-    if (P instanceof StringValue && isArrayIndex(P) === false) {
+    if (P instanceof JSStringValue && isArrayIndex(P) === false) {
       keys.push(P);
     }
   }
@@ -30567,8 +30566,8 @@ function OrdinaryCreateFromConstructor(constructor, intrinsicDefaultProto, inter
 function GetPrototypeFromConstructor(constructor, intrinsicDefaultProto) {
   // Assert: intrinsicDefaultProto is a String value that
   // is this specification's name of an intrinsic object.
-  Assert(IsCallable(constructor) === _Value.true, "IsCallable(constructor) === Value.true");
-  let _temp14 = Get(constructor, _Value('prototype'));
+  Assert(IsCallable(constructor) === Value.true, "IsCallable(constructor) === Value.true");
+  let _temp14 = Get(constructor, Value('prototype'));
   /* c8 ignore if */
   if (_temp14 instanceof AbruptCompletion) {
     return _temp14;
@@ -30629,7 +30628,7 @@ function PrivateGet(P, O) {
   // 4. Assert: entry.[[Kind]] is accessor.
   Assert(entry.Kind === 'accessor', "entry.Kind === 'accessor'");
   // 5. If entry.[[Get]] is undefined, throw a TypeError exception.
-  if (entry.Get === _Value.undefined) {
+  if (entry.Get === Value.undefined) {
     return surroundingAgent.Throw('TypeError', 'PrivateNameNoGetter', P);
   }
   // 6. Let getter be entry.[[Get]].
@@ -30663,7 +30662,7 @@ function PrivateSet(P, O, value) {
     // a. Assert: entry.[[Kind]] is accessor.
     Assert(entry.Kind === 'accessor', "entry.Kind === 'accessor'");
     // b. If entry.[[Set]] is undefined, throw a TypeError exception.
-    if (entry.Set === _Value.undefined) {
+    if (entry.Set === Value.undefined) {
       return surroundingAgent.Throw('TypeError', 'PrivateNameNoSetter', P);
     }
     // c. Let setter be entry.[[Set]].
@@ -30736,9 +30735,9 @@ class PromiseCapabilityRecord {
   Resolve;
   Reject;
   constructor() {
-    this.Promise = _Value.undefined;
-    this.Resolve = _Value.undefined;
-    this.Reject = _Value.undefined;
+    this.Promise = Value.undefined;
+    this.Resolve = Value.undefined;
+    this.Reject = Value.undefined;
   }
 }
 
@@ -30748,7 +30747,7 @@ class PromiseReactionRecord {
   Type;
   Handler;
   constructor(O) {
-    Assert(O.Capability instanceof PromiseCapabilityRecord || O.Capability === _Value.undefined, "O.Capability instanceof PromiseCapabilityRecord\n        || O.Capability === Value.undefined");
+    Assert(O.Capability instanceof PromiseCapabilityRecord || O.Capability === Value.undefined, "O.Capability instanceof PromiseCapabilityRecord\n        || O.Capability === Value.undefined");
     Assert(O.Type === 'Fulfill' || O.Type === 'Reject', "O.Type === 'Fulfill' || O.Type === 'Reject'");
     Assert(O.Handler === undefined || isFunctionObject(O.Handler.Callback), "O.Handler === undefined\n           || isFunctionObject(O.Handler.Callback)");
     this.Capability = O.Capability;
@@ -30768,7 +30767,7 @@ function CreateResolvingFunctions(promise) {
   // 3. Let lengthResolve be the number of non-optional parameters of the function definition in Promise Resolve Functions.
   const lengthResolve = 1;
   // 4. Let resolve be ! CreateBuiltinFunction(stepsResolve, lengthResolve, "", « [[Promise]], [[AlreadyResolved]] »).
-  let _temp = CreateBuiltinFunction(stepsResolve, lengthResolve, _Value(''), ['Promise', 'AlreadyResolved']);
+  let _temp = CreateBuiltinFunction(stepsResolve, lengthResolve, Value(''), ['Promise', 'AlreadyResolved']);
   Assert(!(_temp instanceof AbruptCompletion), "CreateBuiltinFunction(stepsResolve, lengthResolve, Value(''), ['Promise', 'AlreadyResolved'])" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp instanceof Completion) {
@@ -30784,7 +30783,7 @@ function CreateResolvingFunctions(promise) {
   // 8. Let lengthReject be the number of non-optional parameters of the function definition in Promise Reject Functions.
   const lengthReject = 1;
   // 9. Let reject be ! CreateBuiltinFunction(stepsReject, lengthReject, "", « [[Promise]], [[AlreadyResolved]] »).
-  let _temp2 = CreateBuiltinFunction(stepsReject, lengthReject, _Value(''), ['Promise', 'AlreadyResolved']);
+  let _temp2 = CreateBuiltinFunction(stepsReject, lengthReject, Value(''), ['Promise', 'AlreadyResolved']);
   Assert(!(_temp2 instanceof AbruptCompletion), "CreateBuiltinFunction(stepsReject, lengthReject, Value(''), ['Promise', 'AlreadyResolved'])" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp2 instanceof Completion) {
@@ -30803,13 +30802,13 @@ function CreateResolvingFunctions(promise) {
 }
 
 /** https://tc39.es/ecma262/#sec-promise-reject-functions */
-function PromiseRejectFunctions([reason = _Value.undefined]) {
+function PromiseRejectFunctions([reason = Value.undefined]) {
   const F = this;
   Assert('Promise' in F && F.Promise instanceof ObjectValue, "'Promise' in F && F.Promise instanceof ObjectValue");
   const promise = F.Promise;
   const alreadyResolved = F.AlreadyResolved;
   if (alreadyResolved.Value === true) {
-    return _Value.undefined;
+    return Value.undefined;
   }
   alreadyResolved.Value = true;
   return RejectPromise(promise, reason);
@@ -30828,7 +30827,7 @@ function NewPromiseResolveThenableJob(promiseToResolve, thenable, then) {
     // c. If thenCallResult is an abrupt completion, then
     if (thenCallResult instanceof AbruptCompletion) {
       // i .Let status be Call(resolvingFunctions.[[Reject]], undefined, « thenCallResult.[[Value]] »).
-      const status = Call(resolvingFunctions.Reject, _Value.undefined, [thenCallResult.Value]);
+      const status = Call(resolvingFunctions.Reject, Value.undefined, [thenCallResult.Value]);
       // ii. Return Completion(status).
       return Completion(status);
     }
@@ -30855,7 +30854,7 @@ function NewPromiseResolveThenableJob(promiseToResolve, thenable, then) {
 
 /** https://tc39.es/ecma262/#sec-promise-resolve-functions */
 NewPromiseResolveThenableJob.section = 'https://tc39.es/ecma262/#sec-newpromiseresolvethenablejob';
-function PromiseResolveFunctions([resolution = _Value.undefined]) {
+function PromiseResolveFunctions([resolution = Value.undefined]) {
   // 1. Let F be the active function object.
   const F = this;
   // 2. Assert: F has a [[Promise]] internal slot whose value is an Object.
@@ -30866,12 +30865,12 @@ function PromiseResolveFunctions([resolution = _Value.undefined]) {
   const alreadyResolved = F.AlreadyResolved;
   // 5. If alreadyResolved.[[Value]] is true, return undefined.
   if (alreadyResolved.Value === true) {
-    return _Value.undefined;
+    return Value.undefined;
   }
   // 6. Set alreadyResolved.[[Value]] to true.
   alreadyResolved.Value = true;
   // 7. If SameValue(resolution, promise) is true, then
-  if (SameValue(resolution, promise) === _Value.true) {
+  if (SameValue(resolution, promise) === Value.true) {
     // a. Let selfResolutionError be a newly created TypeError object.
     const selfResolutionError = surroundingAgent.Throw('TypeError', 'CannotResolvePromiseWithItself').Value;
     // b. Return RejectPromise(promise, selfResolutionError).
@@ -30883,7 +30882,7 @@ function PromiseResolveFunctions([resolution = _Value.undefined]) {
     return FulfillPromise(promise, resolution);
   }
   // 9. Let then be Get(resolution, "then").
-  const then = Get(resolution, _Value('then'));
+  const then = Get(resolution, Value('then'));
   // 10. If then is an abrupt completion, then
   if (then instanceof AbruptCompletion) {
     // a. Return RejectPromise(promise, then.[[Value]]).
@@ -30892,7 +30891,7 @@ function PromiseResolveFunctions([resolution = _Value.undefined]) {
   // 11. Let thenAction be then.[[Value]].
   const thenAction = then.Value;
   // 12. If IsCallable(thenAction) is false, then
-  if (IsCallable(thenAction) === _Value.false) {
+  if (IsCallable(thenAction) === Value.false) {
     // a. Return FulfillPromise(promise, resolution).
     return FulfillPromise(promise, resolution);
   }
@@ -30903,7 +30902,7 @@ function PromiseResolveFunctions([resolution = _Value.undefined]) {
   // 15. Perform HostEnqueuePromiseJob(job.[[Job]], job.[[Realm]]).
   HostEnqueuePromiseJob(job.Job);
   // 16. Return undefined.
-  return _Value.undefined;
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-fulfillpromise */
@@ -30922,14 +30921,14 @@ function FulfillPromise(promise, value) {
 FulfillPromise.section = 'https://tc39.es/ecma262/#sec-fulfillpromise';
 function NewPromiseCapability(C) {
   // 1. If IsConstructor(C) is false, throw a TypeError exception.
-  if (IsConstructor(C) === _Value.false) {
+  if (IsConstructor(C) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
   }
   // 2. NOTE: C is assumed to be a constructor function that supports the parameter conventions of the Promise constructor (see 26.2.3.1).
   // 3. Let promiseCapability be the PromiseCapability Record { [[Promise]]: undefined, [[Resolve]]: undefined, [[Reject]]: undefined }.
   const promiseCapability = new PromiseCapabilityRecord();
   // 4. Let executorClosure be a new Abstract Closure with parameters (resolve, reject) that captures promiseCapability and performs the following steps when called:
-  const executorClosure = ([resolve = _Value.undefined, reject = _Value.undefined]) => {
+  const executorClosure = ([resolve = Value.undefined, reject = Value.undefined]) => {
     // a. If promiseCapability.[[Resolve]] is not undefined, throw a TypeError exception.
     if (!(promiseCapability.Resolve instanceof UndefinedValue)) {
       return surroundingAgent.Throw('TypeError', 'PromiseCapabilityFunctionAlreadySet', 'resolve');
@@ -30943,10 +30942,10 @@ function NewPromiseCapability(C) {
     // d. Set promiseCapability.[[Reject]] to reject.
     promiseCapability.Reject = reject;
     // e. Return undefined.
-    return _Value.undefined;
+    return Value.undefined;
   };
   // 5. Let executor be ! CreateBuiltinFunction(executorClosure, 2, "", « »).
-  let _temp3 = CreateBuiltinFunction(executorClosure, 2, _Value(''), []);
+  let _temp3 = CreateBuiltinFunction(executorClosure, 2, Value(''), []);
   Assert(!(_temp3 instanceof AbruptCompletion), "CreateBuiltinFunction(executorClosure, 2, Value(''), [])" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp3 instanceof Completion) {
@@ -30965,11 +30964,11 @@ function NewPromiseCapability(C) {
   }
   const promise = _temp4;
   // 9. If IsCallable(promiseCapability.[[Resolve]]) is false, throw a TypeError exception.
-  if (IsCallable(promiseCapability.Resolve) === _Value.false) {
+  if (IsCallable(promiseCapability.Resolve) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'PromiseResolveFunction', promiseCapability.Resolve);
   }
   // 10. If IsCallable(promiseCapability.[[Reject]]) is false, throw a TypeError exception.
-  if (IsCallable(promiseCapability.Reject) === _Value.false) {
+  if (IsCallable(promiseCapability.Reject) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'PromiseRejectFunction', promiseCapability.Reject);
   }
   // 11. Set promiseCapability.[[Promise]] to promise.
@@ -30981,12 +30980,12 @@ function NewPromiseCapability(C) {
 /** https://tc39.es/ecma262/#sec-ispromise */
 function IsPromise(x) {
   if (!(x instanceof ObjectValue)) {
-    return _Value.false;
+    return Value.false;
   }
   if (!('PromiseState' in x)) {
-    return _Value.false;
+    return Value.false;
   }
-  return _Value.true;
+  return Value.true;
 }
 
 /** https://tc39.es/ecma262/#sec-rejectpromise */
@@ -30997,7 +30996,7 @@ function RejectPromise(promise, reason) {
   promise.PromiseFulfillReactions = undefined;
   promise.PromiseRejectReactions = undefined;
   promise.PromiseState = 'rejected';
-  if (promise.PromiseIsHandled === _Value.false) {
+  if (promise.PromiseIsHandled === Value.false) {
     HostPromiseRejectionTracker(promise, 'reject');
   }
   return TriggerPromiseReactions(reactions, reason);
@@ -31014,15 +31013,15 @@ function TriggerPromiseReactions(reactions, argument) {
     HostEnqueuePromiseJob(job.Job);
   });
   // 2. Return undefined.
-  return _Value.undefined;
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-promise-resolve */
 TriggerPromiseReactions.section = 'https://tc39.es/ecma262/#sec-triggerpromisereactions';
 function PromiseResolve(C, x) {
   Assert(C instanceof ObjectValue, "C instanceof ObjectValue");
-  if (IsPromise(x) === _Value.true) {
-    let _temp5 = Get(x, _Value('constructor'));
+  if (IsPromise(x) === Value.true) {
+    let _temp5 = Get(x, Value('constructor'));
     /* c8 ignore if */
     if (_temp5 instanceof AbruptCompletion) {
       return _temp5;
@@ -31032,7 +31031,7 @@ function PromiseResolve(C, x) {
       _temp5 = _temp5.Value;
     }
     const xConstructor = _temp5;
-    if (SameValue(xConstructor, C) === _Value.true) {
+    if (SameValue(xConstructor, C) === Value.true) {
       return x;
     }
   }
@@ -31046,7 +31045,7 @@ function PromiseResolve(C, x) {
     _temp6 = _temp6.Value;
   }
   const promiseCapability = _temp6;
-  let _temp7 = Call(promiseCapability.Resolve, _Value.undefined, [x]);
+  let _temp7 = Call(promiseCapability.Resolve, Value.undefined, [x]);
   /* c8 ignore if */
   if (_temp7 instanceof AbruptCompletion) {
     return _temp7;
@@ -31085,10 +31084,10 @@ function NewPromiseReactionJob(reaction, argument) {
       }
     } else {
       // f. Else, let handlerResult be HostCallJobCallback(handler, undefined, « argument »).
-      handlerResult = HostCallJobCallback(handler, _Value.undefined, [argument]);
+      handlerResult = HostCallJobCallback(handler, Value.undefined, [argument]);
     }
     // g. If promiseCapability is undefined, then
-    if (promiseCapability === _Value.undefined) {
+    if (promiseCapability === Value.undefined) {
       // i. Assert: handlerResult is not an abrupt completion.
       Assert(!(handlerResult instanceof AbruptCompletion), "!(handlerResult instanceof AbruptCompletion)");
       // ii. Return NormalCompletion(empty).
@@ -31098,16 +31097,16 @@ function NewPromiseReactionJob(reaction, argument) {
     // h. If handlerResult is an abrupt completion, then
     if (handlerResult instanceof AbruptCompletion) {
       // i. Let status be Call(promiseCapability.[[Reject]], undefined, « handlerResult.[[Value]] »).
-      status = Call(promiseCapability.Reject, _Value.undefined, [handlerResult.Value]);
+      status = Call(promiseCapability.Reject, Value.undefined, [handlerResult.Value]);
     } else {
       // ii. Let status be Call(promiseCapability.[[Resolve]], undefined, « handlerResult.[[Value]] »).
-      status = Call(promiseCapability.Resolve, _Value.undefined, [handlerResult.Value]);
+      status = Call(promiseCapability.Resolve, Value.undefined, [handlerResult.Value]);
     }
     // j. Return Completion(status).
     return Completion(status);
   };
   // 2. Let handlerRealm be null.
-  let handlerRealm = _Value.null;
+  let handlerRealm = Value.null;
   // 3. If reaction.[[Handler]] is not empty, then
   if (reaction.Handler !== undefined) {
     // a. Let getHandlerRealmResult be GetFunctionRealm(reaction.[[Handler]].[[Callback]]).
@@ -31133,15 +31132,15 @@ function NewPromiseReactionJob(reaction, argument) {
 NewPromiseReactionJob.section = 'https://tc39.es/ecma262/#sec-newpromisereactionjob';
 function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) {
   // 1. Assert: IsPromise(promise) is true.
-  Assert(IsPromise(promise) === _Value.true, "IsPromise(promise) === Value.true");
+  Assert(IsPromise(promise) === Value.true, "IsPromise(promise) === Value.true");
   // 2. If resultCapability is not present, then
   if (resultCapability === undefined) {
     // a. Set resultCapability to undefined.
-    resultCapability = _Value.undefined;
+    resultCapability = Value.undefined;
   }
   let onFulfilledJobCallback;
   // 3. If IsCallable(onFulfilled) is false, then
-  if (IsCallable(onFulfilled) === _Value.false) {
+  if (IsCallable(onFulfilled) === Value.false) {
     // a. Let onFulfilledJobCallback be empty.
     onFulfilledJobCallback = undefined;
   } else {
@@ -31151,7 +31150,7 @@ function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) 
   }
   let onRejectedJobCallback;
   // 5. If IsCallable(onRejected) is false, then
-  if (IsCallable(onRejected) === _Value.false) {
+  if (IsCallable(onRejected) === Value.false) {
     // a. Let onRejectedJobCallback be empty.
     onRejectedJobCallback = undefined;
   } else {
@@ -31189,7 +31188,7 @@ function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) 
     // b. Let reason be promise.[[PromiseResult]].
     const reason = promise.PromiseResult;
     // c. If promise.[[PromiseIsHandled]] is false, perform HostPromiseRejectionTracker(promise, "handle").
-    if (promise.PromiseIsHandled === _Value.false) {
+    if (promise.PromiseIsHandled === Value.false) {
       HostPromiseRejectionTracker(promise, 'handle');
     }
     // d. Let rejectJob be NewPromiseReactionJob(rejectReaction, reason).
@@ -31198,11 +31197,11 @@ function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) 
     HostEnqueuePromiseJob(rejectJob.Job);
   }
   // 12. Set promise.[[PromiseIsHandled]] to true.
-  promise.PromiseIsHandled = _Value.true;
+  promise.PromiseIsHandled = Value.true;
   // 13. If resultCapability is undefined, then
-  if (resultCapability === _Value.undefined) {
+  if (resultCapability === Value.undefined) {
     // a. Return undefined.
-    return _Value.undefined;
+    return Value.undefined;
   } else {
     // 14. Else,
     // a. Return resultCapability.[[Promise]].
@@ -31214,12 +31213,12 @@ function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) 
 function ProxyGetPrototypeOf() {
   const O = this;
   const handler = O.ProxyHandler;
-  if (handler === _Value.null) {
+  if (handler === Value.null) {
     return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'getPrototypeOf');
   }
   Assert(handler instanceof ObjectValue, "handler instanceof ObjectValue");
   const target = O.ProxyTarget;
-  let _temp = GetMethod(handler, _Value('getPrototypeOf'));
+  let _temp = GetMethod(handler, Value('getPrototypeOf'));
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) {
     return _temp;
@@ -31229,7 +31228,7 @@ function ProxyGetPrototypeOf() {
     _temp = _temp.Value;
   }
   const trap = _temp;
-  if (trap === _Value.undefined) {
+  if (trap === Value.undefined) {
     return target.GetPrototypeOf();
   }
   let _temp2 = Call(trap, handler, [target]);
@@ -31255,7 +31254,7 @@ function ProxyGetPrototypeOf() {
     _temp3 = _temp3.Value;
   }
   const extensibleTarget = _temp3;
-  if (extensibleTarget === _Value.true) {
+  if (extensibleTarget === Value.true) {
     return handlerProto;
   }
   let _temp4 = target.GetPrototypeOf();
@@ -31268,7 +31267,7 @@ function ProxyGetPrototypeOf() {
     _temp4 = _temp4.Value;
   }
   const targetProto = _temp4;
-  if (SameValue(handlerProto, targetProto) === _Value.false) {
+  if (SameValue(handlerProto, targetProto) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'ProxyGetPrototypeOfNonExtensible');
   }
   return handlerProto;
@@ -31280,12 +31279,12 @@ function ProxySetPrototypeOf(V) {
   const O = this;
   Assert(V instanceof ObjectValue || V instanceof NullValue, "V instanceof ObjectValue || V instanceof NullValue");
   const handler = O.ProxyHandler;
-  if (handler === _Value.null) {
+  if (handler === Value.null) {
     return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'setPrototypeOf');
   }
   Assert(handler instanceof ObjectValue, "handler instanceof ObjectValue");
   const target = O.ProxyTarget;
-  let _temp5 = GetMethod(handler, _Value('setPrototypeOf'));
+  let _temp5 = GetMethod(handler, Value('setPrototypeOf'));
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) {
     return _temp5;
@@ -31295,7 +31294,7 @@ function ProxySetPrototypeOf(V) {
     _temp5 = _temp5.Value;
   }
   const trap = _temp5;
-  if (trap === _Value.undefined) {
+  if (trap === Value.undefined) {
     return target.SetPrototypeOf(V);
   }
   let _temp6 = Call(trap, handler, [target, V]);
@@ -31308,8 +31307,8 @@ function ProxySetPrototypeOf(V) {
     _temp6 = _temp6.Value;
   }
   const booleanTrapResult = ToBoolean(_temp6);
-  if (booleanTrapResult === _Value.false) {
-    return _Value.false;
+  if (booleanTrapResult === Value.false) {
+    return Value.false;
   }
   let _temp7 = IsExtensible(target);
   /* c8 ignore if */
@@ -31321,8 +31320,8 @@ function ProxySetPrototypeOf(V) {
     _temp7 = _temp7.Value;
   }
   const extensibleTarget = _temp7;
-  if (extensibleTarget === _Value.true) {
-    return _Value.true;
+  if (extensibleTarget === Value.true) {
+    return Value.true;
   }
   let _temp8 = target.GetPrototypeOf();
   /* c8 ignore if */
@@ -31334,10 +31333,10 @@ function ProxySetPrototypeOf(V) {
     _temp8 = _temp8.Value;
   }
   const targetProto = _temp8;
-  if (SameValue(V, targetProto) === _Value.false) {
+  if (SameValue(V, targetProto) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'ProxySetPrototypeOfNonExtensible');
   }
-  return _Value.true;
+  return Value.true;
 }
 
 /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-isextensible */
@@ -31345,12 +31344,12 @@ ProxySetPrototypeOf.section = 'https://tc39.es/ecma262/#sec-proxy-object-interna
 function ProxyIsExtensible() {
   const O = this;
   const handler = O.ProxyHandler;
-  if (handler === _Value.null) {
+  if (handler === Value.null) {
     return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'isExtensible');
   }
   Assert(handler instanceof ObjectValue, "handler instanceof ObjectValue");
   const target = O.ProxyTarget;
-  let _temp9 = GetMethod(handler, _Value('isExtensible'));
+  let _temp9 = GetMethod(handler, Value('isExtensible'));
   /* c8 ignore if */
   if (_temp9 instanceof AbruptCompletion) {
     return _temp9;
@@ -31360,7 +31359,7 @@ function ProxyIsExtensible() {
     _temp9 = _temp9.Value;
   }
   const trap = _temp9;
-  if (trap === _Value.undefined) {
+  if (trap === Value.undefined) {
     return IsExtensible(target);
   }
   let _temp10 = Call(trap, handler, [target]);
@@ -31383,7 +31382,7 @@ function ProxyIsExtensible() {
     _temp11 = _temp11.Value;
   }
   const targetResult = _temp11;
-  if (SameValue(booleanTrapResult, targetResult) === _Value.false) {
+  if (SameValue(booleanTrapResult, targetResult) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'ProxyIsExtensibleInconsistent', targetResult);
   }
   return booleanTrapResult;
@@ -31394,12 +31393,12 @@ ProxyIsExtensible.section = 'https://tc39.es/ecma262/#sec-proxy-object-internal-
 function ProxyPreventExtensions() {
   const O = this;
   const handler = O.ProxyHandler;
-  if (handler === _Value.null) {
+  if (handler === Value.null) {
     return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'preventExtensions');
   }
   Assert(handler instanceof ObjectValue, "handler instanceof ObjectValue");
   const target = O.ProxyTarget;
-  let _temp12 = GetMethod(handler, _Value('preventExtensions'));
+  let _temp12 = GetMethod(handler, Value('preventExtensions'));
   /* c8 ignore if */
   if (_temp12 instanceof AbruptCompletion) {
     return _temp12;
@@ -31409,7 +31408,7 @@ function ProxyPreventExtensions() {
     _temp12 = _temp12.Value;
   }
   const trap = _temp12;
-  if (trap === _Value.undefined) {
+  if (trap === Value.undefined) {
     return target.PreventExtensions();
   }
   let _temp13 = Call(trap, handler, [target]);
@@ -31422,7 +31421,7 @@ function ProxyPreventExtensions() {
     _temp13 = _temp13.Value;
   }
   const booleanTrapResult = ToBoolean(_temp13);
-  if (booleanTrapResult === _Value.true) {
+  if (booleanTrapResult === Value.true) {
     let _temp14 = IsExtensible(target);
     /* c8 ignore if */
     if (_temp14 instanceof AbruptCompletion) {
@@ -31433,7 +31432,7 @@ function ProxyPreventExtensions() {
       _temp14 = _temp14.Value;
     }
     const extensibleTarget = _temp14;
-    if (extensibleTarget === _Value.true) {
+    if (extensibleTarget === Value.true) {
       return surroundingAgent.Throw('TypeError', 'ProxyPreventExtensionsExtensible');
     }
   }
@@ -31450,7 +31449,7 @@ function ProxyGetOwnProperty(P) {
   // 2. Let handler be O.[[ProxyHandler]].
   const handler = O.ProxyHandler;
   // 3. If handler is null, throw a TypeError exception.
-  if (handler === _Value.null) {
+  if (handler === Value.null) {
     return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'getOwnPropertyDescriptor');
   }
   // 4. Assert: Type(Handler) is Object.
@@ -31458,7 +31457,7 @@ function ProxyGetOwnProperty(P) {
   // 5. Let target be O.[[ProxyTarget]].
   const target = O.ProxyTarget;
   // 6. Let trap be ? Getmethod(handler, "getOwnPropertyDescriptor").
-  let _temp15 = GetMethod(handler, _Value('getOwnPropertyDescriptor'));
+  let _temp15 = GetMethod(handler, Value('getOwnPropertyDescriptor'));
   /* c8 ignore if */
   if (_temp15 instanceof AbruptCompletion) {
     return _temp15;
@@ -31469,7 +31468,7 @@ function ProxyGetOwnProperty(P) {
   }
   const trap = _temp15;
   // 7. If trap is undefined, then
-  if (trap === _Value.undefined) {
+  if (trap === Value.undefined) {
     // a. Return ? target.[[GetOwnProperty]](P).
     return target.GetOwnProperty(P);
   }
@@ -31500,13 +31499,13 @@ function ProxyGetOwnProperty(P) {
   }
   const targetDesc = _temp17;
   // 11. If trapResultObj is undefined, then
-  if (trapResultObj === _Value.undefined) {
+  if (trapResultObj === Value.undefined) {
     // a. If targetDesc is undefined, return undefined.
-    if (targetDesc === _Value.undefined) {
-      return _Value.undefined;
+    if (targetDesc === Value.undefined) {
+      return Value.undefined;
     }
     // b. If targetDesc.[[Configurable]] is false, throw a TypeError exception.
-    if (targetDesc.Configurable === _Value.false) {
+    if (targetDesc.Configurable === Value.false) {
       return surroundingAgent.Throw('TypeError', 'ProxyGetOwnPropertyDescriptorUndefined', P);
     }
     // c. Let extensibleTarget be ? IsExtensible(target).
@@ -31521,11 +31520,11 @@ function ProxyGetOwnProperty(P) {
     }
     const extensibleTarget = _temp18;
     // d. If extensibleTarget is false, throw a TypeError exception.
-    if (extensibleTarget === _Value.false) {
+    if (extensibleTarget === Value.false) {
       return surroundingAgent.Throw('TypeError', 'ProxyGetOwnPropertyDescriptorNonExtensible', P);
     }
     // e. Return undefined.
-    return _Value.undefined;
+    return Value.undefined;
   }
   // 12. Let extensibleTarget be ? IsExtensible(target).
   let _temp19 = IsExtensible(target);
@@ -31554,20 +31553,20 @@ function ProxyGetOwnProperty(P) {
   // 15. Let valid be IsCompatiblePropertyDescriptor(extensibleTarget, resultDesc, targetDesc).
   const valid = IsCompatiblePropertyDescriptor(extensibleTarget, resultDesc, targetDesc);
   // 16. If valid is false, throw a TypeError exception.
-  if (valid === _Value.false) {
+  if (valid === Value.false) {
     return surroundingAgent.Throw('TypeError', 'ProxyGetOwnPropertyDescriptorIncompatible', P);
   }
   // 17. If resultDesc.[[Configurable]] is false, then
-  if (resultDesc.Configurable === _Value.false) {
+  if (resultDesc.Configurable === Value.false) {
     // a. If targetDesc is undefined or targetDesc.[[Configurable]] is true, then
-    if (targetDesc === _Value.undefined || targetDesc.Configurable === _Value.true) {
+    if (targetDesc === Value.undefined || targetDesc.Configurable === Value.true) {
       // i. Throw a TypeError exception.
       return surroundingAgent.Throw('TypeError', 'ProxyGetOwnPropertyDescriptorNonConfigurable', P);
     }
     // b. If resultDesc has a [[Writable]] field and resultDesc.[[Writable]] is false, then
-    if ('Writable' in resultDesc && resultDesc.Writable === _Value.false) {
+    if ('Writable' in resultDesc && resultDesc.Writable === Value.false) {
       // i. If targetDesc.[[Writable]] is true, throw a TypeError exception.
-      if (targetDesc.Writable === _Value.true) {
+      if (targetDesc.Writable === Value.true) {
         return surroundingAgent.Throw('TypeError', 'ProxyGetOwnPropertyDescriptorNonConfigurableWritable', P);
       }
     }
@@ -31586,7 +31585,7 @@ function ProxyDefineOwnProperty(P, Desc) {
   // 2. Let handler be O.[[ProxyHandler]].
   const handler = O.ProxyHandler;
   // 3. If handler is null, throw a TypeError exception.
-  if (handler === _Value.null) {
+  if (handler === Value.null) {
     return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'defineProperty');
   }
   // 4. Assert: Type(handler) is Object.
@@ -31594,7 +31593,7 @@ function ProxyDefineOwnProperty(P, Desc) {
   // 5. Let target be O.[[ProxyTarget]].
   const target = O.ProxyTarget;
   // 6. Let trap be ? GetMethod(handler, "defineProperty").
-  let _temp21 = GetMethod(handler, _Value('defineProperty'));
+  let _temp21 = GetMethod(handler, Value('defineProperty'));
   /* c8 ignore if */
   if (_temp21 instanceof AbruptCompletion) {
     return _temp21;
@@ -31605,7 +31604,7 @@ function ProxyDefineOwnProperty(P, Desc) {
   }
   const trap = _temp21;
   // 7. If trap is undefined, then
-  if (trap === _Value.undefined) {
+  if (trap === Value.undefined) {
     // a. Return ? target.[[DefineOwnProperty]](P, Desc).
     return target.DefineOwnProperty(P, Desc);
   }
@@ -31623,8 +31622,8 @@ function ProxyDefineOwnProperty(P, Desc) {
   }
   const booleanTrapResult = ToBoolean(_temp22);
   // 10. If booleanTrapResult is false, return false.
-  if (booleanTrapResult === _Value.false) {
-    return _Value.false;
+  if (booleanTrapResult === Value.false) {
+    return Value.false;
   }
   // 11. Let targetDesc be ? target.[[GetOwnProperty]](P).
   let _temp23 = target.GetOwnProperty(P);
@@ -31650,7 +31649,7 @@ function ProxyDefineOwnProperty(P, Desc) {
   const extensibleTarget = _temp24;
   let settingConfigFalse;
   // 13. If Desc has a [[Configurable]] field and if Desc.[[Configurable]] is false, then
-  if (Desc.Configurable !== undefined && Desc.Configurable === _Value.false) {
+  if (Desc.Configurable !== undefined && Desc.Configurable === Value.false) {
     // a. Let settingConfigFalse be true.
     settingConfigFalse = true;
   } else {
@@ -31658,9 +31657,9 @@ function ProxyDefineOwnProperty(P, Desc) {
     settingConfigFalse = false;
   }
   // 15. If targetDesc is undefined, then
-  if (targetDesc === _Value.undefined) {
+  if (targetDesc === Value.undefined) {
     // a. If extensibleTarget is false, throw a TypeError exception.
-    if (extensibleTarget === _Value.false) {
+    if (extensibleTarget === Value.false) {
       return surroundingAgent.Throw('TypeError', 'ProxyDefinePropertyNonExtensible', P);
     }
     // b. If settingConfigFalse is true, throw a TypeError exception.
@@ -31669,22 +31668,22 @@ function ProxyDefineOwnProperty(P, Desc) {
     }
   } else {
     // a. If IsCompatiblePropertyDescriptor(extensibleTarget, Desc, targetDesc) is false, throw a TypeError exception.
-    if (IsCompatiblePropertyDescriptor(extensibleTarget, Desc, targetDesc) === _Value.false) {
+    if (IsCompatiblePropertyDescriptor(extensibleTarget, Desc, targetDesc) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'ProxyDefinePropertyIncompatible', P);
     }
     // b. If settingConfigFalse is true and targetDesc.[[Configurable]] is true, throw a TypeError exception.
-    if (settingConfigFalse === true && targetDesc.Configurable === _Value.true) {
+    if (settingConfigFalse === true && targetDesc.Configurable === Value.true) {
       return surroundingAgent.Throw('TypeError', 'ProxyDefinePropertyNonConfigurable', P);
     }
     // c. If IsDataDescriptor(targetDesc) is true, targetDesc.[[Configurable]] is false, and targetDesc.[[Writable]] is true, then
-    if (IsDataDescriptor(targetDesc) && targetDesc.Configurable === _Value.false && targetDesc.Writable === _Value.true) {
+    if (IsDataDescriptor(targetDesc) && targetDesc.Configurable === Value.false && targetDesc.Writable === Value.true) {
       // i. If Desc has a [[Writable]] field and Desc.[[Writable]] is false, throw a TypeError exception.
-      if ('Writable' in Desc && Desc.Writable === _Value.false) {
+      if ('Writable' in Desc && Desc.Writable === Value.false) {
         return surroundingAgent.Throw('TypeError', 'ProxyDefinePropertyNonConfigurableWritable', P);
       }
     }
   }
-  return _Value.true;
+  return Value.true;
 }
 
 /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-hasproperty-p */
@@ -31693,12 +31692,12 @@ function ProxyHasProperty(P) {
   const O = this;
   Assert(IsPropertyKey(P), "IsPropertyKey(P)");
   const handler = O.ProxyHandler;
-  if (handler === _Value.null) {
+  if (handler === Value.null) {
     return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'has');
   }
   Assert(handler instanceof ObjectValue, "handler instanceof ObjectValue");
   const target = O.ProxyTarget;
-  let _temp25 = GetMethod(handler, _Value('has'));
+  let _temp25 = GetMethod(handler, Value('has'));
   /* c8 ignore if */
   if (_temp25 instanceof AbruptCompletion) {
     return _temp25;
@@ -31708,7 +31707,7 @@ function ProxyHasProperty(P) {
     _temp25 = _temp25.Value;
   }
   const trap = _temp25;
-  if (trap === _Value.undefined) {
+  if (trap === Value.undefined) {
     return target.HasProperty(P);
   }
   let _temp26 = Call(trap, handler, [target, P]);
@@ -31721,7 +31720,7 @@ function ProxyHasProperty(P) {
     _temp26 = _temp26.Value;
   }
   const booleanTrapResult = ToBoolean(_temp26);
-  if (booleanTrapResult === _Value.false) {
+  if (booleanTrapResult === Value.false) {
     let _temp27 = target.GetOwnProperty(P);
     /* c8 ignore if */
     if (_temp27 instanceof AbruptCompletion) {
@@ -31732,8 +31731,8 @@ function ProxyHasProperty(P) {
       _temp27 = _temp27.Value;
     }
     const targetDesc = _temp27;
-    if (targetDesc !== _Value.undefined) {
-      if (targetDesc.Configurable === _Value.false) {
+    if (targetDesc !== Value.undefined) {
+      if (targetDesc.Configurable === Value.false) {
         return surroundingAgent.Throw('TypeError', 'ProxyHasNonConfigurable', P);
       }
       let _temp28 = IsExtensible(target);
@@ -31746,7 +31745,7 @@ function ProxyHasProperty(P) {
         _temp28 = _temp28.Value;
       }
       const extensibleTarget = _temp28;
-      if (extensibleTarget === _Value.false) {
+      if (extensibleTarget === Value.false) {
         return surroundingAgent.Throw('TypeError', 'ProxyHasNonExtensible', P);
       }
     }
@@ -31760,12 +31759,12 @@ function ProxyGet(P, Receiver) {
   const O = this;
   Assert(IsPropertyKey(P), "IsPropertyKey(P)");
   const handler = O.ProxyHandler;
-  if (handler === _Value.null) {
+  if (handler === Value.null) {
     return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'get');
   }
   Assert(handler instanceof ObjectValue, "handler instanceof ObjectValue");
   const target = O.ProxyTarget;
-  let _temp29 = GetMethod(handler, _Value('get'));
+  let _temp29 = GetMethod(handler, Value('get'));
   /* c8 ignore if */
   if (_temp29 instanceof AbruptCompletion) {
     return _temp29;
@@ -31775,7 +31774,7 @@ function ProxyGet(P, Receiver) {
     _temp29 = _temp29.Value;
   }
   const trap = _temp29;
-  if (trap === _Value.undefined) {
+  if (trap === Value.undefined) {
     return target.Get(P, Receiver);
   }
   let _temp30 = Call(trap, handler, [target, P, Receiver]);
@@ -31798,14 +31797,14 @@ function ProxyGet(P, Receiver) {
     _temp31 = _temp31.Value;
   }
   const targetDesc = _temp31;
-  if (targetDesc !== _Value.undefined && targetDesc.Configurable === _Value.false) {
-    if (IsDataDescriptor(targetDesc) === true && targetDesc.Writable === _Value.false) {
-      if (SameValue(trapResult, targetDesc.Value) === _Value.false) {
+  if (targetDesc !== Value.undefined && targetDesc.Configurable === Value.false) {
+    if (IsDataDescriptor(targetDesc) === true && targetDesc.Writable === Value.false) {
+      if (SameValue(trapResult, targetDesc.Value) === Value.false) {
         return surroundingAgent.Throw('TypeError', 'ProxyGetNonConfigurableData', P);
       }
     }
-    if (IsAccessorDescriptor(targetDesc) === true && targetDesc.Get === _Value.undefined) {
-      if (trapResult !== _Value.undefined) {
+    if (IsAccessorDescriptor(targetDesc) === true && targetDesc.Get === Value.undefined) {
+      if (trapResult !== Value.undefined) {
         return surroundingAgent.Throw('TypeError', 'ProxyGetNonConfigurableAccessor', P);
       }
     }
@@ -31819,12 +31818,12 @@ function ProxySet(P, V, Receiver) {
   const O = this;
   Assert(IsPropertyKey(P), "IsPropertyKey(P)");
   const handler = O.ProxyHandler;
-  if (handler === _Value.null) {
+  if (handler === Value.null) {
     return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'set');
   }
   Assert(handler instanceof ObjectValue, "handler instanceof ObjectValue");
   const target = O.ProxyTarget;
-  let _temp32 = GetMethod(handler, _Value('set'));
+  let _temp32 = GetMethod(handler, Value('set'));
   /* c8 ignore if */
   if (_temp32 instanceof AbruptCompletion) {
     return _temp32;
@@ -31834,7 +31833,7 @@ function ProxySet(P, V, Receiver) {
     _temp32 = _temp32.Value;
   }
   const trap = _temp32;
-  if (trap === _Value.undefined) {
+  if (trap === Value.undefined) {
     return target.Set(P, V, Receiver);
   }
   let _temp33 = Call(trap, handler, [target, P, V, Receiver]);
@@ -31847,8 +31846,8 @@ function ProxySet(P, V, Receiver) {
     _temp33 = _temp33.Value;
   }
   const booleanTrapResult = ToBoolean(_temp33);
-  if (booleanTrapResult === _Value.false) {
-    return _Value.false;
+  if (booleanTrapResult === Value.false) {
+    return Value.false;
   }
   let _temp34 = target.GetOwnProperty(P);
   /* c8 ignore if */
@@ -31860,19 +31859,19 @@ function ProxySet(P, V, Receiver) {
     _temp34 = _temp34.Value;
   }
   const targetDesc = _temp34;
-  if (targetDesc !== _Value.undefined && targetDesc.Configurable === _Value.false) {
-    if (IsDataDescriptor(targetDesc) === true && targetDesc.Writable === _Value.false) {
-      if (SameValue(V, targetDesc.Value) === _Value.false) {
+  if (targetDesc !== Value.undefined && targetDesc.Configurable === Value.false) {
+    if (IsDataDescriptor(targetDesc) === true && targetDesc.Writable === Value.false) {
+      if (SameValue(V, targetDesc.Value) === Value.false) {
         return surroundingAgent.Throw('TypeError', 'ProxySetFrozenData', P);
       }
     }
     if (IsAccessorDescriptor(targetDesc) === true) {
-      if (targetDesc.Set === _Value.undefined) {
+      if (targetDesc.Set === Value.undefined) {
         return surroundingAgent.Throw('TypeError', 'ProxySetFrozenAccessor', P);
       }
     }
   }
-  return _Value.true;
+  return Value.true;
 }
 
 /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-delete-p */
@@ -31885,7 +31884,7 @@ function ProxyDelete(P) {
   // 2. Let handler be O.[[ProxyHandler]].
   const handler = O.ProxyHandler;
   // 3. If handler is null, throw a TypeError exception.
-  if (handler === _Value.null) {
+  if (handler === Value.null) {
     return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'deleteProperty');
   }
   // 4. Assert: Type(handler) is Object.
@@ -31893,7 +31892,7 @@ function ProxyDelete(P) {
   // 5. Let target be O.[[ProxyTarget]].
   const target = O.ProxyTarget;
   // 6. Let trap be ? GetMethod(handler, "deleteProperty").
-  let _temp35 = GetMethod(handler, _Value('deleteProperty'));
+  let _temp35 = GetMethod(handler, Value('deleteProperty'));
   /* c8 ignore if */
   if (_temp35 instanceof AbruptCompletion) {
     return _temp35;
@@ -31904,7 +31903,7 @@ function ProxyDelete(P) {
   }
   const trap = _temp35;
   // 7. If trap is undefined, then
-  if (trap === _Value.undefined) {
+  if (trap === Value.undefined) {
     // a. Return ? target.[[Delete]](P).
     return target.Delete(P);
   }
@@ -31920,8 +31919,8 @@ function ProxyDelete(P) {
   }
   const booleanTrapResult = ToBoolean(_temp36);
   // 9. If booleanTrapResult is false, return false.
-  if (booleanTrapResult === _Value.false) {
-    return _Value.false;
+  if (booleanTrapResult === Value.false) {
+    return Value.false;
   }
   // 10. Let targetDesc be ? target.[[GetOwnProperty]](P).
   let _temp37 = target.GetOwnProperty(P);
@@ -31935,11 +31934,11 @@ function ProxyDelete(P) {
   }
   const targetDesc = _temp37;
   // 11. If targetDesc is undefined, return true.
-  if (targetDesc === _Value.undefined) {
-    return _Value.true;
+  if (targetDesc === Value.undefined) {
+    return Value.true;
   }
   // 12. If targetDesc.[[Configurable]] is false, throw a TypeError exception.
-  if (targetDesc.Configurable === _Value.false) {
+  if (targetDesc.Configurable === Value.false) {
     return surroundingAgent.Throw('TypeError', 'ProxyDeletePropertyNonConfigurable', P);
   }
   // 13. Let extensibleTarget be ? IsExtensible(target).
@@ -31954,11 +31953,11 @@ function ProxyDelete(P) {
   }
   const extensibleTarget = _temp38;
   // 14. If extensibleTarget is false, throw a TypeError exception.
-  if (extensibleTarget === _Value.false) {
+  if (extensibleTarget === Value.false) {
     return surroundingAgent.Throw('TypeError', 'ProxyDeletePropertyNonExtensible', P);
   }
   // 15. Return true.
-  return _Value.true;
+  return Value.true;
 }
 
 /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-ownpropertykeys */
@@ -31966,12 +31965,12 @@ ProxyDelete.section = 'https://tc39.es/ecma262/#sec-proxy-object-internal-method
 function ProxyOwnPropertyKeys() {
   const O = this;
   const handler = O.ProxyHandler;
-  if (handler === _Value.null) {
+  if (handler === Value.null) {
     return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'ownKeys');
   }
   Assert(handler instanceof ObjectValue, "handler instanceof ObjectValue");
   const target = O.ProxyTarget;
-  let _temp39 = GetMethod(handler, _Value('ownKeys'));
+  let _temp39 = GetMethod(handler, Value('ownKeys'));
   /* c8 ignore if */
   if (_temp39 instanceof AbruptCompletion) {
     return _temp39;
@@ -31981,7 +31980,7 @@ function ProxyOwnPropertyKeys() {
     _temp39 = _temp39.Value;
   }
   const trap = _temp39;
-  if (trap === _Value.undefined) {
+  if (trap === Value.undefined) {
     return target.OwnPropertyKeys();
   }
   let _temp40 = Call(trap, handler, [target]);
@@ -32042,13 +32041,13 @@ function ProxyOwnPropertyKeys() {
       _temp44 = _temp44.Value;
     }
     const desc = _temp44;
-    if (desc !== _Value.undefined && desc.Configurable === _Value.false) {
+    if (desc !== Value.undefined && desc.Configurable === Value.false) {
       targetNonconfigurableKeys.push(key);
     } else {
       targetConfigurableKeys.push(key);
     }
   }
-  if (extensibleTarget === _Value.true && targetNonconfigurableKeys.length === 0) {
+  if (extensibleTarget === Value.true && targetNonconfigurableKeys.length === 0) {
     return trapResult;
   }
   const uncheckedResultKeys = new ValueSet(trapResult);
@@ -32058,7 +32057,7 @@ function ProxyOwnPropertyKeys() {
     }
     uncheckedResultKeys.delete(key);
   }
-  if (extensibleTarget === _Value.true) {
+  if (extensibleTarget === Value.true) {
     return trapResult;
   }
   for (const key of targetConfigurableKeys) {
@@ -32078,12 +32077,12 @@ ProxyOwnPropertyKeys.section = 'https://tc39.es/ecma262/#sec-proxy-object-intern
 function ProxyCall(thisArgument, argumentsList) {
   const O = this;
   const handler = O.ProxyHandler;
-  if (handler === _Value.null) {
+  if (handler === Value.null) {
     return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'apply');
   }
   Assert(handler instanceof ObjectValue, "handler instanceof ObjectValue");
   const target = O.ProxyTarget;
-  let _temp45 = GetMethod(handler, _Value('apply'));
+  let _temp45 = GetMethod(handler, Value('apply'));
   /* c8 ignore if */
   if (_temp45 instanceof AbruptCompletion) {
     return _temp45;
@@ -32093,7 +32092,7 @@ function ProxyCall(thisArgument, argumentsList) {
     _temp45 = _temp45.Value;
   }
   const trap = _temp45;
-  if (trap === _Value.undefined) {
+  if (trap === Value.undefined) {
     return Call(target, thisArgument, argumentsList);
   }
   let _temp46 = CreateArrayFromList(argumentsList);
@@ -32111,13 +32110,13 @@ ProxyCall.section = 'https://tc39.es/ecma262/#sec-proxy-object-internal-methods-
 function ProxyConstruct(argumentsList, newTarget) {
   const O = this;
   const handler = O.ProxyHandler;
-  if (handler === _Value.null) {
+  if (handler === Value.null) {
     return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'construct');
   }
   Assert(handler instanceof ObjectValue, "handler instanceof ObjectValue");
   const target = O.ProxyTarget;
-  Assert(IsConstructor(target) === _Value.true, "IsConstructor(target) === Value.true");
-  let _temp47 = GetMethod(handler, _Value('construct'));
+  Assert(IsConstructor(target) === Value.true, "IsConstructor(target) === Value.true");
+  let _temp47 = GetMethod(handler, Value('construct'));
   /* c8 ignore if */
   if (_temp47 instanceof AbruptCompletion) {
     return _temp47;
@@ -32127,7 +32126,7 @@ function ProxyConstruct(argumentsList, newTarget) {
     _temp47 = _temp47.Value;
   }
   const trap = _temp47;
-  if (trap === _Value.undefined) {
+  if (trap === Value.undefined) {
     return Construct(target, argumentsList, newTarget);
   }
   let _temp48 = CreateArrayFromList(argumentsList);
@@ -32188,11 +32187,11 @@ function ProxyCreate(target, handler) {
   P.Delete = ProxyDelete;
   P.OwnPropertyKeys = ProxyOwnPropertyKeys;
   // 5. If IsCallable(target) is true, then
-  if (IsCallable(target) === _Value.true) {
+  if (IsCallable(target) === Value.true) {
     /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-call-thisargument-argumentslist. */
     P.Call = ProxyCall;
     // b. If IsConstructor(target) is true, then
-    if (IsConstructor(target) === _Value.true) {
+    if (IsConstructor(target) === Value.true) {
       /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-construct-argumentslist-newtarget. */
       P.Construct = ProxyConstruct;
     }
@@ -32206,7 +32205,7 @@ function ProxyCreate(target, handler) {
 }
 
 /** https://tc39.es/ecma262/#sec-object.prototype.hasownproperty */
-function ObjectProto_hasOwnProperty([V = _Value.undefined], {
+function ObjectProto_hasOwnProperty([V = Value.undefined], {
   thisValue
 }) {
   let _temp = ToPropertyKey(V);
@@ -32237,12 +32236,12 @@ function ObjectProto_hasOwnProperty([V = _Value.undefined], {
 
 /** https://tc39.es/ecma262/#sec-object.prototype.isprototypeof */
 ObjectProto_hasOwnProperty.section = 'https://tc39.es/ecma262/#sec-object.prototype.hasownproperty';
-function ObjectProto_isPrototypeOf([V = _Value.undefined], {
+function ObjectProto_isPrototypeOf([V = Value.undefined], {
   thisValue
 }) {
   // 1. If Type(V) is not Object, return false.
   if (!(V instanceof ObjectValue)) {
-    return _Value.false;
+    return Value.false;
   }
   // 2. Let O be ? ToObject(this value).
   let _temp3 = ToObject(thisValue);
@@ -32269,19 +32268,19 @@ function ObjectProto_isPrototypeOf([V = _Value.undefined], {
     // a. Set V to ? V.[[GetPrototypeOf]]().
     V = _temp4;
     // b. If V is null, return false.
-    if (V === _Value.null) {
-      return _Value.false;
+    if (V === Value.null) {
+      return Value.false;
     }
     // c. If SameValue(O, V) is true, return true.
-    if (SameValue(O, V) === _Value.true) {
-      return _Value.true;
+    if (SameValue(O, V) === Value.true) {
+      return Value.true;
     }
   }
 }
 
 /** https://tc39.es/ecma262/#sec-object.prototype.propertyisenumerable */
 ObjectProto_isPrototypeOf.section = 'https://tc39.es/ecma262/#sec-object.prototype.isprototypeof';
-function ObjectProto_propertyIsEnumerable([V = _Value.undefined], {
+function ObjectProto_propertyIsEnumerable([V = Value.undefined], {
   thisValue
 }) {
   let _temp5 = ToPropertyKey(V);
@@ -32319,7 +32318,7 @@ function ObjectProto_propertyIsEnumerable([V = _Value.undefined], {
   const desc = _temp7;
   // 4. If desc is undefined, return false.
   if (desc instanceof UndefinedValue) {
-    return _Value.false;
+    return Value.false;
   }
   // 5. Return desc.[[Enumerable]].
   return desc.Enumerable;
@@ -32333,7 +32332,7 @@ function ObjectProto_toLocaleString(argList, {
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. Return ? Invoke(O, "toString").
-  return Invoke(O, _Value('toString'));
+  return Invoke(O, Value('toString'));
 }
 
 /** https://tc39.es/ecma262/#sec-object.prototype.tostring */
@@ -32342,12 +32341,12 @@ function ObjectProto_toString(argList, {
   thisValue
 }) {
   // 1. If the this value is undefined, return "[object Undefined]".
-  if (thisValue === _Value.undefined) {
-    return _Value('[object Undefined]');
+  if (thisValue === Value.undefined) {
+    return Value('[object Undefined]');
   }
   // 2. If the this value is null, return "[object Null]".
-  if (thisValue === _Value.null) {
-    return _Value('[object Null]');
+  if (thisValue === Value.null) {
+    return Value('[object Null]');
   }
   // 3. Let O be ! ToObject(this value).
   let _temp8 = ToObject(thisValue);
@@ -32370,7 +32369,7 @@ function ObjectProto_toString(argList, {
   const isArray = _temp9;
   let builtinTag;
   // 5. If isArray is true, let builtinTag be "Array".
-  if (isArray === _Value.true) {
+  if (isArray === Value.true) {
     builtinTag = 'Array';
   } else if ('ParameterMap' in O) {
     // 6. Else if O has a [[ParameterMap]] internal slot, let builtinTag be "Arguments".
@@ -32412,11 +32411,11 @@ function ObjectProto_toString(argList, {
   }
   let tag = _temp10;
   // 16. If Type(tag) is not String, set tag to builtinTag.
-  if (!(tag instanceof StringValue)) {
+  if (!(tag instanceof JSStringValue)) {
     tag = builtinTag;
   }
   // 17. Return the string-concatenation of "[object ", tag, and "]".
-  return _Value(`[object ${tag.stringValue ? tag.stringValue() : tag}]`);
+  return Value(`[object ${tag.stringValue ? tag.stringValue() : tag}]`);
 }
 
 /** https://tc39.es/ecma262/#sec-object.prototype.valueof */
@@ -32430,7 +32429,7 @@ function ObjectProto_valueOf(argList, {
 
 /** https://tc39.es/ecma262/#sec-object.prototype.__defineGetter__ */
 ObjectProto_valueOf.section = 'https://tc39.es/ecma262/#sec-object.prototype.valueof';
-function ObjectProto__defineGetter__([P = _Value.undefined, getter = _Value.undefined], {
+function ObjectProto__defineGetter__([P = Value.undefined, getter = Value.undefined], {
   thisValue
 }) {
   let _temp11 = ToObject(thisValue);
@@ -32445,14 +32444,14 @@ function ObjectProto__defineGetter__([P = _Value.undefined, getter = _Value.unde
   // 1. Let O be ? ToObject(this value).
   const O = _temp11;
   // 2. If IsCallable(getter) is false, throw a TypeError exception.
-  if (IsCallable(getter) === _Value.false) {
+  if (IsCallable(getter) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', getter);
   }
   // 3. Let desc be PropertyDescriptor { [[Get]]: getter, [[Enumerable]]: true, [[Configurable]]: true }.
   const desc = _Descriptor({
     Get: getter,
-    Enumerable: _Value.true,
-    Configurable: _Value.true
+    Enumerable: Value.true,
+    Configurable: Value.true
   });
   // 4. Let key be ? ToPropertyKey(P).
   let _temp12 = ToPropertyKey(P);
@@ -32476,12 +32475,12 @@ function ObjectProto__defineGetter__([P = _Value.undefined, getter = _Value.unde
     _temp13 = _temp13.Value;
   }
   // 6. Return undefined.
-  return _Value.undefined;
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-object.prototype.__defineSetter__ */
 ObjectProto__defineGetter__.section = 'https://tc39.es/ecma262/#sec-object.prototype.__defineGetter__';
-function ObjectProto__defineSetter__([P = _Value.undefined, setter = _Value.undefined], {
+function ObjectProto__defineSetter__([P = Value.undefined, setter = Value.undefined], {
   thisValue
 }) {
   let _temp14 = ToObject(thisValue);
@@ -32496,14 +32495,14 @@ function ObjectProto__defineSetter__([P = _Value.undefined, setter = _Value.unde
   // 1. Let O be ? ToObject(this value).
   const O = _temp14;
   // 2. If IsCallable(setter) is false, throw a TypeError exception.
-  if (IsCallable(setter) === _Value.false) {
+  if (IsCallable(setter) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', setter);
   }
   // 3. Let desc be PropertyDescriptor { [[Set]]: setter, [[Enumerable]]: true, [[Configurable]]: true }.
   const desc = _Descriptor({
     Set: setter,
-    Enumerable: _Value.true,
-    Configurable: _Value.true
+    Enumerable: Value.true,
+    Configurable: Value.true
   });
   // 4. Let key be ? ToPropertyKey(P).
   let _temp15 = ToPropertyKey(P);
@@ -32527,12 +32526,12 @@ function ObjectProto__defineSetter__([P = _Value.undefined, setter = _Value.unde
     _temp16 = _temp16.Value;
   }
   // 6. Return undefined.
-  return _Value.undefined;
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-object.prototype.__lookupGetter__ */
 ObjectProto__defineSetter__.section = 'https://tc39.es/ecma262/#sec-object.prototype.__defineSetter__';
-function ObjectProto__lookupGetter__([P = _Value.undefined], {
+function ObjectProto__lookupGetter__([P = Value.undefined], {
   thisValue
 }) {
   let _temp17 = ToObject(thisValue);
@@ -32571,13 +32570,13 @@ function ObjectProto__lookupGetter__([P = _Value.undefined], {
     // a. Let desc be ? O.[[GetOwnProperty]](key).
     const desc = _temp19;
     // b. If desc is not undefined, then
-    if (desc !== _Value.undefined) {
+    if (desc !== Value.undefined) {
       // i. If IsAccessorDescriptor(desc) is true, return desc.[[Get]].
       if (IsAccessorDescriptor(desc)) {
         return desc.Get;
       }
       // ii. Return undefined.
-      return _Value.undefined;
+      return Value.undefined;
     }
     // c. Set O to ? O.[[GetPrototypeOf]]().
     let _temp20 = O.GetPrototypeOf();
@@ -32591,15 +32590,15 @@ function ObjectProto__lookupGetter__([P = _Value.undefined], {
     }
     O = _temp20;
     // d. If O is null, return undefined.
-    if (O === _Value.null) {
-      return _Value.undefined;
+    if (O === Value.null) {
+      return Value.undefined;
     }
   }
 }
 
 /** https://tc39.es/ecma262/#sec-object.prototype.__lookupSetter__ */
 ObjectProto__lookupGetter__.section = 'https://tc39.es/ecma262/#sec-object.prototype.__lookupGetter__';
-function ObjectProto__lookupSetter__([P = _Value.undefined], {
+function ObjectProto__lookupSetter__([P = Value.undefined], {
   thisValue
 }) {
   let _temp21 = ToObject(thisValue);
@@ -32638,13 +32637,13 @@ function ObjectProto__lookupSetter__([P = _Value.undefined], {
     // a. Let desc be ? O.[[GetOwnProperty]](key).
     const desc = _temp23;
     // b. If desc is not undefined, then
-    if (desc !== _Value.undefined) {
+    if (desc !== Value.undefined) {
       // i. If IsAccessorDescriptor(desc) is true, return desc.[[Set]].
       if (IsAccessorDescriptor(desc)) {
         return desc.Set;
       }
       // ii. Return undefined.
-      return _Value.undefined;
+      return Value.undefined;
     }
     // c. Set O to ? O.[[GetPrototypeOf]]().
     let _temp24 = O.GetPrototypeOf();
@@ -32658,8 +32657,8 @@ function ObjectProto__lookupSetter__([P = _Value.undefined], {
     }
     O = _temp24;
     // d. If O is null, return undefined.
-    if (O === _Value.null) {
-      return _Value.undefined;
+    if (O === Value.null) {
+      return Value.undefined;
     }
   }
 }
@@ -32686,7 +32685,7 @@ function ObjectProto__proto__Get(args, {
 
 /** https://tc39.es/ecma262/#sec-set-object.prototype.__proto__ */
 ObjectProto__proto__Get.section = 'https://tc39.es/ecma262/#sec-get-object.prototype.__proto__';
-function ObjectProto__proto__Set([proto = _Value.undefined], {
+function ObjectProto__proto__Set([proto = Value.undefined], {
   thisValue
 }) {
   let _temp26 = RequireObjectCoercible(thisValue);
@@ -32702,11 +32701,11 @@ function ObjectProto__proto__Set([proto = _Value.undefined], {
   const O = _temp26;
   // 2. If Type(proto) is neither Object nor Null, return undefined.
   if (!(proto instanceof ObjectValue) && !(proto instanceof NullValue)) {
-    return _Value.undefined;
+    return Value.undefined;
   }
   // 3. If Type(O) is not Object, return undefined.
   if (!(O instanceof ObjectValue)) {
-    return _Value.undefined;
+    return Value.undefined;
   }
   // 4. Let status be ? O.[[SetPrototypeOf]](proto).
   let _temp27 = O.SetPrototypeOf(proto);
@@ -32720,24 +32719,24 @@ function ObjectProto__proto__Set([proto = _Value.undefined], {
   }
   const status = _temp27;
   // 5. If status is false, throw a TypeError exception.
-  if (status === _Value.false) {
+  if (status === Value.false) {
     return surroundingAgent.Throw('TypeError', 'ObjectSetPrototype');
   }
   // 6. Return undefined.
-  return _Value.undefined;
+  return Value.undefined;
 }
 ObjectProto__proto__Set.section = 'https://tc39.es/ecma262/#sec-set-object.prototype.__proto__';
 function bootstrapObjectPrototype(realmRec) {
   const proto = realmRec.Intrinsics['%Object.prototype%'];
   assignProps(realmRec, proto, [['hasOwnProperty', ObjectProto_hasOwnProperty, 1], ['isPrototypeOf', ObjectProto_isPrototypeOf, 1], ['propertyIsEnumerable', ObjectProto_propertyIsEnumerable, 1], ['toLocaleString', ObjectProto_toLocaleString, 0], ['toString', ObjectProto_toString, 0], ['valueOf', ObjectProto_valueOf, 0], ['__defineGetter__', ObjectProto__defineGetter__, 2], ['__defineSetter__', ObjectProto__defineSetter__, 2], ['__lookupGetter__', ObjectProto__lookupGetter__, 1], ['__lookupSetter__', ObjectProto__lookupSetter__, 1], ['__proto__', [ObjectProto__proto__Get, ObjectProto__proto__Set]]]);
-  let _temp28 = Get(proto, _Value('toString'));
+  let _temp28 = Get(proto, Value('toString'));
   Assert(!(_temp28 instanceof AbruptCompletion), "Get(proto, Value('toString'))" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp28 instanceof Completion) {
     _temp28 = _temp28.Value;
   }
   realmRec.Intrinsics['%Object.prototype.toString%'] = _temp28;
-  let _temp29 = Get(proto, _Value('valueOf'));
+  let _temp29 = Get(proto, Value('valueOf'));
   Assert(!(_temp29 instanceof AbruptCompletion), "Get(proto, Value('valueOf'))" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp29 instanceof Completion) {
@@ -32747,10 +32746,10 @@ function bootstrapObjectPrototype(realmRec) {
 }
 
 function AddEntriesFromIterable(target, iterable, adder) {
-  if (IsCallable(adder) === _Value.false) {
+  if (IsCallable(adder) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', adder);
   }
-  Assert(iterable !== undefined && iterable !== _Value.undefined && iterable !== _Value.null, "iterable !== undefined && iterable !== Value.undefined && iterable !== Value.null");
+  Assert(iterable !== undefined && iterable !== Value.undefined && iterable !== Value.null, "iterable !== undefined && iterable !== Value.undefined && iterable !== Value.null");
   let _temp = GetIterator(iterable);
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) {
@@ -32772,7 +32771,7 @@ function AddEntriesFromIterable(target, iterable, adder) {
       _temp2 = _temp2.Value;
     }
     const next = _temp2;
-    if (next === _Value.false) {
+    if (next === Value.false) {
       return target;
     }
     let _temp3 = IteratorValue(next);
@@ -32790,7 +32789,7 @@ function AddEntriesFromIterable(target, iterable, adder) {
       return IteratorClose(iteratorRecord, error);
     }
     // e. Let k be Get(nextItem, "0").
-    let k = Get(nextItem, _Value('0'));
+    let k = Get(nextItem, Value('0'));
     // f. IfAbruptCloseIterator(k, iteratorRecord).
     /* c8 ignore if */
     if (k instanceof AbruptCompletion) {
@@ -32801,7 +32800,7 @@ function AddEntriesFromIterable(target, iterable, adder) {
       k = k.Value;
     }
     // g. Let v be Get(nextItem, "1").
-    let v = Get(nextItem, _Value('1'));
+    let v = Get(nextItem, Value('1'));
     // h. IfAbruptCloseIterator(v, iteratorRecord).
     /* c8 ignore if */
     if (v instanceof AbruptCompletion) {
@@ -32826,11 +32825,11 @@ function AddEntriesFromIterable(target, iterable, adder) {
 }
 
 /** https://tc39.es/ecma262/#sec-map-iterable */
-function MapConstructor([iterable = _Value.undefined], {
+function MapConstructor([iterable = Value.undefined], {
   NewTarget
 }) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
-  if (NewTarget === _Value.undefined) {
+  if (NewTarget === Value.undefined) {
     return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
   // 2. Let map be ? OrdinaryCreateFromConstructor(NewTarget, "%Map.prototype%", « [[MapData]] »).
@@ -32847,11 +32846,11 @@ function MapConstructor([iterable = _Value.undefined], {
   // 3. Set map.[[MapData]] to a new empty List.
   map.MapData = [];
   // 4. If iterable is either undefined or null, return map.
-  if (iterable === _Value.undefined || iterable === _Value.null) {
+  if (iterable === Value.undefined || iterable === Value.null) {
     return map;
   }
   // 5. Let adder be ? Get(map, "set").
-  let _temp5 = Get(map, _Value('set'));
+  let _temp5 = Get(map, Value('set'));
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) {
     return _temp5;
@@ -32880,16 +32879,16 @@ function bootstrapMap(realmRec) {
 }
 
 /** https://tc39.es/ecma262/#sec-object-value */
-function ObjectConstructor([value = _Value.undefined], {
+function ObjectConstructor([value = Value.undefined], {
   NewTarget
 }) {
   // 1. If NewTarget is neither undefined nor the active function, then
-  if (NewTarget !== _Value.undefined && NewTarget !== surroundingAgent.activeFunctionObject) {
+  if (NewTarget !== Value.undefined && NewTarget !== surroundingAgent.activeFunctionObject) {
     // a. Return ? OrdinaryCreateFromConstructor(NewTarget, "%Object.prototype%").
     return OrdinaryCreateFromConstructor(NewTarget, '%Object.prototype%');
   }
   // 2. If value is undefined or null, return OrdinaryObjectCreate(%Object.prototype%).
-  if (value === _Value.null || value === _Value.undefined) {
+  if (value === Value.null || value === Value.undefined) {
     return OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   }
   // 3. Return ! ToObject(value).
@@ -32904,7 +32903,7 @@ function ObjectConstructor([value = _Value.undefined], {
 
 /** https://tc39.es/ecma262/#sec-object.assign */
 ObjectConstructor.section = 'https://tc39.es/ecma262/#sec-object-value';
-function Object_assign([target = _Value.undefined, ...sources]) {
+function Object_assign([target = Value.undefined, ...sources]) {
   let _temp2 = ToObject(target);
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) {
@@ -32924,7 +32923,7 @@ function Object_assign([target = _Value.undefined, ...sources]) {
   // 4. For each element nextSource of sources, in ascending index order, do
   for (const nextSource of sources) {
     // a. If nextSource is neither undefined nor null, then
-    if (nextSource !== _Value.undefined && nextSource !== _Value.null) {
+    if (nextSource !== Value.undefined && nextSource !== Value.null) {
       let _temp3 = ToObject(nextSource);
       Assert(!(_temp3 instanceof AbruptCompletion), "ToObject(nextSource)" + ' returned an abrupt completion');
       /* c8 ignore if */
@@ -32958,7 +32957,7 @@ function Object_assign([target = _Value.undefined, ...sources]) {
         // 1. Let desc be ? from.[[GetOwnProperty]](nextKey).
         const desc = _temp5;
         // 2. If desc is not undefined and desc.[[Enumerable]] is true, then
-        if (desc !== _Value.undefined && desc.Enumerable === _Value.true) {
+        if (desc !== Value.undefined && desc.Enumerable === Value.true) {
           let _temp6 = Get(from, nextKey);
           /* c8 ignore if */
           if (_temp6 instanceof AbruptCompletion) {
@@ -32971,7 +32970,7 @@ function Object_assign([target = _Value.undefined, ...sources]) {
           // a. Let propValue be ? Get(from, nextKey).
           const propValue = _temp6;
           // b. Perform ? Set(to, nextKey, propValue, true).
-          let _temp7 = Set$1(to, nextKey, propValue, _Value.true);
+          let _temp7 = Set$1(to, nextKey, propValue, Value.true);
           /* c8 ignore if */
           if (_temp7 instanceof AbruptCompletion) {
             return _temp7;
@@ -32990,7 +32989,7 @@ function Object_assign([target = _Value.undefined, ...sources]) {
 
 /** https://tc39.es/ecma262/#sec-object.create */
 Object_assign.section = 'https://tc39.es/ecma262/#sec-object.assign';
-function Object_create([O = _Value.undefined, Properties = _Value.undefined]) {
+function Object_create([O = Value.undefined, Properties = Value.undefined]) {
   // 1. If Type(O) is neither Object nor Null, throw a TypeError exception.
   if (!(O instanceof ObjectValue) && !(O instanceof NullValue)) {
     return surroundingAgent.Throw('TypeError', 'ObjectPrototypeType');
@@ -32998,7 +32997,7 @@ function Object_create([O = _Value.undefined, Properties = _Value.undefined]) {
   // 2. Let obj be OrdinaryObjectCreate(O).
   const obj = OrdinaryObjectCreate(O);
   // 3. If Properties is not undefined, then
-  if (Properties !== _Value.undefined) {
+  if (Properties !== Value.undefined) {
     // a. Return ? ObjectDefineProperties(obj, Properties).
     return ObjectDefineProperties(obj, Properties);
   }
@@ -33008,7 +33007,7 @@ function Object_create([O = _Value.undefined, Properties = _Value.undefined]) {
 
 /** https://tc39.es/ecma262/#sec-object.defineproperties */
 Object_create.section = 'https://tc39.es/ecma262/#sec-object.create';
-function Object_defineProperties([O = _Value.undefined, Properties = _Value.undefined]) {
+function Object_defineProperties([O = Value.undefined, Properties = Value.undefined]) {
   // 1. Return ? ObjectDefineProperties(O, Properties).
   return ObjectDefineProperties(O, Properties);
 }
@@ -33058,7 +33057,7 @@ function ObjectDefineProperties(O, Properties) {
     // a. Let propDesc be ? props.[[GetOwnProperty]](nextKey).
     const propDesc = _temp10;
     // b. If propDesc is not undefined and propDesc.[[Enumerable]] is true, then
-    if (propDesc !== _Value.undefined && propDesc.Enumerable === _Value.true) {
+    if (propDesc !== Value.undefined && propDesc.Enumerable === Value.true) {
       let _temp11 = Get(props, nextKey);
       /* c8 ignore if */
       if (_temp11 instanceof AbruptCompletion) {
@@ -33108,7 +33107,7 @@ function ObjectDefineProperties(O, Properties) {
 
 /** https://tc39.es/ecma262/#sec-object.defineproperty */
 ObjectDefineProperties.section = 'https://tc39.es/ecma262/#sec-objectdefineproperties';
-function Object_defineProperty([O = _Value.undefined, P = _Value.undefined, Attributes = _Value.undefined]) {
+function Object_defineProperty([O = Value.undefined, P = Value.undefined, Attributes = Value.undefined]) {
   // 1. If Type(O) is not Object, throw a TypeError exception.
   if (!(O instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
@@ -33151,7 +33150,7 @@ function Object_defineProperty([O = _Value.undefined, P = _Value.undefined, Attr
 
 /** https://tc39.es/ecma262/#sec-object.entries */
 Object_defineProperty.section = 'https://tc39.es/ecma262/#sec-object.defineproperty';
-function Object_entries([O = _Value.undefined]) {
+function Object_entries([O = Value.undefined]) {
   let _temp17 = ToObject(O);
   /* c8 ignore if */
   if (_temp17 instanceof AbruptCompletion) {
@@ -33180,7 +33179,7 @@ function Object_entries([O = _Value.undefined]) {
 
 /** https://tc39.es/ecma262/#sec-object.freeze */
 Object_entries.section = 'https://tc39.es/ecma262/#sec-object.entries';
-function Object_freeze([O = _Value.undefined]) {
+function Object_freeze([O = Value.undefined]) {
   // 1. If Type(O) is not Object, return O.
   if (!(O instanceof ObjectValue)) {
     return O;
@@ -33197,7 +33196,7 @@ function Object_freeze([O = _Value.undefined]) {
   }
   const status = _temp19;
   // 3. If status is false, throw a TypeError exception.
-  if (status === _Value.false) {
+  if (status === Value.false) {
     return surroundingAgent.Throw('TypeError', 'UnableToFreeze', O);
   }
   // 4. Return O.
@@ -33206,7 +33205,7 @@ function Object_freeze([O = _Value.undefined]) {
 
 /** https://tc39.es/ecma262/#sec-object.fromentries */
 Object_freeze.section = 'https://tc39.es/ecma262/#sec-object.freeze';
-function Object_fromEntries([iterable = _Value.undefined]) {
+function Object_fromEntries([iterable = Value.undefined]) {
   let _temp20 = RequireObjectCoercible(iterable);
   /* c8 ignore if */
   if (_temp20 instanceof AbruptCompletion) {
@@ -33225,9 +33224,9 @@ function Object_fromEntries([iterable = _Value.undefined]) {
   }
   const obj = _temp21;
   // 3. Assert: obj is an extensible ordinary object with no own properties.
-  Assert(obj.Extensible === _Value.true && obj.properties.size === 0, "obj.Extensible === Value.true && obj.properties.size === 0");
+  Assert(obj.Extensible === Value.true && obj.properties.size === 0, "obj.Extensible === Value.true && obj.properties.size === 0");
   // 4. Let closure be a new Abstract Closure with parameters (key, value) that captures obj and performs the following steps when called:
-  const closure = ([key = _Value.undefined, value = _Value.undefined]) => {
+  const closure = ([key = Value.undefined, value = Value.undefined]) => {
     let _temp22 = ToPropertyKey(key);
     /* c8 ignore if */
     if (_temp22 instanceof AbruptCompletion) {
@@ -33247,10 +33246,10 @@ function Object_fromEntries([iterable = _Value.undefined]) {
       _temp23 = _temp23.Value;
     }
     // c. Return undefined.
-    return _Value.undefined;
+    return Value.undefined;
   };
   // 5. Let adder be ! CreateBuiltinFunction(closure, 2, "", « »).
-  let _temp24 = CreateBuiltinFunction(closure, 2, _Value(''), []);
+  let _temp24 = CreateBuiltinFunction(closure, 2, Value(''), []);
   Assert(!(_temp24 instanceof AbruptCompletion), "CreateBuiltinFunction(closure, 2, Value(''), [])" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp24 instanceof Completion) {
@@ -33263,7 +33262,7 @@ function Object_fromEntries([iterable = _Value.undefined]) {
 
 /** https://tc39.es/ecma262/#sec-object.getownpropertydescriptor */
 Object_fromEntries.section = 'https://tc39.es/ecma262/#sec-object.fromentries';
-function Object_getOwnPropertyDescriptor([O = _Value.undefined, P = _Value.undefined]) {
+function Object_getOwnPropertyDescriptor([O = Value.undefined, P = Value.undefined]) {
   let _temp25 = ToObject(O);
   /* c8 ignore if */
   if (_temp25 instanceof AbruptCompletion) {
@@ -33303,7 +33302,7 @@ function Object_getOwnPropertyDescriptor([O = _Value.undefined, P = _Value.undef
 
 /** https://tc39.es/ecma262/#sec-object.getownpropertydescriptors */
 Object_getOwnPropertyDescriptor.section = 'https://tc39.es/ecma262/#sec-object.getownpropertydescriptor';
-function Object_getOwnPropertyDescriptors([O = _Value.undefined]) {
+function Object_getOwnPropertyDescriptors([O = Value.undefined]) {
   let _temp28 = ToObject(O);
   /* c8 ignore if */
   if (_temp28 instanceof AbruptCompletion) {
@@ -33356,7 +33355,7 @@ function Object_getOwnPropertyDescriptors([O = _Value.undefined]) {
     }
     const descriptor = _temp32;
     // c. If descriptor is not undefined, perform ! CreateDataPropertyOrThrow(descriptors, key, descriptor).
-    if (descriptor !== _Value.undefined) {
+    if (descriptor !== Value.undefined) {
       let _temp33 = CreateDataProperty(descriptors, key, descriptor);
       Assert(!(_temp33 instanceof AbruptCompletion), "CreateDataProperty(descriptors, key, descriptor)" + ' returned an abrupt completion');
       /* c8 ignore if */
@@ -33409,21 +33408,21 @@ function GetOwnPropertyKeys(O, type) {
 
 /** https://tc39.es/ecma262/#sec-object.getownpropertynames */
 GetOwnPropertyKeys.section = 'https://tc39.es/ecma262/#sec-getownpropertykeys';
-function Object_getOwnPropertyNames([O = _Value.undefined]) {
+function Object_getOwnPropertyNames([O = Value.undefined]) {
   // 1. Return ? GetOwnPropertyKeys(O, string).
   return GetOwnPropertyKeys(O, 'String');
 }
 
 /** https://tc39.es/ecma262/#sec-object.getownpropertysymbols */
 Object_getOwnPropertyNames.section = 'https://tc39.es/ecma262/#sec-object.getownpropertynames';
-function Object_getOwnPropertySymbols([O = _Value.undefined]) {
+function Object_getOwnPropertySymbols([O = Value.undefined]) {
   // 1. Return ? GetOwnPropertyKeys(O, symbol).
   return GetOwnPropertyKeys(O, 'Symbol');
 }
 
 /** https://tc39.es/ecma262/#sec-object.getprototypeof */
 Object_getOwnPropertySymbols.section = 'https://tc39.es/ecma262/#sec-object.getownpropertysymbols';
-function Object_getPrototypeOf([O = _Value.undefined]) {
+function Object_getPrototypeOf([O = Value.undefined]) {
   let _temp36 = ToObject(O);
   /* c8 ignore if */
   if (_temp36 instanceof AbruptCompletion) {
@@ -33441,7 +33440,7 @@ function Object_getPrototypeOf([O = _Value.undefined]) {
 
 /** https://tc39.es/ecma262/#sec-object.hasown */
 Object_getPrototypeOf.section = 'https://tc39.es/ecma262/#sec-object.getprototypeof';
-function Object_hasOwn([O = _Value.undefined, P = _Value.undefined]) {
+function Object_hasOwn([O = Value.undefined, P = Value.undefined]) {
   let _temp37 = ToObject(O);
   /* c8 ignore if */
   if (_temp37 instanceof AbruptCompletion) {
@@ -33470,17 +33469,17 @@ function Object_hasOwn([O = _Value.undefined, P = _Value.undefined]) {
 
 /** https://tc39.es/ecma262/#sec-object.is */
 Object_hasOwn.section = 'https://tc39.es/ecma262/#sec-object.hasown';
-function Object_is([value1 = _Value.undefined, value2 = _Value.undefined]) {
+function Object_is([value1 = Value.undefined, value2 = Value.undefined]) {
   // 1. Return SameValue(value1, value2).
   return SameValue(value1, value2);
 }
 
 /** https://tc39.es/ecma262/#sec-object.isextensible */
 Object_is.section = 'https://tc39.es/ecma262/#sec-object.is';
-function Object_isExtensible([O = _Value.undefined]) {
+function Object_isExtensible([O = Value.undefined]) {
   // 1. If Type(O) is not Object, return false.
   if (!(O instanceof ObjectValue)) {
-    return _Value.false;
+    return Value.false;
   }
   // 2. Return ? IsExtensible(O).
   return IsExtensible(O);
@@ -33488,10 +33487,10 @@ function Object_isExtensible([O = _Value.undefined]) {
 
 /** https://tc39.es/ecma262/#sec-object.isfrozen */
 Object_isExtensible.section = 'https://tc39.es/ecma262/#sec-object.isextensible';
-function Object_isFrozen([O = _Value.undefined]) {
+function Object_isFrozen([O = Value.undefined]) {
   // 1. If Type(O) is not Object, return true.
   if (!(O instanceof ObjectValue)) {
-    return _Value.true;
+    return Value.true;
   }
   // 2. Return ? TestIntegrityLevel(O, frozen).
   return TestIntegrityLevel(O, 'frozen');
@@ -33499,10 +33498,10 @@ function Object_isFrozen([O = _Value.undefined]) {
 
 /** https://tc39.es/ecma262/#sec-object.issealed */
 Object_isFrozen.section = 'https://tc39.es/ecma262/#sec-object.isfrozen';
-function Object_isSealed([O = _Value.undefined]) {
+function Object_isSealed([O = Value.undefined]) {
   // 1. If Type(O) is not Object, return true.
   if (!(O instanceof ObjectValue)) {
-    return _Value.true;
+    return Value.true;
   }
   // 2. Return ? TestIntegrityLevel(O, sealed).
   return TestIntegrityLevel(O, 'sealed');
@@ -33510,7 +33509,7 @@ function Object_isSealed([O = _Value.undefined]) {
 
 /** https://tc39.es/ecma262/#sec-object.keys */
 Object_isSealed.section = 'https://tc39.es/ecma262/#sec-object.issealed';
-function Object_keys([O = _Value.undefined]) {
+function Object_keys([O = Value.undefined]) {
   let _temp39 = ToObject(O);
   /* c8 ignore if */
   if (_temp39 instanceof AbruptCompletion) {
@@ -33539,7 +33538,7 @@ function Object_keys([O = _Value.undefined]) {
 
 /** https://tc39.es/ecma262/#sec-object.preventextensions */
 Object_keys.section = 'https://tc39.es/ecma262/#sec-object.keys';
-function Object_preventExtensions([O = _Value.undefined]) {
+function Object_preventExtensions([O = Value.undefined]) {
   // 1. If Type(O) is not Object, return O.
   if (!(O instanceof ObjectValue)) {
     return O;
@@ -33556,7 +33555,7 @@ function Object_preventExtensions([O = _Value.undefined]) {
   }
   const status = _temp41;
   // 3. If status is false, throw a TypeError exception.
-  if (status === _Value.false) {
+  if (status === Value.false) {
     return surroundingAgent.Throw('TypeError', 'UnableToPreventExtensions', O);
   }
   // 4. Return O.
@@ -33565,7 +33564,7 @@ function Object_preventExtensions([O = _Value.undefined]) {
 
 /** https://tc39.es/ecma262/#sec-object.seal */
 Object_preventExtensions.section = 'https://tc39.es/ecma262/#sec-object.preventextensions';
-function Object_seal([O = _Value.undefined]) {
+function Object_seal([O = Value.undefined]) {
   // 1. If Type(O) is not Object, return O.
   if (!(O instanceof ObjectValue)) {
     return O;
@@ -33582,7 +33581,7 @@ function Object_seal([O = _Value.undefined]) {
   }
   const status = _temp42;
   // 3. If status is false, throw a TypeError exception.
-  if (status === _Value.false) {
+  if (status === Value.false) {
     return surroundingAgent.Throw('TypeError', 'UnableToSeal', O);
   }
   // 4. Return O.
@@ -33591,7 +33590,7 @@ function Object_seal([O = _Value.undefined]) {
 
 /** https://tc39.es/ecma262/#sec-object.setprototypeof */
 Object_seal.section = 'https://tc39.es/ecma262/#sec-object.seal';
-function Object_setPrototypeOf([O = _Value.undefined, proto = _Value.undefined]) {
+function Object_setPrototypeOf([O = Value.undefined, proto = Value.undefined]) {
   let _temp43 = RequireObjectCoercible(O);
   /* c8 ignore if */
   if (_temp43 instanceof AbruptCompletion) {
@@ -33623,7 +33622,7 @@ function Object_setPrototypeOf([O = _Value.undefined, proto = _Value.undefined])
   }
   const status = _temp44;
   // 5. If status is false, throw a TypeError exception.
-  if (status === _Value.false) {
+  if (status === Value.false) {
     return surroundingAgent.Throw('TypeError', 'ObjectSetPrototype');
   }
   // 6. Return O.
@@ -33632,7 +33631,7 @@ function Object_setPrototypeOf([O = _Value.undefined, proto = _Value.undefined])
 
 /** https://tc39.es/ecma262/#sec-object.values */
 Object_setPrototypeOf.section = 'https://tc39.es/ecma262/#sec-object.setprototypeof';
-function Object_values([O = _Value.undefined]) {
+function Object_values([O = Value.undefined]) {
   let _temp45 = ToObject(O);
   /* c8 ignore if */
   if (_temp45 instanceof AbruptCompletion) {
@@ -33706,7 +33705,7 @@ function ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestricted = 
         _temp3 = _temp3.Value;
       }
       const kPresent = _temp3;
-      if (kPresent === _Value.true) {
+      if (kPresent === Value.true) {
         let _temp4 = Get(obj, Pk);
         /* c8 ignore if */
         if (_temp4 instanceof AbruptCompletion) {
@@ -33789,7 +33788,7 @@ function ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestricted = 
     if (_temp7 instanceof Completion) {
       _temp7 = _temp7.Value;
     }
-    let _temp6 = Set$1(obj, _temp7, items[j], _Value.true);
+    let _temp6 = Set$1(obj, _temp7, items[j], Value.true);
     /* c8 ignore if */
     if (_temp6 instanceof AbruptCompletion) {
       return _temp6;
@@ -33823,7 +33822,7 @@ function ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestricted = 
 function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorithm, objectToLength) {
   /** https://tc39.es/ecma262/#sec-array.prototype.every */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.every */
-  function ArrayProto_every([callbackFn = _Value.undefined, thisArg = _Value.undefined], {
+  function ArrayProto_every([callbackFn = Value.undefined, thisArg = Value.undefined], {
     thisValue
   }) {
     let _temp10 = priorToEvaluatingAlgorithm(thisValue);
@@ -33855,7 +33854,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       _temp12 = _temp12.Value;
     }
     const len = _temp12;
-    if (IsCallable(callbackFn) === _Value.false) {
+    if (IsCallable(callbackFn) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackFn);
     }
     let k = 0;
@@ -33877,7 +33876,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         _temp14 = _temp14.Value;
       }
       const kPresent = _temp14;
-      if (kPresent === _Value.true) {
+      if (kPresent === Value.true) {
         let _temp15 = Get(O, Pk);
         /* c8 ignore if */
         if (_temp15 instanceof AbruptCompletion) {
@@ -33898,19 +33897,19 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
           _temp16 = _temp16.Value;
         }
         const testResult = ToBoolean(_temp16);
-        if (testResult === _Value.false) {
-          return _Value.false;
+        if (testResult === Value.false) {
+          return Value.false;
         }
       }
       k += 1;
     }
-    return _Value.true;
+    return Value.true;
   }
 
   /** https://tc39.es/ecma262/#sec-array.prototype.find */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.find */
   ArrayProto_every.section = 'https://tc39.es/ecma262/#sec-array.prototype.every';
-  function ArrayProto_find([predicate = _Value.undefined, thisArg = _Value.undefined], {
+  function ArrayProto_find([predicate = Value.undefined, thisArg = Value.undefined], {
     thisValue
   }) {
     let _temp17 = priorToEvaluatingAlgorithm(thisValue);
@@ -33942,7 +33941,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       _temp19 = _temp19.Value;
     }
     const len = _temp19;
-    if (IsCallable(predicate) === _Value.false) {
+    if (IsCallable(predicate) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
     }
     let k = 0;
@@ -33974,18 +33973,18 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         _temp22 = _temp22.Value;
       }
       const testResult = ToBoolean(_temp22);
-      if (testResult === _Value.true) {
+      if (testResult === Value.true) {
         return kValue;
       }
       k += 1;
     }
-    return _Value.undefined;
+    return Value.undefined;
   }
 
   /** https://tc39.es/ecma262/#sec-array.prototype.findindex */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.findindex */
   ArrayProto_find.section = 'https://tc39.es/ecma262/#sec-array.prototype.find';
-  function ArrayProto_findIndex([predicate = _Value.undefined, thisArg = _Value.undefined], {
+  function ArrayProto_findIndex([predicate = Value.undefined, thisArg = Value.undefined], {
     thisValue
   }) {
     let _temp23 = priorToEvaluatingAlgorithm(thisValue);
@@ -34017,7 +34016,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       _temp25 = _temp25.Value;
     }
     const len = _temp25;
-    if (IsCallable(predicate) === _Value.false) {
+    if (IsCallable(predicate) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
     }
     let k = 0;
@@ -34049,7 +34048,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         _temp28 = _temp28.Value;
       }
       const testResult = ToBoolean(_temp28);
-      if (testResult === _Value.true) {
+      if (testResult === Value.true) {
         return F(k);
       }
       k += 1;
@@ -34060,7 +34059,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
   /** https://tc39.es/ecma262/#sec-array.prototype.findlast */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.findlast */
   ArrayProto_findIndex.section = 'https://tc39.es/ecma262/#sec-array.prototype.findindex';
-  function ArrayProto_findLast([predicate = _Value.undefined, thisArg = _Value.undefined], {
+  function ArrayProto_findLast([predicate = Value.undefined, thisArg = Value.undefined], {
     thisValue
   }) {
     let _temp29 = priorToEvaluatingAlgorithm(thisValue);
@@ -34095,7 +34094,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     }
     const len = _temp31;
     // 3. If IsCallable(predicate) is false, throw a TypeError exception.
-    if (IsCallable(predicate) === _Value.false) {
+    if (IsCallable(predicate) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
     }
     // 4. Let k be len - 1.
@@ -34133,20 +34132,20 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       }
       const testResult = ToBoolean(_temp34);
       // d. If testResult is true, return kValue.
-      if (testResult === _Value.true) {
+      if (testResult === Value.true) {
         return kValue;
       }
       // e. Set k to k - 1.
       k -= 1;
     }
     // 6. Return undefined.
-    return _Value.undefined;
+    return Value.undefined;
   }
 
   /** https://tc39.es/ecma262/#sec-array.prototype.findlastindex */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.findlastindex */
   ArrayProto_findLast.section = 'https://tc39.es/ecma262/#sec-array.prototype.findlast';
-  function ArrayProto_findLastIndex([predicate = _Value.undefined, thisArg = _Value.undefined], {
+  function ArrayProto_findLastIndex([predicate = Value.undefined, thisArg = Value.undefined], {
     thisValue
   }) {
     let _temp35 = priorToEvaluatingAlgorithm(thisValue);
@@ -34181,7 +34180,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     }
     const len = _temp37;
     // 3. If IsCallable(predicate) is false, throw a TypeError exception.
-    if (IsCallable(predicate) === _Value.false) {
+    if (IsCallable(predicate) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
     }
     // 4. Let k be len - 1.
@@ -34219,7 +34218,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       }
       const testResult = ToBoolean(_temp40);
       // d. If testResult is true, return 𝔽(k).
-      if (testResult === _Value.true) {
+      if (testResult === Value.true) {
         return F(k);
       }
       // e. Set k to k - 1.
@@ -34232,7 +34231,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
   /** https://tc39.es/ecma262/#sec-array.prototype.foreach */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.foreach */
   ArrayProto_findLastIndex.section = 'https://tc39.es/ecma262/#sec-array.prototype.findlastindex';
-  function ArrayProto_forEach([callbackfn = _Value.undefined, thisArg = _Value.undefined], {
+  function ArrayProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefined], {
     thisValue
   }) {
     let _temp41 = priorToEvaluatingAlgorithm(thisValue);
@@ -34264,7 +34263,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       _temp43 = _temp43.Value;
     }
     const len = _temp43;
-    if (IsCallable(callbackfn) === _Value.false) {
+    if (IsCallable(callbackfn) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
     }
     let k = 0;
@@ -34286,7 +34285,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         _temp45 = _temp45.Value;
       }
       const kPresent = _temp45;
-      if (kPresent === _Value.true) {
+      if (kPresent === Value.true) {
         let _temp46 = Get(O, Pk);
         /* c8 ignore if */
         if (_temp46 instanceof AbruptCompletion) {
@@ -34309,13 +34308,13 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       }
       k += 1;
     }
-    return _Value.undefined;
+    return Value.undefined;
   }
 
   /** https://tc39.es/ecma262/#sec-array.prototype.includes */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.includes */
   ArrayProto_forEach.section = 'https://tc39.es/ecma262/#sec-array.prototype.foreach';
-  function ArrayProto_includes([searchElement = _Value.undefined, fromIndex = _Value.undefined], {
+  function ArrayProto_includes([searchElement = Value.undefined, fromIndex = Value.undefined], {
     thisValue
   }) {
     let _temp48 = priorToEvaluatingAlgorithm(thisValue);
@@ -34348,7 +34347,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     }
     const len = _temp50;
     if (len === 0) {
-      return _Value.false;
+      return Value.false;
     }
     let _temp51 = ToIntegerOrInfinity(fromIndex);
     /* c8 ignore if */
@@ -34360,7 +34359,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       _temp51 = _temp51.Value;
     }
     const n = _temp51;
-    if (fromIndex === _Value.undefined) {
+    if (fromIndex === Value.undefined) {
       Assert(n === 0, "n === 0");
     }
     let k;
@@ -34390,18 +34389,18 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         _temp53 = _temp53.Value;
       }
       const elementK = _temp53;
-      if (SameValueZero(searchElement, elementK) === _Value.true) {
-        return _Value.true;
+      if (SameValueZero(searchElement, elementK) === Value.true) {
+        return Value.true;
       }
       k += 1;
     }
-    return _Value.false;
+    return Value.false;
   }
 
   /** https://tc39.es/ecma262/#sec-array.prototype.indexof */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.indexof */
   ArrayProto_includes.section = 'https://tc39.es/ecma262/#sec-array.prototype.includes';
-  function ArrayProto_indexOf([searchElement = _Value.undefined, fromIndex = _Value.undefined], {
+  function ArrayProto_indexOf([searchElement = Value.undefined, fromIndex = Value.undefined], {
     thisValue
   }) {
     let _temp54 = priorToEvaluatingAlgorithm(thisValue);
@@ -34446,7 +34445,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       _temp57 = _temp57.Value;
     }
     const n = _temp57;
-    if (fromIndex === _Value.undefined) {
+    if (fromIndex === Value.undefined) {
       Assert(n === 0, "n === 0");
     }
     if (n >= len) {
@@ -34479,7 +34478,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         _temp59 = _temp59.Value;
       }
       const kPresent = _temp59;
-      if (kPresent === _Value.true) {
+      if (kPresent === Value.true) {
         let _temp60 = Get(O, kStr);
         /* c8 ignore if */
         if (_temp60 instanceof AbruptCompletion) {
@@ -34491,7 +34490,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         }
         const elementK = _temp60;
         const same = StrictEqualityComparison(searchElement, elementK);
-        if (same === _Value.true) {
+        if (same === Value.true) {
           return F(k);
         }
       }
@@ -34503,7 +34502,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
   /** https://tc39.es/ecma262/#sec-array.prototype.join */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.join */
   ArrayProto_indexOf.section = 'https://tc39.es/ecma262/#sec-array.prototype.indexof';
-  function ArrayProto_join([separator = _Value.undefined], {
+  function ArrayProto_join([separator = Value.undefined], {
     thisValue
   }) {
     let _temp61 = priorToEvaluatingAlgorithm(thisValue);
@@ -34591,13 +34590,13 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       R = `${R}${next}`;
       k += 1;
     }
-    return _Value(R);
+    return Value(R);
   }
 
   /** https://tc39.es/ecma262/#sec-array.prototype.lastindexof */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.lastindexof */
   ArrayProto_join.section = 'https://tc39.es/ecma262/#sec-array.prototype.join';
-  function ArrayProto_lastIndexOf([searchElement = _Value.undefined, fromIndex], {
+  function ArrayProto_lastIndexOf([searchElement = Value.undefined, fromIndex], {
     thisValue
   }) {
     let _temp68 = priorToEvaluatingAlgorithm(thisValue);
@@ -34671,7 +34670,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         _temp73 = _temp73.Value;
       }
       const kPresent = _temp73;
-      if (kPresent === _Value.true) {
+      if (kPresent === Value.true) {
         let _temp74 = Get(O, kStr);
         /* c8 ignore if */
         if (_temp74 instanceof AbruptCompletion) {
@@ -34683,7 +34682,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         }
         const elementK = _temp74;
         const same = StrictEqualityComparison(searchElement, elementK);
-        if (same === _Value.true) {
+        if (same === Value.true) {
           return F(k);
         }
       }
@@ -34695,7 +34694,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
   /** https://tc39.es/ecma262/#sec-array.prototype.reduce */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.reduce */
   ArrayProto_lastIndexOf.section = 'https://tc39.es/ecma262/#sec-array.prototype.lastindexof';
-  function ArrayProto_reduce([callbackfn = _Value.undefined, initialValue], {
+  function ArrayProto_reduce([callbackfn = Value.undefined, initialValue], {
     thisValue
   }) {
     let _temp75 = priorToEvaluatingAlgorithm(thisValue);
@@ -34727,14 +34726,14 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       _temp77 = _temp77.Value;
     }
     const len = _temp77;
-    if (IsCallable(callbackfn) === _Value.false) {
+    if (IsCallable(callbackfn) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
     }
     if (len === 0 && initialValue === undefined) {
       return surroundingAgent.Throw('TypeError', 'ArrayEmptyReduce');
     }
     let k = 0;
-    let accumulator = _Value.undefined;
+    let accumulator = Value.undefined;
     if (initialValue !== undefined) {
       accumulator = initialValue;
     } else {
@@ -34756,7 +34755,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         if (_temp79 instanceof Completion) {
           _temp79 = _temp79.Value;
         }
-        kPresent = _temp79 === _Value.true;
+        kPresent = _temp79 === Value.true;
         if (kPresent === true) {
           let _temp80 = Get(O, Pk);
           /* c8 ignore if */
@@ -34793,7 +34792,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         _temp82 = _temp82.Value;
       }
       const kPresent = _temp82;
-      if (kPresent === _Value.true) {
+      if (kPresent === Value.true) {
         let _temp83 = Get(O, Pk);
         /* c8 ignore if */
         if (_temp83 instanceof AbruptCompletion) {
@@ -34804,7 +34803,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
           _temp83 = _temp83.Value;
         }
         const kValue = _temp83;
-        let _temp84 = Call(callbackfn, _Value.undefined, [accumulator, kValue, F(k), O]);
+        let _temp84 = Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), O]);
         /* c8 ignore if */
         if (_temp84 instanceof AbruptCompletion) {
           return _temp84;
@@ -34823,7 +34822,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
   /** https://tc39.es/ecma262/#sec-array.prototype.reduceright */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.reduceright */
   ArrayProto_reduce.section = 'https://tc39.es/ecma262/#sec-array.prototype.reduce';
-  function ArrayProto_reduceRight([callbackfn = _Value.undefined, initialValue], {
+  function ArrayProto_reduceRight([callbackfn = Value.undefined, initialValue], {
     thisValue
   }) {
     let _temp85 = priorToEvaluatingAlgorithm(thisValue);
@@ -34855,14 +34854,14 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       _temp87 = _temp87.Value;
     }
     const len = _temp87;
-    if (IsCallable(callbackfn) === _Value.false) {
+    if (IsCallable(callbackfn) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
     }
     if (len === 0 && initialValue === undefined) {
       return surroundingAgent.Throw('TypeError', 'ArrayEmptyReduce');
     }
     let k = len - 1;
-    let accumulator = _Value.undefined;
+    let accumulator = Value.undefined;
     if (initialValue !== undefined) {
       accumulator = initialValue;
     } else {
@@ -34884,7 +34883,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         if (_temp89 instanceof Completion) {
           _temp89 = _temp89.Value;
         }
-        kPresent = _temp89 === _Value.true;
+        kPresent = _temp89 === Value.true;
         if (kPresent === true) {
           let _temp90 = Get(O, Pk);
           /* c8 ignore if */
@@ -34921,7 +34920,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         _temp92 = _temp92.Value;
       }
       const kPresent = _temp92;
-      if (kPresent === _Value.true) {
+      if (kPresent === Value.true) {
         let _temp93 = Get(O, Pk);
         /* c8 ignore if */
         if (_temp93 instanceof AbruptCompletion) {
@@ -34932,7 +34931,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
           _temp93 = _temp93.Value;
         }
         const kValue = _temp93;
-        let _temp94 = Call(callbackfn, _Value.undefined, [accumulator, kValue, F(k), O]);
+        let _temp94 = Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), O]);
         /* c8 ignore if */
         if (_temp94 instanceof AbruptCompletion) {
           return _temp94;
@@ -35013,7 +35012,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       const lowerExists = _temp100;
       let lowerValue;
       let upperValue;
-      if (lowerExists === _Value.true) {
+      if (lowerExists === Value.true) {
         let _temp101 = Get(O, lowerP);
         /* c8 ignore if */
         if (_temp101 instanceof AbruptCompletion) {
@@ -35035,7 +35034,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         _temp102 = _temp102.Value;
       }
       const upperExists = _temp102;
-      if (upperExists === _Value.true) {
+      if (upperExists === Value.true) {
         let _temp103 = Get(O, upperP);
         /* c8 ignore if */
         if (_temp103 instanceof AbruptCompletion) {
@@ -35047,8 +35046,8 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         }
         upperValue = _temp103;
       }
-      if (lowerExists === _Value.true && upperExists === _Value.true) {
-        let _temp104 = Set$1(O, lowerP, upperValue, _Value.true);
+      if (lowerExists === Value.true && upperExists === Value.true) {
+        let _temp104 = Set$1(O, lowerP, upperValue, Value.true);
         /* c8 ignore if */
         if (_temp104 instanceof AbruptCompletion) {
           return _temp104;
@@ -35057,7 +35056,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         if (_temp104 instanceof Completion) {
           _temp104 = _temp104.Value;
         }
-        let _temp105 = Set$1(O, upperP, lowerValue, _Value.true);
+        let _temp105 = Set$1(O, upperP, lowerValue, Value.true);
         /* c8 ignore if */
         if (_temp105 instanceof AbruptCompletion) {
           return _temp105;
@@ -35066,8 +35065,8 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         if (_temp105 instanceof Completion) {
           _temp105 = _temp105.Value;
         }
-      } else if (lowerExists === _Value.false && upperExists === _Value.true) {
-        let _temp106 = Set$1(O, lowerP, upperValue, _Value.true);
+      } else if (lowerExists === Value.false && upperExists === Value.true) {
+        let _temp106 = Set$1(O, lowerP, upperValue, Value.true);
         /* c8 ignore if */
         if (_temp106 instanceof AbruptCompletion) {
           return _temp106;
@@ -35085,7 +35084,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         if (_temp107 instanceof Completion) {
           _temp107 = _temp107.Value;
         }
-      } else if (lowerExists === _Value.true && upperExists === _Value.false) {
+      } else if (lowerExists === Value.true && upperExists === Value.false) {
         let _temp108 = DeletePropertyOrThrow(O, lowerP);
         /* c8 ignore if */
         if (_temp108 instanceof AbruptCompletion) {
@@ -35095,7 +35094,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         if (_temp108 instanceof Completion) {
           _temp108 = _temp108.Value;
         }
-        let _temp109 = Set$1(O, upperP, lowerValue, _Value.true);
+        let _temp109 = Set$1(O, upperP, lowerValue, Value.true);
         /* c8 ignore if */
         if (_temp109 instanceof AbruptCompletion) {
           return _temp109;
@@ -35113,7 +35112,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
   /** https://tc39.es/ecma262/#sec-array.prototype.some */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.some */
   ArrayProto_reverse.section = 'https://tc39.es/ecma262/#sec-array.prototype.reverse';
-  function ArrayProto_some([callbackfn = _Value.undefined, thisArg = _Value.undefined], {
+  function ArrayProto_some([callbackfn = Value.undefined, thisArg = Value.undefined], {
     thisValue
   }) {
     let _temp110 = priorToEvaluatingAlgorithm(thisValue);
@@ -35145,7 +35144,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       _temp112 = _temp112.Value;
     }
     const len = _temp112;
-    if (IsCallable(callbackfn) === _Value.false) {
+    if (IsCallable(callbackfn) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
     }
     let k = 0;
@@ -35167,7 +35166,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         _temp114 = _temp114.Value;
       }
       const kPresent = _temp114;
-      if (kPresent === _Value.true) {
+      if (kPresent === Value.true) {
         let _temp115 = Get(O, Pk);
         /* c8 ignore if */
         if (_temp115 instanceof AbruptCompletion) {
@@ -35188,13 +35187,13 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
           _temp116 = _temp116.Value;
         }
         const testResult = ToBoolean(_temp116);
-        if (testResult === _Value.true) {
-          return _Value.true;
+        if (testResult === Value.true) {
+          return Value.true;
         }
       }
       k += 1;
     }
-    return _Value.false;
+    return Value.false;
   }
 
   /** https://tc39.es/ecma262/#sec-array.prototype.tolocalestring */
@@ -35256,8 +35255,8 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         _temp121 = _temp121.Value;
       }
       const nextElement = _temp121;
-      if (nextElement !== _Value.undefined && nextElement !== _Value.null) {
-        let _temp123 = Invoke(nextElement, _Value('toLocaleString'));
+      if (nextElement !== Value.undefined && nextElement !== Value.null) {
+        let _temp123 = Invoke(nextElement, Value('toLocaleString'));
         /* c8 ignore if */
         if (_temp123 instanceof AbruptCompletion) {
           return _temp123;
@@ -35280,7 +35279,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       }
       k += 1;
     }
-    return _Value(R);
+    return Value(R);
   }
   ArrayProto_toLocaleString.section = 'https://tc39.es/ecma262/#sec-array.prototype.tolocalestring';
   assignProps(realmRec, proto, [['every', ArrayProto_every, 1], ['find', ArrayProto_find, 1], ['findIndex', ArrayProto_findIndex, 1], ['findLast', ArrayProto_findLast, 1], ['findLastIndex', ArrayProto_findLastIndex, 1], ['forEach', ArrayProto_forEach, 1], ['includes', ArrayProto_includes, 1], ['indexOf', ArrayProto_indexOf, 1], ['join', ArrayProto_join, 1], ['lastIndexOf', ArrayProto_lastIndexOf, 1], ['reduce', ArrayProto_reduce, 1], ['reduceRight', ArrayProto_reduceRight, 1], ['reverse', ArrayProto_reverse, 0], ['some', ArrayProto_some, 1], ['toLocaleString', ArrayProto_toLocaleString, 0]]);
@@ -35324,7 +35323,7 @@ function ArrayProto_concat(args, {
       _temp3 = _temp3.Value;
     }
     const spreadable = _temp3;
-    if (spreadable === _Value.true) {
+    if (spreadable === Value.true) {
       let k = 0;
       let _temp4 = LengthOfArrayLike(E);
       /* c8 ignore if */
@@ -35357,7 +35356,7 @@ function ArrayProto_concat(args, {
           _temp6 = _temp6.Value;
         }
         const exists = _temp6;
-        if (exists === _Value.true) {
+        if (exists === Value.true) {
           let _temp7 = Get(E, P);
           /* c8 ignore if */
           if (_temp7 instanceof AbruptCompletion) {
@@ -35411,7 +35410,7 @@ function ArrayProto_concat(args, {
       n += 1;
     }
   }
-  let _temp12 = Set$1(A, _Value('length'), F(n), _Value.true);
+  let _temp12 = Set$1(A, Value('length'), F(n), Value.true);
   /* c8 ignore if */
   if (_temp12 instanceof AbruptCompletion) {
     return _temp12;
@@ -35425,7 +35424,7 @@ function ArrayProto_concat(args, {
 
 /** https://tc39.es/ecma262/#sec-array.prototype.copywithin */
 ArrayProto_concat.section = 'https://tc39.es/ecma262/#sec-array.prototype.concat';
-function ArrayProto_copyWithin([target = _Value.undefined, start = _Value.undefined, end = _Value.undefined], {
+function ArrayProto_copyWithin([target = Value.undefined, start = Value.undefined, end = Value.undefined], {
   thisValue
 }) {
   let _temp13 = ToObject(thisValue);
@@ -35481,7 +35480,7 @@ function ArrayProto_copyWithin([target = _Value.undefined, start = _Value.undefi
     from = Math.min(relativeStart, len);
   }
   let relativeEnd;
-  if (end === _Value.undefined) {
+  if (end === Value.undefined) {
     relativeEnd = len;
   } else {
     let _temp17 = ToIntegerOrInfinity(end);
@@ -35535,7 +35534,7 @@ function ArrayProto_copyWithin([target = _Value.undefined, start = _Value.undefi
       _temp20 = _temp20.Value;
     }
     const fromPresent = _temp20;
-    if (fromPresent === _Value.true) {
+    if (fromPresent === Value.true) {
       let _temp21 = Get(O, fromKey);
       /* c8 ignore if */
       if (_temp21 instanceof AbruptCompletion) {
@@ -35546,7 +35545,7 @@ function ArrayProto_copyWithin([target = _Value.undefined, start = _Value.undefi
         _temp21 = _temp21.Value;
       }
       const fromVal = _temp21;
-      let _temp22 = Set$1(O, toKey, fromVal, _Value.true);
+      let _temp22 = Set$1(O, toKey, fromVal, Value.true);
       /* c8 ignore if */
       if (_temp22 instanceof AbruptCompletion) {
         return _temp22;
@@ -35593,7 +35592,7 @@ function ArrayProto_entries(args, {
 
 /** https://tc39.es/ecma262/#sec-array.prototype.fill */
 ArrayProto_entries.section = 'https://tc39.es/ecma262/#sec-array.prototype.entries';
-function ArrayProto_fill([value = _Value.undefined, start = _Value.undefined, end = _Value.undefined], {
+function ArrayProto_fill([value = Value.undefined, start = Value.undefined, end = Value.undefined], {
   thisValue
 }) {
   let _temp25 = ToObject(thisValue);
@@ -35661,7 +35660,7 @@ function ArrayProto_fill([value = _Value.undefined, start = _Value.undefined, en
       _temp29 = _temp29.Value;
     }
     const Pk = _temp29;
-    let _temp30 = Set$1(O, Pk, value, _Value.true);
+    let _temp30 = Set$1(O, Pk, value, Value.true);
     /* c8 ignore if */
     if (_temp30 instanceof AbruptCompletion) {
       return _temp30;
@@ -35677,7 +35676,7 @@ function ArrayProto_fill([value = _Value.undefined, start = _Value.undefined, en
 
 /** https://tc39.es/ecma262/#sec-array.prototype.filter */
 ArrayProto_fill.section = 'https://tc39.es/ecma262/#sec-array.prototype.fill';
-function ArrayProto_filter([callbackfn = _Value.undefined, thisArg = _Value.undefined], {
+function ArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undefined], {
   thisValue
 }) {
   let _temp31 = ToObject(thisValue);
@@ -35700,7 +35699,7 @@ function ArrayProto_filter([callbackfn = _Value.undefined, thisArg = _Value.unde
     _temp32 = _temp32.Value;
   }
   const len = _temp32;
-  if (IsCallable(callbackfn) === _Value.false) {
+  if (IsCallable(callbackfn) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
   let _temp33 = ArraySpeciesCreate(O, 0);
@@ -35733,7 +35732,7 @@ function ArrayProto_filter([callbackfn = _Value.undefined, thisArg = _Value.unde
       _temp35 = _temp35.Value;
     }
     const kPresent = _temp35;
-    if (kPresent === _Value.true) {
+    if (kPresent === Value.true) {
       let _temp36 = Get(O, Pk);
       /* c8 ignore if */
       if (_temp36 instanceof AbruptCompletion) {
@@ -35754,7 +35753,7 @@ function ArrayProto_filter([callbackfn = _Value.undefined, thisArg = _Value.unde
         _temp37 = _temp37.Value;
       }
       const selected = ToBoolean(_temp37);
-      if (selected === _Value.true) {
+      if (selected === Value.true) {
         let _temp39 = ToString(F(to));
         Assert(!(_temp39 instanceof AbruptCompletion), "ToString(F(to))" + ' returned an abrupt completion');
         /* c8 ignore if */
@@ -35807,7 +35806,7 @@ function FlattenIntoArray(target, source, sourceLen, start, depth, mapperFunctio
       _temp41 = _temp41.Value;
     }
     const exists = _temp41;
-    if (exists === _Value.true) {
+    if (exists === Value.true) {
       let _temp42 = Get(source, P);
       /* c8 ignore if */
       if (_temp42 instanceof AbruptCompletion) {
@@ -35831,7 +35830,7 @@ function FlattenIntoArray(target, source, sourceLen, start, depth, mapperFunctio
         }
         element = _temp43;
       }
-      let shouldFlatten = _Value.false;
+      let shouldFlatten = Value.false;
       if (depth > 0) {
         let _temp44 = IsArray(element);
         /* c8 ignore if */
@@ -35844,7 +35843,7 @@ function FlattenIntoArray(target, source, sourceLen, start, depth, mapperFunctio
         }
         shouldFlatten = _temp44;
       }
-      if (shouldFlatten === _Value.true) {
+      if (shouldFlatten === Value.true) {
         let _temp45 = LengthOfArrayLike(element);
         /* c8 ignore if */
         if (_temp45 instanceof AbruptCompletion) {
@@ -35894,7 +35893,7 @@ function FlattenIntoArray(target, source, sourceLen, start, depth, mapperFunctio
 
 /** https://tc39.es/ecma262/#sec-array.prototype.flat */
 FlattenIntoArray.section = 'https://tc39.es/ecma262/#sec-flattenintoarray';
-function ArrayProto_flat([depth = _Value.undefined], {
+function ArrayProto_flat([depth = Value.undefined], {
   thisValue
 }) {
   let _temp49 = ToObject(thisValue);
@@ -35918,7 +35917,7 @@ function ArrayProto_flat([depth = _Value.undefined], {
   }
   const sourceLen = _temp50;
   let depthNum = 1;
-  if (depth !== _Value.undefined) {
+  if (depth !== Value.undefined) {
     let _temp51 = ToIntegerOrInfinity(depth);
     /* c8 ignore if */
     if (_temp51 instanceof AbruptCompletion) {
@@ -35954,7 +35953,7 @@ function ArrayProto_flat([depth = _Value.undefined], {
 
 /** https://tc39.es/ecma262/#sec-array.prototype.flatmap */
 ArrayProto_flat.section = 'https://tc39.es/ecma262/#sec-array.prototype.flat';
-function ArrayProto_flatMap([mapperFunction = _Value.undefined, thisArg = _Value.undefined], {
+function ArrayProto_flatMap([mapperFunction = Value.undefined, thisArg = Value.undefined], {
   thisValue
 }) {
   let _temp54 = ToObject(thisValue);
@@ -35983,7 +35982,7 @@ function ArrayProto_flatMap([mapperFunction = _Value.undefined, thisArg = _Value
   if (_temp56 instanceof Completion) {
     _temp56 = _temp56.Value;
   }
-  if (_temp56 === _Value.false) {
+  if (_temp56 === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', mapperFunction);
   }
   let _temp57 = ArraySpeciesCreate(O, 0);
@@ -36028,7 +36027,7 @@ function ArrayProto_keys(args, {
 
 /** https://tc39.es/ecma262/#sec-array.prototype.map */
 ArrayProto_keys.section = 'https://tc39.es/ecma262/#sec-array.prototype.keys';
-function ArrayProto_map([callbackfn = _Value.undefined, thisArg = _Value.undefined], {
+function ArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefined], {
   thisValue
 }) {
   let _temp60 = ToObject(thisValue);
@@ -36051,7 +36050,7 @@ function ArrayProto_map([callbackfn = _Value.undefined, thisArg = _Value.undefin
     _temp61 = _temp61.Value;
   }
   const len = _temp61;
-  if (IsCallable(callbackfn) === _Value.false) {
+  if (IsCallable(callbackfn) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
   let _temp62 = ArraySpeciesCreate(O, len);
@@ -36083,7 +36082,7 @@ function ArrayProto_map([callbackfn = _Value.undefined, thisArg = _Value.undefin
       _temp64 = _temp64.Value;
     }
     const kPresent = _temp64;
-    if (kPresent === _Value.true) {
+    if (kPresent === Value.true) {
       let _temp65 = Get(O, Pk);
       /* c8 ignore if */
       if (_temp65 instanceof AbruptCompletion) {
@@ -36145,7 +36144,7 @@ function ArrayProto_pop(args, {
   }
   const len = _temp69;
   if (len === 0) {
-    let _temp70 = Set$1(O, _Value('length'), F(+0), _Value.true);
+    let _temp70 = Set$1(O, Value('length'), F(+0), Value.true);
     /* c8 ignore if */
     if (_temp70 instanceof AbruptCompletion) {
       return _temp70;
@@ -36154,7 +36153,7 @@ function ArrayProto_pop(args, {
     if (_temp70 instanceof Completion) {
       _temp70 = _temp70.Value;
     }
-    return _Value.undefined;
+    return Value.undefined;
   } else {
     const newLen = len - 1;
     let _temp71 = ToString(F(newLen));
@@ -36186,7 +36185,7 @@ function ArrayProto_pop(args, {
     if (_temp73 instanceof Completion) {
       _temp73 = _temp73.Value;
     }
-    let _temp74 = Set$1(O, _Value('length'), F(newLen), _Value.true);
+    let _temp74 = Set$1(O, Value('length'), F(newLen), Value.true);
     /* c8 ignore if */
     if (_temp74 instanceof AbruptCompletion) {
       return _temp74;
@@ -36236,7 +36235,7 @@ function ArrayProto_push(items, {
     if (_temp78 instanceof Completion) {
       _temp78 = _temp78.Value;
     }
-    let _temp77 = Set$1(O, _temp78, E, _Value.true);
+    let _temp77 = Set$1(O, _temp78, E, Value.true);
     /* c8 ignore if */
     if (_temp77 instanceof AbruptCompletion) {
       return _temp77;
@@ -36247,7 +36246,7 @@ function ArrayProto_push(items, {
     }
     len += 1;
   }
-  let _temp79 = Set$1(O, _Value('length'), F(len), _Value.true);
+  let _temp79 = Set$1(O, Value('length'), F(len), Value.true);
   /* c8 ignore if */
   if (_temp79 instanceof AbruptCompletion) {
     return _temp79;
@@ -36285,7 +36284,7 @@ function ArrayProto_shift(args, {
   }
   const len = _temp81;
   if (len === 0) {
-    let _temp82 = Set$1(O, _Value('length'), F(+0), _Value.true);
+    let _temp82 = Set$1(O, Value('length'), F(+0), Value.true);
     /* c8 ignore if */
     if (_temp82 instanceof AbruptCompletion) {
       return _temp82;
@@ -36294,9 +36293,9 @@ function ArrayProto_shift(args, {
     if (_temp82 instanceof Completion) {
       _temp82 = _temp82.Value;
     }
-    return _Value.undefined;
+    return Value.undefined;
   }
-  let _temp83 = Get(O, _Value('0'));
+  let _temp83 = Get(O, Value('0'));
   /* c8 ignore if */
   if (_temp83 instanceof AbruptCompletion) {
     return _temp83;
@@ -36332,7 +36331,7 @@ function ArrayProto_shift(args, {
       _temp86 = _temp86.Value;
     }
     const fromPresent = _temp86;
-    if (fromPresent === _Value.true) {
+    if (fromPresent === Value.true) {
       let _temp87 = Get(O, from);
       /* c8 ignore if */
       if (_temp87 instanceof AbruptCompletion) {
@@ -36343,7 +36342,7 @@ function ArrayProto_shift(args, {
         _temp87 = _temp87.Value;
       }
       const fromVal = _temp87;
-      let _temp88 = Set$1(O, to, fromVal, _Value.true);
+      let _temp88 = Set$1(O, to, fromVal, Value.true);
       /* c8 ignore if */
       if (_temp88 instanceof AbruptCompletion) {
         return _temp88;
@@ -36380,7 +36379,7 @@ function ArrayProto_shift(args, {
   if (_temp90 instanceof Completion) {
     _temp90 = _temp90.Value;
   }
-  let _temp91 = Set$1(O, _Value('length'), F(len - 1), _Value.true);
+  let _temp91 = Set$1(O, Value('length'), F(len - 1), Value.true);
   /* c8 ignore if */
   if (_temp91 instanceof AbruptCompletion) {
     return _temp91;
@@ -36394,7 +36393,7 @@ function ArrayProto_shift(args, {
 
 /** https://tc39.es/ecma262/#sec-array.prototype.slice */
 ArrayProto_shift.section = 'https://tc39.es/ecma262/#sec-array.prototype.shift';
-function ArrayProto_slice([start = _Value.undefined, end = _Value.undefined], {
+function ArrayProto_slice([start = Value.undefined, end = Value.undefined], {
   thisValue
 }) {
   let _temp93 = ToObject(thisValue);
@@ -36484,7 +36483,7 @@ function ArrayProto_slice([start = _Value.undefined, end = _Value.undefined], {
       _temp99 = _temp99.Value;
     }
     const kPresent = _temp99;
-    if (kPresent === _Value.true) {
+    if (kPresent === Value.true) {
       let _temp100 = Get(O, Pk);
       /* c8 ignore if */
       if (_temp100 instanceof AbruptCompletion) {
@@ -36515,7 +36514,7 @@ function ArrayProto_slice([start = _Value.undefined, end = _Value.undefined], {
     k += 1;
     n += 1;
   }
-  let _temp103 = Set$1(A, _Value('length'), F(n), _Value.true);
+  let _temp103 = Set$1(A, Value('length'), F(n), Value.true);
   /* c8 ignore if */
   if (_temp103 instanceof AbruptCompletion) {
     return _temp103;
@@ -36529,10 +36528,10 @@ function ArrayProto_slice([start = _Value.undefined, end = _Value.undefined], {
 
 /** https://tc39.es/ecma262/#sec-array.prototype.sort */
 ArrayProto_slice.section = 'https://tc39.es/ecma262/#sec-array.prototype.slice';
-function ArrayProto_sort([comparefn = _Value.undefined], {
+function ArrayProto_sort([comparefn = Value.undefined], {
   thisValue
 }) {
-  if (comparefn !== _Value.undefined && IsCallable(comparefn) === _Value.false) {
+  if (comparefn !== Value.undefined && IsCallable(comparefn) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', comparefn);
   }
   let _temp104 = ToObject(thisValue);
@@ -36563,7 +36562,7 @@ ArrayProto_sort.section = 'https://tc39.es/ecma262/#sec-array.prototype.sort';
 function ArrayProto_splice(args, {
   thisValue
 }) {
-  const [start = _Value.undefined, deleteCount = _Value.undefined, ...items] = args;
+  const [start = Value.undefined, deleteCount = Value.undefined, ...items] = args;
   let _temp106 = ToObject(thisValue);
   /* c8 ignore if */
   if (_temp106 instanceof AbruptCompletion) {
@@ -36654,7 +36653,7 @@ function ArrayProto_splice(args, {
       _temp112 = _temp112.Value;
     }
     const fromPresent = _temp112;
-    if (fromPresent === _Value.true) {
+    if (fromPresent === Value.true) {
       let _temp113 = Get(O, from);
       /* c8 ignore if */
       if (_temp113 instanceof AbruptCompletion) {
@@ -36683,7 +36682,7 @@ function ArrayProto_splice(args, {
     }
     k += 1;
   }
-  let _temp116 = Set$1(A, _Value('length'), F(actualDeleteCount), _Value.true);
+  let _temp116 = Set$1(A, Value('length'), F(actualDeleteCount), Value.true);
   /* c8 ignore if */
   if (_temp116 instanceof AbruptCompletion) {
     return _temp116;
@@ -36720,7 +36719,7 @@ function ArrayProto_splice(args, {
         _temp119 = _temp119.Value;
       }
       const fromPresent = _temp119;
-      if (fromPresent === _Value.true) {
+      if (fromPresent === Value.true) {
         let _temp120 = Get(O, from);
         /* c8 ignore if */
         if (_temp120 instanceof AbruptCompletion) {
@@ -36731,7 +36730,7 @@ function ArrayProto_splice(args, {
           _temp120 = _temp120.Value;
         }
         const fromValue = _temp120;
-        let _temp121 = Set$1(O, to, fromValue, _Value.true);
+        let _temp121 = Set$1(O, to, fromValue, Value.true);
         /* c8 ignore if */
         if (_temp121 instanceof AbruptCompletion) {
           return _temp121;
@@ -36799,7 +36798,7 @@ function ArrayProto_splice(args, {
         _temp127 = _temp127.Value;
       }
       const fromPresent = _temp127;
-      if (fromPresent === _Value.true) {
+      if (fromPresent === Value.true) {
         let _temp128 = Get(O, from);
         /* c8 ignore if */
         if (_temp128 instanceof AbruptCompletion) {
@@ -36810,7 +36809,7 @@ function ArrayProto_splice(args, {
           _temp128 = _temp128.Value;
         }
         const fromValue = _temp128;
-        let _temp129 = Set$1(O, to, fromValue, _Value.true);
+        let _temp129 = Set$1(O, to, fromValue, Value.true);
         /* c8 ignore if */
         if (_temp129 instanceof AbruptCompletion) {
           return _temp129;
@@ -36842,7 +36841,7 @@ function ArrayProto_splice(args, {
     if (_temp132 instanceof Completion) {
       _temp132 = _temp132.Value;
     }
-    let _temp131 = Set$1(O, _temp132, E, _Value.true);
+    let _temp131 = Set$1(O, _temp132, E, Value.true);
     /* c8 ignore if */
     if (_temp131 instanceof AbruptCompletion) {
       return _temp131;
@@ -36853,7 +36852,7 @@ function ArrayProto_splice(args, {
     }
     k += 1;
   }
-  let _temp133 = Set$1(O, _Value('length'), F(len - actualDeleteCount + itemCount), _Value.true);
+  let _temp133 = Set$1(O, Value('length'), F(len - actualDeleteCount + itemCount), Value.true);
   /* c8 ignore if */
   if (_temp133 instanceof AbruptCompletion) {
     return _temp133;
@@ -36880,7 +36879,7 @@ function ArrayProto_toString(a, {
     _temp134 = _temp134.Value;
   }
   const array = _temp134;
-  let _temp135 = Get(array, _Value('join'));
+  let _temp135 = Get(array, Value('join'));
   /* c8 ignore if */
   if (_temp135 instanceof AbruptCompletion) {
     return _temp135;
@@ -36890,7 +36889,7 @@ function ArrayProto_toString(a, {
     _temp135 = _temp135.Value;
   }
   let func = _temp135;
-  if (IsCallable(func) === _Value.false) {
+  if (IsCallable(func) === Value.false) {
     func = surroundingAgent.intrinsic('%Object.prototype.toString%');
   }
   return Call(func, array);
@@ -36952,7 +36951,7 @@ function ArrayProto_unshift(args, {
         _temp140 = _temp140.Value;
       }
       const fromPresent = _temp140;
-      if (fromPresent === _Value.true) {
+      if (fromPresent === Value.true) {
         let _temp141 = Get(O, from);
         /* c8 ignore if */
         if (_temp141 instanceof AbruptCompletion) {
@@ -36963,7 +36962,7 @@ function ArrayProto_unshift(args, {
           _temp141 = _temp141.Value;
         }
         const fromValue = _temp141;
-        let _temp142 = Set$1(O, to, fromValue, _Value.true);
+        let _temp142 = Set$1(O, to, fromValue, Value.true);
         /* c8 ignore if */
         if (_temp142 instanceof AbruptCompletion) {
           return _temp142;
@@ -36996,7 +36995,7 @@ function ArrayProto_unshift(args, {
         _temp144 = _temp144.Value;
       }
       const jStr = _temp144;
-      let _temp145 = Set$1(O, jStr, E, _Value.true);
+      let _temp145 = Set$1(O, jStr, E, Value.true);
       /* c8 ignore if */
       if (_temp145 instanceof AbruptCompletion) {
         return _temp145;
@@ -37008,7 +37007,7 @@ function ArrayProto_unshift(args, {
       j += 1;
     }
   }
-  let _temp146 = Set$1(O, _Value('length'), F(len + argCount), _Value.true);
+  let _temp146 = Set$1(O, Value('length'), F(len + argCount), Value.true);
   /* c8 ignore if */
   if (_temp146 instanceof AbruptCompletion) {
     return _temp146;
@@ -37040,7 +37039,7 @@ function ArrayProto_values(args, {
 
 /** https://tc39.es/ecma262/#sec-array.prototype.at */
 ArrayProto_values.section = 'https://tc39.es/ecma262/#sec-array.prototype.values';
-function ArrayProto_at([index = _Value.undefined], {
+function ArrayProto_at([index = Value.undefined], {
   thisValue
 }) {
   let _temp148 = ToObject(thisValue);
@@ -37088,7 +37087,7 @@ function ArrayProto_at([index = _Value.undefined], {
   }
   // 6. If k < 0 or k ≥ len, then return undefined.
   if (k < 0 || k >= len) {
-    return _Value.undefined;
+    return Value.undefined;
   }
   // 7. Return ? Get(O, ! ToString(k)).
   let _temp151 = ToString(F(k));
@@ -37112,98 +37111,98 @@ function bootstrapArrayPrototype(realmRec) {
   bootstrapArrayPrototypeShared(realmRec, proto,
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   () => {}, O => LengthOfArrayLike(O));
-  proto.DefineOwnProperty(wellKnownSymbols.iterator, proto.GetOwnProperty(_Value('values')));
+  proto.DefineOwnProperty(wellKnownSymbols.iterator, proto.GetOwnProperty(Value('values')));
   {
-    const unscopableList = OrdinaryObjectCreate(_Value.null);
-    let _temp153 = CreateDataProperty(unscopableList, _Value('copyWithin'), _Value.true);
+    const unscopableList = OrdinaryObjectCreate(Value.null);
+    let _temp153 = CreateDataProperty(unscopableList, Value('copyWithin'), Value.true);
     Assert(!(_temp153 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, Value('copyWithin'), Value.true)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp153 instanceof Completion) {
       _temp153 = _temp153.Value;
     }
-    Assert(_temp153 === _Value.true, "X(CreateDataProperty(unscopableList, Value('copyWithin'), Value.true)) === Value.true");
-    let _temp154 = CreateDataProperty(unscopableList, _Value('entries'), _Value.true);
+    Assert(_temp153 === Value.true, "X(CreateDataProperty(unscopableList, Value('copyWithin'), Value.true)) === Value.true");
+    let _temp154 = CreateDataProperty(unscopableList, Value('entries'), Value.true);
     Assert(!(_temp154 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, Value('entries'), Value.true)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp154 instanceof Completion) {
       _temp154 = _temp154.Value;
     }
-    Assert(_temp154 === _Value.true, "X(CreateDataProperty(unscopableList, Value('entries'), Value.true)) === Value.true");
-    let _temp155 = CreateDataProperty(unscopableList, _Value('fill'), _Value.true);
+    Assert(_temp154 === Value.true, "X(CreateDataProperty(unscopableList, Value('entries'), Value.true)) === Value.true");
+    let _temp155 = CreateDataProperty(unscopableList, Value('fill'), Value.true);
     Assert(!(_temp155 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, Value('fill'), Value.true)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp155 instanceof Completion) {
       _temp155 = _temp155.Value;
     }
-    Assert(_temp155 === _Value.true, "X(CreateDataProperty(unscopableList, Value('fill'), Value.true)) === Value.true");
-    let _temp156 = CreateDataProperty(unscopableList, _Value('find'), _Value.true);
+    Assert(_temp155 === Value.true, "X(CreateDataProperty(unscopableList, Value('fill'), Value.true)) === Value.true");
+    let _temp156 = CreateDataProperty(unscopableList, Value('find'), Value.true);
     Assert(!(_temp156 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, Value('find'), Value.true)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp156 instanceof Completion) {
       _temp156 = _temp156.Value;
     }
-    Assert(_temp156 === _Value.true, "X(CreateDataProperty(unscopableList, Value('find'), Value.true)) === Value.true");
-    let _temp157 = CreateDataProperty(unscopableList, _Value('findLast'), _Value.true);
+    Assert(_temp156 === Value.true, "X(CreateDataProperty(unscopableList, Value('find'), Value.true)) === Value.true");
+    let _temp157 = CreateDataProperty(unscopableList, Value('findLast'), Value.true);
     Assert(!(_temp157 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, Value('findLast'), Value.true)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp157 instanceof Completion) {
       _temp157 = _temp157.Value;
     }
-    Assert(_temp157 === _Value.true, "X(CreateDataProperty(unscopableList, Value('findLast'), Value.true)) === Value.true");
-    let _temp158 = CreateDataProperty(unscopableList, _Value('findIndex'), _Value.true);
+    Assert(_temp157 === Value.true, "X(CreateDataProperty(unscopableList, Value('findLast'), Value.true)) === Value.true");
+    let _temp158 = CreateDataProperty(unscopableList, Value('findIndex'), Value.true);
     Assert(!(_temp158 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, Value('findIndex'), Value.true)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp158 instanceof Completion) {
       _temp158 = _temp158.Value;
     }
-    Assert(_temp158 === _Value.true, "X(CreateDataProperty(unscopableList, Value('findIndex'), Value.true)) === Value.true");
-    let _temp159 = CreateDataProperty(unscopableList, _Value('findLastIndex'), _Value.true);
+    Assert(_temp158 === Value.true, "X(CreateDataProperty(unscopableList, Value('findIndex'), Value.true)) === Value.true");
+    let _temp159 = CreateDataProperty(unscopableList, Value('findLastIndex'), Value.true);
     Assert(!(_temp159 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, Value('findLastIndex'), Value.true)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp159 instanceof Completion) {
       _temp159 = _temp159.Value;
     }
-    Assert(_temp159 === _Value.true, "X(CreateDataProperty(unscopableList, Value('findLastIndex'), Value.true)) === Value.true");
-    let _temp160 = CreateDataProperty(unscopableList, _Value('flat'), _Value.true);
+    Assert(_temp159 === Value.true, "X(CreateDataProperty(unscopableList, Value('findLastIndex'), Value.true)) === Value.true");
+    let _temp160 = CreateDataProperty(unscopableList, Value('flat'), Value.true);
     Assert(!(_temp160 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, Value('flat'), Value.true)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp160 instanceof Completion) {
       _temp160 = _temp160.Value;
     }
-    Assert(_temp160 === _Value.true, "X(CreateDataProperty(unscopableList, Value('flat'), Value.true)) === Value.true");
-    let _temp161 = CreateDataProperty(unscopableList, _Value('flatMap'), _Value.true);
+    Assert(_temp160 === Value.true, "X(CreateDataProperty(unscopableList, Value('flat'), Value.true)) === Value.true");
+    let _temp161 = CreateDataProperty(unscopableList, Value('flatMap'), Value.true);
     Assert(!(_temp161 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, Value('flatMap'), Value.true)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp161 instanceof Completion) {
       _temp161 = _temp161.Value;
     }
-    Assert(_temp161 === _Value.true, "X(CreateDataProperty(unscopableList, Value('flatMap'), Value.true)) === Value.true");
-    let _temp162 = CreateDataProperty(unscopableList, _Value('includes'), _Value.true);
+    Assert(_temp161 === Value.true, "X(CreateDataProperty(unscopableList, Value('flatMap'), Value.true)) === Value.true");
+    let _temp162 = CreateDataProperty(unscopableList, Value('includes'), Value.true);
     Assert(!(_temp162 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, Value('includes'), Value.true)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp162 instanceof Completion) {
       _temp162 = _temp162.Value;
     }
-    Assert(_temp162 === _Value.true, "X(CreateDataProperty(unscopableList, Value('includes'), Value.true)) === Value.true");
-    let _temp163 = CreateDataProperty(unscopableList, _Value('keys'), _Value.true);
+    Assert(_temp162 === Value.true, "X(CreateDataProperty(unscopableList, Value('includes'), Value.true)) === Value.true");
+    let _temp163 = CreateDataProperty(unscopableList, Value('keys'), Value.true);
     Assert(!(_temp163 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, Value('keys'), Value.true)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp163 instanceof Completion) {
       _temp163 = _temp163.Value;
     }
-    Assert(_temp163 === _Value.true, "X(CreateDataProperty(unscopableList, Value('keys'), Value.true)) === Value.true");
-    let _temp164 = CreateDataProperty(unscopableList, _Value('values'), _Value.true);
+    Assert(_temp163 === Value.true, "X(CreateDataProperty(unscopableList, Value('keys'), Value.true)) === Value.true");
+    let _temp164 = CreateDataProperty(unscopableList, Value('values'), Value.true);
     Assert(!(_temp164 instanceof AbruptCompletion), "CreateDataProperty(unscopableList, Value('values'), Value.true)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp164 instanceof Completion) {
       _temp164 = _temp164.Value;
     }
-    Assert(_temp164 === _Value.true, "X(CreateDataProperty(unscopableList, Value('values'), Value.true)) === Value.true");
+    Assert(_temp164 === Value.true, "X(CreateDataProperty(unscopableList, Value('values'), Value.true)) === Value.true");
     let _temp165 = proto.DefineOwnProperty(wellKnownSymbols.unscopables, _Descriptor({
       Value: unscopableList,
-      Writable: _Value.false,
-      Enumerable: _Value.false,
-      Configurable: _Value.true
+      Writable: Value.false,
+      Enumerable: Value.false,
+      Configurable: Value.true
     }));
     Assert(!(_temp165 instanceof AbruptCompletion), "proto.DefineOwnProperty(wellKnownSymbols.unscopables, Descriptor({\n      Value: unscopableList,\n      Writable: Value.false,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    }))" + ' returned an abrupt completion');
     /* c8 ignore if */
@@ -37213,7 +37212,7 @@ function bootstrapArrayPrototype(realmRec) {
   }
 
   // Used in `arguments` objects.
-  let _temp166 = Get(proto, _Value('values'));
+  let _temp166 = Get(proto, Value('values'));
   Assert(!(_temp166 instanceof AbruptCompletion), "Get(proto, Value('values'))" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp166 instanceof Completion) {
@@ -37247,14 +37246,14 @@ function ArrayConstructor(argumentsList, {
     const array = ArrayCreate(0, proto);
     let intLen;
     if (!(len instanceof NumberValue)) {
-      let _temp = CreateDataProperty(array, _Value('0'), len);
+      let _temp = CreateDataProperty(array, Value('0'), len);
       Assert(!(_temp instanceof AbruptCompletion), "CreateDataProperty(array, Value('0'), len)" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
       }
       const defineStatus = _temp;
-      Assert(defineStatus === _Value.true, "defineStatus === Value.true");
+      Assert(defineStatus === Value.true, "defineStatus === Value.true");
       intLen = F(1);
     } else {
       let _temp2 = ToUint32(len);
@@ -37268,7 +37267,7 @@ function ArrayConstructor(argumentsList, {
         return surroundingAgent.Throw('RangeError', 'InvalidArrayLength', len);
       }
     }
-    Set$1(array, _Value('length'), intLen, _Value.true);
+    Set$1(array, Value('length'), intLen, Value.true);
     return array;
   } else if (numberOfArgs >= 2) {
     /** https://tc39.es/ecma262/#sec-array-items */
@@ -37296,10 +37295,10 @@ function ArrayConstructor(argumentsList, {
         _temp4 = _temp4.Value;
       }
       const defineStatus = _temp4;
-      Assert(defineStatus === _Value.true, "defineStatus === Value.true");
+      Assert(defineStatus === Value.true, "defineStatus === Value.true");
       k += 1;
     }
-    let _temp5 = Get(array, _Value('length'));
+    let _temp5 = Get(array, Value('length'));
     Assert(!(_temp5 instanceof AbruptCompletion), "Get(array, Value('length'))" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp5 instanceof Completion) {
@@ -37313,16 +37312,16 @@ function ArrayConstructor(argumentsList, {
 
 /** https://tc39.es/ecma262/#sec-array.from */
 ArrayConstructor.section = 'https://tc39.es/ecma262/#sec-array-constructor';
-function Array_from([items = _Value.undefined, mapfn = _Value.undefined, thisArg = _Value.undefined], {
+function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg = Value.undefined], {
   thisValue
 }) {
   const C = thisValue;
   let mapping;
   let A;
-  if (mapfn === _Value.undefined) {
+  if (mapfn === Value.undefined) {
     mapping = false;
   } else {
-    if (IsCallable(mapfn) === _Value.false) {
+    if (IsCallable(mapfn) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', mapfn);
     }
     mapping = true;
@@ -37337,8 +37336,8 @@ function Array_from([items = _Value.undefined, mapfn = _Value.undefined, thisArg
     _temp6 = _temp6.Value;
   }
   const usingIterator = _temp6;
-  if (usingIterator !== _Value.undefined) {
-    if (IsConstructor(C) === _Value.true) {
+  if (usingIterator !== Value.undefined) {
+    if (IsConstructor(C) === Value.true) {
       let _temp7 = Construct(C);
       /* c8 ignore if */
       if (_temp7 instanceof AbruptCompletion) {
@@ -37392,8 +37391,8 @@ function Array_from([items = _Value.undefined, mapfn = _Value.undefined, thisArg
         _temp11 = _temp11.Value;
       }
       const next = _temp11;
-      if (next === _Value.false) {
-        let _temp12 = Set$1(A, _Value('length'), F(k), _Value.true);
+      if (next === Value.false) {
+        let _temp12 = Set$1(A, Value('length'), F(k), Value.true);
         /* c8 ignore if */
         if (_temp12 instanceof AbruptCompletion) {
           return _temp12;
@@ -37457,7 +37456,7 @@ function Array_from([items = _Value.undefined, mapfn = _Value.undefined, thisArg
     _temp15 = _temp15.Value;
   }
   const len = _temp15;
-  if (IsConstructor(C) === _Value.true) {
+  if (IsConstructor(C) === Value.true) {
     let _temp16 = Construct(C, [F(len)]);
     /* c8 ignore if */
     if (_temp16 instanceof AbruptCompletion) {
@@ -37525,7 +37524,7 @@ function Array_from([items = _Value.undefined, mapfn = _Value.undefined, thisArg
     }
     k += 1;
   }
-  let _temp22 = Set$1(A, _Value('length'), F(len), _Value.true);
+  let _temp22 = Set$1(A, Value('length'), F(len), Value.true);
   /* c8 ignore if */
   if (_temp22 instanceof AbruptCompletion) {
     return _temp22;
@@ -37539,7 +37538,7 @@ function Array_from([items = _Value.undefined, mapfn = _Value.undefined, thisArg
 
 /** https://tc39.es/ecma262/#sec-array.isarray */
 Array_from.section = 'https://tc39.es/ecma262/#sec-array.from';
-function Array_isArray([arg = _Value.undefined]) {
+function Array_isArray([arg = Value.undefined]) {
   return IsArray(arg);
 }
 
@@ -37552,7 +37551,7 @@ function Array_of(items, {
   // Let items be the List of arguments passed to this function.
   const C = thisValue;
   let A;
-  if (IsConstructor(C) === _Value.true) {
+  if (IsConstructor(C) === Value.true) {
     let _temp23 = Construct(C, [F(len)]);
     /* c8 ignore if */
     if (_temp23 instanceof AbruptCompletion) {
@@ -37596,7 +37595,7 @@ function Array_of(items, {
     }
     k += 1;
   }
-  let _temp27 = Set$1(A, _Value('length'), F(len), _Value.true);
+  let _temp27 = Set$1(A, Value('length'), F(len), Value.true);
   /* c8 ignore if */
   if (_temp27 instanceof AbruptCompletion) {
     return _temp27;
@@ -37627,7 +37626,7 @@ function BigIntConstructor([value], {
   NewTarget
 }) {
   // 1. If NewTarget is not undefined, throw a TypeError exception.
-  if (NewTarget !== _Value.undefined) {
+  if (NewTarget !== Value.undefined) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', 'BigInt');
   }
   // 2. Let prim be ? ToPrimitive(value, number).
@@ -37652,7 +37651,7 @@ function BigIntConstructor([value], {
 
 /** https://tc39.es/ecma262/#sec-bigint.asintn */
 BigIntConstructor.section = 'https://tc39.es/ecma262/#sec-bigint-constructor';
-function BigInt_asIntN([bits = _Value.undefined, bigint = _Value.undefined]) {
+function BigInt_asIntN([bits = Value.undefined, bigint = Value.undefined]) {
   let _temp2 = ToIndex(bits);
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) {
@@ -37682,7 +37681,7 @@ function BigInt_asIntN([bits = _Value.undefined, bigint = _Value.undefined]) {
 
 /** https://tc39.es/ecma262/#sec-bigint.asuintn */
 BigInt_asIntN.section = 'https://tc39.es/ecma262/#sec-bigint.asintn';
-function BigInt_asUintN([bits = _Value.undefined, bigint = _Value.undefined]) {
+function BigInt_asUintN([bits = Value.undefined, bigint = Value.undefined]) {
   let _temp4 = ToIndex(bits);
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) {
@@ -37762,7 +37761,7 @@ function BigIntProto_toString([radix], {
   let radixNumber;
   if (radix === undefined) {
     radixNumber = 10;
-  } else if (radix === _Value.undefined) {
+  } else if (radix === Value.undefined) {
     // 3. Else if radix is undefined, let radixNumber be 10.
     radixNumber = 10;
   } else {
@@ -37797,7 +37796,7 @@ function BigIntProto_toString([radix], {
   //    algorithm is implementation-dependent, however the algorithm should be a
   //    generalization of that specified in 6.1.6.2.23.
   // TODO: Implementation stringification
-  return _Value(R(x).toString(radixNumber));
+  return Value(R(x).toString(radixNumber));
 }
 
 /** https://tc39.es/ecma262/#sec-bigint.prototype.tostring */
@@ -37842,10 +37841,10 @@ function BooleanProto_toString(argList, {
   // 1. Let b be ? thisBooleanValue(this value).
   const b = _temp;
   // 2. If b is true, return "true"; else return "false".
-  if (b === _Value.true) {
-    return _Value('true');
+  if (b === Value.true) {
+    return Value('true');
   }
-  return _Value('false');
+  return Value('false');
 }
 
 /** https://tc39.es/ecma262/#sec-boolean.prototype.valueof */
@@ -37859,12 +37858,12 @@ function BooleanProto_valueOf(argList, {
 BooleanProto_valueOf.section = 'https://tc39.es/ecma262/#sec-boolean.prototype.valueof';
 function bootstrapBooleanPrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [['toString', BooleanProto_toString, 0], ['valueOf', BooleanProto_valueOf, 0]], realmRec.Intrinsics['%Object.prototype%']);
-  proto.BooleanData = _Value.false;
+  proto.BooleanData = Value.false;
   realmRec.Intrinsics['%Boolean.prototype%'] = proto;
 }
 
 /** https://tc39.es/ecma262/#sec-boolean-constructor-boolean-value */
-function BooleanConstructor([value = _Value.undefined], {
+function BooleanConstructor([value = Value.undefined], {
   NewTarget
 }) {
   let _temp = ToBoolean(value);
@@ -37876,7 +37875,7 @@ function BooleanConstructor([value = _Value.undefined], {
   // 1. Let b be ! ToBoolean(value).
   const b = _temp;
   // 2. If NewTarget is undefined, return b.
-  if (NewTarget === _Value.undefined) {
+  if (NewTarget === Value.undefined) {
     return b;
   }
   // 3. Let O be ? OrdinaryCreateFromConstructor(NewTarget, "%Boolean.prototype%", « [[BooleanData]] »).
@@ -37914,7 +37913,7 @@ function thisNumberValue(value) {
 }
 
 /** https://tc39.es/ecma262/#sec-number.prototype.toexponential */
-function NumberProto_toExponential([fractionDigits = _Value.undefined], {
+function NumberProto_toExponential([fractionDigits = Value.undefined], {
   thisValue
 }) {
   let _temp = thisNumberValue(thisValue);
@@ -37937,19 +37936,19 @@ function NumberProto_toExponential([fractionDigits = _Value.undefined], {
     _temp2 = _temp2.Value;
   }
   const f = _temp2;
-  Assert(fractionDigits !== _Value.undefined || f === 0, "fractionDigits !== Value.undefined || f === 0");
+  Assert(fractionDigits !== Value.undefined || f === 0, "fractionDigits !== Value.undefined || f === 0");
   if (!x.isFinite()) {
     return NumberValue.toString(x);
   }
   if (f < 0 || f > 100) {
     return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toExponential');
   }
-  return _Value(R(x).toExponential(fractionDigits === _Value.undefined ? undefined : f));
+  return Value(R(x).toExponential(fractionDigits === Value.undefined ? undefined : f));
 }
 
 /** https://tc39.es/ecma262/#sec-number.prototype.tofixed */
 NumberProto_toExponential.section = 'https://tc39.es/ecma262/#sec-number.prototype.toexponential';
-function NumberProto_toFixed([fractionDigits = _Value.undefined], {
+function NumberProto_toFixed([fractionDigits = Value.undefined], {
   thisValue
 }) {
   let _temp3 = thisNumberValue(thisValue);
@@ -37972,7 +37971,7 @@ function NumberProto_toFixed([fractionDigits = _Value.undefined], {
     _temp4 = _temp4.Value;
   }
   const f = _temp4;
-  Assert(fractionDigits !== _Value.undefined || f === 0, "fractionDigits !== Value.undefined || f === 0");
+  Assert(fractionDigits !== Value.undefined || f === 0, "fractionDigits !== Value.undefined || f === 0");
   if (f < 0 || f > 100) {
     return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toFixed');
   }
@@ -37985,7 +37984,7 @@ function NumberProto_toFixed([fractionDigits = _Value.undefined], {
     }
     return _temp5;
   }
-  return _Value(R(x).toFixed(f));
+  return Value(R(x).toFixed(f));
 }
 
 /** https://tc39.es/ecma262/#sec-number.prototype.tolocalestring */
@@ -38000,7 +37999,7 @@ function NumberProto_toLocaleString(args, {
 
 /** https://tc39.es/ecma262/#sec-number.prototype.toprecision */
 NumberProto_toLocaleString.section = 'https://tc39.es/ecma262/#sec-number.prototype.tolocalestring';
-function NumberProto_toPrecision([precision = _Value.undefined], {
+function NumberProto_toPrecision([precision = Value.undefined], {
   thisValue
 }) {
   let _temp6 = thisNumberValue(thisValue);
@@ -38013,7 +38012,7 @@ function NumberProto_toPrecision([precision = _Value.undefined], {
     _temp6 = _temp6.Value;
   }
   const x = _temp6;
-  if (precision === _Value.undefined) {
+  if (precision === Value.undefined) {
     let _temp7 = ToString(x);
     Assert(!(_temp7 instanceof AbruptCompletion), "ToString(x)" + ' returned an abrupt completion');
     /* c8 ignore if */
@@ -38044,12 +38043,12 @@ function NumberProto_toPrecision([precision = _Value.undefined], {
   if (p < 1 || p > 100) {
     return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toPrecision');
   }
-  return _Value(R(x).toPrecision(p));
+  return Value(R(x).toPrecision(p));
 }
 
 /** https://tc39.es/ecma262/#sec-number.prototype.tostring */
 NumberProto_toPrecision.section = 'https://tc39.es/ecma262/#sec-number.prototype.toprecision';
-function NumberProto_toString([radix = _Value.undefined], {
+function NumberProto_toString([radix = Value.undefined], {
   thisValue
 }) {
   let _temp10 = thisNumberValue(thisValue);
@@ -38063,7 +38062,7 @@ function NumberProto_toString([radix = _Value.undefined], {
   }
   const x = _temp10;
   let radixNumber;
-  if (radix === _Value.undefined) {
+  if (radix === Value.undefined) {
     radixNumber = 10;
   } else {
     let _temp11 = ToIntegerOrInfinity(radix);
@@ -38094,7 +38093,7 @@ function NumberProto_toString([radix = _Value.undefined], {
   // used for digits with values 10 through 35. The precise algorithm
   // is implementation-dependent, however the algorithm should be a
   // generalization of that specified in 7.1.12.1.
-  return _Value(R(x).toString(radixNumber));
+  return Value(R(x).toString(radixNumber));
 }
 
 /** https://tc39.es/ecma262/#sec-number.prototype.valueof */
@@ -38135,7 +38134,7 @@ function NumberConstructor([value], {
   } else {
     n = F(+0);
   }
-  if (NewTarget === _Value.undefined) {
+  if (NewTarget === Value.undefined) {
     return n;
   }
   const O = OrdinaryCreateFromConstructor(NewTarget, '%Number.prototype%', ['NumberData']);
@@ -38145,19 +38144,19 @@ function NumberConstructor([value], {
 
 /** https://tc39.es/ecma262/#sec-number.isfinite */
 NumberConstructor.section = 'https://tc39.es/ecma262/#sec-number-constructor-number-value';
-function Number_isFinite([number = _Value.undefined]) {
+function Number_isFinite([number = Value.undefined]) {
   if (!(number instanceof NumberValue)) {
-    return _Value.false;
+    return Value.false;
   }
   if (number.isNaN() || number.isInfinity()) {
-    return _Value.false;
+    return Value.false;
   }
-  return _Value.true;
+  return Value.true;
 }
 
 /** https://tc39.es/ecma262/#sec-number.isinteger */
 Number_isFinite.section = 'https://tc39.es/ecma262/#sec-number.isfinite';
-function Number_isInteger([number = _Value.undefined]) {
+function Number_isInteger([number = Value.undefined]) {
   let _temp2 = IsIntegralNumber(number);
   Assert(!(_temp2 instanceof AbruptCompletion), "IsIntegralNumber(number)" + ' returned an abrupt completion');
   /* c8 ignore if */
@@ -38169,21 +38168,21 @@ function Number_isInteger([number = _Value.undefined]) {
 
 /** https://tc39.es/ecma262/#sec-number.isnan */
 Number_isInteger.section = 'https://tc39.es/ecma262/#sec-number.isinteger';
-function Number_isNaN([number = _Value.undefined]) {
+function Number_isNaN([number = Value.undefined]) {
   if (!(number instanceof NumberValue)) {
-    return _Value.false;
+    return Value.false;
   }
   if (number.isNaN()) {
-    return _Value.true;
+    return Value.true;
   }
-  return _Value.false;
+  return Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-number.issafeinteger */
 Number_isNaN.section = 'https://tc39.es/ecma262/#sec-number.isnan';
-function Number_isSafeInteger([number = _Value.undefined]) {
+function Number_isSafeInteger([number = Value.undefined]) {
   if (!(number instanceof NumberValue)) {
-    return _Value.false;
+    return Value.false;
   }
   let _temp3 = IsIntegralNumber(number);
   Assert(!(_temp3 instanceof AbruptCompletion), "IsIntegralNumber(number)" + ' returned an abrupt completion');
@@ -38191,29 +38190,29 @@ function Number_isSafeInteger([number = _Value.undefined]) {
   if (_temp3 instanceof Completion) {
     _temp3 = _temp3.Value;
   }
-  if (_temp3 === _Value.true) {
+  if (_temp3 === Value.true) {
     if (Math.abs(R(number)) <= 2 ** 53 - 1) {
-      return _Value.true;
+      return Value.true;
     }
   }
-  return _Value.false;
+  return Value.false;
 }
 Number_isSafeInteger.section = 'https://tc39.es/ecma262/#sec-number.issafeinteger';
 function bootstrapNumber(realmRec) {
   const override = {
-    Writable: _Value.false,
-    Enumerable: _Value.false,
-    Configurable: _Value.false
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.false
   };
   const numberConstructor = bootstrapConstructor(realmRec, NumberConstructor, 'Number', 1, realmRec.Intrinsics['%Number.prototype%'], [['EPSILON', F(Number.EPSILON), undefined, override], ['MAX_SAFE_INTEGER', F(Number.MAX_SAFE_INTEGER), undefined, override], ['MAX_VALUE', F(Number.MAX_VALUE), undefined, override], ['MIN_SAFE_INTEGER', F(Number.MIN_SAFE_INTEGER), undefined, override], ['MIN_VALUE', F(Number.MIN_VALUE), undefined, override], ['NaN', F(NaN), undefined, override], ['NEGATIVE_INFINITY', F(-Infinity), undefined, override], ['POSITIVE_INFINITY', F(+Infinity), undefined, override], ['isFinite', Number_isFinite, 1], ['isInteger', Number_isInteger, 1], ['isNaN', Number_isNaN, 1], ['isSafeInteger', Number_isSafeInteger, 1]]);
 
   /** https://tc39.es/ecma262/#sec-number.parsefloat */
   // The value of the Number.parseFloat data property is the same built-in function object that is the value of the parseFloat property of the global object defined in 18.2.4.
-  let _temp4 = numberConstructor.DefineOwnProperty(_Value('parseFloat'), _Descriptor({
+  let _temp4 = numberConstructor.DefineOwnProperty(Value('parseFloat'), _Descriptor({
     Value: realmRec.Intrinsics['%parseFloat%'],
-    Writable: _Value.true,
-    Enumerable: _Value.false,
-    Configurable: _Value.true
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.true
   }));
   Assert(!(_temp4 instanceof AbruptCompletion), "numberConstructor.DefineOwnProperty(Value('parseFloat'), Descriptor({\n    Value: realmRec.Intrinsics['%parseFloat%'],\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
   /* c8 ignore if */
@@ -38223,11 +38222,11 @@ function bootstrapNumber(realmRec) {
 
   /** https://tc39.es/ecma262/#sec-number.parseint */
   // The value of the Number.parseInt data property is the same built-in function object that is the value of the parseInt property of the global object defined in 18.2.5.
-  let _temp5 = numberConstructor.DefineOwnProperty(_Value('parseInt'), _Descriptor({
+  let _temp5 = numberConstructor.DefineOwnProperty(Value('parseInt'), _Descriptor({
     Value: realmRec.Intrinsics['%parseInt%'],
-    Writable: _Value.true,
-    Enumerable: _Value.false,
-    Configurable: _Value.true
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.true
   }));
   Assert(!(_temp5 instanceof AbruptCompletion), "numberConstructor.DefineOwnProperty(Value('parseInt'), Descriptor({\n    Value: realmRec.Intrinsics['%parseInt%'],\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
   /* c8 ignore if */
@@ -38240,22 +38239,22 @@ function bootstrapNumber(realmRec) {
 /** https://tc39.es/ecma262/#sec-properties-of-the-function-prototype-object */
 function FunctionProto(_args, _meta) {
   // * accepts any arguments and returns undefined when invoked.
-  return _Value.undefined;
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-function.prototype.apply */
 FunctionProto.section = 'https://tc39.es/ecma262/#sec-properties-of-the-function-prototype-object';
-function FunctionProto_apply([thisArg = _Value.undefined, argArray = _Value.undefined], {
+function FunctionProto_apply([thisArg = Value.undefined, argArray = Value.undefined], {
   thisValue
 }) {
   // 1. Let func be the this value.
   const func = thisValue;
   // 2. If IsCallable(func) is false, throw a TypeError exception.
-  if (IsCallable(func) === _Value.false) {
+  if (IsCallable(func) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'ThisNotAFunction', func);
   }
   // 3. If argArray is undefined or null, then
-  if (argArray === _Value.undefined || argArray === _Value.null) {
+  if (argArray === Value.undefined || argArray === Value.null) {
     // a. Perform PrepareForTailCall().
     PrepareForTailCall();
     // b. Return ? Call(func, thisArg).
@@ -38289,10 +38288,10 @@ function BoundFunctionExoticObjectCall(thisArgument, argumentsList) {
 function BoundFunctionExoticObjectConstruct(argumentsList, newTarget) {
   const F = this;
   const target = F.BoundTargetFunction;
-  Assert(IsConstructor(target) === _Value.true, "IsConstructor(target) === Value.true");
+  Assert(IsConstructor(target) === Value.true, "IsConstructor(target) === Value.true");
   const boundArgs = F.BoundArguments;
   const args = [...boundArgs, ...argumentsList];
-  if (SameValue(F, newTarget) === _Value.true) {
+  if (SameValue(F, newTarget) === Value.true) {
     newTarget = target;
   }
   return Construct(target, args, newTarget);
@@ -38328,7 +38327,7 @@ function BoundFunctionCreate(targetFunction, boundThis, boundArgs) {
   // 6. Set obj.[[Call]] as described in 9.4.1.1.
   obj.Call = BoundFunctionExoticObjectCall;
   // 7. If IsConstructor(targetFunction) is true, then
-  if (IsConstructor(targetFunction) === _Value.true) {
+  if (IsConstructor(targetFunction) === Value.true) {
     // a. Set obj.[[Construct]] as described in 9.4.1.2.
     obj.Construct = BoundFunctionExoticObjectConstruct;
   }
@@ -38344,13 +38343,13 @@ function BoundFunctionCreate(targetFunction, boundThis, boundArgs) {
 
 /** https://tc39.es/ecma262/#sec-function.prototype.bind */
 BoundFunctionCreate.section = 'https://tc39.es/ecma262/#sec-boundfunctioncreate';
-function FunctionProto_bind([thisArg = _Value.undefined, ...args], {
+function FunctionProto_bind([thisArg = Value.undefined, ...args], {
   thisValue
 }) {
   // 1. Let Target be the this value.
   const Target = thisValue;
   // 2. If IsCallable(Target) is false, throw a TypeError exception.
-  if (IsCallable(Target) === _Value.false) {
+  if (IsCallable(Target) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'ThisNotAFunction', Target);
   }
   // 3. Let F be ? BoundFunctionCreate(Target, thisArg, args).
@@ -38367,7 +38366,7 @@ function FunctionProto_bind([thisArg = _Value.undefined, ...args], {
   // 4. Let L be 0.
   let L = 0;
   // 5. Let targetHasLength be ? HasOwnProperty(Target, "length").
-  let _temp5 = HasOwnProperty(Target, _Value('length'));
+  let _temp5 = HasOwnProperty(Target, Value('length'));
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) {
     return _temp5;
@@ -38378,8 +38377,8 @@ function FunctionProto_bind([thisArg = _Value.undefined, ...args], {
   }
   const targetHasLength = _temp5;
   // 6. If targetHasLength is true, then
-  if (targetHasLength === _Value.true) {
-    let _temp6 = Get(Target, _Value('length'));
+  if (targetHasLength === Value.true) {
+    let _temp6 = Get(Target, Value('length'));
     /* c8 ignore if */
     if (_temp6 instanceof AbruptCompletion) {
       return _temp6;
@@ -38428,7 +38427,7 @@ function FunctionProto_bind([thisArg = _Value.undefined, ...args], {
     _temp8 = _temp8.Value;
   }
   // 8. Let targetName be ? Get(Target, "name").
-  let _temp9 = Get(Target, _Value('name'));
+  let _temp9 = Get(Target, Value('name'));
   /* c8 ignore if */
   if (_temp9 instanceof AbruptCompletion) {
     return _temp9;
@@ -38439,24 +38438,24 @@ function FunctionProto_bind([thisArg = _Value.undefined, ...args], {
   }
   let targetName = _temp9;
   // 9. If Type(targetName) is not String, set targetName to the empty String.
-  if (!(targetName instanceof StringValue)) {
-    targetName = _Value('');
+  if (!(targetName instanceof JSStringValue)) {
+    targetName = Value('');
   }
   // 10. Perform SetFunctionName(F, targetName, "bound").
-  SetFunctionName(F, targetName, _Value('bound'));
+  SetFunctionName(F, targetName, Value('bound'));
   // 11. Return F.
   return F;
 }
 
 /** https://tc39.es/ecma262/#sec-function.prototype.call */
 FunctionProto_bind.section = 'https://tc39.es/ecma262/#sec-function.prototype.bind';
-function FunctionProto_call([thisArg = _Value.undefined, ...args], {
+function FunctionProto_call([thisArg = Value.undefined, ...args], {
   thisValue
 }) {
   // 1. Let func be the this value.
   const func = thisValue;
   // 2. If IsCallable(func) is false, throw a TypeError exception.
-  if (IsCallable(func) === _Value.false) {
+  if (IsCallable(func) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'ThisNotAFunction', func);
   }
   // 3. Let argList be a new empty List.
@@ -38486,9 +38485,9 @@ function FunctionProto_toString(args, {
   if (_temp10 instanceof Completion) {
     _temp10 = _temp10.Value;
   }
-  if (func instanceof ObjectValue && 'SourceText' in func && _temp10 === _Value.true) {
+  if (func instanceof ObjectValue && 'SourceText' in func && _temp10 === Value.true) {
     // Return ! UTF16Encode(func.[[SourceText]]).
-    return _Value(func.SourceText);
+    return Value(func.SourceText);
   }
   // 3. If func is a built-in function object, then return an implementation-defined
   //    String source code representation of func. The representation must have the
@@ -38497,16 +38496,16 @@ function FunctionProto_toString(args, {
   //    that would be matched by `NativeFunctionAccessor? PropertyName` must be the
   //    value of func.[[InitialName]].
   if ('nativeFunction' in func) {
-    if (func.InitialName !== _Value.null) {
-      return _Value(`function ${func.InitialName.stringValue()}() { [native code] }`);
+    if (func.InitialName !== Value.null) {
+      return Value(`function ${func.InitialName.stringValue()}() { [native code] }`);
     }
-    return _Value('function() { [native code] }');
+    return Value('function() { [native code] }');
   }
   // 4. If Type(func) is Object and IsCallable(func) is true, then return an implementation
   //    dependent String source code representation of func. The representation must have
   //    the syntax of a NativeFunction.
-  if (func instanceof ObjectValue && IsCallable(func) === _Value.true) {
-    return _Value('function() { [native code] }');
+  if (func instanceof ObjectValue && IsCallable(func) === Value.true) {
+    return Value('function() { [native code] }');
   }
   // 5. Throw a TypeError exception.
   return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
@@ -38514,7 +38513,7 @@ function FunctionProto_toString(args, {
 
 /** https://tc39.es/ecma262/#sec-function.prototype-@@hasinstance */
 FunctionProto_toString.section = 'https://tc39.es/ecma262/#sec-function.prototype.tostring';
-function FunctionProto_hasInstance([V = _Value.undefined], {
+function FunctionProto_hasInstance([V = Value.undefined], {
   thisValue
 }) {
   // 1. Let F be this value.
@@ -38524,11 +38523,11 @@ function FunctionProto_hasInstance([V = _Value.undefined], {
 }
 FunctionProto_hasInstance.section = 'https://tc39.es/ecma262/#sec-function.prototype-@@hasinstance';
 function bootstrapFunctionPrototype(realmRec) {
-  const proto = CreateBuiltinFunction(FunctionProto, 0, _Value(''), [], realmRec, realmRec.Intrinsics['%Object.prototype%']);
+  const proto = CreateBuiltinFunction(FunctionProto, 0, Value(''), [], realmRec, realmRec.Intrinsics['%Object.prototype%']);
   realmRec.Intrinsics['%Function.prototype%'] = proto;
   const readonly = {
-    Writable: _Value.false,
-    Configurable: _Value.false
+    Writable: Value.false,
+    Configurable: Value.false
   };
   assignProps(realmRec, proto, [['apply', FunctionProto_apply, 2], ['bind', FunctionProto_bind, 1], ['call', FunctionProto_call, 1], ['toString', FunctionProto_toString, 0], [wellKnownSymbols.hasInstance, FunctionProto_hasInstance, 1, readonly]]);
 }
@@ -38632,9 +38631,9 @@ function SymbolProto_toPrimitive(argList, {
 SymbolProto_toPrimitive.section = 'https://tc39.es/ecma262/#sec-symbol.prototype-@@toprimitive';
 function bootstrapSymbolPrototype(realmRec) {
   const override = {
-    Writable: _Value.false,
-    Enumerable: _Value.false,
-    Configurable: _Value.true
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.true
   };
   const proto = bootstrapPrototype(realmRec, [['toString', SymbolProto_toString, 0], ['description', [SymbolProto_descriptionGetter]], ['valueOf', SymbolProto_valueOf, 0], [wellKnownSymbols.toPrimitive, SymbolProto_toPrimitive, 1, override]], realmRec.Intrinsics['%Object.prototype%'], 'Symbol');
   realmRec.Intrinsics['%Symbol.prototype%'] = proto;
@@ -38643,17 +38642,17 @@ function bootstrapSymbolPrototype(realmRec) {
 const GlobalSymbolRegistry = [];
 
 /** https://tc39.es/ecma262/#sec-symbol-description */
-function SymbolConstructor([description = _Value.undefined], {
+function SymbolConstructor([description = Value.undefined], {
   NewTarget
 }) {
   // 1. If NewTarget is not undefined, throw a TypeError exception.
-  if (NewTarget !== _Value.undefined) {
+  if (NewTarget !== Value.undefined) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', this);
   }
   // 2. If description is undefined, let descString be undefined.
   let descString;
-  if (description === _Value.undefined) {
-    descString = _Value.undefined;
+  if (description === Value.undefined) {
+    descString = Value.undefined;
   } else {
     let _temp = ToString(description);
     /* c8 ignore if */
@@ -38673,7 +38672,7 @@ function SymbolConstructor([description = _Value.undefined], {
 
 /** https://tc39.es/ecma262/#sec-symbol.for */
 SymbolConstructor.section = 'https://tc39.es/ecma262/#sec-symbol-description';
-function Symbol_for([key = _Value.undefined]) {
+function Symbol_for([key = Value.undefined]) {
   let _temp2 = ToString(key);
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) {
@@ -38688,7 +38687,7 @@ function Symbol_for([key = _Value.undefined]) {
   // 2. For each element e of the GlobalSymbolRegistry List, do
   for (const e of GlobalSymbolRegistry) {
     // a. If SameValue(e.[[Key]], stringKey) is true, return e.[[Symbol]].
-    if (SameValue(e.Key, stringKey) === _Value.true) {
+    if (SameValue(e.Key, stringKey) === Value.true) {
       return e.Symbol;
     }
   }
@@ -38706,7 +38705,7 @@ function Symbol_for([key = _Value.undefined]) {
 
 /** https://tc39.es/ecma262/#sec-symbol.keyfor */
 Symbol_for.section = 'https://tc39.es/ecma262/#sec-symbol.for';
-function Symbol_keyFor([sym = _Value.undefined]) {
+function Symbol_keyFor([sym = Value.undefined]) {
   // 1. If Type(sym) is not Symbol, throw a TypeError exception.
   if (!(sym instanceof SymbolValue)) {
     return surroundingAgent.Throw('TypeError', 'NotASymbol', sym);
@@ -38714,36 +38713,36 @@ function Symbol_keyFor([sym = _Value.undefined]) {
   // 2. For each element e of the GlobalSymbolRegistry List, do
   for (const e of GlobalSymbolRegistry) {
     // a. If SameValue(e.[[Symbol]], sym) is true, return e.[[Key]].
-    if (SameValue(e.Symbol, sym) === _Value.true) {
+    if (SameValue(e.Symbol, sym) === Value.true) {
       return e.Key;
     }
   }
   // 3. Assert: GlobalSymbolRegistry does not currently contain an entry for sym.
   // 4. Return undefined.
-  return _Value.undefined;
+  return Value.undefined;
 }
 Symbol_keyFor.section = 'https://tc39.es/ecma262/#sec-symbol.keyfor';
 function bootstrapSymbol(realmRec) {
   const symbolConstructor = bootstrapConstructor(realmRec, SymbolConstructor, 'Symbol', 0, realmRec.Intrinsics['%Symbol.prototype%'], [['for', Symbol_for, 1], ['keyFor', Symbol_keyFor, 1]]);
   for (const [name, sym] of Object.entries(wellKnownSymbols)) {
-    symbolConstructor.DefineOwnProperty(_Value(name), _Descriptor({
+    symbolConstructor.DefineOwnProperty(Value(name), _Descriptor({
       Value: sym,
-      Writable: _Value.false,
-      Enumerable: _Value.false,
-      Configurable: _Value.false
+      Writable: Value.false,
+      Enumerable: Value.false,
+      Configurable: Value.false
     }));
   }
-  symbolConstructor.DefineOwnProperty(_Value('prototype'), _Descriptor({
+  symbolConstructor.DefineOwnProperty(Value('prototype'), _Descriptor({
     Value: realmRec.Intrinsics['%Symbol.prototype%'],
-    Writable: _Value.true,
-    Enumerable: _Value.false,
-    Configurable: _Value.true
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.true
   }));
   realmRec.Intrinsics['%Symbol%'] = symbolConstructor;
 }
 
 /** https://tc39.es/ecma262/#sec-math.abs */
-function Math_abs([x = _Value.undefined]) {
+function Math_abs([x = Value.undefined]) {
   let _temp = ToNumber(x);
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) {
@@ -38769,7 +38768,7 @@ function Math_abs([x = _Value.undefined]) {
 
 /** https://tc39.es/ecma262/#sec-math.acos */
 Math_abs.section = 'https://tc39.es/ecma262/#sec-math.abs';
-function Math_acos([x = _Value.undefined]) {
+function Math_acos([x = Value.undefined]) {
   let _temp2 = ToNumber(x);
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) {
@@ -38794,7 +38793,7 @@ function Math_acos([x = _Value.undefined]) {
 
 /** https://tc39.es/ecma262/#sec-math.pow */
 Math_acos.section = 'https://tc39.es/ecma262/#sec-math.acos';
-function Math_pow([base = _Value.undefined, exponent = _Value.undefined]) {
+function Math_pow([base = Value.undefined, exponent = Value.undefined]) {
   let _temp3 = ToNumber(base);
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) {
@@ -38880,8 +38879,8 @@ Math_random.section = 'https://tc39.es/ecma262/#sec-math.random';
 function bootstrapMath(realmRec) {
   /** https://tc39.es/ecma262/#sec-value-properties-of-the-math-object */
   const readonly = {
-    Writable: _Value.false,
-    Configurable: _Value.false
+    Writable: Value.false,
+    Configurable: Value.false
   };
   const valueProps = [['E', 2.718281828459045], ['LN10', 2.302585092994046], ['LN2', 0.6931471805599453], ['LOG10E', 0.4342944819032518], ['LOG2E', 1.4426950408889634], ['PI', 3.141592653589793], ['SQRT1_2', 0.7071067811865476], ['SQRT2', 1.4142135623730951]].map(([name, value]) => [name, F(value), undefined, readonly]);
   // @@toStringTag is handled in the bootstrapPrototype() call.
@@ -38909,12 +38908,12 @@ function bootstrapMath(realmRec) {
       return F(Math[name](...args));
     };
     method.section = 'https://tc39.es/ecma262/#sec-function-properties-of-the-math-object';
-    const func = CreateBuiltinFunction(method, length, _Value(name), [], realmRec);
-    mathObj.DefineOwnProperty(_Value(name), _Descriptor({
+    const func = CreateBuiltinFunction(method, length, Value(name), [], realmRec);
+    mathObj.DefineOwnProperty(Value(name), _Descriptor({
       Value: func,
-      Writable: _Value.true,
-      Enumerable: _Value.false,
-      Configurable: _Value.true
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.true
     }));
   });
   realmRec.Intrinsics['%Math%'] = mathObj;
@@ -39293,7 +39292,7 @@ function DateProto_getUTCSeconds(args, {
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setdate */
 DateProto_getUTCSeconds.section = 'https://tc39.es/ecma262/#sec-date.prototype.getutcseconds';
-function DateProto_setDate([date = _Value.undefined], {
+function DateProto_setDate([date = Value.undefined], {
   thisValue
 }) {
   let _temp18 = thisTimeValue(thisValue);
@@ -39324,7 +39323,7 @@ function DateProto_setDate([date = _Value.undefined], {
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setfullyear */
 DateProto_setDate.section = 'https://tc39.es/ecma262/#sec-date.prototype.setdate';
-function DateProto_setFullYear([year = _Value.undefined, month, date], {
+function DateProto_setFullYear([year = Value.undefined, month, date], {
   thisValue
 }) {
   let _temp20 = thisTimeValue(thisValue);
@@ -39386,7 +39385,7 @@ function DateProto_setFullYear([year = _Value.undefined, month, date], {
 
 /** https://tc39.es/ecma262/#sec-date.prototype.sethours */
 DateProto_setFullYear.section = 'https://tc39.es/ecma262/#sec-date.prototype.setfullyear';
-function DateProto_setHours([hour = _Value.undefined, min, sec, ms], {
+function DateProto_setHours([hour = Value.undefined, min, sec, ms], {
   thisValue
 }) {
   let _temp24 = thisTimeValue(thisValue);
@@ -39462,7 +39461,7 @@ function DateProto_setHours([hour = _Value.undefined, min, sec, ms], {
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setmilliseconds */
 DateProto_setHours.section = 'https://tc39.es/ecma262/#sec-date.prototype.sethours';
-function DateProto_setMilliseconds([ms = _Value.undefined], {
+function DateProto_setMilliseconds([ms = Value.undefined], {
   thisValue
 }) {
   let _temp29 = thisTimeValue(thisValue);
@@ -39493,7 +39492,7 @@ function DateProto_setMilliseconds([ms = _Value.undefined], {
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setminutes */
 DateProto_setMilliseconds.section = 'https://tc39.es/ecma262/#sec-date.prototype.setmilliseconds';
-function DateProto_setMinutes([min = _Value.undefined, sec, ms], {
+function DateProto_setMinutes([min = Value.undefined, sec, ms], {
   thisValue
 }) {
   let _temp31 = thisTimeValue(thisValue);
@@ -39562,7 +39561,7 @@ function DateProto_setMinutes([min = _Value.undefined, sec, ms], {
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setmonth */
 DateProto_setMinutes.section = 'https://tc39.es/ecma262/#sec-date.prototype.setminutes';
-function DateProto_setMonth([month = _Value.undefined, date], {
+function DateProto_setMonth([month = Value.undefined, date], {
   thisValue
 }) {
   let _temp35 = thisTimeValue(thisValue);
@@ -39608,7 +39607,7 @@ function DateProto_setMonth([month = _Value.undefined, date], {
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setseconds */
 DateProto_setMonth.section = 'https://tc39.es/ecma262/#sec-date.prototype.setmonth';
-function DateProto_setSeconds([sec = _Value.undefined, ms], {
+function DateProto_setSeconds([sec = Value.undefined, ms], {
   thisValue
 }) {
   let _temp38 = thisTimeValue(thisValue);
@@ -39654,7 +39653,7 @@ function DateProto_setSeconds([sec = _Value.undefined, ms], {
 
 /** https://tc39.es/ecma262/#sec-date.prototype.settime */
 DateProto_setSeconds.section = 'https://tc39.es/ecma262/#sec-date.prototype.setseconds';
-function DateProto_setTime([time = _Value.undefined], {
+function DateProto_setTime([time = Value.undefined], {
   thisValue
 }) {
   let _temp41 = thisTimeValue(thisValue);
@@ -39683,7 +39682,7 @@ function DateProto_setTime([time = _Value.undefined], {
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setutcdate */
 DateProto_setTime.section = 'https://tc39.es/ecma262/#sec-date.prototype.settime';
-function DateProto_setUTCDate([date = _Value.undefined], {
+function DateProto_setUTCDate([date = Value.undefined], {
   thisValue
 }) {
   let _temp43 = thisTimeValue(thisValue);
@@ -39714,7 +39713,7 @@ function DateProto_setUTCDate([date = _Value.undefined], {
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setutcfullyear */
 DateProto_setUTCDate.section = 'https://tc39.es/ecma262/#sec-date.prototype.setutcdate';
-function DateProto_setUTCFullYear([year = _Value.undefined, month, date], {
+function DateProto_setUTCFullYear([year = Value.undefined, month, date], {
   thisValue
 }) {
   let _temp45 = thisTimeValue(thisValue);
@@ -39778,7 +39777,7 @@ function DateProto_setUTCFullYear([year = _Value.undefined, month, date], {
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setutchours */
 DateProto_setUTCFullYear.section = 'https://tc39.es/ecma262/#sec-date.prototype.setutcfullyear';
-function DateProto_setUTCHours([hour = _Value.undefined, min, sec, ms], {
+function DateProto_setUTCHours([hour = Value.undefined, min, sec, ms], {
   thisValue
 }) {
   let _temp49 = thisTimeValue(thisValue);
@@ -39854,7 +39853,7 @@ function DateProto_setUTCHours([hour = _Value.undefined, min, sec, ms], {
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setutcmilliseconds */
 DateProto_setUTCHours.section = 'https://tc39.es/ecma262/#sec-date.prototype.setutchours';
-function DateProto_setUTCMilliseconds([ms = _Value.undefined], {
+function DateProto_setUTCMilliseconds([ms = Value.undefined], {
   thisValue
 }) {
   let _temp54 = thisTimeValue(thisValue);
@@ -39885,7 +39884,7 @@ function DateProto_setUTCMilliseconds([ms = _Value.undefined], {
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setutcminutes */
 DateProto_setUTCMilliseconds.section = 'https://tc39.es/ecma262/#sec-date.prototype.setutcmilliseconds';
-function DateProto_setUTCMinutes([min = _Value.undefined, sec, ms], {
+function DateProto_setUTCMinutes([min = Value.undefined, sec, ms], {
   thisValue
 }) {
   let _temp56 = thisTimeValue(thisValue);
@@ -39946,7 +39945,7 @@ function DateProto_setUTCMinutes([min = _Value.undefined, sec, ms], {
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setutcmonth */
 DateProto_setUTCMinutes.section = 'https://tc39.es/ecma262/#sec-date.prototype.setutcminutes';
-function DateProto_setUTCMonth([month = _Value.undefined, date], {
+function DateProto_setUTCMonth([month = Value.undefined, date], {
   thisValue
 }) {
   let _temp60 = thisTimeValue(thisValue);
@@ -39992,7 +39991,7 @@ function DateProto_setUTCMonth([month = _Value.undefined, date], {
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setutcseconds */
 DateProto_setUTCMonth.section = 'https://tc39.es/ecma262/#sec-date.prototype.setutcmonth';
-function DateProto_setUTCSeconds([sec = _Value.undefined, ms], {
+function DateProto_setUTCSeconds([sec = Value.undefined, ms], {
   thisValue
 }) {
   let _temp63 = thisTimeValue(thisValue);
@@ -40056,7 +40055,7 @@ function DateProto_toDateString(args, {
   }
   const tv = _temp66;
   if (tv.isNaN()) {
-    return _Value('Invalid Date');
+    return Value('Invalid Date');
   }
   const t = LocalTime(tv);
   return DateString(t);
@@ -40100,7 +40099,7 @@ function DateProto_toISOString(args, {
   const ss = String(sec).padStart(2, '0');
   const sss = String(ms).padStart(3, '0');
   const format = `${YYYY}-${MM}-${DD}T${HH}:${mm}:${ss}.${sss}Z`;
-  return _Value(format);
+  return Value(format);
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.tojson */
@@ -40129,9 +40128,9 @@ function DateProto_toJSON(args, {
   }
   const tv = _temp69;
   if (tv instanceof NumberValue && !Number.isFinite(R(tv))) {
-    return _Value.null;
+    return Value.null;
   }
-  return Invoke(O, _Value('toISOString'));
+  return Invoke(O, Value('toISOString'));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.tolocaledatestring */
@@ -40181,7 +40180,7 @@ function TimeString(tv) {
   const hour = String(R(HourFromTime(tv))).padStart(2, '0');
   const minute = String(R(MinFromTime(tv))).padStart(2, '0');
   const second = String(R(SecFromTime(tv))).padStart(2, '0');
-  return _Value(`${hour}:${minute}:${second} GMT`);
+  return Value(`${hour}:${minute}:${second} GMT`);
 }
 
 /** https://tc39.es/ecma262/#sec-todatestring-day-names */
@@ -40199,15 +40198,15 @@ function DateString(tv) {
   const day = String(R(DateFromTime(tv))).padStart(2, '0');
   const yv = R(YearFromTime(tv));
   const yearSign = yv >= 0 ? '' : '-';
-  const year = _Value(String(Math.abs(yv)));
-  let _temp71 = StringPad(year, F(4), _Value('0'), 'start');
+  const year = Value(String(Math.abs(yv)));
+  let _temp71 = StringPad(year, F(4), Value('0'), 'start');
   Assert(!(_temp71 instanceof AbruptCompletion), "StringPad(year, F(4), Value('0'), 'start')" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp71 instanceof Completion) {
     _temp71 = _temp71.Value;
   }
   const paddedYear = _temp71.stringValue();
-  return _Value(`${weekday} ${month} ${day} ${yearSign}${paddedYear}`);
+  return Value(`${weekday} ${month} ${day} ${yearSign}${paddedYear}`);
 }
 
 /** https://tc39.es/ecma262/#sec-timezoneestring */
@@ -40220,17 +40219,17 @@ function TimeZoneString(tv) {
   const offsetMin = String(R(MinFromTime(F(Math.abs(offset))))).padStart(2, '0');
   const offsetHour = String(R(HourFromTime(F(Math.abs(offset))))).padStart(2, '0');
   const tzName = '';
-  return _Value(`${offsetSign}${offsetHour}${offsetMin}${tzName}`);
+  return Value(`${offsetSign}${offsetHour}${offsetMin}${tzName}`);
 }
 
 /** https://tc39.es/ecma262/#sec-todatestring */
 function ToDateString(tv) {
   Assert(tv instanceof NumberValue, "tv instanceof NumberValue");
   if (tv.isNaN()) {
-    return _Value('Invalid Date');
+    return Value('Invalid Date');
   }
   const t = LocalTime(tv);
-  return _Value(`${DateString(t).stringValue()} ${TimeString(t).stringValue()}${TimeZoneString(t).stringValue()}`);
+  return Value(`${DateString(t).stringValue()} ${TimeString(t).stringValue()}${TimeZoneString(t).stringValue()}`);
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.totimestring */
@@ -40252,10 +40251,10 @@ function DateProto_toTimeString(args, {
   }
   const tv = _temp72;
   if (tv.isNaN()) {
-    return _Value('Invalid Date');
+    return Value('Invalid Date');
   }
   const t = LocalTime(tv);
-  return _Value(`${TimeString(t).stringValue()}${TimeZoneString(tv).stringValue()}`);
+  return Value(`${TimeString(t).stringValue()}${TimeZoneString(tv).stringValue()}`);
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.toutcstring */
@@ -40278,22 +40277,22 @@ function DateProto_toUTCString(args, {
   }
   const tv = _temp73;
   if (tv.isNaN()) {
-    return _Value('Invalid Date');
+    return Value('Invalid Date');
   }
   const weekday = daysOfTheWeek[R(WeekDay(tv))];
   const month = monthsOfTheYear[R(MonthFromTime(tv))];
   const day = String(R(DateFromTime(tv))).padStart(2, '0');
   const yv = R(YearFromTime(tv));
   const yearSign = yv >= 0 ? '' : '-';
-  const year = _Value(String(Math.abs(yv)));
-  let _temp74 = StringPad(year, F(4), _Value('0'), 'start');
+  const year = Value(String(Math.abs(yv)));
+  let _temp74 = StringPad(year, F(4), Value('0'), 'start');
   Assert(!(_temp74 instanceof AbruptCompletion), "StringPad(year, F(4), Value('0'), 'start')" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp74 instanceof Completion) {
     _temp74 = _temp74.Value;
   }
   const paddedYear = _temp74.stringValue();
-  return _Value(`${weekday}, ${day} ${month} ${yearSign}${paddedYear} ${TimeString(tv).stringValue()}`);
+  return Value(`${weekday}, ${day} ${month} ${yearSign}${paddedYear} ${TimeString(tv).stringValue()}`);
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.valueof */
@@ -40306,7 +40305,7 @@ function DateProto_valueOf(args, {
 
 /** https://tc39.es/ecma262/#sec-date.prototype-@@toprimitive */
 DateProto_valueOf.section = 'https://tc39.es/ecma262/#sec-date.prototype.valueof';
-function DateProto_toPrimitive([hint = _Value.undefined], {
+function DateProto_toPrimitive([hint = Value.undefined], {
   thisValue
 }) {
   const O = thisValue;
@@ -40314,9 +40313,9 @@ function DateProto_toPrimitive([hint = _Value.undefined], {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Date', O);
   }
   let tryFirst;
-  if (hint instanceof StringValue && (hint.stringValue() === 'string' || hint.stringValue() === 'default')) {
+  if (hint instanceof JSStringValue && (hint.stringValue() === 'string' || hint.stringValue() === 'default')) {
     tryFirst = 'string';
-  } else if (hint instanceof StringValue && hint.stringValue() === 'number') {
+  } else if (hint instanceof JSStringValue && hint.stringValue() === 'number') {
     tryFirst = 'number';
   } else {
     return surroundingAgent.Throw('TypeError', 'InvalidHint', hint);
@@ -40326,9 +40325,9 @@ function DateProto_toPrimitive([hint = _Value.undefined], {
 DateProto_toPrimitive.section = 'https://tc39.es/ecma262/#sec-date.prototype-@@toprimitive';
 function bootstrapDatePrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [['getDate', DateProto_getDate, 0], ['getDay', DateProto_getDay, 0], ['getFullYear', DateProto_getFullYear, 0], ['getHours', DateProto_getHours, 0], ['getMilliseconds', DateProto_getMilliseconds, 0], ['getMinutes', DateProto_getMinutes, 0], ['getMonth', DateProto_getMonth, 0], ['getSeconds', DateProto_getSeconds, 0], ['getTime', DateProto_getTime, 0], ['getTimezoneOffset', DateProto_getTimezoneOffset, 0], ['getUTCDate', DateProto_getUTCDate, 0], ['getUTCDay', DateProto_getUTCDay, 0], ['getUTCFullYear', DateProto_getUTCFullYear, 0], ['getUTCHours', DateProto_getUTCHours, 0], ['getUTCMilliseconds', DateProto_getUTCMilliseconds, 0], ['getUTCMinutes', DateProto_getUTCMinutes, 0], ['getUTCMonth', DateProto_getUTCMonth, 0], ['getUTCSeconds', DateProto_getUTCSeconds, 0], ['setDate', DateProto_setDate, 1], ['setFullYear', DateProto_setFullYear, 3], ['setHours', DateProto_setHours, 4], ['setMilliseconds', DateProto_setMilliseconds, 1], ['setMinutes', DateProto_setMinutes, 3], ['setMonth', DateProto_setMonth, 2], ['setSeconds', DateProto_setSeconds, 2], ['setTime', DateProto_setTime, 1], ['setUTCDate', DateProto_setUTCDate, 1], ['setUTCFullYear', DateProto_setUTCFullYear, 3], ['setUTCHours', DateProto_setUTCHours, 4], ['setUTCMilliseconds', DateProto_setUTCMilliseconds, 1], ['setUTCMinutes', DateProto_setUTCMinutes, 3], ['setUTCMonth', DateProto_setUTCMonth, 2], ['setUTCSeconds', DateProto_setUTCSeconds, 2], ['toDateString', DateProto_toDateString, 0], ['toISOString', DateProto_toISOString, 0], ['toJSON', DateProto_toJSON, 1], ['toLocaleDateString', DateProto_toLocaleDateString, 0], ['toLocaleString', DateProto_toLocaleString, 0], ['toLocaleTimeString', DateProto_toLocaleTimeString, 0], ['toString', DateProto_toString, 0], ['toTimeString', DateProto_toTimeString, 0], ['toUTCString', DateProto_toUTCString, 0], ['valueOf', DateProto_valueOf, 0], [wellKnownSymbols.toPrimitive, DateProto_toPrimitive, 1, {
-    Writable: _Value.false,
-    Enumerable: _Value.false,
-    Configurable: _Value.true
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.true
   }]], realmRec.Intrinsics['%Object.prototype%']);
   realmRec.Intrinsics['%Date.prototype%'] = proto;
 }
@@ -40342,7 +40341,7 @@ function DateConstructor(args, {
     /** https://tc39.es/ecma262/#sec-date-year-month-date-hours-minutes-seconds-ms */
     const [year, month, date, hours, minutes, seconds, ms] = args;
     Assert(numberOfArgs >= 2, "numberOfArgs >= 2");
-    if (NewTarget === _Value.undefined) {
+    if (NewTarget === Value.undefined) {
       const now = Date.now();
       return ToDateString(F(now));
     } else {
@@ -40476,7 +40475,7 @@ function DateConstructor(args, {
     const [value] = args;
     /** https://tc39.es/ecma262/#sec-date-value */
     Assert(numberOfArgs === 1, "numberOfArgs === 1");
-    if (NewTarget === _Value.undefined) {
+    if (NewTarget === Value.undefined) {
       const now = Date.now();
       return ToDateString(F(now));
     } else {
@@ -40494,7 +40493,7 @@ function DateConstructor(args, {
           _temp10 = _temp10.Value;
         }
         const v = _temp10;
-        if (v instanceof StringValue) {
+        if (v instanceof JSStringValue) {
           // Assert: The next step never returns an abrupt completion because Type(v) is String.
           tv = parseDate(v);
         } else {
@@ -40526,7 +40525,7 @@ function DateConstructor(args, {
   } else {
     /** https://tc39.es/ecma262/#sec-date-constructor-date */
     Assert(numberOfArgs === 0, "numberOfArgs === 0");
-    if (NewTarget === _Value.undefined) {
+    if (NewTarget === Value.undefined) {
       const now = Date.now();
       return ToDateString(F(now));
     } else {
@@ -40555,7 +40554,7 @@ function Date_now() {
 
 /** https://tc39.es/ecma262/#sec-date.parse */
 Date_now.section = 'https://tc39.es/ecma262/#sec-date.now';
-function Date_parse([string = _Value.undefined]) {
+function Date_parse([string = Value.undefined]) {
   const str = ToString(string);
   if (str instanceof AbruptCompletion) {
     return str;
@@ -40565,7 +40564,7 @@ function Date_parse([string = _Value.undefined]) {
 
 /** https://tc39.es/ecma262/#sec-date.utc */
 Date_parse.section = 'https://tc39.es/ecma262/#sec-date.parse';
-function Date_UTC([year = _Value.undefined, month, date, hours, minutes, seconds, ms]) {
+function Date_UTC([year = Value.undefined, month, date, hours, minutes, seconds, ms]) {
   let _temp14 = ToNumber(year);
   /* c8 ignore if */
   if (_temp14 instanceof AbruptCompletion) {
@@ -40697,12 +40696,12 @@ function bootstrapDate(realmRec) {
   realmRec.Intrinsics['%Date%'] = cons;
 }
 
-const kRegExpStringIteratorPrototype = _Value('%RegExpStringIteratorPrototype%');
+const kRegExpStringIteratorPrototype = Value('%RegExpStringIteratorPrototype%');
 
 /** https://tc39.es/ecma262/#sec-createregexpstringiterator */
 function CreateRegExpStringIterator(R$1, S, global, fullUnicode) {
   // 1. Assert: Type(S) is String.
-  Assert(S instanceof StringValue, "S instanceof JSStringValue");
+  Assert(S instanceof JSStringValue, "S instanceof JSStringValue");
   // 2. Assert: Type(global) is Boolean.
   Assert(global instanceof BooleanValue, "global instanceof BooleanValue");
   // 3. Assert: Type(fullUnicode) is Boolean.
@@ -40723,11 +40722,11 @@ function CreateRegExpStringIterator(R$1, S, global, fullUnicode) {
       // i. Let match be ? RegExpExec(R, S).
       const match = _temp;
       // ii. If match is null, return undefined.
-      if (match === _Value.null) {
-        return _Value.undefined;
+      if (match === Value.null) {
+        return Value.undefined;
       }
       // iii. If global is false, then
-      if (global === _Value.false) {
+      if (global === Value.false) {
         let _temp2 = yield* Yield(match);
         /* c8 ignore if */
         if (_temp2 instanceof AbruptCompletion) {
@@ -40738,10 +40737,10 @@ function CreateRegExpStringIterator(R$1, S, global, fullUnicode) {
           _temp2 = _temp2.Value;
         }
         // 2. Return undefined.
-        return _Value.undefined;
+        return Value.undefined;
       }
       // iv. Let matchStr be ? ToString(? Get(match, "0")).
-      let _temp9 = Get(match, _Value('0'));
+      let _temp9 = Get(match, Value('0'));
       /* c8 ignore if */
       if (_temp9 instanceof AbruptCompletion) {
         return _temp9;
@@ -40762,7 +40761,7 @@ function CreateRegExpStringIterator(R$1, S, global, fullUnicode) {
       const matchStr = _temp3;
       // v. If matchStr is the empty String, then
       if (matchStr.stringValue() === '') {
-        let _temp7 = Get(R$1, _Value('lastIndex'));
+        let _temp7 = Get(R$1, Value('lastIndex'));
         /* c8 ignore if */
         if (_temp7 instanceof AbruptCompletion) {
           return _temp7;
@@ -40791,7 +40790,7 @@ function CreateRegExpStringIterator(R$1, S, global, fullUnicode) {
         }
         const nextIndex = _temp5;
         // iii. Perform ? Set(R, "lastIndex", 𝔽(nextIndex), true).
-        let _temp6 = Set$1(R$1, _Value('lastIndex'), F(nextIndex), _Value.true);
+        let _temp6 = Set$1(R$1, Value('lastIndex'), F(nextIndex), Value.true);
         /* c8 ignore if */
         if (_temp6 instanceof AbruptCompletion) {
           return _temp6;
@@ -40837,7 +40836,7 @@ function bootstrapRegExpStringIteratorPrototype(realmRec) {
 }
 
 /** https://tc39.es/ecma262/#sec-regexp.prototype.exec */
-function RegExpProto_exec([string = _Value.undefined], {
+function RegExpProto_exec([string = Value.undefined], {
   thisValue
 }) {
   const R = thisValue;
@@ -40867,8 +40866,8 @@ function RegExpProto_exec([string = _Value.undefined], {
 RegExpProto_exec.section = 'https://tc39.es/ecma262/#sec-regexp.prototype.exec';
 function RegExpExec(R, S) {
   Assert(R instanceof ObjectValue, "R instanceof ObjectValue");
-  Assert(S instanceof StringValue, "S instanceof JSStringValue");
-  let _temp3 = Get(R, _Value('exec'));
+  Assert(S instanceof JSStringValue, "S instanceof JSStringValue");
+  let _temp3 = Get(R, Value('exec'));
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) {
     return _temp3;
@@ -40878,7 +40877,7 @@ function RegExpExec(R, S) {
     _temp3 = _temp3.Value;
   }
   const exec = _temp3;
-  if (IsCallable(exec) === _Value.true) {
+  if (IsCallable(exec) === Value.true) {
     let _temp4 = Call(exec, R, [S]);
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) {
@@ -40911,11 +40910,11 @@ function RegExpBuiltinExec(R$1, S) {
   // 1. Assert: R is an initialized RegExp instance.
   Assert('RegExpMatcher' in R$1, "'RegExpMatcher' in R");
   // 2. Assert: Type(S) is String.
-  Assert(S instanceof StringValue, "S instanceof JSStringValue");
+  Assert(S instanceof JSStringValue, "S instanceof JSStringValue");
   // 3. Let length be the number of code units in S.
   const length = S.stringValue().length;
   // 4. Let lastIndex be ? ℝ(ToLength(? Get(R, "lastIndex"))).
-  let _temp25 = Get(R$1, _Value('lastIndex'));
+  let _temp25 = Get(R$1, Value('lastIndex'));
   /* c8 ignore if */
   if (_temp25 instanceof AbruptCompletion) {
     return _temp25;
@@ -40959,7 +40958,7 @@ function RegExpBuiltinExec(R$1, S) {
     if (lastIndex > length) {
       // i. If global is true or sticky is true, then
       if (global || sticky) {
-        let _temp7 = Set$1(R$1, _Value('lastIndex'), F(+0), _Value.true);
+        let _temp7 = Set$1(R$1, Value('lastIndex'), F(+0), Value.true);
         /* c8 ignore if */
         if (_temp7 instanceof AbruptCompletion) {
           return _temp7;
@@ -40970,7 +40969,7 @@ function RegExpBuiltinExec(R$1, S) {
         }
       }
       // ii. Return null.
-      return _Value.null;
+      return Value.null;
     }
     // b. Let r be matcher(S, lastIndex).
     r = matcher(S, lastIndex);
@@ -40978,7 +40977,7 @@ function RegExpBuiltinExec(R$1, S) {
     if (r === 'failure') {
       // i. If sticky is true, then
       if (sticky) {
-        let _temp8 = Set$1(R$1, _Value('lastIndex'), F(+0), _Value.true);
+        let _temp8 = Set$1(R$1, Value('lastIndex'), F(+0), Value.true);
         /* c8 ignore if */
         if (_temp8 instanceof AbruptCompletion) {
           return _temp8;
@@ -40988,10 +40987,10 @@ function RegExpBuiltinExec(R$1, S) {
           _temp8 = _temp8.Value;
         }
         // 2. Return null.
-        return _Value.null;
+        return Value.null;
       }
       // ii. Set lastIndex to AdvanceStringIndex(S, lastIndex, fullUnicode).
-      lastIndex = AdvanceStringIndex(S, lastIndex, fullUnicode ? _Value.true : _Value.false);
+      lastIndex = AdvanceStringIndex(S, lastIndex, fullUnicode ? Value.true : Value.false);
     } else {
       // d. Else,
       // i. Assert: r is a State.
@@ -41016,7 +41015,7 @@ function RegExpBuiltinExec(R$1, S) {
   }
   // 16. If global is true or sticky is true, then
   if (global || sticky) {
-    let _temp10 = Set$1(R$1, _Value('lastIndex'), F(e), _Value.true);
+    let _temp10 = Set$1(R$1, Value('lastIndex'), F(e), Value.true);
     /* c8 ignore if */
     if (_temp10 instanceof AbruptCompletion) {
       return _temp10;
@@ -41041,7 +41040,7 @@ function RegExpBuiltinExec(R$1, S) {
   }
   const A = _temp11;
   // 21. Assert: The mathematical value of A's "length" property is n + 1.
-  let _temp12 = Get(A, _Value('length'));
+  let _temp12 = Get(A, Value('length'));
   Assert(!(_temp12 instanceof AbruptCompletion), "Get(A, Value('length'))" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp12 instanceof Completion) {
@@ -41049,14 +41048,14 @@ function RegExpBuiltinExec(R$1, S) {
   }
   Assert(R(_temp12) === n + 1, "MathematicalValue(X(Get(A, Value('length')))) === n + 1");
   // 22. Perform ! CreateDataPropertyOrThrow(A, "index", 𝔽(lastIndex)).
-  let _temp13 = CreateDataPropertyOrThrow(A, _Value('index'), F(lastIndex));
+  let _temp13 = CreateDataPropertyOrThrow(A, Value('index'), F(lastIndex));
   Assert(!(_temp13 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, Value('index'), F(lastIndex))" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp13 instanceof Completion) {
     _temp13 = _temp13.Value;
   }
   // 23. Perform ! CreateDataPropertyOrThrow(A, "input", S).
-  let _temp14 = CreateDataPropertyOrThrow(A, _Value('input'), S);
+  let _temp14 = CreateDataPropertyOrThrow(A, Value('input'), S);
   Assert(!(_temp14 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, Value('input'), S)" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp14 instanceof Completion) {
@@ -41082,7 +41081,7 @@ function RegExpBuiltinExec(R$1, S) {
   }
   const matchedValue = _temp15;
   // 29. Perform ! CreateDataProperty(A, "0", matchedValue).
-  let _temp16 = CreateDataPropertyOrThrow(A, _Value('0'), matchedValue);
+  let _temp16 = CreateDataPropertyOrThrow(A, Value('0'), matchedValue);
   Assert(!(_temp16 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, Value('0'), matchedValue)" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp16 instanceof Completion) {
@@ -41093,18 +41092,18 @@ function RegExpBuiltinExec(R$1, S) {
   // 30. If R contains any GroupName, then
   if (R$1.parsedPattern.groupSpecifiers.size > 0) {
     // a. Let groups be OrdinaryObjectCreate(null).
-    groups = OrdinaryObjectCreate(_Value.null);
+    groups = OrdinaryObjectCreate(Value.null);
     // b. Let hasGroups be true.
-    hasGroups = _Value.true;
+    hasGroups = Value.true;
   } else {
     // 31. Else,
     // a. Let groups be undefined.
-    groups = _Value.undefined;
+    groups = Value.undefined;
     // b. Let hasGroups be false.
-    hasGroups = _Value.false;
+    hasGroups = Value.false;
   }
   // 32. Perform ! CreateDataPropertyOrThrow(A, "groups", groups).
-  let _temp17 = CreateDataPropertyOrThrow(A, _Value('groups'), groups);
+  let _temp17 = CreateDataPropertyOrThrow(A, Value('groups'), groups);
   Assert(!(_temp17 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, Value('groups'), groups)" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp17 instanceof Completion) {
@@ -41116,11 +41115,11 @@ function RegExpBuiltinExec(R$1, S) {
     const captureI = r.captures[i];
     let capturedValue;
     // e. If captureI is undefined, then
-    if (captureI === _Value.undefined) {
+    if (captureI === Value.undefined) {
       // i. Let capturedValue be undefined.
-      capturedValue = _Value.undefined;
+      capturedValue = Value.undefined;
       // ii. Append undefined to indices.
-      indices.push(_Value.undefined);
+      indices.push(Value.undefined);
     } else {
       // f. Else,
       // i. Let captureStart be captureI's startIndex.
@@ -41178,7 +41177,7 @@ function RegExpBuiltinExec(R$1, S) {
     // f. If the ith capture of R was defined with a GroupName, then
     if (R$1.parsedPattern.capturingGroups[i - 1].GroupSpecifier) {
       // i. Let s be the StringValue of the corresponding RegExpIdentifierName.
-      const s = _Value(R$1.parsedPattern.capturingGroups[i - 1].GroupSpecifier);
+      const s = Value(R$1.parsedPattern.capturingGroups[i - 1].GroupSpecifier);
       // ii. Perform ! CreateDataPropertyOrThrow(groups, s, capturedValue).
       let _temp22 = CreateDataPropertyOrThrow(groups, s, capturedValue);
       Assert(!(_temp22 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(groups, s, capturedValue)" + ' returned an abrupt completion');
@@ -41190,7 +41189,7 @@ function RegExpBuiltinExec(R$1, S) {
       groupNames.push(s);
     } else {
       // i. Append undefined to groupNames.
-      groupNames.push(_Value.undefined);
+      groupNames.push(Value.undefined);
     }
   }
   // 34. If hasIndices is true, then
@@ -41198,7 +41197,7 @@ function RegExpBuiltinExec(R$1, S) {
     // a. Let indicesArray be MakeMatchIndicesIndexPairArray(S, indices, groupNames, hasGroups).
     const indicesArray = MakeMatchIndicesIndexPairArray(S, indices, groupNames, hasGroups);
     // b. Perform ! CreateDataProperty(A, "indices", indicesArray).
-    let _temp24 = CreateDataPropertyOrThrow(A, _Value('indices'), indicesArray);
+    let _temp24 = CreateDataPropertyOrThrow(A, Value('indices'), indicesArray);
     Assert(!(_temp24 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, Value('indices'), indicesArray)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp24 instanceof Completion) {
@@ -41212,13 +41211,13 @@ function RegExpBuiltinExec(R$1, S) {
 /** https://tc39.es/ecma262/#sec-advancestringindex */
 function AdvanceStringIndex(S, index, unicode) {
   // 1. Assert: Type(S) is String.
-  Assert(S instanceof StringValue, "S instanceof JSStringValue");
+  Assert(S instanceof JSStringValue, "S instanceof JSStringValue");
   // 2. Assert: index is a non-negative integer which is ≤ 2 ** (53 - 1).
   Assert(isNonNegativeInteger(index) && index <= 2 ** 53 - 1, "isNonNegativeInteger(index) && index <= (2 ** 53) - 1");
   // 3. Assert: Type(unicode) is Boolean.
   Assert(unicode instanceof BooleanValue, "unicode instanceof BooleanValue");
   // 4. If unicode is false, return index + 1.
-  if (unicode === _Value.false) {
+  if (unicode === Value.false) {
     return index + 1;
   }
   // 5. Let length be the number of code units in S.
@@ -41261,7 +41260,7 @@ function RegExpProto_flagsGetter(args, {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   let result = '';
-  let _temp27 = Get(R, _Value('hasIndices'));
+  let _temp27 = Get(R, Value('hasIndices'));
   /* c8 ignore if */
   if (_temp27 instanceof AbruptCompletion) {
     return _temp27;
@@ -41271,10 +41270,10 @@ function RegExpProto_flagsGetter(args, {
     _temp27 = _temp27.Value;
   }
   const hasIndices = ToBoolean(_temp27);
-  if (hasIndices === _Value.true) {
+  if (hasIndices === Value.true) {
     result += 'd';
   }
-  let _temp28 = Get(R, _Value('global'));
+  let _temp28 = Get(R, Value('global'));
   /* c8 ignore if */
   if (_temp28 instanceof AbruptCompletion) {
     return _temp28;
@@ -41284,10 +41283,10 @@ function RegExpProto_flagsGetter(args, {
     _temp28 = _temp28.Value;
   }
   const global = ToBoolean(_temp28);
-  if (global === _Value.true) {
+  if (global === Value.true) {
     result += 'g';
   }
-  let _temp29 = Get(R, _Value('ignoreCase'));
+  let _temp29 = Get(R, Value('ignoreCase'));
   /* c8 ignore if */
   if (_temp29 instanceof AbruptCompletion) {
     return _temp29;
@@ -41297,10 +41296,10 @@ function RegExpProto_flagsGetter(args, {
     _temp29 = _temp29.Value;
   }
   const ignoreCase = ToBoolean(_temp29);
-  if (ignoreCase === _Value.true) {
+  if (ignoreCase === Value.true) {
     result += 'i';
   }
-  let _temp30 = Get(R, _Value('multiline'));
+  let _temp30 = Get(R, Value('multiline'));
   /* c8 ignore if */
   if (_temp30 instanceof AbruptCompletion) {
     return _temp30;
@@ -41310,10 +41309,10 @@ function RegExpProto_flagsGetter(args, {
     _temp30 = _temp30.Value;
   }
   const multiline = ToBoolean(_temp30);
-  if (multiline === _Value.true) {
+  if (multiline === Value.true) {
     result += 'm';
   }
-  let _temp31 = Get(R, _Value('dotAll'));
+  let _temp31 = Get(R, Value('dotAll'));
   /* c8 ignore if */
   if (_temp31 instanceof AbruptCompletion) {
     return _temp31;
@@ -41323,10 +41322,10 @@ function RegExpProto_flagsGetter(args, {
     _temp31 = _temp31.Value;
   }
   const dotAll = ToBoolean(_temp31);
-  if (dotAll === _Value.true) {
+  if (dotAll === Value.true) {
     result += 's';
   }
-  let _temp32 = Get(R, _Value('unicode'));
+  let _temp32 = Get(R, Value('unicode'));
   /* c8 ignore if */
   if (_temp32 instanceof AbruptCompletion) {
     return _temp32;
@@ -41336,10 +41335,10 @@ function RegExpProto_flagsGetter(args, {
     _temp32 = _temp32.Value;
   }
   const unicode = ToBoolean(_temp32);
-  if (unicode === _Value.true) {
+  if (unicode === Value.true) {
     result += 'u';
   }
-  let _temp33 = Get(R, _Value('sticky'));
+  let _temp33 = Get(R, Value('sticky'));
   /* c8 ignore if */
   if (_temp33 instanceof AbruptCompletion) {
     return _temp33;
@@ -41349,10 +41348,10 @@ function RegExpProto_flagsGetter(args, {
     _temp33 = _temp33.Value;
   }
   const sticky = ToBoolean(_temp33);
-  if (sticky === _Value.true) {
+  if (sticky === Value.true) {
     result += 'y';
   }
-  return _Value(result);
+  return Value(result);
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp.prototype.global */
@@ -41365,16 +41364,16 @@ function RegExpProto_globalGetter(args, {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   if (!('OriginalFlags' in R)) {
-    if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === _Value.true) {
-      return _Value.undefined;
+    if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
+      return Value.undefined;
     }
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   const flags = R.OriginalFlags;
   if (flags.stringValue().includes('g')) {
-    return _Value.true;
+    return Value.true;
   }
-  return _Value.false;
+  return Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp.prototype.hasIndices */
@@ -41405,7 +41404,7 @@ function RegExpProto_ignoreCaseGetter(args, {
 
 /** https://tc39.es/ecma262/#sec-regexp.prototype-@@match */
 RegExpProto_ignoreCaseGetter.section = 'https://tc39.es/ecma262/#sec-get-regexp.prototype.ignorecase';
-function RegExpProto_match([string = _Value.undefined], {
+function RegExpProto_match([string = Value.undefined], {
   thisValue
 }) {
   // 1. Let rx be the this value.
@@ -41426,7 +41425,7 @@ function RegExpProto_match([string = _Value.undefined], {
   }
   const S = _temp34;
   // 4. Let flags be ? ToString(? Get(rx, "flags")).
-  let _temp46 = Get(rx, _Value('flags'));
+  let _temp46 = Get(rx, Value('flags'));
   /* c8 ignore if */
   if (_temp46 instanceof AbruptCompletion) {
     return _temp46;
@@ -41452,9 +41451,9 @@ function RegExpProto_match([string = _Value.undefined], {
   } else {
     // 6. Else,
     // a. If flags contains "u", let fullUnicode be true. Otherwise, let fullUnicode be false.
-    const fullUnicode = flags.stringValue().includes('u') ? _Value.true : _Value.false;
+    const fullUnicode = flags.stringValue().includes('u') ? Value.true : Value.false;
     // b. Perform ? Set(rx, "lastIndex", +0𝔽, true).
-    let _temp36 = Set$1(rx, _Value('lastIndex'), F(+0), _Value.true);
+    let _temp36 = Set$1(rx, Value('lastIndex'), F(+0), Value.true);
     /* c8 ignore if */
     if (_temp36 instanceof AbruptCompletion) {
       return _temp36;
@@ -41487,15 +41486,15 @@ function RegExpProto_match([string = _Value.undefined], {
       // i. Let result be ? RegExpExec(rx, S).
       const result = _temp38;
       // ii. If result is null, then
-      if (result === _Value.null) {
+      if (result === Value.null) {
         // 1. If n = 0, return null.
         if (n === 0) {
-          return _Value.null;
+          return Value.null;
         }
         // 2. Return A.
         return A;
       } else {
-        let _temp44 = Get(result, _Value('0'));
+        let _temp44 = Get(result, Value('0'));
         /* c8 ignore if */
         if (_temp44 instanceof AbruptCompletion) {
           return _temp44;
@@ -41531,7 +41530,7 @@ function RegExpProto_match([string = _Value.undefined], {
         }
         // 3. If matchStr is the empty String, then
         if (matchStr.stringValue() === '') {
-          let _temp43 = Get(rx, _Value('lastIndex'));
+          let _temp43 = Get(rx, Value('lastIndex'));
           /* c8 ignore if */
           if (_temp43 instanceof AbruptCompletion) {
             return _temp43;
@@ -41554,7 +41553,7 @@ function RegExpProto_match([string = _Value.undefined], {
           // b. Let nextIndex be AdvanceStringIndex(S, thisIndex, fullUnicode).
           const nextIndex = AdvanceStringIndex(S, thisIndex, fullUnicode);
           // c. Perform ? Set(rx, "lastIndex", 𝔽(nextIndex), true).
-          let _temp42 = Set$1(rx, _Value('lastIndex'), F(nextIndex), _Value.true);
+          let _temp42 = Set$1(rx, Value('lastIndex'), F(nextIndex), Value.true);
           /* c8 ignore if */
           if (_temp42 instanceof AbruptCompletion) {
             return _temp42;
@@ -41573,7 +41572,7 @@ function RegExpProto_match([string = _Value.undefined], {
 
 /** https://tc39.es/ecma262/#sec-regexp-prototype-matchall */
 RegExpProto_match.section = 'https://tc39.es/ecma262/#sec-regexp.prototype-@@match';
-function RegExpProto_matchAll([string = _Value.undefined], {
+function RegExpProto_matchAll([string = Value.undefined], {
   thisValue
 }) {
   const R = thisValue;
@@ -41600,7 +41599,7 @@ function RegExpProto_matchAll([string = _Value.undefined], {
     _temp48 = _temp48.Value;
   }
   const C = _temp48;
-  let _temp54 = Get(R, _Value('flags'));
+  let _temp54 = Get(R, Value('flags'));
   /* c8 ignore if */
   if (_temp54 instanceof AbruptCompletion) {
     return _temp54;
@@ -41629,7 +41628,7 @@ function RegExpProto_matchAll([string = _Value.undefined], {
     _temp50 = _temp50.Value;
   }
   const matcher = _temp50;
-  let _temp55 = Get(R, _Value('lastIndex'));
+  let _temp55 = Get(R, Value('lastIndex'));
   /* c8 ignore if */
   if (_temp55 instanceof AbruptCompletion) {
     return _temp55;
@@ -41648,7 +41647,7 @@ function RegExpProto_matchAll([string = _Value.undefined], {
     _temp51 = _temp51.Value;
   }
   const lastIndex = _temp51;
-  let _temp52 = Set$1(matcher, _Value('lastIndex'), lastIndex, _Value.true);
+  let _temp52 = Set$1(matcher, Value('lastIndex'), lastIndex, Value.true);
   /* c8 ignore if */
   if (_temp52 instanceof AbruptCompletion) {
     return _temp52;
@@ -41659,15 +41658,15 @@ function RegExpProto_matchAll([string = _Value.undefined], {
   }
   let global;
   if (flags.stringValue().includes('g')) {
-    global = _Value.true;
+    global = Value.true;
   } else {
-    global = _Value.false;
+    global = Value.false;
   }
   let fullUnicode;
   if (flags.stringValue().includes('u')) {
-    fullUnicode = _Value.true;
+    fullUnicode = Value.true;
   } else {
-    fullUnicode = _Value.false;
+    fullUnicode = Value.false;
   }
   let _temp53 = CreateRegExpStringIterator(matcher, S, global, fullUnicode);
   Assert(!(_temp53 instanceof AbruptCompletion), "CreateRegExpStringIterator(matcher, S, global, fullUnicode)" + ' returned an abrupt completion');
@@ -41693,7 +41692,7 @@ function RegExpProto_multilineGetter(args, {
 
 /** https://tc39.es/ecma262/#sec-regexp.prototype-@@replace */
 RegExpProto_multilineGetter.section = 'https://tc39.es/ecma262/#sec-get-regexp.prototype.multiline';
-function RegExpProto_replace([string = _Value.undefined, replaceValue = _Value.undefined], {
+function RegExpProto_replace([string = Value.undefined, replaceValue = Value.undefined], {
   thisValue
 }) {
   // 1. Let rx be the this value.
@@ -41718,7 +41717,7 @@ function RegExpProto_replace([string = _Value.undefined, replaceValue = _Value.u
   // 5. Let functionalReplace be IsCallable(replaceValue).
   const functionalReplace = IsCallable(replaceValue);
   // 6. If functionalReplace is false, then
-  if (functionalReplace === _Value.false) {
+  if (functionalReplace === Value.false) {
     let _temp57 = ToString(replaceValue);
     /* c8 ignore if */
     if (_temp57 instanceof AbruptCompletion) {
@@ -41732,7 +41731,7 @@ function RegExpProto_replace([string = _Value.undefined, replaceValue = _Value.u
     replaceValue = _temp57;
   }
   // 7. Let flags be ? ToString(? Get(rx, "flags")).
-  let _temp79 = Get(rx, _Value('flags'));
+  let _temp79 = Get(rx, Value('flags'));
   /* c8 ignore if */
   if (_temp79 instanceof AbruptCompletion) {
     return _temp79;
@@ -41752,14 +41751,14 @@ function RegExpProto_replace([string = _Value.undefined, replaceValue = _Value.u
   }
   const flags = _temp58;
   // 8. If flags contains "g", let global be true. Otherwise, let global be false.
-  const global = flags.stringValue().includes('g') ? _Value.true : _Value.false;
+  const global = flags.stringValue().includes('g') ? Value.true : Value.false;
   let fullUnicode;
   // 9. If global is true, then
-  if (global === _Value.true) {
+  if (global === Value.true) {
     // a. If flags contains "u", let fullUnicode be true. Otherwise, let fullUnicode be false.
-    fullUnicode = flags.stringValue().includes('u') ? _Value.true : _Value.false;
+    fullUnicode = flags.stringValue().includes('u') ? Value.true : Value.false;
     // b. Perform ? Set(rx, "lastIndex", +0𝔽, true).
-    let _temp59 = Set$1(rx, _Value('lastIndex'), F(+0), _Value.true);
+    let _temp59 = Set$1(rx, Value('lastIndex'), F(+0), Value.true);
     /* c8 ignore if */
     if (_temp59 instanceof AbruptCompletion) {
       return _temp59;
@@ -41787,17 +41786,17 @@ function RegExpProto_replace([string = _Value.undefined, replaceValue = _Value.u
     // a. Let result be ? RegExpExec(rx, S).
     const result = _temp60;
     // b. If result is null, set done to true.
-    if (result === _Value.null) {
+    if (result === Value.null) {
       done = true;
     } else {
       // c. Else,
       // i. Append result to results.
       results.push(result);
       // ii. If global is false, set done to true.
-      if (global === _Value.false) {
+      if (global === Value.false) {
         done = true;
       } else {
-        let _temp65 = Get(result, _Value('0'));
+        let _temp65 = Get(result, Value('0'));
         /* c8 ignore if */
         if (_temp65 instanceof AbruptCompletion) {
           return _temp65;
@@ -41820,7 +41819,7 @@ function RegExpProto_replace([string = _Value.undefined, replaceValue = _Value.u
         const matchStr = _temp61;
         // 2. If matchStr is the empty String, then
         if (matchStr.stringValue() === '') {
-          let _temp64 = Get(rx, _Value('lastIndex'));
+          let _temp64 = Get(rx, Value('lastIndex'));
           /* c8 ignore if */
           if (_temp64 instanceof AbruptCompletion) {
             return _temp64;
@@ -41843,7 +41842,7 @@ function RegExpProto_replace([string = _Value.undefined, replaceValue = _Value.u
           // b. Let nextIndex be AdvanceStringIndex(S, thisIndex, fullUnicode).
           const nextIndex = AdvanceStringIndex(S, thisIndex, fullUnicode);
           // c. Perform ? Set(rx, "lastIndex", 𝔽(nextIndex), true).
-          let _temp63 = Set$1(rx, _Value('lastIndex'), F(nextIndex), _Value.true);
+          let _temp63 = Set$1(rx, Value('lastIndex'), F(nextIndex), Value.true);
           /* c8 ignore if */
           if (_temp63 instanceof AbruptCompletion) {
             return _temp63;
@@ -41876,7 +41875,7 @@ function RegExpProto_replace([string = _Value.undefined, replaceValue = _Value.u
     // b. Let nCaptures be max(resultLength - 1, 0).
     nCaptures = Math.max(nCaptures - 1, 0);
     // c. Let matched be ? ToString(? Get(result, "0")).
-    let _temp77 = Get(result, _Value('0'));
+    let _temp77 = Get(result, Value('0'));
     /* c8 ignore if */
     if (_temp77 instanceof AbruptCompletion) {
       return _temp77;
@@ -41898,7 +41897,7 @@ function RegExpProto_replace([string = _Value.undefined, replaceValue = _Value.u
     // d. Let matchLength be the length of matched.
     const matchLength = matched.stringValue().length;
     // e. Let position be ? ToIntegerOrInfinity(? Get(result, "index")).
-    let _temp78 = Get(result, _Value('index'));
+    let _temp78 = Get(result, Value('index'));
     /* c8 ignore if */
     if (_temp78 instanceof AbruptCompletion) {
       return _temp78;
@@ -41943,7 +41942,7 @@ function RegExpProto_replace([string = _Value.undefined, replaceValue = _Value.u
       // i. Let capN be ? Get(result, ! ToString(𝔽(n))).
       let capN = _temp69;
       // ii. If capN is not undefined, then
-      if (capN !== _Value.undefined) {
+      if (capN !== Value.undefined) {
         let _temp70 = ToString(capN);
         /* c8 ignore if */
         if (_temp70 instanceof AbruptCompletion) {
@@ -41965,7 +41964,7 @@ function RegExpProto_replace([string = _Value.undefined, replaceValue = _Value.u
       n += 1;
     }
     // j. Let namedCaptures be ? Get(result, "groups").
-    let _temp72 = Get(result, _Value('groups'));
+    let _temp72 = Get(result, Value('groups'));
     /* c8 ignore if */
     if (_temp72 instanceof AbruptCompletion) {
       return _temp72;
@@ -41977,16 +41976,16 @@ function RegExpProto_replace([string = _Value.undefined, replaceValue = _Value.u
     let namedCaptures = _temp72;
     let replacement;
     // k. If functionalReplace is true, then
-    if (functionalReplace === _Value.true) {
+    if (functionalReplace === Value.true) {
       // i. Let replacerArgs be the list-concatenation of « matched », captures, and « 𝔽(position), S ».
       const replacerArgs = [matched, ...captures, F(position), S];
       // ii. If namedCaptures is not undefined, then
-      if (namedCaptures !== _Value.undefined) {
+      if (namedCaptures !== Value.undefined) {
         // 1. Append namedCaptures to replacerArgs.
         replacerArgs.push(namedCaptures);
       }
       // iii. Let replValue be ? Call(replaceValue, undefined, replacerArgs).
-      let _temp73 = Call(replaceValue, _Value.undefined, replacerArgs);
+      let _temp73 = Call(replaceValue, Value.undefined, replacerArgs);
       /* c8 ignore if */
       if (_temp73 instanceof AbruptCompletion) {
         return _temp73;
@@ -42010,7 +42009,7 @@ function RegExpProto_replace([string = _Value.undefined, replaceValue = _Value.u
     } else {
       // l. Else,
       // i. If namedCaptures is not undefined, then
-      if (namedCaptures !== _Value.undefined) {
+      if (namedCaptures !== Value.undefined) {
         let _temp75 = ToObject(namedCaptures);
         /* c8 ignore if */
         if (_temp75 instanceof AbruptCompletion) {
@@ -42048,15 +42047,15 @@ function RegExpProto_replace([string = _Value.undefined, replaceValue = _Value.u
   }
   // 16. If nextSourcePosition ≥ lengthS, return accumulatedResult.
   if (nextSourcePosition >= lengthS) {
-    return _Value(accumulatedResult);
+    return Value(accumulatedResult);
   }
   // 17. Return the string-concatenation of accumulatedResult and the substring of S from nextSourcePosition.
-  return _Value(accumulatedResult + S.stringValue().substring(nextSourcePosition));
+  return Value(accumulatedResult + S.stringValue().substring(nextSourcePosition));
 }
 
 /** https://tc39.es/ecma262/#sec-regexp.prototype-@@search */
 RegExpProto_replace.section = 'https://tc39.es/ecma262/#sec-regexp.prototype-@@replace';
-function RegExpProto_search([string = _Value.undefined], {
+function RegExpProto_search([string = Value.undefined], {
   thisValue
 }) {
   const rx = thisValue;
@@ -42073,7 +42072,7 @@ function RegExpProto_search([string = _Value.undefined], {
     _temp80 = _temp80.Value;
   }
   const S = _temp80;
-  let _temp81 = Get(rx, _Value('lastIndex'));
+  let _temp81 = Get(rx, Value('lastIndex'));
   /* c8 ignore if */
   if (_temp81 instanceof AbruptCompletion) {
     return _temp81;
@@ -42083,8 +42082,8 @@ function RegExpProto_search([string = _Value.undefined], {
     _temp81 = _temp81.Value;
   }
   const previousLastIndex = _temp81;
-  if (SameValue(previousLastIndex, F(+0)) === _Value.false) {
-    let _temp82 = Set$1(rx, _Value('lastIndex'), F(+0), _Value.true);
+  if (SameValue(previousLastIndex, F(+0)) === Value.false) {
+    let _temp82 = Set$1(rx, Value('lastIndex'), F(+0), Value.true);
     /* c8 ignore if */
     if (_temp82 instanceof AbruptCompletion) {
       return _temp82;
@@ -42104,7 +42103,7 @@ function RegExpProto_search([string = _Value.undefined], {
     _temp83 = _temp83.Value;
   }
   const result = _temp83;
-  let _temp84 = Get(rx, _Value('lastIndex'));
+  let _temp84 = Get(rx, Value('lastIndex'));
   /* c8 ignore if */
   if (_temp84 instanceof AbruptCompletion) {
     return _temp84;
@@ -42114,8 +42113,8 @@ function RegExpProto_search([string = _Value.undefined], {
     _temp84 = _temp84.Value;
   }
   const currentLastIndex = _temp84;
-  if (SameValue(currentLastIndex, previousLastIndex) === _Value.false) {
-    let _temp85 = Set$1(rx, _Value('lastIndex'), previousLastIndex, _Value.true);
+  if (SameValue(currentLastIndex, previousLastIndex) === Value.false) {
+    let _temp85 = Set$1(rx, Value('lastIndex'), previousLastIndex, Value.true);
     /* c8 ignore if */
     if (_temp85 instanceof AbruptCompletion) {
       return _temp85;
@@ -42125,10 +42124,10 @@ function RegExpProto_search([string = _Value.undefined], {
       _temp85 = _temp85.Value;
     }
   }
-  if (result === _Value.null) {
+  if (result === Value.null) {
     return F(-1);
   }
-  return Get(result, _Value('index'));
+  return Get(result, Value('index'));
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp.prototype.source */
@@ -42141,8 +42140,8 @@ function RegExpProto_sourceGetter(args, {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   if (!('OriginalSource' in R)) {
-    if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === _Value.true) {
-      return _Value('(?:)');
+    if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
+      return Value('(?:)');
     }
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
@@ -42154,7 +42153,7 @@ function RegExpProto_sourceGetter(args, {
 
 /** https://tc39.es/ecma262/#sec-regexp.prototype-@@split */
 RegExpProto_sourceGetter.section = 'https://tc39.es/ecma262/#sec-get-regexp.prototype.source';
-function RegExpProto_split([string = _Value.undefined, limit = _Value.undefined], {
+function RegExpProto_split([string = Value.undefined, limit = Value.undefined], {
   thisValue
 }) {
   const rx = thisValue;
@@ -42181,7 +42180,7 @@ function RegExpProto_split([string = _Value.undefined, limit = _Value.undefined]
     _temp87 = _temp87.Value;
   }
   const C = _temp87;
-  let _temp88 = Get(rx, _Value('flags'));
+  let _temp88 = Get(rx, Value('flags'));
   /* c8 ignore if */
   if (_temp88 instanceof AbruptCompletion) {
     return _temp88;
@@ -42201,8 +42200,8 @@ function RegExpProto_split([string = _Value.undefined, limit = _Value.undefined]
     _temp89 = _temp89.Value;
   }
   const flags = _temp89.stringValue();
-  const unicodeMatching = flags.includes('u') ? _Value.true : _Value.false;
-  const newFlags = flags.includes('y') ? _Value(flags) : _Value(`${flags}y`);
+  const unicodeMatching = flags.includes('u') ? Value.true : Value.false;
+  const newFlags = flags.includes('y') ? Value(flags) : Value(`${flags}y`);
   let _temp90 = Construct(C, [rx, newFlags]);
   /* c8 ignore if */
   if (_temp90 instanceof AbruptCompletion) {
@@ -42222,7 +42221,7 @@ function RegExpProto_split([string = _Value.undefined, limit = _Value.undefined]
   const A = _temp91;
   let lengthA = 0;
   let lim;
-  if (limit === _Value.undefined) {
+  if (limit === Value.undefined) {
     lim = 2 ** 32 - 1;
   } else {
     let _temp92 = ToUint32(limit);
@@ -42252,10 +42251,10 @@ function RegExpProto_split([string = _Value.undefined, limit = _Value.undefined]
       _temp93 = _temp93.Value;
     }
     const z = _temp93;
-    if (z !== _Value.null) {
+    if (z !== Value.null) {
       return A;
     }
-    let _temp94 = CreateDataProperty(A, _Value('0'), S);
+    let _temp94 = CreateDataProperty(A, Value('0'), S);
     Assert(!(_temp94 instanceof AbruptCompletion), "CreateDataProperty(A, Value('0'), S)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp94 instanceof Completion) {
@@ -42265,7 +42264,7 @@ function RegExpProto_split([string = _Value.undefined, limit = _Value.undefined]
   }
   let q = p;
   while (q < size) {
-    let _temp95 = Set$1(splitter, _Value('lastIndex'), F(q), _Value.true);
+    let _temp95 = Set$1(splitter, Value('lastIndex'), F(q), Value.true);
     /* c8 ignore if */
     if (_temp95 instanceof AbruptCompletion) {
       return _temp95;
@@ -42284,10 +42283,10 @@ function RegExpProto_split([string = _Value.undefined, limit = _Value.undefined]
       _temp96 = _temp96.Value;
     }
     const z = _temp96;
-    if (z === _Value.null) {
+    if (z === Value.null) {
       q = AdvanceStringIndex(S, q, unicodeMatching);
     } else {
-      let _temp97 = Get(splitter, _Value('lastIndex'));
+      let _temp97 = Get(splitter, Value('lastIndex'));
       /* c8 ignore if */
       if (_temp97 instanceof AbruptCompletion) {
         return _temp97;
@@ -42311,7 +42310,7 @@ function RegExpProto_split([string = _Value.undefined, limit = _Value.undefined]
       if (e === p) {
         q = AdvanceStringIndex(S, q, unicodeMatching);
       } else {
-        const T = _Value(S.stringValue().substring(p, q));
+        const T = Value(S.stringValue().substring(p, q));
         let _temp105 = ToString(F(lengthA));
         Assert(!(_temp105 instanceof AbruptCompletion), "ToString(F(lengthA))" + ' returned an abrupt completion');
         /* c8 ignore if */
@@ -42380,7 +42379,7 @@ function RegExpProto_split([string = _Value.undefined, limit = _Value.undefined]
       }
     }
   }
-  const T = _Value(S.stringValue().substring(p, size));
+  const T = Value(S.stringValue().substring(p, size));
   let _temp107 = ToString(F(lengthA));
   Assert(!(_temp107 instanceof AbruptCompletion), "ToString(F(lengthA))" + ' returned an abrupt completion');
   /* c8 ignore if */
@@ -42411,7 +42410,7 @@ function RegExpProto_stickyGetter(args, {
 
 /** https://tc39.es/ecma262/#sec-regexp.prototype.test */
 RegExpProto_stickyGetter.section = 'https://tc39.es/ecma262/#sec-get-regexp.prototype.sticky';
-function RegExpProto_test([S = _Value.undefined], {
+function RegExpProto_test([S = Value.undefined], {
   thisValue
 }) {
   const R = thisValue;
@@ -42438,10 +42437,10 @@ function RegExpProto_test([S = _Value.undefined], {
     _temp109 = _temp109.Value;
   }
   const match = _temp109;
-  if (match !== _Value.null) {
-    return _Value.true;
+  if (match !== Value.null) {
+    return Value.true;
   }
-  return _Value.false;
+  return Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-regexp.prototype.tostring */
@@ -42453,7 +42452,7 @@ function RegExpProto_toString(args, {
   if (!(R instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
-  let _temp112 = Get(R, _Value('source'));
+  let _temp112 = Get(R, Value('source'));
   /* c8 ignore if */
   if (_temp112 instanceof AbruptCompletion) {
     return _temp112;
@@ -42472,7 +42471,7 @@ function RegExpProto_toString(args, {
     _temp110 = _temp110.Value;
   }
   const pattern = _temp110;
-  let _temp113 = Get(R, _Value('flags'));
+  let _temp113 = Get(R, Value('flags'));
   /* c8 ignore if */
   if (_temp113 instanceof AbruptCompletion) {
     return _temp113;
@@ -42492,7 +42491,7 @@ function RegExpProto_toString(args, {
   }
   const flags = _temp111;
   const result = `/${pattern.stringValue()}/${flags.stringValue()}`;
-  return _Value(result);
+  return Value(result);
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp.prototype.unicode */
@@ -42514,7 +42513,7 @@ function bootstrapRegExpPrototype(realmRec) {
 }
 
 /** https://tc39.es/ecma262/#sec-regexp-constructor */
-function RegExpConstructor([pattern = _Value.undefined, flags = _Value.undefined], {
+function RegExpConstructor([pattern = Value.undefined, flags = Value.undefined], {
   NewTarget
 }) {
   let _temp = IsRegExp(pattern);
@@ -42530,12 +42529,12 @@ function RegExpConstructor([pattern = _Value.undefined, flags = _Value.undefined
   const patternIsRegExp = _temp;
   let newTarget;
   // 2. If NewTarget is undefined, then
-  if (NewTarget === _Value.undefined) {
+  if (NewTarget === Value.undefined) {
     // a. Let newTarget be the active function object.
     newTarget = surroundingAgent.activeFunctionObject;
     // b. If patternIsRegExp is true and flags is undefined, then
-    if (patternIsRegExp === _Value.true && flags === _Value.undefined) {
-      let _temp2 = Get(pattern, _Value('constructor'));
+    if (patternIsRegExp === Value.true && flags === Value.undefined) {
+      let _temp2 = Get(pattern, Value('constructor'));
       /* c8 ignore if */
       if (_temp2 instanceof AbruptCompletion) {
         return _temp2;
@@ -42547,7 +42546,7 @@ function RegExpConstructor([pattern = _Value.undefined, flags = _Value.undefined
       // i. Let patternConstructor be ? Get(pattern, "constructor").
       const patternConstructor = _temp2;
       // ii. If SameValue(newTarget, patternConstructor) is true, return pattern.
-      if (SameValue(newTarget, patternConstructor) === _Value.true) {
+      if (SameValue(newTarget, patternConstructor) === Value.true) {
         return pattern;
       }
     }
@@ -42562,14 +42561,14 @@ function RegExpConstructor([pattern = _Value.undefined, flags = _Value.undefined
     // a. Let P be pattern.[[OriginalSource]].
     P = pattern.OriginalSource;
     // b. If flags is undefined, let F be pattern.[[OriginalFlags]].
-    if (flags === _Value.undefined) {
+    if (flags === Value.undefined) {
       F = pattern.OriginalFlags;
     } else {
       // c. Else, let F be flags.
       F = flags;
     }
-  } else if (patternIsRegExp === _Value.true) {
-    let _temp3 = Get(pattern, _Value('source'));
+  } else if (patternIsRegExp === Value.true) {
+    let _temp3 = Get(pattern, Value('source'));
     /* c8 ignore if */
     if (_temp3 instanceof AbruptCompletion) {
       return _temp3;
@@ -42582,8 +42581,8 @@ function RegExpConstructor([pattern = _Value.undefined, flags = _Value.undefined
     // a. Else if patternIsRegExp is true, then
     P = _temp3;
     // b. If flags is undefined, then
-    if (flags === _Value.undefined) {
-      let _temp4 = Get(pattern, _Value('flags'));
+    if (flags === Value.undefined) {
+      let _temp4 = Get(pattern, Value('flags'));
       /* c8 ignore if */
       if (_temp4 instanceof AbruptCompletion) {
         return _temp4;
@@ -42635,18 +42634,18 @@ function bootstrapRegExp(realmRec) {
 }
 
 /** https://tc39.es/ecma262/#sec-promise.prototype.catch */
-function PromiseProto_catch([onRejected = _Value.undefined], {
+function PromiseProto_catch([onRejected = Value.undefined], {
   thisValue
 }) {
   // 1. Let promise be the this value.
   const promise = thisValue;
   // 2. Return ? Invoke(promise, "then", « undefined, onRejected »).
-  return Invoke(promise, _Value('then'), [_Value.undefined, onRejected]);
+  return Invoke(promise, Value('then'), [Value.undefined, onRejected]);
 }
 
 /** https://tc39.es/ecma262/#sec-promise.prototype.finally */
 PromiseProto_catch.section = 'https://tc39.es/ecma262/#sec-promise.prototype.catch';
-function PromiseProto_finally([onFinally = _Value.undefined], {
+function PromiseProto_finally([onFinally = Value.undefined], {
   thisValue
 }) {
   // 1. Let promise be the this value.
@@ -42658,11 +42657,11 @@ function PromiseProto_finally([onFinally = _Value.undefined], {
   // 3. Let C be ? SpeciesConstructor(promise, %Promise%).
   const C = SpeciesConstructor(promise, surroundingAgent.intrinsic('%Promise%'));
   // 4. Assert: IsConstructor(C) is true.
-  Assert(IsConstructor(C) === _Value.true, "IsConstructor(C) === Value.true");
+  Assert(IsConstructor(C) === Value.true, "IsConstructor(C) === Value.true");
   let thenFinally;
   let catchFinally;
   // 5. If IsCallable(onFinally) is false, then
-  if (IsCallable(onFinally) === _Value.false) {
+  if (IsCallable(onFinally) === Value.false) {
     // a. Let thenFinally be onFinally.
     thenFinally = onFinally;
     // b. Let catchFinally be onFinally.
@@ -42670,8 +42669,8 @@ function PromiseProto_finally([onFinally = _Value.undefined], {
   } else {
     // 6. Else,
     // a. Let thenFinallyClosure be a new Abstract Closure with parameters (value) that captures onFinally and C and performs the following steps when called:
-    const thenFinallyClosure = ([value = _Value.undefined]) => {
-      let _temp = Call(onFinally, _Value.undefined);
+    const thenFinallyClosure = ([value = Value.undefined]) => {
+      let _temp = Call(onFinally, Value.undefined);
       /* c8 ignore if */
       if (_temp instanceof AbruptCompletion) {
         return _temp;
@@ -42697,7 +42696,7 @@ function PromiseProto_finally([onFinally = _Value.undefined], {
       //   1. Return value.
       const returnValue = () => value;
       // iv. Let valueThunk be ! CreateBuiltinFunction(returnValue, 0, "", « »).
-      let _temp3 = CreateBuiltinFunction(returnValue, 0, _Value(''), []);
+      let _temp3 = CreateBuiltinFunction(returnValue, 0, Value(''), []);
       Assert(!(_temp3 instanceof AbruptCompletion), "CreateBuiltinFunction(returnValue, 0, Value(''), [])" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp3 instanceof Completion) {
@@ -42705,10 +42704,10 @@ function PromiseProto_finally([onFinally = _Value.undefined], {
       }
       const valueThunk = _temp3;
       // v. Return ? Invoke(promise, "then", « valueThunk »).
-      return Invoke(promiseInner, _Value('then'), [valueThunk]);
+      return Invoke(promiseInner, Value('then'), [valueThunk]);
     };
     // b. Let thenFinally be ! CreateBuiltinFunction(thenFinallyClosure, 1, "", « »).
-    let _temp4 = CreateBuiltinFunction(thenFinallyClosure, 1, _Value(''), []);
+    let _temp4 = CreateBuiltinFunction(thenFinallyClosure, 1, Value(''), []);
     Assert(!(_temp4 instanceof AbruptCompletion), "CreateBuiltinFunction(thenFinallyClosure, 1, Value(''), [])" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp4 instanceof Completion) {
@@ -42716,8 +42715,8 @@ function PromiseProto_finally([onFinally = _Value.undefined], {
     }
     thenFinally = _temp4;
     // c. Let catchFinallyClosure be a new Abstract Closure with parameters (reason) that captures onFinally and C and performs the following steps when called:
-    const catchFinallyClosure = ([reason = _Value.undefined]) => {
-      let _temp5 = Call(onFinally, _Value.undefined);
+    const catchFinallyClosure = ([reason = Value.undefined]) => {
+      let _temp5 = Call(onFinally, Value.undefined);
       /* c8 ignore if */
       if (_temp5 instanceof AbruptCompletion) {
         return _temp5;
@@ -42743,7 +42742,7 @@ function PromiseProto_finally([onFinally = _Value.undefined], {
       //   1. Return ThrowCompletion(reason).
       const throwReason = () => ThrowCompletion(reason);
       // iv. Let thrower be ! CreateBuiltinFunction(throwReason, 0, "", « »).
-      let _temp7 = CreateBuiltinFunction(throwReason, 0, _Value(''), []);
+      let _temp7 = CreateBuiltinFunction(throwReason, 0, Value(''), []);
       Assert(!(_temp7 instanceof AbruptCompletion), "CreateBuiltinFunction(throwReason, 0, Value(''), [])" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp7 instanceof Completion) {
@@ -42751,10 +42750,10 @@ function PromiseProto_finally([onFinally = _Value.undefined], {
       }
       const thrower = _temp7;
       // v. Return ? Invoke(promise, "then", « thrower »).
-      return Invoke(promiseInner, _Value('then'), [thrower]);
+      return Invoke(promiseInner, Value('then'), [thrower]);
     };
     // d. Let catchFinally be ! CreateBuiltinFunction(catchFinallyClosure, 1, "", « »).
-    let _temp8 = CreateBuiltinFunction(catchFinallyClosure, 1, _Value(''), []);
+    let _temp8 = CreateBuiltinFunction(catchFinallyClosure, 1, Value(''), []);
     Assert(!(_temp8 instanceof AbruptCompletion), "CreateBuiltinFunction(catchFinallyClosure, 1, Value(''), [])" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp8 instanceof Completion) {
@@ -42763,18 +42762,18 @@ function PromiseProto_finally([onFinally = _Value.undefined], {
     catchFinally = _temp8;
   }
   // 7. Return ? Invoke(promise, "then", « thenFinally, catchFinally »).
-  return Invoke(promise, _Value('then'), [thenFinally, catchFinally]);
+  return Invoke(promise, Value('then'), [thenFinally, catchFinally]);
 }
 
 /** https://tc39.es/ecma262/#sec-promise.prototype.then */
 PromiseProto_finally.section = 'https://tc39.es/ecma262/#sec-promise.prototype.finally';
-function PromiseProto_then([onFulfilled = _Value.undefined, onRejected = _Value.undefined], {
+function PromiseProto_then([onFulfilled = Value.undefined, onRejected = Value.undefined], {
   thisValue
 }) {
   // 1. Let promise be the this value.
   const promise = thisValue;
   // 2. If IsPromise(promise) is false, throw a TypeError exception.
-  if (IsPromise(promise) === _Value.false) {
+  if (IsPromise(promise) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Promise', promise);
   }
   // 3. Let C be ? SpeciesConstructor(promise, %Promise%).
@@ -42805,7 +42804,7 @@ function PromiseProto_then([onFulfilled = _Value.undefined, onRejected = _Value.
 PromiseProto_then.section = 'https://tc39.es/ecma262/#sec-promise.prototype.then';
 function bootstrapPromisePrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [['catch', PromiseProto_catch, 1], ['finally', PromiseProto_finally, 1], ['then', PromiseProto_then, 2]], realmRec.Intrinsics['%Object.prototype%'], 'Promise');
-  let _temp11 = Get(proto, _Value('then'));
+  let _temp11 = Get(proto, Value('then'));
   Assert(!(_temp11 instanceof AbruptCompletion), "Get(proto, Value('then'))" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp11 instanceof Completion) {
@@ -42818,15 +42817,15 @@ function bootstrapPromisePrototype(realmRec) {
 // @ts-nocheck
 
 /** https://tc39.es/ecma262/#sec-promise-executor */
-function PromiseConstructor([executor = _Value.undefined], {
+function PromiseConstructor([executor = Value.undefined], {
   NewTarget
 }) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
-  if (NewTarget === _Value.undefined) {
+  if (NewTarget === Value.undefined) {
     return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
   // 2. If IsCallable(executor) is false, throw a TypeError exception.
-  if (IsCallable(executor) === _Value.false) {
+  if (IsCallable(executor) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', executor);
   }
   // 3. Let promise be ? OrdinaryCreateFromConstructor(NewTarget, "%Promise.prototype%", « [[PromiseState]], [[PromiseResult]], [[PromiseFulfillReactions]], [[PromiseRejectReactions]], [[PromiseIsHandled]] »).
@@ -42847,14 +42846,14 @@ function PromiseConstructor([executor = _Value.undefined], {
   // 6. Set promise.[[PromiseFulfillReactions]] to a new empty List.
   promise.PromiseRejectReactions = [];
   // 7. Set promise.[[PromiseIsHandled]] to false.
-  promise.PromiseIsHandled = _Value.false;
+  promise.PromiseIsHandled = Value.false;
   // 8. Let resolvingFunctions be CreateResolvingFunctions(promise).
   const resolvingFunctions = CreateResolvingFunctions(promise);
   // 9. Let completion be Call(executor, undefined, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »).
-  const completion = Call(executor, _Value.undefined, [resolvingFunctions.Resolve, resolvingFunctions.Reject]);
+  const completion = Call(executor, Value.undefined, [resolvingFunctions.Resolve, resolvingFunctions.Reject]);
   // 10. If completion is an abrupt completion, then
   if (completion instanceof AbruptCompletion) {
-    let _temp2 = Call(resolvingFunctions.Reject, _Value.undefined, [completion.Value]);
+    let _temp2 = Call(resolvingFunctions.Reject, Value.undefined, [completion.Value]);
     /* c8 ignore if */
     if (_temp2 instanceof AbruptCompletion) {
       return _temp2;
@@ -42870,11 +42869,11 @@ function PromiseConstructor([executor = _Value.undefined], {
 
 /** https://tc39.es/ecma262/#sec-promise.all-resolve-element-functions */
 PromiseConstructor.section = 'https://tc39.es/ecma262/#sec-promise-executor';
-function PromiseAllResolveElementFunctions([x = _Value.undefined]) {
+function PromiseAllResolveElementFunctions([x = Value.undefined]) {
   const F = surroundingAgent.activeFunctionObject;
   const alreadyCalled = F.AlreadyCalled;
   if (alreadyCalled.Value === true) {
-    return _Value.undefined;
+    return Value.undefined;
   }
   alreadyCalled.Value = true;
   const index = F.Index;
@@ -42885,18 +42884,18 @@ function PromiseAllResolveElementFunctions([x = _Value.undefined]) {
   remainingElementsCount.Value -= 1;
   if (remainingElementsCount.Value === 0) {
     const valuesArray = CreateArrayFromList(values);
-    return Call(promiseCapability.Resolve, _Value.undefined, [valuesArray]);
+    return Call(promiseCapability.Resolve, Value.undefined, [valuesArray]);
   }
-  return _Value.undefined;
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-getpromiseresolve */
 PromiseAllResolveElementFunctions.section = 'https://tc39.es/ecma262/#sec-promise.all-resolve-element-functions';
 function GetPromiseResolve(promiseConstructor) {
   // 1. Assert: IsConstructor(promiseConstructor) is true.
-  Assert(IsConstructor(promiseConstructor) === _Value.true, "IsConstructor(promiseConstructor) === Value.true");
+  Assert(IsConstructor(promiseConstructor) === Value.true, "IsConstructor(promiseConstructor) === Value.true");
   // 2. Let promiseResolve be ? Get(promiseConstructor, "resolve").
-  let _temp3 = Get(promiseConstructor, _Value('resolve'));
+  let _temp3 = Get(promiseConstructor, Value('resolve'));
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) {
     return _temp3;
@@ -42907,7 +42906,7 @@ function GetPromiseResolve(promiseConstructor) {
   }
   const promiseResolve = _temp3;
   // 3. If IsCallable(promiseResolve) is false, throw a TypeError exception.
-  if (IsCallable(promiseResolve) === _Value.false) {
+  if (IsCallable(promiseResolve) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', promiseResolve);
   }
   // 4. Return promiseResolve.
@@ -42918,11 +42917,11 @@ function GetPromiseResolve(promiseConstructor) {
 GetPromiseResolve.section = 'https://tc39.es/ecma262/#sec-getpromiseresolve';
 function PerformPromiseAll(iteratorRecord, constructor, resultCapability, promiseResolve) {
   // 1. Assert: IsConstructor(constructor) is true.
-  Assert(IsConstructor(constructor) === _Value.true, "IsConstructor(constructor) === Value.true");
+  Assert(IsConstructor(constructor) === Value.true, "IsConstructor(constructor) === Value.true");
   // 2. Assert: resultCapability is a PromiseCapability Record.
   Assert(resultCapability instanceof PromiseCapabilityRecord, "resultCapability instanceof PromiseCapabilityRecord");
   // 3. Assert: IsCallable(promiseResolve) is true.
-  Assert(IsCallable(promiseResolve) === _Value.true, "IsCallable(promiseResolve) === Value.true");
+  Assert(IsCallable(promiseResolve) === Value.true, "IsCallable(promiseResolve) === Value.true");
   // 4. Let values be a new empty List.
   const values = [];
   // 5. Let remainingElementsCount be the Record { [[Value]]: 1 }.
@@ -42937,7 +42936,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability, promis
     let next = IteratorStep(iteratorRecord);
     // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
     if (next instanceof AbruptCompletion) {
-      iteratorRecord.Done = _Value.true;
+      iteratorRecord.Done = Value.true;
     }
     // c. ReturnIfAbrupt(next).
     /* c8 ignore if */
@@ -42949,9 +42948,9 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability, promis
       next = next.Value;
     }
     // d. If next is false, then
-    if (next === _Value.false) {
+    if (next === Value.false) {
       // i. Set iteratorRecord.[[Done]] to true.
-      iteratorRecord.Done = _Value.true;
+      iteratorRecord.Done = Value.true;
       // ii. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] - 1.
       remainingElementsCount.Value -= 1;
       // iii. If remainingElementsCount.[[Value]] is 0, then
@@ -42959,7 +42958,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability, promis
         // 1. Let valuesArray be ! CreateArrayFromList(values).
         const valuesArray = CreateArrayFromList(values);
         // 2. Perform ? Call(resultCapability.[[Resolve]], undefined, « valuesArray »).
-        let _temp4 = Call(resultCapability.Resolve, _Value.undefined, [valuesArray]);
+        let _temp4 = Call(resultCapability.Resolve, Value.undefined, [valuesArray]);
         /* c8 ignore if */
         if (_temp4 instanceof AbruptCompletion) {
           return _temp4;
@@ -42976,7 +42975,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability, promis
     let nextValue = IteratorValue(next);
     // f. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
     if (nextValue instanceof AbruptCompletion) {
-      iteratorRecord.Done = _Value.true;
+      iteratorRecord.Done = Value.true;
     }
     // g. ReturnIfAbrupt(nextValue).
     /* c8 ignore if */
@@ -42988,7 +42987,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability, promis
       nextValue = nextValue.Value;
     }
     // h. Append undefined to values.
-    values.push(_Value.undefined);
+    values.push(Value.undefined);
     // i. Let nextPromise be ? Call(promiseResolve, constructor, « nextValue »).
     let _temp5 = Call(promiseResolve, constructor, [nextValue]);
     /* c8 ignore if */
@@ -43005,7 +43004,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability, promis
     // k. Let length be the number of non-optional parameters of the function definition in Promise.all Resolve Element Functions.
     const length = 1;
     // l. Let onFulfilled be ! CreateBuiltinFunction(steps, length, "", « [[AlreadyCalled]], [[Index]], [[Values]], [[Capability]], [[RemainingElements]] »).
-    let _temp6 = CreateBuiltinFunction(steps, length, _Value(''), ['AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements']);
+    let _temp6 = CreateBuiltinFunction(steps, length, Value(''), ['AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements']);
     Assert(!(_temp6 instanceof AbruptCompletion), "CreateBuiltinFunction(steps, length, Value(''), [\n      'AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements',\n    ])" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp6 instanceof Completion) {
@@ -43027,7 +43026,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability, promis
     // r. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] + 1.
     remainingElementsCount.Value += 1;
     // s. Perform ? Invoke(nextPromise, "then", « onFulfilled, resultCapability.[[Reject]] »).
-    let _temp7 = Invoke(nextPromise, _Value('then'), [onFulfilled, resultCapability.Reject]);
+    let _temp7 = Invoke(nextPromise, Value('then'), [onFulfilled, resultCapability.Reject]);
     /* c8 ignore if */
     if (_temp7 instanceof AbruptCompletion) {
       return _temp7;
@@ -43043,7 +43042,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability, promis
 
 /** https://tc39.es/ecma262/#sec-promise.all */
 PerformPromiseAll.section = 'https://tc39.es/ecma262/#sec-performpromiseall';
-function Promise_all([iterable = _Value.undefined], {
+function Promise_all([iterable = Value.undefined], {
   thisValue
 }) {
   // 1. Let C be the this value.
@@ -43064,7 +43063,7 @@ function Promise_all([iterable = _Value.undefined], {
   // 4. IfAbruptRejectPromise(promiseResolve, promiseCapability).
   /* c8 ignore if */
   if (promiseResolve instanceof AbruptCompletion) {
-    const hygenicTemp2 = Call(promiseCapability.Reject, _Value.undefined, [promiseResolve.Value]);
+    const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [promiseResolve.Value]);
     if (hygenicTemp2 instanceof AbruptCompletion) {
       return hygenicTemp2;
     }
@@ -43079,7 +43078,7 @@ function Promise_all([iterable = _Value.undefined], {
   // 6. IfAbruptRejectPromise(iteratorRecord, promiseCapability).
   /* c8 ignore if */
   if (iteratorRecord instanceof AbruptCompletion) {
-    const hygenicTemp2 = Call(promiseCapability.Reject, _Value.undefined, [iteratorRecord.Value]);
+    const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [iteratorRecord.Value]);
     if (hygenicTemp2 instanceof AbruptCompletion) {
       return hygenicTemp2;
     }
@@ -43094,13 +43093,13 @@ function Promise_all([iterable = _Value.undefined], {
   // 8. If result is an abrupt completion, then
   if (result instanceof AbruptCompletion) {
     // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
-    if (iteratorRecord.Done === _Value.false) {
+    if (iteratorRecord.Done === Value.false) {
       result = IteratorClose(iteratorRecord, result);
     }
     // b. IfAbruptRejectPromise(result, promiseCapability).
     /* c8 ignore if */
     if (result instanceof AbruptCompletion) {
-      const hygenicTemp2 = Call(promiseCapability.Reject, _Value.undefined, [result.Value]);
+      const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [result.Value]);
       if (hygenicTemp2 instanceof AbruptCompletion) {
         return hygenicTemp2;
       }
@@ -43115,11 +43114,11 @@ function Promise_all([iterable = _Value.undefined], {
   return Completion(result);
 }
 Promise_all.section = 'https://tc39.es/ecma262/#sec-promise.all';
-function PromiseAllSettledResolveElementFunctions([x = _Value.undefined]) {
+function PromiseAllSettledResolveElementFunctions([x = Value.undefined]) {
   const F = surroundingAgent.activeFunctionObject;
   const alreadyCalled = F.AlreadyCalled;
   if (alreadyCalled.Value === true) {
-    return _Value.undefined;
+    return Value.undefined;
   }
   alreadyCalled.Value = true;
   const index = F.Index;
@@ -43133,13 +43132,13 @@ function PromiseAllSettledResolveElementFunctions([x = _Value.undefined]) {
     _temp9 = _temp9.Value;
   }
   const obj = _temp9;
-  let _temp10 = CreateDataProperty(obj, _Value('status'), _Value('fulfilled'));
+  let _temp10 = CreateDataProperty(obj, Value('status'), Value('fulfilled'));
   Assert(!(_temp10 instanceof AbruptCompletion), "CreateDataProperty(obj, Value('status'), Value('fulfilled'))" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp10 instanceof Completion) {
     _temp10 = _temp10.Value;
   }
-  let _temp11 = CreateDataProperty(obj, _Value('value'), x);
+  let _temp11 = CreateDataProperty(obj, Value('value'), x);
   Assert(!(_temp11 instanceof AbruptCompletion), "CreateDataProperty(obj, Value('value'), x)" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp11 instanceof Completion) {
@@ -43155,15 +43154,15 @@ function PromiseAllSettledResolveElementFunctions([x = _Value.undefined]) {
       _temp12 = _temp12.Value;
     }
     const valuesArray = _temp12;
-    return Call(promiseCapability.Resolve, _Value.undefined, [valuesArray]);
+    return Call(promiseCapability.Resolve, Value.undefined, [valuesArray]);
   }
-  return _Value.undefined;
+  return Value.undefined;
 }
-function PromiseAllSettledRejectElementFunctions([x = _Value.undefined]) {
+function PromiseAllSettledRejectElementFunctions([x = Value.undefined]) {
   const F = surroundingAgent.activeFunctionObject;
   const alreadyCalled = F.AlreadyCalled;
   if (alreadyCalled.Value === true) {
-    return _Value.undefined;
+    return Value.undefined;
   }
   alreadyCalled.Value = true;
   const index = F.Index;
@@ -43177,13 +43176,13 @@ function PromiseAllSettledRejectElementFunctions([x = _Value.undefined]) {
     _temp13 = _temp13.Value;
   }
   const obj = _temp13;
-  let _temp14 = CreateDataProperty(obj, _Value('status'), _Value('rejected'));
+  let _temp14 = CreateDataProperty(obj, Value('status'), Value('rejected'));
   Assert(!(_temp14 instanceof AbruptCompletion), "CreateDataProperty(obj, Value('status'), Value('rejected'))" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp14 instanceof Completion) {
     _temp14 = _temp14.Value;
   }
-  let _temp15 = CreateDataProperty(obj, _Value('reason'), x);
+  let _temp15 = CreateDataProperty(obj, Value('reason'), x);
   Assert(!(_temp15 instanceof AbruptCompletion), "CreateDataProperty(obj, Value('reason'), x)" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp15 instanceof Completion) {
@@ -43199,14 +43198,14 @@ function PromiseAllSettledRejectElementFunctions([x = _Value.undefined]) {
       _temp16 = _temp16.Value;
     }
     const valuesArray = _temp16;
-    return Call(promiseCapability.Resolve, _Value.undefined, [valuesArray]);
+    return Call(promiseCapability.Resolve, Value.undefined, [valuesArray]);
   }
-  return _Value.undefined;
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-performpromiseallsettled */
 function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability, promiseResolve) {
-  let _temp17 = IsConstructor(constructor) === _Value.true;
+  let _temp17 = IsConstructor(constructor) === Value.true;
   Assert(!(_temp17 instanceof AbruptCompletion), "IsConstructor(constructor) === Value.true" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp17 instanceof Completion) {
@@ -43217,7 +43216,7 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability,
   // 2. Assert: resultCapability is a PromiseCapability Record.
   Assert(resultCapability instanceof PromiseCapabilityRecord, "resultCapability instanceof PromiseCapabilityRecord");
   // 3. Assert: IsCallable(promiseResolve) is true.
-  Assert(IsCallable(promiseResolve) === _Value.true, "IsCallable(promiseResolve) === Value.true");
+  Assert(IsCallable(promiseResolve) === Value.true, "IsCallable(promiseResolve) === Value.true");
   // 4. Let values be a new empty List.
   const values = [];
   // 5. Let remainingElementsCount be the Record { [[Value]]: 1 }.
@@ -43232,7 +43231,7 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability,
     let next = IteratorStep(iteratorRecord);
     // b. Let next be IteratorStep(iteratorRecord).
     if (next instanceof AbruptCompletion) {
-      iteratorRecord.Done = _Value.true;
+      iteratorRecord.Done = Value.true;
     }
     // c. ReturnIfAbrupt(next).
     /* c8 ignore if */
@@ -43244,9 +43243,9 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability,
       next = next.Value;
     }
     // d. If next is false,
-    if (next === _Value.false) {
+    if (next === Value.false) {
       // i. Set iteratorRecord.[[Done]] to true.
-      iteratorRecord.Done = _Value.true;
+      iteratorRecord.Done = Value.true;
       // ii. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] - 1.
       remainingElementsCount.Value -= 1;
       // iii. If remainingElementsCount.[[Value]] is 0, then
@@ -43260,7 +43259,7 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability,
         // 1. Let valuesArray be ! CreateArrayFromList(values).
         const valuesArray = _temp18;
         // 2. Perform ? Call(resultCapability.[[Resolve]], undefined, « valuesArray »).
-        let _temp19 = Call(resultCapability.Resolve, _Value.undefined, [valuesArray]);
+        let _temp19 = Call(resultCapability.Resolve, Value.undefined, [valuesArray]);
         /* c8 ignore if */
         if (_temp19 instanceof AbruptCompletion) {
           return _temp19;
@@ -43277,7 +43276,7 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability,
     let nextValue = IteratorValue(next);
     // f. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
     if (nextValue instanceof AbruptCompletion) {
-      iteratorRecord.Done = _Value.true;
+      iteratorRecord.Done = Value.true;
     }
     // g. ReturnIfAbrupt(nextValue).
     /* c8 ignore if */
@@ -43289,7 +43288,7 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability,
       nextValue = nextValue.Value;
     }
     // h. Append undefined to values.
-    values.push(_Value.undefined);
+    values.push(Value.undefined);
     // i. Let nextPromise be ? Call(promiseResolve, constructor, « nextValue »).
     let _temp20 = Call(promiseResolve, constructor, [nextValue]);
     /* c8 ignore if */
@@ -43306,7 +43305,7 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability,
     // k. Let lengthFulfilled be the number of non-optional parameters of the function definition in Promise.allSettled Resolve Element Functions.
     const lengthFulfilled = 1;
     // l. Let onFulfilled be ! CreateBuiltinFunction(stepsFulfilled, lengthFulfilled, "", « [[AlreadyCalled]], [[Index]], [[Values]], [[Capability]], [[RemainingElements]] »).
-    let _temp21 = CreateBuiltinFunction(stepsFulfilled, lengthFulfilled, _Value(''), ['AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements']);
+    let _temp21 = CreateBuiltinFunction(stepsFulfilled, lengthFulfilled, Value(''), ['AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements']);
     Assert(!(_temp21 instanceof AbruptCompletion), "CreateBuiltinFunction(stepsFulfilled, lengthFulfilled, Value(''), [\n      'AlreadyCalled',\n      'Index',\n      'Values',\n      'Capability',\n      'RemainingElements',\n    ])" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp21 instanceof Completion) {
@@ -43332,7 +43331,7 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability,
     // t. Let lengthRejected be the number of non-optional parameters of the function definition in Promise.allSettled Reject Element Functions.
     const lengthRejected = 1;
     // u. Let onRejected be ! CreateBuiltinFunction(stepsRejected, lengthRejected, "", « [[AlreadyCalled]], [[Index]], [[Values]], [[Capability]], [[RemainingElements]] »).
-    let _temp22 = CreateBuiltinFunction(stepsRejected, lengthRejected, _Value(''), ['AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements']);
+    let _temp22 = CreateBuiltinFunction(stepsRejected, lengthRejected, Value(''), ['AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements']);
     Assert(!(_temp22 instanceof AbruptCompletion), "CreateBuiltinFunction(stepsRejected, lengthRejected, Value(''), [\n      'AlreadyCalled',\n      'Index',\n      'Values',\n      'Capability',\n      'RemainingElements',\n    ])" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp22 instanceof Completion) {
@@ -43352,7 +43351,7 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability,
     // aa. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] + 1.
     remainingElementsCount.Value += 1;
     // ab. Perform ? Invoke(nextPromise, "then", « onFulfilled, onRejected »).
-    let _temp23 = Invoke(nextPromise, _Value('then'), [onFulfilled, onRejected]);
+    let _temp23 = Invoke(nextPromise, Value('then'), [onFulfilled, onRejected]);
     /* c8 ignore if */
     if (_temp23 instanceof AbruptCompletion) {
       return _temp23;
@@ -43368,7 +43367,7 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability,
 
 /** https://tc39.es/ecma262/#sec-promise.allsettled */
 PerformPromiseAllSettled.section = 'https://tc39.es/ecma262/#sec-performpromiseallsettled';
-function Promise_allSettled([iterable = _Value.undefined], {
+function Promise_allSettled([iterable = Value.undefined], {
   thisValue
 }) {
   // 1. Let C be the this value.
@@ -43389,7 +43388,7 @@ function Promise_allSettled([iterable = _Value.undefined], {
   // 4. IfAbruptRejectPromise(promiseResolve, promiseCapability).
   /* c8 ignore if */
   if (promiseResolve instanceof AbruptCompletion) {
-    const hygenicTemp2 = Call(promiseCapability.Reject, _Value.undefined, [promiseResolve.Value]);
+    const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [promiseResolve.Value]);
     if (hygenicTemp2 instanceof AbruptCompletion) {
       return hygenicTemp2;
     }
@@ -43404,7 +43403,7 @@ function Promise_allSettled([iterable = _Value.undefined], {
   // 6. IfAbruptRejectPromise(iteratorRecord, promiseCapability).
   /* c8 ignore if */
   if (iteratorRecord instanceof AbruptCompletion) {
-    const hygenicTemp2 = Call(promiseCapability.Reject, _Value.undefined, [iteratorRecord.Value]);
+    const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [iteratorRecord.Value]);
     if (hygenicTemp2 instanceof AbruptCompletion) {
       return hygenicTemp2;
     }
@@ -43419,13 +43418,13 @@ function Promise_allSettled([iterable = _Value.undefined], {
   // 8. If result is an abrupt completion, then
   if (result instanceof AbruptCompletion) {
     // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
-    if (iteratorRecord.Done === _Value.false) {
+    if (iteratorRecord.Done === Value.false) {
       result = IteratorClose(iteratorRecord, result);
     }
     // b. IfAbruptRejectPromise(result, promiseCapability).
     /* c8 ignore if */
     if (result instanceof AbruptCompletion) {
-      const hygenicTemp2 = Call(promiseCapability.Reject, _Value.undefined, [result.Value]);
+      const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [result.Value]);
       if (hygenicTemp2 instanceof AbruptCompletion) {
         return hygenicTemp2;
       }
@@ -43442,14 +43441,14 @@ function Promise_allSettled([iterable = _Value.undefined], {
 
 /** https://tc39.es/ecma262/#sec-promise.any-reject-element-functions */
 Promise_allSettled.section = 'https://tc39.es/ecma262/#sec-promise.allsettled';
-function PromiseAnyRejectElementFunctions([x = _Value.undefined]) {
+function PromiseAnyRejectElementFunctions([x = Value.undefined]) {
   // 1. Let F be the active function object.
   const F = surroundingAgent.activeFunctionObject;
   // 2. Let alreadyCalled be F.[[AlreadyCalled]].
   const alreadyCalled = F.AlreadyCalled;
   // 3. If alreadyCalled.[[Value]] is true, return undefined.
   if (alreadyCalled.Value) {
-    return _Value.undefined;
+    return Value.undefined;
   }
   // 4. Set alreadyCalled.[[Value]] to true.
   alreadyCalled.Value = true;
@@ -43476,10 +43475,10 @@ function PromiseAnyRejectElementFunctions([x = _Value.undefined]) {
     if (_temp26 instanceof Completion) {
       _temp26 = _temp26.Value;
     }
-    let _temp25 = DefinePropertyOrThrow(error, _Value('errors'), _Descriptor({
-      Configurable: _Value.true,
-      Enumerable: _Value.false,
-      Writable: _Value.true,
+    let _temp25 = DefinePropertyOrThrow(error, Value('errors'), _Descriptor({
+      Configurable: Value.true,
+      Enumerable: Value.false,
+      Writable: Value.true,
       Value: _temp26
     }));
     Assert(!(_temp25 instanceof AbruptCompletion), "DefinePropertyOrThrow(error, Value('errors'), Descriptor({\n      Configurable: Value.true,\n      Enumerable: Value.false,\n      Writable: Value.true,\n      Value: X(CreateArrayFromList(errors)),\n    }))" + ' returned an abrupt completion');
@@ -43488,10 +43487,10 @@ function PromiseAnyRejectElementFunctions([x = _Value.undefined]) {
       _temp25 = _temp25.Value;
     }
     // c. Return ? Call(promiseCapability.[[Reject]], undefined, « error »).
-    return Call(promiseCapability.Reject, _Value.undefined, [error]);
+    return Call(promiseCapability.Reject, Value.undefined, [error]);
   }
   // 12. Return undefined.
-  return _Value.undefined;
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-performpromiseany */
@@ -43504,7 +43503,7 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promis
     _temp27 = _temp27.Value;
   }
   // 1. Assert: ! IsConstructor(constructor) is true.
-  Assert(_temp27 === _Value.true, "X(IsConstructor(constructor)) === Value.true");
+  Assert(_temp27 === Value.true, "X(IsConstructor(constructor)) === Value.true");
   // 2. Assert: resultCapability is a PromiseCapability Record.
   Assert(resultCapability instanceof PromiseCapabilityRecord, "resultCapability instanceof PromiseCapabilityRecord");
   // 3. Assert: ! IsCallable(promiseResolve) is true.
@@ -43514,7 +43513,7 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promis
   if (_temp28 instanceof Completion) {
     _temp28 = _temp28.Value;
   }
-  Assert(_temp28 === _Value.true, "X(IsCallable(promiseResolve)) === Value.true");
+  Assert(_temp28 === Value.true, "X(IsCallable(promiseResolve)) === Value.true");
   // 4. Let errors be a new empty List.
   const errors = [];
   // 5. Let remainingElementsCount be a new Record { [[Value]]: 1 }.
@@ -43529,7 +43528,7 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promis
     let next = IteratorStep(iteratorRecord);
     // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
     if (next instanceof AbruptCompletion) {
-      iteratorRecord.Done = _Value.true;
+      iteratorRecord.Done = Value.true;
     }
     // c. ReturnIfAbrupt(next).
     /* c8 ignore if */
@@ -43541,9 +43540,9 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promis
       next = next.Value;
     }
     // d. If next is false, then
-    if (next === _Value.false) {
+    if (next === Value.false) {
       // i. Set iteratorRecord.[[Done]] to true.
-      iteratorRecord.Done = _Value.true;
+      iteratorRecord.Done = Value.true;
       // ii. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] - 1.
       remainingElementsCount.Value -= 1;
       // iii. If remainingElementsCount.[[Value]] is 0, then
@@ -43557,10 +43556,10 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promis
         if (_temp30 instanceof Completion) {
           _temp30 = _temp30.Value;
         }
-        let _temp29 = DefinePropertyOrThrow(error, _Value('errors'), _Descriptor({
-          Configurable: _Value.true,
-          Enumerable: _Value.false,
-          Writable: _Value.true,
+        let _temp29 = DefinePropertyOrThrow(error, Value('errors'), _Descriptor({
+          Configurable: Value.true,
+          Enumerable: Value.false,
+          Writable: Value.true,
           Value: _temp30
         }));
         Assert(!(_temp29 instanceof AbruptCompletion), "DefinePropertyOrThrow(error, Value('errors'), Descriptor({\n          Configurable: Value.true,\n          Enumerable: Value.false,\n          Writable: Value.true,\n          Value: X(CreateArrayFromList(errors)),\n        }))" + ' returned an abrupt completion');
@@ -43578,7 +43577,7 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promis
     let nextValue = IteratorValue(next);
     // f. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
     if (nextValue instanceof AbruptCompletion) {
-      iteratorRecord.Done = _Value.true;
+      iteratorRecord.Done = Value.true;
     }
     // g. ReturnIfAbrupt(nextValue).
     /* c8 ignore if */
@@ -43590,7 +43589,7 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promis
       nextValue = nextValue.Value;
     }
     // h. Append undefined to errors.
-    errors.push(_Value.undefined);
+    errors.push(Value.undefined);
     // i. Let nextPromise be ? Call(promiseResolve, constructor, « nextValue »).
     let _temp31 = Call(promiseResolve, constructor, [nextValue]);
     /* c8 ignore if */
@@ -43607,7 +43606,7 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promis
     // k. Let lengthRejected be the number of non-optional parameters of the function definition in Promise.any Reject Element Functions.
     const lengthRejected = 1;
     // l. Let onRejected be ! CreateBuiltinFunction(stepsRejected, lengthRejected, "", « [[AlreadyCalled]], [[Index]], [[Errors]], [[Capability]], [[RemainingElements]] »).
-    let _temp32 = CreateBuiltinFunction(stepsRejected, lengthRejected, _Value(''), ['AlreadyCalled', 'Index', 'Errors', 'Capability', 'RemainingElements']);
+    let _temp32 = CreateBuiltinFunction(stepsRejected, lengthRejected, Value(''), ['AlreadyCalled', 'Index', 'Errors', 'Capability', 'RemainingElements']);
     Assert(!(_temp32 instanceof AbruptCompletion), "CreateBuiltinFunction(stepsRejected, lengthRejected, Value(''), ['AlreadyCalled', 'Index', 'Errors', 'Capability', 'RemainingElements'])" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp32 instanceof Completion) {
@@ -43629,7 +43628,7 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promis
     // r. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] + 1.
     remainingElementsCount.Value += 1;
     // s. Perform ? Invoke(nextPromise, "then", « resultCapability.[[Resolve]], onRejected »).
-    let _temp33 = Invoke(nextPromise, _Value('then'), [resultCapability.Resolve, onRejected]);
+    let _temp33 = Invoke(nextPromise, Value('then'), [resultCapability.Resolve, onRejected]);
     /* c8 ignore if */
     if (_temp33 instanceof AbruptCompletion) {
       return _temp33;
@@ -43645,7 +43644,7 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promis
 
 /** https://tc39.es/ecma262/#sec-promise.any */
 PerformPromiseAny.section = 'https://tc39.es/ecma262/#sec-performpromiseany';
-function Promise_any([iterable = _Value.undefined], {
+function Promise_any([iterable = Value.undefined], {
   thisValue
 }) {
   // 1. Let C be the this value.
@@ -43666,7 +43665,7 @@ function Promise_any([iterable = _Value.undefined], {
   // 4. IfAbruptRejectPromise(promiseResolve, promiseCapability).
   /* c8 ignore if */
   if (promiseResolve instanceof AbruptCompletion) {
-    const hygenicTemp2 = Call(promiseCapability.Reject, _Value.undefined, [promiseResolve.Value]);
+    const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [promiseResolve.Value]);
     if (hygenicTemp2 instanceof AbruptCompletion) {
       return hygenicTemp2;
     }
@@ -43681,7 +43680,7 @@ function Promise_any([iterable = _Value.undefined], {
   // 6. IfAbruptRejectPromise(iteratorRecord, promiseCapability).
   /* c8 ignore if */
   if (iteratorRecord instanceof AbruptCompletion) {
-    const hygenicTemp2 = Call(promiseCapability.Reject, _Value.undefined, [iteratorRecord.Value]);
+    const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [iteratorRecord.Value]);
     if (hygenicTemp2 instanceof AbruptCompletion) {
       return hygenicTemp2;
     }
@@ -43696,13 +43695,13 @@ function Promise_any([iterable = _Value.undefined], {
   // 8. If result is an abrupt completion, then
   if (result instanceof AbruptCompletion) {
     // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
-    if (iteratorRecord.Done === _Value.false) {
+    if (iteratorRecord.Done === Value.false) {
       result = IteratorClose(iteratorRecord, result);
     }
     // b. IfAbruptRejectPromise(result, promiseCapability).
     /* c8 ignore if */
     if (result instanceof AbruptCompletion) {
-      const hygenicTemp2 = Call(promiseCapability.Reject, _Value.undefined, [result.Value]);
+      const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [result.Value]);
       if (hygenicTemp2 instanceof AbruptCompletion) {
         return hygenicTemp2;
       }
@@ -43719,18 +43718,18 @@ function Promise_any([iterable = _Value.undefined], {
 Promise_any.section = 'https://tc39.es/ecma262/#sec-promise.any';
 function PerformPromiseRace(iteratorRecord, constructor, resultCapability, promiseResolve) {
   // 1. Assert: IsConstructor(constructor) is true.
-  Assert(IsConstructor(constructor) === _Value.true, "IsConstructor(constructor) === Value.true");
+  Assert(IsConstructor(constructor) === Value.true, "IsConstructor(constructor) === Value.true");
   // 2. Assert: resultCapability is a PromiseCapability Record.
   Assert(resultCapability instanceof PromiseCapabilityRecord, "resultCapability instanceof PromiseCapabilityRecord");
   // 3. Assert: IsCallable(promiseResolve) is true.
-  Assert(IsCallable(promiseResolve) === _Value.true, "IsCallable(promiseResolve) === Value.true");
+  Assert(IsCallable(promiseResolve) === Value.true, "IsCallable(promiseResolve) === Value.true");
   // 4. Repeat,
   while (true) {
     // a. Let next be IteratorStep(iteratorRecord).
     let next = IteratorStep(iteratorRecord);
     // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
     if (next instanceof AbruptCompletion) {
-      iteratorRecord.Done = _Value.true;
+      iteratorRecord.Done = Value.true;
     }
     // c. ReturnIfAbrupt(next).
     /* c8 ignore if */
@@ -43742,9 +43741,9 @@ function PerformPromiseRace(iteratorRecord, constructor, resultCapability, promi
       next = next.Value;
     }
     // d. If next is false, then
-    if (next === _Value.false) {
+    if (next === Value.false) {
       // i. Set iteratorRecord.[[Done]] to true.
-      iteratorRecord.Done = _Value.true;
+      iteratorRecord.Done = Value.true;
       // ii. Return resultCapability.[[Promise]].
       return resultCapability.Promise;
     }
@@ -43752,7 +43751,7 @@ function PerformPromiseRace(iteratorRecord, constructor, resultCapability, promi
     let nextValue = IteratorValue(next);
     // f. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
     if (nextValue instanceof AbruptCompletion) {
-      iteratorRecord.Done = _Value.true;
+      iteratorRecord.Done = Value.true;
     }
     // g. ReturnIfAbrupt(nextValue).
     /* c8 ignore if */
@@ -43775,7 +43774,7 @@ function PerformPromiseRace(iteratorRecord, constructor, resultCapability, promi
     }
     const nextPromise = _temp35;
     // i. Perform ? Invoke(nextPromise, "then", « resultCapability.[[Resolve]], resultCapability.[[Reject]] »).
-    let _temp36 = Invoke(nextPromise, _Value('then'), [resultCapability.Resolve, resultCapability.Reject]);
+    let _temp36 = Invoke(nextPromise, Value('then'), [resultCapability.Resolve, resultCapability.Reject]);
     /* c8 ignore if */
     if (_temp36 instanceof AbruptCompletion) {
       return _temp36;
@@ -43788,7 +43787,7 @@ function PerformPromiseRace(iteratorRecord, constructor, resultCapability, promi
 }
 
 /** https://tc39.es/ecma262/#sec-promise.race */
-function Promise_race([iterable = _Value.undefined], {
+function Promise_race([iterable = Value.undefined], {
   thisValue
 }) {
   // 1. Let C be the this value.
@@ -43809,7 +43808,7 @@ function Promise_race([iterable = _Value.undefined], {
   // 4. IfAbruptRejectPromise(promiseResolve, promiseCapability).
   /* c8 ignore if */
   if (promiseResolve instanceof AbruptCompletion) {
-    const hygenicTemp2 = Call(promiseCapability.Reject, _Value.undefined, [promiseResolve.Value]);
+    const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [promiseResolve.Value]);
     if (hygenicTemp2 instanceof AbruptCompletion) {
       return hygenicTemp2;
     }
@@ -43824,7 +43823,7 @@ function Promise_race([iterable = _Value.undefined], {
   // 6. IfAbruptRejectPromise(iteratorRecord, promiseCapability).
   /* c8 ignore if */
   if (iteratorRecord instanceof AbruptCompletion) {
-    const hygenicTemp2 = Call(promiseCapability.Reject, _Value.undefined, [iteratorRecord.Value]);
+    const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [iteratorRecord.Value]);
     if (hygenicTemp2 instanceof AbruptCompletion) {
       return hygenicTemp2;
     }
@@ -43839,13 +43838,13 @@ function Promise_race([iterable = _Value.undefined], {
   // 8. If result is an abrupt completion, then
   if (result instanceof AbruptCompletion) {
     // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
-    if (iteratorRecord.Done === _Value.false) {
+    if (iteratorRecord.Done === Value.false) {
       result = IteratorClose(iteratorRecord, result);
     }
     // b. IfAbruptRejectPromise(result, promiseCapability).
     /* c8 ignore if */
     if (result instanceof AbruptCompletion) {
-      const hygenicTemp2 = Call(promiseCapability.Reject, _Value.undefined, [result.Value]);
+      const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [result.Value]);
       if (hygenicTemp2 instanceof AbruptCompletion) {
         return hygenicTemp2;
       }
@@ -43862,7 +43861,7 @@ function Promise_race([iterable = _Value.undefined], {
 
 /** https://tc39.es/ecma262/#sec-promise.reject */
 Promise_race.section = 'https://tc39.es/ecma262/#sec-promise.race';
-function Promise_reject([r = _Value.undefined], {
+function Promise_reject([r = Value.undefined], {
   thisValue
 }) {
   // 1. Let C be this value.
@@ -43879,7 +43878,7 @@ function Promise_reject([r = _Value.undefined], {
   }
   const promiseCapability = _temp38;
   // 3. Perform ? Call(promiseCapability.[[Reject]], undefined, « r »).
-  let _temp39 = Call(promiseCapability.Reject, _Value.undefined, [r]);
+  let _temp39 = Call(promiseCapability.Reject, Value.undefined, [r]);
   /* c8 ignore if */
   if (_temp39 instanceof AbruptCompletion) {
     return _temp39;
@@ -43894,7 +43893,7 @@ function Promise_reject([r = _Value.undefined], {
 
 /** https://tc39.es/ecma262/#sec-promise.resolve */
 Promise_reject.section = 'https://tc39.es/ecma262/#sec-promise.reject';
-function Promise_resolve([x = _Value.undefined], {
+function Promise_resolve([x = Value.undefined], {
   thisValue
 }) {
   // 1. Let C be the this value.
@@ -43918,20 +43917,20 @@ function Promise_symbolSpecies(args, {
 Promise_symbolSpecies.section = 'https://tc39.es/ecma262/#sec-get-promise-@@species';
 function bootstrapPromise(realmRec) {
   const promiseConstructor = bootstrapConstructor(realmRec, PromiseConstructor, 'Promise', 1, realmRec.Intrinsics['%Promise.prototype%'], [['all', Promise_all, 1], ['allSettled', Promise_allSettled, 1], ['any', Promise_any, 1], ['race', Promise_race, 1], ['reject', Promise_reject, 1], ['resolve', Promise_resolve, 1], [wellKnownSymbols.species, [Promise_symbolSpecies]]]);
-  promiseConstructor.DefineOwnProperty(_Value('prototype'), _Descriptor({
-    Writable: _Value.false,
-    Enumerable: _Value.false,
-    Configurable: _Value.false
+  promiseConstructor.DefineOwnProperty(Value('prototype'), _Descriptor({
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.false
   }));
   realmRec.Intrinsics['%Promise%'] = promiseConstructor;
 }
 
 /** https://tc39.es/ecma262/#sec-proxy-target-handler */
-function ProxyConstructor([target = _Value.undefined, handler = _Value.undefined], {
+function ProxyConstructor([target = Value.undefined, handler = Value.undefined], {
   NewTarget
 }) {
   // 1. f NewTarget is undefined, throw a TypeError exception.
-  if (NewTarget === _Value.undefined) {
+  if (NewTarget === Value.undefined) {
     return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
   // 2. Return ? ProxyCreate(target, handler).
@@ -43946,24 +43945,24 @@ function ProxyRevocationFunctions() {
   // 2. Let p be F.[[RevocableProxy]].
   const p = F.RevocableProxy;
   // 3. If p is null, return undefined.
-  if (p === _Value.null) {
-    return _Value.undefined;
+  if (p === Value.null) {
+    return Value.undefined;
   }
   // 4. Set F.[[RevocableProxy]] to null.
-  F.RevocableProxy = _Value.null;
+  F.RevocableProxy = Value.null;
   // 5. Assert: p is a Proxy object.
   Assert(isProxyExoticObject(p), "isProxyExoticObject(p)");
   // 6. Set p.[[ProxyTarget]] to null.
-  p.ProxyTarget = _Value.null;
+  p.ProxyTarget = Value.null;
   // 7. Set p.[[ProxyHandler]] to null.
-  p.ProxyHandler = _Value.null;
+  p.ProxyHandler = Value.null;
   // 8. Return undefined.
-  return _Value.undefined;
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-proxy.revocable */
 ProxyRevocationFunctions.section = 'https://tc39.es/ecma262/#sec-proxy-revocation-functions';
-function Proxy_revocable([target = _Value.undefined, handler = _Value.undefined]) {
+function Proxy_revocable([target = Value.undefined, handler = Value.undefined]) {
   let _temp = ProxyCreate(target, handler);
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) {
@@ -43980,7 +43979,7 @@ function Proxy_revocable([target = _Value.undefined, handler = _Value.undefined]
   // 3. Let length be the number of non-optional parameters of the function definition in Proxy Revocation Functions.
   const length = 0;
   // 4. Let revoker be ! CreateBuiltinFunction(steps, length, "", « [[RevocableProxy]] »).
-  let _temp2 = CreateBuiltinFunction(steps, length, _Value(''), ['RevocableProxy']);
+  let _temp2 = CreateBuiltinFunction(steps, length, Value(''), ['RevocableProxy']);
   Assert(!(_temp2 instanceof AbruptCompletion), "CreateBuiltinFunction(steps, length, Value(''), ['RevocableProxy'])" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp2 instanceof Completion) {
@@ -43992,14 +43991,14 @@ function Proxy_revocable([target = _Value.undefined, handler = _Value.undefined]
   // 6. Let result be OrdinaryObjectCreate(%Object.prototype%).
   const result = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   // 7. Perform ! CreateDataPropertyOrThrow(result, "proxy", p).
-  let _temp3 = CreateDataProperty(result, _Value('proxy'), p);
+  let _temp3 = CreateDataProperty(result, Value('proxy'), p);
   Assert(!(_temp3 instanceof AbruptCompletion), "CreateDataProperty(result, Value('proxy'), p)" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp3 instanceof Completion) {
     _temp3 = _temp3.Value;
   }
   // 8. Perform ! CreateDataPropertyOrThrow(result, "revoke", revoker).
-  let _temp4 = CreateDataProperty(result, _Value('revoke'), revoker);
+  let _temp4 = CreateDataProperty(result, Value('revoke'), revoker);
   Assert(!(_temp4 instanceof AbruptCompletion), "CreateDataProperty(result, Value('revoke'), revoker)" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp4 instanceof Completion) {
@@ -44010,15 +44009,15 @@ function Proxy_revocable([target = _Value.undefined, handler = _Value.undefined]
 }
 Proxy_revocable.section = 'https://tc39.es/ecma262/#sec-proxy.revocable';
 function bootstrapProxy(realmRec) {
-  const proxyConstructor = CreateBuiltinFunction(ProxyConstructor, 2, _Value('Proxy'), [], realmRec, undefined, undefined, _Value.true);
+  const proxyConstructor = CreateBuiltinFunction(ProxyConstructor, 2, Value('Proxy'), [], realmRec, undefined, undefined, Value.true);
   assignProps(realmRec, proxyConstructor, [['revocable', Proxy_revocable, 2]]);
   realmRec.Intrinsics['%Proxy%'] = proxyConstructor;
 }
 
 /** https://tc39.es/ecma262/#sec-reflect.apply */
-function Reflect_apply([target = _Value.undefined, thisArgument = _Value.undefined, argumentsList = _Value.undefined]) {
+function Reflect_apply([target = Value.undefined, thisArgument = Value.undefined, argumentsList = Value.undefined]) {
   // 1. If IsCallable(target) is false, throw a TypeError exception.
-  if (IsCallable(target) === _Value.false) {
+  if (IsCallable(target) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', target);
   }
   // 2. Let args be ? CreateListFromArrayLike(argumentsList).
@@ -44040,15 +44039,15 @@ function Reflect_apply([target = _Value.undefined, thisArgument = _Value.undefin
 
 /** https://tc39.es/ecma262/#sec-reflect.construct */
 Reflect_apply.section = 'https://tc39.es/ecma262/#sec-reflect.apply';
-function Reflect_construct([target = _Value.undefined, argumentsList = _Value.undefined, newTarget]) {
+function Reflect_construct([target = Value.undefined, argumentsList = Value.undefined, newTarget]) {
   // 1. If IsConstructor(target) is false, throw a TypeError exception.
-  if (IsConstructor(target) === _Value.false) {
+  if (IsConstructor(target) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', target);
   }
   // 2. If newTarget is not present, set newTarget to target.
   if (newTarget === undefined) {
     newTarget = target;
-  } else if (IsConstructor(newTarget) === _Value.false) {
+  } else if (IsConstructor(newTarget) === Value.false) {
     // 3. Else if IsConstructor(newTarget) is false, throw a TypeError exception.
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', newTarget);
   }
@@ -44069,7 +44068,7 @@ function Reflect_construct([target = _Value.undefined, argumentsList = _Value.un
 
 /** https://tc39.es/ecma262/#sec-reflect.defineproperty */
 Reflect_construct.section = 'https://tc39.es/ecma262/#sec-reflect.construct';
-function Reflect_defineProperty([target = _Value.undefined, propertyKey = _Value.undefined, attributes = _Value.undefined]) {
+function Reflect_defineProperty([target = Value.undefined, propertyKey = Value.undefined, attributes = Value.undefined]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
@@ -44102,7 +44101,7 @@ function Reflect_defineProperty([target = _Value.undefined, propertyKey = _Value
 
 /** https://tc39.es/ecma262/#sec-reflect.deleteproperty */
 Reflect_defineProperty.section = 'https://tc39.es/ecma262/#sec-reflect.defineproperty';
-function Reflect_deleteProperty([target = _Value.undefined, propertyKey = _Value.undefined]) {
+function Reflect_deleteProperty([target = Value.undefined, propertyKey = Value.undefined]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
@@ -44124,7 +44123,7 @@ function Reflect_deleteProperty([target = _Value.undefined, propertyKey = _Value
 
 /** https://tc39.es/ecma262/#sec-reflect.get */
 Reflect_deleteProperty.section = 'https://tc39.es/ecma262/#sec-reflect.deleteproperty';
-function Reflect_get([target = _Value.undefined, propertyKey = _Value.undefined, receiver]) {
+function Reflect_get([target = Value.undefined, propertyKey = Value.undefined, receiver]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
@@ -44151,7 +44150,7 @@ function Reflect_get([target = _Value.undefined, propertyKey = _Value.undefined,
 
 /** https://tc39.es/ecma262/#sec-reflect.getownpropertydescriptor */
 Reflect_get.section = 'https://tc39.es/ecma262/#sec-reflect.get';
-function Reflect_getOwnPropertyDescriptor([target = _Value.undefined, propertyKey = _Value.undefined]) {
+function Reflect_getOwnPropertyDescriptor([target = Value.undefined, propertyKey = Value.undefined]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
@@ -44184,7 +44183,7 @@ function Reflect_getOwnPropertyDescriptor([target = _Value.undefined, propertyKe
 
 /** https://tc39.es/ecma262/#sec-reflect.getprototypeof */
 Reflect_getOwnPropertyDescriptor.section = 'https://tc39.es/ecma262/#sec-reflect.getownpropertydescriptor';
-function Reflect_getPrototypeOf([target = _Value.undefined]) {
+function Reflect_getPrototypeOf([target = Value.undefined]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
@@ -44195,7 +44194,7 @@ function Reflect_getPrototypeOf([target = _Value.undefined]) {
 
 /** https://tc39.es/ecma262/#sec-reflect.has */
 Reflect_getPrototypeOf.section = 'https://tc39.es/ecma262/#sec-reflect.getprototypeof';
-function Reflect_has([target = _Value.undefined, propertyKey = _Value.undefined]) {
+function Reflect_has([target = Value.undefined, propertyKey = Value.undefined]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
@@ -44217,7 +44216,7 @@ function Reflect_has([target = _Value.undefined, propertyKey = _Value.undefined]
 
 /** https://tc39.es/ecma262/#sec-reflect.isextensible */
 Reflect_has.section = 'https://tc39.es/ecma262/#sec-reflect.has';
-function Reflect_isExtensible([target = _Value.undefined]) {
+function Reflect_isExtensible([target = Value.undefined]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
@@ -44228,7 +44227,7 @@ function Reflect_isExtensible([target = _Value.undefined]) {
 
 /** https://tc39.es/ecma262/#sec-reflect.ownkeys */
 Reflect_isExtensible.section = 'https://tc39.es/ecma262/#sec-reflect.isextensible';
-function Reflect_ownKeys([target = _Value.undefined]) {
+function Reflect_ownKeys([target = Value.undefined]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
@@ -44250,7 +44249,7 @@ function Reflect_ownKeys([target = _Value.undefined]) {
 
 /** https://tc39.es/ecma262/#sec-reflect.preventextensions */
 Reflect_ownKeys.section = 'https://tc39.es/ecma262/#sec-reflect.ownkeys';
-function Reflect_preventExtensions([target = _Value.undefined]) {
+function Reflect_preventExtensions([target = Value.undefined]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
@@ -44261,7 +44260,7 @@ function Reflect_preventExtensions([target = _Value.undefined]) {
 
 /** https://tc39.es/ecma262/#sec-reflect.set */
 Reflect_preventExtensions.section = 'https://tc39.es/ecma262/#sec-reflect.preventextensions';
-function Reflect_set([target = _Value.undefined, propertyKey = _Value.undefined, V = _Value.undefined, receiver]) {
+function Reflect_set([target = Value.undefined, propertyKey = Value.undefined, V = Value.undefined, receiver]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
@@ -44287,13 +44286,13 @@ function Reflect_set([target = _Value.undefined, propertyKey = _Value.undefined,
 
 /** https://tc39.es/ecma262/#sec-reflect.setprototypeof */
 Reflect_set.section = 'https://tc39.es/ecma262/#sec-reflect.set';
-function Reflect_setPrototypeOf([target = _Value.undefined, proto = _Value.undefined]) {
+function Reflect_setPrototypeOf([target = Value.undefined, proto = Value.undefined]) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
   // 2. If Type(proto) is not Object and proto is not null, throw a TypeError exception.
-  if (!(proto instanceof ObjectValue) && proto !== _Value.null) {
+  if (!(proto instanceof ObjectValue) && proto !== Value.null) {
     return surroundingAgent.Throw('TypeError', 'ObjectPrototypeType');
   }
   // 3. Return ? target.[[SetPrototypeOf]](proto).
@@ -44306,19 +44305,19 @@ function bootstrapReflect(realmRec) {
 }
 
 function thisStringValue(value) {
-  if (value instanceof StringValue) {
+  if (value instanceof JSStringValue) {
     return value;
   }
   if (value instanceof ObjectValue && 'StringData' in value) {
     const s = value.StringData;
-    Assert(s instanceof StringValue, "s instanceof JSStringValue");
+    Assert(s instanceof JSStringValue, "s instanceof JSStringValue");
     return s;
   }
   return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'String', value);
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.charat */
-function StringProto_charAt([pos = _Value.undefined], {
+function StringProto_charAt([pos = Value.undefined], {
   thisValue
 }) {
   let _temp = RequireObjectCoercible(thisValue);
@@ -44353,14 +44352,14 @@ function StringProto_charAt([pos = _Value.undefined], {
   const position = _temp3;
   const size = S.stringValue().length;
   if (position < 0 || position >= size) {
-    return _Value('');
+    return Value('');
   }
-  return _Value(S.stringValue()[position]);
+  return Value(S.stringValue()[position]);
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.charcodeat */
 StringProto_charAt.section = 'https://tc39.es/ecma262/#sec-string.prototype.charat';
-function StringProto_charCodeAt([pos = _Value.undefined], {
+function StringProto_charCodeAt([pos = Value.undefined], {
   thisValue
 }) {
   let _temp4 = RequireObjectCoercible(thisValue);
@@ -44402,7 +44401,7 @@ function StringProto_charCodeAt([pos = _Value.undefined], {
 
 /** https://tc39.es/ecma262/#sec-string.prototype.codepointat */
 StringProto_charCodeAt.section = 'https://tc39.es/ecma262/#sec-string.prototype.charcodeat';
-function StringProto_codePointAt([pos = _Value.undefined], {
+function StringProto_codePointAt([pos = Value.undefined], {
   thisValue
 }) {
   let _temp7 = RequireObjectCoercible(thisValue);
@@ -44437,7 +44436,7 @@ function StringProto_codePointAt([pos = _Value.undefined], {
   const position = _temp9;
   const size = S.stringValue().length;
   if (position < 0 || position >= size) {
-    return _Value.undefined;
+    return Value.undefined;
   }
   let _temp10 = CodePointAt(S.stringValue(), position);
   Assert(!(_temp10 instanceof AbruptCompletion), "CodePointAt(S.stringValue(), position)" + ' returned an abrupt completion');
@@ -44489,12 +44488,12 @@ function StringProto_concat(args, {
     const nextString = _temp13;
     R = `${R}${nextString.stringValue()}`;
   }
-  return _Value(R);
+  return Value(R);
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.endswith */
 StringProto_concat.section = 'https://tc39.es/ecma262/#sec-string.prototype.concat';
-function StringProto_endsWith([searchString = _Value.undefined, endPosition = _Value.undefined], {
+function StringProto_endsWith([searchString = Value.undefined, endPosition = Value.undefined], {
   thisValue
 }) {
   let _temp14 = RequireObjectCoercible(thisValue);
@@ -44527,7 +44526,7 @@ function StringProto_endsWith([searchString = _Value.undefined, endPosition = _V
     _temp16 = _temp16.Value;
   }
   const isRegExp = _temp16;
-  if (isRegExp === _Value.true) {
+  if (isRegExp === Value.true) {
     return surroundingAgent.Throw('TypeError', 'RegExpArgumentNotAllowed', 'String.prototype.endsWith');
   }
   let _temp17 = ToString(searchString);
@@ -44542,7 +44541,7 @@ function StringProto_endsWith([searchString = _Value.undefined, endPosition = _V
   const searchStr = _temp17.stringValue();
   const len = S.length;
   let pos;
-  if (endPosition === _Value.undefined) {
+  if (endPosition === Value.undefined) {
     pos = len;
   } else {
     let _temp18 = ToIntegerOrInfinity(endPosition);
@@ -44560,19 +44559,19 @@ function StringProto_endsWith([searchString = _Value.undefined, endPosition = _V
   const searchLength = searchStr.length;
   const start = end - searchLength;
   if (start < 0) {
-    return _Value.false;
+    return Value.false;
   }
   for (let i = 0; i < searchLength; i += 1) {
     if (S.charCodeAt(start + i) !== searchStr.charCodeAt(i)) {
-      return _Value.false;
+      return Value.false;
     }
   }
-  return _Value.true;
+  return Value.true;
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.includes */
 StringProto_endsWith.section = 'https://tc39.es/ecma262/#sec-string.prototype.endswith';
-function StringProto_includes([searchString = _Value.undefined, position = _Value.undefined], {
+function StringProto_includes([searchString = Value.undefined, position = Value.undefined], {
   thisValue
 }) {
   let _temp19 = RequireObjectCoercible(thisValue);
@@ -44605,7 +44604,7 @@ function StringProto_includes([searchString = _Value.undefined, position = _Valu
     _temp21 = _temp21.Value;
   }
   const isRegExp = _temp21;
-  if (isRegExp === _Value.true) {
+  if (isRegExp === Value.true) {
     return surroundingAgent.Throw('TypeError', 'RegExpArgumentNotAllowed', 'String.prototype.includes');
   }
   let _temp22 = ToString(searchString);
@@ -44628,7 +44627,7 @@ function StringProto_includes([searchString = _Value.undefined, position = _Valu
     _temp23 = _temp23.Value;
   }
   const pos = _temp23;
-  Assert(!(position === _Value.undefined) || pos === 0, "!(position === Value.undefined) || pos === 0");
+  Assert(!(position === Value.undefined) || pos === 0, "!(position === Value.undefined) || pos === 0");
   const len = S.length;
   const start = Math.min(Math.max(pos, 0), len);
   const searchLen = searchStr.length;
@@ -44642,16 +44641,16 @@ function StringProto_includes([searchString = _Value.undefined, position = _Valu
       }
     }
     if (match) {
-      return _Value.true;
+      return Value.true;
     }
     k += 1;
   }
-  return _Value.false;
+  return Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.indexof */
 StringProto_includes.section = 'https://tc39.es/ecma262/#sec-string.prototype.includes';
-function StringProto_indexOf([searchString = _Value.undefined, position = _Value.undefined], {
+function StringProto_indexOf([searchString = Value.undefined, position = Value.undefined], {
   thisValue
 }) {
   let _temp24 = RequireObjectCoercible(thisValue);
@@ -44699,7 +44698,7 @@ function StringProto_indexOf([searchString = _Value.undefined, position = _Value
   }
   const pos = _temp27;
   // 5. Assert: If position is undefined, then pos is 0.
-  Assert(!(position === _Value.undefined) || pos === 0, "!(position === Value.undefined) || pos === 0");
+  Assert(!(position === Value.undefined) || pos === 0, "!(position === Value.undefined) || pos === 0");
   // 6. Let len be the length of S.
   const len = S.stringValue().length;
   // 7. Let start be min(max(pos, 0), len).
@@ -44742,12 +44741,12 @@ function StringProto_isWellFormed(args, {
   }
   const S = _temp30;
   // 3. Return IsStringWellFormedUnicode(S).
-  return IsStringWellFormedUnicode(S) ? _Value.true : _Value.false;
+  return IsStringWellFormedUnicode(S) ? Value.true : Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.lastindexof */
 StringProto_isWellFormed.section = 'https://tc39.es/proposal-is-usv-string/#sec-string.prototype.iswellformed';
-function StringProto_lastIndexOf([searchString = _Value.undefined, position = _Value.undefined], {
+function StringProto_lastIndexOf([searchString = Value.undefined, position = Value.undefined], {
   thisValue
 }) {
   let _temp31 = RequireObjectCoercible(thisValue);
@@ -44790,7 +44789,7 @@ function StringProto_lastIndexOf([searchString = _Value.undefined, position = _V
     _temp34 = _temp34.Value;
   }
   const numPos = _temp34;
-  Assert(!(position === _Value.undefined) || numPos.isNaN(), "!(position === Value.undefined) || numPos.isNaN()");
+  Assert(!(position === Value.undefined) || numPos.isNaN(), "!(position === Value.undefined) || numPos.isNaN()");
   let pos;
   if (numPos.isNaN()) {
     pos = Infinity;
@@ -44827,7 +44826,7 @@ function StringProto_lastIndexOf([searchString = _Value.undefined, position = _V
 
 /** https://tc39.es/ecma262/#sec-string.prototype.localecompare */
 StringProto_lastIndexOf.section = 'https://tc39.es/ecma262/#sec-string.prototype.lastindexof';
-function StringProto_localeCompare([that = _Value.undefined], {
+function StringProto_localeCompare([that = Value.undefined], {
   thisValue
 }) {
   let _temp36 = RequireObjectCoercible(thisValue);
@@ -44871,7 +44870,7 @@ function StringProto_localeCompare([that = _Value.undefined], {
 
 /** https://tc39.es/ecma262/#sec-string.prototype.match */
 StringProto_localeCompare.section = 'https://tc39.es/ecma262/#sec-string.prototype.localecompare';
-function StringProto_match([regexp = _Value.undefined], {
+function StringProto_match([regexp = Value.undefined], {
   thisValue
 }) {
   let _temp39 = RequireObjectCoercible(thisValue);
@@ -44884,7 +44883,7 @@ function StringProto_match([regexp = _Value.undefined], {
     _temp39 = _temp39.Value;
   }
   const O = _temp39;
-  if (regexp !== _Value.undefined && regexp !== _Value.null) {
+  if (regexp !== Value.undefined && regexp !== Value.null) {
     let _temp40 = GetMethod(regexp, wellKnownSymbols.match);
     /* c8 ignore if */
     if (_temp40 instanceof AbruptCompletion) {
@@ -44895,7 +44894,7 @@ function StringProto_match([regexp = _Value.undefined], {
       _temp40 = _temp40.Value;
     }
     const matcher = _temp40;
-    if (matcher !== _Value.undefined) {
+    if (matcher !== Value.undefined) {
       return Call(matcher, regexp, [O]);
     }
   }
@@ -44909,7 +44908,7 @@ function StringProto_match([regexp = _Value.undefined], {
     _temp41 = _temp41.Value;
   }
   const S = _temp41;
-  let _temp42 = RegExpCreate(regexp, _Value.undefined);
+  let _temp42 = RegExpCreate(regexp, Value.undefined);
   /* c8 ignore if */
   if (_temp42 instanceof AbruptCompletion) {
     return _temp42;
@@ -44924,7 +44923,7 @@ function StringProto_match([regexp = _Value.undefined], {
 
 /** https://tc39.es/ecma262/#sec-string.prototype.matchall */
 StringProto_match.section = 'https://tc39.es/ecma262/#sec-string.prototype.match';
-function StringProto_matchAll([regexp = _Value.undefined], {
+function StringProto_matchAll([regexp = Value.undefined], {
   thisValue
 }) {
   let _temp43 = RequireObjectCoercible(thisValue);
@@ -44939,7 +44938,7 @@ function StringProto_matchAll([regexp = _Value.undefined], {
   // 1. Let O be ? RequireObjectCoercible(this value).
   const O = _temp43;
   // 2. If regexp is neither undefined nor null, then
-  if (regexp !== _Value.undefined && regexp !== _Value.null) {
+  if (regexp !== Value.undefined && regexp !== Value.null) {
     let _temp44 = IsRegExp(regexp);
     /* c8 ignore if */
     if (_temp44 instanceof AbruptCompletion) {
@@ -44952,8 +44951,8 @@ function StringProto_matchAll([regexp = _Value.undefined], {
     // a. Let isRegExp be ? IsRegExp(regexp).
     const isRegExp = _temp44;
     // b. If isRegExp is true, then
-    if (isRegExp === _Value.true) {
-      let _temp45 = Get(regexp, _Value('flags'));
+    if (isRegExp === Value.true) {
+      let _temp45 = Get(regexp, Value('flags'));
       /* c8 ignore if */
       if (_temp45 instanceof AbruptCompletion) {
         return _temp45;
@@ -45000,7 +44999,7 @@ function StringProto_matchAll([regexp = _Value.undefined], {
     }
     const matcher = _temp48;
     // d. If matcher is not undefined, then
-    if (matcher !== _Value.undefined) {
+    if (matcher !== Value.undefined) {
       // i. Return ? Call(matcher, regexp, « O »).
       return Call(matcher, regexp, [O]);
     }
@@ -45017,7 +45016,7 @@ function StringProto_matchAll([regexp = _Value.undefined], {
   }
   const S = _temp49;
   // 4. Let rx be ? RegExpCreate(regexp, "g").
-  let _temp50 = RegExpCreate(regexp, _Value('g'));
+  let _temp50 = RegExpCreate(regexp, Value('g'));
   /* c8 ignore if */
   if (_temp50 instanceof AbruptCompletion) {
     return _temp50;
@@ -45033,7 +45032,7 @@ function StringProto_matchAll([regexp = _Value.undefined], {
 
 /** https://tc39.es/ecma262/#sec-string.prototype.normalize */
 StringProto_matchAll.section = 'https://tc39.es/ecma262/#sec-string.prototype.matchall';
-function StringProto_normalize([form = _Value.undefined], {
+function StringProto_normalize([form = Value.undefined], {
   thisValue
 }) {
   let _temp51 = RequireObjectCoercible(thisValue);
@@ -45056,8 +45055,8 @@ function StringProto_normalize([form = _Value.undefined], {
     _temp52 = _temp52.Value;
   }
   const S = _temp52;
-  if (form === _Value.undefined) {
-    form = _Value('NFC');
+  if (form === Value.undefined) {
+    form = Value('NFC');
   } else {
     let _temp53 = ToString(form);
     /* c8 ignore if */
@@ -45075,12 +45074,12 @@ function StringProto_normalize([form = _Value.undefined], {
     return surroundingAgent.Throw('RangeError', 'NormalizeInvalidForm');
   }
   const ns = S.stringValue().normalize(f);
-  return _Value(ns);
+  return Value(ns);
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.padend */
 StringProto_normalize.section = 'https://tc39.es/ecma262/#sec-string.prototype.normalize';
-function StringProto_padEnd([maxLength = _Value.undefined, fillString = _Value.undefined], {
+function StringProto_padEnd([maxLength = Value.undefined, fillString = Value.undefined], {
   thisValue
 }) {
   let _temp54 = RequireObjectCoercible(thisValue);
@@ -45098,7 +45097,7 @@ function StringProto_padEnd([maxLength = _Value.undefined, fillString = _Value.u
 
 /** https://tc39.es/ecma262/#sec-string.prototype.padstart */
 StringProto_padEnd.section = 'https://tc39.es/ecma262/#sec-string.prototype.padend';
-function StringProto_padStart([maxLength = _Value.undefined, fillString = _Value.undefined], {
+function StringProto_padStart([maxLength = Value.undefined, fillString = Value.undefined], {
   thisValue
 }) {
   let _temp55 = RequireObjectCoercible(thisValue);
@@ -45116,7 +45115,7 @@ function StringProto_padStart([maxLength = _Value.undefined, fillString = _Value
 
 /** https://tc39.es/ecma262/#sec-string.prototype.repeat */
 StringProto_padStart.section = 'https://tc39.es/ecma262/#sec-string.prototype.padstart';
-function StringProto_repeat([count = _Value.undefined], {
+function StringProto_repeat([count = Value.undefined], {
   thisValue
 }) {
   let _temp56 = RequireObjectCoercible(thisValue);
@@ -45156,18 +45155,18 @@ function StringProto_repeat([count = _Value.undefined], {
     return surroundingAgent.Throw('RangeError', 'StringRepeatCount', n);
   }
   if (n === 0) {
-    return _Value('');
+    return Value('');
   }
   let T = '';
   for (let i = 0; i < n; i += 1) {
     T += S.stringValue();
   }
-  return _Value(T);
+  return Value(T);
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.replace */
 StringProto_repeat.section = 'https://tc39.es/ecma262/#sec-string.prototype.repeat';
-function StringProto_replace([searchValue = _Value.undefined, replaceValue = _Value.undefined], {
+function StringProto_replace([searchValue = Value.undefined, replaceValue = Value.undefined], {
   thisValue
 }) {
   let _temp59 = RequireObjectCoercible(thisValue);
@@ -45180,7 +45179,7 @@ function StringProto_replace([searchValue = _Value.undefined, replaceValue = _Va
     _temp59 = _temp59.Value;
   }
   const O = _temp59;
-  if (searchValue !== _Value.undefined && searchValue !== _Value.null) {
+  if (searchValue !== Value.undefined && searchValue !== Value.null) {
     let _temp60 = GetMethod(searchValue, wellKnownSymbols.replace);
     /* c8 ignore if */
     if (_temp60 instanceof AbruptCompletion) {
@@ -45191,7 +45190,7 @@ function StringProto_replace([searchValue = _Value.undefined, replaceValue = _Va
       _temp60 = _temp60.Value;
     }
     const replacer = _temp60;
-    if (replacer !== _Value.undefined) {
+    if (replacer !== Value.undefined) {
       return Call(replacer, searchValue, [O, replaceValue]);
     }
   }
@@ -45216,7 +45215,7 @@ function StringProto_replace([searchValue = _Value.undefined, replaceValue = _Va
   }
   const searchString = _temp62;
   const functionalReplace = IsCallable(replaceValue);
-  if (functionalReplace === _Value.false) {
+  if (functionalReplace === Value.false) {
     let _temp63 = ToString(replaceValue);
     /* c8 ignore if */
     if (_temp63 instanceof AbruptCompletion) {
@@ -45234,8 +45233,8 @@ function StringProto_replace([searchValue = _Value.undefined, replaceValue = _Va
     return string;
   }
   let replStr;
-  if (functionalReplace === _Value.true) {
-    let _temp64 = Call(replaceValue, _Value.undefined, [matched, F(pos), string]);
+  if (functionalReplace === Value.true) {
+    let _temp64 = Call(replaceValue, Value.undefined, [matched, F(pos), string]);
     /* c8 ignore if */
     if (_temp64 instanceof AbruptCompletion) {
       return _temp64;
@@ -45257,7 +45256,7 @@ function StringProto_replace([searchValue = _Value.undefined, replaceValue = _Va
     replStr = _temp65;
   } else {
     const captures = [];
-    let _temp66 = GetSubstitution(matched, string, pos, captures, _Value.undefined, replaceValue);
+    let _temp66 = GetSubstitution(matched, string, pos, captures, Value.undefined, replaceValue);
     Assert(!(_temp66 instanceof AbruptCompletion), "GetSubstitution(matched, string, pos, captures, Value.undefined, replaceValue)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp66 instanceof Completion) {
@@ -45267,12 +45266,12 @@ function StringProto_replace([searchValue = _Value.undefined, replaceValue = _Va
   }
   const tailPos = pos + matched.stringValue().length;
   const newString = string.stringValue().slice(0, pos) + replStr.stringValue() + string.stringValue().slice(tailPos);
-  return _Value(newString);
+  return Value(newString);
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.replaceall */
 StringProto_replace.section = 'https://tc39.es/ecma262/#sec-string.prototype.replace';
-function StringProto_replaceAll([searchValue = _Value.undefined, replaceValue = _Value.undefined], {
+function StringProto_replaceAll([searchValue = Value.undefined, replaceValue = Value.undefined], {
   thisValue
 }) {
   let _temp67 = RequireObjectCoercible(thisValue);
@@ -45287,7 +45286,7 @@ function StringProto_replaceAll([searchValue = _Value.undefined, replaceValue = 
   // 1. Let O be ? RequireObjectCoercible(this value).
   const O = _temp67;
   // 2.If searchValue is neither undefined nor null, then
-  if (searchValue !== _Value.undefined && searchValue !== _Value.null) {
+  if (searchValue !== Value.undefined && searchValue !== Value.null) {
     let _temp68 = IsRegExp(searchValue);
     /* c8 ignore if */
     if (_temp68 instanceof AbruptCompletion) {
@@ -45300,8 +45299,8 @@ function StringProto_replaceAll([searchValue = _Value.undefined, replaceValue = 
     // a. Let isRegExp be ? IsRegExp(searchValue).
     const isRegExp = _temp68;
     // b. If isRegExp is true, then
-    if (isRegExp === _Value.true) {
-      let _temp69 = Get(searchValue, _Value('flags'));
+    if (isRegExp === Value.true) {
+      let _temp69 = Get(searchValue, Value('flags'));
       /* c8 ignore if */
       if (_temp69 instanceof AbruptCompletion) {
         return _temp69;
@@ -45348,7 +45347,7 @@ function StringProto_replaceAll([searchValue = _Value.undefined, replaceValue = 
     }
     const replacer = _temp72;
     // d. If replacer is not undefined, then
-    if (replacer !== _Value.undefined) {
+    if (replacer !== Value.undefined) {
       // i. Return ? Call(replacer, searchValue, « O, replaceValue »).
       return Call(replacer, searchValue, [O, replaceValue]);
     }
@@ -45378,7 +45377,7 @@ function StringProto_replaceAll([searchValue = _Value.undefined, replaceValue = 
   // 5. Let functionalReplace be IsCallable(replaceValue).
   const functionalReplace = IsCallable(replaceValue);
   // 6. If functionalReplace is false, then
-  if (functionalReplace === _Value.false) {
+  if (functionalReplace === Value.false) {
     let _temp75 = ToString(replaceValue);
     /* c8 ignore if */
     if (_temp75 instanceof AbruptCompletion) {
@@ -45426,8 +45425,8 @@ function StringProto_replaceAll([searchValue = _Value.undefined, replaceValue = 
   for (position of matchPositions) {
     let replacement;
     // a. If functionalReplace is true, then
-    if (functionalReplace === _Value.true) {
-      let _temp79 = Call(replaceValue, _Value.undefined, [searchString, F(position), string]);
+    if (functionalReplace === Value.true) {
+      let _temp79 = Call(replaceValue, Value.undefined, [searchString, F(position), string]);
       /* c8 ignore if */
       if (_temp79 instanceof AbruptCompletion) {
         return _temp79;
@@ -45450,11 +45449,11 @@ function StringProto_replaceAll([searchValue = _Value.undefined, replaceValue = 
     } else {
       // b. Else,
       // i. Assert: Type(replaceValue) is String.
-      Assert(replaceValue instanceof StringValue, "replaceValue instanceof JSStringValue");
+      Assert(replaceValue instanceof JSStringValue, "replaceValue instanceof JSStringValue");
       // ii. Let captures be a new empty List.
       const captures = [];
       // iii. Let replacement be GetSubstitution(searchString, string, position, captures, undefined, replaceValue).
-      replacement = GetSubstitution(searchString, string, position, captures, _Value.undefined, replaceValue);
+      replacement = GetSubstitution(searchString, string, position, captures, Value.undefined, replaceValue);
     }
     // c. Let stringSlice be the substring of string consisting of the code units from endOfLastMatch (inclusive) up through position (exclusive).
     const stringSlice = string.stringValue().slice(endOfLastMatch, position);
@@ -45469,12 +45468,12 @@ function StringProto_replaceAll([searchValue = _Value.undefined, replaceValue = 
     result += string.stringValue().slice(endOfLastMatch);
   }
   // 16. Return result.
-  return _Value(result);
+  return Value(result);
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.slice */
 StringProto_replaceAll.section = 'https://tc39.es/ecma262/#sec-string.prototype.replaceall';
-function StringProto_search([regexp = _Value.undefined], {
+function StringProto_search([regexp = Value.undefined], {
   thisValue
 }) {
   let _temp80 = RequireObjectCoercible(thisValue);
@@ -45487,7 +45486,7 @@ function StringProto_search([regexp = _Value.undefined], {
     _temp80 = _temp80.Value;
   }
   const O = _temp80;
-  if (regexp !== _Value.undefined && regexp !== _Value.null) {
+  if (regexp !== Value.undefined && regexp !== Value.null) {
     let _temp81 = GetMethod(regexp, wellKnownSymbols.search);
     /* c8 ignore if */
     if (_temp81 instanceof AbruptCompletion) {
@@ -45498,7 +45497,7 @@ function StringProto_search([regexp = _Value.undefined], {
       _temp81 = _temp81.Value;
     }
     const searcher = _temp81;
-    if (searcher !== _Value.undefined) {
+    if (searcher !== Value.undefined) {
       return Call(searcher, regexp, [O]);
     }
   }
@@ -45512,7 +45511,7 @@ function StringProto_search([regexp = _Value.undefined], {
     _temp82 = _temp82.Value;
   }
   const string = _temp82;
-  let _temp83 = RegExpCreate(regexp, _Value.undefined);
+  let _temp83 = RegExpCreate(regexp, Value.undefined);
   /* c8 ignore if */
   if (_temp83 instanceof AbruptCompletion) {
     return _temp83;
@@ -45527,7 +45526,7 @@ function StringProto_search([regexp = _Value.undefined], {
 
 /** https://tc39.es/ecma262/#sec-string.prototype.slice */
 StringProto_search.section = 'https://tc39.es/ecma262/#sec-string.prototype.slice';
-function StringProto_slice([start = _Value.undefined, end = _Value.undefined], {
+function StringProto_slice([start = Value.undefined, end = Value.undefined], {
   thisValue
 }) {
   let _temp84 = RequireObjectCoercible(thisValue);
@@ -45562,7 +45561,7 @@ function StringProto_slice([start = _Value.undefined, end = _Value.undefined], {
   }
   const intStart = _temp86;
   let intEnd;
-  if (end === _Value.undefined) {
+  if (end === Value.undefined) {
     intEnd = len;
   } else {
     let _temp87 = ToIntegerOrInfinity(end);
@@ -45589,12 +45588,12 @@ function StringProto_slice([start = _Value.undefined, end = _Value.undefined], {
     to = Math.min(intEnd, len);
   }
   const span = Math.max(to - from, 0);
-  return _Value(S.slice(from, from + span));
+  return Value(S.slice(from, from + span));
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.split */
 StringProto_slice.section = 'https://tc39.es/ecma262/#sec-string.prototype.slice';
-function StringProto_split([separator = _Value.undefined, limit = _Value.undefined], {
+function StringProto_split([separator = Value.undefined, limit = Value.undefined], {
   thisValue
 }) {
   let _temp88 = RequireObjectCoercible(thisValue);
@@ -45607,7 +45606,7 @@ function StringProto_split([separator = _Value.undefined, limit = _Value.undefin
     _temp88 = _temp88.Value;
   }
   const O = _temp88;
-  if (separator !== _Value.undefined && separator !== _Value.null) {
+  if (separator !== Value.undefined && separator !== Value.null) {
     let _temp89 = GetMethod(separator, wellKnownSymbols.split);
     /* c8 ignore if */
     if (_temp89 instanceof AbruptCompletion) {
@@ -45618,7 +45617,7 @@ function StringProto_split([separator = _Value.undefined, limit = _Value.undefin
       _temp89 = _temp89.Value;
     }
     const splitter = _temp89;
-    if (splitter !== _Value.undefined) {
+    if (splitter !== Value.undefined) {
       return Call(splitter, separator, [O, limit]);
     }
   }
@@ -45641,7 +45640,7 @@ function StringProto_split([separator = _Value.undefined, limit = _Value.undefin
   const A = _temp91;
   let lengthA = 0;
   let lim;
-  if (limit === _Value.undefined) {
+  if (limit === Value.undefined) {
     lim = F(2 ** 32 - 1);
   } else {
     let _temp92 = ToUint32(limit);
@@ -45670,8 +45669,8 @@ function StringProto_split([separator = _Value.undefined, limit = _Value.undefin
   if (R(lim) === 0) {
     return A;
   }
-  if (separator === _Value.undefined) {
-    let _temp94 = CreateDataPropertyOrThrow(A, _Value('0'), S);
+  if (separator === Value.undefined) {
+    let _temp94 = CreateDataPropertyOrThrow(A, Value('0'), S);
     Assert(!(_temp94 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, Value('0'), S)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp94 instanceof Completion) {
@@ -45681,7 +45680,7 @@ function StringProto_split([separator = _Value.undefined, limit = _Value.undefin
   }
   if (s === 0) {
     if (R$1.stringValue() !== '') {
-      let _temp95 = CreateDataPropertyOrThrow(A, _Value('0'), S);
+      let _temp95 = CreateDataPropertyOrThrow(A, Value('0'), S);
       Assert(!(_temp95 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, Value('0'), S)" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp95 instanceof Completion) {
@@ -45699,7 +45698,7 @@ function StringProto_split([separator = _Value.undefined, limit = _Value.undefin
       if (e === p) {
         q += 1;
       } else {
-        const T = _Value(S.stringValue().substring(p, q));
+        const T = Value(S.stringValue().substring(p, q));
         let _temp97 = ToString(F(lengthA));
         Assert(!(_temp97 instanceof AbruptCompletion), "ToString(F(lengthA))" + ' returned an abrupt completion');
         /* c8 ignore if */
@@ -45721,7 +45720,7 @@ function StringProto_split([separator = _Value.undefined, limit = _Value.undefin
       }
     }
   }
-  const T = _Value(S.stringValue().substring(p, s));
+  const T = Value(S.stringValue().substring(p, s));
   let _temp99 = ToString(F(lengthA));
   Assert(!(_temp99 instanceof AbruptCompletion), "ToString(F(lengthA))" + ' returned an abrupt completion');
   /* c8 ignore if */
@@ -45740,7 +45739,7 @@ function StringProto_split([separator = _Value.undefined, limit = _Value.undefin
 /** https://tc39.es/ecma262/#sec-splitmatch */
 StringProto_split.section = 'https://tc39.es/ecma262/#sec-string.prototype.split';
 function SplitMatch(S, q, R) {
-  Assert(R instanceof StringValue, "R instanceof JSStringValue");
+  Assert(R instanceof JSStringValue, "R instanceof JSStringValue");
   const r = R.stringValue().length;
   const s = S.stringValue().length;
   if (q + r > s) {
@@ -45756,7 +45755,7 @@ function SplitMatch(S, q, R) {
 
 /** https://tc39.es/ecma262/#sec-string.prototype.startswith */
 SplitMatch.section = 'https://tc39.es/ecma262/#sec-splitmatch';
-function StringProto_startsWith([searchString = _Value.undefined, position = _Value.undefined], {
+function StringProto_startsWith([searchString = Value.undefined, position = Value.undefined], {
   thisValue
 }) {
   let _temp100 = RequireObjectCoercible(thisValue);
@@ -45789,7 +45788,7 @@ function StringProto_startsWith([searchString = _Value.undefined, position = _Va
     _temp102 = _temp102.Value;
   }
   const isRegExp = _temp102;
-  if (isRegExp === _Value.true) {
+  if (isRegExp === Value.true) {
     return surroundingAgent.Throw('TypeError', 'RegExpArgumentNotAllowed', 'String.prototype.startsWith');
   }
   let _temp103 = ToString(searchString);
@@ -45812,24 +45811,24 @@ function StringProto_startsWith([searchString = _Value.undefined, position = _Va
     _temp104 = _temp104.Value;
   }
   const pos = _temp104;
-  Assert(!(position === _Value.undefined) || pos === 0, "!(position === Value.undefined) || pos === 0");
+  Assert(!(position === Value.undefined) || pos === 0, "!(position === Value.undefined) || pos === 0");
   const len = S.length;
   const start = Math.min(Math.max(pos, 0), len);
   const searchLength = searchStr.length;
   if (searchLength + start > len) {
-    return _Value.false;
+    return Value.false;
   }
   for (let i = 0; i < searchLength; i += 1) {
     if (S.charCodeAt(start + i) !== searchStr.charCodeAt(i)) {
-      return _Value.false;
+      return Value.false;
     }
   }
-  return _Value.true;
+  return Value.true;
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.substring */
 StringProto_startsWith.section = 'https://tc39.es/ecma262/#sec-string.prototype.startswith';
-function StringProto_substring([start = _Value.undefined, end = _Value.undefined], {
+function StringProto_substring([start = Value.undefined, end = Value.undefined], {
   thisValue
 }) {
   let _temp105 = RequireObjectCoercible(thisValue);
@@ -45864,7 +45863,7 @@ function StringProto_substring([start = _Value.undefined, end = _Value.undefined
   }
   const intStart = _temp107;
   let intEnd;
-  if (end === _Value.undefined) {
+  if (end === Value.undefined) {
     intEnd = len;
   } else {
     let _temp108 = ToIntegerOrInfinity(end);
@@ -45882,7 +45881,7 @@ function StringProto_substring([start = _Value.undefined, end = _Value.undefined
   const finalEnd = Math.min(Math.max(intEnd, 0), len);
   const from = Math.min(finalStart, finalEnd);
   const to = Math.max(finalStart, finalEnd);
-  return _Value(S.slice(from, to));
+  return Value(S.slice(from, to));
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.tolocalelowercase */
@@ -45911,7 +45910,7 @@ function StringProto_toLocaleLowerCase(args, {
   }
   const S = _temp110;
   const L = S.stringValue().toLocaleLowerCase();
-  return _Value(L);
+  return Value(L);
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.tolocaleuppercase */
@@ -45940,7 +45939,7 @@ function StringProto_toLocaleUpperCase(args, {
   }
   const S = _temp112;
   const L = S.stringValue().toLocaleUpperCase();
-  return _Value(L);
+  return Value(L);
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.tolowercase */
@@ -45969,7 +45968,7 @@ function StringProto_toLowerCase(args, {
   }
   const S = _temp114;
   const L = S.stringValue().toLowerCase();
-  return _Value(L);
+  return Value(L);
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.tostring */
@@ -46006,7 +46005,7 @@ function StringProto_toUpperCase(args, {
   }
   const S = _temp116;
   const L = S.stringValue().toUpperCase();
-  return _Value(L);
+  return Value(L);
 }
 
 /** https://tc39.es/proposal-is-usv-string/#sec-string.prototype.towellformed */
@@ -46059,7 +46058,7 @@ function StringProto_toWellFormed(args, {
     k += cp.CodeUnitCount;
   }
   // 7. Return result.
-  return _Value(result);
+  return Value(result);
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.trim */
@@ -46143,7 +46142,7 @@ function StringProto_iterator(args, {
       // ii. Let nextIndex be position + cp.[[CodeUnitCount]].
       const nextIndex = position + cp.CodeUnitCount;
       // iii. Let resultString be the substring of s from position to nextIndex.
-      const resultString = _Value(s.slice(position, nextIndex));
+      const resultString = Value(s.slice(position, nextIndex));
       // iv. Set position to nextIndex.
       position = nextIndex;
       // v. Perform ? Yield(resultString).
@@ -46158,10 +46157,10 @@ function StringProto_iterator(args, {
       }
     }
     // d. Return undefined.
-    return _Value.undefined;
+    return Value.undefined;
   };
   // 4. Return ! CreateIteratorFromClosure(closure, "%StringIteratorPrototype%", %StringIteratorPrototype%).
-  let _temp123 = CreateIteratorFromClosure(closure, _Value('%StringIteratorPrototype%'), surroundingAgent.intrinsic('%StringIteratorPrototype%'));
+  let _temp123 = CreateIteratorFromClosure(closure, Value('%StringIteratorPrototype%'), surroundingAgent.intrinsic('%StringIteratorPrototype%'));
   Assert(!(_temp123 instanceof AbruptCompletion), "CreateIteratorFromClosure(closure, Value('%StringIteratorPrototype%'), surroundingAgent.intrinsic('%StringIteratorPrototype%'))" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp123 instanceof Completion) {
@@ -46172,7 +46171,7 @@ function StringProto_iterator(args, {
 
 /** https://tc39.es/ecma262/#sec-string.prototype.at */
 StringProto_iterator.section = 'https://tc39.es/ecma262/#sec-string.prototype-@@iterator';
-function StringProto_at([index = _Value.undefined], {
+function StringProto_at([index = Value.undefined], {
   thisValue
 }) {
   let _temp124 = RequireObjectCoercible(thisValue);
@@ -46222,14 +46221,14 @@ function StringProto_at([index = _Value.undefined], {
   }
   // 7. If k < 0 or k ≥ len, then return undefined.
   if (k < 0 || k >= len) {
-    return _Value.undefined;
+    return Value.undefined;
   }
   // 8. Return the String value consisting of only the code unit at position k in S.
-  return _Value(S.stringValue()[k]);
+  return Value(S.stringValue()[k]);
 }
 StringProto_at.section = 'https://tc39.es/ecma262/#sec-string.prototype.at';
 function bootstrapStringPrototype(realmRec) {
-  const proto = StringCreate(_Value(''), realmRec.Intrinsics['%Object.prototype%']);
+  const proto = StringCreate(Value(''), realmRec.Intrinsics['%Object.prototype%']);
   assignProps(realmRec, proto, [['charAt', StringProto_charAt, 1], ['charCodeAt', StringProto_charCodeAt, 1], ['codePointAt', StringProto_codePointAt, 1], ['concat', StringProto_concat, 1], ['endsWith', StringProto_endsWith, 1], ['includes', StringProto_includes, 1], ['indexOf', StringProto_indexOf, 1], surroundingAgent.feature('is-usv-string') ? ['isWellFormed', StringProto_isWellFormed, 0] : undefined, ['at', StringProto_at, 1], ['lastIndexOf', StringProto_lastIndexOf, 1], ['localeCompare', StringProto_localeCompare, 1], ['match', StringProto_match, 1], ['matchAll', StringProto_matchAll, 1], ['normalize', StringProto_normalize, 0], ['padEnd', StringProto_padEnd, 1], ['padStart', StringProto_padStart, 1], ['repeat', StringProto_repeat, 1], ['replace', StringProto_replace, 2], ['replaceAll', StringProto_replaceAll, 2], ['search', StringProto_search, 1], ['slice', StringProto_slice, 2], ['split', StringProto_split, 2], ['startsWith', StringProto_startsWith, 1], ['substring', StringProto_substring, 2], ['toLocaleLowerCase', StringProto_toLocaleLowerCase, 0], ['toLocaleUpperCase', StringProto_toLocaleUpperCase, 0], ['toLowerCase', StringProto_toLowerCase, 0], ['toString', StringProto_toString, 0], ['toUpperCase', StringProto_toUpperCase, 0], surroundingAgent.feature('is-usv-string') ? ['toWellFormed', StringProto_toWellFormed, 0] : undefined, ['trim', StringProto_trim, 0], ['trimEnd', StringProto_trimEnd, 0], ['trimStart', StringProto_trimStart, 0], ['valueOf', StringProto_valueOf, 0], [wellKnownSymbols.iterator, StringProto_iterator, 0]]);
   realmRec.Intrinsics['%String.prototype%'] = proto;
 }
@@ -46240,9 +46239,9 @@ function StringConstructor([value], {
 }) {
   let s;
   if (value === undefined) {
-    s = _Value('');
+    s = Value('');
   } else {
-    if (NewTarget === _Value.undefined && value instanceof SymbolValue) {
+    if (NewTarget === Value.undefined && value instanceof SymbolValue) {
       let _temp = SymbolDescriptiveString(value);
       Assert(!(_temp instanceof AbruptCompletion), "SymbolDescriptiveString(value)" + ' returned an abrupt completion');
       /* c8 ignore if */
@@ -46262,7 +46261,7 @@ function StringConstructor([value], {
     }
     s = _temp2;
   }
-  if (NewTarget === _Value.undefined) {
+  if (NewTarget === Value.undefined) {
     return s;
   }
   let _temp4 = GetPrototypeFromConstructor(NewTarget, '%String.prototype%');
@@ -46305,7 +46304,7 @@ function String_fromCharCode(codeUnits) {
     nextIndex += 1;
   }
   const result = elements.reduce((previous, current) => previous + String.fromCharCode(R(current)), '');
-  return _Value(result);
+  return Value(result);
 }
 
 /** https://tc39.es/ecma262/#sec-string.fromcodepoint */
@@ -46333,7 +46332,7 @@ function String_fromCodePoint(codePoints) {
     if (_temp7 instanceof Completion) {
       _temp7 = _temp7.Value;
     }
-    if (_temp7 === _Value.false) {
+    if (_temp7 === Value.false) {
       return surroundingAgent.Throw('RangeError', 'StringCodePointInvalid', next);
     }
     // c. If ℝ(nextCP) < 0 or ℝ(nextCP) > 0x10FFFF, throw a RangeError exception.
@@ -46346,12 +46345,12 @@ function String_fromCodePoint(codePoints) {
   // 3. Assert: If codePoints is empty, then result is the empty String.
   Assert(!(codePoints.length === 0) || result.length === 0, "!(codePoints.length === 0) || result.length === 0");
   // 4. Return result.
-  return _Value(result);
+  return Value(result);
 }
 
 /** https://tc39.es/ecma262/#sec-string.raw */
 String_fromCodePoint.section = 'https://tc39.es/ecma262/#sec-string.fromcodepoint';
-function String_raw([template = _Value.undefined, ...substitutions]) {
+function String_raw([template = Value.undefined, ...substitutions]) {
   const numberOfSubstitutions = substitutions.length;
   let _temp8 = ToObject(template);
   /* c8 ignore if */
@@ -46363,7 +46362,7 @@ function String_raw([template = _Value.undefined, ...substitutions]) {
     _temp8 = _temp8.Value;
   }
   const cooked = _temp8;
-  let _temp15 = Get(cooked, _Value('raw'));
+  let _temp15 = Get(cooked, Value('raw'));
   /* c8 ignore if */
   if (_temp15 instanceof AbruptCompletion) {
     return _temp15;
@@ -46393,7 +46392,7 @@ function String_raw([template = _Value.undefined, ...substitutions]) {
   }
   const literalSegments = _temp10;
   if (literalSegments <= 0) {
-    return _Value('');
+    return Value('');
   }
   // Not sure why the spec uses a List, but this is really just a String.
   const stringElements = [];
@@ -46427,13 +46426,13 @@ function String_raw([template = _Value.undefined, ...substitutions]) {
     const nextSeg = _temp12;
     stringElements.push(nextSeg.stringValue());
     if (nextIndex + 1 === literalSegments) {
-      return _Value(stringElements.join(''));
+      return Value(stringElements.join(''));
     }
     let next;
     if (nextIndex < numberOfSubstitutions) {
       next = substitutions[nextIndex];
     } else {
-      next = _Value('');
+      next = Value('');
     }
     let _temp13 = ToString(next);
     /* c8 ignore if */
@@ -46466,7 +46465,7 @@ function ErrorProto_toString(args, {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
   }
   // 3. Let name be ? Get(O, "name").
-  let _temp = Get(O, _Value('name'));
+  let _temp = Get(O, Value('name'));
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) {
     return _temp;
@@ -46477,8 +46476,8 @@ function ErrorProto_toString(args, {
   }
   let name = _temp;
   // 4. If name is undefined, set name to "Error"; otherwise set name to ? ToString(name).
-  if (name === _Value.undefined) {
-    name = _Value('Error');
+  if (name === Value.undefined) {
+    name = Value('Error');
   } else {
     let _temp2 = ToString(name);
     /* c8 ignore if */
@@ -46492,7 +46491,7 @@ function ErrorProto_toString(args, {
     name = _temp2;
   }
   // 5. Let msg be ? Get(O, "message").
-  let _temp3 = Get(O, _Value('message'));
+  let _temp3 = Get(O, Value('message'));
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) {
     return _temp3;
@@ -46503,8 +46502,8 @@ function ErrorProto_toString(args, {
   }
   let msg = _temp3;
   // 6. If msg is undefined, set msg to the empty String; otherwise set msg to ? ToString(msg).
-  if (msg === _Value.undefined) {
-    msg = _Value('');
+  if (msg === Value.undefined) {
+    msg = Value('');
   } else {
     let _temp4 = ToString(msg);
     /* c8 ignore if */
@@ -46526,21 +46525,21 @@ function ErrorProto_toString(args, {
     return name;
   }
   // 9. Return the string-concatenation of name, the code unit 0x003A (COLON), the code unit 0x0020 (SPACE), and msg.
-  return _Value(`${name.stringValue()}: ${msg.stringValue()}`);
+  return Value(`${name.stringValue()}: ${msg.stringValue()}`);
 }
 ErrorProto_toString.section = 'https://tc39.es/ecma262/#sec-error.prototype.tostring';
 function bootstrapErrorPrototype(realmRec) {
-  const proto = bootstrapPrototype(realmRec, [['toString', ErrorProto_toString, 0], ['message', _Value('')], ['name', _Value('Error')]], realmRec.Intrinsics['%Object.prototype%']);
+  const proto = bootstrapPrototype(realmRec, [['toString', ErrorProto_toString, 0], ['message', Value('')], ['name', Value('Error')]], realmRec.Intrinsics['%Object.prototype%']);
   realmRec.Intrinsics['%Error.prototype%'] = proto;
 }
 
 /** https://tc39.es/ecma262/#sec-error-constructor */
-function ErrorConstructor([message = _Value.undefined, options = _Value.undefined], {
+function ErrorConstructor([message = Value.undefined, options = Value.undefined], {
   NewTarget
 }) {
   // 1. If NewTarget is undefined, let newTarget be the active function object; else let newTarget be NewTarget.
   let newTarget;
-  if (NewTarget === _Value.undefined) {
+  if (NewTarget === Value.undefined) {
     newTarget = surroundingAgent.activeFunctionObject;
   } else {
     newTarget = NewTarget;
@@ -46557,7 +46556,7 @@ function ErrorConstructor([message = _Value.undefined, options = _Value.undefine
   }
   const O = _temp;
   // 3. If message is not undefined, then
-  if (message !== _Value.undefined) {
+  if (message !== Value.undefined) {
     let _temp2 = ToString(message);
     /* c8 ignore if */
     if (_temp2 instanceof AbruptCompletion) {
@@ -46572,12 +46571,12 @@ function ErrorConstructor([message = _Value.undefined, options = _Value.undefine
     // b. Let msgDesc be the PropertyDescriptor { [[Value]]: msg, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }.
     const msgDesc = _Descriptor({
       Value: msg,
-      Writable: _Value.true,
-      Enumerable: _Value.false,
-      Configurable: _Value.true
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.true
     });
     // c. Perform ! DefinePropertyOrThrow(O, "message", msgDesc).
-    let _temp3 = DefinePropertyOrThrow(O, _Value('message'), msgDesc);
+    let _temp3 = DefinePropertyOrThrow(O, Value('message'), msgDesc);
     Assert(!(_temp3 instanceof AbruptCompletion), "DefinePropertyOrThrow(O, Value('message'), msgDesc)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp3 instanceof Completion) {
@@ -46613,10 +46612,10 @@ function bootstrapError(realmRec) {
 
 function bootstrapNativeError(realmRec) {
   for (const name of ['EvalError', 'RangeError', 'ReferenceError', 'SyntaxError', 'TypeError', 'URIError']) {
-    const proto = bootstrapPrototype(realmRec, [['name', _Value(name)], ['message', _Value('')]], realmRec.Intrinsics['%Error.prototype%']);
+    const proto = bootstrapPrototype(realmRec, [['name', Value(name)], ['message', Value('')]], realmRec.Intrinsics['%Error.prototype%']);
 
     /** https://tc39.es/ecma262/#sec-nativeerror */
-    const Constructor = ([message = _Value.undefined, options = _Value.undefined], {
+    const Constructor = ([message = Value.undefined, options = Value.undefined], {
       NewTarget
     }) => {
       // 1. If NewTarget is undefined, let newTarget be the active function object; else let newTarget be NewTarget.
@@ -46638,7 +46637,7 @@ function bootstrapNativeError(realmRec) {
       }
       const O = _temp;
       // 3. If message is not undefined, then
-      if (message !== _Value.undefined) {
+      if (message !== Value.undefined) {
         let _temp2 = ToString(message);
         /* c8 ignore if */
         if (_temp2 instanceof AbruptCompletion) {
@@ -46653,12 +46652,12 @@ function bootstrapNativeError(realmRec) {
         // b. Let msgDesc be the PropertyDescriptor { [[Value]]: msg, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }.
         const msgDesc = _Descriptor({
           Value: msg,
-          Writable: _Value.true,
-          Enumerable: _Value.false,
-          Configurable: _Value.true
+          Writable: Value.true,
+          Enumerable: Value.false,
+          Configurable: Value.true
         });
         // c. Perform ! DefinePropertyOrThrow(O, "message", msgDesc).
-        let _temp3 = DefinePropertyOrThrow(O, _Value('message'), msgDesc);
+        let _temp3 = DefinePropertyOrThrow(O, Value('message'), msgDesc);
         Assert(!(_temp3 instanceof AbruptCompletion), "DefinePropertyOrThrow(O, Value('message'), msgDesc)" + ' returned an abrupt completion');
         /* c8 ignore if */
         if (_temp3 instanceof Completion) {
@@ -46728,7 +46727,7 @@ function bootstrapAsyncIteratorPrototype(realmRec) {
 }
 
 // @ts-nocheck
-const kArrayIteratorPrototype = _Value('%ArrayIteratorPrototype%');
+const kArrayIteratorPrototype = Value('%ArrayIteratorPrototype%');
 
 /** https://tc39.es/ecma262/#sec-%arrayiteratorprototype%.next */
 function ArrayIteratorPrototype_next(args, {
@@ -46743,7 +46742,7 @@ function bootstrapArrayIteratorPrototype(realmRec) {
   realmRec.Intrinsics['%ArrayIteratorPrototype%'] = proto;
 }
 
-const kMapIteratorPrototype = _Value('%MapIteratorPrototype%');
+const kMapIteratorPrototype = Value('%MapIteratorPrototype%');
 
 /** https://tc39.es/ecma262/#sec-createmapiterator */
 function CreateMapIterator(map, kind) {
@@ -46809,7 +46808,7 @@ function CreateMapIterator(map, kind) {
       numEntries = entries.length;
     }
     // e. Return undefined.
-    return _Value.undefined;
+    return Value.undefined;
   };
   // 3. Return ! CreateIteratorFromClosure(closure, "%MapIteratorPrototype%", %MapIteratorPrototype%).
   let _temp4 = CreateIteratorFromClosure(closure, kMapIteratorPrototype, surroundingAgent.intrinsic('%MapIteratorPrototype%'));
@@ -46834,7 +46833,7 @@ function bootstrapMapIteratorPrototype(realmRec) {
   realmRec.Intrinsics['%MapIteratorPrototype%'] = proto;
 }
 
-const kSetIteratorPrototype = _Value('%SetIteratorPrototype%');
+const kSetIteratorPrototype = Value('%SetIteratorPrototype%');
 
 /** https://tc39.es/ecma262/#sec-createsetiterator */
 function CreateSetIterator(set, kind) {
@@ -46903,7 +46902,7 @@ function CreateSetIterator(set, kind) {
       numEntries = entries.length;
     }
     // e. Return undefined.
-    return _Value.undefined;
+    return Value.undefined;
   };
   // 4. Return ! CreateIteratorFromClosure(closure, "%SetIteratorPrototype%", %SetIteratorPrototype%).
   let _temp5 = CreateIteratorFromClosure(closure, kSetIteratorPrototype, surroundingAgent.intrinsic('%SetIteratorPrototype%'));
@@ -46929,7 +46928,7 @@ function bootstrapSetIteratorPrototype(realmRec) {
 }
 
 // @ts-nocheck
-const kStringIteratorPrototype = _Value('%StringIteratorPrototype%');
+const kStringIteratorPrototype = Value('%StringIteratorPrototype%');
 
 /** https://tc39.es/ecma262/#sec-%stringiteratorprototype%.next */
 function StringIteratorPrototype_next(args, {
@@ -46970,12 +46969,12 @@ function MapProto_clear(args, {
     p.Value = undefined;
   }
   // 5. Return undefined.
-  return _Value.undefined;
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-map.prototype.delete */
 MapProto_clear.section = 'https://tc39.es/ecma262/#sec-map.prototype.clear';
-function MapProto_delete([key = _Value.undefined], {
+function MapProto_delete([key = Value.undefined], {
   thisValue
 }) {
   // 1. Let M be the this value.
@@ -46995,16 +46994,16 @@ function MapProto_delete([key = _Value.undefined], {
   // 4. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
   for (const p of entries) {
     // a. If p.[[Key]] is not empty and SameValueZero(p.[[Key]], key) is true, then
-    if (p.Key !== undefined && SameValueZero(p.Key, key) === _Value.true) {
+    if (p.Key !== undefined && SameValueZero(p.Key, key) === Value.true) {
       // i. Set p.[[Key]] to empty.
       p.Key = undefined;
       // ii. Set p.[[Value]] to empty.
       p.Value = undefined;
       // iii. Return true.
-      return _Value.true;
+      return Value.true;
     }
   }
-  return _Value.false;
+  return Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-map.prototype.entries */
@@ -47020,7 +47019,7 @@ function MapProto_entries(args, {
 
 /** https://tc39.es/ecma262/#sec-map.prototype.foreach */
 MapProto_entries.section = 'https://tc39.es/ecma262/#sec-map.prototype.entries';
-function MapProto_forEach([callbackfn = _Value.undefined, thisArg = _Value.undefined], {
+function MapProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefined], {
   thisValue
 }) {
   // 1. Let M be the this value.
@@ -47036,7 +47035,7 @@ function MapProto_forEach([callbackfn = _Value.undefined, thisArg = _Value.undef
     _temp3 = _temp3.Value;
   }
   // 3. If IsCallable(callbackfn) is false, throw a TypeError exception.
-  if (IsCallable(callbackfn) === _Value.false) {
+  if (IsCallable(callbackfn) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
   // 4. Let entries be the List that is M.[[MapData]].
@@ -47057,12 +47056,12 @@ function MapProto_forEach([callbackfn = _Value.undefined, thisArg = _Value.undef
     }
   }
   // 6. Return undefined.
-  return _Value.undefined;
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-map.prototype.get */
 MapProto_forEach.section = 'https://tc39.es/ecma262/#sec-map.prototype.foreach';
-function MapProto_get([key = _Value.undefined], {
+function MapProto_get([key = Value.undefined], {
   thisValue
 }) {
   // 1. Let M be the this value.
@@ -47082,18 +47081,18 @@ function MapProto_get([key = _Value.undefined], {
   // 4. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
   for (const p of entries) {
     // a. If p.[[Key]] is not empty and SameValueZero(p.[[Key]], key) is true, return p.[[Value]].
-    if (p.Key !== undefined && SameValueZero(p.Key, key) === _Value.true) {
+    if (p.Key !== undefined && SameValueZero(p.Key, key) === Value.true) {
       // i. Return p.[[Value]].
       return p.Value;
     }
   }
   // 5. Return undefined.
-  return _Value.undefined;
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-map.prototype.has */
 MapProto_get.section = 'https://tc39.es/ecma262/#sec-map.prototype.get';
-function MapProto_has([key = _Value.undefined], {
+function MapProto_has([key = Value.undefined], {
   thisValue
 }) {
   // 1. Let M be the this value.
@@ -47113,12 +47112,12 @@ function MapProto_has([key = _Value.undefined], {
   // 4. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
   for (const p of entries) {
     // a. If p.[[Key]] is not empty and SameValueZero(p.[[Key]], key) is true, return true.
-    if (p.Key !== undefined && SameValueZero(p.Key, key) === _Value.true) {
-      return _Value.true;
+    if (p.Key !== undefined && SameValueZero(p.Key, key) === Value.true) {
+      return Value.true;
     }
   }
   // 5. Return false.
-  return _Value.false;
+  return Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-map.prototype.keys */
@@ -47134,7 +47133,7 @@ function MapProto_keys(args, {
 
 /** https://tc39.es/ecma262/#sec-map.prototype.set */
 MapProto_keys.section = 'https://tc39.es/ecma262/#sec-map.prototype.keys';
-function MapProto_set([key = _Value.undefined, value = _Value.undefined], {
+function MapProto_set([key = Value.undefined, value = Value.undefined], {
   thisValue
 }) {
   // 1. Let M be the this value.
@@ -47154,7 +47153,7 @@ function MapProto_set([key = _Value.undefined, value = _Value.undefined], {
   // 4. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
   for (const p of entries) {
     // a. If p.[[Key]] is not empty and SameValueZero(p.[[Key]], key) is true, then
-    if (p.Key !== undefined && SameValueZero(p.Key, key) === _Value.true) {
+    if (p.Key !== undefined && SameValueZero(p.Key, key) === Value.true) {
       // i. Set p.[[Value]] to value.
       p.Value = value;
       // ii. Return M.
@@ -47221,7 +47220,7 @@ function MapProto_values(args, {
 MapProto_values.section = 'https://tc39.es/ecma262/#sec-map.prototype.values';
 function bootstrapMapPrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [['clear', MapProto_clear, 0], ['delete', MapProto_delete, 1], ['entries', MapProto_entries, 0], ['forEach', MapProto_forEach, 1], ['get', MapProto_get, 1], ['has', MapProto_has, 1], ['keys', MapProto_keys, 0], ['set', MapProto_set, 2], ['size', [MapProto_sizeGetter]], ['values', MapProto_values, 0]], realmRec.Intrinsics['%Object.prototype%'], 'Map');
-  let _temp9 = proto.GetOwnProperty(_Value('entries'));
+  let _temp9 = proto.GetOwnProperty(Value('entries'));
   Assert(!(_temp9 instanceof AbruptCompletion), "proto.GetOwnProperty(Value('entries'))" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp9 instanceof Completion) {
@@ -47238,7 +47237,7 @@ function bootstrapMapPrototype(realmRec) {
 }
 
 /** https://tc39.es/ecma262/#sec-set.prototype.add */
-function SetProto_add([value = _Value.undefined], {
+function SetProto_add([value = Value.undefined], {
   thisValue
 }) {
   // 1. Let S be the this value.
@@ -47258,7 +47257,7 @@ function SetProto_add([value = _Value.undefined], {
   // 4. For each e that is an element of entries, do
   for (const e of entries) {
     // a. For each e that is an element of entries, do
-    if (e !== undefined && SameValueZero(e, value) === _Value.true) {
+    if (e !== undefined && SameValueZero(e, value) === Value.true) {
       // i. Return S.
       return S;
     }
@@ -47298,12 +47297,12 @@ function SetProto_clear(args, {
     entries[i] = undefined;
   }
   // 5. Return undefined.
-  return _Value.undefined;
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-set.prototype.delete */
 SetProto_clear.section = 'https://tc39.es/ecma262/#sec-set.prototype.clear';
-function SetProto_delete([value = _Value.undefined], {
+function SetProto_delete([value = Value.undefined], {
   thisValue
 }) {
   // 1. Let S be the this value.
@@ -47324,15 +47323,15 @@ function SetProto_delete([value = _Value.undefined], {
   for (let i = 0; i < entries.length; i += 1) {
     const e = entries[i];
     // a. If e is not empty and SameValueZero(e, value) is true, then
-    if (e !== undefined && SameValueZero(e, value) === _Value.true) {
+    if (e !== undefined && SameValueZero(e, value) === Value.true) {
       // i. Replace the element of entries whose value is e with an element whose value is empty.
       entries[i] = undefined;
       // ii. Return true.
-      return _Value.true;
+      return Value.true;
     }
   }
   // 5. Return false.
-  return _Value.false;
+  return Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-set.prototype.entries */
@@ -47348,7 +47347,7 @@ function SetProto_entries(args, {
 
 /** https://tc39.es/ecma262/#sec-set.prototype.foreach */
 SetProto_entries.section = 'https://tc39.es/ecma262/#sec-set.prototype.entries';
-function SetProto_forEach([callbackfn = _Value.undefined, thisArg = _Value.undefined], {
+function SetProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefined], {
   thisValue
 }) {
   // 1. Let S be the this value.
@@ -47364,7 +47363,7 @@ function SetProto_forEach([callbackfn = _Value.undefined, thisArg = _Value.undef
     _temp4 = _temp4.Value;
   }
   // 3. If IsCallable(callbackfn) is false, throw a TypeError exception
-  if (IsCallable(callbackfn) === _Value.false) {
+  if (IsCallable(callbackfn) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
   // 4. Let entries be the List that is S.[[SetData]].
@@ -47385,12 +47384,12 @@ function SetProto_forEach([callbackfn = _Value.undefined, thisArg = _Value.undef
     }
   }
   // 6. Return undefined.
-  return _Value.undefined;
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-set.prototype.has */
 SetProto_forEach.section = 'https://tc39.es/ecma262/#sec-set.prototype.foreach';
-function SetProto_has([value = _Value.undefined], {
+function SetProto_has([value = Value.undefined], {
   thisValue
 }) {
   // 1. Let S be the this value.
@@ -47410,12 +47409,12 @@ function SetProto_has([value = _Value.undefined], {
   // 4. Let entries be the List that is S.[[SetData]].
   for (const e of entries) {
     // a. If e is not empty and SameValueZero(e, value) is true, return true.
-    if (e !== undefined && SameValueZero(e, value) === _Value.true) {
-      return _Value.true;
+    if (e !== undefined && SameValueZero(e, value) === Value.true) {
+      return Value.true;
     }
   }
   // 5. Return false.
-  return _Value.false;
+  return Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-get-set.prototype.size */
@@ -47463,14 +47462,14 @@ function SetProto_values(args, {
 SetProto_values.section = 'https://tc39.es/ecma262/#sec-set.prototype.values';
 function bootstrapSetPrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [['add', SetProto_add, 1], ['clear', SetProto_clear, 0], ['delete', SetProto_delete, 1], ['entries', SetProto_entries, 0], ['forEach', SetProto_forEach, 1], ['has', SetProto_has, 1], ['size', [SetProto_sizeGetter]], ['values', SetProto_values, 0]], realmRec.Intrinsics['%Object.prototype%'], 'Set');
-  let _temp8 = proto.GetOwnProperty(_Value('values'));
+  let _temp8 = proto.GetOwnProperty(Value('values'));
   Assert(!(_temp8 instanceof AbruptCompletion), "proto.GetOwnProperty(Value('values'))" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp8 instanceof Completion) {
     _temp8 = _temp8.Value;
   }
   const valuesFunc = _temp8;
-  let _temp9 = proto.DefineOwnProperty(_Value('keys'), valuesFunc);
+  let _temp9 = proto.DefineOwnProperty(Value('keys'), valuesFunc);
   Assert(!(_temp9 instanceof AbruptCompletion), "proto.DefineOwnProperty(Value('keys'), valuesFunc)" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp9 instanceof Completion) {
@@ -47486,11 +47485,11 @@ function bootstrapSetPrototype(realmRec) {
 }
 
 /** https://tc39.es/ecma262/#sec-set-iterable */
-function SetConstructor([iterable = _Value.undefined], {
+function SetConstructor([iterable = Value.undefined], {
   NewTarget
 }) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
-  if (NewTarget === _Value.undefined) {
+  if (NewTarget === Value.undefined) {
     return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
   // 2. Let set be ? OrdinaryCreateFromConstructor(NewTarget, "%Set.prototype%", « [[SetData]] »).
@@ -47507,11 +47506,11 @@ function SetConstructor([iterable = _Value.undefined], {
   // 3. Set set.[[SetData]] to a new empty List.
   set.SetData = [];
   // 4. If iterable is either undefined or null, return set.
-  if (iterable === _Value.undefined || iterable === _Value.null) {
+  if (iterable === Value.undefined || iterable === Value.null) {
     return set;
   }
   // 5. Let adder be ? Get(set, "add").
-  let _temp2 = Get(set, _Value('add'));
+  let _temp2 = Get(set, Value('add'));
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) {
     return _temp2;
@@ -47522,7 +47521,7 @@ function SetConstructor([iterable = _Value.undefined], {
   }
   const adder = _temp2;
   // 6. If IsCallable(adder) is false, throw a TypeError exception.
-  if (IsCallable(adder) === _Value.false) {
+  if (IsCallable(adder) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', adder);
   }
   // 7. Let iteratorRecord be ? GetIterator(iterable).
@@ -47550,7 +47549,7 @@ function SetConstructor([iterable = _Value.undefined], {
     // a. Let next be ? IteratorStep(iteratorRecord).
     const next = _temp4;
     // b. If next is false, return set.
-    if (next === _Value.false) {
+    if (next === Value.false) {
       return set;
     }
     // c. Let nextValue be ? IteratorValue(next).
@@ -47595,7 +47594,7 @@ function bootstrapSet(realmRec) {
 // @ts-nocheck
 
 /** https://tc39.es/ecma262/#sec-generator.prototype.next */
-function GeneratorProto_next([value = _Value.undefined], {
+function GeneratorProto_next([value = Value.undefined], {
   thisValue
 }) {
   // 1. Let g be the this value.
@@ -47606,7 +47605,7 @@ function GeneratorProto_next([value = _Value.undefined], {
 
 /** https://tc39.es/ecma262/#sec-generator.prototype.return */
 GeneratorProto_next.section = 'https://tc39.es/ecma262/#sec-generator.prototype.next';
-function GeneratorProto_return([value = _Value.undefined], {
+function GeneratorProto_return([value = Value.undefined], {
   thisValue
 }) {
   // 1. Let g be the this value.
@@ -47623,7 +47622,7 @@ function GeneratorProto_return([value = _Value.undefined], {
 
 /** https://tc39.es/ecma262/#sec-generator.prototype.throw */
 GeneratorProto_return.section = 'https://tc39.es/ecma262/#sec-generator.prototype.return';
-function GeneratorProto_throw([exception = _Value.undefined], {
+function GeneratorProto_throw([exception = Value.undefined], {
   thisValue
 }) {
   // 1. Let g be the this value.
@@ -47639,19 +47638,19 @@ function bootstrapGeneratorFunctionPrototypePrototype(realmRec) {
   realmRec.Intrinsics['%GeneratorFunction.prototype.prototype%'] = generatorPrototype;
 
   // Used by `CreateListIteratorRecord`:
-  realmRec.Intrinsics['%GeneratorFunction.prototype.prototype.next%'] = generatorPrototype.Get(_Value('next'));
+  realmRec.Intrinsics['%GeneratorFunction.prototype.prototype.next%'] = generatorPrototype.Get(Value('next'));
 }
 
 function bootstrapGeneratorFunctionPrototype(realmRec) {
   const generatorPrototype = realmRec.Intrinsics['%GeneratorFunction.prototype.prototype%'];
   const generator = bootstrapPrototype(realmRec, [['prototype', generatorPrototype, undefined, {
-    Writable: _Value.false
+    Writable: Value.false
   }]], realmRec.Intrinsics['%Function.prototype%'], 'GeneratorFunction');
-  let _temp = DefinePropertyOrThrow(generatorPrototype, _Value('constructor'), _Descriptor({
+  let _temp = DefinePropertyOrThrow(generatorPrototype, Value('constructor'), _Descriptor({
     Value: generator,
-    Writable: _Value.false,
-    Enumerable: _Value.false,
-    Configurable: _Value.true
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.true
   }));
   Assert(!(_temp instanceof AbruptCompletion), "DefinePropertyOrThrow(generatorPrototype, Value('constructor'), Descriptor({\n    Value: generator,\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
   /* c8 ignore if */
@@ -47675,17 +47674,17 @@ GeneratorFunctionConstructor.section = 'https://tc39.es/ecma262/#sec-generatorfu
 function bootstrapGeneratorFunction(realmRec) {
   const generator = realmRec.Intrinsics['%GeneratorFunction.prototype%'];
   const cons = bootstrapConstructor(realmRec, GeneratorFunctionConstructor, 'GeneratorFunction', 1, generator, []);
-  let _temp = DefinePropertyOrThrow(cons, _Value('prototype'), _Descriptor({
-    Writable: _Value.false,
-    Configurable: _Value.false
+  let _temp = DefinePropertyOrThrow(cons, Value('prototype'), _Descriptor({
+    Writable: Value.false,
+    Configurable: Value.false
   }));
   Assert(!(_temp instanceof AbruptCompletion), "DefinePropertyOrThrow(cons, Value('prototype'), Descriptor({\n    Writable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
   }
-  let _temp2 = DefinePropertyOrThrow(generator, _Value('constructor'), _Descriptor({
-    Writable: _Value.false
+  let _temp2 = DefinePropertyOrThrow(generator, Value('constructor'), _Descriptor({
+    Writable: Value.false
   }));
   Assert(!(_temp2 instanceof AbruptCompletion), "DefinePropertyOrThrow(generator, Value('constructor'), Descriptor({\n    Writable: Value.false,\n  }))" + ' returned an abrupt completion');
   /* c8 ignore if */
@@ -47716,17 +47715,17 @@ function AsyncFunctionConstructor(args, {
 AsyncFunctionConstructor.section = 'https://tc39.es/ecma262/#sec-async-function-constructor-arguments';
 function bootstrapAsyncFunction(realmRec) {
   const cons = bootstrapConstructor(realmRec, AsyncFunctionConstructor, 'AsyncFunction', 1, realmRec.Intrinsics['%AsyncFunction.prototype%'], []);
-  cons.DefineOwnProperty(_Value('prototype'), _Descriptor({
-    Writable: _Value.false,
-    Enumerable: _Value.false,
-    Configurable: _Value.false
+  cons.DefineOwnProperty(Value('prototype'), _Descriptor({
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.false
   }));
   cons.Prototype = realmRec.Intrinsics['%Function%'];
   realmRec.Intrinsics['%AsyncFunction%'] = cons;
 }
 
 /** https://tc39.es/ecma262/#sec-asyncgenerator-prototype-next */
-function AsyncGeneratorPrototype_next([value = _Value.undefined], {
+function AsyncGeneratorPrototype_next([value = Value.undefined], {
   thisValue
 }) {
   // 1. Let generator be the this value.
@@ -47744,7 +47743,7 @@ function AsyncGeneratorPrototype_next([value = _Value.undefined], {
   // 4. IfAbruptRejectPromise(result, promiseCapability).
   /* c8 ignore if */
   if (result instanceof AbruptCompletion) {
-    const hygenicTemp2 = Call(promiseCapability.Reject, _Value.undefined, [result.Value]);
+    const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [result.Value]);
     if (hygenicTemp2 instanceof AbruptCompletion) {
       return hygenicTemp2;
     }
@@ -47758,7 +47757,7 @@ function AsyncGeneratorPrototype_next([value = _Value.undefined], {
   const state = generator.AsyncGeneratorState;
   // 6. If state is completed, then
   if (state === 'completed') {
-    let _temp2 = CreateIterResultObject(_Value.undefined, _Value.true);
+    let _temp2 = CreateIterResultObject(Value.undefined, Value.true);
     Assert(!(_temp2 instanceof AbruptCompletion), "CreateIterResultObject(Value.undefined, Value.true)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp2 instanceof Completion) {
@@ -47767,7 +47766,7 @@ function AsyncGeneratorPrototype_next([value = _Value.undefined], {
     // a. Let iteratorResult be ! CreateIterResultObject(undefined, true).
     const iteratorResult = _temp2;
     // b. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iteratorResult »).
-    let _temp3 = Call(promiseCapability.Resolve, _Value.undefined, [iteratorResult]);
+    let _temp3 = Call(promiseCapability.Resolve, Value.undefined, [iteratorResult]);
     Assert(!(_temp3 instanceof AbruptCompletion), "Call(promiseCapability.Resolve, Value.undefined, [iteratorResult])" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp3 instanceof Completion) {
@@ -47804,7 +47803,7 @@ function AsyncGeneratorPrototype_next([value = _Value.undefined], {
 
 /** https://tc39.es/ecma262/#sec-asyncgenerator-prototype-return */
 AsyncGeneratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-asyncgenerator-prototype-next';
-function AsyncGeneratorPrototype_return([value = _Value.undefined], {
+function AsyncGeneratorPrototype_return([value = Value.undefined], {
   thisValue
 }) {
   // 1. Let generator be the this value.
@@ -47822,7 +47821,7 @@ function AsyncGeneratorPrototype_return([value = _Value.undefined], {
   // 4. IfAbruptRejectPromise(result, promiseCapability).
   /* c8 ignore if */
   if (result instanceof AbruptCompletion) {
-    const hygenicTemp2 = Call(promiseCapability.Reject, _Value.undefined, [result.Value]);
+    const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [result.Value]);
     if (hygenicTemp2 instanceof AbruptCompletion) {
       return hygenicTemp2;
     }
@@ -47876,7 +47875,7 @@ function AsyncGeneratorPrototype_return([value = _Value.undefined], {
 
 /** https://tc39.es/ecma262/#sec-asyncgenerator-prototype-throw */
 AsyncGeneratorPrototype_return.section = 'https://tc39.es/ecma262/#sec-asyncgenerator-prototype-return';
-function AsyncGeneratorPrototype_throw([exception = _Value.undefined], {
+function AsyncGeneratorPrototype_throw([exception = Value.undefined], {
   thisValue
 }) {
   // 1. Let generator be the this value.
@@ -47894,7 +47893,7 @@ function AsyncGeneratorPrototype_throw([exception = _Value.undefined], {
   // 4. IfAbruptRejectPromise(result, promiseCapability).
   /* c8 ignore if */
   if (result instanceof AbruptCompletion) {
-    const hygenicTemp2 = Call(promiseCapability.Reject, _Value.undefined, [result.Value]);
+    const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [result.Value]);
     if (hygenicTemp2 instanceof AbruptCompletion) {
       return hygenicTemp2;
     }
@@ -47915,7 +47914,7 @@ function AsyncGeneratorPrototype_throw([exception = _Value.undefined], {
   }
   // 7. If state is completed, then
   if (state === 'completed') {
-    let _temp11 = Call(promiseCapability.Reject, _Value.undefined, [exception]);
+    let _temp11 = Call(promiseCapability.Reject, Value.undefined, [exception]);
     Assert(!(_temp11 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [exception])" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp11 instanceof Completion) {
@@ -47957,13 +47956,13 @@ function bootstrapAsyncGeneratorFunctionPrototypePrototype(realmRec) {
 
 function bootstrapAsyncGeneratorFunctionPrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [['prototype', realmRec.Intrinsics['%AsyncGeneratorFunction.prototype.prototype%'], undefined, {
-    Writable: _Value.false
+    Writable: Value.false
   }]], realmRec.Intrinsics['%Function.prototype%'], 'AsyncGeneratorFunction');
-  let _temp = realmRec.Intrinsics['%AsyncGeneratorFunction.prototype.prototype%'].DefineOwnProperty(_Value('constructor'), _Descriptor({
+  let _temp = realmRec.Intrinsics['%AsyncGeneratorFunction.prototype.prototype%'].DefineOwnProperty(Value('constructor'), _Descriptor({
     Value: proto,
-    Writable: _Value.false,
-    Enumerable: _Value.false,
-    Configurable: _Value.true
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.true
   }));
   Assert(!(_temp instanceof AbruptCompletion), "realmRec.Intrinsics['%AsyncGeneratorFunction.prototype.prototype%'].DefineOwnProperty(Value('constructor'), Descriptor({\n    Value: proto,\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
   /* c8 ignore if */
@@ -47986,20 +47985,20 @@ function AsyncGeneratorFunctionConstructor(args, {
 AsyncGeneratorFunctionConstructor.section = 'https://tc39.es/ecma262/#sec-asyncgeneratorfunction';
 function bootstrapAsyncGeneratorFunction(realmRec) {
   const cons = bootstrapConstructor(realmRec, AsyncGeneratorFunctionConstructor, 'AsyncGeneratorFunction', 1, realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'], []);
-  let _temp = cons.DefineOwnProperty(_Value('prototype'), _Descriptor({
-    Writable: _Value.false,
-    Enumerable: _Value.false,
-    Configurable: _Value.false
+  let _temp = cons.DefineOwnProperty(Value('prototype'), _Descriptor({
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.false
   }));
   Assert(!(_temp instanceof AbruptCompletion), "cons.DefineOwnProperty(Value('prototype'), Descriptor({\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
   }
-  let _temp2 = realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'].DefineOwnProperty(_Value('constructor'), _Descriptor({
-    Writable: _Value.false,
-    Enumerable: _Value.false,
-    Configurable: _Value.true
+  let _temp2 = realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'].DefineOwnProperty(Value('constructor'), _Descriptor({
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.true
   }));
   Assert(!(_temp2 instanceof AbruptCompletion), "realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'].DefineOwnProperty(Value('constructor'), Descriptor({\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
   /* c8 ignore if */
@@ -48041,7 +48040,7 @@ function AsyncFromSyncIteratorPrototype_next([value], {
   // 7. IfAbruptRejectPromise(result, promiseCapability).
   /* c8 ignore if */
   if (result instanceof AbruptCompletion) {
-    const hygenicTemp2 = Call(promiseCapability.Reject, _Value.undefined, [result.Value]);
+    const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [result.Value]);
     if (hygenicTemp2 instanceof AbruptCompletion) {
       return hygenicTemp2;
     }
@@ -48081,11 +48080,11 @@ function AsyncFromSyncIteratorPrototype_return([value], {
   // 4. Let syncIterator be O.[[SyncIteratorRecord]].[[Iterator]].
   const syncIterator = O.SyncIteratorRecord.Iterator;
   // 5. Let return be GetMethod(syncIterator, "return").
-  let ret = GetMethod(syncIterator, _Value('return'));
+  let ret = GetMethod(syncIterator, Value('return'));
   // 6. IfAbruptRejectPromise(return, promiseCapability).
   /* c8 ignore if */
   if (ret instanceof AbruptCompletion) {
-    const hygenicTemp2 = Call(promiseCapability.Reject, _Value.undefined, [ret.Value]);
+    const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [ret.Value]);
     if (hygenicTemp2 instanceof AbruptCompletion) {
       return hygenicTemp2;
     }
@@ -48096,8 +48095,8 @@ function AsyncFromSyncIteratorPrototype_return([value], {
     ret = ret.Value;
   }
   // 7. If return is undefined, then
-  if (ret === _Value.undefined) {
-    let _temp4 = CreateIterResultObject(value, _Value.true);
+  if (ret === Value.undefined) {
+    let _temp4 = CreateIterResultObject(value, Value.true);
     Assert(!(_temp4 instanceof AbruptCompletion), "CreateIterResultObject(value, Value.true)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp4 instanceof Completion) {
@@ -48106,7 +48105,7 @@ function AsyncFromSyncIteratorPrototype_return([value], {
     // a. Let iterResult be ! CreateIterResultObject(value, true).
     const iterResult = _temp4;
     // b. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iterResult »).
-    let _temp5 = Call(promiseCapability.Resolve, _Value.undefined, [iterResult]);
+    let _temp5 = Call(promiseCapability.Resolve, Value.undefined, [iterResult]);
     Assert(!(_temp5 instanceof AbruptCompletion), "Call(promiseCapability.Resolve, Value.undefined, [iterResult])" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp5 instanceof Completion) {
@@ -48128,7 +48127,7 @@ function AsyncFromSyncIteratorPrototype_return([value], {
   // 10. IfAbruptRejectPromise(result, promiseCapability).
   /* c8 ignore if */
   if (result instanceof AbruptCompletion) {
-    const hygenicTemp2 = Call(promiseCapability.Reject, _Value.undefined, [result.Value]);
+    const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [result.Value]);
     if (hygenicTemp2 instanceof AbruptCompletion) {
       return hygenicTemp2;
     }
@@ -48140,7 +48139,7 @@ function AsyncFromSyncIteratorPrototype_return([value], {
   }
   // 11. If Type(result) is not Object, then
   if (!(result instanceof ObjectValue)) {
-    let _temp6 = Call(promiseCapability.Reject, _Value.undefined, [surroundingAgent.Throw('TypeError', 'NotAnObject', result).Value]);
+    let _temp6 = Call(promiseCapability.Reject, Value.undefined, [surroundingAgent.Throw('TypeError', 'NotAnObject', result).Value]);
     Assert(!(_temp6 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [\n      surroundingAgent.Throw('TypeError', 'NotAnObject', result).Value,\n    ])" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp6 instanceof Completion) {
@@ -48179,11 +48178,11 @@ function AsyncFromSyncIteratorPrototype_throw([value], {
   // 4. Let syncIterator be O.[[SyncIteratorRecord]].[[Iterator]].
   const syncIterator = O.SyncIteratorRecord.Iterator;
   // 5. Let throw be GetMethod(syncIterator, "throw").
-  let thr = GetMethod(syncIterator, _Value('throw'));
+  let thr = GetMethod(syncIterator, Value('throw'));
   // 6. IfAbruptRejectPromise(throw, promiseCapability).
   /* c8 ignore if */
   if (thr instanceof AbruptCompletion) {
-    const hygenicTemp2 = Call(promiseCapability.Reject, _Value.undefined, [thr.Value]);
+    const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [thr.Value]);
     if (hygenicTemp2 instanceof AbruptCompletion) {
       return hygenicTemp2;
     }
@@ -48194,8 +48193,8 @@ function AsyncFromSyncIteratorPrototype_throw([value], {
     thr = thr.Value;
   }
   // 7. If throw is undefined, then
-  if (thr === _Value.undefined) {
-    let _temp9 = Call(promiseCapability.Reject, _Value.undefined, [value]);
+  if (thr === Value.undefined) {
+    let _temp9 = Call(promiseCapability.Reject, Value.undefined, [value]);
     Assert(!(_temp9 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [value])" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp9 instanceof Completion) {
@@ -48217,7 +48216,7 @@ function AsyncFromSyncIteratorPrototype_throw([value], {
   // 10. IfAbruptRejectPromise(result, promiseCapability).
   /* c8 ignore if */
   if (result instanceof AbruptCompletion) {
-    const hygenicTemp2 = Call(promiseCapability.Reject, _Value.undefined, [result.Value]);
+    const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [result.Value]);
     if (hygenicTemp2 instanceof AbruptCompletion) {
       return hygenicTemp2;
     }
@@ -48229,7 +48228,7 @@ function AsyncFromSyncIteratorPrototype_throw([value], {
   }
   // 11. If Type(result) is not Object, then
   if (!(result instanceof ObjectValue)) {
-    let _temp10 = Call(promiseCapability.Reject, _Value.undefined, [surroundingAgent.Throw('TypeError', 'NotAnObject', result).Value]);
+    let _temp10 = Call(promiseCapability.Reject, Value.undefined, [surroundingAgent.Throw('TypeError', 'NotAnObject', result).Value]);
     Assert(!(_temp10 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [\n      surroundingAgent.Throw('TypeError', 'NotAnObject', result).Value,\n    ])" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp10 instanceof Completion) {
@@ -48254,11 +48253,11 @@ function bootstrapAsyncFromSyncIteratorPrototype(realmRec) {
 }
 
 /** https://tc39.es/ecma262/#sec-arraybuffer-length */
-function ArrayBufferConstructor([length = _Value.undefined], {
+function ArrayBufferConstructor([length = Value.undefined], {
   NewTarget
 }) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
-  if (NewTarget === _Value.undefined) {
+  if (NewTarget === Value.undefined) {
     return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
   // 2. Let byteLength be ? ToIndex(length).
@@ -48278,17 +48277,17 @@ function ArrayBufferConstructor([length = _Value.undefined], {
 
 /** https://tc39.es/ecma262/#sec-arraybuffer.isview */
 ArrayBufferConstructor.section = 'https://tc39.es/ecma262/#sec-arraybuffer-length';
-function ArrayBuffer_isView([arg = _Value.undefined]) {
+function ArrayBuffer_isView([arg = Value.undefined]) {
   // 1. If Type(arg) is not Object, return false.
   if (!(arg instanceof ObjectValue)) {
-    return _Value.false;
+    return Value.false;
   }
   // 2. If arg has a [[ViewedArrayBuffer]] internal slot, return true.
   if ('ViewedArrayBuffer' in arg) {
-    return _Value.true;
+    return Value.true;
   }
   // 3. Return false.
-  return _Value.false;
+  return Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-get-arraybuffer-@@species */
@@ -48321,11 +48320,11 @@ function ArrayBufferProto_byteLength(args, {
     _temp = _temp.Value;
   }
   // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
-  if (IsSharedArrayBuffer() === _Value.true) {
+  if (IsSharedArrayBuffer() === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferShared');
   }
   // 4. If IsDetachedBuffer(O) is true, return +0𝔽.
-  if (IsDetachedBuffer(O) === _Value.true) {
+  if (IsDetachedBuffer(O) === Value.true) {
     return F(+0);
   }
   // 5. Let length be O.[[ArrayBufferByteLength]].
@@ -48336,7 +48335,7 @@ function ArrayBufferProto_byteLength(args, {
 
 /** https://tc39.es/ecma262/#sec-arraybuffer.prototype.slice */
 ArrayBufferProto_byteLength.section = 'https://tc39.es/ecma262/#sec-get-arraybuffer.prototype.bytelength';
-function ArrayBufferProto_slice([start = _Value.undefined, end = _Value.undefined], {
+function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined], {
   thisValue
 }) {
   // 1. Let O be the this value.
@@ -48352,11 +48351,11 @@ function ArrayBufferProto_slice([start = _Value.undefined, end = _Value.undefine
     _temp2 = _temp2.Value;
   }
   // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
-  if (IsSharedArrayBuffer() === _Value.true) {
+  if (IsSharedArrayBuffer() === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferShared');
   }
   // 4. If IsDetachedBuffer(O) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(O) === _Value.true) {
+  if (IsDetachedBuffer(O) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 5. Let len be O.[[ArrayBufferByteLength]].
@@ -48381,7 +48380,7 @@ function ArrayBufferProto_slice([start = _Value.undefined, end = _Value.undefine
   }
   let relativeEnd;
   // 8. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToIntegerOrInfinity(end).
-  if (end === _Value.undefined) {
+  if (end === Value.undefined) {
     relativeEnd = len;
   } else {
     let _temp4 = ToIntegerOrInfinity(end);
@@ -48437,15 +48436,15 @@ function ArrayBufferProto_slice([start = _Value.undefined, end = _Value.undefine
     _temp7 = _temp7.Value;
   }
   // 14. If IsSharedArrayBuffer(new) is true, throw a TypeError exception.
-  if (IsSharedArrayBuffer() === _Value.true) {
+  if (IsSharedArrayBuffer() === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferShared');
   }
   // 15. If IsDetachedBuffer(new) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(newO) === _Value.true) {
+  if (IsDetachedBuffer(newO) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 16. If SameValue(new, O) is true, throw a TypeError exception.
-  if (SameValue(newO, O) === _Value.true) {
+  if (SameValue(newO, O) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'SubclassSameValue', newO);
   }
   // 17. If new.[[ArrayBufferByteLength]] < newLen, throw a TypeError exception.
@@ -48454,7 +48453,7 @@ function ArrayBufferProto_slice([start = _Value.undefined, end = _Value.undefine
   }
   // 18. NOTE: Side-effects of the above steps may have detached O.
   // 19. If IsDetachedBuffer(O) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(O) === _Value.true) {
+  if (IsDetachedBuffer(O) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 20. Let fromBuf be O.[[ArrayBufferData]].
@@ -49017,7 +49016,7 @@ function InternalizeJSONProperty(holder, name, reviver) {
       _temp52 = _temp52.Value;
     }
     const isArray = _temp52;
-    if (isArray === _Value.true) {
+    if (isArray === Value.true) {
       let I = 0;
       let _temp53 = LengthOfArrayLike(val);
       /* c8 ignore if */
@@ -49120,7 +49119,7 @@ function InternalizeJSONProperty(holder, name, reviver) {
 }
 
 /** https://tc39.es/ecma262/#sec-json.parse */
-function JSON_parse([text = _Value.undefined, reviver = _Value.undefined]) {
+function JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
   let _temp62 = ToString(text);
   /* c8 ignore if */
   if (_temp62 instanceof AbruptCompletion) {
@@ -49156,13 +49155,13 @@ function JSON_parse([text = _Value.undefined, reviver = _Value.undefined]) {
   // 5. Let unfiltered be completion.[[Value]].
   const unfiltered = completion.Value;
   // 6. Assert: unfiltered is either a String, Number, Boolean, Null, or an Object that is defined by either an ArrayLiteral or an ObjectLiteral.
-  Assert(unfiltered instanceof StringValue || unfiltered instanceof NumberValue || unfiltered instanceof BooleanValue || unfiltered instanceof NullValue || unfiltered instanceof ObjectValue, "unfiltered instanceof JSStringValue\n         || unfiltered instanceof NumberValue\n         || unfiltered instanceof BooleanValue\n         || unfiltered instanceof NullValue\n         || unfiltered instanceof ObjectValue");
+  Assert(unfiltered instanceof JSStringValue || unfiltered instanceof NumberValue || unfiltered instanceof BooleanValue || unfiltered instanceof NullValue || unfiltered instanceof ObjectValue, "unfiltered instanceof JSStringValue\n         || unfiltered instanceof NumberValue\n         || unfiltered instanceof BooleanValue\n         || unfiltered instanceof NullValue\n         || unfiltered instanceof ObjectValue");
   // 7. If IsCallable(reviver) is true, then
-  if (IsCallable(reviver) === _Value.true) {
+  if (IsCallable(reviver) === Value.true) {
     // a. Let root be OrdinaryObjectCreate(%Object.prototype%).
     const root = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
     // b. Let rootName be the empty String.
-    const rootName = _Value('');
+    const rootName = Value('');
     // c. Perform ! CreateDataPropertyOrThrow(root, rootName, unfiltered).
     let _temp64 = CreateDataPropertyOrThrow(root, rootName, unfiltered);
     Assert(!(_temp64 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(root, rootName, unfiltered)" + ' returned an abrupt completion');
@@ -49193,7 +49192,7 @@ function SerializeJSONProperty(state, key, holder) {
   }
   let value = _temp65; // eslint-disable-line no-shadow
   if (value instanceof ObjectValue || value instanceof BigIntValue) {
-    let _temp66 = GetV(value, _Value('toJSON'));
+    let _temp66 = GetV(value, Value('toJSON'));
     /* c8 ignore if */
     if (_temp66 instanceof AbruptCompletion) {
       return _temp66;
@@ -49203,7 +49202,7 @@ function SerializeJSONProperty(state, key, holder) {
       _temp66 = _temp66.Value;
     }
     const toJSON = _temp66;
-    if (IsCallable(toJSON) === _Value.true) {
+    if (IsCallable(toJSON) === Value.true) {
       let _temp67 = Call(toJSON, value, [key]);
       /* c8 ignore if */
       if (_temp67 instanceof AbruptCompletion) {
@@ -49216,7 +49215,7 @@ function SerializeJSONProperty(state, key, holder) {
       value = _temp67;
     }
   }
-  if (state.ReplacerFunction !== _Value.undefined) {
+  if (state.ReplacerFunction !== Value.undefined) {
     let _temp68 = Call(state.ReplacerFunction, holder, [key, value]);
     /* c8 ignore if */
     if (_temp68 instanceof AbruptCompletion) {
@@ -49257,16 +49256,16 @@ function SerializeJSONProperty(state, key, holder) {
       value = value.BigIntData;
     }
   }
-  if (value === _Value.null) {
-    return _Value('null');
+  if (value === Value.null) {
+    return Value('null');
   }
-  if (value === _Value.true) {
-    return _Value('true');
+  if (value === Value.true) {
+    return Value('true');
   }
-  if (value === _Value.false) {
-    return _Value('false');
+  if (value === Value.false) {
+    return Value('false');
   }
-  if (value instanceof StringValue) {
+  if (value instanceof JSStringValue) {
     return QuoteJSONString(value);
   }
   if (value instanceof NumberValue) {
@@ -49279,12 +49278,12 @@ function SerializeJSONProperty(state, key, holder) {
       }
       return _temp71;
     }
-    return _Value('null');
+    return Value('null');
   }
   if (value instanceof BigIntValue) {
     return surroundingAgent.Throw('TypeError', 'CannotJSONSerializeBigInt');
   }
-  if (value instanceof ObjectValue && IsCallable(value) === _Value.false) {
+  if (value instanceof ObjectValue && IsCallable(value) === Value.false) {
     let _temp72 = IsArray(value);
     /* c8 ignore if */
     if (_temp72 instanceof AbruptCompletion) {
@@ -49295,12 +49294,12 @@ function SerializeJSONProperty(state, key, holder) {
       _temp72 = _temp72.Value;
     }
     const isArray = _temp72;
-    if (isArray === _Value.true) {
+    if (isArray === Value.true) {
       return SerializeJSONArray(state, value);
     }
     return SerializeJSONObject(state, value);
   }
-  return _Value.undefined;
+  return Value.undefined;
 }
 SerializeJSONProperty.section = 'https://tc39.es/ecma262/#sec-serializejsonproperty';
 function UnicodeEscape(C) {
@@ -49323,7 +49322,7 @@ function QuoteJSONString(value) {
     }
   }
   product = `${product}\u0022`;
-  return _Value(product);
+  return Value(product);
 }
 
 /** https://tc39.es/ecma262/#sec-serializejsonobject */
@@ -49335,7 +49334,7 @@ function SerializeJSONObject(state, value) {
   const stepback = state.Indent;
   state.Indent = `${state.Indent}${state.Gap}`;
   let K;
-  if (state.PropertyList !== _Value.undefined) {
+  if (state.PropertyList !== Value.undefined) {
     K = state.PropertyList;
   } else {
     let _temp73 = EnumerableOwnPropertyNames(value, 'key');
@@ -49361,7 +49360,7 @@ function SerializeJSONObject(state, value) {
       _temp74 = _temp74.Value;
     }
     const strP = _temp74;
-    if (strP !== _Value.undefined) {
+    if (strP !== Value.undefined) {
       let member = QuoteJSONString(P).stringValue();
       member = `${member}:`;
       if (state.Gap !== '') {
@@ -49373,15 +49372,15 @@ function SerializeJSONObject(state, value) {
   }
   let final;
   if (partial.length === 0) {
-    final = _Value('{}');
+    final = Value('{}');
   } else {
     if (state.Gap === '') {
       const properties = partial.join(',');
-      final = _Value(`{${properties}}`);
+      final = Value(`{${properties}}`);
     } else {
       const separator = `,\u000A${state.Indent}`;
       const properties = partial.join(separator);
-      final = _Value(`{\u000A${state.Indent}${properties}\u000A${stepback}}`);
+      final = Value(`{\u000A${state.Indent}${properties}\u000A${stepback}}`);
     }
   }
   state.Stack.pop();
@@ -49428,7 +49427,7 @@ function SerializeJSONArray(state, value) {
       _temp77 = _temp77.Value;
     }
     const strP = _temp77;
-    if (strP === _Value.undefined) {
+    if (strP === Value.undefined) {
       partial.push('null');
     } else {
       partial.push(strP.stringValue());
@@ -49437,15 +49436,15 @@ function SerializeJSONArray(state, value) {
   }
   let final;
   if (partial.length === 0) {
-    final = _Value('[]');
+    final = Value('[]');
   } else {
     if (state.Gap === '') {
       const properties = partial.join(',');
-      final = _Value(`[${properties}]`);
+      final = Value(`[${properties}]`);
     } else {
       const separator = `,\u000A${state.Indent}`;
       const properties = partial.join(separator);
-      final = _Value(`[\u000A${state.Indent}${properties}\u000A${stepback}]`);
+      final = Value(`[\u000A${state.Indent}${properties}\u000A${stepback}]`);
     }
   }
   state.Stack.pop();
@@ -49455,13 +49454,13 @@ function SerializeJSONArray(state, value) {
 
 /** https://tc39.es/ecma262/#sec-json.stringify */
 SerializeJSONArray.section = 'https://tc39.es/ecma262/#sec-serializejsonarray';
-function JSON_stringify([value = _Value.undefined, replacer = _Value.undefined, space = _Value.undefined]) {
+function JSON_stringify([value = Value.undefined, replacer = Value.undefined, space = Value.undefined]) {
   const stack = [];
   const indent = '';
-  let PropertyList = _Value.undefined;
-  let ReplacerFunction = _Value.undefined;
+  let PropertyList = Value.undefined;
+  let ReplacerFunction = Value.undefined;
   if (replacer instanceof ObjectValue) {
-    if (IsCallable(replacer) === _Value.true) {
+    if (IsCallable(replacer) === Value.true) {
       ReplacerFunction = replacer;
     } else {
       let _temp78 = IsArray(replacer);
@@ -49474,7 +49473,7 @@ function JSON_stringify([value = _Value.undefined, replacer = _Value.undefined, 
         _temp78 = _temp78.Value;
       }
       const isArray = _temp78;
-      if (isArray === _Value.true) {
+      if (isArray === Value.true) {
         PropertyList = new ValueSet();
         let _temp79 = LengthOfArrayLike(replacer);
         /* c8 ignore if */
@@ -49505,8 +49504,8 @@ function JSON_stringify([value = _Value.undefined, replacer = _Value.undefined, 
             _temp81 = _temp81.Value;
           }
           const v = _temp81;
-          let item = _Value.undefined;
-          if (v instanceof StringValue) {
+          let item = Value.undefined;
+          if (v instanceof JSStringValue) {
             item = v;
           } else if (v instanceof NumberValue) {
             let _temp82 = ToString(v);
@@ -49530,7 +49529,7 @@ function JSON_stringify([value = _Value.undefined, replacer = _Value.undefined, 
               item = _temp83;
             }
           }
-          if (item !== _Value.undefined && !PropertyList.has(item)) {
+          if (item !== Value.undefined && !PropertyList.has(item)) {
             PropertyList.add(item);
           }
           k += 1;
@@ -49577,7 +49576,7 @@ function JSON_stringify([value = _Value.undefined, replacer = _Value.undefined, 
     } else {
       gap = ' '.repeat(space);
     }
-  } else if (space instanceof StringValue) {
+  } else if (space instanceof JSStringValue) {
     if (space.stringValue().length <= 10) {
       gap = space.stringValue();
     } else {
@@ -49587,7 +49586,7 @@ function JSON_stringify([value = _Value.undefined, replacer = _Value.undefined, 
     gap = '';
   }
   const wrapper = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
-  let _temp87 = CreateDataPropertyOrThrow(wrapper, _Value(''), value);
+  let _temp87 = CreateDataPropertyOrThrow(wrapper, Value(''), value);
   Assert(!(_temp87 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(wrapper, Value(''), value)" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp87 instanceof Completion) {
@@ -49600,13 +49599,13 @@ function JSON_stringify([value = _Value.undefined, replacer = _Value.undefined, 
     Gap: gap,
     PropertyList
   };
-  return SerializeJSONProperty(state, _Value(''), wrapper);
+  return SerializeJSONProperty(state, Value(''), wrapper);
 }
 JSON_stringify.section = 'https://tc39.es/ecma262/#sec-json.stringify';
 function bootstrapJSON(realmRec) {
   const json = bootstrapPrototype(realmRec, [['parse', JSON_parse, 2], ['stringify', JSON_stringify, 3]], realmRec.Intrinsics['%Object.prototype%'], 'JSON');
   realmRec.Intrinsics['%JSON%'] = json;
-  let _temp88 = Get(json, _Value('parse'));
+  let _temp88 = Get(json, Value('parse'));
   Assert(!(_temp88 instanceof AbruptCompletion), "Get(json, Value('parse'))" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp88 instanceof Completion) {
@@ -49618,7 +49617,7 @@ function bootstrapJSON(realmRec) {
 // @ts-nocheck
 
 /** https://tc39.es/ecma262/#sec-eval-x */
-function Eval([x = _Value.undefined]) {
+function Eval([x = Value.undefined]) {
   // 1. Assert: The execution context stack has at least two elements.
   Assert(surroundingAgent.executionContextStack.length >= 2, "surroundingAgent.executionContextStack.length >= 2");
   // 2. Let callerContext be the second to top element of the execution context stack.
@@ -49630,11 +49629,11 @@ function Eval([x = _Value.undefined]) {
 }
 Eval.section = 'https://tc39.es/ecma262/#sec-eval-x';
 function bootstrapEval(realmRec) {
-  realmRec.Intrinsics['%eval%'] = CreateBuiltinFunction(Eval, 1, _Value('eval'), [], realmRec);
+  realmRec.Intrinsics['%eval%'] = CreateBuiltinFunction(Eval, 1, Value('eval'), [], realmRec);
 }
 
 /** https://tc39.es/ecma262/#sec-isfinite-number */
-function IsFinite([number = _Value.undefined]) {
+function IsFinite([number = Value.undefined]) {
   let _temp = ToNumber(number);
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) {
@@ -49648,18 +49647,18 @@ function IsFinite([number = _Value.undefined]) {
   const num = _temp;
   // 2. If num is NaN, +∞, or -∞, return false.
   if (num.isNaN() || num.isInfinity()) {
-    return _Value.false;
+    return Value.false;
   }
   // 3. Otherwise, return true.
-  return _Value.true;
+  return Value.true;
 }
 IsFinite.section = 'https://tc39.es/ecma262/#sec-isfinite-number';
 function bootstrapIsFinite(realmRec) {
-  realmRec.Intrinsics['%isFinite%'] = CreateBuiltinFunction(IsFinite, 1, _Value('isFinite'), [], realmRec);
+  realmRec.Intrinsics['%isFinite%'] = CreateBuiltinFunction(IsFinite, 1, Value('isFinite'), [], realmRec);
 }
 
 /** https://tc39.es/ecma262/#sec-isnan-number */
-function IsNaN([number = _Value.undefined]) {
+function IsNaN([number = Value.undefined]) {
   let _temp = ToNumber(number);
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) {
@@ -49673,18 +49672,18 @@ function IsNaN([number = _Value.undefined]) {
   const num = _temp;
   // 2. If num is NaN, return true.
   if (num.isNaN()) {
-    return _Value.true;
+    return Value.true;
   }
   // 3. Otherwise, return false.
-  return _Value.false;
+  return Value.false;
 }
 IsNaN.section = 'https://tc39.es/ecma262/#sec-isnan-number';
 function bootstrapIsNaN(realmRec) {
-  realmRec.Intrinsics['%isNaN%'] = CreateBuiltinFunction(IsNaN, 1, _Value('isNaN'), [], realmRec);
+  realmRec.Intrinsics['%isNaN%'] = CreateBuiltinFunction(IsNaN, 1, Value('isNaN'), [], realmRec);
 }
 
 /** https://tc39.es/ecma262/#sec-parsefloat-string */
-function ParseFloat([string = _Value.undefined]) {
+function ParseFloat([string = Value.undefined]) {
   let _temp = ToString(string);
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) {
@@ -49765,7 +49764,7 @@ function ParseFloat([string = _Value.undefined]) {
 }
 ParseFloat.section = 'https://tc39.es/ecma262/#sec-parsefloat-string';
 function bootstrapParseFloat(realmRec) {
-  realmRec.Intrinsics['%parseFloat%'] = CreateBuiltinFunction(ParseFloat, 1, _Value('parseFloat'), [], realmRec);
+  realmRec.Intrinsics['%parseFloat%'] = CreateBuiltinFunction(ParseFloat, 1, Value('parseFloat'), [], realmRec);
 }
 
 function digitToNumber(digit) {
@@ -49808,7 +49807,7 @@ function searchNotRadixDigit(str, R) {
 }
 
 /** https://tc39.es/ecma262/#sec-parseint-string-radix */
-function ParseInt([string = _Value.undefined, radix = _Value.undefined]) {
+function ParseInt([string = Value.undefined, radix = Value.undefined]) {
   let _temp = ToString(string);
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) {
@@ -49876,7 +49875,7 @@ function ParseInt([string = _Value.undefined, radix = _Value.undefined]) {
 }
 ParseInt.section = 'https://tc39.es/ecma262/#sec-parseint-string-radix';
 function bootstrapParseInt(realmRec) {
-  realmRec.Intrinsics['%parseInt%'] = CreateBuiltinFunction(ParseInt, 2, _Value('parseInt'), [], realmRec);
+  realmRec.Intrinsics['%parseInt%'] = CreateBuiltinFunction(ParseInt, 2, Value('parseInt'), [], realmRec);
 }
 
 function utf8Encode(utf) {
@@ -49965,7 +49964,7 @@ function Encode(string, unescapedSet) {
   while (true) {
     // a. If k equals strLen, return R.
     if (k === strLen) {
-      return _Value(R);
+      return Value(R);
     }
     // b. Let C be the code unit at index k within string.
     const C = string[k];
@@ -50019,7 +50018,7 @@ function Decode(string, reservedSet) {
   while (true) {
     // a. If k equals strLen, return R.
     if (k === strLen) {
-      return _Value(R);
+      return Value(R);
     }
     // b. Let C be the code unit at index k within string.
     const C = string[k];
@@ -50126,7 +50125,7 @@ function Decode(string, reservedSet) {
 
 /** https://tc39.es/ecma262/#sec-decodeuri-encodeduri */
 Decode.section = 'https://tc39.es/ecma262/#sec-decode';
-function decodeURI([encodedURI = _Value.undefined]) {
+function decodeURI([encodedURI = Value.undefined]) {
   let _temp2 = ToString(encodedURI);
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) {
@@ -50146,7 +50145,7 @@ function decodeURI([encodedURI = _Value.undefined]) {
 
 /** https://tc39.es/ecma262/#sec-decodeuricomponent-encodeduricomponent */
 decodeURI.section = 'https://tc39.es/ecma262/#sec-decodeuri-encodeduri';
-function decodeURIComponent([encodedURIComponent = _Value.undefined]) {
+function decodeURIComponent([encodedURIComponent = Value.undefined]) {
   let _temp3 = ToString(encodedURIComponent);
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) {
@@ -50166,7 +50165,7 @@ function decodeURIComponent([encodedURIComponent = _Value.undefined]) {
 
 /** https://tc39.es/ecma262/#sec-encodeuri-uri */
 decodeURIComponent.section = 'https://tc39.es/ecma262/#sec-decodeuricomponent-encodeduricomponent';
-function encodeURI([uri = _Value.undefined]) {
+function encodeURI([uri = Value.undefined]) {
   let _temp4 = ToString(uri);
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) {
@@ -50186,7 +50185,7 @@ function encodeURI([uri = _Value.undefined]) {
 
 /** https://tc39.es/ecma262/#sec-encodeuricomponent-uricomponent */
 encodeURI.section = 'https://tc39.es/ecma262/#sec-encodeuri-uri';
-function encodeURIComponent([uriComponent = _Value.undefined]) {
+function encodeURIComponent([uriComponent = Value.undefined]) {
   let _temp5 = ToString(uriComponent);
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) {
@@ -50206,7 +50205,7 @@ function encodeURIComponent([uriComponent = _Value.undefined]) {
 encodeURIComponent.section = 'https://tc39.es/ecma262/#sec-encodeuricomponent-uricomponent';
 function bootstrapURIHandling(realmRec) {
   [['decodeURI', decodeURI, 1], ['decodeURIComponent', decodeURIComponent, 1], ['encodeURI', encodeURI, 1], ['encodeURIComponent', encodeURIComponent, 1]].forEach(([name, f, length]) => {
-    realmRec.Intrinsics[`%${name}%`] = CreateBuiltinFunction(f, length, _Value(name), [], realmRec);
+    realmRec.Intrinsics[`%${name}%`] = CreateBuiltinFunction(f, length, Value(name), [], realmRec);
   });
 }
 
@@ -50217,7 +50216,7 @@ function ThrowTypeError() {
 }
 ThrowTypeError.section = 'https://tc39.es/ecma262/#sec-%throwtypeerror%';
 function bootstrapThrowTypeError(realmRec) {
-  let _temp = CreateBuiltinFunction(ThrowTypeError, 0, _Value(''), [], realmRec);
+  let _temp = CreateBuiltinFunction(ThrowTypeError, 0, Value(''), [], realmRec);
   Assert(!(_temp instanceof AbruptCompletion), "CreateBuiltinFunction(ThrowTypeError, 0, Value(''), [], realmRec)" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp instanceof Completion) {
@@ -50230,7 +50229,7 @@ function bootstrapThrowTypeError(realmRec) {
   if (_temp2 instanceof Completion) {
     _temp2 = _temp2.Value;
   }
-  Assert(_temp2 === _Value.true, "X(SetIntegrityLevel(f, 'frozen')) === Value.true");
+  Assert(_temp2 === Value.true, "X(SetIntegrityLevel(f, 'frozen')) === Value.true");
   realmRec.Intrinsics['%ThrowTypeError%'] = f;
 }
 
@@ -50242,22 +50241,22 @@ function TypedArrayConstructor() {
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.from */
 TypedArrayConstructor.section = 'https://tc39.es/ecma262/#sec-%typedarray%-intrinsic-object';
-function TypedArray_from([source = _Value.undefined, mapfn = _Value.undefined, thisArg = _Value.undefined], {
+function TypedArray_from([source = Value.undefined, mapfn = Value.undefined, thisArg = Value.undefined], {
   thisValue
 }) {
   // 1. Let C be the this value.
   const C = thisValue;
   // 2. If IsConstructor(C) is false, throw a TypeError exception.
-  if (IsConstructor(C) === _Value.false) {
+  if (IsConstructor(C) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
   }
   // 3. If mapfn is undefined, let mapping be false.
   let mapping;
-  if (mapfn === _Value.undefined) {
+  if (mapfn === Value.undefined) {
     mapping = false;
   } else {
     // a. If IsCallable(mapfn) is false, throw a TypeError exception.
-    if (IsCallable(mapfn) === _Value.false) {
+    if (IsCallable(mapfn) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', mapfn);
     }
     // b. Let mapping be true.
@@ -50275,7 +50274,7 @@ function TypedArray_from([source = _Value.undefined, mapfn = _Value.undefined, t
   }
   const usingIterator = _temp;
   // 6. If usingIterator is not undefined, then
-  if (usingIterator !== _Value.undefined) {
+  if (usingIterator !== Value.undefined) {
     let _temp2 = IterableToList(source, usingIterator);
     /* c8 ignore if */
     if (_temp2 instanceof AbruptCompletion) {
@@ -50322,7 +50321,7 @@ function TypedArray_from([source = _Value.undefined, mapfn = _Value.undefined, t
       } else {
         mappedValue = kValue;
       }
-      let _temp6 = Set$1(targetObj, Pk, mappedValue, _Value.true);
+      let _temp6 = Set$1(targetObj, Pk, mappedValue, Value.true);
       /* c8 ignore if */
       if (_temp6 instanceof AbruptCompletion) {
         return _temp6;
@@ -50409,7 +50408,7 @@ function TypedArray_from([source = _Value.undefined, mapfn = _Value.undefined, t
       mappedValue = kValue;
     }
     // e. Perform ? Set(targetObj, Pk, mappedValue, true).
-    let _temp13 = Set$1(targetObj, Pk, mappedValue, _Value.true);
+    let _temp13 = Set$1(targetObj, Pk, mappedValue, Value.true);
     /* c8 ignore if */
     if (_temp13 instanceof AbruptCompletion) {
       return _temp13;
@@ -50436,7 +50435,7 @@ function TypedArray_of(items, {
   // 3. Let C be the this value.
   const C = thisValue;
   // 4. If IsConstructor(C) is false, throw a TypeError exception.
-  if (IsConstructor(C) === _Value.false) {
+  if (IsConstructor(C) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
   }
   // 5. Let newObj be ? TypedArrayCreate(C, « 𝔽(len) »).
@@ -50465,7 +50464,7 @@ function TypedArray_of(items, {
     }
     const Pk = _temp15;
     // c. Perform ? Set(newObj, Pk, kValue, true).
-    let _temp16 = Set$1(newObj, Pk, kValue, _Value.true);
+    let _temp16 = Set$1(newObj, Pk, kValue, Value.true);
     /* c8 ignore if */
     if (_temp16 instanceof AbruptCompletion) {
       return _temp16;
@@ -50540,7 +50539,7 @@ function TypedArrayProto_byteLength(args, {
   // 4. Let buffer be O.[[ViewedArrayBuffer]].
   const buffer = O.ViewedArrayBuffer;
   // 5. If IsDetachedBuffer(buffer) is true, return +0𝔽.
-  if (IsDetachedBuffer(buffer) === _Value.true) {
+  if (IsDetachedBuffer(buffer) === Value.true) {
     return F(+0);
   }
   // 6. Let size be O.[[ByteLength]].
@@ -50571,7 +50570,7 @@ function TypedArrayProto_byteOffset(args, {
   // 4. Let buffer be O.[[ViewedArrayBuffer]].
   const buffer = O.ViewedArrayBuffer;
   // 5. If IsDetachedBuffer(buffer) is true, return +0𝔽.
-  if (IsDetachedBuffer(buffer) === _Value.true) {
+  if (IsDetachedBuffer(buffer) === Value.true) {
     return F(+0);
   }
   // 6. Let offset be O.[[ByteOffset]].
@@ -50582,7 +50581,7 @@ function TypedArrayProto_byteOffset(args, {
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.copywithin */
 TypedArrayProto_byteOffset.section = 'https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.byteoffset';
-function TypedArrayProto_copyWithin([target = _Value.undefined, start = _Value.undefined, end = _Value.undefined], {
+function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.undefined, end = Value.undefined], {
   thisValue
 }) {
   // 1. Let O be the this value.
@@ -50637,7 +50636,7 @@ function TypedArrayProto_copyWithin([target = _Value.undefined, start = _Value.u
   }
   // 8. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToIntegerOrInfinity(end).
   let relativeEnd;
-  if (end === _Value.undefined) {
+  if (end === Value.undefined) {
     relativeEnd = len;
   } else {
     let _temp7 = ToIntegerOrInfinity(end);
@@ -50666,7 +50665,7 @@ function TypedArrayProto_copyWithin([target = _Value.undefined, start = _Value.u
     // b. Let buffer be O.[[ViewedArrayBuffer]].
     const buffer = O.ViewedArrayBuffer;
     // c. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-    if (IsDetachedBuffer(buffer) === _Value.true) {
+    if (IsDetachedBuffer(buffer) === Value.true) {
       return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
     }
     // d. Let typedArrayName be the String value of O.[[TypedArrayName]].
@@ -50697,9 +50696,9 @@ function TypedArrayProto_copyWithin([target = _Value.undefined, start = _Value.u
     // l. Repeat, while countBytes > 0
     while (countBytes > 0) {
       // i. Let value be GetValueFromBuffer(buffer, fromByteIndex, Uint8, true, Unordered).
-      const value = GetValueFromBuffer(buffer, fromByteIndex, 'Uint8', _Value.true);
+      const value = GetValueFromBuffer(buffer, fromByteIndex, 'Uint8', Value.true);
       // ii. Perform SetValueInBuffer(buffer, toByteIndex, Uint8, value, true, Unordered).
-      SetValueInBuffer(buffer, toByteIndex, 'Uint8', value, _Value.true);
+      SetValueInBuffer(buffer, toByteIndex, 'Uint8', value, Value.true);
       // iii. Set fromByteIndex to fromByteIndex + direction.
       fromByteIndex += direction;
       // iv. Set toByteIndex to toByteIndex + direction.
@@ -50735,7 +50734,7 @@ function TypedArrayProto_entries(args, {
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.fill */
 TypedArrayProto_entries.section = 'https://tc39.es/ecma262/#sec-%typedarray%.prototype.entries';
-function TypedArrayProto_fill([value = _Value.undefined, start = _Value.undefined, end = _Value.undefined], {
+function TypedArrayProto_fill([value = Value.undefined, start = Value.undefined, end = Value.undefined], {
   thisValue
 }) {
   // 1. Let O be the this value.
@@ -50797,7 +50796,7 @@ function TypedArrayProto_fill([value = _Value.undefined, start = _Value.undefine
   }
   // 8. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToIntegerOrInfinity(end).
   let relativeEnd;
-  if (end === _Value.undefined) {
+  if (end === Value.undefined) {
     relativeEnd = len;
   } else {
     let _temp13 = ToIntegerOrInfinity(end);
@@ -50819,7 +50818,7 @@ function TypedArrayProto_fill([value = _Value.undefined, start = _Value.undefine
     final = Math.min(relativeEnd, len);
   }
   // 10. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(O.ViewedArrayBuffer) === _Value.true) {
+  if (IsDetachedBuffer(O.ViewedArrayBuffer) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 11. Repeat, while k < final
@@ -50833,7 +50832,7 @@ function TypedArrayProto_fill([value = _Value.undefined, start = _Value.undefine
     // a. Let Pk be ! ToString(𝔽(k)).
     const Pk = _temp14;
     // b. Perform ! Set(O, Pk, value, true).
-    let _temp15 = Set$1(O, Pk, value, _Value.true);
+    let _temp15 = Set$1(O, Pk, value, Value.true);
     Assert(!(_temp15 instanceof AbruptCompletion), "Set(O, Pk, value, Value.true)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp15 instanceof Completion) {
@@ -50848,7 +50847,7 @@ function TypedArrayProto_fill([value = _Value.undefined, start = _Value.undefine
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.filter */
 TypedArrayProto_fill.section = 'https://tc39.es/ecma262/#sec-%typedarray%.prototype.fill';
-function TypedArrayProto_filter([callbackfn = _Value.undefined, thisArg = _Value.undefined], {
+function TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undefined], {
   thisValue
 }) {
   // 1. Let O be the this value.
@@ -50866,7 +50865,7 @@ function TypedArrayProto_filter([callbackfn = _Value.undefined, thisArg = _Value
   // 3. Let len be O.[[ArrayLength]].
   const len = O.ArrayLength;
   // 4. If IsCallable(callbackfn) is false, throw a TypeError exception.
-  if (IsCallable(callbackfn) === _Value.false) {
+  if (IsCallable(callbackfn) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
   // 5. Let kept be a new empty List.
@@ -50908,7 +50907,7 @@ function TypedArrayProto_filter([callbackfn = _Value.undefined, thisArg = _Value
     }
     const selected = ToBoolean(_temp19);
     // d. If selected is true, then
-    if (selected === _Value.true) {
+    if (selected === Value.true) {
       // i. Append kValue to the end of kept.
       kept.push(kValue);
       // ii. Setp captured to captured + 1.
@@ -50938,7 +50937,7 @@ function TypedArrayProto_filter([callbackfn = _Value.undefined, thisArg = _Value
     if (_temp22 instanceof Completion) {
       _temp22 = _temp22.Value;
     }
-    let _temp21 = Set$1(A, _temp22, e, _Value.true);
+    let _temp21 = Set$1(A, _temp22, e, Value.true);
     Assert(!(_temp21 instanceof AbruptCompletion), "Set(A, X(ToString(F(n))), e, Value.true)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp21 instanceof Completion) {
@@ -50994,7 +50993,7 @@ function TypedArrayProto_length(args, {
   // 4. Let buffer be O.[[ViewedArrayBuffer]].
   const buffer = O.ViewedArrayBuffer;
   // 5. If IsDetachedBuffer(buffer) is true, return +0𝔽.
-  if (IsDetachedBuffer(buffer) === _Value.true) {
+  if (IsDetachedBuffer(buffer) === Value.true) {
     return F(+0);
   }
   // 6. Let length be O.[[ArrayLength]].
@@ -51005,7 +51004,7 @@ function TypedArrayProto_length(args, {
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.map */
 TypedArrayProto_length.section = 'https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.length';
-function TypedArrayProto_map([callbackfn = _Value.undefined, thisArg = _Value.undefined], {
+function TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefined], {
   thisValue
 }) {
   // 1. Let O be the this value.
@@ -51023,7 +51022,7 @@ function TypedArrayProto_map([callbackfn = _Value.undefined, thisArg = _Value.un
   // 3. Let len be O.[[ArrayLength]].
   const len = O.ArrayLength;
   // 4. If IsCallable(callbackfn) is false, throw a TypeError exception.
-  if (IsCallable(callbackfn) === _Value.false) {
+  if (IsCallable(callbackfn) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
   // 5. Let A be ? TypedArraySpeciesCreate(O, « 𝔽(len) »).
@@ -51072,7 +51071,7 @@ function TypedArrayProto_map([callbackfn = _Value.undefined, thisArg = _Value.un
     }
     const mappedValue = _temp29;
     // d. Perform ? Set(A, Pk, mappedValue, true).
-    let _temp30 = Set$1(A, Pk, mappedValue, _Value.true);
+    let _temp30 = Set$1(A, Pk, mappedValue, Value.true);
     /* c8 ignore if */
     if (_temp30 instanceof AbruptCompletion) {
       return _temp30;
@@ -51094,7 +51093,7 @@ function SetTypedArrayFromTypedArray(target, targetOffset, source) {
   // 1. Let targetBuffer be target.[[ViewedArrayBuffer]].
   const targetBuffer = target.ViewedArrayBuffer;
   // 2. If IsDetachedBuffer(targetBuffer) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(targetBuffer) === _Value.true) {
+  if (IsDetachedBuffer(targetBuffer) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 3. Let targetLength be target.[[ArrayLength]].
@@ -51102,7 +51101,7 @@ function SetTypedArrayFromTypedArray(target, targetOffset, source) {
   // 4. Let srcBuffer be source.[[ViewedArrayBuffer]].
   let srcBuffer = source.ViewedArrayBuffer;
   // 5. If IsDetachedBuffer(srcBuffer) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(srcBuffer) === _Value.true) {
+  if (IsDetachedBuffer(srcBuffer) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   const targetName = target.TypedArrayName.stringValue();
@@ -51135,7 +51134,7 @@ function SetTypedArrayFromTypedArray(target, targetOffset, source) {
   }
   // 16. If both IsSharedArrayBuffer(srcBuffer) and IsSharedArrayBuffer(targetBuffer) are true, then
   let same;
-  if (IsSharedArrayBuffer() === _Value.true && IsSharedArrayBuffer() === _Value.true) {
+  if (IsSharedArrayBuffer() === Value.true && IsSharedArrayBuffer() === Value.true) {
     Assert(false, "false");
   } else {
     // 17, Else, let same be SameValue(srcBuffer, targetBuffer).
@@ -51143,7 +51142,7 @@ function SetTypedArrayFromTypedArray(target, targetOffset, source) {
   }
   // 18. If same is true, then
   let srcByteIndex;
-  if (same === _Value.true) {
+  if (same === Value.true) {
     // a. Let srcByteLength be source.[[ByteLength]].
     const srcByteLength = source.ByteLength;
     // b. Set srcBuffer to ? CloneArrayBuffer(srcBuffer, srcByteOffset, srcByteLength, %ArrayBuffer%).
@@ -51173,9 +51172,9 @@ function SetTypedArrayFromTypedArray(target, targetOffset, source) {
     // b. Repeat, while targetByteIndex < limit
     while (targetByteIndex < limit) {
       // i. Let value be GetValueFromBuffer(srcBuffer, srcByteIndex, Uint8, true, Unordered).
-      const value = GetValueFromBuffer(srcBuffer, srcByteIndex, 'Uint8', _Value.true);
+      const value = GetValueFromBuffer(srcBuffer, srcByteIndex, 'Uint8', Value.true);
       // ii. Perform SetValueInBuffer(targetBuffer, targetByteIndex, Uint8, value, true, Unordered).
-      SetValueInBuffer(targetBuffer, targetByteIndex, 'Uint8', value, _Value.true);
+      SetValueInBuffer(targetBuffer, targetByteIndex, 'Uint8', value, Value.true);
       // iii. Set srcByteIndex to srcByteIndex + 1.
       srcByteIndex += 1;
       // iv. Set targetByteIndex to targetByteIndex + 1.
@@ -51186,9 +51185,9 @@ function SetTypedArrayFromTypedArray(target, targetOffset, source) {
     // a. Repeat, while targetByteIndex < limit
     while (targetByteIndex < limit) {
       // i. Let value be GetValueFromBuffer(srcBuffer, srcByteIndex, srcType, true, Unordered).
-      const value = GetValueFromBuffer(srcBuffer, srcByteIndex, srcType, _Value.true);
+      const value = GetValueFromBuffer(srcBuffer, srcByteIndex, srcType, Value.true);
       // ii. Perform SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value, true, Unordered).
-      SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value, _Value.true);
+      SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value, Value.true);
       // iii. Set srcByteIndex to srcByteIndex + srcElementSize.
       srcByteIndex += srcElementSize;
       // iv. Set targetByteIndex to targetByteIndex + targetElementSize.
@@ -51204,7 +51203,7 @@ function SetTypedArrayFromArrayLike(target, targetOffset, source) {
   // 1. Let targetBuffer be target.[[ViewedArrayBuffer]].
   const targetBuffer = target.ViewedArrayBuffer;
   // 2. If IsDetachedBuffer(targetBuffer) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(targetBuffer) === _Value.true) {
+  if (IsDetachedBuffer(targetBuffer) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 3. Let targetLength be target.[[ArrayLength]].
@@ -51282,7 +51281,7 @@ function SetTypedArrayFromArrayLike(target, targetOffset, source) {
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.set-overloaded-offset */
 SetTypedArrayFromArrayLike.section = 'https://tc39.es/ecma262/#sec-settypedarrayfromarraylike';
-function TypedArrayProto_set([source = _Value.undefined, offset = _Value.undefined], {
+function TypedArrayProto_set([source = Value.undefined, offset = Value.undefined], {
   thisValue
 }) {
   // 1. Let target be the this value.
@@ -51337,12 +51336,12 @@ function TypedArrayProto_set([source = _Value.undefined, offset = _Value.undefin
     }
   }
   // 8. Return undefined.
-  return _Value.undefined;
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.slice */
 TypedArrayProto_set.section = 'https://tc39.es/ecma262/#sec-%typedarray%.prototype.set-overloaded-offset';
-function TypedArrayProto_slice([start = _Value.undefined, end = _Value.undefined], {
+function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined], {
   thisValue
 }) {
   // 1. Let O be the this value.
@@ -51379,7 +51378,7 @@ function TypedArrayProto_slice([start = _Value.undefined, end = _Value.undefined
   }
   // 6. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToIntegerOrInfinity(end).
   let relativeEnd;
-  if (end === _Value.undefined) {
+  if (end === Value.undefined) {
     relativeEnd = len;
   } else {
     let _temp43 = ToIntegerOrInfinity(end);
@@ -51416,7 +51415,7 @@ function TypedArrayProto_slice([start = _Value.undefined, end = _Value.undefined
   // 10. If count > 0, then
   if (count > 0) {
     // a. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
-    if (IsDetachedBuffer(O.ViewedArrayBuffer) === _Value.true) {
+    if (IsDetachedBuffer(O.ViewedArrayBuffer) === Value.true) {
       return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
     }
     // b. Let srcName be the String value of O.[[TypedArrayName]].
@@ -51456,7 +51455,7 @@ function TypedArrayProto_slice([start = _Value.undefined, end = _Value.undefined
         if (_temp48 instanceof Completion) {
           _temp48 = _temp48.Value;
         }
-        let _temp47 = Set$1(A, _temp48, kValue, _Value.true);
+        let _temp47 = Set$1(A, _temp48, kValue, Value.true);
         Assert(!(_temp47 instanceof AbruptCompletion), "Set(A, X(ToString(F(n))), kValue, Value.true)" + ' returned an abrupt completion');
         /* c8 ignore if */
         if (_temp47 instanceof Completion) {
@@ -51487,9 +51486,9 @@ function TypedArrayProto_slice([start = _Value.undefined, end = _Value.undefined
       // ix. Repeat, while targetByteIndex < limit
       while (targetByteIndex < limit) {
         // 1. Let value be GetValueFromBuffer(srcBuffer, srcByteIndex, Uint8, true, Unordered).
-        const value = GetValueFromBuffer(srcBuffer, srcByteIndex, 'Uint8', _Value.true);
+        const value = GetValueFromBuffer(srcBuffer, srcByteIndex, 'Uint8', Value.true);
         // 2. Perform SetValueInBuffer(targetBuffer, targetByteIndex, Uint8, value, true, Unordered).
-        SetValueInBuffer(targetBuffer, targetByteIndex, 'Uint8', value, _Value.true);
+        SetValueInBuffer(targetBuffer, targetByteIndex, 'Uint8', value, Value.true);
         // 3. Set srcByteIndex to srcByteIndex + 1.
         srcByteIndex += 1;
         // 4. Set targetByteIndex to targetByteIndex + 1.
@@ -51503,11 +51502,11 @@ function TypedArrayProto_slice([start = _Value.undefined, end = _Value.undefined
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.sort */
 TypedArrayProto_slice.section = 'https://tc39.es/ecma262/#sec-%typedarray%.prototype.slice';
-function TypedArrayProto_sort([comparefn = _Value.undefined], {
+function TypedArrayProto_sort([comparefn = Value.undefined], {
   thisValue
 }) {
   // 1. If comparefn is not undefined and IsCallable(comparefn) is false, throw a TypeError exception.
-  if (comparefn !== _Value.undefined && IsCallable(comparefn) === _Value.false) {
+  if (comparefn !== Value.undefined && IsCallable(comparefn) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', comparefn);
   }
   // 2. Let obj be the this value.
@@ -51540,8 +51539,8 @@ function TypedArraySortCompare(x, y, comparefn) {
   // 1. Assert: Both Type(x) and Type(y) are Number or both are BigInt.
   Assert(x instanceof NumberValue && y instanceof NumberValue || x instanceof BigIntValue && y instanceof BigIntValue, "(x instanceof NumberValue && y instanceof NumberValue)\n         || (x instanceof BigIntValue && y instanceof BigIntValue)");
   // 2. If comparefn is not undefined, then
-  if (comparefn !== _Value.undefined) {
-    let _temp52 = Call(comparefn, _Value.undefined, [x, y]);
+  if (comparefn !== Value.undefined) {
+    let _temp52 = Call(comparefn, Value.undefined, [x, y]);
     /* c8 ignore if */
     if (_temp52 instanceof AbruptCompletion) {
       return _temp52;
@@ -51603,7 +51602,7 @@ function TypedArraySortCompare(x, y, comparefn) {
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.subarray */
-function TypedArrayProto_subarray([begin = _Value.undefined, end = _Value.undefined], {
+function TypedArrayProto_subarray([begin = Value.undefined, end = Value.undefined], {
   thisValue
 }) {
   // 1. Let O be the this value.
@@ -51644,7 +51643,7 @@ function TypedArrayProto_subarray([begin = _Value.undefined, end = _Value.undefi
   }
   // 8. If end is undefined, let relativeEnd be srcLength; else let relativeEnd be ? ToIntegerOrInfinity(end).
   let relativeEnd;
-  if (end === _Value.undefined) {
+  if (end === Value.undefined) {
     relativeEnd = srcLength;
   } else {
     let _temp55 = ToIntegerOrInfinity(end);
@@ -51711,23 +51710,23 @@ function TypedArrayProto_toStringTag(args, {
   const O = thisValue;
   // 2. If Type(O) is not Object, return undefined.
   if (!(O instanceof ObjectValue)) {
-    return _Value.undefined;
+    return Value.undefined;
   }
   // 3. If O does not have a [[TypedArrayName]] internal slot, return undefined.
   if (!('TypedArrayName' in O)) {
-    return _Value.undefined;
+    return Value.undefined;
   }
   // 4. Let name be O.[[TypedArrayName]].
   const name = O.TypedArrayName;
   // 5. Assert: Type(name) is String.
-  Assert(name instanceof StringValue, "name instanceof JSStringValue");
+  Assert(name instanceof JSStringValue, "name instanceof JSStringValue");
   // 6. Return name.
   return name;
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.at */
 TypedArrayProto_toStringTag.section = 'https://tc39.es/ecma262/#sec-get-%typedarray%.prototype-@@tostringtag';
-function TypedArrayProto_at([index = _Value.undefined], {
+function TypedArrayProto_at([index = Value.undefined], {
   thisValue
 }) {
   // 1. Let O be the this value.
@@ -51767,7 +51766,7 @@ function TypedArrayProto_at([index = _Value.undefined], {
   }
   // 7. If k < 0 or k ≥ len, then return undefined.
   if (k < 0 || k >= len) {
-    return _Value.undefined;
+    return Value.undefined;
   }
   // 8. Return ? Get(O, ! ToString(𝔽(k))).
   let _temp59 = ToString(F(k));
@@ -51780,7 +51779,7 @@ function TypedArrayProto_at([index = _Value.undefined], {
 }
 TypedArrayProto_at.section = 'https://tc39.es/ecma262/#sec-%typedarray%.prototype.at';
 function bootstrapTypedArrayPrototype(realmRec) {
-  let _temp60 = Get(realmRec.Intrinsics['%Array.prototype%'], _Value('toString'));
+  let _temp60 = Get(realmRec.Intrinsics['%Array.prototype%'], Value('toString'));
   Assert(!(_temp60 instanceof AbruptCompletion), "Get(realmRec.Intrinsics['%Array.prototype%'], Value('toString'))" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp60 instanceof Completion) {
@@ -51803,7 +51802,7 @@ function bootstrapTypedArrayPrototype(realmRec) {
 
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype-@@iterator */
   {
-    let _temp62 = Get(proto, _Value('values'));
+    let _temp62 = Get(proto, Value('values'));
     Assert(!(_temp62 instanceof AbruptCompletion), "Get(proto, Value('values'))" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp62 instanceof Completion) {
@@ -51812,9 +51811,9 @@ function bootstrapTypedArrayPrototype(realmRec) {
     const fn = _temp62;
     let _temp63 = proto.DefineOwnProperty(wellKnownSymbols.iterator, _Descriptor({
       Value: fn,
-      Writable: _Value.true,
-      Enumerable: _Value.false,
-      Configurable: _Value.true
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.true
     }));
     Assert(!(_temp63 instanceof AbruptCompletion), "proto.DefineOwnProperty(wellKnownSymbols.iterator, Descriptor({\n      Value: fn,\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    }))" + ' returned an abrupt completion');
     /* c8 ignore if */
@@ -51834,11 +51833,11 @@ function bootstrapTypedArrayConstructors(realmRec) {
       if (args.length === 0) {
         /** https://tc39.es/ecma262/#sec-typedarray */
         // 1. If NewTarget is undefined, throw a TypeError exception.
-        if (NewTarget === _Value.undefined) {
+        if (NewTarget === Value.undefined) {
           return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
         }
         // 2. Let constructorName be the String value of the Constructor Name value specified in Table 61 for this TypedArray constructor.
-        const constructorName = _Value(TypedArray);
+        const constructorName = Value(TypedArray);
         // 3. Return ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%", 0).
         return AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`, 0);
       } else if (!(args[0] instanceof ObjectValue)) {
@@ -51847,7 +51846,7 @@ function bootstrapTypedArrayConstructors(realmRec) {
         // 1. Assert: Type(length) is not Object.
         Assert(!(length instanceof ObjectValue), "!(length instanceof ObjectValue)");
         // 2. If NewTarget is undefined, throw a TypeError exception.
-        if (NewTarget === _Value.undefined) {
+        if (NewTarget === Value.undefined) {
           return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
         }
         // 3. Let elementLength be ? ToIndex(length).
@@ -51862,7 +51861,7 @@ function bootstrapTypedArrayConstructors(realmRec) {
         }
         const elementLength = _temp;
         // 4. Let constructorName be the String value of the Constructor Name value specified in Table 61 for this TypedArray constructor.
-        const constructorName = _Value(TypedArray);
+        const constructorName = Value(TypedArray);
         // 5. Return ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%", elementLength).
         return AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`, elementLength);
       } else if ('TypedArrayName' in args[0]) {
@@ -51871,11 +51870,11 @@ function bootstrapTypedArrayConstructors(realmRec) {
         // 1. Assert: Type(typedArray) is Object and typedArray has a [[TypedArrayName]] internal slot.
         Assert(typedArray instanceof ObjectValue && 'TypedArrayName' in typedArray, "typedArray instanceof ObjectValue && 'TypedArrayName' in typedArray");
         // 2. If NewTarget is undefined, throw a TypeError exception.
-        if (NewTarget === _Value.undefined) {
+        if (NewTarget === Value.undefined) {
           return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
         }
         // 3. Let constructorName be the String value of the Constructor Name value specified in Table 61 for this TypedArray constructor.
-        const constructorName = _Value(TypedArray);
+        const constructorName = Value(TypedArray);
         // 4. Let O be ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%").
         let _temp2 = AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`);
         /* c8 ignore if */
@@ -51892,17 +51891,17 @@ function bootstrapTypedArrayConstructors(realmRec) {
         // 6. Let srcData be srcArray.[[ViewedArrayBuffer]].
         const srcData = srcArray.ViewedArrayBuffer;
         // 7. If IsDetachedBuffer(srcData) is true, throw a TypeError exception.
-        if (IsDetachedBuffer(srcData) === _Value.true) {
+        if (IsDetachedBuffer(srcData) === Value.true) {
           return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
         }
         // 8. Let elementType be the Element Type value in Table 61 for constructorName.
-        const elementType = _Value(info.ElementType);
+        const elementType = Value(info.ElementType);
         // 9. Let elementLength be srcArray.[[ArrayLength]].
         const elementLength = srcArray.ArrayLength;
         // 10. Let srcName be the String value of srcArray.[[TypedArrayName]].
         const srcName = srcArray.TypedArrayName.stringValue();
         // 11. Let srcType be the Element Type value in Table 61 for srcName.
-        const srcType = _Value(typedArrayInfoByName[srcName].ElementType);
+        const srcType = Value(typedArrayInfoByName[srcName].ElementType);
         // 12. Let srcElementSize be the Element Size value specified in Table 61 for srcName.
         const srcElementSize = typedArrayInfoByName[srcName].ElementSize;
         // 13. Let srcByteOffset be srcArray.[[ByteOffset]].
@@ -51913,7 +51912,7 @@ function bootstrapTypedArrayConstructors(realmRec) {
         const byteLength = elementSize * elementLength;
         // 16. If IsSharedArrayBuffer(srcData) is false, then
         let bufferConstructor;
-        if (IsSharedArrayBuffer() === _Value.false) {
+        if (IsSharedArrayBuffer() === Value.false) {
           let _temp3 = SpeciesConstructor(srcData, surroundingAgent.intrinsic('%ArrayBuffer%'));
           /* c8 ignore if */
           if (_temp3 instanceof AbruptCompletion) {
@@ -51930,7 +51929,7 @@ function bootstrapTypedArrayConstructors(realmRec) {
         }
         // 18. If elementType is the same as srcType, then
         let data;
-        if (SameValue(elementType, srcType) === _Value.true) {
+        if (SameValue(elementType, srcType) === Value.true) {
           let _temp4 = CloneArrayBuffer(srcData, srcByteOffset, byteLength, bufferConstructor);
           /* c8 ignore if */
           if (_temp4 instanceof AbruptCompletion) {
@@ -51955,7 +51954,7 @@ function bootstrapTypedArrayConstructors(realmRec) {
           // a. Let data be ? AllocateArrayBuffer(bufferConstructor, byteLength).
           data = _temp5;
           // b. If IsDetachedBuffer(srcData) is true, throw a TypeError exception.
-          if (IsDetachedBuffer(srcData) === _Value.true) {
+          if (IsDetachedBuffer(srcData) === Value.true) {
             return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
           }
           // c. If srcArray.[[ContentType]] is not equal to O.[[ContentType]], throw a TypeError exception.
@@ -51998,11 +51997,11 @@ function bootstrapTypedArrayConstructors(realmRec) {
         // 1. Assert: Type(object) is Object and object does not have either a [[TypedArrayName]] or an [[ArrayBufferData]] internal slot.
         Assert(object instanceof ObjectValue && !('TypedArrayName' in object) && !('ArrayBufferData' in object), "object instanceof ObjectValue && !('TypedArrayName' in object) && !('ArrayBufferData' in object)");
         // 2. If NewTarget is undefined, throw a TypeError exception.
-        if (NewTarget === _Value.undefined) {
+        if (NewTarget === Value.undefined) {
           return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
         }
         // 3. Let constructorName be the String value of the Constructor Name value specified in Table 61 for this TypedArray constructor.
-        const constructorName = _Value(TypedArray);
+        const constructorName = Value(TypedArray);
         // 4. Let O be ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%").
         let _temp6 = AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`);
         /* c8 ignore if */
@@ -52026,7 +52025,7 @@ function bootstrapTypedArrayConstructors(realmRec) {
         }
         const usingIterator = _temp7;
         // 6. If usingIterator is not undefined, then
-        if (usingIterator !== _Value.undefined) {
+        if (usingIterator !== Value.undefined) {
           let _temp8 = IterableToList(object, usingIterator);
           /* c8 ignore if */
           if (_temp8 instanceof AbruptCompletion) {
@@ -52065,7 +52064,7 @@ function bootstrapTypedArrayConstructors(realmRec) {
             // ii. Let kValue be the first element of values and remove that element from values.
             const kValue = values.shift();
             // iii. Perform ? Set(O, Pk, kValue, true).
-            let _temp11 = Set$1(O, Pk, kValue, _Value.true);
+            let _temp11 = Set$1(O, Pk, kValue, Value.true);
             /* c8 ignore if */
             if (_temp11 instanceof AbruptCompletion) {
               return _temp11;
@@ -52130,7 +52129,7 @@ function bootstrapTypedArrayConstructors(realmRec) {
           }
           const kValue = _temp15;
           // c. Perform ? Set(O, Pk, kValue, true).
-          let _temp16 = Set$1(O, Pk, kValue, _Value.true);
+          let _temp16 = Set$1(O, Pk, kValue, Value.true);
           /* c8 ignore if */
           if (_temp16 instanceof AbruptCompletion) {
             return _temp16;
@@ -52146,15 +52145,15 @@ function bootstrapTypedArrayConstructors(realmRec) {
         return O;
       } else {
         /** https://tc39.es/ecma262/#sec-typedarray-buffer-byteoffset-length */
-        const [buffer = _Value.undefined, byteOffset = _Value.undefined, length = _Value.undefined] = args;
+        const [buffer = Value.undefined, byteOffset = Value.undefined, length = Value.undefined] = args;
         // 1. Assert: Type(buffer) is Object and buffer has an [[ArrayBufferData]] internal slot.
         Assert(buffer instanceof ObjectValue && 'ArrayBufferData' in buffer, "buffer instanceof ObjectValue && 'ArrayBufferData' in buffer");
         // 2. If NewTarget is undefined, throw a TypeError exception.
-        if (NewTarget === _Value.undefined) {
+        if (NewTarget === Value.undefined) {
           return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
         }
         // 3. Let constructorName be the String value of the Constructor Name value specified in Table 61 for this TypedArray constructor.
-        const constructorName = _Value(TypedArray);
+        const constructorName = Value(TypedArray);
         // 4. Let O be ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%").
         let _temp17 = AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`);
         /* c8 ignore if */
@@ -52185,7 +52184,7 @@ function bootstrapTypedArrayConstructors(realmRec) {
         }
         // 8. If length is not undefined, then
         let newLength;
-        if (length !== _Value.undefined) {
+        if (length !== Value.undefined) {
           let _temp19 = ToIndex(length);
           /* c8 ignore if */
           if (_temp19 instanceof AbruptCompletion) {
@@ -52199,14 +52198,14 @@ function bootstrapTypedArrayConstructors(realmRec) {
           newLength = _temp19;
         }
         // 9. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-        if (IsDetachedBuffer(buffer) === _Value.true) {
+        if (IsDetachedBuffer(buffer) === Value.true) {
           return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
         }
         // 10. Let bufferByteLength be buffer.[[ArrayBufferByteLength]].
         const bufferByteLength = buffer.ArrayBufferByteLength;
         // 11. If length is undefined, then
         let newByteLength;
-        if (length === _Value.undefined) {
+        if (length === Value.undefined) {
           // a. If bufferByteLength modulo elementSize ≠ 0, throw a RangeError exception.
           if (bufferByteLength % elementSize !== 0) {
             return surroundingAgent.Throw('RangeError', 'TypedArrayLengthAlignment', TypedArray, elementSize);
@@ -52239,8 +52238,8 @@ function bootstrapTypedArrayConstructors(realmRec) {
     }
     TypedArrayConstructor.section = 'https://tc39.es/ecma262/#sec-typedarray-constructors';
     const taConstructor = bootstrapConstructor(realmRec, TypedArrayConstructor, TypedArray, 3, realmRec.Intrinsics[`%${TypedArray}.prototype%`], [['BYTES_PER_ELEMENT', F(info.ElementSize), undefined, {
-      Writable: _Value.false,
-      Configurable: _Value.false
+      Writable: Value.false,
+      Configurable: Value.false
     }]]);
     let _temp20 = taConstructor.SetPrototypeOf(realmRec.Intrinsics['%TypedArray%']);
     Assert(!(_temp20 instanceof AbruptCompletion), "taConstructor.SetPrototypeOf(realmRec.Intrinsics['%TypedArray%'])" + ' returned an abrupt completion');
@@ -52258,19 +52257,19 @@ function bootstrapTypedArrayConstructors(realmRec) {
 function bootstrapTypedArrayPrototypes(realmRec) {
   Object.entries(typedArrayInfoByName).forEach(([TypedArray, info]) => {
     const proto = bootstrapPrototype(realmRec, [['BYTES_PER_ELEMENT', F(info.ElementSize), undefined, {
-      Writable: _Value.false,
-      Configurable: _Value.false
+      Writable: Value.false,
+      Configurable: Value.false
     }]], realmRec.Intrinsics['%TypedArray.prototype%']);
     realmRec.Intrinsics[`%${TypedArray}.prototype%`] = proto;
   });
 }
 
 /** https://tc39.es/ecma262/#sec-dataview-constructor */
-function DataViewConstructor([buffer = _Value.undefined, byteOffset = _Value.undefined, byteLength = _Value.undefined], {
+function DataViewConstructor([buffer = Value.undefined, byteOffset = Value.undefined, byteLength = Value.undefined], {
   NewTarget
 }) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
-  if (NewTarget === _Value.undefined) {
+  if (NewTarget === Value.undefined) {
     return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
   // 2. Perform ? RequireInternalSlot(buffer, [[ArrayBufferData]]).
@@ -52295,7 +52294,7 @@ function DataViewConstructor([buffer = _Value.undefined, byteOffset = _Value.und
   }
   const offset = _temp2;
   // 4. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(buffer) === _Value.true) {
+  if (IsDetachedBuffer(buffer) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 5. Let bufferByteLength be buffer.[[ArrayBufferByteLength]].
@@ -52306,7 +52305,7 @@ function DataViewConstructor([buffer = _Value.undefined, byteOffset = _Value.und
   }
   let viewByteLength;
   // 7. If byteLength is undefined, then
-  if (byteLength === _Value.undefined) {
+  if (byteLength === Value.undefined) {
     // a. Let viewByteLength be bufferByteLength - offset.
     viewByteLength = bufferByteLength - offset;
   } else {
@@ -52338,7 +52337,7 @@ function DataViewConstructor([buffer = _Value.undefined, byteOffset = _Value.und
   }
   const O = _temp4;
   // 10. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(buffer) === _Value.true) {
+  if (IsDetachedBuffer(buffer) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 11. Set O.[[ViewedArrayBuffer]] to buffer.
@@ -52402,7 +52401,7 @@ function DataViewProto_byteLength(args, {
   // 4. Let buffer be O.[[ViewedArrayBuffer]].
   const buffer = O.ViewedArrayBuffer;
   // 5. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(buffer) === _Value.true) {
+  if (IsDetachedBuffer(buffer) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 6. Let size be O.[[ByteLength]].
@@ -52433,7 +52432,7 @@ function DataViewProto_byteOffset(args, {
   // 4. Let buffer be O.[[ViewedArrayBuffer]].
   const buffer = O.ViewedArrayBuffer;
   // 5. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(buffer) === _Value.true) {
+  if (IsDetachedBuffer(buffer) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 6. Let offset be O.[[ByteOffset]].
@@ -52444,7 +52443,7 @@ function DataViewProto_byteOffset(args, {
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.getbigint64 */
 DataViewProto_byteOffset.section = 'https://tc39.es/ecma262/#sec-get-dataview.prototype.byteoffset';
-function DataViewProto_getBigInt64([byteOffset = _Value.undefined, littleEndian = _Value.undefined], {
+function DataViewProto_getBigInt64([byteOffset = Value.undefined, littleEndian = Value.undefined], {
   thisValue
 }) {
   // 1. Let v be the this value.
@@ -52455,7 +52454,7 @@ function DataViewProto_getBigInt64([byteOffset = _Value.undefined, littleEndian 
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.getbiguint64 */
 DataViewProto_getBigInt64.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.getbigint64';
-function DataViewProto_getBigUint64([byteOffset = _Value.undefined, littleEndian = _Value.undefined], {
+function DataViewProto_getBigUint64([byteOffset = Value.undefined, littleEndian = Value.undefined], {
   thisValue
 }) {
   // 1. Let v be the this value.
@@ -52466,104 +52465,104 @@ function DataViewProto_getBigUint64([byteOffset = _Value.undefined, littleEndian
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.getfloat32 */
 DataViewProto_getBigUint64.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.getbiguint64';
-function DataViewProto_getFloat32([byteOffset = _Value.undefined, littleEndian], {
+function DataViewProto_getFloat32([byteOffset = Value.undefined, littleEndian], {
   thisValue
 }) {
   const v = thisValue;
   if (littleEndian === undefined) {
-    littleEndian = _Value.false;
+    littleEndian = Value.false;
   }
   return GetViewValue(v, byteOffset, littleEndian, 'Float32');
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.getfloat64 */
 DataViewProto_getFloat32.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.getfloat32';
-function DataViewProto_getFloat64([byteOffset = _Value.undefined, littleEndian], {
+function DataViewProto_getFloat64([byteOffset = Value.undefined, littleEndian], {
   thisValue
 }) {
   const v = thisValue;
   if (littleEndian === undefined) {
-    littleEndian = _Value.false;
+    littleEndian = Value.false;
   }
   return GetViewValue(v, byteOffset, littleEndian, 'Float64');
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.getint8 */
 DataViewProto_getFloat64.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.getfloat64';
-function DataViewProto_getInt8([byteOffset = _Value.undefined], {
+function DataViewProto_getInt8([byteOffset = Value.undefined], {
   thisValue
 }) {
   const v = thisValue;
-  return GetViewValue(v, byteOffset, _Value.true, 'Int8');
+  return GetViewValue(v, byteOffset, Value.true, 'Int8');
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.getint16 */
 DataViewProto_getInt8.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.getint8';
-function DataViewProto_getInt16([byteOffset = _Value.undefined, littleEndian], {
+function DataViewProto_getInt16([byteOffset = Value.undefined, littleEndian], {
   thisValue
 }) {
   const v = thisValue;
   if (littleEndian === undefined) {
-    littleEndian = _Value.false;
+    littleEndian = Value.false;
   }
   return GetViewValue(v, byteOffset, littleEndian, 'Int16');
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.getint32 */
 DataViewProto_getInt16.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.getint16';
-function DataViewProto_getInt32([byteOffset = _Value.undefined, littleEndian], {
+function DataViewProto_getInt32([byteOffset = Value.undefined, littleEndian], {
   thisValue
 }) {
   const v = thisValue;
   if (littleEndian === undefined) {
-    littleEndian = _Value.false;
+    littleEndian = Value.false;
   }
   return GetViewValue(v, byteOffset, littleEndian, 'Int32');
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.getuint8 */
 DataViewProto_getInt32.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.getint32';
-function DataViewProto_getUint8([byteOffset = _Value.undefined], {
+function DataViewProto_getUint8([byteOffset = Value.undefined], {
   thisValue
 }) {
   const v = thisValue;
-  return GetViewValue(v, byteOffset, _Value.true, 'Uint8');
+  return GetViewValue(v, byteOffset, Value.true, 'Uint8');
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.getuint16 */
 DataViewProto_getUint8.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.getuint8';
-function DataViewProto_getUint16([byteOffset = _Value.undefined, littleEndian], {
+function DataViewProto_getUint16([byteOffset = Value.undefined, littleEndian], {
   thisValue
 }) {
   const v = thisValue;
   if (littleEndian === undefined) {
-    littleEndian = _Value.false;
+    littleEndian = Value.false;
   }
   return GetViewValue(v, byteOffset, littleEndian, 'Uint16');
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.getuint32 */
 DataViewProto_getUint16.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.getuint16';
-function DataViewProto_getUint32([byteOffset = _Value.undefined, littleEndian], {
+function DataViewProto_getUint32([byteOffset = Value.undefined, littleEndian], {
   thisValue
 }) {
   const v = thisValue;
   if (littleEndian === undefined) {
-    littleEndian = _Value.false;
+    littleEndian = Value.false;
   }
   return GetViewValue(v, byteOffset, littleEndian, 'Uint32');
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setbigint64 */
 DataViewProto_getUint32.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.getuint32';
-function DataViewProto_setBigInt64([byteOffset = _Value.undefined, value = _Value.undefined, littleEndian], {
+function DataViewProto_setBigInt64([byteOffset = Value.undefined, value = Value.undefined, littleEndian], {
   thisValue
 }) {
   // 1. Let v be the this value.
   const v = thisValue;
   // 2. If littleEndian is not present, set littleEndian to undefined.
   if (littleEndian === undefined) {
-    littleEndian = _Value.undefined;
+    littleEndian = Value.undefined;
   }
   // 3. Return ? SetViewValue(v, byteOffset, littleEndian, BigInt64, value).
   return SetViewValue(v, byteOffset, littleEndian, 'BigInt64', value);
@@ -52571,14 +52570,14 @@ function DataViewProto_setBigInt64([byteOffset = _Value.undefined, value = _Valu
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setbiguint64 */
 DataViewProto_setBigInt64.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setbigint64';
-function DataViewProto_setBigUint64([byteOffset = _Value.undefined, value = _Value.undefined, littleEndian], {
+function DataViewProto_setBigUint64([byteOffset = Value.undefined, value = Value.undefined, littleEndian], {
   thisValue
 }) {
   // 1. Let v be the this value.
   const v = thisValue;
   // 2. If littleEndian is not present, set littleEndian to undefined.
   if (littleEndian === undefined) {
-    littleEndian = _Value.undefined;
+    littleEndian = Value.undefined;
   }
   // 3. Return ? SetViewValue(v, byteOffset, littleEndian, BigUint64, value).
   return SetViewValue(v, byteOffset, littleEndian, 'BigUint64', value);
@@ -52586,90 +52585,90 @@ function DataViewProto_setBigUint64([byteOffset = _Value.undefined, value = _Val
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setfloat32 */
 DataViewProto_setBigUint64.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setbiguint64';
-function DataViewProto_setFloat32([byteOffset = _Value.undefined, value = _Value.undefined, littleEndian], {
+function DataViewProto_setFloat32([byteOffset = Value.undefined, value = Value.undefined, littleEndian], {
   thisValue
 }) {
   const v = thisValue;
   if (littleEndian === undefined) {
-    littleEndian = _Value.false;
+    littleEndian = Value.false;
   }
   return SetViewValue(v, byteOffset, littleEndian, 'Float32', value);
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setfloat64 */
 DataViewProto_setFloat32.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setfloat32';
-function DataViewProto_setFloat64([byteOffset = _Value.undefined, value = _Value.undefined, littleEndian], {
+function DataViewProto_setFloat64([byteOffset = Value.undefined, value = Value.undefined, littleEndian], {
   thisValue
 }) {
   const v = thisValue;
   if (littleEndian === undefined) {
-    littleEndian = _Value.false;
+    littleEndian = Value.false;
   }
   return SetViewValue(v, byteOffset, littleEndian, 'Float64', value);
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setint8 */
 DataViewProto_setFloat64.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setfloat64';
-function DataViewProto_setInt8([byteOffset = _Value.undefined, value = _Value.undefined], {
+function DataViewProto_setInt8([byteOffset = Value.undefined, value = Value.undefined], {
   thisValue
 }) {
   const v = thisValue;
-  return SetViewValue(v, byteOffset, _Value.true, 'Int8', value);
+  return SetViewValue(v, byteOffset, Value.true, 'Int8', value);
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setint16 */
 DataViewProto_setInt8.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setint8';
-function DataViewProto_setInt16([byteOffset = _Value.undefined, value = _Value.undefined, littleEndian], {
+function DataViewProto_setInt16([byteOffset = Value.undefined, value = Value.undefined, littleEndian], {
   thisValue
 }) {
   const v = thisValue;
   if (littleEndian === undefined) {
-    littleEndian = _Value.false;
+    littleEndian = Value.false;
   }
   return SetViewValue(v, byteOffset, littleEndian, 'Int16', value);
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setint32 */
 DataViewProto_setInt16.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setint16';
-function DataViewProto_setInt32([byteOffset = _Value.undefined, value = _Value.undefined, littleEndian], {
+function DataViewProto_setInt32([byteOffset = Value.undefined, value = Value.undefined, littleEndian], {
   thisValue
 }) {
   const v = thisValue;
   if (littleEndian === undefined) {
-    littleEndian = _Value.false;
+    littleEndian = Value.false;
   }
   return SetViewValue(v, byteOffset, littleEndian, 'Int32', value);
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setuint8 */
 DataViewProto_setInt32.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setint32';
-function DataViewProto_setUint8([byteOffset = _Value.undefined, value = _Value.undefined], {
+function DataViewProto_setUint8([byteOffset = Value.undefined, value = Value.undefined], {
   thisValue
 }) {
   const v = thisValue;
-  return SetViewValue(v, byteOffset, _Value.true, 'Uint8', value);
+  return SetViewValue(v, byteOffset, Value.true, 'Uint8', value);
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setuint16 */
 DataViewProto_setUint8.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setuint8';
-function DataViewProto_setUint16([byteOffset = _Value.undefined, value = _Value.undefined, littleEndian], {
+function DataViewProto_setUint16([byteOffset = Value.undefined, value = Value.undefined, littleEndian], {
   thisValue
 }) {
   const v = thisValue;
   if (littleEndian === undefined) {
-    littleEndian = _Value.false;
+    littleEndian = Value.false;
   }
   return SetViewValue(v, byteOffset, littleEndian, 'Uint16', value);
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setuint32 */
 DataViewProto_setUint16.section = 'https://tc39.es/ecma262/#sec-dataview.prototype.setuint16';
-function DataViewProto_setUint32([byteOffset = _Value.undefined, value = _Value.undefined, littleEndian], {
+function DataViewProto_setUint32([byteOffset = Value.undefined, value = Value.undefined, littleEndian], {
   thisValue
 }) {
   const v = thisValue;
   if (littleEndian === undefined) {
-    littleEndian = _Value.false;
+    littleEndian = Value.false;
   }
   return SetViewValue(v, byteOffset, littleEndian, 'Uint32', value);
 }
@@ -52680,7 +52679,7 @@ function bootstrapDataViewPrototype(realmRec) {
 }
 
 /** https://tc39.es/ecma262/#sec-weakmap.prototype.delete */
-function WeakMapProto_delete([key = _Value.undefined], {
+function WeakMapProto_delete([key = Value.undefined], {
   thisValue
 }) {
   // 1. Let M be the this value.
@@ -52699,28 +52698,28 @@ function WeakMapProto_delete([key = _Value.undefined], {
   const entries = M.WeakMapData;
   // 4. If Type(key) is not Object, return false.
   if (!(key instanceof ObjectValue)) {
-    return _Value.false;
+    return Value.false;
   }
   // 5. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
   for (let i = 0; i < entries.length; i += 1) {
     const p = entries[i];
     // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, then
-    if (p.Key !== undefined && SameValue(p.Key, key) === _Value.true) {
+    if (p.Key !== undefined && SameValue(p.Key, key) === Value.true) {
       // i. Set p.[[Key]] to empty.
       p.Key = undefined;
       // ii. Set p.[[Value]] to empty.
       p.Value = undefined;
       // iii. return true.
-      return _Value.true;
+      return Value.true;
     }
   }
   // 6. Return false.
-  return _Value.false;
+  return Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-weakmap.prototype.get */
 WeakMapProto_delete.section = 'https://tc39.es/ecma262/#sec-weakmap.prototype.delete';
-function WeakMapProto_get([key = _Value.undefined], {
+function WeakMapProto_get([key = Value.undefined], {
   thisValue
 }) {
   // 1. Let m be the this value.
@@ -52739,22 +52738,22 @@ function WeakMapProto_get([key = _Value.undefined], {
   const entries = M.WeakMapData;
   // 4. If Type(key) is not Object, return undefined.
   if (!(key instanceof ObjectValue)) {
-    return _Value.undefined;
+    return Value.undefined;
   }
   // 5. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
   for (const p of entries) {
     // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, return p.[[Value]].
-    if (p.Key !== undefined && SameValue(p.Key, key) === _Value.true) {
+    if (p.Key !== undefined && SameValue(p.Key, key) === Value.true) {
       return p.Value;
     }
   }
   // 6. Return undefined.
-  return _Value.undefined;
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-weakmap.prototype.has */
 WeakMapProto_get.section = 'https://tc39.es/ecma262/#sec-weakmap.prototype.get';
-function WeakMapProto_has([key = _Value.undefined], {
+function WeakMapProto_has([key = Value.undefined], {
   thisValue
 }) {
   // 1. Let M be the this value.
@@ -52773,22 +52772,22 @@ function WeakMapProto_has([key = _Value.undefined], {
   const entries = M.WeakMapData;
   // 4. If Type(key) is not Object, return false.
   if (!(key instanceof ObjectValue)) {
-    return _Value.false;
+    return Value.false;
   }
   // 5. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
   for (const p of entries) {
     // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, return true.
-    if (p.Key !== undefined && SameValue(p.Key, key) === _Value.true) {
-      return _Value.true;
+    if (p.Key !== undefined && SameValue(p.Key, key) === Value.true) {
+      return Value.true;
     }
   }
   // 6. Return false.
-  return _Value.false;
+  return Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-weakmap.prototype.set */
 WeakMapProto_has.section = 'https://tc39.es/ecma262/#sec-weakmap.prototype.has';
-function WeakMapProto_set([key = _Value.undefined, value = _Value.undefined], {
+function WeakMapProto_set([key = Value.undefined, value = Value.undefined], {
   thisValue
 }) {
   // 1. Let M be the this value.
@@ -52812,7 +52811,7 @@ function WeakMapProto_set([key = _Value.undefined, value = _Value.undefined], {
   // 5. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
   for (const p of entries) {
     // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, then
-    if (p.Key !== undefined && SameValue(p.Key, key) === _Value.true) {
+    if (p.Key !== undefined && SameValue(p.Key, key) === Value.true) {
       // i. Set p.[[Value]] to value.
       p.Value = value;
       // ii. Return M.
@@ -52836,11 +52835,11 @@ function bootstrapWeakMapPrototype(realmRec) {
 }
 
 /** https://tc39.es/ecma262/#sec-weakmap-constructor */
-function WeakMapConstructor([iterable = _Value.undefined], {
+function WeakMapConstructor([iterable = Value.undefined], {
   NewTarget
 }) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
-  if (NewTarget === _Value.undefined) {
+  if (NewTarget === Value.undefined) {
     return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
   // 2. Let map be ? OrdinaryCreateFromConstructor(NewTarget, "%WeakMap.prototype%", « [[WeakMapData]] »).
@@ -52857,11 +52856,11 @@ function WeakMapConstructor([iterable = _Value.undefined], {
   // 3. Set map.[[WeakMapData]] to a new empty List.
   map.WeakMapData = [];
   // 4. If iterable is either undefined or null, return map.
-  if (iterable === _Value.undefined || iterable === _Value.null) {
+  if (iterable === Value.undefined || iterable === Value.null) {
     return map;
   }
   // 5. Let adder be ? Get(map, "set").
-  let _temp2 = Get(map, _Value('set'));
+  let _temp2 = Get(map, Value('set'));
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) {
     return _temp2;
@@ -52881,7 +52880,7 @@ function bootstrapWeakMap(realmRec) {
 }
 
 /** https://tc39.es/ecma262/#sec-weakset.prototype.add */
-function WeakSetProto_add([value = _Value.undefined], {
+function WeakSetProto_add([value = Value.undefined], {
   thisValue
 }) {
   // 1. Let S be this value.
@@ -52905,7 +52904,7 @@ function WeakSetProto_add([value = _Value.undefined], {
   // 5. For each e that is an element of entries, do
   for (const e of entries) {
     // a. If e is not empty and SameValue(e, value) is true, then
-    if (e !== undefined && SameValue(e, value) === _Value.true) {
+    if (e !== undefined && SameValue(e, value) === Value.true) {
       // i. Return S.
       return S;
     }
@@ -52918,7 +52917,7 @@ function WeakSetProto_add([value = _Value.undefined], {
 
 /** https://tc39.es/ecma262/#sec-weakset.prototype.delete */
 WeakSetProto_add.section = 'https://tc39.es/ecma262/#sec-weakset.prototype.add';
-function WeakSetProto_delete([value = _Value.undefined], {
+function WeakSetProto_delete([value = Value.undefined], {
   thisValue
 }) {
   // 1. Let S be the this value.`
@@ -52935,7 +52934,7 @@ function WeakSetProto_delete([value = _Value.undefined], {
   }
   // 3. If Type(value) is not Object, return false.
   if (!(value instanceof ObjectValue)) {
-    return _Value.false;
+    return Value.false;
   }
   // 4. Let entries be the List that is S.[[WeakSetData]].
   const entries = S.WeakSetData;
@@ -52943,20 +52942,20 @@ function WeakSetProto_delete([value = _Value.undefined], {
   for (let i = 0; i < entries.length; i += 1) {
     const e = entries[i];
     // i. If e is not empty and SameValue(e, value) is true, then
-    if (e !== undefined && SameValue(e, value) === _Value.true) {
+    if (e !== undefined && SameValue(e, value) === Value.true) {
       // i. Replace the element of entries whose value is e with an element whose value is empty.
       entries[i] = undefined;
       // ii. Return true.
-      return _Value.true;
+      return Value.true;
     }
   }
   // 6. Return false.
-  return _Value.false;
+  return Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-weakset.prototype.has */
 WeakSetProto_delete.section = 'https://tc39.es/ecma262/#sec-weakset.prototype.delete';
-function WeakSetProto_has([value = _Value.undefined], {
+function WeakSetProto_has([value = Value.undefined], {
   thisValue
 }) {
   // 1. Let S be the this value.
@@ -52975,17 +52974,17 @@ function WeakSetProto_has([value = _Value.undefined], {
   const entries = S.WeakSetData;
   // 4. If Type(value) is not Object, return false.
   if (!(value instanceof ObjectValue)) {
-    return _Value.false;
+    return Value.false;
   }
   // 5. For each e that is an element of entries, do
   for (const e of entries) {
     // a. If e is not empty and SameValue(e, value) is true, return true.
-    if (e !== undefined && SameValue(e, value) === _Value.true) {
-      return _Value.true;
+    if (e !== undefined && SameValue(e, value) === Value.true) {
+      return Value.true;
     }
   }
   // 6. Return false.
-  return _Value.false;
+  return Value.false;
 }
 WeakSetProto_has.section = 'https://tc39.es/ecma262/#sec-weakset.prototype.has';
 function bootstrapWeakSetPrototype(realmRec) {
@@ -52994,11 +52993,11 @@ function bootstrapWeakSetPrototype(realmRec) {
 }
 
 /** https://tc39.es/ecma262/#sec-weakset-iterable */
-function WeakSetConstructor([iterable = _Value.undefined], {
+function WeakSetConstructor([iterable = Value.undefined], {
   NewTarget
 }) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
-  if (NewTarget === _Value.undefined) {
+  if (NewTarget === Value.undefined) {
     return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
   // 2. Let set be ? OrdinaryCreateFromConstructor(NewTarget, "%WeakSet.prototype%", « [[WeakSetData]] »).
@@ -53015,11 +53014,11 @@ function WeakSetConstructor([iterable = _Value.undefined], {
   // 3. Set set.[[WeakSetData]] to a new empty List.
   set.WeakSetData = [];
   // 4. If iterable is either undefined or null, return set.
-  if (iterable === _Value.undefined || iterable === _Value.null) {
+  if (iterable === Value.undefined || iterable === Value.null) {
     return set;
   }
   // 5. Let adder be ? Get(set, "add").
-  let _temp2 = Get(set, _Value('add'));
+  let _temp2 = Get(set, Value('add'));
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) {
     return _temp2;
@@ -53030,7 +53029,7 @@ function WeakSetConstructor([iterable = _Value.undefined], {
   }
   const adder = _temp2;
   // 6. If IsCallable(adder) is false, throw a TypeError exception.
-  if (IsCallable(adder) === _Value.false) {
+  if (IsCallable(adder) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', adder);
   }
   // 7. Let iteratorRecord be ? GetIterator(iterable).
@@ -53058,7 +53057,7 @@ function WeakSetConstructor([iterable = _Value.undefined], {
     // a. Let next be ? IteratorStep(iteratorRecord).
     const next = _temp4;
     // b. If next is false, return set.
-    if (next === _Value.false) {
+    if (next === Value.false) {
       return set;
     }
     // c. Let nextValue be ? IteratorValue(next).
@@ -53092,12 +53091,12 @@ function bootstrapWeakSet(realmRec) {
 }
 
 /** https://tc39.es/ecma262/#sec-aggregate-error-constructor */
-function AggregateErrorConstructor([errors = _Value.undefined, message = _Value.undefined, options = _Value.undefined], {
+function AggregateErrorConstructor([errors = Value.undefined, message = Value.undefined, options = Value.undefined], {
   NewTarget
 }) {
   // 1. If NewTarget is undefined, let newTarget be the active function object, else let newTarget be NewTarget.
   let newTarget;
-  if (NewTarget === _Value.undefined) {
+  if (NewTarget === Value.undefined) {
     newTarget = surroundingAgent.activeFunctionObject;
   } else {
     newTarget = NewTarget;
@@ -53114,7 +53113,7 @@ function AggregateErrorConstructor([errors = _Value.undefined, message = _Value.
   }
   const O = _temp;
   // 3. If message is not undefined, then
-  if (message !== _Value.undefined) {
+  if (message !== Value.undefined) {
     let _temp2 = ToString(message);
     /* c8 ignore if */
     if (_temp2 instanceof AbruptCompletion) {
@@ -53127,7 +53126,7 @@ function AggregateErrorConstructor([errors = _Value.undefined, message = _Value.
     // a. Let msg be ? ToString(message).
     const msg = _temp2;
     // b. Perform ! CreateMethodProperty(O, "message", msg).
-    let _temp3 = CreateMethodProperty(O, _Value('message'), msg);
+    let _temp3 = CreateMethodProperty(O, Value('message'), msg);
     Assert(!(_temp3 instanceof AbruptCompletion), "CreateMethodProperty(O, Value('message'), msg)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp3 instanceof Completion) {
@@ -53152,10 +53151,10 @@ function AggregateErrorConstructor([errors = _Value.undefined, message = _Value.
   if (_temp8 instanceof Completion) {
     _temp8 = _temp8.Value;
   }
-  let _temp5 = DefinePropertyOrThrow(O, _Value('errors'), _Descriptor({
-    Configurable: _Value.true,
-    Enumerable: _Value.false,
-    Writable: _Value.true,
+  let _temp5 = DefinePropertyOrThrow(O, Value('errors'), _Descriptor({
+    Configurable: Value.true,
+    Enumerable: Value.false,
+    Writable: Value.true,
     Value: _temp8
   }));
   Assert(!(_temp5 instanceof AbruptCompletion), "DefinePropertyOrThrow(O, Value('errors'), Descriptor({\n    Configurable: Value.true,\n    Enumerable: Value.false,\n    Writable: Value.true,\n    Value: X(CreateArrayFromList(errorsList)),\n  }))" + ' returned an abrupt completion');
@@ -53195,7 +53194,7 @@ function bootstrapAggregateError(realmRec) {
 
 // @ts-nocheck
 function bootstrapAggregateErrorPrototype(realmRec) {
-  const proto = bootstrapPrototype(realmRec, [['name', _Value('AggregateError')], ['message', _Value('')]], realmRec.Intrinsics['%Error.prototype%'], 'AggregateError');
+  const proto = bootstrapPrototype(realmRec, [['name', Value('AggregateError')], ['message', Value('')]], realmRec.Intrinsics['%Error.prototype%'], 'AggregateError');
   realmRec.Intrinsics['%AggregateError.prototype%'] = proto;
 }
 
@@ -53231,11 +53230,11 @@ function bootstrapWeakRefPrototype(realmRec) {
 }
 
 /** https://tc39.es/ecma262/#sec-weak-ref-target */
-function WeakRefConstructor([target = _Value.undefined], {
+function WeakRefConstructor([target = Value.undefined], {
   NewTarget
 }) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
-  if (NewTarget === _Value.undefined) {
+  if (NewTarget === Value.undefined) {
     return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
   // 2. If Type(target) is not Object, throw a TypeError exception.
@@ -53272,7 +53271,7 @@ function bootstrapWeakRef(realmRec) {
 }
 
 /** https://tc39.es/ecma262/#sec-finalization-registry.prototype.cleanupSome */
-function FinalizationRegistryProto_cleanupSome([callback = _Value.undefined], {
+function FinalizationRegistryProto_cleanupSome([callback = Value.undefined], {
   thisValue
 }) {
   // 1. Let finalizationRegistry be the this value.
@@ -53288,7 +53287,7 @@ function FinalizationRegistryProto_cleanupSome([callback = _Value.undefined], {
     _temp = _temp.Value;
   }
   // 3. If callback is present and IsCallable(callback) is false, throw a TypeError exception.
-  if (callback !== _Value.undefined && IsCallable(callback) === _Value.false) {
+  if (callback !== Value.undefined && IsCallable(callback) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callback);
   }
   // 4. Perform ? CleanupFinalizationRegistry(finalizationRegistry, callback).
@@ -53302,12 +53301,12 @@ function FinalizationRegistryProto_cleanupSome([callback = _Value.undefined], {
     _temp2 = _temp2.Value;
   }
   // 5. Return *undefined*.
-  return _Value.undefined;
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-finalization-registry.prototype.register */
 FinalizationRegistryProto_cleanupSome.section = 'https://tc39.es/ecma262/#sec-finalization-registry.prototype.cleanupSome';
-function FinalizationRegistryProto_register([target = _Value.undefined, heldValue = _Value.undefined, unregisterToken = _Value.undefined], {
+function FinalizationRegistryProto_register([target = Value.undefined, heldValue = Value.undefined, unregisterToken = Value.undefined], {
   thisValue
 }) {
   // 1. Let finalizationRegistry be the this value.
@@ -53327,13 +53326,13 @@ function FinalizationRegistryProto_register([target = _Value.undefined, heldValu
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
   }
   // 4. If SameValue(target, heldValue), throw a TypeError exception.
-  if (SameValue(target, heldValue) === _Value.true) {
+  if (SameValue(target, heldValue) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'TargetMatchesHeldValue', heldValue);
   }
   // 5. If Type(unregisterToken) is not Object,
   if (!(unregisterToken instanceof ObjectValue)) {
     // a. If unregisterToken is not undefined, throw a TypeError exception.
-    if (unregisterToken !== _Value.undefined) {
+    if (unregisterToken !== Value.undefined) {
       return surroundingAgent.Throw('TypeError', 'NotAnObject', unregisterToken);
     }
     // b. Set unregisterToken to empty.
@@ -53348,12 +53347,12 @@ function FinalizationRegistryProto_register([target = _Value.undefined, heldValu
   // 7. Append cell to finalizationRegistry.[[Cells]].
   finalizationRegistry.Cells.push(cell);
   // 8. Return undefined.
-  return _Value.undefined;
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-finalization-registry.prototype.unregister */
 FinalizationRegistryProto_register.section = 'https://tc39.es/ecma262/#sec-finalization-registry.prototype.register';
-function FinalizationRegistryProto_unregister([unregisterToken = _Value.undefined], {
+function FinalizationRegistryProto_unregister([unregisterToken = Value.undefined], {
   thisValue
 }) {
   // 1. Let finalizationRegistry be the this value.
@@ -53373,16 +53372,16 @@ function FinalizationRegistryProto_unregister([unregisterToken = _Value.undefine
     return surroundingAgent.Throw('TypeError', 'NotAnObject', unregisterToken);
   }
   // 4. Let removed be false.
-  let removed = _Value.false;
+  let removed = Value.false;
   // 5. For each Record { [[WeakRefTarget]], [[HeldValue]], [[UnregisterToken]] } cell that is an element of finalizationRegistry.[[Cells]], do
   finalizationRegistry.Cells = finalizationRegistry.Cells.filter(cell => {
     let r = true;
     // a. If cell.[[UnregisterToken]] is not empty and SameValue(cell.[[UnregisterToken]], unregisterToken) is true, then
-    if (cell.UnregisterToken !== undefined && SameValue(cell.UnregisterToken, unregisterToken) === _Value.true) {
+    if (cell.UnregisterToken !== undefined && SameValue(cell.UnregisterToken, unregisterToken) === Value.true) {
       // i. Remove cell from finalizationRegistry.Cells.
       r = false;
       // ii. Set removed to true.
-      removed = _Value.true;
+      removed = Value.true;
     }
     return r;
   });
@@ -53396,15 +53395,15 @@ function bootstrapFinalizationRegistryPrototype(realmRec) {
 }
 
 /** https://tc39.es/ecma262/#sec-finalization-registry-cleanup-callback */
-function FinalizationRegistryConstructor([cleanupCallback = _Value.undefined], {
+function FinalizationRegistryConstructor([cleanupCallback = Value.undefined], {
   NewTarget
 }) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
-  if (NewTarget === _Value.undefined) {
+  if (NewTarget === Value.undefined) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', 'FinalizationRegistry');
   }
   // 2. If IsCallable(cleanupCallback) is false, throw a TypeError exception.
-  if (IsCallable(cleanupCallback) === _Value.false) {
+  if (IsCallable(cleanupCallback) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', cleanupCallback);
   }
   // 3. Let finalizationGroup be ? OrdinaryCreateFromConstructor(NewTarget, "%FinalizationRegistryPrototype%", « [[Realm]], [[CleanupCallback]], [[Cells]] »).
@@ -53463,8 +53462,8 @@ class Realm {
 function CreateRealm() {
   const realmRec = new Realm();
   CreateIntrinsics(realmRec);
-  realmRec.GlobalObject = _Value.undefined;
-  realmRec.GlobalEnv = _Value.undefined;
+  realmRec.GlobalObject = Value.undefined;
+  realmRec.GlobalEnv = Value.undefined;
   realmRec.TemplateMap = [];
   realmRec.LoadedModules = [];
   return realmRec;
@@ -53472,22 +53471,22 @@ function CreateRealm() {
 function AddRestrictedFunctionProperties(F, realm) {
   Assert(realm.Intrinsics['%ThrowTypeError%'], "realm.Intrinsics['%ThrowTypeError%']");
   const thrower = realm.Intrinsics['%ThrowTypeError%'];
-  let _temp = DefinePropertyOrThrow(F, _Value('caller'), _Descriptor({
+  let _temp = DefinePropertyOrThrow(F, Value('caller'), _Descriptor({
     Get: thrower,
     Set: thrower,
-    Enumerable: _Value.false,
-    Configurable: _Value.true
+    Enumerable: Value.false,
+    Configurable: Value.true
   }));
   Assert(!(_temp instanceof AbruptCompletion), "DefinePropertyOrThrow(F, Value('caller'), Descriptor({\n    Get: thrower,\n    Set: thrower,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
   }
-  let _temp2 = DefinePropertyOrThrow(F, _Value('arguments'), _Descriptor({
+  let _temp2 = DefinePropertyOrThrow(F, Value('arguments'), _Descriptor({
     Get: thrower,
     Set: thrower,
-    Enumerable: _Value.false,
-    Configurable: _Value.true
+    Enumerable: Value.false,
+    Configurable: Value.true
   }));
   Assert(!(_temp2 instanceof AbruptCompletion), "DefinePropertyOrThrow(F, Value('arguments'), Descriptor({\n    Get: thrower,\n    Set: thrower,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion');
   /* c8 ignore if */
@@ -53500,7 +53499,7 @@ function AddRestrictedFunctionProperties(F, realm) {
 function CreateIntrinsics(realmRec) {
   const intrinsics = Object.create(null);
   realmRec.Intrinsics = intrinsics;
-  intrinsics['%Object.prototype%'] = OrdinaryObjectCreate(_Value.null);
+  intrinsics['%Object.prototype%'] = OrdinaryObjectCreate(Value.null);
   bootstrapFunctionPrototype(realmRec);
   bootstrapObjectPrototype(realmRec);
   bootstrapThrowTypeError(realmRec);
@@ -53583,10 +53582,10 @@ function CreateIntrinsics(realmRec) {
 /** https://tc39.es/ecma262/#sec-setrealmglobalobject */
 function SetRealmGlobalObject(realmRec, globalObj, thisValue) {
   const intrinsics = realmRec.Intrinsics;
-  if (globalObj === _Value.undefined) {
+  if (globalObj === Value.undefined) {
     globalObj = OrdinaryObjectCreate(intrinsics['%Object.prototype%']);
   }
-  if (thisValue === _Value.undefined) {
+  if (thisValue === Value.undefined) {
     thisValue = globalObj;
   }
   realmRec.GlobalObject = globalObj;
@@ -53600,12 +53599,12 @@ function SetDefaultGlobalBindings(realmRec) {
   const global = realmRec.GlobalObject;
 
   // Value Properties of the Global Object
-  [['Infinity', F(Infinity)], ['NaN', F(NaN)], ['undefined', _Value.undefined]].forEach(([name, value]) => {
-    let _temp3 = DefinePropertyOrThrow(global, _Value(name), _Descriptor({
+  [['Infinity', F(Infinity)], ['NaN', F(NaN)], ['undefined', Value.undefined]].forEach(([name, value]) => {
+    let _temp3 = DefinePropertyOrThrow(global, Value(name), _Descriptor({
       Value: value,
-      Writable: _Value.false,
-      Enumerable: _Value.false,
-      Configurable: _Value.false
+      Writable: Value.false,
+      Enumerable: Value.false,
+      Configurable: Value.false
     }));
     /* c8 ignore if */
     if (_temp3 instanceof AbruptCompletion) {
@@ -53616,11 +53615,11 @@ function SetDefaultGlobalBindings(realmRec) {
       _temp3 = _temp3.Value;
     }
   });
-  let _temp4 = DefinePropertyOrThrow(global, _Value('globalThis'), _Descriptor({
+  let _temp4 = DefinePropertyOrThrow(global, Value('globalThis'), _Descriptor({
     Value: realmRec.GlobalEnv.GlobalThisValue,
-    Writable: _Value.true,
-    Enumerable: _Value.false,
-    Configurable: _Value.true
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.true
   }));
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) {
@@ -53640,11 +53639,11 @@ function SetDefaultGlobalBindings(realmRec) {
   // Other Properties of the Global Object
   // 'Atomics',
   'JSON', 'Math', 'Reflect'].forEach(name => {
-    let _temp5 = DefinePropertyOrThrow(global, _Value(name), _Descriptor({
+    let _temp5 = DefinePropertyOrThrow(global, Value(name), _Descriptor({
       Value: realmRec.Intrinsics[`%${name}%`],
-      Writable: _Value.true,
-      Enumerable: _Value.false,
-      Configurable: _Value.true
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.true
     }));
     /* c8 ignore if */
     if (_temp5 instanceof AbruptCompletion) {
@@ -53662,10 +53661,10 @@ function SetDefaultGlobalBindings(realmRec) {
 function IsPropertyReference(V) {
   // 1. If V.[[Base]] is unresolvable, return false.
   if (V.Base === 'unresolvable') {
-    return _Value.false;
+    return Value.false;
   }
   // 2. If V.[[Base]] is an Environment Record, return false; otherwise return true.
-  return V.Base instanceof EnvironmentRecord ? _Value.false : _Value.true;
+  return V.Base instanceof EnvironmentRecord ? Value.false : Value.true;
 }
 
 /** https://tc39.es/ecma262/#sec-isunresolvablereference */
@@ -53673,7 +53672,7 @@ function IsUnresolvableReference(V) {
   // 1. Assert: V is a Reference Record.
   Assert(V instanceof ReferenceRecord, "V instanceof ReferenceRecord");
   // 2. If V.[[Base]] is unresolvable, return true; otherwise return false.
-  return V.Base === 'unresolvable' ? _Value.true : _Value.false;
+  return V.Base === 'unresolvable' ? Value.true : Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-issuperreference */
@@ -53681,7 +53680,7 @@ function IsSuperReference(V) {
   // 1. Assert: V is a Reference Record.
   Assert(V instanceof ReferenceRecord, "V instanceof ReferenceRecord");
   // 2. If V.[[ThisValue]] is not empty, return true; otherwise return false.
-  return V.ThisValue !== undefined ? _Value.true : _Value.false;
+  return V.ThisValue !== undefined ? Value.true : Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-isprivatereference */
@@ -53689,7 +53688,7 @@ function IsPrivateReference(V) {
   // 1. Assert: V is a Reference Record.
   Assert(V instanceof ReferenceRecord, "V instanceof ReferenceRecord");
   // 2. If V.[[ReferencedName]] is a Private Name, return true; otherwise return false.
-  return V.ReferencedName instanceof PrivateName ? _Value.true : _Value.false;
+  return V.ReferencedName instanceof PrivateName ? Value.true : Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-getvalue */
@@ -53707,11 +53706,11 @@ function GetValue(V) {
     return V;
   }
   // 3. If IsUnresolvableReference(V) is true, throw a ReferenceError exception.
-  if (IsUnresolvableReference(V) === _Value.true) {
+  if (IsUnresolvableReference(V) === Value.true) {
     return surroundingAgent.Throw('ReferenceError', 'NotDefined', V.ReferencedName);
   }
   // 4. If IsPropertyReference(V) is true, then
-  if (IsPropertyReference(V) === _Value.true) {
+  if (IsPropertyReference(V) === Value.true) {
     let _temp = ToObject(V.Base);
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) {
@@ -53724,7 +53723,7 @@ function GetValue(V) {
     // a. Let baseObj be ? ToObject(V.[[Base]]).
     const baseObj = _temp;
     // b. If IsPrivateReference(V) is true, then
-    if (IsPrivateReference(V) === _Value.true) {
+    if (IsPrivateReference(V) === Value.true) {
       // i. Return ? PrivateGet(V.[[ReferencedName]], baseObj).
       return PrivateGet(V.ReferencedName, baseObj);
     }
@@ -53765,18 +53764,18 @@ function PutValue(V, W) {
     return surroundingAgent.Throw('ReferenceError', 'InvalidAssignmentTarget');
   }
   // 4. If IsUnresolvableReference(V) is true, then
-  if (IsUnresolvableReference(V) === _Value.true) {
+  if (IsUnresolvableReference(V) === Value.true) {
     // a. If V.[[Strict]] is true, throw a ReferenceError exception.
-    if (V.Strict === _Value.true) {
+    if (V.Strict === Value.true) {
       return surroundingAgent.Throw('ReferenceError', 'NotDefined', V.ReferencedName);
     }
     // b. Let globalObj be GetGlobalObject().
     const globalObj = GetGlobalObject();
     // c. Return ? Set(globalObj, V.[[ReferencedName]], W, false).
-    return Set$1(globalObj, V.ReferencedName, W, _Value.false);
+    return Set$1(globalObj, V.ReferencedName, W, Value.false);
   }
   // 5. If IsPropertyReference(V) is true, then
-  if (IsPropertyReference(V) === _Value.true) {
+  if (IsPropertyReference(V) === Value.true) {
     let _temp2 = ToObject(V.Base);
     Assert(!(_temp2 instanceof AbruptCompletion), "ToObject(V.Base)" + ' returned an abrupt completion');
     /* c8 ignore if */
@@ -53786,7 +53785,7 @@ function PutValue(V, W) {
     // a. Let baseObj be ! ToObject(V.[[Base]]).
     const baseObj = _temp2;
     // b. If IsPrivateReference(V) is true, then
-    if (IsPrivateReference(V) === _Value.true) {
+    if (IsPrivateReference(V) === Value.true) {
       // i. Return ? PrivateSet(V.[[ReferencedName]], baseObj, W).
       return PrivateSet(V.ReferencedName, baseObj, W);
     }
@@ -53802,11 +53801,11 @@ function PutValue(V, W) {
     }
     const succeeded = _temp3;
     // d. If succeeded is false and V.[[Strict]] is true, throw a TypeError exception.
-    if (succeeded === _Value.false && V.Strict === _Value.true) {
+    if (succeeded === Value.false && V.Strict === Value.true) {
       return surroundingAgent.Throw('TypeError', 'CannotSetProperty', V.ReferencedName, V.Base);
     }
     // e. Return.
-    return NormalCompletion(_Value.undefined);
+    return NormalCompletion(Value.undefined);
   } else {
     // 6. Else,
     // a. Let base be V.[[Base]].
@@ -53821,9 +53820,9 @@ function PutValue(V, W) {
 /** https://tc39.es/ecma262/#sec-getthisvalue */
 function GetThisValue(V) {
   // 1. Assert: IsPropertyReference(V) is true.
-  Assert(IsPropertyReference(V) === _Value.true, "IsPropertyReference(V) === Value.true");
+  Assert(IsPropertyReference(V) === Value.true, "IsPropertyReference(V) === Value.true");
   // 2. If IsSuperReference(V) is true, return V.[[ThisValue]]; otherwise return V.[[Base]].
-  if (IsSuperReference(V) === _Value.true) {
+  if (IsSuperReference(V) === Value.true) {
     return V.ThisValue;
   } else {
     return V.Base;
@@ -53852,7 +53851,7 @@ function InitializeReferencedBinding(V, W) {
   // 3. Assert: V is a Reference Record.
   Assert(V instanceof ReferenceRecord, "V instanceof ReferenceRecord");
   // 4. Assert: IsUnresolvableReference(V) is false.
-  Assert(IsUnresolvableReference(V) === _Value.false, "IsUnresolvableReference(V) === Value.false");
+  Assert(IsUnresolvableReference(V) === Value.false, "IsUnresolvableReference(V) === Value.false");
   // 5. Let base be V.[[Base]].
   const base = V.Base;
   // 6. Assert: base is an Environment Record.
@@ -53866,7 +53865,7 @@ function MakePrivateReference(baseValue, privateIdentifier) {
   // 1. Let privEnv be the running execution context's PrivateEnvironment.
   const privEnv = surroundingAgent.runningExecutionContext.PrivateEnvironment;
   // 2. Assert: privEnv is not null.
-  Assert(privEnv !== _Value.null, "privEnv !== Value.null");
+  Assert(privEnv !== Value.null, "privEnv !== Value.null");
   // 3. Let privateName be ! ResolvePrivateIdentifier(privEnv, privateIdentifier).
   let _temp4 = ResolvePrivateIdentifier(privEnv, privateIdentifier);
   Assert(!(_temp4 instanceof AbruptCompletion), "ResolvePrivateIdentifier(privEnv, privateIdentifier)" + ' returned an abrupt completion');
@@ -53879,7 +53878,7 @@ function MakePrivateReference(baseValue, privateIdentifier) {
   return new ReferenceRecord({
     Base: baseValue,
     ReferencedName: privateName,
-    Strict: _Value.true,
+    Strict: Value.true,
     ThisValue: undefined
   });
 }
@@ -53899,7 +53898,7 @@ function ResolvePrivateIdentifier(privEnv, identifier) {
     // a. Let outerPrivEnv be privEnv.[[OuterPrivateEnvironment]].
     const outerPrivEnv = privEnv.OuterPrivateEnvironment;
     // b. Assert: outerPrivEnv is not null.
-    Assert(outerPrivEnv !== _Value.null, "outerPrivEnv !== Value.null");
+    Assert(outerPrivEnv !== Value.null, "outerPrivEnv !== Value.null");
     // c. Return ResolvePrivateIdentifier(outerPrivEnv, identifier).
     return ResolvePrivateIdentifier(outerPrivEnv, identifier);
   }
@@ -53917,10 +53916,10 @@ function RegExpAlloc(newTarget) {
     _temp = _temp.Value;
   }
   const obj = _temp;
-  let _temp2 = DefinePropertyOrThrow(obj, _Value('lastIndex'), _Descriptor({
-    Writable: _Value.true,
-    Enumerable: _Value.false,
-    Configurable: _Value.false
+  let _temp2 = DefinePropertyOrThrow(obj, Value('lastIndex'), _Descriptor({
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.false
   }));
   Assert(!(_temp2 instanceof AbruptCompletion), "DefinePropertyOrThrow(obj, Value('lastIndex'), Descriptor({\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
   /* c8 ignore if */
@@ -53934,8 +53933,8 @@ function RegExpAlloc(newTarget) {
 function RegExpInitialize(obj, pattern, flags) {
   let P;
   // 1. If pattern is undefined, let P be the empty String.
-  if (pattern === _Value.undefined) {
-    P = _Value('');
+  if (pattern === Value.undefined) {
+    P = Value('');
   } else {
     let _temp3 = ToString(pattern);
     /* c8 ignore if */
@@ -53951,8 +53950,8 @@ function RegExpInitialize(obj, pattern, flags) {
   }
   let F$1;
   // 3. If flags is undefined, let F be the empty String.
-  if (flags === _Value.undefined) {
-    F$1 = _Value('');
+  if (flags === Value.undefined) {
+    F$1 = Value('');
   } else {
     let _temp4 = ToString(flags);
     /* c8 ignore if */
@@ -53999,7 +53998,7 @@ function RegExpInitialize(obj, pattern, flags) {
   const evaluatePattern = surroundingAgent.hostDefinedOptions.boost?.evaluatePattern || Evaluate_Pattern;
   obj.RegExpMatcher = evaluatePattern(parseResult, F$1.stringValue());
   // 15. Perform ? Set(obj, "lastIndex", +0𝔽, true).
-  let _temp5 = Set$1(obj, _Value('lastIndex'), F(+0), _Value.true);
+  let _temp5 = Set$1(obj, Value('lastIndex'), F(+0), Value.true);
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) {
     return _temp5;
@@ -54031,7 +54030,7 @@ function RegExpCreate(P, F) {
 function EscapeRegExpPattern(P, _F) {
   const source = P.stringValue();
   if (source === '') {
-    return _Value('(:?)');
+    return Value('(:?)');
   }
   let index = 0;
   let escaped = '';
@@ -54085,13 +54084,13 @@ function EscapeRegExpPattern(P, _F) {
         break;
     }
   }
-  return _Value(escaped);
+  return Value(escaped);
 }
 
 /** https://tc39.es/ecma262/#sec-getstringindex */
 function GetStringIndex(S, Input, e) {
   // 1. Assert: Type(S) is String.
-  Assert(S instanceof StringValue, "S instanceof JSStringValue");
+  Assert(S instanceof JSStringValue, "S instanceof JSStringValue");
   // 2. Assert: Input is a List of the code points of S interpreted as a UTF-16 encoded string.
   Assert(Array.isArray(Input), "Array.isArray(Input)");
   // 3. Assert: e is an integer value ≥ 0.
@@ -54117,7 +54116,7 @@ function GetStringIndex(S, Input, e) {
 /** https://tc39.es/ecma262/#sec-getmatchstring */
 function GetMatchString(S, match) {
   // 1. Assert: Type(S) is String.
-  Assert(S instanceof StringValue, "S instanceof JSStringValue");
+  Assert(S instanceof JSStringValue, "S instanceof JSStringValue");
   // 2. Assert: match is a Match Record.
   Assert('StartIndex' in match && 'EndIndex' in match, "'StartIndex' in match && 'EndIndex' in match");
   // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and ≤ the length of S.
@@ -54125,13 +54124,13 @@ function GetMatchString(S, match) {
   // 4. Assert: match.[[EndIndex]] is an integer value ≥ match.[[StartIndex]] and ≤ the length of S.
   Assert(match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length, "match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length");
   // 5. Return the portion of S between offset match.[[StartIndex]] inclusive and offset match.[[EndIndex]] exclusive.
-  return _Value(S.stringValue().slice(match.StartIndex, match.EndIndex));
+  return Value(S.stringValue().slice(match.StartIndex, match.EndIndex));
 }
 
 /** https://tc39.es/ecma262/#sec-getmatchindexpair */
 function GetMatchIndexPair(S, match) {
   // 1. Assert: Type(S) is String.
-  Assert(S instanceof StringValue, "S instanceof JSStringValue");
+  Assert(S instanceof JSStringValue, "S instanceof JSStringValue");
   // 2. Assert: match is a Match Record.
   Assert('StartIndex' in match && 'EndIndex' in match, "'StartIndex' in match && 'EndIndex' in match");
   // 3. Assert: match.[[StartIndex]] is an integer value ≥ 0 and ≤ the length of S.
@@ -54145,7 +54144,7 @@ function GetMatchIndexPair(S, match) {
 /** https://tc39.es/ecma262/#sec-makematchindicesindexpairarray */
 function MakeMatchIndicesIndexPairArray(S, indices, groupNames, hasGroups) {
   // 1. Assert: Type(S) is String.
-  Assert(S instanceof StringValue, "S instanceof JSStringValue");
+  Assert(S instanceof JSStringValue, "S instanceof JSStringValue");
   // 2. Assert: indices is a List.
   Assert(Array.isArray(indices), "Array.isArray(indices)");
   // 3. Let n be the number of elements in indices.
@@ -54168,8 +54167,8 @@ function MakeMatchIndicesIndexPairArray(S, indices, groupNames, hasGroups) {
   const A = _temp7;
   // 10. If hasGroups is true, then
   let groups;
-  if (hasGroups === _Value.true) {
-    let _temp8 = OrdinaryObjectCreate(_Value.null);
+  if (hasGroups === Value.true) {
+    let _temp8 = OrdinaryObjectCreate(Value.null);
     Assert(!(_temp8 instanceof AbruptCompletion), "OrdinaryObjectCreate(Value.null)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp8 instanceof Completion) {
@@ -54180,10 +54179,10 @@ function MakeMatchIndicesIndexPairArray(S, indices, groupNames, hasGroups) {
   } else {
     // 9. Else,
     // b. Let groups be undefined.
-    groups = _Value.undefined;
+    groups = Value.undefined;
   }
   // 11. Perform ! CreateDataProperty(A, "groups", groups).
-  let _temp9 = CreateDataPropertyOrThrow(A, _Value('groups'), groups);
+  let _temp9 = CreateDataPropertyOrThrow(A, Value('groups'), groups);
   Assert(!(_temp9 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, Value('groups'), groups)" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp9 instanceof Completion) {
@@ -54195,7 +54194,7 @@ function MakeMatchIndicesIndexPairArray(S, indices, groupNames, hasGroups) {
     const matchIndices = indices[i];
     // b. If matchIndices is not undefined, then
     let matchIndicesArray;
-    if (matchIndices !== _Value.undefined) {
+    if (matchIndices !== Value.undefined) {
       let _temp10 = GetMatchIndexPair(S, matchIndices);
       Assert(!(_temp10 instanceof AbruptCompletion), "GetMatchIndexPair(S, matchIndices)" + ' returned an abrupt completion');
       /* c8 ignore if */
@@ -54207,7 +54206,7 @@ function MakeMatchIndicesIndexPairArray(S, indices, groupNames, hasGroups) {
     } else {
       // c. Else,
       // i. Let matchIndicesArray be undefined.
-      matchIndicesArray = _Value.undefined;
+      matchIndicesArray = Value.undefined;
     }
     // d. Perform ! CreateDataProperty(A, ! ToString(𝔽(i)), matchIndicesArray).
     let _temp13 = ToString(F(i));
@@ -54223,7 +54222,7 @@ function MakeMatchIndicesIndexPairArray(S, indices, groupNames, hasGroups) {
       _temp11 = _temp11.Value;
     }
     // e. If i > 0 and groupNames[i - 1] is not undefined, then
-    if (i > 0 && groupNames[i - 1] !== _Value.undefined) {
+    if (i > 0 && groupNames[i - 1] !== Value.undefined) {
       let _temp12 = CreateDataPropertyOrThrow(groups, groupNames[i - 1], matchIndicesArray);
       Assert(!(_temp12 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(groups, groupNames[i - 1], matchIndicesArray)" + ' returned an abrupt completion');
       /* c8 ignore if */
@@ -54245,8 +54244,8 @@ function RegExpHasFlag(R, codeUnit) {
   // 2. If R does not have an [[OriginalFlags]] internal slot, then
   if (!('OriginalFlags' in R)) {
     // a. If SameValue(R, %RegExp.prototype%) is true, return undefined.
-    if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === _Value.true) {
-      return _Value.undefined;
+    if (SameValue(R, surroundingAgent.intrinsic('%RegExp.prototype%')) === Value.true) {
+      return Value.undefined;
     }
     // b. Otherwise, throw a TypeError exception.
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
@@ -54255,10 +54254,10 @@ function RegExpHasFlag(R, codeUnit) {
   const flags = R.OriginalFlags.stringValue();
   // 4. If flags contains codeUnit, return true.
   if (flags.includes(codeUnit)) {
-    return _Value.true;
+    return Value.true;
   }
   // 5. Return false.
-  return _Value.false;
+  return Value.false;
 }
 
 // #𝔽
@@ -54320,11 +54319,11 @@ function IsGenericDescriptor(Desc) {
 /** https://tc39.es/ecma262/#sec-frompropertydescriptor */
 function FromPropertyDescriptor(Desc) {
   if (Desc instanceof UndefinedValue) {
-    return _Value.undefined;
+    return Value.undefined;
   }
   const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   if (Desc.Value !== undefined) {
-    let _temp = CreateDataProperty(obj, _Value('value'), Desc.Value);
+    let _temp = CreateDataProperty(obj, Value('value'), Desc.Value);
     Assert(!(_temp instanceof AbruptCompletion), "CreateDataProperty(obj, Value('value'), Desc.Value)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp instanceof Completion) {
@@ -54332,7 +54331,7 @@ function FromPropertyDescriptor(Desc) {
     }
   }
   if (Desc.Writable !== undefined) {
-    let _temp2 = CreateDataProperty(obj, _Value('writable'), Desc.Writable);
+    let _temp2 = CreateDataProperty(obj, Value('writable'), Desc.Writable);
     Assert(!(_temp2 instanceof AbruptCompletion), "CreateDataProperty(obj, Value('writable'), Desc.Writable)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp2 instanceof Completion) {
@@ -54340,7 +54339,7 @@ function FromPropertyDescriptor(Desc) {
     }
   }
   if (Desc.Get !== undefined) {
-    let _temp3 = CreateDataProperty(obj, _Value('get'), Desc.Get);
+    let _temp3 = CreateDataProperty(obj, Value('get'), Desc.Get);
     Assert(!(_temp3 instanceof AbruptCompletion), "CreateDataProperty(obj, Value('get'), Desc.Get)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp3 instanceof Completion) {
@@ -54348,7 +54347,7 @@ function FromPropertyDescriptor(Desc) {
     }
   }
   if (Desc.Set !== undefined) {
-    let _temp4 = CreateDataProperty(obj, _Value('set'), Desc.Set);
+    let _temp4 = CreateDataProperty(obj, Value('set'), Desc.Set);
     Assert(!(_temp4 instanceof AbruptCompletion), "CreateDataProperty(obj, Value('set'), Desc.Set)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp4 instanceof Completion) {
@@ -54356,7 +54355,7 @@ function FromPropertyDescriptor(Desc) {
     }
   }
   if (Desc.Enumerable !== undefined) {
-    let _temp5 = CreateDataProperty(obj, _Value('enumerable'), Desc.Enumerable);
+    let _temp5 = CreateDataProperty(obj, Value('enumerable'), Desc.Enumerable);
     Assert(!(_temp5 instanceof AbruptCompletion), "CreateDataProperty(obj, Value('enumerable'), Desc.Enumerable)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp5 instanceof Completion) {
@@ -54364,7 +54363,7 @@ function FromPropertyDescriptor(Desc) {
     }
   }
   if (Desc.Configurable !== undefined) {
-    let _temp6 = CreateDataProperty(obj, _Value('configurable'), Desc.Configurable);
+    let _temp6 = CreateDataProperty(obj, Value('configurable'), Desc.Configurable);
     Assert(!(_temp6 instanceof AbruptCompletion), "CreateDataProperty(obj, Value('configurable'), Desc.Configurable)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp6 instanceof Completion) {
@@ -54381,7 +54380,7 @@ function ToPropertyDescriptor(Obj) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', Obj);
   }
   const desc = _Descriptor({});
-  let _temp7 = HasProperty(Obj, _Value('enumerable'));
+  let _temp7 = HasProperty(Obj, Value('enumerable'));
   /* c8 ignore if */
   if (_temp7 instanceof AbruptCompletion) {
     return _temp7;
@@ -54391,8 +54390,8 @@ function ToPropertyDescriptor(Obj) {
     _temp7 = _temp7.Value;
   }
   const hasEnumerable = _temp7;
-  if (hasEnumerable === _Value.true) {
-    let _temp8 = Get(Obj, _Value('enumerable'));
+  if (hasEnumerable === Value.true) {
+    let _temp8 = Get(Obj, Value('enumerable'));
     /* c8 ignore if */
     if (_temp8 instanceof AbruptCompletion) {
       return _temp8;
@@ -54404,7 +54403,7 @@ function ToPropertyDescriptor(Obj) {
     const enumerable = ToBoolean(_temp8);
     desc.Enumerable = enumerable;
   }
-  let _temp9 = HasProperty(Obj, _Value('configurable'));
+  let _temp9 = HasProperty(Obj, Value('configurable'));
   /* c8 ignore if */
   if (_temp9 instanceof AbruptCompletion) {
     return _temp9;
@@ -54414,8 +54413,8 @@ function ToPropertyDescriptor(Obj) {
     _temp9 = _temp9.Value;
   }
   const hasConfigurable = _temp9;
-  if (hasConfigurable === _Value.true) {
-    let _temp10 = Get(Obj, _Value('configurable'));
+  if (hasConfigurable === Value.true) {
+    let _temp10 = Get(Obj, Value('configurable'));
     /* c8 ignore if */
     if (_temp10 instanceof AbruptCompletion) {
       return _temp10;
@@ -54427,7 +54426,7 @@ function ToPropertyDescriptor(Obj) {
     const conf = ToBoolean(_temp10);
     desc.Configurable = conf;
   }
-  let _temp11 = HasProperty(Obj, _Value('value'));
+  let _temp11 = HasProperty(Obj, Value('value'));
   /* c8 ignore if */
   if (_temp11 instanceof AbruptCompletion) {
     return _temp11;
@@ -54437,8 +54436,8 @@ function ToPropertyDescriptor(Obj) {
     _temp11 = _temp11.Value;
   }
   const hasValue = _temp11;
-  if (hasValue === _Value.true) {
-    let _temp12 = Get(Obj, _Value('value'));
+  if (hasValue === Value.true) {
+    let _temp12 = Get(Obj, Value('value'));
     /* c8 ignore if */
     if (_temp12 instanceof AbruptCompletion) {
       return _temp12;
@@ -54450,7 +54449,7 @@ function ToPropertyDescriptor(Obj) {
     const value = _temp12;
     desc.Value = value;
   }
-  let _temp13 = HasProperty(Obj, _Value('writable'));
+  let _temp13 = HasProperty(Obj, Value('writable'));
   /* c8 ignore if */
   if (_temp13 instanceof AbruptCompletion) {
     return _temp13;
@@ -54460,8 +54459,8 @@ function ToPropertyDescriptor(Obj) {
     _temp13 = _temp13.Value;
   }
   const hasWritable = _temp13;
-  if (hasWritable === _Value.true) {
-    let _temp14 = Get(Obj, _Value('writable'));
+  if (hasWritable === Value.true) {
+    let _temp14 = Get(Obj, Value('writable'));
     /* c8 ignore if */
     if (_temp14 instanceof AbruptCompletion) {
       return _temp14;
@@ -54473,7 +54472,7 @@ function ToPropertyDescriptor(Obj) {
     const writable = ToBoolean(_temp14);
     desc.Writable = writable;
   }
-  let _temp15 = HasProperty(Obj, _Value('get'));
+  let _temp15 = HasProperty(Obj, Value('get'));
   /* c8 ignore if */
   if (_temp15 instanceof AbruptCompletion) {
     return _temp15;
@@ -54483,8 +54482,8 @@ function ToPropertyDescriptor(Obj) {
     _temp15 = _temp15.Value;
   }
   const hasGet = _temp15;
-  if (hasGet === _Value.true) {
-    let _temp16 = Get(Obj, _Value('get'));
+  if (hasGet === Value.true) {
+    let _temp16 = Get(Obj, Value('get'));
     /* c8 ignore if */
     if (_temp16 instanceof AbruptCompletion) {
       return _temp16;
@@ -54494,12 +54493,12 @@ function ToPropertyDescriptor(Obj) {
       _temp16 = _temp16.Value;
     }
     const getter = _temp16;
-    if (IsCallable(getter) === _Value.false && !(getter instanceof UndefinedValue)) {
+    if (IsCallable(getter) === Value.false && !(getter instanceof UndefinedValue)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', getter);
     }
     desc.Get = getter;
   }
-  let _temp17 = HasProperty(Obj, _Value('set'));
+  let _temp17 = HasProperty(Obj, Value('set'));
   /* c8 ignore if */
   if (_temp17 instanceof AbruptCompletion) {
     return _temp17;
@@ -54509,8 +54508,8 @@ function ToPropertyDescriptor(Obj) {
     _temp17 = _temp17.Value;
   }
   const hasSet = _temp17;
-  if (hasSet === _Value.true) {
-    let _temp18 = Get(Obj, _Value('set'));
+  if (hasSet === Value.true) {
+    let _temp18 = Get(Obj, Value('set'));
     /* c8 ignore if */
     if (_temp18 instanceof AbruptCompletion) {
       return _temp18;
@@ -54520,7 +54519,7 @@ function ToPropertyDescriptor(Obj) {
       _temp18 = _temp18.Value;
     }
     const setter = _temp18;
-    if (IsCallable(setter) === _Value.false && !(setter instanceof UndefinedValue)) {
+    if (IsCallable(setter) === Value.false && !(setter instanceof UndefinedValue)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', setter);
     }
     desc.Set = setter;
@@ -54537,12 +54536,12 @@ function ToPropertyDescriptor(Obj) {
 function CompletePropertyDescriptor(Desc) {
   Assert(Desc instanceof _Descriptor, "Desc instanceof Descriptor");
   const like = _Descriptor({
-    Value: _Value.undefined,
-    Writable: _Value.false,
-    Get: _Value.undefined,
-    Set: _Value.undefined,
-    Enumerable: _Value.false,
-    Configurable: _Value.false
+    Value: Value.undefined,
+    Writable: Value.false,
+    Get: Value.undefined,
+    Set: Value.undefined,
+    Enumerable: Value.false,
+    Configurable: Value.false
   });
   if (IsGenericDescriptor(Desc) || IsDataDescriptor(Desc)) {
     if (Desc.Value === undefined) {
@@ -54653,7 +54652,7 @@ function StringExoticOwnPropertyKeys() {
   const O = this;
   const keys = [];
   const str = O.StringData;
-  Assert(str instanceof StringValue, "str instanceof JSStringValue");
+  Assert(str instanceof JSStringValue, "str instanceof JSStringValue");
   const len = str.stringValue().length;
 
   // 5. For each non-negative integer i starting with 0 such that i < len, in ascending order, do
@@ -54690,7 +54689,7 @@ function StringExoticOwnPropertyKeys() {
   // P is not an array index, in ascending chronological order of property creation, do
   //   Add P as the last element of keys.
   for (const P of O.properties.keys()) {
-    if (P instanceof StringValue && isArrayIndex(P) === false) {
+    if (P instanceof JSStringValue && isArrayIndex(P) === false) {
       keys.push(P);
     }
   }
@@ -54709,7 +54708,7 @@ function StringExoticOwnPropertyKeys() {
 /** https://tc39.es/ecma262/#sec-stringcreate */
 function StringCreate(value, prototype) {
   // 1. Assert: Type(value) is String.
-  Assert(value instanceof StringValue, "value instanceof JSStringValue");
+  Assert(value instanceof JSStringValue, "value instanceof JSStringValue");
   // 2. Let S be ! MakeBasicObject(« [[Prototype]], [[Extensible]], [[StringData]] »).
   let _temp7 = MakeBasicObject(['Prototype', 'Extensible', 'StringData']);
   Assert(!(_temp7 instanceof AbruptCompletion), "MakeBasicObject(['Prototype', 'Extensible', 'StringData'])" + ' returned an abrupt completion');
@@ -54731,11 +54730,11 @@ function StringCreate(value, prototype) {
   // 8. Let length be the number of code unit elements in value.
   const length = value.stringValue().length;
   // 9. Perform ! DefinePropertyOrThrow(S, "length", PropertyDescriptor { [[Value]]: length, [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: false }).
-  let _temp8 = DefinePropertyOrThrow(S, _Value('length'), _Descriptor({
+  let _temp8 = DefinePropertyOrThrow(S, Value('length'), _Descriptor({
     Value: F(length),
-    Writable: _Value.false,
-    Enumerable: _Value.false,
-    Configurable: _Value.false
+    Writable: Value.false,
+    Enumerable: Value.false,
+    Configurable: Value.false
   }));
   Assert(!(_temp8 instanceof AbruptCompletion), "DefinePropertyOrThrow(S, Value('length'), Descriptor({\n    Value: F(length),\n    Writable: Value.false,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion');
   /* c8 ignore if */
@@ -54750,8 +54749,8 @@ function StringCreate(value, prototype) {
 function StringGetOwnProperty(S, P) {
   Assert(S instanceof ObjectValue && 'StringData' in S, "S instanceof ObjectValue && 'StringData' in S");
   Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-  if (!(P instanceof StringValue)) {
-    return _Value.undefined;
+  if (!(P instanceof JSStringValue)) {
+    return Value.undefined;
   }
   let _temp9 = CanonicalNumericIndexString(P);
   Assert(!(_temp9 instanceof AbruptCompletion), "CanonicalNumericIndexString(P)" + ' returned an abrupt completion');
@@ -54761,26 +54760,26 @@ function StringGetOwnProperty(S, P) {
   }
   const index = _temp9;
   if (index instanceof UndefinedValue) {
-    return _Value.undefined;
+    return Value.undefined;
   }
-  if (IsIntegralNumber(index) === _Value.false) {
-    return _Value.undefined;
+  if (IsIntegralNumber(index) === Value.false) {
+    return Value.undefined;
   }
   if (Object.is(R(index), -0)) {
-    return _Value.undefined;
+    return Value.undefined;
   }
   const str = S.StringData;
-  Assert(str instanceof StringValue, "str instanceof JSStringValue");
+  Assert(str instanceof JSStringValue, "str instanceof JSStringValue");
   const len = str.stringValue().length;
   if (R(index) < 0 || len <= R(index)) {
-    return _Value.undefined;
+    return Value.undefined;
   }
   const resultStr = str.stringValue()[R(index)];
   return _Descriptor({
-    Value: _Value(resultStr),
-    Writable: _Value.false,
-    Enumerable: _Value.true,
-    Configurable: _Value.false
+    Value: Value(resultStr),
+    Writable: Value.false,
+    Enumerable: Value.true,
+    Configurable: Value.false
   });
 }
 
@@ -54791,9 +54790,9 @@ function SymbolDescriptiveString(sym) {
   Assert(sym instanceof SymbolValue, "sym instanceof SymbolValue");
   let desc = sym.Description;
   if (desc instanceof UndefinedValue) {
-    desc = _Value('');
+    desc = Value('');
   }
-  return _Value(`Symbol(${desc.stringValue()})`);
+  return Value(`Symbol(${desc.stringValue()})`);
 }
 
 // This file covers abstract operations defined in
@@ -54825,41 +54824,41 @@ function RequireObjectCoercible(argument) {
 /** https://tc39.es/ecma262/#sec-isarray */
 function IsArray(argument) {
   if (!(argument instanceof ObjectValue)) {
-    return _Value.false;
+    return Value.false;
   }
   if (isArrayExoticObject(argument)) {
-    return _Value.true;
+    return Value.true;
   }
   if (isProxyExoticObject(argument)) {
-    if (argument.ProxyHandler === _Value.null) {
+    if (argument.ProxyHandler === Value.null) {
       return surroundingAgent.Throw('TypeError', 'ProxyRevoked', 'IsArray');
     }
     const target = argument.ProxyTarget;
     return IsArray(target);
   }
-  return _Value.false;
+  return Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-iscallable */
 function IsCallable(argument) {
   if (!(argument instanceof ObjectValue)) {
-    return _Value.false;
+    return Value.false;
   }
   if ('Call' in argument) {
-    return _Value.true;
+    return Value.true;
   }
-  return _Value.false;
+  return Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-isconstructor */
 function IsConstructor(argument) {
   if (!(argument instanceof ObjectValue)) {
-    return _Value.false;
+    return Value.false;
   }
   if ('Construct' in argument) {
-    return _Value.true;
+    return Value.true;
   }
-  return _Value.false;
+  return Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-isextensible-o */
@@ -54871,20 +54870,20 @@ function IsExtensible(O) {
 /** https://tc39.es/ecma262/#sec-isinteger */
 function IsIntegralNumber(argument) {
   if (!(argument instanceof NumberValue)) {
-    return _Value.false;
+    return Value.false;
   }
   if (argument.isNaN() || argument.isInfinity()) {
-    return _Value.false;
+    return Value.false;
   }
   if (Math.floor(Math.abs(R(argument))) !== Math.abs(R(argument))) {
-    return _Value.false;
+    return Value.false;
   }
-  return _Value.true;
+  return Value.true;
 }
 
 /** https://tc39.es/ecma262/#sec-ispropertykey */
 function IsPropertyKey(argument) {
-  if (argument instanceof StringValue) {
+  if (argument instanceof JSStringValue) {
     return true;
   }
   if (argument instanceof SymbolValue) {
@@ -54896,7 +54895,7 @@ function IsPropertyKey(argument) {
 /** https://tc39.es/ecma262/#sec-isregexp */
 function IsRegExp(argument) {
   if (!(argument instanceof ObjectValue)) {
-    return _Value.false;
+    return Value.false;
   }
   let _temp = Get(argument, wellKnownSymbols.match);
   /* c8 ignore if */
@@ -54908,19 +54907,19 @@ function IsRegExp(argument) {
     _temp = _temp.Value;
   }
   const matcher = _temp;
-  if (matcher !== _Value.undefined) {
+  if (matcher !== Value.undefined) {
     return ToBoolean(matcher);
   }
   if ('RegExpMatcher' in argument) {
-    return _Value.true;
+    return Value.true;
   }
-  return _Value.false;
+  return Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-isstringprefix */
 function IsStringPrefix(p, q) {
-  Assert(p instanceof StringValue, "p instanceof JSStringValue");
-  Assert(q instanceof StringValue, "q instanceof JSStringValue");
+  Assert(p instanceof JSStringValue, "p instanceof JSStringValue");
+  Assert(q instanceof JSStringValue, "q instanceof JSStringValue");
   return q.stringValue().startsWith(p.stringValue());
 }
 
@@ -54928,7 +54927,7 @@ function IsStringPrefix(p, q) {
 function SameValue(x, y) {
   // 1. If Type(x) is different from Type(y), return false.
   if (Type(x) !== Type(y)) {
-    return _Value.false;
+    return Value.false;
   }
   // 2. If Type(x) is Number or BigInt, then
   if (x instanceof NumberValue || x instanceof BigIntValue) {
@@ -54949,7 +54948,7 @@ function SameValue(x, y) {
 function SameValueZero(x, y) {
   // 1. If Type(x) is different from Type(y), return false.
   if (Type(x) !== Type(y)) {
-    return _Value.false;
+    return Value.false;
   }
   // 2. If Type(x) is Number or BigInt, then
   if (x instanceof NumberValue || x instanceof BigIntValue) {
@@ -54971,27 +54970,27 @@ function SameValueNonNumber(x, y) {
   Assert(!(x instanceof NumberValue), "!(x instanceof NumberValue)");
   Assert(Type(x) === Type(y), "Type(x) === Type(y)");
   if (x instanceof UndefinedValue) {
-    return _Value.true;
+    return Value.true;
   }
   if (x instanceof NullValue) {
-    return _Value.true;
+    return Value.true;
   }
-  if (x instanceof StringValue) {
+  if (x instanceof JSStringValue) {
     if (x.stringValue() === y.stringValue()) {
-      return _Value.true;
+      return Value.true;
     }
-    return _Value.false;
+    return Value.false;
   }
   if (x instanceof BooleanValue) {
     if (x === y) {
-      return _Value.true;
+      return Value.true;
     }
-    return _Value.false;
+    return Value.false;
   }
   if (x instanceof SymbolValue) {
-    return x === y ? _Value.true : _Value.false;
+    return x === y ? Value.true : Value.false;
   }
-  return x === y ? _Value.true : _Value.false;
+  return x === y ? Value.true : Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-abstract-relational-comparison */
@@ -55048,14 +55047,14 @@ function AbstractRelationalComparison(x, y, LeftFirst = true) {
     px = _temp7;
   }
   // 3. If Type(px) is String and Type(py) is String, then
-  if (px instanceof StringValue && py instanceof StringValue) {
+  if (px instanceof JSStringValue && py instanceof JSStringValue) {
     // a. If IsStringPrefix(py, px) is true, return false.
     if (IsStringPrefix(py, px)) {
-      return _Value.false;
+      return Value.false;
     }
     // b. If IsStringPrefix(px, py) is true, return true.
     if (IsStringPrefix(px, py)) {
-      return _Value.true;
+      return Value.true;
     }
     // c. Let k be the smallest nonnegative integer such that the code unit at index k within px
     //    is different from the code unit at index k within py. (There must be such a k, for
@@ -55073,13 +55072,13 @@ function AbstractRelationalComparison(x, y, LeftFirst = true) {
     const n = py.stringValue().charCodeAt(k);
     // f. If m < n, return true. Otherwise, return false.
     if (m < n) {
-      return _Value.true;
+      return Value.true;
     } else {
-      return _Value.false;
+      return Value.false;
     }
   } else {
     // a. If Type(px) is BigInt and Type(py) is String, then
-    if (px instanceof BigIntValue && py instanceof StringValue) {
+    if (px instanceof BigIntValue && py instanceof JSStringValue) {
       let _temp8 = StringToBigInt(py);
       Assert(!(_temp8 instanceof AbruptCompletion), "StringToBigInt(py)" + ' returned an abrupt completion');
       /* c8 ignore if */
@@ -55090,13 +55089,13 @@ function AbstractRelationalComparison(x, y, LeftFirst = true) {
       const ny = _temp8;
       // ii. If ny is NaN, return undefined.
       if (Number.isNaN(ny)) {
-        return _Value.undefined;
+        return Value.undefined;
       }
       // iii. Return BigInt::lessThan(px, ny).
       return BigIntValue.lessThan(px, ny);
     }
     // b. If Type(px) is String and Type(py) is BigInt, then
-    if (px instanceof StringValue && py instanceof BigIntValue) {
+    if (px instanceof JSStringValue && py instanceof BigIntValue) {
       let _temp9 = StringToBigInt(px);
       Assert(!(_temp9 instanceof AbruptCompletion), "StringToBigInt(px)" + ' returned an abrupt completion');
       /* c8 ignore if */
@@ -55107,7 +55106,7 @@ function AbstractRelationalComparison(x, y, LeftFirst = true) {
       const nx = _temp9;
       // ii. If ny is NaN, return undefined.
       if (Number.isNaN(nx)) {
-        return _Value.undefined;
+        return Value.undefined;
       }
       // iii. Return BigInt::lessThan(px, ny).
       return BigIntValue.lessThan(nx, py);
@@ -55142,20 +55141,20 @@ function AbstractRelationalComparison(x, y, LeftFirst = true) {
     Assert(nx instanceof BigIntValue && ny instanceof NumberValue || nx instanceof NumberValue && ny instanceof BigIntValue, "(nx instanceof BigIntValue && ny instanceof NumberValue) || (nx instanceof NumberValue && ny instanceof BigIntValue)");
     // g. If nx or ny is NaN, return undefined.
     if (nx.isNaN && nx.isNaN() || ny.isNaN && ny.isNaN()) {
-      return _Value.undefined;
+      return Value.undefined;
     }
     // h. If nx is -∞ or ny is +∞, return true.
     if (nx.numberValue && R(nx) === -Infinity || ny.numberValue && R(ny) === +Infinity) {
-      return _Value.true;
+      return Value.true;
     }
     // i. If nx is +∞ or ny is -∞, return false.
     if (nx.numberValue && R(nx) === +Infinity || ny.numberValue && R(ny) === -Infinity) {
-      return _Value.false;
+      return Value.false;
     }
     // j. If the mathematical value of nx is less than the mathematical value of ny, return true; otherwise return false.
     const a = nx.numberValue ? R(nx) : R(nx);
     const b = ny.numberValue ? R(ny) : R(ny);
-    return a < b ? _Value.true : _Value.false;
+    return a < b ? Value.true : Value.false;
   }
 }
 
@@ -55167,15 +55166,15 @@ function AbstractEqualityComparison(x, y) {
     return StrictEqualityComparison(x, y);
   }
   // 2. If x is null and y is undefined, return true.
-  if (x === _Value.null && y === _Value.undefined) {
-    return _Value.true;
+  if (x === Value.null && y === Value.undefined) {
+    return Value.true;
   }
   // 3. If x is undefined and y is null, return true.
-  if (x === _Value.undefined && y === _Value.null) {
-    return _Value.true;
+  if (x === Value.undefined && y === Value.null) {
+    return Value.true;
   }
   // 4. If Type(x) is Number and Type(y) is String, return the result of the comparison x == ! ToNumber(y).
-  if (x instanceof NumberValue && y instanceof StringValue) {
+  if (x instanceof NumberValue && y instanceof JSStringValue) {
     let _temp12 = ToNumber(y);
     Assert(!(_temp12 instanceof AbruptCompletion), "ToNumber(y)" + ' returned an abrupt completion');
     /* c8 ignore if */
@@ -55185,7 +55184,7 @@ function AbstractEqualityComparison(x, y) {
     return AbstractEqualityComparison(x, _temp12);
   }
   // 5. If Type(x) is String and Type(y) is Number, return the result of the comparison ! ToNumber(x) == y.
-  if (x instanceof StringValue && y instanceof NumberValue) {
+  if (x instanceof JSStringValue && y instanceof NumberValue) {
     let _temp13 = ToNumber(x);
     Assert(!(_temp13 instanceof AbruptCompletion), "ToNumber(x)" + ' returned an abrupt completion');
     /* c8 ignore if */
@@ -55195,7 +55194,7 @@ function AbstractEqualityComparison(x, y) {
     return AbstractEqualityComparison(_temp13, y);
   }
   // 6. If Type(x) is BigInt and Type(y) is String, then
-  if (x instanceof BigIntValue && y instanceof StringValue) {
+  if (x instanceof BigIntValue && y instanceof JSStringValue) {
     let _temp14 = StringToBigInt(y);
     Assert(!(_temp14 instanceof AbruptCompletion), "StringToBigInt(y)" + ' returned an abrupt completion');
     /* c8 ignore if */
@@ -55206,13 +55205,13 @@ function AbstractEqualityComparison(x, y) {
     const n = _temp14;
     // b. If n is NaN, return false.
     if (Number.isNaN(n)) {
-      return _Value.false;
+      return Value.false;
     }
     // c. Return the result of the comparison x == n.
     return AbstractEqualityComparison(x, n);
   }
   // 7. If Type(x) is String and Type(y) is BigInt, return the result of the comparison y == x.
-  if (x instanceof StringValue && y instanceof BigIntValue) {
+  if (x instanceof JSStringValue && y instanceof BigIntValue) {
     return AbstractEqualityComparison(y, x);
   }
   // 8. If Type(x) is Boolean, return the result of the comparison ! ToNumber(x) == y.
@@ -55265,22 +55264,22 @@ function AbstractEqualityComparison(x, y) {
   if (x instanceof BigIntValue && y instanceof NumberValue || x instanceof NumberValue && y instanceof BigIntValue) {
     // a. If x or y are any of NaN, +∞, or -∞, return false.
     if (x.isNaN && (x.isNaN() || !x.isFinite()) || y.isNaN && (y.isNaN() || !y.isFinite())) {
-      return _Value.false;
+      return Value.false;
     }
     // b. If the mathematical value of x is equal to the mathematical value of y, return true; otherwise return false.
     const a = x.numberValue ? R(x) : R(x);
     const b = y.numberValue ? R(y) : R(y);
-    return a == b ? _Value.true : _Value.false; // eslint-disable-line eqeqeq
+    return a == b ? Value.true : Value.false; // eslint-disable-line eqeqeq
   }
   // 13. Return false.
-  return _Value.false;
+  return Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-strict-equality-comparison */
 function StrictEqualityComparison(x, y) {
   // 1. If Type(x) is different from Type(y), return false.
   if (Type(x) !== Type(y)) {
-    return _Value.false;
+    return Value.false;
   }
   // 2. If Type(x) is Number or BigInt, then
   if (x instanceof NumberValue || x instanceof BigIntValue) {
@@ -55299,27 +55298,27 @@ function StrictEqualityComparison(x, y) {
 
 /** https://tc39.es/ecma262/#sec-isvalidintegerindex */
 function IsValidIntegerIndex(O, index) {
-  if (IsDetachedBuffer(O.ViewedArrayBuffer) === _Value.true) {
-    return _Value.false;
+  if (IsDetachedBuffer(O.ViewedArrayBuffer) === Value.true) {
+    return Value.false;
   }
   Assert(index instanceof NumberValue, "index instanceof NumberValue");
-  if (IsIntegralNumber(index) === _Value.false) {
-    return _Value.false;
+  if (IsIntegralNumber(index) === Value.false) {
+    return Value.false;
   }
   index = R(index);
   if (Object.is(index, -0)) {
-    return _Value.false;
+    return Value.false;
   }
   if (index < 0 || index >= O.ArrayLength) {
-    return _Value.false;
+    return Value.false;
   }
-  return _Value.true;
+  return Value.true;
 }
 
 /** https://tc39.es/ecma262/#sec-toprimitive */
 function ToPrimitive(input, preferredType) {
   // 1. Assert: input is an ECMAScript language value.
-  Assert(input instanceof _Value, "input instanceof Value");
+  Assert(input instanceof Value, "input instanceof Value");
   // 2. If Type(input) is Object, then
   if (input instanceof ObjectValue) {
     let _temp = GetMethod(input, wellKnownSymbols.toPrimitive);
@@ -55334,20 +55333,20 @@ function ToPrimitive(input, preferredType) {
     // a. Let exoticToPrim be ? GetMethod(input, @@toPrimitive).
     const exoticToPrim = _temp;
     // b. If exoticToPrim is not undefined, then
-    if (exoticToPrim !== _Value.undefined) {
+    if (exoticToPrim !== Value.undefined) {
       let hint;
       // i. If preferredType is not present, let hint be "default".
       if (preferredType === undefined) {
-        hint = _Value('default');
+        hint = Value('default');
       } else if (preferredType === 'string') {
         // ii. Else if preferredType is string, let hint be "string".
-        hint = _Value('string');
+        hint = Value('string');
       } else {
         // iii. Else,
         // 1. Assert: preferredType is number.
         Assert(preferredType === 'number', "preferredType === 'number'");
         // 2. Let hint be "number".
-        hint = _Value('number');
+        hint = Value('number');
       }
       // iv. Let result be ? Call(exoticToPrim, input, « hint »).
       let _temp2 = Call(exoticToPrim, input, [hint]);
@@ -55388,11 +55387,11 @@ function OrdinaryToPrimitive(O, hint) {
   // 3. If hint is string, then
   if (hint === 'string') {
     // a. Let methodNames be « "toString", "valueOf" ».
-    methodNames = [_Value('toString'), _Value('valueOf')];
+    methodNames = [Value('toString'), Value('valueOf')];
   } else {
     // 4. Else,
     // a. Let methodNames be « "valueOf", "toString" ».
-    methodNames = [_Value('valueOf'), _Value('toString')];
+    methodNames = [Value('valueOf'), Value('toString')];
   }
   // 5. For each element name of methodNames, do
   for (const name of methodNames) {
@@ -55408,7 +55407,7 @@ function OrdinaryToPrimitive(O, hint) {
     // a. Let method be ? Get(O, name).
     const method = _temp3;
     // b. If IsCallable(method) is true, then
-    if (IsCallable(method) === _Value.true) {
+    if (IsCallable(method) === Value.true) {
       let _temp4 = Call(method, O);
       /* c8 ignore if */
       if (_temp4 instanceof AbruptCompletion) {
@@ -55434,37 +55433,37 @@ function OrdinaryToPrimitive(O, hint) {
 function ToBoolean(argument) {
   if (argument instanceof UndefinedValue) {
     // Return false.
-    return _Value.false;
+    return Value.false;
   } else if (argument instanceof NullValue) {
     // Return false.
-    return _Value.false;
+    return Value.false;
   } else if (argument instanceof BooleanValue) {
     // Return argument.
     return argument;
   } else if (argument instanceof NumberValue) {
     // If argument is +0𝔽, -0𝔽, or NaN, return false; otherwise return true.
     if (R(argument) === 0 || argument.isNaN()) {
-      return _Value.false;
+      return Value.false;
     }
-    return _Value.true;
-  } else if (argument instanceof StringValue) {
+    return Value.true;
+  } else if (argument instanceof JSStringValue) {
     // If argument is the empty String, return false; otherwise return true.
     if (argument.stringValue().length === 0) {
-      return _Value.false;
+      return Value.false;
     }
-    return _Value.true;
+    return Value.true;
   } else if (argument instanceof SymbolValue) {
     // Return true.
-    return _Value.true;
+    return Value.true;
   } else if (argument instanceof BigIntValue) {
     // If argument is 0ℤ, return false; otherwise return true.
     if (R(argument) === 0n) {
-      return _Value.false;
+      return Value.false;
     }
-    return _Value.true;
+    return Value.true;
   } else if (argument instanceof ObjectValue) {
     // Return true.
-    return _Value.true;
+    return Value.true;
   }
   throw new OutOfRange$1('ToBoolean', {
     type: Type(argument),
@@ -55503,7 +55502,7 @@ function ToNumber(argument) {
     return F(+0);
   } else if (argument instanceof BooleanValue) {
     // If argument is true, return 1𝔽.
-    if (argument === _Value.true) {
+    if (argument === Value.true) {
       return F(1);
     }
     // If argument is false, return +0𝔽.
@@ -55511,7 +55510,7 @@ function ToNumber(argument) {
   } else if (argument instanceof NumberValue) {
     // Return argument (no conversion).
     return argument;
-  } else if (argument instanceof StringValue) {
+  } else if (argument instanceof JSStringValue) {
     return MV_StringNumericLiteral(argument.stringValue());
   } else if (argument instanceof BigIntValue) {
     // Throw a TypeError exception.
@@ -55800,7 +55799,7 @@ function ToBigInt(argument) {
     return surroundingAgent.Throw('TypeError', 'CannotConvertToBigInt', prim);
   } else if (prim instanceof BooleanValue) {
     // Return 1ℤ if prim is true and 0ℤ if prim is false.
-    if (prim === _Value.true) {
+    if (prim === Value.true) {
       return Z(1n);
     }
     return Z(0n);
@@ -55810,7 +55809,7 @@ function ToBigInt(argument) {
   } else if (prim instanceof NumberValue) {
     // Throw a TypeError exception.
     return surroundingAgent.Throw('TypeError', 'CannotConvertToBigInt', prim);
-  } else if (prim instanceof StringValue) {
+  } else if (prim instanceof JSStringValue) {
     let _temp16 = StringToBigInt(prim);
     Assert(!(_temp16 instanceof AbruptCompletion), "StringToBigInt(prim)" + ' returned an abrupt completion');
     /* c8 ignore if */
@@ -55890,14 +55889,14 @@ function ToBigUint64(argument) {
 function ToString(argument) {
   if (argument instanceof UndefinedValue) {
     // Return "undefined".
-    return new StringValue('undefined');
+    return Value('undefined');
   } else if (argument instanceof NullValue) {
     // Return "null".
-    return new StringValue('null');
+    return Value('null');
   } else if (argument instanceof BooleanValue) {
     // If argument is true, return "true".
     // If argument is false, return "false".
-    return new StringValue(argument === _Value.true ? 'true' : 'false');
+    return Value(argument === Value.true ? 'true' : 'false');
   } else if (argument instanceof NumberValue) {
     let _temp19 = NumberValue.toString(argument);
     Assert(!(_temp19 instanceof AbruptCompletion), "NumberValue.toString(argument)" + ' returned an abrupt completion');
@@ -55907,7 +55906,7 @@ function ToString(argument) {
     }
     // Return ! Number::toString(argument).
     return _temp19;
-  } else if (argument instanceof StringValue) {
+  } else if (argument instanceof JSStringValue) {
     // Return argument.
     return argument;
   } else if (argument instanceof SymbolValue) {
@@ -55961,7 +55960,7 @@ function ToObject(argument) {
     const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Number.prototype%'), ['NumberData']);
     obj.NumberData = argument;
     return obj;
-  } else if (argument instanceof StringValue) {
+  } else if (argument instanceof JSStringValue) {
     // Return a new String object whose [[StringData]] internal slot is set to argument.
     return StringCreate(argument, surroundingAgent.intrinsic('%String.prototype%'));
   } else if (argument instanceof SymbolValue) {
@@ -56036,7 +56035,7 @@ function ToLength(argument) {
 /** https://tc39.es/ecma262/#sec-canonicalnumericindexstring */
 function CanonicalNumericIndexString(argument) {
   // 1. Assert: Type(argument) is String.
-  Assert(argument instanceof StringValue, "argument instanceof JSStringValue");
+  Assert(argument instanceof JSStringValue, "argument instanceof JSStringValue");
   // 2. If argument is "-0", return -0𝔽.
   if (argument.stringValue() === '-0') {
     return F(-0);
@@ -56056,8 +56055,8 @@ function CanonicalNumericIndexString(argument) {
   if (_temp26 instanceof Completion) {
     _temp26 = _temp26.Value;
   }
-  if (SameValue(_temp26, argument) === _Value.false) {
-    return _Value.undefined;
+  if (SameValue(_temp26, argument) === Value.false) {
+    return Value.undefined;
   }
   // 4. Return n.
   return n;
@@ -56100,7 +56099,7 @@ function ToIndex(value) {
     if (_temp29 instanceof Completion) {
       _temp29 = _temp29.Value;
     }
-    if (_temp29 === _Value.false) {
+    if (_temp29 === Value.false) {
       return surroundingAgent.Throw('RangeError', 'OutOfRange', 'Index');
     }
     // e. Return ℝ(index).
@@ -56197,7 +56196,7 @@ function ValidateTypedArray(O) {
   // 3. Let buffer be O.[[ViewedArrayBuffer]].
   const buffer = O.ViewedArrayBuffer;
   // 4. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(buffer) === _Value.true) {
+  if (IsDetachedBuffer(buffer) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 5. Return buffer.
@@ -56260,7 +56259,7 @@ function AllocateTypedArray(constructorName, newTarget, defaultProto, length) {
   }
   const obj = _temp5;
   // 3. Assert: obj.[[ViewedArrayBuffer]] is undefined.
-  Assert(obj.ViewedArrayBuffer === _Value.undefined, "obj.ViewedArrayBuffer === Value.undefined");
+  Assert(obj.ViewedArrayBuffer === Value.undefined, "obj.ViewedArrayBuffer === Value.undefined");
   // 4. Set obj.[[TypedArrayName]] to constructorName.
   obj.TypedArrayName = constructorName;
   // 5. If constructorName is "BigInt64Array" or "BigUint64Array", set obj.[[ContentType]] to BigInt.
@@ -56298,7 +56297,7 @@ function AllocateTypedArrayBuffer(O, length) {
   // 1. Assert: O is an Object that has a [[ViewedArrayBuffer]] internal slot.
   Assert(O instanceof ObjectValue && 'ViewedArrayBuffer' in O, "O instanceof ObjectValue && 'ViewedArrayBuffer' in O");
   // 2. Assert: O.[[ViewedArrayBuffer]] is undefined.
-  Assert(O.ViewedArrayBuffer === _Value.undefined, "O.ViewedArrayBuffer === Value.undefined");
+  Assert(O.ViewedArrayBuffer === Value.undefined, "O.ViewedArrayBuffer === Value.undefined");
   // 3. Assert: length is a non-negative integer.
   Assert(isNonNegativeInteger(length), "isNonNegativeInteger(length)");
   // 4. Let constructorName be the String value of O.[[TypedArrayName]].
@@ -56384,9 +56383,9 @@ function IterableToList(items, method) {
   // 2. Let values be a new empty List.
   const values = [];
   // 3. Let next be true.
-  let next = _Value.true;
+  let next = Value.true;
   // 4. Repeat, while next is not false
-  while (next !== _Value.false) {
+  while (next !== Value.false) {
     let _temp11 = IteratorStep(iteratorRecord);
     /* c8 ignore if */
     if (_temp11 instanceof AbruptCompletion) {
@@ -56399,7 +56398,7 @@ function IterableToList(items, method) {
     // a. Set next to ? IteratorStep(iteratorRecord).
     next = _temp11;
     // b. If next is not false, then
-    if (next !== _Value.false) {
+    if (next !== Value.false) {
       let _temp12 = IteratorValue(next);
       /* c8 ignore if */
       if (_temp12 instanceof AbruptCompletion) {
@@ -56451,7 +56450,7 @@ function WeakRefDeref(weakRef) {
     return target;
   }
   // 3. Return undefined.
-  return _Value.undefined;
+  return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-cleanup-finalization-registry */
@@ -56459,7 +56458,7 @@ function CleanupFinalizationRegistry(finalizationRegistry, callback) {
   // 1. Assert: finalizationRegistry has [[Cells]] and [[CleanupCallback]] internal slots.
   Assert('Cells' in finalizationRegistry && 'CleanupCallback' in finalizationRegistry, "'Cells' in finalizationRegistry && 'CleanupCallback' in finalizationRegistry");
   // 2. Set callback to finalizationRegistry.[[CleanupCallback]].
-  if (callback === undefined || callback === _Value.undefined) {
+  if (callback === undefined || callback === Value.undefined) {
     callback = finalizationRegistry.CleanupCallback;
   }
   // 3. While finalizationRegistry.[[Cells]] contains a Record cell such that cell.[[WeakRefTarget]] is empty, an implementation may perform the following steps:
@@ -56473,7 +56472,7 @@ function CleanupFinalizationRegistry(finalizationRegistry, callback) {
     finalizationRegistry.Cells.splice(i, 1);
     i -= 1;
     // c. Perform ? HostCallJobCallback(callback, undefined, « cell.[[HeldValue]] »).
-    let _temp2 = HostCallJobCallback(callback, _Value.undefined, [cell.HeldValue]);
+    let _temp2 = HostCallJobCallback(callback, Value.undefined, [cell.HeldValue]);
     /* c8 ignore if */
     if (_temp2 instanceof AbruptCompletion) {
       return _temp2;
@@ -56484,7 +56483,7 @@ function CleanupFinalizationRegistry(finalizationRegistry, callback) {
     }
   }
   // 4. Return NormalCompletion(undefined).
-  return NormalCompletion(_Value.undefined);
+  return NormalCompletion(Value.undefined);
 }
 
 const bareKeyRe = /^[a-zA-Z_][a-zA-Z_0-9]*$/;
@@ -56500,14 +56499,14 @@ const getObjectTag = (value, wrap) => {
     s = _temp.stringValue();
   } catch {}
   try {
-    let _temp2 = Get(value, _Value('constructor'));
+    let _temp2 = Get(value, Value('constructor'));
     Assert(!(_temp2 instanceof AbruptCompletion), "Get(value, Value('constructor'))" + ' returned an abrupt completion', "");
     /* c8 ignore if */
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
     }
     const c = _temp2;
-    let _temp3 = Get(c, _Value('name'));
+    let _temp3 = Get(c, Value('name'));
     Assert(!(_temp3 instanceof AbruptCompletion), "Get(c, Value('name'))" + ' returned an abrupt completion', "");
     /* c8 ignore if */
     if (_temp3 instanceof Completion) {
@@ -56525,7 +56524,7 @@ const getObjectTag = (value, wrap) => {
 };
 const compactObject = (realm, value) => {
   try {
-    let _temp4 = Get(value, _Value('toString'));
+    let _temp4 = Get(value, Value('toString'));
     Assert(!(_temp4 instanceof AbruptCompletion), "Get(value, Value('toString'))" + ' returned an abrupt completion', "");
     /* c8 ignore if */
     if (_temp4 instanceof Completion) {
@@ -56543,7 +56542,7 @@ const compactObject = (realm, value) => {
       return _temp5.stringValue();
     } else {
       const tag = getObjectTag(value, false) || 'Unknown';
-      let _temp6 = Get(value, _Value('constructor'));
+      let _temp6 = Get(value, Value('constructor'));
       Assert(!(_temp6 instanceof AbruptCompletion), "Get(value, Value('constructor'))" + ' returned an abrupt completion', "");
       /* c8 ignore if */
       if (_temp6 instanceof Completion) {
@@ -56551,7 +56550,7 @@ const compactObject = (realm, value) => {
       }
       const ctor = _temp6;
       if (ctor instanceof ObjectValue) {
-        let _temp7 = Get(ctor, _Value('name'));
+        let _temp7 = Get(ctor, Value('name'));
         Assert(!(_temp7 instanceof AbruptCompletion), "Get(ctor, Value('name'))" + ' returned an abrupt completion', "");
         /* c8 ignore if */
         if (_temp7 instanceof Completion) {
@@ -56573,7 +56572,7 @@ const INSPECTORS = {
   Completion: (v, ctx, i) => i(v.Value),
   Null: () => 'null',
   Undefined: () => 'undefined',
-  Boolean: v => v.boolean.toString(),
+  Boolean: v => v.booleanValue().toString(),
   Number: v => {
     const n = R(v);
     if (n === 0 && Object.is(n, -0)) {
@@ -56586,7 +56585,7 @@ const INSPECTORS = {
     const s = JSON.stringify(v.stringValue()).slice(1, -1);
     return `'${s}'`;
   },
-  Symbol: v => `Symbol(${v.Description === _Value.undefined ? '' : v.Description.stringValue()})`,
+  Symbol: v => `Symbol(${v.Description === Value.undefined ? '' : v.Description.stringValue()})`,
   PrivateName: v => v.Description.stringValue(),
   Object: (v, ctx, i) => {
     if (ctx.inspected.includes(v)) {
@@ -56602,14 +56601,14 @@ const INSPECTORS = {
 }`;
     }
     if ('Call' in v) {
-      const name = v.properties.get(_Value('name'));
+      const name = v.properties.get(Value('name'));
       if (name !== undefined && name.Value.stringValue() !== '') {
         return `[Function: ${name.Value.stringValue()}]`;
       }
       return '[Function]';
     }
     if ('ErrorData' in v) {
-      let _temp8 = Get(v, _Value('stack'));
+      let _temp8 = Get(v, Value('stack'));
       /* c8 ignore if */
       if (_temp8 instanceof AbruptCompletion) {
         return _temp8;
@@ -56620,7 +56619,7 @@ const INSPECTORS = {
       }
       let e = _temp8;
       if (!e.stringValue) {
-        let _temp9 = Get(v, _Value('toString'));
+        let _temp9 = Get(v, Value('toString'));
         /* c8 ignore if */
         if (_temp9 instanceof AbruptCompletion) {
           return _temp9;
@@ -56670,7 +56669,7 @@ const INSPECTORS = {
     ctx.indent += 1;
     ctx.inspected.push(v);
     try {
-      const isArray = IsArray(v) === _Value.true;
+      const isArray = IsArray(v) === Value.true;
       const isTypedArray = ('TypedArrayName' in v);
       if (isArray || isTypedArray) {
         let _temp11 = LengthOfArrayLike(v);
@@ -56689,14 +56688,14 @@ const INSPECTORS = {
         };
         const out = [];
         for (let j = 0; j < length; j += 1) {
-          let _temp12 = v.GetOwnProperty(_Value(j.toString()));
+          let _temp12 = v.GetOwnProperty(Value(j.toString()));
           Assert(!(_temp12 instanceof AbruptCompletion), "v.GetOwnProperty(Value(j.toString()))" + ' returned an abrupt completion', "");
           /* c8 ignore if */
           if (_temp12 instanceof Completion) {
             _temp12 = _temp12.Value;
           }
           const elem = _temp12;
-          if (elem === _Value.undefined) {
+          if (elem === Value.undefined) {
             holes += 1;
           } else {
             flushHoles();
@@ -56726,8 +56725,8 @@ const INSPECTORS = {
           _temp14 = _temp14.Value;
         }
         const C = _temp14;
-        if (C.Enumerable === _Value.true) {
-          cache.push([key instanceof StringValue && bareKeyRe.test(key.stringValue()) ? key.stringValue() : i(key), C.Value ? i(C.Value) : '<accessor>']);
+        if (C.Enumerable === Value.true) {
+          cache.push([key instanceof JSStringValue && bareKeyRe.test(key.stringValue()) ? key.stringValue() : i(key), C.Value ? i(C.Value) : '<accessor>']);
         }
       }
       const tag = getObjectTag(v);
@@ -56871,7 +56870,7 @@ function gc() {
 
 /** https://tc39.es/ecma262/#sec-jobs */
 function runJobQueue() {
-  if (surroundingAgent.executionContextStack.some(e => e.ScriptOrModule !== _Value.null)) {
+  if (surroundingAgent.executionContextStack.some(e => e.ScriptOrModule !== Value.null)) {
     return;
   }
 
@@ -56888,7 +56887,7 @@ function runJobQueue() {
     // 1. Perform any implementation-defined preparation steps.
     const newContext = new ExecutionContext();
     surroundingAgent.executionContextStack.push(newContext);
-    newContext.Function = _Value.null;
+    newContext.Function = Value.null;
     newContext.Realm = callerRealm;
     newContext.ScriptOrModule = callerScriptOrModule;
     // 2. Call the abstract closure.
@@ -56918,18 +56917,18 @@ class ManagedRealm extends Realm {
     super();
     // CreateRealm()
     CreateIntrinsics(this);
-    this.GlobalObject = _Value.undefined;
-    this.GlobalEnv = _Value.undefined;
+    this.GlobalObject = Value.undefined;
+    this.GlobalEnv = Value.undefined;
     this.TemplateMap = [];
     this.LoadedModules = [];
 
     // InitializeHostDefinedRealm()
     const newContext = new ExecutionContext();
-    newContext.Function = _Value.null;
+    newContext.Function = Value.null;
     newContext.Realm = this;
-    newContext.ScriptOrModule = _Value.null;
+    newContext.ScriptOrModule = Value.null;
     surroundingAgent.executionContextStack.push(newContext);
-    SetRealmGlobalObject(this, _Value.undefined, _Value.undefined);
+    SetRealmGlobalObject(this, Value.undefined, Value.undefined);
     SetDefaultGlobalBindings(this);
 
     // misc
@@ -56991,7 +56990,7 @@ class ManagedRealm extends Realm {
     if (typeof sourceText !== 'string') {
       throw new TypeError('sourceText must be a string');
     }
-    const module = this.scope(() => ParseJSONModule(_Value(sourceText), this, {
+    const module = this.scope(() => ParseJSONModule(Value(sourceText), this, {
       specifier
     }));
     return module;
@@ -57007,5 +57006,5 @@ class ManagedSourceTextModuleRecord extends SourceTextModuleRecord {
   }
 }
 
-export { AbruptCompletion, AbstractEqualityComparison, AbstractModuleRecord, AbstractRelationalComparison, AddToKeptObjects, Agent, AgentSignifier, AllocateArrayBuffer, AllocateTypedArray, AllocateTypedArrayBuffer, ApplyStringOrNumericBinaryOperator, ArgumentListEvaluation, ArrayCreate, ArraySetLength, ArraySpeciesCreate, Assert, AsyncBlockStart, AsyncFromSyncIteratorContinuation, AsyncFunctionStart, AsyncGeneratorAwaitReturn, AsyncGeneratorEnqueue, AsyncGeneratorResume, AsyncGeneratorStart, AsyncGeneratorValidate, AsyncGeneratorYield, AsyncIteratorClose, Await, BigIntValue, BinaryUnicodeProperties, BindingClassDeclarationEvaluation, BindingInitialization, BlockDeclarationInstantiation, BodyText, BooleanValue, BoundNames, BreakCompletion, Call, CanonicalNumericIndexString, CharacterValue, ClassDefinitionEvaluation, ClassFieldDefinitionEvaluation, ClassFieldDefinitionRecord, ClassStaticBlockDefinitionEvaluation, ClassStaticBlockDefinitionRecord, CleanupFinalizationRegistry, ClearKeptObjects, CloneArrayBuffer, CodePointAt, CodePointsToString, CompletePropertyDescriptor, Completion, Construct, ConstructorMethod, ContainsArguments, ContainsExpression, ContinueCompletion, ContinueDynamicImport, ContinueModuleLoading, CopyDataBlockBytes, CopyDataProperties, CreateArrayFromList, CreateArrayIterator, CreateAsyncFromSyncIterator, CreateAsyncIteratorFromClosure, CreateBuiltinFunction, CreateByteDataBlock, CreateDataProperty, CreateDataPropertyOrThrow, CreateDefaultExportSyntheticModule, CreateDynamicFunction, CreateIntrinsics, CreateIterResultObject, CreateIteratorFromClosure, CreateListFromArrayLike, CreateListIteratorRecord, CreateMappedArgumentsObject, CreateMethodProperty, CreateRealm, CreateResolvingFunctions, CreateSyntheticModule, CreateUnmappedArgumentsObject, CyclicModuleRecord, DataBlock, DateFromTime, Day, DayFromYear, DayWithinYear, DaysInYear, DeclarationPart, DeclarativeEnvironmentRecord, DefineField, DefineMethod, DefinePropertyOrThrow, DeletePropertyOrThrow, _Descriptor as Descriptor, DestructuringAssignmentEvaluation, DetachArrayBuffer, EnsureCompletion, EnumerableOwnPropertyNames, EnvironmentRecord, EscapeRegExpPattern, EvaluateBody, EvaluateBody_AssignmentExpression, EvaluateBody_AsyncFunctionBody, EvaluateBody_AsyncGeneratorBody, EvaluateBody_ConciseBody, EvaluateBody_FunctionBody, EvaluateBody_GeneratorBody, EvaluateCall, EvaluatePropertyAccessWithExpressionKey, EvaluatePropertyAccessWithIdentifierKey, EvaluateStringOrNumericBinaryExpression, Evaluate_AdditiveExpression, Evaluate_AnyFunctionBody, Evaluate_ArrayLiteral, Evaluate_ArrowFunction, Evaluate_AssignmentExpression, Evaluate_AsyncArrowFunction, Evaluate_AsyncFunctionExpression, Evaluate_AsyncGeneratorExpression, Evaluate_AwaitExpression, Evaluate_BinaryBitwiseExpression, Evaluate_BindingList, Evaluate_Block, Evaluate_BreakStatement, Evaluate_BreakableStatement, Evaluate_CallExpression, Evaluate_CaseClause, Evaluate_ClassDeclaration, Evaluate_ClassExpression, Evaluate_CoalesceExpression, Evaluate_CommaOperator, Evaluate_ConditionalExpression, Evaluate_ContinueStatement, Evaluate_DebuggerStatement, Evaluate_EmptyStatement, Evaluate_EqualityExpression, Evaluate_ExponentiationExpression, Evaluate_ExportDeclaration, Evaluate_ExpressionBody, Evaluate_ExpressionStatement, Evaluate_ForBinding, Evaluate_FunctionDeclaration, Evaluate_FunctionExpression, Evaluate_FunctionStatementList, Evaluate_GeneratorExpression, Evaluate_HoistableDeclaration, Evaluate_IdentifierReference, Evaluate_IfStatement, Evaluate_ImportCall, Evaluate_ImportDeclaration, Evaluate_ImportMeta, Evaluate_LabelledStatement, Evaluate_LexicalBinding, Evaluate_LexicalDeclaration, Evaluate_Literal, Evaluate_LogicalANDExpression, Evaluate_LogicalORExpression, Evaluate_MemberExpression, Evaluate_Module, Evaluate_ModuleBody, Evaluate_MultiplicativeExpression, Evaluate_NewExpression, Evaluate_NewTarget, Evaluate_ObjectLiteral, Evaluate_OptionalExpression, Evaluate_ParenthesizedExpression, Evaluate_Pattern, Evaluate_PropertyName, Evaluate_RegularExpressionLiteral, Evaluate_RelationalExpression, Evaluate_RelationalExpression_PrivateIdentifier, Evaluate_ReturnStatement, Evaluate_Script, Evaluate_ScriptBody, Evaluate_ShiftExpression, Evaluate_StatementList, Evaluate_SuperCall, Evaluate_SuperProperty, Evaluate_SwitchStatement, Evaluate_TaggedTemplateExpression, Evaluate_TemplateLiteral, Evaluate_This, Evaluate_ThrowStatement, Evaluate_TryStatement, Evaluate_UnaryExpression, Evaluate_UpdateExpression, Evaluate_VariableDeclarationList, Evaluate_VariableStatement, Evaluate_WithStatement, Evaluate_YieldExpression, ExecutionContext, ExpectedArgumentCount, ExportEntries, ExportEntriesForModule, F, FEATURES, FinishLoadingImportedModule, FlagText, FromPropertyDescriptor, FunctionDeclarationInstantiation, FunctionEnvironmentRecord, GeneratorResume, GeneratorResumeAbrupt, GeneratorStart, GeneratorValidate, GeneratorYield, Get, GetActiveScriptOrModule, GetAsyncCycleRoot, GetFunctionRealm, GetGeneratorKind, GetGlobalObject, GetIdentifierReference, GetImportedModule, GetIterator, GetMatchIndexPair, GetMatchString, GetMethod, GetModuleNamespace, GetNewTarget, GetPrototypeFromConstructor, GetStringIndex, GetSubstitution, GetThisEnvironment, GetThisValue, GetV, GetValue, GetValueFromBuffer, GetViewValue, GlobalDeclarationInstantiation, GlobalEnvironmentRecord, GraphLoadingState, HasInitializer, HasName, HasOwnProperty, HasProperty, HostCallJobCallback, HostEnqueueFinalizationRegistryCleanupJob, HostEnqueuePromiseJob, HostEnsureCanCompileStrings, HostFinalizeImportMeta, HostGetImportMetaProperties, HostHasSourceTextAvailable, HostLoadImportedModule, HostMakeJobCallback, HostPromiseRejectionTracker, HourFromTime, HoursPerDay, IfAbruptCloseIterator, IfAbruptRejectPromise, ImportEntries, ImportEntriesForModule, ImportedLocalNames, InLeapYear, InitializeBoundName, InitializeInstanceElements, InitializeReferencedBinding, InnerModuleEvaluation, InnerModuleLinking, InnerModuleLoading, InstallErrorCause, InstanceofOperator, InstantiateArrowFunctionExpression, InstantiateAsyncArrowFunctionExpression, InstantiateAsyncFunctionExpression, InstantiateAsyncGeneratorFunctionExpression, InstantiateFunctionObject, InstantiateFunctionObject_AsyncFunctionDeclaration, InstantiateFunctionObject_AsyncGeneratorDeclaration, InstantiateFunctionObject_FunctionDeclaration, InstantiateFunctionObject_GeneratorDeclaration, InstantiateGeneratorFunctionExpression, InstantiateOrdinaryFunctionExpression, IntegerIndexedDefineOwnProperty, IntegerIndexedDelete, IntegerIndexedElementGet, IntegerIndexedElementSet, IntegerIndexedGet, IntegerIndexedGetOwnProperty, IntegerIndexedHasProperty, IntegerIndexedObjectCreate, IntegerIndexedOwnPropertyKeys, IntegerIndexedSet, Invoke, IsAccessorDescriptor, IsAnonymousFunctionDefinition, IsArray, IsBigIntElementType, IsCallable, IsCompatiblePropertyDescriptor, IsComputedPropertyKey, IsConcatSpreadable, IsConstantDeclaration, IsConstructor, IsDataDescriptor, IsDestructuring, IsDetachedBuffer, IsExtensible, IsFunctionDefinition, IsGenericDescriptor, IsIdentifierRef, IsInTailPosition, IsIntegralNumber, IsPrivateReference, IsPromise, IsPropertyKey, IsPropertyReference, IsRegExp, IsSharedArrayBuffer, IsSimpleParameterList, IsStatic, IsStrict, IsStringPrefix, IsStringWellFormedUnicode, IsSuperReference, IsUnresolvableReference, IsValidIntegerIndex, IterableToList, IteratorBindingInitialization_ArrayBindingPattern, IteratorBindingInitialization_FormalParameters, IteratorClose, IteratorComplete, IteratorNext, IteratorStep, IteratorValue, StringValue as JSStringValue, KeyedBindingInitialization, LabelledEvaluation, LengthOfArrayLike, LexicallyDeclaredNames, LexicallyScopedDeclarations, LocalTZA, LocalTime, MV_StringNumericLiteral, MakeBasicObject, MakeClassConstructor, MakeConstructor, MakeDate, MakeDay, MakeMatchIndicesIndexPairArray, MakeMethod, MakePrivateReference, MakeTime, ManagedRealm, MethodDefinitionEvaluation, MinFromTime, MinutesPerHour, ModuleEnvironmentRecord, ModuleNamespaceCreate, ModuleRequests, MonthFromTime, NamedEvaluation, NewDeclarativeEnvironment, NewFunctionEnvironment, NewGlobalEnvironment, NewModuleEnvironment, NewObjectEnvironment, NewPrivateEnvironment, NewPromiseCapability, NonConstructorElements, NonbinaryUnicodeProperties, NormalCompletion, NullValue, NumberToBigInt, NumberValue, NumericToRawBytes, NumericValue, ObjectEnvironmentRecord, ObjectValue, OrdinaryCallBindThis, OrdinaryCallEvaluateBody, OrdinaryCreateFromConstructor, OrdinaryDefineOwnProperty, OrdinaryDelete, OrdinaryFunctionCreate, OrdinaryGet, OrdinaryGetOwnProperty, OrdinaryGetPrototypeOf, OrdinaryHasInstance, OrdinaryHasProperty, OrdinaryIsExtensible, OrdinaryObjectCreate, OrdinaryOwnPropertyKeys, OrdinaryPreventExtensions, OrdinarySet, OrdinarySetPrototypeOf, OrdinarySetWithOwnDescriptor, OrdinaryToPrimitive, ParseJSONModule, ParseModule, ParsePattern, ParseScript, Parser, PerformEval, PerformPromiseThen, PrepareForOrdinaryCall, PrepareForTailCall, PrimitiveValue, PrivateBoundIdentifiers, PrivateElementFind, PrivateElementRecord, PrivateFieldAdd, PrivateGet, PrivateMethodOrAccessorAdd, PrivateName, PrivateSet, PromiseCapabilityRecord, PromiseReactionRecord, PromiseResolve, PropName, PropertyBindingInitialization, PropertyDefinitionEvaluation_PropertyDefinitionList, ProxyCreate, PutValue, ReturnIfAbrupt as Q, R, RawBytesToNumeric, Realm, ReferenceRecord, RegExpAlloc, RegExpCreate, RegExpHasFlag, RegExpInitialize, RegExpParser, State as RegExpState, RequireInternalSlot, RequireObjectCoercible, ResolveBinding, ResolvePrivateIdentifier, ResolveThisBinding, ResolvedBindingRecord, RestBindingInitialization, ReturnCompletion, ReturnIfAbrupt, SameValue, SameValueNonNumber, SameValueZero, ScriptEvaluation, SecFromTime, SecondsPerMinute, Set$1 as Set, SetDefaultGlobalBindings, SetFunctionLength, SetFunctionName, SetImmutablePrototype, SetIntegrityLevel, SetRealmGlobalObject, SetValueInBuffer, SetViewValue, SortCompare, SourceTextModuleRecord, SpeciesConstructor, StrictEqualityComparison, StringCreate, StringGetOwnProperty, StringIndexOf, StringPad, StringToBigInt, StringToCodePoints, StringValue$1 as StringValue, SymbolDescriptiveString, SymbolValue, SyntheticModuleRecord, TV, TemplateStrings, TestIntegrityLevel, Throw, ThrowCompletion, TimeClip, TimeFromYear, TimeWithinDay, ToBigInt, ToBigInt64, ToBigUint64, ToBoolean, ToIndex, ToInt16, ToInt32, ToInt8, ToIntegerOrInfinity, ToLength, ToNumber, ToNumeric, ToObject, ToPrimitive, ToPropertyDescriptor, ToPropertyKey, ToString, ToUint16, ToUint32, ToUint8, ToUint8Clamp, TopLevelLexicallyDeclaredNames, TopLevelLexicallyScopedDeclarations, TopLevelVarDeclaredNames, TopLevelVarScopedDeclarations, TrimString, Type, TypeForMethod, TypedArrayCreate, TypedArraySpeciesCreate, UTC, UTF16EncodeCodePoint, UTF16SurrogatePairToCodePoint, UndefinedValue, UnicodeGeneralCategoryValues, UnicodeMatchProperty, UnicodeMatchPropertyValue, UnicodeScriptValues, UnicodeSets, UpdateEmpty, ValidateAndApplyPropertyDescriptor, ValidateTypedArray, _Value as Value, VarDeclaredNames, VarScopedDeclarations, WeakRefDeref, WeekDay, X, YearFromTime, Yield, Z, evaluateScript, gc, generatorBrandToErrorMessageType, getUnicodePropertyValueSet, inspect, isArrayExoticObject, isArrayIndex, isECMAScriptFunctionObject, isFunctionObject, isIntegerIndex, isIntegerIndexedExoticObject, isNonNegativeInteger, isProxyExoticObject, isStrictModeCode, msFromTime, msPerAverageYear, msPerDay, msPerHour, msPerMinute, msPerSecond, refineLeftHandSideExpression, runJobQueue, setSurroundingAgent, sourceTextMatchedBy, surroundingAgent, typedArrayInfoByName, typedArrayInfoByType, wellKnownSymbols, wrappedParse };
+export { AbruptCompletion, AbstractEqualityComparison, AbstractModuleRecord, AbstractRelationalComparison, AddToKeptObjects, Agent, AgentSignifier, AllocateArrayBuffer, AllocateTypedArray, AllocateTypedArrayBuffer, ApplyStringOrNumericBinaryOperator, ArgumentListEvaluation, ArrayCreate, ArraySetLength, ArraySpeciesCreate, Assert, AsyncBlockStart, AsyncFromSyncIteratorContinuation, AsyncFunctionStart, AsyncGeneratorAwaitReturn, AsyncGeneratorEnqueue, AsyncGeneratorResume, AsyncGeneratorStart, AsyncGeneratorValidate, AsyncGeneratorYield, AsyncIteratorClose, Await, BigIntValue, BinaryUnicodeProperties, BindingClassDeclarationEvaluation, BindingInitialization, BlockDeclarationInstantiation, BodyText, BooleanValue, BoundNames, BreakCompletion, Call, CanonicalNumericIndexString, CharacterValue, ClassDefinitionEvaluation, ClassFieldDefinitionEvaluation, ClassFieldDefinitionRecord, ClassStaticBlockDefinitionEvaluation, ClassStaticBlockDefinitionRecord, CleanupFinalizationRegistry, ClearKeptObjects, CloneArrayBuffer, CodePointAt, CodePointsToString, CompletePropertyDescriptor, Completion, Construct, ConstructorMethod, ContainsArguments, ContainsExpression, ContinueCompletion, ContinueDynamicImport, ContinueModuleLoading, CopyDataBlockBytes, CopyDataProperties, CreateArrayFromList, CreateArrayIterator, CreateAsyncFromSyncIterator, CreateAsyncIteratorFromClosure, CreateBuiltinFunction, CreateByteDataBlock, CreateDataProperty, CreateDataPropertyOrThrow, CreateDefaultExportSyntheticModule, CreateDynamicFunction, CreateIntrinsics, CreateIterResultObject, CreateIteratorFromClosure, CreateListFromArrayLike, CreateListIteratorRecord, CreateMappedArgumentsObject, CreateMethodProperty, CreateRealm, CreateResolvingFunctions, CreateSyntheticModule, CreateUnmappedArgumentsObject, CyclicModuleRecord, DataBlock, DateFromTime, Day, DayFromYear, DayWithinYear, DaysInYear, DeclarationPart, DeclarativeEnvironmentRecord, DefineField, DefineMethod, DefinePropertyOrThrow, DeletePropertyOrThrow, _Descriptor as Descriptor, DestructuringAssignmentEvaluation, DetachArrayBuffer, EnsureCompletion, EnumerableOwnPropertyNames, EnvironmentRecord, EscapeRegExpPattern, EvaluateBody, EvaluateBody_AssignmentExpression, EvaluateBody_AsyncFunctionBody, EvaluateBody_AsyncGeneratorBody, EvaluateBody_ConciseBody, EvaluateBody_FunctionBody, EvaluateBody_GeneratorBody, EvaluateCall, EvaluatePropertyAccessWithExpressionKey, EvaluatePropertyAccessWithIdentifierKey, EvaluateStringOrNumericBinaryExpression, Evaluate_AdditiveExpression, Evaluate_AnyFunctionBody, Evaluate_ArrayLiteral, Evaluate_ArrowFunction, Evaluate_AssignmentExpression, Evaluate_AsyncArrowFunction, Evaluate_AsyncFunctionExpression, Evaluate_AsyncGeneratorExpression, Evaluate_AwaitExpression, Evaluate_BinaryBitwiseExpression, Evaluate_BindingList, Evaluate_Block, Evaluate_BreakStatement, Evaluate_BreakableStatement, Evaluate_CallExpression, Evaluate_CaseClause, Evaluate_ClassDeclaration, Evaluate_ClassExpression, Evaluate_CoalesceExpression, Evaluate_CommaOperator, Evaluate_ConditionalExpression, Evaluate_ContinueStatement, Evaluate_DebuggerStatement, Evaluate_EmptyStatement, Evaluate_EqualityExpression, Evaluate_ExponentiationExpression, Evaluate_ExportDeclaration, Evaluate_ExpressionBody, Evaluate_ExpressionStatement, Evaluate_ForBinding, Evaluate_FunctionDeclaration, Evaluate_FunctionExpression, Evaluate_FunctionStatementList, Evaluate_GeneratorExpression, Evaluate_HoistableDeclaration, Evaluate_IdentifierReference, Evaluate_IfStatement, Evaluate_ImportCall, Evaluate_ImportDeclaration, Evaluate_ImportMeta, Evaluate_LabelledStatement, Evaluate_LexicalBinding, Evaluate_LexicalDeclaration, Evaluate_Literal, Evaluate_LogicalANDExpression, Evaluate_LogicalORExpression, Evaluate_MemberExpression, Evaluate_Module, Evaluate_ModuleBody, Evaluate_MultiplicativeExpression, Evaluate_NewExpression, Evaluate_NewTarget, Evaluate_ObjectLiteral, Evaluate_OptionalExpression, Evaluate_ParenthesizedExpression, Evaluate_Pattern, Evaluate_PropertyName, Evaluate_RegularExpressionLiteral, Evaluate_RelationalExpression, Evaluate_RelationalExpression_PrivateIdentifier, Evaluate_ReturnStatement, Evaluate_Script, Evaluate_ScriptBody, Evaluate_ShiftExpression, Evaluate_StatementList, Evaluate_SuperCall, Evaluate_SuperProperty, Evaluate_SwitchStatement, Evaluate_TaggedTemplateExpression, Evaluate_TemplateLiteral, Evaluate_This, Evaluate_ThrowStatement, Evaluate_TryStatement, Evaluate_UnaryExpression, Evaluate_UpdateExpression, Evaluate_VariableDeclarationList, Evaluate_VariableStatement, Evaluate_WithStatement, Evaluate_YieldExpression, ExecutionContext, ExpectedArgumentCount, ExportEntries, ExportEntriesForModule, F, FEATURES, FinishLoadingImportedModule, FlagText, FromPropertyDescriptor, FunctionDeclarationInstantiation, FunctionEnvironmentRecord, GeneratorResume, GeneratorResumeAbrupt, GeneratorStart, GeneratorValidate, GeneratorYield, Get, GetActiveScriptOrModule, GetAsyncCycleRoot, GetFunctionRealm, GetGeneratorKind, GetGlobalObject, GetIdentifierReference, GetImportedModule, GetIterator, GetMatchIndexPair, GetMatchString, GetMethod, GetModuleNamespace, GetNewTarget, GetPrototypeFromConstructor, GetStringIndex, GetSubstitution, GetThisEnvironment, GetThisValue, GetV, GetValue, GetValueFromBuffer, GetViewValue, GlobalDeclarationInstantiation, GlobalEnvironmentRecord, GraphLoadingState, HasInitializer, HasName, HasOwnProperty, HasProperty, HostCallJobCallback, HostEnqueueFinalizationRegistryCleanupJob, HostEnqueuePromiseJob, HostEnsureCanCompileStrings, HostFinalizeImportMeta, HostGetImportMetaProperties, HostHasSourceTextAvailable, HostLoadImportedModule, HostMakeJobCallback, HostPromiseRejectionTracker, HourFromTime, HoursPerDay, IfAbruptCloseIterator, IfAbruptRejectPromise, ImportEntries, ImportEntriesForModule, ImportedLocalNames, InLeapYear, InitializeBoundName, InitializeInstanceElements, InitializeReferencedBinding, InnerModuleEvaluation, InnerModuleLinking, InnerModuleLoading, InstallErrorCause, InstanceofOperator, InstantiateArrowFunctionExpression, InstantiateAsyncArrowFunctionExpression, InstantiateAsyncFunctionExpression, InstantiateAsyncGeneratorFunctionExpression, InstantiateFunctionObject, InstantiateFunctionObject_AsyncFunctionDeclaration, InstantiateFunctionObject_AsyncGeneratorDeclaration, InstantiateFunctionObject_FunctionDeclaration, InstantiateFunctionObject_GeneratorDeclaration, InstantiateGeneratorFunctionExpression, InstantiateOrdinaryFunctionExpression, IntegerIndexedDefineOwnProperty, IntegerIndexedDelete, IntegerIndexedElementGet, IntegerIndexedElementSet, IntegerIndexedGet, IntegerIndexedGetOwnProperty, IntegerIndexedHasProperty, IntegerIndexedObjectCreate, IntegerIndexedOwnPropertyKeys, IntegerIndexedSet, Invoke, IsAccessorDescriptor, IsAnonymousFunctionDefinition, IsArray, IsBigIntElementType, IsCallable, IsCompatiblePropertyDescriptor, IsComputedPropertyKey, IsConcatSpreadable, IsConstantDeclaration, IsConstructor, IsDataDescriptor, IsDestructuring, IsDetachedBuffer, IsExtensible, IsFunctionDefinition, IsGenericDescriptor, IsIdentifierRef, IsInTailPosition, IsIntegralNumber, IsPrivateReference, IsPromise, IsPropertyKey, IsPropertyReference, IsRegExp, IsSharedArrayBuffer, IsSimpleParameterList, IsStatic, IsStrict, IsStringPrefix, IsStringWellFormedUnicode, IsSuperReference, IsUnresolvableReference, IsValidIntegerIndex, IterableToList, IteratorBindingInitialization_ArrayBindingPattern, IteratorBindingInitialization_FormalParameters, IteratorClose, IteratorComplete, IteratorNext, IteratorStep, IteratorValue, JSStringValue, KeyedBindingInitialization, LabelledEvaluation, LengthOfArrayLike, LexicallyDeclaredNames, LexicallyScopedDeclarations, LocalTZA, LocalTime, MV_StringNumericLiteral, MakeBasicObject, MakeClassConstructor, MakeConstructor, MakeDate, MakeDay, MakeMatchIndicesIndexPairArray, MakeMethod, MakePrivateReference, MakeTime, ManagedRealm, MethodDefinitionEvaluation, MinFromTime, MinutesPerHour, ModuleEnvironmentRecord, ModuleNamespaceCreate, ModuleRequests, MonthFromTime, NamedEvaluation, NewDeclarativeEnvironment, NewFunctionEnvironment, NewGlobalEnvironment, NewModuleEnvironment, NewObjectEnvironment, NewPrivateEnvironment, NewPromiseCapability, NonConstructorElements, NonbinaryUnicodeProperties, NormalCompletion, NullValue, NumberToBigInt, NumberValue, NumericToRawBytes, NumericValue, ObjectEnvironmentRecord, ObjectValue, OrdinaryCallBindThis, OrdinaryCallEvaluateBody, OrdinaryCreateFromConstructor, OrdinaryDefineOwnProperty, OrdinaryDelete, OrdinaryFunctionCreate, OrdinaryGet, OrdinaryGetOwnProperty, OrdinaryGetPrototypeOf, OrdinaryHasInstance, OrdinaryHasProperty, OrdinaryIsExtensible, OrdinaryObjectCreate, OrdinaryOwnPropertyKeys, OrdinaryPreventExtensions, OrdinarySet, OrdinarySetPrototypeOf, OrdinarySetWithOwnDescriptor, OrdinaryToPrimitive, ParseJSONModule, ParseModule, ParsePattern, ParseScript, Parser, PerformEval, PerformPromiseThen, PrepareForOrdinaryCall, PrepareForTailCall, PrimitiveValue, PrivateBoundIdentifiers, PrivateElementFind, PrivateElementRecord, PrivateFieldAdd, PrivateGet, PrivateMethodOrAccessorAdd, PrivateName, PrivateSet, PromiseCapabilityRecord, PromiseReactionRecord, PromiseResolve, PropName, PropertyBindingInitialization, PropertyDefinitionEvaluation_PropertyDefinitionList, ProxyCreate, PutValue, ReturnIfAbrupt as Q, R, RawBytesToNumeric, Realm, ReferenceRecord, RegExpAlloc, RegExpCreate, RegExpHasFlag, RegExpInitialize, RegExpParser, State as RegExpState, RequireInternalSlot, RequireObjectCoercible, ResolveBinding, ResolvePrivateIdentifier, ResolveThisBinding, ResolvedBindingRecord, RestBindingInitialization, ReturnCompletion, ReturnIfAbrupt, SameValue, SameValueNonNumber, SameValueZero, ScriptEvaluation, SecFromTime, SecondsPerMinute, Set$1 as Set, SetDefaultGlobalBindings, SetFunctionLength, SetFunctionName, SetImmutablePrototype, SetIntegrityLevel, SetRealmGlobalObject, SetValueInBuffer, SetViewValue, SortCompare, SourceTextModuleRecord, SpeciesConstructor, StrictEqualityComparison, StringCreate, StringGetOwnProperty, StringIndexOf, StringPad, StringToBigInt, StringToCodePoints, StringValue, SymbolDescriptiveString, SymbolValue, SyntheticModuleRecord, TV, TemplateStrings, TestIntegrityLevel, Throw, ThrowCompletion, TimeClip, TimeFromYear, TimeWithinDay, ToBigInt, ToBigInt64, ToBigUint64, ToBoolean, ToIndex, ToInt16, ToInt32, ToInt8, ToIntegerOrInfinity, ToLength, ToNumber, ToNumeric, ToObject, ToPrimitive, ToPropertyDescriptor, ToPropertyKey, ToString, ToUint16, ToUint32, ToUint8, ToUint8Clamp, TopLevelLexicallyDeclaredNames, TopLevelLexicallyScopedDeclarations, TopLevelVarDeclaredNames, TopLevelVarScopedDeclarations, TrimString, Type, TypeForMethod, TypedArrayCreate, TypedArraySpeciesCreate, UTC, UTF16EncodeCodePoint, UTF16SurrogatePairToCodePoint, UndefinedValue, UnicodeGeneralCategoryValues, UnicodeMatchProperty, UnicodeMatchPropertyValue, UnicodeScriptValues, UnicodeSets, UpdateEmpty, ValidateAndApplyPropertyDescriptor, ValidateTypedArray, Value, VarDeclaredNames, VarScopedDeclarations, WeakRefDeref, WeekDay, X, YearFromTime, Yield, Z, evaluateScript, gc, generatorBrandToErrorMessageType, getUnicodePropertyValueSet, inspect, isArrayExoticObject, isArrayIndex, isECMAScriptFunctionObject, isFunctionObject, isIntegerIndex, isIntegerIndexedExoticObject, isNonNegativeInteger, isProxyExoticObject, isStrictModeCode, msFromTime, msPerAverageYear, msPerDay, msPerHour, msPerMinute, msPerSecond, refineLeftHandSideExpression, runJobQueue, setSurroundingAgent, sourceTextMatchedBy, surroundingAgent, typedArrayInfoByName, typedArrayInfoByType, wellKnownSymbols, wrappedParse };
 //# sourceMappingURL=engine262.mjs.map
