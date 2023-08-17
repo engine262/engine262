@@ -9,6 +9,11 @@ import { bootstrapObjectPrototype } from '../intrinsics/ObjectPrototype.mjs';
 import { bootstrapObject } from '../intrinsics/Object.mjs';
 import { bootstrapArrayPrototype } from '../intrinsics/ArrayPrototype.mjs';
 import { bootstrapArray } from '../intrinsics/Array.mjs';
+import { bootstrapAsyncContextVariablePrototype } from '../intrinsics/AsyncContextVariablePrototype.mjs';
+import { bootstrapAsyncContextVariable } from '../intrinsics/AsyncContextVariable.mjs';
+import { bootstrapAsyncContextSnapshotPrototype } from '../intrinsics/AsyncContextSnapshotPrototype.mjs';
+import { bootstrapAsyncContextSnapshot } from '../intrinsics/AsyncContextSnapshot.mjs';
+import { bootstrapAsyncContext } from '../intrinsics/AsyncContext.mjs';
 import { bootstrapBigInt } from '../intrinsics/BigInt.mjs';
 import { bootstrapBigIntPrototype } from '../intrinsics/BigIntPrototype.mjs';
 import { bootstrapBooleanPrototype } from '../intrinsics/BooleanPrototype.mjs';
@@ -220,6 +225,12 @@ export function CreateIntrinsics(realmRec) {
   bootstrapGeneratorFunctionPrototype(realmRec);
   bootstrapGeneratorFunction(realmRec);
 
+  bootstrapAsyncContextVariablePrototype(realmRec);
+  bootstrapAsyncContextVariable(realmRec);
+  bootstrapAsyncContextSnapshotPrototype(realmRec);
+  bootstrapAsyncContextSnapshot(realmRec);
+  bootstrapAsyncContext(realmRec);
+
   bootstrapAsyncFunctionPrototype(realmRec);
   bootstrapAsyncFunction(realmRec);
 
@@ -353,6 +364,7 @@ export function SetDefaultGlobalBindings(realmRec) {
     'WeakSet',
 
     // Other Properties of the Global Object
+    'AsyncContext',
     // 'Atomics',
     'JSON',
     'Math',

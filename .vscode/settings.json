@@ -2,5 +2,6 @@
     "typescript.tsdk": "node_modules/typescript/lib",
     "typescript.preferences.quoteStyle": "single",
     "editor.tabSize": 2,
-    "npm.packageManager": "npm"
+    "npm.packageManager": "npm",
+    "editor.formatOnSave": false
 }

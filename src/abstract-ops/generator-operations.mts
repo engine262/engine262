@@ -12,6 +12,8 @@ import { Evaluate } from '../evaluator.mjs';
 import { resume } from '../helpers.mjs';
 import {
   Assert,
+  AsyncContextSnapshot,
+  AsyncContextSwap,
   AsyncGeneratorYield,
   CreateIterResultObject,
   OrdinaryObjectCreate,
@@ -29,8 +31,8 @@ export function GeneratorStart(generator, generatorBody) {
   const genContext = surroundingAgent.runningExecutionContext;
   // 3. Set the Generator component of genContext to generator.
   genContext.Generator = generator;
-  // 4. Set the code evaluation state of genContext such that when evaluation is resumed
-  //    for that execution context the following steps will be performed:
+  // 4. Let closure be a new Abstract Closure with no parameters that captures generatorBody and
+  //    performs the following steps when called:
   genContext.codeEvaluationState = (function* resumer() {
     // a. If generatorBody is a Parse Node, then
     //    i. Let result be the result of evaluating generatorBody.
@@ -70,12 +72,15 @@ export function GeneratorStart(generator, generatorBody) {
     // j. Return CreateIterResultObject(resultValue, true).
     return X(CreateIterResultObject(resultValue, Value.true));
   }());
-  // 5. Set generator.[[GeneratorContext]] to genContext.
+  // 5. Set the code evaluation state of genContext such that when evaluation is
+  // resumed for that execution context, closure will be called with no arguments.
+  // 6. Set generator.[[GeneratorContext]] to genContext.
   generator.GeneratorContext = genContext;
-  // 6. Set generator.[[GeneratorState]] to suspendedStart.
+  // 7. Set generator.[[GeneratorAsyncContextMapping]] to AsyncContextSnapshot().
+  generator.GeneratorAsyncContextMapping = AsyncContextSnapshot();
+  // 8. Set generator.[[GeneratorState]] to suspendedStart.
   generator.GeneratorState = 'suspendedStart';
-  // 7. Return NormalCompletion(undefined).
-  return NormalCompletion(Value.undefined);
+  // 9. Return unused.
 }
 
 export function generatorBrandToErrorMessageType(generatorBrand) {
@@ -112,8 +117,9 @@ export function GeneratorValidate(generator, generatorBrand) {
       generator,
     );
   }
-  // 4. Assert: generator also has a [[GeneratorContext]] internal slot.
+  // 4. Assert: generator also has [[GeneratorContext]] and [[GeneratorAsyncContextMapping]] internal slots.
   Assert('GeneratorContext' in generator);
+  Assert('GeneratorAsyncContextMapping' in generator);
   // 5. Let state be generator.[[GeneratorState]].
   const state = generator.GeneratorState;
   // 6. If state is executing, throw a TypeError exception.
@@ -141,17 +147,23 @@ export function GeneratorResume(generator, value, generatorBrand) {
   const methodContext = surroundingAgent.runningExecutionContext;
   // 7. Set generator.[[GeneratorState]] to executing.
   generator.GeneratorState = 'executing';
-  // 8. Push genContext onto the execution context stack.
+  // 8. Let asyncContextMapping be AsyncContextSwap(generator.[[GeneratorAsyncContextMapping]]).
+  const asyncContextMapping = AsyncContextSwap(generator.GeneratorAsyncContextMapping);
+  // 9. Push genContext onto the execution context stack.
   surroundingAgent.executionContextStack.push(genContext);
-  // 9. Resume the suspended evaluation of genContext using NormalCompletion(value) as
-  //    the result of the operation that suspended it. Let result be the value returned by
-  //    the resumed computation.
+  // 10. Resume the suspended evaluation of genContext using NormalCompletion(value) as
+  //     the result of the operation that suspended it. Let result be the value returned by
+  //     the resumed computation.
   const result = EnsureCompletion(resume(genContext, NormalCompletion(value)));
-  // 10. Assert: When we return here, genContext has already been removed from the execution
+  // 11. Assert: When we return here, genContext has already been removed from the execution
   //     context stack and methodContext is the currently running execution context.
   Assert(surroundingAgent.runningExecutionContext === methodContext);
-  // 11. Return Completion(result).
-  return Completion(result);
+  // 12. Assert: The result of AsyncContextSnapshot() is generator.[[GeneratorAsyncContextMapping]].
+  Assert(AsyncContextSnapshot() === generator.GeneratorAsyncContextMapping);
+  // 13. AsyncContextSwap(asyncContextMapping).
+  AsyncContextSwap(asyncContextMapping);
+  // 13. Return ? result.
+  return Q(result);
 }
 
 /** https://tc39.es/ecma262/#sec-generatorresumeabrupt */
@@ -188,17 +200,23 @@ export function GeneratorResumeAbrupt(generator, abruptCompletion, generatorBran
   const methodContext = surroundingAgent.runningExecutionContext;
   // 8. Set generator.[[GeneratorState]] to executing.
   generator.GeneratorState = 'executing';
-  // 9. Push genContext onto the execution context stack.
+  // 9. Let asyncContextMapping be AsyncContextSwap(generator.[[GeneratorAsyncContextMapping]]).
+  const asyncContextMapping = AsyncContextSwap(generator.GeneratorAsyncContextMapping);
+  // 10. Push genContext onto the execution context stack.
   surroundingAgent.executionContextStack.push(genContext);
-  // 10. Resume the suspended evaluation of genContext using abruptCompletion as the
+  // 11. Resume the suspended evaluation of genContext using abruptCompletion as the
   //     result of the operation that suspended it. Let result be the completion record
   //     returned by the resumed computation.
   const result = EnsureCompletion(resume(genContext, abruptCompletion));
-  // 11. Assert: When we return here, genContext has already been removed from the
+  // 12. Assert: When we return here, genContext has already been removed from the
   //     execution context stack and methodContext is the currently running execution context.
   Assert(surroundingAgent.runningExecutionContext === methodContext);
-  // 12. Return Completion(result).
-  return Completion(result);
+  // 13. Assert: The result of AsyncContextSnapshot() is generator.[[GeneratorAsyncContextMapping]].
+  Assert(AsyncContextSnapshot() === generator.GeneratorAsyncContextMapping);
+  // 13. AsyncContextSwap(asyncContextMapping).
+  AsyncContextSwap(asyncContextMapping);
+  // 14. Return ? result.
+  return Q(result);
 }
 
 /** https://tc39.es/ecma262/#sec-getgeneratorkind */
@@ -259,8 +277,8 @@ export function* Yield(value) {
 export function CreateIteratorFromClosure(closure, generatorBrand, generatorPrototype) {
   Assert(typeof closure === 'function');
   // 1. NOTE: closure can contain uses of the Yield shorthand to yield an IteratorResult object.
-  // 2. Let internalSlotsList be « [[GeneratorState]], [[GeneratorContext]], [[GeneratorBrand]] ».
-  const internalSlotsList = ['GeneratorState', 'GeneratorContext', 'GeneratorBrand'];
+  // 2. Let internalSlotsList be « [[GeneratorState]], [[GeneratorContext]], [[GeneratorAsyncContextMapping]], [[GeneratorBrand]] ».
+  const internalSlotsList = ['GeneratorState', 'GeneratorContext', 'GeneratorAsyncContextMapping', 'GeneratorBrand'];
   // 3. Let generator be ! OrdinaryObjectCreate(generatorPrototype, internalSlotsList).
   const generator = X(OrdinaryObjectCreate(generatorPrototype, internalSlotsList));
   // 4. Set generator.[[GeneratorBrand]] to generatorBrand.

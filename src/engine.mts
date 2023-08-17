@@ -4,7 +4,7 @@ import {
   EnsureCompletion,
   NormalCompletion,
   ThrowCompletion,
-  Q, X,
+  Q, X, Completion,
 } from './completion.mjs';
 import {
   IsCallable,
@@ -15,6 +15,8 @@ import {
   FinishLoadingImportedModule,
   Realm,
   type FunctionObject,
+  AsyncContextSnapshot,
+  AsyncContextSwap,
 } from './abstract-ops/all.mjs';
 import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
 import { Evaluate } from './evaluator.mjs';
@@ -73,6 +75,7 @@ export class Agent {
       IsLockFree2: Value.true,
       CandidateExecution: undefined,
       KeptAlive: new Set(),
+      AsyncContextMapping: new Map(),
     };
 
     this.hostDefinedOptions = {
@@ -337,18 +340,25 @@ export function HostEnqueueFinalizationRegistryCleanupJob(fg) {
 }
 
 /** https://tc39.es/ecma262/#sec-hostmakejobcallback */
+/** https://tc39.es/proposal-async-context/#sec-hostmakejobcallback */
 export function HostMakeJobCallback(callback) {
-  // 1. Assert: IsCallable(callback) is true.
-  Assert(IsCallable(callback) === Value.true);
-  // 2. Return the JobCallback Record { [[Callback]]: callback, [[HostDefined]]: empty }.
-  return { Callback: callback, HostDefined: undefined };
+  // 1. Let snapshotMapping be AsyncContextSnapshot().
+  const snapshotMapping = AsyncContextSnapshot();
+  // 2. Return the JobCallback Record { [[Callback]]: callback, [[AsyncContextSnapshot]]: snapshotMapping, [[HostDefined]]: empty }.
+  return { Callback: callback, AsyncContextSnapshot: snapshotMapping, HostDefined: undefined };
 }
 
 /** https://tc39.es/ecma262/#sec-hostcalljobcallback */
 export function HostCallJobCallback(jobCallback, V, argumentsList) {
   // 1. Assert: IsCallable(jobCallback.[[Callback]]) is true.
   Assert(IsCallable(jobCallback.Callback) === Value.true);
-  // 1. Return ? Call(jobCallback.[[Callback]], V, argumentsList).
-  return Q(Call(jobCallback.Callback, V, argumentsList));
+  // 2. Let previousContextMapping be AsyncContextSwap(jobCallback.[[AsyncContextSnapshot]]).
+  const previousContextMapping = AsyncContextSwap(jobCallback.AsyncContextSnapshot);
+  // 3. Let result be Completion(Call(jobCallback.[[Callback]], V, argumentsList)).
+  const result = Completion(Call(jobCallback.Callback, V, argumentsList));
+  // 4. AsyncContextSwap(previousContextMapping).
+  AsyncContextSwap(previousContextMapping);
+  // 5. Return result.
+  return result;
 }
 export type GCMarker = (value: unknown) => void;

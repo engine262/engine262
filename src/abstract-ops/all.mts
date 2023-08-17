@@ -1,6 +1,7 @@
 export * from './arguments-operations.mjs';
 export * from './array-objects.mjs';
 export * from './arraybuffer-objects.mjs';
+export * from './async-context-operations.mjs';
 export * from './async-function-operations.mjs';
 export * from './async-generator-objects.mjs';
 export * from './data-types-and-values.mjs';
