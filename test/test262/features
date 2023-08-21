@@ -38,3 +38,6 @@ String.prototype.toWellFormed = is-usv-string
 
 # https://github.com/tc39/proposal-cleanup-some
 FinalizationRegistry.prototype.cleanupSome = cleanup-some
+
+# https://github.com/tc39/proposal-async-context/
+AsyncContext = async-context
