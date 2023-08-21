@@ -85,6 +85,7 @@ import { bootstrapWeakRefPrototype } from '../intrinsics/WeakRefPrototype.mjs';
 import { bootstrapWeakRef } from '../intrinsics/WeakRef.mjs';
 import { bootstrapFinalizationRegistryPrototype } from '../intrinsics/FinalizationRegistryPrototype.mjs';
 import { bootstrapFinalizationRegistry } from '../intrinsics/FinalizationRegistry.mjs';
+import { surroundingAgent } from '../engine.mjs';
 import {
   Assert,
   DefinePropertyOrThrow,
@@ -364,18 +365,20 @@ export function SetDefaultGlobalBindings(realmRec) {
     'WeakSet',
 
     // Other Properties of the Global Object
-    'AsyncContext',
+    surroundingAgent.feature('async-context') ? 'AsyncContext' : undefined,
     // 'Atomics',
     'JSON',
     'Math',
     'Reflect',
   ].forEach((name) => {
-    Q(DefinePropertyOrThrow(global, Value(name), Descriptor({
-      Value: realmRec.Intrinsics[`%${name}%`],
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-    })));
+    if (name !== undefined) {
+      Q(DefinePropertyOrThrow(global, Value(name), Descriptor({
+        Value: realmRec.Intrinsics[`%${name}%`],
+        Writable: Value.true,
+        Enumerable: Value.false,
+        Configurable: Value.true,
+      })));
+    }
   });
 
   return global;

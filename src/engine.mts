@@ -35,6 +35,11 @@ export const FEATURES = Object.freeze([
     flag: 'is-usv-string',
     url: 'https://github.com/tc39/proposal-is-usv-string',
   },
+  {
+    name: 'AsyncContext',
+    flag: 'async-context',
+    url: 'https://github.com/tc39/proposal-async-context',
+  },
 ].map(Object.freeze));
 
 class ExecutionContextStack extends Array<ExecutionContext> {
