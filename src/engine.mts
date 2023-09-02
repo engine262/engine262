@@ -158,7 +158,7 @@ export class Agent {
   }
 }
 
-export let surroundingAgent;
+export let surroundingAgent: Agent;
 export function setSurroundingAgent(a) {
   surroundingAgent = a;
 }

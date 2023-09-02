@@ -11,6 +11,12 @@ import type {
 import { Scope } from './Scope.mjs';
 import { Token } from './tokens.mjs';
 
+export interface ParserOptions {
+  readonly source: string;
+  readonly specifier: string;
+  readonly json?: boolean;
+}
+
 export class Parser extends LanguageParser {
   protected readonly source: string;
   protected readonly specifier: string;
@@ -22,7 +28,7 @@ export class Parser extends LanguageParser {
   };
 
   protected readonly scope = new Scope(this);
-  constructor({ source, specifier, json = false }: { source: string, specifier: string, json?: boolean }) {
+  constructor({ source, specifier, json = false }: ParserOptions) {
     super();
     this.source = source;
     this.specifier = specifier;

@@ -5,6 +5,7 @@ import {
   PerformPromiseThen,
   PromiseCapabilityRecord,
   PromiseResolve,
+  type PromiseObjectValue,
 } from './abstract-ops/all.mjs';
 import { JSStringValue, Value } from './value.mjs';
 import {
@@ -315,7 +316,7 @@ export function* Await(value: Value): Generator<Value, Completion, Completion> {
   // 1. Let asyncContext be the running execution context.
   const asyncContext = surroundingAgent.runningExecutionContext;
   // 2. Let promise be ? PromiseResolve(%Promise%, value).
-  const promise = ReturnIfAbrupt(PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value));
+  const promise = ReturnIfAbrupt(PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value) as PromiseObjectValue);
   // 3. Let fulfilledClosure be a new Abstract Closure with parameters (value) that captures asyncContext and performs the following steps when called:
   const fulfilledClosure = ([valueInner = Value.undefined]) => {
     // a. Let prevContext be the running execution context.

@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { Parser } from './parser/Parser.mjs';
+import { Parser, type ParserOptions } from './parser/Parser.mjs';
 import { RegExpParser, type RegExpParserContext } from './parser/RegExpParser.mjs';
 import { surroundingAgent } from './engine.mjs';
 import { SourceTextModuleRecord } from './modules.mjs';
@@ -9,6 +9,7 @@ import {
   Set,
   Call,
   CreateDefaultExportSyntheticModule,
+  Realm,
 } from './abstract-ops/all.mjs';
 import { Q, X } from './completion.mjs';
 import {
@@ -21,7 +22,7 @@ import { ValueSet, kInternal } from './helpers.mjs';
 
 export { Parser, RegExpParser };
 
-function handleError(e) {
+function handleError(e: unknown) {
   if (e.name === 'SyntaxError') {
     const v = surroundingAgent.Throw('SyntaxError', 'Raw', e.message).Value;
     if (e.decoration) {
@@ -36,7 +37,7 @@ function handleError(e) {
   }
 }
 
-export function wrappedParse(init, f) {
+export function wrappedParse<T>(init: ParserOptions, f: (parser: Parser) => T) {
   const p = new Parser(init);
 
   try {
@@ -50,7 +51,7 @@ export function wrappedParse(init, f) {
   }
 }
 
-export function ParseScript(sourceText, realm, hostDefined = {}) {
+export function ParseScript(sourceText: string, realm: Realm, hostDefined = {}) {
   // 1. Assert: sourceText is an ECMAScript source text (see clause 10).
   // 2. Parse sourceText using Script as the goal symbol and analyse the parse result for
   //    any Early Error conditions. If the parse was successful and no early errors were found,
@@ -84,7 +85,7 @@ export function ParseScript(sourceText, realm, hostDefined = {}) {
   };
 }
 
-export function ParseModule(sourceText, realm, hostDefined = {}) {
+export function ParseModule(sourceText: string, realm: Realm, hostDefined = {}) {
   // 1. Assert: sourceText is an ECMAScript source text (see clause 10).
   // 2. Parse sourceText using Module as the goal symbol and analyse the parse result for
   //    any Early Error conditions. If the parse was successful and no early errors were found,
@@ -176,7 +177,7 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
 }
 
 /** https://tc39.es/ecma262/#sec-parsejsonmodule */
-export function ParseJSONModule(sourceText, realm, hostDefined) {
+export function ParseJSONModule(sourceText: string, realm: Realm, hostDefined: unknown) {
   // 1. Let jsonParse be realm's intrinsic object named "%JSON.parse%".
   const jsonParse = realm.Intrinsics['%JSON.parse%'];
   // 1. Let json be ? Call(jsonParse, undefined, « sourceText »).
@@ -186,7 +187,7 @@ export function ParseJSONModule(sourceText, realm, hostDefined) {
 }
 
 /** https://tc39.es/ecma262/#sec-parsepattern */
-export function ParsePattern(patternText, u) {
+export function ParsePattern(patternText: string, u: boolean) {
   const parse = (flags: RegExpParserContext) => {
     const p = new RegExpParser(patternText);
     return p.scope(flags, () => p.parsePattern());

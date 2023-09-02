@@ -15,7 +15,7 @@ import {
   ToInt32,
   ToUint32,
   Z,
-  F, R,
+  F, R, type OrdinaryObject, type FunctionObject,
 } from './abstract-ops/all.mjs';
 import { EnvironmentRecord } from './environment.mjs';
 import { Completion, X } from './completion.mjs';
@@ -737,48 +737,50 @@ export class ObjectValue extends Value {
     this.internalSlotsList = internalSlotsList;
   }
 
+  // UNSAFE casts below. Methods below are expected to be rewritten when the object is not an OrdinaryObject. (an example is ArgumentExoticObject)
+  // If those methods aren't rewritten, it is an error.
   GetPrototypeOf() {
-    return OrdinaryGetPrototypeOf(this);
+    return OrdinaryGetPrototypeOf(this as unknown as OrdinaryObject);
   }
 
-  SetPrototypeOf(V: Value) {
-    return OrdinarySetPrototypeOf(this, V);
+  SetPrototypeOf(V: ObjectValue | NullValue) {
+    return OrdinarySetPrototypeOf(this as unknown as OrdinaryObject, V);
   }
 
   IsExtensible() {
-    return OrdinaryIsExtensible(this);
+    return OrdinaryIsExtensible(this as unknown as OrdinaryObject);
   }
 
-  PreventExtensions() {
-    return OrdinaryPreventExtensions(this);
+  PreventExtensions(): BooleanValue {
+    return OrdinaryPreventExtensions(this as unknown as OrdinaryObject);
   }
 
   GetOwnProperty(P: PropertyKeyValue) {
-    return OrdinaryGetOwnProperty(this, P);
+    return OrdinaryGetOwnProperty(this as unknown as OrdinaryObject, P);
   }
 
   DefineOwnProperty(P: PropertyKeyValue, Desc: Descriptor) {
-    return OrdinaryDefineOwnProperty(this, P, Desc);
+    return OrdinaryDefineOwnProperty(this as unknown as OrdinaryObject, P, Desc);
   }
 
   HasProperty(P: PropertyKeyValue) {
-    return OrdinaryHasProperty(this, P);
+    return OrdinaryHasProperty(this as unknown as OrdinaryObject, P);
   }
 
   Get(P: PropertyKeyValue, Receiver: Value) {
-    return OrdinaryGet(this, P, Receiver);
+    return OrdinaryGet(this as unknown as OrdinaryObject, P, Receiver);
   }
 
   Set(P: PropertyKeyValue, V: Value, Receiver: Value) {
-    return OrdinarySet(this, P, V, Receiver);
+    return OrdinarySet(this as unknown as OrdinaryObject, P, V, Receiver);
   }
 
   Delete(P: PropertyKeyValue) {
-    return OrdinaryDelete(this, P);
+    return OrdinaryDelete(this as unknown as OrdinaryObject, P);
   }
 
   OwnPropertyKeys() {
-    return OrdinaryOwnPropertyKeys(this);
+    return OrdinaryOwnPropertyKeys(this as unknown as OrdinaryObject);
   }
 
   // NON-SPEC
@@ -808,10 +810,10 @@ export class PrivateName {
 }
 
 export class ReferenceRecord {
-  Base: 'unresolvable' | Value;
-  ReferencedName: JSStringValue | SymbolValue | PrivateName;
-  Strict: BooleanValue;
-  ThisValue: ObjectValue | undefined;
+  readonly Base: 'unresolvable' | Value;
+  readonly ReferencedName: JSStringValue | SymbolValue | PrivateName;
+  readonly Strict: BooleanValue;
+  readonly ThisValue: ObjectValue | undefined;
   constructor({
     Base,
     ReferencedName,
@@ -836,10 +838,8 @@ export class ReferenceRecord {
 export function Descriptor(O: Pick<Descriptor, 'Configurable' | 'Enumerable' | 'Get' | 'Set' | 'Value' | 'Writable'>): Descriptor // @ts-expect-error
 export @callable() class Descriptor {
   readonly Value?: Value;
-  // TODO(ts): should be FunctionObjectValue
-  readonly Get?: ObjectValue;
-  // TODO(ts): should be FunctionObjectValue
-  readonly Set?: ObjectValue;
+  readonly Get?: FunctionObject;
+  readonly Set?: FunctionObject;
   readonly Writable?: BooleanValue;
   readonly Enumerable?: BooleanValue;
   readonly Configurable?: BooleanValue;
@@ -915,3 +915,4 @@ export function TypeForMethod(val: Value) {
   }
   throw new OutOfRange('TypeForValue', val);
 }
+export type Arguments = readonly Value[];

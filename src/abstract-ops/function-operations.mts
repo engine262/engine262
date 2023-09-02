@@ -10,6 +10,8 @@ import {
   UndefinedValue,
   Value,
   PrivateName,
+  type Arguments,
+  BooleanValue, PropertyKeyValue, NullValue, JSStringValue,
 } from '../value.mjs';
 import {
   EnsureCompletion,
@@ -17,16 +19,18 @@ import {
   AbruptCompletion,
   ReturnIfAbrupt,
   Completion,
-  Q, X,
+  Q, X, ThrowCompletion,
 } from '../completion.mjs';
 import { ExpectedArgumentCount } from '../static-semantics/all.mjs';
-import { EvaluateBody } from '../runtime-semantics/all.mjs';
+import { ClassFieldDefinitionRecord, EvaluateBody, PrivateElementRecord } from '../runtime-semantics/all.mjs';
 import {
+  EnvironmentRecord,
   FunctionEnvironmentRecord,
   GlobalEnvironmentRecord,
   NewFunctionEnvironment,
 } from '../environment.mjs';
-import { unwind } from '../helpers.mjs';
+import { unwind, type Mutable } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import {
   Assert,
   Call,
@@ -47,24 +51,52 @@ import {
   isStrictModeCode,
   Realm,
   F as toNumberValue,
+  type OrdinaryObject,
 } from './all.mjs';
 
+interface BaseFunctionObject extends OrdinaryObject {
+  readonly Realm;
+  readonly ScriptOrModule;
+  readonly InitialName: JSStringValue | NullValue;
+  Call(thisValue: Value, arguments: Arguments): NormalCompletion<Value> | ThrowCompletion;
+  Construct(arguments: Arguments, newTarget: Value): NormalCompletion<ObjectValue> | ThrowCompletion;
+}
+export interface ECMAScriptFunctionObject extends BaseFunctionObject {
+  readonly Environment: EnvironmentRecord;
+  readonly PrivateEnvironment;
+  readonly FormalParameters;
+  readonly ECMAScriptCode;
+  readonly ConstructorKind: 'base' | 'derived';
+  readonly Realm;
+  readonly ThisMode: 'lexical' | 'strict' | 'global';
+  readonly Strict;
+  readonly HomeObject: ObjectValue;
+  readonly SourceText: string;
+  readonly Fields: readonly ClassFieldDefinitionRecord[];
+  readonly PrivateMethods: readonly PrivateElementRecord[];
+  readonly ClassFieldInitializerName: undefined | PropertyKeyValue | PrivateName;
+  readonly IsClassConstructor: BooleanValue;
+}
+export interface BuiltinFunctionObject extends BaseFunctionObject {
+  nativeFunction(argumentsList: Arguments, options: { thisValue: Value | UndefinedValue, NewTarget: Value | UndefinedValue }): Value;
+}
+export type FunctionObject = ECMAScriptFunctionObject | BuiltinFunctionObject;
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-ecmascript-function-objects */
 /** https://tc39.es/ecma262/#sec-built-in-function-objects */
 // and
 /** https://tc39.es/ecma262/#sec-tail-position-calls */
 
-export function isECMAScriptFunctionObject(O) {
+export function isECMAScriptFunctionObject(O: ObjectValue): O is ECMAScriptFunctionObject {
   return 'ECMAScriptCode' in O;
 }
 
-export function isFunctionObject(O) {
+export function isFunctionObject(O: ObjectValue): O is FunctionObject {
   return 'Call' in O;
 }
 
 /** https://tc39.es/ecma262/#sec-prepareforordinarycall */
-export function PrepareForOrdinaryCall(F, newTarget) {
+export function PrepareForOrdinaryCall(F: ECMAScriptFunctionObject, newTarget: ObjectValue | UndefinedValue) {
   // 1. Assert: Type(newTarget) is Undefined or Object.
   Assert(newTarget instanceof UndefinedValue || newTarget instanceof ObjectValue);
   // 2. Let callerContext be the running execution context.
@@ -95,7 +127,7 @@ export function PrepareForOrdinaryCall(F, newTarget) {
 }
 
 /** https://tc39.es/ecma262/#sec-ordinarycallbindthis */
-export function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
+export function OrdinaryCallBindThis(F: ECMAScriptFunctionObject, calleeContext: ExecutionContext, thisArgument: Value): void {
   // 1. Let thisMode be F.[[ThisMode]].
   const thisMode = F.ThisMode;
   // 2. If thisMode is lexical, return NormalCompletion(undefined).
@@ -134,13 +166,13 @@ export function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
 }
 
 /** https://tc39.es/ecma262/#sec-ordinarycallevaluatebody */
-export function OrdinaryCallEvaluateBody(F, argumentsList) {
+export function OrdinaryCallEvaluateBody(F: ECMAScriptFunctionObject, argumentsList: Arguments) {
   // 1. Return the result of EvaluateBody of the parsed code that is F.[[ECMAScriptCode]] passing F and argumentsList as the arguments.
   return EnsureCompletion(unwind(EvaluateBody(F.ECMAScriptCode, F, argumentsList)));
 }
 
 /** https://tc39.es/ecma262/#sec-definefield */
-export function DefineField(receiver, fieldRecord) {
+export function DefineField(receiver: ObjectValue, fieldRecord: ClassFieldDefinitionRecord): NormalCompletion<void> | ThrowCompletion {
   // 1. Let fieldName be fieldRecord.[[Name]].
   const fieldName = fieldRecord.Name;
   // 2. Let initializer be fieldRecord.[[Initializer]].
@@ -166,7 +198,7 @@ export function DefineField(receiver, fieldRecord) {
 }
 
 /** https://tc39.es/ecma262/#sec-initializeinstanceelements */
-export function InitializeInstanceElements(O, constructor) {
+export function InitializeInstanceElements(O: ObjectValue, constructor: ECMAScriptFunctionObject): NormalCompletion<void> | ThrowCompletion {
   // 1. Let methods be the value of constructor.[[PrivateMethods]].
   const methods = constructor.PrivateMethods;
   // 2. For each PrivateElement method of methods, do
@@ -184,7 +216,7 @@ export function InitializeInstanceElements(O, constructor) {
 }
 
 /** https://tc39.es/ecma262/#sec-ecmascript-function-objects-call-thisargument-argumentslist */
-function FunctionCallSlot(thisArgument, argumentsList) {
+function FunctionCallSlot(thisArgument: Value, argumentsList: Arguments): NormalCompletion<Value> | ThrowCompletion {
   const F = this;
 
   // 1. Assert: F is an ECMAScript function object.
@@ -221,7 +253,7 @@ function FunctionCallSlot(thisArgument, argumentsList) {
 }
 
 /** https://tc39.es/ecma262/#sec-ecmascript-function-objects-construct-argumentslist-newtarget */
-function FunctionConstructSlot(argumentsList, newTarget) {
+function FunctionConstructSlot(argumentsList: Arguments, newTarget) {
   const F = this;
 
   // 1. Assert: F is an ECMAScript function object.
@@ -284,7 +316,7 @@ function FunctionConstructSlot(argumentsList, newTarget) {
 }
 
 /** https://tc39.es/ecma262/#sec-functionallocate */
-export function OrdinaryFunctionCreate(functionPrototype, sourceText, ParameterList, Body, thisMode, Scope, PrivateScope) {
+export function OrdinaryFunctionCreate(functionPrototype: ObjectValue, sourceText: string, ParameterList: ParseNode, Body: ParseNode, thisMode: 'lexical-this' | 'non-lexical-this', Scope: EnvironmentRecord, PrivateScope) {
   // 1. Assert: Type(functionPrototype) is Object.
   Assert(functionPrototype instanceof ObjectValue);
   // 2. Let internalSlotsList be the internal slots listed in Table 33.
@@ -306,7 +338,7 @@ export function OrdinaryFunctionCreate(functionPrototype, sourceText, ParameterL
     'IsClassConstructor',
   ];
   // 3. Let F be ! OrdinaryObjectCreate(functionPrototype, internalSlotsList).
-  const F = X(OrdinaryObjectCreate(functionPrototype, internalSlotsList));
+  const F = X(OrdinaryObjectCreate(functionPrototype, internalSlotsList)) as Mutable<ECMAScriptFunctionObject>;
   // 4. Set F.[[Call]] to the definition specified in 10.2.1.
   F.Call = surroundingAgent.hostDefinedOptions.boost?.callFunction || FunctionCallSlot;
   // 5. Set F.[[SourceText]] to sourceText.
@@ -353,7 +385,7 @@ export function OrdinaryFunctionCreate(functionPrototype, sourceText, ParameterL
 }
 
 /** https://tc39.es/ecma262/#sec-makeconstructor */
-export function MakeConstructor(F, writablePrototype, prototype) {
+export function MakeConstructor(F: ECMAScriptFunctionObject, writablePrototype?: BooleanValue, prototype?: ObjectValue): void {
   Assert(isECMAScriptFunctionObject(F) || F.Call === BuiltinFunctionCall);
   if (isECMAScriptFunctionObject(F)) {
     Assert(IsConstructor(F) === Value.false);
@@ -383,23 +415,21 @@ export function MakeConstructor(F, writablePrototype, prototype) {
 }
 
 /** https://tc39.es/ecma262/#sec-makeclassconstructor */
-export function MakeClassConstructor(F) {
+export function MakeClassConstructor(F: ECMAScriptFunctionObject): void {
   Assert(isECMAScriptFunctionObject(F));
   Assert(F.IsClassConstructor === Value.false);
   F.IsClassConstructor = Value.true;
-  return NormalCompletion(Value.undefined);
 }
 
 /** https://tc39.es/ecma262/#sec-makemethod */
-export function MakeMethod(F, homeObject) {
+export function MakeMethod(F: ECMAScriptFunctionObject, homeObject: ObjectValue): void {
   Assert(isECMAScriptFunctionObject(F));
   Assert(homeObject instanceof ObjectValue);
   F.HomeObject = homeObject;
-  return NormalCompletion(Value.undefined);
 }
 
 /** https://tc39.es/ecma262/#sec-setfunctionname */
-export function SetFunctionName(F, name, prefix) {
+export function SetFunctionName(F: FunctionObject, name: PropertyKeyValue | PrivateName, prefix?: string): void {
   // 1. Assert: F is an extensible object that does not have a "name" own property.
   Assert(IsExtensible(F) === Value.true && HasOwnProperty(F, Value('name')) === Value.false);
   // 2. If Type(name) is Symbol, then
@@ -441,7 +471,7 @@ export function SetFunctionName(F, name, prefix) {
 }
 
 /** https://tc39.es/ecma262/#sec-setfunctionlength */
-export function SetFunctionLength(F, length) {
+export function SetFunctionLength(F: FunctionObject, length: number): void {
   Assert(isNonNegativeInteger(length) || length === Infinity);
   // 1. Assert: F is an extensible object that does not have a "length" own property.
   Assert(IsExtensible(F) === Value.true && HasOwnProperty(F, Value('length')) === Value.false);
@@ -455,14 +485,14 @@ export function SetFunctionLength(F, length) {
 }
 
 
-function nativeCall(F, argumentsList, thisArgument, newTarget) {
+function nativeCall(F: BuiltinFunctionObject, argumentsList: Arguments, thisArgument?: Value, newTarget?) {
   return F.nativeFunction(argumentsList, {
     thisValue: thisArgument || Value.undefined,
     NewTarget: newTarget || Value.undefined,
   });
 }
 
-function BuiltinFunctionCall(thisArgument, argumentsList) {
+function BuiltinFunctionCall(this: BuiltinFunctionObject, thisArgument: Value, argumentsList: Arguments) {
   const F = this;
 
   // const callerContext = surroundingAgent.runningExecutionContext;
@@ -481,7 +511,7 @@ function BuiltinFunctionCall(thisArgument, argumentsList) {
   return result;
 }
 
-function BuiltinFunctionConstruct(argumentsList, newTarget) {
+function BuiltinFunctionConstruct(this: BuiltinFunctionObject, argumentsList: Arguments, newTarget) {
   const F = this;
 
   // const callerContext = surroundingAgent.runningExecutionContext;
@@ -502,7 +532,7 @@ function BuiltinFunctionConstruct(argumentsList, newTarget) {
 }
 
 /** https://tc39.es/ecma262/#sec-createbuiltinfunction */
-export function CreateBuiltinFunction(steps, length, name, internalSlotsList, realm?, prototype?, prefix?, isConstructor = Value.false) {
+export function CreateBuiltinFunction(steps, length: number, name: PropertyKeyValue | PrivateName, internalSlotsList: readonly string[], realm?: Realm, prototype?: ObjectValue | NullValue, prefix?: string, isConstructor = Value.false): FunctionObject {
   // 1. Assert: steps is either a set of algorithm steps or other definition of a function's behaviour provided in this specification.
   Assert(typeof steps === 'function');
   // 2. If realm is not present, set realm to the current Realm Record.
@@ -516,7 +546,7 @@ export function CreateBuiltinFunction(steps, length, name, internalSlotsList, re
     prototype = realm.Intrinsics['%Function.prototype%'];
   }
   // 5. Let func be a new built-in function object that when called performs the action described by steps. The new function object has internal slots whose names are the elements of internalSlotsList.
-  const func = X(MakeBasicObject(['Prototype', 'Extensible', 'Realm', 'ScriptOrModule', 'InitialName'].concat(internalSlotsList)));
+  const func = X(MakeBasicObject(['Prototype', 'Extensible', 'Realm', 'ScriptOrModule', 'InitialName'].concat(internalSlotsList))) as Mutable<BuiltinFunctionObject>;
   func.Call = BuiltinFunctionCall;
   if (isConstructor === Value.true) {
     func.Construct = BuiltinFunctionConstruct;
