@@ -29,8 +29,8 @@ import {
   PrivateBoundIdentifiers,
 } from '../static-semantics/all.mjs';
 import {
-  NewDeclarativeEnvironment,
-  NewPrivateEnvironment,
+  DeclarativeEnvironmentRecord,
+  PrivateEnvironmentRecord,
 } from '../environment.mjs';
 import {
   Q, X,
@@ -72,7 +72,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
   // 1. Let env be the LexicalEnvironment of the running execution context.
   const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 2. Let classScope be NewDeclarativeEnvironment(env).
-  const classScope = NewDeclarativeEnvironment(env);
+  const classScope = new DeclarativeEnvironmentRecord(env);
   // 3. If classBinding is not undefined, then
   if (classBinding !== Value.undefined) {
     // a. Perform classScopeEnv.CreateImmutableBinding(classBinding, true).
@@ -81,7 +81,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
   // 4. Let outerPrivateEnvironment be the running execution context's PrivateEnvironment.
   const outerPrivateEnvironment = surroundingAgent.runningExecutionContext.PrivateEnvironment;
   // 5. Let classPrivateEnvironment be NewPrivateEnvironment(outerPrivateEnvironment).
-  const classPrivateEnvironment = NewPrivateEnvironment(outerPrivateEnvironment);
+  const classPrivateEnvironment = new PrivateEnvironmentRecord(outerPrivateEnvironment);
   // 6. If ClassBody is present, then
   if (ClassBody) {
     // a. For each String dn of the PrivateBoundIdentifiers of ClassBody, do

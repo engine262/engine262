@@ -3,7 +3,7 @@ import { surroundingAgent } from '../engine.mjs';
 import { Value } from '../value.mjs';
 import { ToObject, GetValue } from '../abstract-ops/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
-import { NewObjectEnvironment } from '../environment.mjs';
+import { ObjectEnvironmentRecord } from '../environment.mjs';
 import {
   UpdateEmpty,
   Completion,
@@ -22,7 +22,7 @@ export function* Evaluate_WithStatement({ Expression, Statement }: ParseNode.Wit
   // 3. Let oldEnv be the running execution context's LexicalEnvironment.
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 4. Let newEnv be NewObjectEnvironment(obj, true, oldEnv).
-  const newEnv = NewObjectEnvironment(obj, Value.true, oldEnv);
+  const newEnv = new ObjectEnvironmentRecord(obj, Value.true, oldEnv);
   // 5. Set the running execution context's LexicalEnvironment to newEnv.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = newEnv;
   // 6. Let C be the result of evaluating Statement.

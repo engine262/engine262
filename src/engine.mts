@@ -13,6 +13,7 @@ import {
   CleanupFinalizationRegistry,
   CreateArrayFromList,
   FinishLoadingImportedModule,
+  Realm,
 } from './abstract-ops/all.mjs';
 import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
 import { Evaluate } from './evaluator.mjs';
@@ -33,7 +34,7 @@ export const FEATURES = Object.freeze([
   },
 ].map(Object.freeze));
 
-class ExecutionContextStack extends Array {
+class ExecutionContextStack extends Array<ExecutionContext> {
   // This ensures that only the length taking overload is supported.
   // This is necessary to support `ArraySpeciesCreate`, which invokes
   // the constructor with argument `length`:
@@ -107,7 +108,7 @@ export class Agent {
   }
 
   // Generate a throw completion using message templates
-  Throw(type, template, ...templateArgs) {
+  Throw<K extends keyof typeof messages>(type: string | Value, template: K, ...templateArgs: Parameters<typeof messages[K]>): ThrowCompletion {
     if (type instanceof Value) {
       return ThrowCompletion(type);
     }
@@ -167,7 +168,7 @@ export function setSurroundingAgent(a) {
 export class ExecutionContext {
   codeEvaluationState;
   Function;
-  Realm;
+  Realm: Realm;
   ScriptOrModule;
   VariableEnvironment;
   LexicalEnvironment;

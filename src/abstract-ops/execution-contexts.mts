@@ -5,7 +5,9 @@ import {
   GetIdentifierReference,
   EnvironmentRecord,
 } from '../environment.mjs';
-import { Value } from '../value.mjs';
+import {
+  BooleanValue, JSStringValue, NullValue, Value,
+} from '../value.mjs';
 import { Assert } from './all.mjs';
 
 // This file covers abstract operations defined in
@@ -23,7 +25,7 @@ export function GetActiveScriptOrModule() {
 }
 
 /** https://tc39.es/ecma262/#sec-resolvebinding */
-export function ResolveBinding(name, env, strict) {
+export function ResolveBinding(name: JSStringValue, env?: EnvironmentRecord | NullValue, strict?: boolean) {
   // 1. If env is not present or if env is undefined, then
   if (env === undefined || env === Value.undefined) {
     // a. Set env to the running execution context's LexicalEnvironment.

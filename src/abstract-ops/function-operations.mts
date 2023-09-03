@@ -27,7 +27,6 @@ import {
   EnvironmentRecord,
   FunctionEnvironmentRecord,
   GlobalEnvironmentRecord,
-  NewFunctionEnvironment,
 } from '../environment.mjs';
 import { unwind, type Mutable } from '../helpers.mjs';
 import type { ParseNode } from '../parser/ParseNode.mjs';
@@ -70,7 +69,7 @@ export interface ECMAScriptFunctionObject extends BaseFunctionObject {
   readonly Realm;
   readonly ThisMode: 'lexical' | 'strict' | 'global';
   readonly Strict;
-  readonly HomeObject: ObjectValue;
+  readonly HomeObject: ObjectValue | UndefinedValue;
   readonly SourceText: string;
   readonly Fields: readonly ClassFieldDefinitionRecord[];
   readonly PrivateMethods: readonly PrivateElementRecord[];
@@ -112,7 +111,7 @@ export function PrepareForOrdinaryCall(F: ECMAScriptFunctionObject, newTarget: O
   // 7. Set the ScriptOrModule of calleeContext to F.[[ScriptOrModule]].
   calleeContext.ScriptOrModule = F.ScriptOrModule;
   // 8. Let localEnv be NewFunctionEnvironment(F, newTarget).
-  const localEnv = NewFunctionEnvironment(F, newTarget);
+  const localEnv = new FunctionEnvironmentRecord(F, newTarget);
   // 9. Set the LexicalEnvironment of calleeContext to localEnv.
   calleeContext.LexicalEnvironment = localEnv;
   // 10. Set the VariableEnvironment of calleeContext to localEnv.

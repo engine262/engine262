@@ -1,15 +1,16 @@
 // @ts-nocheck
 import { Parser, type ParserOptions } from './parser/Parser.mjs';
 import { RegExpParser, type RegExpParserContext } from './parser/RegExpParser.mjs';
-import { surroundingAgent } from './engine.mjs';
+import { surroundingAgent, type GCMarker } from './engine.mjs';
 import { SourceTextModuleRecord } from './modules.mjs';
-import { Value } from './value.mjs';
+import { JSStringValue, ObjectValue, Value } from './value.mjs';
 import {
   Get,
   Set,
   Call,
   CreateDefaultExportSyntheticModule,
   Realm,
+  type BuiltinFunctionObject,
 } from './abstract-ops/all.mjs';
 import { Q, X } from './completion.mjs';
 import {
@@ -19,16 +20,17 @@ import {
   ImportedLocalNames,
 } from './static-semantics/all.mjs';
 import { ValueSet, kInternal } from './helpers.mjs';
+import type { ParseNode } from './parser/ParseNode.mjs';
 
 export { Parser, RegExpParser };
 
 function handleError(e: unknown) {
-  if (e.name === 'SyntaxError') {
-    const v = surroundingAgent.Throw('SyntaxError', 'Raw', e.message).Value;
+  if (e instanceof SyntaxError) {
+    const v = surroundingAgent.Throw('SyntaxError', 'Raw', e.message).Value as ObjectValue;
     if (e.decoration) {
       const stackString = Value('stack');
-      const stack = X(Get(v, stackString)).stringValue();
-      const newStackString = `${e.decoration}\n${stack}`;
+      const stack = X(Get(v, stackString));
+      const newStackString = `${e.decoration}\n${stack instanceof JSStringValue ? stack.stringValue() : ''}`;
       X(Set(v, stackString, Value(newStackString), Value.true));
     }
     return v;
@@ -75,7 +77,7 @@ export function ParseScript(sourceText: string, realm: Realm, hostDefined = {}) 
     ECMAScriptCode: body,
     LoadedModules: [],
     HostDefined: hostDefined,
-    mark(m) {
+    mark(m: GCMarker) {
       m(this.Realm);
       m(this.Environment);
       for (const v of this.LoadedModules) {
@@ -85,7 +87,11 @@ export function ParseScript(sourceText: string, realm: Realm, hostDefined = {}) 
   };
 }
 
-export function ParseModule(sourceText: string, realm: Realm, hostDefined = {}) {
+export interface ParseModuleHostDefined {
+  readonly specifier?: string;
+  readonly SourceTextModuleRecord?: typeof SourceTextModuleRecord;
+}
+export function ParseModule(sourceText: string, realm: Realm, hostDefined: ParseModuleHostDefined = {}) {
   // 1. Assert: sourceText is an ECMAScript source text (see clause 10).
   // 2. Parse sourceText using Module as the goal symbol and analyse the parse result for
   //    any Early Error conditions. If the parse was successful and no early errors were found,
@@ -94,7 +100,7 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined = {}) 
   //    early error detection may be interweaved in an implementation-dependent manner. If more
   //    than one parsing error or early error is present, the number and ordering of error
   //    objects in the list is implementation-dependent, but at least one must be present.
-  const body = wrappedParse({ source: sourceText, specifier: hostDefined.specifier }, (p) => p.parseModule());
+  const body = wrappedParse<ParseNode.Module>({ source: sourceText, specifier: hostDefined.specifier }, (p) => p.parseModule());
   // 3. If body is a List of errors, return body.
   if (Array.isArray(body)) {
     return body;
@@ -177,9 +183,9 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined = {}) 
 }
 
 /** https://tc39.es/ecma262/#sec-parsejsonmodule */
-export function ParseJSONModule(sourceText: string, realm: Realm, hostDefined: unknown) {
+export function ParseJSONModule(sourceText: Value, realm: Realm, hostDefined: unknown) {
   // 1. Let jsonParse be realm's intrinsic object named "%JSON.parse%".
-  const jsonParse = realm.Intrinsics['%JSON.parse%'];
+  const jsonParse = realm.Intrinsics['%JSON.parse%'] as BuiltinFunctionObject;
   // 1. Let json be ? Call(jsonParse, undefined, « sourceText »).
   const json = Q(Call(jsonParse, Value.undefined, [sourceText]));
   // 1. Return CreateDefaultExportSyntheticModule(json, realm, hostDefined).

@@ -1,25 +1,25 @@
 // @ts-nocheck
 import { surroundingAgent } from './engine.mjs';
 import {
-  Type, JSStringValue, ObjectValue, Value, wellKnownSymbols,
+  Type, JSStringValue, ObjectValue, Value, wellKnownSymbols, BooleanValue, NumberValue, BigIntValue, SymbolValue, PrivateName, UndefinedValue,
 } from './value.mjs';
 import {
   Call, IsArray, Get, LengthOfArrayLike,
-  EscapeRegExpPattern, R,
+  EscapeRegExpPattern, R, Realm, type BuiltinFunctionObject,
 } from './abstract-ops/all.mjs';
 import { Q, X } from './completion.mjs';
 
 const bareKeyRe = /^[a-zA-Z_][a-zA-Z_0-9]*$/;
 
-const getObjectTag = (value, wrap) => {
-  let s;
+function getObjectTag(value: ObjectValue, wrap: boolean): string {
+  let s = '';
   try {
     s = X(Get(value, wellKnownSymbols.toStringTag)).stringValue();
-  } catch {}
+  } catch { }
   try {
     const c = X(Get(value, Value('constructor')));
     s = X(Get(c, Value('name'))).stringValue();
-  } catch {}
+  } catch { }
   if (s) {
     if (wrap) {
       return `[${s}] `;
@@ -27,12 +27,12 @@ const getObjectTag = (value, wrap) => {
     return s;
   }
   return '';
-};
+}
 
-const compactObject = (realm, value) => {
+const compactObject = (realm: Realm, value: ObjectValue) => {
   try {
     const toString = X(Get(value, Value('toString')));
-    const objectToString = realm.Intrinsics['%Object.prototype.toString%'];
+    const objectToString = realm.Intrinsics['%Object.prototype.toString%'] as BuiltinFunctionObject;
     if (toString.nativeFunction === objectToString.nativeFunction) {
       return X(Call(toString, value)).stringValue();
     } else {
@@ -56,22 +56,22 @@ const INSPECTORS = {
   Completion: (v, ctx, i) => i(v.Value),
   Null: () => 'null',
   Undefined: () => 'undefined',
-  Boolean: (v) => v.booleanValue().toString(),
-  Number: (v) => {
+  Boolean: (v: BooleanValue) => v.booleanValue().toString(),
+  Number: (v: NumberValue) => {
     const n = R(v);
     if (n === 0 && Object.is(n, -0)) {
       return '-0';
     }
     return n.toString();
   },
-  BigInt: (v) => `${R(v)}n`,
-  String: (v) => {
+  BigInt: (v: BigIntValue) => `${R(v)}n`,
+  String: (v: JSStringValue) => {
     const s = JSON.stringify(v.stringValue()).slice(1, -1);
     return `'${s}'`;
   },
-  Symbol: (v) => `Symbol(${v.Description === Value.undefined ? '' : v.Description.stringValue()})`,
-  PrivateName: (v) => v.Description.stringValue(),
-  Object: (v, ctx, i) => {
+  Symbol: (v: SymbolValue) => `Symbol(${v.Description instanceof UndefinedValue ? '' : v.Description.stringValue()})`,
+  PrivateName: (v: PrivateName) => v.Description.stringValue(),
+  Object: (v: ObjectValue, ctx, i) => {
     if (ctx.inspected.includes(v)) {
       return '[Circular]';
     }

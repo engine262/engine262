@@ -187,9 +187,9 @@ export class JSStringValue extends PrimitiveValue {
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-symbol-type */
 export class SymbolValue extends PrimitiveValue {
   declare readonly type: 'Symbol'; // defined on prototype by static block
-  readonly Description: JSStringValue;
+  readonly Description: JSStringValue | UndefinedValue;
 
-  constructor(Description: JSStringValue) {
+  constructor(Description: JSStringValue | UndefinedValue) {
     super();
     this.Description = Description;
   }
@@ -810,7 +810,7 @@ export class PrivateName {
 }
 
 export class ReferenceRecord {
-  readonly Base: 'unresolvable' | Value;
+  readonly Base: 'unresolvable' | Value | EnvironmentRecord;
   readonly ReferencedName: JSStringValue | SymbolValue | PrivateName;
   readonly Strict: BooleanValue;
   readonly ThisValue: ObjectValue | undefined;

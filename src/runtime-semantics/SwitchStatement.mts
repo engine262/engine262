@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { surroundingAgent } from '../engine.mjs';
 import { Evaluate } from '../evaluator.mjs';
-import { NewDeclarativeEnvironment } from '../environment.mjs';
+import { DeclarativeEnvironmentRecord } from '../environment.mjs';
 import { Assert, GetValue, StrictEqualityComparison } from '../abstract-ops/all.mjs';
 import { Value } from '../value.mjs';
 import {
@@ -190,7 +190,7 @@ export function* Evaluate_SwitchStatement({ Expression, CaseBlock }: ParseNode.S
   // 3. Let oldEnv be the running execution context's LexicalEnvironment.
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 4. Let blockEnv be NewDeclarativeEnvironment(oldEnv).
-  const blockEnv = NewDeclarativeEnvironment(oldEnv);
+  const blockEnv = new DeclarativeEnvironmentRecord(oldEnv);
   // 5. Perform BlockDeclarationInstantiation(CaseBlock, blockEnv).
   BlockDeclarationInstantiation(CaseBlock, blockEnv);
   // 6. Set the running execution context's LexicalEnvironment to blockEnv.
@@ -210,7 +210,7 @@ export function* Evaluate_SwitchStatement({ Expression, CaseBlock }: ParseNode.S
 //   DefaultClause :
 //     `case` `default` `:`
 //     `case` `default` `:` StatementList
-export function* Evaluate_CaseClause({ StatementList }: ParseNode.CaseClause) {
+export function* Evaluate_CaseClause({ StatementList }: ParseNode.CaseClause | ParseNode.DefaultClause) {
   if (!StatementList) {
     // 1. Return NormalCompletion(empty).
     return NormalCompletion(undefined);

@@ -20,7 +20,7 @@ import {
 } from '../completion.mjs';
 import { wrappedParse } from '../parse.mjs';
 import {
-  NewDeclarativeEnvironment,
+  DeclarativeEnvironmentRecord,
   FunctionEnvironmentRecord,
   GlobalEnvironmentRecord,
   ObjectEnvironmentRecord,
@@ -135,14 +135,14 @@ export function PerformEval(x, callerRealm, strictCaller, direct) {
   // 15. If direct is true, then
   if (direct === true) {
     // a. Let lexEnv be NewDeclarativeEnvironment(runningContext's LexicalEnvironment).
-    lexEnv = NewDeclarativeEnvironment(runningContext.LexicalEnvironment);
+    lexEnv = new DeclarativeEnvironmentRecord(runningContext.LexicalEnvironment);
     // b. Let varEnv be runningContext's VariableEnvironment.
     varEnv = runningContext.VariableEnvironment;
     // c. Let privateEnv be runningContext's PrivateEnvironment.
     privateEnv = runningContext.PrivateEnvironment;
   } else { // 16. Else,
     // a. Let lexEnv be NewDeclarativeEnvironment(evalRealm.[[GlobalEnv]]).
-    lexEnv = NewDeclarativeEnvironment(evalRealm.GlobalEnv);
+    lexEnv = new DeclarativeEnvironmentRecord(evalRealm.GlobalEnv);
     // b. Let varEnv be evalRealm.[[GlobalEnv]].
     varEnv = evalRealm.GlobalEnv;
     // c. Let privateEnv be null.

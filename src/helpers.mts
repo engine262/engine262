@@ -1,10 +1,10 @@
 // @ts-nocheck
 import { ExecutionContext, type GCMarker, surroundingAgent } from './engine.mjs';
 import {
-  Value, Descriptor, JSStringValue, NumberValue, ObjectValue, UndefinedValue, NullValue,
+  Value, Descriptor, JSStringValue, NumberValue, ObjectValue, UndefinedValue, NullValue, type PropertyKeyValue,
 } from './value.mjs';
 import {
-  ToString, DefinePropertyOrThrow, CreateBuiltinFunction, R,
+  ToString, DefinePropertyOrThrow, CreateBuiltinFunction, R, type BuiltinFunctionObject,
 } from './abstract-ops/all.mjs';
 import { Completion, X } from './completion.mjs';
 
@@ -19,7 +19,7 @@ function convertValueForKey<T>(key: JSStringValue | NumberValue | T): string | n
   return key;
 }
 
-export class ValueMap<K, V> {
+export class ValueMap<K extends PropertyKeyValue, V> {
   private map: Map<K, V>;
   constructor() {
     this.map = new Map();
@@ -30,20 +30,20 @@ export class ValueMap<K, V> {
   }
 
   get(key: K) {
-    return this.map.get(convertValueForKey(key));
+    return this.map.get(convertValueForKey(key) as K);
   }
 
   set(key: K, value: V) {
-    this.map.set(convertValueForKey(key), value);
+    this.map.set(convertValueForKey(key) as K, value);
     return this;
   }
 
   has(key: K) {
-    return this.map.has(convertValueForKey(key));
+    return this.map.has(convertValueForKey(key) as K);
   }
 
   delete(key: K) {
-    return this.map.delete(convertValueForKey(key));
+    return this.map.delete(convertValueForKey(key) as K);
   }
 
   * keys() {
@@ -96,16 +96,16 @@ export class ValueSet<T> {
   }
 
   add(item: T) {
-    this.set.add(convertValueForKey(item));
+    this.set.add(convertValueForKey(item) as T);
     return this;
   }
 
   has(item: T) {
-    return this.set.has(convertValueForKey(item));
+    return this.set.has(convertValueForKey(item) as T);
   }
 
   delete(item: T) {
-    return this.set.delete(convertValueForKey(item));
+    return this.set.delete(convertValueForKey(item) as T);
   }
 
   values() {
@@ -130,7 +130,7 @@ export class ValueSet<T> {
 }
 
 export class OutOfRange extends RangeError {
-  detail: unknown;
+  private detail: unknown;
   /* c8 ignore next */
   constructor(fn: string, detail: unknown) {
     super(`${fn}() argument out of range`);
@@ -205,7 +205,7 @@ export class CallSite {
   }
 
   isNative() {
-    return !!(this.context.Function as FunctionObjectValue).nativeFunction;
+    return !!(this.context.Function as BuiltinFunctionObject).nativeFunction;
   }
 
   getFunctionName() {

@@ -9,7 +9,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { StringValue } from '../static-semantics/all.mjs';
 import { X } from '../completion.mjs';
-import { NewDeclarativeEnvironment } from '../environment.mjs';
+import { DeclarativeEnvironmentRecord } from '../environment.mjs';
 import type { ParseNode } from '../parser/ParseNode.mjs';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncfunctionexpression */
@@ -23,7 +23,7 @@ export function InstantiateAsyncFunctionExpression(AsyncFunctionExpression: Pars
     // 3. Let scope be the LexicalEnvironment of the running execution context.
     const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
     // 4. Let funcEnv be ! NewDeclarativeEnvironment(scope).
-    const funcEnv = X(NewDeclarativeEnvironment(scope));
+    const funcEnv = X(new DeclarativeEnvironmentRecord(scope));
     // 5. Perform ! funcEnv.CreateImmutableBinding(name, false).
     X(funcEnv.CreateImmutableBinding(name, Value.false));
     // 6. Let privateScope be the running execution context's PrivateEnvironment.

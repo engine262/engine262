@@ -13,13 +13,13 @@ import { Token } from './tokens.mjs';
 
 export interface ParserOptions {
   readonly source: string;
-  readonly specifier: string;
+  readonly specifier?: string;
   readonly json?: boolean;
 }
 
 export class Parser extends LanguageParser {
   protected readonly source: string;
-  protected readonly specifier: string;
+  protected readonly specifier?: string;
   readonly earlyErrors: Set<SyntaxError>;
   readonly state: {
     hasTopLevelAwait: boolean;
@@ -182,12 +182,5 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   unexpected(...args: [(number | Locatable)?, ...Parameters<typeof messages['UnexpectedToken']>]) {
     return this.raise('UnexpectedToken', ...args);
-  }
-}
-
-declare global {
-  interface SyntaxError {
-    decoration?: string;
-    position?: number
   }
 }

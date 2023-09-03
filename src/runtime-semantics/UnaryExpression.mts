@@ -25,7 +25,7 @@ import type { ParseNode } from '../parser/ParseNode.mjs';
 //   UnaryExpression : `delete` UnaryExpression
 function* Evaluate_UnaryExpression_Delete({ UnaryExpression }: ParseNode.UnaryExpression) {
   // 1. Let ref be the result of evaluating UnaryExpression.
-  const ref = yield* Evaluate(UnaryExpression);
+  const ref = Q(yield* Evaluate(UnaryExpression));
   // 2. ReturnIfAbrupt(ref).
   ReturnIfAbrupt(ref);
   // 3. If ref is not a Reference Record, return true.
@@ -80,7 +80,7 @@ function* Evaluate_UnaryExpression_Void({ UnaryExpression }: ParseNode.UnaryExpr
 // UnaryExpression : `typeof` UnaryExpression
 function* Evaluate_UnaryExpression_Typeof({ UnaryExpression }: ParseNode.UnaryExpression) {
   // 1. Let val be the result of evaluating UnaryExpression.
-  let val = yield* Evaluate(UnaryExpression);
+  let val = Q(yield* Evaluate(UnaryExpression));
   // 2. If Type(val) is Reference, then
   if (val instanceof ReferenceRecord) {
     // a. If IsUnresolvableReference(val) is true, return "undefined".
