@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 5f01a0ad3b3564979ba8420033caf0de21d32063
+ * engine262 0.0.1 94ff0aaf810d42c85266574c9d4d8a453191e55b
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -644,7 +644,6 @@
     }
   }
 
-  // @ts-nocheck
   /** https://tc39.es/ecma262/#sec-numericvalue */
 
   function NumericValue(node) {
@@ -3074,7 +3073,6 @@
     return String.fromCodePoint(cu1, cu2);
   }
 
-  // @ts-nocheck
   /** https://tc39.es/ecma262/#sec-identifiers-runtime-semantics-evaluation */
   // IdentifierReference :
   //   Identifier
@@ -3091,7 +3089,6 @@
     return ResolveThisBinding();
   }
 
-  // @ts-nocheck
   /** https://tc39.es/ecma262/#sec-literals-runtime-semantics-evaluation */
   // Literal :
   //   NullLiteral
@@ -3102,22 +3099,22 @@
     switch (Literal.type) {
       case 'NullLiteral':
         // 1. Return null.
-        return Value.null;
+        return NormalCompletion(Value.null);
       case 'BooleanLiteral':
         // 1. If BooleanLiteral is the token false, return false.
         if (Literal.value === false) {
-          return Value.false;
+          return NormalCompletion(Value.false);
         }
         // 2. If BooleanLiteral is the token true, return true.
         if (Literal.value === true) {
-          return Value.true;
+          return NormalCompletion(Value.true);
         }
         throw new OutOfRange$1('Evaluate_Literal', Literal);
       case 'NumericLiteral':
         // 1. Return the NumericValue of NumericLiteral as defined in 11.8.3.
-        return NumericValue(Literal);
+        return NormalCompletion(NumericValue(Literal));
       case 'StringLiteral':
-        return StringValue(Literal);
+        return NormalCompletion(StringValue(Literal));
       /*c8 ignore next*/default:
         throw new OutOfRange$1('Evaluate_Literal', Literal);
     }
@@ -3372,7 +3369,7 @@
     // 1. Let env be the LexicalEnvironment of the running execution context.
     const env = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment;
     // 2. Let classScope be NewDeclarativeEnvironment(env).
-    const classScope = NewDeclarativeEnvironment(env);
+    const classScope = new DeclarativeEnvironmentRecord(env);
     // 3. If classBinding is not undefined, then
     if (classBinding !== Value.undefined) {
       // a. Perform classScopeEnv.CreateImmutableBinding(classBinding, true).
@@ -3381,7 +3378,7 @@
     // 4. Let outerPrivateEnvironment be the running execution context's PrivateEnvironment.
     const outerPrivateEnvironment = exports.surroundingAgent.runningExecutionContext.PrivateEnvironment;
     // 5. Let classPrivateEnvironment be NewPrivateEnvironment(outerPrivateEnvironment).
-    const classPrivateEnvironment = NewPrivateEnvironment(outerPrivateEnvironment);
+    const classPrivateEnvironment = new PrivateEnvironmentRecord(outerPrivateEnvironment);
     // 6. If ClassBody is present, then
     if (ClassBody) {
       // a. For each String dn of the PrivateBoundIdentifiers of ClassBody, do
@@ -3986,8 +3983,17 @@
     if (AssignmentOperator === '=') {
       // 1. If LeftHandSideExpression is neither an ObjectLiteral nor an ArrayLiteral, then
       if (LeftHandSideExpression.type !== 'ObjectLiteral' && LeftHandSideExpression.type !== 'ArrayLiteral') {
+        let _temp = yield* Evaluate(LeftHandSideExpression);
+        /* c8 ignore if */
+        if (_temp instanceof AbruptCompletion) {
+          return _temp;
+        }
+        /* c8 ignore if */
+        if (_temp instanceof Completion) {
+          _temp = _temp.Value;
+        }
         // a. Let lref be the result of evaluating LeftHandSideExpression.
-        let lref = yield* Evaluate(LeftHandSideExpression);
+        let lref = _temp;
         // b. ReturnIfAbrupt(lref).
         /* c8 ignore if */
         if (lref instanceof AbruptCompletion) {
@@ -4007,26 +4013,26 @@
           // i. Let rref be the result of evaluating AssignmentExpression.
           const rref = yield* Evaluate(AssignmentExpression);
           // ii. Let rval be ? GetValue(rref).
-          let _temp = GetValue(rref);
+          let _temp2 = GetValue(rref);
           /* c8 ignore if */
-          if (_temp instanceof AbruptCompletion) {
-            return _temp;
+          if (_temp2 instanceof AbruptCompletion) {
+            return _temp2;
           }
           /* c8 ignore if */
-          if (_temp instanceof Completion) {
-            _temp = _temp.Value;
+          if (_temp2 instanceof Completion) {
+            _temp2 = _temp2.Value;
           }
-          rval = _temp;
+          rval = _temp2;
         }
         // e. Perform ? PutValue(lref, rval).
-        let _temp2 = PutValue(lref, rval);
+        let _temp3 = PutValue(lref, rval);
         /* c8 ignore if */
-        if (_temp2 instanceof AbruptCompletion) {
-          return _temp2;
+        if (_temp3 instanceof AbruptCompletion) {
+          return _temp3;
         }
         /* c8 ignore if */
-        if (_temp2 instanceof Completion) {
-          _temp2 = _temp2.Value;
+        if (_temp3 instanceof Completion) {
+          _temp3 = _temp3.Value;
         }
         // f. Return rval.
         return rval;
@@ -4036,18 +4042,7 @@
       // 3. Let rref be the result of evaluating AssignmentExpression.
       const rref = yield* Evaluate(AssignmentExpression);
       // 3. Let rval be ? GetValue(rref).
-      let _temp3 = GetValue(rref);
-      /* c8 ignore if */
-      if (_temp3 instanceof AbruptCompletion) {
-        return _temp3;
-      }
-      /* c8 ignore if */
-      if (_temp3 instanceof Completion) {
-        _temp3 = _temp3.Value;
-      }
-      const rval = _temp3;
-      // 4. Perform ? DestructuringAssignmentEvaluation of assignmentPattern using rval as the argument.
-      let _temp4 = yield* DestructuringAssignmentEvaluation(assignmentPattern, rval);
+      let _temp4 = GetValue(rref);
       /* c8 ignore if */
       if (_temp4 instanceof AbruptCompletion) {
         return _temp4;
@@ -4056,13 +4051,9 @@
       if (_temp4 instanceof Completion) {
         _temp4 = _temp4.Value;
       }
-      // 5. Return rval.
-      return rval;
-    } else if (AssignmentOperator === '&&=') {
-      // 1. Let lref be the result of evaluating LeftHandSideExpression.
-      const lref = yield* Evaluate(LeftHandSideExpression);
-      // 2. Let lval be ? GetValue(lref).
-      let _temp5 = GetValue(lref);
+      const rval = _temp4;
+      // 4. Perform ? DestructuringAssignmentEvaluation of assignmentPattern using rval as the argument.
+      let _temp5 = yield* DestructuringAssignmentEvaluation(assignmentPattern, rval);
       /* c8 ignore if */
       if (_temp5 instanceof AbruptCompletion) {
         return _temp5;
@@ -4071,15 +4062,39 @@
       if (_temp5 instanceof Completion) {
         _temp5 = _temp5.Value;
       }
-      const lval = _temp5;
-      // 3. Let lbool be ! ToBoolean(lval).
-      let _temp6 = ToBoolean(lval);
-      Assert(!(_temp6 instanceof AbruptCompletion), "ToBoolean(lval)" + ' returned an abrupt completion');
+      // 5. Return rval.
+      return rval;
+    } else if (AssignmentOperator === '&&=') {
+      let _temp6 = yield* Evaluate(LeftHandSideExpression);
+      /* c8 ignore if */
+      if (_temp6 instanceof AbruptCompletion) {
+        return _temp6;
+      }
       /* c8 ignore if */
       if (_temp6 instanceof Completion) {
         _temp6 = _temp6.Value;
       }
-      const lbool = _temp6;
+      // 1. Let lref be the result of evaluating LeftHandSideExpression.
+      const lref = _temp6;
+      // 2. Let lval be ? GetValue(lref).
+      let _temp7 = GetValue(lref);
+      /* c8 ignore if */
+      if (_temp7 instanceof AbruptCompletion) {
+        return _temp7;
+      }
+      /* c8 ignore if */
+      if (_temp7 instanceof Completion) {
+        _temp7 = _temp7.Value;
+      }
+      const lval = _temp7;
+      // 3. Let lbool be ! ToBoolean(lval).
+      let _temp8 = ToBoolean(lval);
+      Assert(!(_temp8 instanceof AbruptCompletion), "ToBoolean(lval)" + ' returned an abrupt completion');
+      /* c8 ignore if */
+      if (_temp8 instanceof Completion) {
+        _temp8 = _temp8.Value;
+      }
+      const lbool = _temp8;
       // 4. If lbool is false, return lval.
       if (lbool === Value.false) {
         return lval;
@@ -4094,51 +4109,60 @@
         // a. Let rref be the result of evaluating AssignmentExpression.
         const rref = yield* Evaluate(AssignmentExpression);
         // b. Let rval be ? GetValue(rref).
-        let _temp7 = GetValue(rref);
+        let _temp9 = GetValue(rref);
         /* c8 ignore if */
-        if (_temp7 instanceof AbruptCompletion) {
-          return _temp7;
+        if (_temp9 instanceof AbruptCompletion) {
+          return _temp9;
         }
         /* c8 ignore if */
-        if (_temp7 instanceof Completion) {
-          _temp7 = _temp7.Value;
+        if (_temp9 instanceof Completion) {
+          _temp9 = _temp9.Value;
         }
-        rval = _temp7;
+        rval = _temp9;
       }
       // 7. Perform ? PutValue(lref, rval).
-      let _temp8 = PutValue(lref, rval);
+      let _temp10 = PutValue(lref, rval);
       /* c8 ignore if */
-      if (_temp8 instanceof AbruptCompletion) {
-        return _temp8;
+      if (_temp10 instanceof AbruptCompletion) {
+        return _temp10;
       }
-      /* c8 ignore if */
-      if (_temp8 instanceof Completion) {
-        _temp8 = _temp8.Value;
-      }
-      // 8. Return rval.
-      return rval;
-    } else if (AssignmentOperator === '||=') {
-      // 1. Let lref be the result of evaluating LeftHandSideExpression.
-      const lref = yield* Evaluate(LeftHandSideExpression);
-      // 2. Let lval be ? GetValue(lref).
-      let _temp9 = GetValue(lref);
-      /* c8 ignore if */
-      if (_temp9 instanceof AbruptCompletion) {
-        return _temp9;
-      }
-      /* c8 ignore if */
-      if (_temp9 instanceof Completion) {
-        _temp9 = _temp9.Value;
-      }
-      const lval = _temp9;
-      // 3. Let lbool be ! ToBoolean(lval).
-      let _temp10 = ToBoolean(lval);
-      Assert(!(_temp10 instanceof AbruptCompletion), "ToBoolean(lval)" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp10 instanceof Completion) {
         _temp10 = _temp10.Value;
       }
-      const lbool = _temp10;
+      // 8. Return rval.
+      return rval;
+    } else if (AssignmentOperator === '||=') {
+      let _temp11 = yield* Evaluate(LeftHandSideExpression);
+      /* c8 ignore if */
+      if (_temp11 instanceof AbruptCompletion) {
+        return _temp11;
+      }
+      /* c8 ignore if */
+      if (_temp11 instanceof Completion) {
+        _temp11 = _temp11.Value;
+      }
+      // 1. Let lref be the result of evaluating LeftHandSideExpression.
+      const lref = _temp11;
+      // 2. Let lval be ? GetValue(lref).
+      let _temp12 = GetValue(lref);
+      /* c8 ignore if */
+      if (_temp12 instanceof AbruptCompletion) {
+        return _temp12;
+      }
+      /* c8 ignore if */
+      if (_temp12 instanceof Completion) {
+        _temp12 = _temp12.Value;
+      }
+      const lval = _temp12;
+      // 3. Let lbool be ! ToBoolean(lval).
+      let _temp13 = ToBoolean(lval);
+      Assert(!(_temp13 instanceof AbruptCompletion), "ToBoolean(lval)" + ' returned an abrupt completion');
+      /* c8 ignore if */
+      if (_temp13 instanceof Completion) {
+        _temp13 = _temp13.Value;
+      }
+      const lbool = _temp13;
       // 4. If lbool is true, return lval.
       if (lbool === Value.true) {
         return lval;
@@ -4153,43 +4177,52 @@
         // a. Let rref be the result of evaluating AssignmentExpression.
         const rref = yield* Evaluate(AssignmentExpression);
         // b. Let rval be ? GetValue(rref).
-        let _temp11 = GetValue(rref);
+        let _temp14 = GetValue(rref);
         /* c8 ignore if */
-        if (_temp11 instanceof AbruptCompletion) {
-          return _temp11;
+        if (_temp14 instanceof AbruptCompletion) {
+          return _temp14;
         }
         /* c8 ignore if */
-        if (_temp11 instanceof Completion) {
-          _temp11 = _temp11.Value;
+        if (_temp14 instanceof Completion) {
+          _temp14 = _temp14.Value;
         }
-        rval = _temp11;
+        rval = _temp14;
       }
       // 7. Perform ? PutValue(lref, rval).
-      let _temp12 = PutValue(lref, rval);
+      let _temp15 = PutValue(lref, rval);
       /* c8 ignore if */
-      if (_temp12 instanceof AbruptCompletion) {
-        return _temp12;
+      if (_temp15 instanceof AbruptCompletion) {
+        return _temp15;
       }
       /* c8 ignore if */
-      if (_temp12 instanceof Completion) {
-        _temp12 = _temp12.Value;
+      if (_temp15 instanceof Completion) {
+        _temp15 = _temp15.Value;
       }
       // 8. Return rval.
       return rval;
     } else if (AssignmentOperator === '??=') {
+      let _temp16 = yield* Evaluate(LeftHandSideExpression);
+      /* c8 ignore if */
+      if (_temp16 instanceof AbruptCompletion) {
+        return _temp16;
+      }
+      /* c8 ignore if */
+      if (_temp16 instanceof Completion) {
+        _temp16 = _temp16.Value;
+      }
       // 1.Let lref be the result of evaluating LeftHandSideExpression.
-      const lref = yield* Evaluate(LeftHandSideExpression);
+      const lref = _temp16;
       // 2. Let lval be ? GetValue(lref).
-      let _temp13 = GetValue(lref);
+      let _temp17 = GetValue(lref);
       /* c8 ignore if */
-      if (_temp13 instanceof AbruptCompletion) {
-        return _temp13;
+      if (_temp17 instanceof AbruptCompletion) {
+        return _temp17;
       }
       /* c8 ignore if */
-      if (_temp13 instanceof Completion) {
-        _temp13 = _temp13.Value;
+      if (_temp17 instanceof Completion) {
+        _temp17 = _temp17.Value;
       }
-      const lval = _temp13;
+      const lval = _temp17;
       // 3. If lval is not undefined nor null, return lval.
       if (lval !== Value.undefined && lval !== Value.null) {
         return lval;
@@ -4204,56 +4237,65 @@
         // a. Let rref be the result of evaluating AssignmentExpression.
         const rref = yield* Evaluate(AssignmentExpression);
         // b. Let rval be ? GetValue(rref).
-        let _temp14 = GetValue(rref);
+        let _temp18 = GetValue(rref);
         /* c8 ignore if */
-        if (_temp14 instanceof AbruptCompletion) {
-          return _temp14;
+        if (_temp18 instanceof AbruptCompletion) {
+          return _temp18;
         }
         /* c8 ignore if */
-        if (_temp14 instanceof Completion) {
-          _temp14 = _temp14.Value;
+        if (_temp18 instanceof Completion) {
+          _temp18 = _temp18.Value;
         }
-        rval = _temp14;
+        rval = _temp18;
       }
       // 6. Perform ? PutValue(lref, rval).
-      let _temp15 = PutValue(lref, rval);
+      let _temp19 = PutValue(lref, rval);
       /* c8 ignore if */
-      if (_temp15 instanceof AbruptCompletion) {
-        return _temp15;
+      if (_temp19 instanceof AbruptCompletion) {
+        return _temp19;
       }
       /* c8 ignore if */
-      if (_temp15 instanceof Completion) {
-        _temp15 = _temp15.Value;
+      if (_temp19 instanceof Completion) {
+        _temp19 = _temp19.Value;
       }
       // 7. Return rval.
       return rval;
     } else {
+      let _temp20 = yield* Evaluate(LeftHandSideExpression);
+      /* c8 ignore if */
+      if (_temp20 instanceof AbruptCompletion) {
+        return _temp20;
+      }
+      /* c8 ignore if */
+      if (_temp20 instanceof Completion) {
+        _temp20 = _temp20.Value;
+      }
       // 1. Let lref be the result of evaluating LeftHandSideExpression.
-      const lref = yield* Evaluate(LeftHandSideExpression);
+      const lref = _temp20;
       // 2. Let lval be ? GetValue(lref).
-      let _temp16 = GetValue(lref);
+      let _temp21 = GetValue(lref);
       /* c8 ignore if */
-      if (_temp16 instanceof AbruptCompletion) {
-        return _temp16;
+      if (_temp21 instanceof AbruptCompletion) {
+        return _temp21;
       }
       /* c8 ignore if */
-      if (_temp16 instanceof Completion) {
-        _temp16 = _temp16.Value;
+      if (_temp21 instanceof Completion) {
+        _temp21 = _temp21.Value;
       }
-      const lval = _temp16;
+      const lval = _temp21;
       // 3. Let rref be the result of evaluating AssignmentExpression.
       const rref = yield* Evaluate(AssignmentExpression);
       // 4. Let rval be ? GetValue(rref).
-      let _temp17 = GetValue(rref);
+      let _temp22 = GetValue(rref);
       /* c8 ignore if */
-      if (_temp17 instanceof AbruptCompletion) {
-        return _temp17;
+      if (_temp22 instanceof AbruptCompletion) {
+        return _temp22;
       }
       /* c8 ignore if */
-      if (_temp17 instanceof Completion) {
-        _temp17 = _temp17.Value;
+      if (_temp22 instanceof Completion) {
+        _temp22 = _temp22.Value;
       }
-      const rval = _temp17;
+      const rval = _temp22;
       // 5. Let assignmentOpText be the source text matched by AssignmentOperator.
       const assignmentOpText = AssignmentOperator;
       // 6. Let opText be the sequence of Unicode code points associated with assignmentOpText in the following table:
@@ -4274,14 +4316,14 @@
       // 7. Let r be ApplyStringOrNumericBinaryOperator(lval, opText, rval).
       const r = ApplyStringOrNumericBinaryOperator(lval, opText, rval);
       // 8. Perform ? PutValue(lref, r).
-      let _temp18 = PutValue(lref, r);
+      let _temp23 = PutValue(lref, r);
       /* c8 ignore if */
-      if (_temp18 instanceof AbruptCompletion) {
-        return _temp18;
+      if (_temp23 instanceof AbruptCompletion) {
+        return _temp23;
       }
       /* c8 ignore if */
-      if (_temp18 instanceof Completion) {
-        _temp18 = _temp18.Value;
+      if (_temp23 instanceof Completion) {
+        _temp23 = _temp23.Value;
       }
       // 9. Return r.
       return r;
@@ -5235,9 +5277,7 @@
     // 3. Let arguments be the Arguments of expr.
     const args = expr.Arguments;
     // 4. Let ref be the result of evaluating memberExpr.
-    const ref = yield* Evaluate(memberExpr);
-    // 5. Let func be ? GetValue(ref).
-    let _temp = GetValue(ref);
+    let _temp = yield* Evaluate(memberExpr);
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) {
       return _temp;
@@ -5246,22 +5286,33 @@
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
     }
-    const func = _temp;
+    const ref = _temp;
+    // 5. Let func be ? GetValue(ref).
+    let _temp2 = GetValue(ref);
+    /* c8 ignore if */
+    if (_temp2 instanceof AbruptCompletion) {
+      return _temp2;
+    }
+    /* c8 ignore if */
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
+    }
+    const func = _temp2;
     // 6. If Type(ref) is Reference, IsPropertyReference(ref) is false, and GetReferencedName(ref) is "eval", then
     if (ref instanceof ReferenceRecord && IsPropertyReference(ref) === Value.false && ref.ReferencedName instanceof JSStringValue && ref.ReferencedName.stringValue() === 'eval') {
       // a. If SameValue(func, %eval%) is true, then
       if (SameValue(func, exports.surroundingAgent.intrinsic('%eval%')) === Value.true) {
-        let _temp2 = yield* ArgumentListEvaluation(args);
+        let _temp3 = yield* ArgumentListEvaluation(args);
         /* c8 ignore if */
-        if (_temp2 instanceof AbruptCompletion) {
-          return _temp2;
+        if (_temp3 instanceof AbruptCompletion) {
+          return _temp3;
         }
         /* c8 ignore if */
-        if (_temp2 instanceof Completion) {
-          _temp2 = _temp2.Value;
+        if (_temp3 instanceof Completion) {
+          _temp3 = _temp3.Value;
         }
         // i. Let argList be ? ArgumentListEvaluation of arguments.
-        const argList = _temp2;
+        const argList = _temp3;
         // ii. If argList has no elements, return undefined.
         if (argList.length === 0) {
           return Value.undefined;
@@ -5985,7 +6036,7 @@
       // b. Let calleeEnv be the LexicalEnvironment of calleeContext.
       const calleeEnv = calleeContext.LexicalEnvironment;
       // c. Let env be NewDeclarativeEnvironment(calleeEnv).
-      env = NewDeclarativeEnvironment(calleeEnv);
+      env = new DeclarativeEnvironmentRecord(calleeEnv);
       // d. Assert: The VariableEnvironment of calleeContext is calleeEnv.
       Assert(calleeContext.VariableEnvironment === calleeEnv, "calleeContext.VariableEnvironment === calleeEnv");
       // e. Set the LexicalEnvironment of calleeContext to env.
@@ -6108,7 +6159,7 @@
       // a. NOTE: A separate Environment Record is needed to ensure that closures created by expressions
       //    in the formal parameter list do not have visibility of declarations in the function body.
       // b. Let varEnv be NewDeclarativeEnvironment(env).
-      varEnv = NewDeclarativeEnvironment(env);
+      varEnv = new DeclarativeEnvironmentRecord(env);
       // c. Set the VariableEnvironment of calleeContext to varEnv.
       calleeContext.VariableEnvironment = varEnv;
       // d. Let instantiatedVarNames be a new empty List.
@@ -6151,7 +6202,7 @@
     // 30. If strict is false, then
     if (strict === false) {
       // a. Let lexEnv be NewDeclarativeEnvironment(varEnv).
-      lexEnv = NewDeclarativeEnvironment(varEnv);
+      lexEnv = new DeclarativeEnvironmentRecord(varEnv);
       // b. NOTE: Non-strict functions use a separate lexical Environment Record for top-level lexical declarations
       //    so that a direct eval can determine whether any var scoped declarations introduced by the eval code
       //    conflict with pre-existing top-level lexically scoped declarations. This is not needed for strict functions
@@ -7423,7 +7474,7 @@
     // 1. Let oldEnv be the running execution context's LexicalEnvironment.
     const oldEnv = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment;
     // 2. Let catchEnv be NewDeclarativeEnvironment(oldEnv).
-    const catchEnv = NewDeclarativeEnvironment(oldEnv);
+    const catchEnv = new DeclarativeEnvironmentRecord(oldEnv);
     // 3. For each element argName of the BoundNames of CatchParameter, do
     for (const argName of BoundNames(CatchParameter)) {
       let _temp = catchEnv.CreateMutableBinding(argName, Value.false);
@@ -7508,7 +7559,7 @@
     // 1. Let oldEnv be the running execution context's LexicalEnvironment.
     const oldEnv = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment;
     // 2. Let blockEnv be NewDeclarativeEnvironment(oldEnv).
-    const blockEnv = NewDeclarativeEnvironment(oldEnv);
+    const blockEnv = new DeclarativeEnvironmentRecord(oldEnv);
     // 3. Perform BlockDeclarationInstantiation(StatementList, blockEnv).
     BlockDeclarationInstantiation(StatementList, blockEnv);
     // 4. Set the running execution context's LexicalEnvironment to blockEnv.
@@ -7717,8 +7768,17 @@
   function* Evaluate_UnaryExpression_Delete({
     UnaryExpression
   }) {
+    let _temp = yield* Evaluate(UnaryExpression);
+    /* c8 ignore if */
+    if (_temp instanceof AbruptCompletion) {
+      return _temp;
+    }
+    /* c8 ignore if */
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
     // 1. Let ref be the result of evaluating UnaryExpression.
-    let ref = yield* Evaluate(UnaryExpression);
+    let ref = _temp;
     // 2. ReturnIfAbrupt(ref).
     /* c8 ignore if */
     if (ref instanceof AbruptCompletion) {
@@ -7746,24 +7806,24 @@
         return exports.surroundingAgent.Throw('ReferenceError', 'CannotDeleteSuper');
       }
       // b. Let baseObj be ! ToObject(ref.[[Base]]).
-      let _temp = ToObject(ref.Base);
-      Assert(!(_temp instanceof AbruptCompletion), "ToObject(ref.Base)" + ' returned an abrupt completion');
-      /* c8 ignore if */
-      if (_temp instanceof Completion) {
-        _temp = _temp.Value;
-      }
-      const baseObj = _temp;
-      // c. Let deleteStatus be ? baseObj.[[Delete]](ref.[[ReferencedName]]).
-      let _temp2 = baseObj.Delete(ref.ReferencedName);
-      /* c8 ignore if */
-      if (_temp2 instanceof AbruptCompletion) {
-        return _temp2;
-      }
+      let _temp2 = ToObject(ref.Base);
+      Assert(!(_temp2 instanceof AbruptCompletion), "ToObject(ref.Base)" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp2 instanceof Completion) {
         _temp2 = _temp2.Value;
       }
-      const deleteStatus = _temp2;
+      const baseObj = _temp2;
+      // c. Let deleteStatus be ? baseObj.[[Delete]](ref.[[ReferencedName]]).
+      let _temp3 = baseObj.Delete(ref.ReferencedName);
+      /* c8 ignore if */
+      if (_temp3 instanceof AbruptCompletion) {
+        return _temp3;
+      }
+      /* c8 ignore if */
+      if (_temp3 instanceof Completion) {
+        _temp3 = _temp3.Value;
+      }
+      const deleteStatus = _temp3;
       // d. If deleteStatus is false and ref.[[Strict]] is true, throw a TypeError exception.
       if (deleteStatus === Value.false && ref.Strict === Value.true) {
         return exports.surroundingAgent.Throw('TypeError', 'StrictModeDelete', ref.ReferencedName);
@@ -7790,14 +7850,14 @@
     // 1. Let expr be the result of evaluating UnaryExpression.
     const expr = yield* Evaluate(UnaryExpression);
     // 2. Perform ? GetValue(expr).
-    let _temp3 = GetValue(expr);
+    let _temp4 = GetValue(expr);
     /* c8 ignore if */
-    if (_temp3 instanceof AbruptCompletion) {
-      return _temp3;
+    if (_temp4 instanceof AbruptCompletion) {
+      return _temp4;
     }
     /* c8 ignore if */
-    if (_temp3 instanceof Completion) {
-      _temp3 = _temp3.Value;
+    if (_temp4 instanceof Completion) {
+      _temp4 = _temp4.Value;
     }
     // 3. Return undefined.
     return Value.undefined;
@@ -7809,8 +7869,17 @@
   function* Evaluate_UnaryExpression_Typeof({
     UnaryExpression
   }) {
+    let _temp5 = yield* Evaluate(UnaryExpression);
+    /* c8 ignore if */
+    if (_temp5 instanceof AbruptCompletion) {
+      return _temp5;
+    }
+    /* c8 ignore if */
+    if (_temp5 instanceof Completion) {
+      _temp5 = _temp5.Value;
+    }
     // 1. Let val be the result of evaluating UnaryExpression.
-    let val = yield* Evaluate(UnaryExpression);
+    let val = _temp5;
     // 2. If Type(val) is Reference, then
     if (val instanceof ReferenceRecord) {
       // a. If IsUnresolvableReference(val) is true, return "undefined".
@@ -7819,16 +7888,16 @@
       }
     }
     // 3. Set val to ? GetValue(val).
-    let _temp4 = GetValue(val);
+    let _temp6 = GetValue(val);
     /* c8 ignore if */
-    if (_temp4 instanceof AbruptCompletion) {
-      return _temp4;
+    if (_temp6 instanceof AbruptCompletion) {
+      return _temp6;
     }
     /* c8 ignore if */
-    if (_temp4 instanceof Completion) {
-      _temp4 = _temp4.Value;
+    if (_temp6 instanceof Completion) {
+      _temp6 = _temp6.Value;
     }
-    val = _temp4;
+    val = _temp6;
     // 4. Return a String according to Table 37.
     if (val instanceof UndefinedValue) {
       return Value('undefined');
@@ -7862,16 +7931,16 @@
     // 1. Let expr be the result of evaluating UnaryExpression.
     const expr = yield* Evaluate(UnaryExpression);
     // 2. Return ? ToNumber(? GetValue(expr)).
-    let _temp5 = GetValue(expr);
+    let _temp7 = GetValue(expr);
     /* c8 ignore if */
-    if (_temp5 instanceof AbruptCompletion) {
-      return _temp5;
+    if (_temp7 instanceof AbruptCompletion) {
+      return _temp7;
     }
     /* c8 ignore if */
-    if (_temp5 instanceof Completion) {
-      _temp5 = _temp5.Value;
+    if (_temp7 instanceof Completion) {
+      _temp7 = _temp7.Value;
     }
-    return ToNumber(_temp5);
+    return ToNumber(_temp7);
   }
 
   /** https://tc39.es/ecma262/#sec-unary-minus-operator-runtime-semantics-evaluation */
@@ -7883,7 +7952,16 @@
     // 1. Let expr be the result of evaluating UnaryExpression.
     const expr = yield* Evaluate(UnaryExpression);
     // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
-    let _temp8 = GetValue(expr);
+    let _temp10 = GetValue(expr);
+    /* c8 ignore if */
+    if (_temp10 instanceof AbruptCompletion) {
+      return _temp10;
+    }
+    /* c8 ignore if */
+    if (_temp10 instanceof Completion) {
+      _temp10 = _temp10.Value;
+    }
+    let _temp8 = ToNumeric(_temp10);
     /* c8 ignore if */
     if (_temp8 instanceof AbruptCompletion) {
       return _temp8;
@@ -7892,26 +7970,17 @@
     if (_temp8 instanceof Completion) {
       _temp8 = _temp8.Value;
     }
-    let _temp6 = ToNumeric(_temp8);
-    /* c8 ignore if */
-    if (_temp6 instanceof AbruptCompletion) {
-      return _temp6;
-    }
-    /* c8 ignore if */
-    if (_temp6 instanceof Completion) {
-      _temp6 = _temp6.Value;
-    }
-    const oldValue = _temp6;
+    const oldValue = _temp8;
     // 3. Let T be Type(oldValue).
     const T = TypeForMethod(oldValue);
     // 4. Return ! T::unaryMinus(oldValue).
-    let _temp7 = T.unaryMinus(oldValue);
-    Assert(!(_temp7 instanceof AbruptCompletion), "T.unaryMinus(oldValue)" + ' returned an abrupt completion');
+    let _temp9 = T.unaryMinus(oldValue);
+    Assert(!(_temp9 instanceof AbruptCompletion), "T.unaryMinus(oldValue)" + ' returned an abrupt completion');
     /* c8 ignore if */
-    if (_temp7 instanceof Completion) {
-      _temp7 = _temp7.Value;
+    if (_temp9 instanceof Completion) {
+      _temp9 = _temp9.Value;
     }
-    return _temp7;
+    return _temp9;
   }
 
   /** https://tc39.es/ecma262/#sec-bitwise-not-operator-runtime-semantics-evaluation */
@@ -7923,7 +7992,16 @@
     // 1. Let expr be the result of evaluating UnaryExpression.
     const expr = yield* Evaluate(UnaryExpression);
     // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
-    let _temp11 = GetValue(expr);
+    let _temp13 = GetValue(expr);
+    /* c8 ignore if */
+    if (_temp13 instanceof AbruptCompletion) {
+      return _temp13;
+    }
+    /* c8 ignore if */
+    if (_temp13 instanceof Completion) {
+      _temp13 = _temp13.Value;
+    }
+    let _temp11 = ToNumeric(_temp13);
     /* c8 ignore if */
     if (_temp11 instanceof AbruptCompletion) {
       return _temp11;
@@ -7932,26 +8010,17 @@
     if (_temp11 instanceof Completion) {
       _temp11 = _temp11.Value;
     }
-    let _temp9 = ToNumeric(_temp11);
-    /* c8 ignore if */
-    if (_temp9 instanceof AbruptCompletion) {
-      return _temp9;
-    }
-    /* c8 ignore if */
-    if (_temp9 instanceof Completion) {
-      _temp9 = _temp9.Value;
-    }
-    const oldValue = _temp9;
+    const oldValue = _temp11;
     // 3. Let T be Type(oldValue).
     const T = TypeForMethod(oldValue);
     // 4. Return ! T::bitwiseNOT(oldValue).
-    let _temp10 = T.bitwiseNOT(oldValue);
-    Assert(!(_temp10 instanceof AbruptCompletion), "T.bitwiseNOT(oldValue)" + ' returned an abrupt completion');
+    let _temp12 = T.bitwiseNOT(oldValue);
+    Assert(!(_temp12 instanceof AbruptCompletion), "T.bitwiseNOT(oldValue)" + ' returned an abrupt completion');
     /* c8 ignore if */
-    if (_temp10 instanceof Completion) {
-      _temp10 = _temp10.Value;
+    if (_temp12 instanceof Completion) {
+      _temp12 = _temp12.Value;
     }
-    return _temp10;
+    return _temp12;
   }
 
   /** https://tc39.es/ecma262/#sec-logical-not-operator-runtime-semantics-evaluation */
@@ -7963,16 +8032,16 @@
     // 1. Let expr be the result of evaluating UnaryExpression.
     const expr = yield* Evaluate(UnaryExpression);
     // 2. Let oldValue be ! ToBoolean(? GetValue(expr)).
-    let _temp12 = GetValue(expr);
+    let _temp14 = GetValue(expr);
     /* c8 ignore if */
-    if (_temp12 instanceof AbruptCompletion) {
-      return _temp12;
+    if (_temp14 instanceof AbruptCompletion) {
+      return _temp14;
     }
     /* c8 ignore if */
-    if (_temp12 instanceof Completion) {
-      _temp12 = _temp12.Value;
+    if (_temp14 instanceof Completion) {
+      _temp14 = _temp14.Value;
     }
-    const oldValue = ToBoolean(_temp12);
+    const oldValue = ToBoolean(_temp14);
     // 3. If oldValue is true, return false.
     if (oldValue === Value.true) {
       return Value.false;
@@ -9293,7 +9362,7 @@
           // 1. Let oldEnv be the running execution context's LexicalEnvironment.
           const oldEnv = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment;
           // 2. Let loopEnv be NewDeclarativeEnvironment(oldEnv).
-          const loopEnv = NewDeclarativeEnvironment(oldEnv);
+          const loopEnv = new DeclarativeEnvironmentRecord(oldEnv);
           // 3. Let isConst be IsConstantDeclaration of LexicalDeclaration.
           const isConst = IsConstantDeclaration(LexicalDeclaration);
           // 4. Let boundNames be the BoundNames of LexicalDeclaration.
@@ -9672,7 +9741,7 @@
       // c. Assert: outer is not null.
       Assert(outer !== Value.null, "outer !== Value.null");
       // d. Let thisIterationEnv be NewDeclarativeEnvironment(outer).
-      const thisIterationEnv = NewDeclarativeEnvironment(outer);
+      const thisIterationEnv = new DeclarativeEnvironmentRecord(outer);
       // e. For each element bn of perIterationBindings, do
       for (const bn of perIterationBindings) {
         let _temp22 = thisIterationEnv.CreateMutableBinding(bn, Value.false);
@@ -9711,7 +9780,7 @@
     if (uninitializedBoundNames.length > 0) {
       // a. Assert: uninitializedBoundNames has no duplicate entries.
       // b. Let newEnv be NewDeclarativeEnvironment(oldEnv).
-      const newEnv = NewDeclarativeEnvironment(oldEnv);
+      const newEnv = new DeclarativeEnvironmentRecord(oldEnv);
       // c. For each string name in uninitializedBoundNames, do
       for (const name of uninitializedBoundNames) {
         let _temp24 = newEnv.CreateMutableBinding(name, Value.false);
@@ -9893,7 +9962,7 @@
         // ii. Assert: lhs is a ForDeclaration.
         Assert(lhs.type === 'ForDeclaration', "lhs.type === 'ForDeclaration'");
         // iii. Let iterationEnv be NewDeclarativeEnvironment(oldEnv).
-        iterationEnv = NewDeclarativeEnvironment(oldEnv);
+        iterationEnv = new DeclarativeEnvironmentRecord(oldEnv);
         // iv. Perform BindingInstantiation for lhs passing iterationEnv as the argument.
         BindingInstantiation(lhs, iterationEnv);
         // v. Set the running execution context's LexicalEnvironment to iterationEnv.
@@ -10325,7 +10394,7 @@
     // 3. Let oldEnv be the running execution context's LexicalEnvironment.
     const oldEnv = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment;
     // 4. Let blockEnv be NewDeclarativeEnvironment(oldEnv).
-    const blockEnv = NewDeclarativeEnvironment(oldEnv);
+    const blockEnv = new DeclarativeEnvironmentRecord(oldEnv);
     // 5. Perform BlockDeclarationInstantiation(CaseBlock, blockEnv).
     BlockDeclarationInstantiation(CaseBlock, blockEnv);
     // 6. Set the running execution context's LexicalEnvironment to blockEnv.
@@ -15380,7 +15449,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   function handleError(e) {
-    if (e.name === 'SyntaxError') {
+    if (e instanceof SyntaxError) {
       const v = exports.surroundingAgent.Throw('SyntaxError', 'Raw', e.message).Value;
       if (e.decoration) {
         const stackString = Value('stack');
@@ -15390,8 +15459,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (_temp instanceof Completion) {
           _temp = _temp.Value;
         }
-        const stack = _temp.stringValue();
-        const newStackString = `${e.decoration}\n${stack}`;
+        const stack = _temp;
+        const newStackString = `${e.decoration}\n${stack instanceof JSStringValue ? stack.stringValue() : ''}`;
         let _temp2 = Set$1(v, stackString, Value(newStackString), Value.true);
         Assert(!(_temp2 instanceof AbruptCompletion), "Set(v, stackString, Value(newStackString), Value.true)" + ' returned an abrupt completion');
         /* c8 ignore if */
@@ -17714,7 +17783,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 3. Let oldEnv be the running execution context's LexicalEnvironment.
     const oldEnv = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment;
     // 4. Let newEnv be NewObjectEnvironment(obj, true, oldEnv).
-    const newEnv = NewObjectEnvironment(obj, Value.true, oldEnv);
+    const newEnv = new ObjectEnvironmentRecord(obj, Value.true, oldEnv);
     // 5. Set the running execution context's LexicalEnvironment to newEnv.
     exports.surroundingAgent.runningExecutionContext.LexicalEnvironment = newEnv;
     // 6. Let C be the result of evaluating Statement.
@@ -18488,10 +18557,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   // @ts-nocheck
-
-  /** https://tc39.es/ecma262/#sec-debugger-statement-runtime-semantics-evaluation */
-  // DebuggerStatement : `debugger` `;`
-  function Evaluate_DebuggerStatement() {
+  /** https://tc39.es/ecma262/#sec-debugger-statement-runtime-semantics-evaluation */ // DebuggerStatement : `debugger` `;`
+  function Evaluate_DebuggerStatement(_node) {
     let result;
     // 1. If an implementation-defined debugging facility is available and enabled, then
     if (exports.surroundingAgent.hostDefinedOptions.onDebugger) {
@@ -20252,7 +20319,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 3. Let scope be the running execution context's LexicalEnvironment.
       const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment;
       // 4. Let funcEnv be NewDeclarativeEnvironment(scope).
-      const funcEnv = NewDeclarativeEnvironment(scope);
+      const funcEnv = new DeclarativeEnvironmentRecord(scope);
       // 5. Perform funcEnv.CreateImmutableBinding(name, false).
       funcEnv.CreateImmutableBinding(name, Value.false);
       // 6. Let privateScope be the running execution context's PrivateEnvironment.
@@ -20308,7 +20375,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 3. Let scope be the running execution context's LexicalEnvironment.
       const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment;
       // 4. Let funcEnv be NewDeclarativeEnvironment(scope).
-      const funcEnv = NewDeclarativeEnvironment(scope);
+      const funcEnv = new DeclarativeEnvironmentRecord(scope);
       // 5. Perform funcEnv.CreateImmutableBinding(name, false).
       funcEnv.CreateImmutableBinding(name, Value.false);
       // 6. Let privateScope be the running execution context's PrivateEnvironment.
@@ -20439,8 +20506,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 3. Let scope be the LexicalEnvironment of the running execution context.
       const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment;
       // 4. Let funcEnv be ! NewDeclarativeEnvironment(scope).
-      let _temp = NewDeclarativeEnvironment(scope);
-      Assert(!(_temp instanceof AbruptCompletion), "NewDeclarativeEnvironment(scope)" + ' returned an abrupt completion');
+      let _temp = new DeclarativeEnvironmentRecord(scope);
+      Assert(!(_temp instanceof AbruptCompletion), "new DeclarativeEnvironmentRecord(scope)" + ' returned an abrupt completion');
       /* c8 ignore if */
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -20524,7 +20591,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 3. Let scope be the running execution context's LexicalEnvironment.
       const scope = exports.surroundingAgent.runningExecutionContext.LexicalEnvironment;
       // 4. Let funcEnv be NewDeclarativeEnvironment(scope).
-      const funcEnv = NewDeclarativeEnvironment(scope);
+      const funcEnv = new DeclarativeEnvironmentRecord(scope);
       // 5. Perform funcEnv.CreateImmutableBinding(name, false).
       funcEnv.CreateImmutableBinding(name, Value.false);
       // 6. Let privateScope be the running execution context's PrivateEnvironment.
@@ -20642,7 +20709,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   // @ts-nocheck
-
   // #resolvedbinding-record
   class ResolvedBindingRecord {
     Module;
@@ -20660,23 +20726,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       m(this.Module);
     }
   }
-
   /** https://tc39.es/ecma262/#sec-abstract-module-records */
   class AbstractModuleRecord {
     Realm;
     Environment;
     Namespace;
     HostDefined;
-    constructor({
-      Realm,
-      Environment,
-      Namespace,
-      HostDefined
-    }) {
-      this.Realm = Realm;
-      this.Environment = Environment;
-      this.Namespace = Namespace;
-      this.HostDefined = HostDefined;
+    constructor(init) {
+      this.Realm = init.Realm;
+      this.Environment = init.Environment;
+      this.Namespace = init.Namespace;
+      this.HostDefined = init.HostDefined;
     }
     mark(m) {
       m(this.Realm);
@@ -20684,7 +20744,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       m(this.Namespace);
     }
   }
-
   /** https://tc39.es/ecma262/#sec-cyclic-module-records */
   class CyclicModuleRecord extends AbstractModuleRecord {
     Status;
@@ -20779,7 +20838,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         module = GetAsyncCycleRoot(module);
       }
       // (*TopLevelAwait) 4. If module.[[TopLevelCapability]] is not undefined, then
-      if (module.TopLevelCapability !== Value.undefined) {
+      if (!(module.TopLevelCapability instanceof UndefinedValue)) {
         // a. Return module.[[TopLevelCapability]].[[Promise]].
         return module.TopLevelCapability.Promise;
       }
@@ -20848,7 +20907,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
     }
   }
-
   /** https://tc39.es/ecma262/#sec-source-text-module-records */
   class SourceTextModuleRecord extends CyclicModuleRecord {
     ImportMeta;
@@ -21037,9 +21095,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 3. Let realm be module.[[Realm]].
       const realm = module.Realm;
       // 4. Assert: realm is not undefined.
-      Assert(realm !== Value.undefined, "realm !== Value.undefined");
+      Assert(!(realm instanceof UndefinedValue), "!(realm instanceof UndefinedValue)");
       // 5. Let env be NewModuleEnvironment(realm.[[GlobalEnv]]).
-      const env = NewModuleEnvironment(realm.GlobalEnv);
+      const env = new ModuleEnvironmentRecord(realm.GlobalEnv);
       // 6. Set module.[[Environment]] to env.
       module.Environment = env;
       // 7. For each ImportEntry Record in in module.[[ImportEntries]], do
@@ -21214,7 +21272,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       m(this.Context);
     }
   }
-
   /** https://tc39.es/ecma262/#sec-synthetic-module-records */
   class SyntheticModuleRecord extends AbstractModuleRecord {
     ExportNames;
@@ -21254,9 +21311,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 1. Let realm be module.[[Realm]].
       const realm = module.Realm;
       // 2. Assert: realm is not undefined.
-      Assert(realm !== Value.undefined, "realm !== Value.undefined");
+      Assert(!(realm instanceof UndefinedValue), "!(realm instanceof UndefinedValue)");
       // 3. Let env be NewModuleEnvironment(realm.[[GlobalEnv]]).
-      const env = NewModuleEnvironment(realm.GlobalEnv);
+      const env = new ModuleEnvironmentRecord(realm.GlobalEnv);
       // 4. Set module.[[Environment]] to env.
       module.Environment = env;
       // 5. For each exportName in module.[[ExportNames]],
@@ -21304,13 +21361,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // 11. Resume the context that is now on the top of the execution context stack as the running execution context.
       exports.surroundingAgent.executionContextStack.pop(moduleContext);
       // 12. Return Completion(result).
+      // @ts-expect-error
+      // TODO(ts): According to the new spec, this should return a Promise now.
       return Completion(result);
     }
-
-    /** https://tc39.es/ecma262/#sec-synthetic-module-record-set-synthetic-export */
     SetSyntheticExport(name, value) {
       const module = this;
-      // 1. Return ? module.[[Environment]].SetMutableBinding(name, value, true).
+      // 1. Return module.[[Environment]].SetMutableBinding(name, value, true).
       return module.Environment.SetMutableBinding(name, value, Value.true);
     }
   }
@@ -21318,13 +21375,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-environment-records */
   class EnvironmentRecord {
     OuterEnv;
-
+    constructor(outerEnv) {
+      this.OuterEnv = outerEnv;
+    }
     // NON-SPEC
     mark(m) {
       m(this.OuterEnv);
     }
   }
-
   /** https://tc39.es/ecma262/#sec-declarative-environment-records */
   class DeclarativeEnvironmentRecord extends EnvironmentRecord {
     bindings = new ValueMap();
@@ -21445,7 +21503,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     /** https://tc39.es/ecma262/#sec-declarative-environment-records-getbindingvalue-n-s */
-    GetBindingValue(N) {
+    GetBindingValue(N, _S) {
       // 1. Let envRec be the declarative Environment Record for which the method was invoked.
       const envRec = this;
       // 2. Assert: envRec has a binding for N.
@@ -21456,7 +21514,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         return exports.surroundingAgent.Throw('ReferenceError', 'NotInitialized', N);
       }
       // 4. Return the value currently bound to N in envRec.
-      return binding.value;
+      return NormalCompletion(binding.value);
     }
 
     /** https://tc39.es/ecma262/#sec-declarative-environment-records-deletebinding-n */
@@ -21496,6 +21554,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     // NON-SPEC
     mark(m) {
+      // TODO(ts): this function does not call super.mark(). is it a mistake?
       m(this.bindings);
     }
   }
@@ -21504,6 +21563,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   class ObjectEnvironmentRecord extends EnvironmentRecord {
     BindingObject;
     IsWithEnvironment;
+
+    /** https://tc39.es/ecma262/#sec-newobjectenvironment */
+    constructor(O, W, E) {
+      super(E);
+      this.BindingObject = O;
+      this.IsWithEnvironment = W;
+    }
 
     /** https://tc39.es/ecma262/#sec-object-environment-records-hasbinding-n */
     HasBinding(N) {
@@ -21645,12 +21711,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (value === Value.false) {
         // a. If S is false, return the value undefined; otherwise throw a ReferenceError exception.
         if (S === Value.false) {
-          return Value.undefined;
+          return NormalCompletion(Value.undefined);
         } else {
           return exports.surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
         }
       }
-      // 5. Return ? Get(bindings, N).
+      // 5. Return Get(bindings, N).
       return Get(bindings, N);
     }
 
@@ -21690,12 +21756,37 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
     // NON-SPEC
     mark(m) {
+      // TODO(ts): this function does not call super.mark(). is it a mistake?
       m(this.BindingObject);
     }
   }
 
   /** https://tc39.es/ecma262/#sec-function-environment-records */
   class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
+    /** https://tc39.es/ecma262/#sec-newfunctionenvironment */
+    constructor(F, newTarget) {
+      // 1. Assert: F is an ECMAScript function.
+      Assert(isECMAScriptFunctionObject(F), "isECMAScriptFunctionObject(F)");
+      // 2. Assert: Type(newTarget) is Undefined or Object.
+      Assert(newTarget instanceof UndefinedValue || newTarget instanceof ObjectValue, "newTarget instanceof UndefinedValue || newTarget instanceof ObjectValue");
+      // 3. Let env be a new function Environment Record containing no bindings.
+      super(F.Environment);
+      // 4. Set env.[[FunctionObject]] to F.
+      this.FunctionObject = F;
+      // 5. If F.[[ThisMode]] is lexical, set env.[[ThisBindingStatus]] to lexical.
+
+      if (F.ThisMode === 'lexical') {
+        this.ThisBindingStatus = 'lexical';
+      } else {
+        // 6. Else, set env.[[ThisBindingStatus]] to uninitialized.
+        this.ThisBindingStatus = 'uninitialized';
+      }
+      // 7. Set env.[[NewTarget]] to newTarget.
+      this.NewTarget = newTarget;
+      // 8. Set env.[[OuterEnv]] to F.[[Environment]].
+      // 9. Return env.
+    }
+
     ThisValue;
     ThisBindingStatus;
     FunctionObject;
@@ -21789,6 +21880,26 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     DeclarativeRecord;
     VarNames;
 
+    /** https://tc39.es/ecma262/#sec-newglobalenvironment */
+    constructor(G, thisValue) {
+      // 1. Let objRec be NewObjectEnvironment(G, false, null).
+      const objRec = new ObjectEnvironmentRecord(G, Value.false, Value.null);
+      // 2. Let dclRec be a new declarative Environment Record containing no bindings.
+      const dclRec = new DeclarativeEnvironmentRecord(Value.null);
+      // 3. Let env be a new global Environment Record.
+      super(Value.null);
+      // 4. Set env.[[ObjectRecord]] to objRec.
+      this.ObjectRecord = objRec;
+      // 5. Set env.[[GlobalThisValue]] to thisValue.
+      this.GlobalThisValue = thisValue;
+      // 6. Set env.[[DeclarativeRecord]] to dclRec.
+      this.DeclarativeRecord = dclRec;
+      // 7. Set env.[[VarNames]] to a new empty List.
+      this.VarNames = [];
+      // 8. Set env.[[OuterEnv]] to null.
+      // 9. Return env.
+    }
+
     /** https://tc39.es/ecma262/#sec-global-environment-records-hasbinding-n */
     HasBinding(N) {
       // 1. Let envRec be the global Environment Record for which the method was invoked.
@@ -21881,7 +21992,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       // 4. Let ObjRec be envRec.[[ObjectRecord]].
       const ObjRec = envRec.ObjectRecord;
-      // 5. Return ? ObjRec.GetBindingValue(N, S).
+      // 5. Return ObjRec.GetBindingValue(N, S).
       return ObjRec.GetBindingValue(N, S);
     }
 
@@ -22011,7 +22122,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const existingProp = _temp9;
       // 5. If existingProp is undefined, return false.
-      if (existingProp === Value.undefined) {
+      if (existingProp instanceof UndefinedValue) {
         return Value.false;
       }
       // 6. If existingProp.[[Configurable]] is true, return false.
@@ -22069,7 +22180,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       const existingProp = _temp11;
       // 5. If existingProp is undefined, return ? IsExtensible(globalObject).
-      if (existingProp === Value.undefined) {
+      if (existingProp instanceof UndefinedValue) {
         return IsExtensible(globalObject);
       }
       // 6. If existingProp.[[Configurable]] is true, return true.
@@ -22169,7 +22280,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const existingProp = _temp16;
       // 5. If existingProp is undefined or existingProp.[[Configurable]] is true, then
       let desc;
-      if (existingProp === Value.undefined || existingProp.Configurable === Value.true) {
+      if (existingProp instanceof UndefinedValue || existingProp.Configurable === Value.true) {
         // a. Let desc be the PropertyDescriptor { [[Value]]: V, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: D }.
         desc = exports.Descriptor({
           Value: V,
@@ -22215,6 +22326,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return NormalCompletion(undefined);
     }
     mark(m) {
+      // TODO(ts): this function does not call super.mark(). is it a mistake?
       m(this.ObjectRecord);
       m(this.GlobalThisValue);
       m(this.DeclarativeRecord);
@@ -22239,7 +22351,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         // b.Let targetEnv be M.[[Environment]].
         const targetEnv = M.Environment;
         // c. If targetEnv is undefined, throw a ReferenceError exception.
-        if (targetEnv === Value.undefined) {
+        if (targetEnv instanceof UndefinedValue) {
           return exports.surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
         }
         // d. Return ? targetEnv.GetBindingValue(N2, true).
@@ -22250,7 +22362,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         return exports.surroundingAgent.Throw('ReferenceError', 'NotInitialized', N);
       }
       // 6. Return the value currently bound to N in envRec.
-      return binding.value;
+      return NormalCompletion(binding.value);
     }
 
     /** https://tc39.es/ecma262/#sec-module-environment-records-deletebinding-n */
@@ -22297,14 +22409,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-getidentifierreference */
   function GetIdentifierReference(env, name, strict) {
     // 1. If lex is the value null, then
-    if (env === Value.null) {
+    if (env instanceof NullValue) {
       // a. Return the Reference Record { [[Base]]: unresolvable, [[ReferencedName]]: name, [[Strict]]: strict, [[ThisValue]]: empty }.
-      return new ReferenceRecord({
+      return NormalCompletion(new ReferenceRecord({
         Base: 'unresolvable',
         ReferencedName: name,
         Strict: strict,
         ThisValue: undefined
-      });
+      }));
     }
     // 2. Let exists be ? envRec.HasBinding(name).
     let _temp19 = env.HasBinding(name);
@@ -22320,12 +22432,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 3. If exists is true, then
     if (exists === Value.true) {
       // a. Return the Reference Record { [[Base]]: env, [[ReferencedName]]: name, [[Strict]]: strict, [[ThisValue]]: empty }.
-      return new ReferenceRecord({
+      return NormalCompletion(new ReferenceRecord({
         Base: env,
         ReferencedName: name,
         Strict: strict,
         ThisValue: undefined
-      });
+      }));
     } else {
       // a. Let outer be env.[[OuterEnv]].
       const outer = env.OuterEnv;
@@ -22333,110 +22445,18 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return GetIdentifierReference(outer, name, strict);
     }
   }
-
-  /** https://tc39.es/ecma262/#sec-newdeclarativeenvironment */
-  function NewDeclarativeEnvironment(E) {
-    // 1. Let env be a new declarative Environment Record containing O as the binding object.
-    const env = new DeclarativeEnvironmentRecord();
-    // 2. Set env.[[OuterEnv]] to E.
-    env.OuterEnv = E;
-    // 3. Return env.
-    return env;
-  }
-
-  /** https://tc39.es/ecma262/#sec-newobjectenvironment */
-  function NewObjectEnvironment(O, W, E) {
-    // 1. Let env be a new object Environment Record.
-    const env = new ObjectEnvironmentRecord();
-    // 2. Set env.[[BindingObject]] to O.
-    env.BindingObject = O;
-    // 3. Set env.[[IsWithEnvironment]] to W.
-    env.IsWithEnvironment = W;
-    // 4. Set env.[[OuterEnv]] to E.
-    env.OuterEnv = E;
-    // 5. Return env.
-    return env;
-  }
-
-  /** https://tc39.es/ecma262/#sec-newfunctionenvironment */
-  function NewFunctionEnvironment(F, newTarget) {
-    // 1. Assert: F is an ECMAScript function.
-    Assert(isECMAScriptFunctionObject(F), "isECMAScriptFunctionObject(F)");
-    // 2. Assert: Type(newTarget) is Undefined or Object.
-    Assert(newTarget instanceof UndefinedValue || newTarget instanceof ObjectValue, "newTarget instanceof UndefinedValue || newTarget instanceof ObjectValue");
-    // 3. Let env be a new function Environment Record containing no bindings.
-    const env = new FunctionEnvironmentRecord();
-    // 4. Set env.[[FunctionObject]] to F.
-    env.FunctionObject = F;
-    // 5. If F.[[ThisMode]] is lexical, set env.[[ThisBindingStatus]] to lexical.
-    if (F.ThisMode === 'lexical') {
-      env.ThisBindingStatus = 'lexical';
-    } else {
-      // 6. Else, set env.[[ThisBindingStatus]] to uninitialized.
-      env.ThisBindingStatus = 'uninitialized';
-    }
-    // 7. Set env.[[NewTarget]] to newTarget.
-    env.NewTarget = newTarget;
-    // 8. Set env.[[OuterEnv]] to F.[[Environment]].
-    env.OuterEnv = F.Environment;
-    // 9. Return env.
-    return env;
-  }
-
-  /** https://tc39.es/ecma262/#sec-newglobalenvironment */
-  function NewGlobalEnvironment(G, thisValue) {
-    // 1. Let objRec be NewObjectEnvironment(G, false, null).
-    const objRec = NewObjectEnvironment(G, Value.false, Value.null);
-    // 2. Let dclRec be a new declarative Environment Record containing no bindings.
-    const dclRec = new DeclarativeEnvironmentRecord(Value.null);
-    // 3. Let env be a new global Environment Record.
-    const env = new GlobalEnvironmentRecord();
-    // 4. Set env.[[ObjectRecord]] to objRec.
-    env.ObjectRecord = objRec;
-    // 5. Set env.[[GlobalThisValue]] to thisValue.
-    env.GlobalThisValue = thisValue;
-    // 6. Set env.[[DeclarativeRecord]] to dclRec.
-    env.DeclarativeRecord = dclRec;
-    // 7. Set env.[[VarNames]] to a new empty List.
-    env.VarNames = [];
-    // 8. Set env.[[OuterEnv]] to null.
-    env.OuterEnv = Value.null;
-    // 9. Return env.
-    return env;
-  }
-
-  /** https://tc39.es/ecma262/#sec-newmoduleenvironment */
-  function NewModuleEnvironment(E) {
-    // 1. Let env be a new module Environment Record containing no bindings.
-    const env = new ModuleEnvironmentRecord();
-    // 2. Set env.[[OuterEnv]] to E.
-    env.OuterEnv = E;
-    // 3. Return env.
-    return env;
-  }
   class PrivateEnvironmentRecord {
     OuterPrivateEnvironment;
-    Names;
-    constructor(init) {
-      this.OuterPrivateEnvironment = init.OuterPrivateEnvironment;
-      this.Names = init.Names;
+    Names = [];
+    /** https://tc39.es/ecma262/#sec-newprivateenvironment */
+    constructor(outerEnv) {
+      this.OuterPrivateEnvironment = outerEnv;
     }
     mark(m) {
       this.Names.forEach(name => {
         m(name);
       });
     }
-  }
-
-  /** https://tc39.es/ecma262/#sec-newprivateenvironment */
-  function NewPrivateEnvironment(outerPrivEnv) {
-    // 1. Let names be a new empty List.
-    const names = [];
-    // 2. Return the PrivateEnvironment Record { [[OuterPrivateEnvironment]]: outerPrivEnv, [[Names]]: names }.
-    return new PrivateEnvironmentRecord({
-      OuterPrivateEnvironment: outerPrivEnv,
-      Names: names
-    });
   }
 
   var _initClass2$1, _dec2$1;
@@ -26261,7 +26281,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 7. Set the ScriptOrModule of calleeContext to F.[[ScriptOrModule]].
     calleeContext.ScriptOrModule = F.ScriptOrModule;
     // 8. Let localEnv be NewFunctionEnvironment(F, newTarget).
-    const localEnv = NewFunctionEnvironment(F, newTarget);
+    const localEnv = new FunctionEnvironmentRecord(F, newTarget);
     // 9. Set the LexicalEnvironment of calleeContext to localEnv.
     calleeContext.LexicalEnvironment = localEnv;
     // 10. Set the VariableEnvironment of calleeContext to localEnv.
@@ -27295,7 +27315,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 15. If direct is true, then
     if (direct === true) {
       // a. Let lexEnv be NewDeclarativeEnvironment(runningContext's LexicalEnvironment).
-      lexEnv = NewDeclarativeEnvironment(runningContext.LexicalEnvironment);
+      lexEnv = new DeclarativeEnvironmentRecord(runningContext.LexicalEnvironment);
       // b. Let varEnv be runningContext's VariableEnvironment.
       varEnv = runningContext.VariableEnvironment;
       // c. Let privateEnv be runningContext's PrivateEnvironment.
@@ -27303,7 +27323,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     } else {
       // 16. Else,
       // a. Let lexEnv be NewDeclarativeEnvironment(evalRealm.[[GlobalEnv]]).
-      lexEnv = NewDeclarativeEnvironment(evalRealm.GlobalEnv);
+      lexEnv = new DeclarativeEnvironmentRecord(evalRealm.GlobalEnv);
       // b. Let varEnv be evalRealm.[[GlobalEnv]].
       varEnv = evalRealm.GlobalEnv;
       // c. Let privateEnv be null.
@@ -28773,7 +28793,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-InnerModuleLoading */
   function InnerModuleLoading(state, module) {
     // 1. Assert: state.[[IsLoading]] is true.
-    Assert(state.IsLoading === true, "state.IsLoading === true");
+    Assert(Boolean(state.IsLoading === true), "Boolean(state.IsLoading === true)"); // this Boolean() is let step 2.d.iii not having a type error.
 
     // 2. If module is a Cyclic Module Record, module.[[Status]] is new, and state.[[Visited]] does not contain module, then
     if (module instanceof CyclicModuleRecord && module.Status === 'new' && !state.Visited.has(module)) {
@@ -28937,17 +28957,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_temp6 instanceof Completion) {
         _temp6 = _temp6.Value;
       }
-      return index;
+      return NormalCompletion(index);
     }
     if (module.Status === 'evaluating-async' || module.Status === 'evaluated') {
-      if (module.EvaluationError === Value.undefined) {
-        return index;
+      if (module.EvaluationError instanceof UndefinedValue) {
+        return NormalCompletion(index);
       } else {
         return module.EvaluationError;
       }
     }
     if (module.Status === 'evaluating') {
-      return index;
+      return NormalCompletion(index);
     }
     Assert(module.Status === 'linked', "module.Status === 'linked'");
     module.Status = 'evaluating';
@@ -29071,7 +29091,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const onRejected = CreateBuiltinFunction(rejectedClosure, 0, Value(''), ['Module']);
     // 9. Perform ! PerformPromiseThen(capability.[[Promise]], onFulfilled, onRejected).
     let _temp13 = PerformPromiseThen(capability.Promise, onFulfilled, onRejected);
-    Assert(!(_temp13 instanceof AbruptCompletion), "PerformPromiseThen(capability.Promise, onFulfilled, onRejected)" + ' returned an abrupt completion');
+    Assert(!(_temp13 instanceof AbruptCompletion), "PerformPromiseThen(capability.Promise as PromiseObjectValue, onFulfilled, onRejected)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp13 instanceof Completion) {
       _temp13 = _temp13.Value;
@@ -29157,7 +29177,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
       }
     }
-    if (module.TopLevelCapability !== Value.undefined) {
+    if (!(module.TopLevelCapability instanceof UndefinedValue)) {
       Assert(module.DFSIndex === module.DFSAncestorIndex, "module.DFSIndex === module.DFSAncestorIndex");
       let _temp19 = Call(module.TopLevelCapability.Resolve, Value.undefined, [Value.undefined]);
       Assert(!(_temp19 instanceof AbruptCompletion), "Call(module.TopLevelCapability.Resolve, Value.undefined, [Value.undefined])" + ' returned an abrupt completion');
@@ -29191,7 +29211,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _temp20 = _temp20.Value;
       }
     }
-    if (module.TopLevelCapability !== Value.undefined) {
+    if (!(module.TopLevelCapability instanceof UndefinedValue)) {
       Assert(module.DFSIndex === module.DFSAncestorIndex, "module.DFSIndex === module.DFSAncestorIndex");
       let _temp21 = Call(module.TopLevelCapability.Reject, Value.undefined, [error]);
       Assert(!(_temp21 instanceof AbruptCompletion), "Call(module.TopLevelCapability.Reject, Value.undefined, [error])" + ' returned an abrupt completion');
@@ -29303,7 +29323,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let closure be the a Abstract Closure with parameters (module) that captures defaultExport and performs the following steps when called:
     const closure = module => {
       // eslint-disable-line arrow-body-style
-      // a. Return ? module.SetSyntheticExport("default", defaultExport).
+      // a. Return module.SetSyntheticExport("default", defaultExport).
       return module.SetSyntheticExport(Value('default'), defaultExport);
     };
     // 2. Return CreateSyntheticModule(« "default" », closure, realm)
@@ -53594,7 +53614,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       thisValue = globalObj;
     }
     realmRec.GlobalObject = globalObj;
-    const newGlobalEnv = NewGlobalEnvironment(globalObj, thisValue);
+    const newGlobalEnv = new GlobalEnvironmentRecord(globalObj, thisValue);
     realmRec.GlobalEnv = newGlobalEnv;
     return realmRec;
   }
@@ -56492,8 +56512,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   const bareKeyRe = /^[a-zA-Z_][a-zA-Z_0-9]*$/;
-  const getObjectTag = (value, wrap) => {
-    let s;
+  function getObjectTag(value, wrap) {
+    let s = '';
     try {
       let _temp = Get(value, wellKnownSymbols.toStringTag);
       Assert(!(_temp instanceof AbruptCompletion), "Get(value, wellKnownSymbols.toStringTag)" + ' returned an abrupt completion', "");
@@ -56526,7 +56546,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return s;
     }
     return '';
-  };
+  }
   const compactObject = (realm, value) => {
     try {
       let _temp4 = Get(value, Value('toString'));
@@ -56590,7 +56610,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const s = JSON.stringify(v.stringValue()).slice(1, -1);
       return `'${s}'`;
     },
-    Symbol: v => `Symbol(${v.Description === Value.undefined ? '' : v.Description.stringValue()})`,
+    Symbol: v => `Symbol(${v.Description instanceof UndefinedValue ? '' : v.Description.stringValue()})`,
     PrivateName: v => v.Description.stringValue(),
     Object: (v, ctx, i) => {
       if (ctx.inspected.includes(v)) {
@@ -56768,8 +56788,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return inner(value);
   }
 
-  function Throw(...args) {
-    return exports.surroundingAgent.Throw(...args);
+  function Throw(type, template, ...templateArgs) {
+    return exports.surroundingAgent.Throw(type, template, ...templateArgs);
   }
 
   /** https://tc39.es/ecma262/#sec-weakref-execution */
@@ -57363,12 +57383,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.ModuleRequests = ModuleRequests;
   exports.MonthFromTime = MonthFromTime;
   exports.NamedEvaluation = NamedEvaluation;
-  exports.NewDeclarativeEnvironment = NewDeclarativeEnvironment;
-  exports.NewFunctionEnvironment = NewFunctionEnvironment;
-  exports.NewGlobalEnvironment = NewGlobalEnvironment;
-  exports.NewModuleEnvironment = NewModuleEnvironment;
-  exports.NewObjectEnvironment = NewObjectEnvironment;
-  exports.NewPrivateEnvironment = NewPrivateEnvironment;
   exports.NewPromiseCapability = NewPromiseCapability;
   exports.NonConstructorElements = NonConstructorElements;
   exports.NonbinaryUnicodeProperties = NonbinaryUnicodeProperties;
@@ -57412,6 +57426,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.PrivateBoundIdentifiers = PrivateBoundIdentifiers;
   exports.PrivateElementFind = PrivateElementFind;
   exports.PrivateElementRecord = PrivateElementRecord;
+  exports.PrivateEnvironmentRecord = PrivateEnvironmentRecord;
   exports.PrivateFieldAdd = PrivateFieldAdd;
   exports.PrivateGet = PrivateGet;
   exports.PrivateMethodOrAccessorAdd = PrivateMethodOrAccessorAdd;

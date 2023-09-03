@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 5f01a0ad3b3564979ba8420033caf0de21d32063
+ * engine262 0.0.1 94ff0aaf810d42c85266574c9d4d8a453191e55b
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -638,7 +638,6 @@ function PropName(node) {
   }
 }
 
-// @ts-nocheck
 /** https://tc39.es/ecma262/#sec-numericvalue */
 
 function NumericValue(node) {
@@ -3068,7 +3067,6 @@ function UTF16EncodeCodePoint(cp) {
   return String.fromCodePoint(cu1, cu2);
 }
 
-// @ts-nocheck
 /** https://tc39.es/ecma262/#sec-identifiers-runtime-semantics-evaluation */
 // IdentifierReference :
 //   Identifier
@@ -3085,7 +3083,6 @@ function Evaluate_This(_PrimaryExpression) {
   return ResolveThisBinding();
 }
 
-// @ts-nocheck
 /** https://tc39.es/ecma262/#sec-literals-runtime-semantics-evaluation */
 // Literal :
 //   NullLiteral
@@ -3096,22 +3093,22 @@ function Evaluate_Literal(Literal) {
   switch (Literal.type) {
     case 'NullLiteral':
       // 1. Return null.
-      return Value.null;
+      return NormalCompletion(Value.null);
     case 'BooleanLiteral':
       // 1. If BooleanLiteral is the token false, return false.
       if (Literal.value === false) {
-        return Value.false;
+        return NormalCompletion(Value.false);
       }
       // 2. If BooleanLiteral is the token true, return true.
       if (Literal.value === true) {
-        return Value.true;
+        return NormalCompletion(Value.true);
       }
       throw new OutOfRange$1('Evaluate_Literal', Literal);
     case 'NumericLiteral':
       // 1. Return the NumericValue of NumericLiteral as defined in 11.8.3.
-      return NumericValue(Literal);
+      return NormalCompletion(NumericValue(Literal));
     case 'StringLiteral':
-      return StringValue(Literal);
+      return NormalCompletion(StringValue(Literal));
     /*c8 ignore next*/default:
       throw new OutOfRange$1('Evaluate_Literal', Literal);
   }
@@ -3366,7 +3363,7 @@ function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
   // 1. Let env be the LexicalEnvironment of the running execution context.
   const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 2. Let classScope be NewDeclarativeEnvironment(env).
-  const classScope = NewDeclarativeEnvironment(env);
+  const classScope = new DeclarativeEnvironmentRecord(env);
   // 3. If classBinding is not undefined, then
   if (classBinding !== Value.undefined) {
     // a. Perform classScopeEnv.CreateImmutableBinding(classBinding, true).
@@ -3375,7 +3372,7 @@ function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
   // 4. Let outerPrivateEnvironment be the running execution context's PrivateEnvironment.
   const outerPrivateEnvironment = surroundingAgent.runningExecutionContext.PrivateEnvironment;
   // 5. Let classPrivateEnvironment be NewPrivateEnvironment(outerPrivateEnvironment).
-  const classPrivateEnvironment = NewPrivateEnvironment(outerPrivateEnvironment);
+  const classPrivateEnvironment = new PrivateEnvironmentRecord(outerPrivateEnvironment);
   // 6. If ClassBody is present, then
   if (ClassBody) {
     // a. For each String dn of the PrivateBoundIdentifiers of ClassBody, do
@@ -3980,8 +3977,17 @@ function* Evaluate_AssignmentExpression({
   if (AssignmentOperator === '=') {
     // 1. If LeftHandSideExpression is neither an ObjectLiteral nor an ArrayLiteral, then
     if (LeftHandSideExpression.type !== 'ObjectLiteral' && LeftHandSideExpression.type !== 'ArrayLiteral') {
+      let _temp = yield* Evaluate(LeftHandSideExpression);
+      /* c8 ignore if */
+      if (_temp instanceof AbruptCompletion) {
+        return _temp;
+      }
+      /* c8 ignore if */
+      if (_temp instanceof Completion) {
+        _temp = _temp.Value;
+      }
       // a. Let lref be the result of evaluating LeftHandSideExpression.
-      let lref = yield* Evaluate(LeftHandSideExpression);
+      let lref = _temp;
       // b. ReturnIfAbrupt(lref).
       /* c8 ignore if */
       if (lref instanceof AbruptCompletion) {
@@ -4001,26 +4007,26 @@ function* Evaluate_AssignmentExpression({
         // i. Let rref be the result of evaluating AssignmentExpression.
         const rref = yield* Evaluate(AssignmentExpression);
         // ii. Let rval be ? GetValue(rref).
-        let _temp = GetValue(rref);
+        let _temp2 = GetValue(rref);
         /* c8 ignore if */
-        if (_temp instanceof AbruptCompletion) {
-          return _temp;
+        if (_temp2 instanceof AbruptCompletion) {
+          return _temp2;
         }
         /* c8 ignore if */
-        if (_temp instanceof Completion) {
-          _temp = _temp.Value;
+        if (_temp2 instanceof Completion) {
+          _temp2 = _temp2.Value;
         }
-        rval = _temp;
+        rval = _temp2;
       }
       // e. Perform ? PutValue(lref, rval).
-      let _temp2 = PutValue(lref, rval);
+      let _temp3 = PutValue(lref, rval);
       /* c8 ignore if */
-      if (_temp2 instanceof AbruptCompletion) {
-        return _temp2;
+      if (_temp3 instanceof AbruptCompletion) {
+        return _temp3;
       }
       /* c8 ignore if */
-      if (_temp2 instanceof Completion) {
-        _temp2 = _temp2.Value;
+      if (_temp3 instanceof Completion) {
+        _temp3 = _temp3.Value;
       }
       // f. Return rval.
       return rval;
@@ -4030,18 +4036,7 @@ function* Evaluate_AssignmentExpression({
     // 3. Let rref be the result of evaluating AssignmentExpression.
     const rref = yield* Evaluate(AssignmentExpression);
     // 3. Let rval be ? GetValue(rref).
-    let _temp3 = GetValue(rref);
-    /* c8 ignore if */
-    if (_temp3 instanceof AbruptCompletion) {
-      return _temp3;
-    }
-    /* c8 ignore if */
-    if (_temp3 instanceof Completion) {
-      _temp3 = _temp3.Value;
-    }
-    const rval = _temp3;
-    // 4. Perform ? DestructuringAssignmentEvaluation of assignmentPattern using rval as the argument.
-    let _temp4 = yield* DestructuringAssignmentEvaluation(assignmentPattern, rval);
+    let _temp4 = GetValue(rref);
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) {
       return _temp4;
@@ -4050,13 +4045,9 @@ function* Evaluate_AssignmentExpression({
     if (_temp4 instanceof Completion) {
       _temp4 = _temp4.Value;
     }
-    // 5. Return rval.
-    return rval;
-  } else if (AssignmentOperator === '&&=') {
-    // 1. Let lref be the result of evaluating LeftHandSideExpression.
-    const lref = yield* Evaluate(LeftHandSideExpression);
-    // 2. Let lval be ? GetValue(lref).
-    let _temp5 = GetValue(lref);
+    const rval = _temp4;
+    // 4. Perform ? DestructuringAssignmentEvaluation of assignmentPattern using rval as the argument.
+    let _temp5 = yield* DestructuringAssignmentEvaluation(assignmentPattern, rval);
     /* c8 ignore if */
     if (_temp5 instanceof AbruptCompletion) {
       return _temp5;
@@ -4065,15 +4056,39 @@ function* Evaluate_AssignmentExpression({
     if (_temp5 instanceof Completion) {
       _temp5 = _temp5.Value;
     }
-    const lval = _temp5;
-    // 3. Let lbool be ! ToBoolean(lval).
-    let _temp6 = ToBoolean(lval);
-    Assert(!(_temp6 instanceof AbruptCompletion), "ToBoolean(lval)" + ' returned an abrupt completion');
+    // 5. Return rval.
+    return rval;
+  } else if (AssignmentOperator === '&&=') {
+    let _temp6 = yield* Evaluate(LeftHandSideExpression);
+    /* c8 ignore if */
+    if (_temp6 instanceof AbruptCompletion) {
+      return _temp6;
+    }
     /* c8 ignore if */
     if (_temp6 instanceof Completion) {
       _temp6 = _temp6.Value;
     }
-    const lbool = _temp6;
+    // 1. Let lref be the result of evaluating LeftHandSideExpression.
+    const lref = _temp6;
+    // 2. Let lval be ? GetValue(lref).
+    let _temp7 = GetValue(lref);
+    /* c8 ignore if */
+    if (_temp7 instanceof AbruptCompletion) {
+      return _temp7;
+    }
+    /* c8 ignore if */
+    if (_temp7 instanceof Completion) {
+      _temp7 = _temp7.Value;
+    }
+    const lval = _temp7;
+    // 3. Let lbool be ! ToBoolean(lval).
+    let _temp8 = ToBoolean(lval);
+    Assert(!(_temp8 instanceof AbruptCompletion), "ToBoolean(lval)" + ' returned an abrupt completion');
+    /* c8 ignore if */
+    if (_temp8 instanceof Completion) {
+      _temp8 = _temp8.Value;
+    }
+    const lbool = _temp8;
     // 4. If lbool is false, return lval.
     if (lbool === Value.false) {
       return lval;
@@ -4088,51 +4103,60 @@ function* Evaluate_AssignmentExpression({
       // a. Let rref be the result of evaluating AssignmentExpression.
       const rref = yield* Evaluate(AssignmentExpression);
       // b. Let rval be ? GetValue(rref).
-      let _temp7 = GetValue(rref);
+      let _temp9 = GetValue(rref);
       /* c8 ignore if */
-      if (_temp7 instanceof AbruptCompletion) {
-        return _temp7;
+      if (_temp9 instanceof AbruptCompletion) {
+        return _temp9;
       }
       /* c8 ignore if */
-      if (_temp7 instanceof Completion) {
-        _temp7 = _temp7.Value;
+      if (_temp9 instanceof Completion) {
+        _temp9 = _temp9.Value;
       }
-      rval = _temp7;
+      rval = _temp9;
     }
     // 7. Perform ? PutValue(lref, rval).
-    let _temp8 = PutValue(lref, rval);
+    let _temp10 = PutValue(lref, rval);
     /* c8 ignore if */
-    if (_temp8 instanceof AbruptCompletion) {
-      return _temp8;
+    if (_temp10 instanceof AbruptCompletion) {
+      return _temp10;
     }
-    /* c8 ignore if */
-    if (_temp8 instanceof Completion) {
-      _temp8 = _temp8.Value;
-    }
-    // 8. Return rval.
-    return rval;
-  } else if (AssignmentOperator === '||=') {
-    // 1. Let lref be the result of evaluating LeftHandSideExpression.
-    const lref = yield* Evaluate(LeftHandSideExpression);
-    // 2. Let lval be ? GetValue(lref).
-    let _temp9 = GetValue(lref);
-    /* c8 ignore if */
-    if (_temp9 instanceof AbruptCompletion) {
-      return _temp9;
-    }
-    /* c8 ignore if */
-    if (_temp9 instanceof Completion) {
-      _temp9 = _temp9.Value;
-    }
-    const lval = _temp9;
-    // 3. Let lbool be ! ToBoolean(lval).
-    let _temp10 = ToBoolean(lval);
-    Assert(!(_temp10 instanceof AbruptCompletion), "ToBoolean(lval)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp10 instanceof Completion) {
       _temp10 = _temp10.Value;
     }
-    const lbool = _temp10;
+    // 8. Return rval.
+    return rval;
+  } else if (AssignmentOperator === '||=') {
+    let _temp11 = yield* Evaluate(LeftHandSideExpression);
+    /* c8 ignore if */
+    if (_temp11 instanceof AbruptCompletion) {
+      return _temp11;
+    }
+    /* c8 ignore if */
+    if (_temp11 instanceof Completion) {
+      _temp11 = _temp11.Value;
+    }
+    // 1. Let lref be the result of evaluating LeftHandSideExpression.
+    const lref = _temp11;
+    // 2. Let lval be ? GetValue(lref).
+    let _temp12 = GetValue(lref);
+    /* c8 ignore if */
+    if (_temp12 instanceof AbruptCompletion) {
+      return _temp12;
+    }
+    /* c8 ignore if */
+    if (_temp12 instanceof Completion) {
+      _temp12 = _temp12.Value;
+    }
+    const lval = _temp12;
+    // 3. Let lbool be ! ToBoolean(lval).
+    let _temp13 = ToBoolean(lval);
+    Assert(!(_temp13 instanceof AbruptCompletion), "ToBoolean(lval)" + ' returned an abrupt completion');
+    /* c8 ignore if */
+    if (_temp13 instanceof Completion) {
+      _temp13 = _temp13.Value;
+    }
+    const lbool = _temp13;
     // 4. If lbool is true, return lval.
     if (lbool === Value.true) {
       return lval;
@@ -4147,43 +4171,52 @@ function* Evaluate_AssignmentExpression({
       // a. Let rref be the result of evaluating AssignmentExpression.
       const rref = yield* Evaluate(AssignmentExpression);
       // b. Let rval be ? GetValue(rref).
-      let _temp11 = GetValue(rref);
+      let _temp14 = GetValue(rref);
       /* c8 ignore if */
-      if (_temp11 instanceof AbruptCompletion) {
-        return _temp11;
+      if (_temp14 instanceof AbruptCompletion) {
+        return _temp14;
       }
       /* c8 ignore if */
-      if (_temp11 instanceof Completion) {
-        _temp11 = _temp11.Value;
+      if (_temp14 instanceof Completion) {
+        _temp14 = _temp14.Value;
       }
-      rval = _temp11;
+      rval = _temp14;
     }
     // 7. Perform ? PutValue(lref, rval).
-    let _temp12 = PutValue(lref, rval);
+    let _temp15 = PutValue(lref, rval);
     /* c8 ignore if */
-    if (_temp12 instanceof AbruptCompletion) {
-      return _temp12;
+    if (_temp15 instanceof AbruptCompletion) {
+      return _temp15;
     }
     /* c8 ignore if */
-    if (_temp12 instanceof Completion) {
-      _temp12 = _temp12.Value;
+    if (_temp15 instanceof Completion) {
+      _temp15 = _temp15.Value;
     }
     // 8. Return rval.
     return rval;
   } else if (AssignmentOperator === '??=') {
+    let _temp16 = yield* Evaluate(LeftHandSideExpression);
+    /* c8 ignore if */
+    if (_temp16 instanceof AbruptCompletion) {
+      return _temp16;
+    }
+    /* c8 ignore if */
+    if (_temp16 instanceof Completion) {
+      _temp16 = _temp16.Value;
+    }
     // 1.Let lref be the result of evaluating LeftHandSideExpression.
-    const lref = yield* Evaluate(LeftHandSideExpression);
+    const lref = _temp16;
     // 2. Let lval be ? GetValue(lref).
-    let _temp13 = GetValue(lref);
+    let _temp17 = GetValue(lref);
     /* c8 ignore if */
-    if (_temp13 instanceof AbruptCompletion) {
-      return _temp13;
+    if (_temp17 instanceof AbruptCompletion) {
+      return _temp17;
     }
     /* c8 ignore if */
-    if (_temp13 instanceof Completion) {
-      _temp13 = _temp13.Value;
+    if (_temp17 instanceof Completion) {
+      _temp17 = _temp17.Value;
     }
-    const lval = _temp13;
+    const lval = _temp17;
     // 3. If lval is not undefined nor null, return lval.
     if (lval !== Value.undefined && lval !== Value.null) {
       return lval;
@@ -4198,56 +4231,65 @@ function* Evaluate_AssignmentExpression({
       // a. Let rref be the result of evaluating AssignmentExpression.
       const rref = yield* Evaluate(AssignmentExpression);
       // b. Let rval be ? GetValue(rref).
-      let _temp14 = GetValue(rref);
+      let _temp18 = GetValue(rref);
       /* c8 ignore if */
-      if (_temp14 instanceof AbruptCompletion) {
-        return _temp14;
+      if (_temp18 instanceof AbruptCompletion) {
+        return _temp18;
       }
       /* c8 ignore if */
-      if (_temp14 instanceof Completion) {
-        _temp14 = _temp14.Value;
+      if (_temp18 instanceof Completion) {
+        _temp18 = _temp18.Value;
       }
-      rval = _temp14;
+      rval = _temp18;
     }
     // 6. Perform ? PutValue(lref, rval).
-    let _temp15 = PutValue(lref, rval);
+    let _temp19 = PutValue(lref, rval);
     /* c8 ignore if */
-    if (_temp15 instanceof AbruptCompletion) {
-      return _temp15;
+    if (_temp19 instanceof AbruptCompletion) {
+      return _temp19;
     }
     /* c8 ignore if */
-    if (_temp15 instanceof Completion) {
-      _temp15 = _temp15.Value;
+    if (_temp19 instanceof Completion) {
+      _temp19 = _temp19.Value;
     }
     // 7. Return rval.
     return rval;
   } else {
+    let _temp20 = yield* Evaluate(LeftHandSideExpression);
+    /* c8 ignore if */
+    if (_temp20 instanceof AbruptCompletion) {
+      return _temp20;
+    }
+    /* c8 ignore if */
+    if (_temp20 instanceof Completion) {
+      _temp20 = _temp20.Value;
+    }
     // 1. Let lref be the result of evaluating LeftHandSideExpression.
-    const lref = yield* Evaluate(LeftHandSideExpression);
+    const lref = _temp20;
     // 2. Let lval be ? GetValue(lref).
-    let _temp16 = GetValue(lref);
+    let _temp21 = GetValue(lref);
     /* c8 ignore if */
-    if (_temp16 instanceof AbruptCompletion) {
-      return _temp16;
+    if (_temp21 instanceof AbruptCompletion) {
+      return _temp21;
     }
     /* c8 ignore if */
-    if (_temp16 instanceof Completion) {
-      _temp16 = _temp16.Value;
+    if (_temp21 instanceof Completion) {
+      _temp21 = _temp21.Value;
     }
-    const lval = _temp16;
+    const lval = _temp21;
     // 3. Let rref be the result of evaluating AssignmentExpression.
     const rref = yield* Evaluate(AssignmentExpression);
     // 4. Let rval be ? GetValue(rref).
-    let _temp17 = GetValue(rref);
+    let _temp22 = GetValue(rref);
     /* c8 ignore if */
-    if (_temp17 instanceof AbruptCompletion) {
-      return _temp17;
+    if (_temp22 instanceof AbruptCompletion) {
+      return _temp22;
     }
     /* c8 ignore if */
-    if (_temp17 instanceof Completion) {
-      _temp17 = _temp17.Value;
+    if (_temp22 instanceof Completion) {
+      _temp22 = _temp22.Value;
     }
-    const rval = _temp17;
+    const rval = _temp22;
     // 5. Let assignmentOpText be the source text matched by AssignmentOperator.
     const assignmentOpText = AssignmentOperator;
     // 6. Let opText be the sequence of Unicode code points associated with assignmentOpText in the following table:
@@ -4268,14 +4310,14 @@ function* Evaluate_AssignmentExpression({
     // 7. Let r be ApplyStringOrNumericBinaryOperator(lval, opText, rval).
     const r = ApplyStringOrNumericBinaryOperator(lval, opText, rval);
     // 8. Perform ? PutValue(lref, r).
-    let _temp18 = PutValue(lref, r);
+    let _temp23 = PutValue(lref, r);
     /* c8 ignore if */
-    if (_temp18 instanceof AbruptCompletion) {
-      return _temp18;
+    if (_temp23 instanceof AbruptCompletion) {
+      return _temp23;
     }
     /* c8 ignore if */
-    if (_temp18 instanceof Completion) {
-      _temp18 = _temp18.Value;
+    if (_temp23 instanceof Completion) {
+      _temp23 = _temp23.Value;
     }
     // 9. Return r.
     return r;
@@ -5229,9 +5271,7 @@ function* Evaluate_CallExpression(CallExpression) {
   // 3. Let arguments be the Arguments of expr.
   const args = expr.Arguments;
   // 4. Let ref be the result of evaluating memberExpr.
-  const ref = yield* Evaluate(memberExpr);
-  // 5. Let func be ? GetValue(ref).
-  let _temp = GetValue(ref);
+  let _temp = yield* Evaluate(memberExpr);
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) {
     return _temp;
@@ -5240,22 +5280,33 @@ function* Evaluate_CallExpression(CallExpression) {
   if (_temp instanceof Completion) {
     _temp = _temp.Value;
   }
-  const func = _temp;
+  const ref = _temp;
+  // 5. Let func be ? GetValue(ref).
+  let _temp2 = GetValue(ref);
+  /* c8 ignore if */
+  if (_temp2 instanceof AbruptCompletion) {
+    return _temp2;
+  }
+  /* c8 ignore if */
+  if (_temp2 instanceof Completion) {
+    _temp2 = _temp2.Value;
+  }
+  const func = _temp2;
   // 6. If Type(ref) is Reference, IsPropertyReference(ref) is false, and GetReferencedName(ref) is "eval", then
   if (ref instanceof ReferenceRecord && IsPropertyReference(ref) === Value.false && ref.ReferencedName instanceof JSStringValue && ref.ReferencedName.stringValue() === 'eval') {
     // a. If SameValue(func, %eval%) is true, then
     if (SameValue(func, surroundingAgent.intrinsic('%eval%')) === Value.true) {
-      let _temp2 = yield* ArgumentListEvaluation(args);
+      let _temp3 = yield* ArgumentListEvaluation(args);
       /* c8 ignore if */
-      if (_temp2 instanceof AbruptCompletion) {
-        return _temp2;
+      if (_temp3 instanceof AbruptCompletion) {
+        return _temp3;
       }
       /* c8 ignore if */
-      if (_temp2 instanceof Completion) {
-        _temp2 = _temp2.Value;
+      if (_temp3 instanceof Completion) {
+        _temp3 = _temp3.Value;
       }
       // i. Let argList be ? ArgumentListEvaluation of arguments.
-      const argList = _temp2;
+      const argList = _temp3;
       // ii. If argList has no elements, return undefined.
       if (argList.length === 0) {
         return Value.undefined;
@@ -5979,7 +6030,7 @@ function* FunctionDeclarationInstantiation(func, argumentsList) {
     // b. Let calleeEnv be the LexicalEnvironment of calleeContext.
     const calleeEnv = calleeContext.LexicalEnvironment;
     // c. Let env be NewDeclarativeEnvironment(calleeEnv).
-    env = NewDeclarativeEnvironment(calleeEnv);
+    env = new DeclarativeEnvironmentRecord(calleeEnv);
     // d. Assert: The VariableEnvironment of calleeContext is calleeEnv.
     Assert(calleeContext.VariableEnvironment === calleeEnv, "calleeContext.VariableEnvironment === calleeEnv");
     // e. Set the LexicalEnvironment of calleeContext to env.
@@ -6102,7 +6153,7 @@ function* FunctionDeclarationInstantiation(func, argumentsList) {
     // a. NOTE: A separate Environment Record is needed to ensure that closures created by expressions
     //    in the formal parameter list do not have visibility of declarations in the function body.
     // b. Let varEnv be NewDeclarativeEnvironment(env).
-    varEnv = NewDeclarativeEnvironment(env);
+    varEnv = new DeclarativeEnvironmentRecord(env);
     // c. Set the VariableEnvironment of calleeContext to varEnv.
     calleeContext.VariableEnvironment = varEnv;
     // d. Let instantiatedVarNames be a new empty List.
@@ -6145,7 +6196,7 @@ function* FunctionDeclarationInstantiation(func, argumentsList) {
   // 30. If strict is false, then
   if (strict === false) {
     // a. Let lexEnv be NewDeclarativeEnvironment(varEnv).
-    lexEnv = NewDeclarativeEnvironment(varEnv);
+    lexEnv = new DeclarativeEnvironmentRecord(varEnv);
     // b. NOTE: Non-strict functions use a separate lexical Environment Record for top-level lexical declarations
     //    so that a direct eval can determine whether any var scoped declarations introduced by the eval code
     //    conflict with pre-existing top-level lexically scoped declarations. This is not needed for strict functions
@@ -7417,7 +7468,7 @@ function* CatchClauseEvaluation({
   // 1. Let oldEnv be the running execution context's LexicalEnvironment.
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 2. Let catchEnv be NewDeclarativeEnvironment(oldEnv).
-  const catchEnv = NewDeclarativeEnvironment(oldEnv);
+  const catchEnv = new DeclarativeEnvironmentRecord(oldEnv);
   // 3. For each element argName of the BoundNames of CatchParameter, do
   for (const argName of BoundNames(CatchParameter)) {
     let _temp = catchEnv.CreateMutableBinding(argName, Value.false);
@@ -7502,7 +7553,7 @@ function* Evaluate_Block({
   // 1. Let oldEnv be the running execution context's LexicalEnvironment.
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 2. Let blockEnv be NewDeclarativeEnvironment(oldEnv).
-  const blockEnv = NewDeclarativeEnvironment(oldEnv);
+  const blockEnv = new DeclarativeEnvironmentRecord(oldEnv);
   // 3. Perform BlockDeclarationInstantiation(StatementList, blockEnv).
   BlockDeclarationInstantiation(StatementList, blockEnv);
   // 4. Set the running execution context's LexicalEnvironment to blockEnv.
@@ -7711,8 +7762,17 @@ function* Evaluate_ArrayLiteral({
 function* Evaluate_UnaryExpression_Delete({
   UnaryExpression
 }) {
+  let _temp = yield* Evaluate(UnaryExpression);
+  /* c8 ignore if */
+  if (_temp instanceof AbruptCompletion) {
+    return _temp;
+  }
+  /* c8 ignore if */
+  if (_temp instanceof Completion) {
+    _temp = _temp.Value;
+  }
   // 1. Let ref be the result of evaluating UnaryExpression.
-  let ref = yield* Evaluate(UnaryExpression);
+  let ref = _temp;
   // 2. ReturnIfAbrupt(ref).
   /* c8 ignore if */
   if (ref instanceof AbruptCompletion) {
@@ -7740,24 +7800,24 @@ function* Evaluate_UnaryExpression_Delete({
       return surroundingAgent.Throw('ReferenceError', 'CannotDeleteSuper');
     }
     // b. Let baseObj be ! ToObject(ref.[[Base]]).
-    let _temp = ToObject(ref.Base);
-    Assert(!(_temp instanceof AbruptCompletion), "ToObject(ref.Base)" + ' returned an abrupt completion');
-    /* c8 ignore if */
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-    const baseObj = _temp;
-    // c. Let deleteStatus be ? baseObj.[[Delete]](ref.[[ReferencedName]]).
-    let _temp2 = baseObj.Delete(ref.ReferencedName);
-    /* c8 ignore if */
-    if (_temp2 instanceof AbruptCompletion) {
-      return _temp2;
-    }
+    let _temp2 = ToObject(ref.Base);
+    Assert(!(_temp2 instanceof AbruptCompletion), "ToObject(ref.Base)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
     }
-    const deleteStatus = _temp2;
+    const baseObj = _temp2;
+    // c. Let deleteStatus be ? baseObj.[[Delete]](ref.[[ReferencedName]]).
+    let _temp3 = baseObj.Delete(ref.ReferencedName);
+    /* c8 ignore if */
+    if (_temp3 instanceof AbruptCompletion) {
+      return _temp3;
+    }
+    /* c8 ignore if */
+    if (_temp3 instanceof Completion) {
+      _temp3 = _temp3.Value;
+    }
+    const deleteStatus = _temp3;
     // d. If deleteStatus is false and ref.[[Strict]] is true, throw a TypeError exception.
     if (deleteStatus === Value.false && ref.Strict === Value.true) {
       return surroundingAgent.Throw('TypeError', 'StrictModeDelete', ref.ReferencedName);
@@ -7784,14 +7844,14 @@ function* Evaluate_UnaryExpression_Void({
   // 1. Let expr be the result of evaluating UnaryExpression.
   const expr = yield* Evaluate(UnaryExpression);
   // 2. Perform ? GetValue(expr).
-  let _temp3 = GetValue(expr);
+  let _temp4 = GetValue(expr);
   /* c8 ignore if */
-  if (_temp3 instanceof AbruptCompletion) {
-    return _temp3;
+  if (_temp4 instanceof AbruptCompletion) {
+    return _temp4;
   }
   /* c8 ignore if */
-  if (_temp3 instanceof Completion) {
-    _temp3 = _temp3.Value;
+  if (_temp4 instanceof Completion) {
+    _temp4 = _temp4.Value;
   }
   // 3. Return undefined.
   return Value.undefined;
@@ -7803,8 +7863,17 @@ Evaluate_UnaryExpression_Void.section = 'https://tc39.es/ecma262/#sec-void-opera
 function* Evaluate_UnaryExpression_Typeof({
   UnaryExpression
 }) {
+  let _temp5 = yield* Evaluate(UnaryExpression);
+  /* c8 ignore if */
+  if (_temp5 instanceof AbruptCompletion) {
+    return _temp5;
+  }
+  /* c8 ignore if */
+  if (_temp5 instanceof Completion) {
+    _temp5 = _temp5.Value;
+  }
   // 1. Let val be the result of evaluating UnaryExpression.
-  let val = yield* Evaluate(UnaryExpression);
+  let val = _temp5;
   // 2. If Type(val) is Reference, then
   if (val instanceof ReferenceRecord) {
     // a. If IsUnresolvableReference(val) is true, return "undefined".
@@ -7813,16 +7882,16 @@ function* Evaluate_UnaryExpression_Typeof({
     }
   }
   // 3. Set val to ? GetValue(val).
-  let _temp4 = GetValue(val);
+  let _temp6 = GetValue(val);
   /* c8 ignore if */
-  if (_temp4 instanceof AbruptCompletion) {
-    return _temp4;
+  if (_temp6 instanceof AbruptCompletion) {
+    return _temp6;
   }
   /* c8 ignore if */
-  if (_temp4 instanceof Completion) {
-    _temp4 = _temp4.Value;
+  if (_temp6 instanceof Completion) {
+    _temp6 = _temp6.Value;
   }
-  val = _temp4;
+  val = _temp6;
   // 4. Return a String according to Table 37.
   if (val instanceof UndefinedValue) {
     return Value('undefined');
@@ -7856,16 +7925,16 @@ function* Evaluate_UnaryExpression_Plus({
   // 1. Let expr be the result of evaluating UnaryExpression.
   const expr = yield* Evaluate(UnaryExpression);
   // 2. Return ? ToNumber(? GetValue(expr)).
-  let _temp5 = GetValue(expr);
+  let _temp7 = GetValue(expr);
   /* c8 ignore if */
-  if (_temp5 instanceof AbruptCompletion) {
-    return _temp5;
+  if (_temp7 instanceof AbruptCompletion) {
+    return _temp7;
   }
   /* c8 ignore if */
-  if (_temp5 instanceof Completion) {
-    _temp5 = _temp5.Value;
+  if (_temp7 instanceof Completion) {
+    _temp7 = _temp7.Value;
   }
-  return ToNumber(_temp5);
+  return ToNumber(_temp7);
 }
 
 /** https://tc39.es/ecma262/#sec-unary-minus-operator-runtime-semantics-evaluation */
@@ -7877,7 +7946,16 @@ function* Evaluate_UnaryExpression_Minus({
   // 1. Let expr be the result of evaluating UnaryExpression.
   const expr = yield* Evaluate(UnaryExpression);
   // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
-  let _temp8 = GetValue(expr);
+  let _temp10 = GetValue(expr);
+  /* c8 ignore if */
+  if (_temp10 instanceof AbruptCompletion) {
+    return _temp10;
+  }
+  /* c8 ignore if */
+  if (_temp10 instanceof Completion) {
+    _temp10 = _temp10.Value;
+  }
+  let _temp8 = ToNumeric(_temp10);
   /* c8 ignore if */
   if (_temp8 instanceof AbruptCompletion) {
     return _temp8;
@@ -7886,26 +7964,17 @@ function* Evaluate_UnaryExpression_Minus({
   if (_temp8 instanceof Completion) {
     _temp8 = _temp8.Value;
   }
-  let _temp6 = ToNumeric(_temp8);
-  /* c8 ignore if */
-  if (_temp6 instanceof AbruptCompletion) {
-    return _temp6;
-  }
-  /* c8 ignore if */
-  if (_temp6 instanceof Completion) {
-    _temp6 = _temp6.Value;
-  }
-  const oldValue = _temp6;
+  const oldValue = _temp8;
   // 3. Let T be Type(oldValue).
   const T = TypeForMethod(oldValue);
   // 4. Return ! T::unaryMinus(oldValue).
-  let _temp7 = T.unaryMinus(oldValue);
-  Assert(!(_temp7 instanceof AbruptCompletion), "T.unaryMinus(oldValue)" + ' returned an abrupt completion');
+  let _temp9 = T.unaryMinus(oldValue);
+  Assert(!(_temp9 instanceof AbruptCompletion), "T.unaryMinus(oldValue)" + ' returned an abrupt completion');
   /* c8 ignore if */
-  if (_temp7 instanceof Completion) {
-    _temp7 = _temp7.Value;
+  if (_temp9 instanceof Completion) {
+    _temp9 = _temp9.Value;
   }
-  return _temp7;
+  return _temp9;
 }
 
 /** https://tc39.es/ecma262/#sec-bitwise-not-operator-runtime-semantics-evaluation */
@@ -7917,7 +7986,16 @@ function* Evaluate_UnaryExpression_Tilde({
   // 1. Let expr be the result of evaluating UnaryExpression.
   const expr = yield* Evaluate(UnaryExpression);
   // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
-  let _temp11 = GetValue(expr);
+  let _temp13 = GetValue(expr);
+  /* c8 ignore if */
+  if (_temp13 instanceof AbruptCompletion) {
+    return _temp13;
+  }
+  /* c8 ignore if */
+  if (_temp13 instanceof Completion) {
+    _temp13 = _temp13.Value;
+  }
+  let _temp11 = ToNumeric(_temp13);
   /* c8 ignore if */
   if (_temp11 instanceof AbruptCompletion) {
     return _temp11;
@@ -7926,26 +8004,17 @@ function* Evaluate_UnaryExpression_Tilde({
   if (_temp11 instanceof Completion) {
     _temp11 = _temp11.Value;
   }
-  let _temp9 = ToNumeric(_temp11);
-  /* c8 ignore if */
-  if (_temp9 instanceof AbruptCompletion) {
-    return _temp9;
-  }
-  /* c8 ignore if */
-  if (_temp9 instanceof Completion) {
-    _temp9 = _temp9.Value;
-  }
-  const oldValue = _temp9;
+  const oldValue = _temp11;
   // 3. Let T be Type(oldValue).
   const T = TypeForMethod(oldValue);
   // 4. Return ! T::bitwiseNOT(oldValue).
-  let _temp10 = T.bitwiseNOT(oldValue);
-  Assert(!(_temp10 instanceof AbruptCompletion), "T.bitwiseNOT(oldValue)" + ' returned an abrupt completion');
+  let _temp12 = T.bitwiseNOT(oldValue);
+  Assert(!(_temp12 instanceof AbruptCompletion), "T.bitwiseNOT(oldValue)" + ' returned an abrupt completion');
   /* c8 ignore if */
-  if (_temp10 instanceof Completion) {
-    _temp10 = _temp10.Value;
+  if (_temp12 instanceof Completion) {
+    _temp12 = _temp12.Value;
   }
-  return _temp10;
+  return _temp12;
 }
 
 /** https://tc39.es/ecma262/#sec-logical-not-operator-runtime-semantics-evaluation */
@@ -7957,16 +8026,16 @@ function* Evaluate_UnaryExpression_Bang({
   // 1. Let expr be the result of evaluating UnaryExpression.
   const expr = yield* Evaluate(UnaryExpression);
   // 2. Let oldValue be ! ToBoolean(? GetValue(expr)).
-  let _temp12 = GetValue(expr);
+  let _temp14 = GetValue(expr);
   /* c8 ignore if */
-  if (_temp12 instanceof AbruptCompletion) {
-    return _temp12;
+  if (_temp14 instanceof AbruptCompletion) {
+    return _temp14;
   }
   /* c8 ignore if */
-  if (_temp12 instanceof Completion) {
-    _temp12 = _temp12.Value;
+  if (_temp14 instanceof Completion) {
+    _temp14 = _temp14.Value;
   }
-  const oldValue = ToBoolean(_temp12);
+  const oldValue = ToBoolean(_temp14);
   // 3. If oldValue is true, return false.
   if (oldValue === Value.true) {
     return Value.false;
@@ -9287,7 +9356,7 @@ function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement, label
         // 1. Let oldEnv be the running execution context's LexicalEnvironment.
         const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
         // 2. Let loopEnv be NewDeclarativeEnvironment(oldEnv).
-        const loopEnv = NewDeclarativeEnvironment(oldEnv);
+        const loopEnv = new DeclarativeEnvironmentRecord(oldEnv);
         // 3. Let isConst be IsConstantDeclaration of LexicalDeclaration.
         const isConst = IsConstantDeclaration(LexicalDeclaration);
         // 4. Let boundNames be the BoundNames of LexicalDeclaration.
@@ -9666,7 +9735,7 @@ function CreatePerIterationEnvironment(perIterationBindings) {
     // c. Assert: outer is not null.
     Assert(outer !== Value.null, "outer !== Value.null");
     // d. Let thisIterationEnv be NewDeclarativeEnvironment(outer).
-    const thisIterationEnv = NewDeclarativeEnvironment(outer);
+    const thisIterationEnv = new DeclarativeEnvironmentRecord(outer);
     // e. For each element bn of perIterationBindings, do
     for (const bn of perIterationBindings) {
       let _temp22 = thisIterationEnv.CreateMutableBinding(bn, Value.false);
@@ -9705,7 +9774,7 @@ function* ForInOfHeadEvaluation(uninitializedBoundNames, expr, iterationKind) {
   if (uninitializedBoundNames.length > 0) {
     // a. Assert: uninitializedBoundNames has no duplicate entries.
     // b. Let newEnv be NewDeclarativeEnvironment(oldEnv).
-    const newEnv = NewDeclarativeEnvironment(oldEnv);
+    const newEnv = new DeclarativeEnvironmentRecord(oldEnv);
     // c. For each string name in uninitializedBoundNames, do
     for (const name of uninitializedBoundNames) {
       let _temp24 = newEnv.CreateMutableBinding(name, Value.false);
@@ -9887,7 +9956,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
       // ii. Assert: lhs is a ForDeclaration.
       Assert(lhs.type === 'ForDeclaration', "lhs.type === 'ForDeclaration'");
       // iii. Let iterationEnv be NewDeclarativeEnvironment(oldEnv).
-      iterationEnv = NewDeclarativeEnvironment(oldEnv);
+      iterationEnv = new DeclarativeEnvironmentRecord(oldEnv);
       // iv. Perform BindingInstantiation for lhs passing iterationEnv as the argument.
       BindingInstantiation(lhs, iterationEnv);
       // v. Set the running execution context's LexicalEnvironment to iterationEnv.
@@ -10319,7 +10388,7 @@ function* Evaluate_SwitchStatement({
   // 3. Let oldEnv be the running execution context's LexicalEnvironment.
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 4. Let blockEnv be NewDeclarativeEnvironment(oldEnv).
-  const blockEnv = NewDeclarativeEnvironment(oldEnv);
+  const blockEnv = new DeclarativeEnvironmentRecord(oldEnv);
   // 5. Perform BlockDeclarationInstantiation(CaseBlock, blockEnv).
   BlockDeclarationInstantiation(CaseBlock, blockEnv);
   // 6. Set the running execution context's LexicalEnvironment to blockEnv.
@@ -15374,7 +15443,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 }
 
 function handleError(e) {
-  if (e.name === 'SyntaxError') {
+  if (e instanceof SyntaxError) {
     const v = surroundingAgent.Throw('SyntaxError', 'Raw', e.message).Value;
     if (e.decoration) {
       const stackString = Value('stack');
@@ -15384,8 +15453,8 @@ function handleError(e) {
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
       }
-      const stack = _temp.stringValue();
-      const newStackString = `${e.decoration}\n${stack}`;
+      const stack = _temp;
+      const newStackString = `${e.decoration}\n${stack instanceof JSStringValue ? stack.stringValue() : ''}`;
       let _temp2 = Set$1(v, stackString, Value(newStackString), Value.true);
       Assert(!(_temp2 instanceof AbruptCompletion), "Set(v, stackString, Value(newStackString), Value.true)" + ' returned an abrupt completion');
       /* c8 ignore if */
@@ -17708,7 +17777,7 @@ function* Evaluate_WithStatement({
   // 3. Let oldEnv be the running execution context's LexicalEnvironment.
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 4. Let newEnv be NewObjectEnvironment(obj, true, oldEnv).
-  const newEnv = NewObjectEnvironment(obj, Value.true, oldEnv);
+  const newEnv = new ObjectEnvironmentRecord(obj, Value.true, oldEnv);
   // 5. Set the running execution context's LexicalEnvironment to newEnv.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = newEnv;
   // 6. Let C be the result of evaluating Statement.
@@ -18482,10 +18551,8 @@ function Evaluate_ImportMeta(_ImportMeta) {
 }
 
 // @ts-nocheck
-
-/** https://tc39.es/ecma262/#sec-debugger-statement-runtime-semantics-evaluation */
-// DebuggerStatement : `debugger` `;`
-function Evaluate_DebuggerStatement() {
+/** https://tc39.es/ecma262/#sec-debugger-statement-runtime-semantics-evaluation */ // DebuggerStatement : `debugger` `;`
+function Evaluate_DebuggerStatement(_node) {
   let result;
   // 1. If an implementation-defined debugging facility is available and enabled, then
   if (surroundingAgent.hostDefinedOptions.onDebugger) {
@@ -20246,7 +20313,7 @@ function InstantiateOrdinaryFunctionExpression(FunctionExpression, name) {
     // 3. Let scope be the running execution context's LexicalEnvironment.
     const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
     // 4. Let funcEnv be NewDeclarativeEnvironment(scope).
-    const funcEnv = NewDeclarativeEnvironment(scope);
+    const funcEnv = new DeclarativeEnvironmentRecord(scope);
     // 5. Perform funcEnv.CreateImmutableBinding(name, false).
     funcEnv.CreateImmutableBinding(name, Value.false);
     // 6. Let privateScope be the running execution context's PrivateEnvironment.
@@ -20302,7 +20369,7 @@ function InstantiateGeneratorFunctionExpression(GeneratorExpression, name) {
     // 3. Let scope be the running execution context's LexicalEnvironment.
     const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
     // 4. Let funcEnv be NewDeclarativeEnvironment(scope).
-    const funcEnv = NewDeclarativeEnvironment(scope);
+    const funcEnv = new DeclarativeEnvironmentRecord(scope);
     // 5. Perform funcEnv.CreateImmutableBinding(name, false).
     funcEnv.CreateImmutableBinding(name, Value.false);
     // 6. Let privateScope be the running execution context's PrivateEnvironment.
@@ -20433,8 +20500,8 @@ function InstantiateAsyncFunctionExpression(AsyncFunctionExpression, name) {
     // 3. Let scope be the LexicalEnvironment of the running execution context.
     const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
     // 4. Let funcEnv be ! NewDeclarativeEnvironment(scope).
-    let _temp = NewDeclarativeEnvironment(scope);
-    Assert(!(_temp instanceof AbruptCompletion), "NewDeclarativeEnvironment(scope)" + ' returned an abrupt completion');
+    let _temp = new DeclarativeEnvironmentRecord(scope);
+    Assert(!(_temp instanceof AbruptCompletion), "new DeclarativeEnvironmentRecord(scope)" + ' returned an abrupt completion');
     /* c8 ignore if */
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
@@ -20518,7 +20585,7 @@ function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpression, n
     // 3. Let scope be the running execution context's LexicalEnvironment.
     const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
     // 4. Let funcEnv be NewDeclarativeEnvironment(scope).
-    const funcEnv = NewDeclarativeEnvironment(scope);
+    const funcEnv = new DeclarativeEnvironmentRecord(scope);
     // 5. Perform funcEnv.CreateImmutableBinding(name, false).
     funcEnv.CreateImmutableBinding(name, Value.false);
     // 6. Let privateScope be the running execution context's PrivateEnvironment.
@@ -20636,7 +20703,6 @@ function ClassStaticBlockDefinitionEvaluation({
 }
 
 // @ts-nocheck
-
 // #resolvedbinding-record
 class ResolvedBindingRecord {
   Module;
@@ -20654,23 +20720,17 @@ class ResolvedBindingRecord {
     m(this.Module);
   }
 }
-
 /** https://tc39.es/ecma262/#sec-abstract-module-records */
 class AbstractModuleRecord {
   Realm;
   Environment;
   Namespace;
   HostDefined;
-  constructor({
-    Realm,
-    Environment,
-    Namespace,
-    HostDefined
-  }) {
-    this.Realm = Realm;
-    this.Environment = Environment;
-    this.Namespace = Namespace;
-    this.HostDefined = HostDefined;
+  constructor(init) {
+    this.Realm = init.Realm;
+    this.Environment = init.Environment;
+    this.Namespace = init.Namespace;
+    this.HostDefined = init.HostDefined;
   }
   mark(m) {
     m(this.Realm);
@@ -20678,7 +20738,6 @@ class AbstractModuleRecord {
     m(this.Namespace);
   }
 }
-
 /** https://tc39.es/ecma262/#sec-cyclic-module-records */
 class CyclicModuleRecord extends AbstractModuleRecord {
   Status;
@@ -20773,7 +20832,7 @@ class CyclicModuleRecord extends AbstractModuleRecord {
       module = GetAsyncCycleRoot(module);
     }
     // (*TopLevelAwait) 4. If module.[[TopLevelCapability]] is not undefined, then
-    if (module.TopLevelCapability !== Value.undefined) {
+    if (!(module.TopLevelCapability instanceof UndefinedValue)) {
       // a. Return module.[[TopLevelCapability]].[[Promise]].
       return module.TopLevelCapability.Promise;
     }
@@ -20842,7 +20901,6 @@ class CyclicModuleRecord extends AbstractModuleRecord {
     }
   }
 }
-
 /** https://tc39.es/ecma262/#sec-source-text-module-records */
 class SourceTextModuleRecord extends CyclicModuleRecord {
   ImportMeta;
@@ -21031,9 +21089,9 @@ class SourceTextModuleRecord extends CyclicModuleRecord {
     // 3. Let realm be module.[[Realm]].
     const realm = module.Realm;
     // 4. Assert: realm is not undefined.
-    Assert(realm !== Value.undefined, "realm !== Value.undefined");
+    Assert(!(realm instanceof UndefinedValue), "!(realm instanceof UndefinedValue)");
     // 5. Let env be NewModuleEnvironment(realm.[[GlobalEnv]]).
-    const env = NewModuleEnvironment(realm.GlobalEnv);
+    const env = new ModuleEnvironmentRecord(realm.GlobalEnv);
     // 6. Set module.[[Environment]] to env.
     module.Environment = env;
     // 7. For each ImportEntry Record in in module.[[ImportEntries]], do
@@ -21208,7 +21266,6 @@ class SourceTextModuleRecord extends CyclicModuleRecord {
     m(this.Context);
   }
 }
-
 /** https://tc39.es/ecma262/#sec-synthetic-module-records */
 class SyntheticModuleRecord extends AbstractModuleRecord {
   ExportNames;
@@ -21248,9 +21305,9 @@ class SyntheticModuleRecord extends AbstractModuleRecord {
     // 1. Let realm be module.[[Realm]].
     const realm = module.Realm;
     // 2. Assert: realm is not undefined.
-    Assert(realm !== Value.undefined, "realm !== Value.undefined");
+    Assert(!(realm instanceof UndefinedValue), "!(realm instanceof UndefinedValue)");
     // 3. Let env be NewModuleEnvironment(realm.[[GlobalEnv]]).
-    const env = NewModuleEnvironment(realm.GlobalEnv);
+    const env = new ModuleEnvironmentRecord(realm.GlobalEnv);
     // 4. Set module.[[Environment]] to env.
     module.Environment = env;
     // 5. For each exportName in module.[[ExportNames]],
@@ -21298,13 +21355,13 @@ class SyntheticModuleRecord extends AbstractModuleRecord {
     // 11. Resume the context that is now on the top of the execution context stack as the running execution context.
     surroundingAgent.executionContextStack.pop(moduleContext);
     // 12. Return Completion(result).
+    // @ts-expect-error
+    // TODO(ts): According to the new spec, this should return a Promise now.
     return Completion(result);
   }
-
-  /** https://tc39.es/ecma262/#sec-synthetic-module-record-set-synthetic-export */
   SetSyntheticExport(name, value) {
     const module = this;
-    // 1. Return ? module.[[Environment]].SetMutableBinding(name, value, true).
+    // 1. Return module.[[Environment]].SetMutableBinding(name, value, true).
     return module.Environment.SetMutableBinding(name, value, Value.true);
   }
 }
@@ -21312,13 +21369,14 @@ class SyntheticModuleRecord extends AbstractModuleRecord {
 /** https://tc39.es/ecma262/#sec-environment-records */
 class EnvironmentRecord {
   OuterEnv;
-
+  constructor(outerEnv) {
+    this.OuterEnv = outerEnv;
+  }
   // NON-SPEC
   mark(m) {
     m(this.OuterEnv);
   }
 }
-
 /** https://tc39.es/ecma262/#sec-declarative-environment-records */
 class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   bindings = new ValueMap();
@@ -21439,7 +21497,7 @@ class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-declarative-environment-records-getbindingvalue-n-s */
-  GetBindingValue(N) {
+  GetBindingValue(N, _S) {
     // 1. Let envRec be the declarative Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Assert: envRec has a binding for N.
@@ -21450,7 +21508,7 @@ class DeclarativeEnvironmentRecord extends EnvironmentRecord {
       return surroundingAgent.Throw('ReferenceError', 'NotInitialized', N);
     }
     // 4. Return the value currently bound to N in envRec.
-    return binding.value;
+    return NormalCompletion(binding.value);
   }
 
   /** https://tc39.es/ecma262/#sec-declarative-environment-records-deletebinding-n */
@@ -21490,6 +21548,7 @@ class DeclarativeEnvironmentRecord extends EnvironmentRecord {
 
   // NON-SPEC
   mark(m) {
+    // TODO(ts): this function does not call super.mark(). is it a mistake?
     m(this.bindings);
   }
 }
@@ -21498,6 +21557,13 @@ class DeclarativeEnvironmentRecord extends EnvironmentRecord {
 class ObjectEnvironmentRecord extends EnvironmentRecord {
   BindingObject;
   IsWithEnvironment;
+
+  /** https://tc39.es/ecma262/#sec-newobjectenvironment */
+  constructor(O, W, E) {
+    super(E);
+    this.BindingObject = O;
+    this.IsWithEnvironment = W;
+  }
 
   /** https://tc39.es/ecma262/#sec-object-environment-records-hasbinding-n */
   HasBinding(N) {
@@ -21639,12 +21705,12 @@ class ObjectEnvironmentRecord extends EnvironmentRecord {
     if (value === Value.false) {
       // a. If S is false, return the value undefined; otherwise throw a ReferenceError exception.
       if (S === Value.false) {
-        return Value.undefined;
+        return NormalCompletion(Value.undefined);
       } else {
         return surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
       }
     }
-    // 5. Return ? Get(bindings, N).
+    // 5. Return Get(bindings, N).
     return Get(bindings, N);
   }
 
@@ -21684,12 +21750,37 @@ class ObjectEnvironmentRecord extends EnvironmentRecord {
 
   // NON-SPEC
   mark(m) {
+    // TODO(ts): this function does not call super.mark(). is it a mistake?
     m(this.BindingObject);
   }
 }
 
 /** https://tc39.es/ecma262/#sec-function-environment-records */
 class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
+  /** https://tc39.es/ecma262/#sec-newfunctionenvironment */
+  constructor(F, newTarget) {
+    // 1. Assert: F is an ECMAScript function.
+    Assert(isECMAScriptFunctionObject(F), "isECMAScriptFunctionObject(F)");
+    // 2. Assert: Type(newTarget) is Undefined or Object.
+    Assert(newTarget instanceof UndefinedValue || newTarget instanceof ObjectValue, "newTarget instanceof UndefinedValue || newTarget instanceof ObjectValue");
+    // 3. Let env be a new function Environment Record containing no bindings.
+    super(F.Environment);
+    // 4. Set env.[[FunctionObject]] to F.
+    this.FunctionObject = F;
+    // 5. If F.[[ThisMode]] is lexical, set env.[[ThisBindingStatus]] to lexical.
+
+    if (F.ThisMode === 'lexical') {
+      this.ThisBindingStatus = 'lexical';
+    } else {
+      // 6. Else, set env.[[ThisBindingStatus]] to uninitialized.
+      this.ThisBindingStatus = 'uninitialized';
+    }
+    // 7. Set env.[[NewTarget]] to newTarget.
+    this.NewTarget = newTarget;
+    // 8. Set env.[[OuterEnv]] to F.[[Environment]].
+    // 9. Return env.
+  }
+
   ThisValue;
   ThisBindingStatus;
   FunctionObject;
@@ -21783,6 +21874,26 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
   DeclarativeRecord;
   VarNames;
 
+  /** https://tc39.es/ecma262/#sec-newglobalenvironment */
+  constructor(G, thisValue) {
+    // 1. Let objRec be NewObjectEnvironment(G, false, null).
+    const objRec = new ObjectEnvironmentRecord(G, Value.false, Value.null);
+    // 2. Let dclRec be a new declarative Environment Record containing no bindings.
+    const dclRec = new DeclarativeEnvironmentRecord(Value.null);
+    // 3. Let env be a new global Environment Record.
+    super(Value.null);
+    // 4. Set env.[[ObjectRecord]] to objRec.
+    this.ObjectRecord = objRec;
+    // 5. Set env.[[GlobalThisValue]] to thisValue.
+    this.GlobalThisValue = thisValue;
+    // 6. Set env.[[DeclarativeRecord]] to dclRec.
+    this.DeclarativeRecord = dclRec;
+    // 7. Set env.[[VarNames]] to a new empty List.
+    this.VarNames = [];
+    // 8. Set env.[[OuterEnv]] to null.
+    // 9. Return env.
+  }
+
   /** https://tc39.es/ecma262/#sec-global-environment-records-hasbinding-n */
   HasBinding(N) {
     // 1. Let envRec be the global Environment Record for which the method was invoked.
@@ -21875,7 +21986,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     }
     // 4. Let ObjRec be envRec.[[ObjectRecord]].
     const ObjRec = envRec.ObjectRecord;
-    // 5. Return ? ObjRec.GetBindingValue(N, S).
+    // 5. Return ObjRec.GetBindingValue(N, S).
     return ObjRec.GetBindingValue(N, S);
   }
 
@@ -22005,7 +22116,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     }
     const existingProp = _temp9;
     // 5. If existingProp is undefined, return false.
-    if (existingProp === Value.undefined) {
+    if (existingProp instanceof UndefinedValue) {
       return Value.false;
     }
     // 6. If existingProp.[[Configurable]] is true, return false.
@@ -22063,7 +22174,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     }
     const existingProp = _temp11;
     // 5. If existingProp is undefined, return ? IsExtensible(globalObject).
-    if (existingProp === Value.undefined) {
+    if (existingProp instanceof UndefinedValue) {
       return IsExtensible(globalObject);
     }
     // 6. If existingProp.[[Configurable]] is true, return true.
@@ -22163,7 +22274,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     const existingProp = _temp16;
     // 5. If existingProp is undefined or existingProp.[[Configurable]] is true, then
     let desc;
-    if (existingProp === Value.undefined || existingProp.Configurable === Value.true) {
+    if (existingProp instanceof UndefinedValue || existingProp.Configurable === Value.true) {
       // a. Let desc be the PropertyDescriptor { [[Value]]: V, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: D }.
       desc = _Descriptor({
         Value: V,
@@ -22209,6 +22320,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     return NormalCompletion(undefined);
   }
   mark(m) {
+    // TODO(ts): this function does not call super.mark(). is it a mistake?
     m(this.ObjectRecord);
     m(this.GlobalThisValue);
     m(this.DeclarativeRecord);
@@ -22233,7 +22345,7 @@ class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
       // b.Let targetEnv be M.[[Environment]].
       const targetEnv = M.Environment;
       // c. If targetEnv is undefined, throw a ReferenceError exception.
-      if (targetEnv === Value.undefined) {
+      if (targetEnv instanceof UndefinedValue) {
         return surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
       }
       // d. Return ? targetEnv.GetBindingValue(N2, true).
@@ -22244,7 +22356,7 @@ class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
       return surroundingAgent.Throw('ReferenceError', 'NotInitialized', N);
     }
     // 6. Return the value currently bound to N in envRec.
-    return binding.value;
+    return NormalCompletion(binding.value);
   }
 
   /** https://tc39.es/ecma262/#sec-module-environment-records-deletebinding-n */
@@ -22291,14 +22403,14 @@ class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
 /** https://tc39.es/ecma262/#sec-getidentifierreference */
 function GetIdentifierReference(env, name, strict) {
   // 1. If lex is the value null, then
-  if (env === Value.null) {
+  if (env instanceof NullValue) {
     // a. Return the Reference Record { [[Base]]: unresolvable, [[ReferencedName]]: name, [[Strict]]: strict, [[ThisValue]]: empty }.
-    return new ReferenceRecord({
+    return NormalCompletion(new ReferenceRecord({
       Base: 'unresolvable',
       ReferencedName: name,
       Strict: strict,
       ThisValue: undefined
-    });
+    }));
   }
   // 2. Let exists be ? envRec.HasBinding(name).
   let _temp19 = env.HasBinding(name);
@@ -22314,12 +22426,12 @@ function GetIdentifierReference(env, name, strict) {
   // 3. If exists is true, then
   if (exists === Value.true) {
     // a. Return the Reference Record { [[Base]]: env, [[ReferencedName]]: name, [[Strict]]: strict, [[ThisValue]]: empty }.
-    return new ReferenceRecord({
+    return NormalCompletion(new ReferenceRecord({
       Base: env,
       ReferencedName: name,
       Strict: strict,
       ThisValue: undefined
-    });
+    }));
   } else {
     // a. Let outer be env.[[OuterEnv]].
     const outer = env.OuterEnv;
@@ -22327,110 +22439,18 @@ function GetIdentifierReference(env, name, strict) {
     return GetIdentifierReference(outer, name, strict);
   }
 }
-
-/** https://tc39.es/ecma262/#sec-newdeclarativeenvironment */
-function NewDeclarativeEnvironment(E) {
-  // 1. Let env be a new declarative Environment Record containing O as the binding object.
-  const env = new DeclarativeEnvironmentRecord();
-  // 2. Set env.[[OuterEnv]] to E.
-  env.OuterEnv = E;
-  // 3. Return env.
-  return env;
-}
-
-/** https://tc39.es/ecma262/#sec-newobjectenvironment */
-function NewObjectEnvironment(O, W, E) {
-  // 1. Let env be a new object Environment Record.
-  const env = new ObjectEnvironmentRecord();
-  // 2. Set env.[[BindingObject]] to O.
-  env.BindingObject = O;
-  // 3. Set env.[[IsWithEnvironment]] to W.
-  env.IsWithEnvironment = W;
-  // 4. Set env.[[OuterEnv]] to E.
-  env.OuterEnv = E;
-  // 5. Return env.
-  return env;
-}
-
-/** https://tc39.es/ecma262/#sec-newfunctionenvironment */
-function NewFunctionEnvironment(F, newTarget) {
-  // 1. Assert: F is an ECMAScript function.
-  Assert(isECMAScriptFunctionObject(F), "isECMAScriptFunctionObject(F)");
-  // 2. Assert: Type(newTarget) is Undefined or Object.
-  Assert(newTarget instanceof UndefinedValue || newTarget instanceof ObjectValue, "newTarget instanceof UndefinedValue || newTarget instanceof ObjectValue");
-  // 3. Let env be a new function Environment Record containing no bindings.
-  const env = new FunctionEnvironmentRecord();
-  // 4. Set env.[[FunctionObject]] to F.
-  env.FunctionObject = F;
-  // 5. If F.[[ThisMode]] is lexical, set env.[[ThisBindingStatus]] to lexical.
-  if (F.ThisMode === 'lexical') {
-    env.ThisBindingStatus = 'lexical';
-  } else {
-    // 6. Else, set env.[[ThisBindingStatus]] to uninitialized.
-    env.ThisBindingStatus = 'uninitialized';
-  }
-  // 7. Set env.[[NewTarget]] to newTarget.
-  env.NewTarget = newTarget;
-  // 8. Set env.[[OuterEnv]] to F.[[Environment]].
-  env.OuterEnv = F.Environment;
-  // 9. Return env.
-  return env;
-}
-
-/** https://tc39.es/ecma262/#sec-newglobalenvironment */
-function NewGlobalEnvironment(G, thisValue) {
-  // 1. Let objRec be NewObjectEnvironment(G, false, null).
-  const objRec = NewObjectEnvironment(G, Value.false, Value.null);
-  // 2. Let dclRec be a new declarative Environment Record containing no bindings.
-  const dclRec = new DeclarativeEnvironmentRecord(Value.null);
-  // 3. Let env be a new global Environment Record.
-  const env = new GlobalEnvironmentRecord();
-  // 4. Set env.[[ObjectRecord]] to objRec.
-  env.ObjectRecord = objRec;
-  // 5. Set env.[[GlobalThisValue]] to thisValue.
-  env.GlobalThisValue = thisValue;
-  // 6. Set env.[[DeclarativeRecord]] to dclRec.
-  env.DeclarativeRecord = dclRec;
-  // 7. Set env.[[VarNames]] to a new empty List.
-  env.VarNames = [];
-  // 8. Set env.[[OuterEnv]] to null.
-  env.OuterEnv = Value.null;
-  // 9. Return env.
-  return env;
-}
-
-/** https://tc39.es/ecma262/#sec-newmoduleenvironment */
-function NewModuleEnvironment(E) {
-  // 1. Let env be a new module Environment Record containing no bindings.
-  const env = new ModuleEnvironmentRecord();
-  // 2. Set env.[[OuterEnv]] to E.
-  env.OuterEnv = E;
-  // 3. Return env.
-  return env;
-}
 class PrivateEnvironmentRecord {
   OuterPrivateEnvironment;
-  Names;
-  constructor(init) {
-    this.OuterPrivateEnvironment = init.OuterPrivateEnvironment;
-    this.Names = init.Names;
+  Names = [];
+  /** https://tc39.es/ecma262/#sec-newprivateenvironment */
+  constructor(outerEnv) {
+    this.OuterPrivateEnvironment = outerEnv;
   }
   mark(m) {
     this.Names.forEach(name => {
       m(name);
     });
   }
-}
-
-/** https://tc39.es/ecma262/#sec-newprivateenvironment */
-function NewPrivateEnvironment(outerPrivEnv) {
-  // 1. Let names be a new empty List.
-  const names = [];
-  // 2. Return the PrivateEnvironment Record { [[OuterPrivateEnvironment]]: outerPrivEnv, [[Names]]: names }.
-  return new PrivateEnvironmentRecord({
-    OuterPrivateEnvironment: outerPrivEnv,
-    Names: names
-  });
 }
 
 var _initClass2$1, _dec2$1;
@@ -26255,7 +26275,7 @@ function PrepareForOrdinaryCall(F, newTarget) {
   // 7. Set the ScriptOrModule of calleeContext to F.[[ScriptOrModule]].
   calleeContext.ScriptOrModule = F.ScriptOrModule;
   // 8. Let localEnv be NewFunctionEnvironment(F, newTarget).
-  const localEnv = NewFunctionEnvironment(F, newTarget);
+  const localEnv = new FunctionEnvironmentRecord(F, newTarget);
   // 9. Set the LexicalEnvironment of calleeContext to localEnv.
   calleeContext.LexicalEnvironment = localEnv;
   // 10. Set the VariableEnvironment of calleeContext to localEnv.
@@ -27289,7 +27309,7 @@ function PerformEval(x, callerRealm, strictCaller, direct) {
   // 15. If direct is true, then
   if (direct === true) {
     // a. Let lexEnv be NewDeclarativeEnvironment(runningContext's LexicalEnvironment).
-    lexEnv = NewDeclarativeEnvironment(runningContext.LexicalEnvironment);
+    lexEnv = new DeclarativeEnvironmentRecord(runningContext.LexicalEnvironment);
     // b. Let varEnv be runningContext's VariableEnvironment.
     varEnv = runningContext.VariableEnvironment;
     // c. Let privateEnv be runningContext's PrivateEnvironment.
@@ -27297,7 +27317,7 @@ function PerformEval(x, callerRealm, strictCaller, direct) {
   } else {
     // 16. Else,
     // a. Let lexEnv be NewDeclarativeEnvironment(evalRealm.[[GlobalEnv]]).
-    lexEnv = NewDeclarativeEnvironment(evalRealm.GlobalEnv);
+    lexEnv = new DeclarativeEnvironmentRecord(evalRealm.GlobalEnv);
     // b. Let varEnv be evalRealm.[[GlobalEnv]].
     varEnv = evalRealm.GlobalEnv;
     // c. Let privateEnv be null.
@@ -28767,7 +28787,7 @@ class GraphLoadingState {
 /** https://tc39.es/ecma262/#sec-InnerModuleLoading */
 function InnerModuleLoading(state, module) {
   // 1. Assert: state.[[IsLoading]] is true.
-  Assert(state.IsLoading === true, "state.IsLoading === true");
+  Assert(Boolean(state.IsLoading === true), "Boolean(state.IsLoading === true)"); // this Boolean() is let step 2.d.iii not having a type error.
 
   // 2. If module is a Cyclic Module Record, module.[[Status]] is new, and state.[[Visited]] does not contain module, then
   if (module instanceof CyclicModuleRecord && module.Status === 'new' && !state.Visited.has(module)) {
@@ -28931,17 +28951,17 @@ function InnerModuleEvaluation(module, stack, index) {
     if (_temp6 instanceof Completion) {
       _temp6 = _temp6.Value;
     }
-    return index;
+    return NormalCompletion(index);
   }
   if (module.Status === 'evaluating-async' || module.Status === 'evaluated') {
-    if (module.EvaluationError === Value.undefined) {
-      return index;
+    if (module.EvaluationError instanceof UndefinedValue) {
+      return NormalCompletion(index);
     } else {
       return module.EvaluationError;
     }
   }
   if (module.Status === 'evaluating') {
-    return index;
+    return NormalCompletion(index);
   }
   Assert(module.Status === 'linked', "module.Status === 'linked'");
   module.Status = 'evaluating';
@@ -29065,7 +29085,7 @@ function ExecuteAsyncModule(module) {
   const onRejected = CreateBuiltinFunction(rejectedClosure, 0, Value(''), ['Module']);
   // 9. Perform ! PerformPromiseThen(capability.[[Promise]], onFulfilled, onRejected).
   let _temp13 = PerformPromiseThen(capability.Promise, onFulfilled, onRejected);
-  Assert(!(_temp13 instanceof AbruptCompletion), "PerformPromiseThen(capability.Promise, onFulfilled, onRejected)" + ' returned an abrupt completion');
+  Assert(!(_temp13 instanceof AbruptCompletion), "PerformPromiseThen(capability.Promise as PromiseObjectValue, onFulfilled, onRejected)" + ' returned an abrupt completion');
   /* c8 ignore if */
   if (_temp13 instanceof Completion) {
     _temp13 = _temp13.Value;
@@ -29151,7 +29171,7 @@ function AsyncModuleExecutionFulfilled(module) {
       }
     }
   }
-  if (module.TopLevelCapability !== Value.undefined) {
+  if (!(module.TopLevelCapability instanceof UndefinedValue)) {
     Assert(module.DFSIndex === module.DFSAncestorIndex, "module.DFSIndex === module.DFSAncestorIndex");
     let _temp19 = Call(module.TopLevelCapability.Resolve, Value.undefined, [Value.undefined]);
     Assert(!(_temp19 instanceof AbruptCompletion), "Call(module.TopLevelCapability.Resolve, Value.undefined, [Value.undefined])" + ' returned an abrupt completion');
@@ -29185,7 +29205,7 @@ function AsyncModuleExecutionRejected(module, error) {
       _temp20 = _temp20.Value;
     }
   }
-  if (module.TopLevelCapability !== Value.undefined) {
+  if (!(module.TopLevelCapability instanceof UndefinedValue)) {
     Assert(module.DFSIndex === module.DFSAncestorIndex, "module.DFSIndex === module.DFSAncestorIndex");
     let _temp21 = Call(module.TopLevelCapability.Reject, Value.undefined, [error]);
     Assert(!(_temp21 instanceof AbruptCompletion), "Call(module.TopLevelCapability.Reject, Value.undefined, [error])" + ' returned an abrupt completion');
@@ -29297,7 +29317,7 @@ function CreateDefaultExportSyntheticModule(defaultExport, realm, hostDefined) {
   // 1. Let closure be the a Abstract Closure with parameters (module) that captures defaultExport and performs the following steps when called:
   const closure = module => {
     // eslint-disable-line arrow-body-style
-    // a. Return ? module.SetSyntheticExport("default", defaultExport).
+    // a. Return module.SetSyntheticExport("default", defaultExport).
     return module.SetSyntheticExport(Value('default'), defaultExport);
   };
   // 2. Return CreateSyntheticModule(« "default" », closure, realm)
@@ -53588,7 +53608,7 @@ function SetRealmGlobalObject(realmRec, globalObj, thisValue) {
     thisValue = globalObj;
   }
   realmRec.GlobalObject = globalObj;
-  const newGlobalEnv = NewGlobalEnvironment(globalObj, thisValue);
+  const newGlobalEnv = new GlobalEnvironmentRecord(globalObj, thisValue);
   realmRec.GlobalEnv = newGlobalEnv;
   return realmRec;
 }
@@ -56486,8 +56506,8 @@ function CleanupFinalizationRegistry(finalizationRegistry, callback) {
 }
 
 const bareKeyRe = /^[a-zA-Z_][a-zA-Z_0-9]*$/;
-const getObjectTag = (value, wrap) => {
-  let s;
+function getObjectTag(value, wrap) {
+  let s = '';
   try {
     let _temp = Get(value, wellKnownSymbols.toStringTag);
     Assert(!(_temp instanceof AbruptCompletion), "Get(value, wellKnownSymbols.toStringTag)" + ' returned an abrupt completion', "");
@@ -56520,7 +56540,7 @@ const getObjectTag = (value, wrap) => {
     return s;
   }
   return '';
-};
+}
 const compactObject = (realm, value) => {
   try {
     let _temp4 = Get(value, Value('toString'));
@@ -56584,7 +56604,7 @@ const INSPECTORS = {
     const s = JSON.stringify(v.stringValue()).slice(1, -1);
     return `'${s}'`;
   },
-  Symbol: v => `Symbol(${v.Description === Value.undefined ? '' : v.Description.stringValue()})`,
+  Symbol: v => `Symbol(${v.Description instanceof UndefinedValue ? '' : v.Description.stringValue()})`,
   PrivateName: v => v.Description.stringValue(),
   Object: (v, ctx, i) => {
     if (ctx.inspected.includes(v)) {
@@ -56762,8 +56782,8 @@ function inspect(value) {
   return inner(value);
 }
 
-function Throw(...args) {
-  return surroundingAgent.Throw(...args);
+function Throw(type, template, ...templateArgs) {
+  return surroundingAgent.Throw(type, template, ...templateArgs);
 }
 
 /** https://tc39.es/ecma262/#sec-weakref-execution */
@@ -57005,5 +57025,5 @@ class ManagedSourceTextModuleRecord extends SourceTextModuleRecord {
   }
 }
 
-export { AbruptCompletion, AbstractEqualityComparison, AbstractModuleRecord, AbstractRelationalComparison, AddToKeptObjects, Agent, AgentSignifier, AllocateArrayBuffer, AllocateTypedArray, AllocateTypedArrayBuffer, ApplyStringOrNumericBinaryOperator, ArgumentListEvaluation, ArrayCreate, ArraySetLength, ArraySpeciesCreate, Assert, AsyncBlockStart, AsyncFromSyncIteratorContinuation, AsyncFunctionStart, AsyncGeneratorAwaitReturn, AsyncGeneratorEnqueue, AsyncGeneratorResume, AsyncGeneratorStart, AsyncGeneratorValidate, AsyncGeneratorYield, AsyncIteratorClose, Await, BigIntValue, BinaryUnicodeProperties, BindingClassDeclarationEvaluation, BindingInitialization, BlockDeclarationInstantiation, BodyText, BooleanValue, BoundNames, BreakCompletion, Call, CanonicalNumericIndexString, CharacterValue, ClassDefinitionEvaluation, ClassFieldDefinitionEvaluation, ClassFieldDefinitionRecord, ClassStaticBlockDefinitionEvaluation, ClassStaticBlockDefinitionRecord, CleanupFinalizationRegistry, ClearKeptObjects, CloneArrayBuffer, CodePointAt, CodePointsToString, CompletePropertyDescriptor, Completion, Construct, ConstructorMethod, ContainsArguments, ContainsExpression, ContinueCompletion, ContinueDynamicImport, ContinueModuleLoading, CopyDataBlockBytes, CopyDataProperties, CreateArrayFromList, CreateArrayIterator, CreateAsyncFromSyncIterator, CreateAsyncIteratorFromClosure, CreateBuiltinFunction, CreateByteDataBlock, CreateDataProperty, CreateDataPropertyOrThrow, CreateDefaultExportSyntheticModule, CreateDynamicFunction, CreateIntrinsics, CreateIterResultObject, CreateIteratorFromClosure, CreateListFromArrayLike, CreateListIteratorRecord, CreateMappedArgumentsObject, CreateMethodProperty, CreateRealm, CreateResolvingFunctions, CreateSyntheticModule, CreateUnmappedArgumentsObject, CyclicModuleRecord, DataBlock, DateFromTime, Day, DayFromYear, DayWithinYear, DaysInYear, DeclarationPart, DeclarativeEnvironmentRecord, DefineField, DefineMethod, DefinePropertyOrThrow, DeletePropertyOrThrow, _Descriptor as Descriptor, DestructuringAssignmentEvaluation, DetachArrayBuffer, EnsureCompletion, EnumerableOwnPropertyNames, EnvironmentRecord, EscapeRegExpPattern, EvaluateBody, EvaluateBody_AssignmentExpression, EvaluateBody_AsyncFunctionBody, EvaluateBody_AsyncGeneratorBody, EvaluateBody_ConciseBody, EvaluateBody_FunctionBody, EvaluateBody_GeneratorBody, EvaluateCall, EvaluatePropertyAccessWithExpressionKey, EvaluatePropertyAccessWithIdentifierKey, EvaluateStringOrNumericBinaryExpression, Evaluate_AdditiveExpression, Evaluate_AnyFunctionBody, Evaluate_ArrayLiteral, Evaluate_ArrowFunction, Evaluate_AssignmentExpression, Evaluate_AsyncArrowFunction, Evaluate_AsyncFunctionExpression, Evaluate_AsyncGeneratorExpression, Evaluate_AwaitExpression, Evaluate_BinaryBitwiseExpression, Evaluate_BindingList, Evaluate_Block, Evaluate_BreakStatement, Evaluate_BreakableStatement, Evaluate_CallExpression, Evaluate_CaseClause, Evaluate_ClassDeclaration, Evaluate_ClassExpression, Evaluate_CoalesceExpression, Evaluate_CommaOperator, Evaluate_ConditionalExpression, Evaluate_ContinueStatement, Evaluate_DebuggerStatement, Evaluate_EmptyStatement, Evaluate_EqualityExpression, Evaluate_ExponentiationExpression, Evaluate_ExportDeclaration, Evaluate_ExpressionBody, Evaluate_ExpressionStatement, Evaluate_ForBinding, Evaluate_FunctionDeclaration, Evaluate_FunctionExpression, Evaluate_FunctionStatementList, Evaluate_GeneratorExpression, Evaluate_HoistableDeclaration, Evaluate_IdentifierReference, Evaluate_IfStatement, Evaluate_ImportCall, Evaluate_ImportDeclaration, Evaluate_ImportMeta, Evaluate_LabelledStatement, Evaluate_LexicalBinding, Evaluate_LexicalDeclaration, Evaluate_Literal, Evaluate_LogicalANDExpression, Evaluate_LogicalORExpression, Evaluate_MemberExpression, Evaluate_Module, Evaluate_ModuleBody, Evaluate_MultiplicativeExpression, Evaluate_NewExpression, Evaluate_NewTarget, Evaluate_ObjectLiteral, Evaluate_OptionalExpression, Evaluate_ParenthesizedExpression, Evaluate_Pattern, Evaluate_PropertyName, Evaluate_RegularExpressionLiteral, Evaluate_RelationalExpression, Evaluate_RelationalExpression_PrivateIdentifier, Evaluate_ReturnStatement, Evaluate_Script, Evaluate_ScriptBody, Evaluate_ShiftExpression, Evaluate_StatementList, Evaluate_SuperCall, Evaluate_SuperProperty, Evaluate_SwitchStatement, Evaluate_TaggedTemplateExpression, Evaluate_TemplateLiteral, Evaluate_This, Evaluate_ThrowStatement, Evaluate_TryStatement, Evaluate_UnaryExpression, Evaluate_UpdateExpression, Evaluate_VariableDeclarationList, Evaluate_VariableStatement, Evaluate_WithStatement, Evaluate_YieldExpression, ExecutionContext, ExpectedArgumentCount, ExportEntries, ExportEntriesForModule, F, FEATURES, FinishLoadingImportedModule, FlagText, FromPropertyDescriptor, FunctionDeclarationInstantiation, FunctionEnvironmentRecord, GeneratorResume, GeneratorResumeAbrupt, GeneratorStart, GeneratorValidate, GeneratorYield, Get, GetActiveScriptOrModule, GetAsyncCycleRoot, GetFunctionRealm, GetGeneratorKind, GetGlobalObject, GetIdentifierReference, GetImportedModule, GetIterator, GetMatchIndexPair, GetMatchString, GetMethod, GetModuleNamespace, GetNewTarget, GetPrototypeFromConstructor, GetStringIndex, GetSubstitution, GetThisEnvironment, GetThisValue, GetV, GetValue, GetValueFromBuffer, GetViewValue, GlobalDeclarationInstantiation, GlobalEnvironmentRecord, GraphLoadingState, HasInitializer, HasName, HasOwnProperty, HasProperty, HostCallJobCallback, HostEnqueueFinalizationRegistryCleanupJob, HostEnqueuePromiseJob, HostEnsureCanCompileStrings, HostFinalizeImportMeta, HostGetImportMetaProperties, HostHasSourceTextAvailable, HostLoadImportedModule, HostMakeJobCallback, HostPromiseRejectionTracker, HourFromTime, HoursPerDay, IfAbruptCloseIterator, IfAbruptRejectPromise, ImportEntries, ImportEntriesForModule, ImportedLocalNames, InLeapYear, InitializeBoundName, InitializeInstanceElements, InitializeReferencedBinding, InnerModuleEvaluation, InnerModuleLinking, InnerModuleLoading, InstallErrorCause, InstanceofOperator, InstantiateArrowFunctionExpression, InstantiateAsyncArrowFunctionExpression, InstantiateAsyncFunctionExpression, InstantiateAsyncGeneratorFunctionExpression, InstantiateFunctionObject, InstantiateFunctionObject_AsyncFunctionDeclaration, InstantiateFunctionObject_AsyncGeneratorDeclaration, InstantiateFunctionObject_FunctionDeclaration, InstantiateFunctionObject_GeneratorDeclaration, InstantiateGeneratorFunctionExpression, InstantiateOrdinaryFunctionExpression, IntegerIndexedDefineOwnProperty, IntegerIndexedDelete, IntegerIndexedElementGet, IntegerIndexedElementSet, IntegerIndexedGet, IntegerIndexedGetOwnProperty, IntegerIndexedHasProperty, IntegerIndexedObjectCreate, IntegerIndexedOwnPropertyKeys, IntegerIndexedSet, Invoke, IsAccessorDescriptor, IsAnonymousFunctionDefinition, IsArray, IsBigIntElementType, IsCallable, IsCompatiblePropertyDescriptor, IsComputedPropertyKey, IsConcatSpreadable, IsConstantDeclaration, IsConstructor, IsDataDescriptor, IsDestructuring, IsDetachedBuffer, IsExtensible, IsFunctionDefinition, IsGenericDescriptor, IsIdentifierRef, IsInTailPosition, IsIntegralNumber, IsPrivateReference, IsPromise, IsPropertyKey, IsPropertyReference, IsRegExp, IsSharedArrayBuffer, IsSimpleParameterList, IsStatic, IsStrict, IsStringPrefix, IsStringWellFormedUnicode, IsSuperReference, IsUnresolvableReference, IsValidIntegerIndex, IterableToList, IteratorBindingInitialization_ArrayBindingPattern, IteratorBindingInitialization_FormalParameters, IteratorClose, IteratorComplete, IteratorNext, IteratorStep, IteratorValue, JSStringValue, KeyedBindingInitialization, LabelledEvaluation, LengthOfArrayLike, LexicallyDeclaredNames, LexicallyScopedDeclarations, LocalTZA, LocalTime, MV_StringNumericLiteral, MakeBasicObject, MakeClassConstructor, MakeConstructor, MakeDate, MakeDay, MakeMatchIndicesIndexPairArray, MakeMethod, MakePrivateReference, MakeTime, ManagedRealm, MethodDefinitionEvaluation, MinFromTime, MinutesPerHour, ModuleEnvironmentRecord, ModuleNamespaceCreate, ModuleRequests, MonthFromTime, NamedEvaluation, NewDeclarativeEnvironment, NewFunctionEnvironment, NewGlobalEnvironment, NewModuleEnvironment, NewObjectEnvironment, NewPrivateEnvironment, NewPromiseCapability, NonConstructorElements, NonbinaryUnicodeProperties, NormalCompletion, NullValue, NumberToBigInt, NumberValue, NumericToRawBytes, NumericValue, ObjectEnvironmentRecord, ObjectValue, OrdinaryCallBindThis, OrdinaryCallEvaluateBody, OrdinaryCreateFromConstructor, OrdinaryDefineOwnProperty, OrdinaryDelete, OrdinaryFunctionCreate, OrdinaryGet, OrdinaryGetOwnProperty, OrdinaryGetPrototypeOf, OrdinaryHasInstance, OrdinaryHasProperty, OrdinaryIsExtensible, OrdinaryObjectCreate, OrdinaryOwnPropertyKeys, OrdinaryPreventExtensions, OrdinarySet, OrdinarySetPrototypeOf, OrdinarySetWithOwnDescriptor, OrdinaryToPrimitive, ParseJSONModule, ParseModule, ParsePattern, ParseScript, Parser, PerformEval, PerformPromiseThen, PrepareForOrdinaryCall, PrepareForTailCall, PrimitiveValue, PrivateBoundIdentifiers, PrivateElementFind, PrivateElementRecord, PrivateFieldAdd, PrivateGet, PrivateMethodOrAccessorAdd, PrivateName, PrivateSet, PromiseCapabilityRecord, PromiseReactionRecord, PromiseResolve, PropName, PropertyBindingInitialization, PropertyDefinitionEvaluation_PropertyDefinitionList, ProxyCreate, PutValue, ReturnIfAbrupt as Q, R, RawBytesToNumeric, Realm, ReferenceRecord, RegExpAlloc, RegExpCreate, RegExpHasFlag, RegExpInitialize, RegExpParser, State as RegExpState, RequireInternalSlot, RequireObjectCoercible, ResolveBinding, ResolvePrivateIdentifier, ResolveThisBinding, ResolvedBindingRecord, RestBindingInitialization, ReturnCompletion, ReturnIfAbrupt, SameValue, SameValueNonNumber, SameValueZero, ScriptEvaluation, SecFromTime, SecondsPerMinute, Set$1 as Set, SetDefaultGlobalBindings, SetFunctionLength, SetFunctionName, SetImmutablePrototype, SetIntegrityLevel, SetRealmGlobalObject, SetValueInBuffer, SetViewValue, SortCompare, SourceTextModuleRecord, SpeciesConstructor, StrictEqualityComparison, StringCreate, StringGetOwnProperty, StringIndexOf, StringPad, StringToBigInt, StringToCodePoints, StringValue, SymbolDescriptiveString, SymbolValue, SyntheticModuleRecord, TV, TemplateStrings, TestIntegrityLevel, Throw, ThrowCompletion, TimeClip, TimeFromYear, TimeWithinDay, ToBigInt, ToBigInt64, ToBigUint64, ToBoolean, ToIndex, ToInt16, ToInt32, ToInt8, ToIntegerOrInfinity, ToLength, ToNumber, ToNumeric, ToObject, ToPrimitive, ToPropertyDescriptor, ToPropertyKey, ToString, ToUint16, ToUint32, ToUint8, ToUint8Clamp, TopLevelLexicallyDeclaredNames, TopLevelLexicallyScopedDeclarations, TopLevelVarDeclaredNames, TopLevelVarScopedDeclarations, TrimString, Type, TypeForMethod, TypedArrayCreate, TypedArraySpeciesCreate, UTC, UTF16EncodeCodePoint, UTF16SurrogatePairToCodePoint, UndefinedValue, UnicodeGeneralCategoryValues, UnicodeMatchProperty, UnicodeMatchPropertyValue, UnicodeScriptValues, UnicodeSets, UpdateEmpty, ValidateAndApplyPropertyDescriptor, ValidateTypedArray, Value, VarDeclaredNames, VarScopedDeclarations, WeakRefDeref, WeekDay, X, YearFromTime, Yield, Z, evaluateScript, gc, generatorBrandToErrorMessageType, getUnicodePropertyValueSet, inspect, isArrayExoticObject, isArrayIndex, isECMAScriptFunctionObject, isFunctionObject, isIntegerIndex, isIntegerIndexedExoticObject, isNonNegativeInteger, isProxyExoticObject, isStrictModeCode, msFromTime, msPerAverageYear, msPerDay, msPerHour, msPerMinute, msPerSecond, refineLeftHandSideExpression, runJobQueue, setSurroundingAgent, sourceTextMatchedBy, surroundingAgent, typedArrayInfoByName, typedArrayInfoByType, wellKnownSymbols, wrappedParse };
+export { AbruptCompletion, AbstractEqualityComparison, AbstractModuleRecord, AbstractRelationalComparison, AddToKeptObjects, Agent, AgentSignifier, AllocateArrayBuffer, AllocateTypedArray, AllocateTypedArrayBuffer, ApplyStringOrNumericBinaryOperator, ArgumentListEvaluation, ArrayCreate, ArraySetLength, ArraySpeciesCreate, Assert, AsyncBlockStart, AsyncFromSyncIteratorContinuation, AsyncFunctionStart, AsyncGeneratorAwaitReturn, AsyncGeneratorEnqueue, AsyncGeneratorResume, AsyncGeneratorStart, AsyncGeneratorValidate, AsyncGeneratorYield, AsyncIteratorClose, Await, BigIntValue, BinaryUnicodeProperties, BindingClassDeclarationEvaluation, BindingInitialization, BlockDeclarationInstantiation, BodyText, BooleanValue, BoundNames, BreakCompletion, Call, CanonicalNumericIndexString, CharacterValue, ClassDefinitionEvaluation, ClassFieldDefinitionEvaluation, ClassFieldDefinitionRecord, ClassStaticBlockDefinitionEvaluation, ClassStaticBlockDefinitionRecord, CleanupFinalizationRegistry, ClearKeptObjects, CloneArrayBuffer, CodePointAt, CodePointsToString, CompletePropertyDescriptor, Completion, Construct, ConstructorMethod, ContainsArguments, ContainsExpression, ContinueCompletion, ContinueDynamicImport, ContinueModuleLoading, CopyDataBlockBytes, CopyDataProperties, CreateArrayFromList, CreateArrayIterator, CreateAsyncFromSyncIterator, CreateAsyncIteratorFromClosure, CreateBuiltinFunction, CreateByteDataBlock, CreateDataProperty, CreateDataPropertyOrThrow, CreateDefaultExportSyntheticModule, CreateDynamicFunction, CreateIntrinsics, CreateIterResultObject, CreateIteratorFromClosure, CreateListFromArrayLike, CreateListIteratorRecord, CreateMappedArgumentsObject, CreateMethodProperty, CreateRealm, CreateResolvingFunctions, CreateSyntheticModule, CreateUnmappedArgumentsObject, CyclicModuleRecord, DataBlock, DateFromTime, Day, DayFromYear, DayWithinYear, DaysInYear, DeclarationPart, DeclarativeEnvironmentRecord, DefineField, DefineMethod, DefinePropertyOrThrow, DeletePropertyOrThrow, _Descriptor as Descriptor, DestructuringAssignmentEvaluation, DetachArrayBuffer, EnsureCompletion, EnumerableOwnPropertyNames, EnvironmentRecord, EscapeRegExpPattern, EvaluateBody, EvaluateBody_AssignmentExpression, EvaluateBody_AsyncFunctionBody, EvaluateBody_AsyncGeneratorBody, EvaluateBody_ConciseBody, EvaluateBody_FunctionBody, EvaluateBody_GeneratorBody, EvaluateCall, EvaluatePropertyAccessWithExpressionKey, EvaluatePropertyAccessWithIdentifierKey, EvaluateStringOrNumericBinaryExpression, Evaluate_AdditiveExpression, Evaluate_AnyFunctionBody, Evaluate_ArrayLiteral, Evaluate_ArrowFunction, Evaluate_AssignmentExpression, Evaluate_AsyncArrowFunction, Evaluate_AsyncFunctionExpression, Evaluate_AsyncGeneratorExpression, Evaluate_AwaitExpression, Evaluate_BinaryBitwiseExpression, Evaluate_BindingList, Evaluate_Block, Evaluate_BreakStatement, Evaluate_BreakableStatement, Evaluate_CallExpression, Evaluate_CaseClause, Evaluate_ClassDeclaration, Evaluate_ClassExpression, Evaluate_CoalesceExpression, Evaluate_CommaOperator, Evaluate_ConditionalExpression, Evaluate_ContinueStatement, Evaluate_DebuggerStatement, Evaluate_EmptyStatement, Evaluate_EqualityExpression, Evaluate_ExponentiationExpression, Evaluate_ExportDeclaration, Evaluate_ExpressionBody, Evaluate_ExpressionStatement, Evaluate_ForBinding, Evaluate_FunctionDeclaration, Evaluate_FunctionExpression, Evaluate_FunctionStatementList, Evaluate_GeneratorExpression, Evaluate_HoistableDeclaration, Evaluate_IdentifierReference, Evaluate_IfStatement, Evaluate_ImportCall, Evaluate_ImportDeclaration, Evaluate_ImportMeta, Evaluate_LabelledStatement, Evaluate_LexicalBinding, Evaluate_LexicalDeclaration, Evaluate_Literal, Evaluate_LogicalANDExpression, Evaluate_LogicalORExpression, Evaluate_MemberExpression, Evaluate_Module, Evaluate_ModuleBody, Evaluate_MultiplicativeExpression, Evaluate_NewExpression, Evaluate_NewTarget, Evaluate_ObjectLiteral, Evaluate_OptionalExpression, Evaluate_ParenthesizedExpression, Evaluate_Pattern, Evaluate_PropertyName, Evaluate_RegularExpressionLiteral, Evaluate_RelationalExpression, Evaluate_RelationalExpression_PrivateIdentifier, Evaluate_ReturnStatement, Evaluate_Script, Evaluate_ScriptBody, Evaluate_ShiftExpression, Evaluate_StatementList, Evaluate_SuperCall, Evaluate_SuperProperty, Evaluate_SwitchStatement, Evaluate_TaggedTemplateExpression, Evaluate_TemplateLiteral, Evaluate_This, Evaluate_ThrowStatement, Evaluate_TryStatement, Evaluate_UnaryExpression, Evaluate_UpdateExpression, Evaluate_VariableDeclarationList, Evaluate_VariableStatement, Evaluate_WithStatement, Evaluate_YieldExpression, ExecutionContext, ExpectedArgumentCount, ExportEntries, ExportEntriesForModule, F, FEATURES, FinishLoadingImportedModule, FlagText, FromPropertyDescriptor, FunctionDeclarationInstantiation, FunctionEnvironmentRecord, GeneratorResume, GeneratorResumeAbrupt, GeneratorStart, GeneratorValidate, GeneratorYield, Get, GetActiveScriptOrModule, GetAsyncCycleRoot, GetFunctionRealm, GetGeneratorKind, GetGlobalObject, GetIdentifierReference, GetImportedModule, GetIterator, GetMatchIndexPair, GetMatchString, GetMethod, GetModuleNamespace, GetNewTarget, GetPrototypeFromConstructor, GetStringIndex, GetSubstitution, GetThisEnvironment, GetThisValue, GetV, GetValue, GetValueFromBuffer, GetViewValue, GlobalDeclarationInstantiation, GlobalEnvironmentRecord, GraphLoadingState, HasInitializer, HasName, HasOwnProperty, HasProperty, HostCallJobCallback, HostEnqueueFinalizationRegistryCleanupJob, HostEnqueuePromiseJob, HostEnsureCanCompileStrings, HostFinalizeImportMeta, HostGetImportMetaProperties, HostHasSourceTextAvailable, HostLoadImportedModule, HostMakeJobCallback, HostPromiseRejectionTracker, HourFromTime, HoursPerDay, IfAbruptCloseIterator, IfAbruptRejectPromise, ImportEntries, ImportEntriesForModule, ImportedLocalNames, InLeapYear, InitializeBoundName, InitializeInstanceElements, InitializeReferencedBinding, InnerModuleEvaluation, InnerModuleLinking, InnerModuleLoading, InstallErrorCause, InstanceofOperator, InstantiateArrowFunctionExpression, InstantiateAsyncArrowFunctionExpression, InstantiateAsyncFunctionExpression, InstantiateAsyncGeneratorFunctionExpression, InstantiateFunctionObject, InstantiateFunctionObject_AsyncFunctionDeclaration, InstantiateFunctionObject_AsyncGeneratorDeclaration, InstantiateFunctionObject_FunctionDeclaration, InstantiateFunctionObject_GeneratorDeclaration, InstantiateGeneratorFunctionExpression, InstantiateOrdinaryFunctionExpression, IntegerIndexedDefineOwnProperty, IntegerIndexedDelete, IntegerIndexedElementGet, IntegerIndexedElementSet, IntegerIndexedGet, IntegerIndexedGetOwnProperty, IntegerIndexedHasProperty, IntegerIndexedObjectCreate, IntegerIndexedOwnPropertyKeys, IntegerIndexedSet, Invoke, IsAccessorDescriptor, IsAnonymousFunctionDefinition, IsArray, IsBigIntElementType, IsCallable, IsCompatiblePropertyDescriptor, IsComputedPropertyKey, IsConcatSpreadable, IsConstantDeclaration, IsConstructor, IsDataDescriptor, IsDestructuring, IsDetachedBuffer, IsExtensible, IsFunctionDefinition, IsGenericDescriptor, IsIdentifierRef, IsInTailPosition, IsIntegralNumber, IsPrivateReference, IsPromise, IsPropertyKey, IsPropertyReference, IsRegExp, IsSharedArrayBuffer, IsSimpleParameterList, IsStatic, IsStrict, IsStringPrefix, IsStringWellFormedUnicode, IsSuperReference, IsUnresolvableReference, IsValidIntegerIndex, IterableToList, IteratorBindingInitialization_ArrayBindingPattern, IteratorBindingInitialization_FormalParameters, IteratorClose, IteratorComplete, IteratorNext, IteratorStep, IteratorValue, JSStringValue, KeyedBindingInitialization, LabelledEvaluation, LengthOfArrayLike, LexicallyDeclaredNames, LexicallyScopedDeclarations, LocalTZA, LocalTime, MV_StringNumericLiteral, MakeBasicObject, MakeClassConstructor, MakeConstructor, MakeDate, MakeDay, MakeMatchIndicesIndexPairArray, MakeMethod, MakePrivateReference, MakeTime, ManagedRealm, MethodDefinitionEvaluation, MinFromTime, MinutesPerHour, ModuleEnvironmentRecord, ModuleNamespaceCreate, ModuleRequests, MonthFromTime, NamedEvaluation, NewPromiseCapability, NonConstructorElements, NonbinaryUnicodeProperties, NormalCompletion, NullValue, NumberToBigInt, NumberValue, NumericToRawBytes, NumericValue, ObjectEnvironmentRecord, ObjectValue, OrdinaryCallBindThis, OrdinaryCallEvaluateBody, OrdinaryCreateFromConstructor, OrdinaryDefineOwnProperty, OrdinaryDelete, OrdinaryFunctionCreate, OrdinaryGet, OrdinaryGetOwnProperty, OrdinaryGetPrototypeOf, OrdinaryHasInstance, OrdinaryHasProperty, OrdinaryIsExtensible, OrdinaryObjectCreate, OrdinaryOwnPropertyKeys, OrdinaryPreventExtensions, OrdinarySet, OrdinarySetPrototypeOf, OrdinarySetWithOwnDescriptor, OrdinaryToPrimitive, ParseJSONModule, ParseModule, ParsePattern, ParseScript, Parser, PerformEval, PerformPromiseThen, PrepareForOrdinaryCall, PrepareForTailCall, PrimitiveValue, PrivateBoundIdentifiers, PrivateElementFind, PrivateElementRecord, PrivateEnvironmentRecord, PrivateFieldAdd, PrivateGet, PrivateMethodOrAccessorAdd, PrivateName, PrivateSet, PromiseCapabilityRecord, PromiseReactionRecord, PromiseResolve, PropName, PropertyBindingInitialization, PropertyDefinitionEvaluation_PropertyDefinitionList, ProxyCreate, PutValue, ReturnIfAbrupt as Q, R, RawBytesToNumeric, Realm, ReferenceRecord, RegExpAlloc, RegExpCreate, RegExpHasFlag, RegExpInitialize, RegExpParser, State as RegExpState, RequireInternalSlot, RequireObjectCoercible, ResolveBinding, ResolvePrivateIdentifier, ResolveThisBinding, ResolvedBindingRecord, RestBindingInitialization, ReturnCompletion, ReturnIfAbrupt, SameValue, SameValueNonNumber, SameValueZero, ScriptEvaluation, SecFromTime, SecondsPerMinute, Set$1 as Set, SetDefaultGlobalBindings, SetFunctionLength, SetFunctionName, SetImmutablePrototype, SetIntegrityLevel, SetRealmGlobalObject, SetValueInBuffer, SetViewValue, SortCompare, SourceTextModuleRecord, SpeciesConstructor, StrictEqualityComparison, StringCreate, StringGetOwnProperty, StringIndexOf, StringPad, StringToBigInt, StringToCodePoints, StringValue, SymbolDescriptiveString, SymbolValue, SyntheticModuleRecord, TV, TemplateStrings, TestIntegrityLevel, Throw, ThrowCompletion, TimeClip, TimeFromYear, TimeWithinDay, ToBigInt, ToBigInt64, ToBigUint64, ToBoolean, ToIndex, ToInt16, ToInt32, ToInt8, ToIntegerOrInfinity, ToLength, ToNumber, ToNumeric, ToObject, ToPrimitive, ToPropertyDescriptor, ToPropertyKey, ToString, ToUint16, ToUint32, ToUint8, ToUint8Clamp, TopLevelLexicallyDeclaredNames, TopLevelLexicallyScopedDeclarations, TopLevelVarDeclaredNames, TopLevelVarScopedDeclarations, TrimString, Type, TypeForMethod, TypedArrayCreate, TypedArraySpeciesCreate, UTC, UTF16EncodeCodePoint, UTF16SurrogatePairToCodePoint, UndefinedValue, UnicodeGeneralCategoryValues, UnicodeMatchProperty, UnicodeMatchPropertyValue, UnicodeScriptValues, UnicodeSets, UpdateEmpty, ValidateAndApplyPropertyDescriptor, ValidateTypedArray, Value, VarDeclaredNames, VarScopedDeclarations, WeakRefDeref, WeekDay, X, YearFromTime, Yield, Z, evaluateScript, gc, generatorBrandToErrorMessageType, getUnicodePropertyValueSet, inspect, isArrayExoticObject, isArrayIndex, isECMAScriptFunctionObject, isFunctionObject, isIntegerIndex, isIntegerIndexedExoticObject, isNonNegativeInteger, isProxyExoticObject, isStrictModeCode, msFromTime, msPerAverageYear, msPerDay, msPerHour, msPerMinute, msPerSecond, refineLeftHandSideExpression, runJobQueue, setSurroundingAgent, sourceTextMatchedBy, surroundingAgent, typedArrayInfoByName, typedArrayInfoByType, wellKnownSymbols, wrappedParse };
 //# sourceMappingURL=engine262.mjs.map
