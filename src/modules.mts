@@ -59,11 +59,16 @@ export class ResolvedBindingRecord {
 
 export type ModuleRecordHostDefined = unknown;
 export type AbstractModuleInit = Pick<AbstractModuleRecord, 'Realm' | 'Environment' | 'Namespace' | 'HostDefined'>;
+interface ResolveSetItem {
+  readonly Module: AbstractModuleRecord;
+  readonly ExportName: JSStringValue;
+}
+
 /** https://tc39.es/ecma262/#sec-abstract-module-records */
 export abstract class AbstractModuleRecord {
   abstract LoadRequestedModules(hostDefined?: ModuleRecordHostDefined): PromiseObjectValue;
   abstract GetExportedNames(exportStarSet?: AbstractModuleRecord[]): readonly JSStringValue[];
-  abstract ResolveExport(exportName: JSStringValue, resolveSet?): ResolvedBindingRecord | { readonly Module: AbstractModuleRecord; readonly BindingName: JSStringValue | 'namespace'; } | null;
+  abstract ResolveExport(exportName: JSStringValue, resolveSet?: ResolveSetItem[]): ResolvedBindingRecord | null;
   abstract Link(): void;
   abstract Evaluate(): PromiseObjectValue;
   readonly Realm: Realm | UndefinedValue;
@@ -305,7 +310,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-resolveexport */
-  ResolveExport(exportName: JSStringValue, resolveSet?) {
+  ResolveExport(exportName: JSStringValue, resolveSet?: ResolveSetItem[]) {
     const module = this;
     // 1. Assert: module.[[Status]] is not new.
     Assert(module.Status !== 'new');
@@ -521,9 +526,9 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
         }
         // iii. If d is a FunctionDeclaration, a GeneratorDeclaration, an AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration, then
         if (d.type === 'FunctionDeclaration'
-            || d.type === 'GeneratorDeclaration'
-            || d.type === 'AsyncFunctionDeclaration'
-            || d.type === 'AsyncGeneratorDeclaration') {
+          || d.type === 'GeneratorDeclaration'
+          || d.type === 'AsyncFunctionDeclaration'
+          || d.type === 'AsyncGeneratorDeclaration') {
           // 1. Let fo be InstantiateFunctionObject of d with argument env.
           const fo = InstantiateFunctionObject(d, env, Value.null);
           // 2. Call env.InitializeBinding(dn, fo).
@@ -538,7 +543,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-source-text-module-record-execute-module */
-  ExecuteModule(capability) {
+  ExecuteModule(capability?: PromiseCapabilityRecord): NormalCompletion<void> | ThrowCompletion {
     // 1. Let module be this Source Text Module Record.
     const module = this;
     // 2. Suspend the currently running execution context.
@@ -585,14 +590,14 @@ export class SyntheticModuleRecord extends AbstractModuleRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-synthetic-module-record-getexportednames */
-  GetExportedNames(_exportStarSet) {
+  GetExportedNames() {
     const module = this;
     // 1. Return module.[[ExportNames]].
     return module.ExportNames;
   }
 
   /** https://tc39.es/ecma262/#sec-synthetic-module-record-resolveexport */
-  ResolveExport(exportName, _resolveSet) {
+  ResolveExport(exportName: JSStringValue): ResolvedBindingRecord | null {
     const module = this;
     // 1. If module.[[ExportNames]] does not contain exportName, return null.
     // 2. Return ResolvedBinding Record { [[Module]]: module, [[BindingName]]: exportName }.

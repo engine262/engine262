@@ -7,6 +7,7 @@ import {
   ToString, DefinePropertyOrThrow, CreateBuiltinFunction, R, type BuiltinFunctionObject,
 } from './abstract-ops/all.mjs';
 import { Completion, X } from './completion.mjs';
+import type { ParseNode } from './parser/ParseNode.mjs';
 
 export const kInternal = Symbol('kInternal');
 
@@ -171,8 +172,8 @@ export function resume(context: ExecutionContext, completion: Completion) {
 
 export class CallSite {
   context: ExecutionContext;
-  lastNode = null;
-  lastCallNode = null;
+  lastNode: ParseNode | null = null;
+  lastCallNode: ParseNode | null = null;
   inheritedLastCallNode = null;
   constructCall = false;
   constructor(context: ExecutionContext) {
@@ -208,7 +209,7 @@ export class CallSite {
     return !!(this.context.Function as BuiltinFunctionObject).nativeFunction;
   }
 
-  getFunctionName() {
+  getFunctionName(): JSStringValue | null {
     if (!(this.context.Function instanceof NullValue)) {
       const name = this.context.Function.properties.get(Value('name'));
       if (name) {
@@ -225,11 +226,11 @@ export class CallSite {
     return null;
   }
 
-  setLocation(node) {
+  setLocation(node: ParseNode) {
     this.lastNode = node;
   }
 
-  setCallLocation(node) {
+  setCallLocation(node: ParseNode | null) {
     this.lastCallNode = node;
   }
 

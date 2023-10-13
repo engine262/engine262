@@ -89,7 +89,7 @@ import {
 
 /** https://tc39.es/ecma262/#sec-code-realms */
 export class Realm {
-  Intrinsics;
+  Intrinsics: Record<string, Value>;
   GlobalObject;
   GlobalEnv;
   TemplateMap;

@@ -7,7 +7,7 @@ import {
   Call, IsArray, Get, LengthOfArrayLike,
   EscapeRegExpPattern, R, Realm, type BuiltinFunctionObject,
 } from './abstract-ops/all.mjs';
-import { Q, X } from './completion.mjs';
+import { Completion, Q, X } from './completion.mjs';
 
 const bareKeyRe = /^[a-zA-Z_][a-zA-Z_0-9]*$/;
 
@@ -52,8 +52,17 @@ const compactObject = (realm: Realm, value: ObjectValue) => {
   }
 };
 
-const INSPECTORS = {
-  Completion: (v, ctx, i) => i(v.Value),
+type Inspecable = Parameters<typeof Type>[0];
+type Types = ReturnType<typeof Type>;
+interface InspectContext {
+  realm: Realm;
+  indent: number;
+  inspected: Inspecable[];
+}
+type Inspector = (value: any, context: InspectContext, inner: (v: Inspecable) => string) => string;
+
+const INSPECTORS: Partial<Record<Types, Inspector>> = {
+  Completion: (v: Completion<Inspecable>, ctx, i) => i(v.Value),
   Null: () => 'null',
   Undefined: () => 'undefined',
   Boolean: (v: BooleanValue) => v.booleanValue().toString(),
@@ -202,12 +211,12 @@ const INSPECTORS = {
   },
 };
 
-export function inspect(value) {
-  const context = {
+export function inspect(value: Value) {
+  const context: InspectContext = {
     realm: surroundingAgent.currentRealmRecord,
     indent: 0,
     inspected: [],
   };
-  const inner = (v) => INSPECTORS[Type(v)](v, context, inner);
+  const inner = (v: Inspecable) => INSPECTORS[Type(v)]!(v, context, inner);
   return inner(value);
 }
