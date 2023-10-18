@@ -53,13 +53,16 @@ const compactObject = (realm: Realm, value: ObjectValue) => {
 };
 
 type Inspecable = Parameters<typeof Type>[0];
+
 type Types = ReturnType<typeof Type>;
+
 interface InspectContext {
   realm: Realm;
   indent: number;
   inspected: Inspecable[];
 }
-type Inspector = (value: any, context: InspectContext, inner: (v: Inspecable) => string) => string;
+
+type Inspector = (value: unknown, context: InspectContext, inner: (v: Inspecable) => string) => string;
 
 const INSPECTORS: Partial<Record<Types, Inspector>> = {
   Completion: (v: Completion<Inspecable>, ctx, i) => i(v.Value),

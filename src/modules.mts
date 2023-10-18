@@ -59,6 +59,7 @@ export class ResolvedBindingRecord {
 
 export type ModuleRecordHostDefined = unknown;
 export type AbstractModuleInit = Pick<AbstractModuleRecord, 'Realm' | 'Environment' | 'Namespace' | 'HostDefined'>;
+
 interface ResolveSetItem {
   readonly Module: AbstractModuleRecord;
   readonly ExportName: JSStringValue;
