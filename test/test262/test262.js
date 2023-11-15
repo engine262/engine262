@@ -186,7 +186,7 @@ if (!process.send) {
     }
 
     for await (const file of files) {
-      if (/annexB|intl402|_FIXTURE/.test(file)) {
+      if (/annexB|intl402|_FIXTURE|\.md$/.test(file)) {
         continue;
       }
 
@@ -313,11 +313,13 @@ if (!process.send) {
       }
 
       {
-        const completion = realm.evaluateScript(`\
+        let script = `\
 var Test262Error = class Test262Error extends Error {};
 Test262Error.thrower = (...args) => {
   throw new Test262Error(...args);
-};
+};`;
+        if (test.attrs.flags.async) {
+          script += `
 
 function $DONE(error) {
   if (error) {
@@ -329,7 +331,10 @@ function $DONE(error) {
   } else {
     __consolePrintHandle__('Test262:AsyncTestComplete');
   }
-}`);
+}`;
+        }
+
+        const completion = realm.evaluateScript(script);
         if (completion instanceof AbruptCompletion) {
           return { status: 'FAIL', error: inspect(completion) };
         }

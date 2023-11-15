@@ -14,6 +14,7 @@ import {
   isLeadingSurrogate,
   isTrailingSurrogate,
   isHexDigit,
+  isRegularExpressionFlagPart,
 } from './Lexer.mjs';
 import type { ParseNode } from './ParseNode.mjs';
 
@@ -269,7 +270,7 @@ export class RegExpParser {
   //   `{` DecimalDigits `,` `}`
   //   `{` DecimalDigits `,` DecimalDigits `}`
   private maybeParseQuantifier(): ParseNode.RegExp.Quantifier | undefined {
-    let QuantifierPrefix: ParseNode.RegExp.Quantifier['QuantifierPrefix'];
+    let QuantifierPrefix: ParseNode.RegExp.Quantifier['QuantifierPrefix'] | undefined;
 
     if (this.eat('*')) {
       QuantifierPrefix = '*';
@@ -308,13 +309,35 @@ export class RegExpParser {
     return undefined;
   }
 
+  private scanRegularExpressionModifiers() {
+    let buffer = '';
+    while (true) {
+      if (this.position >= this.source.length) {
+        return buffer;
+      }
+      const c = this.source[this.position];
+      if (isRegularExpressionFlagPart(c)) {
+        if (!'ims'.includes(c)) {
+          this.raise(`Invalid RegExp modifier '${c}'`);
+        } else if (buffer.includes(c)) {
+          this.raise(`Invalid modifier '${c}' cannot appear more than once.`);
+        }
+        this.position += 1;
+        buffer += c;
+      } else {
+        return buffer;
+      }
+    }
+  }
+
   // Atom ::
   //   PatternCharacter
   //   `.`
   //   `\` AtomEscape
   //   CharacterClass
   //   `(` GroupSpecifier Disjunction `)`
-  //   `(` `?` `:` Disjunction `)`
+  //   `(` `?` RegularExpressionFlags `:` Disjunction `)`
+  //   `(` `?` RegularExpressionFlags `-` RegularExpressionFlags `:` Disjunction `)`
   private parseAtom(): ParseNode.RegExp.Atom {
     if (this.eat('.')) {
       return { type: 'Atom', subtype: '.', enclosedCapturingParentheses: 0 };
@@ -328,11 +351,25 @@ export class RegExpParser {
         capturingParenthesesBefore: this.capturingGroups.length,
         enclosedCapturingParentheses: 0,
         capturing: true,
+        RegularExpressionFlags_a: undefined,
+        RegularExpressionFlags_b: undefined,
         GroupSpecifier: undefined,
         Disjunction: undefined,
       };
       if (this.eat('?')) {
-        if (this.eat(':')) {
+        node.RegularExpressionFlags_a = this.scanRegularExpressionModifiers();
+        if (this.eat('-')) {
+          node.RegularExpressionFlags_b = this.scanRegularExpressionModifiers();
+          node.capturing = false;
+          if (!node.RegularExpressionFlags_a && !node.RegularExpressionFlags_b) {
+            this.raise('Modifier expected');
+          }
+          this.checkDuplicateModifiers(node.RegularExpressionFlags_a, node.RegularExpressionFlags_b);
+          this.expect(':');
+        } else if (node.RegularExpressionFlags_a) {
+          node.capturing = false;
+          this.expect(':');
+        } else if (this.eat(':')) {
           node.capturing = false;
         } else {
           node.GroupSpecifier = this.parseGroupName();
@@ -365,6 +402,19 @@ export class RegExpParser {
       type: 'Atom',
       PatternCharacter: this.parseSourceCharacter(),
     };
+  }
+
+  private checkDuplicateModifiers(a: string, b: string) {
+    if (b.length < a.length) {
+      this.checkDuplicateModifiers(b, a);
+      return;
+    }
+    for (let i = 0; i < a.length; i += 1) {
+      const ch = a[i];
+      if (b.includes(ch)) {
+        this.raise(`Cannot both set and clear modifier '${ch}'.`);
+      }
+    }
   }
 
   // AtomEscape ::

@@ -539,7 +539,7 @@ export function UnicodeMatchPropertyValue(p: string, v) {
 }
 
 const expandedSets = new Map();
-export function getUnicodePropertyValueSet(property, value) {
+export function getUnicodePropertyValueSet(property, value?) {
   const path = value ? `${property}/${value}` : `Binary_Property/${property}`;
   if (!expandedSets.has(path)) {
     const set = new Set();

@@ -4,7 +4,7 @@ import {
   Descriptor, Value, ObjectValue, BooleanValue, JSStringValue,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
-import { Evaluate_Pattern } from '../runtime-semantics/all.mjs';
+import { CompilePattern } from '../runtime-semantics/all.mjs';
 import { ParsePattern } from '../parse.mjs';
 import { isLineTerminator } from '../parser/Lexer.mjs';
 import {
@@ -78,7 +78,7 @@ export function RegExpInitialize(obj, pattern, flags) {
   // 14. Set obj.[[RegExpMatcher]] to the Abstract Closure that evaluates parseResult by
   //     applying the semantics provided in 21.2.2 using patternCharacters as the pattern's
   //     List of SourceCharacter values and F as the flag parameters.
-  const evaluatePattern = surroundingAgent.hostDefinedOptions.boost?.evaluatePattern || Evaluate_Pattern;
+  const evaluatePattern = surroundingAgent.hostDefinedOptions.boost?.evaluatePattern || CompilePattern;
   obj.RegExpMatcher = evaluatePattern(parseResult, F.stringValue());
   // 15. Perform ? Set(obj, "lastIndex", +0𝔽, true).
   Q(Set(obj, Value('lastIndex'), toNumberValue(+0), Value.true));

@@ -1,7 +1,7 @@
 // @ts-nocheck
 import unicodeCaseFoldingCommon from '@unicode/unicode-15.0.0/Case_Folding/C/symbols.js';
 import unicodeCaseFoldingSimple from '@unicode/unicode-15.0.0/Case_Folding/S/symbols.js';
-import { JSStringValue, Value } from '../value.mjs';
+import { JSStringValue, UndefinedValue, Value } from '../value.mjs';
 import { Assert, isNonNegativeInteger } from '../abstract-ops/all.mjs';
 import { CharacterValue, StringToCodePoints } from '../static-semantics/all.mjs';
 import { X } from '../completion.mjs';
@@ -17,37 +17,65 @@ import {
   getUnicodePropertyValueSet,
 } from './all.mjs';
 
-/** https://tc39.es/ecma262/#sec-pattern */
-class State {
+/** https://tc39.es/ecma262/#pattern-matchstate */
+class MatchState {
   endIndex;
   captures;
-  constructor(endIndex, captures) {
+  constructor(endIndex: number, captures: (Range | UndefinedValue)[]) {
     this.endIndex = endIndex;
     this.captures = captures;
   }
 }
 
-export { State as RegExpState };
+/** https://tc39.es/ecma262/#pattern-matchresult */
+type MatchResult = MatchState | 'failure';
 
-function isContinuation(v) {
+/** https://tc39.es/ecma262/#pattern-matchercontinuation */
+type MatcherContinuation = (m: MatchState) => MatchResult;
+
+/** https://tc39.es/ecma262/#pattern-matcher */
+type Matcher = (x: MatchState, c: MatcherContinuation) => MatchResult;
+
+const FORWARD = +1;
+const BACKWARD = -1;
+
+type Direction = 1 | -1;
+
+export { MatchState as RegExpState };
+
+/** https://tc39.es/proposal-regexp-modifiers/#sec-modifiers-records */
+export class ModifiersRecord {
+  readonly DotAll: boolean;
+  readonly IgnoreCase: boolean;
+  readonly Multiline: boolean;
+  constructor(DotAll: boolean, IgnoreCase: boolean, Multiline: boolean) {
+    this.DotAll = DotAll;
+    this.IgnoreCase = IgnoreCase;
+    this.Multiline = Multiline;
+  }
+}
+
+function isContinuation(v: unknown): v is MatcherContinuation {
   return typeof v === 'function' && v.length === 1;
 }
 
-class CharSet {
-  union(other) {
-    const concrete = new Set();
-    const fns = new Set();
-    const add = (cs) => {
-      if (cs.fns) {
+abstract class CharSet {
+  abstract has(c: number): boolean;
+  union(other: CharSet) {
+    const concrete = new Set<number>();
+    const fns = new Set<(ch: number) => boolean>();
+    const add = (cs: CharSet) => {
+      if (cs instanceof UnionCharSet) {
         cs.fns.forEach((fn) => {
           fns.add(fn);
         });
         cs.concrete.forEach((c) => {
           concrete.add(c);
         });
-      } else if (cs.fn) {
+      } else if (cs instanceof VirtualCharSet) {
         fns.add(cs.fn);
       } else {
+        Assert(cs instanceof ConcreteCharSet);
         cs.concrete.forEach((c) => {
           concrete.add(c);
         });
@@ -62,14 +90,14 @@ class CharSet {
 class UnionCharSet extends CharSet {
   concrete;
   fns;
-  constructor(concrete, fns) {
+  constructor(concrete: Set<number>, fns: Set<(ch: number) => boolean>) {
     super();
 
     this.concrete = concrete;
     this.fns = fns;
   }
 
-  has(c) {
+  has(c: number) {
     if (this.concrete.has(c)) {
       return true;
     }
@@ -84,12 +112,12 @@ class UnionCharSet extends CharSet {
 
 class ConcreteCharSet extends CharSet {
   concrete;
-  constructor(items) {
+  constructor(items: Iterable<number>) {
     super();
     this.concrete = items instanceof Set ? items : new Set(items);
   }
 
-  has(c) {
+  has(c: number) {
     return this.concrete.has(c);
   }
 
@@ -105,12 +133,12 @@ class ConcreteCharSet extends CharSet {
 
 class VirtualCharSet extends CharSet {
   fn;
-  constructor(fn) {
+  constructor(fn: (ch: number) => boolean) {
     super();
     this.fn = fn;
   }
 
-  has(c) {
+  has(c: number) {
     return this.fn(c);
   }
 }
@@ -118,7 +146,7 @@ class VirtualCharSet extends CharSet {
 class Range {
   startIndex;
   endIndex;
-  constructor(startIndex, endIndex) {
+  constructor(startIndex: number, endIndex: number) {
     Assert(startIndex <= endIndex);
     this.startIndex = startIndex;
     this.endIndex = endIndex;
@@ -127,7 +155,7 @@ class Range {
 
 /** https://tc39.es/ecma262/#sec-pattern */
 //   Pattern :: Disjunction
-export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
+export function CompilePattern(Pattern: ParseNode.RegExp.Pattern, flags: string) {
   // The descriptions below use the following variables:
   //   * Input is a List consisting of all of the characters, in order, of the String being matched
   //     by the regular expression pattern. Each character is either a code unit or a code point,
@@ -142,7 +170,7 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
   //   * IgnoreCase is true if the RegExp object's [[OriginalFlags]] internal slot contains "i" and otherwise is false.
   //   * Multiline is true if the RegExp object's [[OriginalFlags]] internal slot contains "m" and otherwise is false.
   //   * Unicode is true if the RegExp object's [[OriginalFlags]] internal slot contains "u" and otherwise is false.
-  let Input: string;
+  let Input: number[];
   let InputLength: number;
   const NcapturingParens = Pattern.capturingGroups.length;
   const DotAll = flags.includes('s');
@@ -151,8 +179,10 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
   const Unicode = flags.includes('u');
 
   {
+    // *1. Let modifiers be the Modifiers Record { [[DotAll]]: DotAll, [[IgnoreCase]]: IgnoreCase, [[Multiline]]: Multiline }.
+    const modifiers = new ModifiersRecord(DotAll, IgnoreCase, Multiline);
     // 1. Evaluate Disjunction with +1 as its direction argument to obtain a Matcher m.
-    const m = Evaluate(Pattern.Disjunction, +1);
+    const m = CompileSubpattern(Pattern.Disjunction, FORWARD, modifiers);
     // 2. Return a new abstract closure with parameters (str, index) that captures m and performs the following steps when called:
     return (str: JSStringValue, index: number) => {
       // a. Assert: Type(str) is String.
@@ -172,53 +202,34 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
       // e. Let listIndex be the index into Input of the character that was obtained from element index of str.
       const listIndex = index;
       // f. Let c be a new Continuation with parameters (y) that captures nothing and performs the following steps when called:
-      const c = (y) => {
+      const c: MatcherContinuation = (y) => {
         // i. Assert: y is a State.
-        Assert(y instanceof State);
+        Assert(y instanceof MatchState);
         // ii. Return y.
         return y;
       };
       // g. Let cap be a List of NcapturingParens undefined values, indexed 1 through NcapturingParens.
       const cap = Array.from({ length: NcapturingParens + 1 }, () => Value.undefined);
       // h. Let x be the State (listIndex, cap).
-      const x = new State(listIndex, cap);
+      const x = new MatchState(listIndex, cap);
       // i. Call m(x, c) and return its result.
       return m(x, c);
     };
   }
 
-  function Evaluate(node: ParseNode.RegExp.RegExpParseNode, ...args) {
+  /** https://tc39.es/ecma262/#sec-compilesubpattern */
+  function CompileSubpattern(node: ParseNode.RegExp.Disjunction | ParseNode.RegExp.Alternative | ParseNode.RegExp.Term | ParseNode.RegExp.Assertion, direction: Direction, modifiers: ModifiersRecord): Matcher {
     switch (node.type) {
       case 'Disjunction':
-        return Evaluate_Disjunction(node, ...args);
+        return CompileSubpattern_Disjunction(node, direction, modifiers);
       case 'Alternative':
-        return Evaluate_Alternative(node, ...args);
+        return CompileSubpattern_Alternative(node, direction, modifiers);
       case 'Term':
-        return Evaluate_Term(node, ...args);
+        return CompileSubpattern_Term(node, direction, modifiers);
       case 'Assertion':
-        return Evaluate_Assertion(node, ...args);
-      case 'Quantifier':
-        return Evaluate_Quantifier(node, ...args);
-      case 'Atom':
-        return Evaluate_Atom(node, ...args);
-      case 'AtomEscape':
-        return Evaluate_AtomEscape(node, ...args);
-      case 'CharacterEscape':
-        return Evaluate_CharacterEscape(node, ...args);
-      case 'DecimalEscape':
-        return Evaluate_DecimalEscape(node, ...args);
-      case 'CharacterClassEscape':
-        return Evaluate_CharacterClassEscape(node, ...args);
-      case 'UnicodePropertyValueExpression':
-        return Evaluate_UnicodePropertyValueExpression(node, ...args);
-      case 'CharacterClass':
-        return Evaluate_CharacterClass(node, ...args);
-      case 'ClassAtom':
-        return Evaluate_ClassAtom(node, ...args);
-      case 'ClassEscape':
-        return Evaluate_ClassEscape(node, ...args);
+        return CompileSubpattern_Assertion(node, direction, modifiers);
       default:
-        throw new OutOfRange('Evaluate', node);
+        throw new OutOfRange('CompileSubpattern', subtype);
     }
   }
 
@@ -226,21 +237,21 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
   //   Disjunction ::
   //     Alternative
   //     Alternative `|` Disjunction
-  function Evaluate_Disjunction({ Alternative, Disjunction }: ParseNode.RegExp.Disjunction, direction) {
+  function CompileSubpattern_Disjunction({ Alternative, Disjunction }: ParseNode.RegExp.Disjunction, direction: Direction, modifiers: ModifiersRecord): Matcher {
     if (!Disjunction) {
       // 1. Evaluate Alternative with argument direction to obtain a Matcher m.
-      const m = Evaluate(Alternative, direction);
+      const m = CompileSubpattern(Alternative, direction, modifiers);
       // 2. Return m.
       return m;
     }
     // 1. Evaluate Alternative with argument direction to obtain a Matcher m1.
-    const m1 = Evaluate(Alternative, direction);
+    const m1 = CompileSubpattern(Alternative, direction, modifiers);
     // 2. Evaluate Disjunction with argument direction to obtain a Matcher m2.
-    const m2 = Evaluate(Disjunction, direction);
+    const m2 = CompileSubpattern(Disjunction, direction, modifiers);
     // 3. Return a new Matcher with parameters (x, c) that captures m1 and m2 and performs the following steps when called:
     return (x, c) => {
       // a. Assert: x is a State.
-      Assert(x instanceof State);
+      Assert(x instanceof MatchState);
       // b. Assert: c is a Continuation.
       Assert(isContinuation(c));
       // c. Call m1(x, c) and let r be its result.
@@ -258,12 +269,12 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
   //   Alternative ::
   //     [empty]
   //     Alternative Term
-  function Evaluate_Alternative({ Alternative, Term }: ParseNode.RegExp.Alternative, direction) {
+  function CompileSubpattern_Alternative({ Alternative, Term }: ParseNode.RegExp.Alternative, direction: Direction, modifiers: ModifiersRecord): Matcher {
     if (!Alternative && !Term) {
       // 1. Return a new Matcher with parameters (x, c) that captures nothing and performs the following steps when called:
       return (x, c) => {
         // 1. Assert: x is a State.
-        Assert(x instanceof State);
+        Assert(x instanceof MatchState);
         // 2. Assert: c is a Continuation.
         Assert(isContinuation(c));
         // 3. Call c(x) and return its result.
@@ -271,21 +282,21 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
       };
     }
     // 1. Evaluate Alternative with argument direction to obtain a Matcher m1.
-    const m1 = Evaluate(Alternative, direction);
+    const m1 = CompileSubpattern(Alternative!, direction, modifiers);
     // 2. Evaluate Term with argument direction to obtain a Matcher m2.
-    const m2 = Evaluate(Term, direction);
+    const m2 = CompileSubpattern(Term!, direction, modifiers);
     // 3. If direction is equal to +1, then
-    if (direction === +1) {
+    if (direction === FORWARD) {
       // a. Return a new Matcher with parameters (x, c) that captures m1 and m2 and performs the following steps when called:
       return (x, c) => {
         // i. Assert: x is a State.
-        Assert(x instanceof State);
+        Assert(x instanceof MatchState);
         // ii. Assert: c is a Continuation.
         Assert(isContinuation(c));
         // iii. Let d be a new Continuation with parameters (y) that captures c and m2 and performs the following steps when called:
-        const d = (y) => {
+        const d: MatcherContinuation = (y) => {
           // 1. Assert: y is a State.
-          Assert(y instanceof State);
+          Assert(y instanceof MatchState);
           // 2. Call m2(y, c) and return its result.
           return m2(y, c);
         };
@@ -294,17 +305,17 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
       };
     } else { // 4. Else,
       // a. Assert: direction is equal to -1.
-      Assert(direction === -1);
+      Assert(direction === BACKWARD);
       // b. Return a new Matcher with parameters (x, c) that captures m1 and m2 and performs the following steps when called:
       return (x, c) => {
         // i. Assert: x is a State.
-        Assert(x instanceof State);
+        Assert(x instanceof MatchState);
         // ii. Assert: c is a Continuation.
         Assert(isContinuation(c));
         // iii. Let d be a new Continuation with parameters (y) that captures c and m1 and performs the following steps when called:
-        const d = (y) => {
+        const d: MatcherContinuation = (y) => {
           // 1. Assert: y is a State.
-          Assert(y instanceof State);
+          Assert(y instanceof MatchState);
           // 2. Call m1(y, c) and return its result.
           return m1(y, c);
         };
@@ -316,19 +327,18 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
 
   /** https://tc39.es/ecma262/#sec-term */
   //   Term ::
-  //     Assertion
   //     Atom
   //     Atom Quantifier
-  function Evaluate_Term(Term: ParseNode.RegExp.Term, direction) {
+  function CompileSubpattern_Term(Term: ParseNode.RegExp.Term_Atom, direction: Direction, modifiers: ModifiersRecord): Matcher {
     const { Atom, Quantifier } = Term;
     if (!Quantifier) {
       // 1. Return the Matcher that is the result of evaluating Atom with argument direction.
-      return Evaluate(Atom, direction);
+      return CompileAtom(Atom, direction, modifiers);
     }
     // 1. Evaluate Atom with argument direction to obtain a Matcher m.
-    const m = Evaluate(Atom, direction);
+    const m = CompileAtom(Atom, direction, modifiers);
     // 2. Evaluate Quantifier to obtain the three results: an integer min, an integer (or ∞) max, and Boolean greedy.
-    const [min, max, greedy] = Evaluate(Quantifier);
+    const [min, max, greedy] = CompileQuantifier(Quantifier);
     // 3. Assert: If max is finite, then max is not less than min.
     Assert(!Number.isFinite(max) || (max >= min));
     // 4. Let parenIndex be the number of left-capturing parentheses in the entire regular expression that occur to the
@@ -337,11 +347,11 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
     const parenIndex = Term.capturingParenthesesBefore;
     // 5. Let parenCount be the number of left-capturing parentheses in Atom. This is the total number of
     //    Atom :: `(` GroupSpecifier Disjunction `)` Parse Nodes enclosed by Atom.
-    const parenCount = Atom.enclosedCapturingParentheses;
+    const parenCount = 'enclosedCapturingParentheses' in Atom ? Atom.enclosedCapturingParentheses : 0;
     // 6. Return a new Matcher with parameters (x, c) that captures m, min, max, greedy, parenIndex, and parenCount and performs the following steps when called:
     return (x, c) => {
       // a. Assert: x is a State.
-      Assert(x instanceof State);
+      Assert(x instanceof MatchState);
       // b. Assert: c is a Continuation.
       Assert(isContinuation(c));
       // c. Call RepeatMatcher(m, min, max, greedy, x, c, parenIndex, parenCount) and return its result.
@@ -349,16 +359,24 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
     };
   }
 
+  /** https://tc39.es/ecma262/#sec-term */
+  //   Term ::
+  //     Assertion
+  function CompileSubpattern_Assertion(Assertion: ParseNode.RegExp.Assertion, _direction: Direction, modifiers: ModifiersRecord) {
+    // 1. Return CompileAssertion of Assertion with argument modifiers.
+    return CompileAssertion(Assertion, modifiers);
+  }
+
   /** https://tc39.es/ecma262/#sec-runtime-semantics-repeatmatcher-abstract-operation */
-  function RepeatMatcher(m, min: number, max: number, greedy, x, c, parenIndex: number, parenCount: number) {
+  function RepeatMatcher(m: Matcher, min: number, max: number, greedy: boolean, x: MatchState, c: MatcherContinuation, parenIndex: number, parenCount: number): MatchResult {
     // 1. If max is zero, return c(x).
     if (max === 0) {
       return c(x);
     }
     // 2. Let d be a new Continuation with parameters (y) that captures m, min, max, greedy, x, c, parenIndex, and parenCount and performs the following steps when called:
-    const d = (y) => {
+    const d: MatcherContinuation = (y) => {
       // a. Assert: y is a State.
-      Assert(y instanceof State);
+      Assert(y instanceof MatchState);
       // b. If min is zero and y's endIndex is equal to x's endIndex, return failure.
       if (min === 0 && y.endIndex === x.endIndex) {
         return 'failure';
@@ -389,7 +407,7 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
     // 5. Let e be x's endIndex.
     const e = x.endIndex;
     // 6. Let xr be the State (e, cap).
-    const xr = new State(e, cap);
+    const xr = new MatchState(e, cap);
     // 7. If min is not zero, return m(xr, d).
     if (min !== 0) {
       return m(xr, d);
@@ -425,19 +443,19 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
   //     `(` `?` `!` Disjunction `)`
   //     `(` `?` `<=` Disjunction `)`
   //     `(` `?` `<!` Disjunction `)`
-  function Evaluate_Assertion({ subtype, Disjunction }: ParseNode.RegExp.Assertion) {
+  function CompileAssertion({ subtype, Disjunction }: ParseNode.RegExp.Assertion, modifiers: ModifiersRecord): Matcher {
     switch (subtype) {
       case '^':
         // 1. Return a new Matcher with parameters (x, c) that captures nothing and performs the following steps when called:
         return (x, c) => {
           // a. Assert: x is a State.
-          Assert(x instanceof State);
+          Assert(x instanceof MatchState);
           // b. Assert: c is a Continuation.
           Assert(isContinuation(c));
           // c. Let e be x's endIndex.
           const e = x.endIndex;
           // d. If e is zero, or if Multiline is true and the character Input[e - 1] is one of LineTerminator, then
-          if (e === 0 || (Multiline && isLineTerminator(String.fromCodePoint(Input[e - 1])))) {
+          if (e === 0 || (modifiers.Multiline && isLineTerminator(String.fromCodePoint(Input[e - 1])))) {
             // i. Call c(x) and return its result.
             return c(x);
           }
@@ -448,13 +466,13 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
         // 1. Return a new Matcher with parameters (x, c) that captures nothing and performs the following steps when called:
         return (x, c) => {
           // a. Assert: x is a State.
-          Assert(x instanceof State);
+          Assert(x instanceof MatchState);
           // b. Assert: c is a Continuation.
           Assert(isContinuation(c));
           // c. Let e be x's endIndex.
           const e = x.endIndex;
           // d. If e is equal to InputLength, or if Multiline is true and the character Input[e] is one of LineTerminator, then
-          if (e === InputLength || (Multiline && isLineTerminator(String.fromCodePoint(Input[e])))) {
+          if (e === InputLength || (modifiers.Multiline && isLineTerminator(String.fromCodePoint(Input[e])))) {
             // i. Call c(x) and return its result.
             return c(x);
           }
@@ -465,15 +483,15 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
         // 1. Return a new Matcher with parameters (x, c) that captures nothing and performs the following steps when called:
         return (x, c) => {
           // a. Assert: x is a State.
-          Assert(x instanceof State);
+          Assert(x instanceof MatchState);
           // b. Assert: c is a Continuation.
           Assert(isContinuation(c));
           // c. Let e be x's endIndex.
           const e = x.endIndex;
           // d. Call IsWordChar(e - 1) and let a be the Boolean result.
-          const a = IsWordChar(e - 1);
+          const a = IsWordChar(e - 1, modifiers);
           // e. Call IsWordChar(e) and let b be the Boolean result.
-          const b = IsWordChar(e);
+          const b = IsWordChar(e, modifiers);
           // f. If a is true and b is false, or if a is false and b is true, then
           if ((a && !b) || (!a && b)) {
             // i. Call c(x) and return its result.
@@ -486,15 +504,15 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
         // 1. Return a new Matcher with parameters (x, c) that captures nothing and performs the following steps when called:
         return (x, c) => {
           // a. Assert: x is a State.
-          Assert(x instanceof State);
+          Assert(x instanceof MatchState);
           // b. Assert: c is a Continuation.
           Assert(isContinuation(c));
           // c. Let e be x's endIndex.
           const e = x.endIndex;
           // d. Call IsWordChar(e - 1) and let a be the Boolean result.
-          const a = IsWordChar(e - 1);
+          const a = IsWordChar(e - 1, modifiers);
           // e. Call IsWordChar(e) and let b be the Boolean result.
-          const b = IsWordChar(e);
+          const b = IsWordChar(e, modifiers);
           // f. If a is true and b is true, or if a is false and b is false, then
           if ((a && b) || (!a && !b)) {
             // i. Call c(x) and return its result.
@@ -505,17 +523,17 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
         };
       case '?=': {
         // 1. Evaluate Disjunction with +1 as its direction argument to obtain a Matcher m.
-        const m = Evaluate(Disjunction, +1);
+        const m = CompileSubpattern(Disjunction!, FORWARD, modifiers);
         // 2. Return a new Matcher with parameters (x, c) that captures m and performs the following steps when called:
         return (x, c) => {
           // a. Assert: x is a State.
-          Assert(x instanceof State);
+          Assert(x instanceof MatchState);
           // b. Assert: c is a Continuation.
           Assert(isContinuation(c));
           // c. Let d be a new Continuation with parameters (y) that captures nothing and performs the following steps when called:
-          const d = (y) => {
+          const d: MatcherContinuation = (y) => {
             // i. Assert: y is a State.
-            Assert(y instanceof State);
+            Assert(y instanceof MatchState);
             // ii. Return y.
             return y;
           };
@@ -532,24 +550,24 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
           // h. Let xe be x's endIndex.
           const xe = x.endIndex;
           // i. Let z be the State (xe, cap).
-          const z = new State(xe, cap);
+          const z = new MatchState(xe, cap);
           // j. Call c(z) and return its result.
           return c(z);
         };
       }
       case '?!': {
         // 1. Evaluate Disjunction with +1 as its direction argument to obtain a Matcher m.
-        const m = Evaluate(Disjunction, +1);
+        const m = CompileSubpattern(Disjunction!, FORWARD, modifiers);
         // 2. Return a new Matcher with parameters (x, c) that captures m and performs the following steps when called:
         return (x, c) => {
           // a. Assert: x is a State.
-          Assert(x instanceof State);
+          Assert(x instanceof MatchState);
           // b. Assert: c is a Continuation.
           Assert(isContinuation(c));
           // c. Let d be a new Continuation with parameters (y) that captures nothing and performs the following steps when called:
-          const d = (y) => {
+          const d: MatcherContinuation = (y) => {
             // i. Assert: y is a State.
-            Assert(y instanceof State);
+            Assert(y instanceof MatchState);
             // ii. Return y.
             return y;
           };
@@ -565,17 +583,17 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
       }
       case '?<=': {
         // 1. Evaluate Disjunction with -1 as its direction argument to obtain a Matcher m.
-        const m = Evaluate(Disjunction, -1);
+        const m = CompileSubpattern(Disjunction!, BACKWARD, modifiers);
         // 2. Return a new Matcher with parameters (x, c) that captures m and performs the following steps when called:
         return (x, c) => {
           // a. Assert: x is a State.
-          Assert(x instanceof State);
+          Assert(x instanceof MatchState);
           // b. Assert: c is a Continuation.
           Assert(isContinuation(c));
           // c. Let d be a new Continuation with parameters (y) that captures nothing and performs the following steps when called:
-          const d = (y) => {
+          const d: MatcherContinuation = (y) => {
             // i. Assert: y is a State.
-            Assert(y instanceof State);
+            Assert(y instanceof MatchState);
             // ii. Return y.
             return y;
           };
@@ -592,24 +610,24 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
           // h. Let xe be x's endIndex.
           const xe = x.endIndex;
           // i. Let z be the State (xe, cap).
-          const z = new State(xe, cap);
+          const z = new MatchState(xe, cap);
           // j. Call c(z) and return its result.
           return c(z);
         };
       }
       case '?<!': {
         // 1. Evaluate Disjunction with -1 as its direction argument to obtain a Matcher m.
-        const m = Evaluate(Disjunction, -1);
+        const m = CompileSubpattern(Disjunction!, BACKWARD, modifiers);
         // 2. Return a new Matcher with parameters (x, c) that captures m and performs the following steps when called:
         return (x, c) => {
           // a. Assert: x is a State.
-          Assert(x instanceof State);
+          Assert(x instanceof MatchState);
           // b. Assert: c is a Continuation.
           Assert(isContinuation(c));
           // c. Let d be a new Continuation with parameters (y) that captures nothing and performs the following steps when called:
-          const d = (y) => {
+          const d: MatcherContinuation = (y) => {
             // i. Assert: y is a State.
-            Assert(y instanceof State);
+            Assert(y instanceof MatchState);
             // ii. Return y.
             return y;
           };
@@ -624,12 +642,12 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
         };
       }
       default:
-        throw new OutOfRange('Evaluate_Assertion', subtype);
+        throw new OutOfRange('CompileAssertion', subtype);
     }
   }
 
   /** https://tc39.es/ecma262/#sec-runtime-semantics-wordcharacters-abstract-operation */
-  function WordCharacters() {
+  function GetWordCharacters(modifiers: ModifiersRecord) {
     // 1. Let A be a set of characters containing the sixty-three characters:
     //   a b c d e f g h i j k l m n o p q r s t u v w x y z
     //   A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
@@ -643,13 +661,13 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
       'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
       'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
       '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '_',
-    ].map((c) => c.codePointAt(0)));
+    ].map((c) => c.codePointAt(0)!));
     if (Unicode && IgnoreCase) {
       return new VirtualCharSet((c) => {
         if (A.has(c)) {
           return true;
         }
-        if (A.has(Canonicalize(c))) {
+        if (A.has(Canonicalize(c, modifiers))) {
           return true;
         }
         return false;
@@ -659,7 +677,7 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
   }
 
   /** https://tc39.es/ecma262/#sec-runtime-semantics-iswordchar-abstract-operation */
-  function IsWordChar(e: number) {
+  function IsWordChar(e: number, modifiers: ModifiersRecord) {
     // 1. If e is -1 or e is InputLength, return false.
     if (e === -1 || e === InputLength) {
       return false;
@@ -667,7 +685,7 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
     // 2. Let c be the character Input[e].
     const c = Input[e];
     // 3. Let wordChars be the result of ! WordCharacters().
-    const wordChars = X(WordCharacters());
+    const wordChars = X(GetWordCharacters(modifiers));
     // 4. If c is in wordChars, return true.
     if (wordChars.has(c)) {
       return true;
@@ -680,7 +698,7 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
   //   Quantifier ::
   //     QuantifierPrefix
   //     QuantifierPrefix `?`
-  function Evaluate_Quantifier({ QuantifierPrefix, greedy }: ParseNode.RegExp.Quantifier) {
+  function CompileQuantifier({ QuantifierPrefix, greedy }: ParseNode.RegExp.Quantifier): [min: number, max: number, greedy: boolean] {
     switch (QuantifierPrefix) {
       case '*':
         return [0, Infinity, greedy];
@@ -702,21 +720,22 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
   //     `\` AtomEscape
   //     CharacterClass
   //     `(` GroupSpecifier Disjunction `)`
-  //     `(` `?` `:` Disjunction `)`
-  function Evaluate_Atom(Atom: ParseNode.RegExp.Atom, direction) {
+  //     `(` `?` RegularExpressionFlags `:` Disjunction `)`
+  //     `(` `?` RegularExpressionFlags `-` RegularExpressionFlags `:` Disjunction `)`
+  function CompileAtom(Atom: ParseNode.RegExp.Atom, direction: Direction, modifiers: ModifiersRecord): Matcher {
     switch (true) {
-      case !!Atom.PatternCharacter: {
+      case 'PatternCharacter' in Atom && !!Atom.PatternCharacter: {
         // 1. Let ch be the character matched by PatternCharacter.
-        const ch = Atom.PatternCharacter.codePointAt(0);
+        const ch = Atom.PatternCharacter.codePointAt(0)!;
         // 2. Let A be a one-element CharSet containing the character ch.
-        const A = new ConcreteCharSet([Canonicalize(ch)]);
+        const A = new ConcreteCharSet([Canonicalize(ch, modifiers)]);
         // 3. Call CharacterSetMatcher(A, false, direction) and return its Matcher result.
-        return CharacterSetMatcher(A, false, direction);
+        return CharacterSetMatcher(A, false, direction, modifiers);
       }
-      case Atom.subtype === '.': {
+      case 'subtype' in Atom && Atom.subtype === '.': {
         let A;
         // 1. If DotAll is true, then
-        if (DotAll) {
+        if (modifiers.DotAll) {
           // a. Let A be the set of all characters.
           A = new VirtualCharSet((_c) => true);
         } else {
@@ -724,17 +743,20 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
           A = new VirtualCharSet((c) => !isLineTerminator(String.fromCodePoint(c)));
         }
         // 3. Call CharacterSetMatcher(A, false, direction) and return its Matcher result.
-        return CharacterSetMatcher(A, false, direction);
+        return CharacterSetMatcher(A, false, direction, modifiers);
       }
-      case !!Atom.CharacterClass: {
+      case Atom.type === 'AtomEscape':
+        return CompileAtom_AtomEscape(Atom, direction, modifiers);
+
+      case 'CharacterClass' in Atom && !!Atom.CharacterClass: {
         // 1. Evaluate CharacterClass to obtain a CharSet A and a Boolean invert.
-        const { A, invert } = Evaluate(Atom.CharacterClass);
+        const { A, invert } = CompileCharacterClass(Atom.CharacterClass, modifiers);
         // 2. Call CharacterSetMatcher(A, invert, direction) and return its Matcher result.
-        return CharacterSetMatcher(A, invert, direction);
+        return CharacterSetMatcher(A, invert, direction, modifiers);
       }
-      case Atom.capturing: {
+      case 'capturing' in Atom && Atom.capturing && !!Atom.Disjunction: {
         // 1. Evaluate Disjunction with argument direction to obtain a Matcher m.
-        const m = Evaluate(Atom.Disjunction, direction);
+        const m = CompileSubpattern(Atom.Disjunction, direction, modifiers);
         // 2. Let parenIndex be the number of left-capturing parentheses in the entire regular expression
         //    that occur to the left of this Atom. This is the total number of Atom :: `(` GroupSpecifier Disjunction `)`
         //    Parse Nodes prior to or enclosing this Atom.
@@ -742,13 +764,13 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
         // 3. Return a new Matcher with parameters (x, c) that captures direction, m, and parenIndex and performs the following steps when called:
         return (x, c) => {
           // a. Assert: x is a State.
-          Assert(x instanceof State);
+          Assert(x instanceof MatchState);
           // b. Assert: c is a Continuation.
           Assert(isContinuation(c));
           // c. Let d be a new Continuation with parameters (y) that captures x, c, direction, and parenIndex and performs the following steps when called:
-          const d = (y) => {
+          const d: MatcherContinuation = (y) => {
             // i. Assert: y is a State.
-            Assert(y instanceof State);
+            Assert(y instanceof MatchState);
             // ii. Let cap be a copy of y's captures List.
             const cap = [...y.captures];
             // iii. Let xe be x's endIndex.
@@ -773,7 +795,7 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
             // vii. Set cap[parenIndex + 1] to s.
             cap[parenIndex + 1] = s;
             // viii. Let z be the State (ye, cap).
-            const z = new State(ye, cap);
+            const z = new MatchState(ye, cap);
             // ix. Call c(z) and return its result.
             return c(z);
           };
@@ -781,19 +803,95 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
           return m(x, d);
         };
       }
-      case !!Atom.Disjunction:
-        return Evaluate(Atom.Disjunction, direction);
+      case 'Disjunction' in Atom && !!Atom.Disjunction: {
+        // *1. Let addModifiers be the source text matched by the first RegularExpressionFlags.
+        const addModifiers = Atom.RegularExpressionFlags_a ?? '';
+        // *2. Let removeModifiers be the source text matched by the second RegularExpressionFlags.
+        const removeModifiers = Atom.RegularExpressionFlags_b ?? '';
+        // *3. Let newModifiers be UpdateModifiers(modifiers, CodePointsToString(addModifiers), CodePointsToString(removeModifiers)).
+        const newModifiers = UpdateModifiers(modifiers, addModifiers, removeModifiers);
+        // *4. Return CompileSubpattern of Disjunction with arguments direction and newModifiers.
+        return CompileSubpattern(Atom.Disjunction, direction, newModifiers);
+      }
       default:
-        throw new OutOfRange('Evaluate_Atom', Atom);
+        throw new OutOfRange('CompileAtom', Atom);
     }
   }
 
+  /** https://tc39.es/ecma262/#sec-atomescape */
+  // AtomEscape ::
+  //   DecimalEscape
+  //   CharacterEscape
+  //   CharacterClassEscape
+  //   `k` GroupName
+  function CompileAtom_AtomEscape(AtomEscape: ParseNode.RegExp.AtomEscape, direction: Direction, modifiers: ModifiersRecord): Matcher {
+    switch (true) {
+      case !!AtomEscape.DecimalEscape: {
+        // 1. Evaluate DecimalEscape to obtain an integer n.
+        const n = CapturingGroupNumber(AtomEscape.DecimalEscape);
+        // 2. Assert: n ≤ NcapturingParens.
+        Assert(n <= NcapturingParens);
+        // 3. Call BackreferenceMatcher(n, direction) and return its Matcher result.
+        return BackreferenceMatcher(n, direction, modifiers);
+      }
+      case !!AtomEscape.CharacterEscape: {
+        // 1. Evaluate CharacterEscape to obtain a character ch.
+        const ch = CharacterValue(AtomEscape.CharacterEscape);
+        // 2. Let A be a one-element CharSet containing the character ch.
+        const A = new ConcreteCharSet([Canonicalize(ch, modifiers)]);
+        // 3. Call CharacterSetMatcher(A, false, direction) and return its Matcher result.
+        return CharacterSetMatcher(A, false, direction, modifiers);
+      }
+      case !!AtomEscape.CharacterClassEscape: {
+        // 1. Evaluate CharacterClassEscape to obtain a CharSet A.
+        const A = CompileToCharSet(AtomEscape.CharacterClassEscape, modifiers);
+        // 2. Call CharacterSetMatcher(A, false, direction) and return its Matcher result.
+        return CharacterSetMatcher(A, false, direction, modifiers);
+      }
+      case !!AtomEscape.GroupName: {
+        // 1. Search the enclosing Pattern for an instance of a GroupSpecifier for a RegExpIdentifierName which has a StringValue equal to the StringValue of the RegExpIdentifierName contained in GroupName.
+        // 2. Assert: A unique such GroupSpecifier is found.
+        // 3. Let parenIndex be the number of left-capturing parentheses in the entire regular expression that occur to the left of the located GroupSpecifier. This is the total number of Atom :: `(` GroupSpecifier Disjunction `)` Parse Nodes prior to or enclosing the located GroupSpecifier.
+        const parenIndex = Pattern.groupSpecifiers.get(AtomEscape.GroupName);
+        Assert(parenIndex !== undefined);
+        // 4. Call BackreferenceMatcher(parenIndex, direction) and return its Matcher result.
+        return BackreferenceMatcher(parenIndex + 1, direction, modifiers);
+      }
+      default:
+        throw new OutOfRange('CompileAtom_AtomEscape', AtomEscape);
+    }
+  }
+
+  /** https://tc39.es/proposal-regexp-modifiers/#sec-updatemodifiers */
+  function UpdateModifiers(modifiers: ModifiersRecord, addModifiers: string, removeModifiers: string) {
+    let { DotAll, IgnoreCase, Multiline } = modifiers;
+    if (addModifiers.includes('s')) {
+      DotAll = true;
+    }
+    if (addModifiers.includes('i')) {
+      IgnoreCase = true;
+    }
+    if (addModifiers.includes('m')) {
+      Multiline = true;
+    }
+    if (removeModifiers.includes('s')) {
+      DotAll = false;
+    }
+    if (removeModifiers.includes('i')) {
+      IgnoreCase = false;
+    }
+    if (removeModifiers.includes('m')) {
+      Multiline = false;
+    }
+    return new ModifiersRecord(DotAll, IgnoreCase, Multiline);
+  }
+
   /** https://tc39.es/ecma262/#sec-runtime-semantics-charactersetmatcher-abstract-operation */
-  function CharacterSetMatcher(A, invert, direction) {
+  function CharacterSetMatcher(A: CharSet, invert: boolean, direction: Direction, modifiers: ModifiersRecord): Matcher {
     // 1. Return a new Matcher with parameters (x, c) that captures A, invert, and direction and performs the following steps when called:
-    return (x: State, c) => {
+    return (x, c) => {
       // a. Assert: x is a State.
-      Assert(x instanceof State);
+      Assert(x instanceof MatchState);
       // b. Assert: c is a Continuation.
       Assert(isContinuation(c));
       // c. Let e be x's endIndex.
@@ -809,7 +907,7 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
       // g. Let ch be the character Input[index].
       const ch = Input[index];
       // h. Let cc be Canonicalize(ch).
-      const cc = Canonicalize(ch);
+      const cc = Canonicalize(ch, modifiers);
       // i. If invert is false, then
       if (invert === false) {
         // i. If there does not exist a member a of set A such that Canonicalize(a) is cc, return failure.
@@ -827,16 +925,16 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
       // k. Let cap be x's captures List.
       const cap = x.captures;
       // Let y be the State (f, cap).
-      const y = new State(f, cap);
+      const y = new MatchState(f, cap);
       // Call c(y) and return its result.
       return c(y);
     };
   }
 
   /** https://tc39.es/ecma262/#sec-runtime-semantics-canonicalize-ch */
-  function Canonicalize(ch: number) {
+  function Canonicalize(ch: number, modifiers: ModifiersRecord) {
     // 1. If IgnoreCase is false, return ch.
-    if (IgnoreCase === false) {
+    if (modifiers.IgnoreCase === false) {
       return ch;
     }
     // 2. If Unicode is true, then
@@ -864,7 +962,7 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
         return ch;
       }
       // f. Let cu be u's single code unit element.
-      const cu = u.codePointAt(0);
+      const cu = u.codePointAt(0)!;
       // g. If the numeric value of ch ≥ 128 and the numeric value of cu < 128, return ch.
       if (ch >= 128 && cu < 128) {
         return ch;
@@ -874,56 +972,12 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
     }
   }
 
-  /** https://tc39.es/ecma262/#sec-atomescape */
-  // AtomEscape ::
-  //   DecimalEscape
-  //   CharacterEscape
-  //   CharacterClassEscape
-  //   `k` GroupName
-  function Evaluate_AtomEscape(AtomEscape: ParseNode.RegExp.AtomEscape, direction) {
-    switch (true) {
-      case !!AtomEscape.DecimalEscape: {
-        // 1. Evaluate DecimalEscape to obtain an integer n.
-        const n = Evaluate(AtomEscape.DecimalEscape);
-        // 2. Assert: n ≤ NcapturingParens.
-        Assert(n <= NcapturingParens);
-        // 3. Call BackreferenceMatcher(n, direction) and return its Matcher result.
-        return BackreferenceMatcher(n, direction);
-      }
-      case !!AtomEscape.CharacterEscape: {
-        // 1. Evaluate CharacterEscape to obtain a character ch.
-        const ch = Evaluate(AtomEscape.CharacterEscape);
-        // 2. Let A be a one-element CharSet containing the character ch.
-        const A = new ConcreteCharSet([Canonicalize(ch)]);
-        // 3. Call CharacterSetMatcher(A, false, direction) and return its Matcher result.
-        return CharacterSetMatcher(A, false, direction);
-      }
-      case !!AtomEscape.CharacterClassEscape: {
-        // 1. Evaluate CharacterClassEscape to obtain a CharSet A.
-        const A = Evaluate(AtomEscape.CharacterClassEscape);
-        // 2. Call CharacterSetMatcher(A, false, direction) and return its Matcher result.
-        return CharacterSetMatcher(A, false, direction);
-      }
-      case !!AtomEscape.GroupName: {
-        // 1. Search the enclosing Pattern for an instance of a GroupSpecifier for a RegExpIdentifierName which has a StringValue equal to the StringValue of the RegExpIdentifierName contained in GroupName.
-        // 2. Assert: A unique such GroupSpecifier is found.
-        // 3. Let parenIndex be the number of left-capturing parentheses in the entire regular expression that occur to the left of the located GroupSpecifier. This is the total number of Atom :: `(` GroupSpecifier Disjunction `)` Parse Nodes prior to or enclosing the located GroupSpecifier.
-        const parenIndex = Pattern.groupSpecifiers.get(AtomEscape.GroupName);
-        Assert(parenIndex !== undefined);
-        // 4. Call BackreferenceMatcher(parenIndex, direction) and return its Matcher result.
-        return BackreferenceMatcher(parenIndex + 1, direction);
-      }
-      default:
-        throw new OutOfRange('Evaluate_AtomEscape', AtomEscape);
-    }
-  }
-
   /** https://tc39.es/ecma262/#sec-backreference-matcher */
-  function BackreferenceMatcher(n, direction) {
+  function BackreferenceMatcher(n: number, direction: Direction, modifiers: ModifiersRecord): Matcher {
     // 1. Return a new Matcher with parameters (x, c) that captures n and direction and performs the following steps when called:
     return (x, c) => {
       // a. Assert: x is a State.
-      Assert(x instanceof State);
+      Assert(x instanceof MatchState);
       // b. Assert: c is a Continuation.
       Assert(isContinuation(c));
       // c. Let cap be x's captures List.
@@ -931,7 +985,7 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
       // d. Let s be cap[n].
       const s = cap[n];
       // e. If s is undefined, return c(x).
-      if (s === Value.undefined) {
+      if (s instanceof UndefinedValue) {
         return c(x);
       }
       // f. Let e be x's endIndex.
@@ -952,37 +1006,35 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
       const g = Math.min(e, f);
       // k. If there exists an integer i between 0 (inclusive) and len (exclusive) such that Canonicalize(s[i]) is not the same character value as Canonicalize(Input[g + i]), return failure.
       for (let i = 0; i < len; i += 1) {
-        if (Canonicalize(Input[s.startIndex + i]) !== Canonicalize(Input[g + i])) {
+        if (Canonicalize(Input[s.startIndex + i], modifiers) !== Canonicalize(Input[g + i], modifiers)) {
           return 'failure';
         }
       }
       // l. Let y be the State (f, cap).
-      const y = new State(f, cap);
+      const y = new MatchState(f, cap);
       // m. Call c(y) and return its result.
       return c(y);
     };
   }
 
-  /** https://tc39.es/ecma262/#sec-characterescape */
-  // CharacterEscape ::
-  //   ControlEscape
-  //   `c` ControlLetter
-  //   `0` [lookahead != DecimalDigit]
-  //   HexEscapeSequence
-  //   RegExpUnicodeEscapeSequence
-  //   IdentityEscape
-  function Evaluate_CharacterEscape(CharacterEscape: ParseNode.RegExp.CharacterEscape) {
-    // 1. Let cv be the CharacterValue of this CharacterEscape.
-    const cv = CharacterValue(CharacterEscape);
-    // 2. Return the character whose character value is cv.
-    return cv;
-  }
-
   /** https://tc39.es/ecma262/#sec-decimalescape */
   // DecimalEscape ::
   //   NonZeroDigit DecimalDigits?
-  function Evaluate_DecimalEscape(DecimalEscape: ParseNode.RegExp.DecimalEscape) {
+  function CapturingGroupNumber(DecimalEscape: ParseNode.RegExp.DecimalEscape) {
     return DecimalEscape.value;
+  }
+
+  function CompileToCharSet(node: ParseNode.RegExp.ClassAtom, modifiers: ModifiersRecord): CharSet {
+    switch (node.type) {
+      case 'CharacterClassEscape':
+        return CompileToCharSet_CharacterClassEscape(node, modifiers);
+      case 'ClassAtom':
+        return CompileToCharSet_ClassAtom(node, modifiers);
+      case 'ClassEscape':
+        return CompileToCharSet_ClassEscape(node, modifiers);
+      default:
+        throw new OutOfRange('CompileToCharSet', node);
+    }
   }
 
   /** https://tc39.es/ecma262/#sec-characterclassescape */
@@ -995,11 +1047,11 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
   //   `W`
   //   `p{` UnicodePropertyValueExpression `}`
   //   `P{` UnicodePropertyValueExpression `}`
-  function Evaluate_CharacterClassEscape(node: ParseNode.RegExp.CharacterClassEscape) {
+  function CompileToCharSet_CharacterClassEscape(node: ParseNode.RegExp.CharacterClassEscape, modifiers: ModifiersRecord): CharSet {
     switch (node.value) {
       case 'd':
         // 1. Return the ten-element set of characters containing the characters 0 through 9 inclusive.
-        return new ConcreteCharSet(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].map((c) => c.codePointAt(0)));
+        return new ConcreteCharSet(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].map((c) => c.codePointAt(0)!));
       case 'D':
         // 1. Return the set of all characters not included in the set returned by CharacterClassEscape :: `d`.
         return new VirtualCharSet((c) => !isDecimalDigit(String.fromCodePoint(c)));
@@ -1017,35 +1069,36 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
         });
       case 'w':
         // 1. Return the set of all characters returned by WordCharacters().
-        return WordCharacters();
+        return GetWordCharacters(modifiers);
       case 'W': {
         // 1. Return the set of all characters not included in the set returned by CharacterClassEscape :: `w`.
-        const s = WordCharacters();
+        const s = GetWordCharacters(modifiers);
         return new VirtualCharSet((c) => !s.has(c));
       }
       case 'p':
         // 1. Return the CharSet containing all Unicode code points included in the CharSet returned by UnicodePropertyValueExpression.
-        return Evaluate(node.UnicodePropertyValueExpression);
+        return CompileToCharSet_UnicodePropertyValueExpression(node.UnicodePropertyValueExpression!);
       case 'P': {
         // 1. Return the CharSet containing all Unicode code points not included in the CharSet returned by UnicodePropertyValueExpression.
-        const s = Evaluate(node.UnicodePropertyValueExpression);
+        const s = CompileToCharSet_UnicodePropertyValueExpression(node.UnicodePropertyValueExpression!);
         return new VirtualCharSet((c) => !s.has(c));
       }
       default:
-        throw new OutOfRange('Evaluate_CharacterClassEscape', node);
+        throw new OutOfRange('CompileToCharSet_CharacterClassEscape', node);
     }
   }
 
   // UnicodePropertyValueExpression ::
   //   UnicodePropertyName `=` UnicodePropertyValue
   //   LoneUnicodePropertyNameOrValue
-  function Evaluate_UnicodePropertyValueExpression(UnicodePropertyValueExpression: ParseNode.RegExp.UnicodePropertyValueExpression) {
+  function CompileToCharSet_UnicodePropertyValueExpression(UnicodePropertyValueExpression: ParseNode.RegExp.UnicodePropertyValueExpression): CharSet {
     if (UnicodePropertyValueExpression.LoneUnicodePropertyNameOrValue) {
       // 1. Let s be SourceText of LoneUnicodePropertyNameOrValue.
       const s = UnicodePropertyValueExpression.LoneUnicodePropertyNameOrValue;
       // 2. If ! UnicodeMatchPropertyValue(General_Category, s) is identical to a List of Unicode code points that is the name of a Unicode general category or general category alias listed in the “Property value and aliases” column of Table 57, then
       if (X(UnicodeMatchPropertyValue('General_Category', s) in UnicodeGeneralCategoryValues)) {
         // a. Return the CharSet containing all Unicode code points whose character database definition includes the property “General_Category” with value s.
+        // @ts-expect-error -- 'string' is not a subtype of 'keyof typeof UnicodeGeneralCategoryValues'
         return new ConcreteCharSet(getUnicodePropertyValueSet('General_Category', UnicodeGeneralCategoryValues[s]));
       }
       // 3. Let p be ! UnicodeMatchProperty(s).
@@ -1056,7 +1109,7 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
       return new ConcreteCharSet(getUnicodePropertyValueSet(p));
     }
     // 1. Let ps be SourceText of UnicodePropertyName.
-    const ps = UnicodePropertyValueExpression.UnicodePropertyName;
+    const ps = UnicodePropertyValueExpression.UnicodePropertyName!;
     // 2. Let p be ! UnicodeMatchProperty(ps).
     const p = X(UnicodeMatchProperty(ps));
     // 3. Assert: p is a Unicode property name or property alias listed in the “Property name and aliases” column of Table 55.
@@ -1073,23 +1126,24 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
   //  CharacterClass ::
   //    `[` ClassRanges `]`
   //    `[` `^` ClassRanges `]`
-  function Evaluate_CharacterClass({ invert, ClassRanges }: ParseNode.RegExp.CharacterClass) {
-    let A = new ConcreteCharSet([]);
+  function CompileCharacterClass({ invert, ClassRanges }: ParseNode.RegExp.CharacterClass, modifiers: ModifiersRecord) {
+    let A: CharSet = new ConcreteCharSet([]);
     for (const range of ClassRanges) {
       if (Array.isArray(range)) {
-        const B = Evaluate(range[0]);
-        const C = Evaluate(range[1]);
-        const D = CharacterRange(B, C);
+        const B = CompileToCharSet(range[0], modifiers);
+        const C = CompileToCharSet(range[1], modifiers);
+        Assert(B instanceof ConcreteCharSet && C instanceof ConcreteCharSet);
+        const D = CharacterRange(B, C, modifiers);
         A = A.union(D);
       } else {
-        A = A.union(Evaluate(range));
+        A = A.union(CompileToCharSet(range, modifiers));
       }
     }
     return { A, invert };
   }
 
   /** https://tc39.es/ecma262/#sec-runtime-semantics-characterrange-abstract-operation */
-  function CharacterRange(A, B) {
+  function CharacterRange(A: ConcreteCharSet, B: ConcreteCharSet, modifiers: ModifiersRecord) {
     // 1. Assert: A and B each contain exactly one character.
     Assert(A.size === 1 && B.size === 1);
     // 2. Let a be the one character in CharSet A.
@@ -1103,9 +1157,9 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
     // 6. Assert: i ≤ j.
     Assert(i <= j);
     // 7. Return the set containing all characters numbered i through j, inclusive.
-    const set = new Set();
+    const set = new Set<number>();
     for (let k = i; k <= j; k += 1) {
-      set.add(Canonicalize(k));
+      set.add(Canonicalize(k, modifiers)); // TODO: should this really be using canonicalize?
     }
     return new ConcreteCharSet(set);
   }
@@ -1117,16 +1171,16 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
   // ClassAtomNoDash ::
   //   SourceCharacter
   //   `\` ClassEscape
-  function Evaluate_ClassAtom(ClassAtom: ParseNode.RegExp.ClassAtom) {
+  function CompileToCharSet_ClassAtom(ClassAtom: ParseNode.RegExp.ClassAtom, modifiers: ModifiersRecord): CharSet {
     switch (true) {
-      case !!ClassAtom.SourceCharacter:
+      case 'SourceCharacter' in ClassAtom && !!ClassAtom.SourceCharacter:
         // 1. Return the CharSet containing the character matched by SourceCharacter.
-        return new ConcreteCharSet([Canonicalize(ClassAtom.SourceCharacter.codePointAt(0))]);
+        return new ConcreteCharSet([Canonicalize(ClassAtom.SourceCharacter.codePointAt(0)!, modifiers)]);
       case ClassAtom.value === '-':
         // 1. Return the CharSet containing the single character - U+002D (HYPHEN-MINUS).
         return new ConcreteCharSet([0x002D]);
       default:
-        throw new OutOfRange('Evaluate_ClassAtom', ClassAtom);
+        throw new OutOfRange('CompileToCharSet_ClassAtom', ClassAtom);
     }
   }
 
@@ -1136,7 +1190,7 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
   //   `-`
   //   CharacterEscape
   //   CharacterClassEscape
-  function Evaluate_ClassEscape(ClassEscape: ParseNode.RegExp.ClassEscape) {
+  function CompileToCharSet_ClassEscape(ClassEscape: ParseNode.RegExp.ClassEscape, modifiers: ModifiersRecord): CharSet {
     switch (true) {
       case ClassEscape.value === 'b':
       case ClassEscape.value === '-':
@@ -1146,10 +1200,10 @@ export function Evaluate_Pattern(Pattern: ParseNode.RegExp.Pattern, flags) {
         // 2. Let c be the character whose character value is cv.
         const c = cv;
         // 3. Return the CharSet containing the single character c.
-        return new ConcreteCharSet([Canonicalize(c)]);
+        return new ConcreteCharSet([Canonicalize(c, modifiers)]);
       }
       default:
-        throw new OutOfRange('Evaluate_ClassEscape', ClassEscape);
+        throw new OutOfRange('CompileToCharSet_ClassEscape', ClassEscape);
     }
   }
 }

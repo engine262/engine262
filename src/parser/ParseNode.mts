@@ -2225,7 +2225,7 @@ export namespace ParseNode.RegExp {
   }
   export interface Quantifier {
     readonly type: 'Quantifier';
-    readonly QuantifierPrefix: '*' | '+' | '?' | QuantifierCount | undefined;
+    readonly QuantifierPrefix: '*' | '+' | '?' | QuantifierCount;
     readonly greedy: boolean;
   }
   export interface QuantifierCount {
@@ -2243,6 +2243,8 @@ export namespace ParseNode.RegExp {
     readonly capturingParenthesesBefore: number;
     readonly enclosedCapturingParentheses: number;
     readonly capturing: boolean;
+    readonly RegularExpressionFlags_a: string | undefined;
+    readonly RegularExpressionFlags_b: string | undefined;
     readonly GroupSpecifier: string | undefined;
     readonly Disjunction: Disjunction | undefined;
   }

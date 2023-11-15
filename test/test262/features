@@ -33,6 +33,22 @@
 
 -symbols-as-weakmap-keys
 
+-Array.fromAsync
+
+-iterator-helpers
+
+-arraybuffer-transfer
+
+-resizable-arraybuffer
+
+-promise-with-resolvers
+
+-import-attributes
+
+-json-parse-with-source
+
+-set-methods
+
 String.prototype.isWellFormed = is-usv-string
 String.prototype.toWellFormed = is-usv-string
 
