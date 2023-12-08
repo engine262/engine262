@@ -1,3 +1,4 @@
+
 // @ts-nocheck
 import { surroundingAgent } from '../engine.mjs';
 import {
@@ -228,7 +229,7 @@ export function CreateAsyncFromSyncIterator(syncIteratorRecord) {
 }
 
 /** https://tc39.es/ecma262/#sec-asyncfromsynciteratorcontinuation */
-export function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
+export function AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, closeOnRejection ) {
   // 1. Let done be IteratorComplete(result).
   const done = IteratorComplete(result);
   // 2. IfAbruptRejectPromise(done, promiseCapability).
@@ -239,19 +240,38 @@ export function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
   IfAbruptRejectPromise(value, promiseCapability);
   // 5. Let valueWrapper be PromiseResolve(%Promise%, value).
   const valueWrapper = PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value);
-  // 6. IfAbruptRejectPromise(valueWrapper, promiseCapability).
+  // 6. If valueWrapper is an abrupt completion, done is false, and closeOnRejection is true, then
+  if (valueWrapper instanceof AbruptCompletion) {
+  //  a. Set valueWrapper to IteratorClose(syncIteratorRecord, valueWrapper).
+    valueWrapper = IteratorClose(syncIteratorRecord, valueWrapper);
+  }
+  // 7. IfAbruptRejectPromise(valueWrapper, promiseCapability).
   IfAbruptRejectPromise(valueWrapper, promiseCapability);
-  // 7. Let unwrap be a new Abstract Closure with parameters (value) that captures done and performs the following steps when called:
+  // 8. Let unwrap be a new Abstract Closure with parameters (value) that captures done and performs the following steps when called:
   // eslint-disable-next-line arrow-body-style
   const unwrap = ([valueInner = Value.undefined]) => {
     // a. Return ! CreateIterResultObject(value, done).
     return X(CreateIterResultObject(valueInner, done));
   };
-  // 8. Let onFulfilled be ! CreateBuiltinFunction(unwrap, 1, "", « »).
+  // 9. Let onFulfilled be ! CreateBuiltinFunction(unwrap, 1, "", « »).
   const onFulfilled = X(CreateBuiltinFunction(unwrap, 1, Value(''), ['Done']));
-  // 9. NOTE: onFulfilled is used when processing the "value" property of an IteratorResult object in order to wait for its value if it is a promise and re-package the result in a new "unwrapped" IteratorResult object.
-  // 10. Perform ! PerformPromiseThen(valueWrapper, onFulfilled, undefined, promiseCapability).
-  X(PerformPromiseThen(valueWrapper, onFulfilled, Value.undefined, promiseCapability));
-  // 11. Return promiseCapability.[[Promise]].
+  // 10. NOTE: onFulfilled is used when processing the "value" property of an IteratorResult object in order to wait for its value if it is a promise and re-package the result in a new "unwrapped" IteratorResult object.
+  // 11. If done is true, or if closeOnRejection is false, then
+  //    a. Let onRejected be undefined.
+  const onRejected = Value.undefined;
+  //12. Else,
+  if (!done && closeOnRejection) {
+    //    a. Let closeIterator be a new Abstract Closure with parameters (error) that captures syncIteratorRecord and performs the following steps when called:
+    const closeIterator = ([error = Value.undefined]) => {
+      //        i. Return ? IteratorClose(syncIteratorRecord, ThrowCompletion(error)).
+      return Q(IteratorClose(syncIteratorRecord, ThrowCompletion(error)));
+    }
+    //    b. Let onRejected be ! CreateBuiltinFunction(closeIterator, 1, "", « »).
+    onRejected = X(CreateBuiltinFunction(closeIterator, Value(''), []));
+    //    c. NOTE: onRejected is used to close the Iterator when the "value" property of an IteratorResult object it yields is a rejected promise.
+  }
+  // 13. Perform ! PerformPromiseThen(valueWrapper, onFulfilled, onRejected, promiseCapability).
+  X(PerformPromiseThen(valueWrapper, onFulfilled, onRejected, promiseCapability));
+  // 14. Return promiseCapability.[[Promise]].
   return promiseCapability.Promise;
 }
