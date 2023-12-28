@@ -121,7 +121,7 @@ function AsyncFromSyncIteratorPrototype_throw([value], { thisValue }) {
     // f. NOTE: If closing syncIterator does not throw then the result of that operation is ignored, even if it yields a rejected promise.
     // g. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
     X(Call(promiseCapability.Reject, Value.undefined,  [
-      surroundingAgent.Throw('TypeError', 'NotAnObject', result).Value,
+      surroundingAgent.Throw('TypeError', 'IteratorThrowMissing').Value,
     ]));
     // h. Return promiseCapability.[[Promise]].
     return promiseCapability.Promise;
