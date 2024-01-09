@@ -159,4 +159,3 @@ export function bootstrapAsyncFromSyncIteratorPrototype(realmRec) {
 
   realmRec.Intrinsics['%AsyncFromSyncIteratorPrototype%'] = proto;
 }
-
