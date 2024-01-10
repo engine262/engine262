@@ -238,7 +238,7 @@ export function AsyncFromSyncIteratorContinuation(result, promiseCapability, syn
   // 4. IfAbruptRejectPromise(value, promiseCapability).
   IfAbruptRejectPromise(value, promiseCapability);
   // 5. Let valueWrapper be PromiseResolve(%Promise%, value).
-  const valueWrapper = PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value);
+  let valueWrapper = PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value);
   // 6. If valueWrapper is an abrupt completion, done is false, and closeOnRejection is true, then
   if (valueWrapper instanceof AbruptCompletion) {
   //  a. Set valueWrapper to IteratorClose(syncIteratorRecord, valueWrapper).
@@ -257,7 +257,7 @@ export function AsyncFromSyncIteratorContinuation(result, promiseCapability, syn
   // 10. NOTE: onFulfilled is used when processing the "value" property of an IteratorResult object in order to wait for its value if it is a promise and re-package the result in a new "unwrapped" IteratorResult object.
   // 11. If done is true, or if closeOnRejection is false, then
   //    a. Let onRejected be undefined.
-  const onRejected = Value.undefined;
+  let onRejected = Value.undefined;
   //12. Else,
   if (!done && closeOnRejection) {
     //    a. Let closeIterator be a new Abstract Closure with parameters (error) that captures syncIteratorRecord and performs the following steps when called:
