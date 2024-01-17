@@ -13,6 +13,7 @@ import {
   Q, X,
   Await,
   NormalCompletion,
+  ThrowCompletion,
 } from '../completion.mjs';
 import {
   Assert,
@@ -240,7 +241,7 @@ export function AsyncFromSyncIteratorContinuation(result, promiseCapability, syn
   // 5. Let valueWrapper be PromiseResolve(%Promise%, value).
   let valueWrapper = PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value);
   // 6. If valueWrapper is an abrupt completion, done is false, and closeOnRejection is true, then
-  if (valueWrapper instanceof AbruptCompletion) {
+  if (valueWrapper instanceof AbruptCompletion && done === Value.false && closeOnRejection === Value.true) {
   //  a. Set valueWrapper to IteratorClose(syncIteratorRecord, valueWrapper).
     valueWrapper = IteratorClose(syncIteratorRecord, valueWrapper);
   }
