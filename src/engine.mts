@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { Value } from './value.mjs';
+import { NullValue, Value } from './value.mjs';
 import {
   EnsureCompletion,
   NormalCompletion,
@@ -13,6 +13,8 @@ import {
   CleanupFinalizationRegistry,
   CreateArrayFromList,
   FinishLoadingImportedModule,
+  Realm,
+  type FunctionObject,
   AsyncContextSnapshot,
   AsyncContextSwap,
 } from './abstract-ops/all.mjs';
@@ -40,7 +42,7 @@ export const FEATURES = Object.freeze([
   },
 ].map(Object.freeze));
 
-class ExecutionContextStack extends Array {
+class ExecutionContextStack extends Array<ExecutionContext> {
   // This ensures that only the length taking overload is supported.
   // This is necessary to support `ArraySpeciesCreate`, which invokes
   // the constructor with argument `length`:
@@ -48,7 +50,7 @@ class ExecutionContextStack extends Array {
     super(+length);
   }
 
-  pop(ctx) {
+  pop(ctx: ExecutionContext) {
     if (!ctx.poppedForTailCall) {
       const popped = super.pop();
       Assert(popped === ctx);
@@ -110,12 +112,12 @@ export class Agent {
   }
 
   // Get an intrinsic by name for the current realm
-  intrinsic(name) {
+  intrinsic(name: string) {
     return this.currentRealmRecord.Intrinsics[name];
   }
 
   // Generate a throw completion using message templates
-  Throw(type, template, ...templateArgs) {
+  Throw<K extends keyof typeof messages>(type: string | Value, template: K, ...templateArgs: Parameters<typeof messages[K]>): ThrowCompletion {
     if (type instanceof Value) {
       return ThrowCompletion(type);
     }
@@ -133,7 +135,7 @@ export class Agent {
     return ThrowCompletion(error);
   }
 
-  queueJob(queueName, job) {
+  queueJob(queueName: string, job: () => void) {
     const callerContext = this.runningExecutionContext;
     const callerRealm = callerContext.Realm;
     const callerScriptOrModule = GetActiveScriptOrModule();
@@ -147,12 +149,12 @@ export class Agent {
   }
 
   // NON-SPEC: Check if a feature is enabled in this agent.
-  feature(name) {
+  feature(name: string): boolean {
     return this.hostDefinedOptions.features[name];
   }
 
   // NON-SPEC
-  mark(m) {
+  mark(m: GCMarker) {
     this.AgentRecord.KeptAlive.forEach((v) => {
       m(v);
     });
@@ -166,16 +168,16 @@ export class Agent {
   }
 }
 
-export let surroundingAgent;
-export function setSurroundingAgent(a) {
+export let surroundingAgent: Agent;
+export function setSurroundingAgent(a: Agent) {
   surroundingAgent = a;
 }
 
 /** https://tc39.es/ecma262/#sec-execution-contexts */
 export class ExecutionContext {
   codeEvaluationState;
-  Function;
-  Realm;
+  Function: NullValue | FunctionObject;
+  Realm: Realm;
   ScriptOrModule;
   VariableEnvironment;
   LexicalEnvironment;

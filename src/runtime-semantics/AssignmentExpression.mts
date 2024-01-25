@@ -138,7 +138,7 @@ export function* Evaluate_AssignmentExpression({
     // 1. If LeftHandSideExpression is neither an ObjectLiteral nor an ArrayLiteral, then
     if (LeftHandSideExpression.type !== 'ObjectLiteral' && LeftHandSideExpression.type !== 'ArrayLiteral') {
       // a. Let lref be the result of evaluating LeftHandSideExpression.
-      const lref = yield* Evaluate(LeftHandSideExpression);
+      const lref = Q(yield* Evaluate(LeftHandSideExpression));
       // b. ReturnIfAbrupt(lref).
       ReturnIfAbrupt(lref);
       // c. If IsAnonymousFunctionDefinition(AssignmentExpression) and IsIdentifierRef of LeftHandSideExpression are both true, then
@@ -169,7 +169,7 @@ export function* Evaluate_AssignmentExpression({
     return rval;
   } else if (AssignmentOperator === '&&=') {
     // 1. Let lref be the result of evaluating LeftHandSideExpression.
-    const lref = yield* Evaluate(LeftHandSideExpression);
+    const lref = Q(yield* Evaluate(LeftHandSideExpression));
     // 2. Let lval be ? GetValue(lref).
     const lval = Q(GetValue(lref));
     // 3. Let lbool be ! ToBoolean(lval).
@@ -195,7 +195,7 @@ export function* Evaluate_AssignmentExpression({
     return rval;
   } else if (AssignmentOperator === '||=') {
     // 1. Let lref be the result of evaluating LeftHandSideExpression.
-    const lref = yield* Evaluate(LeftHandSideExpression);
+    const lref = Q(yield* Evaluate(LeftHandSideExpression));
     // 2. Let lval be ? GetValue(lref).
     const lval = Q(GetValue(lref));
     // 3. Let lbool be ! ToBoolean(lval).
@@ -221,7 +221,7 @@ export function* Evaluate_AssignmentExpression({
     return rval;
   } else if (AssignmentOperator === '??=') {
     // 1.Let lref be the result of evaluating LeftHandSideExpression.
-    const lref = yield* Evaluate(LeftHandSideExpression);
+    const lref = Q(yield* Evaluate(LeftHandSideExpression));
     // 2. Let lval be ? GetValue(lref).
     const lval = Q(GetValue(lref));
     // 3. If lval is not undefined nor null, return lval.
@@ -245,7 +245,7 @@ export function* Evaluate_AssignmentExpression({
     return rval;
   } else {
     // 1. Let lref be the result of evaluating LeftHandSideExpression.
-    const lref = yield* Evaluate(LeftHandSideExpression);
+    const lref = Q(yield* Evaluate(LeftHandSideExpression));
     // 2. Let lval be ? GetValue(lref).
     const lval = Q(GetValue(lref));
     // 3. Let rref be the result of evaluating AssignmentExpression.

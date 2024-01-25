@@ -17,7 +17,7 @@ import {
   LexicallyDeclaredNames,
   LexicallyScopedDeclarations,
 } from '../static-semantics/all.mjs';
-import { NewDeclarativeEnvironment } from '../environment.mjs';
+import { DeclarativeEnvironmentRecord } from '../environment.mjs';
 import { Q, X, NormalCompletion } from '../completion.mjs';
 import { ValueSet } from '../helpers.mjs';
 import {
@@ -105,7 +105,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
     // b. Let calleeEnv be the LexicalEnvironment of calleeContext.
     const calleeEnv = calleeContext.LexicalEnvironment;
     // c. Let env be NewDeclarativeEnvironment(calleeEnv).
-    env = NewDeclarativeEnvironment(calleeEnv);
+    env = new DeclarativeEnvironmentRecord(calleeEnv);
     // d. Assert: The VariableEnvironment of calleeContext is calleeEnv.
     Assert(calleeContext.VariableEnvironment === calleeEnv);
     // e. Set the LexicalEnvironment of calleeContext to env.
@@ -193,7 +193,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
     // a. NOTE: A separate Environment Record is needed to ensure that closures created by expressions
     //    in the formal parameter list do not have visibility of declarations in the function body.
     // b. Let varEnv be NewDeclarativeEnvironment(env).
-    varEnv = NewDeclarativeEnvironment(env);
+    varEnv = new DeclarativeEnvironmentRecord(env);
     // c. Set the VariableEnvironment of calleeContext to varEnv.
     calleeContext.VariableEnvironment = varEnv;
     // d. Let instantiatedVarNames be a new empty List.
@@ -225,7 +225,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
   // 30. If strict is false, then
   if (strict === false) {
     // a. Let lexEnv be NewDeclarativeEnvironment(varEnv).
-    lexEnv = NewDeclarativeEnvironment(varEnv);
+    lexEnv = new DeclarativeEnvironmentRecord(varEnv);
     // b. NOTE: Non-strict functions use a separate lexical Environment Record for top-level lexical declarations
     //    so that a direct eval can determine whether any var scoped declarations introduced by the eval code
     //    conflict with pre-existing top-level lexically scoped declarations. This is not needed for strict functions

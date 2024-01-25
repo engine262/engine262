@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { surroundingAgent } from '../engine.mjs';
 import { Value } from '../value.mjs';
-import { NewDeclarativeEnvironment, DeclarativeEnvironmentRecord } from '../environment.mjs';
+import { DeclarativeEnvironmentRecord } from '../environment.mjs';
 import { Assert } from '../abstract-ops/all.mjs';
 import {
   LexicallyScopedDeclarations,
@@ -60,7 +60,7 @@ export function* Evaluate_Block({ StatementList }: ParseNode.Block) {
   // 1. Let oldEnv be the running execution context's LexicalEnvironment.
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 2. Let blockEnv be NewDeclarativeEnvironment(oldEnv).
-  const blockEnv = NewDeclarativeEnvironment(oldEnv);
+  const blockEnv = new DeclarativeEnvironmentRecord(oldEnv);
   // 3. Perform BlockDeclarationInstantiation(StatementList, blockEnv).
   BlockDeclarationInstantiation(StatementList, blockEnv);
   // 4. Set the running execution context's LexicalEnvironment to blockEnv.

@@ -3,7 +3,7 @@ import {
   Descriptor,
   Value,
 } from '../value.mjs';
-import { NewGlobalEnvironment } from '../environment.mjs';
+import { GlobalEnvironmentRecord } from '../environment.mjs';
 import { Q, X } from '../completion.mjs';
 import { bootstrapObjectPrototype } from '../intrinsics/ObjectPrototype.mjs';
 import { bootstrapObject } from '../intrinsics/Object.mjs';
@@ -95,7 +95,7 @@ import {
 
 /** https://tc39.es/ecma262/#sec-code-realms */
 export class Realm {
-  Intrinsics;
+  Intrinsics: Record<string, Value>;
   GlobalObject;
   GlobalEnv;
   TemplateMap;
@@ -280,7 +280,7 @@ export function SetRealmGlobalObject(realmRec, globalObj, thisValue) {
     thisValue = globalObj;
   }
   realmRec.GlobalObject = globalObj;
-  const newGlobalEnv = NewGlobalEnvironment(globalObj, thisValue);
+  const newGlobalEnv = new GlobalEnvironmentRecord(globalObj, thisValue);
   realmRec.GlobalEnv = newGlobalEnv;
   return realmRec;
 }

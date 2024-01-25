@@ -10,7 +10,7 @@ import {
   X,
 } from '../completion.mjs';
 import { BoundNames } from '../static-semantics/all.mjs';
-import { NewDeclarativeEnvironment } from '../environment.mjs';
+import { DeclarativeEnvironmentRecord } from '../environment.mjs';
 import { OutOfRange } from '../helpers.mjs';
 import type { ParseNode } from '../parser/ParseNode.mjs';
 import { BindingInitialization } from './all.mjs';
@@ -95,7 +95,7 @@ function* CatchClauseEvaluation({ CatchParameter, Block }: ParseNode.Catch, thro
   // 1. Let oldEnv be the running execution context's LexicalEnvironment.
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 2. Let catchEnv be NewDeclarativeEnvironment(oldEnv).
-  const catchEnv = NewDeclarativeEnvironment(oldEnv);
+  const catchEnv = new DeclarativeEnvironmentRecord(oldEnv);
   // 3. For each element argName of the BoundNames of CatchParameter, do
   for (const argName of BoundNames(CatchParameter)) {
     // a. Perform ! catchEnv.CreateMutableBinding(argName, false).

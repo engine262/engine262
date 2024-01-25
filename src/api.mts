@@ -25,6 +25,7 @@ import {
   ParseJSONModule,
 } from './parse.mjs';
 import { SourceTextModuleRecord } from './modules.mjs';
+import * as messages from './messages.mjs';
 
 export * from './value.mjs';
 export * from './engine.mjs';
@@ -37,8 +38,8 @@ export * from './parse.mjs';
 export * from './modules.mjs';
 export * from './inspect.mjs';
 
-export function Throw(...args) {
-  return surroundingAgent.Throw(...args);
+export function Throw<K extends keyof typeof messages>(type: string | Value, template: K, ...templateArgs: Parameters<typeof messages[K]>): ThrowCompletion {
+  return surroundingAgent.Throw(type, template, ...templateArgs);
 }
 
 /** https://tc39.es/ecma262/#sec-weakref-execution */
@@ -176,7 +177,7 @@ export function runJobQueue() {
   }
 }
 
-export function evaluateScript(sourceText, realm, hostDefined) {
+export function evaluateScript(sourceText: string, realm: Realm, hostDefined) {
   const s = ParseScript(sourceText, realm, hostDefined);
   if (Array.isArray(s)) {
     return ThrowCompletion(s[0]);
@@ -212,7 +213,7 @@ export class ManagedRealm extends Realm {
     this.topContext = newContext;
   }
 
-  scope(cb) {
+  scope<T>(cb: () => T) {
     if (this.active) {
       return cb();
     }
@@ -224,7 +225,7 @@ export class ManagedRealm extends Realm {
     return r;
   }
 
-  evaluateScript(sourceText, { specifier } = {}) {
+  evaluateScript(sourceText: string, { specifier } = {}) {
     if (typeof sourceText !== 'string') {
       throw new TypeError('sourceText must be a string');
     }
@@ -244,7 +245,7 @@ export class ManagedRealm extends Realm {
     return res;
   }
 
-  createSourceTextModule(specifier, sourceText) {
+  createSourceTextModule(specifier: string, sourceText: string) {
     if (typeof specifier !== 'string') {
       throw new TypeError('specifier must be a string');
     }
@@ -261,7 +262,7 @@ export class ManagedRealm extends Realm {
     return module;
   }
 
-  createJSONModule(specifier, sourceText) {
+  createJSONModule(specifier: string, sourceText: string) {
     if (typeof specifier !== 'string') {
       throw new TypeError('specifier must be a string');
     }
@@ -276,7 +277,7 @@ export class ManagedRealm extends Realm {
 }
 
 class ManagedSourceTextModuleRecord extends SourceTextModuleRecord {
-  Evaluate() {
+  override Evaluate() {
     const r = super.Evaluate();
     if (!(r instanceof AbruptCompletion)) {
       runJobQueue();

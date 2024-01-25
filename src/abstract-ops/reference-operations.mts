@@ -9,6 +9,7 @@ import {
   NormalCompletion,
   Q,
   ReturnIfAbrupt,
+  ThrowCompletion,
   X,
 } from '../completion.mjs';
 import { EnvironmentRecord } from '../environment.mjs';
@@ -40,7 +41,7 @@ export function IsUnresolvableReference(V) {
 }
 
 /** https://tc39.es/ecma262/#sec-issuperreference */
-export function IsSuperReference(V) {
+export function IsSuperReference(V: ReferenceRecord) {
   // 1. Assert: V is a Reference Record.
   Assert(V instanceof ReferenceRecord);
   // 2. If V.[[ThisValue]] is not empty, return true; otherwise return false.
@@ -48,7 +49,7 @@ export function IsSuperReference(V) {
 }
 
 /** https://tc39.es/ecma262/#sec-isprivatereference */
-export function IsPrivateReference(V) {
+export function IsPrivateReference(V: ReferenceRecord) {
   // 1. Assert: V is a Reference Record.
   Assert(V instanceof ReferenceRecord);
   // 2. If V.[[ReferencedName]] is a Private Name, return true; otherwise return false.
@@ -56,7 +57,7 @@ export function IsPrivateReference(V) {
 }
 
 /** https://tc39.es/ecma262/#sec-getvalue */
-export function GetValue(V) {
+export function GetValue(V: NormalCompletion<ReferenceRecord> | ThrowCompletion) {
   // 1. ReturnIfAbrupt(V).
   ReturnIfAbrupt(V);
   // 2. If V is not a Reference Record, return V.
@@ -89,7 +90,7 @@ export function GetValue(V) {
 }
 
 /** https://tc39.es/ecma262/#sec-putvalue */
-export function PutValue(V, W) {
+export function PutValue(V: NormalCompletion<ReferenceRecord> | ThrowCompletion, W) {
   // 1. ReturnIfAbrupt(V).
   ReturnIfAbrupt(V);
   // 2. ReturnIfAbrupt(W).
@@ -149,7 +150,7 @@ export function GetThisValue(V) {
 }
 
 /** https://tc39.es/ecma262/#sec-initializereferencedbinding */
-export function InitializeReferencedBinding(V, W) {
+export function InitializeReferencedBinding(V: NormalCompletion<ReferenceRecord> | ThrowCompletion, W) {
   // 1. ReturnIfAbrupt(V).
   ReturnIfAbrupt(V);
   // 2. ReturnIfAbrupt(W).

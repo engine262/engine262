@@ -72,7 +72,7 @@ export function isArrayExoticObject(O) {
 }
 
 /** https://tc39.es/ecma262/#sec-arraycreate */
-export function ArrayCreate(length, proto) {
+export function ArrayCreate(length, proto?) {
   Assert(isNonNegativeInteger(length));
   if (Object.is(length, -0)) {
     length = +0;

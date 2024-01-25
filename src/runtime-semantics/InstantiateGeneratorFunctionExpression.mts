@@ -11,7 +11,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { X } from '../completion.mjs';
 import { StringValue } from '../static-semantics/all.mjs';
-import { NewDeclarativeEnvironment } from '../environment.mjs';
+import { DeclarativeEnvironmentRecord } from '../environment.mjs';
 import type { ParseNode } from '../parser/ParseNode.mjs';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiategeneratorfunctionexpression */
@@ -28,7 +28,7 @@ export function InstantiateGeneratorFunctionExpression(GeneratorExpression: Pars
     // 3. Let scope be the running execution context's LexicalEnvironment.
     const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
     // 4. Let funcEnv be NewDeclarativeEnvironment(scope).
-    const funcEnv = NewDeclarativeEnvironment(scope);
+    const funcEnv = new DeclarativeEnvironmentRecord(scope);
     // 5. Perform funcEnv.CreateImmutableBinding(name, false).
     funcEnv.CreateImmutableBinding(name, Value.false);
     // 6. Let privateScope be the running execution context's PrivateEnvironment.

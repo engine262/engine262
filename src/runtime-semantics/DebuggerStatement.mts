@@ -1,10 +1,11 @@
 // @ts-nocheck
 import { surroundingAgent } from '../engine.mjs';
 import { NormalCompletion, EnsureCompletion } from '../completion.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
 /** https://tc39.es/ecma262/#sec-debugger-statement-runtime-semantics-evaluation */
 // DebuggerStatement : `debugger` `;`
-export function Evaluate_DebuggerStatement() {
+export function Evaluate_DebuggerStatement(_node: ParseNode.DebuggerStatement) {
   let result;
   // 1. If an implementation-defined debugging facility is available and enabled, then
   if (surroundingAgent.hostDefinedOptions.onDebugger) {

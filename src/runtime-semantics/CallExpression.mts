@@ -25,7 +25,7 @@ export function* Evaluate_CallExpression(CallExpression: ParseNode.CallExpressio
   // 3. Let arguments be the Arguments of expr.
   const args = expr.Arguments;
   // 4. Let ref be the result of evaluating memberExpr.
-  const ref = yield* Evaluate(memberExpr);
+  const ref = Q(yield* Evaluate(memberExpr));
   // 5. Let func be ? GetValue(ref).
   const func = Q(GetValue(ref));
   // 6. If Type(ref) is Reference, IsPropertyReference(ref) is false, and GetReferencedName(ref) is "eval", then

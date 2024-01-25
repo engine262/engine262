@@ -2,7 +2,7 @@
 import { surroundingAgent } from '../engine.mjs';
 import { ObjectValue, Value } from '../value.mjs';
 import { Evaluate } from '../evaluator.mjs';
-import { NewDeclarativeEnvironment, DeclarativeEnvironmentRecord } from '../environment.mjs';
+import { DeclarativeEnvironmentRecord } from '../environment.mjs';
 import {
   Assert,
   Call,
@@ -272,7 +272,7 @@ function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement: Parse
       // 1. Let oldEnv be the running execution context's LexicalEnvironment.
       const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
       // 2. Let loopEnv be NewDeclarativeEnvironment(oldEnv).
-      const loopEnv = NewDeclarativeEnvironment(oldEnv);
+      const loopEnv = new DeclarativeEnvironmentRecord(oldEnv);
       // 3. Let isConst be IsConstantDeclaration of LexicalDeclaration.
       const isConst = IsConstantDeclaration(LexicalDeclaration);
       // 4. Let boundNames be the BoundNames of LexicalDeclaration.
@@ -495,7 +495,7 @@ function CreatePerIterationEnvironment(perIterationBindings) {
     // c. Assert: outer is not null.
     Assert(outer !== Value.null);
     // d. Let thisIterationEnv be NewDeclarativeEnvironment(outer).
-    const thisIterationEnv = NewDeclarativeEnvironment(outer);
+    const thisIterationEnv = new DeclarativeEnvironmentRecord(outer);
     // e. For each element bn of perIterationBindings, do
     for (const bn of perIterationBindings) {
       // i. Perform ! thisIterationEnv.CreateMutableBinding(bn, false).
@@ -520,7 +520,7 @@ function* ForInOfHeadEvaluation(uninitializedBoundNames, expr, iterationKind) {
   if (uninitializedBoundNames.length > 0) {
     // a. Assert: uninitializedBoundNames has no duplicate entries.
     // b. Let newEnv be NewDeclarativeEnvironment(oldEnv).
-    const newEnv = NewDeclarativeEnvironment(oldEnv);
+    const newEnv = new DeclarativeEnvironmentRecord(oldEnv);
     // c. For each string name in uninitializedBoundNames, do
     for (const name of uninitializedBoundNames) {
       // i. Perform ! newEnv.CreateMutableBinding(name, false).
@@ -620,7 +620,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
       // ii. Assert: lhs is a ForDeclaration.
       Assert(lhs.type === 'ForDeclaration');
       // iii. Let iterationEnv be NewDeclarativeEnvironment(oldEnv).
-      iterationEnv = NewDeclarativeEnvironment(oldEnv);
+      iterationEnv = new DeclarativeEnvironmentRecord(oldEnv);
       // iv. Perform BindingInstantiation for lhs passing iterationEnv as the argument.
       BindingInstantiation(lhs, iterationEnv);
       // v. Set the running execution context's LexicalEnvironment to iterationEnv.
