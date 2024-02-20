@@ -2218,11 +2218,19 @@ export namespace ParseNode.RegExp {
     readonly Quantifier: Quantifier | undefined;
     readonly capturingParenthesesBefore: number;
   }
-  export interface Assertion {
+  export interface SimpleAssertion {
     readonly type: 'Assertion';
-    readonly subtype: '^' | '$' | 'b' | 'B' | '?=' | '?!' | '?<=' | '?<!';
-    readonly Disjunction?: Disjunction | undefined;
+    readonly subtype: '^' | '$' | 'b' | 'B';
+    readonly Disjunction?: undefined;
   }
+  export interface ComplexAssertion {
+    readonly type: 'Assertion';
+    readonly subtype: '?=' | '?!' | '?<=' | '?<!';
+    readonly Disjunction: Disjunction;
+  }
+  export type Assertion =
+    | SimpleAssertion
+    | ComplexAssertion;
   export interface Quantifier {
     readonly type: 'Quantifier';
     readonly QuantifierPrefix: '*' | '+' | '?' | QuantifierCount;
@@ -2232,7 +2240,7 @@ export namespace ParseNode.RegExp {
     readonly DecimalDigits_a: number;
     readonly DecimalDigits_b: number | undefined;
   }
-  export type Atom = Atom_Dot | AtomEscape | Atom_Group | Atom_Rest;
+  export type Atom = Atom_Dot | AtomEscape | Atom_Group | Atom_CharacterClass | Atom_PatternCharacter;
   export interface Atom_Dot {
     readonly type: 'Atom';
     readonly subtype: '.';
@@ -2246,12 +2254,15 @@ export namespace ParseNode.RegExp {
     readonly RegularExpressionFlags_a: string | undefined;
     readonly RegularExpressionFlags_b: string | undefined;
     readonly GroupSpecifier: string | undefined;
-    readonly Disjunction: Disjunction | undefined;
+    readonly Disjunction: Disjunction;
   }
-  export interface Atom_Rest {
+  export interface Atom_CharacterClass {
     readonly type: 'Atom';
-    readonly CharacterClass?: CharacterClass | undefined;
-    readonly PatternCharacter?: string | undefined;
+    readonly CharacterClass: CharacterClass;
+  }
+  export interface Atom_PatternCharacter {
+    readonly type: 'Atom';
+    readonly PatternCharacter: string;
   }
   export interface AtomEscape {
     readonly type: 'AtomEscape';
@@ -2325,7 +2336,8 @@ export namespace ParseNode.RegExp {
     | Atom_Dot
     | AtomEscape
     | Atom_Group
-    | Atom_Rest
+    | Atom_CharacterClass
+    | Atom_PatternCharacter
     | CharacterClass
     | ClassAtom_SourceCharacter
     | ClassEscape

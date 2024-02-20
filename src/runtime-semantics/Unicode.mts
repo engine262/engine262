@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { Assert } from '../abstract-ops/all.mjs';
 import UnicodeSets from '../data-gen.json';
+import type { RegExpRecord } from './RegExp.mjs';
 
 export { UnicodeSets };
 
@@ -517,7 +518,8 @@ export const UnicodeScriptValues = {
 Object.setPrototypeOf(UnicodeScriptValues, null);
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-unicodematchproperty-p */
-export function UnicodeMatchProperty(p: string): string {
+export function UnicodeMatchProperty(_rer: RegExpRecord, p: string): string {
+  // NOTE: _rer is reserved here for future support for UnicodeSets support.
   // 1. Assert: p is a List of Unicode code points that is identical to a List of Unicode code points that is a Unicode property name or property alias listed in the “Property name and aliases” column of Table 55 or Table 56.
   Assert(p in NonbinaryUnicodeProperties || p in BinaryUnicodeProperties);
   // 2. Let c be the canonical property name of p as given in the “Canonical property name” column of the corresponding row.

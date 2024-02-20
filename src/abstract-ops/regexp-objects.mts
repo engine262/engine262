@@ -4,7 +4,7 @@ import {
   Descriptor, Value, ObjectValue, BooleanValue, JSStringValue,
 } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
-import { CompilePattern } from '../runtime-semantics/all.mjs';
+import { CompilePattern, RegExpRecord } from '../runtime-semantics/all.mjs';
 import { ParsePattern } from '../parse.mjs';
 import { isLineTerminator } from '../parser/Lexer.mjs';
 import {
@@ -18,8 +18,10 @@ import {
   SameValue,
   Set,
   ToString,
+  isNonNegativeInteger,
   F as toNumberValue,
 } from './all.mjs';
+import { CodePointAt } from '../api.mjs';
 
 /** https://tc39.es/ecma262/#sec-regexpalloc */
 export function RegExpAlloc(newTarget) {
@@ -78,12 +80,22 @@ export function RegExpInitialize(obj, pattern, flags) {
   // 14. Set obj.[[RegExpMatcher]] to the Abstract Closure that evaluates parseResult by
   //     applying the semantics provided in 21.2.2 using patternCharacters as the pattern's
   //     List of SourceCharacter values and F as the flag parameters.
-  const evaluatePattern = surroundingAgent.hostDefinedOptions.boost?.evaluatePattern || CompilePattern;
+  const evaluatePattern = surroundingAgent.hostDefinedOptions.boost?.evaluatePattern || EvaluatePattern;
   obj.RegExpMatcher = evaluatePattern(parseResult, F.stringValue());
   // 15. Perform ? Set(obj, "lastIndex", +0𝔽, true).
   Q(Set(obj, Value('lastIndex'), toNumberValue(+0), Value.true));
   // 16. Return obj.
   return obj;
+}
+
+function EvaluatePattern(Pattern: ParseNode.RegExp.Pattern, flags: string) {
+  const capturingGroupsCount = Pattern.capturingGroups.length;
+  const s = flags.includes('s');
+  const i = flags.includes('i');
+  const m = flags.includes('m');
+  const u = flags.includes('u');
+  const rer = new RegExpRecord(i, m, s, u, capturingGroupsCount);
+  return CompilePattern(Pattern, rer);
 }
 
 /** https://tc39.es/ecma262/#sec-regexpcreate */
@@ -156,29 +168,35 @@ export function EscapeRegExpPattern(P, _F) {
 }
 
 /** https://tc39.es/ecma262/#sec-getstringindex */
-export function GetStringIndex(S, Input, e) {
-  // 1. Assert: Type(S) is String.
+export function GetStringIndex(S: JSStringValue, codePointIndex: number) {
   Assert(S instanceof JSStringValue);
-  // 2. Assert: Input is a List of the code points of S interpreted as a UTF-16 encoded string.
-  Assert(Array.isArray(Input));
-  // 3. Assert: e is an integer value ≥ 0.
-  Assert(e >= 0);
-  // 4. If S is the empty String, return 0.
+  Assert(isNonNegativeInteger(codePointIndex));
+
+  // 1. If S is the empty String, return 0.
   if (S.stringValue() === '') {
     return 0;
   }
-  // 5. Let eUTF be the smallest index into S that corresponds to the character at element e of Input.
-  //    If e is greater than or equal to the number of elements in Input, then eUTF is the number of code units in S.
-  let eUTF = 0;
-  if (e >= Input.length) {
-    eUTF = S.stringValue().length;
-  } else {
-    for (let i = 0; i < e; i += 1) {
-      eUTF += Input[i].length;
+  // 2. Let len be the length of S.
+  const len = S.stringValue().length;
+  // 3. Let codeUnitCount be 0
+  let codeUnitCount = 0;
+  // 4. Let codePointCount be 0
+  let codePointCount = 0;
+  // 5. Repeat, while codeUnitCount < len
+  while (codeUnitCount < len) {
+    // a. If codePointCount = codePointIndex, return codeUnitCount.
+    if (codePointCount === codePointIndex) {
+      return codeUnitCount;
     }
+    // b. Let cp be CodePointAt(S, codeUnitCount).
+    const cp = CodePointAt(S.stringValue(), codeUnitCount);
+    // c. Set codeUnitCount to codeUnitCount + cp.[[CodeUnitCount]].
+    codeUnitCount += cp.CodeUnitCount;
+    // d. Set codePointCount to codePointCount + 1.
+    codePointCount += 1;
   }
-  // 6. Return eUTF.
-  return eUTF;
+  // 6. Return len.
+  return len;
 }
 
 /** https://tc39.es/ecma262/#sec-getmatchstring */

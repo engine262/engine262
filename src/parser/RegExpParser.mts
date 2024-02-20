@@ -354,7 +354,7 @@ export class RegExpParser {
         RegularExpressionFlags_a: undefined,
         RegularExpressionFlags_b: undefined,
         GroupSpecifier: undefined,
-        Disjunction: undefined,
+        Disjunction: undefined!,
       };
       if (this.eat('?')) {
         node.RegularExpressionFlags_a = this.scanRegularExpressionModifiers();
@@ -463,7 +463,11 @@ export class RegExpParser {
   // IdentityEscape ::
   //   [+U] SyntaxCharacter
   //   [+U] `/`
-  //   [~U] SourceCharacter but not UnicodeIDContinue
+  //   [~U] SourceCharacterIdentityEscape
+  //
+  // SourceCharacterIdentityEscape ::
+  //   [~N] SourceCharacter but not `c`
+  //   [+N] SourceCharacter but not one of `c` or `k`
   private parseCharacterEscape(): ParseNode.RegExp.CharacterEscape {
     switch (this.peek()) {
       case 'f':
@@ -550,7 +554,7 @@ export class RegExpParser {
             this.raise('Invalid identity escape');
           }
         } else {
-          if (isIdentifierContinue(c)) {
+          if (this.plusN ? c === 'c' || c === 'k' : c === 'c') {
             this.raise('Invalid identity escape');
           }
         }
