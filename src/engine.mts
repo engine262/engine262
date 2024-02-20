@@ -4,7 +4,7 @@ import {
   EnsureCompletion,
   NormalCompletion,
   ThrowCompletion,
-  Q, X, Completion,
+  Q, X,
 } from './completion.mjs';
 import {
   IsCallable,
@@ -16,7 +16,6 @@ import {
   Realm,
   type FunctionObject,
   AsyncContextSnapshot,
-  AsyncContextSwap,
 } from './abstract-ops/all.mjs';
 import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
 import { Evaluate } from './evaluator.mjs';
@@ -357,13 +356,7 @@ export function HostMakeJobCallback(callback) {
 export function HostCallJobCallback(jobCallback, V, argumentsList) {
   // 1. Assert: IsCallable(jobCallback.[[Callback]]) is true.
   Assert(IsCallable(jobCallback.Callback) === Value.true);
-  // 2. Let previousContextMapping be AsyncContextSwap(jobCallback.[[AsyncContextSnapshot]]).
-  const previousContextMapping = AsyncContextSwap(jobCallback.AsyncContextSnapshot);
-  // 3. Let result be Completion(Call(jobCallback.[[Callback]], V, argumentsList)).
-  const result = Completion(Call(jobCallback.Callback, V, argumentsList));
-  // 4. AsyncContextSwap(previousContextMapping).
-  AsyncContextSwap(previousContextMapping);
-  // 5. Return result.
-  return result;
+  // 1. Return ? Call(jobCallback.[[Callback]], V, argumentsList).
+  return Q(Call(jobCallback.Callback, V, argumentsList));
 }
 export type GCMarker = (value: unknown) => void;
