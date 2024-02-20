@@ -76,11 +76,17 @@ export function GeneratorStart(generator, generatorBody) {
   // resumed for that execution context, closure will be called with no arguments.
   // 6. Set generator.[[GeneratorContext]] to genContext.
   generator.GeneratorContext = genContext;
-  // 7. Set generator.[[GeneratorAsyncContextMapping]] to AsyncContextSnapshot().
-  generator.GeneratorAsyncContextMapping = AsyncContextSnapshot();
-  // 8. Set generator.[[GeneratorState]] to suspendedStart.
+  // 7. If generatorBody is a FunctionBody Parse Node, then
+  if (typeof generatorBody !== 'function') {
+    // a. Set generator.[[GeneratorAsyncContextMapping]] to AsyncContextSnapshot().
+    generator.GeneratorAsyncContextMapping = AsyncContextSnapshot();
+  } else { // 8. Else,
+    // a. Set generator.[[GeneratorAsyncContextMapping]] to empty.
+    generator.GeneratorAsyncContextMapping = undefined;
+  }
+  // 9. Set generator.[[GeneratorState]] to suspendedStart.
   generator.GeneratorState = 'suspendedStart';
-  // 9. Return unused.
+  // 10. Return unused.
 }
 
 export function generatorBrandToErrorMessageType(generatorBrand) {
@@ -147,22 +153,31 @@ export function GeneratorResume(generator, value, generatorBrand) {
   const methodContext = surroundingAgent.runningExecutionContext;
   // 7. Set generator.[[GeneratorState]] to executing.
   generator.GeneratorState = 'executing';
-  // 8. Let asyncContextMapping be AsyncContextSwap(generator.[[GeneratorAsyncContextMapping]]).
-  const asyncContextMapping = AsyncContextSwap(generator.GeneratorAsyncContextMapping);
-  // 9. Push genContext onto the execution context stack.
+  let previousContextMapping;
+  // 8. If generator.[[GeneratorAsyncContextMapping]] is empty, then
+  //    a. Let previousContextMapping be empty.
+  // 9. Else,
+  if (generator.GeneratorAsyncContextMapping !== undefined) {
+    // a. Let previousContextMapping be AsyncContextSwap(generator.[[GeneratorAsyncContextMapping]]).
+    previousContextMapping = AsyncContextSwap(generator.GeneratorAsyncContextMapping);
+  }
+  // 10. Push genContext onto the execution context stack.
   surroundingAgent.executionContextStack.push(genContext);
-  // 10. Resume the suspended evaluation of genContext using NormalCompletion(value) as
+  // 11. Resume the suspended evaluation of genContext using NormalCompletion(value) as
   //     the result of the operation that suspended it. Let result be the value returned by
   //     the resumed computation.
   const result = EnsureCompletion(resume(genContext, NormalCompletion(value)));
-  // 11. Assert: When we return here, genContext has already been removed from the execution
+  // 12. Assert: When we return here, genContext has already been removed from the execution
   //     context stack and methodContext is the currently running execution context.
   Assert(surroundingAgent.runningExecutionContext === methodContext);
-  // 12. Assert: The result of AsyncContextSnapshot() is generator.[[GeneratorAsyncContextMapping]].
-  Assert(AsyncContextSnapshot() === generator.GeneratorAsyncContextMapping);
-  // 13. AsyncContextSwap(asyncContextMapping).
-  AsyncContextSwap(asyncContextMapping);
-  // 13. Return ? result.
+  // 13. If previousContextMapping is not empty, then
+  if (previousContextMapping !== undefined) {
+    // a. Assert: The result of AsyncContextSnapshot() is generator.[[GeneratorAsyncContextMapping]].
+    Assert(AsyncContextSnapshot() === generator.GeneratorAsyncContextMapping);
+    // b. AsyncContextSwap(previousContextMapping).
+    AsyncContextSwap(previousContextMapping);
+  }
+  // 14. Return ? result.
   return Q(result);
 }
 
@@ -200,8 +215,14 @@ export function GeneratorResumeAbrupt(generator, abruptCompletion, generatorBran
   const methodContext = surroundingAgent.runningExecutionContext;
   // 8. Set generator.[[GeneratorState]] to executing.
   generator.GeneratorState = 'executing';
-  // 9. Let asyncContextMapping be AsyncContextSwap(generator.[[GeneratorAsyncContextMapping]]).
-  const asyncContextMapping = AsyncContextSwap(generator.GeneratorAsyncContextMapping);
+  let previousContextMapping;
+  // 9. If generator.[[GeneratorAsyncContextMapping]] is empty, then
+  //    a. Let previousContextMapping be empty.
+  // 9. Else,
+  if (generator.GeneratorAsyncContextMapping !== undefined) {
+    // a. Let previousContextMapping be AsyncContextSwap(generator.[[GeneratorAsyncContextMapping]]).
+    previousContextMapping = AsyncContextSwap(generator.GeneratorAsyncContextMapping);
+  }
   // 10. Push genContext onto the execution context stack.
   surroundingAgent.executionContextStack.push(genContext);
   // 11. Resume the suspended evaluation of genContext using abruptCompletion as the
@@ -211,10 +232,13 @@ export function GeneratorResumeAbrupt(generator, abruptCompletion, generatorBran
   // 12. Assert: When we return here, genContext has already been removed from the
   //     execution context stack and methodContext is the currently running execution context.
   Assert(surroundingAgent.runningExecutionContext === methodContext);
-  // 13. Assert: The result of AsyncContextSnapshot() is generator.[[GeneratorAsyncContextMapping]].
-  Assert(AsyncContextSnapshot() === generator.GeneratorAsyncContextMapping);
-  // 13. AsyncContextSwap(asyncContextMapping).
-  AsyncContextSwap(asyncContextMapping);
+  // 13. If previousContextMapping is not empty, then
+  if (previousContextMapping !== undefined) {
+    // a. Assert: The result of AsyncContextSnapshot() is generator.[[GeneratorAsyncContextMapping]].
+    Assert(AsyncContextSnapshot() === generator.GeneratorAsyncContextMapping);
+    // b. AsyncContextSwap(previousContextMapping).
+    AsyncContextSwap(previousContextMapping);
+  }
   // 14. Return ? result.
   return Q(result);
 }

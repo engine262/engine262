@@ -33,6 +33,7 @@ import {
   type FunctionObject,
   type BuiltinFunctionObject,
   Realm,
+  AsyncContextSwap,
 } from './all.mjs';
 
 // This file covers abstract operations defined in
@@ -133,17 +134,23 @@ function NewPromiseResolveThenableJob(promiseToResolve: PromiseObjectValue, then
   const job = () => {
     // a. Let resolvingFunctions be CreateResolvingFunctions(promiseToResolve).
     const resolvingFunctions = CreateResolvingFunctions(promiseToResolve);
-    // b. Let thenCallResult be HostCallJobCallback(then, thenable, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »).
+    // b. Let previousContextMapping be AsyncContextSwap(then.[[AsyncContextSnapshot]]).
+    const previousContextMapping = AsyncContextSwap(then.AsyncContextSnapshot);
+    // c. Let thenCallResult be HostCallJobCallback(then, thenable, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »).
     const thenCallResult = HostCallJobCallback(then, thenable, [resolvingFunctions.Resolve, resolvingFunctions.Reject]);
-    // c. If thenCallResult is an abrupt completion, then
+    // d. If thenCallResult is an abrupt completion, then
     if (thenCallResult instanceof AbruptCompletion) {
-      // i .Let status be Call(resolvingFunctions.[[Reject]], undefined, « thenCallResult.[[Value]] »).
-      const status = Call(resolvingFunctions.Reject, Value.undefined, [thenCallResult.Value]);
-      // ii. Return Completion(status).
-      return Completion(status);
+      // i. Let rejectResult be Completion(Call(resolvingFunctions.[[Reject]], undefined, « thenCallResult.[[Value]] »)).
+      const rejectResult = Completion(Call(resolvingFunctions.Reject, Value.undefined, [thenCallResult.Value]));
+      // ii. AsyncContextSwap(previousContextMapping).
+      AsyncContextSwap(previousContextMapping);
+      // ii. Return rejectResult.
+      return rejectResult;
     }
-    // d. Return Completion(thenCallResult).
-    return Completion(thenCallResult);
+    // e. AsyncContextSwap(previousContextMapping).
+    AsyncContextSwap(previousContextMapping);
+    // f. Return ? thenCallResult.
+    return Q(thenCallResult);
   };
   // 2. Let getThenRealmResult be GetFunctionRealm(then.[[Callback]]).
   const getThenRealmResult = EnsureCompletion(GetFunctionRealm(then.Callback));
@@ -324,14 +331,15 @@ function NewPromiseReactionJob(reaction: PromiseReactionRecord, argument: Value)
   // 1. Let job be a new Job abstract closure with no parameters that captures
   //    reaction and argument and performs the following steps when called:
   const job = () => {
-    // a. Assert: reaction is a PromiseReaction Record.
     Assert(reaction instanceof PromiseReactionRecord);
-    // b. Let promiseCapability be reaction.[[Capability]].
+    // a. Let promiseCapability be reaction.[[Capability]].
     const promiseCapability = reaction.Capability;
-    // c. Let type be reaction.[[Type]].
+    // b. Let type be reaction.[[Type]].
     const type = reaction.Type;
-    // d. Let handler be reaction.[[Handler]].
+    // c. Let handler be reaction.[[Handler]].
     const handler = reaction.Handler;
+    // d. Let previousContextMapping be AsyncContextSwap(handler.[[AsyncContextSnapshot]]).
+    const previousContextMapping = AsyncContextSwap(handler.AsyncContextSnapshot);
     let handlerResult;
     // e. If handler is empty, then
     if (handler === undefined) {
@@ -352,20 +360,24 @@ function NewPromiseReactionJob(reaction: PromiseReactionRecord, argument: Value)
     if (promiseCapability instanceof UndefinedValue) {
       // i. Assert: handlerResult is not an abrupt completion.
       Assert(!(handlerResult instanceof AbruptCompletion));
-      // ii. Return NormalCompletion(empty).
+      // ii. AsyncContextSwap(previousContextMapping).
+      AsyncContextSwap(previousContextMapping);
+      // iii. Return NormalCompletion(empty).
       return NormalCompletion(undefined);
     }
-    let status;
+    let resolvingFunctionResult;
     // h. If handlerResult is an abrupt completion, then
     if (handlerResult instanceof AbruptCompletion) {
-      // i. Let status be Call(promiseCapability.[[Reject]], undefined, « handlerResult.[[Value]] »).
-      status = Call(promiseCapability.Reject, Value.undefined, [handlerResult.Value]);
+      // i. Let resolvingFunctionResult be Completion(Call(promiseCapability.[[Reject]], undefined, « handlerResult.[[Value]] »)).
+      resolvingFunctionResult = Completion(Call(promiseCapability.Reject, Value.undefined, [handlerResult.Value]));
     } else {
-      // ii. Let status be Call(promiseCapability.[[Resolve]], undefined, « handlerResult.[[Value]] »).
-      status = Call(promiseCapability.Resolve, Value.undefined, [handlerResult.Value]);
+      // i. Let resolvingFunctionResult be Completion(Call(promiseCapability.[[Resolve]], undefined, « handlerResult.[[Value]] »)).
+      resolvingFunctionResult = Completion(Call(promiseCapability.Resolve, Value.undefined, [handlerResult.Value]));
     }
-    // j. Return Completion(status).
-    return Completion(status);
+    // k. AsyncContextSwap(previousContextMapping).
+    AsyncContextSwap(previousContextMapping);
+    // l. Return resolvingFunctionResult.
+    return resolvingFunctionResult;
   };
   // 2. Let handlerRealm be null.
   let handlerRealm: NullValue | Realm = Value.null;

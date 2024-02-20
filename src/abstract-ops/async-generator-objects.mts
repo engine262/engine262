@@ -93,9 +93,15 @@ export function AsyncGeneratorStart(generator, generatorBody) {
   generator.AsyncGeneratorState = 'suspendedStart';
   // 8. Set generator.[[AsyncGeneratorQueue]] to a new empty List.
   generator.AsyncGeneratorQueue = [];
-  // 9. Set generator.[[AsyncGeneratorAsyncContextMapping]] to AsyncContextSnapshot().
-  generator.AsyncGeneratorAsyncContextMapping = AsyncContextSnapshot();
-  // 10. Return unused.
+  // 9. If generatorBody is a FunctionBody Parse Node, then
+  if (typeof generatorBody !== 'function') {
+    // a. Set generator.[[AsyncGeneratorAsyncContextMapping]] to AsyncContextSnapshot().
+    generator.AsyncGeneratorAsyncContextMapping = AsyncContextSnapshot();
+  } else { // 10. Else,
+    // a. Set generator.[[AsyncGeneratorAsyncContextMapping]] to empty.
+    generator.AsyncGeneratorAsyncContextMapping = undefined;
+  }
+  // 11. Return unused.
 }
 
 /** https://tc39.es/ecma262/#sec-asyncgeneratorvalidate */
@@ -183,20 +189,29 @@ export function AsyncGeneratorResume(generator, completion) {
   // 4. Suspend callerContext.
   // 5. Set generator.[[AsyncGeneratorState]] to executing.
   generator.AsyncGeneratorState = 'executing';
-  // 6. Let asyncContextMapping be AsyncContextSwap(generator.[[AsyncGeneratorAsyncContextMapping]]).
-  const asyncContextMapping = AsyncContextSwap(generator.AsyncGeneratorAsyncContextMapping);
-  // 7. Push genContext onto the execution context stack; genContext is now the running execution context.
+  let previousContextMapping;
+  // 6. If generator.[[AsyncGeneratorAsyncContextMapping]] is empty, then
+  //    a. Let previousContextMapping be empty.
+  // 7. Else,
+  if (generator.AsyncGeneratorAsyncContextMapping !== undefined) {
+    // a. Let previousContextMapping be AsyncContextSwap(generator.[[AsyncGeneratorAsyncContextMapping]]).
+    previousContextMapping = AsyncContextSwap(generator.AsyncGeneratorAsyncContextMapping);
+  }
+  // 8. Push genContext onto the execution context stack; genContext is now the running execution context.
   surroundingAgent.executionContextStack.push(genContext);
-  // 8. Resume the suspended evaluation of genContext using completion as the result of the operation that suspended it. Let result be the completion record returned by the resumed computation.
+  // 9. Resume the suspended evaluation of genContext using completion as the result of the operation that suspended it. Let result be the completion record returned by the resumed computation.
   const result = resume(genContext, completion);
-  // 9. Assert: result is never an abrupt completion.
+  // 10. Assert: result is never an abrupt completion.
   Assert(!(result instanceof AbruptCompletion));
-  // 10. Assert: When we return here, genContext has already been removed from the execution context stack and callerContext is the currently running execution context.
+  // 11. Assert: When we return here, genContext has already been removed from the execution context stack and callerContext is the currently running execution context.
   Assert(surroundingAgent.runningExecutionContext === callerContext);
-  // 11. Assert: The result of AsyncContextSnapshot() is generator.[[AsyncGeneratorAsyncContextMapping]].
-  Assert(AsyncContextSnapshot() === generator.AsyncGeneratorAsyncContextMapping);
-  // 12. AsyncContextSwap(asyncContextMapping).
-  AsyncContextSwap(asyncContextMapping);
+  // 12. If previousContextMapping is not empty, then
+  if (previousContextMapping !== undefined) {
+    // a. Assert: The result of AsyncContextSnapshot() is generator.[[AsyncGeneratorAsyncContextMapping]].
+    Assert(AsyncContextSnapshot() === generator.AsyncGeneratorAsyncContextMapping);
+    // b. AsyncContextSwap(previousContextMapping).
+    AsyncContextSwap(previousContextMapping);
+  }
   // 13. Return unused.
 }
 
