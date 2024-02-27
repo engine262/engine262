@@ -3,11 +3,13 @@
 An implementation of ECMA-262 in JavaScript
 
 Goals
+
 - 100% Spec Compliance
 - Introspection
 - Ease of modification
 
 Non-Goals
+
 - Speed at the expense of any of the goals
 
 This project is bound by a [Code of Conduct][COC].
@@ -28,8 +30,8 @@ features can be quickly prototyped and explored. As an example, adding
 [do expressions][] to this engine is as simple as the following diff:
 
 ```diff
---- a/src/evaluator.mjs
-+++ b/src/evaluator.mjs
+--- a/src/evaluator.mts
++++ b/src/evaluator.mts
 @@ -232,6 +232,8 @@ export function* Evaluate(node) {
      case 'GeneratorBody':
      case 'AsyncGeneratorBody':
@@ -39,14 +41,14 @@ features can be quickly prototyped and explored. As an example, adding
      default:
        throw new OutOfRange('Evaluate', node);
    }
---- a/src/parser/ExpressionParser.mjs
-+++ b/src/parser/ExpressionParser.mjs
+--- a/src/parser/ExpressionParser.mts
++++ b/src/parser/ExpressionParser.mts
 @@ -579,6 +579,12 @@ export class ExpressionParser extends FunctionParser {
          return this.parseRegularExpressionLiteral();
        case Token.LPAREN:
          return this.parseParenthesizedExpression();
 +      case Token.DO: {
-+        const node = this.startNode();
++        const node = this.startNode<ParseNode.DoExpression>();
 +        this.next();
 +        node.Block = this.parseBlock();
 +        return this.finishNode(node, 'DoExpression');
@@ -69,7 +71,7 @@ is needed. Additionally, the CLI (`bin/engine262.js`) and test262 runner
 
 ## Using engine262
 
-Use it online: https://engine262.js.org
+Use it online: <https://engine262.js.org>
 
 You can install the latest engine262 build from [GitHub Packages][].
 
@@ -80,18 +82,7 @@ If you install it globally, you can use the CLI like so:
 Or, you can install it locally and use the API:
 
 ```js
-'use strict';
-
-const {
-  Agent,
-  setSurroundingAgent,
-  ManagedRealm,
-  Value,
-
-  CreateDataProperty,
-
-  inspect,
-} = require('engine262');
+import { Agent, setSurroundingAgent, ManagedRealm, Value, CreateDataProperty, inspect, CreateBuiltinFunction } from '@engine262/engine262';
 
 const agent = new Agent({
   // onDebugger() {},
@@ -112,10 +103,10 @@ const realm = new ManagedRealm({
 
 realm.scope(() => {
   // Add print function from host
-  const print = Value((args) => {
+  const print = CreateBuiltinFunction((args) => {
     console.log(...args.map((tmp) => inspect(tmp)));
     return Value.undefined;
-  });
+  }, 1, Value('print'), []);
   CreateDataProperty(realm.GlobalObject, Value('print'), print);
 });
 
@@ -144,6 +135,7 @@ async function* numbers() {
 
 This project can be run against [test262][], which is particularly useful
 for developing new features and/or tests:
+
 ```sh
 $ # build engine262
 $ npm run build
@@ -162,6 +154,7 @@ $ npm run test:test262 built-ins/AsyncGenerator*
 $ # run all tests
 $ npm run test:test262
 ```
+
 The output will indicate counts for total tests, passing tests, failing tests, and skipped tests.
 
 ## Related Projects
@@ -170,11 +163,11 @@ Many people and organizations have attempted to write a JavaScript interpreter
 in JavaScript much like engine262, with different goals. Some of them are
 included here for reference, though engine262 is not based on any of them.
 
-- https://github.com/facebook/prepack
-- https://github.com/mozilla/narcissus
-- https://github.com/NeilFraser/JS-Interpreter
-- https://github.com/metaes/metaes
-- https://github.com/Siubaak/sval
+- <https://github.com/facebook/prepack>
+- <https://github.com/mozilla/narcissus>
+- <https://github.com/NeilFraser/JS-Interpreter>
+- <https://github.com/metaes/metaes>
+- <https://github.com/Siubaak/sval>
 
 [Babel]: https://babeljs.io/
 [COC]: https://github.com/engine262/engine262/blob/master/CODE_OF_CONDUCT.md
