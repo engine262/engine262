@@ -10,6 +10,17 @@
     "url": "https://github.com/engine262/engine262/issues"
   },
   "main": "dist/engine262",
+  "types": "./declaration/api.d.mts",
+  "exports": {
+    "require": {
+      "types": "./declaration/api.d.mts",
+      "default": "./dist/engine262.js"
+    },
+    "import": {
+      "types": "./declaration/api.d.mts",
+      "default": "./dist//engine262.mjs"
+    }
+  },
   "scripts": {
     "lint": "eslint rollup.config.js test/ src/ bin/ inspector/ scripts/ --cache --ext=js,mjs,mts",
     "lint:fix": "eslint rollup.config.js test/ src/ bin/ inspector/ scripts/ --cache --ext=js,mjs,mts --fix",
