@@ -26,9 +26,10 @@
     "lint:fix": "eslint rollup.config.js test/ src/ bin/ inspector/ scripts/ --cache --ext=js,mjs,mts --fix",
     "build": "run-s build:*",
     "build:regex_data": "node scripts/gen_regex_sets.js",
+    "build:dts": "run-s check",
+    "build:engine": "rollup -c",
     "check": "tsc -p . --noEmit --emitDeclarationOnly false",
     "check:watch": "tsc -p . --noEmit --emitDeclarationOnly false --watch",
-    "build:engine": "rollup -c",
     "test": "bash test/test_root.sh",
     "test:test262": "node --enable-source-maps test/test262/test262.js",
     "test:supplemental": "node --enable-source-maps test/supplemental.js",
@@ -40,6 +41,13 @@
   "bin": {
     "engine262": "bin/engine262.js"
   },
+  "files": [
+    "bin",
+    "declaration",
+    "dist",
+    "inspector",
+    "src"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/engine262/engine262.git"
