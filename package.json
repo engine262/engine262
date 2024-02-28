@@ -26,7 +26,7 @@
     "lint:fix": "eslint rollup.config.js test/ src/ bin/ inspector/ scripts/ --cache --ext=js,mjs,mts --fix",
     "build": "run-s build:*",
     "build:regex_data": "node scripts/gen_regex_sets.js",
-    "build:dts": "run-s check",
+    "build:dts": "tsc -p . --emitDeclarationOnly",
     "build:engine": "rollup -c",
     "check": "tsc -p . --noEmit --emitDeclarationOnly false",
     "check:watch": "tsc -p . --noEmit --emitDeclarationOnly false --watch",
@@ -44,6 +44,7 @@
   "files": [
     "bin",
     "declaration",
+    "!declaration/.tsbuildinfo",
     "dist",
     "inspector",
     "src"
