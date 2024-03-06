@@ -344,12 +344,11 @@ export function HostEnqueueFinalizationRegistryCleanupJob(fg) {
 }
 
 /** https://tc39.es/ecma262/#sec-hostmakejobcallback */
-/** https://tc39.es/proposal-async-context/#sec-hostmakejobcallback */
 export function HostMakeJobCallback(callback) {
-  // 1. Let snapshotMapping be AsyncContextSnapshot().
-  const snapshotMapping = AsyncContextSnapshot();
-  // 2. Return the JobCallback Record { [[Callback]]: callback, [[AsyncContextSnapshot]]: snapshotMapping, [[HostDefined]]: empty }.
-  return { Callback: callback, AsyncContextSnapshot: snapshotMapping, HostDefined: undefined };
+  // 1. Assert: IsCallable(callback) is true.
+  Assert(IsCallable(callback) === Value.true);
+  // 2. Return the JobCallback Record { [[Callback]]: callback, [[HostDefined]]: empty }.
+  return { Callback: callback, HostDefined: undefined };
 }
 
 /** https://tc39.es/ecma262/#sec-hostcalljobcallback */

@@ -2,7 +2,7 @@
 import { surroundingAgent, HostCallJobCallback } from '../engine.mjs';
 import { Value } from '../value.mjs';
 import { NormalCompletion, Q, X } from '../completion.mjs';
-import { Assert } from './all.mjs';
+import { Assert, AsyncContextSwap } from './all.mjs';
 
 /** https://tc39.es/ecma262/#sec-clear-kept-objects */
 export function ClearKeptObjects() {
@@ -37,8 +37,8 @@ export function WeakRefDeref(weakRef) {
 
 /** https://tc39.es/ecma262/#sec-cleanup-finalization-registry */
 export function CleanupFinalizationRegistry(finalizationRegistry, callback) {
-  // 1. Assert: finalizationRegistry has [[Cells]] and [[CleanupCallback]] internal slots.
-  Assert('Cells' in finalizationRegistry && 'CleanupCallback' in finalizationRegistry);
+  // 1. Assert: finalizationRegistry has [[Cells]], [[CleanupCallback]], and [[FinalizationRegistryAsyncContextSnapshot]] internal slots.
+  Assert('Cells' in finalizationRegistry && 'CleanupCallback' in finalizationRegistry && 'FinalizationRegistryAsyncContextSnapshot' in finalizationRegistry);
   // 2. Set callback to finalizationRegistry.[[CleanupCallback]].
   if (callback === undefined || callback === Value.undefined) {
     callback = finalizationRegistry.CleanupCallback;
@@ -53,8 +53,14 @@ export function CleanupFinalizationRegistry(finalizationRegistry, callback) {
     // b. Remove cell from finalizationRegistry.[[Cells]].
     finalizationRegistry.Cells.splice(i, 1);
     i -= 1;
-    // c. Perform ? HostCallJobCallback(callback, undefined, « cell.[[HeldValue]] »).
-    Q(HostCallJobCallback(callback, Value.undefined, [cell.HeldValue]));
+    // c. Let previousContextMapping be AsyncContextSwap(finalizationRegistry.[[FinalizationRegistryAsyncContextSnapshot]]).
+    const previousContextMapping = AsyncContextSwap(finalizationRegistry.FinalizationRegistryAsyncContextSnapshot);
+    // d. Let result be Completion(HostCallJobCallback(callback, undefined, « cell.[[HeldValue]] »)).
+    const result = Completion(HostCallJobCallback(callback, Value.undefined, [cell.HeldValue]));
+    // e. AsyncContextSwap(previousContextMapping).
+    AsyncContextSwap(previousContextMapping);
+    // f. Perform ? result.
+    Q(result);
   }
   // 4. Return NormalCompletion(undefined).
   return NormalCompletion(Value.undefined);
