@@ -9,6 +9,11 @@ import { bootstrapObjectPrototype } from '../intrinsics/ObjectPrototype.mjs';
 import { bootstrapObject } from '../intrinsics/Object.mjs';
 import { bootstrapArrayPrototype } from '../intrinsics/ArrayPrototype.mjs';
 import { bootstrapArray } from '../intrinsics/Array.mjs';
+import { bootstrapAsyncContextVariablePrototype } from '../intrinsics/AsyncContextVariablePrototype.mjs';
+import { bootstrapAsyncContextVariable } from '../intrinsics/AsyncContextVariable.mjs';
+import { bootstrapAsyncContextSnapshotPrototype } from '../intrinsics/AsyncContextSnapshotPrototype.mjs';
+import { bootstrapAsyncContextSnapshot } from '../intrinsics/AsyncContextSnapshot.mjs';
+import { bootstrapAsyncContext } from '../intrinsics/AsyncContext.mjs';
 import { bootstrapBigInt } from '../intrinsics/BigInt.mjs';
 import { bootstrapBigIntPrototype } from '../intrinsics/BigIntPrototype.mjs';
 import { bootstrapBooleanPrototype } from '../intrinsics/BooleanPrototype.mjs';
@@ -80,6 +85,7 @@ import { bootstrapWeakRefPrototype } from '../intrinsics/WeakRefPrototype.mjs';
 import { bootstrapWeakRef } from '../intrinsics/WeakRef.mjs';
 import { bootstrapFinalizationRegistryPrototype } from '../intrinsics/FinalizationRegistryPrototype.mjs';
 import { bootstrapFinalizationRegistry } from '../intrinsics/FinalizationRegistry.mjs';
+import { surroundingAgent } from '../engine.mjs';
 import {
   Assert,
   DefinePropertyOrThrow,
@@ -220,6 +226,12 @@ export function CreateIntrinsics(realmRec) {
   bootstrapGeneratorFunctionPrototype(realmRec);
   bootstrapGeneratorFunction(realmRec);
 
+  bootstrapAsyncContextVariablePrototype(realmRec);
+  bootstrapAsyncContextVariable(realmRec);
+  bootstrapAsyncContextSnapshotPrototype(realmRec);
+  bootstrapAsyncContextSnapshot(realmRec);
+  bootstrapAsyncContext(realmRec);
+
   bootstrapAsyncFunctionPrototype(realmRec);
   bootstrapAsyncFunction(realmRec);
 
@@ -353,17 +365,20 @@ export function SetDefaultGlobalBindings(realmRec) {
     'WeakSet',
 
     // Other Properties of the Global Object
+    surroundingAgent.feature('async-context') ? 'AsyncContext' : undefined,
     // 'Atomics',
     'JSON',
     'Math',
     'Reflect',
   ].forEach((name) => {
-    Q(DefinePropertyOrThrow(global, Value(name), Descriptor({
-      Value: realmRec.Intrinsics[`%${name}%`],
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true,
-    })));
+    if (name !== undefined) {
+      Q(DefinePropertyOrThrow(global, Value(name), Descriptor({
+        Value: realmRec.Intrinsics[`%${name}%`],
+        Writable: Value.true,
+        Enumerable: Value.false,
+        Configurable: Value.true,
+      })));
+    }
   });
 
   return global;

@@ -14,6 +14,8 @@ import { Value } from '../value.mjs';
 import { resume, handleInResume } from '../helpers.mjs';
 import {
   Assert,
+  AsyncContextSnapshot,
+  AsyncContextSwap,
   Call,
   CreateBuiltinFunction,
   CreateIterResultObject,
@@ -47,8 +49,8 @@ export function AsyncGeneratorStart(generator, generatorBody) {
   const genContext = surroundingAgent.runningExecutionContext;
   // 3. Set the Generator component of genContext to generator.
   genContext.Generator = generator;
-  // 4. Set the code evaluation state of genContext such that when evaluation
-  //    is resumed for that execution context the following steps will be performed:
+  // 4. Let closure be a new Abstract Closure with no parameters that captures
+  //    generatorBody and performs the following steps when called:
   genContext.codeEvaluationState = (function* resumer() {
     // a. If generatorBody is a Parse Node, then
     //     i. Let result be the result of evaluating generatorBody.
@@ -82,14 +84,24 @@ export function AsyncGeneratorStart(generator, generatorBody) {
     // j. Return undefined.
     return Value.undefined;
   }());
-  // 5. Set generator.[[AsyncGeneratorContext]] to genContext.
+  // 5. Set the code evaluation state of genContext such that when evaluation is
+  //    resumed for that execution context, closure will be called with no
+  //    arguments.
+  // 6. Set generator.[[AsyncGeneratorContext]] to genContext.
   generator.AsyncGeneratorContext = genContext;
-  // 6. Set generator.[[AsyncGeneratorState]] to suspendedStart.
+  // 7. Set generator.[[AsyncGeneratorState]] to suspendedStart.
   generator.AsyncGeneratorState = 'suspendedStart';
-  // 7. Set generator.[[AsyncGeneratorQueue]] to a new empty List.
+  // 8. Set generator.[[AsyncGeneratorQueue]] to a new empty List.
   generator.AsyncGeneratorQueue = [];
-  // 8. Return undefined.
-  return Value.undefined;
+  // 9. If generatorBody is a FunctionBody Parse Node, then
+  if (typeof generatorBody !== 'function') {
+    // a. Set generator.[[AsyncGeneratorAsyncContextMapping]] to AsyncContextSnapshot().
+    generator.AsyncGeneratorAsyncContextMapping = AsyncContextSnapshot();
+  } else { // 10. Else,
+    // a. Set generator.[[AsyncGeneratorAsyncContextMapping]] to empty.
+    generator.AsyncGeneratorAsyncContextMapping = undefined;
+  }
+  // 11. Return unused.
 }
 
 /** https://tc39.es/ecma262/#sec-asyncgeneratorvalidate */
@@ -100,7 +112,9 @@ export function AsyncGeneratorValidate(generator, generatorBrand) {
   Q(RequireInternalSlot(generator, 'AsyncGeneratorState'));
   // 3. Perform ? RequireInternalSlot(generator, [[AsyncGeneratorQueue]]).
   Q(RequireInternalSlot(generator, 'AsyncGeneratorQueue'));
-  // 4. If generator.[[GeneratorBrand]] is not the same value as generatorBrand, throw a TypeError exception.
+  // 4. Perform ? RequireInternalSlot(generator, [[AsyncGeneratorAsyncContextMapping]]).
+  Q(RequireInternalSlot(generator, 'AsyncGeneratorAsyncContextMapping'));
+  // 5. If generator.[[GeneratorBrand]] is not the same value as generatorBrand, throw a TypeError exception.
   const brand = generator.GeneratorBrand;
   if (
     brand === undefined || generatorBrand === undefined
@@ -175,14 +189,30 @@ export function AsyncGeneratorResume(generator, completion) {
   // 4. Suspend callerContext.
   // 5. Set generator.[[AsyncGeneratorState]] to executing.
   generator.AsyncGeneratorState = 'executing';
-  // 6. Push genContext onto the execution context stack; genContext is now the running execution context.
+  let previousContextMapping;
+  // 6. If generator.[[AsyncGeneratorAsyncContextMapping]] is empty, then
+  //    a. Let previousContextMapping be empty.
+  // 7. Else,
+  if (generator.AsyncGeneratorAsyncContextMapping !== undefined) {
+    // a. Let previousContextMapping be AsyncContextSwap(generator.[[AsyncGeneratorAsyncContextMapping]]).
+    previousContextMapping = AsyncContextSwap(generator.AsyncGeneratorAsyncContextMapping);
+  }
+  // 8. Push genContext onto the execution context stack; genContext is now the running execution context.
   surroundingAgent.executionContextStack.push(genContext);
-  // 7. Resume the suspended evaluation of genContext using completion as the result of the operation that suspended it. Let result be the completion record returned by the resumed computation.
+  // 9. Resume the suspended evaluation of genContext using completion as the result of the operation that suspended it. Let result be the completion record returned by the resumed computation.
   const result = resume(genContext, completion);
-  // 8. Assert: result is never an abrupt completion.
+  // 10. Assert: result is never an abrupt completion.
   Assert(!(result instanceof AbruptCompletion));
-  // 9. Assert: When we return here, genContext has already been removed from the execution context stack and callerContext is the currently running execution context.
+  // 11. Assert: When we return here, genContext has already been removed from the execution context stack and callerContext is the currently running execution context.
   Assert(surroundingAgent.runningExecutionContext === callerContext);
+  // 12. If previousContextMapping is not empty, then
+  if (previousContextMapping !== undefined) {
+    // a. Assert: The result of AsyncContextSnapshot() is generator.[[AsyncGeneratorAsyncContextMapping]].
+    Assert(AsyncContextSnapshot() === generator.AsyncGeneratorAsyncContextMapping);
+    // b. AsyncContextSwap(previousContextMapping).
+    AsyncContextSwap(previousContextMapping);
+  }
+  // 13. Return unused.
 }
 
 /** https://tc39.es/ecma262/#sec-asyncgeneratorunwrapyieldresumption */
@@ -344,8 +374,8 @@ function AsyncGeneratorDrainQueue(generator) {
 export function CreateAsyncIteratorFromClosure(closure, generatorBrand, generatorPrototype) {
   Assert(typeof closure === 'function');
   // 1. NOTE: closure can contain uses of the Await shorthand, and uses of the Yield shorthand to yield an IteratorResult object.
-  // 2. Let internalSlotsList be « [[AsyncGeneratorState]], [[AsyncGeneratorContext]], [[AsyncGeneratorQueue]], [[GeneratorBrand]] ».
-  const internalSlotsList = ['AsyncGeneratorState', 'AsyncGeneratorContext', 'AsyncGeneratorQueue', 'GeneratorBrand'];
+  // 2. Let internalSlotsList be « [[AsyncGeneratorState]], [[AsyncGeneratorContext]], [[AsyncGeneratorQueue]], [[AsyncGeneratorAsyncContextMapping]], [[GeneratorBrand]] ».
+  const internalSlotsList = ['AsyncGeneratorState', 'AsyncGeneratorContext', 'AsyncGeneratorQueue', 'AsyncGeneratorAsyncContextMapping', 'GeneratorBrand'];
   // 3. Let generator be ! OrdinaryObjectCreate(generatorPrototype, internalSlotsList).
   const generator = X(OrdinaryObjectCreate(generatorPrototype, internalSlotsList));
   // 4. Set generator.[[GeneratorBrand]] to generatorBrand.

@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { surroundingAgent, HostMakeJobCallback } from '../engine.mjs';
 import { Value } from '../value.mjs';
-import { IsCallable, OrdinaryCreateFromConstructor } from '../abstract-ops/all.mjs';
+import { AsyncContextSnapshot, IsCallable, OrdinaryCreateFromConstructor } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
@@ -29,6 +29,8 @@ function FinalizationRegistryConstructor([cleanupCallback = Value.undefined], { 
   finalizationGroup.CleanupCallback = HostMakeJobCallback(cleanupCallback);
   // 7. Set finalizationGroup.[[Cells]] to be an empty List.
   finalizationGroup.Cells = [];
+  // 8. Set finalizationRegistry.[[FinalizationRegistryAsyncContextSnapshot]] to AsyncContextSnapshot().
+  finalizationGroup.FinalizationRegistryAsyncContextSnapshot = AsyncContextSnapshot();
   // 8. Return finalizationGroup.
   return finalizationGroup;
 }
