@@ -1,8 +1,8 @@
 // @ts-nocheck
 import { surroundingAgent } from '../engine.mjs';
 import {
-  AsyncContextSnapshot, AsyncContextSwap, Call, CreateBuiltinFunction, Get,
-  IsCallable, LengthOfArrayLike, OrdinaryCreateFromConstructor,
+  AsyncContextSnapshot, AsyncContextSwap, Call, CopyNameAndLength, CreateBuiltinFunction,
+  IsCallable, OrdinaryCreateFromConstructor,
 } from '../abstract-ops/all.mjs';
 import { Completion, Q } from '../completion.mjs';
 import { JSStringValue, Value } from '../value.mjs';
@@ -45,20 +45,13 @@ function Snapshot_wrap([fn = Value.undefined]) {
     // e. Return result.
     return result;
   };
-  // 4. Let length be ? LengthOfArrayLike(fn).
-  const length = Q(LengthOfArrayLike(fn));
-  // 5. Let name be ? Get(fn, "name").
-  let name = Q(Get(fn, Value('name')));
-  // 6. If name is not a String, set name to the empty String.
-  if (!(name instanceof JSStringValue)) {
-    name = Value('');
-  }
-  // 7. Let realm be the current Realm Record.
-  const realm = surroundingAgent.currentRealmRecord;
-  // 8. Let prototype be realm.[[Intrinsics]].[[%Function.prototype%]].
-  const prototype = realm.Intrinsics['%Function.prototype%'];
-  // 9. Return CreateBuiltinFunction(closure, length, name, « », realm, prototype, "wrapped").
-  return CreateBuiltinFunction(closure, length, name, [], realm, prototype, Value('wrapped'));
+
+  // 4. Let wrapped be CreateBuiltinFunction(closure).
+  const wrapped = CreateBuiltinFunction(closure);
+  // 5. Perform ? CopyNameAndLength(wrapped, fn, "wrapped").
+  Q(CopyNameAndLength(wrapped, fn, 'wrapped'));
+  // 6. Return wrapped.
+  return wrapped;
 }
 
 export function bootstrapAsyncContextSnapshot(realmRec) {

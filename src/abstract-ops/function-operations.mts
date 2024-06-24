@@ -12,6 +12,7 @@ import {
   PrivateName,
   type Arguments,
   BooleanValue, PropertyKeyValue, NullValue, JSStringValue,
+  NumberValue,
 } from '../value.mjs';
 import {
   EnsureCompletion,
@@ -51,6 +52,9 @@ import {
   Realm,
   F as toNumberValue,
   type OrdinaryObject,
+  Get,
+  ToIntegerOrInfinity,
+  R,
 } from './all.mjs';
 
 interface BaseFunctionObject extends OrdinaryObject {
@@ -428,7 +432,7 @@ export function MakeMethod(F: ECMAScriptFunctionObject, homeObject: ObjectValue)
 }
 
 /** https://tc39.es/ecma262/#sec-setfunctionname */
-export function SetFunctionName(F: FunctionObject, name: PropertyKeyValue | PrivateName, prefix?: string): void {
+export function SetFunctionName(F: FunctionObject, name: PropertyKeyValue | PrivateName, prefix?: JSStringValue): void {
   // 1. Assert: F is an extensible object that does not have a "name" own property.
   Assert(IsExtensible(F) === Value.true && HasOwnProperty(F, Value('name')) === Value.false);
   // 2. If Type(name) is Symbol, then
@@ -531,7 +535,8 @@ function BuiltinFunctionConstruct(this: BuiltinFunctionObject, argumentsList: Ar
 }
 
 /** https://tc39.es/ecma262/#sec-createbuiltinfunction */
-export function CreateBuiltinFunction(steps, length: number, name: PropertyKeyValue | PrivateName, internalSlotsList: readonly string[], realm?: Realm, prototype?: ObjectValue | NullValue, prefix?: string, isConstructor = Value.false): FunctionObject {
+/** https://tc39.es/proposal-async-context/#sec-createbuiltinfunction */
+export function CreateBuiltinFunction(steps, length?: number, name?: PropertyKeyValue | PrivateName, internalSlotsList?: readonly string[] = [], realm?: Realm, prototype?: ObjectValue | NullValue, prefix?: JSStringValue, isConstructor = Value.false): FunctionObject {
   // 1. Assert: steps is either a set of algorithm steps or other definition of a function's behaviour provided in this specification.
   Assert(typeof steps === 'function');
   // 2. If realm is not present, set realm to the current Realm Record.
@@ -561,15 +566,21 @@ export function CreateBuiltinFunction(steps, length: number, name: PropertyKeyVa
   func.ScriptOrModule = Value.null;
   // 10. Set func.[[InitialName]] to null.
   func.InitialName = Value.null;
-  // 11. Perform ! SetFunctionLength(func, length).
-  X(SetFunctionLength(func, length));
-  // 12. If prefix is not present, then
-  if (prefix === undefined) {
-    // a. Perform ! SetFunctionName(func, name).
-    X(SetFunctionName(func, name));
-  } else { // 13. Else
-    // a. Perform ! SetFunctionName(func, name, prefix).
-    X(SetFunctionName(func, name, prefix));
+  // 11. If length is present, then
+  if (length !== undefined) {
+    // a. Perform ! SetFunctionLength(func, length).
+    X(SetFunctionLength(func, length));
+  }
+  // 12. If name is present, then
+  if (name !== undefined) {
+    // a. If prefix is not present, then
+    if (prefix === undefined) {
+      // i. Perform ! SetFunctionName(func, name).
+      X(SetFunctionName(func, name));
+    } else { // b. Else
+      // ii. Perform ! SetFunctionName(func, name, prefix).
+      X(SetFunctionName(func, name, prefix));
+    }
   }
   // 13. Return func.
   return func;
@@ -584,4 +595,53 @@ export function PrepareForTailCall() {
   surroundingAgent.executionContextStack.pop(leafContext);
   // 4. Assert: leafContext has no further use. It will never be activated as the running execution context.
   leafContext.poppedForTailCall = true;
+}
+
+/** https://tc39.es/proposal-shadowrealm/#sec-copynameandlength */
+export function CopyNameAndLength(F: FunctionObject, Target: FunctionObject, prefix?: string, argCount = 0) {
+  // 1. If argCount is not present, set argCount to 0.
+  // 2. Let L be 0.
+  let L = 0;
+  // 3. Let targetHasLength be ? HasOwnProperty(Target, "length").
+  const targetHasLength = Q(HasOwnProperty(Target, Value('length')));
+  // 4. If targetHasLength is true, then
+  if (targetHasLength === Value.true) {
+    // a. Let targetLen be ? Get(Target, "length").
+    const targetLen = Q(Get(Target, Value('length')));
+    // b. If targetLen is a Number, then
+    if (targetLen instanceof NumberValue) {
+      // i. If targetLen is +∞𝔽, then
+      if (R(targetLen) === +Infinity) {
+        // 1. Set L to +∞.
+        L = +Infinity;
+      } else if (R(targetLen) === -Infinity) { // ii. Else if targetLen is -∞𝔽, then
+        // 1. Set L to 0.
+        L = 0;
+      } else { // iii. Else,
+        // 1. Let targetLenAsInt be ! ToIntegerOrInfinity(targetLen).
+        const targetLenAsInt = X(ToIntegerOrInfinity(targetLen));
+        // 2. Assert: targetLenAsInt is finite.
+        Assert(Number.isFinite(targetLenAsInt));
+        // 3. Set L to max(targetLenAsInt - argCount, 0).
+        L = Math.max(targetLenAsInt - argCount, 0);
+      }
+    }
+  }
+  // 5. Perform SetFunctionLength(F, L).
+  SetFunctionLength(F, L);
+
+  // 6. Let targetName be ? Get(Target, "name").
+  let targetName = Q(Get(Target, Value('name')));
+  // 7. If targetName is not a String, set targetName to the empty String.
+  if (!(targetName instanceof JSStringValue)) {
+    targetName = Value('');
+  }
+  // 8. If prefix is present, then
+  if (prefix !== undefined) {
+    // a. Perform SetFunctionName(F, targetName, prefix).
+    SetFunctionName(F, targetName, Value(prefix));
+  } else { // 9. Else,
+    // a. Perform SetFunctionName(F, targetName).
+    SetFunctionName(F, targetName);
+  }
 }
