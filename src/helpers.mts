@@ -506,11 +506,15 @@ export function captureStack(O: ObjectValue) {
   })));
 }
 
-export function callable<Class extends object>(onCalled = (target: Class, _thisArg: unknown, args: unknown[]) => Reflect.construct(target as new (...args: unknown[]) => unknown, args)) {
-  return function decoartor(classValue: Class, _classContext: unknown) {
-    return new Proxy(classValue, {
-      apply: onCalled,
-    });
+export function callable<Class extends object>(
+  onCalled = (target: Class, _thisArg: unknown, args: unknown[]) => Reflect.construct(target as new (...args: unknown[]) => unknown, args),
+) {
+  const handler: ProxyHandler<Class> = Object.freeze({
+    __proto__: null,
+    apply: onCalled,
+  });
+  return function decorator(classValue: Class, _classContext: ClassDecoratorContext<Class & (new (...args: readonly unknown[]) => unknown)>) {
+    return new Proxy(classValue, handler);
   };
 }
 
