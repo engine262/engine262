@@ -14,6 +14,7 @@ import {
   CreateArrayFromList,
   CreateBuiltinFunction,
   CreateDataProperty,
+  CreateDataPropertyOrThrow,
   CreateResolvingFunctions,
   DefinePropertyOrThrow,
   Get,
@@ -659,6 +660,24 @@ function Promise_symbolSpecies(args, { thisValue }) {
   return thisValue;
 }
 
+// https://tc39.es/ecma262/#sec-promise.withResolvers
+function Promise_withResolvers(args, { thisValue }) {
+  // 1. Let C be the this value.
+  const C = thisValue;
+  // 2. Let promiseCapability be ? NewPromiseCapability(C).
+  const promiseCapability: PromiseCapabilityRecord = Q(NewPromiseCapability(C));
+  // 3. Let obj be OrdinaryObjectCreate(%Object.prototype%).
+  const obj = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%')));
+  // 4. Perform ! CreateDataPropertyOrThrow(obj, "promise", promiseCapability.[[Promise]]).
+  X(CreateDataPropertyOrThrow(obj, Value('promise'), promiseCapability.Promise));
+  // 5. Perform ! CreateDataPropertyOrThrow(obj, "resolve", promiseCapability.[[Resolve]]).
+  X(CreateDataPropertyOrThrow(obj, Value('resolve'), promiseCapability.Resolve));
+  // 6. Perform ! CreateDataPropertyOrThrow(obj, "reject", promiseCapability.[[Reject]]).
+  X(CreateDataPropertyOrThrow(obj, Value('reject'), promiseCapability.Reject));
+  // 7. Return obj.
+  return EnsureCompletion(obj);
+}
+
 export function bootstrapPromise(realmRec) {
   const promiseConstructor = bootstrapConstructor(realmRec, PromiseConstructor, 'Promise', 1, realmRec.Intrinsics['%Promise.prototype%'], [
     ['all', Promise_all, 1],
@@ -667,6 +686,7 @@ export function bootstrapPromise(realmRec) {
     ['race', Promise_race, 1],
     ['reject', Promise_reject, 1],
     ['resolve', Promise_resolve, 1],
+    ['withResolvers', Promise_withResolvers, 0],
     [wellKnownSymbols.species, [Promise_symbolSpecies]],
   ]);
 
