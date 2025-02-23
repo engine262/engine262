@@ -7,8 +7,8 @@ const { babel } = require('@rollup/plugin-babel');
 const commonjs = require('@rollup/plugin-commonjs');
 const json = require('@rollup/plugin-json');
 const { nodeResolve } = require('@rollup/plugin-node-resolve');
-const { name, version } = require('./package.json');
 const nodePolyfills = require('rollup-plugin-polyfill-node');
+const { name, version } = require('./package.json');
 
 const hash = execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
 
