@@ -7,6 +7,7 @@ const { babel } = require('@rollup/plugin-babel');
 const commonjs = require('@rollup/plugin-commonjs');
 const json = require('@rollup/plugin-json');
 const { nodeResolve } = require('@rollup/plugin-node-resolve');
+const nodePolyfills = require('rollup-plugin-polyfill-node');
 const { name, version } = require('./package.json');
 
 const hash = execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
@@ -25,6 +26,8 @@ module.exports = () => ({
     commonjs(),
     mtsResolver(),
     nodeResolve(),
+    // TODO: src/runtime-semantics/RegExp.mts imported @unicode/unicode-15.0.0 thus imported the full zlib package.
+    nodePolyfills(),
     babel({
       babelHelpers: 'bundled',
       exclude: 'node_modules/**',
