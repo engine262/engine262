@@ -660,7 +660,33 @@ function Promise_symbolSpecies(args, { thisValue }) {
   return thisValue;
 }
 
-// https://tc39.es/ecma262/#sec-promise.withResolvers
+/** https://tc39.es/ecma262/#sec-promise.try */
+function Promise_try([callback, ...args], { thisValue }) {
+  // 1. Let C be the this value.
+  const C = thisValue;
+  // 2. If C is not an Object, throw a TypeError exception.
+  if (!(C instanceof ObjectValue)) {
+    return surroundingAgent.Throw('TypeError', 'InvalidReceiver', 'Promise.try', C);
+  }
+  // 3. Let promiseCapability be ? NewPromiseCapability(C).
+  const promiseCapability: PromiseCapabilityRecord = Q(NewPromiseCapability(C));
+  // 4. Let status be Completion(Call(callback, undefined, args)).
+  const status = EnsureCompletion(Call(callback, undefined, args));
+
+  if (status instanceof AbruptCompletion) {
+    // 5. If status is an abrupt completion, then
+    //   a. Perform ? Call(promiseCapability.[[Reject]], undefined, « status.[[Value]] »).
+    Q(Call(promiseCapability.Reject, Value.undefined, [status.Value]));
+  } else {
+    // 6. Else,
+    //   a. Perform ? Call(promiseCapability.[[Resolve]], undefined, « status.[[Value]] »).
+    Q(Call(promiseCapability.Resolve, Value.undefined, [status.Value]));
+  }
+  // 7. Return promiseCapability.[[Promise]].
+  return EnsureCompletion(promiseCapability.Promise);
+}
+
+/** https://tc39.es/ecma262/#sec-promise.withResolvers */
 function Promise_withResolvers(args, { thisValue }) {
   // 1. Let C be the this value.
   const C = thisValue;
@@ -686,6 +712,7 @@ export function bootstrapPromise(realmRec) {
     ['race', Promise_race, 1],
     ['reject', Promise_reject, 1],
     ['resolve', Promise_resolve, 1],
+    ['try', Promise_try, 1],
     ['withResolvers', Promise_withResolvers, 0],
     [wellKnownSymbols.species, [Promise_symbolSpecies]],
   ]);
