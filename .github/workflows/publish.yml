@@ -16,13 +16,13 @@ jobs:
       packages: write
     steps:
       # Set everything up
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - uses: actions/setup-node@master
+          submodules: 'recursive'
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18
-      - run: git submodule update --init --recursive
+          node-version: 22
 
       # Run tests and whatnot
       - run: npm install
