@@ -37,19 +37,23 @@ import {
   RegExpHasFlag,
   F, R, R as MathematicalValue,
 } from '../abstract-ops/all.mjs';
-import { RegExpState as State, GetSubstitution } from '../runtime-semantics/all.mjs';
-import { CodePointAt } from '../static-semantics/all.mjs';
+import { MatchState, GetSubstitution, type MatchResult, FAILURE } from '../runtime-semantics/all.mjs';
+import { CodePointAt, StringToCodePoints } from '../static-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 import { CreateRegExpStringIterator } from './RegExpStringIteratorPrototype.mjs';
 
+export interface RegExpObjectValue extends ObjectValue {
+  RegExpMatcher: (Input: number[], index: number) => MatchResult;
+  OriginalFlags: JSStringValue;
+}
 
 /** https://tc39.es/ecma262/#sec-regexp.prototype.exec */
 function RegExpProto_exec([string = Value.undefined], { thisValue }) {
   const R = thisValue;
   Q(RequireInternalSlot(R, 'RegExpMatcher'));
   const S = Q(ToString(string));
-  return Q(RegExpBuiltinExec(R, S));
+  return Q(RegExpBuiltinExec(R as RegExpObjectValue, S));
 }
 
 /** https://tc39.es/ecma262/#sec-regexpexec */
@@ -66,37 +70,48 @@ export function RegExpExec(R, S) {
     return result;
   }
   Q(RequireInternalSlot(R, 'RegExpMatcher'));
-  return Q(RegExpBuiltinExec(R, S));
+  return Q(RegExpBuiltinExec(R as RegExpObjectValue, S));
 }
 
 /** https://tc39.es/ecma262/#sec-regexpbuiltinexec */
-export function RegExpBuiltinExec(R, S) {
-  // 1. Assert: R is an initialized RegExp instance.
+export function RegExpBuiltinExec(R: RegExpObjectValue, S: JSStringValue) {
   Assert('RegExpMatcher' in R);
-  // 2. Assert: Type(S) is String.
   Assert(S instanceof JSStringValue);
-  // 3. Let length be the number of code units in S.
+
+  // 1. Let length be the length of S.
   const length = S.stringValue().length;
-  // 4. Let lastIndex be ? ℝ(ToLength(? Get(R, "lastIndex"))).
+  // 2. Let lastIndex be ℝ(? ToLength(? Get(R, "lastIndex"))).
   let lastIndex = MathematicalValue(Q(ToLength(Q(Get(R, Value('lastIndex'))))));
-  // 5. Let flags be R.[[OriginalFlags]].
+  // 3. Let flags be R.[[OriginalFlags]].
   const flags = R.OriginalFlags.stringValue();
-  // 6. If flags contains "g", let global be true; else let global be false.
+  // 4. If flags contains "g", let global be true; else let global be false.
   const global = flags.includes('g');
-  // 7. If flags contains "y", let sticky be true; else let sticky be false.
+  // 5. If flags contains "y", let sticky be true; else let sticky be false.
   const sticky = flags.includes('y');
-  // 8. If flags contains "d", let hasIndices be true; else let hasIndices be false.
+  // 6. If flags contains "d", let hasIndices be true; else let hasIndices be false.
   const hasIndices = flags.includes('d');
-  // 9. If global is false and sticky is false, set lastIndex to 0.
+  // 7. If global is false and sticky is false, set lastIndex to 0.
   if (!global && !sticky) {
     lastIndex = 0;
   }
-  // 10. Let matcher be R.[[RegExpMatcher]].
+  // 8. Let matcher be R.[[RegExpMatcher]].
   const matcher = R.RegExpMatcher;
-  // 11. If flags contains "u", let fullUnicode be true; else let fullUnicode be false.
+  // 9. If flags contains "u", let fullUnicode be true; else let fullUnicode be false.
   const fullUnicode = flags.includes('u');
-  // 12. Let matchSucceeded be false.
+
+  // 10. Let matchSucceeded be false.
   let matchSucceeded = false;
+
+  // 11. If fullUnicode is true, let input be StringToCodePoints(S).
+  //    Otherwise, let input be a List whose elements are the code units that are the elements of S.
+  // 12. NOTE: Each element of input is considered to be a character.
+  let input: number[];
+  if (fullUnicode) {
+    input = StringToCodePoints(S.stringValue());
+  } else {
+    input = S.stringValue().split('').map((c) => c.charCodeAt(0));
+  }
+
   let r;
   // 13. Repeat, while matchSucceeded is false
   while (matchSucceeded === false) {
@@ -110,10 +125,13 @@ export function RegExpBuiltinExec(R, S) {
       // ii. Return null.
       return Value.null;
     }
-    // b. Let r be matcher(S, lastIndex).
-    r = matcher(S, lastIndex);
-    // c. If r is failure, then
-    if (r === 'failure') {
+    // b. Let inputIndex be the index into input of the character that was obtained from element lastIndex of S.
+    const inputIndex = GetInputIndex(S, lastIndex);
+    // const inputIndex = lastIndex;
+    // c. Let r be matcher(input, inputIndex).
+    r = matcher(input, inputIndex);
+    // d. If r is FAILURE, then
+    if (r === FAILURE) {
       // i. If sticky is true, then
       if (sticky) {
         // 1. Perform ? Set(R, "lastIndex", +0𝔽, true).
@@ -123,20 +141,19 @@ export function RegExpBuiltinExec(R, S) {
       }
       // ii. Set lastIndex to AdvanceStringIndex(S, lastIndex, fullUnicode).
       lastIndex = AdvanceStringIndex(S, lastIndex, fullUnicode ? Value.true : Value.false);
-    } else { // d. Else,
-      // i. Assert: r is a State.
-      Assert(r instanceof State);
+    } else { // e. Else,
+      // i. Assert: r is a MatchState.
+      Assert(r instanceof MatchState);
       // ii. Set matchSucceeded to true.
       matchSucceeded = true;
     }
   }
-  // 14. Let e be r's endIndex value.
-  let e = r.endIndex;
-  const Input = fullUnicode ? Array.from(S.stringValue()) : S.stringValue().split('');
+  // 14. Let e be r.[[EndIndex]] value.
+  let e = r.EndIndex;
   // 15. If fullUnicode is true, then
   if (fullUnicode) {
-    // If fullUnicode is true, set e to ! GetStringIndex(S, Input, e).
-    e = X(GetStringIndex(S, Input, e));
+    // If fullUnicode is true, set e to GetStringIndex(S, e).
+    e = GetStringIndex(S, e);
   }
   // 16. If global is true or sticky is true, then
   if (global || sticky) {
@@ -144,7 +161,7 @@ export function RegExpBuiltinExec(R, S) {
     Q(Set(R, Value('lastIndex'), F(e), Value.true));
   }
   // 17. Let n be the number of elements in r's captures List.
-  const n = r.captures.length - 1;
+  const n = r.Captures.length - 1;
   // 18. Assert: n = R.[[RegExpRecord]].[[CapturingGroupsCount]].
   Assert(n === R.parsedPattern.capturingGroups.length);
   // 19. Assert: n < 2^32 - 1.
@@ -188,7 +205,7 @@ export function RegExpBuiltinExec(R, S) {
   // 33. For each integer i such that i > 0 and i ≤ n, do
   for (let i = 1; i <= n; i += 1) {
     // a. Let captureI be ith element of r's captures List.
-    const captureI = r.captures[i];
+    const captureI = r.Captures[i];
     let capturedValue;
     // e. If captureI is undefined, then
     if (captureI === Value.undefined) {
@@ -198,15 +215,15 @@ export function RegExpBuiltinExec(R, S) {
       indices.push(Value.undefined);
     } else { // f. Else,
       // i. Let captureStart be captureI's startIndex.
-      let captureStart = captureI.startIndex;
+      let captureStart = captureI.StartIndex;
       // ii. Let captureEnd be captureI's endIndex.
-      let captureEnd = captureI.endIndex;
+      let captureEnd = captureI.EndIndex;
       // iii. If fullUnicode is true, then
       if (fullUnicode) {
-        // 1. Set captureStart to ! GetStringIndex(S, Input, captureStart).
-        captureStart = X(GetStringIndex(S, Input, captureStart));
-        // 2. Set captureEnd to ! GetStringIndex(S, Input, captureEnd).
-        captureEnd = X(GetStringIndex(S, Input, captureEnd));
+        // 1. Set captureStart to GetStringIndex(S, captureStart).
+        captureStart = GetStringIndex(S, captureStart);
+        // 2. Set captureEnd to GetStringIndex(S, captureEnd).
+        captureEnd = GetStringIndex(S, captureEnd);
       }
       // iv. Let capture be the Match { [[StartIndex]]: captureStart, [[EndIndex]:: captureEnd }.
       const capture = { StartIndex: captureStart, EndIndex: captureEnd };
@@ -241,6 +258,19 @@ export function RegExpBuiltinExec(R, S) {
   return A;
 }
 
+function GetInputIndex(S: JSStringValue, codeUnitIndex: number) {
+  let len = S.stringValue().length;
+  let codeUnitCount = 0;
+  let codePointCount = 0;
+  while (codeUnitCount < len) {
+    if (codeUnitCount >= codeUnitIndex) return codePointCount;
+    const cp = CodePointAt(S.stringValue(), codeUnitCount);
+    codeUnitCount += cp.CodeUnitCount;
+    codePointCount = codePointCount + 1;
+  }
+  return codePointCount;
+}
+
 /** https://tc39.es/ecma262/#sec-advancestringindex */
 export function AdvanceStringIndex(S, index, unicode) {
   // 1. Assert: Type(S) is String.
@@ -259,8 +289,8 @@ export function AdvanceStringIndex(S, index, unicode) {
   if (index + 1 >= length) {
     return index + 1;
   }
-  // 7. Let cp be ! CodePointAt(S, index).
-  const cp = X(CodePointAt(S.stringValue(), index));
+  // 7. Let cp be CodePointAt(S, index).
+  const cp = CodePointAt(S.stringValue(), index);
   // 8. Return index + cp.[[CodeUnitCount]].
   return index + cp.CodeUnitCount;
 }
