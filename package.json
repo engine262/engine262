@@ -18,7 +18,7 @@
     },
     "import": {
       "types": "./declaration/api.d.mts",
-      "default": "./dist//engine262.mjs"
+      "default": "./dist/engine262.mjs"
     }
   },
   "scripts": {
