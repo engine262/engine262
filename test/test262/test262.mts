@@ -65,7 +65,7 @@ if (ARGV.values.help) {
     --run-slow-tests
         Run slow tests that are listed in the slowlist file.
     --run-failed-only
-        [TODO] Run only the tests that failed in the previous run.
+        Run only the tests that failed in the previous run.
     --update-slow-tests=<number>
         Append tests that take longer than <number> seconds to the slowlist.
     --update-failed-tests
