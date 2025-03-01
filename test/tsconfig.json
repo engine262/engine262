@@ -1,0 +1,19 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "erasableSyntaxOnly": true,
+    "rootDir": "../",
+    "allowImportingTsExtensions": true
+  },
+  "include": [
+    "./base.mts",
+    "./stepped.mts",
+    "./stepped-worker.mts",
+    "./supplemental.mts",
+    "./test262/test262.mts",
+    "./test262/test262-worker.mts",
+    "./json/json.mts",
+    "../bin/test262_realm.mts"
+  ]
+}

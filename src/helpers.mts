@@ -22,6 +22,7 @@ function convertValueForKey<T>(key: JSStringValue | NumberValue | T): string | n
 
 export class ValueMap<K extends PropertyKeyValue, V> {
   private map: Map<K, V>;
+
   constructor() {
     this.map = new Map();
   }
@@ -83,6 +84,7 @@ export class ValueMap<K extends PropertyKeyValue, V> {
 
 export class ValueSet<T> {
   private set: Set<T>;
+
   constructor(init: undefined | null | Iterable<T>) {
     this.set = new Set();
     if (init !== undefined && init !== null) {
@@ -132,6 +134,7 @@ export class ValueSet<T> {
 
 export class OutOfRange extends RangeError {
   private detail: unknown;
+
   /* c8 ignore next */
   constructor(fn: string, detail: unknown) {
     super(`${fn}() argument out of range`);
@@ -172,10 +175,15 @@ export function resume(context: ExecutionContext, completion: Completion) {
 
 export class CallSite {
   context: ExecutionContext;
+
   lastNode: ParseNode | null = null;
+
   lastCallNode: ParseNode | null = null;
+
   inheritedLastCallNode = null;
+
   constructCall = false;
+
   constructor(context: ExecutionContext) {
     this.context = context;
   }

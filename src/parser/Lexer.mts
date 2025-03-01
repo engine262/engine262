@@ -131,13 +131,21 @@ const SingleCharTokens: { [key: string]: number } = {
 
 export class TokenData {
   readonly type: Token;
+
   readonly startIndex: number;
+
   readonly endIndex: number;
+
   readonly line: number;
+
   readonly column: number;
+
   readonly hadLineTerminatorBefore: boolean;
+
   readonly name: string;
+
   readonly value: string | number | bigint | boolean | null;
+
   readonly escaped: boolean;
 
   constructor({
@@ -182,23 +190,37 @@ export abstract class Lexer {
   protected abstract readonly source: string;
 
   protected currentToken!: TokenData; // NOTE: unsound definite assignment operator (`!`)
+
   protected peekToken!: TokenData; // NOTE: unsound definite assignment operator (`!`)
+
   protected peekAheadToken: TokenData | undefined;
 
   protected position = 0;
+
   protected line = 1;
+
   protected columnOffset = 0;
+
   protected scannedValue!: string | number | Token | bigint | boolean; // NOTE: unsound definite assignment operator (`!`)
+
   protected lineTerminatorBeforeNextToken = false;
+
   protected positionForNextToken = 0;
+
   protected lineForNextToken = 0;
+
   protected columnForNextToken = 0;
+
   protected escapeIndex = -1;
 
   abstract isStrictMode(): boolean;
+
   abstract createSyntaxError<K extends keyof typeof import('../messages.mjs')>(context: number | Locatable | undefined, template: K, templateArgs: Parameters<typeof import('../messages.mjs')[K]>): SyntaxError;
+
   abstract raiseEarly<K extends keyof typeof import('../messages.mjs')>(template: K, context?: number | Locatable, ...templateArgs: Parameters<typeof import('../messages.mjs')[K]>): SyntaxError;
+
   abstract raise<K extends keyof typeof import('../messages.mjs')>(template: K, context?: number | Locatable, ...templateArgs: Parameters<typeof import('../messages.mjs')[K]>): never;
+
   abstract unexpected(...args: [(number | Locatable)?, ...Parameters<typeof import('../messages.mjs')['UnexpectedToken']>]): never;
 
   advance(): TokenData {

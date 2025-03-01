@@ -214,7 +214,7 @@ const INSPECTORS: Partial<Record<Types, Inspector>> = {
   },
 };
 
-export function inspect(value: Value) {
+export function inspect(value: Value | Completion) {
   const context: InspectContext = {
     realm: surroundingAgent.currentRealmRecord,
     indent: 0,

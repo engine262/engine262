@@ -34,18 +34,29 @@ import { ValueMap } from './helpers.mjs';
 /** https://tc39.es/ecma262/#sec-environment-records */
 export abstract class EnvironmentRecord {
   readonly OuterEnv: EnvironmentRecord | NullValue;
+
   constructor(outerEnv: EnvironmentRecord | NullValue) {
     this.OuterEnv = outerEnv;
   }
+
   abstract HasBinding(N: JSStringValue): BooleanValue;
+
   abstract CreateMutableBinding(N: JSStringValue, D: BooleanValue): void;
+
   abstract CreateImmutableBinding(N: JSStringValue, S: BooleanValue): void;
+
   abstract InitializeBinding(N: JSStringValue, V: Value): void;
+
   abstract SetMutableBinding(N: JSStringValue, V: Value, S: BooleanValue): void;
+
   abstract GetBindingValue(N: JSStringValue, S: BooleanValue): NormalCompletion<Value> | ThrowCompletion;
+
   abstract DeleteBinding(N: JSStringValue): BooleanValue;
+
   abstract HasThisBinding(): BooleanValue;
+
   abstract HasSuperBinding(): BooleanValue;
+
   abstract WithBaseObject(): ObjectValue | UndefinedValue;
 
   // NON-SPEC
@@ -247,6 +258,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
 /** https://tc39.es/ecma262/#sec-object-environment-records */
 export class ObjectEnvironmentRecord extends EnvironmentRecord {
   BindingObject: ObjectValue;
+
   protected IsWithEnvironment: BooleanValue;
 
   /** https://tc39.es/ecma262/#sec-newobjectenvironment */
@@ -421,8 +433,11 @@ export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
   }
 
   protected ThisValue: undefined | Value;
+
   protected ThisBindingStatus: 'lexical' | 'uninitialized' | 'initialized';
+
   protected readonly FunctionObject;
+
   protected readonly NewTarget: UndefinedValue | ObjectValue;
 
   /** https://tc39.es/ecma262/#sec-bindthisvalue */
@@ -510,8 +525,11 @@ export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
 /** https://tc39.es/ecma262/#sec-global-environment-records */
 export class GlobalEnvironmentRecord extends EnvironmentRecord {
   protected readonly ObjectRecord: ObjectEnvironmentRecord;
+
   protected readonly GlobalThisValue: ObjectValue;
+
   protected readonly DeclarativeRecord: DeclarativeEnvironmentRecord;
+
   protected readonly VarNames: JSStringValue[];
 
   /** https://tc39.es/ecma262/#sec-newglobalenvironment */
@@ -870,6 +888,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
 /** https://tc39.es/ecma262/#sec-module-environment-records */
 export class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
   declare protected readonly bindings: ValueMap<JSStringValue, ModuleEnvironmentBinding>;
+
   /** https://tc39.es/ecma262/#sec-module-environment-records-getbindingvalue-n-s */
   override GetBindingValue(N: JSStringValue, S: BooleanValue): NormalCompletion<Value> | ThrowCompletion {
     // 1. Assert: S is true.
@@ -974,7 +993,9 @@ export function GetIdentifierReference(env: EnvironmentRecord | NullValue, name:
 
 export class PrivateEnvironmentRecord {
   readonly OuterPrivateEnvironment: PrivateEnvironmentRecord | NullValue;
+
   readonly Names: readonly PrivateName[] = [];
+
   /** https://tc39.es/ecma262/#sec-newprivateenvironment */
   constructor(outerEnv: PrivateEnvironmentRecord | NullValue) {
     this.OuterPrivateEnvironment = outerEnv;

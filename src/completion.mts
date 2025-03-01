@@ -49,7 +49,9 @@ type CompletionInit<T> =
 })
 class CompletionImpl<const T> {
   declare readonly Type: 'normal' | 'break' | 'continue' | 'return' | 'throw';
+
   readonly Value!: T | Value;
+
   readonly Target!: JSStringValue | undefined;
 
   constructor(init: CompletionInit<T>) {
@@ -111,7 +113,9 @@ export const Completion = CompletionImpl as {
 })
 class NormalCompletionImpl<const T> extends CompletionImpl<T> {
   declare readonly Type: 'normal';
+
   declare readonly Value: T;
+
   declare readonly Target: undefined;
 
   private constructor(init: NormalCompletionInit<T>) { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
@@ -145,7 +149,9 @@ export type AbruptCompletion<T = unknown> =
 export const AbruptCompletion = (() => {
   abstract class AbruptCompletion<const T> extends CompletionImpl<T | Value> {
     declare readonly Type: 'break' | 'continue' | 'return' | 'throw';
+
     declare readonly Value: T | Value;
+
     declare readonly Target: JSStringValue | undefined;
 
     constructor(init: AbruptCompletionInit<T>) { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
@@ -163,6 +169,7 @@ export const AbruptCompletion = (() => {
 /** https://tc39.es/ecma262/#sec-completion-record-specification-type */
 export class BreakCompletion<const T> extends AbruptCompletion<T> {
   declare readonly Type: 'break';
+
   declare readonly Value: T;
 
   private constructor(init: BreakCompletionInit<T>) { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
@@ -179,7 +186,9 @@ export class BreakCompletion<const T> extends AbruptCompletion<T> {
 /** https://tc39.es/ecma262/#sec-completion-record-specification-type */
 export class ContinueCompletion<const T> extends AbruptCompletion<T> {
   declare readonly Type: 'continue';
+
   declare readonly Value: T;
+
   declare readonly Target: JSStringValue | undefined;
 
   private constructor(init: ContinueCompletionInit<T>) { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
@@ -196,7 +205,9 @@ export class ContinueCompletion<const T> extends AbruptCompletion<T> {
 /** https://tc39.es/ecma262/#sec-completion-record-specification-type */
 export class ReturnCompletion extends AbruptCompletion<Value> {
   declare readonly Type: 'return';
+
   declare readonly Value: Value;
+
   declare readonly Target: undefined;
 
   private constructor(init: ReturnCompletionInit) { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
@@ -217,7 +228,9 @@ export class ReturnCompletion extends AbruptCompletion<Value> {
 })
 class ThrowCompletionImpl extends AbruptCompletion<Value> {
   declare readonly Type: 'throw';
+
   declare readonly Value: Value;
+
   declare readonly Target: undefined;
 
   private constructor(init: Pick<ThrowCompletionImpl, 'Type' | 'Value' | 'Target'>) { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor

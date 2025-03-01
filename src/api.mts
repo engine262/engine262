@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { Value } from './value.mjs';
+import { ObjectValue, Value } from './value.mjs';
 import {
   surroundingAgent,
   ExecutionContext,
@@ -11,6 +11,8 @@ import {
   ThrowCompletion,
   AbruptCompletion,
   EnsureCompletion,
+  Completion,
+  NormalCompletion,
 } from './completion.mjs';
 import {
   Realm,
@@ -186,10 +188,17 @@ export function evaluateScript(sourceText: string, realm: Realm, hostDefined) {
   return EnsureCompletion(ScriptEvaluation(s));
 }
 
+export interface ManagedRealmHostDefined {
+  promiseRejectionTracker?(promise, operation: 'reject' | 'handle'): unknown;
+  resolverCache?: Map<unknown, unknown>;
+  getImportMetaProperties?;
+}
 export class ManagedRealm extends Realm {
   topContext;
+
   active = false;
-  constructor(HostDefined = {}) {
+
+  constructor(HostDefined: ManagedRealmHostDefined = {}) {
     super();
     // CreateRealm()
     CreateIntrinsics(this);
@@ -225,7 +234,7 @@ export class ManagedRealm extends Realm {
     return r;
   }
 
-  evaluateScript(sourceText: string, { specifier } = {}) {
+  evaluateScript(sourceText: string, { specifier } = {}): Completion {
     if (typeof sourceText !== 'string') {
       throw new TypeError('sourceText must be a string');
     }
@@ -245,7 +254,7 @@ export class ManagedRealm extends Realm {
     return res;
   }
 
-  createSourceTextModule(specifier: string, sourceText: string) {
+  createSourceTextModule(specifier: string, sourceText: string): SourceTextModuleRecord | AbruptCompletion<ObjectValue> {
     if (typeof specifier !== 'string') {
       throw new TypeError('specifier must be a string');
     }

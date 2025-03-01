@@ -169,15 +169,25 @@ export interface Label {
 
 export class Scope {
   private readonly parser: Parser;
+
   private readonly scopeStack: ScopeInfo[] = [];
+
   labels: Label[] = [];
+
   readonly arrowInfoStack: (ArrowInfo | null)[] = [];
+
   readonly assignmentInfoStack: AssignmentInfo[] = [];
+
   readonly exports = new Set<string>();
+
   readonly undefinedExports = new Map<string, ParseNode.ModuleExportName>();
+
   private privateScope: PrivateScopeInfo | undefined;
+
   private readonly undefinedPrivateAccesses: UndefinedPrivateAccessInfo[] = [];
+
   private flags: Flag = 0 as Flag;
+
   constructor(parser: Parser) {
     this.parser = parser;
   }
@@ -389,7 +399,9 @@ export class Scope {
   }
 
   declare(node: ParseNode | readonly ParseNode[], type: 'private', extraType?: 'field' | 'method' | 'get' | 'set'): void;
+
   declare(node: ParseNode | readonly ParseNode[], type: 'lexical' | 'import' | 'function' | 'parameter' | 'variable' | 'export'): void;
+
   declare(node: ParseNode | readonly ParseNode[], type: 'lexical' | 'import' | 'function' | 'parameter' | 'variable' | 'export' | 'private', extraType?: 'field' | 'method' | 'get' | 'set') {
     const declarations = getDeclarations(node);
     declarations.forEach((d) => {

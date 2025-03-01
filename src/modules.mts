@@ -44,7 +44,9 @@ import type { ParseNode } from './parser/ParseNode.mjs';
 // #resolvedbinding-record
 export class ResolvedBindingRecord {
   readonly Module: AbstractModuleRecord;
+
   readonly BindingName: 'namespace' | JSStringValue;
+
   constructor({ Module, BindingName }: Pick<ResolvedBindingRecord, 'BindingName' | 'Module'>) {
     Assert(Module instanceof AbstractModuleRecord);
     Assert(BindingName === 'namespace' || BindingName instanceof JSStringValue);
@@ -68,14 +70,23 @@ interface ResolveSetItem {
 /** https://tc39.es/ecma262/#sec-abstract-module-records */
 export abstract class AbstractModuleRecord {
   abstract LoadRequestedModules(hostDefined?: ModuleRecordHostDefined): PromiseObjectValue;
+
   abstract GetExportedNames(exportStarSet?: AbstractModuleRecord[]): readonly JSStringValue[];
+
   abstract ResolveExport(exportName: JSStringValue, resolveSet?: ResolveSetItem[]): ResolvedBindingRecord | null;
+
   abstract Link(): void;
+
   abstract Evaluate(): PromiseObjectValue;
+
   readonly Realm: Realm | UndefinedValue;
+
   readonly Environment: ModuleEnvironmentRecord | UndefinedValue;
+
   readonly Namespace: ObjectValue | UndefinedValue;
+
   readonly HostDefined: ModuleRecordHostDefined;
+
   constructor(init: AbstractModuleInit) {
     this.Realm = init.Realm;
     this.Environment = init.Environment;
@@ -95,16 +106,27 @@ export type CyclicModuleRecordStatus = 'new' | 'unlinked' | 'linking' | 'linked'
 /** https://tc39.es/ecma262/#sec-cyclic-module-records */
 export abstract class CyclicModuleRecord extends AbstractModuleRecord {
   Status: CyclicModuleRecordStatus;
+
   EvaluationError: ThrowCompletion | UndefinedValue;
+
   DFSIndex: number | undefined;
+
   DFSAncestorIndex: number | undefined;
+
   readonly RequestedModules: readonly JSStringValue[];
+
   readonly LoadedModules: ReadonlyArray<{ readonly Specifier: JSStringValue, readonly Module: AbstractModuleRecord }>;
+
   readonly Async: BooleanValue;
+
   AsyncEvaluating: BooleanValue;
+
   TopLevelCapability: PromiseCapabilityRecord | UndefinedValue;
+
   AsyncParentModules: readonly CyclicModuleRecord[];
+
   PendingAsyncDependencies: number | undefined;
+
   constructor(init: CyclicModuleRecordInit) {
     super(init);
     this.Status = init.Status;
@@ -239,12 +261,19 @@ export type SourceTextModuleRecordInit = CyclicModuleRecordInit & Pick<SourceTex
 /** https://tc39.es/ecma262/#sec-source-text-module-records */
 export class SourceTextModuleRecord extends CyclicModuleRecord {
   readonly ImportMeta: ObjectValue | undefined;
+
   readonly ECMAScriptCode: ParseNode;
+
   readonly Context: ExecutionContext | undefined;
+
   readonly ImportEntries: readonly ImportEntry[];
+
   readonly LocalExportEntries: readonly ExportEntry[];
+
   readonly IndirectExportEntries: readonly ExportEntry[];
+
   readonly StarExportEntries: readonly ExportEntry[];
+
   constructor(init: SourceTextModuleRecordInit) {
     super(init);
 
@@ -582,7 +611,9 @@ export type SyntheticModuleRecordInit = AbstractModuleInit & Pick<SyntheticModul
 /** https://tc39.es/ecma262/#sec-synthetic-module-records */
 export class SyntheticModuleRecord extends AbstractModuleRecord {
   readonly ExportNames: readonly JSStringValue[];
+
   readonly EvaluationSteps: (module: SyntheticModuleRecord) => NormalCompletion<void> | ThrowCompletion;
+
   constructor(init: SyntheticModuleRecordInit) {
     super(init);
 

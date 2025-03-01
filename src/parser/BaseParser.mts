@@ -6,6 +6,7 @@ export abstract class BaseParser extends Lexer {
   protected abstract scope: Scope;
 
   abstract startNode<T extends ParseNode>(inheritStart?: ParseNode): ParseNode.Unfinished<T>;
+
   abstract finishNode<T extends ParseNode.Unfinished, K extends T['type'] & ParseNode['type']>(node: T, type: K): ParseNodesByType[K];
 
   /**

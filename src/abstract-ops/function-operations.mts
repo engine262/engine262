@@ -77,7 +77,7 @@ export interface ECMAScriptFunctionObject extends BaseFunctionObject {
   readonly IsClassConstructor: BooleanValue;
 }
 export interface BuiltinFunctionObject extends BaseFunctionObject {
-  nativeFunction(argumentsList: Arguments, options: { thisValue: Value | UndefinedValue, NewTarget: Value | UndefinedValue }): Value;
+  nativeFunction: ((argumentsList: Arguments, options: { thisValue: Value | UndefinedValue, NewTarget: Value | UndefinedValue }) => Value) & { section?: string };
 }
 export type FunctionObject = ECMAScriptFunctionObject | BuiltinFunctionObject;
 // This file covers abstract operations defined in
