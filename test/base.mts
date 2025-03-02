@@ -104,6 +104,21 @@ function printStatusUI() {
     process.stdout.write('\n');
     readline.clearLine(process.stdout, 0);
     readline.cursorTo(process.stdout, 0);
+  } else {
+    const now = Date.now();
+    running.forEach(({ 0: test, 2: since }) => {
+      if (!test) {
+        return;
+      }
+      const timeInSec = ~~((now - since) / 1000);
+      if (timeInSec < 3) {
+        return;
+      }
+      if (timeInSec > 30) {
+        slowTestCallback(test);
+      }
+      process.stdout.write(`Slow test: ${test} has been running for ${timeInSec} seconds`);
+    });
   }
   printStatusLine();
 }
@@ -136,6 +151,13 @@ export function fail(workerId: number, name: string, desc: string | undefined, e
   const line3 = `${error}\n`;
   process.stdout.write(`${line1}${line2}${line3}${'\n'.repeat(NUM_WORKERS + 1)}`);
 }
+export function fatal(message: string): never {
+  process.exitCode = 1;
+  readline.moveCursor(process.stdout, 0, -NUM_WORKERS - 2);
+  readline.clearScreenDown(process.stdout);
+  process.stderr.write(`\n${ANSI.red}ERROR: ${message}${ANSI.reset}\n\n`);
+  process.exit(1);
+}
 export function skip() {
   skipped += 1;
   handledPerSecCounter += 1;
@@ -159,6 +181,8 @@ ${'\n'.repeat(NUM_WORKERS + 1)}
   }, CI ? 5000 : 100).unref();
 
   process.on('exit', () => {
+    readline.cursorTo(process.stdout, 0);
+    printStatusLine();
     process.stdout.write('\n');
   });
 }
@@ -198,5 +222,5 @@ export type WorkerToSupervisor =
 
 export function readList(path: string) {
   const source = fs.readFileSync(path, 'utf8');
-  return source.split('\n').filter((l) => l && !l.startsWith('#'));
+  return source.split('\n').filter((l) => l && !l.startsWith('#') && !l.startsWith('!'));
 }

@@ -2,11 +2,17 @@
 ### Slow Tests ###
 ##################
 
-# Comments start with `#`.
+# Comments start with `#` or `;`.
 # Paths are relative to the `test262/test` directory.
 # Paths may contain globs.
 
+# Slow tests on CI
+built-ins/String/prototype/repeat/empty-string-returns-empty.js
+
 # Slow tests appended by --update-slow-tests=10
+staging/sm/regress/regress-610026.js
+staging/sm/TypedArray/sort_large_countingsort.js
+staging/sm/regress/regress-1507322-deep-weakmap.js
 built-ins/Array/prototype/concat/Array.prototype.concat_large-typed-array.js
 built-ins/Array/prototype/concat/Array.prototype.concat_large-typed-array.js
 built-ins/Array/prototype/concat/Array.prototype.concat_small-typed-array.js

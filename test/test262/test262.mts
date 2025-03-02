@@ -3,11 +3,12 @@ import path from 'node:path';
 import fs from 'node:fs';
 import util from 'node:util';
 import { fork } from 'node:child_process';
-import { globbySync, isDynamicPattern } from 'globby';
+import { globby, isDynamicPattern } from 'globby';
 import YAML from 'js-yaml';
 import {
   pass, fail, skip, incr_total, NUM_WORKERS, type WorkerToSupervisor, type Test, type SupervisorToWorker, run, startTestPrinter, setSlowTestThreshold,
   readList,
+  fatal,
 } from '../base.mts';
 
 const TEST262 = process.env.TEST262 || path.resolve(import.meta.dirname, 'test262');
@@ -112,14 +113,11 @@ if (ARGV.values['run-failed-only']) {
   ARGV.positionals = fs.readFileSync(LAST_FAILED_LIST, { encoding: 'utf-8' }).split('\n');
 }
 
-startTestPrinter();
-
 const workers = Array.from({ length: NUM_WORKERS }, (_, index) => createWorker(index));
 
 const RUN_SLOW_TESTS = ARGV.values['run-slow-tests'];
 
-const slowlist = new Set(readListPaths(SLOW_LIST));
-const skiplist = new Set(readListPaths(SKIP_LIST));
+const [slowlist, skiplist] = await Promise.all([readListPaths(SLOW_LIST), readListPaths(SKIP_LIST)]);
 const failedTests_list = fs.createWriteStream(LAST_FAILED_LIST, { encoding: 'utf-8' });
 const failedTests_log = fs.createWriteStream(LAST_FAILED_LOG, { encoding: 'utf-8' });
 const skiplist_stream = ARGV.values['update-failed-tests'] ? fs.createWriteStream(SKIP_LIST, { encoding: 'utf-8', flags: 'a' }) : undefined;
@@ -150,34 +148,12 @@ const visited = new Set<string>();
 if (ARGV.positionals.length === 0) {
   files = readdir(TEST262_TESTS);
 } else {
-  // Interpret pattern arguments relative to the tests directory,
-  // falling back on the working directory if there are no matches
-  // or a non-glob pattern fails to match.
-  for (const arg of ARGV.positionals) {
-    const matches = globbySync(arg, { cwd: TEST262_TESTS, absolute: true });
-    if (matches.length === 0 && !isDynamicPattern(arg)) {
-      files = [];
-      break;
-    }
-    files = matches;
-  }
-  if (!Array.isArray(files)) {
-    throw new Error('unreachable');
-  }
-  if (files.length === 0) {
-    const cwd = process.cwd();
-    for (const arg of ARGV.positionals) {
-      const matches = globbySync(arg, { cwd, absolute: true });
-      if (matches.length === 0 && !isDynamicPattern(arg)) {
-        fs.accessSync(path.resolve(cwd, arg), fs.constants.R_OK);
-      }
-      files = matches;
-    }
-  }
+  files = parsePositionals(ARGV.positionals);
 }
 
-const promises = [];
+startTestPrinter();
 
+const promises = [];
 for await (const file of files) {
   if (visited.has(file) || /annexB|intl402|_FIXTURE|README\.md|\.py/.test(file)) {
     continue;
@@ -218,16 +194,23 @@ for await (const file of files) {
   }));
 }
 
+if (ARGV.positionals.length && !promises.length) {
+  fatal(`No tests found based on the given globs: ${ARGV.positionals.join(', ')}`);
+}
+
 await Promise.all(promises);
 
 workers.forEach((worker) => {
   worker.send('DONE' satisfies SupervisorToWorker);
 });
 
-function readListPaths(file: string) {
-  return readList(file)
-    .flatMap((t) => globbySync(path.resolve(TEST262, 'test', t), { absolute: true }))
-    .map((f) => path.relative(TEST262_TESTS, f));
+async function readListPaths(file: string) {
+  const list = readList(file);
+  const files = new Set<string>();
+  for await (const file of parsePositionals(list)) {
+    files.add(path.relative(TEST262_TESTS, file));
+  }
+  return files;
 }
 
 async function* readdir(dir: string): AsyncGenerator<string> {
@@ -238,6 +221,41 @@ async function* readdir(dir: string): AsyncGenerator<string> {
     } else {
       yield p;
     }
+  }
+}
+
+async function* parsePositional(pattern: string): AsyncGenerator<string> {
+  if (!isDynamicPattern(pattern)) {
+    const a_path = path.join(TEST262_TESTS, pattern);
+    const a = await fs.promises.stat(a_path).catch(() => undefined);
+    if (a?.isDirectory()) {
+      return yield* readdir(a_path);
+    } else if (a?.isFile()) {
+      return yield a_path;
+    }
+
+    const b_path = path.join(process.cwd(), pattern);
+    const b = await fs.promises.stat(b_path).catch(() => undefined);
+    if (b?.isDirectory()) {
+      return yield* readdir(b_path);
+    } else if (b?.isFile()) {
+      return yield b_path;
+    }
+  }
+  const a = await globby(`**/${pattern}*`, { cwd: TEST262_TESTS, absolute: true });
+  if (a.length) {
+    return yield* a;
+  }
+  const b = await globby(`**/${pattern}*`, { cwd: process.cwd(), absolute: true });
+  if (b.length) {
+    return yield* b;
+  }
+  return undefined;
+}
+
+async function* parsePositionals(pattern: string[]): AsyncGenerator<string> {
+  for (const p of pattern) {
+    yield* parsePositional(p);
   }
 }
 
