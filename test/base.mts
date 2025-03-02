@@ -37,6 +37,7 @@ let passed = 0;
 let failed = 0;
 let total = 0;
 const running: [file: string, flags: string, since: number][] = new Array(NUM_WORKERS).fill(['', Date.now()]);
+export const postRunShowFiles: string[] = [];
 
 let slowTestThreshold = Infinity;
 let slowTestCallback: (newSlowTestFound: string) => void = () => { };
@@ -181,6 +182,12 @@ ${'\n'.repeat(NUM_WORKERS + 1)}
     readline.cursorTo(process.stdout, 0);
     printStatusLine();
     process.stdout.write('\n');
+    if (postRunShowFiles.length) {
+      process.stdout.write(`\n${ANSI.green}Files found:${ANSI.reset}\n`);
+      postRunShowFiles.forEach((file) => {
+        process.stdout.write(`  ${file}\n`);
+      });
+    }
   });
 }
 

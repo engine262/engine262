@@ -1,6 +1,6 @@
 // @ts-nocheck
-import unicodeCaseFoldingCommon from '@unicode/unicode-15.0.0/Case_Folding/C/symbols.js';
-import unicodeCaseFoldingSimple from '@unicode/unicode-15.0.0/Case_Folding/S/symbols.js';
+import unicodeCaseFoldingCommon from '@unicode/unicode-16.0.0/Case_Folding/C/symbols.js';
+import unicodeCaseFoldingSimple from '@unicode/unicode-16.0.0/Case_Folding/S/symbols.js';
 import { JSStringValue, Value } from '../value.mjs';
 import { Assert, isNonNegativeInteger } from '../abstract-ops/all.mjs';
 import { CharacterValue, StringToCodePoints } from '../static-semantics/all.mjs';
