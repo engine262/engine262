@@ -111,13 +111,10 @@ function printStatusUI() {
         return;
       }
       const timeInSec = ~~((now - since) / 1000);
-      if (timeInSec < 3) {
+      if (timeInSec < 20) {
         return;
       }
-      if (timeInSec > 30) {
-        slowTestCallback(test);
-      }
-      process.stdout.write(`Slow test: ${test} has been running for ${timeInSec} seconds`);
+      process.stdout.write(`Slow test: ${test} has been running for ${timeInSec} seconds.\n`);
     });
   }
   printStatusLine();
