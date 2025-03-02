@@ -1,40 +1,49 @@
-# https://github.com/tc39/test262/blob/master/features.txt
+# https://github.com/tc39/test262/blob/main/features.txt
 
 # Start with `-` to skip feature
 # Map feature to engine262 feature using `feature = engine262featurename`
 
+# Update with test262 on Feb 2025, to be investigated/implemented
+-Array.fromAsync
+-Array.prototype.includes
+-Error.isError
+-Float16Array
+-Math.sumPrecise
+-RegExp.escape
+-arraybuffer-transfer
+-canonical-tz
+-explicit-resource-management
+-exponentiation
+-import-attributes
+-import-defer
+-iterator-helpers
+-iterator-sequencing
+-json-parse-with-source
+-promise-try
+-regexp-modifiers
+-set-methods
+-source-phase-imports
+-source-phase-imports-module-source
+-uint8array-base64
+
+# Added before Feb 2025
+
 -Atomics
 -Atomics.waitAsync
-
+-Atomics.pause
 -caller
-
 -SharedArrayBuffer
-
 -tail-call-optimization
-
 -json-modules
--import-assertions
-
 -Temporal
-
 -resizable-arraybuffer
-
 -regexp-v-flag
-
 -decorators
-
 -ShadowRealm
-
 -array-grouping
-
 -regexp-duplicate-named-groups
-
 -change-array-by-copy
-
 -symbols-as-weakmap-keys
 
 String.prototype.isWellFormed = is-usv-string
 String.prototype.toWellFormed = is-usv-string
-
-# https://github.com/tc39/proposal-cleanup-some
-FinalizationRegistry.prototype.cleanupSome = cleanup-some

@@ -28,10 +28,15 @@ export type GraphLoadingStateHostDefined = unknown;
 /** https://tc39.es/ecma262/#graphloadingstate-record */
 export class GraphLoadingState {
   readonly PromiseCapability: PromiseCapabilityRecord;
+
   readonly HostDefined: GraphLoadingStateHostDefined;
+
   IsLoading = true;
+
   readonly Visited = new Set<CyclicModuleRecord>();
+
   PendingModules = 1;
+
   constructor({ PromiseCapability, HostDefined }: Pick<GraphLoadingState, 'PromiseCapability' | 'HostDefined'>) {
     this.PromiseCapability = PromiseCapability;
     this.HostDefined = HostDefined;

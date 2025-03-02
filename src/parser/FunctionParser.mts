@@ -33,8 +33,11 @@ interface ConciseBodyInfo {
 
 export abstract class FunctionParser extends IdentifierParser {
   abstract parseStatementList(token: string | Token, directives?: readonly string[]): ParseNode.StatementList;
+
   abstract parseAssignmentExpression(): ParseNode.AssignmentExpressionOrHigher;
+
   abstract parseBindingElement(): ParseNode.BindingElementLike;
+
   abstract parseBindingRestElement(): ParseNode.BindingRestElement;
 
   // FunctionDeclaration :
@@ -157,6 +160,7 @@ export abstract class FunctionParser extends IdentifierParser {
   }
 
   convertArrowParameter<T extends ParseNode>(node: T): ConvertArrowParameterResult<T['type']>;
+
   convertArrowParameter(node: ParseNode) {
     switch (node.type) {
       case 'IdentifierReference': {

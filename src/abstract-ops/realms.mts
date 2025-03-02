@@ -80,6 +80,7 @@ import { bootstrapWeakRefPrototype } from '../intrinsics/WeakRefPrototype.mjs';
 import { bootstrapWeakRef } from '../intrinsics/WeakRef.mjs';
 import { bootstrapFinalizationRegistryPrototype } from '../intrinsics/FinalizationRegistryPrototype.mjs';
 import { bootstrapFinalizationRegistry } from '../intrinsics/FinalizationRegistry.mjs';
+import type { ManagedRealmHostDefined } from '../api.mjs';
 import {
   Assert,
   DefinePropertyOrThrow,
@@ -90,11 +91,17 @@ import {
 /** https://tc39.es/ecma262/#sec-code-realms */
 export class Realm {
   Intrinsics: Record<string, Value>;
+
   GlobalObject;
+
   GlobalEnv;
+
   TemplateMap;
+
   LoadedModules;
-  HostDefined;
+
+  HostDefined: ManagedRealmHostDefined;
+
   randomState;
 
   mark(m) {

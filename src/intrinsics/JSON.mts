@@ -47,8 +47,11 @@ const ESCAPABLE = ['"', '\\', '/', 'b', 'f', 'n', 'r', 't'];
 
 class JSONValidator {
   input;
+
   pos = 0;
+
   char;
+
   constructor(input) {
     this.input = input;
     this.char = input.charAt(0);

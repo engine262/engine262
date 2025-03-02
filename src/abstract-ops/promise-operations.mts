@@ -55,8 +55,11 @@ export interface PromiseResolvingFunctionObject extends BuiltinFunctionObject {
 /** https://tc39.es/ecma262/#sec-promisecapability-records */
 export class PromiseCapabilityRecord {
   readonly Promise: ObjectValue | UndefinedValue;
+
   readonly Resolve: FunctionObject | UndefinedValue;
+
   readonly Reject: FunctionObject | UndefinedValue;
+
   constructor() {
     this.Promise = Value.undefined;
     this.Resolve = Value.undefined;
@@ -67,8 +70,11 @@ export class PromiseCapabilityRecord {
 /** https://tc39.es/ecma262/#sec-promisereaction-records */
 export class PromiseReactionRecord {
   readonly Capability: PromiseCapabilityRecord | UndefinedValue;
+
   readonly Type: 'Fulfill' | 'Reject';
+
   readonly Handler;
+
   constructor(O: PromiseReactionRecord) {
     Assert(O.Capability instanceof PromiseCapabilityRecord
         || O.Capability === Value.undefined);

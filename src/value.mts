@@ -28,9 +28,13 @@ let createBigIntValue: (value: bigint) => BigIntValue; // set by static block in
 
 abstract class BaseValue {
   static declare readonly null: NullValue; // defined in static block of NullValue
+
   static declare readonly undefined: UndefinedValue; // defined in static block of UndefinedValue
+
   static declare readonly true: BooleanValue<true>; // defined in static block of BooleanValue
+
   static declare readonly false: BooleanValue<false>; // defined in static block of BooleanValue
+
   abstract type: Value['type']; // ensures new `Value` subtypes must be added to `Value` union
 }
 
@@ -110,6 +114,7 @@ export const PrimitiveValue = (() => {
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-undefined-type */
 export class UndefinedValue extends PrimitiveValue {
   declare readonly type: 'Undefined'; // defined on prototype by static block
+
   declare readonly value: undefined; // defined on prototype by static block
 
   private constructor() { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
@@ -126,6 +131,7 @@ export class UndefinedValue extends PrimitiveValue {
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-null-type */
 export class NullValue extends PrimitiveValue {
   declare readonly type: 'Null'; // defined on prototype by static block
+
   declare readonly value: null; // defined on prototype by static block
 
   private constructor() { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
@@ -142,6 +148,7 @@ export class NullValue extends PrimitiveValue {
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-boolean-type */
 export class BooleanValue<T extends boolean = boolean> extends PrimitiveValue {
   declare readonly type: 'Boolean'; // defined on prototype by static block
+
   readonly value: T;
 
   private constructor(value: T) {
@@ -167,6 +174,7 @@ export class BooleanValue<T extends boolean = boolean> extends PrimitiveValue {
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-string-type */
 export class JSStringValue extends PrimitiveValue {
   declare readonly type: 'String'; // defined on prototype by static block
+
   readonly value: string;
 
   private constructor(value: string) {
@@ -187,6 +195,7 @@ export class JSStringValue extends PrimitiveValue {
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-symbol-type */
 export class SymbolValue extends PrimitiveValue {
   declare readonly type: 'Symbol'; // defined on prototype by static block
+
   readonly Description: JSStringValue | UndefinedValue;
 
   constructor(Description: JSStringValue | UndefinedValue) {
@@ -221,6 +230,7 @@ Object.freeze(wellKnownSymbols);
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-number-type */
 export class NumberValue extends PrimitiveValue {
   declare readonly type: 'Number'; // defined on prototype by static block
+
   readonly value: number;
 
   private constructor(value: number) {
@@ -486,6 +496,7 @@ function NumberBitwiseOp(op: '&' | '|' | '^', x: NumberValue, y: NumberValue) {
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-bigint-type */
 export class BigIntValue extends PrimitiveValue {
   declare readonly type: 'BigInt'; // defined on prototype by static block
+
   readonly value: bigint;
 
   private constructor(value: bigint) {
@@ -725,8 +736,11 @@ function BigIntBitwiseOp(op: '&' | '|' | '^', x: BigIntValue, y: BigIntValue) {
 /** https://tc39.es/ecma262/#sec-object-type */
 export class ObjectValue extends Value {
   declare readonly type: 'Object'; // defined on prototype by static block
+
   readonly properties: ValueMap<JSStringValue | SymbolValue, Descriptor>;
+
   readonly internalSlotsList: readonly string[];
+
   readonly PrivateElements: PrivateElementRecord[];
 
   constructor(internalSlotsList: readonly string[]) {
@@ -802,6 +816,7 @@ export class PrivateName {
   // NOTE: The following declaration distinguishes `PrivateName` from `SymbolValue` so that type guards can properly
   //       remove it from unions with `SymbolValue` due to structural overlap.
   declare private _: never;
+
   readonly Description: JSStringValue;
 
   constructor(description: JSStringValue) {
@@ -811,9 +826,13 @@ export class PrivateName {
 
 export class ReferenceRecord {
   readonly Base: 'unresolvable' | Value | EnvironmentRecord;
+
   readonly ReferencedName: JSStringValue | SymbolValue | PrivateName;
+
   readonly Strict: BooleanValue;
+
   readonly ThisValue: ObjectValue | undefined;
+
   constructor({
     Base,
     ReferencedName,
@@ -838,11 +857,17 @@ export class ReferenceRecord {
 export function Descriptor(O: Pick<Descriptor, 'Configurable' | 'Enumerable' | 'Get' | 'Set' | 'Value' | 'Writable'>): Descriptor // @ts-expect-error
 export @callable() class Descriptor {
   readonly Value?: Value;
+
   readonly Get?: FunctionObject;
+
   readonly Set?: FunctionObject;
+
   readonly Writable?: BooleanValue;
+
   readonly Enumerable?: BooleanValue;
+
   readonly Configurable?: BooleanValue;
+
   constructor(O: Pick<Descriptor, 'Configurable' | 'Enumerable' | 'Get' | 'Set' | 'Value' | 'Writable'>) {
     this.Value = O.Value;
     this.Get = O.Get;

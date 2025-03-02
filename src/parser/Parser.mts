@@ -19,8 +19,11 @@ export interface ParserOptions {
 
 export class Parser extends LanguageParser {
   protected readonly source: string;
+
   protected readonly specifier?: string;
+
   readonly earlyErrors: Set<SyntaxError>;
+
   readonly state: {
     hasTopLevelAwait: boolean;
     strict: boolean;
@@ -28,6 +31,7 @@ export class Parser extends LanguageParser {
   };
 
   protected readonly scope = new Scope(this);
+
   constructor({ source, specifier, json = false }: ParserOptions) {
     super();
     this.source = source;
@@ -50,6 +54,7 @@ export class Parser extends LanguageParser {
   }
 
   startNode<T extends ParseNode>(inheritStart?: ParseNode.BaseParseNode): ParseNode.Unfinished<T>;
+
   startNode(inheritStart?: ParseNode.BaseParseNode): ParseNode.Unfinished {
     this.peek();
     const node: ParseNode.BaseParseNode = {
@@ -81,6 +86,7 @@ export class Parser extends LanguageParser {
   }
 
   finishNode<T extends ParseNode.Unfinished, K extends T['type'] & ParseNode['type']>(node: T, type: K): ParseNodesByType[K];
+
   finishNode(node: ParseNode.Unfinished, type: ParseNode['type']) {
     node.type = type;
     node.location.endIndex = this.currentToken.endIndex;

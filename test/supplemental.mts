@@ -1,7 +1,10 @@
-'use strict';
-
-const assert = require('assert');
-const {
+// @ts-check
+import assert from 'assert';
+import { createAgent, createRealm } from '../bin/test262_realm.mts';
+import {
+  incr_total, pass, fail, startTestPrinter,
+} from './base.mts';
+import {
   Agent,
   setSurroundingAgent,
   ManagedRealm,
@@ -11,12 +14,15 @@ const {
   Get,
   CreateArrayFromList,
   CreateDataProperty,
-} = require('..');
-const test262realm = require('../bin/test262_realm');
-const { total, pass, fail } = require('./base');
+  type NumberValue,
+  JSStringValue,
+  type PromiseObjectValue,
+  SourceTextModuleRecord,
+} from '#self';
 
 // Features that cannot be tested by test262 should go here.
 
+startTestPrinter();
 [
   () => {
     const agent = new Agent();
@@ -34,7 +40,7 @@ const { total, pass, fail } = require('./base');
     setSurroundingAgent(agent);
     const realm = new ManagedRealm();
     const result = realm.evaluateScript('debugger;');
-    assert.strictEqual(result.Value.numberValue(), 42); // eslint-disable-line @engine262/mathematical-value
+    assert.strictEqual((result.Value as NumberValue).numberValue(), 42); // eslint-disable-line @engine262/mathematical-value
   },
   () => {
     const agent = new Agent();
@@ -49,7 +55,7 @@ try {
   e.stack;
 }
 `);
-    assert.strictEqual(result.Value.stringValue(), `\
+    assert.strictEqual((result.Value as JSStringValue).stringValue(), `\
 Error: owo
     at x (<anonymous>:1:32)
     at y (<anonymous>:2:16)
@@ -64,7 +70,7 @@ async function x() { await 1; throw new Error('owo'); }
 async function y() { await x(); }
 y().catch((e) => e.stack);
 `);
-    assert.strictEqual(result.Value.PromiseResult.stringValue(), `\
+    assert.strictEqual(((result.Value as PromiseObjectValue).PromiseResult as JSStringValue).stringValue(), `\
 Error: owo
     at async x (<anonymous>:1:47)
     at async y (<anonymous>:2:28)`);
@@ -81,7 +87,7 @@ try {
   e.stack;
 }
 `);
-    assert.strictEqual(result.Value.stringValue(), `\
+    assert.strictEqual((result.Value as JSStringValue).stringValue(), `\
 TypeError: undefined is not an object
     at get (native)
     at x (<anonymous>:1:16)
@@ -100,7 +106,7 @@ try {
   e.stack;
 }
 `);
-    assert.strictEqual(result.Value.stringValue(), `\
+    assert.strictEqual((result.Value as JSStringValue).stringValue(), `\
 Error: owo
     at new Y (<anonymous>:1:32)
     at x (<anonymous>:2:20)
@@ -117,7 +123,7 @@ new Promise(() => {
 });
 e.stack;
 `);
-    assert.strictEqual(result.Value.stringValue(), `\
+    assert.strictEqual((result.Value as JSStringValue).stringValue(), `\
 Error: owo
     at <anonymous> (<anonymous>:3:17)
     at new Promise (native)
@@ -142,7 +148,7 @@ Error: owo
         })
         .then(() => 'pass');
     `);
-    assert.strictEqual(result.Value.PromiseResult.stringValue(), 'pass');
+    assert.strictEqual(((result.Value as PromiseObjectValue).PromiseResult as JSStringValue).stringValue(), 'pass');
   },
   () => {
     const agent = new Agent();
@@ -163,20 +169,20 @@ Error: owo
             }
           })
           .then(() => 'pass');
-      `);
+      `) as SourceTextModuleRecord;
       module.LoadRequestedModules();
       module.Link();
       module.Evaluate();
       const result = Get(realm.GlobalObject, Value('result'));
-      assert.strictEqual(result.Value.PromiseResult.stringValue(), 'pass');
+      assert.strictEqual(((result.Value as PromiseObjectValue).PromiseResult as JSStringValue).stringValue(), 'pass');
     });
   },
   () => {
-    const agent = test262realm.createAgent({
+    const agent = createAgent({
       features: FEATURES.map((f) => f.name),
     });
     setSurroundingAgent(agent);
-    const { realm } = test262realm.createRealm();
+    const { realm } = createRealm();
     realm.scope(() => {
       CreateDataProperty(
         realm.GlobalObject,
@@ -185,7 +191,7 @@ Error: owo
           throw new Error(`${path.stringValue()} did not have a section`);
         }, 1, Value(''), []),
       );
-      const targets = [];
+      const targets: Value[] = [];
       Object.entries(realm.Intrinsics)
         .forEach(([k, v]) => {
           targets.push(CreateArrayFromList([Value(k), v]));
@@ -284,11 +290,11 @@ Error: owo
     assert(!varNames.has('deleteMe'), "`realm.[[GlobalEnv]].[[VarNames]]` shouldn't have 'deleteMe'.");
   },
 ].forEach((test, i) => {
-  total();
+  incr_total();
   try {
     test();
-    pass();
+    pass(0);
   } catch (e) {
-    fail(`Test ${i + 1}`, e.stack || e);
+    fail(0, `Test ${i + 1}`, '', (e as Error).stack || String(e));
   }
 });

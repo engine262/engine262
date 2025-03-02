@@ -9,6 +9,7 @@ import type { ParseNode } from '../parser/ParseNode.mjs';
 
 export class ClassStaticBlockDefinitionRecord {
   BodyFunction;
+
   constructor({ BodyFunction }) {
     this.BodyFunction = BodyFunction;
   }

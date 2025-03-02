@@ -21,8 +21,9 @@ import { Evaluate } from './evaluator.mjs';
 import { CallSite, unwind } from './helpers.mjs';
 import { runJobQueue } from './api.mjs';
 import * as messages from './messages.mjs';
+import type { ParseNode } from './parser/ParseNode.mjs';
 
-export const FEATURES = Object.freeze([
+export const FEATURES = ([
   {
     name: 'FinalizationRegistry.prototype.cleanupSome',
     flag: 'cleanup-some',
@@ -33,7 +34,9 @@ export const FEATURES = Object.freeze([
     flag: 'is-usv-string',
     url: 'https://github.com/tc39/proposal-is-usv-string',
   },
-].map(Object.freeze));
+]) as const;
+Object.freeze(FEATURES);
+FEATURES.forEach(Object.freeze);
 
 class ExecutionContextStack extends Array<ExecutionContext> {
   // This ensures that only the length taking overload is supported.
@@ -52,16 +55,27 @@ class ExecutionContextStack extends Array<ExecutionContext> {
 }
 
 let agentSignifier = 0;
+export interface AgentHostDefined {
+  features?;
+  loadImportedModule?(referrer, specifier, hostDefined, finish): void;
+  onDebugger?();
+  onNodeEvaluation?(node: ParseNode): void;
+}
 /** https://tc39.es/ecma262/#sec-agents */
 export class Agent {
   AgentRecord;
+
   // #execution-context-stack
   executionContextStack = new ExecutionContextStack();
+
   // NON-SPEC
   jobQueue = [];
+
   scheduledForCleanup = new Set();
-  hostDefinedOptions;
-  constructor(options = {}) {
+
+  hostDefinedOptions: AgentHostDefined;
+
+  constructor(options: AgentHostDefined = {}) {
     // #table-agent-record
     const Signifier = agentSignifier;
     agentSignifier += 1;
@@ -168,15 +182,24 @@ export function setSurroundingAgent(a: Agent) {
 /** https://tc39.es/ecma262/#sec-execution-contexts */
 export class ExecutionContext {
   codeEvaluationState;
+
   Function: NullValue | FunctionObject;
+
   Realm: Realm;
+
   ScriptOrModule;
+
   VariableEnvironment;
+
   LexicalEnvironment;
+
   PrivateEnvironment;
+
   // NON-SPEC
   callSite = new CallSite(this);
+
   promiseCapability;
+
   poppedForTailCall = false;
 
   copy() {

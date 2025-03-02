@@ -44,7 +44,7 @@ export function IsDetachedBuffer(arrayBuffer) {
 }
 
 /** https://tc39.es/ecma262/#sec-detacharraybuffer */
-export function DetachArrayBuffer(arrayBuffer, key) {
+export function DetachArrayBuffer(arrayBuffer, key?) {
   // 1. Assert: Type(arrayBuffer) is Object and it has [[ArrayBufferData]], [[ArrayBufferByteLength]], and [[ArrayBufferDetachKey]] internal slots.
   Assert(arrayBuffer instanceof ObjectValue
          && 'ArrayBufferData' in arrayBuffer

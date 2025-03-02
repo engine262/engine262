@@ -20,7 +20,9 @@ import {
 /** https://tc39.es/ecma262/#sec-pattern */
 class State {
   endIndex;
+
   captures;
+
   constructor(endIndex, captures) {
     this.endIndex = endIndex;
     this.captures = captures;
@@ -61,7 +63,9 @@ class CharSet {
 
 class UnionCharSet extends CharSet {
   concrete;
+
   fns;
+
   constructor(concrete, fns) {
     super();
 
@@ -84,6 +88,7 @@ class UnionCharSet extends CharSet {
 
 class ConcreteCharSet extends CharSet {
   concrete;
+
   constructor(items) {
     super();
     this.concrete = items instanceof Set ? items : new Set(items);
@@ -105,6 +110,7 @@ class ConcreteCharSet extends CharSet {
 
 class VirtualCharSet extends CharSet {
   fn;
+
   constructor(fn) {
     super();
     this.fn = fn;
@@ -117,7 +123,9 @@ class VirtualCharSet extends CharSet {
 
 class Range {
   startIndex;
+
   endIndex;
+
   constructor(startIndex, endIndex) {
     Assert(startIndex <= endIndex);
     this.startIndex = startIndex;

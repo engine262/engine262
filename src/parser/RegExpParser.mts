@@ -32,12 +32,19 @@ enum ParserContext {
 export interface RegExpParserContext { U?: undefined | boolean; N?: undefined | boolean; }
 export class RegExpParser {
   private source: string;
+
   private position = 0;
+
   private capturingGroups: ParseNode.RegExp.Atom_Group[] = [];
+
   private groupSpecifiers = new Map<string, number>();
+
   private decimalEscapes: {readonly value: number, readonly position: number}[] = [];
+
   private groupNameRefs: ParseNode.RegExp.AtomEscape[] = [];
+
   private state = ParserContext.None;
+
   constructor(source: string) {
     this.source = source;
   }

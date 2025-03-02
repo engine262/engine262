@@ -26,8 +26,11 @@ export abstract class ExpressionParser extends FunctionParser {
   };
 
   abstract parseBindingPattern(): ParseNode.BindingPattern;
+
   abstract markNodeStart(node: ParseNode.BaseParseNode | ParseNode.Unfinished): void;
+
   abstract parseInitializerOpt(): ParseNode.Initializer | null;
+
   abstract semicolon(): void;
 
   // Expression :
@@ -1326,8 +1329,11 @@ export abstract class ExpressionParser extends FunctionParser {
   // AsyncGeneratorMethod :
   //   `async` [no LineTerminator here] `*` ClassElementName `(` UniqueFormalParameters `)` `{` AsyncGeneratorBody `}`
   parseBracketedDefinition(type: 'class element'): ParseNode.ClassElement;
+
   parseBracketedDefinition(type: 'property'): ParseNode.PropertyDefinitionLike;
+
   parseBracketedDefinition(type: 'property' | 'class element'): ParseNode.PropertyDefinitionLike | ParseNode.ClassElement;
+
   parseBracketedDefinition(type: 'property' | 'class element'): ParseNode.PropertyDefinitionLike | ParseNode.ClassElement {
     const node = this.startNode<ParseNode.PropertyDefinitionLike | ParseNode.ClassElement>();
 

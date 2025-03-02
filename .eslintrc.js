@@ -7,7 +7,7 @@ module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
     tsconfigRootDir: __dirname,
-    project: ['./tsconfig.json'],
+    project: ['./tsconfig.json', './test/tsconfig.json'],
   },
   overrides: [
     {
@@ -18,15 +18,12 @@ module.exports = {
       files: ['*.mts'],
       extends: 'plugin:@typescript-eslint/recommended',
       rules: {
-        '@typescript-eslint/lines-between-class-members': ['error', 'always', {
-          'exceptAfterOverload': true,
-          'exceptAfterSingleLine': true,
-        }],
-        '@typescript-eslint/padding-line-between-statements': ['error', {
-          blankLine: 'always',
-          prev: '*',
-          next: ['interface', 'type'],
-        }],
+        // TODO: enable this rule after upgrade eslint
+        // '@stylistic/padding-line-between-statements': ['error', {
+        //   blankLine: 'always',
+        //   prev: '*',
+        //   next: ['interface', 'type'],
+        // }],
         // checked by tsc.
         '@typescript-eslint/no-unused-vars': 'off',
         'no-redeclare': 'off',
@@ -79,7 +76,7 @@ module.exports = {
     'import/no-cycle': 'off',
     'import/no-mutable-exports': 'off',
     'import/prefer-default-export': 'off',
-    'lines-between-class-members': 'off',
+    '@stylistic/eslint-plugin-js/lines-between-class-members': 'off',
     'max-classes-per-file': 'off',
     'max-len': 'off',
     'no-bitwise': 'off',

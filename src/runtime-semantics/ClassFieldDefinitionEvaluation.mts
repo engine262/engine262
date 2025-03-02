@@ -7,7 +7,9 @@ import { Evaluate_PropertyName } from './PropertyName.mjs';
 
 export class ClassFieldDefinitionRecord {
   Name;
+
   Initializer;
+
   constructor(init) {
     this.Name = init.Name;
     this.Initializer = init.Initializer;
