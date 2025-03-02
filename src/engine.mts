@@ -15,6 +15,7 @@ import {
   FinishLoadingImportedModule,
   Realm,
   type FunctionObject,
+  AsyncContextSnapshot,
 } from './abstract-ops/all.mjs';
 import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
 import { Evaluate } from './evaluator.mjs';
@@ -32,6 +33,11 @@ export const FEATURES = Object.freeze([
     name: 'Well-Formed Unicode Strings',
     flag: 'is-usv-string',
     url: 'https://github.com/tc39/proposal-is-usv-string',
+  },
+  {
+    name: 'AsyncContext',
+    flag: 'async-context',
+    url: 'https://github.com/tc39/proposal-async-context',
   },
 ].map(Object.freeze));
 
@@ -73,6 +79,7 @@ export class Agent {
       IsLockFree2: Value.true,
       CandidateExecution: undefined,
       KeptAlive: new Set(),
+      AsyncContextMapping: new Map(),
     };
 
     this.hostDefinedOptions = {

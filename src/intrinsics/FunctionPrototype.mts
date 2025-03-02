@@ -8,22 +8,16 @@ import {
   Call,
   Construct,
   CreateListFromArrayLike,
-  Get,
-  HasOwnProperty,
   IsCallable,
   IsConstructor,
   OrdinaryHasInstance,
   PrepareForTailCall,
   SameValue,
-  SetFunctionLength,
-  SetFunctionName,
-  ToIntegerOrInfinity,
   CreateBuiltinFunction,
-  MakeBasicObject, R,
+  MakeBasicObject,
+  CopyNameAndLength,
 } from '../abstract-ops/all.mjs';
 import {
-  JSStringValue,
-  NumberValue,
   ObjectValue,
   Value,
   wellKnownSymbols,
@@ -119,6 +113,7 @@ function BoundFunctionCreate(targetFunction, boundThis, boundArgs) {
 }
 
 /** https://tc39.es/ecma262/#sec-function.prototype.bind */
+/** https://tc39.es/proposal-shadowrealm/#sec-function.prototype.bind */
 function FunctionProto_bind([thisArg = Value.undefined, ...args], { thisValue }) {
   // 1. Let Target be the this value.
   const Target = thisValue;
@@ -128,44 +123,11 @@ function FunctionProto_bind([thisArg = Value.undefined, ...args], { thisValue })
   }
   // 3. Let F be ? BoundFunctionCreate(Target, thisArg, args).
   const F = Q(BoundFunctionCreate(Target, thisArg, args));
-  // 4. Let L be 0.
-  let L = 0;
-  // 5. Let targetHasLength be ? HasOwnProperty(Target, "length").
-  const targetHasLength = Q(HasOwnProperty(Target, Value('length')));
-  // 6. If targetHasLength is true, then
-  if (targetHasLength === Value.true) {
-    // a. Let targetLen be ? Get(Target, "length").
-    const targetLen = Q(Get(Target, Value('length')));
-    // b. If Type(targetLen) is Number, then
-    if (targetLen instanceof NumberValue) {
-      // i. If targetLen is +∞𝔽, set L to +∞.
-      if (R(targetLen) === +Infinity) {
-        L = +Infinity;
-      } else if (R(targetLen) === -Infinity) { // ii. Else if targetLen is -∞𝔽, set L to 0.
-        L = 0;
-      } else { // iii. Else,
-        // 1. Set targetLen to ! ToIntegerOrInfinity(targetLen).
-        const targetLenAsInt = Q(ToIntegerOrInfinity(targetLen));
-        // 2. Assert: targetLenAsInt is finite.
-        Assert(Number.isFinite(targetLenAsInt));
-        // 3. Let argCount be the number of elements in args.
-        const argCount = args.length;
-        // 4. Set L to max(targetLenAsInt - argCount, 0).
-        L = Math.max(targetLenAsInt - argCount, 0);
-      }
-    }
-  }
-  // 7. Perform ! SetFunctionLength(F, L).
-  X(SetFunctionLength(F, L));
-  // 8. Let targetName be ? Get(Target, "name").
-  let targetName = Q(Get(Target, Value('name')));
-  // 9. If Type(targetName) is not String, set targetName to the empty String.
-  if (!(targetName instanceof JSStringValue)) {
-    targetName = Value('');
-  }
-  // 10. Perform SetFunctionName(F, targetName, "bound").
-  SetFunctionName(F, targetName, Value('bound'));
-  // 11. Return F.
+  // 4. Let argCount be the number of elements in args.
+  const argCount = args.length;
+  // 5. Perform ? CopyNameAndLength(F, Target, "bound", argCount).
+  Q(CopyNameAndLength(F, Target, 'bound', argCount));
+  // 6. Return F.
   return F;
 }
 

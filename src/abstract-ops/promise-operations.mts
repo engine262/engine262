@@ -33,6 +33,9 @@ import {
   type FunctionObject,
   type BuiltinFunctionObject,
   Realm,
+  AsyncContextSwap,
+  type AsyncContextStore,
+  AsyncContextSnapshot,
 } from './all.mjs';
 
 // This file covers abstract operations defined in
@@ -69,6 +72,7 @@ export class PromiseReactionRecord {
   readonly Capability: PromiseCapabilityRecord | UndefinedValue;
   readonly Type: 'Fulfill' | 'Reject';
   readonly Handler;
+  readonly PromiseAsyncContextSnapshot: AsyncContextStore;
   constructor(O: PromiseReactionRecord) {
     Assert(O.Capability instanceof PromiseCapabilityRecord
         || O.Capability === Value.undefined);
@@ -78,6 +82,7 @@ export class PromiseReactionRecord {
     this.Capability = O.Capability;
     this.Type = O.Type;
     this.Handler = O.Handler;
+    this.PromiseAsyncContextSnapshot = O.PromiseAsyncContextSnapshot;
   }
 }
 
@@ -128,35 +133,43 @@ function PromiseRejectFunctions(this: PromiseResolvingFunctionObject, [reason = 
 
 /** https://tc39.es/ecma262/#sec-newpromiseresolvethenablejob */
 function NewPromiseResolveThenableJob(promiseToResolve: PromiseObjectValue, thenable, then) {
-  // 1. Let job be a new Job abstract closure with no parameters that captures
-  //    promiseToResolve, thenable, and then and performs the following steps when called:
+  // 1. Let snapshot be AsyncContextSnapshot().
+  const snapshot = AsyncContextSnapshot();
+  // 2. Let job be a new Job abstract closure with no parameters that captures
+  //    promiseToResolve, thenable, then, and snapshot and performs the following steps when called:
   const job = () => {
     // a. Let resolvingFunctions be CreateResolvingFunctions(promiseToResolve).
     const resolvingFunctions = CreateResolvingFunctions(promiseToResolve);
-    // b. Let thenCallResult be HostCallJobCallback(then, thenable, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »).
+    // b. Let previousContextMapping be AsyncContextSwap(snapshot).
+    const previousContextMapping = AsyncContextSwap(snapshot);
+    // c. Let thenCallResult be HostCallJobCallback(then, thenable, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »).
     const thenCallResult = HostCallJobCallback(then, thenable, [resolvingFunctions.Resolve, resolvingFunctions.Reject]);
-    // c. If thenCallResult is an abrupt completion, then
+    // d. If thenCallResult is an abrupt completion, then
     if (thenCallResult instanceof AbruptCompletion) {
-      // i .Let status be Call(resolvingFunctions.[[Reject]], undefined, « thenCallResult.[[Value]] »).
-      const status = Call(resolvingFunctions.Reject, Value.undefined, [thenCallResult.Value]);
-      // ii. Return Completion(status).
-      return Completion(status);
+      // i. Let rejectResult be Completion(Call(resolvingFunctions.[[Reject]], undefined, « thenCallResult.[[Value]] »)).
+      const rejectResult = Completion(Call(resolvingFunctions.Reject, Value.undefined, [thenCallResult.Value]));
+      // ii. AsyncContextSwap(previousContextMapping).
+      AsyncContextSwap(previousContextMapping);
+      // ii. Return rejectResult.
+      return rejectResult;
     }
-    // d. Return Completion(thenCallResult).
-    return Completion(thenCallResult);
+    // e. AsyncContextSwap(previousContextMapping).
+    AsyncContextSwap(previousContextMapping);
+    // f. Return ? thenCallResult.
+    return Q(thenCallResult);
   };
-  // 2. Let getThenRealmResult be GetFunctionRealm(then.[[Callback]]).
+  // 3. Let getThenRealmResult be GetFunctionRealm(then.[[Callback]]).
   const getThenRealmResult = EnsureCompletion(GetFunctionRealm(then.Callback));
-  // 3. If getThenRealmResult is a normal completion, then let thenRealm be getThenRealmResult.[[Value]].
+  // 4. If getThenRealmResult is a normal completion, then let thenRealm be getThenRealmResult.[[Value]].
   let thenRealm;
   if (getThenRealmResult instanceof NormalCompletion) {
     thenRealm = getThenRealmResult.Value;
   } else {
-    // 4. Else, let _thenRealm_ be the current Realm Record.
+    // 5. Else, let _thenRealm_ be the current Realm Record.
     thenRealm = surroundingAgent.currentRealmRecord;
   }
-  // 5. NOTE: _thenRealm_ is never *null*. When _then_.[[Callback]] is a revoked Proxy and no code runs, _thenRealm_ is used to create error objects.
-  // 6. Return { [[Job]]: job, [[Realm]]: thenRealm }.
+  // 6. NOTE: _thenRealm_ is never *null*. When _then_.[[Callback]] is a revoked Proxy and no code runs, _thenRealm_ is used to create error objects.
+  // 7. Return { [[Job]]: job, [[Realm]]: thenRealm }.
   return { Job: job, Realm: thenRealm };
 }
 
@@ -324,14 +337,15 @@ function NewPromiseReactionJob(reaction: PromiseReactionRecord, argument: Value)
   // 1. Let job be a new Job abstract closure with no parameters that captures
   //    reaction and argument and performs the following steps when called:
   const job = () => {
-    // a. Assert: reaction is a PromiseReaction Record.
     Assert(reaction instanceof PromiseReactionRecord);
-    // b. Let promiseCapability be reaction.[[Capability]].
+    // a. Let promiseCapability be reaction.[[Capability]].
     const promiseCapability = reaction.Capability;
-    // c. Let type be reaction.[[Type]].
+    // b. Let type be reaction.[[Type]].
     const type = reaction.Type;
-    // d. Let handler be reaction.[[Handler]].
+    // c. Let handler be reaction.[[Handler]].
     const handler = reaction.Handler;
+    // d. Let previousContextMapping be AsyncContextSwap(reaction.[[PromiseAsyncContextSnapshot]]).
+    const previousContextMapping = AsyncContextSwap(reaction.PromiseAsyncContextSnapshot);
     let handlerResult;
     // e. If handler is empty, then
     if (handler === undefined) {
@@ -352,20 +366,24 @@ function NewPromiseReactionJob(reaction: PromiseReactionRecord, argument: Value)
     if (promiseCapability instanceof UndefinedValue) {
       // i. Assert: handlerResult is not an abrupt completion.
       Assert(!(handlerResult instanceof AbruptCompletion));
-      // ii. Return NormalCompletion(empty).
+      // ii. AsyncContextSwap(previousContextMapping).
+      AsyncContextSwap(previousContextMapping);
+      // iii. Return NormalCompletion(empty).
       return NormalCompletion(undefined);
     }
-    let status;
+    let resolvingFunctionResult;
     // h. If handlerResult is an abrupt completion, then
     if (handlerResult instanceof AbruptCompletion) {
-      // i. Let status be Call(promiseCapability.[[Reject]], undefined, « handlerResult.[[Value]] »).
-      status = Call(promiseCapability.Reject, Value.undefined, [handlerResult.Value]);
+      // i. Let resolvingFunctionResult be Completion(Call(promiseCapability.[[Reject]], undefined, « handlerResult.[[Value]] »)).
+      resolvingFunctionResult = Completion(Call(promiseCapability.Reject, Value.undefined, [handlerResult.Value]));
     } else {
-      // ii. Let status be Call(promiseCapability.[[Resolve]], undefined, « handlerResult.[[Value]] »).
-      status = Call(promiseCapability.Resolve, Value.undefined, [handlerResult.Value]);
+      // i. Let resolvingFunctionResult be Completion(Call(promiseCapability.[[Resolve]], undefined, « handlerResult.[[Value]] »)).
+      resolvingFunctionResult = Completion(Call(promiseCapability.Resolve, Value.undefined, [handlerResult.Value]));
     }
-    // j. Return Completion(status).
-    return Completion(status);
+    // k. AsyncContextSwap(previousContextMapping).
+    AsyncContextSwap(previousContextMapping);
+    // l. Return resolvingFunctionResult.
+    return resolvingFunctionResult;
   };
   // 2. Let handlerRealm be null.
   let handlerRealm: NullValue | Realm = Value.null;
@@ -413,19 +431,23 @@ export function PerformPromiseThen(promise: PromiseObjectValue, onFulfilled: Val
   } else { // 6. Else,
     onRejectedJobCallback = HostMakeJobCallback(onRejected);
   }
-  // 7. Let fulfillReaction be the PromiseReaction { [[Capability]]: resultCapability, [[Type]]: Fulfill, [[Handler]]: onFulfilled }.
+  // 7. Let snapshot be AsyncContextSnapshot();
+  const snapshot = AsyncContextSnapshot();
+  // 8. Let fulfillReaction be the PromiseReaction { [[Capability]]: resultCapability, [[Type]]: Fulfill, [[Handler]]: onFulfilled, [[PromiseAsyncContextSnapshot]]: snapshot }.
   const fulfillReaction = new PromiseReactionRecord({
     Capability: resultCapability,
     Type: 'Fulfill',
     Handler: onFulfilledJobCallback,
+    PromiseAsyncContextSnapshot: snapshot,
   });
-  // 8. Let rejectReaction be the PromiseReaction { [[Capability]]: resultCapability, [[Type]]: Reject, [[Handler]]: onRejected }.
+  // 9. Let rejectReaction be the PromiseReaction { [[Capability]]: resultCapability, [[Type]]: Reject, [[Handler]]: onRejected, [[PromiseAsyncContextSnapshot]]: snapshot }.
   const rejectReaction = new PromiseReactionRecord({
     Capability: resultCapability,
     Type: 'Reject',
     Handler: onRejectedJobCallback,
+    PromiseAsyncContextSnapshot: snapshot,
   });
-  // 9. If promise.[[PromiseState]] is pending, then
+  // 10. If promise.[[PromiseState]] is pending, then
   if (promise.PromiseState === 'pending') {
     // a. Append fulfillReaction as the last element of the List that is promise.[[PromiseFulfillReactions]].
     promise.PromiseFulfillReactions!.push(fulfillReaction);
@@ -452,13 +474,13 @@ export function PerformPromiseThen(promise: PromiseObjectValue, onFulfilled: Val
     // e. Perform HostEnqueuePromiseJob(rejectJob.[[Job]], rejectJob.[[Realm]]).
     HostEnqueuePromiseJob(rejectJob.Job, rejectJob.Realm);
   }
-  // 12. Set promise.[[PromiseIsHandled]] to true.
+  // 13. Set promise.[[PromiseIsHandled]] to true.
   promise.PromiseIsHandled = Value.true;
-  // 13. If resultCapability is undefined, then
+  // 14. If resultCapability is undefined, then
   if (resultCapability instanceof UndefinedValue) {
     // a. Return undefined.
     return Value.undefined;
-  } else { // 14. Else,
+  } else { // 15. Else,
     // a. Return resultCapability.[[Promise]].
     return resultCapability.Promise;
   }

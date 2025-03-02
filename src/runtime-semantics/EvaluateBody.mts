@@ -82,8 +82,8 @@ function* EvaluateBody_AsyncConciseBody({ ExpressionBody }: ParseNode.AsyncConci
 export function* EvaluateBody_GeneratorBody(GeneratorBody: ParseNode.GeneratorBody, functionObject, argumentsList) {
   // 1. Perform ? FunctionDeclarationInstantiation(functionObject, argumentsList).
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
-  // 2. Let G be ? OrdinaryCreateFromConstructor(functionObject, "%GeneratorFunction.prototype.prototype%", « [[GeneratorState]], [[GeneratorContext]], [[GeneratorBrand]] »).
-  const G = Q(OrdinaryCreateFromConstructor(functionObject, '%GeneratorFunction.prototype.prototype%', ['GeneratorState', 'GeneratorContext', 'GeneratorBrand']));
+  // 2. Let G be ? OrdinaryCreateFromConstructor(functionObject, "%GeneratorFunction.prototype.prototype%", « [[GeneratorState]], [[GeneratorContext]], [[GeneratorAsyncContextMapping]], [[GeneratorBrand]] »).
+  const G = Q(OrdinaryCreateFromConstructor(functionObject, '%GeneratorFunction.prototype.prototype%', ['GeneratorState', 'GeneratorContext', 'GeneratorAsyncContextMapping', 'GeneratorBrand']));
   // 3. Set G.[[GeneratorBrand]] to empty.
   G.GeneratorBrand = undefined;
   // 4. Perform GeneratorStart(G, FunctionBody).
@@ -97,11 +97,12 @@ export function* EvaluateBody_GeneratorBody(GeneratorBody: ParseNode.GeneratorBo
 export function* EvaluateBody_AsyncGeneratorBody(FunctionBody: ParseNode.AsyncGeneratorBody, functionObject, argumentsList) {
   // 1. Perform ? FunctionDeclarationInstantiation(functionObject, argumentsList).
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
-  // 2. Let generator be ? OrdinaryCreateFromConstructor(functionObject, "%AsyncGeneratorFunction.prototype.prototype%", « [[AsyncGeneratorState]], [[AsyncGeneratorContext]], [[AsyncGeneratorQueue]], [[GeneratorBrand]] »).
+  // 2. Let generator be ? OrdinaryCreateFromConstructor(functionObject, "%AsyncGeneratorFunction.prototype.prototype%", « [[AsyncGeneratorState]], [[AsyncGeneratorContext]], [[AsyncGeneratorQueue]], [[AsyncGeneratorAsyncContextMapping]], [[GeneratorBrand]] »).
   const generator = Q(OrdinaryCreateFromConstructor(functionObject, '%AsyncGeneratorFunction.prototype.prototype%', [
     'AsyncGeneratorState',
     'AsyncGeneratorContext',
     'AsyncGeneratorQueue',
+    'AsyncGeneratorAsyncContextMapping',
     'GeneratorBrand',
   ]));
   // 3. Set generator.[[GeneratorBrand]] to empty.
