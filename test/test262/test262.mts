@@ -259,9 +259,11 @@ async function* parsePositional(pattern: string): AsyncGenerator<string> {
     () => globby(`**/${pattern}*/*`, { cwd: process.cwd(), absolute: true }),
   ];
   for (const try_ of tries) {
+    // eslint-disable-next-line no-await-in-loop
     const files = await try_();
-    if (files.length)
+    if (files.length) {
       return yield* files;
+    }
   }
   return undefined;
 }
