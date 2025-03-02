@@ -9,6 +9,7 @@ import {
   pass, fail, skip, incr_total, NUM_WORKERS, type WorkerToSupervisor, type Test, type SupervisorToWorker, run, startTestPrinter, setSlowTestThreshold,
   readList,
   fatal,
+  postRunShowFiles,
 } from '../base.mts';
 
 const TEST262 = process.env.TEST262 || path.resolve(import.meta.dirname, 'test262');
@@ -38,6 +39,7 @@ const ARGV = util.parseArgs({
     'update-failed-tests': { type: 'boolean' },
     'run-slow-tests': { type: 'boolean' },
     'run-failed-only': { type: 'boolean' },
+    'no-print-found-list': { type: 'boolean' },
   },
 });
 if (ARGV.values.help) {
@@ -71,6 +73,8 @@ if (ARGV.values.help) {
         Append tests that take longer than <number> seconds to the slowlist.
     --update-failed-tests
         Append failed tests to the skiplist.
+    --no-print-found-list
+        Do not print the list of found files after the test run.
 
     Files:
     features
@@ -155,10 +159,13 @@ startTestPrinter();
 
 const promises = [];
 for await (const file of files) {
-  if (visited.has(file) || /annexB|intl402|_FIXTURE|README\.md|\.py/.test(file)) {
+  if (visited.has(file) || /annexB|intl402|_FIXTURE|README\.md|\.py|\.map|\.mts/.test(file)) {
     continue;
   }
 
+  if (ARGV.positionals.length && !ARGV.values['no-print-found-list']) {
+    postRunShowFiles.push(path.relative(process.cwd(), file));
+  }
   visited.add(file);
   promises.push(fs.promises.readFile(file, 'utf8').then((contents) => {
     const frontmatterYaml = contents.match(/\/\*---(.*?)---\*\//s)?.[1];
@@ -242,13 +249,19 @@ async function* parsePositional(pattern: string): AsyncGenerator<string> {
       return yield b_path;
     }
   }
-  const a = await globby(`**/${pattern}*`, { cwd: TEST262_TESTS, absolute: true });
-  if (a.length) {
-    return yield* a;
-  }
-  const b = await globby(`**/${pattern}*`, { cwd: process.cwd(), absolute: true });
-  if (b.length) {
-    return yield* b;
+  const tries = [
+    () => globby(pattern, { cwd: TEST262_TESTS, absolute: true }),
+    () => globby(`**/${pattern}*`, { cwd: TEST262_TESTS, absolute: true }),
+    () => globby(`**/${pattern}*/*`, { cwd: TEST262_TESTS, absolute: true }),
+
+    () => globby(pattern, { cwd: process.cwd(), absolute: true }),
+    () => globby(`**/${pattern}*`, { cwd: process.cwd(), absolute: true }),
+    () => globby(`**/${pattern}*/*`, { cwd: process.cwd(), absolute: true }),
+  ];
+  for (const try_ of tries) {
+    const files = await try_();
+    if (files.length)
+      return yield* files;
   }
   return undefined;
 }
