@@ -1,3 +1,5 @@
 !.eslintrc.js
+bin/engine262.mjs
+inspector/*.mts
 test/test262/test262
 test/json/JSONTestSuite

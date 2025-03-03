@@ -5,8 +5,10 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { format as _format, inspect as _inspect, parseArgs } from 'node:util';
 import packageJson from '../package.json' with { type: 'json' }; // eslint-disable-line import/order
-import { setSurroundingAgent, FEATURES, inspect, Value, CreateBuiltinFunction, CreateDataProperty, OrdinaryObjectCreate, Type, Completion, AbruptCompletion, Throw, ObjectValue, JSStringValue } from '#self';
 import { createRealm, createAgent } from './test262_realm.mts';
+import {
+  setSurroundingAgent, FEATURES, inspect, Value, CreateBuiltinFunction, CreateDataProperty, OrdinaryObjectCreate, Type, Completion, AbruptCompletion, Throw, ObjectValue, JSStringValue,
+} from '#self';
 
 const help = `
 engine262 v${packageJson.version}
@@ -32,11 +34,11 @@ const argv = parseArgs({
   allowPositionals: true,
   strict: true,
   options: {
-    help: { type: 'boolean', short: 'h' },
-    module: { type: 'boolean', short: 'm' },
-    features: { type: 'string' },
+    'help': { type: 'boolean', short: 'h' },
+    'module': { type: 'boolean', short: 'm' },
+    'features': { type: 'string' },
     'list-features': { type: 'boolean' },
-    inspector: { type: 'boolean' },
+    'inspector': { type: 'boolean' },
   },
 });
 
