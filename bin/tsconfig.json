@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "erasableSyntaxOnly": true,
+    "rootDir": "./",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true
+  },
+  "include": [
+    "./engine262.mts",
+    "./test262_realm.mts"
+  ]
+}

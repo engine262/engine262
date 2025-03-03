@@ -331,7 +331,7 @@ export function* Await(value: Value): Generator<Value, Completion, Completion> {
   // 2. Let promise be ? PromiseResolve(%Promise%, value).
   const promise = ReturnIfAbrupt(PromiseResolve(surroundingAgent.intrinsic('%Promise%') as ObjectValue, value) as PromiseObjectValue);
   // 3. Let fulfilledClosure be a new Abstract Closure with parameters (value) that captures asyncContext and performs the following steps when called:
-  const fulfilledClosure = ([valueInner = Value.undefined]) => {
+  const fulfilledClosure = ([valueInner = Value.undefined]: readonly Value[]) => {
     // a. Let prevContext be the running execution context.
     const prevContext = surroundingAgent.runningExecutionContext;
     // b. Suspend prevContext.
@@ -349,7 +349,7 @@ export function* Await(value: Value): Generator<Value, Completion, Completion> {
   // @ts-expect-error TODO(ts): CreateBuiltinFunction should return a specalized type FunctionObjectValue that has a kAsyncContext on it.
   onFulfilled[kAsyncContext] = asyncContext;
   // 5. Let rejectedClosure be a new Abstract Closure with parameters (reason) that captures asyncContext and performs the following steps when called:
-  const rejectedClosure = ([reason = Value.undefined]) => {
+  const rejectedClosure = ([reason = Value.undefined]: readonly Value[]) => {
     // a. Let prevContext be the running execution context.
     const prevContext = surroundingAgent.runningExecutionContext;
     // b. Suspend prevContext.

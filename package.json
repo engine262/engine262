@@ -45,7 +45,7 @@
     "postpublish": "git reset --hard HEAD"
   },
   "bin": {
-    "engine262": "bin/engine262.js"
+    "engine262": "bin/engine262.mjs"
   },
   "files": [
     "bin",
