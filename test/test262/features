@@ -19,7 +19,6 @@
 -iterator-helpers
 -iterator-sequencing
 -json-parse-with-source
--promise-try
 -regexp-modifiers
 -set-methods
 -source-phase-imports
