@@ -671,7 +671,7 @@ function Promise_try([callback, ...args], { thisValue }) {
   // 3. Let promiseCapability be ? NewPromiseCapability(C).
   const promiseCapability: PromiseCapabilityRecord = Q(NewPromiseCapability(C));
   // 4. Let status be Completion(Call(callback, undefined, args)).
-  const status = EnsureCompletion(Call(callback, undefined, args));
+  const status = EnsureCompletion(Call(callback, Value.undefined, args));
 
   if (status instanceof AbruptCompletion) {
     // 5. If status is an abrupt completion, then
