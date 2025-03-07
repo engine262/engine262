@@ -30,7 +30,7 @@ export default defineConfig({
       babelHelpers: 'bundled',
       exclude: 'node_modules/**',
       generatorOpts: {
-        importAttributesKeyword: "with"
+        importAttributesKeyword: 'with',
       },
       presets: [[
         '@babel/preset-env',
