@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   Call,
   Construct,
@@ -11,10 +11,10 @@ import {
   PrepareForTailCall,
   ToPropertyDescriptor,
   ToPropertyKey,
-} from '../abstract-ops/all.mjs';
-import { ObjectValue, Value } from '../value.mjs';
-import { Q } from '../completion.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+} from '../abstract-ops/all.mts';
+import { ObjectValue, Value } from '../value.mts';
+import { Q } from '../completion.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-reflect.apply */
 function Reflect_apply([target = Value.undefined, thisArgument = Value.undefined, argumentsList = Value.undefined]) {

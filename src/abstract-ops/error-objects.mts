@@ -1,7 +1,7 @@
 // @ts-nocheck
-import { ObjectValue, Value, Descriptor } from '../value.mjs';
-import { Q, X, NormalCompletion } from '../completion.mjs';
-import { HasProperty, Get, DefinePropertyOrThrow } from './all.mjs';
+import { ObjectValue, Value, Descriptor } from '../value.mts';
+import { Q, X, NormalCompletion } from '../completion.mts';
+import { HasProperty, Get, DefinePropertyOrThrow } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-errorobjects-install-error-cause */
 export function InstallErrorCause(O, options) {

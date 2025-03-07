@@ -1,8 +1,8 @@
 // @ts-nocheck
-import { Value } from '../value.mjs';
-import { RegExpCreate } from '../abstract-ops/all.mjs';
-import { BodyText, FlagText } from '../static-semantics/all.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+import { Value } from '../value.mts';
+import { RegExpCreate } from '../abstract-ops/all.mts';
+import { BodyText, FlagText } from '../static-semantics/all.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-regular-expression-literals-runtime-semantics-evaluation */
 //   RegularExpressionLiteral :

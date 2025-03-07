@@ -1,19 +1,19 @@
 // @ts-nocheck
-import { Value } from '../value.mjs';
+import { Value } from '../value.mts';
 import {
   GetV,
   GetValue,
   PutValue,
   ResolveBinding,
   InitializeReferencedBinding,
-} from '../abstract-ops/all.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import { StringValue, IsAnonymousFunctionDefinition } from '../static-semantics/all.mjs';
-import { Q } from '../completion.mjs';
+} from '../abstract-ops/all.mts';
+import { Evaluate } from '../evaluator.mts';
+import { StringValue, IsAnonymousFunctionDefinition } from '../static-semantics/all.mts';
+import { Q } from '../completion.mts';
 import {
   NamedEvaluation,
   BindingInitialization,
-} from './all.mjs';
+} from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-keyedbindinginitialization */
 export function* KeyedBindingInitialization(node, value, environment, propertyName) {

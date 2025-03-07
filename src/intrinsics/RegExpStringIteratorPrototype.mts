@@ -1,6 +1,6 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { BooleanValue, JSStringValue, Value } from '../value.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { BooleanValue, JSStringValue, Value } from '../value.mts';
 import {
   Assert,
   CreateIteratorFromClosure,
@@ -11,10 +11,10 @@ import {
   Set,
   Yield,
   F, R, R as MathematicalValue,
-} from '../abstract-ops/all.mjs';
-import { Q, X } from '../completion.mjs';
-import { RegExpExec, AdvanceStringIndex } from './RegExpPrototype.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+} from '../abstract-ops/all.mts';
+import { Q, X } from '../completion.mts';
+import { RegExpExec, AdvanceStringIndex } from './RegExpPrototype.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 
 const kRegExpStringIteratorPrototype = Value('%RegExpStringIteratorPrototype%');
 

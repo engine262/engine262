@@ -4,12 +4,12 @@ import {
   GetValue,
   ToPropertyKey,
   Assert,
-} from '../abstract-ops/all.mjs';
-import { Value, ReferenceRecord } from '../value.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import { StringValue } from '../static-semantics/all.mjs';
-import { Q } from '../completion.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+} from '../abstract-ops/all.mts';
+import { Value, ReferenceRecord } from '../value.mts';
+import { Evaluate } from '../evaluator.mts';
+import { StringValue } from '../static-semantics/all.mts';
+import { Q } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-evaluate-expression-key-property-access */
 export function* EvaluatePropertyAccessWithExpressionKey(baseValue, expression: ParseNode.Expression, strict: boolean) {

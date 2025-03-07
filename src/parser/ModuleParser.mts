@@ -1,9 +1,9 @@
-import { IsStringWellFormedUnicode, StringValue } from '../static-semantics/all.mjs';
-import type { Mutable } from '../helpers.mjs';
-import { Token, isKeywordRaw } from './tokens.mjs';
-import { StatementParser } from './StatementParser.mjs';
-import { FunctionKind } from './FunctionParser.mjs';
-import type { ParseNode } from './ParseNode.mjs';
+import { IsStringWellFormedUnicode, StringValue } from '../static-semantics/all.mts';
+import type { Mutable } from '../helpers.mts';
+import { Token, isKeywordRaw } from './tokens.mts';
+import { StatementParser } from './StatementParser.mts';
+import { FunctionKind } from './FunctionParser.mts';
+import type { ParseNode } from './ParseNode.mts';
 
 export abstract class ModuleParser extends StatementParser {
   // ImportDeclaration :

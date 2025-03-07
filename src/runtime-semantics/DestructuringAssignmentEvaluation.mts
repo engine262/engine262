@@ -1,6 +1,6 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Value } from '../value.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { Value } from '../value.mts';
 import {
   ArrayCreate,
   CopyDataProperties,
@@ -17,13 +17,13 @@ import {
   RequireObjectCoercible,
   ToString,
   F,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   IsAnonymousFunctionDefinition,
   IsIdentifierRef,
   StringValue,
-} from '../static-semantics/all.mjs';
-import { Evaluate } from '../evaluator.mjs';
+} from '../static-semantics/all.mts';
+import { Evaluate } from '../evaluator.mts';
 import {
   Q, X,
   Completion,
@@ -31,13 +31,13 @@ import {
   NormalCompletion,
   ReturnIfAbrupt,
   EnsureCompletion,
-} from '../completion.mjs';
-import { OutOfRange } from '../helpers.mjs';
+} from '../completion.mts';
+import { OutOfRange } from '../helpers.mts';
 import {
   Evaluate_PropertyName,
   NamedEvaluation,
   refineLeftHandSideExpression,
-} from './all.mjs';
+} from './all.mts';
 
 // ObjectAssignmentPattern :
 //  `{` `}`

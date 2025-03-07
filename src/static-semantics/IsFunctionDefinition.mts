@@ -1,4 +1,4 @@
-import type { ParseNode } from '../parser/ParseNode.mjs';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 export function IsFunctionDefinition(node: ParseNode): boolean {
   if (node.type === 'ParenthesizedExpression') {

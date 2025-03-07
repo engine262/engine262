@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { Value } from '../value.mjs';
+import { Value } from '../value.mts';
 import {
   Set,
   ArrayCreate,
@@ -10,10 +10,10 @@ import {
   ToString,
   CreateDataPropertyOrThrow,
   F,
-} from '../abstract-ops/all.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import { ReturnIfAbrupt, Q, X } from '../completion.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+} from '../abstract-ops/all.mts';
+import { Evaluate } from '../evaluator.mts';
+import { ReturnIfAbrupt, Q, X } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-arrayaccumulation */
 //  Elision :

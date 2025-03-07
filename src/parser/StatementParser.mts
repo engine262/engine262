@@ -1,9 +1,9 @@
-import type { Mutable } from '../helpers.mjs';
-import { Token, isAutomaticSemicolon } from './tokens.mjs';
-import { ExpressionParser } from './ExpressionParser.mjs';
-import { FunctionKind } from './FunctionParser.mjs';
-import { getDeclarations } from './Scope.mjs';
-import type { ParseNode } from './ParseNode.mjs';
+import type { Mutable } from '../helpers.mts';
+import { Token, isAutomaticSemicolon } from './tokens.mts';
+import { ExpressionParser } from './ExpressionParser.mts';
+import { FunctionKind } from './FunctionParser.mts';
+import { getDeclarations } from './Scope.mts';
+import type { ParseNode } from './ParseNode.mts';
 
 export abstract class StatementParser extends ExpressionParser {
   eatSemicolonWithASI() {

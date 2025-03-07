@@ -1,7 +1,7 @@
 // @ts-nocheck
 import {
   surroundingAgent,
-} from '../engine.mjs';
+} from '../engine.mts';
 import {
   AbstractRelationalComparison,
   Call,
@@ -14,17 +14,17 @@ import {
   ToPropertyKey,
   ResolvePrivateIdentifier,
   PrivateElementFind,
-} from '../abstract-ops/all.mjs';
-import { StringValue } from '../static-semantics/all.mjs';
+} from '../abstract-ops/all.mts';
+import { StringValue } from '../static-semantics/all.mts';
 import {
   ObjectValue,
   Value,
   wellKnownSymbols,
-} from '../value.mjs';
-import { Q, X, ReturnIfAbrupt } from '../completion.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import { OutOfRange } from '../helpers.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+} from '../value.mts';
+import { Q, X, ReturnIfAbrupt } from '../completion.mts';
+import { Evaluate } from '../evaluator.mts';
+import { OutOfRange } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-instanceofoperator */
 export function InstanceofOperator(V, target) {

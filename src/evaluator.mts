@@ -1,8 +1,8 @@
 // @ts-nocheck
-import type { Completion } from './completion.mjs';
-import { surroundingAgent } from './engine.mjs';
-import { OutOfRange } from './helpers.mjs';
-import type { ParseNode } from './parser/ParseNode.mjs';
+import type { Completion } from './completion.mts';
+import { surroundingAgent } from './engine.mts';
+import { OutOfRange } from './helpers.mts';
+import type { ParseNode } from './parser/ParseNode.mts';
 import {
   Evaluate_Script,
   Evaluate_ScriptBody,
@@ -74,7 +74,7 @@ import {
   Evaluate_RegularExpressionLiteral,
   Evaluate_AnyFunctionBody,
   Evaluate_ExpressionBody,
-} from './runtime-semantics/all.mjs';
+} from './runtime-semantics/all.mts';
 
 export function* Evaluate(node: ParseNode): Generator<unknown, Completion, unknown> {
   surroundingAgent.runningExecutionContext.callSite.setLocation(node);

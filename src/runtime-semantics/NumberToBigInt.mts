@@ -1,9 +1,9 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   Assert, IsIntegralNumber, Z, R,
-} from '../abstract-ops/all.mjs';
-import { Value, NumberValue } from '../value.mjs';
+} from '../abstract-ops/all.mts';
+import { Value, NumberValue } from '../value.mts';
 
 /** https://tc39.es/ecma262/#sec-numbertobigint */
 export function NumberToBigInt(number: NumberValue) {

@@ -1,9 +1,9 @@
 // @ts-nocheck
-import { ModuleEnvironmentRecord } from './environment.mjs';
+import { ModuleEnvironmentRecord } from './environment.mts';
 import {
   Value, JSStringValue, ObjectValue, UndefinedValue, BooleanValue,
-} from './value.mjs';
-import { ExecutionContext, surroundingAgent, type GCMarker } from './engine.mjs';
+} from './value.mts';
+import { ExecutionContext, surroundingAgent, type GCMarker } from './engine.mts';
 import {
   Assert,
   Call,
@@ -20,7 +20,7 @@ import {
   GraphLoadingState,
   Realm,
   type PromiseObjectValue,
-} from './abstract-ops/all.mjs';
+} from './abstract-ops/all.mts';
 import {
   VarScopedDeclarations,
   LexicallyScopedDeclarations,
@@ -28,18 +28,18 @@ import {
   IsConstantDeclaration,
   type ImportEntry,
   type ExportEntry,
-} from './static-semantics/all.mjs';
-import { InstantiateFunctionObject } from './runtime-semantics/all.mjs';
+} from './static-semantics/all.mts';
+import { InstantiateFunctionObject } from './runtime-semantics/all.mts';
 import {
   Completion,
   NormalCompletion,
   AbruptCompletion,
   EnsureCompletion,
   Q, X, ThrowCompletion,
-} from './completion.mjs';
-import { ValueSet, unwind } from './helpers.mjs';
-import { Evaluate } from './evaluator.mjs';
-import type { ParseNode } from './parser/ParseNode.mjs';
+} from './completion.mts';
+import { ValueSet, unwind } from './helpers.mts';
+import { Evaluate } from './evaluator.mts';
+import type { ParseNode } from './parser/ParseNode.mts';
 
 // #resolvedbinding-record
 export class ResolvedBindingRecord {

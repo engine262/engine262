@@ -1,4 +1,4 @@
-import { F } from '../abstract-ops/all.mjs';
+import { F } from '../abstract-ops/all.mts';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-mv-s */
 //   StringNumericLiteral :::

@@ -4,15 +4,15 @@ import {
   OrdinaryCreateFromConstructor,
   InstallErrorCause,
   ToString,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   Descriptor,
   Value,
-} from '../value.mjs';
-import { Q, X } from '../completion.mjs';
-import { surroundingAgent } from '../engine.mjs';
-import { captureStack } from '../helpers.mjs';
-import { bootstrapConstructor } from './bootstrap.mjs';
+} from '../value.mts';
+import { Q, X } from '../completion.mts';
+import { surroundingAgent } from '../engine.mts';
+import { captureStack } from '../helpers.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-error-constructor */
 function ErrorConstructor([message = Value.undefined, options = Value.undefined], { NewTarget }) {

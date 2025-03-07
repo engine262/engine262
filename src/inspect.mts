@@ -1,13 +1,13 @@
 // @ts-nocheck
-import { surroundingAgent } from './engine.mjs';
+import { surroundingAgent } from './engine.mts';
 import {
   Type, JSStringValue, ObjectValue, Value, wellKnownSymbols, BooleanValue, NumberValue, BigIntValue, SymbolValue, PrivateName, UndefinedValue,
-} from './value.mjs';
+} from './value.mts';
 import {
   Call, IsArray, Get, LengthOfArrayLike,
   EscapeRegExpPattern, R, Realm, type BuiltinFunctionObject,
-} from './abstract-ops/all.mjs';
-import { Completion, Q, X } from './completion.mjs';
+} from './abstract-ops/all.mts';
+import { Completion, Q, X } from './completion.mts';
 
 const bareKeyRe = /^[a-zA-Z_][a-zA-Z_0-9]*$/;
 

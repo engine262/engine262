@@ -5,11 +5,11 @@ import {
   NormalCompletion,
   Q, X,
   EnsureCompletion,
-} from '../completion.mjs';
-import { surroundingAgent } from '../engine.mjs';
-import { Value } from '../value.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import { resume } from '../helpers.mjs';
+} from '../completion.mts';
+import { surroundingAgent } from '../engine.mts';
+import { Value } from '../value.mts';
+import { Evaluate } from '../evaluator.mts';
+import { resume } from '../helpers.mts';
 import {
   Assert,
   AsyncGeneratorYield,
@@ -17,7 +17,7 @@ import {
   OrdinaryObjectCreate,
   RequireInternalSlot,
   SameValue,
-} from './all.mjs';
+} from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-generator-objects */
 

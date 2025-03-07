@@ -4,15 +4,15 @@ import {
   OrdinaryCreateFromConstructor,
   ToNumeric,
   F, R,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   Descriptor,
   NumberValue,
   BigIntValue,
   Value,
-} from '../value.mjs';
-import { Q, X } from '../completion.mjs';
-import { bootstrapConstructor } from './bootstrap.mjs';
+} from '../value.mts';
+import { Q, X } from '../completion.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-number-constructor-number-value */
 function NumberConstructor([value], { NewTarget }) {

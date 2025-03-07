@@ -1,4 +1,4 @@
-import { AbstractModuleRecord } from './modules.mjs';
+import { AbstractModuleRecord } from './modules.mts';
 import {
   Descriptor,
   ReferenceRecord,
@@ -10,8 +10,8 @@ import {
   JSStringValue,
   PrivateName,
   NullValue,
-} from './value.mjs';
-import { surroundingAgent, type GCMarker } from './engine.mjs';
+} from './value.mts';
+import { surroundingAgent, type GCMarker } from './engine.mts';
 import {
   Assert,
   DefinePropertyOrThrow,
@@ -25,11 +25,11 @@ import {
   ToBoolean,
   isECMAScriptFunctionObject,
   type ECMAScriptFunctionObject,
-} from './abstract-ops/all.mjs';
+} from './abstract-ops/all.mts';
 import {
   NormalCompletion, Q, ThrowCompletion, X,
-} from './completion.mjs';
-import { ValueMap } from './helpers.mjs';
+} from './completion.mts';
+import { ValueMap } from './helpers.mts';
 
 /** https://tc39.es/ecma262/#sec-environment-records */
 export abstract class EnvironmentRecord {

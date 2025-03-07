@@ -1,5 +1,5 @@
-import { X } from '../completion.mjs';
-import { CodePointAt } from './all.mjs';
+import { X } from '../completion.mts';
+import { CodePointAt } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-stringtocodepoints */
 export function StringToCodePoints(string: string) {

@@ -1,6 +1,6 @@
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import type { JSStringValue, NullValue } from '../value.mjs';
-import { ImportEntriesForModule, ModuleRequests } from './all.mjs';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import type { JSStringValue, NullValue } from '../value.mts';
+import { ImportEntriesForModule, ModuleRequests } from './all.mts';
 
 export function ImportEntries(node: ParseNode): ImportEntry[] {
   switch (node.type) {

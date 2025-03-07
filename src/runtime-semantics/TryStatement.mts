@@ -1,19 +1,19 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Value } from '../value.mjs';
-import { Evaluate } from '../evaluator.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { Value } from '../value.mts';
+import { Evaluate } from '../evaluator.mts';
 import {
   Completion,
   AbruptCompletion,
   UpdateEmpty,
   EnsureCompletion,
   X,
-} from '../completion.mjs';
-import { BoundNames } from '../static-semantics/all.mjs';
-import { DeclarativeEnvironmentRecord } from '../environment.mjs';
-import { OutOfRange } from '../helpers.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { BindingInitialization } from './all.mjs';
+} from '../completion.mts';
+import { BoundNames } from '../static-semantics/all.mts';
+import { DeclarativeEnvironmentRecord } from '../environment.mts';
+import { OutOfRange } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { BindingInitialization } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-try-statement-runtime-semantics-evaluation */
 //   TryStatement :

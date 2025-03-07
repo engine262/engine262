@@ -1,16 +1,16 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   Assert,
   Construct,
   GetValue,
   IsConstructor,
-} from '../abstract-ops/all.mjs';
-import { Value } from '../value.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import { Q } from '../completion.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { ArgumentListEvaluation } from './all.mjs';
+} from '../abstract-ops/all.mts';
+import { Value } from '../value.mts';
+import { Evaluate } from '../evaluator.mts';
+import { Q } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { ArgumentListEvaluation } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-evaluatenew */
 function* EvaluateNew(constructExpr, args) {

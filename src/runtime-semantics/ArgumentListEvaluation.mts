@@ -1,9 +1,9 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Value, Descriptor } from '../value.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import { Q, X } from '../completion.mjs';
-import { OutOfRange, isArray } from '../helpers.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { Value, Descriptor } from '../value.mts';
+import { Evaluate } from '../evaluator.mts';
+import { Q, X } from '../completion.mts';
+import { OutOfRange, isArray } from '../helpers.mts';
 import {
   Assert,
   ArrayCreate,
@@ -14,9 +14,9 @@ import {
   IteratorStep,
   IteratorValue,
   F,
-} from '../abstract-ops/all.mjs';
-import { TemplateStrings } from '../static-semantics/all.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+} from '../abstract-ops/all.mts';
+import { TemplateStrings } from '../static-semantics/all.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-gettemplateobjec */
 function GetTemplateObject(templateLiteral: ParseNode.TemplateLiteral) {

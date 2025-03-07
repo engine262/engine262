@@ -1,9 +1,9 @@
 // @ts-nocheck
-import { surroundingAgent, HostMakeJobCallback } from '../engine.mjs';
-import { Value } from '../value.mjs';
-import { IsCallable, OrdinaryCreateFromConstructor } from '../abstract-ops/all.mjs';
-import { Q } from '../completion.mjs';
-import { bootstrapConstructor } from './bootstrap.mjs';
+import { surroundingAgent, HostMakeJobCallback } from '../engine.mts';
+import { Value } from '../value.mts';
+import { IsCallable, OrdinaryCreateFromConstructor } from '../abstract-ops/all.mts';
+import { Q } from '../completion.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-finalization-registry-cleanup-callback */
 function FinalizationRegistryConstructor([cleanupCallback = Value.undefined], { NewTarget }) {

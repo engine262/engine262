@@ -2,14 +2,14 @@
 import {
   GeneratorResume,
   GeneratorResumeAbrupt,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   Completion,
   ThrowCompletion,
   Q,
-} from '../completion.mjs';
-import { Value } from '../value.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+} from '../completion.mts';
+import { Value } from '../value.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-generator.prototype.next */
 function GeneratorProto_next([value = Value.undefined], { thisValue }) {

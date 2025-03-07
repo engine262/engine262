@@ -1,9 +1,9 @@
 // @ts-nocheck
 
 // TODO: this file must not contain TypeScript syntax until we removed valid-throw rule and use TSC to check the error message.
-import { surroundingAgent } from './engine.mjs';
-import { Value } from './value.mjs';
-import { inspect } from './api.mjs';
+import { surroundingAgent } from './engine.mts';
+import { Value } from './value.mts';
+import { inspect } from './api.mts';
 
 function i(V) {
   if (V instanceof Value) {

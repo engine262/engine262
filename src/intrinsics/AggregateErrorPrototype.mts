@@ -1,6 +1,6 @@
 // @ts-nocheck
-import { Value } from '../value.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+import { Value } from '../value.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 
 export function bootstrapAggregateErrorPrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [

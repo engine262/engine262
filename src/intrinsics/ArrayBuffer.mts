@@ -1,9 +1,9 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { ObjectValue, Value, wellKnownSymbols } from '../value.mjs';
-import { Q } from '../completion.mjs';
-import { ToIndex, AllocateArrayBuffer } from '../abstract-ops/all.mjs';
-import { bootstrapConstructor } from './bootstrap.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { ObjectValue, Value, wellKnownSymbols } from '../value.mts';
+import { Q } from '../completion.mts';
+import { ToIndex, AllocateArrayBuffer } from '../abstract-ops/all.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-arraybuffer-length */
 function ArrayBufferConstructor([length = Value.undefined], { NewTarget }) {

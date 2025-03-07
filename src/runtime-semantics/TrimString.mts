@@ -1,7 +1,7 @@
 // @ts-nocheck
-import { Assert, RequireObjectCoercible, ToString } from '../abstract-ops/all.mjs';
-import { Value } from '../value.mjs';
-import { Q } from '../completion.mjs';
+import { Assert, RequireObjectCoercible, ToString } from '../abstract-ops/all.mts';
+import { Value } from '../value.mts';
+import { Q } from '../completion.mts';
 
 /** https://tc39.es/ecma262/#sec-trimstring */
 export function TrimString(string, where) {

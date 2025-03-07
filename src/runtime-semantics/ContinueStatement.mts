@@ -1,6 +1,6 @@
-import { Completion } from '../completion.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { StringValue } from '../static-semantics/all.mjs';
+import { Completion } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { StringValue } from '../static-semantics/all.mts';
 
 /** https://tc39.es/ecma262/#sec-continue-statement-runtime-semantics-evaluation */
 //   ContinueStatement :

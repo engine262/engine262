@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   BooleanValue,
   NullValue,
@@ -8,7 +8,7 @@ import {
   JSStringValue,
   UndefinedValue,
   Value,
-} from '../value.mjs';
+} from '../value.mts';
 import {
   Assert,
   Call,
@@ -24,21 +24,21 @@ import {
   ToIntegerOrInfinity,
   ToNumber,
   ToString,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   isLeadingSurrogate,
   isTrailingSurrogate,
-} from '../parser/Lexer.mjs';
+} from '../parser/Lexer.mts';
 import {
   UTF16EncodeCodePoint,
-} from '../static-semantics/all.mjs';
+} from '../static-semantics/all.mts';
 import {
   NormalCompletion,
   Q, X,
-} from '../completion.mjs';
-import { ValueSet, kInternal } from '../helpers.mjs';
-import { BigIntValue, evaluateScript, F } from '../api.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+} from '../completion.mts';
+import { ValueSet, kInternal } from '../helpers.mts';
+import { BigIntValue, evaluateScript, F } from '../api.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 
 const WHITESPACE = [' ', '\t', '\r', '\n'];
 const NUMERIC = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];

@@ -5,10 +5,10 @@ import {
   ToInt32,
   ToString,
   F, R, R as MathematicalValue,
-} from '../abstract-ops/all.mjs';
-import { TrimString } from '../runtime-semantics/all.mjs';
-import { Q, X } from '../completion.mjs';
-import { Value } from '../value.mjs';
+} from '../abstract-ops/all.mts';
+import { TrimString } from '../runtime-semantics/all.mts';
+import { Q, X } from '../completion.mts';
+import { Value } from '../value.mts';
 
 function digitToNumber(digit) {
   digit = digit.charCodeAt(0);

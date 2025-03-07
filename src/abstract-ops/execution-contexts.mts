@@ -1,14 +1,14 @@
 // @ts-nocheck
-import { Q } from '../completion.mjs';
-import { surroundingAgent } from '../engine.mjs';
+import { Q } from '../completion.mts';
+import { surroundingAgent } from '../engine.mts';
 import {
   GetIdentifierReference,
   EnvironmentRecord,
-} from '../environment.mjs';
+} from '../environment.mts';
 import {
   BooleanValue, JSStringValue, NullValue, Value,
-} from '../value.mjs';
-import { Assert } from './all.mjs';
+} from '../value.mts';
+import { Assert } from './all.mts';
 
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-execution-contexts */

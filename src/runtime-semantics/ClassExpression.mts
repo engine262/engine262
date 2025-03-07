@@ -1,10 +1,10 @@
 // @ts-nocheck
-import { Value } from '../value.mjs';
-import { sourceTextMatchedBy } from '../abstract-ops/all.mjs';
-import { Q } from '../completion.mjs';
-import { StringValue } from '../static-semantics/all.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { ClassDefinitionEvaluation } from './all.mjs';
+import { Value } from '../value.mts';
+import { sourceTextMatchedBy } from '../abstract-ops/all.mts';
+import { Q } from '../completion.mts';
+import { StringValue } from '../static-semantics/all.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { ClassDefinitionEvaluation } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-class-definitions-runtime-semantics-evaluation */
 // ClassExpression :

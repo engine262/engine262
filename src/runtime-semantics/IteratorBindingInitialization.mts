@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { Value } from '../value.mjs';
+import { Value } from '../value.mts';
 import {
   Assert,
   GetValue,
@@ -12,20 +12,20 @@ import {
   CreateDataPropertyOrThrow,
   ToString,
   F,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   AbruptCompletion,
   NormalCompletion,
   ReturnIfAbrupt,
   Q, X,
-} from '../completion.mjs';
-import { Evaluate } from '../evaluator.mjs';
+} from '../completion.mts';
+import { Evaluate } from '../evaluator.mts';
 import {
   StringValue,
   IsAnonymousFunctionDefinition,
-} from '../static-semantics/all.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { NamedEvaluation, BindingInitialization } from './all.mjs';
+} from '../static-semantics/all.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { NamedEvaluation, BindingInitialization } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-iteratorbindinginitialization */
 // FormalParameters :

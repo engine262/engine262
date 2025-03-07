@@ -1,16 +1,16 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Value } from '../value.mjs';
-import { DeclarativeEnvironmentRecord } from '../environment.mjs';
-import { Assert } from '../abstract-ops/all.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { Value } from '../value.mts';
+import { DeclarativeEnvironmentRecord } from '../environment.mts';
+import { Assert } from '../abstract-ops/all.mts';
 import {
   LexicallyScopedDeclarations,
   IsConstantDeclaration,
   BoundNames,
-} from '../static-semantics/all.mjs';
-import { X, NormalCompletion } from '../completion.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { Evaluate_StatementList, InstantiateFunctionObject } from './all.mjs';
+} from '../static-semantics/all.mts';
+import { X, NormalCompletion } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { Evaluate_StatementList, InstantiateFunctionObject } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-blockdeclarationinstantiation */
 export function BlockDeclarationInstantiation(code, env: DeclarativeEnvironmentRecord) {

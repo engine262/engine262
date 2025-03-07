@@ -6,13 +6,13 @@ import {
   SetFunctionName,
   OrdinaryFunctionCreate,
   sourceTextMatchedBy,
-} from '../abstract-ops/all.mjs';
-import { X } from '../completion.mjs';
-import { surroundingAgent } from '../engine.mjs';
-import { OutOfRange } from '../helpers.mjs';
-import { Descriptor, Value } from '../value.mjs';
-import { StringValue } from '../static-semantics/all.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+} from '../abstract-ops/all.mts';
+import { X } from '../completion.mts';
+import { surroundingAgent } from '../engine.mts';
+import { OutOfRange } from '../helpers.mts';
+import { Descriptor, Value } from '../value.mts';
+import { StringValue } from '../static-semantics/all.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-instantiatefunctionobject */
 //   FunctionDeclaration :

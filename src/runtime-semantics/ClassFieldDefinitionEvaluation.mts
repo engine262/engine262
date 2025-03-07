@@ -1,9 +1,9 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { X, ReturnIfAbrupt } from '../completion.mjs';
-import { MakeMethod, OrdinaryFunctionCreate } from '../abstract-ops/all.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { Evaluate_PropertyName } from './PropertyName.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { X, ReturnIfAbrupt } from '../completion.mts';
+import { MakeMethod, OrdinaryFunctionCreate } from '../abstract-ops/all.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { Evaluate_PropertyName } from './PropertyName.mts';
 
 export class ClassFieldDefinitionRecord {
   Name;

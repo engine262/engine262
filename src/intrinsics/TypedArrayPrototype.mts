@@ -26,15 +26,15 @@ import {
   typedArrayInfoByName,
   typedArrayInfoByType,
   F, R,
-} from '../abstract-ops/all.mjs';
-import { Q, X } from '../completion.mjs';
-import { surroundingAgent } from '../engine.mjs';
+} from '../abstract-ops/all.mts';
+import { Q, X } from '../completion.mts';
+import { surroundingAgent } from '../engine.mts';
 import {
   BigIntValue,
   Descriptor, JSStringValue, NumberValue, ObjectValue, Value, wellKnownSymbols,
-} from '../value.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
-import { ArrayProto_sortBody, bootstrapArrayPrototypeShared } from './ArrayPrototypeShared.mjs';
+} from '../value.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
+import { ArrayProto_sortBody, bootstrapArrayPrototypeShared } from './ArrayPrototypeShared.mts';
 
 /** https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.buffer */
 function TypedArrayProto_buffer(args, { thisValue }) {

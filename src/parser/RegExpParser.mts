@@ -3,19 +3,19 @@ import {
   NonbinaryUnicodeProperties,
   UnicodeGeneralCategoryValues,
   UnicodeScriptValues,
-} from '../runtime-semantics/all.mjs';
+} from '../runtime-semantics/all.mts';
 import {
   CharacterValue,
   UTF16SurrogatePairToCodePoint,
-} from '../static-semantics/all.mjs';
+} from '../static-semantics/all.mts';
 import {
   isIdentifierStart,
   isIdentifierPart,
   isLeadingSurrogate,
   isTrailingSurrogate,
   isHexDigit,
-} from './Lexer.mjs';
-import type { ParseNode } from './ParseNode.mjs';
+} from './Lexer.mts';
+import type { ParseNode } from './ParseNode.mts';
 
 const isSyntaxCharacter = (c: string) => '^$\\.*+?()[]{}|'.includes(c);
 const isClosingSyntaxCharacter = (c: string) => ')]}|'.includes(c);

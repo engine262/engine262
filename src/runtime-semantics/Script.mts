@@ -1,7 +1,7 @@
-import { Value } from '../value.mjs';
-import { NormalCompletion } from '../completion.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+import { Value } from '../value.mts';
+import { NormalCompletion } from '../completion.mts';
+import { Evaluate } from '../evaluator.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-script-semantics-runtime-semantics-evaluation */
 // Script :

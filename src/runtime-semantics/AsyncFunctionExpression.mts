@@ -1,5 +1,5 @@
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { InstantiateAsyncFunctionExpression } from './all.mjs';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { InstantiateAsyncFunctionExpression } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-async-function-definitions-runtime-semantics-evaluation */
 //   AsyncFunctionExpression :

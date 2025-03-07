@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   Assert,
   DateFromTime,
@@ -26,17 +26,17 @@ import {
   WeekDay,
   YearFromTime,
   F, R,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   JSStringValue,
   NumberValue,
   ObjectValue,
   Value,
   wellKnownSymbols,
-} from '../value.mjs';
-import { Q, X } from '../completion.mjs';
-import { StringPad } from '../runtime-semantics/all.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+} from '../value.mts';
+import { Q, X } from '../completion.mts';
+import { StringPad } from '../runtime-semantics/all.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 
 
 export function thisTimeValue(value) {

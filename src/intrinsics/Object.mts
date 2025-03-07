@@ -4,10 +4,10 @@ import {
   NullValue,
   ObjectValue,
   Value,
-} from '../value.mjs';
+} from '../value.mts';
 import {
   surroundingAgent,
-} from '../engine.mjs';
+} from '../engine.mts';
 import {
   Assert,
   CreateArrayFromList,
@@ -30,10 +30,10 @@ import {
   ToPropertyDescriptor,
   ToPropertyKey,
   CreateBuiltinFunction,
-} from '../abstract-ops/all.mjs';
-import { Q, X } from '../completion.mjs';
-import { AddEntriesFromIterable } from './Map.mjs';
-import { bootstrapConstructor } from './bootstrap.mjs';
+} from '../abstract-ops/all.mts';
+import { Q, X } from '../completion.mts';
+import { AddEntriesFromIterable } from './Map.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-object-value */
 function ObjectConstructor([value = Value.undefined], { NewTarget }) {

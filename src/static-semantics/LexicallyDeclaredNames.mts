@@ -1,8 +1,8 @@
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import type { JSStringValue } from '../value.mjs';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import type { JSStringValue } from '../value.mts';
 import {
   TopLevelLexicallyDeclaredNames,
-} from './all.mjs';
+} from './all.mts';
 
 export function LexicallyDeclaredNames(node: ParseNode): JSStringValue[] {
   switch (node.type) {

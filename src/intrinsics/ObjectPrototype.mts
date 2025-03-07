@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   NullValue,
   JSStringValue,
@@ -8,7 +8,7 @@ import {
   Value,
   Descriptor,
   wellKnownSymbols,
-} from '../value.mjs';
+} from '../value.mts';
 import {
   DefinePropertyOrThrow,
   Get,
@@ -21,9 +21,9 @@ import {
   SameValue,
   ToObject,
   ToPropertyKey,
-} from '../abstract-ops/all.mjs';
-import { Q, X } from '../completion.mjs';
-import { assignProps } from './bootstrap.mjs';
+} from '../abstract-ops/all.mts';
+import { Q, X } from '../completion.mts';
+import { assignProps } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-object.prototype.hasownproperty */
 function ObjectProto_hasOwnProperty([V = Value.undefined], { thisValue }) {

@@ -1,10 +1,10 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   UndefinedValue, NullValue, ObjectValue, Value,
-} from '../value.mjs';
-import { Q, X } from '../completion.mjs';
-import { ValueSet } from '../helpers.mjs';
+} from '../value.mts';
+import { Q, X } from '../completion.mts';
+import { ValueSet } from '../helpers.mts';
 import {
   Assert,
   MakeBasicObject,
@@ -25,7 +25,7 @@ import {
   IsCompatiblePropertyDescriptor,
   IsDataDescriptor,
   IsAccessorDescriptor,
-} from './all.mjs';
+} from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getprototypeof */
 function ProxyGetPrototypeOf() {

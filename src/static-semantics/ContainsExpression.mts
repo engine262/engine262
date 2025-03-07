@@ -1,5 +1,5 @@
-import { OutOfRange, isArray } from '../helpers.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+import { OutOfRange, isArray } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 export function ContainsExpression(node: ParseNode | readonly ParseNode[]): boolean {
   if (isArray(node)) {

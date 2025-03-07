@@ -1,13 +1,13 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   Descriptor,
   ObjectValue,
   JSStringValue,
   Value,
   wellKnownSymbols,
-} from '../value.mjs';
-import { Q, X } from '../completion.mjs';
+} from '../value.mts';
+import { Q, X } from '../completion.mts';
 import {
   AbstractRelationalComparison,
   Assert,
@@ -35,7 +35,7 @@ import {
   isNonNegativeInteger,
   Yield,
   F, R,
-} from './all.mjs';
+} from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-array-exotic-objects-defineownproperty-p-desc */
 function ArrayDefineOwnProperty(P, Desc) {

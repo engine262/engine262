@@ -1,7 +1,7 @@
 // @ts-nocheck
-import { NullValue, ObjectValue, Value } from '../value.mjs';
-import { Q } from '../completion.mjs';
-import { Assert, SameValue } from './all.mjs';
+import { NullValue, ObjectValue, Value } from '../value.mts';
+import { Q } from '../completion.mts';
+import { Assert, SameValue } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-set-immutable-prototype */
 export function SetImmutablePrototype(O, V) {

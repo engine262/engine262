@@ -1,6 +1,6 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Value, Descriptor, PrivateName } from '../value.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { Value, Descriptor, PrivateName } from '../value.mts';
 import {
   OrdinaryObjectCreate,
   OrdinaryFunctionCreate,
@@ -8,14 +8,14 @@ import {
   SetFunctionName,
   MakeMethod,
   sourceTextMatchedBy,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   Q, X,
   ReturnIfAbrupt,
-} from '../completion.mjs';
-import { OutOfRange } from '../helpers.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { DefineMethod, Evaluate_PropertyName } from './all.mjs';
+} from '../completion.mts';
+import { OutOfRange } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { DefineMethod, Evaluate_PropertyName } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-privateelement-specification-type */
 export class PrivateElementRecord {

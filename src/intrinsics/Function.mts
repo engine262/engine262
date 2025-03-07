@@ -1,8 +1,8 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Q } from '../completion.mjs';
-import { CreateDynamicFunction } from '../runtime-semantics/all.mjs';
-import { bootstrapConstructor } from './bootstrap.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { Q } from '../completion.mts';
+import { CreateDynamicFunction } from '../runtime-semantics/all.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-function-p1-p2-pn-body */
 function FunctionConstructor(args, { NewTarget }) {

@@ -1,21 +1,21 @@
 // @ts-nocheck
 import {
   surroundingAgent,
-} from '../engine.mjs';
+} from '../engine.mts';
 import {
   Get,
   IsRegExp,
   RegExpAlloc,
   RegExpInitialize,
   SameValue,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   ObjectValue,
   Value,
   wellKnownSymbols,
-} from '../value.mjs';
-import { Q } from '../completion.mjs';
-import { bootstrapConstructor } from './bootstrap.mjs';
+} from '../value.mts';
+import { Q } from '../completion.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-regexp-constructor */
 function RegExpConstructor([pattern = Value.undefined, flags = Value.undefined], { NewTarget }) {

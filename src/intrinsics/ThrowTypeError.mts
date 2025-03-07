@@ -1,12 +1,12 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   Assert,
   CreateBuiltinFunction,
   SetIntegrityLevel,
-} from '../abstract-ops/all.mjs';
-import { Value } from '../value.mjs';
-import { X } from '../completion.mjs';
+} from '../abstract-ops/all.mts';
+import { Value } from '../value.mts';
+import { X } from '../completion.mts';
 
 /** https://tc39.es/ecma262/#sec-%throwtypeerror% */
 function ThrowTypeError() {

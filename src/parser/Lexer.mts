@@ -1,16 +1,16 @@
 import isUnicodeIDStartRegex from '@unicode/unicode-16.0.0/Binary_Property/ID_Start/regex.js';
 import isUnicodeIDContinueRegex from '@unicode/unicode-16.0.0/Binary_Property/ID_Continue/regex.js';
 import isSpaceSeparatorRegex from '@unicode/unicode-16.0.0/General_Category/Space_Separator/regex.js';
-import { UTF16SurrogatePairToCodePoint } from '../static-semantics/all.mjs';
-import { Assert } from '../api.mjs';
+import { UTF16SurrogatePairToCodePoint } from '../static-semantics/all.mts';
+import { Assert } from '../api.mts';
 import {
   Token,
   TokenNames,
   TokenValues,
   KeywordLookup,
   isKeywordRaw,
-} from './tokens.mjs';
-import type { Location, Position } from './ParseNode.mjs';
+} from './tokens.mts';
+import type { Location, Position } from './ParseNode.mts';
 
 export type Locatable =
   | TokenData

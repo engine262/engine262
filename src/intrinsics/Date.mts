@@ -12,14 +12,14 @@ import {
   UTC,
   TimeClip,
   F,
-} from '../abstract-ops/all.mjs';
-import { Value, JSStringValue, ObjectValue } from '../value.mjs';
+} from '../abstract-ops/all.mts';
+import { Value, JSStringValue, ObjectValue } from '../value.mts';
 import {
   AbruptCompletion,
   Q, X,
-} from '../completion.mjs';
-import { bootstrapConstructor } from './bootstrap.mjs';
-import { ToDateString, thisTimeValue } from './DatePrototype.mjs';
+} from '../completion.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
+import { ToDateString, thisTimeValue } from './DatePrototype.mts';
 
 /** https://tc39.es/ecma262/#sec-date-constructor */
 function DateConstructor(args, { NewTarget }) {

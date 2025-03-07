@@ -1,7 +1,7 @@
 // @ts-nocheck
-import type { ThrowCompletion, Value } from '../api.mjs';
-import { surroundingAgent } from '../engine.mjs';
-import { ObjectValue } from '../value.mjs';
+import type { ThrowCompletion, Value } from '../api.mts';
+import { surroundingAgent } from '../engine.mts';
+import { ObjectValue } from '../value.mts';
 
 class AssertError extends Error {}
 

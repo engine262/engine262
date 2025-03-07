@@ -1,9 +1,9 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { ObjectValue, Value } from '../value.mjs';
-import { AddToKeptObjects, OrdinaryCreateFromConstructor } from '../abstract-ops/all.mjs';
-import { Q, X } from '../completion.mjs';
-import { bootstrapConstructor } from './bootstrap.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { ObjectValue, Value } from '../value.mts';
+import { AddToKeptObjects, OrdinaryCreateFromConstructor } from '../abstract-ops/all.mts';
+import { Q, X } from '../completion.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-weak-ref-target */
 function WeakRefConstructor([target = Value.undefined], { NewTarget }) {

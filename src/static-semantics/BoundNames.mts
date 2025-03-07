@@ -1,7 +1,7 @@
-import { OutOfRange, isArray } from '../helpers.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { JSStringValue, Value } from '../value.mjs';
-import { StringValue } from './all.mjs';
+import { OutOfRange, isArray } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { JSStringValue, Value } from '../value.mts';
+import { StringValue } from './all.mts';
 
 export function BoundNames(node: ParseNode | readonly ParseNode[]): JSStringValue[] {
   if (isArray(node)) {

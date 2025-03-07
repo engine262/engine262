@@ -1,4 +1,4 @@
-import type { ArrowInfo } from './Scope.mjs';
+import type { ArrowInfo } from './Scope.mts';
 
 export interface Position {
   readonly line: number;

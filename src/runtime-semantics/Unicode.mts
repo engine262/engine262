@@ -1,6 +1,6 @@
 // @ts-nocheck
-import { Assert } from '../abstract-ops/all.mjs';
-import UnicodeSets from '../data-gen.json';
+import { Assert } from '../abstract-ops/all.mts';
+import UnicodeSets from '../data-gen.json' with { type: 'json' };
 
 export { UnicodeSets };
 

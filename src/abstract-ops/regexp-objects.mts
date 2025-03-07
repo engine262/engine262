@@ -1,12 +1,12 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   Descriptor, Value, ObjectValue, BooleanValue, JSStringValue,
-} from '../value.mjs';
-import { Q, X } from '../completion.mjs';
-import { Evaluate_Pattern } from '../runtime-semantics/all.mjs';
-import { ParsePattern } from '../parse.mjs';
-import { isLineTerminator } from '../parser/Lexer.mjs';
+} from '../value.mts';
+import { Q, X } from '../completion.mts';
+import { Evaluate_Pattern } from '../runtime-semantics/all.mts';
+import { ParsePattern } from '../parse.mts';
+import { isLineTerminator } from '../parser/Lexer.mts';
 import {
   ArrayCreate,
   Assert,
@@ -19,7 +19,7 @@ import {
   Set,
   ToString,
   F as toNumberValue,
-} from './all.mjs';
+} from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-regexpalloc */
 export function RegExpAlloc(newTarget) {

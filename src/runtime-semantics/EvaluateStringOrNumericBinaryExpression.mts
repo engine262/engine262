@@ -1,9 +1,9 @@
 // @ts-nocheck
-import { Evaluate } from '../evaluator.mjs';
-import { GetValue } from '../abstract-ops/all.mjs';
-import { Q } from '../completion.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { ApplyStringOrNumericBinaryOperator, type BinaryOperator } from './all.mjs';
+import { Evaluate } from '../evaluator.mts';
+import { GetValue } from '../abstract-ops/all.mts';
+import { Q } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { ApplyStringOrNumericBinaryOperator, type BinaryOperator } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-evaluatestringornumericbinaryexpression */
 export function* EvaluateStringOrNumericBinaryExpression(leftOperand: ParseNode.Expression, opText: BinaryOperator, rightOperand: ParseNode.Expression) {

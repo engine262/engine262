@@ -2,7 +2,7 @@
 import {
   surroundingAgent,
   HostHasSourceTextAvailable,
-} from '../engine.mjs';
+} from '../engine.mts';
 import {
   Assert,
   Call,
@@ -20,16 +20,16 @@ import {
   ToIntegerOrInfinity,
   CreateBuiltinFunction,
   MakeBasicObject, R,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   JSStringValue,
   NumberValue,
   ObjectValue,
   Value,
   wellKnownSymbols,
-} from '../value.mjs';
-import { Q, X } from '../completion.mjs';
-import { assignProps } from './bootstrap.mjs';
+} from '../value.mts';
+import { Q, X } from '../completion.mts';
+import { assignProps } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-properties-of-the-function-prototype-object */
 function FunctionProto(_args, _meta) {

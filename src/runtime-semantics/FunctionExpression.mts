@@ -1,6 +1,6 @@
 // @ts-nocheck
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { InstantiateOrdinaryFunctionExpression } from './all.mjs';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { InstantiateOrdinaryFunctionExpression } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluation */
 //   FunctionExpression :

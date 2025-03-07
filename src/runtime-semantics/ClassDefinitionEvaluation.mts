@@ -1,9 +1,9 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   Value, NullValue, ObjectValue, PrivateName,
-} from '../value.mjs';
-import { Evaluate } from '../evaluator.mjs';
+} from '../value.mts';
+import { Evaluate } from '../evaluator.mts';
 import {
   Assert,
   Call,
@@ -21,25 +21,25 @@ import {
   PrivateMethodOrAccessorAdd,
   InitializeInstanceElements,
   DefineField,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   IsStatic,
   ConstructorMethod,
   NonConstructorElements,
   PrivateBoundIdentifiers,
-} from '../static-semantics/all.mjs';
+} from '../static-semantics/all.mts';
 import {
   DeclarativeEnvironmentRecord,
   PrivateEnvironmentRecord,
-} from '../environment.mjs';
+} from '../environment.mts';
 import {
   Q, X,
   AbruptCompletion,
   Completion,
   EnsureCompletion,
-} from '../completion.mjs';
-import { OutOfRange } from '../helpers.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+} from '../completion.mts';
+import { OutOfRange } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   DefineMethod,
   MethodDefinitionEvaluation,
@@ -48,7 +48,7 @@ import {
   ClassFieldDefinitionRecord,
   ClassStaticBlockDefinitionEvaluation,
   ClassStaticBlockDefinitionRecord,
-} from './all.mjs';
+} from './all.mts';
 
 function* ClassElementEvaluation(node: ParseNode.MethodDefinition | ParseNode.GeneratorMethod | ParseNode.AsyncMethod | ParseNode.FieldDefinition | ParseNode.ClassStaticBlock, object, enumerable) {
   switch (node.type) {

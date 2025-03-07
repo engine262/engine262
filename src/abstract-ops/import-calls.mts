@@ -4,8 +4,8 @@
 
 import {
   Call, CreateBuiltinFunction, GetModuleNamespace, PerformPromiseThen, Value,
-} from '../api.mjs';
-import { AbruptCompletion, X } from '../completion.mjs';
+} from '../api.mts';
+import { AbruptCompletion, X } from '../completion.mts';
 
 /** https://tc39.es/ecma262/#sec-ContinueDynamicImport */
 export function ContinueDynamicImport(promiseCapability, moduleCompletion) {

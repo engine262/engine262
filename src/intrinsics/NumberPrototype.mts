@@ -3,16 +3,16 @@ import {
   ObjectValue,
   Value,
   NumberValue,
-} from '../value.mjs';
+} from '../value.mts';
 import {
   Assert,
   ToIntegerOrInfinity,
   ToString,
   F, R,
-} from '../abstract-ops/all.mjs';
-import { surroundingAgent } from '../engine.mjs';
-import { Q, X } from '../completion.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+} from '../abstract-ops/all.mts';
+import { surroundingAgent } from '../engine.mts';
+import { Q, X } from '../completion.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 
 function thisNumberValue(value) {
   if (value instanceof NumberValue) {

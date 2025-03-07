@@ -1,8 +1,8 @@
 // @ts-nocheck
 import {
   Value, NumberValue, SymbolValue, JSStringValue, Descriptor,
-} from '../value.mjs';
-import { Q, X } from '../completion.mjs';
+} from '../value.mts';
+import { Q, X } from '../completion.mts';
 import {
   Assert,
   CanonicalNumericIndexString,
@@ -25,7 +25,7 @@ import {
   isIntegerIndex,
   typedArrayInfoByName,
   F, R,
-} from './all.mjs';
+} from './all.mts';
 
 export function isIntegerIndexedExoticObject(O) {
   return O.GetOwnProperty === IntegerIndexedGetOwnProperty;

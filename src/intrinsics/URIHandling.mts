@@ -1,14 +1,14 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Value } from '../value.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { Value } from '../value.mts';
 import {
   Assert,
   CreateBuiltinFunction,
   ToString,
-} from '../abstract-ops/all.mjs';
-import { CodePointAt } from '../static-semantics/all.mjs';
-import { isHexDigit } from '../parser/Lexer.mjs';
-import { Q, X } from '../completion.mjs';
+} from '../abstract-ops/all.mts';
+import { CodePointAt } from '../static-semantics/all.mts';
+import { isHexDigit } from '../parser/Lexer.mts';
+import { Q, X } from '../completion.mts';
 
 function utf8Encode(utf) {
   if (utf <= 0x7F) {

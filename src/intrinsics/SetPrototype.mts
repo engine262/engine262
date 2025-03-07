@@ -1,20 +1,20 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   Call,
   F,
   IsCallable,
   RequireInternalSlot,
   SameValueZero, R,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   NumberValue,
   Value,
   wellKnownSymbols,
-} from '../value.mjs';
-import { Q, X } from '../completion.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
-import { CreateSetIterator } from './SetIteratorPrototype.mjs';
+} from '../value.mts';
+import { Q, X } from '../completion.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
+import { CreateSetIterator } from './SetIteratorPrototype.mts';
 
 /** https://tc39.es/ecma262/#sec-set.prototype.add */
 function SetProto_add([value = Value.undefined], { thisValue }) {

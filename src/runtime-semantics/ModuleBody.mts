@@ -1,5 +1,5 @@
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { Evaluate_StatementList } from './all.mjs';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { Evaluate_StatementList } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-module-semantics-runtime-semantics-evaluation */
 // ModuleBody : ModuleItemList

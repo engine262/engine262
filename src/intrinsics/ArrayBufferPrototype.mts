@@ -1,13 +1,13 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Value } from '../value.mjs';
-import { Q } from '../completion.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { Value } from '../value.mts';
+import { Q } from '../completion.mts';
 import {
   RequireInternalSlot, IsDetachedBuffer, IsSharedArrayBuffer,
   SpeciesConstructor, Construct, ToIntegerOrInfinity, SameValue, CopyDataBlockBytes,
   F,
-} from '../abstract-ops/all.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+} from '../abstract-ops/all.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-get-arraybuffer.prototype.bytelength */
 function ArrayBufferProto_byteLength(args, { thisValue }) {

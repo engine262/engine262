@@ -1,7 +1,7 @@
 // @ts-nocheck
-import { Q } from '../completion.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { EvaluateStringOrNumericBinaryExpression } from './all.mjs';
+import { Q } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { EvaluateStringOrNumericBinaryExpression } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-multiplicative-operators-runtime-semantics-evaluation */
 //   MultiplicativeExpression :

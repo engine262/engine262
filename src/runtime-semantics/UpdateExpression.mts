@@ -1,14 +1,14 @@
 // @ts-nocheck
-import { Evaluate } from '../evaluator.mjs';
-import { OutOfRange } from '../helpers.mjs';
+import { Evaluate } from '../evaluator.mts';
+import { OutOfRange } from '../helpers.mts';
 import {
   GetValue,
   PutValue,
   ToNumeric,
-} from '../abstract-ops/all.mjs';
-import { TypeForMethod } from '../value.mjs';
-import { Q, X } from '../completion.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+} from '../abstract-ops/all.mts';
+import { TypeForMethod } from '../value.mts';
+import { Q, X } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 // UpdateExpression :
 //   LeftHandSideExpression `++`

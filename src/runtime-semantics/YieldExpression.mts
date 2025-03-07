@@ -1,6 +1,6 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { ObjectValue, Value } from '../value.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { ObjectValue, Value } from '../value.mts';
 import {
   Assert,
   Call,
@@ -15,16 +15,16 @@ import {
   AsyncGeneratorYield,
   AsyncIteratorClose,
   Yield,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   Await,
   Completion,
   NormalCompletion,
   EnsureCompletion,
   Q, X,
-} from '../completion.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+} from '../completion.mts';
+import { Evaluate } from '../evaluator.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-evaluation */
 //   YieldExpression :

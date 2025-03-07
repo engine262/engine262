@@ -1,13 +1,13 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   Descriptor,
   Value,
   wellKnownSymbols,
-} from '../value.mjs';
-import { BoundNames } from '../static-semantics/all.mjs';
-import { Q, X } from '../completion.mjs';
-import { ValueSet } from '../helpers.mjs';
+} from '../value.mts';
+import { BoundNames } from '../static-semantics/all.mts';
+import { Q, X } from '../completion.mts';
+import { ValueSet } from '../helpers.mts';
 import {
   Assert,
   CreateBuiltinFunction,
@@ -28,7 +28,7 @@ import {
   IsAccessorDescriptor,
   IsDataDescriptor,
   F,
-} from './all.mjs';
+} from './all.mts';
 
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-arguments-exotic-objects */

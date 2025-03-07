@@ -3,13 +3,13 @@ import {
   GetValue,
   PutValue,
   ResolveBinding,
-} from '../abstract-ops/all.mjs';
-import { NormalCompletion, Q, ReturnIfAbrupt } from '../completion.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { StringValue, IsAnonymousFunctionDefinition } from '../static-semantics/all.mjs';
-import { Value } from '../value.mjs';
-import { NamedEvaluation, BindingInitialization } from './all.mjs';
+} from '../abstract-ops/all.mts';
+import { NormalCompletion, Q, ReturnIfAbrupt } from '../completion.mts';
+import { Evaluate } from '../evaluator.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { StringValue, IsAnonymousFunctionDefinition } from '../static-semantics/all.mts';
+import { Value } from '../value.mts';
+import { NamedEvaluation, BindingInitialization } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-variable-statement-runtime-semantics-evaluation */
 //   VariableDeclaration :

@@ -1,16 +1,16 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Value } from '../value.mjs';
-import { ToObject, GetValue } from '../abstract-ops/all.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import { ObjectEnvironmentRecord } from '../environment.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { Value } from '../value.mts';
+import { ToObject, GetValue } from '../abstract-ops/all.mts';
+import { Evaluate } from '../evaluator.mts';
+import { ObjectEnvironmentRecord } from '../environment.mts';
 import {
   UpdateEmpty,
   Completion,
   EnsureCompletion,
   Q,
-} from '../completion.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+} from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-with-statement-runtime-semantics-evaluation */
 //   WithStatement : `with` `(` Expression `)` Statement

@@ -1,5 +1,5 @@
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { HasInitializer } from './all.mjs';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { HasInitializer } from './all.mts';
 
 export function ExpectedArgumentCount(FormalParameterList: ParseNode.FormalParameters) {
   if (FormalParameterList.length === 0) {

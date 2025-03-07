@@ -1,6 +1,6 @@
-import { Lexer } from './Lexer.mjs';
-import type { ParseNode, ParseNodesByType } from './ParseNode.mjs';
-import type { Scope } from './Scope.mjs';
+import { Lexer } from './Lexer.mts';
+import type { ParseNode, ParseNodesByType } from './ParseNode.mts';
+import type { Scope } from './Scope.mts';
 
 export abstract class BaseParser extends Lexer {
   protected abstract scope: Scope;

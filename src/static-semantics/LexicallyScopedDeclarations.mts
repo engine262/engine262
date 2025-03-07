@@ -1,6 +1,6 @@
-import { isArray } from '../helpers.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { TopLevelLexicallyScopedDeclarations, DeclarationPart } from './all.mjs';
+import { isArray } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { TopLevelLexicallyScopedDeclarations, DeclarationPart } from './all.mts';
 
 export function LexicallyScopedDeclarations(node: ParseNode | readonly ParseNode[]): (ParseNode.Declaration | ParseNode.ExportDeclaration)[] {
   if (isArray(node)) {

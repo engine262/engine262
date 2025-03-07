@@ -1,7 +1,7 @@
 // @ts-nocheck
-import { ExecutionContext, HostEnsureCanCompileStrings, surroundingAgent } from '../engine.mjs';
-import { JSStringValue, Value } from '../value.mjs';
-import { InstantiateFunctionObject } from '../runtime-semantics/all.mjs';
+import { ExecutionContext, HostEnsureCanCompileStrings, surroundingAgent } from '../engine.mts';
+import { JSStringValue, Value } from '../value.mts';
+import { InstantiateFunctionObject } from '../runtime-semantics/all.mts';
 import {
   IsStrict,
   VarDeclaredNames,
@@ -10,24 +10,24 @@ import {
   BoundNames,
   IsConstantDeclaration,
   ContainsArguments,
-} from '../static-semantics/all.mjs';
+} from '../static-semantics/all.mts';
 import {
   Completion,
   AbruptCompletion,
   NormalCompletion,
   EnsureCompletion,
   Q, X,
-} from '../completion.mjs';
-import { wrappedParse } from '../parse.mjs';
+} from '../completion.mts';
+import { wrappedParse } from '../parse.mts';
 import {
   DeclarativeEnvironmentRecord,
   FunctionEnvironmentRecord,
   GlobalEnvironmentRecord,
   ObjectEnvironmentRecord,
-} from '../environment.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import { unwind, ValueSet } from '../helpers.mjs';
-import { Assert, GetThisEnvironment } from './all.mjs';
+} from '../environment.mts';
+import { Evaluate } from '../evaluator.mts';
+import { unwind, ValueSet } from '../helpers.mts';
+import { Assert, GetThisEnvironment } from './all.mts';
 
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-global-object */

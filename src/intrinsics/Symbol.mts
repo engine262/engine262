@@ -4,16 +4,16 @@ import {
   SymbolValue,
   Value,
   wellKnownSymbols,
-} from '../value.mjs';
+} from '../value.mts';
 import {
   surroundingAgent,
-} from '../engine.mjs';
+} from '../engine.mts';
 import {
   SameValue,
   ToString,
-} from '../abstract-ops/all.mjs';
-import { Q } from '../completion.mjs';
-import { bootstrapConstructor } from './bootstrap.mjs';
+} from '../abstract-ops/all.mts';
+import { Q } from '../completion.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 
 export const GlobalSymbolRegistry = [];
 

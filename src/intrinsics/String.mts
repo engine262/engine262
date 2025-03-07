@@ -1,9 +1,9 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   SymbolValue,
   Value,
-} from '../value.mjs';
+} from '../value.mts';
 import {
   Assert,
   Get,
@@ -17,10 +17,10 @@ import {
   ToString,
   ToUint16,
   F, R,
-} from '../abstract-ops/all.mjs';
-import { UTF16EncodeCodePoint } from '../static-semantics/all.mjs';
-import { Q, X } from '../completion.mjs';
-import { bootstrapConstructor } from './bootstrap.mjs';
+} from '../abstract-ops/all.mts';
+import { UTF16EncodeCodePoint } from '../static-semantics/all.mts';
+import { Q, X } from '../completion.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-string-constructor-string-value */
 function StringConstructor([value], { NewTarget }) {

@@ -1,23 +1,23 @@
 // @ts-nocheck
-import { Value } from '../value.mjs';
-import { Q, X, ReturnIfAbrupt } from '../completion.mjs';
+import { Value } from '../value.mts';
+import { Q, X, ReturnIfAbrupt } from '../completion.mts';
 import {
   GetValue,
   PutValue,
   ToBoolean,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   IsAnonymousFunctionDefinition,
   IsIdentifierRef,
-} from '../static-semantics/all.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import { OutOfRange } from '../helpers.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+} from '../static-semantics/all.mts';
+import { Evaluate } from '../evaluator.mts';
+import { OutOfRange } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   NamedEvaluation,
   ApplyStringOrNumericBinaryOperator,
   DestructuringAssignmentEvaluation,
-} from './all.mjs';
+} from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-destructuring-assignment */
 export function refineLeftHandSideExpression(node: ParseNode.ArrayLiteral | ParseNode.ObjectLiteral | ParseNode.PropertyDefinition | ParseNode.MemberExpression | ParseNode.CoverInitializedName | ParseNode.AssignmentExpression | ParseNode.Elision, type) {

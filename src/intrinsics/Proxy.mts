@@ -1,7 +1,7 @@
 // @ts-nocheck
 import {
   surroundingAgent,
-} from '../engine.mjs';
+} from '../engine.mts';
 import {
   Assert,
   CreateBuiltinFunction,
@@ -9,10 +9,10 @@ import {
   OrdinaryObjectCreate,
   ProxyCreate,
   isProxyExoticObject,
-} from '../abstract-ops/all.mjs';
-import { Value } from '../value.mjs';
-import { Q, X } from '../completion.mjs';
-import { assignProps } from './bootstrap.mjs';
+} from '../abstract-ops/all.mts';
+import { Value } from '../value.mts';
+import { Q, X } from '../completion.mts';
+import { assignProps } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-proxy-target-handler */
 function ProxyConstructor([target = Value.undefined, handler = Value.undefined], { NewTarget }) {

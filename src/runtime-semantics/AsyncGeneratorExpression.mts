@@ -1,5 +1,5 @@
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { InstantiateAsyncGeneratorFunctionExpression } from './all.mjs';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { InstantiateAsyncGeneratorFunctionExpression } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-asyncgenerator-definitions-evaluation */
 //   AsyncGeneratorExpression :

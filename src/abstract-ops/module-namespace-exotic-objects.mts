@@ -1,14 +1,14 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Q, X } from '../completion.mjs';
-import { AbstractModuleRecord, ResolvedBindingRecord } from '../modules.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { Q, X } from '../completion.mts';
+import { AbstractModuleRecord, ResolvedBindingRecord } from '../modules.mts';
 import {
   SymbolValue,
   Value,
   Descriptor,
   wellKnownSymbols,
-} from '../value.mjs';
-import { ValueSet } from '../helpers.mjs';
+} from '../value.mts';
+import { ValueSet } from '../helpers.mts';
 import {
   Assert,
   SortCompare,
@@ -24,7 +24,7 @@ import {
   OrdinaryDelete,
   OrdinaryOwnPropertyKeys,
   GetModuleNamespace, R,
-} from './all.mjs';
+} from './all.mts';
 
 
 function ModuleNamespaceSetPrototypeOf(V) {

@@ -1,8 +1,8 @@
-import { ResolveBinding } from '../abstract-ops/all.mjs';
-import { StringValue } from '../static-semantics/all.mjs';
-import { NormalCompletion, ThrowCompletion } from '../completion.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import type { ReferenceRecord } from '../value.mjs';
+import { ResolveBinding } from '../abstract-ops/all.mts';
+import { StringValue } from '../static-semantics/all.mts';
+import { NormalCompletion, ThrowCompletion } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import type { ReferenceRecord } from '../value.mts';
 
 /** https://tc39.es/ecma262/#sec-identifiers-runtime-semantics-evaluation */
 // IdentifierReference :

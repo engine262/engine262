@@ -1,7 +1,7 @@
-import { JSStringValue, NullValue, Value } from '../value.mjs';
-import { OutOfRange, isArray } from '../helpers.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { StringValue, type ExportEntry } from './all.mjs';
+import { JSStringValue, NullValue, Value } from '../value.mts';
+import { OutOfRange, isArray } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { StringValue, type ExportEntry } from './all.mts';
 
 export function ExportEntriesForModule(node: ParseNode | readonly ParseNode[], module: JSStringValue | NullValue): ExportEntry[] {
   if (isArray(node)) {

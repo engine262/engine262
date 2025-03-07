@@ -1,8 +1,8 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { ObjectValue, Value } from '../value.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import { DeclarativeEnvironmentRecord } from '../environment.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { ObjectValue, Value } from '../value.mts';
+import { Evaluate } from '../evaluator.mts';
+import { DeclarativeEnvironmentRecord } from '../environment.mts';
 import {
   Assert,
   Call,
@@ -19,14 +19,14 @@ import {
   ToBoolean,
   ToObject,
   SameValue,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   BoundNames,
   IsConstantDeclaration,
   IsDestructuring,
   StringValue,
-} from '../static-semantics/all.mjs';
-import { CreateForInIterator } from '../intrinsics/ForInIteratorPrototype.mjs';
+} from '../static-semantics/all.mts';
+import { CreateForInIterator } from '../intrinsics/ForInIteratorPrototype.mts';
 import {
   Completion,
   NormalCompletion,
@@ -36,16 +36,16 @@ import {
   ReturnIfAbrupt,
   Await,
   Q, X,
-} from '../completion.mjs';
-import { OutOfRange } from '../helpers.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+} from '../completion.mts';
+import { OutOfRange } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   Evaluate_SwitchStatement,
   Evaluate_VariableDeclarationList,
   BindingInitialization,
   DestructuringAssignmentEvaluation,
   refineLeftHandSideExpression,
-} from './all.mjs';
+} from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-loopcontinues */
 function LoopContinues(completion, labelSet) {

@@ -4,19 +4,19 @@ import {
   StringValue,
   IsComputedPropertyKey,
   ContainsArguments,
-} from '../static-semantics/all.mjs';
-import type { Mutable } from '../helpers.mjs';
+} from '../static-semantics/all.mts';
+import type { Mutable } from '../helpers.mts';
 import {
   Token, TokenPrecedence,
   isPropertyOrCall,
   isMember,
   isKeywordRaw,
   isAutomaticSemicolon,
-} from './tokens.mjs';
-import { isLineTerminator, type TokenData } from './Lexer.mjs';
-import { FunctionParser, FunctionKind } from './FunctionParser.mjs';
-import { RegExpParser, type RegExpParserContext } from './RegExpParser.mjs';
-import type { ParseNode } from './ParseNode.mjs';
+} from './tokens.mts';
+import { isLineTerminator, type TokenData } from './Lexer.mts';
+import { FunctionParser, FunctionKind } from './FunctionParser.mts';
+import { RegExpParser, type RegExpParserContext } from './RegExpParser.mts';
+import type { ParseNode } from './ParseNode.mts';
 
 export abstract class ExpressionParser extends FunctionParser {
   protected abstract readonly state: {

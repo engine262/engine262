@@ -1,15 +1,15 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   SameValue,
   RequireInternalSlot,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   ObjectValue,
   Value,
-} from '../value.mjs';
-import { Q } from '../completion.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+} from '../value.mts';
+import { Q } from '../completion.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-weakmap.prototype.delete */
 function WeakMapProto_delete([key = Value.undefined], { thisValue }) {

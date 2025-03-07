@@ -1,8 +1,8 @@
 // @ts-nocheck
-import { Descriptor, Value } from '../value.mjs';
-import { DefinePropertyOrThrow } from '../abstract-ops/all.mjs';
-import { X } from '../completion.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+import { Descriptor, Value } from '../value.mts';
+import { DefinePropertyOrThrow } from '../abstract-ops/all.mts';
+import { X } from '../completion.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 
 export function bootstrapGeneratorFunctionPrototype(realmRec) {
   const generatorPrototype = realmRec.Intrinsics['%GeneratorFunction.prototype.prototype%'];

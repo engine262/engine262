@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   Assert,
   GetValue,
@@ -11,15 +11,15 @@ import {
   ToNumber,
   ToObject,
   ToNumeric,
-} from '../abstract-ops/all.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import { Q, ReturnIfAbrupt, X } from '../completion.mjs';
+} from '../abstract-ops/all.mts';
+import { Evaluate } from '../evaluator.mts';
+import { Q, ReturnIfAbrupt, X } from '../completion.mts';
 import {
   TypeForMethod, Value, ReferenceRecord, UndefinedValue, BigIntValue, BooleanValue, JSStringValue, NullValue, NumberValue, ObjectValue, SymbolValue,
-} from '../value.mjs';
-import { EnvironmentRecord } from '../environment.mjs';
-import { OutOfRange } from '../helpers.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+} from '../value.mts';
+import { EnvironmentRecord } from '../environment.mts';
+import { OutOfRange } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation */
 //   UnaryExpression : `delete` UnaryExpression

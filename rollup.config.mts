@@ -1,5 +1,4 @@
-import { readFileSync, promises, constants } from 'node:fs';
-import { resolve, dirname } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { hash } from 'node:crypto';
@@ -26,11 +25,13 @@ export default defineConfig({
     importUnicodeLib(),
     (json.default || json)({ compact: true }),
     (commonjs.default || commonjs)(),
-    mtsResolver(),
-    nodeResolve(),
+    nodeResolve({ extensions: ['.mts', '.json'] }),
     babel({
       babelHelpers: 'bundled',
       exclude: 'node_modules/**',
+      generatorOpts: {
+        importAttributesKeyword: "with"
+      },
       presets: [[
         '@babel/preset-env',
         {
@@ -116,24 +117,6 @@ function importUnicodeLib(): Plugin {
         return `export default new Map(JSON.parse(${str}).map(([cp1, cp2]) => [String.fromCodePoint(cp1), String.fromCodePoint(cp2)]));`;
       }
       return code;
-    },
-  };
-}
-function mtsResolver(): Plugin {
-  return {
-    name: 'mts resolver',
-    async resolveId(imported, importer) {
-      if (!imported.endsWith('.mjs') || !importer || imported[0] !== '.') {
-        return null;
-      }
-      const resolved = resolve(dirname(importer), imported);
-
-      return promises.access(resolved, constants.F_OK)
-        .then(() => null)
-        .catch(() => ({
-          id:
-            `${resolved.slice(0, -('.mjs'.length))}.mts`,
-        }));
     },
   };
 }

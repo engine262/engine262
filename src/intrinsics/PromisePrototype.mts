@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   Assert,
   Call,
@@ -13,10 +13,10 @@ import {
   PerformPromiseThen,
   PromiseResolve,
   SpeciesConstructor,
-} from '../abstract-ops/all.mjs';
-import { ObjectValue, Value } from '../value.mjs';
-import { Q, ThrowCompletion, X } from '../completion.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+} from '../abstract-ops/all.mts';
+import { ObjectValue, Value } from '../value.mts';
+import { Q, ThrowCompletion, X } from '../completion.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-promise.prototype.catch */
 function PromiseProto_catch([onRejected = Value.undefined], { thisValue }) {

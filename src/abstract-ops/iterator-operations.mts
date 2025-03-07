@@ -1,11 +1,11 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   BooleanValue,
   ObjectValue,
   Value,
   wellKnownSymbols,
-} from '../value.mjs';
+} from '../value.mts';
 import {
   Completion,
   EnsureCompletion,
@@ -13,7 +13,7 @@ import {
   Q, X,
   Await,
   NormalCompletion,
-} from '../completion.mjs';
+} from '../completion.mts';
 import {
   Assert,
   Call,
@@ -28,7 +28,7 @@ import {
   ToBoolean,
   Yield,
   CreateIteratorFromClosure,
-} from './all.mjs';
+} from './all.mts';
 
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-operations-on-iterator-objects */

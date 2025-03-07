@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   Assert,
   Construct,
@@ -8,12 +8,12 @@ import {
   IsConstructor,
   InitializeInstanceElements,
   isECMAScriptFunctionObject,
-} from '../abstract-ops/all.mjs';
-import { ObjectValue, Value } from '../value.mjs';
-import { Q, X } from '../completion.mjs';
-import { FunctionEnvironmentRecord } from '../environment.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { ArgumentListEvaluation } from './all.mjs';
+} from '../abstract-ops/all.mts';
+import { ObjectValue, Value } from '../value.mts';
+import { Q, X } from '../completion.mts';
+import { FunctionEnvironmentRecord } from '../environment.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { ArgumentListEvaluation } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation */
 // SuperCall : `super` Arguments

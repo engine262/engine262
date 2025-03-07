@@ -1,10 +1,10 @@
 // @ts-nocheck
-import { EnsureCompletion, X } from '../completion.mjs';
-import { surroundingAgent } from '../engine.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import { Value } from '../value.mjs';
-import { resume } from '../helpers.mjs';
-import { Assert, Call } from './all.mjs';
+import { EnsureCompletion, X } from '../completion.mts';
+import { surroundingAgent } from '../engine.mts';
+import { Evaluate } from '../evaluator.mts';
+import { Value } from '../value.mts';
+import { resume } from '../helpers.mts';
+import { Assert, Call } from './all.mts';
 
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-async-function-objects */

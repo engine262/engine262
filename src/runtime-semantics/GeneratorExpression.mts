@@ -1,6 +1,6 @@
 // @ts-nocheck
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { InstantiateGeneratorFunctionExpression } from './all.mjs';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { InstantiateGeneratorFunctionExpression } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-evaluation */
 //   GeneratorExpression :

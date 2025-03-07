@@ -1,7 +1,7 @@
 // @ts-nocheck
-import { typedArrayInfoByName, F } from '../abstract-ops/all.mjs';
-import { Value } from '../value.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+import { typedArrayInfoByName, F } from '../abstract-ops/all.mts';
+import { Value } from '../value.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-properties-of-typedarray-prototype-objects */
 export function bootstrapTypedArrayPrototypes(realmRec) {

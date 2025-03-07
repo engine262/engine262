@@ -1,6 +1,6 @@
 // @ts-nocheck
-import { wellKnownSymbols } from '../value.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+import { wellKnownSymbols } from '../value.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-%iteratorprototype%-@@iterator */
 function IteratorPrototype_iterator(args, { thisValue }) {

@@ -1,11 +1,11 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   MakeMethod,
   OrdinaryFunctionCreate,
-} from '../abstract-ops/all.mjs';
-import { X } from '../completion.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+} from '../abstract-ops/all.mts';
+import { X } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 export class ClassStaticBlockDefinitionRecord {
   BodyFunction;

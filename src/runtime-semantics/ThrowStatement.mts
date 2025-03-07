@@ -1,15 +1,15 @@
 // @ts-nocheck
 import {
   Evaluate,
-} from '../evaluator.mjs';
+} from '../evaluator.mts';
 import {
   GetValue,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   Q,
   ThrowCompletion,
-} from '../completion.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+} from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-throw-statement-runtime-semantics-evaluation */
 // ThrowStatement : `throw` Expression `;`

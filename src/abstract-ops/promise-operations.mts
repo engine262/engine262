@@ -5,10 +5,10 @@ import {
   HostEnqueuePromiseJob,
   HostPromiseRejectionTracker,
   surroundingAgent,
-} from '../engine.mjs';
+} from '../engine.mts';
 import {
   ObjectValue, Value, UndefinedValue, BooleanValue, NullValue, type Arguments,
-} from '../value.mjs';
+} from '../value.mts';
 import {
   AbruptCompletion,
   Completion,
@@ -17,8 +17,8 @@ import {
   Q,
   ThrowCompletion,
   X,
-} from '../completion.mjs';
-import type { Mutable } from '../helpers.mjs';
+} from '../completion.mts';
+import type { Mutable } from '../helpers.mts';
 import {
   Assert,
   Call,
@@ -33,7 +33,7 @@ import {
   type FunctionObject,
   type BuiltinFunctionObject,
   Realm,
-} from './all.mjs';
+} from './all.mts';
 
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-promise-objects */

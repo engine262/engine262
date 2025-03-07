@@ -1,4 +1,4 @@
-import { UTF16EncodeCodePoint } from './all.mjs';
+import { UTF16EncodeCodePoint } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-codepointstostring */
 export function CodePointsToString(text: string) {

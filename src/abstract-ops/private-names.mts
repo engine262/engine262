@@ -1,9 +1,9 @@
 // @ts-nocheck
-import { Value } from '../value.mjs';
-import { surroundingAgent } from '../engine.mjs';
-import { Q, X } from '../completion.mjs';
-import { PrivateElementRecord } from '../runtime-semantics/all.mjs';
-import { Assert, Call } from './all.mjs';
+import { Value } from '../value.mts';
+import { surroundingAgent } from '../engine.mts';
+import { Q, X } from '../completion.mts';
+import { PrivateElementRecord } from '../runtime-semantics/all.mts';
+import { Assert, Call } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-privateelementfind */
 export function PrivateElementFind(P, O) {

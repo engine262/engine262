@@ -1,14 +1,14 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Value, ObjectValue } from '../value.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { Value, ObjectValue } from '../value.mts';
 import {
   CleanupFinalizationRegistry,
   IsCallable,
   RequireInternalSlot,
   SameValue,
-} from '../abstract-ops/all.mjs';
-import { Q } from '../completion.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+} from '../abstract-ops/all.mts';
+import { Q } from '../completion.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-finalization-registry.prototype.cleanupSome */
 function FinalizationRegistryProto_cleanupSome([callback = Value.undefined], { thisValue }) {

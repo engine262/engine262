@@ -6,8 +6,8 @@ import {
   JSStringValue,
   UndefinedValue,
   Value,
-} from '../value.mjs';
-import { X } from '../completion.mjs';
+} from '../value.mts';
+import { X } from '../completion.mts';
 import {
   Assert,
   CanonicalNumericIndexString,
@@ -22,7 +22,7 @@ import {
   ToString,
   isArrayIndex,
   F, R,
-} from './all.mjs';
+} from './all.mts';
 
 function StringExoticGetOwnProperty(P) {
   const S = this;

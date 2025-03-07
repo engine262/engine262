@@ -1,17 +1,17 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   Get,
   OrdinaryCreateFromConstructor,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   Value,
-} from '../value.mjs';
+} from '../value.mts';
 import {
   Q,
-} from '../completion.mjs';
-import { AddEntriesFromIterable } from './Map.mjs';
-import { bootstrapConstructor } from './bootstrap.mjs';
+} from '../completion.mts';
+import { AddEntriesFromIterable } from './Map.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-weakmap-constructor */
 function WeakMapConstructor([iterable = Value.undefined], { NewTarget }) {

@@ -1,8 +1,8 @@
 // @ts-nocheck
-import { Q } from '../completion.mjs';
-import { OutOfRange } from '../helpers.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { EvaluateStringOrNumericBinaryExpression } from './all.mjs';
+import { Q } from '../completion.mts';
+import { OutOfRange } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { EvaluateStringOrNumericBinaryExpression } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-addition-operator-plus-runtime-semantics-evaluation */
 //   AdditiveExpression : AdditiveExpression + MultiplicativeExpression

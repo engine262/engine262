@@ -6,11 +6,11 @@ import {
   IsDetachedBuffer,
   RequireInternalSlot,
   F,
-} from '../abstract-ops/all.mjs';
-import { Q } from '../completion.mjs';
-import { surroundingAgent } from '../engine.mjs';
-import { Value } from '../value.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+} from '../abstract-ops/all.mts';
+import { Q } from '../completion.mts';
+import { surroundingAgent } from '../engine.mts';
+import { Value } from '../value.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-get-dataview.prototype.buffer */
 function DataViewProto_buffer(args, { thisValue }) {

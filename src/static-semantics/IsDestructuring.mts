@@ -1,4 +1,4 @@
-import type { ParseNode } from '../parser/ParseNode.mjs';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 export function IsDestructuring(node: ParseNode): boolean {
   switch (node.type) {

@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   Assert,
   Call,
@@ -10,17 +10,17 @@ import {
   IteratorStep,
   IteratorValue,
   OrdinaryCreateFromConstructor,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   ObjectValue,
   Value,
   wellKnownSymbols,
-} from '../value.mjs';
+} from '../value.mts';
 import {
   IfAbruptCloseIterator,
   Q,
-} from '../completion.mjs';
-import { bootstrapConstructor } from './bootstrap.mjs';
+} from '../completion.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 
 export function AddEntriesFromIterable(target, iterable, adder) {
   if (IsCallable(adder) === Value.false) {

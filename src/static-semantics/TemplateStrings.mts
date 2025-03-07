@@ -1,6 +1,6 @@
-import { Value } from '../value.mjs';
-import { isHexDigit, isDecimalDigit, isLineTerminator } from '../parser/Lexer.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+import { Value } from '../value.mts';
+import { isHexDigit, isDecimalDigit, isLineTerminator } from '../parser/Lexer.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 export function TV(s: string) {
   let buffer = '';

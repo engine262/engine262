@@ -1,6 +1,6 @@
-import { OutOfRange } from '../helpers.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { UTF16SurrogatePairToCodePoint } from './all.mjs';
+import { OutOfRange } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { UTF16SurrogatePairToCodePoint } from './all.mts';
 
 export function CharacterValue(node: ParseNode.RegExp.CharacterEscape | ParseNode.RegExp.RegExpUnicodeEscapeSequence | ParseNode.RegExp.ClassAtom | ParseNode.RegExp.ClassEscape): number {
   switch (node.type) {

@@ -3,10 +3,10 @@ import {
   isKeyword,
   isReservedWordStrict,
   isKeywordRaw,
-} from './tokens.mjs';
-import { BaseParser } from './BaseParser.mjs';
-import type { ParseNode } from './ParseNode.mjs';
-import { type Locatable } from './Lexer.mjs';
+} from './tokens.mts';
+import { BaseParser } from './BaseParser.mts';
+import type { ParseNode } from './ParseNode.mts';
+import { type Locatable } from './Lexer.mts';
 
 export abstract class IdentifierParser extends BaseParser {
   // IdentifierName

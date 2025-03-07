@@ -1,7 +1,7 @@
-import { Assert, Parser } from '../api.mjs';
-import { isArray, OutOfRange } from '../helpers.mjs';
-import type { TokenData } from './Lexer.mjs';
-import type { ParseNode } from './ParseNode.mjs';
+import { Assert, Parser } from '../api.mts';
+import { isArray, OutOfRange } from '../helpers.mts';
+import type { TokenData } from './Lexer.mts';
+import type { ParseNode } from './ParseNode.mts';
 
 export enum Flag {
   return = 1 << 0,

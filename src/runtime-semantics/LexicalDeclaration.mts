@@ -1,21 +1,21 @@
 // @ts-nocheck
-import { Evaluate } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mts';
 import {
   NormalCompletion,
   ReturnIfAbrupt,
   Q, X,
-} from '../completion.mjs';
-import { Value } from '../value.mjs';
-import { surroundingAgent } from '../engine.mjs';
+} from '../completion.mts';
+import { Value } from '../value.mts';
+import { surroundingAgent } from '../engine.mts';
 import {
   GetValue,
   InitializeReferencedBinding,
   ResolveBinding,
-} from '../abstract-ops/all.mjs';
-import { IsAnonymousFunctionDefinition, StringValue } from '../static-semantics/all.mjs';
-import { OutOfRange } from '../helpers.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { NamedEvaluation, BindingInitialization } from './all.mjs';
+} from '../abstract-ops/all.mts';
+import { IsAnonymousFunctionDefinition, StringValue } from '../static-semantics/all.mts';
+import { OutOfRange } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { NamedEvaluation, BindingInitialization } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation */
 //   LexicalBinding :

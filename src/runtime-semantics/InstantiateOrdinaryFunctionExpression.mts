@@ -1,16 +1,16 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Value } from '../value.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { Value } from '../value.mts';
 import {
   Assert,
   OrdinaryFunctionCreate,
   SetFunctionName,
   MakeConstructor,
   sourceTextMatchedBy,
-} from '../abstract-ops/all.mjs';
-import { StringValue } from '../static-semantics/all.mjs';
-import { DeclarativeEnvironmentRecord } from '../environment.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+} from '../abstract-ops/all.mts';
+import { StringValue } from '../static-semantics/all.mts';
+import { DeclarativeEnvironmentRecord } from '../environment.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateordinaryfunctionexpression */
 //   FunctionExpression :

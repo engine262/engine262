@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   BooleanValue,
   NullValue,
@@ -7,7 +7,7 @@ import {
   ObjectValue,
   Value,
   wellKnownSymbols,
-} from '../value.mjs';
+} from '../value.mts';
 import {
   ArrayCreate,
   Assert,
@@ -36,12 +36,12 @@ import {
   ToUint32,
   RegExpHasFlag,
   F, R, R as MathematicalValue,
-} from '../abstract-ops/all.mjs';
-import { RegExpState as State, GetSubstitution } from '../runtime-semantics/all.mjs';
-import { CodePointAt } from '../static-semantics/all.mjs';
-import { Q, X } from '../completion.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
-import { CreateRegExpStringIterator } from './RegExpStringIteratorPrototype.mjs';
+} from '../abstract-ops/all.mts';
+import { RegExpState as State, GetSubstitution } from '../runtime-semantics/all.mts';
+import { CodePointAt } from '../static-semantics/all.mts';
+import { Q, X } from '../completion.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
+import { CreateRegExpStringIterator } from './RegExpStringIteratorPrototype.mts';
 
 
 /** https://tc39.es/ecma262/#sec-regexp.prototype.exec */

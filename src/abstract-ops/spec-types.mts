@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   BigIntValue,
   DataBlock,
@@ -9,8 +9,8 @@ import {
   ObjectValue,
   UndefinedValue,
   Value,
-} from '../value.mjs';
-import { NormalCompletion, Q, X } from '../completion.mjs';
+} from '../value.mts';
+import { NormalCompletion, Q, X } from '../completion.mts';
 import {
   Assert,
   CreateDataProperty,
@@ -19,8 +19,8 @@ import {
   IsCallable,
   OrdinaryObjectCreate,
   ToBoolean,
-} from './all.mjs';
-import { isNonNegativeInteger } from './data-types-and-values.mjs';
+} from './all.mts';
+import { isNonNegativeInteger } from './data-types-and-values.mts';
 
 // #𝔽
 export function F(x: number): NumberValue {

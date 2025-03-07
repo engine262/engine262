@@ -1,17 +1,17 @@
 // @ts-nocheck
 import {
   surroundingAgent,
-} from '../engine.mjs';
+} from '../engine.mts';
 import {
   ObjectValue,
   Value,
-} from '../value.mjs';
+} from '../value.mts';
 import {
   Get,
   ToString,
-} from '../abstract-ops/all.mjs';
-import { Q } from '../completion.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+} from '../abstract-ops/all.mts';
+import { Q } from '../completion.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-error.prototype.tostring */
 function ErrorProto_toString(args, { thisValue }) {

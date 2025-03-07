@@ -1,10 +1,10 @@
 // @ts-nocheck
 import {
   GeneratorResume,
-} from '../abstract-ops/all.mjs';
-import { Q } from '../completion.mjs';
-import { Value } from '../value.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+} from '../abstract-ops/all.mts';
+import { Q } from '../completion.mts';
+import { Value } from '../value.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 
 const kStringIteratorPrototype = Value('%StringIteratorPrototype%');
 

@@ -1,8 +1,8 @@
 // @ts-nocheck
-import { Evaluate } from '../evaluator.mjs';
-import { GetValue } from '../abstract-ops/all.mjs';
-import { Q } from '../completion.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+import { Evaluate } from '../evaluator.mts';
+import { GetValue } from '../abstract-ops/all.mts';
+import { Q } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-comma-operator-runtime-semantics-evaluation */
 //   Expression :

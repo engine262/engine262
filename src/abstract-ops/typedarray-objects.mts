@@ -1,7 +1,7 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { ObjectValue, Value, NumberValue } from '../value.mjs';
-import { Q, X } from '../completion.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { ObjectValue, Value, NumberValue } from '../value.mts';
+import { Q, X } from '../completion.mts';
 import {
   Assert,
   ToInt8,
@@ -24,7 +24,7 @@ import {
   IntegerIndexedObjectCreate,
   GetPrototypeFromConstructor,
   AllocateArrayBuffer, R,
-} from './all.mjs';
+} from './all.mts';
 
 export const typedArrayInfoByName = {
   Int8Array: {

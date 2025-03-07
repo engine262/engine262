@@ -1,26 +1,26 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Value, NullValue, ObjectValue } from '../value.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { Value, NullValue, ObjectValue } from '../value.mts';
 import {
   Assert,
   GetValue,
   CreateDataPropertyOrThrow,
   CopyDataProperties,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   StringValue,
   IsAnonymousFunctionDefinition,
   IsComputedPropertyKey,
-} from '../static-semantics/all.mjs';
-import { Evaluate } from '../evaluator.mjs';
+} from '../static-semantics/all.mts';
+import { Evaluate } from '../evaluator.mts';
 import {
   Q, X,
   ReturnIfAbrupt,
   NormalCompletion,
-} from '../completion.mjs';
-import { OutOfRange, kInternal } from '../helpers.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { NamedEvaluation, MethodDefinitionEvaluation, Evaluate_PropertyName } from './all.mjs';
+} from '../completion.mts';
+import { OutOfRange, kInternal } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { NamedEvaluation, MethodDefinitionEvaluation, Evaluate_PropertyName } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-propertydefinitionevaluation */
 //   PropertyDefinitionList :

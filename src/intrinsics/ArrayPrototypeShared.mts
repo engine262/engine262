@@ -15,11 +15,11 @@ import {
   ToObject,
   ToString,
   F, R,
-} from '../abstract-ops/all.mjs';
-import { Q, X } from '../completion.mjs';
-import { surroundingAgent } from '../engine.mjs';
-import { NullValue, UndefinedValue, Value } from '../value.mjs';
-import { assignProps } from './bootstrap.mjs';
+} from '../abstract-ops/all.mts';
+import { Q, X } from '../completion.mts';
+import { surroundingAgent } from '../engine.mts';
+import { NullValue, UndefinedValue, Value } from '../value.mts';
+import { assignProps } from './bootstrap.mts';
 
 // Algorithms and methods shared between %Array.prototype% and
 // %TypedArray.prototype%.

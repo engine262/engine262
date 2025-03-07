@@ -1,12 +1,12 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Value } from '../value.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { Value } from '../value.mts';
 import {
   Assert,
   CreateListIteratorRecord,
   CreateMappedArgumentsObject,
   CreateUnmappedArgumentsObject,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   BoundNames,
   IsConstantDeclaration,
@@ -16,14 +16,14 @@ import {
   VarScopedDeclarations,
   LexicallyDeclaredNames,
   LexicallyScopedDeclarations,
-} from '../static-semantics/all.mjs';
-import { DeclarativeEnvironmentRecord } from '../environment.mjs';
-import { Q, X, NormalCompletion } from '../completion.mjs';
-import { ValueSet } from '../helpers.mjs';
+} from '../static-semantics/all.mts';
+import { DeclarativeEnvironmentRecord } from '../environment.mts';
+import { Q, X, NormalCompletion } from '../completion.mts';
+import { ValueSet } from '../helpers.mts';
 import {
   InstantiateFunctionObject,
   IteratorBindingInitialization_FormalParameters,
-} from './all.mjs';
+} from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-functiondeclarationinstantiation */
 export function* FunctionDeclarationInstantiation(func, argumentsList) {

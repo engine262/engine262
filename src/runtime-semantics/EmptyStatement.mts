@@ -1,5 +1,5 @@
-import { NormalCompletion } from '../completion.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+import { NormalCompletion } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-empty-statement-runtime-semantics-evaluation */
 //   EmptyStatement : `;`

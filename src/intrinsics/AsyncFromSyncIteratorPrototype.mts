@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   AsyncFromSyncIteratorContinuation,
   Call,
@@ -8,10 +8,10 @@ import {
   IteratorNext,
   NewPromiseCapability,
   Assert,
-} from '../abstract-ops/all.mjs';
-import { ObjectValue, Value } from '../value.mjs';
-import { IfAbruptRejectPromise, X } from '../completion.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+} from '../abstract-ops/all.mts';
+import { ObjectValue, Value } from '../value.mts';
+import { IfAbruptRejectPromise, X } from '../completion.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.next */
 function AsyncFromSyncIteratorPrototype_next([value], { thisValue }) {

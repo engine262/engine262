@@ -1,6 +1,6 @@
 // @ts-nocheck
-import { JSStringValue } from '../value.mjs';
-import { Assert, F, isNonNegativeInteger } from '../abstract-ops/all.mjs';
+import { JSStringValue } from '../value.mts';
+import { Assert, F, isNonNegativeInteger } from '../abstract-ops/all.mts';
 
 // https://tc39.es/proposal-string-replaceall/#sec-stringindexof
 export function StringIndexOf(string: JSStringValue, searchValue: JSStringValue, fromIndex: number) {

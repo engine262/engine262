@@ -1,18 +1,18 @@
 // @ts-nocheck
-import { Evaluate } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mts';
 import {
   GetValue,
   ToBoolean,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   Completion,
   EnsureCompletion,
   NormalCompletion,
   Q,
   UpdateEmpty,
-} from '../completion.mjs';
-import { Value } from '../value.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+} from '../completion.mts';
+import { Value } from '../value.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-if-statement-runtime-semantics-evaluation */
 // IfStatement :

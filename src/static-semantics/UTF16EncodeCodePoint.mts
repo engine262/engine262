@@ -1,4 +1,4 @@
-import { Assert } from '../abstract-ops/all.mjs';
+import { Assert } from '../abstract-ops/all.mts';
 
 /** https://tc39.es/ecma262/#sec-utf16encodecodepoint */
 export function UTF16EncodeCodePoint(cp: number) {

@@ -1,10 +1,10 @@
 // @ts-nocheck
-import { Evaluate } from '../evaluator.mjs';
-import { GetValue } from '../abstract-ops/all.mjs';
-import { IsInTailPosition } from '../static-semantics/all.mjs';
-import { Q } from '../completion.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { EvaluateCall } from './all.mjs';
+import { Evaluate } from '../evaluator.mts';
+import { GetValue } from '../abstract-ops/all.mts';
+import { IsInTailPosition } from '../static-semantics/all.mts';
+import { Q } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { EvaluateCall } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-tagged-templates-runtime-semantics-evaluation */
 //   MemberExpression :

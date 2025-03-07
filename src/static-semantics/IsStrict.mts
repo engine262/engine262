@@ -1,4 +1,4 @@
-import type { ParseNode } from '../parser/ParseNode.mjs';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-static-semantics-isstrict */
 export function IsStrict({ ScriptBody }: ParseNode.Script) {

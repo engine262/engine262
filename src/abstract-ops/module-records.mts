@@ -1,16 +1,16 @@
 // @ts-nocheck
-import { surroundingAgent, HostLoadImportedModule } from '../engine.mjs';
+import { surroundingAgent, HostLoadImportedModule } from '../engine.mts';
 import {
   CyclicModuleRecord,
   SyntheticModuleRecord,
   ResolvedBindingRecord,
   AbstractModuleRecord,
   type ModuleRecordHostDefined,
-} from '../modules.mjs';
-import { JSStringValue, UndefinedValue, Value } from '../value.mjs';
+} from '../modules.mts';
+import { JSStringValue, UndefinedValue, Value } from '../value.mts';
 import {
   Q, X, NormalCompletion, ThrowCompletion,
-} from '../completion.mjs';
+} from '../completion.mts';
 import {
   Assert,
   ModuleNamespaceCreate,
@@ -22,7 +22,7 @@ import {
   PromiseCapabilityRecord,
   Realm,
   type PromiseObjectValue,
-} from './all.mjs';
+} from './all.mts';
 
 export type GraphLoadingStateHostDefined = unknown;
 /** https://tc39.es/ecma262/#graphloadingstate-record */

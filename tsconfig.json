@@ -11,6 +11,8 @@
       "module": "NodeNext",
       "moduleResolution": "NodeNext",
       "verbatimModuleSyntax": true,
+      "resolveJsonModule": true,
+      "allowImportingTsExtensions": true,
       "rootDir": "src",
 
       "declaration": true,

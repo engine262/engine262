@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   Q, X,
   Await,
@@ -8,10 +8,10 @@ import {
   NormalCompletion,
   AbruptCompletion,
   ThrowCompletion,
-} from '../completion.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import { Value } from '../value.mjs';
-import { resume, handleInResume } from '../helpers.mjs';
+} from '../completion.mts';
+import { Evaluate } from '../evaluator.mts';
+import { Value } from '../value.mts';
+import { resume, handleInResume } from '../helpers.mts';
 import {
   Assert,
   Call,
@@ -24,7 +24,7 @@ import {
   PromiseResolve,
   RequireInternalSlot,
   SameValue,
-} from './all.mjs';
+} from './all.mts';
 
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-asyncgenerator-objects */

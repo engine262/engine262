@@ -8,13 +8,13 @@ import {
   wellKnownSymbols,
   NullValue,
   BooleanValue,
-} from '../value.mjs';
+} from '../value.mts';
 import {
   surroundingAgent,
-} from '../engine.mjs';
-import { Q, X } from '../completion.mjs';
-import { OutOfRange } from '../helpers.mjs';
-import { MV_StringNumericLiteral } from '../runtime-semantics/all.mjs';
+} from '../engine.mts';
+import { Q, X } from '../completion.mts';
+import { OutOfRange } from '../helpers.mts';
+import { MV_StringNumericLiteral } from '../runtime-semantics/all.mts';
 import {
   Assert,
   Call,
@@ -26,7 +26,7 @@ import {
   StringCreate,
   Z,
   F, R,
-} from './all.mjs';
+} from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-toprimitive */
 export function ToPrimitive(input, preferredType) {

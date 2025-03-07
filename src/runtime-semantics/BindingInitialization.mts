@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { JSStringValue, Value } from '../value.mjs';
+import { JSStringValue, Value } from '../value.mts';
 import {
   Assert,
   PutValue,
@@ -7,16 +7,16 @@ import {
   RequireObjectCoercible,
   GetIterator,
   IteratorClose,
-} from '../abstract-ops/all.mjs';
-import { StringValue } from '../api.mjs';
-import { NormalCompletion, Q } from '../completion.mjs';
-import { OutOfRange } from '../helpers.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+} from '../abstract-ops/all.mts';
+import { StringValue } from '../api.mts';
+import { NormalCompletion, Q } from '../completion.mts';
+import { OutOfRange } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   IteratorBindingInitialization_ArrayBindingPattern,
   PropertyBindingInitialization,
   RestBindingInitialization,
-} from './all.mjs';
+} from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-initializeboundname */
 export function InitializeBoundName(name: JSStringValue, value, environment) {

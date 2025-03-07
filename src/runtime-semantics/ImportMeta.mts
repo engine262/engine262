@@ -1,15 +1,15 @@
 // @ts-nocheck
-import { HostGetImportMetaProperties, HostFinalizeImportMeta } from '../engine.mjs';
-import { ObjectValue, Value } from '../value.mjs';
+import { HostGetImportMetaProperties, HostFinalizeImportMeta } from '../engine.mts';
+import { ObjectValue, Value } from '../value.mts';
 import {
   Assert,
   GetActiveScriptOrModule,
   OrdinaryObjectCreate,
   CreateDataPropertyOrThrow,
-} from '../abstract-ops/all.mjs';
-import { X } from '../completion.mjs';
-import { SourceTextModuleRecord } from '../modules.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+} from '../abstract-ops/all.mts';
+import { X } from '../completion.mts';
+import { SourceTextModuleRecord } from '../modules.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-meta-properties */
 //   ImportMeta : `import` `.` `meta`

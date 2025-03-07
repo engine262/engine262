@@ -1,7 +1,7 @@
-import { Assert } from '../abstract-ops/all.mjs';
-import { X } from '../completion.mjs';
-import { isLeadingSurrogate, isTrailingSurrogate } from '../parser/Lexer.mjs';
-import { UTF16SurrogatePairToCodePoint } from './all.mjs';
+import { Assert } from '../abstract-ops/all.mts';
+import { X } from '../completion.mts';
+import { isLeadingSurrogate, isTrailingSurrogate } from '../parser/Lexer.mts';
+import { UTF16SurrogatePairToCodePoint } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-codepointat */
 export function CodePointAt(string: string, position: number) {

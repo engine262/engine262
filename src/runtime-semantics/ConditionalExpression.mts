@@ -1,9 +1,9 @@
 // @ts-nocheck
-import { Value } from '../value.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import { ToBoolean, GetValue } from '../abstract-ops/all.mjs';
-import { Q, X } from '../completion.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+import { Value } from '../value.mts';
+import { Evaluate } from '../evaluator.mts';
+import { ToBoolean, GetValue } from '../abstract-ops/all.mts';
+import { Q, X } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-conditional-operator-runtime-semantics-evaluation */
 //   ConditionalExpression :

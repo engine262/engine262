@@ -1,8 +1,8 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   ObjectValue, Value, wellKnownSymbols,
-} from '../value.mjs';
+} from '../value.mts';
 import {
   AllocateArrayBuffer,
   AllocateTypedArray,
@@ -24,9 +24,9 @@ import {
   ToString,
   typedArrayInfoByName,
   F,
-} from '../abstract-ops/all.mjs';
-import { Q, X } from '../completion.mjs';
-import { bootstrapConstructor } from './bootstrap.mjs';
+} from '../abstract-ops/all.mts';
+import { Q, X } from '../completion.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 
 export function bootstrapTypedArrayConstructors(realmRec) {
   Object.entries(typedArrayInfoByName).forEach(([TypedArray, info]) => {

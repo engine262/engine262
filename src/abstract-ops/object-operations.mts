@@ -9,17 +9,17 @@ import {
   UndefinedValue,
   NullValue,
   type Arguments,
-} from '../value.mjs';
+} from '../value.mts';
 import {
   surroundingAgent,
-} from '../engine.mjs';
-import { InstanceofOperator } from '../runtime-semantics/all.mjs';
+} from '../engine.mts';
+import { InstanceofOperator } from '../runtime-semantics/all.mts';
 import {
   NormalCompletion,
   EnsureCompletion,
   Q, X, ThrowCompletion,
-} from '../completion.mjs';
-import { isArray } from '../helpers.mjs';
+} from '../completion.mts';
+import { isArray } from '../helpers.mts';
 import {
   ArrayCreate,
   Assert,
@@ -35,7 +35,7 @@ import {
   ToString,
   isProxyExoticObject,
   F as toNumberValue, R, type FunctionObject, Realm,
-} from './all.mjs';
+} from './all.mts';
 
 
 // This file covers abstract operations defined in

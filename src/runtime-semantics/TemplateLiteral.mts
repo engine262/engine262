@@ -1,10 +1,10 @@
 // @ts-nocheck
-import { Value } from '../value.mjs';
-import { Q } from '../completion.mjs';
-import { GetValue, ToString } from '../abstract-ops/all.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import { TV } from '../static-semantics/all.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+import { Value } from '../value.mts';
+import { Q } from '../completion.mts';
+import { GetValue, ToString } from '../abstract-ops/all.mts';
+import { Evaluate } from '../evaluator.mts';
+import { TV } from '../static-semantics/all.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-template-literals-runtime-semantics-evaluation */
 //   TemplateLiteral : NoSubstitutionTemplate

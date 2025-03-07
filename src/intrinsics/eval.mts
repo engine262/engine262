@@ -1,12 +1,12 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Q } from '../completion.mjs';
-import { Value } from '../value.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { Q } from '../completion.mts';
+import { Value } from '../value.mts';
 import {
   Assert,
   CreateBuiltinFunction,
   PerformEval,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 
 /** https://tc39.es/ecma262/#sec-eval-x */
 function Eval([x = Value.undefined]) {

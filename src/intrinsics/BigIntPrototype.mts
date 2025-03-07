@@ -1,13 +1,13 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   ObjectValue, BigIntValue, Value,
-} from '../value.mjs';
+} from '../value.mts';
 import {
   Assert, ToIntegerOrInfinity, ToString, R,
-} from '../abstract-ops/all.mjs';
-import { Q, X } from '../completion.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+} from '../abstract-ops/all.mts';
+import { Q, X } from '../completion.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-thisbigintvalue */
 function thisBigIntValue(value) {

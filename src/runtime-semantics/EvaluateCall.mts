@@ -1,8 +1,8 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   ObjectValue, Value, ReferenceRecord,
-} from '../value.mjs';
+} from '../value.mts';
 import {
   Assert,
   IsPropertyReference,
@@ -10,10 +10,10 @@ import {
   GetThisValue,
   PrepareForTailCall,
   Call,
-} from '../abstract-ops/all.mjs';
-import { Q, Completion, AbruptCompletion } from '../completion.mjs';
-import { EnvironmentRecord } from '../environment.mjs';
-import { ArgumentListEvaluation } from './all.mjs';
+} from '../abstract-ops/all.mts';
+import { Q, Completion, AbruptCompletion } from '../completion.mts';
+import { EnvironmentRecord } from '../environment.mts';
+import { ArgumentListEvaluation } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-evaluatecall */
 export function* EvaluateCall(func, ref, args, tailPosition: boolean) {

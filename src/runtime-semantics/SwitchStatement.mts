@@ -1,9 +1,9 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import { DeclarativeEnvironmentRecord } from '../environment.mjs';
-import { Assert, GetValue, StrictEqualityComparison } from '../abstract-ops/all.mjs';
-import { Value } from '../value.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { Evaluate } from '../evaluator.mts';
+import { DeclarativeEnvironmentRecord } from '../environment.mts';
+import { Assert, GetValue, StrictEqualityComparison } from '../abstract-ops/all.mts';
+import { Value } from '../value.mts';
 import {
   Completion,
   AbruptCompletion,
@@ -11,13 +11,13 @@ import {
   EnsureCompletion,
   UpdateEmpty,
   Q,
-} from '../completion.mjs';
-import { OutOfRange } from '../helpers.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+} from '../completion.mts';
+import { OutOfRange } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   BlockDeclarationInstantiation,
   Evaluate_StatementList,
-} from './all.mjs';
+} from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-caseclauseisselected */
 function* CaseClauseIsSelected(C: ParseNode.CaseClause, input) {

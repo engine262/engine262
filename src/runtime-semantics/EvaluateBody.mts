@@ -1,6 +1,6 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Value } from '../value.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { Value } from '../value.mts';
 import {
   Assert,
   AsyncFunctionStart,
@@ -10,20 +10,20 @@ import {
   OrdinaryCreateFromConstructor,
   AsyncGeneratorStart,
   GetValue,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   Completion,
   AbruptCompletion,
   Q, X,
-} from '../completion.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import { IsAnonymousFunctionDefinition } from '../static-semantics/all.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+} from '../completion.mts';
+import { Evaluate } from '../evaluator.mts';
+import { IsAnonymousFunctionDefinition } from '../static-semantics/all.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   Evaluate_FunctionStatementList,
   FunctionDeclarationInstantiation,
   NamedEvaluation,
-} from './all.mjs';
+} from './all.mts';
 
 export function Evaluate_AnyFunctionBody({ FunctionStatementList }: ParseNode.FunctionBody) {
   return Evaluate_FunctionStatementList(FunctionStatementList);

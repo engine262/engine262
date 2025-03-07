@@ -1,12 +1,12 @@
 // @ts-nocheck
 import {
   surroundingAgent,
-} from '../engine.mjs';
+} from '../engine.mts';
 import {
   IfAbruptCloseIterator,
   Q,
   ThrowCompletion, X,
-} from '../completion.mjs';
+} from '../completion.mts';
 import {
   ArrayCreate,
   Assert,
@@ -30,15 +30,15 @@ import {
   ToString,
   ToUint32,
   F, R,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   NumberValue,
   UndefinedValue,
   Value,
   wellKnownSymbols,
-} from '../value.mjs';
-import { OutOfRange } from '../helpers.mjs';
-import { bootstrapConstructor } from './bootstrap.mjs';
+} from '../value.mts';
+import { OutOfRange } from '../helpers.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-array-constructor */
 function ArrayConstructor(argumentsList, { NewTarget }) {

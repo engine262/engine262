@@ -1,12 +1,12 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   Descriptor,
   ObjectValue,
   UndefinedValue,
   Value,
   wellKnownSymbols,
-} from '../value.mjs';
+} from '../value.mts';
 import {
   ArrayCreate,
   ArraySpeciesCreate,
@@ -30,10 +30,10 @@ import {
   ToObject,
   ToString,
   F,
-} from '../abstract-ops/all.mjs';
-import { Q, X } from '../completion.mjs';
-import { assignProps } from './bootstrap.mjs';
-import { ArrayProto_sortBody, bootstrapArrayPrototypeShared } from './ArrayPrototypeShared.mjs';
+} from '../abstract-ops/all.mts';
+import { Q, X } from '../completion.mts';
+import { assignProps } from './bootstrap.mts';
+import { ArrayProto_sortBody, bootstrapArrayPrototypeShared } from './ArrayPrototypeShared.mts';
 
 /** https://tc39.es/ecma262/#sec-array.prototype.concat */
 function ArrayProto_concat(args, { thisValue }) {

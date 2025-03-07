@@ -1,7 +1,7 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { EnvironmentRecord } from '../environment.mjs';
-import { Assert } from '../abstract-ops/all.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { EnvironmentRecord } from '../environment.mts';
+import { Assert } from '../abstract-ops/all.mts';
 import {
   BoundNames,
   IsConstantDeclaration,
@@ -9,11 +9,11 @@ import {
   LexicallyScopedDeclarations,
   VarDeclaredNames,
   VarScopedDeclarations,
-} from '../static-semantics/all.mjs';
-import { Value } from '../value.mjs';
-import { Q, NormalCompletion } from '../completion.mjs';
-import { ValueSet } from '../helpers.mjs';
-import { InstantiateFunctionObject } from './all.mjs';
+} from '../static-semantics/all.mts';
+import { Value } from '../value.mts';
+import { Q, NormalCompletion } from '../completion.mts';
+import { ValueSet } from '../helpers.mts';
+import { InstantiateFunctionObject } from './all.mts';
 
 export function GlobalDeclarationInstantiation(script, env: EnvironmentRecord) {
   // 1. Assert: env is a global Environment Record.

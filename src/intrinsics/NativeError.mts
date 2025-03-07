@@ -1,21 +1,21 @@
 // @ts-nocheck
 import {
   surroundingAgent,
-} from '../engine.mjs';
+} from '../engine.mts';
 import {
   DefinePropertyOrThrow,
   OrdinaryCreateFromConstructor,
   InstallErrorCause,
   ToString,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   Descriptor,
   UndefinedValue,
   Value,
-} from '../value.mjs';
-import { Q, X } from '../completion.mjs';
-import { captureStack } from '../helpers.mjs';
-import { bootstrapConstructor, bootstrapPrototype } from './bootstrap.mjs';
+} from '../value.mts';
+import { Q, X } from '../completion.mts';
+import { captureStack } from '../helpers.mts';
+import { bootstrapConstructor, bootstrapPrototype } from './bootstrap.mts';
 
 export function bootstrapNativeError(realmRec) {
   for (const name of [

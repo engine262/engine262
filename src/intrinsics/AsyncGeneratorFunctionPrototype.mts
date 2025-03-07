@@ -1,7 +1,7 @@
 // @ts-nocheck
-import { X } from '../completion.mjs';
-import { Descriptor, Value } from '../value.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+import { X } from '../completion.mts';
+import { Descriptor, Value } from '../value.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 
 export function bootstrapAsyncGeneratorFunctionPrototype(realmRec) {
   const proto = bootstrapPrototype(realmRec, [

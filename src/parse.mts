@@ -1,9 +1,9 @@
 // @ts-nocheck
-import { Parser, type ParserOptions } from './parser/Parser.mjs';
-import { RegExpParser, type RegExpParserContext } from './parser/RegExpParser.mjs';
-import { surroundingAgent, type GCMarker } from './engine.mjs';
-import { SourceTextModuleRecord } from './modules.mjs';
-import { JSStringValue, ObjectValue, Value } from './value.mjs';
+import { Parser, type ParserOptions } from './parser/Parser.mts';
+import { RegExpParser, type RegExpParserContext } from './parser/RegExpParser.mts';
+import { surroundingAgent, type GCMarker } from './engine.mts';
+import { SourceTextModuleRecord } from './modules.mts';
+import { JSStringValue, ObjectValue, Value } from './value.mts';
 import {
   Get,
   Set,
@@ -11,16 +11,16 @@ import {
   CreateDefaultExportSyntheticModule,
   Realm,
   type BuiltinFunctionObject,
-} from './abstract-ops/all.mjs';
-import { Q, X } from './completion.mjs';
+} from './abstract-ops/all.mts';
+import { Q, X } from './completion.mts';
 import {
   ModuleRequests,
   ImportEntries,
   ExportEntries,
   ImportedLocalNames,
-} from './static-semantics/all.mjs';
-import { ValueSet, kInternal } from './helpers.mjs';
-import type { ParseNode } from './parser/ParseNode.mjs';
+} from './static-semantics/all.mts';
+import { ValueSet, kInternal } from './helpers.mts';
+import type { ParseNode } from './parser/ParseNode.mts';
 
 export { Parser, RegExpParser };
 

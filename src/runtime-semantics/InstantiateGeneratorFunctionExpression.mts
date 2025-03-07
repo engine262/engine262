@@ -1,6 +1,6 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Value, Descriptor } from '../value.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { Value, Descriptor } from '../value.mts';
 import {
   Assert,
   DefinePropertyOrThrow,
@@ -8,11 +8,11 @@ import {
   OrdinaryObjectCreate,
   SetFunctionName,
   sourceTextMatchedBy,
-} from '../abstract-ops/all.mjs';
-import { X } from '../completion.mjs';
-import { StringValue } from '../static-semantics/all.mjs';
-import { DeclarativeEnvironmentRecord } from '../environment.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+} from '../abstract-ops/all.mts';
+import { X } from '../completion.mts';
+import { StringValue } from '../static-semantics/all.mts';
+import { DeclarativeEnvironmentRecord } from '../environment.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiategeneratorfunctionexpression */
 //   GeneratorExpression :

@@ -1,14 +1,14 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   IsDetachedBuffer,
   OrdinaryCreateFromConstructor,
   ToIndex,
   RequireInternalSlot,
-} from '../abstract-ops/all.mjs';
-import { Value } from '../value.mjs';
-import { Q } from '../completion.mjs';
-import { bootstrapConstructor } from './bootstrap.mjs';
+} from '../abstract-ops/all.mts';
+import { Value } from '../value.mts';
+import { Q } from '../completion.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-dataview-constructor */
 function DataViewConstructor([buffer = Value.undefined, byteOffset = Value.undefined, byteLength = Value.undefined], { NewTarget }) {

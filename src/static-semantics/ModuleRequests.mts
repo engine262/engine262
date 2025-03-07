@@ -1,6 +1,6 @@
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import type { JSStringValue } from '../value.mjs';
-import { StringValue } from './all.mjs';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import type { JSStringValue } from '../value.mts';
+import { StringValue } from './all.mts';
 
 export function ModuleRequests(node: ParseNode): JSStringValue[] {
   switch (node.type) {

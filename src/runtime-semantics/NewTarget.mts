@@ -1,4 +1,4 @@
-import { GetNewTarget } from '../abstract-ops/all.mjs';
+import { GetNewTarget } from '../abstract-ops/all.mts';
 
 /** https://tc39.es/ecma262/#sec-meta-properties-runtime-semantics-evaluation */
 // NewTarget : `new` `.` `target`

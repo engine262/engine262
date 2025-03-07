@@ -2,9 +2,9 @@
 import {
   ToNumber,
   CreateBuiltinFunction,
-} from '../abstract-ops/all.mjs';
-import { Value } from '../value.mjs';
-import { Q } from '../completion.mjs';
+} from '../abstract-ops/all.mts';
+import { Value } from '../value.mts';
+import { Q } from '../completion.mts';
 
 /** https://tc39.es/ecma262/#sec-isnan-number */
 function IsNaN([number = Value.undefined]) {

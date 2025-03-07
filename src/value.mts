@@ -1,4 +1,4 @@
-import { type GCMarker, surroundingAgent } from './engine.mjs';
+import { type GCMarker, surroundingAgent } from './engine.mts';
 import {
   Assert,
   OrdinaryDefineOwnProperty,
@@ -16,11 +16,11 @@ import {
   ToUint32,
   Z,
   F, R, type OrdinaryObject, type FunctionObject,
-} from './abstract-ops/all.mjs';
-import { EnvironmentRecord } from './environment.mjs';
-import { Completion, X } from './completion.mjs';
-import { ValueMap, OutOfRange, callable } from './helpers.mjs';
-import type { PrivateElementRecord } from './runtime-semantics/MethodDefinitionEvaluation.mjs';
+} from './abstract-ops/all.mts';
+import { EnvironmentRecord } from './environment.mts';
+import { Completion, X } from './completion.mts';
+import { ValueMap, OutOfRange, callable } from './helpers.mts';
+import type { PrivateElementRecord } from './runtime-semantics/MethodDefinitionEvaluation.mts';
 
 let createStringValue: (value: string) => JSStringValue; // set by static block in StringValue for privileged access to constructor
 let createNumberValue: (value: number) => NumberValue; // set by static block in NumberValue for privileged access to constructor

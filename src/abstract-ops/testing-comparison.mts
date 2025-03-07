@@ -9,10 +9,10 @@ import {
   TypeForMethod,
   Value,
   wellKnownSymbols,
-} from '../value.mjs';
-import { surroundingAgent } from '../engine.mjs';
-import { Q, X } from '../completion.mjs';
-import { OutOfRange } from '../helpers.mjs';
+} from '../value.mts';
+import { surroundingAgent } from '../engine.mts';
+import { Q, X } from '../completion.mts';
+import { OutOfRange } from '../helpers.mts';
 import {
   Assert,
   Get,
@@ -24,7 +24,7 @@ import {
   StringToBigInt,
   isProxyExoticObject,
   isArrayExoticObject, R,
-} from './all.mjs';
+} from './all.mts';
 
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-testing-and-comparison-operations */

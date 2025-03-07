@@ -1,11 +1,11 @@
 // @ts-nocheck
-import { NullValue, Value } from './value.mjs';
+import { NullValue, Value } from './value.mts';
 import {
   EnsureCompletion,
   NormalCompletion,
   ThrowCompletion,
   Q, X,
-} from './completion.mjs';
+} from './completion.mts';
 import {
   IsCallable,
   Call, Construct, Assert,
@@ -15,13 +15,13 @@ import {
   FinishLoadingImportedModule,
   Realm,
   type FunctionObject,
-} from './abstract-ops/all.mjs';
-import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
-import { Evaluate } from './evaluator.mjs';
-import { CallSite, unwind } from './helpers.mjs';
-import { runJobQueue } from './api.mjs';
-import * as messages from './messages.mjs';
-import type { ParseNode } from './parser/ParseNode.mjs';
+} from './abstract-ops/all.mts';
+import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mts';
+import { Evaluate } from './evaluator.mts';
+import { CallSite, unwind } from './helpers.mts';
+import { runJobQueue } from './api.mts';
+import * as messages from './messages.mts';
+import type { ParseNode } from './parser/ParseNode.mts';
 
 export const FEATURES = ([
   {

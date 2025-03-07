@@ -1,6 +1,6 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Value } from '../value.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { Value } from '../value.mts';
 import {
   IsCallable,
   OrdinaryCreateFromConstructor,
@@ -9,9 +9,9 @@ import {
   GetIterator,
   IteratorStep,
   IteratorValue,
-} from '../abstract-ops/all.mjs';
-import { IfAbruptCloseIterator, Q } from '../completion.mjs';
-import { bootstrapConstructor } from './bootstrap.mjs';
+} from '../abstract-ops/all.mts';
+import { IfAbruptCloseIterator, Q } from '../completion.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-weakset-iterable */
 function WeakSetConstructor([iterable = Value.undefined], { NewTarget }) {

@@ -1,8 +1,8 @@
 // @ts-nocheck
-import { surroundingAgent, HostCallJobCallback } from '../engine.mjs';
-import { Value } from '../value.mjs';
-import { NormalCompletion, Q, X } from '../completion.mjs';
-import { Assert } from './all.mjs';
+import { surroundingAgent, HostCallJobCallback } from '../engine.mts';
+import { Value } from '../value.mts';
+import { NormalCompletion, Q, X } from '../completion.mts';
+import { Assert } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-clear-kept-objects */
 export function ClearKeptObjects() {

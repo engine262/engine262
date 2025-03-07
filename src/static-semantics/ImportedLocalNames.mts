@@ -1,4 +1,4 @@
-import type { ImportEntry } from './ImportEntries.mjs';
+import type { ImportEntry } from './ImportEntries.mts';
 
 /** https://tc39.es/ecma262/#sec-importedlocalnames */
 export function ImportedLocalNames(importEntries: readonly ImportEntry[]) {

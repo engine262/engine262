@@ -1,7 +1,7 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { NormalCompletion, EnsureCompletion } from '../completion.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { NormalCompletion, EnsureCompletion } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-debugger-statement-runtime-semantics-evaluation */
 // DebuggerStatement : `debugger` `;`

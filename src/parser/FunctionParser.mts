@@ -1,9 +1,9 @@
-import { IsSimpleParameterList } from '../static-semantics/all.mjs';
-import { type Mutable } from '../helpers.mjs';
-import { getDeclarations, type ArrowInfo } from './Scope.mjs';
-import { Token } from './tokens.mjs';
-import { IdentifierParser } from './IdentifierParser.mjs';
-import type { ParseNode, ParseNodesByType } from './ParseNode.mjs';
+import { IsSimpleParameterList } from '../static-semantics/all.mts';
+import { type Mutable } from '../helpers.mts';
+import { getDeclarations, type ArrowInfo } from './Scope.mts';
+import { Token } from './tokens.mts';
+import { IdentifierParser } from './IdentifierParser.mts';
+import type { ParseNode, ParseNodesByType } from './ParseNode.mts';
 
 export enum FunctionKind {
   NORMAL = 0,

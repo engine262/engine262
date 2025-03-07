@@ -1,8 +1,8 @@
-import { Value } from '../value.mjs';
-import { StringValue, NumericValue } from '../static-semantics/all.mjs';
-import { OutOfRange } from '../helpers.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { NormalCompletion } from '../completion.mjs';
+import { Value } from '../value.mts';
+import { StringValue, NumericValue } from '../static-semantics/all.mts';
+import { OutOfRange } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { NormalCompletion } from '../completion.mts';
 
 /** https://tc39.es/ecma262/#sec-literals-runtime-semantics-evaluation */
 // Literal :

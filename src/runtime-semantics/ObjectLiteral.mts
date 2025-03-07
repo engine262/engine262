@@ -1,12 +1,12 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Value } from '../value.mjs';
-import { OrdinaryObjectCreate } from '../abstract-ops/all.mjs';
-import { Q } from '../completion.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { Value } from '../value.mts';
+import { OrdinaryObjectCreate } from '../abstract-ops/all.mts';
+import { Q } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   PropertyDefinitionEvaluation_PropertyDefinitionList,
-} from './all.mjs';
+} from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-evaluation */
 //   ObjectLiteral :

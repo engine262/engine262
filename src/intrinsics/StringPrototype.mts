@@ -1,11 +1,11 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   ObjectValue,
   JSStringValue,
   Value,
   wellKnownSymbols,
-} from '../value.mjs';
+} from '../value.mts';
 import {
   ArrayCreate,
   Assert,
@@ -26,20 +26,20 @@ import {
   StringCreate,
   Yield,
   F, R, R as MathematicalValue,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   GetSubstitution,
   TrimString,
   StringPad,
   StringIndexOf,
-} from '../runtime-semantics/all.mjs';
+} from '../runtime-semantics/all.mts';
 import {
   CodePointAt,
   IsStringWellFormedUnicode,
   UTF16EncodeCodePoint,
-} from '../static-semantics/all.mjs';
-import { Q, X } from '../completion.mjs';
-import { assignProps } from './bootstrap.mjs';
+} from '../static-semantics/all.mts';
+import { Q, X } from '../completion.mts';
+import { assignProps } from './bootstrap.mts';
 
 
 function thisStringValue(value) {

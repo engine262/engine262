@@ -2,10 +2,10 @@
 import {
   OrdinaryCreateFromConstructor,
   ToBoolean,
-} from '../abstract-ops/all.mjs';
-import { Value } from '../value.mjs';
-import { Q, X } from '../completion.mjs';
-import { bootstrapConstructor } from './bootstrap.mjs';
+} from '../abstract-ops/all.mts';
+import { Value } from '../value.mts';
+import { Q, X } from '../completion.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-boolean-constructor-boolean-value */
 function BooleanConstructor([value = Value.undefined], { NewTarget }) {

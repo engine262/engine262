@@ -3,12 +3,12 @@ import {
   AbstractEqualityComparison,
   GetValue,
   StrictEqualityComparison,
-} from '../abstract-ops/all.mjs';
-import { ReturnIfAbrupt, Q, X } from '../completion.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import { Value } from '../value.mjs';
-import { OutOfRange } from '../helpers.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+} from '../abstract-ops/all.mts';
+import { ReturnIfAbrupt, Q, X } from '../completion.mts';
+import { Evaluate } from '../evaluator.mts';
+import { Value } from '../value.mts';
+import { OutOfRange } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-equality-operators-runtime-semantics-evaluation */
 //   EqualityExpression :

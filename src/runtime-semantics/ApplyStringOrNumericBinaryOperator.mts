@@ -1,10 +1,10 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   Type, JSStringValue, TypeForMethod, Value,
-} from '../value.mjs';
-import { ToNumeric, ToPrimitive, ToString } from '../abstract-ops/all.mjs';
-import { Q } from '../completion.mjs';
+} from '../value.mts';
+import { ToNumeric, ToPrimitive, ToString } from '../abstract-ops/all.mts';
+import { Q } from '../completion.mts';
 
 export type BinaryOperator = '+' | '-' | '*' | '/' | '%' | '**' | '<<' | '>>' | '>>>' | '&' | '^' | '|';
 /** https://tc39.es/ecma262/#sec-applystringornumericbinaryoperator */

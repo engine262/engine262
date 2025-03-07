@@ -1,5 +1,5 @@
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { IsFunctionDefinition, HasName } from './all.mjs';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { IsFunctionDefinition, HasName } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-isanonymousfunctiondefinition */
 export function IsAnonymousFunctionDefinition(expr: ParseNode) {

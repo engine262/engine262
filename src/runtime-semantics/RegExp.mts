@@ -1,13 +1,13 @@
 // @ts-nocheck
 import unicodeCaseFoldingCommon from '@unicode/unicode-16.0.0/Case_Folding/C/symbols.js';
 import unicodeCaseFoldingSimple from '@unicode/unicode-16.0.0/Case_Folding/S/symbols.js';
-import { JSStringValue, Value } from '../value.mjs';
-import { Assert, isNonNegativeInteger } from '../abstract-ops/all.mjs';
-import { CharacterValue, StringToCodePoints } from '../static-semantics/all.mjs';
-import { X } from '../completion.mjs';
-import { isLineTerminator, isWhitespace, isDecimalDigit } from '../parser/Lexer.mjs';
-import { OutOfRange } from '../helpers.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+import { JSStringValue, Value } from '../value.mts';
+import { Assert, isNonNegativeInteger } from '../abstract-ops/all.mts';
+import { CharacterValue, StringToCodePoints } from '../static-semantics/all.mts';
+import { X } from '../completion.mts';
+import { isLineTerminator, isWhitespace, isDecimalDigit } from '../parser/Lexer.mts';
+import { OutOfRange } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   UnicodeMatchProperty,
   UnicodeMatchPropertyValue,
@@ -15,7 +15,7 @@ import {
   BinaryUnicodeProperties,
   NonbinaryUnicodeProperties,
   getUnicodePropertyValueSet,
-} from './all.mjs';
+} from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-pattern */
 class State {

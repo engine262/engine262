@@ -8,18 +8,18 @@ import {
   OrdinaryObjectCreate,
   SetFunctionName,
   ToString,
-} from '../abstract-ops/all.mjs';
-import { Q, X } from '../completion.mjs';
+} from '../abstract-ops/all.mts';
+import { Q, X } from '../completion.mts';
 import {
   HostEnsureCanCompileStrings,
   surroundingAgent,
-} from '../engine.mjs';
-import { wrappedParse } from '../parse.mjs';
-import { Token } from '../parser/tokens.mjs';
+} from '../engine.mts';
+import { wrappedParse } from '../parse.mts';
+import { Token } from '../parser/tokens.mts';
 import {
   Descriptor, UndefinedValue, Value,
-} from '../value.mjs';
-import { OutOfRange } from '../helpers.mjs';
+} from '../value.mts';
+import { OutOfRange } from '../helpers.mts';
 
 // #table-dynamic-function-sourcetext-prefixes
 const DynamicFunctionSourceTextPrefixes = {

@@ -1,15 +1,15 @@
-import { surroundingAgent } from '../engine.mjs';
-import * as messages from '../messages.mjs';
-import { LanguageParser } from './LanguageParser.mjs';
-import { isLineTerminator, type Locatable } from './Lexer.mjs';
+import { surroundingAgent } from '../engine.mts';
+import * as messages from '../messages.mts';
+import { LanguageParser } from './LanguageParser.mts';
+import { isLineTerminator, type Locatable } from './Lexer.mts';
 import type {
   Location,
   ParseNode,
   ParseNodesByType,
   Position,
-} from './ParseNode.mjs';
-import { Scope } from './Scope.mjs';
-import { Token } from './tokens.mjs';
+} from './ParseNode.mts';
+import { Scope } from './Scope.mts';
+import { Token } from './tokens.mts';
 
 export interface ParserOptions {
   readonly source: string;

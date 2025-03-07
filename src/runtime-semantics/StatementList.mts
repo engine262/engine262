@@ -1,11 +1,11 @@
-import { Evaluate } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mts';
 import {
   EnsureCompletion,
   ReturnIfAbrupt,
   UpdateEmpty,
   NormalCompletion,
-} from '../completion.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+} from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-block-runtime-semantics-evaluation */
 export function* Evaluate_StatementList(StatementList: ParseNode.StatementList) {

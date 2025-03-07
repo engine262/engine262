@@ -1,6 +1,6 @@
-import { Value } from '../value.mjs';
-import { OutOfRange } from '../helpers.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+import { Value } from '../value.mts';
+import { OutOfRange } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 export function StringValue(node: ParseNode) {
   switch (node.type) {

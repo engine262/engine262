@@ -1,6 +1,6 @@
-import { isArray } from '../helpers.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { DeclarationPart, VarScopedDeclarations } from './all.mjs';
+import { isArray } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { DeclarationPart, VarScopedDeclarations } from './all.mts';
 
 export function TopLevelVarScopedDeclarations(node: ParseNode | readonly ParseNode[]): VarScopedDeclaration[] {
   if (isArray(node)) {

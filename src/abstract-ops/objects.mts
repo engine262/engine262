@@ -6,10 +6,10 @@ import {
   Value,
   BooleanValue,
   type PropertyKeyValue,
-} from '../value.mjs';
+} from '../value.mts';
 import {
   NormalCompletion, Q, ThrowCompletion, X,
-} from '../completion.mjs';
+} from '../completion.mts';
 import {
   Assert,
   Call,
@@ -25,7 +25,7 @@ import {
   SameValue,
   MakeBasicObject,
   isArrayIndex,
-} from './all.mjs';
+} from './all.mts';
 
 export interface OrdinaryObject extends ObjectValue {
   Prototype: ObjectValue | NullValue;

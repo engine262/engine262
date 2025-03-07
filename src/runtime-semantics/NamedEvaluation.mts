@@ -1,9 +1,9 @@
 // @ts-nocheck
-import { Value } from '../value.mjs';
-import { sourceTextMatchedBy } from '../abstract-ops/all.mjs';
-import { ReturnIfAbrupt } from '../completion.mjs';
-import { OutOfRange } from '../helpers.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+import { Value } from '../value.mts';
+import { sourceTextMatchedBy } from '../abstract-ops/all.mts';
+import { ReturnIfAbrupt } from '../completion.mts';
+import { OutOfRange } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   ClassDefinitionEvaluation,
   InstantiateOrdinaryFunctionExpression,
@@ -12,7 +12,7 @@ import {
   InstantiateAsyncGeneratorFunctionExpression,
   InstantiateArrowFunctionExpression,
   InstantiateAsyncArrowFunctionExpression,
-} from './all.mjs';
+} from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-namedevaluation */
 //   FunctionExpression :

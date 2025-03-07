@@ -3,13 +3,13 @@ import {
   ObjectValue,
   BooleanValue,
   Value,
-} from '../value.mjs';
+} from '../value.mts';
 import {
   surroundingAgent,
-} from '../engine.mjs';
-import { Assert } from '../abstract-ops/all.mjs';
-import { Q } from '../completion.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+} from '../engine.mts';
+import { Assert } from '../abstract-ops/all.mts';
+import { Q } from '../completion.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 
 
 function thisBooleanValue(value) {

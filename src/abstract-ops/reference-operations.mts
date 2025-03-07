@@ -1,18 +1,18 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   ReferenceRecord,
   Value,
   PrivateName,
-} from '../value.mjs';
+} from '../value.mts';
 import {
   NormalCompletion,
   Q,
   ReturnIfAbrupt,
   ThrowCompletion,
   X,
-} from '../completion.mjs';
-import { EnvironmentRecord } from '../environment.mjs';
+} from '../completion.mts';
+import { EnvironmentRecord } from '../environment.mts';
 import {
   Assert,
   GetGlobalObject,
@@ -20,7 +20,7 @@ import {
   Set,
   PrivateGet,
   PrivateSet,
-} from './all.mjs';
+} from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-ispropertyreference */
 export function IsPropertyReference(V) {

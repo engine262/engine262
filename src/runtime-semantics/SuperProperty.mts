@@ -1,15 +1,15 @@
 // @ts-nocheck
-import { Evaluate } from '../evaluator.mjs';
-import { ReferenceRecord, Value } from '../value.mjs';
+import { Evaluate } from '../evaluator.mts';
+import { ReferenceRecord, Value } from '../value.mts';
 import {
   Assert,
   GetThisEnvironment,
   GetValue,
   ToPropertyKey,
-} from '../abstract-ops/all.mjs';
-import { StringValue } from '../static-semantics/all.mjs';
-import { Q } from '../completion.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+} from '../abstract-ops/all.mts';
+import { StringValue } from '../static-semantics/all.mts';
+import { Q } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-makesuperpropertyreference */
 function MakeSuperPropertyReference(actualThis, propertyKey, strict) {

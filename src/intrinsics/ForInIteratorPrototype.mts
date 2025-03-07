@@ -1,14 +1,14 @@
 // @ts-nocheck
-import { Value, JSStringValue, ObjectValue } from '../value.mjs';
-import { surroundingAgent } from '../engine.mjs';
+import { Value, JSStringValue, ObjectValue } from '../value.mts';
+import { surroundingAgent } from '../engine.mts';
 import {
   Assert,
   SameValue,
   OrdinaryObjectCreate,
   CreateIterResultObject,
-} from '../abstract-ops/all.mjs';
-import { Q } from '../completion.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+} from '../abstract-ops/all.mts';
+import { Q } from '../completion.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-createforiniterator */
 export function CreateForInIterator(object) {

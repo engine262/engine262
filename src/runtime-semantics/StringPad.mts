@@ -1,9 +1,9 @@
 // @ts-nocheck
-import { Value } from '../value.mjs';
+import { Value } from '../value.mts';
 import {
   Assert, ToString, ToLength, R,
-} from '../abstract-ops/all.mjs';
-import { Q } from '../completion.mjs';
+} from '../abstract-ops/all.mts';
+import { Q } from '../completion.mts';
 
 /** https://tc39.es/ecma262/#sec-stringpad */
 export function StringPad(O, maxLength, fillString, placement: 'start' | 'end') {

@@ -1,9 +1,9 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Q, X } from '../completion.mjs';
-import { CreateDynamicFunction } from '../runtime-semantics/all.mjs';
-import { Descriptor, Value } from '../value.mjs';
-import { bootstrapConstructor } from './bootstrap.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { Q, X } from '../completion.mts';
+import { CreateDynamicFunction } from '../runtime-semantics/all.mts';
+import { Descriptor, Value } from '../value.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-asyncgeneratorfunction */
 function AsyncGeneratorFunctionConstructor(args, { NewTarget }) {

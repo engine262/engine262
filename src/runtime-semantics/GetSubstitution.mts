@@ -4,11 +4,11 @@ import {
   Get,
   ToString,
   isNonNegativeInteger,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   ObjectValue, UndefinedValue, JSStringValue, Value,
-} from '../value.mjs';
-import { Q } from '../completion.mjs';
+} from '../value.mts';
+import { Q } from '../completion.mts';
 
 /** https://tc39.es/ecma262/#sec-getsubstitution */
 export function GetSubstitution(matched: JSStringValue, str: JSStringValue, position: number, captures: readonly (JSStringValue | UndefinedValue)[], namedCaptures, replacement: JSStringValue) {

@@ -1,5 +1,5 @@
-import { Assert } from '../abstract-ops/all.mjs';
-import { isLeadingSurrogate, isTrailingSurrogate } from '../parser/Lexer.mjs';
+import { Assert } from '../abstract-ops/all.mts';
+import { isLeadingSurrogate, isTrailingSurrogate } from '../parser/Lexer.mts';
 
 /** https://tc39.es/ecma262/#sec-utf16decodesurrogatepair */
 export function UTF16SurrogatePairToCodePoint(lead: number, trail: number) {

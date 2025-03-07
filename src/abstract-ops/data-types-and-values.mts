@@ -1,7 +1,7 @@
 // @ts-nocheck
-import { JSStringValue, Value } from '../value.mjs';
-import { X } from '../completion.mjs';
-import { CanonicalNumericIndexString, R } from './all.mjs';
+import { JSStringValue, Value } from '../value.mts';
+import { X } from '../completion.mts';
+import { CanonicalNumericIndexString, R } from './all.mts';
 
 // This file covers predicates defined in
 /** https://tc39.es/ecma262/#sec-ecmascript-data-types-and-values */

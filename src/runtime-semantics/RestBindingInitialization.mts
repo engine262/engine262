@@ -1,16 +1,16 @@
 // @ts-nocheck
-import { Value } from '../value.mjs';
-import { surroundingAgent } from '../engine.mjs';
+import { Value } from '../value.mts';
+import { surroundingAgent } from '../engine.mts';
 import {
   CopyDataProperties,
   InitializeReferencedBinding,
   OrdinaryObjectCreate,
   PutValue,
   ResolveBinding,
-} from '../abstract-ops/all.mjs';
-import { StringValue } from '../static-semantics/all.mjs';
-import { Q } from '../completion.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+} from '../abstract-ops/all.mts';
+import { StringValue } from '../static-semantics/all.mts';
+import { Q } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 // BindingRestProperty : `...` BindingIdentifier
 export function RestBindingInitialization({ BindingIdentifier }: ParseNode.Initializer, value, environment, excludedNames) {

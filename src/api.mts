@@ -1,11 +1,11 @@
 // @ts-nocheck
-import { ObjectValue, Value } from './value.mjs';
+import { ObjectValue, Value } from './value.mts';
 import {
   surroundingAgent,
   ExecutionContext,
   HostEnqueueFinalizationRegistryCleanupJob,
   ScriptEvaluation,
-} from './engine.mjs';
+} from './engine.mts';
 import {
   X,
   ThrowCompletion,
@@ -13,32 +13,32 @@ import {
   EnsureCompletion,
   Completion,
   NormalCompletion,
-} from './completion.mjs';
+} from './completion.mts';
 import {
   Realm,
   ClearKeptObjects,
   CreateIntrinsics,
   SetRealmGlobalObject,
   SetDefaultGlobalBindings,
-} from './abstract-ops/all.mjs';
+} from './abstract-ops/all.mts';
 import {
   ParseScript,
   ParseModule,
   ParseJSONModule,
-} from './parse.mjs';
-import { SourceTextModuleRecord } from './modules.mjs';
-import * as messages from './messages.mjs';
+} from './parse.mts';
+import { SourceTextModuleRecord } from './modules.mts';
+import * as messages from './messages.mts';
 
-export * from './value.mjs';
-export * from './engine.mjs';
-export * from './completion.mjs';
-export * from './abstract-ops/all.mjs';
-export * from './static-semantics/all.mjs';
-export * from './runtime-semantics/all.mjs';
-export * from './environment.mjs';
-export * from './parse.mjs';
-export * from './modules.mjs';
-export * from './inspect.mjs';
+export * from './value.mts';
+export * from './engine.mts';
+export * from './completion.mts';
+export * from './abstract-ops/all.mts';
+export * from './static-semantics/all.mts';
+export * from './runtime-semantics/all.mts';
+export * from './environment.mts';
+export * from './parse.mts';
+export * from './modules.mts';
+export * from './inspect.mts';
 
 export function Throw<K extends keyof typeof messages>(type: string | Value, template: K, ...templateArgs: Parameters<typeof messages[K]>): ThrowCompletion {
   return surroundingAgent.Throw(type, template, ...templateArgs);

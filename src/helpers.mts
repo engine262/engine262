@@ -1,13 +1,13 @@
 // @ts-nocheck
-import { ExecutionContext, type GCMarker, surroundingAgent } from './engine.mjs';
+import { ExecutionContext, type GCMarker, surroundingAgent } from './engine.mts';
 import {
   Value, Descriptor, JSStringValue, NumberValue, ObjectValue, UndefinedValue, NullValue, type PropertyKeyValue,
-} from './value.mjs';
+} from './value.mts';
 import {
   ToString, DefinePropertyOrThrow, CreateBuiltinFunction, R, type BuiltinFunctionObject,
-} from './abstract-ops/all.mjs';
-import { Completion, X } from './completion.mjs';
-import type { ParseNode } from './parser/ParseNode.mjs';
+} from './abstract-ops/all.mts';
+import { Completion, X } from './completion.mts';
+import type { ParseNode } from './parser/ParseNode.mts';
 
 export const kInternal = Symbol('kInternal');
 

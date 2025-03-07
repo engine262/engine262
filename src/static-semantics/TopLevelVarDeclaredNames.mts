@@ -1,7 +1,7 @@
-import { isArray } from '../helpers.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import type { JSStringValue } from '../value.mjs';
-import { BoundNames, VarDeclaredNames } from './all.mjs';
+import { isArray } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import type { JSStringValue } from '../value.mts';
+import { BoundNames, VarDeclaredNames } from './all.mts';
 
 export function TopLevelVarDeclaredNames(node: ParseNode | readonly ParseNode[]): JSStringValue[] {
   if (isArray(node)) {

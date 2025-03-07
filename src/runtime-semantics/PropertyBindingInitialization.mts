@@ -1,9 +1,9 @@
 // @ts-nocheck
-import { BoundNames } from '../static-semantics/all.mjs';
-import { Q, ReturnIfAbrupt } from '../completion.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
-import { isArray } from '../helpers.mjs';
-import { Evaluate_PropertyName, KeyedBindingInitialization } from './all.mjs';
+import { BoundNames } from '../static-semantics/all.mts';
+import { Q, ReturnIfAbrupt } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { isArray } from '../helpers.mts';
+import { Evaluate_PropertyName, KeyedBindingInitialization } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-destructuring-binding-patterns-runtime-semantics-propertybindinginitialization */
 // BindingPropertyList : BIndingPropertyList `,` BindingProperty

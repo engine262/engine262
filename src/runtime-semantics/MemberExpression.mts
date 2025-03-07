@@ -1,14 +1,14 @@
 // @ts-nocheck
-import { GetValue, MakePrivateReference, RequireObjectCoercible } from '../abstract-ops/all.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import { Q, X } from '../completion.mjs';
-import { OutOfRange } from '../helpers.mjs';
-import { StringValue } from '../static-semantics/all.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+import { GetValue, MakePrivateReference, RequireObjectCoercible } from '../abstract-ops/all.mts';
+import { Evaluate } from '../evaluator.mts';
+import { Q, X } from '../completion.mts';
+import { OutOfRange } from '../helpers.mts';
+import { StringValue } from '../static-semantics/all.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   EvaluatePropertyAccessWithExpressionKey,
   EvaluatePropertyAccessWithIdentifierKey,
-} from './all.mjs';
+} from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation */
 //   MemberExpression : MemberExpression `[` Expression `]`

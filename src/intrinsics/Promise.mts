@@ -1,13 +1,13 @@
 // @ts-nocheck
 import {
   surroundingAgent,
-} from '../engine.mjs';
+} from '../engine.mts';
 import {
   Descriptor,
   ObjectValue,
   Value,
   wellKnownSymbols,
-} from '../value.mjs';
+} from '../value.mts';
 import {
   Assert,
   Call,
@@ -30,7 +30,7 @@ import {
   OrdinaryCreateFromConstructor,
   PromiseCapabilityRecord,
   PromiseResolve,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   AbruptCompletion, Completion,
   ThrowCompletion,
@@ -38,8 +38,8 @@ import {
   ReturnIfAbrupt,
   EnsureCompletion,
   Q, X,
-} from '../completion.mjs';
-import { bootstrapConstructor } from './bootstrap.mjs';
+} from '../completion.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-promise-executor */
 function PromiseConstructor([executor = Value.undefined], { NewTarget }) {

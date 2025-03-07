@@ -1,7 +1,7 @@
 // @ts-nocheck
-import { RequireInternalSlot, WeakRefDeref } from '../abstract-ops/all.mjs';
-import { Q, X } from '../completion.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+import { RequireInternalSlot, WeakRefDeref } from '../abstract-ops/all.mts';
+import { Q, X } from '../completion.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-weak-ref.prototype.deref */
 function WeakRefProto_deref(args, { thisValue }) {

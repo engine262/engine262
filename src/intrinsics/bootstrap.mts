@@ -3,13 +3,13 @@ import {
   Assert,
   CreateBuiltinFunction,
   OrdinaryObjectCreate,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   Descriptor,
   Value,
   wellKnownSymbols,
-} from '../value.mjs';
-import { X } from '../completion.mjs';
+} from '../value.mts';
+import { X } from '../completion.mts';
 
 /** https://tc39.es/ecma262/#sec-ecmascript-standard-built-in-objects */
 export function assignProps(realmRec, obj, props) {

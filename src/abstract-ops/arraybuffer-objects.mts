@@ -1,9 +1,9 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   NumberValue, BigIntValue, BooleanValue, ObjectValue, Value,
-} from '../value.mjs';
-import { Q, X, NormalCompletion } from '../completion.mjs';
+} from '../value.mts';
+import { Q, X, NormalCompletion } from '../completion.mts';
 import {
   Assert, OrdinaryCreateFromConstructor,
   isNonNegativeInteger, CreateByteDataBlock,
@@ -11,7 +11,7 @@ import {
   typedArrayInfoByType,
   F,
   Z, R,
-} from './all.mjs';
+} from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-allocatearraybuffer */
 export function AllocateArrayBuffer(constructor, byteLength) {

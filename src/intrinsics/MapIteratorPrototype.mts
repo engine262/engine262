@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../engine.mts';
 import {
   Assert,
   CreateArrayFromList,
@@ -7,10 +7,10 @@ import {
   GeneratorResume,
   RequireInternalSlot,
   Yield,
-} from '../abstract-ops/all.mjs';
-import { Q, X } from '../completion.mjs';
-import { Value } from '../value.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+} from '../abstract-ops/all.mts';
+import { Q, X } from '../completion.mts';
+import { Value } from '../value.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 
 const kMapIteratorPrototype = Value('%MapIteratorPrototype%');
 

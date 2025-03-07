@@ -1,16 +1,16 @@
 // @ts-nocheck
-import { Value } from '../value.mjs';
-import { GetValue, MakePrivateReference, RequireObjectCoercible } from '../abstract-ops/all.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import { Q, X } from '../completion.mjs';
-import { IsInTailPosition, StringValue } from '../static-semantics/all.mjs';
-import { OutOfRange } from '../helpers.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+import { Value } from '../value.mts';
+import { GetValue, MakePrivateReference, RequireObjectCoercible } from '../abstract-ops/all.mts';
+import { Evaluate } from '../evaluator.mts';
+import { Q, X } from '../completion.mts';
+import { IsInTailPosition, StringValue } from '../static-semantics/all.mts';
+import { OutOfRange } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   EvaluateCall,
   EvaluatePropertyAccessWithExpressionKey,
   EvaluatePropertyAccessWithIdentifierKey,
-} from './all.mjs';
+} from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-optional-chaining-evaluation */
 //   OptionalExpression :

@@ -1,4 +1,4 @@
-import { type GCMarker, surroundingAgent } from './engine.mjs';
+import { type GCMarker, surroundingAgent } from './engine.mts';
 import {
   Assert,
   CreateBuiltinFunction,
@@ -6,14 +6,14 @@ import {
   PromiseCapabilityRecord,
   PromiseResolve,
   type PromiseObjectValue,
-} from './abstract-ops/all.mjs';
-import { JSStringValue, ObjectValue, Value } from './value.mjs';
+} from './abstract-ops/all.mts';
+import { JSStringValue, ObjectValue, Value } from './value.mts';
 import {
   callable,
   kAsyncContext,
   OutOfRange,
   resume,
-} from './helpers.mjs';
+} from './helpers.mts';
 
 let createNormalCompletion: <T>(init: NormalCompletionInit<T>) => NormalCompletionImpl<T>;
 let createBreakCompletion: <T>(init: BreakCompletionInit<T>) => BreakCompletion<T>;

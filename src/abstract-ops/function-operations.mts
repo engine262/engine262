@@ -2,7 +2,7 @@
 import {
   surroundingAgent,
   ExecutionContext,
-} from '../engine.mjs';
+} from '../engine.mts';
 import {
   Descriptor,
   SymbolValue,
@@ -12,7 +12,7 @@ import {
   PrivateName,
   type Arguments,
   BooleanValue, PropertyKeyValue, NullValue, JSStringValue,
-} from '../value.mjs';
+} from '../value.mts';
 import {
   EnsureCompletion,
   NormalCompletion,
@@ -20,16 +20,16 @@ import {
   ReturnIfAbrupt,
   Completion,
   Q, X, ThrowCompletion,
-} from '../completion.mjs';
-import { ExpectedArgumentCount } from '../static-semantics/all.mjs';
-import { ClassFieldDefinitionRecord, EvaluateBody, PrivateElementRecord } from '../runtime-semantics/all.mjs';
+} from '../completion.mts';
+import { ExpectedArgumentCount } from '../static-semantics/all.mts';
+import { ClassFieldDefinitionRecord, EvaluateBody, PrivateElementRecord } from '../runtime-semantics/all.mts';
 import {
   EnvironmentRecord,
   FunctionEnvironmentRecord,
   GlobalEnvironmentRecord,
-} from '../environment.mjs';
-import { unwind, type Mutable } from '../helpers.mjs';
-import type { ParseNode } from '../parser/ParseNode.mjs';
+} from '../environment.mts';
+import { unwind, type Mutable } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   Assert,
   Call,
@@ -51,7 +51,7 @@ import {
   Realm,
   F as toNumberValue,
   type OrdinaryObject,
-} from './all.mjs';
+} from './all.mts';
 
 interface BaseFunctionObject extends OrdinaryObject {
   readonly Realm;

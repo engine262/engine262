@@ -1,7 +1,7 @@
 // @ts-nocheck
-import { Q, X } from '../completion.mjs';
-import { surroundingAgent } from '../engine.mjs';
-import { Value, wellKnownSymbols } from '../value.mjs';
+import { Q, X } from '../completion.mts';
+import { surroundingAgent } from '../engine.mts';
+import { Value, wellKnownSymbols } from '../value.mts';
 import {
   Assert,
   Call,
@@ -16,8 +16,8 @@ import {
   ToString,
   TypedArrayCreate,
   F,
-} from '../abstract-ops/all.mjs';
-import { bootstrapConstructor } from './bootstrap.mjs';
+} from '../abstract-ops/all.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-%typedarray%-intrinsic-object */
 function TypedArrayConstructor() {

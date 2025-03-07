@@ -3,12 +3,12 @@ import {
   CreateBuiltinFunction,
   ToString,
   F,
-} from '../abstract-ops/all.mjs';
-import { Q, X } from '../completion.mjs';
-import { Value } from '../value.mjs';
+} from '../abstract-ops/all.mts';
+import { Q, X } from '../completion.mts';
+import { Value } from '../value.mts';
 import {
   TrimString,
-} from '../runtime-semantics/all.mjs';
+} from '../runtime-semantics/all.mts';
 
 /** https://tc39.es/ecma262/#sec-parsefloat-string */
 function ParseFloat([string = Value.undefined]) {

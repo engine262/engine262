@@ -2,11 +2,11 @@
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-date-objects */
 
-import { X } from '../completion.mjs';
+import { X } from '../completion.mts';
 import {
   ToIntegerOrInfinity,
   F, R,
-} from './all.mjs';
+} from './all.mts';
 
 const mod = (n, m) => {
   const r = n % m;

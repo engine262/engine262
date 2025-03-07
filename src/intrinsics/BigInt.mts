@@ -1,15 +1,15 @@
 // @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { NumberValue, Value } from '../value.mjs';
+import { surroundingAgent } from '../engine.mts';
+import { NumberValue, Value } from '../value.mts';
 import {
   ToBigInt,
   ToIndex,
   ToPrimitive,
   Z, R,
-} from '../abstract-ops/all.mjs';
-import { NumberToBigInt } from '../runtime-semantics/all.mjs';
-import { Q } from '../completion.mjs';
-import { bootstrapConstructor } from './bootstrap.mjs';
+} from '../abstract-ops/all.mts';
+import { NumberToBigInt } from '../runtime-semantics/all.mts';
+import { Q } from '../completion.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-bigint-constructor */
 function BigIntConstructor([value], { NewTarget }) {

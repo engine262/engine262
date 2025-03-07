@@ -1,7 +1,7 @@
-import type { Mutable } from '../helpers.mjs';
-import { ModuleParser } from './ModuleParser.mjs';
-import type { ParseNode } from './ParseNode.mjs';
-import { Token } from './tokens.mjs';
+import type { Mutable } from '../helpers.mts';
+import { ModuleParser } from './ModuleParser.mts';
+import type { ParseNode } from './ParseNode.mts';
+import { Token } from './tokens.mts';
 
 export abstract class LanguageParser extends ModuleParser {
   // Script : ScriptBody?

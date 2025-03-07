@@ -1,7 +1,7 @@
 // @ts-nocheck
-import { Q, X } from '../completion.mjs';
-import { surroundingAgent } from '../engine.mjs';
-import { Value } from '../value.mjs';
+import { Q, X } from '../completion.mts';
+import { surroundingAgent } from '../engine.mts';
+import { Value } from '../value.mts';
 import {
   Assert,
   GetValueFromBuffer,
@@ -14,7 +14,7 @@ import {
   ToBigInt,
   RequireInternalSlot,
   typedArrayInfoByType,
-} from './all.mjs';
+} from './all.mts';
 
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-dataview-objects */

@@ -1,6 +1,6 @@
-import { X } from '../completion.mjs';
-import type { JSStringValue } from '../value.mjs';
-import { CodePointAt } from './all.mjs';
+import { X } from '../completion.mts';
+import type { JSStringValue } from '../value.mts';
+import { CodePointAt } from './all.mts';
 
 export function IsStringWellFormedUnicode(string_: JSStringValue) {
   const string = string_.stringValue();
