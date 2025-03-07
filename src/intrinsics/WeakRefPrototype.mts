@@ -9,8 +9,8 @@ function WeakRefProto_deref(args, { thisValue }) {
   const weakRef = thisValue;
   // 2. Perform ? RequireInternalSlot(weakRef, [[WeakRefTarget]]).
   Q(RequireInternalSlot(weakRef, 'WeakRefTarget'));
-  // 3. Return ! WeakRefDeref(weakRef).
-  return X(WeakRefDeref(weakRef));
+  // 3. Return WeakRefDeref(weakRef).
+  return WeakRefDeref(weakRef);
 }
 
 export function bootstrapWeakRefPrototype(realmRec) {

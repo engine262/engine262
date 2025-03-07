@@ -3,7 +3,7 @@ import { surroundingAgent } from '../engine.mjs';
 import {
   SameValue,
   RequireInternalSlot,
-  HasIdentity,
+  CanBeHeldWeakly,
 } from '../abstract-ops/all.mjs';
 import { Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
@@ -15,14 +15,12 @@ function WeakMapProto_delete([key = Value.undefined], { thisValue }) {
   const M = thisValue;
   // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
   Q(RequireInternalSlot(M, 'WeakMapData'));
-  // 3. Let entries be the List that is M.[[WeakMapData]].
-  const entries = M.WeakMapData;
-  // 4. If Type(key) is not Object, return false.
-  // (*SymbolsAsWeakMapKeys) 4. If HasIdentity(key) is false, return false.
-  if (HasIdentity(key) === Value.false) {
+  // 3. If CanBeHeldWeakly(key) is false, return false.
+  if (CanBeHeldWeakly(key) === Value.false) {
     return Value.false;
   }
-  // 5. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
+  // 4. For each Record { [[Key]], [[Value]] } p of M.[[WeakMapData]], do
+  const entries = M.WeakMapData;
   for (let i = 0; i < entries.length; i += 1) {
     const p = entries[i];
     // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, then
@@ -35,7 +33,7 @@ function WeakMapProto_delete([key = Value.undefined], { thisValue }) {
       return Value.true;
     }
   }
-  // 6. Return false.
+  // 5. Return false.
   return Value.false;
 }
 
@@ -45,21 +43,18 @@ function WeakMapProto_get([key = Value.undefined], { thisValue }) {
   const M = thisValue;
   // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
   Q(RequireInternalSlot(M, 'WeakMapData'));
-  // 3. Let entries be the List that is M.[[WeakMapData]].
-  const entries = M.WeakMapData;
-  // 4. If Type(key) is not Object, return undefined.
-  // (*SymbolsAsWeakMapKeys) 4. If HasIdentity(key) is false, return undefined.
-  if (HasIdentity(key) === Value.false) {
+  // 3. If CanBeHeldWeakly(key) is false, return undefined.
+  if (CanBeHeldWeakly(key) === Value.false) {
     return Value.undefined;
   }
-  // 5. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
-  for (const p of entries) {
+  // 4. For each Record { [[Key]], [[Value]] } p of M.[[WeakMapData]], do
+  for (const p of M.WeakMapData) {
     // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, return p.[[Value]].
     if (p.Key !== undefined && SameValue(p.Key, key) === Value.true) {
       return p.Value;
     }
   }
-  // 6. Return undefined.
+  // 5. Return undefined.
   return Value.undefined;
 }
 
@@ -69,15 +64,12 @@ function WeakMapProto_has([key = Value.undefined], { thisValue }) {
   const M = thisValue;
   // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
   Q(RequireInternalSlot(M, 'WeakMapData'));
-  // 3. Let entries be the List that is M.[[WeakMapData]].
-  const entries = M.WeakMapData;
-  // 4. If Type(key) is not Object, return false.
-  // (*SymbolsAsWeakMapKeys) 4. If HasIdentity(key) is false, return false.
-  if (HasIdentity(key) === Value.false) {
+  // 3. If CanBeHeldWeakly(key) is false, return false.
+  if (CanBeHeldWeakly(key) === Value.false) {
     return Value.false;
   }
-  // 5. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
-  for (const p of entries) {
+  // 4. For each Record { [[Key]], [[Value]] } p of M.[[WeakMapData]], do
+  for (const p of M.WeakMapData) {
     // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, return true.
     if (p.Key !== undefined && SameValue(p.Key, key) === Value.true) {
       return Value.true;
@@ -93,15 +85,12 @@ function WeakMapProto_set([key = Value.undefined, value = Value.undefined], { th
   const M = thisValue;
   // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
   Q(RequireInternalSlot(M, 'WeakMapData'));
-  // 3. Let entries be the List that is M.[[WeakMapData]].
-  const entries = M.WeakMapData;
-  // 4. If Type(key) is not Object, throw a TypeError exception.
-  // (*SymbolsAsWeakMapKeys) 4. If HasIdentity(key) is false, throw a TypeError exception.
-  if (HasIdentity(key) === Value.false) {
+  // 3. If CanBeHeldWeakly(key) is false, throw a TypeError exception.
+  if (CanBeHeldWeakly(key) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'WeakCollectionNotObject', key);
   }
-  // 5. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
-  for (const p of entries) {
+  // 4. For each Record { [[Key]], [[Value]] } p of M.[[WeakMapData]], do
+  for (const p of M.WeakMapData) {
     // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, then
     if (p.Key !== undefined && SameValue(p.Key, key) === Value.true) {
       // i. Set p.[[Value]] to value.
@@ -110,11 +99,11 @@ function WeakMapProto_set([key = Value.undefined, value = Value.undefined], { th
       return M;
     }
   }
-  // 6. Let p be the Record { [[Key]]: key, [[Value]]: value }.
+  // 5. Let p be the Record { [[Key]]: key, [[Value]]: value }.
   const p = { Key: key, Value: value };
-  // 7. Append p as the last element of entries.
-  entries.push(p);
-  // 8. Return M.
+  // 6. Append p to M.[[WeakMapData]].
+  M.WeakMapData.push(p);
+  // 7. Return M.
   return M;
 }
 

@@ -1,18 +1,23 @@
 // @ts-nocheck
 import { surroundingAgent, HostCallJobCallback } from '../engine.mjs';
-import { Type, Value } from '../value.mjs';
+import {
+  ObjectValue,
+  SymbolValue,
+  Type,
+  Value,
+} from '../value.mjs';
 import { NormalCompletion, Q, X } from '../completion.mjs';
-import { Assert } from './all.mjs';
+import { Assert, KeyForSymbol, SameValue } from './all.mjs';
 
-/* https://github.com/tc39/proposal-symbols-as-weakmap-keys */
-export function HasIdentity(argument) {
-  // 1. If Type(argument) is Object, return true.
-  if (Type(argument) === 'Object') {
+/* https://tc39.es/ecma262/multipage/#sec-canbeheldweakly */
+export function CanBeHeldWeakly(v: Value) {
+  // 1. If v is an Object, return true.
+  if (v instanceof ObjectValue) {
     return Value.true;
   }
 
-  // (*SymbolsAsWeakMapKeys) 2. If Type(argument) is Symbol, return true.
-  if (Type(argument) === 'Symbol' && surroundingAgent.feature('symbols-as-weakmap-keys')) {
+  // 2. If v is a Symbol and KeyForSymbol(v) is undefined, return true.
+  if (v instanceof SymbolValue && KeyForSymbol(v) === Value.undefined) {
     return Value.true;
   }
 
@@ -34,6 +39,7 @@ export function AddToKeptObjects(object) {
   const agentRecord = surroundingAgent.AgentRecord;
   // 2. Append object to agentRecord.[[KeptAlive]].
   agentRecord.KeptAlive.add(object);
+  // 3. Return unused.
 }
 
 /** https://tc39.es/ecma262/#sec-weakrefderef */
@@ -42,8 +48,8 @@ export function WeakRefDeref(weakRef) {
   const target = weakRef.WeakRefTarget;
   // 2. If target is not empty, then
   if (target !== undefined) {
-    // a. Perform ! AddToKeptObjects(target).
-    X(AddToKeptObjects(target));
+    // a. Perform AddToKeptObjects(target).
+    AddToKeptObjects(target);
     // b. Return target.
     return target;
   }

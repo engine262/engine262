@@ -1,21 +1,29 @@
 // @ts-nocheck
 import {
   Descriptor,
+  JSStringValue,
   SymbolValue,
   Value,
   wellKnownSymbols,
+  type Arguments,
 } from '../value.mjs';
 import {
   surroundingAgent,
 } from '../engine.mjs';
 import {
+  KeyForSymbol,
   SameValue,
   ToString,
 } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-export const GlobalSymbolRegistry = [];
+export const GlobalSymbolRegistry: GlobalSymbolRegistryRecord[] = [];
+
+export interface GlobalSymbolRegistryRecord {
+  readonly Key: JSStringValue;
+  readonly Symbol: SymbolValue;
+}
 
 /** https://tc39.es/ecma262/#sec-symbol-description */
 function SymbolConstructor([description = Value.undefined], { NewTarget }) {
@@ -55,21 +63,13 @@ function Symbol_for([key = Value.undefined]) {
 }
 
 /** https://tc39.es/ecma262/#sec-symbol.keyfor */
-function Symbol_keyFor([sym = Value.undefined]) {
+function Symbol_keyFor([sym = Value.undefined]: Arguments) {
   // 1. If Type(sym) is not Symbol, throw a TypeError exception.
   if (!(sym instanceof SymbolValue)) {
     return surroundingAgent.Throw('TypeError', 'NotASymbol', sym);
   }
-  // 2. For each element e of the GlobalSymbolRegistry List, do
-  for (const e of GlobalSymbolRegistry) {
-    // a. If SameValue(e.[[Symbol]], sym) is true, return e.[[Key]].
-    if (SameValue(e.Symbol, sym) === Value.true) {
-      return e.Key;
-    }
-  }
-  // 3. Assert: GlobalSymbolRegistry does not currently contain an entry for sym.
-  // 4. Return undefined.
-  return Value.undefined;
+  // 2. Return KeyForSymbol(sym).
+  return KeyForSymbol(sym);
 }
 
 export function bootstrapSymbol(realmRec) {
