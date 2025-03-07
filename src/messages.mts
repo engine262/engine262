@@ -88,6 +88,7 @@ export const NotAFunction = (v) => `${i(v)} is not a function`;
 export const NotATypeObject = (t, v) => `${i(v)} is not a ${t} object`;
 export const NotAnObject = (v) => `${i(v)} is not an object`;
 export const NotASymbol = (v) => `${i(v)} is not a symbol`;
+export const NotAWeakKey = (v) => `${i(v)} is not an object or a symbol`;
 export const NotDefined = (n) => `${i(n)} is not defined`;
 export const NotInitialized = (n) => `${i(n)} cannot be used before initialization`;
 export const NotPropertyName = (p) => `${i(p)} is not a valid property name`;

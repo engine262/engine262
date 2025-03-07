@@ -1,8 +1,8 @@
 // @ts-nocheck
 import { surroundingAgent, HostCallJobCallback } from '../engine.mjs';
-import { Value } from '../value.mjs';
+import { BooleanValue, Value } from '../value.mjs';
 import { NormalCompletion, Q, X } from '../completion.mjs';
-import { Assert } from './all.mjs';
+import { Assert, KeyForSymbol } from './all.mjs';
 
 /** https://tc39.es/ecma262/#sec-clear-kept-objects */
 export function ClearKeptObjects() {
@@ -58,4 +58,19 @@ export function CleanupFinalizationRegistry(finalizationRegistry, callback) {
   }
   // 4. Return NormalCompletion(undefined).
   return NormalCompletion(Value.undefined);
+}
+
+/** https://tc39.es/ecma262/#sec-canbeheldweakly */
+export function CanBeHeldWeakly(value: Value): BooleanValue {
+  // 1. If v is an Object, return true.
+  if (value.type === 'Object') {
+    return Value.true;
+  }
+  // 2. If v is a Symbol and KeyForSymbol(v) is undefined, return true.
+  if (value.type === 'Symbol' && KeyForSymbol(value) === Value.undefined) {
+    return Value.true;
+  }
+
+  // 3, Return false.
+  return Value.false;
 }

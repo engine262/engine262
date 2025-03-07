@@ -2,6 +2,7 @@
 import { surroundingAgent } from '../engine.mjs';
 import { Value, ObjectValue } from '../value.mjs';
 import {
+  CanBeHeldWeakly,
   CleanupFinalizationRegistry,
   IsCallable,
   RequireInternalSlot,
@@ -32,19 +33,19 @@ function FinalizationRegistryProto_register([target = Value.undefined, heldValue
   const finalizationRegistry = thisValue;
   // 2. Perform ? RequireInternalSlot(finalizationRegistry, [[Cells]]).
   Q(RequireInternalSlot(finalizationRegistry, 'Cells'));
-  // 3. If Type(target) is not Object, throw a TypeError exception.
-  if (!(target instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
+  // 3. If CanBeHeldWeakly(target) is false, throw a TypeError exception.
+  if (CanBeHeldWeakly(target) === Value.false) {
+    return surroundingAgent.Throw('TypeError', 'NotAWeakKey', target);
   }
   // 4. If SameValue(target, heldValue), throw a TypeError exception.
   if (SameValue(target, heldValue) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'TargetMatchesHeldValue', heldValue);
   }
-  // 5. If Type(unregisterToken) is not Object,
-  if (!(unregisterToken instanceof ObjectValue)) {
+  // 5. If CanBeHeldWeakly(unregisterToken) is false, then
+  if (CanBeHeldWeakly(unregisterToken) === Value.false) {
     // a. If unregisterToken is not undefined, throw a TypeError exception.
     if (unregisterToken !== Value.undefined) {
-      return surroundingAgent.Throw('TypeError', 'NotAnObject', unregisterToken);
+      return surroundingAgent.Throw('TypeError', 'NotAWeakKey', unregisterToken);
     }
     // b. Set unregisterToken to empty.
     unregisterToken = undefined;
@@ -67,9 +68,9 @@ function FinalizationRegistryProto_unregister([unregisterToken = Value.undefined
   const finalizationRegistry = thisValue;
   // 2. Perform ? RequireInternalSlot(finalizationRegistry, [[Cells]]).
   Q(RequireInternalSlot(finalizationRegistry, 'Cells'));
-  // 3. If Type(unregisterToken) is not Object, throw a TypeError exception.
-  if (!(unregisterToken instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', unregisterToken);
+  // 3. If CanBeHeldWeakly(unregisterToken) is false, throw a TypeError exception.
+  if (CanBeHeldWeakly(unregisterToken) === Value.false) {
+    return surroundingAgent.Throw('TypeError', 'NotAWeakKey', unregisterToken);
   }
   // 4. Let removed be false.
   let removed = Value.false;
