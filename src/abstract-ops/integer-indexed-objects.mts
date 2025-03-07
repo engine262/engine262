@@ -24,14 +24,14 @@ import {
   ToBigInt,
   isIntegerIndex,
   typedArrayInfoByName,
-  F,
+  F, R,
 } from './all.mjs';
 
 export function isIntegerIndexedExoticObject(O) {
   return O.GetOwnProperty === IntegerIndexedGetOwnProperty;
 }
 
-/** http://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-getownproperty-p */
+/** https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-getownproperty-p */
 export function IntegerIndexedGetOwnProperty(P) {
   const O = this;
   // 1. Assert: IsPropertyKey(P) is true.
@@ -63,7 +63,7 @@ export function IntegerIndexedGetOwnProperty(P) {
   return OrdinaryGetOwnProperty(O, P);
 }
 
-/** http://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-hasproperty-p */
+/** https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-hasproperty-p */
 export function IntegerIndexedHasProperty(P) {
   const O = this;
   // 1. Assert: IsPropertyKey(P) is true.
@@ -94,7 +94,7 @@ export function IntegerIndexedHasProperty(P) {
   return Q(OrdinaryHasProperty(O, P));
 }
 
-/** http://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-defineownproperty-p-desc */
+/** https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-defineownproperty-p-desc */
 export function IntegerIndexedDefineOwnProperty(P, Desc) {
   const O = this;
   // 1. Assert: IsPropertyKey(P) is true.
@@ -142,7 +142,7 @@ export function IntegerIndexedDefineOwnProperty(P, Desc) {
   return Q(OrdinaryDefineOwnProperty(O, P, Desc));
 }
 
-/** http://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-get-p-receiver */
+/** https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-get-p-receiver */
 export function IntegerIndexedGet(P, Receiver) {
   const O = this;
   // 1. Assert: IsPropertykey(P) is true.
@@ -161,7 +161,7 @@ export function IntegerIndexedGet(P, Receiver) {
   return Q(OrdinaryGet(O, P, Receiver));
 }
 
-/** http://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-set-p-v-receiver */
+/** https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-set-p-v-receiver */
 export function IntegerIndexedSet(P, V, Receiver) {
   const O = this;
   // 1. Assert: IsPropertyKey(P) is true.
@@ -182,7 +182,7 @@ export function IntegerIndexedSet(P, V, Receiver) {
   return Q(OrdinarySet(O, P, V, Receiver));
 }
 
-/** http://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-delete-p */
+/** https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-delete-p */
 export function IntegerIndexedDelete(P) {
   const O = this;
   // 1. Assert: IsPropertyKey(P) is true.
@@ -211,7 +211,7 @@ export function IntegerIndexedDelete(P) {
   return Q(OrdinaryDelete(O, P));
 }
 
-/** http://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-ownpropertykeys */
+/** https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-ownpropertykeys */
 export function IntegerIndexedOwnPropertyKeys() {
   const O = this;
   // 1. Let keys be a new empty List.
@@ -245,7 +245,7 @@ export function IntegerIndexedOwnPropertyKeys() {
   return keys;
 }
 
-/** http://tc39.es/ecma262/#sec-integerindexedelementget */
+/** https://tc39.es/ecma262/#sec-integerindexedelementget */
 export function IntegerIndexedElementGet(O, index) {
   // 1. Assert: O is an Integer-Indexed exotic object.
   Assert(isIntegerIndexedExoticObject(O));
@@ -268,14 +268,14 @@ export function IntegerIndexedElementGet(O, index) {
   // 8. Let elementSize be the Element Size value specified in Table 61 for arrayTypeName.
   const elementSize = typedArrayInfoByName[arrayTypeName].ElementSize;
   // 9. Let indexedPosition be (ℝ(index) × elementSize) + offset.
-  const indexedPosition = (index.numberValue() * elementSize) + offset;
+  const indexedPosition = (R(index) * elementSize) + offset;
   // 10. Let elementType be the Element Type value in Table 61 for arrayTypeName.
   const elementType = typedArrayInfoByName[arrayTypeName].ElementType;
   // 11. Return GetValueFromBuffer(buffer, indexedPosition, elementType, true, Unordered).
   return GetValueFromBuffer(buffer, indexedPosition, elementType, Value.true, 'Unordered');
 }
 
-/** http://tc39.es/ecma262/#sec-integerindexedelementset */
+/** https://tc39.es/ecma262/#sec-integerindexedelementset */
 export function IntegerIndexedElementSet(O, index, value) {
   // 1. Assert: O is an Integer-Indexed exotic object.
   Assert(isIntegerIndexedExoticObject(O));
@@ -306,7 +306,7 @@ export function IntegerIndexedElementSet(O, index, value) {
   // 10. Let elementSize be the Element Size value specified in Table 61 for arrayTypeName.
   const elementSize = typedArrayInfoByName[arrayTypeName].ElementSize;
   // 11. Let indexedPosition be (ℝ(index) × elementSize) + offset.
-  const indexedPosition = (index.numberValue() * elementSize) + offset;
+  const indexedPosition = (R(index) * elementSize) + offset;
   // 12. Let elementType be the Element Type value in Table 61 for arrayTypeName.
   const elementType = typedArrayInfoByName[arrayTypeName].ElementType;
   // 13. Perform SetValueInBuffer(buffer, indexedPosition, elementType, numValue, true, Unordered).
@@ -315,7 +315,7 @@ export function IntegerIndexedElementSet(O, index, value) {
   return Value.true;
 }
 
-/** http://tc39.es/ecma262/#sec-integerindexedobjectcreate */
+/** https://tc39.es/ecma262/#sec-integerindexedobjectcreate */
 export function IntegerIndexedObjectCreate(prototype) {
   // 1. Let internalSlotsList be « [[Prototype]], [[Extensible]], [[ViewedArrayBuffer]], [[TypedArrayName]], [[ContentType]], [[ByteLength]], [[ByteOffset]], [[ArrayLength]] ».
   const internalSlotsList = [

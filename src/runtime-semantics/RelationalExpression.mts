@@ -24,8 +24,9 @@ import {
 import { Q, X, ReturnIfAbrupt } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
-/** http://tc39.es/ecma262/#sec-instanceofoperator */
+/** https://tc39.es/ecma262/#sec-instanceofoperator */
 export function InstanceofOperator(V, target) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
@@ -47,7 +48,7 @@ export function InstanceofOperator(V, target) {
 }
 
 // RelationalExpression : PrivateIdentifier `in` ShiftExpression
-export function* Evaluate_RelationalExpression_PrivateIdentifier({ PrivateIdentifier, ShiftExpression }) {
+export function* Evaluate_RelationalExpression_PrivateIdentifier({ PrivateIdentifier, ShiftExpression }: ParseNode.RelationalExpression) {
   // 1. Let privateIdentifier be the StringValue of PrivateIdentifier.
   const privateIdentifier = StringValue(PrivateIdentifier);
   // 2. Let rref be the result of evaluating ShiftExpression.
@@ -70,7 +71,7 @@ export function* Evaluate_RelationalExpression_PrivateIdentifier({ PrivateIdenti
   return Value.false;
 }
 
-/** http://tc39.es/ecma262/#sec-relational-operators-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-relational-operators-runtime-semantics-evaluation */
 //   RelationalExpression :
 //     RelationalExpression `<` ShiftExpression
 //     RelationalExpression `>` ShiftExpression
@@ -79,7 +80,7 @@ export function* Evaluate_RelationalExpression_PrivateIdentifier({ PrivateIdenti
 //     RelationalExpression `instanceof` ShiftExpression
 //     RelationalExpression `in` ShiftExpression
 //     PrivateIdentifier `in` ShiftExpression
-export function* Evaluate_RelationalExpression(expr) {
+export function* Evaluate_RelationalExpression(expr: ParseNode.RelationalExpression) {
   if (expr.PrivateIdentifier) {
     return yield* Evaluate_RelationalExpression_PrivateIdentifier(expr);
   }

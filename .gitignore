@@ -7,3 +7,5 @@ test.js
 coverage
 .nyc_output
 *-gen.json
+test/test262/last-failed.log
+test/test262/last-failed-list

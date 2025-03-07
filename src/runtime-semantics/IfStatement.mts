@@ -12,12 +12,13 @@ import {
   UpdateEmpty,
 } from '../completion.mjs';
 import { Value } from '../value.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
-/** http://tc39.es/ecma262/#sec-if-statement-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-if-statement-runtime-semantics-evaluation */
 // IfStatement :
 //   `if` `(` Expression `)` Statement `else` Statement
 //   `if` `(` Expression `)` Statement
-export function* Evaluate_IfStatement({ Expression, Statement_a, Statement_b }) {
+export function* Evaluate_IfStatement({ Expression, Statement_a, Statement_b }: ParseNode.IfStatement) {
   // 1. Let exprRef be the result of evaluating Expression.
   const exprRef = yield* Evaluate(Expression);
   // 2. Let exprValue be ! ToBoolean(? GetValue(exprRef)).

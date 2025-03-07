@@ -14,7 +14,7 @@ import { Value } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { assignProps } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-proxy-target-handler */
+/** https://tc39.es/ecma262/#sec-proxy-target-handler */
 function ProxyConstructor([target = Value.undefined, handler = Value.undefined], { NewTarget }) {
   // 1. f NewTarget is undefined, throw a TypeError exception.
   if (NewTarget === Value.undefined) {
@@ -24,7 +24,7 @@ function ProxyConstructor([target = Value.undefined, handler = Value.undefined],
   return Q(ProxyCreate(target, handler));
 }
 
-/** http://tc39.es/ecma262/#sec-proxy-revocation-functions */
+/** https://tc39.es/ecma262/#sec-proxy-revocation-functions */
 function ProxyRevocationFunctions() {
   // 1. Let F be the active function object.
   const F = surroundingAgent.activeFunctionObject;
@@ -46,24 +46,24 @@ function ProxyRevocationFunctions() {
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-proxy.revocable */
+/** https://tc39.es/ecma262/#sec-proxy.revocable */
 function Proxy_revocable([target = Value.undefined, handler = Value.undefined]) {
   // 1. Let p be ? ProxyCreate(target, handler).
   const p = Q(ProxyCreate(target, handler));
-  /** http://tc39.es/ecma262/#sec-proxy-revocation-functions. */
+  /** https://tc39.es/ecma262/#sec-proxy-revocation-functions. */
   const steps = ProxyRevocationFunctions;
   // 3. Let length be the number of non-optional parameters of the function definition in Proxy Revocation Functions.
   const length = 0;
   // 4. Let revoker be ! CreateBuiltinFunction(steps, length, "", « [[RevocableProxy]] »).
-  const revoker = X(CreateBuiltinFunction(steps, length, new Value(''), ['RevocableProxy']));
+  const revoker = X(CreateBuiltinFunction(steps, length, Value(''), ['RevocableProxy']));
   // 5. Set revoker.[[RevocableProxy]] to p.
   revoker.RevocableProxy = p;
   // 6. Let result be OrdinaryObjectCreate(%Object.prototype%).
   const result = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   // 7. Perform ! CreateDataPropertyOrThrow(result, "proxy", p).
-  X(CreateDataProperty(result, new Value('proxy'), p));
+  X(CreateDataProperty(result, Value('proxy'), p));
   // 8. Perform ! CreateDataPropertyOrThrow(result, "revoke", revoker).
-  X(CreateDataProperty(result, new Value('revoke'), revoker));
+  X(CreateDataProperty(result, Value('revoke'), revoker));
   // 9. Return result.
   return result;
 }
@@ -72,7 +72,7 @@ export function bootstrapProxy(realmRec) {
   const proxyConstructor = CreateBuiltinFunction(
     ProxyConstructor,
     2,
-    new Value('Proxy'),
+    Value('Proxy'),
     [],
     realmRec,
     undefined,

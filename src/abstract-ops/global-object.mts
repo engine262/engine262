@@ -20,7 +20,7 @@ import {
 } from '../completion.mjs';
 import { wrappedParse } from '../parse.mjs';
 import {
-  NewDeclarativeEnvironment,
+  DeclarativeEnvironmentRecord,
   FunctionEnvironmentRecord,
   GlobalEnvironmentRecord,
   ObjectEnvironmentRecord,
@@ -30,9 +30,9 @@ import { unwind, ValueSet } from '../helpers.mjs';
 import { Assert, GetThisEnvironment } from './all.mjs';
 
 // This file covers abstract operations defined in
-/** http://tc39.es/ecma262/#sec-global-object */
+/** https://tc39.es/ecma262/#sec-global-object */
 
-/** http://tc39.es/ecma262/#sec-performeval */
+/** https://tc39.es/ecma262/#sec-performeval */
 export function PerformEval(x, callerRealm, strictCaller, direct) {
   // 1. Assert: If direct is false, then strictCaller is also false.
   if (direct === false) {
@@ -135,14 +135,14 @@ export function PerformEval(x, callerRealm, strictCaller, direct) {
   // 15. If direct is true, then
   if (direct === true) {
     // a. Let lexEnv be NewDeclarativeEnvironment(runningContext's LexicalEnvironment).
-    lexEnv = NewDeclarativeEnvironment(runningContext.LexicalEnvironment);
+    lexEnv = new DeclarativeEnvironmentRecord(runningContext.LexicalEnvironment);
     // b. Let varEnv be runningContext's VariableEnvironment.
     varEnv = runningContext.VariableEnvironment;
     // c. Let privateEnv be runningContext's PrivateEnvironment.
     privateEnv = runningContext.PrivateEnvironment;
   } else { // 16. Else,
     // a. Let lexEnv be NewDeclarativeEnvironment(evalRealm.[[GlobalEnv]]).
-    lexEnv = NewDeclarativeEnvironment(evalRealm.GlobalEnv);
+    lexEnv = new DeclarativeEnvironmentRecord(evalRealm.GlobalEnv);
     // b. Let varEnv be evalRealm.[[GlobalEnv]].
     varEnv = evalRealm.GlobalEnv;
     // c. Let privateEnv be null.
@@ -188,7 +188,7 @@ export function PerformEval(x, callerRealm, strictCaller, direct) {
   return Completion(result);
 }
 
-/** http://tc39.es/ecma262/#sec-evaldeclarationinstantiation */
+/** https://tc39.es/ecma262/#sec-evaldeclarationinstantiation */
 function EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strict) {
   // 1. Let varNames be the VarDeclaredNames of body.
   const varNames = VarDeclaredNames(body);

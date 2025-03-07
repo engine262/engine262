@@ -15,7 +15,7 @@ import { Q, NormalCompletion } from '../completion.mjs';
 import { ValueSet } from '../helpers.mjs';
 import { InstantiateFunctionObject } from './all.mjs';
 
-export function GlobalDeclarationInstantiation(script, env) {
+export function GlobalDeclarationInstantiation(script, env: EnvironmentRecord) {
   // 1. Assert: env is a global Environment Record.
   Assert(env instanceof EnvironmentRecord);
   // 2. Let lexNames be the LexicallyDeclaredNames of script.

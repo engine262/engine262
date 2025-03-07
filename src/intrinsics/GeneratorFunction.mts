@@ -6,7 +6,7 @@ import { Q, X } from '../completion.mjs';
 import { CreateDynamicFunction } from '../runtime-semantics/all.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-generatorfunction */
+/** https://tc39.es/ecma262/#sec-generatorfunction */
 function GeneratorFunctionConstructor(args, { NewTarget }) {
   // 1. Let C be the active function object.
   const C = surroundingAgent.activeFunctionObject;
@@ -19,11 +19,11 @@ export function bootstrapGeneratorFunction(realmRec) {
   const generator = realmRec.Intrinsics['%GeneratorFunction.prototype%'];
 
   const cons = bootstrapConstructor(realmRec, GeneratorFunctionConstructor, 'GeneratorFunction', 1, generator, []);
-  X(DefinePropertyOrThrow(cons, new Value('prototype'), Descriptor({
+  X(DefinePropertyOrThrow(cons, Value('prototype'), Descriptor({
     Writable: Value.false,
     Configurable: Value.false,
   })));
-  X(DefinePropertyOrThrow(generator, new Value('constructor'), Descriptor({
+  X(DefinePropertyOrThrow(generator, Value('constructor'), Descriptor({
     Writable: Value.false,
   })));
 

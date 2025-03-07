@@ -1,20 +1,21 @@
-// @ts-nocheck
 import { IsStringWellFormedUnicode, StringValue } from '../static-semantics/all.mjs';
+import type { Mutable } from '../helpers.mjs';
 import { Token, isKeywordRaw } from './tokens.mjs';
 import { StatementParser } from './StatementParser.mjs';
 import { FunctionKind } from './FunctionParser.mjs';
+import type { ParseNode } from './ParseNode.mjs';
 
-export class ModuleParser extends StatementParser {
+export abstract class ModuleParser extends StatementParser {
   // ImportDeclaration :
   //   `import` ImportClause FromClause `;`
   //   `import` ModuleSpecifier `;`
-  parseImportDeclaration() {
+  parseImportDeclaration(): ParseNode.ImportDeclaration | ParseNode.ExpressionStatement | ParseNode.LabelledStatement {
     if (this.testAhead(Token.PERIOD) || this.testAhead(Token.LPAREN)) {
       // `import` `(`
       // `import` `.`
       return this.parseExpressionStatement();
     }
-    const node = this.startNode();
+    const node = this.startNode<ParseNode.ImportDeclaration>();
     this.next();
     if (this.test(Token.STRING)) {
       node.ModuleSpecifier = this.parsePrimaryExpression();
@@ -36,8 +37,8 @@ export class ModuleParser extends StatementParser {
   //
   // ImportedBinding :
   //   BindingIdentifier
-  parseImportClause() {
-    const node = this.startNode();
+  parseImportClause(): ParseNode.ImportClause {
+    const node = this.startNode<ParseNode.ImportClause>();
     if (this.test(Token.IDENTIFIER)) {
       node.ImportedDefaultBinding = this.parseImportedDefaultBinding();
       if (!this.eat(Token.COMMA)) {
@@ -56,16 +57,16 @@ export class ModuleParser extends StatementParser {
 
   // ImportedDefaultBinding :
   //   ImportedBinding
-  parseImportedDefaultBinding() {
-    const node = this.startNode();
+  parseImportedDefaultBinding(): ParseNode.ImportedDefaultBinding {
+    const node = this.startNode<ParseNode.ImportedDefaultBinding>();
     node.ImportedBinding = this.parseBindingIdentifier();
     return this.finishNode(node, 'ImportedDefaultBinding');
   }
 
   // NameSpaceImport :
   //   `*` `as` ImportedBinding
-  parseNameSpaceImport() {
-    const node = this.startNode();
+  parseNameSpaceImport(): ParseNode.NameSpaceImport {
+    const node = this.startNode<ParseNode.NameSpaceImport>();
     this.expect(Token.MUL);
     this.expect('as');
     node.ImportedBinding = this.parseBindingIdentifier();
@@ -76,11 +77,12 @@ export class ModuleParser extends StatementParser {
   //   `{` `}`
   //   `{` ImportsList `}`
   //   `{` ImportsList `,` `}`
-  parseNamedImports() {
-    const node = this.startNode();
-    node.ImportsList = [];
+  parseNamedImports(): ParseNode.NamedImports {
+    const node = this.startNode<ParseNode.NamedImports>();
+    const ImportsList: Mutable<ParseNode.ImportsList> = [];
+    node.ImportsList = ImportsList;
     while (!this.eat(Token.RBRACE)) {
-      node.ImportsList.push(this.parseImportSpecifier());
+      ImportsList.push(this.parseImportSpecifier());
       if (this.eat(Token.RBRACE)) {
         break;
       }
@@ -92,16 +94,15 @@ export class ModuleParser extends StatementParser {
   // ImportSpecifier :
   //   ImportedBinding
   //   ModuleExportName `as` ImportedBinding
-  parseImportSpecifier() {
-    const node = this.startNode();
+  parseImportSpecifier(): ParseNode.ImportSpecifier {
+    const node = this.startNode<ParseNode.ImportSpecifier>();
     const name = this.parseModuleExportName();
     if (name.type === 'StringLiteral' || this.test('as')) {
       this.expect('as');
       node.ModuleExportName = name;
       node.ImportedBinding = this.parseBindingIdentifier();
     } else {
-      node.ImportedBinding = name;
-      node.ImportedBinding.type = 'BindingIdentifier';
+      node.ImportedBinding = this.repurpose(name, 'BindingIdentifier');
       if (isKeywordRaw(node.ImportedBinding.name)) {
         this.raiseEarly('UnexpectedToken', node.ImportedBinding);
       }
@@ -125,8 +126,8 @@ export class ModuleParser extends StatementParser {
   //   `*`
   //   `*` as ModuleExportName
   //   NamedExports
-  parseExportDeclaration() {
-    const node = this.startNode();
+  parseExportDeclaration(): ParseNode.ExportDeclaration {
+    const node = this.startNode<ParseNode.ExportDeclaration>();
     this.expect(Token.EXPORT);
     node.default = this.eat(Token.DEFAULT);
     if (node.default) {
@@ -187,7 +188,7 @@ export class ModuleParser extends StatementParser {
           break;
         }
         case Token.MUL: {
-          const inner = this.startNode();
+          const inner = this.startNode<ParseNode.ExportFromClause>();
           this.next();
           if (this.eat('as')) {
             inner.ModuleExportName = this.parseModuleExportName();
@@ -217,12 +218,13 @@ export class ModuleParser extends StatementParser {
   //   `{` `}`
   //   `{` ExportsList `}`
   //   `{` ExportsList `,` `}`
-  parseNamedExports() {
-    const node = this.startNode();
+  parseNamedExports(): ParseNode.NamedExports {
+    const node = this.startNode<ParseNode.NamedExports>();
     this.expect(Token.LBRACE);
-    node.ExportsList = [];
+    const ExportsList: Mutable<ParseNode.ExportsList> = [];
+    node.ExportsList = ExportsList;
     while (!this.eat(Token.RBRACE)) {
-      node.ExportsList.push(this.parseExportSpecifier());
+      ExportsList.push(this.parseExportSpecifier());
       if (this.eat(Token.RBRACE)) {
         break;
       }
@@ -234,8 +236,8 @@ export class ModuleParser extends StatementParser {
   // ExportSpecifier :
   //   ModuleExportName
   //   ModuleExportName `as` ModuleExportName
-  parseExportSpecifier() {
-    const node = this.startNode();
+  parseExportSpecifier(): ParseNode.ExportSpecifier {
+    const node = this.startNode<ParseNode.ExportSpecifier>();
     node.localName = this.parseModuleExportName();
     if (this.eat('as')) {
       node.exportName = this.parseModuleExportName();
@@ -249,7 +251,7 @@ export class ModuleParser extends StatementParser {
   // ModuleExportName :
   //   IdentifierName
   //   StringLiteral
-  parseModuleExportName() {
+  parseModuleExportName(): ParseNode.ModuleExportName {
     if (this.test(Token.STRING)) {
       const literal = this.parseStringLiteral();
       if (!IsStringWellFormedUnicode(StringValue(literal))) {
@@ -262,7 +264,7 @@ export class ModuleParser extends StatementParser {
 
   // FromClause :
   //   `from` ModuleSpecifier
-  parseFromClause() {
+  parseFromClause(): ParseNode.FromClause {
     this.expect('from');
     return this.parseStringLiteral();
   }

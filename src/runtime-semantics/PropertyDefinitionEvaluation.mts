@@ -19,12 +19,13 @@ import {
   NormalCompletion,
 } from '../completion.mjs';
 import { OutOfRange, kInternal } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import { NamedEvaluation, MethodDefinitionEvaluation, Evaluate_PropertyName } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-propertydefinitionevaluation */
+/** https://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-propertydefinitionevaluation */
 //   PropertyDefinitionList :
 //     PropertyDefinitionList `,` PropertyDefinition
-export function* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList, object, enumerable) {
+export function* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList: ParseNode.PropertyDefinitionList, object, enumerable) {
   let lastReturn;
   for (const PropertyDefinition of PropertyDefinitionList) {
     lastReturn = Q(yield* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, object, enumerable));
@@ -36,7 +37,7 @@ export function* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDef
 //   `...` AssignmentExpression
 //   IdentifierReference
 //   PropertyName `:` AssignmentExpression
-function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, object, enumerable) {
+function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition: ParseNode.PropertyDefinitionLike, object, enumerable) {
   switch (PropertyDefinition.type) {
     case 'IdentifierReference':
       return yield* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(PropertyDefinition, object, enumerable);
@@ -108,7 +109,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, ob
 }
 
 // PropertyDefinition : IdentifierReference
-function* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(IdentifierReference, object, enumerable) {
+function* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(IdentifierReference: ParseNode.IdentifierReference, object, enumerable) {
   // 1. Let propName be StringValue of IdentifierReference.
   const propName = StringValue(IdentifierReference);
   // 2. Let exprValue be the result of evaluating IdentifierReference.

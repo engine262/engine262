@@ -3,12 +3,13 @@ import { Evaluate } from '../evaluator.mjs';
 import { GetValue } from '../abstract-ops/all.mjs';
 import { IsInTailPosition } from '../static-semantics/all.mjs';
 import { Q } from '../completion.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import { EvaluateCall } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-tagged-templates-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-tagged-templates-runtime-semantics-evaluation */
 //   MemberExpression :
 //     MemberExpression TemplateLiteral
-export function* Evaluate_TaggedTemplateExpression(node) {
+export function* Evaluate_TaggedTemplateExpression(node: ParseNode.TaggedTemplateExpression) {
   const { MemberExpression, TemplateLiteral } = node;
   // 1. Let tagRef be the result of evaluating MemberExpression.
   const tagRef = yield* Evaluate(MemberExpression);

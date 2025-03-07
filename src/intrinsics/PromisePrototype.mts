@@ -18,15 +18,15 @@ import { ObjectValue, Value } from '../value.mjs';
 import { Q, ThrowCompletion, X } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-promise.prototype.catch */
+/** https://tc39.es/ecma262/#sec-promise.prototype.catch */
 function PromiseProto_catch([onRejected = Value.undefined], { thisValue }) {
   // 1. Let promise be the this value.
   const promise = thisValue;
   // 2. Return ? Invoke(promise, "then", « undefined, onRejected »).
-  return Q(Invoke(promise, new Value('then'), [Value.undefined, onRejected]));
+  return Q(Invoke(promise, Value('then'), [Value.undefined, onRejected]));
 }
 
-/** http://tc39.es/ecma262/#sec-promise.prototype.finally */
+/** https://tc39.es/ecma262/#sec-promise.prototype.finally */
 function PromiseProto_finally([onFinally = Value.undefined], { thisValue }) {
   // 1. Let promise be the this value.
   const promise = thisValue;
@@ -57,12 +57,12 @@ function PromiseProto_finally([onFinally = Value.undefined], { thisValue }) {
       //   1. Return value.
       const returnValue = () => value;
       // iv. Let valueThunk be ! CreateBuiltinFunction(returnValue, 0, "", « »).
-      const valueThunk = X(CreateBuiltinFunction(returnValue, 0, new Value(''), []));
+      const valueThunk = X(CreateBuiltinFunction(returnValue, 0, Value(''), []));
       // v. Return ? Invoke(promise, "then", « valueThunk »).
-      return Q(Invoke(promiseInner, new Value('then'), [valueThunk]));
+      return Q(Invoke(promiseInner, Value('then'), [valueThunk]));
     };
     // b. Let thenFinally be ! CreateBuiltinFunction(thenFinallyClosure, 1, "", « »).
-    thenFinally = X(CreateBuiltinFunction(thenFinallyClosure, 1, new Value(''), []));
+    thenFinally = X(CreateBuiltinFunction(thenFinallyClosure, 1, Value(''), []));
     // c. Let catchFinallyClosure be a new Abstract Closure with parameters (reason) that captures onFinally and C and performs the following steps when called:
     const catchFinallyClosure = ([reason = Value.undefined]) => {
       // i. Let result be ? Call(onFinally, undefined).
@@ -73,18 +73,18 @@ function PromiseProto_finally([onFinally = Value.undefined], { thisValue }) {
       //   1. Return ThrowCompletion(reason).
       const throwReason = () => ThrowCompletion(reason);
       // iv. Let thrower be ! CreateBuiltinFunction(throwReason, 0, "", « »).
-      const thrower = X(CreateBuiltinFunction(throwReason, 0, new Value(''), []));
+      const thrower = X(CreateBuiltinFunction(throwReason, 0, Value(''), []));
       // v. Return ? Invoke(promise, "then", « thrower »).
-      return Q(Invoke(promiseInner, new Value('then'), [thrower]));
+      return Q(Invoke(promiseInner, Value('then'), [thrower]));
     };
     // d. Let catchFinally be ! CreateBuiltinFunction(catchFinallyClosure, 1, "", « »).
-    catchFinally = X(CreateBuiltinFunction(catchFinallyClosure, 1, new Value(''), []));
+    catchFinally = X(CreateBuiltinFunction(catchFinallyClosure, 1, Value(''), []));
   }
   // 7. Return ? Invoke(promise, "then", « thenFinally, catchFinally »).
-  return Q(Invoke(promise, new Value('then'), [thenFinally, catchFinally]));
+  return Q(Invoke(promise, Value('then'), [thenFinally, catchFinally]));
 }
 
-/** http://tc39.es/ecma262/#sec-promise.prototype.then */
+/** https://tc39.es/ecma262/#sec-promise.prototype.then */
 function PromiseProto_then([onFulfilled = Value.undefined, onRejected = Value.undefined], { thisValue }) {
   // 1. Let promise be the this value.
   const promise = thisValue;
@@ -107,7 +107,7 @@ export function bootstrapPromisePrototype(realmRec) {
     ['then', PromiseProto_then, 2],
   ], realmRec.Intrinsics['%Object.prototype%'], 'Promise');
 
-  realmRec.Intrinsics['%Promise.prototype.then%'] = X(Get(proto, new Value('then')));
+  realmRec.Intrinsics['%Promise.prototype.then%'] = X(Get(proto, Value('then')));
 
   realmRec.Intrinsics['%Promise.prototype%'] = proto;
 }

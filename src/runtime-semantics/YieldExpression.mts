@@ -24,13 +24,14 @@ import {
   Q, X,
 } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
-/** http://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-evaluation */
 //   YieldExpression :
 //     `yield`
 //     `yield` AssignmentExpression
 //     `yield` `*` AssignmentExpression
-export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }) {
+export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }: ParseNode.YieldExpression) {
   if (hasStar) {
     // 1. Let generatorKind be ! GetGeneratorKind().
     const generatorKind = X(GetGeneratorKind());
@@ -73,7 +74,7 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }) {
         }
       } else if (received.Type === 'throw') { // b. Else if received.[[Type]] is throw, then
         // i. Let throw be ? GetMethod(iterator, "throw").
-        const thr = Q(GetMethod(iterator, new Value('throw')));
+        const thr = Q(GetMethod(iterator, Value('throw')));
         // ii. If throw is not undefined, then
         if (thr !== Value.undefined) {
           // 1. Let innerResult be ? Call(throw, iterator, « received.[[Value]] »).
@@ -119,7 +120,7 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }) {
         // i. Assert: received.[[Type]] is return.
         Assert(received.Type === 'return');
         // ii. Let return be ? GetMethod(iterator, "return").
-        const ret = Q(GetMethod(iterator, new Value('return')));
+        const ret = Q(GetMethod(iterator, Value('return')));
         // iii. If return is undefined, then
         if (ret === Value.undefined) {
           // 1. If generatorKind is async, then set received.[[Value]] to ? Await(received.[[Value]]).

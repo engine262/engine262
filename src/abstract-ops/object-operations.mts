@@ -5,6 +5,10 @@ import {
   Value,
   ObjectValue,
   wellKnownSymbols,
+  type PropertyKeyValue,
+  UndefinedValue,
+  NullValue,
+  type Arguments,
 } from '../value.mjs';
 import {
   surroundingAgent,
@@ -13,8 +17,9 @@ import { InstanceofOperator } from '../runtime-semantics/all.mjs';
 import {
   NormalCompletion,
   EnsureCompletion,
-  Q, X,
+  Q, X, ThrowCompletion,
 } from '../completion.mjs';
+import { isArray } from '../helpers.mjs';
 import {
   ArrayCreate,
   Assert,
@@ -29,50 +34,51 @@ import {
   ToObject,
   ToString,
   isProxyExoticObject,
-  F as toNumberValue,
+  F as toNumberValue, R, type FunctionObject, Realm,
 } from './all.mjs';
 
 
 // This file covers abstract operations defined in
-/** http://tc39.es/ecma262/#sec-operations-on-objects */
+/** https://tc39.es/ecma262/#sec-operations-on-objects */
 
-/** http://tc39.es/ecma262/#sec-makebasicobject */
-export function MakeBasicObject(internalSlotsList) {
+/** https://tc39.es/ecma262/#sec-makebasicobject */
+export function MakeBasicObject<const T extends string>(internalSlotsList: readonly T[]) {
   // 1.  Assert: internalSlotsList is a List of internal slot names.
-  Assert(Array.isArray(internalSlotsList));
+  Assert(isArray(internalSlotsList));
   // 2.  Let obj be a newly created object with an internal slot for each name in internalSlotsList.
   // 3.  Set obj's essential internal methods to the default ordinary object definitions specified in 9.1.
-  const obj = new ObjectValue(internalSlotsList);
-  internalSlotsList.forEach((s) => {
-    obj[s] = Value.undefined;
-  });
+  const obj = new ObjectValue(internalSlotsList) as ObjectValue & Record<T, unknown>;
+  Object.assign(obj, internalSlotsList.reduce((extraFields, currentField) => {
+    extraFields[currentField] = Value.undefined;
+    return extraFields;
+  }, {} as Record<T, unknown>));
   // 4.  Assert: If the caller will not be overriding both obj's [[GetPrototypeOf]] and [[SetPrototypeOf]] essential internal methods, then internalSlotsList contains [[Prototype]].
   // 5.  Assert: If the caller will not be overriding all of obj's [[SetPrototypeOf]], [[IsExtensible]], and [[PreventExtensions]] essential internal methods, then internalSlotsList contains [[Extensible]].
   // 6.  If internalSlotsList contains [[Extensible]], then set obj.[[Extensible]] to true.
-  if (internalSlotsList.includes('Extensible')) {
-    obj.Extensible = Value.true;
+  if ((internalSlotsList as readonly string[]).includes('Extensible')) {
+    (obj as ObjectValue & { Extensible: BooleanValue }).Extensible = Value.true;
   }
   // 7.  Return obj.
   return obj;
 }
 
-/** http://tc39.es/ecma262/#sec-get-o-p */
-export function Get(O, P) {
+/** https://tc39.es/ecma262/#sec-get-o-p */
+export function Get(O: ObjectValue, P: PropertyKeyValue): NormalCompletion<Value> | ThrowCompletion {
   Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
   // TODO: This should just return Q(O.Get(P, O))
   return NormalCompletion(Q(O.Get(P, O)));
 }
 
-/** http://tc39.es/ecma262/#sec-getv */
-export function GetV(V, P) {
+/** https://tc39.es/ecma262/#sec-getv */
+export function GetV(V: Value, P: PropertyKeyValue) {
   Assert(IsPropertyKey(P));
   const O = Q(ToObject(V));
   return Q(O.Get(P, V));
 }
 
-/** http://tc39.es/ecma262/#sec-set-o-p-v-throw */
-export function Set(O, P, V, Throw) {
+/** https://tc39.es/ecma262/#sec-set-o-p-v-throw */
+export function Set(O: ObjectValue, P: PropertyKeyValue, V: Value, Throw: BooleanValue) {
   Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
   Assert(Throw instanceof BooleanValue);
@@ -83,8 +89,8 @@ export function Set(O, P, V, Throw) {
   return success;
 }
 
-/** http://tc39.es/ecma262/#sec-createdataproperty */
-export function CreateDataProperty(O, P, V) {
+/** https://tc39.es/ecma262/#sec-createdataproperty */
+export function CreateDataProperty(O: ObjectValue, P: PropertyKeyValue, V: Value) {
   Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
 
@@ -97,8 +103,8 @@ export function CreateDataProperty(O, P, V) {
   return Q(O.DefineOwnProperty(P, newDesc));
 }
 
-/** http://tc39.es/ecma262/#sec-createmethodproperty */
-export function CreateMethodProperty(O, P, V) {
+/** https://tc39.es/ecma262/#sec-createmethodproperty */
+export function CreateMethodProperty(O: ObjectValue, P: PropertyKeyValue, V: Value) {
   Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
 
@@ -111,8 +117,8 @@ export function CreateMethodProperty(O, P, V) {
   return Q(O.DefineOwnProperty(P, newDesc));
 }
 
-/** http://tc39.es/ecma262/#sec-createdatapropertyorthrow */
-export function CreateDataPropertyOrThrow(O, P, V) {
+/** https://tc39.es/ecma262/#sec-createdatapropertyorthrow */
+export function CreateDataPropertyOrThrow(O: ObjectValue, P: PropertyKeyValue, V: Value) {
   Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
   const success = Q(CreateDataProperty(O, P, V));
@@ -122,8 +128,8 @@ export function CreateDataPropertyOrThrow(O, P, V) {
   return success;
 }
 
-/** http://tc39.es/ecma262/#sec-definepropertyorthrow */
-export function DefinePropertyOrThrow(O, P, desc) {
+/** https://tc39.es/ecma262/#sec-definepropertyorthrow */
+export function DefinePropertyOrThrow(O: ObjectValue, P: PropertyKeyValue, desc: Descriptor) {
   Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
   const success = Q(O.DefineOwnProperty(P, desc));
@@ -133,8 +139,8 @@ export function DefinePropertyOrThrow(O, P, desc) {
   return success;
 }
 
-/** http://tc39.es/ecma262/#sec-deletepropertyorthrow */
-export function DeletePropertyOrThrow(O, P) {
+/** https://tc39.es/ecma262/#sec-deletepropertyorthrow */
+export function DeletePropertyOrThrow(O: ObjectValue, P: PropertyKeyValue) {
   Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
   const success = Q(O.Delete(P));
@@ -144,8 +150,8 @@ export function DeletePropertyOrThrow(O, P) {
   return success;
 }
 
-/** http://tc39.es/ecma262/#sec-getmethod */
-export function GetMethod(V, P) {
+/** https://tc39.es/ecma262/#sec-getmethod */
+export function GetMethod(V: Value, P: PropertyKeyValue) {
   Assert(IsPropertyKey(P));
   const func = Q(GetV(V, P));
   if (func === Value.null || func === Value.undefined) {
@@ -157,15 +163,15 @@ export function GetMethod(V, P) {
   return func;
 }
 
-/** http://tc39.es/ecma262/#sec-hasproperty */
-export function HasProperty(O, P) {
+/** https://tc39.es/ecma262/#sec-hasproperty */
+export function HasProperty(O: ObjectValue, P: PropertyKeyValue) {
   Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
   return Q(O.HasProperty(P));
 }
 
-/** http://tc39.es/ecma262/#sec-hasownproperty */
-export function HasOwnProperty(O, P) {
+/** https://tc39.es/ecma262/#sec-hasownproperty */
+export function HasOwnProperty(O: ObjectValue, P: PropertyKeyValue) {
   Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
   const desc = Q(O.GetOwnProperty(P));
@@ -175,8 +181,8 @@ export function HasOwnProperty(O, P) {
   return Value.true;
 }
 
-/** http://tc39.es/ecma262/#sec-call */
-export function Call(F, V, argumentsList) {
+/** https://tc39.es/ecma262/#sec-call */
+export function Call(F: Value, V: Value, argumentsList: Arguments) {
   if (!argumentsList) {
     argumentsList = [];
   }
@@ -186,11 +192,11 @@ export function Call(F, V, argumentsList) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', F);
   }
 
-  return EnsureCompletion(Q(F.Call(V, argumentsList)));
+  return EnsureCompletion(Q((F as FunctionObject).Call(V, argumentsList)));
 }
 
-/** http://tc39.es/ecma262/#sec-construct */
-export function Construct(F, argumentsList, newTarget) {
+/** https://tc39.es/ecma262/#sec-construct */
+export function Construct(F: FunctionObject, argumentsList: Arguments, newTarget?: ObjectValue) {
   if (!newTarget) {
     newTarget = F;
   }
@@ -202,8 +208,8 @@ export function Construct(F, argumentsList, newTarget) {
   return Q(F.Construct(argumentsList, newTarget));
 }
 
-/** http://tc39.es/ecma262/#sec-setintegritylevel */
-export function SetIntegrityLevel(O, level) {
+/** https://tc39.es/ecma262/#sec-setintegritylevel */
+export function SetIntegrityLevel(O: ObjectValue, level: 'sealed' | 'frozen') {
   Assert(O instanceof ObjectValue);
   Assert(level === 'sealed' || level === 'frozen');
   const status = Q(O.PreventExtensions());
@@ -232,8 +238,8 @@ export function SetIntegrityLevel(O, level) {
   return Value.true;
 }
 
-/** http://tc39.es/ecma262/#sec-testintegritylevel */
-export function TestIntegrityLevel(O, level) {
+/** https://tc39.es/ecma262/#sec-testintegritylevel */
+export function TestIntegrityLevel(O: ObjectValue, level: 'sealed' | 'frozen') {
   Assert(O instanceof ObjectValue);
   Assert(level === 'sealed' || level === 'frozen');
   const extensible = Q(IsExtensible(O));
@@ -243,7 +249,7 @@ export function TestIntegrityLevel(O, level) {
   const keys = Q(O.OwnPropertyKeys());
   for (const k of keys) {
     const currentDesc = Q(O.GetOwnProperty(k));
-    if (currentDesc !== Value.undefined) {
+    if (!(currentDesc instanceof UndefinedValue)) {
       if (currentDesc.Configurable === Value.true) {
         return Value.false;
       }
@@ -257,8 +263,8 @@ export function TestIntegrityLevel(O, level) {
   return Value.true;
 }
 
-/** http://tc39.es/ecma262/#sec-createarrayfromlist */
-export function CreateArrayFromList(elements) {
+/** https://tc39.es/ecma262/#sec-createarrayfromlist */
+export function CreateArrayFromList(elements: Arguments) {
   // 1. Assert: elements is a List whose elements are all ECMAScript language values.
   Assert(elements.every((e) => e instanceof Value));
   // 2. Let array be ! ArrayCreate(0).
@@ -276,16 +282,16 @@ export function CreateArrayFromList(elements) {
   return array;
 }
 
-/** http://tc39.es/ecma262/#sec-lengthofarraylike */
-export function LengthOfArrayLike(obj) {
+/** https://tc39.es/ecma262/#sec-lengthofarraylike */
+export function LengthOfArrayLike(obj: ObjectValue) {
   // 1. Assert: Type(obj) is Object.
   Assert(obj instanceof ObjectValue);
   // 2. Return ℝ(? ToLength(? Get(obj, "length"))).
-  return Q(ToLength(Q(Get(obj, new Value('length'))))).numberValue();
+  return R(Q(ToLength(Q(Get(obj, Value('length'))))));
 }
 
-/** http://tc39.es/ecma262/#sec-createlistfromarraylike */
-export function CreateListFromArrayLike(obj, elementTypes) {
+/** https://tc39.es/ecma262/#sec-createlistfromarraylike */
+export function CreateListFromArrayLike(obj: Value, elementTypes) {
   // 1. If elementTypes is not present, set elementTypes to « Undefined, Null, Boolean, String, Symbol, Number, BigInt, Object ».
   if (!elementTypes) {
     elementTypes = ['Undefined', 'Null', 'Boolean', 'String', 'Symbol', 'Number', 'BigInt', 'Object'];
@@ -319,8 +325,8 @@ export function CreateListFromArrayLike(obj, elementTypes) {
   return list;
 }
 
-/** http://tc39.es/ecma262/#sec-invoke */
-export function Invoke(V, P, argumentsList) {
+/** https://tc39.es/ecma262/#sec-invoke */
+export function Invoke(V: Value, P: PropertyKeyValue, argumentsList: Arguments) {
   Assert(IsPropertyKey(P));
   if (!argumentsList) {
     argumentsList = [];
@@ -329,8 +335,8 @@ export function Invoke(V, P, argumentsList) {
   return Q(Call(func, V, argumentsList));
 }
 
-/** http://tc39.es/ecma262/#sec-ordinaryhasinstance */
-export function OrdinaryHasInstance(C, O) {
+/** https://tc39.es/ecma262/#sec-ordinaryhasinstance */
+export function OrdinaryHasInstance(C: Value, O: Value): BooleanValue {
   if (IsCallable(C) === Value.false) {
     return Value.false;
   }
@@ -341,13 +347,13 @@ export function OrdinaryHasInstance(C, O) {
   if (!(O instanceof ObjectValue)) {
     return Value.false;
   }
-  const P = Q(Get(C, new Value('prototype')));
+  const P = Q(Get(C as FunctionObject, Value('prototype')));
   if (!(P instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', P);
   }
   while (true) {
     O = Q(O.GetPrototypeOf());
-    if (O === Value.null) {
+    if (O instanceof NullValue) {
       return Value.false;
     }
     if (SameValue(P, O) === Value.true) {
@@ -356,10 +362,10 @@ export function OrdinaryHasInstance(C, O) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-speciesconstructor */
-export function SpeciesConstructor(O, defaultConstructor) {
+/** https://tc39.es/ecma262/#sec-speciesconstructor */
+export function SpeciesConstructor(O: ObjectValue, defaultConstructor) {
   Assert(O instanceof ObjectValue);
-  const C = Q(Get(O, new Value('constructor')));
+  const C = Q(Get(O, Value('constructor')));
   if (C === Value.undefined) {
     return defaultConstructor;
   }
@@ -376,15 +382,15 @@ export function SpeciesConstructor(O, defaultConstructor) {
   return surroundingAgent.Throw('TypeError', 'SpeciesNotConstructor');
 }
 
-/** http://tc39.es/ecma262/#sec-enumerableownpropertynames */
-export function EnumerableOwnPropertyNames(O, kind) {
+/** https://tc39.es/ecma262/#sec-enumerableownpropertynames */
+export function EnumerableOwnPropertyNames(O: ObjectValue, kind: 'key' | 'value' | 'key+value') {
   Assert(O instanceof ObjectValue);
   const ownKeys = Q(O.OwnPropertyKeys());
   const properties = [];
   for (const key of ownKeys) {
     if (key instanceof JSStringValue) {
       const desc = Q(O.GetOwnProperty(key));
-      if (desc !== Value.undefined && desc.Enumerable === Value.true) {
+      if (!(desc instanceof UndefinedValue) && desc.Enumerable === Value.true) {
         if (kind === 'key') {
           properties.push(key);
         } else {
@@ -403,8 +409,8 @@ export function EnumerableOwnPropertyNames(O, kind) {
   return properties;
 }
 
-/** http://tc39.es/ecma262/#sec-getfunctionrealm */
-export function GetFunctionRealm(obj) {
+/** https://tc39.es/ecma262/#sec-getfunctionrealm */
+export function GetFunctionRealm(obj: FunctionObject): NormalCompletion<Realm> | ThrowCompletion {
   Assert(X(IsCallable(obj)) === Value.true);
   if ('Realm' in obj) {
     return obj.Realm;
@@ -426,8 +432,8 @@ export function GetFunctionRealm(obj) {
   return surroundingAgent.currentRealmRecord;
 }
 
-/** http://tc39.es/ecma262/#sec-copydataproperties */
-export function CopyDataProperties(target, source, excludedItems) {
+/** https://tc39.es/ecma262/#sec-copydataproperties */
+export function CopyDataProperties(target: ObjectValue, source: Value, excludedItems: readonly PropertyKeyValue[]) {
   Assert(target instanceof ObjectValue);
   Assert(excludedItems.every((i) => IsPropertyKey(i)));
   if (source === Value.undefined || source === Value.null) {

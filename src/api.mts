@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { Value } from './value.mjs';
+import { ObjectValue, Value } from './value.mjs';
 import {
   surroundingAgent,
   ExecutionContext,
@@ -11,6 +11,8 @@ import {
   ThrowCompletion,
   AbruptCompletion,
   EnsureCompletion,
+  Completion,
+  NormalCompletion,
 } from './completion.mjs';
 import {
   Realm,
@@ -25,6 +27,7 @@ import {
   ParseJSONModule,
 } from './parse.mjs';
 import { SourceTextModuleRecord } from './modules.mjs';
+import * as messages from './messages.mjs';
 
 export * from './value.mjs';
 export * from './engine.mjs';
@@ -37,11 +40,11 @@ export * from './parse.mjs';
 export * from './modules.mjs';
 export * from './inspect.mjs';
 
-export function Throw(...args) {
-  return surroundingAgent.Throw(...args);
+export function Throw<K extends keyof typeof messages>(type: string | Value, template: K, ...templateArgs: Parameters<typeof messages[K]>): ThrowCompletion {
+  return surroundingAgent.Throw(type, template, ...templateArgs);
 }
 
-/** http://tc39.es/ecma262/#sec-weakref-execution */
+/** https://tc39.es/ecma262/#sec-weakref-execution */
 export function gc() {
   // At any time, if a set of objects S is not live, an ECMAScript implementation may perform the following steps atomically:
   // 1. For each obj of S, do
@@ -176,7 +179,7 @@ export function runJobQueue() {
   }
 }
 
-export function evaluateScript(sourceText, realm, hostDefined) {
+export function evaluateScript(sourceText: string, realm: Realm, hostDefined) {
   const s = ParseScript(sourceText, realm, hostDefined);
   if (Array.isArray(s)) {
     return ThrowCompletion(s[0]);
@@ -185,8 +188,17 @@ export function evaluateScript(sourceText, realm, hostDefined) {
   return EnsureCompletion(ScriptEvaluation(s));
 }
 
+export interface ManagedRealmHostDefined {
+  promiseRejectionTracker?(promise, operation: 'reject' | 'handle'): unknown;
+  resolverCache?: Map<unknown, unknown>;
+  getImportMetaProperties?;
+}
 export class ManagedRealm extends Realm {
-  constructor(HostDefined = {}) {
+  topContext;
+
+  active = false;
+
+  constructor(HostDefined: ManagedRealmHostDefined = {}) {
     super();
     // CreateRealm()
     CreateIntrinsics(this);
@@ -208,10 +220,9 @@ export class ManagedRealm extends Realm {
     surroundingAgent.executionContextStack.pop(newContext);
     this.HostDefined = HostDefined;
     this.topContext = newContext;
-    this.active = false;
   }
 
-  scope(cb) {
+  scope<T>(cb: () => T) {
     if (this.active) {
       return cb();
     }
@@ -223,7 +234,7 @@ export class ManagedRealm extends Realm {
     return r;
   }
 
-  evaluateScript(sourceText, { specifier } = {}) {
+  evaluateScript(sourceText: string, { specifier } = {}): Completion {
     if (typeof sourceText !== 'string') {
       throw new TypeError('sourceText must be a string');
     }
@@ -243,7 +254,7 @@ export class ManagedRealm extends Realm {
     return res;
   }
 
-  createSourceTextModule(specifier, sourceText) {
+  createSourceTextModule(specifier: string, sourceText: string): SourceTextModuleRecord | AbruptCompletion<ObjectValue> {
     if (typeof specifier !== 'string') {
       throw new TypeError('specifier must be a string');
     }
@@ -260,14 +271,14 @@ export class ManagedRealm extends Realm {
     return module;
   }
 
-  createJSONModule(specifier, sourceText) {
+  createJSONModule(specifier: string, sourceText: string) {
     if (typeof specifier !== 'string') {
       throw new TypeError('specifier must be a string');
     }
     if (typeof sourceText !== 'string') {
       throw new TypeError('sourceText must be a string');
     }
-    const module = this.scope(() => ParseJSONModule(new Value(sourceText), this, {
+    const module = this.scope(() => ParseJSONModule(Value(sourceText), this, {
       specifier,
     }));
     return module;
@@ -275,7 +286,7 @@ export class ManagedRealm extends Realm {
 }
 
 class ManagedSourceTextModuleRecord extends SourceTextModuleRecord {
-  Evaluate() {
+  override Evaluate() {
     const r = super.Evaluate();
     if (!(r instanceof AbruptCompletion)) {
       runJobQueue();

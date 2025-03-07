@@ -3,15 +3,16 @@ import { Value } from '../value.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { ToBoolean, GetValue } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
-/** http://tc39.es/ecma262/#sec-conditional-operator-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-conditional-operator-runtime-semantics-evaluation */
 //   ConditionalExpression :
 //     ShortCircuitExpression `?` AssignmentExpression `:` AssignmentExpression
 export function* Evaluate_ConditionalExpression({
   ShortCircuitExpression,
   AssignmentExpression_a,
   AssignmentExpression_b,
-}) {
+}: ParseNode.ConditionalExpression) {
   // 1. Let lref be the result of evaluating ShortCircuitExpression.
   const lref = yield* Evaluate(ShortCircuitExpression);
   // 2. Let lval be ! ToBoolean(? GetValue(lref)).

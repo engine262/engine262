@@ -3,7 +3,7 @@ import { Assert, RequireObjectCoercible, ToString } from '../abstract-ops/all.mj
 import { Value } from '../value.mjs';
 import { Q } from '../completion.mjs';
 
-/** http://tc39.es/ecma262/#sec-trimstring */
+/** https://tc39.es/ecma262/#sec-trimstring */
 export function TrimString(string, where) {
   const str = Q(RequireObjectCoercible(string));
   const S = Q(ToString(str)).stringValue();
@@ -16,5 +16,5 @@ export function TrimString(string, where) {
     Assert(where === 'start+end');
     T = S.trim();
   }
-  return new Value(T);
+  return Value(T);
 }

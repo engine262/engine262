@@ -17,7 +17,7 @@ import {
 import { Q } from '../completion.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-regexp-constructor */
+/** https://tc39.es/ecma262/#sec-regexp-constructor */
 function RegExpConstructor([pattern = Value.undefined, flags = Value.undefined], { NewTarget }) {
   // 1. Let patternIsRegExp be ? IsRegExp(pattern).
   const patternIsRegExp = Q(IsRegExp(pattern));
@@ -29,7 +29,7 @@ function RegExpConstructor([pattern = Value.undefined, flags = Value.undefined],
     // b. If patternIsRegExp is true and flags is undefined, then
     if (patternIsRegExp === Value.true && flags === Value.undefined) {
       // i. Let patternConstructor be ? Get(pattern, "constructor").
-      const patternConstructor = Q(Get(pattern, new Value('constructor')));
+      const patternConstructor = Q(Get(pattern, Value('constructor')));
       // ii. If SameValue(newTarget, patternConstructor) is true, return pattern.
       if (SameValue(newTarget, patternConstructor) === Value.true) {
         return pattern;
@@ -52,11 +52,11 @@ function RegExpConstructor([pattern = Value.undefined, flags = Value.undefined],
     }
   } else if (patternIsRegExp === Value.true) { // 5. Else if patternIsRegExp is true, then
     // a. Else if patternIsRegExp is true, then
-    P = Q(Get(pattern, new Value('source')));
+    P = Q(Get(pattern, Value('source')));
     // b. If flags is undefined, then
     if (flags === Value.undefined) {
       // i. Let F be ? Get(pattern, "flags").
-      F = Q(Get(pattern, new Value('flags')));
+      F = Q(Get(pattern, Value('flags')));
     } else { // c. Else, let F be flags.
       F = flags;
     }
@@ -72,7 +72,7 @@ function RegExpConstructor([pattern = Value.undefined, flags = Value.undefined],
   return Q(RegExpInitialize(O, P, F));
 }
 
-/** http://tc39.es/ecma262/#sec-get-regexp-@@species */
+/** https://tc39.es/ecma262/#sec-get-regexp-@@species */
 function RegExp_speciesGetter(args, { thisValue }) {
   return thisValue;
 }

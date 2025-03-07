@@ -10,13 +10,14 @@ import {
 import { IsInTailPosition } from '../static-semantics/all.mjs';
 import { Q } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import { EvaluateCall, ArgumentListEvaluation } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-function-calls-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-function-calls-runtime-semantics-evaluation */
 // CallExpression :
 //   CoverCallExpressionAndAsyncArrowHead
 //   CallExpression Arguments
-export function* Evaluate_CallExpression(CallExpression) {
+export function* Evaluate_CallExpression(CallExpression: ParseNode.CallExpression) {
   // 1. Let expr be CoveredCallExpression of CoverCallExpressionAndAsyncArrowHead.
   const expr = CallExpression;
   // 2. Let memberExpr be the MemberExpression of expr.
@@ -24,7 +25,7 @@ export function* Evaluate_CallExpression(CallExpression) {
   // 3. Let arguments be the Arguments of expr.
   const args = expr.Arguments;
   // 4. Let ref be the result of evaluating memberExpr.
-  const ref = yield* Evaluate(memberExpr);
+  const ref = Q(yield* Evaluate(memberExpr));
   // 5. Let func be ? GetValue(ref).
   const func = Q(GetValue(ref));
   // 6. If Type(ref) is Reference, IsPropertyReference(ref) is false, and GetReferencedName(ref) is "eval", then

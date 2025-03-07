@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { surroundingAgent } from '../engine.mjs';
 import { Value } from '../value.mjs';
-import { NewDeclarativeEnvironment, DeclarativeEnvironmentRecord } from '../environment.mjs';
+import { DeclarativeEnvironmentRecord } from '../environment.mjs';
 import { Assert } from '../abstract-ops/all.mjs';
 import {
   LexicallyScopedDeclarations,
@@ -9,10 +9,11 @@ import {
   BoundNames,
 } from '../static-semantics/all.mjs';
 import { X, NormalCompletion } from '../completion.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import { Evaluate_StatementList, InstantiateFunctionObject } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-blockdeclarationinstantiation */
-export function BlockDeclarationInstantiation(code, env) {
+/** https://tc39.es/ecma262/#sec-blockdeclarationinstantiation */
+export function BlockDeclarationInstantiation(code, env: DeclarativeEnvironmentRecord) {
   // 1. Assert: env is a declarative Environment Record.
   Assert(env instanceof DeclarativeEnvironmentRecord);
   // 2. Let declarations be the LexicallyScopedDeclarations of code.
@@ -47,11 +48,11 @@ export function BlockDeclarationInstantiation(code, env) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-block-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-block-runtime-semantics-evaluation */
 //  Block :
 //    `{` `}`
 //    `{` StatementList `}`
-export function* Evaluate_Block({ StatementList }) {
+export function* Evaluate_Block({ StatementList }: ParseNode.Block) {
   if (StatementList.length === 0) {
     // 1. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
@@ -59,7 +60,7 @@ export function* Evaluate_Block({ StatementList }) {
   // 1. Let oldEnv be the running execution context's LexicalEnvironment.
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 2. Let blockEnv be NewDeclarativeEnvironment(oldEnv).
-  const blockEnv = NewDeclarativeEnvironment(oldEnv);
+  const blockEnv = new DeclarativeEnvironmentRecord(oldEnv);
   // 3. Perform BlockDeclarationInstantiation(StatementList, blockEnv).
   BlockDeclarationInstantiation(StatementList, blockEnv);
   // 4. Set the running execution context's LexicalEnvironment to blockEnv.

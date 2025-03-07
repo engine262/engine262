@@ -1,6 +1,8 @@
 // @ts-nocheck
+import type { Completion } from './completion.mjs';
 import { surroundingAgent } from './engine.mjs';
 import { OutOfRange } from './helpers.mjs';
+import type { ParseNode } from './parser/ParseNode.mjs';
 import {
   Evaluate_Script,
   Evaluate_ScriptBody,
@@ -74,7 +76,7 @@ import {
   Evaluate_ExpressionBody,
 } from './runtime-semantics/all.mjs';
 
-export function* Evaluate(node) {
+export function* Evaluate(node: ParseNode): Generator<unknown, Completion, unknown> {
   surroundingAgent.runningExecutionContext.callSite.setLocation(node);
 
   if (surroundingAgent.hostDefinedOptions.onNodeEvaluation) {
@@ -240,7 +242,7 @@ export function* Evaluate(node) {
       return yield* Evaluate_ConditionalExpression(node);
     case 'RegularExpressionLiteral':
       return Evaluate_RegularExpressionLiteral(node);
-    case 'AsyncFunctionBody':
+    case 'AsyncBody':
     case 'GeneratorBody':
     case 'AsyncGeneratorBody':
       return yield* Evaluate_AnyFunctionBody(node);

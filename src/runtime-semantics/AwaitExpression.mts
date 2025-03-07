@@ -2,10 +2,11 @@
 import { GetValue } from '../abstract-ops/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { Await, Q } from '../completion.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
-/** http://tc39.es/ecma262/#sec-async-function-definitions-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-async-function-definitions-runtime-semantics-evaluation */
 //   AwaitExpression : `await` UnaryExpression
-export function* Evaluate_AwaitExpression({ UnaryExpression }) {
+export function* Evaluate_AwaitExpression({ UnaryExpression }: ParseNode.AwaitExpression) {
   // 1. Let exprRef be the result of evaluating UnaryExpression.
   const exprRef = yield* Evaluate(UnaryExpression);
   // 2. Let value be ? GetValue(exprRef).

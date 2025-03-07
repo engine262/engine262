@@ -1,4 +1,3 @@
-// @ts-nocheck
 export * from './arguments-operations.mjs';
 export * from './array-objects.mjs';
 export * from './arraybuffer-objects.mjs';

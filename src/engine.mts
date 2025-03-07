@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { Value } from './value.mjs';
+import { NullValue, Value } from './value.mjs';
 import {
   EnsureCompletion,
   NormalCompletion,
@@ -13,14 +13,17 @@ import {
   CleanupFinalizationRegistry,
   CreateArrayFromList,
   FinishLoadingImportedModule,
+  Realm,
+  type FunctionObject,
 } from './abstract-ops/all.mjs';
 import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mjs';
 import { Evaluate } from './evaluator.mjs';
 import { CallSite, unwind } from './helpers.mjs';
 import { runJobQueue } from './api.mjs';
 import * as messages from './messages.mjs';
+import type { ParseNode } from './parser/ParseNode.mjs';
 
-export const FEATURES = Object.freeze([
+export const FEATURES = ([
   {
     name: 'FinalizationRegistry.prototype.cleanupSome',
     flag: 'cleanup-some',
@@ -36,9 +39,11 @@ export const FEATURES = Object.freeze([
     flag: 'symbols-as-weakmap-keys',
     url: 'https://github.com/tc39/proposal-symbols-as-weakmap-keys',
   },
-].map(Object.freeze));
+]) as const;
+Object.freeze(FEATURES);
+FEATURES.forEach(Object.freeze);
 
-class ExecutionContextStack extends Array {
+class ExecutionContextStack extends Array<ExecutionContext> {
   // This ensures that only the length taking overload is supported.
   // This is necessary to support `ArraySpeciesCreate`, which invokes
   // the constructor with argument `length`:
@@ -46,7 +51,7 @@ class ExecutionContextStack extends Array {
     super(+length);
   }
 
-  pop(ctx) {
+  pop(ctx: ExecutionContext) {
     if (!ctx.poppedForTailCall) {
       const popped = super.pop();
       Assert(popped === ctx);
@@ -55,9 +60,27 @@ class ExecutionContextStack extends Array {
 }
 
 let agentSignifier = 0;
-/** http://tc39.es/ecma262/#sec-agents */
+export interface AgentHostDefined {
+  features?;
+  loadImportedModule?(referrer, specifier, hostDefined, finish): void;
+  onDebugger?();
+  onNodeEvaluation?(node: ParseNode): void;
+}
+/** https://tc39.es/ecma262/#sec-agents */
 export class Agent {
-  constructor(options = {}) {
+  AgentRecord;
+
+  // #execution-context-stack
+  executionContextStack = new ExecutionContextStack();
+
+  // NON-SPEC
+  jobQueue = [];
+
+  scheduledForCleanup = new Set();
+
+  hostDefinedOptions: AgentHostDefined;
+
+  constructor(options: AgentHostDefined = {}) {
     // #table-agent-record
     const Signifier = agentSignifier;
     agentSignifier += 1;
@@ -71,12 +94,6 @@ export class Agent {
       KeptAlive: new Set(),
     };
 
-    // #execution-context-stack
-    this.executionContextStack = new ExecutionContextStack();
-
-    // NON-SPEC
-    this.jobQueue = [];
-    this.scheduledForCleanup = new Set();
     this.hostDefinedOptions = {
       ...options,
       features: FEATURES.reduce((acc, { flag }) => {
@@ -106,12 +123,12 @@ export class Agent {
   }
 
   // Get an intrinsic by name for the current realm
-  intrinsic(name) {
+  intrinsic(name: string) {
     return this.currentRealmRecord.Intrinsics[name];
   }
 
   // Generate a throw completion using message templates
-  Throw(type, template, ...templateArgs) {
+  Throw<K extends keyof typeof messages>(type: string | Value, template: K, ...templateArgs: Parameters<typeof messages[K]>): ThrowCompletion {
     if (type instanceof Value) {
       return ThrowCompletion(type);
     }
@@ -121,15 +138,15 @@ export class Agent {
     if (type === 'AggregateError') {
       error = X(Construct(cons, [
         X(CreateArrayFromList([])),
-        new Value(message),
+        Value(message),
       ]));
     } else {
-      error = X(Construct(cons, [new Value(message)]));
+      error = X(Construct(cons, [Value(message)]));
     }
     return ThrowCompletion(error);
   }
 
-  queueJob(queueName, job) {
+  queueJob(queueName: string, job: () => void) {
     const callerContext = this.runningExecutionContext;
     const callerRealm = callerContext.Realm;
     const callerScriptOrModule = GetActiveScriptOrModule();
@@ -143,12 +160,12 @@ export class Agent {
   }
 
   // NON-SPEC: Check if a feature is enabled in this agent.
-  feature(name) {
+  feature(name: string): boolean {
     return this.hostDefinedOptions.features[name];
   }
 
   // NON-SPEC
-  mark(m) {
+  mark(m: GCMarker) {
     this.AgentRecord.KeptAlive.forEach((v) => {
       m(v);
     });
@@ -162,27 +179,33 @@ export class Agent {
   }
 }
 
-export let surroundingAgent;
-export function setSurroundingAgent(a) {
+export let surroundingAgent: Agent;
+export function setSurroundingAgent(a: Agent) {
   surroundingAgent = a;
 }
 
-/** http://tc39.es/ecma262/#sec-execution-contexts */
+/** https://tc39.es/ecma262/#sec-execution-contexts */
 export class ExecutionContext {
-  constructor() {
-    this.codeEvaluationState = undefined;
-    this.Function = undefined;
-    this.Realm = undefined;
-    this.ScriptOrModule = undefined;
-    this.VariableEnvironment = undefined;
-    this.LexicalEnvironment = undefined;
-    this.PrivateEnvironment = undefined;
+  codeEvaluationState;
 
-    // NON-SPEC
-    this.callSite = new CallSite(this);
-    this.promiseCapability = undefined;
-    this.poppedForTailCall = false;
-  }
+  Function: NullValue | FunctionObject;
+
+  Realm: Realm;
+
+  ScriptOrModule;
+
+  VariableEnvironment;
+
+  LexicalEnvironment;
+
+  PrivateEnvironment;
+
+  // NON-SPEC
+  callSite = new CallSite(this);
+
+  promiseCapability;
+
+  poppedForTailCall = false;
 
   copy() {
     const e = new ExecutionContext();
@@ -211,7 +234,7 @@ export class ExecutionContext {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-scriptevaluation */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-scriptevaluation */
 export function ScriptEvaluation(scriptRecord) {
   if (surroundingAgent.hostDefinedOptions.boost?.evaluateScript) {
     return surroundingAgent.hostDefinedOptions.boost.evaluateScript(scriptRecord);
@@ -246,12 +269,12 @@ export function ScriptEvaluation(scriptRecord) {
   return result;
 }
 
-/** http://tc39.es/ecma262/#sec-hostenqueuepromisejob */
+/** https://tc39.es/ecma262/#sec-hostenqueuepromisejob */
 export function HostEnqueuePromiseJob(job, _realm) {
   surroundingAgent.queueJob('PromiseJobs', job);
 }
 
-/** http://tc39.es/ecma262/#sec-agentsignifier */
+/** https://tc39.es/ecma262/#sec-agentsignifier */
 export function AgentSignifier() {
   // 1. Let AR be the Agent Record of the surrounding agent.
   const AR = surroundingAgent.AgentRecord;
@@ -307,7 +330,7 @@ export function HostLoadImportedModule(referrer, specifier, hostDefined, payload
   }
 }
 
-/** http://tc39.es/ecma262/#sec-hostgetimportmetaproperties */
+/** https://tc39.es/ecma262/#sec-hostgetimportmetaproperties */
 export function HostGetImportMetaProperties(moduleRecord) {
   const realm = surroundingAgent.currentRealmRecord;
   if (realm.HostDefined.getImportMetaProperties) {
@@ -316,7 +339,7 @@ export function HostGetImportMetaProperties(moduleRecord) {
   return [];
 }
 
-/** http://tc39.es/ecma262/#sec-hostfinalizeimportmeta */
+/** https://tc39.es/ecma262/#sec-hostfinalizeimportmeta */
 export function HostFinalizeImportMeta(importMeta, moduleRecord) {
   const realm = surroundingAgent.currentRealmRecord;
   if (realm.HostDefined.finalizeImportMeta) {
@@ -325,7 +348,7 @@ export function HostFinalizeImportMeta(importMeta, moduleRecord) {
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-host-cleanup-finalization-registry */
+/** https://tc39.es/ecma262/#sec-host-cleanup-finalization-registry */
 export function HostEnqueueFinalizationRegistryCleanupJob(fg) {
   if (surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry !== undefined) {
     Q(surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry(fg));
@@ -341,7 +364,7 @@ export function HostEnqueueFinalizationRegistryCleanupJob(fg) {
   return NormalCompletion(undefined);
 }
 
-/** http://tc39.es/ecma262/#sec-hostmakejobcallback */
+/** https://tc39.es/ecma262/#sec-hostmakejobcallback */
 export function HostMakeJobCallback(callback) {
   // 1. Assert: IsCallable(callback) is true.
   Assert(IsCallable(callback) === Value.true);
@@ -349,10 +372,11 @@ export function HostMakeJobCallback(callback) {
   return { Callback: callback, HostDefined: undefined };
 }
 
-/** http://tc39.es/ecma262/#sec-hostcalljobcallback */
+/** https://tc39.es/ecma262/#sec-hostcalljobcallback */
 export function HostCallJobCallback(jobCallback, V, argumentsList) {
   // 1. Assert: IsCallable(jobCallback.[[Callback]]) is true.
   Assert(IsCallable(jobCallback.Callback) === Value.true);
   // 1. Return ? Call(jobCallback.[[Callback]], V, argumentsList).
   return Q(Call(jobCallback.Callback, V, argumentsList));
 }
+export type GCMarker = (value: unknown) => void;

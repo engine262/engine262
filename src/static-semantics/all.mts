@@ -1,4 +1,3 @@
-// @ts-nocheck
 export * from './StringValue.mjs';
 export * from './IsStatic.mjs';
 export * from './NonConstructorElements.mjs';

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   BinaryUnicodeProperties,
   NonbinaryUnicodeProperties,
@@ -16,40 +15,53 @@ import {
   isTrailingSurrogate,
   isHexDigit,
 } from './Lexer.mjs';
+import type { ParseNode } from './ParseNode.mjs';
 
-const isSyntaxCharacter = (c) => '^$\\.*+?()[]{}|'.includes(c);
-const isClosingSyntaxCharacter = (c) => ')]}|'.includes(c);
-const isDecimalDigit = (c) => /[0123456789]/u.test(c);
-const isControlLetter = (c) => /[a-zA-Z]/u.test(c);
-const isIdentifierContinue = (c) => c && /\p{ID_Continue}/u.test(c);
+const isSyntaxCharacter = (c: string) => '^$\\.*+?()[]{}|'.includes(c);
+const isClosingSyntaxCharacter = (c: string) => ')]}|'.includes(c);
+const isDecimalDigit = (c: string) => /[0123456789]/u.test(c);
+const isControlLetter = (c: string) => /[a-zA-Z]/u.test(c);
+const isIdentifierContinue = (c: string) => c && /\p{ID_Continue}/u.test(c);
 
-const PLUS_U = 1 << 0;
-const PLUS_N = 1 << 1;
+enum ParserContext {
+  None = 0,
+  U = 1 << 0,
+  N = 1 << 1,
+}
 
+export interface RegExpParserContext { U?: undefined | boolean; N?: undefined | boolean; }
 export class RegExpParser {
-  constructor(source) {
+  private source: string;
+
+  private position = 0;
+
+  private capturingGroups: ParseNode.RegExp.Atom_Group[] = [];
+
+  private groupSpecifiers = new Map<string, number>();
+
+  private decimalEscapes: {readonly value: number, readonly position: number}[] = [];
+
+  private groupNameRefs: ParseNode.RegExp.AtomEscape[] = [];
+
+  private state = ParserContext.None;
+
+  constructor(source: string) {
     this.source = source;
-    this.position = 0;
-    this.capturingGroups = [];
-    this.groupSpecifiers = new Map();
-    this.decimalEscapes = [];
-    this.groupNameRefs = [];
-    this.state = 0;
   }
 
-  scope(flags, f) {
+  scope<T>(flags: RegExpParserContext, f: () => T): T {
     const oldState = this.state;
 
     if (flags.U === true) {
-      this.state |= PLUS_U;
+      this.state |= ParserContext.U;
     } else if (flags.U === false) {
-      this.state &= ~PLUS_U;
+      this.state &= ~ParserContext.U;
     }
 
     if (flags.N === true) {
-      this.state |= PLUS_N;
+      this.state |= ParserContext.N;
     } else if (flags.N === false) {
-      this.state &= ~PLUS_N;
+      this.state &= ~ParserContext.N;
     }
 
     const r = f();
@@ -59,29 +71,29 @@ export class RegExpParser {
     return r;
   }
 
-  get plusU() {
-    return (this.state & PLUS_U) === PLUS_U;
+  private get plusU() {
+    return (this.state & ParserContext.U) === ParserContext.U;
   }
 
-  get plusN() {
-    return (this.state & PLUS_N) === PLUS_N;
+  private get plusN() {
+    return (this.state & ParserContext.N) === ParserContext.N;
   }
 
-  raise(message, position = this.position) {
+  private raise(message: string, position = this.position): never {
     const e = new SyntaxError(message);
     e.position = position;
     throw e;
   }
 
-  peek() {
+  private peek() {
     return this.source[this.position];
   }
 
-  test(c) {
+  private test(c: string) {
     return this.source[this.position] === c;
   }
 
-  eat(c) {
+  private eat(c: string) {
     if (this.test(c)) {
       this.next();
       return true;
@@ -89,13 +101,13 @@ export class RegExpParser {
     return false;
   }
 
-  next() {
+  private next() {
     const c = this.source[this.position];
     this.position += 1;
     return c;
   }
 
-  expect(c) {
+  private expect(c: string) {
     if (!this.eat(c)) {
       this.raise(`Expected ${c} but got ${this.peek()}`);
     }
@@ -104,13 +116,12 @@ export class RegExpParser {
   // Pattern ::
   //   Disjunction
   parsePattern() {
-    const node = {
+    const node: ParseNode.RegExp.Pattern = {
       type: 'Pattern',
       groupSpecifiers: this.groupSpecifiers,
       capturingGroups: this.capturingGroups,
-      Disjunction: undefined,
+      Disjunction: this.parseDisjunction(),
     };
-    node.Disjunction = this.parseDisjunction();
     if (this.position < this.source.length) {
       this.raise('Unexpected token');
     }
@@ -120,7 +131,7 @@ export class RegExpParser {
       }
     });
     this.groupNameRefs.forEach((g) => {
-      if (!node.groupSpecifiers.has(g.GroupName)) {
+      if (!node.groupSpecifiers.has(g.GroupName!)) {
         this.raise('Invalid group name', g.position);
       }
     });
@@ -130,13 +141,12 @@ export class RegExpParser {
   // Disjunction ::
   //   Alternative
   //   Alternative `|` Disjunction
-  parseDisjunction() {
-    const node = {
+  private parseDisjunction() {
+    const node: ParseNode.RegExp.Mutable<ParseNode.RegExp.Disjunction> = {
       type: 'Disjunction',
-      Alternative: undefined,
+      Alternative: this.parseAlternative(),
       Disjunction: undefined,
     };
-    node.Alternative = this.parseAlternative();
     if (this.eat('|')) {
       node.Disjunction = this.parseDisjunction();
     }
@@ -147,8 +157,8 @@ export class RegExpParser {
   // Alternative ::
   //   [empty]
   //   Term Alternative
-  parseAlternative() {
-    let node = {
+  private parseAlternative() {
+    let node: ParseNode.RegExp.Alternative = {
       type: 'Alternative',
       Term: undefined,
       Alternative: undefined,
@@ -168,7 +178,7 @@ export class RegExpParser {
   //   Assertion
   //   Atom
   //   Atom Quantifier
-  parseTerm() {
+  private parseTerm(): ParseNode.RegExp.Term {
     const assertion = this.maybeParseAssertion();
     if (assertion) {
       return assertion;
@@ -190,7 +200,7 @@ export class RegExpParser {
   //   `(` `?` `!` Disjunction `)`
   //   `(` `?` `<=` Disjunction `)`
   //   `(` `?` `<!` Disjunction `)`
-  maybeParseAssertion() {
+  private maybeParseAssertion(): ParseNode.RegExp.Assertion | undefined {
     if (this.eat('^')) {
       return { type: 'Assertion', subtype: '^' };
     }
@@ -265,8 +275,8 @@ export class RegExpParser {
   //   `{` DecimalDigits `}`
   //   `{` DecimalDigits `,` `}`
   //   `{` DecimalDigits `,` DecimalDigits `}`
-  maybeParseQuantifier() {
-    let QuantifierPrefix;
+  private maybeParseQuantifier(): ParseNode.RegExp.Quantifier | undefined {
+    let QuantifierPrefix: ParseNode.RegExp.Quantifier['QuantifierPrefix'];
 
     if (this.eat('*')) {
       QuantifierPrefix = '*';
@@ -275,21 +285,22 @@ export class RegExpParser {
     } else if (this.eat('?')) {
       QuantifierPrefix = '?';
     } else if (this.eat('{')) {
-      QuantifierPrefix = {
-        DecimalDigits_a: undefined,
-        DecimalDigits_b: undefined,
-      };
-      QuantifierPrefix.DecimalDigits_a = Number.parseInt(this.parseDecimalDigits(), 10);
+      const DecimalDigits_a = Number.parseInt(this.parseDecimalDigits(), 10);
+      let DecimalDigits_b;
       if (this.eat(',')) {
         if (this.test('}')) {
-          QuantifierPrefix.DecimalDigits_b = Infinity;
+          DecimalDigits_b = Infinity;
         } else {
-          QuantifierPrefix.DecimalDigits_b = Number.parseInt(this.parseDecimalDigits(), 10);
+          DecimalDigits_b = Number.parseInt(this.parseDecimalDigits(), 10);
         }
-        if (QuantifierPrefix.DecimalDigits_a > QuantifierPrefix.DecimalDigits_b) {
+        if (DecimalDigits_a > DecimalDigits_b) {
           this.raise('Numbers out of order in quantifier');
         }
       }
+      QuantifierPrefix = {
+        DecimalDigits_a,
+        DecimalDigits_b,
+      };
       this.expect('}');
     }
 
@@ -311,7 +322,7 @@ export class RegExpParser {
   //   CharacterClass
   //   `(` GroupSpecifier Disjunction `)`
   //   `(` `?` `:` Disjunction `)`
-  parseAtom() {
+  private parseAtom(): ParseNode.RegExp.Atom {
     if (this.eat('.')) {
       return { type: 'Atom', subtype: '.', enclosedCapturingParentheses: 0 };
     }
@@ -319,7 +330,7 @@ export class RegExpParser {
       return this.parseAtomEscape();
     }
     if (this.eat('(')) {
-      const node = {
+      const node: ParseNode.RegExp.Mutable<ParseNode.RegExp.Atom_Group> = {
         type: 'Atom',
         capturingParenthesesBefore: this.capturingGroups.length,
         enclosedCapturingParentheses: 0,
@@ -368,9 +379,9 @@ export class RegExpParser {
   //   CharacterClassEscape
   //   CharacterEscape
   //   [+N] `k` GroupName
-  parseAtomEscape() {
+  private parseAtomEscape(): ParseNode.RegExp.AtomEscape {
     if (this.plusN && this.eat('k')) {
-      const node = {
+      const node: ParseNode.RegExp.AtomEscape = {
         type: 'AtomEscape',
         position: this.position,
         GroupName: this.parseGroupName(),
@@ -410,7 +421,7 @@ export class RegExpParser {
   //   [+U] SyntaxCharacter
   //   [+U] `/`
   //   [~U] SourceCharacter but not UnicodeIDContinue
-  parseCharacterEscape() {
+  private parseCharacterEscape(): ParseNode.RegExp.CharacterEscape {
     switch (this.peek()) {
       case 'f':
       case 'n':
@@ -433,7 +444,7 @@ export class RegExpParser {
             IdentityEscape: 'c',
           };
         }
-        const p = c.codePointAt(0);
+        const p = c.codePointAt(0)!;
         if ((p >= 65 && p <= 90) || (p >= 97 && p <= 122)) {
           return {
             type: 'CharacterEscape',
@@ -510,7 +521,7 @@ export class RegExpParser {
 
   // DecimalEscape ::
   //   NonZeroDigit DecimalDigits? [lookahead != DecimalDigit]
-  maybeParseDecimalEscape() {
+  private maybeParseDecimalEscape(): ParseNode.RegExp.DecimalEscape | undefined {
     if (isDecimalDigit(this.source[this.position]) && this.source[this.position] !== '0') {
       const start = this.position;
       let buffer = this.source[this.position];
@@ -519,7 +530,7 @@ export class RegExpParser {
         buffer += this.source[this.position];
         this.position += 1;
       }
-      const node = {
+      const node: ParseNode.RegExp.DecimalEscape = {
         type: 'DecimalEscape',
         position: start,
         value: Number.parseInt(buffer, 10),
@@ -539,7 +550,7 @@ export class RegExpParser {
   //   `W`
   //   [+U] `p{` UnicodePropertyValueExpression `}`
   //   [+U] `P{` UnicodePropertyValueExpression `}`
-  maybeParseCharacterClassEscape() {
+  private maybeParseCharacterClassEscape(): ParseNode.RegExp.CharacterClassEscape | undefined {
     switch (this.peek()) {
       case 'd':
       case 'D':
@@ -657,15 +668,15 @@ export class RegExpParser {
   // CharacterClass ::
   //   `[` ClassRanges `]`
   //   `[` `^` ClassRanges `]`
-  parseCharacterClass() {
+  private parseCharacterClass() {
     this.expect('[');
-    const node = {
+    const invert = this.eat('^');
+    const ClassRanges = this.parseClassRanges();
+    const node: ParseNode.RegExp.CharacterClass = {
       type: 'CharacterClass',
-      invert: false,
-      ClassRanges: undefined,
+      invert,
+      ClassRanges,
     };
-    node.invert = this.eat('^');
-    node.ClassRanges = this.parseClassRanges();
     this.expect(']');
     return node;
   }
@@ -673,8 +684,8 @@ export class RegExpParser {
   // ClassRanges ::
   //   [empty]
   //   NonemptyClassRanges
-  parseClassRanges() {
-    const ranges = [];
+  private parseClassRanges() {
+    const ranges: ParseNode.RegExp.ClassRange[] = [];
     while (!this.test(']')) {
       if (this.position >= this.source.length) {
         this.raise('Unexpected end of CharacterClass');
@@ -715,7 +726,7 @@ export class RegExpParser {
   //   [+U] `-`
   //   CharacterClassEscape
   //   CharacterEscape
-  parseClassAtom() {
+  private parseClassAtom(): ParseNode.RegExp.ClassAtom {
     if (this.eat('\\')) {
       if (this.eat('b')) {
         return {
@@ -744,7 +755,7 @@ export class RegExpParser {
     };
   }
 
-  parseSourceCharacter() {
+  private parseSourceCharacter() {
     const lead = this.source.charCodeAt(this.position);
     const trail = this.source.charCodeAt(this.position + 1);
     if (trail && isLeadingSurrogate(lead) && isTrailingSurrogate(trail)) {
@@ -753,7 +764,7 @@ export class RegExpParser {
     return this.next();
   }
 
-  parseGroupName() {
+  private parseGroupName() {
     this.expect('<');
     const RegExpIdentifierName = this.parseRegExpIdentifierName();
     this.expect('>');
@@ -763,7 +774,7 @@ export class RegExpParser {
   // RegExpIdentifierName ::
   //   RegExpIdentifierStart
   //   RegExpIdentifierName RegExpIdentifierPart
-  parseRegExpIdentifierName() {
+  private parseRegExpIdentifierName() {
     let buffer = '';
     let check = isIdentifierStart;
     while (this.position < this.source.length) {
@@ -809,7 +820,7 @@ export class RegExpParser {
   // DecimalDigits ::
   //   DecimalDigit
   //   DecimalDigits DecimalDigit
-  parseDecimalDigits() {
+  private parseDecimalDigits() {
     let n = '';
     if (!isDecimalDigit(this.peek())) {
       this.raise('Invalid decimal digits');
@@ -822,7 +833,7 @@ export class RegExpParser {
 
   // HexEscapeSequence ::
   //   `x` HexDigit HexDigit
-  parseHexEscapeSequence() {
+  private parseHexEscapeSequence(): ParseNode.RegExp.HexEscapeSequence {
     this.expect('x');
     const HexDigit_a = this.next();
     if (!isHexDigit(HexDigit_a)) {
@@ -839,7 +850,7 @@ export class RegExpParser {
     };
   }
 
-  scanHex(length) {
+  private scanHex(length: number) {
     if (length === 0) {
       this.raise('Invalid code point');
     }
@@ -863,7 +874,7 @@ export class RegExpParser {
   //   [+U] `u` HexNonSurrogate
   //   [~U] `u` Hex4Digits
   //   [+U] `u{` CodePoint `}`
-  maybeParseRegExpUnicodeEscapeSequence() {
+  private maybeParseRegExpUnicodeEscapeSequence(): ParseNode.RegExp.RegExpUnicodeEscapeSequence | undefined {
     const start = this.position;
     if (!this.eat('u')) {
       this.position = start;

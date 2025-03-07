@@ -5,16 +5,19 @@ import {
   OrdinaryFunctionCreate,
 } from '../abstract-ops/all.mjs';
 import { X } from '../completion.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
 export class ClassStaticBlockDefinitionRecord {
+  BodyFunction;
+
   constructor({ BodyFunction }) {
     this.BodyFunction = BodyFunction;
   }
 }
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-classstaticblockdefinitionevaluation */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-classstaticblockdefinitionevaluation */
 //    ClassStaticBlock : `static` `{` ClassStaticBlockBody `}`
-export function ClassStaticBlockDefinitionEvaluation({ ClassStaticBlockBody }, homeObject) {
+export function ClassStaticBlockDefinitionEvaluation({ ClassStaticBlockBody }: ParseNode.ClassStaticBlock, homeObject) {
   // 1. Let lex be the running execution context's LexicalEnvironment.
   const lex = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 2. Let privateEnv be the running execution context's PrivateEnvironment.

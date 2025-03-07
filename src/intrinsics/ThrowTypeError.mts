@@ -8,14 +8,14 @@ import {
 import { Value } from '../value.mjs';
 import { X } from '../completion.mjs';
 
-/** http://tc39.es/ecma262/#sec-%throwtypeerror% */
+/** https://tc39.es/ecma262/#sec-%throwtypeerror% */
 function ThrowTypeError() {
   // 1. Throw a TypeError exception.
   return surroundingAgent.Throw('TypeError', 'StrictPoisonPill');
 }
 
 export function bootstrapThrowTypeError(realmRec) {
-  const f = X(CreateBuiltinFunction(ThrowTypeError, 0, new Value(''), [], realmRec));
+  const f = X(CreateBuiltinFunction(ThrowTypeError, 0, Value(''), [], realmRec));
   Assert(X(SetIntegrityLevel(f, 'frozen')) === Value.true);
   realmRec.Intrinsics['%ThrowTypeError%'] = f;
 }

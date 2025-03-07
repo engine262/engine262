@@ -11,10 +11,11 @@ import {
   Q, X, IfAbruptRejectPromise,
 } from '../completion.mjs';
 import { Value } from '../api.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
-/** http://tc39.es/ecma262/#sec-import-calls */
+/** https://tc39.es/ecma262/#sec-import-calls */
 // ImportCall : `import` `(` AssignmentExpression `)`
-export function* Evaluate_ImportCall({ AssignmentExpression }) {
+export function* Evaluate_ImportCall({ AssignmentExpression }: ParseNode.ImportCall) {
   // 1. Let referrer be ! GetActiveScriptOrModule().
   let referrer = X(GetActiveScriptOrModule());
   // 2. If referrer is null, set referrer to the current Realm Record.

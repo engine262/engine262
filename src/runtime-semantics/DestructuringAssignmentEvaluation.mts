@@ -56,7 +56,7 @@ function* DestructuringAssignmentEvaluation_ObjectAssignmentPattern({ Assignment
   return NormalCompletion(undefined);
 }
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-restdestructuringassignmentevaluation */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-restdestructuringassignmentevaluation */
 // AssignmentRestProperty : `...` DestructuringAssignmentTarget
 function* RestDestructuringAssignmentEvaluation({ DestructuringAssignmentTarget }, value, excludedNames) {
   // 1. Let lref be the result of evaluating DestructuringAssignmentTarget.

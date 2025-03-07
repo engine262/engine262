@@ -14,6 +14,7 @@ import {
   CreateArrayFromList,
   CreateBuiltinFunction,
   CreateDataProperty,
+  CreateDataPropertyOrThrow,
   CreateResolvingFunctions,
   DefinePropertyOrThrow,
   Get,
@@ -40,7 +41,7 @@ import {
 } from '../completion.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-promise-executor */
+/** https://tc39.es/ecma262/#sec-promise-executor */
 function PromiseConstructor([executor = Value.undefined], { NewTarget }) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget === Value.undefined) {
@@ -81,7 +82,7 @@ function PromiseConstructor([executor = Value.undefined], { NewTarget }) {
   return promise;
 }
 
-/** http://tc39.es/ecma262/#sec-promise.all-resolve-element-functions */
+/** https://tc39.es/ecma262/#sec-promise.all-resolve-element-functions */
 function PromiseAllResolveElementFunctions([x = Value.undefined]) {
   const F = surroundingAgent.activeFunctionObject;
   const alreadyCalled = F.AlreadyCalled;
@@ -102,12 +103,12 @@ function PromiseAllResolveElementFunctions([x = Value.undefined]) {
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-getpromiseresolve */
+/** https://tc39.es/ecma262/#sec-getpromiseresolve */
 function GetPromiseResolve(promiseConstructor) {
   // 1. Assert: IsConstructor(promiseConstructor) is true.
   Assert(IsConstructor(promiseConstructor) === Value.true);
   // 2. Let promiseResolve be ? Get(promiseConstructor, "resolve").
-  const promiseResolve = Q(Get(promiseConstructor, new Value('resolve')));
+  const promiseResolve = Q(Get(promiseConstructor, Value('resolve')));
   // 3. If IsCallable(promiseResolve) is false, throw a TypeError exception.
   if (IsCallable(promiseResolve) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', promiseResolve);
@@ -116,7 +117,7 @@ function GetPromiseResolve(promiseConstructor) {
   return promiseResolve;
 }
 
-/** http://tc39.es/ecma262/#sec-performpromiseall */
+/** https://tc39.es/ecma262/#sec-performpromiseall */
 function PerformPromiseAll(iteratorRecord, constructor, resultCapability, promiseResolve) {
   // 1. Assert: IsConstructor(constructor) is true.
   Assert(IsConstructor(constructor) === Value.true);
@@ -173,7 +174,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability, promis
     // k. Let length be the number of non-optional parameters of the function definition in Promise.all Resolve Element Functions.
     const length = 1;
     // l. Let onFulfilled be ! CreateBuiltinFunction(steps, length, "", « [[AlreadyCalled]], [[Index]], [[Values]], [[Capability]], [[RemainingElements]] »).
-    const onFulfilled = X(CreateBuiltinFunction(steps, length, new Value(''), [
+    const onFulfilled = X(CreateBuiltinFunction(steps, length, Value(''), [
       'AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements',
     ]));
     // m. Set onFulfilled.[[AlreadyCalled]] to the Record { [[Value]]: false }.
@@ -189,13 +190,13 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability, promis
     // r. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] + 1.
     remainingElementsCount.Value += 1;
     // s. Perform ? Invoke(nextPromise, "then", « onFulfilled, resultCapability.[[Reject]] »).
-    Q(Invoke(nextPromise, new Value('then'), [onFulfilled, resultCapability.Reject]));
+    Q(Invoke(nextPromise, Value('then'), [onFulfilled, resultCapability.Reject]));
     // t. Set index to index + 1.
     index += 1;
   }
 }
 
-/** http://tc39.es/ecma262/#sec-promise.all */
+/** https://tc39.es/ecma262/#sec-promise.all */
 function Promise_all([iterable = Value.undefined], { thisValue }) {
   // 1. Let C be the this value.
   const C = thisValue;
@@ -236,8 +237,8 @@ function PromiseAllSettledResolveElementFunctions([x = Value.undefined]) {
   const promiseCapability = F.Capability;
   const remainingElementsCount = F.RemainingElements;
   const obj = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%')));
-  X(CreateDataProperty(obj, new Value('status'), new Value('fulfilled')));
-  X(CreateDataProperty(obj, new Value('value'), x));
+  X(CreateDataProperty(obj, Value('status'), Value('fulfilled')));
+  X(CreateDataProperty(obj, Value('value'), x));
   values[index] = obj;
   remainingElementsCount.Value -= 1;
   if (remainingElementsCount.Value === 0) {
@@ -259,8 +260,8 @@ function PromiseAllSettledRejectElementFunctions([x = Value.undefined]) {
   const promiseCapability = F.Capability;
   const remainingElementsCount = F.RemainingElements;
   const obj = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%')));
-  X(CreateDataProperty(obj, new Value('status'), new Value('rejected')));
-  X(CreateDataProperty(obj, new Value('reason'), x));
+  X(CreateDataProperty(obj, Value('status'), Value('rejected')));
+  X(CreateDataProperty(obj, Value('reason'), x));
   values[index] = obj;
   remainingElementsCount.Value -= 1;
   if (remainingElementsCount.Value === 0) {
@@ -270,7 +271,7 @@ function PromiseAllSettledRejectElementFunctions([x = Value.undefined]) {
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-performpromiseallsettled */
+/** https://tc39.es/ecma262/#sec-performpromiseallsettled */
 function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability, promiseResolve) {
   // 1. Assert: ! IsConstructor(constructor) is true.
   Assert(X(IsConstructor(constructor) === Value.true));
@@ -327,7 +328,7 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability,
     // k. Let lengthFulfilled be the number of non-optional parameters of the function definition in Promise.allSettled Resolve Element Functions.
     const lengthFulfilled = 1;
     // l. Let onFulfilled be ! CreateBuiltinFunction(stepsFulfilled, lengthFulfilled, "", « [[AlreadyCalled]], [[Index]], [[Values]], [[Capability]], [[RemainingElements]] »).
-    const onFulfilled = X(CreateBuiltinFunction(stepsFulfilled, lengthFulfilled, new Value(''), [
+    const onFulfilled = X(CreateBuiltinFunction(stepsFulfilled, lengthFulfilled, Value(''), [
       'AlreadyCalled',
       'Index',
       'Values',
@@ -351,7 +352,7 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability,
     // t. Let lengthRejected be the number of non-optional parameters of the function definition in Promise.allSettled Reject Element Functions.
     const lengthRejected = 1;
     // u. Let onRejected be ! CreateBuiltinFunction(stepsRejected, lengthRejected, "", « [[AlreadyCalled]], [[Index]], [[Values]], [[Capability]], [[RemainingElements]] »).
-    const onRejected = X(CreateBuiltinFunction(stepsRejected, lengthRejected, new Value(''), [
+    const onRejected = X(CreateBuiltinFunction(stepsRejected, lengthRejected, Value(''), [
       'AlreadyCalled',
       'Index',
       'Values',
@@ -371,13 +372,13 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability,
     // aa. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] + 1.
     remainingElementsCount.Value += 1;
     // ab. Perform ? Invoke(nextPromise, "then", « onFulfilled, onRejected »).
-    Q(Invoke(nextPromise, new Value('then'), [onFulfilled, onRejected]));
+    Q(Invoke(nextPromise, Value('then'), [onFulfilled, onRejected]));
     // ac. Set index to index + 1.
     index += 1;
   }
 }
 
-/** http://tc39.es/ecma262/#sec-promise.allsettled */
+/** https://tc39.es/ecma262/#sec-promise.allsettled */
 function Promise_allSettled([iterable = Value.undefined], { thisValue }) {
   // 1. Let C be the this value.
   const C = thisValue;
@@ -406,7 +407,7 @@ function Promise_allSettled([iterable = Value.undefined], { thisValue }) {
   return Completion(result);
 }
 
-/** http://tc39.es/ecma262/#sec-promise.any-reject-element-functions */
+/** https://tc39.es/ecma262/#sec-promise.any-reject-element-functions */
 function PromiseAnyRejectElementFunctions([x = Value.undefined]) {
   // 1. Let F be the active function object.
   const F = surroundingAgent.activeFunctionObject;
@@ -435,7 +436,7 @@ function PromiseAnyRejectElementFunctions([x = Value.undefined]) {
     // a. Let error be a newly created AggregateError object.
     const error = surroundingAgent.Throw('AggregateError', 'PromiseAnyRejected').Value;
     // b. Perform ! DefinePropertyOrThrow(error, "errors", Property Descriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: errors }).
-    X(DefinePropertyOrThrow(error, new Value('errors'), Descriptor({
+    X(DefinePropertyOrThrow(error, Value('errors'), Descriptor({
       Configurable: Value.true,
       Enumerable: Value.false,
       Writable: Value.true,
@@ -448,7 +449,7 @@ function PromiseAnyRejectElementFunctions([x = Value.undefined]) {
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-performpromiseany */
+/** https://tc39.es/ecma262/#sec-performpromiseany */
 function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promiseResolve) {
   // 1. Assert: ! IsConstructor(constructor) is true.
   Assert(X(IsConstructor(constructor)) === Value.true);
@@ -483,7 +484,7 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promis
         // 1. Let error be a newly created AggregateError object.
         const error = surroundingAgent.Throw('AggregateError', 'PromiseAnyRejected').Value;
         // 2. Perform ! DefinePropertyOrThrow(error, "errors", Property Descriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: errors }).
-        X(DefinePropertyOrThrow(error, new Value('errors'), Descriptor({
+        X(DefinePropertyOrThrow(error, Value('errors'), Descriptor({
           Configurable: Value.true,
           Enumerable: Value.false,
           Writable: Value.true,
@@ -512,7 +513,7 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promis
     // k. Let lengthRejected be the number of non-optional parameters of the function definition in Promise.any Reject Element Functions.
     const lengthRejected = 1;
     // l. Let onRejected be ! CreateBuiltinFunction(stepsRejected, lengthRejected, "", « [[AlreadyCalled]], [[Index]], [[Errors]], [[Capability]], [[RemainingElements]] »).
-    const onRejected = X(CreateBuiltinFunction(stepsRejected, lengthRejected, new Value(''), ['AlreadyCalled', 'Index', 'Errors', 'Capability', 'RemainingElements']));
+    const onRejected = X(CreateBuiltinFunction(stepsRejected, lengthRejected, Value(''), ['AlreadyCalled', 'Index', 'Errors', 'Capability', 'RemainingElements']));
     // m. Set onRejected.[[AlreadyCalled]] to a new Record { [[Value]]: false }.
     onRejected.AlreadyCalled = { Value: false };
     // n. Set onRejected.[[Index]] to index.
@@ -526,13 +527,13 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promis
     // r. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] + 1.
     remainingElementsCount.Value += 1;
     // s. Perform ? Invoke(nextPromise, "then", « resultCapability.[[Resolve]], onRejected »).
-    Q(Invoke(nextPromise, new Value('then'), [resultCapability.Resolve, onRejected]));
+    Q(Invoke(nextPromise, Value('then'), [resultCapability.Resolve, onRejected]));
     // t. Increase index by 1.
     index += 1;
   }
 }
 
-/** http://tc39.es/ecma262/#sec-promise.any */
+/** https://tc39.es/ecma262/#sec-promise.any */
 function Promise_any([iterable = Value.undefined], { thisValue }) {
   // 1. Let C be the this value.
   const C = thisValue;
@@ -596,11 +597,11 @@ function PerformPromiseRace(iteratorRecord, constructor, resultCapability, promi
     // h. Let nextPromise be ? Call(promiseResolve, constructor, « nextValue »).
     const nextPromise = Q(Call(promiseResolve, constructor, [nextValue]));
     // i. Perform ? Invoke(nextPromise, "then", « resultCapability.[[Resolve]], resultCapability.[[Reject]] »).
-    Q(Invoke(nextPromise, new Value('then'), [resultCapability.Resolve, resultCapability.Reject]));
+    Q(Invoke(nextPromise, Value('then'), [resultCapability.Resolve, resultCapability.Reject]));
   }
 }
 
-/** http://tc39.es/ecma262/#sec-promise.race */
+/** https://tc39.es/ecma262/#sec-promise.race */
 function Promise_race([iterable = Value.undefined], { thisValue }) {
   // 1. Let C be the this value.
   const C = thisValue;
@@ -629,7 +630,7 @@ function Promise_race([iterable = Value.undefined], { thisValue }) {
   return Completion(result);
 }
 
-/** http://tc39.es/ecma262/#sec-promise.reject */
+/** https://tc39.es/ecma262/#sec-promise.reject */
 function Promise_reject([r = Value.undefined], { thisValue }) {
   // 1. Let C be this value.
   const C = thisValue;
@@ -641,7 +642,7 @@ function Promise_reject([r = Value.undefined], { thisValue }) {
   return promiseCapability.Promise;
 }
 
-/** http://tc39.es/ecma262/#sec-promise.resolve */
+/** https://tc39.es/ecma262/#sec-promise.resolve */
 function Promise_resolve([x = Value.undefined], { thisValue }) {
   // 1. Let C be the this value.
   const C = thisValue;
@@ -653,10 +654,54 @@ function Promise_resolve([x = Value.undefined], { thisValue }) {
   return Q(PromiseResolve(C, x));
 }
 
-/** http://tc39.es/ecma262/#sec-get-promise-@@species */
+/** https://tc39.es/ecma262/#sec-get-promise-@@species */
 function Promise_symbolSpecies(args, { thisValue }) {
   // 1. Return the this value.
   return thisValue;
+}
+
+/** https://tc39.es/ecma262/#sec-promise.try */
+function Promise_try([callback, ...args], { thisValue }) {
+  // 1. Let C be the this value.
+  const C = thisValue;
+  // 2. If C is not an Object, throw a TypeError exception.
+  if (!(C instanceof ObjectValue)) {
+    return surroundingAgent.Throw('TypeError', 'InvalidReceiver', 'Promise.try', C);
+  }
+  // 3. Let promiseCapability be ? NewPromiseCapability(C).
+  const promiseCapability: PromiseCapabilityRecord = Q(NewPromiseCapability(C));
+  // 4. Let status be Completion(Call(callback, undefined, args)).
+  const status = EnsureCompletion(Call(callback, Value.undefined, args));
+
+  if (status instanceof AbruptCompletion) {
+    // 5. If status is an abrupt completion, then
+    //   a. Perform ? Call(promiseCapability.[[Reject]], undefined, « status.[[Value]] »).
+    Q(Call(promiseCapability.Reject, Value.undefined, [status.Value]));
+  } else {
+    // 6. Else,
+    //   a. Perform ? Call(promiseCapability.[[Resolve]], undefined, « status.[[Value]] »).
+    Q(Call(promiseCapability.Resolve, Value.undefined, [status.Value]));
+  }
+  // 7. Return promiseCapability.[[Promise]].
+  return EnsureCompletion(promiseCapability.Promise);
+}
+
+/** https://tc39.es/ecma262/#sec-promise.withResolvers */
+function Promise_withResolvers(args, { thisValue }) {
+  // 1. Let C be the this value.
+  const C = thisValue;
+  // 2. Let promiseCapability be ? NewPromiseCapability(C).
+  const promiseCapability: PromiseCapabilityRecord = Q(NewPromiseCapability(C));
+  // 3. Let obj be OrdinaryObjectCreate(%Object.prototype%).
+  const obj = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%')));
+  // 4. Perform ! CreateDataPropertyOrThrow(obj, "promise", promiseCapability.[[Promise]]).
+  X(CreateDataPropertyOrThrow(obj, Value('promise'), promiseCapability.Promise));
+  // 5. Perform ! CreateDataPropertyOrThrow(obj, "resolve", promiseCapability.[[Resolve]]).
+  X(CreateDataPropertyOrThrow(obj, Value('resolve'), promiseCapability.Resolve));
+  // 6. Perform ! CreateDataPropertyOrThrow(obj, "reject", promiseCapability.[[Reject]]).
+  X(CreateDataPropertyOrThrow(obj, Value('reject'), promiseCapability.Reject));
+  // 7. Return obj.
+  return EnsureCompletion(obj);
 }
 
 export function bootstrapPromise(realmRec) {
@@ -667,10 +712,12 @@ export function bootstrapPromise(realmRec) {
     ['race', Promise_race, 1],
     ['reject', Promise_reject, 1],
     ['resolve', Promise_resolve, 1],
+    ['try', Promise_try, 1],
+    ['withResolvers', Promise_withResolvers, 0],
     [wellKnownSymbols.species, [Promise_symbolSpecies]],
   ]);
 
-  promiseConstructor.DefineOwnProperty(new Value('prototype'), Descriptor({
+  promiseConstructor.DefineOwnProperty(Value('prototype'), Descriptor({
     Writable: Value.false,
     Enumerable: Value.false,
     Configurable: Value.false,

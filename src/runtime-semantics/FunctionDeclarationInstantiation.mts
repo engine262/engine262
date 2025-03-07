@@ -17,7 +17,7 @@ import {
   LexicallyDeclaredNames,
   LexicallyScopedDeclarations,
 } from '../static-semantics/all.mjs';
-import { NewDeclarativeEnvironment } from '../environment.mjs';
+import { DeclarativeEnvironmentRecord } from '../environment.mjs';
 import { Q, X, NormalCompletion } from '../completion.mjs';
 import { ValueSet } from '../helpers.mjs';
 import {
@@ -25,7 +25,7 @@ import {
   IteratorBindingInitialization_FormalParameters,
 } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-functiondeclarationinstantiation */
+/** https://tc39.es/ecma262/#sec-functiondeclarationinstantiation */
 export function* FunctionDeclarationInstantiation(func, argumentsList) {
   // 1. Let calleeContext be the running execution context.
   const calleeContext = surroundingAgent.runningExecutionContext;
@@ -83,12 +83,12 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
     // a. NOTE: Arrow functions never have an arguments objects.
     // b. Set argumentsObjectNeeded to false.
     argumentsObjectNeeded = false;
-  } else if (new ValueSet(parameterNames).has(new Value('arguments'))) {
+  } else if (new ValueSet(parameterNames).has(Value('arguments'))) {
     // a. Set argumentsObjectNeeded to false.
     argumentsObjectNeeded = false;
   } else if (hasParameterExpressions === false) {
     // a. If "arguments" is an element of functionNames or if "arguments" is an element of lexicalNames, then
-    if (functionNames.has(new Value('arguments')) || lexicalNames.has(new Value('arguments'))) {
+    if (functionNames.has(Value('arguments')) || lexicalNames.has(Value('arguments'))) {
       // i. Set argumentsObjectNeeded to false.
       argumentsObjectNeeded = false;
     }
@@ -105,7 +105,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
     // b. Let calleeEnv be the LexicalEnvironment of calleeContext.
     const calleeEnv = calleeContext.LexicalEnvironment;
     // c. Let env be NewDeclarativeEnvironment(calleeEnv).
-    env = NewDeclarativeEnvironment(calleeEnv);
+    env = new DeclarativeEnvironmentRecord(calleeEnv);
     // d. Assert: The VariableEnvironment of calleeContext is calleeEnv.
     Assert(calleeContext.VariableEnvironment === calleeEnv);
     // e. Set the LexicalEnvironment of calleeContext to env.
@@ -146,15 +146,15 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
     // c. If strict is true, then
     if (strict) {
       // i. Perform ! env.CreateImmutableBinding("arguments", false).
-      X(env.CreateImmutableBinding(new Value('arguments'), Value.false));
+      X(env.CreateImmutableBinding(Value('arguments'), Value.false));
     } else {
       // i. Perform ! env.CreateMutableBinding("arguments", false).
-      X(env.CreateMutableBinding(new Value('arguments'), Value.false));
+      X(env.CreateMutableBinding(Value('arguments'), Value.false));
     }
     // e. Call env.InitializeBinding("arguments", ao).
-    env.InitializeBinding(new Value('arguments'), ao);
+    env.InitializeBinding(Value('arguments'), ao);
     // f. Let parameterBindings be a new List of parameterNames with "arguments" appended.
-    parameterBindings = new ValueSet([...parameterNames, new Value('arguments')]);
+    parameterBindings = new ValueSet([...parameterNames, Value('arguments')]);
   } else {
     // a. Let parameterBindings be parameterNames.
     parameterBindings = new ValueSet(parameterNames);
@@ -193,7 +193,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
     // a. NOTE: A separate Environment Record is needed to ensure that closures created by expressions
     //    in the formal parameter list do not have visibility of declarations in the function body.
     // b. Let varEnv be NewDeclarativeEnvironment(env).
-    varEnv = NewDeclarativeEnvironment(env);
+    varEnv = new DeclarativeEnvironmentRecord(env);
     // c. Set the VariableEnvironment of calleeContext to varEnv.
     calleeContext.VariableEnvironment = varEnv;
     // d. Let instantiatedVarNames be a new empty List.
@@ -225,7 +225,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
   // 30. If strict is false, then
   if (strict === false) {
     // a. Let lexEnv be NewDeclarativeEnvironment(varEnv).
-    lexEnv = NewDeclarativeEnvironment(varEnv);
+    lexEnv = new DeclarativeEnvironmentRecord(varEnv);
     // b. NOTE: Non-strict functions use a separate lexical Environment Record for top-level lexical declarations
     //    so that a direct eval can determine whether any var scoped declarations introduced by the eval code
     //    conflict with pre-existing top-level lexically scoped declarations. This is not needed for strict functions

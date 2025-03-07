@@ -7,9 +7,9 @@ import { resume } from '../helpers.mjs';
 import { Assert, Call } from './all.mjs';
 
 // This file covers abstract operations defined in
-/** http://tc39.es/ecma262/#sec-async-function-objects */
+/** https://tc39.es/ecma262/#sec-async-function-objects */
 
-/** http://tc39.es/ecma262/#sec-asyncblockstart */
+/** https://tc39.es/ecma262/#sec-asyncblockstart */
 export function AsyncBlockStart(promiseCapability, asyncBody, asyncContext) {
   asyncContext.promiseCapability = promiseCapability;
 
@@ -35,7 +35,7 @@ export function AsyncBlockStart(promiseCapability, asyncBody, asyncContext) {
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-async-functions-abstract-operations-async-function-start */
+/** https://tc39.es/ecma262/#sec-async-functions-abstract-operations-async-function-start */
 export function AsyncFunctionStart(promiseCapability, asyncFunctionBody) {
   const runningContext = surroundingAgent.runningExecutionContext;
   const asyncContext = runningContext.copy();

@@ -15,7 +15,7 @@ import {
   BindingInitialization,
 } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-keyedbindinginitialization */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-keyedbindinginitialization */
 export function* KeyedBindingInitialization(node, value, environment, propertyName) {
   if (node.type === 'BindingElement') {
     // 1. Let v be ? GetV(value, propertyName).

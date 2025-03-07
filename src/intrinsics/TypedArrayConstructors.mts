@@ -30,20 +30,20 @@ import { bootstrapConstructor } from './bootstrap.mjs';
 
 export function bootstrapTypedArrayConstructors(realmRec) {
   Object.entries(typedArrayInfoByName).forEach(([TypedArray, info]) => {
-    /** http://tc39.es/ecma262/#sec-typedarray-constructors */
+    /** https://tc39.es/ecma262/#sec-typedarray-constructors */
     function TypedArrayConstructor(args, { NewTarget }) {
       if (args.length === 0) {
-        /** http://tc39.es/ecma262/#sec-typedarray */
+        /** https://tc39.es/ecma262/#sec-typedarray */
         // 1. If NewTarget is undefined, throw a TypeError exception.
         if (NewTarget === Value.undefined) {
           return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
         }
         // 2. Let constructorName be the String value of the Constructor Name value specified in Table 61 for this TypedArray constructor.
-        const constructorName = new Value(TypedArray);
+        const constructorName = Value(TypedArray);
         // 3. Return ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%", 0).
         return Q(AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`, 0));
       } else if (!(args[0] instanceof ObjectValue)) {
-        /** http://tc39.es/ecma262/#sec-typedarray-length */
+        /** https://tc39.es/ecma262/#sec-typedarray-length */
         const [length] = args;
         // 1. Assert: Type(length) is not Object.
         Assert(!(length instanceof ObjectValue));
@@ -54,11 +54,11 @@ export function bootstrapTypedArrayConstructors(realmRec) {
         // 3. Let elementLength be ? ToIndex(length).
         const elementLength = Q(ToIndex(length));
         // 4. Let constructorName be the String value of the Constructor Name value specified in Table 61 for this TypedArray constructor.
-        const constructorName = new Value(TypedArray);
+        const constructorName = Value(TypedArray);
         // 5. Return ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%", elementLength).
         return Q(AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`, elementLength));
       } else if ('TypedArrayName' in args[0]) {
-        /** http://tc39.es/ecma262/#sec-typedarray-typedarray */
+        /** https://tc39.es/ecma262/#sec-typedarray-typedarray */
         const [typedArray] = args;
         // 1. Assert: Type(typedArray) is Object and typedArray has a [[TypedArrayName]] internal slot.
         Assert(typedArray instanceof ObjectValue && 'TypedArrayName' in typedArray);
@@ -67,7 +67,7 @@ export function bootstrapTypedArrayConstructors(realmRec) {
           return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
         }
         // 3. Let constructorName be the String value of the Constructor Name value specified in Table 61 for this TypedArray constructor.
-        const constructorName = new Value(TypedArray);
+        const constructorName = Value(TypedArray);
         // 4. Let O be ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%").
         const O = Q(AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`));
         // 5. Let srcArray be typedArray.
@@ -79,13 +79,13 @@ export function bootstrapTypedArrayConstructors(realmRec) {
           return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
         }
         // 8. Let elementType be the Element Type value in Table 61 for constructorName.
-        const elementType = new Value(info.ElementType);
+        const elementType = Value(info.ElementType);
         // 9. Let elementLength be srcArray.[[ArrayLength]].
         const elementLength = srcArray.ArrayLength;
         // 10. Let srcName be the String value of srcArray.[[TypedArrayName]].
         const srcName = srcArray.TypedArrayName.stringValue();
         // 11. Let srcType be the Element Type value in Table 61 for srcName.
-        const srcType = new Value(typedArrayInfoByName[srcName].ElementType);
+        const srcType = Value(typedArrayInfoByName[srcName].ElementType);
         // 12. Let srcElementSize be the Element Size value specified in Table 61 for srcName.
         const srcElementSize = typedArrayInfoByName[srcName].ElementSize;
         // 13. Let srcByteOffset be srcArray.[[ByteOffset]].
@@ -149,7 +149,7 @@ export function bootstrapTypedArrayConstructors(realmRec) {
         // 24. Return O.
         return O;
       } else if (!('TypedArrayName' in args[0]) && !('ArrayBufferData' in args[0])) {
-        /** http://tc39.es/ecma262/#sec-typedarray-object */
+        /** https://tc39.es/ecma262/#sec-typedarray-object */
         const [object] = args;
         // 1. Assert: Type(object) is Object and object does not have either a [[TypedArrayName]] or an [[ArrayBufferData]] internal slot.
         Assert(object instanceof ObjectValue && !('TypedArrayName' in object) && !('ArrayBufferData' in object));
@@ -158,7 +158,7 @@ export function bootstrapTypedArrayConstructors(realmRec) {
           return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
         }
         // 3. Let constructorName be the String value of the Constructor Name value specified in Table 61 for this TypedArray constructor.
-        const constructorName = new Value(TypedArray);
+        const constructorName = Value(TypedArray);
         // 4. Let O be ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%").
         const O = Q(AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`));
         // 5. Let usingIterator be ? GetMethod(object, @@iterator).
@@ -212,7 +212,7 @@ export function bootstrapTypedArrayConstructors(realmRec) {
         // 13. Return O.
         return O;
       } else {
-        /** http://tc39.es/ecma262/#sec-typedarray-buffer-byteoffset-length */
+        /** https://tc39.es/ecma262/#sec-typedarray-buffer-byteoffset-length */
         const [buffer = Value.undefined, byteOffset = Value.undefined, length = Value.undefined] = args;
         // 1. Assert: Type(buffer) is Object and buffer has an [[ArrayBufferData]] internal slot.
         Assert(buffer instanceof ObjectValue && 'ArrayBufferData' in buffer);
@@ -221,7 +221,7 @@ export function bootstrapTypedArrayConstructors(realmRec) {
           return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
         }
         // 3. Let constructorName be the String value of the Constructor Name value specified in Table 61 for this TypedArray constructor.
-        const constructorName = new Value(TypedArray);
+        const constructorName = Value(TypedArray);
         // 4. Let O be ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%").
         const O = Q(AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`));
         // 5. Let elementSize be the Element Size value specified in Table 61 for constructorName.

@@ -17,7 +17,7 @@ import { bootstrapConstructor } from './bootstrap.mjs';
 
 export const GlobalSymbolRegistry = [];
 
-/** http://tc39.es/ecma262/#sec-symbol-description */
+/** https://tc39.es/ecma262/#sec-symbol-description */
 function SymbolConstructor([description = Value.undefined], { NewTarget }) {
   // 1. If NewTarget is not undefined, throw a TypeError exception.
   if (NewTarget !== Value.undefined) {
@@ -34,7 +34,7 @@ function SymbolConstructor([description = Value.undefined], { NewTarget }) {
   return new SymbolValue(descString);
 }
 
-/** http://tc39.es/ecma262/#sec-symbol.for */
+/** https://tc39.es/ecma262/#sec-symbol.for */
 function Symbol_for([key = Value.undefined]) {
   // 1. Let stringKey be ? ToString(key).
   const stringKey = Q(ToString(key));
@@ -54,7 +54,7 @@ function Symbol_for([key = Value.undefined]) {
   return newSymbol;
 }
 
-/** http://tc39.es/ecma262/#sec-symbol.keyfor */
+/** https://tc39.es/ecma262/#sec-symbol.keyfor */
 function Symbol_keyFor([sym = Value.undefined]) {
   // 1. If Type(sym) is not Symbol, throw a TypeError exception.
   if (!(sym instanceof SymbolValue)) {
@@ -79,7 +79,7 @@ export function bootstrapSymbol(realmRec) {
   ]);
 
   for (const [name, sym] of Object.entries(wellKnownSymbols)) {
-    symbolConstructor.DefineOwnProperty(new Value(name), Descriptor({
+    symbolConstructor.DefineOwnProperty(Value(name), Descriptor({
       Value: sym,
       Writable: Value.false,
       Enumerable: Value.false,
@@ -87,7 +87,7 @@ export function bootstrapSymbol(realmRec) {
     }));
   }
 
-  symbolConstructor.DefineOwnProperty(new Value('prototype'), Descriptor({
+  symbolConstructor.DefineOwnProperty(Value('prototype'), Descriptor({
     Value: realmRec.Intrinsics['%Symbol.prototype%'],
     Writable: Value.true,
     Enumerable: Value.false,

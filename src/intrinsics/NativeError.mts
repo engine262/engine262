@@ -27,11 +27,11 @@ export function bootstrapNativeError(realmRec) {
     'URIError',
   ]) {
     const proto = bootstrapPrototype(realmRec, [
-      ['name', new Value(name)],
-      ['message', new Value('')],
+      ['name', Value(name)],
+      ['message', Value('')],
     ], realmRec.Intrinsics['%Error.prototype%']);
 
-    /** http://tc39.es/ecma262/#sec-nativeerror */
+    /** https://tc39.es/ecma262/#sec-nativeerror */
     const Constructor = ([message = Value.undefined, options = Value.undefined], { NewTarget }) => {
       // 1. If NewTarget is undefined, let newTarget be the active function object; else let newTarget be NewTarget.
       let newTarget;
@@ -54,7 +54,7 @@ export function bootstrapNativeError(realmRec) {
           Configurable: Value.true,
         });
         // c. Perform ! DefinePropertyOrThrow(O, "message", msgDesc).
-        X(DefinePropertyOrThrow(O, new Value('message'), msgDesc));
+        X(DefinePropertyOrThrow(O, Value('message'), msgDesc));
       }
       // 4. Perform ? InstallErrorCause(O, options).
       Q(InstallErrorCause(O, options));

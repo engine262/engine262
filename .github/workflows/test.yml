@@ -1,27 +1,33 @@
 name: test
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       # Set everything up
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
-          persist-credentials: false
-      - uses: actions/setup-node@master
+          submodules: 'recursive'
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18
-      - run: git submodule update --init --recursive
+          node-version: 22
 
       # build and lint
       - run: npm install
       - run: npm run build
       - run: npm run lint
+      - run: npm run check
 
       # upload build artifacts
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: engine262-dist
           path: |
@@ -37,6 +43,6 @@ jobs:
 
       # Upload coverage data
       - name: Coveralls
-        uses: coverallsapp/github-action@master
+        uses: coverallsapp/github-action@v2
         with:
           github-token: ${{github.token}}

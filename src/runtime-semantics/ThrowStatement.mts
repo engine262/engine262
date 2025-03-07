@@ -9,10 +9,11 @@ import {
   Q,
   ThrowCompletion,
 } from '../completion.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
-/** http://tc39.es/ecma262/#sec-throw-statement-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-throw-statement-runtime-semantics-evaluation */
 // ThrowStatement : `throw` Expression `;`
-export function* Evaluate_ThrowStatement({ Expression }) {
+export function* Evaluate_ThrowStatement({ Expression }: ParseNode.ThrowStatement) {
   // 1. Let exprRef be the result of evaluating Expression.
   const exprRef = yield* Evaluate(Expression);
   // 2. Let exprValue be ? GetValue(exprRef).

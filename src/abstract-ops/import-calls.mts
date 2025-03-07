@@ -1,9 +1,9 @@
 // @ts-nocheck
 // This file covers abstract operations defined in
-// http://tc39.es/ecma262/#sec-import-calls
+// https://tc39.es/ecma262/#sec-import-calls
 
 import {
-  Call, GetModuleNamespace, PerformPromiseThen, Value,
+  Call, CreateBuiltinFunction, GetModuleNamespace, PerformPromiseThen, Value,
 } from '../api.mjs';
 import { AbruptCompletion, X } from '../completion.mjs';
 
@@ -29,7 +29,7 @@ export function ContinueDynamicImport(promiseCapability, moduleCompletion) {
     // b. Return unused.
   };
   // 5. Let onRejected be CreateBuiltinFunction(rejectedClosure, 1, "", « »).
-  const onRejected = new Value(rejectedClosure);
+  const onRejected = CreateBuiltinFunction(rejectedClosure, 1, Value(''), []);
 
   // 6. Let linkAndEvaluateClosure be a new Abstract Closure with no parameters that captures module, promiseCapability, and onRejected and performs the following steps when called:
   const linkAndEvaluateClosure = () => {
@@ -55,14 +55,14 @@ export function ContinueDynamicImport(promiseCapability, moduleCompletion) {
       // iii. Return unused.
     };
     // e. Let onFulfilled be CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
-    const onFulfilled = new Value(fulfilledClosure);
+    const onFulfilled = CreateBuiltinFunction(fulfilledClosure, 0, Value(''), []);
 
     // f. Perform PerformPromiseThen(evaluatePromise, onFulfilled, onRejected).
     PerformPromiseThen(evaluatePromise, onFulfilled, onRejected);
     // g. Return unused.
   };
   // 7. Let linkAndEvaluate be CreateBuiltinFunction(linkAndEvaluateClosure, 0, "", « »).
-  const linkAndEvaluate = new Value(linkAndEvaluateClosure);
+  const linkAndEvaluate = CreateBuiltinFunction(linkAndEvaluateClosure, 0, Value(''), []);
 
   // 8. Perform PerformPromiseThen(loadPromise, linkAndEvaluate, onRejected).
   PerformPromiseThen(loadPromise, linkAndEvaluate, onRejected);

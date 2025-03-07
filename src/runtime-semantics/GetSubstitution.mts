@@ -10,8 +10,8 @@ import {
 } from '../value.mjs';
 import { Q } from '../completion.mjs';
 
-/** http://tc39.es/ecma262/#sec-getsubstitution */
-export function GetSubstitution(matched, str, position, captures, namedCaptures, replacement) {
+/** https://tc39.es/ecma262/#sec-getsubstitution */
+export function GetSubstitution(matched: JSStringValue, str: JSStringValue, position: number, captures: readonly (JSStringValue | UndefinedValue)[], namedCaptures, replacement: JSStringValue) {
   // 1. Assert: Type(matched) is String.
   Assert(matched instanceof JSStringValue);
   // 2. Let matchLength be the number of code units in matched.
@@ -96,7 +96,7 @@ export function GetSubstitution(matched, str, position, captures, namedCaptures,
             result += '$<';
             i += 2;
           } else {
-            const groupName = new Value(replacementStr.substring(i + 2, nextSign));
+            const groupName = Value(replacementStr.substring(i + 2, nextSign));
             const capture = Q(Get(namedCaptures, groupName));
             if (capture === Value.undefined) {
               // Replace the text with the empty string
@@ -116,5 +116,5 @@ export function GetSubstitution(matched, str, position, captures, namedCaptures,
     }
   }
   // 12. Return result.
-  return new Value(result);
+  return Value(result);
 }

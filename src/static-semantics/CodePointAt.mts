@@ -1,11 +1,10 @@
-// @ts-nocheck
 import { Assert } from '../abstract-ops/all.mjs';
 import { X } from '../completion.mjs';
 import { isLeadingSurrogate, isTrailingSurrogate } from '../parser/Lexer.mjs';
 import { UTF16SurrogatePairToCodePoint } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-codepointat */
-export function CodePointAt(string, position) {
+/** https://tc39.es/ecma262/#sec-codepointat */
+export function CodePointAt(string: string, position: number) {
   // 1 .Let size be the length of string.
   const size = string.length;
   // 2. Assert: position ≥ 0 and position < size.

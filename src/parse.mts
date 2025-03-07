@@ -1,14 +1,16 @@
 // @ts-nocheck
-import { Parser } from './parser/Parser.mjs';
-import { RegExpParser } from './parser/RegExpParser.mjs';
-import { surroundingAgent } from './engine.mjs';
+import { Parser, type ParserOptions } from './parser/Parser.mjs';
+import { RegExpParser, type RegExpParserContext } from './parser/RegExpParser.mjs';
+import { surroundingAgent, type GCMarker } from './engine.mjs';
 import { SourceTextModuleRecord } from './modules.mjs';
-import { Value } from './value.mjs';
+import { JSStringValue, ObjectValue, Value } from './value.mjs';
 import {
   Get,
   Set,
   Call,
   CreateDefaultExportSyntheticModule,
+  Realm,
+  type BuiltinFunctionObject,
 } from './abstract-ops/all.mjs';
 import { Q, X } from './completion.mjs';
 import {
@@ -18,17 +20,18 @@ import {
   ImportedLocalNames,
 } from './static-semantics/all.mjs';
 import { ValueSet, kInternal } from './helpers.mjs';
+import type { ParseNode } from './parser/ParseNode.mjs';
 
 export { Parser, RegExpParser };
 
-function handleError(e) {
-  if (e.name === 'SyntaxError') {
-    const v = surroundingAgent.Throw('SyntaxError', 'Raw', e.message).Value;
+function handleError(e: unknown) {
+  if (e instanceof SyntaxError) {
+    const v = surroundingAgent.Throw('SyntaxError', 'Raw', e.message).Value as ObjectValue;
     if (e.decoration) {
-      const stackString = new Value('stack');
-      const stack = X(Get(v, stackString)).stringValue();
-      const newStackString = `${e.decoration}\n${stack}`;
-      X(Set(v, stackString, new Value(newStackString), Value.true));
+      const stackString = Value('stack');
+      const stack = X(Get(v, stackString));
+      const newStackString = `${e.decoration}\n${stack instanceof JSStringValue ? stack.stringValue() : ''}`;
+      X(Set(v, stackString, Value(newStackString), Value.true));
     }
     return v;
   } else {
@@ -36,7 +39,7 @@ function handleError(e) {
   }
 }
 
-export function wrappedParse(init, f) {
+export function wrappedParse<T>(init: ParserOptions, f: (parser: Parser) => T) {
   const p = new Parser(init);
 
   try {
@@ -50,7 +53,7 @@ export function wrappedParse(init, f) {
   }
 }
 
-export function ParseScript(sourceText, realm, hostDefined = {}) {
+export function ParseScript(sourceText: string, realm: Realm, hostDefined = {}) {
   // 1. Assert: sourceText is an ECMAScript source text (see clause 10).
   // 2. Parse sourceText using Script as the goal symbol and analyse the parse result for
   //    any Early Error conditions. If the parse was successful and no early errors were found,
@@ -74,7 +77,7 @@ export function ParseScript(sourceText, realm, hostDefined = {}) {
     ECMAScriptCode: body,
     LoadedModules: [],
     HostDefined: hostDefined,
-    mark(m) {
+    mark(m: GCMarker) {
       m(this.Realm);
       m(this.Environment);
       for (const v of this.LoadedModules) {
@@ -84,7 +87,11 @@ export function ParseScript(sourceText, realm, hostDefined = {}) {
   };
 }
 
-export function ParseModule(sourceText, realm, hostDefined = {}) {
+export interface ParseModuleHostDefined {
+  readonly specifier?: string;
+  readonly SourceTextModuleRecord?: typeof SourceTextModuleRecord;
+}
+export function ParseModule(sourceText: string, realm: Realm, hostDefined: ParseModuleHostDefined = {}) {
   // 1. Assert: sourceText is an ECMAScript source text (see clause 10).
   // 2. Parse sourceText using Module as the goal symbol and analyse the parse result for
   //    any Early Error conditions. If the parse was successful and no early errors were found,
@@ -93,7 +100,7 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
   //    early error detection may be interweaved in an implementation-dependent manner. If more
   //    than one parsing error or early error is present, the number and ordering of error
   //    objects in the list is implementation-dependent, but at least one must be present.
-  const body = wrappedParse({ source: sourceText, specifier: hostDefined.specifier }, (p) => p.parseModule());
+  const body = wrappedParse<ParseNode.Module>({ source: sourceText, specifier: hostDefined.specifier }, (p) => p.parseModule());
   // 3. If body is a List of errors, return body.
   if (Array.isArray(body)) {
     return body;
@@ -175,19 +182,19 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
   });
 }
 
-/** http://tc39.es/ecma262/#sec-parsejsonmodule */
-export function ParseJSONModule(sourceText, realm, hostDefined) {
+/** https://tc39.es/ecma262/#sec-parsejsonmodule */
+export function ParseJSONModule(sourceText: Value, realm: Realm, hostDefined: unknown) {
   // 1. Let jsonParse be realm's intrinsic object named "%JSON.parse%".
-  const jsonParse = realm.Intrinsics['%JSON.parse%'];
+  const jsonParse = realm.Intrinsics['%JSON.parse%'] as BuiltinFunctionObject;
   // 1. Let json be ? Call(jsonParse, undefined, « sourceText »).
   const json = Q(Call(jsonParse, Value.undefined, [sourceText]));
   // 1. Return CreateDefaultExportSyntheticModule(json, realm, hostDefined).
   return CreateDefaultExportSyntheticModule(json, realm, hostDefined);
 }
 
-/** http://tc39.es/ecma262/#sec-parsepattern */
-export function ParsePattern(patternText, u) {
-  const parse = (flags) => {
+/** https://tc39.es/ecma262/#sec-parsepattern */
+export function ParsePattern(patternText: string, u: boolean) {
+  const parse = (flags: RegExpParserContext) => {
     const p = new RegExpParser(patternText);
     return p.scope(flags, () => p.parsePattern());
   };

@@ -1,27 +1,25 @@
-'use strict';
-
 /* eslint-disable no-await-in-loop */
-
-const fs = require('fs');
-const path = require('path');
-const globby = require('globby');
-const {
-  pass, fail, skip, total,
-} = require('../base');
-const {
+import fs from 'node:fs';
+import path from 'node:path';
+import { globbySync } from 'globby';
+import {
+  pass, fail, skip, incr_total, startTestPrinter,
+} from '../base.mts';
+import {
   Agent,
   setSurroundingAgent,
   ManagedRealm,
   AbruptCompletion,
   inspect,
-} = require('../..');
+} from '#self';
 
-const BASE_DIR = path.resolve(__dirname, 'JSONTestSuite');
+startTestPrinter();
+const BASE_DIR = path.resolve(import.meta.dirname, 'JSONTestSuite');
 
 const agent = new Agent();
 setSurroundingAgent(agent);
 
-function test(filename) {
+function test(filename: string) {
   const realm = new ManagedRealm();
 
   const source = fs.readFileSync(filename, 'utf8');
@@ -40,27 +38,27 @@ JSON.parse(source);
 
   if (!result || result instanceof AbruptCompletion) {
     if (testName.startsWith('n_')) {
-      pass();
+      pass(0);
     } else if (testName.startsWith('i_')) {
       skip();
     } else {
-      fail(testName, inspect(result));
+      fail(0, testName, '', inspect(result!));
     }
   } else {
     if (testName.startsWith('n_')) {
-      fail(testName, 'JSON parsed but should have failed!');
+      fail(0, testName, '', 'JSON parsed but should have failed!');
     } else {
-      pass();
+      pass(0);
     }
   }
 }
 
-const tests = globby.sync(
+const tests = globbySync(
   'test_{parsing,transform}/**/*.json',
   { cwd: BASE_DIR, absolute: true },
 );
 
 tests.forEach((t) => {
-  total();
+  incr_total();
   test(t);
 });

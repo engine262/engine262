@@ -1,6 +1,7 @@
-// @ts-nocheck
-/** http://tc39.es/ecma262/#sec-static-semantics-containsarguments */
-export function ContainsArguments(node) {
+import type { ParseNode } from '../parser/ParseNode.mjs';
+
+/** https://tc39.es/ecma262/#sec-static-semantics-containsarguments */
+export function ContainsArguments(node: ParseNode): ParseNode.IdentifierReference | null {
   switch (node.type) {
     case 'IdentifierReference':
       if (node.name === 'arguments') {
@@ -19,6 +20,7 @@ export function ContainsArguments(node) {
       return null;
     default:
       for (const value of Object.values(node)) {
+        // TODO(ts): This function does not accept a ParseNode[], when isArray(value), ContainsArguments should never return a result?
         if ((value?.type || Array.isArray(value))) {
           const maybe = ContainsArguments(value);
           if (maybe) {

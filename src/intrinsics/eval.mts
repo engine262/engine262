@@ -8,7 +8,7 @@ import {
   PerformEval,
 } from '../abstract-ops/all.mjs';
 
-/** http://tc39.es/ecma262/#sec-eval-x */
+/** https://tc39.es/ecma262/#sec-eval-x */
 function Eval([x = Value.undefined]) {
   // 1. Assert: The execution context stack has at least two elements.
   Assert(surroundingAgent.executionContextStack.length >= 2);
@@ -21,5 +21,5 @@ function Eval([x = Value.undefined]) {
 }
 
 export function bootstrapEval(realmRec) {
-  realmRec.Intrinsics['%eval%'] = CreateBuiltinFunction(Eval, 1, new Value('eval'), [], realmRec);
+  realmRec.Intrinsics['%eval%'] = CreateBuiltinFunction(Eval, 1, Value('eval'), [], realmRec);
 }

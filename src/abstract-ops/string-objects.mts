@@ -21,7 +21,7 @@ import {
   ToIntegerOrInfinity,
   ToString,
   isArrayIndex,
-  F,
+  F, R,
 } from './all.mjs';
 
 function StringExoticGetOwnProperty(P) {
@@ -91,7 +91,7 @@ function StringExoticOwnPropertyKeys() {
   return keys;
 }
 
-/** http://tc39.es/ecma262/#sec-stringcreate */
+/** https://tc39.es/ecma262/#sec-stringcreate */
 export function StringCreate(value, prototype) {
   // 1. Assert: Type(value) is String.
   Assert(value instanceof JSStringValue);
@@ -110,7 +110,7 @@ export function StringCreate(value, prototype) {
   // 8. Let length be the number of code unit elements in value.
   const length = value.stringValue().length;
   // 9. Perform ! DefinePropertyOrThrow(S, "length", PropertyDescriptor { [[Value]]: length, [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: false }).
-  X(DefinePropertyOrThrow(S, new Value('length'), Descriptor({
+  X(DefinePropertyOrThrow(S, Value('length'), Descriptor({
     Value: F(length),
     Writable: Value.false,
     Enumerable: Value.false,
@@ -120,7 +120,7 @@ export function StringCreate(value, prototype) {
   return S;
 }
 
-/** http://tc39.es/ecma262/#sec-stringgetownproperty */
+/** https://tc39.es/ecma262/#sec-stringgetownproperty */
 export function StringGetOwnProperty(S, P) {
   Assert(S instanceof ObjectValue && 'StringData' in S);
   Assert(IsPropertyKey(P));
@@ -134,18 +134,18 @@ export function StringGetOwnProperty(S, P) {
   if (IsIntegralNumber(index) === Value.false) {
     return Value.undefined;
   }
-  if (Object.is(index.numberValue(), -0)) {
+  if (Object.is(R(index), -0)) {
     return Value.undefined;
   }
   const str = S.StringData;
   Assert(str instanceof JSStringValue);
   const len = str.stringValue().length;
-  if (index.numberValue() < 0 || len <= index.numberValue()) {
+  if (R(index) < 0 || len <= R(index)) {
     return Value.undefined;
   }
-  const resultStr = str.stringValue()[index.numberValue()];
+  const resultStr = str.stringValue()[R(index)];
   return Descriptor({
-    Value: new Value(resultStr),
+    Value: Value(resultStr),
     Writable: Value.false,
     Enumerable: Value.true,
     Configurable: Value.false,

@@ -1,5 +1,6 @@
-// @ts-nocheck
-export function IsDestructuring(node) {
+import type { ParseNode } from '../parser/ParseNode.mjs';
+
+export function IsDestructuring(node: ParseNode): boolean {
   switch (node.type) {
     case 'ObjectBindingPattern':
     case 'ArrayBindingPattern':

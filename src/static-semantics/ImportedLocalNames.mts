@@ -1,6 +1,7 @@
-// @ts-nocheck
-/** http://tc39.es/ecma262/#sec-importedlocalnames */
-export function ImportedLocalNames(importEntries) {
+import type { ImportEntry } from './ImportEntries.mjs';
+
+/** https://tc39.es/ecma262/#sec-importedlocalnames */
+export function ImportedLocalNames(importEntries: readonly ImportEntry[]) {
   // 1. Let localNames be a new empty List.
   const localNames = [];
   // 2. For each ImportEntry Record i in importEntries, do

@@ -4,8 +4,9 @@ import { Q } from '../completion.mjs';
 import { GetValue, ToString } from '../abstract-ops/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { TV } from '../static-semantics/all.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
-/** http://tc39.es/ecma262/#sec-template-literals-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-template-literals-runtime-semantics-evaluation */
 //   TemplateLiteral : NoSubstitutionTemplate
 //   SubstitutionTemplate : TemplateHead Expression TemplateSpans
 //   TemplateSpans : TemplateTail
@@ -15,7 +16,7 @@ import { TV } from '../static-semantics/all.mjs';
 //
 // (implicit)
 //   TemplateLiteral : SubstitutionTemplate
-export function* Evaluate_TemplateLiteral({ TemplateSpanList, ExpressionList }) {
+export function* Evaluate_TemplateLiteral({ TemplateSpanList, ExpressionList }: ParseNode.TemplateLiteral) {
   let str = '';
   for (let i = 0; i < TemplateSpanList.length - 1; i += 1) {
     const Expression = ExpressionList[i];
@@ -30,5 +31,5 @@ export function* Evaluate_TemplateLiteral({ TemplateSpanList, ExpressionList }) 
     str += middle.stringValue();
   }
   const tail = TV(TemplateSpanList[TemplateSpanList.length - 1]);
-  return new Value(str + tail);
+  return Value(str + tail);
 }

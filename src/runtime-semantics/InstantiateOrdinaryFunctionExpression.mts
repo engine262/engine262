@@ -9,13 +9,14 @@ import {
   sourceTextMatchedBy,
 } from '../abstract-ops/all.mjs';
 import { StringValue } from '../static-semantics/all.mjs';
-import { NewDeclarativeEnvironment } from '../environment.mjs';
+import { DeclarativeEnvironmentRecord } from '../environment.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-instantiateordinaryfunctionexpression */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateordinaryfunctionexpression */
 //   FunctionExpression :
 //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
 //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
-export function InstantiateOrdinaryFunctionExpression(FunctionExpression, name) {
+export function InstantiateOrdinaryFunctionExpression(FunctionExpression: ParseNode.FunctionExpression, name?) {
   const { BindingIdentifier, FormalParameters, FunctionBody } = FunctionExpression;
   if (BindingIdentifier) {
     // 1. Assert: name is not present.
@@ -25,7 +26,7 @@ export function InstantiateOrdinaryFunctionExpression(FunctionExpression, name) 
     // 3. Let scope be the running execution context's LexicalEnvironment.
     const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
     // 4. Let funcEnv be NewDeclarativeEnvironment(scope).
-    const funcEnv = NewDeclarativeEnvironment(scope);
+    const funcEnv = new DeclarativeEnvironmentRecord(scope);
     // 5. Perform funcEnv.CreateImmutableBinding(name, false).
     funcEnv.CreateImmutableBinding(name, Value.false);
     // 6. Let privateScope be the running execution context's PrivateEnvironment.
@@ -45,7 +46,7 @@ export function InstantiateOrdinaryFunctionExpression(FunctionExpression, name) 
   }
   // 1. If name is not present, set name to "".
   if (name === undefined) {
-    name = new Value('');
+    name = Value('');
   }
   // 2. Let scope be the running execution context's LexicalEnvironment.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;

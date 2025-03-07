@@ -8,13 +8,14 @@ import {
 } from '../abstract-ops/all.mjs';
 import { TypeForMethod } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
 // UpdateExpression :
 //   LeftHandSideExpression `++`
 //   LeftHandSideExpression `--`
 //   `++` UnaryExpression
 //   `--` UnaryExpression
-export function* Evaluate_UpdateExpression({ LeftHandSideExpression, operator, UnaryExpression }) {
+export function* Evaluate_UpdateExpression({ LeftHandSideExpression, operator, UnaryExpression }: ParseNode.UpdateExpression) {
   switch (true) {
     // UpdateExpression : LeftHandSideExpression `++`
     case operator === '++' && !!LeftHandSideExpression: {

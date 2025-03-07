@@ -19,7 +19,7 @@ import {
   SetFunctionName,
   ToIntegerOrInfinity,
   CreateBuiltinFunction,
-  MakeBasicObject,
+  MakeBasicObject, R,
 } from '../abstract-ops/all.mjs';
 import {
   JSStringValue,
@@ -31,13 +31,13 @@ import {
 import { Q, X } from '../completion.mjs';
 import { assignProps } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-properties-of-the-function-prototype-object */
+/** https://tc39.es/ecma262/#sec-properties-of-the-function-prototype-object */
 function FunctionProto(_args, _meta) {
   // * accepts any arguments and returns undefined when invoked.
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-function.prototype.apply */
+/** https://tc39.es/ecma262/#sec-function.prototype.apply */
 function FunctionProto_apply([thisArg = Value.undefined, argArray = Value.undefined], { thisValue }) {
   // 1. Let func be the this value.
   const func = thisValue;
@@ -83,7 +83,7 @@ function BoundFunctionExoticObjectConstruct(argumentsList, newTarget) {
   return Q(Construct(target, args, newTarget));
 }
 
-/** http://tc39.es/ecma262/#sec-boundfunctioncreate */
+/** https://tc39.es/ecma262/#sec-boundfunctioncreate */
 function BoundFunctionCreate(targetFunction, boundThis, boundArgs) {
   // 1. Assert: Type(targetFunction) is Object.
   Assert(targetFunction instanceof ObjectValue);
@@ -118,7 +118,7 @@ function BoundFunctionCreate(targetFunction, boundThis, boundArgs) {
   return obj;
 }
 
-/** http://tc39.es/ecma262/#sec-function.prototype.bind */
+/** https://tc39.es/ecma262/#sec-function.prototype.bind */
 function FunctionProto_bind([thisArg = Value.undefined, ...args], { thisValue }) {
   // 1. Let Target be the this value.
   const Target = thisValue;
@@ -131,17 +131,17 @@ function FunctionProto_bind([thisArg = Value.undefined, ...args], { thisValue })
   // 4. Let L be 0.
   let L = 0;
   // 5. Let targetHasLength be ? HasOwnProperty(Target, "length").
-  const targetHasLength = Q(HasOwnProperty(Target, new Value('length')));
+  const targetHasLength = Q(HasOwnProperty(Target, Value('length')));
   // 6. If targetHasLength is true, then
   if (targetHasLength === Value.true) {
     // a. Let targetLen be ? Get(Target, "length").
-    const targetLen = Q(Get(Target, new Value('length')));
+    const targetLen = Q(Get(Target, Value('length')));
     // b. If Type(targetLen) is Number, then
     if (targetLen instanceof NumberValue) {
       // i. If targetLen is +∞𝔽, set L to +∞.
-      if (targetLen.numberValue() === +Infinity) {
+      if (R(targetLen) === +Infinity) {
         L = +Infinity;
-      } else if (targetLen.numberValue() === -Infinity) { // ii. Else if targetLen is -∞𝔽, set L to 0.
+      } else if (R(targetLen) === -Infinity) { // ii. Else if targetLen is -∞𝔽, set L to 0.
         L = 0;
       } else { // iii. Else,
         // 1. Set targetLen to ! ToIntegerOrInfinity(targetLen).
@@ -158,18 +158,18 @@ function FunctionProto_bind([thisArg = Value.undefined, ...args], { thisValue })
   // 7. Perform ! SetFunctionLength(F, L).
   X(SetFunctionLength(F, L));
   // 8. Let targetName be ? Get(Target, "name").
-  let targetName = Q(Get(Target, new Value('name')));
+  let targetName = Q(Get(Target, Value('name')));
   // 9. If Type(targetName) is not String, set targetName to the empty String.
   if (!(targetName instanceof JSStringValue)) {
-    targetName = new Value('');
+    targetName = Value('');
   }
   // 10. Perform SetFunctionName(F, targetName, "bound").
-  SetFunctionName(F, targetName, new Value('bound'));
+  SetFunctionName(F, targetName, Value('bound'));
   // 11. Return F.
   return F;
 }
 
-/** http://tc39.es/ecma262/#sec-function.prototype.call */
+/** https://tc39.es/ecma262/#sec-function.prototype.call */
 function FunctionProto_call([thisArg = Value.undefined, ...args], { thisValue }) {
   // 1. Let func be the this value.
   const func = thisValue;
@@ -189,7 +189,7 @@ function FunctionProto_call([thisArg = Value.undefined, ...args], { thisValue })
   return Q(Call(func, thisArg, argList));
 }
 
-/** http://tc39.es/ecma262/#sec-function.prototype.tostring */
+/** https://tc39.es/ecma262/#sec-function.prototype.tostring */
 function FunctionProto_toString(args, { thisValue }) {
   // 1. Let func be the this value.
   const func = thisValue;
@@ -199,7 +199,7 @@ function FunctionProto_toString(args, { thisValue }) {
       && 'SourceText' in func
       && X(HostHasSourceTextAvailable(func)) === Value.true) {
     // Return ! UTF16Encode(func.[[SourceText]]).
-    return new Value(func.SourceText);
+    return Value(func.SourceText);
   }
   // 3. If func is a built-in function object, then return an implementation-defined
   //    String source code representation of func. The representation must have the
@@ -209,21 +209,21 @@ function FunctionProto_toString(args, { thisValue }) {
   //    value of func.[[InitialName]].
   if ('nativeFunction' in func) {
     if (func.InitialName !== Value.null) {
-      return new Value(`function ${func.InitialName.stringValue()}() { [native code] }`);
+      return Value(`function ${func.InitialName.stringValue()}() { [native code] }`);
     }
-    return new Value('function() { [native code] }');
+    return Value('function() { [native code] }');
   }
   // 4. If Type(func) is Object and IsCallable(func) is true, then return an implementation
   //    dependent String source code representation of func. The representation must have
   //    the syntax of a NativeFunction.
   if (func instanceof ObjectValue && IsCallable(func) === Value.true) {
-    return new Value('function() { [native code] }');
+    return Value('function() { [native code] }');
   }
   // 5. Throw a TypeError exception.
   return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
 }
 
-/** http://tc39.es/ecma262/#sec-function.prototype-@@hasinstance */
+/** https://tc39.es/ecma262/#sec-function.prototype-@@hasinstance */
 function FunctionProto_hasInstance([V = Value.undefined], { thisValue }) {
   // 1. Let F be this value.
   const F = thisValue;
@@ -235,7 +235,7 @@ export function bootstrapFunctionPrototype(realmRec) {
   const proto = CreateBuiltinFunction(
     FunctionProto,
     0,
-    new Value(''),
+    Value(''),
     [],
     realmRec,
     realmRec.Intrinsics['%Object.prototype%'],

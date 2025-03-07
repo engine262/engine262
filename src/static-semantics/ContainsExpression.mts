@@ -1,8 +1,8 @@
-// @ts-nocheck
-import { OutOfRange } from '../helpers.mjs';
+import { OutOfRange, isArray } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
-export function ContainsExpression(node) {
-  if (Array.isArray(node)) {
+export function ContainsExpression(node: ParseNode | readonly ParseNode[]): boolean {
+  if (isArray(node)) {
     for (const n of node) {
       if (ContainsExpression(n)) {
         return true;
@@ -27,7 +27,7 @@ export function ContainsExpression(node) {
       }
       return false;
     case 'BindingProperty':
-      if (node.PropertyName && node.PropertyName.ComputedPropertyName) {
+      if (node.PropertyName && 'ComputedPropertyName' in node.PropertyName && node.PropertyName.ComputedPropertyName) {
         return true;
       }
       return ContainsExpression(node.BindingElement);
@@ -35,7 +35,9 @@ export function ContainsExpression(node) {
       if (node.BindingIdentifier) {
         return false;
       }
-      return ContainsExpression(node.BindingPattern);
+      // TODO(ts): BindingRestProperty and BindingElement is different. Is there missing a case?
+      // @ts-expect-error
+      return ContainsExpression((node as ParseNode.BindingElement).BindingPattern);
     case 'ArrayBindingPattern':
       if (ContainsExpression(node.BindingElementList)) {
         return true;
@@ -48,7 +50,7 @@ export function ContainsExpression(node) {
       if (node.BindingIdentifier) {
         return false;
       }
-      return ContainsExpression(node.BindingPattern);
+      return ContainsExpression(node.BindingPattern!);
     case 'Elision':
       return false;
     default:

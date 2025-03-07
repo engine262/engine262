@@ -12,14 +12,15 @@ import {
 } from '../static-semantics/all.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import {
   NamedEvaluation,
   ApplyStringOrNumericBinaryOperator,
   DestructuringAssignmentEvaluation,
 } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-destructuring-assignment */
-export function refineLeftHandSideExpression(node, type) {
+/** https://tc39.es/ecma262/#sec-destructuring-assignment */
+export function refineLeftHandSideExpression(node: ParseNode.ArrayLiteral | ParseNode.ObjectLiteral | ParseNode.PropertyDefinition | ParseNode.MemberExpression | ParseNode.CoverInitializedName | ParseNode.AssignmentExpression | ParseNode.Elision, type) {
   switch (node.type) {
     case 'ArrayLiteral': {
       const refinement = {
@@ -123,7 +124,7 @@ export function refineLeftHandSideExpression(node, type) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-assignment-operators-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-assignment-operators-runtime-semantics-evaluation */
 //   AssignmentExpression :
 //     LeftHandSideExpression `=` AssignmentExpression
 //     LeftHandSideExpression AssignmentOperator AssignmentExpression
@@ -132,12 +133,12 @@ export function refineLeftHandSideExpression(node, type) {
 //     LeftHandSideExpression `??=` AssignmentExpression
 export function* Evaluate_AssignmentExpression({
   LeftHandSideExpression, AssignmentOperator, AssignmentExpression,
-}) {
+}: ParseNode.AssignmentExpression) {
   if (AssignmentOperator === '=') {
     // 1. If LeftHandSideExpression is neither an ObjectLiteral nor an ArrayLiteral, then
     if (LeftHandSideExpression.type !== 'ObjectLiteral' && LeftHandSideExpression.type !== 'ArrayLiteral') {
       // a. Let lref be the result of evaluating LeftHandSideExpression.
-      const lref = yield* Evaluate(LeftHandSideExpression);
+      const lref = Q(yield* Evaluate(LeftHandSideExpression));
       // b. ReturnIfAbrupt(lref).
       ReturnIfAbrupt(lref);
       // c. If IsAnonymousFunctionDefinition(AssignmentExpression) and IsIdentifierRef of LeftHandSideExpression are both true, then
@@ -168,7 +169,7 @@ export function* Evaluate_AssignmentExpression({
     return rval;
   } else if (AssignmentOperator === '&&=') {
     // 1. Let lref be the result of evaluating LeftHandSideExpression.
-    const lref = yield* Evaluate(LeftHandSideExpression);
+    const lref = Q(yield* Evaluate(LeftHandSideExpression));
     // 2. Let lval be ? GetValue(lref).
     const lval = Q(GetValue(lref));
     // 3. Let lbool be ! ToBoolean(lval).
@@ -194,7 +195,7 @@ export function* Evaluate_AssignmentExpression({
     return rval;
   } else if (AssignmentOperator === '||=') {
     // 1. Let lref be the result of evaluating LeftHandSideExpression.
-    const lref = yield* Evaluate(LeftHandSideExpression);
+    const lref = Q(yield* Evaluate(LeftHandSideExpression));
     // 2. Let lval be ? GetValue(lref).
     const lval = Q(GetValue(lref));
     // 3. Let lbool be ! ToBoolean(lval).
@@ -220,7 +221,7 @@ export function* Evaluate_AssignmentExpression({
     return rval;
   } else if (AssignmentOperator === '??=') {
     // 1.Let lref be the result of evaluating LeftHandSideExpression.
-    const lref = yield* Evaluate(LeftHandSideExpression);
+    const lref = Q(yield* Evaluate(LeftHandSideExpression));
     // 2. Let lval be ? GetValue(lref).
     const lval = Q(GetValue(lref));
     // 3. If lval is not undefined nor null, return lval.
@@ -244,7 +245,7 @@ export function* Evaluate_AssignmentExpression({
     return rval;
   } else {
     // 1. Let lref be the result of evaluating LeftHandSideExpression.
-    const lref = yield* Evaluate(LeftHandSideExpression);
+    const lref = Q(yield* Evaluate(LeftHandSideExpression));
     // 2. Let lval be ? GetValue(lref).
     const lval = Q(GetValue(lref));
     // 3. Let rref be the result of evaluating AssignmentExpression.

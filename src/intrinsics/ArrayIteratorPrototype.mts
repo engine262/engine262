@@ -6,9 +6,9 @@ import { Q } from '../completion.mjs';
 import { Value } from '../value.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-const kArrayIteratorPrototype = new Value('%ArrayIteratorPrototype%');
+const kArrayIteratorPrototype = Value('%ArrayIteratorPrototype%');
 
-/** http://tc39.es/ecma262/#sec-%arrayiteratorprototype%.next */
+/** https://tc39.es/ecma262/#sec-%arrayiteratorprototype%.next */
 function ArrayIteratorPrototype_next(args, { thisValue }) {
   // 1. Return ? GeneratorResume(this value, empty, "%ArrayIteratorPrototype%").
   return Q(GeneratorResume(thisValue, undefined, kArrayIteratorPrototype));

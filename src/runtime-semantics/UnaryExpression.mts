@@ -19,12 +19,13 @@ import {
 } from '../value.mjs';
 import { EnvironmentRecord } from '../environment.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
-/** http://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-delete-operator-runtime-semantics-evaluation */
 //   UnaryExpression : `delete` UnaryExpression
-function* Evaluate_UnaryExpression_Delete({ UnaryExpression }) {
+function* Evaluate_UnaryExpression_Delete({ UnaryExpression }: ParseNode.UnaryExpression) {
   // 1. Let ref be the result of evaluating UnaryExpression.
-  const ref = yield* Evaluate(UnaryExpression);
+  const ref = Q(yield* Evaluate(UnaryExpression));
   // 2. ReturnIfAbrupt(ref).
   ReturnIfAbrupt(ref);
   // 3. If ref is not a Reference Record, return true.
@@ -64,9 +65,9 @@ function* Evaluate_UnaryExpression_Delete({ UnaryExpression }) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-void-operator-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-void-operator-runtime-semantics-evaluation */
 //   UnaryExpression : `void` UnaryExpression
-function* Evaluate_UnaryExpression_Void({ UnaryExpression }) {
+function* Evaluate_UnaryExpression_Void({ UnaryExpression }: ParseNode.UnaryExpression) {
   // 1. Let expr be the result of evaluating UnaryExpression.
   const expr = yield* Evaluate(UnaryExpression);
   // 2. Perform ? GetValue(expr).
@@ -75,56 +76,56 @@ function* Evaluate_UnaryExpression_Void({ UnaryExpression }) {
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-typeof-operator-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-typeof-operator-runtime-semantics-evaluation */
 // UnaryExpression : `typeof` UnaryExpression
-function* Evaluate_UnaryExpression_Typeof({ UnaryExpression }) {
+function* Evaluate_UnaryExpression_Typeof({ UnaryExpression }: ParseNode.UnaryExpression) {
   // 1. Let val be the result of evaluating UnaryExpression.
-  let val = yield* Evaluate(UnaryExpression);
+  let val = Q(yield* Evaluate(UnaryExpression));
   // 2. If Type(val) is Reference, then
   if (val instanceof ReferenceRecord) {
     // a. If IsUnresolvableReference(val) is true, return "undefined".
     if (IsUnresolvableReference(val) === Value.true) {
-      return new Value('undefined');
+      return Value('undefined');
     }
   }
   // 3. Set val to ? GetValue(val).
   val = Q(GetValue(val));
   // 4. Return a String according to Table 37.
   if (val instanceof UndefinedValue) {
-    return new JSStringValue('undefined');
+    return Value('undefined');
   } else if (val instanceof NullValue) {
-    return new JSStringValue('object');
+    return Value('object');
   } else if (val instanceof BooleanValue) {
-    return new JSStringValue('boolean');
+    return Value('boolean');
   } else if (val instanceof NumberValue) {
-    return new JSStringValue('number');
+    return Value('number');
   } else if (val instanceof JSStringValue) {
-    return new JSStringValue('string');
+    return Value('string');
   } else if (val instanceof BigIntValue) {
-    return new JSStringValue('bigint');
+    return Value('bigint');
   } else if (val instanceof SymbolValue) {
-    return new JSStringValue('symbol');
+    return Value('symbol');
   } else if (val instanceof ObjectValue) {
     if (IsCallable(val) === Value.true) {
-      return new JSStringValue('function');
+      return Value('function');
     }
-    return new JSStringValue('object');
+    return Value('object');
   }
   throw new OutOfRange('Evaluate_UnaryExpression_Typeof', val);
 }
 
-/** http://tc39.es/ecma262/#sec-unary-plus-operator-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-unary-plus-operator-runtime-semantics-evaluation */
 //   UnaryExpression : `+` UnaryExpression
-function* Evaluate_UnaryExpression_Plus({ UnaryExpression }) {
+function* Evaluate_UnaryExpression_Plus({ UnaryExpression }: ParseNode.UnaryExpression) {
   // 1. Let expr be the result of evaluating UnaryExpression.
   const expr = yield* Evaluate(UnaryExpression);
   // 2. Return ? ToNumber(? GetValue(expr)).
   return Q(ToNumber(Q(GetValue(expr))));
 }
 
-/** http://tc39.es/ecma262/#sec-unary-minus-operator-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-unary-minus-operator-runtime-semantics-evaluation */
 //   UnaryExpression : `-` UnaryExpression
-function* Evaluate_UnaryExpression_Minus({ UnaryExpression }) {
+function* Evaluate_UnaryExpression_Minus({ UnaryExpression }: ParseNode.UnaryExpression) {
   // 1. Let expr be the result of evaluating UnaryExpression.
   const expr = yield* Evaluate(UnaryExpression);
   // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
@@ -135,9 +136,9 @@ function* Evaluate_UnaryExpression_Minus({ UnaryExpression }) {
   return X(T.unaryMinus(oldValue));
 }
 
-/** http://tc39.es/ecma262/#sec-bitwise-not-operator-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-bitwise-not-operator-runtime-semantics-evaluation */
 //   UnaryExpression : `~` UnaryExpression
-function* Evaluate_UnaryExpression_Tilde({ UnaryExpression }) {
+function* Evaluate_UnaryExpression_Tilde({ UnaryExpression }: ParseNode.UnaryExpression) {
   // 1. Let expr be the result of evaluating UnaryExpression.
   const expr = yield* Evaluate(UnaryExpression);
   // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
@@ -148,9 +149,9 @@ function* Evaluate_UnaryExpression_Tilde({ UnaryExpression }) {
   return X(T.bitwiseNOT(oldValue));
 }
 
-/** http://tc39.es/ecma262/#sec-logical-not-operator-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-logical-not-operator-runtime-semantics-evaluation */
 //   UnaryExpression : `!` UnaryExpression
-function* Evaluate_UnaryExpression_Bang({ UnaryExpression }) {
+function* Evaluate_UnaryExpression_Bang({ UnaryExpression }: ParseNode.UnaryExpression) {
   // 1. Let expr be the result of evaluating UnaryExpression.
   const expr = yield* Evaluate(UnaryExpression);
   // 2. Let oldValue be ! ToBoolean(? GetValue(expr)).
@@ -171,7 +172,7 @@ function* Evaluate_UnaryExpression_Bang({ UnaryExpression }) {
 //  `-` UnaryExpression
 //  `~` UnaryExpression
 //  `!` UnaryExpression
-export function* Evaluate_UnaryExpression(UnaryExpression) {
+export function* Evaluate_UnaryExpression(UnaryExpression: ParseNode.UnaryExpression) {
   switch (UnaryExpression.operator) {
     case 'delete':
       return yield* Evaluate_UnaryExpression_Delete(UnaryExpression);

@@ -10,15 +10,15 @@ import {
   Get,
   Set,
   Yield,
-  F,
+  F, R, R as MathematicalValue,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { RegExpExec, AdvanceStringIndex } from './RegExpPrototype.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-const kRegExpStringIteratorPrototype = new Value('%RegExpStringIteratorPrototype%');
+const kRegExpStringIteratorPrototype = Value('%RegExpStringIteratorPrototype%');
 
-/** http://tc39.es/ecma262/#sec-createregexpstringiterator */
+/** https://tc39.es/ecma262/#sec-createregexpstringiterator */
 export function CreateRegExpStringIterator(R, S, global, fullUnicode) {
   // 1. Assert: Type(S) is String.
   Assert(S instanceof JSStringValue);
@@ -44,15 +44,15 @@ export function CreateRegExpStringIterator(R, S, global, fullUnicode) {
         return Value.undefined;
       }
       // iv. Let matchStr be ? ToString(? Get(match, "0")).
-      const matchStr = Q(ToString(Q(Get(match, new Value('0')))));
+      const matchStr = Q(ToString(Q(Get(match, Value('0')))));
       // v. If matchStr is the empty String, then
       if (matchStr.stringValue() === '') {
         // i. Let thisIndex be ℝ(? ToLength(? Get(R, "lastIndex"))).
-        const thisIndex = Q(ToLength(Q(Get(R, new Value('lastIndex'))))).numberValue();
+        const thisIndex = MathematicalValue(Q(ToLength(Q(Get(R, Value('lastIndex'))))));
         // ii. Let nextIndex be ! AdvanceStringIndex(S, thisIndex, fullUnicode).
         const nextIndex = X(AdvanceStringIndex(S, thisIndex, fullUnicode));
         // iii. Perform ? Set(R, "lastIndex", 𝔽(nextIndex), true).
-        Q(Set(R, new Value('lastIndex'), F(nextIndex), Value.true));
+        Q(Set(R, Value('lastIndex'), F(nextIndex), Value.true));
       }
       // vi. Perform ? Yield(match).
       Q(yield* Yield(match));
@@ -62,7 +62,7 @@ export function CreateRegExpStringIterator(R, S, global, fullUnicode) {
   return X(CreateIteratorFromClosure(closure, kRegExpStringIteratorPrototype, surroundingAgent.intrinsic('%RegExpStringIteratorPrototype%')));
 }
 
-/** http://tc39.es/ecma262/#sec-%regexpstringiteratorprototype%.next */
+/** https://tc39.es/ecma262/#sec-%regexpstringiteratorprototype%.next */
 function RegExpStringIteratorPrototype_next(args, { thisValue }) {
   // 1. Return ? GeneratorResume(this value, empty, "%RegExpStringIteratorPrototype%").
   return Q(GeneratorResume(thisValue, undefined, kRegExpStringIteratorPrototype));

@@ -5,7 +5,7 @@ import { CreateDynamicFunction } from '../runtime-semantics/all.mjs';
 import { Descriptor, Value } from '../value.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-asyncgeneratorfunction */
+/** https://tc39.es/ecma262/#sec-asyncgeneratorfunction */
 function AsyncGeneratorFunctionConstructor(args, { NewTarget }) {
   // 1. Let C be the active function object.
   const C = surroundingAgent.activeFunctionObject;
@@ -17,13 +17,13 @@ function AsyncGeneratorFunctionConstructor(args, { NewTarget }) {
 export function bootstrapAsyncGeneratorFunction(realmRec) {
   const cons = bootstrapConstructor(realmRec, AsyncGeneratorFunctionConstructor, 'AsyncGeneratorFunction', 1, realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'], []);
 
-  X(cons.DefineOwnProperty(new Value('prototype'), Descriptor({
+  X(cons.DefineOwnProperty(Value('prototype'), Descriptor({
     Writable: Value.false,
     Enumerable: Value.false,
     Configurable: Value.false,
   })));
 
-  X(realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'].DefineOwnProperty(new Value('constructor'), Descriptor({
+  X(realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'].DefineOwnProperty(Value('constructor'), Descriptor({
     Writable: Value.false,
     Enumerable: Value.false,
     Configurable: Value.true,

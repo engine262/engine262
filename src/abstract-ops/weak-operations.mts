@@ -20,7 +20,7 @@ export function HasIdentity(argument) {
   return Value.false;
 }
 
-/** http://tc39.es/ecma262/#sec-clear-kept-objects */
+/** https://tc39.es/ecma262/#sec-clear-kept-objects */
 export function ClearKeptObjects() {
   // 1. Let agentRecord be the surrounding agent's Agent Record.
   const agentRecord = surroundingAgent.AgentRecord;
@@ -28,7 +28,7 @@ export function ClearKeptObjects() {
   agentRecord.KeptAlive = new Set();
 }
 
-/** http://tc39.es/ecma262/#sec-addtokeptobjects */
+/** https://tc39.es/ecma262/#sec-addtokeptobjects */
 export function AddToKeptObjects(object) {
   // 1. Let agentRecord be the surrounding agent's Agent Record.
   const agentRecord = surroundingAgent.AgentRecord;
@@ -36,7 +36,7 @@ export function AddToKeptObjects(object) {
   agentRecord.KeptAlive.add(object);
 }
 
-/** http://tc39.es/ecma262/#sec-weakrefderef */
+/** https://tc39.es/ecma262/#sec-weakrefderef */
 export function WeakRefDeref(weakRef) {
   // 1. Let target be weakRef.[[WeakRefTarget]].
   const target = weakRef.WeakRefTarget;
@@ -51,7 +51,7 @@ export function WeakRefDeref(weakRef) {
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-cleanup-finalization-registry */
+/** https://tc39.es/ecma262/#sec-cleanup-finalization-registry */
 export function CleanupFinalizationRegistry(finalizationRegistry, callback) {
   // 1. Assert: finalizationRegistry has [[Cells]] and [[CleanupCallback]] internal slots.
   Assert('Cells' in finalizationRegistry && 'CleanupCallback' in finalizationRegistry);

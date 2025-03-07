@@ -6,9 +6,9 @@ import { Q } from '../completion.mjs';
 import { Value } from '../value.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-const kStringIteratorPrototype = new Value('%StringIteratorPrototype%');
+const kStringIteratorPrototype = Value('%StringIteratorPrototype%');
 
-/** http://tc39.es/ecma262/#sec-%stringiteratorprototype%.next */
+/** https://tc39.es/ecma262/#sec-%stringiteratorprototype%.next */
 function StringIteratorPrototype_next(args, { thisValue }) {
   // 1. Return ? GeneratorResume(this value, empty, "%StringIteratorPrototype%").
   return Q(GeneratorResume(thisValue, undefined, kStringIteratorPrototype));

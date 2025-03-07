@@ -6,8 +6,9 @@ import {
 import { ToNumeric, ToPrimitive, ToString } from '../abstract-ops/all.mjs';
 import { Q } from '../completion.mjs';
 
-/** http://tc39.es/ecma262/#sec-applystringornumericbinaryoperator */
-export function ApplyStringOrNumericBinaryOperator(lval, opText, rval) {
+export type BinaryOperator = '+' | '-' | '*' | '/' | '%' | '**' | '<<' | '>>' | '>>>' | '&' | '^' | '|';
+/** https://tc39.es/ecma262/#sec-applystringornumericbinaryoperator */
+export function ApplyStringOrNumericBinaryOperator(lval: Value, opText: BinaryOperator, rval: Value) {
   // 1. If opText is +, then
   if (opText === '+') {
     // a. Let lprim be ? ToPrimitive(lval).
@@ -21,7 +22,7 @@ export function ApplyStringOrNumericBinaryOperator(lval, opText, rval) {
       // ii. Let rstr be ? ToString(rprim).
       const rstr = Q(ToString(rprim));
       // iii. Return the string-concatenation of lstr and rstr.
-      return new Value(lstr.stringValue() + rstr.stringValue());
+      return Value(lstr.stringValue() + rstr.stringValue());
     }
     // d. Set lval to lprim.
     lval = lprim;
@@ -40,7 +41,7 @@ export function ApplyStringOrNumericBinaryOperator(lval, opText, rval) {
   // 6. Let T be Type(lnum).
   const T = TypeForMethod(lnum);
   // 7. Let operation be the abstract operation associated with opText in the following table:
-  const operation = {
+  const operation = ({
     '**': T.exponentiate,
     '*': T.multiply,
     '/': T.divide,
@@ -53,7 +54,7 @@ export function ApplyStringOrNumericBinaryOperator(lval, opText, rval) {
     '&': T.bitwiseAND,
     '^': T.bitwiseXOR,
     '|': T.bitwiseOR,
-  }[opText];
+  } satisfies Record<BinaryOperator, unknown>)[opText];
   // 8. Return ? operation(lnum, rnum).
   return Q(operation(lnum, rnum));
 }

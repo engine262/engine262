@@ -16,17 +16,17 @@ import {
   ToObject,
   ToString,
   ToUint16,
-  F,
+  F, R,
 } from '../abstract-ops/all.mjs';
 import { UTF16EncodeCodePoint } from '../static-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-string-constructor-string-value */
+/** https://tc39.es/ecma262/#sec-string-constructor-string-value */
 function StringConstructor([value], { NewTarget }) {
   let s;
   if (value === undefined) {
-    s = new Value('');
+    s = Value('');
   } else {
     if (NewTarget === Value.undefined && value instanceof SymbolValue) {
       return X(SymbolDescriptiveString(value));
@@ -39,7 +39,7 @@ function StringConstructor([value], { NewTarget }) {
   return X(StringCreate(s, Q(GetPrototypeFromConstructor(NewTarget, '%String.prototype%'))));
 }
 
-/** http://tc39.es/ecma262/#sec-string.fromcharcode */
+/** https://tc39.es/ecma262/#sec-string.fromcharcode */
 function String_fromCharCode(codeUnits) {
   const length = codeUnits.length;
   const elements = [];
@@ -50,11 +50,11 @@ function String_fromCharCode(codeUnits) {
     elements.push(nextCU);
     nextIndex += 1;
   }
-  const result = elements.reduce((previous, current) => previous + String.fromCharCode(current.numberValue()), '');
-  return new Value(result);
+  const result = elements.reduce((previous, current) => previous + String.fromCharCode(R(current)), '');
+  return Value(result);
 }
 
-/** http://tc39.es/ecma262/#sec-string.fromcodepoint */
+/** https://tc39.es/ecma262/#sec-string.fromcodepoint */
 function String_fromCodePoint(codePoints) {
   // 1. Let result be the empty String.
   let result = '';
@@ -67,26 +67,26 @@ function String_fromCodePoint(codePoints) {
       return surroundingAgent.Throw('RangeError', 'StringCodePointInvalid', next);
     }
     // c. If ℝ(nextCP) < 0 or ℝ(nextCP) > 0x10FFFF, throw a RangeError exception.
-    if (nextCP.numberValue() < 0 || nextCP.numberValue() > 0x10FFFF) {
+    if (R(nextCP) < 0 || R(nextCP) > 0x10FFFF) {
       return surroundingAgent.Throw('RangeError', 'StringCodePointInvalid', nextCP);
     }
     // d. Set result to the string-concatenation of result and UTF16EncodeCodePoint(ℝ(nextCP)).
-    result += UTF16EncodeCodePoint(nextCP.numberValue());
+    result += UTF16EncodeCodePoint(R(nextCP));
   }
   // 3. Assert: If codePoints is empty, then result is the empty String.
   Assert(!(codePoints.length === 0) || result.length === 0);
   // 4. Return result.
-  return new Value(result);
+  return Value(result);
 }
 
-/** http://tc39.es/ecma262/#sec-string.raw */
+/** https://tc39.es/ecma262/#sec-string.raw */
 function String_raw([template = Value.undefined, ...substitutions]) {
   const numberOfSubstitutions = substitutions.length;
   const cooked = Q(ToObject(template));
-  const raw = Q(ToObject(Q(Get(cooked, new Value('raw')))));
+  const raw = Q(ToObject(Q(Get(cooked, Value('raw')))));
   const literalSegments = Q(LengthOfArrayLike(raw));
   if (literalSegments <= 0) {
-    return new Value('');
+    return Value('');
   }
   // Not sure why the spec uses a List, but this is really just a String.
   const stringElements = [];
@@ -96,13 +96,13 @@ function String_raw([template = Value.undefined, ...substitutions]) {
     const nextSeg = Q(ToString(Q(Get(raw, nextKey))));
     stringElements.push(nextSeg.stringValue());
     if (nextIndex + 1 === literalSegments) {
-      return new Value(stringElements.join(''));
+      return Value(stringElements.join(''));
     }
     let next;
     if (nextIndex < numberOfSubstitutions) {
       next = substitutions[nextIndex];
     } else {
-      next = new Value('');
+      next = Value('');
     }
     const nextSub = Q(ToString(next));
     stringElements.push(nextSub.stringValue());

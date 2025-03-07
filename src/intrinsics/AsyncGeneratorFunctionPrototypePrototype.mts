@@ -20,7 +20,7 @@ import {
 } from '../abstract-ops/all.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-asyncgenerator-prototype-next */
+/** https://tc39.es/ecma262/#sec-asyncgenerator-prototype-next */
 function AsyncGeneratorPrototype_next([value = Value.undefined], { thisValue }) {
   // 1. Let generator be the this value.
   const generator = thisValue;
@@ -57,7 +57,7 @@ function AsyncGeneratorPrototype_next([value = Value.undefined], { thisValue }) 
   return promiseCapability.Promise;
 }
 
-/** http://tc39.es/ecma262/#sec-asyncgenerator-prototype-return */
+/** https://tc39.es/ecma262/#sec-asyncgenerator-prototype-return */
 function AsyncGeneratorPrototype_return([value = Value.undefined], { thisValue }) {
   // 1. Let generator be the this value.
   const generator = thisValue;
@@ -90,7 +90,7 @@ function AsyncGeneratorPrototype_return([value = Value.undefined], { thisValue }
   return promiseCapability.Promise;
 }
 
-/** http://tc39.es/ecma262/#sec-asyncgenerator-prototype-throw */
+/** https://tc39.es/ecma262/#sec-asyncgenerator-prototype-throw */
 function AsyncGeneratorPrototype_throw([exception = Value.undefined], { thisValue }) {
   // 1. Let generator be the this value.
   const generator = thisValue;

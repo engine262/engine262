@@ -11,13 +11,14 @@ import {
 } from '../abstract-ops/all.mjs';
 import { X } from '../completion.mjs';
 import { StringValue } from '../static-semantics/all.mjs';
-import { NewDeclarativeEnvironment } from '../environment.mjs';
+import { DeclarativeEnvironmentRecord } from '../environment.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-instantiategeneratorfunctionexpression */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-instantiategeneratorfunctionexpression */
 //   GeneratorExpression :
 //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
 //     `function` `* `BindingIdentifier `(` FormalParameters `)` `{` GeneratorBody `}`
-export function InstantiateGeneratorFunctionExpression(GeneratorExpression, name) {
+export function InstantiateGeneratorFunctionExpression(GeneratorExpression: ParseNode.GeneratorExpression, name?) {
   const { BindingIdentifier, FormalParameters, GeneratorBody } = GeneratorExpression;
   if (BindingIdentifier) {
     // 1. Assert: name is not present.
@@ -27,7 +28,7 @@ export function InstantiateGeneratorFunctionExpression(GeneratorExpression, name
     // 3. Let scope be the running execution context's LexicalEnvironment.
     const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
     // 4. Let funcEnv be NewDeclarativeEnvironment(scope).
-    const funcEnv = NewDeclarativeEnvironment(scope);
+    const funcEnv = new DeclarativeEnvironmentRecord(scope);
     // 5. Perform funcEnv.CreateImmutableBinding(name, false).
     funcEnv.CreateImmutableBinding(name, Value.false);
     // 6. Let privateScope be the running execution context's PrivateEnvironment.
@@ -41,7 +42,7 @@ export function InstantiateGeneratorFunctionExpression(GeneratorExpression, name
     // 10. Let prototype be ! OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
     const prototype = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%')));
     // 11. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-    DefinePropertyOrThrow(closure, new Value('prototype'), new Descriptor({
+    DefinePropertyOrThrow(closure, Value('prototype'), new Descriptor({
       Value: prototype,
       Writable: Value.true,
       Enumerable: Value.false,
@@ -54,7 +55,7 @@ export function InstantiateGeneratorFunctionExpression(GeneratorExpression, name
   }
   // 1. If name is not present, set name to "".
   if (name === undefined) {
-    name = new Value('');
+    name = Value('');
   }
   // 2. Let scope be the running execution context's LexicalEnvironment.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
@@ -69,7 +70,7 @@ export function InstantiateGeneratorFunctionExpression(GeneratorExpression, name
   // 7. Let prototype be ! OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
   const prototype = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%')));
   // 8. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-  DefinePropertyOrThrow(closure, new Value('prototype'), new Descriptor({
+  DefinePropertyOrThrow(closure, Value('prototype'), new Descriptor({
     Value: prototype,
     Writable: Value.true,
     Enumerable: Value.false,

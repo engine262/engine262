@@ -25,10 +25,10 @@ import {
   SameValue,
   StringCreate,
   Z,
-  F,
+  F, R,
 } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-toprimitive */
+/** https://tc39.es/ecma262/#sec-toprimitive */
 export function ToPrimitive(input, preferredType) {
   // 1. Assert: input is an ECMAScript language value.
   Assert(input instanceof Value);
@@ -41,14 +41,14 @@ export function ToPrimitive(input, preferredType) {
       let hint;
       // i. If preferredType is not present, let hint be "default".
       if (preferredType === undefined) {
-        hint = new Value('default');
+        hint = Value('default');
       } else if (preferredType === 'string') { // ii. Else if preferredType is string, let hint be "string".
-        hint = new Value('string');
+        hint = Value('string');
       } else { // iii. Else,
         // 1. Assert: preferredType is number.
         Assert(preferredType === 'number');
         // 2. Let hint be "number".
-        hint = new Value('number');
+        hint = Value('number');
       }
       // iv. Let result be ? Call(exoticToPrim, input, « hint »).
       const result = Q(Call(exoticToPrim, input, [hint]));
@@ -70,7 +70,7 @@ export function ToPrimitive(input, preferredType) {
   return input;
 }
 
-/** http://tc39.es/ecma262/#sec-ordinarytoprimitive */
+/** https://tc39.es/ecma262/#sec-ordinarytoprimitive */
 export function OrdinaryToPrimitive(O, hint) {
   // 1. Assert: Type(O) is Object.
   Assert(O instanceof ObjectValue);
@@ -80,10 +80,10 @@ export function OrdinaryToPrimitive(O, hint) {
   // 3. If hint is string, then
   if (hint === 'string') {
     // a. Let methodNames be « "toString", "valueOf" ».
-    methodNames = [new Value('toString'), new Value('valueOf')];
+    methodNames = [Value('toString'), Value('valueOf')];
   } else { // 4. Else,
     // a. Let methodNames be « "valueOf", "toString" ».
-    methodNames = [new Value('valueOf'), new Value('toString')];
+    methodNames = [Value('valueOf'), Value('toString')];
   }
   // 5. For each element name of methodNames, do
   for (const name of methodNames) {
@@ -103,7 +103,7 @@ export function OrdinaryToPrimitive(O, hint) {
   return surroundingAgent.Throw('TypeError', 'ObjectToPrimitive');
 }
 
-/** http://tc39.es/ecma262/#sec-toboolean */
+/** https://tc39.es/ecma262/#sec-toboolean */
 export function ToBoolean(argument) {
   if (argument instanceof UndefinedValue) {
     // Return false.
@@ -116,7 +116,7 @@ export function ToBoolean(argument) {
     return argument;
   } else if (argument instanceof NumberValue) {
     // If argument is +0𝔽, -0𝔽, or NaN, return false; otherwise return true.
-    if (argument.numberValue() === 0 || argument.isNaN()) {
+    if (R(argument) === 0 || argument.isNaN()) {
       return Value.false;
     }
     return Value.true;
@@ -131,7 +131,7 @@ export function ToBoolean(argument) {
     return Value.true;
   } else if (argument instanceof BigIntValue) {
     // If argument is 0ℤ, return false; otherwise return true.
-    if (argument.bigintValue() === 0n) {
+    if (R(argument) === 0n) {
       return Value.false;
     }
     return Value.true;
@@ -142,7 +142,7 @@ export function ToBoolean(argument) {
   throw new OutOfRange('ToBoolean', { type: Type(argument), argument });
 }
 
-/** http://tc39.es/ecma262/#sec-tonumeric */
+/** https://tc39.es/ecma262/#sec-tonumeric */
 export function ToNumeric(value) {
   // 1. Let primValue be ? ToPrimitive(value, number).
   const primValue = Q(ToPrimitive(value, 'number'));
@@ -154,7 +154,7 @@ export function ToNumeric(value) {
   return Q(ToNumber(primValue));
 }
 
-/** http://tc39.es/ecma262/#sec-tonumber */
+/** https://tc39.es/ecma262/#sec-tonumber */
 export function ToNumber(argument) {
   if (argument instanceof UndefinedValue) {
     // Return NaN.
@@ -194,33 +194,33 @@ const mod = (n, m) => {
   return Math.floor(r >= 0 ? r : r + m);
 };
 
-/** http://tc39.es/ecma262/#sec-tointegerorinfinity */
+/** https://tc39.es/ecma262/#sec-tointegerorinfinity */
 export function ToIntegerOrInfinity(argument) {
   // 1. Let number be ? ToNumber(argument).
   const number = Q(ToNumber(argument));
   // 2. If number is NaN, +0𝔽, or -0𝔽, return 0.
-  if (number.isNaN() || number.numberValue() === 0) {
+  if (number.isNaN() || R(number) === 0) {
     return +0;
   }
   // 3. If number is +∞𝔽, return +∞.
   // 4. If number is -∞𝔽, return -∞.
   if (!number.isFinite()) {
-    return number.numberValue();
+    return R(number);
   }
   // 4. Let integer be floor(abs(ℝ(number))).
-  let integer = Math.floor(Math.abs(number.numberValue()));
+  let integer = Math.floor(Math.abs(R(number)));
   // 5. If number < +0𝔽, set integer to -integer.
-  if (number.numberValue() < 0 && integer !== 0) {
+  if (R(number) < 0 && integer !== 0) {
     integer = -integer;
   }
   // 6. Return integer.
   return integer;
 }
 
-/** http://tc39.es/ecma262/#sec-toint32 */
+/** https://tc39.es/ecma262/#sec-toint32 */
 export function ToInt32(argument) {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument)).numberValue();
+  const number = R(Q(ToNumber(argument)));
   // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(+0);
@@ -236,10 +236,10 @@ export function ToInt32(argument) {
   return F(int32bit);
 }
 
-/** http://tc39.es/ecma262/#sec-touint32 */
+/** https://tc39.es/ecma262/#sec-touint32 */
 export function ToUint32(argument) {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument)).numberValue();
+  const number = R(Q(ToNumber(argument)));
   // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(+0);
@@ -252,10 +252,10 @@ export function ToUint32(argument) {
   return F(int32bit);
 }
 
-/** http://tc39.es/ecma262/#sec-toint16 */
+/** https://tc39.es/ecma262/#sec-toint16 */
 export function ToInt16(argument) {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument)).numberValue();
+  const number = R(Q(ToNumber(argument)));
   // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(+0);
@@ -271,10 +271,10 @@ export function ToInt16(argument) {
   return F(int16bit);
 }
 
-/** http://tc39.es/ecma262/#sec-touint16 */
+/** https://tc39.es/ecma262/#sec-touint16 */
 export function ToUint16(argument) {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument)).numberValue();
+  const number = R(Q(ToNumber(argument)));
   // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(+0);
@@ -287,10 +287,10 @@ export function ToUint16(argument) {
   return F(int16bit);
 }
 
-/** http://tc39.es/ecma262/#sec-toint8 */
+/** https://tc39.es/ecma262/#sec-toint8 */
 export function ToInt8(argument) {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument)).numberValue();
+  const number = R(Q(ToNumber(argument)));
   // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(+0);
@@ -306,10 +306,10 @@ export function ToInt8(argument) {
   return F(int8bit);
 }
 
-/** http://tc39.es/ecma262/#sec-touint8 */
+/** https://tc39.es/ecma262/#sec-touint8 */
 export function ToUint8(argument) {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument)).numberValue();
+  const number = R(Q(ToNumber(argument)));
   // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(+0);
@@ -322,10 +322,10 @@ export function ToUint8(argument) {
   return F(int8bit);
 }
 
-/** http://tc39.es/ecma262/#sec-touint8clamp */
+/** https://tc39.es/ecma262/#sec-touint8clamp */
 export function ToUint8Clamp(argument) {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument)).numberValue();
+  const number = R(Q(ToNumber(argument)));
   // 2. If number is NaN, return +0𝔽.
   if (Number.isNaN(number)) {
     return F(+0);
@@ -356,7 +356,7 @@ export function ToUint8Clamp(argument) {
   return F(f);
 }
 
-/** http://tc39.es/ecma262/#sec-tobigint */
+/** https://tc39.es/ecma262/#sec-tobigint */
 export function ToBigInt(argument) {
   // 1. Let prim be ? ToPrimitive(argument, number).
   const prim = Q(ToPrimitive(argument, 'number'));
@@ -395,7 +395,7 @@ export function ToBigInt(argument) {
   throw new OutOfRange('ToBigInt', argument);
 }
 
-/** http://tc39.es/ecma262/#sec-stringtobigint */
+/** https://tc39.es/ecma262/#sec-stringtobigint */
 export function StringToBigInt(argument) {
   // Apply the algorithm in 7.1.4.1 (#sec-tonumber-applied-to-the-string-type) with the following changes:
   // 1. Replace the StrUnsignedDecimalLiteral production with DecimalDigits to not allow Infinity, decimal points, or exponents.
@@ -408,12 +408,12 @@ export function StringToBigInt(argument) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-tobigint64 */
+/** https://tc39.es/ecma262/#sec-tobigint64 */
 export function ToBigInt64(argument) {
   // 1. Let n be ? ToBigInt(argument).
   const n = Q(ToBigInt(argument));
   // 2. Let int64bit be ℝ(n) modulo 2^64.
-  const int64bit = n.bigintValue() % (2n ** 64n);
+  const int64bit = R(n) % (2n ** 64n);
   // 3. If int64bit ≥ 2^63, return ℤ(int64bit - 2^64); otherwise return ℤ(int64bit).
   if (int64bit >= 2n ** 63n) {
     return Z(int64bit - (2n ** 64n));
@@ -421,28 +421,28 @@ export function ToBigInt64(argument) {
   return Z(int64bit);
 }
 
-/** http://tc39.es/ecma262/#sec-tobiguint64 */
+/** https://tc39.es/ecma262/#sec-tobiguint64 */
 export function ToBigUint64(argument) {
   // 1. Let n be ? ToBigInt(argument).
   const n = Q(ToBigInt(argument));
   // 2. Let int64bit be ℝ(n) modulo 2^64.
-  const int64bit = n.bigintValue() % (2n ** 64n);
+  const int64bit = R(n) % (2n ** 64n);
   // 3. Return ℤ(int64bit).
   return Z(int64bit);
 }
 
-/** http://tc39.es/ecma262/#sec-tostring */
+/** https://tc39.es/ecma262/#sec-tostring */
 export function ToString(argument) {
   if (argument instanceof UndefinedValue) {
     // Return "undefined".
-    return new JSStringValue('undefined');
+    return Value('undefined');
   } else if (argument instanceof NullValue) {
     // Return "null".
-    return new JSStringValue('null');
+    return Value('null');
   } else if (argument instanceof BooleanValue) {
     // If argument is true, return "true".
     // If argument is false, return "false".
-    return new JSStringValue(argument === Value.true ? 'true' : 'false');
+    return Value(argument === Value.true ? 'true' : 'false');
   } else if (argument instanceof NumberValue) {
     // Return ! Number::toString(argument).
     return X(NumberValue.toString(argument));
@@ -464,7 +464,7 @@ export function ToString(argument) {
   throw new OutOfRange('ToString', { type: Type(argument), argument });
 }
 
-/** http://tc39.es/ecma262/#sec-toobject */
+/** https://tc39.es/ecma262/#sec-toobject */
 export function ToObject(argument) {
   if (argument instanceof UndefinedValue) {
     // Throw a TypeError exception.
@@ -502,7 +502,7 @@ export function ToObject(argument) {
   throw new OutOfRange('ToObject', { type: Type(argument), argument });
 }
 
-/** http://tc39.es/ecma262/#sec-topropertykey */
+/** https://tc39.es/ecma262/#sec-topropertykey */
 export function ToPropertyKey(argument) {
   // 1. Let key be ? ToPrimitive(argument, string).
   const key = Q(ToPrimitive(argument, 'string'));
@@ -515,7 +515,7 @@ export function ToPropertyKey(argument) {
   return X(ToString(key));
 }
 
-/** http://tc39.es/ecma262/#sec-tolength */
+/** https://tc39.es/ecma262/#sec-tolength */
 export function ToLength(argument) {
   // 1. Let len be ? ToIntegerOrInfinity(argument).
   const len = Q(ToIntegerOrInfinity(argument));
@@ -527,7 +527,7 @@ export function ToLength(argument) {
   return F(Math.min(len, (2 ** 53) - 1));
 }
 
-/** http://tc39.es/ecma262/#sec-canonicalnumericindexstring */
+/** https://tc39.es/ecma262/#sec-canonicalnumericindexstring */
 export function CanonicalNumericIndexString(argument) {
   // 1. Assert: Type(argument) is String.
   Assert(argument instanceof JSStringValue);
@@ -545,7 +545,7 @@ export function CanonicalNumericIndexString(argument) {
   return n;
 }
 
-/** http://tc39.es/ecma262/#sec-toindex */
+/** https://tc39.es/ecma262/#sec-toindex */
 export function ToIndex(value) {
   // 1. If value is undefined, then
   if (value instanceof UndefinedValue) {
@@ -555,7 +555,7 @@ export function ToIndex(value) {
     // a. Let integerIndex be 𝔽(? ToIntegerOrInfinity(value)).
     const integerIndex = F(Q(ToIntegerOrInfinity(value)));
     // b. If integerIndex < +0𝔽, throw a RangeError exception.
-    if (integerIndex.numberValue() < 0) {
+    if (R(integerIndex) < 0) {
       return surroundingAgent.Throw('RangeError', 'NegativeIndex', 'Index');
     }
     // c. Let index be ! ToLength(integerIndex).
@@ -565,6 +565,6 @@ export function ToIndex(value) {
       return surroundingAgent.Throw('RangeError', 'OutOfRange', 'Index');
     }
     // e. Return ℝ(index).
-    return index.numberValue();
+    return R(index);
   }
 }

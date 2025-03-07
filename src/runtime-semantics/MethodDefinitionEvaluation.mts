@@ -14,10 +14,21 @@ import {
   ReturnIfAbrupt,
 } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import { DefineMethod, Evaluate_PropertyName } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-privateelement-specification-type */
+/** https://tc39.es/ecma262/#sec-privateelement-specification-type */
 export class PrivateElementRecord {
+  Key;
+
+  Kind;
+
+  Value;
+
+  Get;
+
+  Set;
+
   constructor(init) {
     this.Key = init.Key;
     this.Kind = init.Kind;
@@ -27,7 +38,7 @@ export class PrivateElementRecord {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-definemethodproperty */
+/** https://tc39.es/ecma262/#sec-definemethodproperty */
 function DefineMethodProperty(key, homeObject, closure, enumerable) {
   // 1. If key is a Private Name, then
   if (key instanceof PrivateName) {
@@ -56,7 +67,7 @@ function DefineMethodProperty(key, homeObject, closure, enumerable) {
 //   ClassElementName `(` UniqueFormalParameters `)` `{` FunctionBody `}`
 //   `get` ClassElementName `(` `)` `{` FunctionBody `}`
 //   `set` ClassElementName `(` PropertySetParameterList `)` `{` FunctionBody `}`
-function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition, object, enumerable) {
+function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNode.MethodDefinition, object, enumerable) {
   switch (true) {
     case !!MethodDefinition.UniqueFormalParameters: {
       // 1. Let methodDef be ? DefineMethod of MethodDefinition with argument object.
@@ -83,7 +94,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition, object, 
       // 7. Perform MakeMethod(closure, object).
       MakeMethod(closure, object);
       // 8. Perform SetFunctionName(closure, propKey, "get").
-      SetFunctionName(closure, propKey, new Value('set'));
+      SetFunctionName(closure, propKey, Value('set'));
       // 9. If propKey is a Private Name, then
       if (propKey instanceof PrivateName) {
         // a. Return PrivateElement { [[Key]]: propKey, [[Kind]]: accessor, [[Get]]: undefined, [[Set]]: closure }.
@@ -125,7 +136,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition, object, 
       // 8. Perform MakeMethod(closure, object).
       MakeMethod(closure, object);
       // 9. Perform SetFunctionName(closure, propKey, "get").
-      SetFunctionName(closure, propKey, new Value('get'));
+      SetFunctionName(closure, propKey, Value('get'));
       // 10. If propKey is a Private Name, then
       if (propKey instanceof PrivateName) {
         return new PrivateElementRecord({
@@ -152,11 +163,11 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition, object, 
   }
 }
 
-/** http://tc39.es/ecma262/#sec-async-function-definitions-MethodDefinitionEvaluation */
+/** https://tc39.es/ecma262/#sec-async-function-definitions-MethodDefinitionEvaluation */
 //   AsyncMethod :
-//     `async` ClassElementName `(` UniqueFormalParameters `)` `{` AsyncFunctionBody `}`
-function* MethodDefinitionEvaluation_AsyncMethod(AsyncMethod, object, enumerable) {
-  const { ClassElementName, UniqueFormalParameters, AsyncFunctionBody } = AsyncMethod;
+//     `async` ClassElementName `(` UniqueFormalParameters `)` `{` AsyncBody `}`
+function* MethodDefinitionEvaluation_AsyncMethod(AsyncMethod: ParseNode.AsyncMethod, object, enumerable) {
+  const { ClassElementName, UniqueFormalParameters, AsyncBody } = AsyncMethod;
   // 1. Let propKey be the result of evaluating ClassElementName.
   const propKey = yield* Evaluate_PropertyName(ClassElementName);
   // 2. ReturnIfAbrupt(propKey).
@@ -167,8 +178,8 @@ function* MethodDefinitionEvaluation_AsyncMethod(AsyncMethod, object, enumerable
   const privateScope = surroundingAgent.runningExecutionContext.PrivateEnvironment;
   // 5. Let sourceText be the source text matched by AsyncMethod.
   const sourceText = sourceTextMatchedBy(AsyncMethod);
-  // 6. Let closure be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, UniqueFormalParameters, AsyncFunctionBody, non-lexical-this, scope, privateScope).
-  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, UniqueFormalParameters, AsyncFunctionBody, 'non-lexical-this', scope, privateScope));
+  // 6. Let closure be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, UniqueFormalParameters, AsyncBody, non-lexical-this, scope, privateScope).
+  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, UniqueFormalParameters, AsyncBody, 'non-lexical-this', scope, privateScope));
   // 7. Perform ! MakeMethod(closure, object).
   X(MakeMethod(closure, object));
   // 8. Perform ! SetFunctionName(closure, propKey).
@@ -177,10 +188,10 @@ function* MethodDefinitionEvaluation_AsyncMethod(AsyncMethod, object, enumerable
   return Q(DefineMethodProperty(propKey, object, closure, enumerable));
 }
 
-/** http://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation */
+/** https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation */
 //   GeneratorMethod :
 //     `*` ClassElementName `(` UniqueFormalParameters `)` `{` GeneratorBody `}`
-function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, enumerable) {
+function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod: ParseNode.GeneratorMethod, object, enumerable) {
   const { ClassElementName, UniqueFormalParameters, GeneratorBody } = GeneratorMethod;
   // 1. Let propKey be the result of evaluating ClassElementName.
   const propKey = yield* Evaluate_PropertyName(ClassElementName);
@@ -192,7 +203,7 @@ function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, en
   const privateScope = surroundingAgent.runningExecutionContext.PrivateEnvironment;
   // 5. Let sourceText be the source text matched by GeneratorMethod.
   const sourceText = sourceTextMatchedBy(GeneratorMethod);
-  // 6. Let closure be ! OrdinaryFunctionCreate(%GeneratorFunction.prototype%, sourceText, UniqueFormalParameters, AsyncFunctionBody, non-lexical-this, scope, privateScope).
+  // 6. Let closure be ! OrdinaryFunctionCreate(%GeneratorFunction.prototype%, sourceText, UniqueFormalParameters, AsyncBody, non-lexical-this, scope, privateScope).
   const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype%'), sourceText, UniqueFormalParameters, GeneratorBody, 'non-lexical-this', scope, privateScope));
   // 7. Perform ! MakeMethod(closure, object).
   X(MakeMethod(closure, object));
@@ -201,7 +212,7 @@ function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, en
   // 9. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
   const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%'));
   // 10. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-  DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
+  DefinePropertyOrThrow(closure, Value('prototype'), Descriptor({
     Value: prototype,
     Writable: Value.true,
     Enumerable: Value.false,
@@ -211,10 +222,10 @@ function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, en
   return Q(DefineMethodProperty(propKey, object, closure, enumerable));
 }
 
-/** http://tc39.es/ecma262/#sec-asyncgenerator-definitions-propertydefinitionevaluation */
+/** https://tc39.es/ecma262/#sec-asyncgenerator-definitions-propertydefinitionevaluation */
 //   AsyncGeneratorMethod :
 //     `async` `*` PropertyName `(` UniqueFormalParameters `)` `{` AsyncGeneratorBody `}`
-function* MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod, object, enumerable) {
+function* MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod: ParseNode.AsyncGeneratorMethod, object, enumerable) {
   const { ClassElementName, UniqueFormalParameters, AsyncGeneratorBody } = AsyncGeneratorMethod;
   // 1. Let propKey be the result of evaluating ClassElementName.
   const propKey = yield* Evaluate_PropertyName(ClassElementName);
@@ -235,7 +246,7 @@ function* MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod, 
   // 9. Let prototype be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
   const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%'));
   // 10. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-  DefinePropertyOrThrow(closure, new Value('prototype'), Descriptor({
+  DefinePropertyOrThrow(closure, Value('prototype'), Descriptor({
     Value: prototype,
     Writable: Value.true,
     Enumerable: Value.false,
@@ -245,7 +256,7 @@ function* MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod, 
   return Q(DefineMethodProperty(propKey, object, closure, enumerable));
 }
 
-export function MethodDefinitionEvaluation(node, object, enumerable) {
+export function MethodDefinitionEvaluation(node: ParseNode.MethodDefinitionLike, object, enumerable) {
   switch (node.type) {
     case 'MethodDefinition':
       return MethodDefinitionEvaluation_MethodDefinition(node, object, enumerable);

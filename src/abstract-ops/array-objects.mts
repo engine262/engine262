@@ -34,10 +34,10 @@ import {
   isArrayIndex,
   isNonNegativeInteger,
   Yield,
-  F,
+  F, R,
 } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-array-exotic-objects-defineownproperty-p-desc */
+/** https://tc39.es/ecma262/#sec-array-exotic-objects-defineownproperty-p-desc */
 function ArrayDefineOwnProperty(P, Desc) {
   const A = this;
 
@@ -45,21 +45,21 @@ function ArrayDefineOwnProperty(P, Desc) {
   if (P instanceof JSStringValue && P.stringValue() === 'length') {
     return Q(ArraySetLength(A, Desc));
   } else if (isArrayIndex(P)) {
-    const oldLenDesc = OrdinaryGetOwnProperty(A, new Value('length'));
+    const oldLenDesc = OrdinaryGetOwnProperty(A, Value('length'));
     Assert(X(IsDataDescriptor(oldLenDesc)));
     Assert(oldLenDesc.Configurable === Value.false);
     const oldLen = oldLenDesc.Value;
     const index = X(ToUint32(P));
-    if (index.numberValue() >= oldLen.numberValue() && oldLenDesc.Writable === Value.false) {
+    if (R(index) >= R(oldLen) && oldLenDesc.Writable === Value.false) {
       return Value.false;
     }
     const succeeded = X(OrdinaryDefineOwnProperty(A, P, Desc));
     if (succeeded === Value.false) {
       return Value.false;
     }
-    if (index.numberValue() >= oldLen.numberValue()) {
-      oldLenDesc.Value = F(index.numberValue() + 1);
-      const succeeded = OrdinaryDefineOwnProperty(A, new Value('length'), oldLenDesc); // eslint-disable-line no-shadow
+    if (R(index) >= R(oldLen)) {
+      oldLenDesc.Value = F(R(index) + 1);
+      const succeeded = OrdinaryDefineOwnProperty(A, Value('length'), oldLenDesc); // eslint-disable-line no-shadow
       Assert(succeeded === Value.true);
     }
     return Value.true;
@@ -71,8 +71,8 @@ export function isArrayExoticObject(O) {
   return O.DefineOwnProperty === ArrayDefineOwnProperty;
 }
 
-/** http://tc39.es/ecma262/#sec-arraycreate */
-export function ArrayCreate(length, proto) {
+/** https://tc39.es/ecma262/#sec-arraycreate */
+export function ArrayCreate(length, proto?) {
   Assert(isNonNegativeInteger(length));
   if (Object.is(length, -0)) {
     length = +0;
@@ -87,7 +87,7 @@ export function ArrayCreate(length, proto) {
   A.Prototype = proto;
   A.DefineOwnProperty = ArrayDefineOwnProperty;
 
-  X(OrdinaryDefineOwnProperty(A, new Value('length'), Descriptor({
+  X(OrdinaryDefineOwnProperty(A, Value('length'), Descriptor({
     Value: F(length),
     Writable: Value.true,
     Enumerable: Value.false,
@@ -97,7 +97,7 @@ export function ArrayCreate(length, proto) {
   return A;
 }
 
-/** http://tc39.es/ecma262/#sec-arrayspeciescreate */
+/** https://tc39.es/ecma262/#sec-arrayspeciescreate */
 export function ArraySpeciesCreate(originalArray, length) {
   Assert(typeof length === 'number' && Number.isInteger(length) && length >= 0);
   if (Object.is(length, -0)) {
@@ -107,7 +107,7 @@ export function ArraySpeciesCreate(originalArray, length) {
   if (isArray === Value.false) {
     return Q(ArrayCreate(length));
   }
-  let C = Q(Get(originalArray, new Value('constructor')));
+  let C = Q(Get(originalArray, Value('constructor')));
   if (IsConstructor(C) === Value.true) {
     const thisRealm = surroundingAgent.currentRealmRecord;
     const realmC = Q(GetFunctionRealm(C));
@@ -132,24 +132,24 @@ export function ArraySpeciesCreate(originalArray, length) {
   return Q(Construct(C, [F(length)]));
 }
 
-/** http://tc39.es/ecma262/#sec-arraysetlength */
+/** https://tc39.es/ecma262/#sec-arraysetlength */
 export function ArraySetLength(A, Desc) {
   if (Desc.Value === undefined) {
-    return OrdinaryDefineOwnProperty(A, new Value('length'), Desc);
+    return OrdinaryDefineOwnProperty(A, Value('length'), Desc);
   }
   const newLenDesc = Descriptor({ ...Desc });
-  const newLen = Q(ToUint32(Desc.Value)).numberValue();
-  const numberLen = Q(ToNumber(Desc.Value)).numberValue();
+  const newLen = R(Q(ToUint32(Desc.Value)));
+  const numberLen = R(Q(ToNumber(Desc.Value)));
   if (newLen !== numberLen) {
     return surroundingAgent.Throw('RangeError', 'InvalidArrayLength', Desc.Value);
   }
   newLenDesc.Value = F(newLen);
-  const oldLenDesc = OrdinaryGetOwnProperty(A, new Value('length'));
+  const oldLenDesc = OrdinaryGetOwnProperty(A, Value('length'));
   Assert(X(IsDataDescriptor(oldLenDesc)));
   Assert(oldLenDesc.Configurable === Value.false);
-  const oldLen = oldLenDesc.Value.numberValue();
+  const oldLen = R(oldLenDesc.Value);
   if (newLen >= oldLen) {
-    return OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc);
+    return OrdinaryDefineOwnProperty(A, Value('length'), newLenDesc);
   }
   if (oldLenDesc.Writable === Value.false) {
     return Value.false;
@@ -161,7 +161,7 @@ export function ArraySetLength(A, Desc) {
     newWritable = false;
     newLenDesc.Writable = Value.true;
   }
-  const succeeded = X(OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc));
+  const succeeded = X(OrdinaryDefineOwnProperty(A, Value('length'), newLenDesc));
   if (succeeded === Value.false) {
     return Value.false;
   }
@@ -175,22 +175,22 @@ export function ArraySetLength(A, Desc) {
   for (const P of keys) {
     const deleteSucceeded = X(A.Delete(P));
     if (deleteSucceeded === Value.false) {
-      newLenDesc.Value = F(X(ToUint32(P)).numberValue() + 1);
+      newLenDesc.Value = F(R(X(ToUint32(P))) + 1);
       if (newWritable === false) {
         newLenDesc.Writable = Value.false;
       }
-      X(OrdinaryDefineOwnProperty(A, new Value('length'), newLenDesc));
+      X(OrdinaryDefineOwnProperty(A, Value('length'), newLenDesc));
       return Value.false;
     }
   }
   if (newWritable === false) {
-    const s = OrdinaryDefineOwnProperty(A, new Value('length'), Descriptor({ Writable: Value.false }));
+    const s = OrdinaryDefineOwnProperty(A, Value('length'), Descriptor({ Writable: Value.false }));
     Assert(s === Value.true);
   }
   return Value.true;
 }
 
-/** http://tc39.es/ecma262/#sec-isconcatspreadable */
+/** https://tc39.es/ecma262/#sec-isconcatspreadable */
 export function IsConcatSpreadable(O) {
   if (!(O instanceof ObjectValue)) {
     return Value.false;
@@ -202,7 +202,7 @@ export function IsConcatSpreadable(O) {
   return Q(IsArray(O));
 }
 
-/** http://tc39.es/ecma262/#sec-sortcompare */
+/** https://tc39.es/ecma262/#sec-sortcompare */
 export function SortCompare(x, y, comparefn) {
   // 1. If x and y are both undefined, return +0𝔽.
   if (x === Value.undefined && y === Value.undefined) {
@@ -247,7 +247,7 @@ export function SortCompare(x, y, comparefn) {
   return F(+0);
 }
 
-/** http://tc39.es/ecma262/#sec-createarrayiterator */
+/** https://tc39.es/ecma262/#sec-createarrayiterator */
 export function CreateArrayIterator(array, kind) {
   // 1. Assert: Type(array) is Object.
   Assert(array instanceof ObjectValue);
@@ -299,5 +299,5 @@ export function CreateArrayIterator(array, kind) {
     }
   };
   // 4. Return ! CreateIteratorFromClosure(closure, "%ArrayIteratorPrototype%", %ArrayIteratorPrototype%).
-  return X(CreateIteratorFromClosure(closure, new Value('%ArrayIteratorPrototype%'), surroundingAgent.intrinsic('%ArrayIteratorPrototype%')));
+  return X(CreateIteratorFromClosure(closure, Value('%ArrayIteratorPrototype%'), surroundingAgent.intrinsic('%ArrayIteratorPrototype%')));
 }

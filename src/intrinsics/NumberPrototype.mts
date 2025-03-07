@@ -8,7 +8,7 @@ import {
   Assert,
   ToIntegerOrInfinity,
   ToString,
-  F,
+  F, R,
 } from '../abstract-ops/all.mjs';
 import { surroundingAgent } from '../engine.mjs';
 import { Q, X } from '../completion.mjs';
@@ -26,7 +26,7 @@ function thisNumberValue(value) {
   return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Number', value);
 }
 
-/** http://tc39.es/ecma262/#sec-number.prototype.toexponential */
+/** https://tc39.es/ecma262/#sec-number.prototype.toexponential */
 function NumberProto_toExponential([fractionDigits = Value.undefined], { thisValue }) {
   const x = Q(thisNumberValue(thisValue));
   const f = Q(ToIntegerOrInfinity(fractionDigits));
@@ -37,10 +37,10 @@ function NumberProto_toExponential([fractionDigits = Value.undefined], { thisVal
   if (f < 0 || f > 100) {
     return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toExponential');
   }
-  return new Value(x.numberValue().toExponential(fractionDigits === Value.undefined ? undefined : f));
+  return Value(R(x).toExponential(fractionDigits === Value.undefined ? undefined : f));
 }
 
-/** http://tc39.es/ecma262/#sec-number.prototype.tofixed */
+/** https://tc39.es/ecma262/#sec-number.prototype.tofixed */
 function NumberProto_toFixed([fractionDigits = Value.undefined], { thisValue }) {
   const x = Q(thisNumberValue(thisValue));
   const f = Q(ToIntegerOrInfinity(fractionDigits));
@@ -51,15 +51,15 @@ function NumberProto_toFixed([fractionDigits = Value.undefined], { thisValue }) 
   if (!x.isFinite()) {
     return X(NumberValue.toString(x));
   }
-  return new Value(x.numberValue().toFixed(f));
+  return Value(R(x).toFixed(f));
 }
 
-/** http://tc39.es/ecma262/#sec-number.prototype.tolocalestring */
+/** https://tc39.es/ecma262/#sec-number.prototype.tolocalestring */
 function NumberProto_toLocaleString(args, { thisValue }) {
   return NumberProto_toString([], { thisValue });
 }
 
-/** http://tc39.es/ecma262/#sec-number.prototype.toprecision */
+/** https://tc39.es/ecma262/#sec-number.prototype.toprecision */
 function NumberProto_toPrecision([precision = Value.undefined], { thisValue }) {
   const x = Q(thisNumberValue(thisValue));
   if (precision === Value.undefined) {
@@ -72,10 +72,10 @@ function NumberProto_toPrecision([precision = Value.undefined], { thisValue }) {
   if (p < 1 || p > 100) {
     return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toPrecision');
   }
-  return new Value(x.numberValue().toPrecision(p));
+  return Value(R(x).toPrecision(p));
 }
 
-/** http://tc39.es/ecma262/#sec-number.prototype.tostring */
+/** https://tc39.es/ecma262/#sec-number.prototype.tostring */
 function NumberProto_toString([radix = Value.undefined], { thisValue }) {
   const x = Q(thisNumberValue(thisValue));
   let radixNumber;
@@ -95,10 +95,10 @@ function NumberProto_toString([radix = Value.undefined], { thisValue }) {
   // used for digits with values 10 through 35. The precise algorithm
   // is implementation-dependent, however the algorithm should be a
   // generalization of that specified in 7.1.12.1.
-  return new Value(x.numberValue().toString(radixNumber));
+  return Value(R(x).toString(radixNumber));
 }
 
-/** http://tc39.es/ecma262/#sec-number.prototype.valueof */
+/** https://tc39.es/ecma262/#sec-number.prototype.valueof */
 function NumberProto_valueOf(args, { thisValue }) {
   return Q(thisNumberValue(thisValue));
 }

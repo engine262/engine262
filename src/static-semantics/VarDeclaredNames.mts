@@ -1,8 +1,10 @@
-// @ts-nocheck
+import { isArray } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
+import type { JSStringValue } from '../value.mjs';
 import { BoundNames, TopLevelVarDeclaredNames } from './all.mjs';
 
-export function VarDeclaredNames(node) {
-  if (Array.isArray(node)) {
+export function VarDeclaredNames(node: ParseNode | readonly ParseNode[]): JSStringValue[] {
+  if (isArray(node)) {
     const names = [];
     for (const item of node) {
       names.push(...VarDeclaredNames(item));
@@ -91,7 +93,7 @@ export function VarDeclaredNames(node) {
       return TopLevelVarDeclaredNames(node.StatementList);
     case 'FunctionBody':
     case 'GeneratorBody':
-    case 'AsyncFunctionBody':
+    case 'AsyncBody':
     case 'AsyncGeneratorBody':
       return TopLevelVarDeclaredNames(node.FunctionStatementList);
     case 'ClassStaticBlockBody':

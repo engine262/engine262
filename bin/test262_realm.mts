@@ -1,8 +1,7 @@
-'use strict';
-
-const path = require('path');
-const fs = require('fs');
-const {
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import path from 'node:path';
+import fs from 'node:fs';
+import {
   Value,
   CreateBuiltinFunction,
   CreateDataProperty,
@@ -17,13 +16,21 @@ const {
   gc,
   Agent,
   Realm,
-} = require('..');
+  ObjectValue,
+  JSStringValue,
+  type BuiltinFunctionObject,
+  type OrdinaryObject,
+} from '#self';
 
-const createAgent = ({ features = [] }) => new Agent({
+export interface CreateAgentOptions {
+  features?: readonly string[];
+}
+
+export const createAgent = ({ features = [] }: CreateAgentOptions) => new Agent({
   features,
-  loadImportedModule(referrer, specifier, hostDefined, finish) {
+  loadImportedModule(referrer, specifier, _hostDefined, finish) {
     if (referrer instanceof Realm) {
-      throw new Error('Internal error: loadImportedModule called without a SriptOrModule referrer.');
+      throw new Error('Internal error: loadImportedModule called without a ScriptOrModule referrer.');
     }
     const realm = referrer.Realm;
 
@@ -41,40 +48,36 @@ const createAgent = ({ features = [] }) => new Agent({
       realm.HostDefined.resolverCache.set(resolved, m);
       finish(m);
     } catch (e) {
-      finish(Throw(e.name, 'Raw', e.message));
+      finish(Throw((e as any).name, 'Raw', (e as any).message));
     }
   },
 });
 
-const createRealm = ({ printCompatMode = false } = {}) => {
-  const trackedPromises = new Set();
+export interface Test262CreateRealm {
+  realm: ManagedRealm;
+  $262: OrdinaryObject;
+  resolverCache: Map<any, any>;
+  setPrintHandle: (f: any) => void;
+}
+export interface CreateRealmOptions {
+  printCompatMode?: boolean;
+}
+
+export function createRealm({ printCompatMode = false }: CreateRealmOptions = {}): Test262CreateRealm {
   const resolverCache = new Map();
 
   const realm = new ManagedRealm({
-    promiseRejectionTracker(promise, operation) {
-      switch (operation) {
-        case 'reject':
-          trackedPromises.add(promise);
-          break;
-        case 'handle':
-          trackedPromises.delete(promise);
-          break;
-        /* c8 ignore next */
-        default:
-          throw new RangeError('promiseRejectionTracker', operation);
-      }
-    },
     resolverCache,
   });
 
   return realm.scope(() => {
-    const $262 = OrdinaryObjectCreate(realm.Intrinsics['%Object.prototype%']);
+    const $262 = OrdinaryObjectCreate(realm.Intrinsics['%Object.prototype%'] as ObjectValue);
 
-    let printHandle;
-    const setPrintHandle = (f) => {
+    let printHandle: (...args: any[]) => void;
+    const setPrintHandle = (f: typeof printHandle) => {
       printHandle = f;
     };
-    CreateDataProperty(realm.GlobalObject, new Value('print'), CreateBuiltinFunction((args) => {
+    CreateDataProperty(realm.GlobalObject, Value('print'), CreateBuiltinFunction((args: any) => {
       /* c8 ignore next */
       if (printHandle !== undefined) {
         printHandle(...args);
@@ -94,53 +97,49 @@ const createRealm = ({ printCompatMode = false } = {}) => {
           process.stdout.write('\n');
           return Value.undefined;
         } else {
-          const formatted = args.map((a, i) => {
+          const formatted = args.map((a: any, i: number) => {
             if (i === 0 && Type(a) === 'String') {
               return a.stringValue();
             }
-            return inspect(a, realm);
+            return inspect(a);
           }).join(' ');
           console.log(formatted); // eslint-disable-line no-console
         }
       }
       return Value.undefined;
-    }, 0, new Value('print'), []));
+    }, 0, Value('print'), []));
 
-    [
+    ([
       ['global', realm.GlobalObject],
       ['createRealm', () => {
         const info = createRealm();
         return info.$262;
       }],
-      ['evalScript', ([sourceText]) => realm.evaluateScript(sourceText.stringValue()), 1],
-      ['detachArrayBuffer', ([arrayBuffer]) => DetachArrayBuffer(arrayBuffer), 1],
+      ['evalScript', ([sourceText]: [JSStringValue]) => realm.evaluateScript(sourceText.stringValue()), 1],
+      ['detachArrayBuffer', ([arrayBuffer]: [unknown]) => DetachArrayBuffer(arrayBuffer), 1],
       ['gc', () => {
         gc();
         return Value.undefined;
       }],
-      ['spec', ([v]) => {
+      ['spec', ([v]: [BuiltinFunctionObject]) => {
         if (v.nativeFunction && v.nativeFunction.section) {
-          return new Value(v.nativeFunction.section);
+          return Value(v.nativeFunction.section);
         }
         return Value.undefined;
       }, 1],
-    ].forEach(([name, value, length = 0]) => {
-      const v = value instanceof Value ? value
-        : CreateBuiltinFunction(value, length, new Value(name), []);
-      CreateDataProperty($262, new Value(name), v);
+    ] as const).forEach(([name, value, length = 0]) => {
+      const v = value instanceof Value ? value : CreateBuiltinFunction(value, length, Value(name), []);
+      CreateDataProperty($262, Value(name), v as Value);
     });
 
-    CreateDataProperty(realm.GlobalObject, new Value('$262'), $262);
-    CreateDataProperty(realm.GlobalObject, new Value('$'), $262);
+    CreateDataProperty(realm.GlobalObject, Value('$262'), $262);
+    CreateDataProperty(realm.GlobalObject, Value('$'), $262);
 
     return {
       realm,
       $262,
       resolverCache,
-      trackedPromises,
       setPrintHandle,
     };
   });
-};
-
-module.exports = { createAgent, createRealm };
+}

@@ -1,23 +1,28 @@
 // @ts-nocheck
-import { surroundingAgent } from './engine.mjs';
+import { ExecutionContext, type GCMarker, surroundingAgent } from './engine.mjs';
 import {
-  Value, Descriptor, JSStringValue, NumberValue,
+  Value, Descriptor, JSStringValue, NumberValue, ObjectValue, UndefinedValue, NullValue, type PropertyKeyValue,
 } from './value.mjs';
-import { ToString, DefinePropertyOrThrow, CreateBuiltinFunction } from './abstract-ops/all.mjs';
-import { X } from './completion.mjs';
+import {
+  ToString, DefinePropertyOrThrow, CreateBuiltinFunction, R, type BuiltinFunctionObject,
+} from './abstract-ops/all.mjs';
+import { Completion, X } from './completion.mjs';
+import type { ParseNode } from './parser/ParseNode.mjs';
 
 export const kInternal = Symbol('kInternal');
 
-function convertValueForKey(key) {
+function convertValueForKey<T>(key: JSStringValue | NumberValue | T): string | number | T {
   if (key instanceof JSStringValue) {
     return key.stringValue();
   } else if (key instanceof NumberValue) {
-    return key.numberValue();
+    return R(key);
   }
   return key;
 }
 
-export class ValueMap {
+export class ValueMap<K extends PropertyKeyValue, V> {
+  private map: Map<K, V>;
+
   constructor() {
     this.map = new Map();
   }
@@ -26,21 +31,21 @@ export class ValueMap {
     return this.map.size;
   }
 
-  get(key) {
-    return this.map.get(convertValueForKey(key));
+  get(key: K) {
+    return this.map.get(convertValueForKey(key) as K);
   }
 
-  set(key, value) {
-    this.map.set(convertValueForKey(key), value);
+  set(key: K, value: V) {
+    this.map.set(convertValueForKey(key) as K, value);
     return this;
   }
 
-  has(key) {
-    return this.map.has(convertValueForKey(key));
+  has(key: K) {
+    return this.map.has(convertValueForKey(key) as K);
   }
 
-  delete(key) {
-    return this.map.delete(convertValueForKey(key));
+  delete(key: K) {
+    return this.map.delete(convertValueForKey(key) as K);
   }
 
   * keys() {
@@ -53,7 +58,7 @@ export class ValueMap {
     return this[Symbol.iterator]();
   }
 
-  forEach(cb) {
+  forEach(cb: (value: V, key: K | JSStringValue | NumberValue, thisValue: ValueMap<K, V>) => void) {
     for (const [key, value] of this.entries()) {
       cb(value, key, this);
     }
@@ -62,14 +67,14 @@ export class ValueMap {
   * [Symbol.iterator]() {
     for (const [key, value] of this.map.entries()) {
       if (typeof key === 'string' || typeof key === 'number') {
-        yield [new Value(key), value];
+        yield [Value(key), value] as const;
       } else {
-        yield [key, value];
+        yield [key, value] as const;
       }
     }
   }
 
-  mark(m) {
+  mark(m: GCMarker) {
     for (const [k, v] of this.entries()) {
       m(k);
       m(v);
@@ -77,8 +82,10 @@ export class ValueMap {
   }
 }
 
-export class ValueSet {
-  constructor(init) {
+export class ValueSet<T> {
+  private set: Set<T>;
+
+  constructor(init: undefined | null | Iterable<T>) {
     this.set = new Set();
     if (init !== undefined && init !== null) {
       for (const item of init) {
@@ -91,17 +98,17 @@ export class ValueSet {
     return this.set.size;
   }
 
-  add(item) {
-    this.set.add(convertValueForKey(item));
+  add(item: T) {
+    this.set.add(convertValueForKey(item) as T);
     return this;
   }
 
-  has(item) {
-    return this.set.has(convertValueForKey(item));
+  has(item: T) {
+    return this.set.has(convertValueForKey(item) as T);
   }
 
-  delete(item) {
-    return this.set.delete(convertValueForKey(item));
+  delete(item: T) {
+    return this.set.delete(convertValueForKey(item) as T);
   }
 
   values() {
@@ -111,14 +118,14 @@ export class ValueSet {
   * [Symbol.iterator]() {
     for (const key of this.set.values()) {
       if (typeof key === 'string' || typeof key === 'number') {
-        yield new Value(key);
+        yield Value(key);
       } else {
         yield key;
       }
     }
   }
 
-  mark(m) {
+  mark(m: GCMarker) {
     for (const v of this.values()) {
       m(v);
     }
@@ -126,8 +133,10 @@ export class ValueSet {
 }
 
 export class OutOfRange extends RangeError {
+  private detail: unknown;
+
   /* c8 ignore next */
-  constructor(fn, detail) {
+  constructor(fn: string, detail: unknown) {
     super(`${fn}() argument out of range`);
     this.detail = detail;
   }
@@ -150,13 +159,13 @@ export function unwind(iterator, maxSteps = 1) {
 
 const kSafeToResume = Symbol('kSameToResume');
 
-export function handleInResume(fn, ...args) {
+export function handleInResume<T extends((...arg: Args) => Return), Args extends unknown[], Return>(fn: T, ...args: Args) {
   const bound = () => fn(...args);
-  bound[kSafeToResume] = true;
+  Reflect.set(bound, kSafeToResume, true);
   return bound;
 }
 
-export function resume(context, completion) {
+export function resume(context: ExecutionContext, completion: Completion) {
   const { value } = context.codeEvaluationState.next(completion);
   if (typeof value === 'function' && value[kSafeToResume] === true) {
     return X(value());
@@ -165,12 +174,18 @@ export function resume(context, completion) {
 }
 
 export class CallSite {
-  constructor(context) {
+  context: ExecutionContext;
+
+  lastNode: ParseNode | null = null;
+
+  lastCallNode: ParseNode | null = null;
+
+  inheritedLastCallNode = null;
+
+  constructCall = false;
+
+  constructor(context: ExecutionContext) {
     this.context = context;
-    this.lastNode = null;
-    this.lastCallNode = null;
-    this.inheritedLastCallNode = null;
-    this.constructCall = false;
   }
 
   clone(context = this.context) {
@@ -191,20 +206,20 @@ export class CallSite {
   }
 
   isAsync() {
-    if (this.context.Function !== Value.null && this.context.Function.ECMAScriptCode) {
+    if (!(this.context.Function instanceof NullValue) && this.context.Function.ECMAScriptCode) {
       const code = this.context.Function.ECMAScriptCode;
-      return code.type === 'AsyncFunctionBody' || code.type === 'AsyncGeneratorBody';
+      return code.type === 'AsyncBody' || code.type === 'AsyncGeneratorBody';
     }
     return false;
   }
 
   isNative() {
-    return !!this.context.Function.nativeFunction;
+    return !!(this.context.Function as BuiltinFunctionObject).nativeFunction;
   }
 
-  getFunctionName() {
-    if (this.context.Function !== Value.null) {
-      const name = this.context.Function.properties.get(new Value('name'));
+  getFunctionName(): JSStringValue | null {
+    if (!(this.context.Function instanceof NullValue)) {
+      const name = this.context.Function.properties.get(Value('name'));
       if (name) {
         return X(ToString(name.Value)).stringValue();
       }
@@ -213,17 +228,17 @@ export class CallSite {
   }
 
   getSpecifier() {
-    if (this.context.ScriptOrModule !== Value.null) {
+    if (!(this.context.Function instanceof NullValue)) {
       return this.context.ScriptOrModule.HostDefined.specifier;
     }
     return null;
   }
 
-  setLocation(node) {
+  setLocation(node: ParseNode) {
     this.lastNode = node;
   }
 
-  setCallLocation(node) {
+  setCallLocation(node: ParseNode | null) {
     this.lastCallNode = node;
   }
 
@@ -305,7 +320,7 @@ export class CallSite {
 
 export const kAsyncContext = Symbol('kAsyncContext');
 
-function captureAsyncStack(stack) {
+function captureAsyncStack(stack: CallSite[]) {
   let promise = stack[0].context.promiseCapability.Promise;
   for (let i = 0; i < 10; i += 1) {
     if (promise.PromiseFulfillReactions.length !== 1) {
@@ -330,8 +345,8 @@ function captureAsyncStack(stack) {
   }
 }
 
-export function captureStack(O) {
-  const stack = [];
+export function captureStack(O: ObjectValue) {
+  const stack: CallSite[] = [];
   for (let i = surroundingAgent.executionContextStack.length - 2; i >= 0; i -= 1) {
     const e = surroundingAgent.executionContextStack[i];
     if (e.VariableEnvironment === undefined && e.Function === Value.null) {
@@ -352,9 +367,9 @@ export function captureStack(O) {
     captureAsyncStack(stack);
   }
 
-  let cache = null;
+  let cache: null | JSStringValue | UndefinedValue = null;
 
-  const name = new Value('stack');
+  const name = Value('stack');
   X(DefinePropertyOrThrow(O, name, Descriptor({
     Get: CreateBuiltinFunction(() => {
       if (cache === null) {
@@ -362,15 +377,32 @@ export function captureStack(O) {
         stack.forEach((s) => {
           errorString = `${errorString}\n    at ${s.toString()}`;
         });
-        cache = new Value(errorString);
+        cache = Value(errorString);
       }
       return cache;
-    }, 0, name, [], undefined, undefined, new Value('get')),
+    }, 0, name, [], undefined, undefined, Value('get')),
     Set: CreateBuiltinFunction(([value = Value.undefined]) => {
       cache = value;
       return Value.undefined;
-    }, 1, name, [], undefined, undefined, new Value('set')),
+    }, 1, name, [], undefined, undefined, Value('set')),
     Enumerable: Value.false,
     Configurable: Value.true,
   })));
+}
+
+export function callable<Class extends object>(onCalled = (target: Class, _thisArg: unknown, args: unknown[]) => Reflect.construct(target, args)) {
+  return function decoartor(classValue: Class, _classContext: ClassDecoratorContext<Class>) {
+    return new Proxy(classValue, {
+      apply: onCalled,
+    });
+  };
+}
+
+export type Mutable<T> = {
+  -readonly [P in keyof T]: T[P];
+}
+
+export const isArray: (arg: unknown) => arg is readonly unknown[] = Array.isArray;
+export function unreachable(_: never): never {
+  throw new Error('Unreachable');
 }

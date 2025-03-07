@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { surroundingAgent } from '../engine.mjs';
 import { Evaluate } from '../evaluator.mjs';
-import { NewDeclarativeEnvironment } from '../environment.mjs';
+import { DeclarativeEnvironmentRecord } from '../environment.mjs';
 import { Assert, GetValue, StrictEqualityComparison } from '../abstract-ops/all.mjs';
 import { Value } from '../value.mjs';
 import {
@@ -13,13 +13,14 @@ import {
   Q,
 } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import {
   BlockDeclarationInstantiation,
   Evaluate_StatementList,
 } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-caseclauseisselected */
-function* CaseClauseIsSelected(C, input) {
+/** https://tc39.es/ecma262/#sec-runtime-semantics-caseclauseisselected */
+function* CaseClauseIsSelected(C: ParseNode.CaseClause, input) {
   // 1. Assert: C is an instance of the production  CaseClause : `case` Expression `:` StatementList?.
   Assert(C.type === 'CaseClause');
   // 2. Let exprRef be the result of evaluating the Expression of C.
@@ -30,12 +31,12 @@ function* CaseClauseIsSelected(C, input) {
   return StrictEqualityComparison(input, clauseSelector);
 }
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-caseblockevaluation */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-caseblockevaluation */
 //   CaseBlock :
 //     `{` `}`
 //     `{` CaseClauses `}`
 //     `{` CaseClauses? DefaultClause CaseClauses? `}`
-function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, input) {
+function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }: ParseNode.CaseBlock, input) {
   switch (true) {
     case !CaseClauses_a && !DefaultClause && !CaseClauses_b: {
       // 1. Return NormalCompletion(undefined).
@@ -178,10 +179,10 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, i
   }
 }
 
-/** http://tc39.es/ecma262/#sec-switch-statement-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-switch-statement-runtime-semantics-evaluation */
 //   SwitchStatement :
 //     `switch` `(` Expression `)` CaseBlock
-export function* Evaluate_SwitchStatement({ Expression, CaseBlock }) {
+export function* Evaluate_SwitchStatement({ Expression, CaseBlock }: ParseNode.SwitchStatement) {
   // 1. Let exprRef be the result of evaluating Expression.
   const exprRef = yield* Evaluate(Expression);
   // 2. Let switchValue be ? GetValue(exprRef).
@@ -189,7 +190,7 @@ export function* Evaluate_SwitchStatement({ Expression, CaseBlock }) {
   // 3. Let oldEnv be the running execution context's LexicalEnvironment.
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 4. Let blockEnv be NewDeclarativeEnvironment(oldEnv).
-  const blockEnv = NewDeclarativeEnvironment(oldEnv);
+  const blockEnv = new DeclarativeEnvironmentRecord(oldEnv);
   // 5. Perform BlockDeclarationInstantiation(CaseBlock, blockEnv).
   BlockDeclarationInstantiation(CaseBlock, blockEnv);
   // 6. Set the running execution context's LexicalEnvironment to blockEnv.
@@ -202,14 +203,14 @@ export function* Evaluate_SwitchStatement({ Expression, CaseBlock }) {
   return R;
 }
 
-/** http://tc39.es/ecma262/#sec-switch-statement-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-switch-statement-runtime-semantics-evaluation */
 //   CaseClause :
 //     `case` Expression `:`
 //     `case` Expression `:` StatementList
 //   DefaultClause :
 //     `case` `default` `:`
 //     `case` `default` `:` StatementList
-export function* Evaluate_CaseClause({ StatementList }) {
+export function* Evaluate_CaseClause({ StatementList }: ParseNode.CaseClause | ParseNode.DefaultClause) {
   if (!StatementList) {
     // 1. Return NormalCompletion(empty).
     return NormalCompletion(undefined);

@@ -23,7 +23,7 @@ import {
   OrdinaryGet,
   OrdinaryDelete,
   OrdinaryOwnPropertyKeys,
-  GetModuleNamespace,
+  GetModuleNamespace, R,
 } from './all.mjs';
 
 
@@ -102,7 +102,7 @@ function ModuleNamespaceHasProperty(P) {
   return Value.false;
 }
 
-/** http://tc39.es/ecma262/#sec-module-namespace-exotic-objects-get-p-receiver */
+/** https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-get-p-receiver */
 function ModuleNamespaceGet(P, Receiver) {
   const O = this;
 
@@ -171,7 +171,7 @@ function ModuleNamespaceOwnPropertyKeys() {
   return exports;
 }
 
-/** http://tc39.es/ecma262/#sec-modulenamespacecreate */
+/** https://tc39.es/ecma262/#sec-modulenamespacecreate */
 export function ModuleNamespaceCreate(module, exports) {
   // 1. Assert: module is a Module Record.
   Assert(module instanceof AbstractModuleRecord);
@@ -183,7 +183,7 @@ export function ModuleNamespaceCreate(module, exports) {
   const internalSlotsList = ['Module', 'Exports', 'Prototype'];
   // 5. Let M be ! MakeBasicObject(internalSlotsList).
   const M = X(MakeBasicObject(internalSlotsList));
-  /** http://tc39.es/ecma262/#sec-module-namespace-exotic-objects */
+  /** https://tc39.es/ecma262/#sec-module-namespace-exotic-objects */
   M.SetPrototypeOf = ModuleNamespaceSetPrototypeOf;
   M.IsExtensible = ModuleNamespaceIsExtensible;
   M.PreventExtensions = ModuleNamespacePreventExtensions;
@@ -201,7 +201,7 @@ export function ModuleNamespaceCreate(module, exports) {
   // 9. Let sortedExports be a new List containing the same values as the list exports where the values are ordered as if an Array of the same values had been sorted using Array.prototype.sort using undefined as comparefn.
   const sortedExports = [...exports].sort((x, y) => {
     const result = X(SortCompare(x, y, Value.undefined));
-    return result.numberValue();
+    return R(result);
   });
   // 10. Set M.[[Exports]] to sortedExports.
   M.Exports = new ValueSet(sortedExports);
@@ -210,7 +210,7 @@ export function ModuleNamespaceCreate(module, exports) {
     Writable: Value.false,
     Enumerable: Value.false,
     Configurable: Value.false,
-    Value: new Value('Module'),
+    Value: Value('Module'),
   }));
   // 12. Set module.[[Namespace]] to M.
   module.Namespace = M;

@@ -35,7 +35,7 @@ import { Q, X } from '../completion.mjs';
 import { assignProps } from './bootstrap.mjs';
 import { ArrayProto_sortBody, bootstrapArrayPrototypeShared } from './ArrayPrototypeShared.mjs';
 
-/** http://tc39.es/ecma262/#sec-array.prototype.concat */
+/** https://tc39.es/ecma262/#sec-array.prototype.concat */
 function ArrayProto_concat(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   const A = Q(ArraySpeciesCreate(O, 0));
@@ -70,11 +70,11 @@ function ArrayProto_concat(args, { thisValue }) {
       n += 1;
     }
   }
-  Q(Set(A, new Value('length'), F(n), Value.true));
+  Q(Set(A, Value('length'), F(n), Value.true));
   return A;
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.copywithin */
+/** https://tc39.es/ecma262/#sec-array.prototype.copywithin */
 function ArrayProto_copyWithin([target = Value.undefined, start = Value.undefined, end = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
@@ -130,13 +130,13 @@ function ArrayProto_copyWithin([target = Value.undefined, start = Value.undefine
   return O;
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.entries */
+/** https://tc39.es/ecma262/#sec-array.prototype.entries */
 function ArrayProto_entries(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   return CreateArrayIterator(O, 'key+value');
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.fill */
+/** https://tc39.es/ecma262/#sec-array.prototype.fill */
 function ArrayProto_fill([value = Value.undefined, start = Value.undefined, end = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
@@ -167,7 +167,7 @@ function ArrayProto_fill([value = Value.undefined, start = Value.undefined, end 
   return O;
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.filter */
+/** https://tc39.es/ecma262/#sec-array.prototype.filter */
 function ArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
@@ -193,7 +193,7 @@ function ArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undefi
   return A;
 }
 
-/** http://tc39.es/ecma262/#sec-flattenintoarray */
+/** https://tc39.es/ecma262/#sec-flattenintoarray */
 function FlattenIntoArray(target, source, sourceLen, start, depth, mapperFunction, thisArg) {
   Assert(target instanceof ObjectValue);
   Assert(source instanceof ObjectValue);
@@ -232,7 +232,7 @@ function FlattenIntoArray(target, source, sourceLen, start, depth, mapperFunctio
   return targetIndex;
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.flat */
+/** https://tc39.es/ecma262/#sec-array.prototype.flat */
 function ArrayProto_flat([depth = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const sourceLen = Q(LengthOfArrayLike(O));
@@ -245,7 +245,7 @@ function ArrayProto_flat([depth = Value.undefined], { thisValue }) {
   return A;
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.flatmap */
+/** https://tc39.es/ecma262/#sec-array.prototype.flatmap */
 function ArrayProto_flatMap([mapperFunction = Value.undefined, thisArg = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const sourceLen = Q(LengthOfArrayLike(O));
@@ -257,13 +257,13 @@ function ArrayProto_flatMap([mapperFunction = Value.undefined, thisArg = Value.u
   return A;
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.keys */
+/** https://tc39.es/ecma262/#sec-array.prototype.keys */
 function ArrayProto_keys(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   return CreateArrayIterator(O, 'key');
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.map */
+/** https://tc39.es/ecma262/#sec-array.prototype.map */
 function ArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
@@ -285,24 +285,24 @@ function ArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefined
   return A;
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.pop */
+/** https://tc39.es/ecma262/#sec-array.prototype.pop */
 function ArrayProto_pop(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
   if (len === 0) {
-    Q(Set(O, new Value('length'), F(+0), Value.true));
+    Q(Set(O, Value('length'), F(+0), Value.true));
     return Value.undefined;
   } else {
     const newLen = len - 1;
     const index = Q(ToString(F(newLen)));
     const element = Q(Get(O, index));
     Q(DeletePropertyOrThrow(O, index));
-    Q(Set(O, new Value('length'), F(newLen), Value.true));
+    Q(Set(O, Value('length'), F(newLen), Value.true));
     return element;
   }
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.push */
+/** https://tc39.es/ecma262/#sec-array.prototype.push */
 function ArrayProto_push(items, { thisValue }) {
   const O = Q(ToObject(thisValue));
   let len = Q(LengthOfArrayLike(O));
@@ -315,19 +315,19 @@ function ArrayProto_push(items, { thisValue }) {
     Q(Set(O, X(ToString(F(len))), E, Value.true));
     len += 1;
   }
-  Q(Set(O, new Value('length'), F(len), Value.true));
+  Q(Set(O, Value('length'), F(len), Value.true));
   return F(len);
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.shift */
+/** https://tc39.es/ecma262/#sec-array.prototype.shift */
 function ArrayProto_shift(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
   if (len === 0) {
-    Q(Set(O, new Value('length'), F(+0), Value.true));
+    Q(Set(O, Value('length'), F(+0), Value.true));
     return Value.undefined;
   }
-  const first = Q(Get(O, new Value('0')));
+  const first = Q(Get(O, Value('0')));
   let k = 1;
   while (k < len) {
     const from = X(ToString(F(k)));
@@ -342,11 +342,11 @@ function ArrayProto_shift(args, { thisValue }) {
     k += 1;
   }
   Q(DeletePropertyOrThrow(O, X(ToString(F(len - 1)))));
-  Q(Set(O, new Value('length'), F(len - 1), Value.true));
+  Q(Set(O, Value('length'), F(len - 1), Value.true));
   return first;
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.slice */
+/** https://tc39.es/ecma262/#sec-array.prototype.slice */
 function ArrayProto_slice([start = Value.undefined, end = Value.undefined], { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
@@ -383,11 +383,11 @@ function ArrayProto_slice([start = Value.undefined, end = Value.undefined], { th
     k += 1;
     n += 1;
   }
-  Q(Set(A, new Value('length'), F(n), Value.true));
+  Q(Set(A, Value('length'), F(n), Value.true));
   return A;
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.sort */
+/** https://tc39.es/ecma262/#sec-array.prototype.sort */
 function ArrayProto_sort([comparefn = Value.undefined], { thisValue }) {
   if (comparefn !== Value.undefined && IsCallable(comparefn) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', comparefn);
@@ -398,7 +398,7 @@ function ArrayProto_sort([comparefn = Value.undefined], { thisValue }) {
   return ArrayProto_sortBody(obj, len, (x, y) => SortCompare(x, y, comparefn));
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.splice */
+/** https://tc39.es/ecma262/#sec-array.prototype.splice */
 function ArrayProto_splice(args, { thisValue }) {
   const [start = Value.undefined, deleteCount = Value.undefined, ...items] = args;
   const O = Q(ToObject(thisValue));
@@ -437,7 +437,7 @@ function ArrayProto_splice(args, { thisValue }) {
     }
     k += 1;
   }
-  Q(Set(A, new Value('length'), F(actualDeleteCount), Value.true));
+  Q(Set(A, Value('length'), F(actualDeleteCount), Value.true));
   const itemCount = items.length;
   if (itemCount < actualDeleteCount) {
     k = actualStart;
@@ -479,21 +479,21 @@ function ArrayProto_splice(args, { thisValue }) {
     Q(Set(O, X(ToString(F(k))), E, Value.true));
     k += 1;
   }
-  Q(Set(O, new Value('length'), F(len - actualDeleteCount + itemCount), Value.true));
+  Q(Set(O, Value('length'), F(len - actualDeleteCount + itemCount), Value.true));
   return A;
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.tostring */
+/** https://tc39.es/ecma262/#sec-array.prototype.tostring */
 function ArrayProto_toString(a, { thisValue }) {
   const array = Q(ToObject(thisValue));
-  let func = Q(Get(array, new Value('join')));
+  let func = Q(Get(array, Value('join')));
   if (IsCallable(func) === Value.false) {
     func = surroundingAgent.intrinsic('%Object.prototype.toString%');
   }
   return Q(Call(func, array));
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.unshift */
+/** https://tc39.es/ecma262/#sec-array.prototype.unshift */
 function ArrayProto_unshift(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
@@ -524,17 +524,17 @@ function ArrayProto_unshift(args, { thisValue }) {
       j += 1;
     }
   }
-  Q(Set(O, new Value('length'), F(len + argCount), Value.true));
+  Q(Set(O, Value('length'), F(len + argCount), Value.true));
   return F(len + argCount);
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.values */
+/** https://tc39.es/ecma262/#sec-array.prototype.values */
 function ArrayProto_values(args, { thisValue }) {
   const O = Q(ToObject(thisValue));
   return CreateArrayIterator(O, 'value');
 }
 
-/** http://tc39.es/ecma262/#sec-array.prototype.at */
+/** https://tc39.es/ecma262/#sec-array.prototype.at */
 function ArrayProto_at([index = Value.undefined], { thisValue }) {
   // 1. Let O be ? ToObject(this value).
   const O = Q(ToObject(thisValue));
@@ -592,22 +592,22 @@ export function bootstrapArrayPrototype(realmRec) {
     (O) => Q(LengthOfArrayLike(O)),
   );
 
-  proto.DefineOwnProperty(wellKnownSymbols.iterator, proto.GetOwnProperty(new Value('values')));
+  proto.DefineOwnProperty(wellKnownSymbols.iterator, proto.GetOwnProperty(Value('values')));
 
   {
     const unscopableList = OrdinaryObjectCreate(Value.null);
-    Assert(X(CreateDataProperty(unscopableList, new Value('copyWithin'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, new Value('entries'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, new Value('fill'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, new Value('find'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, new Value('findLast'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, new Value('findIndex'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, new Value('findLastIndex'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, new Value('flat'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, new Value('flatMap'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, new Value('includes'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, new Value('keys'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, new Value('values'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, Value('copyWithin'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, Value('entries'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, Value('fill'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, Value('find'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, Value('findLast'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, Value('findIndex'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, Value('findLastIndex'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, Value('flat'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, Value('flatMap'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, Value('includes'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, Value('keys'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, Value('values'), Value.true)) === Value.true);
     X(proto.DefineOwnProperty(wellKnownSymbols.unscopables, Descriptor({
       Value: unscopableList,
       Writable: Value.false,
@@ -617,7 +617,7 @@ export function bootstrapArrayPrototype(realmRec) {
   }
 
   // Used in `arguments` objects.
-  realmRec.Intrinsics['%Array.prototype.values%'] = X(Get(proto, new Value('values')));
+  realmRec.Intrinsics['%Array.prototype.values%'] = X(Get(proto, Value('values')));
 
   realmRec.Intrinsics['%Array.prototype%'] = proto;
 }

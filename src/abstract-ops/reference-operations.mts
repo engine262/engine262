@@ -9,6 +9,7 @@ import {
   NormalCompletion,
   Q,
   ReturnIfAbrupt,
+  ThrowCompletion,
   X,
 } from '../completion.mjs';
 import { EnvironmentRecord } from '../environment.mjs';
@@ -21,7 +22,7 @@ import {
   PrivateSet,
 } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-ispropertyreference */
+/** https://tc39.es/ecma262/#sec-ispropertyreference */
 export function IsPropertyReference(V) {
   // 1. If V.[[Base]] is unresolvable, return false.
   if (V.Base === 'unresolvable') {
@@ -31,7 +32,7 @@ export function IsPropertyReference(V) {
   return V.Base instanceof EnvironmentRecord ? Value.false : Value.true;
 }
 
-/** http://tc39.es/ecma262/#sec-isunresolvablereference */
+/** https://tc39.es/ecma262/#sec-isunresolvablereference */
 export function IsUnresolvableReference(V) {
   // 1. Assert: V is a Reference Record.
   Assert(V instanceof ReferenceRecord);
@@ -39,24 +40,24 @@ export function IsUnresolvableReference(V) {
   return V.Base === 'unresolvable' ? Value.true : Value.false;
 }
 
-/** http://tc39.es/ecma262/#sec-issuperreference */
-export function IsSuperReference(V) {
+/** https://tc39.es/ecma262/#sec-issuperreference */
+export function IsSuperReference(V: ReferenceRecord) {
   // 1. Assert: V is a Reference Record.
   Assert(V instanceof ReferenceRecord);
   // 2. If V.[[ThisValue]] is not empty, return true; otherwise return false.
   return V.ThisValue !== undefined ? Value.true : Value.false;
 }
 
-/** http://tc39.es/ecma262/#sec-isprivatereference */
-export function IsPrivateReference(V) {
+/** https://tc39.es/ecma262/#sec-isprivatereference */
+export function IsPrivateReference(V: ReferenceRecord) {
   // 1. Assert: V is a Reference Record.
   Assert(V instanceof ReferenceRecord);
   // 2. If V.[[ReferencedName]] is a Private Name, return true; otherwise return false.
   return V.ReferencedName instanceof PrivateName ? Value.true : Value.false;
 }
 
-/** http://tc39.es/ecma262/#sec-getvalue */
-export function GetValue(V) {
+/** https://tc39.es/ecma262/#sec-getvalue */
+export function GetValue(V: NormalCompletion<ReferenceRecord> | ThrowCompletion) {
   // 1. ReturnIfAbrupt(V).
   ReturnIfAbrupt(V);
   // 2. If V is not a Reference Record, return V.
@@ -88,8 +89,8 @@ export function GetValue(V) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-putvalue */
-export function PutValue(V, W) {
+/** https://tc39.es/ecma262/#sec-putvalue */
+export function PutValue(V: NormalCompletion<ReferenceRecord> | ThrowCompletion, W) {
   // 1. ReturnIfAbrupt(V).
   ReturnIfAbrupt(V);
   // 2. ReturnIfAbrupt(W).
@@ -136,7 +137,7 @@ export function PutValue(V, W) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-getthisvalue */
+/** https://tc39.es/ecma262/#sec-getthisvalue */
 export function GetThisValue(V) {
   // 1. Assert: IsPropertyReference(V) is true.
   Assert(IsPropertyReference(V) === Value.true);
@@ -148,8 +149,8 @@ export function GetThisValue(V) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-initializereferencedbinding */
-export function InitializeReferencedBinding(V, W) {
+/** https://tc39.es/ecma262/#sec-initializereferencedbinding */
+export function InitializeReferencedBinding(V: NormalCompletion<ReferenceRecord> | ThrowCompletion, W) {
   // 1. ReturnIfAbrupt(V).
   ReturnIfAbrupt(V);
   // 2. ReturnIfAbrupt(W).
@@ -166,7 +167,7 @@ export function InitializeReferencedBinding(V, W) {
   return base.InitializeBinding(V.ReferencedName, W);
 }
 
-/** http://tc39.es/ecma262/#sec-makeprivatereference */
+/** https://tc39.es/ecma262/#sec-makeprivatereference */
 export function MakePrivateReference(baseValue, privateIdentifier) {
   // 1. Let privEnv be the running execution context's PrivateEnvironment.
   const privEnv = surroundingAgent.runningExecutionContext.PrivateEnvironment;
@@ -183,7 +184,7 @@ export function MakePrivateReference(baseValue, privateIdentifier) {
   });
 }
 
-/** http://tc39.es/ecma262/#sec-resolve-private-identifier */
+/** https://tc39.es/ecma262/#sec-resolve-private-identifier */
 export function ResolvePrivateIdentifier(privEnv, identifier) {
   // 1. Let names be privEnv.[[Names]].
   const names = privEnv.Names;

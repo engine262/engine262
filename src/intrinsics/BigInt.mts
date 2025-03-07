@@ -5,13 +5,13 @@ import {
   ToBigInt,
   ToIndex,
   ToPrimitive,
-  Z,
+  Z, R,
 } from '../abstract-ops/all.mjs';
 import { NumberToBigInt } from '../runtime-semantics/all.mjs';
 import { Q } from '../completion.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-bigint-constructor */
+/** https://tc39.es/ecma262/#sec-bigint-constructor */
 function BigIntConstructor([value], { NewTarget }) {
   // 1. If NewTarget is not undefined, throw a TypeError exception.
   if (NewTarget !== Value.undefined) {
@@ -28,7 +28,7 @@ function BigIntConstructor([value], { NewTarget }) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-bigint.asintn */
+/** https://tc39.es/ecma262/#sec-bigint.asintn */
 function BigInt_asIntN([bits = Value.undefined, bigint = Value.undefined]) {
   // 1. Set bits to ? ToIndex(bits).
   bits = Q(ToIndex(bits));
@@ -36,10 +36,10 @@ function BigInt_asIntN([bits = Value.undefined, bigint = Value.undefined]) {
   bigint = Q(ToBigInt(bigint));
   // 3. Let mod be the BigInt value that represents bigint modulo 2bits.
   // 4. If mod ≥ 2^bits - 1, return mod - 2^bits; otherwise, return mod.
-  return Z(BigInt.asIntN(bits, bigint.bigintValue()));
+  return Z(BigInt.asIntN(bits, R(bigint)));
 }
 
-/** http://tc39.es/ecma262/#sec-bigint.asuintn */
+/** https://tc39.es/ecma262/#sec-bigint.asuintn */
 function BigInt_asUintN([bits = Value.undefined, bigint = Value.undefined]) {
   // 1. Set bits to ? ToIndex(bits).
   bits = Q(ToIndex(bits));
@@ -47,7 +47,7 @@ function BigInt_asUintN([bits = Value.undefined, bigint = Value.undefined]) {
   bigint = Q(ToBigInt(bigint));
   // 3. Let mod be ℝ(bigint) modulo 2 ** bits.
   // 4. If mod ≥ 2 ** (bits - 1), return Z(mod - 2 ** bits); otherwise, return Z(mod).
-  return Z(BigInt.asUintN(bits, bigint.bigintValue()));
+  return Z(BigInt.asUintN(bits, R(bigint)));
 }
 
 export function bootstrapBigInt(realmRec) {

@@ -1,12 +1,12 @@
-// @ts-nocheck
 import { NormalCompletion } from '../completion.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
-/** http://tc39.es/ecma262/#sec-statement-semantics-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-statement-semantics-runtime-semantics-evaluation */
 //   HoistableDeclaration :
 //     GeneratorDeclaration
 //     AsyncFunctionDeclaration
 //     AsyncGeneratorDeclaration
-export function Evaluate_HoistableDeclaration(_HoistableDeclaration) {
+export function Evaluate_HoistableDeclaration(_HoistableDeclaration: ParseNode.HoistableDeclaration) {
   // 1. Return NormalCompletion(empty).
   return NormalCompletion(undefined);
 }

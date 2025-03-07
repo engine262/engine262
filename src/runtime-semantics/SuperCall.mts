@@ -12,11 +12,12 @@ import {
 import { ObjectValue, Value } from '../value.mjs';
 import { Q, X } from '../completion.mjs';
 import { FunctionEnvironmentRecord } from '../environment.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import { ArgumentListEvaluation } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation */
 // SuperCall : `super` Arguments
-export function* Evaluate_SuperCall({ Arguments }) {
+export function* Evaluate_SuperCall({ Arguments }: ParseNode.SuperCall) {
   // 1. Let newTarget be GetNewTarget().
   const newTarget = GetNewTarget();
   // 2. Assert: Type(newTarget) is Object.
@@ -45,7 +46,7 @@ export function* Evaluate_SuperCall({ Arguments }) {
   return result;
 }
 
-/** http://tc39.es/ecma262/#sec-getsuperconstructor */
+/** https://tc39.es/ecma262/#sec-getsuperconstructor */
 function GetSuperConstructor() {
   // 1. Let envRec be GetThisEnvironment().
   const envRec = GetThisEnvironment();

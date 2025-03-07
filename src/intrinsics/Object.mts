@@ -35,7 +35,7 @@ import { Q, X } from '../completion.mjs';
 import { AddEntriesFromIterable } from './Map.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-object-value */
+/** https://tc39.es/ecma262/#sec-object-value */
 function ObjectConstructor([value = Value.undefined], { NewTarget }) {
   // 1. If NewTarget is neither undefined nor the active function, then
   if (NewTarget !== Value.undefined && NewTarget !== surroundingAgent.activeFunctionObject) {
@@ -50,7 +50,7 @@ function ObjectConstructor([value = Value.undefined], { NewTarget }) {
   return X(ToObject(value));
 }
 
-/** http://tc39.es/ecma262/#sec-object.assign */
+/** https://tc39.es/ecma262/#sec-object.assign */
 function Object_assign([target = Value.undefined, ...sources]) {
   // 1. Let to be ? ToObject(target).
   const to = Q(ToObject(target));
@@ -85,7 +85,7 @@ function Object_assign([target = Value.undefined, ...sources]) {
   return to;
 }
 
-/** http://tc39.es/ecma262/#sec-object.create */
+/** https://tc39.es/ecma262/#sec-object.create */
 function Object_create([O = Value.undefined, Properties = Value.undefined]) {
   // 1. If Type(O) is neither Object nor Null, throw a TypeError exception.
   if (!(O instanceof ObjectValue) && !(O instanceof NullValue)) {
@@ -102,13 +102,13 @@ function Object_create([O = Value.undefined, Properties = Value.undefined]) {
   return obj;
 }
 
-/** http://tc39.es/ecma262/#sec-object.defineproperties */
+/** https://tc39.es/ecma262/#sec-object.defineproperties */
 function Object_defineProperties([O = Value.undefined, Properties = Value.undefined]) {
   // 1. Return ? ObjectDefineProperties(O, Properties).
   return Q(ObjectDefineProperties(O, Properties));
 }
 
-/** http://tc39.es/ecma262/#sec-objectdefineproperties ObjectDefineProperties */
+/** https://tc39.es/ecma262/#sec-objectdefineproperties ObjectDefineProperties */
 function ObjectDefineProperties(O, Properties) {
   // 1. If Type(O) is not Object, throw a TypeError exception.
   if (!(O instanceof ObjectValue)) {
@@ -147,7 +147,7 @@ function ObjectDefineProperties(O, Properties) {
   return O;
 }
 
-/** http://tc39.es/ecma262/#sec-object.defineproperty */
+/** https://tc39.es/ecma262/#sec-object.defineproperty */
 function Object_defineProperty([O = Value.undefined, P = Value.undefined, Attributes = Value.undefined]) {
   // 1. If Type(O) is not Object, throw a TypeError exception.
   if (!(O instanceof ObjectValue)) {
@@ -163,7 +163,7 @@ function Object_defineProperty([O = Value.undefined, P = Value.undefined, Attrib
   return O;
 }
 
-/** http://tc39.es/ecma262/#sec-object.entries */
+/** https://tc39.es/ecma262/#sec-object.entries */
 function Object_entries([O = Value.undefined]) {
   // 1. Let obj be ? ToObject(O).
   const obj = Q(ToObject(O));
@@ -173,7 +173,7 @@ function Object_entries([O = Value.undefined]) {
   return CreateArrayFromList(nameList);
 }
 
-/** http://tc39.es/ecma262/#sec-object.freeze */
+/** https://tc39.es/ecma262/#sec-object.freeze */
 function Object_freeze([O = Value.undefined]) {
   // 1. If Type(O) is not Object, return O.
   if (!(O instanceof ObjectValue)) {
@@ -189,7 +189,7 @@ function Object_freeze([O = Value.undefined]) {
   return O;
 }
 
-/** http://tc39.es/ecma262/#sec-object.fromentries */
+/** https://tc39.es/ecma262/#sec-object.fromentries */
 function Object_fromEntries([iterable = Value.undefined]) {
   // 1. Perform ? RequireObjectCoercible(iterable).
   Q(RequireObjectCoercible(iterable));
@@ -207,12 +207,12 @@ function Object_fromEntries([iterable = Value.undefined]) {
     return Value.undefined;
   };
   // 5. Let adder be ! CreateBuiltinFunction(closure, 2, "", « »).
-  const adder = X(CreateBuiltinFunction(closure, 2, new Value(''), []));
+  const adder = X(CreateBuiltinFunction(closure, 2, Value(''), []));
   // 6. Return ? AddEntriesFromIterable(obj, iterable, adder).
   return Q(AddEntriesFromIterable(obj, iterable, adder));
 }
 
-/** http://tc39.es/ecma262/#sec-object.getownpropertydescriptor */
+/** https://tc39.es/ecma262/#sec-object.getownpropertydescriptor */
 function Object_getOwnPropertyDescriptor([O = Value.undefined, P = Value.undefined]) {
   // 1. Let obj be ? ToObject(O).
   const obj = Q(ToObject(O));
@@ -224,7 +224,7 @@ function Object_getOwnPropertyDescriptor([O = Value.undefined, P = Value.undefin
   return FromPropertyDescriptor(desc);
 }
 
-/** http://tc39.es/ecma262/#sec-object.getownpropertydescriptors */
+/** https://tc39.es/ecma262/#sec-object.getownpropertydescriptors */
 function Object_getOwnPropertyDescriptors([O = Value.undefined]) {
   // 1. Let obj be ? ToObject(O).
   const obj = Q(ToObject(O));
@@ -247,7 +247,7 @@ function Object_getOwnPropertyDescriptors([O = Value.undefined]) {
   return descriptors;
 }
 
-/** http://tc39.es/ecma262/#sec-getownpropertykeys */
+/** https://tc39.es/ecma262/#sec-getownpropertykeys */
 function GetOwnPropertyKeys(O, type) {
   // 1. Let obj be ? ToObject(O).
   const obj = Q(ToObject(O));
@@ -266,19 +266,19 @@ function GetOwnPropertyKeys(O, type) {
   return CreateArrayFromList(nameList);
 }
 
-/** http://tc39.es/ecma262/#sec-object.getownpropertynames */
+/** https://tc39.es/ecma262/#sec-object.getownpropertynames */
 function Object_getOwnPropertyNames([O = Value.undefined]) {
   // 1. Return ? GetOwnPropertyKeys(O, string).
   return Q(GetOwnPropertyKeys(O, 'String'));
 }
 
-/** http://tc39.es/ecma262/#sec-object.getownpropertysymbols */
+/** https://tc39.es/ecma262/#sec-object.getownpropertysymbols */
 function Object_getOwnPropertySymbols([O = Value.undefined]) {
   // 1. Return ? GetOwnPropertyKeys(O, symbol).
   return Q(GetOwnPropertyKeys(O, 'Symbol'));
 }
 
-/** http://tc39.es/ecma262/#sec-object.getprototypeof */
+/** https://tc39.es/ecma262/#sec-object.getprototypeof */
 function Object_getPrototypeOf([O = Value.undefined]) {
   // 1. Let obj be ? ToObject(O).
   const obj = Q(ToObject(O));
@@ -286,7 +286,7 @@ function Object_getPrototypeOf([O = Value.undefined]) {
   return Q(obj.GetPrototypeOf());
 }
 
-/** http://tc39.es/ecma262/#sec-object.hasown */
+/** https://tc39.es/ecma262/#sec-object.hasown */
 function Object_hasOwn([O = Value.undefined, P = Value.undefined]) {
   // 1. Let obj be ? ToObject(O).
   const obj = Q(ToObject(O));
@@ -296,13 +296,13 @@ function Object_hasOwn([O = Value.undefined, P = Value.undefined]) {
   return HasOwnProperty(obj, key);
 }
 
-/** http://tc39.es/ecma262/#sec-object.is */
+/** https://tc39.es/ecma262/#sec-object.is */
 function Object_is([value1 = Value.undefined, value2 = Value.undefined]) {
   // 1. Return SameValue(value1, value2).
   return SameValue(value1, value2);
 }
 
-/** http://tc39.es/ecma262/#sec-object.isextensible */
+/** https://tc39.es/ecma262/#sec-object.isextensible */
 function Object_isExtensible([O = Value.undefined]) {
   // 1. If Type(O) is not Object, return false.
   if (!(O instanceof ObjectValue)) {
@@ -312,7 +312,7 @@ function Object_isExtensible([O = Value.undefined]) {
   return Q(IsExtensible(O));
 }
 
-/** http://tc39.es/ecma262/#sec-object.isfrozen */
+/** https://tc39.es/ecma262/#sec-object.isfrozen */
 function Object_isFrozen([O = Value.undefined]) {
   // 1. If Type(O) is not Object, return true.
   if (!(O instanceof ObjectValue)) {
@@ -322,7 +322,7 @@ function Object_isFrozen([O = Value.undefined]) {
   return Q(TestIntegrityLevel(O, 'frozen'));
 }
 
-/** http://tc39.es/ecma262/#sec-object.issealed */
+/** https://tc39.es/ecma262/#sec-object.issealed */
 function Object_isSealed([O = Value.undefined]) {
   // 1. If Type(O) is not Object, return true.
   if (!(O instanceof ObjectValue)) {
@@ -332,7 +332,7 @@ function Object_isSealed([O = Value.undefined]) {
   return Q(TestIntegrityLevel(O, 'sealed'));
 }
 
-/** http://tc39.es/ecma262/#sec-object.keys */
+/** https://tc39.es/ecma262/#sec-object.keys */
 function Object_keys([O = Value.undefined]) {
   // 1. Let obj be ? ToObject(O).
   const obj = Q(ToObject(O));
@@ -342,7 +342,7 @@ function Object_keys([O = Value.undefined]) {
   return CreateArrayFromList(nameList);
 }
 
-/** http://tc39.es/ecma262/#sec-object.preventextensions */
+/** https://tc39.es/ecma262/#sec-object.preventextensions */
 function Object_preventExtensions([O = Value.undefined]) {
   // 1. If Type(O) is not Object, return O.
   if (!(O instanceof ObjectValue)) {
@@ -358,7 +358,7 @@ function Object_preventExtensions([O = Value.undefined]) {
   return O;
 }
 
-/** http://tc39.es/ecma262/#sec-object.seal */
+/** https://tc39.es/ecma262/#sec-object.seal */
 function Object_seal([O = Value.undefined]) {
   // 1. If Type(O) is not Object, return O.
   if (!(O instanceof ObjectValue)) {
@@ -374,7 +374,7 @@ function Object_seal([O = Value.undefined]) {
   return O;
 }
 
-/** http://tc39.es/ecma262/#sec-object.setprototypeof */
+/** https://tc39.es/ecma262/#sec-object.setprototypeof */
 function Object_setPrototypeOf([O = Value.undefined, proto = Value.undefined]) {
   // 1. Set O to ? RequireObjectCoercible(O).
   O = Q(RequireObjectCoercible(O));
@@ -396,7 +396,7 @@ function Object_setPrototypeOf([O = Value.undefined, proto = Value.undefined]) {
   return O;
 }
 
-/** http://tc39.es/ecma262/#sec-object.values */
+/** https://tc39.es/ecma262/#sec-object.values */
 function Object_values([O = Value.undefined]) {
   // 1. Let obj be ? ToObject(O).
   const obj = Q(ToObject(O));

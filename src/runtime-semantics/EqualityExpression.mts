@@ -8,14 +8,15 @@ import { ReturnIfAbrupt, Q, X } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { Value } from '../value.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
-/** http://tc39.es/ecma262/#sec-equality-operators-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-equality-operators-runtime-semantics-evaluation */
 //   EqualityExpression :
 //     EqualityExpression `==` RelationalExpression
 //     EqualityExpression `!=` RelationalExpression
 //     EqualityExpression `===` RelationalExpression
 //     EqualityExpression `!==` RelationalExpression
-export function* Evaluate_EqualityExpression({ EqualityExpression, operator, RelationalExpression }) {
+export function* Evaluate_EqualityExpression({ EqualityExpression, operator, RelationalExpression }: ParseNode.EqualityExpression) {
   // 1. Let lref be the result of evaluating EqualityExpression.
   const lref = yield* Evaluate(EqualityExpression);
   // 2. Let lval be ? GetValue(lref).

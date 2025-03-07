@@ -29,7 +29,7 @@ import {
   ToObject,
   ToString,
   ToUint32,
-  F,
+  F, R,
 } from '../abstract-ops/all.mjs';
 import {
   NumberValue,
@@ -40,11 +40,11 @@ import {
 import { OutOfRange } from '../helpers.mjs';
 import { bootstrapConstructor } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-array-constructor */
+/** https://tc39.es/ecma262/#sec-array-constructor */
 function ArrayConstructor(argumentsList, { NewTarget }) {
   const numberOfArgs = argumentsList.length;
   if (numberOfArgs === 0) {
-    /** http://tc39.es/ecma262/#sec-array-constructor-array */
+    /** https://tc39.es/ecma262/#sec-array-constructor-array */
     Assert(numberOfArgs === 0);
     if (NewTarget instanceof UndefinedValue) {
       NewTarget = surroundingAgent.activeFunctionObject;
@@ -52,7 +52,7 @@ function ArrayConstructor(argumentsList, { NewTarget }) {
     const proto = GetPrototypeFromConstructor(NewTarget, '%Array.prototype%');
     return ArrayCreate(0, proto);
   } else if (numberOfArgs === 1) {
-    /** http://tc39.es/ecma262/#sec-array-len */
+    /** https://tc39.es/ecma262/#sec-array-len */
     const [len] = argumentsList;
     Assert(numberOfArgs === 1);
     if (NewTarget instanceof UndefinedValue) {
@@ -62,19 +62,19 @@ function ArrayConstructor(argumentsList, { NewTarget }) {
     const array = ArrayCreate(0, proto);
     let intLen;
     if (!(len instanceof NumberValue)) {
-      const defineStatus = X(CreateDataProperty(array, new Value('0'), len));
+      const defineStatus = X(CreateDataProperty(array, Value('0'), len));
       Assert(defineStatus === Value.true);
       intLen = F(1);
     } else {
       intLen = X(ToUint32(len));
-      if (intLen.numberValue() !== len.numberValue()) {
+      if (R(intLen) !== R(len)) {
         return surroundingAgent.Throw('RangeError', 'InvalidArrayLength', len);
       }
     }
-    Set(array, new Value('length'), intLen, Value.true);
+    Set(array, Value('length'), intLen, Value.true);
     return array;
   } else if (numberOfArgs >= 2) {
-    /** http://tc39.es/ecma262/#sec-array-items */
+    /** https://tc39.es/ecma262/#sec-array-items */
     const items = argumentsList;
     Assert(numberOfArgs >= 2);
     if (NewTarget instanceof UndefinedValue) {
@@ -90,14 +90,14 @@ function ArrayConstructor(argumentsList, { NewTarget }) {
       Assert(defineStatus === Value.true);
       k += 1;
     }
-    Assert(X(Get(array, new Value('length'))).numberValue() === numberOfArgs);
+    Assert(R(X(Get(array, Value('length')))) === numberOfArgs);
     return array;
   }
 
   throw new OutOfRange('ArrayConstructor', numberOfArgs);
 }
 
-/** http://tc39.es/ecma262/#sec-array.from */
+/** https://tc39.es/ecma262/#sec-array.from */
 function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
   const C = thisValue;
   let mapping;
@@ -127,7 +127,7 @@ function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg =
       const Pk = X(ToString(F(k)));
       const next = Q(IteratorStep(iteratorRecord));
       if (next === Value.false) {
-        Q(Set(A, new Value('length'), F(k), Value.true));
+        Q(Set(A, Value('length'), F(k), Value.true));
         return A;
       }
       const nextValue = Q(IteratorValue(next));
@@ -163,16 +163,16 @@ function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg =
     Q(CreateDataPropertyOrThrow(A, Pk, mappedValue));
     k += 1;
   }
-  Q(Set(A, new Value('length'), F(len), Value.true));
+  Q(Set(A, Value('length'), F(len), Value.true));
   return A;
 }
 
-/** http://tc39.es/ecma262/#sec-array.isarray */
+/** https://tc39.es/ecma262/#sec-array.isarray */
 function Array_isArray([arg = Value.undefined]) {
   return Q(IsArray(arg));
 }
 
-/** http://tc39.es/ecma262/#sec-array.of */
+/** https://tc39.es/ecma262/#sec-array.of */
 function Array_of(items, { thisValue }) {
   const len = items.length;
   // Let items be the List of arguments passed to this function.
@@ -190,11 +190,11 @@ function Array_of(items, { thisValue }) {
     Q(CreateDataPropertyOrThrow(A, Pk, kValue));
     k += 1;
   }
-  Q(Set(A, new Value('length'), F(len), Value.true));
+  Q(Set(A, Value('length'), F(len), Value.true));
   return A;
 }
 
-/** http://tc39.es/ecma262/#sec-get-array-@@species */
+/** https://tc39.es/ecma262/#sec-get-array-@@species */
 function Array_speciesGetter(args, { thisValue }) {
   return thisValue;
 }

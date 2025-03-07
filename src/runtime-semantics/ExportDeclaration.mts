@@ -6,13 +6,14 @@ import { GetValue } from '../abstract-ops/all.mjs';
 import { BoundNames, IsAnonymousFunctionDefinition } from '../static-semantics/all.mjs';
 import { NormalCompletion, Q } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import {
   NamedEvaluation,
   InitializeBoundName,
   BindingClassDeclarationEvaluation,
 } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-exports-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-exports-runtime-semantics-evaluation */
 //   ExportDeclaration :
 //     `export` ExportFromClause FromClause `;`
 //     `export` NamedExports `;`
@@ -21,7 +22,7 @@ import {
 //     `export` `default` HoistableDeclaration
 //     `export` `default` ClassDeclaration
 //     `export` `default` AssignmentExpression `;`
-export function* Evaluate_ExportDeclaration(ExportDeclaration) {
+export function* Evaluate_ExportDeclaration(ExportDeclaration: ParseNode.ExportDeclaration) {
   const {
     FromClause, NamedExports,
     VariableStatement,
@@ -61,7 +62,7 @@ export function* Evaluate_ExportDeclaration(ExportDeclaration) {
       // a. Let env be the running execution context's LexicalEnvironment.
       const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
       // b. Perform ? InitializeBoundName("*default*", value, env).
-      Q(InitializeBoundName(new Value('*default*'), value, env));
+      Q(InitializeBoundName(Value('*default*'), value, env));
     }
     // 3. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
@@ -71,7 +72,7 @@ export function* Evaluate_ExportDeclaration(ExportDeclaration) {
     // 1. If IsAnonymousFunctionDefinition(AssignmentExpression) is true, then
     if (IsAnonymousFunctionDefinition(AssignmentExpression)) {
       // a. Let value be NamedEvaluation of AssignmentExpression with argument "default".
-      value = yield* NamedEvaluation(AssignmentExpression, new Value('default'));
+      value = yield* NamedEvaluation(AssignmentExpression, Value('default'));
     } else { // 2. Else,
       // a. Let rhs be the result of evaluating AssignmentExpression.
       const rhs = yield* Evaluate(AssignmentExpression);
@@ -81,7 +82,7 @@ export function* Evaluate_ExportDeclaration(ExportDeclaration) {
     // 3. Let env be the running execution context's LexicalEnvironment.
     const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
     // 4. Perform ? InitializeBoundName("*default*", value, env).
-    Q(InitializeBoundName(new Value('*default*'), value, env));
+    Q(InitializeBoundName(Value('*default*'), value, env));
     // 5. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
   }

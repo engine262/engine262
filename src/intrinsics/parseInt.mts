@@ -4,7 +4,7 @@ import {
   CreateBuiltinFunction,
   ToInt32,
   ToString,
-  F,
+  F, R, R as MathematicalValue,
 } from '../abstract-ops/all.mjs';
 import { TrimString } from '../runtime-semantics/all.mjs';
 import { Q, X } from '../completion.mjs';
@@ -51,7 +51,7 @@ function searchNotRadixDigit(str, R) {
   return str.length;
 }
 
-/** http://tc39.es/ecma262/#sec-parseint-string-radix */
+/** https://tc39.es/ecma262/#sec-parseint-string-radix */
 function ParseInt([string = Value.undefined, radix = Value.undefined]) {
   const inputString = Q(ToString(string));
   let S = X(TrimString(inputString, 'start')).stringValue();
@@ -63,7 +63,7 @@ function ParseInt([string = Value.undefined, radix = Value.undefined]) {
     S = S.slice(1);
   }
 
-  let R = Q(ToInt32(radix)).numberValue();
+  let R = MathematicalValue(Q(ToInt32(radix)));
   let stripPrefix = true;
   if (R !== 0) {
     if (R < 2 || R > 36) {
@@ -97,5 +97,5 @@ function ParseInt([string = Value.undefined, radix = Value.undefined]) {
 }
 
 export function bootstrapParseInt(realmRec) {
-  realmRec.Intrinsics['%parseInt%'] = CreateBuiltinFunction(ParseInt, 2, new Value('parseInt'), [], realmRec);
+  realmRec.Intrinsics['%parseInt%'] = CreateBuiltinFunction(ParseInt, 2, Value('parseInt'), [], realmRec);
 }

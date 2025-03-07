@@ -13,7 +13,7 @@ import { ObjectValue, Value } from '../value.mjs';
 import { IfAbruptRejectPromise, X } from '../completion.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-/** http://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.next */
+/** https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.next */
 function AsyncFromSyncIteratorPrototype_next([value], { thisValue }) {
   // 1. Let O be the this value.
   const O = thisValue;
@@ -38,7 +38,7 @@ function AsyncFromSyncIteratorPrototype_next([value], { thisValue }) {
   return X(AsyncFromSyncIteratorContinuation(result, promiseCapability));
 }
 
-/** http://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.return */
+/** https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.return */
 function AsyncFromSyncIteratorPrototype_return([value], { thisValue }) {
   // 1. Let O be the this value.
   const O = thisValue;
@@ -49,7 +49,7 @@ function AsyncFromSyncIteratorPrototype_return([value], { thisValue }) {
   // 4. Let syncIterator be O.[[SyncIteratorRecord]].[[Iterator]].
   const syncIterator = O.SyncIteratorRecord.Iterator;
   // 5. Let return be GetMethod(syncIterator, "return").
-  const ret = GetMethod(syncIterator, new Value('return'));
+  const ret = GetMethod(syncIterator, Value('return'));
   // 6. IfAbruptRejectPromise(return, promiseCapability).
   IfAbruptRejectPromise(ret, promiseCapability);
   // 7. If return is undefined, then
@@ -85,7 +85,7 @@ function AsyncFromSyncIteratorPrototype_return([value], { thisValue }) {
   return X(AsyncFromSyncIteratorContinuation(result, promiseCapability));
 }
 
-/** http://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.throw */
+/** https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.throw */
 function AsyncFromSyncIteratorPrototype_throw([value], { thisValue }) {
   // 1. Let O be this value.
   const O = thisValue;
@@ -96,7 +96,7 @@ function AsyncFromSyncIteratorPrototype_throw([value], { thisValue }) {
   // 4. Let syncIterator be O.[[SyncIteratorRecord]].[[Iterator]].
   const syncIterator = O.SyncIteratorRecord.Iterator;
   // 5. Let throw be GetMethod(syncIterator, "throw").
-  const thr = GetMethod(syncIterator, new Value('throw'));
+  const thr = GetMethod(syncIterator, Value('throw'));
   // 6. IfAbruptRejectPromise(throw, promiseCapability).
   IfAbruptRejectPromise(thr, promiseCapability);
   // 7. If throw is undefined, then

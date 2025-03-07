@@ -10,8 +10,9 @@ import {
   ToPropertyKey,
 } from '../abstract-ops/all.mjs';
 import { Q, X } from '../completion.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 
-/** http://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-evaluation */
 // PropertyName :
 //   LiteralPropertyName
 //   ComputedPropertyName
@@ -21,12 +22,12 @@ import { Q, X } from '../completion.mjs';
 //   NumericLiteral
 // ComputedPropertyName :
 //   `[` AssignmentExpression `]`
-export function* Evaluate_PropertyName(PropertyName) {
+export function* Evaluate_PropertyName(PropertyName: ParseNode.PropertyNameLike | ParseNode.PrivateIdentifier) {
   switch (PropertyName.type) {
     case 'IdentifierName':
       return StringValue(PropertyName);
     case 'StringLiteral':
-      return new Value(PropertyName.value);
+      return Value(PropertyName.value);
     case 'NumericLiteral': {
       // 1. Let nbr be the NumericValue of NumericLiteral.
       const nbr = NumericValue(PropertyName);

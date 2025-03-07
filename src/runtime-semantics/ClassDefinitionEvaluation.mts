@@ -29,8 +29,8 @@ import {
   PrivateBoundIdentifiers,
 } from '../static-semantics/all.mjs';
 import {
-  NewDeclarativeEnvironment,
-  NewPrivateEnvironment,
+  DeclarativeEnvironmentRecord,
+  PrivateEnvironmentRecord,
 } from '../environment.mjs';
 import {
   Q, X,
@@ -39,6 +39,7 @@ import {
   EnsureCompletion,
 } from '../completion.mjs';
 import { OutOfRange } from '../helpers.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import {
   DefineMethod,
   MethodDefinitionEvaluation,
@@ -49,7 +50,7 @@ import {
   ClassStaticBlockDefinitionRecord,
 } from './all.mjs';
 
-function* ClassElementEvaluation(node, object, enumerable) {
+function* ClassElementEvaluation(node: ParseNode.MethodDefinition | ParseNode.GeneratorMethod | ParseNode.AsyncMethod | ParseNode.FieldDefinition | ParseNode.ClassStaticBlock, object, enumerable) {
   switch (node.type) {
     case 'MethodDefinition':
     case 'GeneratorMethod':
@@ -66,12 +67,12 @@ function* ClassElementEvaluation(node, object, enumerable) {
 }
 
 // ClassTail : ClassHeritage? `{` ClassBody? `}`
-export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
+export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, classBinding, className) {
   const { ClassHeritage, ClassBody } = ClassTail;
   // 1. Let env be the LexicalEnvironment of the running execution context.
   const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 2. Let classScope be NewDeclarativeEnvironment(env).
-  const classScope = NewDeclarativeEnvironment(env);
+  const classScope = new DeclarativeEnvironmentRecord(env);
   // 3. If classBinding is not undefined, then
   if (classBinding !== Value.undefined) {
     // a. Perform classScopeEnv.CreateImmutableBinding(classBinding, true).
@@ -80,7 +81,7 @@ export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
   // 4. Let outerPrivateEnvironment be the running execution context's PrivateEnvironment.
   const outerPrivateEnvironment = surroundingAgent.runningExecutionContext.PrivateEnvironment;
   // 5. Let classPrivateEnvironment be NewPrivateEnvironment(outerPrivateEnvironment).
-  const classPrivateEnvironment = NewPrivateEnvironment(outerPrivateEnvironment);
+  const classPrivateEnvironment = new PrivateEnvironmentRecord(outerPrivateEnvironment);
   // 6. If ClassBody is present, then
   if (ClassBody) {
     // a. For each String dn of the PrivateBoundIdentifiers of ClassBody, do
@@ -125,7 +126,7 @@ export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
       return surroundingAgent.Throw('TypeError', 'NotAConstructor', superclass);
     } else { // g. Else,
       // i. Let protoParent be ? Get(superclass, "prototype").
-      protoParent = Q(Get(superclass, new Value('prototype')));
+      protoParent = Q(Get(superclass, Value('prototype')));
       // ii. If Type(protoParent) is neither Object nor Null, throw a TypeError exception.
       if (!(protoParent instanceof ObjectValue) && !(protoParent instanceof NullValue)) {
         return surroundingAgent.Throw('TypeError', 'ObjectPrototypeType');
@@ -200,7 +201,7 @@ export function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
     F.ConstructorKind = 'derived';
   }
   // 18. Perform CreateMethodProperty(proto, "constructor", F).
-  X(CreateMethodProperty(proto, new Value('constructor'), F));
+  X(CreateMethodProperty(proto, Value('constructor'), F));
   // 19. If ClassBody is not present, let elements be a new empty List.
   let elements;
   if (!ClassBody) {

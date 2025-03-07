@@ -9,9 +9,10 @@ import {
 import { Value } from '../value.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { Q } from '../completion.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import { ArgumentListEvaluation } from './all.mjs';
 
-/** http://tc39.es/ecma262/#sec-evaluatenew */
+/** https://tc39.es/ecma262/#sec-evaluatenew */
 function* EvaluateNew(constructExpr, args) {
   // 1. Assert: constructExpr is either a NewExpression or a MemberExpression.
   // 2. Assert: arguments is either empty or an Arguments.
@@ -36,11 +37,11 @@ function* EvaluateNew(constructExpr, args) {
   return Q(Construct(constructor, argList));
 }
 
-/** http://tc39.es/ecma262/#sec-new-operator-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-new-operator-runtime-semantics-evaluation */
 //   NewExpression :
 //     `new` NewExpression
 //     `new` MemberExpression Arguments
-export function* Evaluate_NewExpression({ MemberExpression, Arguments }) {
+export function* Evaluate_NewExpression({ MemberExpression, Arguments }: ParseNode.NewExpression) {
   if (!Arguments) {
     // 1. Return ? EvaluateNew(NewExpression, empty).
     return Q(yield* EvaluateNew(MemberExpression, undefined));

@@ -18,28 +18,29 @@ import {
 } from '../completion.mjs';
 import { Evaluate } from '../evaluator.mjs';
 import { IsAnonymousFunctionDefinition } from '../static-semantics/all.mjs';
+import type { ParseNode } from '../parser/ParseNode.mjs';
 import {
   Evaluate_FunctionStatementList,
   FunctionDeclarationInstantiation,
   NamedEvaluation,
 } from './all.mjs';
 
-export function Evaluate_AnyFunctionBody({ FunctionStatementList }) {
+export function Evaluate_AnyFunctionBody({ FunctionStatementList }: ParseNode.FunctionBody) {
   return Evaluate_FunctionStatementList(FunctionStatementList);
 }
 
-/** http://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluatebody */
+/** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluatebody */
 // FunctionBody : FunctionStatementList
-export function* EvaluateBody_FunctionBody({ FunctionStatementList }, functionObject, argumentsList) {
+export function* EvaluateBody_FunctionBody({ FunctionStatementList }: ParseNode.FunctionBody, functionObject, argumentsList) {
   // 1. Perform ? FunctionDeclarationInstantiation(functionObject, argumentsList).
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
   // 2. Return the result of evaluating FunctionStatementList.
   return yield* Evaluate_FunctionStatementList(FunctionStatementList);
 }
 
-/** http://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-evaluation */
 // ExpressionBody : AssignmentExpression
-export function* Evaluate_ExpressionBody({ AssignmentExpression }) {
+export function* Evaluate_ExpressionBody({ AssignmentExpression }: ParseNode.ExpressionBody) {
   // 1. Let exprRef be the result of evaluating AssignmentExpression.
   const exprRef = yield* Evaluate(AssignmentExpression);
   // 2. Let exprValue be ? GetValue(exprRef).
@@ -48,18 +49,18 @@ export function* Evaluate_ExpressionBody({ AssignmentExpression }) {
   return new Completion({ Type: 'return', Value: exprValue, Target: undefined });
 }
 
-/** http://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-evaluatebody */
+/** https://tc39.es/ecma262/#sec-arrow-function-definitions-runtime-semantics-evaluatebody */
 // ConciseBody : ExpressionBody
-export function* EvaluateBody_ConciseBody({ ExpressionBody }, functionObject, argumentsList) {
+export function* EvaluateBody_ConciseBody({ ExpressionBody }: ParseNode.ConciseBody, functionObject, argumentsList) {
   // 1. Perform ? FunctionDeclarationInstantiation(functionObject, argumentsList).
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
   // 2. Return the result of evaluating ExpressionBody.
   return yield* Evaluate(ExpressionBody);
 }
 
-/** http://tc39.es/ecma262/#sec-async-arrow-function-definitions-EvaluateBody */
+/** https://tc39.es/ecma262/#sec-async-arrow-function-definitions-EvaluateBody */
 // AsyncConciseBody : ExpressionBody
-function* EvaluateBody_AsyncConciseBody({ ExpressionBody }, functionObject, argumentsList) {
+function* EvaluateBody_AsyncConciseBody({ ExpressionBody }: ParseNode.AsyncConciseBody, functionObject, argumentsList) {
   // 1. Let promiseCapability be ! NewPromiseCapability(%Promise%).
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
   // 2. Let declResult be FunctionDeclarationInstantiation(functionObject, argumentsList).
@@ -76,9 +77,9 @@ function* EvaluateBody_AsyncConciseBody({ ExpressionBody }, functionObject, argu
   return new Completion({ Type: 'return', Value: promiseCapability.Promise, Target: undefined });
 }
 
-/** http://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-evaluatebody */
+/** https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-evaluatebody */
 // GeneratorBody : FunctionBody
-export function* EvaluateBody_GeneratorBody(GeneratorBody, functionObject, argumentsList) {
+export function* EvaluateBody_GeneratorBody(GeneratorBody: ParseNode.GeneratorBody, functionObject, argumentsList) {
   // 1. Perform ? FunctionDeclarationInstantiation(functionObject, argumentsList).
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
   // 2. Let G be ? OrdinaryCreateFromConstructor(functionObject, "%GeneratorFunction.prototype.prototype%", « [[GeneratorState]], [[GeneratorContext]], [[GeneratorBrand]] »).
@@ -91,9 +92,9 @@ export function* EvaluateBody_GeneratorBody(GeneratorBody, functionObject, argum
   return new Completion({ Type: 'return', Value: G, Target: undefined });
 }
 
-/** http://tc39.es/ecma262/#sec-asyncgenerator-definitions-evaluatebody */
+/** https://tc39.es/ecma262/#sec-asyncgenerator-definitions-evaluatebody */
 // AsyncGeneratorBody : FunctionBody
-export function* EvaluateBody_AsyncGeneratorBody(FunctionBody, functionObject, argumentsList) {
+export function* EvaluateBody_AsyncGeneratorBody(FunctionBody: ParseNode.AsyncGeneratorBody, functionObject, argumentsList) {
   // 1. Perform ? FunctionDeclarationInstantiation(functionObject, argumentsList).
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
   // 2. Let generator be ? OrdinaryCreateFromConstructor(functionObject, "%AsyncGeneratorFunction.prototype.prototype%", « [[AsyncGeneratorState]], [[AsyncGeneratorContext]], [[AsyncGeneratorQueue]], [[GeneratorBrand]] »).
@@ -111,9 +112,9 @@ export function* EvaluateBody_AsyncGeneratorBody(FunctionBody, functionObject, a
   return new Completion({ Type: 'return', Value: generator, Target: undefined });
 }
 
-/** http://tc39.es/ecma262/#sec-async-function-definitions-EvaluateBody */
-// AsyncFunctionBody : FunctionBody
-export function* EvaluateBody_AsyncFunctionBody(FunctionBody, functionObject, argumentsList) {
+/** https://tc39.es/ecma262/#sec-async-function-definitions-EvaluateBody */
+// AsyncBody : FunctionBody
+export function* EvaluateBody_AsyncFunctionBody(FunctionBody: ParseNode.AsyncBody, functionObject, argumentsList) {
   // 1. Let promiseCapability be ! NewPromiseCapability(%Promise%).
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
   // 2. Let declResult be FunctionDeclarationInstantiation(functionObject, argumentsList).
@@ -132,7 +133,7 @@ export function* EvaluateBody_AsyncFunctionBody(FunctionBody, functionObject, ar
 
 // Initializer :
 //   `=` AssignmentExpression
-export function* EvaluateBody_AssignmentExpression(AssignmentExpression, functionObject, argumentsList) {
+export function* EvaluateBody_AssignmentExpression(AssignmentExpression: ParseNode.AssignmentExpression, functionObject, argumentsList) {
   // 1. Assert: argumentsList is empty.
   Assert(argumentsList.length === 0);
   // 2. Assert: functionObject.[[ClassFieldInitializerName]] is not empty.
@@ -152,9 +153,9 @@ export function* EvaluateBody_AssignmentExpression(AssignmentExpression, functio
   return new Completion({ Type: 'return', Value: value, Target: undefined });
 }
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-evaluateclassstaticblockbody */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-evaluateclassstaticblockbody */
 //    ClassStaticBlockBody : ClassStaticBlockStatementList
-function* EvaluateClassStaticBlockBody({ ClassStaticBlockStatementList }, functionObject) {
+function* EvaluateClassStaticBlockBody({ ClassStaticBlockStatementList }: ParseNode.ClassStaticBlockBody, functionObject) {
   // 1. Perform ? FunctionDeclarationInstantiation(functionObject, « »).
   Q(yield* FunctionDeclarationInstantiation(functionObject, []));
   // 2. Return the result of evaluating ClassStaticBlockStatementList.
@@ -165,10 +166,10 @@ function* EvaluateClassStaticBlockBody({ ClassStaticBlockStatementList }, functi
 // ConciseBody : ExpressionBody
 // GeneratorBody : FunctionBody
 // AsyncGeneratorBody : FunctionBody
-// AsyncFunctionBody : FunctionBody
+// AsyncBody : FunctionBody
 // AsyncConciseBody : ExpressionBody
 // ClassStaticBlockBody : ClassStaticBlockStatementList
-export function EvaluateBody(Body, functionObject, argumentsList) {
+export function EvaluateBody(Body: ParseNode.FunctionBodyLike | ParseNode.ConciseBodyLike | ParseNode.AsyncConciseBodyLike | ParseNode.ClassStaticBlockBody | ParseNode.AssignmentExpression, functionObject, argumentsList) {
   switch (Body.type) {
     case 'FunctionBody':
       return EvaluateBody_FunctionBody(Body, functionObject, argumentsList);
@@ -178,7 +179,7 @@ export function EvaluateBody(Body, functionObject, argumentsList) {
       return EvaluateBody_GeneratorBody(Body, functionObject, argumentsList);
     case 'AsyncGeneratorBody':
       return EvaluateBody_AsyncGeneratorBody(Body, functionObject, argumentsList);
-    case 'AsyncFunctionBody':
+    case 'AsyncBody':
       return EvaluateBody_AsyncFunctionBody(Body, functionObject, argumentsList);
     case 'AsyncConciseBody':
       return EvaluateBody_AsyncConciseBody(Body, functionObject, argumentsList);

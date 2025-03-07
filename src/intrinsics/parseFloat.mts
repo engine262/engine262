@@ -10,7 +10,7 @@ import {
   TrimString,
 } from '../runtime-semantics/all.mjs';
 
-/** http://tc39.es/ecma262/#sec-parsefloat-string */
+/** https://tc39.es/ecma262/#sec-parsefloat-string */
 function ParseFloat([string = Value.undefined]) {
   // 1. Let inputString be ? ToString(string).
   const inputString = Q(ToString(string));
@@ -74,5 +74,5 @@ function ParseFloat([string = Value.undefined]) {
 }
 
 export function bootstrapParseFloat(realmRec) {
-  realmRec.Intrinsics['%parseFloat%'] = CreateBuiltinFunction(ParseFloat, 1, new Value('parseFloat'), [], realmRec);
+  realmRec.Intrinsics['%parseFloat%'] = CreateBuiltinFunction(ParseFloat, 1, Value('parseFloat'), [], realmRec);
 }

@@ -1,13 +1,38 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mjs';
 import * as messages from '../messages.mjs';
 import { LanguageParser } from './LanguageParser.mjs';
-import { Token } from './tokens.mjs';
+import { isLineTerminator, type Locatable } from './Lexer.mjs';
+import type {
+  Location,
+  ParseNode,
+  ParseNodesByType,
+  Position,
+} from './ParseNode.mjs';
 import { Scope } from './Scope.mjs';
-import { isLineTerminator } from './Lexer.mjs';
+import { Token } from './tokens.mjs';
+
+export interface ParserOptions {
+  readonly source: string;
+  readonly specifier?: string;
+  readonly json?: boolean;
+}
 
 export class Parser extends LanguageParser {
-  constructor({ source, specifier, json = false }) {
+  protected readonly source: string;
+
+  protected readonly specifier?: string;
+
+  readonly earlyErrors: Set<SyntaxError>;
+
+  readonly state: {
+    hasTopLevelAwait: boolean;
+    strict: boolean;
+    json: boolean;
+  };
+
+  protected readonly scope = new Scope(this);
+
+  constructor({ source, specifier, json = false }: ParserOptions) {
     super();
     this.source = source;
     this.specifier = specifier;
@@ -17,22 +42,23 @@ export class Parser extends LanguageParser {
       strict: false,
       json,
     };
-    this.scope = new Scope(this);
   }
 
   isStrictMode() {
     return this.state.strict;
   }
 
-  feature(name) {
+  feature(name: string) {
     // eslint-disable-next-line @engine262/valid-feature
     return surroundingAgent.feature(name);
   }
 
-  startNode(inheritStart = undefined) {
+  startNode<T extends ParseNode>(inheritStart?: ParseNode.BaseParseNode): ParseNode.Unfinished<T>;
+
+  startNode(inheritStart?: ParseNode.BaseParseNode): ParseNode.Unfinished {
     this.peek();
-    const node = {
-      type: undefined,
+    const node: ParseNode.BaseParseNode = {
+      type: undefined!,
       location: {
         startIndex: inheritStart ? inheritStart.location.startIndex : this.peekToken.startIndex,
         endIndex: -1,
@@ -51,7 +77,7 @@ export class Parser extends LanguageParser {
     return node;
   }
 
-  markNodeStart(node) {
+  markNodeStart(node: ParseNode.Unfinished) {
     node.location.startIndex = this.peekToken.startIndex;
     node.location.start = {
       line: this.peekToken.line,
@@ -59,7 +85,9 @@ export class Parser extends LanguageParser {
     };
   }
 
-  finishNode(node, type) {
+  finishNode<T extends ParseNode.Unfinished, K extends T['type'] & ParseNode['type']>(node: T, type: K): ParseNodesByType[K];
+
+  finishNode(node: ParseNode.Unfinished, type: ParseNode['type']) {
     node.type = type;
     node.location.endIndex = this.currentToken.endIndex;
     node.location.end.line = this.currentToken.line;
@@ -67,9 +95,9 @@ export class Parser extends LanguageParser {
     return node;
   }
 
-  createSyntaxError(context = this.peek(), template, templateArgs) {
-    if (template === 'UnexpectedToken' && context.type === Token.EOS) {
-      template = 'UnexpectedEOS';
+  createSyntaxError<K extends keyof typeof messages>(context: number | Locatable = this.peek(), template: K, templateArgs: Parameters<typeof messages[K]>): SyntaxError {
+    if (template === 'UnexpectedToken' && typeof context !== 'number' && 'type' in context && context.type === Token.EOS) {
+      return this.createSyntaxError(context, 'UnexpectedEOS', []);
     }
 
     let startIndex;
@@ -86,7 +114,7 @@ export class Parser extends LanguageParser {
       }
       startIndex = context;
       endIndex = context + 1;
-    } else if (context.type === Token.EOS) {
+    } else if ('type' in context && context.type === Token.EOS) {
       line = this.line;
       startIndex = context.startIndex;
       while (isLineTerminator(this.source[startIndex - 1])) {
@@ -95,7 +123,7 @@ export class Parser extends LanguageParser {
       }
       endIndex = startIndex + 1;
     } else {
-      if (context.location) {
+      if ('location' in context && context.location) {
         context = context.location;
       }
       ({
@@ -104,8 +132,8 @@ export class Parser extends LanguageParser {
         start: {
           line,
           column,
-        } = context,
-      } = context);
+        } = context as Position, // NOTE: unsound cast
+      } = context as Location); // NOTE: unsound cast
     }
 
     /*
@@ -139,25 +167,26 @@ export class Parser extends LanguageParser {
       column = startIndex - lineStart + 1;
     }
 
-    const e = new SyntaxError(messages[template](...templateArgs));
+    const message = messages[template] as (...args: Parameters<typeof messages[K]>) => string;
+    const e = new SyntaxError(message(...templateArgs));
     e.decoration = `\
 ${this.specifier ? `${this.specifier}:${line}:${column}\n` : ''}${this.source.slice(lineStart, lineEnd)}
 ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex, 1))}`;
     return e;
   }
 
-  raiseEarly(template, context, ...templateArgs) {
+  raiseEarly<K extends keyof typeof messages>(template: K, context?: number | Locatable, ...templateArgs: Parameters<typeof messages[K]>) {
     const e = this.createSyntaxError(context, template, templateArgs);
     this.earlyErrors.add(e);
     return e;
   }
 
-  raise(template, context, ...templateArgs) {
+  raise<K extends keyof typeof messages>(template: K, context?: number | Locatable, ...templateArgs: Parameters<typeof messages[K]>): never {
     const e = this.createSyntaxError(context, template, templateArgs);
     throw e;
   }
 
-  unexpected(...args) {
+  unexpected(...args: [(number | Locatable)?, ...Parameters<typeof messages['UnexpectedToken']>]) {
     return this.raise('UnexpectedToken', ...args);
   }
 }

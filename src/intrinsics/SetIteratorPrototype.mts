@@ -12,9 +12,9 @@ import { Q, X } from '../completion.mjs';
 import { Value } from '../value.mjs';
 import { bootstrapPrototype } from './bootstrap.mjs';
 
-const kSetIteratorPrototype = new Value('%SetIteratorPrototype%');
+const kSetIteratorPrototype = Value('%SetIteratorPrototype%');
 
-/** http://tc39.es/ecma262/#sec-createsetiterator */
+/** https://tc39.es/ecma262/#sec-createsetiterator */
 export function CreateSetIterator(set, kind) {
   // 1. Assert: kind is key+value or value.
   Assert(kind === 'key+value' || kind === 'value');
@@ -57,7 +57,7 @@ export function CreateSetIterator(set, kind) {
   return X(CreateIteratorFromClosure(closure, kSetIteratorPrototype, surroundingAgent.intrinsic('%SetIteratorPrototype%')));
 }
 
-/** http://tc39.es/ecma262/#sec-%setiteratorprototype%.next */
+/** https://tc39.es/ecma262/#sec-%setiteratorprototype%.next */
 function SetIteratorPrototype_next(args, { thisValue }) {
   // 1. Return ? GeneratorResume(this value, empty, "%SetIteratorPrototype%").
   return Q(GeneratorResume(thisValue, undefined, kSetIteratorPrototype));
