@@ -1,6 +1,9 @@
 // @ts-nocheck
-import { UndefinedValue, SymbolValue, Value } from '../value.mts';
-import { Assert } from './all.mts';
+import { GlobalSymbolRegistry } from '../intrinsics/Symbol.mjs';
+import {
+  UndefinedValue, SymbolValue, Value, JSStringValue,
+} from '../value.mts';
+import { Assert, SameValue } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-symboldescriptivestring */
 export function SymbolDescriptiveString(sym) {
@@ -10,4 +13,19 @@ export function SymbolDescriptiveString(sym) {
     desc = Value('');
   }
   return Value(`Symbol(${desc.stringValue()})`);
+}
+
+/** https://tc39.es/ecma262/#sec-keyforsymbol */
+export function KeyForSymbol(sym: SymbolValue): JSStringValue | UndefinedValue {
+  // 1. For each element e of the GlobalSymbolRegistry List, do
+  for (const e of GlobalSymbolRegistry) {
+    // a. If SameValue(e.[[Symbol]], sym) is true, return e.[[Key]].
+    if (SameValue(e.Symbol, sym) === Value.true) {
+      return e.Key;
+    }
+  }
+
+  // 2. Assert: The GlobalSymbolRegistry List does not currently contain an entry for sym.
+  // 3. Return undefined.
+  return Value.undefined;
 }
