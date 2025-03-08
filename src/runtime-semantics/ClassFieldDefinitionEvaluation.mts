@@ -1,32 +1,34 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import { X, ReturnIfAbrupt } from '../completion.mts';
 import { MakeMethod, OrdinaryFunctionCreate } from '../abstract-ops/all.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import type { Evaluator } from '../evaluator.mts';
 import { Evaluate_PropertyName } from './PropertyName.mts';
+import type {
+  ECMAScriptFunctionObject, ObjectValue, PlainCompletion, PrivateName, PropertyKeyValue,
+} from '#self';
 
 export class ClassFieldDefinitionRecord {
-  Name;
+  Name: PropertyKeyValue | PrivateName;
 
-  Initializer;
+  Initializer: ECMAScriptFunctionObject | undefined;
 
-  constructor(init) {
+  constructor(init: ClassFieldDefinitionRecord) {
     this.Name = init.Name;
     this.Initializer = init.Initializer;
   }
 }
 
-export function* ClassFieldDefinitionEvaluation(FieldDefinition: ParseNode.FieldDefinition, homeObject) {
+export function* ClassFieldDefinitionEvaluation(FieldDefinition: ParseNode.FieldDefinition, homeObject: ObjectValue): Evaluator<PlainCompletion<ClassFieldDefinitionRecord>> {
   const { ClassElementName, Initializer } = FieldDefinition;
   // 1. Let name be the result of evaluating ClassElementName.
-  const name = yield* Evaluate_PropertyName(ClassElementName);
   // 2. ReturnIfAbrupt(name).
-  ReturnIfAbrupt(name);
+  const name = ReturnIfAbrupt(yield* Evaluate_PropertyName(ClassElementName));
   // 3. If Initializer is present, then
   let initializer;
   if (Initializer) {
     // a. Let formalParameterList be an instance of the production FormalParameters : [empty].
-    const formalParameterList = [];
+    const formalParameterList: readonly [] = [];
     // b. Let scope be the LexicalEnvironment of the running execution context.
     const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
     // c. Let privateScope be the running execution context's PrivateEnvironment.

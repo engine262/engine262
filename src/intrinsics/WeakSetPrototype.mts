@@ -1,21 +1,23 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import {
   SameValue,
   RequireInternalSlot,
   CanBeHeldWeakly,
+  Realm,
 } from '../abstract-ops/all.mts';
 import {
-  ObjectValue,
   Value,
+  type Arguments,
+  type FunctionCallContext,
 } from '../value.mts';
-import { Q } from '../completion.mts';
+import { Q, type ExpressionCompletion } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
+import type { WeakSetObject } from './WeakSet.mts';
 
 /** https://tc39.es/ecma262/#sec-weakset.prototype.add */
-function WeakSetProto_add([value = Value.undefined], { thisValue }) {
+function WeakSetProto_add([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let S be this value.
-  const S = thisValue;
+  const S = thisValue as WeakSetObject;
   // 2. Perform ? RequireInternalSlot(S, [[WeakSetData]]).
   Q(RequireInternalSlot(S, 'WeakSetData'));
   // 3. If CanBeHeldWeakly(value) is false, throw a TypeError exception.
@@ -31,16 +33,16 @@ function WeakSetProto_add([value = Value.undefined], { thisValue }) {
       return S;
     }
   }
-  // 5. Append value as the last element of entries.
+  // 6. Append value as the last element of entries.
   entries.push(value);
   // 6. Return S.
   return S;
 }
 
 /** https://tc39.es/ecma262/#sec-weakset.prototype.delete */
-function WeakSetProto_delete([value = Value.undefined], { thisValue }) {
+function WeakSetProto_delete([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let S be the this value.`
-  const S = thisValue;
+  const S = thisValue as WeakSetObject;
   // 2. Perform ? RequireInternalSlot(S, [[WeakSetData]]).
   Q(RequireInternalSlot(S, 'WeakSetData'));
   // 3. If CanBeHeldWeakly(value) is false, return false.
@@ -54,6 +56,7 @@ function WeakSetProto_delete([value = Value.undefined], { thisValue }) {
     // i. If e is not empty and SameValue(e, value) is true, then
     if (e !== undefined && SameValue(e, value) === Value.true) {
       // i. Replace the element of entries whose value is e with an element whose value is empty.
+      Q(surroundingAgent.debugger_tryTouchDuringPreview(S));
       entries[i] = undefined;
       // ii. Return true.
       return Value.true;
@@ -64,9 +67,9 @@ function WeakSetProto_delete([value = Value.undefined], { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-weakset.prototype.has */
-function WeakSetProto_has([value = Value.undefined], { thisValue }) {
+function WeakSetProto_has([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let S be the this value.
-  const S = thisValue;
+  const S = thisValue as WeakSetObject;
   // 2. Perform ? RequireInternalSlot(S, [[WeakSetData]]).
   Q(RequireInternalSlot(S, 'WeakSetData'));
   // 3. If CanBeHeldWeakly(value) is false, return false.
@@ -85,7 +88,7 @@ function WeakSetProto_has([value = Value.undefined], { thisValue }) {
   return Value.false;
 }
 
-export function bootstrapWeakSetPrototype(realmRec) {
+export function bootstrapWeakSetPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['add', WeakSetProto_add, 1],
     ['delete', WeakSetProto_delete, 1],

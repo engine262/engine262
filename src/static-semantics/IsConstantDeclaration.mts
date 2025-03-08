@@ -1,6 +1,5 @@
 import type { ParseNode } from '../parser/ParseNode.mts';
 
-export function IsConstantDeclaration(node: 'const' | ParseNode.LexicalDeclaration | ParseNode.ForDeclaration) {
-  // TODO(ts): node === 'const' looks like a typo?
-  return node === 'const' || node.LetOrConst === 'const';
+export function IsConstantDeclaration(node: ParseNode | ParseNode.LetOrConst) {
+  return node === 'const' || (typeof node === 'object' && 'LetOrConst' in node && node.LetOrConst === 'const');
 }

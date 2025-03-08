@@ -1,6 +1,7 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
-import { Value, Descriptor, PrivateName } from '../value.mts';
+import {
+  Value, Descriptor, PrivateName, UndefinedValue, type PropertyKeyValue, ObjectValue, BooleanValue,
+} from '../value.mts';
 import {
   OrdinaryObjectCreate,
   OrdinaryFunctionCreate,
@@ -8,28 +9,31 @@ import {
   SetFunctionName,
   MakeMethod,
   sourceTextMatchedBy,
+  type FunctionObject,
 } from '../abstract-ops/all.mts';
 import {
   Q, X,
   ReturnIfAbrupt,
+  type PlainCompletion,
 } from '../completion.mts';
 import { OutOfRange } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import type { Evaluator } from '../evaluator.mts';
 import { DefineMethod, Evaluate_PropertyName } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-privateelement-specification-type */
 export class PrivateElementRecord {
-  Key;
+  readonly Key: PrivateName;
 
-  Kind;
+  readonly Kind: 'method' | 'accessor' | 'field';
 
-  Value;
+  Value?: Value;
 
-  Get;
+  readonly Get?: FunctionObject | UndefinedValue;
 
-  Set;
+  readonly Set?: FunctionObject | UndefinedValue;
 
-  constructor(init) {
+  constructor(init: PrivateElementRecord) {
     this.Key = init.Key;
     this.Kind = init.Kind;
     this.Value = init.Value;
@@ -39,7 +43,7 @@ export class PrivateElementRecord {
 }
 
 /** https://tc39.es/ecma262/#sec-definemethodproperty */
-function DefineMethodProperty(key, homeObject, closure, enumerable) {
+function DefineMethodProperty(key: PropertyKeyValue | PrivateName, homeObject: ObjectValue, closure: FunctionObject, enumerable: BooleanValue): PlainCompletion<PrivateElementRecord | undefined> {
   // 1. If key is a Private Name, then
   if (key instanceof PrivateName) {
     // a. Return PrivateElement { [[Key]]: key, [[Kind]]: method, [[Value]]: closure }.
@@ -67,7 +71,7 @@ function DefineMethodProperty(key, homeObject, closure, enumerable) {
 //   ClassElementName `(` UniqueFormalParameters `)` `{` FunctionBody `}`
 //   `get` ClassElementName `(` `)` `{` FunctionBody `}`
 //   `set` ClassElementName `(` PropertySetParameterList `)` `{` FunctionBody `}`
-function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNode.MethodDefinition, object, enumerable) {
+function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNode.MethodDefinition, object: ObjectValue, enumerable: BooleanValue): Evaluator<PlainCompletion<PrivateElementRecord | void>> {
   switch (true) {
     case !!MethodDefinition.UniqueFormalParameters: {
       // 1. Let methodDef be ? DefineMethod of MethodDefinition with argument object.
@@ -80,9 +84,8 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNod
     case !!MethodDefinition.PropertySetParameterList: {
       const { ClassElementName, PropertySetParameterList, FunctionBody } = MethodDefinition;
       // 1. Let propKey be the result of evaluating ClassElementName.
-      const propKey = yield* Evaluate_PropertyName(ClassElementName);
       // 2. ReturnIfAbrupt(propKey).
-      ReturnIfAbrupt(propKey);
+      const propKey = ReturnIfAbrupt(yield* Evaluate_PropertyName(ClassElementName));
       // 3. Let scope be the running execution context's LexicalEnvironment.
       const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
       // 4. Let privateScope be the running execution context's PrivateEnvironment.
@@ -120,15 +123,14 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNod
     case !MethodDefinition.UniqueFormalParameters && !MethodDefinition.PropertySetParameterList: {
       const { ClassElementName, FunctionBody } = MethodDefinition;
       // 1. Let propKey be the result of evaluating ClassElementName.
-      const propKey = yield* Evaluate_PropertyName(ClassElementName);
       // 2. ReturnIfAbrupt(propKey).
-      ReturnIfAbrupt(propKey);
+      const propKey = ReturnIfAbrupt(yield* Evaluate_PropertyName(ClassElementName));
       // 3. Let scope be the running execution context's LexicalEnvironment.
       const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
       // 4. Let privateScope be the running execution context's PrivateEnvironment.
       const privateScope = surroundingAgent.runningExecutionContext.PrivateEnvironment;
       // 5. Let formalParameterList be an instance of the production FormalParameters : [empty].
-      const formalParameterList = [];
+      const formalParameterList: ParseNode.FormalParameters = [];
       // 6. Let sourceText be the source text matched by MethodDefinition.
       const sourceText = sourceTextMatchedBy(MethodDefinition);
       // 7. Let closure be OrdinaryFunctionCreate(%Function.prototype%, sourceText, formalParameterList, FunctionBody, non-lexical-this, scope, privateScope).
@@ -166,12 +168,11 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNod
 /** https://tc39.es/ecma262/#sec-async-function-definitions-MethodDefinitionEvaluation */
 //   AsyncMethod :
 //     `async` ClassElementName `(` UniqueFormalParameters `)` `{` AsyncBody `}`
-function* MethodDefinitionEvaluation_AsyncMethod(AsyncMethod: ParseNode.AsyncMethod, object, enumerable) {
+function* MethodDefinitionEvaluation_AsyncMethod(AsyncMethod: ParseNode.AsyncMethod, object: ObjectValue, enumerable: BooleanValue): Evaluator<PlainCompletion<PrivateElementRecord | void>> {
   const { ClassElementName, UniqueFormalParameters, AsyncBody } = AsyncMethod;
   // 1. Let propKey be the result of evaluating ClassElementName.
-  const propKey = yield* Evaluate_PropertyName(ClassElementName);
   // 2. ReturnIfAbrupt(propKey).
-  ReturnIfAbrupt(propKey);
+  const propKey = ReturnIfAbrupt(yield* Evaluate_PropertyName(ClassElementName));
   // 3. Let scope be the LexicalEnvironment of the running execution context.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 4. Let privateScope be the running execution context's PrivateEnvironment.
@@ -191,12 +192,12 @@ function* MethodDefinitionEvaluation_AsyncMethod(AsyncMethod: ParseNode.AsyncMet
 /** https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation */
 //   GeneratorMethod :
 //     `*` ClassElementName `(` UniqueFormalParameters `)` `{` GeneratorBody `}`
-function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod: ParseNode.GeneratorMethod, object, enumerable) {
+function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod: ParseNode.GeneratorMethod, object: ObjectValue, enumerable: BooleanValue): Evaluator<PlainCompletion<PrivateElementRecord | undefined>> {
   const { ClassElementName, UniqueFormalParameters, GeneratorBody } = GeneratorMethod;
   // 1. Let propKey be the result of evaluating ClassElementName.
-  const propKey = yield* Evaluate_PropertyName(ClassElementName);
+  let propKey = yield* Evaluate_PropertyName(ClassElementName);
   // 2. ReturnIfAbrupt(propKey).
-  ReturnIfAbrupt(propKey);
+  propKey = ReturnIfAbrupt(propKey);
   // 3. Let scope be the LexicalEnvironment of the running execution context.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 4. Let privateScope be the running execution context's PrivateEnvironment.
@@ -225,20 +226,20 @@ function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod: ParseNode.
 /** https://tc39.es/ecma262/#sec-asyncgenerator-definitions-propertydefinitionevaluation */
 //   AsyncGeneratorMethod :
 //     `async` `*` PropertyName `(` UniqueFormalParameters `)` `{` AsyncGeneratorBody `}`
-function* MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod: ParseNode.AsyncGeneratorMethod, object, enumerable) {
+function* MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod: ParseNode.AsyncGeneratorMethod, object: ObjectValue, enumerable: BooleanValue): Evaluator<PlainCompletion<PrivateElementRecord | undefined>> {
   const { ClassElementName, UniqueFormalParameters, AsyncGeneratorBody } = AsyncGeneratorMethod;
   // 1. Let propKey be the result of evaluating ClassElementName.
-  const propKey = yield* Evaluate_PropertyName(ClassElementName);
+  let propKey = yield* Evaluate_PropertyName(ClassElementName);
   // 2. ReturnIfAbrupt(propKey).
-  ReturnIfAbrupt(propKey);
+  propKey = ReturnIfAbrupt(propKey);
   // 3. Let scope be the LexicalEnvironment of the running execution context.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 4. Let privateScope be the running execution context's PrivateEnvironment.
-  const privateScope = surroundingAgent.runningExecutionContext.PrivateEnvironment;
+  const privateEnv = surroundingAgent.runningExecutionContext.PrivateEnvironment;
   // 5. Let sourceText be the source text matched by AsyncGeneratorMethod.
   const sourceText = sourceTextMatchedBy(AsyncGeneratorMethod);
   // 6. Let closure be ! OrdinaryFunctionCreate(%AsyncGeneratorFunction.prototype%, sourceText, UniqueFormalParameters, AsyncGeneratorBody, non-lexical-this, scope, privateScope).
-  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), sourceText, UniqueFormalParameters, AsyncGeneratorBody, 'non-lexical-this', scope, privateScope));
+  const closure = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), sourceText, UniqueFormalParameters, AsyncGeneratorBody, 'non-lexical-this', scope, privateEnv));
   // 7. Perform ! MakeMethod(closure, object).
   X(MakeMethod(closure, object));
   // 9. Perform ! SetFunctionName(closure, propKey).
@@ -256,7 +257,7 @@ function* MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod: 
   return Q(DefineMethodProperty(propKey, object, closure, enumerable));
 }
 
-export function MethodDefinitionEvaluation(node: ParseNode.MethodDefinitionLike, object, enumerable) {
+export function MethodDefinitionEvaluation(node: ParseNode.MethodDefinitionLike, object: ObjectValue, enumerable: BooleanValue) {
   switch (node.type) {
     case 'MethodDefinition':
       return MethodDefinitionEvaluation_MethodDefinition(node, object, enumerable);

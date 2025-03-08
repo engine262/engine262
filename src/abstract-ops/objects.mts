@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   Descriptor,
   ObjectValue,
@@ -6,10 +5,13 @@ import {
   Value,
   BooleanValue,
   type PropertyKeyValue,
+  type DescriptorInit,
 } from '../value.mts';
 import {
-  NormalCompletion, Q, ThrowCompletion, X,
+  Q, X,
+  type ExpressionCompletion,
 } from '../completion.mts';
+import type { Mutable } from '../helpers.mts';
 import {
   Assert,
   Call,
@@ -25,12 +27,15 @@ import {
   SameValue,
   MakeBasicObject,
   isArrayIndex,
+  type FunctionObject,
 } from './all.mts';
 
 export interface OrdinaryObject extends ObjectValue {
   Prototype: ObjectValue | NullValue;
   Extensible: BooleanValue;
 }
+// TODO: ban other direct extension from ObjectValue in the linter
+export type ExoticObject = ObjectValue;
 // 9.1.1.1 OrdinaryGetPrototypeOf
 export function OrdinaryGetPrototypeOf(O: OrdinaryObject) {
   return O.Prototype;
@@ -51,14 +56,14 @@ export function OrdinarySetPrototypeOf(O: OrdinaryObject, V: ObjectValue | NullV
   let p = V;
   let done = false;
   while (done === false) {
-    if (p === Value.null) {
+    if (p instanceof NullValue) {
       done = true;
     } else if (SameValue(p, O) === Value.true) {
       return Value.false;
     } else if (p.GetPrototypeOf !== ObjectValue.prototype.GetPrototypeOf) {
       done = true;
     } else {
-      p = p.Prototype;
+      p = (p as OrdinaryObject).Prototype;
     }
   }
   O.Prototype = V;
@@ -84,9 +89,9 @@ export function OrdinaryGetOwnProperty(O: OrdinaryObject, P: PropertyKeyValue) {
     return Value.undefined;
   }
 
-  const D = Descriptor({});
+  const D: Mutable<DescriptorInit> = {};
 
-  const x = O.properties.get(P);
+  const x = O.properties.get(P)!;
 
   if (IsDataDescriptor(x)) {
     D.Value = x.Value;
@@ -98,23 +103,23 @@ export function OrdinaryGetOwnProperty(O: OrdinaryObject, P: PropertyKeyValue) {
   D.Enumerable = x.Enumerable;
   D.Configurable = x.Configurable;
 
-  return D;
+  return Descriptor(D);
 }
 
 // 9.1.6.1 OrdinaryDefineOwnProperty
-export function OrdinaryDefineOwnProperty(O: OrdinaryObject, P: PropertyKeyValue, Desc) {
+export function OrdinaryDefineOwnProperty(O: OrdinaryObject, P: PropertyKeyValue, Desc: Descriptor): ExpressionCompletion<BooleanValue> {
   const current = Q(O.GetOwnProperty(P));
   const extensible = Q(IsExtensible(O));
   return ValidateAndApplyPropertyDescriptor(O, P, extensible, Desc, current);
 }
 
 /** https://tc39.es/ecma262/#sec-iscompatiblepropertydescriptor */
-export function IsCompatiblePropertyDescriptor(Extensible, Desc, Current) {
+export function IsCompatiblePropertyDescriptor(Extensible: BooleanValue, Desc: Descriptor, Current: UndefinedValue | Descriptor) {
   return ValidateAndApplyPropertyDescriptor(Value.undefined, Value.undefined, Extensible, Desc, Current);
 }
 
 // 9.1.6.3 ValidateAndApplyPropertyDescriptor
-export function ValidateAndApplyPropertyDescriptor(O: OrdinaryObject, P: PropertyKeyValue, extensible: BooleanValue, Desc, current) {
+export function ValidateAndApplyPropertyDescriptor(O: OrdinaryObject | UndefinedValue, P: PropertyKeyValue | UndefinedValue, extensible: BooleanValue, Desc: Descriptor, current: UndefinedValue | Descriptor) {
   Assert(O === Value.undefined || IsPropertyKey(P));
 
   if (current === Value.undefined) {
@@ -126,7 +131,7 @@ export function ValidateAndApplyPropertyDescriptor(O: OrdinaryObject, P: Propert
 
     if (IsGenericDescriptor(Desc) || IsDataDescriptor(Desc)) {
       if (!(O instanceof UndefinedValue)) {
-        O.properties.set(P, Descriptor({
+        O.properties.set(P as PropertyKeyValue, Descriptor({
           Value: Desc.Value === undefined ? Value.undefined : Desc.Value,
           Writable: Desc.Writable === undefined ? Value.false : Desc.Writable,
           Enumerable: Desc.Enumerable === undefined ? Value.false : Desc.Enumerable,
@@ -136,7 +141,7 @@ export function ValidateAndApplyPropertyDescriptor(O: OrdinaryObject, P: Propert
     } else {
       Assert(IsAccessorDescriptor(Desc));
       if (!(O instanceof UndefinedValue)) {
-        O.properties.set(P, Descriptor({
+        O.properties.set(P as PropertyKeyValue, Descriptor({
           Get: Desc.Get === undefined ? Value.undefined : Desc.Get,
           Set: Desc.Set === undefined ? Value.undefined : Desc.Set,
           Enumerable: Desc.Enumerable === undefined ? Value.false : Desc.Enumerable,
@@ -152,12 +157,12 @@ export function ValidateAndApplyPropertyDescriptor(O: OrdinaryObject, P: Propert
     return Value.true;
   }
 
-  if (current.Configurable === Value.false) {
+  if ((current as Descriptor).Configurable === Value.false) {
     if (Desc.Configurable !== undefined && Desc.Configurable === Value.true) {
       return Value.false;
     }
 
-    if (Desc.Enumerable !== undefined && Desc.Enumerable !== current.Enumerable) {
+    if (Desc.Enumerable !== undefined && Desc.Enumerable !== (current as Descriptor).Enumerable) {
       return Value.false;
     }
   }
@@ -165,24 +170,26 @@ export function ValidateAndApplyPropertyDescriptor(O: OrdinaryObject, P: Propert
   if (IsGenericDescriptor(Desc)) {
     // No further validation is required.
   } else if (IsDataDescriptor(current) !== IsDataDescriptor(Desc)) {
-    if (current.Configurable === Value.false) {
+    if ((current as Descriptor).Configurable === Value.false) {
       return Value.false;
     }
     if (IsDataDescriptor(current)) {
       if (!(O instanceof UndefinedValue)) {
-        const entry = O.properties.get(P);
+        const entry = { ...O.properties.get(P as PropertyKeyValue)! };
         entry.Value = undefined;
         entry.Writable = undefined;
         entry.Get = Value.undefined;
         entry.Set = Value.undefined;
+        O.properties.set(P as PropertyKeyValue, Descriptor(entry));
       }
     } else {
       if (!(O instanceof UndefinedValue)) {
-        const entry = O.properties.get(P);
+        const entry = { ...O.properties.get(P as PropertyKeyValue) };
         entry.Get = undefined;
         entry.Set = undefined;
         entry.Value = Value.undefined;
         entry.Writable = Value.false;
+        O.properties.set(P as PropertyKeyValue, Descriptor(entry));
       }
     }
   } else if (IsDataDescriptor(current) && IsDataDescriptor(Desc)) {
@@ -209,7 +216,7 @@ export function ValidateAndApplyPropertyDescriptor(O: OrdinaryObject, P: Propert
   }
 
   if (!(O instanceof UndefinedValue)) {
-    const target = O.properties.get(P);
+    const target = { ...O.properties.get(P as PropertyKeyValue) };
     if (Desc.Value !== undefined) {
       target.Value = Desc.Value;
     }
@@ -228,13 +235,14 @@ export function ValidateAndApplyPropertyDescriptor(O: OrdinaryObject, P: Propert
     if (Desc.Configurable !== undefined) {
       target.Configurable = Desc.Configurable;
     }
+    O.properties.set(P as PropertyKeyValue, Descriptor(target));
   }
 
   return Value.true;
 }
 
 // 9.1.7.1 OrdinaryHasProperty
-export function OrdinaryHasProperty(O: OrdinaryObject, P: PropertyKeyValue): BooleanValue {
+export function OrdinaryHasProperty(O: OrdinaryObject, P: PropertyKeyValue): ExpressionCompletion<BooleanValue> {
   Assert(IsPropertyKey(P));
 
   const hasOwn = Q(O.GetOwnProperty(P));
@@ -249,7 +257,7 @@ export function OrdinaryHasProperty(O: OrdinaryObject, P: PropertyKeyValue): Boo
 }
 
 // 9.1.8.1
-export function OrdinaryGet(O: OrdinaryObject, P: PropertyKeyValue, Receiver): NormalCompletion<Value> | ThrowCompletion {
+export function OrdinaryGet(O: OrdinaryObject, P: PropertyKeyValue, Receiver: Value): ExpressionCompletion {
   Assert(IsPropertyKey(P));
 
   const desc = Q(O.GetOwnProperty(P));
@@ -272,14 +280,14 @@ export function OrdinaryGet(O: OrdinaryObject, P: PropertyKeyValue, Receiver): N
 }
 
 // 9.1.9.1 OrdinarySet
-export function OrdinarySet(O: OrdinaryObject, P: PropertyKeyValue, V, Receiver) {
+export function OrdinarySet(O: OrdinaryObject, P: PropertyKeyValue, V: Value, Receiver: Value) {
   Assert(IsPropertyKey(P));
   const ownDesc = Q(O.GetOwnProperty(P));
   return OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc);
 }
 
 // 9.1.9.2 OrdinarySetWithOwnDescriptor
-export function OrdinarySetWithOwnDescriptor(O: OrdinaryObject, P: PropertyKeyValue, V, Receiver, ownDesc): NormalCompletion<BooleanValue> | ThrowCompletion {
+export function OrdinarySetWithOwnDescriptor(O: OrdinaryObject, P: PropertyKeyValue, V: Value, Receiver: Value, ownDesc: Descriptor | UndefinedValue): ExpressionCompletion<BooleanValue> {
   Assert(IsPropertyKey(P));
 
   if (ownDesc instanceof UndefinedValue) {
@@ -327,7 +335,7 @@ export function OrdinarySetWithOwnDescriptor(O: OrdinaryObject, P: PropertyKeyVa
 }
 
 // 9.1.10.1 OrdinaryDelete
-export function OrdinaryDelete(O: OrdinaryObject, P: PropertyKeyValue) {
+export function OrdinaryDelete(O: OrdinaryObject, P: PropertyKeyValue): ExpressionCompletion<BooleanValue> {
   Assert(IsPropertyKey(P));
   const desc = Q(O.GetOwnProperty(P));
   if (desc instanceof UndefinedValue) {
@@ -342,7 +350,7 @@ export function OrdinaryDelete(O: OrdinaryObject, P: PropertyKeyValue) {
 
 // 9.1.11.1
 export function OrdinaryOwnPropertyKeys(O: OrdinaryObject) {
-  const keys = [];
+  const keys: PropertyKeyValue[] = [];
 
   // For each own property key P of O that is an array index, in ascending numeric index order, do
   //   Add P as the last element of keys.
@@ -351,7 +359,7 @@ export function OrdinaryOwnPropertyKeys(O: OrdinaryObject) {
       keys.push(P);
     }
   }
-  keys.sort((a, b) => Number.parseInt(a.stringValue(), 10) - Number.parseInt(b.stringValue(), 10));
+  keys.sort((a, b) => Number.parseInt((a as JSStringValue).stringValue(), 10) - Number.parseInt((b as JSStringValue).stringValue(), 10));
 
   // For each own property key P of O such that Type(P) is String and
   // P is not an array index, in ascending chronological order of property creation, do
@@ -375,9 +383,9 @@ export function OrdinaryOwnPropertyKeys(O: OrdinaryObject) {
 }
 
 /** https://tc39.es/ecma262/#sec-ordinaryobjectcreate */
-export function OrdinaryObjectCreate(proto: ObjectValue | NullValue, additionalInternalSlotsList?: readonly string[]) {
+export function OrdinaryObjectCreate<const T extends string>(proto: ObjectValue | NullValue, additionalInternalSlotsList?: readonly T[]) {
   // 1. Let internalSlotsList be « [[Prototype]], [[Extensible]] ».
-  const internalSlotsList = ['Prototype', 'Extensible'];
+  const internalSlotsList: ['Prototype', 'Extensible', ...T[]] = ['Prototype', 'Extensible'];
   // 2. If additionalInternalSlotsList is present, append each of its elements to internalSlotsList.
   if (additionalInternalSlotsList !== undefined) {
     internalSlotsList.push(...additionalInternalSlotsList);
@@ -391,21 +399,21 @@ export function OrdinaryObjectCreate(proto: ObjectValue | NullValue, additionalI
 }
 
 // 9.1.13 OrdinaryCreateFromConstructor
-export function OrdinaryCreateFromConstructor(constructor, intrinsicDefaultProto, internalSlotsList) {
+export function OrdinaryCreateFromConstructor<const T extends string>(constructor: FunctionObject, intrinsicDefaultProto: string, internalSlotsList?: readonly T[]): ExpressionCompletion<ObjectValue> {
   // Assert: intrinsicDefaultProto is a String value that is this specification's name of an intrinsic object.
   const proto = Q(GetPrototypeFromConstructor(constructor, intrinsicDefaultProto));
   return OrdinaryObjectCreate(proto, internalSlotsList);
 }
 
 // 9.1.14 GetPrototypeFromConstructor
-export function GetPrototypeFromConstructor(constructor, intrinsicDefaultProto) {
+export function GetPrototypeFromConstructor(constructor: FunctionObject, intrinsicDefaultProto: string): ExpressionCompletion<ObjectValue> {
   // Assert: intrinsicDefaultProto is a String value that
   // is this specification's name of an intrinsic object.
   Assert(IsCallable(constructor) === Value.true);
   let proto = Q(Get(constructor, Value('prototype')));
   if (!(proto instanceof ObjectValue)) {
     const realm = Q(GetFunctionRealm(constructor));
-    proto = realm.Intrinsics[intrinsicDefaultProto];
+    proto = realm.Intrinsics[intrinsicDefaultProto] as ObjectValue;
   }
   return proto;
 }

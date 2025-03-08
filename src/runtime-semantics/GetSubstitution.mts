@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   Assert,
   Get,
@@ -8,10 +7,10 @@ import {
 import {
   ObjectValue, UndefinedValue, JSStringValue, Value,
 } from '../value.mts';
-import { Q } from '../completion.mts';
+import { Q, type ExpressionCompletion } from '../completion.mts';
 
 /** https://tc39.es/ecma262/#sec-getsubstitution */
-export function GetSubstitution(matched: JSStringValue, str: JSStringValue, position: number, captures: readonly (JSStringValue | UndefinedValue)[], namedCaptures, replacement: JSStringValue) {
+export function GetSubstitution(matched: JSStringValue, str: JSStringValue, position: number, captures: readonly (JSStringValue | UndefinedValue)[], namedCaptures: UndefinedValue | ObjectValue, replacement: JSStringValue): ExpressionCompletion<JSStringValue> {
   // 1. Assert: Type(matched) is String.
   Assert(matched instanceof JSStringValue);
   // 2. Let matchLength be the number of code units in matched.
@@ -66,7 +65,7 @@ export function GetSubstitution(matched: JSStringValue, str: JSStringValue, posi
         const n = Number(nextChar);
         if (n <= m) {
           const capture = captures[n - 1];
-          if (capture !== Value.undefined) {
+          if (!(capture instanceof UndefinedValue)) {
             result += capture.stringValue();
           }
         } else {
@@ -78,7 +77,7 @@ export function GetSubstitution(matched: JSStringValue, str: JSStringValue, posi
         const n = Number(nextChar + nextNextChar);
         if (n !== 0 && n <= m) {
           const capture = captures[n - 1];
-          if (capture !== Value.undefined) {
+          if (!(capture instanceof UndefinedValue)) {
             result += capture.stringValue();
           }
         } else {

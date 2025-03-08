@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import {
   ObjectValue, Value, ReferenceRecord,
@@ -13,10 +12,11 @@ import {
 } from '../abstract-ops/all.mts';
 import { Q, Completion, AbruptCompletion } from '../completion.mts';
 import { EnvironmentRecord } from '../environment.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 import { ArgumentListEvaluation } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-evaluatecall */
-export function* EvaluateCall(func, ref, args, tailPosition: boolean) {
+export function* EvaluateCall(func: Value, ref: ReferenceRecord | Value, args: ParseNode | ParseNode.Arguments, tailPosition: boolean) {
   // 1. If Type(ref) is Reference, then
   let thisValue;
   if (ref instanceof ReferenceRecord) {

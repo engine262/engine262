@@ -1,7 +1,12 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import {
   Value, NullValue, ObjectValue, PrivateName,
+  BooleanValue,
+  JSStringValue,
+  type Arguments,
+  type FunctionCallContext,
+  UndefinedValue,
+  type PropertyKeyValue,
 } from '../value.mts';
 import { Evaluate } from '../evaluator.mts';
 import {
@@ -21,6 +26,8 @@ import {
   PrivateMethodOrAccessorAdd,
   InitializeInstanceElements,
   DefineField,
+  type ECMAScriptFunctionObject,
+  type FunctionObject,
 } from '../abstract-ops/all.mts';
 import {
   IsStatic,
@@ -36,9 +43,8 @@ import {
   Q, X,
   AbruptCompletion,
   Completion,
-  EnsureCompletion,
 } from '../completion.mts';
-import { OutOfRange } from '../helpers.mts';
+import { __ts_cast__, OutOfRange, type Mutable } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   DefineMethod,
@@ -50,7 +56,7 @@ import {
   ClassStaticBlockDefinitionRecord,
 } from './all.mts';
 
-function* ClassElementEvaluation(node: ParseNode.MethodDefinition | ParseNode.GeneratorMethod | ParseNode.AsyncMethod | ParseNode.FieldDefinition | ParseNode.ClassStaticBlock, object, enumerable) {
+function* ClassElementEvaluation(node: ParseNode.MethodDefinition | ParseNode.GeneratorMethod | ParseNode.AsyncMethod | ParseNode.AsyncGeneratorMethod | ParseNode.FieldDefinition | ParseNode.ClassStaticBlock, object: ObjectValue, enumerable: BooleanValue) {
   switch (node.type) {
     case 'MethodDefinition':
     case 'GeneratorMethod':
@@ -67,14 +73,14 @@ function* ClassElementEvaluation(node: ParseNode.MethodDefinition | ParseNode.Ge
 }
 
 // ClassTail : ClassHeritage? `{` ClassBody? `}`
-export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, classBinding, className) {
+export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, classBinding: JSStringValue | UndefinedValue, className: PropertyKeyValue | PrivateName) {
   const { ClassHeritage, ClassBody } = ClassTail;
   // 1. Let env be the LexicalEnvironment of the running execution context.
   const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 2. Let classScope be NewDeclarativeEnvironment(env).
   const classScope = new DeclarativeEnvironmentRecord(env);
   // 3. If classBinding is not undefined, then
-  if (classBinding !== Value.undefined) {
+  if (!(classBinding instanceof UndefinedValue)) {
     // a. Perform classScopeEnv.CreateImmutableBinding(classBinding, true).
     classScope.CreateImmutableBinding(classBinding, Value.true);
   }
@@ -99,7 +105,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
     }
   }
   let protoParent;
-  let constructorParent;
+  let constructorParent: ObjectValue;
   // 7. If ClassHeritage is not present, then
   if (!ClassHeritage) {
     // a. Let protoParent be %Object.prototype%.
@@ -116,7 +122,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
     // d. Let superclass be ? GetValue(superclassRef).
     const superclass = Q(GetValue(superclassRef));
     // e. If superclass is null, then
-    if (superclass === Value.null) {
+    if (superclass instanceof NullValue) {
       // i. Let protoParent be null.
       protoParent = Value.null;
       // ii. Let constructorParent be %Function.prototype%.
@@ -126,13 +132,13 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
       return surroundingAgent.Throw('TypeError', 'NotAConstructor', superclass);
     } else { // g. Else,
       // i. Let protoParent be ? Get(superclass, "prototype").
-      protoParent = Q(Get(superclass, Value('prototype')));
+      protoParent = Q(Get(superclass as ObjectValue, Value('prototype')));
       // ii. If Type(protoParent) is neither Object nor Null, throw a TypeError exception.
       if (!(protoParent instanceof ObjectValue) && !(protoParent instanceof NullValue)) {
         return surroundingAgent.Throw('TypeError', 'ObjectPrototypeType');
       }
       // iii. Let constructorParent be superclass.
-      constructorParent = superclass;
+      constructorParent = superclass as ObjectValue;
     }
   }
   // 9. Let proto be OrdinaryObjectCreate(protoParent).
@@ -152,14 +158,14 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
   // 14. If constructor is empty, then
   if (constructor === undefined) {
     // a. Let defaultConstructor be a new Abstract Closure with no parameters that captures nothing and performs the following steps when called:
-    const defaultConstructor = (args, { NewTarget }) => {
+    const defaultConstructor = (args: Arguments, { NewTarget }: FunctionCallContext) => {
       // i. Let args be the List of arguments that was passed to this function by [[Call]] or [[Construct]].
       // ii. If NewTarget is undefined, throw a TypeError exception.
-      if (NewTarget === Value.undefined) {
+      if (NewTarget instanceof UndefinedValue) {
         return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', surroundingAgent.activeFunctionObject);
       }
       // iii. Let F be the active function object.
-      const F = surroundingAgent.activeFunctionObject; // eslint-disable-line no-shadow
+      const F = surroundingAgent.activeFunctionObject as ECMAScriptFunctionObject; // eslint-disable-line no-shadow
       let result;
       // iv. If F.[[ConstructorKind]] is derived, then
       if (F.ConstructorKind === 'derived') {
@@ -173,7 +179,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
           return surroundingAgent.Throw('TypeError', 'NotAConstructor', func);
         }
         // 4. Let result be ? Construct(func, args, NewTarget).
-        result = Q(Construct(func, args, NewTarget));
+        result = Q(Construct(func as FunctionObject, args, NewTarget));
       } else { // v. Else,
         // 1. NOTE: This branch behaves similarly to `constructor() {}`.
         // 2. Let result be ? OrdinaryCreateFromConstructor(NewTarget, "%Object.prototype%").
@@ -194,6 +200,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
     // d. Perform SetFunctionName(F, className).
     SetFunctionName(F, className);
   }
+  __ts_cast__<Mutable<ECMAScriptFunctionObject>>(F);
   // 16. Perform MakeConstructor(F, false, proto).
   MakeConstructor(F, Value.false, proto);
   // 17. If ClassHeritage is present, set F.[[ConstructorKind]] to derived.
@@ -203,30 +210,30 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
   // 18. Perform CreateMethodProperty(proto, "constructor", F).
   X(CreateMethodProperty(proto, Value('constructor'), F));
   // 19. If ClassBody is not present, let elements be a new empty List.
-  let elements;
+  let elements: ParseNode.ClassElement[];
   if (!ClassBody) {
     elements = [];
   } else { // 20. Else, let elements be NonConstructorElements of ClassBody.
     elements = NonConstructorElements(ClassBody);
   }
   // 21. Let instancePrivateMethods be a new empty List.
-  const instancePrivateMethods = [];
+  const instancePrivateMethods: never[] = [];
   // 22. Let staticPrivateMethods be a new empty List.
-  const staticPrivateMethods = [];
+  const staticPrivateMethods: never[] = [];
   // 23. Let instanceFields be a new empty List.
-  const instanceFields = [];
+  const instanceFields: ClassFieldDefinitionRecord[] = [];
   // 24. Let staticElements be a new empty List.
-  const staticElements = [];
+  const staticElements: (ClassFieldDefinitionRecord | ClassStaticBlockDefinitionRecord)[] = [];
   // 25. For each ClassElement e of elements, do
   for (const e of elements) {
     let field;
     // a. If IsStatic of e is false, then
     if (IsStatic(e) === false) {
       // i. Let field be ClassElementEvaluation of e with arguments proto and false.
-      field = yield* ClassElementEvaluation(e, proto, Value.false);
+      field = (yield* ClassElementEvaluation(e, proto, Value.false))!;
     } else { // b. Else,
       // i. Let field be ClassElementEvaluation of e with arguments F and false.
-      field = yield* ClassElementEvaluation(e, F, Value.false);
+      field = (yield* ClassElementEvaluation(e, F, Value.false))!;
     }
     // c. If field is an abrupt completion, then
     if (field instanceof AbruptCompletion) {
@@ -235,16 +242,16 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
       // ii. Set the running execution context's PrivateEnvironment to outerPrivateEnvironment.
       surroundingAgent.runningExecutionContext.PrivateEnvironment = outerPrivateEnvironment;
       // iii. Return Completion(field).
-      return Completion(field);
+      return field;
     }
     // d. Set field to field.[[Value]].
-    field = EnsureCompletion(field).Value;
+    Q(field);
     // e. If field is a PrivateElement, then
     if (field instanceof PrivateElementRecord) {
       // i. Assert: field.[[Kind]] is either method or accessor.
       Assert(field.Kind === 'method' || field.Kind === 'accessor');
       // ii. If IsStatic of e is false, let container be instancePrivateMethods.
-      let container;
+      let container: PrivateElementRecord[];
       if (IsStatic(e) === false) {
         container = instancePrivateMethods;
       } else { // iii. Else, let container be staticPrivateMethods.
@@ -295,7 +302,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
   // 26. Set the running execution context's LexicalEnvironment to env.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = env;
   // 27. If classBinding is not undefined, then
-  if (classBinding !== Value.undefined) {
+  if (!(classBinding instanceof UndefinedValue)) {
     // a. Perform classScope.InitializeBinding(classBinding, F).
     classScope.InitializeBinding(classBinding, F);
   }

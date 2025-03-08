@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import {
   Assert,
@@ -12,14 +11,21 @@ import {
   NewPromiseCapability,
   PerformPromiseThen,
   PromiseResolve,
+  Realm,
   SpeciesConstructor,
+  type FunctionObject,
 } from '../abstract-ops/all.mts';
-import { ObjectValue, Value } from '../value.mts';
-import { Q, ThrowCompletion, X } from '../completion.mts';
+import {
+  ObjectValue, Value, type Arguments, type FunctionCallContext,
+} from '../value.mts';
+import {
+  Q, ThrowCompletion, X, type ExpressionCompletion,
+} from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
+import type { PromiseObject } from './Promise.mts';
 
 /** https://tc39.es/ecma262/#sec-promise.prototype.catch */
-function PromiseProto_catch([onRejected = Value.undefined], { thisValue }) {
+function PromiseProto_catch([onRejected = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let promise be the this value.
   const promise = thisValue;
   // 2. Return ? Invoke(promise, "then", « undefined, onRejected »).
@@ -27,7 +33,7 @@ function PromiseProto_catch([onRejected = Value.undefined], { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-promise.prototype.finally */
-function PromiseProto_finally([onFinally = Value.undefined], { thisValue }) {
+function PromiseProto_finally([onFinally = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let promise be the this value.
   const promise = thisValue;
   // 2. If Type(promise) is not Object, throw a TypeError exception.
@@ -35,7 +41,7 @@ function PromiseProto_finally([onFinally = Value.undefined], { thisValue }) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Promise', promise);
   }
   // 3. Let C be ? SpeciesConstructor(promise, %Promise%).
-  const C = SpeciesConstructor(promise, surroundingAgent.intrinsic('%Promise%'));
+  const C = Q(SpeciesConstructor(promise, surroundingAgent.intrinsic('%Promise%') as FunctionObject));
   // 4. Assert: IsConstructor(C) is true.
   Assert(IsConstructor(C) === Value.true);
   let thenFinally;
@@ -48,7 +54,7 @@ function PromiseProto_finally([onFinally = Value.undefined], { thisValue }) {
     catchFinally = onFinally;
   } else { // 6. Else,
     // a. Let thenFinallyClosure be a new Abstract Closure with parameters (value) that captures onFinally and C and performs the following steps when called:
-    const thenFinallyClosure = ([value = Value.undefined]) => {
+    const thenFinallyClosure = ([value = Value.undefined]: Arguments): ExpressionCompletion => {
       // i. Let result be ? Call(onFinally, undefined).
       const result = Q(Call(onFinally, Value.undefined));
       // ii. Let promise be ? PromiseResolve(C, result).
@@ -64,7 +70,7 @@ function PromiseProto_finally([onFinally = Value.undefined], { thisValue }) {
     // b. Let thenFinally be ! CreateBuiltinFunction(thenFinallyClosure, 1, "", « »).
     thenFinally = X(CreateBuiltinFunction(thenFinallyClosure, 1, Value(''), []));
     // c. Let catchFinallyClosure be a new Abstract Closure with parameters (reason) that captures onFinally and C and performs the following steps when called:
-    const catchFinallyClosure = ([reason = Value.undefined]) => {
+    const catchFinallyClosure = ([reason = Value.undefined]: Arguments): ExpressionCompletion => {
       // i. Let result be ? Call(onFinally, undefined).
       const result = Q(Call(onFinally, Value.undefined));
       // ii. Let promise be ? PromiseResolve(C, result).
@@ -85,22 +91,23 @@ function PromiseProto_finally([onFinally = Value.undefined], { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-promise.prototype.then */
-function PromiseProto_then([onFulfilled = Value.undefined, onRejected = Value.undefined], { thisValue }) {
+function PromiseProto_then([onFulfilled = Value.undefined, onRejected = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Let promise be the this value.
-  const promise = thisValue;
+  const promise = thisValue as PromiseObject;
   // 2. If IsPromise(promise) is false, throw a TypeError exception.
   if (IsPromise(promise) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Promise', promise);
   }
   // 3. Let C be ? SpeciesConstructor(promise, %Promise%).
-  const C = Q(SpeciesConstructor(promise, surroundingAgent.intrinsic('%Promise%')));
+  const C = Q(SpeciesConstructor(promise, surroundingAgent.intrinsic('%Promise%') as FunctionObject));
   // 4. Let resultCapability be ? NewPromiseCapability(C).
   const resultCapability = Q(NewPromiseCapability(C));
   // 5. Return PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability).
+  Q(surroundingAgent.debugger_tryTouchDuringPreview(promise));
   return PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability);
 }
 
-export function bootstrapPromisePrototype(realmRec) {
+export function bootstrapPromisePrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['catch', PromiseProto_catch, 1],
     ['finally', PromiseProto_finally, 1],

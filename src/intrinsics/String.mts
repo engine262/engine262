@@ -1,8 +1,14 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import {
+  BooleanValue,
+  JSStringValue,
+  NullValue,
+  ObjectValue,
   SymbolValue,
+  UndefinedValue,
   Value,
+  type Arguments,
+  type FunctionCallContext,
 } from '../value.mts';
 import {
   Assert,
@@ -17,13 +23,20 @@ import {
   ToString,
   ToUint16,
   F, R,
+  type ExoticObject,
+  Realm,
 } from '../abstract-ops/all.mts';
 import { UTF16EncodeCodePoint } from '../static-semantics/all.mts';
-import { Q, X } from '../completion.mts';
+import { Q, X, type ExpressionCompletion } from '../completion.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 
+export interface StringObject extends ExoticObject {
+  readonly StringData: JSStringValue;
+  Prototype: ObjectValue | NullValue;
+  Extensible: BooleanValue;
+}
 /** https://tc39.es/ecma262/#sec-string-constructor-string-value */
-function StringConstructor([value], { NewTarget }) {
+function StringConstructor([value]: Arguments, { NewTarget }: FunctionCallContext): ExpressionCompletion {
   let s;
   if (value === undefined) {
     s = Value('');
@@ -33,14 +46,14 @@ function StringConstructor([value], { NewTarget }) {
     }
     s = Q(ToString(value));
   }
-  if (NewTarget === Value.undefined) {
+  if (NewTarget instanceof UndefinedValue) {
     return s;
   }
   return X(StringCreate(s, Q(GetPrototypeFromConstructor(NewTarget, '%String.prototype%'))));
 }
 
 /** https://tc39.es/ecma262/#sec-string.fromcharcode */
-function String_fromCharCode(codeUnits) {
+function String_fromCharCode(codeUnits: Arguments): ExpressionCompletion {
   const length = codeUnits.length;
   const elements = [];
   let nextIndex = 0;
@@ -55,7 +68,7 @@ function String_fromCharCode(codeUnits) {
 }
 
 /** https://tc39.es/ecma262/#sec-string.fromcodepoint */
-function String_fromCodePoint(codePoints) {
+function String_fromCodePoint(codePoints: Arguments) {
   // 1. Let result be the empty String.
   let result = '';
   // 2. For each element next of codePoints, do
@@ -80,7 +93,7 @@ function String_fromCodePoint(codePoints) {
 }
 
 /** https://tc39.es/ecma262/#sec-string.raw */
-function String_raw([template = Value.undefined, ...substitutions]) {
+function String_raw([template = Value.undefined, ...substitutions]: Arguments): ExpressionCompletion {
   const numberOfSubstitutions = substitutions.length;
   const cooked = Q(ToObject(template));
   const raw = Q(ToObject(Q(Get(cooked, Value('raw')))));
@@ -110,7 +123,7 @@ function String_raw([template = Value.undefined, ...substitutions]) {
   }
 }
 
-export function bootstrapString(realmRec) {
+export function bootstrapString(realmRec: Realm) {
   const stringConstructor = bootstrapConstructor(realmRec, StringConstructor, 'String', 1, realmRec.Intrinsics['%String.prototype%'], [
     ['fromCharCode', String_fromCharCode, 1],
     ['fromCodePoint', String_fromCodePoint, 1],

@@ -1,19 +1,34 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import {
   IsDetachedBuffer,
   OrdinaryCreateFromConstructor,
   ToIndex,
   RequireInternalSlot,
+  type OrdinaryObject,
+  type FunctionObject,
+  Realm,
+  type ArrayBufferObject,
 } from '../abstract-ops/all.mts';
-import { Value } from '../value.mts';
+import {
+  UndefinedValue, Value, type Arguments, type FunctionCallContext,
+} from '../value.mts';
 import { Q } from '../completion.mts';
+import { __ts_cast__, type Mutable } from '../helpers.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 
+export interface DataViewObject extends OrdinaryObject {
+  readonly DataView: string;
+  readonly ViewedArrayBuffer: Value;
+  readonly ByteLength: number;
+  readonly ByteOffset: number;
+}
+export function isDataViewObject(V: Value): V is DataViewObject {
+  return 'DataView' in V;
+}
 /** https://tc39.es/ecma262/#sec-dataview-constructor */
-function DataViewConstructor([buffer = Value.undefined, byteOffset = Value.undefined, byteLength = Value.undefined], { NewTarget }) {
+function DataViewConstructor(this: FunctionObject, [buffer = Value.undefined, byteOffset = Value.undefined, byteLength = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
-  if (NewTarget === Value.undefined) {
+  if (NewTarget instanceof UndefinedValue) {
     return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
   // 2. Perform ? RequireInternalSlot(buffer, [[ArrayBufferData]]).
@@ -21,11 +36,12 @@ function DataViewConstructor([buffer = Value.undefined, byteOffset = Value.undef
   // 3. Let offset be ? ToIndex(byteOffset).
   const offset = Q(ToIndex(byteOffset));
   // 4. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+  __ts_cast__<ArrayBufferObject>(buffer);
   if (IsDetachedBuffer(buffer) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 5. Let bufferByteLength be buffer.[[ArrayBufferByteLength]].
-  const bufferByteLength = buffer.ArrayBufferByteLength;
+  const bufferByteLength = (buffer as ArrayBufferObject).ArrayBufferByteLength;
   // 6. If offset > bufferByteLength, throw a RangeError exception.
   if (offset > bufferByteLength) {
     return surroundingAgent.Throw('RangeError', 'DataViewOOB');
@@ -44,7 +60,7 @@ function DataViewConstructor([buffer = Value.undefined, byteOffset = Value.undef
     }
   }
   // 9. Let O be ? OrdinaryCreateFromConstructor(NewTarget, "%DataView.prototype%", « [[DataView]], [[ViewedArrayBuffer]], [[ByteLength]], [[ByteOffset]] »).
-  const O = Q(OrdinaryCreateFromConstructor(NewTarget, '%DataView.prototype%', ['DataView', 'ViewedArrayBuffer', 'ByteLength', 'ByteOffset']));
+  const O = Q(OrdinaryCreateFromConstructor(NewTarget, '%DataView.prototype%', ['DataView', 'ViewedArrayBuffer', 'ByteLength', 'ByteOffset'])) as Mutable<DataViewObject>;
   // 10. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
   if (IsDetachedBuffer(buffer) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
@@ -59,7 +75,7 @@ function DataViewConstructor([buffer = Value.undefined, byteOffset = Value.undef
   return O;
 }
 
-export function bootstrapDataView(realmRec) {
+export function bootstrapDataView(realmRec: Realm) {
   const dvConstructor = bootstrapConstructor(realmRec, DataViewConstructor, 'DataView', 1, realmRec.Intrinsics['%DataView.prototype%'], []);
 
   realmRec.Intrinsics['%DataView%'] = dvConstructor;

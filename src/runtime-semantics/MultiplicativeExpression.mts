@@ -1,5 +1,5 @@
-// @ts-nocheck
 import { Q } from '../completion.mts';
+import type { ExpressionEvaluator } from '../evaluator.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { EvaluateStringOrNumericBinaryExpression } from './all.mts';
 
@@ -10,7 +10,7 @@ export function* Evaluate_MultiplicativeExpression({
   MultiplicativeExpression,
   MultiplicativeOperator,
   ExponentiationExpression,
-}: ParseNode.MultiplicativeExpression) {
+}: ParseNode.MultiplicativeExpression): ExpressionEvaluator {
   // 1. Let opText be the source text matched by MultiplicativeOperator.
   const opText = MultiplicativeOperator;
   // 2. Return ? EvaluateStringOrNumericBinaryExpression(MultiplicativeExpression, opText, ExponentiationExpression).

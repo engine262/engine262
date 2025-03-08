@@ -5,6 +5,6 @@ import { PropName } from './all.mts';
 // ClassElementList :
 //   ClassElement
 //   ClassElementList ClassElement
-export function ConstructorMethod(ClassElementList: ParseNode.ClassElementList) {
-  return ClassElementList.find((ClassElement) => ClassElement.static === false && PropName(ClassElement) === 'constructor');
+export function ConstructorMethod(ClassElementList: ParseNode.ClassElementList): ParseNode.MethodDefinition | undefined {
+  return ClassElementList.find((ClassElement) => ClassElement.static === false && PropName(ClassElement) === 'constructor') as ParseNode.MethodDefinition;
 }

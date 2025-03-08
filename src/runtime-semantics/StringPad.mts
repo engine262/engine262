@@ -1,12 +1,11 @@
-// @ts-nocheck
-import { Value } from '../value.mts';
+import { JSStringValue, Value } from '../value.mts';
 import {
   Assert, ToString, ToLength, R,
 } from '../abstract-ops/all.mts';
-import { Q } from '../completion.mts';
+import { Q, type ExpressionCompletion } from '../completion.mts';
 
 /** https://tc39.es/ecma262/#sec-stringpad */
-export function StringPad(O, maxLength, fillString, placement: 'start' | 'end') {
+export function StringPad(O: Value, maxLength: Value, fillString: Value, placement: 'start' | 'end'): ExpressionCompletion<JSStringValue> {
   Assert(placement === 'start' || placement === 'end');
   const S = Q(ToString(O));
   const intMaxLength = R(Q(ToLength(maxLength)));

@@ -1,4 +1,3 @@
-// @ts-check
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-multi-assign */
 import path from 'node:path';
@@ -9,9 +8,7 @@ import {
   readList, type SupervisorToWorker, type Test, type WorkerToSupervisor,
 } from '../base.mts';
 import {
-  AbruptCompletion, ObjectValue, type PromiseObjectValue, type SourceTextModuleRecord,
-} from '#self';
-import {
+  AbruptCompletion, ObjectValue, __Q2,
   setSurroundingAgent,
   inspect,
   Value,
@@ -122,43 +119,31 @@ __consolePrintHandle__('Test262:AsyncTestComplete');
 
     const specifier = path.resolve(TEST262_TESTS, test.file);
 
-    let completion: unknown;
-    if (test.attrs.flags.module) {
-      const module: SourceTextModuleRecord | AbruptCompletion<ObjectValue> = (completion = realm.createSourceTextModule(specifier, test.contents));
-      if (!(module instanceof AbruptCompletion)) {
+    const completion = __Q2((Q) => {
+      if (test.attrs.flags.module) {
+        const module = Q(realm.createSourceTextModule(specifier, test.contents));
         resolverCache.set(specifier, module);
-        const loadModuleCompletion: PromiseObjectValue = (completion = (
-          module as SourceTextModuleRecord
-        ).LoadRequestedModules());
-        if (!(loadModuleCompletion instanceof AbruptCompletion)) {
-          if (loadModuleCompletion.PromiseState === 'rejected') {
-            completion = Throw(loadModuleCompletion.PromiseResult!, 'Raw', 'Module load failed');
-          } else if (loadModuleCompletion.PromiseState === 'pending') {
-            throw new Error('Internal error: .LoadRequestedModules() returned a pending promise');
-          }
+        const loadModuleCompletion = module.LoadRequestedModules();
+        if (loadModuleCompletion.PromiseState === 'rejected') {
+          Q(Throw(loadModuleCompletion.PromiseResult!, 'Raw', 'Module load failed'));
+        } else if (loadModuleCompletion.PromiseState === 'pending') {
+          throw new Error('Internal error: .LoadRequestedModules() returned a pending promise');
         }
-        if (!(completion instanceof AbruptCompletion)) {
-          completion = (module as SourceTextModuleRecord).Link();
+        Q(module.Link());
+        const evaluateCompletion = Q(module.Evaluate());
+        if (evaluateCompletion.PromiseState === 'rejected') {
+          Q(Throw(evaluateCompletion.PromiseResult!, 'Raw', 'Module evaluation failed'));
         }
-        let evaluateCompletion: PromiseObjectValue | undefined;
-        if (!(completion instanceof AbruptCompletion)) {
-          evaluateCompletion = completion = (module as SourceTextModuleRecord).Evaluate();
-        }
-        if (!(completion instanceof AbruptCompletion) && evaluateCompletion) {
-          if (evaluateCompletion.PromiseState === 'rejected') {
-            completion = Throw(evaluateCompletion.PromiseResult!, 'Raw', 'Module evaluation failed');
-          }
-        }
+      } else {
+        Q(realm.evaluateScript(test.contents, { specifier }));
       }
-    } else {
-      completion = realm.evaluateScript(test.contents, { specifier });
-    }
+    });
 
-    if (completion instanceof AbruptCompletion) {
-      if (test.attrs.negative && isError(test.attrs.negative.type, (completion as AbruptCompletion).Value)) {
+    if (completion.Type === 'throw') {
+      if (test.attrs.negative && isError(test.attrs.negative.type, completion.Value)) {
         return { status: 'PASS', file: test.file };
       } else {
-        return fails(test, inspect(completion as AbruptCompletion));
+        return fails(test, inspect(completion));
       }
     }
 

@@ -16,10 +16,13 @@ import {
   ToUint32,
   Z,
   F, R, type OrdinaryObject, type FunctionObject,
+  type BuiltinFunctionObject,
 } from './abstract-ops/all.mts';
 import { EnvironmentRecord } from './environment.mts';
-import { Completion, X } from './completion.mts';
-import { ValueMap, OutOfRange, callable } from './helpers.mts';
+import {
+  Completion, Q, X, type ExpressionCompletion, type PlainCompletion,
+} from './completion.mts';
+import { PropertyKeyMap, OutOfRange, callable } from './helpers.mts';
 import type { PrivateElementRecord } from './runtime-semantics/MethodDefinitionEvaluation.mts';
 
 let createStringValue: (value: string) => JSStringValue; // set by static block in StringValue for privileged access to constructor
@@ -36,6 +39,8 @@ abstract class BaseValue {
   static declare readonly false: BooleanValue<false>; // defined in static block of BooleanValue
 
   abstract type: Value['type']; // ensures new `Value` subtypes must be added to `Value` union
+
+  declare [Symbol.hasInstance]: (value: unknown) => value is Value; // no need to actually declare it.
 }
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types */
@@ -733,11 +738,27 @@ function BigIntBitwiseOp(op: '&' | '|' | '^', x: BigIntValue, y: BigIntValue) {
   }
 }
 
+export interface ObjectInternalMethods<Self> {
+  GetPrototypeOf(this: Self): ExpressionCompletion<ObjectValue | NullValue>;
+  SetPrototypeOf(this: Self, V: ObjectValue | NullValue): ExpressionCompletion<BooleanValue>;
+  IsExtensible(this: Self): ExpressionCompletion<BooleanValue>;
+  PreventExtensions(this: Self): ExpressionCompletion<BooleanValue>;
+  GetOwnProperty(this: Self, P: PropertyKeyValue): PlainCompletion<Descriptor | UndefinedValue>;
+  DefineOwnProperty(this: Self, P: PropertyKeyValue, Desc: Descriptor): ExpressionCompletion<BooleanValue>;
+  HasProperty(this: Self, P: PropertyKeyValue): ExpressionCompletion<BooleanValue>;
+  Get(this: Self, P: PropertyKeyValue, Receiver: Value): ExpressionCompletion;
+  Set(this: Self, P: PropertyKeyValue, V: Value, Receiver: Value): ExpressionCompletion<BooleanValue>;
+  Delete(this: Self, P: PropertyKeyValue): ExpressionCompletion<BooleanValue>;
+  OwnPropertyKeys(this: Self): PlainCompletion<PropertyKeyValue[]>;
+  Call?(this: Self, thisArg: Value, args: Arguments): ExpressionCompletion;
+  Construct?(this: Self, args: Arguments, newTarget: FunctionObject | UndefinedValue): ExpressionCompletion<ObjectValue>;
+}
+
 /** https://tc39.es/ecma262/#sec-object-type */
-export class ObjectValue extends Value {
+export class ObjectValue extends Value implements ObjectInternalMethods<ObjectValue> {
   declare readonly type: 'Object'; // defined on prototype by static block
 
-  readonly properties: ValueMap<JSStringValue | SymbolValue, Descriptor>;
+  readonly properties: PropertyKeyMap<Descriptor>;
 
   readonly internalSlotsList: readonly string[];
 
@@ -747,53 +768,60 @@ export class ObjectValue extends Value {
     super();
 
     this.PrivateElements = [];
-    this.properties = new ValueMap();
+    this.properties = new PropertyKeyMap();
     this.internalSlotsList = internalSlotsList;
+    surroundingAgent.debugger_markObjectCreated(this);
   }
 
   // UNSAFE casts below. Methods below are expected to be rewritten when the object is not an OrdinaryObject. (an example is ArgumentExoticObject)
   // If those methods aren't rewritten, it is an error.
-  GetPrototypeOf() {
+  GetPrototypeOf(): ExpressionCompletion<ObjectValue | NullValue> {
     return OrdinaryGetPrototypeOf(this as unknown as OrdinaryObject);
   }
 
-  SetPrototypeOf(V: ObjectValue | NullValue) {
+  SetPrototypeOf(V: ObjectValue | NullValue): ExpressionCompletion<BooleanValue> {
+    Q(surroundingAgent.debugger_tryTouchDuringPreview(this));
     return OrdinarySetPrototypeOf(this as unknown as OrdinaryObject, V);
   }
 
-  IsExtensible() {
+  IsExtensible(): ExpressionCompletion<BooleanValue> {
     return OrdinaryIsExtensible(this as unknown as OrdinaryObject);
   }
 
-  PreventExtensions(): BooleanValue {
+  PreventExtensions(): ExpressionCompletion<BooleanValue> {
+    Q(surroundingAgent.debugger_tryTouchDuringPreview(this));
     return OrdinaryPreventExtensions(this as unknown as OrdinaryObject);
   }
 
-  GetOwnProperty(P: PropertyKeyValue) {
+  GetOwnProperty(P: PropertyKeyValue): PlainCompletion<Descriptor | UndefinedValue> {
     return OrdinaryGetOwnProperty(this as unknown as OrdinaryObject, P);
   }
 
-  DefineOwnProperty(P: PropertyKeyValue, Desc: Descriptor) {
+  DefineOwnProperty(P: PropertyKeyValue, Desc: Descriptor): ExpressionCompletion<BooleanValue> {
+    Q(surroundingAgent.debugger_tryTouchDuringPreview(this));
     return OrdinaryDefineOwnProperty(this as unknown as OrdinaryObject, P, Desc);
   }
 
-  HasProperty(P: PropertyKeyValue) {
+  HasProperty(P: PropertyKeyValue): ExpressionCompletion<BooleanValue> {
     return OrdinaryHasProperty(this as unknown as OrdinaryObject, P);
   }
 
-  Get(P: PropertyKeyValue, Receiver: Value) {
+  Get(P: PropertyKeyValue, Receiver: Value): ExpressionCompletion {
     return OrdinaryGet(this as unknown as OrdinaryObject, P, Receiver);
   }
 
-  Set(P: PropertyKeyValue, V: Value, Receiver: Value) {
+  Set(P: PropertyKeyValue, V: Value, Receiver: Value): ExpressionCompletion<BooleanValue> {
+    // TODO:
+    Q(surroundingAgent.debugger_tryTouchDuringPreview(Receiver as ObjectValue));
     return OrdinarySet(this as unknown as OrdinaryObject, P, V, Receiver);
   }
 
-  Delete(P: PropertyKeyValue) {
+  Delete(P: PropertyKeyValue): ExpressionCompletion<BooleanValue> {
+    Q(surroundingAgent.debugger_tryTouchDuringPreview(this));
     return OrdinaryDelete(this as unknown as OrdinaryObject, P);
   }
 
-  OwnPropertyKeys() {
+  OwnPropertyKeys(): PlainCompletion<PropertyKeyValue[]> {
     return OrdinaryOwnPropertyKeys(this as unknown as OrdinaryObject);
   }
 
@@ -827,11 +855,11 @@ export class PrivateName {
 export class ReferenceRecord {
   readonly Base: 'unresolvable' | Value | EnvironmentRecord;
 
-  readonly ReferencedName: JSStringValue | SymbolValue | PrivateName;
+  ReferencedName: Value | PrivateName;
 
   readonly Strict: BooleanValue;
 
-  readonly ThisValue: ObjectValue | undefined;
+  readonly ThisValue: Value | undefined;
 
   constructor({
     Base,
@@ -853,14 +881,15 @@ export class ReferenceRecord {
   }
 }
 
+export type DescriptorInit = Pick<Descriptor, 'Configurable' | 'Enumerable' | 'Get' | 'Set' | 'Value' | 'Writable'>;
 // @ts-expect-error
-export function Descriptor(O: Pick<Descriptor, 'Configurable' | 'Enumerable' | 'Get' | 'Set' | 'Value' | 'Writable'>): Descriptor // @ts-expect-error
+export function Descriptor(O: DescriptorInit): Descriptor // @ts-expect-error
 export @callable() class Descriptor {
   readonly Value?: Value;
 
-  readonly Get?: FunctionObject;
+  readonly Get?: FunctionObject | UndefinedValue;
 
-  readonly Set?: FunctionObject;
+  readonly Set?: FunctionObject | UndefinedValue;
 
   readonly Writable?: BooleanValue;
 
@@ -879,11 +908,11 @@ export @callable() class Descriptor {
 
   everyFieldIsAbsent() {
     return this.Value === undefined
-          && this.Get === undefined
-          && this.Set === undefined
-          && this.Writable === undefined
-          && this.Enumerable === undefined
-          && this.Configurable === undefined;
+      && this.Get === undefined
+      && this.Set === undefined
+      && this.Writable === undefined
+      && this.Enumerable === undefined
+      && this.Configurable === undefined;
   }
 
   // NON-SPEC
@@ -905,7 +934,7 @@ export class DataBlock extends Uint8Array {
   }
 }
 
-export function Type(val: Value | PrivateName | Completion | EnvironmentRecord | Descriptor | DataBlock) {
+export function Type(val: Value | PrivateName | Completion<unknown> | EnvironmentRecord | Descriptor | DataBlock) {
   if (val instanceof Value) {
     return val.type;
   }
@@ -930,14 +959,20 @@ export function Type(val: Value | PrivateName | Completion | EnvironmentRecord |
     return 'Data Block';
   }
 
+  // TODO:
+  if ((val as unknown) instanceof DataBlock) {
+    return 'Shared Data Block';
+  }
+
   throw new OutOfRange('Type', val);
 }
 
-// Used for Type(x)::y
-export function TypeForMethod(val: Value) {
-  if (val instanceof Value) {
-    return val.constructor;
-  }
-  throw new OutOfRange('TypeForValue', val);
-}
 export type Arguments = readonly Value[];
+export interface FunctionCallContext {
+  readonly thisValue: Value;
+  readonly NewTarget: FunctionObject | UndefinedValue;
+}
+export interface NativeSteps {
+  (this: BuiltinFunctionObject, args: Arguments, context: FunctionCallContext): void | ExpressionCompletion;
+  section?: string;
+}

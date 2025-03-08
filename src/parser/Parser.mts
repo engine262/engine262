@@ -30,7 +30,7 @@ export class Parser extends LanguageParser {
     json: boolean;
   };
 
-  protected readonly scope = new Scope(this);
+  readonly scope = new Scope(this);
 
   constructor({ source, specifier, json = false }: ParserOptions) {
     super();

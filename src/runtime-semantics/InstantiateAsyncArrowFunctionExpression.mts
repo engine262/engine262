@@ -1,12 +1,12 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import { Value } from '../value.mts';
 import { OrdinaryFunctionCreate, SetFunctionName, sourceTextMatchedBy } from '../abstract-ops/all.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import type { PrivateName, PropertyKeyValue } from '#self';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncarrowfunctionexpression */
 // AsyncArrowFunction : ArrowParameters `=>` AsyncConciseBody
-export function InstantiateAsyncArrowFunctionExpression(AsyncArrowFunction: ParseNode.AsyncArrowFunction, name?) {
+export function InstantiateAsyncArrowFunctionExpression(AsyncArrowFunction: ParseNode.AsyncArrowFunction, name?: PropertyKeyValue | PrivateName) {
   const { ArrowParameters, AsyncConciseBody } = AsyncArrowFunction;
   // 1. If name is not present, set name to "".
   if (name === undefined) {

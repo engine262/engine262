@@ -1,7 +1,8 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
-import { ObjectValue, Value } from '../value.mts';
-import { Evaluate } from '../evaluator.mts';
+import {
+  JSStringValue, ObjectValue, ReferenceRecord, Value,
+} from '../value.mts';
+import { Evaluate, type Evaluator, type StatementEvaluator } from '../evaluator.mts';
 import { DeclarativeEnvironmentRecord } from '../environment.mts';
 import {
   Assert,
@@ -19,14 +20,16 @@ import {
   ToBoolean,
   ToObject,
   SameValue,
+  type IteratorRecord,
 } from '../abstract-ops/all.mts';
 import {
   BoundNames,
   IsConstantDeclaration,
   IsDestructuring,
   StringValue,
+  type DestructuringParseNode,
 } from '../static-semantics/all.mts';
-import { CreateForInIterator } from '../intrinsics/ForInIteratorPrototype.mts';
+import { CreateForInIterator, type ForInIteratorInstance } from '../intrinsics/ForInIteratorPrototype.mts';
 import {
   Completion,
   NormalCompletion,
@@ -36,8 +39,10 @@ import {
   ReturnIfAbrupt,
   Await,
   Q, X,
+  type PlainCompletion,
+  BreakCompletion,
 } from '../completion.mts';
-import { OutOfRange } from '../helpers.mts';
+import { JSStringSet, OutOfRange } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   Evaluate_SwitchStatement,
@@ -48,7 +53,7 @@ import {
 } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-loopcontinues */
-function LoopContinues(completion, labelSet) {
+function LoopContinues(completion: Completion<Value | void>, labelSet: JSStringSet) {
   // 1. If completion.[[Type]] is normal, return true.
   if (completion.Type === 'normal') {
     return Value.true;
@@ -69,7 +74,7 @@ function LoopContinues(completion, labelSet) {
   return Value.false;
 }
 
-export function LabelledEvaluation(node: ParseNode.LabelledStatement | ParseNode.BreakableStatement, labelSet) {
+export function LabelledEvaluation(node: ParseNode.LabelledStatement | ParseNode.BreakableStatement, labelSet: JSStringSet): StatementEvaluator {
   switch (node.type) {
     case 'DoWhileStatement':
     case 'WhileStatement':
@@ -88,15 +93,15 @@ export function LabelledEvaluation(node: ParseNode.LabelledStatement | ParseNode
 
 /** https://tc39.es/ecma262/#sec-labelled-statements-runtime-semantics-labelledevaluation */
 //   LabelledStatement : LabelIdentifier `:` LabelledItem
-function* LabelledEvaluation_LabelledStatement({ LabelIdentifier, LabelledItem }: ParseNode.LabelledStatement, labelSet) {
+function* LabelledEvaluation_LabelledStatement({ LabelIdentifier, LabelledItem }: ParseNode.LabelledStatement, labelSet: JSStringSet) {
   // 1. Let label be the StringValue of LabelIdentifier.
   const label = StringValue(LabelIdentifier);
   // 2. Append label as an element of labelSet.
   labelSet.add(label);
   // 3. Let stmtResult be LabelledEvaluation of LabelledItem with argument labelSet.
-  let stmtResult = EnsureCompletion(yield* LabelledEvaluation_LabelledItem(LabelledItem, labelSet));
+  let stmtResult = EnsureCompletion(yield* LabelledEvaluation_LabelledItem(LabelledItem, labelSet)) as Completion<Value | void>;
   // 4. If stmtResult.[[Type]] is break and SameValue(stmtResult.[[Target]], label) is true, then
-  if (stmtResult.Type === 'break' && SameValue(stmtResult.Target, label) === Value.true) {
+  if (stmtResult.Type === 'break' && SameValue(stmtResult.Target!, label) === Value.true) {
     // a. Set stmtResult to NormalCompletion(stmtResult.[[Value]]).
     stmtResult = NormalCompletion(stmtResult.Value);
   }
@@ -107,7 +112,7 @@ function* LabelledEvaluation_LabelledStatement({ LabelIdentifier, LabelledItem }
 // LabelledItem :
 //   Statement
 //   FunctionDeclaration
-function LabelledEvaluation_LabelledItem(LabelledItem: ParseNode.LabelledItem, labelSet) {
+function LabelledEvaluation_LabelledItem(LabelledItem: ParseNode.LabelledItem, labelSet: JSStringSet) {
   switch (LabelledItem.type) {
     case 'DoWhileStatement':
     case 'WhileStatement':
@@ -130,7 +135,7 @@ function LabelledEvaluation_LabelledItem(LabelledItem: ParseNode.LabelledItem, l
 //  IterationStatement :
 //    (DoWhileStatement)
 //    (WhileStatement)
-function* LabelledEvaluation_BreakableStatement(BreakableStatement: ParseNode.BreakableStatement, labelSet) {
+function* LabelledEvaluation_BreakableStatement(BreakableStatement: ParseNode.BreakableStatement, labelSet: JSStringSet): StatementEvaluator {
   switch (BreakableStatement.type) {
     case 'DoWhileStatement':
     case 'WhileStatement':
@@ -171,14 +176,14 @@ function* LabelledEvaluation_BreakableStatement(BreakableStatement: ParseNode.Br
         }
       }
       // 3. Return Completion(stmtResult).
-      return Completion(stmtResult);
+      return Completion(stmtResult) as Completion<Value | void>;
     }
     default:
       throw new OutOfRange('LabelledEvaluation_BreakableStatement', BreakableStatement);
   }
 }
 
-function LabelledEvaluation_IterationStatement(IterationStatement: ParseNode.IterationStatement, labelSet) {
+function LabelledEvaluation_IterationStatement(IterationStatement: ParseNode.IterationStatement, labelSet: JSStringSet): StatementEvaluator {
   switch (IterationStatement.type) {
     case 'DoWhileStatement':
       return LabelledEvaluation_IterationStatement_DoWhileStatement(IterationStatement, labelSet);
@@ -200,13 +205,13 @@ function LabelledEvaluation_IterationStatement(IterationStatement: ParseNode.Ite
 /** https://tc39.es/ecma262/#sec-do-while-statement-runtime-semantics-labelledevaluation */
 //   IterationStatement :
 //     `do` Statement `while` `(` Expression `)` `;`
-function* LabelledEvaluation_IterationStatement_DoWhileStatement({ Statement, Expression }: ParseNode.DoWhileStatement, labelSet) {
+function* LabelledEvaluation_IterationStatement_DoWhileStatement({ Statement, Expression }: ParseNode.DoWhileStatement, labelSet: JSStringSet) {
   // 1. Let V be undefined.
-  let V = Value.undefined;
+  let V: Value = Value.undefined;
   // 2. Repeat,
   while (true) {
     // a. Let stmtResult be the result of evaluating Statement.
-    const stmtResult = EnsureCompletion(yield* Evaluate(Statement));
+    const stmtResult = EnsureCompletion(yield* Evaluate(Statement)) as Completion<Value | void>;
     // b. If LoopContinues(stmtResult, labelSet) is false, return Completion(UpdateEmpty(stmtResult, V)).
     if (LoopContinues(stmtResult, labelSet) === Value.false) {
       return Completion(UpdateEmpty(stmtResult, V));
@@ -230,9 +235,9 @@ function* LabelledEvaluation_IterationStatement_DoWhileStatement({ Statement, Ex
 /** https://tc39.es/ecma262/#sec-while-statement-runtime-semantics-labelledevaluation */
 //   IterationStatement :
 //     `while` `(` Expression `)` Statement
-function* LabelledEvaluation_IterationStatement_WhileStatement({ Expression, Statement }: ParseNode.WhileStatement, labelSet) {
+function* LabelledEvaluation_IterationStatement_WhileStatement({ Expression, Statement }: ParseNode.WhileStatement, labelSet: JSStringSet) {
   // 1. Let V be undefined.
-  let V = Value.undefined;
+  let V: Value = Value.undefined;
   // 2. Repeat,
   while (true) {
     // a. Let exprRef be the result of evaluating Expression.
@@ -261,7 +266,7 @@ function* LabelledEvaluation_IterationStatement_WhileStatement({ Expression, Sta
 //     `for` `(` Expression? `;` Expression? `;` Expresssion? `)` Statement
 //     `for` `(` `var` VariableDeclarationList `;` Expression? `;` Expression? `)` Statement
 //     `for` `(` LexicalDeclaration Expression? `;` Expression? `)` Statement
-function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement: ParseNode.ForStatement, labelSet) {
+function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement: ParseNode.ForStatement, labelSet: JSStringSet) {
   const {
     VariableDeclarationList, LexicalDeclaration,
     Expression_a, Expression_b, Expression_c,
@@ -300,7 +305,7 @@ function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement: Parse
         return Completion(forDcl);
       }
       // 9. If isConst is false, let perIterationLets be boundNames; otherwise let perIterationLets be « ».
-      let perIterationLets;
+      let perIterationLets: JSStringValue[];
       if (isConst === false) {
         perIterationLets = boundNames;
       } else {
@@ -335,7 +340,7 @@ function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement: Parse
   }
 }
 
-function* LabelledEvaluation_IterationStatement_ForInStatement(ForInStatement: ParseNode.ForInStatement, labelSet) {
+function* LabelledEvaluation_IterationStatement_ForInStatement(ForInStatement: ParseNode.ForInStatement, labelSet: JSStringSet): StatementEvaluator {
   const {
     LeftHandSideExpression,
     ForBinding,
@@ -349,21 +354,21 @@ function* LabelledEvaluation_IterationStatement_ForInStatement(ForInStatement: P
       // 1. Let keyResult be ? ForIn/OfHeadEvaluation(« », Expression, enumerate).
       const keyResult = Q(yield* ForInOfHeadEvaluation([], Expression, 'enumerate'));
       // 2. Return ? ForIn/OfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, enumerate, assignment, labelSet).
-      return Q(yield* ForInOfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, 'enumerate', 'assignment', labelSet));
+      return Q(yield* ForInOfBodyEvaluation(LeftHandSideExpression, Statement, keyResult as IteratorRecord, 'enumerate', 'assignment', labelSet));
     }
     case !!ForBinding && !!Expression: {
       // IterationStatement :`for` `(` `var` ForBinding `in` Expression `)` Statement
       // 1. Let keyResult be ? ForIn/OfHeadEvaluation(« », Expression, enumerate).
       const keyResult = Q(yield* ForInOfHeadEvaluation([], Expression, 'enumerate'));
       // 2. Return ? ForIn/OfBodyEvaluation(ForBinding, Statement, keyResult, enumerate, varBinding, labelSet).
-      return Q(yield* ForInOfBodyEvaluation(ForBinding, Statement, keyResult, 'enumerate', 'varBinding', labelSet));
+      return Q(yield* ForInOfBodyEvaluation(ForBinding, Statement, keyResult as IteratorRecord, 'enumerate', 'varBinding', labelSet));
     }
     case !!ForDeclaration && !!Expression: {
       // IterationStatement : `for` `(` ForDeclaration `in` Expression `)` Statement
       // 1. Let keyResult be ? ForIn/OfHeadEvaluation(BoundNames of ForDeclaration, Expression, enumerate).
       const keyResult = Q(yield* ForInOfHeadEvaluation(BoundNames(ForDeclaration), Expression, 'enumerate'));
       // 2. Return ? ForIn/OfBodyEvaluation(ForDeclaration, Statement, keyResult, enumerate, lexicalBinding, labelSet).
-      return Q(yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'enumerate', 'lexicalBinding', labelSet));
+      return Q(yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult as IteratorRecord, 'enumerate', 'lexicalBinding', labelSet));
     }
     default:
       throw new OutOfRange('LabelledEvaluation_IterationStatement_ForInStatement', ForInStatement);
@@ -374,7 +379,7 @@ function* LabelledEvaluation_IterationStatement_ForInStatement(ForInStatement: P
 //   `for` `await` `(` LeftHandSideExpression `of` AssignmentExpression `)` Statement
 //   `for` `await` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
 //   `for` `await` `(` ForDeclaration`of` AssignmentExpression `)` Statement
-function* LabelledEvaluation_IterationStatement_ForAwaitStatement(ForAwaitStatement: ParseNode.ForAwaitStatement, labelSet) {
+function* LabelledEvaluation_IterationStatement_ForAwaitStatement(ForAwaitStatement: ParseNode.ForAwaitStatement, labelSet: JSStringSet): StatementEvaluator {
   const {
     LeftHandSideExpression,
     ForBinding,
@@ -387,19 +392,19 @@ function* LabelledEvaluation_IterationStatement_ForAwaitStatement(ForAwaitStatem
       // 1. Let keyResult be ? ForIn/OfHeadEvaluation(« », AssignmentExpression, async-iterate).
       const keyResult = Q(yield* ForInOfHeadEvaluation([], AssignmentExpression, 'async-iterate'));
       // 2. Return ? ForIn/OfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, iterate, assignment, labelSet, async).
-      return Q(yield* ForInOfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, 'iterate', 'assignment', labelSet, 'async'));
+      return Q(yield* ForInOfBodyEvaluation(LeftHandSideExpression, Statement, keyResult as IteratorRecord, 'iterate', 'assignment', labelSet, 'async'));
     }
     case !!ForBinding: {
       // 1. Let keyResult be ? ForIn/OfHeadEvaluation(« », AssignmentExpression, async-iterate).
       const keyResult = Q(yield* ForInOfHeadEvaluation([], AssignmentExpression, 'async-iterate'));
       // 2. Return ? ForIn/OfBodyEvaluation(ForBinding, Statement, keyResult, iterate, varBinding, labelSet, async).
-      return Q(yield* ForInOfBodyEvaluation(ForBinding, Statement, keyResult, 'iterate', 'varBinding', labelSet, 'async'));
+      return Q(yield* ForInOfBodyEvaluation(ForBinding, Statement, keyResult as IteratorRecord, 'iterate', 'varBinding', labelSet, 'async'));
     }
     case !!ForDeclaration: {
       // 1. Let keyResult be ? ForIn/OfHeadEvaluation(BoundNames of ForDeclaration, AssignmentExpression, async-iterate).
       const keyResult = Q(yield* ForInOfHeadEvaluation(BoundNames(ForDeclaration), AssignmentExpression, 'async-iterate'));
       // 2. Return ? ForIn/OfBodyEvaluation(ForDeclaration, Statement, keyResult, iterate, lexicalBinding, labelSet, async).
-      return Q(yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'iterate', 'lexicalBinding', labelSet, 'async'));
+      return Q(yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult as IteratorRecord, 'iterate', 'lexicalBinding', labelSet, 'async'));
     }
     default:
       throw new OutOfRange('LabelledEvaluation_IterationStatement_ForAwaitStatement', ForAwaitStatement);
@@ -411,7 +416,7 @@ function* LabelledEvaluation_IterationStatement_ForAwaitStatement(ForAwaitStatem
 //   `for` `(` LeftHandSideExpression `of` AssignmentExpression `)` Statement
 //   `for` `(` `var` ForBinding `of` AssignmentExpression `)` Statement
 //   `for` `(` ForDeclaration `of` AssignmentExpression `)` Statement
-function* LabelledEvaluation_IterationStatement_ForOfStatement(ForOfStatement: ParseNode.ForOfStatement, labelSet) {
+function* LabelledEvaluation_IterationStatement_ForOfStatement(ForOfStatement: ParseNode.ForOfStatement, labelSet: JSStringSet): StatementEvaluator {
   const {
     LeftHandSideExpression,
     ForBinding,
@@ -424,19 +429,19 @@ function* LabelledEvaluation_IterationStatement_ForOfStatement(ForOfStatement: P
       // 1. Let keyResult be ? ForIn/OfHeadEvaluation(« », AssignmentExpression, iterate).
       const keyResult = Q(yield* ForInOfHeadEvaluation([], AssignmentExpression, 'iterate'));
       // 2. Return ? ForIn/OfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, iterate, assignment, labelSet).
-      return Q(yield* ForInOfBodyEvaluation(LeftHandSideExpression, Statement, keyResult, 'iterate', 'assignment', labelSet));
+      return Q(yield* ForInOfBodyEvaluation(LeftHandSideExpression, Statement, keyResult as IteratorRecord, 'iterate', 'assignment', labelSet));
     }
     case !!ForBinding: {
       // 1. Let keyResult be ? ForIn/OfHeadEvaluation(« », AssignmentExpression, iterate).
       const keyResult = Q(yield* ForInOfHeadEvaluation([], AssignmentExpression, 'iterate'));
       // 2. Return ? ForIn/OfBodyEvaluation(ForBinding, Statement, keyResult, iterate, varBinding, labelSet).
-      return Q(yield* ForInOfBodyEvaluation(ForBinding, Statement, keyResult, 'iterate', 'varBinding', labelSet));
+      return Q(yield* ForInOfBodyEvaluation(ForBinding, Statement, keyResult as IteratorRecord, 'iterate', 'varBinding', labelSet));
     }
     case !!ForDeclaration: {
       // 1. Let keyResult be ? ForIn/OfHeadEvaluation(BoundNames of ForDeclaration, AssignmentExpression, iterate).
       const keyResult = Q(yield* ForInOfHeadEvaluation(BoundNames(ForDeclaration), AssignmentExpression, 'iterate'));
       // 2. Return ? ForIn/OfBodyEvaluation(ForDeclaration, Statement, keyResult, iterate, lexicalBinding, labelSet).
-      return Q(yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult, 'iterate', 'lexicalBinding', labelSet));
+      return Q(yield* ForInOfBodyEvaluation(ForDeclaration, Statement, keyResult as IteratorRecord, 'iterate', 'lexicalBinding', labelSet));
     }
     default:
       throw new OutOfRange('LabelledEvaluation_BreakableStatement_ForOfStatement', ForOfStatement);
@@ -444,9 +449,9 @@ function* LabelledEvaluation_IterationStatement_ForOfStatement(ForOfStatement: P
 }
 
 /** https://tc39.es/ecma262/#sec-forbodyevaluation */
-function* ForBodyEvaluation(test, increment, stmt, perIterationBindings, labelSet) {
+function* ForBodyEvaluation(test: ParseNode.Expression | undefined, increment: ParseNode.Expression | undefined, stmt: ParseNode.Statement, perIterationBindings: readonly JSStringValue[], labelSet: JSStringSet) {
   // 1. Let V be undefined.
-  let V = Value.undefined;
+  let V: Value = Value.undefined;
   // 2. Perform ? CreatePerIterationEnvironment(perIterationBindings).
   Q(CreatePerIterationEnvironment(perIterationBindings));
   // 3. Repeat,
@@ -485,7 +490,7 @@ function* ForBodyEvaluation(test, increment, stmt, perIterationBindings, labelSe
 }
 
 /** https://tc39.es/ecma262/#sec-createperiterationenvironment */
-function CreatePerIterationEnvironment(perIterationBindings) {
+function CreatePerIterationEnvironment(perIterationBindings: readonly JSStringValue[]): PlainCompletion<void> {
   // 1. If perIterationBindings has any elements, then
   if (perIterationBindings.length > 0) {
     // a. Let lastIterationEnv be the running execution context's LexicalEnvironment.
@@ -509,11 +514,11 @@ function CreatePerIterationEnvironment(perIterationBindings) {
     surroundingAgent.runningExecutionContext.LexicalEnvironment = thisIterationEnv;
   }
   // 2. Return undefined.
-  return Value.undefined;
+  return undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-forinofheadevaluation */
-function* ForInOfHeadEvaluation(uninitializedBoundNames, expr, iterationKind) {
+function* ForInOfHeadEvaluation(uninitializedBoundNames: readonly JSStringValue[], expr: ParseNode.Expression | ParseNode.AssignmentExpression, iterationKind: 'enumerate' | 'iterate' | 'async-iterate'): Evaluator<PlainCompletion<Value | ForInOfHeadEvaluationResult | IteratorRecord> | BreakCompletion> {
   // 1. Let oldEnv be the running execution context's LexicalEnvironment.
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 2. If uninitializedBoundNames is not an empty List, then
@@ -560,22 +565,27 @@ function* ForInOfHeadEvaluation(uninitializedBoundNames, expr, iterationKind) {
     return Q(GetIterator(exprValue, iteratorHint));
   }
 }
+interface ForInOfHeadEvaluationResult {
+  readonly Iterator: ForInIteratorInstance;
+  readonly NextMethod: Value;
+  readonly Done: Value;
+}
 
 /** https://tc39.es/ecma262/#sec-enumerate-object-properties */
-function EnumerateObjectProperties(O) {
+function EnumerateObjectProperties(O: ObjectValue) {
   return CreateForInIterator(O);
 }
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-forin-div-ofbodyevaluation-lhs-stmt-iterator-lhskind-labelset */
-function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKind, labelSet, iteratorKind) {
+function* ForInOfBodyEvaluation(lhs: ParseNode, stmt: ParseNode.Statement, iteratorRecord: IteratorRecord, iterationKind: 'enumerate' | 'iterate', lhsKind: 'assignment' | 'lexicalBinding' | 'varBinding', labelSet: JSStringSet, iteratorKind?: 'sync' | 'async'): StatementEvaluator {
   // 1. If iteratorKind is not present, set iteratorKind to sync.
-  if (iterationKind === undefined) {
-    iterationKind = 'sync';
+  if (iteratorKind === undefined) {
+    iteratorKind = 'sync';
   }
   // 2. Let oldEnv be the running execution context's LexicalEnvironment.
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 3. Let V be undefined.
-  let V = Value.undefined;
+  let V: Value = Value.undefined;
   // 4. Let destructuring be IsDestructuring of lhs.
   const destructuring = IsDestructuring(lhs);
   // 5. If destructuring is true and if lhsKind is assignment, then
@@ -583,7 +593,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
   if (destructuring && lhsKind === 'assignment') {
     // a. Assert: lhs is a LeftHandSideExpression.
     // b. Let assignmentPattern be the AssignmentPattern that is covered by lhs.
-    assignmentPattern = refineLeftHandSideExpression(lhs);
+    assignmentPattern = refineLeftHandSideExpression(lhs as DestructuringParseNode);
   }
   // 6. Repeat,
   while (true) {
@@ -643,15 +653,15 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
         status = lhsRef;
       } else if (lhsKind === 'lexicalBinding') { // ii. Else is lhsKind is lexicalBinding, then
         // 1. Let status be InitializeReferencedBinding(lhsRef, nextValue).
-        status = InitializeReferencedBinding(lhsRef, nextValue);
+        status = InitializeReferencedBinding(lhsRef as ReferenceRecord, nextValue);
       } else { // iii. Else,
-        status = PutValue(lhsRef, nextValue);
+        status = PutValue(lhsRef as ReferenceRecord, nextValue);
       }
     } else { // j. Else,
       // i. If lhsKind is assignment, then
       if (lhsKind === 'assignment') {
         // 1. Let status be DestructuringAssignmentEvaluation of assignmentPattern with argument nextValue.
-        status = yield* DestructuringAssignmentEvaluation(assignmentPattern, nextValue);
+        status = yield* DestructuringAssignmentEvaluation(assignmentPattern as ParseNode.ObjectAssignmentPattern | ParseNode.ArrayAssignmentPattern, nextValue);
       } else if (lhsKind === 'varBinding') { // ii. Else if lhsKind is varBinding, then
         // 1. Assert: lhs is a ForBinding.
         Assert(lhs.type === 'ForBinding');
@@ -663,7 +673,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
         // 2. Assert: lhs is a ForDeclaration.
         Assert(lhs.type === 'ForDeclaration');
         // 3. Let status be BindingInitialization of lhs with arguments nextValue and iterationEnv.
-        status = yield* BindingInitialization(lhs, nextValue, iterationEnv);
+        status = yield* BindingInitialization(lhs, nextValue, iterationEnv!);
       }
     }
     // k. If status is an abrupt completion, then
@@ -672,12 +682,12 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
       surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
       // ii. If iteratorKind is async, return ? AsyncIteratorClose(iteratorRecord, status).
       if (iteratorKind === 'async') {
-        return Q(yield* AsyncIteratorClose(iteratorRecord, status));
+        return Q(yield* AsyncIteratorClose(iteratorRecord, status)) as Completion<Value | void>;
       }
       // iii. if iterationKind is enumerate, then
       if (iterationKind === 'enumerate') {
         // 1. Return status.
-        return status;
+        return status as Completion<Value | void>;
       } else { // iv. Else,
         // 1. Assert: iterationKind is iterate.
         Assert(iterationKind === 'iterate');
@@ -702,7 +712,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
         status = UpdateEmpty(result, V);
         // 3. If iteratorKind is async, return ? AsyncIteratorClose(iteratorRecord, status).
         if (iteratorKind === 'async') {
-          return Q(yield* AsyncIteratorClose(iteratorRecord, status));
+          return Q(yield* AsyncIteratorClose(iteratorRecord, status)) as Completion<Value | void>;
         }
         // 4. Return ? IteratorClose(iteratorRecord, status).
         return Q(IteratorClose(iteratorRecord, status));
@@ -710,14 +720,14 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
     }
     // o. If result.[[Value]] is not empty, set V to result.[[Value]].
     if (result.Value !== undefined) {
-      V = result.Value;
+      V = result.Value as Value;
     }
   }
 }
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-bindinginstantiation */
 //   ForDeclaration : LetOrConst ForBinding
-function BindingInstantiation({ LetOrConst, ForBinding }: ParseNode.ForDeclaration, environment) {
+function BindingInstantiation({ LetOrConst, ForBinding }: ParseNode.ForDeclaration, environment: DeclarativeEnvironmentRecord) {
   // 1. Assert: environment is a declarative Environment Record.
   Assert(environment instanceof DeclarativeEnvironmentRecord);
   // 2. For each element name of the BoundNames of ForBinding, do
@@ -737,7 +747,7 @@ function BindingInstantiation({ LetOrConst, ForBinding }: ParseNode.ForDeclarati
 //   ForBinding : BindingIdentifier
 export function Evaluate_ForBinding({ BindingIdentifier, strict }: ParseNode.ForBinding) {
   // 1. Let bindingId be StringValue of BindingIdentifier.
-  const bindingId = StringValue(BindingIdentifier);
+  const bindingId = StringValue(BindingIdentifier!);
   // 2. Return ? ResolveBinding(bindingId).
-  return Q(ResolveBinding(bindingId, undefined, strict));
+  return ResolveBinding(bindingId, undefined, strict);
 }

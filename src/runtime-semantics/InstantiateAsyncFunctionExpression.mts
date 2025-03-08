@@ -1,6 +1,7 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
-import { Value } from '../value.mts';
+import {
+  PrivateName, Value, type PropertyKeyValue,
+} from '../value.mts';
 import {
   Assert,
   OrdinaryFunctionCreate,
@@ -13,7 +14,7 @@ import { DeclarativeEnvironmentRecord } from '../environment.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncfunctionexpression */
-export function InstantiateAsyncFunctionExpression(AsyncFunctionExpression: ParseNode.AsyncFunctionExpression, name?) {
+export function InstantiateAsyncFunctionExpression(AsyncFunctionExpression: ParseNode.AsyncFunctionExpression, name?: PropertyKeyValue | PrivateName) {
   const { BindingIdentifier, FormalParameters, AsyncBody } = AsyncFunctionExpression;
   if (BindingIdentifier) {
     // 1. Assert: name is not present.

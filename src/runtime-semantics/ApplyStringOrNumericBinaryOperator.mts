@@ -1,9 +1,12 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import {
-  Type, JSStringValue, TypeForMethod, Value,
+  Type, JSStringValue, Value,
+  NumberValue,
+  BigIntValue,
 } from '../value.mts';
-import { ToNumeric, ToPrimitive, ToString } from '../abstract-ops/all.mts';
+import {
+  Assert, ToNumeric, ToPrimitive, ToString,
+} from '../abstract-ops/all.mts';
 import { Q } from '../completion.mts';
 
 export type BinaryOperator = '+' | '-' | '*' | '/' | '%' | '**' | '<<' | '>>' | '>>>' | '&' | '^' | '|';
@@ -38,23 +41,38 @@ export function ApplyStringOrNumericBinaryOperator(lval: Value, opText: BinaryOp
   if (Type(lnum) !== Type(rnum)) {
     return surroundingAgent.Throw('TypeError', 'CannotMixBigInts');
   }
-  // 6. Let T be Type(lnum).
-  const T = TypeForMethod(lnum);
-  // 7. Let operation be the abstract operation associated with opText in the following table:
-  const operation = ({
-    '**': T.exponentiate,
-    '*': T.multiply,
-    '/': T.divide,
-    '%': T.remainder,
-    '+': T.add,
-    '-': T.subtract,
-    '<<': T.leftShift,
-    '>>': T.signedRightShift,
-    '>>>': T.unsignedRightShift,
-    '&': T.bitwiseAND,
-    '^': T.bitwiseXOR,
-    '|': T.bitwiseOR,
-  } satisfies Record<BinaryOperator, unknown>)[opText];
-  // 8. Return ? operation(lnum, rnum).
-  return Q(operation(lnum, rnum));
+  if (lnum instanceof BigIntValue) {
+    const operations = {
+      '**': BigIntValue.exponentiate,
+      '*': BigIntValue.multiply,
+      '/': BigIntValue.divide,
+      '%': BigIntValue.remainder,
+      '+': BigIntValue.add,
+      '-': BigIntValue.subtract,
+      '<<': BigIntValue.leftShift,
+      '>>': BigIntValue.signedRightShift,
+      '>>>': BigIntValue.unsignedRightShift,
+      '&': BigIntValue.bitwiseAND,
+      '^': BigIntValue.bitwiseXOR,
+      '|': BigIntValue.bitwiseOR,
+    };
+    return Q(operations[opText](lnum, rnum as BigIntValue));
+  } else {
+    Assert(lnum instanceof NumberValue);
+    const operations = {
+      '**': NumberValue.exponentiate,
+      '*': NumberValue.multiply,
+      '/': NumberValue.divide,
+      '%': NumberValue.remainder,
+      '+': NumberValue.add,
+      '-': NumberValue.subtract,
+      '<<': NumberValue.leftShift,
+      '>>': NumberValue.signedRightShift,
+      '>>>': NumberValue.unsignedRightShift,
+      '&': NumberValue.bitwiseAND,
+      '^': NumberValue.bitwiseXOR,
+      '|': NumberValue.bitwiseOR,
+    };
+    return Q(operations[opText](lnum, rnum as NumberValue));
+  }
 }

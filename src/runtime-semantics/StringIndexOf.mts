@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { JSStringValue } from '../value.mts';
 import { Assert, F, isNonNegativeInteger } from '../abstract-ops/all.mts';
 

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import { Value, ReferenceRecord, JSStringValue } from '../value.mts';
 import {
@@ -9,7 +8,7 @@ import {
 } from '../abstract-ops/all.mts';
 import { IsInTailPosition } from '../static-semantics/all.mts';
 import { Q } from '../completion.mts';
-import { Evaluate } from '../evaluator.mts';
+import { Evaluate, type ExpressionEvaluator } from '../evaluator.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { EvaluateCall, ArgumentListEvaluation } from './all.mts';
 
@@ -17,7 +16,7 @@ import { EvaluateCall, ArgumentListEvaluation } from './all.mts';
 // CallExpression :
 //   CoverCallExpressionAndAsyncArrowHead
 //   CallExpression Arguments
-export function* Evaluate_CallExpression(CallExpression: ParseNode.CallExpression) {
+export function* Evaluate_CallExpression(CallExpression: ParseNode.CallExpression): ExpressionEvaluator {
   // 1. Let expr be CoveredCallExpression of CoverCallExpressionAndAsyncArrowHead.
   const expr = CallExpression;
   // 2. Let memberExpr be the MemberExpression of expr.

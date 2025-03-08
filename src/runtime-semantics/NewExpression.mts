@@ -1,19 +1,19 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import {
   Assert,
   Construct,
   GetValue,
   IsConstructor,
+  type FunctionObject,
 } from '../abstract-ops/all.mts';
 import { Value } from '../value.mts';
-import { Evaluate } from '../evaluator.mts';
+import { Evaluate, type ExpressionEvaluator } from '../evaluator.mts';
 import { Q } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { ArgumentListEvaluation } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-evaluatenew */
-function* EvaluateNew(constructExpr, args) {
+function* EvaluateNew(constructExpr: ParseNode.LeftHandSideExpression, args: undefined | ParseNode.Arguments) {
   // 1. Assert: constructExpr is either a NewExpression or a MemberExpression.
   // 2. Assert: arguments is either empty or an Arguments.
   Assert(args === undefined || Array.isArray(args));
@@ -34,14 +34,14 @@ function* EvaluateNew(constructExpr, args) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', constructor);
   }
   // 8. Return ? Construct(constructor, argList).
-  return Q(Construct(constructor, argList));
+  return Q(Construct(constructor as FunctionObject, argList));
 }
 
 /** https://tc39.es/ecma262/#sec-new-operator-runtime-semantics-evaluation */
 //   NewExpression :
 //     `new` NewExpression
 //     `new` MemberExpression Arguments
-export function* Evaluate_NewExpression({ MemberExpression, Arguments }: ParseNode.NewExpression) {
+export function* Evaluate_NewExpression({ MemberExpression, Arguments }: ParseNode.NewExpression): ExpressionEvaluator {
   if (!Arguments) {
     // 1. Return ? EvaluateNew(NewExpression, empty).
     return Q(yield* EvaluateNew(MemberExpression, undefined));

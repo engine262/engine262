@@ -30,4 +30,5 @@ export type VarScopedDeclaration =
   | ParseNode.FunctionDeclaration
   | ParseNode.GeneratorDeclaration
   | ParseNode.AsyncFunctionDeclaration
-  | ParseNode.AsyncGeneratorDeclaration;
+  | ParseNode.AsyncGeneratorDeclaration
+  | ParseNode.BindingIdentifier;

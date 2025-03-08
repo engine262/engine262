@@ -1,6 +1,7 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
-import { BooleanValue, JSStringValue, Value } from '../value.mts';
+import {
+  BooleanValue, JSStringValue, NullValue, ObjectValue, Value, type Arguments, type FunctionCallContext,
+} from '../value.mts';
 import {
   Assert,
   CreateIteratorFromClosure,
@@ -10,16 +11,19 @@ import {
   Get,
   Set,
   Yield,
-  F, R, R as MathematicalValue,
+  F, R as MathematicalValue,
+  Realm,
+  type GeneratorObject,
 } from '../abstract-ops/all.mts';
-import { Q, X } from '../completion.mts';
+import { Q, X, type ExpressionCompletion } from '../completion.mts';
+import type { YieldEvaluator } from '../evaluator.mts';
 import { RegExpExec, AdvanceStringIndex } from './RegExpPrototype.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 
 const kRegExpStringIteratorPrototype = Value('%RegExpStringIteratorPrototype%');
 
 /** https://tc39.es/ecma262/#sec-createregexpstringiterator */
-export function CreateRegExpStringIterator(R, S, global, fullUnicode) {
+export function CreateRegExpStringIterator(R: ObjectValue, S: JSStringValue, global: BooleanValue, fullUnicode: BooleanValue): ExpressionCompletion<GeneratorObject> {
   // 1. Assert: Type(S) is String.
   Assert(S instanceof JSStringValue);
   // 2. Assert: Type(global) is Boolean.
@@ -27,13 +31,13 @@ export function CreateRegExpStringIterator(R, S, global, fullUnicode) {
   // 3. Assert: Type(fullUnicode) is Boolean.
   Assert(fullUnicode instanceof BooleanValue);
   // 4. Let closure be a new Abstract Closure with no parameters that captures R, S, global, and fullUnicode and performs the following steps when called:
-  const closure = function* closure() {
+  const closure = function* closure(): YieldEvaluator {
     // a. Repeat,
     while (true) {
       // i. Let match be ? RegExpExec(R, S).
       const match = Q(RegExpExec(R, S));
       // ii. If match is null, return undefined.
-      if (match === Value.null) {
+      if (match instanceof NullValue) {
         return Value.undefined;
       }
       // iii. If global is false, then
@@ -63,12 +67,12 @@ export function CreateRegExpStringIterator(R, S, global, fullUnicode) {
 }
 
 /** https://tc39.es/ecma262/#sec-%regexpstringiteratorprototype%.next */
-function RegExpStringIteratorPrototype_next(args, { thisValue }) {
+function RegExpStringIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Return ? GeneratorResume(this value, empty, "%RegExpStringIteratorPrototype%").
   return Q(GeneratorResume(thisValue, undefined, kRegExpStringIteratorPrototype));
 }
 
-export function bootstrapRegExpStringIteratorPrototype(realmRec) {
+export function bootstrapRegExpStringIteratorPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['next', RegExpStringIteratorPrototype_next, 0],
   ], realmRec.Intrinsics['%IteratorPrototype%'], 'RegExp String Iterator');

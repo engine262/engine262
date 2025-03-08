@@ -1,21 +1,24 @@
-// @ts-nocheck
 import {
   DefinePropertyOrThrow,
   OrdinaryCreateFromConstructor,
   InstallErrorCause,
   ToString,
+  Realm,
+  type FunctionObject,
 } from '../abstract-ops/all.mts';
 import {
   Descriptor,
   Value,
+  type Arguments,
+  type FunctionCallContext,
 } from '../value.mts';
-import { Q, X } from '../completion.mts';
+import { Q, X, type ExpressionCompletion } from '../completion.mts';
 import { surroundingAgent } from '../engine.mts';
 import { captureStack } from '../helpers.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-error-constructor */
-function ErrorConstructor([message = Value.undefined, options = Value.undefined], { NewTarget }) {
+function ErrorConstructor([message = Value.undefined, options = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext): ExpressionCompletion {
   // 1. If NewTarget is undefined, let newTarget be the active function object; else let newTarget be NewTarget.
   let newTarget;
   if (NewTarget === Value.undefined) {
@@ -24,7 +27,7 @@ function ErrorConstructor([message = Value.undefined, options = Value.undefined]
     newTarget = NewTarget;
   }
   // 2. Let O be ? OrdinaryCreateFromConstructor(newTarget, "%Error.prototype%", « [[ErrorData]] »).
-  const O = Q(OrdinaryCreateFromConstructor(newTarget, '%Error.prototype%', ['ErrorData']));
+  const O = Q(OrdinaryCreateFromConstructor(newTarget as FunctionObject, '%Error.prototype%', ['ErrorData']));
   // 3. If message is not undefined, then
   if (message !== Value.undefined) {
     // a. Let msg be ? ToString(message).
@@ -49,7 +52,7 @@ function ErrorConstructor([message = Value.undefined, options = Value.undefined]
   return O;
 }
 
-export function bootstrapError(realmRec) {
+export function bootstrapError(realmRec: Realm) {
   const error = bootstrapConstructor(realmRec, ErrorConstructor, 'Error', 1, realmRec.Intrinsics['%Error.prototype%'], []);
 
   realmRec.Intrinsics['%Error%'] = error;

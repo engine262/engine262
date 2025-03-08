@@ -7,7 +7,10 @@ import { format as _format, inspect as _inspect, parseArgs } from 'node:util';
 import packageJson from '../package.json' with { type: 'json' }; // eslint-disable-line import/order
 import { createRealm, createAgent } from './test262_realm.mts';
 import {
-  setSurroundingAgent, FEATURES, inspect, Value, CreateBuiltinFunction, CreateDataProperty, OrdinaryObjectCreate, Type, Completion, AbruptCompletion, Throw, ObjectValue, JSStringValue,
+  setSurroundingAgent, FEATURES, inspect, Value, CreateBuiltinFunction, CreateDataProperty, OrdinaryObjectCreate, Type, Completion, AbruptCompletion, Throw, JSStringValue,
+  type Arguments,
+  type PlainCompletion,
+  surroundingAgent,
 } from '#self';
 
 const help = `
@@ -26,19 +29,24 @@ Options:
     --features=...  A comma separated list of features.
     --features=all  Enable all features.
     --list-features List available features.
-    --inspector     [TODO]: Attach an inspector.
+    --no-inspector  Do not attach an inspector.
+    --no-preview    Do not enable preview in the inspector.
 `;
 
 const argv = parseArgs({
   args: process.argv.slice(2),
   allowPositionals: true,
+  allowNegative: true,
   strict: true,
   options: {
     'help': { type: 'boolean', short: 'h' },
     'module': { type: 'boolean', short: 'm' },
     'features': { type: 'string' },
     'list-features': { type: 'boolean' },
-    'inspector': { type: 'boolean' },
+    'inspector': { type: 'boolean', default: true },
+    'preview': { type: 'boolean', default: true },
+    // hidden options
+    'preview-debug': { type: 'boolean' },
   },
 });
 
@@ -80,11 +88,12 @@ const agent = createAgent({ features });
 setSurroundingAgent(agent);
 
 const { realm, resolverCache } = createRealm({ printCompatMode: true });
+// Define console.log
 realm.scope(() => {
-  const console = OrdinaryObjectCreate(realm.Intrinsics['%Object.prototype%'] as ObjectValue);
+  const console = OrdinaryObjectCreate(realm.Intrinsics['%Object.prototype%']);
   CreateDataProperty(realm.GlobalObject, Value('console'), console);
 
-  const format = (args: readonly Value[]) => args.map((a, i) => {
+  const format = (args: Arguments) => args.map((a, i) => {
     if (i === 0 && Type(a) === 'String') {
       return (a as JSStringValue).stringValue();
     }
@@ -92,18 +101,27 @@ realm.scope(() => {
   }).join(' ');
 
   const log = CreateBuiltinFunction((args) => {
+    if (surroundingAgent.debugger_isPreviewing) {
+      return Value.undefined;
+    }
     process.stdout.write(`${format(args)}\n`);
     return Value.undefined;
   }, 1, Value('log'), []);
   CreateDataProperty(console, Value('log'), log);
 
   const error = CreateBuiltinFunction((args) => {
+    if (surroundingAgent.debugger_isPreviewing) {
+      return Value.undefined;
+    }
     process.stderr.write(`${format(args)}\n`);
     return Value.undefined;
   }, 1, Value('error'), []);
   CreateDataProperty(console, Value('error'), error);
 
   const debug = CreateBuiltinFunction((args) => {
+    if (surroundingAgent.debugger_isPreviewing) {
+      return Value.undefined;
+    }
     process.stderr.write(`${_format(...args)}\n`);
     return Value.undefined;
   }, 1, Value('debug'), []);
@@ -111,11 +129,15 @@ realm.scope(() => {
 });
 
 if (argv.values.inspector) {
-  throw new Error('TODO: Attach an inspector');
+  // @ts-ignore
+  const { attachRealm, inspectorOptions } = await import('../inspector/server.mts');
+  attachRealm(realm);
+  inspectorOptions.preview = argv.values.preview;
+  inspectorOptions.previewDebug = argv.values['preview-debug'] || false;
 }
 
 function oneShotEval(source: string, filename: string) {
-  function Q<T>(value: T | AbruptCompletion): T {
+  function Q<T>(value: PlainCompletion<T>): T {
     if (value instanceof AbruptCompletion) {
       throw value;
     }
@@ -182,7 +204,7 @@ Please report bugs to ${packageJson.bugs.url}
     completer: () => [],
     writer: (o) => realm.scope(() => {
       if (o instanceof Value || o instanceof Completion) {
-        return inspect(o as Value | Completion);
+        return inspect(o as Value | Completion<unknown>);
       }
       return _inspect(o);
     }),

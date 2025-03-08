@@ -6,5 +6,7 @@ module.exports = {
     'valid-feature': require('./valid-feature'),
     'valid-throw': require('./valid-throw'),
     'mathematical-value': require('./mathematical-value'),
+
+    'safe-function-with-q': require('./safe-function-with-q'),
   },
 };

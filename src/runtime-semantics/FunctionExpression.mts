@@ -1,4 +1,3 @@
-// @ts-nocheck
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { InstantiateOrdinaryFunctionExpression } from './all.mts';
 

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import {
   BooleanValue,
@@ -33,12 +32,19 @@ import {
   UTF16EncodeCodePoint,
 } from '../static-semantics/all.mts';
 import {
+  AbruptCompletion,
   NormalCompletion,
   Q, X,
 } from '../completion.mts';
-import { ValueSet, kInternal } from '../helpers.mts';
-import { BigIntValue, evaluateScript, F } from '../api.mts';
+import { JSStringSet, kInternal } from '../helpers.mts';
+import {
+  BigIntValue, evaluateScript, F, Realm, type Arguments,
+  type ExpressionCompletion,
+  type PlainCompletion,
+} from '../api.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
+import { isBooleanObject } from './Boolean.mts';
+import { isBigIntObject } from './BigInt.mts';
 
 const WHITESPACE = [' ', '\t', '\r', '\n'];
 const NUMERIC = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
@@ -50,9 +56,9 @@ class JSONValidator {
 
   pos = 0;
 
-  char;
+  char: string | null;
 
-  constructor(input) {
+  constructor(input: string) {
     this.input = input;
     this.char = input.charAt(0);
   }
@@ -84,7 +90,7 @@ class JSONValidator {
     }
   }
 
-  eat(c) {
+  eat(c: string | readonly string[]) {
     if (Array.isArray(c) && c.includes(this.char)) {
       X(this.advance());
       return true;
@@ -95,7 +101,7 @@ class JSONValidator {
     return false;
   }
 
-  expect(c) {
+  expect(c: string | readonly string[]) {
     const { char } = this;
     if (!this.eat(c)) {
       return surroundingAgent.Throw('SyntaxError', 'JSONExpected', c, this.char);
@@ -159,7 +165,7 @@ class JSONValidator {
           Q(this.expect(VALID_HEX));
         }
       } else {
-        if (this.char < ' ') {
+        if (this.char! < ' ') {
           return surroundingAgent.Throw('SyntaxError', 'JSONUnexpectedChar', this.char);
         }
         Q(this.advance());
@@ -168,7 +174,7 @@ class JSONValidator {
     return X(this.eatWhitespace());
   }
 
-  parseNumber() {
+  parseNumber(): PlainCompletion<void> {
     this.eat('-');
     if (!this.eat('0')) {
       Q(this.expect(NUMERIC));
@@ -192,7 +198,7 @@ class JSONValidator {
     X(this.eatWhitespace());
   }
 
-  parseObject() {
+  parseObject(): PlainCompletion<void> {
     Q(this.expect('{'));
     X(this.eatWhitespace());
     let first = true;
@@ -213,7 +219,7 @@ class JSONValidator {
     X(this.eatWhitespace());
   }
 
-  parseArray() {
+  parseArray(): PlainCompletion<void> {
     Q(this.expect('['));
     X(this.eatWhitespace());
     let first = true;
@@ -230,13 +236,13 @@ class JSONValidator {
     X(this.eatWhitespace());
   }
 
-  static validate(input) {
+  static validate(input: string) {
     const v = new JSONValidator(input);
     return v.validate();
   }
 }
 
-function InternalizeJSONProperty(holder, name, reviver) {
+function InternalizeJSONProperty(holder: ObjectValue, name: JSStringValue, reviver: Value): ExpressionCompletion {
   const val = Q(Get(holder, name));
   if (val instanceof ObjectValue) {
     const isArray = Q(IsArray(val));
@@ -269,7 +275,7 @@ function InternalizeJSONProperty(holder, name, reviver) {
 }
 
 /** https://tc39.es/ecma262/#sec-json.parse */
-function JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
+function JSON_parse([text = Value.undefined, reviver = Value.undefined]: Arguments): ExpressionCompletion {
   // 1. Let jsonString be ? ToString(text).
   const jsonString = Q(ToString(text));
   // 2. Parse ! UTF16DecodeString(jsonString) as a JSON text as specified in ECMA-404.
@@ -280,15 +286,15 @@ function JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
   // 4. Let completion be the result of parsing and evaluating
   //    ! UTF16DecodeString(scriptString) as if it was the source text of an ECMAScript Script. The
   //    extended PropertyDefinitionEvaluation semantics defined in B.3.1 must not be used during the evaluation.
-  const completion = evaluateScript(scriptString, surroundingAgent.currentRealmRecord, { [kInternal]: { json: true } });
+  const completion = X(evaluateScript(scriptString, surroundingAgent.currentRealmRecord, { [kInternal]: { json: true } }));
   // 5. Let unfiltered be completion.[[Value]].
-  const unfiltered = completion.Value;
+  const unfiltered = completion;
   // 6. Assert: unfiltered is either a String, Number, Boolean, Null, or an Object that is defined by either an ArrayLiteral or an ObjectLiteral.
   Assert(unfiltered instanceof JSStringValue
-         || unfiltered instanceof NumberValue
-         || unfiltered instanceof BooleanValue
-         || unfiltered instanceof NullValue
-         || unfiltered instanceof ObjectValue);
+    || unfiltered instanceof NumberValue
+    || unfiltered instanceof BooleanValue
+    || unfiltered instanceof NullValue
+    || unfiltered instanceof ObjectValue);
   // 7. If IsCallable(reviver) is true, then
   if (IsCallable(reviver) === Value.true) {
     // a. Let root be OrdinaryObjectCreate(%Object.prototype%).
@@ -315,8 +321,15 @@ const codeUnitTable = new Map([
   [0x005C, '\\\\'],
 ]);
 
+interface State {
+  ReplacerFunction: ObjectValue | UndefinedValue;
+  Stack: ObjectValue[];
+  Indent: string;
+  Gap: string;
+  PropertyList: JSStringSet | UndefinedValue;
+}
 /** https://tc39.es/ecma262/#sec-serializejsonproperty */
-function SerializeJSONProperty(state, key, holder) {
+function SerializeJSONProperty(state: State, key: JSStringValue, holder: ObjectValue) {
   let value = Q(Get(holder, key)); // eslint-disable-line no-shadow
   if (value instanceof ObjectValue || value instanceof BigIntValue) {
     const toJSON = Q(GetV(value, Value('toJSON')));
@@ -332,9 +345,9 @@ function SerializeJSONProperty(state, key, holder) {
       value = Q(ToNumber(value));
     } else if ('StringData' in value) {
       value = Q(ToString(value));
-    } else if ('BooleanData' in value) {
+    } else if (isBooleanObject(value)) {
       value = value.BooleanData;
-    } else if ('BigIntData' in value) {
+    } else if (isBigIntObject(value)) {
       value = value.BigIntData;
     }
   }
@@ -369,15 +382,15 @@ function SerializeJSONProperty(state, key, holder) {
   return Value.undefined;
 }
 
-function UnicodeEscape(C) {
+function UnicodeEscape(C: string) {
   const n = C.charCodeAt(0);
   Assert(n < 0xFFFF);
   return `\u005Cu${n.toString(16).padStart(4, '0')}`;
 }
 
-function QuoteJSONString(value) { // eslint-disable-line no-shadow
+function QuoteJSONString(value: JSStringValue) { // eslint-disable-line no-shadow
   let product = '\u0022';
-  const cpList = [...value.stringValue()].map((c) => c.codePointAt(0));
+  const cpList = [...value.stringValue()].map((c) => c.codePointAt(0)!);
   for (const C of cpList) {
     if (codeUnitTable.has(C)) {
       product = `${product}${codeUnitTable.get(C)}`;
@@ -393,23 +406,23 @@ function QuoteJSONString(value) { // eslint-disable-line no-shadow
 }
 
 /** https://tc39.es/ecma262/#sec-serializejsonobject */
-function SerializeJSONObject(state, value) {
+function SerializeJSONObject(state: State, value: ObjectValue) {
   if (state.Stack.includes(value)) {
     return surroundingAgent.Throw('TypeError', 'JSONCircular');
   }
   state.Stack.push(value);
   const stepback = state.Indent;
   state.Indent = `${state.Indent}${state.Gap}`;
-  let K;
-  if (state.PropertyList !== Value.undefined) {
-    K = state.PropertyList;
+  let K: IterableIterator<JSStringValue>;
+  if (!(state.PropertyList instanceof UndefinedValue)) {
+    K = state.PropertyList.keys();
   } else {
-    K = Q(EnumerableOwnPropertyNames(value, 'key'));
+    K = Q(EnumerableOwnPropertyNames(value, 'key')).values();
   }
   const partial = [];
   for (const P of K) {
     const strP = Q(SerializeJSONProperty(state, P, value));
-    if (strP !== Value.undefined) {
+    if (!(strP instanceof UndefinedValue)) {
       let member = QuoteJSONString(P).stringValue();
       member = `${member}:`;
       if (state.Gap !== '') {
@@ -438,7 +451,7 @@ function SerializeJSONObject(state, value) {
 }
 
 /** https://tc39.es/ecma262/#sec-serializejsonarray */
-function SerializeJSONArray(state, value) {
+function SerializeJSONArray(state: State, value: ObjectValue): JSStringValue | AbruptCompletion {
   if (state.Stack.includes(value)) {
     return surroundingAgent.Throw('TypeError', 'JSONCircular');
   }
@@ -451,7 +464,7 @@ function SerializeJSONArray(state, value) {
   while (index < len) {
     const indexStr = X(ToString(F(index)));
     const strP = Q(SerializeJSONProperty(state, indexStr, value));
-    if (strP === Value.undefined) {
+    if (strP instanceof UndefinedValue) {
       partial.push('null');
     } else {
       partial.push(strP.stringValue());
@@ -477,24 +490,24 @@ function SerializeJSONArray(state, value) {
 }
 
 /** https://tc39.es/ecma262/#sec-json.stringify */
-function JSON_stringify([value = Value.undefined, replacer = Value.undefined, space = Value.undefined]) {
-  const stack = [];
+function JSON_stringify([value = Value.undefined, replacer = Value.undefined, _space = Value.undefined]: Arguments): ExpressionCompletion {
+  const stack: ObjectValue[] = [];
   const indent = '';
-  let PropertyList = Value.undefined;
-  let ReplacerFunction = Value.undefined;
+  let PropertyList: JSStringSet | UndefinedValue = Value.undefined;
+  let ReplacerFunction: ObjectValue | UndefinedValue = Value.undefined;
   if (replacer instanceof ObjectValue) {
     if (IsCallable(replacer) === Value.true) {
       ReplacerFunction = replacer;
     } else {
       const isArray = Q(IsArray(replacer));
       if (isArray === Value.true) {
-        PropertyList = new ValueSet();
+        PropertyList = new JSStringSet();
         const len = Q(LengthOfArrayLike(replacer));
         let k = 0;
         while (k < len) {
           const vStr = X(ToString(F(k)));
           const v = Q(Get(replacer, vStr));
-          let item = Value.undefined;
+          let item: JSStringValue | UndefinedValue = Value.undefined;
           if (v instanceof JSStringValue) {
             item = v;
           } else if (v instanceof NumberValue) {
@@ -504,7 +517,7 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
               item = Q(ToString(v));
             }
           }
-          if (item !== Value.undefined && !PropertyList.has(item)) {
+          if (!(item instanceof UndefinedValue) && !PropertyList.has(item)) {
             PropertyList.add(item);
           }
           k += 1;
@@ -512,6 +525,7 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
       }
     }
   }
+  let space: Value | number = _space;
   if (space instanceof ObjectValue) {
     if ('NumberData' in space) {
       space = Q(ToNumber(space));
@@ -519,7 +533,7 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
       space = Q(ToString(space));
     }
   }
-  let gap;
+  let gap: string;
   if (space instanceof NumberValue) {
     space = Math.min(10, X(ToIntegerOrInfinity(space)));
     if (space < 1) {
@@ -536,15 +550,15 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, sp
   } else {
     gap = '';
   }
-  const wrapper = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+  const wrapper = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%') as ObjectValue);
   X(CreateDataPropertyOrThrow(wrapper, Value(''), value));
-  const state = {
+  const state: State = {
     ReplacerFunction, Stack: stack, Indent: indent, Gap: gap, PropertyList,
   };
   return Q(SerializeJSONProperty(state, Value(''), wrapper));
 }
 
-export function bootstrapJSON(realmRec) {
+export function bootstrapJSON(realmRec: Realm) {
   const json = bootstrapPrototype(realmRec, [
     ['parse', JSON_parse, 2],
     ['stringify', JSON_stringify, 3],

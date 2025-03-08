@@ -2143,6 +2143,38 @@ export namespace ParseNode {
     readonly exportName: ModuleExportName;
   }
 
+  export type AssignmentPattern = ObjectAssignmentPattern | ArrayAssignmentPattern | AssignmentProperty | AssignmentElement | ParseNode.Elision;
+  export type ObjectAssignmentPattern = {
+    type: 'ObjectAssignmentPattern';
+    AssignmentPropertyList: (AssignmentProperty | AssignmentPattern)[];
+    AssignmentRestProperty: AssignmentRestProperty | undefined;
+  }
+  export type AssignmentProperty = {
+    type: 'AssignmentProperty';
+    IdentifierReference: ParseNode.IdentifierReference;
+    Initializer?: ParseNode.Initializer | null | undefined;
+  } | {
+    type: 'AssignmentProperty';
+    PropertyName: ParseNode.PropertyNameLike | null;
+    AssignmentElement: AssignmentElement;
+  }
+  export type AssignmentElement = {
+    type: 'AssignmentElement';
+    DestructuringAssignmentTarget: ParseNode.AssignmentExpressionOrHigher;
+    Initializer: ParseNode.Initializer | undefined | null;
+  }
+
+  export type ArrayAssignmentPattern = {
+    type: 'ArrayAssignmentPattern';
+    AssignmentElementList: AssignmentElisionElement[];
+    AssignmentRestElement: AssignmentRestElement | undefined;
+  }
+  export type AssignmentElisionElement = ParseNode.Elision | AssignmentElement | AssignmentPattern;
+  export type AssignmentRestProperty = {
+    type: 'AssignmentRestProperty';
+    DestructuringAssignmentTarget: ParseNode.AssignmentExpressionOrHigher;
+  }
+
   // Helpers
   // NON-SPEC
 

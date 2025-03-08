@@ -270,6 +270,9 @@ async function* parsePositional(pattern: string): AsyncGenerator<string> {
 
 async function* parsePositionals(pattern: string[]): AsyncGenerator<string> {
   for (const p of pattern) {
+    if (!p) {
+      continue;
+    }
     yield* parsePositional(p);
   }
 }

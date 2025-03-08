@@ -1,9 +1,13 @@
-// @ts-nocheck
 import {
   Type,
   NullValue,
   ObjectValue,
   Value,
+  type Arguments,
+  type FunctionCallContext,
+  UndefinedValue,
+  type PropertyKeyValue,
+  Descriptor,
 } from '../value.mts';
 import {
   surroundingAgent,
@@ -30,17 +34,19 @@ import {
   ToPropertyDescriptor,
   ToPropertyKey,
   CreateBuiltinFunction,
+  Realm,
+  type FunctionObject,
 } from '../abstract-ops/all.mts';
-import { Q, X } from '../completion.mts';
+import { Q, X, type ExpressionCompletion } from '../completion.mts';
 import { AddEntriesFromIterable } from './Map.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-object-value */
-function ObjectConstructor([value = Value.undefined], { NewTarget }) {
+function ObjectConstructor([value = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext): ExpressionCompletion {
   // 1. If NewTarget is neither undefined nor the active function, then
   if (NewTarget !== Value.undefined && NewTarget !== surroundingAgent.activeFunctionObject) {
     // a. Return ? OrdinaryCreateFromConstructor(NewTarget, "%Object.prototype%").
-    return OrdinaryCreateFromConstructor(NewTarget, '%Object.prototype%');
+    return OrdinaryCreateFromConstructor(NewTarget as FunctionObject, '%Object.prototype%');
   }
   // 2. If value is undefined or null, return OrdinaryObjectCreate(%Object.prototype%).
   if (value === Value.null || value === Value.undefined) {
@@ -51,7 +57,7 @@ function ObjectConstructor([value = Value.undefined], { NewTarget }) {
 }
 
 /** https://tc39.es/ecma262/#sec-object.assign */
-function Object_assign([target = Value.undefined, ...sources]) {
+function Object_assign([target = Value.undefined, ...sources]: Arguments): ExpressionCompletion {
   // 1. Let to be ? ToObject(target).
   const to = Q(ToObject(target));
   // 2. If only one argument was passed, return to.
@@ -72,7 +78,7 @@ function Object_assign([target = Value.undefined, ...sources]) {
         // 1. Let desc be ? from.[[GetOwnProperty]](nextKey).
         const desc = Q(from.GetOwnProperty(nextKey));
         // 2. If desc is not undefined and desc.[[Enumerable]] is true, then
-        if (desc !== Value.undefined && desc.Enumerable === Value.true) {
+        if (!(desc instanceof UndefinedValue) && desc.Enumerable === Value.true) {
           // a. Let propValue be ? Get(from, nextKey).
           const propValue = Q(Get(from, nextKey));
           // b. Perform ? Set(to, nextKey, propValue, true).
@@ -86,7 +92,7 @@ function Object_assign([target = Value.undefined, ...sources]) {
 }
 
 /** https://tc39.es/ecma262/#sec-object.create */
-function Object_create([O = Value.undefined, Properties = Value.undefined]) {
+function Object_create([O = Value.undefined, Properties = Value.undefined]: Arguments) {
   // 1. If Type(O) is neither Object nor Null, throw a TypeError exception.
   if (!(O instanceof ObjectValue) && !(O instanceof NullValue)) {
     return surroundingAgent.Throw('TypeError', 'ObjectPrototypeType');
@@ -103,13 +109,13 @@ function Object_create([O = Value.undefined, Properties = Value.undefined]) {
 }
 
 /** https://tc39.es/ecma262/#sec-object.defineproperties */
-function Object_defineProperties([O = Value.undefined, Properties = Value.undefined]) {
+function Object_defineProperties([O = Value.undefined, Properties = Value.undefined]: Arguments): ExpressionCompletion {
   // 1. Return ? ObjectDefineProperties(O, Properties).
   return Q(ObjectDefineProperties(O, Properties));
 }
 
 /** https://tc39.es/ecma262/#sec-objectdefineproperties ObjectDefineProperties */
-function ObjectDefineProperties(O, Properties) {
+function ObjectDefineProperties(O: Value, Properties: Value) {
   // 1. If Type(O) is not Object, throw a TypeError exception.
   if (!(O instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
@@ -119,13 +125,13 @@ function ObjectDefineProperties(O, Properties) {
   // 3. Let keys be ? props.[[OwnPropertyKeys]]().
   const keys = Q(props.OwnPropertyKeys());
   // 4. Let descriptors be a new empty List.
-  const descriptors = [];
+  const descriptors: [PropertyKeyValue, Descriptor][] = [];
   // 5. For each element nextKey of keys in List order, do
   for (const nextKey of keys) {
     // a. Let propDesc be ? props.[[GetOwnProperty]](nextKey).
     const propDesc = Q(props.GetOwnProperty(nextKey));
     // b. If propDesc is not undefined and propDesc.[[Enumerable]] is true, then
-    if (propDesc !== Value.undefined && propDesc.Enumerable === Value.true) {
+    if (!(propDesc instanceof UndefinedValue) && propDesc.Enumerable === Value.true) {
       // i. Let descObj be ? Get(props, nextKey).
       const descObj = Q(Get(props, nextKey));
       // ii. Let desc be ? ToPropertyDescriptor(descObj).
@@ -148,7 +154,7 @@ function ObjectDefineProperties(O, Properties) {
 }
 
 /** https://tc39.es/ecma262/#sec-object.defineproperty */
-function Object_defineProperty([O = Value.undefined, P = Value.undefined, Attributes = Value.undefined]) {
+function Object_defineProperty([O = Value.undefined, P = Value.undefined, Attributes = Value.undefined]: Arguments) {
   // 1. If Type(O) is not Object, throw a TypeError exception.
   if (!(O instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
@@ -164,7 +170,7 @@ function Object_defineProperty([O = Value.undefined, P = Value.undefined, Attrib
 }
 
 /** https://tc39.es/ecma262/#sec-object.entries */
-function Object_entries([O = Value.undefined]) {
+function Object_entries([O = Value.undefined]: Arguments): ExpressionCompletion {
   // 1. Let obj be ? ToObject(O).
   const obj = Q(ToObject(O));
   // 2. Let nameList be ? EnumerableOwnPropertyNames(obj, key+value).
@@ -174,7 +180,7 @@ function Object_entries([O = Value.undefined]) {
 }
 
 /** https://tc39.es/ecma262/#sec-object.freeze */
-function Object_freeze([O = Value.undefined]) {
+function Object_freeze([O = Value.undefined]: Arguments) {
   // 1. If Type(O) is not Object, return O.
   if (!(O instanceof ObjectValue)) {
     return O;
@@ -190,7 +196,7 @@ function Object_freeze([O = Value.undefined]) {
 }
 
 /** https://tc39.es/ecma262/#sec-object.fromentries */
-function Object_fromEntries([iterable = Value.undefined]) {
+function Object_fromEntries([iterable = Value.undefined]: Arguments): ExpressionCompletion {
   // 1. Perform ? RequireObjectCoercible(iterable).
   Q(RequireObjectCoercible(iterable));
   // 2. Let obj be ! OrdinaryObjectCreate(%Object.prototype%).
@@ -198,7 +204,7 @@ function Object_fromEntries([iterable = Value.undefined]) {
   // 3. Assert: obj is an extensible ordinary object with no own properties.
   Assert(obj.Extensible === Value.true && obj.properties.size === 0);
   // 4. Let closure be a new Abstract Closure with parameters (key, value) that captures obj and performs the following steps when called:
-  const closure = ([key = Value.undefined, value = Value.undefined]) => {
+  const closure = ([key = Value.undefined, value = Value.undefined]: Arguments): ExpressionCompletion => {
     // a. Let propertyKey be ? ToPropertyKey(key).
     const propertyKey = Q(ToPropertyKey(key));
     // b. Perform ! CreateDataPropertyOrThrow(obj, propertyKey, value).
@@ -213,7 +219,7 @@ function Object_fromEntries([iterable = Value.undefined]) {
 }
 
 /** https://tc39.es/ecma262/#sec-object.getownpropertydescriptor */
-function Object_getOwnPropertyDescriptor([O = Value.undefined, P = Value.undefined]) {
+function Object_getOwnPropertyDescriptor([O = Value.undefined, P = Value.undefined]: Arguments): ExpressionCompletion {
   // 1. Let obj be ? ToObject(O).
   const obj = Q(ToObject(O));
   // 2. Let key be ? ToPropertyKey(P).
@@ -225,7 +231,7 @@ function Object_getOwnPropertyDescriptor([O = Value.undefined, P = Value.undefin
 }
 
 /** https://tc39.es/ecma262/#sec-object.getownpropertydescriptors */
-function Object_getOwnPropertyDescriptors([O = Value.undefined]) {
+function Object_getOwnPropertyDescriptors([O = Value.undefined]: Arguments): ExpressionCompletion {
   // 1. Let obj be ? ToObject(O).
   const obj = Q(ToObject(O));
   // 2. Let ownKeys be ? obj.[[OwnPropertyKeys]]().
@@ -248,13 +254,13 @@ function Object_getOwnPropertyDescriptors([O = Value.undefined]) {
 }
 
 /** https://tc39.es/ecma262/#sec-getownpropertykeys */
-function GetOwnPropertyKeys(O, type) {
+function GetOwnPropertyKeys(O: Value, type: 'String' | 'Symbol'): ExpressionCompletion {
   // 1. Let obj be ? ToObject(O).
   const obj = Q(ToObject(O));
   // 2. Let keys be ? obj.[[OwnPropertyKeys]]().
   const keys = Q(obj.OwnPropertyKeys());
   // 3. Let nameList be a new empty List.
-  const nameList = [];
+  const nameList: PropertyKeyValue[] = [];
   // 4. For each element nextKey of keys in List order, do
   keys.forEach((nextKey) => {
     // a. If Type(nextKey) is Symbol and type is symbol or Type(nextKey) is String and type is string, then
@@ -267,19 +273,19 @@ function GetOwnPropertyKeys(O, type) {
 }
 
 /** https://tc39.es/ecma262/#sec-object.getownpropertynames */
-function Object_getOwnPropertyNames([O = Value.undefined]) {
+function Object_getOwnPropertyNames([O = Value.undefined]: Arguments): ExpressionCompletion {
   // 1. Return ? GetOwnPropertyKeys(O, string).
   return Q(GetOwnPropertyKeys(O, 'String'));
 }
 
 /** https://tc39.es/ecma262/#sec-object.getownpropertysymbols */
-function Object_getOwnPropertySymbols([O = Value.undefined]) {
+function Object_getOwnPropertySymbols([O = Value.undefined]: Arguments): ExpressionCompletion {
   // 1. Return ? GetOwnPropertyKeys(O, symbol).
   return Q(GetOwnPropertyKeys(O, 'Symbol'));
 }
 
 /** https://tc39.es/ecma262/#sec-object.getprototypeof */
-function Object_getPrototypeOf([O = Value.undefined]) {
+function Object_getPrototypeOf([O = Value.undefined]: Arguments): ExpressionCompletion {
   // 1. Let obj be ? ToObject(O).
   const obj = Q(ToObject(O));
   // 2. Return ? obj.[[GetPrototypeOf]]().
@@ -287,7 +293,7 @@ function Object_getPrototypeOf([O = Value.undefined]) {
 }
 
 /** https://tc39.es/ecma262/#sec-object.hasown */
-function Object_hasOwn([O = Value.undefined, P = Value.undefined]) {
+function Object_hasOwn([O = Value.undefined, P = Value.undefined]: Arguments) {
   // 1. Let obj be ? ToObject(O).
   const obj = Q(ToObject(O));
   // 2. Let O be ? ToObject(this value).
@@ -297,13 +303,13 @@ function Object_hasOwn([O = Value.undefined, P = Value.undefined]) {
 }
 
 /** https://tc39.es/ecma262/#sec-object.is */
-function Object_is([value1 = Value.undefined, value2 = Value.undefined]) {
+function Object_is([value1 = Value.undefined, value2 = Value.undefined]: Arguments) {
   // 1. Return SameValue(value1, value2).
   return SameValue(value1, value2);
 }
 
 /** https://tc39.es/ecma262/#sec-object.isextensible */
-function Object_isExtensible([O = Value.undefined]) {
+function Object_isExtensible([O = Value.undefined]: Arguments): ExpressionCompletion {
   // 1. If Type(O) is not Object, return false.
   if (!(O instanceof ObjectValue)) {
     return Value.false;
@@ -313,7 +319,7 @@ function Object_isExtensible([O = Value.undefined]) {
 }
 
 /** https://tc39.es/ecma262/#sec-object.isfrozen */
-function Object_isFrozen([O = Value.undefined]) {
+function Object_isFrozen([O = Value.undefined]: Arguments): ExpressionCompletion {
   // 1. If Type(O) is not Object, return true.
   if (!(O instanceof ObjectValue)) {
     return Value.true;
@@ -323,7 +329,7 @@ function Object_isFrozen([O = Value.undefined]) {
 }
 
 /** https://tc39.es/ecma262/#sec-object.issealed */
-function Object_isSealed([O = Value.undefined]) {
+function Object_isSealed([O = Value.undefined]: Arguments): ExpressionCompletion {
   // 1. If Type(O) is not Object, return true.
   if (!(O instanceof ObjectValue)) {
     return Value.true;
@@ -333,7 +339,7 @@ function Object_isSealed([O = Value.undefined]) {
 }
 
 /** https://tc39.es/ecma262/#sec-object.keys */
-function Object_keys([O = Value.undefined]) {
+function Object_keys([O = Value.undefined]: Arguments): ExpressionCompletion {
   // 1. Let obj be ? ToObject(O).
   const obj = Q(ToObject(O));
   // 2. Let nameList be ? EnumerableOwnPropertyNames(obj, key).
@@ -343,7 +349,7 @@ function Object_keys([O = Value.undefined]) {
 }
 
 /** https://tc39.es/ecma262/#sec-object.preventextensions */
-function Object_preventExtensions([O = Value.undefined]) {
+function Object_preventExtensions([O = Value.undefined]: Arguments) {
   // 1. If Type(O) is not Object, return O.
   if (!(O instanceof ObjectValue)) {
     return O;
@@ -359,7 +365,7 @@ function Object_preventExtensions([O = Value.undefined]) {
 }
 
 /** https://tc39.es/ecma262/#sec-object.seal */
-function Object_seal([O = Value.undefined]) {
+function Object_seal([O = Value.undefined]: Arguments) {
   // 1. If Type(O) is not Object, return O.
   if (!(O instanceof ObjectValue)) {
     return O;
@@ -375,7 +381,7 @@ function Object_seal([O = Value.undefined]) {
 }
 
 /** https://tc39.es/ecma262/#sec-object.setprototypeof */
-function Object_setPrototypeOf([O = Value.undefined, proto = Value.undefined]) {
+function Object_setPrototypeOf([O = Value.undefined, proto = Value.undefined]: Arguments) {
   // 1. Set O to ? RequireObjectCoercible(O).
   O = Q(RequireObjectCoercible(O));
   // 2. If Type(proto) is neither Object nor Null, throw a TypeError exception.
@@ -397,7 +403,7 @@ function Object_setPrototypeOf([O = Value.undefined, proto = Value.undefined]) {
 }
 
 /** https://tc39.es/ecma262/#sec-object.values */
-function Object_values([O = Value.undefined]) {
+function Object_values([O = Value.undefined]: Arguments): ExpressionCompletion {
   // 1. Let obj be ? ToObject(O).
   const obj = Q(ToObject(O));
   // 2. Let nameList be ? EnumerableOwnPropertyNames(obj, value).
@@ -406,7 +412,7 @@ function Object_values([O = Value.undefined]) {
   return CreateArrayFromList(nameList);
 }
 
-export function bootstrapObject(realmRec) {
+export function bootstrapObject(realmRec: Realm) {
   const objectConstructor = bootstrapConstructor(realmRec, ObjectConstructor, 'Object', 1, realmRec.Intrinsics['%Object.prototype%'], [
     ['assign', Object_assign, 2],
     ['create', Object_create, 2],

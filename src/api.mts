@@ -1,33 +1,42 @@
-// @ts-nocheck
-import { ObjectValue, Value } from './value.mts';
+import { ObjectValue, Value, type PropertyKeyValue } from './value.mts';
 import {
   surroundingAgent,
   ExecutionContext,
   HostEnqueueFinalizationRegistryCleanupJob,
   ScriptEvaluation,
+  type Markable,
+  AgentSignifier,
 } from './engine.mts';
 import {
   X,
   ThrowCompletion,
   AbruptCompletion,
   EnsureCompletion,
-  Completion,
-  NormalCompletion,
+  type PlainCompletion,
+  type ExpressionCompletion,
 } from './completion.mts';
 import {
   Realm,
   ClearKeptObjects,
   CreateIntrinsics,
-  SetRealmGlobalObject,
   SetDefaultGlobalBindings,
+  OrdinaryObjectCreate,
 } from './abstract-ops/all.mts';
 import {
   ParseScript,
   ParseModule,
   ParseJSONModule,
+  type ParseScriptHostDefined,
 } from './parse.mts';
-import { SourceTextModuleRecord } from './modules.mts';
+import { AbstractModuleRecord, SourceTextModuleRecord, type ModuleRecordHostDefinedPublic } from './modules.mts';
 import * as messages from './messages.mts';
+import { isWeakRef, type WeakRefObject } from './intrinsics/WeakRef.mts';
+import { isFinalizationRegistryObject, type FinalizationRegistryObject } from './intrinsics/FinalizationRegistry.mts';
+import { isWeakMapObject, type WeakMapObject } from './intrinsics/WeakMap.mts';
+import { isWeakSetObject, type WeakSetObject } from './intrinsics/WeakSet.mts';
+import type { PromiseObject } from './intrinsics/Promise.mts';
+import type { ParseNode } from './parser/ParseNode.mts';
+import { GlobalEnvironmentRecord, type Intrinsics } from '#self';
 
 export * from './value.mts';
 export * from './engine.mts';
@@ -39,8 +48,10 @@ export * from './environment.mts';
 export * from './parse.mts';
 export * from './modules.mts';
 export * from './inspect.mts';
+export * from './api-types.mts';
 
-export function Throw<K extends keyof typeof messages>(type: string | Value, template: K, ...templateArgs: Parameters<typeof messages[K]>): ThrowCompletion {
+export type ErrorType = 'AggregateError' | 'TypeError' | 'Error' | 'SyntaxError' | 'RangeError' | 'ReferenceError' | 'URIError';
+export function Throw<K extends keyof typeof messages>(type: ErrorType | Value, template: K, ...templateArgs: Parameters<typeof messages[K]>): ThrowCompletion {
   return surroundingAgent.Throw(type, template, ...templateArgs);
 }
 
@@ -59,14 +70,14 @@ export function gc() {
   //   d. For each WeakSet set such that set.[[WeakSetData]] contains obj,
   //     i. Replace the element of set whose value is obj with an element whose value is empty.
 
-  const marked = new Set();
-  const weakrefs = new Set();
-  const fgs = new Set();
-  const weakmaps = new Set();
-  const weaksets = new Set();
-  const ephemeronQueue = [];
+  const marked = new Set<unknown>();
+  const weakrefs = new Set<WeakRefObject>();
+  const fgs = new Set<FinalizationRegistryObject>();
+  const weakmaps = new Set<WeakMapObject>();
+  const weaksets = new Set<WeakSetObject>();
+  const ephemeronQueue: WeakMapObject['WeakMapData'][number][] = [];
 
-  const markCb = (O) => {
+  const markCb = (O: unknown) => {
     if (typeof O !== 'object' || O === null) {
       return;
     }
@@ -76,37 +87,37 @@ export function gc() {
     }
     marked.add(O);
 
-    if ('WeakRefTarget' in O && !('HeldValue' in O)) {
+    if (isWeakRef(O)) {
       weakrefs.add(O);
       markCb(O.properties);
       markCb(O.Prototype);
-    } else if ('Cells' in O) {
+    } else if (isFinalizationRegistryObject(O)) {
       fgs.add(O);
       markCb(O.properties);
       markCb(O.Prototype);
       O.Cells.forEach((cell) => {
         markCb(cell.HeldValue);
       });
-    } else if ('WeakMapData' in O) {
+    } else if (isWeakMapObject(O)) {
       weakmaps.add(O);
       markCb(O.properties);
       markCb(O.Prototype);
       O.WeakMapData.forEach((r) => {
         ephemeronQueue.push(r);
       });
-    } else if ('WeakSetData' in O) {
+    } else if (isWeakSetObject(O)) {
       weaksets.add(O);
       markCb(O.properties);
       markCb(O.Prototype);
-    } else if (O.mark) {
-      O.mark(markCb);
+    } else if ('mark' in O) {
+      (O as Markable).mark(markCb);
     }
   };
 
   markCb(surroundingAgent);
 
   while (ephemeronQueue.length > 0) {
-    const item = ephemeronQueue.shift();
+    const item = ephemeronQueue.shift()!;
     if (marked.has(item.Key)) {
       markCb(item.Value);
     }
@@ -162,7 +173,7 @@ export function runJobQueue() {
       job: abstractClosure,
       callerRealm,
       callerScriptOrModule,
-    } = surroundingAgent.jobQueue.shift();
+    } = surroundingAgent.jobQueue.shift()!;
 
     // 1. Perform any implementation-defined preparation steps.
     const newContext = new ExecutionContext();
@@ -179,7 +190,7 @@ export function runJobQueue() {
   }
 }
 
-export function evaluateScript(sourceText: string, realm: Realm, hostDefined) {
+export function evaluateScript(sourceText: string, realm: Realm, hostDefined?: ParseScriptHostDefined): ExpressionCompletion {
   const s = ParseScript(sourceText, realm, hostDefined);
   if (Array.isArray(s)) {
     return ThrowCompletion(s[0]);
@@ -189,31 +200,49 @@ export function evaluateScript(sourceText: string, realm: Realm, hostDefined) {
 }
 
 export interface ManagedRealmHostDefined {
-  promiseRejectionTracker?(promise, operation: 'reject' | 'handle'): unknown;
-  resolverCache?: Map<unknown, unknown>;
-  getImportMetaProperties?;
+  promiseRejectionTracker?(promise: PromiseObject, operation: 'reject' | 'handle'): void;
+  getImportMetaProperties?(module: ModuleRecordHostDefinedPublic): readonly { readonly Key: PropertyKeyValue, readonly Value: Value }[];
+  finalizeImportMeta?(meta: ObjectValue, module: ModuleRecordHostDefinedPublic): PlainCompletion<void>;
+  resolverCache?: Map<string, AbstractModuleRecord>;
+
+  randomSeed?(): string
 }
 export class ManagedRealm extends Realm {
-  topContext;
+  override TemplateMap: { Site: ParseNode.TemplateLiteral; Array: ObjectValue; }[];
+
+  override AgentSignifier: unknown;
+
+  override Intrinsics: Intrinsics;
+
+  override randomState: BigUint64Array<ArrayBufferLike> | undefined;
+
+  override GlobalObject: ObjectValue;
+
+  override GlobalEnv: GlobalEnvironmentRecord;
+
+  override HostDefined: ManagedRealmHostDefined;
+
+  topContext: ExecutionContext;
 
   active = false;
 
+  /** https://tc39.es/ecma262/#sec-initializehostdefinedrealm */
   constructor(HostDefined: ManagedRealmHostDefined = {}) {
     super();
-    // CreateRealm()
-    CreateIntrinsics(this);
-    this.GlobalObject = Value.undefined;
-    this.GlobalEnv = Value.undefined;
+    this.Intrinsics = CreateIntrinsics(this);
+    this.AgentSignifier = AgentSignifier();
     this.TemplateMap = [];
-    this.LoadedModules = [];
-
-    // InitializeHostDefinedRealm()
     const newContext = new ExecutionContext();
     newContext.Function = Value.null;
     newContext.Realm = this;
     newContext.ScriptOrModule = Value.null;
     surroundingAgent.executionContextStack.push(newContext);
-    SetRealmGlobalObject(this, Value.undefined, Value.undefined);
+    // TODO: a host hook for exotic global object
+    const global = OrdinaryObjectCreate(this.Intrinsics['%Object.prototype%']);
+    // TODO: a host hook for global "this" binding
+    const thisValue = global;
+    this.GlobalObject = global;
+    this.GlobalEnv = new GlobalEnvironmentRecord(global, thisValue);
     SetDefaultGlobalBindings(this);
 
     // misc
@@ -222,19 +251,19 @@ export class ManagedRealm extends Realm {
     this.topContext = newContext;
   }
 
-  scope<T>(cb: () => T) {
+  scope<T>(cb: () => T, inspectorPreview = false) {
     if (this.active) {
       return cb();
     }
     this.active = true;
     surroundingAgent.executionContextStack.push(this.topContext);
-    const r = cb();
+    const r = inspectorPreview ? surroundingAgent.debugger_scopePreview(cb) : cb();
     surroundingAgent.executionContextStack.pop(this.topContext);
     this.active = false;
     return r;
   }
 
-  evaluateScript(sourceText: string, { specifier } = {}): Completion {
+  evaluateScript(sourceText: string, { specifier, inspectorPreview }: { specifier?: string, inspectorPreview?: boolean } = {}): ExpressionCompletion {
     if (typeof sourceText !== 'string') {
       throw new TypeError('sourceText must be a string');
     }
@@ -245,7 +274,7 @@ export class ManagedRealm extends Realm {
         specifier,
         public: { specifier },
       });
-    });
+    }, inspectorPreview);
 
     if (!(res instanceof AbruptCompletion)) {
       runJobQueue();
@@ -254,7 +283,7 @@ export class ManagedRealm extends Realm {
     return res;
   }
 
-  createSourceTextModule(specifier: string, sourceText: string): SourceTextModuleRecord | AbruptCompletion<ObjectValue> {
+  createSourceTextModule(specifier: string, sourceText: string): PlainCompletion<SourceTextModuleRecord> {
     if (typeof specifier !== 'string') {
       throw new TypeError('specifier must be a string');
     }

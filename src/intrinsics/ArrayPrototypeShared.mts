@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   Assert,
   Call,
@@ -9,16 +8,21 @@ import {
   IsCallable,
   SameValueZero,
   Set,
-  StrictEqualityComparison,
+  IsStrictlyEqual,
   ToBoolean,
   ToIntegerOrInfinity,
   ToObject,
   ToString,
   F, R,
+  Realm,
 } from '../abstract-ops/all.mts';
-import { Q, X } from '../completion.mts';
+import {
+  Q, X, type ExpressionCompletion, type PlainCompletion,
+} from '../completion.mts';
 import { surroundingAgent } from '../engine.mts';
-import { NullValue, UndefinedValue, Value } from '../value.mts';
+import {
+  NullValue, NumberValue, ObjectValue, UndefinedValue, Value, type Arguments, type FunctionCallContext,
+} from '../value.mts';
 import { assignProps } from './bootstrap.mts';
 
 // Algorithms and methods shared between %Array.prototype% and
@@ -30,7 +34,7 @@ import { assignProps } from './bootstrap.mts';
 // If internalMethodsRestricted is true, then Asserts are used to ensure that
 // "The only internal methods of the this object that the algorithm may call
 // are [[Get]] and [[Set]]," a requirement of %TypedArray%.prototype.sort.
-export function ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestricted = false) {
+export function ArrayProto_sortBody(obj: ObjectValue, len: number, SortCompare: (x: Value, y: Value) => ExpressionCompletion<NumberValue>, internalMethodsRestricted = false): ExpressionCompletion {
   const items = [];
   let k = 0;
   while (k < len) {
@@ -111,10 +115,10 @@ export function ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestri
   return obj;
 }
 
-export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorithm, objectToLength) {
+export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValue, priorToEvaluatingAlgorithm: (value: Value) => void, objectToLength: (o: ObjectValue) => PlainCompletion<number>) {
   /** https://tc39.es/ecma262/#sec-array.prototype.every */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.every */
-  function ArrayProto_every([callbackFn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
+  function ArrayProto_every([callbackFn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const len = Q(objectToLength(O));
@@ -139,7 +143,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
 
   /** https://tc39.es/ecma262/#sec-array.prototype.find */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.find */
-  function ArrayProto_find([predicate = Value.undefined, thisArg = Value.undefined], { thisValue }) {
+  function ArrayProto_find([predicate = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const len = Q(objectToLength(O));
@@ -161,7 +165,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
 
   /** https://tc39.es/ecma262/#sec-array.prototype.findindex */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.findindex */
-  function ArrayProto_findIndex([predicate = Value.undefined, thisArg = Value.undefined], { thisValue }) {
+  function ArrayProto_findIndex([predicate = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const len = Q(objectToLength(O));
@@ -183,7 +187,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
 
   /** https://tc39.es/ecma262/#sec-array.prototype.findlast */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.findlast */
-  function ArrayProto_findLast([predicate = Value.undefined, thisArg = Value.undefined], { thisValue }) {
+  function ArrayProto_findLast([predicate = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
     Q(priorToEvaluatingAlgorithm(thisValue));
     // Let O be ? ToObject(this value).
     const O = Q(ToObject(thisValue));
@@ -216,7 +220,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
 
   /** https://tc39.es/ecma262/#sec-array.prototype.findlastindex */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.findlastindex */
-  function ArrayProto_findLastIndex([predicate = Value.undefined, thisArg = Value.undefined], { thisValue }) {
+  function ArrayProto_findLastIndex([predicate = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
     Q(priorToEvaluatingAlgorithm(thisValue));
     // Let O be ? ToObject(this value).
     const O = Q(ToObject(thisValue));
@@ -249,7 +253,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
 
   /** https://tc39.es/ecma262/#sec-array.prototype.foreach */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.foreach */
-  function ArrayProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
+  function ArrayProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const len = Q(objectToLength(O));
@@ -271,7 +275,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
 
   /** https://tc39.es/ecma262/#sec-array.prototype.includes */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.includes */
-  function ArrayProto_includes([searchElement = Value.undefined, fromIndex = Value.undefined], { thisValue }) {
+  function ArrayProto_includes([searchElement = Value.undefined, fromIndex = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const len = Q(objectToLength(O));
@@ -304,7 +308,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
 
   /** https://tc39.es/ecma262/#sec-array.prototype.indexof */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.indexof */
-  function ArrayProto_indexOf([searchElement = Value.undefined, fromIndex = Value.undefined], { thisValue }) {
+  function ArrayProto_indexOf([searchElement = Value.undefined, fromIndex = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const len = Q(objectToLength(O));
@@ -332,7 +336,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
       const kPresent = Q(HasProperty(O, kStr));
       if (kPresent === Value.true) {
         const elementK = Q(Get(O, kStr));
-        const same = StrictEqualityComparison(searchElement, elementK);
+        const same = IsStrictlyEqual(searchElement, elementK);
         if (same === Value.true) {
           return F(k);
         }
@@ -344,7 +348,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
 
   /** https://tc39.es/ecma262/#sec-array.prototype.join */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.join */
-  function ArrayProto_join([separator = Value.undefined], { thisValue }) {
+  function ArrayProto_join([separator = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const len = Q(objectToLength(O));
@@ -376,7 +380,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
 
   /** https://tc39.es/ecma262/#sec-array.prototype.lastindexof */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.lastindexof */
-  function ArrayProto_lastIndexOf([searchElement = Value.undefined, fromIndex], { thisValue }) {
+  function ArrayProto_lastIndexOf([searchElement = Value.undefined, fromIndex]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const len = Q(objectToLength(O));
@@ -400,7 +404,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
       const kPresent = Q(HasProperty(O, kStr));
       if (kPresent === Value.true) {
         const elementK = Q(Get(O, kStr));
-        const same = StrictEqualityComparison(searchElement, elementK);
+        const same = IsStrictlyEqual(searchElement, elementK);
         if (same === Value.true) {
           return F(k);
         }
@@ -412,7 +416,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
 
   /** https://tc39.es/ecma262/#sec-array.prototype.reduce */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.reduce */
-  function ArrayProto_reduce([callbackfn = Value.undefined, initialValue], { thisValue }) {
+  function ArrayProto_reduce([callbackfn = Value.undefined, initialValue]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const len = Q(objectToLength(O));
@@ -423,7 +427,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
       return surroundingAgent.Throw('TypeError', 'ArrayEmptyReduce');
     }
     let k = 0;
-    let accumulator = Value.undefined;
+    let accumulator: Value = Value.undefined;
     if (initialValue !== undefined) {
       accumulator = initialValue;
     } else {
@@ -454,7 +458,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
 
   /** https://tc39.es/ecma262/#sec-array.prototype.reduceright */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.reduceright */
-  function ArrayProto_reduceRight([callbackfn = Value.undefined, initialValue], { thisValue }) {
+  function ArrayProto_reduceRight([callbackfn = Value.undefined, initialValue]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const len = Q(objectToLength(O));
@@ -465,7 +469,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
       return surroundingAgent.Throw('TypeError', 'ArrayEmptyReduce');
     }
     let k = len - 1;
-    let accumulator = Value.undefined;
+    let accumulator: Value = Value.undefined;
     if (initialValue !== undefined) {
       accumulator = initialValue;
     } else {
@@ -496,7 +500,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
 
   /** https://tc39.es/ecma262/#sec-array.prototype.reverse */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.reverse */
-  function ArrayProto_reverse(args, { thisValue }) {
+  function ArrayProto_reverse(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const len = Q(objectToLength(O));
@@ -517,14 +521,14 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
         upperValue = Q(Get(O, upperP));
       }
       if (lowerExists === Value.true && upperExists === Value.true) {
-        Q(Set(O, lowerP, upperValue, Value.true));
-        Q(Set(O, upperP, lowerValue, Value.true));
+        Q(Set(O, lowerP, upperValue as Value, Value.true));
+        Q(Set(O, upperP, lowerValue as Value, Value.true));
       } else if (lowerExists === Value.false && upperExists === Value.true) {
-        Q(Set(O, lowerP, upperValue, Value.true));
+        Q(Set(O, lowerP, upperValue as Value, Value.true));
         Q(DeletePropertyOrThrow(O, upperP));
       } else if (lowerExists === Value.true && upperExists === Value.false) {
         Q(DeletePropertyOrThrow(O, lowerP));
-        Q(Set(O, upperP, lowerValue, Value.true));
+        Q(Set(O, upperP, lowerValue as Value, Value.true));
       } else {
         // no further action is required
       }
@@ -535,7 +539,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
 
   /** https://tc39.es/ecma262/#sec-array.prototype.some */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.some */
-  function ArrayProto_some([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
+  function ArrayProto_some([callbackfn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const O = Q(ToObject(thisValue));
     const len = Q(objectToLength(O));
@@ -560,7 +564,7 @@ export function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluating
 
   /** https://tc39.es/ecma262/#sec-array.prototype.tolocalestring */
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.tolocalestring */
-  function ArrayProto_toLocaleString(args, { thisValue }) {
+  function ArrayProto_toLocaleString(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
     Q(priorToEvaluatingAlgorithm(thisValue));
     const array = Q(ToObject(thisValue));
     const len = Q(objectToLength(array));

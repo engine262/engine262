@@ -1,5 +1,6 @@
 import type { ParseNode } from '../parser/ParseNode.mts';
 
+export type DestructuringParseNode = ParseNode.ObjectBindingPattern | ParseNode.ArrayBindingPattern | ParseNode.ObjectLiteral | ParseNode.ArrayLiteral | ParseNode.ForDeclaration | ParseNode.ForBinding;
 export function IsDestructuring(node: ParseNode): boolean {
   switch (node.type) {
     case 'ObjectBindingPattern':

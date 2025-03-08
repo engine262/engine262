@@ -1,28 +1,32 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import {
   Assert,
   CreateArrayFromList,
   CreateIteratorFromClosure,
   GeneratorResume,
+  Realm,
   RequireInternalSlot,
   Yield,
 } from '../abstract-ops/all.mts';
 import { Q, X } from '../completion.mts';
-import { Value } from '../value.mts';
+import { Value, type Arguments } from '../value.mts';
+import type { YieldEvaluator } from '../evaluator.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
+import type {
+  ExpressionCompletion, FunctionCallContext, GeneratorObject, MapObject,
+} from '#self';
 
 const kMapIteratorPrototype = Value('%MapIteratorPrototype%');
 
 /** https://tc39.es/ecma262/#sec-createmapiterator */
-export function CreateMapIterator(map, kind) {
+export function CreateMapIterator(map: Value, kind: 'key+value' | 'key' | 'value'): ExpressionCompletion<GeneratorObject> {
   Assert(kind === 'key+value' || kind === 'key' || kind === 'value');
   // 1. Perform ? RequireInternalSlot(map, [[MapData]]).
   Q(RequireInternalSlot(map, 'MapData'));
   // 2. Let closure be a new Abstract Closure with no parameters that captures map and kind and performs the following steps when called:
-  const closure = function* closure() {
+  const closure = function* closure(): YieldEvaluator {
     // a. Let entries be the List that is map.[[MapData]].
-    const entries = map.MapData;
+    const entries = (map as MapObject).MapData;
     // b. Let index be 0.
     let index = 0;
     // c. Let numEntries be the number of elements of entries.
@@ -45,10 +49,10 @@ export function CreateMapIterator(map, kind) {
           // a. Assert: kind is key+value.
           Assert(kind === 'key+value');
           // b. Let result be ! CreateArrayFromList(« e.[[Key]], e.[[Value]] »).
-          result = X(CreateArrayFromList([e.Key, e.Value]));
+          result = X(CreateArrayFromList([e.Key, e.Value!]));
         }
         // 4. Perform ? Yield(result).
-        Q(yield* Yield(result));
+        Q(yield* Yield(result!));
       }
       // iv. Set numEntries to the number of elements of entries.
       numEntries = entries.length;
@@ -61,12 +65,12 @@ export function CreateMapIterator(map, kind) {
 }
 
 /** https://tc39.es/ecma262/#sec-%mapiteratorprototype%.next */
-function MapIteratorPrototype_next(args, { thisValue }) {
+function MapIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Return ? GeneratorResume(this value, empty, "%MapIteratorPrototype%")
   return Q(GeneratorResume(thisValue, undefined, kMapIteratorPrototype));
 }
 
-export function bootstrapMapIteratorPrototype(realmRec) {
+export function bootstrapMapIteratorPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['next', MapIteratorPrototype_next, 0],
   ], realmRec.Intrinsics['%IteratorPrototype%'], 'Map Iterator');

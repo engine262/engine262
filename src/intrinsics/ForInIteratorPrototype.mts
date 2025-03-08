@@ -1,17 +1,30 @@
-// @ts-nocheck
-import { Value, JSStringValue, ObjectValue } from '../value.mts';
+import {
+  Value, JSStringValue, ObjectValue, type Arguments,
+  type FunctionCallContext,
+  UndefinedValue,
+  NullValue,
+} from '../value.mts';
 import { surroundingAgent } from '../engine.mts';
 import {
   Assert,
   SameValue,
   OrdinaryObjectCreate,
   CreateIterResultObject,
+  Realm,
+  type OrdinaryObject,
 } from '../abstract-ops/all.mts';
-import { Q } from '../completion.mts';
+import { Q, type ExpressionCompletion } from '../completion.mts';
+import { __ts_cast__, type Mutable } from '../helpers.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 
+export interface ForInIteratorInstance extends OrdinaryObject {
+  Object: ObjectValue | NullValue;
+  ObjectWasVisited: Value;
+  readonly VisitedKeys: JSStringValue[];
+  readonly RemainingKeys: JSStringValue[];
+}
 /** https://tc39.es/ecma262/#sec-createforiniterator */
-export function CreateForInIterator(object) {
+export function CreateForInIterator(object: ObjectValue) {
   // 1. Assert: Type(object) is Object.
   Assert(object instanceof ObjectValue);
   // 2. Let iterator be ObjectCreate(%ForInIteratorPrototype%, « [[Object]], [[ObjectWasVisited]], [[VisitedKeys]], [[RemainingKeys]] »).
@@ -20,7 +33,7 @@ export function CreateForInIterator(object) {
     'ObjectWasVisited',
     'VisitedKeys',
     'RemainingKeys',
-  ]);
+  ]) as Mutable<ForInIteratorInstance>;
   // 3. Set iterator.[[Object]] to object.
   iterator.Object = object;
   // 4. Set iterator.[[ObjectWasVisited]] to false.
@@ -34,21 +47,23 @@ export function CreateForInIterator(object) {
 }
 
 /** https://tc39.es/ecma262/#sec-%foriniteratorprototype%.next */
-function ForInIteratorPrototype_next(args, { thisValue }) {
+function ForInIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let O be this value.
   const O = thisValue;
   // 2. Assert: Type(O) is Object.
   Assert(O instanceof ObjectValue);
   // 3. Assert: O has all the internal slot sof a For-In Iterator Instance.
-  Assert('Object' in O && 'ObjectWasVisited' in O && 'VisitedKeys' in O && 'RemainingKeys in O');
+  Assert('Object' in O && 'ObjectWasVisited' in O && 'VisitedKeys' in O && 'RemainingKeys' in O);
+  __ts_cast__<ForInIteratorInstance>(O);
   // 4. Let object be O.[[Object]].
-  let object = O.Object;
+  let object: ObjectValue | NullValue = O.Object;
   // 5. Let visited be O.[[VisitedKeys]].
   const visited = O.VisitedKeys;
   // 6. Let remaining be O.[[RemainingKeys]].
   const remaining = O.RemainingKeys;
   // 7. Repeat,
   while (true) {
+    __ts_cast__<ObjectValue>(object);
     // a. If O.[[ObjectWasVisited]] is false, then
     if (O.ObjectWasVisited === Value.false) {
       // i. Let keys be ? object.[[OwnPropertyKeys]]().
@@ -67,13 +82,13 @@ function ForInIteratorPrototype_next(args, { thisValue }) {
     // b. Repeat, while remaining is not empty,
     while (remaining.length > 0) {
       // i. Remove the first element from remaining and let r be the value of the element.
-      const r = remaining.shift();
+      const r = remaining.shift()!;
       // ii. If there does not exist an element v of visisted such that SameValue(r, v) is true, then
       if (!visited.find((v) => SameValue(r, v) === Value.true)) {
         // 1. Let desc be ? object.[[GetOwnProperty]](r).
         const desc = Q(object.GetOwnProperty(r));
         // 2. If desc is not undefined, then,
-        if (desc !== Value.undefined) {
+        if (!(desc instanceof UndefinedValue)) {
           // a. Append r to visited.
           visited.push(r);
           // b. If desc.[[Enumerable]] is true, return CreateIterResultObject(r, false).
@@ -96,7 +111,7 @@ function ForInIteratorPrototype_next(args, { thisValue }) {
   }
 }
 
-export function bootstrapForInIteratorPrototype(realmRec) {
+export function bootstrapForInIteratorPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['next', ForInIteratorPrototype_next, 0],
   ], realmRec.Intrinsics['%IteratorPrototype%']);

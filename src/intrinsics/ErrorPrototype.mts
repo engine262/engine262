@@ -1,20 +1,22 @@
-// @ts-nocheck
 import {
   surroundingAgent,
 } from '../engine.mts';
 import {
   ObjectValue,
   Value,
+  type Arguments,
+  type FunctionCallContext,
 } from '../value.mts';
 import {
   Get,
+  Realm,
   ToString,
 } from '../abstract-ops/all.mts';
 import { Q } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-error.prototype.tostring */
-function ErrorProto_toString(args, { thisValue }) {
+function ErrorProto_toString(_args: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Let O be this value.
   const O = thisValue;
   // 2. If Type(O) is not Object, throw a TypeError exception.
@@ -49,7 +51,7 @@ function ErrorProto_toString(args, { thisValue }) {
   return Value(`${name.stringValue()}: ${msg.stringValue()}`);
 }
 
-export function bootstrapErrorPrototype(realmRec) {
+export function bootstrapErrorPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['toString', ErrorProto_toString, 0],
     ['message', Value('')],

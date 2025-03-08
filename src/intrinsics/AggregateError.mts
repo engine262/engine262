@@ -1,6 +1,8 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
-import { Value, Descriptor } from '../value.mts';
+import {
+  Value, Descriptor, type Arguments, type FunctionCallContext,
+  UndefinedValue,
+} from '../value.mts';
 import {
   CreateMethodProperty,
   ToString,
@@ -9,17 +11,19 @@ import {
   DefinePropertyOrThrow,
   InstallErrorCause,
   CreateArrayFromList,
+  Realm,
+  type FunctionObject,
 } from '../abstract-ops/all.mts';
-import { Q, X } from '../completion.mts';
+import { Q, X, type ExpressionCompletion } from '../completion.mts';
 import { captureStack } from '../helpers.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-aggregate-error-constructor */
-function AggregateErrorConstructor([errors = Value.undefined, message = Value.undefined, options = Value.undefined], { NewTarget }) {
+function AggregateErrorConstructor([errors = Value.undefined, message = Value.undefined, options = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext): ExpressionCompletion {
   // 1. If NewTarget is undefined, let newTarget be the active function object, else let newTarget be NewTarget.
   let newTarget;
-  if (NewTarget === Value.undefined) {
-    newTarget = surroundingAgent.activeFunctionObject;
+  if (NewTarget instanceof UndefinedValue) {
+    newTarget = surroundingAgent.activeFunctionObject as FunctionObject;
   } else {
     newTarget = NewTarget;
   }
@@ -54,7 +58,7 @@ function AggregateErrorConstructor([errors = Value.undefined, message = Value.un
   return O;
 }
 
-export function bootstrapAggregateError(realmRec) {
+export function bootstrapAggregateError(realmRec: Realm) {
   const c = bootstrapConstructor(realmRec, AggregateErrorConstructor, 'AggregateError', 2, realmRec.Intrinsics['%AggregateError.prototype%'], []);
   c.Prototype = realmRec.Intrinsics['%Error%'];
   realmRec.Intrinsics['%AggregateError%'] = c;

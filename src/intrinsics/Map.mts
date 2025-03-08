@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import {
   Assert,
@@ -10,30 +9,37 @@ import {
   IteratorStep,
   IteratorValue,
   OrdinaryCreateFromConstructor,
+  Realm,
+  type FunctionObject,
+  type OrdinaryObject,
 } from '../abstract-ops/all.mts';
 import {
   ObjectValue,
+  UndefinedValue,
   Value,
   wellKnownSymbols,
+  type Arguments,
+  type FunctionCallContext,
 } from '../value.mts';
 import {
   IfAbruptCloseIterator,
   Q,
 } from '../completion.mts';
+import { __ts_cast__, type Mutable } from '../helpers.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 
-export function AddEntriesFromIterable(target, iterable, adder) {
+export function AddEntriesFromIterable(target: ObjectValue, iterable: Value, adder: Value) {
   if (IsCallable(adder) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', adder);
   }
   Assert(iterable !== undefined && iterable !== Value.undefined && iterable !== Value.null);
-  const iteratorRecord = Q(GetIterator(iterable));
+  const iteratorRecord = Q(GetIterator(iterable, 'sync'));
   while (true) {
     const next = Q(IteratorStep(iteratorRecord));
     if (next === Value.false) {
       return target;
     }
-    const nextItem = Q(IteratorValue(next));
+    const nextItem = Q(IteratorValue(next as ObjectValue));
     if (!(nextItem instanceof ObjectValue)) {
       const error = surroundingAgent.Throw('TypeError', 'NotAnObject', nextItem);
       return Q(IteratorClose(iteratorRecord, error));
@@ -42,10 +48,12 @@ export function AddEntriesFromIterable(target, iterable, adder) {
     const k = Get(nextItem, Value('0'));
     // f. IfAbruptCloseIterator(k, iteratorRecord).
     IfAbruptCloseIterator(k, iteratorRecord);
+    __ts_cast__<Value>(k);
     // g. Let v be Get(nextItem, "1").
     const v = Get(nextItem, Value('1'));
     // h. IfAbruptCloseIterator(v, iteratorRecord).
     IfAbruptCloseIterator(v, iteratorRecord);
+    __ts_cast__<Value>(v);
     // i. Let status be Call(adder, target, « k, v »).
     const status = Call(adder, target, [k, v]);
     // j. IfAbruptCloseIterator(status, iteratorRecord).
@@ -53,14 +61,17 @@ export function AddEntriesFromIterable(target, iterable, adder) {
   }
 }
 
+export interface MapObject extends OrdinaryObject {
+  readonly MapData: { Key: Value | undefined, Value: Value | undefined }[];
+}
 /** https://tc39.es/ecma262/#sec-map-iterable */
-function MapConstructor([iterable = Value.undefined], { NewTarget }) {
+function MapConstructor(this: FunctionObject, [iterable = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
-  if (NewTarget === Value.undefined) {
+  if (NewTarget instanceof UndefinedValue) {
     return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
   // 2. Let map be ? OrdinaryCreateFromConstructor(NewTarget, "%Map.prototype%", « [[MapData]] »).
-  const map = Q(OrdinaryCreateFromConstructor(NewTarget, '%Map.prototype%', ['MapData']));
+  const map = Q(OrdinaryCreateFromConstructor(NewTarget, '%Map.prototype%', ['MapData'])) as Mutable<MapObject>;
   // 3. Set map.[[MapData]] to a new empty List.
   map.MapData = [];
   // 4. If iterable is either undefined or null, return map.
@@ -74,12 +85,12 @@ function MapConstructor([iterable = Value.undefined], { NewTarget }) {
 }
 
 /** https://tc39.es/ecma262/#sec-get-map-@@species */
-function Map_speciesGetter(args, { thisValue }) {
+function Map_speciesGetter(_args: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Return the this value.
   return thisValue;
 }
 
-export function bootstrapMap(realmRec) {
+export function bootstrapMap(realmRec: Realm) {
   const mapConstructor = bootstrapConstructor(realmRec, MapConstructor, 'Map', 0, realmRec.Intrinsics['%Map.prototype%'], [
     [wellKnownSymbols.species, [Map_speciesGetter]],
   ]);

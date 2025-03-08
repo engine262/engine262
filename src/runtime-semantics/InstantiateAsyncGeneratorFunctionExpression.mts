@@ -1,6 +1,7 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
-import { Value, Descriptor } from '../value.mts';
+import {
+  Value, Descriptor, type PropertyKeyValue, PrivateName,
+} from '../value.mts';
 import {
   Assert,
   DefinePropertyOrThrow,
@@ -18,7 +19,7 @@ import type { ParseNode } from '../parser/ParseNode.mts';
 //   AsyncGeneratorExpression :
 //     `async` `function` `*` `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
 //     `async` `function` `*` BindingIdentifier `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
-export function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpression: ParseNode.AsyncGeneratorExpression, name?) {
+export function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpression: ParseNode.AsyncGeneratorExpression, name?: PropertyKeyValue | PrivateName) {
   const { BindingIdentifier, FormalParameters, AsyncGeneratorBody } = AsyncGeneratorExpression;
   if (BindingIdentifier) {
     // 1. Assert: name is not present.

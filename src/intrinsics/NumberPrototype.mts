@@ -1,20 +1,24 @@
-// @ts-nocheck
 import {
   ObjectValue,
   Value,
   NumberValue,
+  type Arguments,
+  type FunctionCallContext,
 } from '../value.mts';
 import {
   Assert,
   ToIntegerOrInfinity,
   ToString,
   F, R,
+  Realm,
 } from '../abstract-ops/all.mts';
 import { surroundingAgent } from '../engine.mts';
-import { Q, X } from '../completion.mts';
+import { Q, X, type ExpressionCompletion } from '../completion.mts';
+import type { Mutable } from '../helpers.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
+import type { NumberObject } from './Number.mts';
 
-function thisNumberValue(value) {
+function thisNumberValue(value: Value) {
   if (value instanceof NumberValue) {
     return value;
   }
@@ -27,7 +31,7 @@ function thisNumberValue(value) {
 }
 
 /** https://tc39.es/ecma262/#sec-number.prototype.toexponential */
-function NumberProto_toExponential([fractionDigits = Value.undefined], { thisValue }) {
+function NumberProto_toExponential([fractionDigits = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const x = Q(thisNumberValue(thisValue));
   const f = Q(ToIntegerOrInfinity(fractionDigits));
   Assert(fractionDigits !== Value.undefined || f === 0);
@@ -41,7 +45,7 @@ function NumberProto_toExponential([fractionDigits = Value.undefined], { thisVal
 }
 
 /** https://tc39.es/ecma262/#sec-number.prototype.tofixed */
-function NumberProto_toFixed([fractionDigits = Value.undefined], { thisValue }) {
+function NumberProto_toFixed([fractionDigits = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const x = Q(thisNumberValue(thisValue));
   const f = Q(ToIntegerOrInfinity(fractionDigits));
   Assert(fractionDigits !== Value.undefined || f === 0);
@@ -55,12 +59,12 @@ function NumberProto_toFixed([fractionDigits = Value.undefined], { thisValue }) 
 }
 
 /** https://tc39.es/ecma262/#sec-number.prototype.tolocalestring */
-function NumberProto_toLocaleString(args, { thisValue }) {
-  return NumberProto_toString([], { thisValue });
+function NumberProto_toLocaleString(_args: Arguments, context: FunctionCallContext): ExpressionCompletion {
+  return NumberProto_toString([], context);
 }
 
 /** https://tc39.es/ecma262/#sec-number.prototype.toprecision */
-function NumberProto_toPrecision([precision = Value.undefined], { thisValue }) {
+function NumberProto_toPrecision([precision = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const x = Q(thisNumberValue(thisValue));
   if (precision === Value.undefined) {
     return X(ToString(x));
@@ -76,7 +80,7 @@ function NumberProto_toPrecision([precision = Value.undefined], { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-number.prototype.tostring */
-function NumberProto_toString([radix = Value.undefined], { thisValue }) {
+function NumberProto_toString([radix = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const x = Q(thisNumberValue(thisValue));
   let radixNumber;
   if (radix === Value.undefined) {
@@ -99,11 +103,11 @@ function NumberProto_toString([radix = Value.undefined], { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-number.prototype.valueof */
-function NumberProto_valueOf(args, { thisValue }) {
+function NumberProto_valueOf(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   return Q(thisNumberValue(thisValue));
 }
 
-export function bootstrapNumberPrototype(realmRec) {
+export function bootstrapNumberPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['toExponential', NumberProto_toExponential, 1],
     ['toFixed', NumberProto_toFixed, 1],
@@ -113,7 +117,7 @@ export function bootstrapNumberPrototype(realmRec) {
     ['valueOf', NumberProto_valueOf, 0],
   ], realmRec.Intrinsics['%Object.prototype%']);
 
-  proto.NumberData = F(+0);
+  (proto as Mutable<NumberObject>).NumberData = F(+0);
 
   realmRec.Intrinsics['%Number.prototype%'] = proto;
 }

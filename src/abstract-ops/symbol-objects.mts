@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { GlobalSymbolRegistry } from '../intrinsics/Symbol.mjs';
 import {
   UndefinedValue, SymbolValue, Value, JSStringValue,
@@ -6,7 +5,7 @@ import {
 import { Assert, SameValue } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-symboldescriptivestring */
-export function SymbolDescriptiveString(sym) {
+export function SymbolDescriptiveString(sym: SymbolValue) {
   Assert(sym instanceof SymbolValue);
   let desc = sym.Description;
   if (desc instanceof UndefinedValue) {

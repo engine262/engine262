@@ -1,6 +1,5 @@
-// @ts-nocheck
 import { Value } from '../value.mts';
-import { Evaluate } from '../evaluator.mts';
+import { Evaluate, type ExpressionEvaluator } from '../evaluator.mts';
 import { ToBoolean, GetValue } from '../abstract-ops/all.mts';
 import { Q, X } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
@@ -12,7 +11,7 @@ export function* Evaluate_ConditionalExpression({
   ShortCircuitExpression,
   AssignmentExpression_a,
   AssignmentExpression_b,
-}: ParseNode.ConditionalExpression) {
+}: ParseNode.ConditionalExpression): ExpressionEvaluator {
   // 1. Let lref be the result of evaluating ShortCircuitExpression.
   const lref = yield* Evaluate(ShortCircuitExpression);
   // 2. Let lval be ! ToBoolean(? GetValue(lref)).

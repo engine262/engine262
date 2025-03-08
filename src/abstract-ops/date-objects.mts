@@ -1,4 +1,3 @@
-// @ts-nocheck
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-date-objects */
 
@@ -6,9 +5,11 @@ import { X } from '../completion.mts';
 import {
   ToIntegerOrInfinity,
   F, R,
+  Assert,
 } from './all.mts';
+import type { NumberValue } from '#self';
 
-const mod = (n, m) => {
+const mod = (n: number, m: number) => {
   const r = n % m;
   return Math.floor(r >= 0 ? r : r + m);
 };
@@ -22,44 +23,42 @@ export const msPerHour = msPerMinute * MinutesPerHour;
 export const msPerDay = msPerHour * HoursPerDay;
 
 /** https://tc39.es/ecma262/#sec-day-number-and-time-within-day */
-export function Day(t) {
+export function Day(t: NumberValue) {
   return F(Math.floor(R(t) / msPerDay));
 }
 
-export function TimeWithinDay(t) {
+export function TimeWithinDay(t: NumberValue) {
   return F(mod(R(t), msPerDay));
 }
 
 /** https://tc39.es/ecma262/#sec-year-number */
-export function DaysInYear(y) {
-  y = R(y);
-  if (mod(y, 4) !== 0) {
-    return F(365);
-  }
-  if (mod(y, 4) === 0 && mod(y, 100) !== 0) {
+export function DaysInYear(y: NumberValue) {
+  const ry = R(y);
+  if (mod(ry, 400) === 0) {
     return F(366);
   }
-  if (mod(y, 100) === 0 && mod(y, 400) !== 0) {
+  if (mod(ry, 100) === 0) {
     return F(365);
   }
-  if (mod(y, 400) === 0) {
+  if (mod(ry, 4) === 0) {
     return F(366);
   }
+  return F(365);
 }
 
-export function DayFromYear(y) {
-  y = R(y);
+export function DayFromYear(_y: NumberValue) {
+  const y = R(_y);
   return F(365 * (y - 1970) + Math.floor((y - 1969) / 4) - Math.floor((y - 1901) / 100) + Math.floor((y - 1601) / 400));
 }
 
-export function TimeFromYear(y) {
+export function TimeFromYear(y: NumberValue) {
   return F(msPerDay * R(DayFromYear(y)));
 }
 
 export const msPerAverageYear = 12 * 30.436875 * msPerDay;
 
-export function YearFromTime(t) {
-  t = R(t);
+export function YearFromTime(_t: NumberValue) {
+  const t = R(_t);
   let year = Math.floor((t + msPerAverageYear / 2) / msPerAverageYear) + 1970;
   if (R(TimeFromYear(F(year))) > t) {
     year -= 1;
@@ -67,67 +66,64 @@ export function YearFromTime(t) {
   return F(year);
 }
 
-export function InLeapYear(t) {
-  if (R(DaysInYear(YearFromTime(t))) === 365) {
-    return F(+0);
-  }
+export function InLeapYear(t: NumberValue) {
   if (R(DaysInYear(YearFromTime(t))) === 366) {
     return F(1);
   }
+  return F(0);
 }
 
 /** https://tc39.es/ecma262/#sec-month-number */
-export function MonthFromTime(t) {
-  const dayWithinYear = R(DayWithinYear(t));
+export function MonthFromTime(t: NumberValue) {
   const inLeapYear = R(InLeapYear(t));
-  if (dayWithinYear >= 0 && dayWithinYear < 31) {
+  const dayWithinYear = R(DayWithinYear(t));
+  if (dayWithinYear < 31) {
     return F(+0);
   }
-  if (dayWithinYear >= 31 && dayWithinYear < 59 + inLeapYear) {
+  if (dayWithinYear < 59 + inLeapYear) {
     return F(1);
   }
-  if (dayWithinYear >= 59 + inLeapYear && dayWithinYear < 90 + inLeapYear) {
+  if (dayWithinYear < 90 + inLeapYear) {
     return F(2);
   }
-  if (dayWithinYear >= 90 + inLeapYear && dayWithinYear < 120 + inLeapYear) {
+  if (dayWithinYear < 120 + inLeapYear) {
     return F(3);
   }
-  if (dayWithinYear >= 120 + inLeapYear && dayWithinYear < 151 + inLeapYear) {
+  if (dayWithinYear < 151 + inLeapYear) {
     return F(4);
   }
-  if (dayWithinYear >= 151 + inLeapYear && dayWithinYear < 181 + inLeapYear) {
+  if (dayWithinYear < 181 + inLeapYear) {
     return F(5);
   }
-  if (dayWithinYear >= 181 + inLeapYear && dayWithinYear < 212 + inLeapYear) {
+  if (dayWithinYear < 212 + inLeapYear) {
     return F(6);
   }
-  if (dayWithinYear >= 212 + inLeapYear && dayWithinYear < 243 + inLeapYear) {
+  if (dayWithinYear < 243 + inLeapYear) {
     return F(7);
   }
-  if (dayWithinYear >= 243 + inLeapYear && dayWithinYear < 273 + inLeapYear) {
+  if (dayWithinYear < 273 + inLeapYear) {
     return F(8);
   }
-  if (dayWithinYear >= 273 + inLeapYear && dayWithinYear < 304 + inLeapYear) {
+  if (dayWithinYear < 304 + inLeapYear) {
     return F(9);
   }
-  if (dayWithinYear >= 304 + inLeapYear && dayWithinYear < 334 + inLeapYear) {
+  if (dayWithinYear < 334 + inLeapYear) {
     return F(10);
   }
-  if (dayWithinYear >= 334 + inLeapYear && dayWithinYear < 365 + inLeapYear) {
-    return F(11);
-  }
+  Assert(dayWithinYear < 365 + inLeapYear);
+  return F(11);
 }
 
-export function DayWithinYear(t) {
+export function DayWithinYear(t: NumberValue) {
   return F(R(Day(t)) - R(DayFromYear(YearFromTime(t))));
 }
 
 /** https://tc39.es/ecma262/#sec-date-number */
-export function DateFromTime(t) {
-  const dayWithinYear = R(DayWithinYear(t));
-  const monthFromTime = R(MonthFromTime(t));
+export function DateFromTime(t: NumberValue) {
   const inLeapYear = R(InLeapYear(t));
-  switch (monthFromTime) {
+  const dayWithinYear = R(DayWithinYear(t));
+  const month = R(MonthFromTime(t));
+  switch (month) {
     case 0: return F(dayWithinYear + 1);
     case 1: return F(dayWithinYear - 30);
     case 2: return F(dayWithinYear - 58 - inLeapYear);
@@ -139,51 +135,52 @@ export function DateFromTime(t) {
     case 8: return F(dayWithinYear - 242 - inLeapYear);
     case 9: return F(dayWithinYear - 272 - inLeapYear);
     case 10: return F(dayWithinYear - 303 - inLeapYear);
-    case 11: return F(dayWithinYear - 333 - inLeapYear);
-    default: // Unreachable
+    default:
   }
+  Assert(month === 11);
+  return F(dayWithinYear - 333 - inLeapYear);
 }
 
 /** https://tc39.es/ecma262/#sec-week-day */
-export function WeekDay(t) {
+export function WeekDay(t: NumberValue) {
   return F(mod(R(Day(t)) + 4, 7));
 }
 
 /** https://tc39.es/ecma262/#sec-local-time-zone-adjustment */
-export function LocalTZA(_t, _isUTC) {
+export function LocalTZA(_t: NumberValue, _isUTC: boolean) {
   // TODO: implement this function properly.
   return 0;
 }
 
 /** https://tc39.es/ecma262/#sec-localtime */
-export function LocalTime(t) {
+export function LocalTime(t: NumberValue) {
   return F(R(t) + LocalTZA(t, true));
 }
 
 /** https://tc39.es/ecma262/#sec-utc-t */
-export function UTC(t) {
+export function UTC(t: NumberValue) {
   return F(R(t) - LocalTZA(t, false));
 }
 
 /** https://tc39.es/ecma262/#sec-hours-minutes-second-and-milliseconds */
-export function HourFromTime(t) {
+export function HourFromTime(t: NumberValue) {
   return F(mod(Math.floor(R(t) / msPerHour), HoursPerDay));
 }
 
-export function MinFromTime(t) {
+export function MinFromTime(t: NumberValue) {
   return F(mod(Math.floor(R(t) / msPerMinute), MinutesPerHour));
 }
 
-export function SecFromTime(t) {
+export function SecFromTime(t: NumberValue) {
   return F(mod(Math.floor(R(t) / msPerSecond), SecondsPerMinute));
 }
 
-export function msFromTime(t) {
+export function msFromTime(t: NumberValue) {
   return F(mod(R(t), msPerSecond));
 }
 
 /** https://tc39.es/ecma262/#sec-maketime */
-export function MakeTime(hour, min, sec, ms) {
+export function MakeTime(hour: NumberValue, min: NumberValue, sec: NumberValue, ms: NumberValue) {
   if (!Number.isFinite(R(hour)) || !Number.isFinite(R(min)) || !Number.isFinite(R(sec)) || !Number.isFinite(R(ms))) {
     return F(NaN);
   }
@@ -198,7 +195,7 @@ export function MakeTime(hour, min, sec, ms) {
 const daysWithinYearToEndOfMonth = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334, 365];
 
 /** https://tc39.es/ecma262/#sec-makeday */
-export function MakeDay(year, month, date) {
+export function MakeDay(year: NumberValue, month: NumberValue, date: NumberValue) {
   if (!Number.isFinite(R(year)) || !Number.isFinite(R(month)) || !Number.isFinite(R(date))) {
     return F(NaN);
   }
@@ -213,7 +210,7 @@ export function MakeDay(year, month, date) {
 }
 
 /** https://tc39.es/ecma262/#sec-makedate */
-export function MakeDate(day, time) {
+export function MakeDate(day: NumberValue, time: NumberValue) {
   if (!Number.isFinite(R(day)) || !Number.isFinite(R(time))) {
     return F(NaN);
   }
@@ -221,7 +218,7 @@ export function MakeDate(day, time) {
 }
 
 /** https://tc39.es/ecma262/#sec-timeclip */
-export function TimeClip(time) {
+export function TimeClip(time: NumberValue) {
   // 1. If time is not finite, return NaN.
   if (!time.isFinite()) {
     return F(NaN);

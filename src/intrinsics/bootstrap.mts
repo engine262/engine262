@@ -1,18 +1,32 @@
-// @ts-nocheck
 import {
   Assert,
   CreateBuiltinFunction,
   OrdinaryObjectCreate,
+  Realm,
+  type FunctionObject,
 } from '../abstract-ops/all.mts';
 import {
   Descriptor,
+  JSStringValue,
+  NullValue,
+  ObjectValue,
+  SymbolValue,
+  UndefinedValue,
   Value,
   wellKnownSymbols,
+  type DescriptorInit,
+  type NativeSteps,
 } from '../value.mts';
 import { X } from '../completion.mts';
 
+type Props = [
+  name: string | JSStringValue | SymbolValue,
+  value: [getter: NativeSteps | UndefinedValue | FunctionObject, setter?: NativeSteps | UndefinedValue | FunctionObject] | NativeSteps | Value,
+  fnLength?: number,
+  desc?: DescriptorInit
+];
 /** https://tc39.es/ecma262/#sec-ecmascript-standard-built-in-objects */
-export function assignProps(realmRec, obj, props) {
+export function assignProps(realmRec: Realm, obj: ObjectValue, props: readonly (Props | undefined)[]) {
   for (const item of props) {
     if (item === undefined) {
       continue;
@@ -81,7 +95,7 @@ export function assignProps(realmRec, obj, props) {
   }
 }
 
-export function bootstrapPrototype(realmRec, props, Prototype, stringTag) {
+export function bootstrapPrototype(realmRec: Realm, props: readonly (Props | undefined)[], Prototype: ObjectValue | NullValue, stringTag?: string) {
   Assert(Prototype !== undefined);
   const proto = OrdinaryObjectCreate(Prototype);
 
@@ -99,7 +113,7 @@ export function bootstrapPrototype(realmRec, props, Prototype, stringTag) {
   return proto;
 }
 
-export function bootstrapConstructor(realmRec, Constructor, name, length, Prototype, props = []) {
+export function bootstrapConstructor(realmRec: Realm, Constructor: NativeSteps, name: string, length: number, Prototype: ObjectValue, props: readonly Props[] = []) {
   const cons = CreateBuiltinFunction(
     Constructor,
     length,

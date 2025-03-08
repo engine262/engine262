@@ -1,7 +1,6 @@
-// @ts-nocheck
-import { Value } from '../value.mts';
+import { ReferenceRecord, Value } from '../value.mts';
 import { GetValue, MakePrivateReference, RequireObjectCoercible } from '../abstract-ops/all.mts';
-import { Evaluate } from '../evaluator.mts';
+import { Evaluate, type ExpressionEvaluator } from '../evaluator.mts';
 import { Q, X } from '../completion.mts';
 import { IsInTailPosition, StringValue } from '../static-semantics/all.mts';
 import { OutOfRange } from '../helpers.mts';
@@ -28,7 +27,7 @@ export function* Evaluate_OptionalExpression({ MemberExpression, OptionalChain }
     return Value.undefined;
   }
   // 4. Return the result of performing ChainEvaluation of OptionalChain with arguments baseValue and baseReference.
-  return yield* ChainEvaluation(OptionalChain, baseValue, baseReference);
+  return yield* ChainEvaluation(OptionalChain, baseValue, X(baseReference));
 }
 
 /** https://tc39.es/ecma262/#sec-optional-chaining-chain-evaluation */
@@ -41,7 +40,7 @@ export function* Evaluate_OptionalExpression({ MemberExpression, OptionalChain }
 //     OptionalChain `[` Expression `]`
 //     OptionalChain `.` IdentifierName
 //     OptionalChain `.` PrivateIdentifier
-function* ChainEvaluation(node: ParseNode.OptionalChain, baseValue, baseReference) {
+function* ChainEvaluation(node: ParseNode.OptionalChain, baseValue: Value, baseReference: Value | ReferenceRecord): ExpressionEvaluator {
   const {
     OptionalChain,
     Arguments,

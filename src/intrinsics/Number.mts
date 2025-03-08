@@ -1,21 +1,29 @@
-// @ts-nocheck
 import {
   IsIntegralNumber,
   OrdinaryCreateFromConstructor,
   ToNumeric,
   F, R,
+  Realm,
+  type OrdinaryObject,
 } from '../abstract-ops/all.mts';
 import {
   Descriptor,
   NumberValue,
   BigIntValue,
   Value,
+  type Arguments,
+  type FunctionCallContext,
+  UndefinedValue,
 } from '../value.mts';
-import { Q, X } from '../completion.mts';
+import { Q, X, type ExpressionCompletion } from '../completion.mts';
+import type { Mutable } from '../helpers.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 
+export interface NumberObject extends OrdinaryObject {
+  readonly NumberData: NumberValue;
+}
 /** https://tc39.es/ecma262/#sec-number-constructor-number-value */
-function NumberConstructor([value], { NewTarget }) {
+function NumberConstructor([value]: Arguments, { NewTarget }: FunctionCallContext): ExpressionCompletion {
   let n;
   if (value !== undefined) {
     const prim = Q(ToNumeric(value));
@@ -27,16 +35,16 @@ function NumberConstructor([value], { NewTarget }) {
   } else {
     n = F(+0);
   }
-  if (NewTarget === Value.undefined) {
+  if (NewTarget instanceof UndefinedValue) {
     return n;
   }
-  const O = OrdinaryCreateFromConstructor(NewTarget, '%Number.prototype%', ['NumberData']);
+  const O = OrdinaryCreateFromConstructor(NewTarget, '%Number.prototype%', ['NumberData']) as Mutable<NumberObject>;
   O.NumberData = n;
   return O;
 }
 
 /** https://tc39.es/ecma262/#sec-number.isfinite */
-function Number_isFinite([number = Value.undefined]) {
+function Number_isFinite([number = Value.undefined]: Arguments) {
   if (!(number instanceof NumberValue)) {
     return Value.false;
   }
@@ -48,12 +56,12 @@ function Number_isFinite([number = Value.undefined]) {
 }
 
 /** https://tc39.es/ecma262/#sec-number.isinteger */
-function Number_isInteger([number = Value.undefined]) {
+function Number_isInteger([number = Value.undefined]: Arguments) {
   return X(IsIntegralNumber(number));
 }
 
 /** https://tc39.es/ecma262/#sec-number.isnan */
-function Number_isNaN([number = Value.undefined]) {
+function Number_isNaN([number = Value.undefined]: Arguments) {
   if (!(number instanceof NumberValue)) {
     return Value.false;
   }
@@ -65,7 +73,7 @@ function Number_isNaN([number = Value.undefined]) {
 }
 
 /** https://tc39.es/ecma262/#sec-number.issafeinteger */
-function Number_isSafeInteger([number = Value.undefined]) {
+function Number_isSafeInteger([number = Value.undefined]: Arguments) {
   if (!(number instanceof NumberValue)) {
     return Value.false;
   }
@@ -79,7 +87,7 @@ function Number_isSafeInteger([number = Value.undefined]) {
   return Value.false;
 }
 
-export function bootstrapNumber(realmRec) {
+export function bootstrapNumber(realmRec: Realm) {
   const override = {
     Writable: Value.false,
     Enumerable: Value.false,

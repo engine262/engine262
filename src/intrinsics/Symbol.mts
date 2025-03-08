@@ -1,30 +1,37 @@
-// @ts-nocheck
 import {
   Descriptor,
   type JSStringValue,
   SymbolValue,
   Value,
   wellKnownSymbols,
+  type Arguments,
+  type FunctionCallContext,
 } from '../value.mts';
 import {
   surroundingAgent,
 } from '../engine.mts';
 import {
   KeyForSymbol,
+  Realm,
   SameValue,
   ToString,
+  type FunctionObject,
+  type OrdinaryObject,
 } from '../abstract-ops/all.mts';
-import { Q } from '../completion.mts';
+import { Q, type ExpressionCompletion } from '../completion.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 
-interface GlobalSymbolRegistryRecord {
-  Key: JSStringValue;
-  Symbol: SymbolValue;
+export interface GlobalSymbolRegistryRecord {
+  readonly Key: JSStringValue;
+  readonly Symbol: SymbolValue;
 }
 export const GlobalSymbolRegistry: GlobalSymbolRegistryRecord[] = [];
 
+export interface SymbolObject extends OrdinaryObject {
+  readonly SymbolData: SymbolValue;
+}
 /** https://tc39.es/ecma262/#sec-symbol-description */
-function SymbolConstructor([description = Value.undefined], { NewTarget }) {
+function SymbolConstructor(this: FunctionObject, [description = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext): ExpressionCompletion {
   // 1. If NewTarget is not undefined, throw a TypeError exception.
   if (NewTarget !== Value.undefined) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', this);
@@ -41,7 +48,7 @@ function SymbolConstructor([description = Value.undefined], { NewTarget }) {
 }
 
 /** https://tc39.es/ecma262/#sec-symbol.for */
-function Symbol_for([key = Value.undefined]) {
+function Symbol_for([key = Value.undefined]: Arguments): ExpressionCompletion {
   // 1. Let stringKey be ? ToString(key).
   const stringKey = Q(ToString(key));
   // 2. For each element e of the GlobalSymbolRegistry List, do
@@ -61,7 +68,7 @@ function Symbol_for([key = Value.undefined]) {
 }
 
 /** https://tc39.es/ecma262/#sec-symbol.keyfor */
-function Symbol_keyFor([sym = Value.undefined]) {
+function Symbol_keyFor([sym = Value.undefined]: Arguments) {
   // 1. If Type(sym) is not Symbol, throw a TypeError exception.
   if (!(sym instanceof SymbolValue)) {
     return surroundingAgent.Throw('TypeError', 'NotASymbol', sym);
@@ -70,7 +77,7 @@ function Symbol_keyFor([sym = Value.undefined]) {
   return KeyForSymbol(sym);
 }
 
-export function bootstrapSymbol(realmRec) {
+export function bootstrapSymbol(realmRec: Realm) {
   const symbolConstructor = bootstrapConstructor(realmRec, SymbolConstructor, 'Symbol', 0, realmRec.Intrinsics['%Symbol.prototype%'], [
     ['for', Symbol_for, 1],
     ['keyFor', Symbol_keyFor, 1],

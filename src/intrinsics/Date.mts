@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   Assert,
   OrdinaryCreateFromConstructor,
@@ -12,17 +11,27 @@ import {
   UTC,
   TimeClip,
   F,
+  type OrdinaryObject,
+  type FunctionObject,
+  Realm,
 } from '../abstract-ops/all.mts';
-import { Value, JSStringValue, ObjectValue } from '../value.mts';
+import {
+  Value, JSStringValue, ObjectValue, type Arguments, type FunctionCallContext, NumberValue,
+} from '../value.mts';
 import {
   AbruptCompletion,
-  Q, X,
+  Q, ValueOfNormalCompletion, X,
+  type ExpressionCompletion,
 } from '../completion.mts';
+import type { Mutable } from '../helpers.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import { ToDateString, thisTimeValue } from './DatePrototype.mts';
 
+export interface DateObject extends OrdinaryObject {
+  DateValue: NumberValue;
+}
 /** https://tc39.es/ecma262/#sec-date-constructor */
-function DateConstructor(args, { NewTarget }) {
+function DateConstructor(args: Arguments, { NewTarget }: FunctionCallContext): ExpressionCompletion {
   const numberOfArgs = args.length;
   if (numberOfArgs >= 2) {
     /** https://tc39.es/ecma262/#sec-date-year-month-date-hours-minutes-seconds-ms */
@@ -76,7 +85,7 @@ function DateConstructor(args, { NewTarget }) {
         }
       }
       const finalDate = MakeDate(MakeDay(yr, m, dt), MakeTime(h, min, s, milli));
-      const O = Q(OrdinaryCreateFromConstructor(NewTarget, '%Date.prototype%', ['DateValue']));
+      const O = Q(OrdinaryCreateFromConstructor(NewTarget as FunctionObject, '%Date.prototype%', ['DateValue'])) as Mutable<DateObject>;
       O.DateValue = TimeClip(UTC(finalDate));
       return O;
     }
@@ -90,7 +99,7 @@ function DateConstructor(args, { NewTarget }) {
     } else {
       let tv;
       if (value instanceof ObjectValue && 'DateValue' in value) {
-        tv = thisTimeValue(value);
+        tv = X(thisTimeValue(value));
       } else {
         const v = Q(ToPrimitive(value));
         if (v instanceof JSStringValue) {
@@ -100,7 +109,7 @@ function DateConstructor(args, { NewTarget }) {
           tv = Q(ToNumber(v));
         }
       }
-      const O = Q(OrdinaryCreateFromConstructor(NewTarget, '%Date.prototype%', ['DateValue']));
+      const O = Q(OrdinaryCreateFromConstructor(NewTarget as FunctionObject, '%Date.prototype%', ['DateValue'])) as Mutable<DateObject>;
       O.DateValue = TimeClip(tv);
       return O;
     }
@@ -111,7 +120,7 @@ function DateConstructor(args, { NewTarget }) {
       const now = Date.now();
       return ToDateString(F(now));
     } else {
-      const O = Q(OrdinaryCreateFromConstructor(NewTarget, '%Date.prototype%', ['DateValue']));
+      const O = Q(OrdinaryCreateFromConstructor(NewTarget as FunctionObject, '%Date.prototype%', ['DateValue'])) as Mutable<DateObject>;
       O.DateValue = F(Date.now());
       return O;
     }
@@ -125,16 +134,16 @@ function Date_now() {
 }
 
 /** https://tc39.es/ecma262/#sec-date.parse */
-function Date_parse([string = Value.undefined]) {
+function Date_parse([string = Value.undefined]: Arguments): ExpressionCompletion<NumberValue> {
   const str = ToString(string);
   if (str instanceof AbruptCompletion) {
     return str;
   }
-  return parseDate(str);
+  return parseDate(ValueOfNormalCompletion(str));
 }
 
 /** https://tc39.es/ecma262/#sec-date.utc */
-function Date_UTC([year = Value.undefined, month, date, hours, minutes, seconds, ms]) {
+function Date_UTC([year = Value.undefined, month, date, hours, minutes, seconds, ms]: Arguments): ExpressionCompletion {
   const y = Q(ToNumber(year));
   let m;
   if (month !== undefined) {
@@ -188,14 +197,14 @@ function Date_UTC([year = Value.undefined, month, date, hours, minutes, seconds,
   return TimeClip(MakeDate(MakeDay(yr, m, dt), MakeTime(h, min, s, milli)));
 }
 
-function parseDate(dateTimeString) {
+function parseDate(dateTimeString: JSStringValue) {
   /** https://tc39.es/ecma262/#sec-date-time-string-format */
   // TODO: implement parsing without the host.
   const parsed = Date.parse(dateTimeString.stringValue());
   return F(parsed);
 }
 
-export function bootstrapDate(realmRec) {
+export function bootstrapDate(realmRec: Realm) {
   const cons = bootstrapConstructor(realmRec, DateConstructor, 'Date', 7, realmRec.Intrinsics['%Date.prototype%'], [
     ['now', Date_now, 0],
     ['parse', Date_parse, 1],

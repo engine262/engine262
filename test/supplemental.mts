@@ -16,8 +16,12 @@ import {
   CreateDataProperty,
   type NumberValue,
   JSStringValue,
-  type PromiseObjectValue,
+  type PromiseObject,
   SourceTextModuleRecord,
+  NormalCompletion,
+  type Arguments,
+  ToString,
+  EnsureCompletion,
 } from '#self';
 
 // Features that cannot be tested by test262 should go here.
@@ -29,6 +33,7 @@ startTestPrinter();
     setSurroundingAgent(agent);
     const realm = new ManagedRealm();
     const result = realm.evaluateScript('debugger;');
+    assert.ok(result instanceof NormalCompletion);
     assert.strictEqual(result.Value, Value.undefined);
   },
   () => {
@@ -40,7 +45,7 @@ startTestPrinter();
     setSurroundingAgent(agent);
     const realm = new ManagedRealm();
     const result = realm.evaluateScript('debugger;');
-    assert.strictEqual((result.Value as NumberValue).numberValue(), 42); // eslint-disable-line @engine262/mathematical-value
+    assert.strictEqual((result as NormalCompletion<NumberValue>).Value.numberValue(), 42); // eslint-disable-line @engine262/mathematical-value
   },
   () => {
     const agent = new Agent();
@@ -55,7 +60,7 @@ try {
   e.stack;
 }
 `);
-    assert.strictEqual((result.Value as JSStringValue).stringValue(), `\
+    assert.strictEqual((result as NormalCompletion<JSStringValue>).Value.stringValue(), `\
 Error: owo
     at x (<anonymous>:1:32)
     at y (<anonymous>:2:16)
@@ -70,7 +75,7 @@ async function x() { await 1; throw new Error('owo'); }
 async function y() { await x(); }
 y().catch((e) => e.stack);
 `);
-    assert.strictEqual(((result.Value as PromiseObjectValue).PromiseResult as JSStringValue).stringValue(), `\
+    assert.strictEqual(((result as NormalCompletion<PromiseObject>).Value.PromiseResult as JSStringValue).stringValue(), `\
 Error: owo
     at async x (<anonymous>:1:47)
     at async y (<anonymous>:2:28)`);
@@ -87,7 +92,7 @@ try {
   e.stack;
 }
 `);
-    assert.strictEqual((result.Value as JSStringValue).stringValue(), `\
+    assert.strictEqual((result as NormalCompletion<JSStringValue>).Value.stringValue(), `\
 TypeError: undefined is not an object
     at get (native)
     at x (<anonymous>:1:16)
@@ -106,7 +111,7 @@ try {
   e.stack;
 }
 `);
-    assert.strictEqual((result.Value as JSStringValue).stringValue(), `\
+    assert.strictEqual((result as NormalCompletion<JSStringValue>).Value.stringValue(), `\
 Error: owo
     at new Y (<anonymous>:1:32)
     at x (<anonymous>:2:20)
@@ -123,7 +128,7 @@ new Promise(() => {
 });
 e.stack;
 `);
-    assert.strictEqual((result.Value as JSStringValue).stringValue(), `\
+    assert.strictEqual((result as NormalCompletion<JSStringValue>).Value.stringValue(), `\
 Error: owo
     at <anonymous> (<anonymous>:3:17)
     at new Promise (native)
@@ -148,7 +153,7 @@ Error: owo
         })
         .then(() => 'pass');
     `);
-    assert.strictEqual(((result.Value as PromiseObjectValue).PromiseResult as JSStringValue).stringValue(), 'pass');
+    assert.strictEqual(((result as NormalCompletion<PromiseObject>).Value.PromiseResult as JSStringValue).stringValue(), 'pass');
   },
   () => {
     const agent = new Agent();
@@ -174,7 +179,7 @@ Error: owo
       module.Link();
       module.Evaluate();
       const result = Get(realm.GlobalObject, Value('result'));
-      assert.strictEqual(((result.Value as PromiseObjectValue).PromiseResult as JSStringValue).stringValue(), 'pass');
+      assert.strictEqual(((result as NormalCompletion<PromiseObject>).Value.PromiseResult as JSStringValue).stringValue(), 'pass');
     });
   },
   () => {
@@ -187,8 +192,12 @@ Error: owo
       CreateDataProperty(
         realm.GlobalObject,
         Value('fail'),
-        CreateBuiltinFunction(([path]) => {
-          throw new Error(`${path.stringValue()} did not have a section`);
+        CreateBuiltinFunction(([path]: Arguments) => {
+          const o = EnsureCompletion(ToString(path));
+          if (o.Type === 'throw') {
+            return o;
+          }
+          throw new Error(`${o.Value.stringValue()} did not have a section`);
         }, 1, Value(''), []),
       );
       const targets: Value[] = [];
@@ -257,6 +266,7 @@ Error: owo
   });
 }
     `);
+    assert.ok(result instanceof NormalCompletion);
     assert.strictEqual(result.Value, Value.undefined);
   },
   () => {

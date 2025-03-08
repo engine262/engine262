@@ -1,7 +1,9 @@
-// @ts-nocheck
 import { Q, X } from '../completion.mts';
 import { surroundingAgent } from '../engine.mts';
-import { Value, wellKnownSymbols } from '../value.mts';
+import {
+  UndefinedValue,
+  Value, wellKnownSymbols, type Arguments, type FunctionCallContext,
+} from '../value.mts';
 import {
   Assert,
   Call,
@@ -16,17 +18,25 @@ import {
   ToString,
   TypedArrayCreate,
   F,
+  Realm,
+  type FunctionObject,
+  type IntegerIndexedObject,
 } from '../abstract-ops/all.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 
+export type TypedArrayObject = IntegerIndexedObject;
+export function isTypedArrayObject(value: Value): value is TypedArrayObject {
+  return 'TypedArrayName' in value;
+}
+
 /** https://tc39.es/ecma262/#sec-%typedarray%-intrinsic-object */
-function TypedArrayConstructor() {
+function TypedArrayConstructor(this: unknown) {
   // 1. Throw a TypeError exception.
   return surroundingAgent.Throw('TypeError', 'NotAConstructor', this);
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.from */
-function TypedArray_from([source = Value.undefined, mapfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
+function TypedArray_from([source = Value.undefined, mapfn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Let C be the this value.
   const C = thisValue;
   // 2. If IsConstructor(C) is false, throw a TypeError exception.
@@ -48,14 +58,14 @@ function TypedArray_from([source = Value.undefined, mapfn = Value.undefined, thi
   // 5. Let usingIterator be ? GetMethod(source, @@iterator).
   const usingIterator = Q(GetMethod(source, wellKnownSymbols.iterator));
   // 6. If usingIterator is not undefined, then
-  if (usingIterator !== Value.undefined) {
+  if (!(usingIterator instanceof UndefinedValue)) {
     const values = Q(IterableToList(source, usingIterator));
     const len = values.length;
-    const targetObj = Q(TypedArrayCreate(C, [F(len)]));
+    const targetObj = Q(TypedArrayCreate(C as FunctionObject, [F(len)]));
     let k = 0;
     while (k < len) {
       const Pk = X(ToString(F(k)));
-      const kValue = values.shift();
+      const kValue = values.shift()!;
       let mappedValue;
       if (mapping) {
         mappedValue = Q(Call(mapfn, thisArg, [kValue, F(k)]));
@@ -74,7 +84,7 @@ function TypedArray_from([source = Value.undefined, mapfn = Value.undefined, thi
   // 9. Let len be ? LengthOfArrayLike(arrayLike).
   const len = Q(LengthOfArrayLike(arrayLike));
   // 10. Let targetObj be ? TypedArrayCreate(C, « 𝔽(len) »).
-  const targetObj = Q(TypedArrayCreate(C, [F(len)]));
+  const targetObj = Q(TypedArrayCreate(C as FunctionObject, [F(len)]));
   // 11. Let k be 0.
   let k = 0;
   // 12. Repeat, while k < len
@@ -102,7 +112,7 @@ function TypedArray_from([source = Value.undefined, mapfn = Value.undefined, thi
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.of */
-function TypedArray_of(items, { thisValue }) {
+function TypedArray_of(items: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Let len be the actual number of arguments passed to this function.
   // 2. Let items be the List of arguments passed to this function.
   const len = items.length;
@@ -113,7 +123,7 @@ function TypedArray_of(items, { thisValue }) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
   }
   // 5. Let newObj be ? TypedArrayCreate(C, « 𝔽(len) »).
-  const newObj = Q(TypedArrayCreate(C, [F(len)]));
+  const newObj = Q(TypedArrayCreate(C as FunctionObject, [F(len)]));
   // 6. Let k be 0.
   let k = 0;
   // 7. Repeat, while k < len
@@ -132,11 +142,11 @@ function TypedArray_of(items, { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-get-%typedarray%-@@species */
-function TypedArray_speciesGetter(args, { thisValue }) {
+function TypedArray_speciesGetter(_args: Arguments, { thisValue }: FunctionCallContext) {
   return thisValue;
 }
 
-export function bootstrapTypedArray(realmRec) {
+export function bootstrapTypedArray(realmRec: Realm) {
   const typedArrayConstructor = bootstrapConstructor(realmRec, TypedArrayConstructor, 'TypedArray', 0, realmRec.Intrinsics['%TypedArray.prototype%'], [
     ['from', TypedArray_from, 1],
     ['of', TypedArray_of, 0],

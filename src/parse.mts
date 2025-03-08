@@ -1,8 +1,7 @@
-// @ts-nocheck
 import { Parser, type ParserOptions } from './parser/Parser.mts';
 import { RegExpParser, type RegExpParserContext } from './parser/RegExpParser.mts';
 import { surroundingAgent, type GCMarker } from './engine.mts';
-import { SourceTextModuleRecord } from './modules.mts';
+import { SourceTextModuleRecord, SyntheticModuleRecord, type ModuleRecordHostDefined } from './modules.mts';
 import { JSStringValue, ObjectValue, Value } from './value.mts';
 import {
   Get,
@@ -11,15 +10,16 @@ import {
   CreateDefaultExportSyntheticModule,
   Realm,
   type BuiltinFunctionObject,
+  type LoadedModuleRequestRecord,
 } from './abstract-ops/all.mts';
-import { Q, X } from './completion.mts';
+import { Q, X, type PlainCompletion } from './completion.mts';
 import {
   ModuleRequests,
   ImportEntries,
   ExportEntries,
   ImportedLocalNames,
 } from './static-semantics/all.mts';
-import { ValueSet, kInternal } from './helpers.mts';
+import { JSStringSet, kInternal } from './helpers.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
 
 export { Parser, RegExpParser };
@@ -53,7 +53,19 @@ export function wrappedParse<T>(init: ParserOptions, f: (parser: Parser) => T) {
   }
 }
 
-export function ParseScript(sourceText: string, realm: Realm, hostDefined = {}) {
+export interface ScriptRecord {
+  readonly Realm: Realm;
+  readonly ECMAScriptCode: ParseNode.Script;
+  readonly LoadedModules: LoadedModuleRequestRecord[];
+  readonly HostDefined: ParseScriptHostDefined;
+  mark(m: GCMarker): void;
+}
+export interface ParseScriptHostDefined {
+  readonly specifier?: string | undefined;
+  readonly [kInternal]?: { json: boolean };
+  public?: { readonly specifier?: string | undefined; }
+}
+export function ParseScript(sourceText: string, realm: Realm, hostDefined: ParseScriptHostDefined = {}): ScriptRecord | ObjectValue[] {
   // 1. Assert: sourceText is an ECMAScript source text (see clause 10).
   // 2. Parse sourceText using Script as the goal symbol and analyse the parse result for
   //    any Early Error conditions. If the parse was successful and no early errors were found,
@@ -72,26 +84,19 @@ export function ParseScript(sourceText: string, realm: Realm, hostDefined = {}) 
     return body;
   }
   // 4. Return Script Record { [[Realm]]: realm, [[ECMAScriptCode]]: body, [[HostDefined]]: hostDefined }.
-  return {
+  const rec: ScriptRecord = {
     Realm: realm,
     ECMAScriptCode: body,
     LoadedModules: [],
     HostDefined: hostDefined,
     mark(m: GCMarker) {
-      m(this.Realm);
-      m(this.Environment);
-      for (const v of this.LoadedModules) {
-        m(v.Module);
-      }
+      m(rec.Realm);
     },
   };
+  return rec;
 }
 
-export interface ParseModuleHostDefined {
-  readonly specifier?: string;
-  readonly SourceTextModuleRecord?: typeof SourceTextModuleRecord;
-}
-export function ParseModule(sourceText: string, realm: Realm, hostDefined: ParseModuleHostDefined = {}) {
+export function ParseModule(sourceText: string, realm: Realm, hostDefined: ModuleRecordHostDefined = {}) {
   // 1. Assert: sourceText is an ECMAScript source text (see clause 10).
   // 2. Parse sourceText using Module as the goal symbol and analyse the parse result for
   //    any Early Error conditions. If the parse was successful and no early errors were found,
@@ -110,7 +115,7 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined: Parse
   // 5. Let importEntries be ImportEntries of body.
   const importEntries = ImportEntries(body);
   // 6. Let importedBoundNames be ImportedLocalNames(importEntries).
-  const importedBoundNames = new ValueSet(ImportedLocalNames(importEntries));
+  const importedBoundNames = new JSStringSet(ImportedLocalNames(importEntries));
   // 7. Let indirectExportEntries be a new empty List.
   const indirectExportEntries = [];
   // 8. Let localExportEntries be a new empty List.
@@ -129,9 +134,9 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined: Parse
         localExportEntries.push(ee);
       } else { // ii. Else,
         // 1. Let ie be the element of importEntries whose [[LocalName]] is the same as ee.[[LocalName]].
-        const ie = importEntries.find((e) => e.LocalName.stringValue() === ee.LocalName.stringValue());
+        const ie = importEntries.find((e) => e.LocalName.stringValue() === (ee.LocalName as JSStringValue).stringValue());
         // 2. If ie.[[ImportName]] is ~namespace-object~, then
-        if (ie.ImportName === 'namespace-object') {
+        if (ie!.ImportName === 'namespace-object') {
           // a. NOTE: This is a re-export of an imported module namespace object.
           // b. Append ee to localExportEntries.
           localExportEntries.push(ee);
@@ -139,8 +144,8 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined: Parse
           // a. NOTE: This is a re-export of a single name.
           // b. Append the ExportEntry Record { [[ModuleRequest]]: ie.[[ModuleRequest]], [[ImportName]]: ie.[[ImportName]], [[LocalName]]: null, [[ExportName]]: ee.[[ExportName]] } to indirectExportEntries.
           indirectExportEntries.push({
-            ModuleRequest: ie.ModuleRequest,
-            ImportName: ie.ImportName,
+            ModuleRequest: ie!.ModuleRequest,
+            ImportName: ie!.ImportName,
             LocalName: Value.null,
             ExportName: ee.ExportName,
           });
@@ -157,7 +162,7 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined: Parse
   // 12. Return Source Text Module Record { [[Realm]]: realm, [[Environment]]: undefined, [[Namespace]]: undefined, [[Status]]: unlinked, [[EvaluationError]]: undefined, [[HostDefined]]: hostDefined, [[ECMAScriptCode]]: body, [[Context]]: empty, [[ImportMeta]]: empty, [[RequestedModules]]: requestedModules, [[ImportEntries]]: importEntries, [[LocalExportEntries]]: localExportEntries, [[IndirectExportEntries]]: indirectExportEntries, [[StarExportEntries]]: starExportEntries, [[DFSIndex]]: undefined, [[DFSAncestorIndex]]: undefined }.
   return new (hostDefined.SourceTextModuleRecord || SourceTextModuleRecord)({
     Realm: realm,
-    Environment: Value.undefined,
+    Environment: undefined,
     Namespace: Value.undefined,
     Status: 'new',
     EvaluationError: Value.undefined,
@@ -171,19 +176,18 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined: Parse
     LocalExportEntries: localExportEntries,
     IndirectExportEntries: indirectExportEntries,
     StarExportEntries: starExportEntries,
-    DFSIndex: Value.undefined,
-    DFSAncestorIndex: Value.undefined,
-
     Async: body.hasTopLevelAwait ? Value.true : Value.false,
     AsyncEvaluating: Value.false,
     TopLevelCapability: Value.undefined,
-    AsyncParentModules: Value.undefined,
-    PendingAsyncDependencies: Value.undefined,
+    AsyncParentModules: [],
+    DFSIndex: undefined,
+    DFSAncestorIndex: undefined,
+    PendingAsyncDependencies: undefined,
   });
 }
 
 /** https://tc39.es/ecma262/#sec-parsejsonmodule */
-export function ParseJSONModule(sourceText: Value, realm: Realm, hostDefined: unknown) {
+export function ParseJSONModule(sourceText: Value, realm: Realm, hostDefined: ModuleRecordHostDefined): PlainCompletion<SyntheticModuleRecord> {
   // 1. Let jsonParse be realm's intrinsic object named "%JSON.parse%".
   const jsonParse = realm.Intrinsics['%JSON.parse%'] as BuiltinFunctionObject;
   // 1. Let json be ? Call(jsonParse, undefined, « sourceText »).

@@ -1,8 +1,8 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import {
   Assert,
   CreateBuiltinFunction,
+  Realm,
   SetIntegrityLevel,
 } from '../abstract-ops/all.mts';
 import { Value } from '../value.mts';
@@ -14,7 +14,7 @@ function ThrowTypeError() {
   return surroundingAgent.Throw('TypeError', 'StrictPoisonPill');
 }
 
-export function bootstrapThrowTypeError(realmRec) {
+export function bootstrapThrowTypeError(realmRec: Realm) {
   const f = X(CreateBuiltinFunction(ThrowTypeError, 0, Value(''), [], realmRec));
   Assert(X(SetIntegrityLevel(f, 'frozen')) === Value.true);
   realmRec.Intrinsics['%ThrowTypeError%'] = f;

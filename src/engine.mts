@@ -1,10 +1,11 @@
-// @ts-nocheck
-import { NullValue, Value } from './value.mts';
+import { JSStringValue, NullValue, Value } from './value.mts';
 import {
   EnsureCompletion,
   NormalCompletion,
   ThrowCompletion,
   Q, X,
+  type PlainCompletion,
+  type ExpressionCompletion,
 } from './completion.mts';
 import {
   IsCallable,
@@ -15,13 +16,20 @@ import {
   FinishLoadingImportedModule,
   Realm,
   type FunctionObject,
+  GraphLoadingState,
+  PromiseCapabilityRecord,
 } from './abstract-ops/all.mts';
 import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mts';
-import { Evaluate } from './evaluator.mts';
-import { CallSite, unwind } from './helpers.mts';
-import { runJobQueue } from './api.mts';
+import { Evaluate, type YieldEvaluator } from './evaluator.mts';
+import { CallSite, kAsyncContext, unwind } from './helpers.mts';
+import {
+  AbstractModuleRecord, CyclicModuleRecord, EnvironmentRecord, ObjectValue, PrivateEnvironmentRecord, runJobQueue, type Arguments, type AsyncGeneratorObject, type ErrorType, type GeneratorObject, type ModuleRecordHostDefined, type ParseScriptHostDefined, type ScriptRecord,
+} from './api.mts';
 import * as messages from './messages.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
+import type { RegExpObject } from './intrinsics/RegExp.mts';
+import type { PromiseObject } from './intrinsics/Promise.mts';
+import type { FinalizationRegistryObject } from './intrinsics/FinalizationRegistry.mts';
 
 export const FEATURES = ([
   {
@@ -46,7 +54,8 @@ class ExecutionContextStack extends Array<ExecutionContext> {
     super(+length);
   }
 
-  pop(ctx: ExecutionContext) {
+  // @ts-expect-error
+  override pop(ctx: ExecutionContext) {
     if (!ctx.poppedForTailCall) {
       const popped = super.pop();
       Assert(popped === ctx);
@@ -56,10 +65,19 @@ class ExecutionContextStack extends Array<ExecutionContext> {
 
 let agentSignifier = 0;
 export interface AgentHostDefined {
-  features?;
-  loadImportedModule?(referrer, specifier, hostDefined, finish): void;
-  onDebugger?();
-  onNodeEvaluation?(node: ParseNode): void;
+  hasSourceTextAvailable?(f: FunctionObject): void;
+  ensureCanCompileStrings?(callerRealm: Realm, calleeRealm: Realm): PlainCompletion<void>;
+  cleanupFinalizationRegistry?(FinalizationRegistry: FinalizationRegistryObject): PlainCompletion<void>;
+  features?: readonly string[];
+  loadImportedModule?(referrer: AbstractModuleRecord | ScriptRecord | NullValue | Realm, specifier: string, hostDefined: ModuleRecordHostDefined | undefined, finish: (res: PlainCompletion<AbstractModuleRecord>) => void): void;
+  onDebugger?(): void;
+  onNodeEvaluation?(node: ParseNode, realm: Realm): void;
+  boost?: {
+    evaluatePattern?(pattern: ParseNode.RegExp.Pattern): RegExpObject['RegExpMatcher'];
+    evaluateScript?(script: ScriptRecord): ExpressionCompletion;
+    callFunction?(thisArgument: Value, argumentsList: Arguments): ExpressionCompletion;
+    constructFunction?(this: FunctionObject, argumentsList: Arguments, newTarget: FunctionObject): ExpressionCompletion<ObjectValue>
+  }
 }
 /** https://tc39.es/ecma262/#sec-agents */
 export class Agent {
@@ -69,7 +87,7 @@ export class Agent {
   executionContextStack = new ExecutionContextStack();
 
   // NON-SPEC
-  jobQueue = [];
+  readonly jobQueue: Job[] = [];
 
   scheduledForCleanup = new Set();
 
@@ -86,19 +104,12 @@ export class Agent {
       IsLockFree1: Value.true,
       IsLockFree2: Value.true,
       CandidateExecution: undefined,
-      KeptAlive: new Set(),
+      KeptAlive: new Set<Value>(),
     };
 
     this.hostDefinedOptions = {
       ...options,
-      features: FEATURES.reduce((acc, { flag }) => {
-        if (options.features) {
-          acc[flag] = options.features.includes(flag);
-        } else {
-          acc[flag] = false;
-        }
-        return acc;
-      }, {}),
+      features: options.features,
     };
   }
 
@@ -118,17 +129,18 @@ export class Agent {
   }
 
   // Get an intrinsic by name for the current realm
-  intrinsic(name: string) {
+
+  intrinsic<const T extends keyof typeof this.currentRealmRecord.Intrinsics>(name: T): typeof this.currentRealmRecord.Intrinsics[T] {
     return this.currentRealmRecord.Intrinsics[name];
   }
 
   // Generate a throw completion using message templates
-  Throw<K extends keyof typeof messages>(type: string | Value, template: K, ...templateArgs: Parameters<typeof messages[K]>): ThrowCompletion {
+  Throw<K extends keyof typeof messages>(type: ErrorType | Value, template: K, ...templateArgs: Parameters<typeof messages[K]>): ThrowCompletion {
     if (type instanceof Value) {
       return ThrowCompletion(type);
     }
-    const message = messages[template](...templateArgs);
-    const cons = this.currentRealmRecord.Intrinsics[`%${type}%`];
+    const message = (messages[template] as (...args: unknown[]) => string)(...templateArgs);
+    const cons = this.currentRealmRecord.Intrinsics[`%${type}%`] as FunctionObject;
     let error;
     if (type === 'AggregateError') {
       error = X(Construct(cons, [
@@ -145,7 +157,7 @@ export class Agent {
     const callerContext = this.runningExecutionContext;
     const callerRealm = callerContext.Realm;
     const callerScriptOrModule = GetActiveScriptOrModule();
-    const pending = {
+    const pending: Job = {
       queueName,
       job,
       callerRealm,
@@ -156,7 +168,7 @@ export class Agent {
 
   // NON-SPEC: Check if a feature is enabled in this agent.
   feature(name: string): boolean {
-    return this.hostDefinedOptions.features[name];
+    return !!this.hostDefinedOptions.features?.includes(name);
   }
 
   // NON-SPEC
@@ -172,6 +184,46 @@ export class Agent {
       m(j.callerScriptOrModule);
     });
   }
+
+  /**
+   * NON-SPEC
+   */
+  #debugger_previewing = false;
+
+  #debugger_objectsCreatedDuringPreview = new Set<ObjectValue>();
+
+  get debugger_isPreviewing() {
+    return this.#debugger_previewing;
+  }
+
+  get debugger_cannotPreview() {
+    if (this.#debugger_previewing) {
+      return ThrowCompletion(X(Construct(this.currentRealmRecord.Intrinsics['%EvalError%'] as FunctionObject, [Value('Preview evaluator cannot evaluate side-effecting code')])));
+    }
+    return undefined;
+  }
+
+  debugger_tryTouchDuringPreview(object: ObjectValue) {
+    if (this.#debugger_previewing && !this.#debugger_objectsCreatedDuringPreview.has(object)) {
+      return this.debugger_cannotPreview;
+    }
+    return undefined;
+  }
+
+  debugger_markObjectCreated(object: ObjectValue) {
+    if (!this.#debugger_previewing) {
+      return;
+    }
+    this.#debugger_objectsCreatedDuringPreview.add(object);
+  }
+
+  debugger_scopePreview<T>(cb: () => T) {
+    this.#debugger_previewing = true;
+    const res = cb();
+    this.#debugger_previewing = false;
+    this.#debugger_objectsCreatedDuringPreview.clear();
+    return res;
+  }
 }
 
 export let surroundingAgent: Agent;
@@ -181,26 +233,30 @@ export function setSurroundingAgent(a: Agent) {
 
 /** https://tc39.es/ecma262/#sec-execution-contexts */
 export class ExecutionContext {
-  codeEvaluationState;
+  codeEvaluationState?: YieldEvaluator;
 
-  Function: NullValue | FunctionObject;
+  Function: NullValue | FunctionObject = Value.null;
 
-  Realm: Realm;
+  Generator?: GeneratorObject | AsyncGeneratorObject;
 
-  ScriptOrModule;
+  ScriptOrModule: AbstractModuleRecord | ScriptRecord | NullValue = Value.null;
 
-  VariableEnvironment;
+  VariableEnvironment!: EnvironmentRecord;
 
-  LexicalEnvironment;
+  LexicalEnvironment!: EnvironmentRecord;
 
-  PrivateEnvironment;
+  PrivateEnvironment: PrivateEnvironmentRecord | NullValue = Value.null;
+
+  HostDefined?: ParseScriptHostDefined;
 
   // NON-SPEC
   callSite = new CallSite(this);
 
-  promiseCapability;
+  promiseCapability?: PromiseCapabilityRecord;
 
   poppedForTailCall = false;
+
+  Realm!: Realm;
 
   copy() {
     const e = new ExecutionContext();
@@ -218,7 +274,7 @@ export class ExecutionContext {
   }
 
   // NON-SPEC
-  mark(m) {
+  mark(m: GCMarker) {
     m(this.Function);
     m(this.Realm);
     m(this.ScriptOrModule);
@@ -230,7 +286,7 @@ export class ExecutionContext {
 }
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-scriptevaluation */
-export function ScriptEvaluation(scriptRecord) {
+export function ScriptEvaluation(scriptRecord: ScriptRecord): ExpressionCompletion {
   if (surroundingAgent.hostDefinedOptions.boost?.evaluateScript) {
     return surroundingAgent.hostDefinedOptions.boost.evaluateScript(scriptRecord);
   }
@@ -247,25 +303,25 @@ export function ScriptEvaluation(scriptRecord) {
   // Suspend runningExecutionContext
   surroundingAgent.executionContextStack.push(scriptContext);
   const scriptBody = scriptRecord.ECMAScriptCode;
-  let result = EnsureCompletion(GlobalDeclarationInstantiation(scriptBody, globalEnv));
+  let result: NormalCompletion<void | Value> | ThrowCompletion = EnsureCompletion(GlobalDeclarationInstantiation(scriptBody, globalEnv));
 
   if (result.Type === 'normal') {
-    result = EnsureCompletion(unwind(Evaluate(scriptBody)));
-  }
+    result = EnsureCompletion(unwind(Evaluate(scriptBody))) as NormalCompletion<void | Value>;
 
-  if (result.Type === 'normal' && !result.Value) {
-    result = NormalCompletion(Value.undefined);
+    if (result.Type === 'normal' && !result.Value) {
+      result = NormalCompletion(Value.undefined);
+    }
   }
 
   // Suspend scriptCtx
   surroundingAgent.executionContextStack.pop(scriptContext);
   // Resume(surroundingAgent.runningExecutionContext);
 
-  return result;
+  return result as ExpressionCompletion;
 }
 
 /** https://tc39.es/ecma262/#sec-hostenqueuepromisejob */
-export function HostEnqueuePromiseJob(job, _realm) {
+export function HostEnqueuePromiseJob(job: () => void, _realm: Realm | NullValue) {
   surroundingAgent.queueJob('PromiseJobs', job);
 }
 
@@ -277,21 +333,21 @@ export function AgentSignifier() {
   return AR.Signifier;
 }
 
-export function HostEnsureCanCompileStrings(callerRealm, calleeRealm) {
+export function HostEnsureCanCompileStrings(callerRealm: Realm, calleeRealm: Realm): PlainCompletion<void> {
   if (surroundingAgent.hostDefinedOptions.ensureCanCompileStrings !== undefined) {
     Q(surroundingAgent.hostDefinedOptions.ensureCanCompileStrings(callerRealm, calleeRealm));
   }
   return NormalCompletion(undefined);
 }
 
-export function HostPromiseRejectionTracker(promise, operation) {
+export function HostPromiseRejectionTracker(promise: PromiseObject, operation: 'reject' | 'handle') {
   const realm = surroundingAgent.currentRealmRecord;
   if (realm && realm.HostDefined.promiseRejectionTracker) {
     X(realm.HostDefined.promiseRejectionTracker(promise, operation));
   }
 }
 
-export function HostHasSourceTextAvailable(func) {
+export function HostHasSourceTextAvailable(func: FunctionObject) {
   if (surroundingAgent.hostDefinedOptions.hasSourceTextAvailable) {
     return X(surroundingAgent.hostDefinedOptions.hasSourceTextAvailable(func));
   }
@@ -299,17 +355,19 @@ export function HostHasSourceTextAvailable(func) {
 }
 
 // #sec-HostLoadImportedModule
-export function HostLoadImportedModule(referrer, specifier, hostDefined, payload) {
+export function HostLoadImportedModule(referrer: CyclicModuleRecord | ScriptRecord | Realm, specifier: JSStringValue, hostDefined: ModuleRecordHostDefined | undefined, payload: GraphLoadingState | PromiseCapabilityRecord) {
   if (surroundingAgent.hostDefinedOptions.loadImportedModule) {
     const executionContext = surroundingAgent.runningExecutionContext;
-    let result;
+    let result: PlainCompletion<AbstractModuleRecord> | undefined;
     let sync = true;
     surroundingAgent.hostDefinedOptions.loadImportedModule(referrer, specifier.stringValue(), hostDefined, (res) => {
-      result = EnsureCompletion(res);
+      result = res;
       if (!sync) {
         // If this callback has been called asynchronously, restore the correct execution context and enqueue a job.
         surroundingAgent.executionContextStack.push(executionContext);
         surroundingAgent.queueJob('FinishLoadingImportedModule', () => {
+          result = EnsureCompletion(result);
+          Assert(!!result && (result.Type === 'normal' || result.Type === 'throw'));
           FinishLoadingImportedModule(referrer, specifier, result, payload);
         });
         surroundingAgent.executionContextStack.pop(executionContext);
@@ -318,6 +376,8 @@ export function HostLoadImportedModule(referrer, specifier, hostDefined, payload
     });
     sync = false;
     if (result !== undefined) {
+      result = EnsureCompletion(result);
+      Assert(result.Type === 'normal' || result.Type === 'throw');
       FinishLoadingImportedModule(referrer, specifier, result, payload);
     }
   } else {
@@ -326,7 +386,7 @@ export function HostLoadImportedModule(referrer, specifier, hostDefined, payload
 }
 
 /** https://tc39.es/ecma262/#sec-hostgetimportmetaproperties */
-export function HostGetImportMetaProperties(moduleRecord) {
+export function HostGetImportMetaProperties(moduleRecord: AbstractModuleRecord) {
   const realm = surroundingAgent.currentRealmRecord;
   if (realm.HostDefined.getImportMetaProperties) {
     return X(realm.HostDefined.getImportMetaProperties(moduleRecord.HostDefined.public));
@@ -335,7 +395,7 @@ export function HostGetImportMetaProperties(moduleRecord) {
 }
 
 /** https://tc39.es/ecma262/#sec-hostfinalizeimportmeta */
-export function HostFinalizeImportMeta(importMeta, moduleRecord) {
+export function HostFinalizeImportMeta(importMeta: ObjectValue, moduleRecord: AbstractModuleRecord) {
   const realm = surroundingAgent.currentRealmRecord;
   if (realm.HostDefined.finalizeImportMeta) {
     return X(realm.HostDefined.finalizeImportMeta(importMeta, moduleRecord.HostDefined.public));
@@ -344,7 +404,7 @@ export function HostFinalizeImportMeta(importMeta, moduleRecord) {
 }
 
 /** https://tc39.es/ecma262/#sec-host-cleanup-finalization-registry */
-export function HostEnqueueFinalizationRegistryCleanupJob(fg) {
+export function HostEnqueueFinalizationRegistryCleanupJob(fg: FinalizationRegistryObject): PlainCompletion<void> {
   if (surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry !== undefined) {
     Q(surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry(fg));
   } else {
@@ -359,8 +419,12 @@ export function HostEnqueueFinalizationRegistryCleanupJob(fg) {
   return NormalCompletion(undefined);
 }
 
+export interface JobCallbackRecord {
+  Callback: FunctionObject & { [kAsyncContext]?: ExecutionContext; };
+  HostDefined: undefined;
+}
 /** https://tc39.es/ecma262/#sec-hostmakejobcallback */
-export function HostMakeJobCallback(callback) {
+export function HostMakeJobCallback(callback: FunctionObject): JobCallbackRecord {
   // 1. Assert: IsCallable(callback) is true.
   Assert(IsCallable(callback) === Value.true);
   // 2. Return the JobCallback Record { [[Callback]]: callback, [[HostDefined]]: empty }.
@@ -368,10 +432,19 @@ export function HostMakeJobCallback(callback) {
 }
 
 /** https://tc39.es/ecma262/#sec-hostcalljobcallback */
-export function HostCallJobCallback(jobCallback, V, argumentsList) {
+export function HostCallJobCallback(jobCallback: JobCallbackRecord, V: Value, argumentsList: Arguments): ExpressionCompletion {
   // 1. Assert: IsCallable(jobCallback.[[Callback]]) is true.
   Assert(IsCallable(jobCallback.Callback) === Value.true);
   // 1. Return ? Call(jobCallback.[[Callback]], V, argumentsList).
   return Q(Call(jobCallback.Callback, V, argumentsList));
 }
 export type GCMarker = (value: unknown) => void;
+export interface Markable {
+  mark(marker: GCMarker): void;
+}
+export interface Job {
+  readonly queueName: string;
+  readonly job: () => void;
+  readonly callerRealm: Realm;
+  readonly callerScriptOrModule: AbstractModuleRecord | ScriptRecord | NullValue;
+}

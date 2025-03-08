@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Value } from '../value.mts';
 import { surroundingAgent } from '../engine.mts';
 import {
@@ -11,9 +10,10 @@ import {
 import { StringValue } from '../static-semantics/all.mts';
 import { Q } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import type { EnvironmentRecord, PropertyKeyValue, UndefinedValue } from '#self';
 
 // BindingRestProperty : `...` BindingIdentifier
-export function RestBindingInitialization({ BindingIdentifier }: ParseNode.Initializer, value, environment, excludedNames) {
+export function RestBindingInitialization({ BindingIdentifier }: ParseNode.BindingRestProperty, value: Value, environment: EnvironmentRecord | UndefinedValue, excludedNames: readonly PropertyKeyValue[]) {
   // 1. Let lhs be ? ResolveBinding(StringValue of BindingIdentifier, environment).
   const lhs = Q(ResolveBinding(StringValue(BindingIdentifier), environment, BindingIdentifier.strict));
   // 2. Let restObj be OrdinaryObjectCreate(%Object.prototype%).
