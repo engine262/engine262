@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Value } from '../value.mts';
 import {
   GetV,
@@ -10,13 +9,17 @@ import {
 import { Evaluate } from '../evaluator.mts';
 import { StringValue, IsAnonymousFunctionDefinition } from '../static-semantics/all.mts';
 import { Q } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   NamedEvaluation,
   BindingInitialization,
 } from './all.mts';
+import type {
+  EnvironmentRecord, FunctionDeclaration, PropertyKeyValue, UndefinedValue,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-keyedbindinginitialization */
-export function* KeyedBindingInitialization(node, value, environment, propertyName) {
+export function* KeyedBindingInitialization(node: ParseNode.BindingElement | ParseNode.SingleNameBinding, value: Value, environment: EnvironmentRecord | UndefinedValue, propertyName: PropertyKeyValue) {
   if (node.type === 'BindingElement') {
     // 1. Let v be ? GetV(value, propertyName).
     let v = Q(GetV(value, propertyName));
@@ -40,7 +43,7 @@ export function* KeyedBindingInitialization(node, value, environment, propertyNa
       // a. If IsAnonymousFunctionDefinition(Initializer) is true, then
       if (IsAnonymousFunctionDefinition(node.Initializer)) {
         // i. Set v to the result of performing NamedEvaluation for Initializer with argument bindingId.
-        v = yield* NamedEvaluation(node.Initializer, bindingId);
+        v = (yield* NamedEvaluation(node.Initializer as FunctionDeclaration, bindingId)) as Value;
       } else { // b. Else,
         // i. Let defaultValue be the result of evaluating Initializer.
         const defaultValue = yield* Evaluate(node.Initializer);

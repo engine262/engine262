@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   surroundingAgent,
 } from '../engine.mts';
@@ -6,6 +5,7 @@ import {
   IfAbruptCloseIterator,
   Q,
   ThrowCompletion, X,
+  type ExpressionCompletion,
 } from '../completion.mts';
 import {
   ArrayCreate,
@@ -30,36 +30,41 @@ import {
   ToString,
   ToUint32,
   F, R,
+  Realm,
+  type FunctionObject,
 } from '../abstract-ops/all.mts';
 import {
   NumberValue,
+  ObjectValue,
   UndefinedValue,
   Value,
   wellKnownSymbols,
+  type Arguments,
+  type FunctionCallContext,
 } from '../value.mts';
-import { OutOfRange } from '../helpers.mts';
+import { __ts_cast__, OutOfRange } from '../helpers.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-array-constructor */
-function ArrayConstructor(argumentsList, { NewTarget }) {
+function ArrayConstructor(argumentsList: Arguments, { NewTarget }: FunctionCallContext) {
   const numberOfArgs = argumentsList.length;
   if (numberOfArgs === 0) {
     /** https://tc39.es/ecma262/#sec-array-constructor-array */
     Assert(numberOfArgs === 0);
     if (NewTarget instanceof UndefinedValue) {
-      NewTarget = surroundingAgent.activeFunctionObject;
+      NewTarget = surroundingAgent.activeFunctionObject as FunctionObject;
     }
-    const proto = GetPrototypeFromConstructor(NewTarget, '%Array.prototype%');
+    const proto = X(GetPrototypeFromConstructor(NewTarget, '%Array.prototype%'));
     return ArrayCreate(0, proto);
   } else if (numberOfArgs === 1) {
     /** https://tc39.es/ecma262/#sec-array-len */
     const [len] = argumentsList;
     Assert(numberOfArgs === 1);
     if (NewTarget instanceof UndefinedValue) {
-      NewTarget = surroundingAgent.activeFunctionObject;
+      NewTarget = surroundingAgent.activeFunctionObject as FunctionObject;
     }
-    const proto = GetPrototypeFromConstructor(NewTarget, '%Array.prototype%');
-    const array = ArrayCreate(0, proto);
+    const proto = X(GetPrototypeFromConstructor(NewTarget, '%Array.prototype%'));
+    const array = X(ArrayCreate(0, proto));
     let intLen;
     if (!(len instanceof NumberValue)) {
       const defineStatus = X(CreateDataProperty(array, Value('0'), len));
@@ -78,10 +83,10 @@ function ArrayConstructor(argumentsList, { NewTarget }) {
     const items = argumentsList;
     Assert(numberOfArgs >= 2);
     if (NewTarget instanceof UndefinedValue) {
-      NewTarget = surroundingAgent.activeFunctionObject;
+      NewTarget = surroundingAgent.activeFunctionObject as FunctionObject;
     }
-    const proto = GetPrototypeFromConstructor(NewTarget, '%Array.prototype%');
-    const array = ArrayCreate(0, proto);
+    const proto = Q(GetPrototypeFromConstructor(NewTarget, '%Array.prototype%'));
+    const array = X(ArrayCreate(0, proto));
     let k = 0;
     while (k < numberOfArgs) {
       const Pk = X(ToString(F(k)));
@@ -90,7 +95,7 @@ function ArrayConstructor(argumentsList, { NewTarget }) {
       Assert(defineStatus === Value.true);
       k += 1;
     }
-    Assert(R(X(Get(array, Value('length')))) === numberOfArgs);
+    Assert(R(X(Get(array, Value('length')) as NumberValue)) === numberOfArgs);
     return array;
   }
 
@@ -98,7 +103,7 @@ function ArrayConstructor(argumentsList, { NewTarget }) {
 }
 
 /** https://tc39.es/ecma262/#sec-array.from */
-function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
+function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   const C = thisValue;
   let mapping;
   let A;
@@ -113,7 +118,7 @@ function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg =
   const usingIterator = Q(GetMethod(items, wellKnownSymbols.iterator));
   if (usingIterator !== Value.undefined) {
     if (IsConstructor(C) === Value.true) {
-      A = Q(Construct(C));
+      A = Q(Construct(C as FunctionObject));
     } else {
       A = X(ArrayCreate(0));
     }
@@ -130,11 +135,12 @@ function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg =
         Q(Set(A, Value('length'), F(k), Value.true));
         return A;
       }
-      const nextValue = Q(IteratorValue(next));
+      const nextValue = Q(IteratorValue(next as ObjectValue));
       let mappedValue;
       if (mapping) {
         mappedValue = Call(mapfn, thisArg, [nextValue, F(k)]);
         IfAbruptCloseIterator(mappedValue, iteratorRecord);
+        __ts_cast__<Value>(mappedValue);
       } else {
         mappedValue = nextValue;
       }
@@ -146,7 +152,7 @@ function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg =
   const arrayLike = X(ToObject(items));
   const len = Q(LengthOfArrayLike(arrayLike));
   if (IsConstructor(C) === Value.true) {
-    A = Q(Construct(C, [F(len)]));
+    A = Q(Construct(C as FunctionObject, [F(len)]));
   } else {
     A = Q(ArrayCreate(len));
   }
@@ -168,18 +174,18 @@ function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg =
 }
 
 /** https://tc39.es/ecma262/#sec-array.isarray */
-function Array_isArray([arg = Value.undefined]) {
+function Array_isArray([arg = Value.undefined]: Arguments): ExpressionCompletion {
   return Q(IsArray(arg));
 }
 
 /** https://tc39.es/ecma262/#sec-array.of */
-function Array_of(items, { thisValue }) {
+function Array_of(items: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const len = items.length;
   // Let items be the List of arguments passed to this function.
   const C = thisValue;
   let A;
   if (IsConstructor(C) === Value.true) {
-    A = Q(Construct(C, [F(len)]));
+    A = Q(Construct(C as FunctionObject, [F(len)]));
   } else {
     A = Q(ArrayCreate(len));
   }
@@ -195,11 +201,11 @@ function Array_of(items, { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-get-array-@@species */
-function Array_speciesGetter(args, { thisValue }) {
+function Array_speciesGetter(_args: Arguments, { thisValue }: FunctionCallContext) {
   return thisValue;
 }
 
-export function bootstrapArray(realmRec) {
+export function bootstrapArray(realmRec: Realm) {
   const proto = realmRec.Intrinsics['%Array.prototype%'];
 
   const cons = bootstrapConstructor(realmRec, ArrayConstructor, 'Array', 1, proto, [

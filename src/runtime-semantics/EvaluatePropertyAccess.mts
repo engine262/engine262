@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   RequireObjectCoercible,
   GetValue,
@@ -6,13 +5,13 @@ import {
   Assert,
 } from '../abstract-ops/all.mts';
 import { Value, ReferenceRecord } from '../value.mts';
-import { Evaluate } from '../evaluator.mts';
+import { Evaluate, type ExpressionEvaluator } from '../evaluator.mts';
 import { StringValue } from '../static-semantics/all.mts';
-import { Q } from '../completion.mts';
+import { Q, type PlainCompletion } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-evaluate-expression-key-property-access */
-export function* EvaluatePropertyAccessWithExpressionKey(baseValue, expression: ParseNode.Expression, strict: boolean) {
+export function* EvaluatePropertyAccessWithExpressionKey(baseValue: Value, expression: ParseNode.Expression, strict: boolean): ExpressionEvaluator<ReferenceRecord> {
   // 1. Let propertyNameReference be the result of evaluating expression.
   const propertyNameReference = yield* Evaluate(expression);
   // 2. Let propertyNameValue be ? GetValue(propertyNameReference).
@@ -31,7 +30,7 @@ export function* EvaluatePropertyAccessWithExpressionKey(baseValue, expression: 
 }
 
 /** https://tc39.es/ecma262/#sec-evaluate-identifier-key-property-access */
-export function EvaluatePropertyAccessWithIdentifierKey(baseValue, identifierName: ParseNode.IdentifierName, strict: boolean) {
+export function EvaluatePropertyAccessWithIdentifierKey(baseValue: Value, identifierName: ParseNode.IdentifierName, strict: boolean): PlainCompletion<ReferenceRecord> {
   // 1. Assert: identifierName is an IdentifierName.
   Assert(identifierName.type === 'IdentifierName');
   // 2. Let bv be ? RequireObjectCoercible(baseValue).

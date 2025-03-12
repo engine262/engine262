@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import { NormalCompletion, EnsureCompletion } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
@@ -8,7 +7,7 @@ import type { ParseNode } from '../parser/ParseNode.mts';
 export function Evaluate_DebuggerStatement(_node: ParseNode.DebuggerStatement) {
   let result;
   // 1. If an implementation-defined debugging facility is available and enabled, then
-  if (surroundingAgent.hostDefinedOptions.onDebugger) {
+  if (surroundingAgent.hostDefinedOptions.onDebugger && !surroundingAgent.debugger_isPreviewing) {
     // a. Perform an implementation-defined debugging action.
     // b. Let result be an implementation-defined Completion value.
     result = EnsureCompletion(surroundingAgent.hostDefinedOptions.onDebugger());

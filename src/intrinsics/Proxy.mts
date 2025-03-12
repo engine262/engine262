@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   surroundingAgent,
 } from '../engine.mts';
@@ -8,26 +7,39 @@ import {
   CreateDataProperty,
   OrdinaryObjectCreate,
   ProxyCreate,
+  Realm,
   isProxyExoticObject,
+  type BuiltinFunctionObject,
+  type ExoticObject,
+  type FunctionObject,
 } from '../abstract-ops/all.mts';
-import { Value } from '../value.mts';
-import { Q, X } from '../completion.mts';
+import {
+  NullValue, ObjectValue, Value, type Arguments, type FunctionCallContext,
+} from '../value.mts';
+import { Q, X, type ExpressionCompletion } from '../completion.mts';
 import { assignProps } from './bootstrap.mts';
 
+export interface ProxyObject extends ExoticObject, BuiltinFunctionObject {
+  ProxyHandler: Value | NullValue;
+  ProxyTarget: ObjectValue | NullValue;
+}
+export interface RevocableProxyRevokeFunctionObject extends BuiltinFunctionObject {
+  RevocableProxy: ProxyObject | NullValue;
+}
 /** https://tc39.es/ecma262/#sec-proxy-target-handler */
-function ProxyConstructor([target = Value.undefined, handler = Value.undefined], { NewTarget }) {
+function ProxyConstructor(this: FunctionObject, [target = Value.undefined, handler = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
   // 1. f NewTarget is undefined, throw a TypeError exception.
   if (NewTarget === Value.undefined) {
     return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
   // 2. Return ? ProxyCreate(target, handler).
-  return Q(ProxyCreate(target, handler));
+  return ProxyCreate(target, handler);
 }
 
 /** https://tc39.es/ecma262/#sec-proxy-revocation-functions */
 function ProxyRevocationFunctions() {
   // 1. Let F be the active function object.
-  const F = surroundingAgent.activeFunctionObject;
+  const F = surroundingAgent.activeFunctionObject as RevocableProxyRevokeFunctionObject;
   // 2. Let p be F.[[RevocableProxy]].
   const p = F.RevocableProxy;
   // 3. If p is null, return undefined.
@@ -47,7 +59,7 @@ function ProxyRevocationFunctions() {
 }
 
 /** https://tc39.es/ecma262/#sec-proxy.revocable */
-function Proxy_revocable([target = Value.undefined, handler = Value.undefined]) {
+function Proxy_revocable([target = Value.undefined, handler = Value.undefined]: Arguments): ExpressionCompletion {
   // 1. Let p be ? ProxyCreate(target, handler).
   const p = Q(ProxyCreate(target, handler));
   /** https://tc39.es/ecma262/#sec-proxy-revocation-functions. */
@@ -55,7 +67,7 @@ function Proxy_revocable([target = Value.undefined, handler = Value.undefined]) 
   // 3. Let length be the number of non-optional parameters of the function definition in Proxy Revocation Functions.
   const length = 0;
   // 4. Let revoker be ! CreateBuiltinFunction(steps, length, "", « [[RevocableProxy]] »).
-  const revoker = X(CreateBuiltinFunction(steps, length, Value(''), ['RevocableProxy']));
+  const revoker = X(CreateBuiltinFunction(steps, length, Value(''), ['RevocableProxy'])) as RevocableProxyRevokeFunctionObject;
   // 5. Set revoker.[[RevocableProxy]] to p.
   revoker.RevocableProxy = p;
   // 6. Let result be OrdinaryObjectCreate(%Object.prototype%).
@@ -68,7 +80,7 @@ function Proxy_revocable([target = Value.undefined, handler = Value.undefined]) 
   return result;
 }
 
-export function bootstrapProxy(realmRec) {
+export function bootstrapProxy(realmRec: Realm) {
   const proxyConstructor = CreateBuiltinFunction(
     ProxyConstructor,
     2,

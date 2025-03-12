@@ -27,9 +27,11 @@ import {
   type ECMAScriptFunctionObject,
 } from './abstract-ops/all.mts';
 import {
-  NormalCompletion, Q, ThrowCompletion, X,
+  NormalCompletion, Q, X,
+  type ExpressionCompletion,
+  type PlainCompletion,
 } from './completion.mts';
-import { ValueMap } from './helpers.mts';
+import { JSStringMap } from './helpers.mts';
 
 /** https://tc39.es/ecma262/#sec-environment-records */
 export abstract class EnvironmentRecord {
@@ -39,9 +41,9 @@ export abstract class EnvironmentRecord {
     this.OuterEnv = outerEnv;
   }
 
-  abstract HasBinding(N: JSStringValue): BooleanValue;
+  abstract HasBinding(N: JSStringValue): PlainCompletion<BooleanValue>;
 
-  abstract CreateMutableBinding(N: JSStringValue, D: BooleanValue): void;
+  abstract CreateMutableBinding(N: JSStringValue, D: BooleanValue): PlainCompletion<void>;
 
   abstract CreateImmutableBinding(N: JSStringValue, S: BooleanValue): void;
 
@@ -49,9 +51,9 @@ export abstract class EnvironmentRecord {
 
   abstract SetMutableBinding(N: JSStringValue, V: Value, S: BooleanValue): void;
 
-  abstract GetBindingValue(N: JSStringValue, S: BooleanValue): NormalCompletion<Value> | ThrowCompletion;
+  abstract GetBindingValue(N: JSStringValue, S: BooleanValue): ExpressionCompletion;
 
-  abstract DeleteBinding(N: JSStringValue): BooleanValue;
+  abstract DeleteBinding(N: JSStringValue): ExpressionCompletion<BooleanValue>;
 
   abstract HasThisBinding(): BooleanValue;
 
@@ -81,7 +83,7 @@ interface ModuleEnvironmentBinding extends DeclarativeEnvironmentBinding {
 }
 /** https://tc39.es/ecma262/#sec-declarative-environment-records */
 export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
-  protected readonly bindings = new ValueMap<JSStringValue, DeclarativeEnvironmentBinding>();
+  readonly bindings = new JSStringMap<DeclarativeEnvironmentBinding>();
 
   /** https://tc39.es/ecma262/#sec-declarative-environment-records-hasbinding-n */
   HasBinding(N: JSStringValue) {
@@ -158,7 +160,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-declarative-environment-records-setmutablebinding-n-v-s */
-  SetMutableBinding(N: JSStringValue, V: Value, S: BooleanValue): NormalCompletion<void> | ThrowCompletion {
+  SetMutableBinding(N: JSStringValue, V: Value, S: BooleanValue): PlainCompletion<void> {
     Assert(IsPropertyKey(N));
     // 1. Let envRec be the declarative Environment Record for which the method was invoked.
     const envRec = this;
@@ -199,7 +201,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-declarative-environment-records-getbindingvalue-n-s */
-  GetBindingValue(N: JSStringValue, _S: BooleanValue) {
+  GetBindingValue(N: JSStringValue, _S: BooleanValue): ExpressionCompletion {
     // 1. Let envRec be the declarative Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Assert: envRec has a binding for N.
@@ -269,7 +271,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-object-environment-records-hasbinding-n */
-  HasBinding(N: JSStringValue) {
+  HasBinding(N: JSStringValue): ExpressionCompletion<BooleanValue> {
     // 1. Let envRec be the object Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Let bindings be the binding object for envRec.
@@ -300,13 +302,13 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-object-environment-records-createmutablebinding-n-d */
-  CreateMutableBinding(N: JSStringValue, D: BooleanValue) {
+  CreateMutableBinding(N: JSStringValue, D: BooleanValue): PlainCompletion<void> {
     // 1. Let envRec be the object Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Let envRec be the object Environment Record for which the method was invoked.
     const bindings = envRec.BindingObject;
     // 3. Return ? DefinePropertyOrThrow(bindings, N, PropertyDescriptor { [[Value]]: undefined, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: D }).
-    return Q(DefinePropertyOrThrow(bindings, N, Descriptor({
+    Q(DefinePropertyOrThrow(bindings, N, Descriptor({
       Value: Value.undefined,
       Writable: Value.true,
       Enumerable: Value.true,
@@ -320,7 +322,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-object-environment-records-initializebinding-n-v */
-  InitializeBinding(N: JSStringValue, V: Value) {
+  InitializeBinding(N: JSStringValue, V: Value): ExpressionCompletion<BooleanValue> {
     // 1. Let envRec be the object Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Assert: envRec must have an uninitialized binding for N.
@@ -367,7 +369,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-object-environment-records-deletebinding-n */
-  DeleteBinding(N: JSStringValue) {
+  DeleteBinding(N: JSStringValue): ExpressionCompletion<BooleanValue> {
     // 1. Let envRec be the object Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Let bindings be the binding object for envRec.
@@ -432,13 +434,13 @@ export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
     // 9. Return env.
   }
 
-  protected ThisValue: undefined | Value;
+  protected ThisValue!: Value;
 
-  protected ThisBindingStatus: 'lexical' | 'uninitialized' | 'initialized';
+  ThisBindingStatus: 'lexical' | 'uninitialized' | 'initialized';
 
-  protected readonly FunctionObject;
+  readonly FunctionObject: ECMAScriptFunctionObject;
 
-  protected readonly NewTarget: UndefinedValue | ObjectValue;
+  readonly NewTarget: UndefinedValue | ObjectValue;
 
   /** https://tc39.es/ecma262/#sec-bindthisvalue */
   BindThisValue(V: Value) {
@@ -496,7 +498,7 @@ export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
       return surroundingAgent.Throw('ReferenceError', 'InvalidThis');
     }
     // 4. Return envRec.[[ThisValue]].
-    return envRec.ThisValue!;
+    return envRec.ThisValue;
   }
 
   /** https://tc39.es/ecma262/#sec-getsuperbase */
@@ -510,8 +512,8 @@ export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
     }
     // 3. Assert: Type(home) is Object.
     Assert(home instanceof ObjectValue);
-    // 4. Return ? home.[[GetPrototypeOf]]().
-    return Q(home.GetPrototypeOf());
+    // 4. Return ! home.[[GetPrototypeOf]]().
+    return X(home.GetPrototypeOf());
   }
 
   override mark(m: GCMarker) {
@@ -526,11 +528,11 @@ export class FunctionEnvironmentRecord extends DeclarativeEnvironmentRecord {
 export class GlobalEnvironmentRecord extends EnvironmentRecord {
   protected readonly ObjectRecord: ObjectEnvironmentRecord;
 
-  protected readonly GlobalThisValue: ObjectValue;
+  readonly GlobalThisValue: ObjectValue;
 
-  protected readonly DeclarativeRecord: DeclarativeEnvironmentRecord;
+  readonly DeclarativeRecord: DeclarativeEnvironmentRecord;
 
-  protected readonly VarNames: JSStringValue[];
+  readonly VarNames: JSStringValue[];
 
   /** https://tc39.es/ecma262/#sec-newglobalenvironment */
   constructor(G: ObjectValue, thisValue: ObjectValue) {
@@ -649,7 +651,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-global-environment-records-deletebinding-n */
-  DeleteBinding(N: JSStringValue) {
+  DeleteBinding(N: JSStringValue): PlainCompletion<BooleanValue> {
     // 1. Let envRec be the global Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Let DclRec be envRec.[[DeclarativeRecord]].
@@ -737,7 +739,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-hasrestrictedglobalproperty */
-  HasRestrictedGlobalProperty(N: JSStringValue) {
+  HasRestrictedGlobalProperty(N: JSStringValue): ExpressionCompletion<BooleanValue> {
     // 1. Let envRec be the global Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Let ObjRec be envRec.[[ObjectRecord]].
@@ -759,7 +761,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-candeclareglobalvar */
-  CanDeclareGlobalVar(N: JSStringValue) {
+  CanDeclareGlobalVar(N: JSStringValue): ExpressionCompletion<BooleanValue> {
     // 1. Let envRec be the global Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Let ObjRec be envRec.[[ObjectRecord]].
@@ -777,7 +779,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-candeclareglobalfunction */
-  CanDeclareGlobalFunction(N: JSStringValue) {
+  CanDeclareGlobalFunction(N: JSStringValue): ExpressionCompletion<BooleanValue> {
     // 1. Let envRec be the global Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Let ObjRec be envRec.[[ObjectRecord]].
@@ -797,8 +799,8 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
     // 7. If IsDataDescriptor(existingProp) is true and existingProp has attribute values
     //    { [[Writable]]: true, [[Enumerable]]: true }, return true.
     if (IsDataDescriptor(existingProp) === true
-        && existingProp.Writable === Value.true
-        && existingProp.Enumerable === Value.true) {
+      && existingProp.Writable === Value.true
+      && existingProp.Enumerable === Value.true) {
       return Value.true;
     }
     // 8. Return false.
@@ -806,7 +808,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-createglobalvarbinding */
-  CreateGlobalVarBinding(N: JSStringValue, D: BooleanValue) {
+  CreateGlobalVarBinding(N: JSStringValue, D: BooleanValue): PlainCompletion<void> {
     // 1. Let envRec be the global Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Let ObjRec be envRec.[[ObjectRecord]].
@@ -836,7 +838,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-createglobalfunctionbinding */
-  CreateGlobalFunctionBinding(N: JSStringValue, V: Value, D: BooleanValue) {
+  CreateGlobalFunctionBinding(N: JSStringValue, V: Value, D: BooleanValue): PlainCompletion<void> {
     // 1. Let envRec be the global Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Let ObjRec be envRec.[[ObjectRecord]].
@@ -887,10 +889,10 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
 
 /** https://tc39.es/ecma262/#sec-module-environment-records */
 export class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
-  declare protected readonly bindings: ValueMap<JSStringValue, ModuleEnvironmentBinding>;
+  declare readonly bindings: JSStringMap<ModuleEnvironmentBinding>;
 
   /** https://tc39.es/ecma262/#sec-module-environment-records-getbindingvalue-n-s */
-  override GetBindingValue(N: JSStringValue, S: BooleanValue): NormalCompletion<Value> | ThrowCompletion {
+  override GetBindingValue(N: JSStringValue, S: BooleanValue): ExpressionCompletion {
     // 1. Assert: S is true.
     Assert(S === Value.true);
     // 2. Let envRec be the module Environment Record for which the method was invoked.
@@ -905,7 +907,7 @@ export class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
       // b.Let targetEnv be M.[[Environment]].
       const targetEnv = M.Environment;
       // c. If targetEnv is undefined, throw a ReferenceError exception.
-      if (targetEnv instanceof UndefinedValue) {
+      if (!targetEnv) {
         return surroundingAgent.Throw('ReferenceError', 'NotDefined', N);
       }
       // d. Return ? targetEnv.GetBindingValue(N2, true).
@@ -961,7 +963,7 @@ export class ModuleEnvironmentRecord extends DeclarativeEnvironmentRecord {
 }
 
 /** https://tc39.es/ecma262/#sec-getidentifierreference */
-export function GetIdentifierReference(env: EnvironmentRecord | NullValue, name: JSStringValue, strict: BooleanValue): NormalCompletion<ReferenceRecord> | ThrowCompletion {
+export function GetIdentifierReference(env: EnvironmentRecord | NullValue, name: JSStringValue, strict: BooleanValue): PlainCompletion<ReferenceRecord> {
   // 1. If lex is the value null, then
   if (env instanceof NullValue) {
     // a. Return the Reference Record { [[Base]]: unresolvable, [[ReferencedName]]: name, [[Strict]]: strict, [[ThisValue]]: empty }.
@@ -994,7 +996,7 @@ export function GetIdentifierReference(env: EnvironmentRecord | NullValue, name:
 export class PrivateEnvironmentRecord {
   readonly OuterPrivateEnvironment: PrivateEnvironmentRecord | NullValue;
 
-  readonly Names: readonly PrivateName[] = [];
+  readonly Names: PrivateName[] = [];
 
   /** https://tc39.es/ecma262/#sec-newprivateenvironment */
   constructor(outerEnv: PrivateEnvironmentRecord | NullValue) {
@@ -1007,3 +1009,5 @@ export class PrivateEnvironmentRecord {
     });
   }
 }
+
+export type EnvironmentRecordWithThisBinding = FunctionEnvironmentRecord | GlobalEnvironmentRecord | ModuleEnvironmentRecord;

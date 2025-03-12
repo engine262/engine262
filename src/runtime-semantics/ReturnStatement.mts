@@ -1,11 +1,12 @@
-// @ts-nocheck
 import { Value } from '../value.mts';
-import { Evaluate } from '../evaluator.mts';
+import { Evaluate, type Evaluator } from '../evaluator.mts';
 import { GetValue, GetGeneratorKind } from '../abstract-ops/all.mts';
 import {
   Completion,
   Await,
   Q, X,
+  ReturnCompletion,
+  ThrowCompletion,
 } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 
@@ -13,7 +14,7 @@ import type { ParseNode } from '../parser/ParseNode.mts';
 //  ReturnStatement :
 //    `return` `;`
 //    `return` Expression `;`
-export function* Evaluate_ReturnStatement({ Expression }: ParseNode.ReturnStatement) {
+export function* Evaluate_ReturnStatement({ Expression }: ParseNode.ReturnStatement): Evaluator<ReturnCompletion | ThrowCompletion> {
   if (!Expression) {
     // 1. Return Completion { [[Type]]: return, [[Value]]: undefined, [[Target]]: empty }.
     return new Completion({ Type: 'return', Value: Value.undefined, Target: undefined });

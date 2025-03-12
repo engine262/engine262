@@ -1,6 +1,5 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
-import { EnvironmentRecord } from '../environment.mts';
+import { GlobalEnvironmentRecord } from '../environment.mts';
 import { Assert } from '../abstract-ops/all.mts';
 import {
   BoundNames,
@@ -12,12 +11,11 @@ import {
 } from '../static-semantics/all.mts';
 import { Value } from '../value.mts';
 import { Q, NormalCompletion } from '../completion.mts';
-import { ValueSet } from '../helpers.mts';
+import { JSStringSet } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 import { InstantiateFunctionObject } from './all.mts';
 
-export function GlobalDeclarationInstantiation(script, env: EnvironmentRecord) {
-  // 1. Assert: env is a global Environment Record.
-  Assert(env instanceof EnvironmentRecord);
+export function GlobalDeclarationInstantiation(script: ParseNode.Script, env: GlobalEnvironmentRecord) {
   // 2. Let lexNames be the LexicallyDeclaredNames of script.
   const lexNames = LexicallyDeclaredNames(script);
   // 3. Let varNames be the VarDeclaredNames of script.
@@ -51,7 +49,7 @@ export function GlobalDeclarationInstantiation(script, env: EnvironmentRecord) {
   // 7. Let functionsToInitialize be a new empty List.
   const functionsToInitialize = [];
   // 8. Let declaredFunctionNames be a new empty List.
-  const declaredFunctionNames = new ValueSet();
+  const declaredFunctionNames = new JSStringSet();
   // 9. For each d in varDeclarations, in reverse list order, do
   for (const d of [...varDeclarations].reverse()) {
     // a. If d is neither a VariableDeclaration nor a ForBinding nor a BindingIdentifier, then
@@ -82,7 +80,7 @@ export function GlobalDeclarationInstantiation(script, env: EnvironmentRecord) {
     }
   }
   // 10. Let declaredVarNames be a new empty List.
-  const declaredVarNames = new ValueSet();
+  const declaredVarNames = new JSStringSet();
   // 11. For each d in varDeclarations, do
   for (const d of varDeclarations) {
     // a. If d is a VariableDeclaration, a ForBinding, or a BindingIdentifier, then

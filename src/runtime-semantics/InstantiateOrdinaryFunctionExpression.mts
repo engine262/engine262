@@ -1,6 +1,5 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
-import { Value } from '../value.mts';
+import { PrivateName, Value, type PropertyKeyValue } from '../value.mts';
 import {
   Assert,
   OrdinaryFunctionCreate,
@@ -16,7 +15,7 @@ import type { ParseNode } from '../parser/ParseNode.mts';
 //   FunctionExpression :
 //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
 //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
-export function InstantiateOrdinaryFunctionExpression(FunctionExpression: ParseNode.FunctionExpression, name?) {
+export function InstantiateOrdinaryFunctionExpression(FunctionExpression: ParseNode.FunctionExpression, name?: PropertyKeyValue | PrivateName) {
   const { BindingIdentifier, FormalParameters, FunctionBody } = FunctionExpression;
   if (BindingIdentifier) {
     // 1. Assert: name is not present.

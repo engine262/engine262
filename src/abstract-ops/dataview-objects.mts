@@ -1,6 +1,7 @@
-// @ts-nocheck
 import { Q, X } from '../completion.mts';
 import { surroundingAgent } from '../engine.mts';
+import { __ts_cast__ } from '../helpers.mts';
+import type { DataViewObject } from '../intrinsics/DataView.mts';
 import { Value } from '../value.mts';
 import {
   Assert,
@@ -14,15 +15,18 @@ import {
   ToBigInt,
   RequireInternalSlot,
   typedArrayInfoByType,
+  type TypedArrayTypes,
+  type ArrayBufferObject,
 } from './all.mts';
 
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-dataview-objects */
 
 /** https://tc39.es/ecma262/#sec-getviewvalue */
-export function GetViewValue(view, requestIndex, isLittleEndian, type) {
+export function GetViewValue(view: Value, requestIndex: Value, isLittleEndian: Value, type: TypedArrayTypes) {
   // 1. Perform ? RequireInternalSlot(view, [[DataView]]).
   Q(RequireInternalSlot(view, 'DataView'));
+  __ts_cast__<DataViewObject>(view);
   // 2. Assert: view has a [[ViewedArrayBuffer]] internal slot.
   Assert('ViewedArrayBuffer' in view);
   // 3. Let getIndex be ? ToIndex(requestIndex).
@@ -30,7 +34,7 @@ export function GetViewValue(view, requestIndex, isLittleEndian, type) {
   // 4. Set isLittleEndian to ! ToBoolean(isLittleEndian).
   isLittleEndian = X(ToBoolean(isLittleEndian));
   // 5. Let buffer be view.[[ViewedArrayBuffer]].
-  const buffer = view.ViewedArrayBuffer;
+  const buffer = view.ViewedArrayBuffer as ArrayBufferObject;
   // 6. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
   if (IsDetachedBuffer(buffer) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
@@ -52,11 +56,12 @@ export function GetViewValue(view, requestIndex, isLittleEndian, type) {
 }
 
 /** https://tc39.es/ecma262/#sec-setviewvalue */
-export function SetViewValue(view, requestIndex, isLittleEndian, type, value) {
+export function SetViewValue(view: Value, requestIndex: Value, isLittleEndian: Value, type: TypedArrayTypes, value: Value) {
   // 1. Perform ? RequireInternalSlot(view, [[DataView]]).
   Q(RequireInternalSlot(view, 'DataView'));
   // 2. Assert: view has a [[ViewedArrayBuffer]] internal slot.
   Assert('ViewedArrayBuffer' in view);
+  __ts_cast__<DataViewObject>(view);
   // 3. Let getIndex be ? ToIndex(requestIndex).
   const getIndex = Q(ToIndex(requestIndex));
   // 4. If ! IsBigIntElementType(type) is true, let numberValue be ? ToBigInt(value).
@@ -70,7 +75,7 @@ export function SetViewValue(view, requestIndex, isLittleEndian, type, value) {
   // 6. Set isLittleEndian to ! ToBoolean(isLittleEndian).
   isLittleEndian = X(ToBoolean(isLittleEndian));
   // 7. Let buffer be view.[[ViewedArrayBuffer]].
-  const buffer = view.ViewedArrayBuffer;
+  const buffer = view.ViewedArrayBuffer as ArrayBufferObject;
   // 8. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
   if (IsDetachedBuffer(buffer) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');

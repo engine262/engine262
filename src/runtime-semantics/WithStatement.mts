@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import { Value } from '../value.mts';
 import { ToObject, GetValue } from '../abstract-ops/all.mts';

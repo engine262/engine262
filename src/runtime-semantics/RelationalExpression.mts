@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   surroundingAgent,
 } from '../engine.mts';
@@ -25,9 +24,10 @@ import { Q, X, ReturnIfAbrupt } from '../completion.mts';
 import { Evaluate } from '../evaluator.mts';
 import { OutOfRange } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import type { PrivateEnvironmentRecord } from '#self';
 
 /** https://tc39.es/ecma262/#sec-instanceofoperator */
-export function InstanceofOperator(V, target) {
+export function InstanceofOperator(V: Value, target: Value) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
@@ -50,7 +50,7 @@ export function InstanceofOperator(V, target) {
 // RelationalExpression : PrivateIdentifier `in` ShiftExpression
 export function* Evaluate_RelationalExpression_PrivateIdentifier({ PrivateIdentifier, ShiftExpression }: ParseNode.RelationalExpression) {
   // 1. Let privateIdentifier be the StringValue of PrivateIdentifier.
-  const privateIdentifier = StringValue(PrivateIdentifier);
+  const privateIdentifier = StringValue(PrivateIdentifier!);
   // 2. Let rref be the result of evaluating ShiftExpression.
   const rref = yield* Evaluate(ShiftExpression);
   // 3. Let rval be ? GetValue(rref).
@@ -60,7 +60,7 @@ export function* Evaluate_RelationalExpression_PrivateIdentifier({ PrivateIdenti
     return surroundingAgent.Throw('TypeError', 'NotAnObject', rval);
   }
   // 5. Let privateEnv be the running execution context's PrivateEnvironment.
-  const privateEnv = surroundingAgent.runningExecutionContext.PrivateEnvironment;
+  const privateEnv = surroundingAgent.runningExecutionContext.PrivateEnvironment as PrivateEnvironmentRecord;
   // 6. Let privateName be ! ResolvePrivateIdentifier(privateEnv, privateIdentifier).
   const privateName = X(ResolvePrivateIdentifier(privateEnv, privateIdentifier));
   // 7. If ! PrivateElementFind(privateName, rval) is not empty, return true.
@@ -88,7 +88,7 @@ export function* Evaluate_RelationalExpression(expr: ParseNode.RelationalExpress
   const { RelationalExpression, operator, ShiftExpression } = expr;
 
   // 1. Let lref be the result of evaluating RelationalExpression.
-  const lref = yield* Evaluate(RelationalExpression);
+  const lref = yield* Evaluate(RelationalExpression!);
   // 2. Let lval be ? GetValue(lref).
   const lval = Q(GetValue(lref));
   // 3. Let rref be the result of evaluating ShiftExpression.
@@ -149,7 +149,7 @@ export function* Evaluate_RelationalExpression(expr: ParseNode.RelationalExpress
         return surroundingAgent.Throw('TypeError', 'NotAnObject', rval);
       }
       // 6. Return ? HasProperty(rval, ? ToPropertyKey(lval)).
-      return Q(HasProperty(rval, ToPropertyKey(lval)));
+      return Q(HasProperty(rval, Q(ToPropertyKey(lval))));
     default:
       throw new OutOfRange('Evaluate_RelationalExpression', operator);
   }

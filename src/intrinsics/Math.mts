@@ -1,20 +1,21 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import {
   Descriptor,
   Value,
   NumberValue,
+  type Arguments,
 } from '../value.mts';
 import {
   CreateBuiltinFunction,
   ToNumber,
   F, R,
+  Realm,
 } from '../abstract-ops/all.mts';
-import { Q, X } from '../completion.mts';
+import { Q, X, type ExpressionCompletion } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-math.abs */
-function Math_abs([x = Value.undefined]) {
+function Math_abs([x = Value.undefined]: Arguments): ExpressionCompletion {
   const n = Q(ToNumber(x));
   if (n.isNaN()) {
     return n;
@@ -31,7 +32,7 @@ function Math_abs([x = Value.undefined]) {
 }
 
 /** https://tc39.es/ecma262/#sec-math.acos */
-function Math_acos([x = Value.undefined]) {
+function Math_acos([x = Value.undefined]: Arguments): ExpressionCompletion {
   const n = Q(ToNumber(x));
   if (n.isNaN()) {
     return n;
@@ -47,7 +48,7 @@ function Math_acos([x = Value.undefined]) {
 }
 
 /** https://tc39.es/ecma262/#sec-math.pow */
-function Math_pow([base = Value.undefined, exponent = Value.undefined]) {
+function Math_pow([base = Value.undefined, exponent = Value.undefined]: Arguments): ExpressionCompletion {
   // 1. Set base to ? ToNumber(base).
   base = Q(ToNumber(base));
   // 2. Set exponent to ? ToNumber(exponent).
@@ -57,7 +58,7 @@ function Math_pow([base = Value.undefined, exponent = Value.undefined]) {
 }
 
 /** @param {bigint} h */
-function fmix64(h) {
+function fmix64(h: bigint) {
   h ^= h >> 33n;
   h *= 0xFF51AFD7ED558CCDn;
   h ^= h >> 33n;
@@ -99,23 +100,20 @@ function Math_random() {
 }
 
 /** https://tc39.es/ecma262/#sec-math-object */
-export function bootstrapMath(realmRec) {
+export function bootstrapMath(realmRec: Realm) {
   /** https://tc39.es/ecma262/#sec-value-properties-of-the-math-object */
   const readonly = { Writable: Value.false, Configurable: Value.false };
-  const valueProps = [
-    ['E', 2.718281828459045],
-    ['LN10', 2.302585092994046],
-    ['LN2', 0.6931471805599453],
-    ['LOG10E', 0.4342944819032518],
-    ['LOG2E', 1.4426950408889634],
-    ['PI', 3.141592653589793],
-    ['SQRT1_2', 0.7071067811865476],
-    ['SQRT2', 1.4142135623730951],
-  ].map(([name, value]) => [name, F(value), undefined, readonly]);
-  // @@toStringTag is handled in the bootstrapPrototype() call.
 
+  // @@toStringTag is handled in the bootstrapPrototype() call.
   const mathObj = bootstrapPrototype(realmRec, [
-    ...valueProps,
+    ['E', F(2.718281828459045), undefined, readonly],
+    ['LN10', F(2.302585092994046), undefined, readonly],
+    ['LN2', F(0.6931471805599453), undefined, readonly],
+    ['LOG10E', F(0.4342944819032518), undefined, readonly],
+    ['LOG2E', F(1.4426950408889634), undefined, readonly],
+    ['PI', F(3.141592653589793), undefined, readonly],
+    ['SQRT1_2', F(0.7071067811865476), undefined, readonly],
+    ['SQRT2', F(1.4142135623730951), undefined, readonly],
     ['abs', Math_abs, 1],
     ['acos', Math_acos, 1],
     ['pow', Math_pow, 2],
@@ -124,7 +122,7 @@ export function bootstrapMath(realmRec) {
 
   /** https://tc39.es/ecma262/#sec-function-properties-of-the-math-object */
 
-  [
+  ([
     ['acosh', 1],
     ['asin', 1],
     ['asinh', 1],
@@ -156,14 +154,16 @@ export function bootstrapMath(realmRec) {
     ['tan', 1],
     ['tanh', 1],
     ['trunc', 1],
-  ].forEach(([name, length]) => {
+  ] as const).forEach(([name, length]) => {
     // TODO(18): Math
     /** https://tc39.es/ecma262/#sec-function-properties-of-the-math-object */
-    const method = (args) => {
+    const method = (args: Arguments): ExpressionCompletion => {
+      const nextArgs: number[] = [];
       for (let i = 0; i < args.length; i += 1) {
-        args[i] = R(Q(ToNumber(args[i])));
+        nextArgs[i] = R(Q(ToNumber(args[i])));
       }
-      return F(Math[name](...args));
+      // we're calling host Math functions here.
+      return F((Math[name] as (...args: unknown[]) => number)(...nextArgs));
     };
     const func = CreateBuiltinFunction(method, length, Value(name), [], realmRec);
     mathObj.DefineOwnProperty(Value(name), Descriptor({

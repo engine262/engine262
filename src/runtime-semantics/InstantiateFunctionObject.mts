@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   DefinePropertyOrThrow,
   MakeConstructor,
@@ -13,19 +12,20 @@ import { OutOfRange } from '../helpers.mts';
 import { Descriptor, Value } from '../value.mts';
 import { StringValue } from '../static-semantics/all.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import type { EnvironmentRecord, NullValue, PrivateEnvironmentRecord } from '#self';
 
 /** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-instantiatefunctionobject */
 //   FunctionDeclaration :
 //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
 //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
-export function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaration: ParseNode.FunctionDeclaration, scope, privateScope) {
+export function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaration: ParseNode.FunctionDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | NullValue) {
   const { BindingIdentifier, FormalParameters, FunctionBody } = FunctionDeclaration;
   // 1. Let name be StringValue of BindingIdentifier.
   const name = BindingIdentifier ? StringValue(BindingIdentifier) : Value('default');
   // 2. Let sourceText be the source text matched by FunctionDeclaration.
   const sourceText = sourceTextMatchedBy(FunctionDeclaration);
   // 3. Let F be OrdinaryFunctionCreate(%Function.prototype%, sourceText, FormalParameters, FunctionBody, non-lexical-this, scope, privateScope).
-  const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), sourceText, FormalParameters, FunctionBody, 'non-lexical-this', scope, privateScope));
+  const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%Function.prototype%'), sourceText, FormalParameters, FunctionBody, 'non-lexical-this', env, privateEnv));
   // 4. Perform SetFunctionName(F, name).
   SetFunctionName(F, name);
   // 5. Perform MakeConstructor(F).
@@ -38,14 +38,14 @@ export function InstantiateFunctionObject_FunctionDeclaration(FunctionDeclaratio
 //   GeneratorDeclaration :
 //     `function` `*` BindingIdentifier `(` FormalParameters `)` `{` GeneratorBody `}`
 //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
-export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclaration: ParseNode.GeneratorDeclaration, scope, privateScope) {
+export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclaration: ParseNode.GeneratorDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | NullValue) {
   const { BindingIdentifier, FormalParameters, GeneratorBody } = GeneratorDeclaration;
   // 1. Let name be StringValue of BindingIdentifier.
   const name = BindingIdentifier ? StringValue(BindingIdentifier) : Value('default');
   // 2. Let sourceText be the source text matched by GeneratorDeclaration.
   const sourceText = sourceTextMatchedBy(GeneratorDeclaration);
   // 3. Let F be OrdinaryFunctionCreate(%GeneratorFunction.prototype%, sourceText, FormalParameters, GeneratorBody, non-lexical-this, scope, privateScope).
-  const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype%'), sourceText, FormalParameters, GeneratorBody, 'non-lexical-this', scope, privateScope));
+  const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype%'), sourceText, FormalParameters, GeneratorBody, 'non-lexical-this', env, privateEnv));
   // 4. Perform SetFunctionName(F, name).
   SetFunctionName(F, name);
   // 5. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
@@ -65,14 +65,14 @@ export function InstantiateFunctionObject_GeneratorDeclaration(GeneratorDeclarat
 //  AsyncFunctionDeclaration :
 //    `async` `function` BindingIdentifier `(` FormalParameters `)` `{` AsyncBody `}`
 //    `async` `function` `(` FormalParameters `)` `{` AsyncBody `}`
-export function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunctionDeclaration: ParseNode.AsyncFunctionDeclaration, scope, privateScope) {
+export function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunctionDeclaration: ParseNode.AsyncFunctionDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | NullValue) {
   const { BindingIdentifier, FormalParameters, AsyncBody } = AsyncFunctionDeclaration;
   // 1. Let name be StringValue of BindingIdentifier.
   const name = BindingIdentifier ? StringValue(BindingIdentifier) : Value('default');
   // 2. Let sourceText be the source text matched by AsyncFunctionDeclaration.
   const sourceText = sourceTextMatchedBy(AsyncFunctionDeclaration);
   // 3. Let F be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, FormalParameters, AsyncBody, non-lexical-this, scope, privateScope).
-  const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, FormalParameters, AsyncBody, 'non-lexical-this', scope, privateScope));
+  const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncFunction.prototype%'), sourceText, FormalParameters, AsyncBody, 'non-lexical-this', env, privateEnv));
   // 4. Perform ! SetFunctionName(F, name).
   SetFunctionName(F, name);
   // 5. Return F.
@@ -83,14 +83,14 @@ export function InstantiateFunctionObject_AsyncFunctionDeclaration(AsyncFunction
 //  AsyncGeneratorDeclaration :
 //    `async` `function` `*` BindingIdentifier `(` FormalParameters`)` `{` AsyncGeneratorBody `}`
 //    `async` `function` `*` `(` FormalParameters`)` `{` AsyncGeneratorBody `}`
-export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGeneratorDeclaration: ParseNode.AsyncGeneratorDeclaration, scope, privateScope) {
+export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGeneratorDeclaration: ParseNode.AsyncGeneratorDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | NullValue) {
   const { BindingIdentifier, FormalParameters, AsyncGeneratorBody } = AsyncGeneratorDeclaration;
   // 1. Let name be StringValue of BindingIdentifier.
   const name = BindingIdentifier ? StringValue(BindingIdentifier) : Value('default');
   // 2. Let sourceText be the source text matched by AsyncGeneratorDeclaration.
   const sourceText = sourceTextMatchedBy(AsyncGeneratorDeclaration);
   // 3. Let F be ! OrdinaryFunctionCreate(%AsyncGeneratorFunction.prototype%, sourceText, FormalParameters, AsyncGeneratorBody, non-lexical-this, scope, privateScope).
-  const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), sourceText, FormalParameters, AsyncGeneratorBody, 'non-lexical-this', scope, privateScope));
+  const F = X(OrdinaryFunctionCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype%'), sourceText, FormalParameters, AsyncGeneratorBody, 'non-lexical-this', env, privateEnv));
   // 4. Perform ! SetFunctionName(F, name).
   SetFunctionName(F, name);
   // 5. Let prototype be ! OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
@@ -106,16 +106,16 @@ export function InstantiateFunctionObject_AsyncGeneratorDeclaration(AsyncGenerat
   return F;
 }
 
-export function InstantiateFunctionObject(AnyFunctionDeclaration: ParseNode.FunctionDeclaration | ParseNode.GeneratorDeclaration | ParseNode.AsyncFunctionDeclaration | ParseNode.AsyncGeneratorDeclaration, scope, privateScope) {
+export function InstantiateFunctionObject(AnyFunctionDeclaration: ParseNode.FunctionDeclaration | ParseNode.GeneratorDeclaration | ParseNode.AsyncFunctionDeclaration | ParseNode.AsyncGeneratorDeclaration, env: EnvironmentRecord, privateEnv: PrivateEnvironmentRecord | NullValue) {
   switch (AnyFunctionDeclaration.type) {
     case 'FunctionDeclaration':
-      return InstantiateFunctionObject_FunctionDeclaration(AnyFunctionDeclaration, scope, privateScope);
+      return InstantiateFunctionObject_FunctionDeclaration(AnyFunctionDeclaration, env, privateEnv);
     case 'GeneratorDeclaration':
-      return InstantiateFunctionObject_GeneratorDeclaration(AnyFunctionDeclaration, scope, privateScope);
+      return InstantiateFunctionObject_GeneratorDeclaration(AnyFunctionDeclaration, env, privateEnv);
     case 'AsyncFunctionDeclaration':
-      return InstantiateFunctionObject_AsyncFunctionDeclaration(AnyFunctionDeclaration, scope, privateScope);
+      return InstantiateFunctionObject_AsyncFunctionDeclaration(AnyFunctionDeclaration, env, privateEnv);
     case 'AsyncGeneratorDeclaration':
-      return InstantiateFunctionObject_AsyncGeneratorDeclaration(AnyFunctionDeclaration, scope, privateScope);
+      return InstantiateFunctionObject_AsyncGeneratorDeclaration(AnyFunctionDeclaration, env, privateEnv);
 
     default:
       throw new OutOfRange('InstantiateFunctionObject', AnyFunctionDeclaration);

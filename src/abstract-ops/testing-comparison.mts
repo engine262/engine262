@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   BigIntValue,
   Type, BooleanValue, NullValue, UndefinedValue,
@@ -6,13 +5,13 @@ import {
   JSStringValue,
   NumberValue,
   ObjectValue,
-  TypeForMethod,
   Value,
   wellKnownSymbols,
 } from '../value.mts';
 import { surroundingAgent } from '../engine.mts';
-import { Q, X } from '../completion.mts';
+import { Q, X, type ExpressionCompletion } from '../completion.mts';
 import { OutOfRange } from '../helpers.mts';
+import type { TypedArrayObject } from '../intrinsics/TypedArray.mts';
 import {
   Assert,
   Get,
@@ -24,13 +23,14 @@ import {
   StringToBigInt,
   isProxyExoticObject,
   isArrayExoticObject, R,
+  type ArrayBufferObject,
 } from './all.mts';
 
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-testing-and-comparison-operations */
 
 /** https://tc39.es/ecma262/#sec-requireobjectcoercible */
-export function RequireObjectCoercible(argument) {
+export function RequireObjectCoercible(argument: Value) {
   const type = Type(argument);
   switch (type) {
     case 'Undefined':
@@ -50,7 +50,7 @@ export function RequireObjectCoercible(argument) {
 }
 
 /** https://tc39.es/ecma262/#sec-isarray */
-export function IsArray(argument) {
+export function IsArray(argument: Value) {
   if (!(argument instanceof ObjectValue)) {
     return Value.false;
   }
@@ -68,7 +68,7 @@ export function IsArray(argument) {
 }
 
 /** https://tc39.es/ecma262/#sec-iscallable */
-export function IsCallable(argument) {
+export function IsCallable(argument: Value): BooleanValue {
   if (!(argument instanceof ObjectValue)) {
     return Value.false;
   }
@@ -79,7 +79,7 @@ export function IsCallable(argument) {
 }
 
 /** https://tc39.es/ecma262/#sec-isconstructor */
-export function IsConstructor(argument) {
+export function IsConstructor(argument: Value) {
   if (!(argument instanceof ObjectValue)) {
     return Value.false;
   }
@@ -90,13 +90,13 @@ export function IsConstructor(argument) {
 }
 
 /** https://tc39.es/ecma262/#sec-isextensible-o */
-export function IsExtensible(O) {
+export function IsExtensible(O: ObjectValue) {
   Assert(O instanceof ObjectValue);
   return O.IsExtensible();
 }
 
 /** https://tc39.es/ecma262/#sec-isinteger */
-export function IsIntegralNumber(argument) {
+export function IsIntegralNumber(argument: Value) {
   if (!(argument instanceof NumberValue)) {
     return Value.false;
   }
@@ -110,7 +110,7 @@ export function IsIntegralNumber(argument) {
 }
 
 /** https://tc39.es/ecma262/#sec-ispropertykey */
-export function IsPropertyKey(argument) {
+export function IsPropertyKey(argument: unknown) {
   if (argument instanceof JSStringValue) {
     return true;
   }
@@ -121,7 +121,7 @@ export function IsPropertyKey(argument) {
 }
 
 /** https://tc39.es/ecma262/#sec-isregexp */
-export function IsRegExp(argument) {
+export function IsRegExp(argument: Value): ExpressionCompletion<BooleanValue> {
   if (!(argument instanceof ObjectValue)) {
     return Value.false;
   }
@@ -136,57 +136,56 @@ export function IsRegExp(argument) {
 }
 
 /** https://tc39.es/ecma262/#sec-isstringprefix */
-export function IsStringPrefix(p, q) {
+export function IsStringPrefix(p: JSStringValue, q: JSStringValue) {
   Assert(p instanceof JSStringValue);
   Assert(q instanceof JSStringValue);
   return q.stringValue().startsWith(p.stringValue());
 }
 
 /** https://tc39.es/ecma262/#sec-samevalue */
-export function SameValue(x, y) {
-  // 1. If Type(x) is different from Type(y), return false.
+export function SameValue(x: Value, y: Value) {
+  // If SameType(x, y) is false, return false.
   if (Type(x) !== Type(y)) {
     return Value.false;
   }
-  // 2. If Type(x) is Number or BigInt, then
-  if (x instanceof NumberValue || x instanceof BigIntValue) {
-    // a. Return ! Type(x)::sameValue(x, y).
-    return TypeForMethod(x).sameValue(x, y);
+  // If x is a Number, then
+  if (x instanceof NumberValue) {
+    // a. Return Number::sameValue(x, y).
+    return NumberValue.sameValue(x, y as NumberValue);
   }
-  // 3. Return ! SameValueNonNumeric(x, y).
+  // 3. Return SameValueNonNumber(x, y).
   return X(SameValueNonNumber(x, y));
 }
 
 /** https://tc39.es/ecma262/#sec-samevaluezero */
-export function SameValueZero(x, y) {
-  // 1. If Type(x) is different from Type(y), return false.
+export function SameValueZero(x: Value, y: Value) {
+  // 1. If SameType(x, y) is false, return false.
   if (Type(x) !== Type(y)) {
     return Value.false;
   }
-  // 2. If Type(x) is Number or BigInt, then
-  if (x instanceof NumberValue || x instanceof BigIntValue) {
-    // a. Return ! Type(x)::sameValueZero(x, y).
-    return TypeForMethod(x).sameValueZero(x, y);
+  // 2. If x is a Number, then
+  if (x instanceof NumberValue) {
+    // a. Return Number::sameValueZero(x, y).
+    return NumberValue.sameValueZero(x, y as NumberValue);
   }
-  // 3. Return ! SameValueNonNumeric(x, y).
-  return X(SameValueNonNumber(x, y));
+  // 3. Return SameValueNonNumber(x, y).
+  return SameValueNonNumber(x, y);
 }
 
 /** https://tc39.es/ecma262/#sec-samevaluenonnumber */
-export function SameValueNonNumber(x, y) {
-  Assert(!(x instanceof NumberValue));
+export function SameValueNonNumber(x: Value, y: Value) {
   Assert(Type(x) === Type(y));
 
-  if (x instanceof UndefinedValue) {
+  if (x instanceof UndefinedValue || x instanceof NullValue) {
     return Value.true;
   }
 
-  if (x instanceof NullValue) {
-    return Value.true;
+  if (x instanceof BigIntValue) {
+    return BigIntValue.equal(x, y as BigIntValue);
   }
 
   if (x instanceof JSStringValue) {
-    if (x.stringValue() === y.stringValue()) {
+    if (x.stringValue() === (y as JSStringValue).stringValue()) {
       return Value.true;
     }
     return Value.false;
@@ -199,15 +198,11 @@ export function SameValueNonNumber(x, y) {
     return Value.false;
   }
 
-  if (x instanceof SymbolValue) {
-    return x === y ? Value.true : Value.false;
-  }
-
   return x === y ? Value.true : Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-abstract-relational-comparison */
-export function AbstractRelationalComparison(x, y, LeftFirst = true) {
+export function AbstractRelationalComparison(x: Value, y: Value, LeftFirst = true): ExpressionCompletion<BooleanValue | UndefinedValue> {
   let px;
   let py;
   // 1. If the LeftFirst flag is true, then
@@ -263,7 +258,7 @@ export function AbstractRelationalComparison(x, y, LeftFirst = true) {
         return Value.undefined;
       }
       // iii. Return BigInt::lessThan(px, ny).
-      return BigIntValue.lessThan(px, ny);
+      return BigIntValue.lessThan(px, ny as BigIntValue);
     }
     // b. If Type(px) is String and Type(py) is BigInt, then
     if (px instanceof JSStringValue && py instanceof BigIntValue) {
@@ -274,7 +269,7 @@ export function AbstractRelationalComparison(x, y, LeftFirst = true) {
         return Value.undefined;
       }
       // iii. Return BigInt::lessThan(px, ny).
-      return BigIntValue.lessThan(nx, py);
+      return BigIntValue.lessThan(nx as BigIntValue, py);
     }
     // c. Let nx be ? ToNumeric(px). NOTE: Because px and py are primitive values evaluation order is not important.
     const nx = Q(ToNumeric(px));
@@ -282,7 +277,12 @@ export function AbstractRelationalComparison(x, y, LeftFirst = true) {
     const ny = Q(ToNumeric(py));
     // e. If Type(nx) is the same as Type(ny), return Type(nx)::lessThan(nx, ny).
     if (Type(nx) === Type(ny)) {
-      return TypeForMethod(nx).lessThan(nx, ny);
+      if (nx instanceof NumberValue) {
+        return NumberValue.lessThan(nx, ny as NumberValue);
+      } else {
+        Assert(nx instanceof BigIntValue);
+        return BigIntValue.lessThan(nx, ny as BigIntValue);
+      }
     }
     // f. Assert: Type(nx) is BigInt and Type(ny) is Number, or Type(nx) is Number and Type(ny) is BigInt.
     Assert((nx instanceof BigIntValue && ny instanceof NumberValue) || (nx instanceof NumberValue && ny instanceof BigIntValue));
@@ -291,26 +291,26 @@ export function AbstractRelationalComparison(x, y, LeftFirst = true) {
       return Value.undefined;
     }
     // h. If nx is -∞ or ny is +∞, return true.
-    if ((nx.numberValue && R(nx) === -Infinity) || (ny.numberValue && R(ny) === +Infinity)) {
+    if ((nx instanceof NumberValue && R(nx) === -Infinity) || (ny instanceof NumberValue && R(ny) === +Infinity)) {
       return Value.true;
     }
     // i. If nx is +∞ or ny is -∞, return false.
-    if ((nx.numberValue && R(nx) === +Infinity) || (ny.numberValue && R(ny) === -Infinity)) {
+    if ((nx instanceof NumberValue && R(nx) === +Infinity) || (ny instanceof NumberValue && R(ny) === -Infinity)) {
       return Value.false;
     }
     // j. If the mathematical value of nx is less than the mathematical value of ny, return true; otherwise return false.
-    const a = nx.numberValue ? R(nx) : R(nx);
-    const b = ny.numberValue ? R(ny) : R(ny);
+    const a = R(nx);
+    const b = R(ny);
     return a < b ? Value.true : Value.false;
   }
 }
 
 /** https://tc39.es/ecma262/#sec-abstract-equality-comparison */
-export function AbstractEqualityComparison(x, y) {
+export function AbstractEqualityComparison(x: Value, y: Value): ExpressionCompletion<BooleanValue> {
   // 1. If Type(x) is the same as Type(y), then
   if (Type(x) === Type(y)) {
     // a. Return the result of performing Strict Equality Comparison x === y.
-    return StrictEqualityComparison(x, y);
+    return IsStrictlyEqual(x, y);
   }
   // 2. If x is null and y is undefined, return true.
   if (x === Value.null && y === Value.undefined) {
@@ -337,7 +337,7 @@ export function AbstractEqualityComparison(x, y) {
       return Value.false;
     }
     // c. Return the result of the comparison x == n.
-    return AbstractEqualityComparison(x, n);
+    return AbstractEqualityComparison(x, n as BigIntValue);
   }
   // 7. If Type(x) is String and Type(y) is BigInt, return the result of the comparison y == x.
   if (x instanceof JSStringValue && y instanceof BigIntValue) {
@@ -366,43 +366,43 @@ export function AbstractEqualityComparison(x, y) {
       return Value.false;
     }
     // b. If the mathematical value of x is equal to the mathematical value of y, return true; otherwise return false.
-    const a = (x.numberValue ? R(x) : R(x));
-    const b = (y.numberValue ? R(y) : R(y));
+    const a = R(x);
+    const b = R(y);
     return a == b ? Value.true : Value.false; // eslint-disable-line eqeqeq
   }
   // 13. Return false.
   return Value.false;
 }
 
-/** https://tc39.es/ecma262/#sec-strict-equality-comparison */
-export function StrictEqualityComparison(x, y) {
-  // 1. If Type(x) is different from Type(y), return false.
+/** https://tc39.es/ecma262/#sec-isstrictlyequal */
+export function IsStrictlyEqual(x: Value, y: Value) {
+// 1. If SameType(x, y) is false, return false.
   if (Type(x) !== Type(y)) {
     return Value.false;
   }
-  // 2. If Type(x) is Number or BigInt, then
-  if (x instanceof NumberValue || x instanceof BigIntValue) {
-    // a. Return ! Type(x)::equal(x, y).
-    return X(TypeForMethod(x).equal(x, y));
+  // 2. If x is a Number, then
+  if (x instanceof NumberValue) {
+    // a. Return Number::equal(x, y).
+    return NumberValue.equal(x, y as NumberValue);
   }
-  // 3. Return ! SameValueNonNumeric(x, y).
+  // 3. Return SameValueNonNumber(x, y).
   return SameValueNonNumber(x, y);
 }
 
 /** https://tc39.es/ecma262/#sec-isvalidintegerindex */
-export function IsValidIntegerIndex(O, index) {
-  if (IsDetachedBuffer(O.ViewedArrayBuffer) === Value.true) {
+export function IsValidIntegerIndex(O: TypedArrayObject, index: NumberValue) {
+  if (IsDetachedBuffer(O.ViewedArrayBuffer as ArrayBufferObject) === Value.true) {
     return Value.false;
   }
   Assert(index instanceof NumberValue);
   if (IsIntegralNumber(index) === Value.false) {
     return Value.false;
   }
-  index = R(index);
-  if (Object.is(index, -0)) {
+  const index_ = R(index);
+  if (Object.is(index_, -0)) {
     return Value.false;
   }
-  if (index < 0 || index >= O.ArrayLength) {
+  if (index_ < 0 || index_ >= O.ArrayLength) {
     return Value.false;
   }
   return Value.true;

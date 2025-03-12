@@ -1,4 +1,3 @@
-// @ts-nocheck
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { Evaluate_StatementList } from './all.mts';
 

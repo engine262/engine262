@@ -9,17 +9,24 @@ import {
   OrdinaryObjectCreate,
   ToString,
   Type,
-  Throw,
-  AbruptCompletion,
   ManagedRealm,
   inspect,
   gc,
   Agent,
   Realm,
-  ObjectValue,
-  JSStringValue,
-  type BuiltinFunctionObject,
   type OrdinaryObject,
+  type Arguments,
+  SourceTextModuleRecord,
+  type ExpressionCompletion,
+  NullValue,
+  EnsureCompletion,
+  __Q2,
+  Throw,
+  surroundingAgent,
+  isArrayBufferObject,
+  isBuiltinFunctionObject,
+  type NativeSteps,
+  NormalCompletion,
 } from '#self';
 
 export interface CreateAgentOptions {
@@ -29,34 +36,36 @@ export interface CreateAgentOptions {
 export const createAgent = ({ features = [] }: CreateAgentOptions) => new Agent({
   features,
   loadImportedModule(referrer, specifier, _hostDefined, finish) {
-    if (referrer instanceof Realm) {
+    if (referrer instanceof Realm || referrer instanceof NullValue) {
       throw new Error('Internal error: loadImportedModule called without a ScriptOrModule referrer.');
     }
-    const realm = referrer.Realm;
+    const realm = referrer.Realm as ManagedRealm;
 
-    try {
-      const base = path.dirname(referrer.HostDefined.specifier);
+    __Q2((Q) => {
+      const base = path.dirname(referrer.HostDefined.specifier!);
       const resolved = path.resolve(base, specifier);
-      if (realm.HostDefined.resolverCache.has(resolved)) {
-        finish(realm.HostDefined.resolverCache.get(resolved));
+      if (realm.HostDefined.resolverCache!.has(resolved)) {
+        finish(realm.HostDefined.resolverCache!.get(resolved)!);
         return;
       }
-      const source = fs.readFileSync(resolved, 'utf8');
-      const m = resolved.endsWith('.json')
-        ? realm.createJSONModule(resolved, source)
-        : realm.createSourceTextModule(resolved, source);
-      realm.HostDefined.resolverCache.set(resolved, m);
-      finish(m);
-    } catch (e) {
-      finish(Throw((e as any).name, 'Raw', (e as any).message));
-    }
+      try {
+        const source = fs.readFileSync(resolved, 'utf8');
+        const m = Q(resolved.endsWith('.json')
+          ? realm.createJSONModule(resolved, source)
+          : realm.createSourceTextModule(resolved, source));
+        realm.HostDefined.resolverCache!.set(resolved, m);
+        finish(m);
+      } catch (error) {
+        finish(Throw('SyntaxError', 'CouldNotResolveModule', specifier));
+      }
+    });
   },
 });
 
 export interface Test262CreateRealm {
   realm: ManagedRealm;
   $262: OrdinaryObject;
-  resolverCache: Map<any, any>;
+  resolverCache: Map<string, SourceTextModuleRecord>;
   setPrintHandle: (f: any) => void;
 }
 export interface CreateRealmOptions {
@@ -71,13 +80,16 @@ export function createRealm({ printCompatMode = false }: CreateRealmOptions = {}
   });
 
   return realm.scope(() => {
-    const $262 = OrdinaryObjectCreate(realm.Intrinsics['%Object.prototype%'] as ObjectValue);
+    const $262 = OrdinaryObjectCreate(realm.Intrinsics['%Object.prototype%']);
 
     let printHandle: (...args: any[]) => void;
     const setPrintHandle = (f: typeof printHandle) => {
       printHandle = f;
     };
-    CreateDataProperty(realm.GlobalObject, Value('print'), CreateBuiltinFunction((args: any) => {
+    CreateDataProperty(realm.GlobalObject, Value('print'), CreateBuiltinFunction((args: Arguments): ExpressionCompletion => {
+      if (surroundingAgent.debugger_isPreviewing) {
+        return NormalCompletion(Value.undefined);
+      }
       /* c8 ignore next */
       if (printHandle !== undefined) {
         printHandle(...args);
@@ -85,11 +97,11 @@ export function createRealm({ printCompatMode = false }: CreateRealmOptions = {}
         if (printCompatMode) {
           for (let i = 0; i < args.length; i += 1) {
             const arg = args[i];
-            const s = ToString(arg);
-            if (s instanceof AbruptCompletion) {
+            const s = EnsureCompletion(ToString(arg));
+            if (s.Type === 'throw') {
               return s;
             }
-            process.stdout.write(s.stringValue());
+            process.stdout.write(s.Value.stringValue());
             if (i !== args.length - 1) {
               process.stdout.write(' ');
             }
@@ -115,20 +127,25 @@ export function createRealm({ printCompatMode = false }: CreateRealmOptions = {}
         const info = createRealm();
         return info.$262;
       }],
-      ['evalScript', ([sourceText]: [JSStringValue]) => realm.evaluateScript(sourceText.stringValue()), 1],
-      ['detachArrayBuffer', ([arrayBuffer]: [unknown]) => DetachArrayBuffer(arrayBuffer), 1],
+      ['evalScript', ([sourceText]) => __Q2((Q) => realm.evaluateScript(Q(ToString(sourceText)).stringValue())), 1],
+      ['detachArrayBuffer', ([arrayBuffer]) => {
+        if (!isArrayBufferObject(arrayBuffer)) {
+          return surroundingAgent.Throw('TypeError', 'Raw', 'Argument must be an ArrayBuffer');
+        }
+        return DetachArrayBuffer(arrayBuffer);
+      }, 1],
       ['gc', () => {
         gc();
         return Value.undefined;
       }],
-      ['spec', ([v]: [BuiltinFunctionObject]) => {
-        if (v.nativeFunction && v.nativeFunction.section) {
+      ['spec', ([v]) => {
+        if (isBuiltinFunctionObject(v) && v.nativeFunction.section) {
           return Value(v.nativeFunction.section);
         }
         return Value.undefined;
       }, 1],
-    ] as const).forEach(([name, value, length = 0]) => {
-      const v = value instanceof Value ? value : CreateBuiltinFunction(value, length, Value(name), []);
+    ] as [string, NativeSteps | Value][]).forEach(([name, value, length = 0]) => {
+      const v = value instanceof Value ? value : CreateBuiltinFunction(value as NativeSteps, length, Value(name), []);
       CreateDataProperty($262, Value(name), v as Value);
     });
 

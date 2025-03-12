@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import { ObjectValue, Value } from '../value.mts';
 import {
@@ -22,8 +21,10 @@ import {
   NormalCompletion,
   EnsureCompletion,
   Q, X,
+  type ExpressionCompletion,
+  ReturnCompletion,
 } from '../completion.mts';
-import { Evaluate } from '../evaluator.mts';
+import { Evaluate, type Evaluator } from '../evaluator.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-evaluation */
@@ -31,12 +32,14 @@ import type { ParseNode } from '../parser/ParseNode.mts';
 //     `yield`
 //     `yield` AssignmentExpression
 //     `yield` `*` AssignmentExpression
-export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }: ParseNode.YieldExpression) {
+export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }: ParseNode.YieldExpression): Evaluator<ExpressionCompletion | ReturnCompletion> {
   if (hasStar) {
     // 1. Let generatorKind be ! GetGeneratorKind().
     const generatorKind = X(GetGeneratorKind());
+    // 2. Assert: generatorKind is either sync or async.
+    Assert(generatorKind === 'async' || generatorKind === 'sync');
     // 2. Let exprRef be the result of evaluating AssignmentExpression.
-    const exprRef = yield* Evaluate(AssignmentExpression);
+    const exprRef = yield* Evaluate(AssignmentExpression!);
     // 3. Let value be ? GetValue(exprRef).
     const value = Q(GetValue(exprRef));
     // 4. Let iteratorRecord be ? GetIterator(value, generatorKind).
@@ -44,13 +47,13 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }: Par
     // 5. Let iterator be iteratorRecord.[[Iterator]].
     const iterator = iteratorRecord.Iterator;
     // 6. Let received be NormalCompletion(undefined).
-    let received = NormalCompletion(Value.undefined);
+    let received: ExpressionCompletion | ReturnCompletion = NormalCompletion(Value.undefined);
     // 7. Repeat,
     while (true) {
       // a. If received.[[Type]] is normal, then
       if (received.Type === 'normal') {
         // i. Let innerResult be ? Call(iteratorRecord.[[NextMethod]], iteratorRecord.[[Iterator]], « received.[[Value]] »).
-        let innerResult = Q(Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, [received.Value]));
+        let innerResult: Value = Q(Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, [received.Value]));
         // ii. If generatorKind is async, then set innerResult to ? Await(innerResult).
         if (generatorKind === 'async') {
           innerResult = Q(yield* Await(innerResult));
@@ -78,7 +81,7 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }: Par
         // ii. If throw is not undefined, then
         if (thr !== Value.undefined) {
           // 1. Let innerResult be ? Call(throw, iterator, « received.[[Value]] »).
-          let innerResult = Q(Call(thr, iterator, [received.Value]));
+          let innerResult: Value = Q(Call(thr, iterator, [received.Value]));
           // 2. If generatorKind is async, then set innerResult to ? Await(innerResult).
           if (generatorKind === 'async') {
             innerResult = Q(yield* Await(innerResult));
@@ -123,15 +126,17 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }: Par
         const ret = Q(GetMethod(iterator, Value('return')));
         // iii. If return is undefined, then
         if (ret === Value.undefined) {
+          // Set value to received.[[Value]].
+          let value: Value = received.Value;
           // 1. If generatorKind is async, then set received.[[Value]] to ? Await(received.[[Value]]).
           if (generatorKind === 'async') {
-            received.Value = Q(yield* Await(received.Value));
+            value = Q(yield* Await(value));
           }
           // 2. Return Completion(received).
-          return Completion(received);
+          return new Completion({ Type: 'return', Value: value, Target: undefined });
         }
         // iv. Let innerReturnResult be ? Call(return, iterator, « received.[[Value]] »).
-        let innerReturnResult = Q(Call(ret, iterator, [received.Value]));
+        let innerReturnResult: Value = Q(Call(ret, iterator, [received.Value]));
         // v. If generatorKind is async, then set innerReturnResult to ? Await(innerReturnResult).
         if (generatorKind === 'async') {
           innerReturnResult = Q(yield* Await(innerReturnResult));

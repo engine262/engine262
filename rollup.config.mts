@@ -25,7 +25,7 @@ export default defineConfig({
     importUnicodeLib(),
     (json.default || json)({ compact: true }),
     (commonjs.default || commonjs)(),
-    nodeResolve({ extensions: ['.mts', '.json'] }),
+    nodeResolve({ exportConditions: ['rollup'], extensions: ['.mts'] }),
     babel({
       babelHelpers: 'bundled',
       exclude: 'node_modules/**',
@@ -90,7 +90,7 @@ function importUnicodeLib(): Plugin {
     name: '@unicode lib import',
     async transform(code, id) {
       if (!id.includes('node_modules/@unicode')) {
-        return code;
+        return { code, map: this.getCombinedSourcemap() };
       }
       const isA = id.endsWith(fileNameA);
       const isB = id.endsWith(fileNameB);

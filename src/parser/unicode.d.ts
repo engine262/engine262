@@ -10,3 +10,11 @@ declare module '@unicode/unicode-16.0.0/General_Category/Space_Separator/regex.j
     let regex: RegExp;
     export default regex;
 }
+declare module '@unicode/unicode-16.0.0/Case_Folding/C/symbols.js' {
+    let data: Map<string, string>;
+    export default data;
+}
+declare module '@unicode/unicode-16.0.0/Case_Folding/S/symbols.js' {
+    let data: Map<string, string>;
+    export default data;
+}

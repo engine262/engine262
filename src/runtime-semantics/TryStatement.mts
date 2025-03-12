@@ -1,7 +1,6 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import { Value } from '../value.mts';
-import { Evaluate } from '../evaluator.mts';
+import { Evaluate, type StatementEvaluator } from '../evaluator.mts';
 import {
   Completion,
   AbruptCompletion,
@@ -40,7 +39,7 @@ function* Evaluate_TryStatement_BlockCatch({ Block, Catch }: ParseNode.TryStatem
   // 2. If B.[[Type]] is throw, let C be CatchClauseEvaluation of Catch with argument B.[[Value]].
   let C;
   if (B.Type === 'throw') {
-    C = EnsureCompletion(yield* CatchClauseEvaluation(Catch, B.Value));
+    C = EnsureCompletion(yield* CatchClauseEvaluation(Catch!, B.Value));
   } else { // 3. Else, let C be B.
     C = B;
   }
@@ -53,7 +52,7 @@ function* Evaluate_TryStatement_BlockFinally({ Block, Finally }: ParseNode.TrySt
   // 1. Let B be the result of evaluating Block.
   const B = EnsureCompletion(yield* Evaluate(Block));
   // 1. Let F be the result of evaluating Finally.
-  let F = EnsureCompletion(yield* Evaluate(Finally));
+  let F = EnsureCompletion(yield* Evaluate(Finally!));
   // 1. If F.[[Type]] is normal, set F to B.
   if (F.Type === 'normal') {
     F = B;
@@ -67,14 +66,14 @@ function* Evaluate_TryStatement_BlockCatchFinally({ Block, Catch, Finally }: Par
   // 1. Let B be the result of evaluating Block.
   const B = EnsureCompletion(yield* Evaluate(Block));
   // 2. If B.[[Type]] is throw, let C be CatchClauseEvaluation of Catch with argument B.[[Value]].
-  let C;
+  let C: Completion<Value | void>;
   if (B.Type === 'throw') {
-    C = EnsureCompletion(yield* CatchClauseEvaluation(Catch, B.Value));
+    C = EnsureCompletion(yield* CatchClauseEvaluation(Catch!, B.Value));
   } else { // 3. Else, let C be B.
     C = B;
   }
   // 4. Let F be the result of evaluating Finally.
-  let F = EnsureCompletion(yield* Evaluate(Finally));
+  let F = EnsureCompletion(yield* Evaluate(Finally!));
   // 5. If F.[[Type]] is normal, set F to C.
   if (F.Type === 'normal') {
     F = C;
@@ -87,7 +86,7 @@ function* Evaluate_TryStatement_BlockCatchFinally({ Block, Catch, Finally }: Par
 //  Catch :
 //    `catch` Block
 //    `catch` `(` CatchParameter `)` Block
-function* CatchClauseEvaluation({ CatchParameter, Block }: ParseNode.Catch, thrownValue: Value) {
+function* CatchClauseEvaluation({ CatchParameter, Block }: ParseNode.Catch, thrownValue: Value): StatementEvaluator {
   if (!CatchParameter) {
     // 1. Return the result of evaluating Block.
     return yield* Evaluate(Block);

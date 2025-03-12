@@ -1,21 +1,23 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import {
   SameValue,
   RequireInternalSlot,
   CanBeHeldWeakly,
+  Realm,
 } from '../abstract-ops/all.mts';
 import {
-  ObjectValue,
   Value,
+  type Arguments,
+  type FunctionCallContext,
 } from '../value.mts';
-import { Q } from '../completion.mts';
+import { Q, type ExpressionCompletion } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
+import type { WeakMapObject } from './WeakMap.mts';
 
 /** https://tc39.es/ecma262/#sec-weakmap.prototype.delete */
-function WeakMapProto_delete([key = Value.undefined], { thisValue }) {
+function WeakMapProto_delete([key = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let M be the this value.
-  const M = thisValue;
+  const M = thisValue as WeakMapObject;
   // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
   Q(RequireInternalSlot(M, 'WeakMapData'));
   // 3. If CanBeHeldWeakly(key) is false, return false.
@@ -29,6 +31,7 @@ function WeakMapProto_delete([key = Value.undefined], { thisValue }) {
     // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, then
     if (p.Key !== undefined && SameValue(p.Key, key) === Value.true) {
       // i. Set p.[[Key]] to empty.
+      Q(surroundingAgent.debugger_tryTouchDuringPreview(M));
       p.Key = undefined;
       // ii. Set p.[[Value]] to empty.
       p.Value = undefined;
@@ -41,9 +44,9 @@ function WeakMapProto_delete([key = Value.undefined], { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-weakmap.prototype.get */
-function WeakMapProto_get([key = Value.undefined], { thisValue }) {
+function WeakMapProto_get([key = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let m be the this value.
-  const M = thisValue;
+  const M = thisValue as WeakMapObject;
   // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
   Q(RequireInternalSlot(M, 'WeakMapData'));
   // 3. If CanBeHeldWeakly(key) is false, return false.
@@ -55,7 +58,7 @@ function WeakMapProto_get([key = Value.undefined], { thisValue }) {
   for (const p of entries) {
     // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, return p.[[Value]].
     if (p.Key !== undefined && SameValue(p.Key, key) === Value.true) {
-      return p.Value;
+      return p.Value!;
     }
   }
   // 6. Return undefined.
@@ -63,9 +66,9 @@ function WeakMapProto_get([key = Value.undefined], { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-weakmap.prototype.has */
-function WeakMapProto_has([key = Value.undefined], { thisValue }) {
+function WeakMapProto_has([key = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let M be the this value.
-  const M = thisValue;
+  const M = thisValue as WeakMapObject;
   // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
   Q(RequireInternalSlot(M, 'WeakMapData'));
   // 3. If CanBeHeldWeakly(key) is false, return false.
@@ -85,9 +88,9 @@ function WeakMapProto_has([key = Value.undefined], { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-weakmap.prototype.set */
-function WeakMapProto_set([key = Value.undefined, value = Value.undefined], { thisValue }) {
+function WeakMapProto_set([key = Value.undefined, value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let M be the this value.
-  const M = thisValue;
+  const M = thisValue as WeakMapObject;
   // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
   Q(RequireInternalSlot(M, 'WeakMapData'));
   // 3. If CanBeHeldWeakly(key) is false, throw a TypeError exception.
@@ -100,6 +103,7 @@ function WeakMapProto_set([key = Value.undefined, value = Value.undefined], { th
     // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, then
     if (p.Key !== undefined && SameValue(p.Key, key) === Value.true) {
       // i. Set p.[[Value]] to value.
+      Q(surroundingAgent.debugger_tryTouchDuringPreview(M));
       p.Value = value;
       // ii. Return M.
       return M;
@@ -107,13 +111,13 @@ function WeakMapProto_set([key = Value.undefined, value = Value.undefined], { th
   }
   // 5. Let p be the Record { [[Key]]: key, [[Value]]: value }.
   const p = { Key: key, Value: value };
-  // 6. Append p as the last element of entries.
+  // 7. Append p as the last element of entries.
   entries.push(p);
   // 7. Return M.
   return M;
 }
 
-export function bootstrapWeakMapPrototype(realmRec) {
+export function bootstrapWeakMapPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['delete', WeakMapProto_delete, 1],
     ['get', WeakMapProto_get, 1],

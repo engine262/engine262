@@ -1,5 +1,10 @@
 'use strict';
 
+// TODO:
+// - Any spec object must inherit from OrdinaryObject or ExoticObject.
+// - JSString | SymbolValue => PropertyKeyValue
+// - NormalCompletion<T> | ThrowCompletion => PlainCompletion<T>
+// - PlainCompletion<Value> => ExpressionCompletion
 module.exports = {
   root: true,
   extends: 'airbnb-base',
@@ -7,12 +12,18 @@ module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
     tsconfigRootDir: __dirname,
-    project: ['./tsconfig.json', './test/tsconfig.json', './tsconfig.rest.json', './bin/tsconfig.json'],
+    project: ['./tsconfig.json', './test/tsconfig.json', './tsconfig.rest.json', './bin/tsconfig.json', './inspector/tsconfig.json'],
   },
   overrides: [
     {
       files: ['*.js'],
       parserOptions: { sourceType: 'script', project: null },
+    },
+    {
+      files: ['src/**/*.mts'],
+      rules: {
+        '@engine262/safe-function-with-q': 'error',
+      },
     },
     {
       files: ['*.mts'],

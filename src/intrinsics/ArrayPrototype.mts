@@ -1,11 +1,13 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import {
+  BooleanValue,
   Descriptor,
   ObjectValue,
   UndefinedValue,
   Value,
   wellKnownSymbols,
+  type Arguments,
+  type FunctionCallContext,
 } from '../value.mts';
 import {
   ArrayCreate,
@@ -22,7 +24,7 @@ import {
   IsCallable,
   IsConcatSpreadable,
   Set,
-  SortCompare,
+  CompareArrayElements,
   LengthOfArrayLike,
   OrdinaryObjectCreate,
   ToBoolean,
@@ -30,20 +32,24 @@ import {
   ToObject,
   ToString,
   F,
+  Realm,
+  type FunctionObject,
 } from '../abstract-ops/all.mts';
-import { Q, X } from '../completion.mts';
+import { Q, X, type ExpressionCompletion } from '../completion.mts';
+import { __ts_cast__ } from '../helpers.mts';
 import { assignProps } from './bootstrap.mts';
 import { ArrayProto_sortBody, bootstrapArrayPrototypeShared } from './ArrayPrototypeShared.mts';
 
 /** https://tc39.es/ecma262/#sec-array.prototype.concat */
-function ArrayProto_concat(args, { thisValue }) {
+function ArrayProto_concat(args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const O = Q(ToObject(thisValue));
   const A = Q(ArraySpeciesCreate(O, 0));
   let n = 0;
   const items = [O, ...args];
   while (items.length > 0) {
-    const E = items.shift();
+    const E = items.shift()!;
     const spreadable = Q(IsConcatSpreadable(E));
+    __ts_cast__<ObjectValue>(E);
     if (spreadable === Value.true) {
       let k = 0;
       const len = Q(LengthOfArrayLike(E));
@@ -75,7 +81,7 @@ function ArrayProto_concat(args, { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-array.prototype.copywithin */
-function ArrayProto_copyWithin([target = Value.undefined, start = Value.undefined, end = Value.undefined], { thisValue }) {
+function ArrayProto_copyWithin([target = Value.undefined, start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
   const relativeTarget = Q(ToIntegerOrInfinity(target));
@@ -131,13 +137,13 @@ function ArrayProto_copyWithin([target = Value.undefined, start = Value.undefine
 }
 
 /** https://tc39.es/ecma262/#sec-array.prototype.entries */
-function ArrayProto_entries(args, { thisValue }) {
+function ArrayProto_entries(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const O = Q(ToObject(thisValue));
   return CreateArrayIterator(O, 'key+value');
 }
 
 /** https://tc39.es/ecma262/#sec-array.prototype.fill */
-function ArrayProto_fill([value = Value.undefined, start = Value.undefined, end = Value.undefined], { thisValue }) {
+function ArrayProto_fill([value = Value.undefined, start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
   const relativeStart = Q(ToIntegerOrInfinity(start));
@@ -168,7 +174,7 @@ function ArrayProto_fill([value = Value.undefined, start = Value.undefined, end 
 }
 
 /** https://tc39.es/ecma262/#sec-array.prototype.filter */
-function ArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
+function ArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
   if (IsCallable(callbackfn) === Value.false) {
@@ -194,7 +200,7 @@ function ArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undefi
 }
 
 /** https://tc39.es/ecma262/#sec-flattenintoarray */
-function FlattenIntoArray(target, source, sourceLen, start, depth, mapperFunction, thisArg) {
+function FlattenIntoArray(target: ObjectValue, source: ObjectValue, sourceLen: number, start: number, depth: number, mapperFunction?: FunctionObject, thisArg?: Value) {
   Assert(target instanceof ObjectValue);
   Assert(source instanceof ObjectValue);
   Assert(sourceLen >= 0);
@@ -209,16 +215,16 @@ function FlattenIntoArray(target, source, sourceLen, start, depth, mapperFunctio
     if (exists === Value.true) {
       let element = Q(Get(source, P));
       if (mapperFunction) {
-        Assert(thisArg);
+        Assert(!!thisArg);
         element = Q(Call(mapperFunction, thisArg, [element, F(sourceIndex), source]));
       }
-      let shouldFlatten = Value.false;
+      let shouldFlatten: BooleanValue = Value.false;
       if (depth > 0) {
         shouldFlatten = Q(IsArray(element));
       }
       if (shouldFlatten === Value.true) {
-        const elementLen = Q(LengthOfArrayLike(element));
-        targetIndex = Q(FlattenIntoArray(target, element, elementLen, targetIndex, depth - 1));
+        const elementLen = Q(LengthOfArrayLike(element as ObjectValue));
+        targetIndex = Q(FlattenIntoArray(target, element as ObjectValue, elementLen, targetIndex, depth - 1));
       } else {
         if (targetIndex >= (2 ** 53) - 1) {
           return surroundingAgent.Throw('TypeError', 'OutOfRange', targetIndex);
@@ -233,7 +239,7 @@ function FlattenIntoArray(target, source, sourceLen, start, depth, mapperFunctio
 }
 
 /** https://tc39.es/ecma262/#sec-array.prototype.flat */
-function ArrayProto_flat([depth = Value.undefined], { thisValue }) {
+function ArrayProto_flat([depth = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const O = Q(ToObject(thisValue));
   const sourceLen = Q(LengthOfArrayLike(O));
   let depthNum = 1;
@@ -246,25 +252,25 @@ function ArrayProto_flat([depth = Value.undefined], { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-array.prototype.flatmap */
-function ArrayProto_flatMap([mapperFunction = Value.undefined, thisArg = Value.undefined], { thisValue }) {
+function ArrayProto_flatMap([mapperFunction = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const O = Q(ToObject(thisValue));
   const sourceLen = Q(LengthOfArrayLike(O));
   if (X(IsCallable(mapperFunction)) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', mapperFunction);
   }
   const A = Q(ArraySpeciesCreate(O, 0));
-  Q(FlattenIntoArray(A, O, sourceLen, 0, 1, mapperFunction, thisArg));
+  Q(FlattenIntoArray(A, O, sourceLen, 0, 1, mapperFunction as FunctionObject, thisArg));
   return A;
 }
 
 /** https://tc39.es/ecma262/#sec-array.prototype.keys */
-function ArrayProto_keys(args, { thisValue }) {
+function ArrayProto_keys(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const O = Q(ToObject(thisValue));
   return CreateArrayIterator(O, 'key');
 }
 
 /** https://tc39.es/ecma262/#sec-array.prototype.map */
-function ArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
+function ArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
   if (IsCallable(callbackfn) === Value.false) {
@@ -286,7 +292,7 @@ function ArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefined
 }
 
 /** https://tc39.es/ecma262/#sec-array.prototype.pop */
-function ArrayProto_pop(args, { thisValue }) {
+function ArrayProto_pop(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
   if (len === 0) {
@@ -303,7 +309,8 @@ function ArrayProto_pop(args, { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-array.prototype.push */
-function ArrayProto_push(items, { thisValue }) {
+function ArrayProto_push(_items: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+  const items = [..._items];
   const O = Q(ToObject(thisValue));
   let len = Q(LengthOfArrayLike(O));
   const argCount = items.length;
@@ -311,7 +318,7 @@ function ArrayProto_push(items, { thisValue }) {
     return surroundingAgent.Throw('TypeError', 'ArrayPastSafeLength');
   }
   while (items.length > 0) {
-    const E = items.shift();
+    const E = items.shift()!;
     Q(Set(O, X(ToString(F(len))), E, Value.true));
     len += 1;
   }
@@ -320,7 +327,7 @@ function ArrayProto_push(items, { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-array.prototype.shift */
-function ArrayProto_shift(args, { thisValue }) {
+function ArrayProto_shift(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
   if (len === 0) {
@@ -347,7 +354,7 @@ function ArrayProto_shift(args, { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-array.prototype.slice */
-function ArrayProto_slice([start = Value.undefined, end = Value.undefined], { thisValue }) {
+function ArrayProto_slice([start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
   const relativeStart = Q(ToIntegerOrInfinity(start));
@@ -388,18 +395,18 @@ function ArrayProto_slice([start = Value.undefined, end = Value.undefined], { th
 }
 
 /** https://tc39.es/ecma262/#sec-array.prototype.sort */
-function ArrayProto_sort([comparefn = Value.undefined], { thisValue }) {
+function ArrayProto_sort([comparefn = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   if (comparefn !== Value.undefined && IsCallable(comparefn) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', comparefn);
   }
   const obj = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(obj));
 
-  return ArrayProto_sortBody(obj, len, (x, y) => SortCompare(x, y, comparefn));
+  return ArrayProto_sortBody(obj, len, (x, y) => CompareArrayElements(x, y, comparefn as UndefinedValue | FunctionObject));
 }
 
 /** https://tc39.es/ecma262/#sec-array.prototype.splice */
-function ArrayProto_splice(args, { thisValue }) {
+function ArrayProto_splice(args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const [start = Value.undefined, deleteCount = Value.undefined, ...items] = args;
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
@@ -475,7 +482,7 @@ function ArrayProto_splice(args, { thisValue }) {
   }
   k = actualStart;
   while (items.length > 0) {
-    const E = items.shift();
+    const E = items.shift()!;
     Q(Set(O, X(ToString(F(k))), E, Value.true));
     k += 1;
   }
@@ -484,7 +491,7 @@ function ArrayProto_splice(args, { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-array.prototype.tostring */
-function ArrayProto_toString(a, { thisValue }) {
+function ArrayProto_toString(_a: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const array = Q(ToObject(thisValue));
   let func = Q(Get(array, Value('join')));
   if (IsCallable(func) === Value.false) {
@@ -494,7 +501,7 @@ function ArrayProto_toString(a, { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-array.prototype.unshift */
-function ArrayProto_unshift(args, { thisValue }) {
+function ArrayProto_unshift(args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const O = Q(ToObject(thisValue));
   const len = Q(LengthOfArrayLike(O));
   const argCount = args.length;
@@ -516,9 +523,9 @@ function ArrayProto_unshift(args, { thisValue }) {
       k -= 1;
     }
     let j = 0;
-    const items = args;
+    const items = [...args];
     while (items.length !== 0) {
-      const E = items.shift();
+      const E = items.shift()!;
       const jStr = X(ToString(F(j)));
       Q(Set(O, jStr, E, Value.true));
       j += 1;
@@ -529,13 +536,13 @@ function ArrayProto_unshift(args, { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-array.prototype.values */
-function ArrayProto_values(args, { thisValue }) {
+function ArrayProto_values(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const O = Q(ToObject(thisValue));
   return CreateArrayIterator(O, 'value');
 }
 
 /** https://tc39.es/ecma262/#sec-array.prototype.at */
-function ArrayProto_at([index = Value.undefined], { thisValue }) {
+function ArrayProto_at([index = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let O be ? ToObject(this value).
   const O = Q(ToObject(thisValue));
   // 2. Let len be ? LengthOfArrayLike(O).
@@ -559,7 +566,7 @@ function ArrayProto_at([index = Value.undefined], { thisValue }) {
   return Q(Get(O, X(ToString(F(k)))));
 }
 
-export function bootstrapArrayPrototype(realmRec) {
+export function bootstrapArrayPrototype(realmRec: Realm) {
   const proto = X(ArrayCreate(0, realmRec.Intrinsics['%Object.prototype%']));
 
   assignProps(realmRec, proto, [
@@ -588,11 +595,11 @@ export function bootstrapArrayPrototype(realmRec) {
     realmRec,
     proto,
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    () => {},
-    (O) => Q(LengthOfArrayLike(O)),
+    () => { },
+    (O) => LengthOfArrayLike(O),
   );
 
-  proto.DefineOwnProperty(wellKnownSymbols.iterator, proto.GetOwnProperty(Value('values')));
+  proto.DefineOwnProperty(wellKnownSymbols.iterator, X(proto.GetOwnProperty(Value('values'))) as Descriptor);
 
   {
     const unscopableList = OrdinaryObjectCreate(Value.null);

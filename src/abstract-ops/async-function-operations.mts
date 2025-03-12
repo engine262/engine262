@@ -1,16 +1,16 @@
-// @ts-nocheck
 import { EnsureCompletion, X } from '../completion.mts';
-import { surroundingAgent } from '../engine.mts';
+import { ExecutionContext, surroundingAgent } from '../engine.mts';
 import { Evaluate } from '../evaluator.mts';
 import { Value } from '../value.mts';
 import { resume } from '../helpers.mts';
-import { Assert, Call } from './all.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { Assert, Call, PromiseCapabilityRecord } from './all.mts';
 
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-async-function-objects */
 
 /** https://tc39.es/ecma262/#sec-asyncblockstart */
-export function AsyncBlockStart(promiseCapability, asyncBody, asyncContext) {
+export function AsyncBlockStart(promiseCapability: PromiseCapabilityRecord, asyncBody: ParseNode.AsyncBody | ParseNode.ExpressionBody | ParseNode.Module, asyncContext: ExecutionContext) {
   asyncContext.promiseCapability = promiseCapability;
 
   const runningContext = surroundingAgent.runningExecutionContext;
@@ -29,14 +29,14 @@ export function AsyncBlockStart(promiseCapability, asyncBody, asyncContext) {
     return Value.undefined;
   }());
   surroundingAgent.executionContextStack.push(asyncContext);
-  const result = EnsureCompletion(resume(asyncContext, undefined));
+  const result = EnsureCompletion(resume(asyncContext, Value.undefined));
   Assert(surroundingAgent.runningExecutionContext === runningContext);
   Assert(result.Type === 'normal' && result.Value === Value.undefined);
   return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-async-functions-abstract-operations-async-function-start */
-export function AsyncFunctionStart(promiseCapability, asyncFunctionBody) {
+export function AsyncFunctionStart(promiseCapability: PromiseCapabilityRecord, asyncFunctionBody: ParseNode.AsyncBody | ParseNode.ExpressionBody) {
   const runningContext = surroundingAgent.runningExecutionContext;
   const asyncContext = runningContext.copy();
   X(AsyncBlockStart(promiseCapability, asyncFunctionBody, asyncContext));

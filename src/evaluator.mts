@@ -1,5 +1,4 @@
-// @ts-nocheck
-import type { Completion } from './completion.mts';
+import type { PlainCompletion } from './completion.mts';
 import { surroundingAgent } from './engine.mts';
 import { OutOfRange } from './helpers.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
@@ -75,8 +74,23 @@ import {
   Evaluate_AnyFunctionBody,
   Evaluate_ExpressionBody,
 } from './runtime-semantics/all.mts';
+import type {
+  AbruptCompletion, ExpressionCompletion, ReferenceRecord, ReturnCompletion, Value,
+} from '#self';
 
-export function* Evaluate(node: ParseNode): Generator<unknown, Completion, unknown> {
+export type Evaluator<Result> = Generator<Value, Result, unknown>;
+export type StatementEvaluator<T = void | Value> = Evaluator<PlainCompletion<T> | AbruptCompletion>;
+export type ExpressionEvaluator<T = ReferenceRecord | Value> = Evaluator<PlainCompletion<T>>;
+export type ReferenceEvaluator = Evaluator<PlainCompletion<ReferenceRecord>>;
+export type ValueEvaluator = Evaluator<ExpressionCompletion>;
+export type YieldEvaluator = Evaluator<PlainCompletion<Value> | ReturnCompletion>;
+
+export type ExpressionThatEvaluatedToReferenceRecord = ParseNode.IdentifierReference;
+
+export function Evaluate(node: ExpressionThatEvaluatedToReferenceRecord): ReferenceEvaluator
+export function Evaluate(node: ParseNode.Expression): ExpressionEvaluator
+export function Evaluate(node: ParseNode): StatementEvaluator
+export function* Evaluate(node: ParseNode): Evaluator<unknown> {
   surroundingAgent.runningExecutionContext.callSite.setLocation(node);
 
   if (surroundingAgent.hostDefinedOptions.onNodeEvaluation) {
@@ -221,7 +235,7 @@ export function* Evaluate(node: ParseNode): Generator<unknown, Completion, unkno
     case 'SuperCall':
       return yield* Evaluate_SuperCall(node);
     case 'NewTarget':
-      return Evaluate_NewTarget(node);
+      return Evaluate_NewTarget();
     case 'ImportMeta':
       return Evaluate_ImportMeta(node);
     case 'ImportCall':

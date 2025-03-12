@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import { Value } from '../value.mts';
 import { DeclarativeEnvironmentRecord } from '../environment.mts';
@@ -13,7 +12,7 @@ import type { ParseNode } from '../parser/ParseNode.mts';
 import { Evaluate_StatementList, InstantiateFunctionObject } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-blockdeclarationinstantiation */
-export function BlockDeclarationInstantiation(code, env: DeclarativeEnvironmentRecord) {
+export function BlockDeclarationInstantiation(code: ParseNode.StatementList | ParseNode.CaseBlock, env: DeclarativeEnvironmentRecord) {
   // 1. Assert: env is a declarative Environment Record.
   Assert(env instanceof DeclarativeEnvironmentRecord);
   // 2. Let declarations be the LexicallyScopedDeclarations of code.
@@ -30,7 +29,7 @@ export function BlockDeclarationInstantiation(code, env: DeclarativeEnvironmentR
         X(env.CreateImmutableBinding(dn, Value.true));
       } else { // ii. Else,
         // 1. Perform ! env.CreateMutableBinding(dn, false).
-        X(env.CreateMutableBinding(dn, false));
+        X(env.CreateMutableBinding(dn, Value.false));
       }
       // b. If d is a FunctionDeclaration, a GeneratorDeclaration, an AsyncFunctionDeclaration, or an AsyncGeneratorDeclaration, then
       if (d.type === 'FunctionDeclaration'

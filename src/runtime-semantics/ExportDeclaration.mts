@@ -1,8 +1,7 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import { Value } from '../value.mts';
 import { Evaluate } from '../evaluator.mts';
-import { GetValue } from '../abstract-ops/all.mts';
+import { GetValue, type ECMAScriptFunctionObject } from '../abstract-ops/all.mts';
 import { BoundNames, IsAnonymousFunctionDefinition } from '../static-semantics/all.mts';
 import { NormalCompletion, Q } from '../completion.mts';
 import { OutOfRange } from '../helpers.mts';
@@ -12,6 +11,7 @@ import {
   InitializeBoundName,
   BindingClassDeclarationEvaluation,
 } from './all.mts';
+import type { FunctionDeclaration } from '#self';
 
 /** https://tc39.es/ecma262/#sec-exports-runtime-semantics-evaluation */
 //   ExportDeclaration :
@@ -43,7 +43,7 @@ export function* Evaluate_ExportDeclaration(ExportDeclaration: ParseNode.ExportD
   }
   if (Declaration) {
     // 1. Return the result of evaluating Declaration.
-    return yield* Evaluate(ExportDeclaration.Declaration);
+    return yield* Evaluate(ExportDeclaration.Declaration!);
   }
   if (!isDefault) {
     throw new OutOfRange('Evaluate_ExportDeclaration', ExportDeclaration);
@@ -54,7 +54,7 @@ export function* Evaluate_ExportDeclaration(ExportDeclaration: ParseNode.ExportD
   }
   if (ClassDeclaration) {
     // 1. Let value be ? BindingClassDeclarationEvaluation of ClassDeclaration.
-    const value = Q(yield* BindingClassDeclarationEvaluation(ClassDeclaration));
+    const value = Q(yield* BindingClassDeclarationEvaluation(ClassDeclaration)) as ECMAScriptFunctionObject;
     // 2. Let className be the sole element of BoundNames of ClassDeclaration.
     const className = BoundNames(ClassDeclaration)[0];
     // If className is "*default*", then
@@ -72,7 +72,7 @@ export function* Evaluate_ExportDeclaration(ExportDeclaration: ParseNode.ExportD
     // 1. If IsAnonymousFunctionDefinition(AssignmentExpression) is true, then
     if (IsAnonymousFunctionDefinition(AssignmentExpression)) {
       // a. Let value be NamedEvaluation of AssignmentExpression with argument "default".
-      value = yield* NamedEvaluation(AssignmentExpression, Value('default'));
+      value = yield* NamedEvaluation(AssignmentExpression as FunctionDeclaration, Value('default'));
     } else { // 2. Else,
       // a. Let rhs be the result of evaluating AssignmentExpression.
       const rhs = yield* Evaluate(AssignmentExpression);
@@ -82,7 +82,7 @@ export function* Evaluate_ExportDeclaration(ExportDeclaration: ParseNode.ExportD
     // 3. Let env be the running execution context's LexicalEnvironment.
     const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
     // 4. Perform ? InitializeBoundName("*default*", value, env).
-    Q(InitializeBoundName(Value('*default*'), value, env));
+    Q(InitializeBoundName(Value('*default*'), value as ECMAScriptFunctionObject, env));
     // 5. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
   }

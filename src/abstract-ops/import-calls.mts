@@ -1,29 +1,32 @@
-// @ts-nocheck
 // This file covers abstract operations defined in
 // https://tc39.es/ecma262/#sec-import-calls
 
 import {
-  Call, CreateBuiltinFunction, GetModuleNamespace, PerformPromiseThen, Value,
+  AbstractModuleRecord,
+  Call, CreateBuiltinFunction, GetModuleNamespace, PerformPromiseThen, PromiseCapabilityRecord, Value,
+  type Arguments,
 } from '../api.mts';
-import { AbruptCompletion, X } from '../completion.mts';
+import {
+  AbruptCompletion, ValueOfNormalCompletion, X, type PlainCompletion,
+} from '../completion.mts';
 
 /** https://tc39.es/ecma262/#sec-ContinueDynamicImport */
-export function ContinueDynamicImport(promiseCapability, moduleCompletion) {
+export function ContinueDynamicImport(promiseCapability: PromiseCapabilityRecord, moduleCompletion: PlainCompletion<AbstractModuleRecord>) {
   // 1. If moduleCompletion is an abrupt completion, then
   if (moduleCompletion instanceof AbruptCompletion) {
     // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « moduleCompletion.[[Value]] »).
-    X(Call(promiseCapability.Reject, undefined, [moduleCompletion.Value]));
+    X(Call(promiseCapability.Reject, Value.undefined, [moduleCompletion.Value]));
     // b. Return unused.
     return;
   }
   // 2. Let module be moduleCompletion.[[Value]].
-  const module = moduleCompletion.Value;
+  const module = ValueOfNormalCompletion(moduleCompletion);
 
   // 3. Let loadPromise be module.LoadRequestedModules().
   const loadPromise = module.LoadRequestedModules();
 
   // 4. Let rejectedClosure be a new Abstract Closure with parameters (reason) that captures promiseCapability and performs the following steps when called:
-  const rejectedClosure = ([reason = Value.undefined]) => {
+  const rejectedClosure = ([reason = Value.undefined]: Arguments): void => {
     // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « reason »).
     X(Call(promiseCapability.Reject, Value.undefined, [reason]));
     // b. Return unused.
@@ -38,7 +41,7 @@ export function ContinueDynamicImport(promiseCapability, moduleCompletion) {
     // b. If link is an abrupt completion, then
     if (link instanceof AbruptCompletion) {
       // i. Perform ! Call(promiseCapability.[[Reject]], undefined, « link.[[Value]] »).
-      X(Call(promiseCapability.Reject, Value.undefined, [link.Value]));
+      X(Call(promiseCapability.Reject, Value.undefined, [link.Value as Value]));
       // ii. Return unused.
       return;
     }

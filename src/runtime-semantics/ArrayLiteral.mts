@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { Value } from '../value.mts';
+import { ObjectValue, Value } from '../value.mts';
 import {
   Set,
   ArrayCreate,
@@ -11,8 +10,10 @@ import {
   CreateDataPropertyOrThrow,
   F,
 } from '../abstract-ops/all.mts';
-import { Evaluate } from '../evaluator.mts';
-import { ReturnIfAbrupt, Q, X } from '../completion.mts';
+import { Evaluate, type Evaluator, type ExpressionEvaluator } from '../evaluator.mts';
+import {
+  ReturnIfAbrupt, Q, X, type PlainCompletion,
+} from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-arrayaccumulation */
@@ -26,7 +27,7 @@ import type { ParseNode } from '../parser/ParseNode.mts';
 //    ElementList : ElementList `,` Elision SpreadElement
 //  SpreadElement :
 //    `...` AssignmentExpression
-function* ArrayAccumulation(ElementList: ParseNode.ElementList, array, nextIndex: number) {
+function* ArrayAccumulation(ElementList: ParseNode.ElementList, array: ObjectValue, nextIndex: number): Evaluator<PlainCompletion<number>> {
   let postIndex = nextIndex;
   for (const element of ElementList) {
     switch (element.type) {
@@ -46,13 +47,13 @@ function* ArrayAccumulation(ElementList: ParseNode.ElementList, array, nextIndex
 }
 
 // SpreadElement : `...` AssignmentExpression
-function* ArrayAccumulation_SpreadElement({ AssignmentExpression }: ParseNode.SpreadElement, array, nextIndex: number) {
+function* ArrayAccumulation_SpreadElement({ AssignmentExpression }: ParseNode.SpreadElement, array: ObjectValue, nextIndex: number): Evaluator<PlainCompletion<number>> {
   // 1. Let spreadRef be the result of evaluating AssignmentExpression.
   const spreadRef = yield* Evaluate(AssignmentExpression);
   // 2. Let spreadObj be ? GetValue(spreadRef).
   const spreadObj = Q(GetValue(spreadRef));
   // 3. Let iteratorRecord be ? GetIterator(spreadObj).
-  const iteratorRecord = Q(GetIterator(spreadObj));
+  const iteratorRecord = Q(GetIterator(spreadObj, 'sync'));
   // 4. Repeat,
   while (true) {
     // a. Let next be ? IteratorStep(iteratorRecord).
@@ -62,7 +63,7 @@ function* ArrayAccumulation_SpreadElement({ AssignmentExpression }: ParseNode.Sp
       return nextIndex;
     }
     // c. Let nextValue be ? IteratorValue(next).
-    const nextValue = Q(IteratorValue(next));
+    const nextValue = Q(IteratorValue(next as ObjectValue));
     // d. Perform ! CreateDataPropertyOrThrow(array, ! ToString(𝔽(nextIndex)), nextValue).
     X(CreateDataPropertyOrThrow(array, X(ToString(F(nextIndex))), nextValue));
     // e. Set nextIndex to nextIndex + 1.
@@ -71,13 +72,13 @@ function* ArrayAccumulation_SpreadElement({ AssignmentExpression }: ParseNode.Sp
 }
 
 
-function* ArrayAccumulation_AssignmentExpression(AssignmentExpression: ParseNode.AssignmentExpression, array, nextIndex: number) {
+function* ArrayAccumulation_AssignmentExpression(AssignmentExpression: ParseNode.AssignmentExpressionOrHigher, array: ObjectValue, nextIndex: number): Evaluator<PlainCompletion<number>> {
   // 2. Let initResult be the result of evaluating AssignmentExpression.
   const initResult = yield* Evaluate(AssignmentExpression);
   // 3. Let initValue be ? GetValue(initResult).
   const initValue = Q(GetValue(initResult));
   // 4. Let created be ! CreateDataPropertyOrThrow(array, ! ToString(𝔽(nextIndex)), initValue).
-  const _created = X(CreateDataPropertyOrThrow(array, X(ToString(F(nextIndex))), initValue));
+  X(CreateDataPropertyOrThrow(array, X(ToString(F(nextIndex))), initValue));
   // 5. Return nextIndex + 1.
   return nextIndex + 1;
 }
@@ -87,7 +88,7 @@ function* ArrayAccumulation_AssignmentExpression(AssignmentExpression: ParseNode
 //    `[` Elision `]`
 //    `[` ElementList `]`
 //    `[` ElementList `,` Elision `]`
-export function* Evaluate_ArrayLiteral({ ElementList }: ParseNode.ArrayLiteral) {
+export function* Evaluate_ArrayLiteral({ ElementList }: ParseNode.ArrayLiteral): ExpressionEvaluator {
   // 1. Let array be ! ArrayCreate(0).
   const array = X(ArrayCreate(0));
   // 2. Let len be the result of performing ArrayAccumulation for ElementList with arguments array and 0.

@@ -1,6 +1,5 @@
-// @ts-nocheck
 import { surroundingAgent, HostLoadImportedModule } from '../engine.mts';
-import { Evaluate } from '../evaluator.mts';
+import { Evaluate, type ExpressionEvaluator } from '../evaluator.mts';
 import {
   GetValue,
   ToString,
@@ -10,17 +9,21 @@ import {
 import {
   Q, X, IfAbruptRejectPromise,
 } from '../completion.mts';
-import { Value } from '../api.mts';
+import {
+  AbstractModuleRecord, CyclicModuleRecord, JSStringValue, NullValue, Realm, type PromiseObject, type ScriptRecord,
+} from '../api.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import { __ts_cast__ } from '../helpers.mts';
 
 /** https://tc39.es/ecma262/#sec-import-calls */
 // ImportCall : `import` `(` AssignmentExpression `)`
-export function* Evaluate_ImportCall({ AssignmentExpression }: ParseNode.ImportCall) {
+export function* Evaluate_ImportCall({ AssignmentExpression }: ParseNode.ImportCall): ExpressionEvaluator<PromiseObject> {
+  Q(surroundingAgent.debugger_cannotPreview);
   // 1. Let referrer be ! GetActiveScriptOrModule().
-  let referrer = X(GetActiveScriptOrModule());
+  let referrer: NullValue | AbstractModuleRecord | ScriptRecord | Realm = X(GetActiveScriptOrModule());
   // 2. If referrer is null, set referrer to the current Realm Record.
-  if (referrer === null) {
-    referrer = surroundingAgent.realm;
+  if (referrer instanceof NullValue) {
+    referrer = surroundingAgent.currentRealmRecord;
   }
   // 3. Let argRef be the result of evaluating AssignmentExpression.
   const argRef = yield* Evaluate(AssignmentExpression);
@@ -32,8 +35,9 @@ export function* Evaluate_ImportCall({ AssignmentExpression }: ParseNode.ImportC
   const specifierString = ToString(specifier);
   // 7. IfAbruptRejectPromise(specifierString, promiseCapability).
   IfAbruptRejectPromise(specifierString, promiseCapability);
+  __ts_cast__<JSStringValue>(specifierString);
   // 8. Perform HostLoadImportedModule(referrer, specifierString, ~empty~, promiseCapability).
-  HostLoadImportedModule(referrer, specifierString, Value.undefined, promiseCapability);
+  HostLoadImportedModule(referrer as CyclicModuleRecord | ScriptRecord | Realm, specifierString, undefined, promiseCapability);
   // 9. Return promiseCapability.[[Promise]].
   return promiseCapability.Promise;
 }

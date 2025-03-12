@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   surroundingAgent,
 } from '../engine.mts';
@@ -7,17 +6,21 @@ import {
   OrdinaryCreateFromConstructor,
   InstallErrorCause,
   ToString,
+  Realm,
+  type FunctionObject,
 } from '../abstract-ops/all.mts';
 import {
   Descriptor,
   UndefinedValue,
   Value,
+  type Arguments,
+  type FunctionCallContext,
 } from '../value.mts';
-import { Q, X } from '../completion.mts';
+import { Q, X, type ExpressionCompletion } from '../completion.mts';
 import { captureStack } from '../helpers.mts';
 import { bootstrapConstructor, bootstrapPrototype } from './bootstrap.mts';
 
-export function bootstrapNativeError(realmRec) {
+export function bootstrapNativeError(realmRec: Realm) {
   for (const name of [
     'EvalError',
     'RangeError',
@@ -32,7 +35,7 @@ export function bootstrapNativeError(realmRec) {
     ], realmRec.Intrinsics['%Error.prototype%']);
 
     /** https://tc39.es/ecma262/#sec-nativeerror */
-    const Constructor = ([message = Value.undefined, options = Value.undefined], { NewTarget }) => {
+    const Constructor = ([message = Value.undefined, options = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext): ExpressionCompletion => {
       // 1. If NewTarget is undefined, let newTarget be the active function object; else let newTarget be NewTarget.
       let newTarget;
       if (NewTarget instanceof UndefinedValue) {
@@ -41,7 +44,7 @@ export function bootstrapNativeError(realmRec) {
         newTarget = NewTarget;
       }
       // 2. Let O be ? OrdinaryCreateFromConstructor(newTarget, "%NativeError.prototype%", « [[ErrorData]] »).
-      const O = Q(OrdinaryCreateFromConstructor(newTarget, `%${name}.prototype%`, ['ErrorData']));
+      const O = Q(OrdinaryCreateFromConstructor(newTarget as FunctionObject, `%${name}.prototype%`, ['ErrorData']));
       // 3. If message is not undefined, then
       if (message !== Value.undefined) {
         // a. Let msg be ? ToString(message).

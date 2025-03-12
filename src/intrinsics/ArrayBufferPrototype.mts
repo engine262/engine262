@@ -1,18 +1,22 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
-import { Value } from '../value.mts';
+import {
+  DataBlock, Value, type Arguments, type FunctionCallContext,
+} from '../value.mts';
 import { Q } from '../completion.mts';
 import {
   RequireInternalSlot, IsDetachedBuffer, IsSharedArrayBuffer,
   SpeciesConstructor, Construct, ToIntegerOrInfinity, SameValue, CopyDataBlockBytes,
   F,
+  Realm,
+  type FunctionObject,
+  type ArrayBufferObject,
 } from '../abstract-ops/all.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-get-arraybuffer.prototype.bytelength */
-function ArrayBufferProto_byteLength(args, { thisValue }) {
+function ArrayBufferProto_byteLength(_args: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Let O be this value.
-  const O = thisValue;
+  const O = thisValue as ArrayBufferObject;
   // 2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
   Q(RequireInternalSlot(O, 'ArrayBufferData'));
   // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
@@ -30,9 +34,9 @@ function ArrayBufferProto_byteLength(args, { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-arraybuffer.prototype.slice */
-function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined], { thisValue }) {
+function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Let O be the this value.
-  const O = thisValue;
+  const O = thisValue as ArrayBufferObject;
   // 2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
   Q(RequireInternalSlot(O, 'ArrayBufferData'));
   // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
@@ -71,9 +75,9 @@ function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]
   // 10. Let newLen be max(final - first, 0).
   const newLen = Math.max(final - first, 0);
   // 11. Let ctor be ? SpeciesConstructor(O, %ArrayBuffer%).
-  const ctor = Q(SpeciesConstructor(O, surroundingAgent.intrinsic('%ArrayBuffer%')));
+  const ctor = Q(SpeciesConstructor(O, surroundingAgent.intrinsic('%ArrayBuffer%') as FunctionObject));
   // 12. Let new be ? Construct(ctor, « newLen »).
-  const newO = Q(Construct(ctor, [F(newLen)]));
+  const newO = Q(Construct(ctor, [F(newLen)])) as ArrayBufferObject;
   // 13. Perform ? RequireInternalSlot(new, [[ArrayBufferData]]).
   Q(RequireInternalSlot(newO, 'ArrayBufferData'));
   // 14. If IsSharedArrayBuffer(new) is true, throw a TypeError exception.
@@ -98,16 +102,16 @@ function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 20. Let fromBuf be O.[[ArrayBufferData]].
-  const fromBuf = O.ArrayBufferData;
+  const fromBuf = O.ArrayBufferData as DataBlock;
   // 21. Let toBuf be new.[[ArrayBufferData]].
-  const toBuf = newO.ArrayBufferData;
+  const toBuf = newO.ArrayBufferData as DataBlock;
   // 22. Perform CopyDataBlockBytes(toBuf, 0, fromBuf, first, newLen).
   CopyDataBlockBytes(toBuf, 0, fromBuf, first, newLen);
   // 23. Return new.
   return newO;
 }
 
-export function bootstrapArrayBufferPrototype(realmRec) {
+export function bootstrapArrayBufferPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['byteLength', [ArrayBufferProto_byteLength]],
     ['slice', ArrayBufferProto_slice, 2],

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   Assert,
   GetViewValue,
@@ -6,16 +5,19 @@ import {
   IsDetachedBuffer,
   RequireInternalSlot,
   F,
+  Realm,
+  type ArrayBufferObject,
 } from '../abstract-ops/all.mts';
-import { Q } from '../completion.mts';
+import { Q, type ExpressionCompletion } from '../completion.mts';
 import { surroundingAgent } from '../engine.mts';
-import { Value } from '../value.mts';
+import { Value, type Arguments, type FunctionCallContext } from '../value.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
+import type { DataViewObject } from './DataView.mts';
 
 /** https://tc39.es/ecma262/#sec-get-dataview.prototype.buffer */
-function DataViewProto_buffer(args, { thisValue }) {
+function DataViewProto_buffer(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let O be the this value.
-  const O = thisValue;
+  const O = thisValue as DataViewObject;
   // 2. Perform ? RequireInternalSlot(O, [[DataView]]).
   Q(RequireInternalSlot(O, 'DataView'));
   // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
@@ -27,15 +29,15 @@ function DataViewProto_buffer(args, { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-get-dataview.prototype.bytelength */
-function DataViewProto_byteLength(args, { thisValue }) {
+function DataViewProto_byteLength(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let O be the this value.
-  const O = thisValue;
+  const O = thisValue as DataViewObject;
   // 2. Perform ? RequireInternalSlot(O, [[DataView]]).
   Q(RequireInternalSlot(O, 'DataView'));
   // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
   Assert('ViewedArrayBuffer' in O);
   // 4. Let buffer be O.[[ViewedArrayBuffer]].
-  const buffer = O.ViewedArrayBuffer;
+  const buffer = O.ViewedArrayBuffer as ArrayBufferObject;
   // 5. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
   if (IsDetachedBuffer(buffer) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
@@ -47,15 +49,15 @@ function DataViewProto_byteLength(args, { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-get-dataview.prototype.byteoffset */
-function DataViewProto_byteOffset(args, { thisValue }) {
+function DataViewProto_byteOffset(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let O be the this value.
-  const O = thisValue;
+  const O = thisValue as DataViewObject;
   // 2. Perform ? RequireInternalSlot(O, [[DataView]]).
   Q(RequireInternalSlot(O, 'DataView'));
   // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
   Assert('ViewedArrayBuffer' in O);
   // 4. Let buffer be O.[[ViewedArrayBuffer]].
-  const buffer = O.ViewedArrayBuffer;
+  const buffer = O.ViewedArrayBuffer as ArrayBufferObject;
   // 5. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
   if (IsDetachedBuffer(buffer) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
@@ -67,7 +69,7 @@ function DataViewProto_byteOffset(args, { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.getbigint64 */
-function DataViewProto_getBigInt64([byteOffset = Value.undefined, littleEndian = Value.undefined], { thisValue }) {
+function DataViewProto_getBigInt64([byteOffset = Value.undefined, littleEndian = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let v be the this value.
   const v = thisValue;
   // 2. Return ? GetViewValue(v, byteOffset, littleEndian, BigInt64).
@@ -75,7 +77,7 @@ function DataViewProto_getBigInt64([byteOffset = Value.undefined, littleEndian =
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.getbiguint64 */
-function DataViewProto_getBigUint64([byteOffset = Value.undefined, littleEndian = Value.undefined], { thisValue }) {
+function DataViewProto_getBigUint64([byteOffset = Value.undefined, littleEndian = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let v be the this value.
   const v = thisValue;
   // 2. Return ? GetViewValue(v, byteOffset, littleEndian, BigUint64).
@@ -83,7 +85,7 @@ function DataViewProto_getBigUint64([byteOffset = Value.undefined, littleEndian 
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.getfloat32 */
-function DataViewProto_getFloat32([byteOffset = Value.undefined, littleEndian], { thisValue }) {
+function DataViewProto_getFloat32([byteOffset = Value.undefined, littleEndian]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const v = thisValue;
   if (littleEndian === undefined) {
     littleEndian = Value.false;
@@ -92,7 +94,7 @@ function DataViewProto_getFloat32([byteOffset = Value.undefined, littleEndian], 
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.getfloat64 */
-function DataViewProto_getFloat64([byteOffset = Value.undefined, littleEndian], { thisValue }) {
+function DataViewProto_getFloat64([byteOffset = Value.undefined, littleEndian]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const v = thisValue;
   if (littleEndian === undefined) {
     littleEndian = Value.false;
@@ -101,13 +103,13 @@ function DataViewProto_getFloat64([byteOffset = Value.undefined, littleEndian], 
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.getint8 */
-function DataViewProto_getInt8([byteOffset = Value.undefined], { thisValue }) {
+function DataViewProto_getInt8([byteOffset = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const v = thisValue;
   return Q(GetViewValue(v, byteOffset, Value.true, 'Int8'));
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.getint16 */
-function DataViewProto_getInt16([byteOffset = Value.undefined, littleEndian], { thisValue }) {
+function DataViewProto_getInt16([byteOffset = Value.undefined, littleEndian]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const v = thisValue;
   if (littleEndian === undefined) {
     littleEndian = Value.false;
@@ -116,7 +118,7 @@ function DataViewProto_getInt16([byteOffset = Value.undefined, littleEndian], { 
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.getint32 */
-function DataViewProto_getInt32([byteOffset = Value.undefined, littleEndian], { thisValue }) {
+function DataViewProto_getInt32([byteOffset = Value.undefined, littleEndian]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const v = thisValue;
   if (littleEndian === undefined) {
     littleEndian = Value.false;
@@ -125,13 +127,13 @@ function DataViewProto_getInt32([byteOffset = Value.undefined, littleEndian], { 
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.getuint8 */
-function DataViewProto_getUint8([byteOffset = Value.undefined], { thisValue }) {
+function DataViewProto_getUint8([byteOffset = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const v = thisValue;
   return Q(GetViewValue(v, byteOffset, Value.true, 'Uint8'));
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.getuint16 */
-function DataViewProto_getUint16([byteOffset = Value.undefined, littleEndian], { thisValue }) {
+function DataViewProto_getUint16([byteOffset = Value.undefined, littleEndian]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const v = thisValue;
   if (littleEndian === undefined) {
     littleEndian = Value.false;
@@ -140,7 +142,7 @@ function DataViewProto_getUint16([byteOffset = Value.undefined, littleEndian], {
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.getuint32 */
-function DataViewProto_getUint32([byteOffset = Value.undefined, littleEndian], { thisValue }) {
+function DataViewProto_getUint32([byteOffset = Value.undefined, littleEndian]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const v = thisValue;
   if (littleEndian === undefined) {
     littleEndian = Value.false;
@@ -149,7 +151,7 @@ function DataViewProto_getUint32([byteOffset = Value.undefined, littleEndian], {
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setbigint64 */
-function DataViewProto_setBigInt64([byteOffset = Value.undefined, value = Value.undefined, littleEndian], { thisValue }) {
+function DataViewProto_setBigInt64([byteOffset = Value.undefined, value = Value.undefined, littleEndian]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let v be the this value.
   const v = thisValue;
   // 2. If littleEndian is not present, set littleEndian to undefined.
@@ -161,7 +163,7 @@ function DataViewProto_setBigInt64([byteOffset = Value.undefined, value = Value.
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setbiguint64 */
-function DataViewProto_setBigUint64([byteOffset = Value.undefined, value = Value.undefined, littleEndian], { thisValue }) {
+function DataViewProto_setBigUint64([byteOffset = Value.undefined, value = Value.undefined, littleEndian]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let v be the this value.
   const v = thisValue;
   // 2. If littleEndian is not present, set littleEndian to undefined.
@@ -173,7 +175,7 @@ function DataViewProto_setBigUint64([byteOffset = Value.undefined, value = Value
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setfloat32 */
-function DataViewProto_setFloat32([byteOffset = Value.undefined, value = Value.undefined, littleEndian], { thisValue }) {
+function DataViewProto_setFloat32([byteOffset = Value.undefined, value = Value.undefined, littleEndian]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const v = thisValue;
   if (littleEndian === undefined) {
     littleEndian = Value.false;
@@ -182,7 +184,7 @@ function DataViewProto_setFloat32([byteOffset = Value.undefined, value = Value.u
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setfloat64 */
-function DataViewProto_setFloat64([byteOffset = Value.undefined, value = Value.undefined, littleEndian], { thisValue }) {
+function DataViewProto_setFloat64([byteOffset = Value.undefined, value = Value.undefined, littleEndian]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const v = thisValue;
   if (littleEndian === undefined) {
     littleEndian = Value.false;
@@ -191,13 +193,13 @@ function DataViewProto_setFloat64([byteOffset = Value.undefined, value = Value.u
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setint8 */
-function DataViewProto_setInt8([byteOffset = Value.undefined, value = Value.undefined], { thisValue }) {
+function DataViewProto_setInt8([byteOffset = Value.undefined, value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const v = thisValue;
   return Q(SetViewValue(v, byteOffset, Value.true, 'Int8', value));
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setint16 */
-function DataViewProto_setInt16([byteOffset = Value.undefined, value = Value.undefined, littleEndian], { thisValue }) {
+function DataViewProto_setInt16([byteOffset = Value.undefined, value = Value.undefined, littleEndian]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const v = thisValue;
   if (littleEndian === undefined) {
     littleEndian = Value.false;
@@ -206,7 +208,7 @@ function DataViewProto_setInt16([byteOffset = Value.undefined, value = Value.und
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setint32 */
-function DataViewProto_setInt32([byteOffset = Value.undefined, value = Value.undefined, littleEndian], { thisValue }) {
+function DataViewProto_setInt32([byteOffset = Value.undefined, value = Value.undefined, littleEndian]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const v = thisValue;
   if (littleEndian === undefined) {
     littleEndian = Value.false;
@@ -215,13 +217,13 @@ function DataViewProto_setInt32([byteOffset = Value.undefined, value = Value.und
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setuint8 */
-function DataViewProto_setUint8([byteOffset = Value.undefined, value = Value.undefined], { thisValue }) {
+function DataViewProto_setUint8([byteOffset = Value.undefined, value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const v = thisValue;
   return Q(SetViewValue(v, byteOffset, Value.true, 'Uint8', value));
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setuint16 */
-function DataViewProto_setUint16([byteOffset = Value.undefined, value = Value.undefined, littleEndian], { thisValue }) {
+function DataViewProto_setUint16([byteOffset = Value.undefined, value = Value.undefined, littleEndian]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const v = thisValue;
   if (littleEndian === undefined) {
     littleEndian = Value.false;
@@ -230,7 +232,7 @@ function DataViewProto_setUint16([byteOffset = Value.undefined, value = Value.un
 }
 
 /** https://tc39.es/ecma262/#sec-dataview.prototype.setuint32 */
-function DataViewProto_setUint32([byteOffset = Value.undefined, value = Value.undefined, littleEndian], { thisValue }) {
+function DataViewProto_setUint32([byteOffset = Value.undefined, value = Value.undefined, littleEndian]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   const v = thisValue;
   if (littleEndian === undefined) {
     littleEndian = Value.false;
@@ -238,7 +240,7 @@ function DataViewProto_setUint32([byteOffset = Value.undefined, value = Value.un
   return Q(SetViewValue(v, byteOffset, littleEndian, 'Uint32', value));
 }
 
-export function bootstrapDataViewPrototype(realmRec) {
+export function bootstrapDataViewPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['buffer', [DataViewProto_buffer]],
     ['byteLength', [DataViewProto_byteLength]],

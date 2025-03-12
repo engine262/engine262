@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import {
   Call,
@@ -9,15 +8,17 @@ import {
   IsCallable,
   IsConstructor,
   PrepareForTailCall,
+  Realm,
   ToPropertyDescriptor,
   ToPropertyKey,
+  type FunctionObject,
 } from '../abstract-ops/all.mts';
-import { ObjectValue, Value } from '../value.mts';
+import { ObjectValue, Value, type Arguments } from '../value.mts';
 import { Q } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-reflect.apply */
-function Reflect_apply([target = Value.undefined, thisArgument = Value.undefined, argumentsList = Value.undefined]) {
+function Reflect_apply([target = Value.undefined, thisArgument = Value.undefined, argumentsList = Value.undefined]: Arguments) {
   // 1. If IsCallable(target) is false, throw a TypeError exception.
   if (IsCallable(target) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', target);
@@ -31,7 +32,7 @@ function Reflect_apply([target = Value.undefined, thisArgument = Value.undefined
 }
 
 /** https://tc39.es/ecma262/#sec-reflect.construct */
-function Reflect_construct([target = Value.undefined, argumentsList = Value.undefined, newTarget]) {
+function Reflect_construct([target = Value.undefined, argumentsList = Value.undefined, newTarget]: Arguments) {
   // 1. If IsConstructor(target) is false, throw a TypeError exception.
   if (IsConstructor(target) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', target);
@@ -45,11 +46,11 @@ function Reflect_construct([target = Value.undefined, argumentsList = Value.unde
   // 4. Let args be ? CreateListFromArrayLike(argumentsList).
   const args = Q(CreateListFromArrayLike(argumentsList));
   // 5. Return ? Construct(target, args, newTarget).
-  return Q(Construct(target, args, newTarget));
+  return Q(Construct(target as FunctionObject, args, newTarget as FunctionObject));
 }
 
 /** https://tc39.es/ecma262/#sec-reflect.defineproperty */
-function Reflect_defineProperty([target = Value.undefined, propertyKey = Value.undefined, attributes = Value.undefined]) {
+function Reflect_defineProperty([target = Value.undefined, propertyKey = Value.undefined, attributes = Value.undefined]: Arguments) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
@@ -63,7 +64,7 @@ function Reflect_defineProperty([target = Value.undefined, propertyKey = Value.u
 }
 
 /** https://tc39.es/ecma262/#sec-reflect.deleteproperty */
-function Reflect_deleteProperty([target = Value.undefined, propertyKey = Value.undefined]) {
+function Reflect_deleteProperty([target = Value.undefined, propertyKey = Value.undefined]: Arguments) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
@@ -75,7 +76,7 @@ function Reflect_deleteProperty([target = Value.undefined, propertyKey = Value.u
 }
 
 /** https://tc39.es/ecma262/#sec-reflect.get */
-function Reflect_get([target = Value.undefined, propertyKey = Value.undefined, receiver]) {
+function Reflect_get([target = Value.undefined, propertyKey = Value.undefined, receiver]: Arguments) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
@@ -92,7 +93,7 @@ function Reflect_get([target = Value.undefined, propertyKey = Value.undefined, r
 }
 
 /** https://tc39.es/ecma262/#sec-reflect.getownpropertydescriptor */
-function Reflect_getOwnPropertyDescriptor([target = Value.undefined, propertyKey = Value.undefined]) {
+function Reflect_getOwnPropertyDescriptor([target = Value.undefined, propertyKey = Value.undefined]: Arguments) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
@@ -106,7 +107,7 @@ function Reflect_getOwnPropertyDescriptor([target = Value.undefined, propertyKey
 }
 
 /** https://tc39.es/ecma262/#sec-reflect.getprototypeof */
-function Reflect_getPrototypeOf([target = Value.undefined]) {
+function Reflect_getPrototypeOf([target = Value.undefined]: Arguments) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
@@ -116,7 +117,7 @@ function Reflect_getPrototypeOf([target = Value.undefined]) {
 }
 
 /** https://tc39.es/ecma262/#sec-reflect.has */
-function Reflect_has([target = Value.undefined, propertyKey = Value.undefined]) {
+function Reflect_has([target = Value.undefined, propertyKey = Value.undefined]: Arguments) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
@@ -128,7 +129,7 @@ function Reflect_has([target = Value.undefined, propertyKey = Value.undefined]) 
 }
 
 /** https://tc39.es/ecma262/#sec-reflect.isextensible */
-function Reflect_isExtensible([target = Value.undefined]) {
+function Reflect_isExtensible([target = Value.undefined]: Arguments) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
@@ -138,7 +139,7 @@ function Reflect_isExtensible([target = Value.undefined]) {
 }
 
 /** https://tc39.es/ecma262/#sec-reflect.ownkeys */
-function Reflect_ownKeys([target = Value.undefined]) {
+function Reflect_ownKeys([target = Value.undefined]: Arguments) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
@@ -150,7 +151,7 @@ function Reflect_ownKeys([target = Value.undefined]) {
 }
 
 /** https://tc39.es/ecma262/#sec-reflect.preventextensions */
-function Reflect_preventExtensions([target = Value.undefined]) {
+function Reflect_preventExtensions([target = Value.undefined]: Arguments) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
@@ -160,7 +161,7 @@ function Reflect_preventExtensions([target = Value.undefined]) {
 }
 
 /** https://tc39.es/ecma262/#sec-reflect.set */
-function Reflect_set([target = Value.undefined, propertyKey = Value.undefined, V = Value.undefined, receiver]) {
+function Reflect_set([target = Value.undefined, propertyKey = Value.undefined, V = Value.undefined, receiver]: Arguments) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
@@ -176,7 +177,7 @@ function Reflect_set([target = Value.undefined, propertyKey = Value.undefined, V
 }
 
 /** https://tc39.es/ecma262/#sec-reflect.setprototypeof */
-function Reflect_setPrototypeOf([target = Value.undefined, proto = Value.undefined]) {
+function Reflect_setPrototypeOf([target = Value.undefined, proto = Value.undefined]: Arguments) {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
@@ -189,7 +190,7 @@ function Reflect_setPrototypeOf([target = Value.undefined, proto = Value.undefin
   return Q(target.SetPrototypeOf(proto));
 }
 
-export function bootstrapReflect(realmRec) {
+export function bootstrapReflect(realmRec: Realm) {
   const reflect = bootstrapPrototype(realmRec, [
     ['apply', Reflect_apply, 3],
     ['construct', Reflect_construct, 2],

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   Descriptor,
   ObjectValue,
@@ -6,8 +5,12 @@ import {
   JSStringValue,
   UndefinedValue,
   Value,
+  type PropertyKeyValue,
+  type ObjectInternalMethods,
 } from '../value.mts';
 import { X } from '../completion.mts';
+import type { StringObject } from '../intrinsics/String.mts';
+import type { Mutable } from '../helpers.mts';
 import {
   Assert,
   CanonicalNumericIndexString,
@@ -24,89 +27,89 @@ import {
   F, R,
 } from './all.mts';
 
-function StringExoticGetOwnProperty(P) {
-  const S = this;
-  Assert(IsPropertyKey(P));
-  const desc = OrdinaryGetOwnProperty(S, P);
-  if (!(desc instanceof UndefinedValue)) {
-    return desc;
-  }
-  return X(StringGetOwnProperty(S, P));
-}
+const InternalMethods = {
+  GetOwnProperty(P) {
+    const S = this;
+    Assert(IsPropertyKey(P));
+    const desc = OrdinaryGetOwnProperty(S, P);
+    if (!(desc instanceof UndefinedValue)) {
+      return desc;
+    }
+    return X(StringGetOwnProperty(S, P));
+  },
+  DefineOwnProperty(P, Desc) {
+    const S = this;
+    Assert(IsPropertyKey(P));
+    const stringDesc = X(StringGetOwnProperty(S, P));
+    if (!(stringDesc instanceof UndefinedValue)) {
+      const extensible = S.Extensible;
+      return X(IsCompatiblePropertyDescriptor(extensible, Desc, stringDesc));
+    }
+    return X(OrdinaryDefineOwnProperty(S, P, Desc));
+  },
+  OwnPropertyKeys() {
+    const O = this;
+    const keys = [];
+    const str = O.StringData;
+    Assert(str instanceof JSStringValue);
+    const len = str.stringValue().length;
 
-function StringExoticDefineOwnProperty(P, Desc) {
-  const S = this;
-  Assert(IsPropertyKey(P));
-  const stringDesc = X(StringGetOwnProperty(S, P));
-  if (!(stringDesc instanceof UndefinedValue)) {
-    const extensible = S.Extensible;
-    return X(IsCompatiblePropertyDescriptor(extensible, Desc, stringDesc));
-  }
-  return X(OrdinaryDefineOwnProperty(S, P, Desc));
-}
+    // 5. For each non-negative integer i starting with 0 such that i < len, in ascending order, do
+    for (let i = 0; i < len; i += 1) {
+      // a. Add ! ToString(𝔽(i)) as the last element of keys.
+      keys.push(X(ToString(F(i))));
+    }
 
-function StringExoticOwnPropertyKeys() {
-  const O = this;
-  const keys = [];
-  const str = O.StringData;
-  Assert(str instanceof JSStringValue);
-  const len = str.stringValue().length;
+    // For each own property key P of O such that P is an array index and
+    // ToIntegerOrInfinity(P) ≥ len, in ascending numeric index order, do
+    //   Add P as the last element of keys.
+    for (const P of O.properties.keys()) {
+      // This is written with two nested ifs to work around https://github.com/devsnek/engine262/issues/24
+      if (isArrayIndex(P)) {
+        if (X(ToIntegerOrInfinity(P)) >= len) {
+          keys.push(P);
+        }
+      }
+    }
 
-  // 5. For each non-negative integer i starting with 0 such that i < len, in ascending order, do
-  for (let i = 0; i < len; i += 1) {
-    // a. Add ! ToString(𝔽(i)) as the last element of keys.
-    keys.push(X(ToString(F(i))));
-  }
-
-  // For each own property key P of O such that P is an array index and
-  // ToIntegerOrInfinity(P) ≥ len, in ascending numeric index order, do
-  //   Add P as the last element of keys.
-  for (const P of O.properties.keys()) {
-    // This is written with two nested ifs to work around https://github.com/devsnek/engine262/issues/24
-    if (isArrayIndex(P)) {
-      if (X(ToIntegerOrInfinity(P)) >= len) {
+    // For each own property key P of O such that Type(P) is String and
+    // P is not an array index, in ascending chronological order of property creation, do
+    //   Add P as the last element of keys.
+    for (const P of O.properties.keys()) {
+      if (P instanceof JSStringValue && isArrayIndex(P) === false) {
         keys.push(P);
       }
     }
-  }
 
-  // For each own property key P of O such that Type(P) is String and
-  // P is not an array index, in ascending chronological order of property creation, do
-  //   Add P as the last element of keys.
-  for (const P of O.properties.keys()) {
-    if (P instanceof JSStringValue && isArrayIndex(P) === false) {
-      keys.push(P);
+    // For each own property key P of O such that Type(P) is Symbol,
+    // in ascending chronological order of property creation, do
+    //   Add P as the last element of keys.
+    for (const P of O.properties.keys()) {
+      if (P instanceof SymbolValue) {
+        keys.push(P);
+      }
     }
-  }
 
-  // For each own property key P of O such that Type(P) is Symbol,
-  // in ascending chronological order of property creation, do
-  //   Add P as the last element of keys.
-  for (const P of O.properties.keys()) {
-    if (P instanceof SymbolValue) {
-      keys.push(P);
-    }
-  }
-
-  return keys;
-}
+    return keys;
+  },
+} satisfies Partial<ObjectInternalMethods<StringObject>>;
 
 /** https://tc39.es/ecma262/#sec-stringcreate */
-export function StringCreate(value, prototype) {
+export function StringCreate(value: JSStringValue, prototype: ObjectValue) {
   // 1. Assert: Type(value) is String.
   Assert(value instanceof JSStringValue);
   // 2. Let S be ! MakeBasicObject(« [[Prototype]], [[Extensible]], [[StringData]] »).
-  const S = X(MakeBasicObject(['Prototype', 'Extensible', 'StringData']));
+  const S = X(MakeBasicObject(['Prototype', 'Extensible', 'StringData'])) as Mutable<StringObject>;
   // 3. Set S.[[Prototype]] to prototype.
   S.Prototype = prototype;
   // 4. Set S.[[StringData]] to value.
   S.StringData = value;
   // 5. Set S.[[GetOwnProperty]] as specified in 9.4.3.1.
-  S.GetOwnProperty = StringExoticGetOwnProperty;
+  S.GetOwnProperty = InternalMethods.GetOwnProperty;
   // 6. Set S.[[DefineOwnProperty]] as specified in 9.4.3.2.
-  S.DefineOwnProperty = StringExoticDefineOwnProperty;
+  S.DefineOwnProperty = InternalMethods.DefineOwnProperty;
   // 7. Set S.[[OwnPropertyKeys]] as specified in 9.4.3.3.
-  S.OwnPropertyKeys = StringExoticOwnPropertyKeys;
+  S.OwnPropertyKeys = InternalMethods.OwnPropertyKeys;
   // 8. Let length be the number of code unit elements in value.
   const length = value.stringValue().length;
   // 9. Perform ! DefinePropertyOrThrow(S, "length", PropertyDescriptor { [[Value]]: length, [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: false }).
@@ -121,7 +124,7 @@ export function StringCreate(value, prototype) {
 }
 
 /** https://tc39.es/ecma262/#sec-stringgetownproperty */
-export function StringGetOwnProperty(S, P) {
+export function StringGetOwnProperty(S: ObjectValue, P: PropertyKeyValue) {
   Assert(S instanceof ObjectValue && 'StringData' in S);
   Assert(IsPropertyKey(P));
   if (!(P instanceof JSStringValue)) {

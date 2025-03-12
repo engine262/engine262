@@ -1,8 +1,7 @@
-// @ts-nocheck
 import {
   AbstractEqualityComparison,
   GetValue,
-  StrictEqualityComparison,
+  IsStrictlyEqual,
 } from '../abstract-ops/all.mts';
 import { ReturnIfAbrupt, Q, X } from '../completion.mts';
 import { Evaluate } from '../evaluator.mts';
@@ -43,11 +42,11 @@ export function* Evaluate_EqualityExpression({ EqualityExpression, operator, Rel
     }
     case '===':
       // 5. Return the result of performing Strict Equality Comparison rval === lval.
-      return StrictEqualityComparison(rval, lval);
+      return IsStrictlyEqual(rval, lval);
     case '!==': {
       // 5. Let r be the result of performing Strict Equality Comparison rval === lval.
       // 6. Assert: r is a normal completion.
-      const r = X(StrictEqualityComparison(rval, lval));
+      const r = X(IsStrictlyEqual(rval, lval));
       // 7. If r.[[Value]] is true, return false. Otherwise, return true.
       if (r === Value.true) {
         return Value.false;

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import {
   Call,
@@ -6,20 +5,25 @@ import {
   IsCallable,
   RequireInternalSlot,
   SameValueZero, R,
+  Realm,
 } from '../abstract-ops/all.mts';
 import {
+  Descriptor,
   NumberValue,
   Value,
   wellKnownSymbols,
+  type Arguments,
+  type FunctionCallContext,
 } from '../value.mts';
-import { Q, X } from '../completion.mts';
+import { Q, X, type ExpressionCompletion } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import { CreateSetIterator } from './SetIteratorPrototype.mts';
+import type { SetObject } from './Set.mts';
 
 /** https://tc39.es/ecma262/#sec-set.prototype.add */
-function SetProto_add([value = Value.undefined], { thisValue }) {
+function SetProto_add([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let S be the this value.
-  const S = thisValue;
+  const S = thisValue as SetObject;
   // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
   Q(RequireInternalSlot(S, 'SetData'));
   // 3. Let entries be the List that is S.[[SetData]].
@@ -37,20 +41,24 @@ function SetProto_add([value = Value.undefined], { thisValue }) {
     value = F(+0);
   }
   // 6. Append value as the last element of entries.
+  Q(surroundingAgent.debugger_tryTouchDuringPreview(S));
   entries.push(value);
   // 7. Return S.
   return S;
 }
 
 /** https://tc39.es/ecma262/#sec-set.prototype.clear */
-function SetProto_clear(args, { thisValue }) {
+function SetProto_clear(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let S be the this value.
-  const S = thisValue;
+  const S = thisValue as SetObject;
   // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
   Q(RequireInternalSlot(S, 'SetData'));
   // 3. Let entries be the List that is S.[[SetData]].
   const entries = S.SetData;
   // 4. For each e that is an element of entries, do
+  if (entries.length) {
+    Q(surroundingAgent.debugger_tryTouchDuringPreview(S));
+  }
   for (let i = 0; i < entries.length; i += 1) {
     // a. Replace the element of entries whose value is e with an element whose value is empty.
     entries[i] = undefined;
@@ -60,9 +68,9 @@ function SetProto_clear(args, { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-set.prototype.delete */
-function SetProto_delete([value = Value.undefined], { thisValue }) {
+function SetProto_delete([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let S be the this value.
-  const S = thisValue;
+  const S = thisValue as SetObject;
   // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
   Q(RequireInternalSlot(S, 'SetData'));
   // 3. Let entries be the List that is S.[[SetData]].
@@ -73,6 +81,7 @@ function SetProto_delete([value = Value.undefined], { thisValue }) {
     // a. If e is not empty and SameValueZero(e, value) is true, then
     if (e !== undefined && SameValueZero(e, value) === Value.true) {
       // i. Replace the element of entries whose value is e with an element whose value is empty.
+      Q(surroundingAgent.debugger_tryTouchDuringPreview(S));
       entries[i] = undefined;
       // ii. Return true.
       return Value.true;
@@ -83,7 +92,7 @@ function SetProto_delete([value = Value.undefined], { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-set.prototype.entries */
-function SetProto_entries(args, { thisValue }) {
+function SetProto_entries(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let S be the this value.
   const S = thisValue;
   // 2. Return ? CreateSetIterator(S, key+value).
@@ -91,9 +100,9 @@ function SetProto_entries(args, { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-set.prototype.foreach */
-function SetProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
+function SetProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let S be the this value.
-  const S = thisValue;
+  const S = thisValue as SetObject;
   // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
   Q(RequireInternalSlot(S, 'SetData'));
   // 3. If IsCallable(callbackfn) is false, throw a TypeError exception
@@ -115,9 +124,9 @@ function SetProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefin
 }
 
 /** https://tc39.es/ecma262/#sec-set.prototype.has */
-function SetProto_has([value = Value.undefined], { thisValue }) {
+function SetProto_has([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let S be the this value.
-  const S = thisValue;
+  const S = thisValue as SetObject;
   // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
   Q(RequireInternalSlot(S, 'SetData'));
   // 3. Let entries be the List that is S.[[SetData]].
@@ -134,9 +143,9 @@ function SetProto_has([value = Value.undefined], { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-get-set.prototype.size */
-function SetProto_sizeGetter(args, { thisValue }) {
+function SetProto_sizeGetter(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let S be the this value.
-  const S = thisValue;
+  const S = thisValue as SetObject;
   // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
   Q(RequireInternalSlot(S, 'SetData'));
   // 3. Let entries be the List that is S.[[SetData]].
@@ -155,14 +164,14 @@ function SetProto_sizeGetter(args, { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-set.prototype.values */
-function SetProto_values(args, { thisValue }) {
+function SetProto_values(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let S be the this value.
   const S = thisValue;
   // 2. Return ? CreateSetIterator(S, value).
   return Q(CreateSetIterator(S, 'value'));
 }
 
-export function bootstrapSetPrototype(realmRec) {
+export function bootstrapSetPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['add', SetProto_add, 1],
     ['clear', SetProto_clear, 0],
@@ -174,7 +183,7 @@ export function bootstrapSetPrototype(realmRec) {
     ['values', SetProto_values, 0],
   ], realmRec.Intrinsics['%Object.prototype%'], 'Set');
 
-  const valuesFunc = X(proto.GetOwnProperty(Value('values')));
+  const valuesFunc = X(proto.GetOwnProperty(Value('values'))) as Descriptor;
   X(proto.DefineOwnProperty(Value('keys'), valuesFunc));
   X(proto.DefineOwnProperty(wellKnownSymbols.iterator, valuesFunc));
 

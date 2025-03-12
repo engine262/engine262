@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import {
   BigIntValue,
@@ -9,6 +8,7 @@ import {
   ObjectValue,
   UndefinedValue,
   Value,
+  BooleanValue,
 } from '../value.mts';
 import { NormalCompletion, Q, X } from '../completion.mts';
 import {
@@ -19,26 +19,27 @@ import {
   IsCallable,
   OrdinaryObjectCreate,
   ToBoolean,
+  type FunctionObject,
 } from './all.mts';
 import { isNonNegativeInteger } from './data-types-and-values.mts';
 
 // #𝔽
 export function F(x: number): NumberValue {
   Assert(typeof x === 'number');
-  return new NumberValue(x);
+  return Value(x);
 }
 
 // #ℤ
 export function Z(x: bigint): BigIntValue {
   Assert(typeof x === 'bigint');
-  return new BigIntValue(x);
+  return Value(x);
 }
 
 // #ℝ
 export function R(x: NumberValue): number;
 export function R(x: BigIntValue): bigint;
 export function R(x: BigIntValue | NumberValue): bigint | number;
-export function R(x) {
+export function R(x: unknown) {
   if (x instanceof BigIntValue) {
     return x.bigintValue(); // eslint-disable-line @engine262/mathematical-value
   }
@@ -47,7 +48,7 @@ export function R(x) {
 }
 
 // 6.2.5.1 IsAccessorDescriptor
-export function IsAccessorDescriptor(Desc) {
+export function IsAccessorDescriptor(Desc: Descriptor | UndefinedValue): Desc is Descriptor & { Get: Value; Set: Value } {
   if (Desc instanceof UndefinedValue) {
     return false;
   }
@@ -60,7 +61,7 @@ export function IsAccessorDescriptor(Desc) {
 }
 
 // 6.2.5.2 IsDataDescriptor
-export function IsDataDescriptor(Desc) {
+export function IsDataDescriptor(Desc: Descriptor | UndefinedValue): Desc is Descriptor & { Value: Value; Writable: BooleanValue } {
   if (Desc instanceof UndefinedValue) {
     return false;
   }
@@ -73,7 +74,7 @@ export function IsDataDescriptor(Desc) {
 }
 
 // 6.2.5.3 IsGenericDescriptor
-export function IsGenericDescriptor(Desc) {
+export function IsGenericDescriptor(Desc: Descriptor | UndefinedValue) {
   if (Desc instanceof UndefinedValue) {
     return false;
   }
@@ -86,7 +87,7 @@ export function IsGenericDescriptor(Desc) {
 }
 
 /** https://tc39.es/ecma262/#sec-frompropertydescriptor */
-export function FromPropertyDescriptor(Desc) {
+export function FromPropertyDescriptor(Desc: Descriptor | UndefinedValue) {
   if (Desc instanceof UndefinedValue) {
     return Value.undefined;
   }
@@ -114,31 +115,31 @@ export function FromPropertyDescriptor(Desc) {
 }
 
 /** https://tc39.es/ecma262/#sec-topropertydescriptor */
-export function ToPropertyDescriptor(Obj) {
+export function ToPropertyDescriptor(Obj: Value) {
   if (!(Obj instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', Obj);
   }
 
-  const desc = Descriptor({});
+  let desc = Descriptor({});
   const hasEnumerable = Q(HasProperty(Obj, Value('enumerable')));
   if (hasEnumerable === Value.true) {
     const enumerable = ToBoolean(Q(Get(Obj, Value('enumerable'))));
-    desc.Enumerable = enumerable;
+    desc = Descriptor({ ...desc, Enumerable: enumerable });
   }
   const hasConfigurable = Q(HasProperty(Obj, Value('configurable')));
   if (hasConfigurable === Value.true) {
     const conf = ToBoolean(Q(Get(Obj, Value('configurable'))));
-    desc.Configurable = conf;
+    desc = Descriptor({ ...desc, Configurable: conf });
   }
   const hasValue = Q(HasProperty(Obj, Value('value')));
   if (hasValue === Value.true) {
     const value = Q(Get(Obj, Value('value')));
-    desc.Value = value;
+    desc = Descriptor({ ...desc, Value: value });
   }
   const hasWritable = Q(HasProperty(Obj, Value('writable')));
   if (hasWritable === Value.true) {
     const writable = ToBoolean(Q(Get(Obj, Value('writable'))));
-    desc.Writable = writable;
+    desc = Descriptor({ ...desc, Writable: writable });
   }
   const hasGet = Q(HasProperty(Obj, Value('get')));
   if (hasGet === Value.true) {
@@ -146,7 +147,7 @@ export function ToPropertyDescriptor(Obj) {
     if (IsCallable(getter) === Value.false && !(getter instanceof UndefinedValue)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', getter);
     }
-    desc.Get = getter;
+    desc = Descriptor({ ...desc, Get: getter as FunctionObject });
   }
   const hasSet = Q(HasProperty(Obj, Value('set')));
   if (hasSet === Value.true) {
@@ -154,7 +155,7 @@ export function ToPropertyDescriptor(Obj) {
     if (IsCallable(setter) === Value.false && !(setter instanceof UndefinedValue)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', setter);
     }
-    desc.Set = setter;
+    desc = Descriptor({ ...desc, Set: setter as FunctionObject });
   }
   if (desc.Get !== undefined || desc.Set !== undefined) {
     if (desc.Value !== undefined || desc.Writable !== undefined) {
@@ -165,7 +166,7 @@ export function ToPropertyDescriptor(Obj) {
 }
 
 /** https://tc39.es/ecma262/#sec-completepropertydescriptor */
-export function CompletePropertyDescriptor(Desc) {
+export function CompletePropertyDescriptor(Desc: Descriptor) {
   Assert(Desc instanceof Descriptor);
   const like = Descriptor({
     Value: Value.undefined,
@@ -177,30 +178,30 @@ export function CompletePropertyDescriptor(Desc) {
   });
   if (IsGenericDescriptor(Desc) || IsDataDescriptor(Desc)) {
     if (Desc.Value === undefined) {
-      Desc.Value = like.Value;
+      Desc = Descriptor({ ...Desc, Value: like.Value });
     }
     if (Desc.Writable === undefined) {
-      Desc.Writable = like.Writable;
+      Desc = Descriptor({ ...Desc, Writable: like.Writable });
     }
   } else {
     if (Desc.Get === undefined) {
-      Desc.Get = like.Get;
+      Desc = Descriptor({ ...Desc, Get: like.Get });
     }
     if (Desc.Set === undefined) {
-      Desc.Set = like.Set;
+      Desc = Descriptor({ ...Desc, Set: like.Set });
     }
   }
   if (Desc.Enumerable === undefined) {
-    Desc.Enumerable = like.Enumerable;
+    Desc = Descriptor({ ...Desc, Enumerable: like.Enumerable });
   }
   if (Desc.Configurable === undefined) {
-    Desc.Configurable = like.Configurable;
+    Desc = Descriptor({ ...Desc, Configurable: like.Configurable });
   }
   return Desc;
 }
 
 /** https://tc39.es/ecma262/#sec-createbytedatablock */
-export function CreateByteDataBlock(size) {
+export function CreateByteDataBlock(size: number) {
   Assert(isNonNegativeInteger(size));
   let db;
   try {
@@ -212,7 +213,7 @@ export function CreateByteDataBlock(size) {
 }
 
 /** https://tc39.es/ecma262/#sec-copydatablockbytes */
-export function CopyDataBlockBytes(toBlock, toIndex, fromBlock, fromIndex, count) {
+export function CopyDataBlockBytes(toBlock: DataBlock, toIndex: number, fromBlock: DataBlock, fromIndex: number, count: number) {
   Assert(fromBlock !== toBlock);
   Assert(fromBlock instanceof DataBlock || Type(fromBlock) === 'Shared Data Block');
   Assert(toBlock instanceof DataBlock || Type(toBlock) === 'Shared Data Block');

@@ -1,15 +1,21 @@
-// @ts-nocheck
 import {
   Await,
   Completion,
   NormalCompletion,
   Q, X,
   EnsureCompletion,
+  AbruptCompletion,
+  type ExpressionCompletion,
 } from '../completion.mts';
-import { surroundingAgent } from '../engine.mts';
-import { Value } from '../value.mts';
-import { Evaluate } from '../evaluator.mts';
-import { resume } from '../helpers.mts';
+import { ExecutionContext, surroundingAgent } from '../engine.mts';
+import {
+  JSStringValue, ObjectValue, UndefinedValue, Value,
+} from '../value.mts';
+import {
+  Evaluate, type YieldEvaluator,
+} from '../evaluator.mts';
+import { __ts_cast__, resume, type Mutable } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   Assert,
   AsyncGeneratorYield,
@@ -17,12 +23,18 @@ import {
   OrdinaryObjectCreate,
   RequireInternalSlot,
   SameValue,
+  type OrdinaryObject,
 } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-generator-objects */
+export interface GeneratorObject extends OrdinaryObject {
+  GeneratorState: 'suspendedStart' | 'suspendedYield' | 'executing' | 'completed' | UndefinedValue;
+  GeneratorContext: ExecutionContext | null;
+  readonly GeneratorBrand: JSStringValue | undefined;
+}
 
 /** https://tc39.es/ecma262/#sec-generatorstart */
-export function GeneratorStart(generator, generatorBody) {
+export function GeneratorStart(generator: GeneratorObject, generatorBody: ParseNode.GeneratorBody | (() => YieldEvaluator)): ExpressionCompletion {
   // 1. Assert: The value of generator.[[GeneratorState]] is undefined.
   Assert(generator.GeneratorState === Value.undefined);
   // 2. Let genContext be the running execution context.
@@ -31,7 +43,7 @@ export function GeneratorStart(generator, generatorBody) {
   genContext.Generator = generator;
   // 4. Set the code evaluation state of genContext such that when evaluation is resumed
   //    for that execution context the following steps will be performed:
-  genContext.codeEvaluationState = (function* resumer() {
+  genContext.codeEvaluationState = (function* resumer(): YieldEvaluator {
     // a. If generatorBody is a Parse Node, then
     //    i. Let result be the result of evaluating generatorBody.
     // b. Else,
@@ -53,7 +65,7 @@ export function GeneratorStart(generator, generatorBody) {
     // f. Once a generator enters the completed state it never leaves it and its
     //    associated execution context is never resumed. Any execution state associated
     //    with generator can be discarded at this point.
-    genContext.codeEvaluationState = null;
+    genContext.codeEvaluationState = undefined;
     // g. If result.[[Type]] is normal, let resultValue be undefined.
     let resultValue;
     if (result.Type === 'normal') {
@@ -65,7 +77,7 @@ export function GeneratorStart(generator, generatorBody) {
       // i. Assert: result.[[Type]] is throw.
       Assert(result.Type === 'throw');
       // ii. Return Completion(result).
-      return Completion(result);
+      return Q(result);
     }
     // j. Return CreateIterResultObject(resultValue, true).
     return X(CreateIterResultObject(resultValue, Value.true));
@@ -78,7 +90,7 @@ export function GeneratorStart(generator, generatorBody) {
   return NormalCompletion(Value.undefined);
 }
 
-export function generatorBrandToErrorMessageType(generatorBrand) {
+export function generatorBrandToErrorMessageType(generatorBrand: JSStringValue | undefined) {
   let expectedType;
   if (generatorBrand !== undefined) {
     expectedType = generatorBrand.stringValue();
@@ -93,11 +105,12 @@ export function generatorBrandToErrorMessageType(generatorBrand) {
 }
 
 /** https://tc39.es/ecma262/#sec-generatorvalidate */
-export function GeneratorValidate(generator, generatorBrand) {
+export function GeneratorValidate(generator: Value, generatorBrand: JSStringValue | undefined) {
   // 1. Perform ? RequireInternalSlot(generator, [[GeneratorState]]).
   Q(RequireInternalSlot(generator, 'GeneratorState'));
   // 2. Perform ? RequireInternalSlot(generator, [[GeneratorBrand]]).
   Q(RequireInternalSlot(generator, 'GeneratorBrand'));
+  __ts_cast__<GeneratorObject>(generator);
   // 3. If generator.[[GeneratorBrand]] is not the same value as generatorBrand, throw a TypeError exception.
   const brand = generator.GeneratorBrand;
   if (
@@ -125,9 +138,10 @@ export function GeneratorValidate(generator, generatorBrand) {
 }
 
 /** https://tc39.es/ecma262/#sec-generatorresume */
-export function GeneratorResume(generator, value, generatorBrand) {
+export function GeneratorResume(generator: Value, value: Value | void, generatorBrand: JSStringValue | undefined) {
   // 1. Let state be ? GeneratorValidate(generator, generatorBrand).
   const state = Q(GeneratorValidate(generator, generatorBrand));
+  __ts_cast__<GeneratorObject>(generator);
   // 2. If state is completed, return CreateIterResultObject(undefined, true).
   if (state === 'completed') {
     return X(CreateIterResultObject(Value.undefined, Value.true));
@@ -135,7 +149,7 @@ export function GeneratorResume(generator, value, generatorBrand) {
   // 3. Assert: state is either suspendedStart or suspendedYield.
   Assert(state === 'suspendedStart' || state === 'suspendedYield');
   // 4. Let genContext be generator.[[GeneratorContext]].
-  const genContext = generator.GeneratorContext;
+  const genContext = generator.GeneratorContext!;
   // 5. Let methodContext be the running execution context.
   // 6. Suspend methodContext.
   const methodContext = surroundingAgent.runningExecutionContext;
@@ -155,9 +169,10 @@ export function GeneratorResume(generator, value, generatorBrand) {
 }
 
 /** https://tc39.es/ecma262/#sec-generatorresumeabrupt */
-export function GeneratorResumeAbrupt(generator, abruptCompletion, generatorBrand) {
+export function GeneratorResumeAbrupt(generator: Value, abruptCompletion: AbruptCompletion, generatorBrand: JSStringValue | undefined) {
   // 1. Let state be ? GeneratorValidate(generator, generatorBrand).
   let state = Q(GeneratorValidate(generator, generatorBrand));
+  __ts_cast__<GeneratorObject>(generator);
   // 2. If state is suspendedStart, then
   if (state === 'suspendedStart') {
     // a. Set generator.[[GeneratorState]] to completed.
@@ -182,7 +197,7 @@ export function GeneratorResumeAbrupt(generator, abruptCompletion, generatorBran
   // 4. Assert: state is suspendedYield.
   Assert(state === 'suspendedYield');
   // 5. Let genContext be generator.[[GeneratorContext]].
-  const genContext = generator.GeneratorContext;
+  const genContext = generator.GeneratorContext!;
   // 6. Let methodContext be the running execution context.
   // 7. Suspend methodContext.
   const methodContext = surroundingAgent.runningExecutionContext;
@@ -202,7 +217,7 @@ export function GeneratorResumeAbrupt(generator, abruptCompletion, generatorBran
 }
 
 /** https://tc39.es/ecma262/#sec-getgeneratorkind */
-export function GetGeneratorKind() {
+export function GetGeneratorKind(): 'async' | 'sync' | 'non-generator' {
   // 1. Let genContext be the running execution context.
   const genContext = surroundingAgent.runningExecutionContext;
   // 2. If genContext does not have a Generator component, return non-generator.
@@ -220,14 +235,14 @@ export function GetGeneratorKind() {
 }
 
 /** https://tc39.es/ecma262/#sec-generatoryield */
-export function* GeneratorYield(iterNextObj) {
+export function* GeneratorYield(iterNextObj: ObjectValue): YieldEvaluator {
   // 1. Assert: iterNextObj is an Object that implements the IteratorResult interface.
   // 2. Let genContext be the running execution context.
   const genContext = surroundingAgent.runningExecutionContext;
   // 3. Assert: genContext is the execution context of a generator.
   Assert(genContext.Generator !== undefined);
   // 4. Let generator be the value of the Generator component of genContext.
-  const generator = genContext.Generator;
+  const generator = genContext.Generator as GeneratorObject;
   // 5. Assert: GetGeneratorKind is sync.
   Assert(GetGeneratorKind() === 'sync');
   // 6. Set generator.GeneratorState to suspendedYield.
@@ -237,14 +252,16 @@ export function* GeneratorYield(iterNextObj) {
   // 8. Set the code evaluation state of genContext such that when evaluation is resumed with
   //    a Completion resumptionValue the following steps will be performed:
   //      a. Return resumptionValue
-  const resumptionValue = yield NormalCompletion(iterNextObj);
+  const resumptionValue = yield iterNextObj;
   // 9. Return NormalCompletion(iterNextObj).
-  return resumptionValue;
+  // TODO
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return resumptionValue as any;
   // 10. NOTE: this returns to the evaluation of the operation that had most previously resumed evaluation of genContext.
 }
 
 /** https://tc39.es/ecma262/#sec-yield */
-export function* Yield(value) {
+export function* Yield(value: Value): YieldEvaluator {
   // 1. Let generatorKind be GetGeneratorKind().
   const generatorKind = GetGeneratorKind();
   // 2. If generatorKind is async, return ? AsyncGeneratorYield(? Await(value)).
@@ -256,13 +273,13 @@ export function* Yield(value) {
 }
 
 /** https://tc39.es/ecma262/#sec-createiteratorfromclosure */
-export function CreateIteratorFromClosure(closure, generatorBrand, generatorPrototype) {
+export function CreateIteratorFromClosure(closure: () => YieldEvaluator, generatorBrand: JSStringValue | undefined, generatorPrototype: ObjectValue) {
   Assert(typeof closure === 'function');
   // 1. NOTE: closure can contain uses of the Yield shorthand to yield an IteratorResult object.
   // 2. Let internalSlotsList be « [[GeneratorState]], [[GeneratorContext]], [[GeneratorBrand]] ».
   const internalSlotsList = ['GeneratorState', 'GeneratorContext', 'GeneratorBrand'];
   // 3. Let generator be ! OrdinaryObjectCreate(generatorPrototype, internalSlotsList).
-  const generator = X(OrdinaryObjectCreate(generatorPrototype, internalSlotsList));
+  const generator = X(OrdinaryObjectCreate(generatorPrototype, internalSlotsList)) as Mutable<GeneratorObject>;
   // 4. Set generator.[[GeneratorBrand]] to generatorBrand.
   generator.GeneratorBrand = generatorBrand;
   // 5. Set generator.[[GeneratorState]] to undefined.

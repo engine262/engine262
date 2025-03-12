@@ -1,10 +1,9 @@
-// @ts-nocheck
 import { Assert, RequireObjectCoercible, ToString } from '../abstract-ops/all.mts';
-import { Value } from '../value.mts';
-import { Q } from '../completion.mts';
+import { JSStringValue, Value } from '../value.mts';
+import { Q, type ExpressionCompletion } from '../completion.mts';
 
 /** https://tc39.es/ecma262/#sec-trimstring */
-export function TrimString(string, where) {
+export function TrimString(string: Value, where: 'start' | 'end' | 'start+end'): ExpressionCompletion<JSStringValue> {
   const str = Q(RequireObjectCoercible(string));
   const S = Q(ToString(str)).stringValue();
   let T;

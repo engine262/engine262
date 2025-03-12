@@ -106,7 +106,7 @@ module.exports = ({ types: t, template }) => {
     X: {
       template: template(`
       let ID = ARGUMENT;
-      Assert(!(ID instanceof AbruptCompletion), SOURCE + ' returned an abrupt completion');
+      Assert(!(ID instanceof AbruptCompletion), SOURCE + ' returned an abrupt completion', ID);
       /* c8 ignore if */
       if (ID instanceof Completion) {
         ID = ID.Value;

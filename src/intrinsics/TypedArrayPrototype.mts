@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   Assert,
   Call,
@@ -26,20 +25,28 @@ import {
   typedArrayInfoByName,
   typedArrayInfoByType,
   F, R,
+  Realm,
+  type FunctionObject,
+  type TypedArrayConstructorNames,
+  type ArrayBufferObject,
 } from '../abstract-ops/all.mts';
-import { Q, X } from '../completion.mts';
+import { Q, X, type ExpressionCompletion } from '../completion.mts';
 import { surroundingAgent } from '../engine.mts';
 import {
   BigIntValue,
-  Descriptor, JSStringValue, NumberValue, ObjectValue, Value, wellKnownSymbols,
+  Descriptor, JSStringValue, NumberValue, ObjectValue, UndefinedValue, Value, wellKnownSymbols,
+  type Arguments,
+  type FunctionCallContext,
 } from '../value.mts';
+import { __ts_cast__ } from '../helpers.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import { ArrayProto_sortBody, bootstrapArrayPrototypeShared } from './ArrayPrototypeShared.mts';
+import type { TypedArrayObject } from './TypedArray.mts';
 
 /** https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.buffer */
-function TypedArrayProto_buffer(args, { thisValue }) {
+function TypedArrayProto_buffer(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let O be the this value.
-  const O = thisValue;
+  const O = thisValue as TypedArrayObject;
   // 2. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
   Q(RequireInternalSlot(O, 'TypedArrayName'));
   // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
@@ -51,9 +58,9 @@ function TypedArrayProto_buffer(args, { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.bytelength */
-function TypedArrayProto_byteLength(args, { thisValue }) {
+function TypedArrayProto_byteLength(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let O be the this value.
-  const O = thisValue;
+  const O = thisValue as TypedArrayObject;
   // 2. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
   Q(RequireInternalSlot(O, 'TypedArrayName'));
   // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
@@ -61,7 +68,7 @@ function TypedArrayProto_byteLength(args, { thisValue }) {
   // 4. Let buffer be O.[[ViewedArrayBuffer]].
   const buffer = O.ViewedArrayBuffer;
   // 5. If IsDetachedBuffer(buffer) is true, return +0𝔽.
-  if (IsDetachedBuffer(buffer) === Value.true) {
+  if (IsDetachedBuffer(buffer as ArrayBufferObject) === Value.true) {
     return F(+0);
   }
   // 6. Let size be O.[[ByteLength]].
@@ -71,9 +78,9 @@ function TypedArrayProto_byteLength(args, { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.byteoffset */
-function TypedArrayProto_byteOffset(args, { thisValue }) {
+function TypedArrayProto_byteOffset(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let O be the this value.
-  const O = thisValue;
+  const O = thisValue as TypedArrayObject;
   // 2. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
   Q(RequireInternalSlot(O, 'TypedArrayName'));
   // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
@@ -81,7 +88,7 @@ function TypedArrayProto_byteOffset(args, { thisValue }) {
   // 4. Let buffer be O.[[ViewedArrayBuffer]].
   const buffer = O.ViewedArrayBuffer;
   // 5. If IsDetachedBuffer(buffer) is true, return +0𝔽.
-  if (IsDetachedBuffer(buffer) === Value.true) {
+  if (IsDetachedBuffer(buffer as ArrayBufferObject) === Value.true) {
     return F(+0);
   }
   // 6. Let offset be O.[[ByteOffset]].
@@ -91,9 +98,9 @@ function TypedArrayProto_byteOffset(args, { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.copywithin */
-function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.undefined, end = Value.undefined], { thisValue }) {
+function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let O be the this value.
-  const O = thisValue;
+  const O = thisValue as TypedArrayObject;
   // 2. Perform ? ValidateTypedArray(O).
   Q(ValidateTypedArray(O));
   // 3. Let len be O.[[ArrayLength]].
@@ -136,7 +143,7 @@ function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.und
   if (count > 0) {
     // a. NOTE: The copying must be performed in a manner that preserves the bit-level encoding of the source data.
     // b. Let buffer be O.[[ViewedArrayBuffer]].
-    const buffer = O.ViewedArrayBuffer;
+    const buffer = O.ViewedArrayBuffer as ArrayBufferObject;
     // c. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
     if (IsDetachedBuffer(buffer) === Value.true) {
       return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
@@ -144,7 +151,7 @@ function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.und
     // d. Let typedArrayName be the String value of O.[[TypedArrayName]].
     const typedArrayName = O.TypedArrayName.stringValue();
     // e. Let elementSize be the Element Size value specified in Table 61 for typedArrayName.
-    const elementSize = typedArrayInfoByName[typedArrayName].ElementSize;
+    const elementSize = typedArrayInfoByName[typedArrayName as TypedArrayConstructorNames].ElementSize;
     // f. Let byteOffset be O.[[ByteOffset].
     const byteOffset = O.ByteOffset;
     // g. Let toByteIndex be to × elementSize + byteOffset.
@@ -185,9 +192,9 @@ function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.und
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.entries */
-function TypedArrayProto_entries(args, { thisValue }) {
+function TypedArrayProto_entries(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let O be the this value.
-  const O = thisValue;
+  const O = thisValue as TypedArrayObject;
   // 2. Perform ? ValidateTypedArray(O).
   Q(ValidateTypedArray(O));
   // 3. Return CreateArrayIterator(O, key+value).
@@ -195,9 +202,9 @@ function TypedArrayProto_entries(args, { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.fill */
-function TypedArrayProto_fill([value = Value.undefined, start = Value.undefined, end = Value.undefined], { thisValue }) {
+function TypedArrayProto_fill([value = Value.undefined, start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let O be the this value.
-  const O = thisValue;
+  const O = thisValue as TypedArrayObject;
   // 2. Perform ? ValidateTypedArray(O).
   Q(ValidateTypedArray(O));
   // 3. Let len be O.[[ArrayLength]]
@@ -233,7 +240,7 @@ function TypedArrayProto_fill([value = Value.undefined, start = Value.undefined,
     final = Math.min(relativeEnd, len);
   }
   // 10. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(O.ViewedArrayBuffer) === Value.true) {
+  if (IsDetachedBuffer(O.ViewedArrayBuffer as ArrayBufferObject) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 11. Repeat, while k < final
@@ -250,9 +257,9 @@ function TypedArrayProto_fill([value = Value.undefined, start = Value.undefined,
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.filter */
-function TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
+function TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let O be the this value.
-  const O = thisValue;
+  const O = thisValue as TypedArrayObject;
   // 2. Perform ? ValidateTypedArray(O).
   Q(ValidateTypedArray(O));
   // 3. Let len be O.[[ArrayLength]].
@@ -301,9 +308,9 @@ function TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.u
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.keys */
-function TypedArrayProto_keys(args, { thisValue }) {
+function TypedArrayProto_keys(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let O be the this value.
-  const O = thisValue;
+  const O = thisValue as TypedArrayObject;
   // 2. Perform ? ValidateTypedArray(O).
   Q(ValidateTypedArray(O));
   // 3. Return CreateArrayIterator(O, key).
@@ -311,9 +318,9 @@ function TypedArrayProto_keys(args, { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.length */
-function TypedArrayProto_length(args, { thisValue }) {
+function TypedArrayProto_length(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let O be the this value.
-  const O = thisValue;
+  const O = thisValue as TypedArrayObject;
   // 2. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
   Q(RequireInternalSlot(O, 'TypedArrayName'));
   // 3. Assert: O has [[ViewedArrayBuffer]] and [[ArrayLength]] internal slots.
@@ -321,7 +328,7 @@ function TypedArrayProto_length(args, { thisValue }) {
   // 4. Let buffer be O.[[ViewedArrayBuffer]].
   const buffer = O.ViewedArrayBuffer;
   // 5. If IsDetachedBuffer(buffer) is true, return +0𝔽.
-  if (IsDetachedBuffer(buffer) === Value.true) {
+  if (IsDetachedBuffer(buffer as ArrayBufferObject) === Value.true) {
     return F(+0);
   }
   // 6. Let length be O.[[ArrayLength]].
@@ -331,9 +338,9 @@ function TypedArrayProto_length(args, { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.map */
-function TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
+function TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let O be the this value.
-  const O = thisValue;
+  const O = thisValue as TypedArrayObject;
   // 2. Perform ? ValidateTypedArray(O).
   Q(ValidateTypedArray(O));
   // 3. Let len be O.[[ArrayLength]].
@@ -364,9 +371,9 @@ function TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.unde
 }
 
 /** https://tc39.es/ecma262/#sec-settypedarrayfromtypedarray */
-function SetTypedArrayFromTypedArray(target, targetOffset, source) {
+function SetTypedArrayFromTypedArray(target: TypedArrayObject, targetOffset: number, source: TypedArrayObject) {
   // 1. Let targetBuffer be target.[[ViewedArrayBuffer]].
-  const targetBuffer = target.ViewedArrayBuffer;
+  const targetBuffer = target.ViewedArrayBuffer as ArrayBufferObject;
   // 2. If IsDetachedBuffer(targetBuffer) is true, throw a TypeError exception.
   if (IsDetachedBuffer(targetBuffer) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
@@ -374,19 +381,19 @@ function SetTypedArrayFromTypedArray(target, targetOffset, source) {
   // 3. Let targetLength be target.[[ArrayLength]].
   const targetLength = target.ArrayLength;
   // 4. Let srcBuffer be source.[[ViewedArrayBuffer]].
-  let srcBuffer = source.ViewedArrayBuffer;
+  let srcBuffer = source.ViewedArrayBuffer as ArrayBufferObject;
   // 5. If IsDetachedBuffer(srcBuffer) is true, throw a TypeError exception.
   if (IsDetachedBuffer(srcBuffer) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
-  const targetName = target.TypedArrayName.stringValue();
+  const targetName = target.TypedArrayName.stringValue() as TypedArrayConstructorNames;
   // 6. Let targetType be the Element Type value in Table 61 for targetName.
   const targetType = typedArrayInfoByName[targetName].ElementType;
   // 7. Let targetElementSize be the Element Size value specified in Table 61 for targetName.
   const targetElementSize = typedArrayInfoByName[targetName].ElementSize;
   // 8. Let targetByteOffset be target.[[ByteOffset]].
   const targetByteOffset = target.ByteOffset;
-  const srcName = source.TypedArrayName.stringValue();
+  const srcName = source.TypedArrayName.stringValue() as TypedArrayConstructorNames;
   // 9. Let srcType be the Element Type value in Table 61 for srcName.
   const srcType = typedArrayInfoByName[srcName].ElementType;
   // 10. Let srcElementSize be the Element Size value specified in Table 61 for srcName.
@@ -420,7 +427,7 @@ function SetTypedArrayFromTypedArray(target, targetOffset, source) {
     // a. Let srcByteLength be source.[[ByteLength]].
     const srcByteLength = source.ByteLength;
     // b. Set srcBuffer to ? CloneArrayBuffer(srcBuffer, srcByteOffset, srcByteLength, %ArrayBuffer%).
-    srcBuffer = Q(CloneArrayBuffer(srcBuffer, srcByteOffset, srcByteLength, surroundingAgent.intrinsic('%ArrayBuffer%')));
+    srcBuffer = Q(CloneArrayBuffer(srcBuffer, srcByteOffset, srcByteLength, surroundingAgent.intrinsic('%ArrayBuffer%') as FunctionObject));
     // c. Let srcByteIndex be 0.
     srcByteIndex = 0;
   } else { // 19. Else, let srcByteIndex be srcByteOffset.
@@ -458,12 +465,13 @@ function SetTypedArrayFromTypedArray(target, targetOffset, source) {
     }
   }
   // 24. Return unused.
+  return undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-settypedarrayfromarraylike */
-function SetTypedArrayFromArrayLike(target, targetOffset, source) {
+function SetTypedArrayFromArrayLike(target: TypedArrayObject, targetOffset: number, source: Value) {
   // 1. Let targetBuffer be target.[[ViewedArrayBuffer]].
-  const targetBuffer = target.ViewedArrayBuffer;
+  const targetBuffer = target.ViewedArrayBuffer as ArrayBufferObject;
   // 2. If IsDetachedBuffer(targetBuffer) is true, throw a TypeError exception.
   if (IsDetachedBuffer(targetBuffer) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
@@ -498,12 +506,13 @@ function SetTypedArrayFromArrayLike(target, targetOffset, source) {
     k += 1;
   }
   // 10. Return unused.
+  return undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.set-overloaded-offset */
-function TypedArrayProto_set([source = Value.undefined, offset = Value.undefined], { thisValue }) {
+function TypedArrayProto_set([source = Value.undefined, offset = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let target be the this value.
-  const target = thisValue;
+  const target = thisValue as TypedArrayObject;
   // 2. Perform ? RequireInternalSlot(target, [[TypedArrayName]]).
   Q(RequireInternalSlot(target, 'TypedArrayName'));
   // 3. Assert: target has a [[ViewedArrayBuffer]] internal slot.
@@ -517,7 +526,7 @@ function TypedArrayProto_set([source = Value.undefined, offset = Value.undefined
   // 6. If source is an Object that has a [[TypedArrayName]] internal slot, then
   if (source instanceof ObjectValue && 'TypedArrayName' in source) {
     // a. Perform ? SetTypedArrayFromTypedArray(target, targetOffset, source).
-    Q(SetTypedArrayFromTypedArray(target, targetOffset, source));
+    Q(SetTypedArrayFromTypedArray(target, targetOffset, source as TypedArrayObject));
   } else { // 7. Else,
     // a. Perform ? SetTypedArrayFromArrayLike(target, targetOffset, source).
     Q(SetTypedArrayFromArrayLike(target, targetOffset, source));
@@ -527,9 +536,9 @@ function TypedArrayProto_set([source = Value.undefined, offset = Value.undefined
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.slice */
-function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined], { thisValue }) {
+function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let O be the this value.
-  const O = thisValue;
+  const O = thisValue as TypedArrayObject;
   // 2. Perform ? ValidateTypedArray(O).
   Q(ValidateTypedArray(O));
   // 3. Let len be O.[[ArrayLength]].
@@ -560,19 +569,19 @@ function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined],
   // 8. Let count be max(final - k, 0).
   const count = Math.max(final - k, 0);
   // 9. Let A be ? TypedArraySpeciesCreate(O, « 𝔽(count) »).
-  const A = Q(TypedArraySpeciesCreate(O, [F(count)]));
+  const A = Q(TypedArraySpeciesCreate(O, [F(count)])) as TypedArrayObject;
   // 10. If count > 0, then
   if (count > 0) {
     // a. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
-    if (IsDetachedBuffer(O.ViewedArrayBuffer) === Value.true) {
+    if (IsDetachedBuffer(O.ViewedArrayBuffer as ArrayBufferObject) === Value.true) {
       return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
     }
     // b. Let srcName be the String value of O.[[TypedArrayName]].
     const srcName = O.TypedArrayName.stringValue();
     // c. Let srcType be the Element Type value in Table 61 for srcName.
-    const srcType = typedArrayInfoByName[srcName].ElementType;
+    const srcType = typedArrayInfoByName[srcName as TypedArrayConstructorNames].ElementType;
     // d. Let targetName be the String value of A.[[TypedArrayName]].
-    const targetName = A.TypedArrayName.stringValue();
+    const targetName = A.TypedArrayName.stringValue() as TypedArrayConstructorNames;
     // e. Let targetType be the Element Type value in Table 61 for targetName.
     const targetType = typedArrayInfoByName[targetName].ElementType;
     // f. If srcType is different from targetType, then
@@ -594,9 +603,9 @@ function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined],
       }
     } else { // g. Else,
       // i. Let srcBuffer be O.[[ViewedArrayBuffer]].
-      const srcBuffer = O.ViewedArrayBuffer;
+      const srcBuffer = O.ViewedArrayBuffer as ArrayBufferObject;
       // ii. Let targetBuffer be A.[[ViewedArrayBuffer]].
-      const targetBuffer = A.ViewedArrayBuffer;
+      const targetBuffer = A.ViewedArrayBuffer as ArrayBufferObject;
       // iii. Let elementSize be the Element Size value specified in Table 61 for Element Type srcType.
       const elementSize = typedArrayInfoByType[srcType].ElementSize;
       // iv. NOTE: If srcType and targetType are the same, the transfer must be performed in a manner that preserves the bit-level encoding of the source data.
@@ -626,22 +635,22 @@ function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined],
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.sort */
-function TypedArrayProto_sort([comparefn = Value.undefined], { thisValue }) {
+function TypedArrayProto_sort([comparefn = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. If comparefn is not undefined and IsCallable(comparefn) is false, throw a TypeError exception.
   if (comparefn !== Value.undefined && IsCallable(comparefn) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', comparefn);
   }
   // 2. Let obj be the this value.
-  const obj = Q(ToObject(thisValue));
+  const obj = Q(ToObject(thisValue)) as TypedArrayObject;
   // 3. Perform ? ValidateTypedArray(obj).
   Q(ValidateTypedArray(obj));
   // 4. Let len be obj.[[ArrayLength]].
   const len = obj.ArrayLength;
 
-  return ArrayProto_sortBody(obj, len, (x, y) => TypedArraySortCompare(x, y, comparefn), true);
+  return ArrayProto_sortBody(obj, len, (x, y) => TypedArraySortCompare(x as NumberValue | BigIntValue, y as NumberValue | BigIntValue, comparefn as FunctionObject), true);
 }
 
-function TypedArraySortCompare(x, y, comparefn) {
+function TypedArraySortCompare(x: NumberValue | BigIntValue, y: NumberValue | BigIntValue, comparefn: FunctionObject | UndefinedValue): ExpressionCompletion<NumberValue> {
   // 1. Assert: Both Type(x) and Type(y) are Number or both are BigInt.
   Assert((x instanceof NumberValue && y instanceof NumberValue)
          || (x instanceof BigIntValue && y instanceof BigIntValue));
@@ -668,22 +677,22 @@ function TypedArraySortCompare(x, y, comparefn) {
   if (y.isNaN()) {
     return F(-1);
   }
-  x = x.numberValue ? R(x) : R(x);
-  y = y.numberValue ? R(y) : R(y);
+  const x_ = R(x);
+  const y_ = R(y);
   // 6. If x < y, return -1𝔽.
-  if (x < y) {
+  if (x_ < y_) {
     return F(-1);
   }
   // 7. If x > y, return 1𝔽.
-  if (x > y) {
+  if (x_ > y_) {
     return F(1);
   }
   // 8. If x is -0𝔽 and y is +0𝔽, return -1𝔽.
-  if (Object.is(x, -0) && Object.is(y, +0)) {
+  if (Object.is(x_, -0) && Object.is(y_, +0)) {
     return F(-1);
   }
   // 9. If x is +0𝔽 and y is -0𝔽, return 1𝔽.
-  if (Object.is(x, +0) && Object.is(y, -0)) {
+  if (Object.is(x_, +0) && Object.is(y_, -0)) {
     return F(1);
   }
   // 10. Return +0𝔽.
@@ -691,9 +700,9 @@ function TypedArraySortCompare(x, y, comparefn) {
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.subarray */
-function TypedArrayProto_subarray([begin = Value.undefined, end = Value.undefined], { thisValue }) {
+function TypedArrayProto_subarray([begin = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let O be the this value.
-  const O = thisValue;
+  const O = thisValue as TypedArrayObject;
   // 2. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
   Q(RequireInternalSlot(O, 'TypedArrayName'));
   // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
@@ -728,7 +737,7 @@ function TypedArrayProto_subarray([begin = Value.undefined, end = Value.undefine
   // 10. Let newLength be max(endIndex - beginIndex, 0).
   const newLength = Math.max(endIndex - beginIndex, 0);
   // 11. Let constructorName be the String value of O.[[TypedArrayName]].
-  const constructorName = O.TypedArrayName.stringValue();
+  const constructorName = O.TypedArrayName.stringValue() as TypedArrayConstructorNames;
   // 12. Let elementSize be the Element Size value specified in Table 61 for constructorName.
   const elementSize = typedArrayInfoByName[constructorName].ElementSize;
   // 13. Let srcByteOffset be O.[[ByteOffset]].
@@ -742,9 +751,9 @@ function TypedArrayProto_subarray([begin = Value.undefined, end = Value.undefine
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.values */
-function TypedArrayProto_values(args, { thisValue }) {
+function TypedArrayProto_values(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let o be the this value.
-  const O = thisValue;
+  const O = thisValue as TypedArrayObject;
   // 2. Perform ? ValidateTypedArray(O).
   Q(ValidateTypedArray(O));
   // Return CreateArrayIterator(O, value).
@@ -752,9 +761,9 @@ function TypedArrayProto_values(args, { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-get-%typedarray%.prototype-@@tostringtag */
-function TypedArrayProto_toStringTag(args, { thisValue }) {
+function TypedArrayProto_toStringTag(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let O be the this value.
-  const O = thisValue;
+  const O = thisValue as TypedArrayObject;
   // 2. If Type(O) is not Object, return undefined.
   if (!(O instanceof ObjectValue)) {
     return Value.undefined;
@@ -772,9 +781,9 @@ function TypedArrayProto_toStringTag(args, { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.at */
-function TypedArrayProto_at([index = Value.undefined], { thisValue }) {
+function TypedArrayProto_at([index = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let O be the this value.
-  const O = thisValue;
+  const O = thisValue as TypedArrayObject;
   // 2. Perform ? ValidateTypedArray(O).
   Q(ValidateTypedArray(O));
   // 3. Let len be O.[[ArrayLength]].
@@ -798,7 +807,7 @@ function TypedArrayProto_at([index = Value.undefined], { thisValue }) {
   return Q(Get(O, X(ToString(F(k)))));
 }
 
-export function bootstrapTypedArrayPrototype(realmRec) {
+export function bootstrapTypedArrayPrototype(realmRec: Realm) {
   const ArrayProto_toString = X(Get(realmRec.Intrinsics['%Array.prototype%'], Value('toString')));
   Assert(ArrayProto_toString instanceof ObjectValue);
 
@@ -826,10 +835,8 @@ export function bootstrapTypedArrayPrototype(realmRec) {
   bootstrapArrayPrototypeShared(
     realmRec,
     proto,
-    (thisValue) => {
-      Q(ValidateTypedArray(thisValue));
-    },
-    (O) => O.ArrayLength,
+    (thisValue) => ValidateTypedArray(thisValue),
+    (O) => (O as TypedArrayObject).ArrayLength,
   );
 
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype-@@iterator */

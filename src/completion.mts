@@ -5,41 +5,45 @@ import {
   PerformPromiseThen,
   PromiseCapabilityRecord,
   PromiseResolve,
-  type PromiseObjectValue,
+  type IteratorRecord,
 } from './abstract-ops/all.mts';
-import { JSStringValue, ObjectValue, Value } from './value.mts';
+import {
+  JSStringValue, ObjectValue, Value, type Arguments,
+} from './value.mts';
 import {
   callable,
   kAsyncContext,
   OutOfRange,
   resume,
 } from './helpers.mts';
+import type { PromiseObject } from './intrinsics/Promise.mts';
+import type { Evaluator } from './evaluator.mts';
 
 let createNormalCompletion: <T>(init: NormalCompletionInit<T>) => NormalCompletionImpl<T>;
-let createBreakCompletion: <T>(init: BreakCompletionInit<T>) => BreakCompletion<T>;
-let createContinueCompletion: <T>(init: ContinueCompletionInit<T>) => ContinueCompletion<T>;
+let createBreakCompletion: (init: BreakCompletionInit) => BreakCompletion;
+let createContinueCompletion: (init: ContinueCompletionInit) => ContinueCompletion;
 let createReturnCompletion: (init: ReturnCompletionInit) => ReturnCompletion;
 let createThrowCompletion: (init: ThrowCompletionInit) => ThrowCompletionImpl;
 
 type NormalCompletionInit<T> = Pick<NormalCompletion<T>, 'Type' | 'Value' | 'Target'>;
 
-type BreakCompletionInit<T> = Pick<BreakCompletion<T>, 'Type' | 'Value' | 'Target'>;
+type BreakCompletionInit = Pick<BreakCompletion, 'Type' | 'Value' | 'Target'>;
 
-type ContinueCompletionInit<T> = Pick<ContinueCompletion<T>, 'Type' | 'Value' | 'Target'>;
+type ContinueCompletionInit = Pick<ContinueCompletion, 'Type' | 'Value' | 'Target'>;
 
 type ReturnCompletionInit = Pick<ReturnCompletion, 'Type' | 'Value' | 'Target'>;
 
 type ThrowCompletionInit = Pick<ThrowCompletion, 'Type' | 'Value' | 'Target'>;
 
-type AbruptCompletionInit<T> =
-  | BreakCompletionInit<T>
-  | ContinueCompletionInit<T>
+type AbruptCompletionInit =
+  | BreakCompletionInit
+  | ContinueCompletionInit
   | ReturnCompletionInit
   | ThrowCompletionInit;
 
 type CompletionInit<T> =
   | NormalCompletionInit<T>
-  | AbruptCompletionInit<T>;
+  | AbruptCompletionInit;
 
 @callable((_target, _thisArg, [completionRecord]) => {
   // 1. Assert: completionRecord is a Completion Record.
@@ -60,9 +64,9 @@ class CompletionImpl<const T> {
         case 'normal':
           return createNormalCompletion(init);
         case 'break':
-          return createBreakCompletion(init);
+          return createBreakCompletion(init) as CompletionImpl<T>;
         case 'continue':
-          return createContinueCompletion(init);
+          return createContinueCompletion(init) as CompletionImpl<T>;
         case 'return':
           return createReturnCompletion(init) as CompletionImpl<T>;
         case 'throw':
@@ -74,7 +78,7 @@ class CompletionImpl<const T> {
 
     const { Type, Value, Target } = init;
     Assert(new.target.prototype.Type === Type);
-    this.Value = Value;
+    this.Value = Value as T;
     this.Target = Target;
   }
 
@@ -89,9 +93,21 @@ class CompletionImpl<const T> {
 }
 
 /** https://tc39.es/ecma262/#sec-completion-record-specification-type */
-export type Completion<T = unknown> =
+export type Completion<T> =
   | NormalCompletion<T>
   | AbruptCompletion<T>;
+
+/**
+ * A NON-SPEC shorthand to notate "returns either a normal completion containing an ECMAScript language value or a throw completion".
+ */
+export type ExpressionCompletion<T extends Value = Value> = T | NormalCompletion<T> | ThrowCompletion;
+/**
+ * A NON-SPEC shorthand to notate "returns either a normal completion containing ... or a throw completion".
+ *
+ * If the T is an ECMAScript language value, use ExpressionCompletion<T>.
+ */
+export type PlainCompletion<T> = T | NormalCompletion<T> | ThrowCompletion;
+export type YieldCompletion = NormalCompletion<Value> | ThrowCompletion | ReturnCompletion;
 
 /** https://tc39.es/ecma262/#sec-completion-ao */
 export const Completion = CompletionImpl as {
@@ -100,10 +116,10 @@ export const Completion = CompletionImpl as {
 
   /** https://tc39.es/ecma262/#sec-completion-record-specification-type */
   new <const T>(completion: { Type: 'normal', Value: T, Target: undefined }): NormalCompletion<T>;
-  new <const T>(completion: { Type: 'break', Value: T, Target: JSStringValue | undefined }): BreakCompletion<T>;
-  new <const T>(completion: { Type: 'continue', Value: T, Target: JSStringValue | undefined }): ContinueCompletion<T>;
-  new (completion: { Type: 'return', Value: Value, Target: undefined }): ReturnCompletion;
-  new (completion: { Type: 'throw', Value: Value, Target: undefined }): ThrowCompletion;
+  new(completion: { Type: 'break', Value: void, Target: JSStringValue | undefined }): BreakCompletion;
+  new(completion: { Type: 'continue', Value: void, Target: JSStringValue | undefined }): ContinueCompletion;
+  new(completion: { Type: 'return', Value: Value, Target: undefined }): ReturnCompletion;
+  new(completion: { Type: 'throw', Value: Value, Target: undefined }): ThrowCompletion;
   readonly prototype: CompletionImpl<unknown>;
 };
 
@@ -142,8 +158,8 @@ export const NormalCompletion = NormalCompletionImpl as typeof NormalCompletionI
 export type AbruptCompletion<T = unknown> =
   | ThrowCompletion
   | ReturnCompletion
-  | BreakCompletion<T>
-  | ContinueCompletion<T>;
+  | BreakCompletion
+  | ContinueCompletion;
 
 /** https://tc39.es/ecma262/#sec-completion-record-specification-type */
 export const AbruptCompletion = (() => {
@@ -154,7 +170,7 @@ export const AbruptCompletion = (() => {
 
     declare readonly Target: JSStringValue | undefined;
 
-    constructor(init: AbruptCompletionInit<T>) { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
+    constructor(init: AbruptCompletionInit) { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
       super(init);
     }
 
@@ -167,12 +183,12 @@ export const AbruptCompletion = (() => {
 })();
 
 /** https://tc39.es/ecma262/#sec-completion-record-specification-type */
-export class BreakCompletion<const T> extends AbruptCompletion<T> {
+export class BreakCompletion extends AbruptCompletion<void> {
   declare readonly Type: 'break';
 
-  declare readonly Value: T;
+  declare readonly Value: void;
 
-  private constructor(init: BreakCompletionInit<T>) { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
+  private constructor(init: BreakCompletionInit) { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
     super(init);
   }
 
@@ -184,14 +200,14 @@ export class BreakCompletion<const T> extends AbruptCompletion<T> {
 }
 
 /** https://tc39.es/ecma262/#sec-completion-record-specification-type */
-export class ContinueCompletion<const T> extends AbruptCompletion<T> {
+export class ContinueCompletion extends AbruptCompletion<void> {
   declare readonly Type: 'continue';
 
-  declare readonly Value: T;
+  declare readonly Value: void;
 
   declare readonly Target: JSStringValue | undefined;
 
-  private constructor(init: ContinueCompletionInit<T>) { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
+  private constructor(init: ContinueCompletionInit) { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
     super(init);
   }
 
@@ -221,6 +237,7 @@ export class ReturnCompletion extends AbruptCompletion<Value> {
   }
 }
 
+const debugging = false;
 @callable((_target, _thisArg, [value]) => {
   Assert(value instanceof Value);
   // 1. Return Completion { [[Type]]: throw, [[Value]]: value, [[Target]]: empty }.
@@ -233,8 +250,13 @@ class ThrowCompletionImpl extends AbruptCompletion<Value> {
 
   declare readonly Target: undefined;
 
+  readonly stack = debugging ? new Error() : undefined;
+
   private constructor(init: Pick<ThrowCompletionImpl, 'Type' | 'Value' | 'Target'>) { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
     super(init);
+    if (debugging) {
+      Error.stackTraceLimit = Infinity;
+    }
   }
 
   static {
@@ -256,15 +278,15 @@ export const ThrowCompletion = ThrowCompletionImpl as typeof ThrowCompletionImpl
 /** https://tc39.es/ecma262/#sec-updateempty */
 export type UpdateEmpty<T extends Completion<unknown>, U> =
   T extends NormalCompletion<infer V> ? NormalCompletion<V extends undefined ? U : V> :
-  T extends BreakCompletion<infer V> ? BreakCompletion<V extends undefined ? U : V> :
-  T extends ContinueCompletion<infer V> ? ContinueCompletion<V extends undefined ? U : V> :
+  T extends BreakCompletion ? BreakCompletion :
+  T extends ContinueCompletion ? ContinueCompletion :
   T extends AbruptCompletion ? T :
   T extends ReturnCompletion ? T :
   never;
 
 /** https://tc39.es/ecma262/#sec-updateempty */
-export function UpdateEmpty<C extends Completion, const T>(completionRecord: C, value: T): UpdateEmpty<C, T>;
-export function UpdateEmpty<C extends Completion, const T>(completionRecord: C, value: T) {
+export function UpdateEmpty<C extends Completion<unknown>, const T>(completionRecord: C, value: T): UpdateEmpty<C, T>;
+export function UpdateEmpty<C extends Completion<unknown>, const T>(completionRecord: C, value: T) {
   // 1. Assert: If completionRecord.[[Type]] is either return or throw, then completionRecord.[[Value]] is not empty.
   Assert(!(completionRecord.Type === 'return' || completionRecord.Type === 'throw') || completionRecord.Value !== undefined);
   // 2. If completionRecord.[[Value]] is not empty, return Completion(completionRecord).
@@ -290,6 +312,14 @@ export function ReturnIfAbrupt<const T>(_completion: T): ReturnIfAbrupt<T> {
   throw new TypeError('ReturnIfAbrupt requires build');
 }
 
+function ReturnIfAbruptRuntime<const T>(completion: T): ReturnIfAbrupt<T> {
+  const c = EnsureCompletion(completion);
+  if (c.Type === 'normal') {
+    return c.Value as ReturnIfAbrupt<T>;
+  }
+  throw c;
+}
+
 export { ReturnIfAbrupt as Q };
 
 /** https://tc39.es/ecma262/#sec-returnifabrupt-shorthands ! OperationName() */
@@ -298,25 +328,55 @@ export function X<const T>(_completion: T): ReturnIfAbrupt<T> {
   throw new TypeError('X() requires build');
 }
 
+export function XRuntime<const T>(completion: T): ReturnIfAbrupt<T> {
+  const c = EnsureCompletion(completion);
+  if (c.Type === 'normal') {
+    return c.Value as ReturnIfAbrupt<T>;
+  }
+  throw new Error('Engine assertion failed.', { cause: c.Value });
+}
+
 /** https://tc39.es/ecma262/#sec-ifabruptcloseiterator */
-// TODO(TS):
-export function IfAbruptCloseIterator(_value: Completion, _iteratorRecord: unknown) {
+export function IfAbruptCloseIterator<T>(_value: T, _iteratorRecord: IteratorRecord): ReturnIfAbrupt<T> {
   /* c8 skip next */
   throw new TypeError('IfAbruptCloseIterator() requires build');
 }
 
 /** https://tc39.es/ecma262/#sec-ifabruptrejectpromise */
-export function IfAbruptRejectPromise(_value: Completion, _capability: PromiseCapabilityRecord) {
+export function IfAbruptRejectPromise<T>(_value: T, _capability: PromiseCapabilityRecord): ReturnIfAbrupt<T> {
   /* c8 skip next */
   throw new TypeError('IfAbruptRejectPromise requires build');
+}
+
+/**
+ * This is a util for code that cannot use Q() or X() marco to emulate this behaviour.
+ *
+ * @example
+ * import { __Q2 } from '...'
+ * __Q2((Q) => {
+ *     let val = Q(operation);
+ * });
+ */
+export function __Q2<T>(callback: (q: typeof ReturnIfAbrupt, x: typeof X) => T): NormalCompletion<T> | ThrowCompletion {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return EnsureCompletion(callback(ReturnIfAbruptRuntime, XRuntime)) as any;
+  } catch (error) {
+    if (error instanceof ThrowCompletion) {
+      return error;
+    }
+    // a real error
+    throw error;
+  }
 }
 
 export type EnsureCompletion<T> = EnsureCompletionWorker<T, T>;
 
 // Distribute over `T`s that are `Completion`s, but don't distribute over `T`s that aren't `Completion`s
-type EnsureCompletionWorker<T, _T> = T extends Completion ? T : NormalCompletion<Exclude<_T, Completion>>;
+type EnsureCompletionWorker<T, _T> = T extends Completion<unknown> ? T : NormalCompletion<Exclude<_T, PlainCompletion<unknown>>>;
 
 /** https://tc39.es/ecma262/#sec-implicit-normal-completion */
+export function EnsureCompletion(val: Value): NormalCompletion<Value>;
 export function EnsureCompletion<const T>(val: T): EnsureCompletion<T>;
 export function EnsureCompletion<const T>(val: T) {
   if (val instanceof Completion) {
@@ -325,13 +385,17 @@ export function EnsureCompletion<const T>(val: T) {
   return NormalCompletion(val);
 }
 
-export function* Await(value: Value): Generator<Value, Completion, Completion> {
+export function ValueOfNormalCompletion<T>(value: NormalCompletion<T> | T) {
+  return value instanceof NormalCompletion ? value.Value : value;
+}
+
+export function* Await(value: Value): Evaluator<ExpressionCompletion> {
   // 1. Let asyncContext be the running execution context.
   const asyncContext = surroundingAgent.runningExecutionContext;
   // 2. Let promise be ? PromiseResolve(%Promise%, value).
-  const promise = ReturnIfAbrupt(PromiseResolve(surroundingAgent.intrinsic('%Promise%') as ObjectValue, value) as PromiseObjectValue);
+  const promise = ReturnIfAbrupt(PromiseResolve(surroundingAgent.intrinsic('%Promise%') as ObjectValue, value) as PromiseObject);
   // 3. Let fulfilledClosure be a new Abstract Closure with parameters (value) that captures asyncContext and performs the following steps when called:
-  const fulfilledClosure = ([valueInner = Value.undefined]: readonly Value[]) => {
+  const fulfilledClosure = ([valueInner = Value.undefined]: Arguments) => {
     // a. Let prevContext be the running execution context.
     const prevContext = surroundingAgent.runningExecutionContext;
     // b. Suspend prevContext.
@@ -349,7 +413,7 @@ export function* Await(value: Value): Generator<Value, Completion, Completion> {
   // @ts-expect-error TODO(ts): CreateBuiltinFunction should return a specalized type FunctionObjectValue that has a kAsyncContext on it.
   onFulfilled[kAsyncContext] = asyncContext;
   // 5. Let rejectedClosure be a new Abstract Closure with parameters (reason) that captures asyncContext and performs the following steps when called:
-  const rejectedClosure = ([reason = Value.undefined]: readonly Value[]) => {
+  const rejectedClosure = ([reason = Value.undefined]: Arguments) => {
     // a. Let prevContext be the running execution context.
     const prevContext = surroundingAgent.runningExecutionContext;
     // b. Suspend prevContext.
@@ -373,6 +437,6 @@ export function* Await(value: Value): Generator<Value, Completion, Completion> {
   // 9. Set the code evaluation state of asyncContext such that when evaluation is resumed with a Completion completion, the following steps of the algorithm that invoked Await will be performed, with completion available.
   const completion = yield Value.undefined;
   // 10. Return.
-  return completion;
+  return completion as ExpressionCompletion;
   // 11. NOTE: This returns to the evaluation of the operation that had most previously resumed evaluation of asyncContext.
 }

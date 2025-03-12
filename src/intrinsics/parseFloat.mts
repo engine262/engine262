@@ -1,17 +1,17 @@
-// @ts-nocheck
 import {
   CreateBuiltinFunction,
   ToString,
   F,
+  Realm,
 } from '../abstract-ops/all.mts';
-import { Q, X } from '../completion.mts';
-import { Value } from '../value.mts';
+import { Q, X, type ExpressionCompletion } from '../completion.mts';
+import { Value, type Arguments } from '../value.mts';
 import {
   TrimString,
 } from '../runtime-semantics/all.mts';
 
 /** https://tc39.es/ecma262/#sec-parsefloat-string */
-function ParseFloat([string = Value.undefined]) {
+function ParseFloat([string = Value.undefined]: Arguments): ExpressionCompletion {
   // 1. Let inputString be ? ToString(string).
   const inputString = Q(ToString(string));
   // 2. Let trimmedString be ! TrimString(inputString, start).
@@ -73,6 +73,6 @@ function ParseFloat([string = Value.undefined]) {
   return F(parseFloat(numberString.slice(0, index)) * multiplier);
 }
 
-export function bootstrapParseFloat(realmRec) {
+export function bootstrapParseFloat(realmRec: Realm) {
   realmRec.Intrinsics['%parseFloat%'] = CreateBuiltinFunction(ParseFloat, 1, Value('parseFloat'), [], realmRec);
 }

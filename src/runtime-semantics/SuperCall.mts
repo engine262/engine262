@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import {
   Assert,
@@ -8,6 +7,7 @@ import {
   IsConstructor,
   InitializeInstanceElements,
   isECMAScriptFunctionObject,
+  type FunctionObject,
 } from '../abstract-ops/all.mts';
 import { ObjectValue, Value } from '../value.mts';
 import { Q, X } from '../completion.mts';
@@ -31,9 +31,11 @@ export function* Evaluate_SuperCall({ Arguments }: ParseNode.SuperCall) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', func);
   }
   // 6. Let result be ? Construct(func, argList, newTarget).
-  const result = Q(Construct(func, argList, newTarget));
+  const result = Q(Construct(func as FunctionObject, argList, newTarget as FunctionObject));
   // 7. Let thisER be GetThisEnvironment().
   const thisER = GetThisEnvironment();
+  // 8. Assert: thisER is a Function Environment Record.
+  Assert(thisER instanceof FunctionEnvironmentRecord);
   // 8. Perform ? thisER.BindThisValue(result).
   Q(thisER.BindThisValue(result));
   // 9. Let F be thisER.[[FunctionObject]].

@@ -1,15 +1,15 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
-import { Q } from '../completion.mts';
-import { Value } from '../value.mts';
+import { Q, type ExpressionCompletion } from '../completion.mts';
+import { Value, type Arguments } from '../value.mts';
 import {
   Assert,
   CreateBuiltinFunction,
   PerformEval,
+  Realm,
 } from '../abstract-ops/all.mts';
 
 /** https://tc39.es/ecma262/#sec-eval-x */
-function Eval([x = Value.undefined]) {
+function Eval([x = Value.undefined]: Arguments): ExpressionCompletion {
   // 1. Assert: The execution context stack has at least two elements.
   Assert(surroundingAgent.executionContextStack.length >= 2);
   // 2. Let callerContext be the second to top element of the execution context stack.
@@ -20,6 +20,6 @@ function Eval([x = Value.undefined]) {
   return Q(PerformEval(x, callerRealm, false, false));
 }
 
-export function bootstrapEval(realmRec) {
+export function bootstrapEval(realmRec: Realm) {
   realmRec.Intrinsics['%eval%'] = CreateBuiltinFunction(Eval, 1, Value('eval'), [], realmRec);
 }

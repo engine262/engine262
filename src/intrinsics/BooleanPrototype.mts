@@ -1,18 +1,21 @@
-// @ts-nocheck
 import {
   ObjectValue,
   BooleanValue,
   Value,
+  type Arguments,
+  type FunctionCallContext,
 } from '../value.mts';
 import {
   surroundingAgent,
 } from '../engine.mts';
-import { Assert } from '../abstract-ops/all.mts';
-import { Q } from '../completion.mts';
+import { Assert, Realm } from '../abstract-ops/all.mts';
+import { Q, type ExpressionCompletion } from '../completion.mts';
+import type { Mutable } from '../helpers.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
+import type { BooleanObject } from './Boolean.mts';
 
 
-function thisBooleanValue(value) {
+function thisBooleanValue(value: Value) {
   if (value instanceof BooleanValue) {
     return value;
   }
@@ -27,7 +30,7 @@ function thisBooleanValue(value) {
 }
 
 /** https://tc39.es/ecma262/#sec-boolean.prototype.tostring */
-function BooleanProto_toString(argList, { thisValue }) {
+function BooleanProto_toString(_argList: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let b be ? thisBooleanValue(this value).
   const b = Q(thisBooleanValue(thisValue));
   // 2. If b is true, return "true"; else return "false".
@@ -38,18 +41,18 @@ function BooleanProto_toString(argList, { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-boolean.prototype.valueof */
-function BooleanProto_valueOf(argList, { thisValue }) {
+function BooleanProto_valueOf(_argList: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Return ? thisBooleanValue(this value).
   return Q(thisBooleanValue(thisValue));
 }
 
-export function bootstrapBooleanPrototype(realmRec) {
+export function bootstrapBooleanPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['toString', BooleanProto_toString, 0],
     ['valueOf', BooleanProto_valueOf, 0],
   ], realmRec.Intrinsics['%Object.prototype%']);
 
-  proto.BooleanData = Value.false;
+  (proto as Mutable<BooleanObject>).BooleanData = Value.false;
 
   realmRec.Intrinsics['%Boolean.prototype%'] = proto;
 }

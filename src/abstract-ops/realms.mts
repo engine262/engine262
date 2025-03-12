@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   Descriptor,
   Value,
@@ -72,39 +71,60 @@ import { bootstrapDataView } from '../intrinsics/DataView.mts';
 import { bootstrapDataViewPrototype } from '../intrinsics/DataViewPrototype.mts';
 import { bootstrapWeakMapPrototype } from '../intrinsics/WeakMapPrototype.mts';
 import { bootstrapWeakMap } from '../intrinsics/WeakMap.mts';
-import { bootstrapWeakSetPrototype } from '../intrinsics/WeakSetPrototype.mjs';
-import { bootstrapWeakSet } from '../intrinsics/WeakSet.mjs';
-import { bootstrapAggregateError } from '../intrinsics/AggregateError.mjs';
-import { bootstrapAggregateErrorPrototype } from '../intrinsics/AggregateErrorPrototype.mjs';
-import { bootstrapWeakRefPrototype } from '../intrinsics/WeakRefPrototype.mjs';
-import { bootstrapWeakRef } from '../intrinsics/WeakRef.mjs';
-import { bootstrapFinalizationRegistryPrototype } from '../intrinsics/FinalizationRegistryPrototype.mjs';
-import { bootstrapFinalizationRegistry } from '../intrinsics/FinalizationRegistry.mjs';
-import type { ManagedRealmHostDefined } from '../api.mjs';
+import { bootstrapWeakSetPrototype } from '../intrinsics/WeakSetPrototype.mts';
+import { bootstrapWeakSet } from '../intrinsics/WeakSet.mts';
+import { bootstrapAggregateError } from '../intrinsics/AggregateError.mts';
+import { bootstrapAggregateErrorPrototype } from '../intrinsics/AggregateErrorPrototype.mts';
+import { bootstrapWeakRefPrototype } from '../intrinsics/WeakRefPrototype.mts';
+import { bootstrapWeakRef } from '../intrinsics/WeakRef.mts';
+import { bootstrapFinalizationRegistryPrototype } from '../intrinsics/FinalizationRegistryPrototype.mts';
+import { bootstrapFinalizationRegistry } from '../intrinsics/FinalizationRegistry.mts';
+import {
+  AbstractModuleRecord, JSStringValue, ManagedRealm, ObjectValue, type ExpressionCompletion, type FunctionObject, type GCMarker, type ManagedRealmHostDefined,
+} from '../api.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import type { Mutable } from '../helpers.mts';
 import {
   Assert,
   DefinePropertyOrThrow,
   F as toNumberValue,
   OrdinaryObjectCreate,
-} from './all.mjs';
+} from './all.mts';
+
+export interface LoadedModuleRequestRecord {
+  readonly Specifier: JSStringValue;
+  readonly Module: AbstractModuleRecord
+}
+
+export interface Intrinsics {
+  '%Error%': ObjectValue;
+  '%Function%': ObjectValue;
+  '%Object.Prototype%': ObjectValue;
+  [key: `%${string}.prototype%`]: ObjectValue;
+  [key: `%${string}Prototype%`]: ObjectValue;
+  [key: string]: Value;
+}
 
 /** https://tc39.es/ecma262/#sec-code-realms */
-export class Realm {
-  Intrinsics: Record<string, Value>;
+export abstract class Realm {
+  abstract readonly AgentSignifier: unknown;
 
-  GlobalObject;
+  abstract readonly Intrinsics: Intrinsics;
 
-  GlobalEnv;
+  abstract readonly GlobalObject: ObjectValue;
 
-  TemplateMap;
+  abstract readonly GlobalEnv: GlobalEnvironmentRecord;
 
-  LoadedModules;
+  abstract readonly TemplateMap: { Site: ParseNode.TemplateLiteral, Array: ObjectValue }[];
 
-  HostDefined: ManagedRealmHostDefined;
+  readonly LoadedModules: LoadedModuleRequestRecord[] = [];
 
-  randomState;
+  abstract readonly HostDefined: ManagedRealmHostDefined;
 
-  mark(m) {
+  // NON-SPEC
+  abstract randomState: undefined | BigUint64Array;
+
+  mark(m: GCMarker) {
     m(this.GlobalObject);
     m(this.GlobalEnv);
     for (const v of Object.values(this.Intrinsics)) {
@@ -119,20 +139,13 @@ export class Realm {
   }
 }
 
-/** https://tc39.es/ecma262/#sec-createrealm */
-export function CreateRealm() {
-  const realmRec = new Realm();
-  CreateIntrinsics(realmRec);
-  realmRec.GlobalObject = Value.undefined;
-  realmRec.GlobalEnv = Value.undefined;
-  realmRec.TemplateMap = [];
-  realmRec.LoadedModules = [];
-  return realmRec;
+export function InitializeHostDefinedRealm() {
+  return new ManagedRealm();
 }
 
-function AddRestrictedFunctionProperties(F, realm) {
-  Assert(realm.Intrinsics['%ThrowTypeError%']);
-  const thrower = realm.Intrinsics['%ThrowTypeError%'];
+function AddRestrictedFunctionProperties(F: ObjectValue, realm: Realm) {
+  Assert(!!realm.Intrinsics['%ThrowTypeError%']);
+  const thrower = realm.Intrinsics['%ThrowTypeError%'] as FunctionObject;
   X(DefinePropertyOrThrow(F, Value('caller'), Descriptor({
     Get: thrower,
     Set: thrower,
@@ -148,10 +161,9 @@ function AddRestrictedFunctionProperties(F, realm) {
 }
 
 /** https://tc39.es/ecma262/#sec-createintrinsics */
-export function CreateIntrinsics(realmRec) {
+export function CreateIntrinsics(realmRec: Realm) {
   const intrinsics = Object.create(null);
-  realmRec.Intrinsics = intrinsics;
-
+  (realmRec as Mutable<Realm>).Intrinsics = intrinsics;
   intrinsics['%Object.prototype%'] = OrdinaryObjectCreate(Value.null);
 
   bootstrapFunctionPrototype(realmRec);
@@ -265,38 +277,23 @@ export function CreateIntrinsics(realmRec) {
   return intrinsics;
 }
 
-/** https://tc39.es/ecma262/#sec-setrealmglobalobject */
-export function SetRealmGlobalObject(realmRec, globalObj, thisValue) {
-  const intrinsics = realmRec.Intrinsics;
-  if (globalObj === Value.undefined) {
-    globalObj = OrdinaryObjectCreate(intrinsics['%Object.prototype%']);
-  }
-  if (thisValue === Value.undefined) {
-    thisValue = globalObj;
-  }
-  realmRec.GlobalObject = globalObj;
-  const newGlobalEnv = new GlobalEnvironmentRecord(globalObj, thisValue);
-  realmRec.GlobalEnv = newGlobalEnv;
-  return realmRec;
-}
-
 /** https://tc39.es/ecma262/#sec-setdefaultglobalbindings */
-export function SetDefaultGlobalBindings(realmRec) {
+export function SetDefaultGlobalBindings(realmRec: Realm): ExpressionCompletion<ObjectValue> {
   const global = realmRec.GlobalObject;
 
   // Value Properties of the Global Object
-  [
+  for (const [name, value] of [
     ['Infinity', toNumberValue(Infinity)],
     ['NaN', toNumberValue(NaN)],
     ['undefined', Value.undefined],
-  ].forEach(([name, value]) => {
+  ] as const) {
     Q(DefinePropertyOrThrow(global, Value(name), Descriptor({
       Value: value,
       Writable: Value.false,
       Enumerable: Value.false,
       Configurable: Value.false,
     })));
-  });
+  }
 
   Q(DefinePropertyOrThrow(global, Value('globalThis'), Descriptor({
     Value: realmRec.GlobalEnv.GlobalThisValue,
@@ -305,7 +302,7 @@ export function SetDefaultGlobalBindings(realmRec) {
     Configurable: Value.true,
   })));
 
-  [
+  for (const name of [
     // Function Properties of the Global Object
     'eval',
     'isFinite',
@@ -364,14 +361,14 @@ export function SetDefaultGlobalBindings(realmRec) {
     'JSON',
     'Math',
     'Reflect',
-  ].forEach((name) => {
+  ] as const) {
     Q(DefinePropertyOrThrow(global, Value(name), Descriptor({
       Value: realmRec.Intrinsics[`%${name}%`],
       Writable: Value.true,
       Enumerable: Value.false,
       Configurable: Value.true,
     })));
-  });
+  }
 
   return global;
 }

@@ -182,7 +182,7 @@ export class Scope {
 
   readonly undefinedExports = new Map<string, ParseNode.ModuleExportName>();
 
-  private privateScope: PrivateScopeInfo | undefined;
+  privateScope: PrivateScopeInfo | undefined;
 
   private readonly undefinedPrivateAccesses: UndefinedPrivateAccessInfo[] = [];
 

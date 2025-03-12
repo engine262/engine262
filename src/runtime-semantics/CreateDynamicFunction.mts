@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   Assert,
   DefinePropertyOrThrow,
@@ -8,8 +7,9 @@ import {
   OrdinaryObjectCreate,
   SetFunctionName,
   ToString,
+  type FunctionObject,
 } from '../abstract-ops/all.mts';
-import { Q, X } from '../completion.mts';
+import { Q, ThrowCompletion, X } from '../completion.mts';
 import {
   HostEnsureCanCompileStrings,
   surroundingAgent,
@@ -18,8 +18,10 @@ import { wrappedParse } from '../parse.mts';
 import { Token } from '../parser/tokens.mts';
 import {
   Descriptor, UndefinedValue, Value,
+  type Arguments,
 } from '../value.mts';
-import { OutOfRange } from '../helpers.mts';
+import { __ts_cast__, OutOfRange } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 // #table-dynamic-function-sourcetext-prefixes
 const DynamicFunctionSourceTextPrefixes = {
@@ -29,7 +31,7 @@ const DynamicFunctionSourceTextPrefixes = {
   'asyncGenerator': 'async function*',
 };
 
-export function CreateDynamicFunction(constructor, newTarget, kind, args) {
+export function CreateDynamicFunction(constructor: FunctionObject, newTarget: FunctionObject | UndefinedValue, kind: 'normal' | 'generator' | 'async' | 'asyncGenerator', args: Arguments) {
   // 1. Assert: The execution context stack has at least two elements.
   Assert(surroundingAgent.executionContextStack.length >= 2);
   // 2. Let callerContext be the second to top element of the execution context stack.
@@ -136,21 +138,22 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
       return r;
     });
     if (Array.isArray(f)) {
-      return surroundingAgent.Throw(f[0]);
+      return ThrowCompletion(f[0]);
     }
+    __ts_cast__<ParseNode.FunctionExpression | ParseNode.GeneratorExpression | ParseNode.AsyncFunctionExpression | ParseNode.AsyncGeneratorExpression>(f);
     parameters = f.FormalParameters;
     switch (kind) {
       case 'normal':
-        body = f.FunctionBody;
+        body = (f as ParseNode.FunctionExpression).FunctionBody;
         break;
       case 'generator':
-        body = f.GeneratorBody;
+        body = (f as ParseNode.GeneratorExpression).GeneratorBody;
         break;
       case 'async':
-        body = f.AsyncBody;
+        body = (f as ParseNode.AsyncFunctionExpression).AsyncBody;
         break;
       case 'asyncGenerator':
-        body = f.AsyncGeneratorBody;
+        body = (f as ParseNode.AsyncGeneratorExpression).AsyncGeneratorBody;
         break;
       default:
         throw new OutOfRange('kind', kind);

@@ -36,7 +36,7 @@ jobs:
       # Publish to npm registry
       - run: npm set //registry.npmjs.org/:_authToken ${{ secrets.NPM_TOKEN }}
       - run: npm config set registry https://registry.npmjs.org
-      - run: npm exec npm@latest -- publish --provenance --access public
+      - run: npm exec npm@latest -- publish --provenance --access public --tag latest
 
       # Push build to to gh-pages
       - run: |

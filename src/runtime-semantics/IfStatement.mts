@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Evaluate } from '../evaluator.mts';
 import {
   GetValue,

@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import {
   NullValue,
@@ -8,6 +7,8 @@ import {
   Value,
   Descriptor,
   wellKnownSymbols,
+  type FunctionCallContext,
+  type Arguments,
 } from '../value.mts';
 import {
   DefinePropertyOrThrow,
@@ -17,16 +18,19 @@ import {
   IsAccessorDescriptor,
   IsArray,
   IsCallable,
+  Realm,
   RequireObjectCoercible,
   SameValue,
   ToObject,
   ToPropertyKey,
+  type FunctionObject,
 } from '../abstract-ops/all.mts';
-import { Q, X } from '../completion.mts';
+import { Q, X, type ExpressionCompletion } from '../completion.mts';
+import { __ts_cast__ } from '../helpers.mts';
 import { assignProps } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-object.prototype.hasownproperty */
-function ObjectProto_hasOwnProperty([V = Value.undefined], { thisValue }) {
+function ObjectProto_hasOwnProperty([V = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let P be ? ToPropertyKey(V).
   const P = Q(ToPropertyKey(V));
   // 2. Let O be ? ToObject(this value).
@@ -36,7 +40,7 @@ function ObjectProto_hasOwnProperty([V = Value.undefined], { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-object.prototype.isprototypeof */
-function ObjectProto_isPrototypeOf([V = Value.undefined], { thisValue }) {
+function ObjectProto_isPrototypeOf([V = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. If Type(V) is not Object, return false.
   if (!(V instanceof ObjectValue)) {
     return Value.false;
@@ -46,7 +50,7 @@ function ObjectProto_isPrototypeOf([V = Value.undefined], { thisValue }) {
   // 3. Repeat,
   while (true) {
     // a. Set V to ? V.[[GetPrototypeOf]]().
-    V = Q(V.GetPrototypeOf());
+    V = Q((V as ObjectValue).GetPrototypeOf());
     // b. If V is null, return false.
     if (V === Value.null) {
       return Value.false;
@@ -59,7 +63,7 @@ function ObjectProto_isPrototypeOf([V = Value.undefined], { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-object.prototype.propertyisenumerable */
-function ObjectProto_propertyIsEnumerable([V = Value.undefined], { thisValue }) {
+function ObjectProto_propertyIsEnumerable([V = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let P be ? ToPropertyKey(V).
   const P = Q(ToPropertyKey(V));
   // 2. Let O be ? ToObject(this value).
@@ -71,11 +75,11 @@ function ObjectProto_propertyIsEnumerable([V = Value.undefined], { thisValue }) 
     return Value.false;
   }
   // 5. Return desc.[[Enumerable]].
-  return desc.Enumerable;
+  return desc.Enumerable!;
 }
 
 /** https://tc39.es/ecma262/#sec-object.prototype.tolocalestring */
-function ObjectProto_toLocaleString(argList, { thisValue }) {
+function ObjectProto_toLocaleString(_argList: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. Return ? Invoke(O, "toString").
@@ -83,7 +87,7 @@ function ObjectProto_toLocaleString(argList, { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-object.prototype.tostring */
-function ObjectProto_toString(argList, { thisValue }) {
+function ObjectProto_toString(_argList: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. If the this value is undefined, return "[object Undefined]".
   if (thisValue === Value.undefined) {
     return Value('[object Undefined]');
@@ -120,23 +124,26 @@ function ObjectProto_toString(argList, { thisValue }) {
     builtinTag = 'Object';
   }
   // 15. Let tag be ? Get(O, @@toStringTag).
-  let tag = Q(Get(O, wellKnownSymbols.toStringTag));
+  const tag = Q(Get(O, wellKnownSymbols.toStringTag));
+  let tagStr;
   // 16. If Type(tag) is not String, set tag to builtinTag.
   if (!(tag instanceof JSStringValue)) {
-    tag = builtinTag;
+    tagStr = builtinTag;
+  } else {
+    tagStr = tag.stringValue();
   }
   // 17. Return the string-concatenation of "[object ", tag, and "]".
-  return Value(`[object ${tag.stringValue ? tag.stringValue() : tag}]`);
+  return Value(`[object ${tagStr}]`);
 }
 
 /** https://tc39.es/ecma262/#sec-object.prototype.valueof */
-function ObjectProto_valueOf(argList, { thisValue }) {
+function ObjectProto_valueOf(_argList: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Return ? ToObject(this value).
   return Q(ToObject(thisValue));
 }
 
 /** https://tc39.es/ecma262/#sec-object.prototype.__defineGetter__ */
-function ObjectProto__defineGetter__([P = Value.undefined, getter = Value.undefined], { thisValue }) {
+function ObjectProto__defineGetter__([P = Value.undefined, getter = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let O be ? ToObject(this value).
   const O = Q(ToObject(thisValue));
   // 2. If IsCallable(getter) is false, throw a TypeError exception.
@@ -145,7 +152,7 @@ function ObjectProto__defineGetter__([P = Value.undefined, getter = Value.undefi
   }
   // 3. Let desc be PropertyDescriptor { [[Get]]: getter, [[Enumerable]]: true, [[Configurable]]: true }.
   const desc = Descriptor({
-    Get: getter,
+    Get: getter as FunctionObject,
     Enumerable: Value.true,
     Configurable: Value.true,
   });
@@ -158,7 +165,7 @@ function ObjectProto__defineGetter__([P = Value.undefined, getter = Value.undefi
 }
 
 /** https://tc39.es/ecma262/#sec-object.prototype.__defineSetter__ */
-function ObjectProto__defineSetter__([P = Value.undefined, setter = Value.undefined], { thisValue }) {
+function ObjectProto__defineSetter__([P = Value.undefined, setter = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let O be ? ToObject(this value).
   const O = Q(ToObject(thisValue));
   // 2. If IsCallable(setter) is false, throw a TypeError exception.
@@ -167,7 +174,7 @@ function ObjectProto__defineSetter__([P = Value.undefined, setter = Value.undefi
   }
   // 3. Let desc be PropertyDescriptor { [[Set]]: setter, [[Enumerable]]: true, [[Configurable]]: true }.
   const desc = Descriptor({
-    Set: setter,
+    Set: setter as FunctionObject,
     Enumerable: Value.true,
     Configurable: Value.true,
   });
@@ -180,20 +187,21 @@ function ObjectProto__defineSetter__([P = Value.undefined, setter = Value.undefi
 }
 
 /** https://tc39.es/ecma262/#sec-object.prototype.__lookupGetter__ */
-function ObjectProto__lookupGetter__([P = Value.undefined], { thisValue }) {
+function ObjectProto__lookupGetter__([P = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let O be ? ToObject(this value).
-  let O = Q(ToObject(thisValue));
+  let O: NullValue | ObjectValue = Q(ToObject(thisValue));
   // 2. Let key be ? ToPropertyKey(P).
   const key = Q(ToPropertyKey(P));
   // 3. Repeat,
   while (true) {
+    __ts_cast__<ObjectValue>(O);
     // a. Let desc be ? O.[[GetOwnProperty]](key).
     const desc = Q(O.GetOwnProperty(key));
     // b. If desc is not undefined, then
-    if (desc !== Value.undefined) {
+    if (!(desc instanceof UndefinedValue)) {
       // i. If IsAccessorDescriptor(desc) is true, return desc.[[Get]].
       if (IsAccessorDescriptor(desc)) {
-        return desc.Get;
+        return desc.Get!;
       }
       // ii. Return undefined.
       return Value.undefined;
@@ -208,20 +216,21 @@ function ObjectProto__lookupGetter__([P = Value.undefined], { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-object.prototype.__lookupSetter__ */
-function ObjectProto__lookupSetter__([P = Value.undefined], { thisValue }) {
+function ObjectProto__lookupSetter__([P = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let O be ? ToObject(this value).
-  let O = Q(ToObject(thisValue));
+  let O: NullValue | ObjectValue = Q(ToObject(thisValue));
   // 2. Let key be ? ToPropertyKey(P).
   const key = Q(ToPropertyKey(P));
   // 3. Repeat,
   while (true) {
+    __ts_cast__<ObjectValue>(O);
     // a. Let desc be ? O.[[GetOwnProperty]](key).
     const desc = Q(O.GetOwnProperty(key));
     // b. If desc is not undefined, then
-    if (desc !== Value.undefined) {
+    if (!(desc instanceof UndefinedValue)) {
       // i. If IsAccessorDescriptor(desc) is true, return desc.[[Set]].
       if (IsAccessorDescriptor(desc)) {
-        return desc.Set;
+        return desc.Set!;
       }
       // ii. Return undefined.
       return Value.undefined;
@@ -236,7 +245,7 @@ function ObjectProto__lookupSetter__([P = Value.undefined], { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-get-object.prototype.__proto__ */
-function ObjectProto__proto__Get(args, { thisValue }) {
+function ObjectProto__proto__Get(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let O be ? ToObject(this value).
   const O = Q(ToObject(thisValue));
   // 2. Return ? O.[[GetPrototypeOf]]().
@@ -244,7 +253,7 @@ function ObjectProto__proto__Get(args, { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-set-object.prototype.__proto__ */
-function ObjectProto__proto__Set([proto = Value.undefined], { thisValue }) {
+function ObjectProto__proto__Set([proto = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let O be ? RequireObjectCoercible(this value).
   const O = Q(RequireObjectCoercible(thisValue));
   // 2. If Type(proto) is neither Object nor Null, return undefined.
@@ -265,7 +274,7 @@ function ObjectProto__proto__Set([proto = Value.undefined], { thisValue }) {
   return Value.undefined;
 }
 
-export function bootstrapObjectPrototype(realmRec) {
+export function bootstrapObjectPrototype(realmRec: Realm) {
   const proto = realmRec.Intrinsics['%Object.prototype%'];
 
   assignProps(realmRec, proto, [

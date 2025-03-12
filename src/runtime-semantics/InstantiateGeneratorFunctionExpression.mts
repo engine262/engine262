@@ -1,6 +1,7 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
-import { Value, Descriptor } from '../value.mts';
+import {
+  Value, Descriptor, type PropertyKeyValue, PrivateName,
+} from '../value.mts';
 import {
   Assert,
   DefinePropertyOrThrow,
@@ -18,7 +19,7 @@ import type { ParseNode } from '../parser/ParseNode.mts';
 //   GeneratorExpression :
 //     `function` `*` `(` FormalParameters `)` `{` GeneratorBody `}`
 //     `function` `* `BindingIdentifier `(` FormalParameters `)` `{` GeneratorBody `}`
-export function InstantiateGeneratorFunctionExpression(GeneratorExpression: ParseNode.GeneratorExpression, name?) {
+export function InstantiateGeneratorFunctionExpression(GeneratorExpression: ParseNode.GeneratorExpression, name?: PropertyKeyValue | PrivateName) {
   const { BindingIdentifier, FormalParameters, GeneratorBody } = GeneratorExpression;
   if (BindingIdentifier) {
     // 1. Assert: name is not present.

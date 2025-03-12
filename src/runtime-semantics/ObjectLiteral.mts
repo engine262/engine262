@@ -1,9 +1,9 @@
-// @ts-nocheck
 import { surroundingAgent } from '../engine.mts';
 import { Value } from '../value.mts';
 import { OrdinaryObjectCreate } from '../abstract-ops/all.mts';
 import { Q } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import type { ExpressionEvaluator } from '../evaluator.mts';
 import {
   PropertyDefinitionEvaluation_PropertyDefinitionList,
 } from './all.mts';
@@ -13,7 +13,7 @@ import {
 //     `{` `}`
 //     `{` PropertyDefinitionList `}`
 //     `{` PropertyDefinitionList `,` `}`
-export function* Evaluate_ObjectLiteral({ PropertyDefinitionList }: ParseNode.ObjectLiteral) {
+export function* Evaluate_ObjectLiteral({ PropertyDefinitionList }: ParseNode.ObjectLiteral): ExpressionEvaluator {
   // 1. Let obj be OrdinaryObjectCreate(%Object.prototype%).
   const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   if (PropertyDefinitionList.length === 0) {

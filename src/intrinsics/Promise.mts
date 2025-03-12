@@ -1,12 +1,15 @@
-// @ts-nocheck
 import {
   surroundingAgent,
 } from '../engine.mts';
 import {
+  BooleanValue,
   Descriptor,
   ObjectValue,
+  UndefinedValue,
   Value,
   wellKnownSymbols,
+  type Arguments,
+  type FunctionCallContext,
 } from '../value.mts';
 import {
   Assert,
@@ -30,21 +33,38 @@ import {
   OrdinaryCreateFromConstructor,
   PromiseCapabilityRecord,
   PromiseResolve,
+  PromiseReactionRecord,
+  type FunctionObject,
+  Realm,
+  type IteratorRecord,
+  type OrdinaryObject,
+  type PromiseAllResolveElementFunctionObject,
+  type PromiseAllRejectElementFunctionObject,
 } from '../abstract-ops/all.mts';
 import {
-  AbruptCompletion, Completion,
+  AbruptCompletion,
   ThrowCompletion,
   IfAbruptRejectPromise,
   ReturnIfAbrupt,
   EnsureCompletion,
   Q, X,
+  type ExpressionCompletion,
 } from '../completion.mts';
+import { __ts_cast__, type Mutable } from '../helpers.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 
+/** https://tc39.es/ecma262/#table-internal-slots-of-promise-instances */
+export interface PromiseObject extends OrdinaryObject {
+  PromiseState: 'pending' | 'fulfilled' | 'rejected';
+  PromiseResult: Value | undefined;
+  PromiseFulfillReactions: undefined | PromiseReactionRecord[];
+  PromiseRejectReactions: undefined | PromiseReactionRecord[];
+  PromiseIsHandled: BooleanValue;
+}
 /** https://tc39.es/ecma262/#sec-promise-executor */
-function PromiseConstructor([executor = Value.undefined], { NewTarget }) {
+function PromiseConstructor(this: FunctionObject, [executor = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext): ExpressionCompletion {
   // 1. If NewTarget is undefined, throw a TypeError exception.
-  if (NewTarget === Value.undefined) {
+  if (NewTarget instanceof UndefinedValue) {
     return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
   // 2. If IsCallable(executor) is false, throw a TypeError exception.
@@ -58,7 +78,7 @@ function PromiseConstructor([executor = Value.undefined], { NewTarget }) {
     'PromiseFulfillReactions',
     'PromiseRejectReactions',
     'PromiseIsHandled',
-  ]));
+  ])) as Mutable<PromiseObject>;
   // 4. Set promise.[[PromiseState]] to pending.
   promise.PromiseState = 'pending';
   // 5. Set promise.[[PromiseFulfillReactions]] to a new empty List.
@@ -83,8 +103,8 @@ function PromiseConstructor([executor = Value.undefined], { NewTarget }) {
 }
 
 /** https://tc39.es/ecma262/#sec-promise.all-resolve-element-functions */
-function PromiseAllResolveElementFunctions([x = Value.undefined]) {
-  const F = surroundingAgent.activeFunctionObject;
+function PromiseAllResolveElementFunctions([x = Value.undefined]: Arguments): ExpressionCompletion {
+  const F = surroundingAgent.activeFunctionObject as PromiseAllResolveElementFunctionObject;
   const alreadyCalled = F.AlreadyCalled;
   if (alreadyCalled.Value === true) {
     return Value.undefined;
@@ -104,7 +124,7 @@ function PromiseAllResolveElementFunctions([x = Value.undefined]) {
 }
 
 /** https://tc39.es/ecma262/#sec-getpromiseresolve */
-function GetPromiseResolve(promiseConstructor) {
+function GetPromiseResolve(promiseConstructor: FunctionObject) {
   // 1. Assert: IsConstructor(promiseConstructor) is true.
   Assert(IsConstructor(promiseConstructor) === Value.true);
   // 2. Let promiseResolve be ? Get(promiseConstructor, "resolve").
@@ -118,7 +138,7 @@ function GetPromiseResolve(promiseConstructor) {
 }
 
 /** https://tc39.es/ecma262/#sec-performpromiseall */
-function PerformPromiseAll(iteratorRecord, constructor, resultCapability, promiseResolve) {
+function PerformPromiseAll(iteratorRecord: IteratorRecord, constructor: FunctionObject, resultCapability: PromiseCapabilityRecord, promiseResolve: FunctionObject): ExpressionCompletion<PromiseObject> {
   // 1. Assert: IsConstructor(constructor) is true.
   Assert(IsConstructor(constructor) === Value.true);
   // 2. Assert: resultCapability is a PromiseCapability Record.
@@ -158,7 +178,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability, promis
       return resultCapability.Promise;
     }
     // e. Let nextValue be IteratorValue(next).
-    const nextValue = IteratorValue(next);
+    const nextValue = IteratorValue(next as ObjectValue);
     // f. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
     if (nextValue instanceof AbruptCompletion) {
       iteratorRecord.Done = Value.true;
@@ -168,7 +188,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability, promis
     // h. Append undefined to values.
     values.push(Value.undefined);
     // i. Let nextPromise be ? Call(promiseResolve, constructor, « nextValue »).
-    const nextPromise = Q(Call(promiseResolve, constructor, [nextValue]));
+    const nextPromise = Q(Call(promiseResolve, constructor, [X(nextValue)]));
     // j. Let steps be the algorithm steps defined in Promise.all Resolve Element Functions.
     const steps = PromiseAllResolveElementFunctions;
     // k. Let length be the number of non-optional parameters of the function definition in Promise.all Resolve Element Functions.
@@ -176,7 +196,7 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability, promis
     // l. Let onFulfilled be ! CreateBuiltinFunction(steps, length, "", « [[AlreadyCalled]], [[Index]], [[Values]], [[Capability]], [[RemainingElements]] »).
     const onFulfilled = X(CreateBuiltinFunction(steps, length, Value(''), [
       'AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements',
-    ]));
+    ])) as Mutable<PromiseAllResolveElementFunctionObject>;
     // m. Set onFulfilled.[[AlreadyCalled]] to the Record { [[Value]]: false }.
     onFulfilled.AlreadyCalled = { Value: false };
     // n. Set onFulfilled.[[Index]] to index.
@@ -197,21 +217,24 @@ function PerformPromiseAll(iteratorRecord, constructor, resultCapability, promis
 }
 
 /** https://tc39.es/ecma262/#sec-promise.all */
-function Promise_all([iterable = Value.undefined], { thisValue }) {
+function Promise_all([iterable = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let C be the this value.
   const C = thisValue;
   // 2. Let promiseCapability be ? NewPromiseCapability(C).
   const promiseCapability = Q(NewPromiseCapability(C));
+  __ts_cast__<FunctionObject>(C);
   // 3. Let promiseResolve be GetPromiseResolve(C).
   const promiseResolve = GetPromiseResolve(C);
   // 4. IfAbruptRejectPromise(promiseResolve, promiseCapability).
   IfAbruptRejectPromise(promiseResolve, promiseCapability);
+  __ts_cast__<FunctionObject>(promiseResolve);
   // 5. Let iteratorRecord be GetIterator(iterable).
-  const iteratorRecord = GetIterator(iterable);
+  const iteratorRecord = GetIterator(iterable, 'sync');
   // 6. IfAbruptRejectPromise(iteratorRecord, promiseCapability).
   IfAbruptRejectPromise(iteratorRecord, promiseCapability);
+  __ts_cast__<IteratorRecord>(iteratorRecord);
   // 7. Let result be PerformPromiseAll(iteratorRecord, C, promiseCapability, promiseResolve).
-  let result = EnsureCompletion(PerformPromiseAll(iteratorRecord, C, promiseCapability, promiseResolve));
+  let result: ExpressionCompletion = EnsureCompletion(PerformPromiseAll(iteratorRecord, C, promiseCapability, promiseResolve));
   // 8. If result is an abrupt completion, then
   if (result instanceof AbruptCompletion) {
     // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
@@ -222,11 +245,11 @@ function Promise_all([iterable = Value.undefined], { thisValue }) {
     IfAbruptRejectPromise(result, promiseCapability);
   }
   // 9. Return Completion(result).
-  return Completion(result);
+  return EnsureCompletion(result);
 }
 
-function PromiseAllSettledResolveElementFunctions([x = Value.undefined]) {
-  const F = surroundingAgent.activeFunctionObject;
+function PromiseAllSettledResolveElementFunctions([x = Value.undefined]: Arguments): ExpressionCompletion {
+  const F = surroundingAgent.activeFunctionObject as PromiseAllResolveElementFunctionObject;
   const alreadyCalled = F.AlreadyCalled;
   if (alreadyCalled.Value === true) {
     return Value.undefined;
@@ -248,8 +271,8 @@ function PromiseAllSettledResolveElementFunctions([x = Value.undefined]) {
   return Value.undefined;
 }
 
-function PromiseAllSettledRejectElementFunctions([x = Value.undefined]) {
-  const F = surroundingAgent.activeFunctionObject;
+function PromiseAllSettledRejectElementFunctions([x = Value.undefined]: Arguments): ExpressionCompletion {
+  const F = surroundingAgent.activeFunctionObject as PromiseAllResolveElementFunctionObject;
   const alreadyCalled = F.AlreadyCalled;
   if (alreadyCalled.Value === true) {
     return Value.undefined;
@@ -272,7 +295,7 @@ function PromiseAllSettledRejectElementFunctions([x = Value.undefined]) {
 }
 
 /** https://tc39.es/ecma262/#sec-performpromiseallsettled */
-function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability, promiseResolve) {
+function PerformPromiseAllSettled(iteratorRecord: IteratorRecord, constructor: FunctionObject, resultCapability: PromiseCapabilityRecord, promiseResolve: FunctionObject): ExpressionCompletion {
   // 1. Assert: ! IsConstructor(constructor) is true.
   Assert(X(IsConstructor(constructor) === Value.true));
   // 2. Assert: resultCapability is a PromiseCapability Record.
@@ -312,13 +335,14 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability,
       return resultCapability.Promise;
     }
     // e. Let nextValue be IteratorValue(next).
-    const nextValue = IteratorValue(next);
+    const nextValue = IteratorValue(next as ObjectValue);
     // f. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
     if (nextValue instanceof AbruptCompletion) {
       iteratorRecord.Done = Value.true;
     }
     // g. ReturnIfAbrupt(nextValue).
     ReturnIfAbrupt(nextValue);
+    __ts_cast__<Value>(nextValue);
     // h. Append undefined to values.
     values.push(Value.undefined);
     // i. Let nextPromise be ? Call(promiseResolve, constructor, « nextValue »).
@@ -334,7 +358,7 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability,
       'Values',
       'Capability',
       'RemainingElements',
-    ]));
+    ])) as Mutable<PromiseAllResolveElementFunctionObject>;
     // m. Let alreadyCalled be the Record { [[Value]]: false }.
     const alreadyCalled = { Value: false };
     // n. Set onFulfilled.[[AlreadyCalled]] to alreadyCalled.
@@ -358,7 +382,7 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability,
       'Values',
       'Capability',
       'RemainingElements',
-    ]));
+    ])) as Mutable<PromiseAllResolveElementFunctionObject>;
     // v. Set onRejected.[[AlreadyCalled]] to alreadyCalled.
     onRejected.AlreadyCalled = alreadyCalled;
     // w. Set onRejected.[[Index]] to index.
@@ -379,21 +403,24 @@ function PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability,
 }
 
 /** https://tc39.es/ecma262/#sec-promise.allsettled */
-function Promise_allSettled([iterable = Value.undefined], { thisValue }) {
+function Promise_allSettled([iterable = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let C be the this value.
   const C = thisValue;
   // 2. Let promiseCapability be ? NewPromiseCapability(C).
   const promiseCapability = Q(NewPromiseCapability(C));
+  __ts_cast__<FunctionObject>(C);
   // 3. Let promiseResolve be GetPromiseResolve(C).
   const promiseResolve = GetPromiseResolve(C);
+  __ts_cast__<FunctionObject>(promiseResolve);
   // 4. IfAbruptRejectPromise(promiseResolve, promiseCapability).
   IfAbruptRejectPromise(promiseResolve, promiseCapability);
   // 5. Let iteratorRecord be GetIterator(iterable).
-  const iteratorRecord = GetIterator(iterable);
+  const iteratorRecord = GetIterator(iterable, 'sync');
   // 6. IfAbruptRejectPromise(iteratorRecord, promiseCapability).
   IfAbruptRejectPromise(iteratorRecord, promiseCapability);
+  __ts_cast__<IteratorRecord>(iteratorRecord);
   // 7. Let result be PerformPromiseAllSettled(iteratorRecord, C, promiseCapability, promiseResolve).
-  let result = EnsureCompletion(PerformPromiseAllSettled(iteratorRecord, C, promiseCapability, promiseResolve));
+  let result: ExpressionCompletion = EnsureCompletion(PerformPromiseAllSettled(iteratorRecord, C, promiseCapability, promiseResolve));
   // 8. If result is an abrupt completion, then
   if (result instanceof AbruptCompletion) {
     // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
@@ -404,13 +431,13 @@ function Promise_allSettled([iterable = Value.undefined], { thisValue }) {
     IfAbruptRejectPromise(result, promiseCapability);
   }
   // 9. Return Completion(result).
-  return Completion(result);
+  return EnsureCompletion(result);
 }
 
 /** https://tc39.es/ecma262/#sec-promise.any-reject-element-functions */
-function PromiseAnyRejectElementFunctions([x = Value.undefined]) {
+function PromiseAnyRejectElementFunctions([x = Value.undefined]: Arguments): ExpressionCompletion {
   // 1. Let F be the active function object.
-  const F = surroundingAgent.activeFunctionObject;
+  const F = surroundingAgent.activeFunctionObject as PromiseAllRejectElementFunctionObject;
   // 2. Let alreadyCalled be F.[[AlreadyCalled]].
   const alreadyCalled = F.AlreadyCalled;
   // 3. If alreadyCalled.[[Value]] is true, return undefined.
@@ -434,7 +461,7 @@ function PromiseAnyRejectElementFunctions([x = Value.undefined]) {
   // 11. If remainingElementsCount.[[Value]] is 0, then
   if (remainingElementsCount.Value === 0) {
     // a. Let error be a newly created AggregateError object.
-    const error = surroundingAgent.Throw('AggregateError', 'PromiseAnyRejected').Value;
+    const error = surroundingAgent.Throw('AggregateError', 'PromiseAnyRejected').Value as ObjectValue;
     // b. Perform ! DefinePropertyOrThrow(error, "errors", Property Descriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: errors }).
     X(DefinePropertyOrThrow(error, Value('errors'), Descriptor({
       Configurable: Value.true,
@@ -450,7 +477,7 @@ function PromiseAnyRejectElementFunctions([x = Value.undefined]) {
 }
 
 /** https://tc39.es/ecma262/#sec-performpromiseany */
-function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promiseResolve) {
+function PerformPromiseAny(iteratorRecord: IteratorRecord, constructor: FunctionObject, resultCapability: PromiseCapabilityRecord, promiseResolve: FunctionObject) {
   // 1. Assert: ! IsConstructor(constructor) is true.
   Assert(X(IsConstructor(constructor)) === Value.true);
   // 2. Assert: resultCapability is a PromiseCapability Record.
@@ -482,7 +509,7 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promis
       // iii. If remainingElementsCount.[[Value]] is 0, then
       if (remainingElementsCount.Value === 0) {
         // 1. Let error be a newly created AggregateError object.
-        const error = surroundingAgent.Throw('AggregateError', 'PromiseAnyRejected').Value;
+        const error = surroundingAgent.Throw('AggregateError', 'PromiseAnyRejected').Value as ObjectValue;
         // 2. Perform ! DefinePropertyOrThrow(error, "errors", Property Descriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: errors }).
         X(DefinePropertyOrThrow(error, Value('errors'), Descriptor({
           Configurable: Value.true,
@@ -497,13 +524,14 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promis
       return resultCapability.Promise;
     }
     // e. Let nextValue be IteratorValue(next).
-    const nextValue = IteratorValue(next);
+    const nextValue = IteratorValue(next as ObjectValue);
     // f. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
     if (nextValue instanceof AbruptCompletion) {
       iteratorRecord.Done = Value.true;
     }
     // g. ReturnIfAbrupt(nextValue).
     ReturnIfAbrupt(nextValue);
+    __ts_cast__<Value>(nextValue);
     // h. Append undefined to errors.
     errors.push(Value.undefined);
     // i. Let nextPromise be ? Call(promiseResolve, constructor, « nextValue »).
@@ -513,7 +541,7 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promis
     // k. Let lengthRejected be the number of non-optional parameters of the function definition in Promise.any Reject Element Functions.
     const lengthRejected = 1;
     // l. Let onRejected be ! CreateBuiltinFunction(stepsRejected, lengthRejected, "", « [[AlreadyCalled]], [[Index]], [[Errors]], [[Capability]], [[RemainingElements]] »).
-    const onRejected = X(CreateBuiltinFunction(stepsRejected, lengthRejected, Value(''), ['AlreadyCalled', 'Index', 'Errors', 'Capability', 'RemainingElements']));
+    const onRejected = X(CreateBuiltinFunction(stepsRejected, lengthRejected, Value(''), ['AlreadyCalled', 'Index', 'Errors', 'Capability', 'RemainingElements'])) as Mutable<PromiseAllRejectElementFunctionObject>;
     // m. Set onRejected.[[AlreadyCalled]] to a new Record { [[Value]]: false }.
     onRejected.AlreadyCalled = { Value: false };
     // n. Set onRejected.[[Index]] to index.
@@ -534,21 +562,24 @@ function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promis
 }
 
 /** https://tc39.es/ecma262/#sec-promise.any */
-function Promise_any([iterable = Value.undefined], { thisValue }) {
+function Promise_any([iterable = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let C be the this value.
   const C = thisValue;
   // 2. Let promiseCapability be ? NewPromiseCapability(C).
   const promiseCapability = Q(NewPromiseCapability(C));
+  __ts_cast__<FunctionObject>(C);
   // 3. Let promiseResolve be GetPromiseResolve(C).
   const promiseResolve = GetPromiseResolve(C);
   // 4. IfAbruptRejectPromise(promiseResolve, promiseCapability).
   IfAbruptRejectPromise(promiseResolve, promiseCapability);
+  __ts_cast__<FunctionObject>(promiseResolve);
   // 5. Let iteratorRecord be GetIterator(iterable).
-  const iteratorRecord = GetIterator(iterable);
+  const iteratorRecord = GetIterator(iterable, 'sync');
   // 6. IfAbruptRejectPromise(iteratorRecord, promiseCapability).
   IfAbruptRejectPromise(iteratorRecord, promiseCapability);
+  __ts_cast__<IteratorRecord>(iteratorRecord);
   // 7. Let result be PerformPromiseAny(iteratorRecord, C, promiseCapability).
-  let result = EnsureCompletion(PerformPromiseAny(iteratorRecord, C, promiseCapability, promiseResolve));
+  let result: ExpressionCompletion = EnsureCompletion(PerformPromiseAny(iteratorRecord, C, promiseCapability, promiseResolve));
   // 8. If result is an abrupt completion, then
   if (result instanceof AbruptCompletion) {
     // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
@@ -559,10 +590,10 @@ function Promise_any([iterable = Value.undefined], { thisValue }) {
     IfAbruptRejectPromise(result, promiseCapability);
   }
   // 9. Return Completion(result).
-  return Completion(result);
+  return EnsureCompletion(result);
 }
 
-function PerformPromiseRace(iteratorRecord, constructor, resultCapability, promiseResolve) {
+function PerformPromiseRace(iteratorRecord: IteratorRecord, constructor: FunctionObject, resultCapability: PromiseCapabilityRecord, promiseResolve: FunctionObject): ExpressionCompletion {
   // 1. Assert: IsConstructor(constructor) is true.
   Assert(IsConstructor(constructor) === Value.true);
   // 2. Assert: resultCapability is a PromiseCapability Record.
@@ -587,13 +618,14 @@ function PerformPromiseRace(iteratorRecord, constructor, resultCapability, promi
       return resultCapability.Promise;
     }
     // e. Let nextValue be IteratorValue(next).
-    const nextValue = IteratorValue(next);
+    const nextValue = IteratorValue(X(next) as ObjectValue);
     // f. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
     if (nextValue instanceof AbruptCompletion) {
       iteratorRecord.Done = Value.true;
     }
     // g. ReturnIfAbrupt(nextValue).
     ReturnIfAbrupt(nextValue);
+    __ts_cast__<Value>(nextValue);
     // h. Let nextPromise be ? Call(promiseResolve, constructor, « nextValue »).
     const nextPromise = Q(Call(promiseResolve, constructor, [nextValue]));
     // i. Perform ? Invoke(nextPromise, "then", « resultCapability.[[Resolve]], resultCapability.[[Reject]] »).
@@ -602,21 +634,24 @@ function PerformPromiseRace(iteratorRecord, constructor, resultCapability, promi
 }
 
 /** https://tc39.es/ecma262/#sec-promise.race */
-function Promise_race([iterable = Value.undefined], { thisValue }) {
+function Promise_race([iterable = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let C be the this value.
   const C = thisValue;
   // 2. Let promiseCapability be ? NewPromiseCapability(C).
   const promiseCapability = Q(NewPromiseCapability(C));
+  __ts_cast__<FunctionObject>(C);
   // 3. Let promiseResolve be GetPromiseResolve(C).
   const promiseResolve = GetPromiseResolve(C);
+  __ts_cast__<FunctionObject>(promiseResolve);
   // 4. IfAbruptRejectPromise(promiseResolve, promiseCapability).
   IfAbruptRejectPromise(promiseResolve, promiseCapability);
   // 5. Let iteratorRecord be GetIterator(iterable).
-  const iteratorRecord = GetIterator(iterable);
+  const iteratorRecord = GetIterator(iterable, 'sync');
   // 6. IfAbruptRejectPromise(iteratorRecord, promiseCapability).
   IfAbruptRejectPromise(iteratorRecord, promiseCapability);
+  __ts_cast__<IteratorRecord>(iteratorRecord);
   // 7. Let result be PerformPromiseRace(iteratorRecord, C, promiseCapability, promiseResolve).
-  let result = EnsureCompletion(PerformPromiseRace(iteratorRecord, C, promiseCapability, promiseResolve));
+  let result: ExpressionCompletion = EnsureCompletion(PerformPromiseRace(iteratorRecord, C, promiseCapability, promiseResolve));
   // 8. If result is an abrupt completion, then
   if (result instanceof AbruptCompletion) {
     // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
@@ -627,11 +662,11 @@ function Promise_race([iterable = Value.undefined], { thisValue }) {
     IfAbruptRejectPromise(result, promiseCapability);
   }
   // 9. Return Completion(result).
-  return Completion(result);
+  return EnsureCompletion(result);
 }
 
 /** https://tc39.es/ecma262/#sec-promise.reject */
-function Promise_reject([r = Value.undefined], { thisValue }) {
+function Promise_reject([r = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let C be this value.
   const C = thisValue;
   // 2. Let promiseCapability be ? NewPromiseCapability(C).
@@ -643,7 +678,7 @@ function Promise_reject([r = Value.undefined], { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-promise.resolve */
-function Promise_resolve([x = Value.undefined], { thisValue }) {
+function Promise_resolve([x = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let C be the this value.
   const C = thisValue;
   // 2. If Type(C) is not Object, throw a TypeError exception.
@@ -655,13 +690,13 @@ function Promise_resolve([x = Value.undefined], { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-get-promise-@@species */
-function Promise_symbolSpecies(args, { thisValue }) {
+function Promise_symbolSpecies(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Return the this value.
   return thisValue;
 }
 
 /** https://tc39.es/ecma262/#sec-promise.try */
-function Promise_try([callback, ...args], { thisValue }) {
+function Promise_try([callback, ...args]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let C be the this value.
   const C = thisValue;
   // 2. If C is not an Object, throw a TypeError exception.
@@ -687,7 +722,7 @@ function Promise_try([callback, ...args], { thisValue }) {
 }
 
 /** https://tc39.es/ecma262/#sec-promise.withResolvers */
-function Promise_withResolvers(args, { thisValue }) {
+function Promise_withResolvers(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
   // 1. Let C be the this value.
   const C = thisValue;
   // 2. Let promiseCapability be ? NewPromiseCapability(C).
@@ -704,7 +739,7 @@ function Promise_withResolvers(args, { thisValue }) {
   return EnsureCompletion(obj);
 }
 
-export function bootstrapPromise(realmRec) {
+export function bootstrapPromise(realmRec: Realm) {
   const promiseConstructor = bootstrapConstructor(realmRec, PromiseConstructor, 'Promise', 1, realmRec.Intrinsics['%Promise.prototype%'], [
     ['all', Promise_all, 1],
     ['allSettled', Promise_allSettled, 1],

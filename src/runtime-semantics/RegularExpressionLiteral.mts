@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { Value } from '../value.mts';
 import { RegExpCreate } from '../abstract-ops/all.mts';
 import { BodyText, FlagText } from '../static-semantics/all.mts';

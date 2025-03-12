@@ -1,10 +1,9 @@
-// @ts-nocheck
-import { typedArrayInfoByName, F } from '../abstract-ops/all.mts';
+import { typedArrayInfoByName, F, Realm } from '../abstract-ops/all.mts';
 import { Value } from '../value.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-properties-of-typedarray-prototype-objects */
-export function bootstrapTypedArrayPrototypes(realmRec) {
+export function bootstrapTypedArrayPrototypes(realmRec: Realm) {
   Object.entries(typedArrayInfoByName).forEach(([TypedArray, info]) => {
     const proto = bootstrapPrototype(realmRec, [
       ['BYTES_PER_ELEMENT', F(info.ElementSize), undefined, {
