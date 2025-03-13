@@ -1,5 +1,7 @@
 import { surroundingAgent, HostCallJobCallback, type JobCallbackRecord } from '../engine.mts';
-import { BooleanValue, UndefinedValue, Value } from '../value.mts';
+import {
+  BooleanValue, ObjectValue, SymbolValue, UndefinedValue, Value,
+} from '../value.mts';
 import {
   NormalCompletion, Q, X, type ExpressionCompletion,
 } from '../completion.mts';
@@ -65,16 +67,17 @@ export function CleanupFinalizationRegistry(finalizationRegistry: FinalizationRe
 }
 
 /** https://tc39.es/ecma262/#sec-canbeheldweakly */
-export function CanBeHeldWeakly(value: Value): BooleanValue {
+export function CanBeHeldWeakly(v: Value): BooleanValue {
   // 1. If v is an Object, return true.
-  if (value.type === 'Object') {
-    return Value.true;
-  }
-  // 2. If v is a Symbol and KeyForSymbol(v) is undefined, return true.
-  if (value.type === 'Symbol' && KeyForSymbol(value) === Value.undefined) {
+  if (v instanceof ObjectValue) {
     return Value.true;
   }
 
-  // 3, Return false.
+  // 2. If v is a Symbol and KeyForSymbol(v) is undefined, return true.
+  if (v instanceof SymbolValue && KeyForSymbol(v) === Value.undefined) {
+    return Value.true;
+  }
+
+  // 3. Return false.
   return Value.false;
 }
