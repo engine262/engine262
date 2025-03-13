@@ -1,11 +1,14 @@
 #!/usr/bin/env node
 
-import { spawnSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+'use strict';
+
+const { resolve } = require('node:path');
+const { spawnSync } = require('node:child_process');
+const { fileURLToPath } = require('node:url');
 
 const child = spawnSync(process.execPath, [
   ...process.execArgv, '--disable-warning=ExperimentalWarning', '--experimental-strip-types',
-  fileURLToPath(import.meta.resolve('./engine262.mts')), ...process.argv.slice(2),
+  fileURLToPath(resolve('./engine262.mts')), ...process.argv.slice(2),
 ], {
   stdio: 'inherit',
 });
