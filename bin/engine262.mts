@@ -43,7 +43,7 @@ const argv = parseArgs({
     'module': { type: 'boolean', short: 'm' },
     'features': { type: 'string' },
     'list-features': { type: 'boolean' },
-    'inspector': { type: 'boolean', default: true },
+    'inspector': { type: 'boolean' },
     'preview': { type: 'boolean', default: true },
     // hidden options
     'preview-debug': { type: 'boolean' },
@@ -128,12 +128,24 @@ realm.scope(() => {
   CreateDataProperty(console, Value('debug'), debug);
 });
 
-if (argv.values.inspector) {
-  // @ts-ignore
-  const { attachRealm, inspectorOptions } = await import('../inspector/server.mts');
-  attachRealm(realm);
-  inspectorOptions.preview = argv.values.preview;
-  inspectorOptions.previewDebug = argv.values['preview-debug'] || false;
+if (argv.values.inspector !== false) {
+  let has_ws = false;
+  try {
+    await import('ws');
+    has_ws = true;
+  } catch {
+    if (argv.values.inspector === true) {
+      process.stderr.write('--inspector requires the "ws" package to be installed.\n');
+      process.exit(1);
+    }
+  }
+  if (has_ws) {
+    // @ts-ignore
+    const { attachRealm, inspectorOptions } = await import('../inspector/server.mts');
+    attachRealm(realm);
+    inspectorOptions.preview = argv.values.preview;
+    inspectorOptions.previewDebug = argv.values['preview-debug'] || false;
+  }
 }
 
 function oneShotEval(source: string, filename: string) {
