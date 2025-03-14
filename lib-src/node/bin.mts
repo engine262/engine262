@@ -4,13 +4,15 @@ import { start } from 'node:repl';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { format as _format, inspect as _inspect, parseArgs } from 'node:util';
-import packageJson from '../package.json' with { type: 'json' }; // eslint-disable-line import/order
-import { createRealm, createAgent } from './test262_realm.mts';
+import packageJson from '../../package.json' with { type: 'json' }; // eslint-disable-line import/order
 import {
-  setSurroundingAgent, FEATURES, inspect, Value, CreateBuiltinFunction, CreateDataProperty, OrdinaryObjectCreate, Type, Completion, AbruptCompletion, Throw, JSStringValue,
+  setSurroundingAgent, FEATURES, inspect, Value, CreateBuiltinFunction, CreateDataProperty, OrdinaryObjectCreate, Type, Completion, AbruptCompletion, JSStringValue,
   type Arguments,
-  type PlainCompletion,
   surroundingAgent,
+  evalQ,
+  Agent,
+  ManagedRealm,
+  Throw,
 } from '#self';
 
 const help = `
@@ -84,10 +86,10 @@ if (argv.values.features === 'all') {
   features = [];
 }
 
-const agent = createAgent({ features });
+const agent = new Agent({ features });
 setSurroundingAgent(agent);
 
-const { realm, resolverCache } = createRealm({ printCompatMode: true });
+const realm = new ManagedRealm({});
 // Define console.log
 realm.scope(() => {
   const console = OrdinaryObjectCreate(realm.Intrinsics['%Object.prototype%']);
@@ -141,25 +143,20 @@ if (argv.values.inspector !== false) {
   }
   if (has_ws) {
     // @ts-ignore
-    const { attachRealm, inspectorOptions } = await import('../inspector/server.mts');
-    attachRealm(realm);
-    inspectorOptions.preview = argv.values.preview;
-    inspectorOptions.previewDebug = argv.values['preview-debug'] || false;
+    const { NodeWebsocketInspector } = await import('./inspector.mts');
+    const inspect = await NodeWebsocketInspector.new();
+    inspect.attachRealm(realm);
+    inspect.preference.preview = argv.values.preview;
+    inspect.preference.previewDebug = argv.values['preview-debug'] || false;
   }
 }
 
 function oneShotEval(source: string, filename: string) {
-  function Q<T>(value: PlainCompletion<T>): T {
-    if (value instanceof AbruptCompletion) {
-      throw value;
-    }
-    return value as T;
-  }
   realm.scope(() => {
-    try {
+    const completion = evalQ((Q) => {
       if (argv.values.module || filename.endsWith('.mjs')) {
         const module = Q(realm.createSourceTextModule(filename, source));
-        resolverCache.set(filename, module);
+        realm.HostDefined.resolverCache?.set(filename, module);
         const load = Q(module.LoadRequestedModules());
         if (load.PromiseState === 'rejected') {
           Q(Throw(load.PromiseResult!, 'Raw', load.PromiseResult!));
@@ -174,14 +171,13 @@ function oneShotEval(source: string, filename: string) {
       } else {
         Q(realm.evaluateScript(source, { specifier: filename }));
       }
-    } catch (e) {
-      if (e instanceof AbruptCompletion) {
-        const inspected = inspect(e as AbruptCompletion);
-        process.stderr.write(`${inspected}\n`);
-        process.exit(1);
-      } else {
-        throw e;
-      }
+    });
+    if (completion instanceof AbruptCompletion) {
+      const inspected = inspect(completion);
+      process.stderr.write(`${inspected}\n`);
+      process.exit(1);
+    } else {
+      throw completion;
     }
   });
 }

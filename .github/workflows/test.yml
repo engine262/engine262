@@ -29,12 +29,12 @@ jobs:
       # upload build artifacts
       - uses: actions/upload-artifact@v4
         with:
-          name: engine262-dist
+          name: engine262-lib
           path: |
-            dist/engine262.js
-            dist/engine262.js.map
-            dist/engine262.mjs
-            dist/engine262.mjs.map
+            lib/engine262.js
+            lib/engine262.js.map
+            lib/engine262.mjs
+            lib/engine262.mjs.map
 
       # run tests/coverage
       - run: npm run coverage

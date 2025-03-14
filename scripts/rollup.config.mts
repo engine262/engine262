@@ -3,12 +3,12 @@ import { execSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 import { hash } from 'node:crypto';
 import { createRequire } from 'node:module';
-import { babel } from '@rollup/plugin-babel';
+import { babel, type RollupBabelInputPluginOptions } from '@rollup/plugin-babel';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import { defineConfig, type Plugin } from 'rollup';
-import packageJson from './package.json' with { type: 'json' };
+import packageJson from '../package.json' with { type: 'json' };
 
 const commitHash = execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
 
@@ -19,66 +19,103 @@ const banner = `/*!
  */
 `;
 
-export default defineConfig({
-  input: './src/api.mts',
-  plugins: [
-    importUnicodeLib(),
-    (json.default || json)({ compact: true }),
-    (commonjs.default || commonjs)(),
-    nodeResolve({ exportConditions: ['rollup'], extensions: ['.mts'] }),
-    babel({
-      babelHelpers: 'bundled',
-      exclude: 'node_modules/**',
-      generatorOpts: {
-        importAttributesKeyword: 'with',
-      },
-      presets: [[
-        '@babel/preset-env',
-        {
-          // this includes at least 1 LTS for Node.js
-          targets: ['last 2 node versions'],
-          spec: true,
-          bugfixes: true,
-        },
-      ], [
-        '@babel/preset-typescript',
-        {
-          allowDeclareFields: true,
-        },
-      ]],
-      extensions: ['.mts'],
-      plugins: [
-        './scripts/transform.js',
-        ['@babel/plugin-proposal-decorators', {
-          'version': '2023-11',
-        }],
-      ],
-    }),
-  ],
-  output: [
-    {
-      file: 'dist/engine262.js',
-      format: 'umd',
-      sourcemap: true,
-      name: packageJson.name,
-      banner,
-    },
-    {
-      file: 'dist/engine262.mjs',
-      format: 'es',
-      sourcemap: true,
-      banner,
-    },
-  ],
-  onwarn(warning, warn) {
-    if (warning.code === 'CIRCULAR_DEPENDENCY' || warning.code === 'SOURCEMAP_BROKEN') {
-      // Squelch.
-      return;
-    }
-    process.exitCode = 1;
-    warn(warning);
+const babelOptions: RollupBabelInputPluginOptions = {
+  babelHelpers: 'bundled',
+  exclude: 'node_modules/**',
+  generatorOpts: {
+    importAttributesKeyword: 'with',
   },
-});
+  presets: [[
+    '@babel/preset-env',
+    {
+      // this includes at least 1 LTS for Node.js
+      targets: ['last 2 node versions'],
+      spec: true,
+      bugfixes: true,
+    },
+  ], [
+    '@babel/preset-typescript',
+    {
+      allowDeclareFields: true,
+    },
+  ]],
+  extensions: ['.mts'],
+};
+
+export default defineConfig([
+  {
+    input: 'lib-src/inspector/index.mts',
+    plugins: [
+      babel(babelOptions),
+      {
+        name: 'resolve-self',
+        resolveId(source, _importer, _options) {
+          if (source === '#self') {
+            return { id: './engine262.mjs' };
+          }
+          return undefined;
+        },
+      },
+    ],
+    external: ['./engine262.mjs'],
+    output: [
+      {
+        file: 'lib/inspector.js',
+        format: 'umd',
+        sourcemap: true,
+        name: `${packageJson.name}/inspector`,
+        banner,
+        globals: { './engine262.mjs': '@engine262/engine262' },
+      },
+      {
+        file: 'lib/inspector.mjs',
+        format: 'es',
+        sourcemap: true,
+        banner,
+      },
+    ],
+  },
+  {
+    input: './src/api.mts',
+    plugins: [
+      importUnicodeLib(),
+      (json.default || json)({ compact: true }),
+      (commonjs.default || commonjs)(),
+      nodeResolve({ exportConditions: ['rollup'], extensions: ['.mts'] }),
+      babel({
+        ...babelOptions,
+        plugins: [
+          './scripts/transform.js',
+          ['@babel/plugin-proposal-decorators', {
+            'version': '2023-11',
+          }],
+        ],
+      }),
+    ],
+    output: [
+      {
+        file: 'lib/engine262.js',
+        format: 'umd',
+        sourcemap: true,
+        name: packageJson.name,
+        banner,
+      },
+      {
+        file: 'lib/engine262.mjs',
+        format: 'es',
+        sourcemap: true,
+        banner,
+      },
+    ],
+    onwarn(warning, warn) {
+      if (warning.code === 'CIRCULAR_DEPENDENCY' || warning.code === 'SOURCEMAP_BROKEN') {
+        // Squelch.
+        return;
+      }
+      process.exitCode = 1;
+      warn(warning);
+    },
+  }]);
 
 /**
  * Special handle of the following modules so we don't need to import the whole zlib polyfill.

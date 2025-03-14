@@ -14,7 +14,7 @@
             "program": "${workspaceFolder}\\bin\\engine262.js",
             "args": ["d:/dev/scratch/dispose.js"],
             "outFiles": [
-                "${workspaceFolder}/dist/*.js"
+                "${workspaceFolder}/lib/*.js"
             ]
         }
     ]
