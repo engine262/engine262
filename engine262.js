@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 ecd13a9fce518c68ac510b00560cbd9755897fd8
+ * engine262 0.0.1 a59c8b0bceee0f55d615ace8438ed7fb6d0e565e
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -57519,17 +57519,18 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   /** https://tc39.es/ecma262/#sec-canbeheldweakly */
-  function CanBeHeldWeakly(value) {
+  function CanBeHeldWeakly(v) {
     // 1. If v is an Object, return true.
-    if (value.type === 'Object') {
-      return Value.true;
-    }
-    // 2. If v is a Symbol and KeyForSymbol(v) is undefined, return true.
-    if (value.type === 'Symbol' && KeyForSymbol(value) === Value.undefined) {
+    if (v instanceof ObjectValue) {
       return Value.true;
     }
 
-    // 3, Return false.
+    // 2. If v is a Symbol and KeyForSymbol(v) is undefined, return true.
+    if (v instanceof SymbolValue && KeyForSymbol(v) === Value.undefined) {
+      return Value.true;
+    }
+
+    // 3. Return false.
     return Value.false;
   }
 
