@@ -2,7 +2,7 @@ import type { Mutable } from '../helpers.mts';
 import { Token, isAutomaticSemicolon } from './tokens.mts';
 import { ExpressionParser } from './ExpressionParser.mts';
 import { FunctionKind } from './FunctionParser.mts';
-import { getDeclarations } from './Scope.mts';
+import { getDeclarations, type LabelType } from './Scope.mts';
 import type { ParseNode } from './ParseNode.mts';
 
 export abstract class StatementParser extends ExpressionParser {
@@ -920,7 +920,7 @@ export abstract class StatementParser extends ExpressionParser {
       if (this.scope.labels.find((l) => l.name === LabelIdentifier.name)) {
         this.raiseEarly('AlreadyDeclared', node.LabelIdentifier, node.LabelIdentifier.name);
       }
-      let type = null;
+      let type: LabelType | null = null;
       switch (this.peek().type) {
         case Token.SWITCH:
           type = 'switch';

@@ -123,7 +123,7 @@ export type ScopeFlagSetters =
     readonly variable?: boolean;
     readonly variableFunctions?: boolean;
     readonly private?: boolean;
-    readonly label?: string;
+    readonly label?: LabelType | 'boundary';
     readonly strict?: boolean;
   };
 
@@ -161,8 +161,10 @@ export interface AssignmentInfo {
   clear(): void;
 }
 
+export type LabelType = 'switch' | 'loop';
+
 export interface Label {
-  type: string | null;
+  type: LabelType | null;
   readonly name?: string;
   readonly nextToken?: TokenData | null;
 }
