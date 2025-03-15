@@ -1,7 +1,15 @@
 import type { Protocol } from 'devtools-protocol';
+import type { InspectorContext } from './context.mts';
+
+export interface DebuggerPreference {
+  preview: boolean;
+  previewDebug: boolean;
+}
 
 export interface DebuggerContext {
   sendEvent: DevtoolEvents;
+  getContext(executionContextId?: number | undefined): InspectorContext;
+  preference: DebuggerPreference;
 }
 export interface DebuggerNamespace {
   /** https://chromedevtools.github.io/devtools-protocol/v8/Debugger/#method-continueToLocation */

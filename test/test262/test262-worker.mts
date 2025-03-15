@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-multi-assign */
-import path from 'node:path';
-import fs from 'node:fs';
-import util from 'node:util';
-import { createRealm, createAgent } from '../../bin/test262_realm.mts';
+import * as path from 'node:path';
+import * as fs from 'node:fs';
+import * as util from 'node:util';
 import {
   readList, type SupervisorToWorker, type Test, type WorkerToSupervisor,
 } from '../base.mts';
+import { createRealm, createAgent } from './test262_realm.mts';
 import {
-  AbruptCompletion, ObjectValue, __Q2,
+  AbruptCompletion, ObjectValue, evalQ,
   setSurroundingAgent,
   inspect,
   Value,
@@ -119,7 +119,7 @@ __consolePrintHandle__('Test262:AsyncTestComplete');
 
     const specifier = path.resolve(TEST262_TESTS, test.file);
 
-    const completion = __Q2((Q) => {
+    const completion = evalQ((Q) => {
       if (test.attrs.flags.module) {
         const module = Q(realm.createSourceTextModule(specifier, test.contents));
         resolverCache.set(specifier, module);

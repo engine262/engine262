@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import path from 'node:path';
-import fs from 'node:fs';
+import { loadImportedModuleSync } from '../../lib-src/node/module.mts';
 import {
   Value,
   CreateBuiltinFunction,
@@ -13,15 +12,12 @@ import {
   inspect,
   gc,
   Agent,
-  Realm,
   type OrdinaryObject,
   type Arguments,
   SourceTextModuleRecord,
   type ExpressionCompletion,
-  NullValue,
   EnsureCompletion,
-  __Q2,
-  Throw,
+  evalQ,
   surroundingAgent,
   isArrayBufferObject,
   isBuiltinFunctionObject,
@@ -35,31 +31,7 @@ export interface CreateAgentOptions {
 
 export const createAgent = ({ features = [] }: CreateAgentOptions) => new Agent({
   features,
-  loadImportedModule(referrer, specifier, _hostDefined, finish) {
-    if (referrer instanceof Realm || referrer instanceof NullValue) {
-      throw new Error('Internal error: loadImportedModule called without a ScriptOrModule referrer.');
-    }
-    const realm = referrer.Realm as ManagedRealm;
-
-    __Q2((Q) => {
-      const base = path.dirname(referrer.HostDefined.specifier!);
-      const resolved = path.resolve(base, specifier);
-      if (realm.HostDefined.resolverCache!.has(resolved)) {
-        finish(realm.HostDefined.resolverCache!.get(resolved)!);
-        return;
-      }
-      try {
-        const source = fs.readFileSync(resolved, 'utf8');
-        const m = Q(resolved.endsWith('.json')
-          ? realm.createJSONModule(resolved, source)
-          : realm.createSourceTextModule(resolved, source));
-        realm.HostDefined.resolverCache!.set(resolved, m);
-        finish(m);
-      } catch (error) {
-        finish(Throw('SyntaxError', 'CouldNotResolveModule', specifier));
-      }
-    });
-  },
+  loadImportedModule: loadImportedModuleSync,
 });
 
 export interface Test262CreateRealm {
@@ -127,7 +99,7 @@ export function createRealm({ printCompatMode = false }: CreateRealmOptions = {}
         const info = createRealm();
         return info.$262;
       }],
-      ['evalScript', ([sourceText]) => __Q2((Q) => realm.evaluateScript(Q(ToString(sourceText)).stringValue())), 1],
+      ['evalScript', ([sourceText]) => evalQ((Q) => realm.evaluateScript(Q(ToString(sourceText)).stringValue())), 1],
       ['detachArrayBuffer', ([arrayBuffer]) => {
         if (!isArrayBufferObject(arrayBuffer)) {
           return surroundingAgent.Throw('TypeError', 'Raw', 'Argument must be an ArrayBuffer');

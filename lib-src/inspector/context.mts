@@ -1,56 +1,56 @@
 import type { Protocol } from 'devtools-protocol';
 import {
-  __Q2,
-  BigIntValue, BooleanValue, Descriptor, EnsureCompletion, Get, IsAccessorDescriptor, IsArray, IsPromise, JSStringValue, NullValue, NumberValue, ObjectValue, R, SymbolValue, ThrowCompletion, Type, UndefinedValue, Value, type ExpressionCompletion, type ManagedRealm,
+  evalQ,
+  BigIntValue, BooleanValue, Descriptor, EnsureCompletion, Get, IsAccessorDescriptor, IsArray, IsPromise, JSStringValue, ManagedRealm, NullValue, NumberValue, ObjectValue, R, SymbolValue, ThrowCompletion, Type, UndefinedValue, Value, type ExpressionCompletion,
   type MapObject,
   type PromiseObject,
 } from '#self';
 
-class InspectorContext {
+export class InspectorContext {
   realm: ManagedRealm;
 
-  idToObject = new Map<string, ObjectValue>();
+  #idToObject = new Map<string, ObjectValue>();
 
-  objectToId = new Map<ObjectValue, string>();
+  #objectToId = new Map<ObjectValue, string>();
 
-  objectCounter = 0;
+  #objectCounter = 0;
 
-  previewStack: Value[] = [];
+  #previewStack: Value[] = [];
 
   constructor(realm: ManagedRealm) {
     this.realm = realm;
   }
 
   internObject(object: ObjectValue, group = 'default') {
-    if (this.objectToId.has(object)) {
-      return this.objectToId.get(object)!;
+    if (this.#objectToId.has(object)) {
+      return this.#objectToId.get(object)!;
     }
-    const id = `${group}:${this.objectCounter}`;
-    this.objectCounter += 1;
-    this.idToObject.set(id, object);
-    this.objectToId.set(object, id);
+    const id = `${group}:${this.#objectCounter}`;
+    this.#objectCounter += 1;
+    this.#idToObject.set(id, object);
+    this.#objectToId.set(object, id);
     return id;
   }
 
   releaseObject(id: string) {
-    const object = this.idToObject.get(id);
+    const object = this.#idToObject.get(id);
     if (object) {
-      this.idToObject.delete(id);
-      this.objectToId.delete(object);
+      this.#idToObject.delete(id);
+      this.#objectToId.delete(object);
     }
   }
 
   releaseObjectGroup(group: string) {
-    for (const [id, object] of this.idToObject.entries()) {
+    for (const [id, object] of this.#idToObject.entries()) {
       if (id.startsWith(group)) {
-        this.idToObject.delete(id);
-        this.objectToId.delete(object);
+        this.#idToObject.delete(id);
+        this.#objectToId.delete(object);
       }
     }
   }
 
   getObject(objectId: string) {
-    return this.idToObject.get(objectId);
+    return this.#idToObject.get(objectId);
   }
 
   toRemoteObject(object: Value, options: Protocol.Runtime.EvaluateRequest & Protocol.Runtime.GetPropertiesRequest): Protocol.Runtime.RemoteObject {
@@ -103,8 +103,8 @@ class InspectorContext {
     if (options.generatePreview
       && result.type === 'object'
       && result.subtype !== 'null'
-      && !this.previewStack.includes(object)) {
-      this.previewStack.push(object);
+      && !this.#previewStack.includes(object)) {
+      this.#previewStack.push(object);
       const properties_completion = this.getPropertyPreview((object as ObjectValue), options);
       const properties = properties_completion instanceof ThrowCompletion ? [] : properties_completion;
       let entries: Protocol.Runtime.EntryPreview[] | undefined;
@@ -114,7 +114,7 @@ class InspectorContext {
           value: this.toRemoteObject(d.Value!, options).preview!,
         }));
       }
-      this.previewStack.pop();
+      this.#previewStack.pop();
       result.preview = {
         type: result.type,
         subtype: result.subtype,
@@ -148,7 +148,7 @@ class InspectorContext {
       });
     });
 
-    const value = __Q2((Q) => {
+    const value = evalQ((Q) => {
       let p: NullValue | ObjectValue = object;
       while (p instanceof ObjectValue) {
         for (const key of Q(p.OwnPropertyKeys())) {
@@ -210,7 +210,7 @@ class InspectorContext {
     const wrap = (v: Value) => this.toRemoteObject(v, options);
 
     const properties: Protocol.Runtime.PropertyPreview[] = [];
-    const value = __Q2((Q) => {
+    const value = evalQ((Q) => {
       const keys = Q(object.OwnPropertyKeys());
       for (const key of keys) {
         if (IsArray(object) === Value.true && key.type === 'String' && key.stringValue() === 'length') {
@@ -320,14 +320,6 @@ class InspectorContext {
   }
 }
 
-const contexts: InspectorContext[] = [];
-function attachRealm(realm: ManagedRealm) {
-  contexts.push(new InspectorContext(realm));
-}
-
-function getContext(id = 0) {
-  return contexts[id];
-}
 function getObjectValueSubtype(object: ObjectValue): Protocol.Runtime.PropertyPreview['subtype'] {
   switch (true) {
     case IsArray(object) === Value.true:
@@ -362,6 +354,3 @@ function getObjectValueSubtype(object: ObjectValue): Protocol.Runtime.PropertyPr
       return undefined;
   }
 }
-
-export { attachRealm, getContext };
-export const inspectorOptions = { preview: true, previewDebug: false };

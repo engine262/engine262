@@ -1,4 +1,3 @@
-import { getContext, inspectorOptions } from './context.mts';
 import type {
   DebuggerNamespace, HeapProfilerNamespace, ProfilerNamespace, RuntimeNamespace,
 } from './types.mts';
@@ -27,7 +26,7 @@ export const Runtime: RuntimeNamespace = {
   compileScript() {
     return { scriptId: 'script.0' };
   },
-  callFunctionOn(options) {
+  callFunctionOn(options, { getContext }) {
     const context = getContext(options.executionContextId);
     const { Value: F } = context.realm.evaluateScript(`(${options.functionDeclaration})`) as NormalCompletion<FunctionObject>;
     const thisValue = options.objectId
@@ -46,10 +45,11 @@ export const Runtime: RuntimeNamespace = {
       return Value.undefined;
     });
     const r = Call(F, thisValue, args || []);
+    // @ts-expect-error
     return context.createEvaluationResult(r, options);
   },
-  evaluate(options) {
-    if (options.awaitPromise || (!inspectorOptions.preview && options.throwOnSideEffect)) {
+  evaluate(options, { preference, getContext }) {
+    if (options.awaitPromise || (!preference.preview && options.throwOnSideEffect)) {
       return {
         result: { type: 'undefined' },
         exceptionDetails: {
@@ -62,13 +62,15 @@ export const Runtime: RuntimeNamespace = {
     // TODO: introduce devtool scoping
     const finalSource = options.throwOnSideEffect ? `{\n${options.expression}}\n` : options.expression;
     const r = context.realm.evaluateScript(finalSource, { inspectorPreview: options.throwOnSideEffect });
+    // @ts-expect-error
     return context.createEvaluationResult(r, options);
   },
-  getExceptionDetails(req) {
+  getExceptionDetails(req, { getContext }) {
     const context = getContext();
     const object = context.getObject(req.errorObjectId)!;
     if (object instanceof ObjectValue) {
       return {
+        // @ts-expect-error
         exceptionDetails: context.createExceptionDetails(ThrowCompletion(object), {}),
       };
     }
@@ -86,21 +88,22 @@ export const Runtime: RuntimeNamespace = {
   getIsolateId() {
     return { id: 'isolate.0' };
   },
-  getProperties(options) {
+  getProperties(options, { getContext }) {
     const context = getContext();
     const object = context.getObject(options.objectId)!;
+    // @ts-expect-error
     return context.getProperties(object, options);
   },
-  globalLexicalScopeNames({ executionContextId }) {
+  globalLexicalScopeNames({ executionContextId }, { getContext }) {
     const context = getContext(executionContextId);
     const envRec = context.realm.GlobalEnv;
     const names = Array.from(envRec.DeclarativeRecord.bindings.keys(), (v) => v.stringValue());
     return { names };
   },
-  releaseObject(req) {
+  releaseObject(req, { getContext }) {
     getContext().releaseObject(req.objectId);
   },
-  releaseObjectGroup({ objectGroup }) {
+  releaseObjectGroup({ objectGroup }, { getContext }) {
     getContext().releaseObjectGroup(objectGroup);
   },
   runIfWaitingForDebugger(_, ctx) {

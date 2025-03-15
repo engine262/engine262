@@ -352,15 +352,26 @@ export function IfAbruptRejectPromise<T>(_value: T, _capability: PromiseCapabili
  * This is a util for code that cannot use Q() or X() marco to emulate this behaviour.
  *
  * @example
- * import { __Q2 } from '...'
- * __Q2((Q) => {
+ * import { evalQ } from '...'
+ * evalQ((Q) => {
  *     let val = Q(operation);
  * });
  */
-export function __Q2<T>(callback: (q: typeof ReturnIfAbrupt, x: typeof X) => T): NormalCompletion<T> | ThrowCompletion {
+export function evalQ<T>(callback: (q: typeof ReturnIfAbrupt, x: typeof X) => Promise<T>): Promise<NormalCompletion<T> | ThrowCompletion>
+export function evalQ<T>(callback: (q: typeof ReturnIfAbrupt, x: typeof X) => T): NormalCompletion<T> | ThrowCompletion
+export function evalQ<T>(callback: (q: typeof ReturnIfAbrupt, x: typeof X) => T | Promise<T>): Promise<NormalCompletion<T> | ThrowCompletion> | NormalCompletion<T> | ThrowCompletion {
   try {
+    const result = callback(ReturnIfAbruptRuntime, XRuntime);
+    if (result instanceof Promise) {
+      return result.then(EnsureCompletion, (error) => {
+        if (error instanceof ThrowCompletion) {
+          return error;
+        }
+        throw error;
+      });
+    }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return EnsureCompletion(callback(ReturnIfAbruptRuntime, XRuntime)) as any;
+    return EnsureCompletion(result) as any;
   } catch (error) {
     if (error instanceof ThrowCompletion) {
       return error;

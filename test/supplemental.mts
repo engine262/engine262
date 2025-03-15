@@ -1,6 +1,6 @@
 // @ts-check
 import assert from 'assert';
-import { createAgent, createRealm } from '../bin/test262_realm.mts';
+import { createAgent, createRealm } from './test262/test262_realm.mts';
 import {
   incr_total, pass, fail, startTestPrinter,
 } from './base.mts';
