@@ -41,7 +41,6 @@ import {
   F, R, R as MathematicalValue,
   Realm,
   type MatchRecord,
-  type FunctionObject,
   type OrdinaryObject,
 } from '../abstract-ops/all.mts';
 import { RegExpState as State, GetSubstitution } from '../runtime-semantics/all.mts';
@@ -426,9 +425,9 @@ function RegExpProto_matchAll([string = Value.undefined]: Arguments, { thisValue
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   const S = Q(ToString(string));
-  const C = Q(SpeciesConstructor(R, surroundingAgent.intrinsic('%RegExp%') as FunctionObject));
+  const C = Q(SpeciesConstructor(R, surroundingAgent.intrinsic('%RegExp%')));
   const flags = Q(ToString(Q(Get(R, Value('flags')))));
-  const matcher = Q(Construct(C as FunctionObject, [R, flags]));
+  const matcher = Q(Construct(C, [R, flags]));
   const lastIndex = Q(ToLength(Q(Get(R, Value('lastIndex')))));
   Q(Set(matcher, Value('lastIndex'), lastIndex, Value.true));
   let global;
@@ -654,12 +653,12 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined]: 
   }
   const S = Q(ToString(string));
 
-  const C = Q(SpeciesConstructor(rx, surroundingAgent.intrinsic('%RegExp%') as FunctionObject));
+  const C = Q(SpeciesConstructor(rx, surroundingAgent.intrinsic('%RegExp%')));
   const flagsValue = Q(Get(rx, Value('flags')));
   const flags = Q(ToString(flagsValue)).stringValue();
   const unicodeMatching = flags.includes('u') ? Value.true : Value.false;
   const newFlags = flags.includes('y') ? Value(flags) : Value(`${flags}y`);
-  const splitter = Q(Construct(C as FunctionObject, [rx, newFlags]));
+  const splitter = Q(Construct(C, [rx, newFlags]));
 
   const A = X(ArrayCreate(0));
   let lengthA = 0;

@@ -976,3 +976,6 @@ export interface NativeSteps {
   (this: BuiltinFunctionObject, args: Arguments, context: FunctionCallContext): void | ExpressionCompletion;
   section?: string;
 }
+export interface CanBeNativeSteps {
+  (...args: Value[]): void | ExpressionCompletion;
+}

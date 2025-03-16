@@ -13,6 +13,7 @@ import {
 import { Q, X, type ExpressionCompletion } from '../completion.mts';
 import type { Mutable } from '../helpers.mts';
 import type { YieldEvaluator } from '../evaluator.mts';
+import { isTypedArrayObject } from '../intrinsics/TypedArray.mts';
 import {
   AbstractRelationalComparison,
   Assert,
@@ -25,7 +26,6 @@ import {
   IsDataDescriptor,
   IsArray,
   IsConstructor,
-  IsDetachedBuffer,
   OrdinaryDefineOwnProperty,
   OrdinaryGetOwnProperty,
   LengthOfArrayLike,
@@ -38,13 +38,15 @@ import {
   IsPropertyKey,
   isArrayIndex,
   isNonNegativeInteger,
-  Yield,
   F, R,
   type OrdinaryObject,
   type FunctionObject,
-  isIntegerIndexedExoticObject,
   type GeneratorObject,
-  type ArrayBufferObject,
+  MakeTypedArrayWithBufferWitnessRecord,
+  IsTypedArrayOutOfBounds,
+  TypedArrayLength,
+  CreateIteratorResultObject,
+  GeneratorYield,
 } from './all.mts';
 
 const InternalMethods = {
@@ -261,10 +263,6 @@ export function CompareArrayElements(x: Value, y: Value, comparefn: FunctionObje
 
 /** https://tc39.es/ecma262/#sec-createarrayiterator */
 export function CreateArrayIterator(array: ObjectValue, kind: 'key+value' | 'key' | 'value'): ExpressionCompletion<GeneratorObject> {
-  // 1. Assert: Type(array) is Object.
-  Assert(array instanceof ObjectValue);
-  // 2. Assert: kind is key+value, key, or value.
-  Assert(kind === 'key+value' || kind === 'key' || kind === 'value');
   // 3. Let closure be a new Abstract Closure with no parameters that captures kind and array and performs the following steps when called:
   const closure = function* closure(): YieldEvaluator {
     // a. Let index be 0.
@@ -272,14 +270,15 @@ export function CreateArrayIterator(array: ObjectValue, kind: 'key+value' | 'key
     // b. Repeat,
     while (true) {
       let len;
+      let result;
       // i. If array has a [[TypedArrayName]] internal slot, then
-      if (isIntegerIndexedExoticObject(array)) {
-        // 1. If IsDetachedBuffer(array.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
-        if (IsDetachedBuffer(array.ViewedArrayBuffer as ArrayBufferObject) === Value.true) {
-          return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+      if (isTypedArrayObject(array)) {
+        const taRecord = MakeTypedArrayWithBufferWitnessRecord(array, 'seq-cst');
+        if (IsTypedArrayOutOfBounds(taRecord)) {
+          return surroundingAgent.Throw('TypeError', 'TypedArrayOutOfBounds');
         }
         // 2. Let len be array.[[ArrayLength]].
-        len = array.ArrayLength;
+        len = TypedArrayLength(taRecord);
       } else { // ii. Else,
         // 1. Let len be ? LengthOfArrayLike(array).
         len = Q(LengthOfArrayLike(array));
@@ -288,28 +287,30 @@ export function CreateArrayIterator(array: ObjectValue, kind: 'key+value' | 'key
       if (index >= len) {
         return Value.undefined;
       }
-      // iv. If kind is key, perform ? Yield(𝔽(index)).
+      const indexNumber = F(index);
+      // iv. If kind is key,
       if (kind === 'key') {
-        Q(yield* Yield(F(index)));
+        result = indexNumber;
       } else { // v. Else,
-        // 1. Let elementKey be ! ToString(𝔽(index)).
-        const elementKey = X(ToString(F(index)));
+        // 1. Let elementKey be ! ToString(indexNumber).
+        const elementKey = X(ToString(indexNumber));
         // 2. Let elementValue be ? Get(array, elementKey).
         const elementValue = Q(Get(array, elementKey));
         // 3. If kind is value, perform ? Yield(elementValue).
         if (kind === 'value') {
-          Q(yield* Yield(elementValue));
+          result = elementValue;
         } else { // 4. Else,
           // a. Assert: kind is key+value.
           Assert(kind === 'key+value');
           // b. Perform ? Yield(! CreateArrayFromList(« 𝔽(index), elementValue »)).
-          Q(yield* Yield(X(CreateArrayFromList([F(index), elementValue]))));
+          result = CreateArrayFromList([indexNumber, elementValue]);
         }
       }
+      Q(yield* GeneratorYield(CreateIteratorResultObject(result, Value.false)));
       // vi. Set index to index + 1.
       index += 1;
     }
   };
-  // 4. Return ! CreateIteratorFromClosure(closure, "%ArrayIteratorPrototype%", %ArrayIteratorPrototype%).
-  return X(CreateIteratorFromClosure(closure, Value('%ArrayIteratorPrototype%'), surroundingAgent.intrinsic('%ArrayIteratorPrototype%')));
+  // 4. Return CreateIteratorFromClosure(closure, "%ArrayIteratorPrototype%", %ArrayIteratorPrototype%).
+  return CreateIteratorFromClosure(closure, Value('%ArrayIteratorPrototype%'), surroundingAgent.intrinsic('%ArrayIteratorPrototype%'));
 }

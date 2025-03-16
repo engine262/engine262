@@ -17,7 +17,8 @@ import {
   Realm,
 } from '../abstract-ops/all.mts';
 import {
-  Q, X, type ExpressionCompletion, type PlainCompletion,
+  NormalCompletion,
+  Q, ThrowCompletion, X, type ExpressionCompletion, type PlainCompletion,
 } from '../completion.mts';
 import { surroundingAgent } from '../engine.mts';
 import {
@@ -113,6 +114,43 @@ export function ArrayProto_sortBody(obj: ObjectValue, len: number, SortCompare: 
   }
 
   return obj;
+}
+
+/** https://tc39.es/ecma262/#sec-sortindexedproperties */
+export function SortIndexedProperties(obj: ObjectValue, len: number, SortCompare: (x: Value, y: Value) => ExpressionCompletion<NumberValue>, holes: 'skip-holes' | 'read-through-holes'): PlainCompletion<Value[]> {
+  const items = [];
+  let k = 0;
+  while (k < len) {
+    const Pk = X(ToString(F(k)));
+    let kRead;
+    if (holes === 'skip-holes') {
+      kRead = Q(HasProperty(obj, Pk));
+    } else {
+      Assert(holes === 'read-through-holes');
+      kRead = Value.true;
+    }
+    if (kRead === Value.true) {
+      const kValue = Q(Get(obj, Pk));
+      items.push(kValue);
+    }
+    k += 1;
+  }
+  let completion: ExpressionCompletion<NumberValue> = NormalCompletion(Value(0));
+  items.sort((a, b) => {
+    if (completion instanceof ThrowCompletion) {
+      return 0;
+    }
+    completion = SortCompare(a, b);
+    if (completion instanceof ThrowCompletion) {
+      return 0;
+    }
+    const cmp = R(X(completion));
+    return cmp;
+  });
+  if (completion instanceof ThrowCompletion) {
+    return completion;
+  }
+  return items;
 }
 
 export function bootstrapArrayPrototypeShared(realmRec: Realm, proto: ObjectValue, priorToEvaluatingAlgorithm: (value: Value) => void, objectToLength: (o: ObjectValue) => PlainCompletion<number>) {

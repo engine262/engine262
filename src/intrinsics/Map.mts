@@ -6,8 +6,7 @@ import {
   GetIterator,
   IsCallable,
   IteratorClose,
-  IteratorStep,
-  IteratorValue,
+  IteratorStepValue,
   OrdinaryCreateFromConstructor,
   Realm,
   type FunctionObject,
@@ -24,33 +23,30 @@ import {
 import {
   IfAbruptCloseIterator,
   Q,
+  type ExpressionCompletion,
 } from '../completion.mts';
 import { __ts_cast__, type Mutable } from '../helpers.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 
-export function AddEntriesFromIterable(target: ObjectValue, iterable: Value, adder: Value) {
-  if (IsCallable(adder) === Value.false) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', adder);
-  }
-  Assert(iterable !== undefined && iterable !== Value.undefined && iterable !== Value.null);
+export function AddEntriesFromIterable(target: ObjectValue, iterable: Value, adder: FunctionObject): ExpressionCompletion {
+  Assert(iterable !== Value.undefined && iterable !== Value.null);
   const iteratorRecord = Q(GetIterator(iterable, 'sync'));
   while (true) {
-    const next = Q(IteratorStep(iteratorRecord));
-    if (next === Value.false) {
+    const next = Q(IteratorStepValue(iteratorRecord));
+    if (next === 'done') {
       return target;
     }
-    const nextItem = Q(IteratorValue(next as ObjectValue));
-    if (!(nextItem instanceof ObjectValue)) {
-      const error = surroundingAgent.Throw('TypeError', 'NotAnObject', nextItem);
+    if (!(next instanceof ObjectValue)) {
+      const error = surroundingAgent.Throw('TypeError', 'NotAnObject', next);
       return Q(IteratorClose(iteratorRecord, error));
     }
     // e. Let k be Get(nextItem, "0").
-    const k = Get(nextItem, Value('0'));
+    const k = Get(next, Value('0'));
     // f. IfAbruptCloseIterator(k, iteratorRecord).
     IfAbruptCloseIterator(k, iteratorRecord);
     __ts_cast__<Value>(k);
     // g. Let v be Get(nextItem, "1").
-    const v = Get(nextItem, Value('1'));
+    const v = Get(next, Value('1'));
     // h. IfAbruptCloseIterator(v, iteratorRecord).
     IfAbruptCloseIterator(v, iteratorRecord);
     __ts_cast__<Value>(v);
@@ -80,8 +76,11 @@ function MapConstructor(this: FunctionObject, [iterable = Value.undefined]: Argu
   }
   // 5. Let adder be ? Get(map, "set").
   const adder = Q(Get(map, Value('set')));
+  if (IsCallable(adder) === Value.false) {
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', adder);
+  }
   // 6. Return ? AddEntriesFromIterable(map, iterable, adder).
-  return Q(AddEntriesFromIterable(map, iterable, adder));
+  return Q(AddEntriesFromIterable(map, iterable, adder as FunctionObject));
 }
 
 /** https://tc39.es/ecma262/#sec-get-map-@@species */

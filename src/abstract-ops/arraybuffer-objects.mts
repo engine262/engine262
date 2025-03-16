@@ -1,6 +1,6 @@
 import { surroundingAgent } from '../engine.mts';
 import {
-  NumberValue, BigIntValue, BooleanValue, ObjectValue, Value,
+  NumberValue, BigIntValue, BooleanValue, Value,
   DataBlock,
   UndefinedValue,
   NullValue,
@@ -9,15 +9,14 @@ import {
   Q, X, NormalCompletion, type ExpressionCompletion,
 } from '../completion.mts';
 import type { Mutable } from '../helpers.mts';
+import { typedArrayInfoByType, type TypedArrayTypes } from '../intrinsics/TypedArray.mts';
 import {
   Assert, OrdinaryCreateFromConstructor,
   isNonNegativeInteger, CreateByteDataBlock,
-  SameValue, IsConstructor, CopyDataBlockBytes,
-  typedArrayInfoByType,
+  SameValue, CopyDataBlockBytes,
   F,
   Z, R,
   type FunctionObject,
-  type TypedArrayTypes,
   type OrdinaryObject,
 } from './all.mts';
 
@@ -27,16 +26,30 @@ export interface ArrayBufferObject extends OrdinaryObject {
   readonly ArrayBufferDetachKey: Value;
 }
 
+export interface ResizableArrayBufferObject extends ArrayBufferObject {
+  readonly ArrayBufferMaxByteLength: number;
+}
+
 export function isArrayBufferObject(o: Value): o is ArrayBufferObject {
   return 'ArrayBufferDetachKey' in o;
 }
 
 /** https://tc39.es/ecma262/#sec-allocatearraybuffer */
-export function AllocateArrayBuffer(constructor: FunctionObject, byteLength: number): ExpressionCompletion<ArrayBufferObject> {
-  // 1. Let obj be ? OrdinaryCreateFromConstructor(constructor, "%ArrayBuffer.prototype%", « [[ArrayBufferData]], [[ArrayBufferByteLength]], [[ArrayBufferDetachKey]] »).
-  const obj = Q(OrdinaryCreateFromConstructor(constructor, '%ArrayBuffer.prototype%', [
-    'ArrayBufferData', 'ArrayBufferByteLength', 'ArrayBufferDetachKey',
-  ])) as Mutable<ArrayBufferObject>;
+export function AllocateArrayBuffer(constructor: FunctionObject, byteLength: number, maxByteLength?: number): ExpressionCompletion<ArrayBufferObject> {
+  const slots = ['ArrayBufferData', 'ArrayBufferByteLength', 'ArrayBufferDetachKey'];
+  let allocatingResizableBuffer;
+  if (maxByteLength !== undefined) {
+    allocatingResizableBuffer = true;
+  } else {
+    allocatingResizableBuffer = false;
+  }
+  if (allocatingResizableBuffer) {
+    if (byteLength > maxByteLength!) {
+      return surroundingAgent.Throw('RangeError', 'ResizableBufferInvalidMaxByteLength');
+    }
+    slots.push('ArrayBufferMaxByteLength');
+  }
+  const obj = Q(OrdinaryCreateFromConstructor(constructor, '%ArrayBuffer.prototype%', slots)) as Mutable<ArrayBufferObject>;
   // 2. Assert: byteLength is a non-negative integer.
   Assert(isNonNegativeInteger(byteLength));
   // 3. Let block be ? CreateByteDataBlock(byteLength).
@@ -46,28 +59,22 @@ export function AllocateArrayBuffer(constructor: FunctionObject, byteLength: num
   // 5. Set obj.[[ArrayBufferByteLength]] to byteLength.
   obj.ArrayBufferByteLength = byteLength;
   // 6. Return obj.
+  if (allocatingResizableBuffer) {
+    (obj as Mutable<ResizableArrayBufferObject>).ArrayBufferMaxByteLength = maxByteLength!;
+  }
   return obj;
 }
 
 /** https://tc39.es/ecma262/#sec-isdetachedbuffer */
 export function IsDetachedBuffer(arrayBuffer: ArrayBufferObject) {
-  // 1. Assert: Type(arrayBuffer) is Object and it has an [[ArrayBufferData]] internal slot.
-  Assert(arrayBuffer instanceof ObjectValue && 'ArrayBufferData' in arrayBuffer);
-  // 2. If arrayBuffer.[[ArrayBufferData]] is null, return true.
   if (arrayBuffer.ArrayBufferData === Value.null) {
     return Value.true;
   }
-  // 3. Return false.
   return Value.false;
 }
 
 /** https://tc39.es/ecma262/#sec-detacharraybuffer */
 export function DetachArrayBuffer(arrayBuffer: Mutable<ArrayBufferObject>, key?: Value) {
-  // 1. Assert: Type(arrayBuffer) is Object and it has [[ArrayBufferData]], [[ArrayBufferByteLength]], and [[ArrayBufferDetachKey]] internal slots.
-  Assert(arrayBuffer instanceof ObjectValue
-         && 'ArrayBufferData' in arrayBuffer
-         && 'ArrayBufferByteLength' in arrayBuffer
-         && 'ArrayBufferDetachKey' in arrayBuffer);
   // 2. Assert: IsSharedArrayBuffer(arrayBuffer) is false.
   Assert(IsSharedArrayBuffer(arrayBuffer) === Value.false);
   // 3. If key is not present, set key to undefined.
@@ -83,8 +90,7 @@ export function DetachArrayBuffer(arrayBuffer: Mutable<ArrayBufferObject>, key?:
   arrayBuffer.ArrayBufferData = Value.null;
   // 6. Set arrayBuffer.[[ArrayBufferByteLength]] to 0.
   arrayBuffer.ArrayBufferByteLength = 0;
-  // 7. Return NormalCompletion(null).
-  return NormalCompletion(Value.null);
+  return undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-issharedarraybuffer */
@@ -92,24 +98,12 @@ export function IsSharedArrayBuffer(_obj: Value): BooleanValue {
   return Value.false;
 }
 
-export function CloneArrayBuffer(srcBuffer: ArrayBufferObject, srcByteOffset: number, srcLength: number, cloneConstructor: FunctionObject) {
-  // 1. Assert: Type(srcBuffer) is Object and it has an [[ArrayBufferData]] internal slot.
-  Assert(srcBuffer instanceof ObjectValue && 'ArrayBufferData' in srcBuffer);
-  // 2. Assert: IsConstructor(cloneConstructor) is true.
-  Assert(IsConstructor(cloneConstructor) === Value.true);
-  // 3. Let targetBuffer be ? AllocateArrayBuffer(cloneConstructor, srcLength).
-  const targetBuffer = Q(AllocateArrayBuffer(cloneConstructor, srcLength));
-  // 4. If IsDetachedBuffer(srcBuffer) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(srcBuffer) === Value.true) {
-    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
-  }
-  // 5. Let srcBlock be srcBuffer.[[ArrayBufferData]].
+export function CloneArrayBuffer(srcBuffer: ArrayBufferObject, srcByteOffset: number, srcLength: number): ExpressionCompletion<ArrayBufferObject> {
+  Assert(IsDetachedBuffer(srcBuffer) === Value.false);
+  const targetBuffer = Q(AllocateArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), srcLength));
   const srcBlock = srcBuffer.ArrayBufferData as DataBlock;
-  // 6. Let targetBlock be targetBuffer.[[ArrayBufferData]].
   const targetBlock = targetBuffer.ArrayBufferData as DataBlock;
-  // 7. Perform CopyDataBlockBytes(targetBlock, 0, srcBlock, srcByteOffset, srcLength).
   CopyDataBlockBytes(targetBlock, 0, srcBlock, srcByteOffset, srcLength);
-  // 8. Return targetBuffer.
   return targetBuffer;
 }
 
@@ -139,7 +133,7 @@ export function RawBytesToNumeric(type: TypedArrayTypes, rawBytes: number[], isL
 }
 
 /** https://tc39.es/ecma262/#sec-getvaluefrombuffer */
-export function GetValueFromBuffer(arrayBuffer: ArrayBufferObject, byteIndex: number, type: TypedArrayTypes, _isTypedArray: unknown, _order: unknown, isLittleEndian?: BooleanValue) {
+export function GetValueFromBuffer(arrayBuffer: ArrayBufferObject, byteIndex: number, type: TypedArrayTypes, _isTypedArray: boolean, _order: 'unordered', isLittleEndian?: BooleanValue) {
   // 1. Assert: IsDetachedBuffer(arrayBuffer) is false.
   Assert(IsDetachedBuffer(arrayBuffer) === Value.false);
   // 2. Assert: There are sufficient bytes in arrayBuffer starting at byteIndex to represent a value of type.
@@ -169,7 +163,7 @@ const float64NaNLE = Object.freeze([0, 0, 0, 0, 0, 0, 248, 127]);
 const float64NaNBE = Object.freeze([127, 248, 0, 0, 0, 0, 0, 0]);
 
 /** https://tc39.es/ecma262/#sec-numerictorawbytes */
-export function NumericToRawBytes(type: TypedArrayTypes, value: NumberValue, _isLittleEndian: BooleanValue) {
+export function NumericToRawBytes(type: TypedArrayTypes, value: NumberValue | BigIntValue, _isLittleEndian: BooleanValue) {
   Assert(_isLittleEndian instanceof BooleanValue);
   const isLittleEndian = _isLittleEndian === Value.true;
   let rawBytes;
@@ -178,14 +172,14 @@ export function NumericToRawBytes(type: TypedArrayTypes, value: NumberValue, _is
     if (Number.isNaN(R(value))) {
       rawBytes = isLittleEndian ? [...float32NaNLE] : [...float32NaNBE];
     } else {
-      throwawayDataView.setFloat32(0, R(value), isLittleEndian);
+      throwawayDataView.setFloat32(0, R(value as NumberValue), isLittleEndian);
       rawBytes = [...throwawayArray.subarray(0, 4)];
     }
   } else if (type === 'Float64') {
     if (Number.isNaN(R(value))) {
       rawBytes = isLittleEndian ? [...float64NaNLE] : [...float64NaNBE];
     } else {
-      throwawayDataView.setFloat64(0, R(value), isLittleEndian);
+      throwawayDataView.setFloat64(0, R(value as NumberValue), isLittleEndian);
       rawBytes = [...throwawayArray.subarray(0, 8)];
     }
   } else {
@@ -209,8 +203,8 @@ export function SetValueInBuffer(arrayBuffer: ArrayBufferObject, byteIndex: numb
   // 2. Assert: There are sufficient bytes in arrayBuffer starting at byteIndex to represent a value of type.
   // 3. Assert: byteIndex is a non-negative integer.
   Assert(isNonNegativeInteger(byteIndex));
-  // 4. Assert: Type(value) is BigInt if ! IsBigIntElementType(type) is true; otherwise, Type(value) is Number.
-  if (X(IsBigIntElementType(type)) === Value.true) {
+  // 4. Assert: Type(value) is BigInt if IsBigIntElementType(type) is true; otherwise, Type(value) is Number.
+  if (IsBigIntElementType(type) === Value.true) {
     Assert(value instanceof BigIntValue);
   } else {
     Assert(value instanceof NumberValue);
@@ -218,13 +212,13 @@ export function SetValueInBuffer(arrayBuffer: ArrayBufferObject, byteIndex: numb
   // 5. Let block be arrayBuffer.[[ArrayBufferData]].
   const block = arrayBuffer.ArrayBufferData as DataBlock;
   // 6. Let elementSize be the Element Size value specified in Table 61 for Element Type type.
-  // const elementSize = typedArrayInfo[type].ElementSize;
+  // const elementSize = typedArrayInfoByType[type].ElementSize;
   // 7. If isLittleEndian is not present, set isLittleEndian to the value of the [[LittleEndian]] field of the surrounding agent's Agent Record.
   if (isLittleEndian === undefined) {
     isLittleEndian = surroundingAgent.AgentRecord.LittleEndian;
   }
   // 8. Let rawBytes be NumericToRawBytes(type, value, isLittleEndian).
-  const rawBytes = NumericToRawBytes(type, value as NumberValue, isLittleEndian);
+  const rawBytes = NumericToRawBytes(type, value, isLittleEndian);
   // 9. If IsSharedArrayBuffer(arrayBuffer) is true, then
   if (IsSharedArrayBuffer(arrayBuffer) === Value.true) {
     Assert(false);
@@ -236,4 +230,18 @@ export function SetValueInBuffer(arrayBuffer: ArrayBufferObject, byteIndex: numb
   });
   // 11. Return NormalCompletion(undefined).
   return NormalCompletion(Value.undefined);
+}
+
+/** https://tc39.es/ecma262/#sec-arraybufferbytelength */
+export function ArrayBufferByteLength(arrayBuffer: ArrayBufferObject, _order: 'seq-cst' | 'unordered'): number {
+  if (IsSharedArrayBuffer(arrayBuffer) === Value.true) {
+    Assert(false);
+  }
+  Assert(IsDetachedBuffer(arrayBuffer) === Value.false);
+  return arrayBuffer.ArrayBufferByteLength;
+}
+
+/** https://tc39.es/ecma262/#sec-isfixedlengtharraybuffer */
+export function IsFixedLengthArrayBuffer(arrayBuffer: ArrayBufferObject) {
+  return !('ArrayBufferMaxByteLength' in arrayBuffer);
 }

@@ -4,11 +4,10 @@ import {
   ArrayCreate,
   GetValue,
   GetIterator,
-  IteratorStep,
-  IteratorValue,
   ToString,
   CreateDataPropertyOrThrow,
   F,
+  IteratorStepValue,
 } from '../abstract-ops/all.mts';
 import { Evaluate, type Evaluator, type ExpressionEvaluator } from '../evaluator.mts';
 import {
@@ -57,15 +56,13 @@ function* ArrayAccumulation_SpreadElement({ AssignmentExpression }: ParseNode.Sp
   // 4. Repeat,
   while (true) {
     // a. Let next be ? IteratorStep(iteratorRecord).
-    const next = Q(IteratorStep(iteratorRecord));
-    // b. If next is false, return nextIndex.
-    if (next === Value.false) {
+    const next = Q(IteratorStepValue(iteratorRecord));
+    // b. If next is done, return nextIndex.
+    if (next === 'done') {
       return nextIndex;
     }
-    // c. Let nextValue be ? IteratorValue(next).
-    const nextValue = Q(IteratorValue(next as ObjectValue));
-    // d. Perform ! CreateDataPropertyOrThrow(array, ! ToString(𝔽(nextIndex)), nextValue).
-    X(CreateDataPropertyOrThrow(array, X(ToString(F(nextIndex))), nextValue));
+    // d. Perform ! CreateDataPropertyOrThrow(array, ! ToString(𝔽(nextIndex)), next).
+    X(CreateDataPropertyOrThrow(array, X(ToString(F(nextIndex))), next));
     // e. Set nextIndex to nextIndex + 1.
     nextIndex += 1;
   }

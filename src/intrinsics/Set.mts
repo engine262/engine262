@@ -4,15 +4,14 @@ import {
   Get,
   GetIterator,
   IsCallable,
-  IteratorStep,
-  IteratorValue,
+  IteratorStepValue,
   OrdinaryCreateFromConstructor,
   Realm,
   type FunctionObject,
   type OrdinaryObject,
 } from '../abstract-ops/all.mts';
 import {
-  ObjectValue, UndefinedValue, Value, wellKnownSymbols, type Arguments, type FunctionCallContext,
+  UndefinedValue, Value, wellKnownSymbols, type Arguments, type FunctionCallContext,
 } from '../value.mts';
 import { IfAbruptCloseIterator, Q } from '../completion.mts';
 import type { Mutable } from '../helpers.mts';
@@ -45,16 +44,14 @@ function SetConstructor(this: FunctionObject, [iterable = Value.undefined]: Argu
   const iteratorRecord = Q(GetIterator(iterable, 'sync'));
   // 8. Repeat,
   while (true) {
-    // a. Let next be ? IteratorStep(iteratorRecord).
-    const next = Q(IteratorStep(iteratorRecord));
+    // a. Let next be ? IteratorStepValue(iteratorRecord).
+    const next = Q(IteratorStepValue(iteratorRecord));
     // b. If next is false, return set.
-    if (next === Value.false) {
+    if (next === 'done') {
       return set;
     }
-    // c. Let nextValue be ? IteratorValue(next).
-    const nextValue = Q(IteratorValue(next as ObjectValue));
-    // d. Let status be Call(adder, set, « nextValue »).
-    const status = Call(adder, set, [nextValue]);
+    // d. Let status be Call(adder, set, « next »).
+    const status = Call(adder, set, [next]);
     // e. IfAbruptCloseIterator(status, iteratorRecord).
     IfAbruptCloseIterator(status, iteratorRecord);
   }

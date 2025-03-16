@@ -13,7 +13,6 @@ export * from './generator-operations.mts';
 export * from './global-object.mts';
 export * from './immutable-prototype-objects.mts';
 export * from './import-calls.mts';
-export * from './integer-indexed-objects.mts';
 export * from './iterator-operations.mts';
 export * from './module-namespace-exotic-objects.mts';
 export * from './module-records.mts';

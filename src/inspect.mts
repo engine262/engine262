@@ -40,7 +40,7 @@ function getObjectTag(value: ObjectValue, wrap = false): string {
 const compactObject = (realm: Realm, value: ObjectValue) => {
   try {
     const toString = X(Get(value, Value('toString'))) as BuiltinFunctionObject;
-    const objectToString = realm.Intrinsics['%Object.prototype.toString%'] as BuiltinFunctionObject;
+    const objectToString = realm.Intrinsics['%Object.prototype.toString%'];
     if (toString.nativeFunction === objectToString.nativeFunction) {
       return (X(Call(toString, value)) as JSStringValue).stringValue();
     } else {

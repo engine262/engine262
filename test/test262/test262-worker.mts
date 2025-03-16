@@ -29,12 +29,9 @@ readList(path.resolve(import.meta.dirname, 'features')).forEach((f) => {
   }
 });
 
-const includeCache: Record<string, undefined | { source: string, specifier: unknown }> = {};
+const includeCache: Record<string, undefined | { source: string, specifier: string }> = {};
 
 process.on('message', (test: SupervisorToWorker) => {
-  if (test === 'DONE') {
-    process.exit(0);
-  }
   try {
     process.send!({ status: 'RUNNING', file: test.file, flags: test.flags } satisfies WorkerToSupervisor, handleSendError);
     const result = run(test);
@@ -44,7 +41,7 @@ process.on('message', (test: SupervisorToWorker) => {
       process.send!(result satisfies WorkerToSupervisor, handleSendError);
     }
   } catch (e) {
-    process.send!(fails(test, e), handleSendError);
+    process.send!(fails(test, util.inspect(e)), handleSendError);
   }
 });
 
@@ -59,6 +56,7 @@ function run(test: Test): WorkerToSupervisor {
   }
   const agent = createAgent({ features });
   setSurroundingAgent(agent);
+  agent.hostDefinedOptions.errorStackAttachNativeStack = true;
 
   const { realm, resolverCache, setPrintHandle } = createRealm();
   const r = realm.scope((): WorkerToSupervisor => {
@@ -78,7 +76,7 @@ function run(test: Test): WorkerToSupervisor {
       const entry = includeCache[include];
       const completion = realm.evaluateScript(entry.source, { specifier: entry.specifier });
       if (completion instanceof AbruptCompletion) {
-        return fails(test, completion);
+        return fails(test, inspect(completion));
       }
     }
 
@@ -101,7 +99,7 @@ __consolePrintHandle__('Test262:AsyncTestComplete');
 }
 }`);
       if (completion instanceof AbruptCompletion) {
-        return fails(test, completion);
+        return fails(test, inspect(completion));
       }
     }
 
@@ -194,12 +192,12 @@ function isError(type: string, value: unknown) {
   return nameProp instanceof JSStringValue && nameProp.stringValue() === type;
 }
 
-function fails(test: Test, error: unknown): WorkerToSupervisor {
+function fails(test: Test, error: string): WorkerToSupervisor {
   return {
     status: 'FAIL',
     file: test.file,
     flags: test.flags,
     description: test.attrs.description,
-    error: util.inspect(error),
+    error,
   };
 }

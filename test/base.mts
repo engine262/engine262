@@ -3,6 +3,8 @@ import readline from 'node:readline';
 import os from 'node:os';
 import fs from 'node:fs';
 import util from 'node:util';
+import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 process.on('unhandledRejection', (reason) => {
   fs.writeSync(0, `\n${util.inspect(reason)}\n`);
@@ -37,6 +39,10 @@ let passed = 0;
 let failed = 0;
 let total = 0;
 const running: [file: string, flags: string, since: number][] = new Array(NUM_WORKERS).fill(['', Date.now()]);
+export const pendingWork: number[] = new Array(NUM_WORKERS).fill(0);
+const TEST262 = process.env.TEST262 || path.resolve(import.meta.dirname, 'test262', 'test262');
+const TEST262_TESTS = path.join(TEST262, 'test');
+
 export const postRunShowFiles: string[] = [];
 
 let slowTestThreshold = Infinity;
@@ -65,6 +71,7 @@ function printStatusLine() {
 
   const line = `[${time}|${found}|${l}|${p}|${f}|${s}] (${testsPerSec.toFixed(2)}/s)`;
   process.stdout.write(`${line}${CI ? '\n' : ''}`);
+  readline.cursorTo(process.stdout, 0);
 }
 function printStatusUI() {
   const maxLineLength = process.stdout.columns;
@@ -73,7 +80,7 @@ function printStatusUI() {
     const now = Date.now();
     const workerLines = running.map(({ 0: test, 1: flags, 2: since }, index): [text: string, lengthOffset: number] => {
       let lengthOffset = ANSI.green.length + ANSI.reset.length;
-      const workerName = `${ANSI.green}Worker ${String(index).padStart(workerPadding)}${ANSI.reset}`;
+      const workerName = `${ANSI.green}Worker ${String(index).padStart(workerPadding)}${ANSI.reset} [${pendingWork[index]}]`;
       if (!test) {
         return [`${workerName}: ${ANSI.green}idle${ANSI.reset}`, lengthOffset * 2];
       }
@@ -93,7 +100,6 @@ function printStatusUI() {
       const time = `${ANSI.red + timeInSec.toString().padStart(2)}s${ANSI.reset}`;
       return [`${workerName}: [${time}] ${taskName}`, lengthOffset];
     });
-    readline.moveCursor(process.stdout, 0, -workerLines.length - 2);
     readline.clearLine(process.stdout, 0);
     process.stdout.write('\n');
     for (let i = 0; i < workerLines.length; i += 1) {
@@ -119,6 +125,9 @@ function printStatusUI() {
     });
   }
   printStatusLine();
+  if (!CI) {
+    readline.moveCursor(process.stdout, 0, -running.length - 2);
+  }
 }
 
 setInterval(() => {
@@ -142,12 +151,17 @@ export function fail(workerId: number, name: string, desc: string | undefined, e
   failed += 1;
   handledPerSecCounter += 1;
   process.exitCode = 1;
-  readline.moveCursor(process.stdout, 0, -NUM_WORKERS - 2);
   readline.clearScreenDown(process.stdout);
+  if (!CI) {
+    const OSC = '\u001B]';
+    const BEL = '\u0007';
+    const SEP = ';';
+    name = `${OSC}8${SEP}${SEP}${pathToFileURL(path.resolve(TEST262_TESTS, name))}${BEL}${name}${OSC}8${SEP}${SEP}${BEL}`;
+  }
   const line1 = `\n${ANSI.red}FAILED ${name}${ANSI.reset}\n`;
   const line2 = desc ? `  ${ANSI.yellow}${desc}${ANSI.reset}${desc.endsWith('\n') ? '' : '\n'}` : '';
   const line3 = `${error}\n`;
-  process.stdout.write(`${line1}${line2}${line3}${'\n'.repeat(NUM_WORKERS + 1)}`);
+  process.stdout.write(`${line1}${line2}${line3}`);
 }
 export function fatal(message: string): never {
   process.exitCode = 1;
@@ -170,7 +184,6 @@ ${ANSI.yellow}#######################
   engine262 Test Runner
   ${CI ? 'Running' : 'Not running'} on CI
 #######################${ANSI.reset}
-${'\n'.repeat(NUM_WORKERS + 1)}
   `);
 
   printStatusUI();
@@ -179,15 +192,9 @@ ${'\n'.repeat(NUM_WORKERS + 1)}
   }, CI ? 5000 : 100).unref();
 
   process.on('exit', () => {
-    readline.cursorTo(process.stdout, 0);
+    process.stdout.write('\n');
     printStatusLine();
     process.stdout.write('\n');
-    if (postRunShowFiles.length) {
-      process.stdout.write(`\n${ANSI.green}Files found:${ANSI.reset}\n`);
-      postRunShowFiles.forEach((file) => {
-        process.stdout.write(`  ${file}\n`);
-      });
-    }
   });
 }
 
@@ -214,14 +221,11 @@ export type Test = {
   contents: string
 }
 
-export type SupervisorToWorker =
-  | 'DONE'
-  | Test
+export type SupervisorToWorker = Test
 export type WorkerToSupervisor =
   | { status: 'RUNNING'; file: string; flags: string; }
   | { status: 'PASS'; file: string; }
   | { status: 'FAIL'; file: string; flags: string; description: string; error: string }
-  | { status: 'SKIP'; }
 
 
 export function readList(path: string) {

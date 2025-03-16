@@ -4,7 +4,6 @@ import {
   GetValue,
   InitializeReferencedBinding,
   IteratorStep,
-  IteratorValue,
   PutValue,
   ResolveBinding,
   ArrayCreate,
@@ -14,9 +13,7 @@ import {
   type IteratorRecord,
 } from '../abstract-ops/all.mts';
 import {
-  AbruptCompletion,
   NormalCompletion,
-  ReturnIfAbrupt,
   Q, X,
 } from '../completion.mts';
 import { Evaluate, type Evaluator } from '../evaluator.mts';
@@ -28,7 +25,8 @@ import type { ParseNode } from '../parser/ParseNode.mts';
 import { __ts_cast__ } from '../helpers.mts';
 import { NamedEvaluation, BindingInitialization } from './all.mts';
 import {
-  UndefinedValue, type BooleanValue, type EnvironmentRecord, type FunctionDeclaration, type ObjectValue,
+  IteratorStepValue,
+  UndefinedValue, type EnvironmentRecord, type FunctionDeclaration,
   type PlainCompletion,
 } from '#self';
 
@@ -81,47 +79,28 @@ function* IteratorBindingInitialization_SingleNameBinding({ BindingIdentifier, I
   const bindingId = StringValue(BindingIdentifier);
   // 2. Let lhs be ? ResolveBinding(bindingId, environment).
   const lhs = Q(ResolveBinding(bindingId, environment, BindingIdentifier.strict));
-  let v;
+  let v: Value = Value.undefined;
   // 3. If iteratorRecord.[[Done]] is false, then
   if (iteratorRecord.Done === Value.false) {
-    // a. Let next be IteratorStep(iteratorRecord).
-    const next = IteratorStep(iteratorRecord);
-    // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-    if (next instanceof AbruptCompletion) {
-      iteratorRecord.Done = Value.true;
+    // a. Let next be ? IteratorStepValue(iteratorRecord).
+    const next = Q(IteratorStepValue(iteratorRecord));
+    // d. If next is not DONE,
+    if (next !== 'done') {
+      v = next;
     }
-    // c. ReturnIfAbrupt(next).
-    ReturnIfAbrupt(next);
-    // d. If next is false, set iteratorRecord.[[Done]] to true.
-    if (next === Value.false) {
-      iteratorRecord.Done = Value.true;
-    } else { // e. Else,
-      // i. Let v be IteratorValue(next).
-      v = IteratorValue(next as ObjectValue);
-      // ii. If v is an abrupt completion, set iteratorRecord.[[Done]] to true.
-      if (v instanceof AbruptCompletion) {
-        iteratorRecord.Done = Value.true;
-      }
-      // iii. ReturnIfAbrupt(v).
-      ReturnIfAbrupt(v);
-    }
-  }
-  // 4. If iteratorRecord.[[Done]] is true, let v be undefined.
-  if (iteratorRecord.Done === Value.true) {
-    v = Value.undefined;
   }
   // 5. If Initializer is present and v is undefined, then
   if (Initializer && v === Value.undefined) {
     if (IsAnonymousFunctionDefinition(Initializer)) {
-      v = yield* NamedEvaluation(Initializer as FunctionDeclaration, bindingId);
+      v = Q(yield* NamedEvaluation(Initializer as FunctionDeclaration, bindingId));
     } else {
-      const defaultValue = yield* Evaluate(Initializer);
+      const defaultValue = Q(yield* Evaluate(Initializer));
       v = Q(GetValue(defaultValue));
     }
   }
   // 6. If environment is undefined, return ? PutValue(lhs, v).
   if (environment === Value.undefined) {
-    return Q(PutValue(lhs, v!));
+    return Q(PutValue(lhs, v));
   }
   // 7. Return InitializeReferencedBinding(lhs, v).
   return InitializeReferencedBinding(lhs, X(v!));
@@ -140,24 +119,13 @@ function* IteratorBindingInitialization_BindingRestElement({ BindingIdentifier, 
     let n = 0;
     // 4. Repeat,
     while (true) {
-      let next;
+      let next: 'done' | Value = 'done';
       // a. If iteratorRecord.[[Done]] is false, then
       if (iteratorRecord.Done === Value.false) {
-        // i. Let next be IteratorStep(iteratorRecord).
-        next = IteratorStep(iteratorRecord);
-        // ii. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-        if (next instanceof AbruptCompletion) {
-          iteratorRecord.Done = Value.true;
-        }
-        // iii. ReturnIfAbrupt(next).
-        ReturnIfAbrupt(next);
-        // iv. If next is false, set iteratorRecord.[[Done]] to true.
-        if (next === Value.false) {
-          iteratorRecord.Done = Value.true;
-        }
+        // i. Let next be ? IteratorStepValue(iteratorRecord).
+        next = Q(IteratorStepValue(iteratorRecord));
       }
-      // b. If iteratorRecord.[[Done]] is true, then
-      if (iteratorRecord.Done === Value.true) {
+      if (next === 'done') {
         // i. If environment is undefined, return ? PutValue(lhs, A).
         if (environment === Value.undefined) {
           return Q(PutValue(lhs, A));
@@ -165,16 +133,8 @@ function* IteratorBindingInitialization_BindingRestElement({ BindingIdentifier, 
         // ii. Return InitializeReferencedBinding(lhs, A).
         return InitializeReferencedBinding(lhs, A);
       }
-      // c. Let nextValue be IteratorValue(next).
-      const nextValue = IteratorValue(next as ObjectValue);
-      // d. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
-      if (nextValue instanceof AbruptCompletion) {
-        iteratorRecord.Done = Value.true;
-      }
-      // e. ReturnIfAbrupt(nextValue).
-      ReturnIfAbrupt(nextValue);
-      // f. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), nextValue).
-      X(CreateDataPropertyOrThrow(A, X(ToString(F(n))), Q(nextValue)));
+      // f. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), next).
+      X(CreateDataPropertyOrThrow(A, X(ToString(F(n))), next));
       // g. Set n to n + 1.
       n += 1;
     }
@@ -185,37 +145,19 @@ function* IteratorBindingInitialization_BindingRestElement({ BindingIdentifier, 
     let n = 0;
     // 3. Repeat,
     while (true) {
-      let next;
+      let next: 'done' | Value = 'done';
       // a. If iteratorRecord.[[Done]] is false, then
       if (iteratorRecord.Done === Value.false) {
-        // i. Let next be IteratorStep(iteratorRecord).
-        next = IteratorStep(iteratorRecord);
-        // ii. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-        if (next instanceof AbruptCompletion) {
-          iteratorRecord.Done = Value.true;
-        }
-        // iii. ReturnIfAbrupt(next).
-        ReturnIfAbrupt(next);
-        // iv. If next is false, set iteratorRecord.[[Done]] to true.
-        if (next === Value.false) {
-          iteratorRecord.Done = Value.true;
-        }
+        // i. Let next be ? IteratorStepValue(iteratorRecord).
+        next = Q(IteratorStepValue(iteratorRecord));
       }
-      // b. If iteratorRecord.[[Done]] is true, then
-      if (iteratorRecord.Done === Value.true) {
+      // b. If next is done, then
+      if (next === 'done') {
         // i. Return the result of performing BindingInitialization of BindingPattern with A and environment as the arguments.
         return yield* BindingInitialization(BindingPattern!, A, environment);
       }
-      // c. Let nextValue be IteratorValue(next).
-      const nextValue = IteratorValue(next as ObjectValue);
-      // d. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
-      if (nextValue instanceof AbruptCompletion) {
-        iteratorRecord.Done = Value.true;
-      }
-      // e. ReturnIfAbrupt(nextValue).
-      ReturnIfAbrupt(nextValue);
-      // f. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), nextValue).
-      X(CreateDataPropertyOrThrow(A, X(ToString(F(n))), Q(nextValue)));
+      // f. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), next).
+      X(CreateDataPropertyOrThrow(A, X(ToString(F(n))), Q(next)));
       // g. Set n to n + 1.
       n += 1;
     }
@@ -223,35 +165,14 @@ function* IteratorBindingInitialization_BindingRestElement({ BindingIdentifier, 
 }
 
 function* IteratorBindingInitialization_BindingPattern({ BindingPattern, Initializer }: ParseNode.BindingElement, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | UndefinedValue) {
-  let v;
+  let v: Value = Value.undefined;
   // 1. If iteratorRecord.[[Done]] is false, then
   if (iteratorRecord.Done === Value.false) {
-    // a. Let next be IteratorStep(iteratorRecord).
-    const next = IteratorStep(iteratorRecord);
-    // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-    if (next instanceof AbruptCompletion) {
-      iteratorRecord.Done = Value.true;
+    // a. Let next be ? IteratorStepValue(iteratorRecord).
+    const next = Q(IteratorStepValue(iteratorRecord));
+    if (next !== 'done') {
+      v = next;
     }
-    // c. ReturnIfAbrupt(next).
-    ReturnIfAbrupt(next);
-    __ts_cast__<ObjectValue | BooleanValue>(next);
-    // d. If next is false, set iteratorRecord.[[Done]] to true.
-    if (next === Value.false) {
-      iteratorRecord.Done = Value.true;
-    } else { // e. Else,
-      // i. Let v be IteratorValue(next).
-      v = IteratorValue(next as ObjectValue);
-      // ii. If v is an abrupt completion, set iteratorRecord.[[Done]] to true.
-      if (v instanceof AbruptCompletion) {
-        iteratorRecord.Done = Value.true;
-      }
-      // iii. ReturnIfAbrupt(v).
-      ReturnIfAbrupt(v);
-    }
-  }
-  // 2. If iteratorRecord.[[Done]] is true, let v be undefined.
-  if (iteratorRecord.Done === Value.true) {
-    v = Value.undefined;
   }
   // 3. If Initializer is present and v is undefined, then
   if (Initializer && v instanceof UndefinedValue) {
@@ -268,18 +189,8 @@ function IteratorDestructuringAssignmentEvaluation(node: ParseNode.Elision, iter
   Assert(node.type === 'Elision');
   // 1. If iteratorRecord.[[Done]] is false, then
   if (iteratorRecord.Done === Value.false) {
-    // a. Let next be IteratorStep(iteratorRecord).
-    let next = IteratorStep(iteratorRecord);
-    // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-    if (next instanceof AbruptCompletion) {
-      iteratorRecord.Done = Value.true;
-    }
-    // c. ReturnIfAbrupt(next).
-    next = ReturnIfAbrupt(next);
-    // d. If next is false, set iteratorRecord.[[Done]] to true.
-    if (next === Value.false) {
-      iteratorRecord.Done = Value.true;
-    }
+    // a. Perform ? IteratorStep(iteratorRecord).
+    Q(IteratorStep(iteratorRecord));
   }
   // 2. Return NormalCompletion(empty).
   return NormalCompletion(undefined);

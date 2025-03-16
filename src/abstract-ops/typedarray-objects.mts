@@ -1,263 +1,402 @@
-import { surroundingAgent } from '../engine.mts';
 import {
-  ObjectValue, Value, NumberValue, type Arguments, UndefinedValue,
+  ObjectValue, Value, NumberValue,
   JSStringValue,
+  type ObjectInternalMethods,
+  SymbolValue,
+  Descriptor,
+  UndefinedValue,
+  BooleanValue,
 } from '../value.mts';
 import {
-  Q, X, type ExpressionCompletion, type PlainCompletion,
+  Q, X, type ExpressionCompletion,
 } from '../completion.mts';
-import { __ts_cast__, type Mutable } from '../helpers.mts';
-import type { TypedArrayObject } from '../intrinsics/TypedArray.mts';
+import { __ts_cast__ } from '../helpers.mts';
+import {
+  type TypedArrayObject, TypedArrayElementSize, TypedArrayElementType,
+} from '../intrinsics/TypedArray.mts';
+import { isDataViewObject, type DataViewObject } from '../intrinsics/DataView.mts';
 import {
   Assert,
-  ToInt8,
-  ToUint8,
-  ToUint8Clamp,
-  ToInt16,
-  ToUint16,
-  ToInt32,
-  ToUint32,
-  ToBigInt64,
-  ToBigUint64,
-  RequireInternalSlot,
-  Construct,
-  GetIterator,
-  IteratorStep,
-  IteratorValue,
-  SpeciesConstructor,
   IsDetachedBuffer,
-  isNonNegativeInteger,
-  IntegerIndexedObjectCreate,
-  GetPrototypeFromConstructor,
-  AllocateArrayBuffer, R,
-  type FunctionObject,
-  type IntegerIndexedObject,
+  R,
+  ArrayBufferByteLength,
+  IsFixedLengthArrayBuffer,
   type ArrayBufferObject,
+  MakeBasicObject,
+  isIntegerIndex,
+  ToString,
+  OrdinaryDelete,
+  CanonicalNumericIndexString,
+  F,
+  IsAccessorDescriptor,
+  OrdinaryDefineOwnProperty,
+  OrdinaryGet,
+  OrdinaryGetOwnProperty,
+  OrdinaryHasProperty,
+  OrdinarySet,
+  GetValueFromBuffer,
+  SetValueInBuffer,
+  ToBigInt,
+  ToNumber,
+  IsSharedArrayBuffer,
+  OrdinaryPreventExtensions,
+  SameValue,
+  IsIntegralNumber,
+  IsViewOutOfBounds,
+  MakeDataViewWithBufferWitnessRecord,
 } from './all.mts';
 
-export const typedArrayInfoByName = {
-  Int8Array: {
-    IntrinsicName: '%Int8Array%',
-    ElementType: 'Int8',
-    ElementSize: 1,
-    ConversionOperation: ToInt8,
+const InternalMethods = {
+  /** https://tc39.es/ecma262/#sec-typedarray-preventextensions */
+  PreventExtensions() {
+    const O = this;
+    if (!IsTypedArrayFixedLength(O)) {
+      return Value.false;
+    }
+    return OrdinaryPreventExtensions(O);
   },
-  Uint8Array: {
-    IntrinsicName: '%Uint8Array%',
-    ElementType: 'Uint8',
-    ElementSize: 1,
-    ConversionOperation: ToUint8,
+  /** https://tc39.es/ecma262/#sec-typedarray-getownproperty */
+  GetOwnProperty(P) {
+    const O = this;
+    // 3. If Type(P) is String, then
+    if (P instanceof JSStringValue) {
+      // a. Let numericIndex be CanonicalNumericIndexString(P).
+      const numericIndex = CanonicalNumericIndexString(P);
+      // b. If numericIndex is not undefined, then
+      if (!(numericIndex instanceof UndefinedValue)) {
+        // i. Let value be TypedArrayGetElement(O, numericIndex).
+        const value = TypedArrayGetElement(O, numericIndex);
+        // ii. If value is undefined, return undefined.
+        if (value === Value.undefined) {
+          return Value.undefined;
+        }
+        // iii. Return the PropertyDescriptor { [[Value]]: value, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: true }.
+        return Descriptor({
+          Value: value,
+          Writable: Value.true,
+          Enumerable: Value.true,
+          Configurable: Value.true,
+        });
+      }
+    }
+    // 4. Return OrdinaryGetOwnProperty(O, P).
+    return OrdinaryGetOwnProperty(O, P);
   },
-  Uint8ClampedArray: {
-    IntrinsicName: '%Uint8ClampedArray%',
-    ElementType: 'Uint8C',
-    ElementSize: 1,
-    ConversionOperation: ToUint8Clamp,
+  /** https://tc39.es/ecma262/#sec-typedarray-hasproperty */
+  HasProperty(P) {
+    const O = this;
+    // 3. If Type(P) is String, then
+    if (P instanceof JSStringValue) {
+      // a. Let numericIndex be CanonicalNumericIndexString(P).
+      const numericIndex = CanonicalNumericIndexString(P);
+      // b. If numericIndex is not undefined, then
+      if (!(numericIndex instanceof UndefinedValue)) {
+        return IsValidIntegerIndex(O, numericIndex);
+      }
+    }
+    // 4. Return ? OrdinaryHasProperty(O, P)
+    return Q(OrdinaryHasProperty(O, P));
   },
-  Int16Array: {
-    IntrinsicName: '%Int16Array%',
-    ElementType: 'Int16',
-    ElementSize: 2,
-    ConversionOperation: ToInt16,
+  /** https://tc39.es/ecma262/#sec-typedarray-defineownproperty */
+  DefineOwnProperty(P, Desc) {
+    const O = this;
+    // 3. If Type(P) is String, then
+    if (P instanceof JSStringValue) {
+      // a. Let numericIndex be CanonicalNumericIndexString(P).
+      const numericIndex = CanonicalNumericIndexString(P);
+      // b. If numericIndex is not undefined, then
+      if (!(numericIndex instanceof UndefinedValue)) {
+        // i. If ! IsValidIntegerIndex(O, numericIndex) is false, return false.
+        if (IsValidIntegerIndex(O, numericIndex) === Value.false) {
+          return Value.false;
+        }
+        // iii. If Desc has a [[Configurable]] field and if Desc.[[Configurable]] is true, return false.
+        if (Desc.Configurable === Value.false) {
+          return Value.false;
+        }
+        // iv. If Desc has an [[Enumerable]] field and if Desc.[[Enumerable]] is false, return false.
+        if (Desc.Enumerable === Value.false) {
+          return Value.false;
+        }
+        // ii. If IsAccessorDescriptor(Desc) is true, return false.
+        if (IsAccessorDescriptor(Desc)) {
+          return Value.false;
+        }
+        // v. If Desc has a [[Writable]] field and if Desc.[[Writable]] is false, return false.
+        if (Desc.Writable === Value.false) {
+          return Value.false;
+        }
+        // vi. If Desc has a [[Value]] field, then
+        if (Desc.Value !== undefined) {
+          return Q(TypedArraySetElement(O, numericIndex, Desc.Value));
+        }
+        // vii. Return true.
+        return Value.true;
+      }
+    }
+    // 4. Return ! OrdinaryDefineOwnProperty(O, P, Desc).
+    return Q(OrdinaryDefineOwnProperty(O, P, Desc));
   },
-  Uint16Array: {
-    IntrinsicName: '%Uint16Array%',
-    ElementType: 'Uint16',
-    ElementSize: 2,
-    ConversionOperation: ToUint16,
+  /** https://tc39.es/ecma262/#sec-typedarray-get */
+  Get(P, Receiver) {
+    const O = this;
+    // 2. If Type(P) is String, then
+    if (P instanceof JSStringValue) {
+      // a. Let numericIndex be CanonicalNumericIndexString(P).
+      const numericIndex = CanonicalNumericIndexString(P);
+      // b. If numericIndex is not undefined, then
+      if (!(numericIndex instanceof UndefinedValue)) {
+        // i. Return ! IntegerIndexedElementGet(O, numericIndex).
+        return X(TypedArrayGetElement(O, numericIndex));
+      }
+    }
+    // 3. Return ? OrdinaryGet(O, P, Receiver).
+    return Q(OrdinaryGet(O, P, Receiver));
   },
-  Int32Array: {
-    IntrinsicName: '%Int32Array%',
-    ElementType: 'Int32',
-    ElementSize: 4,
-    ConversionOperation: ToInt32,
+  /** https://tc39.es/ecma262/#sec-typedarray-set */
+  Set(P, V, Receiver) {
+    const O = this;
+    // 2. If Type(P) is String, then
+    if (P instanceof JSStringValue) {
+      // a. Let numericIndex be CanonicalNumericIndexString(P).
+      const numericIndex = CanonicalNumericIndexString(P);
+      // b. If numericIndex is not undefined, then
+      if (!(numericIndex instanceof UndefinedValue)) {
+        if (SameValue(O, Receiver) === Value.true) {
+          // i. Perform ? IntegerIndexedElementSet(O, numericIndex, V).
+          Q(TypedArraySetElement(O, numericIndex, V));
+          // ii. Return true.
+          return Value.true;
+        }
+        if (IsValidIntegerIndex(O, numericIndex) === Value.false) {
+          return Value.true;
+        }
+      }
+    }
+    // 3. Return ? OrdinarySet(O, P, V, Receiver).
+    return Q(OrdinarySet(O, P, V, Receiver));
   },
-  Uint32Array: {
-    IntrinsicName: '%Uint32Array%',
-    ElementType: 'Uint32',
-    ElementSize: 4,
-    ConversionOperation: ToUint32,
+  /** https://tc39.es/ecma262/#sec-typedarray-delete */
+  Delete(P) {
+    const O = this;
+    // 3. If Type(P) is String, then
+    if (P instanceof JSStringValue) {
+      // a. Let numericIndex be ! CanonicalNumericIndexString(P).
+      const numericIndex = CanonicalNumericIndexString(P);
+      // b. If numericIndex is not undefined, then
+      if (!(numericIndex instanceof UndefinedValue)) {
+        // ii. If IsValidIntegerIndex(O, numericIndex) is false, return true.
+        if (IsValidIntegerIndex(O, numericIndex) === Value.false) {
+          return Value.true;
+        } else {
+          // iii. Return false.
+          return Value.false;
+        }
+      }
+    }
+    // 4. Return ? OrdinaryDelete(O, P).
+    return Q(OrdinaryDelete(O, P));
   },
-  BigInt64Array: {
-    IntrinsicName: '%BigInt64Array%',
-    ElementType: 'BigInt64',
-    ElementSize: 8,
-    ConversionOperation: ToBigInt64,
+  /** https://tc39.es/ecma262/#sec-typedarray-ownpropertykeys */
+  OwnPropertyKeys() {
+    const O = this;
+    const taRecord = MakeTypedArrayWithBufferWitnessRecord(O, 'seq-cst');
+    // 1. Let keys be a new empty List.
+    const keys = [];
+    if (!IsTypedArrayOutOfBounds(taRecord)) {
+      const length = TypedArrayLength(taRecord);
+      // 4. For each integer i starting with 0 such that i < len, in ascending order, do
+      for (let i = 0; i < length; i += 1) {
+        // a. Add ! ToString(𝔽(i)) as the last element of keys.
+        keys.push(X(ToString(F(i))));
+      }
+    }
+    // 5. For each own property key P of O such that Type(P) is String and P is not an integer index, in ascending chronological order of property creation, do
+    for (const P of O.properties.keys()) {
+      if (P instanceof JSStringValue) {
+        if (!isIntegerIndex(P)) {
+          // a. Add P as the last element of keys.
+          keys.push(P);
+        }
+      }
+    }
+    // 6. For each own property key P of O such that Type(P) is Symbol, in ascending chronological order of property creation, do
+    for (const P of O.properties.keys()) {
+      if (P instanceof SymbolValue) {
+        // a. Add P as the last element of keys.
+        keys.push(P);
+      }
+    }
+    // 7. Return keys.
+    return keys;
   },
-  BigUint64Array: {
-    IntrinsicName: '%BigUint64Array%',
-    ElementType: 'BigUint64',
-    ElementSize: 8,
-    ConversionOperation: ToBigUint64,
-  },
-  Float32Array: {
-    IntrinsicName: '%Float32Array%',
-    ElementType: 'Float32',
-    ElementSize: 4,
-    ConversionOperation: undefined,
-  },
-  Float64Array: {
-    IntrinsicName: '%Float64Array%',
-    ElementType: 'Float64',
-    ElementSize: 8,
-    ConversionOperation: undefined,
-  },
-} as const;
-export type TypedArrayConstructorNames = keyof typeof typedArrayInfoByName;
+} satisfies Partial<ObjectInternalMethods<TypedArrayObject>>;
 
-export const typedArrayInfoByType = {
-  Int8: typedArrayInfoByName.Int8Array,
-  Uint8: typedArrayInfoByName.Uint8Array,
-  Uint8C: typedArrayInfoByName.Uint8ClampedArray,
-  Int16: typedArrayInfoByName.Int16Array,
-  Uint16: typedArrayInfoByName.Uint16Array,
-  Int32: typedArrayInfoByName.Int32Array,
-  Uint32: typedArrayInfoByName.Uint32Array,
-  BigInt64: typedArrayInfoByName.BigInt64Array,
-  BigUint64: typedArrayInfoByName.BigUint64Array,
-  Float32: typedArrayInfoByName.Float32Array,
-  Float64: typedArrayInfoByName.Float64Array,
-} as const;
-export type TypedArrayTypes = keyof typeof typedArrayInfoByType;
+/** https://tc39.es/ecma262/#sec-typedarray-with-buffer-witness-records */
+export interface TypedArrayWithBufferWitnessRecord {
+  readonly Object: TypedArrayObject;
+  readonly CachedBufferByteLength: 'detached' | number;
+}
 
-/** https://tc39.es/ecma262/#sec-validatetypedarray */
-export function ValidateTypedArray(O: Value) {
-  // 1. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
-  Q(RequireInternalSlot(O, 'TypedArrayName'));
-  __ts_cast__<TypedArrayObject>(O);
-  // 2. Assert: O has a [[ViewedArrayBuffer]] internal slot.
-  Assert('ViewedArrayBuffer' in O);
-  // 3. Let buffer be O.[[ViewedArrayBuffer]].
+/** https://tc39.es/ecma262/#sec-maketypedarraywithbufferwitnessrecord */
+export function MakeTypedArrayWithBufferWitnessRecord(obj: TypedArrayObject, order: 'seq-cst' | 'unordered') {
+  const buffer = obj.ViewedArrayBuffer;
+  let byteLength: TypedArrayWithBufferWitnessRecord['CachedBufferByteLength'];
+  if (IsDetachedBuffer(buffer as ArrayBufferObject) === Value.true) {
+    byteLength = 'detached';
+  } else {
+    byteLength = ArrayBufferByteLength(buffer as ArrayBufferObject, order);
+  }
+  return { Object: obj, CachedBufferByteLength: byteLength };
+}
+
+/** https://tc39.es/ecma262/#sec-typedarraycreate */
+export function TypedArrayCreate(prototype: ObjectValue) {
+  const internalSlotsList = ['Prototype', 'Extensible', 'ViewedArrayBuffer', 'TypedArrayName', 'ContentType', 'ByteLength', 'ByteOffset', 'ArrayLength'] as const;
+  const A = MakeBasicObject(internalSlotsList);
+  A.PreventExtensions = InternalMethods.PreventExtensions;
+  A.GetOwnProperty = InternalMethods.GetOwnProperty;
+  A.HasProperty = InternalMethods.HasProperty;
+  A.DefineOwnProperty = InternalMethods.DefineOwnProperty;
+  A.Get = InternalMethods.Get;
+  A.Set = InternalMethods.Set;
+  A.Delete = InternalMethods.Delete;
+  A.OwnPropertyKeys = InternalMethods.OwnPropertyKeys;
+  A.Prototype = prototype;
+  return A;
+}
+
+/** https://tc39.es/ecma262/#sec-typedarraybytelength */
+export function TypedArrayByteLength(taRecord: TypedArrayWithBufferWitnessRecord): number {
+  if (IsTypedArrayOutOfBounds(taRecord)) {
+    return 0;
+  }
+  const length = TypedArrayLength(taRecord);
+  if (length === 0) {
+    return 0;
+  }
+  const O = taRecord.Object;
+  if (O.ByteLength !== 'auto') {
+    return O.ByteLength;
+  }
+  const elementSize = TypedArrayElementSize(O);
+  return length * elementSize;
+}
+
+/** https://tc39.es/ecma262/#sec-typedarraylength */
+export function TypedArrayLength(taRecord: TypedArrayWithBufferWitnessRecord): number {
+  Assert(IsTypedArrayOutOfBounds(taRecord) === false);
+  const O = taRecord.Object;
+  if (O.ArrayLength !== 'auto') {
+    return O.ArrayLength;
+  }
+  Assert(!IsFixedLengthArrayBuffer(O.ViewedArrayBuffer as ArrayBufferObject));
+  const byteOffset = O.ByteOffset;
+  const elementSize = TypedArrayElementSize(O);
+  const bufferLength = taRecord.CachedBufferByteLength;
+  Assert(bufferLength !== 'detached');
+  return Math.floor((bufferLength - byteOffset) / elementSize);
+}
+
+/** https://tc39.es/ecma262/#sec-istypedarrayoutofbounds */
+export function IsTypedArrayOutOfBounds(taRecord: TypedArrayWithBufferWitnessRecord) {
+  const O = taRecord.Object;
+  const bufferByteLength = taRecord.CachedBufferByteLength;
+  Assert(
+    (IsDetachedBuffer(O.ViewedArrayBuffer as ArrayBufferObject) === Value.true && bufferByteLength === 'detached')
+    || (IsDetachedBuffer(O.ViewedArrayBuffer as ArrayBufferObject) === Value.false && bufferByteLength !== 'detached'),
+  );
+  if (bufferByteLength === 'detached') {
+    return true;
+  }
+  const byteOffsetStart = O.ByteOffset;
+  let byteOffsetEnd;
+  if (O.ArrayLength === 'auto') {
+    byteOffsetEnd = bufferByteLength;
+  } else {
+    const elementSize = TypedArrayElementSize(O);
+    byteOffsetEnd = byteOffsetStart + O.ArrayLength * elementSize;
+  }
+  if (byteOffsetStart > bufferByteLength || byteOffsetEnd > bufferByteLength) {
+    return true;
+  }
+  return false;
+}
+
+/** https://tc39.es/ecma262/#sec-istypedarrayfixedlength */
+export function IsTypedArrayFixedLength(O: TypedArrayObject) {
+  if (O.ArrayLength === 'auto') {
+    return false;
+  }
   const buffer = O.ViewedArrayBuffer as ArrayBufferObject;
-  // 4. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(buffer) === Value.true) {
-    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+  if (!IsFixedLengthArrayBuffer(buffer) && IsSharedArrayBuffer(buffer) === Value.false) {
+    return false;
   }
-  // 5. Return buffer.
-  return buffer;
+  return true;
 }
 
-// #typedarray-create
-export function TypedArrayCreate(constructor: FunctionObject, argumentList: Arguments) {
-  // 1. Let newTypedArray be ? Construct(constructor, argumentList).
-  const newTypedArray = Q(Construct(constructor, argumentList));
-  // 2. Perform ? ValidateTypedArray(newTypedArray).
-  Q(ValidateTypedArray(newTypedArray));
-  // 3. If argumentList is a List of a single Number, then
-  if (argumentList.length === 1 && argumentList[0] instanceof NumberValue) {
-    // a. If newTypedArray.[[ArrayLength]] < argumentList[0], throw a TypeError exception.
-    if ((newTypedArray as IntegerIndexedObject).ArrayLength < R(argumentList[0])) {
-      return surroundingAgent.Throw('TypeError', 'TypedArrayTooSmall');
-    }
+/** https://tc39.es/ecma262/#sec-isvalidintegerindex */
+export function IsValidIntegerIndex(O: TypedArrayObject, index: NumberValue) {
+  if (IsDetachedBuffer(O.ViewedArrayBuffer as ArrayBufferObject) === Value.true) {
+    return Value.false;
   }
-  // 4. Return newTypedArray.
-  return newTypedArray;
+  if (IsIntegralNumber(index) === Value.false) {
+    return Value.false;
+  }
+  const index_ = R(index);
+  if (Object.is(index_, -0) || index_ < 0) {
+    return Value.false;
+  }
+  const taRecord = MakeTypedArrayWithBufferWitnessRecord(O, 'seq-cst');
+  if (IsTypedArrayOutOfBounds(taRecord)) {
+    return Value.false;
+  }
+  const length = TypedArrayLength(taRecord);
+  if (index_ >= length) {
+    return Value.false;
+  }
+  return Value.true;
 }
 
-/** https://tc39.es/ecma262/#sec-allocatetypedarray */
-export function AllocateTypedArray(constructorName: JSStringValue, newTarget: FunctionObject, defaultProto: string, length?: number): ExpressionCompletion<Mutable<IntegerIndexedObject>> {
-  // 1. Let proto be ? GetPrototypeFromConstructor(newTarget, defaultProto).
-  const proto = Q(GetPrototypeFromConstructor(newTarget, defaultProto));
-  // 2. Let obj be ! IntegerIndexedObjectCreate(proto).
-  const obj = X(IntegerIndexedObjectCreate(proto)) as Mutable<TypedArrayObject>;
-  // 3. Assert: obj.[[ViewedArrayBuffer]] is undefined.
-  Assert(obj.ViewedArrayBuffer === Value.undefined);
-  // 4. Set obj.[[TypedArrayName]] to constructorName.
-  obj.TypedArrayName = constructorName;
-  // 5. If constructorName is "BigInt64Array" or "BigUint64Array", set obj.[[ContentType]] to BigInt.
-  // 6. Otherwise, set obj.[[ContentType]] to Number.
-  if (constructorName.stringValue() === 'BigInt64Array' || constructorName.stringValue() === 'BigUint64Array') {
-    obj.ContentType = 'BigInt';
+/** https://tc39.es/ecma262/#sec-typedarraygetelement */
+export function TypedArrayGetElement(O: TypedArrayObject, index: NumberValue) {
+  if (IsValidIntegerIndex(O, index) === Value.false) {
+    return Value.undefined;
+  }
+  const offset = O.ByteOffset;
+  const elementSize = TypedArrayElementSize(O);
+  const byteIndexInBuffer = (R(index) * elementSize) + offset;
+  const elementType = TypedArrayElementType(O);
+  return GetValueFromBuffer(O.ViewedArrayBuffer as ArrayBufferObject, byteIndexInBuffer, elementType, true, 'unordered');
+}
+
+/** https://tc39.es/ecma262/#sec-integerindexedelementset */
+export function TypedArraySetElement(O: TypedArrayObject, index: NumberValue, value: Value): ExpressionCompletion<BooleanValue> {
+  // 3. If O.[[ContentType]] is BigInt, let numValue be ? ToBigInt(value).
+  // 4. Otherwise, let numValue be ? ToNumber(value).
+  let numValue;
+  if (O.ContentType === 'BigInt') {
+    numValue = Q(ToBigInt(value));
   } else {
-    obj.ContentType = 'Number';
+    numValue = Q(ToNumber(value));
   }
-  // 7. If length is not present, then
-  if (length === undefined) {
-    // 1. Set obj.[[ByteLength]] to 0.
-    obj.ByteLength = 0;
-    // 1. Set obj.[[ByteOffset]] to 0.
-    obj.ByteOffset = 0;
-    // 1. Set obj.[[ArrayLength]] to 0.
-    obj.ArrayLength = 0;
-  } else {
-    // a. Perform ? AllocateTypedArrayBuffer(obj, length).
-    Q(AllocateTypedArrayBuffer(obj, length));
+  if (IsValidIntegerIndex(O, index) === Value.true) {
+    const offset = O.ByteOffset;
+    const elementSize = TypedArrayElementSize(O);
+    const byteIndexInBuffer = (R(index) * elementSize) + offset;
+    const elementType = TypedArrayElementType(O);
+    SetValueInBuffer(O.ViewedArrayBuffer as ArrayBufferObject, byteIndexInBuffer, elementType, numValue, true, 'unordered');
+    return Value.true;
   }
-  // 9. Return obj.
-  return obj;
+  return Value.true;
 }
 
-/** https://tc39.es/ecma262/#sec-allocatetypedarraybuffer */
-export function AllocateTypedArrayBuffer(O: TypedArrayObject, length: number): ExpressionCompletion<TypedArrayObject> {
-  // 1. Assert: O is an Object that has a [[ViewedArrayBuffer]] internal slot.
-  Assert(O instanceof ObjectValue && 'ViewedArrayBuffer' in O);
-  // 2. Assert: O.[[ViewedArrayBuffer]] is undefined.
-  Assert(O.ViewedArrayBuffer === Value.undefined);
-  // 3. Assert: length is a non-negative integer.
-  Assert(isNonNegativeInteger(length));
-  // 4. Let constructorName be the String value of O.[[TypedArrayName]].
-  const constructorName = O.TypedArrayName.stringValue() as TypedArrayConstructorNames;
-  // 5. Let elementSize be the Element Size value specified in Table 61 for constructorName.
-  const elementSize = typedArrayInfoByName[constructorName].ElementSize;
-  // 6. Let byteLength be elementSize × length.
-  const byteLength = elementSize * length;
-  // 7. Let data be ? AllocateArrayBuffer(%ArrayBuffer%, byteLength).
-  const data = Q(AllocateArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%') as FunctionObject, byteLength));
-  // 8. Set O.[[ViewedArrayBuffer]] to data.
-  O.ViewedArrayBuffer = data;
-  // 9. Set O.[[ByteLength]] to byteLength.
-  __ts_cast__<Mutable<TypedArrayObject>>(O);
-  O.ByteLength = byteLength;
-  // 10. Set O.[[ByteOffset]] to 0.
-  O.ByteOffset = 0;
-  // 11. Set O.[[ArrayLength]] to length.
-  O.ArrayLength = length;
-  // 12. Return O.
-  return O;
-}
-
-// #typedarray-species-create
-export function TypedArraySpeciesCreate(exemplar: TypedArrayObject, argumentList: Arguments) {
-  // 1. Assert: exemplar is an Object that has [[TypedArrayName]] and [[ContentType]] internal slots.
-  Assert(exemplar instanceof ObjectValue
-         && 'TypedArrayName' in exemplar
-         && 'ContentType' in exemplar);
-  // 2. Let defaultConstructor be the intrinsic object listed in column one of Table 61 for exemplar.[[TypedArrayName]].
-  const defaultConstructor = surroundingAgent.intrinsic(typedArrayInfoByName[exemplar.TypedArrayName.stringValue() as TypedArrayConstructorNames].IntrinsicName) as FunctionObject;
-  // 3. Let constructor be ? SpeciesConstructor(exemplar, defaultConstructor).
-  const constructor = Q(SpeciesConstructor(exemplar, defaultConstructor));
-  // 4. Let result be ? TypedArrayCreate(constructor, argumentList).
-  const result = Q(TypedArrayCreate(constructor, argumentList));
-  // 5. Assert: result has [[TypedArrayName]] and [[ContentType]] internal slots.
-  Assert('TypedArrayName' in result && 'ContentType' in result);
-  // 6. If result.[[ContentType]] is not equal to exemplar.[[ContentType]], throw a TypeError exception.
-  if (result.ContentType !== exemplar.ContentType) {
-    return surroundingAgent.Throw('TypeError', 'BufferContentTypeMismatch');
+/** https://tc39.es/ecma262/#sec-isarraybufferviewoutofbounds */
+export function IsArrayBufferViewOutOfBounds(O: DataViewObject | TypedArrayObject) {
+  if (isDataViewObject(O)) {
+    const viewRecord = MakeDataViewWithBufferWitnessRecord(O, 'seq-cst');
+    return IsViewOutOfBounds(viewRecord);
   }
-  // 7. Return result.
-  return result;
-}
-
-/** https://tc39.es/ecma262/#sec-iterabletolist */
-export function IterableToList(items: Value, method?: FunctionObject | UndefinedValue): PlainCompletion<Value[]> {
-  // 1. Let iteratorRecord be ? GetIterator(items, sync, method).
-  const iteratorRecord = Q(GetIterator(items, 'sync', method));
-  // 2. Let values be a new empty List.
-  const values = [];
-  // 3. Let next be true.
-  let next: Value = Value.true;
-  // 4. Repeat, while next is not false
-  while (next !== Value.false) {
-    // a. Set next to ? IteratorStep(iteratorRecord).
-    next = Q(IteratorStep(iteratorRecord));
-    // b. If next is not false, then
-    if (next !== Value.false) {
-      // i. Let nextValue be ? IteratorValue(next).
-      const nextValue = Q(IteratorValue(next as ObjectValue));
-      // ii. Append nextValue to the end of the List values.
-      values.push(nextValue);
-    }
-  }
-  // 5. Return values.
-  return values;
+  const taRecord = MakeTypedArrayWithBufferWitnessRecord(O, 'seq-cst');
+  return IsTypedArrayOutOfBounds(taRecord);
 }

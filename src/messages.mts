@@ -89,8 +89,10 @@ export const NotATypeObject = (t, v) => `${i(v)} is not a ${t} object`;
 export const NotAnObject = (v) => `${i(v)} is not an object`;
 export const NotASymbol = (v) => `${i(v)} is not a symbol`;
 export const NotAWeakKey = (v) => `${i(v)} is not an object or a symbol`;
+export const NotAString = (v) => `${i(v)} is not a string`;
 export const NotDefined = (n) => `${i(n)} is not defined`;
 export const NotInitialized = (n) => `${i(n)} cannot be used before initialization`;
+export const NotIterable = (n) => `${i(n)} is not iterable`;
 export const NotPropertyName = (p) => `${i(p)} is not a valid property name`;
 export const NumberFormatRange = (m) => `Invalid format range for ${m}`;
 export const ObjectToPrimitive = () => 'Cannot convert object to primitive value';
@@ -133,6 +135,7 @@ export const ProxySetFrozenData = (p) => `'set' on proxy: trap returned truthy f
 export const ProxySetFrozenAccessor = (p) => `'set' on proxy: trap returned truthy for property ${i(p)} which exists in the proxy target as a non-configurable and non-writable accessor property without a setter`;
 export const RegExpArgumentNotAllowed = (m) => `First argument to ${m} must not be a regular expression`;
 export const RegExpExecNotObject = (o) => `${i(o)} is not object or null`;
+export const ResizableBufferInvalidMaxByteLength = () => 'Invalid maxByteLength for resizable ArrayBuffer';
 export const ResolutionNullOrAmbiguous = (r, n, m) => (r === null
   ? `Could not resolve import ${i(n)} from ${m.HostDefined.specifier}`
   : `Star export ${i(n)} from ${m.HostDefined.specifier} is ambiguous`);
@@ -151,6 +154,7 @@ export const TryMissingCatchOrFinally = () => 'Missing catch or finally after tr
 export const TypedArrayCreationOOB = () => 'Sum of start offset and byte length should be less than the size of underlying buffer';
 export const TypedArrayLengthAlignment = (n, m) => `Size of ${n} should be a multiple of ${m}`;
 export const TypedArrayOOB = () => 'Sum of start offset and byte length should be less than the size of the TypedArray';
+export const TypedArrayOutOfBounds = () => 'TypedArray index out of bounds';
 export const TypedArrayOffsetAlignment = (n, m) => `Start offset of ${n} should be a multiple of ${m}`;
 export const TypedArrayTooSmall = () => 'Derived TypedArray constructor created an array which was too small';
 export const UnableToSeal = (o) => `Unable to seal object ${i(o)}`;

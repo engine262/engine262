@@ -9,7 +9,7 @@ import {
   Assert,
   SameValue,
   OrdinaryObjectCreate,
-  CreateIterResultObject,
+  CreateIteratorResultObject,
   Realm,
   type OrdinaryObject,
 } from '../abstract-ops/all.mts';
@@ -91,9 +91,9 @@ function ForInIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionCa
         if (!(desc instanceof UndefinedValue)) {
           // a. Append r to visited.
           visited.push(r);
-          // b. If desc.[[Enumerable]] is true, return CreateIterResultObject(r, false).
+          // b. If desc.[[Enumerable]] is true, return CreateIteratorResultObject(r, false).
           if (desc.Enumerable === Value.true) {
-            return CreateIterResultObject(r, Value.false);
+            return CreateIteratorResultObject(r, Value.false);
           }
         }
       }
@@ -104,9 +104,9 @@ function ForInIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionCa
     O.Object = object;
     // e. Set O.ObjectWasVisited to false.
     O.ObjectWasVisited = Value.false;
-    // f. If object is null, return CreateIterResultObject(undefined, true).
+    // f. If object is null, return CreateIteratorResultObject(undefined, true).
     if (object === Value.null) {
-      return CreateIterResultObject(Value.undefined, Value.true);
+      return CreateIteratorResultObject(Value.undefined, Value.true);
     }
   }
 }

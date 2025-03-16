@@ -15,15 +15,12 @@ import {
   CreateDataProperty,
   CreateDataPropertyOrThrow,
   Get,
-  GetIterator,
   GetMethod,
   GetPrototypeFromConstructor,
   IsArray,
   IsCallable,
   IsConstructor,
   IteratorClose,
-  IteratorStep,
-  IteratorValue,
   Set,
   LengthOfArrayLike,
   ToObject,
@@ -32,10 +29,11 @@ import {
   F, R,
   Realm,
   type FunctionObject,
+  IteratorStepValue,
+  GetIteratorFromMethod,
 } from '../abstract-ops/all.mts';
 import {
   NumberValue,
-  ObjectValue,
   UndefinedValue,
   Value,
   wellKnownSymbols,
@@ -103,26 +101,26 @@ function ArrayConstructor(argumentsList: Arguments, { NewTarget }: FunctionCallC
 }
 
 /** https://tc39.es/ecma262/#sec-array.from */
-function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
+function Array_from([items = Value.undefined, mapper = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   const C = thisValue;
   let mapping;
   let A;
-  if (mapfn === Value.undefined) {
+  if (mapper === Value.undefined) {
     mapping = false;
   } else {
-    if (IsCallable(mapfn) === Value.false) {
-      return surroundingAgent.Throw('TypeError', 'NotAFunction', mapfn);
+    if (IsCallable(mapper) === Value.false) {
+      return surroundingAgent.Throw('TypeError', 'NotAFunction', mapper);
     }
     mapping = true;
   }
   const usingIterator = Q(GetMethod(items, wellKnownSymbols.iterator));
-  if (usingIterator !== Value.undefined) {
+  if (!(usingIterator instanceof UndefinedValue)) {
     if (IsConstructor(C) === Value.true) {
       A = Q(Construct(C as FunctionObject));
     } else {
       A = X(ArrayCreate(0));
     }
-    const iteratorRecord = Q(GetIterator(items, 'sync', usingIterator));
+    const iteratorRecord = Q(GetIteratorFromMethod(items, usingIterator));
     let k = 0;
     while (true) { // eslint-disable-line no-constant-condition
       if (k >= (2 ** 53) - 1) {
@@ -130,19 +128,18 @@ function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg =
         return Q(IteratorClose(iteratorRecord, error));
       }
       const Pk = X(ToString(F(k)));
-      const next = Q(IteratorStep(iteratorRecord));
-      if (next === Value.false) {
+      const next = Q(IteratorStepValue(iteratorRecord));
+      if (next === 'done') {
         Q(Set(A, Value('length'), F(k), Value.true));
         return A;
       }
-      const nextValue = Q(IteratorValue(next as ObjectValue));
       let mappedValue;
       if (mapping) {
-        mappedValue = Call(mapfn, thisArg, [nextValue, F(k)]);
+        mappedValue = Call(mapper, thisArg, [next, F(k)]);
         IfAbruptCloseIterator(mappedValue, iteratorRecord);
         __ts_cast__<Value>(mappedValue);
       } else {
-        mappedValue = nextValue;
+        mappedValue = next;
       }
       const defineStatus = CreateDataPropertyOrThrow(A, Pk, mappedValue);
       IfAbruptCloseIterator(defineStatus, iteratorRecord);
@@ -162,7 +159,7 @@ function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg =
     const kValue = Q(Get(arrayLike, Pk));
     let mappedValue;
     if (mapping === true) {
-      mappedValue = Q(Call(mapfn, thisArg, [kValue, F(k)]));
+      mappedValue = Q(Call(mapper, thisArg, [kValue, F(k)]));
     } else {
       mappedValue = kValue;
     }

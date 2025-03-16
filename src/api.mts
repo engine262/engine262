@@ -205,7 +205,8 @@ export interface ManagedRealmHostDefined {
   finalizeImportMeta?(meta: ObjectValue, module: ModuleRecordHostDefinedPublic): PlainCompletion<void>;
   resolverCache?: Map<string, AbstractModuleRecord>;
 
-  randomSeed?(): string
+  randomSeed?(): string;
+  attachingInspector?: unknown;
 }
 export class ManagedRealm extends Realm {
   override TemplateMap: { Site: ParseNode.TemplateLiteral; Array: ObjectValue; }[];
