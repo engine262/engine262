@@ -8,7 +8,6 @@ import {
   SpeciesConstructor, Construct, ToIntegerOrInfinity, SameValue, CopyDataBlockBytes,
   F,
   Realm,
-  type FunctionObject,
   type ArrayBufferObject,
 } from '../abstract-ops/all.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
@@ -75,7 +74,7 @@ function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]
   // 10. Let newLen be max(final - first, 0).
   const newLen = Math.max(final - first, 0);
   // 11. Let ctor be ? SpeciesConstructor(O, %ArrayBuffer%).
-  const ctor = Q(SpeciesConstructor(O, surroundingAgent.intrinsic('%ArrayBuffer%') as FunctionObject));
+  const ctor = Q(SpeciesConstructor(O, surroundingAgent.intrinsic('%ArrayBuffer%')));
   // 12. Let new be ? Construct(ctor, « newLen »).
   const newO = Q(Construct(ctor, [F(newLen)])) as ArrayBufferObject;
   // 13. Perform ? RequireInternalSlot(new, [[ArrayBufferData]]).

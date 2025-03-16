@@ -49,6 +49,7 @@
     "build:regex_data": "node scripts/gen_regex_sets.js",
     "build:dts": "tsc -b .",
     "build:engine": "NODE_OPTIONS='--enable-source-maps --disable-warning=ExperimentalWarning --experimental-strip-types' rollup -c ./scripts/rollup.config.mts",
+    "build-watch:engine": "npm run build:engine -- --watch",
     "check": "tsc -b .",
     "check:watch": "tsc -b . --watch",
     "test": "bash test/test_root.sh",

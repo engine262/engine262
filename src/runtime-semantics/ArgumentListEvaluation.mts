@@ -1,7 +1,6 @@
 import { surroundingAgent } from '../engine.mts';
 import {
   Value, Descriptor, type Arguments,
-  BooleanValue,
 } from '../value.mts';
 import { Evaluate, type Evaluator } from '../evaluator.mts';
 import { Q, X, type PlainCompletion } from '../completion.mts';
@@ -13,9 +12,8 @@ import {
   ToString,
   GetIterator,
   GetValue,
-  IteratorStep,
-  IteratorValue,
   F,
+  IteratorStepValue,
 } from '../abstract-ops/all.mts';
 import { TemplateStrings } from '../static-semantics/all.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
@@ -145,17 +143,14 @@ function* ArgumentListEvaluation_Arguments(Arguments: ParseNode.Arguments): Eval
       const iteratorRecord = Q(GetIterator(spreadObj, 'sync'));
       // 5. Repeat,
       while (true) {
-        // a. Let next be ? IteratorStep(iteratorRecord).
-        const next = Q(IteratorStep(iteratorRecord));
+        // a. Let next be ? IteratorStepValue(iteratorRecord).
+        const next = Q(IteratorStepValue(iteratorRecord));
         // b. If next is false, return list.
-        if (next instanceof BooleanValue) {
-          Assert(next === Value.false);
+        if (next === 'done') {
           break;
         }
-        // c. Let nextArg be ? IteratorValue(next).
-        const nextArg = Q(IteratorValue(next));
-        // d. Append nextArg as the last element of list.
-        precedingArgs.push(nextArg);
+        // d. Append next as the last element of list.
+        precedingArgs.push(next);
       }
     } else {
       const AssignmentExpression = element;

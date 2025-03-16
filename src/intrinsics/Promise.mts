@@ -26,8 +26,6 @@ import {
   IsCallable,
   IsConstructor,
   IteratorClose,
-  IteratorStep,
-  IteratorValue,
   NewPromiseCapability,
   OrdinaryObjectCreate,
   OrdinaryCreateFromConstructor,
@@ -40,12 +38,12 @@ import {
   type OrdinaryObject,
   type PromiseAllResolveElementFunctionObject,
   type PromiseAllRejectElementFunctionObject,
+  IteratorStepValue,
 } from '../abstract-ops/all.mts';
 import {
   AbruptCompletion,
   ThrowCompletion,
   IfAbruptRejectPromise,
-  ReturnIfAbrupt,
   EnsureCompletion,
   Q, X,
   type ExpressionCompletion,
@@ -138,7 +136,7 @@ function GetPromiseResolve(promiseConstructor: FunctionObject) {
 }
 
 /** https://tc39.es/ecma262/#sec-performpromiseall */
-function PerformPromiseAll(iteratorRecord: IteratorRecord, constructor: FunctionObject, resultCapability: PromiseCapabilityRecord, promiseResolve: FunctionObject): ExpressionCompletion<PromiseObject> {
+function PerformPromiseAll(iteratorRecord: IteratorRecord, constructor: FunctionObject, resultCapability: PromiseCapabilityRecord, promiseResolve: FunctionObject): ExpressionCompletion {
   // 1. Assert: IsConstructor(constructor) is true.
   Assert(IsConstructor(constructor) === Value.true);
   // 2. Assert: resultCapability is a PromiseCapability Record.
@@ -153,18 +151,10 @@ function PerformPromiseAll(iteratorRecord: IteratorRecord, constructor: Function
   let index = 0;
   // 7. Repeat,
   while (true) {
-    // a. Let next be IteratorStep(iteratorRecord).
-    const next = IteratorStep(iteratorRecord);
-    // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-    if (next instanceof AbruptCompletion) {
-      iteratorRecord.Done = Value.true;
-    }
-    // c. ReturnIfAbrupt(next).
-    ReturnIfAbrupt(next);
-    // d. If next is false, then
-    if (next === Value.false) {
-      // i. Set iteratorRecord.[[Done]] to true.
-      iteratorRecord.Done = Value.true;
+    // a. Let next be ? IteratorStepValue(iteratorRecord).
+    const next = Q(IteratorStepValue(iteratorRecord));
+    // d. If next is done, then
+    if (next === 'done') {
       // ii. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] - 1.
       remainingElementsCount.Value -= 1;
       // iii. If remainingElementsCount.[[Value]] is 0, then
@@ -177,18 +167,10 @@ function PerformPromiseAll(iteratorRecord: IteratorRecord, constructor: Function
       // iv. Return resultCapability.[[Promise]].
       return resultCapability.Promise;
     }
-    // e. Let nextValue be IteratorValue(next).
-    const nextValue = IteratorValue(next as ObjectValue);
-    // f. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
-    if (nextValue instanceof AbruptCompletion) {
-      iteratorRecord.Done = Value.true;
-    }
-    // g. ReturnIfAbrupt(nextValue).
-    ReturnIfAbrupt(nextValue);
     // h. Append undefined to values.
     values.push(Value.undefined);
-    // i. Let nextPromise be ? Call(promiseResolve, constructor, « nextValue »).
-    const nextPromise = Q(Call(promiseResolve, constructor, [X(nextValue)]));
+    // i. Let nextPromise be ? Call(promiseResolve, constructor, « next »).
+    const nextPromise = Q(Call(promiseResolve, constructor, [next]));
     // j. Let steps be the algorithm steps defined in Promise.all Resolve Element Functions.
     const steps = PromiseAllResolveElementFunctions;
     // k. Let length be the number of non-optional parameters of the function definition in Promise.all Resolve Element Functions.
@@ -234,7 +216,7 @@ function Promise_all([iterable = Value.undefined]: Arguments, { thisValue }: Fun
   IfAbruptRejectPromise(iteratorRecord, promiseCapability);
   __ts_cast__<IteratorRecord>(iteratorRecord);
   // 7. Let result be PerformPromiseAll(iteratorRecord, C, promiseCapability, promiseResolve).
-  let result: ExpressionCompletion = EnsureCompletion(PerformPromiseAll(iteratorRecord, C, promiseCapability, promiseResolve));
+  let result: ExpressionCompletion = PerformPromiseAll(iteratorRecord, C, promiseCapability, promiseResolve);
   // 8. If result is an abrupt completion, then
   if (result instanceof AbruptCompletion) {
     // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
@@ -244,8 +226,8 @@ function Promise_all([iterable = Value.undefined]: Arguments, { thisValue }: Fun
     // b. IfAbruptRejectPromise(result, promiseCapability).
     IfAbruptRejectPromise(result, promiseCapability);
   }
-  // 9. Return Completion(result).
-  return EnsureCompletion(result);
+  // 9. Return ? result.
+  return result;
 }
 
 function PromiseAllSettledResolveElementFunctions([x = Value.undefined]: Arguments): ExpressionCompletion {
@@ -310,18 +292,10 @@ function PerformPromiseAllSettled(iteratorRecord: IteratorRecord, constructor: F
   let index = 0;
   // 7. Repeat,
   while (true) {
-    // a. Let next be IteratorStep(iteratorRecord).
-    const next = IteratorStep(iteratorRecord);
-    // b. Let next be IteratorStep(iteratorRecord).
-    if (next instanceof AbruptCompletion) {
-      iteratorRecord.Done = Value.true;
-    }
-    // c. ReturnIfAbrupt(next).
-    ReturnIfAbrupt(next);
-    // d. If next is false,
-    if (next === Value.false) {
-      // i. Set iteratorRecord.[[Done]] to true.
-      iteratorRecord.Done = Value.true;
+    // a. Let next be ? IteratorStepValue(iteratorRecord).
+    const next = Q(IteratorStepValue(iteratorRecord));
+    // d. If next is done,
+    if (next === 'done') {
       // ii. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] - 1.
       remainingElementsCount.Value -= 1;
       // iii. If remainingElementsCount.[[Value]] is 0, then
@@ -334,19 +308,10 @@ function PerformPromiseAllSettled(iteratorRecord: IteratorRecord, constructor: F
       // iv. Return resultCapability.[[Promise]].
       return resultCapability.Promise;
     }
-    // e. Let nextValue be IteratorValue(next).
-    const nextValue = IteratorValue(next as ObjectValue);
-    // f. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
-    if (nextValue instanceof AbruptCompletion) {
-      iteratorRecord.Done = Value.true;
-    }
-    // g. ReturnIfAbrupt(nextValue).
-    ReturnIfAbrupt(nextValue);
-    __ts_cast__<Value>(nextValue);
     // h. Append undefined to values.
     values.push(Value.undefined);
-    // i. Let nextPromise be ? Call(promiseResolve, constructor, « nextValue »).
-    const nextPromise = Q(Call(promiseResolve, constructor, [nextValue]));
+    // i. Let nextPromise be ? Call(promiseResolve, constructor, « next »).
+    const nextPromise = Q(Call(promiseResolve, constructor, [next]));
     // j. Let stepsFulfilled be the algorithm steps defined in Promise.allSettled Resolve Element Functions.
     const stepsFulfilled = PromiseAllSettledResolveElementFunctions;
     // k. Let lengthFulfilled be the number of non-optional parameters of the function definition in Promise.allSettled Resolve Element Functions.
@@ -420,7 +385,7 @@ function Promise_allSettled([iterable = Value.undefined]: Arguments, { thisValue
   IfAbruptRejectPromise(iteratorRecord, promiseCapability);
   __ts_cast__<IteratorRecord>(iteratorRecord);
   // 7. Let result be PerformPromiseAllSettled(iteratorRecord, C, promiseCapability, promiseResolve).
-  let result: ExpressionCompletion = EnsureCompletion(PerformPromiseAllSettled(iteratorRecord, C, promiseCapability, promiseResolve));
+  let result: ExpressionCompletion = PerformPromiseAllSettled(iteratorRecord, C, promiseCapability, promiseResolve);
   // 8. If result is an abrupt completion, then
   if (result instanceof AbruptCompletion) {
     // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
@@ -430,8 +395,8 @@ function Promise_allSettled([iterable = Value.undefined]: Arguments, { thisValue
     // b. IfAbruptRejectPromise(result, promiseCapability).
     IfAbruptRejectPromise(result, promiseCapability);
   }
-  // 9. Return Completion(result).
-  return EnsureCompletion(result);
+  // 9. Return ? result.
+  return result;
 }
 
 /** https://tc39.es/ecma262/#sec-promise.any-reject-element-functions */
@@ -492,18 +457,10 @@ function PerformPromiseAny(iteratorRecord: IteratorRecord, constructor: Function
   let index = 0;
   // 7. Repeat,
   while (true) {
-    // a. Let next be IteratorStep(iteratorRecord).
-    const next = IteratorStep(iteratorRecord);
-    // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-    if (next instanceof AbruptCompletion) {
-      iteratorRecord.Done = Value.true;
-    }
-    // c. ReturnIfAbrupt(next).
-    ReturnIfAbrupt(next);
-    // d. If next is false, then
-    if (next === Value.false) {
-      // i. Set iteratorRecord.[[Done]] to true.
-      iteratorRecord.Done = Value.true;
+    // a. Let next be ? IteratorStepValue(iteratorRecord).
+    const next = Q(IteratorStepValue(iteratorRecord));
+    // d. If next is done, then
+    if (next === 'done') {
       // ii. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] - 1.
       remainingElementsCount.Value -= 1;
       // iii. If remainingElementsCount.[[Value]] is 0, then
@@ -523,19 +480,10 @@ function PerformPromiseAny(iteratorRecord: IteratorRecord, constructor: Function
       // iv. Return resultCapability.[[Promise]].
       return resultCapability.Promise;
     }
-    // e. Let nextValue be IteratorValue(next).
-    const nextValue = IteratorValue(next as ObjectValue);
-    // f. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
-    if (nextValue instanceof AbruptCompletion) {
-      iteratorRecord.Done = Value.true;
-    }
-    // g. ReturnIfAbrupt(nextValue).
-    ReturnIfAbrupt(nextValue);
-    __ts_cast__<Value>(nextValue);
     // h. Append undefined to errors.
     errors.push(Value.undefined);
-    // i. Let nextPromise be ? Call(promiseResolve, constructor, « nextValue »).
-    const nextPromise = Q(Call(promiseResolve, constructor, [nextValue]));
+    // i. Let nextPromise be ? Call(promiseResolve, constructor, « next »).
+    const nextPromise = Q(Call(promiseResolve, constructor, [next]));
     // j. Let stepsRejected be the algorithm steps defined in Promise.any Reject Element Functions.
     const stepsRejected = PromiseAnyRejectElementFunctions;
     // k. Let lengthRejected be the number of non-optional parameters of the function definition in Promise.any Reject Element Functions.
@@ -579,7 +527,7 @@ function Promise_any([iterable = Value.undefined]: Arguments, { thisValue }: Fun
   IfAbruptRejectPromise(iteratorRecord, promiseCapability);
   __ts_cast__<IteratorRecord>(iteratorRecord);
   // 7. Let result be PerformPromiseAny(iteratorRecord, C, promiseCapability).
-  let result: ExpressionCompletion = EnsureCompletion(PerformPromiseAny(iteratorRecord, C, promiseCapability, promiseResolve));
+  let result: ExpressionCompletion = PerformPromiseAny(iteratorRecord, C, promiseCapability, promiseResolve);
   // 8. If result is an abrupt completion, then
   if (result instanceof AbruptCompletion) {
     // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
@@ -589,8 +537,8 @@ function Promise_any([iterable = Value.undefined]: Arguments, { thisValue }: Fun
     // b. IfAbruptRejectPromise(result, promiseCapability).
     IfAbruptRejectPromise(result, promiseCapability);
   }
-  // 9. Return Completion(result).
-  return EnsureCompletion(result);
+  // 9. Return ? result.
+  return result;
 }
 
 function PerformPromiseRace(iteratorRecord: IteratorRecord, constructor: FunctionObject, resultCapability: PromiseCapabilityRecord, promiseResolve: FunctionObject): ExpressionCompletion {
@@ -602,32 +550,15 @@ function PerformPromiseRace(iteratorRecord: IteratorRecord, constructor: Functio
   Assert(IsCallable(promiseResolve) === Value.true);
   // 4. Repeat,
   while (true) {
-    // a. Let next be IteratorStep(iteratorRecord).
-    const next = IteratorStep(iteratorRecord);
-    // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-    if (next instanceof AbruptCompletion) {
-      iteratorRecord.Done = Value.true;
-    }
-    // c. ReturnIfAbrupt(next).
-    ReturnIfAbrupt(next);
-    // d. If next is false, then
-    if (next === Value.false) {
-      // i. Set iteratorRecord.[[Done]] to true.
-      iteratorRecord.Done = Value.true;
+    // a. Let next be ? IteratorStepValue(iteratorRecord).
+    const next = Q(IteratorStepValue(iteratorRecord));
+    // d. If next is done, then
+    if (next === 'done') {
       // ii. Return resultCapability.[[Promise]].
       return resultCapability.Promise;
     }
-    // e. Let nextValue be IteratorValue(next).
-    const nextValue = IteratorValue(X(next) as ObjectValue);
-    // f. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
-    if (nextValue instanceof AbruptCompletion) {
-      iteratorRecord.Done = Value.true;
-    }
-    // g. ReturnIfAbrupt(nextValue).
-    ReturnIfAbrupt(nextValue);
-    __ts_cast__<Value>(nextValue);
-    // h. Let nextPromise be ? Call(promiseResolve, constructor, « nextValue »).
-    const nextPromise = Q(Call(promiseResolve, constructor, [nextValue]));
+    // h. Let nextPromise be ? Call(promiseResolve, constructor, « next »).
+    const nextPromise = Q(Call(promiseResolve, constructor, [next]));
     // i. Perform ? Invoke(nextPromise, "then", « resultCapability.[[Resolve]], resultCapability.[[Reject]] »).
     Q(Invoke(nextPromise, Value('then'), [resultCapability.Resolve, resultCapability.Reject]));
   }
@@ -651,7 +582,7 @@ function Promise_race([iterable = Value.undefined]: Arguments, { thisValue }: Fu
   IfAbruptRejectPromise(iteratorRecord, promiseCapability);
   __ts_cast__<IteratorRecord>(iteratorRecord);
   // 7. Let result be PerformPromiseRace(iteratorRecord, C, promiseCapability, promiseResolve).
-  let result: ExpressionCompletion = EnsureCompletion(PerformPromiseRace(iteratorRecord, C, promiseCapability, promiseResolve));
+  let result: ExpressionCompletion = PerformPromiseRace(iteratorRecord, C, promiseCapability, promiseResolve);
   // 8. If result is an abrupt completion, then
   if (result instanceof AbruptCompletion) {
     // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
@@ -661,8 +592,8 @@ function Promise_race([iterable = Value.undefined]: Arguments, { thisValue }: Fu
     // b. IfAbruptRejectPromise(result, promiseCapability).
     IfAbruptRejectPromise(result, promiseCapability);
   }
-  // 9. Return Completion(result).
-  return EnsureCompletion(result);
+  // 9. Return ? result.
+  return result;
 }
 
 /** https://tc39.es/ecma262/#sec-promise.reject */

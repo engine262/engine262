@@ -15,7 +15,7 @@ import {
   AsyncGeneratorEnqueue,
   AsyncGeneratorResume,
   AsyncGeneratorAwaitReturn,
-  CreateIterResultObject,
+  CreateIteratorResultObject,
   type AsyncGeneratorObject,
   Realm,
 } from '../abstract-ops/all.mts';
@@ -37,8 +37,8 @@ function AsyncGeneratorPrototype_next([value = Value.undefined]: Arguments, { th
   const state = generator.AsyncGeneratorState;
   // 6. If state is completed, then
   if (state === 'completed') {
-    // a. Let iteratorResult be ! CreateIterResultObject(undefined, true).
-    const iteratorResult = X(CreateIterResultObject(Value.undefined, Value.true));
+    // a. Let iteratorResult be ! CreateIteratorResultObject(undefined, true).
+    const iteratorResult = X(CreateIteratorResultObject(Value.undefined, Value.true));
     // b. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iteratorResult »).
     X(Call(promiseCapability.Resolve, Value.undefined, [iteratorResult]));
     // c. Return promiseCapability.[[Promise]].

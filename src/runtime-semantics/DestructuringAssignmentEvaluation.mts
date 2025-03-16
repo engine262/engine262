@@ -1,6 +1,6 @@
 import { surroundingAgent } from '../engine.mts';
 import {
-  JSStringValue, ObjectValue, ReferenceRecord, Value, type PropertyKeyValue,
+  JSStringValue, ReferenceRecord, Value, type PropertyKeyValue,
 } from '../value.mts';
 import {
   ArrayCreate,
@@ -11,7 +11,6 @@ import {
   GetValue,
   IteratorClose,
   IteratorStep,
-  IteratorValue,
   OrdinaryObjectCreate,
   PutValue,
   ResolveBinding,
@@ -20,6 +19,7 @@ import {
   F,
   Assert,
   type IteratorRecord,
+  IteratorStepValue,
 } from '../abstract-ops/all.mts';
 import {
   IsAnonymousFunctionDefinition,
@@ -207,18 +207,8 @@ function* IteratorDestructuringAssignmentEvaluation(node: ParseNode.AssignmentEl
     case 'Elision':
       // 1. If iteratorRecord.[[Done]] is false, then
       if (iteratorRecord.Done === Value.false) {
-        // a. Let next be IteratorStep(iteratorRecord).
-        const next = IteratorStep(iteratorRecord);
-        // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-        if (next instanceof AbruptCompletion) {
-          iteratorRecord.Done = Value.true;
-        }
-        // c. ReturnIfAbrupt(next)
-        ReturnIfAbrupt(next);
-        // d. If next is false, set iteratorRecord.[[Done]] to true.
-        if (next === Value.false) {
-          iteratorRecord.Done = Value.true;
-        }
+        // a. Perform ? IteratorStep(iteratorRecord).
+        Q(IteratorStep(iteratorRecord));
       }
       // 2. Return NormalCompletion(empty).
       return NormalCompletion(undefined);
@@ -228,45 +218,27 @@ function* IteratorDestructuringAssignmentEvaluation(node: ParseNode.AssignmentEl
       // 1. If DestructuringAssignmentTarget is neither an ObjectLiteral nor an ArrayLiteral, then
       if (DestructuringAssignmentTarget.type !== 'ObjectLiteral'
           && DestructuringAssignmentTarget.type !== 'ArrayLiteral') {
-        lref = yield* Evaluate(DestructuringAssignmentTarget);
-        ReturnIfAbrupt(lref);
+        lref = Q(yield* Evaluate(DestructuringAssignmentTarget));
       }
-      let value;
+      let value: Value = Value.undefined;
       // 2. If iteratorRecord.[[Done]] is false, then
       if (iteratorRecord.Done === Value.false) {
-        // a. Let next be IteratorStep(iteratorRecord).
-        const next = IteratorStep(iteratorRecord);
-        // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-        if (next instanceof AbruptCompletion) {
-          iteratorRecord.Done = Value.true;
+        // a. Let next be ? IteratorStepValue(iteratorRecord).
+        const next = Q(IteratorStepValue(iteratorRecord));
+        // d. If next is not done, set value to next.
+        if (next !== 'done') {
+          value = next;
         }
-        // c. ReturnIfAbrupt(next);
-        ReturnIfAbrupt(next);
-        // d. If next is false, set iteratorRecord.[[Done]] to true.
-        if (next === Value.false) {
-          iteratorRecord.Done = Value.true;
-        } else { // e. Else,
-          // i. Let value be IteratorValue(next).
-          value = IteratorValue(next as ObjectValue);
-          // ii. If value is an abrupt completion, set iteratorRecord.[[Done]] to true.
-          if (value instanceof AbruptCompletion) {
-            iteratorRecord.Done = Value.true;
-          }
-          // iii. ReturnIfAbrupt(value).
-          ReturnIfAbrupt(value);
-        }
-      }
-      // 3. If iteratorRecord.[[Done]] is true, let value be undefined.
-      if (iteratorRecord.Done === Value.true) {
-        value = Value.undefined;
       }
       let v: ExpressionCompletion;
       // 4. If Initializer is present and value is undefined, then
       if (Initializer && value === Value.undefined) {
         // a. If IsAnonymousFunctionDefinition(AssignmentExpression) is true and IsIdentifierRef of LeftHandSideExpression is true, then
         if (IsAnonymousFunctionDefinition(Initializer) && IsIdentifierRef(DestructuringAssignmentTarget)) {
-          // i. Let v be NamedEvaluation of Initializer with argument GetReferencedName(lref).
-          v = yield* NamedEvaluation(Initializer as FunctionDeclaration, (lref as ReferenceRecord).ReferencedName as JSStringValue);
+          // i. Let target be the StringValue of DestructuringAssignmentTarget.
+          const target = (lref as ReferenceRecord).ReferencedName as JSStringValue;
+          // i. ii. Let v be ? NamedEvaluation of Initializer with argument target.
+          v = yield* NamedEvaluation(Initializer as FunctionDeclaration, target);
         } else { // b. Else,
           // i. Let defaultValue be the result of evaluating Initializer.
           const defaultValue = yield* Evaluate(Initializer);
@@ -303,27 +275,11 @@ function* IteratorDestructuringAssignmentEvaluation(node: ParseNode.AssignmentEl
       // 4. Repeat, while iteratorRecord.[[Done]] is false,
       while (iteratorRecord.Done === Value.false) {
         // a. Let next be IteratorStep(iteratorRecord).
-        const next = IteratorStep(iteratorRecord);
-        // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-        if (next instanceof AbruptCompletion) {
-          iteratorRecord.Done = Value.true;
-        }
-        // c. ReturnIfAbrupt(next);
-        ReturnIfAbrupt(next);
-        // d. If next is false, set iteratorRecord.[[Done]] to true.
-        if (next === Value.false) {
-          iteratorRecord.Done = Value.true;
-        } else { // e. Else,
-          // i. Let nextValue be IteratorValue(next).
-          const nextValue = IteratorValue(next as ObjectValue);
-          // ii. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
-          if (nextValue instanceof AbruptCompletion) {
-            iteratorRecord.Done = Value.true;
-          }
-          // iii. ReturnIfAbrupt(nextValue).
-          ReturnIfAbrupt(nextValue);
-          // iv. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), nextValue).
-          X(CreateDataPropertyOrThrow(A, X(ToString(F(n))), X(nextValue) as ObjectValue));
+        const next = Q(IteratorStepValue(iteratorRecord));
+        // d. If next is not done, then
+        if (next !== 'done') {
+          // i. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), next).
+          X(CreateDataPropertyOrThrow(A, X(ToString(F(n))), X(next)));
           // v. Set n to n + 1.
           n += 1;
         }

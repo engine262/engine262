@@ -486,6 +486,12 @@ export function captureStack(O: ObjectValue) {
   let cache: Value | null = null;
 
   const name = Value('stack');
+
+  let __native_stack__: string | undefined;
+  if (surroundingAgent.hostDefinedOptions.errorStackAttachNativeStack) {
+    Error.stackTraceLimit = 12;
+    __native_stack__ = new Error().stack;
+  }
   X(DefinePropertyOrThrow(O, name, Descriptor({
     Get: CreateBuiltinFunction(() => {
       if (cache === null) {
@@ -493,6 +499,9 @@ export function captureStack(O: ObjectValue) {
         stack.forEach((s) => {
           errorString = `${errorString}\n    at ${s.toString()}`;
         });
+        if (__native_stack__) {
+          errorString = `${errorString}\n    <NATIVE>\n${__native_stack__.split('\n').slice(6).join('\n')}`;
+        }
         cache = Value(errorString);
       }
       return cache;

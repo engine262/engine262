@@ -41,7 +41,7 @@ function PromiseProto_finally([onFinally = Value.undefined]: Arguments, { thisVa
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Promise', promise);
   }
   // 3. Let C be ? SpeciesConstructor(promise, %Promise%).
-  const C = Q(SpeciesConstructor(promise, surroundingAgent.intrinsic('%Promise%') as FunctionObject));
+  const C = Q(SpeciesConstructor(promise, surroundingAgent.intrinsic('%Promise%')));
   // 4. Assert: IsConstructor(C) is true.
   Assert(IsConstructor(C) === Value.true);
   let thenFinally;
@@ -99,7 +99,7 @@ function PromiseProto_then([onFulfilled = Value.undefined, onRejected = Value.un
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Promise', promise);
   }
   // 3. Let C be ? SpeciesConstructor(promise, %Promise%).
-  const C = Q(SpeciesConstructor(promise, surroundingAgent.intrinsic('%Promise%') as FunctionObject));
+  const C = Q(SpeciesConstructor(promise, surroundingAgent.intrinsic('%Promise%')));
   // 4. Let resultCapability be ? NewPromiseCapability(C).
   const resultCapability = Q(NewPromiseCapability(C));
   // 5. Return PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability).
@@ -114,7 +114,7 @@ export function bootstrapPromisePrototype(realmRec: Realm) {
     ['then', PromiseProto_then, 2],
   ], realmRec.Intrinsics['%Object.prototype%'], 'Promise');
 
-  realmRec.Intrinsics['%Promise.prototype.then%'] = X(Get(proto, Value('then')));
+  realmRec.Intrinsics['%Promise.prototype.then%'] = X(Get(proto, Value('then'))) as FunctionObject;
 
   realmRec.Intrinsics['%Promise.prototype%'] = proto;
 }

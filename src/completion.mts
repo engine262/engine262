@@ -8,7 +8,7 @@ import {
   type IteratorRecord,
 } from './abstract-ops/all.mts';
 import {
-  JSStringValue, ObjectValue, Value, type Arguments,
+  JSStringValue, Value, type Arguments,
 } from './value.mts';
 import {
   callable,
@@ -23,7 +23,7 @@ let createNormalCompletion: <T>(init: NormalCompletionInit<T>) => NormalCompleti
 let createBreakCompletion: (init: BreakCompletionInit) => BreakCompletion;
 let createContinueCompletion: (init: ContinueCompletionInit) => ContinueCompletion;
 let createReturnCompletion: (init: ReturnCompletionInit) => ReturnCompletion;
-let createThrowCompletion: (init: ThrowCompletionInit) => ThrowCompletionImpl;
+let createThrowCompletion: (init: ThrowCompletionInit) => ThrowCompletion_;
 
 type NormalCompletionInit<T> = Pick<NormalCompletion<T>, 'Type' | 'Value' | 'Target'>;
 
@@ -218,8 +218,12 @@ export class ContinueCompletion extends AbruptCompletion<void> {
   }
 }
 
-/** https://tc39.es/ecma262/#sec-completion-record-specification-type */
-export class ReturnCompletion extends AbruptCompletion<Value> {
+@callable((_target, _thisArg, [value]) => {
+  Assert(value instanceof Value);
+  // 1. Return Completion { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
+  return new Completion({ Type: 'return', Value: value as Value, Target: undefined });
+})
+class ReturnCompletion_ extends AbruptCompletion<Value> {
   declare readonly Type: 'return';
 
   declare readonly Value: Value;
@@ -237,13 +241,22 @@ export class ReturnCompletion extends AbruptCompletion<Value> {
   }
 }
 
+/** https://tc39.es/ecma262/#sec-completion-record-specification-type */
+export type ReturnCompletion = ReturnCompletion_;
+
+/** https://tc39.es/ecma262/#sec-throwcompletion */
+export const ReturnCompletion = ReturnCompletion_ as typeof ReturnCompletion_ & {
+  /** https://tc39.es/ecma262/#sec-throwcompletion */
+  (value: Value): ThrowCompletion;
+};
+
 const debugging = false;
 @callable((_target, _thisArg, [value]) => {
   Assert(value instanceof Value);
   // 1. Return Completion { [[Type]]: throw, [[Value]]: value, [[Target]]: empty }.
   return new Completion({ Type: 'throw', Value: value as Value, Target: undefined });
 })
-class ThrowCompletionImpl extends AbruptCompletion<Value> {
+class ThrowCompletion_ extends AbruptCompletion<Value> {
   declare readonly Type: 'throw';
 
   declare readonly Value: Value;
@@ -252,7 +265,7 @@ class ThrowCompletionImpl extends AbruptCompletion<Value> {
 
   readonly stack = debugging ? new Error() : undefined;
 
-  private constructor(init: Pick<ThrowCompletionImpl, 'Type' | 'Value' | 'Target'>) { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
+  private constructor(init: Pick<ThrowCompletion_, 'Type' | 'Value' | 'Target'>) { // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
     super(init);
     if (debugging) {
       Error.stackTraceLimit = Infinity;
@@ -262,15 +275,15 @@ class ThrowCompletionImpl extends AbruptCompletion<Value> {
   static {
     Object.defineProperty(this, 'name', { value: 'ThrowCompletion' });
     Object.defineProperty(this.prototype, 'Type', { value: 'throw' });
-    createThrowCompletion = (init) => new ThrowCompletionImpl(init);
+    createThrowCompletion = (init) => new ThrowCompletion_(init);
   }
 }
 
 /** https://tc39.es/ecma262/#sec-completion-record-specification-type */
-export type ThrowCompletion = ThrowCompletionImpl;
+export type ThrowCompletion = ThrowCompletion_;
 
 /** https://tc39.es/ecma262/#sec-throwcompletion */
-export const ThrowCompletion = ThrowCompletionImpl as typeof ThrowCompletionImpl & {
+export const ThrowCompletion = ThrowCompletion_ as typeof ThrowCompletion_ & {
   /** https://tc39.es/ecma262/#sec-throwcompletion */
   (value: Value): ThrowCompletion;
 };
@@ -404,7 +417,7 @@ export function* Await(value: Value): Evaluator<ExpressionCompletion> {
   // 1. Let asyncContext be the running execution context.
   const asyncContext = surroundingAgent.runningExecutionContext;
   // 2. Let promise be ? PromiseResolve(%Promise%, value).
-  const promise = ReturnIfAbrupt(PromiseResolve(surroundingAgent.intrinsic('%Promise%') as ObjectValue, value) as PromiseObject);
+  const promise = ReturnIfAbrupt(PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value) as PromiseObject);
   // 3. Let fulfilledClosure be a new Abstract Closure with parameters (value) that captures asyncContext and performs the following steps when called:
   const fulfilledClosure = ([valueInner = Value.undefined]: Arguments) => {
     // a. Let prevContext be the running execution context.

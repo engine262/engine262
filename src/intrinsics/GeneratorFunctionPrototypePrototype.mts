@@ -2,6 +2,7 @@ import {
   GeneratorResume,
   GeneratorResumeAbrupt,
   Realm,
+  type FunctionObject,
 } from '../abstract-ops/all.mts';
 import {
   Completion,
@@ -52,5 +53,5 @@ export function bootstrapGeneratorFunctionPrototypePrototype(realmRec: Realm) {
   realmRec.Intrinsics['%GeneratorFunction.prototype.prototype%'] = generatorPrototype;
 
   // Used by `CreateListIteratorRecord`:
-  realmRec.Intrinsics['%GeneratorFunction.prototype.prototype.next%'] = X(generatorPrototype.Get(Value('next'), generatorPrototype));
+  realmRec.Intrinsics['%GeneratorFunction.prototype.prototype.next%'] = X(generatorPrototype.Get(Value('next'), generatorPrototype)) as FunctionObject;
 }

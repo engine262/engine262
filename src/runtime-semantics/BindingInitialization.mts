@@ -8,6 +8,7 @@ import {
   IteratorClose,
 } from '../abstract-ops/all.mts';
 import {
+  EnsureCompletion,
   EnvironmentRecord, StringValue, UndefinedValue, type PlainCompletion,
 } from '../api.mts';
 import { NormalCompletion, Q } from '../completion.mts';
@@ -78,13 +79,12 @@ export function* BindingInitialization(node: ParseNode.ForBinding | ParseNode.Fo
       // 1. Let iteratorRecord be ? GetIterator(value).
       const iteratorRecord = Q(GetIterator(value, 'sync'));
       // 2. Let result be IteratorBindingInitialization of ArrayBindingPattern with arguments iteratorRecord and environment.
-      const result = yield* IteratorBindingInitialization_ArrayBindingPattern(node, iteratorRecord, environment);
+      const result = EnsureCompletion(yield* IteratorBindingInitialization_ArrayBindingPattern(node, iteratorRecord, environment));
       // 3. If iteratorRecord.[[Done]] is false, return ? IteratorClose(iteratorRecord, result).
       if (iteratorRecord.Done === Value.false) {
-        Q(IteratorClose(iteratorRecord, result));
-        return NormalCompletion(undefined);
+        return Q(IteratorClose(iteratorRecord, result));
       }
-      // 4. Return result.
+      // 4. Return ? result.
       return result;
     }
     default:

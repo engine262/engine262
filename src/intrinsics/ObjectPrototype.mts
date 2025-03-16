@@ -23,6 +23,7 @@ import {
   SameValue,
   ToObject,
   ToPropertyKey,
+  type BuiltinFunctionObject,
   type FunctionObject,
 } from '../abstract-ops/all.mts';
 import { Q, X, type ExpressionCompletion } from '../completion.mts';
@@ -291,6 +292,6 @@ export function bootstrapObjectPrototype(realmRec: Realm) {
     ['__proto__', [ObjectProto__proto__Get, ObjectProto__proto__Set]],
   ]);
 
-  realmRec.Intrinsics['%Object.prototype.toString%'] = X(Get(proto, Value('toString')));
-  realmRec.Intrinsics['%Object.prototype.valueOf%'] = X(Get(proto, Value('valueOf')));
+  realmRec.Intrinsics['%Object.prototype.toString%'] = X(Get(proto, Value('toString'))) as BuiltinFunctionObject;
+  realmRec.Intrinsics['%Object.prototype.valueOf%'] = X(Get(proto, Value('valueOf'))) as FunctionObject;
 }

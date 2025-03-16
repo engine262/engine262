@@ -8,6 +8,7 @@ import {
   SetFunctionName,
   ToString,
   type FunctionObject,
+  type Intrinsics,
 } from '../abstract-ops/all.mts';
 import { Q, ThrowCompletion, X } from '../completion.mts';
 import {
@@ -47,7 +48,7 @@ export function CreateDynamicFunction(constructor: FunctionObject, newTarget: Fu
     newTarget = constructor;
   }
   // 7. If kind is normal, then
-  let fallbackProto;
+  let fallbackProto: keyof Intrinsics;
   if (kind === 'normal') {
     // a. Let goal be the grammar symbol FunctionBody[~Yield, ~Await].
     // b. Let parameterGoal be the grammar symbol FormalParameters[~Yield, ~Await].

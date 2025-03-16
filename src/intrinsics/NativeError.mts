@@ -20,15 +20,17 @@ import { Q, X, type ExpressionCompletion } from '../completion.mts';
 import { captureStack } from '../helpers.mts';
 import { bootstrapConstructor, bootstrapPrototype } from './bootstrap.mts';
 
+const nativeErrorNames = [
+  'EvalError',
+  'RangeError',
+  'ReferenceError',
+  'SyntaxError',
+  'TypeError',
+  'URIError',
+] as const;
+export type NativeErrorNames = typeof nativeErrorNames[number];
 export function bootstrapNativeError(realmRec: Realm) {
-  for (const name of [
-    'EvalError',
-    'RangeError',
-    'ReferenceError',
-    'SyntaxError',
-    'TypeError',
-    'URIError',
-  ]) {
+  for (const name of nativeErrorNames) {
     const proto = bootstrapPrototype(realmRec, [
       ['name', Value(name)],
       ['message', Value('')],

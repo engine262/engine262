@@ -23,7 +23,7 @@ import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mts';
 import { Evaluate, type YieldEvaluator } from './evaluator.mts';
 import { CallSite, kAsyncContext, unwind } from './helpers.mts';
 import {
-  AbstractModuleRecord, CyclicModuleRecord, EnvironmentRecord, ObjectValue, PrivateEnvironmentRecord, runJobQueue, type Arguments, type AsyncGeneratorObject, type ErrorType, type GeneratorObject, type ModuleRecordHostDefined, type ParseScriptHostDefined, type ScriptRecord,
+  AbstractModuleRecord, CyclicModuleRecord, EnvironmentRecord, ObjectValue, PrivateEnvironmentRecord, runJobQueue, type Arguments, type AsyncGeneratorObject, type ErrorType, type GeneratorObject, type Intrinsics, type ModuleRecordHostDefined, type ParseScriptHostDefined, type ScriptRecord,
 } from './api.mts';
 import * as messages from './messages.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
@@ -78,6 +78,8 @@ export interface AgentHostDefined {
     callFunction?(thisArgument: Value, argumentsList: Arguments): ExpressionCompletion;
     constructFunction?(this: FunctionObject, argumentsList: Arguments, newTarget: FunctionObject): ExpressionCompletion<ObjectValue>
   }
+
+  errorStackAttachNativeStack?: boolean;
 }
 /** https://tc39.es/ecma262/#sec-agents */
 export class Agent {
@@ -129,8 +131,7 @@ export class Agent {
   }
 
   // Get an intrinsic by name for the current realm
-
-  intrinsic<const T extends keyof typeof this.currentRealmRecord.Intrinsics>(name: T): typeof this.currentRealmRecord.Intrinsics[T] {
+  intrinsic<const T extends keyof Intrinsics>(name: T): Intrinsics[T] {
     return this.currentRealmRecord.Intrinsics[name];
   }
 
@@ -140,7 +141,7 @@ export class Agent {
       return ThrowCompletion(type);
     }
     const message = (messages[template] as (...args: unknown[]) => string)(...templateArgs);
-    const cons = this.currentRealmRecord.Intrinsics[`%${type}%`] as FunctionObject;
+    const cons = this.currentRealmRecord.Intrinsics[`%${type}%`];
     let error;
     if (type === 'AggregateError') {
       error = X(Construct(cons, [
@@ -198,7 +199,7 @@ export class Agent {
 
   get debugger_cannotPreview() {
     if (this.#debugger_previewing) {
-      return ThrowCompletion(X(Construct(this.currentRealmRecord.Intrinsics['%EvalError%'] as FunctionObject, [Value('Preview evaluator cannot evaluate side-effecting code')])));
+      return ThrowCompletion(X(Construct(this.currentRealmRecord.Intrinsics['%EvalError%'], [Value('Preview evaluator cannot evaluate side-effecting code')])));
     }
     return undefined;
   }

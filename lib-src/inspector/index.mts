@@ -8,6 +8,7 @@ const ignoreNamespaces = ['Network'];
 const ignoreMethods: string[] = [];
 
 export type { DebuggerPreference } from './types.mts';
+export { createConsole, createInternals } from './utils.mts';
 
 export abstract class Inspector {
   protected abstract send(data: object): void;
@@ -18,6 +19,7 @@ export abstract class Inspector {
 
   attachRealm(realm: ManagedRealm) {
     this.#contexts.push(new InspectorContext(realm));
+    realm.HostDefined.attachingInspector = this;
   }
 
   protected onMessage(id: unknown, methodArg: string, params: unknown): void {

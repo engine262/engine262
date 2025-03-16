@@ -10,6 +10,7 @@ import {
   readList,
   fatal,
   postRunShowFiles,
+  pendingWork,
 } from '../base.mts';
 
 const TEST262 = process.env.TEST262 || path.resolve(import.meta.dirname, 'test262');
@@ -19,6 +20,8 @@ const LAST_FAILED_LOG = path.resolve(import.meta.dirname, 'last-failed.log');
 const SKIP_LIST = path.resolve(import.meta.dirname, 'skiplist');
 const FEATURES = path.resolve(import.meta.dirname, 'features');
 const SLOW_LIST = path.resolve(import.meta.dirname, 'slowlist');
+let mayExit = false;
+const workerCanHoldTasks = 4;
 
 const disabledFeatures = new Set<string>();
 readList(FEATURES).forEach((f) => {
@@ -131,19 +134,32 @@ if (skiplist_stream) {
 const failedTests = new Set<string>();
 const isDisabled = (feature: string) => disabledFeatures.has(feature);
 
-let workerIndex = 0;
-function handleTest(test: Test) {
+const pendingTasks: Test[] = [];
+function queueTest(test: Test) {
   incr_total();
 
   if (test.attrs.features?.some(isDisabled) || skiplist.has(test.file) || (slowlist.has(test.file) && !RUN_SLOW_TESTS)) {
     skip();
     return;
   }
+  pendingTasks.push(test);
+  distributeTest();
+}
 
-  workers[workerIndex].send(test satisfies SupervisorToWorker);
-  workerIndex += 1;
-  if (workerIndex >= workers.length) {
-    workerIndex = 0;
+function distributeTest() {
+  while (true) {
+    const candidate = pendingWork.findIndex((work) => work < workerCanHoldTasks);
+    if (candidate === -1) {
+      return;
+    }
+    if (!pendingTasks.length) {
+      if (mayExit && pendingWork.every((work) => work === 0)) {
+        process.exit(0);
+      }
+      return;
+    }
+    workers[candidate].send(pendingTasks.shift()! satisfies SupervisorToWorker);
+    pendingWork[candidate] += 1;
   }
 }
 
@@ -186,16 +202,16 @@ for await (const file of files) {
 
     if (test.attrs.flags.module) {
       test.flags = 'module';
-      handleTest(test);
+      queueTest(test);
     } else {
       if (!test.attrs.flags.onlyStrict) {
-        handleTest(test);
+        queueTest(test);
       }
 
       if (!test.attrs.flags.noStrict && !test.attrs.flags.raw) {
         test.contents = `'use strict';\n${test.contents}`;
         test.flags = 'strict';
-        handleTest(test);
+        queueTest(test);
       }
     }
   }));
@@ -206,10 +222,7 @@ if (ARGV.positionals.length && !promises.length) {
 }
 
 await Promise.all(promises);
-
-workers.forEach((worker) => {
-  worker.send('DONE' satisfies SupervisorToWorker);
-});
+mayExit = true;
 
 async function readListPaths(file: string) {
   const list = readList(file);
@@ -284,8 +297,16 @@ function createWorker(workerId: number) {
       case 'RUNNING':
         return run(workerId, message.file, message.flags);
       case 'PASS':
+        pendingWork[workerId] -= 1;
+        if (pendingWork[workerId] < workerCanHoldTasks) {
+          distributeTest();
+        }
         return pass(workerId);
       case 'FAIL': {
+        pendingWork[workerId] -= 1;
+        if (pendingWork[workerId] < workerCanHoldTasks) {
+          distributeTest();
+        }
         const skipReport = failedTests.has(message.file);
         const err = message.error.split('\n').map(message.description ? (l) => `    ${l}` : (l) => `  ${l}`).join('\n');
         failedTests_log.write(`${message.file}\n  ${message.flags ? `[${message.flags}] ` : ''}${message.description}\n${err}\n\n`);
@@ -300,8 +321,6 @@ function createWorker(workerId: number) {
         }
         return fail(workerId, message.file, message.description, err);
       }
-      case 'SKIP':
-        return skip();
       default:
         throw new RangeError(JSON.stringify(message));
     }

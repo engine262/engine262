@@ -11,11 +11,9 @@ import {
 import { surroundingAgent } from '../engine.mts';
 import { Q, X, type ExpressionCompletion } from '../completion.mts';
 import { OutOfRange } from '../helpers.mts';
-import type { TypedArrayObject } from '../intrinsics/TypedArray.mts';
 import {
   Assert,
   Get,
-  IsDetachedBuffer,
   ToBoolean,
   ToNumber,
   ToNumeric,
@@ -23,7 +21,6 @@ import {
   StringToBigInt,
   isProxyExoticObject,
   isArrayExoticObject, R,
-  type ArrayBufferObject,
 } from './all.mts';
 
 // This file covers abstract operations defined in
@@ -387,23 +384,4 @@ export function IsStrictlyEqual(x: Value, y: Value) {
   }
   // 3. Return SameValueNonNumber(x, y).
   return SameValueNonNumber(x, y);
-}
-
-/** https://tc39.es/ecma262/#sec-isvalidintegerindex */
-export function IsValidIntegerIndex(O: TypedArrayObject, index: NumberValue) {
-  if (IsDetachedBuffer(O.ViewedArrayBuffer as ArrayBufferObject) === Value.true) {
-    return Value.false;
-  }
-  Assert(index instanceof NumberValue);
-  if (IsIntegralNumber(index) === Value.false) {
-    return Value.false;
-  }
-  const index_ = R(index);
-  if (Object.is(index_, -0)) {
-    return Value.false;
-  }
-  if (index_ < 0 || index_ >= O.ArrayLength) {
-    return Value.false;
-  }
-  return Value.true;
 }

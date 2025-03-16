@@ -4,6 +4,8 @@ import {
   BigIntValue, BooleanValue, Descriptor, EnsureCompletion, Get, IsAccessorDescriptor, IsArray, IsPromise, JSStringValue, ManagedRealm, NullValue, NumberValue, ObjectValue, R, SymbolValue, ThrowCompletion, Type, UndefinedValue, Value, type ExpressionCompletion,
   type MapObject,
   type PromiseObject,
+  surroundingAgent,
+  ToString,
 } from '#self';
 
 export class InspectorContext {
@@ -293,12 +295,24 @@ export class InspectorContext {
   }
 
   createExceptionDetails(completion: ThrowCompletion, options: Protocol.Runtime.EvaluateRequest & Protocol.Runtime.GetPropertiesRequest): Protocol.Runtime.ExceptionDetails {
+    let text = '';
+    surroundingAgent.debugger_scopePreview(() => {
+      evalQ((Q) => {
+        const value = completion.Value;
+        if (value instanceof ObjectValue) {
+          const stack = Q(Get(value, Value('stack')));
+          if (stack !== Value.undefined) {
+            text += Q(ToString(stack)).stringValue();
+          }
+        }
+      });
+    });
     return {
-      text: 'Uncaught',
+      text,
       lineNumber: 0,
       columnNumber: 0,
       exceptionId: 0,
-      exception: this.toRemoteObject(completion.Value as Value, options),
+      exception: this.toRemoteObject(completion.Value, options),
     };
   }
 

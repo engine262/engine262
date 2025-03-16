@@ -245,7 +245,11 @@ module.exports = ({ types: t, template }) => {
               const binding = path.scope.getBinding(argument.name);
               binding.path.parent.kind = 'let';
               statementPath.insertBefore(macro.template({ ID: argument, CAPABILITY: capability }));
-              path.remove();
+              try {
+                path.remove();
+              } catch (e) {
+                throw path.get('arguments.0').buildCodeFrameError(`Macros error: ${e.message}`);
+              }
             } else if (macro === MACROS.IfAbruptCloseIterator) {
               if (!t.isIdentifier(argument)) {
                 throw path.get('arguments.0').buildCodeFrameError('First argument to IfAbruptCloseIterator should be an identifier');

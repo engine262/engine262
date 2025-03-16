@@ -6,6 +6,7 @@ import {
   BooleanValue,
   type PropertyKeyValue,
   type DescriptorInit,
+  type CanBeNativeSteps,
 } from '../value.mts';
 import {
   Q, X,
@@ -28,7 +29,9 @@ import {
   MakeBasicObject,
   isArrayIndex,
   type FunctionObject,
+  type Intrinsics,
 } from './all.mts';
+import { CreateBuiltinFunction, surroundingAgent } from '#self';
 
 export interface OrdinaryObject extends ObjectValue {
   Prototype: ObjectValue | NullValue;
@@ -384,6 +387,7 @@ export function OrdinaryOwnPropertyKeys(O: OrdinaryObject) {
 
 /** https://tc39.es/ecma262/#sec-ordinaryobjectcreate */
 export function OrdinaryObjectCreate<const T extends string>(proto: ObjectValue | NullValue, additionalInternalSlotsList?: readonly T[]) {
+  Assert(!!proto);
   // 1. Let internalSlotsList be « [[Prototype]], [[Extensible]] ».
   const internalSlotsList: ['Prototype', 'Extensible', ...T[]] = ['Prototype', 'Extensible'];
   // 2. If additionalInternalSlotsList is present, append each of its elements to internalSlotsList.
@@ -398,22 +402,34 @@ export function OrdinaryObjectCreate<const T extends string>(proto: ObjectValue 
   return O;
 }
 
+/** This is a helper function to define non-spec host objects. */
+OrdinaryObjectCreate.from = (object: Record<string, Value | CanBeNativeSteps>) => {
+  const O = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+  for (const key in object) {
+    if (Object.hasOwn(object, key)) {
+      const value = object[key];
+      X(CreateDataProperty(O, Value(key), value instanceof Value ? value : CreateBuiltinFunction.from(value, key)));
+    }
+  }
+  return O;
+};
+
 // 9.1.13 OrdinaryCreateFromConstructor
-export function OrdinaryCreateFromConstructor<const T extends string>(constructor: FunctionObject, intrinsicDefaultProto: string, internalSlotsList?: readonly T[]): ExpressionCompletion<ObjectValue> {
+export function OrdinaryCreateFromConstructor<const T extends string>(constructor: FunctionObject, intrinsicDefaultProto: keyof Intrinsics, internalSlotsList?: readonly T[]): ExpressionCompletion<ObjectValue> {
   // Assert: intrinsicDefaultProto is a String value that is this specification's name of an intrinsic object.
   const proto = Q(GetPrototypeFromConstructor(constructor, intrinsicDefaultProto));
   return OrdinaryObjectCreate(proto, internalSlotsList);
 }
 
 // 9.1.14 GetPrototypeFromConstructor
-export function GetPrototypeFromConstructor(constructor: FunctionObject, intrinsicDefaultProto: string): ExpressionCompletion<ObjectValue> {
+export function GetPrototypeFromConstructor(constructor: FunctionObject, intrinsicDefaultProto: keyof Intrinsics): ExpressionCompletion<ObjectValue> {
   // Assert: intrinsicDefaultProto is a String value that
   // is this specification's name of an intrinsic object.
   Assert(IsCallable(constructor) === Value.true);
   let proto = Q(Get(constructor, Value('prototype')));
   if (!(proto instanceof ObjectValue)) {
     const realm = Q(GetFunctionRealm(constructor));
-    proto = realm.Intrinsics[intrinsicDefaultProto] as ObjectValue;
+    proto = realm.Intrinsics[intrinsicDefaultProto];
   }
   return proto;
 }

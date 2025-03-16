@@ -23,7 +23,7 @@ import {
   Assert,
   Call,
   CreateBuiltinFunction,
-  CreateIterResultObject,
+  CreateIteratorResultObject,
   generatorBrandToErrorMessageType,
   GetGeneratorKind,
   OrdinaryObjectCreate,
@@ -33,7 +33,6 @@ import {
   Realm,
   RequireInternalSlot,
   SameValue,
-  type FunctionObject,
   type OrdinaryObject,
 } from './all.mts';
 
@@ -174,13 +173,13 @@ function AsyncGeneratorCompleteStep(generator: AsyncGeneratorObject, completion:
       const oldRealm = surroundingAgent.runningExecutionContext.Realm;
       // ii. Set the running execution context's Realm to realm.
       surroundingAgent.runningExecutionContext.Realm = realm;
-      // iii. Let iteratorResult be ! CreateIterResultObject(value, done).
-      iteratorResult = X(CreateIterResultObject(value!, done));
+      // iii. Let iteratorResult be ! CreateIteratorResultObject(value, done).
+      iteratorResult = X(CreateIteratorResultObject(value!, done));
       // iv. Set the running execution context's Realm to oldRealm.
       surroundingAgent.runningExecutionContext.Realm = oldRealm;
     } else { // c. Else,
-      // i. Let iteratorResult be ! CreateIterResultObject(value, done).
-      iteratorResult = X(CreateIterResultObject(value!, done));
+      // i. Let iteratorResult be ! CreateIteratorResultObject(value, done).
+      iteratorResult = X(CreateIteratorResultObject(value!, done));
     }
     // d. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iteratorResult »).
     X(Call(promiseCapability.Resolve, Value.undefined, [iteratorResult]));
@@ -288,7 +287,7 @@ export function AsyncGeneratorAwaitReturn(generator: AsyncGeneratorObject): Plai
   // 5. Assert: completion.[[Type]] is return.
   Assert(completion.Type === 'return');
   // 6. Let promise be ? PromiseResolve(%Promise%, completion.[[Value]]).
-  const promise = Q(PromiseResolve(surroundingAgent.intrinsic('%Promise%') as FunctionObject, completion.Value));
+  const promise = Q(PromiseResolve(surroundingAgent.intrinsic('%Promise%'), completion.Value));
   // 7. Let fulfilledClosure be a new Abstract Closure with parameters (value) that captures generator and performs the following steps when called:
   const fulfilledClosure = ([value = Value.undefined]: Arguments) => {
     // a. Set generator.[[AsyncGeneratorState]] to completed.

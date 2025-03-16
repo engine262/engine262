@@ -1,6 +1,6 @@
 import { surroundingAgent } from '../engine.mts';
 import {
-  ObjectValue, UndefinedValue, Value, type Arguments, type FunctionCallContext,
+  UndefinedValue, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
 import {
   IsCallable,
@@ -8,11 +8,10 @@ import {
   Call,
   Get,
   GetIterator,
-  IteratorStep,
-  IteratorValue,
   type OrdinaryObject,
   Realm,
   type FunctionObject,
+  IteratorStepValue,
 } from '../abstract-ops/all.mts';
 import { IfAbruptCloseIterator, Q } from '../completion.mts';
 import type { Mutable } from '../helpers.mts';
@@ -49,15 +48,13 @@ function WeakSetConstructor(this: FunctionObject, [iterable = Value.undefined]: 
   // 8. Repeat,
   while (true) {
     // a. Let next be ? IteratorStep(iteratorRecord).
-    const next = Q(IteratorStep(iteratorRecord));
+    const next = Q(IteratorStepValue(iteratorRecord));
     // b. If next is false, return set.
-    if (next === Value.false) {
+    if (next === 'done') {
       return set;
     }
-    // c. Let nextValue be ? IteratorValue(next).
-    const nextValue = Q(IteratorValue(next as ObjectValue));
-    // d. Let status be Call(adder, set, « nextValue »).
-    const status = Call(adder, set, [nextValue]);
+    // d. Let status be Call(adder, set, « next »).
+    const status = Call(adder, set, [next]);
     // e. IfAbruptCloseIterator(status, iteratorRecord).
     IfAbruptCloseIterator(status, iteratorRecord);
   }

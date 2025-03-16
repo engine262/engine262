@@ -91,7 +91,7 @@ export function RegExpInitialize(obj: Mutable<RegExpObject>, pattern: Value, fla
 
 /** https://tc39.es/ecma262/#sec-regexpcreate */
 export function RegExpCreate(P: Value, F: Value): ExpressionCompletion<RegExpObject> {
-  const obj = Q(RegExpAlloc(surroundingAgent.intrinsic('%RegExp%') as FunctionObject));
+  const obj = Q(RegExpAlloc(surroundingAgent.intrinsic('%RegExp%')));
   return Q(RegExpInitialize(obj, P, F));
 }
 

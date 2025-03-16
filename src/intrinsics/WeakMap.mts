@@ -1,6 +1,7 @@
 import { surroundingAgent } from '../engine.mts';
 import {
   Get,
+  IsCallable,
   OrdinaryCreateFromConstructor,
   Realm,
   type FunctionObject,
@@ -41,8 +42,11 @@ function WeakMapConstructor(this: FunctionObject, [iterable = Value.undefined]: 
   }
   // 5. Let adder be ? Get(map, "set").
   const adder = Q(Get(map, Value('set')));
+  if (IsCallable(adder) === Value.false) {
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', adder);
+  }
   // 6. Return ? AddEntriesFromIterable(map, iterable, adder).
-  return Q(AddEntriesFromIterable(map, iterable, adder));
+  return Q(AddEntriesFromIterable(map, iterable, adder as FunctionObject));
 }
 
 export function bootstrapWeakMap(realmRec: Realm) {

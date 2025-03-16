@@ -34,7 +34,6 @@ import {
   IsDataDescriptor,
   F,
   type OrdinaryObject,
-  type FunctionObject,
 } from './all.mts';
 import type { EnvironmentRecord } from '#self';
 
@@ -152,8 +151,8 @@ export function CreateUnmappedArgumentsObject(argumentsList: Arguments) {
     Configurable: Value.true,
   })));
   X(DefinePropertyOrThrow(obj, Value('callee'), Descriptor({
-    Get: surroundingAgent.intrinsic('%ThrowTypeError%') as FunctionObject,
-    Set: surroundingAgent.intrinsic('%ThrowTypeError%') as FunctionObject,
+    Get: surroundingAgent.intrinsic('%ThrowTypeError%'),
+    Set: surroundingAgent.intrinsic('%ThrowTypeError%'),
     Enumerable: Value.false,
     Configurable: Value.false,
   })));

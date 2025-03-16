@@ -19,7 +19,7 @@ import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   Assert,
   AsyncGeneratorYield,
-  CreateIterResultObject,
+  CreateIteratorResultObject,
   OrdinaryObjectCreate,
   RequireInternalSlot,
   SameValue,
@@ -79,8 +79,8 @@ export function GeneratorStart(generator: GeneratorObject, generatorBody: ParseN
       // ii. Return Completion(result).
       return Q(result);
     }
-    // j. Return CreateIterResultObject(resultValue, true).
-    return X(CreateIterResultObject(resultValue, Value.true));
+    // j. Return CreateIteratorResultObject(resultValue, true).
+    return X(CreateIteratorResultObject(resultValue, Value.true));
   }());
   // 5. Set generator.[[GeneratorContext]] to genContext.
   generator.GeneratorContext = genContext;
@@ -142,9 +142,9 @@ export function GeneratorResume(generator: Value, value: Value | void, generator
   // 1. Let state be ? GeneratorValidate(generator, generatorBrand).
   const state = Q(GeneratorValidate(generator, generatorBrand));
   __ts_cast__<GeneratorObject>(generator);
-  // 2. If state is completed, return CreateIterResultObject(undefined, true).
+  // 2. If state is completed, return CreateIteratorResultObject(undefined, true).
   if (state === 'completed') {
-    return X(CreateIterResultObject(Value.undefined, Value.true));
+    return X(CreateIteratorResultObject(Value.undefined, Value.true));
   }
   // 3. Assert: state is either suspendedStart or suspendedYield.
   Assert(state === 'suspendedStart' || state === 'suspendedYield');
@@ -188,8 +188,8 @@ export function GeneratorResumeAbrupt(generator: Value, abruptCompletion: Abrupt
   if (state === 'completed') {
     // a. If abruptCompletion.[[Type]] is return, then
     if (abruptCompletion.Type === 'return') {
-      // i. Return CreateIterResultObject(abruptCompletion.[[Value]], true).
-      return X(CreateIterResultObject(abruptCompletion.Value, Value.true));
+      // i. Return CreateIteratorResultObject(abruptCompletion.[[Value]], true).
+      return X(CreateIteratorResultObject(abruptCompletion.Value, Value.true));
     }
     // b. Return Completion(abruptCompletion).
     return Completion(abruptCompletion);
@@ -268,8 +268,8 @@ export function* Yield(value: Value): YieldEvaluator {
   if (generatorKind === 'async') {
     return Q(yield* AsyncGeneratorYield(Q(yield* Await(value))));
   }
-  // 3. Otherwise, return ? GeneratorYield(CreateIterResultObject(value, false)).
-  return Q(yield* GeneratorYield(CreateIterResultObject(value, Value.false)));
+  // 3. Otherwise, return ? GeneratorYield(CreateIteratorResultObject(value, false)).
+  return Q(yield* GeneratorYield(CreateIteratorResultObject(value, Value.false)));
 }
 
 /** https://tc39.es/ecma262/#sec-createiteratorfromclosure */

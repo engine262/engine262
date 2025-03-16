@@ -5,10 +5,10 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { format as _format, inspect as _inspect, parseArgs } from 'node:util';
 import packageJson from '../../package.json' with { type: 'json' }; // eslint-disable-line import/order
+import { createConsole, createInternals } from '../inspector/utils.mts';
 import {
-  setSurroundingAgent, FEATURES, inspect, Value, CreateBuiltinFunction, CreateDataProperty, OrdinaryObjectCreate, Type, Completion, AbruptCompletion, JSStringValue,
+  setSurroundingAgent, FEATURES, inspect, Value, Type, Completion, AbruptCompletion, JSStringValue,
   type Arguments,
-  surroundingAgent,
   evalQ,
   Agent,
   ManagedRealm,
@@ -91,44 +91,24 @@ setSurroundingAgent(agent);
 
 const realm = new ManagedRealm({});
 // Define console.log
-realm.scope(() => {
-  const console = OrdinaryObjectCreate(realm.Intrinsics['%Object.prototype%']);
-  CreateDataProperty(realm.GlobalObject, Value('console'), console);
-
-  const format = (args: Arguments) => args.map((a, i) => {
-    if (i === 0 && Type(a) === 'String') {
-      return (a as JSStringValue).stringValue();
-    }
-    return inspect(a);
-  }).join(' ');
-
-  const log = CreateBuiltinFunction((args) => {
-    if (surroundingAgent.debugger_isPreviewing) {
-      return Value.undefined;
-    }
+const format = (args: Arguments) => args.map((a, i) => {
+  if (i === 0 && Type(a) === 'String') {
+    return (a as JSStringValue).stringValue();
+  }
+  return inspect(a);
+}).join(' ');
+createConsole(realm, {
+  log: (args) => {
     process.stdout.write(`${format(args)}\n`);
-    return Value.undefined;
-  }, 1, Value('log'), []);
-  CreateDataProperty(console, Value('log'), log);
-
-  const error = CreateBuiltinFunction((args) => {
-    if (surroundingAgent.debugger_isPreviewing) {
-      return Value.undefined;
-    }
+  },
+  error: (args) => {
     process.stderr.write(`${format(args)}\n`);
-    return Value.undefined;
-  }, 1, Value('error'), []);
-  CreateDataProperty(console, Value('error'), error);
-
-  const debug = CreateBuiltinFunction((args) => {
-    if (surroundingAgent.debugger_isPreviewing) {
-      return Value.undefined;
-    }
+  },
+  debug: (args) => {
     process.stderr.write(`${_format(...args)}\n`);
-    return Value.undefined;
-  }, 1, Value('debug'), []);
-  CreateDataProperty(console, Value('debug'), debug);
+  },
 });
+createInternals(realm);
 
 if (argv.values.inspector !== false) {
   let has_ws = false;

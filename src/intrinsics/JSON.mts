@@ -40,6 +40,7 @@ import { JSStringSet, kInternal } from '../helpers.mts';
 import {
   BigIntValue, evaluateScript, F, Realm, type Arguments,
   type ExpressionCompletion,
+  type FunctionObject,
   type PlainCompletion,
 } from '../api.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
@@ -550,7 +551,7 @@ function JSON_stringify([value = Value.undefined, replacer = Value.undefined, _s
   } else {
     gap = '';
   }
-  const wrapper = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%') as ObjectValue);
+  const wrapper = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   X(CreateDataPropertyOrThrow(wrapper, Value(''), value));
   const state: State = {
     ReplacerFunction, Stack: stack, Indent: indent, Gap: gap, PropertyList,
@@ -565,5 +566,5 @@ export function bootstrapJSON(realmRec: Realm) {
   ], realmRec.Intrinsics['%Object.prototype%'], 'JSON');
 
   realmRec.Intrinsics['%JSON%'] = json;
-  realmRec.Intrinsics['%JSON.parse%'] = X(Get(json, Value('parse')));
+  realmRec.Intrinsics['%JSON.parse%'] = X(Get(json, Value('parse'))) as FunctionObject;
 }

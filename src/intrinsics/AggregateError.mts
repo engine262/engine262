@@ -4,15 +4,16 @@ import {
   UndefinedValue,
 } from '../value.mts';
 import {
-  CreateMethodProperty,
   ToString,
-  IterableToList,
+  IteratorToList,
   OrdinaryCreateFromConstructor,
   DefinePropertyOrThrow,
   InstallErrorCause,
   CreateArrayFromList,
   Realm,
   type FunctionObject,
+  CreateNonEnumerableDataPropertyOrThrow,
+  GetIterator,
 } from '../abstract-ops/all.mts';
 import { Q, X, type ExpressionCompletion } from '../completion.mts';
 import { captureStack } from '../helpers.mts';
@@ -36,20 +37,18 @@ function AggregateErrorConstructor([errors = Value.undefined, message = Value.un
     // a. Let msg be ? ToString(message).
     const msg = Q(ToString(message));
     // b. Perform ! CreateMethodProperty(O, "message", msg).
-    X(CreateMethodProperty(O, Value('message'), msg));
+    X(CreateNonEnumerableDataPropertyOrThrow(O, Value('message'), msg));
   }
+  Q(InstallErrorCause(O, options));
   // 4. Let errorsList be ? IterableToList(errors).
-  const errorsList = Q(IterableToList(errors));
+  const errorsList = Q(IteratorToList(Q(GetIterator(errors, 'sync'))));
   // 5. Perform ! DefinePropertyOrThrow(O, "errors", Property Descriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: ! CreateArrayFromList(errorsList) }).
   X(DefinePropertyOrThrow(O, Value('errors'), Descriptor({
     Configurable: Value.true,
     Enumerable: Value.false,
     Writable: Value.true,
-    Value: X(CreateArrayFromList(errorsList)),
+    Value: CreateArrayFromList(errorsList),
   })));
-
-  // 6. Perform ? InstallErrorCause(O, options).
-  Q(InstallErrorCause(O, options));
 
   // NON-SPEC
   X(captureStack(O));

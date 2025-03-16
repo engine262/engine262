@@ -55,7 +55,7 @@ import {
   type OrdinaryObject,
 } from './all.mts';
 import type {
-  AbstractModuleRecord, ModuleRecord, PrivateEnvironmentRecord, ScriptRecord,
+  AbstractModuleRecord, CanBeNativeSteps, ModuleRecord, PrivateEnvironmentRecord, ScriptRecord,
 } from '#self';
 
 interface BaseFunctionObject extends OrdinaryObject {
@@ -498,6 +498,11 @@ function nativeCall(F: BuiltinFunctionObject, argumentsList: Arguments, thisArgu
     thisValue: thisArgument || Value.undefined,
     NewTarget: newTarget || Value.undefined,
   });
+  // by this notation we can keep the F.nativeFunction name in the stack trace
+  // return Reflect['apply'](F.nativeFunction, F, [argumentsList, {
+  //   thisValue: thisArgument || Value.undefined,
+  //   NewTarget: newTarget || Value.undefined,
+  // }]);
 }
 
 function BuiltinFunctionCall(this: BuiltinFunctionObject, thisArgument: Value, argumentsList: Arguments): ExpressionCompletion {
@@ -585,6 +590,9 @@ export function CreateBuiltinFunction(steps: NativeSteps, length: number, name: 
   // 13. Return func.
   return func;
 }
+
+/** This is a helper function to define non-spec host functions. */
+CreateBuiltinFunction.from = (steps: CanBeNativeSteps, name = steps.name) => CreateBuiltinFunction(Reflect.apply.bind(null, steps, null), steps.length, Value(name), []);
 
 /** https://tc39.es/ecma262/#sec-preparefortailcall */
 export function PrepareForTailCall() {

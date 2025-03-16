@@ -130,6 +130,17 @@ export function CreateDataPropertyOrThrow(O: ObjectValue, P: PropertyKeyValue, V
   return success;
 }
 
+export function CreateNonEnumerableDataPropertyOrThrow(O: ObjectValue, P: PropertyKeyValue, V: Value) {
+  Assert(O instanceof ObjectValue);
+  const newDesc = Descriptor({
+    Value: V,
+    Writable: Value.true,
+    Enumerable: Value.false,
+    Configurable: Value.true,
+  });
+  X(DefinePropertyOrThrow(O, P, newDesc));
+}
+
 /** https://tc39.es/ecma262/#sec-definepropertyorthrow */
 export function DefinePropertyOrThrow(O: ObjectValue, P: PropertyKeyValue, desc: Descriptor) {
   Assert(O instanceof ObjectValue);

@@ -17,6 +17,7 @@
     "./context.mts",
     "./methods.mts",
     "./types.mts",
-    "./index.mts"
+    "./index.mts",
+    "./utils.mts"
   ]
 }
