@@ -3,4 +3,4 @@
 'use strict';
 
 // this file is for esvu compatibility
-await import('../lib/node/bin.mjs');
+(async () => import('../lib/node/bin.mjs'))();
