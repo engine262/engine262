@@ -1,11 +1,14 @@
-'use strict';
+import { execSync } from 'child_process';
+import fs from 'fs';
 
-const { execSync } = require('child_process');
-const fs = require('fs');
+interface PackageJson {
+  [x: string]: unknown;
+  version: string;
+}
 
 const pjsonPath = require.resolve('../package.json');
 
-const pjson = JSON.parse(fs.readFileSync(pjsonPath, 'utf8'));
+const pjson: PackageJson = JSON.parse(fs.readFileSync(pjsonPath, 'utf8'));
 
 process.stdout.write('Checking package.json for git revision...\n');
 
