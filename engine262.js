@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 a59c8b0bceee0f55d615ace8438ed7fb6d0e565e
+ * engine262 0.0.1 07c72085c73f960bcf0aa06db807321f3b446518
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -580,6 +580,11 @@
     }
     let cache = null;
     const name = Value('stack');
+    let __native_stack__;
+    if (exports.surroundingAgent.hostDefinedOptions.errorStackAttachNativeStack) {
+      Error.stackTraceLimit = 12;
+      __native_stack__ = new Error().stack;
+    }
     let _temp3 = DefinePropertyOrThrow(O, name, exports.Descriptor({
       Get: CreateBuiltinFunction(() => {
         if (cache === null) {
@@ -593,6 +598,9 @@
           stack.forEach(s => {
             errorString = `${errorString}\n    at ${s.toString()}`;
           });
+          if (__native_stack__) {
+            errorString = `${errorString}\n    <NATIVE>\n${__native_stack__.split('\n').slice(6).join('\n')}`;
+          }
           cache = Value(errorString);
         }
         return cache;
@@ -604,17 +612,19 @@
       Enumerable: Value.false,
       Configurable: Value.true
     }));
-    Assert(!(_temp3 instanceof AbruptCompletion), "DefinePropertyOrThrow(O, name, Descriptor({\n    Get: CreateBuiltinFunction(() => {\n      if (cache === null) {\n        let errorString = X(ToString(O)).stringValue();\n        stack.forEach((s) => {\n          errorString = `${errorString}\\n    at ${s.toString()}`;\n        });\n        cache = Value(errorString);\n      }\n      return cache;\n    }, 0, name, [], undefined, undefined, Value('get')),\n    Set: CreateBuiltinFunction(([value = Value.undefined]) => {\n      cache = value;\n      return Value.undefined;\n    }, 1, name, [], undefined, undefined, Value('set')),\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion', _temp3);
+    Assert(!(_temp3 instanceof AbruptCompletion), "DefinePropertyOrThrow(O, name, Descriptor({\n    Get: CreateBuiltinFunction(() => {\n      if (cache === null) {\n        let errorString = X(ToString(O)).stringValue();\n        stack.forEach((s) => {\n          errorString = `${errorString}\\n    at ${s.toString()}`;\n        });\n        if (__native_stack__) {\n          errorString = `${errorString}\\n    <NATIVE>\\n${__native_stack__.split('\\n').slice(6).join('\\n')}`;\n        }\n        cache = Value(errorString);\n      }\n      return cache;\n    }, 0, name, [], undefined, undefined, Value('get')),\n    Set: CreateBuiltinFunction(([value = Value.undefined]) => {\n      cache = value;\n      return Value.undefined;\n    }, 1, name, [], undefined, undefined, Value('set')),\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  }))" + ' returned an abrupt completion', _temp3);
     /* c8 ignore if */
     if (_temp3 instanceof Completion) {
       _temp3 = _temp3.Value;
     }
   }
   function callable(onCalled = (target, _thisArg, args) => Reflect.construct(target, args)) {
-    return function decoartor(classValue, _classContext) {
-      return new Proxy(classValue, {
-        apply: onCalled
-      });
+    const handler = Object.freeze({
+      __proto__: null,
+      apply: onCalled
+    });
+    return function decorator(classValue, _classContext) {
+      return new Proxy(classValue, handler);
     };
   }
   const isArray = Array.isArray;
@@ -5685,7 +5695,7 @@
         const iteratorRecord = _temp11;
         // 5. Repeat,
         while (true) {
-          let _temp12 = IteratorStep(iteratorRecord);
+          let _temp12 = IteratorStepValue(iteratorRecord);
           /* c8 ignore if */
           if (_temp12 instanceof AbruptCompletion) {
             return _temp12;
@@ -5694,42 +5704,30 @@
           if (_temp12 instanceof Completion) {
             _temp12 = _temp12.Value;
           }
-          // a. Let next be ? IteratorStep(iteratorRecord).
+          // a. Let next be ? IteratorStepValue(iteratorRecord).
           const next = _temp12;
           // b. If next is false, return list.
-          if (next instanceof BooleanValue) {
-            Assert(next === Value.false, "next === Value.false");
+          if (next === 'done') {
             break;
           }
-          // c. Let nextArg be ? IteratorValue(next).
-          let _temp13 = IteratorValue(next);
-          /* c8 ignore if */
-          if (_temp13 instanceof AbruptCompletion) {
-            return _temp13;
-          }
-          /* c8 ignore if */
-          if (_temp13 instanceof Completion) {
-            _temp13 = _temp13.Value;
-          }
-          const nextArg = _temp13;
-          // d. Append nextArg as the last element of list.
-          precedingArgs.push(nextArg);
+          // d. Append next as the last element of list.
+          precedingArgs.push(next);
         }
       } else {
         const AssignmentExpression = element;
         // 2. Let ref be the result of evaluating AssignmentExpression.
         const ref = yield* Evaluate(AssignmentExpression);
         // 3. Let arg be ? GetValue(ref).
-        let _temp14 = GetValue(ref);
+        let _temp13 = GetValue(ref);
         /* c8 ignore if */
-        if (_temp14 instanceof AbruptCompletion) {
-          return _temp14;
+        if (_temp13 instanceof AbruptCompletion) {
+          return _temp13;
         }
         /* c8 ignore if */
-        if (_temp14 instanceof Completion) {
-          _temp14 = _temp14.Value;
+        if (_temp13 instanceof Completion) {
+          _temp13 = _temp13.Value;
         }
-        const arg = _temp14;
+        const arg = _temp13;
         // 4. Append arg to the end of precedingArgs.
         precedingArgs.push(arg);
         // 5. Return precedingArgs.
@@ -6433,66 +6431,59 @@
       _temp2 = _temp2.Value;
     }
     const lhs = _temp2;
-    let v;
+    let v = Value.undefined;
     // 3. If iteratorRecord.[[Done]] is false, then
     if (iteratorRecord.Done === Value.false) {
-      // a. Let next be IteratorStep(iteratorRecord).
-      let next = IteratorStep(iteratorRecord);
-      // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-      if (next instanceof AbruptCompletion) {
-        iteratorRecord.Done = Value.true;
-      }
-      // c. ReturnIfAbrupt(next).
+      let _temp3 = IteratorStepValue(iteratorRecord);
       /* c8 ignore if */
-      if (next instanceof AbruptCompletion) {
-        return next;
+      if (_temp3 instanceof AbruptCompletion) {
+        return _temp3;
       }
       /* c8 ignore if */
-      if (next instanceof Completion) {
-        next = next.Value;
+      if (_temp3 instanceof Completion) {
+        _temp3 = _temp3.Value;
       }
-      // d. If next is false, set iteratorRecord.[[Done]] to true.
-      if (next === Value.false) {
-        iteratorRecord.Done = Value.true;
-      } else {
-        // e. Else,
-        // i. Let v be IteratorValue(next).
-        v = IteratorValue(next);
-        // ii. If v is an abrupt completion, set iteratorRecord.[[Done]] to true.
-        if (v instanceof AbruptCompletion) {
-          iteratorRecord.Done = Value.true;
-        }
-        // iii. ReturnIfAbrupt(v).
-        /* c8 ignore if */
-        if (v instanceof AbruptCompletion) {
-          return v;
-        }
-        /* c8 ignore if */
-        if (v instanceof Completion) {
-          v = v.Value;
-        }
+      // a. Let next be ? IteratorStepValue(iteratorRecord).
+      const next = _temp3;
+      // d. If next is not DONE,
+      if (next !== 'done') {
+        v = next;
       }
-    }
-    // 4. If iteratorRecord.[[Done]] is true, let v be undefined.
-    if (iteratorRecord.Done === Value.true) {
-      v = Value.undefined;
     }
     // 5. If Initializer is present and v is undefined, then
     if (Initializer && v === Value.undefined) {
       if (IsAnonymousFunctionDefinition(Initializer)) {
-        v = yield* NamedEvaluation(Initializer, bindingId);
+        let _temp4 = yield* NamedEvaluation(Initializer, bindingId);
+        /* c8 ignore if */
+        if (_temp4 instanceof AbruptCompletion) {
+          return _temp4;
+        }
+        /* c8 ignore if */
+        if (_temp4 instanceof Completion) {
+          _temp4 = _temp4.Value;
+        }
+        v = _temp4;
       } else {
-        const defaultValue = yield* Evaluate(Initializer);
-        let _temp3 = GetValue(defaultValue);
+        let _temp5 = yield* Evaluate(Initializer);
         /* c8 ignore if */
-        if (_temp3 instanceof AbruptCompletion) {
-          return _temp3;
+        if (_temp5 instanceof AbruptCompletion) {
+          return _temp5;
         }
         /* c8 ignore if */
-        if (_temp3 instanceof Completion) {
-          _temp3 = _temp3.Value;
+        if (_temp5 instanceof Completion) {
+          _temp5 = _temp5.Value;
         }
-        v = _temp3;
+        const defaultValue = _temp5;
+        let _temp6 = GetValue(defaultValue);
+        /* c8 ignore if */
+        if (_temp6 instanceof AbruptCompletion) {
+          return _temp6;
+        }
+        /* c8 ignore if */
+        if (_temp6 instanceof Completion) {
+          _temp6 = _temp6.Value;
+        }
+        v = _temp6;
       }
     }
     // 6. If environment is undefined, return ? PutValue(lhs, v).
@@ -6500,13 +6491,13 @@
       return PutValue(lhs, v);
     }
     // 7. Return InitializeReferencedBinding(lhs, v).
-    let _temp4 = v;
-    Assert(!(_temp4 instanceof AbruptCompletion), "v!" + ' returned an abrupt completion', _temp4);
+    let _temp7 = v;
+    Assert(!(_temp7 instanceof AbruptCompletion), "v!" + ' returned an abrupt completion', _temp7);
     /* c8 ignore if */
-    if (_temp4 instanceof Completion) {
-      _temp4 = _temp4.Value;
+    if (_temp7 instanceof Completion) {
+      _temp7 = _temp7.Value;
     }
-    return InitializeReferencedBinding(lhs, _temp4);
+    return InitializeReferencedBinding(lhs, _temp7);
   }
 
   // BindingRestElement :
@@ -6517,54 +6508,45 @@
     BindingPattern
   }, iteratorRecord, environment) {
     if (BindingIdentifier) {
-      let _temp5 = ResolveBinding(StringValue(BindingIdentifier), environment, BindingIdentifier.strict);
+      let _temp8 = ResolveBinding(StringValue(BindingIdentifier), environment, BindingIdentifier.strict);
       /* c8 ignore if */
-      if (_temp5 instanceof AbruptCompletion) {
-        return _temp5;
+      if (_temp8 instanceof AbruptCompletion) {
+        return _temp8;
       }
       /* c8 ignore if */
-      if (_temp5 instanceof Completion) {
-        _temp5 = _temp5.Value;
+      if (_temp8 instanceof Completion) {
+        _temp8 = _temp8.Value;
       }
       // 1. Let lhs be ? ResolveBinding(StringValue of BindingIdentifier, environment).
-      const lhs = _temp5;
+      const lhs = _temp8;
       // 2. Let A be ! ArrayCreate(0).
-      let _temp6 = ArrayCreate(0);
-      Assert(!(_temp6 instanceof AbruptCompletion), "ArrayCreate(0)" + ' returned an abrupt completion', _temp6);
+      let _temp9 = ArrayCreate(0);
+      Assert(!(_temp9 instanceof AbruptCompletion), "ArrayCreate(0)" + ' returned an abrupt completion', _temp9);
       /* c8 ignore if */
-      if (_temp6 instanceof Completion) {
-        _temp6 = _temp6.Value;
+      if (_temp9 instanceof Completion) {
+        _temp9 = _temp9.Value;
       }
-      const A = _temp6;
+      const A = _temp9;
       // 3. Let n be 0.
       let n = 0;
       // 4. Repeat,
       while (true) {
-        let next;
+        let next = 'done';
         // a. If iteratorRecord.[[Done]] is false, then
         if (iteratorRecord.Done === Value.false) {
-          // i. Let next be IteratorStep(iteratorRecord).
-          next = IteratorStep(iteratorRecord);
-          // ii. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-          if (next instanceof AbruptCompletion) {
-            iteratorRecord.Done = Value.true;
-          }
-          // iii. ReturnIfAbrupt(next).
+          let _temp10 = IteratorStepValue(iteratorRecord);
           /* c8 ignore if */
-          if (next instanceof AbruptCompletion) {
-            return next;
+          if (_temp10 instanceof AbruptCompletion) {
+            return _temp10;
           }
           /* c8 ignore if */
-          if (next instanceof Completion) {
-            next = next.Value;
+          if (_temp10 instanceof Completion) {
+            _temp10 = _temp10.Value;
           }
-          // iv. If next is false, set iteratorRecord.[[Done]] to true.
-          if (next === Value.false) {
-            iteratorRecord.Done = Value.true;
-          }
+          // i. Let next be ? IteratorStepValue(iteratorRecord).
+          next = _temp10;
         }
-        // b. If iteratorRecord.[[Done]] is true, then
-        if (iteratorRecord.Done === Value.true) {
+        if (next === 'done') {
           // i. If environment is undefined, return ? PutValue(lhs, A).
           if (environment === Value.undefined) {
             return PutValue(lhs, A);
@@ -6572,121 +6554,75 @@
           // ii. Return InitializeReferencedBinding(lhs, A).
           return InitializeReferencedBinding(lhs, A);
         }
-        // c. Let nextValue be IteratorValue(next).
-        let nextValue = IteratorValue(next);
-        // d. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
-        if (nextValue instanceof AbruptCompletion) {
-          iteratorRecord.Done = Value.true;
-        }
-        // e. ReturnIfAbrupt(nextValue).
+        // f. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), next).
+        let _temp12 = ToString(F(n));
+        Assert(!(_temp12 instanceof AbruptCompletion), "ToString(F(n))" + ' returned an abrupt completion', _temp12);
         /* c8 ignore if */
-        if (nextValue instanceof AbruptCompletion) {
-          return nextValue;
+        if (_temp12 instanceof Completion) {
+          _temp12 = _temp12.Value;
         }
+        let _temp11 = CreateDataPropertyOrThrow(A, _temp12, next);
+        Assert(!(_temp11 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, X(ToString(F(n))), next)" + ' returned an abrupt completion', _temp11);
         /* c8 ignore if */
-        if (nextValue instanceof Completion) {
-          nextValue = nextValue.Value;
-        }
-        // f. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), nextValue).
-        let _temp8 = ToString(F(n));
-        Assert(!(_temp8 instanceof AbruptCompletion), "ToString(F(n))" + ' returned an abrupt completion', _temp8);
-        /* c8 ignore if */
-        if (_temp8 instanceof Completion) {
-          _temp8 = _temp8.Value;
-        }
-        /* c8 ignore if */
-        if (nextValue instanceof AbruptCompletion) {
-          return nextValue;
-        }
-        /* c8 ignore if */
-        if (nextValue instanceof Completion) {
-          nextValue = nextValue.Value;
-        }
-        let _temp7 = CreateDataPropertyOrThrow(A, _temp8, nextValue);
-        Assert(!(_temp7 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, X(ToString(F(n))), Q(nextValue))" + ' returned an abrupt completion', _temp7);
-        /* c8 ignore if */
-        if (_temp7 instanceof Completion) {
-          _temp7 = _temp7.Value;
+        if (_temp11 instanceof Completion) {
+          _temp11 = _temp11.Value;
         }
         // g. Set n to n + 1.
         n += 1;
       }
     } else {
-      let _temp9 = ArrayCreate(0);
-      Assert(!(_temp9 instanceof AbruptCompletion), "ArrayCreate(0)" + ' returned an abrupt completion', _temp9);
+      let _temp13 = ArrayCreate(0);
+      Assert(!(_temp13 instanceof AbruptCompletion), "ArrayCreate(0)" + ' returned an abrupt completion', _temp13);
       /* c8 ignore if */
-      if (_temp9 instanceof Completion) {
-        _temp9 = _temp9.Value;
+      if (_temp13 instanceof Completion) {
+        _temp13 = _temp13.Value;
       }
       // 1. Let A be ! ArrayCreate(0).
-      const A = _temp9;
+      const A = _temp13;
       // 2. Let n be 0.
       let n = 0;
       // 3. Repeat,
       while (true) {
-        let next;
+        let next = 'done';
         // a. If iteratorRecord.[[Done]] is false, then
         if (iteratorRecord.Done === Value.false) {
-          // i. Let next be IteratorStep(iteratorRecord).
-          next = IteratorStep(iteratorRecord);
-          // ii. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-          if (next instanceof AbruptCompletion) {
-            iteratorRecord.Done = Value.true;
-          }
-          // iii. ReturnIfAbrupt(next).
+          let _temp14 = IteratorStepValue(iteratorRecord);
           /* c8 ignore if */
-          if (next instanceof AbruptCompletion) {
-            return next;
+          if (_temp14 instanceof AbruptCompletion) {
+            return _temp14;
           }
           /* c8 ignore if */
-          if (next instanceof Completion) {
-            next = next.Value;
+          if (_temp14 instanceof Completion) {
+            _temp14 = _temp14.Value;
           }
-          // iv. If next is false, set iteratorRecord.[[Done]] to true.
-          if (next === Value.false) {
-            iteratorRecord.Done = Value.true;
-          }
+          // i. Let next be ? IteratorStepValue(iteratorRecord).
+          next = _temp14;
         }
-        // b. If iteratorRecord.[[Done]] is true, then
-        if (iteratorRecord.Done === Value.true) {
+        // b. If next is done, then
+        if (next === 'done') {
           // i. Return the result of performing BindingInitialization of BindingPattern with A and environment as the arguments.
           return yield* BindingInitialization(BindingPattern, A, environment);
         }
-        // c. Let nextValue be IteratorValue(next).
-        let nextValue = IteratorValue(next);
-        // d. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
-        if (nextValue instanceof AbruptCompletion) {
-          iteratorRecord.Done = Value.true;
-        }
-        // e. ReturnIfAbrupt(nextValue).
+        // f. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), next).
+        let _temp16 = ToString(F(n));
+        Assert(!(_temp16 instanceof AbruptCompletion), "ToString(F(n))" + ' returned an abrupt completion', _temp16);
         /* c8 ignore if */
-        if (nextValue instanceof AbruptCompletion) {
-          return nextValue;
+        if (_temp16 instanceof Completion) {
+          _temp16 = _temp16.Value;
         }
         /* c8 ignore if */
-        if (nextValue instanceof Completion) {
-          nextValue = nextValue.Value;
-        }
-        // f. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), nextValue).
-        let _temp11 = ToString(F(n));
-        Assert(!(_temp11 instanceof AbruptCompletion), "ToString(F(n))" + ' returned an abrupt completion', _temp11);
-        /* c8 ignore if */
-        if (_temp11 instanceof Completion) {
-          _temp11 = _temp11.Value;
+        if (next instanceof AbruptCompletion) {
+          return next;
         }
         /* c8 ignore if */
-        if (nextValue instanceof AbruptCompletion) {
-          return nextValue;
+        if (next instanceof Completion) {
+          next = next.Value;
         }
+        let _temp15 = CreateDataPropertyOrThrow(A, _temp16, next);
+        Assert(!(_temp15 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, X(ToString(F(n))), Q(next))" + ' returned an abrupt completion', _temp15);
         /* c8 ignore if */
-        if (nextValue instanceof Completion) {
-          nextValue = nextValue.Value;
-        }
-        let _temp10 = CreateDataPropertyOrThrow(A, _temp11, nextValue);
-        Assert(!(_temp10 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, X(ToString(F(n))), Q(nextValue))" + ' returned an abrupt completion', _temp10);
-        /* c8 ignore if */
-        if (_temp10 instanceof Completion) {
-          _temp10 = _temp10.Value;
+        if (_temp15 instanceof Completion) {
+          _temp15 = _temp15.Value;
         }
         // g. Set n to n + 1.
         n += 1;
@@ -6697,98 +6633,61 @@
     BindingPattern,
     Initializer
   }, iteratorRecord, environment) {
-    let v;
+    let v = Value.undefined;
     // 1. If iteratorRecord.[[Done]] is false, then
     if (iteratorRecord.Done === Value.false) {
-      // a. Let next be IteratorStep(iteratorRecord).
-      let next = IteratorStep(iteratorRecord);
-      // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-      if (next instanceof AbruptCompletion) {
-        iteratorRecord.Done = Value.true;
-      }
-      // c. ReturnIfAbrupt(next).
+      let _temp17 = IteratorStepValue(iteratorRecord);
       /* c8 ignore if */
-      if (next instanceof AbruptCompletion) {
-        return next;
+      if (_temp17 instanceof AbruptCompletion) {
+        return _temp17;
       }
       /* c8 ignore if */
-      if (next instanceof Completion) {
-        next = next.Value;
+      if (_temp17 instanceof Completion) {
+        _temp17 = _temp17.Value;
       }
-      // d. If next is false, set iteratorRecord.[[Done]] to true.
-      if (next === Value.false) {
-        iteratorRecord.Done = Value.true;
-      } else {
-        // e. Else,
-        // i. Let v be IteratorValue(next).
-        v = IteratorValue(next);
-        // ii. If v is an abrupt completion, set iteratorRecord.[[Done]] to true.
-        if (v instanceof AbruptCompletion) {
-          iteratorRecord.Done = Value.true;
-        }
-        // iii. ReturnIfAbrupt(v).
-        /* c8 ignore if */
-        if (v instanceof AbruptCompletion) {
-          return v;
-        }
-        /* c8 ignore if */
-        if (v instanceof Completion) {
-          v = v.Value;
-        }
+      // a. Let next be ? IteratorStepValue(iteratorRecord).
+      const next = _temp17;
+      if (next !== 'done') {
+        v = next;
       }
-    }
-    // 2. If iteratorRecord.[[Done]] is true, let v be undefined.
-    if (iteratorRecord.Done === Value.true) {
-      v = Value.undefined;
     }
     // 3. If Initializer is present and v is undefined, then
     if (Initializer && v instanceof UndefinedValue) {
       // a. Let defaultValue be the result of evaluating Initializer.
       const defaultValue = yield* Evaluate(Initializer);
       // b. Set v to ? GetValue(defaultValue).
-      let _temp12 = GetValue(defaultValue);
+      let _temp18 = GetValue(defaultValue);
       /* c8 ignore if */
-      if (_temp12 instanceof AbruptCompletion) {
-        return _temp12;
+      if (_temp18 instanceof AbruptCompletion) {
+        return _temp18;
       }
       /* c8 ignore if */
-      if (_temp12 instanceof Completion) {
-        _temp12 = _temp12.Value;
+      if (_temp18 instanceof Completion) {
+        _temp18 = _temp18.Value;
       }
-      v = _temp12;
+      v = _temp18;
     }
     // 4. Return the result of performing BindingInitialization of BindingPattern with v and environment as the arguments.
-    let _temp13 = v;
-    Assert(!(_temp13 instanceof AbruptCompletion), "v!" + ' returned an abrupt completion', _temp13);
+    let _temp19 = v;
+    Assert(!(_temp19 instanceof AbruptCompletion), "v!" + ' returned an abrupt completion', _temp19);
     /* c8 ignore if */
-    if (_temp13 instanceof Completion) {
-      _temp13 = _temp13.Value;
+    if (_temp19 instanceof Completion) {
+      _temp19 = _temp19.Value;
     }
-    return yield* BindingInitialization(BindingPattern, _temp13, environment);
+    return yield* BindingInitialization(BindingPattern, _temp19, environment);
   }
   function IteratorDestructuringAssignmentEvaluation$1(node, iteratorRecord) {
     Assert(node.type === 'Elision', "node.type === 'Elision'");
     // 1. If iteratorRecord.[[Done]] is false, then
     if (iteratorRecord.Done === Value.false) {
-      // a. Let next be IteratorStep(iteratorRecord).
-      let next = IteratorStep(iteratorRecord);
-      // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-      if (next instanceof AbruptCompletion) {
-        iteratorRecord.Done = Value.true;
-      }
-      // c. ReturnIfAbrupt(next).
+      let _temp20 = IteratorStep(iteratorRecord);
       /* c8 ignore if */
-      if (next instanceof AbruptCompletion) {
-        return next;
+      if (_temp20 instanceof AbruptCompletion) {
+        return _temp20;
       }
       /* c8 ignore if */
-      if (next instanceof Completion) {
-        next = next.Value;
-      }
-      next = next;
-      // d. If next is false, set iteratorRecord.[[Done]] to true.
-      if (next === Value.false) {
-        iteratorRecord.Done = Value.true;
+      if (_temp20 instanceof Completion) {
+        _temp20 = _temp20.Value;
       }
     }
     // 2. Return NormalCompletion(empty).
@@ -6800,24 +6699,24 @@
   }, iteratorRecord, environment) {
     for (const BindingElement of BindingElementList) {
       if (BindingElement.type === 'Elision') {
-        let _temp14 = IteratorDestructuringAssignmentEvaluation$1(BindingElement, iteratorRecord);
+        let _temp21 = IteratorDestructuringAssignmentEvaluation$1(BindingElement, iteratorRecord);
         /* c8 ignore if */
-        if (_temp14 instanceof AbruptCompletion) {
-          return _temp14;
+        if (_temp21 instanceof AbruptCompletion) {
+          return _temp21;
         }
         /* c8 ignore if */
-        if (_temp14 instanceof Completion) {
-          _temp14 = _temp14.Value;
+        if (_temp21 instanceof Completion) {
+          _temp21 = _temp21.Value;
         }
       } else {
-        let _temp15 = yield* IteratorBindingInitialization_BindingElement(BindingElement, iteratorRecord, environment);
+        let _temp22 = yield* IteratorBindingInitialization_BindingElement(BindingElement, iteratorRecord, environment);
         /* c8 ignore if */
-        if (_temp15 instanceof AbruptCompletion) {
-          return _temp15;
+        if (_temp22 instanceof AbruptCompletion) {
+          return _temp22;
         }
         /* c8 ignore if */
-        if (_temp15 instanceof Completion) {
-          _temp15 = _temp15.Value;
+        if (_temp22 instanceof Completion) {
+          _temp22 = _temp22.Value;
         }
       }
     }
@@ -7792,7 +7691,7 @@
     const iteratorRecord = _temp5;
     // 4. Repeat,
     while (true) {
-      let _temp6 = IteratorStep(iteratorRecord);
+      let _temp6 = IteratorStepValue(iteratorRecord);
       /* c8 ignore if */
       if (_temp6 instanceof AbruptCompletion) {
         return _temp6;
@@ -7803,33 +7702,22 @@
       }
       // a. Let next be ? IteratorStep(iteratorRecord).
       const next = _temp6;
-      // b. If next is false, return nextIndex.
-      if (next === Value.false) {
+      // b. If next is done, return nextIndex.
+      if (next === 'done') {
         return nextIndex;
       }
-      // c. Let nextValue be ? IteratorValue(next).
-      let _temp7 = IteratorValue(next);
-      /* c8 ignore if */
-      if (_temp7 instanceof AbruptCompletion) {
-        return _temp7;
-      }
-      /* c8 ignore if */
-      if (_temp7 instanceof Completion) {
-        _temp7 = _temp7.Value;
-      }
-      const nextValue = _temp7;
-      // d. Perform ! CreateDataPropertyOrThrow(array, ! ToString(𝔽(nextIndex)), nextValue).
-      let _temp9 = ToString(F(nextIndex));
-      Assert(!(_temp9 instanceof AbruptCompletion), "ToString(F(nextIndex))" + ' returned an abrupt completion', _temp9);
-      /* c8 ignore if */
-      if (_temp9 instanceof Completion) {
-        _temp9 = _temp9.Value;
-      }
-      let _temp8 = CreateDataPropertyOrThrow(array, _temp9, nextValue);
-      Assert(!(_temp8 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(array, X(ToString(F(nextIndex))), nextValue)" + ' returned an abrupt completion', _temp8);
+      // d. Perform ! CreateDataPropertyOrThrow(array, ! ToString(𝔽(nextIndex)), next).
+      let _temp8 = ToString(F(nextIndex));
+      Assert(!(_temp8 instanceof AbruptCompletion), "ToString(F(nextIndex))" + ' returned an abrupt completion', _temp8);
       /* c8 ignore if */
       if (_temp8 instanceof Completion) {
         _temp8 = _temp8.Value;
+      }
+      let _temp7 = CreateDataPropertyOrThrow(array, _temp8, next);
+      Assert(!(_temp7 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(array, X(ToString(F(nextIndex))), next)" + ' returned an abrupt completion', _temp7);
+      /* c8 ignore if */
+      if (_temp7 instanceof Completion) {
+        _temp7 = _temp7.Value;
       }
       // e. Set nextIndex to nextIndex + 1.
       nextIndex += 1;
@@ -7839,28 +7727,28 @@
     // 2. Let initResult be the result of evaluating AssignmentExpression.
     const initResult = yield* Evaluate(AssignmentExpression);
     // 3. Let initValue be ? GetValue(initResult).
-    let _temp10 = GetValue(initResult);
+    let _temp9 = GetValue(initResult);
     /* c8 ignore if */
-    if (_temp10 instanceof AbruptCompletion) {
-      return _temp10;
+    if (_temp9 instanceof AbruptCompletion) {
+      return _temp9;
     }
     /* c8 ignore if */
-    if (_temp10 instanceof Completion) {
-      _temp10 = _temp10.Value;
+    if (_temp9 instanceof Completion) {
+      _temp9 = _temp9.Value;
     }
-    const initValue = _temp10;
+    const initValue = _temp9;
     // 4. Let created be ! CreateDataPropertyOrThrow(array, ! ToString(𝔽(nextIndex)), initValue).
-    let _temp12 = ToString(F(nextIndex));
-    Assert(!(_temp12 instanceof AbruptCompletion), "ToString(F(nextIndex))" + ' returned an abrupt completion', _temp12);
-    /* c8 ignore if */
-    if (_temp12 instanceof Completion) {
-      _temp12 = _temp12.Value;
-    }
-    let _temp11 = CreateDataPropertyOrThrow(array, _temp12, initValue);
-    Assert(!(_temp11 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(array, X(ToString(F(nextIndex))), initValue)" + ' returned an abrupt completion', _temp11);
+    let _temp11 = ToString(F(nextIndex));
+    Assert(!(_temp11 instanceof AbruptCompletion), "ToString(F(nextIndex))" + ' returned an abrupt completion', _temp11);
     /* c8 ignore if */
     if (_temp11 instanceof Completion) {
       _temp11 = _temp11.Value;
+    }
+    let _temp10 = CreateDataPropertyOrThrow(array, _temp11, initValue);
+    Assert(!(_temp10 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(array, X(ToString(F(nextIndex))), initValue)" + ' returned an abrupt completion', _temp10);
+    /* c8 ignore if */
+    if (_temp10 instanceof Completion) {
+      _temp10 = _temp10.Value;
     }
     // 5. Return nextIndex + 1.
     return nextIndex + 1;
@@ -7874,14 +7762,14 @@
   function* Evaluate_ArrayLiteral({
     ElementList
   }) {
-    let _temp13 = ArrayCreate(0);
-    Assert(!(_temp13 instanceof AbruptCompletion), "ArrayCreate(0)" + ' returned an abrupt completion', _temp13);
+    let _temp12 = ArrayCreate(0);
+    Assert(!(_temp12 instanceof AbruptCompletion), "ArrayCreate(0)" + ' returned an abrupt completion', _temp12);
     /* c8 ignore if */
-    if (_temp13 instanceof Completion) {
-      _temp13 = _temp13.Value;
+    if (_temp12 instanceof Completion) {
+      _temp12 = _temp12.Value;
     }
     // 1. Let array be ! ArrayCreate(0).
-    const array = _temp13;
+    const array = _temp12;
     // 2. Let len be the result of performing ArrayAccumulation for ElementList with arguments array and 0.
     let len = yield* ArrayAccumulation(ElementList, array, 0);
     // 3. ReturnIfAbrupt(len).
@@ -8766,21 +8654,12 @@
           // 1. Let iteratorRecord be ? GetIterator(value).
           const iteratorRecord = _temp4;
           // 2. Let result be IteratorBindingInitialization of ArrayBindingPattern with arguments iteratorRecord and environment.
-          const result = yield* IteratorBindingInitialization_ArrayBindingPattern(node, iteratorRecord, environment);
+          const result = EnsureCompletion(yield* IteratorBindingInitialization_ArrayBindingPattern(node, iteratorRecord, environment));
           // 3. If iteratorRecord.[[Done]] is false, return ? IteratorClose(iteratorRecord, result).
           if (iteratorRecord.Done === Value.false) {
-            let _temp5 = IteratorClose(iteratorRecord, result);
-            /* c8 ignore if */
-            if (_temp5 instanceof AbruptCompletion) {
-              return _temp5;
-            }
-            /* c8 ignore if */
-            if (_temp5 instanceof Completion) {
-              _temp5 = _temp5.Value;
-            }
-            return NormalCompletion(undefined);
+            return IteratorClose(iteratorRecord, result);
           }
-          // 4. Return result.
+          // 4. Return ? result.
           return result;
         }
       /*c8 ignore next*/default:
@@ -9234,9 +9113,9 @@
           if (!(desc instanceof UndefinedValue)) {
             // a. Append r to visited.
             visited.push(r);
-            // b. If desc.[[Enumerable]] is true, return CreateIterResultObject(r, false).
+            // b. If desc.[[Enumerable]] is true, return CreateIteratorResultObject(r, false).
             if (desc.Enumerable === Value.true) {
-              return CreateIterResultObject(r, Value.false);
+              return CreateIteratorResultObject(r, Value.false);
             }
           }
         }
@@ -9256,9 +9135,9 @@
       O.Object = object;
       // e. Set O.ObjectWasVisited to false.
       O.ObjectWasVisited = Value.false;
-      // f. If object is null, return CreateIterResultObject(undefined, true).
+      // f. If object is null, return CreateIteratorResultObject(undefined, true).
       if (object === Value.null) {
-        return CreateIterResultObject(Value.undefined, Value.true);
+        return CreateIteratorResultObject(Value.undefined, Value.true);
       }
     }
   }
@@ -10686,8 +10565,10 @@
   const NotAnObject = v => `${i(v)} is not an object`;
   const NotASymbol = v => `${i(v)} is not a symbol`;
   const NotAWeakKey = v => `${i(v)} is not an object or a symbol`;
+  const NotAString = v => `${i(v)} is not a string`;
   const NotDefined = n => `${i(n)} is not defined`;
   const NotInitialized = n => `${i(n)} cannot be used before initialization`;
+  const NotIterable = n => `${i(n)} is not iterable`;
   const NotPropertyName = p => `${i(p)} is not a valid property name`;
   const NumberFormatRange = m => `Invalid format range for ${m}`;
   const ObjectToPrimitive = () => 'Cannot convert object to primitive value';
@@ -10730,6 +10611,7 @@
   const ProxySetFrozenAccessor = p => `'set' on proxy: trap returned truthy for property ${i(p)} which exists in the proxy target as a non-configurable and non-writable accessor property without a setter`;
   const RegExpArgumentNotAllowed = m => `First argument to ${m} must not be a regular expression`;
   const RegExpExecNotObject = o => `${i(o)} is not object or null`;
+  const ResizableBufferInvalidMaxByteLength = () => 'Invalid maxByteLength for resizable ArrayBuffer';
   const ResolutionNullOrAmbiguous = (r, n, m) => r === null ? `Could not resolve import ${i(n)} from ${m.HostDefined.specifier}` : `Star export ${i(n)} from ${m.HostDefined.specifier} is ambiguous`;
   const SpeciesNotConstructor = () => 'object.constructor[Symbol.species] is not a constructor';
   const StrictModeDelete = n => `Cannot not delete property ${i(n)}`;
@@ -10746,6 +10628,7 @@
   const TypedArrayCreationOOB = () => 'Sum of start offset and byte length should be less than the size of underlying buffer';
   const TypedArrayLengthAlignment = (n, m) => `Size of ${n} should be a multiple of ${m}`;
   const TypedArrayOOB = () => 'Sum of start offset and byte length should be less than the size of the TypedArray';
+  const TypedArrayOutOfBounds = () => 'TypedArray index out of bounds';
   const TypedArrayOffsetAlignment = (n, m) => `Start offset of ${n} should be a multiple of ${m}`;
   const TypedArrayTooSmall = () => 'Derived TypedArray constructor created an array which was too small';
   const UnableToSeal = o => `Unable to seal object ${i(o)}`;
@@ -10839,12 +10722,14 @@
     NormalizeInvalidForm: NormalizeInvalidForm,
     NotAConstructor: NotAConstructor,
     NotAFunction: NotAFunction,
+    NotAString: NotAString,
     NotASymbol: NotASymbol,
     NotATypeObject: NotATypeObject,
     NotAWeakKey: NotAWeakKey,
     NotAnObject: NotAnObject,
     NotDefined: NotDefined,
     NotInitialized: NotInitialized,
+    NotIterable: NotIterable,
     NotPropertyName: NotPropertyName,
     NumberFormatRange: NumberFormatRange,
     ObjectPrototypeType: ObjectPrototypeType,
@@ -10888,6 +10773,7 @@
     Raw: Raw,
     RegExpArgumentNotAllowed: RegExpArgumentNotAllowed,
     RegExpExecNotObject: RegExpExecNotObject,
+    ResizableBufferInvalidMaxByteLength: ResizableBufferInvalidMaxByteLength,
     ResolutionNullOrAmbiguous: ResolutionNullOrAmbiguous,
     SpeciesNotConstructor: SpeciesNotConstructor,
     StrictModeDelete: StrictModeDelete,
@@ -10905,6 +10791,7 @@
     TypedArrayLengthAlignment: TypedArrayLengthAlignment,
     TypedArrayOOB: TypedArrayOOB,
     TypedArrayOffsetAlignment: TypedArrayOffsetAlignment,
+    TypedArrayOutOfBounds: TypedArrayOutOfBounds,
     TypedArrayTooSmall: TypedArrayTooSmall,
     URIMalformed: URIMalformed,
     UnableToFreeze: UnableToFreeze,
@@ -16176,18 +16063,21 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     AssignmentExpression
   }) {
     if (hasStar) {
-      let _temp = GetGeneratorKind();
-      Assert(!(_temp instanceof AbruptCompletion), "GetGeneratorKind()" + ' returned an abrupt completion', _temp);
+      // 1. Let generatorKind be GetGeneratorKind().
+      const generatorKind = GetGeneratorKind();
+      // 2. Assert: generatorKind is either sync or async.
+      Assert(generatorKind === 'async' || generatorKind === 'sync', "generatorKind === 'async' || generatorKind === 'sync'");
+      // 2. Let exprRef be ? Evaluation of AssignmentExpression.
+      let _temp = yield* Evaluate(AssignmentExpression);
+      /* c8 ignore if */
+      if (_temp instanceof AbruptCompletion) {
+        return _temp;
+      }
       /* c8 ignore if */
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
       }
-      // 1. Let generatorKind be ! GetGeneratorKind().
-      const generatorKind = _temp;
-      // 2. Assert: generatorKind is either sync or async.
-      Assert(generatorKind === 'async' || generatorKind === 'sync', "generatorKind === 'async' || generatorKind === 'sync'");
-      // 2. Let exprRef be the result of evaluating AssignmentExpression.
-      const exprRef = yield* Evaluate(AssignmentExpression);
+      const exprRef = _temp;
       // 3. Let value be ? GetValue(exprRef).
       let _temp2 = GetValue(exprRef);
       /* c8 ignore if */
@@ -16198,7 +16088,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_temp2 instanceof Completion) {
         _temp2 = _temp2.Value;
       }
-      const value = _temp2;
+      let value = _temp2;
       // 4. Let iteratorRecord be ? GetIterator(value, generatorKind).
       let _temp3 = GetIterator(value, generatorKind);
       /* c8 ignore if */
@@ -16216,8 +16106,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let received = NormalCompletion(Value.undefined);
       // 7. Repeat,
       while (true) {
-        // a. If received.[[Type]] is normal, then
-        if (received.Type === 'normal') {
+        // a. If received is a normal completion, then
+        if (received instanceof NormalCompletion) {
           let _temp4 = Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, [received.Value]);
           /* c8 ignore if */
           if (_temp4 instanceof AbruptCompletion) {
@@ -16278,7 +16168,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             // vii. Else, set received to GeneratorYield(innerResult).
             received = yield* GeneratorYield(innerResult);
           }
-        } else if (received.Type === 'throw') {
+        } else if (received instanceof ThrowCompletion) {
           let _temp8 = GetMethod(iterator, Value('throw'));
           /* c8 ignore if */
           if (_temp8 instanceof AbruptCompletion) {
@@ -16288,7 +16178,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           if (_temp8 instanceof Completion) {
             _temp8 = _temp8.Value;
           }
-          // b. Else if received.[[Type]] is throw, then
+          // b. Else if received is a throw completion, then
           // i. Let throw be ? GetMethod(iterator, "throw").
           const thr = _temp8;
           // ii. If throw is not undefined, then
@@ -16357,7 +16247,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           } else {
             // iii. Else,
             // 1. NOTE: If iterator does not have a throw method, this throw is going to terminate the yield* loop. But first we need to give iterator a chance to clean up.
-            // 2. Let closeCompletion be Completion { [[Type]]: normal, [[Value]]: empty, [[Target]]: empty }.
+            // 2. Let closeCompletion be NormalCompletion(empty).
             const closeCompletion = NormalCompletion(undefined);
             // 3. If generatorKind is async, perform ? AsyncIteratorClose(iteratorRecord, closeCompletion).
             // 4. Else, perform ? IteratorClose(iteratorRecord, closeCompletion).
@@ -16388,8 +16278,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           }
         } else {
           // c. Else,
-          // i. Assert: received.[[Type]] is return.
-          Assert(received.Type === 'return', "received.Type === 'return'");
+          // i. Assert: received is a return completion.
+          Assert(received instanceof ReturnCompletion, "received instanceof ReturnCompletion");
           // ii. Let return be ? GetMethod(iterator, "return").
           let _temp15 = GetMethod(iterator, Value('return'));
           /* c8 ignore if */
@@ -16418,12 +16308,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
               }
               value = _temp16;
             }
-            // 2. Return Completion(received).
-            return new Completion({
-              Type: 'return',
-              Value: value,
-              Target: undefined
-            });
+            // 2. Return ReturnCompletion(value).
+            return ReturnCompletion(value);
           }
           // iv. Let innerReturnResult be ? Call(return, iterator, « received.[[Value]] »).
           let _temp17 = Call(ret, iterator, [received.Value]);
@@ -16475,14 +16361,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             if (_temp20 instanceof Completion) {
               _temp20 = _temp20.Value;
             }
-            // 1. Let value be ? IteratorValue(innerReturnResult).
-            const innerValue = _temp20;
-            // 2. Return Completion { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
-            return new Completion({
-              Type: 'return',
-              Value: innerValue,
-              Target: undefined
-            });
+            // 1. Set value to ? IteratorValue(innerReturnResult).
+            value = _temp20;
+            // 2. Return ReturnCompletion(value).
+            return ReturnCompletion(value);
           }
           // ix. If generatorKind is async, then set received to AsyncGeneratorYield(? IteratorValue(innerResult)).
           if (generatorKind === 'async') {
@@ -16501,7 +16383,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             received = yield* GeneratorYield(innerReturnResult);
           }
         }
-        received = EnsureCompletion(received);
       }
     }
     if (AssignmentExpression) {
@@ -19275,24 +19156,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       case 'Elision':
         // 1. If iteratorRecord.[[Done]] is false, then
         if (iteratorRecord.Done === Value.false) {
-          // a. Let next be IteratorStep(iteratorRecord).
-          let next = IteratorStep(iteratorRecord);
-          // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-          if (next instanceof AbruptCompletion) {
-            iteratorRecord.Done = Value.true;
-          }
-          // c. ReturnIfAbrupt(next)
+          let _temp17 = IteratorStep(iteratorRecord);
           /* c8 ignore if */
-          if (next instanceof AbruptCompletion) {
-            return next;
+          if (_temp17 instanceof AbruptCompletion) {
+            return _temp17;
           }
           /* c8 ignore if */
-          if (next instanceof Completion) {
-            next = next.Value;
-          }
-          // d. If next is false, set iteratorRecord.[[Done]] to true.
-          if (next === Value.false) {
-            iteratorRecord.Done = Value.true;
+          if (_temp17 instanceof Completion) {
+            _temp17 = _temp17.Value;
           }
         }
         // 2. Return NormalCompletion(empty).
@@ -19306,85 +19177,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           let lref;
           // 1. If DestructuringAssignmentTarget is neither an ObjectLiteral nor an ArrayLiteral, then
           if (DestructuringAssignmentTarget.type !== 'ObjectLiteral' && DestructuringAssignmentTarget.type !== 'ArrayLiteral') {
-            lref = yield* Evaluate(DestructuringAssignmentTarget);
-            /* c8 ignore if */
-            if (lref instanceof AbruptCompletion) {
-              return lref;
-            }
-            /* c8 ignore if */
-            if (lref instanceof Completion) {
-              lref = lref.Value;
-            }
-          }
-          let value;
-          // 2. If iteratorRecord.[[Done]] is false, then
-          if (iteratorRecord.Done === Value.false) {
-            // a. Let next be IteratorStep(iteratorRecord).
-            let next = IteratorStep(iteratorRecord);
-            // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-            if (next instanceof AbruptCompletion) {
-              iteratorRecord.Done = Value.true;
-            }
-            // c. ReturnIfAbrupt(next);
-            /* c8 ignore if */
-            if (next instanceof AbruptCompletion) {
-              return next;
-            }
-            /* c8 ignore if */
-            if (next instanceof Completion) {
-              next = next.Value;
-            }
-            // d. If next is false, set iteratorRecord.[[Done]] to true.
-            if (next === Value.false) {
-              iteratorRecord.Done = Value.true;
-            } else {
-              // e. Else,
-              // i. Let value be IteratorValue(next).
-              value = IteratorValue(next);
-              // ii. If value is an abrupt completion, set iteratorRecord.[[Done]] to true.
-              if (value instanceof AbruptCompletion) {
-                iteratorRecord.Done = Value.true;
-              }
-              // iii. ReturnIfAbrupt(value).
-              /* c8 ignore if */
-              if (value instanceof AbruptCompletion) {
-                return value;
-              }
-              /* c8 ignore if */
-              if (value instanceof Completion) {
-                value = value.Value;
-              }
-            }
-          }
-          // 3. If iteratorRecord.[[Done]] is true, let value be undefined.
-          if (iteratorRecord.Done === Value.true) {
-            value = Value.undefined;
-          }
-          let v;
-          // 4. If Initializer is present and value is undefined, then
-          if (Initializer && value === Value.undefined) {
-            // a. If IsAnonymousFunctionDefinition(AssignmentExpression) is true and IsIdentifierRef of LeftHandSideExpression is true, then
-            if (IsAnonymousFunctionDefinition(Initializer) && IsIdentifierRef(DestructuringAssignmentTarget)) {
-              // i. Let v be NamedEvaluation of Initializer with argument GetReferencedName(lref).
-              v = yield* NamedEvaluation(Initializer, lref.ReferencedName);
-            } else {
-              // b. Else,
-              // i. Let defaultValue be the result of evaluating Initializer.
-              const defaultValue = yield* Evaluate(Initializer);
-              // ii. Let v be ? GetValue(defaultValue).
-              let _temp17 = GetValue(defaultValue);
-              /* c8 ignore if */
-              if (_temp17 instanceof AbruptCompletion) {
-                return _temp17;
-              }
-              /* c8 ignore if */
-              if (_temp17 instanceof Completion) {
-                _temp17 = _temp17.Value;
-              }
-              v = _temp17;
-            }
-          } else {
-            let _temp18 = value;
+            let _temp18 = yield* Evaluate(DestructuringAssignmentTarget);
             /* c8 ignore if */
             if (_temp18 instanceof AbruptCompletion) {
               return _temp18;
@@ -19393,21 +19186,77 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             if (_temp18 instanceof Completion) {
               _temp18 = _temp18.Value;
             }
+            lref = _temp18;
+          }
+          let value = Value.undefined;
+          // 2. If iteratorRecord.[[Done]] is false, then
+          if (iteratorRecord.Done === Value.false) {
+            let _temp19 = IteratorStepValue(iteratorRecord);
+            /* c8 ignore if */
+            if (_temp19 instanceof AbruptCompletion) {
+              return _temp19;
+            }
+            /* c8 ignore if */
+            if (_temp19 instanceof Completion) {
+              _temp19 = _temp19.Value;
+            }
+            // a. Let next be ? IteratorStepValue(iteratorRecord).
+            const next = _temp19;
+            // d. If next is not done, set value to next.
+            if (next !== 'done') {
+              value = next;
+            }
+          }
+          let v;
+          // 4. If Initializer is present and value is undefined, then
+          if (Initializer && value === Value.undefined) {
+            // a. If IsAnonymousFunctionDefinition(AssignmentExpression) is true and IsIdentifierRef of LeftHandSideExpression is true, then
+            if (IsAnonymousFunctionDefinition(Initializer) && IsIdentifierRef(DestructuringAssignmentTarget)) {
+              // i. Let target be the StringValue of DestructuringAssignmentTarget.
+              const target = lref.ReferencedName;
+              // i. ii. Let v be ? NamedEvaluation of Initializer with argument target.
+              v = yield* NamedEvaluation(Initializer, target);
+            } else {
+              // b. Else,
+              // i. Let defaultValue be the result of evaluating Initializer.
+              const defaultValue = yield* Evaluate(Initializer);
+              // ii. Let v be ? GetValue(defaultValue).
+              let _temp20 = GetValue(defaultValue);
+              /* c8 ignore if */
+              if (_temp20 instanceof AbruptCompletion) {
+                return _temp20;
+              }
+              /* c8 ignore if */
+              if (_temp20 instanceof Completion) {
+                _temp20 = _temp20.Value;
+              }
+              v = _temp20;
+            }
+          } else {
+            let _temp21 = value;
+            /* c8 ignore if */
+            if (_temp21 instanceof AbruptCompletion) {
+              return _temp21;
+            }
+            /* c8 ignore if */
+            if (_temp21 instanceof Completion) {
+              _temp21 = _temp21.Value;
+            }
             // 5. Else, let v be value.
-            v = _temp18;
+            v = _temp21;
           }
           // 6. If DestructuringAssignmentTarget is an ObjectLiteral or an ArrayLiteral, then
           if (DestructuringAssignmentTarget.type === 'ObjectLiteral' || DestructuringAssignmentTarget.type === 'ArrayLiteral') {
             // a. Let nestedAssignmentPattern be the AssignmentPattern that is covered by DestructuringAssignmentTarget.
             const nestedAssignmentPattern = refineLeftHandSideExpression(DestructuringAssignmentTarget);
             // b. Return the result of performing DestructuringAssignmentEvaluation of nestedAssignmentPattern with v as the argument.
-            let _temp19 = v;
-            Assert(!(_temp19 instanceof AbruptCompletion), "v" + ' returned an abrupt completion', _temp19);
+            let _temp22 = v;
+            Assert(!(_temp22 instanceof AbruptCompletion), "v" + ' returned an abrupt completion', _temp22);
             /* c8 ignore if */
-            if (_temp19 instanceof Completion) {
-              _temp19 = _temp19.Value;
+            if (_temp22 instanceof Completion) {
+              _temp22 = _temp22.Value;
             }
-            return yield* DestructuringAssignmentEvaluation(nestedAssignmentPattern, _temp19);
+            return yield* DestructuringAssignmentEvaluation(nestedAssignmentPattern, _temp22);
           }
           // 7. Return ? PutValue(lref, v).
           return PutValue(lref, v);
@@ -19431,70 +19280,47 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             }
           }
           // 2. Let A be ! ArrayCreate(0).
-          let _temp20 = ArrayCreate(0);
-          Assert(!(_temp20 instanceof AbruptCompletion), "ArrayCreate(0)" + ' returned an abrupt completion', _temp20);
+          let _temp23 = ArrayCreate(0);
+          Assert(!(_temp23 instanceof AbruptCompletion), "ArrayCreate(0)" + ' returned an abrupt completion', _temp23);
           /* c8 ignore if */
-          if (_temp20 instanceof Completion) {
-            _temp20 = _temp20.Value;
+          if (_temp23 instanceof Completion) {
+            _temp23 = _temp23.Value;
           }
-          const A = _temp20;
+          const A = _temp23;
           // 3. Let n be 0.
           let n = 0;
           // 4. Repeat, while iteratorRecord.[[Done]] is false,
           while (iteratorRecord.Done === Value.false) {
+            let _temp24 = IteratorStepValue(iteratorRecord);
+            /* c8 ignore if */
+            if (_temp24 instanceof AbruptCompletion) {
+              return _temp24;
+            }
+            /* c8 ignore if */
+            if (_temp24 instanceof Completion) {
+              _temp24 = _temp24.Value;
+            }
             // a. Let next be IteratorStep(iteratorRecord).
-            let next = IteratorStep(iteratorRecord);
-            // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-            if (next instanceof AbruptCompletion) {
-              iteratorRecord.Done = Value.true;
-            }
-            // c. ReturnIfAbrupt(next);
-            /* c8 ignore if */
-            if (next instanceof AbruptCompletion) {
-              return next;
-            }
-            /* c8 ignore if */
-            if (next instanceof Completion) {
-              next = next.Value;
-            }
-            // d. If next is false, set iteratorRecord.[[Done]] to true.
-            if (next === Value.false) {
-              iteratorRecord.Done = Value.true;
-            } else {
-              // e. Else,
-              // i. Let nextValue be IteratorValue(next).
-              let nextValue = IteratorValue(next);
-              // ii. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
-              if (nextValue instanceof AbruptCompletion) {
-                iteratorRecord.Done = Value.true;
-              }
-              // iii. ReturnIfAbrupt(nextValue).
+            const next = _temp24;
+            // d. If next is not done, then
+            if (next !== 'done') {
+              let _temp26 = ToString(F(n));
+              Assert(!(_temp26 instanceof AbruptCompletion), "ToString(F(n))" + ' returned an abrupt completion', _temp26);
               /* c8 ignore if */
-              if (nextValue instanceof AbruptCompletion) {
-                return nextValue;
+              if (_temp26 instanceof Completion) {
+                _temp26 = _temp26.Value;
               }
+              let _temp27 = next;
+              Assert(!(_temp27 instanceof AbruptCompletion), "next" + ' returned an abrupt completion', _temp27);
               /* c8 ignore if */
-              if (nextValue instanceof Completion) {
-                nextValue = nextValue.Value;
+              if (_temp27 instanceof Completion) {
+                _temp27 = _temp27.Value;
               }
-              // iv. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), nextValue).
-              let _temp22 = ToString(F(n));
-              Assert(!(_temp22 instanceof AbruptCompletion), "ToString(F(n))" + ' returned an abrupt completion', _temp22);
+              let _temp25 = CreateDataPropertyOrThrow(A, _temp26, _temp27);
+              Assert(!(_temp25 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, X(ToString(F(n))), X(next))" + ' returned an abrupt completion', _temp25);
               /* c8 ignore if */
-              if (_temp22 instanceof Completion) {
-                _temp22 = _temp22.Value;
-              }
-              let _temp23 = nextValue;
-              Assert(!(_temp23 instanceof AbruptCompletion), "nextValue" + ' returned an abrupt completion', _temp23);
-              /* c8 ignore if */
-              if (_temp23 instanceof Completion) {
-                _temp23 = _temp23.Value;
-              }
-              let _temp21 = CreateDataPropertyOrThrow(A, _temp22, _temp23);
-              Assert(!(_temp21 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(A, X(ToString(F(n))), X(nextValue) as ObjectValue)" + ' returned an abrupt completion', _temp21);
-              /* c8 ignore if */
-              if (_temp21 instanceof Completion) {
-                _temp21 = _temp21.Value;
+              if (_temp25 instanceof Completion) {
+                _temp25 = _temp25.Value;
               }
               // v. Set n to n + 1.
               n += 1;
@@ -23804,7 +23630,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     // Get an intrinsic by name for the current realm
-
     intrinsic(name) {
       return this.currentRealmRecord.Intrinsics[name];
     }
@@ -23885,7 +23710,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     get debugger_cannotPreview() {
       if (this.#debugger_previewing) {
         let _temp4 = Construct(this.currentRealmRecord.Intrinsics['%EvalError%'], [Value('Preview evaluator cannot evaluate side-effecting code')]);
-        Assert(!(_temp4 instanceof AbruptCompletion), "Construct(this.currentRealmRecord.Intrinsics['%EvalError%'] as FunctionObject, [Value('Preview evaluator cannot evaluate side-effecting code')])" + ' returned an abrupt completion', _temp4);
+        Assert(!(_temp4 instanceof AbruptCompletion), "Construct(this.currentRealmRecord.Intrinsics['%EvalError%'], [Value('Preview evaluator cannot evaluate side-effecting code')])" + ' returned an abrupt completion', _temp4);
         /* c8 ignore if */
         if (_temp4 instanceof Completion) {
           _temp4 = _temp4.Value;
@@ -24147,7 +23972,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   var _CompletionImpl2;
-  let _initClass, _initClass2, _initClass3;
+  let _initClass, _initClass2, _initClass3, _initClass4;
   let createNormalCompletion;
   let createBreakCompletion;
   let createContinueCompletion;
@@ -24303,28 +24128,45 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       createContinueCompletion = init => new ContinueCompletion(init);
     }
   }
-
-  /** https://tc39.es/ecma262/#sec-completion-record-specification-type */
-  class ReturnCompletion extends AbruptCompletion {
-    constructor(init) {
-      // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
-      super(init);
-    }
-    static {
-      Object.defineProperty(this, 'name', {
-        value: 'ReturnCompletion'
-      });
-      Object.defineProperty(this.prototype, 'Type', {
-        value: 'return'
-      });
-      createReturnCompletion = init => new ReturnCompletion(init);
-    }
-  }
-  let _ThrowCompletionImpl;
+  let _ReturnCompletion_;
   new class extends _identity {
-    static [class ThrowCompletionImpl extends AbruptCompletion {
+    static [class ReturnCompletion_ extends AbruptCompletion {
       static {
-        [_ThrowCompletionImpl, _initClass3] = _applyDecs2311(this, [callable((_target, _thisArg, [value]) => {
+        [_ReturnCompletion_, _initClass3] = _applyDecs2311(this, [callable((_target, _thisArg, [value]) => {
+          Assert(value instanceof Value, "value instanceof Value");
+          // 1. Return Completion { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
+          return new Completion({
+            Type: 'return',
+            Value: value,
+            Target: undefined
+          });
+        })], [], 0, void 0, AbruptCompletion).c;
+      }
+      constructor(init) {
+        // eslint-disable-line no-useless-constructor -- Sets privacy for constructor
+        super(init);
+      }
+    }];
+    constructor() {
+      super(_ReturnCompletion_), (() => {
+        Object.defineProperty(this, 'name', {
+          value: 'ReturnCompletion'
+        });
+        Object.defineProperty(this.prototype, 'Type', {
+          value: 'return'
+        });
+        createReturnCompletion = init => new ReturnCompletion(init);
+      })(), _initClass3();
+    }
+  }();
+  /** https://tc39.es/ecma262/#sec-completion-record-specification-type */
+  /** https://tc39.es/ecma262/#sec-throwcompletion */
+  const ReturnCompletion = _ReturnCompletion_;
+  let _ThrowCompletion_;
+  new class extends _identity {
+    static [class ThrowCompletion_ extends AbruptCompletion {
+      static {
+        [_ThrowCompletion_, _initClass4] = _applyDecs2311(this, [callable((_target, _thisArg, [value]) => {
           Assert(value instanceof Value, "value instanceof Value");
           // 1. Return Completion { [[Type]]: throw, [[Value]]: value, [[Target]]: empty }.
           return new Completion({
@@ -24341,20 +24183,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
     }];
     constructor() {
-      super(_ThrowCompletionImpl), (() => {
+      super(_ThrowCompletion_), (() => {
         Object.defineProperty(this, 'name', {
           value: 'ThrowCompletion'
         });
         Object.defineProperty(this.prototype, 'Type', {
           value: 'throw'
         });
-        createThrowCompletion = init => new _ThrowCompletionImpl(init);
-      })(), _initClass3();
+        createThrowCompletion = init => new _ThrowCompletion_(init);
+      })(), _initClass4();
     }
   }();
   /** https://tc39.es/ecma262/#sec-completion-record-specification-type */
   /** https://tc39.es/ecma262/#sec-throwcompletion */
-  const ThrowCompletion = _ThrowCompletionImpl;
+  const ThrowCompletion = _ThrowCompletion_;
 
   /** https://tc39.es/ecma262/#sec-updateempty */
 
@@ -24424,15 +24266,25 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
    * This is a util for code that cannot use Q() or X() marco to emulate this behaviour.
    *
    * @example
-   * import { __Q2 } from '...'
-   * __Q2((Q) => {
+   * import { evalQ } from '...'
+   * evalQ((Q) => {
    *     let val = Q(operation);
    * });
    */
-  function __Q2(callback) {
+
+  function evalQ(callback) {
     try {
+      const result = callback(ReturnIfAbruptRuntime, XRuntime);
+      if (result instanceof Promise) {
+        return result.then(EnsureCompletion, error => {
+          if (error instanceof ThrowCompletion) {
+            return error;
+          }
+          throw error;
+        });
+      }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return EnsureCompletion(callback(ReturnIfAbruptRuntime, XRuntime));
+      return EnsureCompletion(result);
     } catch (error) {
       if (error instanceof ThrowCompletion) {
         return error;
@@ -24731,7 +24583,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       Enumerable: Value.false,
       Configurable: Value.false
     }));
-    Assert(!(_temp13 instanceof AbruptCompletion), "DefinePropertyOrThrow(obj, Value('callee'), Descriptor({\n    Get: surroundingAgent.intrinsic('%ThrowTypeError%') as FunctionObject,\n    Set: surroundingAgent.intrinsic('%ThrowTypeError%') as FunctionObject,\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion', _temp13);
+    Assert(!(_temp13 instanceof AbruptCompletion), "DefinePropertyOrThrow(obj, Value('callee'), Descriptor({\n    Get: surroundingAgent.intrinsic('%ThrowTypeError%'),\n    Set: surroundingAgent.intrinsic('%ThrowTypeError%'),\n    Enumerable: Value.false,\n    Configurable: Value.false,\n  }))" + ' returned an abrupt completion', _temp13);
     /* c8 ignore if */
     if (_temp13 instanceof Completion) {
       _temp13 = _temp13.Value;
@@ -24880,6 +24732,811 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp23 = _temp23.Value;
     }
     return obj;
+  }
+
+  const typedArrayInfoByName = {
+    Int8Array: {
+      IntrinsicName: '%Int8Array%',
+      ElementType: 'Int8',
+      ElementSize: 1,
+      ConversionOperation: ToInt8
+    },
+    Uint8Array: {
+      IntrinsicName: '%Uint8Array%',
+      ElementType: 'Uint8',
+      ElementSize: 1,
+      ConversionOperation: ToUint8
+    },
+    Uint8ClampedArray: {
+      IntrinsicName: '%Uint8ClampedArray%',
+      ElementType: 'Uint8C',
+      ElementSize: 1,
+      ConversionOperation: ToUint8Clamp
+    },
+    Int16Array: {
+      IntrinsicName: '%Int16Array%',
+      ElementType: 'Int16',
+      ElementSize: 2,
+      ConversionOperation: ToInt16
+    },
+    Uint16Array: {
+      IntrinsicName: '%Uint16Array%',
+      ElementType: 'Uint16',
+      ElementSize: 2,
+      ConversionOperation: ToUint16
+    },
+    Int32Array: {
+      IntrinsicName: '%Int32Array%',
+      ElementType: 'Int32',
+      ElementSize: 4,
+      ConversionOperation: ToInt32
+    },
+    Uint32Array: {
+      IntrinsicName: '%Uint32Array%',
+      ElementType: 'Uint32',
+      ElementSize: 4,
+      ConversionOperation: ToUint32
+    },
+    BigInt64Array: {
+      IntrinsicName: '%BigInt64Array%',
+      ElementType: 'BigInt64',
+      ElementSize: 8,
+      ConversionOperation: ToBigInt64
+    },
+    BigUint64Array: {
+      IntrinsicName: '%BigUint64Array%',
+      ElementType: 'BigUint64',
+      ElementSize: 8,
+      ConversionOperation: ToBigUint64
+    },
+    Float32Array: {
+      IntrinsicName: '%Float32Array%',
+      ElementType: 'Float32',
+      ElementSize: 4,
+      ConversionOperation: undefined
+    },
+    Float64Array: {
+      IntrinsicName: '%Float64Array%',
+      ElementType: 'Float64',
+      ElementSize: 8,
+      ConversionOperation: undefined
+    }
+  };
+  const typedArrayInfoByType = {
+    Int8: typedArrayInfoByName.Int8Array,
+    Uint8: typedArrayInfoByName.Uint8Array,
+    Uint8C: typedArrayInfoByName.Uint8ClampedArray,
+    Int16: typedArrayInfoByName.Int16Array,
+    Uint16: typedArrayInfoByName.Uint16Array,
+    Int32: typedArrayInfoByName.Int32Array,
+    Uint32: typedArrayInfoByName.Uint32Array,
+    BigInt64: typedArrayInfoByName.BigInt64Array,
+    BigUint64: typedArrayInfoByName.BigUint64Array,
+    Float32: typedArrayInfoByName.Float32Array,
+    Float64: typedArrayInfoByName.Float64Array
+  };
+  function isTypedArrayObject(value) {
+    return 'TypedArrayName' in value;
+  }
+
+  /** https://tc39.es/ecma262/#typedarray-species-create */
+  function TypedArraySpeciesCreate(exemplar, argumentList) {
+    // 1. Assert: exemplar is an Object that has [[TypedArrayName]] and [[ContentType]] internal slots.
+    Assert(exemplar instanceof ObjectValue && 'TypedArrayName' in exemplar && 'ContentType' in exemplar, "exemplar instanceof ObjectValue\n    && 'TypedArrayName' in exemplar\n    && 'ContentType' in exemplar");
+    // 2. Let defaultConstructor be the intrinsic object listed in column one of Table 61 for exemplar.[[TypedArrayName]].
+    const defaultConstructor = exports.surroundingAgent.intrinsic(typedArrayInfoByName[exemplar.TypedArrayName.stringValue()].IntrinsicName);
+    // 3. Let constructor be ? SpeciesConstructor(exemplar, defaultConstructor).
+    let _temp = SpeciesConstructor(exemplar, defaultConstructor);
+    /* c8 ignore if */
+    if (_temp instanceof AbruptCompletion) {
+      return _temp;
+    }
+    /* c8 ignore if */
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+    const constructor = _temp;
+    // 4. Let result be ? TypedArrayCreate(constructor, argumentList).
+    let _temp2 = TypedArrayCreateFromConstructor(constructor, argumentList);
+    /* c8 ignore if */
+    if (_temp2 instanceof AbruptCompletion) {
+      return _temp2;
+    }
+    /* c8 ignore if */
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
+    }
+    const result = _temp2;
+    // 5. Assert: result has [[TypedArrayName]] and [[ContentType]] internal slots.
+    Assert('TypedArrayName' in result && 'ContentType' in result, "'TypedArrayName' in result && 'ContentType' in result");
+    // 6. If result.[[ContentType]] is not equal to exemplar.[[ContentType]], throw a TypeError exception.
+    if (result.ContentType !== exemplar.ContentType) {
+      return exports.surroundingAgent.Throw('TypeError', 'BufferContentTypeMismatch');
+    }
+    // 7. Return result.
+    return result;
+  }
+
+  /** https://tc39.es/ecma262/#sec-typedarraycreatefromconstructor */
+  function TypedArrayCreateFromConstructor(constructor, argumentList) {
+    let _temp3 = Construct(constructor, argumentList);
+    /* c8 ignore if */
+    if (_temp3 instanceof AbruptCompletion) {
+      return _temp3;
+    }
+    /* c8 ignore if */
+    if (_temp3 instanceof Completion) {
+      _temp3 = _temp3.Value;
+    }
+    const newTypedArray = _temp3;
+    let _temp4 = ValidateTypedArray(newTypedArray);
+    /* c8 ignore if */
+    if (_temp4 instanceof AbruptCompletion) {
+      return _temp4;
+    }
+    /* c8 ignore if */
+    if (_temp4 instanceof Completion) {
+      _temp4 = _temp4.Value;
+    }
+    const taRecord = _temp4;
+    if (argumentList.length === 1 && argumentList[0] instanceof NumberValue) {
+      if (IsTypedArrayOutOfBounds(taRecord)) {
+        // TODO: error message
+        return exports.surroundingAgent.Throw('TypeError', 'Raw', 'TypedArrayCreateFromConstructor:IsTypedArrayOutOfBounds');
+      }
+      const length = TypedArrayLength(taRecord);
+      if (length < R(argumentList[0])) {
+        return exports.surroundingAgent.Throw('TypeError', 'TypedArrayTooSmall');
+      }
+    }
+    return newTypedArray;
+  }
+
+  /** https://tc39.es/ecma262/#sec-validatetypedarray */
+  function ValidateTypedArray(O, order) {
+    let _temp6 = RequireInternalSlot(O, 'TypedArrayName');
+    /* c8 ignore if */
+    if (_temp6 instanceof AbruptCompletion) {
+      return _temp6;
+    }
+    /* c8 ignore if */
+    if (_temp6 instanceof Completion) {
+      _temp6 = _temp6.Value;
+    }
+    Assert('ViewedArrayBuffer' in O, "'ViewedArrayBuffer' in O");
+    const taRecord = MakeTypedArrayWithBufferWitnessRecord(O);
+    if (IsTypedArrayOutOfBounds(taRecord)) {
+      return exports.surroundingAgent.Throw('TypeError', 'TypedArrayOutOfBounds');
+    }
+    return taRecord;
+  }
+
+  /** https://tc39.es/ecma262/#sec-typedarrayelementsize */
+  function TypedArrayElementSize(O) {
+    const type = O.TypedArrayName.stringValue();
+    return typedArrayInfoByName[type].ElementSize;
+  }
+
+  /** https://tc39.es/ecma262/#sec-typedarrayelementtype */
+  function TypedArrayElementType(O) {
+    const type = O.TypedArrayName.stringValue();
+    return typedArrayInfoByName[type].ElementType;
+  }
+
+  /** https://tc39.es/ecma262/#sec-comparetypedarrayelements */
+  function CompareTypedArrayElements(x, y, comparator) {
+    Assert(x instanceof NumberValue && y instanceof NumberValue || x instanceof BigIntValue && y instanceof BigIntValue, "(x instanceof NumberValue && y instanceof NumberValue)\n    || (x instanceof BigIntValue && y instanceof BigIntValue)");
+    if (!(comparator instanceof UndefinedValue)) {
+      let _temp8 = Call(comparator, Value.undefined, [x, y]);
+      /* c8 ignore if */
+      if (_temp8 instanceof AbruptCompletion) {
+        return _temp8;
+      }
+      /* c8 ignore if */
+      if (_temp8 instanceof Completion) {
+        _temp8 = _temp8.Value;
+      }
+      let _temp7 = ToNumber(_temp8);
+      /* c8 ignore if */
+      if (_temp7 instanceof AbruptCompletion) {
+        return _temp7;
+      }
+      /* c8 ignore if */
+      if (_temp7 instanceof Completion) {
+        _temp7 = _temp7.Value;
+      }
+      const v = _temp7;
+      if (v.isNaN()) {
+        return F(0);
+      }
+      return v;
+    }
+    if (x.isNaN() && y.isNaN()) {
+      return F(0);
+    }
+    if (x.isNaN()) {
+      return F(1);
+    }
+    if (y.isNaN()) {
+      return F(-1);
+    }
+    if (x.value < y.value) {
+      return F(-1);
+    }
+    if (x.value > y.value) {
+      return F(1);
+    }
+    if (Object.is(-0, x.value) && Object.is(0, y.value)) {
+      return F(-1);
+    }
+    if (Object.is(0, x.value) && Object.is(-0, y.value)) {
+      return F(1);
+    }
+    return F(0);
+  }
+
+  /** https://tc39.es/ecma262/#sec-%typedarray%-intrinsic-object */
+  function TypedArrayConstructor() {
+    // 1. Throw a TypeError exception.
+    return exports.surroundingAgent.Throw('TypeError', 'NotAConstructor', this);
+  }
+
+  /** https://tc39.es/ecma262/#sec-allocatetypedarray */
+  TypedArrayConstructor.section = 'https://tc39.es/ecma262/#sec-%typedarray%-intrinsic-object';
+  function AllocateTypedArray(constructorName, newTarget, defaultProto, length) {
+    let _temp9 = GetPrototypeFromConstructor(newTarget, defaultProto);
+    /* c8 ignore if */
+    if (_temp9 instanceof AbruptCompletion) {
+      return _temp9;
+    }
+    /* c8 ignore if */
+    if (_temp9 instanceof Completion) {
+      _temp9 = _temp9.Value;
+    }
+    // 1. Let proto be ? GetPrototypeFromConstructor(newTarget, defaultProto).
+    const proto = _temp9;
+    // 2. Let obj be TypedArrayCreate(proto).
+    const obj = TypedArrayCreate(proto);
+    // 3. Assert: obj.[[ViewedArrayBuffer]] is undefined.
+    Assert(obj.ViewedArrayBuffer === Value.undefined, "obj.ViewedArrayBuffer === Value.undefined");
+    // 4. Set obj.[[TypedArrayName]] to constructorName.
+    obj.TypedArrayName = constructorName;
+    // 5. If constructorName is "BigInt64Array" or "BigUint64Array", set obj.[[ContentType]] to BigInt.
+    // 6. Otherwise, set obj.[[ContentType]] to Number.
+    if (constructorName.stringValue() === 'BigInt64Array' || constructorName.stringValue() === 'BigUint64Array') {
+      obj.ContentType = 'BigInt';
+    } else {
+      obj.ContentType = 'Number';
+    }
+    // 7. If length is not present, then
+    if (length === undefined) {
+      // 1. Set obj.[[ByteLength]] to 0.
+      obj.ByteLength = 0;
+      // 1. Set obj.[[ByteOffset]] to 0.
+      obj.ByteOffset = 0;
+      // 1. Set obj.[[ArrayLength]] to 0.
+      obj.ArrayLength = 0;
+    } else {
+      let _temp10 = AllocateTypedArrayBuffer(obj, length);
+      /* c8 ignore if */
+      if (_temp10 instanceof AbruptCompletion) {
+        return _temp10;
+      }
+      /* c8 ignore if */
+      if (_temp10 instanceof Completion) {
+        _temp10 = _temp10.Value;
+      }
+    }
+    // 9. Return obj.
+    return obj;
+  }
+
+  /** https://tc39.es/ecma262/#sec-initializetypedarrayfromtypedarray */
+  function InitializeTypedArrayFromTypedArray(O, srcArray) {
+    const srcData = srcArray.ViewedArrayBuffer;
+    const elementType = TypedArrayElementType(O);
+    const elementSize = TypedArrayElementSize(O);
+    const srcType = TypedArrayElementType(srcArray);
+    const srcElementSize = TypedArrayElementSize(srcArray);
+    const srcByteOffset = srcArray.ByteOffset;
+    const srcRecord = MakeTypedArrayWithBufferWitnessRecord(srcArray);
+    if (IsTypedArrayOutOfBounds(srcRecord)) {
+      return exports.surroundingAgent.Throw('TypeError', 'TypedArrayOutOfBounds');
+    }
+    const elementLength = TypedArrayLength(srcRecord);
+    const byteLength = elementSize * elementLength;
+    let data;
+    if (elementType === srcType) {
+      let _temp11 = CloneArrayBuffer(srcData, srcByteOffset, byteLength);
+      /* c8 ignore if */
+      if (_temp11 instanceof AbruptCompletion) {
+        return _temp11;
+      }
+      /* c8 ignore if */
+      if (_temp11 instanceof Completion) {
+        _temp11 = _temp11.Value;
+      }
+      data = _temp11;
+    } else {
+      let _temp12 = AllocateArrayBuffer(exports.surroundingAgent.intrinsic('%ArrayBuffer%'), byteLength);
+      /* c8 ignore if */
+      if (_temp12 instanceof AbruptCompletion) {
+        return _temp12;
+      }
+      /* c8 ignore if */
+      if (_temp12 instanceof Completion) {
+        _temp12 = _temp12.Value;
+      }
+      data = _temp12;
+      if (srcArray.ContentType !== O.ContentType) {
+        return exports.surroundingAgent.Throw('TypeError', 'BufferContentTypeMismatch');
+      }
+      let srcByteIndex = srcByteOffset;
+      let targetByteIndex = 0;
+      let count = elementLength;
+      while (count > 0) {
+        const value = GetValueFromBuffer(srcData, srcByteIndex, srcType);
+        SetValueInBuffer(data, targetByteIndex, elementType, value);
+        srcByteIndex += srcElementSize;
+        targetByteIndex += elementSize;
+        count -= 1;
+      }
+    }
+    O.ViewedArrayBuffer = data;
+    O.ByteLength = byteLength;
+    O.ByteOffset = 0;
+    O.ArrayLength = elementLength;
+  }
+
+  /** https://tc39.es/ecma262/#sec-initializetypedarrayfromarraybuffer */
+  function InitializeTypedArrayFromArrayBuffer(O, buffer, byteOffset, length) {
+    const elementSize = TypedArrayElementSize(O);
+    let _temp13 = ToIndex(byteOffset);
+    /* c8 ignore if */
+    if (_temp13 instanceof AbruptCompletion) {
+      return _temp13;
+    }
+    /* c8 ignore if */
+    if (_temp13 instanceof Completion) {
+      _temp13 = _temp13.Value;
+    }
+    const offset = _temp13;
+    if (offset % elementSize !== 0) {
+      return exports.surroundingAgent.Throw('RangeError', 'TypedArrayOffsetAlignment', offset, elementSize);
+    }
+    const bufferIsFixedLength = IsFixedLengthArrayBuffer(buffer);
+    let newLength;
+    if (length !== Value.undefined) {
+      let _temp14 = ToIndex(length);
+      /* c8 ignore if */
+      if (_temp14 instanceof AbruptCompletion) {
+        return _temp14;
+      }
+      /* c8 ignore if */
+      if (_temp14 instanceof Completion) {
+        _temp14 = _temp14.Value;
+      }
+      newLength = _temp14;
+    }
+    if (IsDetachedBuffer(buffer) === Value.true) {
+      return exports.surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+    }
+    const bufferByteLength = ArrayBufferByteLength(buffer);
+    if (length === Value.undefined && !bufferIsFixedLength) {
+      if (offset > bufferByteLength) {
+        return exports.surroundingAgent.Throw('RangeError', 'TypedArrayCreationOOB');
+      }
+      O.ByteLength = 'auto';
+      O.ArrayLength = 'auto';
+    } else {
+      let newByteLength;
+      if (length === Value.undefined) {
+        if (bufferByteLength % elementSize !== 0) {
+          return exports.surroundingAgent.Throw('RangeError', 'TypedArrayLengthAlignment', bufferByteLength, elementSize);
+        }
+        newByteLength = bufferByteLength - offset;
+        if (newByteLength < 0) {
+          return exports.surroundingAgent.Throw('RangeError', 'TypedArrayCreationOOB');
+        }
+      } else {
+        Assert(newLength !== undefined, "newLength !== undefined");
+        newByteLength = newLength * elementSize;
+        if (offset + newByteLength > bufferByteLength) {
+          return exports.surroundingAgent.Throw('RangeError', 'TypedArrayCreationOOB');
+        }
+      }
+      O.ByteLength = newByteLength;
+      O.ArrayLength = newByteLength / elementSize;
+    }
+    O.ViewedArrayBuffer = buffer;
+    O.ByteOffset = offset;
+  }
+
+  /** https://tc39.es/ecma262/#sec-initializetypedarrayfromlist */
+  function InitializeTypedArrayFromList(O, value) {
+    const len = value.length;
+    let _temp15 = AllocateTypedArrayBuffer(O, len);
+    /* c8 ignore if */
+    if (_temp15 instanceof AbruptCompletion) {
+      return _temp15;
+    }
+    /* c8 ignore if */
+    if (_temp15 instanceof Completion) {
+      _temp15 = _temp15.Value;
+    }
+    let k = 0;
+    while (k < len) {
+      let _temp16 = ToString(F(k));
+      Assert(!(_temp16 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp16);
+      /* c8 ignore if */
+      if (_temp16 instanceof Completion) {
+        _temp16 = _temp16.Value;
+      }
+      const Pk = _temp16;
+      const kValue = value.shift();
+      let _temp17 = Set$1(O, Pk, kValue, Value.true);
+      /* c8 ignore if */
+      if (_temp17 instanceof AbruptCompletion) {
+        return _temp17;
+      }
+      /* c8 ignore if */
+      if (_temp17 instanceof Completion) {
+        _temp17 = _temp17.Value;
+      }
+      k += 1;
+    }
+    Assert(value.length === 0, "value.length === 0");
+  }
+
+  /** https://tc39.es/ecma262/#sec-initializetypedarrayfromarraylike */
+  function InitializeTypedArrayFromArrayLike(O, arrayLike) {
+    let _temp18 = LengthOfArrayLike(arrayLike);
+    /* c8 ignore if */
+    if (_temp18 instanceof AbruptCompletion) {
+      return _temp18;
+    }
+    /* c8 ignore if */
+    if (_temp18 instanceof Completion) {
+      _temp18 = _temp18.Value;
+    }
+    const len = _temp18;
+    let _temp19 = AllocateTypedArrayBuffer(O, len);
+    /* c8 ignore if */
+    if (_temp19 instanceof AbruptCompletion) {
+      return _temp19;
+    }
+    /* c8 ignore if */
+    if (_temp19 instanceof Completion) {
+      _temp19 = _temp19.Value;
+    }
+    let k = 0;
+    while (k < len) {
+      let _temp20 = ToString(F(k));
+      Assert(!(_temp20 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp20);
+      /* c8 ignore if */
+      if (_temp20 instanceof Completion) {
+        _temp20 = _temp20.Value;
+      }
+      const Pk = _temp20;
+      let _temp21 = Get(arrayLike, Pk);
+      /* c8 ignore if */
+      if (_temp21 instanceof AbruptCompletion) {
+        return _temp21;
+      }
+      /* c8 ignore if */
+      if (_temp21 instanceof Completion) {
+        _temp21 = _temp21.Value;
+      }
+      const kValue = _temp21;
+      let _temp22 = Set$1(O, Pk, kValue, Value.true);
+      /* c8 ignore if */
+      if (_temp22 instanceof AbruptCompletion) {
+        return _temp22;
+      }
+      /* c8 ignore if */
+      if (_temp22 instanceof Completion) {
+        _temp22 = _temp22.Value;
+      }
+      k += 1;
+    }
+  }
+
+  /** https://tc39.es/ecma262/#sec-allocatetypedarraybuffer */
+  function AllocateTypedArrayBuffer(O, length) {
+    // 1. Assert: O is an Object that has a [[ViewedArrayBuffer]] internal slot.
+    Assert(O instanceof ObjectValue && 'ViewedArrayBuffer' in O, "O instanceof ObjectValue && 'ViewedArrayBuffer' in O");
+    // 2. Assert: O.[[ViewedArrayBuffer]] is undefined.
+    Assert(O.ViewedArrayBuffer === Value.undefined, "O.ViewedArrayBuffer === Value.undefined");
+    // 3. Assert: length is a non-negative integer.
+    Assert(isNonNegativeInteger(length), "isNonNegativeInteger(length)");
+    // 4. Let constructorName be the String value of O.[[TypedArrayName]].
+    const constructorName = O.TypedArrayName.stringValue();
+    // 5. Let elementSize be the Element Size value specified in Table 61 for constructorName.
+    const elementSize = typedArrayInfoByName[constructorName].ElementSize;
+    // 6. Let byteLength be elementSize × length.
+    const byteLength = elementSize * length;
+    // 7. Let data be ? AllocateArrayBuffer(%ArrayBuffer%, byteLength).
+    let _temp23 = AllocateArrayBuffer(exports.surroundingAgent.intrinsic('%ArrayBuffer%'), byteLength);
+    /* c8 ignore if */
+    if (_temp23 instanceof AbruptCompletion) {
+      return _temp23;
+    }
+    /* c8 ignore if */
+    if (_temp23 instanceof Completion) {
+      _temp23 = _temp23.Value;
+    }
+    const data = _temp23;
+    // 8. Set O.[[ViewedArrayBuffer]] to data.
+    O.ViewedArrayBuffer = data;
+    O.ByteLength = byteLength;
+    // 10. Set O.[[ByteOffset]] to 0.
+    O.ByteOffset = 0;
+    // 11. Set O.[[ArrayLength]] to length.
+    O.ArrayLength = length;
+    // 12. Return O.
+    return O;
+  }
+
+  /** https://tc39.es/ecma262/#sec-%typedarray%.from */
+  function TypedArray_from([source = Value.undefined, mapper = Value.undefined, thisArg = Value.undefined], {
+    thisValue
+  }) {
+    // 1. Let C be the this value.
+    const C = thisValue;
+    // 2. If IsConstructor(C) is false, throw a TypeError exception.
+    if (IsConstructor(C) === Value.false) {
+      return exports.surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
+    }
+    // 3. If mapfn is undefined, let mapping be false.
+    let mapping;
+    if (mapper === Value.undefined) {
+      mapping = false;
+    } else {
+      // a. If IsCallable(mapfn) is false, throw a TypeError exception.
+      if (IsCallable(mapper) === Value.false) {
+        return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', mapper);
+      }
+      // b. Let mapping be true.
+      mapping = true;
+    }
+    // 5. Let usingIterator be ? GetMethod(source, @@iterator).
+    let _temp24 = GetMethod(source, wellKnownSymbols.iterator);
+    /* c8 ignore if */
+    if (_temp24 instanceof AbruptCompletion) {
+      return _temp24;
+    }
+    /* c8 ignore if */
+    if (_temp24 instanceof Completion) {
+      _temp24 = _temp24.Value;
+    }
+    const usingIterator = _temp24;
+    // 6. If usingIterator is not undefined, then
+    if (!(usingIterator instanceof UndefinedValue)) {
+      let _temp30 = GetIteratorFromMethod(source, usingIterator);
+      /* c8 ignore if */
+      if (_temp30 instanceof AbruptCompletion) {
+        return _temp30;
+      }
+      /* c8 ignore if */
+      if (_temp30 instanceof Completion) {
+        _temp30 = _temp30.Value;
+      }
+      let _temp25 = IteratorToList(_temp30);
+      /* c8 ignore if */
+      if (_temp25 instanceof AbruptCompletion) {
+        return _temp25;
+      }
+      /* c8 ignore if */
+      if (_temp25 instanceof Completion) {
+        _temp25 = _temp25.Value;
+      }
+      const values = _temp25;
+      const len = values.length;
+      let _temp26 = TypedArrayCreateFromConstructor(C, [F(len)]);
+      /* c8 ignore if */
+      if (_temp26 instanceof AbruptCompletion) {
+        return _temp26;
+      }
+      /* c8 ignore if */
+      if (_temp26 instanceof Completion) {
+        _temp26 = _temp26.Value;
+      }
+      const targetObj = _temp26;
+      let k = 0;
+      while (k < len) {
+        let _temp27 = ToString(F(k));
+        Assert(!(_temp27 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp27);
+        /* c8 ignore if */
+        if (_temp27 instanceof Completion) {
+          _temp27 = _temp27.Value;
+        }
+        const Pk = _temp27;
+        const kValue = values.shift();
+        let mappedValue;
+        if (mapping) {
+          let _temp28 = Call(mapper, thisArg, [kValue, F(k)]);
+          /* c8 ignore if */
+          if (_temp28 instanceof AbruptCompletion) {
+            return _temp28;
+          }
+          /* c8 ignore if */
+          if (_temp28 instanceof Completion) {
+            _temp28 = _temp28.Value;
+          }
+          mappedValue = _temp28;
+        } else {
+          mappedValue = kValue;
+        }
+        let _temp29 = Set$1(targetObj, Pk, mappedValue, Value.true);
+        /* c8 ignore if */
+        if (_temp29 instanceof AbruptCompletion) {
+          return _temp29;
+        }
+        /* c8 ignore if */
+        if (_temp29 instanceof Completion) {
+          _temp29 = _temp29.Value;
+        }
+        k += 1;
+      }
+      Assert(values.length === 0, "values.length === 0");
+      return targetObj;
+    }
+    // 7. NOTE: source is not an Iterable so assume it is already an array-like object.
+    // 8. Let arrayLike be ! ToObject(source).
+    let _temp31 = ToObject(source);
+    Assert(!(_temp31 instanceof AbruptCompletion), "ToObject(source)" + ' returned an abrupt completion', _temp31);
+    /* c8 ignore if */
+    if (_temp31 instanceof Completion) {
+      _temp31 = _temp31.Value;
+    }
+    const arrayLike = _temp31;
+    // 9. Let len be ? LengthOfArrayLike(arrayLike).
+    let _temp32 = LengthOfArrayLike(arrayLike);
+    /* c8 ignore if */
+    if (_temp32 instanceof AbruptCompletion) {
+      return _temp32;
+    }
+    /* c8 ignore if */
+    if (_temp32 instanceof Completion) {
+      _temp32 = _temp32.Value;
+    }
+    const len = _temp32;
+    // 10. Let targetObj be ? TypedArrayCreate(C, « 𝔽(len) »).
+    let _temp33 = TypedArrayCreateFromConstructor(C, [F(len)]);
+    /* c8 ignore if */
+    if (_temp33 instanceof AbruptCompletion) {
+      return _temp33;
+    }
+    /* c8 ignore if */
+    if (_temp33 instanceof Completion) {
+      _temp33 = _temp33.Value;
+    }
+    const targetObj = _temp33;
+    // 11. Let k be 0.
+    let k = 0;
+    // 12. Repeat, while k < len
+    while (k < len) {
+      let _temp34 = ToString(F(k));
+      Assert(!(_temp34 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp34);
+      /* c8 ignore if */
+      if (_temp34 instanceof Completion) {
+        _temp34 = _temp34.Value;
+      }
+      // a. Let Pk be ! ToString(𝔽(k)).
+      const Pk = _temp34;
+      // b. Let kValue be ? Get(arrayLike, Pk).
+      let _temp35 = Get(arrayLike, Pk);
+      /* c8 ignore if */
+      if (_temp35 instanceof AbruptCompletion) {
+        return _temp35;
+      }
+      /* c8 ignore if */
+      if (_temp35 instanceof Completion) {
+        _temp35 = _temp35.Value;
+      }
+      const kValue = _temp35;
+      let mappedValue;
+      // c. If mapping is true, then
+      if (mapping) {
+        let _temp36 = Call(mapper, thisArg, [kValue, F(k)]);
+        /* c8 ignore if */
+        if (_temp36 instanceof AbruptCompletion) {
+          return _temp36;
+        }
+        /* c8 ignore if */
+        if (_temp36 instanceof Completion) {
+          _temp36 = _temp36.Value;
+        }
+        // i. Let mappedValue be ? Call(mapfn, thisArg, « kValue, 𝔽(k) »).
+        mappedValue = _temp36;
+      } else {
+        // d. Else, let mappedValue be kValue.
+        mappedValue = kValue;
+      }
+      // e. Perform ? Set(targetObj, Pk, mappedValue, true).
+      let _temp37 = Set$1(targetObj, Pk, mappedValue, Value.true);
+      /* c8 ignore if */
+      if (_temp37 instanceof AbruptCompletion) {
+        return _temp37;
+      }
+      /* c8 ignore if */
+      if (_temp37 instanceof Completion) {
+        _temp37 = _temp37.Value;
+      }
+      // f. Set k to k + 1.
+      k += 1;
+    }
+    // 13. Return targetObj.
+    return targetObj;
+  }
+
+  /** https://tc39.es/ecma262/#sec-%typedarray%.of */
+  TypedArray_from.section = 'https://tc39.es/ecma262/#sec-%typedarray%.from';
+  function TypedArray_of(items, {
+    thisValue
+  }) {
+    // 1. Let len be the actual number of arguments passed to this function.
+    // 2. Let items be the List of arguments passed to this function.
+    const len = items.length;
+    // 3. Let C be the this value.
+    const C = thisValue;
+    // 4. If IsConstructor(C) is false, throw a TypeError exception.
+    if (IsConstructor(C) === Value.false) {
+      return exports.surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
+    }
+    // 5. Let newObj be ? TypedArrayCreate(C, « 𝔽(len) »).
+    let _temp38 = TypedArrayCreateFromConstructor(C, [F(len)]);
+    /* c8 ignore if */
+    if (_temp38 instanceof AbruptCompletion) {
+      return _temp38;
+    }
+    /* c8 ignore if */
+    if (_temp38 instanceof Completion) {
+      _temp38 = _temp38.Value;
+    }
+    const newObj = _temp38;
+    // 6. Let k be 0.
+    let k = 0;
+    // 7. Repeat, while k < len
+    while (k < len) {
+      // a. Let kValue be items[k].
+      const kValue = items[k];
+      // b. Let Pk be ! ToString(𝔽(k)).
+      let _temp39 = ToString(F(k));
+      Assert(!(_temp39 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp39);
+      /* c8 ignore if */
+      if (_temp39 instanceof Completion) {
+        _temp39 = _temp39.Value;
+      }
+      const Pk = _temp39;
+      // c. Perform ? Set(newObj, Pk, kValue, true).
+      let _temp40 = Set$1(newObj, Pk, kValue, Value.true);
+      /* c8 ignore if */
+      if (_temp40 instanceof AbruptCompletion) {
+        return _temp40;
+      }
+      /* c8 ignore if */
+      if (_temp40 instanceof Completion) {
+        _temp40 = _temp40.Value;
+      }
+      // d. Set k to k + 1.
+      k += 1;
+    }
+    // 8. Return newObj.
+    return newObj;
+  }
+
+  /** https://tc39.es/ecma262/#sec-get-%typedarray%-@@species */
+  TypedArray_of.section = 'https://tc39.es/ecma262/#sec-%typedarray%.of';
+  function TypedArray_speciesGetter(_args, {
+    thisValue
+  }) {
+    return thisValue;
+  }
+  TypedArray_speciesGetter.section = 'https://tc39.es/ecma262/#sec-get-%typedarray%-@@species';
+  function bootstrapTypedArray(realmRec) {
+    const typedArrayConstructor = bootstrapConstructor(realmRec, TypedArrayConstructor, 'TypedArray', 0, realmRec.Intrinsics['%TypedArray.prototype%'], [['from', TypedArray_from, 1], ['of', TypedArray_of, 0], [wellKnownSymbols.species, [TypedArray_speciesGetter]]]);
+    realmRec.Intrinsics['%TypedArray%'] = typedArrayConstructor;
   }
 
   const InternalMethods$4 = {
@@ -25266,10 +25923,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-createarrayiterator */
   function CreateArrayIterator(array, kind) {
-    // 1. Assert: Type(array) is Object.
-    Assert(array instanceof ObjectValue, "array instanceof ObjectValue");
-    // 2. Assert: kind is key+value, key, or value.
-    Assert(kind === 'key+value' || kind === 'key' || kind === 'value', "kind === 'key+value' || kind === 'key' || kind === 'value'");
     // 3. Let closure be a new Abstract Closure with no parameters that captures kind and array and performs the following steps when called:
     const closure = function* closure() {
       // a. Let index be 0.
@@ -25277,14 +25930,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // b. Repeat,
       while (true) {
         let len;
+        let result;
         // i. If array has a [[TypedArrayName]] internal slot, then
-        if (isIntegerIndexedExoticObject(array)) {
-          // 1. If IsDetachedBuffer(array.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
-          if (IsDetachedBuffer(array.ViewedArrayBuffer) === Value.true) {
-            return exports.surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+        if (isTypedArrayObject(array)) {
+          const taRecord = MakeTypedArrayWithBufferWitnessRecord(array);
+          if (IsTypedArrayOutOfBounds(taRecord)) {
+            return exports.surroundingAgent.Throw('TypeError', 'TypedArrayOutOfBounds');
           }
           // 2. Let len be array.[[ArrayLength]].
-          len = array.ArrayLength;
+          len = TypedArrayLength(taRecord);
         } else {
           let _temp22 = LengthOfArrayLike(array);
           /* c8 ignore if */
@@ -25303,83 +25957,57 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (index >= len) {
           return Value.undefined;
         }
-        // iv. If kind is key, perform ? Yield(𝔽(index)).
+        const indexNumber = F(index);
+        // iv. If kind is key,
         if (kind === 'key') {
-          let _temp23 = yield* Yield(F(index));
-          /* c8 ignore if */
-          if (_temp23 instanceof AbruptCompletion) {
-            return _temp23;
-          }
+          result = indexNumber;
+        } else {
+          let _temp23 = ToString(indexNumber);
+          Assert(!(_temp23 instanceof AbruptCompletion), "ToString(indexNumber)" + ' returned an abrupt completion', _temp23);
           /* c8 ignore if */
           if (_temp23 instanceof Completion) {
             _temp23 = _temp23.Value;
           }
-        } else {
-          let _temp24 = ToString(F(index));
-          Assert(!(_temp24 instanceof AbruptCompletion), "ToString(F(index))" + ' returned an abrupt completion', _temp24);
+          // v. Else,
+          // 1. Let elementKey be ! ToString(indexNumber).
+          const elementKey = _temp23;
+          // 2. Let elementValue be ? Get(array, elementKey).
+          let _temp24 = Get(array, elementKey);
+          /* c8 ignore if */
+          if (_temp24 instanceof AbruptCompletion) {
+            return _temp24;
+          }
           /* c8 ignore if */
           if (_temp24 instanceof Completion) {
             _temp24 = _temp24.Value;
           }
-          // v. Else,
-          // 1. Let elementKey be ! ToString(𝔽(index)).
-          const elementKey = _temp24;
-          // 2. Let elementValue be ? Get(array, elementKey).
-          let _temp25 = Get(array, elementKey);
-          /* c8 ignore if */
-          if (_temp25 instanceof AbruptCompletion) {
-            return _temp25;
-          }
-          /* c8 ignore if */
-          if (_temp25 instanceof Completion) {
-            _temp25 = _temp25.Value;
-          }
-          const elementValue = _temp25;
+          const elementValue = _temp24;
           // 3. If kind is value, perform ? Yield(elementValue).
           if (kind === 'value') {
-            let _temp26 = yield* Yield(elementValue);
-            /* c8 ignore if */
-            if (_temp26 instanceof AbruptCompletion) {
-              return _temp26;
-            }
-            /* c8 ignore if */
-            if (_temp26 instanceof Completion) {
-              _temp26 = _temp26.Value;
-            }
+            result = elementValue;
           } else {
             // 4. Else,
             // a. Assert: kind is key+value.
             Assert(kind === 'key+value', "kind === 'key+value'");
             // b. Perform ? Yield(! CreateArrayFromList(« 𝔽(index), elementValue »)).
-            let _temp28 = CreateArrayFromList([F(index), elementValue]);
-            Assert(!(_temp28 instanceof AbruptCompletion), "CreateArrayFromList([F(index), elementValue])" + ' returned an abrupt completion', _temp28);
-            /* c8 ignore if */
-            if (_temp28 instanceof Completion) {
-              _temp28 = _temp28.Value;
-            }
-            let _temp27 = yield* Yield(_temp28);
-            /* c8 ignore if */
-            if (_temp27 instanceof AbruptCompletion) {
-              return _temp27;
-            }
-            /* c8 ignore if */
-            if (_temp27 instanceof Completion) {
-              _temp27 = _temp27.Value;
-            }
+            result = CreateArrayFromList([indexNumber, elementValue]);
           }
+        }
+        let _temp25 = yield* GeneratorYield(CreateIteratorResultObject(result, Value.false));
+        /* c8 ignore if */
+        if (_temp25 instanceof AbruptCompletion) {
+          return _temp25;
+        }
+        /* c8 ignore if */
+        if (_temp25 instanceof Completion) {
+          _temp25 = _temp25.Value;
         }
         // vi. Set index to index + 1.
         index += 1;
       }
     };
-    // 4. Return ! CreateIteratorFromClosure(closure, "%ArrayIteratorPrototype%", %ArrayIteratorPrototype%).
-    let _temp29 = CreateIteratorFromClosure(closure, Value('%ArrayIteratorPrototype%'), exports.surroundingAgent.intrinsic('%ArrayIteratorPrototype%'));
-    Assert(!(_temp29 instanceof AbruptCompletion), "CreateIteratorFromClosure(closure, Value('%ArrayIteratorPrototype%'), surroundingAgent.intrinsic('%ArrayIteratorPrototype%'))" + ' returned an abrupt completion', _temp29);
-    /* c8 ignore if */
-    if (_temp29 instanceof Completion) {
-      _temp29 = _temp29.Value;
-    }
-    return _temp29;
+    // 4. Return CreateIteratorFromClosure(closure, "%ArrayIteratorPrototype%", %ArrayIteratorPrototype%).
+    return CreateIteratorFromClosure(closure, Value('%ArrayIteratorPrototype%'), exports.surroundingAgent.intrinsic('%ArrayIteratorPrototype%'));
   }
 
   function isArrayBufferObject(o) {
@@ -25387,8 +26015,21 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   /** https://tc39.es/ecma262/#sec-allocatearraybuffer */
-  function AllocateArrayBuffer(constructor, byteLength) {
-    let _temp = OrdinaryCreateFromConstructor(constructor, '%ArrayBuffer.prototype%', ['ArrayBufferData', 'ArrayBufferByteLength', 'ArrayBufferDetachKey']);
+  function AllocateArrayBuffer(constructor, byteLength, maxByteLength) {
+    const slots = ['ArrayBufferData', 'ArrayBufferByteLength', 'ArrayBufferDetachKey'];
+    let allocatingResizableBuffer;
+    if (maxByteLength !== undefined) {
+      allocatingResizableBuffer = true;
+    } else {
+      allocatingResizableBuffer = false;
+    }
+    if (allocatingResizableBuffer) {
+      if (byteLength > maxByteLength) {
+        return exports.surroundingAgent.Throw('RangeError', 'ResizableBufferInvalidMaxByteLength');
+      }
+      slots.push('ArrayBufferMaxByteLength');
+    }
+    let _temp = OrdinaryCreateFromConstructor(constructor, '%ArrayBuffer.prototype%', slots);
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) {
       return _temp;
@@ -25397,7 +26038,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp instanceof Completion) {
       _temp = _temp.Value;
     }
-    // 1. Let obj be ? OrdinaryCreateFromConstructor(constructor, "%ArrayBuffer.prototype%", « [[ArrayBufferData]], [[ArrayBufferByteLength]], [[ArrayBufferDetachKey]] »).
     const obj = _temp;
     // 2. Assert: byteLength is a non-negative integer.
     Assert(isNonNegativeInteger(byteLength), "isNonNegativeInteger(byteLength)");
@@ -25417,25 +26057,22 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 5. Set obj.[[ArrayBufferByteLength]] to byteLength.
     obj.ArrayBufferByteLength = byteLength;
     // 6. Return obj.
+    if (allocatingResizableBuffer) {
+      obj.ArrayBufferMaxByteLength = maxByteLength;
+    }
     return obj;
   }
 
   /** https://tc39.es/ecma262/#sec-isdetachedbuffer */
   function IsDetachedBuffer(arrayBuffer) {
-    // 1. Assert: Type(arrayBuffer) is Object and it has an [[ArrayBufferData]] internal slot.
-    Assert(arrayBuffer instanceof ObjectValue && 'ArrayBufferData' in arrayBuffer, "arrayBuffer instanceof ObjectValue && 'ArrayBufferData' in arrayBuffer");
-    // 2. If arrayBuffer.[[ArrayBufferData]] is null, return true.
     if (arrayBuffer.ArrayBufferData === Value.null) {
       return Value.true;
     }
-    // 3. Return false.
     return Value.false;
   }
 
   /** https://tc39.es/ecma262/#sec-detacharraybuffer */
   function DetachArrayBuffer(arrayBuffer, key) {
-    // 1. Assert: Type(arrayBuffer) is Object and it has [[ArrayBufferData]], [[ArrayBufferByteLength]], and [[ArrayBufferDetachKey]] internal slots.
-    Assert(arrayBuffer instanceof ObjectValue && 'ArrayBufferData' in arrayBuffer && 'ArrayBufferByteLength' in arrayBuffer && 'ArrayBufferDetachKey' in arrayBuffer, "arrayBuffer instanceof ObjectValue\n         && 'ArrayBufferData' in arrayBuffer\n         && 'ArrayBufferByteLength' in arrayBuffer\n         && 'ArrayBufferDetachKey' in arrayBuffer");
     // 2. Assert: IsSharedArrayBuffer(arrayBuffer) is false.
     Assert(IsSharedArrayBuffer() === Value.false, "IsSharedArrayBuffer(arrayBuffer) === Value.false");
     // 3. If key is not present, set key to undefined.
@@ -25459,21 +26096,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     arrayBuffer.ArrayBufferData = Value.null;
     // 6. Set arrayBuffer.[[ArrayBufferByteLength]] to 0.
     arrayBuffer.ArrayBufferByteLength = 0;
-    // 7. Return NormalCompletion(null).
-    return NormalCompletion(Value.null);
+    return undefined;
   }
 
   /** https://tc39.es/ecma262/#sec-issharedarraybuffer */
   function IsSharedArrayBuffer(_obj) {
     return Value.false;
   }
-  function CloneArrayBuffer(srcBuffer, srcByteOffset, srcLength, cloneConstructor) {
-    // 1. Assert: Type(srcBuffer) is Object and it has an [[ArrayBufferData]] internal slot.
-    Assert(srcBuffer instanceof ObjectValue && 'ArrayBufferData' in srcBuffer, "srcBuffer instanceof ObjectValue && 'ArrayBufferData' in srcBuffer");
-    // 2. Assert: IsConstructor(cloneConstructor) is true.
-    Assert(IsConstructor(cloneConstructor) === Value.true, "IsConstructor(cloneConstructor) === Value.true");
-    // 3. Let targetBuffer be ? AllocateArrayBuffer(cloneConstructor, srcLength).
-    let _temp4 = AllocateArrayBuffer(cloneConstructor, srcLength);
+  function CloneArrayBuffer(srcBuffer, srcByteOffset, srcLength) {
+    Assert(IsDetachedBuffer(srcBuffer) === Value.false, "IsDetachedBuffer(srcBuffer) === Value.false");
+    let _temp4 = AllocateArrayBuffer(exports.surroundingAgent.intrinsic('%ArrayBuffer%'), srcLength);
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) {
       return _temp4;
@@ -25483,17 +26115,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp4 = _temp4.Value;
     }
     const targetBuffer = _temp4;
-    // 4. If IsDetachedBuffer(srcBuffer) is true, throw a TypeError exception.
-    if (IsDetachedBuffer(srcBuffer) === Value.true) {
-      return exports.surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
-    }
-    // 5. Let srcBlock be srcBuffer.[[ArrayBufferData]].
     const srcBlock = srcBuffer.ArrayBufferData;
-    // 6. Let targetBlock be targetBuffer.[[ArrayBufferData]].
     const targetBlock = targetBuffer.ArrayBufferData;
-    // 7. Perform CopyDataBlockBytes(targetBlock, 0, srcBlock, srcByteOffset, srcLength).
     CopyDataBlockBytes(targetBlock, 0, srcBlock, srcByteOffset, srcLength);
-    // 8. Return targetBuffer.
     return targetBuffer;
   }
 
@@ -25597,14 +26221,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 2. Assert: There are sufficient bytes in arrayBuffer starting at byteIndex to represent a value of type.
     // 3. Assert: byteIndex is a non-negative integer.
     Assert(isNonNegativeInteger(byteIndex), "isNonNegativeInteger(byteIndex)");
-    // 4. Assert: Type(value) is BigInt if ! IsBigIntElementType(type) is true; otherwise, Type(value) is Number.
-    let _temp6 = IsBigIntElementType(type);
-    Assert(!(_temp6 instanceof AbruptCompletion), "IsBigIntElementType(type)" + ' returned an abrupt completion', _temp6);
-    /* c8 ignore if */
-    if (_temp6 instanceof Completion) {
-      _temp6 = _temp6.Value;
-    }
-    if (_temp6 === Value.true) {
+    // 4. Assert: Type(value) is BigInt if IsBigIntElementType(type) is true; otherwise, Type(value) is Number.
+    if (IsBigIntElementType(type) === Value.true) {
       Assert(value instanceof BigIntValue, "value instanceof BigIntValue");
     } else {
       Assert(value instanceof NumberValue, "value instanceof NumberValue");
@@ -25612,7 +26230,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 5. Let block be arrayBuffer.[[ArrayBufferData]].
     const block = arrayBuffer.ArrayBufferData;
     // 6. Let elementSize be the Element Size value specified in Table 61 for Element Type type.
-    // const elementSize = typedArrayInfo[type].ElementSize;
+    // const elementSize = typedArrayInfoByType[type].ElementSize;
     // 7. If isLittleEndian is not present, set isLittleEndian to the value of the [[LittleEndian]] field of the surrounding agent's Agent Record.
     if (isLittleEndian === undefined) {
       isLittleEndian = exports.surroundingAgent.AgentRecord.LittleEndian;
@@ -25624,20 +26242,34 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       Assert(false, "false");
     }
     // 10. Else, store the individual bytes of rawBytes into block, in order, starting at block[byteIndex].
-    let _temp7 = exports.surroundingAgent.debugger_tryTouchDuringPreview(arrayBuffer);
+    let _temp6 = exports.surroundingAgent.debugger_tryTouchDuringPreview(arrayBuffer);
     /* c8 ignore if */
-    if (_temp7 instanceof AbruptCompletion) {
-      return _temp7;
+    if (_temp6 instanceof AbruptCompletion) {
+      return _temp6;
     }
     /* c8 ignore if */
-    if (_temp7 instanceof Completion) {
-      _temp7 = _temp7.Value;
+    if (_temp6 instanceof Completion) {
+      _temp6 = _temp6.Value;
     }
     rawBytes.forEach((byte, i) => {
       block[byteIndex + i] = byte;
     });
     // 11. Return NormalCompletion(undefined).
     return NormalCompletion(Value.undefined);
+  }
+
+  /** https://tc39.es/ecma262/#sec-arraybufferbytelength */
+  function ArrayBufferByteLength(arrayBuffer, _order) {
+    if (IsSharedArrayBuffer() === Value.true) {
+      Assert(false, "false");
+    }
+    Assert(IsDetachedBuffer(arrayBuffer) === Value.false, "IsDetachedBuffer(arrayBuffer) === Value.false");
+    return arrayBuffer.ArrayBufferByteLength;
+  }
+
+  /** https://tc39.es/ecma262/#sec-isfixedlengtharraybuffer */
+  function IsFixedLengthArrayBuffer(arrayBuffer) {
+    return !('ArrayBufferMaxByteLength' in arrayBuffer);
   }
 
   // This file covers abstract operations defined in
@@ -25846,9 +26478,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         const oldRealm = exports.surroundingAgent.runningExecutionContext.Realm;
         // ii. Set the running execution context's Realm to realm.
         exports.surroundingAgent.runningExecutionContext.Realm = realm;
-        // iii. Let iteratorResult be ! CreateIterResultObject(value, done).
-        let _temp7 = CreateIterResultObject(value, done);
-        Assert(!(_temp7 instanceof AbruptCompletion), "CreateIterResultObject(value!, done)" + ' returned an abrupt completion', _temp7);
+        // iii. Let iteratorResult be ! CreateIteratorResultObject(value, done).
+        let _temp7 = CreateIteratorResultObject(value, done);
+        Assert(!(_temp7 instanceof AbruptCompletion), "CreateIteratorResultObject(value!, done)" + ' returned an abrupt completion', _temp7);
         /* c8 ignore if */
         if (_temp7 instanceof Completion) {
           _temp7 = _temp7.Value;
@@ -25857,14 +26489,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         // iv. Set the running execution context's Realm to oldRealm.
         exports.surroundingAgent.runningExecutionContext.Realm = oldRealm;
       } else {
-        let _temp8 = CreateIterResultObject(value, done);
-        Assert(!(_temp8 instanceof AbruptCompletion), "CreateIterResultObject(value!, done)" + ' returned an abrupt completion', _temp8);
+        let _temp8 = CreateIteratorResultObject(value, done);
+        Assert(!(_temp8 instanceof AbruptCompletion), "CreateIteratorResultObject(value!, done)" + ' returned an abrupt completion', _temp8);
         /* c8 ignore if */
         if (_temp8 instanceof Completion) {
           _temp8 = _temp8.Value;
         }
         // c. Else,
-        // i. Let iteratorResult be ! CreateIterResultObject(value, done).
+        // i. Let iteratorResult be ! CreateIteratorResultObject(value, done).
         iteratorResult = _temp8;
       }
       // d. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iteratorResult »).
@@ -26211,6 +26843,60 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   // This file covers abstract operations defined in
   /** https://tc39.es/ecma262/#sec-dataview-objects */
 
+  /** https://tc39.es/ecma262/#sec-dataview-with-buffer-witness-records */
+
+  /** https://tc39.es/ecma262/#sec-makedataviewwithbufferwitnessrecord */
+  function MakeDataViewWithBufferWitnessRecord(obj, order) {
+    const buffer = obj.ViewedArrayBuffer;
+    let byteLength;
+    if (IsDetachedBuffer(buffer) === Value.true) {
+      byteLength = 'detached';
+    } else {
+      byteLength = ArrayBufferByteLength(buffer);
+    }
+    return {
+      Object: obj,
+      CachedBufferByteLength: byteLength
+    };
+  }
+
+  /** https://tc39.es/ecma262/#sec-getviewbytelength */
+  function GetViewByteLength(viewRecord) {
+    Assert(!IsViewOutOfBounds(viewRecord), "!IsViewOutOfBounds(viewRecord)");
+    const view = viewRecord.Object;
+    // @ts-expect-error
+    if (view.ByteLength !== 'auto') {
+      return view.ByteLength;
+    }
+    Assert(!IsFixedLengthArrayBuffer(view.ViewedArrayBuffer), "!IsFixedLengthArrayBuffer(view.ViewedArrayBuffer as ArrayBufferObject)");
+    const byteOffset = view.ByteOffset;
+    const byteLength = viewRecord.CachedBufferByteLength;
+    Assert(byteLength !== 'detached', "byteLength !== 'detached'");
+    return byteLength - byteOffset;
+  }
+
+  /** https://tc39.es/ecma262/#sec-isviewoutofbounds */
+  function IsViewOutOfBounds(viewRecord) {
+    const view = viewRecord.Object;
+    const bufferByteLength = viewRecord.CachedBufferByteLength;
+    Assert(IsDetachedBuffer(view.ViewedArrayBuffer) === Value.true && bufferByteLength === 'detached' || IsDetachedBuffer(view.ViewedArrayBuffer) === Value.false && bufferByteLength !== 'detached', "(IsDetachedBuffer(view.ViewedArrayBuffer as ArrayBufferObject) === Value.true && bufferByteLength === 'detached')\n    || (IsDetachedBuffer(view.ViewedArrayBuffer as ArrayBufferObject) === Value.false && bufferByteLength !== 'detached')");
+    if (bufferByteLength === 'detached') {
+      return true;
+    }
+    const byteOffsetStart = view.ByteOffset;
+    let byteOffsetEnd;
+    // @ts-expect-error
+    if (view.ByteLength === 'auto') {
+      byteOffsetEnd = bufferByteLength;
+    } else {
+      byteOffsetEnd = byteOffsetStart + view.ByteLength;
+    }
+    if (byteOffsetStart > bufferByteLength || byteOffsetEnd > bufferByteLength) {
+      return true;
+    }
+    return false;
+  }
+
   /** https://tc39.es/ecma262/#sec-getviewvalue */
   function GetViewValue(view, requestIndex, isLittleEndian, type) {
     let _temp = RequireInternalSlot(view, 'DataView');
@@ -26235,24 +26921,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp2 = _temp2.Value;
     }
     const getIndex = _temp2;
-    // 4. Set isLittleEndian to ! ToBoolean(isLittleEndian).
-    let _temp3 = ToBoolean(isLittleEndian);
-    Assert(!(_temp3 instanceof AbruptCompletion), "ToBoolean(isLittleEndian)" + ' returned an abrupt completion', _temp3);
-    /* c8 ignore if */
-    if (_temp3 instanceof Completion) {
-      _temp3 = _temp3.Value;
-    }
-    isLittleEndian = _temp3;
-    // 5. Let buffer be view.[[ViewedArrayBuffer]].
-    const buffer = view.ViewedArrayBuffer;
-    // 6. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-    if (IsDetachedBuffer(buffer) === Value.true) {
-      return exports.surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
-    }
+    // 4. Set isLittleEndian to ToBoolean(isLittleEndian).
+    isLittleEndian = ToBoolean(isLittleEndian);
     // 7. Let viewOffset be view.[[ByteOffset]].
     const viewOffset = view.ByteOffset;
-    // 8. Let viewSize be view.[[ByteLength]].
-    const viewSize = view.ByteLength;
+    const viewRecord = MakeDataViewWithBufferWitnessRecord(view);
+    if (IsViewOutOfBounds(viewRecord)) {
+      return exports.surroundingAgent.Throw('TypeError', 'DataViewOOB');
+    }
+    const viewSize = GetViewByteLength(viewRecord);
     // 9. Let elementSize be the Element Size value specified in Table 61 for Element Type type.
     const elementSize = typedArrayInfoByType[type].ElementSize;
     // 10. If getIndex + elementSize > viewSize, throw a RangeError exception.
@@ -26262,12 +26939,24 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 11. Let bufferIndex be getIndex + viewOffset.
     const bufferIndex = getIndex + viewOffset;
     // 12. Return GetValueFromBuffer(buffer, bufferIndex, type, false, Unordered, isLittleEndian).
-    return GetValueFromBuffer(buffer, bufferIndex, type, Value.false, 'Unordered', isLittleEndian);
+    return GetValueFromBuffer(view.ViewedArrayBuffer, bufferIndex, type, false, 'unordered', isLittleEndian);
   }
 
   /** https://tc39.es/ecma262/#sec-setviewvalue */
   function SetViewValue(view, requestIndex, isLittleEndian, type, value) {
-    let _temp4 = RequireInternalSlot(view, 'DataView');
+    let _temp3 = RequireInternalSlot(view, 'DataView');
+    /* c8 ignore if */
+    if (_temp3 instanceof AbruptCompletion) {
+      return _temp3;
+    }
+    /* c8 ignore if */
+    if (_temp3 instanceof Completion) {
+      _temp3 = _temp3.Value;
+    }
+    // 2. Assert: view has a [[ViewedArrayBuffer]] internal slot.
+    Assert('ViewedArrayBuffer' in view, "'ViewedArrayBuffer' in view");
+    // 3. Let getIndex be ? ToIndex(requestIndex).
+    let _temp4 = ToIndex(requestIndex);
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) {
       return _temp4;
@@ -26276,69 +26965,42 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp4 instanceof Completion) {
       _temp4 = _temp4.Value;
     }
-    // 2. Assert: view has a [[ViewedArrayBuffer]] internal slot.
-    Assert('ViewedArrayBuffer' in view, "'ViewedArrayBuffer' in view");
-    // 3. Let getIndex be ? ToIndex(requestIndex).
-    let _temp5 = ToIndex(requestIndex);
-    /* c8 ignore if */
-    if (_temp5 instanceof AbruptCompletion) {
-      return _temp5;
-    }
-    /* c8 ignore if */
-    if (_temp5 instanceof Completion) {
-      _temp5 = _temp5.Value;
-    }
-    const getIndex = _temp5;
-    // 4. If ! IsBigIntElementType(type) is true, let numberValue be ? ToBigInt(value).
+    const getIndex = _temp4;
+    // 4. If IsBigIntElementType(type) is true, let numberValue be ? ToBigInt(value).
     // 5. Otherwise, let numberValue be ? ToNumber(value).
     let numberValue;
-    let _temp6 = IsBigIntElementType(type);
-    Assert(!(_temp6 instanceof AbruptCompletion), "IsBigIntElementType(type)" + ' returned an abrupt completion', _temp6);
-    /* c8 ignore if */
-    if (_temp6 instanceof Completion) {
-      _temp6 = _temp6.Value;
-    }
-    if (_temp6 === Value.true) {
-      let _temp7 = ToBigInt(value);
+    if (IsBigIntElementType(type) === Value.true) {
+      let _temp5 = ToBigInt(value);
       /* c8 ignore if */
-      if (_temp7 instanceof AbruptCompletion) {
-        return _temp7;
+      if (_temp5 instanceof AbruptCompletion) {
+        return _temp5;
       }
       /* c8 ignore if */
-      if (_temp7 instanceof Completion) {
-        _temp7 = _temp7.Value;
+      if (_temp5 instanceof Completion) {
+        _temp5 = _temp5.Value;
       }
-      numberValue = _temp7;
+      numberValue = _temp5;
     } else {
-      let _temp8 = ToNumber(value);
+      let _temp6 = ToNumber(value);
       /* c8 ignore if */
-      if (_temp8 instanceof AbruptCompletion) {
-        return _temp8;
+      if (_temp6 instanceof AbruptCompletion) {
+        return _temp6;
       }
       /* c8 ignore if */
-      if (_temp8 instanceof Completion) {
-        _temp8 = _temp8.Value;
+      if (_temp6 instanceof Completion) {
+        _temp6 = _temp6.Value;
       }
-      numberValue = _temp8;
+      numberValue = _temp6;
     }
-    // 6. Set isLittleEndian to ! ToBoolean(isLittleEndian).
-    let _temp9 = ToBoolean(isLittleEndian);
-    Assert(!(_temp9 instanceof AbruptCompletion), "ToBoolean(isLittleEndian)" + ' returned an abrupt completion', _temp9);
-    /* c8 ignore if */
-    if (_temp9 instanceof Completion) {
-      _temp9 = _temp9.Value;
-    }
-    isLittleEndian = _temp9;
-    // 7. Let buffer be view.[[ViewedArrayBuffer]].
-    const buffer = view.ViewedArrayBuffer;
-    // 8. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-    if (IsDetachedBuffer(buffer) === Value.true) {
-      return exports.surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
-    }
+    // 6. Set isLittleEndian to ToBoolean(isLittleEndian).
+    isLittleEndian = ToBoolean(isLittleEndian);
     // 9. Let viewOffset be view.[[ByteOffset]].
     const viewOffset = view.ByteOffset;
-    // 10. Let viewSize be view.[[ByteLength]].
-    const viewSize = view.ByteLength;
+    const viewRecord = MakeDataViewWithBufferWitnessRecord(view);
+    if (IsViewOutOfBounds(viewRecord)) {
+      return exports.surroundingAgent.Throw('TypeError', 'DataViewOOB');
+    }
+    const viewSize = GetViewByteLength(viewRecord);
     // 11. Let elementSize be the Element Size value specified in Table 61 for Element Type type.
     const elementSize = typedArrayInfoByType[type].ElementSize;
     // 12. If getIndex + elementSize > viewSize, throw a RangeError exception.
@@ -26347,8 +27009,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     // 13. Let bufferIndex be getIndex + viewOffset.
     const bufferIndex = getIndex + viewOffset;
-    // 14. Return SetValueInBuffer(buffer, bufferIndex, type, numberValue, false, Unordered, isLittleEndian).
-    return SetValueInBuffer(buffer, bufferIndex, type, numberValue, Value.false, 'Unordered', isLittleEndian);
+    // 14. Perform ? SetValueInBuffer(buffer, bufferIndex, type, numberValue, false, Unordered, isLittleEndian).
+    SetValueInBuffer(view.ViewedArrayBuffer, bufferIndex, type, numberValue, Value.false, 'unordered', isLittleEndian);
+    return Value.undefined;
   }
 
   const mod$1 = (n, m) => {
@@ -27252,6 +27915,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       thisValue: thisArgument || Value.undefined,
       NewTarget: newTarget || Value.undefined
     });
+    // by this notation we can keep the F.nativeFunction name in the stack trace
+    // return Reflect['apply'](F.nativeFunction, F, [argumentsList, {
+    //   thisValue: thisArgument || Value.undefined,
+    //   NewTarget: newTarget || Value.undefined,
+    // }]);
   }
   function BuiltinFunctionCall(thisArgument, argumentsList) {
     const F = this;
@@ -27372,6 +28040,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return func;
   }
 
+  /** This is a helper function to define non-spec host functions. */
+  CreateBuiltinFunction.from = (steps, name = steps.name) => CreateBuiltinFunction(Reflect.apply.bind(null, steps, null), steps.length, Value(name), []);
+
   /** https://tc39.es/ecma262/#sec-preparefortailcall */
   function PrepareForTailCall() {
     // 1. Let leafContext be the running execution context.
@@ -27429,9 +28100,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         // ii. Return Completion(result).
         return result;
       }
-      // j. Return CreateIterResultObject(resultValue, true).
-      let _temp = CreateIterResultObject(resultValue, Value.true);
-      Assert(!(_temp instanceof AbruptCompletion), "CreateIterResultObject(resultValue, Value.true)" + ' returned an abrupt completion', _temp);
+      // j. Return CreateIteratorResultObject(resultValue, true).
+      let _temp = CreateIteratorResultObject(resultValue, Value.true);
+      Assert(!(_temp instanceof AbruptCompletion), "CreateIteratorResultObject(resultValue, Value.true)" + ' returned an abrupt completion', _temp);
       /* c8 ignore if */
       if (_temp instanceof Completion) {
         _temp = _temp.Value;
@@ -27510,10 +28181,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     // 1. Let state be ? GeneratorValidate(generator, generatorBrand).
     const state = _temp4;
-    // 2. If state is completed, return CreateIterResultObject(undefined, true).
+    // 2. If state is completed, return CreateIteratorResultObject(undefined, true).
     if (state === 'completed') {
-      let _temp5 = CreateIterResultObject(Value.undefined, Value.true);
-      Assert(!(_temp5 instanceof AbruptCompletion), "CreateIterResultObject(Value.undefined, Value.true)" + ' returned an abrupt completion', _temp5);
+      let _temp5 = CreateIteratorResultObject(Value.undefined, Value.true);
+      Assert(!(_temp5 instanceof AbruptCompletion), "CreateIteratorResultObject(Value.undefined, Value.true)" + ' returned an abrupt completion', _temp5);
       /* c8 ignore if */
       if (_temp5 instanceof Completion) {
         _temp5 = _temp5.Value;
@@ -27570,13 +28241,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (state === 'completed') {
       // a. If abruptCompletion.[[Type]] is return, then
       if (abruptCompletion.Type === 'return') {
-        let _temp7 = CreateIterResultObject(abruptCompletion.Value, Value.true);
-        Assert(!(_temp7 instanceof AbruptCompletion), "CreateIterResultObject(abruptCompletion.Value, Value.true)" + ' returned an abrupt completion', _temp7);
+        let _temp7 = CreateIteratorResultObject(abruptCompletion.Value, Value.true);
+        Assert(!(_temp7 instanceof AbruptCompletion), "CreateIteratorResultObject(abruptCompletion.Value, Value.true)" + ' returned an abrupt completion', _temp7);
         /* c8 ignore if */
         if (_temp7 instanceof Completion) {
           _temp7 = _temp7.Value;
         }
-        // i. Return CreateIterResultObject(abruptCompletion.[[Value]], true).
+        // i. Return CreateIteratorResultObject(abruptCompletion.[[Value]], true).
         return _temp7;
       }
       // b. Return Completion(abruptCompletion).
@@ -27665,8 +28336,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       return yield* AsyncGeneratorYield(_temp8);
     }
-    // 3. Otherwise, return ? GeneratorYield(CreateIterResultObject(value, false)).
-    return yield* GeneratorYield(CreateIterResultObject(value, Value.false));
+    // 3. Otherwise, return ? GeneratorYield(CreateIteratorResultObject(value, false)).
+    return yield* GeneratorYield(CreateIteratorResultObject(value, Value.false));
   }
 
   /** https://tc39.es/ecma262/#sec-createiteratorfromclosure */
@@ -28231,458 +28902,64 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 9. Return unused.
   }
 
-  function isIntegerIndexedExoticObject(O) {
-    return O.GetOwnProperty === InternalMethods$3.GetOwnProperty;
-  }
-  const InternalMethods$3 = {
-    /** https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-getownproperty-p */
-    GetOwnProperty(P) {
-      const O = this;
-      // 1. Assert: IsPropertyKey(P) is true.
-      Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-      // 2. Assert: O is an Integer-Indexed exotic object.
-      Assert(isIntegerIndexedExoticObject(O), "isIntegerIndexedExoticObject(O)");
-      // 3. If Type(P) is String, then
-      if (P instanceof JSStringValue) {
-        let _temp = CanonicalNumericIndexString(P);
-        Assert(!(_temp instanceof AbruptCompletion), "CanonicalNumericIndexString(P)" + ' returned an abrupt completion', _temp);
-        /* c8 ignore if */
-        if (_temp instanceof Completion) {
-          _temp = _temp.Value;
-        }
-        // a. Let numericIndex be ! CanonicalNumericIndexString(P).
-        const numericIndex = _temp;
-        // b. If numericIndex is not undefined, then
-        if (!(numericIndex instanceof UndefinedValue)) {
-          let _temp2 = IntegerIndexedElementGet(O, numericIndex);
-          Assert(!(_temp2 instanceof AbruptCompletion), "IntegerIndexedElementGet(O, numericIndex)" + ' returned an abrupt completion', _temp2);
-          /* c8 ignore if */
-          if (_temp2 instanceof Completion) {
-            _temp2 = _temp2.Value;
-          }
-          // i. Let value be ! IntegerIndexedElementGet(O, numericIndex).
-          const value = _temp2;
-          // ii. If value is undefined, return undefined.
-          if (value === Value.undefined) {
-            return Value.undefined;
-          }
-          // iii. Return the PropertyDescriptor { [[Value]]: value, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: true }.
-          return exports.Descriptor({
-            Value: value,
-            Writable: Value.true,
-            Enumerable: Value.true,
-            Configurable: Value.true
-          });
-        }
-      }
-      // 4. Return OrdinaryGetOwnProperty(O, P).
-      return OrdinaryGetOwnProperty(O, P);
-    },
-    /** https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-hasproperty-p */
-    HasProperty(P) {
-      const O = this;
-      // 1. Assert: IsPropertyKey(P) is true.
-      Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-      // 2. Assert: O is an Integer-Indexed exotic object.
-      Assert(isIntegerIndexedExoticObject(O), "isIntegerIndexedExoticObject(O)");
-      // 3. If Type(P) is String, then
-      if (P instanceof JSStringValue) {
-        let _temp3 = CanonicalNumericIndexString(P);
-        Assert(!(_temp3 instanceof AbruptCompletion), "CanonicalNumericIndexString(P)" + ' returned an abrupt completion', _temp3);
-        /* c8 ignore if */
-        if (_temp3 instanceof Completion) {
-          _temp3 = _temp3.Value;
-        }
-        // a. Let numericIndex be ! CanonicalNumericIndexString(P).
-        const numericIndex = _temp3;
-        // b. If numericIndex is not undefined, then
-        if (!(numericIndex instanceof UndefinedValue)) {
-          // i. Let buffer be O.[[ViewedArrayBuffer]].
-          const buffer = O.ViewedArrayBuffer;
-          // ii. If IsDetachedBuffer(buffer) is true, return false.
-          if (IsDetachedBuffer(buffer) === Value.true) {
-            return Value.false;
-          }
-          // iii. If ! IsValidIntegerIndex(O, numericIndex) is false, return false.
-          if (IsValidIntegerIndex(O, numericIndex) === Value.false) {
-            return Value.false;
-          }
-          // iv. Return true.
-          return Value.true;
-        }
-      }
-      // 4. Return ? OrdinaryHasProperty(O, P)
-      return OrdinaryHasProperty(O, P);
-    },
-    /** https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-defineownproperty */
-    DefineOwnProperty(P, Desc) {
-      const O = this;
-      // 1. Assert: IsPropertyKey(P) is true.
-      Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-      // 2. Assert: O is an Integer-Indexed exotic object.
-      Assert(isIntegerIndexedExoticObject(O), "isIntegerIndexedExoticObject(O)");
-      // 3. If Type(P) is String, then
-      if (P instanceof JSStringValue) {
-        let _temp4 = CanonicalNumericIndexString(P);
-        Assert(!(_temp4 instanceof AbruptCompletion), "CanonicalNumericIndexString(P)" + ' returned an abrupt completion', _temp4);
-        /* c8 ignore if */
-        if (_temp4 instanceof Completion) {
-          _temp4 = _temp4.Value;
-        }
-        // a. Let numericIndex be ! CanonicalNumericIndexString(P).
-        const numericIndex = _temp4;
-        // b. If numericIndex is not undefined, then
-        if (!(numericIndex instanceof UndefinedValue)) {
-          // i. If ! IsValidIntegerIndex(O, numericIndex) is false, return false.
-          if (IsValidIntegerIndex(O, numericIndex) === Value.false) {
-            return Value.false;
-          }
-          // ii. If IsAccessorDescriptor(Desc) is true, return false.
-          if (IsAccessorDescriptor(Desc)) {
-            return Value.false;
-          }
-          // iii. If Desc has a [[Configurable]] field and if Desc.[[Configurable]] is true, return false.
-          if (Desc.Configurable === Value.false) {
-            return Value.false;
-          }
-          // iv. If Desc has an [[Enumerable]] field and if Desc.[[Enumerable]] is false, return false.
-          if (Desc.Enumerable === Value.false) {
-            return Value.false;
-          }
-          // v. If Desc has a [[Writable]] field and if Desc.[[Writable]] is false, return false.
-          if (Desc.Writable === Value.false) {
-            return Value.false;
-          }
-          // vi. If Desc has a [[Value]] field, then
-          if (Desc.Value !== undefined) {
-            // 1. Let value be Desc.[[Value]].
-            const value = Desc.Value;
-            // 2. Return ? IntegerIndexedElementSet(O, numericIndex, value).
-            return IntegerIndexedElementSet(O, numericIndex, value);
-          }
-          // vii. Return true.
-          return Value.true;
-        }
-      }
-      // 4. Return ! OrdinaryDefineOwnProperty(O, P, Desc).
-      return OrdinaryDefineOwnProperty(O, P, Desc);
-    },
-    /** https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-get-p-receiver */
-    Get(P, Receiver) {
-      const O = this;
-      // 1. Assert: IsPropertykey(P) is true.
-      Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-      // 2. If Type(P) is String, then
-      if (P instanceof JSStringValue) {
-        let _temp5 = CanonicalNumericIndexString(P);
-        Assert(!(_temp5 instanceof AbruptCompletion), "CanonicalNumericIndexString(P)" + ' returned an abrupt completion', _temp5);
-        /* c8 ignore if */
-        if (_temp5 instanceof Completion) {
-          _temp5 = _temp5.Value;
-        }
-        // a. Let numericIndex be ! CanonicalNumericIndexString(P).
-        const numericIndex = _temp5;
-        // b. If numericIndex is not undefined, then
-        if (!(numericIndex instanceof UndefinedValue)) {
-          let _temp6 = IntegerIndexedElementGet(O, numericIndex);
-          Assert(!(_temp6 instanceof AbruptCompletion), "IntegerIndexedElementGet(O, numericIndex)" + ' returned an abrupt completion', _temp6);
-          /* c8 ignore if */
-          if (_temp6 instanceof Completion) {
-            _temp6 = _temp6.Value;
-          }
-          // i. Return ! IntegerIndexedElementGet(O, numericIndex).
-          return _temp6;
-        }
-      }
-      // 3. Return ? OrdinaryGet(O, P, Receiver).
-      return OrdinaryGet(O, P, Receiver);
-    },
-    /** https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-set-p-v-receiver */
-    Set(P, V, Receiver) {
-      const O = this;
-      // 1. Assert: IsPropertyKey(P) is true.
-      Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-      // 2. If Type(P) is String, then
-      if (P instanceof JSStringValue) {
-        let _temp7 = CanonicalNumericIndexString(P);
-        Assert(!(_temp7 instanceof AbruptCompletion), "CanonicalNumericIndexString(P)" + ' returned an abrupt completion', _temp7);
-        /* c8 ignore if */
-        if (_temp7 instanceof Completion) {
-          _temp7 = _temp7.Value;
-        }
-        // a. Let numericIndex be ! CanonicalNumericIndexString(P).
-        const numericIndex = _temp7;
-        // b. If numericIndex is not undefined, then
-        if (!(numericIndex instanceof UndefinedValue)) {
-          let _temp8 = IntegerIndexedElementSet(O, numericIndex, V);
-          /* c8 ignore if */
-          if (_temp8 instanceof AbruptCompletion) {
-            return _temp8;
-          }
-          /* c8 ignore if */
-          if (_temp8 instanceof Completion) {
-            _temp8 = _temp8.Value;
-          }
-          // ii. Return true.
-          return Value.true;
-        }
-      }
-      // 3. Return ? OrdinarySet(O, P, V, Receiver).
-      return OrdinarySet(O, P, V, Receiver);
-    },
-    /** https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-delete-p */
-    Delete(P) {
-      const O = this;
-      // 1. Assert: IsPropertyKey(P) is true.
-      Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-      // 2. Assert: O is an Integer-Indexed exotic object.
-      Assert(isIntegerIndexedExoticObject(O), "isIntegerIndexedExoticObject(O)");
-      // 3. If Type(P) is String, then
-      if (P instanceof JSStringValue) {
-        let _temp9 = CanonicalNumericIndexString(P);
-        Assert(!(_temp9 instanceof AbruptCompletion), "CanonicalNumericIndexString(P)" + ' returned an abrupt completion', _temp9);
-        /* c8 ignore if */
-        if (_temp9 instanceof Completion) {
-          _temp9 = _temp9.Value;
-        }
-        // a. Let numericIndex be ! CanonicalNumericIndexString(P).
-        const numericIndex = _temp9;
-        // b. If numericIndex is not undefined, then
-        if (!(numericIndex instanceof UndefinedValue)) {
-          // i. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, return true.
-          if (IsDetachedBuffer(O.ViewedArrayBuffer) === Value.true) {
-            return Value.true;
-          }
-          // ii. If ! IsValidIntegerIndex(O, numericIndex) is false, return true.
-          let _temp10 = IsValidIntegerIndex(O, numericIndex);
-          Assert(!(_temp10 instanceof AbruptCompletion), "IsValidIntegerIndex(O, numericIndex)" + ' returned an abrupt completion', _temp10);
-          /* c8 ignore if */
-          if (_temp10 instanceof Completion) {
-            _temp10 = _temp10.Value;
-          }
-          if (_temp10 === Value.false) {
-            return Value.true;
-          }
-          // iii. Return false.
-          return Value.false;
-        }
-      }
-      // 4. Return ? OrdinaryDelete(O, P).
-      return OrdinaryDelete(O, P);
-    },
-    /** https://tc39.es/ecma262/#sec-integer-indexed-exotic-objects-ownpropertykeys */
-    OwnPropertyKeys() {
-      const O = this;
-      // 1. Let keys be a new empty List.
-      const keys = [];
-      // 2. Assert: O is an Integer-Indexed exotic object.
-      Assert(isIntegerIndexedExoticObject(O), "isIntegerIndexedExoticObject(O)");
-      // 3. Let len be O.[[ArrayLength]].
-      const len = O.ArrayLength;
-      // 4. For each integer i starting with 0 such that i < len, in ascending order, do
-      for (let i = 0; i < len; i += 1) {
-        let _temp11 = ToString(F(i));
-        Assert(!(_temp11 instanceof AbruptCompletion), "ToString(F(i))" + ' returned an abrupt completion', _temp11);
-        /* c8 ignore if */
-        if (_temp11 instanceof Completion) {
-          _temp11 = _temp11.Value;
-        }
-        // a. Add ! ToString(𝔽(i)) as the last element of keys.
-        keys.push(_temp11);
-      }
-      // 5. For each own property key P of O such that Type(P) is String and P is not an integer index, in ascending chronological order of property creation, do
-      for (const P of O.properties.keys()) {
-        if (P instanceof JSStringValue) {
-          if (!isIntegerIndex(P)) {
-            // a. Add P as the last element of keys.
-            keys.push(P);
-          }
-        }
-      }
-      // 6. For each own property key P of O such that Type(P) is Symbol, in ascending chronological order of property creation, do
-      for (const P of O.properties.keys()) {
-        if (P instanceof SymbolValue) {
-          // a. Add P as the last element of keys.
-          keys.push(P);
-        }
-      }
-      // 7. Return keys.
-      return keys;
-    }
-  };
-
-  /** https://tc39.es/ecma262/#sec-integerindexedelementget */
-  function IntegerIndexedElementGet(O, index) {
-    // 1. Assert: O is an Integer-Indexed exotic object.
-    Assert(isIntegerIndexedExoticObject(O), "isIntegerIndexedExoticObject(O)");
-    // 2. Assert: Type(index) is Number.
-    Assert(index instanceof NumberValue, "index instanceof NumberValue");
-    // 3. Let buffer be O.[[ViewedArrayBuffer]].
-    const buffer = O.ViewedArrayBuffer;
-    // 4. If IsDetachedBuffer(buffer) is true, return undefined.
-    if (IsDetachedBuffer(buffer) === Value.true) {
-      return Value.undefined;
-    }
-    // 5. If ! IsValidIntegerIndex(O, index) is false, return undefined.
-    if (IsValidIntegerIndex(O, index) === Value.false) {
-      return Value.undefined;
-    }
-    // 6. Let offset be O.[[ByteOffset]].
-    const offset = O.ByteOffset;
-    // 7. Let arrayTypeName be the String value of O.[[TypedArrayName]].
-    const arrayTypeName = O.TypedArrayName.stringValue();
-    // 8. Let elementSize be the Element Size value specified in Table 61 for arrayTypeName.
-    const elementSize = typedArrayInfoByName[arrayTypeName].ElementSize;
-    // 9. Let indexedPosition be (ℝ(index) × elementSize) + offset.
-    const indexedPosition = R(index) * elementSize + offset;
-    // 10. Let elementType be the Element Type value in Table 61 for arrayTypeName.
-    const elementType = typedArrayInfoByName[arrayTypeName].ElementType;
-    // 11. Return GetValueFromBuffer(buffer, indexedPosition, elementType, true, Unordered).
-    return GetValueFromBuffer(buffer, indexedPosition, elementType, Value.true);
-  }
-
-  /** https://tc39.es/ecma262/#sec-integerindexedelementset */
-  function IntegerIndexedElementSet(O, index, value) {
-    // 1. Assert: O is an Integer-Indexed exotic object.
-    Assert(isIntegerIndexedExoticObject(O), "isIntegerIndexedExoticObject(O)");
-    // 2. Assert: Type(index) is Number.
-    Assert(index instanceof NumberValue, "index instanceof NumberValue");
-    // 3. If O.[[ContentType]] is BigInt, let numValue be ? ToBigInt(value).
-    // 4. Otherwise, let numValue be ? ToNumber(value).
-    let numValue;
-    if (O.ContentType === 'BigInt') {
-      let _temp12 = ToBigInt(value);
-      /* c8 ignore if */
-      if (_temp12 instanceof AbruptCompletion) {
-        return _temp12;
-      }
-      /* c8 ignore if */
-      if (_temp12 instanceof Completion) {
-        _temp12 = _temp12.Value;
-      }
-      numValue = _temp12;
-    } else {
-      let _temp13 = ToNumber(value);
-      /* c8 ignore if */
-      if (_temp13 instanceof AbruptCompletion) {
-        return _temp13;
-      }
-      /* c8 ignore if */
-      if (_temp13 instanceof Completion) {
-        _temp13 = _temp13.Value;
-      }
-      numValue = _temp13;
-    }
-    // 5. Let buffer be O.[[ViewedArrayBuffer]].
-    const buffer = O.ViewedArrayBuffer;
-    // 6. If IsDetachedBuffer(buffer) is true, return false.
-    if (IsDetachedBuffer(buffer) === Value.true) {
-      return Value.false;
-    }
-    // 7. If ! IsValidIntegerIndex(O, index) is false, return false.
-    if (IsValidIntegerIndex(O, index) === Value.false) {
-      return Value.false;
-    }
-    // 8. Let offset be O.[[ByteOffset]].
-    const offset = O.ByteOffset;
-    // 9. Let arrayTypeName be the String value of O.[[TypedArrayName]].
-    const arrayTypeName = O.TypedArrayName.stringValue();
-    // 10. Let elementSize be the Element Size value specified in Table 61 for arrayTypeName.
-    const elementSize = typedArrayInfoByName[arrayTypeName].ElementSize;
-    // 11. Let indexedPosition be (ℝ(index) × elementSize) + offset.
-    const indexedPosition = R(index) * elementSize + offset;
-    // 12. Let elementType be the Element Type value in Table 61 for arrayTypeName.
-    const elementType = typedArrayInfoByName[arrayTypeName].ElementType;
-    // 13. Perform SetValueInBuffer(buffer, indexedPosition, elementType, numValue, true, Unordered).
-    let _temp14 = SetValueInBuffer(buffer, indexedPosition, elementType, numValue, Value.true);
-    Assert(!(_temp14 instanceof AbruptCompletion), "SetValueInBuffer(buffer, indexedPosition, elementType, numValue, Value.true, 'Unordered')" + ' returned an abrupt completion', _temp14);
-    /* c8 ignore if */
-    if (_temp14 instanceof Completion) {
-      _temp14 = _temp14.Value;
-    }
-    // 14. Return true.
-    return Value.true;
-  }
-
-  /** https://tc39.es/ecma262/#sec-integerindexedobjectcreate */
-  function IntegerIndexedObjectCreate(prototype) {
-    // 1. Let internalSlotsList be « [[Prototype]], [[Extensible]], [[ViewedArrayBuffer]], [[TypedArrayName]], [[ContentType]], [[ByteLength]], [[ByteOffset]], [[ArrayLength]] ».
-    const internalSlotsList = ['Prototype', 'Extensible', 'ViewedArrayBuffer', 'TypedArrayName', 'ContentType', 'ByteLength', 'ByteOffset', 'ArrayLength'];
-    // 2. Let A be ! MakeBasicObject(internalSlotsList).
-    let _temp15 = MakeBasicObject(internalSlotsList);
-    Assert(!(_temp15 instanceof AbruptCompletion), "MakeBasicObject(internalSlotsList)" + ' returned an abrupt completion', _temp15);
-    /* c8 ignore if */
-    if (_temp15 instanceof Completion) {
-      _temp15 = _temp15.Value;
-    }
-    const A = _temp15;
-    // 3. Set A.[[GetOwnProperty]] as specified in 9.4.5.1.
-    A.GetOwnProperty = InternalMethods$3.GetOwnProperty;
-    // 4. Set A.[[HasProperty]] as specified in 9.4.5.2.
-    A.HasProperty = InternalMethods$3.HasProperty;
-    // 5. Set A.[[DefineOwnProperty]] as specified in 9.4.5.3.
-    A.DefineOwnProperty = InternalMethods$3.DefineOwnProperty;
-    // 6. Set A.[[Get]] as specified in 9.4.5.4.
-    A.Get = InternalMethods$3.Get;
-    // 7. Set A.[[Set]] as specified in 9.4.5.5.
-    A.Set = InternalMethods$3.Set;
-    // 8. Set A.[[Delete]] as specified in 9.4.5.6.
-    A.Delete = InternalMethods$3.Delete;
-    // 9. Set A.[[OwnPropertyKeys]] as specified in 9.4.5.6.
-    A.OwnPropertyKeys = InternalMethods$3.OwnPropertyKeys;
-    // 10. Set A.[[Prototype]] to prototype.
-    A.Prototype = prototype;
-    // 11. Return A.
-    return A;
-  }
-
   // This file covers abstract operations defined in
   /** https://tc39.es/ecma262/#sec-operations-on-iterator-objects */
   // and
   /** https://tc39.es/ecma262/#sec-iteration */
 
-  /** https://tc39.es/ecma262/#sec-getiterator */
-  function GetIterator(obj, hint, method) {
-    if (!hint) {
-      hint = 'sync';
+  /** https://tc39.es/ecma262/#sec-getiteratordirect */
+  function GetIteratorDirect(obj) {
+    let _temp = Get(obj, Value('next'));
+    /* c8 ignore if */
+    if (_temp instanceof AbruptCompletion) {
+      return _temp;
     }
-    Assert(hint === 'sync' || hint === 'async', "hint === 'sync' || hint === 'async'");
-    if (!method) {
-      if (hint === 'async') {
-        let _temp = GetMethod(obj, wellKnownSymbols.asyncIterator);
-        /* c8 ignore if */
-        if (_temp instanceof AbruptCompletion) {
-          return _temp;
-        }
-        /* c8 ignore if */
-        if (_temp instanceof Completion) {
-          _temp = _temp.Value;
-        }
-        method = _temp;
-        if (method === Value.undefined) {
-          let _temp2 = GetMethod(obj, wellKnownSymbols.iterator);
-          /* c8 ignore if */
-          if (_temp2 instanceof AbruptCompletion) {
-            return _temp2;
-          }
-          /* c8 ignore if */
-          if (_temp2 instanceof Completion) {
-            _temp2 = _temp2.Value;
-          }
-          const syncMethod = _temp2;
-          let _temp3 = GetIterator(obj, 'sync', syncMethod);
-          /* c8 ignore if */
-          if (_temp3 instanceof AbruptCompletion) {
-            return _temp3;
-          }
-          /* c8 ignore if */
-          if (_temp3 instanceof Completion) {
-            _temp3 = _temp3.Value;
-          }
-          const syncIteratorRecord = _temp3;
-          return CreateAsyncFromSyncIterator(syncIteratorRecord);
-        }
-      } else {
+    /* c8 ignore if */
+    if (_temp instanceof Completion) {
+      _temp = _temp.Value;
+    }
+    const nextMethod = _temp;
+    const iteratorRecord = {
+      Iterator: obj,
+      NextMethod: nextMethod,
+      Done: Value.false
+    };
+    return iteratorRecord;
+  }
+
+  /** https://tc39.es/ecma262/#sec-getiteratorfrommethod */
+  function GetIteratorFromMethod(obj, method) {
+    let _temp2 = Call(method, obj);
+    /* c8 ignore if */
+    if (_temp2 instanceof AbruptCompletion) {
+      return _temp2;
+    }
+    /* c8 ignore if */
+    if (_temp2 instanceof Completion) {
+      _temp2 = _temp2.Value;
+    }
+    const iterator = _temp2;
+    if (!(iterator instanceof ObjectValue)) {
+      return exports.surroundingAgent.Throw('TypeError', 'NotAnObject', iterator);
+    }
+    return GetIteratorDirect(iterator);
+  }
+
+  /** https://tc39.es/ecma262/#sec-getiterator */
+  function GetIterator(obj, kind) {
+    let method;
+    if (kind === 'async') {
+      let _temp3 = GetMethod(obj, wellKnownSymbols.asyncIterator);
+      /* c8 ignore if */
+      if (_temp3 instanceof AbruptCompletion) {
+        return _temp3;
+      }
+      /* c8 ignore if */
+      if (_temp3 instanceof Completion) {
+        _temp3 = _temp3.Value;
+      }
+      method = _temp3;
+      if (method === Value.undefined) {
         let _temp4 = GetMethod(obj, wellKnownSymbols.iterator);
         /* c8 ignore if */
         if (_temp4 instanceof AbruptCompletion) {
@@ -28692,56 +28969,64 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (_temp4 instanceof Completion) {
           _temp4 = _temp4.Value;
         }
-        method = _temp4;
+        const syncMethod = _temp4;
+        if (syncMethod instanceof UndefinedValue) {
+          return exports.surroundingAgent.Throw('TypeError', 'NotIterable', obj);
+        }
+        let _temp5 = GetIteratorFromMethod(obj, syncMethod);
+        /* c8 ignore if */
+        if (_temp5 instanceof AbruptCompletion) {
+          return _temp5;
+        }
+        /* c8 ignore if */
+        if (_temp5 instanceof Completion) {
+          _temp5 = _temp5.Value;
+        }
+        const syncIteratorRecord = _temp5;
+        return CreateAsyncFromSyncIterator(syncIteratorRecord);
       }
-    }
-    let _temp5 = Call(method, obj);
-    /* c8 ignore if */
-    if (_temp5 instanceof AbruptCompletion) {
-      return _temp5;
-    }
-    /* c8 ignore if */
-    if (_temp5 instanceof Completion) {
-      _temp5 = _temp5.Value;
-    }
-    const iterator = _temp5;
-    if (!(iterator instanceof ObjectValue)) {
-      return exports.surroundingAgent.Throw('TypeError', 'NotAnObject', iterator);
-    }
-    let _temp6 = GetV(iterator, Value('next'));
-    /* c8 ignore if */
-    if (_temp6 instanceof AbruptCompletion) {
-      return _temp6;
-    }
-    /* c8 ignore if */
-    if (_temp6 instanceof Completion) {
-      _temp6 = _temp6.Value;
-    }
-    const nextMethod = _temp6;
-    const iteratorRecord = {
-      Iterator: iterator,
-      NextMethod: nextMethod,
-      Done: Value.false
-    };
-    return EnsureCompletion(iteratorRecord);
-  }
-
-  /** https://tc39.es/ecma262/#sec-iteratornext */
-  function IteratorNext(iteratorRecord, value) {
-    let result;
-    if (!value) {
-      let _temp7 = Call(iteratorRecord.NextMethod, iteratorRecord.Iterator);
-      /* c8 ignore if */
-      if (_temp7 instanceof AbruptCompletion) {
-        return _temp7;
-      }
-      /* c8 ignore if */
-      if (_temp7 instanceof Completion) {
-        _temp7 = _temp7.Value;
-      }
-      result = _temp7;
     } else {
-      let _temp8 = Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, [value]);
+      let _temp6 = GetMethod(obj, wellKnownSymbols.iterator);
+      /* c8 ignore if */
+      if (_temp6 instanceof AbruptCompletion) {
+        return _temp6;
+      }
+      /* c8 ignore if */
+      if (_temp6 instanceof Completion) {
+        _temp6 = _temp6.Value;
+      }
+      method = _temp6;
+    }
+    if (method instanceof UndefinedValue) {
+      return exports.surroundingAgent.Throw('TypeError', 'NotIterable', obj);
+    }
+    return GetIteratorFromMethod(obj, method);
+  }
+  function GetIteratorFlattenable(obj, primitiveHandling) {
+    if (!(obj instanceof ObjectValue)) {
+      if (primitiveHandling === 'reject-primitives') {
+        return exports.surroundingAgent.Throw('TypeError', 'NotAnObject', obj);
+      }
+      Assert(primitiveHandling === 'iterate-string-primitives', "primitiveHandling === 'iterate-string-primitives'");
+      if (!(obj instanceof JSStringValue)) {
+        return exports.surroundingAgent.Throw('TypeError', 'NotAString', obj);
+      }
+    }
+    let _temp7 = GetMethod(obj, wellKnownSymbols.iterator);
+    /* c8 ignore if */
+    if (_temp7 instanceof AbruptCompletion) {
+      return _temp7;
+    }
+    /* c8 ignore if */
+    if (_temp7 instanceof Completion) {
+      _temp7 = _temp7.Value;
+    }
+    const method = _temp7;
+    let iterator;
+    if (method instanceof UndefinedValue) {
+      iterator = obj;
+    } else {
+      let _temp8 = Call(method, obj);
       /* c8 ignore if */
       if (_temp8 instanceof AbruptCompletion) {
         return _temp8;
@@ -28750,33 +29035,43 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_temp8 instanceof Completion) {
         _temp8 = _temp8.Value;
       }
-      result = _temp8;
+      iterator = _temp8;
     }
+    if (!(iterator instanceof ObjectValue)) {
+      return exports.surroundingAgent.Throw('TypeError', 'NotAnObject', iterator);
+    }
+    return GetIteratorDirect(iterator);
+  }
+
+  /** https://tc39.es/ecma262/#sec-iteratornext */
+  function IteratorNext(iteratorRecord, value) {
+    let result;
+    if (!value) {
+      result = EnsureCompletion(Call(iteratorRecord.NextMethod, iteratorRecord.Iterator));
+    } else {
+      result = EnsureCompletion(Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, [value]));
+    }
+    if (result instanceof ThrowCompletion) {
+      iteratorRecord.Done = Value.true;
+      return result;
+    }
+    let _temp9 = result;
+    Assert(!(_temp9 instanceof AbruptCompletion), "result" + ' returned an abrupt completion', _temp9);
+    /* c8 ignore if */
+    if (_temp9 instanceof Completion) {
+      _temp9 = _temp9.Value;
+    }
+    result = _temp9;
     if (!(result instanceof ObjectValue)) {
+      iteratorRecord.Done = Value.true;
       return exports.surroundingAgent.Throw('TypeError', 'NotAnObject', result);
     }
     return result;
   }
 
   /** https://tc39.es/ecma262/#sec-iteratorcomplete */
-  function IteratorComplete(iterResult) {
-    Assert(iterResult instanceof ObjectValue, "iterResult instanceof ObjectValue");
-    let _temp9 = Get(iterResult, Value('done'));
-    /* c8 ignore if */
-    if (_temp9 instanceof AbruptCompletion) {
-      return _temp9;
-    }
-    /* c8 ignore if */
-    if (_temp9 instanceof Completion) {
-      _temp9 = _temp9.Value;
-    }
-    return ToBoolean(_temp9);
-  }
-
-  /** https://tc39.es/ecma262/#sec-iteratorvalue */
-  function IteratorValue(iterResult) {
-    Assert(iterResult instanceof ObjectValue, "iterResult instanceof ObjectValue");
-    let _temp10 = Get(iterResult, Value('value'));
+  function IteratorComplete(iteratorResult) {
+    let _temp10 = Get(iteratorResult, Value('done'));
     /* c8 ignore if */
     if (_temp10 instanceof AbruptCompletion) {
       return _temp10;
@@ -28785,7 +29080,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp10 instanceof Completion) {
       _temp10 = _temp10.Value;
     }
-    return EnsureCompletion(_temp10);
+    return ToBoolean(_temp10);
+  }
+
+  /** https://tc39.es/ecma262/#sec-iteratorvalue */
+  function IteratorValue(iterResult) {
+    return Get(iterResult, Value('value'));
   }
 
   /** https://tc39.es/ecma262/#sec-iteratorstep */
@@ -28800,148 +29100,133 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp11 = _temp11.Value;
     }
     const result = _temp11;
-    let _temp12 = IteratorComplete(result);
-    /* c8 ignore if */
-    if (_temp12 instanceof AbruptCompletion) {
-      return _temp12;
+    let done = EnsureCompletion(IteratorComplete(result));
+    if (done instanceof ThrowCompletion) {
+      iteratorRecord.Done = Value.true;
+      return done;
     }
+    let _temp12 = done;
+    Assert(!(_temp12 instanceof AbruptCompletion), "done" + ' returned an abrupt completion', _temp12);
     /* c8 ignore if */
     if (_temp12 instanceof Completion) {
       _temp12 = _temp12.Value;
     }
-    const done = _temp12;
+    done = _temp12;
     if (done === Value.true) {
-      return NormalCompletion(Value.false);
+      iteratorRecord.Done = Value.true;
+      return 'done';
     }
-    return NormalCompletion(result);
+    return result;
+  }
+
+  /** https://tc39.es/ecma262/#sec-iteratorstepvalue */
+  function IteratorStepValue(iteratorRecord) {
+    let _temp13 = IteratorStep(iteratorRecord);
+    /* c8 ignore if */
+    if (_temp13 instanceof AbruptCompletion) {
+      return _temp13;
+    }
+    /* c8 ignore if */
+    if (_temp13 instanceof Completion) {
+      _temp13 = _temp13.Value;
+    }
+    const result = _temp13;
+    if (result === 'done') {
+      return 'done';
+    }
+    const value = EnsureCompletion(IteratorValue(result));
+    if (value instanceof ThrowCompletion) {
+      iteratorRecord.Done = Value.true;
+    }
+    return value;
   }
 
   /** https://tc39.es/ecma262/#sec-iteratorclose */
   function IteratorClose(iteratorRecord, completion) {
-    // 1. Assert: Type(iteratorRecord.[[Iterator]]) is Object.
     Assert(iteratorRecord.Iterator instanceof ObjectValue, "iteratorRecord.Iterator instanceof ObjectValue");
-    // 2. Assert: completion is a Completion Record.
-    // TODO: completion should be a Completion Record so this should not be necessary
-    Assert(completion instanceof Completion, "completion instanceof Completion");
-    // 3. Let iterator be iteratorRecord.[[Iterator]].
     const iterator = iteratorRecord.Iterator;
-    // 4. Let innerResult be GetMethod(iterator, "return").
     let innerResult = EnsureCompletion(GetMethod(iterator, Value('return')));
-    // 5. If innerResult.[[Type]] is normal, then
-    if (innerResult.Type === 'normal') {
-      // a. Let return be innerResult.[[Value]].
+    if (innerResult instanceof NormalCompletion) {
       const ret = innerResult.Value;
-      // b. If return is undefined, return Completion(completion).
       if (ret === Value.undefined) {
         return completion;
       }
-      // c. Set innerResult to Call(return, iterator).
-      innerResult = Call(ret, iterator);
+      innerResult = EnsureCompletion(Call(ret, iterator));
     }
-    // 6. If completion.[[Type]] is throw, return Completion(completion).
-    if (completion.Type === 'throw') {
-      return Completion(completion);
+    if (completion instanceof ThrowCompletion) {
+      return completion;
     }
-    // 7. If innerResult.[[Type]] is throw, return Completion(innerResult).
-    if (innerResult.Type === 'throw') {
-      return Completion(innerResult);
+    if (innerResult instanceof ThrowCompletion) {
+      return innerResult;
     }
-    // 8. If Type(innerResult.[[Value]]) is not Object, throw a TypeError exception.
     if (!(innerResult.Value instanceof ObjectValue)) {
       return exports.surroundingAgent.Throw('TypeError', 'NotAnObject', innerResult.Value);
     }
-    // 9. Return Completion(completion).
     return completion;
   }
 
   /** https://tc39.es/ecma262/#sec-asynciteratorclose */
   function* AsyncIteratorClose(iteratorRecord, completion) {
-    // 1. Assert: Type(iteratorRecord.[[Iterator]]) is Object.
     Assert(iteratorRecord.Iterator instanceof ObjectValue, "iteratorRecord.Iterator instanceof ObjectValue");
-    // 2. Assert: completion is a Completion Record.
-    Assert(completion instanceof Completion, "completion instanceof Completion");
-    // 3. Let iterator be iteratorRecord.[[Iterator]].
     const iterator = iteratorRecord.Iterator;
-    // 4. Let innerResult be GetMethod(iterator, "return").
     let innerResult = EnsureCompletion(GetMethod(iterator, Value('return')));
-    // 5. If innerResult.[[Type]] is normal, then
-    if (innerResult.Type === 'normal') {
-      // a. Let return be innerResult.[[Value]].
+    if (innerResult instanceof NormalCompletion) {
       const ret = innerResult.Value;
-      // b. If return is undefined, return Completion(completion).
-      if (ret === Value.undefined) {
-        return Completion(completion);
+      if (ret instanceof UndefinedValue) {
+        return completion;
       }
-      // c. Set innerResult to Call(return, iterator).
       innerResult = Call(ret, iterator);
-      // d. If innerResult.[[Type]] is normal, set innerResult to Await(innerResult.[[Value]]).
-      if (innerResult.Type === 'normal') {
+      if (innerResult instanceof NormalCompletion) {
         innerResult = EnsureCompletion(yield* Await(innerResult.Value));
       }
     }
-    // 6. If completion.[[Type]] is throw, return Completion(completion).
-    if (completion.Type === 'throw') {
-      return Completion(completion);
+    if (completion instanceof ThrowCompletion) {
+      return completion;
     }
-    // 7. If innerResult.[[Type]] is throw, return Completion(innerResult).
-    if (innerResult.Type === 'throw') {
-      return Completion(innerResult);
+    if (innerResult instanceof ThrowCompletion) {
+      return innerResult;
     }
-    // 8. If Type(innerResult.[[Value]]) is not Object, throw a TypeError exception.
     if (!(innerResult.Value instanceof ObjectValue)) {
       return exports.surroundingAgent.Throw('TypeError', 'NotAnObject', innerResult.Value);
     }
-    // 9. Return Completion(completion).
-    return Completion(completion);
+    return completion;
   }
 
   /** https://tc39.es/ecma262/#sec-createiterresultobject */
-  function CreateIterResultObject(value, done) {
-    Assert(done instanceof BooleanValue, "done instanceof BooleanValue");
+  function CreateIteratorResultObject(value, done) {
     const obj = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%Object.prototype%'));
-    let _temp13 = CreateDataProperty(obj, Value('value'), value);
-    Assert(!(_temp13 instanceof AbruptCompletion), "CreateDataProperty(obj, Value('value'), value)" + ' returned an abrupt completion', _temp13);
-    /* c8 ignore if */
-    if (_temp13 instanceof Completion) {
-      _temp13 = _temp13.Value;
-    }
-    let _temp14 = CreateDataProperty(obj, Value('done'), done);
-    Assert(!(_temp14 instanceof AbruptCompletion), "CreateDataProperty(obj, Value('done'), done)" + ' returned an abrupt completion', _temp14);
+    let _temp14 = CreateDataPropertyOrThrow(obj, Value('value'), value);
+    Assert(!(_temp14 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(obj, Value('value'), value)" + ' returned an abrupt completion', _temp14);
     /* c8 ignore if */
     if (_temp14 instanceof Completion) {
       _temp14 = _temp14.Value;
+    }
+    let _temp15 = CreateDataPropertyOrThrow(obj, Value('done'), done);
+    Assert(!(_temp15 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(obj, Value('done'), done)" + ' returned an abrupt completion', _temp15);
+    /* c8 ignore if */
+    if (_temp15 instanceof Completion) {
+      _temp15 = _temp15.Value;
     }
     return obj;
   }
 
   /** https://tc39.es/ecma262/#sec-createlistiteratorRecord */
   function CreateListIteratorRecord(list) {
-    // 1. Let closure be a new Abstract Closure with no parameters that captures list and performs the following steps when called:
     const closure = function* closure() {
-      // a. For each element E of list, do
       for (const E of list) {
-        let _temp15 = yield* Yield(E);
+        let _temp16 = yield* GeneratorYield(CreateIteratorResultObject(E, Value.false));
         /* c8 ignore if */
-        if (_temp15 instanceof AbruptCompletion) {
-          return _temp15;
+        if (_temp16 instanceof AbruptCompletion) {
+          return _temp16;
         }
         /* c8 ignore if */
-        if (_temp15 instanceof Completion) {
-          _temp15 = _temp15.Value;
+        if (_temp16 instanceof Completion) {
+          _temp16 = _temp16.Value;
         }
       }
-      // b. Return undefined.
       return NormalCompletion(Value.undefined);
     };
-    // 2. Let iterator be ! CreateIteratorFromClosure(closure, empty, %IteratorPrototype%).
-    let _temp16 = CreateIteratorFromClosure(closure, undefined, exports.surroundingAgent.intrinsic('%IteratorPrototype%'));
-    Assert(!(_temp16 instanceof AbruptCompletion), "CreateIteratorFromClosure(closure, undefined, surroundingAgent.intrinsic('%IteratorPrototype%'))" + ' returned an abrupt completion', _temp16);
-    /* c8 ignore if */
-    if (_temp16 instanceof Completion) {
-      _temp16 = _temp16.Value;
-    }
-    const iterator = _temp16;
-    // 3. Return Record { [[Iterator]]: iterator, [[NextMethod]]: %GeneratorFunction.prototype.prototype.next%, [[Done]]: false }.
+    const iterator = CreateIteratorFromClosure(closure, undefined, exports.surroundingAgent.intrinsic('%IteratorPrototype%'));
     return {
       Iterator: iterator,
       NextMethod: exports.surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype.next%'),
@@ -28949,15 +29234,30 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     };
   }
 
+  /** https://tc39.es/ecma262/#sec-iteratortolist */
+  function IteratorToList(iteratorRecord) {
+    const list = [];
+    while (true) {
+      let _temp17 = IteratorStepValue(iteratorRecord);
+      /* c8 ignore if */
+      if (_temp17 instanceof AbruptCompletion) {
+        return _temp17;
+      }
+      /* c8 ignore if */
+      if (_temp17 instanceof Completion) {
+        _temp17 = _temp17.Value;
+      }
+      const next = _temp17;
+      if (next === 'done') {
+        return list;
+      }
+      list.push(next);
+    }
+  }
+
   /** https://tc39.es/ecma262/#sec-createasyncfromsynciterator */
   function CreateAsyncFromSyncIterator(syncIteratorRecord) {
-    let _temp17 = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%AsyncFromSyncIteratorPrototype%'), ['SyncIteratorRecord']);
-    Assert(!(_temp17 instanceof AbruptCompletion), "OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncFromSyncIteratorPrototype%'), [\n    'SyncIteratorRecord',\n  ])" + ' returned an abrupt completion', _temp17);
-    /* c8 ignore if */
-    if (_temp17 instanceof Completion) {
-      _temp17 = _temp17.Value;
-    }
-    const asyncIterator = _temp17;
+    const asyncIterator = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%AsyncFromSyncIteratorPrototype%'), ['SyncIteratorRecord']);
     asyncIterator.SyncIteratorRecord = syncIteratorRecord;
     let _temp18 = Get(asyncIterator, Value('next'));
     Assert(!(_temp18 instanceof AbruptCompletion), "Get(asyncIterator, Value('next'))" + ' returned an abrupt completion', _temp18);
@@ -28974,10 +29274,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   /** https://tc39.es/ecma262/#sec-asyncfromsynciteratorcontinuation */
-  function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
-    // 1. Let done be IteratorComplete(result).
+  function AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, closeOnRejection) {
     let done = IteratorComplete(result);
-    // 2. IfAbruptRejectPromise(done, promiseCapability).
     /* c8 ignore if */
     if (done instanceof AbruptCompletion) {
       const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [done.Value]);
@@ -28990,9 +29288,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (done instanceof Completion) {
       done = done.Value;
     }
-    // 3. Let value be IteratorValue(result).
     let value = IteratorValue(result);
-    // 4. IfAbruptRejectPromise(value, promiseCapability).
     /* c8 ignore if */
     if (value instanceof AbruptCompletion) {
       const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [value.Value]);
@@ -29005,18 +29301,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (value instanceof Completion) {
       value = value.Value;
     }
-    /* c8 ignore if */
-    if (value instanceof AbruptCompletion) {
-      return value;
-    }
-    /* c8 ignore if */
-    if (value instanceof Completion) {
-      value = value.Value;
-    }
-    value = value;
-    // 5. Let valueWrapper be PromiseResolve(%Promise%, value).
     let valueWrapper = PromiseResolve(exports.surroundingAgent.intrinsic('%Promise%'), value);
-    // 6. IfAbruptRejectPromise(valueWrapper, promiseCapability).
+    if (valueWrapper instanceof AbruptCompletion && done === Value.false && closeOnRejection === Value.true) {
+      valueWrapper = IteratorClose(syncIteratorRecord, valueWrapper);
+    }
     /* c8 ignore if */
     if (valueWrapper instanceof AbruptCompletion) {
       const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [valueWrapper.Value]);
@@ -29029,45 +29317,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (valueWrapper instanceof Completion) {
       valueWrapper = valueWrapper.Value;
     }
-    // 7. Let unwrap be a new Abstract Closure with parameters (value) that captures done and performs the following steps when called:
-    // eslint-disable-next-line arrow-body-style
-    const unwrap = ([valueInner = Value.undefined]) => {
-      let _temp20 = done;
-      Assert(!(_temp20 instanceof AbruptCompletion), "done" + ' returned an abrupt completion', _temp20);
-      /* c8 ignore if */
-      if (_temp20 instanceof Completion) {
-        _temp20 = _temp20.Value;
-      }
-      let _temp19 = CreateIterResultObject(valueInner, _temp20);
-      Assert(!(_temp19 instanceof AbruptCompletion), "CreateIterResultObject(valueInner, X(done))" + ' returned an abrupt completion', _temp19);
-      /* c8 ignore if */
-      if (_temp19 instanceof Completion) {
-        _temp19 = _temp19.Value;
-      }
-      // a. Return ! CreateIterResultObject(value, done).
-      return _temp19;
-    };
-    // 8. Let onFulfilled be ! CreateBuiltinFunction(unwrap, 1, "", « »).
-    let _temp21 = CreateBuiltinFunction(unwrap, 1, Value(''), ['Done']);
-    Assert(!(_temp21 instanceof AbruptCompletion), "CreateBuiltinFunction(unwrap, 1, Value(''), ['Done'])" + ' returned an abrupt completion', _temp21);
-    /* c8 ignore if */
-    if (_temp21 instanceof Completion) {
-      _temp21 = _temp21.Value;
+    const unwrap = ([v]) => CreateIteratorResultObject(v, done);
+    const onFullfilled = CreateBuiltinFunction(unwrap, 1, Value(''), []);
+    let onRejected;
+    if (done === Value.true || closeOnRejection === Value.false) {
+      onRejected = Value.undefined;
+    } else {
+      const closeIterator = ([error]) => IteratorClose(syncIteratorRecord, ThrowCompletion(error));
+      onRejected = CreateBuiltinFunction(closeIterator, 1, Value(''), []);
     }
-    const onFulfilled = _temp21;
-    // 9. NOTE: onFulfilled is used when processing the "value" property of an IteratorResult object in order to wait for its value if it is a promise and re-package the result in a new "unwrapped" IteratorResult object.
-    // 10. Perform ! PerformPromiseThen(valueWrapper, onFulfilled, undefined, promiseCapability).
-    let _temp22 = PerformPromiseThen(valueWrapper, onFulfilled, Value.undefined, promiseCapability);
-    Assert(!(_temp22 instanceof AbruptCompletion), "PerformPromiseThen(valueWrapper, onFulfilled, Value.undefined, promiseCapability)" + ' returned an abrupt completion', _temp22);
-    /* c8 ignore if */
-    if (_temp22 instanceof Completion) {
-      _temp22 = _temp22.Value;
-    }
-    // 11. Return promiseCapability.[[Promise]].
+    PerformPromiseThen(valueWrapper, onFullfilled, onRejected, promiseCapability);
     return promiseCapability.Promise;
   }
 
-  const InternalMethods$2 = {
+  const InternalMethods$3 = {
     SetPrototypeOf(V) {
       return SetImmutablePrototype(this, V);
     },
@@ -29239,16 +29502,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const M = _temp4;
     /** https://tc39.es/ecma262/#sec-module-namespace-exotic-objects */
-    M.SetPrototypeOf = InternalMethods$2.SetPrototypeOf;
-    M.IsExtensible = InternalMethods$2.IsExtensible;
-    M.PreventExtensions = InternalMethods$2.PreventExtensions;
-    M.GetOwnProperty = InternalMethods$2.GetOwnProperty;
-    M.DefineOwnProperty = InternalMethods$2.DefineOwnProperty;
-    M.HasProperty = InternalMethods$2.HasProperty;
-    M.Get = InternalMethods$2.Get;
-    M.Set = InternalMethods$2.Set;
-    M.Delete = InternalMethods$2.Delete;
-    M.OwnPropertyKeys = InternalMethods$2.OwnPropertyKeys;
+    M.SetPrototypeOf = InternalMethods$3.SetPrototypeOf;
+    M.IsExtensible = InternalMethods$3.IsExtensible;
+    M.PreventExtensions = InternalMethods$3.PreventExtensions;
+    M.GetOwnProperty = InternalMethods$3.GetOwnProperty;
+    M.DefineOwnProperty = InternalMethods$3.DefineOwnProperty;
+    M.HasProperty = InternalMethods$3.HasProperty;
+    M.Get = InternalMethods$3.Get;
+    M.Set = InternalMethods$3.Set;
+    M.Delete = InternalMethods$3.Delete;
+    M.OwnPropertyKeys = InternalMethods$3.OwnPropertyKeys;
     // 7. Set M.[[Prototype]] to null.
     M.Prototype = Value.null;
     // 8. Set M.[[Module]] to module.
@@ -30309,32 +30572,27 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     return success;
   }
+  function CreateNonEnumerableDataPropertyOrThrow(O, P, V) {
+    Assert(O instanceof ObjectValue, "O instanceof ObjectValue");
+    const newDesc = exports.Descriptor({
+      Value: V,
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.true
+    });
+    let _temp5 = DefinePropertyOrThrow(O, P, newDesc);
+    Assert(!(_temp5 instanceof AbruptCompletion), "DefinePropertyOrThrow(O, P, newDesc)" + ' returned an abrupt completion', _temp5);
+    /* c8 ignore if */
+    if (_temp5 instanceof Completion) {
+      _temp5 = _temp5.Value;
+    }
+  }
 
   /** https://tc39.es/ecma262/#sec-definepropertyorthrow */
   function DefinePropertyOrThrow(O, P, desc) {
     Assert(O instanceof ObjectValue, "O instanceof ObjectValue");
     Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-    let _temp5 = O.DefineOwnProperty(P, desc);
-    /* c8 ignore if */
-    if (_temp5 instanceof AbruptCompletion) {
-      return _temp5;
-    }
-    /* c8 ignore if */
-    if (_temp5 instanceof Completion) {
-      _temp5 = _temp5.Value;
-    }
-    const success = _temp5;
-    if (success === Value.false) {
-      return exports.surroundingAgent.Throw('TypeError', 'CannotDefineProperty', P);
-    }
-    return success;
-  }
-
-  /** https://tc39.es/ecma262/#sec-deletepropertyorthrow */
-  function DeletePropertyOrThrow(O, P) {
-    Assert(O instanceof ObjectValue, "O instanceof ObjectValue");
-    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-    let _temp6 = O.Delete(P);
+    let _temp6 = O.DefineOwnProperty(P, desc);
     /* c8 ignore if */
     if (_temp6 instanceof AbruptCompletion) {
       return _temp6;
@@ -30345,15 +30603,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const success = _temp6;
     if (success === Value.false) {
-      return exports.surroundingAgent.Throw('TypeError', 'CannotDeleteProperty', P);
+      return exports.surroundingAgent.Throw('TypeError', 'CannotDefineProperty', P);
     }
     return success;
   }
 
-  /** https://tc39.es/ecma262/#sec-getmethod */
-  function GetMethod(V, P) {
+  /** https://tc39.es/ecma262/#sec-deletepropertyorthrow */
+  function DeletePropertyOrThrow(O, P) {
+    Assert(O instanceof ObjectValue, "O instanceof ObjectValue");
     Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-    let _temp7 = GetV(V, P);
+    let _temp7 = O.Delete(P);
     /* c8 ignore if */
     if (_temp7 instanceof AbruptCompletion) {
       return _temp7;
@@ -30362,7 +30621,26 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp7 instanceof Completion) {
       _temp7 = _temp7.Value;
     }
-    const func = _temp7;
+    const success = _temp7;
+    if (success === Value.false) {
+      return exports.surroundingAgent.Throw('TypeError', 'CannotDeleteProperty', P);
+    }
+    return success;
+  }
+
+  /** https://tc39.es/ecma262/#sec-getmethod */
+  function GetMethod(V, P) {
+    Assert(IsPropertyKey(P), "IsPropertyKey(P)");
+    let _temp8 = GetV(V, P);
+    /* c8 ignore if */
+    if (_temp8 instanceof AbruptCompletion) {
+      return _temp8;
+    }
+    /* c8 ignore if */
+    if (_temp8 instanceof Completion) {
+      _temp8 = _temp8.Value;
+    }
+    const func = _temp8;
     if (func === Value.null || func === Value.undefined) {
       return Value.undefined;
     }
@@ -30383,16 +30661,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function HasOwnProperty(O, P) {
     Assert(O instanceof ObjectValue, "O instanceof ObjectValue");
     Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-    let _temp8 = O.GetOwnProperty(P);
+    let _temp9 = O.GetOwnProperty(P);
     /* c8 ignore if */
-    if (_temp8 instanceof AbruptCompletion) {
-      return _temp8;
+    if (_temp9 instanceof AbruptCompletion) {
+      return _temp9;
     }
     /* c8 ignore if */
-    if (_temp8 instanceof Completion) {
-      _temp8 = _temp8.Value;
+    if (_temp9 instanceof Completion) {
+      _temp9 = _temp9.Value;
     }
-    const desc = _temp8;
+    const desc = _temp9;
     if (desc === Value.undefined) {
       return Value.false;
     }
@@ -30405,16 +30683,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (IsCallable(F) === Value.false) {
       return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', F);
     }
-    let _temp9 = F.Call(V, argumentsList);
+    let _temp10 = F.Call(V, argumentsList);
     /* c8 ignore if */
-    if (_temp9 instanceof AbruptCompletion) {
-      return _temp9;
+    if (_temp10 instanceof AbruptCompletion) {
+      return _temp10;
     }
     /* c8 ignore if */
-    if (_temp9 instanceof Completion) {
-      _temp9 = _temp9.Value;
+    if (_temp10 instanceof Completion) {
+      _temp10 = _temp10.Value;
     }
-    return EnsureCompletion(_temp9);
+    return EnsureCompletion(_temp10);
   }
 
   /** https://tc39.es/ecma262/#sec-construct */
@@ -30431,20 +30709,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function SetIntegrityLevel(O, level) {
     Assert(O instanceof ObjectValue, "O instanceof ObjectValue");
     Assert(level === 'sealed' || level === 'frozen', "level === 'sealed' || level === 'frozen'");
-    let _temp10 = O.PreventExtensions();
-    /* c8 ignore if */
-    if (_temp10 instanceof AbruptCompletion) {
-      return _temp10;
-    }
-    /* c8 ignore if */
-    if (_temp10 instanceof Completion) {
-      _temp10 = _temp10.Value;
-    }
-    const status = _temp10;
-    if (status === Value.false) {
-      return Value.false;
-    }
-    let _temp11 = O.OwnPropertyKeys();
+    let _temp11 = O.PreventExtensions();
     /* c8 ignore if */
     if (_temp11 instanceof AbruptCompletion) {
       return _temp11;
@@ -30453,24 +30718,25 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp11 instanceof Completion) {
       _temp11 = _temp11.Value;
     }
-    const keys = _temp11;
+    const status = _temp11;
+    if (status === Value.false) {
+      return Value.false;
+    }
+    let _temp12 = O.OwnPropertyKeys();
+    /* c8 ignore if */
+    if (_temp12 instanceof AbruptCompletion) {
+      return _temp12;
+    }
+    /* c8 ignore if */
+    if (_temp12 instanceof Completion) {
+      _temp12 = _temp12.Value;
+    }
+    const keys = _temp12;
     if (level === 'sealed') {
       for (const k of keys) {
-        let _temp12 = DefinePropertyOrThrow(O, k, exports.Descriptor({
+        let _temp13 = DefinePropertyOrThrow(O, k, exports.Descriptor({
           Configurable: Value.false
         }));
-        /* c8 ignore if */
-        if (_temp12 instanceof AbruptCompletion) {
-          return _temp12;
-        }
-        /* c8 ignore if */
-        if (_temp12 instanceof Completion) {
-          _temp12 = _temp12.Value;
-        }
-      }
-    } else if (level === 'frozen') {
-      for (const k of keys) {
-        let _temp13 = O.GetOwnProperty(k);
         /* c8 ignore if */
         if (_temp13 instanceof AbruptCompletion) {
           return _temp13;
@@ -30479,7 +30745,19 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (_temp13 instanceof Completion) {
           _temp13 = _temp13.Value;
         }
-        const currentDesc = _temp13;
+      }
+    } else if (level === 'frozen') {
+      for (const k of keys) {
+        let _temp14 = O.GetOwnProperty(k);
+        /* c8 ignore if */
+        if (_temp14 instanceof AbruptCompletion) {
+          return _temp14;
+        }
+        /* c8 ignore if */
+        if (_temp14 instanceof Completion) {
+          _temp14 = _temp14.Value;
+        }
+        const currentDesc = _temp14;
         if (currentDesc !== Value.undefined) {
           let desc;
           if (IsAccessorDescriptor(currentDesc) === true) {
@@ -30492,14 +30770,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
               Writable: Value.false
             });
           }
-          let _temp14 = DefinePropertyOrThrow(O, k, desc);
+          let _temp15 = DefinePropertyOrThrow(O, k, desc);
           /* c8 ignore if */
-          if (_temp14 instanceof AbruptCompletion) {
-            return _temp14;
+          if (_temp15 instanceof AbruptCompletion) {
+            return _temp15;
           }
           /* c8 ignore if */
-          if (_temp14 instanceof Completion) {
-            _temp14 = _temp14.Value;
+          if (_temp15 instanceof Completion) {
+            _temp15 = _temp15.Value;
           }
         }
       }
@@ -30511,20 +30789,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function TestIntegrityLevel(O, level) {
     Assert(O instanceof ObjectValue, "O instanceof ObjectValue");
     Assert(level === 'sealed' || level === 'frozen', "level === 'sealed' || level === 'frozen'");
-    let _temp15 = IsExtensible(O);
-    /* c8 ignore if */
-    if (_temp15 instanceof AbruptCompletion) {
-      return _temp15;
-    }
-    /* c8 ignore if */
-    if (_temp15 instanceof Completion) {
-      _temp15 = _temp15.Value;
-    }
-    const extensible = _temp15;
-    if (extensible === Value.true) {
-      return Value.false;
-    }
-    let _temp16 = O.OwnPropertyKeys();
+    let _temp16 = IsExtensible(O);
     /* c8 ignore if */
     if (_temp16 instanceof AbruptCompletion) {
       return _temp16;
@@ -30533,18 +30798,31 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp16 instanceof Completion) {
       _temp16 = _temp16.Value;
     }
-    const keys = _temp16;
+    const extensible = _temp16;
+    if (extensible === Value.true) {
+      return Value.false;
+    }
+    let _temp17 = O.OwnPropertyKeys();
+    /* c8 ignore if */
+    if (_temp17 instanceof AbruptCompletion) {
+      return _temp17;
+    }
+    /* c8 ignore if */
+    if (_temp17 instanceof Completion) {
+      _temp17 = _temp17.Value;
+    }
+    const keys = _temp17;
     for (const k of keys) {
-      let _temp17 = O.GetOwnProperty(k);
+      let _temp18 = O.GetOwnProperty(k);
       /* c8 ignore if */
-      if (_temp17 instanceof AbruptCompletion) {
-        return _temp17;
+      if (_temp18 instanceof AbruptCompletion) {
+        return _temp18;
       }
       /* c8 ignore if */
-      if (_temp17 instanceof Completion) {
-        _temp17 = _temp17.Value;
+      if (_temp18 instanceof Completion) {
+        _temp18 = _temp18.Value;
       }
-      const currentDesc = _temp17;
+      const currentDesc = _temp18;
       if (!(currentDesc instanceof UndefinedValue)) {
         if (currentDesc.Configurable === Value.true) {
           return Value.false;
@@ -30564,28 +30842,28 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Assert: elements is a List whose elements are all ECMAScript language values.
     Assert(elements.every(e => e instanceof Value), "elements.every((e) => e instanceof Value)");
     // 2. Let array be ! ArrayCreate(0).
-    let _temp18 = ArrayCreate(0);
-    Assert(!(_temp18 instanceof AbruptCompletion), "ArrayCreate(0)" + ' returned an abrupt completion', _temp18);
+    let _temp19 = ArrayCreate(0);
+    Assert(!(_temp19 instanceof AbruptCompletion), "ArrayCreate(0)" + ' returned an abrupt completion', _temp19);
     /* c8 ignore if */
-    if (_temp18 instanceof Completion) {
-      _temp18 = _temp18.Value;
+    if (_temp19 instanceof Completion) {
+      _temp19 = _temp19.Value;
     }
-    const array = _temp18;
+    const array = _temp19;
     // 3. Let n be 0.
     let n = 0;
     // 4. For each element e of elements, do
     for (const e of elements) {
-      let _temp20 = ToString(F(n));
-      Assert(!(_temp20 instanceof AbruptCompletion), "ToString(toNumberValue(n))" + ' returned an abrupt completion', _temp20);
+      let _temp21 = ToString(F(n));
+      Assert(!(_temp21 instanceof AbruptCompletion), "ToString(toNumberValue(n))" + ' returned an abrupt completion', _temp21);
+      /* c8 ignore if */
+      if (_temp21 instanceof Completion) {
+        _temp21 = _temp21.Value;
+      }
+      let _temp20 = CreateDataPropertyOrThrow(array, _temp21, e);
+      Assert(!(_temp20 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(array, X(ToString(toNumberValue(n))), e)" + ' returned an abrupt completion', _temp20);
       /* c8 ignore if */
       if (_temp20 instanceof Completion) {
         _temp20 = _temp20.Value;
-      }
-      let _temp19 = CreateDataPropertyOrThrow(array, _temp20, e);
-      Assert(!(_temp19 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(array, X(ToString(toNumberValue(n))), e)" + ' returned an abrupt completion', _temp19);
-      /* c8 ignore if */
-      if (_temp19 instanceof Completion) {
-        _temp19 = _temp19.Value;
       }
       // b. Set n to n + 1.
       n += 1;
@@ -30599,7 +30877,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Assert: Type(obj) is Object.
     Assert(obj instanceof ObjectValue, "obj instanceof ObjectValue");
     // 2. Return ℝ(? ToLength(? Get(obj, "length"))).
-    let _temp22 = Get(obj, Value('length'));
+    let _temp23 = Get(obj, Value('length'));
+    /* c8 ignore if */
+    if (_temp23 instanceof AbruptCompletion) {
+      return _temp23;
+    }
+    /* c8 ignore if */
+    if (_temp23 instanceof Completion) {
+      _temp23 = _temp23.Value;
+    }
+    let _temp22 = ToLength(_temp23);
     /* c8 ignore if */
     if (_temp22 instanceof AbruptCompletion) {
       return _temp22;
@@ -30608,16 +30895,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp22 instanceof Completion) {
       _temp22 = _temp22.Value;
     }
-    let _temp21 = ToLength(_temp22);
-    /* c8 ignore if */
-    if (_temp21 instanceof AbruptCompletion) {
-      return _temp21;
-    }
-    /* c8 ignore if */
-    if (_temp21 instanceof Completion) {
-      _temp21 = _temp21.Value;
-    }
-    return R(_temp21);
+    return R(_temp22);
   }
   /** https://tc39.es/ecma262/#sec-createlistfromarraylike */
   function CreateListFromArrayLike(obj, elementTypes) {
@@ -30630,41 +30908,41 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return exports.surroundingAgent.Throw('TypeError', 'NotAnObject', obj);
     }
     // 3. Let len be ? LengthOfArrayLike(obj).
-    let _temp23 = LengthOfArrayLike(obj);
+    let _temp24 = LengthOfArrayLike(obj);
     /* c8 ignore if */
-    if (_temp23 instanceof AbruptCompletion) {
-      return _temp23;
+    if (_temp24 instanceof AbruptCompletion) {
+      return _temp24;
     }
     /* c8 ignore if */
-    if (_temp23 instanceof Completion) {
-      _temp23 = _temp23.Value;
+    if (_temp24 instanceof Completion) {
+      _temp24 = _temp24.Value;
     }
-    const len = _temp23;
+    const len = _temp24;
     // 4. Let list be a new empty List.
     const list = [];
     // 5. Let index be 0.
     let index = 0;
     // 6. Repeat, while index < len,
     while (index < len) {
-      let _temp24 = ToString(F(index));
-      Assert(!(_temp24 instanceof AbruptCompletion), "ToString(toNumberValue(index))" + ' returned an abrupt completion', _temp24);
-      /* c8 ignore if */
-      if (_temp24 instanceof Completion) {
-        _temp24 = _temp24.Value;
-      }
-      // a. Let indexName be ! ToString(𝔽(index)).
-      const indexName = _temp24;
-      // b. Let next be ? Get(obj, indexName).
-      let _temp25 = Get(obj, indexName);
-      /* c8 ignore if */
-      if (_temp25 instanceof AbruptCompletion) {
-        return _temp25;
-      }
+      let _temp25 = ToString(F(index));
+      Assert(!(_temp25 instanceof AbruptCompletion), "ToString(toNumberValue(index))" + ' returned an abrupt completion', _temp25);
       /* c8 ignore if */
       if (_temp25 instanceof Completion) {
         _temp25 = _temp25.Value;
       }
-      const next = _temp25;
+      // a. Let indexName be ! ToString(𝔽(index)).
+      const indexName = _temp25;
+      // b. Let next be ? Get(obj, indexName).
+      let _temp26 = Get(obj, indexName);
+      /* c8 ignore if */
+      if (_temp26 instanceof AbruptCompletion) {
+        return _temp26;
+      }
+      /* c8 ignore if */
+      if (_temp26 instanceof Completion) {
+        _temp26 = _temp26.Value;
+      }
+      const next = _temp26;
       // c. If Type(next) is not an element of elementTypes, throw a TypeError exception.
       if (!elementTypes.includes(Type(next))) {
         return exports.surroundingAgent.Throw('TypeError', 'NotPropertyName', next);
@@ -30681,16 +30959,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-invoke */
   function Invoke(V, P, argumentsList = []) {
     Assert(IsPropertyKey(P), "IsPropertyKey(P)");
-    let _temp26 = GetV(V, P);
+    let _temp27 = GetV(V, P);
     /* c8 ignore if */
-    if (_temp26 instanceof AbruptCompletion) {
-      return _temp26;
+    if (_temp27 instanceof AbruptCompletion) {
+      return _temp27;
     }
     /* c8 ignore if */
-    if (_temp26 instanceof Completion) {
-      _temp26 = _temp26.Value;
+    if (_temp27 instanceof Completion) {
+      _temp27 = _temp27.Value;
     }
-    const func = _temp26;
+    const func = _temp27;
     return Call(func, V, argumentsList);
   }
 
@@ -30706,30 +30984,30 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (!(O instanceof ObjectValue)) {
       return Value.false;
     }
-    let _temp27 = Get(C, Value('prototype'));
+    let _temp28 = Get(C, Value('prototype'));
     /* c8 ignore if */
-    if (_temp27 instanceof AbruptCompletion) {
-      return _temp27;
+    if (_temp28 instanceof AbruptCompletion) {
+      return _temp28;
     }
     /* c8 ignore if */
-    if (_temp27 instanceof Completion) {
-      _temp27 = _temp27.Value;
+    if (_temp28 instanceof Completion) {
+      _temp28 = _temp28.Value;
     }
-    const P = _temp27;
+    const P = _temp28;
     if (!(P instanceof ObjectValue)) {
       return exports.surroundingAgent.Throw('TypeError', 'NotAnObject', P);
     }
     while (true) {
-      let _temp28 = O.GetPrototypeOf();
+      let _temp29 = O.GetPrototypeOf();
       /* c8 ignore if */
-      if (_temp28 instanceof AbruptCompletion) {
-        return _temp28;
+      if (_temp29 instanceof AbruptCompletion) {
+        return _temp29;
       }
       /* c8 ignore if */
-      if (_temp28 instanceof Completion) {
-        _temp28 = _temp28.Value;
+      if (_temp29 instanceof Completion) {
+        _temp29 = _temp29.Value;
       }
-      O = _temp28;
+      O = _temp29;
       if (O instanceof NullValue) {
         return Value.false;
       }
@@ -30742,23 +31020,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-speciesconstructor */
   function SpeciesConstructor(O, defaultConstructor) {
     Assert(O instanceof ObjectValue, "O instanceof ObjectValue");
-    let _temp29 = Get(O, Value('constructor'));
-    /* c8 ignore if */
-    if (_temp29 instanceof AbruptCompletion) {
-      return _temp29;
-    }
-    /* c8 ignore if */
-    if (_temp29 instanceof Completion) {
-      _temp29 = _temp29.Value;
-    }
-    const C = _temp29;
-    if (C === Value.undefined) {
-      return defaultConstructor;
-    }
-    if (!(C instanceof ObjectValue)) {
-      return exports.surroundingAgent.Throw('TypeError', 'NotAnObject', C);
-    }
-    let _temp30 = Get(C, wellKnownSymbols.species);
+    let _temp30 = Get(O, Value('constructor'));
     /* c8 ignore if */
     if (_temp30 instanceof AbruptCompletion) {
       return _temp30;
@@ -30767,7 +31029,23 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp30 instanceof Completion) {
       _temp30 = _temp30.Value;
     }
-    const S = _temp30;
+    const C = _temp30;
+    if (C === Value.undefined) {
+      return defaultConstructor;
+    }
+    if (!(C instanceof ObjectValue)) {
+      return exports.surroundingAgent.Throw('TypeError', 'NotAnObject', C);
+    }
+    let _temp31 = Get(C, wellKnownSymbols.species);
+    /* c8 ignore if */
+    if (_temp31 instanceof AbruptCompletion) {
+      return _temp31;
+    }
+    /* c8 ignore if */
+    if (_temp31 instanceof Completion) {
+      _temp31 = _temp31.Value;
+    }
+    const S = _temp31;
     if (S === Value.undefined || S === Value.null) {
       return defaultConstructor;
     }
@@ -30781,54 +31059,54 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   function EnumerableOwnPropertyNames(O, kind) {
     Assert(O instanceof ObjectValue, "O instanceof ObjectValue");
-    let _temp31 = O.OwnPropertyKeys();
+    let _temp32 = O.OwnPropertyKeys();
     /* c8 ignore if */
-    if (_temp31 instanceof AbruptCompletion) {
-      return _temp31;
+    if (_temp32 instanceof AbruptCompletion) {
+      return _temp32;
     }
     /* c8 ignore if */
-    if (_temp31 instanceof Completion) {
-      _temp31 = _temp31.Value;
+    if (_temp32 instanceof Completion) {
+      _temp32 = _temp32.Value;
     }
-    const ownKeys = _temp31;
+    const ownKeys = _temp32;
     const properties = [];
     for (const key of ownKeys) {
       if (key instanceof JSStringValue) {
-        let _temp32 = O.GetOwnProperty(key);
+        let _temp33 = O.GetOwnProperty(key);
         /* c8 ignore if */
-        if (_temp32 instanceof AbruptCompletion) {
-          return _temp32;
+        if (_temp33 instanceof AbruptCompletion) {
+          return _temp33;
         }
         /* c8 ignore if */
-        if (_temp32 instanceof Completion) {
-          _temp32 = _temp32.Value;
+        if (_temp33 instanceof Completion) {
+          _temp33 = _temp33.Value;
         }
-        const desc = _temp32;
+        const desc = _temp33;
         if (!(desc instanceof UndefinedValue) && desc.Enumerable === Value.true) {
           if (kind === 'key') {
             properties.push(key);
           } else {
-            let _temp33 = Get(O, key);
+            let _temp34 = Get(O, key);
             /* c8 ignore if */
-            if (_temp33 instanceof AbruptCompletion) {
-              return _temp33;
+            if (_temp34 instanceof AbruptCompletion) {
+              return _temp34;
             }
             /* c8 ignore if */
-            if (_temp33 instanceof Completion) {
-              _temp33 = _temp33.Value;
+            if (_temp34 instanceof Completion) {
+              _temp34 = _temp34.Value;
             }
-            const value = _temp33;
+            const value = _temp34;
             if (kind === 'value') {
               properties.push(value);
             } else {
               Assert(kind === 'key+value', "kind === 'key+value'");
-              let _temp34 = CreateArrayFromList([key, value]);
-              Assert(!(_temp34 instanceof AbruptCompletion), "CreateArrayFromList([key, value])" + ' returned an abrupt completion', _temp34);
+              let _temp35 = CreateArrayFromList([key, value]);
+              Assert(!(_temp35 instanceof AbruptCompletion), "CreateArrayFromList([key, value])" + ' returned an abrupt completion', _temp35);
               /* c8 ignore if */
-              if (_temp34 instanceof Completion) {
-                _temp34 = _temp34.Value;
+              if (_temp35 instanceof Completion) {
+                _temp35 = _temp35.Value;
               }
-              const entry = _temp34;
+              const entry = _temp35;
               properties.push(entry);
             }
           }
@@ -30840,13 +31118,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-getfunctionrealm */
   function GetFunctionRealm(obj) {
-    let _temp35 = IsCallable(obj);
-    Assert(!(_temp35 instanceof AbruptCompletion), "IsCallable(obj)" + ' returned an abrupt completion', _temp35);
+    let _temp36 = IsCallable(obj);
+    Assert(!(_temp36 instanceof AbruptCompletion), "IsCallable(obj)" + ' returned an abrupt completion', _temp36);
     /* c8 ignore if */
-    if (_temp35 instanceof Completion) {
-      _temp35 = _temp35.Value;
+    if (_temp36 instanceof Completion) {
+      _temp36 = _temp36.Value;
     }
-    Assert(_temp35 === Value.true, "X(IsCallable(obj)) === Value.true");
+    Assert(_temp36 === Value.true, "X(IsCallable(obj)) === Value.true");
     if ('Realm' in obj) {
       return obj.Realm;
     }
@@ -30871,23 +31149,23 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (source === Value.undefined || source === Value.null) {
       return target;
     }
-    let _temp36 = ToObject(source);
-    Assert(!(_temp36 instanceof AbruptCompletion), "ToObject(source)" + ' returned an abrupt completion', _temp36);
-    /* c8 ignore if */
-    if (_temp36 instanceof Completion) {
-      _temp36 = _temp36.Value;
-    }
-    const from = _temp36;
-    let _temp37 = from.OwnPropertyKeys();
-    /* c8 ignore if */
-    if (_temp37 instanceof AbruptCompletion) {
-      return _temp37;
-    }
+    let _temp37 = ToObject(source);
+    Assert(!(_temp37 instanceof AbruptCompletion), "ToObject(source)" + ' returned an abrupt completion', _temp37);
     /* c8 ignore if */
     if (_temp37 instanceof Completion) {
       _temp37 = _temp37.Value;
     }
-    const keys = _temp37;
+    const from = _temp37;
+    let _temp38 = from.OwnPropertyKeys();
+    /* c8 ignore if */
+    if (_temp38 instanceof AbruptCompletion) {
+      return _temp38;
+    }
+    /* c8 ignore if */
+    if (_temp38 instanceof Completion) {
+      _temp38 = _temp38.Value;
+    }
+    const keys = _temp38;
     for (const nextKey of keys) {
       let excluded = false;
       for (const e of excludedItems) {
@@ -30896,32 +31174,32 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
       }
       if (excluded === false) {
-        let _temp38 = from.GetOwnProperty(nextKey);
+        let _temp39 = from.GetOwnProperty(nextKey);
         /* c8 ignore if */
-        if (_temp38 instanceof AbruptCompletion) {
-          return _temp38;
+        if (_temp39 instanceof AbruptCompletion) {
+          return _temp39;
         }
         /* c8 ignore if */
-        if (_temp38 instanceof Completion) {
-          _temp38 = _temp38.Value;
+        if (_temp39 instanceof Completion) {
+          _temp39 = _temp39.Value;
         }
-        const desc = _temp38;
+        const desc = _temp39;
         if (!(desc instanceof UndefinedValue) && desc.Enumerable === Value.true) {
-          let _temp39 = Get(from, nextKey);
+          let _temp40 = Get(from, nextKey);
           /* c8 ignore if */
-          if (_temp39 instanceof AbruptCompletion) {
-            return _temp39;
+          if (_temp40 instanceof AbruptCompletion) {
+            return _temp40;
           }
-          /* c8 ignore if */
-          if (_temp39 instanceof Completion) {
-            _temp39 = _temp39.Value;
-          }
-          const propValue = _temp39;
-          let _temp40 = CreateDataProperty(target, nextKey, propValue);
-          Assert(!(_temp40 instanceof AbruptCompletion), "CreateDataProperty(target, nextKey, propValue)" + ' returned an abrupt completion', _temp40);
           /* c8 ignore if */
           if (_temp40 instanceof Completion) {
             _temp40 = _temp40.Value;
+          }
+          const propValue = _temp40;
+          let _temp41 = CreateDataProperty(target, nextKey, propValue);
+          Assert(!(_temp41 instanceof AbruptCompletion), "CreateDataProperty(target, nextKey, propValue)" + ' returned an abrupt completion', _temp41);
+          /* c8 ignore if */
+          if (_temp41 instanceof Completion) {
+            _temp41 = _temp41.Value;
           }
         }
       }
@@ -31360,6 +31638,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-ordinaryobjectcreate */
   function OrdinaryObjectCreate(proto, additionalInternalSlotsList) {
+    Assert(!!proto, "!!proto");
     // 1. Let internalSlotsList be « [[Prototype]], [[Extensible]] ».
     const internalSlotsList = ['Prototype', 'Extensible'];
     // 2. If additionalInternalSlotsList is present, append each of its elements to internalSlotsList.
@@ -31380,28 +31659,26 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return O;
   }
 
+  /** This is a helper function to define non-spec host objects. */
+  OrdinaryObjectCreate.from = object => {
+    const O = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%Object.prototype%'));
+    for (const key in object) {
+      if (Object.hasOwn(object, key)) {
+        const value = object[key];
+        let _temp13 = CreateDataProperty(O, Value(key), value instanceof Value ? value : CreateBuiltinFunction.from(value, key));
+        Assert(!(_temp13 instanceof AbruptCompletion), "CreateDataProperty(O, Value(key), value instanceof Value ? value : CreateBuiltinFunction.from(value, key))" + ' returned an abrupt completion', _temp13);
+        /* c8 ignore if */
+        if (_temp13 instanceof Completion) {
+          _temp13 = _temp13.Value;
+        }
+      }
+    }
+    return O;
+  };
+
   // 9.1.13 OrdinaryCreateFromConstructor
   function OrdinaryCreateFromConstructor(constructor, intrinsicDefaultProto, internalSlotsList) {
-    let _temp13 = GetPrototypeFromConstructor(constructor, intrinsicDefaultProto);
-    /* c8 ignore if */
-    if (_temp13 instanceof AbruptCompletion) {
-      return _temp13;
-    }
-    /* c8 ignore if */
-    if (_temp13 instanceof Completion) {
-      _temp13 = _temp13.Value;
-    }
-    // Assert: intrinsicDefaultProto is a String value that is this specification's name of an intrinsic object.
-    const proto = _temp13;
-    return OrdinaryObjectCreate(proto, internalSlotsList);
-  }
-
-  // 9.1.14 GetPrototypeFromConstructor
-  function GetPrototypeFromConstructor(constructor, intrinsicDefaultProto) {
-    // Assert: intrinsicDefaultProto is a String value that
-    // is this specification's name of an intrinsic object.
-    Assert(IsCallable(constructor) === Value.true, "IsCallable(constructor) === Value.true");
-    let _temp14 = Get(constructor, Value('prototype'));
+    let _temp14 = GetPrototypeFromConstructor(constructor, intrinsicDefaultProto);
     /* c8 ignore if */
     if (_temp14 instanceof AbruptCompletion) {
       return _temp14;
@@ -31410,18 +31687,37 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp14 instanceof Completion) {
       _temp14 = _temp14.Value;
     }
-    let proto = _temp14;
+    // Assert: intrinsicDefaultProto is a String value that is this specification's name of an intrinsic object.
+    const proto = _temp14;
+    return OrdinaryObjectCreate(proto, internalSlotsList);
+  }
+
+  // 9.1.14 GetPrototypeFromConstructor
+  function GetPrototypeFromConstructor(constructor, intrinsicDefaultProto) {
+    // Assert: intrinsicDefaultProto is a String value that
+    // is this specification's name of an intrinsic object.
+    Assert(IsCallable(constructor) === Value.true, "IsCallable(constructor) === Value.true");
+    let _temp15 = Get(constructor, Value('prototype'));
+    /* c8 ignore if */
+    if (_temp15 instanceof AbruptCompletion) {
+      return _temp15;
+    }
+    /* c8 ignore if */
+    if (_temp15 instanceof Completion) {
+      _temp15 = _temp15.Value;
+    }
+    let proto = _temp15;
     if (!(proto instanceof ObjectValue)) {
-      let _temp15 = GetFunctionRealm(constructor);
+      let _temp16 = GetFunctionRealm(constructor);
       /* c8 ignore if */
-      if (_temp15 instanceof AbruptCompletion) {
-        return _temp15;
+      if (_temp16 instanceof AbruptCompletion) {
+        return _temp16;
       }
       /* c8 ignore if */
-      if (_temp15 instanceof Completion) {
-        _temp15 = _temp15.Value;
+      if (_temp16 instanceof Completion) {
+        _temp16 = _temp16.Value;
       }
-      const realm = _temp15;
+      const realm = _temp16;
       proto = realm.Intrinsics[intrinsicDefaultProto];
     }
     return proto;
@@ -32067,7 +32363,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  const InternalMethods$1 = {
+  const InternalMethods$2 = {
     /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getprototypeof */
     GetPrototypeOf() {
       const O = this;
@@ -33017,25 +33313,25 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const P = _temp50;
     // 4. Set P's essential internal methods, except for [[Call]] and [[Construct]], to the definitions specified in 9.5.
-    P.GetPrototypeOf = InternalMethods$1.GetPrototypeOf;
-    P.SetPrototypeOf = InternalMethods$1.SetPrototypeOf;
-    P.IsExtensible = InternalMethods$1.IsExtensible;
-    P.PreventExtensions = InternalMethods$1.PreventExtensions;
-    P.GetOwnProperty = InternalMethods$1.GetOwnProperty;
-    P.DefineOwnProperty = InternalMethods$1.DefineOwnProperty;
-    P.HasProperty = InternalMethods$1.HasProperty;
-    P.Get = InternalMethods$1.Get;
-    P.Set = InternalMethods$1.Set;
-    P.Delete = InternalMethods$1.Delete;
-    P.OwnPropertyKeys = InternalMethods$1.OwnPropertyKeys;
+    P.GetPrototypeOf = InternalMethods$2.GetPrototypeOf;
+    P.SetPrototypeOf = InternalMethods$2.SetPrototypeOf;
+    P.IsExtensible = InternalMethods$2.IsExtensible;
+    P.PreventExtensions = InternalMethods$2.PreventExtensions;
+    P.GetOwnProperty = InternalMethods$2.GetOwnProperty;
+    P.DefineOwnProperty = InternalMethods$2.DefineOwnProperty;
+    P.HasProperty = InternalMethods$2.HasProperty;
+    P.Get = InternalMethods$2.Get;
+    P.Set = InternalMethods$2.Set;
+    P.Delete = InternalMethods$2.Delete;
+    P.OwnPropertyKeys = InternalMethods$2.OwnPropertyKeys;
     // 5. If IsCallable(target) is true, then
     if (IsCallable(target) === Value.true) {
       /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-call-thisargument-argumentslist. */
-      P.Call = InternalMethods$1.Call;
+      P.Call = InternalMethods$2.Call;
       // b. If IsConstructor(target) is true, then
       if (IsConstructor(target) === Value.true) {
         /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-construct-argumentslist-newtarget. */
-        P.Construct = InternalMethods$1.Construct;
+        P.Construct = InternalMethods$2.Construct;
       }
     }
     // 6. Set P.[[ProxyTarget]] to target.
@@ -33591,10 +33887,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   function AddEntriesFromIterable(target, iterable, adder) {
-    if (IsCallable(adder) === Value.false) {
-      return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', adder);
-    }
-    Assert(iterable !== undefined && iterable !== Value.undefined && iterable !== Value.null, "iterable !== undefined && iterable !== Value.undefined && iterable !== Value.null");
+    Assert(iterable !== Value.undefined && iterable !== Value.null, "iterable !== Value.undefined && iterable !== Value.null");
     let _temp = GetIterator(iterable, 'sync');
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) {
@@ -33606,7 +33899,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const iteratorRecord = _temp;
     while (true) {
-      let _temp2 = IteratorStep(iteratorRecord);
+      let _temp2 = IteratorStepValue(iteratorRecord);
       /* c8 ignore if */
       if (_temp2 instanceof AbruptCompletion) {
         return _temp2;
@@ -33616,25 +33909,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _temp2 = _temp2.Value;
       }
       const next = _temp2;
-      if (next === Value.false) {
+      if (next === 'done') {
         return target;
       }
-      let _temp3 = IteratorValue(next);
-      /* c8 ignore if */
-      if (_temp3 instanceof AbruptCompletion) {
-        return _temp3;
-      }
-      /* c8 ignore if */
-      if (_temp3 instanceof Completion) {
-        _temp3 = _temp3.Value;
-      }
-      const nextItem = _temp3;
-      if (!(nextItem instanceof ObjectValue)) {
-        const error = exports.surroundingAgent.Throw('TypeError', 'NotAnObject', nextItem);
+      if (!(next instanceof ObjectValue)) {
+        const error = exports.surroundingAgent.Throw('TypeError', 'NotAnObject', next);
         return IteratorClose(iteratorRecord, error);
       }
       // e. Let k be Get(nextItem, "0").
-      let k = Get(nextItem, Value('0'));
+      let k = Get(next, Value('0'));
       // f. IfAbruptCloseIterator(k, iteratorRecord).
       /* c8 ignore if */
       if (k instanceof AbruptCompletion) {
@@ -33645,7 +33928,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         k = k.Value;
       }
       // g. Let v be Get(nextItem, "1").
-      let v = Get(nextItem, Value('1'));
+      let v = Get(next, Value('1'));
       // h. IfAbruptCloseIterator(v, iteratorRecord).
       /* c8 ignore if */
       if (v instanceof AbruptCompletion) {
@@ -33677,7 +33960,24 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return exports.surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
     }
     // 2. Let map be ? OrdinaryCreateFromConstructor(NewTarget, "%Map.prototype%", « [[MapData]] »).
-    let _temp4 = OrdinaryCreateFromConstructor(NewTarget, '%Map.prototype%', ['MapData']);
+    let _temp3 = OrdinaryCreateFromConstructor(NewTarget, '%Map.prototype%', ['MapData']);
+    /* c8 ignore if */
+    if (_temp3 instanceof AbruptCompletion) {
+      return _temp3;
+    }
+    /* c8 ignore if */
+    if (_temp3 instanceof Completion) {
+      _temp3 = _temp3.Value;
+    }
+    const map = _temp3;
+    // 3. Set map.[[MapData]] to a new empty List.
+    map.MapData = [];
+    // 4. If iterable is either undefined or null, return map.
+    if (iterable === Value.undefined || iterable === Value.null) {
+      return map;
+    }
+    // 5. Let adder be ? Get(map, "set").
+    let _temp4 = Get(map, Value('set'));
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) {
       return _temp4;
@@ -33686,24 +33986,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp4 instanceof Completion) {
       _temp4 = _temp4.Value;
     }
-    const map = _temp4;
-    // 3. Set map.[[MapData]] to a new empty List.
-    map.MapData = [];
-    // 4. If iterable is either undefined or null, return map.
-    if (iterable === Value.undefined || iterable === Value.null) {
-      return map;
+    const adder = _temp4;
+    if (IsCallable(adder) === Value.false) {
+      return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', adder);
     }
-    // 5. Let adder be ? Get(map, "set").
-    let _temp5 = Get(map, Value('set'));
-    /* c8 ignore if */
-    if (_temp5 instanceof AbruptCompletion) {
-      return _temp5;
-    }
-    /* c8 ignore if */
-    if (_temp5 instanceof Completion) {
-      _temp5 = _temp5.Value;
-    }
-    const adder = _temp5;
     // 6. Return ? AddEntriesFromIterable(map, iterable, adder).
     return AddEntriesFromIterable(map, iterable, adder);
   }
@@ -34663,84 +34949,140 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     return obj;
   }
+
+  /** https://tc39.es/ecma262/#sec-sortindexedproperties */
+  function SortIndexedProperties(obj, len, SortCompare, holes) {
+    const items = [];
+    let k = 0;
+    while (k < len) {
+      let _temp10 = ToString(F(k));
+      Assert(!(_temp10 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp10);
+      /* c8 ignore if */
+      if (_temp10 instanceof Completion) {
+        _temp10 = _temp10.Value;
+      }
+      const Pk = _temp10;
+      let kRead;
+      {
+        Assert(holes === 'read-through-holes', "holes === 'read-through-holes'");
+        kRead = Value.true;
+      }
+      if (kRead === Value.true) {
+        let _temp12 = Get(obj, Pk);
+        /* c8 ignore if */
+        if (_temp12 instanceof AbruptCompletion) {
+          return _temp12;
+        }
+        /* c8 ignore if */
+        if (_temp12 instanceof Completion) {
+          _temp12 = _temp12.Value;
+        }
+        const kValue = _temp12;
+        items.push(kValue);
+      }
+      k += 1;
+    }
+    let completion = NormalCompletion(Value(0));
+    items.sort((a, b) => {
+      if (completion instanceof ThrowCompletion) {
+        return 0;
+      }
+      completion = SortCompare(a, b);
+      if (completion instanceof ThrowCompletion) {
+        return 0;
+      }
+      let _temp13 = completion;
+      Assert(!(_temp13 instanceof AbruptCompletion), "completion" + ' returned an abrupt completion', _temp13);
+      /* c8 ignore if */
+      if (_temp13 instanceof Completion) {
+        _temp13 = _temp13.Value;
+      }
+      const cmp = R(_temp13);
+      return cmp;
+    });
+    if (completion instanceof ThrowCompletion) {
+      return completion;
+    }
+    return items;
+  }
   function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorithm, objectToLength) {
     /** https://tc39.es/ecma262/#sec-array.prototype.every */
     /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.every */
     function ArrayProto_every([callbackFn = Value.undefined, thisArg = Value.undefined], {
       thisValue
     }) {
-      let _temp10 = priorToEvaluatingAlgorithm(thisValue);
+      let _temp14 = priorToEvaluatingAlgorithm(thisValue);
       /* c8 ignore if */
-      if (_temp10 instanceof AbruptCompletion) {
-        return _temp10;
+      if (_temp14 instanceof AbruptCompletion) {
+        return _temp14;
       }
       /* c8 ignore if */
-      if (_temp10 instanceof Completion) {
-        _temp10 = _temp10.Value;
+      if (_temp14 instanceof Completion) {
+        _temp14 = _temp14.Value;
       }
-      let _temp11 = ToObject(thisValue);
+      let _temp15 = ToObject(thisValue);
       /* c8 ignore if */
-      if (_temp11 instanceof AbruptCompletion) {
-        return _temp11;
-      }
-      /* c8 ignore if */
-      if (_temp11 instanceof Completion) {
-        _temp11 = _temp11.Value;
-      }
-      const O = _temp11;
-      let _temp12 = objectToLength(O);
-      /* c8 ignore if */
-      if (_temp12 instanceof AbruptCompletion) {
-        return _temp12;
+      if (_temp15 instanceof AbruptCompletion) {
+        return _temp15;
       }
       /* c8 ignore if */
-      if (_temp12 instanceof Completion) {
-        _temp12 = _temp12.Value;
+      if (_temp15 instanceof Completion) {
+        _temp15 = _temp15.Value;
       }
-      const len = _temp12;
+      const O = _temp15;
+      let _temp16 = objectToLength(O);
+      /* c8 ignore if */
+      if (_temp16 instanceof AbruptCompletion) {
+        return _temp16;
+      }
+      /* c8 ignore if */
+      if (_temp16 instanceof Completion) {
+        _temp16 = _temp16.Value;
+      }
+      const len = _temp16;
       if (IsCallable(callbackFn) === Value.false) {
         return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', callbackFn);
       }
       let k = 0;
       while (k < len) {
-        let _temp13 = ToString(F(k));
-        Assert(!(_temp13 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp13);
+        let _temp17 = ToString(F(k));
+        Assert(!(_temp17 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp17);
         /* c8 ignore if */
-        if (_temp13 instanceof Completion) {
-          _temp13 = _temp13.Value;
+        if (_temp17 instanceof Completion) {
+          _temp17 = _temp17.Value;
         }
-        const Pk = _temp13;
-        let _temp14 = HasProperty(O, Pk);
+        const Pk = _temp17;
+        let _temp18 = HasProperty(O, Pk);
         /* c8 ignore if */
-        if (_temp14 instanceof AbruptCompletion) {
-          return _temp14;
+        if (_temp18 instanceof AbruptCompletion) {
+          return _temp18;
         }
         /* c8 ignore if */
-        if (_temp14 instanceof Completion) {
-          _temp14 = _temp14.Value;
+        if (_temp18 instanceof Completion) {
+          _temp18 = _temp18.Value;
         }
-        const kPresent = _temp14;
+        const kPresent = _temp18;
         if (kPresent === Value.true) {
-          let _temp15 = Get(O, Pk);
+          let _temp19 = Get(O, Pk);
           /* c8 ignore if */
-          if (_temp15 instanceof AbruptCompletion) {
-            return _temp15;
+          if (_temp19 instanceof AbruptCompletion) {
+            return _temp19;
           }
           /* c8 ignore if */
-          if (_temp15 instanceof Completion) {
-            _temp15 = _temp15.Value;
+          if (_temp19 instanceof Completion) {
+            _temp19 = _temp19.Value;
           }
-          const kValue = _temp15;
-          let _temp16 = Call(callbackFn, thisArg, [kValue, F(k), O]);
+          const kValue = _temp19;
+          let _temp20 = Call(callbackFn, thisArg, [kValue, F(k), O]);
           /* c8 ignore if */
-          if (_temp16 instanceof AbruptCompletion) {
-            return _temp16;
+          if (_temp20 instanceof AbruptCompletion) {
+            return _temp20;
           }
           /* c8 ignore if */
-          if (_temp16 instanceof Completion) {
-            _temp16 = _temp16.Value;
+          if (_temp20 instanceof Completion) {
+            _temp20 = _temp20.Value;
           }
-          const testResult = ToBoolean(_temp16);
+          const testResult = ToBoolean(_temp20);
           if (testResult === Value.false) {
             return Value.false;
           }
@@ -34756,67 +35098,67 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     function ArrayProto_find([predicate = Value.undefined, thisArg = Value.undefined], {
       thisValue
     }) {
-      let _temp17 = priorToEvaluatingAlgorithm(thisValue);
+      let _temp21 = priorToEvaluatingAlgorithm(thisValue);
       /* c8 ignore if */
-      if (_temp17 instanceof AbruptCompletion) {
-        return _temp17;
+      if (_temp21 instanceof AbruptCompletion) {
+        return _temp21;
       }
       /* c8 ignore if */
-      if (_temp17 instanceof Completion) {
-        _temp17 = _temp17.Value;
+      if (_temp21 instanceof Completion) {
+        _temp21 = _temp21.Value;
       }
-      let _temp18 = ToObject(thisValue);
+      let _temp22 = ToObject(thisValue);
       /* c8 ignore if */
-      if (_temp18 instanceof AbruptCompletion) {
-        return _temp18;
-      }
-      /* c8 ignore if */
-      if (_temp18 instanceof Completion) {
-        _temp18 = _temp18.Value;
-      }
-      const O = _temp18;
-      let _temp19 = objectToLength(O);
-      /* c8 ignore if */
-      if (_temp19 instanceof AbruptCompletion) {
-        return _temp19;
+      if (_temp22 instanceof AbruptCompletion) {
+        return _temp22;
       }
       /* c8 ignore if */
-      if (_temp19 instanceof Completion) {
-        _temp19 = _temp19.Value;
+      if (_temp22 instanceof Completion) {
+        _temp22 = _temp22.Value;
       }
-      const len = _temp19;
+      const O = _temp22;
+      let _temp23 = objectToLength(O);
+      /* c8 ignore if */
+      if (_temp23 instanceof AbruptCompletion) {
+        return _temp23;
+      }
+      /* c8 ignore if */
+      if (_temp23 instanceof Completion) {
+        _temp23 = _temp23.Value;
+      }
+      const len = _temp23;
       if (IsCallable(predicate) === Value.false) {
         return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
       }
       let k = 0;
       while (k < len) {
-        let _temp20 = ToString(F(k));
-        Assert(!(_temp20 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp20);
+        let _temp24 = ToString(F(k));
+        Assert(!(_temp24 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp24);
         /* c8 ignore if */
-        if (_temp20 instanceof Completion) {
-          _temp20 = _temp20.Value;
+        if (_temp24 instanceof Completion) {
+          _temp24 = _temp24.Value;
         }
-        const Pk = _temp20;
-        let _temp21 = Get(O, Pk);
+        const Pk = _temp24;
+        let _temp25 = Get(O, Pk);
         /* c8 ignore if */
-        if (_temp21 instanceof AbruptCompletion) {
-          return _temp21;
-        }
-        /* c8 ignore if */
-        if (_temp21 instanceof Completion) {
-          _temp21 = _temp21.Value;
-        }
-        const kValue = _temp21;
-        let _temp22 = Call(predicate, thisArg, [kValue, F(k), O]);
-        /* c8 ignore if */
-        if (_temp22 instanceof AbruptCompletion) {
-          return _temp22;
+        if (_temp25 instanceof AbruptCompletion) {
+          return _temp25;
         }
         /* c8 ignore if */
-        if (_temp22 instanceof Completion) {
-          _temp22 = _temp22.Value;
+        if (_temp25 instanceof Completion) {
+          _temp25 = _temp25.Value;
         }
-        const testResult = ToBoolean(_temp22);
+        const kValue = _temp25;
+        let _temp26 = Call(predicate, thisArg, [kValue, F(k), O]);
+        /* c8 ignore if */
+        if (_temp26 instanceof AbruptCompletion) {
+          return _temp26;
+        }
+        /* c8 ignore if */
+        if (_temp26 instanceof Completion) {
+          _temp26 = _temp26.Value;
+        }
+        const testResult = ToBoolean(_temp26);
         if (testResult === Value.true) {
           return kValue;
         }
@@ -34831,67 +35173,67 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     function ArrayProto_findIndex([predicate = Value.undefined, thisArg = Value.undefined], {
       thisValue
     }) {
-      let _temp23 = priorToEvaluatingAlgorithm(thisValue);
+      let _temp27 = priorToEvaluatingAlgorithm(thisValue);
       /* c8 ignore if */
-      if (_temp23 instanceof AbruptCompletion) {
-        return _temp23;
+      if (_temp27 instanceof AbruptCompletion) {
+        return _temp27;
       }
       /* c8 ignore if */
-      if (_temp23 instanceof Completion) {
-        _temp23 = _temp23.Value;
+      if (_temp27 instanceof Completion) {
+        _temp27 = _temp27.Value;
       }
-      let _temp24 = ToObject(thisValue);
+      let _temp28 = ToObject(thisValue);
       /* c8 ignore if */
-      if (_temp24 instanceof AbruptCompletion) {
-        return _temp24;
-      }
-      /* c8 ignore if */
-      if (_temp24 instanceof Completion) {
-        _temp24 = _temp24.Value;
-      }
-      const O = _temp24;
-      let _temp25 = objectToLength(O);
-      /* c8 ignore if */
-      if (_temp25 instanceof AbruptCompletion) {
-        return _temp25;
+      if (_temp28 instanceof AbruptCompletion) {
+        return _temp28;
       }
       /* c8 ignore if */
-      if (_temp25 instanceof Completion) {
-        _temp25 = _temp25.Value;
+      if (_temp28 instanceof Completion) {
+        _temp28 = _temp28.Value;
       }
-      const len = _temp25;
+      const O = _temp28;
+      let _temp29 = objectToLength(O);
+      /* c8 ignore if */
+      if (_temp29 instanceof AbruptCompletion) {
+        return _temp29;
+      }
+      /* c8 ignore if */
+      if (_temp29 instanceof Completion) {
+        _temp29 = _temp29.Value;
+      }
+      const len = _temp29;
       if (IsCallable(predicate) === Value.false) {
         return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
       }
       let k = 0;
       while (k < len) {
-        let _temp26 = ToString(F(k));
-        Assert(!(_temp26 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp26);
+        let _temp30 = ToString(F(k));
+        Assert(!(_temp30 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp30);
         /* c8 ignore if */
-        if (_temp26 instanceof Completion) {
-          _temp26 = _temp26.Value;
+        if (_temp30 instanceof Completion) {
+          _temp30 = _temp30.Value;
         }
-        const Pk = _temp26;
-        let _temp27 = Get(O, Pk);
+        const Pk = _temp30;
+        let _temp31 = Get(O, Pk);
         /* c8 ignore if */
-        if (_temp27 instanceof AbruptCompletion) {
-          return _temp27;
-        }
-        /* c8 ignore if */
-        if (_temp27 instanceof Completion) {
-          _temp27 = _temp27.Value;
-        }
-        const kValue = _temp27;
-        let _temp28 = Call(predicate, thisArg, [kValue, F(k), O]);
-        /* c8 ignore if */
-        if (_temp28 instanceof AbruptCompletion) {
-          return _temp28;
+        if (_temp31 instanceof AbruptCompletion) {
+          return _temp31;
         }
         /* c8 ignore if */
-        if (_temp28 instanceof Completion) {
-          _temp28 = _temp28.Value;
+        if (_temp31 instanceof Completion) {
+          _temp31 = _temp31.Value;
         }
-        const testResult = ToBoolean(_temp28);
+        const kValue = _temp31;
+        let _temp32 = Call(predicate, thisArg, [kValue, F(k), O]);
+        /* c8 ignore if */
+        if (_temp32 instanceof AbruptCompletion) {
+          return _temp32;
+        }
+        /* c8 ignore if */
+        if (_temp32 instanceof Completion) {
+          _temp32 = _temp32.Value;
+        }
+        const testResult = ToBoolean(_temp32);
         if (testResult === Value.true) {
           return F(k);
         }
@@ -34906,37 +35248,37 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     function ArrayProto_findLast([predicate = Value.undefined, thisArg = Value.undefined], {
       thisValue
     }) {
-      let _temp29 = priorToEvaluatingAlgorithm(thisValue);
+      let _temp33 = priorToEvaluatingAlgorithm(thisValue);
       /* c8 ignore if */
-      if (_temp29 instanceof AbruptCompletion) {
-        return _temp29;
+      if (_temp33 instanceof AbruptCompletion) {
+        return _temp33;
       }
       /* c8 ignore if */
-      if (_temp29 instanceof Completion) {
-        _temp29 = _temp29.Value;
+      if (_temp33 instanceof Completion) {
+        _temp33 = _temp33.Value;
       }
       // Let O be ? ToObject(this value).
-      let _temp30 = ToObject(thisValue);
+      let _temp34 = ToObject(thisValue);
       /* c8 ignore if */
-      if (_temp30 instanceof AbruptCompletion) {
-        return _temp30;
+      if (_temp34 instanceof AbruptCompletion) {
+        return _temp34;
       }
       /* c8 ignore if */
-      if (_temp30 instanceof Completion) {
-        _temp30 = _temp30.Value;
+      if (_temp34 instanceof Completion) {
+        _temp34 = _temp34.Value;
       }
-      const O = _temp30;
+      const O = _temp34;
       // 2. Let len be ? LengthOfArrayLike(O).
-      let _temp31 = objectToLength(O);
+      let _temp35 = objectToLength(O);
       /* c8 ignore if */
-      if (_temp31 instanceof AbruptCompletion) {
-        return _temp31;
+      if (_temp35 instanceof AbruptCompletion) {
+        return _temp35;
       }
       /* c8 ignore if */
-      if (_temp31 instanceof Completion) {
-        _temp31 = _temp31.Value;
+      if (_temp35 instanceof Completion) {
+        _temp35 = _temp35.Value;
       }
-      const len = _temp31;
+      const len = _temp35;
       // 3. If IsCallable(predicate) is false, throw a TypeError exception.
       if (IsCallable(predicate) === Value.false) {
         return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
@@ -34945,36 +35287,36 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let k = len - 1;
       // 5. Repeat, while k ≥ 0,
       while (k >= 0) {
-        let _temp32 = ToString(F(k));
-        Assert(!(_temp32 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp32);
+        let _temp36 = ToString(F(k));
+        Assert(!(_temp36 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp36);
         /* c8 ignore if */
-        if (_temp32 instanceof Completion) {
-          _temp32 = _temp32.Value;
+        if (_temp36 instanceof Completion) {
+          _temp36 = _temp36.Value;
         }
         // a. Let Pk be ! ToString(𝔽(k)).
-        const Pk = _temp32;
+        const Pk = _temp36;
         // b. Let kValue be ? Get(O, Pk).
-        let _temp33 = Get(O, Pk);
+        let _temp37 = Get(O, Pk);
         /* c8 ignore if */
-        if (_temp33 instanceof AbruptCompletion) {
-          return _temp33;
+        if (_temp37 instanceof AbruptCompletion) {
+          return _temp37;
         }
         /* c8 ignore if */
-        if (_temp33 instanceof Completion) {
-          _temp33 = _temp33.Value;
+        if (_temp37 instanceof Completion) {
+          _temp37 = _temp37.Value;
         }
-        const kValue = _temp33;
+        const kValue = _temp37;
         // c. Let testResult be ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
-        let _temp34 = Call(predicate, thisArg, [kValue, F(k), O]);
+        let _temp38 = Call(predicate, thisArg, [kValue, F(k), O]);
         /* c8 ignore if */
-        if (_temp34 instanceof AbruptCompletion) {
-          return _temp34;
+        if (_temp38 instanceof AbruptCompletion) {
+          return _temp38;
         }
         /* c8 ignore if */
-        if (_temp34 instanceof Completion) {
-          _temp34 = _temp34.Value;
+        if (_temp38 instanceof Completion) {
+          _temp38 = _temp38.Value;
         }
-        const testResult = ToBoolean(_temp34);
+        const testResult = ToBoolean(_temp38);
         // d. If testResult is true, return kValue.
         if (testResult === Value.true) {
           return kValue;
@@ -34992,37 +35334,37 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     function ArrayProto_findLastIndex([predicate = Value.undefined, thisArg = Value.undefined], {
       thisValue
     }) {
-      let _temp35 = priorToEvaluatingAlgorithm(thisValue);
+      let _temp39 = priorToEvaluatingAlgorithm(thisValue);
       /* c8 ignore if */
-      if (_temp35 instanceof AbruptCompletion) {
-        return _temp35;
+      if (_temp39 instanceof AbruptCompletion) {
+        return _temp39;
       }
       /* c8 ignore if */
-      if (_temp35 instanceof Completion) {
-        _temp35 = _temp35.Value;
+      if (_temp39 instanceof Completion) {
+        _temp39 = _temp39.Value;
       }
       // Let O be ? ToObject(this value).
-      let _temp36 = ToObject(thisValue);
+      let _temp40 = ToObject(thisValue);
       /* c8 ignore if */
-      if (_temp36 instanceof AbruptCompletion) {
-        return _temp36;
+      if (_temp40 instanceof AbruptCompletion) {
+        return _temp40;
       }
       /* c8 ignore if */
-      if (_temp36 instanceof Completion) {
-        _temp36 = _temp36.Value;
+      if (_temp40 instanceof Completion) {
+        _temp40 = _temp40.Value;
       }
-      const O = _temp36;
+      const O = _temp40;
       // 2. Let len be ? LengthOfArrayLike(O).
-      let _temp37 = objectToLength(O);
+      let _temp41 = objectToLength(O);
       /* c8 ignore if */
-      if (_temp37 instanceof AbruptCompletion) {
-        return _temp37;
+      if (_temp41 instanceof AbruptCompletion) {
+        return _temp41;
       }
       /* c8 ignore if */
-      if (_temp37 instanceof Completion) {
-        _temp37 = _temp37.Value;
+      if (_temp41 instanceof Completion) {
+        _temp41 = _temp41.Value;
       }
-      const len = _temp37;
+      const len = _temp41;
       // 3. If IsCallable(predicate) is false, throw a TypeError exception.
       if (IsCallable(predicate) === Value.false) {
         return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
@@ -35031,36 +35373,36 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       let k = len - 1;
       // 5. Repeat, while k ≥ 0,
       while (k >= 0) {
-        let _temp38 = ToString(F(k));
-        Assert(!(_temp38 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp38);
+        let _temp42 = ToString(F(k));
+        Assert(!(_temp42 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp42);
         /* c8 ignore if */
-        if (_temp38 instanceof Completion) {
-          _temp38 = _temp38.Value;
+        if (_temp42 instanceof Completion) {
+          _temp42 = _temp42.Value;
         }
         // a. Let Pk be ! ToString(𝔽(k)).
-        const Pk = _temp38;
+        const Pk = _temp42;
         // b. Let kValue be ? Get(O, Pk).
-        let _temp39 = Get(O, Pk);
+        let _temp43 = Get(O, Pk);
         /* c8 ignore if */
-        if (_temp39 instanceof AbruptCompletion) {
-          return _temp39;
+        if (_temp43 instanceof AbruptCompletion) {
+          return _temp43;
         }
         /* c8 ignore if */
-        if (_temp39 instanceof Completion) {
-          _temp39 = _temp39.Value;
+        if (_temp43 instanceof Completion) {
+          _temp43 = _temp43.Value;
         }
-        const kValue = _temp39;
+        const kValue = _temp43;
         // c. Let testResult be ToBoolean(? Call(predicate, thisArg, « kValue, 𝔽(k), O »)).
-        let _temp40 = Call(predicate, thisArg, [kValue, F(k), O]);
+        let _temp44 = Call(predicate, thisArg, [kValue, F(k), O]);
         /* c8 ignore if */
-        if (_temp40 instanceof AbruptCompletion) {
-          return _temp40;
+        if (_temp44 instanceof AbruptCompletion) {
+          return _temp44;
         }
         /* c8 ignore if */
-        if (_temp40 instanceof Completion) {
-          _temp40 = _temp40.Value;
+        if (_temp44 instanceof Completion) {
+          _temp44 = _temp44.Value;
         }
-        const testResult = ToBoolean(_temp40);
+        const testResult = ToBoolean(_temp44);
         // d. If testResult is true, return 𝔽(k).
         if (testResult === Value.true) {
           return F(k);
@@ -35078,76 +35420,76 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     function ArrayProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefined], {
       thisValue
     }) {
-      let _temp41 = priorToEvaluatingAlgorithm(thisValue);
+      let _temp45 = priorToEvaluatingAlgorithm(thisValue);
       /* c8 ignore if */
-      if (_temp41 instanceof AbruptCompletion) {
-        return _temp41;
+      if (_temp45 instanceof AbruptCompletion) {
+        return _temp45;
       }
       /* c8 ignore if */
-      if (_temp41 instanceof Completion) {
-        _temp41 = _temp41.Value;
+      if (_temp45 instanceof Completion) {
+        _temp45 = _temp45.Value;
       }
-      let _temp42 = ToObject(thisValue);
+      let _temp46 = ToObject(thisValue);
       /* c8 ignore if */
-      if (_temp42 instanceof AbruptCompletion) {
-        return _temp42;
-      }
-      /* c8 ignore if */
-      if (_temp42 instanceof Completion) {
-        _temp42 = _temp42.Value;
-      }
-      const O = _temp42;
-      let _temp43 = objectToLength(O);
-      /* c8 ignore if */
-      if (_temp43 instanceof AbruptCompletion) {
-        return _temp43;
+      if (_temp46 instanceof AbruptCompletion) {
+        return _temp46;
       }
       /* c8 ignore if */
-      if (_temp43 instanceof Completion) {
-        _temp43 = _temp43.Value;
+      if (_temp46 instanceof Completion) {
+        _temp46 = _temp46.Value;
       }
-      const len = _temp43;
+      const O = _temp46;
+      let _temp47 = objectToLength(O);
+      /* c8 ignore if */
+      if (_temp47 instanceof AbruptCompletion) {
+        return _temp47;
+      }
+      /* c8 ignore if */
+      if (_temp47 instanceof Completion) {
+        _temp47 = _temp47.Value;
+      }
+      const len = _temp47;
       if (IsCallable(callbackfn) === Value.false) {
         return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
       }
       let k = 0;
       while (k < len) {
-        let _temp44 = ToString(F(k));
-        Assert(!(_temp44 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp44);
+        let _temp48 = ToString(F(k));
+        Assert(!(_temp48 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp48);
         /* c8 ignore if */
-        if (_temp44 instanceof Completion) {
-          _temp44 = _temp44.Value;
+        if (_temp48 instanceof Completion) {
+          _temp48 = _temp48.Value;
         }
-        const Pk = _temp44;
-        let _temp45 = HasProperty(O, Pk);
+        const Pk = _temp48;
+        let _temp49 = HasProperty(O, Pk);
         /* c8 ignore if */
-        if (_temp45 instanceof AbruptCompletion) {
-          return _temp45;
+        if (_temp49 instanceof AbruptCompletion) {
+          return _temp49;
         }
         /* c8 ignore if */
-        if (_temp45 instanceof Completion) {
-          _temp45 = _temp45.Value;
+        if (_temp49 instanceof Completion) {
+          _temp49 = _temp49.Value;
         }
-        const kPresent = _temp45;
+        const kPresent = _temp49;
         if (kPresent === Value.true) {
-          let _temp46 = Get(O, Pk);
+          let _temp50 = Get(O, Pk);
           /* c8 ignore if */
-          if (_temp46 instanceof AbruptCompletion) {
-            return _temp46;
+          if (_temp50 instanceof AbruptCompletion) {
+            return _temp50;
           }
           /* c8 ignore if */
-          if (_temp46 instanceof Completion) {
-            _temp46 = _temp46.Value;
+          if (_temp50 instanceof Completion) {
+            _temp50 = _temp50.Value;
           }
-          const kValue = _temp46;
-          let _temp47 = Call(callbackfn, thisArg, [kValue, F(k), O]);
+          const kValue = _temp50;
+          let _temp51 = Call(callbackfn, thisArg, [kValue, F(k), O]);
           /* c8 ignore if */
-          if (_temp47 instanceof AbruptCompletion) {
-            return _temp47;
+          if (_temp51 instanceof AbruptCompletion) {
+            return _temp51;
           }
           /* c8 ignore if */
-          if (_temp47 instanceof Completion) {
-            _temp47 = _temp47.Value;
+          if (_temp51 instanceof Completion) {
+            _temp51 = _temp51.Value;
           }
         }
         k += 1;
@@ -35161,48 +35503,48 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     function ArrayProto_includes([searchElement = Value.undefined, fromIndex = Value.undefined], {
       thisValue
     }) {
-      let _temp48 = priorToEvaluatingAlgorithm(thisValue);
+      let _temp52 = priorToEvaluatingAlgorithm(thisValue);
       /* c8 ignore if */
-      if (_temp48 instanceof AbruptCompletion) {
-        return _temp48;
+      if (_temp52 instanceof AbruptCompletion) {
+        return _temp52;
       }
       /* c8 ignore if */
-      if (_temp48 instanceof Completion) {
-        _temp48 = _temp48.Value;
+      if (_temp52 instanceof Completion) {
+        _temp52 = _temp52.Value;
       }
-      let _temp49 = ToObject(thisValue);
+      let _temp53 = ToObject(thisValue);
       /* c8 ignore if */
-      if (_temp49 instanceof AbruptCompletion) {
-        return _temp49;
-      }
-      /* c8 ignore if */
-      if (_temp49 instanceof Completion) {
-        _temp49 = _temp49.Value;
-      }
-      const O = _temp49;
-      let _temp50 = objectToLength(O);
-      /* c8 ignore if */
-      if (_temp50 instanceof AbruptCompletion) {
-        return _temp50;
+      if (_temp53 instanceof AbruptCompletion) {
+        return _temp53;
       }
       /* c8 ignore if */
-      if (_temp50 instanceof Completion) {
-        _temp50 = _temp50.Value;
+      if (_temp53 instanceof Completion) {
+        _temp53 = _temp53.Value;
       }
-      const len = _temp50;
+      const O = _temp53;
+      let _temp54 = objectToLength(O);
+      /* c8 ignore if */
+      if (_temp54 instanceof AbruptCompletion) {
+        return _temp54;
+      }
+      /* c8 ignore if */
+      if (_temp54 instanceof Completion) {
+        _temp54 = _temp54.Value;
+      }
+      const len = _temp54;
       if (len === 0) {
         return Value.false;
       }
-      let _temp51 = ToIntegerOrInfinity(fromIndex);
+      let _temp55 = ToIntegerOrInfinity(fromIndex);
       /* c8 ignore if */
-      if (_temp51 instanceof AbruptCompletion) {
-        return _temp51;
+      if (_temp55 instanceof AbruptCompletion) {
+        return _temp55;
       }
       /* c8 ignore if */
-      if (_temp51 instanceof Completion) {
-        _temp51 = _temp51.Value;
+      if (_temp55 instanceof Completion) {
+        _temp55 = _temp55.Value;
       }
-      const n = _temp51;
+      const n = _temp55;
       if (fromIndex === Value.undefined) {
         Assert(n === 0, "n === 0");
       }
@@ -35216,23 +35558,23 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
       }
       while (k < len) {
-        let _temp52 = ToString(F(k));
-        Assert(!(_temp52 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp52);
+        let _temp56 = ToString(F(k));
+        Assert(!(_temp56 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp56);
         /* c8 ignore if */
-        if (_temp52 instanceof Completion) {
-          _temp52 = _temp52.Value;
+        if (_temp56 instanceof Completion) {
+          _temp56 = _temp56.Value;
         }
-        const kStr = _temp52;
-        let _temp53 = Get(O, kStr);
+        const kStr = _temp56;
+        let _temp57 = Get(O, kStr);
         /* c8 ignore if */
-        if (_temp53 instanceof AbruptCompletion) {
-          return _temp53;
+        if (_temp57 instanceof AbruptCompletion) {
+          return _temp57;
         }
         /* c8 ignore if */
-        if (_temp53 instanceof Completion) {
-          _temp53 = _temp53.Value;
+        if (_temp57 instanceof Completion) {
+          _temp57 = _temp57.Value;
         }
-        const elementK = _temp53;
+        const elementK = _temp57;
         if (SameValueZero(searchElement, elementK) === Value.true) {
           return Value.true;
         }
@@ -35247,48 +35589,48 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     function ArrayProto_indexOf([searchElement = Value.undefined, fromIndex = Value.undefined], {
       thisValue
     }) {
-      let _temp54 = priorToEvaluatingAlgorithm(thisValue);
+      let _temp58 = priorToEvaluatingAlgorithm(thisValue);
       /* c8 ignore if */
-      if (_temp54 instanceof AbruptCompletion) {
-        return _temp54;
+      if (_temp58 instanceof AbruptCompletion) {
+        return _temp58;
       }
       /* c8 ignore if */
-      if (_temp54 instanceof Completion) {
-        _temp54 = _temp54.Value;
+      if (_temp58 instanceof Completion) {
+        _temp58 = _temp58.Value;
       }
-      let _temp55 = ToObject(thisValue);
+      let _temp59 = ToObject(thisValue);
       /* c8 ignore if */
-      if (_temp55 instanceof AbruptCompletion) {
-        return _temp55;
-      }
-      /* c8 ignore if */
-      if (_temp55 instanceof Completion) {
-        _temp55 = _temp55.Value;
-      }
-      const O = _temp55;
-      let _temp56 = objectToLength(O);
-      /* c8 ignore if */
-      if (_temp56 instanceof AbruptCompletion) {
-        return _temp56;
+      if (_temp59 instanceof AbruptCompletion) {
+        return _temp59;
       }
       /* c8 ignore if */
-      if (_temp56 instanceof Completion) {
-        _temp56 = _temp56.Value;
+      if (_temp59 instanceof Completion) {
+        _temp59 = _temp59.Value;
       }
-      const len = _temp56;
+      const O = _temp59;
+      let _temp60 = objectToLength(O);
+      /* c8 ignore if */
+      if (_temp60 instanceof AbruptCompletion) {
+        return _temp60;
+      }
+      /* c8 ignore if */
+      if (_temp60 instanceof Completion) {
+        _temp60 = _temp60.Value;
+      }
+      const len = _temp60;
       if (len === 0) {
         return F(-1);
       }
-      let _temp57 = ToIntegerOrInfinity(fromIndex);
+      let _temp61 = ToIntegerOrInfinity(fromIndex);
       /* c8 ignore if */
-      if (_temp57 instanceof AbruptCompletion) {
-        return _temp57;
+      if (_temp61 instanceof AbruptCompletion) {
+        return _temp61;
       }
       /* c8 ignore if */
-      if (_temp57 instanceof Completion) {
-        _temp57 = _temp57.Value;
+      if (_temp61 instanceof Completion) {
+        _temp61 = _temp61.Value;
       }
-      const n = _temp57;
+      const n = _temp61;
       if (fromIndex === Value.undefined) {
         Assert(n === 0, "n === 0");
       }
@@ -35305,34 +35647,34 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
       }
       while (k < len) {
-        let _temp58 = ToString(F(k));
-        Assert(!(_temp58 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp58);
+        let _temp62 = ToString(F(k));
+        Assert(!(_temp62 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp62);
         /* c8 ignore if */
-        if (_temp58 instanceof Completion) {
-          _temp58 = _temp58.Value;
+        if (_temp62 instanceof Completion) {
+          _temp62 = _temp62.Value;
         }
-        const kStr = _temp58;
-        let _temp59 = HasProperty(O, kStr);
+        const kStr = _temp62;
+        let _temp63 = HasProperty(O, kStr);
         /* c8 ignore if */
-        if (_temp59 instanceof AbruptCompletion) {
-          return _temp59;
+        if (_temp63 instanceof AbruptCompletion) {
+          return _temp63;
         }
         /* c8 ignore if */
-        if (_temp59 instanceof Completion) {
-          _temp59 = _temp59.Value;
+        if (_temp63 instanceof Completion) {
+          _temp63 = _temp63.Value;
         }
-        const kPresent = _temp59;
+        const kPresent = _temp63;
         if (kPresent === Value.true) {
-          let _temp60 = Get(O, kStr);
+          let _temp64 = Get(O, kStr);
           /* c8 ignore if */
-          if (_temp60 instanceof AbruptCompletion) {
-            return _temp60;
+          if (_temp64 instanceof AbruptCompletion) {
+            return _temp64;
           }
           /* c8 ignore if */
-          if (_temp60 instanceof Completion) {
-            _temp60 = _temp60.Value;
+          if (_temp64 instanceof Completion) {
+            _temp64 = _temp64.Value;
           }
-          const elementK = _temp60;
+          const elementK = _temp64;
           const same = IsStrictlyEqual(searchElement, elementK);
           if (same === Value.true) {
             return F(k);
@@ -35349,49 +35691,49 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     function ArrayProto_join([separator = Value.undefined], {
       thisValue
     }) {
-      let _temp61 = priorToEvaluatingAlgorithm(thisValue);
+      let _temp65 = priorToEvaluatingAlgorithm(thisValue);
       /* c8 ignore if */
-      if (_temp61 instanceof AbruptCompletion) {
-        return _temp61;
+      if (_temp65 instanceof AbruptCompletion) {
+        return _temp65;
       }
       /* c8 ignore if */
-      if (_temp61 instanceof Completion) {
-        _temp61 = _temp61.Value;
+      if (_temp65 instanceof Completion) {
+        _temp65 = _temp65.Value;
       }
-      let _temp62 = ToObject(thisValue);
+      let _temp66 = ToObject(thisValue);
       /* c8 ignore if */
-      if (_temp62 instanceof AbruptCompletion) {
-        return _temp62;
-      }
-      /* c8 ignore if */
-      if (_temp62 instanceof Completion) {
-        _temp62 = _temp62.Value;
-      }
-      const O = _temp62;
-      let _temp63 = objectToLength(O);
-      /* c8 ignore if */
-      if (_temp63 instanceof AbruptCompletion) {
-        return _temp63;
+      if (_temp66 instanceof AbruptCompletion) {
+        return _temp66;
       }
       /* c8 ignore if */
-      if (_temp63 instanceof Completion) {
-        _temp63 = _temp63.Value;
+      if (_temp66 instanceof Completion) {
+        _temp66 = _temp66.Value;
       }
-      const len = _temp63;
+      const O = _temp66;
+      let _temp67 = objectToLength(O);
+      /* c8 ignore if */
+      if (_temp67 instanceof AbruptCompletion) {
+        return _temp67;
+      }
+      /* c8 ignore if */
+      if (_temp67 instanceof Completion) {
+        _temp67 = _temp67.Value;
+      }
+      const len = _temp67;
       let sep;
       if (separator instanceof UndefinedValue) {
         sep = ',';
       } else {
-        let _temp64 = ToString(separator);
+        let _temp68 = ToString(separator);
         /* c8 ignore if */
-        if (_temp64 instanceof AbruptCompletion) {
-          return _temp64;
+        if (_temp68 instanceof AbruptCompletion) {
+          return _temp68;
         }
         /* c8 ignore if */
-        if (_temp64 instanceof Completion) {
-          _temp64 = _temp64.Value;
+        if (_temp68 instanceof Completion) {
+          _temp68 = _temp68.Value;
         }
-        sep = _temp64.stringValue();
+        sep = _temp68.stringValue();
       }
       let R = '';
       let k = 0;
@@ -35399,37 +35741,37 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (k > 0) {
           R = `${R}${sep}`;
         }
-        let _temp65 = ToString(F(k));
-        Assert(!(_temp65 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp65);
+        let _temp69 = ToString(F(k));
+        Assert(!(_temp69 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp69);
         /* c8 ignore if */
-        if (_temp65 instanceof Completion) {
-          _temp65 = _temp65.Value;
+        if (_temp69 instanceof Completion) {
+          _temp69 = _temp69.Value;
         }
-        const kStr = _temp65;
-        let _temp66 = Get(O, kStr);
+        const kStr = _temp69;
+        let _temp70 = Get(O, kStr);
         /* c8 ignore if */
-        if (_temp66 instanceof AbruptCompletion) {
-          return _temp66;
+        if (_temp70 instanceof AbruptCompletion) {
+          return _temp70;
         }
         /* c8 ignore if */
-        if (_temp66 instanceof Completion) {
-          _temp66 = _temp66.Value;
+        if (_temp70 instanceof Completion) {
+          _temp70 = _temp70.Value;
         }
-        const element = _temp66;
+        const element = _temp70;
         let next;
         if (element instanceof UndefinedValue || element instanceof NullValue) {
           next = '';
         } else {
-          let _temp67 = ToString(element);
+          let _temp71 = ToString(element);
           /* c8 ignore if */
-          if (_temp67 instanceof AbruptCompletion) {
-            return _temp67;
+          if (_temp71 instanceof AbruptCompletion) {
+            return _temp71;
           }
           /* c8 ignore if */
-          if (_temp67 instanceof Completion) {
-            _temp67 = _temp67.Value;
+          if (_temp71 instanceof Completion) {
+            _temp71 = _temp71.Value;
           }
-          next = _temp67.stringValue();
+          next = _temp71.stringValue();
         }
         R = `${R}${next}`;
         k += 1;
@@ -35443,50 +35785,50 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     function ArrayProto_lastIndexOf([searchElement = Value.undefined, fromIndex], {
       thisValue
     }) {
-      let _temp68 = priorToEvaluatingAlgorithm(thisValue);
+      let _temp72 = priorToEvaluatingAlgorithm(thisValue);
       /* c8 ignore if */
-      if (_temp68 instanceof AbruptCompletion) {
-        return _temp68;
+      if (_temp72 instanceof AbruptCompletion) {
+        return _temp72;
       }
       /* c8 ignore if */
-      if (_temp68 instanceof Completion) {
-        _temp68 = _temp68.Value;
+      if (_temp72 instanceof Completion) {
+        _temp72 = _temp72.Value;
       }
-      let _temp69 = ToObject(thisValue);
+      let _temp73 = ToObject(thisValue);
       /* c8 ignore if */
-      if (_temp69 instanceof AbruptCompletion) {
-        return _temp69;
-      }
-      /* c8 ignore if */
-      if (_temp69 instanceof Completion) {
-        _temp69 = _temp69.Value;
-      }
-      const O = _temp69;
-      let _temp70 = objectToLength(O);
-      /* c8 ignore if */
-      if (_temp70 instanceof AbruptCompletion) {
-        return _temp70;
+      if (_temp73 instanceof AbruptCompletion) {
+        return _temp73;
       }
       /* c8 ignore if */
-      if (_temp70 instanceof Completion) {
-        _temp70 = _temp70.Value;
+      if (_temp73 instanceof Completion) {
+        _temp73 = _temp73.Value;
       }
-      const len = _temp70;
+      const O = _temp73;
+      let _temp74 = objectToLength(O);
+      /* c8 ignore if */
+      if (_temp74 instanceof AbruptCompletion) {
+        return _temp74;
+      }
+      /* c8 ignore if */
+      if (_temp74 instanceof Completion) {
+        _temp74 = _temp74.Value;
+      }
+      const len = _temp74;
       if (len === 0) {
         return F(-1);
       }
       let n;
       if (fromIndex !== undefined) {
-        let _temp71 = ToIntegerOrInfinity(fromIndex);
+        let _temp75 = ToIntegerOrInfinity(fromIndex);
         /* c8 ignore if */
-        if (_temp71 instanceof AbruptCompletion) {
-          return _temp71;
+        if (_temp75 instanceof AbruptCompletion) {
+          return _temp75;
         }
         /* c8 ignore if */
-        if (_temp71 instanceof Completion) {
-          _temp71 = _temp71.Value;
+        if (_temp75 instanceof Completion) {
+          _temp75 = _temp75.Value;
         }
-        n = _temp71;
+        n = _temp75;
       } else {
         n = len - 1;
       }
@@ -35497,34 +35839,34 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         k = len + n;
       }
       while (k >= 0) {
-        let _temp72 = ToString(F(k));
-        Assert(!(_temp72 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp72);
+        let _temp76 = ToString(F(k));
+        Assert(!(_temp76 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp76);
         /* c8 ignore if */
-        if (_temp72 instanceof Completion) {
-          _temp72 = _temp72.Value;
+        if (_temp76 instanceof Completion) {
+          _temp76 = _temp76.Value;
         }
-        const kStr = _temp72;
-        let _temp73 = HasProperty(O, kStr);
+        const kStr = _temp76;
+        let _temp77 = HasProperty(O, kStr);
         /* c8 ignore if */
-        if (_temp73 instanceof AbruptCompletion) {
-          return _temp73;
+        if (_temp77 instanceof AbruptCompletion) {
+          return _temp77;
         }
         /* c8 ignore if */
-        if (_temp73 instanceof Completion) {
-          _temp73 = _temp73.Value;
+        if (_temp77 instanceof Completion) {
+          _temp77 = _temp77.Value;
         }
-        const kPresent = _temp73;
+        const kPresent = _temp77;
         if (kPresent === Value.true) {
-          let _temp74 = Get(O, kStr);
+          let _temp78 = Get(O, kStr);
           /* c8 ignore if */
-          if (_temp74 instanceof AbruptCompletion) {
-            return _temp74;
+          if (_temp78 instanceof AbruptCompletion) {
+            return _temp78;
           }
           /* c8 ignore if */
-          if (_temp74 instanceof Completion) {
-            _temp74 = _temp74.Value;
+          if (_temp78 instanceof Completion) {
+            _temp78 = _temp78.Value;
           }
-          const elementK = _temp74;
+          const elementK = _temp78;
           const same = IsStrictlyEqual(searchElement, elementK);
           if (same === Value.true) {
             return F(k);
@@ -35541,35 +35883,35 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     function ArrayProto_reduce([callbackfn = Value.undefined, initialValue], {
       thisValue
     }) {
-      let _temp75 = priorToEvaluatingAlgorithm(thisValue);
+      let _temp79 = priorToEvaluatingAlgorithm(thisValue);
       /* c8 ignore if */
-      if (_temp75 instanceof AbruptCompletion) {
-        return _temp75;
+      if (_temp79 instanceof AbruptCompletion) {
+        return _temp79;
       }
       /* c8 ignore if */
-      if (_temp75 instanceof Completion) {
-        _temp75 = _temp75.Value;
+      if (_temp79 instanceof Completion) {
+        _temp79 = _temp79.Value;
       }
-      let _temp76 = ToObject(thisValue);
+      let _temp80 = ToObject(thisValue);
       /* c8 ignore if */
-      if (_temp76 instanceof AbruptCompletion) {
-        return _temp76;
-      }
-      /* c8 ignore if */
-      if (_temp76 instanceof Completion) {
-        _temp76 = _temp76.Value;
-      }
-      const O = _temp76;
-      let _temp77 = objectToLength(O);
-      /* c8 ignore if */
-      if (_temp77 instanceof AbruptCompletion) {
-        return _temp77;
+      if (_temp80 instanceof AbruptCompletion) {
+        return _temp80;
       }
       /* c8 ignore if */
-      if (_temp77 instanceof Completion) {
-        _temp77 = _temp77.Value;
+      if (_temp80 instanceof Completion) {
+        _temp80 = _temp80.Value;
       }
-      const len = _temp77;
+      const O = _temp80;
+      let _temp81 = objectToLength(O);
+      /* c8 ignore if */
+      if (_temp81 instanceof AbruptCompletion) {
+        return _temp81;
+      }
+      /* c8 ignore if */
+      if (_temp81 instanceof Completion) {
+        _temp81 = _temp81.Value;
+      }
+      const len = _temp81;
       if (IsCallable(callbackfn) === Value.false) {
         return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
       }
@@ -35583,61 +35925,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       } else {
         let kPresent = false;
         while (kPresent === false && k < len) {
-          let _temp78 = ToString(F(k));
-          Assert(!(_temp78 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp78);
+          let _temp82 = ToString(F(k));
+          Assert(!(_temp82 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp82);
           /* c8 ignore if */
-          if (_temp78 instanceof Completion) {
-            _temp78 = _temp78.Value;
+          if (_temp82 instanceof Completion) {
+            _temp82 = _temp82.Value;
           }
-          const Pk = _temp78;
-          let _temp79 = HasProperty(O, Pk);
-          /* c8 ignore if */
-          if (_temp79 instanceof AbruptCompletion) {
-            return _temp79;
-          }
-          /* c8 ignore if */
-          if (_temp79 instanceof Completion) {
-            _temp79 = _temp79.Value;
-          }
-          kPresent = _temp79 === Value.true;
-          if (kPresent === true) {
-            let _temp80 = Get(O, Pk);
-            /* c8 ignore if */
-            if (_temp80 instanceof AbruptCompletion) {
-              return _temp80;
-            }
-            /* c8 ignore if */
-            if (_temp80 instanceof Completion) {
-              _temp80 = _temp80.Value;
-            }
-            accumulator = _temp80;
-          }
-          k += 1;
-        }
-        if (kPresent === false) {
-          return exports.surroundingAgent.Throw('TypeError', 'ArrayEmptyReduce');
-        }
-      }
-      while (k < len) {
-        let _temp81 = ToString(F(k));
-        Assert(!(_temp81 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp81);
-        /* c8 ignore if */
-        if (_temp81 instanceof Completion) {
-          _temp81 = _temp81.Value;
-        }
-        const Pk = _temp81;
-        let _temp82 = HasProperty(O, Pk);
-        /* c8 ignore if */
-        if (_temp82 instanceof AbruptCompletion) {
-          return _temp82;
-        }
-        /* c8 ignore if */
-        if (_temp82 instanceof Completion) {
-          _temp82 = _temp82.Value;
-        }
-        const kPresent = _temp82;
-        if (kPresent === Value.true) {
-          let _temp83 = Get(O, Pk);
+          const Pk = _temp82;
+          let _temp83 = HasProperty(O, Pk);
           /* c8 ignore if */
           if (_temp83 instanceof AbruptCompletion) {
             return _temp83;
@@ -35646,17 +35941,64 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           if (_temp83 instanceof Completion) {
             _temp83 = _temp83.Value;
           }
-          const kValue = _temp83;
-          let _temp84 = Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), O]);
+          kPresent = _temp83 === Value.true;
+          if (kPresent === true) {
+            let _temp84 = Get(O, Pk);
+            /* c8 ignore if */
+            if (_temp84 instanceof AbruptCompletion) {
+              return _temp84;
+            }
+            /* c8 ignore if */
+            if (_temp84 instanceof Completion) {
+              _temp84 = _temp84.Value;
+            }
+            accumulator = _temp84;
+          }
+          k += 1;
+        }
+        if (kPresent === false) {
+          return exports.surroundingAgent.Throw('TypeError', 'ArrayEmptyReduce');
+        }
+      }
+      while (k < len) {
+        let _temp85 = ToString(F(k));
+        Assert(!(_temp85 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp85);
+        /* c8 ignore if */
+        if (_temp85 instanceof Completion) {
+          _temp85 = _temp85.Value;
+        }
+        const Pk = _temp85;
+        let _temp86 = HasProperty(O, Pk);
+        /* c8 ignore if */
+        if (_temp86 instanceof AbruptCompletion) {
+          return _temp86;
+        }
+        /* c8 ignore if */
+        if (_temp86 instanceof Completion) {
+          _temp86 = _temp86.Value;
+        }
+        const kPresent = _temp86;
+        if (kPresent === Value.true) {
+          let _temp87 = Get(O, Pk);
           /* c8 ignore if */
-          if (_temp84 instanceof AbruptCompletion) {
-            return _temp84;
+          if (_temp87 instanceof AbruptCompletion) {
+            return _temp87;
           }
           /* c8 ignore if */
-          if (_temp84 instanceof Completion) {
-            _temp84 = _temp84.Value;
+          if (_temp87 instanceof Completion) {
+            _temp87 = _temp87.Value;
           }
-          accumulator = _temp84;
+          const kValue = _temp87;
+          let _temp88 = Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), O]);
+          /* c8 ignore if */
+          if (_temp88 instanceof AbruptCompletion) {
+            return _temp88;
+          }
+          /* c8 ignore if */
+          if (_temp88 instanceof Completion) {
+            _temp88 = _temp88.Value;
+          }
+          accumulator = _temp88;
         }
         k += 1;
       }
@@ -35669,35 +36011,35 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     function ArrayProto_reduceRight([callbackfn = Value.undefined, initialValue], {
       thisValue
     }) {
-      let _temp85 = priorToEvaluatingAlgorithm(thisValue);
+      let _temp89 = priorToEvaluatingAlgorithm(thisValue);
       /* c8 ignore if */
-      if (_temp85 instanceof AbruptCompletion) {
-        return _temp85;
+      if (_temp89 instanceof AbruptCompletion) {
+        return _temp89;
       }
       /* c8 ignore if */
-      if (_temp85 instanceof Completion) {
-        _temp85 = _temp85.Value;
+      if (_temp89 instanceof Completion) {
+        _temp89 = _temp89.Value;
       }
-      let _temp86 = ToObject(thisValue);
+      let _temp90 = ToObject(thisValue);
       /* c8 ignore if */
-      if (_temp86 instanceof AbruptCompletion) {
-        return _temp86;
-      }
-      /* c8 ignore if */
-      if (_temp86 instanceof Completion) {
-        _temp86 = _temp86.Value;
-      }
-      const O = _temp86;
-      let _temp87 = objectToLength(O);
-      /* c8 ignore if */
-      if (_temp87 instanceof AbruptCompletion) {
-        return _temp87;
+      if (_temp90 instanceof AbruptCompletion) {
+        return _temp90;
       }
       /* c8 ignore if */
-      if (_temp87 instanceof Completion) {
-        _temp87 = _temp87.Value;
+      if (_temp90 instanceof Completion) {
+        _temp90 = _temp90.Value;
       }
-      const len = _temp87;
+      const O = _temp90;
+      let _temp91 = objectToLength(O);
+      /* c8 ignore if */
+      if (_temp91 instanceof AbruptCompletion) {
+        return _temp91;
+      }
+      /* c8 ignore if */
+      if (_temp91 instanceof Completion) {
+        _temp91 = _temp91.Value;
+      }
+      const len = _temp91;
       if (IsCallable(callbackfn) === Value.false) {
         return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
       }
@@ -35711,61 +36053,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       } else {
         let kPresent = false;
         while (kPresent === false && k >= 0) {
-          let _temp88 = ToString(F(k));
-          Assert(!(_temp88 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp88);
+          let _temp92 = ToString(F(k));
+          Assert(!(_temp92 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp92);
           /* c8 ignore if */
-          if (_temp88 instanceof Completion) {
-            _temp88 = _temp88.Value;
+          if (_temp92 instanceof Completion) {
+            _temp92 = _temp92.Value;
           }
-          const Pk = _temp88;
-          let _temp89 = HasProperty(O, Pk);
-          /* c8 ignore if */
-          if (_temp89 instanceof AbruptCompletion) {
-            return _temp89;
-          }
-          /* c8 ignore if */
-          if (_temp89 instanceof Completion) {
-            _temp89 = _temp89.Value;
-          }
-          kPresent = _temp89 === Value.true;
-          if (kPresent === true) {
-            let _temp90 = Get(O, Pk);
-            /* c8 ignore if */
-            if (_temp90 instanceof AbruptCompletion) {
-              return _temp90;
-            }
-            /* c8 ignore if */
-            if (_temp90 instanceof Completion) {
-              _temp90 = _temp90.Value;
-            }
-            accumulator = _temp90;
-          }
-          k -= 1;
-        }
-        if (kPresent === false) {
-          return exports.surroundingAgent.Throw('TypeError', 'ArrayEmptyReduce');
-        }
-      }
-      while (k >= 0) {
-        let _temp91 = ToString(F(k));
-        Assert(!(_temp91 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp91);
-        /* c8 ignore if */
-        if (_temp91 instanceof Completion) {
-          _temp91 = _temp91.Value;
-        }
-        const Pk = _temp91;
-        let _temp92 = HasProperty(O, Pk);
-        /* c8 ignore if */
-        if (_temp92 instanceof AbruptCompletion) {
-          return _temp92;
-        }
-        /* c8 ignore if */
-        if (_temp92 instanceof Completion) {
-          _temp92 = _temp92.Value;
-        }
-        const kPresent = _temp92;
-        if (kPresent === Value.true) {
-          let _temp93 = Get(O, Pk);
+          const Pk = _temp92;
+          let _temp93 = HasProperty(O, Pk);
           /* c8 ignore if */
           if (_temp93 instanceof AbruptCompletion) {
             return _temp93;
@@ -35774,17 +36069,64 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           if (_temp93 instanceof Completion) {
             _temp93 = _temp93.Value;
           }
-          const kValue = _temp93;
-          let _temp94 = Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), O]);
+          kPresent = _temp93 === Value.true;
+          if (kPresent === true) {
+            let _temp94 = Get(O, Pk);
+            /* c8 ignore if */
+            if (_temp94 instanceof AbruptCompletion) {
+              return _temp94;
+            }
+            /* c8 ignore if */
+            if (_temp94 instanceof Completion) {
+              _temp94 = _temp94.Value;
+            }
+            accumulator = _temp94;
+          }
+          k -= 1;
+        }
+        if (kPresent === false) {
+          return exports.surroundingAgent.Throw('TypeError', 'ArrayEmptyReduce');
+        }
+      }
+      while (k >= 0) {
+        let _temp95 = ToString(F(k));
+        Assert(!(_temp95 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp95);
+        /* c8 ignore if */
+        if (_temp95 instanceof Completion) {
+          _temp95 = _temp95.Value;
+        }
+        const Pk = _temp95;
+        let _temp96 = HasProperty(O, Pk);
+        /* c8 ignore if */
+        if (_temp96 instanceof AbruptCompletion) {
+          return _temp96;
+        }
+        /* c8 ignore if */
+        if (_temp96 instanceof Completion) {
+          _temp96 = _temp96.Value;
+        }
+        const kPresent = _temp96;
+        if (kPresent === Value.true) {
+          let _temp97 = Get(O, Pk);
           /* c8 ignore if */
-          if (_temp94 instanceof AbruptCompletion) {
-            return _temp94;
+          if (_temp97 instanceof AbruptCompletion) {
+            return _temp97;
           }
           /* c8 ignore if */
-          if (_temp94 instanceof Completion) {
-            _temp94 = _temp94.Value;
+          if (_temp97 instanceof Completion) {
+            _temp97 = _temp97.Value;
           }
-          accumulator = _temp94;
+          const kValue = _temp97;
+          let _temp98 = Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), O]);
+          /* c8 ignore if */
+          if (_temp98 instanceof AbruptCompletion) {
+            return _temp98;
+          }
+          /* c8 ignore if */
+          if (_temp98 instanceof Completion) {
+            _temp98 = _temp98.Value;
+          }
+          accumulator = _temp98;
         }
         k -= 1;
       }
@@ -35797,110 +36139,67 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     function ArrayProto_reverse(_args, {
       thisValue
     }) {
-      let _temp95 = priorToEvaluatingAlgorithm(thisValue);
+      let _temp99 = priorToEvaluatingAlgorithm(thisValue);
       /* c8 ignore if */
-      if (_temp95 instanceof AbruptCompletion) {
-        return _temp95;
+      if (_temp99 instanceof AbruptCompletion) {
+        return _temp99;
       }
       /* c8 ignore if */
-      if (_temp95 instanceof Completion) {
-        _temp95 = _temp95.Value;
+      if (_temp99 instanceof Completion) {
+        _temp99 = _temp99.Value;
       }
-      let _temp96 = ToObject(thisValue);
+      let _temp100 = ToObject(thisValue);
       /* c8 ignore if */
-      if (_temp96 instanceof AbruptCompletion) {
-        return _temp96;
-      }
-      /* c8 ignore if */
-      if (_temp96 instanceof Completion) {
-        _temp96 = _temp96.Value;
-      }
-      const O = _temp96;
-      let _temp97 = objectToLength(O);
-      /* c8 ignore if */
-      if (_temp97 instanceof AbruptCompletion) {
-        return _temp97;
+      if (_temp100 instanceof AbruptCompletion) {
+        return _temp100;
       }
       /* c8 ignore if */
-      if (_temp97 instanceof Completion) {
-        _temp97 = _temp97.Value;
+      if (_temp100 instanceof Completion) {
+        _temp100 = _temp100.Value;
       }
-      const len = _temp97;
+      const O = _temp100;
+      let _temp101 = objectToLength(O);
+      /* c8 ignore if */
+      if (_temp101 instanceof AbruptCompletion) {
+        return _temp101;
+      }
+      /* c8 ignore if */
+      if (_temp101 instanceof Completion) {
+        _temp101 = _temp101.Value;
+      }
+      const len = _temp101;
       const middle = Math.floor(len / 2);
       let lower = 0;
       while (lower !== middle) {
         const upper = len - lower - 1;
-        let _temp98 = ToString(F(upper));
-        Assert(!(_temp98 instanceof AbruptCompletion), "ToString(F(upper))" + ' returned an abrupt completion', _temp98);
-        /* c8 ignore if */
-        if (_temp98 instanceof Completion) {
-          _temp98 = _temp98.Value;
-        }
-        const upperP = _temp98;
-        let _temp99 = ToString(F(lower));
-        Assert(!(_temp99 instanceof AbruptCompletion), "ToString(F(lower))" + ' returned an abrupt completion', _temp99);
-        /* c8 ignore if */
-        if (_temp99 instanceof Completion) {
-          _temp99 = _temp99.Value;
-        }
-        const lowerP = _temp99;
-        let _temp100 = HasProperty(O, lowerP);
-        /* c8 ignore if */
-        if (_temp100 instanceof AbruptCompletion) {
-          return _temp100;
-        }
-        /* c8 ignore if */
-        if (_temp100 instanceof Completion) {
-          _temp100 = _temp100.Value;
-        }
-        const lowerExists = _temp100;
-        let lowerValue;
-        let upperValue;
-        if (lowerExists === Value.true) {
-          let _temp101 = Get(O, lowerP);
-          /* c8 ignore if */
-          if (_temp101 instanceof AbruptCompletion) {
-            return _temp101;
-          }
-          /* c8 ignore if */
-          if (_temp101 instanceof Completion) {
-            _temp101 = _temp101.Value;
-          }
-          lowerValue = _temp101;
-        }
-        let _temp102 = HasProperty(O, upperP);
-        /* c8 ignore if */
-        if (_temp102 instanceof AbruptCompletion) {
-          return _temp102;
-        }
+        let _temp102 = ToString(F(upper));
+        Assert(!(_temp102 instanceof AbruptCompletion), "ToString(F(upper))" + ' returned an abrupt completion', _temp102);
         /* c8 ignore if */
         if (_temp102 instanceof Completion) {
           _temp102 = _temp102.Value;
         }
-        const upperExists = _temp102;
-        if (upperExists === Value.true) {
-          let _temp103 = Get(O, upperP);
-          /* c8 ignore if */
-          if (_temp103 instanceof AbruptCompletion) {
-            return _temp103;
-          }
-          /* c8 ignore if */
-          if (_temp103 instanceof Completion) {
-            _temp103 = _temp103.Value;
-          }
-          upperValue = _temp103;
+        const upperP = _temp102;
+        let _temp103 = ToString(F(lower));
+        Assert(!(_temp103 instanceof AbruptCompletion), "ToString(F(lower))" + ' returned an abrupt completion', _temp103);
+        /* c8 ignore if */
+        if (_temp103 instanceof Completion) {
+          _temp103 = _temp103.Value;
         }
-        if (lowerExists === Value.true && upperExists === Value.true) {
-          let _temp104 = Set$1(O, lowerP, upperValue, Value.true);
-          /* c8 ignore if */
-          if (_temp104 instanceof AbruptCompletion) {
-            return _temp104;
-          }
-          /* c8 ignore if */
-          if (_temp104 instanceof Completion) {
-            _temp104 = _temp104.Value;
-          }
-          let _temp105 = Set$1(O, upperP, lowerValue, Value.true);
+        const lowerP = _temp103;
+        let _temp104 = HasProperty(O, lowerP);
+        /* c8 ignore if */
+        if (_temp104 instanceof AbruptCompletion) {
+          return _temp104;
+        }
+        /* c8 ignore if */
+        if (_temp104 instanceof Completion) {
+          _temp104 = _temp104.Value;
+        }
+        const lowerExists = _temp104;
+        let lowerValue;
+        let upperValue;
+        if (lowerExists === Value.true) {
+          let _temp105 = Get(O, lowerP);
           /* c8 ignore if */
           if (_temp105 instanceof AbruptCompletion) {
             return _temp105;
@@ -35909,17 +36208,20 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           if (_temp105 instanceof Completion) {
             _temp105 = _temp105.Value;
           }
-        } else if (lowerExists === Value.false && upperExists === Value.true) {
-          let _temp106 = Set$1(O, lowerP, upperValue, Value.true);
-          /* c8 ignore if */
-          if (_temp106 instanceof AbruptCompletion) {
-            return _temp106;
-          }
-          /* c8 ignore if */
-          if (_temp106 instanceof Completion) {
-            _temp106 = _temp106.Value;
-          }
-          let _temp107 = DeletePropertyOrThrow(O, upperP);
+          lowerValue = _temp105;
+        }
+        let _temp106 = HasProperty(O, upperP);
+        /* c8 ignore if */
+        if (_temp106 instanceof AbruptCompletion) {
+          return _temp106;
+        }
+        /* c8 ignore if */
+        if (_temp106 instanceof Completion) {
+          _temp106 = _temp106.Value;
+        }
+        const upperExists = _temp106;
+        if (upperExists === Value.true) {
+          let _temp107 = Get(O, upperP);
           /* c8 ignore if */
           if (_temp107 instanceof AbruptCompletion) {
             return _temp107;
@@ -35928,8 +36230,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           if (_temp107 instanceof Completion) {
             _temp107 = _temp107.Value;
           }
-        } else if (lowerExists === Value.true && upperExists === Value.false) {
-          let _temp108 = DeletePropertyOrThrow(O, lowerP);
+          upperValue = _temp107;
+        }
+        if (lowerExists === Value.true && upperExists === Value.true) {
+          let _temp108 = Set$1(O, lowerP, upperValue, Value.true);
           /* c8 ignore if */
           if (_temp108 instanceof AbruptCompletion) {
             return _temp108;
@@ -35947,6 +36251,44 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           if (_temp109 instanceof Completion) {
             _temp109 = _temp109.Value;
           }
+        } else if (lowerExists === Value.false && upperExists === Value.true) {
+          let _temp110 = Set$1(O, lowerP, upperValue, Value.true);
+          /* c8 ignore if */
+          if (_temp110 instanceof AbruptCompletion) {
+            return _temp110;
+          }
+          /* c8 ignore if */
+          if (_temp110 instanceof Completion) {
+            _temp110 = _temp110.Value;
+          }
+          let _temp111 = DeletePropertyOrThrow(O, upperP);
+          /* c8 ignore if */
+          if (_temp111 instanceof AbruptCompletion) {
+            return _temp111;
+          }
+          /* c8 ignore if */
+          if (_temp111 instanceof Completion) {
+            _temp111 = _temp111.Value;
+          }
+        } else if (lowerExists === Value.true && upperExists === Value.false) {
+          let _temp112 = DeletePropertyOrThrow(O, lowerP);
+          /* c8 ignore if */
+          if (_temp112 instanceof AbruptCompletion) {
+            return _temp112;
+          }
+          /* c8 ignore if */
+          if (_temp112 instanceof Completion) {
+            _temp112 = _temp112.Value;
+          }
+          let _temp113 = Set$1(O, upperP, lowerValue, Value.true);
+          /* c8 ignore if */
+          if (_temp113 instanceof AbruptCompletion) {
+            return _temp113;
+          }
+          /* c8 ignore if */
+          if (_temp113 instanceof Completion) {
+            _temp113 = _temp113.Value;
+          }
         } else ;
         lower += 1;
       }
@@ -35959,78 +36301,78 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     function ArrayProto_some([callbackfn = Value.undefined, thisArg = Value.undefined], {
       thisValue
     }) {
-      let _temp110 = priorToEvaluatingAlgorithm(thisValue);
+      let _temp114 = priorToEvaluatingAlgorithm(thisValue);
       /* c8 ignore if */
-      if (_temp110 instanceof AbruptCompletion) {
-        return _temp110;
+      if (_temp114 instanceof AbruptCompletion) {
+        return _temp114;
       }
       /* c8 ignore if */
-      if (_temp110 instanceof Completion) {
-        _temp110 = _temp110.Value;
+      if (_temp114 instanceof Completion) {
+        _temp114 = _temp114.Value;
       }
-      let _temp111 = ToObject(thisValue);
+      let _temp115 = ToObject(thisValue);
       /* c8 ignore if */
-      if (_temp111 instanceof AbruptCompletion) {
-        return _temp111;
-      }
-      /* c8 ignore if */
-      if (_temp111 instanceof Completion) {
-        _temp111 = _temp111.Value;
-      }
-      const O = _temp111;
-      let _temp112 = objectToLength(O);
-      /* c8 ignore if */
-      if (_temp112 instanceof AbruptCompletion) {
-        return _temp112;
+      if (_temp115 instanceof AbruptCompletion) {
+        return _temp115;
       }
       /* c8 ignore if */
-      if (_temp112 instanceof Completion) {
-        _temp112 = _temp112.Value;
+      if (_temp115 instanceof Completion) {
+        _temp115 = _temp115.Value;
       }
-      const len = _temp112;
+      const O = _temp115;
+      let _temp116 = objectToLength(O);
+      /* c8 ignore if */
+      if (_temp116 instanceof AbruptCompletion) {
+        return _temp116;
+      }
+      /* c8 ignore if */
+      if (_temp116 instanceof Completion) {
+        _temp116 = _temp116.Value;
+      }
+      const len = _temp116;
       if (IsCallable(callbackfn) === Value.false) {
         return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
       }
       let k = 0;
       while (k < len) {
-        let _temp113 = ToString(F(k));
-        Assert(!(_temp113 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp113);
+        let _temp117 = ToString(F(k));
+        Assert(!(_temp117 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp117);
         /* c8 ignore if */
-        if (_temp113 instanceof Completion) {
-          _temp113 = _temp113.Value;
+        if (_temp117 instanceof Completion) {
+          _temp117 = _temp117.Value;
         }
-        const Pk = _temp113;
-        let _temp114 = HasProperty(O, Pk);
+        const Pk = _temp117;
+        let _temp118 = HasProperty(O, Pk);
         /* c8 ignore if */
-        if (_temp114 instanceof AbruptCompletion) {
-          return _temp114;
+        if (_temp118 instanceof AbruptCompletion) {
+          return _temp118;
         }
         /* c8 ignore if */
-        if (_temp114 instanceof Completion) {
-          _temp114 = _temp114.Value;
+        if (_temp118 instanceof Completion) {
+          _temp118 = _temp118.Value;
         }
-        const kPresent = _temp114;
+        const kPresent = _temp118;
         if (kPresent === Value.true) {
-          let _temp115 = Get(O, Pk);
+          let _temp119 = Get(O, Pk);
           /* c8 ignore if */
-          if (_temp115 instanceof AbruptCompletion) {
-            return _temp115;
+          if (_temp119 instanceof AbruptCompletion) {
+            return _temp119;
           }
           /* c8 ignore if */
-          if (_temp115 instanceof Completion) {
-            _temp115 = _temp115.Value;
+          if (_temp119 instanceof Completion) {
+            _temp119 = _temp119.Value;
           }
-          const kValue = _temp115;
-          let _temp116 = Call(callbackfn, thisArg, [kValue, F(k), O]);
+          const kValue = _temp119;
+          let _temp120 = Call(callbackfn, thisArg, [kValue, F(k), O]);
           /* c8 ignore if */
-          if (_temp116 instanceof AbruptCompletion) {
-            return _temp116;
+          if (_temp120 instanceof AbruptCompletion) {
+            return _temp120;
           }
           /* c8 ignore if */
-          if (_temp116 instanceof Completion) {
-            _temp116 = _temp116.Value;
+          if (_temp120 instanceof Completion) {
+            _temp120 = _temp120.Value;
           }
-          const testResult = ToBoolean(_temp116);
+          const testResult = ToBoolean(_temp120);
           if (testResult === Value.true) {
             return Value.true;
           }
@@ -36046,35 +36388,35 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     function ArrayProto_toLocaleString(_args, {
       thisValue
     }) {
-      let _temp117 = priorToEvaluatingAlgorithm(thisValue);
+      let _temp121 = priorToEvaluatingAlgorithm(thisValue);
       /* c8 ignore if */
-      if (_temp117 instanceof AbruptCompletion) {
-        return _temp117;
+      if (_temp121 instanceof AbruptCompletion) {
+        return _temp121;
       }
       /* c8 ignore if */
-      if (_temp117 instanceof Completion) {
-        _temp117 = _temp117.Value;
+      if (_temp121 instanceof Completion) {
+        _temp121 = _temp121.Value;
       }
-      let _temp118 = ToObject(thisValue);
+      let _temp122 = ToObject(thisValue);
       /* c8 ignore if */
-      if (_temp118 instanceof AbruptCompletion) {
-        return _temp118;
-      }
-      /* c8 ignore if */
-      if (_temp118 instanceof Completion) {
-        _temp118 = _temp118.Value;
-      }
-      const array = _temp118;
-      let _temp119 = objectToLength(array);
-      /* c8 ignore if */
-      if (_temp119 instanceof AbruptCompletion) {
-        return _temp119;
+      if (_temp122 instanceof AbruptCompletion) {
+        return _temp122;
       }
       /* c8 ignore if */
-      if (_temp119 instanceof Completion) {
-        _temp119 = _temp119.Value;
+      if (_temp122 instanceof Completion) {
+        _temp122 = _temp122.Value;
       }
-      const len = _temp119;
+      const array = _temp122;
+      let _temp123 = objectToLength(array);
+      /* c8 ignore if */
+      if (_temp123 instanceof AbruptCompletion) {
+        return _temp123;
+      }
+      /* c8 ignore if */
+      if (_temp123 instanceof Completion) {
+        _temp123 = _temp123.Value;
+      }
+      const len = _temp123;
       const separator = ', ';
       let R = '';
       let k = 0;
@@ -36082,43 +36424,43 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (k > 0) {
           R = `${R}${separator}`;
         }
-        let _temp120 = ToString(F(k));
-        Assert(!(_temp120 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp120);
+        let _temp124 = ToString(F(k));
+        Assert(!(_temp124 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp124);
         /* c8 ignore if */
-        if (_temp120 instanceof Completion) {
-          _temp120 = _temp120.Value;
+        if (_temp124 instanceof Completion) {
+          _temp124 = _temp124.Value;
         }
-        const kStr = _temp120;
-        let _temp121 = Get(array, kStr);
+        const kStr = _temp124;
+        let _temp125 = Get(array, kStr);
         /* c8 ignore if */
-        if (_temp121 instanceof AbruptCompletion) {
-          return _temp121;
+        if (_temp125 instanceof AbruptCompletion) {
+          return _temp125;
         }
         /* c8 ignore if */
-        if (_temp121 instanceof Completion) {
-          _temp121 = _temp121.Value;
+        if (_temp125 instanceof Completion) {
+          _temp125 = _temp125.Value;
         }
-        const nextElement = _temp121;
+        const nextElement = _temp125;
         if (nextElement !== Value.undefined && nextElement !== Value.null) {
-          let _temp123 = Invoke(nextElement, Value('toLocaleString'));
+          let _temp127 = Invoke(nextElement, Value('toLocaleString'));
           /* c8 ignore if */
-          if (_temp123 instanceof AbruptCompletion) {
-            return _temp123;
+          if (_temp127 instanceof AbruptCompletion) {
+            return _temp127;
           }
           /* c8 ignore if */
-          if (_temp123 instanceof Completion) {
-            _temp123 = _temp123.Value;
+          if (_temp127 instanceof Completion) {
+            _temp127 = _temp127.Value;
           }
-          let _temp122 = ToString(_temp123);
+          let _temp126 = ToString(_temp127);
           /* c8 ignore if */
-          if (_temp122 instanceof AbruptCompletion) {
-            return _temp122;
+          if (_temp126 instanceof AbruptCompletion) {
+            return _temp126;
           }
           /* c8 ignore if */
-          if (_temp122 instanceof Completion) {
-            _temp122 = _temp122.Value;
+          if (_temp126 instanceof Completion) {
+            _temp126 = _temp126.Value;
           }
-          const S = _temp122.stringValue();
+          const S = _temp126.stringValue();
           R = `${R}${S}`;
         }
         k += 1;
@@ -38196,17 +38538,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
 
   /** https://tc39.es/ecma262/#sec-array.from */
   ArrayConstructor.section = 'https://tc39.es/ecma262/#sec-array-constructor';
-  function Array_from([items = Value.undefined, mapfn = Value.undefined, thisArg = Value.undefined], {
+  function Array_from([items = Value.undefined, mapper = Value.undefined, thisArg = Value.undefined], {
     thisValue
   }) {
     const C = thisValue;
     let mapping;
     let A;
-    if (mapfn === Value.undefined) {
+    if (mapper === Value.undefined) {
       mapping = false;
     } else {
-      if (IsCallable(mapfn) === Value.false) {
-        return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', mapfn);
+      if (IsCallable(mapper) === Value.false) {
+        return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', mapper);
       }
       mapping = true;
     }
@@ -38220,7 +38562,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp11 = _temp11.Value;
     }
     const usingIterator = _temp11;
-    if (usingIterator !== Value.undefined) {
+    if (!(usingIterator instanceof UndefinedValue)) {
       if (IsConstructor(C) === Value.true) {
         let _temp12 = Construct(C);
         /* c8 ignore if */
@@ -38241,7 +38583,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
         A = _temp13;
       }
-      let _temp14 = GetIterator(items, 'sync', usingIterator);
+      let _temp14 = GetIteratorFromMethod(items, usingIterator);
       /* c8 ignore if */
       if (_temp14 instanceof AbruptCompletion) {
         return _temp14;
@@ -38265,7 +38607,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           _temp15 = _temp15.Value;
         }
         const Pk = _temp15;
-        let _temp16 = IteratorStep(iteratorRecord);
+        let _temp16 = IteratorStepValue(iteratorRecord);
         /* c8 ignore if */
         if (_temp16 instanceof AbruptCompletion) {
           return _temp16;
@@ -38275,7 +38617,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           _temp16 = _temp16.Value;
         }
         const next = _temp16;
-        if (next === Value.false) {
+        if (next === 'done') {
           let _temp17 = Set$1(A, Value('length'), F(k), Value.true);
           /* c8 ignore if */
           if (_temp17 instanceof AbruptCompletion) {
@@ -38287,19 +38629,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           }
           return A;
         }
-        let _temp18 = IteratorValue(next);
-        /* c8 ignore if */
-        if (_temp18 instanceof AbruptCompletion) {
-          return _temp18;
-        }
-        /* c8 ignore if */
-        if (_temp18 instanceof Completion) {
-          _temp18 = _temp18.Value;
-        }
-        const nextValue = _temp18;
         let mappedValue;
         if (mapping) {
-          mappedValue = Call(mapfn, thisArg, [nextValue, F(k)]);
+          mappedValue = Call(mapper, thisArg, [next, F(k)]);
           /* c8 ignore if */
           if (mappedValue instanceof AbruptCompletion) {
             return IteratorClose(iteratorRecord, mappedValue);
@@ -38309,7 +38641,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             mappedValue = mappedValue.Value;
           }
         } else {
-          mappedValue = nextValue;
+          mappedValue = next;
         }
         let defineStatus = CreateDataPropertyOrThrow(A, Pk, mappedValue);
         /* c8 ignore if */
@@ -38323,25 +38655,36 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         k += 1;
       }
     }
-    let _temp19 = ToObject(items);
-    Assert(!(_temp19 instanceof AbruptCompletion), "ToObject(items)" + ' returned an abrupt completion', _temp19);
+    let _temp18 = ToObject(items);
+    Assert(!(_temp18 instanceof AbruptCompletion), "ToObject(items)" + ' returned an abrupt completion', _temp18);
+    /* c8 ignore if */
+    if (_temp18 instanceof Completion) {
+      _temp18 = _temp18.Value;
+    }
+    const arrayLike = _temp18;
+    let _temp19 = LengthOfArrayLike(arrayLike);
+    /* c8 ignore if */
+    if (_temp19 instanceof AbruptCompletion) {
+      return _temp19;
+    }
     /* c8 ignore if */
     if (_temp19 instanceof Completion) {
       _temp19 = _temp19.Value;
     }
-    const arrayLike = _temp19;
-    let _temp20 = LengthOfArrayLike(arrayLike);
-    /* c8 ignore if */
-    if (_temp20 instanceof AbruptCompletion) {
-      return _temp20;
-    }
-    /* c8 ignore if */
-    if (_temp20 instanceof Completion) {
-      _temp20 = _temp20.Value;
-    }
-    const len = _temp20;
+    const len = _temp19;
     if (IsConstructor(C) === Value.true) {
-      let _temp21 = Construct(C, [F(len)]);
+      let _temp20 = Construct(C, [F(len)]);
+      /* c8 ignore if */
+      if (_temp20 instanceof AbruptCompletion) {
+        return _temp20;
+      }
+      /* c8 ignore if */
+      if (_temp20 instanceof Completion) {
+        _temp20 = _temp20.Value;
+      }
+      A = _temp20;
+    } else {
+      let _temp21 = ArrayCreate(len);
       /* c8 ignore if */
       if (_temp21 instanceof AbruptCompletion) {
         return _temp21;
@@ -38351,71 +38694,60 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _temp21 = _temp21.Value;
       }
       A = _temp21;
-    } else {
-      let _temp22 = ArrayCreate(len);
-      /* c8 ignore if */
-      if (_temp22 instanceof AbruptCompletion) {
-        return _temp22;
-      }
+    }
+    let k = 0;
+    while (k < len) {
+      let _temp22 = ToString(F(k));
+      Assert(!(_temp22 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp22);
       /* c8 ignore if */
       if (_temp22 instanceof Completion) {
         _temp22 = _temp22.Value;
       }
-      A = _temp22;
-    }
-    let k = 0;
-    while (k < len) {
-      let _temp23 = ToString(F(k));
-      Assert(!(_temp23 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp23);
+      const Pk = _temp22;
+      let _temp23 = Get(arrayLike, Pk);
+      /* c8 ignore if */
+      if (_temp23 instanceof AbruptCompletion) {
+        return _temp23;
+      }
       /* c8 ignore if */
       if (_temp23 instanceof Completion) {
         _temp23 = _temp23.Value;
       }
-      const Pk = _temp23;
-      let _temp24 = Get(arrayLike, Pk);
-      /* c8 ignore if */
-      if (_temp24 instanceof AbruptCompletion) {
-        return _temp24;
-      }
-      /* c8 ignore if */
-      if (_temp24 instanceof Completion) {
-        _temp24 = _temp24.Value;
-      }
-      const kValue = _temp24;
+      const kValue = _temp23;
       let mappedValue;
       if (mapping === true) {
-        let _temp25 = Call(mapfn, thisArg, [kValue, F(k)]);
+        let _temp24 = Call(mapper, thisArg, [kValue, F(k)]);
         /* c8 ignore if */
-        if (_temp25 instanceof AbruptCompletion) {
-          return _temp25;
+        if (_temp24 instanceof AbruptCompletion) {
+          return _temp24;
         }
         /* c8 ignore if */
-        if (_temp25 instanceof Completion) {
-          _temp25 = _temp25.Value;
+        if (_temp24 instanceof Completion) {
+          _temp24 = _temp24.Value;
         }
-        mappedValue = _temp25;
+        mappedValue = _temp24;
       } else {
         mappedValue = kValue;
       }
-      let _temp26 = CreateDataPropertyOrThrow(A, Pk, mappedValue);
+      let _temp25 = CreateDataPropertyOrThrow(A, Pk, mappedValue);
       /* c8 ignore if */
-      if (_temp26 instanceof AbruptCompletion) {
-        return _temp26;
+      if (_temp25 instanceof AbruptCompletion) {
+        return _temp25;
       }
       /* c8 ignore if */
-      if (_temp26 instanceof Completion) {
-        _temp26 = _temp26.Value;
+      if (_temp25 instanceof Completion) {
+        _temp25 = _temp25.Value;
       }
       k += 1;
     }
-    let _temp27 = Set$1(A, Value('length'), F(len), Value.true);
+    let _temp26 = Set$1(A, Value('length'), F(len), Value.true);
     /* c8 ignore if */
-    if (_temp27 instanceof AbruptCompletion) {
-      return _temp27;
+    if (_temp26 instanceof AbruptCompletion) {
+      return _temp26;
     }
     /* c8 ignore if */
-    if (_temp27 instanceof Completion) {
-      _temp27 = _temp27.Value;
+    if (_temp26 instanceof Completion) {
+      _temp26 = _temp26.Value;
     }
     return A;
   }
@@ -38436,7 +38768,18 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const C = thisValue;
     let A;
     if (IsConstructor(C) === Value.true) {
-      let _temp28 = Construct(C, [F(len)]);
+      let _temp27 = Construct(C, [F(len)]);
+      /* c8 ignore if */
+      if (_temp27 instanceof AbruptCompletion) {
+        return _temp27;
+      }
+      /* c8 ignore if */
+      if (_temp27 instanceof Completion) {
+        _temp27 = _temp27.Value;
+      }
+      A = _temp27;
+    } else {
+      let _temp28 = ArrayCreate(len);
       /* c8 ignore if */
       if (_temp28 instanceof AbruptCompletion) {
         return _temp28;
@@ -38446,47 +38789,36 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _temp28 = _temp28.Value;
       }
       A = _temp28;
-    } else {
-      let _temp29 = ArrayCreate(len);
-      /* c8 ignore if */
-      if (_temp29 instanceof AbruptCompletion) {
-        return _temp29;
-      }
-      /* c8 ignore if */
-      if (_temp29 instanceof Completion) {
-        _temp29 = _temp29.Value;
-      }
-      A = _temp29;
     }
     let k = 0;
     while (k < len) {
       const kValue = items[k];
-      let _temp30 = ToString(F(k));
-      Assert(!(_temp30 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp30);
+      let _temp29 = ToString(F(k));
+      Assert(!(_temp29 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp29);
+      /* c8 ignore if */
+      if (_temp29 instanceof Completion) {
+        _temp29 = _temp29.Value;
+      }
+      const Pk = _temp29;
+      let _temp30 = CreateDataPropertyOrThrow(A, Pk, kValue);
+      /* c8 ignore if */
+      if (_temp30 instanceof AbruptCompletion) {
+        return _temp30;
+      }
       /* c8 ignore if */
       if (_temp30 instanceof Completion) {
         _temp30 = _temp30.Value;
       }
-      const Pk = _temp30;
-      let _temp31 = CreateDataPropertyOrThrow(A, Pk, kValue);
-      /* c8 ignore if */
-      if (_temp31 instanceof AbruptCompletion) {
-        return _temp31;
-      }
-      /* c8 ignore if */
-      if (_temp31 instanceof Completion) {
-        _temp31 = _temp31.Value;
-      }
       k += 1;
     }
-    let _temp32 = Set$1(A, Value('length'), F(len), Value.true);
+    let _temp31 = Set$1(A, Value('length'), F(len), Value.true);
     /* c8 ignore if */
-    if (_temp32 instanceof AbruptCompletion) {
-      return _temp32;
+    if (_temp31 instanceof AbruptCompletion) {
+      return _temp31;
     }
     /* c8 ignore if */
-    if (_temp32 instanceof Completion) {
-      _temp32 = _temp32.Value;
+    if (_temp31 instanceof Completion) {
+      _temp31 = _temp31.Value;
     }
     return A;
   }
@@ -43678,25 +44010,19 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let index = 0;
     // 7. Repeat,
     while (true) {
-      // a. Let next be IteratorStep(iteratorRecord).
-      let next = IteratorStep(iteratorRecord);
-      // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-      if (next instanceof AbruptCompletion) {
-        iteratorRecord.Done = Value.true;
-      }
-      // c. ReturnIfAbrupt(next).
+      let _temp4 = IteratorStepValue(iteratorRecord);
       /* c8 ignore if */
-      if (next instanceof AbruptCompletion) {
-        return next;
+      if (_temp4 instanceof AbruptCompletion) {
+        return _temp4;
       }
       /* c8 ignore if */
-      if (next instanceof Completion) {
-        next = next.Value;
+      if (_temp4 instanceof Completion) {
+        _temp4 = _temp4.Value;
       }
-      // d. If next is false, then
-      if (next === Value.false) {
-        // i. Set iteratorRecord.[[Done]] to true.
-        iteratorRecord.Done = Value.true;
+      // a. Let next be ? IteratorStepValue(iteratorRecord).
+      const next = _temp4;
+      // d. If next is done, then
+      if (next === 'done') {
         // ii. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] - 1.
         remainingElementsCount.Value -= 1;
         // iii. If remainingElementsCount.[[Value]] is 0, then
@@ -43704,65 +44030,44 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           // 1. Let valuesArray be ! CreateArrayFromList(values).
           const valuesArray = CreateArrayFromList(values);
           // 2. Perform ? Call(resultCapability.[[Resolve]], undefined, « valuesArray »).
-          let _temp4 = Call(resultCapability.Resolve, Value.undefined, [valuesArray]);
+          let _temp5 = Call(resultCapability.Resolve, Value.undefined, [valuesArray]);
           /* c8 ignore if */
-          if (_temp4 instanceof AbruptCompletion) {
-            return _temp4;
+          if (_temp5 instanceof AbruptCompletion) {
+            return _temp5;
           }
           /* c8 ignore if */
-          if (_temp4 instanceof Completion) {
-            _temp4 = _temp4.Value;
+          if (_temp5 instanceof Completion) {
+            _temp5 = _temp5.Value;
           }
         }
         // iv. Return resultCapability.[[Promise]].
         return resultCapability.Promise;
       }
-      // e. Let nextValue be IteratorValue(next).
-      let nextValue = IteratorValue(next);
-      // f. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
-      if (nextValue instanceof AbruptCompletion) {
-        iteratorRecord.Done = Value.true;
-      }
-      // g. ReturnIfAbrupt(nextValue).
-      /* c8 ignore if */
-      if (nextValue instanceof AbruptCompletion) {
-        return nextValue;
-      }
-      /* c8 ignore if */
-      if (nextValue instanceof Completion) {
-        nextValue = nextValue.Value;
-      }
       // h. Append undefined to values.
       values.push(Value.undefined);
-      // i. Let nextPromise be ? Call(promiseResolve, constructor, « nextValue »).
-      let _temp8 = nextValue;
-      Assert(!(_temp8 instanceof AbruptCompletion), "nextValue" + ' returned an abrupt completion', _temp8);
+      // i. Let nextPromise be ? Call(promiseResolve, constructor, « next »).
+      let _temp6 = Call(promiseResolve, constructor, [next]);
       /* c8 ignore if */
-      if (_temp8 instanceof Completion) {
-        _temp8 = _temp8.Value;
-      }
-      let _temp5 = Call(promiseResolve, constructor, [_temp8]);
-      /* c8 ignore if */
-      if (_temp5 instanceof AbruptCompletion) {
-        return _temp5;
+      if (_temp6 instanceof AbruptCompletion) {
+        return _temp6;
       }
       /* c8 ignore if */
-      if (_temp5 instanceof Completion) {
-        _temp5 = _temp5.Value;
+      if (_temp6 instanceof Completion) {
+        _temp6 = _temp6.Value;
       }
-      const nextPromise = _temp5;
+      const nextPromise = _temp6;
       // j. Let steps be the algorithm steps defined in Promise.all Resolve Element Functions.
       const steps = PromiseAllResolveElementFunctions;
       // k. Let length be the number of non-optional parameters of the function definition in Promise.all Resolve Element Functions.
       const length = 1;
       // l. Let onFulfilled be ! CreateBuiltinFunction(steps, length, "", « [[AlreadyCalled]], [[Index]], [[Values]], [[Capability]], [[RemainingElements]] »).
-      let _temp6 = CreateBuiltinFunction(steps, length, Value(''), ['AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements']);
-      Assert(!(_temp6 instanceof AbruptCompletion), "CreateBuiltinFunction(steps, length, Value(''), [\n      'AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements',\n    ])" + ' returned an abrupt completion', _temp6);
+      let _temp7 = CreateBuiltinFunction(steps, length, Value(''), ['AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements']);
+      Assert(!(_temp7 instanceof AbruptCompletion), "CreateBuiltinFunction(steps, length, Value(''), [\n      'AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements',\n    ])" + ' returned an abrupt completion', _temp7);
       /* c8 ignore if */
-      if (_temp6 instanceof Completion) {
-        _temp6 = _temp6.Value;
+      if (_temp7 instanceof Completion) {
+        _temp7 = _temp7.Value;
       }
-      const onFulfilled = _temp6;
+      const onFulfilled = _temp7;
       // m. Set onFulfilled.[[AlreadyCalled]] to the Record { [[Value]]: false }.
       onFulfilled.AlreadyCalled = {
         Value: false
@@ -43778,14 +44083,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // r. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] + 1.
       remainingElementsCount.Value += 1;
       // s. Perform ? Invoke(nextPromise, "then", « onFulfilled, resultCapability.[[Reject]] »).
-      let _temp7 = Invoke(nextPromise, Value('then'), [onFulfilled, resultCapability.Reject]);
+      let _temp8 = Invoke(nextPromise, Value('then'), [onFulfilled, resultCapability.Reject]);
       /* c8 ignore if */
-      if (_temp7 instanceof AbruptCompletion) {
-        return _temp7;
+      if (_temp8 instanceof AbruptCompletion) {
+        return _temp8;
       }
       /* c8 ignore if */
-      if (_temp7 instanceof Completion) {
-        _temp7 = _temp7.Value;
+      if (_temp8 instanceof Completion) {
+        _temp8 = _temp8.Value;
       }
       // t. Set index to index + 1.
       index += 1;
@@ -43841,7 +44146,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       iteratorRecord = iteratorRecord.Value;
     }
     // 7. Let result be PerformPromiseAll(iteratorRecord, C, promiseCapability, promiseResolve).
-    let result = EnsureCompletion(PerformPromiseAll(iteratorRecord, C, promiseCapability, promiseResolve));
+    let result = PerformPromiseAll(iteratorRecord, C, promiseCapability, promiseResolve);
     // 8. If result is an abrupt completion, then
     if (result instanceof AbruptCompletion) {
       // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
@@ -43862,8 +44167,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         result = result.Value;
       }
     }
-    // 9. Return Completion(result).
-    return EnsureCompletion(result);
+    // 9. Return ? result.
+    return result;
   }
   Promise_all.section = 'https://tc39.es/ecma262/#sec-promise.all';
   function PromiseAllSettledResolveElementFunctions([x = Value.undefined]) {
@@ -43979,91 +44284,70 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let index = 0;
     // 7. Repeat,
     while (true) {
-      // a. Let next be IteratorStep(iteratorRecord).
-      let next = IteratorStep(iteratorRecord);
-      // b. Let next be IteratorStep(iteratorRecord).
-      if (next instanceof AbruptCompletion) {
-        iteratorRecord.Done = Value.true;
-      }
-      // c. ReturnIfAbrupt(next).
+      let _temp19 = IteratorStepValue(iteratorRecord);
       /* c8 ignore if */
-      if (next instanceof AbruptCompletion) {
-        return next;
+      if (_temp19 instanceof AbruptCompletion) {
+        return _temp19;
       }
       /* c8 ignore if */
-      if (next instanceof Completion) {
-        next = next.Value;
+      if (_temp19 instanceof Completion) {
+        _temp19 = _temp19.Value;
       }
-      // d. If next is false,
-      if (next === Value.false) {
-        // i. Set iteratorRecord.[[Done]] to true.
-        iteratorRecord.Done = Value.true;
+      // a. Let next be ? IteratorStepValue(iteratorRecord).
+      const next = _temp19;
+      // d. If next is done,
+      if (next === 'done') {
         // ii. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] - 1.
         remainingElementsCount.Value -= 1;
         // iii. If remainingElementsCount.[[Value]] is 0, then
         if (remainingElementsCount.Value === 0) {
-          let _temp19 = CreateArrayFromList(values);
-          Assert(!(_temp19 instanceof AbruptCompletion), "CreateArrayFromList(values)" + ' returned an abrupt completion', _temp19);
-          /* c8 ignore if */
-          if (_temp19 instanceof Completion) {
-            _temp19 = _temp19.Value;
-          }
-          // 1. Let valuesArray be ! CreateArrayFromList(values).
-          const valuesArray = _temp19;
-          // 2. Perform ? Call(resultCapability.[[Resolve]], undefined, « valuesArray »).
-          let _temp20 = Call(resultCapability.Resolve, Value.undefined, [valuesArray]);
-          /* c8 ignore if */
-          if (_temp20 instanceof AbruptCompletion) {
-            return _temp20;
-          }
+          let _temp20 = CreateArrayFromList(values);
+          Assert(!(_temp20 instanceof AbruptCompletion), "CreateArrayFromList(values)" + ' returned an abrupt completion', _temp20);
           /* c8 ignore if */
           if (_temp20 instanceof Completion) {
             _temp20 = _temp20.Value;
+          }
+          // 1. Let valuesArray be ! CreateArrayFromList(values).
+          const valuesArray = _temp20;
+          // 2. Perform ? Call(resultCapability.[[Resolve]], undefined, « valuesArray »).
+          let _temp21 = Call(resultCapability.Resolve, Value.undefined, [valuesArray]);
+          /* c8 ignore if */
+          if (_temp21 instanceof AbruptCompletion) {
+            return _temp21;
+          }
+          /* c8 ignore if */
+          if (_temp21 instanceof Completion) {
+            _temp21 = _temp21.Value;
           }
         }
         // iv. Return resultCapability.[[Promise]].
         return resultCapability.Promise;
       }
-      // e. Let nextValue be IteratorValue(next).
-      let nextValue = IteratorValue(next);
-      // f. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
-      if (nextValue instanceof AbruptCompletion) {
-        iteratorRecord.Done = Value.true;
-      }
-      // g. ReturnIfAbrupt(nextValue).
-      /* c8 ignore if */
-      if (nextValue instanceof AbruptCompletion) {
-        return nextValue;
-      }
-      /* c8 ignore if */
-      if (nextValue instanceof Completion) {
-        nextValue = nextValue.Value;
-      }
       // h. Append undefined to values.
       values.push(Value.undefined);
-      // i. Let nextPromise be ? Call(promiseResolve, constructor, « nextValue »).
-      let _temp21 = Call(promiseResolve, constructor, [nextValue]);
+      // i. Let nextPromise be ? Call(promiseResolve, constructor, « next »).
+      let _temp22 = Call(promiseResolve, constructor, [next]);
       /* c8 ignore if */
-      if (_temp21 instanceof AbruptCompletion) {
-        return _temp21;
+      if (_temp22 instanceof AbruptCompletion) {
+        return _temp22;
       }
       /* c8 ignore if */
-      if (_temp21 instanceof Completion) {
-        _temp21 = _temp21.Value;
+      if (_temp22 instanceof Completion) {
+        _temp22 = _temp22.Value;
       }
-      const nextPromise = _temp21;
+      const nextPromise = _temp22;
       // j. Let stepsFulfilled be the algorithm steps defined in Promise.allSettled Resolve Element Functions.
       const stepsFulfilled = PromiseAllSettledResolveElementFunctions;
       // k. Let lengthFulfilled be the number of non-optional parameters of the function definition in Promise.allSettled Resolve Element Functions.
       const lengthFulfilled = 1;
       // l. Let onFulfilled be ! CreateBuiltinFunction(stepsFulfilled, lengthFulfilled, "", « [[AlreadyCalled]], [[Index]], [[Values]], [[Capability]], [[RemainingElements]] »).
-      let _temp22 = CreateBuiltinFunction(stepsFulfilled, lengthFulfilled, Value(''), ['AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements']);
-      Assert(!(_temp22 instanceof AbruptCompletion), "CreateBuiltinFunction(stepsFulfilled, lengthFulfilled, Value(''), [\n      'AlreadyCalled',\n      'Index',\n      'Values',\n      'Capability',\n      'RemainingElements',\n    ])" + ' returned an abrupt completion', _temp22);
+      let _temp23 = CreateBuiltinFunction(stepsFulfilled, lengthFulfilled, Value(''), ['AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements']);
+      Assert(!(_temp23 instanceof AbruptCompletion), "CreateBuiltinFunction(stepsFulfilled, lengthFulfilled, Value(''), [\n      'AlreadyCalled',\n      'Index',\n      'Values',\n      'Capability',\n      'RemainingElements',\n    ])" + ' returned an abrupt completion', _temp23);
       /* c8 ignore if */
-      if (_temp22 instanceof Completion) {
-        _temp22 = _temp22.Value;
+      if (_temp23 instanceof Completion) {
+        _temp23 = _temp23.Value;
       }
-      const onFulfilled = _temp22;
+      const onFulfilled = _temp23;
       // m. Let alreadyCalled be the Record { [[Value]]: false }.
       const alreadyCalled = {
         Value: false
@@ -44083,13 +44367,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // t. Let lengthRejected be the number of non-optional parameters of the function definition in Promise.allSettled Reject Element Functions.
       const lengthRejected = 1;
       // u. Let onRejected be ! CreateBuiltinFunction(stepsRejected, lengthRejected, "", « [[AlreadyCalled]], [[Index]], [[Values]], [[Capability]], [[RemainingElements]] »).
-      let _temp23 = CreateBuiltinFunction(stepsRejected, lengthRejected, Value(''), ['AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements']);
-      Assert(!(_temp23 instanceof AbruptCompletion), "CreateBuiltinFunction(stepsRejected, lengthRejected, Value(''), [\n      'AlreadyCalled',\n      'Index',\n      'Values',\n      'Capability',\n      'RemainingElements',\n    ])" + ' returned an abrupt completion', _temp23);
+      let _temp24 = CreateBuiltinFunction(stepsRejected, lengthRejected, Value(''), ['AlreadyCalled', 'Index', 'Values', 'Capability', 'RemainingElements']);
+      Assert(!(_temp24 instanceof AbruptCompletion), "CreateBuiltinFunction(stepsRejected, lengthRejected, Value(''), [\n      'AlreadyCalled',\n      'Index',\n      'Values',\n      'Capability',\n      'RemainingElements',\n    ])" + ' returned an abrupt completion', _temp24);
       /* c8 ignore if */
-      if (_temp23 instanceof Completion) {
-        _temp23 = _temp23.Value;
+      if (_temp24 instanceof Completion) {
+        _temp24 = _temp24.Value;
       }
-      const onRejected = _temp23;
+      const onRejected = _temp24;
       // v. Set onRejected.[[AlreadyCalled]] to alreadyCalled.
       onRejected.AlreadyCalled = alreadyCalled;
       // w. Set onRejected.[[Index]] to index.
@@ -44103,14 +44387,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // aa. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] + 1.
       remainingElementsCount.Value += 1;
       // ab. Perform ? Invoke(nextPromise, "then", « onFulfilled, onRejected »).
-      let _temp24 = Invoke(nextPromise, Value('then'), [onFulfilled, onRejected]);
+      let _temp25 = Invoke(nextPromise, Value('then'), [onFulfilled, onRejected]);
       /* c8 ignore if */
-      if (_temp24 instanceof AbruptCompletion) {
-        return _temp24;
+      if (_temp25 instanceof AbruptCompletion) {
+        return _temp25;
       }
       /* c8 ignore if */
-      if (_temp24 instanceof Completion) {
-        _temp24 = _temp24.Value;
+      if (_temp25 instanceof Completion) {
+        _temp25 = _temp25.Value;
       }
       // ac. Set index to index + 1.
       index += 1;
@@ -44125,16 +44409,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let C be the this value.
     const C = thisValue;
     // 2. Let promiseCapability be ? NewPromiseCapability(C).
-    let _temp25 = NewPromiseCapability(C);
+    let _temp26 = NewPromiseCapability(C);
     /* c8 ignore if */
-    if (_temp25 instanceof AbruptCompletion) {
-      return _temp25;
+    if (_temp26 instanceof AbruptCompletion) {
+      return _temp26;
     }
     /* c8 ignore if */
-    if (_temp25 instanceof Completion) {
-      _temp25 = _temp25.Value;
+    if (_temp26 instanceof Completion) {
+      _temp26 = _temp26.Value;
     }
-    const promiseCapability = _temp25;
+    const promiseCapability = _temp26;
     // 3. Let promiseResolve be GetPromiseResolve(C).
     let promiseResolve = GetPromiseResolve(C);
     // 4. IfAbruptRejectPromise(promiseResolve, promiseCapability).
@@ -44166,7 +44450,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       iteratorRecord = iteratorRecord.Value;
     }
     // 7. Let result be PerformPromiseAllSettled(iteratorRecord, C, promiseCapability, promiseResolve).
-    let result = EnsureCompletion(PerformPromiseAllSettled(iteratorRecord, C, promiseCapability, promiseResolve));
+    let result = PerformPromiseAllSettled(iteratorRecord, C, promiseCapability, promiseResolve);
     // 8. If result is an abrupt completion, then
     if (result instanceof AbruptCompletion) {
       // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
@@ -44187,8 +44471,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         result = result.Value;
       }
     }
-    // 9. Return Completion(result).
-    return EnsureCompletion(result);
+    // 9. Return ? result.
+    return result;
   }
 
   /** https://tc39.es/ecma262/#sec-promise.any-reject-element-functions */
@@ -44221,22 +44505,22 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // a. Let error be a newly created AggregateError object.
       const error = exports.surroundingAgent.Throw('AggregateError', 'PromiseAnyRejected').Value;
       // b. Perform ! DefinePropertyOrThrow(error, "errors", Property Descriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: errors }).
-      let _temp27 = CreateArrayFromList(errors);
-      Assert(!(_temp27 instanceof AbruptCompletion), "CreateArrayFromList(errors)" + ' returned an abrupt completion', _temp27);
+      let _temp28 = CreateArrayFromList(errors);
+      Assert(!(_temp28 instanceof AbruptCompletion), "CreateArrayFromList(errors)" + ' returned an abrupt completion', _temp28);
       /* c8 ignore if */
-      if (_temp27 instanceof Completion) {
-        _temp27 = _temp27.Value;
+      if (_temp28 instanceof Completion) {
+        _temp28 = _temp28.Value;
       }
-      let _temp26 = DefinePropertyOrThrow(error, Value('errors'), exports.Descriptor({
+      let _temp27 = DefinePropertyOrThrow(error, Value('errors'), exports.Descriptor({
         Configurable: Value.true,
         Enumerable: Value.false,
         Writable: Value.true,
-        Value: _temp27
+        Value: _temp28
       }));
-      Assert(!(_temp26 instanceof AbruptCompletion), "DefinePropertyOrThrow(error, Value('errors'), Descriptor({\n      Configurable: Value.true,\n      Enumerable: Value.false,\n      Writable: Value.true,\n      Value: X(CreateArrayFromList(errors)),\n    }))" + ' returned an abrupt completion', _temp26);
+      Assert(!(_temp27 instanceof AbruptCompletion), "DefinePropertyOrThrow(error, Value('errors'), Descriptor({\n      Configurable: Value.true,\n      Enumerable: Value.false,\n      Writable: Value.true,\n      Value: X(CreateArrayFromList(errors)),\n    }))" + ' returned an abrupt completion', _temp27);
       /* c8 ignore if */
-      if (_temp26 instanceof Completion) {
-        _temp26 = _temp26.Value;
+      if (_temp27 instanceof Completion) {
+        _temp27 = _temp27.Value;
       }
       // c. Return ? Call(promiseCapability.[[Reject]], undefined, « error »).
       return Call(promiseCapability.Reject, Value.undefined, [error]);
@@ -44248,24 +44532,24 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   /** https://tc39.es/ecma262/#sec-performpromiseany */
   PromiseAnyRejectElementFunctions.section = 'https://tc39.es/ecma262/#sec-promise.any-reject-element-functions';
   function PerformPromiseAny(iteratorRecord, constructor, resultCapability, promiseResolve) {
-    let _temp28 = IsConstructor(constructor);
-    Assert(!(_temp28 instanceof AbruptCompletion), "IsConstructor(constructor)" + ' returned an abrupt completion', _temp28);
-    /* c8 ignore if */
-    if (_temp28 instanceof Completion) {
-      _temp28 = _temp28.Value;
-    }
-    // 1. Assert: ! IsConstructor(constructor) is true.
-    Assert(_temp28 === Value.true, "X(IsConstructor(constructor)) === Value.true");
-    // 2. Assert: resultCapability is a PromiseCapability Record.
-    Assert(resultCapability instanceof PromiseCapabilityRecord, "resultCapability instanceof PromiseCapabilityRecord");
-    // 3. Assert: ! IsCallable(promiseResolve) is true.
-    let _temp29 = IsCallable(promiseResolve);
-    Assert(!(_temp29 instanceof AbruptCompletion), "IsCallable(promiseResolve)" + ' returned an abrupt completion', _temp29);
+    let _temp29 = IsConstructor(constructor);
+    Assert(!(_temp29 instanceof AbruptCompletion), "IsConstructor(constructor)" + ' returned an abrupt completion', _temp29);
     /* c8 ignore if */
     if (_temp29 instanceof Completion) {
       _temp29 = _temp29.Value;
     }
-    Assert(_temp29 === Value.true, "X(IsCallable(promiseResolve)) === Value.true");
+    // 1. Assert: ! IsConstructor(constructor) is true.
+    Assert(_temp29 === Value.true, "X(IsConstructor(constructor)) === Value.true");
+    // 2. Assert: resultCapability is a PromiseCapability Record.
+    Assert(resultCapability instanceof PromiseCapabilityRecord, "resultCapability instanceof PromiseCapabilityRecord");
+    // 3. Assert: ! IsCallable(promiseResolve) is true.
+    let _temp30 = IsCallable(promiseResolve);
+    Assert(!(_temp30 instanceof AbruptCompletion), "IsCallable(promiseResolve)" + ' returned an abrupt completion', _temp30);
+    /* c8 ignore if */
+    if (_temp30 instanceof Completion) {
+      _temp30 = _temp30.Value;
+    }
+    Assert(_temp30 === Value.true, "X(IsCallable(promiseResolve)) === Value.true");
     // 4. Let errors be a new empty List.
     const errors = [];
     // 5. Let remainingElementsCount be a new Record { [[Value]]: 1 }.
@@ -44276,25 +44560,19 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     let index = 0;
     // 7. Repeat,
     while (true) {
-      // a. Let next be IteratorStep(iteratorRecord).
-      let next = IteratorStep(iteratorRecord);
-      // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-      if (next instanceof AbruptCompletion) {
-        iteratorRecord.Done = Value.true;
-      }
-      // c. ReturnIfAbrupt(next).
+      let _temp31 = IteratorStepValue(iteratorRecord);
       /* c8 ignore if */
-      if (next instanceof AbruptCompletion) {
-        return next;
+      if (_temp31 instanceof AbruptCompletion) {
+        return _temp31;
       }
       /* c8 ignore if */
-      if (next instanceof Completion) {
-        next = next.Value;
+      if (_temp31 instanceof Completion) {
+        _temp31 = _temp31.Value;
       }
-      // d. If next is false, then
-      if (next === Value.false) {
-        // i. Set iteratorRecord.[[Done]] to true.
-        iteratorRecord.Done = Value.true;
+      // a. Let next be ? IteratorStepValue(iteratorRecord).
+      const next = _temp31;
+      // d. If next is done, then
+      if (next === 'done') {
         // ii. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] - 1.
         remainingElementsCount.Value -= 1;
         // iii. If remainingElementsCount.[[Value]] is 0, then
@@ -44302,22 +44580,22 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           // 1. Let error be a newly created AggregateError object.
           const error = exports.surroundingAgent.Throw('AggregateError', 'PromiseAnyRejected').Value;
           // 2. Perform ! DefinePropertyOrThrow(error, "errors", Property Descriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: errors }).
-          let _temp31 = CreateArrayFromList(errors);
-          Assert(!(_temp31 instanceof AbruptCompletion), "CreateArrayFromList(errors)" + ' returned an abrupt completion', _temp31);
+          let _temp33 = CreateArrayFromList(errors);
+          Assert(!(_temp33 instanceof AbruptCompletion), "CreateArrayFromList(errors)" + ' returned an abrupt completion', _temp33);
           /* c8 ignore if */
-          if (_temp31 instanceof Completion) {
-            _temp31 = _temp31.Value;
+          if (_temp33 instanceof Completion) {
+            _temp33 = _temp33.Value;
           }
-          let _temp30 = DefinePropertyOrThrow(error, Value('errors'), exports.Descriptor({
+          let _temp32 = DefinePropertyOrThrow(error, Value('errors'), exports.Descriptor({
             Configurable: Value.true,
             Enumerable: Value.false,
             Writable: Value.true,
-            Value: _temp31
+            Value: _temp33
           }));
-          Assert(!(_temp30 instanceof AbruptCompletion), "DefinePropertyOrThrow(error, Value('errors'), Descriptor({\n          Configurable: Value.true,\n          Enumerable: Value.false,\n          Writable: Value.true,\n          Value: X(CreateArrayFromList(errors)),\n        }))" + ' returned an abrupt completion', _temp30);
+          Assert(!(_temp32 instanceof AbruptCompletion), "DefinePropertyOrThrow(error, Value('errors'), Descriptor({\n          Configurable: Value.true,\n          Enumerable: Value.false,\n          Writable: Value.true,\n          Value: X(CreateArrayFromList(errors)),\n        }))" + ' returned an abrupt completion', _temp32);
           /* c8 ignore if */
-          if (_temp30 instanceof Completion) {
-            _temp30 = _temp30.Value;
+          if (_temp32 instanceof Completion) {
+            _temp32 = _temp32.Value;
           }
           // 3. Return ThrowCompletion(error).
           return ThrowCompletion(error);
@@ -44325,46 +44603,31 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         // iv. Return resultCapability.[[Promise]].
         return resultCapability.Promise;
       }
-      // e. Let nextValue be IteratorValue(next).
-      let nextValue = IteratorValue(next);
-      // f. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
-      if (nextValue instanceof AbruptCompletion) {
-        iteratorRecord.Done = Value.true;
-      }
-      // g. ReturnIfAbrupt(nextValue).
-      /* c8 ignore if */
-      if (nextValue instanceof AbruptCompletion) {
-        return nextValue;
-      }
-      /* c8 ignore if */
-      if (nextValue instanceof Completion) {
-        nextValue = nextValue.Value;
-      }
       // h. Append undefined to errors.
       errors.push(Value.undefined);
-      // i. Let nextPromise be ? Call(promiseResolve, constructor, « nextValue »).
-      let _temp32 = Call(promiseResolve, constructor, [nextValue]);
+      // i. Let nextPromise be ? Call(promiseResolve, constructor, « next »).
+      let _temp34 = Call(promiseResolve, constructor, [next]);
       /* c8 ignore if */
-      if (_temp32 instanceof AbruptCompletion) {
-        return _temp32;
+      if (_temp34 instanceof AbruptCompletion) {
+        return _temp34;
       }
       /* c8 ignore if */
-      if (_temp32 instanceof Completion) {
-        _temp32 = _temp32.Value;
+      if (_temp34 instanceof Completion) {
+        _temp34 = _temp34.Value;
       }
-      const nextPromise = _temp32;
+      const nextPromise = _temp34;
       // j. Let stepsRejected be the algorithm steps defined in Promise.any Reject Element Functions.
       const stepsRejected = PromiseAnyRejectElementFunctions;
       // k. Let lengthRejected be the number of non-optional parameters of the function definition in Promise.any Reject Element Functions.
       const lengthRejected = 1;
       // l. Let onRejected be ! CreateBuiltinFunction(stepsRejected, lengthRejected, "", « [[AlreadyCalled]], [[Index]], [[Errors]], [[Capability]], [[RemainingElements]] »).
-      let _temp33 = CreateBuiltinFunction(stepsRejected, lengthRejected, Value(''), ['AlreadyCalled', 'Index', 'Errors', 'Capability', 'RemainingElements']);
-      Assert(!(_temp33 instanceof AbruptCompletion), "CreateBuiltinFunction(stepsRejected, lengthRejected, Value(''), ['AlreadyCalled', 'Index', 'Errors', 'Capability', 'RemainingElements'])" + ' returned an abrupt completion', _temp33);
+      let _temp35 = CreateBuiltinFunction(stepsRejected, lengthRejected, Value(''), ['AlreadyCalled', 'Index', 'Errors', 'Capability', 'RemainingElements']);
+      Assert(!(_temp35 instanceof AbruptCompletion), "CreateBuiltinFunction(stepsRejected, lengthRejected, Value(''), ['AlreadyCalled', 'Index', 'Errors', 'Capability', 'RemainingElements'])" + ' returned an abrupt completion', _temp35);
       /* c8 ignore if */
-      if (_temp33 instanceof Completion) {
-        _temp33 = _temp33.Value;
+      if (_temp35 instanceof Completion) {
+        _temp35 = _temp35.Value;
       }
-      const onRejected = _temp33;
+      const onRejected = _temp35;
       // m. Set onRejected.[[AlreadyCalled]] to a new Record { [[Value]]: false }.
       onRejected.AlreadyCalled = {
         Value: false
@@ -44380,14 +44643,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // r. Set remainingElementsCount.[[Value]] to remainingElementsCount.[[Value]] + 1.
       remainingElementsCount.Value += 1;
       // s. Perform ? Invoke(nextPromise, "then", « resultCapability.[[Resolve]], onRejected »).
-      let _temp34 = Invoke(nextPromise, Value('then'), [resultCapability.Resolve, onRejected]);
+      let _temp36 = Invoke(nextPromise, Value('then'), [resultCapability.Resolve, onRejected]);
       /* c8 ignore if */
-      if (_temp34 instanceof AbruptCompletion) {
-        return _temp34;
+      if (_temp36 instanceof AbruptCompletion) {
+        return _temp36;
       }
       /* c8 ignore if */
-      if (_temp34 instanceof Completion) {
-        _temp34 = _temp34.Value;
+      if (_temp36 instanceof Completion) {
+        _temp36 = _temp36.Value;
       }
       // t. Increase index by 1.
       index += 1;
@@ -44402,16 +44665,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let C be the this value.
     const C = thisValue;
     // 2. Let promiseCapability be ? NewPromiseCapability(C).
-    let _temp35 = NewPromiseCapability(C);
+    let _temp37 = NewPromiseCapability(C);
     /* c8 ignore if */
-    if (_temp35 instanceof AbruptCompletion) {
-      return _temp35;
+    if (_temp37 instanceof AbruptCompletion) {
+      return _temp37;
     }
     /* c8 ignore if */
-    if (_temp35 instanceof Completion) {
-      _temp35 = _temp35.Value;
+    if (_temp37 instanceof Completion) {
+      _temp37 = _temp37.Value;
     }
-    const promiseCapability = _temp35;
+    const promiseCapability = _temp37;
     // 3. Let promiseResolve be GetPromiseResolve(C).
     let promiseResolve = GetPromiseResolve(C);
     // 4. IfAbruptRejectPromise(promiseResolve, promiseCapability).
@@ -44443,7 +44706,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       iteratorRecord = iteratorRecord.Value;
     }
     // 7. Let result be PerformPromiseAny(iteratorRecord, C, promiseCapability).
-    let result = EnsureCompletion(PerformPromiseAny(iteratorRecord, C, promiseCapability, promiseResolve));
+    let result = PerformPromiseAny(iteratorRecord, C, promiseCapability, promiseResolve);
     // 8. If result is an abrupt completion, then
     if (result instanceof AbruptCompletion) {
       // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
@@ -44464,8 +44727,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         result = result.Value;
       }
     }
-    // 9. Return Completion(result).
-    return EnsureCompletion(result);
+    // 9. Return ? result.
+    return result;
   }
   Promise_any.section = 'https://tc39.es/ecma262/#sec-promise.any';
   function PerformPromiseRace(iteratorRecord, constructor, resultCapability, promiseResolve) {
@@ -44477,62 +44740,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     Assert(IsCallable(promiseResolve) === Value.true, "IsCallable(promiseResolve) === Value.true");
     // 4. Repeat,
     while (true) {
-      // a. Let next be IteratorStep(iteratorRecord).
-      let next = IteratorStep(iteratorRecord);
-      // b. If next is an abrupt completion, set iteratorRecord.[[Done]] to true.
-      if (next instanceof AbruptCompletion) {
-        iteratorRecord.Done = Value.true;
-      }
-      // c. ReturnIfAbrupt(next).
-      /* c8 ignore if */
-      if (next instanceof AbruptCompletion) {
-        return next;
-      }
-      /* c8 ignore if */
-      if (next instanceof Completion) {
-        next = next.Value;
-      }
-      // d. If next is false, then
-      if (next === Value.false) {
-        // i. Set iteratorRecord.[[Done]] to true.
-        iteratorRecord.Done = Value.true;
-        // ii. Return resultCapability.[[Promise]].
-        return resultCapability.Promise;
-      }
-      // e. Let nextValue be IteratorValue(next).
-      let _temp36 = next;
-      Assert(!(_temp36 instanceof AbruptCompletion), "next" + ' returned an abrupt completion', _temp36);
-      /* c8 ignore if */
-      if (_temp36 instanceof Completion) {
-        _temp36 = _temp36.Value;
-      }
-      let nextValue = IteratorValue(_temp36);
-      // f. If nextValue is an abrupt completion, set iteratorRecord.[[Done]] to true.
-      if (nextValue instanceof AbruptCompletion) {
-        iteratorRecord.Done = Value.true;
-      }
-      // g. ReturnIfAbrupt(nextValue).
-      /* c8 ignore if */
-      if (nextValue instanceof AbruptCompletion) {
-        return nextValue;
-      }
-      /* c8 ignore if */
-      if (nextValue instanceof Completion) {
-        nextValue = nextValue.Value;
-      }
-      // h. Let nextPromise be ? Call(promiseResolve, constructor, « nextValue »).
-      let _temp37 = Call(promiseResolve, constructor, [nextValue]);
-      /* c8 ignore if */
-      if (_temp37 instanceof AbruptCompletion) {
-        return _temp37;
-      }
-      /* c8 ignore if */
-      if (_temp37 instanceof Completion) {
-        _temp37 = _temp37.Value;
-      }
-      const nextPromise = _temp37;
-      // i. Perform ? Invoke(nextPromise, "then", « resultCapability.[[Resolve]], resultCapability.[[Reject]] »).
-      let _temp38 = Invoke(nextPromise, Value('then'), [resultCapability.Resolve, resultCapability.Reject]);
+      let _temp38 = IteratorStepValue(iteratorRecord);
       /* c8 ignore if */
       if (_temp38 instanceof AbruptCompletion) {
         return _temp38;
@@ -44540,6 +44748,34 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       /* c8 ignore if */
       if (_temp38 instanceof Completion) {
         _temp38 = _temp38.Value;
+      }
+      // a. Let next be ? IteratorStepValue(iteratorRecord).
+      const next = _temp38;
+      // d. If next is done, then
+      if (next === 'done') {
+        // ii. Return resultCapability.[[Promise]].
+        return resultCapability.Promise;
+      }
+      // h. Let nextPromise be ? Call(promiseResolve, constructor, « next »).
+      let _temp39 = Call(promiseResolve, constructor, [next]);
+      /* c8 ignore if */
+      if (_temp39 instanceof AbruptCompletion) {
+        return _temp39;
+      }
+      /* c8 ignore if */
+      if (_temp39 instanceof Completion) {
+        _temp39 = _temp39.Value;
+      }
+      const nextPromise = _temp39;
+      // i. Perform ? Invoke(nextPromise, "then", « resultCapability.[[Resolve]], resultCapability.[[Reject]] »).
+      let _temp40 = Invoke(nextPromise, Value('then'), [resultCapability.Resolve, resultCapability.Reject]);
+      /* c8 ignore if */
+      if (_temp40 instanceof AbruptCompletion) {
+        return _temp40;
+      }
+      /* c8 ignore if */
+      if (_temp40 instanceof Completion) {
+        _temp40 = _temp40.Value;
       }
     }
   }
@@ -44551,16 +44787,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let C be the this value.
     const C = thisValue;
     // 2. Let promiseCapability be ? NewPromiseCapability(C).
-    let _temp39 = NewPromiseCapability(C);
+    let _temp41 = NewPromiseCapability(C);
     /* c8 ignore if */
-    if (_temp39 instanceof AbruptCompletion) {
-      return _temp39;
+    if (_temp41 instanceof AbruptCompletion) {
+      return _temp41;
     }
     /* c8 ignore if */
-    if (_temp39 instanceof Completion) {
-      _temp39 = _temp39.Value;
+    if (_temp41 instanceof Completion) {
+      _temp41 = _temp41.Value;
     }
-    const promiseCapability = _temp39;
+    const promiseCapability = _temp41;
     // 3. Let promiseResolve be GetPromiseResolve(C).
     let promiseResolve = GetPromiseResolve(C);
     // 4. IfAbruptRejectPromise(promiseResolve, promiseCapability).
@@ -44592,7 +44828,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       iteratorRecord = iteratorRecord.Value;
     }
     // 7. Let result be PerformPromiseRace(iteratorRecord, C, promiseCapability, promiseResolve).
-    let result = EnsureCompletion(PerformPromiseRace(iteratorRecord, C, promiseCapability, promiseResolve));
+    let result = PerformPromiseRace(iteratorRecord, C, promiseCapability, promiseResolve);
     // 8. If result is an abrupt completion, then
     if (result instanceof AbruptCompletion) {
       // a. If iteratorRecord.[[Done]] is false, set result to IteratorClose(iteratorRecord, result).
@@ -44613,8 +44849,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         result = result.Value;
       }
     }
-    // 9. Return Completion(result).
-    return EnsureCompletion(result);
+    // 9. Return ? result.
+    return result;
   }
 
   /** https://tc39.es/ecma262/#sec-promise.reject */
@@ -44625,25 +44861,25 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let C be this value.
     const C = thisValue;
     // 2. Let promiseCapability be ? NewPromiseCapability(C).
-    let _temp40 = NewPromiseCapability(C);
+    let _temp42 = NewPromiseCapability(C);
     /* c8 ignore if */
-    if (_temp40 instanceof AbruptCompletion) {
-      return _temp40;
+    if (_temp42 instanceof AbruptCompletion) {
+      return _temp42;
     }
     /* c8 ignore if */
-    if (_temp40 instanceof Completion) {
-      _temp40 = _temp40.Value;
+    if (_temp42 instanceof Completion) {
+      _temp42 = _temp42.Value;
     }
-    const promiseCapability = _temp40;
+    const promiseCapability = _temp42;
     // 3. Perform ? Call(promiseCapability.[[Reject]], undefined, « r »).
-    let _temp41 = Call(promiseCapability.Reject, Value.undefined, [r]);
+    let _temp43 = Call(promiseCapability.Reject, Value.undefined, [r]);
     /* c8 ignore if */
-    if (_temp41 instanceof AbruptCompletion) {
-      return _temp41;
+    if (_temp43 instanceof AbruptCompletion) {
+      return _temp43;
     }
     /* c8 ignore if */
-    if (_temp41 instanceof Completion) {
-      _temp41 = _temp41.Value;
+    if (_temp43 instanceof Completion) {
+      _temp43 = _temp43.Value;
     }
     // 4. Return promiseCapability.[[Promise]].
     return promiseCapability.Promise;
@@ -44685,37 +44921,37 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return exports.surroundingAgent.Throw('TypeError', 'InvalidReceiver', 'Promise.try', C);
     }
     // 3. Let promiseCapability be ? NewPromiseCapability(C).
-    let _temp42 = NewPromiseCapability(C);
+    let _temp44 = NewPromiseCapability(C);
     /* c8 ignore if */
-    if (_temp42 instanceof AbruptCompletion) {
-      return _temp42;
+    if (_temp44 instanceof AbruptCompletion) {
+      return _temp44;
     }
     /* c8 ignore if */
-    if (_temp42 instanceof Completion) {
-      _temp42 = _temp42.Value;
+    if (_temp44 instanceof Completion) {
+      _temp44 = _temp44.Value;
     }
-    const promiseCapability = _temp42;
+    const promiseCapability = _temp44;
     // 4. Let status be Completion(Call(callback, undefined, args)).
     const status = EnsureCompletion(Call(callback, Value.undefined, args));
     if (status instanceof AbruptCompletion) {
-      let _temp43 = Call(promiseCapability.Reject, Value.undefined, [status.Value]);
+      let _temp45 = Call(promiseCapability.Reject, Value.undefined, [status.Value]);
       /* c8 ignore if */
-      if (_temp43 instanceof AbruptCompletion) {
-        return _temp43;
+      if (_temp45 instanceof AbruptCompletion) {
+        return _temp45;
       }
       /* c8 ignore if */
-      if (_temp43 instanceof Completion) {
-        _temp43 = _temp43.Value;
+      if (_temp45 instanceof Completion) {
+        _temp45 = _temp45.Value;
       }
     } else {
-      let _temp44 = Call(promiseCapability.Resolve, Value.undefined, [status.Value]);
+      let _temp46 = Call(promiseCapability.Resolve, Value.undefined, [status.Value]);
       /* c8 ignore if */
-      if (_temp44 instanceof AbruptCompletion) {
-        return _temp44;
+      if (_temp46 instanceof AbruptCompletion) {
+        return _temp46;
       }
       /* c8 ignore if */
-      if (_temp44 instanceof Completion) {
-        _temp44 = _temp44.Value;
+      if (_temp46 instanceof Completion) {
+        _temp46 = _temp46.Value;
       }
     }
     // 7. Return promiseCapability.[[Promise]].
@@ -44730,44 +44966,44 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 1. Let C be the this value.
     const C = thisValue;
     // 2. Let promiseCapability be ? NewPromiseCapability(C).
-    let _temp45 = NewPromiseCapability(C);
+    let _temp47 = NewPromiseCapability(C);
     /* c8 ignore if */
-    if (_temp45 instanceof AbruptCompletion) {
-      return _temp45;
+    if (_temp47 instanceof AbruptCompletion) {
+      return _temp47;
     }
-    /* c8 ignore if */
-    if (_temp45 instanceof Completion) {
-      _temp45 = _temp45.Value;
-    }
-    const promiseCapability = _temp45;
-    // 3. Let obj be OrdinaryObjectCreate(%Object.prototype%).
-    let _temp46 = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%Object.prototype%'));
-    Assert(!(_temp46 instanceof AbruptCompletion), "OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'))" + ' returned an abrupt completion', _temp46);
-    /* c8 ignore if */
-    if (_temp46 instanceof Completion) {
-      _temp46 = _temp46.Value;
-    }
-    const obj = _temp46;
-    // 4. Perform ! CreateDataPropertyOrThrow(obj, "promise", promiseCapability.[[Promise]]).
-    let _temp47 = CreateDataPropertyOrThrow(obj, Value('promise'), promiseCapability.Promise);
-    Assert(!(_temp47 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(obj, Value('promise'), promiseCapability.Promise)" + ' returned an abrupt completion', _temp47);
     /* c8 ignore if */
     if (_temp47 instanceof Completion) {
       _temp47 = _temp47.Value;
     }
-    // 5. Perform ! CreateDataPropertyOrThrow(obj, "resolve", promiseCapability.[[Resolve]]).
-    let _temp48 = CreateDataPropertyOrThrow(obj, Value('resolve'), promiseCapability.Resolve);
-    Assert(!(_temp48 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(obj, Value('resolve'), promiseCapability.Resolve)" + ' returned an abrupt completion', _temp48);
+    const promiseCapability = _temp47;
+    // 3. Let obj be OrdinaryObjectCreate(%Object.prototype%).
+    let _temp48 = OrdinaryObjectCreate(exports.surroundingAgent.intrinsic('%Object.prototype%'));
+    Assert(!(_temp48 instanceof AbruptCompletion), "OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'))" + ' returned an abrupt completion', _temp48);
     /* c8 ignore if */
     if (_temp48 instanceof Completion) {
       _temp48 = _temp48.Value;
     }
-    // 6. Perform ! CreateDataPropertyOrThrow(obj, "reject", promiseCapability.[[Reject]]).
-    let _temp49 = CreateDataPropertyOrThrow(obj, Value('reject'), promiseCapability.Reject);
-    Assert(!(_temp49 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(obj, Value('reject'), promiseCapability.Reject)" + ' returned an abrupt completion', _temp49);
+    const obj = _temp48;
+    // 4. Perform ! CreateDataPropertyOrThrow(obj, "promise", promiseCapability.[[Promise]]).
+    let _temp49 = CreateDataPropertyOrThrow(obj, Value('promise'), promiseCapability.Promise);
+    Assert(!(_temp49 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(obj, Value('promise'), promiseCapability.Promise)" + ' returned an abrupt completion', _temp49);
     /* c8 ignore if */
     if (_temp49 instanceof Completion) {
       _temp49 = _temp49.Value;
+    }
+    // 5. Perform ! CreateDataPropertyOrThrow(obj, "resolve", promiseCapability.[[Resolve]]).
+    let _temp50 = CreateDataPropertyOrThrow(obj, Value('resolve'), promiseCapability.Resolve);
+    Assert(!(_temp50 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(obj, Value('resolve'), promiseCapability.Resolve)" + ' returned an abrupt completion', _temp50);
+    /* c8 ignore if */
+    if (_temp50 instanceof Completion) {
+      _temp50 = _temp50.Value;
+    }
+    // 6. Perform ! CreateDataPropertyOrThrow(obj, "reject", promiseCapability.[[Reject]]).
+    let _temp51 = CreateDataPropertyOrThrow(obj, Value('reject'), promiseCapability.Reject);
+    Assert(!(_temp51 instanceof AbruptCompletion), "CreateDataPropertyOrThrow(obj, Value('reject'), promiseCapability.Reject)" + ' returned an abrupt completion', _temp51);
+    /* c8 ignore if */
+    if (_temp51 instanceof Completion) {
+      _temp51 = _temp51.Value;
     }
     // 7. Return obj.
     return EnsureCompletion(obj);
@@ -47475,8 +47711,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     realmRec.Intrinsics['%Error%'] = error;
   }
 
+  const nativeErrorNames = ['EvalError', 'RangeError', 'ReferenceError', 'SyntaxError', 'TypeError', 'URIError'];
   function bootstrapNativeError(realmRec) {
-    for (const name of ['EvalError', 'RangeError', 'ReferenceError', 'SyntaxError', 'TypeError', 'URIError']) {
+    for (const name of nativeErrorNames) {
       const proto = bootstrapPrototype(realmRec, [['name', Value(name)], ['message', Value('')]], realmRec.Intrinsics['%Error.prototype%']);
 
       /** https://tc39.es/ecma262/#sec-nativeerror */
@@ -48461,7 +48698,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const iteratorRecord = _temp3;
     // 8. Repeat,
     while (true) {
-      let _temp4 = IteratorStep(iteratorRecord);
+      let _temp4 = IteratorStepValue(iteratorRecord);
       /* c8 ignore if */
       if (_temp4 instanceof AbruptCompletion) {
         return _temp4;
@@ -48470,25 +48707,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_temp4 instanceof Completion) {
         _temp4 = _temp4.Value;
       }
-      // a. Let next be ? IteratorStep(iteratorRecord).
+      // a. Let next be ? IteratorStepValue(iteratorRecord).
       const next = _temp4;
       // b. If next is false, return set.
-      if (next === Value.false) {
+      if (next === 'done') {
         return set;
       }
-      // c. Let nextValue be ? IteratorValue(next).
-      let _temp5 = IteratorValue(next);
-      /* c8 ignore if */
-      if (_temp5 instanceof AbruptCompletion) {
-        return _temp5;
-      }
-      /* c8 ignore if */
-      if (_temp5 instanceof Completion) {
-        _temp5 = _temp5.Value;
-      }
-      const nextValue = _temp5;
-      // d. Let status be Call(adder, set, « nextValue »).
-      let status = Call(adder, set, [nextValue]);
+      // d. Let status be Call(adder, set, « next »).
+      let status = Call(adder, set, [next]);
       // e. IfAbruptCloseIterator(status, iteratorRecord).
       /* c8 ignore if */
       if (status instanceof AbruptCompletion) {
@@ -48682,13 +48908,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const state = generator.AsyncGeneratorState;
     // 6. If state is completed, then
     if (state === 'completed') {
-      let _temp2 = CreateIterResultObject(Value.undefined, Value.true);
-      Assert(!(_temp2 instanceof AbruptCompletion), "CreateIterResultObject(Value.undefined, Value.true)" + ' returned an abrupt completion', _temp2);
+      let _temp2 = CreateIteratorResultObject(Value.undefined, Value.true);
+      Assert(!(_temp2 instanceof AbruptCompletion), "CreateIteratorResultObject(Value.undefined, Value.true)" + ' returned an abrupt completion', _temp2);
       /* c8 ignore if */
       if (_temp2 instanceof Completion) {
         _temp2 = _temp2.Value;
       }
-      // a. Let iteratorResult be ! CreateIterResultObject(undefined, true).
+      // a. Let iteratorResult be ! CreateIteratorResultObject(undefined, true).
       const iteratorResult = _temp2;
       // b. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iteratorResult »).
       let _temp3 = Call(promiseCapability.Resolve, Value.undefined, [iteratorResult]);
@@ -48975,19 +49201,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (result instanceof Completion) {
       result = result.Value;
     }
-    let _temp3 = result;
-    Assert(!(_temp3 instanceof AbruptCompletion), "result" + ' returned an abrupt completion', _temp3);
-    /* c8 ignore if */
-    if (_temp3 instanceof Completion) {
-      _temp3 = _temp3.Value;
-    }
-    let _temp2 = AsyncFromSyncIteratorContinuation(_temp3, promiseCapability);
-    Assert(!(_temp2 instanceof AbruptCompletion), "AsyncFromSyncIteratorContinuation(X(result), promiseCapability)" + ' returned an abrupt completion', _temp2);
+    // 8. Return ! AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, true).
+    let _temp2 = AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, Value.true);
+    Assert(!(_temp2 instanceof AbruptCompletion), "AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, Value.true)" + ' returned an abrupt completion', _temp2);
     /* c8 ignore if */
     if (_temp2 instanceof Completion) {
       _temp2 = _temp2.Value;
     }
-    // 8. Return ! AsyncFromSyncIteratorContinuation(result, promiseCapability).
     return _temp2;
   }
 
@@ -49001,15 +49221,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 2. Assert: Type(O) is Object and O has a [[SyncIteratorRecord]] internal slot.
     Assert(O instanceof ObjectValue && 'SyncIteratorRecord' in O, "O instanceof ObjectValue && 'SyncIteratorRecord' in O");
     // 3. Let promiseCapability be ! NewPromiseCapability(%Promise%).
-    let _temp4 = NewPromiseCapability(exports.surroundingAgent.intrinsic('%Promise%'));
-    Assert(!(_temp4 instanceof AbruptCompletion), "NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))" + ' returned an abrupt completion', _temp4);
+    let _temp3 = NewPromiseCapability(exports.surroundingAgent.intrinsic('%Promise%'));
+    Assert(!(_temp3 instanceof AbruptCompletion), "NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))" + ' returned an abrupt completion', _temp3);
     /* c8 ignore if */
-    if (_temp4 instanceof Completion) {
-      _temp4 = _temp4.Value;
+    if (_temp3 instanceof Completion) {
+      _temp3 = _temp3.Value;
     }
-    const promiseCapability = _temp4;
+    const promiseCapability = _temp3;
     // 4. Let syncIterator be O.[[SyncIteratorRecord]].[[Iterator]].
-    const syncIterator = O.SyncIteratorRecord.Iterator;
+    const syncIteratorRecord = O.SyncIteratorRecord;
+    const syncIterator = syncIteratorRecord.Iterator;
     // 5. Let return be GetMethod(syncIterator, "return").
     let ret = GetMethod(syncIterator, Value('return'));
     // 6. IfAbruptRejectPromise(return, promiseCapability).
@@ -49025,31 +49246,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (ret instanceof Completion) {
       ret = ret.Value;
     }
-    /* c8 ignore if */
-    if (ret instanceof AbruptCompletion) {
-      return ret;
-    }
-    /* c8 ignore if */
-    if (ret instanceof Completion) {
-      ret = ret.Value;
-    }
-    ret = ret;
     // 7. If return is undefined, then
     if (ret === Value.undefined) {
-      let _temp5 = CreateIterResultObject(value, Value.true);
-      Assert(!(_temp5 instanceof AbruptCompletion), "CreateIterResultObject(value, Value.true)" + ' returned an abrupt completion', _temp5);
+      // a. Let iteratorResult be CreateIteratorResultObject(value, true).
+      const iteratorResult = CreateIteratorResultObject(value, Value.true);
+      // b. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iteratorResult »).
+      let _temp4 = Call(promiseCapability.Resolve, Value.undefined, [iteratorResult]);
+      Assert(!(_temp4 instanceof AbruptCompletion), "Call(promiseCapability.Resolve, Value.undefined, [iteratorResult])" + ' returned an abrupt completion', _temp4);
       /* c8 ignore if */
-      if (_temp5 instanceof Completion) {
-        _temp5 = _temp5.Value;
-      }
-      // a. Let iterResult be ! CreateIterResultObject(value, true).
-      const iterResult = _temp5;
-      // b. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iterResult »).
-      let _temp6 = Call(promiseCapability.Resolve, Value.undefined, [iterResult]);
-      Assert(!(_temp6 instanceof AbruptCompletion), "Call(promiseCapability.Resolve, Value.undefined, [iterResult])" + ' returned an abrupt completion', _temp6);
-      /* c8 ignore if */
-      if (_temp6 instanceof Completion) {
-        _temp6 = _temp6.Value;
+      if (_temp4 instanceof Completion) {
+        _temp4 = _temp4.Value;
       }
       // c. Return promiseCapability.[[Promise]].
       return promiseCapability.Promise;
@@ -49077,25 +49283,25 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (result instanceof Completion) {
       result = result.Value;
     }
-    // 11. If Type(result) is not Object, then
+    // 11. If result is not an Object, then
     if (!(result instanceof ObjectValue)) {
-      let _temp7 = Call(promiseCapability.Reject, Value.undefined, [exports.surroundingAgent.Throw('TypeError', 'NotAnObject', result).Value]);
-      Assert(!(_temp7 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [\n      surroundingAgent.Throw('TypeError', 'NotAnObject', result).Value,\n    ])" + ' returned an abrupt completion', _temp7);
+      let _temp5 = Call(promiseCapability.Reject, Value.undefined, [exports.surroundingAgent.Throw('TypeError', 'NotAnObject', result).Value]);
+      Assert(!(_temp5 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [\n      surroundingAgent.Throw('TypeError', 'NotAnObject', result).Value,\n    ])" + ' returned an abrupt completion', _temp5);
       /* c8 ignore if */
-      if (_temp7 instanceof Completion) {
-        _temp7 = _temp7.Value;
+      if (_temp5 instanceof Completion) {
+        _temp5 = _temp5.Value;
       }
       // b. Return promiseCapability.[[Promise]].
       return promiseCapability.Promise;
     }
-    // 12. Return ! AsyncFromSyncIteratorContinuation(result, promiseCapability).
-    let _temp8 = AsyncFromSyncIteratorContinuation(result, promiseCapability);
-    Assert(!(_temp8 instanceof AbruptCompletion), "AsyncFromSyncIteratorContinuation(result, promiseCapability)" + ' returned an abrupt completion', _temp8);
+    // 12. Return ! AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, false).
+    let _temp6 = AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, Value.false);
+    Assert(!(_temp6 instanceof AbruptCompletion), "AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, Value.false)" + ' returned an abrupt completion', _temp6);
     /* c8 ignore if */
-    if (_temp8 instanceof Completion) {
-      _temp8 = _temp8.Value;
+    if (_temp6 instanceof Completion) {
+      _temp6 = _temp6.Value;
     }
-    return _temp8;
+    return _temp6;
   }
 
   /** https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.throw */
@@ -49108,15 +49314,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 2. Assert: Type(O) is Object and O has a [[SyncIteratorRecord]] internal slot.
     Assert(O instanceof ObjectValue && 'SyncIteratorRecord' in O, "O instanceof ObjectValue && 'SyncIteratorRecord' in O");
     // 3. Let promiseCapability be ! NewPromiseCapability(%Promise%).
-    let _temp9 = NewPromiseCapability(exports.surroundingAgent.intrinsic('%Promise%'));
-    Assert(!(_temp9 instanceof AbruptCompletion), "NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))" + ' returned an abrupt completion', _temp9);
+    let _temp7 = NewPromiseCapability(exports.surroundingAgent.intrinsic('%Promise%'));
+    Assert(!(_temp7 instanceof AbruptCompletion), "NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'))" + ' returned an abrupt completion', _temp7);
     /* c8 ignore if */
-    if (_temp9 instanceof Completion) {
-      _temp9 = _temp9.Value;
+    if (_temp7 instanceof Completion) {
+      _temp7 = _temp7.Value;
     }
-    const promiseCapability = _temp9;
+    const promiseCapability = _temp7;
     // 4. Let syncIterator be O.[[SyncIteratorRecord]].[[Iterator]].
-    const syncIterator = O.SyncIteratorRecord.Iterator;
+    const syncIteratorRecord = O.SyncIteratorRecord;
+    const syncIterator = syncIteratorRecord.Iterator;
     // 5. Let throw be GetMethod(syncIterator, "throw").
     let thr = GetMethod(syncIterator, Value('throw'));
     // 6. IfAbruptRejectPromise(throw, promiseCapability).
@@ -49132,24 +49339,30 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (thr instanceof Completion) {
       thr = thr.Value;
     }
-    /* c8 ignore if */
-    if (thr instanceof AbruptCompletion) {
-      return thr;
-    }
-    /* c8 ignore if */
-    if (thr instanceof Completion) {
-      thr = thr.Value;
-    }
-    thr = thr;
     // 7. If throw is undefined, then
     if (thr === Value.undefined) {
-      let _temp10 = Call(promiseCapability.Reject, Value.undefined, [value]);
-      Assert(!(_temp10 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [value])" + ' returned an abrupt completion', _temp10);
+      const closeCompletion = NormalCompletion(undefined);
+      let result = IteratorClose(syncIteratorRecord, closeCompletion);
       /* c8 ignore if */
-      if (_temp10 instanceof Completion) {
-        _temp10 = _temp10.Value;
+      if (result instanceof AbruptCompletion) {
+        const hygenicTemp2 = Call(promiseCapability.Reject, Value.undefined, [result.Value]);
+        if (hygenicTemp2 instanceof AbruptCompletion) {
+          return hygenicTemp2;
+        }
+        return promiseCapability.Promise;
       }
-      // b. Return promiseCapability.[[Promise]].
+      /* c8 ignore if */
+      if (result instanceof Completion) {
+        result = result.Value;
+      }
+      let _temp8 = Call(promiseCapability.Reject, Value.undefined, [
+      // TODO: error message should be no throw method
+      exports.surroundingAgent.Throw('TypeError', 'NotAnObject', value).Value]);
+      Assert(!(_temp8 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [\n      // TODO: error message should be no throw method\n      surroundingAgent.Throw('TypeError', 'NotAnObject', value).Value,\n    ])" + ' returned an abrupt completion', _temp8);
+      /* c8 ignore if */
+      if (_temp8 instanceof Completion) {
+        _temp8 = _temp8.Value;
+      }
       return promiseCapability.Promise;
     }
     // 8. If value is present, then
@@ -49177,23 +49390,23 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     // 11. If Type(result) is not Object, then
     if (!(result instanceof ObjectValue)) {
-      let _temp11 = Call(promiseCapability.Reject, Value.undefined, [exports.surroundingAgent.Throw('TypeError', 'NotAnObject', result).Value]);
-      Assert(!(_temp11 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [\n      surroundingAgent.Throw('TypeError', 'NotAnObject', result).Value,\n    ])" + ' returned an abrupt completion', _temp11);
+      let _temp9 = Call(promiseCapability.Reject, Value.undefined, [exports.surroundingAgent.Throw('TypeError', 'NotAnObject', result).Value]);
+      Assert(!(_temp9 instanceof AbruptCompletion), "Call(promiseCapability.Reject, Value.undefined, [\n      surroundingAgent.Throw('TypeError', 'NotAnObject', result).Value,\n    ])" + ' returned an abrupt completion', _temp9);
       /* c8 ignore if */
-      if (_temp11 instanceof Completion) {
-        _temp11 = _temp11.Value;
+      if (_temp9 instanceof Completion) {
+        _temp9 = _temp9.Value;
       }
       // b. Return promiseCapability.[[Promise]].
       return promiseCapability.Promise;
     }
-    // 12. Return ! AsyncFromSyncIteratorContinuation(result, promiseCapability).
-    let _temp12 = AsyncFromSyncIteratorContinuation(result, promiseCapability);
-    Assert(!(_temp12 instanceof AbruptCompletion), "AsyncFromSyncIteratorContinuation(result, promiseCapability)" + ' returned an abrupt completion', _temp12);
+    // 12. Return ! AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, true).
+    let _temp10 = AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, Value.true);
+    Assert(!(_temp10 instanceof AbruptCompletion), "AsyncFromSyncIteratorContinuation(result, promiseCapability, syncIteratorRecord, Value.true)" + ' returned an abrupt completion', _temp10);
     /* c8 ignore if */
-    if (_temp12 instanceof Completion) {
-      _temp12 = _temp12.Value;
+    if (_temp10 instanceof Completion) {
+      _temp10 = _temp10.Value;
     }
-    return _temp12;
+    return _temp10;
   }
   AsyncFromSyncIteratorPrototype_throw.section = 'https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.throw';
   function bootstrapAsyncFromSyncIteratorPrototype(realmRec) {
@@ -51184,270 +51397,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     realmRec.Intrinsics['%ThrowTypeError%'] = f;
   }
 
-  function isTypedArrayObject(value) {
-    return 'TypedArrayName' in value;
-  }
-
-  /** https://tc39.es/ecma262/#sec-%typedarray%-intrinsic-object */
-  function TypedArrayConstructor() {
-    // 1. Throw a TypeError exception.
-    return exports.surroundingAgent.Throw('TypeError', 'NotAConstructor', this);
-  }
-
-  /** https://tc39.es/ecma262/#sec-%typedarray%.from */
-  TypedArrayConstructor.section = 'https://tc39.es/ecma262/#sec-%typedarray%-intrinsic-object';
-  function TypedArray_from([source = Value.undefined, mapfn = Value.undefined, thisArg = Value.undefined], {
-    thisValue
-  }) {
-    // 1. Let C be the this value.
-    const C = thisValue;
-    // 2. If IsConstructor(C) is false, throw a TypeError exception.
-    if (IsConstructor(C) === Value.false) {
-      return exports.surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
-    }
-    // 3. If mapfn is undefined, let mapping be false.
-    let mapping;
-    if (mapfn === Value.undefined) {
-      mapping = false;
-    } else {
-      // a. If IsCallable(mapfn) is false, throw a TypeError exception.
-      if (IsCallable(mapfn) === Value.false) {
-        return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', mapfn);
-      }
-      // b. Let mapping be true.
-      mapping = true;
-    }
-    // 5. Let usingIterator be ? GetMethod(source, @@iterator).
-    let _temp = GetMethod(source, wellKnownSymbols.iterator);
-    /* c8 ignore if */
-    if (_temp instanceof AbruptCompletion) {
-      return _temp;
-    }
-    /* c8 ignore if */
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-    const usingIterator = _temp;
-    // 6. If usingIterator is not undefined, then
-    if (!(usingIterator instanceof UndefinedValue)) {
-      let _temp2 = IterableToList(source, usingIterator);
-      /* c8 ignore if */
-      if (_temp2 instanceof AbruptCompletion) {
-        return _temp2;
-      }
-      /* c8 ignore if */
-      if (_temp2 instanceof Completion) {
-        _temp2 = _temp2.Value;
-      }
-      const values = _temp2;
-      const len = values.length;
-      let _temp3 = TypedArrayCreate(C, [F(len)]);
-      /* c8 ignore if */
-      if (_temp3 instanceof AbruptCompletion) {
-        return _temp3;
-      }
-      /* c8 ignore if */
-      if (_temp3 instanceof Completion) {
-        _temp3 = _temp3.Value;
-      }
-      const targetObj = _temp3;
-      let k = 0;
-      while (k < len) {
-        let _temp4 = ToString(F(k));
-        Assert(!(_temp4 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp4);
-        /* c8 ignore if */
-        if (_temp4 instanceof Completion) {
-          _temp4 = _temp4.Value;
-        }
-        const Pk = _temp4;
-        const kValue = values.shift();
-        let mappedValue;
-        if (mapping) {
-          let _temp5 = Call(mapfn, thisArg, [kValue, F(k)]);
-          /* c8 ignore if */
-          if (_temp5 instanceof AbruptCompletion) {
-            return _temp5;
-          }
-          /* c8 ignore if */
-          if (_temp5 instanceof Completion) {
-            _temp5 = _temp5.Value;
-          }
-          mappedValue = _temp5;
-        } else {
-          mappedValue = kValue;
-        }
-        let _temp6 = Set$1(targetObj, Pk, mappedValue, Value.true);
-        /* c8 ignore if */
-        if (_temp6 instanceof AbruptCompletion) {
-          return _temp6;
-        }
-        /* c8 ignore if */
-        if (_temp6 instanceof Completion) {
-          _temp6 = _temp6.Value;
-        }
-        k += 1;
-      }
-      Assert(values.length === 0, "values.length === 0");
-      return targetObj;
-    }
-    // 7. NOTE: source is not an Iterable so assume it is already an array-like object.
-    // 8. Let arrayLike be ! ToObject(source).
-    let _temp7 = ToObject(source);
-    Assert(!(_temp7 instanceof AbruptCompletion), "ToObject(source)" + ' returned an abrupt completion', _temp7);
-    /* c8 ignore if */
-    if (_temp7 instanceof Completion) {
-      _temp7 = _temp7.Value;
-    }
-    const arrayLike = _temp7;
-    // 9. Let len be ? LengthOfArrayLike(arrayLike).
-    let _temp8 = LengthOfArrayLike(arrayLike);
-    /* c8 ignore if */
-    if (_temp8 instanceof AbruptCompletion) {
-      return _temp8;
-    }
-    /* c8 ignore if */
-    if (_temp8 instanceof Completion) {
-      _temp8 = _temp8.Value;
-    }
-    const len = _temp8;
-    // 10. Let targetObj be ? TypedArrayCreate(C, « 𝔽(len) »).
-    let _temp9 = TypedArrayCreate(C, [F(len)]);
-    /* c8 ignore if */
-    if (_temp9 instanceof AbruptCompletion) {
-      return _temp9;
-    }
-    /* c8 ignore if */
-    if (_temp9 instanceof Completion) {
-      _temp9 = _temp9.Value;
-    }
-    const targetObj = _temp9;
-    // 11. Let k be 0.
-    let k = 0;
-    // 12. Repeat, while k < len
-    while (k < len) {
-      let _temp10 = ToString(F(k));
-      Assert(!(_temp10 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp10);
-      /* c8 ignore if */
-      if (_temp10 instanceof Completion) {
-        _temp10 = _temp10.Value;
-      }
-      // a. Let Pk be ! ToString(𝔽(k)).
-      const Pk = _temp10;
-      // b. Let kValue be ? Get(arrayLike, Pk).
-      let _temp11 = Get(arrayLike, Pk);
-      /* c8 ignore if */
-      if (_temp11 instanceof AbruptCompletion) {
-        return _temp11;
-      }
-      /* c8 ignore if */
-      if (_temp11 instanceof Completion) {
-        _temp11 = _temp11.Value;
-      }
-      const kValue = _temp11;
-      let mappedValue;
-      // c. If mapping is true, then
-      if (mapping) {
-        let _temp12 = Call(mapfn, thisArg, [kValue, F(k)]);
-        /* c8 ignore if */
-        if (_temp12 instanceof AbruptCompletion) {
-          return _temp12;
-        }
-        /* c8 ignore if */
-        if (_temp12 instanceof Completion) {
-          _temp12 = _temp12.Value;
-        }
-        // i. Let mappedValue be ? Call(mapfn, thisArg, « kValue, 𝔽(k) »).
-        mappedValue = _temp12;
-      } else {
-        // d. Else, let mappedValue be kValue.
-        mappedValue = kValue;
-      }
-      // e. Perform ? Set(targetObj, Pk, mappedValue, true).
-      let _temp13 = Set$1(targetObj, Pk, mappedValue, Value.true);
-      /* c8 ignore if */
-      if (_temp13 instanceof AbruptCompletion) {
-        return _temp13;
-      }
-      /* c8 ignore if */
-      if (_temp13 instanceof Completion) {
-        _temp13 = _temp13.Value;
-      }
-      // f. Set k to k + 1.
-      k += 1;
-    }
-    // 13. Return targetObj.
-    return targetObj;
-  }
-
-  /** https://tc39.es/ecma262/#sec-%typedarray%.of */
-  TypedArray_from.section = 'https://tc39.es/ecma262/#sec-%typedarray%.from';
-  function TypedArray_of(items, {
-    thisValue
-  }) {
-    // 1. Let len be the actual number of arguments passed to this function.
-    // 2. Let items be the List of arguments passed to this function.
-    const len = items.length;
-    // 3. Let C be the this value.
-    const C = thisValue;
-    // 4. If IsConstructor(C) is false, throw a TypeError exception.
-    if (IsConstructor(C) === Value.false) {
-      return exports.surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
-    }
-    // 5. Let newObj be ? TypedArrayCreate(C, « 𝔽(len) »).
-    let _temp14 = TypedArrayCreate(C, [F(len)]);
-    /* c8 ignore if */
-    if (_temp14 instanceof AbruptCompletion) {
-      return _temp14;
-    }
-    /* c8 ignore if */
-    if (_temp14 instanceof Completion) {
-      _temp14 = _temp14.Value;
-    }
-    const newObj = _temp14;
-    // 6. Let k be 0.
-    let k = 0;
-    // 7. Repeat, while k < len
-    while (k < len) {
-      // a. Let kValue be items[k].
-      const kValue = items[k];
-      // b. Let Pk be ! ToString(𝔽(k)).
-      let _temp15 = ToString(F(k));
-      Assert(!(_temp15 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp15);
-      /* c8 ignore if */
-      if (_temp15 instanceof Completion) {
-        _temp15 = _temp15.Value;
-      }
-      const Pk = _temp15;
-      // c. Perform ? Set(newObj, Pk, kValue, true).
-      let _temp16 = Set$1(newObj, Pk, kValue, Value.true);
-      /* c8 ignore if */
-      if (_temp16 instanceof AbruptCompletion) {
-        return _temp16;
-      }
-      /* c8 ignore if */
-      if (_temp16 instanceof Completion) {
-        _temp16 = _temp16.Value;
-      }
-      // d. Set k to k + 1.
-      k += 1;
-    }
-    // 8. Return newObj.
-    return newObj;
-  }
-
-  /** https://tc39.es/ecma262/#sec-get-%typedarray%-@@species */
-  TypedArray_of.section = 'https://tc39.es/ecma262/#sec-%typedarray%.of';
-  function TypedArray_speciesGetter(_args, {
-    thisValue
-  }) {
-    return thisValue;
-  }
-  TypedArray_speciesGetter.section = 'https://tc39.es/ecma262/#sec-get-%typedarray%-@@species';
-  function bootstrapTypedArray(realmRec) {
-    const typedArrayConstructor = bootstrapConstructor(realmRec, TypedArrayConstructor, 'TypedArray', 0, realmRec.Intrinsics['%TypedArray.prototype%'], [['from', TypedArray_from, 1], ['of', TypedArray_of, 0], [wellKnownSymbols.species, [TypedArray_speciesGetter]]]);
-    realmRec.Intrinsics['%TypedArray%'] = typedArrayConstructor;
-  }
-
   /** https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.buffer */
   function TypedArrayProto_buffer(_args, {
     thisValue
@@ -51491,15 +51440,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
     Assert('ViewedArrayBuffer' in O, "'ViewedArrayBuffer' in O");
-    // 4. Let buffer be O.[[ViewedArrayBuffer]].
-    const buffer = O.ViewedArrayBuffer;
-    // 5. If IsDetachedBuffer(buffer) is true, return +0𝔽.
-    if (IsDetachedBuffer(buffer) === Value.true) {
-      return F(0);
-    }
-    // 6. Let size be O.[[ByteLength]].
-    const size = O.ByteLength;
-    // 7. Return size.
+    const taRecord = MakeTypedArrayWithBufferWitnessRecord(O);
+    const size = TypedArrayByteLength(taRecord);
     return F(size);
   }
 
@@ -51522,15 +51464,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
     Assert('ViewedArrayBuffer' in O, "'ViewedArrayBuffer' in O");
-    // 4. Let buffer be O.[[ViewedArrayBuffer]].
-    const buffer = O.ViewedArrayBuffer;
-    // 5. If IsDetachedBuffer(buffer) is true, return +0𝔽.
-    if (IsDetachedBuffer(buffer) === Value.true) {
+    const taRecord = MakeTypedArrayWithBufferWitnessRecord(O);
+    if (IsTypedArrayOutOfBounds(taRecord)) {
       return F(0);
     }
-    // 6. Let offset be O.[[ByteOffset]].
     const offset = O.ByteOffset;
-    // 7. Return offset.
     return F(offset);
   }
 
@@ -51539,9 +51477,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.undefined, end = Value.undefined], {
     thisValue
   }) {
-    // 1. Let O be the this value.
     const O = thisValue;
-    // 2. Perform ? ValidateTypedArray(O).
     let _temp4 = ValidateTypedArray(O);
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) {
@@ -51551,9 +51487,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp4 instanceof Completion) {
       _temp4 = _temp4.Value;
     }
-    // 3. Let len be O.[[ArrayLength]].
-    const len = O.ArrayLength;
-    // 4. Let relativeTarget be ? ToIntegerOrInfinity(target).
+    let taRecord = _temp4;
+    let len = TypedArrayLength(taRecord);
     let _temp5 = ToIntegerOrInfinity(target);
     /* c8 ignore if */
     if (_temp5 instanceof AbruptCompletion) {
@@ -51564,14 +51499,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp5 = _temp5.Value;
     }
     const relativeTarget = _temp5;
-    // 5. If relativeTarget < 0, let to be max((len + relativeTarget), 0); else let to be min(relativeTarget, len).
-    let to;
-    if (relativeTarget < 0) {
-      to = Math.max(len + relativeTarget, 0);
+    let targetIndex;
+    if (relativeTarget === -Infinity) {
+      targetIndex = 0;
+    } else if (relativeTarget < 0) {
+      targetIndex = Math.max(len + relativeTarget, 0);
     } else {
-      to = Math.min(relativeTarget, len);
+      targetIndex = Math.min(relativeTarget, len);
     }
-    // 6. Let relativeStart be ? ToIntegerOrInfinity(start).
     let _temp6 = ToIntegerOrInfinity(start);
     /* c8 ignore if */
     if (_temp6 instanceof AbruptCompletion) {
@@ -51582,14 +51517,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp6 = _temp6.Value;
     }
     const relativeStart = _temp6;
-    // 7. If relativeStart < 0, let from be max((len + relativeStart), 0); else let from be min(relativeStart, len).
-    let from;
-    if (relativeStart < 0) {
-      from = Math.max(len + relativeStart, 0);
+    let startIndex;
+    if (relativeStart === -Infinity) {
+      startIndex = 0;
+    } else if (relativeStart < 0) {
+      startIndex = Math.max(len + relativeStart, 0);
     } else {
-      from = Math.min(relativeStart, len);
+      startIndex = Math.min(relativeStart, len);
     }
-    // 8. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToIntegerOrInfinity(end).
     let relativeEnd;
     if (end === Value.undefined) {
       relativeEnd = len;
@@ -51605,64 +51540,48 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       relativeEnd = _temp7;
     }
-    // 9. If relativeEnd < 0, let final be max((len + relativeEnd), 0); else let final be min(relativeEnd, len).
-    let final;
-    if (relativeEnd < 0) {
-      final = Math.max(len + relativeEnd, 0);
+    let endIndex;
+    if (relativeEnd === -Infinity) {
+      endIndex = 0;
+    } else if (relativeEnd < 0) {
+      endIndex = Math.max(len + relativeEnd, 0);
     } else {
-      final = Math.min(relativeEnd, len);
+      endIndex = Math.min(relativeEnd, len);
     }
-    // 10. Let count be min(final - from, len - to).
-    const count = Math.min(final - from, len - to);
-    // 11. If count > 0, then
+    const count = Math.min(endIndex - startIndex, len - targetIndex);
     if (count > 0) {
-      // a. NOTE: The copying must be performed in a manner that preserves the bit-level encoding of the source data.
-      // b. Let buffer be O.[[ViewedArrayBuffer]].
       const buffer = O.ViewedArrayBuffer;
-      // c. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-      if (IsDetachedBuffer(buffer) === Value.true) {
-        return exports.surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+      taRecord = MakeTypedArrayWithBufferWitnessRecord(O);
+      if (IsTypedArrayOutOfBounds(taRecord)) {
+        return exports.surroundingAgent.Throw('TypeError', 'TypedArrayOOB');
       }
-      // d. Let typedArrayName be the String value of O.[[TypedArrayName]].
-      const typedArrayName = O.TypedArrayName.stringValue();
-      // e. Let elementSize be the Element Size value specified in Table 61 for typedArrayName.
-      const elementSize = typedArrayInfoByName[typedArrayName].ElementSize;
-      // f. Let byteOffset be O.[[ByteOffset].
+      len = TypedArrayLength(taRecord);
+      const elementSize = TypedArrayElementSize(O);
       const byteOffset = O.ByteOffset;
-      // g. Let toByteIndex be to × elementSize + byteOffset.
-      let toByteIndex = to * elementSize + byteOffset;
-      // h. Let fromByteIndex be from × elementSize + byteOffset.
-      let fromByteIndex = from * elementSize + byteOffset;
-      // i. Let countBytes be count × elementSize.
+      const bufferByteLimit = len * elementSize + byteOffset;
+      let toByteIndex = targetIndex * elementSize + byteOffset;
+      let fromByteIndex = startIndex * elementSize + byteOffset;
       let countBytes = count * elementSize;
-      // j. If fromByteIndex < toByteIndex and toByteIndex < fromByteIndex + countBytes, then
       let direction;
       if (fromByteIndex < toByteIndex && toByteIndex < fromByteIndex + countBytes) {
-        // i. Let direction be -1.
         direction = -1;
-        // ii. Set fromByteIndex to fromByteIndex + countBytes - 1.
         fromByteIndex = fromByteIndex + countBytes - 1;
-        // iii. Set toByteIndex to toByteIndex + countBytes - 1.
         toByteIndex = toByteIndex + countBytes - 1;
       } else {
-        // i. Let direction be 1.
         direction = 1;
       }
-      // l. Repeat, while countBytes > 0
       while (countBytes > 0) {
-        // i. Let value be GetValueFromBuffer(buffer, fromByteIndex, Uint8, true, Unordered).
-        const value = GetValueFromBuffer(buffer, fromByteIndex, 'Uint8', Value.true);
-        // ii. Perform SetValueInBuffer(buffer, toByteIndex, Uint8, value, true, Unordered).
-        SetValueInBuffer(buffer, toByteIndex, 'Uint8', value, Value.true);
-        // iii. Set fromByteIndex to fromByteIndex + direction.
-        fromByteIndex += direction;
-        // iv. Set toByteIndex to toByteIndex + direction.
-        toByteIndex += direction;
-        // v. Set countBytes to countBytes - 1.
-        countBytes -= 1;
+        if (fromByteIndex < bufferByteLimit && toByteIndex < bufferByteLimit) {
+          const value = GetValueFromBuffer(buffer, fromByteIndex, 'Uint8');
+          SetValueInBuffer(buffer, toByteIndex, 'Uint8', value);
+          fromByteIndex += direction;
+          toByteIndex += direction;
+          countBytes -= 1;
+        } else {
+          countBytes = 0;
+        }
       }
     }
-    // 12. Return O.
     return O;
   }
 
@@ -51692,9 +51611,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function TypedArrayProto_fill([value = Value.undefined, start = Value.undefined, end = Value.undefined], {
     thisValue
   }) {
-    // 1. Let O be the this value.
     const O = thisValue;
-    // 2. Perform ? ValidateTypedArray(O).
     let _temp9 = ValidateTypedArray(O);
     /* c8 ignore if */
     if (_temp9 instanceof AbruptCompletion) {
@@ -51704,10 +51621,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp9 instanceof Completion) {
       _temp9 = _temp9.Value;
     }
-    // 3. Let len be O.[[ArrayLength]]
-    const len = O.ArrayLength;
-    // 4. If O.[[ContentType]] is BigInt, set value to ? ToBigInt(value).
-    // 5. Else, set value to ? ToNumber(value).
+    let taRecord = _temp9;
+    let len = TypedArrayLength(taRecord);
     if (O.ContentType === 'BigInt') {
       let _temp10 = ToBigInt(value);
       /* c8 ignore if */
@@ -51731,7 +51646,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       value = _temp11;
     }
-    // 6. Let relativeStart be ? ToIntegerOrInfinity(start).
     let _temp12 = ToIntegerOrInfinity(start);
     /* c8 ignore if */
     if (_temp12 instanceof AbruptCompletion) {
@@ -51742,14 +51656,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp12 = _temp12.Value;
     }
     const relativeStart = _temp12;
-    // 7. If relativeStart < 0, let k be max((len + relativeStart), 0); else let k be min(relativeStart, len).
-    let k;
-    if (relativeStart < 0) {
-      k = Math.max(len + relativeStart, 0);
+    let startIndex;
+    if (relativeStart === -Infinity) {
+      startIndex = 0;
+    } else if (relativeStart < 0) {
+      startIndex = Math.max(len + relativeStart, 0);
     } else {
-      k = Math.min(relativeStart, len);
+      startIndex = Math.min(relativeStart, len);
     }
-    // 8. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToIntegerOrInfinity(end).
     let relativeEnd;
     if (end === Value.undefined) {
       relativeEnd = len;
@@ -51765,38 +51679,37 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       relativeEnd = _temp13;
     }
-    // 9. If relativeEnd < 0, let final be max((len + relativeEnd), 0); else let final be min(relativeEnd, len).
-    let final;
-    if (relativeEnd < 0) {
-      final = Math.max(len + relativeEnd, 0);
+    let endIndex;
+    if (relativeEnd === -Infinity) {
+      endIndex = 0;
+    } else if (relativeEnd < 0) {
+      endIndex = Math.max(len + relativeEnd, 0);
     } else {
-      final = Math.min(relativeEnd, len);
+      endIndex = Math.min(relativeEnd, len);
     }
-    // 10. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
-    if (IsDetachedBuffer(O.ViewedArrayBuffer) === Value.true) {
-      return exports.surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+    taRecord = MakeTypedArrayWithBufferWitnessRecord(O);
+    if (IsTypedArrayOutOfBounds(taRecord)) {
+      return exports.surroundingAgent.Throw('TypeError', 'TypedArrayOOB');
     }
-    // 11. Repeat, while k < final
-    while (k < final) {
+    len = TypedArrayLength(taRecord);
+    endIndex = Math.min(endIndex, len);
+    let k = startIndex;
+    while (k < endIndex) {
       let _temp14 = ToString(F(k));
       Assert(!(_temp14 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp14);
       /* c8 ignore if */
       if (_temp14 instanceof Completion) {
         _temp14 = _temp14.Value;
       }
-      // a. Let Pk be ! ToString(𝔽(k)).
       const Pk = _temp14;
-      // b. Perform ! Set(O, Pk, value, true).
       let _temp15 = Set$1(O, Pk, value, Value.true);
       Assert(!(_temp15 instanceof AbruptCompletion), "Set(O, Pk, value, Value.true)" + ' returned an abrupt completion', _temp15);
       /* c8 ignore if */
       if (_temp15 instanceof Completion) {
         _temp15 = _temp15.Value;
       }
-      // c. Set k to k + 1.
       k += 1;
     }
-    // 12. Return O.
     return O;
   }
 
@@ -51805,9 +51718,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undefined], {
     thisValue
   }) {
-    // 1. Let O be the this value.
     const O = thisValue;
-    // 2. Perform ? ValidateTypedArray(O).
     let _temp16 = ValidateTypedArray(O);
     /* c8 ignore if */
     if (_temp16 instanceof AbruptCompletion) {
@@ -51817,19 +51728,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp16 instanceof Completion) {
       _temp16 = _temp16.Value;
     }
-    // 3. Let len be O.[[ArrayLength]].
-    const len = O.ArrayLength;
-    // 4. If IsCallable(callbackfn) is false, throw a TypeError exception.
+    const taRecord = _temp16;
+    const len = TypedArrayLength(taRecord);
     if (IsCallable(callbackfn) === Value.false) {
       return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
     }
-    // 5. Let kept be a new empty List.
     const kept = [];
-    // 6. Let k be 0.
-    let k = 0;
-    // 7. Let captured be 0.
     let captured = 0;
-    // 8. Repeat, while k < len
+    let k = 0;
     while (k < len) {
       let _temp17 = ToString(F(k));
       Assert(!(_temp17 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp17);
@@ -51837,20 +51743,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_temp17 instanceof Completion) {
         _temp17 = _temp17.Value;
       }
-      // a. Let Pk be ! ToString(𝔽(k)).
       const Pk = _temp17;
-      // b. Let kValue be ? Get(O, Pk).
       let _temp18 = Get(O, Pk);
-      /* c8 ignore if */
-      if (_temp18 instanceof AbruptCompletion) {
-        return _temp18;
-      }
+      Assert(!(_temp18 instanceof AbruptCompletion), "Get(O, Pk)" + ' returned an abrupt completion', _temp18);
       /* c8 ignore if */
       if (_temp18 instanceof Completion) {
         _temp18 = _temp18.Value;
       }
       const kValue = _temp18;
-      // c. Let selected be ! ToBoolean(? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »)).
       let _temp19 = Call(callbackfn, thisArg, [kValue, F(k), O]);
       /* c8 ignore if */
       if (_temp19 instanceof AbruptCompletion) {
@@ -51861,17 +51761,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _temp19 = _temp19.Value;
       }
       const selected = ToBoolean(_temp19);
-      // d. If selected is true, then
       if (selected === Value.true) {
-        // i. Append kValue to the end of kept.
         kept.push(kValue);
-        // ii. Setp captured to captured + 1.
         captured += 1;
       }
-      // e. Set k to k + 1.
       k += 1;
     }
-    // 9. Let A be ? TypedArraySpeciesCreate(O, « 𝔽(captured) »).
     let _temp20 = TypedArraySpeciesCreate(O, [F(captured)]);
     /* c8 ignore if */
     if (_temp20 instanceof AbruptCompletion) {
@@ -51882,9 +51777,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp20 = _temp20.Value;
     }
     const A = _temp20;
-    // 10. Let n be 0.
     let n = 0;
-    // 11. For each element e of kept, do
     for (const e of kept) {
       let _temp22 = ToString(F(n));
       Assert(!(_temp22 instanceof AbruptCompletion), "ToString(F(n))" + ' returned an abrupt completion', _temp22);
@@ -51898,10 +51791,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_temp21 instanceof Completion) {
         _temp21 = _temp21.Value;
       }
-      // b. Set n to n + 1.
       n += 1;
     }
-    // 12. Return A.
     return A;
   }
 
@@ -51931,9 +51822,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function TypedArrayProto_length(_args, {
     thisValue
   }) {
-    // 1. Let O be the this value.
     const O = thisValue;
-    // 2. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
     let _temp24 = RequireInternalSlot(O, 'TypedArrayName');
     /* c8 ignore if */
     if (_temp24 instanceof AbruptCompletion) {
@@ -51943,17 +51832,12 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp24 instanceof Completion) {
       _temp24 = _temp24.Value;
     }
-    // 3. Assert: O has [[ViewedArrayBuffer]] and [[ArrayLength]] internal slots.
-    Assert('ViewedArrayBuffer' in O && 'ArrayLength' in O, "'ViewedArrayBuffer' in O && 'ArrayLength' in O");
-    // 4. Let buffer be O.[[ViewedArrayBuffer]].
-    const buffer = O.ViewedArrayBuffer;
-    // 5. If IsDetachedBuffer(buffer) is true, return +0𝔽.
-    if (IsDetachedBuffer(buffer) === Value.true) {
+    Assert('ViewedArrayBuffer' in O, "'ViewedArrayBuffer' in O");
+    const taRecord = MakeTypedArrayWithBufferWitnessRecord(O);
+    if (IsTypedArrayOutOfBounds(taRecord)) {
       return F(0);
     }
-    // 6. Let length be O.[[ArrayLength]].
-    const length = O.ArrayLength;
-    // 8. Return 𝔽(length).
+    const length = TypedArrayLength(taRecord);
     return F(length);
   }
 
@@ -51962,9 +51846,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefined], {
     thisValue
   }) {
-    // 1. Let O be the this value.
     const O = thisValue;
-    // 2. Perform ? ValidateTypedArray(O).
     let _temp25 = ValidateTypedArray(O);
     /* c8 ignore if */
     if (_temp25 instanceof AbruptCompletion) {
@@ -51974,13 +51856,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp25 instanceof Completion) {
       _temp25 = _temp25.Value;
     }
-    // 3. Let len be O.[[ArrayLength]].
-    const len = O.ArrayLength;
-    // 4. If IsCallable(callbackfn) is false, throw a TypeError exception.
+    const taRecord = _temp25;
+    const len = TypedArrayLength(taRecord);
     if (IsCallable(callbackfn) === Value.false) {
       return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
     }
-    // 5. Let A be ? TypedArraySpeciesCreate(O, « 𝔽(len) »).
     let _temp26 = TypedArraySpeciesCreate(O, [F(len)]);
     /* c8 ignore if */
     if (_temp26 instanceof AbruptCompletion) {
@@ -51991,9 +51871,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp26 = _temp26.Value;
     }
     const A = _temp26;
-    // 6. Let k be 0.
     let k = 0;
-    // 7. Repeat, while k < len
     while (k < len) {
       let _temp27 = ToString(F(k));
       Assert(!(_temp27 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp27);
@@ -52001,20 +51879,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_temp27 instanceof Completion) {
         _temp27 = _temp27.Value;
       }
-      // a. Let Pk be ! ToString(𝔽(k)).
       const Pk = _temp27;
-      // b. Let kValue be ? Get(O, Pk).
       let _temp28 = Get(O, Pk);
-      /* c8 ignore if */
-      if (_temp28 instanceof AbruptCompletion) {
-        return _temp28;
-      }
+      Assert(!(_temp28 instanceof AbruptCompletion), "Get(O, Pk)" + ' returned an abrupt completion', _temp28);
       /* c8 ignore if */
       if (_temp28 instanceof Completion) {
         _temp28 = _temp28.Value;
       }
       const kValue = _temp28;
-      // c. Let mappedValue be ? Call(callbackfn, thisArg, « kValue, 𝔽(k), O »).
       let _temp29 = Call(callbackfn, thisArg, [kValue, F(k), O]);
       /* c8 ignore if */
       if (_temp29 instanceof AbruptCompletion) {
@@ -52025,83 +51897,57 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _temp29 = _temp29.Value;
       }
       const mappedValue = _temp29;
-      // d. Perform ? Set(A, Pk, mappedValue, true).
       let _temp30 = Set$1(A, Pk, mappedValue, Value.true);
-      /* c8 ignore if */
-      if (_temp30 instanceof AbruptCompletion) {
-        return _temp30;
-      }
+      Assert(!(_temp30 instanceof AbruptCompletion), "Set(A, Pk, mappedValue, Value.true)" + ' returned an abrupt completion', _temp30);
       /* c8 ignore if */
       if (_temp30 instanceof Completion) {
         _temp30 = _temp30.Value;
       }
-      // e. Set k to k + 1.
       k += 1;
     }
-    // 8. Return A.
     return A;
   }
 
   /** https://tc39.es/ecma262/#sec-settypedarrayfromtypedarray */
   TypedArrayProto_map.section = 'https://tc39.es/ecma262/#sec-%typedarray%.prototype.map';
   function SetTypedArrayFromTypedArray(target, targetOffset, source) {
-    // 1. Let targetBuffer be target.[[ViewedArrayBuffer]].
     const targetBuffer = target.ViewedArrayBuffer;
-    // 2. If IsDetachedBuffer(targetBuffer) is true, throw a TypeError exception.
-    if (IsDetachedBuffer(targetBuffer) === Value.true) {
-      return exports.surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+    const targetRecord = MakeTypedArrayWithBufferWitnessRecord(target);
+    if (IsTypedArrayOutOfBounds(targetRecord)) {
+      return exports.surroundingAgent.Throw('TypeError', 'TypedArrayOOB');
     }
-    // 3. Let targetLength be target.[[ArrayLength]].
-    const targetLength = target.ArrayLength;
-    // 4. Let srcBuffer be source.[[ViewedArrayBuffer]].
+    const targetLength = TypedArrayLength(targetRecord);
     let srcBuffer = source.ViewedArrayBuffer;
-    // 5. If IsDetachedBuffer(srcBuffer) is true, throw a TypeError exception.
-    if (IsDetachedBuffer(srcBuffer) === Value.true) {
-      return exports.surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+    const srcRecord = MakeTypedArrayWithBufferWitnessRecord(source);
+    if (IsTypedArrayOutOfBounds(srcRecord)) {
+      return exports.surroundingAgent.Throw('TypeError', 'TypedArrayOOB');
     }
-    const targetName = target.TypedArrayName.stringValue();
-    // 6. Let targetType be the Element Type value in Table 61 for targetName.
-    const targetType = typedArrayInfoByName[targetName].ElementType;
-    // 7. Let targetElementSize be the Element Size value specified in Table 61 for targetName.
-    const targetElementSize = typedArrayInfoByName[targetName].ElementSize;
-    // 8. Let targetByteOffset be target.[[ByteOffset]].
+    const srcLength = TypedArrayLength(srcRecord);
+    const targetType = TypedArrayElementType(target);
+    const targetElementSize = TypedArrayElementSize(target);
     const targetByteOffset = target.ByteOffset;
-    const srcName = source.TypedArrayName.stringValue();
-    // 9. Let srcType be the Element Type value in Table 61 for srcName.
-    const srcType = typedArrayInfoByName[srcName].ElementType;
-    // 10. Let srcElementSize be the Element Size value specified in Table 61 for srcName.
-    const srcElementSize = typedArrayInfoByName[srcName].ElementSize;
-    // 11. Let srcLength be source.[[ArrayLength]].
-    const srcLength = source.ArrayLength;
-    // 12. Let srcByteOffset be source.[[ByteOffset]].
+    const srcType = TypedArrayElementType(source);
+    const srcElementSize = TypedArrayElementSize(source);
     const srcByteOffset = source.ByteOffset;
-    // 13. If targetOffset is +∞, throw a RangeError exception.
     if (targetOffset === +Infinity) {
       return exports.surroundingAgent.Throw('RangeError', 'TypedArrayOOB');
     }
-    // 14. If srcLength + targetOffset > targetLength, throw a RangeError exception.
     if (srcLength + targetOffset > targetLength) {
       return exports.surroundingAgent.Throw('RangeError', 'TypedArrayOOB');
     }
-    // 15. If target.[[ContentType]] is not equal to source.[[ContentType]], throw a TypeError exception.
     if (target.ContentType !== source.ContentType) {
       return exports.surroundingAgent.Throw('TypeError', 'BufferContentTypeMismatch');
     }
-    // 16. If both IsSharedArrayBuffer(srcBuffer) and IsSharedArrayBuffer(targetBuffer) are true, then
-    let same;
-    if (IsSharedArrayBuffer() === Value.true && IsSharedArrayBuffer() === Value.true) {
-      Assert(false, "false");
+    let sameSharedArrayBuffer;
+    if (IsSharedArrayBuffer() === Value.true && IsSharedArrayBuffer() === Value.true && srcBuffer.ArrayBufferData === targetBuffer.ArrayBufferData) {
+      sameSharedArrayBuffer = true;
     } else {
-      // 17, Else, let same be SameValue(srcBuffer, targetBuffer).
-      same = SameValue(srcBuffer, targetBuffer);
+      sameSharedArrayBuffer = false;
     }
-    // 18. If same is true, then
     let srcByteIndex;
-    if (same === Value.true) {
-      // a. Let srcByteLength be source.[[ByteLength]].
-      const srcByteLength = source.ByteLength;
-      // b. Set srcBuffer to ? CloneArrayBuffer(srcBuffer, srcByteOffset, srcByteLength, %ArrayBuffer%).
-      let _temp31 = CloneArrayBuffer(srcBuffer, srcByteOffset, srcByteLength, exports.surroundingAgent.intrinsic('%ArrayBuffer%'));
+    if (SameValue(srcBuffer, targetBuffer) === Value.true || sameSharedArrayBuffer) {
+      const srcByteLength = TypedArrayByteLength(srcRecord);
+      let _temp31 = CloneArrayBuffer(srcBuffer, srcByteOffset, srcByteLength);
       /* c8 ignore if */
       if (_temp31 instanceof AbruptCompletion) {
         return _temp31;
@@ -52111,60 +51957,38 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _temp31 = _temp31.Value;
       }
       srcBuffer = _temp31;
-      // c. Let srcByteIndex be 0.
       srcByteIndex = 0;
     } else {
-      // 19. Else, let srcByteIndex be srcByteOffset.
       srcByteIndex = srcByteOffset;
     }
-    // 20. Let targetByteIndex be targetOffset × targetElementSize + targetByteOffset.
     let targetByteIndex = targetOffset * targetElementSize + targetByteOffset;
-    // 21. Let limit be targetByteIndex + targetElementSize × srcLength.
     const limit = targetByteIndex + targetElementSize * srcLength;
-    // 22. If srcType is the same as targetType, then
     if (srcType === targetType) {
-      // a. NOTE: If srcType and targetType are the same, the transfer must be performed in a manner that preserves the bit-level encoding of the source data.
-      // b. Repeat, while targetByteIndex < limit
       while (targetByteIndex < limit) {
-        // i. Let value be GetValueFromBuffer(srcBuffer, srcByteIndex, Uint8, true, Unordered).
-        const value = GetValueFromBuffer(srcBuffer, srcByteIndex, 'Uint8', Value.true);
-        // ii. Perform SetValueInBuffer(targetBuffer, targetByteIndex, Uint8, value, true, Unordered).
+        const value = GetValueFromBuffer(srcBuffer, srcByteIndex, 'Uint8');
         SetValueInBuffer(targetBuffer, targetByteIndex, 'Uint8', value, Value.true);
-        // iii. Set srcByteIndex to srcByteIndex + 1.
         srcByteIndex += 1;
-        // iv. Set targetByteIndex to targetByteIndex + 1.
         targetByteIndex += 1;
       }
     } else {
-      // 23. Else,
-      // a. Repeat, while targetByteIndex < limit
       while (targetByteIndex < limit) {
-        // i. Let value be GetValueFromBuffer(srcBuffer, srcByteIndex, srcType, true, Unordered).
-        const value = GetValueFromBuffer(srcBuffer, srcByteIndex, srcType, Value.true);
-        // ii. Perform SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value, true, Unordered).
+        const value = GetValueFromBuffer(srcBuffer, srcByteIndex, srcType);
         SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value, Value.true);
-        // iii. Set srcByteIndex to srcByteIndex + srcElementSize.
         srcByteIndex += srcElementSize;
-        // iv. Set targetByteIndex to targetByteIndex + targetElementSize.
         targetByteIndex += targetElementSize;
       }
     }
-    // 24. Return unused.
     return undefined;
   }
 
   /** https://tc39.es/ecma262/#sec-settypedarrayfromarraylike */
   SetTypedArrayFromTypedArray.section = 'https://tc39.es/ecma262/#sec-settypedarrayfromtypedarray';
   function SetTypedArrayFromArrayLike(target, targetOffset, source) {
-    // 1. Let targetBuffer be target.[[ViewedArrayBuffer]].
-    const targetBuffer = target.ViewedArrayBuffer;
-    // 2. If IsDetachedBuffer(targetBuffer) is true, throw a TypeError exception.
-    if (IsDetachedBuffer(targetBuffer) === Value.true) {
-      return exports.surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+    const targetRecord = MakeTypedArrayWithBufferWitnessRecord(target);
+    if (IsTypedArrayOutOfBounds(targetRecord)) {
+      return exports.surroundingAgent.Throw('TypeError', 'TypedArrayOOB');
     }
-    // 3. Let targetLength be target.[[ArrayLength]].
-    const targetLength = target.ArrayLength;
-    // 4. Let src be ? ToObject(source).
+    const targetLength = TypedArrayLength(targetRecord);
     let _temp32 = ToObject(source);
     /* c8 ignore if */
     if (_temp32 instanceof AbruptCompletion) {
@@ -52175,7 +51999,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp32 = _temp32.Value;
     }
     const src = _temp32;
-    // 5. Let srcLength be ? LengthOfArrayLike(src).
     let _temp33 = LengthOfArrayLike(src);
     /* c8 ignore if */
     if (_temp33 instanceof AbruptCompletion) {
@@ -52186,17 +52009,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp33 = _temp33.Value;
     }
     const srcLength = _temp33;
-    // 6. If targetOffset is +∞, throw a RangeError exception.
     if (targetOffset === +Infinity) {
       return exports.surroundingAgent.Throw('RangeError', 'TypedArrayOOB');
     }
-    // 7. If srcLength + targetOffset > targetLength, throw a RangeError exception.
     if (srcLength + targetOffset > targetLength) {
       return exports.surroundingAgent.Throw('RangeError', 'TypedArrayOOB');
     }
-    // 8. Let k be 0.
     let k = 0;
-    // 9. Repeat, while k < srcLength,
     while (k < srcLength) {
       let _temp34 = ToString(F(k));
       Assert(!(_temp34 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp34);
@@ -52204,9 +52023,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_temp34 instanceof Completion) {
         _temp34 = _temp34.Value;
       }
-      // a. Let Pk be ! ToString(𝔽(k)).
       const Pk = _temp34;
-      // b. Let value be ? Get(src, Pk).
       let _temp35 = Get(src, Pk);
       /* c8 ignore if */
       if (_temp35 instanceof AbruptCompletion) {
@@ -52217,10 +52034,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         _temp35 = _temp35.Value;
       }
       const value = _temp35;
-      // c. Let targetIndex be 𝔽(targetOffset + k).
       const targetIndex = F(targetOffset + k);
-      // d. Perform ? IntegerIndexedElementSet(target, targetIndex, value).
-      let _temp36 = IntegerIndexedElementSet(target, targetIndex, value);
+      let _temp36 = TypedArraySetElement(target, targetIndex, value);
       /* c8 ignore if */
       if (_temp36 instanceof AbruptCompletion) {
         return _temp36;
@@ -52229,10 +52044,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       if (_temp36 instanceof Completion) {
         _temp36 = _temp36.Value;
       }
-      // e. Set k to k + 1.
       k += 1;
     }
-    // 10. Return unused.
     return undefined;
   }
 
@@ -52301,9 +52114,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined], {
     thisValue
   }) {
-    // 1. Let O be the this value.
     const O = thisValue;
-    // 2. Perform ? ValidateTypedArray(O).
     let _temp41 = ValidateTypedArray(O);
     /* c8 ignore if */
     if (_temp41 instanceof AbruptCompletion) {
@@ -52313,9 +52124,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp41 instanceof Completion) {
       _temp41 = _temp41.Value;
     }
-    // 3. Let len be O.[[ArrayLength]].
-    const len = O.ArrayLength;
-    // 4. Let relativeStart be ? ToIntegerOrInfinity(start).
+    let taRecord = _temp41;
+    const srcArrayLength = TypedArrayLength(taRecord);
     let _temp42 = ToIntegerOrInfinity(start);
     /* c8 ignore if */
     if (_temp42 instanceof AbruptCompletion) {
@@ -52326,17 +52136,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp42 = _temp42.Value;
     }
     const relativeStart = _temp42;
-    // 5. If relativeStart < 0, let k be max((len + relativeStart), 0); else let k be min(relativeStart, len).
-    let k;
-    if (relativeStart < 0) {
-      k = Math.max(len + relativeStart, 0);
+    let startIndex;
+    if (relativeStart === -Infinity) {
+      startIndex = 0;
+    } else if (relativeStart < 0) {
+      startIndex = Math.max(srcArrayLength + relativeStart, 0);
     } else {
-      k = Math.min(relativeStart, len);
+      startIndex = Math.min(relativeStart, srcArrayLength);
     }
-    // 6. If end is undefined, let relativeEnd be len; else let relativeEnd be ? ToIntegerOrInfinity(end).
     let relativeEnd;
     if (end === Value.undefined) {
-      relativeEnd = len;
+      relativeEnd = srcArrayLength;
     } else {
       let _temp43 = ToIntegerOrInfinity(end);
       /* c8 ignore if */
@@ -52349,17 +52159,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       relativeEnd = _temp43;
     }
-    // 7. If relativeEnd < 0, let final be max((len + relativeEnd), 0); else let final be min(relativeEnd, len).
-    let final;
-    if (relativeEnd < 0) {
-      final = Math.max(len + relativeEnd, 0);
+    let endIndex;
+    if (relativeEnd === -Infinity) {
+      endIndex = 0;
+    } else if (relativeEnd < 0) {
+      endIndex = Math.max(srcArrayLength + relativeEnd, 0);
     } else {
-      final = Math.min(relativeEnd, len);
+      endIndex = Math.min(relativeEnd, srcArrayLength);
     }
-    // 8. Let count be max(final - k, 0).
-    const count = Math.max(final - k, 0);
-    // 9. Let A be ? TypedArraySpeciesCreate(O, « 𝔽(count) »).
-    let _temp44 = TypedArraySpeciesCreate(O, [F(count)]);
+    let countBytes = Math.max(endIndex - startIndex, 0);
+    let _temp44 = TypedArraySpeciesCreate(O, [F(countBytes)]);
     /* c8 ignore if */
     if (_temp44 instanceof AbruptCompletion) {
       return _temp44;
@@ -52369,35 +52178,40 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp44 = _temp44.Value;
     }
     const A = _temp44;
-    // 10. If count > 0, then
-    if (count > 0) {
-      // a. If IsDetachedBuffer(O.[[ViewedArrayBuffer]]) is true, throw a TypeError exception.
-      if (IsDetachedBuffer(O.ViewedArrayBuffer) === Value.true) {
-        return exports.surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
+    if (countBytes > 0) {
+      taRecord = MakeTypedArrayWithBufferWitnessRecord(O);
+      if (IsTypedArrayOutOfBounds(taRecord)) {
+        return exports.surroundingAgent.Throw('TypeError', 'TypedArrayOOB');
       }
-      // b. Let srcName be the String value of O.[[TypedArrayName]].
-      const srcName = O.TypedArrayName.stringValue();
-      // c. Let srcType be the Element Type value in Table 61 for srcName.
-      const srcType = typedArrayInfoByName[srcName].ElementType;
-      // d. Let targetName be the String value of A.[[TypedArrayName]].
-      const targetName = A.TypedArrayName.stringValue();
-      // e. Let targetType be the Element Type value in Table 61 for targetName.
-      const targetType = typedArrayInfoByName[targetName].ElementType;
-      // f. If srcType is different from targetType, then
-      if (srcType !== targetType) {
-        // i. Let n be 0.
+      endIndex = Math.min(endIndex, TypedArrayLength(taRecord));
+      countBytes = Math.max(endIndex - startIndex, 0);
+      const srcType = TypedArrayElementType(O);
+      const targetType = TypedArrayElementType(A);
+      if (srcType === targetType) {
+        const srcBuffer = O.ViewedArrayBuffer;
+        const targetBuffer = A.ViewedArrayBuffer;
+        const elementSize = TypedArrayElementSize(O);
+        const srcByteOffset = O.ByteOffset;
+        let srcByteIndex = startIndex * elementSize + srcByteOffset;
+        let targetByteIndex = A.ByteOffset;
+        const endByteIndex = targetByteIndex + countBytes * elementSize;
+        while (targetByteIndex < endByteIndex) {
+          const value = GetValueFromBuffer(srcBuffer, srcByteIndex, 'Uint8');
+          SetValueInBuffer(targetBuffer, targetByteIndex, 'Uint8', value);
+          srcByteIndex += 1;
+          targetByteIndex += 1;
+        }
+      } else {
         let n = 0;
-        // ii. Repeat, while k < final
-        while (k < final) {
+        let k = startIndex;
+        while (k < endIndex) {
           let _temp45 = ToString(F(k));
           Assert(!(_temp45 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp45);
           /* c8 ignore if */
           if (_temp45 instanceof Completion) {
             _temp45 = _temp45.Value;
           }
-          // 1. Let Pk be ! ToString(𝔽(k)).
           const Pk = _temp45;
-          // 2. Let kValue be ! Get(O, Pk).
           let _temp46 = Get(O, Pk);
           Assert(!(_temp46 instanceof AbruptCompletion), "Get(O, Pk)" + ' returned an abrupt completion', _temp46);
           /* c8 ignore if */
@@ -52405,7 +52219,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             _temp46 = _temp46.Value;
           }
           const kValue = _temp46;
-          // 3. Perform ! Set(A, ! ToString(𝔽(n)), kValue, true).
           let _temp48 = ToString(F(n));
           Assert(!(_temp48 instanceof AbruptCompletion), "ToString(F(n))" + ' returned an abrupt completion', _temp48);
           /* c8 ignore if */
@@ -52418,56 +52231,24 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           if (_temp47 instanceof Completion) {
             _temp47 = _temp47.Value;
           }
-          // 4. Set k to k + 1.
           k += 1;
-          // 5. Set n to n + 1.
           n += 1;
-        }
-      } else {
-        // g. Else,
-        // i. Let srcBuffer be O.[[ViewedArrayBuffer]].
-        const srcBuffer = O.ViewedArrayBuffer;
-        // ii. Let targetBuffer be A.[[ViewedArrayBuffer]].
-        const targetBuffer = A.ViewedArrayBuffer;
-        // iii. Let elementSize be the Element Size value specified in Table 61 for Element Type srcType.
-        const elementSize = typedArrayInfoByType[srcType].ElementSize;
-        // iv. NOTE: If srcType and targetType are the same, the transfer must be performed in a manner that preserves the bit-level encoding of the source data.
-        // v. Let srcByteOffet be O.[[ByteOffset]].
-        const srcByteOffset = O.ByteOffset;
-        // vi. Let targetByteIndex be A.[[ByteOffset]].
-        let targetByteIndex = A.ByteOffset;
-        // vii. Let srcByteIndex be (k × elementSize) + srcByteOffet.
-        let srcByteIndex = k * elementSize + srcByteOffset;
-        // viii. Let limit be targetByteIndex + count × elementSize.
-        const limit = targetByteIndex + count * elementSize;
-        // ix. Repeat, while targetByteIndex < limit
-        while (targetByteIndex < limit) {
-          // 1. Let value be GetValueFromBuffer(srcBuffer, srcByteIndex, Uint8, true, Unordered).
-          const value = GetValueFromBuffer(srcBuffer, srcByteIndex, 'Uint8', Value.true);
-          // 2. Perform SetValueInBuffer(targetBuffer, targetByteIndex, Uint8, value, true, Unordered).
-          SetValueInBuffer(targetBuffer, targetByteIndex, 'Uint8', value, Value.true);
-          // 3. Set srcByteIndex to srcByteIndex + 1.
-          srcByteIndex += 1;
-          // 4. Set targetByteIndex to targetByteIndex + 1.
-          targetByteIndex += 1;
         }
       }
     }
-    // 16. Return A.
     return A;
   }
 
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.sort */
   TypedArrayProto_slice.section = 'https://tc39.es/ecma262/#sec-%typedarray%.prototype.slice';
-  function TypedArrayProto_sort([comparefn = Value.undefined], {
+  function TypedArrayProto_sort([comparator = Value.undefined], {
     thisValue
   }) {
-    // 1. If comparefn is not undefined and IsCallable(comparefn) is false, throw a TypeError exception.
-    if (comparefn !== Value.undefined && IsCallable(comparefn) === Value.false) {
-      return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', comparefn);
+    if (comparator !== Value.undefined && IsCallable(comparator) === Value.false) {
+      return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', comparator);
     }
-    // 2. Let obj be the this value.
-    let _temp49 = ToObject(thisValue);
+    const obj = thisValue;
+    let _temp49 = ValidateTypedArray(obj);
     /* c8 ignore if */
     if (_temp49 instanceof AbruptCompletion) {
       return _temp49;
@@ -52476,9 +52257,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp49 instanceof Completion) {
       _temp49 = _temp49.Value;
     }
-    const obj = _temp49;
-    // 3. Perform ? ValidateTypedArray(obj).
-    let _temp50 = ValidateTypedArray(obj);
+    const taRecord = _temp49;
+    const len = TypedArrayLength(taRecord);
+    const SortCompare = (x, y) => {
+      Assert(x instanceof NumberValue || x instanceof BigIntValue, "x instanceof NumberValue || x instanceof BigIntValue");
+      Assert(y instanceof NumberValue || y instanceof BigIntValue, "y instanceof NumberValue || y instanceof BigIntValue");
+      return CompareTypedArrayElements(x, y, comparator);
+    };
+    let _temp50 = SortIndexedProperties(obj, len, SortCompare, 'read-through-holes');
     /* c8 ignore if */
     if (_temp50 instanceof AbruptCompletion) {
       return _temp50;
@@ -52487,84 +52273,32 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp50 instanceof Completion) {
       _temp50 = _temp50.Value;
     }
-    // 4. Let len be obj.[[ArrayLength]].
-    const len = obj.ArrayLength;
-    return ArrayProto_sortBody(obj, len, (x, y) => TypedArraySortCompare(x, y, comparefn), true);
-  }
-  TypedArrayProto_sort.section = 'https://tc39.es/ecma262/#sec-%typedarray%.prototype.sort';
-  function TypedArraySortCompare(x, y, comparefn) {
-    // 1. Assert: Both Type(x) and Type(y) are Number or both are BigInt.
-    Assert(x instanceof NumberValue && y instanceof NumberValue || x instanceof BigIntValue && y instanceof BigIntValue, "(x instanceof NumberValue && y instanceof NumberValue)\n         || (x instanceof BigIntValue && y instanceof BigIntValue)");
-    // 2. If comparefn is not undefined, then
-    if (comparefn !== Value.undefined) {
-      let _temp52 = Call(comparefn, Value.undefined, [x, y]);
-      /* c8 ignore if */
-      if (_temp52 instanceof AbruptCompletion) {
-        return _temp52;
-      }
+    const sortedList = _temp50;
+    let j = 0;
+    while (j < len) {
+      let _temp52 = ToString(F(j));
+      Assert(!(_temp52 instanceof AbruptCompletion), "ToString(F(j))" + ' returned an abrupt completion', _temp52);
       /* c8 ignore if */
       if (_temp52 instanceof Completion) {
         _temp52 = _temp52.Value;
       }
-      let _temp51 = ToNumber(_temp52);
-      /* c8 ignore if */
-      if (_temp51 instanceof AbruptCompletion) {
-        return _temp51;
-      }
+      let _temp51 = Set$1(obj, _temp52, sortedList[j], Value.true);
+      Assert(!(_temp51 instanceof AbruptCompletion), "Set(obj, X(ToString(F(j))), sortedList[j], Value.true)" + ' returned an abrupt completion', _temp51);
       /* c8 ignore if */
       if (_temp51 instanceof Completion) {
         _temp51 = _temp51.Value;
       }
-      // a. Let v be ? ToNumber(? Call(comparefn, undefined, « x, y »)).
-      const v = _temp51;
-      // b. If v is NaN, return +0𝔽.
-      if (v.isNaN()) {
-        return F(0);
-      }
-      // c. Return v.
-      return v;
+      j += 1;
     }
-    // 3. If x and y are both NaN, return +0𝔽.
-    if (x.isNaN() && y.isNaN()) {
-      return F(0);
-    }
-    // 4. If x is NaN, return 1𝔽.
-    if (x.isNaN()) {
-      return F(1);
-    }
-    // 5. If y is NaN, return -1𝔽.
-    if (y.isNaN()) {
-      return F(-1);
-    }
-    const x_ = R(x);
-    const y_ = R(y);
-    // 6. If x < y, return -1𝔽.
-    if (x_ < y_) {
-      return F(-1);
-    }
-    // 7. If x > y, return 1𝔽.
-    if (x_ > y_) {
-      return F(1);
-    }
-    // 8. If x is -0𝔽 and y is +0𝔽, return -1𝔽.
-    if (Object.is(x_, -0) && Object.is(y_, 0)) {
-      return F(-1);
-    }
-    // 9. If x is +0𝔽 and y is -0𝔽, return 1𝔽.
-    if (Object.is(x_, 0) && Object.is(y_, -0)) {
-      return F(1);
-    }
-    // 10. Return +0𝔽.
-    return F(0);
+    return obj;
   }
 
   /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.subarray */
+  TypedArrayProto_sort.section = 'https://tc39.es/ecma262/#sec-%typedarray%.prototype.sort';
   function TypedArrayProto_subarray([begin = Value.undefined, end = Value.undefined], {
     thisValue
   }) {
-    // 1. Let O be the this value.
     const O = thisValue;
-    // 2. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
     let _temp53 = RequireInternalSlot(O, 'TypedArrayName');
     /* c8 ignore if */
     if (_temp53 instanceof AbruptCompletion) {
@@ -52574,13 +52308,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp53 instanceof Completion) {
       _temp53 = _temp53.Value;
     }
-    // 3. Assert: O has a [[ViewedArrayBuffer]] internal slot.
     Assert('ViewedArrayBuffer' in O, "'ViewedArrayBuffer' in O");
-    // 4. Let buffer be O.[[ViewedArrayBuffer]].
     const buffer = O.ViewedArrayBuffer;
-    // 5. Let srcLength be O.[[ArrayLength]].
-    const srcLength = O.ArrayLength;
-    // 6. Let relativeBegin be ? ToIntegerOrInfinity(begin).
+    const srcRecord = MakeTypedArrayWithBufferWitnessRecord(O);
+    let srcLength;
+    if (IsTypedArrayOutOfBounds(srcRecord)) {
+      srcLength = 0;
+    } else {
+      srcLength = TypedArrayLength(srcRecord);
+    }
     let _temp54 = ToIntegerOrInfinity(begin);
     /* c8 ignore if */
     if (_temp54 instanceof AbruptCompletion) {
@@ -52590,50 +52326,48 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp54 instanceof Completion) {
       _temp54 = _temp54.Value;
     }
-    const relativeBegin = _temp54;
-    // 7. If relativeBegin < 0, let beginIndex be max((srcLength + relativeBegin), 0); else let beginIndex be min(relativeBegin, srcLength).
-    let beginIndex;
-    if (relativeBegin < 0) {
-      beginIndex = Math.max(srcLength + relativeBegin, 0);
+    const relativeStart = _temp54;
+    let startIndex;
+    if (relativeStart === -Infinity) {
+      startIndex = 0;
+    } else if (relativeStart < 0) {
+      startIndex = Math.max(srcLength + relativeStart, 0);
     } else {
-      beginIndex = Math.min(relativeBegin, srcLength);
+      startIndex = Math.min(relativeStart, srcLength);
     }
-    // 8. If end is undefined, let relativeEnd be srcLength; else let relativeEnd be ? ToIntegerOrInfinity(end).
-    let relativeEnd;
-    if (end === Value.undefined) {
-      relativeEnd = srcLength;
-    } else {
-      let _temp55 = ToIntegerOrInfinity(end);
-      /* c8 ignore if */
-      if (_temp55 instanceof AbruptCompletion) {
-        return _temp55;
-      }
-      /* c8 ignore if */
-      if (_temp55 instanceof Completion) {
-        _temp55 = _temp55.Value;
-      }
-      relativeEnd = _temp55;
-    }
-    // 9. If relativeEnd < 0, let endIndex be max((srcLength + relativeEnd), 0); else let endIndex be min(relativeEnd, srcLength).
-    let endIndex;
-    if (relativeEnd < 0) {
-      endIndex = Math.max(srcLength + relativeEnd, 0);
-    } else {
-      endIndex = Math.min(relativeEnd, srcLength);
-    }
-    // 10. Let newLength be max(endIndex - beginIndex, 0).
-    const newLength = Math.max(endIndex - beginIndex, 0);
-    // 11. Let constructorName be the String value of O.[[TypedArrayName]].
-    const constructorName = O.TypedArrayName.stringValue();
-    // 12. Let elementSize be the Element Size value specified in Table 61 for constructorName.
-    const elementSize = typedArrayInfoByName[constructorName].ElementSize;
-    // 13. Let srcByteOffset be O.[[ByteOffset]].
+    const elementSize = TypedArrayElementSize(O);
     const srcByteOffset = O.ByteOffset;
-    // 14. Let beginByteOffset be srcByteOffset + beginIndex × elementSize.
-    const beginByteOffset = srcByteOffset + beginIndex * elementSize;
-    // 15. Let argumentsList be « buffer, 𝔽(beginByteOffset), 𝔽(newLength) ».
-    const argumentsList = [buffer, F(beginByteOffset), F(newLength)];
-    // 16. Return ? TypedArraySpeciesCreate(O, argumentsList).
+    const beginByteOffset = srcByteOffset + startIndex * elementSize;
+    let argumentsList;
+    if (O.ArrayLength === 'auto' && end === Value.undefined) {
+      argumentsList = [buffer, F(beginByteOffset)];
+    } else {
+      let relativeEnd;
+      if (end === Value.undefined) {
+        relativeEnd = srcLength;
+      } else {
+        let _temp55 = ToIntegerOrInfinity(end);
+        /* c8 ignore if */
+        if (_temp55 instanceof AbruptCompletion) {
+          return _temp55;
+        }
+        /* c8 ignore if */
+        if (_temp55 instanceof Completion) {
+          _temp55 = _temp55.Value;
+        }
+        relativeEnd = _temp55;
+      }
+      let endIndex;
+      if (relativeEnd === -Infinity) {
+        endIndex = 0;
+      } else if (relativeEnd < 0) {
+        endIndex = Math.max(srcLength + relativeEnd, 0);
+      } else {
+        endIndex = Math.min(relativeEnd, srcLength);
+      }
+      const newLength = Math.max(endIndex - startIndex, 0);
+      argumentsList = [buffer, F(beginByteOffset), F(newLength)];
+    }
     return TypedArraySpeciesCreate(O, argumentsList);
   }
 
@@ -52686,9 +52420,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   function TypedArrayProto_at([index = Value.undefined], {
     thisValue
   }) {
-    // 1. Let O be the this value.
     const O = thisValue;
-    // 2. Perform ? ValidateTypedArray(O).
     let _temp57 = ValidateTypedArray(O);
     /* c8 ignore if */
     if (_temp57 instanceof AbruptCompletion) {
@@ -52698,9 +52430,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp57 instanceof Completion) {
       _temp57 = _temp57.Value;
     }
-    // 3. Let len be O.[[ArrayLength]].
-    const len = O.ArrayLength;
-    // 4. Let relativeIndex be ? ToIntegerOrInfinity(index).
+    const taRecord = _temp57;
+    const len = TypedArrayLength(taRecord);
     let _temp58 = ToIntegerOrInfinity(index);
     /* c8 ignore if */
     if (_temp58 instanceof AbruptCompletion) {
@@ -52712,60 +52443,72 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     const relativeIndex = _temp58;
     let k;
-    // 5. If relativeIndex ≥ 0, then
     if (relativeIndex >= 0) {
-      // a. Let k be relativeIndex.
       k = relativeIndex;
     } else {
-      // 6. Else,
-      // a. Let k be len + relativeIndex.
       k = len + relativeIndex;
     }
-    // 7. If k < 0 or k ≥ len, then return undefined.
     if (k < 0 || k >= len) {
       return Value.undefined;
     }
-    // 8. Return ? Get(O, ! ToString(𝔽(k))).
-    let _temp59 = ToString(F(k));
-    Assert(!(_temp59 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp59);
-    /* c8 ignore if */
-    if (_temp59 instanceof Completion) {
-      _temp59 = _temp59.Value;
-    }
-    return Get(O, _temp59);
-  }
-  TypedArrayProto_at.section = 'https://tc39.es/ecma262/#sec-%typedarray%.prototype.at';
-  function bootstrapTypedArrayPrototype(realmRec) {
-    let _temp60 = Get(realmRec.Intrinsics['%Array.prototype%'], Value('toString'));
-    Assert(!(_temp60 instanceof AbruptCompletion), "Get(realmRec.Intrinsics['%Array.prototype%'], Value('toString'))" + ' returned an abrupt completion', _temp60);
+    let _temp60 = ToString(F(k));
+    Assert(!(_temp60 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp60);
     /* c8 ignore if */
     if (_temp60 instanceof Completion) {
       _temp60 = _temp60.Value;
     }
-    const ArrayProto_toString = _temp60;
+    let _temp59 = Get(O, _temp60);
+    Assert(!(_temp59 instanceof AbruptCompletion), "Get(O, X(ToString(F(k))))" + ' returned an abrupt completion', _temp59);
+    /* c8 ignore if */
+    if (_temp59 instanceof Completion) {
+      _temp59 = _temp59.Value;
+    }
+    return _temp59;
+  }
+  TypedArrayProto_at.section = 'https://tc39.es/ecma262/#sec-%typedarray%.prototype.at';
+  function bootstrapTypedArrayPrototype(realmRec) {
+    let _temp61 = Get(realmRec.Intrinsics['%Array.prototype%'], Value('toString'));
+    Assert(!(_temp61 instanceof AbruptCompletion), "Get(realmRec.Intrinsics['%Array.prototype%'], Value('toString'))" + ' returned an abrupt completion', _temp61);
+    /* c8 ignore if */
+    if (_temp61 instanceof Completion) {
+      _temp61 = _temp61.Value;
+    }
+    const ArrayProto_toString = _temp61;
     Assert(ArrayProto_toString instanceof ObjectValue, "ArrayProto_toString instanceof ObjectValue");
     const proto = bootstrapPrototype(realmRec, [['buffer', [TypedArrayProto_buffer]], ['byteLength', [TypedArrayProto_byteLength]], ['byteOffset', [TypedArrayProto_byteOffset]], ['copyWithin', TypedArrayProto_copyWithin, 2], ['entries', TypedArrayProto_entries, 0], ['fill', TypedArrayProto_fill, 1], ['filter', TypedArrayProto_filter, 1], ['at', TypedArrayProto_at, 1], ['keys', TypedArrayProto_keys, 0], ['length', [TypedArrayProto_length]], ['map', TypedArrayProto_map, 1], ['set', TypedArrayProto_set, 1], ['slice', TypedArrayProto_slice, 2], ['sort', TypedArrayProto_sort, 1], ['subarray', TypedArrayProto_subarray, 2], ['values', TypedArrayProto_values, 0], ['toString', ArrayProto_toString], [wellKnownSymbols.toStringTag, [TypedArrayProto_toStringTag]]], realmRec.Intrinsics['%Object.prototype%']);
-    bootstrapArrayPrototypeShared(realmRec, proto, thisValue => ValidateTypedArray(thisValue), O => O.ArrayLength);
+    bootstrapArrayPrototypeShared(realmRec, proto, thisValue => ValidateTypedArray(thisValue), O => {
+      let _temp62 = ValidateTypedArray(O);
+      /* c8 ignore if */
+      if (_temp62 instanceof AbruptCompletion) {
+        return _temp62;
+      }
+      /* c8 ignore if */
+      if (_temp62 instanceof Completion) {
+        _temp62 = _temp62.Value;
+      }
+      const rec = _temp62;
+      return TypedArrayLength(rec);
+    });
 
     /** https://tc39.es/ecma262/#sec-%typedarray%.prototype-@@iterator */
     {
-      let _temp61 = Get(proto, Value('values'));
-      Assert(!(_temp61 instanceof AbruptCompletion), "Get(proto, Value('values'))" + ' returned an abrupt completion', _temp61);
+      let _temp63 = Get(proto, Value('values'));
+      Assert(!(_temp63 instanceof AbruptCompletion), "Get(proto, Value('values'))" + ' returned an abrupt completion', _temp63);
       /* c8 ignore if */
-      if (_temp61 instanceof Completion) {
-        _temp61 = _temp61.Value;
+      if (_temp63 instanceof Completion) {
+        _temp63 = _temp63.Value;
       }
-      const fn = _temp61;
-      let _temp62 = proto.DefineOwnProperty(wellKnownSymbols.iterator, exports.Descriptor({
+      const fn = _temp63;
+      let _temp64 = proto.DefineOwnProperty(wellKnownSymbols.iterator, exports.Descriptor({
         Value: fn,
         Writable: Value.true,
         Enumerable: Value.false,
         Configurable: Value.true
       }));
-      Assert(!(_temp62 instanceof AbruptCompletion), "proto.DefineOwnProperty(wellKnownSymbols.iterator, Descriptor({\n      Value: fn,\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    }))" + ' returned an abrupt completion', _temp62);
+      Assert(!(_temp64 instanceof AbruptCompletion), "proto.DefineOwnProperty(wellKnownSymbols.iterator, Descriptor({\n      Value: fn,\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    }))" + ' returned an abrupt completion', _temp64);
       /* c8 ignore if */
-      if (_temp62 instanceof Completion) {
-        _temp62 = _temp62.Value;
+      if (_temp64 instanceof Completion) {
+        _temp64 = _temp64.Value;
       }
     }
     realmRec.Intrinsics['%TypedArray.prototype%'] = proto;
@@ -52777,217 +52520,116 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       function TypedArrayConstructor(args, {
         NewTarget
       }) {
-        if (args.length === 0) {
-          /** https://tc39.es/ecma262/#sec-typedarray */
-          // 1. If NewTarget is undefined, throw a TypeError exception.
-          if (NewTarget instanceof UndefinedValue) {
-            return exports.surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
-          }
-          // 2. Let constructorName be the String value of the Constructor Name value specified in Table 61 for this TypedArray constructor.
-          const constructorName = Value(TypedArray);
-          // 3. Return ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%", 0).
-          return AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`, 0);
-        } else if (!(args[0] instanceof ObjectValue)) {
-          /** https://tc39.es/ecma262/#sec-typedarray-length */
-          const [length] = args;
-          // 1. Assert: Type(length) is not Object.
-          Assert(!(length instanceof ObjectValue), "!(length instanceof ObjectValue)");
-          // 2. If NewTarget is undefined, throw a TypeError exception.
-          if (NewTarget instanceof UndefinedValue) {
-            return exports.surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
-          }
-          // 3. Let elementLength be ? ToIndex(length).
-          let _temp = ToIndex(length);
-          /* c8 ignore if */
-          if (_temp instanceof AbruptCompletion) {
-            return _temp;
-          }
-          /* c8 ignore if */
-          if (_temp instanceof Completion) {
-            _temp = _temp.Value;
-          }
-          const elementLength = _temp;
-          // 4. Let constructorName be the String value of the Constructor Name value specified in Table 61 for this TypedArray constructor.
-          const constructorName = Value(TypedArray);
-          // 5. Return ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%", elementLength).
-          return AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`, elementLength);
-        } else if ('TypedArrayName' in args[0]) {
-          /** https://tc39.es/ecma262/#sec-typedarray-typedarray */
-          const [typedArray] = args;
-          // 1. Assert: Type(typedArray) is Object and typedArray has a [[TypedArrayName]] internal slot.
-          Assert(typedArray instanceof ObjectValue && 'TypedArrayName' in typedArray, "typedArray instanceof ObjectValue && 'TypedArrayName' in typedArray");
-          // 2. If NewTarget is undefined, throw a TypeError exception.
-          if (NewTarget instanceof UndefinedValue) {
-            return exports.surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
-          }
-          // 3. Let constructorName be the String value of the Constructor Name value specified in Table 61 for this TypedArray constructor.
-          const constructorName = Value(TypedArray);
-          // 4. Let O be ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%").
-          let _temp2 = AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`);
-          /* c8 ignore if */
-          if (_temp2 instanceof AbruptCompletion) {
-            return _temp2;
-          }
-          /* c8 ignore if */
-          if (_temp2 instanceof Completion) {
-            _temp2 = _temp2.Value;
-          }
-          const O = _temp2;
-          // 5. Let srcArray be typedArray.
-          const srcArray = typedArray;
-          // 6. Let srcData be srcArray.[[ViewedArrayBuffer]].
-          const srcData = srcArray.ViewedArrayBuffer;
-          // 7. If IsDetachedBuffer(srcData) is true, throw a TypeError exception.
-          if (IsDetachedBuffer(srcData) === Value.true) {
-            return exports.surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
-          }
-          // 8. Let elementType be the Element Type value in Table 61 for constructorName.
-          const elementType = Value(info.ElementType);
-          // 9. Let elementLength be srcArray.[[ArrayLength]].
-          const elementLength = srcArray.ArrayLength;
-          // 10. Let srcName be the String value of srcArray.[[TypedArrayName]].
-          const srcName = srcArray.TypedArrayName.stringValue();
-          // 11. Let srcType be the Element Type value in Table 61 for srcName.
-          const srcType = Value(typedArrayInfoByName[srcName].ElementType);
-          // 12. Let srcElementSize be the Element Size value specified in Table 61 for srcName.
-          const srcElementSize = typedArrayInfoByName[srcName].ElementSize;
-          // 13. Let srcByteOffset be srcArray.[[ByteOffset]].
-          const srcByteOffset = srcArray.ByteOffset;
-          // 14. Let elementSize be the Element Size value specified in Table 61 for constructorName.
-          const elementSize = info.ElementSize;
-          // 15. Let byteLength be elementSize × elementLength.
-          const byteLength = elementSize * elementLength;
-          // 16. If IsSharedArrayBuffer(srcData) is false, then
-          let bufferConstructor;
-          if (IsSharedArrayBuffer() === Value.false) {
-            let _temp3 = SpeciesConstructor(srcData, exports.surroundingAgent.intrinsic('%ArrayBuffer%'));
+        if (NewTarget instanceof UndefinedValue) {
+          return exports.surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+        }
+        const constructorName = Value(TypedArray);
+        const proto = `%${TypedArray}.prototype%`;
+        const numberOfArgs = args.length;
+        if (numberOfArgs === 0) {
+          return AllocateTypedArray(constructorName, NewTarget, proto, 0);
+        } else {
+          const firstArgument = args[0];
+          if (firstArgument instanceof ObjectValue) {
+            let _temp = AllocateTypedArray(constructorName, NewTarget, proto);
             /* c8 ignore if */
-            if (_temp3 instanceof AbruptCompletion) {
-              return _temp3;
+            if (_temp instanceof AbruptCompletion) {
+              return _temp;
             }
             /* c8 ignore if */
-            if (_temp3 instanceof Completion) {
-              _temp3 = _temp3.Value;
+            if (_temp instanceof Completion) {
+              _temp = _temp.Value;
             }
-            bufferConstructor = _temp3;
+            const O = _temp;
+            if (isTypedArrayObject(firstArgument)) {
+              let _temp2 = InitializeTypedArrayFromTypedArray(O, firstArgument);
+              /* c8 ignore if */
+              if (_temp2 instanceof AbruptCompletion) {
+                return _temp2;
+              }
+              /* c8 ignore if */
+              if (_temp2 instanceof Completion) {
+                _temp2 = _temp2.Value;
+              }
+            } else if (isArrayBufferObject(firstArgument)) {
+              let byteOffset;
+              let length;
+              if (numberOfArgs > 1) {
+                byteOffset = args[1];
+              } else {
+                byteOffset = Value.undefined;
+              }
+              if (numberOfArgs > 2) {
+                length = args[2];
+              } else {
+                length = Value.undefined;
+              }
+              let _temp3 = InitializeTypedArrayFromArrayBuffer(O, firstArgument, byteOffset, length);
+              /* c8 ignore if */
+              if (_temp3 instanceof AbruptCompletion) {
+                return _temp3;
+              }
+              /* c8 ignore if */
+              if (_temp3 instanceof Completion) {
+                _temp3 = _temp3.Value;
+              }
+            } else {
+              Assert(firstArgument instanceof ObjectValue && !isTypedArrayObject(firstArgument) && !isArrayBufferObject(firstArgument), "firstArgument instanceof ObjectValue && !isTypedArrayObject(firstArgument) && !isArrayBufferObject(firstArgument)");
+              let _temp4 = GetMethod(firstArgument, wellKnownSymbols.iterator);
+              /* c8 ignore if */
+              if (_temp4 instanceof AbruptCompletion) {
+                return _temp4;
+              }
+              /* c8 ignore if */
+              if (_temp4 instanceof Completion) {
+                _temp4 = _temp4.Value;
+              }
+              const usingIterator = _temp4;
+              if (!(usingIterator instanceof UndefinedValue)) {
+                let _temp7 = GetIteratorFromMethod(firstArgument, usingIterator);
+                /* c8 ignore if */
+                if (_temp7 instanceof AbruptCompletion) {
+                  return _temp7;
+                }
+                /* c8 ignore if */
+                if (_temp7 instanceof Completion) {
+                  _temp7 = _temp7.Value;
+                }
+                let _temp5 = IteratorToList(_temp7);
+                /* c8 ignore if */
+                if (_temp5 instanceof AbruptCompletion) {
+                  return _temp5;
+                }
+                /* c8 ignore if */
+                if (_temp5 instanceof Completion) {
+                  _temp5 = _temp5.Value;
+                }
+                const values = _temp5;
+                let _temp6 = InitializeTypedArrayFromList(O, values);
+                /* c8 ignore if */
+                if (_temp6 instanceof AbruptCompletion) {
+                  return _temp6;
+                }
+                /* c8 ignore if */
+                if (_temp6 instanceof Completion) {
+                  _temp6 = _temp6.Value;
+                }
+              } else {
+                let _temp8 = InitializeTypedArrayFromArrayLike(O, firstArgument);
+                /* c8 ignore if */
+                if (_temp8 instanceof AbruptCompletion) {
+                  return _temp8;
+                }
+                /* c8 ignore if */
+                if (_temp8 instanceof Completion) {
+                  _temp8 = _temp8.Value;
+                }
+              }
+            }
+            return O;
           } else {
-            // 17. Else, Let bufferConstructor be %ArrayBuffer%.
-            bufferConstructor = exports.surroundingAgent.intrinsic('%ArrayBuffer%');
-          }
-          // 18. If elementType is the same as srcType, then
-          let data;
-          if (SameValue(elementType, srcType) === Value.true) {
-            let _temp4 = CloneArrayBuffer(srcData, srcByteOffset, byteLength, bufferConstructor);
-            /* c8 ignore if */
-            if (_temp4 instanceof AbruptCompletion) {
-              return _temp4;
-            }
-            /* c8 ignore if */
-            if (_temp4 instanceof Completion) {
-              _temp4 = _temp4.Value;
-            }
-            // a. Let data be ? CloneArrayBuffer(srcData, srcByteOffset, byteLength, bufferConstructor).
-            data = _temp4;
-          } else {
-            let _temp5 = AllocateArrayBuffer(bufferConstructor, byteLength);
-            /* c8 ignore if */
-            if (_temp5 instanceof AbruptCompletion) {
-              return _temp5;
-            }
-            /* c8 ignore if */
-            if (_temp5 instanceof Completion) {
-              _temp5 = _temp5.Value;
-            }
-            // a. Let data be ? AllocateArrayBuffer(bufferConstructor, byteLength).
-            data = _temp5;
-            // b. If IsDetachedBuffer(srcData) is true, throw a TypeError exception.
-            if (IsDetachedBuffer(srcData) === Value.true) {
-              return exports.surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
-            }
-            // c. If srcArray.[[ContentType]] is not equal to O.[[ContentType]], throw a TypeError exception.
-            if (srcArray.ContentType !== O.ContentType) {
-              return exports.surroundingAgent.Throw('TypeError', 'BufferContentTypeMismatch');
-            }
-            // d. Let srcByteIndex be srcByteOffset.
-            let srcByteIndex = srcByteOffset;
-            // e. Let targetByteIndex be 0.
-            let targetByteIndex = 0;
-            // f. Let count be elementLength.
-            let count = elementLength;
-            // g. Repeat, while count > 0
-            while (count > 0) {
-              // i. Let value be GetValueFromBuffer(srcData, srcByteIndex, srcType, true, Unordered).
-              const value = GetValueFromBuffer(srcData, srcByteIndex, srcType.stringValue());
-              // ii. Perform SetValueInBuffer(data, targetByteIndex, elementType, value, true, Unordered).
-              SetValueInBuffer(data, targetByteIndex, elementType.stringValue(), value);
-              // iii. Set srcByteIndex to srcByteIndex + srcElementSize.
-              srcByteIndex += srcElementSize;
-              // iv. Set targetByteIndex to targetByteIndex + elementSize.
-              targetByteIndex += elementSize;
-              // v. Set count to count - 1.
-              count -= 1;
-            }
-          }
-          // 20. Set O.[[ViewedArrayBuffer]] to data.
-          O.ViewedArrayBuffer = data;
-          // 21. Set O.[[ByteLength]] to byteLength.
-          O.ByteLength = byteLength;
-          // 22. Set O.[[ByteOffset]] to 0.
-          O.ByteOffset = 0;
-          // 23. Set O.[[ArrayLength]] to elementLength.
-          O.ArrayLength = elementLength;
-          // 24. Return O.
-          return O;
-        } else if (!('TypedArrayName' in args[0]) && !('ArrayBufferData' in args[0])) {
-          /** https://tc39.es/ecma262/#sec-typedarray-object */
-          const [object] = args;
-          // 1. Assert: Type(object) is Object and object does not have either a [[TypedArrayName]] or an [[ArrayBufferData]] internal slot.
-          Assert(object instanceof ObjectValue && !('TypedArrayName' in object) && !('ArrayBufferData' in object), "object instanceof ObjectValue && !('TypedArrayName' in object) && !('ArrayBufferData' in object)");
-          // 2. If NewTarget is undefined, throw a TypeError exception.
-          if (NewTarget instanceof UndefinedValue) {
-            return exports.surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
-          }
-          // 3. Let constructorName be the String value of the Constructor Name value specified in Table 61 for this TypedArray constructor.
-          const constructorName = Value(TypedArray);
-          // 4. Let O be ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%").
-          let _temp6 = AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`);
-          /* c8 ignore if */
-          if (_temp6 instanceof AbruptCompletion) {
-            return _temp6;
-          }
-          /* c8 ignore if */
-          if (_temp6 instanceof Completion) {
-            _temp6 = _temp6.Value;
-          }
-          const O = _temp6;
-          // 5. Let usingIterator be ? GetMethod(object, @@iterator).
-          let _temp7 = GetMethod(object, wellKnownSymbols.iterator);
-          /* c8 ignore if */
-          if (_temp7 instanceof AbruptCompletion) {
-            return _temp7;
-          }
-          /* c8 ignore if */
-          if (_temp7 instanceof Completion) {
-            _temp7 = _temp7.Value;
-          }
-          const usingIterator = _temp7;
-          // 6. If usingIterator is not undefined, then
-          if (usingIterator !== Value.undefined) {
-            let _temp8 = IterableToList(object, usingIterator);
-            /* c8 ignore if */
-            if (_temp8 instanceof AbruptCompletion) {
-              return _temp8;
-            }
-            /* c8 ignore if */
-            if (_temp8 instanceof Completion) {
-              _temp8 = _temp8.Value;
-            }
-            // a. Let values be ? IterableToList(object, usingIterator).
-            const values = _temp8;
-            // b. Let len be the number of elements in values.
-            const len = values.length;
-            // c. Perform ? AllocateTypedArrayBuffer(O, len).
-            let _temp9 = AllocateTypedArrayBuffer(O, len);
+            Assert(!(firstArgument instanceof ObjectValue), "!(firstArgument instanceof ObjectValue)");
+            let _temp9 = ToIndex(firstArgument);
             /* c8 ignore if */
             if (_temp9 instanceof AbruptCompletion) {
               return _temp9;
@@ -52996,191 +52638,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             if (_temp9 instanceof Completion) {
               _temp9 = _temp9.Value;
             }
-            // d. Let k be 0.
-            let k = 0;
-            // e. Repeat, while k < len
-            while (k < len) {
-              let _temp10 = ToString(F(k));
-              Assert(!(_temp10 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp10);
-              /* c8 ignore if */
-              if (_temp10 instanceof Completion) {
-                _temp10 = _temp10.Value;
-              }
-              // i. Let Pk be ! ToString(𝔽(k)).
-              const Pk = _temp10;
-              // ii. Let kValue be the first element of values and remove that element from values.
-              const kValue = values.shift();
-              // iii. Perform ? Set(O, Pk, kValue, true).
-              let _temp11 = Set$1(O, Pk, kValue, Value.true);
-              /* c8 ignore if */
-              if (_temp11 instanceof AbruptCompletion) {
-                return _temp11;
-              }
-              /* c8 ignore if */
-              if (_temp11 instanceof Completion) {
-                _temp11 = _temp11.Value;
-              }
-              // iv. Set k to k + 1.
-              k += 1;
-            }
-            // f. Assert: values is now an empty List.
-            Assert(values.length === 0, "values.length === 0");
-            // g. Return O.
-            return O;
+            const elementLength = _temp9;
+            return AllocateTypedArray(constructorName, NewTarget, proto, elementLength);
           }
-          // 7. NOTE: object is not an Iterable so assume it is already an array-like object.
-          // 8. Let arrayLike be object.
-          const arrayLike = object;
-          // 9. Let len be ? LengthOfArrayLike(arrayLike).
-          let _temp12 = LengthOfArrayLike(arrayLike);
-          /* c8 ignore if */
-          if (_temp12 instanceof AbruptCompletion) {
-            return _temp12;
-          }
-          /* c8 ignore if */
-          if (_temp12 instanceof Completion) {
-            _temp12 = _temp12.Value;
-          }
-          const len = _temp12;
-          // 10. Perform ? AllocateTypedArrayBuffer(O, len).
-          let _temp13 = AllocateTypedArrayBuffer(O, len);
-          /* c8 ignore if */
-          if (_temp13 instanceof AbruptCompletion) {
-            return _temp13;
-          }
-          /* c8 ignore if */
-          if (_temp13 instanceof Completion) {
-            _temp13 = _temp13.Value;
-          }
-          // 11. Let k be 0.
-          let k = 0;
-          // 12. Repeat, while k < len.
-          while (k < len) {
-            let _temp14 = ToString(F(k));
-            Assert(!(_temp14 instanceof AbruptCompletion), "ToString(F(k))" + ' returned an abrupt completion', _temp14);
-            /* c8 ignore if */
-            if (_temp14 instanceof Completion) {
-              _temp14 = _temp14.Value;
-            }
-            // a. Let Pk be ! ToString(𝔽(k)).
-            const Pk = _temp14;
-            // b. Let kValue be ? Get(arrayLike, Pk).
-            let _temp15 = Get(arrayLike, Pk);
-            /* c8 ignore if */
-            if (_temp15 instanceof AbruptCompletion) {
-              return _temp15;
-            }
-            /* c8 ignore if */
-            if (_temp15 instanceof Completion) {
-              _temp15 = _temp15.Value;
-            }
-            const kValue = _temp15;
-            // c. Perform ? Set(O, Pk, kValue, true).
-            let _temp16 = Set$1(O, Pk, kValue, Value.true);
-            /* c8 ignore if */
-            if (_temp16 instanceof AbruptCompletion) {
-              return _temp16;
-            }
-            /* c8 ignore if */
-            if (_temp16 instanceof Completion) {
-              _temp16 = _temp16.Value;
-            }
-            // d. Set k to k + 1.
-            k += 1;
-          }
-          // 13. Return O.
-          return O;
-        } else {
-          /** https://tc39.es/ecma262/#sec-typedarray-buffer-byteoffset-length */
-          const [buffer = Value.undefined, byteOffset = Value.undefined, length = Value.undefined] = args;
-          // 1. Assert: Type(buffer) is Object and buffer has an [[ArrayBufferData]] internal slot.
-          Assert(buffer instanceof ObjectValue && 'ArrayBufferData' in buffer, "buffer instanceof ObjectValue && 'ArrayBufferData' in buffer");
-          // 2. If NewTarget is undefined, throw a TypeError exception.
-          if (NewTarget instanceof UndefinedValue) {
-            return exports.surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
-          }
-          // 3. Let constructorName be the String value of the Constructor Name value specified in Table 61 for this TypedArray constructor.
-          const constructorName = Value(TypedArray);
-          // 4. Let O be ? AllocateTypedArray(constructorName, NewTarget, "%TypedArray.prototype%").
-          let _temp17 = AllocateTypedArray(constructorName, NewTarget, `%${TypedArray}.prototype%`);
-          /* c8 ignore if */
-          if (_temp17 instanceof AbruptCompletion) {
-            return _temp17;
-          }
-          /* c8 ignore if */
-          if (_temp17 instanceof Completion) {
-            _temp17 = _temp17.Value;
-          }
-          const O = _temp17;
-          // 5. Let elementSize be the Element Size value specified in Table 61 for constructorName.
-          const elementSize = info.ElementSize;
-          // 6. Let offset be ? ToIndex(byteOffset).
-          let _temp18 = ToIndex(byteOffset);
-          /* c8 ignore if */
-          if (_temp18 instanceof AbruptCompletion) {
-            return _temp18;
-          }
-          /* c8 ignore if */
-          if (_temp18 instanceof Completion) {
-            _temp18 = _temp18.Value;
-          }
-          const offset = _temp18;
-          // 7. If offset modulo elementSize ≠ 0, throw a RangeError exception.
-          if (offset % elementSize !== 0) {
-            return exports.surroundingAgent.Throw('RangeError', 'TypedArrayOffsetAlignment', TypedArray, elementSize);
-          }
-          // 8. If length is not undefined, then
-          let newLength;
-          if (length !== Value.undefined) {
-            let _temp19 = ToIndex(length);
-            /* c8 ignore if */
-            if (_temp19 instanceof AbruptCompletion) {
-              return _temp19;
-            }
-            /* c8 ignore if */
-            if (_temp19 instanceof Completion) {
-              _temp19 = _temp19.Value;
-            }
-            // Let newLength be ? ToIndex(length).
-            newLength = _temp19;
-          }
-          // 9. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-          if (IsDetachedBuffer(buffer) === Value.true) {
-            return exports.surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
-          }
-          // 10. Let bufferByteLength be buffer.[[ArrayBufferByteLength]].
-          const bufferByteLength = buffer.ArrayBufferByteLength;
-          // 11. If length is undefined, then
-          let newByteLength;
-          if (length === Value.undefined) {
-            // a. If bufferByteLength modulo elementSize ≠ 0, throw a RangeError exception.
-            if (bufferByteLength % elementSize !== 0) {
-              return exports.surroundingAgent.Throw('RangeError', 'TypedArrayLengthAlignment', TypedArray, elementSize);
-            }
-            // b. Let newByteLength be bufferByteLength - offset.
-            newByteLength = bufferByteLength - offset;
-            // c. If newByteLength < 0, throw a RangeError exception.
-            if (newByteLength < 0) {
-              return exports.surroundingAgent.Throw('RangeError', 'TypedArrayCreationOOB');
-            }
-          } else {
-            // a. Let newByteLength be newLength × elementSize.
-            newByteLength = newLength * elementSize;
-            // b. If offset + newByteLength > bufferByteLength, throw a RangeError exception.
-            if (offset + newByteLength > bufferByteLength) {
-              return exports.surroundingAgent.Throw('RangeError', 'TypedArrayCreationOOB');
-            }
-          }
-          // 13. Set O.[[ViewedArrayBuffer]] to buffer.
-          O.ViewedArrayBuffer = buffer;
-          // 14. Set O.[[ByteLength]] to newByteLength.
-          O.ByteLength = newByteLength;
-          // 15. Set O.[[ByteOffset]] to offset.
-          O.ByteOffset = offset;
-          // 16. Set O.[[ArrayLength]] to newByteLength / elementSize.
-          O.ArrayLength = newByteLength / elementSize;
-          // 17. Return O.
-          return O;
         }
       }
       TypedArrayConstructor.section = 'https://tc39.es/ecma262/#sec-typedarray-constructors';
@@ -53188,11 +52648,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         Writable: Value.false,
         Configurable: Value.false
       }]]);
-      let _temp20 = taConstructor.SetPrototypeOf(realmRec.Intrinsics['%TypedArray%']);
-      Assert(!(_temp20 instanceof AbruptCompletion), "taConstructor.SetPrototypeOf(realmRec.Intrinsics['%TypedArray%'] as FunctionObject)" + ' returned an abrupt completion', _temp20);
+      let _temp10 = taConstructor.SetPrototypeOf(realmRec.Intrinsics['%TypedArray%']);
+      Assert(!(_temp10 instanceof AbruptCompletion), "taConstructor.SetPrototypeOf(realmRec.Intrinsics['%TypedArray%'])" + ' returned an abrupt completion', _temp10);
       /* c8 ignore if */
-      if (_temp20 instanceof Completion) {
-        _temp20 = _temp20.Value;
+      if (_temp10 instanceof Completion) {
+        _temp10 = _temp10.Value;
       }
       realmRec.Intrinsics[`%${TypedArray}%`] = taConstructor;
     });
@@ -53209,6 +52669,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     });
   }
 
+  function isDataViewObject(V) {
+    return 'DataView' in V;
+  }
   /** https://tc39.es/ecma262/#sec-dataview-constructor */
   function DataViewConstructor([buffer = Value.undefined, byteOffset = Value.undefined, byteLength = Value.undefined], {
     NewTarget
@@ -53829,6 +53292,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       _temp2 = _temp2.Value;
     }
     const adder = _temp2;
+    if (IsCallable(adder) === Value.false) {
+      return exports.surroundingAgent.Throw('TypeError', 'NotAFunction', adder);
+    }
     // 6. Return ? AddEntriesFromIterable(map, iterable, adder).
     return AddEntriesFromIterable(map, iterable, adder);
   }
@@ -54012,7 +53478,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const iteratorRecord = _temp3;
     // 8. Repeat,
     while (true) {
-      let _temp4 = IteratorStep(iteratorRecord);
+      let _temp4 = IteratorStepValue(iteratorRecord);
       /* c8 ignore if */
       if (_temp4 instanceof AbruptCompletion) {
         return _temp4;
@@ -54024,22 +53490,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // a. Let next be ? IteratorStep(iteratorRecord).
       const next = _temp4;
       // b. If next is false, return set.
-      if (next === Value.false) {
+      if (next === 'done') {
         return set;
       }
-      // c. Let nextValue be ? IteratorValue(next).
-      let _temp5 = IteratorValue(next);
-      /* c8 ignore if */
-      if (_temp5 instanceof AbruptCompletion) {
-        return _temp5;
-      }
-      /* c8 ignore if */
-      if (_temp5 instanceof Completion) {
-        _temp5 = _temp5.Value;
-      }
-      const nextValue = _temp5;
-      // d. Let status be Call(adder, set, « nextValue »).
-      let status = Call(adder, set, [nextValue]);
+      // d. Let status be Call(adder, set, « next »).
+      let status = Call(adder, set, [next]);
       // e. IfAbruptCloseIterator(status, iteratorRecord).
       /* c8 ignore if */
       if (status instanceof AbruptCompletion) {
@@ -54093,15 +53548,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       // a. Let msg be ? ToString(message).
       const msg = _temp2;
       // b. Perform ! CreateMethodProperty(O, "message", msg).
-      let _temp3 = CreateMethodProperty(O, Value('message'), msg);
-      Assert(!(_temp3 instanceof AbruptCompletion), "CreateMethodProperty(O, Value('message'), msg)" + ' returned an abrupt completion', _temp3);
+      let _temp3 = CreateNonEnumerableDataPropertyOrThrow(O, Value('message'), msg);
+      Assert(!(_temp3 instanceof AbruptCompletion), "CreateNonEnumerableDataPropertyOrThrow(O, Value('message'), msg)" + ' returned an abrupt completion', _temp3);
       /* c8 ignore if */
       if (_temp3 instanceof Completion) {
         _temp3 = _temp3.Value;
       }
     }
-    // 4. Let errorsList be ? IterableToList(errors).
-    let _temp4 = IterableToList(errors);
+    let _temp4 = InstallErrorCause(O, options);
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) {
       return _temp4;
@@ -54110,32 +53564,34 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp4 instanceof Completion) {
       _temp4 = _temp4.Value;
     }
-    const errorsList = _temp4;
-    // 5. Perform ! DefinePropertyOrThrow(O, "errors", Property Descriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: ! CreateArrayFromList(errorsList) }).
-    let _temp8 = CreateArrayFromList(errorsList);
-    Assert(!(_temp8 instanceof AbruptCompletion), "CreateArrayFromList(errorsList)" + ' returned an abrupt completion', _temp8);
+    // 4. Let errorsList be ? IterableToList(errors).
+    let _temp8 = GetIterator(errors, 'sync');
+    /* c8 ignore if */
+    if (_temp8 instanceof AbruptCompletion) {
+      return _temp8;
+    }
     /* c8 ignore if */
     if (_temp8 instanceof Completion) {
       _temp8 = _temp8.Value;
     }
-    let _temp5 = DefinePropertyOrThrow(O, Value('errors'), exports.Descriptor({
-      Configurable: Value.true,
-      Enumerable: Value.false,
-      Writable: Value.true,
-      Value: _temp8
-    }));
-    Assert(!(_temp5 instanceof AbruptCompletion), "DefinePropertyOrThrow(O, Value('errors'), Descriptor({\n    Configurable: Value.true,\n    Enumerable: Value.false,\n    Writable: Value.true,\n    Value: X(CreateArrayFromList(errorsList)),\n  }))" + ' returned an abrupt completion', _temp5);
+    let _temp5 = IteratorToList(_temp8);
+    /* c8 ignore if */
+    if (_temp5 instanceof AbruptCompletion) {
+      return _temp5;
+    }
     /* c8 ignore if */
     if (_temp5 instanceof Completion) {
       _temp5 = _temp5.Value;
     }
-
-    // 6. Perform ? InstallErrorCause(O, options).
-    let _temp6 = InstallErrorCause(O, options);
-    /* c8 ignore if */
-    if (_temp6 instanceof AbruptCompletion) {
-      return _temp6;
-    }
+    const errorsList = _temp5;
+    // 5. Perform ! DefinePropertyOrThrow(O, "errors", Property Descriptor { [[Configurable]]: true, [[Enumerable]]: false, [[Writable]]: true, [[Value]]: ! CreateArrayFromList(errorsList) }).
+    let _temp6 = DefinePropertyOrThrow(O, Value('errors'), exports.Descriptor({
+      Configurable: Value.true,
+      Enumerable: Value.false,
+      Writable: Value.true,
+      Value: CreateArrayFromList(errorsList)
+    }));
+    Assert(!(_temp6 instanceof AbruptCompletion), "DefinePropertyOrThrow(O, Value('errors'), Descriptor({\n    Configurable: Value.true,\n    Enumerable: Value.false,\n    Writable: Value.true,\n    Value: CreateArrayFromList(errorsList),\n  }))" + ' returned an abrupt completion', _temp6);
     /* c8 ignore if */
     if (_temp6 instanceof Completion) {
       _temp6 = _temp6.Value;
@@ -54425,6 +53881,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     realmRec.Intrinsics['%FinalizationRegistry%'] = cons;
   }
 
+  /** https://tc39.es/ecma262/#table-well-known-intrinsic-objects */
+
   /** https://tc39.es/ecma262/#sec-code-realms */
   class Realm {
     LoadedModules = [];
@@ -54556,6 +54014,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     bootstrapFinalizationRegistryPrototype(realmRec);
     bootstrapFinalizationRegistry(realmRec);
     AddRestrictedFunctionProperties(intrinsics['%Function.prototype%'], realmRec);
+    for (const key in intrinsics) {
+      if (intrinsics[key] instanceof ObjectValue) {
+        Object.defineProperty(intrinsics, '__debug_intrinsic_name__', {
+          value: key,
+          configurable: true
+        });
+      }
+    }
     return intrinsics;
   }
 
@@ -55617,7 +55083,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return NormalCompletion(undefined);
   }
 
-  const InternalMethods = {
+  const InternalMethods$1 = {
     GetOwnProperty(P) {
       const S = this;
       Assert(IsPropertyKey(P), "IsPropertyKey(P)");
@@ -55736,11 +55202,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 4. Set S.[[StringData]] to value.
     S.StringData = value;
     // 5. Set S.[[GetOwnProperty]] as specified in 9.4.3.1.
-    S.GetOwnProperty = InternalMethods.GetOwnProperty;
+    S.GetOwnProperty = InternalMethods$1.GetOwnProperty;
     // 6. Set S.[[DefineOwnProperty]] as specified in 9.4.3.2.
-    S.DefineOwnProperty = InternalMethods.DefineOwnProperty;
+    S.DefineOwnProperty = InternalMethods$1.DefineOwnProperty;
     // 7. Set S.[[OwnPropertyKeys]] as specified in 9.4.3.3.
-    S.OwnPropertyKeys = InternalMethods.OwnPropertyKeys;
+    S.OwnPropertyKeys = InternalMethods$1.OwnPropertyKeys;
     // 8. Let length be the number of code unit elements in value.
     const length = value.stringValue().length;
     // 9. Perform ! DefinePropertyOrThrow(S, "length", PropertyDescriptor { [[Value]]: length, [[Writable]]: false, [[Enumerable]]: false, [[Configurable]]: false }).
@@ -56310,25 +55776,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     // 3. Return SameValueNonNumber(x, y).
     return SameValueNonNumber(x, y);
-  }
-
-  /** https://tc39.es/ecma262/#sec-isvalidintegerindex */
-  function IsValidIntegerIndex(O, index) {
-    if (IsDetachedBuffer(O.ViewedArrayBuffer) === Value.true) {
-      return Value.false;
-    }
-    Assert(index instanceof NumberValue, "index instanceof NumberValue");
-    if (IsIntegralNumber(index) === Value.false) {
-      return Value.false;
-    }
-    const index_ = R(index);
-    if (Object.is(index_, -0)) {
-      return Value.false;
-    }
-    if (index_ < 0 || index_ >= O.ArrayLength) {
-      return Value.false;
-    }
-    return Value.true;
   }
 
   /** https://tc39.es/ecma262/#sec-toprimitive */
@@ -57123,322 +56570,392 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  const typedArrayInfoByName = {
-    Int8Array: {
-      IntrinsicName: '%Int8Array%',
-      ElementType: 'Int8',
-      ElementSize: 1,
-      ConversionOperation: ToInt8
+  const InternalMethods = {
+    /** https://tc39.es/ecma262/#sec-typedarray-preventextensions */
+    PreventExtensions() {
+      const O = this;
+      if (!IsTypedArrayFixedLength(O)) {
+        return Value.false;
+      }
+      return OrdinaryPreventExtensions(O);
     },
-    Uint8Array: {
-      IntrinsicName: '%Uint8Array%',
-      ElementType: 'Uint8',
-      ElementSize: 1,
-      ConversionOperation: ToUint8
+    /** https://tc39.es/ecma262/#sec-typedarray-getownproperty */
+    GetOwnProperty(P) {
+      const O = this;
+      // 3. If Type(P) is String, then
+      if (P instanceof JSStringValue) {
+        // a. Let numericIndex be CanonicalNumericIndexString(P).
+        const numericIndex = CanonicalNumericIndexString(P);
+        // b. If numericIndex is not undefined, then
+        if (!(numericIndex instanceof UndefinedValue)) {
+          // i. Let value be TypedArrayGetElement(O, numericIndex).
+          const value = TypedArrayGetElement(O, numericIndex);
+          // ii. If value is undefined, return undefined.
+          if (value === Value.undefined) {
+            return Value.undefined;
+          }
+          // iii. Return the PropertyDescriptor { [[Value]]: value, [[Writable]]: true, [[Enumerable]]: true, [[Configurable]]: true }.
+          return exports.Descriptor({
+            Value: value,
+            Writable: Value.true,
+            Enumerable: Value.true,
+            Configurable: Value.true
+          });
+        }
+      }
+      // 4. Return OrdinaryGetOwnProperty(O, P).
+      return OrdinaryGetOwnProperty(O, P);
     },
-    Uint8ClampedArray: {
-      IntrinsicName: '%Uint8ClampedArray%',
-      ElementType: 'Uint8C',
-      ElementSize: 1,
-      ConversionOperation: ToUint8Clamp
+    /** https://tc39.es/ecma262/#sec-typedarray-hasproperty */
+    HasProperty(P) {
+      const O = this;
+      // 3. If Type(P) is String, then
+      if (P instanceof JSStringValue) {
+        // a. Let numericIndex be CanonicalNumericIndexString(P).
+        const numericIndex = CanonicalNumericIndexString(P);
+        // b. If numericIndex is not undefined, then
+        if (!(numericIndex instanceof UndefinedValue)) {
+          return IsValidIntegerIndex(O, numericIndex);
+        }
+      }
+      // 4. Return ? OrdinaryHasProperty(O, P)
+      return OrdinaryHasProperty(O, P);
     },
-    Int16Array: {
-      IntrinsicName: '%Int16Array%',
-      ElementType: 'Int16',
-      ElementSize: 2,
-      ConversionOperation: ToInt16
+    /** https://tc39.es/ecma262/#sec-typedarray-defineownproperty */
+    DefineOwnProperty(P, Desc) {
+      const O = this;
+      // 3. If Type(P) is String, then
+      if (P instanceof JSStringValue) {
+        // a. Let numericIndex be CanonicalNumericIndexString(P).
+        const numericIndex = CanonicalNumericIndexString(P);
+        // b. If numericIndex is not undefined, then
+        if (!(numericIndex instanceof UndefinedValue)) {
+          // i. If ! IsValidIntegerIndex(O, numericIndex) is false, return false.
+          if (IsValidIntegerIndex(O, numericIndex) === Value.false) {
+            return Value.false;
+          }
+          // iii. If Desc has a [[Configurable]] field and if Desc.[[Configurable]] is true, return false.
+          if (Desc.Configurable === Value.false) {
+            return Value.false;
+          }
+          // iv. If Desc has an [[Enumerable]] field and if Desc.[[Enumerable]] is false, return false.
+          if (Desc.Enumerable === Value.false) {
+            return Value.false;
+          }
+          // ii. If IsAccessorDescriptor(Desc) is true, return false.
+          if (IsAccessorDescriptor(Desc)) {
+            return Value.false;
+          }
+          // v. If Desc has a [[Writable]] field and if Desc.[[Writable]] is false, return false.
+          if (Desc.Writable === Value.false) {
+            return Value.false;
+          }
+          // vi. If Desc has a [[Value]] field, then
+          if (Desc.Value !== undefined) {
+            return TypedArraySetElement(O, numericIndex, Desc.Value);
+          }
+          // vii. Return true.
+          return Value.true;
+        }
+      }
+      // 4. Return ! OrdinaryDefineOwnProperty(O, P, Desc).
+      return OrdinaryDefineOwnProperty(O, P, Desc);
     },
-    Uint16Array: {
-      IntrinsicName: '%Uint16Array%',
-      ElementType: 'Uint16',
-      ElementSize: 2,
-      ConversionOperation: ToUint16
+    /** https://tc39.es/ecma262/#sec-typedarray-get */
+    Get(P, Receiver) {
+      const O = this;
+      // 2. If Type(P) is String, then
+      if (P instanceof JSStringValue) {
+        // a. Let numericIndex be CanonicalNumericIndexString(P).
+        const numericIndex = CanonicalNumericIndexString(P);
+        // b. If numericIndex is not undefined, then
+        if (!(numericIndex instanceof UndefinedValue)) {
+          let _temp = TypedArrayGetElement(O, numericIndex);
+          Assert(!(_temp instanceof AbruptCompletion), "TypedArrayGetElement(O, numericIndex)" + ' returned an abrupt completion', _temp);
+          /* c8 ignore if */
+          if (_temp instanceof Completion) {
+            _temp = _temp.Value;
+          }
+          // i. Return ! IntegerIndexedElementGet(O, numericIndex).
+          return _temp;
+        }
+      }
+      // 3. Return ? OrdinaryGet(O, P, Receiver).
+      return OrdinaryGet(O, P, Receiver);
     },
-    Int32Array: {
-      IntrinsicName: '%Int32Array%',
-      ElementType: 'Int32',
-      ElementSize: 4,
-      ConversionOperation: ToInt32
+    /** https://tc39.es/ecma262/#sec-typedarray-set */
+    Set(P, V, Receiver) {
+      const O = this;
+      // 2. If Type(P) is String, then
+      if (P instanceof JSStringValue) {
+        // a. Let numericIndex be CanonicalNumericIndexString(P).
+        const numericIndex = CanonicalNumericIndexString(P);
+        // b. If numericIndex is not undefined, then
+        if (!(numericIndex instanceof UndefinedValue)) {
+          if (SameValue(O, Receiver) === Value.true) {
+            let _temp2 = TypedArraySetElement(O, numericIndex, V);
+            /* c8 ignore if */
+            if (_temp2 instanceof AbruptCompletion) {
+              return _temp2;
+            }
+            /* c8 ignore if */
+            if (_temp2 instanceof Completion) {
+              _temp2 = _temp2.Value;
+            }
+            // ii. Return true.
+            return Value.true;
+          }
+          if (IsValidIntegerIndex(O, numericIndex) === Value.false) {
+            return Value.true;
+          }
+        }
+      }
+      // 3. Return ? OrdinarySet(O, P, V, Receiver).
+      return OrdinarySet(O, P, V, Receiver);
     },
-    Uint32Array: {
-      IntrinsicName: '%Uint32Array%',
-      ElementType: 'Uint32',
-      ElementSize: 4,
-      ConversionOperation: ToUint32
+    /** https://tc39.es/ecma262/#sec-typedarray-delete */
+    Delete(P) {
+      const O = this;
+      // 3. If Type(P) is String, then
+      if (P instanceof JSStringValue) {
+        // a. Let numericIndex be ! CanonicalNumericIndexString(P).
+        const numericIndex = CanonicalNumericIndexString(P);
+        // b. If numericIndex is not undefined, then
+        if (!(numericIndex instanceof UndefinedValue)) {
+          // ii. If IsValidIntegerIndex(O, numericIndex) is false, return true.
+          if (IsValidIntegerIndex(O, numericIndex) === Value.false) {
+            return Value.true;
+          } else {
+            // iii. Return false.
+            return Value.false;
+          }
+        }
+      }
+      // 4. Return ? OrdinaryDelete(O, P).
+      return OrdinaryDelete(O, P);
     },
-    BigInt64Array: {
-      IntrinsicName: '%BigInt64Array%',
-      ElementType: 'BigInt64',
-      ElementSize: 8,
-      ConversionOperation: ToBigInt64
-    },
-    BigUint64Array: {
-      IntrinsicName: '%BigUint64Array%',
-      ElementType: 'BigUint64',
-      ElementSize: 8,
-      ConversionOperation: ToBigUint64
-    },
-    Float32Array: {
-      IntrinsicName: '%Float32Array%',
-      ElementType: 'Float32',
-      ElementSize: 4,
-      ConversionOperation: undefined
-    },
-    Float64Array: {
-      IntrinsicName: '%Float64Array%',
-      ElementType: 'Float64',
-      ElementSize: 8,
-      ConversionOperation: undefined
+    /** https://tc39.es/ecma262/#sec-typedarray-ownpropertykeys */
+    OwnPropertyKeys() {
+      const O = this;
+      const taRecord = MakeTypedArrayWithBufferWitnessRecord(O);
+      // 1. Let keys be a new empty List.
+      const keys = [];
+      if (!IsTypedArrayOutOfBounds(taRecord)) {
+        const length = TypedArrayLength(taRecord);
+        // 4. For each integer i starting with 0 such that i < len, in ascending order, do
+        for (let i = 0; i < length; i += 1) {
+          let _temp3 = ToString(F(i));
+          Assert(!(_temp3 instanceof AbruptCompletion), "ToString(F(i))" + ' returned an abrupt completion', _temp3);
+          /* c8 ignore if */
+          if (_temp3 instanceof Completion) {
+            _temp3 = _temp3.Value;
+          }
+          // a. Add ! ToString(𝔽(i)) as the last element of keys.
+          keys.push(_temp3);
+        }
+      }
+      // 5. For each own property key P of O such that Type(P) is String and P is not an integer index, in ascending chronological order of property creation, do
+      for (const P of O.properties.keys()) {
+        if (P instanceof JSStringValue) {
+          if (!isIntegerIndex(P)) {
+            // a. Add P as the last element of keys.
+            keys.push(P);
+          }
+        }
+      }
+      // 6. For each own property key P of O such that Type(P) is Symbol, in ascending chronological order of property creation, do
+      for (const P of O.properties.keys()) {
+        if (P instanceof SymbolValue) {
+          // a. Add P as the last element of keys.
+          keys.push(P);
+        }
+      }
+      // 7. Return keys.
+      return keys;
     }
   };
-  const typedArrayInfoByType = {
-    Int8: typedArrayInfoByName.Int8Array,
-    Uint8: typedArrayInfoByName.Uint8Array,
-    Uint8C: typedArrayInfoByName.Uint8ClampedArray,
-    Int16: typedArrayInfoByName.Int16Array,
-    Uint16: typedArrayInfoByName.Uint16Array,
-    Int32: typedArrayInfoByName.Int32Array,
-    Uint32: typedArrayInfoByName.Uint32Array,
-    BigInt64: typedArrayInfoByName.BigInt64Array,
-    BigUint64: typedArrayInfoByName.BigUint64Array,
-    Float32: typedArrayInfoByName.Float32Array,
-    Float64: typedArrayInfoByName.Float64Array
-  };
-  /** https://tc39.es/ecma262/#sec-validatetypedarray */
-  function ValidateTypedArray(O) {
-    let _temp = RequireInternalSlot(O, 'TypedArrayName');
-    /* c8 ignore if */
-    if (_temp instanceof AbruptCompletion) {
-      return _temp;
-    }
-    /* c8 ignore if */
-    if (_temp instanceof Completion) {
-      _temp = _temp.Value;
-    }
-    // 2. Assert: O has a [[ViewedArrayBuffer]] internal slot.
-    Assert('ViewedArrayBuffer' in O, "'ViewedArrayBuffer' in O");
-    // 3. Let buffer be O.[[ViewedArrayBuffer]].
-    const buffer = O.ViewedArrayBuffer;
-    // 4. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
+
+  /** https://tc39.es/ecma262/#sec-typedarray-with-buffer-witness-records */
+
+  /** https://tc39.es/ecma262/#sec-maketypedarraywithbufferwitnessrecord */
+  function MakeTypedArrayWithBufferWitnessRecord(obj, order) {
+    const buffer = obj.ViewedArrayBuffer;
+    let byteLength;
     if (IsDetachedBuffer(buffer) === Value.true) {
-      return exports.surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
-    }
-    // 5. Return buffer.
-    return buffer;
-  }
-
-  // #typedarray-create
-  function TypedArrayCreate(constructor, argumentList) {
-    let _temp2 = Construct(constructor, argumentList);
-    /* c8 ignore if */
-    if (_temp2 instanceof AbruptCompletion) {
-      return _temp2;
-    }
-    /* c8 ignore if */
-    if (_temp2 instanceof Completion) {
-      _temp2 = _temp2.Value;
-    }
-    // 1. Let newTypedArray be ? Construct(constructor, argumentList).
-    const newTypedArray = _temp2;
-    // 2. Perform ? ValidateTypedArray(newTypedArray).
-    let _temp3 = ValidateTypedArray(newTypedArray);
-    /* c8 ignore if */
-    if (_temp3 instanceof AbruptCompletion) {
-      return _temp3;
-    }
-    /* c8 ignore if */
-    if (_temp3 instanceof Completion) {
-      _temp3 = _temp3.Value;
-    }
-    // 3. If argumentList is a List of a single Number, then
-    if (argumentList.length === 1 && argumentList[0] instanceof NumberValue) {
-      // a. If newTypedArray.[[ArrayLength]] < argumentList[0], throw a TypeError exception.
-      if (newTypedArray.ArrayLength < R(argumentList[0])) {
-        return exports.surroundingAgent.Throw('TypeError', 'TypedArrayTooSmall');
-      }
-    }
-    // 4. Return newTypedArray.
-    return newTypedArray;
-  }
-
-  /** https://tc39.es/ecma262/#sec-allocatetypedarray */
-  function AllocateTypedArray(constructorName, newTarget, defaultProto, length) {
-    let _temp4 = GetPrototypeFromConstructor(newTarget, defaultProto);
-    /* c8 ignore if */
-    if (_temp4 instanceof AbruptCompletion) {
-      return _temp4;
-    }
-    /* c8 ignore if */
-    if (_temp4 instanceof Completion) {
-      _temp4 = _temp4.Value;
-    }
-    // 1. Let proto be ? GetPrototypeFromConstructor(newTarget, defaultProto).
-    const proto = _temp4;
-    // 2. Let obj be ! IntegerIndexedObjectCreate(proto).
-    let _temp5 = IntegerIndexedObjectCreate(proto);
-    Assert(!(_temp5 instanceof AbruptCompletion), "IntegerIndexedObjectCreate(proto)" + ' returned an abrupt completion', _temp5);
-    /* c8 ignore if */
-    if (_temp5 instanceof Completion) {
-      _temp5 = _temp5.Value;
-    }
-    const obj = _temp5;
-    // 3. Assert: obj.[[ViewedArrayBuffer]] is undefined.
-    Assert(obj.ViewedArrayBuffer === Value.undefined, "obj.ViewedArrayBuffer === Value.undefined");
-    // 4. Set obj.[[TypedArrayName]] to constructorName.
-    obj.TypedArrayName = constructorName;
-    // 5. If constructorName is "BigInt64Array" or "BigUint64Array", set obj.[[ContentType]] to BigInt.
-    // 6. Otherwise, set obj.[[ContentType]] to Number.
-    if (constructorName.stringValue() === 'BigInt64Array' || constructorName.stringValue() === 'BigUint64Array') {
-      obj.ContentType = 'BigInt';
+      byteLength = 'detached';
     } else {
-      obj.ContentType = 'Number';
+      byteLength = ArrayBufferByteLength(buffer);
     }
-    // 7. If length is not present, then
-    if (length === undefined) {
-      // 1. Set obj.[[ByteLength]] to 0.
-      obj.ByteLength = 0;
-      // 1. Set obj.[[ByteOffset]] to 0.
-      obj.ByteOffset = 0;
-      // 1. Set obj.[[ArrayLength]] to 0.
-      obj.ArrayLength = 0;
+    return {
+      Object: obj,
+      CachedBufferByteLength: byteLength
+    };
+  }
+
+  /** https://tc39.es/ecma262/#sec-typedarraycreate */
+  function TypedArrayCreate(prototype) {
+    const internalSlotsList = ['Prototype', 'Extensible', 'ViewedArrayBuffer', 'TypedArrayName', 'ContentType', 'ByteLength', 'ByteOffset', 'ArrayLength'];
+    const A = MakeBasicObject(internalSlotsList);
+    A.PreventExtensions = InternalMethods.PreventExtensions;
+    A.GetOwnProperty = InternalMethods.GetOwnProperty;
+    A.HasProperty = InternalMethods.HasProperty;
+    A.DefineOwnProperty = InternalMethods.DefineOwnProperty;
+    A.Get = InternalMethods.Get;
+    A.Set = InternalMethods.Set;
+    A.Delete = InternalMethods.Delete;
+    A.OwnPropertyKeys = InternalMethods.OwnPropertyKeys;
+    A.Prototype = prototype;
+    return A;
+  }
+
+  /** https://tc39.es/ecma262/#sec-typedarraybytelength */
+  function TypedArrayByteLength(taRecord) {
+    if (IsTypedArrayOutOfBounds(taRecord)) {
+      return 0;
+    }
+    const length = TypedArrayLength(taRecord);
+    if (length === 0) {
+      return 0;
+    }
+    const O = taRecord.Object;
+    if (O.ByteLength !== 'auto') {
+      return O.ByteLength;
+    }
+    const elementSize = TypedArrayElementSize(O);
+    return length * elementSize;
+  }
+
+  /** https://tc39.es/ecma262/#sec-typedarraylength */
+  function TypedArrayLength(taRecord) {
+    Assert(IsTypedArrayOutOfBounds(taRecord) === false, "IsTypedArrayOutOfBounds(taRecord) === false");
+    const O = taRecord.Object;
+    if (O.ArrayLength !== 'auto') {
+      return O.ArrayLength;
+    }
+    Assert(!IsFixedLengthArrayBuffer(O.ViewedArrayBuffer), "!IsFixedLengthArrayBuffer(O.ViewedArrayBuffer as ArrayBufferObject)");
+    const byteOffset = O.ByteOffset;
+    const elementSize = TypedArrayElementSize(O);
+    const bufferLength = taRecord.CachedBufferByteLength;
+    Assert(bufferLength !== 'detached', "bufferLength !== 'detached'");
+    return Math.floor((bufferLength - byteOffset) / elementSize);
+  }
+
+  /** https://tc39.es/ecma262/#sec-istypedarrayoutofbounds */
+  function IsTypedArrayOutOfBounds(taRecord) {
+    const O = taRecord.Object;
+    const bufferByteLength = taRecord.CachedBufferByteLength;
+    Assert(IsDetachedBuffer(O.ViewedArrayBuffer) === Value.true && bufferByteLength === 'detached' || IsDetachedBuffer(O.ViewedArrayBuffer) === Value.false && bufferByteLength !== 'detached', "(IsDetachedBuffer(O.ViewedArrayBuffer as ArrayBufferObject) === Value.true && bufferByteLength === 'detached')\n    || (IsDetachedBuffer(O.ViewedArrayBuffer as ArrayBufferObject) === Value.false && bufferByteLength !== 'detached')");
+    if (bufferByteLength === 'detached') {
+      return true;
+    }
+    const byteOffsetStart = O.ByteOffset;
+    let byteOffsetEnd;
+    if (O.ArrayLength === 'auto') {
+      byteOffsetEnd = bufferByteLength;
     } else {
-      let _temp6 = AllocateTypedArrayBuffer(obj, length);
-      /* c8 ignore if */
-      if (_temp6 instanceof AbruptCompletion) {
-        return _temp6;
-      }
-      /* c8 ignore if */
-      if (_temp6 instanceof Completion) {
-        _temp6 = _temp6.Value;
-      }
+      const elementSize = TypedArrayElementSize(O);
+      byteOffsetEnd = byteOffsetStart + O.ArrayLength * elementSize;
     }
-    // 9. Return obj.
-    return obj;
+    if (byteOffsetStart > bufferByteLength || byteOffsetEnd > bufferByteLength) {
+      return true;
+    }
+    return false;
   }
 
-  /** https://tc39.es/ecma262/#sec-allocatetypedarraybuffer */
-  function AllocateTypedArrayBuffer(O, length) {
-    // 1. Assert: O is an Object that has a [[ViewedArrayBuffer]] internal slot.
-    Assert(O instanceof ObjectValue && 'ViewedArrayBuffer' in O, "O instanceof ObjectValue && 'ViewedArrayBuffer' in O");
-    // 2. Assert: O.[[ViewedArrayBuffer]] is undefined.
-    Assert(O.ViewedArrayBuffer === Value.undefined, "O.ViewedArrayBuffer === Value.undefined");
-    // 3. Assert: length is a non-negative integer.
-    Assert(isNonNegativeInteger(length), "isNonNegativeInteger(length)");
-    // 4. Let constructorName be the String value of O.[[TypedArrayName]].
-    const constructorName = O.TypedArrayName.stringValue();
-    // 5. Let elementSize be the Element Size value specified in Table 61 for constructorName.
-    const elementSize = typedArrayInfoByName[constructorName].ElementSize;
-    // 6. Let byteLength be elementSize × length.
-    const byteLength = elementSize * length;
-    // 7. Let data be ? AllocateArrayBuffer(%ArrayBuffer%, byteLength).
-    let _temp7 = AllocateArrayBuffer(exports.surroundingAgent.intrinsic('%ArrayBuffer%'), byteLength);
-    /* c8 ignore if */
-    if (_temp7 instanceof AbruptCompletion) {
-      return _temp7;
+  /** https://tc39.es/ecma262/#sec-istypedarrayfixedlength */
+  function IsTypedArrayFixedLength(O) {
+    if (O.ArrayLength === 'auto') {
+      return false;
     }
-    /* c8 ignore if */
-    if (_temp7 instanceof Completion) {
-      _temp7 = _temp7.Value;
+    const buffer = O.ViewedArrayBuffer;
+    if (!IsFixedLengthArrayBuffer(buffer) && IsSharedArrayBuffer() === Value.false) {
+      return false;
     }
-    const data = _temp7;
-    // 8. Set O.[[ViewedArrayBuffer]] to data.
-    O.ViewedArrayBuffer = data;
-    O.ByteLength = byteLength;
-    // 10. Set O.[[ByteOffset]] to 0.
-    O.ByteOffset = 0;
-    // 11. Set O.[[ArrayLength]] to length.
-    O.ArrayLength = length;
-    // 12. Return O.
-    return O;
+    return true;
   }
 
-  // #typedarray-species-create
-  function TypedArraySpeciesCreate(exemplar, argumentList) {
-    // 1. Assert: exemplar is an Object that has [[TypedArrayName]] and [[ContentType]] internal slots.
-    Assert(exemplar instanceof ObjectValue && 'TypedArrayName' in exemplar && 'ContentType' in exemplar, "exemplar instanceof ObjectValue\n         && 'TypedArrayName' in exemplar\n         && 'ContentType' in exemplar");
-    // 2. Let defaultConstructor be the intrinsic object listed in column one of Table 61 for exemplar.[[TypedArrayName]].
-    const defaultConstructor = exports.surroundingAgent.intrinsic(typedArrayInfoByName[exemplar.TypedArrayName.stringValue()].IntrinsicName);
-    // 3. Let constructor be ? SpeciesConstructor(exemplar, defaultConstructor).
-    let _temp8 = SpeciesConstructor(exemplar, defaultConstructor);
-    /* c8 ignore if */
-    if (_temp8 instanceof AbruptCompletion) {
-      return _temp8;
+  /** https://tc39.es/ecma262/#sec-isvalidintegerindex */
+  function IsValidIntegerIndex(O, index) {
+    if (IsDetachedBuffer(O.ViewedArrayBuffer) === Value.true) {
+      return Value.false;
     }
-    /* c8 ignore if */
-    if (_temp8 instanceof Completion) {
-      _temp8 = _temp8.Value;
+    if (IsIntegralNumber(index) === Value.false) {
+      return Value.false;
     }
-    const constructor = _temp8;
-    // 4. Let result be ? TypedArrayCreate(constructor, argumentList).
-    let _temp9 = TypedArrayCreate(constructor, argumentList);
-    /* c8 ignore if */
-    if (_temp9 instanceof AbruptCompletion) {
-      return _temp9;
+    const index_ = R(index);
+    if (Object.is(index_, -0) || index_ < 0) {
+      return Value.false;
     }
-    /* c8 ignore if */
-    if (_temp9 instanceof Completion) {
-      _temp9 = _temp9.Value;
+    const taRecord = MakeTypedArrayWithBufferWitnessRecord(O);
+    if (IsTypedArrayOutOfBounds(taRecord)) {
+      return Value.false;
     }
-    const result = _temp9;
-    // 5. Assert: result has [[TypedArrayName]] and [[ContentType]] internal slots.
-    Assert('TypedArrayName' in result && 'ContentType' in result, "'TypedArrayName' in result && 'ContentType' in result");
-    // 6. If result.[[ContentType]] is not equal to exemplar.[[ContentType]], throw a TypeError exception.
-    if (result.ContentType !== exemplar.ContentType) {
-      return exports.surroundingAgent.Throw('TypeError', 'BufferContentTypeMismatch');
+    const length = TypedArrayLength(taRecord);
+    if (index_ >= length) {
+      return Value.false;
     }
-    // 7. Return result.
-    return result;
+    return Value.true;
   }
 
-  /** https://tc39.es/ecma262/#sec-iterabletolist */
-  function IterableToList(items, method) {
-    let _temp10 = GetIterator(items, 'sync', method);
-    /* c8 ignore if */
-    if (_temp10 instanceof AbruptCompletion) {
-      return _temp10;
+  /** https://tc39.es/ecma262/#sec-typedarraygetelement */
+  function TypedArrayGetElement(O, index) {
+    if (IsValidIntegerIndex(O, index) === Value.false) {
+      return Value.undefined;
     }
-    /* c8 ignore if */
-    if (_temp10 instanceof Completion) {
-      _temp10 = _temp10.Value;
-    }
-    // 1. Let iteratorRecord be ? GetIterator(items, sync, method).
-    const iteratorRecord = _temp10;
-    // 2. Let values be a new empty List.
-    const values = [];
-    // 3. Let next be true.
-    let next = Value.true;
-    // 4. Repeat, while next is not false
-    while (next !== Value.false) {
-      let _temp11 = IteratorStep(iteratorRecord);
+    const offset = O.ByteOffset;
+    const elementSize = TypedArrayElementSize(O);
+    const byteIndexInBuffer = R(index) * elementSize + offset;
+    const elementType = TypedArrayElementType(O);
+    return GetValueFromBuffer(O.ViewedArrayBuffer, byteIndexInBuffer, elementType);
+  }
+
+  /** https://tc39.es/ecma262/#sec-integerindexedelementset */
+  function TypedArraySetElement(O, index, value) {
+    // 3. If O.[[ContentType]] is BigInt, let numValue be ? ToBigInt(value).
+    // 4. Otherwise, let numValue be ? ToNumber(value).
+    let numValue;
+    if (O.ContentType === 'BigInt') {
+      let _temp4 = ToBigInt(value);
       /* c8 ignore if */
-      if (_temp11 instanceof AbruptCompletion) {
-        return _temp11;
+      if (_temp4 instanceof AbruptCompletion) {
+        return _temp4;
       }
       /* c8 ignore if */
-      if (_temp11 instanceof Completion) {
-        _temp11 = _temp11.Value;
+      if (_temp4 instanceof Completion) {
+        _temp4 = _temp4.Value;
       }
-      // a. Set next to ? IteratorStep(iteratorRecord).
-      next = _temp11;
-      // b. If next is not false, then
-      if (next !== Value.false) {
-        let _temp12 = IteratorValue(next);
-        /* c8 ignore if */
-        if (_temp12 instanceof AbruptCompletion) {
-          return _temp12;
-        }
-        /* c8 ignore if */
-        if (_temp12 instanceof Completion) {
-          _temp12 = _temp12.Value;
-        }
-        // i. Let nextValue be ? IteratorValue(next).
-        const nextValue = _temp12;
-        // ii. Append nextValue to the end of the List values.
-        values.push(nextValue);
+      numValue = _temp4;
+    } else {
+      let _temp5 = ToNumber(value);
+      /* c8 ignore if */
+      if (_temp5 instanceof AbruptCompletion) {
+        return _temp5;
       }
+      /* c8 ignore if */
+      if (_temp5 instanceof Completion) {
+        _temp5 = _temp5.Value;
+      }
+      numValue = _temp5;
     }
-    // 5. Return values.
-    return values;
+    if (IsValidIntegerIndex(O, index) === Value.true) {
+      const offset = O.ByteOffset;
+      const elementSize = TypedArrayElementSize(O);
+      const byteIndexInBuffer = R(index) * elementSize + offset;
+      const elementType = TypedArrayElementType(O);
+      SetValueInBuffer(O.ViewedArrayBuffer, byteIndexInBuffer, elementType, numValue);
+      return Value.true;
+    }
+    return Value.true;
+  }
+
+  /** https://tc39.es/ecma262/#sec-isarraybufferviewoutofbounds */
+  function IsArrayBufferViewOutOfBounds(O) {
+    if (isDataViewObject(O)) {
+      const viewRecord = MakeDataViewWithBufferWitnessRecord(O);
+      return IsViewOutOfBounds(viewRecord);
+    }
+    const taRecord = MakeTypedArrayWithBufferWitnessRecord(O);
+    return IsTypedArrayOutOfBounds(taRecord);
   }
 
   /** https://tc39.es/ecma262/#sec-clear-kept-objects */
@@ -58070,10 +57587,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.Agent = Agent;
   exports.AgentSignifier = AgentSignifier;
   exports.AllocateArrayBuffer = AllocateArrayBuffer;
-  exports.AllocateTypedArray = AllocateTypedArray;
-  exports.AllocateTypedArrayBuffer = AllocateTypedArrayBuffer;
   exports.ApplyStringOrNumericBinaryOperator = ApplyStringOrNumericBinaryOperator;
   exports.ArgumentListEvaluation = ArgumentListEvaluation;
+  exports.ArrayBufferByteLength = ArrayBufferByteLength;
   exports.ArrayCreate = ArrayCreate;
   exports.ArraySetLength = ArraySetLength;
   exports.ArraySpeciesCreate = ArraySpeciesCreate;
@@ -58135,12 +57651,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.CreateDefaultExportSyntheticModule = CreateDefaultExportSyntheticModule;
   exports.CreateDynamicFunction = CreateDynamicFunction;
   exports.CreateIntrinsics = CreateIntrinsics;
-  exports.CreateIterResultObject = CreateIterResultObject;
   exports.CreateIteratorFromClosure = CreateIteratorFromClosure;
+  exports.CreateIteratorResultObject = CreateIteratorResultObject;
   exports.CreateListFromArrayLike = CreateListFromArrayLike;
   exports.CreateListIteratorRecord = CreateListIteratorRecord;
   exports.CreateMappedArgumentsObject = CreateMappedArgumentsObject;
   exports.CreateMethodProperty = CreateMethodProperty;
+  exports.CreateNonEnumerableDataPropertyOrThrow = CreateNonEnumerableDataPropertyOrThrow;
   exports.CreateResolvingFunctions = CreateResolvingFunctions;
   exports.CreateSyntheticModule = CreateSyntheticModule;
   exports.CreateUnmappedArgumentsObject = CreateUnmappedArgumentsObject;
@@ -58278,6 +57795,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.GetIdentifierReference = GetIdentifierReference;
   exports.GetImportedModule = GetImportedModule;
   exports.GetIterator = GetIterator;
+  exports.GetIteratorDirect = GetIteratorDirect;
+  exports.GetIteratorFlattenable = GetIteratorFlattenable;
+  exports.GetIteratorFromMethod = GetIteratorFromMethod;
   exports.GetMatchIndexPair = GetMatchIndexPair;
   exports.GetMatchString = GetMatchString;
   exports.GetMethod = GetMethod;
@@ -58291,6 +57811,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.GetV = GetV;
   exports.GetValue = GetValue;
   exports.GetValueFromBuffer = GetValueFromBuffer;
+  exports.GetViewByteLength = GetViewByteLength;
   exports.GetViewValue = GetViewValue;
   exports.GlobalDeclarationInstantiation = GlobalDeclarationInstantiation;
   exports.GlobalEnvironmentRecord = GlobalEnvironmentRecord;
@@ -58337,13 +57858,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.InstantiateFunctionObject_GeneratorDeclaration = InstantiateFunctionObject_GeneratorDeclaration;
   exports.InstantiateGeneratorFunctionExpression = InstantiateGeneratorFunctionExpression;
   exports.InstantiateOrdinaryFunctionExpression = InstantiateOrdinaryFunctionExpression;
-  exports.IntegerIndexedElementGet = IntegerIndexedElementGet;
-  exports.IntegerIndexedElementSet = IntegerIndexedElementSet;
-  exports.IntegerIndexedObjectCreate = IntegerIndexedObjectCreate;
   exports.Invoke = Invoke;
   exports.IsAccessorDescriptor = IsAccessorDescriptor;
   exports.IsAnonymousFunctionDefinition = IsAnonymousFunctionDefinition;
   exports.IsArray = IsArray;
+  exports.IsArrayBufferViewOutOfBounds = IsArrayBufferViewOutOfBounds;
   exports.IsBigIntElementType = IsBigIntElementType;
   exports.IsCallable = IsCallable;
   exports.IsCompatiblePropertyDescriptor = IsCompatiblePropertyDescriptor;
@@ -58355,6 +57874,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.IsDestructuring = IsDestructuring;
   exports.IsDetachedBuffer = IsDetachedBuffer;
   exports.IsExtensible = IsExtensible;
+  exports.IsFixedLengthArrayBuffer = IsFixedLengthArrayBuffer;
   exports.IsFunctionDefinition = IsFunctionDefinition;
   exports.IsGenericDescriptor = IsGenericDescriptor;
   exports.IsIdentifierRef = IsIdentifierRef;
@@ -58373,15 +57893,19 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.IsStringPrefix = IsStringPrefix;
   exports.IsStringWellFormedUnicode = IsStringWellFormedUnicode;
   exports.IsSuperReference = IsSuperReference;
+  exports.IsTypedArrayFixedLength = IsTypedArrayFixedLength;
+  exports.IsTypedArrayOutOfBounds = IsTypedArrayOutOfBounds;
   exports.IsUnresolvableReference = IsUnresolvableReference;
   exports.IsValidIntegerIndex = IsValidIntegerIndex;
-  exports.IterableToList = IterableToList;
+  exports.IsViewOutOfBounds = IsViewOutOfBounds;
   exports.IteratorBindingInitialization_ArrayBindingPattern = IteratorBindingInitialization_ArrayBindingPattern;
   exports.IteratorBindingInitialization_FormalParameters = IteratorBindingInitialization_FormalParameters;
   exports.IteratorClose = IteratorClose;
   exports.IteratorComplete = IteratorComplete;
   exports.IteratorNext = IteratorNext;
   exports.IteratorStep = IteratorStep;
+  exports.IteratorStepValue = IteratorStepValue;
+  exports.IteratorToList = IteratorToList;
   exports.IteratorValue = IteratorValue;
   exports.JSStringValue = JSStringValue;
   exports.KeyForSymbol = KeyForSymbol;
@@ -58396,12 +57920,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.MakeBasicObject = MakeBasicObject;
   exports.MakeClassConstructor = MakeClassConstructor;
   exports.MakeConstructor = MakeConstructor;
+  exports.MakeDataViewWithBufferWitnessRecord = MakeDataViewWithBufferWitnessRecord;
   exports.MakeDate = MakeDate;
   exports.MakeDay = MakeDay;
   exports.MakeMatchIndicesIndexPairArray = MakeMatchIndicesIndexPairArray;
   exports.MakeMethod = MakeMethod;
   exports.MakePrivateReference = MakePrivateReference;
   exports.MakeTime = MakeTime;
+  exports.MakeTypedArrayWithBufferWitnessRecord = MakeTypedArrayWithBufferWitnessRecord;
   exports.ManagedRealm = ManagedRealm;
   exports.MethodDefinitionEvaluation = MethodDefinitionEvaluation;
   exports.MinFromTime = MinFromTime;
@@ -58550,8 +58076,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.TopLevelVarScopedDeclarations = TopLevelVarScopedDeclarations;
   exports.TrimString = TrimString;
   exports.Type = Type;
+  exports.TypedArrayByteLength = TypedArrayByteLength;
   exports.TypedArrayCreate = TypedArrayCreate;
-  exports.TypedArraySpeciesCreate = TypedArraySpeciesCreate;
+  exports.TypedArrayGetElement = TypedArrayGetElement;
+  exports.TypedArrayLength = TypedArrayLength;
+  exports.TypedArraySetElement = TypedArraySetElement;
   exports.UTC = UTC;
   exports.UTF16EncodeCodePoint = UTF16EncodeCodePoint;
   exports.UTF16SurrogatePairToCodePoint = UTF16SurrogatePairToCodePoint;
@@ -58563,7 +58092,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.UnicodeSets = UnicodeSets;
   exports.UpdateEmpty = UpdateEmpty;
   exports.ValidateAndApplyPropertyDescriptor = ValidateAndApplyPropertyDescriptor;
-  exports.ValidateTypedArray = ValidateTypedArray;
   exports.Value = Value;
   exports.ValueOfNormalCompletion = ValueOfNormalCompletion;
   exports.VarDeclaredNames = VarDeclaredNames;
@@ -58575,7 +58103,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.YearFromTime = YearFromTime;
   exports.Yield = Yield;
   exports.Z = Z;
-  exports.__Q2 = __Q2;
+  exports.evalQ = evalQ;
   exports.evaluateScript = evaluateScript;
   exports.gc = gc;
   exports.generatorBrandToErrorMessageType = generatorBrandToErrorMessageType;
@@ -58588,7 +58116,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.isECMAScriptFunctionObject = isECMAScriptFunctionObject;
   exports.isFunctionObject = isFunctionObject;
   exports.isIntegerIndex = isIntegerIndex;
-  exports.isIntegerIndexedExoticObject = isIntegerIndexedExoticObject;
   exports.isNonNegativeInteger = isNonNegativeInteger;
   exports.isProxyExoticObject = isProxyExoticObject;
   exports.isStrictModeCode = isStrictModeCode;
@@ -58602,8 +58129,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.runJobQueue = runJobQueue;
   exports.setSurroundingAgent = setSurroundingAgent;
   exports.sourceTextMatchedBy = sourceTextMatchedBy;
-  exports.typedArrayInfoByName = typedArrayInfoByName;
-  exports.typedArrayInfoByType = typedArrayInfoByType;
   exports.wellKnownSymbols = wellKnownSymbols;
   exports.wrappedParse = wrappedParse;
 
