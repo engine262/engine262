@@ -47,7 +47,7 @@ jobs:
           git fetch github
           git checkout gh-pages
 
-          cp lib/* .
+          cp -r lib/* .
           git add engine262.*
           git commit -m "autobuild" || exit 0 # exit silently if nothing changed
           git push -u github gh-pages
