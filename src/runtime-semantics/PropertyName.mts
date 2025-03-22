@@ -1,6 +1,6 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
 import { Value } from '../value.mts';
-import { Evaluate, type Evaluator } from '../evaluator.mts';
+import { Evaluate } from '../evaluator.mts';
 import { StringValue, NumericValue } from '../static-semantics/all.mts';
 import {
   Assert,
@@ -11,7 +11,7 @@ import {
 import { Q, X } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type {
-  PlainCompletion, PrivateEnvironmentRecord, PrivateName, PropertyKeyValue,
+  PlainEvaluator, PrivateEnvironmentRecord, PrivateName, PropertyKeyValue,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-evaluation */
@@ -24,7 +24,7 @@ import type {
 //   NumericLiteral
 // ComputedPropertyName :
 //   `[` AssignmentExpression `]`
-export function* Evaluate_PropertyName(PropertyName: ParseNode.PropertyNameLike | ParseNode.PrivateIdentifier): Evaluator<PlainCompletion<PropertyKeyValue | PrivateName>> {
+export function* Evaluate_PropertyName(PropertyName: ParseNode.PropertyNameLike | ParseNode.PrivateIdentifier): PlainEvaluator<PropertyKeyValue | PrivateName> {
   switch (PropertyName.type) {
     case 'IdentifierName':
       return StringValue(PropertyName);

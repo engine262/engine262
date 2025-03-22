@@ -9,9 +9,11 @@ import {
   F,
   IteratorStepValue,
 } from '../abstract-ops/all.mts';
-import { Evaluate, type Evaluator, type ExpressionEvaluator } from '../evaluator.mts';
 import {
-  ReturnIfAbrupt, Q, X, type PlainCompletion,
+  Evaluate, type ExpressionEvaluator, type PlainEvaluator,
+} from '../evaluator.mts';
+import {
+  ReturnIfAbrupt, Q, X,
 } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 
@@ -26,7 +28,7 @@ import type { ParseNode } from '../parser/ParseNode.mts';
 //    ElementList : ElementList `,` Elision SpreadElement
 //  SpreadElement :
 //    `...` AssignmentExpression
-function* ArrayAccumulation(ElementList: ParseNode.ElementList, array: ObjectValue, nextIndex: number): Evaluator<PlainCompletion<number>> {
+function* ArrayAccumulation(ElementList: ParseNode.ElementList, array: ObjectValue, nextIndex: number): PlainEvaluator<number> {
   let postIndex = nextIndex;
   for (const element of ElementList) {
     switch (element.type) {
@@ -46,7 +48,7 @@ function* ArrayAccumulation(ElementList: ParseNode.ElementList, array: ObjectVal
 }
 
 // SpreadElement : `...` AssignmentExpression
-function* ArrayAccumulation_SpreadElement({ AssignmentExpression }: ParseNode.SpreadElement, array: ObjectValue, nextIndex: number): Evaluator<PlainCompletion<number>> {
+function* ArrayAccumulation_SpreadElement({ AssignmentExpression }: ParseNode.SpreadElement, array: ObjectValue, nextIndex: number): PlainEvaluator<number> {
   // 1. Let spreadRef be the result of evaluating AssignmentExpression.
   const spreadRef = yield* Evaluate(AssignmentExpression);
   // 2. Let spreadObj be ? GetValue(spreadRef).
@@ -69,7 +71,7 @@ function* ArrayAccumulation_SpreadElement({ AssignmentExpression }: ParseNode.Sp
 }
 
 
-function* ArrayAccumulation_AssignmentExpression(AssignmentExpression: ParseNode.AssignmentExpressionOrHigher, array: ObjectValue, nextIndex: number): Evaluator<PlainCompletion<number>> {
+function* ArrayAccumulation_AssignmentExpression(AssignmentExpression: ParseNode.AssignmentExpressionOrHigher, array: ObjectValue, nextIndex: number): PlainEvaluator<number> {
   // 2. Let initResult be the result of evaluating AssignmentExpression.
   const initResult = yield* Evaluate(AssignmentExpression);
   // 3. Let initValue be ? GetValue(initResult).

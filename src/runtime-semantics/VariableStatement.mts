@@ -4,9 +4,9 @@ import {
   ResolveBinding,
 } from '../abstract-ops/all.mts';
 import {
-  NormalCompletion, Q, ReturnIfAbrupt, type PlainCompletion,
+  NormalCompletion, Q, ReturnIfAbrupt,
 } from '../completion.mts';
-import { Evaluate, type Evaluator } from '../evaluator.mts';
+import { Evaluate, type PlainEvaluator } from '../evaluator.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { StringValue, IsAnonymousFunctionDefinition, type FunctionDeclaration } from '../static-semantics/all.mts';
 import { Value } from '../value.mts';
@@ -17,7 +17,7 @@ import { NamedEvaluation, BindingInitialization } from './all.mts';
 //     BindingIdentifier
 //     BindingIdentifier Initializer
 //     BindingPattern Initializer
-function* Evaluate_VariableDeclaration({ BindingIdentifier, Initializer, BindingPattern }: ParseNode.VariableDeclaration): Evaluator<PlainCompletion<void>> {
+function* Evaluate_VariableDeclaration({ BindingIdentifier, Initializer, BindingPattern }: ParseNode.VariableDeclaration): PlainEvaluator {
   if (BindingIdentifier) {
     if (!Initializer) {
       // 1. Return NormalCompletion(empty).
@@ -65,7 +65,7 @@ export function* Evaluate_VariableDeclarationList(VariableDeclarationList: Parse
 
 /** https://tc39.es/ecma262/#sec-variable-statement-runtime-semantics-evaluation */
 //   VariableStatement : `var` VariableDeclarationList `;`
-export function* Evaluate_VariableStatement({ VariableDeclarationList }: ParseNode.VariableStatement): Evaluator<PlainCompletion<void>> {
+export function* Evaluate_VariableStatement({ VariableDeclarationList }: ParseNode.VariableStatement): PlainEvaluator {
   const next = yield* Evaluate_VariableDeclarationList(VariableDeclarationList);
   ReturnIfAbrupt(next);
   return NormalCompletion(undefined);

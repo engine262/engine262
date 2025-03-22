@@ -80,13 +80,12 @@ import {
 } from '#self';
 
 export type Evaluator<Result> = Generator<EvaluatorYieldType, Result, EvaluatorNextType>;
-export type StatementEvaluator<T = void | Value> = Evaluator<PlainCompletion<T> | AbruptCompletion>;
-export type ExpressionEvaluator<T = ReferenceRecord | Value> = Evaluator<PlainCompletion<T>>;
-export type ReferenceEvaluator = Evaluator<PlainCompletion<ReferenceRecord>>;
+export type PlainEvaluator<V = void> = Evaluator<PlainCompletion<V>>;
 export type ValueEvaluator<V extends Value = Value> = Evaluator<ValueCompletion<V>>;
-export type PlainEvaluator<V> = Evaluator<PlainCompletion<V>>;
+export type ExpressionEvaluator<T extends ReferenceRecord | Value = ReferenceRecord | Value> = Evaluator<PlainCompletion<T>>;
+export type StatementEvaluator<T = void | Value> = Evaluator<PlainCompletion<T> | AbruptCompletion>;
+export type ReferenceEvaluator = Evaluator<PlainCompletion<ReferenceRecord>>;
 export type YieldEvaluator = Evaluator<PlainCompletion<Value> | ReturnCompletion>;
-
 export type ExpressionThatEvaluatedToReferenceRecord = ParseNode.IdentifierReference;
 
 export function Evaluate(node: ExpressionThatEvaluatedToReferenceRecord): ReferenceEvaluator

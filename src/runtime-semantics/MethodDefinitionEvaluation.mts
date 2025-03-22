@@ -14,11 +14,10 @@ import {
 import {
   Q, X,
   ReturnIfAbrupt,
-  type PlainCompletion,
 } from '../completion.mts';
 import { OutOfRange } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
-import type { Evaluator, PlainEvaluator } from '../evaluator.mts';
+import type { PlainEvaluator } from '../evaluator.mts';
 import { DefineMethod, Evaluate_PropertyName } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-privateelement-specification-type */
@@ -71,7 +70,7 @@ function* DefineMethodProperty(key: PropertyKeyValue | PrivateName, homeObject: 
 //   ClassElementName `(` UniqueFormalParameters `)` `{` FunctionBody `}`
 //   `get` ClassElementName `(` `)` `{` FunctionBody `}`
 //   `set` ClassElementName `(` PropertySetParameterList `)` `{` FunctionBody `}`
-function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNode.MethodDefinition, object: ObjectValue, enumerable: BooleanValue): Evaluator<PlainCompletion<PrivateElementRecord | void>> {
+function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNode.MethodDefinition, object: ObjectValue, enumerable: BooleanValue): PlainEvaluator<PrivateElementRecord | void> {
   switch (true) {
     case !!MethodDefinition.UniqueFormalParameters: {
       // 1. Let methodDef be ? DefineMethod of MethodDefinition with argument object.
@@ -168,7 +167,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNod
 /** https://tc39.es/ecma262/#sec-async-function-definitions-MethodDefinitionEvaluation */
 //   AsyncMethod :
 //     `async` ClassElementName `(` UniqueFormalParameters `)` `{` AsyncBody `}`
-function* MethodDefinitionEvaluation_AsyncMethod(AsyncMethod: ParseNode.AsyncMethod, object: ObjectValue, enumerable: BooleanValue): Evaluator<PlainCompletion<PrivateElementRecord | void>> {
+function* MethodDefinitionEvaluation_AsyncMethod(AsyncMethod: ParseNode.AsyncMethod, object: ObjectValue, enumerable: BooleanValue): PlainEvaluator<PrivateElementRecord | void> {
   const { ClassElementName, UniqueFormalParameters, AsyncBody } = AsyncMethod;
   // 1. Let propKey be the result of evaluating ClassElementName.
   // 2. ReturnIfAbrupt(propKey).
@@ -192,7 +191,7 @@ function* MethodDefinitionEvaluation_AsyncMethod(AsyncMethod: ParseNode.AsyncMet
 /** https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation */
 //   GeneratorMethod :
 //     `*` ClassElementName `(` UniqueFormalParameters `)` `{` GeneratorBody `}`
-function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod: ParseNode.GeneratorMethod, object: ObjectValue, enumerable: BooleanValue): Evaluator<PlainCompletion<PrivateElementRecord | undefined>> {
+function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod: ParseNode.GeneratorMethod, object: ObjectValue, enumerable: BooleanValue): PlainEvaluator<PrivateElementRecord | undefined> {
   const { ClassElementName, UniqueFormalParameters, GeneratorBody } = GeneratorMethod;
   // 1. Let propKey be the result of evaluating ClassElementName.
   let propKey = yield* Evaluate_PropertyName(ClassElementName);
@@ -226,7 +225,7 @@ function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod: ParseNode.
 /** https://tc39.es/ecma262/#sec-asyncgenerator-definitions-propertydefinitionevaluation */
 //   AsyncGeneratorMethod :
 //     `async` `*` PropertyName `(` UniqueFormalParameters `)` `{` AsyncGeneratorBody `}`
-function* MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod: ParseNode.AsyncGeneratorMethod, object: ObjectValue, enumerable: BooleanValue): Evaluator<PlainCompletion<PrivateElementRecord | undefined>> {
+function* MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod: ParseNode.AsyncGeneratorMethod, object: ObjectValue, enumerable: BooleanValue): PlainEvaluator<PrivateElementRecord | undefined> {
   const { ClassElementName, UniqueFormalParameters, AsyncGeneratorBody } = AsyncGeneratorMethod;
   // 1. Let propKey be the result of evaluating ClassElementName.
   let propKey = yield* Evaluate_PropertyName(ClassElementName);

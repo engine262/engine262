@@ -2,8 +2,8 @@ import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Value, Descriptor, type Arguments,
 } from '../value.mts';
-import { Evaluate, type Evaluator } from '../evaluator.mts';
-import { Q, X, type PlainCompletion } from '../completion.mts';
+import { Evaluate, type PlainEvaluator } from '../evaluator.mts';
+import { Q, X } from '../completion.mts';
 import { OutOfRange, isArray } from '../helpers.mts';
 import {
   Assert,
@@ -93,7 +93,7 @@ function GetTemplateObject(templateLiteral: ParseNode.TemplateLiteral) {
 //
 // https://github.com/tc39/ecma262/pull/1402
 //   TemplateLiteral : SubstitutionTemplate
-function* ArgumentListEvaluation_TemplateLiteral(TemplateLiteral: ParseNode.TemplateLiteral): Evaluator<PlainCompletion<Arguments>> {
+function* ArgumentListEvaluation_TemplateLiteral(TemplateLiteral: ParseNode.TemplateLiteral): PlainEvaluator<Arguments> {
   switch (true) {
     case TemplateLiteral.TemplateSpanList.length === 1: {
       const templateLiteral = TemplateLiteral;
@@ -130,7 +130,7 @@ function* ArgumentListEvaluation_TemplateLiteral(TemplateLiteral: ParseNode.Temp
 //   Arguments :
 //     `(` ArgumentList `)`
 //     `(` ArgumentList `,` `)`
-function* ArgumentListEvaluation_Arguments(Arguments: ParseNode.Arguments): Evaluator<PlainCompletion<Arguments>> {
+function* ArgumentListEvaluation_Arguments(Arguments: ParseNode.Arguments): PlainEvaluator<Arguments> {
   const precedingArgs = [];
   for (const element of Arguments) {
     if (element.type === 'AssignmentRestElement') {

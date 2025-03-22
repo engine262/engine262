@@ -9,12 +9,12 @@ import {
 } from '../abstract-ops/all.mts';
 import {
   EnsureCompletion,
-  EnvironmentRecord, StringValue, UndefinedValue, type PlainCompletion,
+  EnvironmentRecord, StringValue, UndefinedValue,
 } from '../index.mts';
 import { NormalCompletion, Q } from '../completion.mts';
 import { OutOfRange } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
-import type { Evaluator, PlainEvaluator } from '../evaluator.mts';
+import type { PlainEvaluator } from '../evaluator.mts';
 import {
   IteratorBindingInitialization_ArrayBindingPattern,
   PropertyBindingInitialization,
@@ -44,7 +44,7 @@ export function* InitializeBoundName(name: JSStringValue, value: Value, environm
 //   `{` BindingPropertyList `}`
 //   `{` BindingRestProperty `}`
 //   `{` BindingPropertyList `,` BindingRestProperty `}`
-function* BindingInitialization_ObjectBindingPattern({ BindingPropertyList, BindingRestProperty }: ParseNode.ObjectBindingPattern, value: Value, environment: EnvironmentRecord | UndefinedValue): Evaluator<PlainCompletion<void>> {
+function* BindingInitialization_ObjectBindingPattern({ BindingPropertyList, BindingRestProperty }: ParseNode.ObjectBindingPattern, value: Value, environment: EnvironmentRecord | UndefinedValue): PlainEvaluator {
   // 1. Perform ? PropertyBindingInitialization for BindingPropertyList using value and environment as the arguments.
   const excludedNames = Q(yield* PropertyBindingInitialization(BindingPropertyList, value, environment));
   if (BindingRestProperty) {
@@ -54,7 +54,7 @@ function* BindingInitialization_ObjectBindingPattern({ BindingPropertyList, Bind
   return NormalCompletion(undefined);
 }
 
-export function* BindingInitialization(node: ParseNode.ForBinding | ParseNode.ForDeclaration | ParseNode.BindingIdentifier | ParseNode.ObjectBindingPattern | ParseNode.ArrayBindingPattern | ParseNode.BindingPattern, value: Value, environment: EnvironmentRecord | UndefinedValue): Evaluator<PlainCompletion<void>> {
+export function* BindingInitialization(node: ParseNode.ForBinding | ParseNode.ForDeclaration | ParseNode.BindingIdentifier | ParseNode.ObjectBindingPattern | ParseNode.ArrayBindingPattern | ParseNode.BindingPattern, value: Value, environment: EnvironmentRecord | UndefinedValue): PlainEvaluator {
   switch (node.type) {
     case 'ForBinding':
       if (node.BindingIdentifier) {

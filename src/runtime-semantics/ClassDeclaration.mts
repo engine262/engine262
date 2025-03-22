@@ -2,10 +2,10 @@ import { surroundingAgent } from '../host-defined/engine.mts';
 import { Value } from '../value.mts';
 import { sourceTextMatchedBy, type ECMAScriptFunctionObject } from '../abstract-ops/all.mts';
 import { StringValue } from '../static-semantics/all.mts';
-import { Q, NormalCompletion, type PlainCompletion } from '../completion.mts';
+import { Q, NormalCompletion } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { Mutable } from '../helpers.mts';
-import type { Evaluator, ExpressionEvaluator } from '../evaluator.mts';
+import type { ExpressionEvaluator, PlainEvaluator } from '../evaluator.mts';
 import { InitializeBoundName, ClassDefinitionEvaluation } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-bindingclassdeclarationevaluation */
@@ -38,7 +38,7 @@ export function* BindingClassDeclarationEvaluation(ClassDeclaration: ParseNode.C
 
 /** https://tc39.es/ecma262/#sec-class-definitions-runtime-semantics-evaluation */
 //   ClassDeclaration : `class` BindingIdentifier ClassTAil
-export function* Evaluate_ClassDeclaration(ClassDeclaration: ParseNode.ClassDeclaration): Evaluator<PlainCompletion<void>> {
+export function* Evaluate_ClassDeclaration(ClassDeclaration: ParseNode.ClassDeclaration): PlainEvaluator {
   // 1. Perform ? BindingClassDeclarationEvaluation of this ClassDeclaration.
   Q(yield* BindingClassDeclarationEvaluation(ClassDeclaration));
   // 2. Return NormalCompletion(empty).

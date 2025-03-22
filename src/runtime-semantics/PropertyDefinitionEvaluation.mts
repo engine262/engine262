@@ -14,12 +14,11 @@ import {
   IsComputedPropertyKey,
   type FunctionDeclaration,
 } from '../static-semantics/all.mts';
-import { Evaluate, type Evaluator, type ExpressionEvaluator } from '../evaluator.mts';
+import { Evaluate, type ExpressionEvaluator, type PlainEvaluator } from '../evaluator.mts';
 import {
   Q, X,
   ReturnIfAbrupt,
   NormalCompletion,
-  type PlainCompletion,
 } from '../completion.mts';
 import { OutOfRange, kInternal } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
@@ -28,7 +27,7 @@ import { NamedEvaluation, MethodDefinitionEvaluation, Evaluate_PropertyName } fr
 /** https://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-propertydefinitionevaluation */
 //   PropertyDefinitionList :
 //     PropertyDefinitionList `,` PropertyDefinition
-export function* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList: ParseNode.PropertyDefinitionList, object: ObjectValue, enumerable: BooleanValue<true>): Evaluator<PlainCompletion<void>> {
+export function* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList: ParseNode.PropertyDefinitionList, object: ObjectValue, enumerable: BooleanValue<true>): PlainEvaluator<void> {
   for (const PropertyDefinition of PropertyDefinitionList) {
     Q(yield* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, object, enumerable));
   }

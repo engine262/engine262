@@ -16,7 +16,7 @@ import {
   NormalCompletion,
   Q, X,
 } from '../completion.mts';
-import { Evaluate, type Evaluator, type PlainEvaluator } from '../evaluator.mts';
+import { Evaluate, type PlainEvaluator } from '../evaluator.mts';
 import {
   StringValue,
   IsAnonymousFunctionDefinition,
@@ -27,7 +27,6 @@ import { NamedEvaluation, BindingInitialization } from './all.mts';
 import {
   IteratorStepValue,
   UndefinedValue, type EnvironmentRecord, type FunctionDeclaration,
-  type PlainCompletion,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-iteratorbindinginitialization */
@@ -74,7 +73,7 @@ function IteratorBindingInitialization_BindingElement(BindingElement: ParseNode.
 }
 
 // SingleNameBinding : BindingIdentifier Initializer?
-function* IteratorBindingInitialization_SingleNameBinding({ BindingIdentifier, Initializer }: ParseNode.SingleNameBinding, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | UndefinedValue): Evaluator<PlainCompletion<void>> {
+function* IteratorBindingInitialization_SingleNameBinding({ BindingIdentifier, Initializer }: ParseNode.SingleNameBinding, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | UndefinedValue): PlainEvaluator<void> {
   // 1. Let bindingId be StringValue of BindingIdentifier.
   const bindingId = StringValue(BindingIdentifier);
   // 2. Let lhs be ? ResolveBinding(bindingId, environment).
@@ -196,7 +195,7 @@ function* IteratorDestructuringAssignmentEvaluation(node: ParseNode.Elision, ite
   return NormalCompletion(undefined);
 }
 
-export function* IteratorBindingInitialization_ArrayBindingPattern({ BindingElementList, BindingRestElement }: ParseNode.ArrayBindingPattern, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | UndefinedValue): Evaluator<PlainCompletion<void>> {
+export function* IteratorBindingInitialization_ArrayBindingPattern({ BindingElementList, BindingRestElement }: ParseNode.ArrayBindingPattern, iteratorRecord: IteratorRecord, environment: EnvironmentRecord | UndefinedValue): PlainEvaluator<void> {
   for (const BindingElement of BindingElementList) {
     if (BindingElement.type === 'Elision') {
       Q(yield* IteratorDestructuringAssignmentEvaluation(BindingElement, iteratorRecord));

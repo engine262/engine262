@@ -1,6 +1,6 @@
 import { GetValue, MakePrivateReference, RequireObjectCoercible } from '../abstract-ops/all.mts';
-import { Evaluate, type Evaluator } from '../evaluator.mts';
-import { Q, X, type PlainCompletion } from '../completion.mts';
+import { Evaluate } from '../evaluator.mts';
+import { Q, X } from '../completion.mts';
 import { OutOfRange } from '../helpers.mts';
 import { StringValue } from '../static-semantics/all.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
@@ -8,12 +8,12 @@ import {
   EvaluatePropertyAccessWithExpressionKey,
   EvaluatePropertyAccessWithIdentifierKey,
 } from './all.mts';
-import type { ReferenceRecord } from '#self';
+import type { PlainEvaluator, ReferenceRecord } from '#self';
 
 /** https://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation */
 //   MemberExpression : MemberExpression `[` Expression `]`
 //   CallExpression : CallExpression `[` Expression `]`
-function* Evaluate_MemberExpression_Expression({ strict, MemberExpression, Expression }: ParseNode.MemberExpression): Evaluator<PlainCompletion<ReferenceRecord>> {
+function* Evaluate_MemberExpression_Expression({ strict, MemberExpression, Expression }: ParseNode.MemberExpression): PlainEvaluator<ReferenceRecord> {
   // 1. Let baseReference be the result of evaluating |MemberExpression|.
   const baseReference = yield* Evaluate(MemberExpression);
   // 2. Let baseValue be ? GetValue(baseReference).
@@ -26,7 +26,7 @@ function* Evaluate_MemberExpression_Expression({ strict, MemberExpression, Expre
 /** https://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation */
 //   MemberExpression : MemberExpression `.` IdentifierName
 //   CallExpression : CallExpression `.` IdentifierName
-function* Evaluate_MemberExpression_IdentifierName({ strict, MemberExpression, IdentifierName }: ParseNode.MemberExpression): Evaluator<PlainCompletion<ReferenceRecord>> {
+function* Evaluate_MemberExpression_IdentifierName({ strict, MemberExpression, IdentifierName }: ParseNode.MemberExpression): PlainEvaluator<ReferenceRecord> {
   // 1. Let baseReference be the result of evaluating |MemberExpression|.
   const baseReference = yield* Evaluate(MemberExpression);
   // 2. Let baseValue be ? GetValue(baseReference).
@@ -39,7 +39,7 @@ function* Evaluate_MemberExpression_IdentifierName({ strict, MemberExpression, I
 /** https://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation */
 //   MemberExpression : MemberExpression `.` PrivateIdentifier
 //   CallExpression : CallExpression `.` PrivateIdentifier
-function* Evaluate_MemberExpression_PrivateIdentifier({ MemberExpression, PrivateIdentifier }: ParseNode.MemberExpression): Evaluator<PlainCompletion<ReferenceRecord>> {
+function* Evaluate_MemberExpression_PrivateIdentifier({ MemberExpression, PrivateIdentifier }: ParseNode.MemberExpression): PlainEvaluator<ReferenceRecord> {
   // 1. Let baseReference be the result of evaluating MemberExpression.
   const baseReference = yield* Evaluate(MemberExpression);
   // 2. Let baseValue be ? GetValue(baseReference).

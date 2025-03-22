@@ -27,7 +27,9 @@ import {
   StringValue,
   type FunctionDeclaration,
 } from '../static-semantics/all.mts';
-import { Evaluate, type Evaluator, type StatementEvaluator } from '../evaluator.mts';
+import {
+  Evaluate, type PlainEvaluator, type StatementEvaluator,
+} from '../evaluator.mts';
 import {
   Q, X,
   Completion,
@@ -35,7 +37,6 @@ import {
   NormalCompletion,
   ReturnIfAbrupt,
   EnsureCompletion,
-  type PlainCompletion,
   type ValueCompletion,
 } from '../completion.mts';
 import { OutOfRange } from '../helpers.mts';
@@ -51,7 +52,7 @@ import {
 //  `{` AssignmentPropertyList `}`
 //  `{` AssignmentPropertyList `,` `}`
 //  `{` AssignmentPropertyList `,` AssignmentRestProperty? `}`
-function* DestructuringAssignmentEvaluation_ObjectAssignmentPattern({ AssignmentPropertyList, AssignmentRestProperty }: ParseNode.ObjectAssignmentPattern, value: Value): Evaluator<PlainCompletion<void>> {
+function* DestructuringAssignmentEvaluation_ObjectAssignmentPattern({ AssignmentPropertyList, AssignmentRestProperty }: ParseNode.ObjectAssignmentPattern, value: Value): PlainEvaluator<void> {
   // 1. Perform ? RequireObjectCoercible(value).
   Q(RequireObjectCoercible(value));
   // 2. Perform ? PropertyDestructuringAssignmentEvaluation for AssignmentPropertyList using value as the argument.
@@ -78,7 +79,7 @@ function* RestDestructuringAssignmentEvaluation({ DestructuringAssignmentTarget 
   return yield* PutValue(lref, restObj);
 }
 
-function* PropertyDestructuringAssignmentEvaluation(AssignmentPropertyList: ParseNode.ObjectAssignmentPattern['AssignmentPropertyList'], value: Value): Evaluator<PlainCompletion<PropertyKeyValue[]>> {
+function* PropertyDestructuringAssignmentEvaluation(AssignmentPropertyList: ParseNode.ObjectAssignmentPattern['AssignmentPropertyList'], value: Value): PlainEvaluator<PropertyKeyValue[]> {
   const propertyNames: PropertyKeyValue[] = [];
   for (const AssignmentProperty of AssignmentPropertyList) {
     if ('IdentifierReference' in AssignmentProperty) {
