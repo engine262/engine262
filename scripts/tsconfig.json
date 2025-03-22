@@ -1,6 +1,6 @@
 {
   "extends": "../tsconfig.base.json",
-  "files": ["./rollup.config.mts"],
+  "include": ["."],
   "compilerOptions": {
     "noEmit": true,
     "erasableSyntaxOnly": true
