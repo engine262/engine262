@@ -1,13 +1,13 @@
 import { Value } from '../value.mts';
 import { GetValue, ToBoolean } from '../abstract-ops/all.mts';
-import { Evaluate, type ExpressionEvaluator } from '../evaluator.mts';
+import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
 import { Q, X } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 
 /** https://tc39.es/ecma262/#sec-binary-logical-operators-runtime-semantics-evaluation */
 //   LogicalANDExpression :
 //     LogicalANDExpression `&&` BitwiseORExpression
-export function* Evaluate_LogicalANDExpression({ LogicalANDExpression, BitwiseORExpression }: ParseNode.LogicalANDExpression): ExpressionEvaluator {
+export function* Evaluate_LogicalANDExpression({ LogicalANDExpression, BitwiseORExpression }: ParseNode.LogicalANDExpression): ValueEvaluator {
   // 1. Let lref be the result of evaluating LogicalANDExpression.
   const lref = yield* Evaluate(LogicalANDExpression);
   // 2. Let lval be ? GetValue(lref).

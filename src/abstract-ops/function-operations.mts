@@ -187,7 +187,7 @@ export function* OrdinaryCallEvaluateBody(F: ECMAScriptFunctionObject, arguments
 }
 
 /** https://tc39.es/ecma262/#sec-definefield */
-export function* DefineField(receiver: ObjectValue, fieldRecord: ClassFieldDefinitionRecord): PlainEvaluator<void> {
+export function* DefineField(receiver: ObjectValue, fieldRecord: ClassFieldDefinitionRecord): PlainEvaluator {
   // 1. Let fieldName be fieldRecord.[[Name]].
   const fieldName = fieldRecord.Name;
   // 2. Let initializer be fieldRecord.[[Initializer]].
@@ -213,7 +213,7 @@ export function* DefineField(receiver: ObjectValue, fieldRecord: ClassFieldDefin
 }
 
 /** https://tc39.es/ecma262/#sec-initializeinstanceelements */
-export function* InitializeInstanceElements(O: ObjectValue, constructor: ECMAScriptFunctionObject): PlainEvaluator<void> {
+export function* InitializeInstanceElements(O: ObjectValue, constructor: ECMAScriptFunctionObject): PlainEvaluator {
   // 1. Let methods be the value of constructor.[[PrivateMethods]].
   const methods = constructor.PrivateMethods;
   // 2. For each PrivateElement method of methods, do

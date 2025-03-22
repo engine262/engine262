@@ -1,5 +1,5 @@
 import { surroundingAgent } from '../host-defined/engine.mts';
-import { Evaluate, type StatementEvaluator } from '../evaluator.mts';
+import { Evaluate, type StatementEvaluator, type ValueEvaluator } from '../evaluator.mts';
 import { DeclarativeEnvironmentRecord } from '../environment.mts';
 import { Assert, GetValue, IsStrictlyEqual } from '../abstract-ops/all.mts';
 import {
@@ -21,7 +21,7 @@ import {
 } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-caseclauseisselected */
-function* CaseClauseIsSelected(C: ParseNode.CaseClause, input: Value): StatementEvaluator<BooleanValue> {
+function* CaseClauseIsSelected(C: ParseNode.CaseClause, input: Value): ValueEvaluator<BooleanValue> {
   // 1. Assert: C is an instance of the production  CaseClause : `case` Expression `:` StatementList?.
   Assert(C.type === 'CaseClause');
   // 2. Let exprRef be the result of evaluating the Expression of C.
@@ -37,7 +37,7 @@ function* CaseClauseIsSelected(C: ParseNode.CaseClause, input: Value): Statement
 //     `{` `}`
 //     `{` CaseClauses `}`
 //     `{` CaseClauses? DefaultClause CaseClauses? `}`
-function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }: ParseNode.CaseBlock, input: Value): StatementEvaluator<Value> {
+function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }: ParseNode.CaseBlock, input: Value): StatementEvaluator {
   switch (true) {
     case !CaseClauses_a && !DefaultClause && !CaseClauses_b: {
       // 1. Return NormalCompletion(undefined).

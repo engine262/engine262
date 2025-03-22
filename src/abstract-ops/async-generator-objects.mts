@@ -272,7 +272,7 @@ export function* AsyncGeneratorYield(value: Value): YieldEvaluator {
 }
 
 /** https://tc39.es/ecma262/#sec-asyncgeneratorawaitreturn */
-export function* AsyncGeneratorAwaitReturn(generator: AsyncGeneratorObject): PlainEvaluator<void> {
+export function* AsyncGeneratorAwaitReturn(generator: AsyncGeneratorObject): PlainEvaluator {
   // 1. Let queue be generator.[[AsyncGeneratorQueue]].
   const queue = generator.AsyncGeneratorQueue;
   // 2. Assert: queue is not empty.

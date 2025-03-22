@@ -1,4 +1,4 @@
-import type { PlainCompletion } from './completion.mts';
+import type { PlainCompletion, YieldCompletion } from './completion.mts';
 import { surroundingAgent } from './host-defined/engine.mts';
 import { OutOfRange } from './helpers.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
@@ -82,10 +82,10 @@ import {
 export type Evaluator<Result> = Generator<EvaluatorYieldType, Result, EvaluatorNextType>;
 export type PlainEvaluator<V = void> = Evaluator<PlainCompletion<V>>;
 export type ValueEvaluator<V extends Value = Value> = Evaluator<ValueCompletion<V>>;
-export type ExpressionEvaluator<T extends ReferenceRecord | Value = ReferenceRecord | Value> = Evaluator<PlainCompletion<T>>;
-export type StatementEvaluator<T = void | Value> = Evaluator<PlainCompletion<T> | AbruptCompletion>;
+export type ExpressionEvaluator = Evaluator<PlainCompletion<ReferenceRecord | Value>>;
+export type StatementEvaluator = Evaluator<PlainCompletion<void | Value> | AbruptCompletion>;
 export type ReferenceEvaluator = Evaluator<PlainCompletion<ReferenceRecord>>;
-export type YieldEvaluator = Evaluator<PlainCompletion<Value> | ReturnCompletion>;
+export type YieldEvaluator = Evaluator<YieldCompletion | Value>;
 export type ExpressionThatEvaluatedToReferenceRecord = ParseNode.IdentifierReference;
 
 export function Evaluate(node: ExpressionThatEvaluatedToReferenceRecord): ReferenceEvaluator

@@ -96,7 +96,7 @@ export function* GetValue(V: PlainCompletion<ReferenceRecord | Value>): PlainEva
 }
 
 /** https://tc39.es/ecma262/#sec-putvalue */
-export function* PutValue(V: PlainCompletion<ReferenceRecord | Value>, W: PlainCompletion<Value>): PlainEvaluator<void> {
+export function* PutValue(V: PlainCompletion<ReferenceRecord | Value>, W: PlainCompletion<Value>): PlainEvaluator {
   // 1. ReturnIfAbrupt(V).
   V = ReturnIfAbrupt(V);
   // 2. ReturnIfAbrupt(W).
@@ -157,7 +157,7 @@ export function GetThisValue(V: ReferenceRecord) {
 }
 
 /** https://tc39.es/ecma262/#sec-initializereferencedbinding */
-export function* InitializeReferencedBinding(V: PlainCompletion<ReferenceRecord>, W: Value): PlainEvaluator<void> {
+export function* InitializeReferencedBinding(V: PlainCompletion<ReferenceRecord>, W: Value): PlainEvaluator {
   // 1. ReturnIfAbrupt(V).
   ReturnIfAbrupt(V);
   // 2. ReturnIfAbrupt(W).

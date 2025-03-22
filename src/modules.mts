@@ -721,7 +721,7 @@ export class SyntheticModuleRecord extends AbstractModuleRecord {
     return Completion(result);
   }
 
-  * SetSyntheticExport(name: JSStringValue, value: Value): PlainEvaluator<void> {
+  * SetSyntheticExport(name: JSStringValue, value: Value): PlainEvaluator {
     const module = this;
     // 1. Return module.[[Environment]].SetMutableBinding(name, value, true).
     return yield* (module.Environment as ModuleEnvironmentRecord).SetMutableBinding(name, value, Value.true);

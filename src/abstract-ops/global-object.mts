@@ -192,7 +192,7 @@ export function* PerformEval(x: Value, callerRealm: Realm, strictCaller: boolean
 }
 
 /** https://tc39.es/ecma262/#sec-evaldeclarationinstantiation */
-function* EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv: EnvironmentRecord, lexEnv: DeclarativeEnvironmentRecord, privateEnv: PrivateEnvironmentRecord | NullValue, strict: boolean): PlainEvaluator<void> {
+function* EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv: EnvironmentRecord, lexEnv: DeclarativeEnvironmentRecord, privateEnv: PrivateEnvironmentRecord | NullValue, strict: boolean): PlainEvaluator {
   // 1. Let varNames be the VarDeclaredNames of body.
   const varNames = VarDeclaredNames(body);
   // 2. Let varDeclarations be the VarScopedDeclarations of body.

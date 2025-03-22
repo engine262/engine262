@@ -15,7 +15,7 @@ import {
   IsPrivateReference,
   ToPropertyKey,
 } from '../abstract-ops/all.mts';
-import { Evaluate, type ExpressionEvaluator } from '../evaluator.mts';
+import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
 import { Q, ReturnIfAbrupt } from '../completion.mts';
 import {
   Value, ReferenceRecord, UndefinedValue, BigIntValue, BooleanValue, JSStringValue, NullValue, NumberValue, ObjectValue, SymbolValue,
@@ -78,7 +78,7 @@ function* Evaluate_UnaryExpression_Delete({ UnaryExpression }: ParseNode.UnaryEx
 
 /** https://tc39.es/ecma262/#sec-void-operator-runtime-semantics-evaluation */
 //   UnaryExpression : `void` UnaryExpression
-function* Evaluate_UnaryExpression_Void({ UnaryExpression }: ParseNode.UnaryExpression): ExpressionEvaluator {
+function* Evaluate_UnaryExpression_Void({ UnaryExpression }: ParseNode.UnaryExpression): ValueEvaluator {
   // 1. Let expr be the result of evaluating UnaryExpression.
   const expr = yield* Evaluate(UnaryExpression);
   // 2. Perform ? GetValue(expr).
@@ -89,7 +89,7 @@ function* Evaluate_UnaryExpression_Void({ UnaryExpression }: ParseNode.UnaryExpr
 
 /** https://tc39.es/ecma262/#sec-typeof-operator-runtime-semantics-evaluation */
 // UnaryExpression : `typeof` UnaryExpression
-function* Evaluate_UnaryExpression_Typeof({ UnaryExpression }: ParseNode.UnaryExpression): ExpressionEvaluator {
+function* Evaluate_UnaryExpression_Typeof({ UnaryExpression }: ParseNode.UnaryExpression): ValueEvaluator {
   // 1. Let val be the result of evaluating UnaryExpression.
   const _val = Q(yield* Evaluate(UnaryExpression));
   // 2. If Type(val) is Reference, then
@@ -127,7 +127,7 @@ function* Evaluate_UnaryExpression_Typeof({ UnaryExpression }: ParseNode.UnaryEx
 
 /** https://tc39.es/ecma262/#sec-unary-plus-operator-runtime-semantics-evaluation */
 //   UnaryExpression : `+` UnaryExpression
-function* Evaluate_UnaryExpression_Plus({ UnaryExpression }: ParseNode.UnaryExpression): ExpressionEvaluator {
+function* Evaluate_UnaryExpression_Plus({ UnaryExpression }: ParseNode.UnaryExpression): ValueEvaluator {
   // 1. Let expr be the result of evaluating UnaryExpression.
   const expr = yield* Evaluate(UnaryExpression);
   // 2. Return ? ToNumber(? GetValue(expr)).
@@ -136,7 +136,7 @@ function* Evaluate_UnaryExpression_Plus({ UnaryExpression }: ParseNode.UnaryExpr
 
 /** https://tc39.es/ecma262/#sec-unary-minus-operator-runtime-semantics-evaluation */
 //   UnaryExpression : `-` UnaryExpression
-function* Evaluate_UnaryExpression_Minus({ UnaryExpression }: ParseNode.UnaryExpression): ExpressionEvaluator {
+function* Evaluate_UnaryExpression_Minus({ UnaryExpression }: ParseNode.UnaryExpression): ValueEvaluator {
   // 1. Let expr be the result of evaluating UnaryExpression.
   const expr = yield* Evaluate(UnaryExpression);
   // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
@@ -155,7 +155,7 @@ function* Evaluate_UnaryExpression_Minus({ UnaryExpression }: ParseNode.UnaryExp
 
 /** https://tc39.es/ecma262/#sec-bitwise-not-operator-runtime-semantics-evaluation */
 //   UnaryExpression : `~` UnaryExpression
-function* Evaluate_UnaryExpression_Tilde({ UnaryExpression }: ParseNode.UnaryExpression): ExpressionEvaluator {
+function* Evaluate_UnaryExpression_Tilde({ UnaryExpression }: ParseNode.UnaryExpression): ValueEvaluator {
   // 1. Let expr be the result of evaluating UnaryExpression.
   const expr = yield* Evaluate(UnaryExpression);
   // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
@@ -174,7 +174,7 @@ function* Evaluate_UnaryExpression_Tilde({ UnaryExpression }: ParseNode.UnaryExp
 
 /** https://tc39.es/ecma262/#sec-logical-not-operator-runtime-semantics-evaluation */
 //   UnaryExpression : `!` UnaryExpression
-function* Evaluate_UnaryExpression_Bang({ UnaryExpression }: ParseNode.UnaryExpression): ExpressionEvaluator {
+function* Evaluate_UnaryExpression_Bang({ UnaryExpression }: ParseNode.UnaryExpression): ValueEvaluator {
   // 1. Let expr be the result of evaluating UnaryExpression.
   const expr = yield* Evaluate(UnaryExpression);
   // 2. Let oldValue be ! ToBoolean(? GetValue(expr)).

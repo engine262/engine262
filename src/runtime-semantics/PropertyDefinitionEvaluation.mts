@@ -14,7 +14,7 @@ import {
   IsComputedPropertyKey,
   type FunctionDeclaration,
 } from '../static-semantics/all.mts';
-import { Evaluate, type ExpressionEvaluator, type PlainEvaluator } from '../evaluator.mts';
+import { Evaluate, type PlainEvaluator, type ValueEvaluator } from '../evaluator.mts';
 import {
   Q, X,
   ReturnIfAbrupt,
@@ -27,7 +27,7 @@ import { NamedEvaluation, MethodDefinitionEvaluation, Evaluate_PropertyName } fr
 /** https://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-propertydefinitionevaluation */
 //   PropertyDefinitionList :
 //     PropertyDefinitionList `,` PropertyDefinition
-export function* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList: ParseNode.PropertyDefinitionList, object: ObjectValue, enumerable: BooleanValue<true>): PlainEvaluator<void> {
+export function* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList: ParseNode.PropertyDefinitionList, object: ObjectValue, enumerable: BooleanValue<true>): PlainEvaluator {
   for (const PropertyDefinition of PropertyDefinitionList) {
     Q(yield* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, object, enumerable));
   }
@@ -108,7 +108,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition: Pa
 }
 
 // PropertyDefinition : IdentifierReference
-function* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(IdentifierReference: ParseNode.IdentifierReference, object: ObjectValue, enumerable: BooleanValue<true>): ExpressionEvaluator {
+function* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(IdentifierReference: ParseNode.IdentifierReference, object: ObjectValue, enumerable: BooleanValue<true>): ValueEvaluator {
   // 1. Let propName be StringValue of IdentifierReference.
   const propName = StringValue(IdentifierReference);
   // 2. Let exprValue be the result of evaluating IdentifierReference.

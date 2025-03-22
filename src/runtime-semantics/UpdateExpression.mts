@@ -1,4 +1,4 @@
-import { Evaluate, type ExpressionEvaluator } from '../evaluator.mts';
+import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
 import { OutOfRange } from '../helpers.mts';
 import {
   Assert,
@@ -18,7 +18,7 @@ type AnyNumericValue = BigIntValue | NumberValue;
 //   LeftHandSideExpression `--`
 //   `++` UnaryExpression
 //   `--` UnaryExpression
-export function* Evaluate_UpdateExpression({ LeftHandSideExpression, operator, UnaryExpression }: ParseNode.UpdateExpression): ExpressionEvaluator {
+export function* Evaluate_UpdateExpression({ LeftHandSideExpression, operator, UnaryExpression }: ParseNode.UpdateExpression): ValueEvaluator {
   switch (true) {
     // UpdateExpression : LeftHandSideExpression `++`
     // https://tc39.es/ecma262/#sec-postfix-increment-operator-runtime-semantics-evaluation

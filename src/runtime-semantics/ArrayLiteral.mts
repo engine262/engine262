@@ -10,7 +10,8 @@ import {
   IteratorStepValue,
 } from '../abstract-ops/all.mts';
 import {
-  Evaluate, type ExpressionEvaluator, type PlainEvaluator,
+  Evaluate, type PlainEvaluator,
+  type ValueEvaluator,
 } from '../evaluator.mts';
 import {
   ReturnIfAbrupt, Q, X,
@@ -87,7 +88,7 @@ function* ArrayAccumulation_AssignmentExpression(AssignmentExpression: ParseNode
 //    `[` Elision `]`
 //    `[` ElementList `]`
 //    `[` ElementList `,` Elision `]`
-export function* Evaluate_ArrayLiteral({ ElementList }: ParseNode.ArrayLiteral): ExpressionEvaluator {
+export function* Evaluate_ArrayLiteral({ ElementList }: ParseNode.ArrayLiteral): ValueEvaluator {
   // 1. Let array be ! ArrayCreate(0).
   const array = X(ArrayCreate(0));
   // 2. Let len be the result of performing ArrayAccumulation for ElementList with arguments array and 0.

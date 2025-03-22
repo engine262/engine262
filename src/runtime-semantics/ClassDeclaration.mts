@@ -5,14 +5,14 @@ import { StringValue } from '../static-semantics/all.mts';
 import { Q, NormalCompletion } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { Mutable } from '../helpers.mts';
-import type { ExpressionEvaluator, PlainEvaluator } from '../evaluator.mts';
+import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
 import { InitializeBoundName, ClassDefinitionEvaluation } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-bindingclassdeclarationevaluation */
 //   ClassDeclaration :
 //     `class` BindingIdentifier ClassTail
 //     `class` ClassTail
-export function* BindingClassDeclarationEvaluation(ClassDeclaration: ParseNode.ClassDeclaration): ExpressionEvaluator {
+export function* BindingClassDeclarationEvaluation(ClassDeclaration: ParseNode.ClassDeclaration): ValueEvaluator {
   const { BindingIdentifier, ClassTail } = ClassDeclaration;
   if (!BindingIdentifier) {
     // 1. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments undefined and "default".

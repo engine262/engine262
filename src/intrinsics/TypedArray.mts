@@ -313,7 +313,7 @@ export function* AllocateTypedArray(constructorName: JSStringValue, newTarget: F
 }
 
 /** https://tc39.es/ecma262/#sec-initializetypedarrayfromtypedarray */
-export function* InitializeTypedArrayFromTypedArray(O: Mutable<TypedArrayObject>, srcArray: TypedArrayObject): PlainEvaluator<void> {
+export function* InitializeTypedArrayFromTypedArray(O: Mutable<TypedArrayObject>, srcArray: TypedArrayObject): PlainEvaluator {
   const srcData = srcArray.ViewedArrayBuffer as ArrayBufferObject;
   const elementType = TypedArrayElementType(O);
   const elementSize = TypedArrayElementSize(O);
@@ -352,7 +352,7 @@ export function* InitializeTypedArrayFromTypedArray(O: Mutable<TypedArrayObject>
 }
 
 /** https://tc39.es/ecma262/#sec-initializetypedarrayfromarraybuffer */
-export function* InitializeTypedArrayFromArrayBuffer(O: Mutable<TypedArrayObject>, buffer: ArrayBufferObject, byteOffset: Value, length: Value): PlainEvaluator<void> {
+export function* InitializeTypedArrayFromArrayBuffer(O: Mutable<TypedArrayObject>, buffer: ArrayBufferObject, byteOffset: Value, length: Value): PlainEvaluator {
   const elementSize = TypedArrayElementSize(O);
   const offset = Q(yield* ToIndex(byteOffset));
   if (offset % elementSize !== 0) {
@@ -398,7 +398,7 @@ export function* InitializeTypedArrayFromArrayBuffer(O: Mutable<TypedArrayObject
 }
 
 /** https://tc39.es/ecma262/#sec-initializetypedarrayfromlist */
-export function* InitializeTypedArrayFromList(O: Mutable<TypedArrayObject>, value: Value[]): PlainEvaluator<void> {
+export function* InitializeTypedArrayFromList(O: Mutable<TypedArrayObject>, value: Value[]): PlainEvaluator {
   const len = value.length;
   Q(yield* AllocateTypedArrayBuffer(O, len));
   let k = 0;
@@ -412,7 +412,7 @@ export function* InitializeTypedArrayFromList(O: Mutable<TypedArrayObject>, valu
 }
 
 /** https://tc39.es/ecma262/#sec-initializetypedarrayfromarraylike */
-export function* InitializeTypedArrayFromArrayLike(O: Mutable<TypedArrayObject>, arrayLike: ObjectValue): PlainEvaluator<void> {
+export function* InitializeTypedArrayFromArrayLike(O: Mutable<TypedArrayObject>, arrayLike: ObjectValue): PlainEvaluator {
   const len = Q(yield* LengthOfArrayLike(arrayLike));
   Q(yield* AllocateTypedArrayBuffer(O, len));
   let k = 0;

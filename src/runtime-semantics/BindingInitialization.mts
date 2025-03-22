@@ -22,7 +22,7 @@ import {
 } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-initializeboundname */
-export function* InitializeBoundName(name: JSStringValue, value: Value, environment: EnvironmentRecord | UndefinedValue): PlainEvaluator<void> {
+export function* InitializeBoundName(name: JSStringValue, value: Value, environment: EnvironmentRecord | UndefinedValue): PlainEvaluator {
   // 1. Assert: Type(name) is String.
   Assert(name instanceof JSStringValue);
   // 2. If environment is not undefined, then

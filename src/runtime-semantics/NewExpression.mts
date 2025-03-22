@@ -7,7 +7,7 @@ import {
   type FunctionObject,
 } from '../abstract-ops/all.mts';
 import { Value } from '../value.mts';
-import { Evaluate, type ExpressionEvaluator } from '../evaluator.mts';
+import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
 import { Q } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { ArgumentListEvaluation } from './all.mts';
@@ -41,7 +41,7 @@ function* EvaluateNew(constructExpr: ParseNode.LeftHandSideExpression, args: und
 //   NewExpression :
 //     `new` NewExpression
 //     `new` MemberExpression Arguments
-export function* Evaluate_NewExpression({ MemberExpression, Arguments }: ParseNode.NewExpression): ExpressionEvaluator {
+export function* Evaluate_NewExpression({ MemberExpression, Arguments }: ParseNode.NewExpression): ValueEvaluator {
   if (!Arguments) {
     // 1. Return ? EvaluateNew(NewExpression, empty).
     return Q(yield* EvaluateNew(MemberExpression, undefined));

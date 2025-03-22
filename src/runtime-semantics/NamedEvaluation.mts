@@ -3,7 +3,7 @@ import { sourceTextMatchedBy } from '../abstract-ops/all.mts';
 import { ReturnIfAbrupt } from '../completion.mts';
 import { OutOfRange, type Mutable } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
-import type { ExpressionEvaluator } from '../evaluator.mts';
+import type { ValueEvaluator } from '../evaluator.mts';
 import {
   ClassDefinitionEvaluation,
   InstantiateOrdinaryFunctionExpression,
@@ -74,7 +74,7 @@ function* NamedEvaluation_ClassExpression(ClassExpression: ParseNode.ClassExpres
   return value;
 }
 
-export function* NamedEvaluation(F: FunctionDeclaration, name: PropertyKeyValue | PrivateName): ExpressionEvaluator<ECMAScriptFunctionObject> {
+export function* NamedEvaluation(F: FunctionDeclaration, name: PropertyKeyValue | PrivateName): ValueEvaluator<ECMAScriptFunctionObject> {
   switch (F.type) {
     case 'FunctionExpression':
       return NamedEvaluation_FunctionExpression(F, name);

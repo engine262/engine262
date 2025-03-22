@@ -19,7 +19,7 @@ import { NamedEvaluation, BindingInitialization } from './all.mts';
 //   LexicalBinding :
 //     BindingIdentifier
 //     BindingIdentifier Initializer
-function* Evaluate_LexicalBinding_BindingIdentifier({ BindingIdentifier, Initializer, strict }: ParseNode.LexicalBinding): PlainEvaluator<void> {
+function* Evaluate_LexicalBinding_BindingIdentifier({ BindingIdentifier, Initializer, strict }: ParseNode.LexicalBinding): PlainEvaluator {
   if (Initializer) {
     // 1. Let bindingId be StringValue of BindingIdentifier.
     const bindingId = StringValue(BindingIdentifier!);
@@ -86,7 +86,7 @@ export function* Evaluate_BindingList(BindingList: ParseNode.BindingList) {
 
 /** https://tc39.es/ecma262/#sec-let-and-const-declarations-runtime-semantics-evaluation */
 //   LexicalDeclaration : LetOrConst BindingList `;`
-export function* Evaluate_LexicalDeclaration({ BindingList }: ParseNode.LexicalDeclaration): PlainEvaluator<void> {
+export function* Evaluate_LexicalDeclaration({ BindingList }: ParseNode.LexicalDeclaration): PlainEvaluator {
   // 1. Let next be the result of evaluating BindingList.
   // 2. ReturnIfAbrupt(next).
   ReturnIfAbrupt(yield* Evaluate_BindingList(BindingList));

@@ -1,5 +1,5 @@
 import { Q } from '../completion.mts';
-import { Evaluate, type ExpressionEvaluator } from '../evaluator.mts';
+import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
 import { GetValue } from '../abstract-ops/all.mts';
 import { Value } from '../value.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
@@ -7,7 +7,7 @@ import type { ParseNode } from '../parser/ParseNode.mts';
 /** https://tc39.es/ecma262/#sec-binary-logical-operators-runtime-semantics-evaluation */
 //   CoalesceExpression :
 //     CoalesceExpressionHead `??` BitwiseORExpression
-export function* Evaluate_CoalesceExpression({ CoalesceExpressionHead, BitwiseORExpression }: ParseNode.CoalesceExpression): ExpressionEvaluator {
+export function* Evaluate_CoalesceExpression({ CoalesceExpressionHead, BitwiseORExpression }: ParseNode.CoalesceExpression): ValueEvaluator {
   // 1. Let lref be the result of evaluating |CoalesceExpressionHead|.
   const lref = yield* Evaluate(CoalesceExpressionHead);
   // 2. Let lval be ? GetValue(lref).

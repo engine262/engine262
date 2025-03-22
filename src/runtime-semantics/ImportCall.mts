@@ -1,5 +1,5 @@
 import { surroundingAgent, HostLoadImportedModule } from '../host-defined/engine.mts';
-import { Evaluate, type ExpressionEvaluator } from '../evaluator.mts';
+import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
 import {
   GetValue,
   ToString,
@@ -17,7 +17,7 @@ import { __ts_cast__ } from '../helpers.mts';
 
 /** https://tc39.es/ecma262/#sec-import-calls */
 // ImportCall : `import` `(` AssignmentExpression `)`
-export function* Evaluate_ImportCall({ AssignmentExpression }: ParseNode.ImportCall): ExpressionEvaluator<PromiseObject> {
+export function* Evaluate_ImportCall({ AssignmentExpression }: ParseNode.ImportCall): ValueEvaluator<PromiseObject> {
   Q(surroundingAgent.debugger_cannotPreview);
   // 1. Let referrer be ! GetActiveScriptOrModule().
   let referrer: NullValue | AbstractModuleRecord | ScriptRecord | Realm = X(GetActiveScriptOrModule());

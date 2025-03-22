@@ -5,7 +5,7 @@ import {
 import { HasProperty, Get, DefinePropertyOrThrow } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-errorobjects-install-error-cause */
-export function* InstallErrorCause(O: ObjectValue, options: Value): ValueEvaluator<Value> {
+export function* InstallErrorCause(O: ObjectValue, options: Value): ValueEvaluator {
   // 1. If Type(options) is Object and ? HasProperty(options, "cause") is true, then
   if (options instanceof ObjectValue) {
     // nested if statement due to macro expansion

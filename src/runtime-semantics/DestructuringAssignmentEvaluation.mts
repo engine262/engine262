@@ -52,7 +52,7 @@ import {
 //  `{` AssignmentPropertyList `}`
 //  `{` AssignmentPropertyList `,` `}`
 //  `{` AssignmentPropertyList `,` AssignmentRestProperty? `}`
-function* DestructuringAssignmentEvaluation_ObjectAssignmentPattern({ AssignmentPropertyList, AssignmentRestProperty }: ParseNode.ObjectAssignmentPattern, value: Value): PlainEvaluator<void> {
+function* DestructuringAssignmentEvaluation_ObjectAssignmentPattern({ AssignmentPropertyList, AssignmentRestProperty }: ParseNode.ObjectAssignmentPattern, value: Value): PlainEvaluator {
   // 1. Perform ? RequireObjectCoercible(value).
   Q(RequireObjectCoercible(value));
   // 2. Perform ? PropertyDestructuringAssignmentEvaluation for AssignmentPropertyList using value as the argument.

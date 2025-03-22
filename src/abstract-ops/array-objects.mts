@@ -3,7 +3,7 @@ import {
   NumberValue, UndefinedValue,
   BooleanValue,
   Q, X, type ValueCompletion, type ValueEvaluator,
-  type Mutable, type ExpressionEvaluator, type YieldEvaluator,
+  type Mutable, type YieldEvaluator,
   AbstractRelationalComparison,
   Assert,
   Call,
@@ -41,7 +41,7 @@ import { isTypedArrayObject } from '#self';
 
 const InternalMethods = {
   /** https://tc39.es/ecma262/#sec-array-exotic-objects-defineownproperty-p-desc */
-  * DefineOwnProperty(P, Desc): ExpressionEvaluator<BooleanValue> {
+  * DefineOwnProperty(P, Desc): ValueEvaluator<BooleanValue> {
     const A = this;
 
     Assert(IsPropertyKey(P));

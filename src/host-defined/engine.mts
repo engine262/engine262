@@ -20,7 +20,7 @@ import {
 } from '../abstract-ops/all.mts';
 import { GlobalDeclarationInstantiation } from '../runtime-semantics/all.mts';
 import {
-  Evaluate, type ExpressionEvaluator, type ValueEvaluator, type YieldEvaluator,
+  Evaluate, type ValueEvaluator, type YieldEvaluator,
 } from '../evaluator.mts';
 import { CallSite, kAsyncContext } from '../helpers.mts';
 import {
@@ -367,7 +367,7 @@ export class ExecutionContext {
 }
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-scriptevaluation */
-export function* ScriptEvaluation(scriptRecord: ScriptRecord): ExpressionEvaluator<Value> {
+export function* ScriptEvaluation(scriptRecord: ScriptRecord): ValueEvaluator {
   if (surroundingAgent.hostDefinedOptions.boost?.evaluateScript) {
     return yield* surroundingAgent.hostDefinedOptions.boost.evaluateScript(scriptRecord);
   }

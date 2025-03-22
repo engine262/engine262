@@ -43,13 +43,13 @@ export abstract class EnvironmentRecord {
 
   abstract HasBinding(N: JSStringValue): ValueEvaluator<BooleanValue>;
 
-  abstract CreateMutableBinding(N: JSStringValue, D: BooleanValue): PlainEvaluator<void>;
+  abstract CreateMutableBinding(N: JSStringValue, D: BooleanValue): PlainEvaluator;
 
   abstract CreateImmutableBinding(N: JSStringValue, S: BooleanValue): void;
 
-  abstract InitializeBinding(N: JSStringValue, V: Value): PlainEvaluator<void>;
+  abstract InitializeBinding(N: JSStringValue, V: Value): PlainEvaluator;
 
-  abstract SetMutableBinding(N: JSStringValue, V: Value, S: BooleanValue): PlainEvaluator<void>;
+  abstract SetMutableBinding(N: JSStringValue, V: Value, S: BooleanValue): PlainEvaluator;
 
   abstract GetBindingValue(N: JSStringValue, S: BooleanValue): ValueEvaluator;
 
@@ -160,7 +160,7 @@ export class DeclarativeEnvironmentRecord extends EnvironmentRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-declarative-environment-records-setmutablebinding-n-v-s */
-  * SetMutableBinding(N: JSStringValue, V: Value, S: BooleanValue): PlainEvaluator<void> {
+  * SetMutableBinding(N: JSStringValue, V: Value, S: BooleanValue): PlainEvaluator {
     Assert(IsPropertyKey(N));
     // 1. Let envRec be the declarative Environment Record for which the method was invoked.
     const envRec = this;
@@ -302,7 +302,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-object-environment-records-createmutablebinding-n-d */
-  * CreateMutableBinding(N: JSStringValue, D: BooleanValue): PlainEvaluator<void> {
+  * CreateMutableBinding(N: JSStringValue, D: BooleanValue): PlainEvaluator {
     // 1. Let envRec be the object Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Let envRec be the object Environment Record for which the method was invoked.
@@ -322,7 +322,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-object-environment-records-initializebinding-n-v */
-  * InitializeBinding(N: JSStringValue, V: Value): PlainEvaluator<void> {
+  * InitializeBinding(N: JSStringValue, V: Value): PlainEvaluator {
     // 1. Let envRec be the object Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Assert: envRec must have an uninitialized binding for N.
@@ -332,7 +332,7 @@ export class ObjectEnvironmentRecord extends EnvironmentRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-object-environment-records-setmutablebinding-n-v-s */
-  * SetMutableBinding(N: JSStringValue, V: Value, S: BooleanValue): PlainEvaluator<void> {
+  * SetMutableBinding(N: JSStringValue, V: Value, S: BooleanValue): PlainEvaluator {
     // 1. Let envRec be the object Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Let bindings be the binding object for envRec.
@@ -620,7 +620,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-global-environment-records-setmutablebinding-n-v-s */
-  * SetMutableBinding(N: JSStringValue, V: Value, S: BooleanValue): PlainEvaluator<void> {
+  * SetMutableBinding(N: JSStringValue, V: Value, S: BooleanValue): PlainEvaluator {
     // 1. Let envRec be the global Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Let DclRec be envRec.[[DeclarativeRecord]].
@@ -812,7 +812,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-createglobalvarbinding */
-  * CreateGlobalVarBinding(N: JSStringValue, D: BooleanValue): PlainEvaluator<void> {
+  * CreateGlobalVarBinding(N: JSStringValue, D: BooleanValue): PlainEvaluator {
     // 1. Let envRec be the global Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Let ObjRec be envRec.[[ObjectRecord]].
@@ -842,7 +842,7 @@ export class GlobalEnvironmentRecord extends EnvironmentRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-createglobalfunctionbinding */
-  * CreateGlobalFunctionBinding(N: JSStringValue, V: Value, D: BooleanValue): PlainEvaluator<void> {
+  * CreateGlobalFunctionBinding(N: JSStringValue, V: Value, D: BooleanValue): PlainEvaluator {
     // 1. Let envRec be the global Environment Record for which the method was invoked.
     const envRec = this;
     // 2. Let ObjRec be envRec.[[ObjectRecord]].

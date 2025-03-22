@@ -492,7 +492,7 @@ function* ForBodyEvaluation(test: ParseNode.Expression | undefined, increment: P
 }
 
 /** https://tc39.es/ecma262/#sec-createperiterationenvironment */
-function* CreatePerIterationEnvironment(perIterationBindings: readonly JSStringValue[]): PlainEvaluator<void> {
+function* CreatePerIterationEnvironment(perIterationBindings: readonly JSStringValue[]): PlainEvaluator {
   // 1. If perIterationBindings has any elements, then
   if (perIterationBindings.length > 0) {
     // a. Let lastIterationEnv be the running execution context's LexicalEnvironment.
