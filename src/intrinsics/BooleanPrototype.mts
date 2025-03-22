@@ -7,9 +7,9 @@ import {
 } from '../value.mts';
 import {
   surroundingAgent,
-} from '../engine.mts';
+} from '../host-defined/engine.mts';
 import { Assert, Realm } from '../abstract-ops/all.mts';
-import { Q, type ExpressionCompletion } from '../completion.mts';
+import { Q, type ValueCompletion } from '../completion.mts';
 import type { Mutable } from '../helpers.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import type { BooleanObject } from './Boolean.mts';
@@ -30,7 +30,7 @@ function thisBooleanValue(value: Value) {
 }
 
 /** https://tc39.es/ecma262/#sec-boolean.prototype.tostring */
-function BooleanProto_toString(_argList: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function BooleanProto_toString(_argList: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let b be ? thisBooleanValue(this value).
   const b = Q(thisBooleanValue(thisValue));
   // 2. If b is true, return "true"; else return "false".
@@ -41,7 +41,7 @@ function BooleanProto_toString(_argList: Arguments, { thisValue }: FunctionCallC
 }
 
 /** https://tc39.es/ecma262/#sec-boolean.prototype.valueof */
-function BooleanProto_valueOf(_argList: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function BooleanProto_valueOf(_argList: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Return ? thisBooleanValue(this value).
   return Q(thisBooleanValue(thisValue));
 }

@@ -8,7 +8,7 @@ import {
   BooleanValue,
 } from '../value.mts';
 import {
-  Q, X, type ExpressionCompletion,
+  Q, X, type ValueEvaluator,
 } from '../completion.mts';
 import { __ts_cast__ } from '../helpers.mts';
 import {
@@ -48,7 +48,7 @@ import {
 
 const InternalMethods = {
   /** https://tc39.es/ecma262/#sec-typedarray-preventextensions */
-  PreventExtensions() {
+  * PreventExtensions() {
     const O = this;
     if (!IsTypedArrayFixedLength(O)) {
       return Value.false;
@@ -56,7 +56,7 @@ const InternalMethods = {
     return OrdinaryPreventExtensions(O);
   },
   /** https://tc39.es/ecma262/#sec-typedarray-getownproperty */
-  GetOwnProperty(P) {
+  * GetOwnProperty(P) {
     const O = this;
     // 3. If Type(P) is String, then
     if (P instanceof JSStringValue) {
@@ -83,7 +83,7 @@ const InternalMethods = {
     return OrdinaryGetOwnProperty(O, P);
   },
   /** https://tc39.es/ecma262/#sec-typedarray-hasproperty */
-  HasProperty(P) {
+  * HasProperty(P) {
     const O = this;
     // 3. If Type(P) is String, then
     if (P instanceof JSStringValue) {
@@ -95,10 +95,10 @@ const InternalMethods = {
       }
     }
     // 4. Return ? OrdinaryHasProperty(O, P)
-    return Q(OrdinaryHasProperty(O, P));
+    return Q(yield* OrdinaryHasProperty(O, P));
   },
   /** https://tc39.es/ecma262/#sec-typedarray-defineownproperty */
-  DefineOwnProperty(P, Desc) {
+  * DefineOwnProperty(P, Desc) {
     const O = this;
     // 3. If Type(P) is String, then
     if (P instanceof JSStringValue) {
@@ -128,17 +128,17 @@ const InternalMethods = {
         }
         // vi. If Desc has a [[Value]] field, then
         if (Desc.Value !== undefined) {
-          return Q(TypedArraySetElement(O, numericIndex, Desc.Value));
+          return Q(yield* TypedArraySetElement(O, numericIndex, Desc.Value));
         }
         // vii. Return true.
         return Value.true;
       }
     }
     // 4. Return ! OrdinaryDefineOwnProperty(O, P, Desc).
-    return Q(OrdinaryDefineOwnProperty(O, P, Desc));
+    return Q(yield* OrdinaryDefineOwnProperty(O, P, Desc));
   },
   /** https://tc39.es/ecma262/#sec-typedarray-get */
-  Get(P, Receiver) {
+  *  Get(P, Receiver) {
     const O = this;
     // 2. If Type(P) is String, then
     if (P instanceof JSStringValue) {
@@ -151,10 +151,10 @@ const InternalMethods = {
       }
     }
     // 3. Return ? OrdinaryGet(O, P, Receiver).
-    return Q(OrdinaryGet(O, P, Receiver));
+    return Q(yield* OrdinaryGet(O, P, Receiver));
   },
   /** https://tc39.es/ecma262/#sec-typedarray-set */
-  Set(P, V, Receiver) {
+  * Set(P, V, Receiver) {
     const O = this;
     // 2. If Type(P) is String, then
     if (P instanceof JSStringValue) {
@@ -164,7 +164,7 @@ const InternalMethods = {
       if (!(numericIndex instanceof UndefinedValue)) {
         if (SameValue(O, Receiver) === Value.true) {
           // i. Perform ? IntegerIndexedElementSet(O, numericIndex, V).
-          Q(TypedArraySetElement(O, numericIndex, V));
+          Q(yield* TypedArraySetElement(O, numericIndex, V));
           // ii. Return true.
           return Value.true;
         }
@@ -174,10 +174,10 @@ const InternalMethods = {
       }
     }
     // 3. Return ? OrdinarySet(O, P, V, Receiver).
-    return Q(OrdinarySet(O, P, V, Receiver));
+    return Q(yield* OrdinarySet(O, P, V, Receiver));
   },
   /** https://tc39.es/ecma262/#sec-typedarray-delete */
-  Delete(P) {
+  * Delete(P) {
     const O = this;
     // 3. If Type(P) is String, then
     if (P instanceof JSStringValue) {
@@ -195,10 +195,10 @@ const InternalMethods = {
       }
     }
     // 4. Return ? OrdinaryDelete(O, P).
-    return Q(OrdinaryDelete(O, P));
+    return Q(yield* OrdinaryDelete(O, P));
   },
   /** https://tc39.es/ecma262/#sec-typedarray-ownpropertykeys */
-  OwnPropertyKeys() {
+  * OwnPropertyKeys() {
     const O = this;
     const taRecord = MakeTypedArrayWithBufferWitnessRecord(O, 'seq-cst');
     // 1. Let keys be a new empty List.
@@ -371,21 +371,21 @@ export function TypedArrayGetElement(O: TypedArrayObject, index: NumberValue) {
 }
 
 /** https://tc39.es/ecma262/#sec-integerindexedelementset */
-export function TypedArraySetElement(O: TypedArrayObject, index: NumberValue, value: Value): ExpressionCompletion<BooleanValue> {
+export function* TypedArraySetElement(O: TypedArrayObject, index: NumberValue, value: Value): ValueEvaluator<BooleanValue> {
   // 3. If O.[[ContentType]] is BigInt, let numValue be ? ToBigInt(value).
   // 4. Otherwise, let numValue be ? ToNumber(value).
   let numValue;
   if (O.ContentType === 'BigInt') {
-    numValue = Q(ToBigInt(value));
+    numValue = Q(yield* ToBigInt(value));
   } else {
-    numValue = Q(ToNumber(value));
+    numValue = Q(yield* ToNumber(value));
   }
   if (IsValidIntegerIndex(O, index) === Value.true) {
     const offset = O.ByteOffset;
     const elementSize = TypedArrayElementSize(O);
     const byteIndexInBuffer = (R(index) * elementSize) + offset;
     const elementType = TypedArrayElementType(O);
-    SetValueInBuffer(O.ViewedArrayBuffer as ArrayBufferObject, byteIndexInBuffer, elementType, numValue, true, 'unordered');
+    Q(yield* SetValueInBuffer(O.ViewedArrayBuffer as ArrayBufferObject, byteIndexInBuffer, elementType, numValue, true, 'unordered'));
     return Value.true;
   }
   return Value.true;

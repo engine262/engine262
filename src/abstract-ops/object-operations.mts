@@ -1,6 +1,6 @@
 import {
   Descriptor,
-  Type, JSStringValue, BooleanValue,
+  JSStringValue, BooleanValue,
   Value,
   ObjectValue,
   wellKnownSymbols,
@@ -11,17 +11,16 @@ import {
 } from '../value.mts';
 import {
   surroundingAgent,
-} from '../engine.mts';
+} from '../host-defined/engine.mts';
 import { InstanceofOperator } from '../runtime-semantics/all.mts';
 import {
-  NormalCompletion,
   EnsureCompletion,
   Q, X,
-  type ExpressionCompletion,
   type PlainCompletion,
 } from '../completion.mts';
 import { isArray } from '../helpers.mts';
 import { isBoundFunctionObject } from '../intrinsics/FunctionPrototype.mts';
+import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
 import {
   ArrayCreate,
   Assert,
@@ -37,7 +36,7 @@ import {
   ToString,
   isProxyExoticObject,
   F as toNumberValue, R, type FunctionObject, Realm,
-} from './all.mts';
+} from '#self';
 
 
 // This file covers abstract operations defined in
@@ -65,26 +64,25 @@ export function MakeBasicObject<const T extends string>(internalSlotsList: reado
 }
 
 /** https://tc39.es/ecma262/#sec-get-o-p */
-export function Get(O: ObjectValue, P: PropertyKeyValue): ExpressionCompletion {
+export function* Get(O: ObjectValue, P: PropertyKeyValue): ValueEvaluator {
   Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
-  // TODO: This should just return Q(O.Get(P, O))
-  return NormalCompletion(Q(O.Get(P, O)));
+  return Q(yield* O.Get(P, O));
 }
 
 /** https://tc39.es/ecma262/#sec-getv */
-export function GetV(V: Value, P: PropertyKeyValue): ExpressionCompletion {
+export function* GetV(V: Value, P: PropertyKeyValue): ValueEvaluator {
   Assert(IsPropertyKey(P));
   const O = Q(ToObject(V));
-  return Q(O.Get(P, V));
+  return Q(yield* O.Get(P, V));
 }
 
 /** https://tc39.es/ecma262/#sec-set-o-p-v-throw */
-export function Set(O: ObjectValue, P: PropertyKeyValue, V: Value, Throw: BooleanValue) {
+export function* Set(O: ObjectValue, P: PropertyKeyValue, V: Value, Throw: BooleanValue) {
   Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
   Assert(Throw instanceof BooleanValue);
-  const success = Q(O.Set(P, V, O));
+  const success = Q(yield* O.Set(P, V, O));
   if (success === Value.false && Throw === Value.true) {
     return surroundingAgent.Throw('TypeError', 'CannotSetProperty', P, O);
   }
@@ -92,7 +90,7 @@ export function Set(O: ObjectValue, P: PropertyKeyValue, V: Value, Throw: Boolea
 }
 
 /** https://tc39.es/ecma262/#sec-createdataproperty */
-export function CreateDataProperty(O: ObjectValue, P: PropertyKeyValue, V: Value): ExpressionCompletion<BooleanValue> {
+export function* CreateDataProperty(O: ObjectValue, P: PropertyKeyValue, V: Value): ValueEvaluator<BooleanValue> {
   Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
 
@@ -102,11 +100,11 @@ export function CreateDataProperty(O: ObjectValue, P: PropertyKeyValue, V: Value
     Enumerable: Value.true,
     Configurable: Value.true,
   });
-  return Q(O.DefineOwnProperty(P, newDesc));
+  return Q(yield* O.DefineOwnProperty(P, newDesc));
 }
 
 /** https://tc39.es/ecma262/#sec-createmethodproperty */
-export function CreateMethodProperty(O: ObjectValue, P: PropertyKeyValue, V: Value): ExpressionCompletion<BooleanValue> {
+export function* CreateMethodProperty(O: ObjectValue, P: PropertyKeyValue, V: Value): ValueEvaluator<BooleanValue> {
   Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
 
@@ -116,14 +114,14 @@ export function CreateMethodProperty(O: ObjectValue, P: PropertyKeyValue, V: Val
     Enumerable: Value.false,
     Configurable: Value.true,
   });
-  return Q(O.DefineOwnProperty(P, newDesc));
+  return Q(yield* O.DefineOwnProperty(P, newDesc));
 }
 
 /** https://tc39.es/ecma262/#sec-createdatapropertyorthrow */
-export function CreateDataPropertyOrThrow(O: ObjectValue, P: PropertyKeyValue, V: Value) {
+export function* CreateDataPropertyOrThrow(O: ObjectValue, P: PropertyKeyValue, V: Value) {
   Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
-  const success = Q(CreateDataProperty(O, P, V));
+  const success = Q(yield* CreateDataProperty(O, P, V));
   if (success === Value.false) {
     return surroundingAgent.Throw('TypeError', 'CannotDefineProperty', P);
   }
@@ -142,10 +140,10 @@ export function CreateNonEnumerableDataPropertyOrThrow(O: ObjectValue, P: Proper
 }
 
 /** https://tc39.es/ecma262/#sec-definepropertyorthrow */
-export function DefinePropertyOrThrow(O: ObjectValue, P: PropertyKeyValue, desc: Descriptor) {
+export function* DefinePropertyOrThrow(O: ObjectValue, P: PropertyKeyValue, desc: Descriptor) {
   Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
-  const success = Q(O.DefineOwnProperty(P, desc));
+  const success = Q(yield* O.DefineOwnProperty(P, desc));
   if (success === Value.false) {
     return surroundingAgent.Throw('TypeError', 'CannotDefineProperty', P);
   }
@@ -153,10 +151,10 @@ export function DefinePropertyOrThrow(O: ObjectValue, P: PropertyKeyValue, desc:
 }
 
 /** https://tc39.es/ecma262/#sec-deletepropertyorthrow */
-export function DeletePropertyOrThrow(O: ObjectValue, P: PropertyKeyValue) {
+export function* DeletePropertyOrThrow(O: ObjectValue, P: PropertyKeyValue) {
   Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
-  const success = Q(O.Delete(P));
+  const success = Q(yield* O.Delete(P));
   if (success === Value.false) {
     return surroundingAgent.Throw('TypeError', 'CannotDeleteProperty', P);
   }
@@ -164,9 +162,9 @@ export function DeletePropertyOrThrow(O: ObjectValue, P: PropertyKeyValue) {
 }
 
 /** https://tc39.es/ecma262/#sec-getmethod */
-export function GetMethod(V: Value, P: PropertyKeyValue): ExpressionCompletion<UndefinedValue | FunctionObject> {
+export function* GetMethod(V: Value, P: PropertyKeyValue): ValueEvaluator<UndefinedValue | FunctionObject> {
   Assert(IsPropertyKey(P));
-  const func = Q(GetV(V, P));
+  const func = Q(yield* GetV(V, P));
   if (func === Value.null || func === Value.undefined) {
     return Value.undefined;
   }
@@ -177,17 +175,17 @@ export function GetMethod(V: Value, P: PropertyKeyValue): ExpressionCompletion<U
 }
 
 /** https://tc39.es/ecma262/#sec-hasproperty */
-export function HasProperty(O: ObjectValue, P: PropertyKeyValue): ExpressionCompletion<BooleanValue> {
+export function* HasProperty(O: ObjectValue, P: PropertyKeyValue): ValueEvaluator<BooleanValue> {
   Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
-  return Q(O.HasProperty(P));
+  return Q(yield* O.HasProperty(P));
 }
 
 /** https://tc39.es/ecma262/#sec-hasownproperty */
-export function HasOwnProperty(O: ObjectValue, P: PropertyKeyValue): ExpressionCompletion<BooleanValue> {
+export function* HasOwnProperty(O: ObjectValue, P: PropertyKeyValue): ValueEvaluator<BooleanValue> {
   Assert(O instanceof ObjectValue);
   Assert(IsPropertyKey(P));
-  const desc = Q(O.GetOwnProperty(P));
+  const desc = Q(yield* O.GetOwnProperty(P));
   if (desc === Value.undefined) {
     return Value.false;
   }
@@ -195,42 +193,42 @@ export function HasOwnProperty(O: ObjectValue, P: PropertyKeyValue): ExpressionC
 }
 
 /** https://tc39.es/ecma262/#sec-call */
-export function Call(F: Value, V: Value, argumentsList: Arguments = []) {
+export function* Call(F: Value, V: Value, argumentsList: Arguments = []): ValueEvaluator {
   Assert(argumentsList.every((a) => a instanceof Value));
 
   if (IsCallable(F) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', F);
   }
 
-  return EnsureCompletion(Q((F as FunctionObject).Call(V, argumentsList)));
+  return EnsureCompletion(Q(yield* (F as FunctionObject).Call(V, argumentsList)));
 }
 
 /** https://tc39.es/ecma262/#sec-construct */
-export function Construct(F: FunctionObject, argumentsList: Arguments = [], newTarget?: FunctionObject | UndefinedValue): ExpressionCompletion<ObjectValue> {
+export function* Construct(F: FunctionObject, argumentsList: Arguments = [], newTarget?: FunctionObject | UndefinedValue): ValueEvaluator<ObjectValue> {
   if (!newTarget) {
     newTarget = F;
   }
   Assert(IsConstructor(F) === Value.true);
   Assert(IsConstructor(newTarget) === Value.true);
-  return Q(F.Construct(argumentsList, newTarget));
+  return Q(yield* F.Construct(argumentsList, newTarget));
 }
 
 /** https://tc39.es/ecma262/#sec-setintegritylevel */
-export function SetIntegrityLevel(O: ObjectValue, level: 'sealed' | 'frozen'): ExpressionCompletion<BooleanValue> {
+export function* SetIntegrityLevel(O: ObjectValue, level: 'sealed' | 'frozen'): ValueEvaluator<BooleanValue> {
   Assert(O instanceof ObjectValue);
   Assert(level === 'sealed' || level === 'frozen');
-  const status = Q(O.PreventExtensions());
+  const status = Q(yield* O.PreventExtensions());
   if (status === Value.false) {
     return Value.false;
   }
-  const keys = Q(O.OwnPropertyKeys());
+  const keys = Q(yield* O.OwnPropertyKeys());
   if (level === 'sealed') {
     for (const k of keys) {
-      Q(DefinePropertyOrThrow(O, k, Descriptor({ Configurable: Value.false })));
+      Q(yield* DefinePropertyOrThrow(O, k, Descriptor({ Configurable: Value.false })));
     }
   } else if (level === 'frozen') {
     for (const k of keys) {
-      const currentDesc = Q(O.GetOwnProperty(k));
+      const currentDesc = Q(yield* O.GetOwnProperty(k));
       if (currentDesc !== Value.undefined) {
         let desc;
         if (IsAccessorDescriptor(currentDesc) === true) {
@@ -238,7 +236,7 @@ export function SetIntegrityLevel(O: ObjectValue, level: 'sealed' | 'frozen'): E
         } else {
           desc = Descriptor({ Configurable: Value.false, Writable: Value.false });
         }
-        Q(DefinePropertyOrThrow(O, k, desc));
+        Q(yield* DefinePropertyOrThrow(O, k, desc));
       }
     }
   }
@@ -246,16 +244,16 @@ export function SetIntegrityLevel(O: ObjectValue, level: 'sealed' | 'frozen'): E
 }
 
 /** https://tc39.es/ecma262/#sec-testintegritylevel */
-export function TestIntegrityLevel(O: ObjectValue, level: 'sealed' | 'frozen'): ExpressionCompletion<BooleanValue> {
+export function* TestIntegrityLevel(O: ObjectValue, level: 'sealed' | 'frozen'): ValueEvaluator<BooleanValue> {
   Assert(O instanceof ObjectValue);
   Assert(level === 'sealed' || level === 'frozen');
-  const extensible = Q(IsExtensible(O));
+  const extensible = Q(yield* IsExtensible(O));
   if (extensible === Value.true) {
     return Value.false;
   }
-  const keys = Q(O.OwnPropertyKeys());
+  const keys = Q(yield* O.OwnPropertyKeys());
   for (const k of keys) {
-    const currentDesc = Q(O.GetOwnProperty(k));
+    const currentDesc = Q(yield* O.GetOwnProperty(k));
     if (!(currentDesc instanceof UndefinedValue)) {
       if (currentDesc.Configurable === Value.true) {
         return Value.false;
@@ -290,26 +288,23 @@ export function CreateArrayFromList(elements: Arguments) {
 }
 
 /** https://tc39.es/ecma262/#sec-lengthofarraylike */
-export function LengthOfArrayLike(obj: ObjectValue): PlainCompletion<number> {
+export function* LengthOfArrayLike(obj: ObjectValue): PlainEvaluator<number> {
   // 1. Assert: Type(obj) is Object.
   Assert(obj instanceof ObjectValue);
   // 2. Return ℝ(? ToLength(? Get(obj, "length"))).
-  return R(Q(ToLength(Q(Get(obj, Value('length'))))));
+  return R(Q(yield* ToLength(Q(yield* Get(obj, Value('length'))))));
 }
 
-type ElementType = 'Boolean' | 'String' | 'Symbol' | 'BigInt' | 'Object' | 'Undefined' | 'Null' | 'Number';
 /** https://tc39.es/ecma262/#sec-createlistfromarraylike */
-export function CreateListFromArrayLike(obj: Value, elementTypes?: readonly ElementType[]) {
-  // 1. If elementTypes is not present, set elementTypes to « Undefined, Null, Boolean, String, Symbol, Number, BigInt, Object ».
-  if (!elementTypes) {
-    elementTypes = ['Undefined', 'Null', 'Boolean', 'String', 'Symbol', 'Number', 'BigInt', 'Object'];
-  }
+export function CreateListFromArrayLike(obj: Value, validElementTypes?: undefined | 'all'): PlainEvaluator<Value[]>
+export function CreateListFromArrayLike(obj: Value, validElementTypes: 'property-key'): PlainEvaluator<PropertyKeyValue[]>
+export function* CreateListFromArrayLike(obj: Value, validElementTypes: 'all' | 'property-key' = 'all'): PlainEvaluator<Value[]> {
   // 2. If Type(obj) is not Object, throw a TypeError exception.
   if (!(obj instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', obj);
   }
   // 3. Let len be ? LengthOfArrayLike(obj).
-  const len = Q(LengthOfArrayLike(obj));
+  const len = Q(yield* LengthOfArrayLike(obj));
   // 4. Let list be a new empty List.
   const list = [];
   // 5. Let index be 0.
@@ -319,9 +314,9 @@ export function CreateListFromArrayLike(obj: Value, elementTypes?: readonly Elem
     // a. Let indexName be ! ToString(𝔽(index)).
     const indexName = X(ToString(toNumberValue(index)));
     // b. Let next be ? Get(obj, indexName).
-    const next = Q(Get(obj, indexName));
+    const next = Q(yield* Get(obj, indexName));
     // c. If Type(next) is not an element of elementTypes, throw a TypeError exception.
-    if (!(elementTypes as string[]).includes(Type(next))) {
+    if (validElementTypes === 'property-key' && !IsPropertyKey(next)) {
       return surroundingAgent.Throw('TypeError', 'NotPropertyName', next);
     }
     // d. Append next as the last element of list.
@@ -334,30 +329,30 @@ export function CreateListFromArrayLike(obj: Value, elementTypes?: readonly Elem
 }
 
 /** https://tc39.es/ecma262/#sec-invoke */
-export function Invoke(V: Value, P: PropertyKeyValue, argumentsList: Arguments = []): ExpressionCompletion {
+export function* Invoke(V: Value, P: PropertyKeyValue, argumentsList: Arguments = []): ValueEvaluator {
   Assert(IsPropertyKey(P));
-  const func = Q(GetV(V, P));
-  return Q(Call(func, V, argumentsList));
+  const func = Q(yield* GetV(V, P));
+  return Q(yield* Call(func, V, argumentsList));
 }
 
 /** https://tc39.es/ecma262/#sec-ordinaryhasinstance */
-export function OrdinaryHasInstance(C: Value, O: Value): ExpressionCompletion<BooleanValue> {
+export function* OrdinaryHasInstance(C: Value, O: Value): ValueEvaluator<BooleanValue> {
   if (IsCallable(C) === Value.false) {
     return Value.false;
   }
   if (isBoundFunctionObject(C)) {
     const BC = C.BoundTargetFunction;
-    return Q(InstanceofOperator(O, BC));
+    return Q(yield* InstanceofOperator(O, BC));
   }
   if (!(O instanceof ObjectValue)) {
     return Value.false;
   }
-  const P = Q(Get(C as FunctionObject, Value('prototype')));
+  const P = Q(yield* Get(C as FunctionObject, Value('prototype')));
   if (!(P instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', P);
   }
   while (true) {
-    O = Q(O.GetPrototypeOf());
+    O = Q(yield* O.GetPrototypeOf());
     if (O instanceof NullValue) {
       return Value.false;
     }
@@ -368,16 +363,16 @@ export function OrdinaryHasInstance(C: Value, O: Value): ExpressionCompletion<Bo
 }
 
 /** https://tc39.es/ecma262/#sec-speciesconstructor */
-export function SpeciesConstructor(O: ObjectValue, defaultConstructor: FunctionObject): ExpressionCompletion<FunctionObject> {
+export function* SpeciesConstructor(O: ObjectValue, defaultConstructor: FunctionObject): ValueEvaluator<FunctionObject> {
   Assert(O instanceof ObjectValue);
-  const C = Q(Get(O, Value('constructor')));
+  const C = Q(yield* Get(O, Value('constructor')));
   if (C === Value.undefined) {
     return defaultConstructor;
   }
   if (!(C instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', C);
   }
-  const S = Q(Get(C, wellKnownSymbols.species));
+  const S = Q(yield* Get(C, wellKnownSymbols.species));
   if (S === Value.undefined || S === Value.null) {
     return defaultConstructor;
   }
@@ -388,21 +383,21 @@ export function SpeciesConstructor(O: ObjectValue, defaultConstructor: FunctionO
 }
 
 /** https://tc39.es/ecma262/#sec-enumerableownpropertynames */
-export function EnumerableOwnPropertyNames(O: ObjectValue, kind: 'key'): PlainCompletion<JSStringValue[]>
-export function EnumerableOwnPropertyNames(O: ObjectValue, kind: 'value'): PlainCompletion<Value[]>
-export function EnumerableOwnPropertyNames(O: ObjectValue, kind: 'key' | 'value' | 'key+value'): PlainCompletion<ObjectValue[]>
-export function EnumerableOwnPropertyNames(O: ObjectValue, kind: 'key' | 'value' | 'key+value'): PlainCompletion<Value[]> {
+export function EnumerableOwnPropertyNames(O: ObjectValue, kind: 'key'): PlainEvaluator<JSStringValue[]>
+export function EnumerableOwnPropertyNames(O: ObjectValue, kind: 'value'): PlainEvaluator<Value[]>
+export function EnumerableOwnPropertyNames(O: ObjectValue, kind: 'key' | 'value' | 'key+value'): PlainEvaluator<ObjectValue[]>
+export function* EnumerableOwnPropertyNames(O: ObjectValue, kind: 'key' | 'value' | 'key+value'): PlainEvaluator<Value[]> {
   Assert(O instanceof ObjectValue);
-  const ownKeys = Q(O.OwnPropertyKeys());
+  const ownKeys = Q(yield* O.OwnPropertyKeys());
   const properties = [];
   for (const key of ownKeys) {
     if (key instanceof JSStringValue) {
-      const desc = Q(O.GetOwnProperty(key));
+      const desc = Q(yield* O.GetOwnProperty(key));
       if (!(desc instanceof UndefinedValue) && desc.Enumerable === Value.true) {
         if (kind === 'key') {
           properties.push(key);
         } else {
-          const value = Q(Get(O, key));
+          const value = Q(yield* Get(O, key));
           if (kind === 'value') {
             properties.push(value);
           } else {
@@ -441,14 +436,14 @@ export function GetFunctionRealm(obj: FunctionObject): PlainCompletion<Realm> {
 }
 
 /** https://tc39.es/ecma262/#sec-copydataproperties */
-export function CopyDataProperties(target: ObjectValue, source: Value, excludedItems: readonly PropertyKeyValue[]): ExpressionCompletion<ObjectValue> {
+export function* CopyDataProperties(target: ObjectValue, source: Value, excludedItems: readonly PropertyKeyValue[]): ValueEvaluator<ObjectValue> {
   Assert(target instanceof ObjectValue);
   Assert(excludedItems.every((i) => IsPropertyKey(i)));
   if (source === Value.undefined || source === Value.null) {
     return target;
   }
   const from = X(ToObject(source));
-  const keys = Q(from.OwnPropertyKeys());
+  const keys = Q(yield* from.OwnPropertyKeys());
   for (const nextKey of keys) {
     let excluded = false;
     for (const e of excludedItems) {
@@ -457,9 +452,9 @@ export function CopyDataProperties(target: ObjectValue, source: Value, excludedI
       }
     }
     if (excluded === false) {
-      const desc = Q(from.GetOwnProperty(nextKey));
+      const desc = Q(yield* from.GetOwnProperty(nextKey));
       if (!(desc instanceof UndefinedValue) && desc.Enumerable === Value.true) {
-        const propValue = Q(Get(from, nextKey));
+        const propValue = Q(yield* Get(from, nextKey));
         X(CreateDataProperty(target, nextKey, propValue));
       }
     }

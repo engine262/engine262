@@ -4,10 +4,11 @@ import {
   NormalCompletion,
   Q, X,
   EnsureCompletion,
-  AbruptCompletion,
-  type ExpressionCompletion,
+  type ValueCompletion,
+  ReturnCompletion,
+  ThrowCompletion,
 } from '../completion.mts';
-import { ExecutionContext, surroundingAgent } from '../engine.mts';
+import { ExecutionContext, surroundingAgent } from '../host-defined/engine.mts';
 import {
   JSStringValue, ObjectValue, UndefinedValue, Value,
 } from '../value.mts';
@@ -34,7 +35,7 @@ export interface GeneratorObject extends OrdinaryObject {
 }
 
 /** https://tc39.es/ecma262/#sec-generatorstart */
-export function GeneratorStart(generator: GeneratorObject, generatorBody: ParseNode.GeneratorBody | (() => YieldEvaluator)): ExpressionCompletion {
+export function GeneratorStart(generator: GeneratorObject, generatorBody: ParseNode.GeneratorBody | (() => YieldEvaluator)): ValueCompletion {
   // 1. Assert: The value of generator.[[GeneratorState]] is undefined.
   Assert(generator.GeneratorState === Value.undefined);
   // 2. Let genContext be the running execution context.
@@ -138,7 +139,7 @@ export function GeneratorValidate(generator: Value, generatorBrand: JSStringValu
 }
 
 /** https://tc39.es/ecma262/#sec-generatorresume */
-export function GeneratorResume(generator: Value, value: Value | void, generatorBrand: JSStringValue | undefined) {
+export function* GeneratorResume(generator: Value, value: Value | void, generatorBrand: JSStringValue | undefined) {
   // 1. Let state be ? GeneratorValidate(generator, generatorBrand).
   const state = Q(GeneratorValidate(generator, generatorBrand));
   __ts_cast__<GeneratorObject>(generator);
@@ -160,7 +161,7 @@ export function GeneratorResume(generator: Value, value: Value | void, generator
   // 9. Resume the suspended evaluation of genContext using NormalCompletion(value) as
   //    the result of the operation that suspended it. Let result be the value returned by
   //    the resumed computation.
-  const result = EnsureCompletion(resume(genContext, NormalCompletion(value)));
+  const result = EnsureCompletion(yield* resume(genContext, { type: 'generator-resume', value: NormalCompletion(value || Value.undefined) }));
   // 10. Assert: When we return here, genContext has already been removed from the execution
   //     context stack and methodContext is the currently running execution context.
   Assert(surroundingAgent.runningExecutionContext === methodContext);
@@ -169,7 +170,7 @@ export function GeneratorResume(generator: Value, value: Value | void, generator
 }
 
 /** https://tc39.es/ecma262/#sec-generatorresumeabrupt */
-export function GeneratorResumeAbrupt(generator: Value, abruptCompletion: AbruptCompletion, generatorBrand: JSStringValue | undefined) {
+export function* GeneratorResumeAbrupt(generator: Value, abruptCompletion: ThrowCompletion | ReturnCompletion, generatorBrand: JSStringValue | undefined) {
   // 1. Let state be ? GeneratorValidate(generator, generatorBrand).
   let state = Q(GeneratorValidate(generator, generatorBrand));
   __ts_cast__<GeneratorObject>(generator);
@@ -208,7 +209,7 @@ export function GeneratorResumeAbrupt(generator: Value, abruptCompletion: Abrupt
   // 10. Resume the suspended evaluation of genContext using abruptCompletion as the
   //     result of the operation that suspended it. Let result be the completion record
   //     returned by the resumed computation.
-  const result = EnsureCompletion(resume(genContext, abruptCompletion));
+  const result = EnsureCompletion(yield* resume(genContext, { type: 'generator-resume', value: abruptCompletion }));
   // 11. Assert: When we return here, genContext has already been removed from the
   //     execution context stack and methodContext is the currently running execution context.
   Assert(surroundingAgent.runningExecutionContext === methodContext);
@@ -252,11 +253,10 @@ export function* GeneratorYield(iterNextObj: ObjectValue): YieldEvaluator {
   // 8. Set the code evaluation state of genContext such that when evaluation is resumed with
   //    a Completion resumptionValue the following steps will be performed:
   //      a. Return resumptionValue
-  const resumptionValue = yield iterNextObj;
+  const resumptionValue = yield { type: 'yield', value: iterNextObj };
+  Assert(resumptionValue.type === 'generator-resume');
   // 9. Return NormalCompletion(iterNextObj).
-  // TODO
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return resumptionValue as any;
+  return resumptionValue.value;
   // 10. NOTE: this returns to the evaluation of the operation that had most previously resumed evaluation of genContext.
 }
 

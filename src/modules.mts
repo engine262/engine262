@@ -3,7 +3,7 @@ import {
   Value, JSStringValue, ObjectValue, UndefinedValue, BooleanValue,
   NullValue,
 } from './value.mts';
-import { ExecutionContext, surroundingAgent, type GCMarker } from './engine.mts';
+import { ExecutionContext, surroundingAgent, type GCMarker } from './host-defined/engine.mts';
 import {
   Assert,
   Call,
@@ -37,10 +37,15 @@ import {
   Q, X, ThrowCompletion,
   IfAbruptRejectPromise,
 } from './completion.mts';
-import { JSStringSet, unwind, type Mutable } from './helpers.mts';
-import { Evaluate } from './evaluator.mts';
+import { JSStringSet, type Mutable } from './helpers.mts';
+import {
+  Evaluate, type Evaluator, type PlainEvaluator, type ValueEvaluator,
+} from './evaluator.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
-import type { LoadedModuleRequestRecord, PlainCompletion, PromiseObject } from '#self';
+import type {
+  LoadedModuleRequestRecord, PlainCompletion, PromiseObject,
+  ValueCompletion,
+} from '#self';
 
 // #resolvedbinding-record
 export class ResolvedBindingRecord {
@@ -65,6 +70,7 @@ export type ModuleRecordHostDefined = {
   public?: ModuleRecordHostDefinedPublic;
   specifier?: string | undefined;
   readonly SourceTextModuleRecord?: typeof SourceTextModuleRecord;
+  readonly scriptId?: string;
 };
 export type AbstractModuleInit = Pick<AbstractModuleRecord, 'Realm' | 'Environment' | 'Namespace' | 'HostDefined'>;
 
@@ -83,7 +89,7 @@ export abstract class AbstractModuleRecord {
 
   abstract Link(): PlainCompletion<void>;
 
-  abstract Evaluate(): PromiseObject;
+  abstract Evaluate(): Evaluator<PromiseObject>;
 
   readonly Realm: Realm;
 
@@ -199,7 +205,7 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-moduleevaluation */
-  Evaluate(): PromiseObject {
+  * Evaluate(): Evaluator<PromiseObject> {
     // 1. Assert: This call to Evaluate is not happening at the same time as another call to Evaluate within the surrounding agent.
     // 2. Let module be this Cyclic Module Record.
     let module: CyclicModuleRecord = this;
@@ -221,7 +227,7 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
     // (*TopLevelAwait) 7. Set module.[[TopLevelCapability]] to capability.
     module.TopLevelCapability = capability;
     // 5. Let result be InnerModuleEvaluation(module, stack, 0).
-    const result = InnerModuleEvaluation(module, stack, 0);
+    const result = yield* InnerModuleEvaluation(module, stack, 0);
     // 6. If result is an abrupt completion, then
     if (result instanceof AbruptCompletion) {
       // a. For each Cyclic Module Record m in stack, do
@@ -483,7 +489,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
         // ii. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
         X(env.CreateImmutableBinding(ie.LocalName, Value.true));
         // iii. Call env.InitializeBinding(in.[[LocalName]], namespace).
-        env.InitializeBinding(ie.LocalName, namespace);
+        X(env.InitializeBinding(ie.LocalName, namespace));
       } else { // c. Else,
         // i. Let resolution be importedModule.ResolveExport(in.[[ImportName]]).
         const resolution = importedModule.ResolveExport(ie.ImportName);
@@ -504,10 +510,10 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
           // 2. Perform ! env.CreateImmutableBinding(in.[[LocalName]], true).
           X(env.CreateImmutableBinding(ie.LocalName, Value.true));
           // 3. Call env.InitializeBinding(in.[[LocalName]], namespace).
-          env.InitializeBinding(ie.LocalName, namespace);
+          X(env.InitializeBinding(ie.LocalName, namespace));
         } else { // iv. Else,
           // 1. Call env.CreateImportBinding(in.[[LocalName]], resolution.[[Module]], resolution.[[BindingName]]).
-          env.CreateImportBinding(ie.LocalName, resolution.Module, resolution.BindingName);
+          X(env.CreateImportBinding(ie.LocalName, resolution.Module, resolution.BindingName));
         }
       }
     }
@@ -546,7 +552,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
           // 1. Perform ! env.CreateMutableBinding(dn, false).
           X(env.CreateMutableBinding(dn, Value.false));
           // 2. Call env.InitializeBinding(dn, undefined).
-          env.InitializeBinding(dn, Value.undefined);
+          X(env.InitializeBinding(dn, Value.undefined));
           // 3. Append dn to declaredVarNames.
           declaredVarNames.add(dn);
         }
@@ -574,7 +580,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
           // 1. Let fo be InstantiateFunctionObject of d with argument env.
           const fo = InstantiateFunctionObject(d, env, Value.null);
           // 2. Call env.InitializeBinding(dn, fo).
-          env.InitializeBinding(dn, fo);
+          X(env.InitializeBinding(dn, fo));
         }
       }
     }
@@ -585,7 +591,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-source-text-module-record-execute-module */
-  ExecuteModule(capability?: PromiseCapabilityRecord): PlainCompletion<void | Value> {
+  * ExecuteModule(capability?: PromiseCapabilityRecord): ValueEvaluator {
     // 1. Let module be this Source Text Module Record.
     const module = this;
     // 2. Suspend the currently running execution context.
@@ -596,7 +602,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       // 4. Push moduleContext onto the execution context stack; moduleContext is now the running execution context.
       surroundingAgent.executionContextStack.push(moduleContext);
       // 5. Let result be the result of evaluating module.[[ECMAScriptCode]].
-      const result = EnsureCompletion(unwind(Evaluate(module.ECMAScriptCode)));
+      const result = EnsureCompletion(yield* (Evaluate(module.ECMAScriptCode)));
       // 6. Suspend moduleContext and remove it from the execution context stack.
       // 7. Resume the context that is now on the top of the execution context stack as the running execution context.
       surroundingAgent.executionContextStack.pop(moduleContext);
@@ -606,7 +612,7 @@ export class SourceTextModuleRecord extends CyclicModuleRecord {
       // a. Assert: capability is a PromiseCapability Record.
       Assert(capability instanceof PromiseCapabilityRecord);
       // b. Perform ! AsyncBlockStart(capability, module.[[ECMAScriptCode]], moduleCxt).
-      X(AsyncBlockStart(capability, module.ECMAScriptCode, moduleContext));
+      X(yield* AsyncBlockStart(capability, module.ECMAScriptCode, moduleContext));
       // c. Return.
       return Value.undefined;
     }
@@ -631,7 +637,7 @@ export class SyntheticModuleRecord extends AbstractModuleRecord {
 
   readonly ExportNames: readonly JSStringValue[];
 
-  readonly EvaluationSteps: (module: SyntheticModuleRecord) => PlainCompletion<void>;
+  readonly EvaluationSteps: (module: SyntheticModuleRecord) => ValueEvaluator | ValueCompletion | void;
 
   constructor(init: SyntheticModuleRecordInit) {
     super(init);
@@ -683,7 +689,7 @@ export class SyntheticModuleRecord extends AbstractModuleRecord {
   }
 
   /** https://tc39.es/ecma262/#sec-synthetic-module-record-evaluate */
-  Evaluate(): PromiseObject {
+  * Evaluate(): Evaluator<PromiseObject> {
     const module = this;
     // 1. Suspend the currently running execution context.
     // 2. Let moduleContext be a new ECMAScript code execution context.
@@ -702,7 +708,10 @@ export class SyntheticModuleRecord extends AbstractModuleRecord {
     // 8. Push moduleContext on to the execution context stack; moduleContext is now the running execution context.
     surroundingAgent.executionContextStack.push(moduleContext);
     // 9. Let result be the result of performing module.[[EvaluationSteps]](module).
-    const result = module.EvaluationSteps(module);
+    let result = module.EvaluationSteps(module);
+    if (result && 'next' in result) {
+      result = yield* result;
+    }
     // 10. Suspend moduleContext and remove it from the execution context stack.
     // 11. Resume the context that is now on the top of the execution context stack as the running execution context.
     surroundingAgent.executionContextStack.pop(moduleContext);
@@ -712,9 +721,9 @@ export class SyntheticModuleRecord extends AbstractModuleRecord {
     return Completion(result);
   }
 
-  SetSyntheticExport(name: JSStringValue, value: Value): PlainCompletion<void> {
+  * SetSyntheticExport(name: JSStringValue, value: Value): PlainEvaluator<void> {
     const module = this;
     // 1. Return module.[[Environment]].SetMutableBinding(name, value, true).
-    return (module.Environment as ModuleEnvironmentRecord).SetMutableBinding(name, value, Value.true);
+    return yield* (module.Environment as ModuleEnvironmentRecord).SetMutableBinding(name, value, Value.true);
   }
 }

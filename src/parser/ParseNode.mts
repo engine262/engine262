@@ -21,6 +21,7 @@ export namespace ParseNode {
     readonly location: Location;
     readonly strict: boolean;
     readonly sourceText: () => string;
+    readonly parent: ParseNode | undefined;
   }
 
   // A.1 Lexical Grammar
@@ -2218,6 +2219,21 @@ export namespace ParseNode {
   export type Finished<T extends BaseParseNode | Unfinished<ParseNode>, K extends T['type'] & ParseNode['type']> =
     T extends Unfinished<ParseNode> ? Extract<ParseNodesByType[K], T> :
     T;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace ParseNode {
+  export type WithStatementListChild =
+    | ModuleBody
+    | ScriptBody
+    | Block
+    | CaseClause
+    | DefaultClause
+    | ClassStaticBlockBody
+    | FunctionBody
+    | GeneratorBody
+    | AsyncBody
+    | AsyncGeneratorBody;
 }
 
 /** https://tc39.es/ecma262/multipage/text-processing.html#sec-patterns */

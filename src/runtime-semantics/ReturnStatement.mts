@@ -22,7 +22,7 @@ export function* Evaluate_ReturnStatement({ Expression }: ParseNode.ReturnStatem
   // 1. Let exprRef be the result of evaluating Expression.
   const exprRef = yield* Evaluate(Expression);
   // 1. Let exprValue be ? GetValue(exprRef).
-  let exprValue = Q(GetValue(exprRef));
+  let exprValue = Q(yield* GetValue(exprRef));
   // 1. If ! GetGeneratorKind() is async, set exprValue to ? Await(exprValue).
   if (X(GetGeneratorKind()) === 'async') {
     exprValue = Q(yield* Await(exprValue));

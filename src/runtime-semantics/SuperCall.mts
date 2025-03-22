@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Assert,
   Construct,
@@ -31,7 +31,7 @@ export function* Evaluate_SuperCall({ Arguments }: ParseNode.SuperCall) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', func);
   }
   // 6. Let result be ? Construct(func, argList, newTarget).
-  const result = Q(Construct(func as FunctionObject, argList, newTarget as FunctionObject));
+  const result = Q(yield* Construct(func as FunctionObject, argList, newTarget as FunctionObject));
   // 7. Let thisER be GetThisEnvironment().
   const thisER = GetThisEnvironment();
   // 8. Assert: thisER is a Function Environment Record.
@@ -43,7 +43,7 @@ export function* Evaluate_SuperCall({ Arguments }: ParseNode.SuperCall) {
   // 10. Assert: F is an ECMAScript function object.
   Assert(isECMAScriptFunctionObject(F));
   // 11. Perform ? InitializeInstanceElements(result, F).
-  Q(InitializeInstanceElements(result, F));
+  Q(yield* InitializeInstanceElements(result, F));
   // 12. Return result.
   return result;
 }

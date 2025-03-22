@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import { GlobalEnvironmentRecord } from '../environment.mts';
 import { Assert } from '../abstract-ops/all.mts';
 import {
@@ -15,7 +15,7 @@ import { JSStringSet } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { InstantiateFunctionObject } from './all.mts';
 
-export function GlobalDeclarationInstantiation(script: ParseNode.Script, env: GlobalEnvironmentRecord) {
+export function* GlobalDeclarationInstantiation(script: ParseNode.Script, env: GlobalEnvironmentRecord) {
   // 2. Let lexNames be the LexicallyDeclaredNames of script.
   const lexNames = LexicallyDeclaredNames(script);
   // 3. Let varNames be the VarDeclaredNames of script.
@@ -27,11 +27,11 @@ export function GlobalDeclarationInstantiation(script: ParseNode.Script, env: Gl
       return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
     }
     // 1. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
-    if (env.HasLexicalDeclaration(name) === Value.true) {
+    if ((yield* env.HasLexicalDeclaration(name)) === Value.true) {
       return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
     }
     // 1. Let hasRestrictedGlobal be ? env.HasRestrictedGlobalProperty(name).
-    const hasRestrictedGlobal = Q(env.HasRestrictedGlobalProperty(name));
+    const hasRestrictedGlobal = Q(yield* env.HasRestrictedGlobalProperty(name));
     // 1. If hasRestrictedGlobal is true, throw a SyntaxError exception.
     if (hasRestrictedGlobal === Value.true) {
       return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
@@ -40,7 +40,7 @@ export function GlobalDeclarationInstantiation(script: ParseNode.Script, env: Gl
   // 5. For each name in varNames, do
   for (const name of varNames) {
     // 1. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
-    if (env.HasLexicalDeclaration(name) === Value.true) {
+    if ((yield* env.HasLexicalDeclaration(name)) === Value.true) {
       return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
     }
   }
@@ -67,7 +67,7 @@ export function GlobalDeclarationInstantiation(script: ParseNode.Script, env: Gl
       // iv. If fn is not an element of declaredFunctionNames, then
       if (!declaredFunctionNames.has(fn)) {
         // 1. Let fnDefinable be ? env.CanDeclareGlobalFunction(fn).
-        const fnDefinable = Q(env.CanDeclareGlobalFunction(fn));
+        const fnDefinable = Q(yield* env.CanDeclareGlobalFunction(fn));
         // 2. If fnDefinable is false, throw a TypeError exception.
         if (fnDefinable === Value.false) {
           return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', fn);
@@ -92,7 +92,7 @@ export function GlobalDeclarationInstantiation(script: ParseNode.Script, env: Gl
         // 1. If vn is not an element of declaredFunctionNames, then
         if (!declaredFunctionNames.has(vn)) {
           // a. Let vnDefinable be ? env.CanDeclareGlobalVar(vn).
-          const vnDefinable = Q(env.CanDeclareGlobalVar(vn));
+          const vnDefinable = Q(yield* env.CanDeclareGlobalVar(vn));
           // b. If vnDefinable is false, throw a TypeError exception.
           if (vnDefinable === Value.false) {
             return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', vn);
@@ -123,7 +123,7 @@ export function GlobalDeclarationInstantiation(script: ParseNode.Script, env: Gl
         Q(env.CreateImmutableBinding(dn, Value.true));
       } else { // 1. Else,
         // 1. Perform ? env.CreateMutableBinding(dn, false).
-        Q(env.CreateMutableBinding(dn, Value.false));
+        Q(yield* env.CreateMutableBinding(dn, Value.false));
       }
     }
   }
@@ -134,12 +134,12 @@ export function GlobalDeclarationInstantiation(script: ParseNode.Script, env: Gl
     // b. Let fo be InstantiateFunctionObject of f with argument env and privateEnv.
     const fo = InstantiateFunctionObject(f, env, privateEnv);
     // c. Perform ? env.CreateGlobalFunctionBinding(fn, fo, false).
-    Q(env.CreateGlobalFunctionBinding(fn, fo, Value.false));
+    Q(yield* env.CreateGlobalFunctionBinding(fn, fo, Value.false));
   }
   // 18. For each String vn in declaredVarNames, in list order, do
   for (const vn of declaredVarNames) {
     // a. Perform ? env.CreateGlobalVarBinding(vn, false).
-    Q(env.CreateGlobalVarBinding(vn, Value.false));
+    Q(yield* env.CreateGlobalVarBinding(vn, Value.false));
   }
   // 19. Return NormalCompletion(empty).
   return NormalCompletion(undefined);

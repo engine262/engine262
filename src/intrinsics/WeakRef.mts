@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   UndefinedValue, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
@@ -16,7 +16,7 @@ export function isWeakRef(object: object): object is WeakRefObject {
   return 'WeakRefTarget' in object && !('HeldValue' in object);
 }
 /** https://tc39.es/ecma262/#sec-weak-ref-target */
-function WeakRefConstructor(this: FunctionObject, [target = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
+function* WeakRefConstructor(this: FunctionObject, [target = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget instanceof UndefinedValue) {
     return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
@@ -26,7 +26,7 @@ function WeakRefConstructor(this: FunctionObject, [target = Value.undefined]: Ar
     return surroundingAgent.Throw('TypeError', 'NotAWeakKey', target);
   }
   // 3. Let weakRef be ? OrdinaryCreateFromConstructor(NewTarget, "%WeakRefPrototype%", « [[WeakRefTarget]] »).
-  const weakRef = Q(OrdinaryCreateFromConstructor(NewTarget, '%WeakRef.prototype%', ['WeakRefTarget'])) as Mutable<WeakRefObject>;
+  const weakRef = Q(yield* OrdinaryCreateFromConstructor(NewTarget, '%WeakRef.prototype%', ['WeakRefTarget'])) as Mutable<WeakRefObject>;
   // 4. Perform ! AddToKeptObjects(target).
   X(AddToKeptObjects(target));
   // 5. Set weakRef.[[WeakRefTarget]] to target.

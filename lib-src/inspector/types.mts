@@ -9,6 +9,7 @@ export interface DebuggerPreference {
 export interface DebuggerContext {
   sendEvent: DevtoolEvents;
   getContext(executionContextId?: number | undefined): InspectorContext;
+  onDebuggerAttached(): void;
   preference: DebuggerPreference;
 }
 export interface DebuggerNamespace {
@@ -19,7 +20,7 @@ export interface DebuggerNamespace {
   /** https://chromedevtools.github.io/devtools-protocol/v8/Debugger/#method-enable */
   enable?(req: Protocol.Debugger.EnableRequest, context: DebuggerContext): Protocol.Debugger.EnableResponse;
   /** https://chromedevtools.github.io/devtools-protocol/v8/Debugger/#method-evaluateOnCallFrame */
-  evaluateOnCallFrame?(req: Protocol.Debugger.EvaluateOnCallFrameRequest, context: DebuggerContext): Protocol.Debugger.EvaluateOnCallFrameResponse;
+  evaluateOnCallFrame?(req: Protocol.Debugger.EvaluateOnCallFrameRequest, context: DebuggerContext): Protocol.Debugger.EvaluateOnCallFrameResponse | Promise<Protocol.Debugger.EvaluateOnCallFrameResponse>;
   /** https://chromedevtools.github.io/devtools-protocol/v8/Debugger/#method-getPossibleBreakpoints */
   getPossibleBreakpoints?(req: Protocol.Debugger.GetPossibleBreakpointsRequest, context: DebuggerContext): Protocol.Debugger.GetPossibleBreakpointsResponse;
   /** https://chromedevtools.github.io/devtools-protocol/v8/Debugger/#method-getScriptSource */
@@ -109,7 +110,7 @@ export interface RuntimeNamespace {
   /** https://chromedevtools.github.io/devtools-protocol/v8/Runtime/#method-enable */
   enable?(req: void, context: DebuggerContext): void;
   /** https://chromedevtools.github.io/devtools-protocol/v8/Runtime/#method-evaluate */
-  evaluate?(req: Protocol.Runtime.EvaluateRequest, context: DebuggerContext): Protocol.Runtime.EvaluateResponse;
+  evaluate?(req: Protocol.Runtime.EvaluateRequest, context: DebuggerContext): Protocol.Runtime.EvaluateResponse | Promise<Protocol.Runtime.EvaluateResponse>;
   /** https://chromedevtools.github.io/devtools-protocol/v8/Runtime/#method-getProperties */
   getProperties?(req: Protocol.Runtime.GetPropertiesRequest, context: DebuggerContext): Protocol.Runtime.GetPropertiesResponse;
   /** https://chromedevtools.github.io/devtools-protocol/v8/Runtime/#method-globalLexicalScopeNames */

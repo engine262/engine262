@@ -1,12 +1,11 @@
-import { JSStringValue, NullValue, Value } from './value.mts';
+import { JSStringValue, NullValue, Value } from '../value.mts';
 import {
   EnsureCompletion,
   NormalCompletion,
   ThrowCompletion,
   Q, X,
   type PlainCompletion,
-  type ExpressionCompletion,
-} from './completion.mts';
+} from '../completion.mts';
 import {
   IsCallable,
   Call, Construct, Assert,
@@ -18,18 +17,21 @@ import {
   type FunctionObject,
   GraphLoadingState,
   PromiseCapabilityRecord,
-} from './abstract-ops/all.mts';
-import { GlobalDeclarationInstantiation } from './runtime-semantics/all.mts';
-import { Evaluate, type YieldEvaluator } from './evaluator.mts';
-import { CallSite, kAsyncContext, unwind } from './helpers.mts';
+} from '../abstract-ops/all.mts';
+import { GlobalDeclarationInstantiation } from '../runtime-semantics/all.mts';
 import {
-  AbstractModuleRecord, CyclicModuleRecord, EnvironmentRecord, ObjectValue, PrivateEnvironmentRecord, runJobQueue, type Arguments, type AsyncGeneratorObject, type ErrorType, type GeneratorObject, type Intrinsics, type ModuleRecordHostDefined, type ParseScriptHostDefined, type ScriptRecord,
-} from './api.mts';
-import * as messages from './messages.mts';
-import type { ParseNode } from './parser/ParseNode.mts';
-import type { RegExpObject } from './intrinsics/RegExp.mts';
-import type { PromiseObject } from './intrinsics/Promise.mts';
-import type { FinalizationRegistryObject } from './intrinsics/FinalizationRegistry.mts';
+  Evaluate, type ExpressionEvaluator, type ValueEvaluator, type YieldEvaluator,
+} from '../evaluator.mts';
+import { CallSite, kAsyncContext } from '../helpers.mts';
+import {
+  AbstractModuleRecord, CyclicModuleRecord, EnvironmentRecord, ObjectValue, PrivateEnvironmentRecord, runJobQueue, skipDebugger, type Arguments, type AsyncGeneratorObject, type ErrorType, type ValueCompletion, type GeneratorObject, type Intrinsics, type ModuleRecordHostDefined, type ParseScriptHostDefined, type ScriptRecord,
+} from '../index.mts';
+import * as messages from '../messages.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import type { RegExpObject } from '../intrinsics/RegExp.mts';
+import type { PromiseObject } from '../intrinsics/Promise.mts';
+import type { FinalizationRegistryObject } from '../intrinsics/FinalizationRegistry.mts';
+import { shouldStepOnNode } from './debugger-util.mts';
 
 export const FEATURES = ([
   {
@@ -74,13 +76,26 @@ export interface AgentHostDefined {
   onNodeEvaluation?(node: ParseNode, realm: Realm): void;
   boost?: {
     evaluatePattern?(pattern: ParseNode.RegExp.Pattern): RegExpObject['RegExpMatcher'];
-    evaluateScript?(script: ScriptRecord): ExpressionCompletion;
-    callFunction?(thisArgument: Value, argumentsList: Arguments): ExpressionCompletion;
-    constructFunction?(this: FunctionObject, argumentsList: Arguments, newTarget: FunctionObject): ExpressionCompletion<ObjectValue>
+    evaluateScript?(script: ScriptRecord): ValueEvaluator;
+    callFunction?(thisArgument: Value, argumentsList: Arguments): ValueEvaluator;
+    constructFunction?(this: FunctionObject, argumentsList: Arguments, newTarget: FunctionObject): ValueEvaluator<ObjectValue>
   }
 
   errorStackAttachNativeStack?: boolean;
 }
+
+export interface ResumeEvaluateOptions {
+  noBreakpoint?: boolean;
+  pauseAt?: 'step-over' | 'step-in' | 'step-out';
+}
+export interface Breakpoint {
+  node: ParseNode;
+  /** true if continueToLocation, false if regular breakpoint */
+  once: boolean;
+  /** code to evaluate, pause iff condition evaluates to truthy */
+  condition: ParseNode.ScriptBody | undefined;
+}
+
 /** https://tc39.es/ecma262/#sec-agents */
 export class Agent {
   AgentRecord;
@@ -174,16 +189,77 @@ export class Agent {
 
   // NON-SPEC
   mark(m: GCMarker) {
-    this.AgentRecord.KeptAlive.forEach((v) => {
-      m(v);
-    });
-    this.executionContextStack.forEach((e) => {
-      m(e);
-    });
+    this.AgentRecord.KeptAlive.forEach(m);
+    this.executionContextStack.forEach(m);
     this.jobQueue.forEach((j) => {
       m(j.callerRealm);
       m(j.callerScriptOrModule);
     });
+  }
+
+  // NON-SPEC
+  // Step-by-step evaluation
+  #pausedEvaluator?: ValueEvaluator;
+
+  #onEvaluatorFin?: (completion: NormalCompletion<Value> | ThrowCompletion) => void;
+
+  /** This function will synchronously return a completion if this is a nested evaluation and debugger cannot be triggered. */
+  evaluate(evaluator: ValueEvaluator, onFinished: (completion: NormalCompletion<Value> | ThrowCompletion) => void) {
+    if (this.#pausedEvaluator) {
+      const result = EnsureCompletion(skipDebugger(evaluator));
+      // only the top evaluator can be evaluted step by step.
+      onFinished(result);
+      return result;
+    }
+    this.#pausedEvaluator = evaluator;
+    this.#onEvaluatorFin = onFinished;
+    return undefined;
+  }
+
+  #breakpoints: Set<Breakpoint> = new Set();
+
+  addBreakpoint(breakpoint: Breakpoint) {
+    this.#breakpoints.add(breakpoint);
+  }
+
+  resumeEvaluate(options?: ResumeEvaluateOptions): IteratorResult<void, ValueCompletion> {
+    const { noBreakpoint } = options || {};
+    if (!this.#pausedEvaluator) {
+      throw new Error('No paused evaluator');
+    }
+    let nextLocation;
+    if (options?.pauseAt === 'step-over') {
+      nextLocation = this.runningExecutionContext.callSite.nextNode;
+    } else if (options?.pauseAt === 'step-out') {
+      nextLocation = this.executionContextStack[this.executionContextStack.length - 2].callSite.lastCallNode;
+    }
+    while (true) {
+      const state = this.#pausedEvaluator.next({ type: 'next' });
+
+      if (!noBreakpoint && this.hostDefinedOptions.onDebugger && !this.debugger_isPreviewing && !state.done) {
+        if (state.value.type === 'debugger') {
+          this.hostDefinedOptions.onDebugger();
+          return { done: false, value: undefined };
+        } else if (state.value.type === 'potential-debugger') {
+          if (options?.pauseAt === 'step-in' && shouldStepOnNode()) {
+            this.hostDefinedOptions.onDebugger();
+            return { done: false, value: undefined };
+          }
+          const callSite = surroundingAgent.runningExecutionContext.callSite;
+          if (nextLocation && (callSite.lastNode === nextLocation || callSite.lastCallNode === nextLocation)) {
+            this.hostDefinedOptions.onDebugger();
+            return { done: false, value: undefined };
+          }
+        }
+      }
+
+      if (state.done) {
+        this.#pausedEvaluator = undefined;
+        this.#onEvaluatorFin!(EnsureCompletion(state.value));
+        this.#onEvaluatorFin = undefined;
+        return state;
+      }
+    }
   }
 
   /**
@@ -219,11 +295,15 @@ export class Agent {
   }
 
   debugger_scopePreview<T>(cb: () => T) {
+    const old = this.#debugger_previewing;
     this.#debugger_previewing = true;
-    const res = cb();
-    this.#debugger_previewing = false;
-    this.#debugger_objectsCreatedDuringPreview.clear();
-    return res;
+    try {
+      const res = cb();
+      return res;
+    } finally {
+      this.#debugger_previewing = old;
+      this.#debugger_objectsCreatedDuringPreview.clear();
+    }
   }
 }
 
@@ -287,9 +367,9 @@ export class ExecutionContext {
 }
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-scriptevaluation */
-export function ScriptEvaluation(scriptRecord: ScriptRecord): ExpressionCompletion {
+export function* ScriptEvaluation(scriptRecord: ScriptRecord): ExpressionEvaluator<Value> {
   if (surroundingAgent.hostDefinedOptions.boost?.evaluateScript) {
-    return surroundingAgent.hostDefinedOptions.boost.evaluateScript(scriptRecord);
+    return yield* surroundingAgent.hostDefinedOptions.boost.evaluateScript(scriptRecord);
   }
 
   const globalEnv = scriptRecord.Realm.GlobalEnv;
@@ -304,10 +384,10 @@ export function ScriptEvaluation(scriptRecord: ScriptRecord): ExpressionCompleti
   // Suspend runningExecutionContext
   surroundingAgent.executionContextStack.push(scriptContext);
   const scriptBody = scriptRecord.ECMAScriptCode;
-  let result: NormalCompletion<void | Value> | ThrowCompletion = EnsureCompletion(GlobalDeclarationInstantiation(scriptBody, globalEnv));
+  let result: NormalCompletion<void | Value> | ThrowCompletion = EnsureCompletion(yield* GlobalDeclarationInstantiation(scriptBody, globalEnv));
 
   if (result.Type === 'normal') {
-    result = EnsureCompletion(unwind(Evaluate(scriptBody))) as NormalCompletion<void | Value>;
+    result = EnsureCompletion(yield* (Evaluate(scriptBody))) as NormalCompletion<void | Value>;
 
     if (result.Type === 'normal' && !result.Value) {
       result = NormalCompletion(Value.undefined);
@@ -318,11 +398,14 @@ export function ScriptEvaluation(scriptRecord: ScriptRecord): ExpressionCompleti
   surroundingAgent.executionContextStack.pop(scriptContext);
   // Resume(surroundingAgent.runningExecutionContext);
 
-  return result as ExpressionCompletion;
+  return result as ValueCompletion;
 }
 
 /** https://tc39.es/ecma262/#sec-hostenqueuepromisejob */
 export function HostEnqueuePromiseJob(job: () => void, _realm: Realm | NullValue) {
+  if (surroundingAgent.debugger_isPreviewing) {
+    return;
+  }
   surroundingAgent.queueJob('PromiseJobs', job);
 }
 
@@ -413,7 +496,8 @@ export function HostEnqueueFinalizationRegistryCleanupJob(fg: FinalizationRegist
       surroundingAgent.scheduledForCleanup.add(fg);
       surroundingAgent.queueJob('FinalizationCleanup', () => {
         surroundingAgent.scheduledForCleanup.delete(fg);
-        CleanupFinalizationRegistry(fg);
+        // TODO: remove skipDebugger
+        skipDebugger(CleanupFinalizationRegistry(fg));
       });
     }
   }
@@ -433,11 +517,11 @@ export function HostMakeJobCallback(callback: FunctionObject): JobCallbackRecord
 }
 
 /** https://tc39.es/ecma262/#sec-hostcalljobcallback */
-export function HostCallJobCallback(jobCallback: JobCallbackRecord, V: Value, argumentsList: Arguments): ExpressionCompletion {
+export function* HostCallJobCallback(jobCallback: JobCallbackRecord, V: Value, argumentsList: Arguments): ValueEvaluator {
   // 1. Assert: IsCallable(jobCallback.[[Callback]]) is true.
   Assert(IsCallable(jobCallback.Callback) === Value.true);
   // 1. Return ? Call(jobCallback.[[Callback]], V, argumentsList).
-  return Q(Call(jobCallback.Callback, V, argumentsList));
+  return Q(yield* Call(jobCallback.Callback, V, argumentsList));
 }
 export type GCMarker = (value: unknown) => void;
 export interface Markable {

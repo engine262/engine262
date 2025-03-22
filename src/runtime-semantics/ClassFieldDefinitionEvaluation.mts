@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import { X, ReturnIfAbrupt } from '../completion.mts';
 import { MakeMethod, OrdinaryFunctionCreate } from '../abstract-ops/all.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';

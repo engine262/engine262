@@ -28,7 +28,7 @@ import {
 } from './all.mts';
 
 const InternalMethods = {
-  GetOwnProperty(P) {
+  * GetOwnProperty(P) {
     const S = this;
     Assert(IsPropertyKey(P));
     const desc = OrdinaryGetOwnProperty(S, P);
@@ -37,7 +37,7 @@ const InternalMethods = {
     }
     return X(StringGetOwnProperty(S, P));
   },
-  DefineOwnProperty(P, Desc) {
+  * DefineOwnProperty(P, Desc) {
     const S = this;
     Assert(IsPropertyKey(P));
     const stringDesc = X(StringGetOwnProperty(S, P));
@@ -47,7 +47,7 @@ const InternalMethods = {
     }
     return X(OrdinaryDefineOwnProperty(S, P, Desc));
   },
-  OwnPropertyKeys() {
+  * OwnPropertyKeys() {
     const O = this;
     const keys = [];
     const str = O.StringData;

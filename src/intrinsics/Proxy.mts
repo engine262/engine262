@@ -1,6 +1,6 @@
 import {
   surroundingAgent,
-} from '../engine.mts';
+} from '../host-defined/engine.mts';
 import {
   Assert,
   CreateBuiltinFunction,
@@ -8,7 +8,6 @@ import {
   OrdinaryObjectCreate,
   ProxyCreate,
   Realm,
-  isProxyExoticObject,
   type BuiltinFunctionObject,
   type ExoticObject,
   type FunctionObject,
@@ -16,12 +15,15 @@ import {
 import {
   NullValue, ObjectValue, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
-import { Q, X, type ExpressionCompletion } from '../completion.mts';
+import { Q, X, type ValueCompletion } from '../completion.mts';
 import { assignProps } from './bootstrap.mts';
 
 export interface ProxyObject extends ExoticObject, BuiltinFunctionObject {
   ProxyHandler: Value | NullValue;
   ProxyTarget: ObjectValue | NullValue;
+}
+export function isProxyExoticObject(O: Value): O is ProxyObject {
+  return 'ProxyHandler' in O;
 }
 export interface RevocableProxyRevokeFunctionObject extends BuiltinFunctionObject {
   RevocableProxy: ProxyObject | NullValue;
@@ -59,7 +61,7 @@ function ProxyRevocationFunctions() {
 }
 
 /** https://tc39.es/ecma262/#sec-proxy.revocable */
-function Proxy_revocable([target = Value.undefined, handler = Value.undefined]: Arguments): ExpressionCompletion {
+function Proxy_revocable([target = Value.undefined, handler = Value.undefined]: Arguments): ValueCompletion {
   // 1. Let p be ? ProxyCreate(target, handler).
   const p = Q(ProxyCreate(target, handler));
   /** https://tc39.es/ecma262/#sec-proxy-revocation-functions. */

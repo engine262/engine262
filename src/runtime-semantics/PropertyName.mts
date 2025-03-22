@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import { Value } from '../value.mts';
 import { Evaluate, type Evaluator } from '../evaluator.mts';
 import { StringValue, NumericValue } from '../static-semantics/all.mts';
@@ -54,9 +54,9 @@ export function* Evaluate_PropertyName(PropertyName: ParseNode.PropertyNameLike 
       // 1. Let exprValue be the result of evaluating AssignmentExpression.
       const exprValue = yield* Evaluate(PropertyName.ComputedPropertyName);
       // 2. Let propName be ? GetValue(exprValue).
-      const propName = Q(GetValue(exprValue));
+      const propName = Q(yield* GetValue(exprValue));
       // 3. Return ? ToPropertyKey(propName).
-      return Q(ToPropertyKey(propName));
+      return Q(yield* ToPropertyKey(propName));
     }
   }
 }

@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Assert,
   CreateArrayFromList,
@@ -13,13 +13,12 @@ import { Value, type Arguments } from '../value.mts';
 import type { YieldEvaluator } from '../evaluator.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import type {
-  ExpressionCompletion, FunctionCallContext, GeneratorObject, MapObject,
+  ValueEvaluator, FunctionCallContext, GeneratorObject, MapObject,
+  ValueCompletion,
 } from '#self';
 
-const kMapIteratorPrototype = Value('%MapIteratorPrototype%');
-
 /** https://tc39.es/ecma262/#sec-createmapiterator */
-export function CreateMapIterator(map: Value, kind: 'key+value' | 'key' | 'value'): ExpressionCompletion<GeneratorObject> {
+export function CreateMapIterator(map: Value, kind: 'key+value' | 'key' | 'value'): ValueCompletion<GeneratorObject> {
   Assert(kind === 'key+value' || kind === 'key' || kind === 'value');
   // 1. Perform ? RequireInternalSlot(map, [[MapData]]).
   Q(RequireInternalSlot(map, 'MapData'));
@@ -61,13 +60,13 @@ export function CreateMapIterator(map: Value, kind: 'key+value' | 'key' | 'value
     return Value.undefined;
   };
   // 3. Return ! CreateIteratorFromClosure(closure, "%MapIteratorPrototype%", %MapIteratorPrototype%).
-  return X(CreateIteratorFromClosure(closure, kMapIteratorPrototype, surroundingAgent.intrinsic('%MapIteratorPrototype%')));
+  return X(CreateIteratorFromClosure(closure, Value('%MapIteratorPrototype%'), surroundingAgent.intrinsic('%MapIteratorPrototype%')));
 }
 
 /** https://tc39.es/ecma262/#sec-%mapiteratorprototype%.next */
-function MapIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* MapIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Return ? GeneratorResume(this value, empty, "%MapIteratorPrototype%")
-  return Q(GeneratorResume(thisValue, undefined, kMapIteratorPrototype));
+  return Q(yield* GeneratorResume(thisValue, undefined, Value('%MapIteratorPrototype%')));
 }
 
 export function bootstrapMapIteratorPrototype(realmRec: Realm) {

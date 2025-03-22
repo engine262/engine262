@@ -1,17 +1,17 @@
 import { ObjectValue, Value, Descriptor } from '../value.mts';
 import {
-  Q, X, NormalCompletion, type ExpressionCompletion,
+  Q, X, NormalCompletion, type ValueEvaluator,
 } from '../completion.mts';
 import { HasProperty, Get, DefinePropertyOrThrow } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-errorobjects-install-error-cause */
-export function InstallErrorCause(O: ObjectValue, options: Value): ExpressionCompletion<Value> {
+export function* InstallErrorCause(O: ObjectValue, options: Value): ValueEvaluator<Value> {
   // 1. If Type(options) is Object and ? HasProperty(options, "cause") is true, then
   if (options instanceof ObjectValue) {
     // nested if statement due to macro expansion
-    if (Q(HasProperty(options, Value('cause'))) === Value.true) {
+    if (Q(yield* HasProperty(options, Value('cause'))) === Value.true) {
       // a. Let cause be ? Get(options, "cause").
-      const cause = Q(Get(options, Value('cause')));
+      const cause = Q(yield* Get(options, Value('cause')));
       // b. Perform ! CreateNonEnumerableDataPropertyOrThrow(O, "cause", cause).
       X(DefinePropertyOrThrow(O, Value('cause'), Descriptor({
         Value: cause,

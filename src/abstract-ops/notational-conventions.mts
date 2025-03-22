@@ -1,16 +1,16 @@
-import type { Completion, ThrowCompletion, Value } from '../api.mts';
-import { surroundingAgent } from '../engine.mts';
+import type { Completion, ThrowCompletion, Value } from '../index.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { ObjectValue } from '../value.mts';
 
 class AssertError extends Error {}
-
 export function Assert(invariant: boolean, source?: string, completion?: Completion<unknown>): asserts invariant {
   /* c8 ignore next */
   if (!invariant) {
     throw new AssertError(source, { cause: completion });
   }
 }
+Assert.Error = AssertError;
 
 /** https://tc39.es/ecma262/#sec-requireinternalslot */
 export function RequireInternalSlot(O: Value, internalSlot: string): ThrowCompletion | undefined {

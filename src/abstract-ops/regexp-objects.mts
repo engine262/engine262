@@ -1,9 +1,9 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Descriptor, Value, ObjectValue, BooleanValue, JSStringValue,
   UndefinedValue,
 } from '../value.mts';
-import { Q, X, type ExpressionCompletion } from '../completion.mts';
+import { Q, X, type ValueEvaluator } from '../completion.mts';
 import { Evaluate_Pattern } from '../runtime-semantics/all.mts';
 import { ParsePattern } from '../parse.mts';
 import { isLineTerminator } from '../parser/Lexer.mts';
@@ -25,8 +25,8 @@ import {
 } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-regexpalloc */
-export function RegExpAlloc(newTarget: FunctionObject): ExpressionCompletion<RegExpObject> {
-  const obj = Q(OrdinaryCreateFromConstructor(newTarget, '%RegExp.prototype%', ['RegExpMatcher', 'OriginalSource', 'OriginalFlags'])) as Mutable<RegExpObject>;
+export function* RegExpAlloc(newTarget: FunctionObject): ValueEvaluator<RegExpObject> {
+  const obj = Q(yield* OrdinaryCreateFromConstructor(newTarget, '%RegExp.prototype%', ['RegExpMatcher', 'OriginalSource', 'OriginalFlags'])) as Mutable<RegExpObject>;
   X(DefinePropertyOrThrow(obj, Value('lastIndex'), Descriptor({
     Writable: Value.true,
     Enumerable: Value.false,
@@ -36,20 +36,20 @@ export function RegExpAlloc(newTarget: FunctionObject): ExpressionCompletion<Reg
 }
 
 /** https://tc39.es/ecma262/#sec-regexpinitialize */
-export function RegExpInitialize(obj: Mutable<RegExpObject>, pattern: Value, flags: Value) {
+export function* RegExpInitialize(obj: Mutable<RegExpObject>, pattern: Value, flags: Value) {
   let P;
   // 1. If pattern is undefined, let P be the empty String.
   if (pattern === Value.undefined) {
     P = Value('');
   } else { // 2. Else, let P be ? ToString(pattern).
-    P = Q(ToString(pattern));
+    P = Q(yield* ToString(pattern));
   }
   let F;
   // 3. If flags is undefined, let F be the empty String.
   if (flags === Value.undefined) {
     F = Value('');
   } else { // 4. Else, let F be ? ToString(flags).
-    F = Q(ToString(flags));
+    F = Q(yield* ToString(flags));
   }
   const f = F.stringValue();
   // 5. If F contains any code unit other than "d", "g", "i", "m", "s", "u", or "y" or if it contains the same code unit more than once, throw a SyntaxError exception.
@@ -84,15 +84,15 @@ export function RegExpInitialize(obj: Mutable<RegExpObject>, pattern: Value, fla
   const evaluatePattern = surroundingAgent.hostDefinedOptions.boost?.evaluatePattern || Evaluate_Pattern;
   obj.RegExpMatcher = evaluatePattern(parseResult, F.stringValue());
   // 15. Perform ? Set(obj, "lastIndex", +0𝔽, true).
-  Q(Set(obj, Value('lastIndex'), toNumberValue(+0), Value.true));
+  Q(yield* Set(obj, Value('lastIndex'), toNumberValue(+0), Value.true));
   // 16. Return obj.
   return obj;
 }
 
 /** https://tc39.es/ecma262/#sec-regexpcreate */
-export function RegExpCreate(P: Value, F: Value): ExpressionCompletion<RegExpObject> {
-  const obj = Q(RegExpAlloc(surroundingAgent.intrinsic('%RegExp%')));
-  return Q(RegExpInitialize(obj, P, F));
+export function* RegExpCreate(P: Value, F: Value): ValueEvaluator<RegExpObject> {
+  const obj = Q(yield* RegExpAlloc(surroundingAgent.intrinsic('%RegExp%')));
+  return Q(yield* RegExpInitialize(obj, P, F));
 }
 
 /** https://tc39.es/ecma262/#sec-escaperegexppattern */

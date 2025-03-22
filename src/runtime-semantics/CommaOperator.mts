@@ -12,7 +12,7 @@ export function* Evaluate_CommaOperator({ ExpressionList }: ParseNode.CommaOpera
   let result!: Value;
   for (const Expression of ExpressionList) {
     const lref = yield* Evaluate(Expression);
-    result = Q(GetValue(lref));
+    result = Q(yield* GetValue(lref));
   }
   return result;
 }

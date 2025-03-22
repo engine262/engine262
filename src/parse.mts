@@ -1,6 +1,6 @@
 import { Parser, type ParserOptions } from './parser/Parser.mts';
 import { RegExpParser, type RegExpParserContext } from './parser/RegExpParser.mts';
-import { surroundingAgent, type GCMarker } from './engine.mts';
+import { surroundingAgent, type GCMarker } from './host-defined/engine.mts';
 import { SourceTextModuleRecord, SyntheticModuleRecord, type ModuleRecordHostDefined } from './modules.mts';
 import { JSStringValue, ObjectValue, Value } from './value.mts';
 import {
@@ -19,7 +19,9 @@ import {
   ExportEntries,
   ImportedLocalNames,
 } from './static-semantics/all.mts';
-import { JSStringSet, kInternal } from './helpers.mts';
+import {
+  isArray, JSStringSet, kInternal, skipDebugger, type Mutable,
+} from './helpers.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
 
 export { Parser, RegExpParser };
@@ -63,7 +65,7 @@ export interface ScriptRecord {
 export interface ParseScriptHostDefined {
   readonly specifier?: string | undefined;
   readonly [kInternal]?: { json: boolean };
-  public?: { readonly specifier?: string | undefined; }
+  readonly scriptId?: string;
 }
 export function ParseScript(sourceText: string, realm: Realm, hostDefined: ParseScriptHostDefined = {}): ScriptRecord | ObjectValue[] {
   // 1. Assert: sourceText is an ECMAScript source text (see clause 10).
@@ -83,6 +85,7 @@ export function ParseScript(sourceText: string, realm: Realm, hostDefined: Parse
   if (Array.isArray(body)) {
     return body;
   }
+  setNodeParent(body, undefined);
   // 4. Return Script Record { [[Realm]]: realm, [[ECMAScriptCode]]: body, [[HostDefined]]: hostDefined }.
   const rec: ScriptRecord = {
     Realm: realm,
@@ -110,6 +113,7 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined: Modul
   if (Array.isArray(body)) {
     return body;
   }
+  setNodeParent(body, undefined);
   // 4. Let requestedModules be the ModuleRequests of body.
   const requestedModules = ModuleRequests(body);
   // 5. Let importEntries be ImportEntries of body.
@@ -191,9 +195,31 @@ export function ParseJSONModule(sourceText: Value, realm: Realm, hostDefined: Mo
   // 1. Let jsonParse be realm's intrinsic object named "%JSON.parse%".
   const jsonParse = realm.Intrinsics['%JSON.parse%'] as BuiltinFunctionObject;
   // 1. Let json be ? Call(jsonParse, undefined, « sourceText »).
-  const json = Q(Call(jsonParse, Value.undefined, [sourceText]));
+  const json = Q(skipDebugger(Call(jsonParse, Value.undefined, [sourceText])));
   // 1. Return CreateDefaultExportSyntheticModule(json, realm, hostDefined).
   return CreateDefaultExportSyntheticModule(json, realm, hostDefined);
+}
+
+function setNodeParent(node: ParseNode, parent: ParseNode | undefined) {
+  (node as Mutable<ParseNode.BaseParseNode>).parent = parent;
+  for (const i in node) {
+    if (Object.hasOwn(node, i)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const value = (node as any)[i];
+      if (isArray(value)) {
+        value.forEach((val) => {
+          if (isParseNode(val) && !val.parent) {
+            setNodeParent(val, node);
+          }
+        });
+      } else if (isParseNode(value) && !value.parent) {
+        setNodeParent(value, node);
+      }
+    }
+  }
+}
+function isParseNode(value: unknown): value is ParseNode {
+  return !!(value && typeof value === 'object' && 'type' in value && 'location' in value);
 }
 
 /** https://tc39.es/ecma262/#sec-parsepattern */

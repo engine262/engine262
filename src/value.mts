@@ -1,4 +1,4 @@
-import { type GCMarker, surroundingAgent } from './engine.mts';
+import { type GCMarker, surroundingAgent } from './host-defined/engine.mts';
 import {
   Assert,
   OrdinaryDefineOwnProperty,
@@ -20,10 +20,13 @@ import {
 } from './abstract-ops/all.mts';
 import { EnvironmentRecord } from './environment.mts';
 import {
-  Completion, Q, X, type ExpressionCompletion, type PlainCompletion,
+  Q, X, type ValueEvaluator, type PlainCompletion,
 } from './completion.mts';
-import { PropertyKeyMap, OutOfRange, callable } from './helpers.mts';
+import {
+  PropertyKeyMap, OutOfRange, callable,
+} from './helpers.mts';
 import type { PrivateElementRecord } from './runtime-semantics/MethodDefinitionEvaluation.mts';
+import type { PlainEvaluator } from './evaluator.mts';
 
 let createStringValue: (value: string) => JSStringValue; // set by static block in StringValue for privileged access to constructor
 let createNumberValue: (value: number) => NumberValue; // set by static block in NumberValue for privileged access to constructor
@@ -739,21 +742,24 @@ function BigIntBitwiseOp(op: '&' | '|' | '^', x: BigIntValue, y: BigIntValue) {
 }
 
 export interface ObjectInternalMethods<Self> {
-  GetPrototypeOf(this: Self): ExpressionCompletion<ObjectValue | NullValue>;
-  SetPrototypeOf(this: Self, V: ObjectValue | NullValue): ExpressionCompletion<BooleanValue>;
-  IsExtensible(this: Self): ExpressionCompletion<BooleanValue>;
-  PreventExtensions(this: Self): ExpressionCompletion<BooleanValue>;
-  GetOwnProperty(this: Self, P: PropertyKeyValue): PlainCompletion<Descriptor | UndefinedValue>;
-  DefineOwnProperty(this: Self, P: PropertyKeyValue, Desc: Descriptor): ExpressionCompletion<BooleanValue>;
-  HasProperty(this: Self, P: PropertyKeyValue): ExpressionCompletion<BooleanValue>;
-  Get(this: Self, P: PropertyKeyValue, Receiver: Value): ExpressionCompletion;
-  Set(this: Self, P: PropertyKeyValue, V: Value, Receiver: Value): ExpressionCompletion<BooleanValue>;
-  Delete(this: Self, P: PropertyKeyValue): ExpressionCompletion<BooleanValue>;
-  OwnPropertyKeys(this: Self): PlainCompletion<PropertyKeyValue[]>;
-  Call?(this: Self, thisArg: Value, args: Arguments): ExpressionCompletion;
-  Construct?(this: Self, args: Arguments, newTarget: FunctionObject | UndefinedValue): ExpressionCompletion<ObjectValue>;
+  GetPrototypeOf(this: Self): ValueEvaluator<ObjectValue | NullValue>;
+  SetPrototypeOf(this: Self, V: ObjectValue | NullValue): ValueEvaluator<BooleanValue>;
+  IsExtensible(this: Self): ValueEvaluator<BooleanValue>;
+  PreventExtensions(this: Self): ValueEvaluator<BooleanValue>;
+  GetOwnProperty(this: Self, P: PropertyKeyValue): PlainEvaluator<Descriptor | UndefinedValue>;
+  DefineOwnProperty(this: Self, P: PropertyKeyValue, Desc: Descriptor): ValueEvaluator<BooleanValue>;
+  HasProperty(this: Self, P: PropertyKeyValue): ValueEvaluator<BooleanValue>;
+  Get(this: Self, P: PropertyKeyValue, Receiver: Value): ValueEvaluator;
+  Set(this: Self, P: PropertyKeyValue, V: Value, Receiver: Value): ValueEvaluator<BooleanValue>;
+  Delete(this: Self, P: PropertyKeyValue): ValueEvaluator<BooleanValue>;
+  OwnPropertyKeys(this: Self): PlainEvaluator<PropertyKeyValue[]>;
+  Call?(this: Self, thisArg: Value, args: Arguments): ValueEvaluator;
+  Construct?(this: Self, args: Arguments, newTarget: FunctionObject | UndefinedValue): ValueEvaluator<ObjectValue>;
 }
 
+type ObjectSlotReturn = {
+  [key in keyof ObjectInternalMethods<ObjectValue>]: ReturnType<NonNullable<ObjectInternalMethods<ObjectValue>[key]>>
+};
 /** https://tc39.es/ecma262/#sec-object-type */
 export class ObjectValue extends Value implements ObjectInternalMethods<ObjectValue> {
   declare readonly type: 'Object'; // defined on prototype by static block
@@ -775,53 +781,59 @@ export class ObjectValue extends Value implements ObjectInternalMethods<ObjectVa
 
   // UNSAFE casts below. Methods below are expected to be rewritten when the object is not an OrdinaryObject. (an example is ArgumentExoticObject)
   // If those methods aren't rewritten, it is an error.
-  GetPrototypeOf(): ExpressionCompletion<ObjectValue | NullValue> {
+  // eslint-disable-next-line require-yield
+  * GetPrototypeOf(): ObjectSlotReturn['GetPrototypeOf'] {
     return OrdinaryGetPrototypeOf(this as unknown as OrdinaryObject);
   }
 
-  SetPrototypeOf(V: ObjectValue | NullValue): ExpressionCompletion<BooleanValue> {
+  // eslint-disable-next-line require-yield
+  * SetPrototypeOf(V: ObjectValue | NullValue): ObjectSlotReturn['SetPrototypeOf'] {
     Q(surroundingAgent.debugger_tryTouchDuringPreview(this));
     return OrdinarySetPrototypeOf(this as unknown as OrdinaryObject, V);
   }
 
-  IsExtensible(): ExpressionCompletion<BooleanValue> {
+  // eslint-disable-next-line require-yield
+  * IsExtensible(): ObjectSlotReturn['IsExtensible'] {
     return OrdinaryIsExtensible(this as unknown as OrdinaryObject);
   }
 
-  PreventExtensions(): ExpressionCompletion<BooleanValue> {
+  // eslint-disable-next-line require-yield
+  * PreventExtensions(): ObjectSlotReturn['PreventExtensions'] {
     Q(surroundingAgent.debugger_tryTouchDuringPreview(this));
     return OrdinaryPreventExtensions(this as unknown as OrdinaryObject);
   }
 
-  GetOwnProperty(P: PropertyKeyValue): PlainCompletion<Descriptor | UndefinedValue> {
+  // eslint-disable-next-line require-yield
+  * GetOwnProperty(P: PropertyKeyValue): ObjectSlotReturn['GetOwnProperty'] {
     return OrdinaryGetOwnProperty(this as unknown as OrdinaryObject, P);
   }
 
-  DefineOwnProperty(P: PropertyKeyValue, Desc: Descriptor): ExpressionCompletion<BooleanValue> {
+  * DefineOwnProperty(P: PropertyKeyValue, Desc: Descriptor): ObjectSlotReturn['DefineOwnProperty'] {
     Q(surroundingAgent.debugger_tryTouchDuringPreview(this));
-    return OrdinaryDefineOwnProperty(this as unknown as OrdinaryObject, P, Desc);
+    return yield* OrdinaryDefineOwnProperty(this as unknown as OrdinaryObject, P, Desc);
   }
 
-  HasProperty(P: PropertyKeyValue): ExpressionCompletion<BooleanValue> {
-    return OrdinaryHasProperty(this as unknown as OrdinaryObject, P);
+  * HasProperty(P: PropertyKeyValue): ObjectSlotReturn['HasProperty'] {
+    return yield* OrdinaryHasProperty(this as unknown as OrdinaryObject, P);
   }
 
-  Get(P: PropertyKeyValue, Receiver: Value): ExpressionCompletion {
-    return OrdinaryGet(this as unknown as OrdinaryObject, P, Receiver);
+  * Get(P: PropertyKeyValue, Receiver: Value): ObjectSlotReturn['Get'] {
+    return yield* OrdinaryGet(this as unknown as OrdinaryObject, P, Receiver);
   }
 
-  Set(P: PropertyKeyValue, V: Value, Receiver: Value): ExpressionCompletion<BooleanValue> {
+  * Set(P: PropertyKeyValue, V: Value, Receiver: Value): ObjectSlotReturn['Set'] {
     // TODO:
     Q(surroundingAgent.debugger_tryTouchDuringPreview(Receiver as ObjectValue));
-    return OrdinarySet(this as unknown as OrdinaryObject, P, V, Receiver);
+    return yield* OrdinarySet(this as unknown as OrdinaryObject, P, V, Receiver);
   }
 
-  Delete(P: PropertyKeyValue): ExpressionCompletion<BooleanValue> {
+  * Delete(P: PropertyKeyValue): ObjectSlotReturn['Delete'] {
     Q(surroundingAgent.debugger_tryTouchDuringPreview(this));
-    return OrdinaryDelete(this as unknown as OrdinaryObject, P);
+    return yield* OrdinaryDelete(this as unknown as OrdinaryObject, P);
   }
 
-  OwnPropertyKeys(): PlainCompletion<PropertyKeyValue[]> {
+  // eslint-disable-next-line require-yield
+  * OwnPropertyKeys(): ObjectSlotReturn['OwnPropertyKeys'] {
     return OrdinaryOwnPropertyKeys(this as unknown as OrdinaryObject);
   }
 
@@ -934,37 +946,21 @@ export class DataBlock extends Uint8Array {
   }
 }
 
-export function Type(val: Value | PrivateName | Completion<unknown> | EnvironmentRecord | Descriptor | DataBlock) {
-  if (val instanceof Value) {
-    return val.type;
+/** https://tc39.es/ecma262/#sec-sametype */
+export function SameType(x: Value, y: Value) {
+  switch (true) {
+    case x === Value.undefined && y === Value.undefined:
+    case x === Value.null && y === Value.null:
+    case x instanceof BooleanValue && y instanceof BooleanValue:
+    case x instanceof NumberValue && y instanceof NumberValue:
+    case x instanceof BigIntValue && y instanceof BigIntValue:
+    case x instanceof SymbolValue && y instanceof SymbolValue:
+    case x instanceof JSStringValue && y instanceof JSStringValue:
+    case x instanceof ObjectValue && y instanceof ObjectValue:
+      return true;
+    default:
+      return false;
   }
-
-  if (val instanceof PrivateName) {
-    return 'PrivateName';
-  }
-
-  if (val instanceof Completion) {
-    return 'Completion';
-  }
-
-  if (val instanceof EnvironmentRecord) {
-    return 'EnvironmentRecord';
-  }
-
-  if (val instanceof Descriptor) {
-    return 'Descriptor';
-  }
-
-  if (val instanceof DataBlock) {
-    return 'Data Block';
-  }
-
-  // TODO:
-  if ((val as unknown) instanceof DataBlock) {
-    return 'Shared Data Block';
-  }
-
-  throw new OutOfRange('Type', val);
 }
 
 export type Arguments = readonly Value[];
@@ -973,9 +969,9 @@ export interface FunctionCallContext {
   readonly NewTarget: FunctionObject | UndefinedValue;
 }
 export interface NativeSteps {
-  (this: BuiltinFunctionObject, args: Arguments, context: FunctionCallContext): void | ExpressionCompletion;
+  (this: BuiltinFunctionObject, args: Arguments, context: FunctionCallContext): PlainEvaluator<Value | void> | PlainCompletion<Value | void>;
   section?: string;
 }
 export interface CanBeNativeSteps {
-  (...args: Value[]): void | ExpressionCompletion;
+  (...args: Value[]): void | ValueEvaluator;
 }

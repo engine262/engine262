@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Value, Descriptor, PrivateName, UndefinedValue, type PropertyKeyValue, ObjectValue, BooleanValue,
 } from '../value.mts';
@@ -18,7 +18,7 @@ import {
 } from '../completion.mts';
 import { OutOfRange } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
-import type { Evaluator } from '../evaluator.mts';
+import type { Evaluator, PlainEvaluator } from '../evaluator.mts';
 import { DefineMethod, Evaluate_PropertyName } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-privateelement-specification-type */
@@ -43,7 +43,7 @@ export class PrivateElementRecord {
 }
 
 /** https://tc39.es/ecma262/#sec-definemethodproperty */
-function DefineMethodProperty(key: PropertyKeyValue | PrivateName, homeObject: ObjectValue, closure: FunctionObject, enumerable: BooleanValue): PlainCompletion<PrivateElementRecord | undefined> {
+function* DefineMethodProperty(key: PropertyKeyValue | PrivateName, homeObject: ObjectValue, closure: FunctionObject, enumerable: BooleanValue): PlainEvaluator<PrivateElementRecord | undefined> {
   // 1. If key is a Private Name, then
   if (key instanceof PrivateName) {
     // a. Return PrivateElement { [[Key]]: key, [[Kind]]: method, [[Value]]: closure }.
@@ -61,7 +61,7 @@ function DefineMethodProperty(key: PropertyKeyValue | PrivateName, homeObject: O
       Configurable: Value.true,
     });
     // b. Perform ? DefinePropertyOrThrow(homeObject, key, desc).
-    Q(DefinePropertyOrThrow(homeObject, key, desc));
+    Q(yield* DefinePropertyOrThrow(homeObject, key, desc));
     // c. Return empty.
     return undefined;
   }
@@ -79,7 +79,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNod
       // 2. Perform ! SetFunctionName(methodDef.[[Closure]], methodDef.[[Key]]).
       X(SetFunctionName(methodDef.Closure, methodDef.Key));
       // 3. Return ? DefineMethodProperty(methodDef.[[Key]], object, methodDef.[[Closure]], enumerable).
-      return Q(DefineMethodProperty(methodDef.Key, object, methodDef.Closure, enumerable));
+      return Q(yield* DefineMethodProperty(methodDef.Key, object, methodDef.Closure, enumerable));
     }
     case !!MethodDefinition.PropertySetParameterList: {
       const { ClassElementName, PropertySetParameterList, FunctionBody } = MethodDefinition;
@@ -115,7 +115,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNod
           Configurable: Value.true,
         });
         // b. Perform ? DefinePropertyOrThrow(object, propKey, desc).
-        Q(DefinePropertyOrThrow(object, propKey, desc));
+        Q(yield* DefinePropertyOrThrow(object, propKey, desc));
         // c. Return empty.
         return undefined;
       }
@@ -155,7 +155,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition: ParseNod
           Configurable: Value.true,
         });
         // b. Perform ? DefinePropertyOrThrow(object, propKey, desc).
-        Q(DefinePropertyOrThrow(object, propKey, desc));
+        Q(yield* DefinePropertyOrThrow(object, propKey, desc));
         // c. Return empty.
         return undefined;
       }
@@ -186,7 +186,7 @@ function* MethodDefinitionEvaluation_AsyncMethod(AsyncMethod: ParseNode.AsyncMet
   // 8. Perform ! SetFunctionName(closure, propKey).
   X(SetFunctionName(closure, propKey));
   // 9. Return ? DefineMethodProperty(propKey, object, closure, enumerable).
-  return Q(DefineMethodProperty(propKey, object, closure, enumerable));
+  return Q(yield* DefineMethodProperty(propKey, object, closure, enumerable));
 }
 
 /** https://tc39.es/ecma262/#sec-generator-function-definitions-runtime-semantics-propertydefinitionevaluation */
@@ -213,14 +213,14 @@ function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod: ParseNode.
   // 9. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
   const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%'));
   // 10. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-  DefinePropertyOrThrow(closure, Value('prototype'), Descriptor({
+  X(DefinePropertyOrThrow(closure, Value('prototype'), Descriptor({
     Value: prototype,
     Writable: Value.true,
     Enumerable: Value.false,
     Configurable: Value.false,
-  }));
+  })));
   // 11. Return ? DefineMethodProperty(propKey, object, closure, enumerable).
-  return Q(DefineMethodProperty(propKey, object, closure, enumerable));
+  return Q(yield* DefineMethodProperty(propKey, object, closure, enumerable));
 }
 
 /** https://tc39.es/ecma262/#sec-asyncgenerator-definitions-propertydefinitionevaluation */
@@ -247,14 +247,14 @@ function* MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod: 
   // 9. Let prototype be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
   const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%'));
   // 10. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-  DefinePropertyOrThrow(closure, Value('prototype'), Descriptor({
+  X(DefinePropertyOrThrow(closure, Value('prototype'), Descriptor({
     Value: prototype,
     Writable: Value.true,
     Enumerable: Value.false,
     Configurable: Value.false,
-  }));
+  })));
   // 11. Return ? DefineMethodProperty(propKey, object, closure, enumerable).
-  return Q(DefineMethodProperty(propKey, object, closure, enumerable));
+  return Q(yield* DefineMethodProperty(propKey, object, closure, enumerable));
 }
 
 export function MethodDefinitionEvaluation(node: ParseNode.MethodDefinitionLike, object: ObjectValue, enumerable: BooleanValue) {

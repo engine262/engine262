@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import { JSStringValue, Value, type Arguments } from '../value.mts';
 import {
   Assert,
@@ -8,7 +8,7 @@ import {
 } from '../abstract-ops/all.mts';
 import { CodePointAt } from '../static-semantics/all.mts';
 import { isHexDigit } from '../parser/Lexer.mts';
-import { Q, X, type ExpressionCompletion } from '../completion.mts';
+import { Q, X, type ValueEvaluator } from '../completion.mts';
 
 function utf8Encode(utf: number) {
   if (utf <= 0x7F) {
@@ -270,9 +270,9 @@ function Decode(_string: JSStringValue, reservedSet: string) {
 }
 
 /** https://tc39.es/ecma262/#sec-decodeuri-encodeduri */
-function decodeURI([encodedURI = Value.undefined]: Arguments): ExpressionCompletion {
+function* decodeURI([encodedURI = Value.undefined]: Arguments): ValueEvaluator {
   // 1. Let uriString be ? ToString(encodedURI).
-  const uriString = Q(ToString(encodedURI));
+  const uriString = Q(yield* ToString(encodedURI));
   // 2. Let reservedURISet be a String containing one instance of each code unit valid in uriReserved plus "#".
   const reservedURISet = `${uriReserved}#`;
   // 3. Return ? Decode(uriString, reservedURISet).
@@ -280,9 +280,9 @@ function decodeURI([encodedURI = Value.undefined]: Arguments): ExpressionComplet
 }
 
 /** https://tc39.es/ecma262/#sec-decodeuricomponent-encodeduricomponent */
-function decodeURIComponent([encodedURIComponent = Value.undefined]: Arguments): ExpressionCompletion {
+function* decodeURIComponent([encodedURIComponent = Value.undefined]: Arguments): ValueEvaluator {
   // 1. Let componentString be ? ToString(encodedURIComponent).
-  const componentString = Q(ToString(encodedURIComponent));
+  const componentString = Q(yield* ToString(encodedURIComponent));
   // 2. Let reservedURIComponentSet be the empty String.
   const reservedURIComponentSet = '';
   // 3. Return ? Decode(componentString, reservedURIComponentSet).
@@ -290,9 +290,9 @@ function decodeURIComponent([encodedURIComponent = Value.undefined]: Arguments):
 }
 
 /** https://tc39.es/ecma262/#sec-encodeuri-uri */
-function encodeURI([uri = Value.undefined]: Arguments): ExpressionCompletion {
+function* encodeURI([uri = Value.undefined]: Arguments): ValueEvaluator {
   // 1. Let uriString be ? ToString(uri).
-  const uriString = Q(ToString(uri));
+  const uriString = Q(yield* ToString(uri));
   // 2. Let unescapedURISet be a String containing one instance of each code unit valid in uriReserved and uriUnescaped plus "#".
   const unescapedURISet = `${uriReserved}${uriUnescaped}#`;
   // 3. Return ? Encode(uriString, unescapedURISet).
@@ -300,9 +300,9 @@ function encodeURI([uri = Value.undefined]: Arguments): ExpressionCompletion {
 }
 
 /** https://tc39.es/ecma262/#sec-encodeuricomponent-uricomponent */
-function encodeURIComponent([uriComponent = Value.undefined]: Arguments): ExpressionCompletion {
+function* encodeURIComponent([uriComponent = Value.undefined]: Arguments): ValueEvaluator {
   // 1. Let componentString be ? ToString(uriComponent).
-  const componentString = Q(ToString(uriComponent));
+  const componentString = Q(yield* ToString(uriComponent));
   // 2. Let unescapedURIComponentSet be a String containing one instance of each code unit valid in uriUnescaped.
   const unescapedURIComponentSet = uriUnescaped;
   // 3. Return ? Encode(componentString, unescapedURIComponentSet).

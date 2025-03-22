@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   SameValue,
   RequireInternalSlot,
@@ -10,12 +10,12 @@ import {
   type Arguments,
   type FunctionCallContext,
 } from '../value.mts';
-import { Q, type ExpressionCompletion } from '../completion.mts';
+import { Q, type ValueCompletion } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import type { WeakMapObject } from './WeakMap.mts';
 
 /** https://tc39.es/ecma262/#sec-weakmap.prototype.delete */
-function WeakMapProto_delete([key = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function WeakMapProto_delete([key = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let M be the this value.
   const M = thisValue as WeakMapObject;
   // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
@@ -44,7 +44,7 @@ function WeakMapProto_delete([key = Value.undefined]: Arguments, { thisValue }: 
 }
 
 /** https://tc39.es/ecma262/#sec-weakmap.prototype.get */
-function WeakMapProto_get([key = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function WeakMapProto_get([key = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let m be the this value.
   const M = thisValue as WeakMapObject;
   // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
@@ -66,7 +66,7 @@ function WeakMapProto_get([key = Value.undefined]: Arguments, { thisValue }: Fun
 }
 
 /** https://tc39.es/ecma262/#sec-weakmap.prototype.has */
-function WeakMapProto_has([key = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function WeakMapProto_has([key = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let M be the this value.
   const M = thisValue as WeakMapObject;
   // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).
@@ -88,7 +88,7 @@ function WeakMapProto_has([key = Value.undefined]: Arguments, { thisValue }: Fun
 }
 
 /** https://tc39.es/ecma262/#sec-weakmap.prototype.set */
-function WeakMapProto_set([key = Value.undefined, value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function WeakMapProto_set([key = Value.undefined, value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let M be the this value.
   const M = thisValue as WeakMapObject;
   // 2. Perform ? RequireInternalSlot(M, [[WeakMapData]]).

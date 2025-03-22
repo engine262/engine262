@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import { Value } from '../value.mts';
 import { OrdinaryObjectCreate } from '../abstract-ops/all.mts';
 import { Q } from '../completion.mts';

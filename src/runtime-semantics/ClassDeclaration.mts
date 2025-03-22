@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import { Value } from '../value.mts';
 import { sourceTextMatchedBy, type ECMAScriptFunctionObject } from '../abstract-ops/all.mts';
 import { StringValue } from '../static-semantics/all.mts';
@@ -31,7 +31,7 @@ export function* BindingClassDeclarationEvaluation(ClassDeclaration: ParseNode.C
   // 4. Let env be the running execution context's LexicalEnvironment.
   const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 5. Perform ? InitializeBoundName(className, value, env).
-  Q(InitializeBoundName(className, value, env));
+  Q(yield* InitializeBoundName(className, value, env));
   // 6. Return value.
   return value;
 }

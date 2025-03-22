@@ -14,7 +14,7 @@ import { Q, ThrowCompletion, X } from '../completion.mts';
 import {
   HostEnsureCanCompileStrings,
   surroundingAgent,
-} from '../engine.mts';
+} from '../host-defined/engine.mts';
 import { wrappedParse } from '../parse.mts';
 import { Token } from '../parser/tokens.mts';
 import {
@@ -32,7 +32,7 @@ const DynamicFunctionSourceTextPrefixes = {
   'asyncGenerator': 'async function*',
 };
 
-export function CreateDynamicFunction(constructor: FunctionObject, newTarget: FunctionObject | UndefinedValue, kind: 'normal' | 'generator' | 'async' | 'asyncGenerator', args: Arguments) {
+export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: FunctionObject | UndefinedValue, kind: 'normal' | 'generator' | 'async' | 'asyncGenerator', args: Arguments) {
   // 1. Assert: The execution context stack has at least two elements.
   Assert(surroundingAgent.executionContextStack.length >= 2);
   // 2. Let callerContext be the second to top element of the execution context stack.
@@ -88,7 +88,7 @@ export function CreateDynamicFunction(constructor: FunctionObject, newTarget: Fu
     // b. Let firstArg be args[0].
     const firstArg = args[0];
     // c. Set P to ? ToString(firstArg).
-    P = Q(ToString(firstArg)).stringValue();
+    P = Q(yield* ToString(firstArg)).stringValue();
     // d. Let k be 1.
     let k = 1;
     // e. Repeat, while k < argCount - 1
@@ -96,7 +96,7 @@ export function CreateDynamicFunction(constructor: FunctionObject, newTarget: Fu
       // i. Let nextArg be args[k].
       const nextArg = args[k];
       // ii. Let nextArgString be ? ToString(nextArg).
-      const nextArgString = Q(ToString(nextArg));
+      const nextArgString = Q(yield* ToString(nextArg));
       // iii. Set P to the string-concatenation of the previous value of P, "," (a comma), and nextArgString.
       P = `${P},${nextArgString.stringValue()}`;
       // iv. Set k to k + 1.
@@ -106,7 +106,7 @@ export function CreateDynamicFunction(constructor: FunctionObject, newTarget: Fu
     bodyArg = args[k];
   }
   // 16. Let bodyString be the string-concatenation of 0x000A (LINE FEED), ? ToString(bodyArg), and 0x000A (LINE FEED).
-  const bodyString = `\u{000A}${Q(ToString(bodyArg)).stringValue()}\u{000A}`;
+  const bodyString = `\u{000A}${Q(yield* ToString(bodyArg)).stringValue()}\u{000A}`;
   // 17. Let prefix be the prefix associated with kind in Table 48.
   const prefix = DynamicFunctionSourceTextPrefixes[kind];
   // 18. Let sourceString be the string-concatenation of prefix, " anonymous(", P, 0x000A (LINE FEED), ") {", bodyString, and "}".
@@ -161,7 +161,7 @@ export function CreateDynamicFunction(constructor: FunctionObject, newTarget: Fu
     }
   }
   // 21. Let proto be ? GetPrototypeFromConstructor(newTarget, fallbackProto).
-  const proto = Q(GetPrototypeFromConstructor(newTarget, fallbackProto));
+  const proto = Q(yield* GetPrototypeFromConstructor(newTarget, fallbackProto));
   // 22. Let realmF be the current Realm Record.
   const realmF = surroundingAgent.currentRealmRecord;
   // 23. Let scope be realmF.[[GlobalEnv]].
@@ -175,22 +175,22 @@ export function CreateDynamicFunction(constructor: FunctionObject, newTarget: Fu
     // a. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
     const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%'));
     // b. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-    DefinePropertyOrThrow(F, Value('prototype'), Descriptor({
+    X(DefinePropertyOrThrow(F, Value('prototype'), Descriptor({
       Value: prototype,
       Writable: Value.true,
       Enumerable: Value.false,
       Configurable: Value.false,
-    }));
+    })));
   } else if (kind === 'asyncGenerator') { // 27. Else if kind is asyncGenerator, then
     // a. Let prototype be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
     const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%'));
     // b. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-    DefinePropertyOrThrow(F, Value('prototype'), Descriptor({
+    X(DefinePropertyOrThrow(F, Value('prototype'), Descriptor({
       Value: prototype,
       Writable: Value.true,
       Enumerable: Value.false,
       Configurable: Value.false,
-    }));
+    })));
   } else if (kind === 'normal') { // 28. Else if kind is normal, then perform MakeConstructor(F).
     MakeConstructor(F);
   }

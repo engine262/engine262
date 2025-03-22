@@ -80,8 +80,8 @@ import { bootstrapWeakRef } from '../intrinsics/WeakRef.mts';
 import { bootstrapFinalizationRegistryPrototype } from '../intrinsics/FinalizationRegistryPrototype.mts';
 import { bootstrapFinalizationRegistry } from '../intrinsics/FinalizationRegistry.mts';
 import {
-  AbstractModuleRecord, JSStringValue, ManagedRealm, ObjectValue, type BuiltinFunctionObject, type ExpressionCompletion, type FunctionObject, type GCMarker, type ManagedRealmHostDefined,
-} from '../api.mts';
+  AbstractModuleRecord, JSStringValue, ManagedRealm, ObjectValue, type BuiltinFunctionObject, type ValueEvaluator, type FunctionObject, type GCMarker, type ManagedRealmHostDefined,
+} from '../index.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { Mutable } from '../helpers.mts';
 import {
@@ -421,7 +421,7 @@ export function CreateIntrinsics(realmRec: Realm) {
 }
 
 /** https://tc39.es/ecma262/#sec-setdefaultglobalbindings */
-export function SetDefaultGlobalBindings(realmRec: Realm): ExpressionCompletion<ObjectValue> {
+export function* SetDefaultGlobalBindings(realmRec: Realm): ValueEvaluator<ObjectValue> {
   const global = realmRec.GlobalObject;
 
   // Value Properties of the Global Object
@@ -430,7 +430,7 @@ export function SetDefaultGlobalBindings(realmRec: Realm): ExpressionCompletion<
     ['NaN', toNumberValue(NaN)],
     ['undefined', Value.undefined],
   ] as const) {
-    Q(DefinePropertyOrThrow(global, Value(name), Descriptor({
+    Q(yield* DefinePropertyOrThrow(global, Value(name), Descriptor({
       Value: value,
       Writable: Value.false,
       Enumerable: Value.false,
@@ -438,7 +438,7 @@ export function SetDefaultGlobalBindings(realmRec: Realm): ExpressionCompletion<
     })));
   }
 
-  Q(DefinePropertyOrThrow(global, Value('globalThis'), Descriptor({
+  Q(yield* DefinePropertyOrThrow(global, Value('globalThis'), Descriptor({
     Value: realmRec.GlobalEnv.GlobalThisValue,
     Writable: Value.true,
     Enumerable: Value.false,
@@ -505,7 +505,7 @@ export function SetDefaultGlobalBindings(realmRec: Realm): ExpressionCompletion<
     'Math',
     'Reflect',
   ] as const) {
-    Q(DefinePropertyOrThrow(global, Value(name), Descriptor({
+    Q(yield* DefinePropertyOrThrow(global, Value(name), Descriptor({
       Value: realmRec.Intrinsics[`%${name}%`],
       Writable: Value.true,
       Enumerable: Value.false,

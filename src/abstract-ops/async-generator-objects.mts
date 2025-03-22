@@ -1,4 +1,4 @@
-import { ExecutionContext, surroundingAgent } from '../engine.mts';
+import { ExecutionContext, surroundingAgent } from '../host-defined/engine.mts';
 import {
   Q, X,
   Await,
@@ -7,16 +7,14 @@ import {
   NormalCompletion,
   AbruptCompletion,
   ThrowCompletion,
-  type ExpressionCompletion,
-  type PlainCompletion,
   type YieldCompletion,
 } from '../completion.mts';
-import { Evaluate, type YieldEvaluator } from '../evaluator.mts';
+import { Evaluate, type PlainEvaluator, type YieldEvaluator } from '../evaluator.mts';
 import {
   BooleanValue, JSStringValue, ObjectValue, UndefinedValue, Value, type Arguments,
 } from '../value.mts';
 import {
-  resume, handleInResume, __ts_cast__, type Mutable,
+  resume, __ts_cast__, type Mutable,
 } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
@@ -187,7 +185,7 @@ function AsyncGeneratorCompleteStep(generator: AsyncGeneratorObject, completion:
 }
 
 /** https://tc39.es/ecma262/#sec-asyncgeneratorresume */
-export function AsyncGeneratorResume(generator: AsyncGeneratorObject, completion: YieldCompletion) {
+export function* AsyncGeneratorResume(generator: AsyncGeneratorObject, completion: YieldCompletion) {
   // 1. Assert: generator.[[AsyncGeneratorState]] is either suspendedStart or suspendedYield.
   Assert(generator.AsyncGeneratorState === 'suspendedStart' || generator.AsyncGeneratorState === 'suspendedYield');
   // 2. Let genContext be generator.[[AsyncGeneratorContext]].
@@ -200,7 +198,7 @@ export function AsyncGeneratorResume(generator: AsyncGeneratorObject, completion
   // 6. Push genContext onto the execution context stack; genContext is now the running execution context.
   surroundingAgent.executionContextStack.push(genContext);
   // 7. Resume the suspended evaluation of genContext using completion as the result of the operation that suspended it. Let result be the completion record returned by the resumed computation.
-  const result = resume(genContext, completion);
+  const result = yield* resume(genContext, { type: 'async-generator-resume', value: completion });
   // 8. Assert: result is never an abrupt completion.
   Assert(!(result instanceof AbruptCompletion));
   // 9. Assert: When we return here, genContext has already been removed from the execution context stack and callerContext is the currently running execution context.
@@ -211,13 +209,13 @@ export function AsyncGeneratorResume(generator: AsyncGeneratorObject, completion
 function* AsyncGeneratorUnwrapYieldResumption(resumptionValue: YieldCompletion): YieldEvaluator {
   // 1. If resumptionValue.[[Type]] is not return, return Completion(resumptionValue).
   if (resumptionValue.Type !== 'return') {
-    return Completion(resumptionValue) as ExpressionCompletion;
+    return resumptionValue;
   }
   // 2. Let awaited be Await(resumptionValue.[[Value]]).
   const awaited = EnsureCompletion(yield* Await(resumptionValue.Value));
   // 3. If awaited.[[Type]] is throw, return Completion(awaited).
   if (awaited.Type === 'throw') {
-    return Completion(awaited);
+    return awaited;
   }
   // 4. Assert: awaited.[[Type]] is normal.
   Assert(awaited.Type === 'normal');
@@ -262,11 +260,10 @@ export function* AsyncGeneratorYield(value: Value): YieldEvaluator {
     // b. Remove genContext from the execution context stack and restore the execution context that is at the top of the execution context stack as the running execution context.
     surroundingAgent.executionContextStack.pop(genContext);
     // c. Set the code evaluation state of genContext such that when evaluation is resumed with a Completion resumptionValue the following steps will be performed:
-    // TODO: figure out this type
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const resumptionValue = EnsureCompletion(yield handleInResume(() => Value.undefined) as any);
+    const resumptionValue = yield { type: 'async-generator-yield' };
+    Assert(resumptionValue.type === 'async-generator-resume');
     // i. Return AsyncGeneratorUnwrapYieldResumption(resumptionValue).
-    return yield* AsyncGeneratorUnwrapYieldResumption(resumptionValue);
+    return yield* AsyncGeneratorUnwrapYieldResumption(EnsureCompletion(resumptionValue.value));
     // ii. NOTE: When the above step returns, it returns to the evaluation of the YieldExpression production that originally called this abstract operation.
 
     // d. Return undefined.
@@ -275,7 +272,7 @@ export function* AsyncGeneratorYield(value: Value): YieldEvaluator {
 }
 
 /** https://tc39.es/ecma262/#sec-asyncgeneratorawaitreturn */
-export function AsyncGeneratorAwaitReturn(generator: AsyncGeneratorObject): PlainCompletion<void> {
+export function* AsyncGeneratorAwaitReturn(generator: AsyncGeneratorObject): PlainEvaluator<void> {
   // 1. Let queue be generator.[[AsyncGeneratorQueue]].
   const queue = generator.AsyncGeneratorQueue;
   // 2. Assert: queue is not empty.
@@ -287,7 +284,7 @@ export function AsyncGeneratorAwaitReturn(generator: AsyncGeneratorObject): Plai
   // 5. Assert: completion.[[Type]] is return.
   Assert(completion.Type === 'return');
   // 6. Let promise be ? PromiseResolve(%Promise%, completion.[[Value]]).
-  const promise = Q(PromiseResolve(surroundingAgent.intrinsic('%Promise%'), completion.Value));
+  const promise = Q(yield* PromiseResolve(surroundingAgent.intrinsic('%Promise%'), completion.Value));
   // 7. Let fulfilledClosure be a new Abstract Closure with parameters (value) that captures generator and performs the following steps when called:
   const fulfilledClosure = ([value = Value.undefined]: Arguments) => {
     // a. Set generator.[[AsyncGeneratorState]] to completed.

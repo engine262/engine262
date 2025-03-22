@@ -1,4 +1,4 @@
-import { surroundingAgent, HostLoadImportedModule } from '../engine.mts';
+import { surroundingAgent, HostLoadImportedModule } from '../host-defined/engine.mts';
 import { Evaluate, type ExpressionEvaluator } from '../evaluator.mts';
 import {
   GetValue,
@@ -11,7 +11,7 @@ import {
 } from '../completion.mts';
 import {
   AbstractModuleRecord, CyclicModuleRecord, JSStringValue, NullValue, Realm, type PromiseObject, type ScriptRecord,
-} from '../api.mts';
+} from '../index.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { __ts_cast__ } from '../helpers.mts';
 
@@ -28,11 +28,11 @@ export function* Evaluate_ImportCall({ AssignmentExpression }: ParseNode.ImportC
   // 3. Let argRef be the result of evaluating AssignmentExpression.
   const argRef = yield* Evaluate(AssignmentExpression);
   // 4. Let specifier be ? GetValue(argRef).
-  const specifier = Q(GetValue(argRef));
+  const specifier = Q(yield* GetValue(argRef));
   // 5. Let promiseCapability be ! NewPromiseCapability(%Promise%).
   const promiseCapability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
   // 6. Let specifierString be ToString(specifier).
-  const specifierString = ToString(specifier);
+  const specifierString = yield* ToString(specifier);
   // 7. IfAbruptRejectPromise(specifierString, promiseCapability).
   IfAbruptRejectPromise(specifierString, promiseCapability);
   __ts_cast__<JSStringValue>(specifierString);

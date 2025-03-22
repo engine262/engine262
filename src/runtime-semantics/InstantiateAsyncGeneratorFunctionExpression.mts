@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Value, Descriptor, type PropertyKeyValue, PrivateName,
 } from '../value.mts';
@@ -54,7 +54,7 @@ export function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpres
       }),
     ));
     // 12. Perform funcEnv.InitializeBinding(name, closure).
-    funcEnv.InitializeBinding(name, closure);
+    X(funcEnv.InitializeBinding(name, closure));
     // 13. Return closure.
     return closure;
   }

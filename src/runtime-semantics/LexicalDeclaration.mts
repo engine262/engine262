@@ -5,7 +5,7 @@ import {
   type PlainCompletion,
 } from '../completion.mts';
 import { Value } from '../value.mts';
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   GetValue,
   InitializeReferencedBinding,
@@ -35,15 +35,15 @@ function* Evaluate_LexicalBinding_BindingIdentifier({ BindingIdentifier, Initial
       // a. Let rhs be the result of evaluating Initializer.
       const rhs = yield* Evaluate(Initializer);
       // b. Let value be ? GetValue(rhs).
-      value = Q(GetValue(rhs));
+      value = Q(yield* GetValue(rhs));
     }
     // 5. Return InitializeReferencedBinding(lhs, value).
-    return InitializeReferencedBinding(lhs, value);
+    return yield* InitializeReferencedBinding(lhs, value);
   } else {
     // 1. Let lhs be ResolveBinding(StringValue of BindingIdentifier).
-    const lhs = ResolveBinding(StringValue(BindingIdentifier!), undefined, strict);
+    const lhs = yield* ResolveBinding(StringValue(BindingIdentifier!), undefined, strict);
     // 2. Return InitializeReferencedBinding(lhs, undefined).
-    return InitializeReferencedBinding(lhs, Value.undefined);
+    return yield* InitializeReferencedBinding(lhs, Value.undefined);
   }
 }
 
@@ -52,7 +52,7 @@ function* Evaluate_LexicalBinding_BindingIdentifier({ BindingIdentifier, Initial
 function* Evaluate_LexicalBinding_BindingPattern(LexicalBinding: ParseNode.LexicalBinding) {
   const { BindingPattern, Initializer } = LexicalBinding;
   const rhs = yield* Evaluate(Initializer!);
-  const value = Q(GetValue(rhs));
+  const value = Q(yield* GetValue(rhs));
   const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   return yield* BindingInitialization(BindingPattern!, value, env);
 }

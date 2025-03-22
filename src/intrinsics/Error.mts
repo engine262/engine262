@@ -12,13 +12,16 @@ import {
   type Arguments,
   type FunctionCallContext,
 } from '../value.mts';
-import { Q, X, type ExpressionCompletion } from '../completion.mts';
-import { surroundingAgent } from '../engine.mts';
+import { Q, X, type ValueEvaluator } from '../completion.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import { captureStack } from '../helpers.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 
+export function isErrorObject(value: Value): boolean {
+  return 'ErrorData' in value;
+}
 /** https://tc39.es/ecma262/#sec-error-constructor */
-function ErrorConstructor([message = Value.undefined, options = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext): ExpressionCompletion {
+function* ErrorConstructor([message = Value.undefined, options = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
   // 1. If NewTarget is undefined, let newTarget be the active function object; else let newTarget be NewTarget.
   let newTarget;
   if (NewTarget === Value.undefined) {
@@ -27,11 +30,11 @@ function ErrorConstructor([message = Value.undefined, options = Value.undefined]
     newTarget = NewTarget;
   }
   // 2. Let O be ? OrdinaryCreateFromConstructor(newTarget, "%Error.prototype%", « [[ErrorData]] »).
-  const O = Q(OrdinaryCreateFromConstructor(newTarget as FunctionObject, '%Error.prototype%', ['ErrorData']));
+  const O = Q(yield* OrdinaryCreateFromConstructor(newTarget as FunctionObject, '%Error.prototype%', ['ErrorData', 'HostDefinedErrorStack']));
   // 3. If message is not undefined, then
   if (message !== Value.undefined) {
     // a. Let msg be ? ToString(message).
-    const msg = Q(ToString(message));
+    const msg = Q(yield* ToString(message));
     // b. Let msgDesc be the PropertyDescriptor { [[Value]]: msg, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }.
     const msgDesc = Descriptor({
       Value: msg,
@@ -44,7 +47,7 @@ function ErrorConstructor([message = Value.undefined, options = Value.undefined]
   }
 
   // 4. Perform ? InstallErrorCause(O, options).
-  Q(InstallErrorCause(O, options));
+  Q(yield* InstallErrorCause(O, options));
 
   X(captureStack(O)); // NON-SPEC
 

@@ -1,4 +1,4 @@
-import { Assert, Parser } from '../api.mts';
+import { Assert, Parser } from '../index.mts';
 import { isArray, OutOfRange } from '../helpers.mts';
 import type { TokenData } from './Lexer.mts';
 import type { ParseNode } from './ParseNode.mts';

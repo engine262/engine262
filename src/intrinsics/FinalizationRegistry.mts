@@ -1,4 +1,4 @@
-import { surroundingAgent, HostMakeJobCallback, type JobCallbackRecord } from '../engine.mts';
+import { surroundingAgent, HostMakeJobCallback, type JobCallbackRecord } from '../host-defined/engine.mts';
 import {
   UndefinedValue, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
@@ -23,7 +23,7 @@ export function isFinalizationRegistryObject(object: object): object is Finaliza
   return 'Cells' in object;
 }
 /** https://tc39.es/ecma262/#sec-finalization-registry-cleanup-callback */
-function FinalizationRegistryConstructor([cleanupCallback = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
+function* FinalizationRegistryConstructor([cleanupCallback = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget instanceof UndefinedValue) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', 'FinalizationRegistry');
@@ -33,7 +33,7 @@ function FinalizationRegistryConstructor([cleanupCallback = Value.undefined]: Ar
     return surroundingAgent.Throw('TypeError', 'NotAFunction', cleanupCallback);
   }
   // 3. Let finalizationGroup be ? OrdinaryCreateFromConstructor(NewTarget, "%FinalizationRegistryPrototype%", « [[Realm]], [[CleanupCallback]], [[Cells]] »).
-  const finalizationGroup = Q(OrdinaryCreateFromConstructor(NewTarget, '%FinalizationRegistry.prototype%', [
+  const finalizationGroup = Q(yield* OrdinaryCreateFromConstructor(NewTarget, '%FinalizationRegistry.prototype%', [
     'Realm',
     'CleanupCallback',
     'Cells',

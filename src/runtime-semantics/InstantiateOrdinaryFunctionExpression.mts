@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import { PrivateName, Value, type PropertyKeyValue } from '../value.mts';
 import {
   Assert,
@@ -10,6 +10,7 @@ import {
 import { StringValue } from '../static-semantics/all.mts';
 import { DeclarativeEnvironmentRecord } from '../environment.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import { X } from '#self';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateordinaryfunctionexpression */
 //   FunctionExpression :
@@ -39,7 +40,7 @@ export function InstantiateOrdinaryFunctionExpression(FunctionExpression: ParseN
     // 10. Perform MakeConstructor(closure).
     MakeConstructor(closure);
     // 11. Perform funcEnv.InitializeBinding(name, closure).
-    funcEnv.InitializeBinding(name, closure);
+    X(funcEnv.InitializeBinding(name, closure));
     // 12. Return closure.
     return closure;
   }

@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Call,
   Get,
@@ -20,14 +20,17 @@ import { bootstrapConstructor } from './bootstrap.mts';
 export interface SetObject extends OrdinaryObject {
   readonly SetData: (Value | undefined)[];
 }
+export function isSetObject(value: Value): value is SetObject {
+  return 'SetData' in value;
+}
 /** https://tc39.es/ecma262/#sec-set-iterable */
-function SetConstructor(this: FunctionObject, [iterable = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
+function* SetConstructor(this: FunctionObject, [iterable = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget instanceof UndefinedValue) {
     return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
   // 2. Let set be ? OrdinaryCreateFromConstructor(NewTarget, "%Set.prototype%", « [[SetData]] »).
-  const set = Q(OrdinaryCreateFromConstructor(NewTarget, '%Set.prototype%', ['SetData'])) as Mutable<SetObject>;
+  const set = Q(yield* OrdinaryCreateFromConstructor(NewTarget, '%Set.prototype%', ['SetData'])) as Mutable<SetObject>;
   // 3. Set set.[[SetData]] to a new empty List.
   set.SetData = [];
   // 4. If iterable is either undefined or null, return set.
@@ -35,23 +38,23 @@ function SetConstructor(this: FunctionObject, [iterable = Value.undefined]: Argu
     return set;
   }
   // 5. Let adder be ? Get(set, "add").
-  const adder = Q(Get(set, Value('add')));
+  const adder = Q(yield* Get(set, Value('add')));
   // 6. If IsCallable(adder) is false, throw a TypeError exception.
   if (IsCallable(adder) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', adder);
   }
   // 7. Let iteratorRecord be ? GetIterator(iterable).
-  const iteratorRecord = Q(GetIterator(iterable, 'sync'));
+  const iteratorRecord = Q(yield* GetIterator(iterable, 'sync'));
   // 8. Repeat,
   while (true) {
     // a. Let next be ? IteratorStepValue(iteratorRecord).
-    const next = Q(IteratorStepValue(iteratorRecord));
+    const next = Q(yield* IteratorStepValue(iteratorRecord));
     // b. If next is false, return set.
     if (next === 'done') {
       return set;
     }
     // d. Let status be Call(adder, set, « next »).
-    const status = Call(adder, set, [next]);
+    const status = yield* Call(adder, set, [next]);
     // e. IfAbruptCloseIterator(status, iteratorRecord).
     IfAbruptCloseIterator(status, iteratorRecord);
   }

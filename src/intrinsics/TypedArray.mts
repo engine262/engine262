@@ -1,7 +1,7 @@
 import {
-  Q, X, type ExpressionCompletion, type PlainCompletion,
+  Q, X, type PlainCompletion,
 } from '../completion.mts';
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   BigIntValue,
   BooleanValue,
@@ -62,6 +62,7 @@ import {
   ArrayBufferByteLength,
 } from '../abstract-ops/all.mts';
 import { type Mutable, __ts_cast__ } from '../helpers.mts';
+import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 
 export const typedArrayInfoByName = {
@@ -165,7 +166,7 @@ export function isTypedArrayObject(value: Value): value is TypedArrayObject {
 }
 
 /** https://tc39.es/ecma262/#typedarray-species-create */
-export function TypedArraySpeciesCreate(exemplar: TypedArrayObject, argumentList: Arguments): ExpressionCompletion<TypedArrayObject> {
+export function* TypedArraySpeciesCreate(exemplar: TypedArrayObject, argumentList: Arguments): ValueEvaluator<TypedArrayObject> {
   // 1. Assert: exemplar is an Object that has [[TypedArrayName]] and [[ContentType]] internal slots.
   Assert(exemplar instanceof ObjectValue
     && 'TypedArrayName' in exemplar
@@ -173,9 +174,9 @@ export function TypedArraySpeciesCreate(exemplar: TypedArrayObject, argumentList
   // 2. Let defaultConstructor be the intrinsic object listed in column one of Table 61 for exemplar.[[TypedArrayName]].
   const defaultConstructor = surroundingAgent.intrinsic(typedArrayInfoByName[exemplar.TypedArrayName.stringValue() as TypedArrayConstructorNames].IntrinsicName);
   // 3. Let constructor be ? SpeciesConstructor(exemplar, defaultConstructor).
-  const constructor = Q(SpeciesConstructor(exemplar, defaultConstructor));
+  const constructor = Q(yield* SpeciesConstructor(exemplar, defaultConstructor));
   // 4. Let result be ? TypedArrayCreate(constructor, argumentList).
-  const result = Q(TypedArrayCreateFromConstructor(constructor, argumentList));
+  const result = Q(yield* TypedArrayCreateFromConstructor(constructor, argumentList));
   // 5. Assert: result has [[TypedArrayName]] and [[ContentType]] internal slots.
   Assert('TypedArrayName' in result && 'ContentType' in result);
   // 6. If result.[[ContentType]] is not equal to exemplar.[[ContentType]], throw a TypeError exception.
@@ -187,8 +188,8 @@ export function TypedArraySpeciesCreate(exemplar: TypedArrayObject, argumentList
 }
 
 /** https://tc39.es/ecma262/#sec-typedarraycreatefromconstructor */
-export function TypedArrayCreateFromConstructor(constructor: FunctionObject, argumentList: Arguments): ExpressionCompletion<TypedArrayObject> {
-  const newTypedArray = Q(Construct(constructor, argumentList)) as TypedArrayObject;
+export function* TypedArrayCreateFromConstructor(constructor: FunctionObject, argumentList: Arguments): ValueEvaluator<TypedArrayObject> {
+  const newTypedArray = Q(yield* Construct(constructor, argumentList)) as TypedArrayObject;
   const taRecord = Q(ValidateTypedArray(newTypedArray, 'seq-cst'));
   if (argumentList.length === 1 && argumentList[0] instanceof NumberValue) {
     if (IsTypedArrayOutOfBounds(taRecord)) {
@@ -204,9 +205,9 @@ export function TypedArrayCreateFromConstructor(constructor: FunctionObject, arg
 }
 
 /** https://tc39.es/ecma262/#sec-typedarray-create-same-type */
-export function TypedArrayCreateSameType(exemplar: TypedArrayObject, argumentList: Arguments): ExpressionCompletion<TypedArrayObject> {
+export function* TypedArrayCreateSameType(exemplar: TypedArrayObject, argumentList: Arguments): ValueEvaluator<TypedArrayObject> {
   const constructor = surroundingAgent.intrinsic(typedArrayInfoByName[exemplar.TypedArrayName.stringValue() as TypedArrayConstructorNames].IntrinsicName);
-  const result = Q(TypedArrayCreateFromConstructor(constructor, argumentList)) as TypedArrayObject;
+  const result = Q(yield* TypedArrayCreateFromConstructor(constructor, argumentList)) as TypedArrayObject;
   Assert('TypedArrayName' in result && 'ContentType' in result);
   Assert(result.ContentType === exemplar.ContentType);
   return result;
@@ -236,13 +237,13 @@ export function TypedArrayElementType(O: TypedArrayObject): TypedArrayTypes {
 }
 
 /** https://tc39.es/ecma262/#sec-comparetypedarrayelements */
-export function CompareTypedArrayElements(x: NumberValue | BigIntValue, y: NumberValue | BigIntValue, comparator: FunctionObject | UndefinedValue): ExpressionCompletion<NumberValue> {
+export function* CompareTypedArrayElements(x: NumberValue | BigIntValue, y: NumberValue | BigIntValue, comparator: FunctionObject | UndefinedValue): ValueEvaluator<NumberValue> {
   Assert(
     (x instanceof NumberValue && y instanceof NumberValue)
     || (x instanceof BigIntValue && y instanceof BigIntValue),
   );
   if (!(comparator instanceof UndefinedValue)) {
-    const v = Q(ToNumber(Q(Call(comparator, Value.undefined, [x, y]))));
+    const v = Q(yield* ToNumber(Q(yield* Call(comparator, Value.undefined, [x, y]))));
     if (v.isNaN()) {
       return F(0);
     }
@@ -279,9 +280,9 @@ function TypedArrayConstructor(this: unknown) {
 }
 
 /** https://tc39.es/ecma262/#sec-allocatetypedarray */
-export function AllocateTypedArray(constructorName: JSStringValue, newTarget: FunctionObject, defaultProto: keyof Intrinsics, length?: number): ExpressionCompletion<Mutable<TypedArrayObject>> {
+export function* AllocateTypedArray(constructorName: JSStringValue, newTarget: FunctionObject, defaultProto: keyof Intrinsics, length?: number): ValueEvaluator<Mutable<TypedArrayObject>> {
   // 1. Let proto be ? GetPrototypeFromConstructor(newTarget, defaultProto).
-  const proto = Q(GetPrototypeFromConstructor(newTarget, defaultProto));
+  const proto = Q(yield* GetPrototypeFromConstructor(newTarget, defaultProto));
   // 2. Let obj be TypedArrayCreate(proto).
   const obj = TypedArrayCreate(proto) as Mutable<TypedArrayObject>;
   // 3. Assert: obj.[[ViewedArrayBuffer]] is undefined.
@@ -305,14 +306,14 @@ export function AllocateTypedArray(constructorName: JSStringValue, newTarget: Fu
     obj.ArrayLength = 0;
   } else {
     // a. Perform ? AllocateTypedArrayBuffer(obj, length).
-    Q(AllocateTypedArrayBuffer(obj, length));
+    Q(yield* AllocateTypedArrayBuffer(obj, length));
   }
   // 9. Return obj.
   return obj;
 }
 
 /** https://tc39.es/ecma262/#sec-initializetypedarrayfromtypedarray */
-export function InitializeTypedArrayFromTypedArray(O: Mutable<TypedArrayObject>, srcArray: TypedArrayObject): PlainCompletion<void> {
+export function* InitializeTypedArrayFromTypedArray(O: Mutable<TypedArrayObject>, srcArray: TypedArrayObject): PlainEvaluator<void> {
   const srcData = srcArray.ViewedArrayBuffer as ArrayBufferObject;
   const elementType = TypedArrayElementType(O);
   const elementSize = TypedArrayElementSize(O);
@@ -327,9 +328,9 @@ export function InitializeTypedArrayFromTypedArray(O: Mutable<TypedArrayObject>,
   const byteLength = elementSize * elementLength;
   let data;
   if (elementType === srcType) {
-    data = Q(CloneArrayBuffer(srcData, srcByteOffset, byteLength));
+    data = Q(yield* CloneArrayBuffer(srcData, srcByteOffset, byteLength));
   } else {
-    data = Q(AllocateArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), byteLength));
+    data = Q(yield* AllocateArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), byteLength));
     if (srcArray.ContentType !== O.ContentType) {
       return surroundingAgent.Throw('TypeError', 'BufferContentTypeMismatch');
     }
@@ -338,7 +339,7 @@ export function InitializeTypedArrayFromTypedArray(O: Mutable<TypedArrayObject>,
     let count = elementLength;
     while (count > 0) {
       const value = GetValueFromBuffer(srcData, srcByteIndex, srcType, true, 'unordered');
-      SetValueInBuffer(data, targetByteIndex, elementType, value, true, 'unordered');
+      Q(yield* SetValueInBuffer(data, targetByteIndex, elementType, value, true, 'unordered'));
       srcByteIndex += srcElementSize;
       targetByteIndex += elementSize;
       count -= 1;
@@ -351,16 +352,16 @@ export function InitializeTypedArrayFromTypedArray(O: Mutable<TypedArrayObject>,
 }
 
 /** https://tc39.es/ecma262/#sec-initializetypedarrayfromarraybuffer */
-export function InitializeTypedArrayFromArrayBuffer(O: Mutable<TypedArrayObject>, buffer: ArrayBufferObject, byteOffset: Value, length: Value): PlainCompletion<void> {
+export function* InitializeTypedArrayFromArrayBuffer(O: Mutable<TypedArrayObject>, buffer: ArrayBufferObject, byteOffset: Value, length: Value): PlainEvaluator<void> {
   const elementSize = TypedArrayElementSize(O);
-  const offset = Q(ToIndex(byteOffset));
+  const offset = Q(yield* ToIndex(byteOffset));
   if (offset % elementSize !== 0) {
     return surroundingAgent.Throw('RangeError', 'TypedArrayOffsetAlignment', offset, elementSize);
   }
   const bufferIsFixedLength = IsFixedLengthArrayBuffer(buffer);
   let newLength;
   if (length !== Value.undefined) {
-    newLength = Q(ToIndex(length));
+    newLength = Q(yield* ToIndex(length));
   }
   if (IsDetachedBuffer(buffer) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
@@ -397,34 +398,34 @@ export function InitializeTypedArrayFromArrayBuffer(O: Mutable<TypedArrayObject>
 }
 
 /** https://tc39.es/ecma262/#sec-initializetypedarrayfromlist */
-export function InitializeTypedArrayFromList(O: Mutable<TypedArrayObject>, value: Value[]): PlainCompletion<void> {
+export function* InitializeTypedArrayFromList(O: Mutable<TypedArrayObject>, value: Value[]): PlainEvaluator<void> {
   const len = value.length;
-  Q(AllocateTypedArrayBuffer(O, len));
+  Q(yield* AllocateTypedArrayBuffer(O, len));
   let k = 0;
   while (k < len) {
     const Pk = X(ToString(F(k)));
     const kValue = value.shift()!;
-    Q(Set(O, Pk, kValue, Value.true));
+    Q(yield* Set(O, Pk, kValue, Value.true));
     k += 1;
   }
   Assert(value.length === 0);
 }
 
 /** https://tc39.es/ecma262/#sec-initializetypedarrayfromarraylike */
-export function InitializeTypedArrayFromArrayLike(O: Mutable<TypedArrayObject>, arrayLike: ObjectValue): PlainCompletion<void> {
-  const len = Q(LengthOfArrayLike(arrayLike));
-  Q(AllocateTypedArrayBuffer(O, len));
+export function* InitializeTypedArrayFromArrayLike(O: Mutable<TypedArrayObject>, arrayLike: ObjectValue): PlainEvaluator<void> {
+  const len = Q(yield* LengthOfArrayLike(arrayLike));
+  Q(yield* AllocateTypedArrayBuffer(O, len));
   let k = 0;
   while (k < len) {
     const Pk = X(ToString(F(k)));
-    const kValue = Q(Get(arrayLike, Pk));
-    Q(Set(O, Pk, kValue, Value.true));
+    const kValue = Q(yield* Get(arrayLike, Pk));
+    Q(yield* Set(O, Pk, kValue, Value.true));
     k += 1;
   }
 }
 
 /** https://tc39.es/ecma262/#sec-allocatetypedarraybuffer */
-export function AllocateTypedArrayBuffer(O: TypedArrayObject, length: number): ExpressionCompletion<TypedArrayObject> {
+export function* AllocateTypedArrayBuffer(O: TypedArrayObject, length: number): ValueEvaluator<TypedArrayObject> {
   // 1. Assert: O is an Object that has a [[ViewedArrayBuffer]] internal slot.
   Assert(O instanceof ObjectValue && 'ViewedArrayBuffer' in O);
   // 2. Assert: O.[[ViewedArrayBuffer]] is undefined.
@@ -438,7 +439,7 @@ export function AllocateTypedArrayBuffer(O: TypedArrayObject, length: number): E
   // 6. Let byteLength be elementSize × length.
   const byteLength = elementSize * length;
   // 7. Let data be ? AllocateArrayBuffer(%ArrayBuffer%, byteLength).
-  const data = Q(AllocateArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), byteLength));
+  const data = Q(yield* AllocateArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), byteLength));
   // 8. Set O.[[ViewedArrayBuffer]] to data.
   O.ViewedArrayBuffer = data;
   // 9. Set O.[[ByteLength]] to byteLength.
@@ -453,7 +454,7 @@ export function AllocateTypedArrayBuffer(O: TypedArrayObject, length: number): E
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.from */
-function TypedArray_from([source = Value.undefined, mapper = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
+function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Let C be the this value.
   const C = thisValue;
   // 2. If IsConstructor(C) is false, throw a TypeError exception.
@@ -473,23 +474,23 @@ function TypedArray_from([source = Value.undefined, mapper = Value.undefined, th
     mapping = true;
   }
   // 5. Let usingIterator be ? GetMethod(source, @@iterator).
-  const usingIterator = Q(GetMethod(source, wellKnownSymbols.iterator));
+  const usingIterator = Q(yield* GetMethod(source, wellKnownSymbols.iterator));
   // 6. If usingIterator is not undefined, then
   if (!(usingIterator instanceof UndefinedValue)) {
-    const values = Q(IteratorToList(Q(GetIteratorFromMethod(source, usingIterator))));
+    const values = Q(yield* IteratorToList(Q(yield* GetIteratorFromMethod(source, usingIterator))));
     const len = values.length;
-    const targetObj = Q(TypedArrayCreateFromConstructor(C as FunctionObject, [F(len)]));
+    const targetObj = Q(yield* TypedArrayCreateFromConstructor(C as FunctionObject, [F(len)]));
     let k = 0;
     while (k < len) {
       const Pk = X(ToString(F(k)));
       const kValue = values.shift()!;
       let mappedValue;
       if (mapping) {
-        mappedValue = Q(Call(mapper, thisArg, [kValue, F(k)]));
+        mappedValue = Q(yield* Call(mapper, thisArg, [kValue, F(k)]));
       } else {
         mappedValue = kValue;
       }
-      Q(Set(targetObj, Pk, mappedValue, Value.true));
+      Q(yield* Set(targetObj, Pk, mappedValue, Value.true));
       k += 1;
     }
     Assert(values.length === 0);
@@ -499,9 +500,9 @@ function TypedArray_from([source = Value.undefined, mapper = Value.undefined, th
   // 8. Let arrayLike be ! ToObject(source).
   const arrayLike = X(ToObject(source));
   // 9. Let len be ? LengthOfArrayLike(arrayLike).
-  const len = Q(LengthOfArrayLike(arrayLike));
+  const len = Q(yield* LengthOfArrayLike(arrayLike));
   // 10. Let targetObj be ? TypedArrayCreate(C, « 𝔽(len) »).
-  const targetObj = Q(TypedArrayCreateFromConstructor(C as FunctionObject, [F(len)]));
+  const targetObj = Q(yield* TypedArrayCreateFromConstructor(C as FunctionObject, [F(len)]));
   // 11. Let k be 0.
   let k = 0;
   // 12. Repeat, while k < len
@@ -509,18 +510,18 @@ function TypedArray_from([source = Value.undefined, mapper = Value.undefined, th
     // a. Let Pk be ! ToString(𝔽(k)).
     const Pk = X(ToString(F(k)));
     // b. Let kValue be ? Get(arrayLike, Pk).
-    const kValue = Q(Get(arrayLike, Pk));
+    const kValue = Q(yield* Get(arrayLike, Pk));
     let mappedValue;
     // c. If mapping is true, then
     if (mapping) {
       // i. Let mappedValue be ? Call(mapfn, thisArg, « kValue, 𝔽(k) »).
-      mappedValue = Q(Call(mapper, thisArg, [kValue, F(k)]));
+      mappedValue = Q(yield* Call(mapper, thisArg, [kValue, F(k)]));
     } else {
       // d. Else, let mappedValue be kValue.
       mappedValue = kValue;
     }
     // e. Perform ? Set(targetObj, Pk, mappedValue, true).
-    Q(Set(targetObj, Pk, mappedValue, Value.true));
+    Q(yield* Set(targetObj, Pk, mappedValue, Value.true));
     // f. Set k to k + 1.
     k += 1;
   }
@@ -529,7 +530,7 @@ function TypedArray_from([source = Value.undefined, mapper = Value.undefined, th
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.of */
-function TypedArray_of(items: Arguments, { thisValue }: FunctionCallContext) {
+function* TypedArray_of(items: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Let len be the actual number of arguments passed to this function.
   // 2. Let items be the List of arguments passed to this function.
   const len = items.length;
@@ -540,7 +541,7 @@ function TypedArray_of(items: Arguments, { thisValue }: FunctionCallContext) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
   }
   // 5. Let newObj be ? TypedArrayCreate(C, « 𝔽(len) »).
-  const newObj = Q(TypedArrayCreateFromConstructor(C as FunctionObject, [F(len)]));
+  const newObj = Q(yield* TypedArrayCreateFromConstructor(C as FunctionObject, [F(len)]));
   // 6. Let k be 0.
   let k = 0;
   // 7. Repeat, while k < len
@@ -550,7 +551,7 @@ function TypedArray_of(items: Arguments, { thisValue }: FunctionCallContext) {
     // b. Let Pk be ! ToString(𝔽(k)).
     const Pk = X(ToString(F(k)));
     // c. Perform ? Set(newObj, Pk, kValue, true).
-    Q(Set(newObj, Pk, kValue, Value.true));
+    Q(yield* Set(newObj, Pk, kValue, Value.true));
     // d. Set k to k + 1.
     k += 1;
   }

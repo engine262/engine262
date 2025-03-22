@@ -13,7 +13,7 @@ export function* Evaluate_TaggedTemplateExpression(node: ParseNode.TaggedTemplat
   // 1. Let tagRef be ? Evaluation of MemberExpression.
   const tagRef = Q(yield* Evaluate(MemberExpression));
   // 1. Let tagFunc be ? GetValue(tagRef).
-  const tagFunc = Q(GetValue(tagRef));
+  const tagFunc = Q(yield* GetValue(tagRef));
   // 1. Let thisCall be this MemberExpression.
   const thisCall = node;
   // 1. Let tailCall be IsInTailPosition(thisCall).

@@ -1,4 +1,4 @@
-import { type GCMarker, surroundingAgent } from './engine.mts';
+import { type GCMarker, surroundingAgent } from './host-defined/engine.mts';
 import {
   Assert,
   CreateBuiltinFunction,
@@ -16,8 +16,8 @@ import {
   OutOfRange,
   resume,
 } from './helpers.mts';
-import type { PromiseObject } from './intrinsics/Promise.mts';
-import type { Evaluator } from './evaluator.mts';
+import type { Evaluator, ValueEvaluator } from './evaluator.mts';
+import { Q, skipDebugger } from '#self';
 
 let createNormalCompletion: <T>(init: NormalCompletionInit<T>) => NormalCompletionImpl<T>;
 let createBreakCompletion: (init: BreakCompletionInit) => BreakCompletion;
@@ -100,7 +100,9 @@ export type Completion<T> =
 /**
  * A NON-SPEC shorthand to notate "returns either a normal completion containing an ECMAScript language value or a throw completion".
  */
-export type ExpressionCompletion<T extends Value = Value> = T | NormalCompletion<T> | ThrowCompletion;
+// export type ValueEvaluator<T extends Value = Value> = T | NormalCompletion<T> | ThrowCompletion;
+export type ValueCompletion<T extends Value = Value> = T | NormalCompletion<T> | ThrowCompletion;
+export { type ValueEvaluator } from './evaluator.mts';
 /**
  * A NON-SPEC shorthand to notate "returns either a normal completion containing ... or a throw completion".
  *
@@ -320,6 +322,7 @@ export type ReturnIfAbrupt<T> =
  * https://tc39.es/ecma262/#sec-returnifabrupt
  * https://tc39.es/ecma262/#sec-returnifabrupt-shorthands ? OperationName()
  */
+export function ReturnIfAbrupt<const T>(_completion: T): ReturnIfAbrupt<T>
 export function ReturnIfAbrupt<const T>(_completion: T): ReturnIfAbrupt<T> {
   /* c8 skip next */
   throw new TypeError('ReturnIfAbrupt requires build');
@@ -336,12 +339,15 @@ function ReturnIfAbruptRuntime<const T>(completion: T): ReturnIfAbrupt<T> {
 export { ReturnIfAbrupt as Q };
 
 /** https://tc39.es/ecma262/#sec-returnifabrupt-shorthands ! OperationName() */
-export function X<const T>(_completion: T): ReturnIfAbrupt<T> {
+export function X<const T>(_completion: T | Evaluator<T>): ReturnIfAbrupt<T> {
   /* c8 skip next */
   throw new TypeError('X() requires build');
 }
 
-export function XRuntime<const T>(completion: T): ReturnIfAbrupt<T> {
+export function XRuntime<const T>(completion: T | Evaluator<T>): ReturnIfAbrupt<T> {
+  if (typeof completion === 'object' && completion && 'next' in completion) {
+    completion = skipDebugger(completion);
+  }
   const c = EnsureCompletion(completion);
   if (c.Type === 'normal') {
     return c.Value as ReturnIfAbrupt<T>;
@@ -413,20 +419,20 @@ export function ValueOfNormalCompletion<T>(value: NormalCompletion<T> | T) {
   return value instanceof NormalCompletion ? value.Value : value;
 }
 
-export function* Await(value: Value): Evaluator<ExpressionCompletion> {
+export function* Await(value: Value): ValueEvaluator {
   // 1. Let asyncContext be the running execution context.
   const asyncContext = surroundingAgent.runningExecutionContext;
   // 2. Let promise be ? PromiseResolve(%Promise%, value).
-  const promise = ReturnIfAbrupt(PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value) as PromiseObject);
+  const promise = Q(yield* PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value));
   // 3. Let fulfilledClosure be a new Abstract Closure with parameters (value) that captures asyncContext and performs the following steps when called:
-  const fulfilledClosure = ([valueInner = Value.undefined]: Arguments) => {
+  const fulfilledClosure = function* fulfilledClosure([valueInner = Value.undefined]: Arguments) {
     // a. Let prevContext be the running execution context.
     const prevContext = surroundingAgent.runningExecutionContext;
     // b. Suspend prevContext.
     // c. Push asyncContext onto the execution context stack; asyncContext is now the running execution context.
     surroundingAgent.executionContextStack.push(asyncContext);
     // d. Resume the suspended evaluation of asyncContext using NormalCompletion(value) as the result of the operation that suspended it.
-    resume(asyncContext, NormalCompletion(valueInner));
+    yield* resume(asyncContext, { type: 'await-resume', value: NormalCompletion(valueInner) });
     // e. Assert: When we reach this step, asyncContext has already been removed from the execution context stack and prevContext is the currently running execution context.
     Assert(surroundingAgent.runningExecutionContext === prevContext);
     // f. Return undefined.
@@ -437,14 +443,14 @@ export function* Await(value: Value): Evaluator<ExpressionCompletion> {
   // @ts-expect-error TODO(ts): CreateBuiltinFunction should return a specalized type FunctionObjectValue that has a kAsyncContext on it.
   onFulfilled[kAsyncContext] = asyncContext;
   // 5. Let rejectedClosure be a new Abstract Closure with parameters (reason) that captures asyncContext and performs the following steps when called:
-  const rejectedClosure = ([reason = Value.undefined]: Arguments) => {
+  const rejectedClosure = function* rejectedClosure([reason = Value.undefined]: Arguments) {
     // a. Let prevContext be the running execution context.
     const prevContext = surroundingAgent.runningExecutionContext;
     // b. Suspend prevContext.
     // c. Push asyncContext onto the execution context stack; asyncContext is now the running execution context.
     surroundingAgent.executionContextStack.push(asyncContext);
     // d. Resume the suspended evaluation of asyncContext using ThrowCompletion(reason) as the result of the operation that suspended it.
-    resume(asyncContext, ThrowCompletion(reason));
+    yield* resume(asyncContext, { type: 'await-resume', value: ThrowCompletion(reason) });
     // e. Assert: When we reach this step, asyncContext has already been removed from the execution context stack and prevContext is the currently running execution context.
     Assert(surroundingAgent.runningExecutionContext === prevContext);
     // f. Return undefined.
@@ -459,8 +465,9 @@ export function* Await(value: Value): Evaluator<ExpressionCompletion> {
   // 8. Remove asyncContext from the execution context stack and restore the execution context that is at the top of the execution context stack as the running execution context.
   surroundingAgent.executionContextStack.pop(asyncContext);
   // 9. Set the code evaluation state of asyncContext such that when evaluation is resumed with a Completion completion, the following steps of the algorithm that invoked Await will be performed, with completion available.
-  const completion = yield Value.undefined;
+  const completion = yield { type: 'await' };
+  Assert(completion.type === 'await-resume');
   // 10. Return.
-  return completion as ExpressionCompletion;
+  return completion.value;
   // 11. NOTE: This returns to the evaluation of the operation that had most previously resumed evaluation of asyncContext.
 }

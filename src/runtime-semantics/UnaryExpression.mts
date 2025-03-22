@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Assert,
   GetValue,
@@ -56,10 +56,10 @@ function* Evaluate_UnaryExpression_Delete({ UnaryExpression }: ParseNode.UnaryEx
     // d. If ref.[[ReferencedName]] is not a property key, then
     if (!IsPropertyKey(ref.ReferencedName)) {
       // Set ref.[[ReferencedName]] to ? ToPropertyKey(ref.[[ReferencedName]]).
-      ref.ReferencedName = Q(ToPropertyKey(ref.ReferencedName as Value));
+      ref.ReferencedName = Q(yield* ToPropertyKey(ref.ReferencedName as Value));
     }
     // e. Let deleteStatus be ? baseObj.[[Delete]](ref.[[ReferencedName]]).
-    const deleteStatus = Q(baseObj.Delete(ref.ReferencedName as JSStringValue));
+    const deleteStatus = Q(yield* baseObj.Delete(ref.ReferencedName as JSStringValue));
     // f. If deleteStatus is false and ref.[[Strict]] is true, throw a TypeError exception.
     if (deleteStatus === Value.false && ref.Strict === Value.true) {
       return surroundingAgent.Throw('TypeError', 'StrictModeDelete', ref.ReferencedName);
@@ -72,7 +72,7 @@ function* Evaluate_UnaryExpression_Delete({ UnaryExpression }: ParseNode.UnaryEx
     // b. Assert: base is an Environment Record.
     Assert(base instanceof EnvironmentRecord);
     // c. Return ? bindings.DeleteBinding(GetReferencedName(ref)).
-    return Q(base.DeleteBinding(ref.ReferencedName as JSStringValue));
+    return Q(yield* base.DeleteBinding(ref.ReferencedName as JSStringValue));
   }
 }
 
@@ -82,7 +82,7 @@ function* Evaluate_UnaryExpression_Void({ UnaryExpression }: ParseNode.UnaryExpr
   // 1. Let expr be the result of evaluating UnaryExpression.
   const expr = yield* Evaluate(UnaryExpression);
   // 2. Perform ? GetValue(expr).
-  Q(GetValue(expr));
+  Q(yield* GetValue(expr));
   // 3. Return undefined.
   return Value.undefined;
 }
@@ -100,7 +100,7 @@ function* Evaluate_UnaryExpression_Typeof({ UnaryExpression }: ParseNode.UnaryEx
     }
   }
   // 3. Set val to ? GetValue(val).
-  const val = Q(GetValue(_val));
+  const val = Q(yield* GetValue(_val));
   // 4. Return a String according to Table 37.
   if (val instanceof UndefinedValue) {
     return Value('undefined');
@@ -131,7 +131,7 @@ function* Evaluate_UnaryExpression_Plus({ UnaryExpression }: ParseNode.UnaryExpr
   // 1. Let expr be the result of evaluating UnaryExpression.
   const expr = yield* Evaluate(UnaryExpression);
   // 2. Return ? ToNumber(? GetValue(expr)).
-  return Q(ToNumber(Q(GetValue(expr))));
+  return Q(yield* ToNumber(Q(yield* GetValue(expr))));
 }
 
 /** https://tc39.es/ecma262/#sec-unary-minus-operator-runtime-semantics-evaluation */
@@ -140,7 +140,7 @@ function* Evaluate_UnaryExpression_Minus({ UnaryExpression }: ParseNode.UnaryExp
   // 1. Let expr be the result of evaluating UnaryExpression.
   const expr = yield* Evaluate(UnaryExpression);
   // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
-  const oldValue = Q(ToNumeric(Q(GetValue(expr))));
+  const oldValue = Q(yield* ToNumeric(Q(yield* GetValue(expr))));
   // 3. If oldValue is a Number, then
   if (oldValue instanceof NumberValue) {
     // a. Return Number::unaryMinus(oldValue).
@@ -159,7 +159,7 @@ function* Evaluate_UnaryExpression_Tilde({ UnaryExpression }: ParseNode.UnaryExp
   // 1. Let expr be the result of evaluating UnaryExpression.
   const expr = yield* Evaluate(UnaryExpression);
   // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
-  const oldValue = Q(ToNumeric(Q(GetValue(expr))));
+  const oldValue = Q(yield* ToNumeric(Q(yield* GetValue(expr))));
   // 3. If oldValue is a Number, then
   if (oldValue instanceof NumberValue) {
     // a. Return Number::bitwiseNOT(oldValue).
@@ -178,7 +178,7 @@ function* Evaluate_UnaryExpression_Bang({ UnaryExpression }: ParseNode.UnaryExpr
   // 1. Let expr be the result of evaluating UnaryExpression.
   const expr = yield* Evaluate(UnaryExpression);
   // 2. Let oldValue be ! ToBoolean(? GetValue(expr)).
-  const oldValue = ToBoolean(Q(GetValue(expr)));
+  const oldValue = ToBoolean(Q(yield* GetValue(expr)));
   // 3. If oldValue is true, return false.
   if (oldValue === Value.true) {
     return Value.false;

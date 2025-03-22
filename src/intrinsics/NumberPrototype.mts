@@ -12,8 +12,10 @@ import {
   F, R,
   Realm,
 } from '../abstract-ops/all.mts';
-import { surroundingAgent } from '../engine.mts';
-import { Q, X, type ExpressionCompletion } from '../completion.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
+import {
+  Q, X, type ValueCompletion, type ValueEvaluator,
+} from '../completion.mts';
 import type { Mutable } from '../helpers.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import type { NumberObject } from './Number.mts';
@@ -31,9 +33,9 @@ function thisNumberValue(value: Value) {
 }
 
 /** https://tc39.es/ecma262/#sec-number.prototype.toexponential */
-function NumberProto_toExponential([fractionDigits = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* NumberProto_toExponential([fractionDigits = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const x = Q(thisNumberValue(thisValue));
-  const f = Q(ToIntegerOrInfinity(fractionDigits));
+  const f = Q(yield* ToIntegerOrInfinity(fractionDigits));
   Assert(fractionDigits !== Value.undefined || f === 0);
   if (!x.isFinite()) {
     return NumberValue.toString(x);
@@ -45,9 +47,9 @@ function NumberProto_toExponential([fractionDigits = Value.undefined]: Arguments
 }
 
 /** https://tc39.es/ecma262/#sec-number.prototype.tofixed */
-function NumberProto_toFixed([fractionDigits = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* NumberProto_toFixed([fractionDigits = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const x = Q(thisNumberValue(thisValue));
-  const f = Q(ToIntegerOrInfinity(fractionDigits));
+  const f = Q(yield* ToIntegerOrInfinity(fractionDigits));
   Assert(fractionDigits !== Value.undefined || f === 0);
   if (f < 0 || f > 100) {
     return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toFixed');
@@ -59,17 +61,17 @@ function NumberProto_toFixed([fractionDigits = Value.undefined]: Arguments, { th
 }
 
 /** https://tc39.es/ecma262/#sec-number.prototype.tolocalestring */
-function NumberProto_toLocaleString(_args: Arguments, context: FunctionCallContext): ExpressionCompletion {
+function NumberProto_toLocaleString(_args: Arguments, context: FunctionCallContext): ValueEvaluator {
   return NumberProto_toString([], context);
 }
 
 /** https://tc39.es/ecma262/#sec-number.prototype.toprecision */
-function NumberProto_toPrecision([precision = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* NumberProto_toPrecision([precision = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const x = Q(thisNumberValue(thisValue));
   if (precision === Value.undefined) {
     return X(ToString(x));
   }
-  const p = Q(ToIntegerOrInfinity(precision));
+  const p = Q(yield* ToIntegerOrInfinity(precision));
   if (!x.isFinite()) {
     return X(NumberValue.toString(x));
   }
@@ -80,13 +82,13 @@ function NumberProto_toPrecision([precision = Value.undefined]: Arguments, { thi
 }
 
 /** https://tc39.es/ecma262/#sec-number.prototype.tostring */
-function NumberProto_toString([radix = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* NumberProto_toString([radix = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const x = Q(thisNumberValue(thisValue));
   let radixNumber;
   if (radix === Value.undefined) {
     radixNumber = 10;
   } else {
-    radixNumber = Q(ToIntegerOrInfinity(radix));
+    radixNumber = Q(yield* ToIntegerOrInfinity(radix));
   }
   if (radixNumber < 2 || radixNumber > 36) {
     return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toString');
@@ -103,7 +105,7 @@ function NumberProto_toString([radix = Value.undefined]: Arguments, { thisValue 
 }
 
 /** https://tc39.es/ecma262/#sec-number.prototype.valueof */
-function NumberProto_valueOf(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function NumberProto_valueOf(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   return Q(thisNumberValue(thisValue));
 }
 

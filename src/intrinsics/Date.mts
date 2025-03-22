@@ -21,7 +21,7 @@ import {
 import {
   AbruptCompletion,
   Q, ValueOfNormalCompletion, X,
-  type ExpressionCompletion,
+  type ValueEvaluator,
 } from '../completion.mts';
 import type { Mutable } from '../helpers.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
@@ -30,8 +30,11 @@ import { ToDateString, thisTimeValue } from './DatePrototype.mts';
 export interface DateObject extends OrdinaryObject {
   DateValue: NumberValue;
 }
+export function isDateObject(value: Value): value is DateObject {
+  return 'DateValue' in value;
+}
 /** https://tc39.es/ecma262/#sec-date-constructor */
-function DateConstructor(args: Arguments, { NewTarget }: FunctionCallContext): ExpressionCompletion {
+function* DateConstructor(args: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
   const numberOfArgs = args.length;
   if (numberOfArgs >= 2) {
     /** https://tc39.es/ecma262/#sec-date-year-month-date-hours-minutes-seconds-ms */
@@ -41,35 +44,35 @@ function DateConstructor(args: Arguments, { NewTarget }: FunctionCallContext): E
       const now = Date.now();
       return ToDateString(F(now));
     } else {
-      const y = Q(ToNumber(year));
-      const m = Q(ToNumber(month));
+      const y = Q(yield* ToNumber(year));
+      const m = Q(yield* ToNumber(month));
       let dt;
       if (date !== undefined) {
-        dt = Q(ToNumber(date));
+        dt = Q(yield* ToNumber(date));
       } else {
         dt = F(1);
       }
       let h;
       if (hours !== undefined) {
-        h = Q(ToNumber(hours));
+        h = Q(yield* ToNumber(hours));
       } else {
         h = F(+0);
       }
       let min;
       if (minutes !== undefined) {
-        min = Q(ToNumber(minutes));
+        min = Q(yield* ToNumber(minutes));
       } else {
         min = F(+0);
       }
       let s;
       if (seconds !== undefined) {
-        s = Q(ToNumber(seconds));
+        s = Q(yield* ToNumber(seconds));
       } else {
         s = F(+0);
       }
       let milli;
       if (ms !== undefined) {
-        milli = Q(ToNumber(ms));
+        milli = Q(yield* ToNumber(ms));
       } else {
         milli = F(+0);
       }
@@ -85,7 +88,7 @@ function DateConstructor(args: Arguments, { NewTarget }: FunctionCallContext): E
         }
       }
       const finalDate = MakeDate(MakeDay(yr, m, dt), MakeTime(h, min, s, milli));
-      const O = Q(OrdinaryCreateFromConstructor(NewTarget as FunctionObject, '%Date.prototype%', ['DateValue'])) as Mutable<DateObject>;
+      const O = Q(yield* OrdinaryCreateFromConstructor(NewTarget as FunctionObject, '%Date.prototype%', ['DateValue'])) as Mutable<DateObject>;
       O.DateValue = TimeClip(UTC(finalDate));
       return O;
     }
@@ -101,15 +104,15 @@ function DateConstructor(args: Arguments, { NewTarget }: FunctionCallContext): E
       if (value instanceof ObjectValue && 'DateValue' in value) {
         tv = X(thisTimeValue(value));
       } else {
-        const v = Q(ToPrimitive(value));
+        const v = Q(yield* ToPrimitive(value));
         if (v instanceof JSStringValue) {
           // Assert: The next step never returns an abrupt completion because Type(v) is String.
           tv = parseDate(v);
         } else {
-          tv = Q(ToNumber(v));
+          tv = Q(yield* ToNumber(v));
         }
       }
-      const O = Q(OrdinaryCreateFromConstructor(NewTarget as FunctionObject, '%Date.prototype%', ['DateValue'])) as Mutable<DateObject>;
+      const O = Q(yield* OrdinaryCreateFromConstructor(NewTarget as FunctionObject, '%Date.prototype%', ['DateValue'])) as Mutable<DateObject>;
       O.DateValue = TimeClip(tv);
       return O;
     }
@@ -120,7 +123,7 @@ function DateConstructor(args: Arguments, { NewTarget }: FunctionCallContext): E
       const now = Date.now();
       return ToDateString(F(now));
     } else {
-      const O = Q(OrdinaryCreateFromConstructor(NewTarget as FunctionObject, '%Date.prototype%', ['DateValue'])) as Mutable<DateObject>;
+      const O = Q(yield* OrdinaryCreateFromConstructor(NewTarget as FunctionObject, '%Date.prototype%', ['DateValue'])) as Mutable<DateObject>;
       O.DateValue = F(Date.now());
       return O;
     }
@@ -134,8 +137,8 @@ function Date_now() {
 }
 
 /** https://tc39.es/ecma262/#sec-date.parse */
-function Date_parse([string = Value.undefined]: Arguments): ExpressionCompletion<NumberValue> {
-  const str = ToString(string);
+function* Date_parse([string = Value.undefined]: Arguments): ValueEvaluator<NumberValue> {
+  const str = yield* ToString(string);
   if (str instanceof AbruptCompletion) {
     return str;
   }
@@ -143,41 +146,41 @@ function Date_parse([string = Value.undefined]: Arguments): ExpressionCompletion
 }
 
 /** https://tc39.es/ecma262/#sec-date.utc */
-function Date_UTC([year = Value.undefined, month, date, hours, minutes, seconds, ms]: Arguments): ExpressionCompletion {
-  const y = Q(ToNumber(year));
+function* Date_UTC([year = Value.undefined, month, date, hours, minutes, seconds, ms]: Arguments): ValueEvaluator {
+  const y = Q(yield* ToNumber(year));
   let m;
   if (month !== undefined) {
-    m = Q(ToNumber(month));
+    m = Q(yield* ToNumber(month));
   } else {
     m = F(+0);
   }
   let dt;
   if (date !== undefined) {
-    dt = Q(ToNumber(date));
+    dt = Q(yield* ToNumber(date));
   } else {
     dt = F(1);
   }
   let h;
   if (hours !== undefined) {
-    h = Q(ToNumber(hours));
+    h = Q(yield* ToNumber(hours));
   } else {
     h = F(+0);
   }
   let min;
   if (minutes !== undefined) {
-    min = Q(ToNumber(minutes));
+    min = Q(yield* ToNumber(minutes));
   } else {
     min = F(+0);
   }
   let s;
   if (seconds !== undefined) {
-    s = Q(ToNumber(seconds));
+    s = Q(yield* ToNumber(seconds));
   } else {
     s = F(+0);
   }
   let milli;
   if (ms !== undefined) {
-    milli = Q(ToNumber(ms));
+    milli = Q(yield* ToNumber(ms));
   } else {
     milli = F(+0);
   }

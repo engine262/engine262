@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   IsDetachedBuffer,
   OrdinaryCreateFromConstructor,
@@ -26,7 +26,7 @@ export function isDataViewObject(V: Value): V is DataViewObject {
   return 'DataView' in V;
 }
 /** https://tc39.es/ecma262/#sec-dataview-constructor */
-function DataViewConstructor(this: FunctionObject, [buffer = Value.undefined, byteOffset = Value.undefined, byteLength = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
+function* DataViewConstructor(this: FunctionObject, [buffer = Value.undefined, byteOffset = Value.undefined, byteLength = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget instanceof UndefinedValue) {
     return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
@@ -34,7 +34,7 @@ function DataViewConstructor(this: FunctionObject, [buffer = Value.undefined, by
   // 2. Perform ? RequireInternalSlot(buffer, [[ArrayBufferData]]).
   Q(RequireInternalSlot(buffer, 'ArrayBufferData'));
   // 3. Let offset be ? ToIndex(byteOffset).
-  const offset = Q(ToIndex(byteOffset));
+  const offset = Q(yield* ToIndex(byteOffset));
   // 4. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
   __ts_cast__<ArrayBufferObject>(buffer);
   if (IsDetachedBuffer(buffer) === Value.true) {
@@ -53,14 +53,14 @@ function DataViewConstructor(this: FunctionObject, [buffer = Value.undefined, by
     viewByteLength = bufferByteLength - offset;
   } else {
     // a. Let viewByteLength be ? ToIndex(byteLength).
-    viewByteLength = Q(ToIndex(byteLength));
+    viewByteLength = Q(yield* ToIndex(byteLength));
     // b. If offset + viewByteLength > bufferByteLength, throw a RangeError exception.
     if (offset + viewByteLength > bufferByteLength) {
       return surroundingAgent.Throw('RangeError', 'DataViewOOB');
     }
   }
   // 9. Let O be ? OrdinaryCreateFromConstructor(NewTarget, "%DataView.prototype%", « [[DataView]], [[ViewedArrayBuffer]], [[ByteLength]], [[ByteOffset]] »).
-  const O = Q(OrdinaryCreateFromConstructor(NewTarget, '%DataView.prototype%', ['DataView', 'ViewedArrayBuffer', 'ByteLength', 'ByteOffset'])) as Mutable<DataViewObject>;
+  const O = Q(yield* OrdinaryCreateFromConstructor(NewTarget, '%DataView.prototype%', ['DataView', 'ViewedArrayBuffer', 'ByteLength', 'ByteOffset'])) as Mutable<DataViewObject>;
   // 10. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
   if (IsDetachedBuffer(buffer) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');

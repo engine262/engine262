@@ -7,12 +7,14 @@ import { format as _format, inspect as _inspect, parseArgs } from 'node:util';
 import packageJson from '../../package.json' with { type: 'json' }; // eslint-disable-line import/order
 import { createConsole, createInternals } from '../inspector/utils.mts';
 import {
-  setSurroundingAgent, FEATURES, inspect, Value, Type, Completion, AbruptCompletion, JSStringValue,
+  setSurroundingAgent, FEATURES, inspect, Value, Completion, AbruptCompletion, JSStringValue,
   type Arguments,
   evalQ,
   Agent,
   ManagedRealm,
   Throw,
+  skipDebugger,
+  type ValueCompletion,
 } from '#self';
 
 const help = `
@@ -92,8 +94,8 @@ setSurroundingAgent(agent);
 const realm = new ManagedRealm({});
 // Define console.log
 const format = (args: Arguments) => args.map((a, i) => {
-  if (i === 0 && Type(a) === 'String') {
-    return (a as JSStringValue).stringValue();
+  if (i === 0 && a instanceof JSStringValue) {
+    return a.stringValue();
   }
   return inspect(a);
 }).join(' ');
@@ -125,7 +127,7 @@ if (argv.values.inspector !== false) {
     // @ts-ignore
     const { NodeWebsocketInspector } = await import('./inspector.mts');
     const inspect = await NodeWebsocketInspector.new();
-    inspect.attachRealm(realm);
+    inspect.attachRealm(realm, 'Main Realm');
     inspect.preference.preview = argv.values.preview;
     inspect.preference.previewDebug = argv.values['preview-debug'] || false;
   }
@@ -144,7 +146,7 @@ function oneShotEval(source: string, filename: string) {
           throw new Error('Internal error: .LoadRequestedModules() returned a pending promise');
         }
         Q(module.Link());
-        const evaluate = Q(module.Evaluate());
+        const evaluate = Q(skipDebugger(module.Evaluate()));
         if (evaluate.PromiseState === 'rejected') {
           Q(Throw(evaluate.PromiseResult!, 'Raw', evaluate.PromiseResult!));
         }
@@ -192,7 +194,7 @@ Please report bugs to ${packageJson.bugs.url}
     completer: () => [],
     writer: (o) => realm.scope(() => {
       if (o instanceof Value || o instanceof Completion) {
-        return inspect(o as Value | Completion<unknown>);
+        return inspect(o as Value | ValueCompletion);
       }
       return _inspect(o);
     }),

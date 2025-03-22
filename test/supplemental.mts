@@ -22,6 +22,7 @@ import {
   type Arguments,
   ToString,
   EnsureCompletion,
+  skipDebugger,
 } from '#self';
 
 // Features that cannot be tested by test262 should go here.
@@ -177,8 +178,8 @@ Error: owo
       `) as SourceTextModuleRecord;
       module.LoadRequestedModules();
       module.Link();
-      module.Evaluate();
-      const result = Get(realm.GlobalObject, Value('result'));
+      skipDebugger(module.Evaluate());
+      const result = skipDebugger(Get(realm.GlobalObject, Value('result')));
       assert.strictEqual(((result as NormalCompletion<PromiseObject>).Value.PromiseResult as JSStringValue).stringValue(), 'pass');
     });
   },
@@ -189,27 +190,27 @@ Error: owo
     setSurroundingAgent(agent);
     const { realm } = createRealm();
     realm.scope(() => {
-      CreateDataProperty(
+      skipDebugger(CreateDataProperty(
         realm.GlobalObject,
         Value('fail'),
         CreateBuiltinFunction(([path]: Arguments) => {
-          const o = EnsureCompletion(ToString(path));
+          const o = EnsureCompletion(skipDebugger(ToString(path)));
           if (o.Type === 'throw') {
             return o;
           }
           throw new Error(`${o.Value.stringValue()} did not have a section`);
         }, 1, Value(''), []),
-      );
+      ));
       const targets: Value[] = [];
       Object.entries(realm.Intrinsics)
         .forEach(([k, v]) => {
           targets.push(CreateArrayFromList([Value(k), v]));
         });
-      CreateDataProperty(
+      skipDebugger(CreateDataProperty(
         realm.GlobalObject,
         Value('targets'),
         CreateArrayFromList(targets),
-      );
+      ));
     });
     const result = realm.evaluateScript(`
 'use strict';

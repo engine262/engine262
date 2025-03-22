@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Value, NullValue, ObjectValue, PrivateName,
   BooleanValue,
@@ -42,7 +42,6 @@ import {
 import {
   Q, X,
   AbruptCompletion,
-  Completion,
 } from '../completion.mts';
 import { __ts_cast__, OutOfRange, type Mutable } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
@@ -120,7 +119,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
     // c. Set the running execution context's LexicalEnvironment to env.
     surroundingAgent.runningExecutionContext.LexicalEnvironment = env;
     // d. Let superclass be ? GetValue(superclassRef).
-    const superclass = Q(GetValue(superclassRef));
+    const superclass = Q(yield* GetValue(superclassRef));
     // e. If superclass is null, then
     if (superclass instanceof NullValue) {
       // i. Let protoParent be null.
@@ -132,7 +131,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
       return surroundingAgent.Throw('TypeError', 'NotAConstructor', superclass);
     } else { // g. Else,
       // i. Let protoParent be ? Get(superclass, "prototype").
-      protoParent = Q(Get(superclass as ObjectValue, Value('prototype')));
+      protoParent = Q(yield* Get(superclass as ObjectValue, Value('prototype')));
       // ii. If Type(protoParent) is neither Object nor Null, throw a TypeError exception.
       if (!(protoParent instanceof ObjectValue) && !(protoParent instanceof NullValue)) {
         return surroundingAgent.Throw('TypeError', 'ObjectPrototypeType');
@@ -158,7 +157,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
   // 14. If constructor is empty, then
   if (constructor === undefined) {
     // a. Let defaultConstructor be a new Abstract Closure with no parameters that captures nothing and performs the following steps when called:
-    const defaultConstructor = (args: Arguments, { NewTarget }: FunctionCallContext) => {
+    const defaultConstructor = function* defaultConstructor(args: Arguments, { NewTarget }: FunctionCallContext) {
       // i. Let args be the List of arguments that was passed to this function by [[Call]] or [[Construct]].
       // ii. If NewTarget is undefined, throw a TypeError exception.
       if (NewTarget instanceof UndefinedValue) {
@@ -173,19 +172,19 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
         //    notable distinction is that while the aforementioned ECMAScript source text observably calls
         //    the @@iterator method on `%Array.prototype%`, a Default Constructor Function does not.
         // 2. Let func be ! F.[[GetPrototypeOf]]().
-        const func = X(F.GetPrototypeOf());
+        const func = X(yield* F.GetPrototypeOf());
         // 3. If IsConstructor(func) is false, throw a TypeError exception.
         if (IsConstructor(func) === Value.false) {
           return surroundingAgent.Throw('TypeError', 'NotAConstructor', func);
         }
         // 4. Let result be ? Construct(func, args, NewTarget).
-        result = Q(Construct(func as FunctionObject, args, NewTarget));
+        result = Q(yield* Construct(func as FunctionObject, args, NewTarget));
       } else { // v. Else,
         // 1. NOTE: This branch behaves similarly to `constructor() {}`.
         // 2. Let result be ? OrdinaryCreateFromConstructor(NewTarget, "%Object.prototype%").
-        result = Q(OrdinaryCreateFromConstructor(NewTarget, '%Object.prototype%'));
+        result = Q(yield* OrdinaryCreateFromConstructor(NewTarget, '%Object.prototype%'));
       }
-      Q(InitializeInstanceElements(result, F));
+      Q(yield* InitializeInstanceElements(result, F));
       return result;
     };
     // b. ! CreateBuiltinFunction(defaultConstructor, 0, className, « [[ConstructorKind]], [[SourceText]] », the current Realm Record, constructorParent).
@@ -304,7 +303,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
   // 27. If classBinding is not undefined, then
   if (!(classBinding instanceof UndefinedValue)) {
     // a. Perform classScope.InitializeBinding(classBinding, F).
-    classScope.InitializeBinding(classBinding, F);
+    yield* classScope.InitializeBinding(classBinding, F);
   }
   // 28. Set F.[[PrivateMethods]] to instancePrivateMethods.
   F.PrivateMethods = instancePrivateMethods;
@@ -321,12 +320,12 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
     // a. If elementRecord is a ClassFieldDefinition Record, then
     if (elementRecord instanceof ClassFieldDefinitionRecord) {
       // a. Let result be DefineField(F, elementRecord).
-      result = DefineField(F, elementRecord);
+      result = yield* DefineField(F, elementRecord);
     } else { // b. Else,
       // i. Assert: elementRecord is a ClassStaticBlockDefinition Record.
       Assert(elementRecord instanceof ClassStaticBlockDefinitionRecord);
       // ii. Let result be Completion(Call(elementRecord.[[BodyFunction]], F)).
-      result = Completion(Call(elementRecord.BodyFunction, F));
+      result = yield* Call(elementRecord.BodyFunction, F);
     }
     // c. If result is an abrupt completion, then
     if (result instanceof AbruptCompletion) {

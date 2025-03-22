@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Assert, IsIntegralNumber, Z, R,
 } from '../abstract-ops/all.mts';

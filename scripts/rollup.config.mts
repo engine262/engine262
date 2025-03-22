@@ -76,7 +76,7 @@ export default defineConfig([
     ],
   },
   {
-    input: './src/api.mts',
+    input: './src/index.mts',
     plugins: [
       importUnicodeLib(),
       (json.default || json)({ compact: true }),

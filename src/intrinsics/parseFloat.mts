@@ -4,16 +4,16 @@ import {
   F,
   Realm,
 } from '../abstract-ops/all.mts';
-import { Q, X, type ExpressionCompletion } from '../completion.mts';
+import { Q, X, type ValueEvaluator } from '../completion.mts';
 import { Value, type Arguments } from '../value.mts';
 import {
   TrimString,
 } from '../runtime-semantics/all.mts';
 
 /** https://tc39.es/ecma262/#sec-parsefloat-string */
-function ParseFloat([string = Value.undefined]: Arguments): ExpressionCompletion {
+function* ParseFloat([string = Value.undefined]: Arguments): ValueEvaluator {
   // 1. Let inputString be ? ToString(string).
-  const inputString = Q(ToString(string));
+  const inputString = Q(yield* ToString(string));
   // 2. Let trimmedString be ! TrimString(inputString, start).
   const trimmedString = X(TrimString(inputString, 'start')).stringValue();
   // 3. If neither trimmedString nor any prefix of trimmedString satisfies the syntax of a StrDecimalLiteral (see 7.1.4.1), return NaN.

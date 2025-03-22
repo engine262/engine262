@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import { Q, X } from '../completion.mts';
 import { AbstractModuleRecord, ResolvedBindingRecord } from '../modules.mts';
 import {
@@ -13,7 +13,9 @@ import {
   NullValue,
   BooleanValue,
 } from '../value.mts';
-import { isArray, JSStringSet, type Mutable } from '../helpers.mts';
+import {
+  isArray, JSStringSet, type Mutable,
+} from '../helpers.mts';
 import {
   Assert,
   CompareArrayElements,
@@ -41,16 +43,16 @@ export interface ModuleNamespaceObject extends ExoticObject {
 }
 
 const InternalMethods = {
-  SetPrototypeOf(V) {
-    return Q(SetImmutablePrototype(this, V));
+  * SetPrototypeOf(V) {
+    return Q(yield* SetImmutablePrototype(this, V));
   },
-  IsExtensible() {
+  * IsExtensible() {
     return Value.false;
   },
-  PreventExtensions() {
+  * PreventExtensions() {
     return Value.true;
   },
-  GetOwnProperty(P) {
+  * GetOwnProperty(P) {
     const O = this;
 
     if (P instanceof SymbolValue) {
@@ -60,7 +62,7 @@ const InternalMethods = {
     if (!exports.has(P)) {
       return Value.undefined;
     }
-    const value = Q(O.Get(P, O));
+    const value = Q(yield* O.Get(P, O));
     return Descriptor({
       Value: value,
       Writable: Value.true,
@@ -68,14 +70,14 @@ const InternalMethods = {
       Configurable: Value.false,
     });
   },
-  DefineOwnProperty(P, Desc) {
+  * DefineOwnProperty(P, Desc) {
     const O = this;
 
     if (P instanceof SymbolValue) {
-      return OrdinaryDefineOwnProperty(O, P, Desc);
+      return yield* OrdinaryDefineOwnProperty(O, P, Desc);
     }
 
-    const current = Q(O.GetOwnProperty(P));
+    const current = Q(yield* O.GetOwnProperty(P));
     if (current instanceof UndefinedValue) {
       return Value.false;
     }
@@ -96,11 +98,11 @@ const InternalMethods = {
     }
     return Value.true;
   },
-  HasProperty(P) {
+  * HasProperty(P) {
     const O = this;
 
     if (P instanceof SymbolValue) {
-      return OrdinaryHasProperty(O, P);
+      return yield* OrdinaryHasProperty(O, P);
     }
     const exports = O.Exports;
     if (exports.has(P)) {
@@ -109,7 +111,7 @@ const InternalMethods = {
     return Value.false;
   },
   /** https://tc39.es/ecma262/#sec-module-namespace-exotic-objects-get-p-receiver */
-  Get(P, Receiver) {
+  * Get(P, Receiver) {
     const O = this;
 
     // 1. Assert: IsPropertyKey(P) is true.
@@ -117,7 +119,7 @@ const InternalMethods = {
     // 2. If Type(P) is Symbol, then
     if (P instanceof SymbolValue) {
       // a. Return ? OrdinaryGet(O, P, Receiver).
-      return OrdinaryGet(O, P, Receiver);
+      return yield* OrdinaryGet(O, P, Receiver);
     }
     // 3. Let exports be O.[[Exports]].
     const exports = O.Exports;
@@ -147,17 +149,17 @@ const InternalMethods = {
       return surroundingAgent.Throw('ReferenceError', 'NotDefined', P);
     }
     // 13. Return ? targetEnv.GetBindingValue(binding.[[BindingName]], true).
-    return Q(targetEnv.GetBindingValue(binding.BindingName, Value.true));
+    return Q(yield* targetEnv.GetBindingValue(binding.BindingName, Value.true));
   },
-  Set() {
+  * Set() {
     return Value.false;
   },
-  Delete(P) {
+  * Delete(P) {
     const O = this;
 
     Assert(IsPropertyKey(P));
     if (P instanceof SymbolValue) {
-      return Q(OrdinaryDelete(O, P));
+      return Q(yield* OrdinaryDelete(O, P));
     }
     const exports = O.Exports;
     if (exports.has(P)) {
@@ -165,7 +167,7 @@ const InternalMethods = {
     }
     return Value.true;
   },
-  OwnPropertyKeys() {
+  * OwnPropertyKeys() {
     const O = this;
 
     const exports: PropertyKeyValue[] = [...O.Exports];

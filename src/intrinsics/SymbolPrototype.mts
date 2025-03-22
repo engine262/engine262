@@ -8,13 +8,13 @@ import {
 } from '../value.mts';
 import {
   surroundingAgent,
-} from '../engine.mts';
+} from '../host-defined/engine.mts';
 import {
   Assert,
   Realm,
   SymbolDescriptiveString,
 } from '../abstract-ops/all.mts';
-import { Q, type ExpressionCompletion } from '../completion.mts';
+import { Q, type ValueCompletion } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-thissymbolvalue */
@@ -37,7 +37,7 @@ function thisSymbolValue(value: Value) {
 }
 
 /** https://tc39.es/ecma262/#sec-symbol.prototype.description */
-function SymbolProto_descriptionGetter(_argList: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function SymbolProto_descriptionGetter(_argList: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let s be the this value.
   const s = thisValue;
   // 2. Let sym be ? thisSymbolValue(s).
@@ -47,7 +47,7 @@ function SymbolProto_descriptionGetter(_argList: Arguments, { thisValue }: Funct
 }
 
 /** https://tc39.es/ecma262/#sec-symbol.prototype.tostring */
-function SymbolProto_toString(_argList: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function SymbolProto_toString(_argList: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let sym be ? thisSymbolValue(this value).
   const sym = Q(thisSymbolValue(thisValue));
   // 2. Return SymbolDescriptiveString(sym).
@@ -55,13 +55,13 @@ function SymbolProto_toString(_argList: Arguments, { thisValue }: FunctionCallCo
 }
 
 /** https://tc39.es/ecma262/#sec-symbol.prototype.valueof */
-function SymbolProto_valueOf(_argList: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function SymbolProto_valueOf(_argList: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Return ? thisSymbolValue(this value).
   return Q(thisSymbolValue(thisValue));
 }
 
 /** https://tc39.es/ecma262/#sec-symbol.prototype-@@toprimitive */
-function SymbolProto_toPrimitive(_argList: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function SymbolProto_toPrimitive(_argList: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Return ? thisSymbolValue(this value).
   return Q(thisSymbolValue(thisValue));
 }

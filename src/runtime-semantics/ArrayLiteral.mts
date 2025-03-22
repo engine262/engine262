@@ -32,7 +32,7 @@ function* ArrayAccumulation(ElementList: ParseNode.ElementList, array: ObjectVal
     switch (element.type) {
       case 'Elision':
         postIndex += 1;
-        Q(Set(array, Value('length'), F(postIndex), Value.true));
+        Q(yield* Set(array, Value('length'), F(postIndex), Value.true));
         break;
       case 'SpreadElement':
         postIndex = Q(yield* ArrayAccumulation_SpreadElement(element, array, postIndex));
@@ -50,13 +50,13 @@ function* ArrayAccumulation_SpreadElement({ AssignmentExpression }: ParseNode.Sp
   // 1. Let spreadRef be the result of evaluating AssignmentExpression.
   const spreadRef = yield* Evaluate(AssignmentExpression);
   // 2. Let spreadObj be ? GetValue(spreadRef).
-  const spreadObj = Q(GetValue(spreadRef));
+  const spreadObj = Q(yield* GetValue(spreadRef));
   // 3. Let iteratorRecord be ? GetIterator(spreadObj).
-  const iteratorRecord = Q(GetIterator(spreadObj, 'sync'));
+  const iteratorRecord = Q(yield* GetIterator(spreadObj, 'sync'));
   // 4. Repeat,
   while (true) {
     // a. Let next be ? IteratorStep(iteratorRecord).
-    const next = Q(IteratorStepValue(iteratorRecord));
+    const next = Q(yield* IteratorStepValue(iteratorRecord));
     // b. If next is done, return nextIndex.
     if (next === 'done') {
       return nextIndex;
@@ -73,7 +73,7 @@ function* ArrayAccumulation_AssignmentExpression(AssignmentExpression: ParseNode
   // 2. Let initResult be the result of evaluating AssignmentExpression.
   const initResult = yield* Evaluate(AssignmentExpression);
   // 3. Let initValue be ? GetValue(initResult).
-  const initValue = Q(GetValue(initResult));
+  const initValue = Q(yield* GetValue(initResult));
   // 4. Let created be ! CreateDataPropertyOrThrow(array, ! ToString(𝔽(nextIndex)), initValue).
   X(CreateDataPropertyOrThrow(array, X(ToString(F(nextIndex))), initValue));
   // 5. Return nextIndex + 1.

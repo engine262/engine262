@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Assert,
   DateFromTime,
@@ -37,14 +37,14 @@ import {
   type FunctionCallContext,
 } from '../value.mts';
 import {
-  Q, X, type ExpressionCompletion,
+  Q, X, type ValueCompletion, type ValueEvaluator,
 } from '../completion.mts';
 import { StringPad } from '../runtime-semantics/all.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import type { DateObject } from './Date.mts';
 
 
-export function thisTimeValue(value: Value): ExpressionCompletion<NumberValue> {
+export function thisTimeValue(value: Value): ValueCompletion<NumberValue> {
   if (value instanceof ObjectValue && 'DateValue' in value) {
     return (value as DateObject).DateValue;
   }
@@ -52,7 +52,7 @@ export function thisTimeValue(value: Value): ExpressionCompletion<NumberValue> {
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getdate */
-function DateProto_getDate(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function DateProto_getDate(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
     return F(NaN);
@@ -61,7 +61,7 @@ function DateProto_getDate(_args: Arguments, { thisValue }: FunctionCallContext)
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getday */
-function DateProto_getDay(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function DateProto_getDay(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
     return F(NaN);
@@ -70,7 +70,7 @@ function DateProto_getDay(_args: Arguments, { thisValue }: FunctionCallContext):
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getfullyear */
-function DateProto_getFullYear(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function DateProto_getFullYear(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
     return F(NaN);
@@ -79,7 +79,7 @@ function DateProto_getFullYear(_args: Arguments, { thisValue }: FunctionCallCont
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.gethours */
-function DateProto_getHours(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function DateProto_getHours(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
     return F(NaN);
@@ -88,7 +88,7 @@ function DateProto_getHours(_args: Arguments, { thisValue }: FunctionCallContext
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getmilliseconds */
-function DateProto_getMilliseconds(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function DateProto_getMilliseconds(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
     return F(NaN);
@@ -97,7 +97,7 @@ function DateProto_getMilliseconds(_args: Arguments, { thisValue }: FunctionCall
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getminutes */
-function DateProto_getMinutes(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function DateProto_getMinutes(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
     return F(NaN);
@@ -106,7 +106,7 @@ function DateProto_getMinutes(_args: Arguments, { thisValue }: FunctionCallConte
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getmonth */
-function DateProto_getMonth(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function DateProto_getMonth(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
     return F(NaN);
@@ -115,7 +115,7 @@ function DateProto_getMonth(_args: Arguments, { thisValue }: FunctionCallContext
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getseconds */
-function DateProto_getSeconds(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function DateProto_getSeconds(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
     return F(NaN);
@@ -124,12 +124,12 @@ function DateProto_getSeconds(_args: Arguments, { thisValue }: FunctionCallConte
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.gettime */
-function DateProto_getTime(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function DateProto_getTime(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   return Q(thisTimeValue(thisValue));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.gettimezoneoffset */
-function DateProto_getTimezoneOffset(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function DateProto_getTimezoneOffset(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
     return F(NaN);
@@ -138,7 +138,7 @@ function DateProto_getTimezoneOffset(_args: Arguments, { thisValue }: FunctionCa
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getutcdate */
-function DateProto_getUTCDate(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function DateProto_getUTCDate(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
     return F(NaN);
@@ -147,7 +147,7 @@ function DateProto_getUTCDate(_args: Arguments, { thisValue }: FunctionCallConte
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getutcday */
-function DateProto_getUTCDay(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function DateProto_getUTCDay(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
     return F(NaN);
@@ -156,7 +156,7 @@ function DateProto_getUTCDay(_args: Arguments, { thisValue }: FunctionCallContex
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getutcfullyear */
-function DateProto_getUTCFullYear(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function DateProto_getUTCFullYear(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
     return F(NaN);
@@ -165,7 +165,7 @@ function DateProto_getUTCFullYear(_args: Arguments, { thisValue }: FunctionCallC
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getutchours */
-function DateProto_getUTCHours(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function DateProto_getUTCHours(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
     return F(NaN);
@@ -174,7 +174,7 @@ function DateProto_getUTCHours(_args: Arguments, { thisValue }: FunctionCallCont
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getutcmilliseconds */
-function DateProto_getUTCMilliseconds(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function DateProto_getUTCMilliseconds(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
     return F(NaN);
@@ -183,7 +183,7 @@ function DateProto_getUTCMilliseconds(_args: Arguments, { thisValue }: FunctionC
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getutcminutes */
-function DateProto_getUTCMinutes(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function DateProto_getUTCMinutes(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
     return F(NaN);
@@ -192,7 +192,7 @@ function DateProto_getUTCMinutes(_args: Arguments, { thisValue }: FunctionCallCo
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getutcmonth */
-function DateProto_getUTCMonth(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function DateProto_getUTCMonth(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
     return F(NaN);
@@ -201,7 +201,7 @@ function DateProto_getUTCMonth(_args: Arguments, { thisValue }: FunctionCallCont
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.getutcseconds */
-function DateProto_getUTCSeconds(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function DateProto_getUTCSeconds(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
     return F(NaN);
@@ -210,9 +210,9 @@ function DateProto_getUTCSeconds(_args: Arguments, { thisValue }: FunctionCallCo
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setdate */
-function DateProto_setDate([date = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* DateProto_setDate([date = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   let t = Q(thisTimeValue(thisValue));
-  const dt = Q(ToNumber(date));
+  const dt = Q(yield* ToNumber(date));
   if (t.isNaN()) {
     return t;
   }
@@ -225,19 +225,19 @@ function DateProto_setDate([date = Value.undefined]: Arguments, { thisValue }: F
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setfullyear */
-function DateProto_setFullYear([year = Value.undefined, month, date]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* DateProto_setFullYear([year = Value.undefined, month, date]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   let t = Q(thisTimeValue(thisValue));
   t = t.isNaN() ? F(+0) : LocalTime(t);
-  const y = Q(ToNumber(year));
+  const y = Q(yield* ToNumber(year));
   let m;
   if (month !== undefined) {
-    m = Q(ToNumber(month));
+    m = Q(yield* ToNumber(month));
   } else {
     m = MonthFromTime(t);
   }
   let dt;
   if (date !== undefined) {
-    dt = Q(ToNumber(date));
+    dt = Q(yield* ToNumber(date));
   } else {
     dt = DateFromTime(t);
   }
@@ -249,24 +249,24 @@ function DateProto_setFullYear([year = Value.undefined, month, date]: Arguments,
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.sethours */
-function DateProto_setHours([hour = Value.undefined, min, sec, ms]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* DateProto_setHours([hour = Value.undefined, min, sec, ms]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const t = LocalTime(Q(thisTimeValue(thisValue)));
-  const h = Q(ToNumber(hour));
+  const h = Q(yield* ToNumber(hour));
   let m;
   if (min !== undefined) {
-    m = Q(ToNumber(min));
+    m = Q(yield* ToNumber(min));
   } else {
     m = MinFromTime(t);
   }
   let s;
   if (sec !== undefined) {
-    s = Q(ToNumber(sec));
+    s = Q(yield* ToNumber(sec));
   } else {
     s = SecFromTime(t);
   }
   let milli;
   if (ms !== undefined) {
-    milli = Q(ToNumber(ms));
+    milli = Q(yield* ToNumber(ms));
   } else {
     milli = msFromTime(t);
   }
@@ -278,9 +278,9 @@ function DateProto_setHours([hour = Value.undefined, min, sec, ms]: Arguments, {
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setmilliseconds */
-function DateProto_setMilliseconds([ms = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* DateProto_setMilliseconds([ms = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const t = LocalTime(Q(thisTimeValue(thisValue)));
-  ms = Q(ToNumber(ms));
+  ms = Q(yield* ToNumber(ms));
   const time = MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), ms);
   const u = TimeClip(UTC(MakeDate(Day(t), time)));
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
@@ -289,22 +289,22 @@ function DateProto_setMilliseconds([ms = Value.undefined]: Arguments, { thisValu
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setminutes */
-function DateProto_setMinutes([min = Value.undefined, sec, ms]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* DateProto_setMinutes([min = Value.undefined, sec, ms]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let t be LocalTime(? thisTimeValue(this value)).
   const t = LocalTime(Q(thisTimeValue(thisValue)));
   // 2. Let m be ? ToNumber(min).
-  const m = Q(ToNumber(min));
+  const m = Q(yield* ToNumber(min));
   let s;
   // 3. If sec is not present, let s be SecFromTime(t); otherwise, let s be ? ToNumber(sec).
   if (sec !== undefined) {
-    s = Q(ToNumber(sec));
+    s = Q(yield* ToNumber(sec));
   } else {
     s = SecFromTime(t);
   }
   let milli;
   // 4. If ms is not present, let milli be msFromTime(t); otherwise, let milli be ? ToNumber(ms).
   if (ms !== undefined) {
-    milli = Q(ToNumber(ms));
+    milli = Q(yield* ToNumber(ms));
   } else {
     milli = msFromTime(t);
   }
@@ -320,12 +320,12 @@ function DateProto_setMinutes([min = Value.undefined, sec, ms]: Arguments, { thi
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setmonth */
-function DateProto_setMonth([month = Value.undefined, date]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* DateProto_setMonth([month = Value.undefined, date]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const t = LocalTime(Q(thisTimeValue(thisValue)));
-  const m = Q(ToNumber(month));
+  const m = Q(yield* ToNumber(month));
   let dt;
   if (date !== undefined) {
-    dt = Q(ToNumber(date));
+    dt = Q(yield* ToNumber(date));
   } else {
     dt = DateFromTime(t);
   }
@@ -337,12 +337,12 @@ function DateProto_setMonth([month = Value.undefined, date]: Arguments, { thisVa
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setseconds */
-function DateProto_setSeconds([sec = Value.undefined, ms]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* DateProto_setSeconds([sec = Value.undefined, ms]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const t = LocalTime(Q(thisTimeValue(thisValue)));
-  const s = Q(ToNumber(sec));
+  const s = Q(yield* ToNumber(sec));
   let milli;
   if (ms !== undefined) {
-    milli = Q(ToNumber(ms));
+    milli = Q(yield* ToNumber(ms));
   } else {
     milli = msFromTime(t);
   }
@@ -354,9 +354,9 @@ function DateProto_setSeconds([sec = Value.undefined, ms]: Arguments, { thisValu
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.settime */
-function DateProto_setTime([time = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* DateProto_setTime([time = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   Q(thisTimeValue(thisValue));
-  const t = Q(ToNumber(time));
+  const t = Q(yield* ToNumber(time));
   const v = TimeClip(t);
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
   (thisValue as DateObject).DateValue = v;
@@ -364,9 +364,9 @@ function DateProto_setTime([time = Value.undefined]: Arguments, { thisValue }: F
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setutcdate */
-function DateProto_setUTCDate([date = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* DateProto_setUTCDate([date = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const t = Q(thisTimeValue(thisValue));
-  const dt = Q(ToNumber(date));
+  const dt = Q(yield* ToNumber(date));
   if (t.isNaN()) {
     return t;
   }
@@ -378,21 +378,21 @@ function DateProto_setUTCDate([date = Value.undefined]: Arguments, { thisValue }
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setutcfullyear */
-function DateProto_setUTCFullYear([year = Value.undefined, month, date]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* DateProto_setUTCFullYear([year = Value.undefined, month, date]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   let t = Q(thisTimeValue(thisValue));
   if (t.isNaN()) {
     t = F(+0);
   }
-  const y = Q(ToNumber(year));
+  const y = Q(yield* ToNumber(year));
   let m;
   if (month !== undefined) {
-    m = Q(ToNumber(month));
+    m = Q(yield* ToNumber(month));
   } else {
     m = MonthFromTime(t);
   }
   let dt;
   if (date !== undefined) {
-    dt = Q(ToNumber(date));
+    dt = Q(yield* ToNumber(date));
   } else {
     dt = DateFromTime(t);
   }
@@ -404,24 +404,24 @@ function DateProto_setUTCFullYear([year = Value.undefined, month, date]: Argumen
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setutchours */
-function DateProto_setUTCHours([hour = Value.undefined, min, sec, ms]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* DateProto_setUTCHours([hour = Value.undefined, min, sec, ms]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const t = Q(thisTimeValue(thisValue));
-  const h = Q(ToNumber(hour));
+  const h = Q(yield* ToNumber(hour));
   let m;
   if (min !== undefined) {
-    m = Q(ToNumber(min));
+    m = Q(yield* ToNumber(min));
   } else {
     m = MinFromTime(t);
   }
   let s;
   if (sec !== undefined) {
-    s = Q(ToNumber(sec));
+    s = Q(yield* ToNumber(sec));
   } else {
     s = SecFromTime(t);
   }
   let milli;
   if (ms !== undefined) {
-    milli = Q(ToNumber(ms));
+    milli = Q(yield* ToNumber(ms));
   } else {
     milli = msFromTime(t);
   }
@@ -433,9 +433,9 @@ function DateProto_setUTCHours([hour = Value.undefined, min, sec, ms]: Arguments
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setutcmilliseconds */
-function DateProto_setUTCMilliseconds([ms = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* DateProto_setUTCMilliseconds([ms = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const t = Q(thisTimeValue(thisValue));
-  const milli = Q(ToNumber(ms));
+  const milli = Q(yield* ToNumber(ms));
   const time = MakeTime(HourFromTime(t), MinFromTime(t), SecFromTime(t), milli);
   const v = TimeClip(MakeDate(Day(t), time));
   Q(surroundingAgent.debugger_tryTouchDuringPreview(thisValue as DateObject));
@@ -444,18 +444,18 @@ function DateProto_setUTCMilliseconds([ms = Value.undefined]: Arguments, { thisV
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setutcminutes */
-function DateProto_setUTCMinutes([min = Value.undefined, sec, ms]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* DateProto_setUTCMinutes([min = Value.undefined, sec, ms]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const t = Q(thisTimeValue(thisValue));
-  const m = Q(ToNumber(min));
+  const m = Q(yield* ToNumber(min));
   let s;
   if (sec !== undefined) {
-    s = Q(ToNumber(sec));
+    s = Q(yield* ToNumber(sec));
   } else {
     s = SecFromTime(t);
   }
   let milli;
   if (ms !== undefined) {
-    milli = Q(ToNumber(ms));
+    milli = Q(yield* ToNumber(ms));
   } else {
     milli = msFromTime(t);
   }
@@ -467,12 +467,12 @@ function DateProto_setUTCMinutes([min = Value.undefined, sec, ms]: Arguments, { 
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setutcmonth */
-function DateProto_setUTCMonth([month = Value.undefined, date]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* DateProto_setUTCMonth([month = Value.undefined, date]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const t = Q(thisTimeValue(thisValue));
-  const m = Q(ToNumber(month));
+  const m = Q(yield* ToNumber(month));
   let dt;
   if (date !== undefined) {
-    dt = Q(ToNumber(date));
+    dt = Q(yield* ToNumber(date));
   } else {
     dt = DateFromTime(t);
   }
@@ -484,12 +484,12 @@ function DateProto_setUTCMonth([month = Value.undefined, date]: Arguments, { thi
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.setutcseconds */
-function DateProto_setUTCSeconds([sec = Value.undefined, ms]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* DateProto_setUTCSeconds([sec = Value.undefined, ms]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const t = Q(thisTimeValue(thisValue));
-  const s = Q(ToNumber(sec));
+  const s = Q(yield* ToNumber(sec));
   let milli;
   if (ms !== undefined) {
-    milli = Q(ToNumber(ms));
+    milli = Q(yield* ToNumber(ms));
   } else {
     milli = msFromTime(t);
   }
@@ -501,7 +501,7 @@ function DateProto_setUTCSeconds([sec = Value.undefined, ms]: Arguments, { thisV
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.todatestring */
-function DateProto_toDateString(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* DateProto_toDateString(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = thisValue;
   if (!(O instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Date', O);
@@ -515,7 +515,7 @@ function DateProto_toDateString(_args: Arguments, { thisValue }: FunctionCallCon
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.toisostring */
-function DateProto_toISOString(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+export function DateProto_toISOString(_args: Arguments, { thisValue }: FunctionCallContext) {
   const t = Q(thisTimeValue(thisValue));
   if (!Number.isFinite(R(t))) {
     return surroundingAgent.Throw('RangeError', 'DateInvalidTime');
@@ -544,13 +544,13 @@ function DateProto_toISOString(_args: Arguments, { thisValue }: FunctionCallCont
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.tojson */
-function DateProto_toJSON(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* DateProto_toJSON(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = Q(ToObject(thisValue));
-  const tv = Q(ToPrimitive(O, 'number'));
+  const tv = Q(yield* ToPrimitive(O, 'number'));
   if (tv instanceof NumberValue && !Number.isFinite(R(tv))) {
     return Value.null;
   }
-  return Q(Invoke(O, Value('toISOString')));
+  return Q(yield* Invoke(O, Value('toISOString')));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.tolocaledatestring */
@@ -572,7 +572,7 @@ function DateProto_toLocaleTimeString() {
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.tostring */
-function DateProto_toString(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function DateProto_toString(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const tv = Q(thisTimeValue(thisValue));
   return ToDateString(tv);
 }
@@ -629,7 +629,7 @@ export function ToDateString(tv: NumberValue) {
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.totimestring */
-function DateProto_toTimeString(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function DateProto_toTimeString(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const O = thisValue;
   if (!(O instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Date', O);
@@ -643,7 +643,7 @@ function DateProto_toTimeString(_args: Arguments, { thisValue }: FunctionCallCon
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.toutcstring */
-function DateProto_toUTCString(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function DateProto_toUTCString(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const O = thisValue;
   if (!(O instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Date', O);
@@ -663,12 +663,12 @@ function DateProto_toUTCString(_args: Arguments, { thisValue }: FunctionCallCont
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.valueof */
-function DateProto_valueOf(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function DateProto_valueOf(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   return Q(thisTimeValue(thisValue));
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype-@@toprimitive */
-function DateProto_toPrimitive([hint = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* DateProto_toPrimitive([hint = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = thisValue;
   if (!(O instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Date', O);
@@ -681,7 +681,7 @@ function DateProto_toPrimitive([hint = Value.undefined]: Arguments, { thisValue 
   } else {
     return surroundingAgent.Throw('TypeError', 'InvalidHint', hint);
   }
-  return Q(OrdinaryToPrimitive(O, tryFirst));
+  return Q(yield* OrdinaryToPrimitive(O, tryFirst));
 }
 
 export function bootstrapDatePrototype(realmRec: Realm) {

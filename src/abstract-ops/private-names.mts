@@ -1,5 +1,5 @@
 import { ObjectValue, PrivateName, Value } from '../value.mts';
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import { Q, X } from '../completion.mts';
 import { PrivateElementRecord } from '../runtime-semantics/all.mts';
 import { Assert, Call } from './all.mts';
@@ -18,7 +18,7 @@ export function PrivateElementFind(P: PrivateName, O: ObjectValue) {
 }
 
 /** https://tc39.es/ecma262/#sec-privateget */
-export function PrivateGet(P: PrivateName, O: ObjectValue) {
+export function* PrivateGet(P: PrivateName, O: ObjectValue) {
   // 1. Let entry be ! PrivateElementFind(P, O).
   const entry = X(PrivateElementFind(P, O));
   // 2. If entry is empty, throw a TypeError exception.
@@ -39,10 +39,10 @@ export function PrivateGet(P: PrivateName, O: ObjectValue) {
   // 6. Let getter be entry.[[Get]].
   const getter = entry.Get!;
   // 7. Return ? Call(getter, O).
-  return Q(Call(getter, O));
+  return Q(yield* Call(getter, O));
 }
 
-export function PrivateSet(P: PrivateName, O: ObjectValue, value: Value) {
+export function* PrivateSet(P: PrivateName, O: ObjectValue, value: Value) {
   // 1. Let entry be ! PrivateElementFind(P, O).
   const entry = X(PrivateElementFind(P, O));
   // 2. If entry is empty, throw a TypeError exception.
@@ -66,7 +66,7 @@ export function PrivateSet(P: PrivateName, O: ObjectValue, value: Value) {
     // c. Let setter be entry.[[Set]].
     const setter = entry.Set!;
     // d. Perform ? Call(setter, O, « value »).
-    Q(Call(setter, O, [value]));
+    Q(yield* Call(setter, O, [value]));
   }
   return undefined;
 }

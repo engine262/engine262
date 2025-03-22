@@ -1,8 +1,8 @@
-import type Protocol from 'devtools-protocol';
+import type { Protocol } from 'devtools-protocol';
 import { InspectorContext } from './context.mts';
 import * as impl from './methods.mts';
 import type { DebuggerContext, DebuggerPreference, DevtoolEvents } from './types.mts';
-import type { Arguments, ManagedRealm } from '#self';
+import { surroundingAgent, type Arguments, type ManagedRealm } from '#self';
 
 const ignoreNamespaces = ['Network'];
 const ignoreMethods: string[] = [];
@@ -15,11 +15,35 @@ export abstract class Inspector {
 
   readonly preference: DebuggerPreference = { preview: false, previewDebug: false };
 
-  #contexts: InspectorContext[] = [];
+  #contexts: [InspectorContext, Protocol.Runtime.ExecutionContextDescription][] = [];
 
-  attachRealm(realm: ManagedRealm) {
-    this.#contexts.push(new InspectorContext(realm));
+  attachRealm(realm: ManagedRealm, name = 'engine262') {
+    const id = this.#contexts.length;
+    const desc: Protocol.Runtime.ExecutionContextDescription = {
+      id,
+      origin: 'vm://realm',
+      name,
+      uniqueId: '',
+    };
+    this.#contexts.push([new InspectorContext(realm), desc]);
     realm.HostDefined.attachingInspector = this;
+
+    const oldOnDebugger = surroundingAgent.hostDefinedOptions.onDebugger;
+    surroundingAgent.hostDefinedOptions.onDebugger = () => {
+      this.sendEvent['Debugger.paused']({
+        reason: 'debugCommand',
+        callFrames: this.#context.getContext().getDebuggerCallFrame(),
+      });
+      oldOnDebugger?.();
+    };
+
+    this.#context.sendEvent['Runtime.executionContextCreated']({ context: desc });
+  }
+
+  #onDebuggerAttached() {
+    for (const [, context] of this.#contexts) {
+      this.sendEvent['Runtime.executionContextCreated']({ context });
+    }
   }
 
   protected onMessage(id: unknown, methodArg: string, params: unknown): void {
@@ -60,8 +84,8 @@ export abstract class Inspector {
     },
   }));
 
-  console(realm: ManagedRealm, type: Protocol.Protocol.Runtime.ConsoleAPICalledEventType, args: Arguments) {
-    const context = this.#contexts.findIndex((c) => c.realm === realm);
+  console(realm: ManagedRealm, type: Protocol.Runtime.ConsoleAPICalledEventType, args: Arguments) {
+    const context = this.#contexts.findIndex((c) => c[0].realm === realm);
     this.sendEvent['Runtime.consoleAPICalled']({
       type,
       // @ts-expect-error
@@ -74,6 +98,7 @@ export abstract class Inspector {
   #context: DebuggerContext = {
     sendEvent: this.sendEvent,
     preference: this.preference,
-    getContext: (id = 0) => this.#contexts.at(id)!,
+    getContext: (id = 0) => this.#contexts.at(id)![0],
+    onDebuggerAttached: this.#onDebuggerAttached.bind(this),
   };
 }

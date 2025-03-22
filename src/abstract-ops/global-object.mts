@@ -1,4 +1,4 @@
-import { ExecutionContext, HostEnsureCanCompileStrings, surroundingAgent } from '../engine.mts';
+import { ExecutionContext, HostEnsureCanCompileStrings, surroundingAgent } from '../host-defined/engine.mts';
 import { JSStringValue, NullValue, Value } from '../value.mts';
 import { InstantiateFunctionObject } from '../runtime-semantics/all.mts';
 import {
@@ -14,7 +14,7 @@ import {
   NormalCompletion,
   EnsureCompletion,
   Q, X,
-  type ExpressionCompletion,
+  type ValueEvaluator,
   ThrowCompletion,
   type PlainCompletion,
 } from '../completion.mts';
@@ -27,8 +27,8 @@ import {
   ObjectEnvironmentRecord,
   PrivateEnvironmentRecord,
 } from '../environment.mts';
-import { Evaluate } from '../evaluator.mts';
-import { __ts_cast__, JSStringSet, unwind } from '../helpers.mts';
+import { Evaluate, type PlainEvaluator } from '../evaluator.mts';
+import { __ts_cast__, JSStringSet } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { Assert, GetThisEnvironment, Realm } from './all.mts';
 
@@ -36,7 +36,7 @@ import { Assert, GetThisEnvironment, Realm } from './all.mts';
 /** https://tc39.es/ecma262/#sec-global-object */
 
 /** https://tc39.es/ecma262/#sec-performeval */
-export function PerformEval(x: Value, callerRealm: Realm, strictCaller: boolean, direct: boolean): ExpressionCompletion {
+export function* PerformEval(x: Value, callerRealm: Realm, strictCaller: boolean, direct: boolean): ValueEvaluator {
   // 1. Assert: If direct is false, then strictCaller is also false.
   if (direct === false) {
     Assert(strictCaller === false);
@@ -173,11 +173,11 @@ export function PerformEval(x: Value, callerRealm: Realm, strictCaller: boolean,
   // 26. Push evalContext onto the execution context stack.
   surroundingAgent.executionContextStack.push(evalContext);
   // 27. Let result be EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strictEval).
-  let result: PlainCompletion<void | Value> = EnsureCompletion(EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strictEval));
+  let result: PlainCompletion<void | Value> = EnsureCompletion(yield* EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strictEval));
   // 28. If result.[[Type]] is normal, then
   if (result.Type === 'normal') {
     // a. Set result to the result of evaluating body.
-    result = EnsureCompletion(unwind(Evaluate(body)) as PlainCompletion<void | Value>);
+    result = EnsureCompletion(yield* Evaluate(body));
   }
   // 29. If result.[[Type]] is normal and result.[[Value]] is empty, then
   if (result.Type === 'normal' && result.Value === undefined) {
@@ -192,7 +192,7 @@ export function PerformEval(x: Value, callerRealm: Realm, strictCaller: boolean,
 }
 
 /** https://tc39.es/ecma262/#sec-evaldeclarationinstantiation */
-function EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv: EnvironmentRecord, lexEnv: DeclarativeEnvironmentRecord, privateEnv: PrivateEnvironmentRecord | NullValue, strict: boolean): PlainCompletion<void> {
+function* EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv: EnvironmentRecord, lexEnv: DeclarativeEnvironmentRecord, privateEnv: PrivateEnvironmentRecord | NullValue, strict: boolean): PlainEvaluator<void> {
   // 1. Let varNames be the VarDeclaredNames of body.
   const varNames = VarDeclaredNames(body);
   // 2. Let varDeclarations be the VarScopedDeclarations of body.
@@ -204,7 +204,7 @@ function EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv: Enviro
       // i. For each name in varNames, do
       for (const name of varNames) {
         // 1. If varEnv.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
-        if (varEnv.HasLexicalDeclaration(name) === Value.true) {
+        if ((yield* varEnv.HasLexicalDeclaration(name)) === Value.true) {
           return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
         }
         // 2. NOTE: eval will not create a global var declaration that would be shadowed by a global lexical declaration.
@@ -222,7 +222,7 @@ function EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv: Enviro
         // 2. For each name in varNames, do
         for (const name of varNames) {
           // a. If thisEnv.HasBinding(name) is true, then
-          if (thisEnv.HasBinding(name) === Value.true) {
+          if ((yield* thisEnv.HasBinding(name)) === Value.true) {
             // i. Throw a SyntaxError exception.
             return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
             // ii. NOTE: Annex B.3.5 defines alternate semantics for the above step.
@@ -273,7 +273,7 @@ function EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv: Enviro
         // 1. If varEnv is a global Environment Record, then
         if (varEnv instanceof GlobalEnvironmentRecord) {
           // a. Let fnDefinable be ? varEnv.CanDeclareGlobalFunction(fn).
-          const fnDefinable = Q(varEnv.CanDeclareGlobalFunction(fn));
+          const fnDefinable = Q(yield* varEnv.CanDeclareGlobalFunction(fn));
           // b. Let fnDefinable be ? varEnv.CanDeclareGlobalFunction(fn).
           if (fnDefinable === Value.false) {
             return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', fn);
@@ -302,7 +302,7 @@ function EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv: Enviro
           // a. If varEnv is a global Environment Record, then
           if (varEnv instanceof GlobalEnvironmentRecord) {
             // i. Let vnDefinable be ? varEnv.CanDeclareGlobalVar(vn).
-            const vnDefinable = Q(varEnv.CanDeclareGlobalVar(vn));
+            const vnDefinable = Q(yield* varEnv.CanDeclareGlobalVar(vn));
             // ii. If vnDefinable is false, throw a TypeError exception.
             if (vnDefinable === Value.false) {
               return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', vn);
@@ -332,7 +332,7 @@ function EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv: Enviro
         Q(lexEnv.CreateImmutableBinding(dn, Value.true));
       } else { // ii. Else,
         // 1. Perform ? lexEnv.CreateMutableBinding(dn, false).
-        Q(lexEnv.CreateMutableBinding(dn, Value.false));
+        Q(yield* lexEnv.CreateMutableBinding(dn, Value.false));
       }
     }
   }
@@ -345,10 +345,10 @@ function EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv: Enviro
     // c. If varEnv is a global Environment Record, then
     if (varEnv instanceof GlobalEnvironmentRecord) {
       // i. Perform ? varEnv.CreateGlobalFunctionBinding(fn, fo, true).
-      Q(varEnv.CreateGlobalFunctionBinding(fn, fo, Value.true));
+      Q(yield* varEnv.CreateGlobalFunctionBinding(fn, fo, Value.true));
     } else { // d. Else,
       // i. Let bindingExists be varEnv.HasBinding(fn).
-      const bindingExists = varEnv.HasBinding(fn);
+      const bindingExists = yield* varEnv.HasBinding(fn);
       // ii. If bindingExists is false, then
       if (bindingExists === Value.false) {
         // 1. Let status be ! varEnv.CreateMutableBinding(fn, true).
@@ -367,10 +367,10 @@ function EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv: Enviro
     // a. If varEnv is a global Environment Record, then
     if (varEnv instanceof GlobalEnvironmentRecord) {
       // i. Perform ? varEnv.CreateGlobalVarBinding(vn, true).
-      Q(varEnv.CreateGlobalVarBinding(vn, Value.true));
+      Q(yield* varEnv.CreateGlobalVarBinding(vn, Value.true));
     } else { // b. Else,
       // i. Let bindingExists be varEnv.HasBinding(vn).
-      const bindingExists = varEnv.HasBinding(vn);
+      const bindingExists = yield* varEnv.HasBinding(vn);
       // ii. If bindingExists is false, then
       if (bindingExists === Value.false) {
         // 1. Let status be ! varEnv.CreateMutableBinding(vn, true).

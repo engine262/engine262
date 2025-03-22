@@ -23,9 +23,9 @@ export function* Evaluate_TemplateLiteral({ TemplateSpanList, ExpressionList }: 
     // 2. Let subRef be the result of evaluating Expression.
     const subRef = yield* Evaluate(Expression);
     // 3. Let sub be ? GetValue(subRef).
-    const sub = Q(GetValue(subRef));
+    const sub = Q(yield* GetValue(subRef));
     // 4. Let middle be ? ToString(sub).
-    const middle = Q(ToString(sub));
+    const middle = Q(yield* ToString(sub));
     str += head;
     str += middle.stringValue();
   }

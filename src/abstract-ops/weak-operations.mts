@@ -1,13 +1,9 @@
-import { surroundingAgent, HostCallJobCallback, type JobCallbackRecord } from '../engine.mts';
 import {
+  surroundingAgent, HostCallJobCallback, type JobCallbackRecord,
+  NormalCompletion, Q, X, type ValueEvaluator,
   BooleanValue, ObjectValue, SymbolValue, UndefinedValue, Value,
-} from '../value.mts';
-import {
-  NormalCompletion, Q, X, type ExpressionCompletion,
-} from '../completion.mts';
-import type { WeakRefObject } from '../intrinsics/WeakRef.mts';
-import type { FinalizationRegistryObject } from '../intrinsics/FinalizationRegistry.mts';
-import { Assert, KeyForSymbol } from './all.mts';
+  type WeakRefObject, type FinalizationRegistryObject, Assert, KeyForSymbol,
+} from '#self';
 
 /** https://tc39.es/ecma262/#sec-clear-kept-objects */
 export function ClearKeptObjects() {
@@ -41,7 +37,7 @@ export function WeakRefDeref(weakRef: WeakRefObject) {
 }
 
 /** https://tc39.es/ecma262/#sec-cleanup-finalization-registry */
-export function CleanupFinalizationRegistry(finalizationRegistry: FinalizationRegistryObject, callback?: JobCallbackRecord): ExpressionCompletion<UndefinedValue> {
+export function* CleanupFinalizationRegistry(finalizationRegistry: FinalizationRegistryObject, callback?: JobCallbackRecord): ValueEvaluator<UndefinedValue> {
   Q(surroundingAgent.debugger_tryTouchDuringPreview(finalizationRegistry));
   // 1. Assert: finalizationRegistry has [[Cells]] and [[CleanupCallback]] internal slots.
   Assert('Cells' in finalizationRegistry && 'CleanupCallback' in finalizationRegistry);
@@ -60,7 +56,7 @@ export function CleanupFinalizationRegistry(finalizationRegistry: FinalizationRe
     finalizationRegistry.Cells.splice(i, 1);
     i -= 1;
     // c. Perform ? HostCallJobCallback(callback, undefined, « cell.[[HeldValue]] »).
-    Q(HostCallJobCallback(callback, Value.undefined, [cell.HeldValue]));
+    Q(yield* HostCallJobCallback(callback, Value.undefined, [cell.HeldValue]));
   }
   // 4. Return NormalCompletion(undefined).
   return NormalCompletion(Value.undefined);

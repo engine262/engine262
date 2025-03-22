@@ -1,16 +1,12 @@
-import { surroundingAgent } from '../engine.mts';
+import { typedArrayInfoByType, type TypedArrayTypes } from '../intrinsics/TypedArray.mts';
 import {
+  surroundingAgent,
   NumberValue, BigIntValue, BooleanValue, Value,
   DataBlock,
   UndefinedValue,
   NullValue,
-} from '../value.mts';
-import {
-  Q, X, NormalCompletion, type ExpressionCompletion,
-} from '../completion.mts';
-import type { Mutable } from '../helpers.mts';
-import { typedArrayInfoByType, type TypedArrayTypes } from '../intrinsics/TypedArray.mts';
-import {
+  Q, X, NormalCompletion, type ValueEvaluator,
+  type Mutable,
   Assert, OrdinaryCreateFromConstructor,
   isNonNegativeInteger, CreateByteDataBlock,
   SameValue, CopyDataBlockBytes,
@@ -18,7 +14,7 @@ import {
   Z, R,
   type FunctionObject,
   type OrdinaryObject,
-} from './all.mts';
+} from '#self';
 
 export interface ArrayBufferObject extends OrdinaryObject {
   readonly ArrayBufferData: DataBlock | NullValue;
@@ -35,7 +31,7 @@ export function isArrayBufferObject(o: Value): o is ArrayBufferObject {
 }
 
 /** https://tc39.es/ecma262/#sec-allocatearraybuffer */
-export function AllocateArrayBuffer(constructor: FunctionObject, byteLength: number, maxByteLength?: number): ExpressionCompletion<ArrayBufferObject> {
+export function* AllocateArrayBuffer(constructor: FunctionObject, byteLength: number, maxByteLength?: number): ValueEvaluator<ArrayBufferObject> {
   const slots = ['ArrayBufferData', 'ArrayBufferByteLength', 'ArrayBufferDetachKey'];
   let allocatingResizableBuffer;
   if (maxByteLength !== undefined) {
@@ -49,7 +45,7 @@ export function AllocateArrayBuffer(constructor: FunctionObject, byteLength: num
     }
     slots.push('ArrayBufferMaxByteLength');
   }
-  const obj = Q(OrdinaryCreateFromConstructor(constructor, '%ArrayBuffer.prototype%', slots)) as Mutable<ArrayBufferObject>;
+  const obj = Q(yield* OrdinaryCreateFromConstructor(constructor, '%ArrayBuffer.prototype%', slots)) as Mutable<ArrayBufferObject>;
   // 2. Assert: byteLength is a non-negative integer.
   Assert(isNonNegativeInteger(byteLength));
   // 3. Let block be ? CreateByteDataBlock(byteLength).
@@ -98,9 +94,9 @@ export function IsSharedArrayBuffer(_obj: Value): BooleanValue {
   return Value.false;
 }
 
-export function CloneArrayBuffer(srcBuffer: ArrayBufferObject, srcByteOffset: number, srcLength: number): ExpressionCompletion<ArrayBufferObject> {
+export function* CloneArrayBuffer(srcBuffer: ArrayBufferObject, srcByteOffset: number, srcLength: number): ValueEvaluator<ArrayBufferObject> {
   Assert(IsDetachedBuffer(srcBuffer) === Value.false);
-  const targetBuffer = Q(AllocateArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), srcLength));
+  const targetBuffer = Q(yield* AllocateArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), srcLength));
   const srcBlock = srcBuffer.ArrayBufferData as DataBlock;
   const targetBlock = targetBuffer.ArrayBufferData as DataBlock;
   CopyDataBlockBytes(targetBlock, 0, srcBlock, srcByteOffset, srcLength);
@@ -186,7 +182,7 @@ export function NumericToRawBytes(type: TypedArrayTypes, value: NumberValue | Bi
     // a. Let n be the Element Size value specified in Table 61 for Element Type type.
     const n = typedArrayInfoByType[type].ElementSize;
     // b. Let convOp be the abstract operation named in the Conversion Operation column in Table 61 for Element Type type.
-    const convOp = typedArrayInfoByType[type].ConversionOperation;
+    const convOp = typedArrayInfoByType[type].ConversionOperation as (argument: Value) => ValueEvaluator<NumberValue | BigIntValue>;
     // c. Let intValue be convOp(value) treated as a mathematical value, whether the result is a BigInt or Number.
     const intValue = X(convOp(value));
     const dataViewType = type === 'Uint8C' ? 'Uint8' : type;
@@ -197,7 +193,7 @@ export function NumericToRawBytes(type: TypedArrayTypes, value: NumberValue | Bi
 }
 
 /** https://tc39.es/ecma262/#sec-setvalueinbuffer */
-export function SetValueInBuffer(arrayBuffer: ArrayBufferObject, byteIndex: number, type: TypedArrayTypes, value: BigIntValue | NumberValue, _isTypedArray: unknown, _order: unknown, isLittleEndian?: BooleanValue): ExpressionCompletion<UndefinedValue> {
+export function* SetValueInBuffer(arrayBuffer: ArrayBufferObject, byteIndex: number, type: TypedArrayTypes, value: BigIntValue | NumberValue, _isTypedArray: unknown, _order: unknown, isLittleEndian?: BooleanValue): ValueEvaluator<UndefinedValue> {
   // 1. Assert: IsDetachedBuffer(arrayBuffer) is false.
   Assert(IsDetachedBuffer(arrayBuffer) === Value.false);
   // 2. Assert: There are sufficient bytes in arrayBuffer starting at byteIndex to represent a value of type.

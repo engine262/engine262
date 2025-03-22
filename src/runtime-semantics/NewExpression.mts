@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Assert,
   Construct,
@@ -20,7 +20,7 @@ function* EvaluateNew(constructExpr: ParseNode.LeftHandSideExpression, args: und
   // 3. Let ref be the result of evaluating constructExpr.
   const ref = yield* Evaluate(constructExpr);
   // 4. Let constructor be ? GetValue(ref).
-  const constructor = Q(GetValue(ref));
+  const constructor = Q(yield* GetValue(ref));
   let argList;
   // 5. If arguments is empty, let argList be a new empty List.
   if (args === undefined) {
@@ -34,7 +34,7 @@ function* EvaluateNew(constructExpr: ParseNode.LeftHandSideExpression, args: und
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', constructor);
   }
   // 8. Return ? Construct(constructor, argList).
-  return Q(Construct(constructor as FunctionObject, argList));
+  return Q(yield* Construct(constructor as FunctionObject, argList));
 }
 
 /** https://tc39.es/ecma262/#sec-new-operator-runtime-semantics-evaluation */

@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Descriptor,
   Value,
@@ -11,12 +11,12 @@ import {
   F, R,
   Realm,
 } from '../abstract-ops/all.mts';
-import { Q, X, type ExpressionCompletion } from '../completion.mts';
+import { Q, X, type ValueEvaluator } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-math.abs */
-function Math_abs([x = Value.undefined]: Arguments): ExpressionCompletion {
-  const n = Q(ToNumber(x));
+function* Math_abs([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
   if (n.isNaN()) {
     return n;
   } else if (Object.is(R(n), -0)) {
@@ -32,8 +32,8 @@ function Math_abs([x = Value.undefined]: Arguments): ExpressionCompletion {
 }
 
 /** https://tc39.es/ecma262/#sec-math.acos */
-function Math_acos([x = Value.undefined]: Arguments): ExpressionCompletion {
-  const n = Q(ToNumber(x));
+function* Math_acos([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
   if (n.isNaN()) {
     return n;
   } else if (R(n) > 1) {
@@ -48,11 +48,11 @@ function Math_acos([x = Value.undefined]: Arguments): ExpressionCompletion {
 }
 
 /** https://tc39.es/ecma262/#sec-math.pow */
-function Math_pow([base = Value.undefined, exponent = Value.undefined]: Arguments): ExpressionCompletion {
+function* Math_pow([base = Value.undefined, exponent = Value.undefined]: Arguments): ValueEvaluator {
   // 1. Set base to ? ToNumber(base).
-  base = Q(ToNumber(base));
+  base = Q(yield* ToNumber(base));
   // 2. Set exponent to ? ToNumber(exponent).
-  exponent = Q(ToNumber(exponent));
+  exponent = Q(yield* ToNumber(exponent));
   // 3. Return ! Number::exponentiate(base, exponent).
   return X(NumberValue.exponentiate(base, exponent));
 }
@@ -157,21 +157,21 @@ export function bootstrapMath(realmRec: Realm) {
   ] as const).forEach(([name, length]) => {
     // TODO(18): Math
     /** https://tc39.es/ecma262/#sec-function-properties-of-the-math-object */
-    const method = (args: Arguments): ExpressionCompletion => {
+    const method = function* method(args: Arguments): ValueEvaluator {
       const nextArgs: number[] = [];
       for (let i = 0; i < args.length; i += 1) {
-        nextArgs[i] = R(Q(ToNumber(args[i])));
+        nextArgs[i] = R(Q(yield* ToNumber(args[i])));
       }
       // we're calling host Math functions here.
       return F((Math[name] as (...args: unknown[]) => number)(...nextArgs));
     };
     const func = CreateBuiltinFunction(method, length, Value(name), [], realmRec);
-    mathObj.DefineOwnProperty(Value(name), Descriptor({
+    X(mathObj.DefineOwnProperty(Value(name), Descriptor({
       Value: func,
       Writable: Value.true,
       Enumerable: Value.false,
       Configurable: Value.true,
-    }));
+    })));
   });
 
   realmRec.Intrinsics['%Math%'] = mathObj;

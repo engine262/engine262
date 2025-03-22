@@ -1,16 +1,13 @@
-import { EnsureCompletion, X } from '../completion.mts';
-import { ExecutionContext, surroundingAgent } from '../engine.mts';
-import { Evaluate } from '../evaluator.mts';
-import { Value } from '../value.mts';
 import { resume } from '../helpers.mts';
-import type { ParseNode } from '../parser/ParseNode.mts';
-import { Assert, Call, PromiseCapabilityRecord } from './all.mts';
+import {
+  EnsureCompletion, X, ExecutionContext, surroundingAgent, Evaluate, Value, type ParseNode, Assert, Call, PromiseCapabilityRecord,
+} from '#self';
 
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-async-function-objects */
 
 /** https://tc39.es/ecma262/#sec-asyncblockstart */
-export function AsyncBlockStart(promiseCapability: PromiseCapabilityRecord, asyncBody: ParseNode.AsyncBody | ParseNode.ExpressionBody | ParseNode.Module, asyncContext: ExecutionContext) {
+export function* AsyncBlockStart(promiseCapability: PromiseCapabilityRecord, asyncBody: ParseNode.AsyncBody | ParseNode.ExpressionBody | ParseNode.Module, asyncContext: ExecutionContext) {
   asyncContext.promiseCapability = promiseCapability;
 
   const runningContext = surroundingAgent.runningExecutionContext;
@@ -29,15 +26,15 @@ export function AsyncBlockStart(promiseCapability: PromiseCapabilityRecord, asyn
     return Value.undefined;
   }());
   surroundingAgent.executionContextStack.push(asyncContext);
-  const result = EnsureCompletion(resume(asyncContext, Value.undefined));
+  const result = EnsureCompletion(yield* resume(asyncContext, { type: 'await-resume', value: Value.undefined }));
   Assert(surroundingAgent.runningExecutionContext === runningContext);
   Assert(result.Type === 'normal' && result.Value === Value.undefined);
   return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-async-functions-abstract-operations-async-function-start */
-export function AsyncFunctionStart(promiseCapability: PromiseCapabilityRecord, asyncFunctionBody: ParseNode.AsyncBody | ParseNode.ExpressionBody) {
+export function* AsyncFunctionStart(promiseCapability: PromiseCapabilityRecord, asyncFunctionBody: ParseNode.AsyncBody | ParseNode.ExpressionBody) {
   const runningContext = surroundingAgent.runningExecutionContext;
   const asyncContext = runningContext.copy();
-  X(AsyncBlockStart(promiseCapability, asyncFunctionBody, asyncContext));
+  X(yield* AsyncBlockStart(promiseCapability, asyncFunctionBody, asyncContext));
 }

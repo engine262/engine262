@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   DataBlock, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
@@ -33,7 +33,7 @@ function ArrayBufferProto_byteLength(_args: Arguments, { thisValue }: FunctionCa
 }
 
 /** https://tc39.es/ecma262/#sec-arraybuffer.prototype.slice */
-function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
+function* ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Let O be the this value.
   const O = thisValue as ArrayBufferObject;
   // 2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
@@ -49,7 +49,7 @@ function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]
   // 5. Let len be O.[[ArrayBufferByteLength]].
   const len = O.ArrayBufferByteLength;
   // 6. Let relativeStart be ? ToIntegerOrInfinity(start).
-  const relativeStart = Q(ToIntegerOrInfinity(start));
+  const relativeStart = Q(yield* ToIntegerOrInfinity(start));
   let first;
   // 7. If relativeStart < 0, let first be max((len + relativeStart), 0); else let first be min(relativeStart, len).
   if (relativeStart < 0) {
@@ -62,7 +62,7 @@ function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]
   if (end === Value.undefined) {
     relativeEnd = len;
   } else {
-    relativeEnd = Q(ToIntegerOrInfinity(end));
+    relativeEnd = Q(yield* ToIntegerOrInfinity(end));
   }
   let final;
   // 9. If relativeEnd < 0, let final be max((len + relativeEnd), 0); else let final be min(relativeEnd, len).
@@ -74,9 +74,9 @@ function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]
   // 10. Let newLen be max(final - first, 0).
   const newLen = Math.max(final - first, 0);
   // 11. Let ctor be ? SpeciesConstructor(O, %ArrayBuffer%).
-  const ctor = Q(SpeciesConstructor(O, surroundingAgent.intrinsic('%ArrayBuffer%')));
+  const ctor = Q(yield* SpeciesConstructor(O, surroundingAgent.intrinsic('%ArrayBuffer%')));
   // 12. Let new be ? Construct(ctor, « newLen »).
-  const newO = Q(Construct(ctor, [F(newLen)])) as ArrayBufferObject;
+  const newO = Q(yield* Construct(ctor, [F(newLen)])) as ArrayBufferObject;
   // 13. Perform ? RequireInternalSlot(new, [[ArrayBufferData]]).
   Q(RequireInternalSlot(newO, 'ArrayBufferData'));
   // 14. If IsSharedArrayBuffer(new) is true, throw a TypeError exception.

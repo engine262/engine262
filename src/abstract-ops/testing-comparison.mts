@@ -1,6 +1,6 @@
 import {
   BigIntValue,
-  Type, BooleanValue, NullValue, UndefinedValue,
+  BooleanValue, NullValue, UndefinedValue,
   SymbolValue,
   JSStringValue,
   NumberValue,
@@ -8,9 +8,8 @@ import {
   Value,
   wellKnownSymbols,
 } from '../value.mts';
-import { surroundingAgent } from '../engine.mts';
-import { Q, X, type ExpressionCompletion } from '../completion.mts';
-import { OutOfRange } from '../helpers.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
+import { Q, X, type ValueEvaluator } from '../completion.mts';
 import {
   Assert,
   Get,
@@ -21,29 +20,22 @@ import {
   StringToBigInt,
   isProxyExoticObject,
   isArrayExoticObject, R,
-} from './all.mts';
+  SameType,
+} from '#self';
 
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-testing-and-comparison-operations */
 
 /** https://tc39.es/ecma262/#sec-requireobjectcoercible */
 export function RequireObjectCoercible(argument: Value) {
-  const type = Type(argument);
-  switch (type) {
-    case 'Undefined':
-      return surroundingAgent.Throw('TypeError', 'CannotConvertToObject', 'undefined');
-    case 'Null':
-      return surroundingAgent.Throw('TypeError', 'CannotConvertToObject', 'null');
-    case 'Boolean':
-    case 'Number':
-    case 'String':
-    case 'Symbol':
-    case 'BigInt':
-    case 'Object':
-      return argument;
-    default:
-      throw new OutOfRange('RequireObjectCoercible', { type, argument });
+  if (argument instanceof UndefinedValue) {
+    return surroundingAgent.Throw('TypeError', 'CannotConvertToObject', 'undefined');
   }
+  if (argument instanceof NullValue) {
+    return surroundingAgent.Throw('TypeError', 'CannotConvertToObject', 'null');
+  }
+  Assert(argument instanceof ObjectValue || argument instanceof BooleanValue || argument instanceof NumberValue || argument instanceof JSStringValue || argument instanceof SymbolValue || argument instanceof BigIntValue);
+  return argument;
 }
 
 /** https://tc39.es/ecma262/#sec-isarray */
@@ -87,9 +79,9 @@ export function IsConstructor(argument: Value) {
 }
 
 /** https://tc39.es/ecma262/#sec-isextensible-o */
-export function IsExtensible(O: ObjectValue) {
+export function* IsExtensible(O: ObjectValue) {
   Assert(O instanceof ObjectValue);
-  return O.IsExtensible();
+  return yield* O.IsExtensible();
 }
 
 /** https://tc39.es/ecma262/#sec-isinteger */
@@ -118,11 +110,11 @@ export function IsPropertyKey(argument: unknown) {
 }
 
 /** https://tc39.es/ecma262/#sec-isregexp */
-export function IsRegExp(argument: Value): ExpressionCompletion<BooleanValue> {
+export function* IsRegExp(argument: Value): ValueEvaluator<BooleanValue> {
   if (!(argument instanceof ObjectValue)) {
     return Value.false;
   }
-  const matcher = Q(Get(argument, wellKnownSymbols.match));
+  const matcher = Q(yield* Get(argument, wellKnownSymbols.match));
   if (matcher !== Value.undefined) {
     return ToBoolean(matcher);
   }
@@ -142,7 +134,7 @@ export function IsStringPrefix(p: JSStringValue, q: JSStringValue) {
 /** https://tc39.es/ecma262/#sec-samevalue */
 export function SameValue(x: Value, y: Value) {
   // If SameType(x, y) is false, return false.
-  if (Type(x) !== Type(y)) {
+  if (!SameType(x, y)) {
     return Value.false;
   }
   // If x is a Number, then
@@ -157,7 +149,7 @@ export function SameValue(x: Value, y: Value) {
 /** https://tc39.es/ecma262/#sec-samevaluezero */
 export function SameValueZero(x: Value, y: Value) {
   // 1. If SameType(x, y) is false, return false.
-  if (Type(x) !== Type(y)) {
+  if (!SameType(x, y)) {
     return Value.false;
   }
   // 2. If x is a Number, then
@@ -171,7 +163,7 @@ export function SameValueZero(x: Value, y: Value) {
 
 /** https://tc39.es/ecma262/#sec-samevaluenonnumber */
 export function SameValueNonNumber(x: Value, y: Value) {
-  Assert(Type(x) === Type(y));
+  Assert(SameType(x, y));
 
   if (x instanceof UndefinedValue || x instanceof NullValue) {
     return Value.true;
@@ -199,21 +191,21 @@ export function SameValueNonNumber(x: Value, y: Value) {
 }
 
 /** https://tc39.es/ecma262/#sec-abstract-relational-comparison */
-export function AbstractRelationalComparison(x: Value, y: Value, LeftFirst = true): ExpressionCompletion<BooleanValue | UndefinedValue> {
+export function* AbstractRelationalComparison(x: Value, y: Value, LeftFirst = true): ValueEvaluator<BooleanValue | UndefinedValue> {
   let px;
   let py;
   // 1. If the LeftFirst flag is true, then
   if (LeftFirst === true) {
     // a. Let px be ? ToPrimitive(x, number).
-    px = Q(ToPrimitive(x, 'number'));
+    px = Q(yield* ToPrimitive(x, 'number'));
     // b. Let py be ? ToPrimitive(y, number).
-    py = Q(ToPrimitive(y, 'number'));
+    py = Q(yield* ToPrimitive(y, 'number'));
   } else {
     // a. NOTE: The order of evaluation needs to be reversed to preserve left to right evaluation.
     // b. Let py be ? ToPrimitive(y, number).
-    py = Q(ToPrimitive(y, 'number'));
+    py = Q(yield* ToPrimitive(y, 'number'));
     // c. Let px be ? ToPrimitive(x, number).
-    px = Q(ToPrimitive(x, 'number'));
+    px = Q(yield* ToPrimitive(x, 'number'));
   }
   // 3. If Type(px) is String and Type(py) is String, then
   if (px instanceof JSStringValue && py instanceof JSStringValue) {
@@ -248,32 +240,32 @@ export function AbstractRelationalComparison(x: Value, y: Value, LeftFirst = tru
   } else {
     // a. If Type(px) is BigInt and Type(py) is String, then
     if (px instanceof BigIntValue && py instanceof JSStringValue) {
-      // i. Let ny be ! StringToBigInt(py).
-      const ny = X(StringToBigInt(py));
-      // ii. If ny is NaN, return undefined.
-      if (Number.isNaN(ny)) {
+      // i. Let ny be StringToBigInt(py).
+      const ny = StringToBigInt(py);
+      // ii. If ny is undefined, return undefined.
+      if (ny === undefined) {
         return Value.undefined;
       }
       // iii. Return BigInt::lessThan(px, ny).
-      return BigIntValue.lessThan(px, ny as BigIntValue);
+      return BigIntValue.lessThan(px, ny);
     }
     // b. If Type(px) is String and Type(py) is BigInt, then
     if (px instanceof JSStringValue && py instanceof BigIntValue) {
-      // i. Let ny be ! StringToBigInt(py).
-      const nx = X(StringToBigInt(px));
-      // ii. If ny is NaN, return undefined.
-      if (Number.isNaN(nx)) {
+      // i. Let ny be StringToBigInt(py).
+      const nx = StringToBigInt(px);
+      // ii. If ny is undefined, return undefined.
+      if (nx === undefined) {
         return Value.undefined;
       }
       // iii. Return BigInt::lessThan(px, ny).
-      return BigIntValue.lessThan(nx as BigIntValue, py);
+      return BigIntValue.lessThan(nx, py);
     }
     // c. Let nx be ? ToNumeric(px). NOTE: Because px and py are primitive values evaluation order is not important.
-    const nx = Q(ToNumeric(px));
+    const nx = Q(yield* ToNumeric(px));
     // d. Let ny be ? ToNumeric(py).
-    const ny = Q(ToNumeric(py));
+    const ny = Q(yield* ToNumeric(py));
     // e. If Type(nx) is the same as Type(ny), return Type(nx)::lessThan(nx, ny).
-    if (Type(nx) === Type(ny)) {
+    if (SameType(nx, ny)) {
       if (nx instanceof NumberValue) {
         return NumberValue.lessThan(nx, ny as NumberValue);
       } else {
@@ -302,10 +294,10 @@ export function AbstractRelationalComparison(x: Value, y: Value, LeftFirst = tru
   }
 }
 
-/** https://tc39.es/ecma262/#sec-abstract-equality-comparison */
-export function AbstractEqualityComparison(x: Value, y: Value): ExpressionCompletion<BooleanValue> {
-  // 1. If Type(x) is the same as Type(y), then
-  if (Type(x) === Type(y)) {
+/** https://tc39.es/ecma262/#sec-islooselyequal */
+export function* IsLooselyEqual(x: Value, y: Value): ValueEvaluator<BooleanValue> {
+  // 1. If SameType(x, y) is true, then
+  if (SameType(x, y)) {
     // a. Return the result of performing Strict Equality Comparison x === y.
     return IsStrictlyEqual(x, y);
   }
@@ -319,42 +311,42 @@ export function AbstractEqualityComparison(x: Value, y: Value): ExpressionComple
   }
   // 4. If Type(x) is Number and Type(y) is String, return the result of the comparison x == ! ToNumber(y).
   if (x instanceof NumberValue && y instanceof JSStringValue) {
-    return AbstractEqualityComparison(x, X(ToNumber(y)));
+    return X(yield* IsLooselyEqual(x, X(ToNumber(y))));
   }
   // 5. If Type(x) is String and Type(y) is Number, return the result of the comparison ! ToNumber(x) == y.
   if (x instanceof JSStringValue && y instanceof NumberValue) {
-    return AbstractEqualityComparison(X(ToNumber(x)), y);
+    return X(yield* IsLooselyEqual(X(ToNumber(x)), y));
   }
   // 6. If Type(x) is BigInt and Type(y) is String, then
   if (x instanceof BigIntValue && y instanceof JSStringValue) {
-    // a. Let n be ! StringToBigInt(y).
-    const n = X(StringToBigInt(y));
-    // b. If n is NaN, return false.
-    if (Number.isNaN(n)) {
+    // a. Let n be StringToBigInt(y).
+    const n = StringToBigInt(y);
+    // b. If n is undefined, return false.
+    if (n === undefined) {
       return Value.false;
     }
     // c. Return the result of the comparison x == n.
-    return AbstractEqualityComparison(x, n as BigIntValue);
+    return X(yield* IsLooselyEqual(x, n));
   }
   // 7. If Type(x) is String and Type(y) is BigInt, return the result of the comparison y == x.
   if (x instanceof JSStringValue && y instanceof BigIntValue) {
-    return AbstractEqualityComparison(y, x);
+    return X(yield* IsLooselyEqual(y, x));
   }
   // 8. If Type(x) is Boolean, return the result of the comparison ! ToNumber(x) == y.
   if (x instanceof BooleanValue) {
-    return AbstractEqualityComparison(X(ToNumber(x)), y);
+    return X(yield* IsLooselyEqual(X(ToNumber(x)), y));
   }
   // 9. If Type(y) is Boolean, return the result of the comparison x == ! ToNumber(y).
   if (y instanceof BooleanValue) {
-    return AbstractEqualityComparison(x, X(ToNumber(y)));
+    return X(yield* IsLooselyEqual(x, X(ToNumber(y))));
   }
   // 10. If Type(x) is either String, Number, BigInt, or Symbol and Type(y) is Object, return the result of the comparison x == ToPrimitive(y).
-  if (['String', 'Number', 'BigInt', 'Symbol'].includes(Type(x)) && y instanceof ObjectValue) {
-    return AbstractEqualityComparison(x, Q(ToPrimitive(y)));
+  if ((x instanceof JSStringValue || x instanceof NumberValue || x instanceof BigIntValue || x instanceof SymbolValue) && y instanceof ObjectValue) {
+    return X(yield* IsLooselyEqual(x, Q(yield* ToPrimitive(y))));
   }
   // 11. If Type(x) is Object and Type(y) is either String, Number, BigInt, or Symbol, return the result of the comparison ToPrimitive(x) == y.
-  if (x instanceof ObjectValue && ['String', 'Number', 'BigInt', 'Symbol'].includes(Type(y))) {
-    return AbstractEqualityComparison(Q(ToPrimitive(x)), y);
+  if (x instanceof ObjectValue && (y instanceof JSStringValue || y instanceof NumberValue || y instanceof BigIntValue || y instanceof SymbolValue)) {
+    return X(yield* IsLooselyEqual(Q(yield* ToPrimitive(x)), y));
   }
   // 12. If Type(x) is BigInt and Type(y) is Number, or if Type(x) is Number and Type(y) is BigInt, then
   if ((x instanceof BigIntValue && y instanceof NumberValue) || (x instanceof NumberValue && y instanceof BigIntValue)) {
@@ -374,7 +366,7 @@ export function AbstractEqualityComparison(x: Value, y: Value): ExpressionComple
 /** https://tc39.es/ecma262/#sec-isstrictlyequal */
 export function IsStrictlyEqual(x: Value, y: Value) {
 // 1. If SameType(x, y) is false, return false.
-  if (Type(x) !== Type(y)) {
+  if (!SameType(x, y)) {
     return Value.false;
   }
   // 2. If x is a Number, then

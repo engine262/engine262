@@ -1,8 +1,10 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   JSStringValue, ObjectValue, ReferenceRecord, Value,
 } from '../value.mts';
-import { Evaluate, type Evaluator, type StatementEvaluator } from '../evaluator.mts';
+import {
+  Evaluate, type Evaluator, type PlainEvaluator, type StatementEvaluator,
+} from '../evaluator.mts';
 import { DeclarativeEnvironmentRecord } from '../environment.mts';
 import {
   Assert,
@@ -223,7 +225,7 @@ function* LabelledEvaluation_IterationStatement_DoWhileStatement({ Statement, Ex
     // d. Let exprRef be the result of evaluating Expression.
     const exprRef = yield* Evaluate(Expression);
     // e. Let exprValue be ? GetValue(exprRef).
-    const exprValue = Q(GetValue(exprRef));
+    const exprValue = Q(yield* GetValue(exprRef));
     // f. If ! ToBoolean(exprValue) is false, return NormalCompletion(V).
     if (X(ToBoolean(exprValue)) === Value.false) {
       return NormalCompletion(V);
@@ -243,7 +245,7 @@ function* LabelledEvaluation_IterationStatement_WhileStatement({ Expression, Sta
     // a. Let exprRef be the result of evaluating Expression.
     const exprRef = yield* Evaluate(Expression);
     // b. Let exprValue be ? GetValue(exprRef).
-    const exprValue = Q(GetValue(exprRef));
+    const exprValue = Q(yield* GetValue(exprRef));
     // c. If ! ToBoolean(exprValue) is false, return NormalCompletion(V).
     if (X(ToBoolean(exprValue)) === Value.false) {
       return NormalCompletion(V);
@@ -332,7 +334,7 @@ function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement: Parse
         // a. Let exprRef be the result of evaluating the first Expression.
         const exprRef = yield* Evaluate(Expression_a);
         // b. Perform ? GetValue(exprRef).
-        Q(GetValue(exprRef));
+        Q(yield* GetValue(exprRef));
       }
       // 2. Return ? ForBodyEvaluation(the second Expression, the third Expression, Statement, « », labelSet).
       return Q(yield* ForBodyEvaluation(Expression_b, Expression_c, Statement, [], labelSet));
@@ -453,7 +455,7 @@ function* ForBodyEvaluation(test: ParseNode.Expression | undefined, increment: P
   // 1. Let V be undefined.
   let V: Value = Value.undefined;
   // 2. Perform ? CreatePerIterationEnvironment(perIterationBindings).
-  Q(CreatePerIterationEnvironment(perIterationBindings));
+  Q(yield* CreatePerIterationEnvironment(perIterationBindings));
   // 3. Repeat,
   while (true) {
     // a. If test is not [empty], then
@@ -461,7 +463,7 @@ function* ForBodyEvaluation(test: ParseNode.Expression | undefined, increment: P
       // i. Let testRef be the result of evaluating test.
       const testRef = yield* Evaluate(test);
       // ii. Let testValue be ? GetValue(testRef).
-      const testValue = Q(GetValue(testRef));
+      const testValue = Q(yield* GetValue(testRef));
       // iii. If ! ToBoolean(testValue) is false, return NormalCompletion(V).
       if (X(ToBoolean(testValue)) === Value.false) {
         return NormalCompletion(V);
@@ -478,19 +480,19 @@ function* ForBodyEvaluation(test: ParseNode.Expression | undefined, increment: P
       V = result.Value;
     }
     // e. Perform ? CreatePerIterationEnvironment(perIterationBindings).
-    Q(CreatePerIterationEnvironment(perIterationBindings));
+    Q(yield* CreatePerIterationEnvironment(perIterationBindings));
     // f. If increment is not [empty], then
     if (increment) {
       // i. Let incRef be the result of evaluating increment.
       const incRef = yield* Evaluate(increment);
       // ii. Perform ? GetValue(incRef).
-      Q(GetValue(incRef));
+      Q(yield* GetValue(incRef));
     }
   }
 }
 
 /** https://tc39.es/ecma262/#sec-createperiterationenvironment */
-function CreatePerIterationEnvironment(perIterationBindings: readonly JSStringValue[]): PlainCompletion<void> {
+function* CreatePerIterationEnvironment(perIterationBindings: readonly JSStringValue[]): PlainEvaluator<void> {
   // 1. If perIterationBindings has any elements, then
   if (perIterationBindings.length > 0) {
     // a. Let lastIterationEnv be the running execution context's LexicalEnvironment.
@@ -506,9 +508,9 @@ function CreatePerIterationEnvironment(perIterationBindings: readonly JSStringVa
       // i. Perform ! thisIterationEnv.CreateMutableBinding(bn, false).
       X(thisIterationEnv.CreateMutableBinding(bn, Value.false));
       // ii. Let lastValue be ? lastIterationEnv.GetBindingValue(bn, true).
-      const lastValue = Q(lastIterationEnv.GetBindingValue(bn, Value.true));
+      const lastValue = Q(yield* lastIterationEnv.GetBindingValue(bn, Value.true));
       // iii. Perform thisIterationEnv.InitializeBinding(bn, lastValue).
-      thisIterationEnv.InitializeBinding(bn, lastValue);
+      yield* thisIterationEnv.InitializeBinding(bn, lastValue);
     }
     // f. Set the running execution context's LexicalEnvironment to thisIterationEnv.
     surroundingAgent.runningExecutionContext.LexicalEnvironment = thisIterationEnv;
@@ -539,7 +541,7 @@ function* ForInOfHeadEvaluation(uninitializedBoundNames: readonly JSStringValue[
   // 4. Set the running execution context's LexicalEnvironment to oldEnv.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
   // 5. Let exprValue be ? GetValue(exprRef).
-  const exprValue = Q(GetValue(exprRef));
+  const exprValue = Q(yield* GetValue(exprRef));
   // 6. If iterationKind is enumerate, then
   if (iterationKind === 'enumerate') {
     // a. If exprValue is undefined or null, then
@@ -562,7 +564,7 @@ function* ForInOfHeadEvaluation(uninitializedBoundNames: readonly JSStringValue[
     // c. Else, let iteratorHint be sync.
     const iteratorHint = iterationKind === 'async-iterate' ? 'async' : 'sync';
     // d. Return ? GetIterator(exprValue, iteratorHint).
-    return Q(GetIterator(exprValue, iteratorHint));
+    return Q(yield* GetIterator(exprValue, iteratorHint));
   }
 }
 interface ForInOfHeadEvaluationResult {
@@ -598,7 +600,7 @@ function* ForInOfBodyEvaluation(lhs: ParseNode, stmt: ParseNode.Statement, itera
   // 6. Repeat,
   while (true) {
     // a. Let nextResult be ? Call(iteratorRecord.[[NextMethod]], iteratorRecord.[[Iterator]]).
-    let nextResult = Q(Call(iteratorRecord.NextMethod, iteratorRecord.Iterator));
+    let nextResult = Q(yield* Call(iteratorRecord.NextMethod, iteratorRecord.Iterator));
     // b. If iteratorKind is async, then set nextResult to ? Await(nextResult).
     if (iteratorKind === 'async') {
       nextResult = Q(yield* Await(nextResult));
@@ -608,13 +610,13 @@ function* ForInOfBodyEvaluation(lhs: ParseNode, stmt: ParseNode.Statement, itera
       return surroundingAgent.Throw('TypeError', 'NotAnObject', nextResult);
     }
     // d. Let done be ? IteratorComplete(nextResult).
-    const done = Q(IteratorComplete(nextResult));
+    const done = Q(yield* IteratorComplete(nextResult));
     // e. If done is true, return NormalCompletion(V).
     if (done === Value.true) {
       return NormalCompletion(V);
     }
     // f. Let nextValue be ? IteratorValue(nextResult).
-    const nextValue = Q(IteratorValue(nextResult));
+    const nextValue = Q(yield* IteratorValue(nextResult));
     // g. If lhsKind is either assignment or varBinding, then
     let lhsRef;
     let iterationEnv;
@@ -644,7 +646,7 @@ function* ForInOfBodyEvaluation(lhs: ParseNode, stmt: ParseNode.Statement, itera
         lhsRef = X(ResolveBinding(lhsName, undefined, lhs.strict));
       }
     }
-    let status;
+    let status: PlainCompletion<unknown>;
     // i. If destructuring is false, then
     if (destructuring === false) {
       // i. If lhsRef is an abrupt completion, then
@@ -653,9 +655,9 @@ function* ForInOfBodyEvaluation(lhs: ParseNode, stmt: ParseNode.Statement, itera
         status = lhsRef;
       } else if (lhsKind === 'lexicalBinding') { // ii. Else is lhsKind is lexicalBinding, then
         // 1. Let status be InitializeReferencedBinding(lhsRef, nextValue).
-        status = InitializeReferencedBinding(lhsRef as ReferenceRecord, nextValue);
+        status = yield* InitializeReferencedBinding(lhsRef as ReferenceRecord, nextValue);
       } else { // iii. Else,
-        status = PutValue(lhsRef as ReferenceRecord, nextValue);
+        status = yield* PutValue(lhsRef as ReferenceRecord, nextValue);
       }
     } else { // j. Else,
       // i. If lhsKind is assignment, then
@@ -692,7 +694,7 @@ function* ForInOfBodyEvaluation(lhs: ParseNode, stmt: ParseNode.Statement, itera
         // 1. Assert: iterationKind is iterate.
         Assert(iterationKind === 'iterate');
         // 2 .Return ? IteratorClose(iteratorRecord, status).
-        return Q(IteratorClose(iteratorRecord, status));
+        return Q(yield* IteratorClose(iteratorRecord, EnsureCompletion(status)));
       }
     }
     // l. Let result be the result of evaluating stmt.
@@ -715,7 +717,7 @@ function* ForInOfBodyEvaluation(lhs: ParseNode, stmt: ParseNode.Statement, itera
           return Q(yield* AsyncIteratorClose(iteratorRecord, status)) as Completion<Value | void>;
         }
         // 4. Return ? IteratorClose(iteratorRecord, status).
-        return Q(IteratorClose(iteratorRecord, status));
+        return Q(yield* IteratorClose(iteratorRecord, EnsureCompletion(status)));
       }
     }
     // o. If result.[[Value]] is not empty, set V to result.[[Value]].

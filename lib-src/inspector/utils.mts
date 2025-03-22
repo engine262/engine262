@@ -1,7 +1,8 @@
 import type Protocol from 'devtools-protocol';
 import { Inspector } from './index.mts';
 import {
-  CreateBuiltinFunction, CreateDataProperty, CreateNonEnumerableDataPropertyOrThrow, DefinePropertyOrThrow, Descriptor, DetachArrayBuffer, isArrayBufferObject, NormalCompletion, OrdinaryObjectCreate, surroundingAgent, ThrowCompletion, Value, type Arguments, type ManagedRealm,
+  CreateBuiltinFunction, CreateDataProperty, CreateNonEnumerableDataPropertyOrThrow, DefinePropertyOrThrow, Descriptor, DetachArrayBuffer, isArrayBufferObject, NormalCompletion, OrdinaryObjectCreate, surroundingAgent, ThrowCompletion, skipDebugger, Value, type Arguments, type ManagedRealm,
+  type ValueEvaluator,
 } from '#self';
 
 const consoleMethods = [
@@ -28,7 +29,7 @@ type ConsoleMethod = typeof consoleMethods[number];
 export function createConsole(realm: ManagedRealm, defaultBehaviour: Partial<Record<ConsoleMethod, (args: Arguments) => void | NormalCompletion<void>>>) {
   realm.scope(() => {
     const console = OrdinaryObjectCreate(realm.Intrinsics['%Object.prototype%']);
-    DefinePropertyOrThrow(
+    skipDebugger(DefinePropertyOrThrow(
       realm.GlobalObject,
       Value('console'),
       Descriptor({
@@ -37,7 +38,7 @@ export function createConsole(realm: ManagedRealm, defaultBehaviour: Partial<Rec
         Writable: Value.true,
         Value: console,
       }),
-    );
+    ));
     consoleMethods.forEach((method) => {
       const f = CreateBuiltinFunction(
         (args) => {
@@ -59,7 +60,7 @@ export function createConsole(realm: ManagedRealm, defaultBehaviour: Partial<Rec
         Value(method),
         [],
       );
-      CreateDataProperty(console, Value(method), f);
+      skipDebugger(CreateDataProperty(console, Value(method), f));
     });
   });
 }
@@ -74,11 +75,15 @@ export function createInternals(realm: ManagedRealm) {
         // eslint-disable-next-line no-debugger
         debugger;
       },
-      detachArrayBuffer: (object) => {
+      * detachArrayBuffer(object): ValueEvaluator {
         if (!isArrayBufferObject(object)) {
           return surroundingAgent.Throw('TypeError', 'Raw', 'Argument must be an ArrayBuffer');
         }
-        return DetachArrayBuffer(object);
+        const completion = DetachArrayBuffer(object);
+        if (completion instanceof ThrowCompletion) {
+          return completion;
+        }
+        return Value.undefined;
       },
     });
     CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, Value('$'), $);

@@ -11,7 +11,7 @@ export function* Evaluate_LogicalANDExpression({ LogicalANDExpression, BitwiseOR
   // 1. Let lref be the result of evaluating LogicalANDExpression.
   const lref = yield* Evaluate(LogicalANDExpression);
   // 2. Let lval be ? GetValue(lref).
-  const lval = Q(GetValue(lref));
+  const lval = Q(yield* GetValue(lref));
   // 3. Let lbool be ! ToBoolean(lval).
   const lbool = X(ToBoolean(lval));
   // 4. If lbool is false, return lval.
@@ -21,5 +21,5 @@ export function* Evaluate_LogicalANDExpression({ LogicalANDExpression, BitwiseOR
   // 5. Let rref be the result of evaluating BitwiseORExpression.
   const rref = yield* Evaluate(BitwiseORExpression);
   // 6. Return ? GetValue(rref).
-  return Q(GetValue(rref));
+  return Q(yield* GetValue(rref));
 }
