@@ -99,8 +99,8 @@ export function* Evaluate(node: ParseNode): Evaluator<unknown> {
     surroundingAgent.hostDefinedOptions.onNodeEvaluation(node, surroundingAgent.currentRealmRecord);
   }
   if (surroundingAgent.hostDefinedOptions.onDebugger) {
-    const completion = yield { type: 'potential-debugger' };
-    Assert(completion.type === 'debugger-resume');
+    const resumption = yield { type: 'potential-debugger' };
+    Assert(resumption.type === 'debugger-resume');
   }
 
   switch (node.type) {
@@ -225,7 +225,8 @@ export function* Evaluate(node: ParseNode): Evaluator<unknown> {
     case 'CallExpression': {
       surroundingAgent.runningExecutionContext.callSite.setCallLocation(node);
       const r = yield* Evaluate_CallExpression(node);
-      yield { type: 'potential-debugger' };
+      const resumption = yield { type: 'potential-debugger' };
+      Assert(resumption.type === 'debugger-resume');
       surroundingAgent.runningExecutionContext.callSite.setCallLocation(null);
       return r;
     }
