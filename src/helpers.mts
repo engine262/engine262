@@ -268,7 +268,7 @@ export class OutOfRange extends RangeError {
 export function skipDebugger<T>(iterator: Evaluator<T>, maxSteps = Infinity): T {
   let steps = 0;
   while (true) {
-    const { done, value } = iterator.next({ type: 'next' });
+    const { done, value } = iterator.next({ type: 'debugger-resume', value: undefined });
     if (done) {
       return value;
     }

@@ -80,12 +80,20 @@ module.exports = ({ types: t, template }) => {
   function addSectionFromComments(path) {
     if (path.node.leadingComments) {
       for (const c of path.node.leadingComments) {
+        let name;
+        if (path.node.id) {
+          name = path.node.id.name;
+        } else if (path.node.declaration) {
+          name = path.node.declaration.id.name;
+        } else {
+          name = path.node.declarations[0].id.name;
+        }
         const lines = c.value.split('\n');
         for (const line of lines) {
           if (/#sec/.test(line)) {
             const section = line.split(' ').find((l) => l.includes('#sec'));
             const url = section.includes('https') ? section : `https://tc39.es/ecma262/${section}`;
-            path.insertAfter(template.ast(`${path.node.id ? path.node.id.name : path.node.declarations[0].id.name}.section = '${url}';`));
+            path.insertAfter(template.ast(`${name}.section = '${url}';`));
             return;
           }
         }
@@ -292,7 +300,12 @@ module.exports = ({ types: t, template }) => {
         addSectionFromComments(path);
       },
       VariableDeclaration(path) {
-        if (path.get('declarations.0.init').isArrowFunctionExpression()) {
+        if (path.get('declarations.0.init').isArrowFunctionExpression() || path.get('declarations.0.init').isFunctionExpression()) {
+          addSectionFromComments(path);
+        }
+      },
+      ExportNamedDeclaration(path) {
+        if (path.get('declaration').isFunctionDeclaration()) {
           addSectionFromComments(path);
         }
       },

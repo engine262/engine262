@@ -87,6 +87,7 @@ export interface AgentHostDefined {
 export interface ResumeEvaluateOptions {
   noBreakpoint?: boolean;
   pauseAt?: 'step-over' | 'step-in' | 'step-out';
+  debuggerStatementCompletion?: ValueCompletion;
 }
 export interface Breakpoint {
   node: ParseNode;
@@ -233,8 +234,10 @@ export class Agent {
     } else if (options?.pauseAt === 'step-out') {
       nextLocation = this.executionContextStack[this.executionContextStack.length - 2].callSite.lastCallNode;
     }
+    let debuggerStatementCompletion = options?.debuggerStatementCompletion;
     while (true) {
-      const state = this.#pausedEvaluator.next({ type: 'next' });
+      const state = this.#pausedEvaluator.next({ type: 'debugger-resume', value: debuggerStatementCompletion });
+      debuggerStatementCompletion = undefined;
 
       if (!noBreakpoint && this.hostDefinedOptions.onDebugger && !this.debugger_isPreviewing && !state.done) {
         if (state.value.type === 'debugger') {

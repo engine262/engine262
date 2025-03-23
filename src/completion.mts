@@ -344,15 +344,15 @@ export function X<const T>(_completion: T | Evaluator<T>): ReturnIfAbrupt<T> {
   throw new TypeError('X() requires build');
 }
 
-export function XRuntime<const T>(completion: T | Evaluator<T>): ReturnIfAbrupt<T> {
+export function unwrapCompletion<const T>(completion: T | Evaluator<T>): ReturnIfAbrupt<T> {
   if (typeof completion === 'object' && completion && 'next' in completion) {
     completion = skipDebugger(completion);
   }
   const c = EnsureCompletion(completion);
-  if (c.Type === 'normal') {
+  if (c instanceof NormalCompletion) {
     return c.Value as ReturnIfAbrupt<T>;
   }
-  throw new Error('Engine assertion failed.', { cause: c.Value });
+  throw new Error('Unexpected AbruptCompletion.', { cause: c });
 }
 
 /** https://tc39.es/ecma262/#sec-ifabruptcloseiterator */
@@ -380,7 +380,7 @@ export function evalQ<T>(callback: (q: typeof ReturnIfAbrupt, x: typeof X) => Pr
 export function evalQ<T>(callback: (q: typeof ReturnIfAbrupt, x: typeof X) => T): NormalCompletion<T> | ThrowCompletion
 export function evalQ<T>(callback: (q: typeof ReturnIfAbrupt, x: typeof X) => T | Promise<T>): Promise<NormalCompletion<T> | ThrowCompletion> | NormalCompletion<T> | ThrowCompletion {
   try {
-    const result = callback(ReturnIfAbruptRuntime, XRuntime);
+    const result = callback(ReturnIfAbruptRuntime, unwrapCompletion);
     if (result instanceof Promise) {
       return result.then(EnsureCompletion, (error) => {
         if (error instanceof ThrowCompletion) {

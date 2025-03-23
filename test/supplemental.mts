@@ -14,8 +14,8 @@ import {
   Get,
   CreateArrayFromList,
   CreateDataProperty,
-  type NumberValue,
   JSStringValue,
+  NumberValue,
   type PromiseObject,
   SourceTextModuleRecord,
   NormalCompletion,
@@ -23,6 +23,13 @@ import {
   ToString,
   EnsureCompletion,
   skipDebugger,
+  type ValueCompletion,
+  surroundingAgent,
+  isPromiseObject,
+  evalQ,
+  Assert,
+  unwrapCompletion,
+  R,
 } from '#self';
 
 // Features that cannot be tested by test262 should go here.
@@ -40,13 +47,29 @@ startTestPrinter();
   () => {
     const agent = new Agent({
       onDebugger() {
-        return Value(42);
       },
     });
     setSurroundingAgent(agent);
     const realm = new ManagedRealm();
-    const result = realm.evaluateScript('debugger;');
-    assert.strictEqual((result as NormalCompletion<NumberValue>).Value.numberValue(), 42); // eslint-disable-line @engine262/mathematical-value
+    evalQ((_Q, X) => {
+      const script = X(realm.compileScript('debugger;'));
+      let completion!: ValueCompletion;
+      realm.evaluate(script, (c) => {
+        completion = c;
+      });
+      // start the evaluation
+      X(surroundingAgent.resumeEvaluate({}));
+      // paused at the debugger statement, resume with a value
+      X(surroundingAgent.resumeEvaluate({
+        debuggerStatementCompletion: NormalCompletion(Value(42)),
+      }));
+      if (!completion) {
+        throw new Error('Completion should be set.');
+      }
+      const value = X(completion);
+      assert.ok(value instanceof NumberValue);
+      assert.strictEqual(R(value), 42);
+    });
   },
   () => {
     const agent = new Agent();
@@ -176,11 +199,16 @@ Error: owo
           })
           .then(() => 'pass');
       `) as SourceTextModuleRecord;
-      module.LoadRequestedModules();
-      module.Link();
-      skipDebugger(module.Evaluate());
-      const result = skipDebugger(Get(realm.GlobalObject, Value('result')));
-      assert.strictEqual(((result as NormalCompletion<PromiseObject>).Value.PromiseResult as JSStringValue).stringValue(), 'pass');
+      const completion = evalQ((_Q, X) => {
+        module.LoadRequestedModules();
+        X(module.Link());
+        skipDebugger(module.Evaluate());
+        const result = X(skipDebugger(Get(realm.GlobalObject, Value('result'))));
+        assert.ok(isPromiseObject(result));
+        assert.ok(result.PromiseResult instanceof JSStringValue);
+        assert.strictEqual(result.PromiseResult.stringValue(), 'pass');
+      });
+      unwrapCompletion(completion);
     });
   },
   () => {

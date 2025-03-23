@@ -1,4 +1,6 @@
-import type { Completion, ThrowCompletion, Value } from '../index.mts';
+import {
+  ThrowCompletion, type Completion, type Value,
+} from '../index.mts';
 import { surroundingAgent } from '../host-defined/engine.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { ObjectValue } from '../value.mts';

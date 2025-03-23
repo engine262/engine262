@@ -75,7 +75,7 @@ import {
   Evaluate_ExpressionBody,
 } from './runtime-semantics/all.mts';
 import {
-  type AbruptCompletion, type ReferenceRecord, type ReturnCompletion, Value,
+  type AbruptCompletion, Assert, type ReferenceRecord, type ReturnCompletion, Value,
   type ValueCompletion,
 } from '#self';
 
@@ -99,7 +99,8 @@ export function* Evaluate(node: ParseNode): Evaluator<unknown> {
     surroundingAgent.hostDefinedOptions.onNodeEvaluation(node, surroundingAgent.currentRealmRecord);
   }
   if (surroundingAgent.hostDefinedOptions.onDebugger) {
-    yield { type: 'potential-debugger' };
+    const completion = yield { type: 'potential-debugger' };
+    Assert(completion.type === 'debugger-resume');
   }
 
   switch (node.type) {
@@ -281,7 +282,8 @@ export type EvaluatorYieldType =
   | { type: 'async-generator-yield' }
 
 export type EvaluatorNextType = {
-  type: 'next',
+  type: 'debugger-resume',
+  value: ValueCompletion | undefined
 } | {
   type: 'await-resume',
   value: ValueCompletion
