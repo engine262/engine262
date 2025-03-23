@@ -88,8 +88,7 @@ export abstract class Inspector {
     const context = this.#contexts.findIndex((c) => c[0].realm === realm);
     this.sendEvent['Runtime.consoleAPICalled']({
       type,
-      // @ts-expect-error
-      args: args.map((x) => this.#contexts[context].toRemoteObject(x, { generatePreview: true })),
+      args: args.map((x) => this.#contexts[context][0].toRemoteObject(x, { })),
       executionContextId: context,
       timestamp: Date.now(),
     });

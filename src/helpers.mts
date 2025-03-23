@@ -289,7 +289,7 @@ export function* resume(context: ExecutionContext, completion: EvaluatorNextType
     }
     const { value } = result;
     if (value.type === 'debugger' || value.type === 'potential-debugger') {
-      yield value;
+      completion = yield value;
     } else if (value.type === 'await' || value.type === 'async-generator-yield') {
       return Value.undefined;
     } else if (value.type === 'yield') {
