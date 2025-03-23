@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Value, NullValue, ObjectValue, type PropertyKeyValue, JSStringValue, BooleanValue,
 } from '../value.mts';
@@ -14,12 +14,11 @@ import {
   IsComputedPropertyKey,
   type FunctionDeclaration,
 } from '../static-semantics/all.mts';
-import { Evaluate, type Evaluator, type ExpressionEvaluator } from '../evaluator.mts';
+import { Evaluate, type PlainEvaluator, type ValueEvaluator } from '../evaluator.mts';
 import {
   Q, X,
   ReturnIfAbrupt,
   NormalCompletion,
-  type PlainCompletion,
 } from '../completion.mts';
 import { OutOfRange, kInternal } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
@@ -28,7 +27,7 @@ import { NamedEvaluation, MethodDefinitionEvaluation, Evaluate_PropertyName } fr
 /** https://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-propertydefinitionevaluation */
 //   PropertyDefinitionList :
 //     PropertyDefinitionList `,` PropertyDefinition
-export function* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList: ParseNode.PropertyDefinitionList, object: ObjectValue, enumerable: BooleanValue<true>): Evaluator<PlainCompletion<void>> {
+export function* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList: ParseNode.PropertyDefinitionList, object: ObjectValue, enumerable: BooleanValue<true>): PlainEvaluator {
   for (const PropertyDefinition of PropertyDefinitionList) {
     Q(yield* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, object, enumerable));
   }
@@ -60,11 +59,11 @@ function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition: Pa
     // 1. Let exprValue be the result of evaluating AssignmentExpression.
     const exprValue = yield* Evaluate(AssignmentExpression);
     // 2. Let fromValue be ? GetValue(exprValue).
-    const fromValue = Q(GetValue(exprValue));
+    const fromValue = Q(yield* GetValue(exprValue));
     // 3. Let excludedNames be a new empty List.
     const excludedNames: PropertyKeyValue[] = [];
     // 4. Return ? CopyDataProperties(object, fromValue, excludedNames).
-    return Q(CopyDataProperties(object, fromValue, excludedNames));
+    return Q(yield* CopyDataProperties(object, fromValue, excludedNames));
   }
   // 1. Let propKey be the result of evaluating PropertyName.
   const propKey = ReturnIfAbrupt(yield* Evaluate_PropertyName(PropertyName));
@@ -89,14 +88,14 @@ function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition: Pa
     // a. Let exprValueRef be the result of evaluating AssignmentExpression.
     const exprValueRef = yield* Evaluate(AssignmentExpression);
     // b. Let propValue be ? GetValue(exprValueRef).
-    propValue = Q(GetValue(exprValueRef));
+    propValue = Q(yield* GetValue(exprValueRef));
   }
   // 7. If isProtoSetter is true, then
   if (isProtoSetter) {
     // a. If Type(propValue) is either Object or Null, then
     if (propValue instanceof ObjectValue || propValue instanceof NullValue) {
       // i. Return object.[[SetPrototypeOf]](propValue).
-      return object.SetPrototypeOf(propValue);
+      return yield* object.SetPrototypeOf(propValue);
     }
     // b. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
@@ -109,13 +108,13 @@ function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition: Pa
 }
 
 // PropertyDefinition : IdentifierReference
-function* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(IdentifierReference: ParseNode.IdentifierReference, object: ObjectValue, enumerable: BooleanValue<true>): ExpressionEvaluator {
+function* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(IdentifierReference: ParseNode.IdentifierReference, object: ObjectValue, enumerable: BooleanValue<true>): ValueEvaluator {
   // 1. Let propName be StringValue of IdentifierReference.
   const propName = StringValue(IdentifierReference);
   // 2. Let exprValue be the result of evaluating IdentifierReference.
   const exprValue = yield* Evaluate(IdentifierReference);
   // 3. Let propValue be ? GetValue(exprValue).
-  const propValue = Q(GetValue(exprValue));
+  const propValue = Q(yield* GetValue(exprValue));
   // 4. Assert: enumerable is true.
   Assert(enumerable === Value.true);
   // 5. Assert: object is an ordinary, extensible object with no non-configurable properties.

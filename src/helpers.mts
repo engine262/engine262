@@ -1,4 +1,5 @@
-import { ExecutionContext, type GCMarker, surroundingAgent } from './engine.mts';
+import type { Protocol } from 'devtools-protocol';
+import { ExecutionContext, type GCMarker, surroundingAgent } from './host-defined/engine.mts';
 import {
   Value, Descriptor, JSStringValue, ObjectValue, UndefinedValue, NullValue, type PropertyKeyValue,
   SymbolValue,
@@ -9,9 +10,9 @@ import {
   isBuiltinFunctionObject,
   isECMAScriptFunctionObject,
 } from './abstract-ops/all.mts';
-import { Completion, X } from './completion.mts';
+import { X } from './completion.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
-import type { Evaluator } from './evaluator.mts';
+import type { Evaluator, EvaluatorNextType, YieldEvaluator } from './evaluator.mts';
 
 export const kInternal = Symbol('kInternal');
 
@@ -73,7 +74,9 @@ export class JSStringMap<V> implements Map<JSStringValue, V> {
     return undefined;
   }
 
-  declare values: () => MapIterator<V>;
+  values() {
+    return this.#map.values();
+  }
 
   declare [Symbol.iterator]: () => MapIterator<[JSStringValue, V]>;
 
@@ -81,7 +84,7 @@ export class JSStringMap<V> implements Map<JSStringValue, V> {
 
   static {
     JSStringMap.prototype[Symbol.toStringTag] = 'JSStringMap';
-    JSStringMap.prototype[Symbol.iterator] = JSStringMap.prototype.values;
+    JSStringMap.prototype[Symbol.iterator] = JSStringMap.prototype.entries;
   }
 
   mark(m: GCMarker) {
@@ -158,7 +161,12 @@ export class PropertyKeyMap<V> implements Map<PropertyKeyValue, V> {
     return undefined;
   }
 
-  declare values: () => MapIterator<V>;
+  * values() {
+    for (const value of this.#map.values()) {
+      yield value;
+    }
+    return undefined;
+  }
 
   declare [Symbol.iterator]: () => MapIterator<[PropertyKeyValue, V]>;
 
@@ -166,7 +174,7 @@ export class PropertyKeyMap<V> implements Map<PropertyKeyValue, V> {
 
   static {
     PropertyKeyMap.prototype[Symbol.toStringTag] = 'PropertyKeyMap';
-    PropertyKeyMap.prototype[Symbol.iterator] = PropertyKeyMap.prototype.values;
+    PropertyKeyMap.prototype[Symbol.iterator] = PropertyKeyMap.prototype.entries;
   }
 
   mark(m: GCMarker) {
@@ -257,10 +265,10 @@ export class OutOfRange extends RangeError {
   }
 }
 
-export function unwind<T>(iterator: Evaluator<T>, maxSteps = 1): T {
+export function skipDebugger<T>(iterator: Evaluator<T>, maxSteps = Infinity): T {
   let steps = 0;
   while (true) {
-    const { done, value } = iterator.next('Unwind');
+    const { done, value } = iterator.next({ type: 'debugger-resume', value: undefined });
     if (done) {
       return value;
     }
@@ -272,27 +280,32 @@ export function unwind<T>(iterator: Evaluator<T>, maxSteps = 1): T {
   }
 }
 
-const kSafeToResume = Symbol('kSameToResume');
-
-export function handleInResume(fn: () => Value) {
-  const bound = () => fn();
-  Reflect.set(bound, kSafeToResume, true);
-  return bound;
-}
-
-export function resume(context: ExecutionContext, completion: Completion<Value | void> | Value | void) {
-  const { value } = context.codeEvaluationState!.next(completion);
-  if (typeof value === 'function' && value[kSafeToResume] === true) {
-    // @ts-expect-error TODO
-    return X(value());
+export function* resume(context: ExecutionContext, completion: EvaluatorNextType): YieldEvaluator {
+  let result;
+  while (true) {
+    result = context.codeEvaluationState!.next(completion);
+    if (result.done) {
+      return result.value;
+    }
+    const { value } = result;
+    if (value.type === 'debugger' || value.type === 'potential-debugger') {
+      yield value;
+    } else if (value.type === 'await' || value.type === 'async-generator-yield') {
+      return Value.undefined;
+    } else if (value.type === 'yield') {
+      return value.value;
+    } else {
+      unreachable(value);
+    }
   }
-  return value;
 }
 
 export class CallSite {
   context: ExecutionContext;
 
   lastNode: ParseNode | null = null;
+
+  nextNode: ParseNode | null = null;
 
   lastCallNode: ParseNode.CallExpression | null = null;
 
@@ -350,8 +363,19 @@ export class CallSite {
     return null;
   }
 
+  getScriptId() {
+    if (!(this.context.Function instanceof NullValue) && !(this.context.ScriptOrModule instanceof NullValue)) {
+      return this.context.ScriptOrModule.HostDefined.scriptId;
+    }
+    return this.context.HostDefined?.scriptId;
+  }
+
   setLocation(node: ParseNode) {
     this.lastNode = node;
+  }
+
+  setNextLocation(node: ParseNode) {
+    this.nextNode = node;
   }
 
   setCallLocation(node: ParseNode.CallExpression | null) {
@@ -432,6 +456,20 @@ export class CallSite {
 
     return `${string} (${this.loc()})`;
   }
+
+  toCallFrame(): Protocol.Runtime.CallFrame | undefined {
+    const source = this.getScriptId();
+    if (source === undefined || source === null) {
+      return undefined;
+    }
+    return {
+      columnNumber: (this.columnNumber || 1) - 1,
+      lineNumber: (this.lineNumber || 1) - 1,
+      functionName: this.getFunctionName() || '<anonymous>',
+      scriptId: source,
+      url: this.getSpecifier() || '<anonymous>',
+    };
+  }
 }
 
 export const kAsyncContext = Symbol('kAsyncContext');
@@ -461,9 +499,16 @@ function captureAsyncStack(stack: CallSite[]) {
   }
 }
 
-export function captureStack(O: ObjectValue) {
+export function getHostDefinedErrorStack(O: Value) {
+  if (O instanceof ObjectValue && 'HostDefinedErrorStack' in O && isArray(O.HostDefinedErrorStack)) {
+    return O.HostDefinedErrorStack as readonly CallSite[];
+  }
+  return undefined;
+}
+
+export function getCurrentStack(excludeGlobalStack = true) {
   const stack: CallSite[] = [];
-  for (let i = surroundingAgent.executionContextStack.length - 2; i >= 0; i -= 1) {
+  for (let i = surroundingAgent.executionContextStack.length - (excludeGlobalStack ? 2 : 1); i >= 0; i -= 1) {
     const e = surroundingAgent.executionContextStack[i];
     if (e.VariableEnvironment === undefined && e.Function === Value.null) {
       break;
@@ -482,7 +527,11 @@ export function captureStack(O: ObjectValue) {
   if (stack.length > 0 && stack[0].context.promiseCapability) {
     captureAsyncStack(stack);
   }
+  return stack;
+}
 
+export function captureStack(O: ObjectValue) {
+  const stack = getCurrentStack();
   let cache: Value | null = null;
 
   const name = Value('stack');
@@ -491,6 +540,9 @@ export function captureStack(O: ObjectValue) {
   if (surroundingAgent.hostDefinedOptions.errorStackAttachNativeStack) {
     Error.stackTraceLimit = 12;
     __native_stack__ = new Error().stack;
+  }
+  if ('HostDefinedErrorStack' in O && (!O.HostDefinedErrorStack || O.HostDefinedErrorStack === Value.undefined)) {
+    O.HostDefinedErrorStack = stack;
   }
   X(DefinePropertyOrThrow(O, name, Descriptor({
     Get: CreateBuiltinFunction(() => {

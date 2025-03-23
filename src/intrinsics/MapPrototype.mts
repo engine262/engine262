@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Call,
   F,
@@ -16,11 +16,12 @@ import { bootstrapPrototype } from './bootstrap.mts';
 import { CreateMapIterator } from './MapIteratorPrototype.mts';
 import type { MapObject } from './Map.mts';
 import type {
-  Arguments, Descriptor, ExpressionCompletion, FunctionCallContext, Realm,
+  Arguments, Descriptor, ValueEvaluator, FunctionCallContext, Realm,
+  ValueCompletion,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-map.prototype.clear */
-function MapProto_clear(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function MapProto_clear(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let M be the this value.
   const M = thisValue as MapObject;
   // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
@@ -42,7 +43,7 @@ function MapProto_clear(_args: Arguments, { thisValue }: FunctionCallContext): E
 }
 
 /** https://tc39.es/ecma262/#sec-map.prototype.delete */
-function MapProto_delete([key = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function MapProto_delete([key = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let M be the this value.
   const M = thisValue as MapObject;
   // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
@@ -66,7 +67,7 @@ function MapProto_delete([key = Value.undefined]: Arguments, { thisValue }: Func
 }
 
 /** https://tc39.es/ecma262/#sec-map.prototype.entries */
-function MapProto_entries(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function MapProto_entries(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let M be the this value.
   const M = thisValue;
   // 2. Return ? CreateMapIterator(M, key+value);
@@ -74,7 +75,7 @@ function MapProto_entries(_args: Arguments, { thisValue }: FunctionCallContext):
 }
 
 /** https://tc39.es/ecma262/#sec-map.prototype.foreach */
-function MapProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* MapProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let M be the this value.
   const M = thisValue as MapObject;
   // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
@@ -90,7 +91,7 @@ function MapProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefin
     // a. If e.[[Key]] is not empty, then
     if (e.Key !== undefined) {
       // i. Perform ? Call(callbackfn, thisArg, « e.[[Value]], e.[[Key]], M »).
-      Q(Call(callbackfn, thisArg, [e.Value!, e.Key, M]));
+      Q(yield* Call(callbackfn, thisArg, [e.Value!, e.Key, M]));
     }
   }
   // 6. Return undefined.
@@ -98,7 +99,7 @@ function MapProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefin
 }
 
 /** https://tc39.es/ecma262/#sec-map.prototype.get */
-function MapProto_get([key = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function MapProto_get([key = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let M be the this value.
   const M = thisValue as MapObject;
   // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
@@ -118,7 +119,7 @@ function MapProto_get([key = Value.undefined]: Arguments, { thisValue }: Functio
 }
 
 /** https://tc39.es/ecma262/#sec-map.prototype.has */
-function MapProto_has([key = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function MapProto_has([key = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let M be the this value.
   const M = thisValue as MapObject;
   // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
@@ -137,7 +138,7 @@ function MapProto_has([key = Value.undefined]: Arguments, { thisValue }: Functio
 }
 
 /** https://tc39.es/ecma262/#sec-map.prototype.keys */
-function MapProto_keys(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function MapProto_keys(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let M be the this value.
   const M = thisValue;
   // 2. Return ? CreateMapIterator(M, key).
@@ -145,7 +146,7 @@ function MapProto_keys(_args: Arguments, { thisValue }: FunctionCallContext): Ex
 }
 
 /** https://tc39.es/ecma262/#sec-map.prototype.set */
-function MapProto_set([key = Value.undefined, value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function MapProto_set([key = Value.undefined, value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let M be the this value.
   const M = thisValue as MapObject;
   // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
@@ -177,7 +178,7 @@ function MapProto_set([key = Value.undefined, value = Value.undefined]: Argument
 }
 
 /** https://tc39.es/ecma262/#sec-get-map.prototype.size */
-function MapProto_sizeGetter(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function MapProto_sizeGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let M be the this value.
   const M = thisValue as MapObject;
   // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
@@ -198,7 +199,7 @@ function MapProto_sizeGetter(_args: Arguments, { thisValue }: FunctionCallContex
 }
 
 /** https://tc39.es/ecma262/#sec-map.prototype.values */
-function MapProto_values(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function MapProto_values(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let M be the this value.
   const M = thisValue;
   // 2. Return ? CreateMapIterator(M, value).

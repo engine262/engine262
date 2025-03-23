@@ -16,7 +16,7 @@ export function* Evaluate_ThrowStatement({ Expression }: ParseNode.ThrowStatemen
   // 1. Let exprRef be the result of evaluating Expression.
   const exprRef = yield* Evaluate(Expression);
   // 2. Let exprValue be ? GetValue(exprRef).
-  const exprValue = Q(GetValue(exprRef));
+  const exprValue = Q(yield* GetValue(exprRef));
   // 3. Return ThrowCompletion(exprValue).
   return ThrowCompletion(exprValue);
 }

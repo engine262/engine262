@@ -1,11 +1,11 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import { OrdinaryFunctionCreate, MakeMethod, sourceTextMatchedBy } from '../abstract-ops/all.mts';
 import { ReturnIfAbrupt } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
-import type { Evaluator } from '../evaluator.mts';
+import type { PlainEvaluator } from '../evaluator.mts';
 import { Evaluate_PropertyName } from './all.mts';
 import type {
-  ECMAScriptFunctionObject, ObjectValue, PlainCompletion, PrivateName, PropertyKeyValue,
+  ECMAScriptFunctionObject, ObjectValue, PrivateName, PropertyKeyValue,
 } from '#self';
 
 export interface DefineMethodRecord {
@@ -13,7 +13,7 @@ export interface DefineMethodRecord {
   readonly Closure: ECMAScriptFunctionObject;
 }
 /** https://tc39.es/ecma262/#sec-runtime-semantics-definemethod */
-export function* DefineMethod(MethodDefinition: ParseNode.MethodDefinition, object: ObjectValue, functionPrototype?: ObjectValue): Evaluator<PlainCompletion<DefineMethodRecord>> {
+export function* DefineMethod(MethodDefinition: ParseNode.MethodDefinition, object: ObjectValue, functionPrototype?: ObjectValue): PlainEvaluator<DefineMethodRecord> {
   const { ClassElementName, UniqueFormalParameters, FunctionBody } = MethodDefinition;
   // 1. Let propKey be the result of evaluating ClassElementName.
   const propKey = ReturnIfAbrupt(yield* Evaluate_PropertyName(ClassElementName));

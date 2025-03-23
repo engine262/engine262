@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   SameValue,
   RequireInternalSlot,
@@ -10,12 +10,12 @@ import {
   type Arguments,
   type FunctionCallContext,
 } from '../value.mts';
-import { Q, type ExpressionCompletion } from '../completion.mts';
+import { Q, type ValueCompletion } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import type { WeakSetObject } from './WeakSet.mts';
 
 /** https://tc39.es/ecma262/#sec-weakset.prototype.add */
-function WeakSetProto_add([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function WeakSetProto_add([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let S be this value.
   const S = thisValue as WeakSetObject;
   // 2. Perform ? RequireInternalSlot(S, [[WeakSetData]]).
@@ -40,7 +40,7 @@ function WeakSetProto_add([value = Value.undefined]: Arguments, { thisValue }: F
 }
 
 /** https://tc39.es/ecma262/#sec-weakset.prototype.delete */
-function WeakSetProto_delete([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function WeakSetProto_delete([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let S be the this value.`
   const S = thisValue as WeakSetObject;
   // 2. Perform ? RequireInternalSlot(S, [[WeakSetData]]).
@@ -67,7 +67,7 @@ function WeakSetProto_delete([value = Value.undefined]: Arguments, { thisValue }
 }
 
 /** https://tc39.es/ecma262/#sec-weakset.prototype.has */
-function WeakSetProto_has([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function WeakSetProto_has([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let S be the this value.
   const S = thisValue as WeakSetObject;
   // 2. Perform ? RequireInternalSlot(S, [[WeakSetData]]).

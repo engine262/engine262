@@ -31,7 +31,7 @@
     "incremental": true,
     "skipLibCheck": true,
     "paths": {
-      "#self": ["./src/api.mts"]
+      "#self": ["./src/index.mts"]
     }
   },
   "files": []

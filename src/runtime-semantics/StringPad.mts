@@ -2,13 +2,14 @@ import { JSStringValue, Value } from '../value.mts';
 import {
   Assert, ToString, ToLength, R,
 } from '../abstract-ops/all.mts';
-import { Q, type ExpressionCompletion } from '../completion.mts';
+import { Q } from '../completion.mts';
+import type { ValueEvaluator } from '../evaluator.mts';
 
 /** https://tc39.es/ecma262/#sec-stringpad */
-export function StringPad(O: Value, maxLength: Value, fillString: Value, placement: 'start' | 'end'): ExpressionCompletion<JSStringValue> {
+export function* StringPad(O: Value, maxLength: Value, fillString: Value, placement: 'start' | 'end'): ValueEvaluator<JSStringValue> {
   Assert(placement === 'start' || placement === 'end');
-  const S = Q(ToString(O));
-  const intMaxLength = R(Q(ToLength(maxLength)));
+  const S = Q(yield* ToString(O));
+  const intMaxLength = R(Q(yield* ToLength(maxLength)));
   const stringLength = S.stringValue().length;
   if (intMaxLength <= stringLength) {
     return S;
@@ -17,7 +18,7 @@ export function StringPad(O: Value, maxLength: Value, fillString: Value, placeme
   if (fillString === Value.undefined) {
     filler = ' ';
   } else {
-    filler = Q(ToString(fillString)).stringValue();
+    filler = Q(yield* ToString(fillString)).stringValue();
   }
   if (filler === '') {
     return S;

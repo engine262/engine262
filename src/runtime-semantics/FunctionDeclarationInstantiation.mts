@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import { Value, type Arguments } from '../value.mts';
 import {
   Assert,
@@ -31,7 +31,7 @@ export function* FunctionDeclarationInstantiation(func: ECMAScriptFunctionObject
   // 1. Let calleeContext be the running execution context.
   const calleeContext = surroundingAgent.runningExecutionContext;
   // 2. Let code be func.[[ECMAScriptCode]].
-  const code = func.ECMAScriptCode;
+  const code = func.ECMAScriptCode!;
   // 3. Let strict be func.[[Strict]].
   const strict = func.Strict;
   // 4. Let formals be func.[[FormalParameters]].
@@ -115,7 +115,7 @@ export function* FunctionDeclarationInstantiation(func: ECMAScriptFunctionObject
   // 21. For each String paramName in parameterNames, do
   for (const paramName of parameterNames) {
     // a. Let alreadyDeclared be env.HasBinding(paramName).
-    const alreadyDeclared = env.HasBinding(paramName);
+    const alreadyDeclared = yield* env.HasBinding(paramName);
     // b. NOTE: Early errors ensure that duplicate parameter names can only occur in
     //    non-strict functions that do not have parameter default values or rest parameters.
     // c. If alreadyDeclared is false, then
@@ -153,7 +153,7 @@ export function* FunctionDeclarationInstantiation(func: ECMAScriptFunctionObject
       X(env.CreateMutableBinding(Value('arguments'), Value.false));
     }
     // e. Call env.InitializeBinding("arguments", ao).
-    env.InitializeBinding(Value('arguments'), ao);
+    yield* env.InitializeBinding(Value('arguments'), ao);
     // f. Let parameterBindings be a new List of parameterNames with "arguments" appended.
     parameterBindings = new JSStringSet(parameterNames);
     parameterBindings.add('arguments');
@@ -186,7 +186,7 @@ export function* FunctionDeclarationInstantiation(func: ECMAScriptFunctionObject
         // 2. Perform ! env.CreateMutableBinding(n, false).
         X(env.CreateMutableBinding(n, Value.false));
         // 3. Call env.InitializeBinding(n, undefined).
-        env.InitializeBinding(n, Value.undefined);
+        yield* env.InitializeBinding(n, Value.undefined);
       }
     }
     // d. Let varEnv be env.
@@ -217,7 +217,7 @@ export function* FunctionDeclarationInstantiation(func: ECMAScriptFunctionObject
           initialValue = X(env.GetBindingValue(n, Value.false));
         }
         // 5. Call varEnv.InitializeBinding(n, initialValue).
-        varEnv.InitializeBinding(n, initialValue);
+        yield* varEnv.InitializeBinding(n, initialValue);
         // 6. NOTE: vars whose names are the same as a formal parameter, initially have the same value as the corresponding initialized parameter.
       }
     }

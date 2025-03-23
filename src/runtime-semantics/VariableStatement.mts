@@ -4,9 +4,9 @@ import {
   ResolveBinding,
 } from '../abstract-ops/all.mts';
 import {
-  NormalCompletion, Q, ReturnIfAbrupt, type PlainCompletion,
+  NormalCompletion, Q, ReturnIfAbrupt,
 } from '../completion.mts';
-import { Evaluate, type Evaluator } from '../evaluator.mts';
+import { Evaluate, type PlainEvaluator } from '../evaluator.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { StringValue, IsAnonymousFunctionDefinition, type FunctionDeclaration } from '../static-semantics/all.mts';
 import { Value } from '../value.mts';
@@ -17,7 +17,7 @@ import { NamedEvaluation, BindingInitialization } from './all.mts';
 //     BindingIdentifier
 //     BindingIdentifier Initializer
 //     BindingPattern Initializer
-function* Evaluate_VariableDeclaration({ BindingIdentifier, Initializer, BindingPattern }: ParseNode.VariableDeclaration): Evaluator<PlainCompletion<void>> {
+function* Evaluate_VariableDeclaration({ BindingIdentifier, Initializer, BindingPattern }: ParseNode.VariableDeclaration): PlainEvaluator {
   if (BindingIdentifier) {
     if (!Initializer) {
       // 1. Return NormalCompletion(empty).
@@ -26,7 +26,7 @@ function* Evaluate_VariableDeclaration({ BindingIdentifier, Initializer, Binding
     // 1. Let bindingId be StringValue of BindingIdentifier.
     const bindingId = StringValue(BindingIdentifier);
     // 2. Let lhs be ? ResolveBinding(bindingId).
-    const lhs = Q(ResolveBinding(bindingId, undefined, BindingIdentifier.strict));
+    const lhs = Q(yield* ResolveBinding(bindingId, undefined, BindingIdentifier.strict));
     // 3. If IsAnonymousFunctionDefinition(Initializer) is true, then
     let value;
     if (IsAnonymousFunctionDefinition(Initializer)) {
@@ -36,15 +36,15 @@ function* Evaluate_VariableDeclaration({ BindingIdentifier, Initializer, Binding
       // a. Let rhs be the result of evaluating Initializer.
       const rhs = yield* Evaluate(Initializer);
       // b. Let value be ? GetValue(rhs).
-      value = Q(GetValue(rhs));
+      value = Q(yield* GetValue(rhs));
     }
     // 5. Return ? PutValue(lhs, value).
-    return Q(PutValue(lhs, value));
+    return Q(yield* PutValue(lhs, value));
   }
   // 1. Let rhs be the result of evaluating Initializer.
   const rhs = yield* Evaluate(Initializer!);
   // 2. Let rval be ? GetValue(rhs).
-  const rval = Q(GetValue(rhs));
+  const rval = Q(yield* GetValue(rhs));
   // 3. Return the result of performing BindingInitialization for BindingPattern passing rval and undefined as arguments.
   return yield* BindingInitialization(BindingPattern!, rval, Value.undefined);
 }
@@ -65,7 +65,7 @@ export function* Evaluate_VariableDeclarationList(VariableDeclarationList: Parse
 
 /** https://tc39.es/ecma262/#sec-variable-statement-runtime-semantics-evaluation */
 //   VariableStatement : `var` VariableDeclarationList `;`
-export function* Evaluate_VariableStatement({ VariableDeclarationList }: ParseNode.VariableStatement): Evaluator<PlainCompletion<void>> {
+export function* Evaluate_VariableStatement({ VariableDeclarationList }: ParseNode.VariableStatement): PlainEvaluator {
   const next = yield* Evaluate_VariableDeclarationList(VariableDeclarationList);
   ReturnIfAbrupt(next);
   return NormalCompletion(undefined);

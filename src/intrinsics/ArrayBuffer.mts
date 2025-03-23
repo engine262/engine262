@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   ObjectValue, UndefinedValue, Value, wellKnownSymbols, type Arguments, type FunctionCallContext,
 } from '../value.mts';
@@ -9,15 +9,15 @@ import {
 import { bootstrapConstructor } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-arraybuffer-length */
-function ArrayBufferConstructor(this: FunctionObject, [length = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
+function* ArrayBufferConstructor(this: FunctionObject, [length = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget instanceof UndefinedValue) {
     return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
   // 2. Let byteLength be ? ToIndex(length).
-  const byteLength = Q(ToIndex(length));
+  const byteLength = Q(yield* ToIndex(length));
   // 3. Return ? AllocateArrayBuffer(NewTarget, byteLength).
-  return Q(AllocateArrayBuffer(NewTarget, byteLength));
+  return Q(yield* AllocateArrayBuffer(NewTarget, byteLength));
 }
 
 /** https://tc39.es/ecma262/#sec-arraybuffer.isview */

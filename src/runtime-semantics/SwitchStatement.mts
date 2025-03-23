@@ -1,5 +1,5 @@
-import { surroundingAgent } from '../engine.mts';
-import { Evaluate, type StatementEvaluator } from '../evaluator.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
+import { Evaluate, type StatementEvaluator, type ValueEvaluator } from '../evaluator.mts';
 import { DeclarativeEnvironmentRecord } from '../environment.mts';
 import { Assert, GetValue, IsStrictlyEqual } from '../abstract-ops/all.mts';
 import {
@@ -21,13 +21,13 @@ import {
 } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-caseclauseisselected */
-function* CaseClauseIsSelected(C: ParseNode.CaseClause, input: Value): StatementEvaluator<BooleanValue> {
+function* CaseClauseIsSelected(C: ParseNode.CaseClause, input: Value): ValueEvaluator<BooleanValue> {
   // 1. Assert: C is an instance of the production  CaseClause : `case` Expression `:` StatementList?.
   Assert(C.type === 'CaseClause');
   // 2. Let exprRef be the result of evaluating the Expression of C.
   const exprRef = yield* Evaluate(C.Expression);
   // 3. Let clauseSelector be ? GetValue(exprRef).
-  const clauseSelector = Q(GetValue(exprRef));
+  const clauseSelector = Q(yield* GetValue(exprRef));
   // 4. Return the result of performing Strict Equality Comparison input === clauseSelector.
   return IsStrictlyEqual(input, clauseSelector);
 }
@@ -37,7 +37,7 @@ function* CaseClauseIsSelected(C: ParseNode.CaseClause, input: Value): Statement
 //     `{` `}`
 //     `{` CaseClauses `}`
 //     `{` CaseClauses? DefaultClause CaseClauses? `}`
-function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }: ParseNode.CaseBlock, input: Value): StatementEvaluator<Value> {
+function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }: ParseNode.CaseBlock, input: Value): StatementEvaluator {
   switch (true) {
     case !CaseClauses_a && !DefaultClause && !CaseClauses_b: {
       // 1. Return NormalCompletion(undefined).
@@ -187,13 +187,13 @@ export function* Evaluate_SwitchStatement({ Expression, CaseBlock }: ParseNode.S
   // 1. Let exprRef be the result of evaluating Expression.
   const exprRef = yield* Evaluate(Expression);
   // 2. Let switchValue be ? GetValue(exprRef).
-  const switchValue = Q(GetValue(exprRef));
+  const switchValue = Q(yield* GetValue(exprRef));
   // 3. Let oldEnv be the running execution context's LexicalEnvironment.
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 4. Let blockEnv be NewDeclarativeEnvironment(oldEnv).
   const blockEnv = new DeclarativeEnvironmentRecord(oldEnv);
   // 5. Perform BlockDeclarationInstantiation(CaseBlock, blockEnv).
-  BlockDeclarationInstantiation(CaseBlock, blockEnv);
+  yield* BlockDeclarationInstantiation(CaseBlock, blockEnv);
   // 6. Set the running execution context's LexicalEnvironment to blockEnv.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = blockEnv;
   // 7. Let R be CaseBlockEvaluation of CaseBlock with argument switchValue.

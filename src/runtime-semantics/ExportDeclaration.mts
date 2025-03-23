@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import { Value } from '../value.mts';
 import { Evaluate } from '../evaluator.mts';
 import { GetValue, type ECMAScriptFunctionObject } from '../abstract-ops/all.mts';
@@ -62,7 +62,7 @@ export function* Evaluate_ExportDeclaration(ExportDeclaration: ParseNode.ExportD
       // a. Let env be the running execution context's LexicalEnvironment.
       const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
       // b. Perform ? InitializeBoundName("*default*", value, env).
-      Q(InitializeBoundName(Value('*default*'), value, env));
+      Q(yield* InitializeBoundName(Value('*default*'), value, env));
     }
     // 3. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
@@ -77,12 +77,12 @@ export function* Evaluate_ExportDeclaration(ExportDeclaration: ParseNode.ExportD
       // a. Let rhs be the result of evaluating AssignmentExpression.
       const rhs = yield* Evaluate(AssignmentExpression);
       // a. Let value be ? GetValue(rhs).
-      value = Q(GetValue(rhs));
+      value = Q(yield* GetValue(rhs));
     }
     // 3. Let env be the running execution context's LexicalEnvironment.
     const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
     // 4. Perform ? InitializeBoundName("*default*", value, env).
-    Q(InitializeBoundName(Value('*default*'), value as ECMAScriptFunctionObject, env));
+    Q(yield* InitializeBoundName(Value('*default*'), value as ECMAScriptFunctionObject, env));
     // 5. Return NormalCompletion(empty).
     return NormalCompletion(undefined);
   }

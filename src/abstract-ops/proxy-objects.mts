@@ -1,12 +1,11 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   UndefinedValue, NullValue, ObjectValue, Value,
   type ObjectInternalMethods,
-  type PropertyKeyValue,
 } from '../value.mts';
 import {
   Q, X,
-  type ExpressionCompletion,
+  type ValueCompletion,
 } from '../completion.mts';
 import { __ts_cast__, PropertyKeyMap } from '../helpers.mts';
 import type { ProxyObject } from '../intrinsics/Proxy.mts';
@@ -35,7 +34,7 @@ import {
 
 const InternalMethods = {
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getprototypeof */
-  GetPrototypeOf() {
+  * GetPrototypeOf() {
     const O = this;
 
     const handler = O.ProxyHandler;
@@ -44,26 +43,26 @@ const InternalMethods = {
     }
     Assert(handler instanceof ObjectValue);
     const target = O.ProxyTarget as ObjectValue;
-    const trap = Q(GetMethod(handler, Value('getPrototypeOf')));
+    const trap = Q(yield* GetMethod(handler, Value('getPrototypeOf')));
     if (trap === Value.undefined) {
-      return Q(target.GetPrototypeOf());
+      return Q(yield* target.GetPrototypeOf());
     }
-    const handlerProto = Q(Call(trap, handler, [target]));
+    const handlerProto = Q(yield* Call(trap, handler, [target]));
     if (!(handlerProto instanceof ObjectValue) && !(handlerProto instanceof NullValue)) {
       return surroundingAgent.Throw('TypeError', 'ProxyGetPrototypeOfInvalid');
     }
-    const extensibleTarget = Q(IsExtensible(target));
+    const extensibleTarget = Q(yield* IsExtensible(target));
     if (extensibleTarget === Value.true) {
       return handlerProto;
     }
-    const targetProto = Q(target.GetPrototypeOf());
+    const targetProto = Q(yield* target.GetPrototypeOf());
     if (SameValue(handlerProto, targetProto) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'ProxyGetPrototypeOfNonExtensible');
     }
     return handlerProto;
   },
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-setprototypeof-v */
-  SetPrototypeOf(V) {
+  * SetPrototypeOf(V) {
     const O = this;
 
     Assert(V instanceof ObjectValue || V instanceof NullValue);
@@ -73,26 +72,26 @@ const InternalMethods = {
     }
     Assert(handler instanceof ObjectValue);
     const target = O.ProxyTarget as ObjectValue;
-    const trap = Q(GetMethod(handler, Value('setPrototypeOf')));
+    const trap = Q(yield* GetMethod(handler, Value('setPrototypeOf')));
     if (trap === Value.undefined) {
-      return Q(target.SetPrototypeOf(V));
+      return Q(yield* target.SetPrototypeOf(V));
     }
-    const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target, V])));
+    const booleanTrapResult = ToBoolean(Q(yield* Call(trap, handler, [target, V])));
     if (booleanTrapResult === Value.false) {
       return Value.false;
     }
-    const extensibleTarget = Q(IsExtensible(target));
+    const extensibleTarget = Q(yield* IsExtensible(target));
     if (extensibleTarget === Value.true) {
       return Value.true;
     }
-    const targetProto = Q(target.GetPrototypeOf());
+    const targetProto = Q(yield* target.GetPrototypeOf());
     if (SameValue(V, targetProto) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'ProxySetPrototypeOfNonExtensible');
     }
     return Value.true;
   },
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-isextensible */
-  IsExtensible() {
+  * IsExtensible() {
     const O = this;
 
     const handler = O.ProxyHandler;
@@ -101,19 +100,19 @@ const InternalMethods = {
     }
     Assert(handler instanceof ObjectValue);
     const target = O.ProxyTarget;
-    const trap = Q(GetMethod(handler, Value('isExtensible')));
+    const trap = Q(yield* GetMethod(handler, Value('isExtensible')));
     if (trap === Value.undefined) {
-      return Q(IsExtensible(target as ObjectValue));
+      return Q(yield* IsExtensible(target as ObjectValue));
     }
-    const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target])));
-    const targetResult = Q(IsExtensible(target as ObjectValue));
+    const booleanTrapResult = ToBoolean(Q(yield* Call(trap, handler, [target])));
+    const targetResult = Q(yield* IsExtensible(target as ObjectValue));
     if (SameValue(booleanTrapResult, targetResult) === Value.false) {
       return surroundingAgent.Throw('TypeError', 'ProxyIsExtensibleInconsistent', targetResult);
     }
     return booleanTrapResult;
   },
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-preventextensions */
-  PreventExtensions() {
+  * PreventExtensions() {
     const O = this;
 
     const handler = O.ProxyHandler;
@@ -122,13 +121,13 @@ const InternalMethods = {
     }
     Assert(handler instanceof ObjectValue);
     const target = O.ProxyTarget as ObjectValue;
-    const trap = Q(GetMethod(handler, Value('preventExtensions')));
+    const trap = Q(yield* GetMethod(handler, Value('preventExtensions')));
     if (trap === Value.undefined) {
-      return Q(target.PreventExtensions());
+      return Q(yield* target.PreventExtensions());
     }
-    const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target])));
+    const booleanTrapResult = ToBoolean(Q(yield* Call(trap, handler, [target])));
     if (booleanTrapResult === Value.true) {
-      const extensibleTarget = Q(IsExtensible(target));
+      const extensibleTarget = Q(yield* IsExtensible(target));
       if (extensibleTarget === Value.true) {
         return surroundingAgent.Throw('TypeError', 'ProxyPreventExtensionsExtensible');
       }
@@ -136,7 +135,7 @@ const InternalMethods = {
     return booleanTrapResult;
   },
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getownproperty-p */
-  GetOwnProperty(P) {
+  * GetOwnProperty(P) {
     const O = this;
 
     // 1. Assert: IsPropertyKey(P) is true.
@@ -152,20 +151,20 @@ const InternalMethods = {
     // 5. Let target be O.[[ProxyTarget]].
     const target = O.ProxyTarget as ObjectValue;
     // 6. Let trap be ? Getmethod(handler, "getOwnPropertyDescriptor").
-    const trap = Q(GetMethod(handler, Value('getOwnPropertyDescriptor')));
+    const trap = Q(yield* GetMethod(handler, Value('getOwnPropertyDescriptor')));
     // 7. If trap is undefined, then
     if (trap === Value.undefined) {
       // a. Return ? target.[[GetOwnProperty]](P).
-      return Q(target.GetOwnProperty(P));
+      return Q(yield* target.GetOwnProperty(P));
     }
     // 8. Let trapResultObj be ? Call(trap, handler, « target, P »).
-    const trapResultObj = Q(Call(trap, handler, [target, P]));
+    const trapResultObj = Q(yield* Call(trap, handler, [target, P]));
     // 9. If Type(trapResultObj) is neither Object nor Undefined, throw a TypeError exception.
     if (!(trapResultObj instanceof ObjectValue) && !(trapResultObj instanceof UndefinedValue)) {
       return surroundingAgent.Throw('TypeError', 'ProxyGetOwnPropertyDescriptorInvalid', P);
     }
     // 10. Let targetDesc be ? target.[[GetOwnProperty]](P).
-    const targetDesc = Q(target.GetOwnProperty(P));
+    const targetDesc = Q(yield* target.GetOwnProperty(P));
     // 11. If trapResultObj is undefined, then
     if (trapResultObj === Value.undefined) {
     // a. If targetDesc is undefined, return undefined.
@@ -177,7 +176,7 @@ const InternalMethods = {
         return surroundingAgent.Throw('TypeError', 'ProxyGetOwnPropertyDescriptorUndefined', P);
       }
       // c. Let extensibleTarget be ? IsExtensible(target).
-      const extensibleTarget = Q(IsExtensible(target));
+      const extensibleTarget = Q(yield* IsExtensible(target));
       // d. If extensibleTarget is false, throw a TypeError exception.
       if (extensibleTarget === Value.false) {
         return surroundingAgent.Throw('TypeError', 'ProxyGetOwnPropertyDescriptorNonExtensible', P);
@@ -186,9 +185,9 @@ const InternalMethods = {
       return Value.undefined;
     }
     // 12. Let extensibleTarget be ? IsExtensible(target).
-    const extensibleTarget = Q(IsExtensible(target));
+    const extensibleTarget = Q(yield* IsExtensible(target));
     // 13. Let resultDesc be ? ToPropertyDescriptor(trapResultObj).
-    const resultDesc = Q(ToPropertyDescriptor(trapResultObj));
+    const resultDesc = Q(yield* ToPropertyDescriptor(trapResultObj));
     // 14. Call CompletePropertyDescriptor(resultDesc).
     CompletePropertyDescriptor(resultDesc);
     // 15. Let valid be IsCompatiblePropertyDescriptor(extensibleTarget, resultDesc, targetDesc).
@@ -216,7 +215,7 @@ const InternalMethods = {
     return resultDesc;
   },
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-defineownproperty-p-desc */
-  DefineOwnProperty(P, Desc) {
+  * DefineOwnProperty(P, Desc) {
     const O = this;
 
     // 1. Assert: IsPropertyKey(P) is true.
@@ -232,24 +231,24 @@ const InternalMethods = {
     // 5. Let target be O.[[ProxyTarget]].
     const target = O.ProxyTarget as ObjectValue;
     // 6. Let trap be ? GetMethod(handler, "defineProperty").
-    const trap = Q(GetMethod(handler, Value('defineProperty')));
+    const trap = Q(yield* GetMethod(handler, Value('defineProperty')));
     // 7. If trap is undefined, then
     if (trap === Value.undefined) {
       // a. Return ? target.[[DefineOwnProperty]](P, Desc).
-      return Q(target.DefineOwnProperty(P, Desc));
+      return Q(yield* target.DefineOwnProperty(P, Desc));
     }
     // 8. Let descObj be FromPropertyDescriptor(Desc).
     const descObj = FromPropertyDescriptor(Desc);
     // 9. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target, P, descObj »)).
-    const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target, P, descObj])));
+    const booleanTrapResult = ToBoolean(Q(yield* Call(trap, handler, [target, P, descObj])));
     // 10. If booleanTrapResult is false, return false.
     if (booleanTrapResult === Value.false) {
       return Value.false;
     }
     // 11. Let targetDesc be ? target.[[GetOwnProperty]](P).
-    const targetDesc = Q(target.GetOwnProperty(P));
+    const targetDesc = Q(yield* target.GetOwnProperty(P));
     // 12. Let extensibleTarget be ? IsExtensible(target).
-    const extensibleTarget = Q(IsExtensible(target));
+    const extensibleTarget = Q(yield* IsExtensible(target));
     let settingConfigFalse;
     // 13. If Desc has a [[Configurable]] field and if Desc.[[Configurable]] is false, then
     if (Desc.Configurable !== undefined && Desc.Configurable === Value.false) {
@@ -291,7 +290,7 @@ const InternalMethods = {
     return Value.true;
   },
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-hasproperty-p */
-  HasProperty(P) {
+  * HasProperty(P) {
     const O = this;
 
     Assert(IsPropertyKey(P));
@@ -301,18 +300,18 @@ const InternalMethods = {
     }
     Assert(handler instanceof ObjectValue);
     const target = O.ProxyTarget as ObjectValue;
-    const trap = Q(GetMethod(handler, Value('has')));
+    const trap = Q(yield* GetMethod(handler, Value('has')));
     if (trap === Value.undefined) {
-      return Q(target.HasProperty(P));
+      return Q(yield* target.HasProperty(P));
     }
-    const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target, P])));
+    const booleanTrapResult = ToBoolean(Q(yield* Call(trap, handler, [target, P])));
     if (booleanTrapResult === Value.false) {
-      const targetDesc = Q(target.GetOwnProperty(P));
+      const targetDesc = Q(yield* target.GetOwnProperty(P));
       if (!(targetDesc instanceof UndefinedValue)) {
         if (targetDesc.Configurable === Value.false) {
           return surroundingAgent.Throw('TypeError', 'ProxyHasNonConfigurable', P);
         }
-        const extensibleTarget = Q(IsExtensible(target));
+        const extensibleTarget = Q(yield* IsExtensible(target));
         if (extensibleTarget === Value.false) {
           return surroundingAgent.Throw('TypeError', 'ProxyHasNonExtensible', P);
         }
@@ -321,7 +320,7 @@ const InternalMethods = {
     return booleanTrapResult;
   },
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-get-p-receiver */
-  Get(P, Receiver) {
+  * Get(P, Receiver) {
     const O = this;
 
     Assert(IsPropertyKey(P));
@@ -331,12 +330,12 @@ const InternalMethods = {
     }
     Assert(handler instanceof ObjectValue);
     const target = O.ProxyTarget as ObjectValue;
-    const trap = Q(GetMethod(handler, Value('get')));
+    const trap = Q(yield* GetMethod(handler, Value('get')));
     if (trap === Value.undefined) {
-      return Q(target.Get(P, Receiver));
+      return Q(yield* target.Get(P, Receiver));
     }
-    const trapResult = Q(Call(trap, handler, [target, P, Receiver]));
-    const targetDesc = Q(target.GetOwnProperty(P));
+    const trapResult = Q(yield* Call(trap, handler, [target, P, Receiver]));
+    const targetDesc = Q(yield* target.GetOwnProperty(P));
     if (!(targetDesc instanceof UndefinedValue) && targetDesc.Configurable === Value.false) {
       if (IsDataDescriptor(targetDesc) === true && targetDesc.Writable === Value.false) {
         if (SameValue(trapResult, targetDesc.Value) === Value.false) {
@@ -352,7 +351,7 @@ const InternalMethods = {
     return trapResult;
   },
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-set-p-v-receiver */
-  Set(P, V, Receiver) {
+  * Set(P, V, Receiver) {
     const O = this;
 
     Assert(IsPropertyKey(P));
@@ -362,15 +361,15 @@ const InternalMethods = {
     }
     Assert(handler instanceof ObjectValue);
     const target = O.ProxyTarget as ObjectValue;
-    const trap = Q(GetMethod(handler, Value('set')));
+    const trap = Q(yield* GetMethod(handler, Value('set')));
     if (trap === Value.undefined) {
-      return Q(target.Set(P, V, Receiver));
+      return Q(yield* target.Set(P, V, Receiver));
     }
-    const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target, P, V, Receiver])));
+    const booleanTrapResult = ToBoolean(Q(yield* Call(trap, handler, [target, P, V, Receiver])));
     if (booleanTrapResult === Value.false) {
       return Value.false;
     }
-    const targetDesc = Q(target.GetOwnProperty(P));
+    const targetDesc = Q(yield* target.GetOwnProperty(P));
     if (!(targetDesc instanceof UndefinedValue) && targetDesc.Configurable === Value.false) {
       if (IsDataDescriptor(targetDesc) === true && targetDesc.Writable === Value.false) {
         if (SameValue(V, targetDesc.Value) === Value.false) {
@@ -386,7 +385,7 @@ const InternalMethods = {
     return Value.true;
   },
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-delete-p */
-  Delete(P) {
+  * Delete(P) {
     const O = this;
 
     // 1. Assert: IsPropertyKey(P) is true.
@@ -402,20 +401,20 @@ const InternalMethods = {
     // 5. Let target be O.[[ProxyTarget]].
     const target = O.ProxyTarget as ObjectValue;
     // 6. Let trap be ? GetMethod(handler, "deleteProperty").
-    const trap = Q(GetMethod(handler, Value('deleteProperty')));
+    const trap = Q(yield* GetMethod(handler, Value('deleteProperty')));
     // 7. If trap is undefined, then
     if (trap === Value.undefined) {
       // a. Return ? target.[[Delete]](P).
-      return Q(target.Delete(P));
+      return Q(yield* target.Delete(P));
     }
     // 8. Let booleanTrapResult be ! ToBoolean(? Call(trap, handler, « target, P »)).
-    const booleanTrapResult = ToBoolean(Q(Call(trap, handler, [target, P])));
+    const booleanTrapResult = ToBoolean(Q(yield* Call(trap, handler, [target, P])));
     // 9. If booleanTrapResult is false, return false.
     if (booleanTrapResult === Value.false) {
       return Value.false;
     }
     // 10. Let targetDesc be ? target.[[GetOwnProperty]](P).
-    const targetDesc = Q(target.GetOwnProperty(P));
+    const targetDesc = Q(yield* target.GetOwnProperty(P));
     // 11. If targetDesc is undefined, return true.
     if (targetDesc instanceof UndefinedValue) {
       return Value.true;
@@ -425,7 +424,7 @@ const InternalMethods = {
       return surroundingAgent.Throw('TypeError', 'ProxyDeletePropertyNonConfigurable', P);
     }
     // 13. Let extensibleTarget be ? IsExtensible(target).
-    const extensibleTarget = Q(IsExtensible(target));
+    const extensibleTarget = Q(yield* IsExtensible(target));
     // 14. If extensibleTarget is false, throw a TypeError exception.
     if (extensibleTarget === Value.false) {
       return surroundingAgent.Throw('TypeError', 'ProxyDeletePropertyNonExtensible', P);
@@ -434,7 +433,7 @@ const InternalMethods = {
     return Value.true;
   },
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-ownpropertykeys */
-  OwnPropertyKeys() {
+  * OwnPropertyKeys() {
     const O = this;
 
     const handler = O.ProxyHandler;
@@ -443,12 +442,12 @@ const InternalMethods = {
     }
     Assert(handler instanceof ObjectValue);
     const target = O.ProxyTarget as ObjectValue;
-    const trap = Q(GetMethod(handler, Value('ownKeys')));
+    const trap = Q(yield* GetMethod(handler, Value('ownKeys')));
     if (trap === Value.undefined) {
-      return Q(target.OwnPropertyKeys());
+      return Q(yield* target.OwnPropertyKeys());
     }
-    const trapResultArray = Q(Call(trap, handler, [target]));
-    const trapResult = Q(CreateListFromArrayLike(trapResultArray, ['String', 'Symbol'])) as PropertyKeyValue[];
+    const trapResultArray = Q(yield* Call(trap, handler, [target]));
+    const trapResult = Q(yield* CreateListFromArrayLike(trapResultArray, 'property-key'));
     const noDuplicate = new PropertyKeyMap();
     trapResult.forEach((key) => {
       noDuplicate.set(key, true);
@@ -456,14 +455,14 @@ const InternalMethods = {
     if (noDuplicate.size !== trapResult.length) {
       return surroundingAgent.Throw('TypeError', 'ProxyOwnKeysDuplicateEntries');
     }
-    const extensibleTarget = Q(IsExtensible(target));
-    const targetKeys = Q(target.OwnPropertyKeys());
+    const extensibleTarget = Q(yield* IsExtensible(target));
+    const targetKeys = Q(yield* target.OwnPropertyKeys());
     // Assert: targetKeys is a List containing only String and Symbol values.
     // Assert: targetKeys contains no duplicate entries.
     const targetConfigurableKeys = [];
     const targetNonconfigurableKeys = [];
     for (const key of targetKeys) {
-      const desc = Q(target.GetOwnProperty(key));
+      const desc = Q(yield* target.GetOwnProperty(key));
       if (!(desc instanceof UndefinedValue) && desc.Configurable === Value.false) {
         targetNonconfigurableKeys.push(key);
       } else {
@@ -498,7 +497,7 @@ const InternalMethods = {
     return trapResult;
   },
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-call-thisargument-argumentslist */
-  Call(thisArgument, argumentsList) {
+  * Call(thisArgument, argumentsList) {
     const O = this;
 
     const handler = O.ProxyHandler;
@@ -507,15 +506,15 @@ const InternalMethods = {
     }
     Assert(handler instanceof ObjectValue);
     const target = O.ProxyTarget;
-    const trap = Q(GetMethod(handler, Value('apply')));
+    const trap = Q(yield* GetMethod(handler, Value('apply')));
     if (trap === Value.undefined) {
-      return Q(Call(target, thisArgument, argumentsList));
+      return Q(yield* Call(target, thisArgument, argumentsList));
     }
     const argArray = X(CreateArrayFromList(argumentsList));
-    return Q(Call(trap, handler, [target, thisArgument, argArray]));
+    return Q(yield* Call(trap, handler, [target, thisArgument, argArray]));
   },
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-construct-argumentslist-newtarget */
-  Construct(argumentsList, newTarget) {
+  * Construct(argumentsList, newTarget) {
     const O = this;
 
     const handler = O.ProxyHandler;
@@ -525,12 +524,12 @@ const InternalMethods = {
     Assert(handler instanceof ObjectValue);
     const target = O.ProxyTarget;
     Assert(IsConstructor(target) === Value.true);
-    const trap = Q(GetMethod(handler, Value('construct')));
+    const trap = Q(yield* GetMethod(handler, Value('construct')));
     if (trap === Value.undefined) {
-      return Q(Construct(target as FunctionObject, argumentsList, newTarget));
+      return Q(yield* Construct(target as FunctionObject, argumentsList, newTarget));
     }
     const argArray = X(CreateArrayFromList(argumentsList));
-    const newObj = Q(Call(trap, handler, [target, argArray, newTarget]));
+    const newObj = Q(yield* Call(trap, handler, [target, argArray, newTarget]));
     if (!(newObj instanceof ObjectValue)) {
       return surroundingAgent.Throw('TypeError', 'NotAnObject', newObj);
     }
@@ -538,12 +537,8 @@ const InternalMethods = {
   },
 } satisfies ObjectInternalMethods<ProxyObject>;
 
-export function isProxyExoticObject(O: Value): O is ProxyObject {
-  return 'ProxyHandler' in O;
-}
-
 /** https://tc39.es/ecma262/#sec-proxycreate */
-export function ProxyCreate(target: Value, handler: Value): ExpressionCompletion<ProxyObject> {
+export function ProxyCreate(target: Value, handler: Value): ValueCompletion<ProxyObject> {
   // 1. If Type(target) is not Object, throw a TypeError exception.
   if (!(target instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'CannotCreateProxyWith', 'non-object', 'target');

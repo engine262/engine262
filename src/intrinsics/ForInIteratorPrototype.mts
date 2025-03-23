@@ -4,7 +4,7 @@ import {
   UndefinedValue,
   NullValue,
 } from '../value.mts';
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Assert,
   SameValue,
@@ -13,7 +13,7 @@ import {
   Realm,
   type OrdinaryObject,
 } from '../abstract-ops/all.mts';
-import { Q, type ExpressionCompletion } from '../completion.mts';
+import { Q, type ValueEvaluator } from '../completion.mts';
 import { __ts_cast__, type Mutable } from '../helpers.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 
@@ -47,7 +47,7 @@ export function CreateForInIterator(object: ObjectValue) {
 }
 
 /** https://tc39.es/ecma262/#sec-%foriniteratorprototype%.next */
-function ForInIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* ForInIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be this value.
   const O = thisValue;
   // 2. Assert: Type(O) is Object.
@@ -67,7 +67,7 @@ function ForInIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionCa
     // a. If O.[[ObjectWasVisited]] is false, then
     if (O.ObjectWasVisited === Value.false) {
       // i. Let keys be ? object.[[OwnPropertyKeys]]().
-      const keys = Q(object.OwnPropertyKeys());
+      const keys = Q(yield* object.OwnPropertyKeys());
       // ii. for each key of keys in List order, do
       for (const key of keys) {
         // 1. If Type(key) is String, then
@@ -86,7 +86,7 @@ function ForInIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionCa
       // ii. If there does not exist an element v of visisted such that SameValue(r, v) is true, then
       if (!visited.find((v) => SameValue(r, v) === Value.true)) {
         // 1. Let desc be ? object.[[GetOwnProperty]](r).
-        const desc = Q(object.GetOwnProperty(r));
+        const desc = Q(yield* object.GetOwnProperty(r));
         // 2. If desc is not undefined, then,
         if (!(desc instanceof UndefinedValue)) {
           // a. Append r to visited.
@@ -99,7 +99,7 @@ function ForInIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionCa
       }
     }
     // c. Set object to ? object.[[GetPrototypeOf]]().
-    object = Q(object.GetPrototypeOf());
+    object = Q(yield* object.GetPrototypeOf());
     // d. Set O.Object to object.
     O.Object = object;
     // e. Set O.ObjectWasVisited to false.

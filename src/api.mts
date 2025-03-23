@@ -6,14 +6,15 @@ import {
   ScriptEvaluation,
   type Markable,
   AgentSignifier,
-} from './engine.mts';
+} from './host-defined/engine.mts';
 import {
   X,
   ThrowCompletion,
   AbruptCompletion,
-  EnsureCompletion,
   type PlainCompletion,
-  type ExpressionCompletion,
+  type ValueCompletion,
+  NormalCompletion,
+  Q,
 } from './completion.mts';
 import {
   Realm,
@@ -21,12 +22,14 @@ import {
   CreateIntrinsics,
   SetDefaultGlobalBindings,
   OrdinaryObjectCreate,
+  Assert,
 } from './abstract-ops/all.mts';
 import {
   ParseScript,
   ParseModule,
   ParseJSONModule,
   type ParseScriptHostDefined,
+  type ScriptRecord,
 } from './parse.mts';
 import { AbstractModuleRecord, SourceTextModuleRecord, type ModuleRecordHostDefinedPublic } from './modules.mts';
 import * as messages from './messages.mts';
@@ -36,19 +39,8 @@ import { isWeakMapObject, type WeakMapObject } from './intrinsics/WeakMap.mts';
 import { isWeakSetObject, type WeakSetObject } from './intrinsics/WeakSet.mts';
 import type { PromiseObject } from './intrinsics/Promise.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
+import { skipDebugger } from './helpers.mts';
 import { GlobalEnvironmentRecord, type Intrinsics } from '#self';
-
-export * from './value.mts';
-export * from './engine.mts';
-export * from './completion.mts';
-export * from './abstract-ops/all.mts';
-export * from './static-semantics/all.mts';
-export * from './runtime-semantics/all.mts';
-export * from './environment.mts';
-export * from './parse.mts';
-export * from './modules.mts';
-export * from './inspect.mts';
-export * from './api-types.mts';
 
 export type ErrorType = 'AggregateError' | 'TypeError' | 'Error' | 'SyntaxError' | 'RangeError' | 'ReferenceError' | 'URIError';
 export function Throw<K extends keyof typeof messages>(type: ErrorType | Value, template: K, ...templateArgs: Parameters<typeof messages[K]>): ThrowCompletion {
@@ -190,15 +182,6 @@ export function runJobQueue() {
   }
 }
 
-export function evaluateScript(sourceText: string, realm: Realm, hostDefined?: ParseScriptHostDefined): ExpressionCompletion {
-  const s = ParseScript(sourceText, realm, hostDefined);
-  if (Array.isArray(s)) {
-    return ThrowCompletion(s[0]);
-  }
-
-  return EnsureCompletion(ScriptEvaluation(s));
-}
-
 export interface ManagedRealmHostDefined {
   promiseRejectionTracker?(promise: PromiseObject, operation: 'reject' | 'handle'): void;
   getImportMetaProperties?(module: ModuleRecordHostDefinedPublic): readonly { readonly Key: PropertyKeyValue, readonly Value: Value }[];
@@ -244,7 +227,7 @@ export class ManagedRealm extends Realm {
     const thisValue = global;
     this.GlobalObject = global;
     this.GlobalEnv = new GlobalEnvironmentRecord(global, thisValue);
-    SetDefaultGlobalBindings(this);
+    skipDebugger(SetDefaultGlobalBindings(this));
 
     // misc
     surroundingAgent.executionContextStack.pop(newContext);
@@ -264,24 +247,73 @@ export class ManagedRealm extends Realm {
     return r;
   }
 
-  evaluateScript(sourceText: string, { specifier, inspectorPreview }: { specifier?: string, inspectorPreview?: boolean } = {}): ExpressionCompletion {
-    if (typeof sourceText !== 'string') {
-      throw new TypeError('sourceText must be a string');
+  compileScript(sourceText: string, hostDefined?: ParseScriptHostDefined) {
+    return this.scope(() => {
+      const realm = surroundingAgent.currentRealmRecord;
+      const s = ParseScript(sourceText, realm, hostDefined);
+      if (Array.isArray(s)) {
+        return ThrowCompletion(s[0]);
+      }
+      return NormalCompletion(s);
+    });
+  }
+
+  /**
+   * Call surroundingAgent.resumeEvaluate() to continue evaluation.
+   *
+   * This function will synchronously return a completion if this is a nested evaluation and debugger cannot be triggered.
+   */
+  evaluate(sourceText: ScriptRecord, callback: (completion: NormalCompletion<Value> | ThrowCompletion) => void) {
+    if (!sourceText) {
+      throw new TypeError('sourceText must be a string or a ScriptRecord');
     }
 
-    const res = this.scope(() => {
-      const realm = surroundingAgent.currentRealmRecord;
-      return evaluateScript(sourceText, realm, {
-        specifier,
-        public: { specifier },
-      });
-    }, inspectorPreview);
+    const old = this.active;
+    this.active = true;
+    surroundingAgent.executionContextStack.push(this.topContext);
+    let result: ValueCompletion | undefined;
+    surroundingAgent.evaluate(ScriptEvaluation(sourceText), (completion) => {
+      this.active = old;
+      surroundingAgent.executionContextStack.pop(this.topContext);
+      result = completion;
+      callback(completion);
+    });
+    return result;
+  }
 
-    if (!(res instanceof AbruptCompletion)) {
+  evaluateScript(sourceText: string | ScriptRecord, { specifier, inspectorPreview }: { specifier?: string, inspectorPreview?: boolean } = {}): ValueCompletion {
+    if (sourceText === undefined || sourceText === null) {
+      throw new TypeError('sourceText must be a string or a ScriptRecord');
+    }
+    if (typeof sourceText === 'string') {
+      sourceText = Q(this.compileScript(sourceText, { specifier }));
+    }
+
+    let completion;
+    completion = this.evaluate(sourceText, (c) => {
+      completion = c;
+    });
+    if (!completion) {
+      if (inspectorPreview) {
+        surroundingAgent.debugger_scopePreview(() => {
+          surroundingAgent.resumeEvaluate({
+            noBreakpoint: true,
+          });
+        });
+      } else {
+        surroundingAgent.resumeEvaluate({
+          noBreakpoint: true,
+        });
+      }
+    }
+    if (!completion) {
+      throw new Assert.Error('Expect evaluation completes synchronously');
+    }
+    if (!(completion instanceof AbruptCompletion)) {
       runJobQueue();
     }
 
-    return res;
+    return completion;
   }
 
   createSourceTextModule(specifier: string, sourceText: string): PlainCompletion<SourceTextModuleRecord> {
@@ -316,11 +348,9 @@ export class ManagedRealm extends Realm {
 }
 
 class ManagedSourceTextModuleRecord extends SourceTextModuleRecord {
-  override Evaluate() {
-    const r = super.Evaluate();
-    if (!(r instanceof AbruptCompletion)) {
-      runJobQueue();
-    }
+  override* Evaluate() {
+    const r = yield* super.Evaluate();
+    runJobQueue();
     return r;
   }
 }

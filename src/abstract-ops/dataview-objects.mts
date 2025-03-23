@@ -1,5 +1,5 @@
 import { Q } from '../completion.mts';
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import { __ts_cast__ } from '../helpers.mts';
 import type { DataViewObject } from '../intrinsics/DataView.mts';
 import { type TypedArrayTypes, typedArrayInfoByType } from '../intrinsics/TypedArray.mts';
@@ -82,14 +82,14 @@ export function IsViewOutOfBounds(viewRecord: DataViewWithBufferWitnessRecord): 
 }
 
 /** https://tc39.es/ecma262/#sec-getviewvalue */
-export function GetViewValue(view: Value, requestIndex: Value, isLittleEndian: Value, type: TypedArrayTypes) {
+export function* GetViewValue(view: Value, requestIndex: Value, isLittleEndian: Value, type: TypedArrayTypes) {
   // 1. Perform ? RequireInternalSlot(view, [[DataView]]).
   Q(RequireInternalSlot(view, 'DataView'));
   __ts_cast__<DataViewObject>(view);
   // 2. Assert: view has a [[ViewedArrayBuffer]] internal slot.
   Assert('ViewedArrayBuffer' in view);
   // 3. Let getIndex be ? ToIndex(requestIndex).
-  const getIndex = Q(ToIndex(requestIndex));
+  const getIndex = Q(yield* ToIndex(requestIndex));
   // 4. Set isLittleEndian to ToBoolean(isLittleEndian).
   isLittleEndian = ToBoolean(isLittleEndian);
   // 7. Let viewOffset be view.[[ByteOffset]].
@@ -112,21 +112,21 @@ export function GetViewValue(view: Value, requestIndex: Value, isLittleEndian: V
 }
 
 /** https://tc39.es/ecma262/#sec-setviewvalue */
-export function SetViewValue(view: Value, requestIndex: Value, isLittleEndian: Value, type: TypedArrayTypes, value: Value) {
+export function* SetViewValue(view: Value, requestIndex: Value, isLittleEndian: Value, type: TypedArrayTypes, value: Value) {
   // 1. Perform ? RequireInternalSlot(view, [[DataView]]).
   Q(RequireInternalSlot(view, 'DataView'));
   // 2. Assert: view has a [[ViewedArrayBuffer]] internal slot.
   Assert('ViewedArrayBuffer' in view);
   __ts_cast__<DataViewObject>(view);
   // 3. Let getIndex be ? ToIndex(requestIndex).
-  const getIndex = Q(ToIndex(requestIndex));
+  const getIndex = Q(yield* ToIndex(requestIndex));
   // 4. If IsBigIntElementType(type) is true, let numberValue be ? ToBigInt(value).
   // 5. Otherwise, let numberValue be ? ToNumber(value).
   let numberValue;
   if (IsBigIntElementType(type) === Value.true) {
-    numberValue = Q(ToBigInt(value));
+    numberValue = Q(yield* ToBigInt(value));
   } else {
-    numberValue = Q(ToNumber(value));
+    numberValue = Q(yield* ToNumber(value));
   }
   // 6. Set isLittleEndian to ToBoolean(isLittleEndian).
   isLittleEndian = ToBoolean(isLittleEndian);
@@ -146,6 +146,6 @@ export function SetViewValue(view: Value, requestIndex: Value, isLittleEndian: V
   // 13. Let bufferIndex be getIndex + viewOffset.
   const bufferIndex = getIndex + viewOffset;
   // 14. Perform ? SetValueInBuffer(buffer, bufferIndex, type, numberValue, false, Unordered, isLittleEndian).
-  SetValueInBuffer(view.ViewedArrayBuffer as ArrayBufferObject, bufferIndex, type, numberValue, Value.false, 'unordered', isLittleEndian);
+  Q(yield* SetValueInBuffer(view.ViewedArrayBuffer as ArrayBufferObject, bufferIndex, type, numberValue, Value.false, 'unordered', isLittleEndian));
   return Value.undefined;
 }

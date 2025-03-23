@@ -1,20 +1,9 @@
-import { surroundingAgent } from '../engine.mts';
 import {
-  Descriptor,
-  ObjectValue,
-  JSStringValue,
-  Value,
-  wellKnownSymbols,
-  type ObjectInternalMethods,
-  NumberValue,
-  UndefinedValue,
+  surroundingAgent, Descriptor, ObjectValue, JSStringValue, Value, wellKnownSymbols, type ObjectInternalMethods,
+  NumberValue, UndefinedValue,
   BooleanValue,
-} from '../value.mts';
-import { Q, X, type ExpressionCompletion } from '../completion.mts';
-import type { Mutable } from '../helpers.mts';
-import type { YieldEvaluator } from '../evaluator.mts';
-import { isTypedArrayObject } from '../intrinsics/TypedArray.mts';
-import {
+  Q, X, type ValueCompletion, type ValueEvaluator,
+  type Mutable, type YieldEvaluator,
   AbstractRelationalComparison,
   Assert,
   Call,
@@ -47,16 +36,17 @@ import {
   TypedArrayLength,
   CreateIteratorResultObject,
   GeneratorYield,
-} from './all.mts';
+} from '#self';
+import { isTypedArrayObject } from '#self';
 
 const InternalMethods = {
   /** https://tc39.es/ecma262/#sec-array-exotic-objects-defineownproperty-p-desc */
-  DefineOwnProperty(P, Desc) {
+  * DefineOwnProperty(P, Desc): ValueEvaluator<BooleanValue> {
     const A = this;
 
     Assert(IsPropertyKey(P));
     if (P instanceof JSStringValue && P.stringValue() === 'length') {
-      return Q(ArraySetLength(A, Desc));
+      return Q(yield* ArraySetLength(A, Desc));
     } else if (isArrayIndex(P)) {
       let oldLenDesc = OrdinaryGetOwnProperty(A, Value('length')) as Descriptor;
       Assert(X(IsDataDescriptor(oldLenDesc)));
@@ -72,21 +62,21 @@ const InternalMethods = {
       }
       if (R(index) >= R(oldLen)) {
         oldLenDesc = Descriptor({ ...oldLenDesc, Value: F(R(index) + 1) });
-        const succeeded = OrdinaryDefineOwnProperty(A, Value('length'), oldLenDesc); // eslint-disable-line no-shadow
+        const succeeded = yield* OrdinaryDefineOwnProperty(A, Value('length'), oldLenDesc); // eslint-disable-line no-shadow
         Assert(succeeded === Value.true);
       }
       return Value.true;
     }
-    return OrdinaryDefineOwnProperty(A, P, Desc);
+    return yield* OrdinaryDefineOwnProperty(A, P, Desc);
   },
 } satisfies Partial<ObjectInternalMethods<OrdinaryObject>>;
 
-export function isArrayExoticObject(O: ObjectValue) {
-  return O.DefineOwnProperty === InternalMethods.DefineOwnProperty;
+export function isArrayExoticObject(O: Value) {
+  return O instanceof ObjectValue && O.DefineOwnProperty === InternalMethods.DefineOwnProperty;
 }
 
 /** https://tc39.es/ecma262/#sec-arraycreate */
-export function ArrayCreate(length: number, proto?: ObjectValue): ExpressionCompletion<OrdinaryObject> {
+export function ArrayCreate(length: number, proto?: ObjectValue): ValueCompletion<OrdinaryObject> {
   Assert(isNonNegativeInteger(length));
   if (Object.is(length, -0)) {
     length = +0;
@@ -112,7 +102,7 @@ export function ArrayCreate(length: number, proto?: ObjectValue): ExpressionComp
 }
 
 /** https://tc39.es/ecma262/#sec-arrayspeciescreate */
-export function ArraySpeciesCreate(originalArray: ObjectValue, length: number) {
+export function* ArraySpeciesCreate(originalArray: ObjectValue, length: number): ValueEvaluator<ObjectValue> {
   Assert(typeof length === 'number' && Number.isInteger(length) && length >= 0);
   if (Object.is(length, -0)) {
     length = +0;
@@ -121,7 +111,7 @@ export function ArraySpeciesCreate(originalArray: ObjectValue, length: number) {
   if (isArray === Value.false) {
     return Q(ArrayCreate(length));
   }
-  let C = Q(Get(originalArray, Value('constructor')));
+  let C = Q(yield* Get(originalArray, Value('constructor')));
   if (IsConstructor(C) === Value.true) {
     const thisRealm = surroundingAgent.currentRealmRecord;
     const realmC = Q(GetFunctionRealm(C as FunctionObject));
@@ -132,7 +122,7 @@ export function ArraySpeciesCreate(originalArray: ObjectValue, length: number) {
     }
   }
   if (C instanceof ObjectValue) {
-    C = Q(Get(C, wellKnownSymbols.species));
+    C = Q(yield* Get(C, wellKnownSymbols.species));
     if (C === Value.null) {
       C = Value.undefined;
     }
@@ -143,17 +133,17 @@ export function ArraySpeciesCreate(originalArray: ObjectValue, length: number) {
   if (IsConstructor(C) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
   }
-  return Q(Construct(C as FunctionObject, [F(length)]));
+  return Q(yield* Construct(C as FunctionObject, [F(length)]));
 }
 
 /** https://tc39.es/ecma262/#sec-arraysetlength */
-export function ArraySetLength(A: OrdinaryObject, Desc: Descriptor) {
+export function* ArraySetLength(A: OrdinaryObject, Desc: Descriptor): ValueEvaluator<BooleanValue> {
   if (Desc.Value === undefined) {
-    return OrdinaryDefineOwnProperty(A, Value('length'), Desc);
+    return yield* OrdinaryDefineOwnProperty(A, Value('length'), Desc);
   }
   let newLenDesc = Desc;
-  const newLen = R(Q(ToUint32(Desc.Value)));
-  const numberLen = R(Q(ToNumber(Desc.Value)));
+  const newLen = R(Q(yield* ToUint32(Desc.Value)));
+  const numberLen = R(Q(yield* ToNumber(Desc.Value)));
   if (newLen !== numberLen) {
     return surroundingAgent.Throw('RangeError', 'InvalidArrayLength', Desc.Value);
   }
@@ -163,7 +153,7 @@ export function ArraySetLength(A: OrdinaryObject, Desc: Descriptor) {
   Assert(oldLenDesc.Configurable === Value.false);
   const oldLen = R(oldLenDesc.Value as NumberValue);
   if (newLen >= oldLen) {
-    return OrdinaryDefineOwnProperty(A, Value('length'), newLenDesc);
+    return yield* OrdinaryDefineOwnProperty(A, Value('length'), newLenDesc);
   }
   if (oldLenDesc.Writable === Value.false) {
     return Value.false;
@@ -198,18 +188,18 @@ export function ArraySetLength(A: OrdinaryObject, Desc: Descriptor) {
     }
   }
   if (newWritable === false) {
-    const s = OrdinaryDefineOwnProperty(A, Value('length'), Descriptor({ Writable: Value.false }));
+    const s = yield* OrdinaryDefineOwnProperty(A, Value('length'), Descriptor({ Writable: Value.false }));
     Assert(s === Value.true);
   }
   return Value.true;
 }
 
 /** https://tc39.es/ecma262/#sec-isconcatspreadable */
-export function IsConcatSpreadable(O: Value): ExpressionCompletion<BooleanValue> {
+export function* IsConcatSpreadable(O: Value): ValueEvaluator<BooleanValue> {
   if (!(O instanceof ObjectValue)) {
     return Value.false;
   }
-  const spreadable = Q(Get(O, wellKnownSymbols.isConcatSpreadable));
+  const spreadable = Q(yield* Get(O, wellKnownSymbols.isConcatSpreadable));
   if (spreadable !== Value.undefined) {
     return ToBoolean(spreadable);
   }
@@ -217,7 +207,7 @@ export function IsConcatSpreadable(O: Value): ExpressionCompletion<BooleanValue>
 }
 
 /** https://tc39.es/ecma262/#sec-comparearrayelements */
-export function CompareArrayElements(x: Value, y: Value, comparefn: FunctionObject | UndefinedValue): ExpressionCompletion<NumberValue> {
+export function* CompareArrayElements(x: Value, y: Value, comparefn: FunctionObject | UndefinedValue): ValueEvaluator<NumberValue> {
   // 1. If x and y are both undefined, return +0𝔽.
   if (x === Value.undefined && y === Value.undefined) {
     return F(+0);
@@ -233,7 +223,7 @@ export function CompareArrayElements(x: Value, y: Value, comparefn: FunctionObje
   // 4. If comparefn is not undefined, then
   if (comparefn !== Value.undefined) {
     // a. Let v be ? ToNumber(? Call(comparefn, undefined, « x, y »)).
-    const v = Q(ToNumber(Q(Call(comparefn, Value.undefined, [x, y]))));
+    const v = Q(yield* ToNumber(Q(yield* Call(comparefn, Value.undefined, [x, y]))));
     // b. If v is NaN, return +0𝔽.
     if (v.isNaN()) {
       return F(+0);
@@ -242,17 +232,17 @@ export function CompareArrayElements(x: Value, y: Value, comparefn: FunctionObje
     return v;
   }
   // 5. Let xString be ? ToString(x).
-  const xString = Q(ToString(x));
+  const xString = Q(yield* ToString(x));
   // 6. Let yString be ? ToString(y).
-  const yString = Q(ToString(y));
+  const yString = Q(yield* ToString(y));
   // 7. Let xSmaller be the result of performing Abstract Relational Comparison xString < yString.
-  const xSmaller = AbstractRelationalComparison(xString, yString);
+  const xSmaller = yield* AbstractRelationalComparison(xString, yString);
   // 8. If xSmaller is true, return -1𝔽.
   if (xSmaller === Value.true) {
     return F(-1);
   }
   // 9. Let ySmaller be the result of performing Abstract Relational Comparison yString < xString.
-  const ySmaller = AbstractRelationalComparison(yString, xString);
+  const ySmaller = yield* AbstractRelationalComparison(yString, xString);
   // 10. If ySmaller is true, return 1𝔽.
   if (ySmaller === Value.true) {
     return F(1);
@@ -262,7 +252,7 @@ export function CompareArrayElements(x: Value, y: Value, comparefn: FunctionObje
 }
 
 /** https://tc39.es/ecma262/#sec-createarrayiterator */
-export function CreateArrayIterator(array: ObjectValue, kind: 'key+value' | 'key' | 'value'): ExpressionCompletion<GeneratorObject> {
+export function CreateArrayIterator(array: ObjectValue, kind: 'key+value' | 'key' | 'value'): ValueCompletion<GeneratorObject> {
   // 3. Let closure be a new Abstract Closure with no parameters that captures kind and array and performs the following steps when called:
   const closure = function* closure(): YieldEvaluator {
     // a. Let index be 0.
@@ -281,7 +271,7 @@ export function CreateArrayIterator(array: ObjectValue, kind: 'key+value' | 'key
         len = TypedArrayLength(taRecord);
       } else { // ii. Else,
         // 1. Let len be ? LengthOfArrayLike(array).
-        len = Q(LengthOfArrayLike(array));
+        len = Q(yield* LengthOfArrayLike(array));
       }
       // iii. If index ≥ len, return undefined.
       if (index >= len) {
@@ -295,7 +285,7 @@ export function CreateArrayIterator(array: ObjectValue, kind: 'key+value' | 'key
         // 1. Let elementKey be ! ToString(indexNumber).
         const elementKey = X(ToString(indexNumber));
         // 2. Let elementValue be ? Get(array, elementKey).
-        const elementValue = Q(Get(array, elementKey));
+        const elementValue = Q(yield* Get(array, elementKey));
         // 3. If kind is value, perform ? Yield(elementValue).
         if (kind === 'value') {
           result = elementValue;

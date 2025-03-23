@@ -153,10 +153,10 @@ export function* Evaluate_AssignmentExpression({
         // i. Let rref be the result of evaluating AssignmentExpression.
         const rref = yield* Evaluate(AssignmentExpression);
         // ii. Let rval be ? GetValue(rref).
-        rval = Q(GetValue(rref));
+        rval = Q(yield* GetValue(rref));
       }
       // e. Perform ? PutValue(lref, rval).
-      Q(PutValue(lref, rval));
+      Q(yield* PutValue(lref, rval));
       // f. Return rval.
       return rval;
     }
@@ -165,7 +165,7 @@ export function* Evaluate_AssignmentExpression({
     // 3. Let rref be the result of evaluating AssignmentExpression.
     const rref = yield* Evaluate(AssignmentExpression);
     // 3. Let rval be ? GetValue(rref).
-    const rval = Q(GetValue(rref));
+    const rval = Q(yield* GetValue(rref));
     // 4. Perform ? DestructuringAssignmentEvaluation of assignmentPattern using rval as the argument.
     Q(yield* DestructuringAssignmentEvaluation(assignmentPattern as ParseNode.ObjectAssignmentPattern | ParseNode.ArrayAssignmentPattern, rval));
     // 5. Return rval.
@@ -174,7 +174,7 @@ export function* Evaluate_AssignmentExpression({
     // 1. Let lref be the result of evaluating LeftHandSideExpression.
     const lref = Q(yield* Evaluate(LeftHandSideExpression));
     // 2. Let lval be ? GetValue(lref).
-    const lval = Q(GetValue(lref));
+    const lval = Q(yield* GetValue(lref));
     // 3. Let lbool be ! ToBoolean(lval).
     const lbool = X(ToBoolean(lval));
     // 4. If lbool is false, return lval.
@@ -190,17 +190,17 @@ export function* Evaluate_AssignmentExpression({
       // a. Let rref be the result of evaluating AssignmentExpression.
       const rref = yield* Evaluate(AssignmentExpression);
       // b. Let rval be ? GetValue(rref).
-      rval = Q(GetValue(rref));
+      rval = Q(yield* GetValue(rref));
     }
     // 7. Perform ? PutValue(lref, rval).
-    Q(PutValue(lref, rval));
+    Q(yield* PutValue(lref, rval));
     // 8. Return rval.
     return rval;
   } else if (AssignmentOperator === '||=') {
     // 1. Let lref be the result of evaluating LeftHandSideExpression.
     const lref = Q(yield* Evaluate(LeftHandSideExpression));
     // 2. Let lval be ? GetValue(lref).
-    const lval = Q(GetValue(lref));
+    const lval = Q(yield* GetValue(lref));
     // 3. Let lbool be ! ToBoolean(lval).
     const lbool = X(ToBoolean(lval));
     // 4. If lbool is true, return lval.
@@ -216,17 +216,17 @@ export function* Evaluate_AssignmentExpression({
       // a. Let rref be the result of evaluating AssignmentExpression.
       const rref = yield* Evaluate(AssignmentExpression);
       // b. Let rval be ? GetValue(rref).
-      rval = Q(GetValue(rref));
+      rval = Q(yield* GetValue(rref));
     }
     // 7. Perform ? PutValue(lref, rval).
-    Q(PutValue(lref, rval));
+    Q(yield* PutValue(lref, rval));
     // 8. Return rval.
     return rval;
   } else if (AssignmentOperator === '??=') {
     // 1.Let lref be the result of evaluating LeftHandSideExpression.
     const lref = Q(yield* Evaluate(LeftHandSideExpression));
     // 2. Let lval be ? GetValue(lref).
-    const lval = Q(GetValue(lref));
+    const lval = Q(yield* GetValue(lref));
     // 3. If lval is not undefined nor null, return lval.
     if (lval !== Value.undefined && lval !== Value.null) {
       return lval;
@@ -240,21 +240,21 @@ export function* Evaluate_AssignmentExpression({
       // a. Let rref be the result of evaluating AssignmentExpression.
       const rref = yield* Evaluate(AssignmentExpression);
       // b. Let rval be ? GetValue(rref).
-      rval = Q(GetValue(rref));
+      rval = Q(yield* GetValue(rref));
     }
     // 6. Perform ? PutValue(lref, rval).
-    Q(PutValue(lref, rval));
+    Q(yield* PutValue(lref, rval));
     // 7. Return rval.
     return rval;
   } else {
     // 1. Let lref be the result of evaluating LeftHandSideExpression.
     const lref = Q(yield* Evaluate(LeftHandSideExpression));
     // 2. Let lval be ? GetValue(lref).
-    const lval = Q(GetValue(lref));
+    const lval = Q(yield* GetValue(lref));
     // 3. Let rref be the result of evaluating AssignmentExpression.
     const rref = yield* Evaluate(AssignmentExpression);
     // 4. Let rval be ? GetValue(rref).
-    const rval = Q(GetValue(rref));
+    const rval = Q(yield* GetValue(rref));
     // 5. Let assignmentOpText be the source text matched by AssignmentOperator.
     const assignmentOpText = AssignmentOperator;
     // 6. Let opText be the sequence of Unicode code points associated with assignmentOpText in the following table:
@@ -273,9 +273,9 @@ export function* Evaluate_AssignmentExpression({
       '|=': '|',
     } as const)[assignmentOpText];
     // 7. Let r be ApplyStringOrNumericBinaryOperator(lval, opText, rval).
-    const r = ApplyStringOrNumericBinaryOperator(lval, opText, rval);
+    const r = yield* ApplyStringOrNumericBinaryOperator(lval, opText, rval);
     // 8. Perform ? PutValue(lref, r).
-    Q(PutValue(lref, r));
+    Q(yield* PutValue(lref, r));
     // 9. Return r.
     return r;
   }

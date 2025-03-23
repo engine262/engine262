@@ -2,10 +2,10 @@ import { Realm, RequireInternalSlot, WeakRefDeref } from '../abstract-ops/all.mt
 import { Q, X } from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import type { WeakRefObject } from './WeakRef.mts';
-import type { Arguments, ExpressionCompletion, FunctionCallContext } from '#self';
+import type { Arguments, ValueCompletion, FunctionCallContext } from '#self';
 
 /** https://tc39.es/ecma262/#sec-weak-ref.prototype.deref */
-function WeakRefProto_deref(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function WeakRefProto_deref(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let weakRef be the this value.
   const weakRef = thisValue as WeakRefObject;
   // 2. Perform ? RequireInternalSlot(weakRef, [[WeakRefTarget]]).

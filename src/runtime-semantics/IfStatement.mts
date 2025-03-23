@@ -21,7 +21,7 @@ export function* Evaluate_IfStatement({ Expression, Statement_a, Statement_b }: 
   // 1. Let exprRef be the result of evaluating Expression.
   const exprRef = yield* Evaluate(Expression);
   // 2. Let exprValue be ! ToBoolean(? GetValue(exprRef)).
-  const exprValue = ToBoolean(Q(GetValue(exprRef)));
+  const exprValue = ToBoolean(Q(yield* GetValue(exprRef)));
   if (Statement_b) {
     let stmtCompletion;
     // 3. If exprValue is true, then

@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   NullValue,
   JSStringValue,
@@ -26,22 +26,24 @@ import {
   type BuiltinFunctionObject,
   type FunctionObject,
 } from '../abstract-ops/all.mts';
-import { Q, X, type ExpressionCompletion } from '../completion.mts';
+import {
+  Q, X, type ValueCompletion, type ValueEvaluator,
+} from '../completion.mts';
 import { __ts_cast__ } from '../helpers.mts';
 import { assignProps } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-object.prototype.hasownproperty */
-function ObjectProto_hasOwnProperty([V = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* ObjectProto_hasOwnProperty([V = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let P be ? ToPropertyKey(V).
-  const P = Q(ToPropertyKey(V));
+  const P = Q(yield* ToPropertyKey(V));
   // 2. Let O be ? ToObject(this value).
   const O = Q(ToObject(thisValue));
   // 3. Return ? HasOwnProperty(O, P).
-  return HasOwnProperty(O, P);
+  return yield* HasOwnProperty(O, P);
 }
 
 /** https://tc39.es/ecma262/#sec-object.prototype.isprototypeof */
-function ObjectProto_isPrototypeOf([V = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* ObjectProto_isPrototypeOf([V = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. If Type(V) is not Object, return false.
   if (!(V instanceof ObjectValue)) {
     return Value.false;
@@ -51,7 +53,7 @@ function ObjectProto_isPrototypeOf([V = Value.undefined]: Arguments, { thisValue
   // 3. Repeat,
   while (true) {
     // a. Set V to ? V.[[GetPrototypeOf]]().
-    V = Q((V as ObjectValue).GetPrototypeOf());
+    V = Q(yield* (V as ObjectValue).GetPrototypeOf());
     // b. If V is null, return false.
     if (V === Value.null) {
       return Value.false;
@@ -64,13 +66,13 @@ function ObjectProto_isPrototypeOf([V = Value.undefined]: Arguments, { thisValue
 }
 
 /** https://tc39.es/ecma262/#sec-object.prototype.propertyisenumerable */
-function ObjectProto_propertyIsEnumerable([V = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* ObjectProto_propertyIsEnumerable([V = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let P be ? ToPropertyKey(V).
-  const P = Q(ToPropertyKey(V));
+  const P = Q(yield* ToPropertyKey(V));
   // 2. Let O be ? ToObject(this value).
   const O = Q(ToObject(thisValue));
   // 3. Let desc be ? O.[[GetOwnProperty]](P).
-  const desc = Q(O.GetOwnProperty(P));
+  const desc = Q(yield* O.GetOwnProperty(P));
   // 4. If desc is undefined, return false.
   if (desc instanceof UndefinedValue) {
     return Value.false;
@@ -80,15 +82,15 @@ function ObjectProto_propertyIsEnumerable([V = Value.undefined]: Arguments, { th
 }
 
 /** https://tc39.es/ecma262/#sec-object.prototype.tolocalestring */
-function ObjectProto_toLocaleString(_argList: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* ObjectProto_toLocaleString(_argList: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. Return ? Invoke(O, "toString").
-  return Q(Invoke(O, Value('toString')));
+  return Q(yield* Invoke(O, Value('toString')));
 }
 
 /** https://tc39.es/ecma262/#sec-object.prototype.tostring */
-function ObjectProto_toString(_argList: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* ObjectProto_toString(_argList: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. If the this value is undefined, return "[object Undefined]".
   if (thisValue === Value.undefined) {
     return Value('[object Undefined]');
@@ -125,7 +127,7 @@ function ObjectProto_toString(_argList: Arguments, { thisValue }: FunctionCallCo
     builtinTag = 'Object';
   }
   // 15. Let tag be ? Get(O, @@toStringTag).
-  const tag = Q(Get(O, wellKnownSymbols.toStringTag));
+  const tag = Q(yield* Get(O, wellKnownSymbols.toStringTag));
   let tagStr;
   // 16. If Type(tag) is not String, set tag to builtinTag.
   if (!(tag instanceof JSStringValue)) {
@@ -138,13 +140,13 @@ function ObjectProto_toString(_argList: Arguments, { thisValue }: FunctionCallCo
 }
 
 /** https://tc39.es/ecma262/#sec-object.prototype.valueof */
-function ObjectProto_valueOf(_argList: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function ObjectProto_valueOf(_argList: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Return ? ToObject(this value).
   return Q(ToObject(thisValue));
 }
 
 /** https://tc39.es/ecma262/#sec-object.prototype.__defineGetter__ */
-function ObjectProto__defineGetter__([P = Value.undefined, getter = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* ObjectProto__defineGetter__([P = Value.undefined, getter = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be ? ToObject(this value).
   const O = Q(ToObject(thisValue));
   // 2. If IsCallable(getter) is false, throw a TypeError exception.
@@ -158,15 +160,15 @@ function ObjectProto__defineGetter__([P = Value.undefined, getter = Value.undefi
     Configurable: Value.true,
   });
   // 4. Let key be ? ToPropertyKey(P).
-  const key = Q(ToPropertyKey(P));
+  const key = Q(yield* ToPropertyKey(P));
   // 5. Perform ? DefinePropertyOrThrow(O, key, desc).
-  Q(DefinePropertyOrThrow(O, key, desc));
+  Q(yield* DefinePropertyOrThrow(O, key, desc));
   // 6. Return undefined.
   return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-object.prototype.__defineSetter__ */
-function ObjectProto__defineSetter__([P = Value.undefined, setter = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* ObjectProto__defineSetter__([P = Value.undefined, setter = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be ? ToObject(this value).
   const O = Q(ToObject(thisValue));
   // 2. If IsCallable(setter) is false, throw a TypeError exception.
@@ -180,24 +182,24 @@ function ObjectProto__defineSetter__([P = Value.undefined, setter = Value.undefi
     Configurable: Value.true,
   });
   // 4. Let key be ? ToPropertyKey(P).
-  const key = Q(ToPropertyKey(P));
+  const key = Q(yield* ToPropertyKey(P));
   // 5. Perform ? DefinePropertyOrThrow(O, key, desc).
-  Q(DefinePropertyOrThrow(O, key, desc));
+  Q(yield* DefinePropertyOrThrow(O, key, desc));
   // 6. Return undefined.
   return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-object.prototype.__lookupGetter__ */
-function ObjectProto__lookupGetter__([P = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* ObjectProto__lookupGetter__([P = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be ? ToObject(this value).
   let O: NullValue | ObjectValue = Q(ToObject(thisValue));
   // 2. Let key be ? ToPropertyKey(P).
-  const key = Q(ToPropertyKey(P));
+  const key = Q(yield* ToPropertyKey(P));
   // 3. Repeat,
   while (true) {
     __ts_cast__<ObjectValue>(O);
     // a. Let desc be ? O.[[GetOwnProperty]](key).
-    const desc = Q(O.GetOwnProperty(key));
+    const desc = Q(yield* O.GetOwnProperty(key));
     // b. If desc is not undefined, then
     if (!(desc instanceof UndefinedValue)) {
       // i. If IsAccessorDescriptor(desc) is true, return desc.[[Get]].
@@ -208,7 +210,7 @@ function ObjectProto__lookupGetter__([P = Value.undefined]: Arguments, { thisVal
       return Value.undefined;
     }
     // c. Set O to ? O.[[GetPrototypeOf]]().
-    O = Q(O.GetPrototypeOf());
+    O = Q(yield* O.GetPrototypeOf());
     // d. If O is null, return undefined.
     if (O === Value.null) {
       return Value.undefined;
@@ -217,16 +219,16 @@ function ObjectProto__lookupGetter__([P = Value.undefined]: Arguments, { thisVal
 }
 
 /** https://tc39.es/ecma262/#sec-object.prototype.__lookupSetter__ */
-function ObjectProto__lookupSetter__([P = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* ObjectProto__lookupSetter__([P = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be ? ToObject(this value).
   let O: NullValue | ObjectValue = Q(ToObject(thisValue));
   // 2. Let key be ? ToPropertyKey(P).
-  const key = Q(ToPropertyKey(P));
+  const key = Q(yield* ToPropertyKey(P));
   // 3. Repeat,
   while (true) {
     __ts_cast__<ObjectValue>(O);
     // a. Let desc be ? O.[[GetOwnProperty]](key).
-    const desc = Q(O.GetOwnProperty(key));
+    const desc = Q(yield* O.GetOwnProperty(key));
     // b. If desc is not undefined, then
     if (!(desc instanceof UndefinedValue)) {
       // i. If IsAccessorDescriptor(desc) is true, return desc.[[Set]].
@@ -237,7 +239,7 @@ function ObjectProto__lookupSetter__([P = Value.undefined]: Arguments, { thisVal
       return Value.undefined;
     }
     // c. Set O to ? O.[[GetPrototypeOf]]().
-    O = Q(O.GetPrototypeOf());
+    O = Q(yield* O.GetPrototypeOf());
     // d. If O is null, return undefined.
     if (O === Value.null) {
       return Value.undefined;
@@ -246,15 +248,15 @@ function ObjectProto__lookupSetter__([P = Value.undefined]: Arguments, { thisVal
 }
 
 /** https://tc39.es/ecma262/#sec-get-object.prototype.__proto__ */
-function ObjectProto__proto__Get(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* ObjectProto__proto__Get(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be ? ToObject(this value).
   const O = Q(ToObject(thisValue));
   // 2. Return ? O.[[GetPrototypeOf]]().
-  return Q(O.GetPrototypeOf());
+  return Q(yield* O.GetPrototypeOf());
 }
 
 /** https://tc39.es/ecma262/#sec-set-object.prototype.__proto__ */
-function ObjectProto__proto__Set([proto = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* ObjectProto__proto__Set([proto = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be ? RequireObjectCoercible(this value).
   const O = Q(RequireObjectCoercible(thisValue));
   // 2. If Type(proto) is neither Object nor Null, return undefined.
@@ -266,7 +268,7 @@ function ObjectProto__proto__Set([proto = Value.undefined]: Arguments, { thisVal
     return Value.undefined;
   }
   // 4. Let status be ? O.[[SetPrototypeOf]](proto).
-  const status = Q(O.SetPrototypeOf(proto));
+  const status = Q(yield* O.SetPrototypeOf(proto));
   // 5. If status is false, throw a TypeError exception.
   if (status === Value.false) {
     return surroundingAgent.Throw('TypeError', 'ObjectSetPrototype');

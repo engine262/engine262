@@ -16,6 +16,7 @@ import {
   IsDataDescriptor,
   JSStringValue,
   Throw,
+  skipDebugger,
 } from '#self';
 
 const TEST262 = process.env.TEST262 || path.resolve(import.meta.dirname, 'test262');
@@ -128,7 +129,7 @@ __consolePrintHandle__('Test262:AsyncTestComplete');
           throw new Error('Internal error: .LoadRequestedModules() returned a pending promise');
         }
         Q(module.Link());
-        const evaluateCompletion = Q(module.Evaluate());
+        const evaluateCompletion = Q(skipDebugger(module.Evaluate()));
         if (evaluateCompletion.PromiseState === 'rejected') {
           Q(Throw(evaluateCompletion.PromiseResult!, 'Raw', 'Module evaluation failed'));
         }

@@ -1,9 +1,9 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Value, Descriptor, type Arguments,
 } from '../value.mts';
-import { Evaluate, type Evaluator } from '../evaluator.mts';
-import { Q, X, type PlainCompletion } from '../completion.mts';
+import { Evaluate, type PlainEvaluator } from '../evaluator.mts';
+import { Q, X } from '../completion.mts';
 import { OutOfRange, isArray } from '../helpers.mts';
 import {
   Assert,
@@ -93,7 +93,7 @@ function GetTemplateObject(templateLiteral: ParseNode.TemplateLiteral) {
 //
 // https://github.com/tc39/ecma262/pull/1402
 //   TemplateLiteral : SubstitutionTemplate
-function* ArgumentListEvaluation_TemplateLiteral(TemplateLiteral: ParseNode.TemplateLiteral): Evaluator<PlainCompletion<Arguments>> {
+function* ArgumentListEvaluation_TemplateLiteral(TemplateLiteral: ParseNode.TemplateLiteral): PlainEvaluator<Arguments> {
   switch (true) {
     case TemplateLiteral.TemplateSpanList.length === 1: {
       const templateLiteral = TemplateLiteral;
@@ -107,7 +107,7 @@ function* ArgumentListEvaluation_TemplateLiteral(TemplateLiteral: ParseNode.Temp
       const restSub = [];
       for (const Expression of TemplateLiteral.ExpressionList) {
         const subRef = yield* Evaluate(Expression);
-        const subValue = Q(GetValue(subRef));
+        const subValue = Q(yield* GetValue(subRef));
         restSub.push(subValue);
       }
       return [siteObj, ...restSub] as Arguments;
@@ -130,7 +130,7 @@ function* ArgumentListEvaluation_TemplateLiteral(TemplateLiteral: ParseNode.Temp
 //   Arguments :
 //     `(` ArgumentList `)`
 //     `(` ArgumentList `,` `)`
-function* ArgumentListEvaluation_Arguments(Arguments: ParseNode.Arguments): Evaluator<PlainCompletion<Arguments>> {
+function* ArgumentListEvaluation_Arguments(Arguments: ParseNode.Arguments): PlainEvaluator<Arguments> {
   const precedingArgs = [];
   for (const element of Arguments) {
     if (element.type === 'AssignmentRestElement') {
@@ -138,13 +138,13 @@ function* ArgumentListEvaluation_Arguments(Arguments: ParseNode.Arguments): Eval
       // 2. Let spreadRef be the result of evaluating AssignmentExpression.
       const spreadRef = yield* Evaluate(AssignmentExpression);
       // 3. Let spreadObj be ? GetValue(spreadRef).
-      const spreadObj = Q(GetValue(spreadRef));
+      const spreadObj = Q(yield* GetValue(spreadRef));
       // 4. Let iteratorRecord be ? GetIterator(spreadObj).
-      const iteratorRecord = Q(GetIterator(spreadObj, 'sync'));
+      const iteratorRecord = Q(yield* GetIterator(spreadObj, 'sync'));
       // 5. Repeat,
       while (true) {
         // a. Let next be ? IteratorStepValue(iteratorRecord).
-        const next = Q(IteratorStepValue(iteratorRecord));
+        const next = Q(yield* IteratorStepValue(iteratorRecord));
         // b. If next is false, return list.
         if (next === 'done') {
           break;
@@ -157,7 +157,7 @@ function* ArgumentListEvaluation_Arguments(Arguments: ParseNode.Arguments): Eval
       // 2. Let ref be the result of evaluating AssignmentExpression.
       const ref = yield* Evaluate(AssignmentExpression);
       // 3. Let arg be ? GetValue(ref).
-      const arg = Q(GetValue(ref));
+      const arg = Q(yield* GetValue(ref));
       // 4. Append arg to the end of precedingArgs.
       precedingArgs.push(arg);
       // 5. Return precedingArgs.

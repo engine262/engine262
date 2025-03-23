@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import { Value } from '../value.mts';
 import { DeclarativeEnvironmentRecord } from '../environment.mts';
 import { Assert } from '../abstract-ops/all.mts';
@@ -12,7 +12,7 @@ import type { ParseNode } from '../parser/ParseNode.mts';
 import { Evaluate_StatementList, InstantiateFunctionObject } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-blockdeclarationinstantiation */
-export function BlockDeclarationInstantiation(code: ParseNode.StatementList | ParseNode.CaseBlock, env: DeclarativeEnvironmentRecord) {
+export function* BlockDeclarationInstantiation(code: ParseNode.StatementList | ParseNode.CaseBlock, env: DeclarativeEnvironmentRecord) {
   // 1. Assert: env is a declarative Environment Record.
   Assert(env instanceof DeclarativeEnvironmentRecord);
   // 2. Let declarations be the LexicallyScopedDeclarations of code.
@@ -41,7 +41,7 @@ export function BlockDeclarationInstantiation(code: ParseNode.StatementList | Pa
         // ii. Let fo be InstantiateFunctionObject of d with argument env.
         const fo = InstantiateFunctionObject(d, env, privateEnv);
         // iii. Perform env.InitializeBinding(fn, fo).
-        env.InitializeBinding(fn, fo);
+        yield* env.InitializeBinding(fn, fo);
       }
     }
   }
@@ -61,7 +61,7 @@ export function* Evaluate_Block({ StatementList }: ParseNode.Block) {
   // 2. Let blockEnv be NewDeclarativeEnvironment(oldEnv).
   const blockEnv = new DeclarativeEnvironmentRecord(oldEnv);
   // 3. Perform BlockDeclarationInstantiation(StatementList, blockEnv).
-  BlockDeclarationInstantiation(StatementList, blockEnv);
+  yield* BlockDeclarationInstantiation(StatementList, blockEnv);
   // 4. Set the running execution context's LexicalEnvironment to blockEnv.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = blockEnv;
   // 5. Let blockValue be the result of evaluating StatementList.

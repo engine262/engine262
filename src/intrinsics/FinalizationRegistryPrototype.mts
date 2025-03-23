@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Value, type Arguments, type FunctionCallContext, BooleanValue,
 } from '../value.mts';
@@ -16,7 +16,7 @@ import { bootstrapPrototype } from './bootstrap.mts';
 import type { FinalizationRegistryCell, FinalizationRegistryObject } from './FinalizationRegistry.mts';
 
 /** https://tc39.es/ecma262/#sec-finalization-registry.prototype.cleanupSome */
-function FinalizationRegistryProto_cleanupSome([callback = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
+function* FinalizationRegistryProto_cleanupSome([callback = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Let finalizationRegistry be the this value.
   const finalizationRegistry = thisValue;
   // 2. Perform ? RequireInternalSlot(finalizationRegistry, [[Cells]]).
@@ -26,7 +26,7 @@ function FinalizationRegistryProto_cleanupSome([callback = Value.undefined]: Arg
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callback);
   }
   // 4. Perform ? CleanupFinalizationRegistry(finalizationRegistry, callback).
-  Q(CleanupFinalizationRegistry(finalizationRegistry as FinalizationRegistryObject, { Callback: callback as FunctionObject, HostDefined: undefined }));
+  Q(yield* CleanupFinalizationRegistry(finalizationRegistry as FinalizationRegistryObject, { Callback: callback as FunctionObject, HostDefined: undefined }));
   // 5. Return *undefined*.
   return Value.undefined;
 }

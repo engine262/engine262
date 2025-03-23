@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   AsyncFromSyncIteratorContinuation,
   Call,
@@ -26,7 +26,7 @@ export interface AsyncFromSyncIteratorObject extends OrdinaryObject {
   readonly SyncIteratorRecord: IteratorRecord;
 }
 /** https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.next */
-function AsyncFromSyncIteratorPrototype_next([value]: Arguments, { thisValue }: FunctionCallContext) {
+function* AsyncFromSyncIteratorPrototype_next([value]: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Let O be the this value.
   const O = thisValue as AsyncFromSyncIteratorObject;
   // 2. Assert: Type(O) is Object and O has a [[SyncIteratorRecord]] internal slot.
@@ -39,10 +39,10 @@ function AsyncFromSyncIteratorPrototype_next([value]: Arguments, { thisValue }: 
   let result;
   if (value !== undefined) {
     // a. Let result be IteratorNext(syncIteratorRecord, value).
-    result = IteratorNext(syncIteratorRecord, value);
+    result = yield* IteratorNext(syncIteratorRecord, value);
   } else { // 6. Else,
     // a. Let result be IteratorNext(syncIteratorRecord).
-    result = IteratorNext(syncIteratorRecord);
+    result = yield* IteratorNext(syncIteratorRecord);
   }
   // 7. IfAbruptRejectPromise(result, promiseCapability).
   IfAbruptRejectPromise(result, promiseCapability);
@@ -52,7 +52,7 @@ function AsyncFromSyncIteratorPrototype_next([value]: Arguments, { thisValue }: 
 }
 
 /** https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.return */
-function AsyncFromSyncIteratorPrototype_return([value]: Arguments, { thisValue }: FunctionCallContext) {
+function* AsyncFromSyncIteratorPrototype_return([value]: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Let O be the this value.
   const O = thisValue as AsyncFromSyncIteratorObject;
   // 2. Assert: Type(O) is Object and O has a [[SyncIteratorRecord]] internal slot.
@@ -63,7 +63,7 @@ function AsyncFromSyncIteratorPrototype_return([value]: Arguments, { thisValue }
   const syncIteratorRecord = O.SyncIteratorRecord;
   const syncIterator = syncIteratorRecord.Iterator;
   // 5. Let return be GetMethod(syncIterator, "return").
-  const ret = GetMethod(syncIterator, Value('return'));
+  const ret = yield* GetMethod(syncIterator, Value('return'));
   // 6. IfAbruptRejectPromise(return, promiseCapability).
   IfAbruptRejectPromise(ret, promiseCapability);
   __ts_cast__<UndefinedValue | FunctionObject>(ret);
@@ -80,10 +80,10 @@ function AsyncFromSyncIteratorPrototype_return([value]: Arguments, { thisValue }
   let result;
   if (value !== undefined) {
     // a. Let result be Call(return, syncIterator, « value »).
-    result = Call(ret, syncIterator, [value]);
+    result = yield* Call(ret, syncIterator, [value]);
   } else { // 9. Else,
     // a. Let result be Call(return, syncIterator).
-    result = Call(ret, syncIterator);
+    result = yield* Call(ret, syncIterator);
   }
   // 10. IfAbruptRejectPromise(result, promiseCapability).
   IfAbruptRejectPromise(result, promiseCapability);
@@ -101,7 +101,7 @@ function AsyncFromSyncIteratorPrototype_return([value]: Arguments, { thisValue }
 }
 
 /** https://tc39.es/ecma262/#sec-%asyncfromsynciteratorprototype%.throw */
-function AsyncFromSyncIteratorPrototype_throw([value]: Arguments, { thisValue }: FunctionCallContext) {
+function* AsyncFromSyncIteratorPrototype_throw([value]: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Let O be this value.
   const O = thisValue as AsyncFromSyncIteratorObject;
   // 2. Assert: Type(O) is Object and O has a [[SyncIteratorRecord]] internal slot.
@@ -112,14 +112,14 @@ function AsyncFromSyncIteratorPrototype_throw([value]: Arguments, { thisValue }:
   const syncIteratorRecord = O.SyncIteratorRecord;
   const syncIterator = syncIteratorRecord.Iterator;
   // 5. Let throw be GetMethod(syncIterator, "throw").
-  const thr = GetMethod(syncIterator, Value('throw'));
+  const thr = yield* GetMethod(syncIterator, Value('throw'));
   // 6. IfAbruptRejectPromise(throw, promiseCapability).
   IfAbruptRejectPromise(thr, promiseCapability);
   __ts_cast__<UndefinedValue | FunctionObject>(thr);
   // 7. If throw is undefined, then
   if (thr === Value.undefined) {
     const closeCompletion = NormalCompletion(undefined);
-    const result = IteratorClose(syncIteratorRecord, closeCompletion);
+    const result = yield* IteratorClose(syncIteratorRecord, closeCompletion);
     IfAbruptRejectPromise(result, promiseCapability);
     X(Call(promiseCapability.Reject, Value.undefined, [
       // TODO: error message should be no throw method
@@ -131,10 +131,10 @@ function AsyncFromSyncIteratorPrototype_throw([value]: Arguments, { thisValue }:
   let result;
   if (value !== undefined) {
     // a. Let result be Call(throw, syncIterator, « value »).
-    result = Call(thr, syncIterator, [value]);
+    result = yield* Call(thr, syncIterator, [value]);
   } else { // 9. Else,
     // a. Let result be Call(throw, syncIterator).
-    result = Call(thr, syncIterator);
+    result = yield* Call(thr, syncIterator);
   }
   // 10. IfAbruptRejectPromise(result, promiseCapability).
   IfAbruptRejectPromise(result, promiseCapability);

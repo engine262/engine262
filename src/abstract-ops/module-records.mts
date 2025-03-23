@@ -1,4 +1,4 @@
-import { surroundingAgent, HostLoadImportedModule } from '../engine.mts';
+import { surroundingAgent, HostLoadImportedModule } from '../host-defined/engine.mts';
 import {
   CyclicModuleRecord,
   SyntheticModuleRecord,
@@ -14,6 +14,7 @@ import {
   type PlainCompletion,
   EnsureCompletion,
 } from '../completion.mts';
+import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
 import {
   Assert,
   ModuleNamespaceCreate,
@@ -25,7 +26,9 @@ import {
   PromiseCapabilityRecord,
   Realm,
 } from './all.mts';
-import type { Arguments, ScriptRecord, SourceTextModuleRecord } from '#self';
+import type {
+  Arguments, ScriptRecord, SourceTextModuleRecord, ValueCompletion,
+} from '#self';
 
 /** https://tc39.es/ecma262/#graphloadingstate-record */
 export class GraphLoadingState {
@@ -167,9 +170,9 @@ export function InnerModuleLinking(module: AbstractModuleRecord, stack: CyclicMo
 }
 
 /** https://tc39.es/ecma262/#sec-innermoduleevaluation */
-export function InnerModuleEvaluation(module: AbstractModuleRecord, stack: CyclicModuleRecord[], index: number): PlainCompletion<number> {
+export function* InnerModuleEvaluation(module: AbstractModuleRecord, stack: CyclicModuleRecord[], index: number): PlainEvaluator<number> {
   if (!(module instanceof CyclicModuleRecord)) {
-    Q(module.Evaluate());
+    Q(yield* module.Evaluate());
     return NormalCompletion(index);
   }
   if (module.Status === 'evaluating-async' || module.Status === 'evaluated') {
@@ -192,7 +195,7 @@ export function InnerModuleEvaluation(module: AbstractModuleRecord, stack: Cycli
   stack.push(module);
   for (const required of module.RequestedModules) {
     let requiredModule = GetImportedModule(module, required) as CyclicModuleRecord;
-    index = Q(InnerModuleEvaluation(requiredModule, stack, index));
+    index = Q(yield* InnerModuleEvaluation(requiredModule, stack, index));
     if (requiredModule instanceof CyclicModuleRecord) {
       Assert(requiredModule.Status === 'evaluating' || requiredModule.Status === 'evaluating-async' || requiredModule.Status === 'evaluated');
       Assert((requiredModule.Status === 'evaluating') === stack.includes(requiredModule));
@@ -214,9 +217,9 @@ export function InnerModuleEvaluation(module: AbstractModuleRecord, stack: Cycli
   if (module.PendingAsyncDependencies > 0) {
     module.AsyncEvaluating = Value.true;
   } else if (module.Async === Value.true) {
-    X(ExecuteAsyncModule(module));
+    X(yield* ExecuteAsyncModule(module));
   } else {
-    Q((module as SourceTextModuleRecord).ExecuteModule());
+    Q(yield* (module as SourceTextModuleRecord).ExecuteModule());
   }
   Assert(stack.indexOf(module) === stack.lastIndexOf(module));
   Assert(module.DFSAncestorIndex <= module.DFSIndex);
@@ -239,7 +242,7 @@ export function InnerModuleEvaluation(module: AbstractModuleRecord, stack: Cycli
 }
 
 /** https://tc39.es/ecma262/#sec-execute-async-module */
-function ExecuteAsyncModule(module: CyclicModuleRecord) {
+function* ExecuteAsyncModule(module: CyclicModuleRecord) {
   // 1. Assert: module.[[Status]] is evaluating or evaluating-async.
   Assert(module.Status === 'evaluating' || module.Status === 'evaluating-async');
   // 2. Assert: module.[[Async]] is true.
@@ -249,12 +252,12 @@ function ExecuteAsyncModule(module: CyclicModuleRecord) {
   // 4. Let capability be ! NewPromiseCapability(%Promise%).
   const capability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
   // 5. Let fulfilledClosure be a new Abstract Closure with no parameters that captures module and performs the following steps when called:
-  const fulfilledClosure = () => {
+  function* fulfilledClosure() {
     // a. Perform ! AsyncModuleExecutionFulfilled(module).
-    X(AsyncModuleExecutionFulfilled(module));
+    X(yield* AsyncModuleExecutionFulfilled(module));
     // b. Return undefined.
     return Value.undefined;
-  };
+  }
   // 6. Let onFulfilled be ! CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
   const onFulfilled = CreateBuiltinFunction(fulfilledClosure, 0, Value(''), ['Module']);
   // 7. Let rejectedClosure be a new Abstract Closure with parameters (error) that captures module and performs the following steps when called:
@@ -269,7 +272,7 @@ function ExecuteAsyncModule(module: CyclicModuleRecord) {
   // 9. Perform ! PerformPromiseThen(capability.[[Promise]], onFulfilled, onRejected).
   X(PerformPromiseThen(capability.Promise, onFulfilled, onRejected));
   // 10. Perform ! module.ExecuteModule(capability).
-  X((module as SourceTextModuleRecord).ExecuteModule(capability));
+  X(yield* (module as SourceTextModuleRecord).ExecuteModule(capability));
   // 11. Return.
   return Value.undefined;
 }
@@ -291,7 +294,7 @@ export function GetAsyncCycleRoot(module: CyclicModuleRecord) {
 }
 
 /** https://tc39.es/ecma262/#sec-asyncmodulexecutionfulfilled */
-function AsyncModuleExecutionFulfilled(module: CyclicModuleRecord) {
+function* AsyncModuleExecutionFulfilled(module: CyclicModuleRecord): ValueEvaluator {
   if (module.Status === 'evaluated') {
     Assert(module.EvaluationError !== Value.undefined);
     return Value.undefined;
@@ -311,11 +314,11 @@ function AsyncModuleExecutionFulfilled(module: CyclicModuleRecord) {
         return Value.undefined;
       }
       if (m.Async === Value.true) {
-        X(ExecuteAsyncModule(m));
+        X(yield* ExecuteAsyncModule(m));
       } else {
-        const result = EnsureCompletion((m as SourceTextModuleRecord).ExecuteModule());
+        const result = EnsureCompletion(yield* (m as SourceTextModuleRecord).ExecuteModule());
         if (result instanceof NormalCompletion) {
-          X(AsyncModuleExecutionFulfilled(m));
+          X(yield* AsyncModuleExecutionFulfilled(m));
         } else {
           X(AsyncModuleExecutionRejected(m, result.Value));
         }
@@ -427,7 +430,7 @@ export function GetModuleNamespace(module: AbstractModuleRecord): ObjectValue {
   return namespace;
 }
 
-export function CreateSyntheticModule(exportNames: readonly JSStringValue[], evaluationSteps: (record: SyntheticModuleRecord) => PlainCompletion<void>, realm: Realm, hostDefined: ModuleRecordHostDefined) {
+export function CreateSyntheticModule(exportNames: readonly JSStringValue[], evaluationSteps: (record: SyntheticModuleRecord) => ValueEvaluator | ValueCompletion | void, realm: Realm, hostDefined: ModuleRecordHostDefined) {
   // 1. Return Synthetic Module Record {
   //      [[Realm]]: realm,
   //      [[Environment]]: undefined,
@@ -449,9 +452,10 @@ export function CreateSyntheticModule(exportNames: readonly JSStringValue[], eva
 /** https://tc39.es/ecma262/#sec-create-default-export-synthetic-module */
 export function CreateDefaultExportSyntheticModule(defaultExport: Value, realm: Realm, hostDefined: ModuleRecordHostDefined) {
   // 1. Let closure be the a Abstract Closure with parameters (module) that captures defaultExport and performs the following steps when called:
-  const closure = (module: SyntheticModuleRecord) => { // eslint-disable-line arrow-body-style
+  const closure = function* closure(module: SyntheticModuleRecord): ValueEvaluator {
     // a. Return module.SetSyntheticExport("default", defaultExport).
-    return module.SetSyntheticExport(Value('default'), defaultExport);
+    Q(yield* module.SetSyntheticExport(Value('default'), defaultExport));
+    return Value.undefined;
   };
   // 2. Return CreateSyntheticModule(« "default" », closure, realm)
   return CreateSyntheticModule([Value('default')], closure, realm, hostDefined);

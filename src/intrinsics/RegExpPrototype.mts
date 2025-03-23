@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   BooleanValue,
   NullValue,
@@ -45,39 +45,41 @@ import {
 } from '../abstract-ops/all.mts';
 import { RegExpState as State, GetSubstitution } from '../runtime-semantics/all.mts';
 import { CodePointAt } from '../static-semantics/all.mts';
-import { Q, X, type ExpressionCompletion } from '../completion.mts';
+import {
+  Q, X, type ValueCompletion, type ValueEvaluator,
+} from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import { CreateRegExpStringIterator } from './RegExpStringIteratorPrototype.mts';
 import { isRegExpObject, type RegExpObject } from './RegExp.mts';
 
 
 /** https://tc39.es/ecma262/#sec-regexp.prototype.exec */
-function RegExpProto_exec([string = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* RegExpProto_exec([string = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const R = thisValue as RegExpObject;
   Q(RequireInternalSlot(R, 'RegExpMatcher'));
-  const S = Q(ToString(string));
-  return Q(RegExpBuiltinExec(R, S));
+  const S = Q(yield* ToString(string));
+  return Q(yield* RegExpBuiltinExec(R, S));
 }
 
 /** https://tc39.es/ecma262/#sec-regexpexec */
-export function RegExpExec(R: ObjectValue, S: JSStringValue) {
+export function* RegExpExec(R: ObjectValue, S: JSStringValue) {
   Assert(R instanceof ObjectValue);
   Assert(S instanceof JSStringValue);
 
-  const exec = Q(Get(R, Value('exec')));
+  const exec = Q(yield* Get(R, Value('exec')));
   if (IsCallable(exec) === Value.true) {
-    const result = Q(Call(exec, R, [S]));
+    const result = Q(yield* Call(exec, R, [S]));
     if (!(result instanceof ObjectValue) && !(result instanceof NullValue)) {
       return surroundingAgent.Throw('TypeError', 'RegExpExecNotObject', result);
     }
     return result;
   }
   Q(RequireInternalSlot(R, 'RegExpMatcher'));
-  return Q(RegExpBuiltinExec(R as RegExpObject, S));
+  return Q(yield* RegExpBuiltinExec(R as RegExpObject, S));
 }
 
 /** https://tc39.es/ecma262/#sec-regexpbuiltinexec */
-export function RegExpBuiltinExec(R: RegExpObject, S: JSStringValue): ExpressionCompletion<NullValue | OrdinaryObject> {
+export function* RegExpBuiltinExec(R: RegExpObject, S: JSStringValue): ValueEvaluator<NullValue | OrdinaryObject> {
   // 1. Assert: R is an initialized RegExp instance.
   Assert('RegExpMatcher' in R);
   // 2. Assert: Type(S) is String.
@@ -85,7 +87,7 @@ export function RegExpBuiltinExec(R: RegExpObject, S: JSStringValue): Expression
   // 3. Let length be the number of code units in S.
   const length = S.stringValue().length;
   // 4. Let lastIndex be ? ℝ(ToLength(? Get(R, "lastIndex"))).
-  let lastIndex = MathematicalValue(Q(ToLength(Q(Get(R, Value('lastIndex'))))));
+  let lastIndex = MathematicalValue(Q(yield* ToLength(Q(yield* Get(R, Value('lastIndex'))))));
   // 5. Let flags be R.[[OriginalFlags]].
   const flags = R.OriginalFlags.stringValue();
   // 6. If flags contains "g", let global be true; else let global be false.
@@ -112,7 +114,7 @@ export function RegExpBuiltinExec(R: RegExpObject, S: JSStringValue): Expression
       // i. If global is true or sticky is true, then
       if (global || sticky) {
         // 1. Perform ? Set(R, "lastIndex", +0𝔽, true).
-        Q(Set(R, Value('lastIndex'), F(+0), Value.true));
+        Q(yield* Set(R, Value('lastIndex'), F(+0), Value.true));
       }
       // ii. Return null.
       return Value.null;
@@ -124,7 +126,7 @@ export function RegExpBuiltinExec(R: RegExpObject, S: JSStringValue): Expression
       // i. If sticky is true, then
       if (sticky) {
         // 1. Perform ? Set(R, "lastIndex", +0𝔽, true).
-        Q(Set(R, Value('lastIndex'), F(+0), Value.true));
+        Q(yield* Set(R, Value('lastIndex'), F(+0), Value.true));
         // 2. Return null.
         return Value.null;
       }
@@ -148,7 +150,7 @@ export function RegExpBuiltinExec(R: RegExpObject, S: JSStringValue): Expression
   // 16. If global is true or sticky is true, then
   if (global || sticky) {
     // a. Perform ? Set(R, "lastIndex", 𝔽(e), true).
-    Q(Set(R, Value('lastIndex'), F(e), Value.true));
+    Q(yield* Set(R, Value('lastIndex'), F(e), Value.true));
   }
   // 17. Let n be the number of elements in r's captures List.
   const n = (r as State).captures.length - 1;
@@ -274,7 +276,7 @@ export function AdvanceStringIndex(S: JSStringValue, index: number, unicode: Boo
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp.prototype.dotAll */
-function RegExpProto_dotAllGetter(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function RegExpProto_dotAllGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let R be the this value.
   const R = thisValue;
   // 2. Let cu be the code unit 0x0073 (LATIN SMALL LETTER S).
@@ -284,37 +286,37 @@ function RegExpProto_dotAllGetter(_args: Arguments, { thisValue }: FunctionCallC
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp.prototype.flags */
-function RegExpProto_flagsGetter(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* RegExpProto_flagsGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const R = thisValue;
   if (!(R instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   let result = '';
-  const hasIndices = ToBoolean(Q(Get(R, Value('hasIndices'))));
+  const hasIndices = ToBoolean(Q(yield* Get(R, Value('hasIndices'))));
   if (hasIndices === Value.true) {
     result += 'd';
   }
-  const global = ToBoolean(Q(Get(R, Value('global'))));
+  const global = ToBoolean(Q(yield* Get(R, Value('global'))));
   if (global === Value.true) {
     result += 'g';
   }
-  const ignoreCase = ToBoolean(Q(Get(R, Value('ignoreCase'))));
+  const ignoreCase = ToBoolean(Q(yield* Get(R, Value('ignoreCase'))));
   if (ignoreCase === Value.true) {
     result += 'i';
   }
-  const multiline = ToBoolean(Q(Get(R, Value('multiline'))));
+  const multiline = ToBoolean(Q(yield* Get(R, Value('multiline'))));
   if (multiline === Value.true) {
     result += 'm';
   }
-  const dotAll = ToBoolean(Q(Get(R, Value('dotAll'))));
+  const dotAll = ToBoolean(Q(yield* Get(R, Value('dotAll'))));
   if (dotAll === Value.true) {
     result += 's';
   }
-  const unicode = ToBoolean(Q(Get(R, Value('unicode'))));
+  const unicode = ToBoolean(Q(yield* Get(R, Value('unicode'))));
   if (unicode === Value.true) {
     result += 'u';
   }
-  const sticky = ToBoolean(Q(Get(R, Value('sticky'))));
+  const sticky = ToBoolean(Q(yield* Get(R, Value('sticky'))));
   if (sticky === Value.true) {
     result += 'y';
   }
@@ -322,7 +324,7 @@ function RegExpProto_flagsGetter(_args: Arguments, { thisValue }: FunctionCallCo
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp.prototype.global */
-function RegExpProto_globalGetter(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function RegExpProto_globalGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const R = thisValue as RegExpObject;
   if (!(R instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
@@ -341,7 +343,7 @@ function RegExpProto_globalGetter(_args: Arguments, { thisValue }: FunctionCallC
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp.prototype.hasIndices */
-function RegExpProto_hasIndicesGetter(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function RegExpProto_hasIndicesGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let R be the this value.
   const R = thisValue;
   // 2. Let cu be the code unit 0x0073 (LATIN SMALL LETTER D).
@@ -351,7 +353,7 @@ function RegExpProto_hasIndicesGetter(_args: Arguments, { thisValue }: FunctionC
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp.prototype.ignorecase */
-function RegExpProto_ignoreCaseGetter(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function RegExpProto_ignoreCaseGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let R be the this value.
   const R = thisValue;
   // 2. Let cu be the code unit 0x0069 (LATIN SMALL LETTER I).
@@ -361,7 +363,7 @@ function RegExpProto_ignoreCaseGetter(_args: Arguments, { thisValue }: FunctionC
 }
 
 /** https://tc39.es/ecma262/#sec-regexp.prototype-@@match */
-function RegExpProto_match([string = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* RegExpProto_match([string = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let rx be the this value.
   const rx = thisValue;
   // 2. If Type(rx) is not Object, throw a TypeError exception.
@@ -369,18 +371,18 @@ function RegExpProto_match([string = Value.undefined]: Arguments, { thisValue }:
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', rx);
   }
   // 3. Let S be ? ToString(string).
-  const S = Q(ToString(string));
+  const S = Q(yield* ToString(string));
   // 4. Let flags be ? ToString(? Get(rx, "flags")).
-  const flags = Q(ToString(Q(Get(rx, Value('flags')))));
+  const flags = Q(yield* ToString(Q(yield* Get(rx, Value('flags')))));
   // 5. If flags does not contain "g", then
   if (!flags.stringValue().includes('g')) {
     // a. Return ? RegExpExec(rx, S).
-    return Q(RegExpExec(rx, S));
+    return Q(yield* RegExpExec(rx, S));
   } else { // 6. Else,
     // a. If flags contains "u", let fullUnicode be true. Otherwise, let fullUnicode be false.
     const fullUnicode = flags.stringValue().includes('u') ? Value.true : Value.false;
     // b. Perform ? Set(rx, "lastIndex", +0𝔽, true).
-    Q(Set(rx, Value('lastIndex'), F(+0), Value.true));
+    Q(yield* Set(rx, Value('lastIndex'), F(+0), Value.true));
     // c. Let A be ! ArrayCreate(0).
     const A = X(ArrayCreate(0));
     // d. Let n be 0.
@@ -388,7 +390,7 @@ function RegExpProto_match([string = Value.undefined]: Arguments, { thisValue }:
     // e. Repeat,
     while (true) {
       // i. Let result be ? RegExpExec(rx, S).
-      const result = Q(RegExpExec(rx, S));
+      const result = Q(yield* RegExpExec(rx, S));
       // ii. If result is null, then
       if (result instanceof NullValue) {
         // 1. If n = 0, return null.
@@ -399,17 +401,17 @@ function RegExpProto_match([string = Value.undefined]: Arguments, { thisValue }:
         return A;
       } else { // iii. Else,
         // 1. Let matchStr be ? ToString(? Get(result, "0")).
-        const matchStr = Q(ToString(Q(Get(result, Value('0')))));
+        const matchStr = Q(yield* ToString(Q(yield* Get(result, Value('0')))));
         // 2. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), matchStr).
         X(CreateDataPropertyOrThrow(A, X(ToString(F(n))), matchStr));
         // 3. If matchStr is the empty String, then
         if (matchStr.stringValue() === '') {
           // a. Let thisIndex be ℝ(? ToLength(? Get(rx, "lastIndex"))).
-          const thisIndex = R(Q(ToLength(Q(Get(rx, Value('lastIndex'))))));
+          const thisIndex = R(Q(yield* ToLength(Q(yield* Get(rx, Value('lastIndex'))))));
           // b. Let nextIndex be AdvanceStringIndex(S, thisIndex, fullUnicode).
           const nextIndex = AdvanceStringIndex(S, thisIndex, fullUnicode);
           // c. Perform ? Set(rx, "lastIndex", 𝔽(nextIndex), true).
-          Q(Set(rx, Value('lastIndex'), F(nextIndex), Value.true));
+          Q(yield* Set(rx, Value('lastIndex'), F(nextIndex), Value.true));
         }
         // 4. Set n to n + 1.
         n += 1;
@@ -419,17 +421,17 @@ function RegExpProto_match([string = Value.undefined]: Arguments, { thisValue }:
 }
 
 /** https://tc39.es/ecma262/#sec-regexp-prototype-matchall */
-function RegExpProto_matchAll([string = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* RegExpProto_matchAll([string = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const R = thisValue;
   if (!(R instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
-  const S = Q(ToString(string));
-  const C = Q(SpeciesConstructor(R, surroundingAgent.intrinsic('%RegExp%')));
-  const flags = Q(ToString(Q(Get(R, Value('flags')))));
-  const matcher = Q(Construct(C, [R, flags]));
-  const lastIndex = Q(ToLength(Q(Get(R, Value('lastIndex')))));
-  Q(Set(matcher, Value('lastIndex'), lastIndex, Value.true));
+  const S = Q(yield* ToString(string));
+  const C = Q(yield* SpeciesConstructor(R, surroundingAgent.intrinsic('%RegExp%')));
+  const flags = Q(yield* ToString(Q(yield* Get(R, Value('flags')))));
+  const matcher = Q(yield* Construct(C, [R, flags]));
+  const lastIndex = Q(yield* ToLength(Q(yield* Get(R, Value('lastIndex')))));
+  Q(yield* Set(matcher, Value('lastIndex'), lastIndex, Value.true));
   let global;
   if (flags.stringValue().includes('g')) {
     global = Value.true;
@@ -446,7 +448,7 @@ function RegExpProto_matchAll([string = Value.undefined]: Arguments, { thisValue
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp.prototype.multiline */
-function RegExpProto_multilineGetter(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function RegExpProto_multilineGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let R be the this value.
   const R = thisValue;
   // 2. Let cu be the code unit 0x006D (LATIN SMALL LETTER M).
@@ -456,7 +458,7 @@ function RegExpProto_multilineGetter(_args: Arguments, { thisValue }: FunctionCa
 }
 
 /** https://tc39.es/ecma262/#sec-regexp.prototype-@@replace */
-function RegExpProto_replace([string = Value.undefined, replaceValue = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let rx be the this value.
   const rx = thisValue;
   // 2. If rx is not an Object, throw a TypeError exception.
@@ -464,7 +466,7 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', rx);
   }
   // 3. Let S be ? ToString(string).
-  const S = Q(ToString(string));
+  const S = Q(yield* ToString(string));
   // 4. Let lengthS be the length of S.
   const lengthS = S.stringValue().length;
   // 5. Let functionalReplace be IsCallable(replaceValue).
@@ -472,10 +474,10 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
   // 6. If functionalReplace is false, then
   if (functionalReplace === Value.false) {
     // a. Set replaceValue to ? ToString(replaceValue).
-    replaceValue = Q(ToString(replaceValue));
+    replaceValue = Q(yield* ToString(replaceValue));
   }
   // 7. Let flags be ? ToString(? Get(rx, "flags")).
-  const flags = Q(ToString(Q(Get(rx, Value('flags')))));
+  const flags = Q(yield* ToString(Q(yield* Get(rx, Value('flags')))));
   // 8. If flags contains "g", let global be true. Otherwise, let global be false.
   const global = flags.stringValue().includes('g') ? Value.true : Value.false;
   let fullUnicode;
@@ -484,7 +486,7 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
     // a. If flags contains "u", let fullUnicode be true. Otherwise, let fullUnicode be false.
     fullUnicode = flags.stringValue().includes('u') ? Value.true : Value.false;
     // b. Perform ? Set(rx, "lastIndex", +0𝔽, true).
-    Q(Set(rx, Value('lastIndex'), F(+0), Value.true));
+    Q(yield* Set(rx, Value('lastIndex'), F(+0), Value.true));
   }
   // 10. Let results be a new empty List.
   const results = [];
@@ -493,7 +495,7 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
   // 12. Repeat, while done is false,
   while (!done) {
     // a. Let result be ? RegExpExec(rx, S).
-    const result = Q(RegExpExec(rx, S));
+    const result = Q(yield* RegExpExec(rx, S));
     // b. If result is null, set done to true.
     if (result instanceof NullValue) {
       done = true;
@@ -505,15 +507,15 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
         done = true;
       } else { // iii. Else,
         // 1. Let matchStr be ? ToString(? Get(result, "0")).
-        const matchStr = Q(ToString(Q(Get(result, Value('0')))));
+        const matchStr = Q(yield* ToString(Q(yield* Get(result, Value('0')))));
         // 2. If matchStr is the empty String, then
         if (matchStr.stringValue() === '') {
           // a. Let thisIndex be ℝ(? ToLength(? Get(rx, "lastIndex"))).
-          const thisIndex = R(Q(ToLength(Q(Get(rx, Value('lastIndex'))))));
+          const thisIndex = R(Q(yield* ToLength(Q(yield* Get(rx, Value('lastIndex'))))));
           // b. Let nextIndex be AdvanceStringIndex(S, thisIndex, fullUnicode).
           const nextIndex = AdvanceStringIndex(S, thisIndex, fullUnicode!);
           // c. Perform ? Set(rx, "lastIndex", 𝔽(nextIndex), true).
-          Q(Set(rx, Value('lastIndex'), F(nextIndex), Value.true));
+          Q(yield* Set(rx, Value('lastIndex'), F(nextIndex), Value.true));
         }
       }
     }
@@ -525,15 +527,15 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
   // 15. For each element result of results, do
   for (const result of results) {
     // a. Let resultLength be ? LengthOfArrayLike(result).
-    let nCaptures = Q(LengthOfArrayLike(result));
+    let nCaptures = Q(yield* LengthOfArrayLike(result));
     // b. Let nCaptures be max(resultLength - 1, 0).
     nCaptures = Math.max(nCaptures - 1, 0);
     // c. Let matched be ? ToString(? Get(result, "0")).
-    const matched = Q(ToString(Q(Get(result, Value('0')))));
+    const matched = Q(yield* ToString(Q(yield* Get(result, Value('0')))));
     // d. Let matchLength be the length of matched.
     const matchLength = matched.stringValue().length;
     // e. Let position be ? ToIntegerOrInfinity(? Get(result, "index")).
-    let position = Q(ToIntegerOrInfinity(Q(Get(result, Value('index')))));
+    let position = Q(yield* ToIntegerOrInfinity(Q(yield* Get(result, Value('index')))));
     // f. Set position to the result of clamping position between 0 and lengthS.
     position = Math.max(Math.min(position, lengthS), 0);
     // g. Let captures be a new empty List.
@@ -543,11 +545,11 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
     // i. Repeat, while n ≤ nCaptures,
     while (n <= nCaptures) {
       // i. Let capN be ? Get(result, ! ToString(𝔽(n))).
-      let capN = Q(Get(result, X(ToString(F(n)))));
+      let capN = Q(yield* Get(result, X(ToString(F(n)))));
       // ii. If capN is not undefined, then
       if (capN !== Value.undefined) {
         // 1. Set capN to ? ToString(capN).
-        capN = Q(ToString(capN));
+        capN = Q(yield* ToString(capN));
       }
       // iii. Append capN to captures.
       captures.push(capN);
@@ -558,7 +560,7 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
       n += 1;
     }
     // j. Let namedCaptures be ? Get(result, "groups").
-    let namedCaptures = Q(Get(result, Value('groups')));
+    let namedCaptures = Q(yield* Get(result, Value('groups')));
     let replacement;
     // k. If functionalReplace is true, then
     if (functionalReplace === Value.true) {
@@ -570,9 +572,9 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
         replacerArgs.push(namedCaptures);
       }
       // iii. Let replValue be ? Call(replaceValue, undefined, replacerArgs).
-      const replValue = Q(Call(replaceValue, Value.undefined, replacerArgs));
+      const replValue = Q(yield* Call(replaceValue, Value.undefined, replacerArgs));
       // iv. Let replacement be ? ToString(replValue).
-      replacement = Q(ToString(replValue));
+      replacement = Q(yield* ToString(replValue));
     } else { // l. Else,
       // i. If namedCaptures is not undefined, then
       if (namedCaptures !== Value.undefined) {
@@ -580,7 +582,7 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
         namedCaptures = Q(ToObject(namedCaptures));
       }
       // ii. Let replacement be ? GetSubstitution(matched, S, position, captures, namedCaptures, replaceValue).
-      replacement = Q(GetSubstitution(matched, S, position, captures, namedCaptures, replaceValue as JSStringValue));
+      replacement = Q(yield* GetSubstitution(matched, S, position, captures, namedCaptures, replaceValue as JSStringValue));
     }
     // m. If position ≥ nextSourcePosition, then
     if (position >= nextSourcePosition) {
@@ -602,33 +604,33 @@ function RegExpProto_replace([string = Value.undefined, replaceValue = Value.und
 }
 
 /** https://tc39.es/ecma262/#sec-regexp.prototype-@@search */
-function RegExpProto_search([string = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* RegExpProto_search([string = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const rx = thisValue;
   if (!(rx instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', rx);
   }
-  const S = Q(ToString(string));
+  const S = Q(yield* ToString(string));
 
-  const previousLastIndex = Q(Get(rx, Value('lastIndex')));
+  const previousLastIndex = Q(yield* Get(rx, Value('lastIndex')));
   if (SameValue(previousLastIndex, F(+0)) === Value.false) {
-    Q(Set(rx, Value('lastIndex'), F(+0), Value.true));
+    Q(yield* Set(rx, Value('lastIndex'), F(+0), Value.true));
   }
 
-  const result = Q(RegExpExec(rx, S));
-  const currentLastIndex = Q(Get(rx, Value('lastIndex')));
+  const result = Q(yield* RegExpExec(rx, S));
+  const currentLastIndex = Q(yield* Get(rx, Value('lastIndex')));
   if (SameValue(currentLastIndex, previousLastIndex) === Value.false) {
-    Q(Set(rx, Value('lastIndex'), previousLastIndex, Value.true));
+    Q(yield* Set(rx, Value('lastIndex'), previousLastIndex, Value.true));
   }
 
   if (result instanceof NullValue) {
     return F(-1);
   }
 
-  return Q(Get(result, Value('index')));
+  return Q(yield* Get(result, Value('index')));
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp.prototype.source */
-function RegExpProto_sourceGetter(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function RegExpProto_sourceGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const R = thisValue;
   if (!(R instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
@@ -646,19 +648,19 @@ function RegExpProto_sourceGetter(_args: Arguments, { thisValue }: FunctionCallC
 }
 
 /** https://tc39.es/ecma262/#sec-regexp.prototype-@@split */
-function RegExpProto_split([string = Value.undefined, limit = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* RegExpProto_split([string = Value.undefined, limit = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const rx = thisValue;
   if (!(rx instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', rx);
   }
-  const S = Q(ToString(string));
+  const S = Q(yield* ToString(string));
 
-  const C = Q(SpeciesConstructor(rx, surroundingAgent.intrinsic('%RegExp%')));
-  const flagsValue = Q(Get(rx, Value('flags')));
-  const flags = Q(ToString(flagsValue)).stringValue();
+  const C = Q(yield* SpeciesConstructor(rx, surroundingAgent.intrinsic('%RegExp%')));
+  const flagsValue = Q(yield* Get(rx, Value('flags')));
+  const flags = Q(yield* ToString(flagsValue)).stringValue();
   const unicodeMatching = flags.includes('u') ? Value.true : Value.false;
   const newFlags = flags.includes('y') ? Value(flags) : Value(`${flags}y`);
-  const splitter = Q(Construct(C, [rx, newFlags]));
+  const splitter = Q(yield* Construct(C, [rx, newFlags]));
 
   const A = X(ArrayCreate(0));
   let lengthA = 0;
@@ -667,7 +669,7 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined]: 
   if (limit === Value.undefined) {
     lim = (2 ** 32) - 1;
   } else {
-    lim = R(Q(ToUint32(limit)));
+    lim = R(Q(yield* ToUint32(limit)));
   }
 
   const size = S.stringValue().length;
@@ -678,7 +680,7 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined]: 
   }
 
   if (size === 0) {
-    const z = Q(RegExpExec(splitter, S));
+    const z = Q(yield* RegExpExec(splitter, S));
     if (z !== Value.null) {
       return A;
     }
@@ -688,13 +690,13 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined]: 
 
   let q = p;
   while (q < size) {
-    Q(Set(splitter, Value('lastIndex'), F(q), Value.true));
-    const z = Q(RegExpExec(splitter, S));
+    Q(yield* Set(splitter, Value('lastIndex'), F(q), Value.true));
+    const z = Q(yield* RegExpExec(splitter, S));
     if (z instanceof NullValue) {
       q = AdvanceStringIndex(S, q, unicodeMatching);
     } else {
-      const lastIndex = Q(Get(splitter, Value('lastIndex')));
-      let e = R(Q(ToLength(lastIndex)));
+      const lastIndex = Q(yield* Get(splitter, Value('lastIndex')));
+      let e = R(Q(yield* ToLength(lastIndex)));
       e = Math.min(e, size);
       if (e === p) {
         q = AdvanceStringIndex(S, q, unicodeMatching);
@@ -706,11 +708,11 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined]: 
           return A;
         }
         p = e;
-        let numberOfCaptures = Q(LengthOfArrayLike(z));
+        let numberOfCaptures = Q(yield* LengthOfArrayLike(z));
         numberOfCaptures = Math.max(numberOfCaptures - 1, 0);
         let i = 1;
         while (i <= numberOfCaptures) {
-          const nextCapture = Q(Get(z, X(ToString(F(i)))));
+          const nextCapture = Q(yield* Get(z, X(ToString(F(i)))));
           X(CreateDataProperty(A, X(ToString(F(lengthA))), nextCapture));
           i += 1;
           lengthA += 1;
@@ -729,7 +731,7 @@ function RegExpProto_split([string = Value.undefined, limit = Value.undefined]: 
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp.prototype.sticky */
-function RegExpProto_stickyGetter(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function RegExpProto_stickyGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let R be the this value.
   const R = thisValue;
   // 2. Let cu be the code unit 0x0097 (LATIN SMALL LETTER Y).
@@ -739,13 +741,13 @@ function RegExpProto_stickyGetter(_args: Arguments, { thisValue }: FunctionCallC
 }
 
 /** https://tc39.es/ecma262/#sec-regexp.prototype.test */
-function RegExpProto_test([S = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* RegExpProto_test([S = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const R = thisValue;
   if (!(R instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
-  const string = Q(ToString(S));
-  const match = Q(RegExpExec(R, string));
+  const string = Q(yield* ToString(S));
+  const match = Q(yield* RegExpExec(R, string));
   if (match !== Value.null) {
     return Value.true;
   }
@@ -753,19 +755,19 @@ function RegExpProto_test([S = Value.undefined]: Arguments, { thisValue }: Funct
 }
 
 /** https://tc39.es/ecma262/#sec-regexp.prototype.tostring */
-function RegExpProto_toString(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* RegExpProto_toString(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const R = thisValue;
   if (!(R instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
-  const pattern = Q(ToString(Q(Get(R, Value('source')))));
-  const flags = Q(ToString(Q(Get(R, Value('flags')))));
+  const pattern = Q(yield* ToString(Q(yield* Get(R, Value('source')))));
+  const flags = Q(yield* ToString(Q(yield* Get(R, Value('flags')))));
   const result = `/${pattern.stringValue()}/${flags.stringValue()}`;
   return Value(result);
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp.prototype.unicode */
-function RegExpProto_unicodeGetter(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function RegExpProto_unicodeGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let R be the this value.
   const R = thisValue;
   // 2. Let cu be the code unit 0x0075 (LATIN SMALL LETTER U).

@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   ObjectValue, Value, ReferenceRecord,
 } from '../value.mts';
@@ -51,7 +51,7 @@ export function* EvaluateCall(func: Value, ref: ReferenceRecord | Value, args: P
     PrepareForTailCall();
   }
   // 7. Let result be Call(func, thisValue, argList).
-  const result = Call(func, thisValue, argList);
+  const result = yield* Call(func, thisValue, argList);
   // 8. Assert: If tailPosition is true, the above call will not return here but instead
   //    evaluation will continue as if the following return has already occurred.
   // 9. Assert: If result is not an abrupt completion, then Type(result) is an ECMAScript language type.

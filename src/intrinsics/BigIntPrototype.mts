@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   ObjectValue, BigIntValue, Value,
   type Arguments,
@@ -8,7 +8,9 @@ import {
   Assert, ToIntegerOrInfinity, ToString, R,
   Realm,
 } from '../abstract-ops/all.mts';
-import { Q, X, type ExpressionCompletion } from '../completion.mts';
+import {
+  Q, X, type ValueCompletion, type ValueEvaluator,
+} from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-thisbigintvalue */
@@ -29,12 +31,12 @@ function thisBigIntValue(value: Value) {
 }
 
 /** https://tc39.es/ecma262/#sec-bigint.prototype.tolocalestring */
-function BigIntProto_toLocalString(args: Arguments, context: FunctionCallContext): ExpressionCompletion {
+function BigIntProto_toLocalString(args: Arguments, context: FunctionCallContext): ValueEvaluator {
   return BigIntProto_toString(args, context);
 }
 
 /** https://tc39.es/ecma262/#sec-bigint.prototype.tostring */
-function BigIntProto_toString([radix]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* BigIntProto_toString([radix]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let x be ? thisBigIntValue(this value).
   const x = Q(thisBigIntValue(thisValue));
   // 2. If radix is not present, let radixNumber be 10.
@@ -46,7 +48,7 @@ function BigIntProto_toString([radix]: Arguments, { thisValue }: FunctionCallCon
     radixNumber = 10;
   } else {
     // 4. Else, let radixNumber be ? ToIntegerOrInfinity(radix).
-    radixNumber = Q(ToIntegerOrInfinity(radix));
+    radixNumber = Q(yield* ToIntegerOrInfinity(radix));
   }
   // 5. If radixNumber < 2 or radixNumber > 36, throw a RangeError exception.
   if (radixNumber < 2 || radixNumber > 36) {
@@ -65,7 +67,7 @@ function BigIntProto_toString([radix]: Arguments, { thisValue }: FunctionCallCon
 }
 
 /** https://tc39.es/ecma262/#sec-bigint.prototype.tostring */
-function BigIntProto_valueOf(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function BigIntProto_valueOf(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // Return ? thisBigIntValue(this value).
   return Q(thisBigIntValue(thisValue));
 }

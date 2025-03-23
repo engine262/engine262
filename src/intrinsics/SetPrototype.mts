@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Call,
   F,
@@ -15,13 +15,15 @@ import {
   type Arguments,
   type FunctionCallContext,
 } from '../value.mts';
-import { Q, X, type ExpressionCompletion } from '../completion.mts';
+import {
+  Q, X, type ValueCompletion, type ValueEvaluator,
+} from '../completion.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import { CreateSetIterator } from './SetIteratorPrototype.mts';
 import type { SetObject } from './Set.mts';
 
 /** https://tc39.es/ecma262/#sec-set.prototype.add */
-function SetProto_add([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function SetProto_add([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let S be the this value.
   const S = thisValue as SetObject;
   // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
@@ -48,7 +50,7 @@ function SetProto_add([value = Value.undefined]: Arguments, { thisValue }: Funct
 }
 
 /** https://tc39.es/ecma262/#sec-set.prototype.clear */
-function SetProto_clear(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function SetProto_clear(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let S be the this value.
   const S = thisValue as SetObject;
   // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
@@ -68,7 +70,7 @@ function SetProto_clear(_args: Arguments, { thisValue }: FunctionCallContext): E
 }
 
 /** https://tc39.es/ecma262/#sec-set.prototype.delete */
-function SetProto_delete([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function SetProto_delete([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let S be the this value.
   const S = thisValue as SetObject;
   // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
@@ -92,7 +94,7 @@ function SetProto_delete([value = Value.undefined]: Arguments, { thisValue }: Fu
 }
 
 /** https://tc39.es/ecma262/#sec-set.prototype.entries */
-function SetProto_entries(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function SetProto_entries(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let S be the this value.
   const S = thisValue;
   // 2. Return ? CreateSetIterator(S, key+value).
@@ -100,7 +102,7 @@ function SetProto_entries(_args: Arguments, { thisValue }: FunctionCallContext):
 }
 
 /** https://tc39.es/ecma262/#sec-set.prototype.foreach */
-function SetProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* SetProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let S be the this value.
   const S = thisValue as SetObject;
   // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
@@ -116,7 +118,7 @@ function SetProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefin
     // a. If e is not empty, then
     if (e !== undefined) {
       // i. Perform ? Call(callbackfn, thisArg, « e, e, S »).
-      Q(Call(callbackfn, thisArg, [e, e, S]));
+      Q(yield* Call(callbackfn, thisArg, [e, e, S]));
     }
   }
   // 6. Return undefined.
@@ -124,7 +126,7 @@ function SetProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefin
 }
 
 /** https://tc39.es/ecma262/#sec-set.prototype.has */
-function SetProto_has([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function SetProto_has([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let S be the this value.
   const S = thisValue as SetObject;
   // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
@@ -143,7 +145,7 @@ function SetProto_has([value = Value.undefined]: Arguments, { thisValue }: Funct
 }
 
 /** https://tc39.es/ecma262/#sec-get-set.prototype.size */
-function SetProto_sizeGetter(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function SetProto_sizeGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let S be the this value.
   const S = thisValue as SetObject;
   // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
@@ -164,7 +166,7 @@ function SetProto_sizeGetter(_args: Arguments, { thisValue }: FunctionCallContex
 }
 
 /** https://tc39.es/ecma262/#sec-set.prototype.values */
-function SetProto_values(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function SetProto_values(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let S be the this value.
   const S = thisValue;
   // 2. Return ? CreateSetIterator(S, value).

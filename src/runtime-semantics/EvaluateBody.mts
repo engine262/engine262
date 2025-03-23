@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import { Value, type Arguments } from '../value.mts';
 import {
   Assert,
@@ -49,7 +49,7 @@ export function* Evaluate_ExpressionBody({ AssignmentExpression }: ParseNode.Exp
   // 1. Let exprRef be the result of evaluating AssignmentExpression.
   const exprRef = yield* Evaluate(AssignmentExpression);
   // 2. Let exprValue be ? GetValue(exprRef).
-  const exprValue = Q(GetValue(exprRef));
+  const exprValue = Q(yield* GetValue(exprRef));
   // 3. Return Completion { [[Type]]: return, [[Value]]: exprValue, [[Target]]: empty }.
   return new Completion({ Type: 'return', Value: exprValue, Target: undefined });
 }
@@ -73,10 +73,10 @@ function* EvaluateBody_AsyncConciseBody({ ExpressionBody }: ParseNode.AsyncConci
   // 3. If declResult is not an abrupt completion, then
   if (declResult.Type === 'normal') {
     // a. Perform ! AsyncFunctionStart(promiseCapability, ExpressionBody).
-    X(AsyncFunctionStart(promiseCapability, ExpressionBody));
+    X(yield* AsyncFunctionStart(promiseCapability, ExpressionBody));
   } else { // 4. Else
     // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « declResult.[[Value]] »).
-    X(Call(promiseCapability.Reject, Value.undefined, [declResult.Value!]));
+    X(yield* Call(promiseCapability.Reject, Value.undefined, [declResult.Value!]));
   }
   // 5. Return Completion { [[Type]]: return, [[Value]]: promiseCapability.[[Promise]], [[Target]]: empty }.
   return new Completion({ Type: 'return', Value: promiseCapability.Promise, Target: undefined });
@@ -88,7 +88,7 @@ export function* EvaluateBody_GeneratorBody(GeneratorBody: ParseNode.GeneratorBo
   // 1. Perform ? FunctionDeclarationInstantiation(functionObject, argumentsList).
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
   // 2. Let G be ? OrdinaryCreateFromConstructor(functionObject, "%GeneratorFunction.prototype.prototype%", « [[GeneratorState]], [[GeneratorContext]], [[GeneratorBrand]] »).
-  const G = Q(OrdinaryCreateFromConstructor(functionObject, '%GeneratorFunction.prototype.prototype%', ['GeneratorState', 'GeneratorContext', 'GeneratorBrand'])) as Mutable<GeneratorObject>;
+  const G = Q(yield* OrdinaryCreateFromConstructor(functionObject, '%GeneratorFunction.prototype.prototype%', ['GeneratorState', 'GeneratorContext', 'GeneratorBrand'])) as Mutable<GeneratorObject>;
   // 3. Set G.[[GeneratorBrand]] to empty.
   G.GeneratorBrand = undefined;
   // 4. Perform GeneratorStart(G, FunctionBody).
@@ -103,7 +103,7 @@ export function* EvaluateBody_AsyncGeneratorBody(FunctionBody: ParseNode.AsyncGe
   // 1. Perform ? FunctionDeclarationInstantiation(functionObject, argumentsList).
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
   // 2. Let generator be ? OrdinaryCreateFromConstructor(functionObject, "%AsyncGeneratorFunction.prototype.prototype%", « [[AsyncGeneratorState]], [[AsyncGeneratorContext]], [[AsyncGeneratorQueue]], [[GeneratorBrand]] »).
-  const generator = Q(OrdinaryCreateFromConstructor(functionObject, '%AsyncGeneratorFunction.prototype.prototype%', [
+  const generator = Q(yield* OrdinaryCreateFromConstructor(functionObject, '%AsyncGeneratorFunction.prototype.prototype%', [
     'AsyncGeneratorState',
     'AsyncGeneratorContext',
     'AsyncGeneratorQueue',
@@ -127,10 +127,10 @@ export function* EvaluateBody_AsyncFunctionBody(FunctionBody: ParseNode.AsyncBod
   // 3. If declResult is not an abrupt completion, then
   if (!(declResult instanceof AbruptCompletion)) {
     // a. Perform ! AsyncFunctionStart(promiseCapability, FunctionBody).
-    X(AsyncFunctionStart(promiseCapability, FunctionBody));
+    X(yield* AsyncFunctionStart(promiseCapability, FunctionBody));
   } else { // 4. Else,
     // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « declResult.[[Value]] »).
-    X(Call(promiseCapability.Reject, Value.undefined, [declResult.Value!]));
+    X(yield* Call(promiseCapability.Reject, Value.undefined, [declResult.Value!]));
   }
   // 5. Return Completion { [[Type]]: return, [[Value]]: promiseCapability.[[Promise]], [[Target]]: empty }.
   return new Completion({ Type: 'return', Value: promiseCapability.Promise, Target: undefined });
@@ -152,7 +152,7 @@ export function* EvaluateBody_AssignmentExpression(AssignmentExpression: ParseNo
     // a. Let rhs be the result of evaluating AssignmentExpression.
     const rhs = yield* Evaluate(AssignmentExpression);
     // b. Let value be ? GetValue(rhs).
-    value = Q(GetValue(rhs));
+    value = Q(yield* GetValue(rhs));
   }
   // 5. Return Completion { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
   return new Completion({ Type: 'return', Value: X(value), Target: undefined });

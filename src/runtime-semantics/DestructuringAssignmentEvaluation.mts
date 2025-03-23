@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   JSStringValue, ReferenceRecord, Value, type PropertyKeyValue,
 } from '../value.mts';
@@ -27,7 +27,9 @@ import {
   StringValue,
   type FunctionDeclaration,
 } from '../static-semantics/all.mts';
-import { Evaluate, type Evaluator, type StatementEvaluator } from '../evaluator.mts';
+import {
+  Evaluate, type PlainEvaluator, type StatementEvaluator,
+} from '../evaluator.mts';
 import {
   Q, X,
   Completion,
@@ -35,8 +37,7 @@ import {
   NormalCompletion,
   ReturnIfAbrupt,
   EnsureCompletion,
-  type ExpressionCompletion,
-  type PlainCompletion,
+  type ValueCompletion,
 } from '../completion.mts';
 import { OutOfRange } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
@@ -51,7 +52,7 @@ import {
 //  `{` AssignmentPropertyList `}`
 //  `{` AssignmentPropertyList `,` `}`
 //  `{` AssignmentPropertyList `,` AssignmentRestProperty? `}`
-function* DestructuringAssignmentEvaluation_ObjectAssignmentPattern({ AssignmentPropertyList, AssignmentRestProperty }: ParseNode.ObjectAssignmentPattern, value: Value): Evaluator<PlainCompletion<void>> {
+function* DestructuringAssignmentEvaluation_ObjectAssignmentPattern({ AssignmentPropertyList, AssignmentRestProperty }: ParseNode.ObjectAssignmentPattern, value: Value): PlainEvaluator {
   // 1. Perform ? RequireObjectCoercible(value).
   Q(RequireObjectCoercible(value));
   // 2. Perform ? PropertyDestructuringAssignmentEvaluation for AssignmentPropertyList using value as the argument.
@@ -65,7 +66,7 @@ function* DestructuringAssignmentEvaluation_ObjectAssignmentPattern({ Assignment
 
 /** https://tc39.es/ecma262/#sec-runtime-semantics-restdestructuringassignmentevaluation */
 // AssignmentRestProperty : `...` DestructuringAssignmentTarget
-function* RestDestructuringAssignmentEvaluation({ DestructuringAssignmentTarget }: ParseNode.AssignmentRestProperty, value: Value, excludedNames: readonly PropertyKeyValue[]) {
+function* RestDestructuringAssignmentEvaluation({ DestructuringAssignmentTarget }: ParseNode.AssignmentRestProperty, value: Value, excludedNames: readonly PropertyKeyValue[]): StatementEvaluator {
   // 1. Let lref be the result of evaluating DestructuringAssignmentTarget.
   const lref = yield* Evaluate(DestructuringAssignmentTarget);
   // 2. ReturnIfAbrupt(lref).
@@ -73,21 +74,21 @@ function* RestDestructuringAssignmentEvaluation({ DestructuringAssignmentTarget 
   // 3. Let restObj be OrdinaryObjectCreate(%Object.prototype%).
   const restObj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   // 4. Perform ? CopyDataProperties(restObj, value, excludedNames).
-  Q(CopyDataProperties(restObj, value, excludedNames));
+  Q(yield* CopyDataProperties(restObj, value, excludedNames));
   // 5. Return PutValue(lref, restObj).
-  return PutValue(lref, restObj);
+  return yield* PutValue(lref, restObj);
 }
 
-function* PropertyDestructuringAssignmentEvaluation(AssignmentPropertyList: ParseNode.ObjectAssignmentPattern['AssignmentPropertyList'], value: Value): Evaluator<PlainCompletion<PropertyKeyValue[]>> {
+function* PropertyDestructuringAssignmentEvaluation(AssignmentPropertyList: ParseNode.ObjectAssignmentPattern['AssignmentPropertyList'], value: Value): PlainEvaluator<PropertyKeyValue[]> {
   const propertyNames: PropertyKeyValue[] = [];
   for (const AssignmentProperty of AssignmentPropertyList) {
     if ('IdentifierReference' in AssignmentProperty) {
       // 1. Let P be StringValue of IdentifierReference.
       const P = StringValue(AssignmentProperty.IdentifierReference);
       // 2. Let lref be ? ResolveBinding(P).
-      const lref = Q(ResolveBinding(P, undefined, AssignmentProperty.IdentifierReference.strict));
+      const lref = Q(yield* ResolveBinding(P, undefined, AssignmentProperty.IdentifierReference.strict));
       // 3. Let v be ? GetV(value, P).
-      let v = Q(GetV(value, P));
+      let v = Q(yield* GetV(value, P));
       // 4. If Initializer? is present and v is undefined, then
       if (AssignmentProperty.Initializer && v === Value.undefined) {
         // a. If IsAnonymousFunctionDefinition(Initializer) is true, then
@@ -98,11 +99,11 @@ function* PropertyDestructuringAssignmentEvaluation(AssignmentPropertyList: Pars
           // i. Let defaultValue be the result of evaluating Initializer.
           const defaultValue = yield* Evaluate(AssignmentProperty.Initializer);
           // ii. Set v to ? GetValue(defaultValue)
-          v = Q(GetValue(defaultValue));
+          v = Q(yield* GetValue(defaultValue));
         }
       }
       // 5. Perform ? PutValue(lref, v).
-      Q(PutValue(lref, v));
+      Q(yield* PutValue(lref, v));
       // 6. Return a new List containing P.
       propertyNames.push(P);
     } else {
@@ -135,9 +136,9 @@ function* KeyedDestructuringAssignmentEvaluation({
     ReturnIfAbrupt(lref);
   }
   // 2. Let v be ? GetV(value, propertyName).
-  const v = Q(GetV(value, propertyName));
+  const v = Q(yield* GetV(value, propertyName));
   // 3. If Initializer is present and v is undefined, then
-  let rhsValue: ExpressionCompletion;
+  let rhsValue: ValueCompletion;
   if (Initializer && v === Value.undefined) {
     // a. If IsAnonymousFunctionDefinition(Initializer) and IsIdentifierRef of DestructuringAssignmentTarget are both true, then
     if (IsAnonymousFunctionDefinition(Initializer) && IsIdentifierRef(DestructuringAssignmentTarget)) {
@@ -147,7 +148,7 @@ function* KeyedDestructuringAssignmentEvaluation({
       // i. Let defaultValue be the result of evaluating Initializer.
       const defaultValue = yield* Evaluate(Initializer);
       // ii. Let rhsValue be ? GetValue(defaultValue).
-      rhsValue = Q(GetValue(defaultValue));
+      rhsValue = Q(yield* GetValue(defaultValue));
     }
   } else { // 4. Else, let rhsValue be v.
     rhsValue = v;
@@ -161,7 +162,7 @@ function* KeyedDestructuringAssignmentEvaluation({
     return yield* DestructuringAssignmentEvaluation(assignmentPattern, X(rhsValue));
   }
   // 6. Return ? PutValue(lref, rhsValue).
-  return Q(PutValue(X(lref!), rhsValue));
+  return Q(yield* PutValue(X(lref!), rhsValue));
 }
 
 // ArrayAssignmentPattern :
@@ -170,14 +171,14 @@ function* KeyedDestructuringAssignmentEvaluation({
 //   `[` AssignmentElementList `,` AssignmentRestElement? `]`
 function* DestructuringAssignmentEvaluation_ArrayAssignmentPattern({ AssignmentElementList, AssignmentRestElement }: ParseNode.ArrayAssignmentPattern, value: Value) {
   // 1. Let iteratorRecord be ? GetIterator(value).
-  const iteratorRecord = Q(GetIterator(value, 'sync'));
+  const iteratorRecord = Q(yield* GetIterator(value, 'sync'));
   // 2. Let status be IteratorDestructuringAssignmentEvaluation of AssignmentElementList with argument iteratorRecord.
   let status = EnsureCompletion(yield* IteratorDestructuringAssignmentEvaluation(AssignmentElementList, iteratorRecord));
   // 3. If status is an abrupt completion, then
   if (status instanceof AbruptCompletion) {
     // a. If iteratorRecord.[[Done]] is false, return ? IteratorClose(iteratorRecord, status).
     if (iteratorRecord.Done === Value.false) {
-      return Q(IteratorClose(iteratorRecord, status));
+      return Q(yield* IteratorClose(iteratorRecord, status));
     }
     // b. Return Completion(status).
     return status;
@@ -191,7 +192,7 @@ function* DestructuringAssignmentEvaluation_ArrayAssignmentPattern({ AssignmentE
   }
   // 6. If iteratorRecord.[[Done]] is false, return ? IteratorClose(iteratorRecord, status).
   if (iteratorRecord.Done === Value.false) {
-    return Q(IteratorClose(iteratorRecord, status));
+    return Q(yield* IteratorClose(iteratorRecord, status));
   }
   return Completion(status);
 }
@@ -208,7 +209,7 @@ function* IteratorDestructuringAssignmentEvaluation(node: ParseNode.AssignmentEl
       // 1. If iteratorRecord.[[Done]] is false, then
       if (iteratorRecord.Done === Value.false) {
         // a. Perform ? IteratorStep(iteratorRecord).
-        Q(IteratorStep(iteratorRecord));
+        Q(yield* IteratorStep(iteratorRecord));
       }
       // 2. Return NormalCompletion(empty).
       return NormalCompletion(undefined);
@@ -224,13 +225,13 @@ function* IteratorDestructuringAssignmentEvaluation(node: ParseNode.AssignmentEl
       // 2. If iteratorRecord.[[Done]] is false, then
       if (iteratorRecord.Done === Value.false) {
         // a. Let next be ? IteratorStepValue(iteratorRecord).
-        const next = Q(IteratorStepValue(iteratorRecord));
+        const next = Q(yield* IteratorStepValue(iteratorRecord));
         // d. If next is not done, set value to next.
         if (next !== 'done') {
           value = next;
         }
       }
-      let v: ExpressionCompletion;
+      let v: ValueCompletion;
       // 4. If Initializer is present and value is undefined, then
       if (Initializer && value === Value.undefined) {
         // a. If IsAnonymousFunctionDefinition(AssignmentExpression) is true and IsIdentifierRef of LeftHandSideExpression is true, then
@@ -243,7 +244,7 @@ function* IteratorDestructuringAssignmentEvaluation(node: ParseNode.AssignmentEl
           // i. Let defaultValue be the result of evaluating Initializer.
           const defaultValue = yield* Evaluate(Initializer);
           // ii. Let v be ? GetValue(defaultValue).
-          v = Q(GetValue(defaultValue));
+          v = Q(yield* GetValue(defaultValue));
         }
       } else { // 5. Else, let v be value.
         v = Q(value!);
@@ -257,7 +258,7 @@ function* IteratorDestructuringAssignmentEvaluation(node: ParseNode.AssignmentEl
         return yield* DestructuringAssignmentEvaluation(nestedAssignmentPattern, X(v));
       }
       // 7. Return ? PutValue(lref, v).
-      return Q(PutValue(lref as ReferenceRecord, v));
+      return Q(yield* PutValue(lref as ReferenceRecord, v));
     }
     case 'AssignmentRestElement': {
       const { AssignmentExpression: DestructuringAssignmentTarget } = node;
@@ -275,7 +276,7 @@ function* IteratorDestructuringAssignmentEvaluation(node: ParseNode.AssignmentEl
       // 4. Repeat, while iteratorRecord.[[Done]] is false,
       while (iteratorRecord.Done === Value.false) {
         // a. Let next be IteratorStep(iteratorRecord).
-        const next = Q(IteratorStepValue(iteratorRecord));
+        const next = Q(yield* IteratorStepValue(iteratorRecord));
         // d. If next is not done, then
         if (next !== 'done') {
           // i. Perform ! CreateDataPropertyOrThrow(A, ! ToString(𝔽(n)), next).
@@ -287,7 +288,7 @@ function* IteratorDestructuringAssignmentEvaluation(node: ParseNode.AssignmentEl
       // 5. If DestructuringAssignmentTarget is neither an ObjectLiteral nor an ArrayLiteral, then
       if (DestructuringAssignmentTarget.type !== 'ObjectLiteral'
           && DestructuringAssignmentTarget.type !== 'ArrayLiteral') {
-        return Q(PutValue(lref as ReferenceRecord, A));
+        return Q(yield* PutValue(lref as ReferenceRecord, A));
       }
       // 6. Let nestedAssignmentPattern be the AssignmentPattern that is covered by DestructuringAssignmentTarget.
       const nestedAssignmentPattern = refineLeftHandSideExpression(DestructuringAssignmentTarget) as ParseNode.ObjectAssignmentPattern | ParseNode.ArrayAssignmentPattern;

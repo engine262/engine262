@@ -1,18 +1,18 @@
 import { Q } from '../completion.mts';
-import type { ExpressionEvaluator } from '../evaluator.mts';
+import type { ValueEvaluator } from '../evaluator.mts';
 import { OutOfRange } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { EvaluateStringOrNumericBinaryExpression } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-addition-operator-plus-runtime-semantics-evaluation */
 //   AdditiveExpression : AdditiveExpression + MultiplicativeExpression
-function* Evaluate_AdditiveExpression_Plus({ AdditiveExpression, MultiplicativeExpression }: ParseNode.AdditiveExpression): ExpressionEvaluator {
+function* Evaluate_AdditiveExpression_Plus({ AdditiveExpression, MultiplicativeExpression }: ParseNode.AdditiveExpression): ValueEvaluator {
   // 1. Return ? EvaluateStringOrNumericBinaryExpression(AdditiveExpression, +, MultiplicativeExpression).
   return Q(yield* EvaluateStringOrNumericBinaryExpression(AdditiveExpression, '+', MultiplicativeExpression));
 }
 
 /** https://tc39.es/ecma262/#sec-subtraction-operator-minus-runtime-semantics-evaluation */
-function* Evaluate_AdditiveExpression_Minus({ AdditiveExpression, MultiplicativeExpression }: ParseNode.AdditiveExpression): ExpressionEvaluator {
+function* Evaluate_AdditiveExpression_Minus({ AdditiveExpression, MultiplicativeExpression }: ParseNode.AdditiveExpression): ValueEvaluator {
   // 1. Return ? EvaluateStringOrNumericBinaryExpression(AdditiveExpression, -, MultiplicativeExpression).
   return Q(yield* EvaluateStringOrNumericBinaryExpression(AdditiveExpression, '-', MultiplicativeExpression));
 }

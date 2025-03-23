@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Value, Descriptor, type PropertyKeyValue, PrivateName,
 } from '../value.mts';
@@ -43,14 +43,14 @@ export function InstantiateGeneratorFunctionExpression(GeneratorExpression: Pars
     // 10. Let prototype be ! OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
     const prototype = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%')));
     // 11. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-    DefinePropertyOrThrow(closure, Value('prototype'), new Descriptor({
+    X(DefinePropertyOrThrow(closure, Value('prototype'), new Descriptor({
       Value: prototype,
       Writable: Value.true,
       Enumerable: Value.false,
       Configurable: Value.false,
-    }));
+    })));
     // 12. Perform funcEnv.InitializeBinding(name, closure).
-    funcEnv.InitializeBinding(name, closure);
+    X(funcEnv.InitializeBinding(name, closure));
     // 13. Return closure.
     return closure;
   }
@@ -71,12 +71,12 @@ export function InstantiateGeneratorFunctionExpression(GeneratorExpression: Pars
   // 7. Let prototype be ! OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
   const prototype = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%')));
   // 8. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-  DefinePropertyOrThrow(closure, Value('prototype'), new Descriptor({
+  X(DefinePropertyOrThrow(closure, Value('prototype'), new Descriptor({
     Value: prototype,
     Writable: Value.true,
     Enumerable: Value.false,
     Configurable: Value.false,
-  }));
+  })));
   // 9. Return closure.
   return closure;
 }

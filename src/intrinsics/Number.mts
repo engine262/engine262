@@ -15,7 +15,7 @@ import {
   type FunctionCallContext,
   UndefinedValue,
 } from '../value.mts';
-import { Q, X, type ExpressionCompletion } from '../completion.mts';
+import { Q, X, type ValueEvaluator } from '../completion.mts';
 import type { Mutable } from '../helpers.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 
@@ -23,10 +23,10 @@ export interface NumberObject extends OrdinaryObject {
   readonly NumberData: NumberValue;
 }
 /** https://tc39.es/ecma262/#sec-number-constructor-number-value */
-function NumberConstructor([value]: Arguments, { NewTarget }: FunctionCallContext): ExpressionCompletion {
+function* NumberConstructor([value]: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
   let n;
   if (value !== undefined) {
-    const prim = Q(ToNumeric(value));
+    const prim = Q(yield* ToNumeric(value));
     if (prim instanceof BigIntValue) {
       n = F(Number(R(prim)));
     } else {
@@ -38,7 +38,7 @@ function NumberConstructor([value]: Arguments, { NewTarget }: FunctionCallContex
   if (NewTarget instanceof UndefinedValue) {
     return n;
   }
-  const O = OrdinaryCreateFromConstructor(NewTarget, '%Number.prototype%', ['NumberData']) as Mutable<NumberObject>;
+  const O = (yield* OrdinaryCreateFromConstructor(NewTarget, '%Number.prototype%', ['NumberData'])) as Mutable<NumberObject>;
   O.NumberData = n;
   return O;
 }

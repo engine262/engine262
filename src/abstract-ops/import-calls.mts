@@ -5,7 +5,7 @@ import {
   AbstractModuleRecord,
   Call, CreateBuiltinFunction, GetModuleNamespace, PerformPromiseThen, PromiseCapabilityRecord, Value,
   type Arguments,
-} from '../api.mts';
+} from '../index.mts';
 import {
   AbruptCompletion, ValueOfNormalCompletion, X, type PlainCompletion,
 } from '../completion.mts';
@@ -35,7 +35,7 @@ export function ContinueDynamicImport(promiseCapability: PromiseCapabilityRecord
   const onRejected = CreateBuiltinFunction(rejectedClosure, 1, Value(''), []);
 
   // 6. Let linkAndEvaluateClosure be a new Abstract Closure with no parameters that captures module, promiseCapability, and onRejected and performs the following steps when called:
-  const linkAndEvaluateClosure = () => {
+  function* linkAndEvaluateClosure() {
     // a. Let link be Completion(module.Link()).
     const link = module.Link();
     // b. If link is an abrupt completion, then
@@ -47,7 +47,7 @@ export function ContinueDynamicImport(promiseCapability: PromiseCapabilityRecord
     }
 
     // c. Let evaluatePromise be module.Evaluate().
-    const evaluatePromise = module.Evaluate();
+    const evaluatePromise = yield* module.Evaluate();
 
     // d. Let fulfilledClosure be a new Abstract Closure with no parameters that captures module and promiseCapability and performs the following steps when called:
     const fulfilledClosure = () => {
@@ -63,7 +63,7 @@ export function ContinueDynamicImport(promiseCapability: PromiseCapabilityRecord
     // f. Perform PerformPromiseThen(evaluatePromise, onFulfilled, onRejected).
     PerformPromiseThen(evaluatePromise, onFulfilled, onRejected);
     // g. Return unused.
-  };
+  }
   // 7. Let linkAndEvaluate be CreateBuiltinFunction(linkAndEvaluateClosure, 0, "", « »).
   const linkAndEvaluate = CreateBuiltinFunction(linkAndEvaluateClosure, 0, Value(''), []);
 

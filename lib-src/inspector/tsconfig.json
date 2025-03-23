@@ -13,11 +13,5 @@
     "rewriteRelativeImportExtensions": true,
     "resolveJsonModule": true
   },
-  "include": [
-    "./context.mts",
-    "./methods.mts",
-    "./types.mts",
-    "./index.mts",
-    "./utils.mts"
-  ]
+  "include": ["./*.mts"]
 }

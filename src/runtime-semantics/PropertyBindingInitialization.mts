@@ -2,7 +2,7 @@ import { BoundNames } from '../static-semantics/all.mts';
 import { Q, ReturnIfAbrupt } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import { isArray } from '../helpers.mts';
-import type { Evaluator } from '../evaluator.mts';
+import type { PlainEvaluator } from '../evaluator.mts';
 import { Evaluate_PropertyName, KeyedBindingInitialization } from './all.mts';
 import type {
   EnvironmentRecord, PlainCompletion, PropertyKeyValue, UndefinedValue, Value,
@@ -13,7 +13,7 @@ import type {
 // BindingProperty :
 //   SingleNameBinding
 //   PropertyName `:` BindingElement
-export function* PropertyBindingInitialization(node: ParseNode.BindingPropertyList | ParseNode.BindingPropertyLike, value: Value, environment: EnvironmentRecord | UndefinedValue): Evaluator<PlainCompletion<PropertyKeyValue[]>> {
+export function* PropertyBindingInitialization(node: ParseNode.BindingPropertyList | ParseNode.BindingPropertyLike, value: Value, environment: EnvironmentRecord | UndefinedValue): PlainEvaluator<PropertyKeyValue[]> {
   if (isArray(node)) {
     // 1. Let boundNames be ? PropertyBindingInitialization of BindingPropertyList with arguments value and environment.
     // 2. Let nextNames be ? PropertyBindingInitialization of BindingProperty with arguments value and environment.

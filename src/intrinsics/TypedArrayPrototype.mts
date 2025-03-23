@@ -29,9 +29,10 @@ import {
   TypedArrayLength,
 } from '../abstract-ops/all.mts';
 import {
-  Q, X, type ExpressionCompletion, type PlainCompletion,
+  Q, X, type ValueEvaluator, type PlainCompletion,
+  type ValueCompletion,
 } from '../completion.mts';
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   BigIntValue,
   Descriptor, JSStringValue, NumberValue, ObjectValue, UndefinedValue, Value, wellKnownSymbols,
@@ -49,7 +50,7 @@ import {
 } from './TypedArray.mts';
 
 /** https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.buffer */
-function TypedArrayProto_buffer(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function TypedArrayProto_buffer(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let O be the this value.
   const O = thisValue as TypedArrayObject;
   // 2. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
@@ -63,7 +64,7 @@ function TypedArrayProto_buffer(_args: Arguments, { thisValue }: FunctionCallCon
 }
 
 /** https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.bytelength */
-function TypedArrayProto_byteLength(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function TypedArrayProto_byteLength(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let O be the this value.
   const O = thisValue as TypedArrayObject;
   // 2. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
@@ -76,7 +77,7 @@ function TypedArrayProto_byteLength(_args: Arguments, { thisValue }: FunctionCal
 }
 
 /** https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.byteoffset */
-function TypedArrayProto_byteOffset(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function TypedArrayProto_byteOffset(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let O be the this value.
   const O = thisValue as TypedArrayObject;
   // 2. Perform ? RequireInternalSlot(O, [[TypedArrayName]]).
@@ -92,11 +93,11 @@ function TypedArrayProto_byteOffset(_args: Arguments, { thisValue }: FunctionCal
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.copywithin */
-function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* TypedArrayProto_copyWithin([target = Value.undefined, start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = thisValue as TypedArrayObject;
   let taRecord = Q(ValidateTypedArray(O, 'seq-cst'));
   let len = TypedArrayLength(taRecord);
-  const relativeTarget = Q(ToIntegerOrInfinity(target));
+  const relativeTarget = Q(yield* ToIntegerOrInfinity(target));
   let targetIndex;
   if (relativeTarget === -Infinity) {
     targetIndex = 0;
@@ -105,7 +106,7 @@ function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.und
   } else {
     targetIndex = Math.min(relativeTarget, len);
   }
-  const relativeStart = Q(ToIntegerOrInfinity(start));
+  const relativeStart = Q(yield* ToIntegerOrInfinity(start));
   let startIndex;
   if (relativeStart === -Infinity) {
     startIndex = 0;
@@ -118,7 +119,7 @@ function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.und
   if (end === Value.undefined) {
     relativeEnd = len;
   } else {
-    relativeEnd = Q(ToIntegerOrInfinity(end));
+    relativeEnd = Q(yield* ToIntegerOrInfinity(end));
   }
   let endIndex;
   if (relativeEnd === -Infinity) {
@@ -153,7 +154,7 @@ function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.und
     while (countBytes > 0) {
       if (fromByteIndex < bufferByteLimit && toByteIndex < bufferByteLimit) {
         const value = GetValueFromBuffer(buffer, fromByteIndex, 'Uint8', true, 'unordered');
-        SetValueInBuffer(buffer, toByteIndex, 'Uint8', value, true, 'unordered');
+        Q(yield* SetValueInBuffer(buffer, toByteIndex, 'Uint8', value, true, 'unordered'));
         fromByteIndex += direction;
         toByteIndex += direction;
         countBytes -= 1;
@@ -166,7 +167,7 @@ function TypedArrayProto_copyWithin([target = Value.undefined, start = Value.und
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.entries */
-function TypedArrayProto_entries(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function TypedArrayProto_entries(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let O be the this value.
   const O = thisValue as TypedArrayObject;
   // 2. Perform ? ValidateTypedArray(O).
@@ -176,16 +177,16 @@ function TypedArrayProto_entries(_args: Arguments, { thisValue }: FunctionCallCo
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.fill */
-function TypedArrayProto_fill([value = Value.undefined, start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* TypedArrayProto_fill([value = Value.undefined, start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = thisValue as TypedArrayObject;
   let taRecord = Q(ValidateTypedArray(O, 'seq-cst'));
   let len = TypedArrayLength(taRecord);
   if (O.ContentType === 'BigInt') {
-    value = Q(ToBigInt(value));
+    value = Q(yield* ToBigInt(value));
   } else {
-    value = Q(ToNumber(value));
+    value = Q(yield* ToNumber(value));
   }
-  const relativeStart = Q(ToIntegerOrInfinity(start));
+  const relativeStart = Q(yield* ToIntegerOrInfinity(start));
   let startIndex;
   if (relativeStart === -Infinity) {
     startIndex = 0;
@@ -198,7 +199,7 @@ function TypedArrayProto_fill([value = Value.undefined, start = Value.undefined,
   if (end === Value.undefined) {
     relativeEnd = len;
   } else {
-    relativeEnd = Q(ToIntegerOrInfinity(end));
+    relativeEnd = Q(yield* ToIntegerOrInfinity(end));
   }
   let endIndex;
   if (relativeEnd === -Infinity) {
@@ -224,7 +225,7 @@ function TypedArrayProto_fill([value = Value.undefined, start = Value.undefined,
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.filter */
-function TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   const O = thisValue as TypedArrayObject;
   const taRecord = Q(ValidateTypedArray(O, 'seq-cst'));
   const len = TypedArrayLength(taRecord);
@@ -237,14 +238,14 @@ function TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.u
   while (k < len) {
     const Pk = X(ToString(F(k)));
     const kValue = X(Get(O, Pk));
-    const selected = ToBoolean(Q(Call(callbackfn, thisArg, [kValue, F(k), O])));
+    const selected = ToBoolean(Q(yield* Call(callbackfn, thisArg, [kValue, F(k), O])));
     if (selected === Value.true) {
       kept.push(kValue);
       captured += 1;
     }
     k += 1;
   }
-  const A = Q(TypedArraySpeciesCreate(O, [F(captured)]));
+  const A = Q(yield* TypedArraySpeciesCreate(O, [F(captured)]));
   let n = 0;
   for (const e of kept) {
     X(Set(A, X(ToString(F(n))), e, Value.true));
@@ -254,7 +255,7 @@ function TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.u
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.keys */
-function TypedArrayProto_keys(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function TypedArrayProto_keys(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let O be the this value.
   const O = thisValue as TypedArrayObject;
   // 2. Perform ? ValidateTypedArray(O).
@@ -264,7 +265,7 @@ function TypedArrayProto_keys(_args: Arguments, { thisValue }: FunctionCallConte
 }
 
 /** https://tc39.es/ecma262/#sec-get-%typedarray%.prototype.length */
-function TypedArrayProto_length(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function TypedArrayProto_length(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   const O = thisValue as TypedArrayObject;
   Q(RequireInternalSlot(O, 'TypedArrayName'));
   Assert('ViewedArrayBuffer' in O);
@@ -277,19 +278,19 @@ function TypedArrayProto_length(_args: Arguments, { thisValue }: FunctionCallCon
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.map */
-function TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   const O = thisValue as TypedArrayObject;
   const taRecord = Q(ValidateTypedArray(O, 'seq-cst'));
   const len = TypedArrayLength(taRecord);
   if (IsCallable(callbackfn) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
-  const A = Q(TypedArraySpeciesCreate(O, [F(len)]));
+  const A = Q(yield* TypedArraySpeciesCreate(O, [F(len)]));
   let k = 0;
   while (k < len) {
     const Pk = X(ToString(F(k)));
     const kValue = X(Get(O, Pk));
-    const mappedValue = Q(Call(callbackfn, thisArg, [kValue, F(k), O]));
+    const mappedValue = Q(yield* Call(callbackfn, thisArg, [kValue, F(k), O]));
     X(Set(A, Pk, mappedValue, Value.true));
     k += 1;
   }
@@ -297,7 +298,7 @@ function TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.unde
 }
 
 /** https://tc39.es/ecma262/#sec-settypedarrayfromtypedarray */
-function SetTypedArrayFromTypedArray(target: TypedArrayObject, targetOffset: number, source: TypedArrayObject) {
+function* SetTypedArrayFromTypedArray(target: TypedArrayObject, targetOffset: number, source: TypedArrayObject) {
   const targetBuffer = target.ViewedArrayBuffer as ArrayBufferObject;
   const targetRecord = MakeTypedArrayWithBufferWitnessRecord(target, 'seq-cst');
   if (IsTypedArrayOutOfBounds(targetRecord)) {
@@ -334,7 +335,7 @@ function SetTypedArrayFromTypedArray(target: TypedArrayObject, targetOffset: num
   let srcByteIndex;
   if (SameValue(srcBuffer, targetBuffer) === Value.true || sameSharedArrayBuffer) {
     const srcByteLength = TypedArrayByteLength(srcRecord);
-    srcBuffer = Q(CloneArrayBuffer(srcBuffer, srcByteOffset, srcByteLength));
+    srcBuffer = Q(yield* CloneArrayBuffer(srcBuffer, srcByteOffset, srcByteLength));
     srcByteIndex = 0;
   } else {
     srcByteIndex = srcByteOffset;
@@ -344,14 +345,14 @@ function SetTypedArrayFromTypedArray(target: TypedArrayObject, targetOffset: num
   if (srcType === targetType) {
     while (targetByteIndex < limit) {
       const value = GetValueFromBuffer(srcBuffer, srcByteIndex, 'Uint8', true, 'unordered');
-      SetValueInBuffer(targetBuffer, targetByteIndex, 'Uint8', value, Value.true, 'unordered');
+      Q(yield* SetValueInBuffer(targetBuffer, targetByteIndex, 'Uint8', value, Value.true, 'unordered'));
       srcByteIndex += 1;
       targetByteIndex += 1;
     }
   } else {
     while (targetByteIndex < limit) {
       const value = GetValueFromBuffer(srcBuffer, srcByteIndex, srcType, true, 'unordered');
-      SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value, Value.true, 'unordered');
+      Q(yield* SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value, Value.true, 'unordered'));
       srcByteIndex += srcElementSize;
       targetByteIndex += targetElementSize;
     }
@@ -360,14 +361,14 @@ function SetTypedArrayFromTypedArray(target: TypedArrayObject, targetOffset: num
 }
 
 /** https://tc39.es/ecma262/#sec-settypedarrayfromarraylike */
-function SetTypedArrayFromArrayLike(target: TypedArrayObject, targetOffset: number, source: Value) {
+function* SetTypedArrayFromArrayLike(target: TypedArrayObject, targetOffset: number, source: Value) {
   const targetRecord = MakeTypedArrayWithBufferWitnessRecord(target, 'seq-cst');
   if (IsTypedArrayOutOfBounds(targetRecord)) {
     return surroundingAgent.Throw('TypeError', 'TypedArrayOOB');
   }
   const targetLength = TypedArrayLength(targetRecord);
   const src = Q(ToObject(source));
-  const srcLength = Q(LengthOfArrayLike(src));
+  const srcLength = Q(yield* LengthOfArrayLike(src));
   if (targetOffset === +Infinity) {
     return surroundingAgent.Throw('RangeError', 'TypedArrayOOB');
   }
@@ -377,16 +378,16 @@ function SetTypedArrayFromArrayLike(target: TypedArrayObject, targetOffset: numb
   let k = 0;
   while (k < srcLength) {
     const Pk = X(ToString(F(k)));
-    const value = Q(Get(src, Pk));
+    const value = Q(yield* Get(src, Pk));
     const targetIndex = F(targetOffset + k);
-    Q(TypedArraySetElement(target, targetIndex, value));
+    Q(yield* TypedArraySetElement(target, targetIndex, value));
     k += 1;
   }
   return undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.set-overloaded-offset */
-function TypedArrayProto_set([source = Value.undefined, offset = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* TypedArrayProto_set([source = Value.undefined, offset = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let target be the this value.
   const target = thisValue as TypedArrayObject;
   // 2. Perform ? RequireInternalSlot(target, [[TypedArrayName]]).
@@ -394,7 +395,7 @@ function TypedArrayProto_set([source = Value.undefined, offset = Value.undefined
   // 3. Assert: target has a [[ViewedArrayBuffer]] internal slot.
   Assert('ViewedArrayBuffer' in target);
   // 4. Let targetOffset be ? ToIntegerOrInfinity(offset).
-  const targetOffset = Q(ToIntegerOrInfinity(offset));
+  const targetOffset = Q(yield* ToIntegerOrInfinity(offset));
   // 5. If targetOffset < 0, throw a RangeError exception.
   if (targetOffset < 0) {
     return surroundingAgent.Throw('RangeError', 'NegativeIndex', 'Offset');
@@ -402,21 +403,21 @@ function TypedArrayProto_set([source = Value.undefined, offset = Value.undefined
   // 6. If source is an Object that has a [[TypedArrayName]] internal slot, then
   if (source instanceof ObjectValue && 'TypedArrayName' in source) {
     // a. Perform ? SetTypedArrayFromTypedArray(target, targetOffset, source).
-    Q(SetTypedArrayFromTypedArray(target, targetOffset, source as TypedArrayObject));
+    Q(yield* SetTypedArrayFromTypedArray(target, targetOffset, source as TypedArrayObject));
   } else { // 7. Else,
     // a. Perform ? SetTypedArrayFromArrayLike(target, targetOffset, source).
-    Q(SetTypedArrayFromArrayLike(target, targetOffset, source));
+    Q(yield* SetTypedArrayFromArrayLike(target, targetOffset, source));
   }
   // 8. Return undefined.
   return Value.undefined;
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.slice */
-function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = thisValue as TypedArrayObject;
   let taRecord = Q(ValidateTypedArray(O, 'seq-cst'));
   const srcArrayLength = TypedArrayLength(taRecord);
-  const relativeStart = Q(ToIntegerOrInfinity(start));
+  const relativeStart = Q(yield* ToIntegerOrInfinity(start));
   let startIndex;
   if (relativeStart === -Infinity) {
     startIndex = 0;
@@ -429,7 +430,7 @@ function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]:
   if (end === Value.undefined) {
     relativeEnd = srcArrayLength;
   } else {
-    relativeEnd = Q(ToIntegerOrInfinity(end));
+    relativeEnd = Q(yield* ToIntegerOrInfinity(end));
   }
   let endIndex;
   if (relativeEnd === -Infinity) {
@@ -440,7 +441,7 @@ function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]:
     endIndex = Math.min(relativeEnd, srcArrayLength);
   }
   let countBytes = Math.max(endIndex - startIndex, 0);
-  const A = Q(TypedArraySpeciesCreate(O, [F(countBytes)]));
+  const A = Q(yield* TypedArraySpeciesCreate(O, [F(countBytes)]));
   if (countBytes > 0) {
     taRecord = MakeTypedArrayWithBufferWitnessRecord(O, 'seq-cst');
     if (IsTypedArrayOutOfBounds(taRecord)) {
@@ -460,7 +461,7 @@ function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]:
       const endByteIndex = targetByteIndex + (countBytes * elementSize);
       while (targetByteIndex < endByteIndex) {
         const value = GetValueFromBuffer(srcBuffer, srcByteIndex, 'Uint8', true, 'unordered');
-        SetValueInBuffer(targetBuffer, targetByteIndex, 'Uint8', value, true, 'unordered');
+        Q(yield* SetValueInBuffer(targetBuffer, targetByteIndex, 'Uint8', value, true, 'unordered'));
         srcByteIndex += 1;
         targetByteIndex += 1;
       }
@@ -480,19 +481,19 @@ function TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]:
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.sort */
-function TypedArrayProto_sort([comparator = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* TypedArrayProto_sort([comparator = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   if (comparator !== Value.undefined && IsCallable(comparator) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', comparator);
   }
   const obj = thisValue as TypedArrayObject;
   const taRecord = Q(ValidateTypedArray(obj, 'seq-cst'));
   const len = TypedArrayLength(taRecord);
-  const SortCompare = (x: Value, y: Value): ExpressionCompletion<NumberValue> => {
+  const SortCompare = function* SortCompare(x: Value, y: Value): ValueEvaluator<NumberValue> {
     Assert(x instanceof NumberValue || x instanceof BigIntValue);
     Assert(y instanceof NumberValue || y instanceof BigIntValue);
-    return CompareTypedArrayElements(x, y, comparator as UndefinedValue | FunctionObject);
+    return yield* CompareTypedArrayElements(x, y, comparator as UndefinedValue | FunctionObject);
   };
-  const sortedList = Q(SortIndexedProperties(obj, len, SortCompare, 'read-through-holes'));
+  const sortedList = Q(yield* SortIndexedProperties(obj, len, SortCompare, 'read-through-holes'));
   let j = 0;
   while (j < len) {
     X(Set(obj, X(ToString(F(j))), sortedList[j], Value.true));
@@ -502,7 +503,7 @@ function TypedArrayProto_sort([comparator = Value.undefined]: Arguments, { thisV
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.subarray */
-function TypedArrayProto_subarray([begin = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* TypedArrayProto_subarray([begin = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = thisValue as TypedArrayObject;
   Q(RequireInternalSlot(O, 'TypedArrayName'));
   Assert('ViewedArrayBuffer' in O);
@@ -514,7 +515,7 @@ function TypedArrayProto_subarray([begin = Value.undefined, end = Value.undefine
   } else {
     srcLength = TypedArrayLength(srcRecord);
   }
-  const relativeStart = Q(ToIntegerOrInfinity(begin));
+  const relativeStart = Q(yield* ToIntegerOrInfinity(begin));
   let startIndex;
   if (relativeStart === -Infinity) {
     startIndex = 0;
@@ -534,7 +535,7 @@ function TypedArrayProto_subarray([begin = Value.undefined, end = Value.undefine
     if (end === Value.undefined) {
       relativeEnd = srcLength;
     } else {
-      relativeEnd = Q(ToIntegerOrInfinity(end));
+      relativeEnd = Q(yield* ToIntegerOrInfinity(end));
     }
     let endIndex;
     if (relativeEnd === -Infinity) {
@@ -547,11 +548,11 @@ function TypedArrayProto_subarray([begin = Value.undefined, end = Value.undefine
     const newLength = Math.max(endIndex - startIndex, 0);
     argumentsList = [buffer, F(beginByteOffset), F(newLength)];
   }
-  return Q(TypedArraySpeciesCreate(O, argumentsList));
+  return Q(yield* TypedArraySpeciesCreate(O, argumentsList));
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.values */
-function TypedArrayProto_values(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function TypedArrayProto_values(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let o be the this value.
   const O = thisValue as TypedArrayObject;
   // 2. Perform ? ValidateTypedArray(O).
@@ -561,7 +562,7 @@ function TypedArrayProto_values(_args: Arguments, { thisValue }: FunctionCallCon
 }
 
 /** https://tc39.es/ecma262/#sec-get-%typedarray%.prototype-@@tostringtag */
-function TypedArrayProto_toStringTag(_args: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function TypedArrayProto_toStringTag(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let O be the this value.
   const O = thisValue as TypedArrayObject;
   // 2. If Type(O) is not Object, return undefined.
@@ -581,11 +582,11 @@ function TypedArrayProto_toStringTag(_args: Arguments, { thisValue }: FunctionCa
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.at */
-function TypedArrayProto_at([index = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ExpressionCompletion {
+function* TypedArrayProto_at([index = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = thisValue as TypedArrayObject;
   const taRecord = Q(ValidateTypedArray(O, 'seq-cst'));
   const len = TypedArrayLength(taRecord);
-  const relativeIndex = Q(ToIntegerOrInfinity(index));
+  const relativeIndex = Q(yield* ToIntegerOrInfinity(index));
   let k;
   if (relativeIndex >= 0) {
     k = relativeIndex;

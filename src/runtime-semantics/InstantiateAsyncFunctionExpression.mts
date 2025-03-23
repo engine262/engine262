@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   PrivateName, Value, type PropertyKeyValue,
 } from '../value.mts';

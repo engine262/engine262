@@ -1,28 +1,29 @@
-import { surroundingAgent } from './engine.mts';
 import {
-  Type, JSStringValue, ObjectValue, Value, wellKnownSymbols, BooleanValue, NumberValue, BigIntValue, SymbolValue, PrivateName, UndefinedValue,
-} from './value.mts';
+  JSStringValue, ObjectValue, Value, wellKnownSymbols, BooleanValue, NumberValue, BigIntValue, SymbolValue, UndefinedValue,
+} from '../value.mts';
 import {
   Call, IsArray, Get, LengthOfArrayLike,
   EscapeRegExpPattern, R, Realm, type BuiltinFunctionObject,
-} from './abstract-ops/all.mts';
-import { Completion, X } from './completion.mts';
-import { isRegExpObject } from './intrinsics/RegExp.mts';
-import type { DateObject } from './intrinsics/Date.mts';
-import type { BooleanObject } from './intrinsics/Boolean.mts';
-import type { NumberObject } from './intrinsics/Number.mts';
-import type { BigIntObject } from './intrinsics/BigInt.mts';
-import type { StringObject } from './intrinsics/String.mts';
-import type { SymbolObject } from './intrinsics/Symbol.mts';
-import { isTypedArrayObject } from './intrinsics/TypedArray.mts';
-import type { Descriptor, PromiseObject } from '#self';
+} from '../abstract-ops/all.mts';
+import { Completion, ThrowCompletion, X } from '../completion.mts';
+import { isRegExpObject } from '../intrinsics/RegExp.mts';
+import type { DateObject } from '../intrinsics/Date.mts';
+import type { BooleanObject } from '../intrinsics/Boolean.mts';
+import type { NumberObject } from '../intrinsics/Number.mts';
+import type { BigIntObject } from '../intrinsics/BigInt.mts';
+import type { StringObject } from '../intrinsics/String.mts';
+import type { SymbolObject } from '../intrinsics/Symbol.mts';
+import { isTypedArrayObject } from '../intrinsics/TypedArray.mts';
+import { DateProto_toISOString } from '../intrinsics/DatePrototype.mts';
+import { surroundingAgent } from './engine.mts';
+import type { Descriptor, ValueCompletion, PromiseObject } from '#self';
 
 const bareKeyRe = /^[a-zA-Z_][a-zA-Z_0-9]*$/;
 
 function getObjectTag(value: ObjectValue, wrap = false): string {
   let s = '';
   try {
-    s = X((Get(value, wellKnownSymbols.toStringTag) as JSStringValue)).stringValue();
+    s = (X(Get(value, wellKnownSymbols.toStringTag)) as JSStringValue).stringValue();
   } catch { }
   try {
     const c = X(Get(value, Value('constructor')));
@@ -60,22 +61,17 @@ const compactObject = (realm: Realm, value: ObjectValue) => {
   }
 };
 
-type Inspecable = Parameters<typeof Type>[0];
-
-type Types = ReturnType<typeof Type>;
-
 interface InspectContext {
   realm: Realm;
   indent: number;
-  inspected: Inspecable[];
+  inspected: Value[];
   compact: boolean;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type Inspector = (value: any, context: InspectContext, inner: (v: Inspecable) => string) => string;
+type Inspector = (value: any, context: InspectContext, inner: (v: Value) => string) => string;
 
-const INSPECTORS: Partial<Record<Types, Inspector>> = {
-  Completion: (v: Completion<Inspecable>, _ctx, i) => i(v.Value || Value.undefined),
+const INSPECTORS = {
   Null: () => 'null',
   Undefined: () => 'undefined',
   Boolean: (v: BooleanValue) => v.booleanValue().toString(),
@@ -92,7 +88,6 @@ const INSPECTORS: Partial<Record<Types, Inspector>> = {
     return `'${s}'`;
   },
   Symbol: (v: SymbolValue) => `Symbol(${v.Description instanceof UndefinedValue ? '' : v.Description.stringValue()})`,
-  PrivateName: (v: PrivateName) => v.Description.stringValue(),
   Object: (v: ObjectValue, ctx, i) => {
     if (ctx.inspected.includes(v)) {
       return '[Circular]';
@@ -222,15 +217,27 @@ const INSPECTORS: Partial<Record<Types, Inspector>> = {
       ctx.inspected.pop();
     }
   },
-};
+} satisfies Partial<Record<Value['type'], Inspector>>;
 
-export function inspect(value: Value | Completion<unknown>) {
+export function inspect(value: Value | ValueCompletion) {
   const context: InspectContext = {
     realm: surroundingAgent.currentRealmRecord,
     indent: 0,
     inspected: [],
     compact: false,
   };
-  const inner = (v: Inspecable) => INSPECTORS[Type(v)]!(v, context, inner);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const inner = (v: Value) => (INSPECTORS[v.type]! as any)(v, context, inner);
+  if (value instanceof Completion) {
+    value = value.Value;
+  }
   return inner(value);
+}
+
+export function inspectDate(value: DateObject) {
+  const result = DateProto_toISOString([], { thisValue: value, NewTarget: Value.undefined });
+  if (result instanceof ThrowCompletion) {
+    return 'Invalid Date';
+  }
+  return result.stringValue();
 }

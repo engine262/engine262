@@ -7,7 +7,7 @@ import {
   sourceTextMatchedBy,
 } from '../abstract-ops/all.mts';
 import { X } from '../completion.mts';
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import { OutOfRange } from '../helpers.mts';
 import { Descriptor, Value } from '../value.mts';
 import { StringValue } from '../static-semantics/all.mts';

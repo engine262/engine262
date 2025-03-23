@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Get,
   IsCallable,
@@ -27,13 +27,13 @@ export function isWeakMapObject(object: object): object is WeakMapObject {
   return 'WeakMapData' in object;
 }
 /** https://tc39.es/ecma262/#sec-weakmap-constructor */
-function WeakMapConstructor(this: FunctionObject, [iterable = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
+function* WeakMapConstructor(this: FunctionObject, [iterable = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget instanceof UndefinedValue) {
     return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
   // 2. Let map be ? OrdinaryCreateFromConstructor(NewTarget, "%WeakMap.prototype%", « [[WeakMapData]] »).
-  const map = Q(OrdinaryCreateFromConstructor(NewTarget, '%WeakMap.prototype%', ['WeakMapData'])) as Mutable<WeakMapObject>;
+  const map = Q(yield* OrdinaryCreateFromConstructor(NewTarget, '%WeakMap.prototype%', ['WeakMapData'])) as Mutable<WeakMapObject>;
   // 3. Set map.[[WeakMapData]] to a new empty List.
   map.WeakMapData = [];
   // 4. If iterable is either undefined or null, return map.
@@ -41,12 +41,12 @@ function WeakMapConstructor(this: FunctionObject, [iterable = Value.undefined]: 
     return map;
   }
   // 5. Let adder be ? Get(map, "set").
-  const adder = Q(Get(map, Value('set')));
+  const adder = Q(yield* Get(map, Value('set')));
   if (IsCallable(adder) === Value.false) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', adder);
   }
   // 6. Return ? AddEntriesFromIterable(map, iterable, adder).
-  return Q(AddEntriesFromIterable(map, iterable, adder as FunctionObject));
+  return Q(yield* AddEntriesFromIterable(map, iterable, adder as FunctionObject));
 }
 
 export function bootstrapWeakMap(realmRec: Realm) {

@@ -9,6 +9,7 @@ import {
   ThrowCompletion,
   Q,
   X,
+  type ValueEvaluator,
 } from '../completion.mts';
 import {
   Value, type Arguments, type FunctionCallContext,
@@ -16,31 +17,31 @@ import {
 import { bootstrapPrototype } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-generator.prototype.next */
-function GeneratorProto_next([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
+function* GeneratorProto_next([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let g be the this value.
   const g = thisValue;
   // 2. Return ? GeneratorResume(g, value, empty).
-  return Q(GeneratorResume(g, value, undefined));
+  return Q(yield* GeneratorResume(g, value, undefined));
 }
 
 /** https://tc39.es/ecma262/#sec-generator.prototype.return */
-function GeneratorProto_return([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
+function* GeneratorProto_return([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let g be the this value.
   const g = thisValue;
   // 2. Let C be Completion { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
   const C = new Completion({ Type: 'return', Value: value, Target: undefined });
   // 3. Return ? GeneratorResumeAbrupt(g, C, empty).
-  return Q(GeneratorResumeAbrupt(g, C, undefined));
+  return Q(yield* GeneratorResumeAbrupt(g, C, undefined));
 }
 
 /** https://tc39.es/ecma262/#sec-generator.prototype.throw */
-function GeneratorProto_throw([exception = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
+function* GeneratorProto_throw([exception = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let g be the this value.
   const g = thisValue;
   // 2. Let C be ThrowCompletion(exception).
   const C = ThrowCompletion(exception);
   // 3. Return ? GeneratorResumeAbrupt(g, C, empty).
-  return Q(GeneratorResumeAbrupt(g, C, undefined));
+  return Q(yield* GeneratorResumeAbrupt(g, C, undefined));
 }
 
 export function bootstrapGeneratorFunctionPrototypePrototype(realmRec: Realm) {

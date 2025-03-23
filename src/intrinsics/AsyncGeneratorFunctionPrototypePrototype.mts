@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   X,
   Completion,
@@ -23,7 +23,7 @@ import { __ts_cast__ } from '../helpers.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-asyncgenerator-prototype-next */
-function AsyncGeneratorPrototype_next([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
+function* AsyncGeneratorPrototype_next([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Let generator be the this value.
   const generator = thisValue;
   // 2. Let promiseCapability be ! NewPromiseCapability(%Promise%).
@@ -51,7 +51,7 @@ function AsyncGeneratorPrototype_next([value = Value.undefined]: Arguments, { th
   // 9. If state is either suspendedStart or suspendedYield, then
   if (state === 'suspendedStart' || state === 'suspendedYield') {
     // a. Perform ! AsyncGeneratorResume(generator, completion).
-    X(AsyncGeneratorResume(generator, completion));
+    X(yield* AsyncGeneratorResume(generator, completion));
   } else { // 10. Else,
     // a. Assert: state is either executing or awaiting-return.
     Assert(state === 'executing' || state === 'awaiting-return');
@@ -61,7 +61,7 @@ function AsyncGeneratorPrototype_next([value = Value.undefined]: Arguments, { th
 }
 
 /** https://tc39.es/ecma262/#sec-asyncgenerator-prototype-return */
-function AsyncGeneratorPrototype_return([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
+function* AsyncGeneratorPrototype_return([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Let generator be the this value.
   const generator = thisValue;
   // 2. Let promiseCapability be ! NewPromiseCapability(%Promise%).
@@ -85,7 +85,7 @@ function AsyncGeneratorPrototype_return([value = Value.undefined]: Arguments, { 
     X(AsyncGeneratorAwaitReturn(generator));
   } else if (state === 'suspendedYield') { // 9. Else if state is suspendedYield, then
     // a. Perform ! AsyncGeneratorResume(generator, completion).
-    X(AsyncGeneratorResume(generator, completion));
+    X(yield* AsyncGeneratorResume(generator, completion));
   } else { // 10. Else,
     // a. Assert: state is either executing or awaiting-return.
     Assert(state === 'executing' || state === 'awaiting-return');
@@ -95,7 +95,7 @@ function AsyncGeneratorPrototype_return([value = Value.undefined]: Arguments, { 
 }
 
 /** https://tc39.es/ecma262/#sec-asyncgenerator-prototype-throw */
-function AsyncGeneratorPrototype_throw([exception = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
+function* AsyncGeneratorPrototype_throw([exception = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Let generator be the this value.
   const generator = thisValue;
   // 2. Let promiseCapability be ! NewPromiseCapability(%Promise%).
@@ -128,7 +128,7 @@ function AsyncGeneratorPrototype_throw([exception = Value.undefined]: Arguments,
   // 10. If state is suspendedYield, then
   if (state === 'suspendedYield') {
     // a. Perform ! AsyncGeneratorResume(generator, completion).
-    X(AsyncGeneratorResume(generator, completion));
+    X(yield* AsyncGeneratorResume(generator, completion));
   } else { // 11. Else,
     // a. Assert: state is either executing or awaiting-return.
     Assert(state === 'executing' || state === 'awaiting-return');

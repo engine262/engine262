@@ -1,19 +1,19 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import { Q, X } from '../completion.mts';
 import { CreateDynamicFunction } from '../runtime-semantics/all.mts';
 import { Descriptor, Value } from '../value.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import type {
-  Arguments, ExpressionCompletion, FunctionCallContext, FunctionObject, Realm,
+  Arguments, ValueEvaluator, FunctionCallContext, FunctionObject, Realm,
 } from '#self';
 
 /** https://tc39.es/ecma262/#sec-asyncgeneratorfunction */
-function AsyncGeneratorFunctionConstructor(args: Arguments, { NewTarget }: FunctionCallContext): ExpressionCompletion {
+function* AsyncGeneratorFunctionConstructor(args: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
   // 1. Let C be the active function object.
   const C = surroundingAgent.activeFunctionObject as FunctionObject;
   // 2. Let args be the argumentsList that was passed to this function by [[Call]] or [[Construct]].
   // 3. Return ? CreateDynamicFunction(C, NewTarget, asyncGenerator, args).
-  return Q(CreateDynamicFunction(C, NewTarget, 'asyncGenerator', args));
+  return Q(yield* CreateDynamicFunction(C, NewTarget, 'asyncGenerator', args));
 }
 
 export function bootstrapAsyncGeneratorFunction(realmRec: Realm) {

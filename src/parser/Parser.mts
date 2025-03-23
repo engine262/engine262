@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import * as messages from '../messages.mts';
 import { LanguageParser } from './LanguageParser.mts';
 import { isLineTerminator, type Locatable } from './Lexer.mts';
@@ -59,6 +59,7 @@ export class Parser extends LanguageParser {
     this.peek();
     const node: ParseNode.BaseParseNode = {
       type: undefined!,
+      parent: undefined,
       location: {
         startIndex: inheritStart ? inheritStart.location.startIndex : this.peekToken.startIndex,
         endIndex: -1,

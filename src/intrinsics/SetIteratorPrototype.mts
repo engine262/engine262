@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Assert,
   CreateArrayFromList,
@@ -9,18 +9,16 @@ import {
   Yield,
   type GeneratorObject,
 } from '../abstract-ops/all.mts';
-import { Q, X, type ExpressionCompletion } from '../completion.mts';
+import { Q, X, type ValueCompletion } from '../completion.mts';
 import {
   Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
-import type { YieldEvaluator } from '../evaluator.mts';
+import type { ValueEvaluator, YieldEvaluator } from '../evaluator.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import type { SetObject } from './Set.mts';
 
-const kSetIteratorPrototype = Value('%SetIteratorPrototype%');
-
 /** https://tc39.es/ecma262/#sec-createsetiterator */
-export function CreateSetIterator(set: Value, kind: 'key+value' | 'value'): ExpressionCompletion<GeneratorObject> {
+export function CreateSetIterator(set: Value, kind: 'key+value' | 'value'): ValueCompletion<GeneratorObject> {
   // 1. Assert: kind is key+value or value.
   Assert(kind === 'key+value' || kind === 'value');
   // 2. Perform ? RequireInternalSlot(set, [[SetData]]).
@@ -59,13 +57,13 @@ export function CreateSetIterator(set: Value, kind: 'key+value' | 'value'): Expr
     return Value.undefined;
   };
   // 4. Return ! CreateIteratorFromClosure(closure, "%SetIteratorPrototype%", %SetIteratorPrototype%).
-  return X(CreateIteratorFromClosure(closure, kSetIteratorPrototype, surroundingAgent.intrinsic('%SetIteratorPrototype%')));
+  return X(CreateIteratorFromClosure(closure, Value('%SetIteratorPrototype%'), surroundingAgent.intrinsic('%SetIteratorPrototype%')));
 }
 
 /** https://tc39.es/ecma262/#sec-%setiteratorprototype%.next */
-function SetIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionCallContext) {
+function* SetIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Return ? GeneratorResume(this value, empty, "%SetIteratorPrototype%").
-  return Q(GeneratorResume(thisValue, undefined, kSetIteratorPrototype));
+  return Q(yield* GeneratorResume(thisValue, undefined, Value('%SetIteratorPrototype%')));
 }
 
 export function bootstrapSetIteratorPrototype(realmRec: Realm) {

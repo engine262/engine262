@@ -1,4 +1,4 @@
-import { HostGetImportMetaProperties, HostFinalizeImportMeta } from '../engine.mts';
+import { HostGetImportMetaProperties, HostFinalizeImportMeta } from '../host-defined/engine.mts';
 import { ObjectValue, Value } from '../value.mts';
 import {
   Assert,

@@ -1,8 +1,9 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
-  Type, JSStringValue, Value,
+  JSStringValue, Value,
   NumberValue,
   BigIntValue,
+  SameType,
 } from '../value.mts';
 import {
   Assert, ToNumeric, ToPrimitive, ToString,
@@ -11,19 +12,19 @@ import { Q } from '../completion.mts';
 
 export type BinaryOperator = '+' | '-' | '*' | '/' | '%' | '**' | '<<' | '>>' | '>>>' | '&' | '^' | '|';
 /** https://tc39.es/ecma262/#sec-applystringornumericbinaryoperator */
-export function ApplyStringOrNumericBinaryOperator(lval: Value, opText: BinaryOperator, rval: Value) {
+export function* ApplyStringOrNumericBinaryOperator(lval: Value, opText: BinaryOperator, rval: Value) {
   // 1. If opText is +, then
   if (opText === '+') {
     // a. Let lprim be ? ToPrimitive(lval).
-    const lprim = Q(ToPrimitive(lval));
+    const lprim = Q(yield* ToPrimitive(lval));
     // b. Let rprim be ? ToPrimitive(rval).
-    const rprim = Q(ToPrimitive(rval));
+    const rprim = Q(yield* ToPrimitive(rval));
     // c. If Type(lprim) is String or Type(rprim) is String, then
     if (lprim instanceof JSStringValue || rprim instanceof JSStringValue) {
       // i. Let lstr be ? ToString(lprim).
-      const lstr = Q(ToString(lprim));
+      const lstr = Q(yield* ToString(lprim));
       // ii. Let rstr be ? ToString(rprim).
-      const rstr = Q(ToString(rprim));
+      const rstr = Q(yield* ToString(rprim));
       // iii. Return the string-concatenation of lstr and rstr.
       return Value(lstr.stringValue() + rstr.stringValue());
     }
@@ -34,11 +35,11 @@ export function ApplyStringOrNumericBinaryOperator(lval: Value, opText: BinaryOp
   }
   // 2. NOTE: At this point, it must be a numeric operation.
   // 3. Let lnum be ? ToNumeric(lval).
-  const lnum = Q(ToNumeric(lval));
+  const lnum = Q(yield* ToNumeric(lval));
   // 4. Let rnum be ? ToNumeric(rval).
-  const rnum = Q(ToNumeric(rval));
-  // 5. If Type(lnum) is different from Type(rnum), throw a TypeError exception.
-  if (Type(lnum) !== Type(rnum)) {
+  const rnum = Q(yield* ToNumeric(rval));
+  // 5. If SameType(lNum, rNum) is false, throw a TypeError exception.
+  if (!SameType(lnum, rnum)) {
     return surroundingAgent.Throw('TypeError', 'CannotMixBigInts');
   }
   if (lnum instanceof BigIntValue) {

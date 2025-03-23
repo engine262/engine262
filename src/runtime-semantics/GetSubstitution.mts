@@ -7,10 +7,11 @@ import {
 import {
   ObjectValue, UndefinedValue, JSStringValue, Value,
 } from '../value.mts';
-import { Q, type ExpressionCompletion } from '../completion.mts';
+import { Q } from '../completion.mts';
+import type { ValueEvaluator } from '../evaluator.mts';
 
 /** https://tc39.es/ecma262/#sec-getsubstitution */
-export function GetSubstitution(matched: JSStringValue, str: JSStringValue, position: number, captures: readonly (JSStringValue | UndefinedValue)[], namedCaptures: UndefinedValue | ObjectValue, replacement: JSStringValue): ExpressionCompletion<JSStringValue> {
+export function* GetSubstitution(matched: JSStringValue, str: JSStringValue, position: number, captures: readonly (JSStringValue | UndefinedValue)[], namedCaptures: UndefinedValue | ObjectValue, replacement: JSStringValue): ValueEvaluator<JSStringValue> {
   // 1. Assert: Type(matched) is String.
   Assert(matched instanceof JSStringValue);
   // 2. Let matchLength be the number of code units in matched.
@@ -96,11 +97,11 @@ export function GetSubstitution(matched: JSStringValue, str: JSStringValue, posi
             i += 2;
           } else {
             const groupName = Value(replacementStr.substring(i + 2, nextSign));
-            const capture = Q(Get(namedCaptures, groupName));
+            const capture = Q(yield* Get(namedCaptures, groupName));
             if (capture === Value.undefined) {
               // Replace the text with the empty string
             } else {
-              result += Q(ToString(capture)).stringValue();
+              result += Q(yield* ToString(capture)).stringValue();
             }
             i = nextSign + 1;
           }

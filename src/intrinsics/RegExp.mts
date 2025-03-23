@@ -1,6 +1,6 @@
 import {
   surroundingAgent,
-} from '../engine.mts';
+} from '../host-defined/engine.mts';
 import {
   Get,
   IsRegExp,
@@ -19,8 +19,9 @@ import {
   type Arguments,
   type FunctionCallContext,
 } from '../value.mts';
-import { Q, type ExpressionCompletion } from '../completion.mts';
+import { Q } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
+import type { ValueEvaluator } from '../evaluator.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 
 export interface RegExpObject extends OrdinaryObject {
@@ -33,9 +34,9 @@ export function isRegExpObject(o: Value): o is RegExpObject {
   return 'RegExpMatcher' in o;
 }
 /** https://tc39.es/ecma262/#sec-regexp-constructor */
-function RegExpConstructor([pattern = Value.undefined, flags = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext): ExpressionCompletion {
+function* RegExpConstructor([pattern = Value.undefined, flags = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
   // 1. Let patternIsRegExp be ? IsRegExp(pattern).
-  const patternIsRegExp = Q(IsRegExp(pattern));
+  const patternIsRegExp = Q(yield* IsRegExp(pattern));
   let newTarget;
   // 2. If NewTarget is undefined, then
   if (NewTarget === Value.undefined) {
@@ -44,7 +45,7 @@ function RegExpConstructor([pattern = Value.undefined, flags = Value.undefined]:
     // b. If patternIsRegExp is true and flags is undefined, then
     if (patternIsRegExp === Value.true && flags === Value.undefined) {
       // i. Let patternConstructor be ? Get(pattern, "constructor").
-      const patternConstructor = Q(Get(pattern as ObjectValue, Value('constructor')));
+      const patternConstructor = Q(yield* Get(pattern as ObjectValue, Value('constructor')));
       // ii. If SameValue(newTarget, patternConstructor) is true, return pattern.
       if (SameValue(newTarget, patternConstructor) === Value.true) {
         return pattern;
@@ -67,11 +68,11 @@ function RegExpConstructor([pattern = Value.undefined, flags = Value.undefined]:
     }
   } else if (patternIsRegExp === Value.true) { // 5. Else if patternIsRegExp is true, then
     // a. Else if patternIsRegExp is true, then
-    P = Q(Get(pattern as ObjectValue, Value('source')));
+    P = Q(yield* Get(pattern as ObjectValue, Value('source')));
     // b. If flags is undefined, then
     if (flags === Value.undefined) {
       // i. Let F be ? Get(pattern, "flags").
-      F = Q(Get(pattern as ObjectValue, Value('flags')));
+      F = Q(yield* Get(pattern as ObjectValue, Value('flags')));
     } else { // c. Else, let F be flags.
       F = flags;
     }
@@ -82,9 +83,9 @@ function RegExpConstructor([pattern = Value.undefined, flags = Value.undefined]:
     F = flags;
   }
   // 7. Let O be ? RegExpAlloc(newTarget).
-  const O = Q(RegExpAlloc(newTarget as FunctionObject));
+  const O = Q(yield* RegExpAlloc(newTarget as FunctionObject));
   // 8. Return ? RegExpInitialize(O, P, F).
-  return Q(RegExpInitialize(O, P, F));
+  return Q(yield* RegExpInitialize(O, P, F));
 }
 
 /** https://tc39.es/ecma262/#sec-get-regexp-@@species */

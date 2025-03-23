@@ -1,6 +1,6 @@
 import {
   surroundingAgent,
-} from '../engine.mts';
+} from '../host-defined/engine.mts';
 import {
   DefinePropertyOrThrow,
   OrdinaryCreateFromConstructor,
@@ -16,7 +16,7 @@ import {
   type Arguments,
   type FunctionCallContext,
 } from '../value.mts';
-import { Q, X, type ExpressionCompletion } from '../completion.mts';
+import { Q, X, type ValueEvaluator } from '../completion.mts';
 import { captureStack } from '../helpers.mts';
 import { bootstrapConstructor, bootstrapPrototype } from './bootstrap.mts';
 
@@ -37,7 +37,7 @@ export function bootstrapNativeError(realmRec: Realm) {
     ], realmRec.Intrinsics['%Error.prototype%']);
 
     /** https://tc39.es/ecma262/#sec-nativeerror */
-    const Constructor = ([message = Value.undefined, options = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext): ExpressionCompletion => {
+    const Constructor = function* Constructor([message = Value.undefined, options = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
       // 1. If NewTarget is undefined, let newTarget be the active function object; else let newTarget be NewTarget.
       let newTarget;
       if (NewTarget instanceof UndefinedValue) {
@@ -46,11 +46,11 @@ export function bootstrapNativeError(realmRec: Realm) {
         newTarget = NewTarget;
       }
       // 2. Let O be ? OrdinaryCreateFromConstructor(newTarget, "%NativeError.prototype%", « [[ErrorData]] »).
-      const O = Q(OrdinaryCreateFromConstructor(newTarget as FunctionObject, `%${name}.prototype%`, ['ErrorData']));
+      const O = Q(yield* OrdinaryCreateFromConstructor(newTarget as FunctionObject, `%${name}.prototype%`, ['ErrorData']));
       // 3. If message is not undefined, then
       if (message !== Value.undefined) {
         // a. Let msg be ? ToString(message).
-        const msg = Q(ToString(message));
+        const msg = Q(yield* ToString(message));
         // b. Let msgDesc be the PropertyDescriptor { [[Value]]: msg, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }.
         const msgDesc = Descriptor({
           Value: msg,
@@ -62,7 +62,7 @@ export function bootstrapNativeError(realmRec: Realm) {
         X(DefinePropertyOrThrow(O, Value('message'), msgDesc));
       }
       // 4. Perform ? InstallErrorCause(O, options).
-      Q(InstallErrorCause(O, options));
+      Q(yield* InstallErrorCause(O, options));
       // NON-SPEC
       X(captureStack(O));
       // 5. Return O.

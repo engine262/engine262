@@ -1,19 +1,6 @@
-import { surroundingAgent } from '../engine.mts';
 import {
-  Descriptor,
-  JSStringValue,
-  ObjectValue,
-  UndefinedValue,
-  Value,
-  wellKnownSymbols,
-  type Arguments,
-  type ObjectInternalMethods,
-} from '../value.mts';
-import { BoundNames } from '../static-semantics/all.mts';
-import { Q, X } from '../completion.mts';
-import { JSStringSet, type Mutable } from '../helpers.mts';
-import type { ParseNode } from '../parser/ParseNode.mts';
-import {
+  Q, X, BoundNames, surroundingAgent,
+  JSStringSet, type Mutable, type ParseNode,
   Assert,
   CreateBuiltinFunction,
   CreateDataProperty,
@@ -34,8 +21,16 @@ import {
   IsDataDescriptor,
   F,
   type OrdinaryObject,
-} from './all.mts';
-import type { EnvironmentRecord } from '#self';
+  Descriptor,
+  JSStringValue,
+  ObjectValue,
+  UndefinedValue,
+  Value,
+  wellKnownSymbols,
+  type Arguments,
+  type ObjectInternalMethods,
+  EnvironmentRecord,
+} from '#self';
 
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-arguments-exotic-objects */
@@ -46,8 +41,12 @@ export interface UnmappedArgumentsObject extends OrdinaryObject {
   readonly ParameterMap: UndefinedValue;
 }
 
+export function isArgumentExoticObject(value: Value): value is MappedArgumentsObject | UnmappedArgumentsObject {
+  return 'ParameterMap' in value;
+}
+
 const ArgumentExoticObject = {
-  GetOwnProperty(P) {
+  * GetOwnProperty(P) {
     const args = this;
     const desc = OrdinaryGetOwnProperty(args, P);
     if (desc === Value.undefined) {
@@ -56,11 +55,11 @@ const ArgumentExoticObject = {
     const map = args.ParameterMap;
     const isMapped = X(HasOwnProperty(map, P));
     if (isMapped === Value.true) {
-      return Descriptor({ ...desc, Value: Q(Get(map, P)) });
+      return Descriptor({ ...desc, Value: Q(yield* Get(map, P)) });
     }
     return desc;
   },
-  DefineOwnProperty(P, Desc) {
+  * DefineOwnProperty(P, Desc) {
     const args = this;
     const map = args.ParameterMap;
     const isMapped = X(HasOwnProperty(map, P));
@@ -70,36 +69,36 @@ const ArgumentExoticObject = {
         newArgDesc = Descriptor({ ...Desc, Value: X(Get(map, P)) });
       }
     }
-    const allowed = Q(OrdinaryDefineOwnProperty(args, P, newArgDesc));
+    const allowed = Q(yield* OrdinaryDefineOwnProperty(args, P, newArgDesc));
     if (allowed === Value.false) {
       return Value.false;
     }
     if (isMapped === Value.true) {
       if (IsAccessorDescriptor(Desc) === true) {
-        map.Delete(P);
+        yield* map.Delete(P);
       } else {
         if (Desc.Value !== undefined) {
-          const setStatus = Set(map, P, Desc.Value, Value.false);
+          const setStatus = yield* Set(map, P, Desc.Value, Value.false);
           Assert(setStatus === Value.true);
         }
         if (Desc.Writable !== undefined && Desc.Writable === Value.false) {
-          map.Delete(P);
+          yield* map.Delete(P);
         }
       }
     }
     return Value.true;
   },
-  Get(P, Receiver) {
+  * Get(P, Receiver) {
     const args = this;
     const map = args.ParameterMap;
     const isMapped = X(HasOwnProperty(map, P));
     if (isMapped === Value.false) {
-      return Q(OrdinaryGet(args, P, Receiver));
+      return Q(yield* OrdinaryGet(args, P, Receiver));
     } else {
-      return Get(map, P);
+      return yield* Get(map, P);
     }
   },
-  Set(P, V, Receiver) {
+  * Set(P, V, Receiver) {
     const args = this;
     let isMapped;
     let map;
@@ -110,18 +109,18 @@ const ArgumentExoticObject = {
       isMapped = X(HasOwnProperty(map, P)) === Value.true;
     }
     if (isMapped) {
-      const setStatus = Set(map!, P, V, Value.false);
+      const setStatus = yield* Set(map!, P, V, Value.false);
       Assert(setStatus === Value.true);
     }
-    return Q(OrdinarySet(args, P, V, Receiver));
+    return Q(yield* OrdinarySet(args, P, V, Receiver));
   },
-  Delete(P) {
+  * Delete(P) {
     const args = this;
     const map = args.ParameterMap;
     const isMapped = X(HasOwnProperty(map, P));
-    const result = Q(OrdinaryDelete(args, P));
+    const result = Q(yield* OrdinaryDelete(args, P));
     if (result === Value.true && isMapped === Value.true) {
-      map.Delete(P);
+      yield* map.Delete(P);
     }
     return result;
   },
@@ -132,12 +131,12 @@ export function CreateUnmappedArgumentsObject(argumentsList: Arguments) {
   const len = argumentsList.length;
   const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'), ['ParameterMap']) as Mutable<UnmappedArgumentsObject>;
   obj.ParameterMap = Value.undefined;
-  DefinePropertyOrThrow(obj, Value('length'), Descriptor({
+  X(DefinePropertyOrThrow(obj, Value('length'), Descriptor({
     Value: F(len),
     Writable: Value.true,
     Enumerable: Value.false,
     Configurable: Value.true,
-  }));
+  })));
   let index = 0;
   while (index < len) {
     const val = argumentsList[index];

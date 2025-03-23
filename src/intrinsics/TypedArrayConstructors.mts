@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   ObjectValue, UndefinedValue, Value, wellKnownSymbols,
   type Arguments,
@@ -14,7 +14,7 @@ import {
   GetIteratorFromMethod,
   isArrayBufferObject,
 } from '../abstract-ops/all.mts';
-import { Q, X } from '../completion.mts';
+import { Q, X, type ValueEvaluator } from '../completion.mts';
 import { __ts_cast__ } from '../helpers.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 import {
@@ -24,7 +24,7 @@ import {
 export function bootstrapTypedArrayConstructors(realmRec: Realm) {
   Object.entries(typedArrayInfoByName).forEach(([TypedArray, info]) => {
     /** https://tc39.es/ecma262/#sec-typedarray-constructors */
-    function TypedArrayConstructor(this: Value, args: Arguments, { NewTarget }: FunctionCallContext) {
+    function* TypedArrayConstructor(this: Value, args: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
       __ts_cast__<TypedArrayConstructorNames>(TypedArray);
       if (NewTarget instanceof UndefinedValue) {
         return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
@@ -33,13 +33,13 @@ export function bootstrapTypedArrayConstructors(realmRec: Realm) {
       const proto = `%${TypedArray}.prototype%` as const;
       const numberOfArgs = args.length;
       if (numberOfArgs === 0) {
-        return AllocateTypedArray(constructorName, NewTarget, proto, 0);
+        return yield* AllocateTypedArray(constructorName, NewTarget, proto, 0);
       } else {
         const firstArgument = args[0];
         if (firstArgument instanceof ObjectValue) {
-          const O = Q(AllocateTypedArray(constructorName, NewTarget, proto));
+          const O = Q(yield* AllocateTypedArray(constructorName, NewTarget, proto));
           if (isTypedArrayObject(firstArgument)) {
-            Q(InitializeTypedArrayFromTypedArray(O, firstArgument));
+            Q(yield* InitializeTypedArrayFromTypedArray(O, firstArgument));
           } else if (isArrayBufferObject(firstArgument)) {
             let byteOffset;
             let length;
@@ -53,22 +53,22 @@ export function bootstrapTypedArrayConstructors(realmRec: Realm) {
             } else {
               length = Value.undefined;
             }
-            Q(InitializeTypedArrayFromArrayBuffer(O, firstArgument, byteOffset, length));
+            Q(yield* InitializeTypedArrayFromArrayBuffer(O, firstArgument, byteOffset, length));
           } else {
             Assert(firstArgument instanceof ObjectValue && !isTypedArrayObject(firstArgument) && !isArrayBufferObject(firstArgument));
-            const usingIterator = Q(GetMethod(firstArgument, wellKnownSymbols.iterator));
+            const usingIterator = Q(yield* GetMethod(firstArgument, wellKnownSymbols.iterator));
             if (!(usingIterator instanceof UndefinedValue)) {
-              const values = Q(IteratorToList(Q(GetIteratorFromMethod(firstArgument, usingIterator))));
-              Q(InitializeTypedArrayFromList(O, values));
+              const values = Q(yield* IteratorToList(Q(yield* GetIteratorFromMethod(firstArgument, usingIterator))));
+              Q(yield* InitializeTypedArrayFromList(O, values));
             } else {
-              Q(InitializeTypedArrayFromArrayLike(O, firstArgument));
+              Q(yield* InitializeTypedArrayFromArrayLike(O, firstArgument));
             }
           }
           return O;
         } else {
           Assert(!(firstArgument instanceof ObjectValue));
-          const elementLength = Q(ToIndex(firstArgument));
-          return AllocateTypedArray(constructorName, NewTarget, proto, elementLength);
+          const elementLength = Q(yield* ToIndex(firstArgument));
+          return yield* AllocateTypedArray(constructorName, NewTarget, proto, elementLength);
         }
       }
     }

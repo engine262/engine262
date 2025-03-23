@@ -1,16 +1,16 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   BigIntValue,
   DataBlock,
   Descriptor,
   NumberValue,
-  Type,
   ObjectValue,
   UndefinedValue,
   Value,
   BooleanValue,
 } from '../value.mts';
 import { NormalCompletion, Q, X } from '../completion.mts';
+import type { PlainEvaluator } from '../evaluator.mts';
 import {
   Assert,
   CreateDataProperty,
@@ -115,43 +115,43 @@ export function FromPropertyDescriptor(Desc: Descriptor | UndefinedValue) {
 }
 
 /** https://tc39.es/ecma262/#sec-topropertydescriptor */
-export function ToPropertyDescriptor(Obj: Value) {
+export function* ToPropertyDescriptor(Obj: Value): PlainEvaluator<Descriptor> {
   if (!(Obj instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', Obj);
   }
 
   let desc = Descriptor({});
-  const hasEnumerable = Q(HasProperty(Obj, Value('enumerable')));
+  const hasEnumerable = Q(yield* HasProperty(Obj, Value('enumerable')));
   if (hasEnumerable === Value.true) {
-    const enumerable = ToBoolean(Q(Get(Obj, Value('enumerable'))));
+    const enumerable = ToBoolean(Q(yield* Get(Obj, Value('enumerable'))));
     desc = Descriptor({ ...desc, Enumerable: enumerable });
   }
-  const hasConfigurable = Q(HasProperty(Obj, Value('configurable')));
+  const hasConfigurable = Q(yield* HasProperty(Obj, Value('configurable')));
   if (hasConfigurable === Value.true) {
-    const conf = ToBoolean(Q(Get(Obj, Value('configurable'))));
+    const conf = ToBoolean(Q(yield* Get(Obj, Value('configurable'))));
     desc = Descriptor({ ...desc, Configurable: conf });
   }
-  const hasValue = Q(HasProperty(Obj, Value('value')));
+  const hasValue = Q(yield* HasProperty(Obj, Value('value')));
   if (hasValue === Value.true) {
-    const value = Q(Get(Obj, Value('value')));
+    const value = Q(yield* Get(Obj, Value('value')));
     desc = Descriptor({ ...desc, Value: value });
   }
-  const hasWritable = Q(HasProperty(Obj, Value('writable')));
+  const hasWritable = Q(yield* HasProperty(Obj, Value('writable')));
   if (hasWritable === Value.true) {
-    const writable = ToBoolean(Q(Get(Obj, Value('writable'))));
+    const writable = ToBoolean(Q(yield* Get(Obj, Value('writable'))));
     desc = Descriptor({ ...desc, Writable: writable });
   }
-  const hasGet = Q(HasProperty(Obj, Value('get')));
+  const hasGet = Q(yield* HasProperty(Obj, Value('get')));
   if (hasGet === Value.true) {
-    const getter = Q(Get(Obj, Value('get')));
+    const getter = Q(yield* Get(Obj, Value('get')));
     if (IsCallable(getter) === Value.false && !(getter instanceof UndefinedValue)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', getter);
     }
     desc = Descriptor({ ...desc, Get: getter as FunctionObject });
   }
-  const hasSet = Q(HasProperty(Obj, Value('set')));
+  const hasSet = Q(yield* HasProperty(Obj, Value('set')));
   if (hasSet === Value.true) {
-    const setter = Q(Get(Obj, Value('set')));
+    const setter = Q(yield* Get(Obj, Value('set')));
     if (IsCallable(setter) === Value.false && !(setter instanceof UndefinedValue)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', setter);
     }
@@ -215,8 +215,6 @@ export function CreateByteDataBlock(size: number) {
 /** https://tc39.es/ecma262/#sec-copydatablockbytes */
 export function CopyDataBlockBytes(toBlock: DataBlock, toIndex: number, fromBlock: DataBlock, fromIndex: number, count: number) {
   Assert(fromBlock !== toBlock);
-  Assert(fromBlock instanceof DataBlock || Type(fromBlock) === 'Shared Data Block');
-  Assert(toBlock instanceof DataBlock || Type(toBlock) === 'Shared Data Block');
   Assert(Number.isSafeInteger(fromIndex) && fromIndex >= 0);
   Assert(Number.isSafeInteger(toIndex) && toIndex >= 0);
   Assert(Number.isSafeInteger(count) && count >= 0);
@@ -225,12 +223,7 @@ export function CopyDataBlockBytes(toBlock: DataBlock, toIndex: number, fromBloc
   const toSize = toBlock.byteLength;
   Assert(toIndex + count <= toSize);
   while (count > 0) {
-    if (Type(fromBlock) === 'Shared Data Block') {
-      Assert(false);
-    } else {
-      Assert(Type(toBlock) !== 'Shared Data Block');
-      toBlock[toIndex] = fromBlock[fromIndex];
-    }
+    toBlock[toIndex] = fromBlock[fromIndex];
     toIndex += 1;
     fromIndex += 1;
     count -= 1;

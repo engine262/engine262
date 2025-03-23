@@ -4,14 +4,14 @@ import { Q } from '../completion.mts';
 import { StringValue } from '../static-semantics/all.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import type { Mutable } from '../helpers.mts';
-import type { ExpressionEvaluator } from '../evaluator.mts';
+import type { ValueEvaluator } from '../evaluator.mts';
 import { ClassDefinitionEvaluation } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-class-definitions-runtime-semantics-evaluation */
 // ClassExpression :
 //   `class` ClassTail
 //   `class` BindingIdentifier ClassTail
-export function* Evaluate_ClassExpression(ClassExpression: ParseNode.ClassExpression): ExpressionEvaluator {
+export function* Evaluate_ClassExpression(ClassExpression: ParseNode.ClassExpression): ValueEvaluator {
   const { BindingIdentifier, ClassTail } = ClassExpression;
   if (!BindingIdentifier) {
     // 1. Let value be ? ClassDefinitionEvaluation of ClassTail with arguments undefined and ''

@@ -1,4 +1,4 @@
-import { Evaluate, type ExpressionEvaluator } from '../evaluator.mts';
+import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
 import { OutOfRange } from '../helpers.mts';
 import {
   Assert,
@@ -18,7 +18,7 @@ type AnyNumericValue = BigIntValue | NumberValue;
 //   LeftHandSideExpression `--`
 //   `++` UnaryExpression
 //   `--` UnaryExpression
-export function* Evaluate_UpdateExpression({ LeftHandSideExpression, operator, UnaryExpression }: ParseNode.UpdateExpression): ExpressionEvaluator {
+export function* Evaluate_UpdateExpression({ LeftHandSideExpression, operator, UnaryExpression }: ParseNode.UpdateExpression): ValueEvaluator {
   switch (true) {
     // UpdateExpression : LeftHandSideExpression `++`
     // https://tc39.es/ecma262/#sec-postfix-increment-operator-runtime-semantics-evaluation
@@ -26,7 +26,7 @@ export function* Evaluate_UpdateExpression({ LeftHandSideExpression, operator, U
       // 1. Let lhs be the result of evaluating LeftHandSideExpression.
       const lhs = yield* Evaluate(LeftHandSideExpression);
       // 2. Let oldValue be ? ToNumeric(? GetValue(lhs)).
-      const oldValue = Q(ToNumeric(Q(GetValue(lhs))));
+      const oldValue = Q(yield* ToNumeric(Q(yield* GetValue(lhs))));
       // 3. If oldValue is a Number, then
       //  a. Let newValue be Number::add(oldValue, 1𝔽).
       //  4. Else,
@@ -40,7 +40,7 @@ export function* Evaluate_UpdateExpression({ LeftHandSideExpression, operator, U
         newValue = BigIntValue.add(oldValue, Z(1n));
       }
       // 4. Perform ? PutValue(lhs, newValue).
-      Q(PutValue(lhs, newValue));
+      Q(yield* PutValue(lhs, newValue));
       // 5. Return oldValue.
       return oldValue;
     }
@@ -51,7 +51,7 @@ export function* Evaluate_UpdateExpression({ LeftHandSideExpression, operator, U
       // 1. Let lhs be the result of evaluating LeftHandSideExpression.
       const lhs = yield* Evaluate(LeftHandSideExpression);
       // 2. Let oldValue be ? ToNumeric(? GetValue(lhs)).
-      const oldValue = Q(ToNumeric(Q(GetValue(lhs))));
+      const oldValue = Q(yield* ToNumeric(Q(yield* GetValue(lhs))));
       // 3. If oldValue is a Number, then
       //  a. Let newValue be Number::subtract(oldValue, 1𝔽).
       //  4. Else,
@@ -65,7 +65,7 @@ export function* Evaluate_UpdateExpression({ LeftHandSideExpression, operator, U
         newValue = BigIntValue.subtract(oldValue, Z(1n));
       }
       // 4. Perform ? PutValue(lhs, newValue).
-      Q(PutValue(lhs, newValue));
+      Q(yield* PutValue(lhs, newValue));
       // 5. Return oldValue.
       return oldValue;
     }
@@ -76,7 +76,7 @@ export function* Evaluate_UpdateExpression({ LeftHandSideExpression, operator, U
       // 1. Let expr be the result of evaluating UnaryExpression.
       const expr = yield* Evaluate(UnaryExpression);
       // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
-      const oldValue = Q(ToNumeric(Q(GetValue(expr))));
+      const oldValue = Q(yield* ToNumeric(Q(yield* GetValue(expr))));
       // 3. If oldValue is a Number, then
       //  a. Let newValue be Number::add(oldValue, 1𝔽).
       //  4. Else,
@@ -90,7 +90,7 @@ export function* Evaluate_UpdateExpression({ LeftHandSideExpression, operator, U
         newValue = BigIntValue.add(oldValue, Z(1n));
       }
       // 4. Perform ? PutValue(expr, newValue).
-      Q(PutValue(expr, newValue));
+      Q(yield* PutValue(expr, newValue));
       // 5. Return newValue.
       return newValue;
     }
@@ -101,7 +101,7 @@ export function* Evaluate_UpdateExpression({ LeftHandSideExpression, operator, U
       // 1. Let expr be the result of evaluating UnaryExpression.
       const expr = yield* Evaluate(UnaryExpression);
       // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
-      const oldValue = Q(ToNumeric(Q(GetValue(expr))));
+      const oldValue = Q(yield* ToNumeric(Q(yield* GetValue(expr))));
       // 3. If oldValue is a Number, then
       //   a. Let newValue be Number::subtract(oldValue, 1𝔽).
       // 4. Else,
@@ -115,7 +115,7 @@ export function* Evaluate_UpdateExpression({ LeftHandSideExpression, operator, U
         newValue = BigIntValue.subtract(oldValue, Z(1n));
       }
       // 4. Perform ? PutValue(expr, newValue).
-      Q(PutValue(expr, newValue));
+      Q(yield* PutValue(expr, newValue));
       // 5. Return newValue.
       return newValue;
     }

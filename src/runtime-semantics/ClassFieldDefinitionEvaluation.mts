@@ -1,11 +1,11 @@
-import { surroundingAgent } from '../engine.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import { X, ReturnIfAbrupt } from '../completion.mts';
 import { MakeMethod, OrdinaryFunctionCreate } from '../abstract-ops/all.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
-import type { Evaluator } from '../evaluator.mts';
+import type { PlainEvaluator } from '../evaluator.mts';
 import { Evaluate_PropertyName } from './PropertyName.mts';
 import type {
-  ECMAScriptFunctionObject, ObjectValue, PlainCompletion, PrivateName, PropertyKeyValue,
+  ECMAScriptFunctionObject, ObjectValue, PrivateName, PropertyKeyValue,
 } from '#self';
 
 export class ClassFieldDefinitionRecord {
@@ -19,7 +19,7 @@ export class ClassFieldDefinitionRecord {
   }
 }
 
-export function* ClassFieldDefinitionEvaluation(FieldDefinition: ParseNode.FieldDefinition, homeObject: ObjectValue): Evaluator<PlainCompletion<ClassFieldDefinitionRecord>> {
+export function* ClassFieldDefinitionEvaluation(FieldDefinition: ParseNode.FieldDefinition, homeObject: ObjectValue): PlainEvaluator<ClassFieldDefinitionRecord> {
   const { ClassElementName, Initializer } = FieldDefinition;
   // 1. Let name be the result of evaluating ClassElementName.
   // 2. ReturnIfAbrupt(name).

@@ -7,7 +7,6 @@ import {
   DetachArrayBuffer,
   OrdinaryObjectCreate,
   ToString,
-  Type,
   ManagedRealm,
   inspect,
   gc,
@@ -15,7 +14,6 @@ import {
   type OrdinaryObject,
   type Arguments,
   SourceTextModuleRecord,
-  type ExpressionCompletion,
   EnsureCompletion,
   evalQ,
   surroundingAgent,
@@ -23,16 +21,26 @@ import {
   isBuiltinFunctionObject,
   type NativeSteps,
   NormalCompletion,
+  skipDebugger,
+  type ValueCompletion,
+  JSStringValue,
 } from '#self';
 
 export interface CreateAgentOptions {
   features?: readonly string[];
 }
 
-export const createAgent = ({ features = [] }: CreateAgentOptions) => new Agent({
-  features,
-  loadImportedModule: loadImportedModuleSync,
-});
+export const createAgent = ({ features = [] }: CreateAgentOptions) => {
+  const agent = new Agent({
+    features,
+    loadImportedModule: loadImportedModuleSync,
+    onDebugger() {
+      // attach an empty debugger to make sure our debugger infrastructure does not break the engine
+      agent.resumeEvaluate({ noBreakpoint: true });
+    },
+  });
+  return agent;
+};
 
 export interface Test262CreateRealm {
   realm: ManagedRealm;
@@ -58,7 +66,7 @@ export function createRealm({ printCompatMode = false }: CreateRealmOptions = {}
     const setPrintHandle = (f: typeof printHandle) => {
       printHandle = f;
     };
-    CreateDataProperty(realm.GlobalObject, Value('print'), CreateBuiltinFunction((args: Arguments): ExpressionCompletion => {
+    skipDebugger(CreateDataProperty(realm.GlobalObject, Value('print'), CreateBuiltinFunction((args: Arguments): ValueCompletion => {
       if (surroundingAgent.debugger_isPreviewing) {
         return NormalCompletion(Value.undefined);
       }
@@ -69,7 +77,7 @@ export function createRealm({ printCompatMode = false }: CreateRealmOptions = {}
         if (printCompatMode) {
           for (let i = 0; i < args.length; i += 1) {
             const arg = args[i];
-            const s = EnsureCompletion(ToString(arg));
+            const s = EnsureCompletion(skipDebugger(ToString(arg)));
             if (s.Type === 'throw') {
               return s;
             }
@@ -82,7 +90,7 @@ export function createRealm({ printCompatMode = false }: CreateRealmOptions = {}
           return Value.undefined;
         } else {
           const formatted = args.map((a: any, i: number) => {
-            if (i === 0 && Type(a) === 'String') {
+            if (i === 0 && a instanceof JSStringValue) {
               return a.stringValue();
             }
             return inspect(a);
@@ -91,7 +99,7 @@ export function createRealm({ printCompatMode = false }: CreateRealmOptions = {}
         }
       }
       return Value.undefined;
-    }, 0, Value('print'), []));
+    }, 0, Value('print'), [])));
 
     ([
       ['global', realm.GlobalObject],
@@ -99,7 +107,7 @@ export function createRealm({ printCompatMode = false }: CreateRealmOptions = {}
         const info = createRealm();
         return info.$262;
       }],
-      ['evalScript', ([sourceText]) => evalQ((Q) => realm.evaluateScript(Q(ToString(sourceText)).stringValue())), 1],
+      ['evalScript', ([sourceText]) => evalQ((Q) => realm.evaluateScript(Q(skipDebugger(ToString(sourceText))).stringValue())), 1],
       ['detachArrayBuffer', ([arrayBuffer]) => {
         if (!isArrayBufferObject(arrayBuffer)) {
           return surroundingAgent.Throw('TypeError', 'Raw', 'Argument must be an ArrayBuffer');
@@ -118,11 +126,11 @@ export function createRealm({ printCompatMode = false }: CreateRealmOptions = {}
       }, 1],
     ] as [string, NativeSteps | Value][]).forEach(([name, value, length = 0]) => {
       const v = value instanceof Value ? value : CreateBuiltinFunction(value as NativeSteps, length, Value(name), []);
-      CreateDataProperty($262, Value(name), v as Value);
+      skipDebugger(CreateDataProperty($262, Value(name), v as Value));
     });
 
-    CreateDataProperty(realm.GlobalObject, Value('$262'), $262);
-    CreateDataProperty(realm.GlobalObject, Value('$'), $262);
+    skipDebugger(CreateDataProperty(realm.GlobalObject, Value('$262'), $262));
+    skipDebugger(CreateDataProperty(realm.GlobalObject, Value('$'), $262));
 
     return {
       realm,

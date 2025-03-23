@@ -1,5 +1,5 @@
-import type { PlainCompletion } from './completion.mts';
-import { surroundingAgent } from './engine.mts';
+import type { PlainCompletion, YieldCompletion } from './completion.mts';
+import { surroundingAgent } from './host-defined/engine.mts';
 import { OutOfRange } from './helpers.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
 import {
@@ -74,20 +74,22 @@ import {
   Evaluate_AnyFunctionBody,
   Evaluate_ExpressionBody,
 } from './runtime-semantics/all.mts';
-import type {
-  AbruptCompletion, ExpressionCompletion, ReferenceRecord, ReturnCompletion, Value,
+import {
+  type AbruptCompletion, Assert, type ReferenceRecord, type ReturnCompletion, Value,
+  type ValueCompletion,
 } from '#self';
 
-export type Evaluator<Result> = Generator<Value, Result, unknown>;
-export type StatementEvaluator<T = void | Value> = Evaluator<PlainCompletion<T> | AbruptCompletion>;
-export type ExpressionEvaluator<T = ReferenceRecord | Value> = Evaluator<PlainCompletion<T>>;
+export type Evaluator<Result> = Generator<EvaluatorYieldType, Result, EvaluatorNextType>;
+export type PlainEvaluator<V = void> = Evaluator<PlainCompletion<V>>;
+export type ValueEvaluator<V extends Value = Value> = Evaluator<ValueCompletion<V>>;
+export type ExpressionEvaluator = Evaluator<PlainCompletion<ReferenceRecord | Value>>;
+export type StatementEvaluator = Evaluator<PlainCompletion<void | Value> | AbruptCompletion>;
 export type ReferenceEvaluator = Evaluator<PlainCompletion<ReferenceRecord>>;
-export type ValueEvaluator = Evaluator<ExpressionCompletion>;
-export type YieldEvaluator = Evaluator<PlainCompletion<Value> | ReturnCompletion>;
-
+export type YieldEvaluator = Evaluator<YieldCompletion | Value>;
 export type ExpressionThatEvaluatedToReferenceRecord = ParseNode.IdentifierReference;
 
 export function Evaluate(node: ExpressionThatEvaluatedToReferenceRecord): ReferenceEvaluator
+export function Evaluate(node: ParseNode.Module | ParseNode.ScriptBody): ValueEvaluator
 export function Evaluate(node: ParseNode.Expression): ExpressionEvaluator
 export function Evaluate(node: ParseNode): StatementEvaluator
 export function* Evaluate(node: ParseNode): Evaluator<unknown> {
@@ -95,6 +97,10 @@ export function* Evaluate(node: ParseNode): Evaluator<unknown> {
 
   if (surroundingAgent.hostDefinedOptions.onNodeEvaluation) {
     surroundingAgent.hostDefinedOptions.onNodeEvaluation(node, surroundingAgent.currentRealmRecord);
+  }
+  if (surroundingAgent.hostDefinedOptions.onDebugger) {
+    const completion = yield { type: 'potential-debugger' };
+    Assert(completion.type === 'debugger-resume');
   }
 
   switch (node.type) {
@@ -127,7 +133,7 @@ export function* Evaluate(node: ParseNode): Evaluator<unknown> {
     case 'ForAwaitStatement':
       return yield* Evaluate_BreakableStatement(node);
     case 'ForBinding':
-      return Evaluate_ForBinding(node);
+      return yield* Evaluate_ForBinding(node);
     case 'CaseClause':
     case 'DefaultClause':
       return yield* Evaluate_CaseClause(node);
@@ -144,7 +150,7 @@ export function* Evaluate(node: ParseNode): Evaluator<unknown> {
     case 'TryStatement':
       return yield* Evaluate_TryStatement(node);
     case 'DebuggerStatement':
-      return Evaluate_DebuggerStatement(node);
+      return yield* Evaluate_DebuggerStatement(node);
     case 'WithStatement':
       return yield* Evaluate_WithStatement(node);
     // Declarations
@@ -168,7 +174,7 @@ export function* Evaluate(node: ParseNode): Evaluator<unknown> {
     case 'ThisExpression':
       return Evaluate_This(node);
     case 'IdentifierReference':
-      return Evaluate_IdentifierReference(node);
+      return yield* Evaluate_IdentifierReference(node);
     case 'NullLiteral':
     case 'BooleanLiteral':
     case 'NumericLiteral':
@@ -219,6 +225,7 @@ export function* Evaluate(node: ParseNode): Evaluator<unknown> {
     case 'CallExpression': {
       surroundingAgent.runningExecutionContext.callSite.setCallLocation(node);
       const r = yield* Evaluate_CallExpression(node);
+      yield { type: 'potential-debugger' };
       surroundingAgent.runningExecutionContext.callSite.setCallLocation(null);
       return r;
     }
@@ -255,7 +262,7 @@ export function* Evaluate(node: ParseNode): Evaluator<unknown> {
     case 'ConditionalExpression':
       return yield* Evaluate_ConditionalExpression(node);
     case 'RegularExpressionLiteral':
-      return Evaluate_RegularExpressionLiteral(node);
+      return yield* Evaluate_RegularExpressionLiteral(node);
     case 'AsyncBody':
     case 'GeneratorBody':
     case 'AsyncGeneratorBody':
@@ -265,4 +272,25 @@ export function* Evaluate(node: ParseNode): Evaluator<unknown> {
     default:
       throw new OutOfRange('Evaluate', node);
   }
+}
+
+export type EvaluatorYieldType =
+  | { type: 'debugger' }
+  | { type: 'potential-debugger' }
+  | { type: 'await' }
+  | { type: 'yield', value: Value }
+  | { type: 'async-generator-yield' }
+
+export type EvaluatorNextType = {
+  type: 'debugger-resume',
+  value: ValueCompletion | undefined
+} | {
+  type: 'await-resume',
+  value: ValueCompletion
+} | {
+  type: 'generator-resume',
+  value: ValueCompletion | ReturnCompletion
+} | {
+  type: 'async-generator-resume',
+  value: ValueCompletion | ReturnCompletion
 }
