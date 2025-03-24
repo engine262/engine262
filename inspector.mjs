@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 a93bc07dce34f75d19d9bad777a33c8c2606020d
+ * engine262 0.0.1 82ce9702778d690a60b4d6a97ccabfc08002f716
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-import { surroundingAgent, evalQ, ObjectValue, skipDebugger, Get, Value, ToString, inspectDate, IsCallable, isDataViewObject, isArrayBufferObject, isTypedArrayObject, isPromiseObject, isProxyExoticObject, isErrorObject, isWeakSetObject, isWeakMapObject, isSetObject, isMapObject, isDateObject, isRegExpObject, isArrayExoticObject, BigIntValue, NumberValue, JSStringValue, SymbolValue, SymbolDescriptiveString, R, isIntegerIndex, IntrinsicsFunctionToString, isECMAScriptFunctionObject, PrivateName, UndefinedValue, IsPromise, ThrowCompletion, getHostDefinedErrorStack, EnsureCompletion, getCurrentStack, EnvironmentRecord, DeclarativeEnvironmentRecord, OrdinaryObjectCreate, isArgumentExoticObject, Descriptor, ObjectEnvironmentRecord, GlobalEnvironmentRecord, NullValue, FunctionEnvironmentRecord, ModuleEnvironmentRecord, Call, ParseScript, runJobQueue, DefinePropertyOrThrow, CreateBuiltinFunction, CreateDataProperty, DetachArrayBuffer, CreateNonEnumerableDataPropertyOrThrow } from './engine262.mjs';
+import { surroundingAgent, evalQ, ObjectValue, skipDebugger, Get, Value, ToString, inspectDate, IsCallable, isDataViewObject, isArrayBufferObject, isTypedArrayObject, isPromiseObject, isProxyExoticObject, isErrorObject, isWeakSetObject, isWeakMapObject, isSetObject, isMapObject, isDateObject, isRegExpObject, isArrayExoticObject, BigIntValue, NumberValue, JSStringValue, SymbolValue, SymbolDescriptiveString, R, isIntegerIndex, IntrinsicsFunctionToString, isECMAScriptFunctionObject, PrivateName, UndefinedValue, IsPromise, ThrowCompletion, getHostDefinedErrorStack, EnsureCompletion, getCurrentStack, EnvironmentRecord, DeclarativeEnvironmentRecord, OrdinaryObjectCreate, isArgumentExoticObject, Descriptor, ObjectEnvironmentRecord, GlobalEnvironmentRecord, NullValue, FunctionEnvironmentRecord, ModuleEnvironmentRecord, Call, ParseScript, runJobQueue, DefinePropertyOrThrow, CreateBuiltinFunction, CreateDataProperty, gc, isBuiltinFunctionObject, DetachArrayBuffer, CreateNonEnumerableDataPropertyOrThrow } from './engine262.mjs';
 
 /*
 Test code: copy this into the inspector console.
@@ -1085,9 +1085,17 @@ function createInternals(realm) {
           return completion;
         }
         return Value.undefined;
+      },
+      gc,
+      *spec(v) {
+        if (isBuiltinFunctionObject(v) && v.nativeFunction.section) {
+          return Value(v.nativeFunction.section);
+        }
+        return Value.undefined;
       }
     });
     CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, Value('$'), $);
+    CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, Value('$262'), $);
   });
 }
 
