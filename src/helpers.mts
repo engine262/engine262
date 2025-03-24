@@ -185,7 +185,7 @@ export class PropertyKeyMap<V> implements Map<PropertyKeyValue, V> {
   }
 }
 
-export class JSStringSet implements Set<JSStringValue> {
+export class JSStringSet {
   #set = new Set<string>();
 
   constructor(value?: Iterable<JSStringValue | string>) {

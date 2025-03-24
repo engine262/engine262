@@ -297,15 +297,30 @@ export class Agent {
     this.#debugger_objectsCreatedDuringPreview.add(object);
   }
 
-  debugger_scopePreview<T>(cb: () => T) {
-    const old = this.#debugger_previewing;
-    this.#debugger_previewing = true;
-    try {
-      const res = cb();
-      return res;
-    } finally {
-      this.#debugger_previewing = old;
-      this.#debugger_objectsCreatedDuringPreview.clear();
+  debugger_scopePreview(): Disposable | null
+
+  debugger_scopePreview<T>(cb: () => T): T
+
+  debugger_scopePreview<T>(cb?: () => T): T | Disposable | null {
+    if (!cb) {
+      const old = this.#debugger_previewing;
+      this.#debugger_previewing = true;
+      return {
+        [Symbol.dispose]: () => {
+          this.#debugger_previewing = old;
+          this.#debugger_objectsCreatedDuringPreview.clear();
+        },
+      };
+    } else {
+      const old = this.#debugger_previewing;
+      this.#debugger_previewing = true;
+      try {
+        const res = cb();
+        return res;
+      } finally {
+        this.#debugger_previewing = old;
+        this.#debugger_objectsCreatedDuringPreview.clear();
+      }
     }
   }
 }

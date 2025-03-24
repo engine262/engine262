@@ -235,16 +235,37 @@ export class ManagedRealm extends Realm {
     this.topContext = newContext;
   }
 
-  scope<T>(cb: () => T, inspectorPreview = false) {
-    if (this.active) {
-      return cb();
+  scope(inspectorPreview?: boolean): Disposable | null;
+
+  scope<T>(cb: () => T, inspectorPreview?: boolean): T
+
+  scope<T>(arg0?: (() => T) | boolean, arg2?: boolean): T | Disposable | null {
+    if (typeof arg0 !== 'function') {
+      const inspectorPreview = arg0;
+      if (this.active) {
+        return null;
+      }
+      this.active = true;
+      surroundingAgent.executionContextStack.push(this.topContext);
+      using _ = inspectorPreview ? surroundingAgent.debugger_scopePreview() : null;
+      return {
+        [Symbol.dispose]: () => {
+          surroundingAgent.executionContextStack.pop(this.topContext);
+          this.active = false;
+        },
+      };
+    } else {
+      const callback = arg0;
+      if (this.active) {
+        return arg0();
+      }
+      this.active = true;
+      surroundingAgent.executionContextStack.push(this.topContext);
+      const result = arg2 ? surroundingAgent.debugger_scopePreview(callback) : callback();
+      surroundingAgent.executionContextStack.pop(this.topContext);
+      this.active = false;
+      return result;
     }
-    this.active = true;
-    surroundingAgent.executionContextStack.push(this.topContext);
-    const r = inspectorPreview ? surroundingAgent.debugger_scopePreview(cb) : cb();
-    surroundingAgent.executionContextStack.pop(this.topContext);
-    this.active = false;
-    return r;
   }
 
   compileScript(sourceText: string, hostDefined?: ParseScriptHostDefined) {

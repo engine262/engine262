@@ -56,6 +56,21 @@ export default defineConfig([
           return undefined;
         },
       },
+      {
+        name: 'dts',
+        buildStart() {
+          this.emitFile({
+            type: 'asset',
+            fileName: 'inspector.d.ts',
+            source: 'export type * from "../lib/inspector/index.d.mts";',
+          });
+          this.emitFile({
+            type: 'asset',
+            fileName: 'inspector.d.mts',
+            source: 'export type * from "../lib/inspector/index.d.mts";',
+          });
+        },
+      },
     ],
     external: ['./engine262.mjs'],
     output: [
@@ -91,6 +106,21 @@ export default defineConfig([
           }],
         ],
       }),
+      {
+        name: 'dts',
+        buildStart() {
+          this.emitFile({
+            type: 'asset',
+            fileName: 'engine262.d.ts',
+            source: 'export type * from "../declaration/index.d.mts";',
+          });
+          this.emitFile({
+            type: 'asset',
+            fileName: 'engine262.d.mts',
+            source: 'export type * from "../declaration/index.d.mts";',
+          });
+        },
+      },
     ],
     output: [
       {

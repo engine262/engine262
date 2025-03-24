@@ -106,7 +106,7 @@ module.exports = ({ types: t, template }) => {
       template: template(`
       /* ReturnIfAbrupt */
       let ID = ARGUMENT;
-      /* c8 ignore if */ if (ID && typeof ID === 'object' && 'next' in ID) throw new Assert.Error('Forgot to yield*');
+      /* c8 ignore if */ if (ID && typeof ID === 'object' && 'next' in ID) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */ if (ID instanceof AbruptCompletion) return ID;
       /* c8 ignore if */ if (ID instanceof Completion) ID = ID.Value;
       `, { preserveComments: true }),

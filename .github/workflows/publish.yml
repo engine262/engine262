@@ -49,6 +49,7 @@ jobs:
 
           cp -r lib/* .
           git add engine262.*
+          git add inspector.*
           git commit -m "autobuild" || exit 0 # exit silently if nothing changed
           git push -u github gh-pages
         env:

@@ -329,6 +329,9 @@ export function ReturnIfAbrupt<const T>(_completion: T): ReturnIfAbrupt<T> {
 }
 
 function ReturnIfAbruptRuntime<const T>(completion: T): ReturnIfAbrupt<T> {
+  if (typeof completion === 'object' && completion && 'next' in completion) {
+    throw new TypeError('Forgot to yield* on the completion.');
+  }
   const c = EnsureCompletion(completion);
   if (c.Type === 'normal') {
     return c.Value as ReturnIfAbrupt<T>;
