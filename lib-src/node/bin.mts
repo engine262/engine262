@@ -115,21 +115,23 @@ createConsole(realm, {
     process.stderr.write(`${_format(...args)}\n`);
   },
 });
-skipDebugger(CreateDataProperty(realm.GlobalObject, Value('print'), CreateBuiltinFunction(function* print(args) {
-  for (let i = 0; i < args.length; i += 1) {
-    const arg = args[i];
-    const s = yield* ToString(arg);
-    if (s instanceof ThrowCompletion) {
-      return s;
+realm.scope(() => {
+  skipDebugger(CreateDataProperty(realm.GlobalObject, Value('print'), CreateBuiltinFunction(function* print(args) {
+    for (let i = 0; i < args.length; i += 1) {
+      const arg = args[i];
+      const s = yield* ToString(arg);
+      if (s instanceof ThrowCompletion) {
+        return s;
+      }
+      process.stdout.write(ValueOfNormalCompletion(s).stringValue());
+      if (i !== args.length - 1) {
+        process.stdout.write(' ');
+      }
     }
-    process.stdout.write(ValueOfNormalCompletion(s).stringValue());
-    if (i !== args.length - 1) {
-      process.stdout.write(' ');
-    }
-  }
-  process.stdout.write('\n');
-  return Value.undefined;
-}, 0, Value('print'), [])));
+    process.stdout.write('\n');
+    return Value.undefined;
+  }, 0, Value('print'), [])));
+});
 createInternals(realm);
 
 if (argv.values.inspector !== false) {
