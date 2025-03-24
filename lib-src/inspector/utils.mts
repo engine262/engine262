@@ -2,7 +2,8 @@ import type Protocol from 'devtools-protocol';
 import { Inspector } from './index.mts';
 import {
   CreateBuiltinFunction, CreateDataProperty, CreateNonEnumerableDataPropertyOrThrow, DefinePropertyOrThrow, Descriptor, DetachArrayBuffer, isArrayBufferObject, NormalCompletion, OrdinaryObjectCreate, surroundingAgent, ThrowCompletion, skipDebugger, Value, type Arguments, type ManagedRealm,
-  type ValueEvaluator,
+  type ValueEvaluator, gc,
+  isBuiltinFunctionObject,
 } from '#self';
 
 const consoleMethods = [
@@ -85,7 +86,15 @@ export function createInternals(realm: ManagedRealm) {
         }
         return Value.undefined;
       },
+      gc,
+      * spec(v) {
+        if (isBuiltinFunctionObject(v) && v.nativeFunction.section) {
+          return Value(v.nativeFunction.section);
+        }
+        return Value.undefined;
+      },
     });
     CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, Value('$'), $);
+    CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, Value('$262'), $);
   });
 }
