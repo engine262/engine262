@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 9ae0bf8c9ecc8eed7a773942f3e5a87d4f2bdf76
+ * engine262 0.0.1 a93bc07dce34f75d19d9bad777a33c8c2606020d
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -51,7 +51,7 @@ const ArgumentExoticObject = {
       /* ReturnIfAbrupt */
       let _temp2 = yield* Get(map, P);
       /* c8 ignore if */
-      if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+      if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp2 instanceof AbruptCompletion) return _temp2;
       /* c8 ignore if */
@@ -99,7 +99,7 @@ const ArgumentExoticObject = {
     /* ReturnIfAbrupt */
     let _temp5 = yield* OrdinaryDefineOwnProperty(args, P, newArgDesc);
     /* c8 ignore if */
-    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp5 instanceof AbruptCompletion) return _temp5;
     /* c8 ignore if */
@@ -186,7 +186,7 @@ const ArgumentExoticObject = {
     /* ReturnIfAbrupt */
     let _temp9 = yield* OrdinaryDelete(args, P);
     /* c8 ignore if */
-    if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+    if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp9 instanceof AbruptCompletion) return _temp9;
     /* c8 ignore if */
@@ -582,7 +582,7 @@ function* ArraySpeciesCreate(originalArray, length) {
   /* ReturnIfAbrupt */
   let _temp6 = IsArray(originalArray);
   /* c8 ignore if */
-  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp6 instanceof AbruptCompletion) return _temp6;
   /* c8 ignore if */
@@ -594,7 +594,7 @@ function* ArraySpeciesCreate(originalArray, length) {
   /* ReturnIfAbrupt */
   let _temp7 = yield* Get(originalArray, Value('constructor'));
   /* c8 ignore if */
-  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp7 instanceof AbruptCompletion) return _temp7;
   /* c8 ignore if */
@@ -605,7 +605,7 @@ function* ArraySpeciesCreate(originalArray, length) {
     /* ReturnIfAbrupt */
     let _temp8 = GetFunctionRealm(C);
     /* c8 ignore if */
-    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp8 instanceof AbruptCompletion) return _temp8;
     /* c8 ignore if */
@@ -621,7 +621,7 @@ function* ArraySpeciesCreate(originalArray, length) {
     /* ReturnIfAbrupt */
     let _temp9 = yield* Get(C, wellKnownSymbols.species);
     /* c8 ignore if */
-    if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+    if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp9 instanceof AbruptCompletion) return _temp9;
     /* c8 ignore if */
@@ -650,7 +650,7 @@ function* ArraySetLength(A, Desc) {
   /* ReturnIfAbrupt */
   let _temp10 = yield* ToUint32(Desc.Value);
   /* c8 ignore if */
-  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp10 instanceof AbruptCompletion) return _temp10;
   /* c8 ignore if */
@@ -659,7 +659,7 @@ function* ArraySetLength(A, Desc) {
   /* ReturnIfAbrupt */
   let _temp11 = yield* ToNumber(Desc.Value);
   /* c8 ignore if */
-  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp11 instanceof AbruptCompletion) return _temp11;
   /* c8 ignore if */
@@ -787,7 +787,7 @@ function* IsConcatSpreadable(O) {
   /* ReturnIfAbrupt */
   let _temp17 = yield* Get(O, wellKnownSymbols.isConcatSpreadable);
   /* c8 ignore if */
-  if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield*');
+  if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp17 instanceof AbruptCompletion) return _temp17;
   /* c8 ignore if */
@@ -819,7 +819,7 @@ function* CompareArrayElements(x, y, comparefn) {
     /* ReturnIfAbrupt */
     let _temp19 = yield* Call(comparefn, Value.undefined, [x, y]);
     /* c8 ignore if */
-    if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield*');
+    if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp19 instanceof AbruptCompletion) return _temp19;
     /* c8 ignore if */
@@ -827,7 +827,7 @@ function* CompareArrayElements(x, y, comparefn) {
     /* ReturnIfAbrupt */
     let _temp18 = yield* ToNumber(_temp19);
     /* c8 ignore if */
-    if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield*');
+    if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp18 instanceof AbruptCompletion) return _temp18;
     /* c8 ignore if */
@@ -845,7 +845,7 @@ function* CompareArrayElements(x, y, comparefn) {
   /* ReturnIfAbrupt */
   let _temp20 = yield* ToString(x);
   /* c8 ignore if */
-  if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield*');
+  if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp20 instanceof AbruptCompletion) return _temp20;
   /* c8 ignore if */
@@ -855,7 +855,7 @@ function* CompareArrayElements(x, y, comparefn) {
   /* ReturnIfAbrupt */
   let _temp21 = yield* ToString(y);
   /* c8 ignore if */
-  if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield*');
+  if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp21 instanceof AbruptCompletion) return _temp21;
   /* c8 ignore if */
@@ -900,7 +900,7 @@ function CreateArrayIterator(array, kind) {
         /* ReturnIfAbrupt */
         let _temp22 = yield* LengthOfArrayLike(array);
         /* c8 ignore if */
-        if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield*');
+        if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp22 instanceof AbruptCompletion) return _temp22;
         /* c8 ignore if */
@@ -935,7 +935,7 @@ function CreateArrayIterator(array, kind) {
         /* ReturnIfAbrupt */
         let _temp24 = yield* Get(array, elementKey);
         /* c8 ignore if */
-        if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) throw new Assert.Error('Forgot to yield*');
+        if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp24 instanceof AbruptCompletion) return _temp24;
         /* c8 ignore if */
@@ -955,7 +955,7 @@ function CreateArrayIterator(array, kind) {
       /* ReturnIfAbrupt */
       let _temp25 = yield* GeneratorYield(CreateIteratorResultObject(result, Value.false));
       /* c8 ignore if */
-      if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield*');
+      if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp25 instanceof AbruptCompletion) return _temp25;
       /* c8 ignore if */
@@ -1118,6 +1118,64 @@ function _toPrimitive(t, r) {
 function _toPropertyKey(t) {
   var i = _toPrimitive(t, "string");
   return "symbol" == typeof i ? i : i + "";
+}
+function _usingCtx() {
+  var r = "function" == typeof SuppressedError ? SuppressedError : function (r, e) {
+      var n = Error();
+      return n.name = "SuppressedError", n.error = r, n.suppressed = e, n;
+    },
+    e = {},
+    n = [];
+  function using(r, e) {
+    if (null != e) {
+      if (Object(e) !== e) throw new TypeError("using declarations can only be used with objects, functions, null, or undefined.");
+      if (r) var o = e[Symbol.asyncDispose || Symbol.for("Symbol.asyncDispose")];
+      if (void 0 === o && (o = e[Symbol.dispose || Symbol.for("Symbol.dispose")], r)) var t = o;
+      if ("function" != typeof o) throw new TypeError("Object is not disposable.");
+      t && (o = function () {
+        try {
+          t.call(e);
+        } catch (r) {
+          return Promise.reject(r);
+        }
+      }), n.push({
+        v: e,
+        d: o,
+        a: r
+      });
+    } else r && n.push({
+      d: e,
+      a: r
+    });
+    return e;
+  }
+  return {
+    e: e,
+    u: using.bind(null, false),
+    a: using.bind(null, true),
+    d: function () {
+      var o,
+        t = this.e,
+        s = 0;
+      function next() {
+        for (; o = n.pop();) try {
+          if (!o.a && 1 === s) return s = 0, n.push(o), Promise.resolve().then(next);
+          if (o.d) {
+            var r = o.d.call(o.v);
+            if (o.a) return s |= 2, Promise.resolve(r).then(next, err);
+          } else s |= 1;
+        } catch (r) {
+          return err(r);
+        }
+        if (1 === s) return t !== e ? Promise.reject(t) : Promise.resolve();
+        if (t !== e) throw t;
+      }
+      function err(n) {
+        return t = t !== e ? new r(n, t) : n, next();
+      }
+      return next();
+    }
+  };
 }
 
 const kInternal = Symbol('kInternal');
@@ -2451,7 +2509,7 @@ class ObjectValue extends Value {
     /* ReturnIfAbrupt */
     let _temp12 = surroundingAgent.debugger_tryTouchDuringPreview(this);
     /* c8 ignore if */
-    if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield*');
+    if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp12 instanceof AbruptCompletion) return _temp12;
     /* c8 ignore if */
@@ -2469,7 +2527,7 @@ class ObjectValue extends Value {
     /* ReturnIfAbrupt */
     let _temp13 = surroundingAgent.debugger_tryTouchDuringPreview(this);
     /* c8 ignore if */
-    if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield*');
+    if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp13 instanceof AbruptCompletion) return _temp13;
     /* c8 ignore if */
@@ -2485,7 +2543,7 @@ class ObjectValue extends Value {
     /* ReturnIfAbrupt */
     let _temp14 = surroundingAgent.debugger_tryTouchDuringPreview(this);
     /* c8 ignore if */
-    if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield*');
+    if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp14 instanceof AbruptCompletion) return _temp14;
     /* c8 ignore if */
@@ -2502,7 +2560,7 @@ class ObjectValue extends Value {
     /* ReturnIfAbrupt */
     let _temp15 = surroundingAgent.debugger_tryTouchDuringPreview(Receiver);
     /* c8 ignore if */
-    if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield*');
+    if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp15 instanceof AbruptCompletion) return _temp15;
     /* c8 ignore if */
@@ -2513,7 +2571,7 @@ class ObjectValue extends Value {
     /* ReturnIfAbrupt */
     let _temp16 = surroundingAgent.debugger_tryTouchDuringPreview(this);
     /* c8 ignore if */
-    if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield*');
+    if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp16 instanceof AbruptCompletion) return _temp16;
     /* c8 ignore if */
@@ -5251,7 +5309,7 @@ function* Evaluate_ClassExpression(ClassExpression) {
     /* ReturnIfAbrupt */
     let _temp = yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, Value(''));
     /* c8 ignore if */
-    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) return _temp;
     /* c8 ignore if */
@@ -5269,7 +5327,7 @@ function* Evaluate_ClassExpression(ClassExpression) {
   /* ReturnIfAbrupt */
   let _temp2 = yield* ClassDefinitionEvaluation(ClassTail, className, className);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -6456,7 +6514,7 @@ class ObjectEnvironmentRecord extends EnvironmentRecord {
     /* ReturnIfAbrupt */
     let _temp = yield* HasProperty(bindings, N);
     /* c8 ignore if */
-    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) return _temp;
     /* c8 ignore if */
@@ -6474,7 +6532,7 @@ class ObjectEnvironmentRecord extends EnvironmentRecord {
     /* ReturnIfAbrupt */
     let _temp2 = yield* Get(bindings, wellKnownSymbols.unscopables);
     /* c8 ignore if */
-    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp2 instanceof AbruptCompletion) return _temp2;
     /* c8 ignore if */
@@ -6485,7 +6543,7 @@ class ObjectEnvironmentRecord extends EnvironmentRecord {
       /* ReturnIfAbrupt */
       let _temp4 = yield* Get(unscopables, N);
       /* c8 ignore if */
-      if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+      if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp4 instanceof AbruptCompletion) return _temp4;
       /* c8 ignore if */
@@ -6526,7 +6584,7 @@ class ObjectEnvironmentRecord extends EnvironmentRecord {
       Configurable: D
     }));
     /* c8 ignore if */
-    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp5 instanceof AbruptCompletion) return _temp5;
     /* c8 ignore if */
@@ -6548,7 +6606,7 @@ class ObjectEnvironmentRecord extends EnvironmentRecord {
     /* ReturnIfAbrupt */
     let _temp6 = yield* envRec.SetMutableBinding(N, V, Value.false);
     /* c8 ignore if */
-    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp6 instanceof AbruptCompletion) return _temp6;
     /* c8 ignore if */
@@ -6565,7 +6623,7 @@ class ObjectEnvironmentRecord extends EnvironmentRecord {
     /* ReturnIfAbrupt */
     let _temp7 = yield* HasProperty(bindings, N);
     /* c8 ignore if */
-    if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+    if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp7 instanceof AbruptCompletion) return _temp7;
     /* c8 ignore if */
@@ -6579,7 +6637,7 @@ class ObjectEnvironmentRecord extends EnvironmentRecord {
     /* ReturnIfAbrupt */
     let _temp8 = yield* Set$1(bindings, N, V, S);
     /* c8 ignore if */
-    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp8 instanceof AbruptCompletion) return _temp8;
     /* c8 ignore if */
@@ -6597,7 +6655,7 @@ class ObjectEnvironmentRecord extends EnvironmentRecord {
     /* ReturnIfAbrupt */
     let _temp9 = yield* HasProperty(bindings, N);
     /* c8 ignore if */
-    if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+    if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp9 instanceof AbruptCompletion) return _temp9;
     /* c8 ignore if */
@@ -6886,7 +6944,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     /* ReturnIfAbrupt */
     let _temp11 = yield* ObjRec.SetMutableBinding(N, V, S);
     /* c8 ignore if */
-    if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+    if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp11 instanceof AbruptCompletion) return _temp11;
     /* c8 ignore if */
@@ -6930,7 +6988,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     /* ReturnIfAbrupt */
     let _temp12 = yield* HasOwnProperty(globalObject, N);
     /* c8 ignore if */
-    if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield*');
+    if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp12 instanceof AbruptCompletion) return _temp12;
     /* c8 ignore if */
@@ -6941,7 +6999,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
       /* ReturnIfAbrupt */
       let _temp13 = yield* ObjRec.DeleteBinding(N);
       /* c8 ignore if */
-      if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield*');
+      if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp13 instanceof AbruptCompletion) return _temp13;
       /* c8 ignore if */
@@ -7027,7 +7085,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     /* ReturnIfAbrupt */
     let _temp14 = yield* globalObject.GetOwnProperty(N);
     /* c8 ignore if */
-    if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield*');
+    if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp14 instanceof AbruptCompletion) return _temp14;
     /* c8 ignore if */
@@ -7057,7 +7115,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     /* ReturnIfAbrupt */
     let _temp15 = yield* HasOwnProperty(globalObject, N);
     /* c8 ignore if */
-    if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield*');
+    if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp15 instanceof AbruptCompletion) return _temp15;
     /* c8 ignore if */
@@ -7083,7 +7141,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     /* ReturnIfAbrupt */
     let _temp16 = yield* globalObject.GetOwnProperty(N);
     /* c8 ignore if */
-    if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield*');
+    if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp16 instanceof AbruptCompletion) return _temp16;
     /* c8 ignore if */
@@ -7118,7 +7176,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     /* ReturnIfAbrupt */
     let _temp17 = yield* HasOwnProperty(globalObject, N);
     /* c8 ignore if */
-    if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield*');
+    if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp17 instanceof AbruptCompletion) return _temp17;
     /* c8 ignore if */
@@ -7128,7 +7186,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     /* ReturnIfAbrupt */
     let _temp18 = yield* IsExtensible(globalObject);
     /* c8 ignore if */
-    if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield*');
+    if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp18 instanceof AbruptCompletion) return _temp18;
     /* c8 ignore if */
@@ -7139,7 +7197,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
       /* ReturnIfAbrupt */
       let _temp19 = yield* ObjRec.CreateMutableBinding(N, D);
       /* c8 ignore if */
-      if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield*');
+      if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp19 instanceof AbruptCompletion) return _temp19;
       /* c8 ignore if */
@@ -7148,7 +7206,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
       /* ReturnIfAbrupt */
       let _temp20 = yield* ObjRec.InitializeBinding(N, Value.undefined);
       /* c8 ignore if */
-      if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield*');
+      if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp20 instanceof AbruptCompletion) return _temp20;
       /* c8 ignore if */
@@ -7177,7 +7235,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     /* ReturnIfAbrupt */
     let _temp21 = yield* globalObject.GetOwnProperty(N);
     /* c8 ignore if */
-    if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield*');
+    if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp21 instanceof AbruptCompletion) return _temp21;
     /* c8 ignore if */
@@ -7203,7 +7261,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     /* ReturnIfAbrupt */
     let _temp22 = yield* DefinePropertyOrThrow(globalObject, N, desc);
     /* c8 ignore if */
-    if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield*');
+    if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp22 instanceof AbruptCompletion) return _temp22;
     /* c8 ignore if */
@@ -7213,7 +7271,7 @@ class GlobalEnvironmentRecord extends EnvironmentRecord {
     /* ReturnIfAbrupt */
     let _temp23 = yield* Set$1(globalObject, N, V, Value.false);
     /* c8 ignore if */
-    if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield*');
+    if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp23 instanceof AbruptCompletion) return _temp23;
     /* c8 ignore if */
@@ -7325,7 +7383,7 @@ function* GetIdentifierReference(env, name, strict) {
   /* ReturnIfAbrupt */
   let _temp24 = yield* env.HasBinding(name);
   /* c8 ignore if */
-  if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) throw new Assert.Error('Forgot to yield*');
+  if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp24 instanceof AbruptCompletion) return _temp24;
   /* c8 ignore if */
@@ -7433,7 +7491,7 @@ function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
     /* ReturnIfAbrupt */
     let _temp = yield* GetValue(superclassRef);
     /* c8 ignore if */
-    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) return _temp;
     /* c8 ignore if */
@@ -7452,7 +7510,7 @@ function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
       /* ReturnIfAbrupt */
       let _temp2 = yield* Get(superclass, Value('prototype'));
       /* c8 ignore if */
-      if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+      if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp2 instanceof AbruptCompletion) return _temp2;
       /* c8 ignore if */
@@ -7522,7 +7580,7 @@ function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
         /* ReturnIfAbrupt */
         let _temp4 = yield* Construct(func, args, NewTarget);
         /* c8 ignore if */
-        if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+        if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp4 instanceof AbruptCompletion) return _temp4;
         /* c8 ignore if */
@@ -7532,7 +7590,7 @@ function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
         /* ReturnIfAbrupt */
         let _temp5 = yield* OrdinaryCreateFromConstructor(NewTarget, '%Object.prototype%');
         /* c8 ignore if */
-        if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+        if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp5 instanceof AbruptCompletion) return _temp5;
         /* c8 ignore if */
@@ -7545,7 +7603,7 @@ function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
       /* ReturnIfAbrupt */
       let _temp6 = yield* InitializeInstanceElements(result, F);
       /* c8 ignore if */
-      if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+      if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp6 instanceof AbruptCompletion) return _temp6;
       /* c8 ignore if */
@@ -7770,7 +7828,7 @@ function* DefineMethod(MethodDefinition, object, functionPrototype) {
   /* ReturnIfAbrupt */
   let _temp = yield* Evaluate_PropertyName(ClassElementName);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -7861,7 +7919,7 @@ function* Evaluate_PropertyName(PropertyName) {
         /* ReturnIfAbrupt */
         let _temp2 = yield* GetValue(exprValue);
         /* c8 ignore if */
-        if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+        if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp2 instanceof AbruptCompletion) return _temp2;
         /* c8 ignore if */
@@ -8030,7 +8088,7 @@ function* Evaluate_AssignmentExpression({
       /* ReturnIfAbrupt */
       let _temp = yield* Evaluate(LeftHandSideExpression);
       /* c8 ignore if */
-      if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+      if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp instanceof AbruptCompletion) return _temp;
       /* c8 ignore if */
@@ -8059,7 +8117,7 @@ function* Evaluate_AssignmentExpression({
         /* ReturnIfAbrupt */
         let _temp2 = yield* GetValue(rref);
         /* c8 ignore if */
-        if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+        if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp2 instanceof AbruptCompletion) return _temp2;
         /* c8 ignore if */
@@ -8070,7 +8128,7 @@ function* Evaluate_AssignmentExpression({
       /* ReturnIfAbrupt */
       let _temp3 = yield* PutValue(lref, rval);
       /* c8 ignore if */
-      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp3 instanceof AbruptCompletion) return _temp3;
       /* c8 ignore if */
@@ -8086,7 +8144,7 @@ function* Evaluate_AssignmentExpression({
     /* ReturnIfAbrupt */
     let _temp4 = yield* GetValue(rref);
     /* c8 ignore if */
-    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) return _temp4;
     /* c8 ignore if */
@@ -8096,7 +8154,7 @@ function* Evaluate_AssignmentExpression({
     /* ReturnIfAbrupt */
     let _temp5 = yield* DestructuringAssignmentEvaluation(assignmentPattern, rval);
     /* c8 ignore if */
-    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp5 instanceof AbruptCompletion) return _temp5;
     /* c8 ignore if */
@@ -8107,7 +8165,7 @@ function* Evaluate_AssignmentExpression({
     /* ReturnIfAbrupt */
     let _temp6 = yield* Evaluate(LeftHandSideExpression);
     /* c8 ignore if */
-    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp6 instanceof AbruptCompletion) return _temp6;
     /* c8 ignore if */
@@ -8118,7 +8176,7 @@ function* Evaluate_AssignmentExpression({
     /* ReturnIfAbrupt */
     let _temp7 = yield* GetValue(lref);
     /* c8 ignore if */
-    if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+    if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp7 instanceof AbruptCompletion) return _temp7;
     /* c8 ignore if */
@@ -8153,7 +8211,7 @@ function* Evaluate_AssignmentExpression({
       /* ReturnIfAbrupt */
       let _temp9 = yield* GetValue(rref);
       /* c8 ignore if */
-      if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+      if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp9 instanceof AbruptCompletion) return _temp9;
       /* c8 ignore if */
@@ -8164,7 +8222,7 @@ function* Evaluate_AssignmentExpression({
     /* ReturnIfAbrupt */
     let _temp10 = yield* PutValue(lref, rval);
     /* c8 ignore if */
-    if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+    if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp10 instanceof AbruptCompletion) return _temp10;
     /* c8 ignore if */
@@ -8175,7 +8233,7 @@ function* Evaluate_AssignmentExpression({
     /* ReturnIfAbrupt */
     let _temp11 = yield* Evaluate(LeftHandSideExpression);
     /* c8 ignore if */
-    if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+    if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp11 instanceof AbruptCompletion) return _temp11;
     /* c8 ignore if */
@@ -8186,7 +8244,7 @@ function* Evaluate_AssignmentExpression({
     /* ReturnIfAbrupt */
     let _temp12 = yield* GetValue(lref);
     /* c8 ignore if */
-    if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield*');
+    if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp12 instanceof AbruptCompletion) return _temp12;
     /* c8 ignore if */
@@ -8221,7 +8279,7 @@ function* Evaluate_AssignmentExpression({
       /* ReturnIfAbrupt */
       let _temp14 = yield* GetValue(rref);
       /* c8 ignore if */
-      if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield*');
+      if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp14 instanceof AbruptCompletion) return _temp14;
       /* c8 ignore if */
@@ -8232,7 +8290,7 @@ function* Evaluate_AssignmentExpression({
     /* ReturnIfAbrupt */
     let _temp15 = yield* PutValue(lref, rval);
     /* c8 ignore if */
-    if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield*');
+    if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp15 instanceof AbruptCompletion) return _temp15;
     /* c8 ignore if */
@@ -8243,7 +8301,7 @@ function* Evaluate_AssignmentExpression({
     /* ReturnIfAbrupt */
     let _temp16 = yield* Evaluate(LeftHandSideExpression);
     /* c8 ignore if */
-    if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield*');
+    if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp16 instanceof AbruptCompletion) return _temp16;
     /* c8 ignore if */
@@ -8254,7 +8312,7 @@ function* Evaluate_AssignmentExpression({
     /* ReturnIfAbrupt */
     let _temp17 = yield* GetValue(lref);
     /* c8 ignore if */
-    if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield*');
+    if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp17 instanceof AbruptCompletion) return _temp17;
     /* c8 ignore if */
@@ -8277,7 +8335,7 @@ function* Evaluate_AssignmentExpression({
       /* ReturnIfAbrupt */
       let _temp18 = yield* GetValue(rref);
       /* c8 ignore if */
-      if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield*');
+      if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp18 instanceof AbruptCompletion) return _temp18;
       /* c8 ignore if */
@@ -8288,7 +8346,7 @@ function* Evaluate_AssignmentExpression({
     /* ReturnIfAbrupt */
     let _temp19 = yield* PutValue(lref, rval);
     /* c8 ignore if */
-    if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield*');
+    if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp19 instanceof AbruptCompletion) return _temp19;
     /* c8 ignore if */
@@ -8299,7 +8357,7 @@ function* Evaluate_AssignmentExpression({
     /* ReturnIfAbrupt */
     let _temp20 = yield* Evaluate(LeftHandSideExpression);
     /* c8 ignore if */
-    if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield*');
+    if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp20 instanceof AbruptCompletion) return _temp20;
     /* c8 ignore if */
@@ -8310,7 +8368,7 @@ function* Evaluate_AssignmentExpression({
     /* ReturnIfAbrupt */
     let _temp21 = yield* GetValue(lref);
     /* c8 ignore if */
-    if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield*');
+    if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp21 instanceof AbruptCompletion) return _temp21;
     /* c8 ignore if */
@@ -8322,7 +8380,7 @@ function* Evaluate_AssignmentExpression({
     /* ReturnIfAbrupt */
     let _temp22 = yield* GetValue(rref);
     /* c8 ignore if */
-    if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield*');
+    if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp22 instanceof AbruptCompletion) return _temp22;
     /* c8 ignore if */
@@ -8351,7 +8409,7 @@ function* Evaluate_AssignmentExpression({
     /* ReturnIfAbrupt */
     let _temp23 = yield* PutValue(lref, r);
     /* c8 ignore if */
-    if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield*');
+    if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp23 instanceof AbruptCompletion) return _temp23;
     /* c8 ignore if */
@@ -8390,7 +8448,7 @@ function* Evaluate_CoalesceExpression({
   /* ReturnIfAbrupt */
   let _temp = yield* GetValue(lref);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -8442,7 +8500,7 @@ function* Evaluate_IfStatement({
   /* ReturnIfAbrupt */
   let _temp = yield* GetValue(exprRef);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -8485,7 +8543,7 @@ function* Evaluate_ImportCall({
   /* ReturnIfAbrupt */
   let _temp = surroundingAgent.debugger_cannotPreview;
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -8512,7 +8570,7 @@ function* Evaluate_ImportCall({
   /* ReturnIfAbrupt */
   let _temp3 = yield* GetValue(argRef);
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -8575,7 +8633,7 @@ function* Evaluate_ThrowStatement({
   /* ReturnIfAbrupt */
   let _temp = yield* GetValue(exprRef);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -8607,7 +8665,7 @@ function* Evaluate_UpdateExpression({
         /* ReturnIfAbrupt */
         let _temp3 = yield* GetValue(lhs);
         /* c8 ignore if */
-        if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+        if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp3 instanceof AbruptCompletion) return _temp3;
         /* c8 ignore if */
@@ -8615,7 +8673,7 @@ function* Evaluate_UpdateExpression({
         /* ReturnIfAbrupt */
         let _temp = yield* ToNumeric(_temp3);
         /* c8 ignore if */
-        if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+        if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp instanceof AbruptCompletion) return _temp;
         /* c8 ignore if */
@@ -8637,7 +8695,7 @@ function* Evaluate_UpdateExpression({
         /* ReturnIfAbrupt */
         let _temp2 = yield* PutValue(lhs, newValue);
         /* c8 ignore if */
-        if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+        if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp2 instanceof AbruptCompletion) return _temp2;
         /* c8 ignore if */
@@ -8656,7 +8714,7 @@ function* Evaluate_UpdateExpression({
         /* ReturnIfAbrupt */
         let _temp6 = yield* GetValue(lhs);
         /* c8 ignore if */
-        if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+        if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp6 instanceof AbruptCompletion) return _temp6;
         /* c8 ignore if */
@@ -8664,7 +8722,7 @@ function* Evaluate_UpdateExpression({
         /* ReturnIfAbrupt */
         let _temp4 = yield* ToNumeric(_temp6);
         /* c8 ignore if */
-        if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+        if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp4 instanceof AbruptCompletion) return _temp4;
         /* c8 ignore if */
@@ -8686,7 +8744,7 @@ function* Evaluate_UpdateExpression({
         /* ReturnIfAbrupt */
         let _temp5 = yield* PutValue(lhs, newValue);
         /* c8 ignore if */
-        if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+        if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp5 instanceof AbruptCompletion) return _temp5;
         /* c8 ignore if */
@@ -8705,7 +8763,7 @@ function* Evaluate_UpdateExpression({
         /* ReturnIfAbrupt */
         let _temp9 = yield* GetValue(expr);
         /* c8 ignore if */
-        if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+        if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp9 instanceof AbruptCompletion) return _temp9;
         /* c8 ignore if */
@@ -8713,7 +8771,7 @@ function* Evaluate_UpdateExpression({
         /* ReturnIfAbrupt */
         let _temp7 = yield* ToNumeric(_temp9);
         /* c8 ignore if */
-        if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+        if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp7 instanceof AbruptCompletion) return _temp7;
         /* c8 ignore if */
@@ -8735,7 +8793,7 @@ function* Evaluate_UpdateExpression({
         /* ReturnIfAbrupt */
         let _temp8 = yield* PutValue(expr, newValue);
         /* c8 ignore if */
-        if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+        if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp8 instanceof AbruptCompletion) return _temp8;
         /* c8 ignore if */
@@ -8754,7 +8812,7 @@ function* Evaluate_UpdateExpression({
         /* ReturnIfAbrupt */
         let _temp12 = yield* GetValue(expr);
         /* c8 ignore if */
-        if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield*');
+        if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp12 instanceof AbruptCompletion) return _temp12;
         /* c8 ignore if */
@@ -8762,7 +8820,7 @@ function* Evaluate_UpdateExpression({
         /* ReturnIfAbrupt */
         let _temp10 = yield* ToNumeric(_temp12);
         /* c8 ignore if */
-        if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+        if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp10 instanceof AbruptCompletion) return _temp10;
         /* c8 ignore if */
@@ -8784,7 +8842,7 @@ function* Evaluate_UpdateExpression({
         /* ReturnIfAbrupt */
         let _temp11 = yield* PutValue(expr, newValue);
         /* c8 ignore if */
-        if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+        if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp11 instanceof AbruptCompletion) return _temp11;
         /* c8 ignore if */
@@ -8816,7 +8874,7 @@ function* GlobalDeclarationInstantiation(script, env) {
     /* ReturnIfAbrupt */
     let _temp = yield* env.HasRestrictedGlobalProperty(name);
     /* c8 ignore if */
-    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) return _temp;
     /* c8 ignore if */
@@ -8854,7 +8912,7 @@ function* GlobalDeclarationInstantiation(script, env) {
         /* ReturnIfAbrupt */
         let _temp2 = yield* env.CanDeclareGlobalFunction(fn);
         /* c8 ignore if */
-        if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+        if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp2 instanceof AbruptCompletion) return _temp2;
         /* c8 ignore if */
@@ -8885,7 +8943,7 @@ function* GlobalDeclarationInstantiation(script, env) {
           /* ReturnIfAbrupt */
           let _temp3 = yield* env.CanDeclareGlobalVar(vn);
           /* c8 ignore if */
-          if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+          if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp3 instanceof AbruptCompletion) return _temp3;
           /* c8 ignore if */
@@ -8921,7 +8979,7 @@ function* GlobalDeclarationInstantiation(script, env) {
         /* ReturnIfAbrupt */
         let _temp4 = env.CreateImmutableBinding(dn, Value.true);
         /* c8 ignore if */
-        if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+        if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp4 instanceof AbruptCompletion) return _temp4;
         /* c8 ignore if */
@@ -8930,7 +8988,7 @@ function* GlobalDeclarationInstantiation(script, env) {
         /* ReturnIfAbrupt */
         let _temp5 = yield* env.CreateMutableBinding(dn, Value.false);
         /* c8 ignore if */
-        if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+        if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp5 instanceof AbruptCompletion) return _temp5;
         /* c8 ignore if */
@@ -8948,7 +9006,7 @@ function* GlobalDeclarationInstantiation(script, env) {
     /* ReturnIfAbrupt */
     let _temp6 = yield* env.CreateGlobalFunctionBinding(fn, fo, Value.false);
     /* c8 ignore if */
-    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp6 instanceof AbruptCompletion) return _temp6;
     /* c8 ignore if */
@@ -8959,7 +9017,7 @@ function* GlobalDeclarationInstantiation(script, env) {
     /* ReturnIfAbrupt */
     let _temp7 = yield* env.CreateGlobalVarBinding(vn, Value.false);
     /* c8 ignore if */
-    if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+    if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp7 instanceof AbruptCompletion) return _temp7;
     /* c8 ignore if */
@@ -9253,7 +9311,7 @@ function* Evaluate_VariableDeclaration({
     /* ReturnIfAbrupt */
     let _temp = yield* ResolveBinding(bindingId, undefined, BindingIdentifier.strict);
     /* c8 ignore if */
-    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) return _temp;
     /* c8 ignore if */
@@ -9272,7 +9330,7 @@ function* Evaluate_VariableDeclaration({
       /* ReturnIfAbrupt */
       let _temp2 = yield* GetValue(rhs);
       /* c8 ignore if */
-      if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+      if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp2 instanceof AbruptCompletion) return _temp2;
       /* c8 ignore if */
@@ -9288,7 +9346,7 @@ function* Evaluate_VariableDeclaration({
   /* ReturnIfAbrupt */
   let _temp3 = yield* GetValue(rhs);
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -9364,7 +9422,7 @@ function* Evaluate_CallExpression(CallExpression) {
   /* ReturnIfAbrupt */
   let _temp = yield* Evaluate(memberExpr);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -9374,7 +9432,7 @@ function* Evaluate_CallExpression(CallExpression) {
   /* ReturnIfAbrupt */
   let _temp2 = yield* GetValue(ref);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -9387,7 +9445,7 @@ function* Evaluate_CallExpression(CallExpression) {
       /* ReturnIfAbrupt */
       let _temp3 = yield* ArgumentListEvaluation(args);
       /* c8 ignore if */
-      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp3 instanceof AbruptCompletion) return _temp3;
       /* c8 ignore if */
@@ -9440,7 +9498,7 @@ function* EvaluateCall(func, ref, args, tailPosition) {
   /* ReturnIfAbrupt */
   let _temp = yield* ArgumentListEvaluation(args);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -9643,7 +9701,7 @@ function* ArgumentListEvaluation_TemplateLiteral(TemplateLiteral) {
           /* ReturnIfAbrupt */
           let _temp9 = yield* GetValue(subRef);
           /* c8 ignore if */
-          if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+          if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp9 instanceof AbruptCompletion) return _temp9;
           /* c8 ignore if */
@@ -9684,7 +9742,7 @@ function* ArgumentListEvaluation_Arguments(Arguments) {
       /* ReturnIfAbrupt */
       let _temp10 = yield* GetValue(spreadRef);
       /* c8 ignore if */
-      if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+      if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp10 instanceof AbruptCompletion) return _temp10;
       /* c8 ignore if */
@@ -9694,7 +9752,7 @@ function* ArgumentListEvaluation_Arguments(Arguments) {
       /* ReturnIfAbrupt */
       let _temp11 = yield* GetIterator(spreadObj, 'sync');
       /* c8 ignore if */
-      if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+      if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp11 instanceof AbruptCompletion) return _temp11;
       /* c8 ignore if */
@@ -9705,7 +9763,7 @@ function* ArgumentListEvaluation_Arguments(Arguments) {
         /* ReturnIfAbrupt */
         let _temp12 = yield* IteratorStepValue(iteratorRecord);
         /* c8 ignore if */
-        if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield*');
+        if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp12 instanceof AbruptCompletion) return _temp12;
         /* c8 ignore if */
@@ -9727,7 +9785,7 @@ function* ArgumentListEvaluation_Arguments(Arguments) {
       /* ReturnIfAbrupt */
       let _temp13 = yield* GetValue(ref);
       /* c8 ignore if */
-      if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield*');
+      if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp13 instanceof AbruptCompletion) return _temp13;
       /* c8 ignore if */
@@ -9766,7 +9824,7 @@ function* EvaluateBody_FunctionBody({
   /* ReturnIfAbrupt */
   let _temp = yield* FunctionDeclarationInstantiation(functionObject, argumentsList);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -9787,7 +9845,7 @@ function* Evaluate_ExpressionBody({
   /* ReturnIfAbrupt */
   let _temp2 = yield* GetValue(exprRef);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -9810,7 +9868,7 @@ function* EvaluateBody_ConciseBody({
   /* ReturnIfAbrupt */
   let _temp3 = yield* FunctionDeclarationInstantiation(functionObject, argumentsList);
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -9878,7 +9936,7 @@ function* EvaluateBody_GeneratorBody(GeneratorBody, functionObject, argumentsLis
   /* ReturnIfAbrupt */
   let _temp7 = yield* FunctionDeclarationInstantiation(functionObject, argumentsList);
   /* c8 ignore if */
-  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp7 instanceof AbruptCompletion) return _temp7;
   /* c8 ignore if */
@@ -9887,7 +9945,7 @@ function* EvaluateBody_GeneratorBody(GeneratorBody, functionObject, argumentsLis
   /* ReturnIfAbrupt */
   let _temp8 = yield* OrdinaryCreateFromConstructor(functionObject, '%GeneratorFunction.prototype.prototype%', ['GeneratorState', 'GeneratorContext', 'GeneratorBrand']);
   /* c8 ignore if */
-  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp8 instanceof AbruptCompletion) return _temp8;
   /* c8 ignore if */
@@ -9912,7 +9970,7 @@ function* EvaluateBody_AsyncGeneratorBody(FunctionBody, functionObject, argument
   /* ReturnIfAbrupt */
   let _temp9 = yield* FunctionDeclarationInstantiation(functionObject, argumentsList);
   /* c8 ignore if */
-  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp9 instanceof AbruptCompletion) return _temp9;
   /* c8 ignore if */
@@ -9921,7 +9979,7 @@ function* EvaluateBody_AsyncGeneratorBody(FunctionBody, functionObject, argument
   /* ReturnIfAbrupt */
   let _temp10 = yield* OrdinaryCreateFromConstructor(functionObject, '%AsyncGeneratorFunction.prototype.prototype%', ['AsyncGeneratorState', 'AsyncGeneratorContext', 'AsyncGeneratorQueue', 'GeneratorBrand']);
   /* c8 ignore if */
-  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp10 instanceof AbruptCompletion) return _temp10;
   /* c8 ignore if */
@@ -10019,7 +10077,7 @@ function* EvaluateBody_AssignmentExpression(AssignmentExpression, functionObject
     /* ReturnIfAbrupt */
     let _temp15 = yield* GetValue(rhs);
     /* c8 ignore if */
-    if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield*');
+    if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp15 instanceof AbruptCompletion) return _temp15;
     /* c8 ignore if */
@@ -10052,7 +10110,7 @@ function* EvaluateClassStaticBlockBody({
   /* ReturnIfAbrupt */
   let _temp17 = yield* FunctionDeclarationInstantiation(functionObject, []);
   /* c8 ignore if */
-  if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield*');
+  if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp17 instanceof AbruptCompletion) return _temp17;
   /* c8 ignore if */
@@ -10259,7 +10317,7 @@ function* FunctionDeclarationInstantiation(func, argumentsList) {
     /* ReturnIfAbrupt */
     let _temp5 = yield* IteratorBindingInitialization_FormalParameters(formals, iteratorRecord, Value.undefined);
     /* c8 ignore if */
-    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp5 instanceof AbruptCompletion) return _temp5;
     /* c8 ignore if */
@@ -10268,7 +10326,7 @@ function* FunctionDeclarationInstantiation(func, argumentsList) {
     /* ReturnIfAbrupt */
     let _temp6 = yield* IteratorBindingInitialization_FormalParameters(formals, iteratorRecord, env);
     /* c8 ignore if */
-    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp6 instanceof AbruptCompletion) return _temp6;
     /* c8 ignore if */
@@ -10451,7 +10509,7 @@ function* IteratorBindingInitialization_FormalParameters(FormalParameters, itera
     /* ReturnIfAbrupt */
     let _temp = yield* IteratorBindingInitialization_FormalParameter(FormalParameter, iteratorRecord, environment);
     /* c8 ignore if */
-    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) return _temp;
     /* c8 ignore if */
@@ -10498,7 +10556,7 @@ function* IteratorBindingInitialization_SingleNameBinding({
   /* ReturnIfAbrupt */
   let _temp2 = yield* ResolveBinding(bindingId, environment, BindingIdentifier.strict);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -10510,7 +10568,7 @@ function* IteratorBindingInitialization_SingleNameBinding({
     /* ReturnIfAbrupt */
     let _temp3 = yield* IteratorStepValue(iteratorRecord);
     /* c8 ignore if */
-    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp3 instanceof AbruptCompletion) return _temp3;
     /* c8 ignore if */
@@ -10528,7 +10586,7 @@ function* IteratorBindingInitialization_SingleNameBinding({
       /* ReturnIfAbrupt */
       let _temp4 = yield* NamedEvaluation(Initializer, bindingId);
       /* c8 ignore if */
-      if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+      if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp4 instanceof AbruptCompletion) return _temp4;
       /* c8 ignore if */
@@ -10538,7 +10596,7 @@ function* IteratorBindingInitialization_SingleNameBinding({
       /* ReturnIfAbrupt */
       let _temp5 = yield* Evaluate(Initializer);
       /* c8 ignore if */
-      if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+      if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp5 instanceof AbruptCompletion) return _temp5;
       /* c8 ignore if */
@@ -10547,7 +10605,7 @@ function* IteratorBindingInitialization_SingleNameBinding({
       /* ReturnIfAbrupt */
       let _temp6 = yield* GetValue(defaultValue);
       /* c8 ignore if */
-      if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+      if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp6 instanceof AbruptCompletion) return _temp6;
       /* c8 ignore if */
@@ -10584,7 +10642,7 @@ function* IteratorBindingInitialization_BindingRestElement({
     /* ReturnIfAbrupt */
     let _temp8 = yield* ResolveBinding(StringValue(BindingIdentifier), environment, BindingIdentifier.strict);
     /* c8 ignore if */
-    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp8 instanceof AbruptCompletion) return _temp8;
     /* c8 ignore if */
@@ -10613,7 +10671,7 @@ function* IteratorBindingInitialization_BindingRestElement({
         /* ReturnIfAbrupt */
         let _temp10 = yield* IteratorStepValue(iteratorRecord);
         /* c8 ignore if */
-        if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+        if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp10 instanceof AbruptCompletion) return _temp10;
         /* c8 ignore if */
@@ -10676,7 +10734,7 @@ function* IteratorBindingInitialization_BindingRestElement({
         /* ReturnIfAbrupt */
         let _temp14 = yield* IteratorStepValue(iteratorRecord);
         /* c8 ignore if */
-        if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield*');
+        if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp14 instanceof AbruptCompletion) return _temp14;
         /* c8 ignore if */
@@ -10733,7 +10791,7 @@ function* IteratorBindingInitialization_BindingPattern({
     /* ReturnIfAbrupt */
     let _temp17 = yield* IteratorStepValue(iteratorRecord);
     /* c8 ignore if */
-    if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield*');
+    if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp17 instanceof AbruptCompletion) return _temp17;
     /* c8 ignore if */
@@ -10752,7 +10810,7 @@ function* IteratorBindingInitialization_BindingPattern({
     /* ReturnIfAbrupt */
     let _temp18 = yield* GetValue(defaultValue);
     /* c8 ignore if */
-    if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield*');
+    if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp18 instanceof AbruptCompletion) return _temp18;
     /* c8 ignore if */
@@ -10779,7 +10837,7 @@ function* IteratorDestructuringAssignmentEvaluation$1(node, iteratorRecord) {
     /* ReturnIfAbrupt */
     let _temp20 = yield* IteratorStep(iteratorRecord);
     /* c8 ignore if */
-    if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield*');
+    if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp20 instanceof AbruptCompletion) return _temp20;
     /* c8 ignore if */
@@ -10797,7 +10855,7 @@ function* IteratorBindingInitialization_ArrayBindingPattern({
       /* ReturnIfAbrupt */
       let _temp21 = yield* IteratorDestructuringAssignmentEvaluation$1(BindingElement, iteratorRecord);
       /* c8 ignore if */
-      if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield*');
+      if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp21 instanceof AbruptCompletion) return _temp21;
       /* c8 ignore if */
@@ -10806,7 +10864,7 @@ function* IteratorBindingInitialization_ArrayBindingPattern({
       /* ReturnIfAbrupt */
       let _temp22 = yield* IteratorBindingInitialization_BindingElement(BindingElement, iteratorRecord, environment);
       /* c8 ignore if */
-      if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield*');
+      if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp22 instanceof AbruptCompletion) return _temp22;
       /* c8 ignore if */
@@ -10840,7 +10898,7 @@ function* Evaluate_ReturnStatement({
   /* ReturnIfAbrupt */
   let _temp = yield* GetValue(exprRef);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -10861,7 +10919,7 @@ function* Evaluate_ReturnStatement({
     /* ReturnIfAbrupt */
     let _temp3 = yield* Await(exprValue);
     /* c8 ignore if */
-    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp3 instanceof AbruptCompletion) return _temp3;
     /* c8 ignore if */
@@ -10900,7 +10958,7 @@ function* Evaluate_MemberExpression_Expression({
   /* ReturnIfAbrupt */
   let _temp = yield* GetValue(baseReference);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -10926,7 +10984,7 @@ function* Evaluate_MemberExpression_IdentifierName({
   /* ReturnIfAbrupt */
   let _temp2 = yield* GetValue(baseReference);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -10951,7 +11009,7 @@ function* Evaluate_MemberExpression_PrivateIdentifier({
   /* ReturnIfAbrupt */
   let _temp3 = yield* GetValue(baseReference);
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -10961,7 +11019,7 @@ function* Evaluate_MemberExpression_PrivateIdentifier({
   /* ReturnIfAbrupt */
   let _temp4 = RequireObjectCoercible(baseValue);
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -11013,7 +11071,7 @@ function* EvaluatePropertyAccessWithExpressionKey(baseValue, expression, strict)
   /* ReturnIfAbrupt */
   let _temp = yield* GetValue(propertyNameReference);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -11023,7 +11081,7 @@ function* EvaluatePropertyAccessWithExpressionKey(baseValue, expression, strict)
   /* ReturnIfAbrupt */
   let _temp2 = RequireObjectCoercible(baseValue);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -11033,7 +11091,7 @@ function* EvaluatePropertyAccessWithExpressionKey(baseValue, expression, strict)
   /* ReturnIfAbrupt */
   let _temp3 = yield* ToPropertyKey(propertyNameValue);
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -11057,7 +11115,7 @@ function EvaluatePropertyAccessWithIdentifierKey(baseValue, identifierName, stri
   /* ReturnIfAbrupt */
   let _temp4 = RequireObjectCoercible(baseValue);
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -11105,7 +11163,7 @@ function* Evaluate_LexicalBinding_BindingIdentifier({
       /* ReturnIfAbrupt */
       let _temp2 = yield* NamedEvaluation(Initializer, bindingId);
       /* c8 ignore if */
-      if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+      if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp2 instanceof AbruptCompletion) return _temp2;
       /* c8 ignore if */
@@ -11120,7 +11178,7 @@ function* Evaluate_LexicalBinding_BindingIdentifier({
       /* ReturnIfAbrupt */
       let _temp3 = yield* GetValue(rhs);
       /* c8 ignore if */
-      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp3 instanceof AbruptCompletion) return _temp3;
       /* c8 ignore if */
@@ -11149,7 +11207,7 @@ function* Evaluate_LexicalBinding_BindingPattern(LexicalBinding) {
   /* ReturnIfAbrupt */
   let _temp4 = yield* GetValue(rhs);
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -11203,7 +11261,7 @@ function* Evaluate_LexicalDeclaration({
   /* ReturnIfAbrupt */
   let _temp5 = yield* Evaluate_BindingList(BindingList);
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -11230,7 +11288,7 @@ function* Evaluate_ObjectLiteral({
   /* ReturnIfAbrupt */
   let _temp = yield* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinitionList, obj, Value.true);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -11248,7 +11306,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinitionList(PropertyDefinition
     /* ReturnIfAbrupt */
     let _temp = yield* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, object, enumerable);
     /* c8 ignore if */
-    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) return _temp;
     /* c8 ignore if */
@@ -11289,7 +11347,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, ob
     /* ReturnIfAbrupt */
     let _temp2 = yield* GetValue(exprValue);
     /* c8 ignore if */
-    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp2 instanceof AbruptCompletion) return _temp2;
     /* c8 ignore if */
@@ -11304,7 +11362,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, ob
   /* ReturnIfAbrupt */
   let _temp3 = yield* Evaluate_PropertyName(PropertyName);
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -11337,7 +11395,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition, ob
     /* ReturnIfAbrupt */
     let _temp4 = yield* GetValue(exprValueRef);
     /* c8 ignore if */
-    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) return _temp4;
     /* c8 ignore if */
@@ -11391,7 +11449,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(Id
   /* ReturnIfAbrupt */
   let _temp7 = yield* GetValue(exprValue);
   /* c8 ignore if */
-  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp7 instanceof AbruptCompletion) return _temp7;
   /* c8 ignore if */
@@ -11746,7 +11804,7 @@ function* ArrayAccumulation(ElementList, array, nextIndex) {
         /* ReturnIfAbrupt */
         let _temp = yield* Set$1(array, Value('length'), F(postIndex), Value.true);
         /* c8 ignore if */
-        if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+        if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp instanceof AbruptCompletion) return _temp;
         /* c8 ignore if */
@@ -11756,7 +11814,7 @@ function* ArrayAccumulation(ElementList, array, nextIndex) {
         /* ReturnIfAbrupt */
         let _temp2 = yield* ArrayAccumulation_SpreadElement(element, array, postIndex);
         /* c8 ignore if */
-        if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+        if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp2 instanceof AbruptCompletion) return _temp2;
         /* c8 ignore if */
@@ -11767,7 +11825,7 @@ function* ArrayAccumulation(ElementList, array, nextIndex) {
         /* ReturnIfAbrupt */
         let _temp3 = yield* ArrayAccumulation_AssignmentExpression(element, array, postIndex);
         /* c8 ignore if */
-        if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+        if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp3 instanceof AbruptCompletion) return _temp3;
         /* c8 ignore if */
@@ -11790,7 +11848,7 @@ function* ArrayAccumulation_SpreadElement({
   /* ReturnIfAbrupt */
   let _temp4 = yield* GetValue(spreadRef);
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -11800,7 +11858,7 @@ function* ArrayAccumulation_SpreadElement({
   /* ReturnIfAbrupt */
   let _temp5 = yield* GetIterator(spreadObj, 'sync');
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -11811,7 +11869,7 @@ function* ArrayAccumulation_SpreadElement({
     /* ReturnIfAbrupt */
     let _temp6 = yield* IteratorStepValue(iteratorRecord);
     /* c8 ignore if */
-    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp6 instanceof AbruptCompletion) return _temp6;
     /* c8 ignore if */
@@ -11854,7 +11912,7 @@ function* ArrayAccumulation_AssignmentExpression(AssignmentExpression, array, ne
   /* ReturnIfAbrupt */
   let _temp9 = yield* GetValue(initResult);
   /* c8 ignore if */
-  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp9 instanceof AbruptCompletion) return _temp9;
   /* c8 ignore if */
@@ -11929,7 +11987,7 @@ function* Evaluate_UnaryExpression_Delete({
   /* ReturnIfAbrupt */
   let _temp = yield* Evaluate(UnaryExpression);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -11968,7 +12026,7 @@ function* Evaluate_UnaryExpression_Delete({
     /* ReturnIfAbrupt */
     let _temp2 = ToObject(ref.Base);
     /* c8 ignore if */
-    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp2 instanceof AbruptCompletion) return _temp2;
     /* c8 ignore if */
@@ -11979,7 +12037,7 @@ function* Evaluate_UnaryExpression_Delete({
       /* ReturnIfAbrupt */
       let _temp3 = yield* ToPropertyKey(ref.ReferencedName);
       /* c8 ignore if */
-      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp3 instanceof AbruptCompletion) return _temp3;
       /* c8 ignore if */
@@ -11991,7 +12049,7 @@ function* Evaluate_UnaryExpression_Delete({
     /* ReturnIfAbrupt */
     let _temp4 = yield* baseObj.Delete(ref.ReferencedName);
     /* c8 ignore if */
-    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) return _temp4;
     /* c8 ignore if */
@@ -12026,7 +12084,7 @@ function* Evaluate_UnaryExpression_Void({
   /* ReturnIfAbrupt */
   let _temp5 = yield* GetValue(expr);
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -12044,7 +12102,7 @@ function* Evaluate_UnaryExpression_Typeof({
   /* ReturnIfAbrupt */
   let _temp6 = yield* Evaluate(UnaryExpression);
   /* c8 ignore if */
-  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp6 instanceof AbruptCompletion) return _temp6;
   /* c8 ignore if */
@@ -12062,7 +12120,7 @@ function* Evaluate_UnaryExpression_Typeof({
   /* ReturnIfAbrupt */
   let _temp7 = yield* GetValue(_val);
   /* c8 ignore if */
-  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp7 instanceof AbruptCompletion) return _temp7;
   /* c8 ignore if */
@@ -12104,7 +12162,7 @@ function* Evaluate_UnaryExpression_Plus({
   /* ReturnIfAbrupt */
   let _temp8 = yield* GetValue(expr);
   /* c8 ignore if */
-  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp8 instanceof AbruptCompletion) return _temp8;
   /* c8 ignore if */
@@ -12124,7 +12182,7 @@ function* Evaluate_UnaryExpression_Minus({
   /* ReturnIfAbrupt */
   let _temp10 = yield* GetValue(expr);
   /* c8 ignore if */
-  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp10 instanceof AbruptCompletion) return _temp10;
   /* c8 ignore if */
@@ -12132,7 +12190,7 @@ function* Evaluate_UnaryExpression_Minus({
   /* ReturnIfAbrupt */
   let _temp9 = yield* ToNumeric(_temp10);
   /* c8 ignore if */
-  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp9 instanceof AbruptCompletion) return _temp9;
   /* c8 ignore if */
@@ -12162,7 +12220,7 @@ function* Evaluate_UnaryExpression_Tilde({
   /* ReturnIfAbrupt */
   let _temp12 = yield* GetValue(expr);
   /* c8 ignore if */
-  if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield*');
+  if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp12 instanceof AbruptCompletion) return _temp12;
   /* c8 ignore if */
@@ -12170,7 +12228,7 @@ function* Evaluate_UnaryExpression_Tilde({
   /* ReturnIfAbrupt */
   let _temp11 = yield* ToNumeric(_temp12);
   /* c8 ignore if */
-  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp11 instanceof AbruptCompletion) return _temp11;
   /* c8 ignore if */
@@ -12200,7 +12258,7 @@ function* Evaluate_UnaryExpression_Bang({
   /* ReturnIfAbrupt */
   let _temp13 = yield* GetValue(expr);
   /* c8 ignore if */
-  if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield*');
+  if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp13 instanceof AbruptCompletion) return _temp13;
   /* c8 ignore if */
@@ -12229,7 +12287,7 @@ function* Evaluate_UnaryExpression(UnaryExpression) {
       /* ReturnIfAbrupt */
       let _temp14 = surroundingAgent.debugger_cannotPreview;
       /* c8 ignore if */
-      if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield*');
+      if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp14 instanceof AbruptCompletion) return _temp14;
       /* c8 ignore if */
@@ -12269,7 +12327,7 @@ function* Evaluate_EqualityExpression({
   /* ReturnIfAbrupt */
   let _temp = yield* GetValue(lref);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -12281,7 +12339,7 @@ function* Evaluate_EqualityExpression({
   /* ReturnIfAbrupt */
   let _temp2 = yield* GetValue(rref);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -12355,7 +12413,7 @@ function* Evaluate_LogicalANDExpression({
   /* ReturnIfAbrupt */
   let _temp = yield* GetValue(lref);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -12397,7 +12455,7 @@ function* Evaluate_LogicalORExpression({
   /* ReturnIfAbrupt */
   let _temp = yield* GetValue(lref);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -12437,7 +12495,7 @@ function* EvaluateNew(constructExpr, args) {
   /* ReturnIfAbrupt */
   let _temp = yield* GetValue(ref);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -12451,7 +12509,7 @@ function* EvaluateNew(constructExpr, args) {
     /* ReturnIfAbrupt */
     let _temp2 = yield* ArgumentListEvaluation(args);
     /* c8 ignore if */
-    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp2 instanceof AbruptCompletion) return _temp2;
     /* c8 ignore if */
@@ -12530,7 +12588,7 @@ function* Evaluate_SuperCall({
   /* ReturnIfAbrupt */
   let _temp2 = yield* ArgumentListEvaluation(Arguments);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -12544,7 +12602,7 @@ function* Evaluate_SuperCall({
   /* ReturnIfAbrupt */
   let _temp3 = yield* Construct(func, argList, newTarget);
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -12558,7 +12616,7 @@ function* Evaluate_SuperCall({
   /* ReturnIfAbrupt */
   let _temp4 = thisER.BindThisValue(result);
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -12571,7 +12629,7 @@ function* Evaluate_SuperCall({
   /* ReturnIfAbrupt */
   let _temp5 = yield* InitializeInstanceElements(result, F);
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -12620,7 +12678,7 @@ function MakeSuperPropertyReference(actualThis, propertyKey, strict) {
   /* ReturnIfAbrupt */
   let _temp = env.GetSuperBase();
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -12651,7 +12709,7 @@ function* Evaluate_SuperProperty({
   /* ReturnIfAbrupt */
   let _temp2 = env.GetThisBinding();
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -12664,7 +12722,7 @@ function* Evaluate_SuperProperty({
     /* ReturnIfAbrupt */
     let _temp3 = yield* GetValue(propertyNameReference);
     /* c8 ignore if */
-    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp3 instanceof AbruptCompletion) return _temp3;
     /* c8 ignore if */
@@ -12674,7 +12732,7 @@ function* Evaluate_SuperProperty({
     /* ReturnIfAbrupt */
     let _temp4 = yield* ToPropertyKey(propertyNameValue);
     /* c8 ignore if */
-    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) return _temp4;
     /* c8 ignore if */
@@ -12724,7 +12782,7 @@ function* BindingInitialization_ObjectBindingPattern({
   /* ReturnIfAbrupt */
   let _temp = yield* PropertyBindingInitialization(BindingPropertyList, value, environment);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -12735,7 +12793,7 @@ function* BindingInitialization_ObjectBindingPattern({
     /* ReturnIfAbrupt */
     let _temp2 = yield* RestBindingInitialization(BindingRestProperty, value, environment, excludedNames);
     /* c8 ignore if */
-    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp2 instanceof AbruptCompletion) return _temp2;
     /* c8 ignore if */
@@ -12765,7 +12823,7 @@ function* BindingInitialization(node, value, environment) {
         /* ReturnIfAbrupt */
         let _temp3 = RequireObjectCoercible(value);
         /* c8 ignore if */
-        if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+        if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp3 instanceof AbruptCompletion) return _temp3;
         /* c8 ignore if */
@@ -12778,7 +12836,7 @@ function* BindingInitialization(node, value, environment) {
         /* ReturnIfAbrupt */
         let _temp4 = yield* GetIterator(value, 'sync');
         /* c8 ignore if */
-        if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+        if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp4 instanceof AbruptCompletion) return _temp4;
         /* c8 ignore if */
@@ -12819,7 +12877,7 @@ function* InstanceofOperator(V, target) {
   /* ReturnIfAbrupt */
   let _temp = yield* GetMethod(target, wellKnownSymbols.hasInstance);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -12830,7 +12888,7 @@ function* InstanceofOperator(V, target) {
     /* ReturnIfAbrupt */
     let _temp3 = yield* Call(instOfHandler, target, [V]);
     /* c8 ignore if */
-    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp3 instanceof AbruptCompletion) return _temp3;
     /* c8 ignore if */
@@ -12870,7 +12928,7 @@ function* Evaluate_RelationalExpression_PrivateIdentifier({
   /* ReturnIfAbrupt */
   let _temp4 = yield* GetValue(rref);
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -12937,7 +12995,7 @@ function* Evaluate_RelationalExpression(expr) {
   /* ReturnIfAbrupt */
   let _temp7 = yield* GetValue(lref);
   /* c8 ignore if */
-  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp7 instanceof AbruptCompletion) return _temp7;
   /* c8 ignore if */
@@ -12949,7 +13007,7 @@ function* Evaluate_RelationalExpression(expr) {
   /* ReturnIfAbrupt */
   let _temp8 = yield* GetValue(rref);
   /* c8 ignore if */
-  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp8 instanceof AbruptCompletion) return _temp8;
   /* c8 ignore if */
@@ -13044,7 +13102,7 @@ function* Evaluate_RelationalExpression(expr) {
       /* ReturnIfAbrupt */
       let _temp9 = yield* ToPropertyKey(lval);
       /* c8 ignore if */
-      if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+      if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp9 instanceof AbruptCompletion) return _temp9;
       /* c8 ignore if */
@@ -13233,7 +13291,7 @@ function* ForInIteratorPrototype_next(_args, {
       /* ReturnIfAbrupt */
       let _temp = yield* object.OwnPropertyKeys();
       /* c8 ignore if */
-      if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+      if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp instanceof AbruptCompletion) return _temp;
       /* c8 ignore if */
@@ -13260,7 +13318,7 @@ function* ForInIteratorPrototype_next(_args, {
         /* ReturnIfAbrupt */
         let _temp2 = yield* object.GetOwnProperty(r);
         /* c8 ignore if */
-        if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+        if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp2 instanceof AbruptCompletion) return _temp2;
         /* c8 ignore if */
@@ -13282,7 +13340,7 @@ function* ForInIteratorPrototype_next(_args, {
     /* ReturnIfAbrupt */
     let _temp3 = yield* object.GetPrototypeOf();
     /* c8 ignore if */
-    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp3 instanceof AbruptCompletion) return _temp3;
     /* c8 ignore if */
@@ -13489,7 +13547,7 @@ function* LabelledEvaluation_IterationStatement_DoWhileStatement({
     /* ReturnIfAbrupt */
     let _temp = yield* GetValue(exprRef);
     /* c8 ignore if */
-    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) return _temp;
     /* c8 ignore if */
@@ -13530,7 +13588,7 @@ function* LabelledEvaluation_IterationStatement_WhileStatement({
     /* ReturnIfAbrupt */
     let _temp3 = yield* GetValue(exprRef);
     /* c8 ignore if */
-    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp3 instanceof AbruptCompletion) return _temp3;
     /* c8 ignore if */
@@ -13667,7 +13725,7 @@ function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement, label
           /* ReturnIfAbrupt */
           let _temp7 = yield* GetValue(exprRef);
           /* c8 ignore if */
-          if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+          if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp7 instanceof AbruptCompletion) return _temp7;
           /* c8 ignore if */
@@ -13693,7 +13751,7 @@ function* LabelledEvaluation_IterationStatement_ForInStatement(ForInStatement, l
         /* ReturnIfAbrupt */
         let _temp8 = yield* ForInOfHeadEvaluation([], Expression, 'enumerate');
         /* c8 ignore if */
-        if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+        if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp8 instanceof AbruptCompletion) return _temp8;
         /* c8 ignore if */
@@ -13709,7 +13767,7 @@ function* LabelledEvaluation_IterationStatement_ForInStatement(ForInStatement, l
         /* ReturnIfAbrupt */
         let _temp9 = yield* ForInOfHeadEvaluation([], Expression, 'enumerate');
         /* c8 ignore if */
-        if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+        if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp9 instanceof AbruptCompletion) return _temp9;
         /* c8 ignore if */
@@ -13725,7 +13783,7 @@ function* LabelledEvaluation_IterationStatement_ForInStatement(ForInStatement, l
         /* ReturnIfAbrupt */
         let _temp10 = yield* ForInOfHeadEvaluation(BoundNames(ForDeclaration), Expression, 'enumerate');
         /* c8 ignore if */
-        if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+        if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp10 instanceof AbruptCompletion) return _temp10;
         /* c8 ignore if */
@@ -13759,7 +13817,7 @@ function* LabelledEvaluation_IterationStatement_ForAwaitStatement(ForAwaitStatem
         /* ReturnIfAbrupt */
         let _temp11 = yield* ForInOfHeadEvaluation([], AssignmentExpression, 'async-iterate');
         /* c8 ignore if */
-        if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+        if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp11 instanceof AbruptCompletion) return _temp11;
         /* c8 ignore if */
@@ -13774,7 +13832,7 @@ function* LabelledEvaluation_IterationStatement_ForAwaitStatement(ForAwaitStatem
         /* ReturnIfAbrupt */
         let _temp12 = yield* ForInOfHeadEvaluation([], AssignmentExpression, 'async-iterate');
         /* c8 ignore if */
-        if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield*');
+        if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp12 instanceof AbruptCompletion) return _temp12;
         /* c8 ignore if */
@@ -13789,7 +13847,7 @@ function* LabelledEvaluation_IterationStatement_ForAwaitStatement(ForAwaitStatem
         /* ReturnIfAbrupt */
         let _temp13 = yield* ForInOfHeadEvaluation(BoundNames(ForDeclaration), AssignmentExpression, 'async-iterate');
         /* c8 ignore if */
-        if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield*');
+        if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp13 instanceof AbruptCompletion) return _temp13;
         /* c8 ignore if */
@@ -13823,7 +13881,7 @@ function* LabelledEvaluation_IterationStatement_ForOfStatement(ForOfStatement, l
         /* ReturnIfAbrupt */
         let _temp14 = yield* ForInOfHeadEvaluation([], AssignmentExpression, 'iterate');
         /* c8 ignore if */
-        if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield*');
+        if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp14 instanceof AbruptCompletion) return _temp14;
         /* c8 ignore if */
@@ -13838,7 +13896,7 @@ function* LabelledEvaluation_IterationStatement_ForOfStatement(ForOfStatement, l
         /* ReturnIfAbrupt */
         let _temp15 = yield* ForInOfHeadEvaluation([], AssignmentExpression, 'iterate');
         /* c8 ignore if */
-        if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield*');
+        if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp15 instanceof AbruptCompletion) return _temp15;
         /* c8 ignore if */
@@ -13853,7 +13911,7 @@ function* LabelledEvaluation_IterationStatement_ForOfStatement(ForOfStatement, l
         /* ReturnIfAbrupt */
         let _temp16 = yield* ForInOfHeadEvaluation(BoundNames(ForDeclaration), AssignmentExpression, 'iterate');
         /* c8 ignore if */
-        if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield*');
+        if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp16 instanceof AbruptCompletion) return _temp16;
         /* c8 ignore if */
@@ -13877,7 +13935,7 @@ function* ForBodyEvaluation(test, increment, stmt, perIterationBindings, labelSe
   /* ReturnIfAbrupt */
   let _temp17 = yield* CreatePerIterationEnvironment(perIterationBindings);
   /* c8 ignore if */
-  if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield*');
+  if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp17 instanceof AbruptCompletion) return _temp17;
   /* c8 ignore if */
@@ -13892,7 +13950,7 @@ function* ForBodyEvaluation(test, increment, stmt, perIterationBindings, labelSe
       /* ReturnIfAbrupt */
       let _temp18 = yield* GetValue(testRef);
       /* c8 ignore if */
-      if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield*');
+      if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp18 instanceof AbruptCompletion) return _temp18;
       /* c8 ignore if */
@@ -13927,7 +13985,7 @@ function* ForBodyEvaluation(test, increment, stmt, perIterationBindings, labelSe
     /* ReturnIfAbrupt */
     let _temp20 = yield* CreatePerIterationEnvironment(perIterationBindings);
     /* c8 ignore if */
-    if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield*');
+    if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp20 instanceof AbruptCompletion) return _temp20;
     /* c8 ignore if */
@@ -13940,7 +13998,7 @@ function* ForBodyEvaluation(test, increment, stmt, perIterationBindings, labelSe
       /* ReturnIfAbrupt */
       let _temp21 = yield* GetValue(incRef);
       /* c8 ignore if */
-      if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield*');
+      if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp21 instanceof AbruptCompletion) return _temp21;
       /* c8 ignore if */
@@ -13978,7 +14036,7 @@ function* CreatePerIterationEnvironment(perIterationBindings) {
       /* ReturnIfAbrupt */
       let _temp23 = yield* lastIterationEnv.GetBindingValue(bn, Value.true);
       /* c8 ignore if */
-      if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield*');
+      if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp23 instanceof AbruptCompletion) return _temp23;
       /* c8 ignore if */
@@ -14028,7 +14086,7 @@ function* ForInOfHeadEvaluation(uninitializedBoundNames, expr, iterationKind) {
   /* ReturnIfAbrupt */
   let _temp25 = yield* GetValue(exprRef);
   /* c8 ignore if */
-  if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield*');
+  if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp25 instanceof AbruptCompletion) return _temp25;
   /* c8 ignore if */
@@ -14061,7 +14119,7 @@ function* ForInOfHeadEvaluation(uninitializedBoundNames, expr, iterationKind) {
     /* ReturnIfAbrupt */
     let _temp27 = EnumerateObjectProperties(obj);
     /* c8 ignore if */
-    if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield*');
+    if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp27 instanceof AbruptCompletion) return _temp27;
     /* c8 ignore if */
@@ -14127,7 +14185,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
     /* ReturnIfAbrupt */
     let _temp29 = yield* Call(iteratorRecord.NextMethod, iteratorRecord.Iterator);
     /* c8 ignore if */
-    if (_temp29 && typeof _temp29 === 'object' && 'next' in _temp29) throw new Assert.Error('Forgot to yield*');
+    if (_temp29 && typeof _temp29 === 'object' && 'next' in _temp29) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp29 instanceof AbruptCompletion) return _temp29;
     /* c8 ignore if */
@@ -14139,7 +14197,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
       /* ReturnIfAbrupt */
       let _temp30 = yield* Await(nextResult);
       /* c8 ignore if */
-      if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) throw new Assert.Error('Forgot to yield*');
+      if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp30 instanceof AbruptCompletion) return _temp30;
       /* c8 ignore if */
@@ -14154,7 +14212,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
     /* ReturnIfAbrupt */
     let _temp31 = yield* IteratorComplete(nextResult);
     /* c8 ignore if */
-    if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) throw new Assert.Error('Forgot to yield*');
+    if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp31 instanceof AbruptCompletion) return _temp31;
     /* c8 ignore if */
@@ -14168,7 +14226,7 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
     /* ReturnIfAbrupt */
     let _temp32 = yield* IteratorValue(nextResult);
     /* c8 ignore if */
-    if (_temp32 && typeof _temp32 === 'object' && 'next' in _temp32) throw new Assert.Error('Forgot to yield*');
+    if (_temp32 && typeof _temp32 === 'object' && 'next' in _temp32) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp32 instanceof AbruptCompletion) return _temp32;
     /* c8 ignore if */
@@ -14378,7 +14436,7 @@ function* Evaluate_TemplateLiteral({
     /* ReturnIfAbrupt */
     let _temp = yield* GetValue(subRef);
     /* c8 ignore if */
-    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) return _temp;
     /* c8 ignore if */
@@ -14388,7 +14446,7 @@ function* Evaluate_TemplateLiteral({
     /* ReturnIfAbrupt */
     let _temp2 = yield* ToString(sub);
     /* c8 ignore if */
-    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp2 instanceof AbruptCompletion) return _temp2;
     /* c8 ignore if */
@@ -14412,7 +14470,7 @@ function* CaseClauseIsSelected(C, input) {
   /* ReturnIfAbrupt */
   let _temp = yield* GetValue(exprRef);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -14454,7 +14512,7 @@ function* CaseBlockEvaluation({
             /* ReturnIfAbrupt */
             let _temp2 = yield* CaseClauseIsSelected(C, input);
             /* c8 ignore if */
-            if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+            if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
             /* c8 ignore if */
             if (_temp2 instanceof AbruptCompletion) return _temp2;
             /* c8 ignore if */
@@ -14501,7 +14559,7 @@ function* CaseBlockEvaluation({
             /* ReturnIfAbrupt */
             let _temp3 = yield* CaseClauseIsSelected(C, input);
             /* c8 ignore if */
-            if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+            if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
             /* c8 ignore if */
             if (_temp3 instanceof AbruptCompletion) return _temp3;
             /* c8 ignore if */
@@ -14544,7 +14602,7 @@ function* CaseBlockEvaluation({
               /* ReturnIfAbrupt */
               let _temp4 = yield* CaseClauseIsSelected(C, input);
               /* c8 ignore if */
-              if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+              if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
               /* c8 ignore if */
               if (_temp4 instanceof AbruptCompletion) return _temp4;
               /* c8 ignore if */
@@ -14618,7 +14676,7 @@ function* Evaluate_SwitchStatement({
   /* ReturnIfAbrupt */
   let _temp5 = yield* GetValue(exprRef);
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -19876,7 +19934,7 @@ function ParseJSONModule(sourceText, realm, hostDefined) {
   /* ReturnIfAbrupt */
   let _temp3 = skipDebugger(Call(jsonParse, Value.undefined, [sourceText]));
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -19964,7 +20022,7 @@ function* CreateDynamicFunction(constructor, newTarget, kind, args) {
   /* ReturnIfAbrupt */
   let _temp = HostEnsureCanCompileStrings(callerRealm, calleeRealm);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -20022,7 +20080,7 @@ function* CreateDynamicFunction(constructor, newTarget, kind, args) {
     /* ReturnIfAbrupt */
     let _temp2 = yield* ToString(firstArg);
     /* c8 ignore if */
-    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp2 instanceof AbruptCompletion) return _temp2;
     /* c8 ignore if */
@@ -20038,7 +20096,7 @@ function* CreateDynamicFunction(constructor, newTarget, kind, args) {
       /* ReturnIfAbrupt */
       let _temp3 = yield* ToString(nextArg);
       /* c8 ignore if */
-      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp3 instanceof AbruptCompletion) return _temp3;
       /* c8 ignore if */
@@ -20056,7 +20114,7 @@ function* CreateDynamicFunction(constructor, newTarget, kind, args) {
   /* ReturnIfAbrupt */
   let _temp4 = yield* ToString(bodyArg);
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -20120,7 +20178,7 @@ function* CreateDynamicFunction(constructor, newTarget, kind, args) {
   /* ReturnIfAbrupt */
   let _temp5 = yield* GetPrototypeFromConstructor(newTarget, fallbackProto);
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -20277,7 +20335,7 @@ function* Evaluate_CommaOperator({
     /* ReturnIfAbrupt */
     let _temp = yield* GetValue(lref);
     /* c8 ignore if */
-    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) return _temp;
     /* c8 ignore if */
@@ -20306,7 +20364,7 @@ function* Evaluate_YieldExpression({
     /* ReturnIfAbrupt */
     let _temp = yield* Evaluate(AssignmentExpression);
     /* c8 ignore if */
-    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) return _temp;
     /* c8 ignore if */
@@ -20316,7 +20374,7 @@ function* Evaluate_YieldExpression({
     /* ReturnIfAbrupt */
     let _temp2 = yield* GetValue(exprRef);
     /* c8 ignore if */
-    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp2 instanceof AbruptCompletion) return _temp2;
     /* c8 ignore if */
@@ -20326,7 +20384,7 @@ function* Evaluate_YieldExpression({
     /* ReturnIfAbrupt */
     let _temp3 = yield* GetIterator(value, generatorKind);
     /* c8 ignore if */
-    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp3 instanceof AbruptCompletion) return _temp3;
     /* c8 ignore if */
@@ -20343,7 +20401,7 @@ function* Evaluate_YieldExpression({
         /* ReturnIfAbrupt */
         let _temp4 = yield* Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, [received.Value]);
         /* c8 ignore if */
-        if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+        if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp4 instanceof AbruptCompletion) return _temp4;
         /* c8 ignore if */
@@ -20355,7 +20413,7 @@ function* Evaluate_YieldExpression({
           /* ReturnIfAbrupt */
           let _temp5 = yield* Await(innerResult);
           /* c8 ignore if */
-          if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+          if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp5 instanceof AbruptCompletion) return _temp5;
           /* c8 ignore if */
@@ -20370,7 +20428,7 @@ function* Evaluate_YieldExpression({
         /* ReturnIfAbrupt */
         let _temp6 = yield* IteratorComplete(innerResult);
         /* c8 ignore if */
-        if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+        if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp6 instanceof AbruptCompletion) return _temp6;
         /* c8 ignore if */
@@ -20386,7 +20444,7 @@ function* Evaluate_YieldExpression({
           /* ReturnIfAbrupt */
           let _temp7 = yield* IteratorValue(innerResult);
           /* c8 ignore if */
-          if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+          if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp7 instanceof AbruptCompletion) return _temp7;
           /* c8 ignore if */
@@ -20400,7 +20458,7 @@ function* Evaluate_YieldExpression({
         /* ReturnIfAbrupt */
         let _temp8 = yield* GetMethod(iterator, Value('throw'));
         /* c8 ignore if */
-        if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+        if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp8 instanceof AbruptCompletion) return _temp8;
         /* c8 ignore if */
@@ -20413,7 +20471,7 @@ function* Evaluate_YieldExpression({
           /* ReturnIfAbrupt */
           let _temp9 = yield* Call(thr, iterator, [received.Value]);
           /* c8 ignore if */
-          if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+          if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp9 instanceof AbruptCompletion) return _temp9;
           /* c8 ignore if */
@@ -20425,7 +20483,7 @@ function* Evaluate_YieldExpression({
             /* ReturnIfAbrupt */
             let _temp10 = yield* Await(innerResult);
             /* c8 ignore if */
-            if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+            if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
             /* c8 ignore if */
             if (_temp10 instanceof AbruptCompletion) return _temp10;
             /* c8 ignore if */
@@ -20441,7 +20499,7 @@ function* Evaluate_YieldExpression({
           /* ReturnIfAbrupt */
           let _temp11 = yield* IteratorComplete(innerResult);
           /* c8 ignore if */
-          if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+          if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp11 instanceof AbruptCompletion) return _temp11;
           /* c8 ignore if */
@@ -20457,7 +20515,7 @@ function* Evaluate_YieldExpression({
             /* ReturnIfAbrupt */
             let _temp12 = yield* IteratorValue(innerResult);
             /* c8 ignore if */
-            if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield*');
+            if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
             /* c8 ignore if */
             if (_temp12 instanceof AbruptCompletion) return _temp12;
             /* c8 ignore if */
@@ -20478,7 +20536,7 @@ function* Evaluate_YieldExpression({
             /* ReturnIfAbrupt */
             let _temp13 = yield* AsyncIteratorClose(iteratorRecord, closeCompletion);
             /* c8 ignore if */
-            if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield*');
+            if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield* on the completion.');
             /* c8 ignore if */
             if (_temp13 instanceof AbruptCompletion) return _temp13;
             /* c8 ignore if */
@@ -20487,7 +20545,7 @@ function* Evaluate_YieldExpression({
             /* ReturnIfAbrupt */
             let _temp14 = yield* IteratorClose(iteratorRecord, closeCompletion);
             /* c8 ignore if */
-            if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield*');
+            if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
             /* c8 ignore if */
             if (_temp14 instanceof AbruptCompletion) return _temp14;
             /* c8 ignore if */
@@ -20505,7 +20563,7 @@ function* Evaluate_YieldExpression({
         /* ReturnIfAbrupt */
         let _temp15 = yield* GetMethod(iterator, Value('return'));
         /* c8 ignore if */
-        if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield*');
+        if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp15 instanceof AbruptCompletion) return _temp15;
         /* c8 ignore if */
@@ -20520,7 +20578,7 @@ function* Evaluate_YieldExpression({
             /* ReturnIfAbrupt */
             let _temp16 = yield* Await(value);
             /* c8 ignore if */
-            if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield*');
+            if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield* on the completion.');
             /* c8 ignore if */
             if (_temp16 instanceof AbruptCompletion) return _temp16;
             /* c8 ignore if */
@@ -20534,7 +20592,7 @@ function* Evaluate_YieldExpression({
         /* ReturnIfAbrupt */
         let _temp17 = yield* Call(ret, iterator, [received.Value]);
         /* c8 ignore if */
-        if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield*');
+        if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp17 instanceof AbruptCompletion) return _temp17;
         /* c8 ignore if */
@@ -20545,7 +20603,7 @@ function* Evaluate_YieldExpression({
           /* ReturnIfAbrupt */
           let _temp18 = yield* Await(innerReturnResult);
           /* c8 ignore if */
-          if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield*');
+          if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp18 instanceof AbruptCompletion) return _temp18;
           /* c8 ignore if */
@@ -20560,7 +20618,7 @@ function* Evaluate_YieldExpression({
         /* ReturnIfAbrupt */
         let _temp19 = yield* IteratorComplete(innerReturnResult);
         /* c8 ignore if */
-        if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield*');
+        if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp19 instanceof AbruptCompletion) return _temp19;
         /* c8 ignore if */
@@ -20571,7 +20629,7 @@ function* Evaluate_YieldExpression({
           /* ReturnIfAbrupt */
           let _temp20 = yield* IteratorValue(innerReturnResult);
           /* c8 ignore if */
-          if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield*');
+          if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp20 instanceof AbruptCompletion) return _temp20;
           /* c8 ignore if */
@@ -20586,7 +20644,7 @@ function* Evaluate_YieldExpression({
           /* ReturnIfAbrupt */
           let _temp21 = yield* IteratorValue(innerReturnResult);
           /* c8 ignore if */
-          if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield*');
+          if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp21 instanceof AbruptCompletion) return _temp21;
           /* c8 ignore if */
@@ -20606,7 +20664,7 @@ function* Evaluate_YieldExpression({
     /* ReturnIfAbrupt */
     let _temp22 = yield* GetValue(exprRef);
     /* c8 ignore if */
-    if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield*');
+    if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp22 instanceof AbruptCompletion) return _temp22;
     /* c8 ignore if */
@@ -20689,7 +20747,7 @@ function* Evaluate_ConditionalExpression({
   /* ReturnIfAbrupt */
   let _temp2 = yield* GetValue(lref);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -21880,7 +21938,7 @@ function* StringPad(O, maxLength, fillString, placement) {
   /* ReturnIfAbrupt */
   let _temp = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -21889,7 +21947,7 @@ function* StringPad(O, maxLength, fillString, placement) {
   /* ReturnIfAbrupt */
   let _temp2 = yield* ToLength(maxLength);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -21906,7 +21964,7 @@ function* StringPad(O, maxLength, fillString, placement) {
     /* ReturnIfAbrupt */
     let _temp3 = yield* ToString(fillString);
     /* c8 ignore if */
-    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp3 instanceof AbruptCompletion) return _temp3;
     /* c8 ignore if */
@@ -21932,7 +21990,7 @@ function* TrimString(string, where) {
   /* ReturnIfAbrupt */
   let _temp = RequireObjectCoercible(string);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -21941,7 +21999,7 @@ function* TrimString(string, where) {
   /* ReturnIfAbrupt */
   let _temp2 = yield* ToString(str);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -21976,7 +22034,7 @@ function* Evaluate_AwaitExpression({
   /* ReturnIfAbrupt */
   let _temp = surroundingAgent.debugger_cannotPreview;
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -21987,7 +22045,7 @@ function* Evaluate_AwaitExpression({
   /* ReturnIfAbrupt */
   let _temp2 = yield* GetValue(exprRef);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -22011,7 +22069,7 @@ function* BindingClassDeclarationEvaluation(ClassDeclaration) {
     /* ReturnIfAbrupt */
     let _temp = yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, Value('default'));
     /* c8 ignore if */
-    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) return _temp;
     /* c8 ignore if */
@@ -22029,7 +22087,7 @@ function* BindingClassDeclarationEvaluation(ClassDeclaration) {
   /* ReturnIfAbrupt */
   let _temp2 = yield* ClassDefinitionEvaluation(ClassTail, className, className);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -22043,7 +22101,7 @@ function* BindingClassDeclarationEvaluation(ClassDeclaration) {
   /* ReturnIfAbrupt */
   let _temp3 = yield* InitializeBoundName(className, value, env);
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -22059,7 +22117,7 @@ function* Evaluate_ClassDeclaration(ClassDeclaration) {
   /* ReturnIfAbrupt */
   let _temp4 = yield* BindingClassDeclarationEvaluation(ClassDeclaration);
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -22081,7 +22139,7 @@ function* Evaluate_WithStatement({
   /* ReturnIfAbrupt */
   let _temp2 = yield* GetValue(val);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -22089,7 +22147,7 @@ function* Evaluate_WithStatement({
   /* ReturnIfAbrupt */
   let _temp = ToObject(_temp2);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -22186,7 +22244,7 @@ function* Evaluate_ExportDeclaration(ExportDeclaration) {
     /* ReturnIfAbrupt */
     let _temp = yield* BindingClassDeclarationEvaluation(ClassDeclaration);
     /* c8 ignore if */
-    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) return _temp;
     /* c8 ignore if */
@@ -22203,7 +22261,7 @@ function* Evaluate_ExportDeclaration(ExportDeclaration) {
       /* ReturnIfAbrupt */
       let _temp2 = yield* InitializeBoundName(Value('*default*'), value, env);
       /* c8 ignore if */
-      if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+      if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp2 instanceof AbruptCompletion) return _temp2;
       /* c8 ignore if */
@@ -22226,7 +22284,7 @@ function* Evaluate_ExportDeclaration(ExportDeclaration) {
       /* ReturnIfAbrupt */
       let _temp3 = yield* GetValue(rhs);
       /* c8 ignore if */
-      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp3 instanceof AbruptCompletion) return _temp3;
       /* c8 ignore if */
@@ -22239,7 +22297,7 @@ function* Evaluate_ExportDeclaration(ExportDeclaration) {
     /* ReturnIfAbrupt */
     let _temp4 = yield* InitializeBoundName(Value('*default*'), value, env);
     /* c8 ignore if */
-    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) return _temp4;
     /* c8 ignore if */
@@ -22266,7 +22324,7 @@ function* Evaluate_OptionalExpression({
   /* ReturnIfAbrupt */
   let _temp = yield* GetValue(baseReference);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -22318,7 +22376,7 @@ function* ChainEvaluation(node, baseValue, baseReference) {
       /* ReturnIfAbrupt */
       let _temp3 = yield* ChainEvaluation(optionalChain, baseValue, baseReference);
       /* c8 ignore if */
-      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp3 instanceof AbruptCompletion) return _temp3;
       /* c8 ignore if */
@@ -22328,7 +22386,7 @@ function* ChainEvaluation(node, baseValue, baseReference) {
       /* ReturnIfAbrupt */
       let _temp4 = yield* GetValue(newReference);
       /* c8 ignore if */
-      if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+      if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp4 instanceof AbruptCompletion) return _temp4;
       /* c8 ignore if */
@@ -22352,7 +22410,7 @@ function* ChainEvaluation(node, baseValue, baseReference) {
       /* ReturnIfAbrupt */
       let _temp5 = yield* ChainEvaluation(optionalChain, baseValue, baseReference);
       /* c8 ignore if */
-      if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+      if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp5 instanceof AbruptCompletion) return _temp5;
       /* c8 ignore if */
@@ -22362,7 +22420,7 @@ function* ChainEvaluation(node, baseValue, baseReference) {
       /* ReturnIfAbrupt */
       let _temp6 = yield* GetValue(newReference);
       /* c8 ignore if */
-      if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+      if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp6 instanceof AbruptCompletion) return _temp6;
       /* c8 ignore if */
@@ -22386,7 +22444,7 @@ function* ChainEvaluation(node, baseValue, baseReference) {
       /* ReturnIfAbrupt */
       let _temp7 = yield* ChainEvaluation(optionalChain, baseValue, baseReference);
       /* c8 ignore if */
-      if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+      if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp7 instanceof AbruptCompletion) return _temp7;
       /* c8 ignore if */
@@ -22396,7 +22454,7 @@ function* ChainEvaluation(node, baseValue, baseReference) {
       /* ReturnIfAbrupt */
       let _temp8 = yield* GetValue(newReference);
       /* c8 ignore if */
-      if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+      if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp8 instanceof AbruptCompletion) return _temp8;
       /* c8 ignore if */
@@ -22420,7 +22478,7 @@ function* ChainEvaluation(node, baseValue, baseReference) {
       /* ReturnIfAbrupt */
       let _temp9 = yield* ChainEvaluation(optionalChain, baseValue, baseReference);
       /* c8 ignore if */
-      if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+      if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp9 instanceof AbruptCompletion) return _temp9;
       /* c8 ignore if */
@@ -22430,7 +22488,7 @@ function* ChainEvaluation(node, baseValue, baseReference) {
       /* ReturnIfAbrupt */
       let _temp10 = yield* GetValue(newReference);
       /* c8 ignore if */
-      if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+      if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp10 instanceof AbruptCompletion) return _temp10;
       /* c8 ignore if */
@@ -22440,7 +22498,7 @@ function* ChainEvaluation(node, baseValue, baseReference) {
       /* ReturnIfAbrupt */
       let _temp11 = RequireObjectCoercible(newValue);
       /* c8 ignore if */
-      if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+      if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp11 instanceof AbruptCompletion) return _temp11;
       /* c8 ignore if */
@@ -22465,7 +22523,7 @@ function* ChainEvaluation(node, baseValue, baseReference) {
     /* ReturnIfAbrupt */
     let _temp13 = RequireObjectCoercible(baseValue);
     /* c8 ignore if */
-    if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield*');
+    if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp13 instanceof AbruptCompletion) return _temp13;
     /* c8 ignore if */
@@ -22502,7 +22560,7 @@ function* Evaluate_TaggedTemplateExpression(node) {
   /* ReturnIfAbrupt */
   let _temp = yield* Evaluate(MemberExpression);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -22512,7 +22570,7 @@ function* Evaluate_TaggedTemplateExpression(node) {
   /* ReturnIfAbrupt */
   let _temp2 = yield* GetValue(tagRef);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -22611,7 +22669,7 @@ function* GetSubstitution(matched, str, position, captures, namedCaptures, repla
             /* ReturnIfAbrupt */
             let _temp = yield* Get(namedCaptures, groupName);
             /* c8 ignore if */
-            if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+            if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
             /* c8 ignore if */
             if (_temp instanceof AbruptCompletion) return _temp;
             /* c8 ignore if */
@@ -22621,7 +22679,7 @@ function* GetSubstitution(matched, str, position, captures, namedCaptures, repla
               /* ReturnIfAbrupt */
               let _temp2 = yield* ToString(capture);
               /* c8 ignore if */
-              if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+              if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
               /* c8 ignore if */
               if (_temp2 instanceof AbruptCompletion) return _temp2;
               /* c8 ignore if */
@@ -22697,7 +22755,7 @@ function* ApplyStringOrNumericBinaryOperator(lval, opText, rval) {
     /* ReturnIfAbrupt */
     let _temp = yield* ToPrimitive(lval);
     /* c8 ignore if */
-    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) return _temp;
     /* c8 ignore if */
@@ -22708,7 +22766,7 @@ function* ApplyStringOrNumericBinaryOperator(lval, opText, rval) {
     /* ReturnIfAbrupt */
     let _temp2 = yield* ToPrimitive(rval);
     /* c8 ignore if */
-    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp2 instanceof AbruptCompletion) return _temp2;
     /* c8 ignore if */
@@ -22719,7 +22777,7 @@ function* ApplyStringOrNumericBinaryOperator(lval, opText, rval) {
       /* ReturnIfAbrupt */
       let _temp3 = yield* ToString(lprim);
       /* c8 ignore if */
-      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp3 instanceof AbruptCompletion) return _temp3;
       /* c8 ignore if */
@@ -22730,7 +22788,7 @@ function* ApplyStringOrNumericBinaryOperator(lval, opText, rval) {
       /* ReturnIfAbrupt */
       let _temp4 = yield* ToString(rprim);
       /* c8 ignore if */
-      if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+      if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp4 instanceof AbruptCompletion) return _temp4;
       /* c8 ignore if */
@@ -22749,7 +22807,7 @@ function* ApplyStringOrNumericBinaryOperator(lval, opText, rval) {
   /* ReturnIfAbrupt */
   let _temp5 = yield* ToNumeric(lval);
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -22759,7 +22817,7 @@ function* ApplyStringOrNumericBinaryOperator(lval, opText, rval) {
   /* ReturnIfAbrupt */
   let _temp6 = yield* ToNumeric(rval);
   /* c8 ignore if */
-  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp6 instanceof AbruptCompletion) return _temp6;
   /* c8 ignore if */
@@ -22814,7 +22872,7 @@ function* EvaluateStringOrNumericBinaryExpression(leftOperand, opText, rightOper
   /* ReturnIfAbrupt */
   let _temp = yield* GetValue(lref);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -22826,7 +22884,7 @@ function* EvaluateStringOrNumericBinaryExpression(leftOperand, opText, rightOper
   /* ReturnIfAbrupt */
   let _temp2 = yield* GetValue(rref);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -22954,7 +23012,7 @@ function* PropertyBindingInitialization(node, value, environment) {
       /* ReturnIfAbrupt */
       let _temp = yield* PropertyBindingInitialization(item, value, environment);
       /* c8 ignore if */
-      if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+      if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp instanceof AbruptCompletion) return _temp;
       /* c8 ignore if */
@@ -22980,7 +23038,7 @@ function* PropertyBindingInitialization(node, value, environment) {
     /* ReturnIfAbrupt */
     let _temp2 = yield* KeyedBindingInitialization(node.BindingElement, value, environment, P);
     /* c8 ignore if */
-    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp2 instanceof AbruptCompletion) return _temp2;
     /* c8 ignore if */
@@ -22994,7 +23052,7 @@ function* PropertyBindingInitialization(node, value, environment) {
     /* ReturnIfAbrupt */
     let _temp3 = yield* KeyedBindingInitialization(node, value, environment, name);
     /* c8 ignore if */
-    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp3 instanceof AbruptCompletion) return _temp3;
     /* c8 ignore if */
@@ -23011,7 +23069,7 @@ function* KeyedBindingInitialization(node, value, environment, propertyName) {
     /* ReturnIfAbrupt */
     let _temp = yield* GetV(value, propertyName);
     /* c8 ignore if */
-    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) return _temp;
     /* c8 ignore if */
@@ -23026,7 +23084,7 @@ function* KeyedBindingInitialization(node, value, environment, propertyName) {
       /* ReturnIfAbrupt */
       let _temp2 = yield* GetValue(defaultValue);
       /* c8 ignore if */
-      if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+      if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp2 instanceof AbruptCompletion) return _temp2;
       /* c8 ignore if */
@@ -23042,7 +23100,7 @@ function* KeyedBindingInitialization(node, value, environment, propertyName) {
     /* ReturnIfAbrupt */
     let _temp3 = yield* ResolveBinding(bindingId, environment, node.BindingIdentifier.strict);
     /* c8 ignore if */
-    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp3 instanceof AbruptCompletion) return _temp3;
     /* c8 ignore if */
@@ -23052,7 +23110,7 @@ function* KeyedBindingInitialization(node, value, environment, propertyName) {
     /* ReturnIfAbrupt */
     let _temp4 = yield* GetV(value, propertyName);
     /* c8 ignore if */
-    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) return _temp4;
     /* c8 ignore if */
@@ -23071,7 +23129,7 @@ function* KeyedBindingInitialization(node, value, environment, propertyName) {
         /* ReturnIfAbrupt */
         let _temp5 = yield* GetValue(defaultValue);
         /* c8 ignore if */
-        if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+        if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp5 instanceof AbruptCompletion) return _temp5;
         /* c8 ignore if */
@@ -23101,7 +23159,7 @@ function* DestructuringAssignmentEvaluation_ObjectAssignmentPattern({
   /* ReturnIfAbrupt */
   let _temp = RequireObjectCoercible(value);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -23110,7 +23168,7 @@ function* DestructuringAssignmentEvaluation_ObjectAssignmentPattern({
   /* ReturnIfAbrupt */
   let _temp2 = yield* PropertyDestructuringAssignmentEvaluation(AssignmentPropertyList, value);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -23120,7 +23178,7 @@ function* DestructuringAssignmentEvaluation_ObjectAssignmentPattern({
     /* ReturnIfAbrupt */
     let _temp3 = yield* RestDestructuringAssignmentEvaluation(AssignmentRestProperty, value, excludedNames);
     /* c8 ignore if */
-    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp3 instanceof AbruptCompletion) return _temp3;
     /* c8 ignore if */
@@ -23152,7 +23210,7 @@ function* RestDestructuringAssignmentEvaluation({
   /* ReturnIfAbrupt */
   let _temp4 = yield* CopyDataProperties(restObj, value, excludedNames);
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -23171,7 +23229,7 @@ function* PropertyDestructuringAssignmentEvaluation(AssignmentPropertyList, valu
       /* ReturnIfAbrupt */
       let _temp5 = yield* ResolveBinding(P, undefined, AssignmentProperty.IdentifierReference.strict);
       /* c8 ignore if */
-      if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+      if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp5 instanceof AbruptCompletion) return _temp5;
       /* c8 ignore if */
@@ -23181,7 +23239,7 @@ function* PropertyDestructuringAssignmentEvaluation(AssignmentPropertyList, valu
       /* ReturnIfAbrupt */
       let _temp6 = yield* GetV(value, P);
       /* c8 ignore if */
-      if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+      if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp6 instanceof AbruptCompletion) return _temp6;
       /* c8 ignore if */
@@ -23194,7 +23252,7 @@ function* PropertyDestructuringAssignmentEvaluation(AssignmentPropertyList, valu
           /* ReturnIfAbrupt */
           let _temp7 = yield* NamedEvaluation(AssignmentProperty.Initializer, P);
           /* c8 ignore if */
-          if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+          if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp7 instanceof AbruptCompletion) return _temp7;
           /* c8 ignore if */
@@ -23209,7 +23267,7 @@ function* PropertyDestructuringAssignmentEvaluation(AssignmentPropertyList, valu
           /* ReturnIfAbrupt */
           let _temp8 = yield* GetValue(defaultValue);
           /* c8 ignore if */
-          if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+          if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp8 instanceof AbruptCompletion) return _temp8;
           /* c8 ignore if */
@@ -23221,7 +23279,7 @@ function* PropertyDestructuringAssignmentEvaluation(AssignmentPropertyList, valu
       /* ReturnIfAbrupt */
       let _temp9 = yield* PutValue(lref, v);
       /* c8 ignore if */
-      if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+      if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp9 instanceof AbruptCompletion) return _temp9;
       /* c8 ignore if */
@@ -23245,7 +23303,7 @@ function* PropertyDestructuringAssignmentEvaluation(AssignmentPropertyList, valu
       /* ReturnIfAbrupt */
       let _temp10 = yield* KeyedDestructuringAssignmentEvaluation(AssignmentProperty.AssignmentElement, value, name);
       /* c8 ignore if */
-      if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+      if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp10 instanceof AbruptCompletion) return _temp10;
       /* c8 ignore if */
@@ -23281,7 +23339,7 @@ function* KeyedDestructuringAssignmentEvaluation({
   /* ReturnIfAbrupt */
   let _temp11 = yield* GetV(value, propertyName);
   /* c8 ignore if */
-  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp11 instanceof AbruptCompletion) return _temp11;
   /* c8 ignore if */
@@ -23301,7 +23359,7 @@ function* KeyedDestructuringAssignmentEvaluation({
       /* ReturnIfAbrupt */
       let _temp12 = yield* GetValue(defaultValue);
       /* c8 ignore if */
-      if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield*');
+      if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp12 instanceof AbruptCompletion) return _temp12;
       /* c8 ignore if */
@@ -23354,7 +23412,7 @@ function* DestructuringAssignmentEvaluation_ArrayAssignmentPattern({
   /* ReturnIfAbrupt */
   let _temp15 = yield* GetIterator(value, 'sync');
   /* c8 ignore if */
-  if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield*');
+  if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp15 instanceof AbruptCompletion) return _temp15;
   /* c8 ignore if */
@@ -23391,7 +23449,7 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
       /* ReturnIfAbrupt */
       let _temp16 = yield* IteratorDestructuringAssignmentEvaluation(n, iteratorRecord);
       /* c8 ignore if */
-      if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield*');
+      if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp16 instanceof AbruptCompletion) return _temp16;
       /* c8 ignore if */
@@ -23406,7 +23464,7 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
         /* ReturnIfAbrupt */
         let _temp17 = yield* IteratorStep(iteratorRecord);
         /* c8 ignore if */
-        if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield*');
+        if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp17 instanceof AbruptCompletion) return _temp17;
         /* c8 ignore if */
@@ -23426,7 +23484,7 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
           /* ReturnIfAbrupt */
           let _temp18 = yield* Evaluate(DestructuringAssignmentTarget);
           /* c8 ignore if */
-          if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield*');
+          if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp18 instanceof AbruptCompletion) return _temp18;
           /* c8 ignore if */
@@ -23439,7 +23497,7 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
           /* ReturnIfAbrupt */
           let _temp19 = yield* IteratorStepValue(iteratorRecord);
           /* c8 ignore if */
-          if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield*');
+          if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp19 instanceof AbruptCompletion) return _temp19;
           /* c8 ignore if */
@@ -23468,7 +23526,7 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
             /* ReturnIfAbrupt */
             let _temp20 = yield* GetValue(defaultValue);
             /* c8 ignore if */
-            if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield*');
+            if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield* on the completion.');
             /* c8 ignore if */
             if (_temp20 instanceof AbruptCompletion) return _temp20;
             /* c8 ignore if */
@@ -23479,7 +23537,7 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
           /* ReturnIfAbrupt */
           let _temp21 = value;
           /* c8 ignore if */
-          if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield*');
+          if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp21 instanceof AbruptCompletion) return _temp21;
           /* c8 ignore if */
@@ -23544,7 +23602,7 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
           /* ReturnIfAbrupt */
           let _temp24 = yield* IteratorStepValue(iteratorRecord);
           /* c8 ignore if */
-          if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) throw new Assert.Error('Forgot to yield*');
+          if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp24 instanceof AbruptCompletion) return _temp24;
           /* c8 ignore if */
@@ -23618,7 +23676,7 @@ function* RestBindingInitialization({
   /* ReturnIfAbrupt */
   let _temp = yield* ResolveBinding(StringValue(BindingIdentifier), environment, BindingIdentifier.strict);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -23631,7 +23689,7 @@ function* RestBindingInitialization({
   /* ReturnIfAbrupt */
   let _temp2 = yield* CopyDataProperties(restObj, value, excludedNames);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -24235,7 +24293,7 @@ function* DefineMethodProperty(key, homeObject, closure, enumerable) {
     /* ReturnIfAbrupt */
     let _temp = yield* DefinePropertyOrThrow(homeObject, key, desc);
     /* c8 ignore if */
-    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) return _temp;
     /* c8 ignore if */
@@ -24257,7 +24315,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition, object, 
         /* ReturnIfAbrupt */
         let _temp2 = yield* DefineMethod(MethodDefinition, object);
         /* c8 ignore if */
-        if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+        if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp2 instanceof AbruptCompletion) return _temp2;
         /* c8 ignore if */
@@ -24290,7 +24348,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition, object, 
         /* ReturnIfAbrupt */
         let _temp4 = yield* Evaluate_PropertyName(ClassElementName);
         /* c8 ignore if */
-        if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+        if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp4 instanceof AbruptCompletion) return _temp4;
         /* c8 ignore if */
@@ -24329,7 +24387,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition, object, 
           /* ReturnIfAbrupt */
           let _temp5 = yield* DefinePropertyOrThrow(object, propKey, desc);
           /* c8 ignore if */
-          if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+          if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp5 instanceof AbruptCompletion) return _temp5;
           /* c8 ignore if */
@@ -24349,7 +24407,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition, object, 
         /* ReturnIfAbrupt */
         let _temp6 = yield* Evaluate_PropertyName(ClassElementName);
         /* c8 ignore if */
-        if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+        if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp6 instanceof AbruptCompletion) return _temp6;
         /* c8 ignore if */
@@ -24389,7 +24447,7 @@ function* MethodDefinitionEvaluation_MethodDefinition(MethodDefinition, object, 
           /* ReturnIfAbrupt */
           let _temp7 = yield* DefinePropertyOrThrow(object, propKey, desc);
           /* c8 ignore if */
-          if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+          if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp7 instanceof AbruptCompletion) return _temp7;
           /* c8 ignore if */
@@ -24417,7 +24475,7 @@ function* MethodDefinitionEvaluation_AsyncMethod(AsyncMethod, object, enumerable
   /* ReturnIfAbrupt */
   let _temp8 = yield* Evaluate_PropertyName(ClassElementName);
   /* c8 ignore if */
-  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp8 instanceof AbruptCompletion) return _temp8;
   /* c8 ignore if */
@@ -24668,7 +24726,7 @@ function* ClassFieldDefinitionEvaluation(FieldDefinition, homeObject) {
   /* ReturnIfAbrupt */
   let _temp = yield* Evaluate_PropertyName(ClassElementName);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -25500,14 +25558,25 @@ class Agent {
     this.#debugger_objectsCreatedDuringPreview.add(object);
   }
   debugger_scopePreview(cb) {
-    const old = this.#debugger_previewing;
-    this.#debugger_previewing = true;
-    try {
-      const res = cb();
-      return res;
-    } finally {
-      this.#debugger_previewing = old;
-      this.#debugger_objectsCreatedDuringPreview.clear();
+    if (!cb) {
+      const old = this.#debugger_previewing;
+      this.#debugger_previewing = true;
+      return {
+        [Symbol.dispose]: () => {
+          this.#debugger_previewing = old;
+          this.#debugger_objectsCreatedDuringPreview.clear();
+        }
+      };
+    } else {
+      const old = this.#debugger_previewing;
+      this.#debugger_previewing = true;
+      try {
+        const res = cb();
+        return res;
+      } finally {
+        this.#debugger_previewing = old;
+        this.#debugger_objectsCreatedDuringPreview.clear();
+      }
     }
   }
 }
@@ -25613,7 +25682,7 @@ function HostEnsureCanCompileStrings(callerRealm, calleeRealm) {
     /* ReturnIfAbrupt */
     let _temp5 = surroundingAgent.hostDefinedOptions.ensureCanCompileStrings(callerRealm, calleeRealm);
     /* c8 ignore if */
-    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp5 instanceof AbruptCompletion) return _temp5;
     /* c8 ignore if */
@@ -25731,7 +25800,7 @@ function HostEnqueueFinalizationRegistryCleanupJob(fg) {
     /* ReturnIfAbrupt */
     let _temp10 = surroundingAgent.hostDefinedOptions.cleanupFinalizationRegistry(fg);
     /* c8 ignore if */
-    if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+    if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp10 instanceof AbruptCompletion) return _temp10;
     /* c8 ignore if */
@@ -26029,6 +26098,9 @@ function ReturnIfAbrupt(_completion) {
   throw new TypeError('ReturnIfAbrupt requires build');
 }
 function ReturnIfAbruptRuntime(completion) {
+  if (typeof completion === 'object' && completion && 'next' in completion) {
+    throw new TypeError('Forgot to yield* on the completion.');
+  }
   const c = EnsureCompletion(completion);
   if (c.Type === 'normal') {
     return c.Value;
@@ -26120,7 +26192,7 @@ function* Await(value) {
   /* ReturnIfAbrupt */
   let _temp = yield* PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -26306,7 +26378,7 @@ function* TypedArraySpeciesCreate(exemplar, argumentList) {
   /* ReturnIfAbrupt */
   let _temp = yield* SpeciesConstructor(exemplar, defaultConstructor);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -26316,7 +26388,7 @@ function* TypedArraySpeciesCreate(exemplar, argumentList) {
   /* ReturnIfAbrupt */
   let _temp2 = yield* TypedArrayCreateFromConstructor(constructor, argumentList);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -26337,7 +26409,7 @@ function* TypedArrayCreateFromConstructor(constructor, argumentList) {
   /* ReturnIfAbrupt */
   let _temp3 = yield* Construct(constructor, argumentList);
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -26346,7 +26418,7 @@ function* TypedArrayCreateFromConstructor(constructor, argumentList) {
   /* ReturnIfAbrupt */
   let _temp4 = ValidateTypedArray(newTypedArray);
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -26371,7 +26443,7 @@ function ValidateTypedArray(O, order) {
   /* ReturnIfAbrupt */
   let _temp6 = RequireInternalSlot(O, 'TypedArrayName');
   /* c8 ignore if */
-  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp6 instanceof AbruptCompletion) return _temp6;
   /* c8 ignore if */
@@ -26406,7 +26478,7 @@ function* CompareTypedArrayElements(x, y, comparator) {
     /* ReturnIfAbrupt */
     let _temp8 = yield* Call(comparator, Value.undefined, [x, y]);
     /* c8 ignore if */
-    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp8 instanceof AbruptCompletion) return _temp8;
     /* c8 ignore if */
@@ -26414,7 +26486,7 @@ function* CompareTypedArrayElements(x, y, comparator) {
     /* ReturnIfAbrupt */
     let _temp7 = yield* ToNumber(_temp8);
     /* c8 ignore if */
-    if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+    if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp7 instanceof AbruptCompletion) return _temp7;
     /* c8 ignore if */
@@ -26462,7 +26534,7 @@ function* AllocateTypedArray(constructorName, newTarget, defaultProto, length) {
   /* ReturnIfAbrupt */
   let _temp9 = yield* GetPrototypeFromConstructor(newTarget, defaultProto);
   /* c8 ignore if */
-  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp9 instanceof AbruptCompletion) return _temp9;
   /* c8 ignore if */
@@ -26494,7 +26566,7 @@ function* AllocateTypedArray(constructorName, newTarget, defaultProto, length) {
     /* ReturnIfAbrupt */
     let _temp10 = yield* AllocateTypedArrayBuffer(obj, length);
     /* c8 ignore if */
-    if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+    if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp10 instanceof AbruptCompletion) return _temp10;
     /* c8 ignore if */
@@ -26524,7 +26596,7 @@ function* InitializeTypedArrayFromTypedArray(O, srcArray) {
     /* ReturnIfAbrupt */
     let _temp11 = yield* CloneArrayBuffer(srcData, srcByteOffset, byteLength);
     /* c8 ignore if */
-    if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+    if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp11 instanceof AbruptCompletion) return _temp11;
     /* c8 ignore if */
@@ -26534,7 +26606,7 @@ function* InitializeTypedArrayFromTypedArray(O, srcArray) {
     /* ReturnIfAbrupt */
     let _temp12 = yield* AllocateArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), byteLength);
     /* c8 ignore if */
-    if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield*');
+    if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp12 instanceof AbruptCompletion) return _temp12;
     /* c8 ignore if */
@@ -26551,7 +26623,7 @@ function* InitializeTypedArrayFromTypedArray(O, srcArray) {
       /* ReturnIfAbrupt */
       let _temp13 = yield* SetValueInBuffer(data, targetByteIndex, elementType, value);
       /* c8 ignore if */
-      if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield*');
+      if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp13 instanceof AbruptCompletion) return _temp13;
       /* c8 ignore if */
@@ -26574,7 +26646,7 @@ function* InitializeTypedArrayFromArrayBuffer(O, buffer, byteOffset, length) {
   /* ReturnIfAbrupt */
   let _temp14 = yield* ToIndex(byteOffset);
   /* c8 ignore if */
-  if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield*');
+  if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp14 instanceof AbruptCompletion) return _temp14;
   /* c8 ignore if */
@@ -26589,7 +26661,7 @@ function* InitializeTypedArrayFromArrayBuffer(O, buffer, byteOffset, length) {
     /* ReturnIfAbrupt */
     let _temp15 = yield* ToIndex(length);
     /* c8 ignore if */
-    if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield*');
+    if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp15 instanceof AbruptCompletion) return _temp15;
     /* c8 ignore if */
@@ -26637,7 +26709,7 @@ function* InitializeTypedArrayFromList(O, value) {
   /* ReturnIfAbrupt */
   let _temp16 = yield* AllocateTypedArrayBuffer(O, len);
   /* c8 ignore if */
-  if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield*');
+  if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp16 instanceof AbruptCompletion) return _temp16;
   /* c8 ignore if */
@@ -26659,7 +26731,7 @@ function* InitializeTypedArrayFromList(O, value) {
     /* ReturnIfAbrupt */
     let _temp18 = yield* Set$1(O, Pk, kValue, Value.true);
     /* c8 ignore if */
-    if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield*');
+    if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp18 instanceof AbruptCompletion) return _temp18;
     /* c8 ignore if */
@@ -26675,7 +26747,7 @@ function* InitializeTypedArrayFromArrayLike(O, arrayLike) {
   /* ReturnIfAbrupt */
   let _temp19 = yield* LengthOfArrayLike(arrayLike);
   /* c8 ignore if */
-  if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield*');
+  if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp19 instanceof AbruptCompletion) return _temp19;
   /* c8 ignore if */
@@ -26684,7 +26756,7 @@ function* InitializeTypedArrayFromArrayLike(O, arrayLike) {
   /* ReturnIfAbrupt */
   let _temp20 = yield* AllocateTypedArrayBuffer(O, len);
   /* c8 ignore if */
-  if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield*');
+  if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp20 instanceof AbruptCompletion) return _temp20;
   /* c8 ignore if */
@@ -26705,7 +26777,7 @@ function* InitializeTypedArrayFromArrayLike(O, arrayLike) {
     /* ReturnIfAbrupt */
     let _temp22 = yield* Get(arrayLike, Pk);
     /* c8 ignore if */
-    if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield*');
+    if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp22 instanceof AbruptCompletion) return _temp22;
     /* c8 ignore if */
@@ -26714,7 +26786,7 @@ function* InitializeTypedArrayFromArrayLike(O, arrayLike) {
     /* ReturnIfAbrupt */
     let _temp23 = yield* Set$1(O, Pk, kValue, Value.true);
     /* c8 ignore if */
-    if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield*');
+    if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp23 instanceof AbruptCompletion) return _temp23;
     /* c8 ignore if */
@@ -26742,7 +26814,7 @@ function* AllocateTypedArrayBuffer(O, length) {
   /* ReturnIfAbrupt */
   let _temp24 = yield* AllocateArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), byteLength);
   /* c8 ignore if */
-  if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) throw new Assert.Error('Forgot to yield*');
+  if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp24 instanceof AbruptCompletion) return _temp24;
   /* c8 ignore if */
@@ -26786,7 +26858,7 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
   /* ReturnIfAbrupt */
   let _temp25 = yield* GetMethod(source, wellKnownSymbols.iterator);
   /* c8 ignore if */
-  if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield*');
+  if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp25 instanceof AbruptCompletion) return _temp25;
   /* c8 ignore if */
@@ -26797,7 +26869,7 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
     /* ReturnIfAbrupt */
     let _temp31 = yield* GetIteratorFromMethod(source, usingIterator);
     /* c8 ignore if */
-    if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) throw new Assert.Error('Forgot to yield*');
+    if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp31 instanceof AbruptCompletion) return _temp31;
     /* c8 ignore if */
@@ -26805,7 +26877,7 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
     /* ReturnIfAbrupt */
     let _temp26 = yield* IteratorToList(_temp31);
     /* c8 ignore if */
-    if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield*');
+    if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp26 instanceof AbruptCompletion) return _temp26;
     /* c8 ignore if */
@@ -26815,7 +26887,7 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
     /* ReturnIfAbrupt */
     let _temp27 = yield* TypedArrayCreateFromConstructor(C, [F(len)]);
     /* c8 ignore if */
-    if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield*');
+    if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp27 instanceof AbruptCompletion) return _temp27;
     /* c8 ignore if */
@@ -26840,7 +26912,7 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
         /* ReturnIfAbrupt */
         let _temp29 = yield* Call(mapper, thisArg, [kValue, F(k)]);
         /* c8 ignore if */
-        if (_temp29 && typeof _temp29 === 'object' && 'next' in _temp29) throw new Assert.Error('Forgot to yield*');
+        if (_temp29 && typeof _temp29 === 'object' && 'next' in _temp29) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp29 instanceof AbruptCompletion) return _temp29;
         /* c8 ignore if */
@@ -26852,7 +26924,7 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
       /* ReturnIfAbrupt */
       let _temp30 = yield* Set$1(targetObj, Pk, mappedValue, Value.true);
       /* c8 ignore if */
-      if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) throw new Assert.Error('Forgot to yield*');
+      if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp30 instanceof AbruptCompletion) return _temp30;
       /* c8 ignore if */
@@ -26879,7 +26951,7 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
   /* ReturnIfAbrupt */
   let _temp33 = yield* LengthOfArrayLike(arrayLike);
   /* c8 ignore if */
-  if (_temp33 && typeof _temp33 === 'object' && 'next' in _temp33) throw new Assert.Error('Forgot to yield*');
+  if (_temp33 && typeof _temp33 === 'object' && 'next' in _temp33) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp33 instanceof AbruptCompletion) return _temp33;
   /* c8 ignore if */
@@ -26889,7 +26961,7 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
   /* ReturnIfAbrupt */
   let _temp34 = yield* TypedArrayCreateFromConstructor(C, [F(len)]);
   /* c8 ignore if */
-  if (_temp34 && typeof _temp34 === 'object' && 'next' in _temp34) throw new Assert.Error('Forgot to yield*');
+  if (_temp34 && typeof _temp34 === 'object' && 'next' in _temp34) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp34 instanceof AbruptCompletion) return _temp34;
   /* c8 ignore if */
@@ -26915,7 +26987,7 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
     /* ReturnIfAbrupt */
     let _temp36 = yield* Get(arrayLike, Pk);
     /* c8 ignore if */
-    if (_temp36 && typeof _temp36 === 'object' && 'next' in _temp36) throw new Assert.Error('Forgot to yield*');
+    if (_temp36 && typeof _temp36 === 'object' && 'next' in _temp36) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp36 instanceof AbruptCompletion) return _temp36;
     /* c8 ignore if */
@@ -26927,7 +26999,7 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
       /* ReturnIfAbrupt */
       let _temp37 = yield* Call(mapper, thisArg, [kValue, F(k)]);
       /* c8 ignore if */
-      if (_temp37 && typeof _temp37 === 'object' && 'next' in _temp37) throw new Assert.Error('Forgot to yield*');
+      if (_temp37 && typeof _temp37 === 'object' && 'next' in _temp37) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp37 instanceof AbruptCompletion) return _temp37;
       /* c8 ignore if */
@@ -26942,7 +27014,7 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
     /* ReturnIfAbrupt */
     let _temp38 = yield* Set$1(targetObj, Pk, mappedValue, Value.true);
     /* c8 ignore if */
-    if (_temp38 && typeof _temp38 === 'object' && 'next' in _temp38) throw new Assert.Error('Forgot to yield*');
+    if (_temp38 && typeof _temp38 === 'object' && 'next' in _temp38) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp38 instanceof AbruptCompletion) return _temp38;
     /* c8 ignore if */
@@ -26972,7 +27044,7 @@ function* TypedArray_of(items, {
   /* ReturnIfAbrupt */
   let _temp39 = yield* TypedArrayCreateFromConstructor(C, [F(len)]);
   /* c8 ignore if */
-  if (_temp39 && typeof _temp39 === 'object' && 'next' in _temp39) throw new Assert.Error('Forgot to yield*');
+  if (_temp39 && typeof _temp39 === 'object' && 'next' in _temp39) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp39 instanceof AbruptCompletion) return _temp39;
   /* c8 ignore if */
@@ -27000,7 +27072,7 @@ function* TypedArray_of(items, {
     /* ReturnIfAbrupt */
     let _temp41 = yield* Set$1(newObj, Pk, kValue, Value.true);
     /* c8 ignore if */
-    if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) throw new Assert.Error('Forgot to yield*');
+    if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp41 instanceof AbruptCompletion) return _temp41;
     /* c8 ignore if */
@@ -27047,7 +27119,7 @@ function* AllocateArrayBuffer(constructor, byteLength, maxByteLength) {
   /* ReturnIfAbrupt */
   let _temp = yield* OrdinaryCreateFromConstructor(constructor, '%ArrayBuffer.prototype%', slots);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -27059,7 +27131,7 @@ function* AllocateArrayBuffer(constructor, byteLength, maxByteLength) {
   /* ReturnIfAbrupt */
   let _temp2 = CreateByteDataBlock(byteLength);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -27101,7 +27173,7 @@ function DetachArrayBuffer(arrayBuffer, key) {
   /* ReturnIfAbrupt */
   let _temp3 = surroundingAgent.debugger_tryTouchDuringPreview(arrayBuffer);
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -27124,7 +27196,7 @@ function* CloneArrayBuffer(srcBuffer, srcByteOffset, srcLength) {
   /* ReturnIfAbrupt */
   let _temp4 = yield* AllocateArrayBuffer(surroundingAgent.intrinsic('%ArrayBuffer%'), srcLength);
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -27268,7 +27340,7 @@ function* SetValueInBuffer(arrayBuffer, byteIndex, type, value, _isTypedArray, _
   /* ReturnIfAbrupt */
   let _temp6 = surroundingAgent.debugger_tryTouchDuringPreview(arrayBuffer);
   /* c8 ignore if */
-  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp6 instanceof AbruptCompletion) return _temp6;
   /* c8 ignore if */
@@ -27459,7 +27531,7 @@ function AsyncGeneratorValidate(generator, generatorBrand) {
   /* ReturnIfAbrupt */
   let _temp3 = RequireInternalSlot(generator, 'AsyncGeneratorContext');
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -27468,7 +27540,7 @@ function AsyncGeneratorValidate(generator, generatorBrand) {
   /* ReturnIfAbrupt */
   let _temp4 = RequireInternalSlot(generator, 'AsyncGeneratorState');
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -27477,7 +27549,7 @@ function AsyncGeneratorValidate(generator, generatorBrand) {
   /* ReturnIfAbrupt */
   let _temp5 = RequireInternalSlot(generator, 'AsyncGeneratorQueue');
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -27705,7 +27777,7 @@ function* AsyncGeneratorAwaitReturn(generator) {
   /* ReturnIfAbrupt */
   let _temp11 = yield* PromiseResolve(surroundingAgent.intrinsic('%Promise%'), completion.Value);
   /* c8 ignore if */
-  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp11 instanceof AbruptCompletion) return _temp11;
   /* c8 ignore if */
@@ -27899,7 +27971,7 @@ function CreateAsyncIteratorFromClosure(closure, generatorBrand, generatorProtot
   /* ReturnIfAbrupt */
   let _temp22 = AsyncGeneratorStart(generator, closure);
   /* c8 ignore if */
-  if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield*');
+  if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp22 instanceof AbruptCompletion) return _temp22;
   /* c8 ignore if */
@@ -28034,7 +28106,7 @@ function* GetViewValue(view, requestIndex, isLittleEndian, type) {
   /* ReturnIfAbrupt */
   let _temp = RequireInternalSlot(view, 'DataView');
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -28045,7 +28117,7 @@ function* GetViewValue(view, requestIndex, isLittleEndian, type) {
   /* ReturnIfAbrupt */
   let _temp2 = yield* ToIndex(requestIndex);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -28078,7 +28150,7 @@ function* SetViewValue(view, requestIndex, isLittleEndian, type, value) {
   /* ReturnIfAbrupt */
   let _temp3 = RequireInternalSlot(view, 'DataView');
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -28089,7 +28161,7 @@ function* SetViewValue(view, requestIndex, isLittleEndian, type, value) {
   /* ReturnIfAbrupt */
   let _temp4 = yield* ToIndex(requestIndex);
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -28102,7 +28174,7 @@ function* SetViewValue(view, requestIndex, isLittleEndian, type, value) {
     /* ReturnIfAbrupt */
     let _temp5 = yield* ToBigInt(value);
     /* c8 ignore if */
-    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp5 instanceof AbruptCompletion) return _temp5;
     /* c8 ignore if */
@@ -28112,7 +28184,7 @@ function* SetViewValue(view, requestIndex, isLittleEndian, type, value) {
     /* ReturnIfAbrupt */
     let _temp6 = yield* ToNumber(value);
     /* c8 ignore if */
-    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp6 instanceof AbruptCompletion) return _temp6;
     /* c8 ignore if */
@@ -28140,7 +28212,7 @@ function* SetViewValue(view, requestIndex, isLittleEndian, type, value) {
   /* ReturnIfAbrupt */
   let _temp7 = yield* SetValueInBuffer(view.ViewedArrayBuffer, bufferIndex, type, numberValue, Value.false, 'unordered', isLittleEndian);
   /* c8 ignore if */
-  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp7 instanceof AbruptCompletion) return _temp7;
   /* c8 ignore if */
@@ -28469,7 +28541,7 @@ function* InstallErrorCause(O, options) {
     /* ReturnIfAbrupt */
     let _temp = yield* HasProperty(options, Value('cause'));
     /* c8 ignore if */
-    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) return _temp;
     /* c8 ignore if */
@@ -28479,7 +28551,7 @@ function* InstallErrorCause(O, options) {
       /* ReturnIfAbrupt */
       let _temp2 = yield* Get(options, Value('cause'));
       /* c8 ignore if */
-      if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+      if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp2 instanceof AbruptCompletion) return _temp2;
       /* c8 ignore if */
@@ -28615,7 +28687,7 @@ function* FunctionProto_apply([thisArg = Value.undefined, argArray = Value.undef
   /* ReturnIfAbrupt */
   let _temp = yield* CreateListFromArrayLike(argArray);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -28655,7 +28727,7 @@ function* BoundFunctionCreate(targetFunction, boundThis, boundArgs) {
   /* ReturnIfAbrupt */
   let _temp2 = yield* targetFunction.GetPrototypeOf();
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -28709,7 +28781,7 @@ function* FunctionProto_bind([thisArg = Value.undefined, ...args], {
   /* ReturnIfAbrupt */
   let _temp4 = yield* BoundFunctionCreate(Target, thisArg, args);
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -28721,7 +28793,7 @@ function* FunctionProto_bind([thisArg = Value.undefined, ...args], {
   /* ReturnIfAbrupt */
   let _temp5 = yield* HasOwnProperty(Target, Value('length'));
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -28732,7 +28804,7 @@ function* FunctionProto_bind([thisArg = Value.undefined, ...args], {
     /* ReturnIfAbrupt */
     let _temp6 = yield* Get(Target, Value('length'));
     /* c8 ignore if */
-    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp6 instanceof AbruptCompletion) return _temp6;
     /* c8 ignore if */
@@ -28751,7 +28823,7 @@ function* FunctionProto_bind([thisArg = Value.undefined, ...args], {
         /* ReturnIfAbrupt */
         let _temp7 = yield* ToIntegerOrInfinity(targetLen);
         /* c8 ignore if */
-        if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+        if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp7 instanceof AbruptCompletion) return _temp7;
         /* c8 ignore if */
@@ -28783,7 +28855,7 @@ function* FunctionProto_bind([thisArg = Value.undefined, ...args], {
   /* ReturnIfAbrupt */
   let _temp9 = yield* Get(Target, Value('name'));
   /* c8 ignore if */
-  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp9 instanceof AbruptCompletion) return _temp9;
   /* c8 ignore if */
@@ -28988,7 +29060,7 @@ function OrdinaryCallBindThis(F, calleeContext, thisArgument) {
   /* ReturnIfAbrupt */
   let _temp2 = localEnv.BindThisValue(thisValue);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -29015,7 +29087,7 @@ function* DefineField(receiver, fieldRecord) {
     /* ReturnIfAbrupt */
     let _temp3 = yield* Call(initializer, receiver);
     /* c8 ignore if */
-    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp3 instanceof AbruptCompletion) return _temp3;
     /* c8 ignore if */
@@ -29031,7 +29103,7 @@ function* DefineField(receiver, fieldRecord) {
     /* ReturnIfAbrupt */
     let _temp4 = PrivateFieldAdd(fieldName, receiver, initValue);
     /* c8 ignore if */
-    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) return _temp4;
     /* c8 ignore if */
@@ -29054,7 +29126,7 @@ function* DefineField(receiver, fieldRecord) {
     /* ReturnIfAbrupt */
     let _temp6 = yield* CreateDataPropertyOrThrow(receiver, fieldName, initValue);
     /* c8 ignore if */
-    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp6 instanceof AbruptCompletion) return _temp6;
     /* c8 ignore if */
@@ -29072,7 +29144,7 @@ function* InitializeInstanceElements(O, constructor) {
     /* ReturnIfAbrupt */
     let _temp7 = PrivateMethodOrAccessorAdd(method, O);
     /* c8 ignore if */
-    if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+    if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp7 instanceof AbruptCompletion) return _temp7;
     /* c8 ignore if */
@@ -29085,7 +29157,7 @@ function* InitializeInstanceElements(O, constructor) {
     /* ReturnIfAbrupt */
     let _temp8 = yield* DefineField(O, fieldRecord);
     /* c8 ignore if */
-    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp8 instanceof AbruptCompletion) return _temp8;
     /* c8 ignore if */
@@ -29156,7 +29228,7 @@ function* FunctionConstructSlot(argumentsList, newTarget) {
     /* ReturnIfAbrupt */
     let _temp9 = yield* OrdinaryCreateFromConstructor(newTarget, '%Object.prototype%');
     /* c8 ignore if */
-    if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+    if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp9 instanceof AbruptCompletion) return _temp9;
     /* c8 ignore if */
@@ -29725,7 +29797,7 @@ function GeneratorValidate(generator, generatorBrand) {
   /* ReturnIfAbrupt */
   let _temp2 = RequireInternalSlot(generator, 'GeneratorState');
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -29734,7 +29806,7 @@ function GeneratorValidate(generator, generatorBrand) {
   /* ReturnIfAbrupt */
   let _temp3 = RequireInternalSlot(generator, 'GeneratorBrand');
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -29762,7 +29834,7 @@ function* GeneratorResume(generator, value, generatorBrand) {
   /* ReturnIfAbrupt */
   let _temp4 = GeneratorValidate(generator, generatorBrand);
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -29814,7 +29886,7 @@ function* GeneratorResumeAbrupt(generator, abruptCompletion, generatorBrand) {
   /* ReturnIfAbrupt */
   let _temp6 = GeneratorValidate(generator, generatorBrand);
   /* c8 ignore if */
-  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp6 instanceof AbruptCompletion) return _temp6;
   /* c8 ignore if */
@@ -29935,7 +30007,7 @@ function* Yield(value) {
     /* ReturnIfAbrupt */
     let _temp8 = yield* Await(value);
     /* c8 ignore if */
-    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp8 instanceof AbruptCompletion) return _temp8;
     /* c8 ignore if */
@@ -30004,7 +30076,7 @@ function* PerformEval(x, callerRealm, strictCaller, direct) {
   /* ReturnIfAbrupt */
   let _temp = HostEnsureCanCompileStrings(callerRealm, evalRealm);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -30243,7 +30315,7 @@ function* EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strict)
           /* ReturnIfAbrupt */
           let _temp3 = yield* varEnv.CanDeclareGlobalFunction(fn);
           /* c8 ignore if */
-          if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+          if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp3 instanceof AbruptCompletion) return _temp3;
           /* c8 ignore if */
@@ -30278,7 +30350,7 @@ function* EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strict)
             /* ReturnIfAbrupt */
             let _temp4 = yield* varEnv.CanDeclareGlobalVar(vn);
             /* c8 ignore if */
-            if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+            if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
             /* c8 ignore if */
             if (_temp4 instanceof AbruptCompletion) return _temp4;
             /* c8 ignore if */
@@ -30313,7 +30385,7 @@ function* EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strict)
         /* ReturnIfAbrupt */
         let _temp5 = lexEnv.CreateImmutableBinding(dn, Value.true);
         /* c8 ignore if */
-        if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+        if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp5 instanceof AbruptCompletion) return _temp5;
         /* c8 ignore if */
@@ -30322,7 +30394,7 @@ function* EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strict)
         /* ReturnIfAbrupt */
         let _temp6 = yield* lexEnv.CreateMutableBinding(dn, Value.false);
         /* c8 ignore if */
-        if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+        if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp6 instanceof AbruptCompletion) return _temp6;
         /* c8 ignore if */
@@ -30341,7 +30413,7 @@ function* EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strict)
       /* ReturnIfAbrupt */
       let _temp7 = yield* varEnv.CreateGlobalFunctionBinding(fn, fo, Value.true);
       /* c8 ignore if */
-      if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+      if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp7 instanceof AbruptCompletion) return _temp7;
       /* c8 ignore if */
@@ -30394,7 +30466,7 @@ function* EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strict)
       /* ReturnIfAbrupt */
       let _temp11 = yield* varEnv.CreateGlobalVarBinding(vn, Value.true);
       /* c8 ignore if */
-      if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+      if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp11 instanceof AbruptCompletion) return _temp11;
       /* c8 ignore if */
@@ -30442,7 +30514,7 @@ function* SetImmutablePrototype(O, V) {
   /* ReturnIfAbrupt */
   let _temp = yield* O.GetPrototypeOf();
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -30563,7 +30635,7 @@ function* GetIteratorDirect(obj) {
   /* ReturnIfAbrupt */
   let _temp = yield* Get(obj, Value('next'));
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -30583,7 +30655,7 @@ function* GetIteratorFromMethod(obj, method) {
   /* ReturnIfAbrupt */
   let _temp2 = yield* Call(method, obj);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -30603,7 +30675,7 @@ function* GetIterator(obj, kind) {
     /* ReturnIfAbrupt */
     let _temp3 = yield* GetMethod(obj, wellKnownSymbols.asyncIterator);
     /* c8 ignore if */
-    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp3 instanceof AbruptCompletion) return _temp3;
     /* c8 ignore if */
@@ -30613,7 +30685,7 @@ function* GetIterator(obj, kind) {
       /* ReturnIfAbrupt */
       let _temp4 = yield* GetMethod(obj, wellKnownSymbols.iterator);
       /* c8 ignore if */
-      if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+      if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp4 instanceof AbruptCompletion) return _temp4;
       /* c8 ignore if */
@@ -30625,7 +30697,7 @@ function* GetIterator(obj, kind) {
       /* ReturnIfAbrupt */
       let _temp5 = yield* GetIteratorFromMethod(obj, syncMethod);
       /* c8 ignore if */
-      if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+      if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp5 instanceof AbruptCompletion) return _temp5;
       /* c8 ignore if */
@@ -30637,7 +30709,7 @@ function* GetIterator(obj, kind) {
     /* ReturnIfAbrupt */
     let _temp6 = yield* GetMethod(obj, wellKnownSymbols.iterator);
     /* c8 ignore if */
-    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp6 instanceof AbruptCompletion) return _temp6;
     /* c8 ignore if */
@@ -30663,7 +30735,7 @@ function* GetIteratorFlattenable(obj, primitiveHandling) {
   /* ReturnIfAbrupt */
   let _temp7 = yield* GetMethod(obj, wellKnownSymbols.iterator);
   /* c8 ignore if */
-  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp7 instanceof AbruptCompletion) return _temp7;
   /* c8 ignore if */
@@ -30676,7 +30748,7 @@ function* GetIteratorFlattenable(obj, primitiveHandling) {
     /* ReturnIfAbrupt */
     let _temp8 = yield* Call(method, obj);
     /* c8 ignore if */
-    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp8 instanceof AbruptCompletion) return _temp8;
     /* c8 ignore if */
@@ -30725,7 +30797,7 @@ function* IteratorComplete(iteratorResult) {
   /* ReturnIfAbrupt */
   let _temp10 = yield* Get(iteratorResult, Value('done'));
   /* c8 ignore if */
-  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp10 instanceof AbruptCompletion) return _temp10;
   /* c8 ignore if */
@@ -30745,7 +30817,7 @@ function* IteratorStep(iteratorRecord) {
   /* ReturnIfAbrupt */
   let _temp11 = yield* IteratorNext(iteratorRecord);
   /* c8 ignore if */
-  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp11 instanceof AbruptCompletion) return _temp11;
   /* c8 ignore if */
@@ -30780,7 +30852,7 @@ function* IteratorStepValue(iteratorRecord) {
   /* ReturnIfAbrupt */
   let _temp13 = yield* IteratorStep(iteratorRecord);
   /* c8 ignore if */
-  if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield*');
+  if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp13 instanceof AbruptCompletion) return _temp13;
   /* c8 ignore if */
@@ -30884,7 +30956,7 @@ function CreateListIteratorRecord(list) {
       /* ReturnIfAbrupt */
       let _temp16 = yield* GeneratorYield(CreateIteratorResultObject(E, Value.false));
       /* c8 ignore if */
-      if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield*');
+      if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp16 instanceof AbruptCompletion) return _temp16;
       /* c8 ignore if */
@@ -30908,7 +30980,7 @@ function* IteratorToList(iteratorRecord) {
     /* ReturnIfAbrupt */
     let _temp17 = yield* IteratorStepValue(iteratorRecord);
     /* c8 ignore if */
-    if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield*');
+    if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp17 instanceof AbruptCompletion) return _temp17;
     /* c8 ignore if */
@@ -31016,7 +31088,7 @@ const InternalMethods$3 = {
     /* ReturnIfAbrupt */
     let _temp = yield* O.Get(P, O);
     /* c8 ignore if */
-    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) return _temp;
     /* c8 ignore if */
@@ -31037,7 +31109,7 @@ const InternalMethods$3 = {
     /* ReturnIfAbrupt */
     let _temp2 = yield* O.GetOwnProperty(P);
     /* c8 ignore if */
-    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp2 instanceof AbruptCompletion) return _temp2;
     /* c8 ignore if */
@@ -31337,7 +31409,7 @@ function InnerModuleLinking(module, stack, index) {
     /* ReturnIfAbrupt */
     let _temp3 = module.Link();
     /* c8 ignore if */
-    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp3 instanceof AbruptCompletion) return _temp3;
     /* c8 ignore if */
@@ -31358,7 +31430,7 @@ function InnerModuleLinking(module, stack, index) {
     /* ReturnIfAbrupt */
     let _temp4 = InnerModuleLinking(requiredModule, stack, index);
     /* c8 ignore if */
-    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) return _temp4;
     /* c8 ignore if */
@@ -31375,7 +31447,7 @@ function InnerModuleLinking(module, stack, index) {
   /* ReturnIfAbrupt */
   let _temp5 = module.InitializeEnvironment();
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -31403,7 +31475,7 @@ function* InnerModuleEvaluation(module, stack, index) {
     /* ReturnIfAbrupt */
     let _temp6 = yield* module.Evaluate();
     /* c8 ignore if */
-    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp6 instanceof AbruptCompletion) return _temp6;
     /* c8 ignore if */
@@ -31433,7 +31505,7 @@ function* InnerModuleEvaluation(module, stack, index) {
     /* ReturnIfAbrupt */
     let _temp7 = yield* InnerModuleEvaluation(requiredModule, stack, index);
     /* c8 ignore if */
-    if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+    if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp7 instanceof AbruptCompletion) return _temp7;
     /* c8 ignore if */
@@ -31474,7 +31546,7 @@ function* InnerModuleEvaluation(module, stack, index) {
     /* ReturnIfAbrupt */
     let _temp9 = yield* module.ExecuteModule();
     /* c8 ignore if */
-    if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+    if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp9 instanceof AbruptCompletion) return _temp9;
     /* c8 ignore if */
@@ -31832,7 +31904,7 @@ function CreateDefaultExportSyntheticModule(defaultExport, realm, hostDefined) {
     /* ReturnIfAbrupt */
     let _temp22 = yield* module.SetSyntheticExport(Value('default'), defaultExport);
     /* c8 ignore if */
-    if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield*');
+    if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp22 instanceof AbruptCompletion) return _temp22;
     /* c8 ignore if */
@@ -31934,7 +32006,7 @@ function* GetV(V, P) {
   /* ReturnIfAbrupt */
   let _temp = ToObject(V);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -31952,7 +32024,7 @@ function* Set$1(O, P, V, Throw) {
   /* ReturnIfAbrupt */
   let _temp2 = yield* O.Set(P, V, O);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -32000,7 +32072,7 @@ function* CreateDataPropertyOrThrow(O, P, V) {
   /* ReturnIfAbrupt */
   let _temp3 = yield* CreateDataProperty(O, P, V);
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -32039,7 +32111,7 @@ function* DefinePropertyOrThrow(O, P, desc) {
   /* ReturnIfAbrupt */
   let _temp5 = yield* O.DefineOwnProperty(P, desc);
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -32059,7 +32131,7 @@ function* DeletePropertyOrThrow(O, P) {
   /* ReturnIfAbrupt */
   let _temp6 = yield* O.Delete(P);
   /* c8 ignore if */
-  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp6 instanceof AbruptCompletion) return _temp6;
   /* c8 ignore if */
@@ -32078,7 +32150,7 @@ function* GetMethod(V, P) {
   /* ReturnIfAbrupt */
   let _temp7 = yield* GetV(V, P);
   /* c8 ignore if */
-  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp7 instanceof AbruptCompletion) return _temp7;
   /* c8 ignore if */
@@ -32109,7 +32181,7 @@ function* HasOwnProperty(O, P) {
   /* ReturnIfAbrupt */
   let _temp8 = yield* O.GetOwnProperty(P);
   /* c8 ignore if */
-  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp8 instanceof AbruptCompletion) return _temp8;
   /* c8 ignore if */
@@ -32131,7 +32203,7 @@ function* Call(F, V, argumentsList = []) {
   /* ReturnIfAbrupt */
   let _temp9 = yield* F.Call(V, argumentsList);
   /* c8 ignore if */
-  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp9 instanceof AbruptCompletion) return _temp9;
   /* c8 ignore if */
@@ -32158,7 +32230,7 @@ function* SetIntegrityLevel(O, level) {
   /* ReturnIfAbrupt */
   let _temp10 = yield* O.PreventExtensions();
   /* c8 ignore if */
-  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp10 instanceof AbruptCompletion) return _temp10;
   /* c8 ignore if */
@@ -32170,7 +32242,7 @@ function* SetIntegrityLevel(O, level) {
   /* ReturnIfAbrupt */
   let _temp11 = yield* O.OwnPropertyKeys();
   /* c8 ignore if */
-  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp11 instanceof AbruptCompletion) return _temp11;
   /* c8 ignore if */
@@ -32183,7 +32255,7 @@ function* SetIntegrityLevel(O, level) {
         Configurable: Value.false
       }));
       /* c8 ignore if */
-      if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield*');
+      if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp12 instanceof AbruptCompletion) return _temp12;
       /* c8 ignore if */
@@ -32194,7 +32266,7 @@ function* SetIntegrityLevel(O, level) {
       /* ReturnIfAbrupt */
       let _temp13 = yield* O.GetOwnProperty(k);
       /* c8 ignore if */
-      if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield*');
+      if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp13 instanceof AbruptCompletion) return _temp13;
       /* c8 ignore if */
@@ -32215,7 +32287,7 @@ function* SetIntegrityLevel(O, level) {
         /* ReturnIfAbrupt */
         let _temp14 = yield* DefinePropertyOrThrow(O, k, desc);
         /* c8 ignore if */
-        if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield*');
+        if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp14 instanceof AbruptCompletion) return _temp14;
         /* c8 ignore if */
@@ -32234,7 +32306,7 @@ function* TestIntegrityLevel(O, level) {
   /* ReturnIfAbrupt */
   let _temp15 = yield* IsExtensible(O);
   /* c8 ignore if */
-  if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield*');
+  if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp15 instanceof AbruptCompletion) return _temp15;
   /* c8 ignore if */
@@ -32246,7 +32318,7 @@ function* TestIntegrityLevel(O, level) {
   /* ReturnIfAbrupt */
   let _temp16 = yield* O.OwnPropertyKeys();
   /* c8 ignore if */
-  if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield*');
+  if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp16 instanceof AbruptCompletion) return _temp16;
   /* c8 ignore if */
@@ -32256,7 +32328,7 @@ function* TestIntegrityLevel(O, level) {
     /* ReturnIfAbrupt */
     let _temp17 = yield* O.GetOwnProperty(k);
     /* c8 ignore if */
-    if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield*');
+    if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp17 instanceof AbruptCompletion) return _temp17;
     /* c8 ignore if */
@@ -32333,7 +32405,7 @@ function* LengthOfArrayLike(obj) {
   /* ReturnIfAbrupt */
   let _temp22 = yield* Get(obj, Value('length'));
   /* c8 ignore if */
-  if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield*');
+  if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp22 instanceof AbruptCompletion) return _temp22;
   /* c8 ignore if */
@@ -32341,7 +32413,7 @@ function* LengthOfArrayLike(obj) {
   /* ReturnIfAbrupt */
   let _temp21 = yield* ToLength(_temp22);
   /* c8 ignore if */
-  if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield*');
+  if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp21 instanceof AbruptCompletion) return _temp21;
   /* c8 ignore if */
@@ -32360,7 +32432,7 @@ function* CreateListFromArrayLike(obj, validElementTypes = 'all') {
   /* ReturnIfAbrupt */
   let _temp23 = yield* LengthOfArrayLike(obj);
   /* c8 ignore if */
-  if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield*');
+  if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp23 instanceof AbruptCompletion) return _temp23;
   /* c8 ignore if */
@@ -32388,7 +32460,7 @@ function* CreateListFromArrayLike(obj, validElementTypes = 'all') {
     /* ReturnIfAbrupt */
     let _temp25 = yield* Get(obj, indexName);
     /* c8 ignore if */
-    if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield*');
+    if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp25 instanceof AbruptCompletion) return _temp25;
     /* c8 ignore if */
@@ -32413,7 +32485,7 @@ function* Invoke(V, P, argumentsList = []) {
   /* ReturnIfAbrupt */
   let _temp26 = yield* GetV(V, P);
   /* c8 ignore if */
-  if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield*');
+  if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp26 instanceof AbruptCompletion) return _temp26;
   /* c8 ignore if */
@@ -32438,7 +32510,7 @@ function* OrdinaryHasInstance(C, O) {
   /* ReturnIfAbrupt */
   let _temp27 = yield* Get(C, Value('prototype'));
   /* c8 ignore if */
-  if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield*');
+  if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp27 instanceof AbruptCompletion) return _temp27;
   /* c8 ignore if */
@@ -32451,7 +32523,7 @@ function* OrdinaryHasInstance(C, O) {
     /* ReturnIfAbrupt */
     let _temp28 = yield* O.GetPrototypeOf();
     /* c8 ignore if */
-    if (_temp28 && typeof _temp28 === 'object' && 'next' in _temp28) throw new Assert.Error('Forgot to yield*');
+    if (_temp28 && typeof _temp28 === 'object' && 'next' in _temp28) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp28 instanceof AbruptCompletion) return _temp28;
     /* c8 ignore if */
@@ -32473,7 +32545,7 @@ function* SpeciesConstructor(O, defaultConstructor) {
   /* ReturnIfAbrupt */
   let _temp29 = yield* Get(O, Value('constructor'));
   /* c8 ignore if */
-  if (_temp29 && typeof _temp29 === 'object' && 'next' in _temp29) throw new Assert.Error('Forgot to yield*');
+  if (_temp29 && typeof _temp29 === 'object' && 'next' in _temp29) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp29 instanceof AbruptCompletion) return _temp29;
   /* c8 ignore if */
@@ -32488,7 +32560,7 @@ function* SpeciesConstructor(O, defaultConstructor) {
   /* ReturnIfAbrupt */
   let _temp30 = yield* Get(C, wellKnownSymbols.species);
   /* c8 ignore if */
-  if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) throw new Assert.Error('Forgot to yield*');
+  if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp30 instanceof AbruptCompletion) return _temp30;
   /* c8 ignore if */
@@ -32510,7 +32582,7 @@ function* EnumerableOwnPropertyNames(O, kind) {
   /* ReturnIfAbrupt */
   let _temp31 = yield* O.OwnPropertyKeys();
   /* c8 ignore if */
-  if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) throw new Assert.Error('Forgot to yield*');
+  if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp31 instanceof AbruptCompletion) return _temp31;
   /* c8 ignore if */
@@ -32522,7 +32594,7 @@ function* EnumerableOwnPropertyNames(O, kind) {
       /* ReturnIfAbrupt */
       let _temp32 = yield* O.GetOwnProperty(key);
       /* c8 ignore if */
-      if (_temp32 && typeof _temp32 === 'object' && 'next' in _temp32) throw new Assert.Error('Forgot to yield*');
+      if (_temp32 && typeof _temp32 === 'object' && 'next' in _temp32) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp32 instanceof AbruptCompletion) return _temp32;
       /* c8 ignore if */
@@ -32535,7 +32607,7 @@ function* EnumerableOwnPropertyNames(O, kind) {
           /* ReturnIfAbrupt */
           let _temp33 = yield* Get(O, key);
           /* c8 ignore if */
-          if (_temp33 && typeof _temp33 === 'object' && 'next' in _temp33) throw new Assert.Error('Forgot to yield*');
+          if (_temp33 && typeof _temp33 === 'object' && 'next' in _temp33) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp33 instanceof AbruptCompletion) return _temp33;
           /* c8 ignore if */
@@ -32617,7 +32689,7 @@ function* CopyDataProperties(target, source, excludedItems) {
   /* ReturnIfAbrupt */
   let _temp37 = yield* from.OwnPropertyKeys();
   /* c8 ignore if */
-  if (_temp37 && typeof _temp37 === 'object' && 'next' in _temp37) throw new Assert.Error('Forgot to yield*');
+  if (_temp37 && typeof _temp37 === 'object' && 'next' in _temp37) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp37 instanceof AbruptCompletion) return _temp37;
   /* c8 ignore if */
@@ -32634,7 +32706,7 @@ function* CopyDataProperties(target, source, excludedItems) {
       /* ReturnIfAbrupt */
       let _temp38 = yield* from.GetOwnProperty(nextKey);
       /* c8 ignore if */
-      if (_temp38 && typeof _temp38 === 'object' && 'next' in _temp38) throw new Assert.Error('Forgot to yield*');
+      if (_temp38 && typeof _temp38 === 'object' && 'next' in _temp38) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp38 instanceof AbruptCompletion) return _temp38;
       /* c8 ignore if */
@@ -32644,7 +32716,7 @@ function* CopyDataProperties(target, source, excludedItems) {
         /* ReturnIfAbrupt */
         let _temp39 = yield* Get(from, nextKey);
         /* c8 ignore if */
-        if (_temp39 && typeof _temp39 === 'object' && 'next' in _temp39) throw new Assert.Error('Forgot to yield*');
+        if (_temp39 && typeof _temp39 === 'object' && 'next' in _temp39) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp39 instanceof AbruptCompletion) return _temp39;
         /* c8 ignore if */
@@ -32738,7 +32810,7 @@ function* OrdinaryDefineOwnProperty(O, P, Desc) {
   /* ReturnIfAbrupt */
   let _temp = yield* O.GetOwnProperty(P);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -32747,7 +32819,7 @@ function* OrdinaryDefineOwnProperty(O, P, Desc) {
   /* ReturnIfAbrupt */
   let _temp2 = yield* IsExtensible(O);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -32885,7 +32957,7 @@ function* OrdinaryHasProperty(O, P) {
   /* ReturnIfAbrupt */
   let _temp3 = yield* O.GetOwnProperty(P);
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -32897,7 +32969,7 @@ function* OrdinaryHasProperty(O, P) {
   /* ReturnIfAbrupt */
   let _temp4 = yield* O.GetPrototypeOf();
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -32915,7 +32987,7 @@ function* OrdinaryGet(O, P, Receiver) {
   /* ReturnIfAbrupt */
   let _temp5 = yield* O.GetOwnProperty(P);
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -32925,7 +32997,7 @@ function* OrdinaryGet(O, P, Receiver) {
     /* ReturnIfAbrupt */
     let _temp6 = yield* O.GetPrototypeOf();
     /* c8 ignore if */
-    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp6 instanceof AbruptCompletion) return _temp6;
     /* c8 ignore if */
@@ -32953,7 +33025,7 @@ function* OrdinarySet(O, P, V, Receiver) {
   /* ReturnIfAbrupt */
   let _temp7 = yield* O.GetOwnProperty(P);
   /* c8 ignore if */
-  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp7 instanceof AbruptCompletion) return _temp7;
   /* c8 ignore if */
@@ -32969,7 +33041,7 @@ function* OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc) {
     /* ReturnIfAbrupt */
     let _temp8 = yield* O.GetPrototypeOf();
     /* c8 ignore if */
-    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp8 instanceof AbruptCompletion) return _temp8;
     /* c8 ignore if */
@@ -32995,7 +33067,7 @@ function* OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc) {
     /* ReturnIfAbrupt */
     let _temp9 = yield* Receiver.GetOwnProperty(P);
     /* c8 ignore if */
-    if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+    if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp9 instanceof AbruptCompletion) return _temp9;
     /* c8 ignore if */
@@ -33023,7 +33095,7 @@ function* OrdinarySetWithOwnDescriptor(O, P, V, Receiver, ownDesc) {
   /* ReturnIfAbrupt */
   let _temp10 = yield* Call(setter, Receiver, [V]);
   /* c8 ignore if */
-  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp10 instanceof AbruptCompletion) return _temp10;
   /* c8 ignore if */
@@ -33037,7 +33109,7 @@ function* OrdinaryDelete(O, P) {
   /* ReturnIfAbrupt */
   let _temp11 = yield* O.GetOwnProperty(P);
   /* c8 ignore if */
-  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp11 instanceof AbruptCompletion) return _temp11;
   /* c8 ignore if */
@@ -33140,7 +33212,7 @@ function* OrdinaryCreateFromConstructor(constructor, intrinsicDefaultProto, inte
   /* ReturnIfAbrupt */
   let _temp14 = yield* GetPrototypeFromConstructor(constructor, intrinsicDefaultProto);
   /* c8 ignore if */
-  if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield*');
+  if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp14 instanceof AbruptCompletion) return _temp14;
   /* c8 ignore if */
@@ -33158,7 +33230,7 @@ function* GetPrototypeFromConstructor(constructor, intrinsicDefaultProto) {
   /* ReturnIfAbrupt */
   let _temp15 = yield* Get(constructor, Value('prototype'));
   /* c8 ignore if */
-  if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield*');
+  if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp15 instanceof AbruptCompletion) return _temp15;
   /* c8 ignore if */
@@ -33168,7 +33240,7 @@ function* GetPrototypeFromConstructor(constructor, intrinsicDefaultProto) {
     /* ReturnIfAbrupt */
     let _temp16 = GetFunctionRealm(constructor);
     /* c8 ignore if */
-    if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield*');
+    if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp16 instanceof AbruptCompletion) return _temp16;
     /* c8 ignore if */
@@ -33267,7 +33339,7 @@ function* PrivateSet(P, O, value) {
     /* ReturnIfAbrupt */
     let _temp3 = yield* Call(setter, O, [value]);
     /* c8 ignore if */
-    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp3 instanceof AbruptCompletion) return _temp3;
     /* c8 ignore if */
@@ -33427,7 +33499,7 @@ function PromiseRejectFunctions([reason = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp3 = surroundingAgent.debugger_tryTouchDuringPreview(promise);
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -33492,7 +33564,7 @@ function* PromiseResolveFunctions([resolution = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp4 = surroundingAgent.debugger_tryTouchDuringPreview(promise);
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -33593,7 +33665,7 @@ function* NewPromiseCapability(C) {
   /* ReturnIfAbrupt */
   let _temp6 = yield* Construct(C, [executor]);
   /* c8 ignore if */
-  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp6 instanceof AbruptCompletion) return _temp6;
   /* c8 ignore if */
@@ -33662,7 +33734,7 @@ function* PromiseResolve(C, x) {
     /* ReturnIfAbrupt */
     let _temp7 = yield* Get(x, Value('constructor'));
     /* c8 ignore if */
-    if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+    if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp7 instanceof AbruptCompletion) return _temp7;
     /* c8 ignore if */
@@ -33675,7 +33747,7 @@ function* PromiseResolve(C, x) {
   /* ReturnIfAbrupt */
   let _temp8 = yield* NewPromiseCapability(C);
   /* c8 ignore if */
-  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp8 instanceof AbruptCompletion) return _temp8;
   /* c8 ignore if */
@@ -33684,7 +33756,7 @@ function* PromiseResolve(C, x) {
   /* ReturnIfAbrupt */
   let _temp9 = yield* Call(promiseCapability.Resolve, Value.undefined, [x]);
   /* c8 ignore if */
-  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp9 instanceof AbruptCompletion) return _temp9;
   /* c8 ignore if */
@@ -33870,7 +33942,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp = yield* GetMethod(handler, Value('getPrototypeOf'));
     /* c8 ignore if */
-    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) return _temp;
     /* c8 ignore if */
@@ -33882,7 +33954,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp2 = yield* Call(trap, handler, [target]);
     /* c8 ignore if */
-    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp2 instanceof AbruptCompletion) return _temp2;
     /* c8 ignore if */
@@ -33894,7 +33966,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp3 = yield* IsExtensible(target);
     /* c8 ignore if */
-    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp3 instanceof AbruptCompletion) return _temp3;
     /* c8 ignore if */
@@ -33906,7 +33978,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp4 = yield* target.GetPrototypeOf();
     /* c8 ignore if */
-    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) return _temp4;
     /* c8 ignore if */
@@ -33930,7 +34002,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp5 = yield* GetMethod(handler, Value('setPrototypeOf'));
     /* c8 ignore if */
-    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp5 instanceof AbruptCompletion) return _temp5;
     /* c8 ignore if */
@@ -33942,7 +34014,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp6 = yield* Call(trap, handler, [target, V]);
     /* c8 ignore if */
-    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp6 instanceof AbruptCompletion) return _temp6;
     /* c8 ignore if */
@@ -33954,7 +34026,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp7 = yield* IsExtensible(target);
     /* c8 ignore if */
-    if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+    if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp7 instanceof AbruptCompletion) return _temp7;
     /* c8 ignore if */
@@ -33966,7 +34038,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp8 = yield* target.GetPrototypeOf();
     /* c8 ignore if */
-    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp8 instanceof AbruptCompletion) return _temp8;
     /* c8 ignore if */
@@ -33989,7 +34061,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp9 = yield* GetMethod(handler, Value('isExtensible'));
     /* c8 ignore if */
-    if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+    if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp9 instanceof AbruptCompletion) return _temp9;
     /* c8 ignore if */
@@ -34001,7 +34073,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp10 = yield* Call(trap, handler, [target]);
     /* c8 ignore if */
-    if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+    if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp10 instanceof AbruptCompletion) return _temp10;
     /* c8 ignore if */
@@ -34010,7 +34082,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp11 = yield* IsExtensible(target);
     /* c8 ignore if */
-    if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+    if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp11 instanceof AbruptCompletion) return _temp11;
     /* c8 ignore if */
@@ -34033,7 +34105,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp12 = yield* GetMethod(handler, Value('preventExtensions'));
     /* c8 ignore if */
-    if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield*');
+    if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp12 instanceof AbruptCompletion) return _temp12;
     /* c8 ignore if */
@@ -34045,7 +34117,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp13 = yield* Call(trap, handler, [target]);
     /* c8 ignore if */
-    if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield*');
+    if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp13 instanceof AbruptCompletion) return _temp13;
     /* c8 ignore if */
@@ -34055,7 +34127,7 @@ const InternalMethods$2 = {
       /* ReturnIfAbrupt */
       let _temp14 = yield* IsExtensible(target);
       /* c8 ignore if */
-      if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield*');
+      if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp14 instanceof AbruptCompletion) return _temp14;
       /* c8 ignore if */
@@ -34087,7 +34159,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp15 = yield* GetMethod(handler, Value('getOwnPropertyDescriptor'));
     /* c8 ignore if */
-    if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield*');
+    if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp15 instanceof AbruptCompletion) return _temp15;
     /* c8 ignore if */
@@ -34102,7 +34174,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp16 = yield* Call(trap, handler, [target, P]);
     /* c8 ignore if */
-    if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield*');
+    if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp16 instanceof AbruptCompletion) return _temp16;
     /* c8 ignore if */
@@ -34116,7 +34188,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp17 = yield* target.GetOwnProperty(P);
     /* c8 ignore if */
-    if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield*');
+    if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp17 instanceof AbruptCompletion) return _temp17;
     /* c8 ignore if */
@@ -34136,7 +34208,7 @@ const InternalMethods$2 = {
       /* ReturnIfAbrupt */
       let _temp18 = yield* IsExtensible(target);
       /* c8 ignore if */
-      if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield*');
+      if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp18 instanceof AbruptCompletion) return _temp18;
       /* c8 ignore if */
@@ -34153,7 +34225,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp19 = yield* IsExtensible(target);
     /* c8 ignore if */
-    if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield*');
+    if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp19 instanceof AbruptCompletion) return _temp19;
     /* c8 ignore if */
@@ -34163,7 +34235,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp20 = yield* ToPropertyDescriptor(trapResultObj);
     /* c8 ignore if */
-    if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield*');
+    if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp20 instanceof AbruptCompletion) return _temp20;
     /* c8 ignore if */
@@ -34215,7 +34287,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp21 = yield* GetMethod(handler, Value('defineProperty'));
     /* c8 ignore if */
-    if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield*');
+    if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp21 instanceof AbruptCompletion) return _temp21;
     /* c8 ignore if */
@@ -34232,7 +34304,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp22 = yield* Call(trap, handler, [target, P, descObj]);
     /* c8 ignore if */
-    if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield*');
+    if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp22 instanceof AbruptCompletion) return _temp22;
     /* c8 ignore if */
@@ -34246,7 +34318,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp23 = yield* target.GetOwnProperty(P);
     /* c8 ignore if */
-    if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield*');
+    if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp23 instanceof AbruptCompletion) return _temp23;
     /* c8 ignore if */
@@ -34256,7 +34328,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp24 = yield* IsExtensible(target);
     /* c8 ignore if */
-    if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) throw new Assert.Error('Forgot to yield*');
+    if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp24 instanceof AbruptCompletion) return _temp24;
     /* c8 ignore if */
@@ -34313,7 +34385,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp25 = yield* GetMethod(handler, Value('has'));
     /* c8 ignore if */
-    if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield*');
+    if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp25 instanceof AbruptCompletion) return _temp25;
     /* c8 ignore if */
@@ -34325,7 +34397,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp26 = yield* Call(trap, handler, [target, P]);
     /* c8 ignore if */
-    if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield*');
+    if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp26 instanceof AbruptCompletion) return _temp26;
     /* c8 ignore if */
@@ -34335,7 +34407,7 @@ const InternalMethods$2 = {
       /* ReturnIfAbrupt */
       let _temp27 = yield* target.GetOwnProperty(P);
       /* c8 ignore if */
-      if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield*');
+      if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp27 instanceof AbruptCompletion) return _temp27;
       /* c8 ignore if */
@@ -34348,7 +34420,7 @@ const InternalMethods$2 = {
         /* ReturnIfAbrupt */
         let _temp28 = yield* IsExtensible(target);
         /* c8 ignore if */
-        if (_temp28 && typeof _temp28 === 'object' && 'next' in _temp28) throw new Assert.Error('Forgot to yield*');
+        if (_temp28 && typeof _temp28 === 'object' && 'next' in _temp28) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp28 instanceof AbruptCompletion) return _temp28;
         /* c8 ignore if */
@@ -34374,7 +34446,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp29 = yield* GetMethod(handler, Value('get'));
     /* c8 ignore if */
-    if (_temp29 && typeof _temp29 === 'object' && 'next' in _temp29) throw new Assert.Error('Forgot to yield*');
+    if (_temp29 && typeof _temp29 === 'object' && 'next' in _temp29) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp29 instanceof AbruptCompletion) return _temp29;
     /* c8 ignore if */
@@ -34386,7 +34458,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp30 = yield* Call(trap, handler, [target, P, Receiver]);
     /* c8 ignore if */
-    if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) throw new Assert.Error('Forgot to yield*');
+    if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp30 instanceof AbruptCompletion) return _temp30;
     /* c8 ignore if */
@@ -34395,7 +34467,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp31 = yield* target.GetOwnProperty(P);
     /* c8 ignore if */
-    if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) throw new Assert.Error('Forgot to yield*');
+    if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp31 instanceof AbruptCompletion) return _temp31;
     /* c8 ignore if */
@@ -34428,7 +34500,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp32 = yield* GetMethod(handler, Value('set'));
     /* c8 ignore if */
-    if (_temp32 && typeof _temp32 === 'object' && 'next' in _temp32) throw new Assert.Error('Forgot to yield*');
+    if (_temp32 && typeof _temp32 === 'object' && 'next' in _temp32) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp32 instanceof AbruptCompletion) return _temp32;
     /* c8 ignore if */
@@ -34440,7 +34512,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp33 = yield* Call(trap, handler, [target, P, V, Receiver]);
     /* c8 ignore if */
-    if (_temp33 && typeof _temp33 === 'object' && 'next' in _temp33) throw new Assert.Error('Forgot to yield*');
+    if (_temp33 && typeof _temp33 === 'object' && 'next' in _temp33) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp33 instanceof AbruptCompletion) return _temp33;
     /* c8 ignore if */
@@ -34452,7 +34524,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp34 = yield* target.GetOwnProperty(P);
     /* c8 ignore if */
-    if (_temp34 && typeof _temp34 === 'object' && 'next' in _temp34) throw new Assert.Error('Forgot to yield*');
+    if (_temp34 && typeof _temp34 === 'object' && 'next' in _temp34) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp34 instanceof AbruptCompletion) return _temp34;
     /* c8 ignore if */
@@ -34492,7 +34564,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp35 = yield* GetMethod(handler, Value('deleteProperty'));
     /* c8 ignore if */
-    if (_temp35 && typeof _temp35 === 'object' && 'next' in _temp35) throw new Assert.Error('Forgot to yield*');
+    if (_temp35 && typeof _temp35 === 'object' && 'next' in _temp35) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp35 instanceof AbruptCompletion) return _temp35;
     /* c8 ignore if */
@@ -34507,7 +34579,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp36 = yield* Call(trap, handler, [target, P]);
     /* c8 ignore if */
-    if (_temp36 && typeof _temp36 === 'object' && 'next' in _temp36) throw new Assert.Error('Forgot to yield*');
+    if (_temp36 && typeof _temp36 === 'object' && 'next' in _temp36) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp36 instanceof AbruptCompletion) return _temp36;
     /* c8 ignore if */
@@ -34521,7 +34593,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp37 = yield* target.GetOwnProperty(P);
     /* c8 ignore if */
-    if (_temp37 && typeof _temp37 === 'object' && 'next' in _temp37) throw new Assert.Error('Forgot to yield*');
+    if (_temp37 && typeof _temp37 === 'object' && 'next' in _temp37) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp37 instanceof AbruptCompletion) return _temp37;
     /* c8 ignore if */
@@ -34539,7 +34611,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp38 = yield* IsExtensible(target);
     /* c8 ignore if */
-    if (_temp38 && typeof _temp38 === 'object' && 'next' in _temp38) throw new Assert.Error('Forgot to yield*');
+    if (_temp38 && typeof _temp38 === 'object' && 'next' in _temp38) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp38 instanceof AbruptCompletion) return _temp38;
     /* c8 ignore if */
@@ -34564,7 +34636,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp39 = yield* GetMethod(handler, Value('ownKeys'));
     /* c8 ignore if */
-    if (_temp39 && typeof _temp39 === 'object' && 'next' in _temp39) throw new Assert.Error('Forgot to yield*');
+    if (_temp39 && typeof _temp39 === 'object' && 'next' in _temp39) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp39 instanceof AbruptCompletion) return _temp39;
     /* c8 ignore if */
@@ -34576,7 +34648,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp40 = yield* Call(trap, handler, [target]);
     /* c8 ignore if */
-    if (_temp40 && typeof _temp40 === 'object' && 'next' in _temp40) throw new Assert.Error('Forgot to yield*');
+    if (_temp40 && typeof _temp40 === 'object' && 'next' in _temp40) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp40 instanceof AbruptCompletion) return _temp40;
     /* c8 ignore if */
@@ -34585,7 +34657,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp41 = yield* CreateListFromArrayLike(trapResultArray, 'property-key');
     /* c8 ignore if */
-    if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) throw new Assert.Error('Forgot to yield*');
+    if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp41 instanceof AbruptCompletion) return _temp41;
     /* c8 ignore if */
@@ -34601,7 +34673,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp42 = yield* IsExtensible(target);
     /* c8 ignore if */
-    if (_temp42 && typeof _temp42 === 'object' && 'next' in _temp42) throw new Assert.Error('Forgot to yield*');
+    if (_temp42 && typeof _temp42 === 'object' && 'next' in _temp42) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp42 instanceof AbruptCompletion) return _temp42;
     /* c8 ignore if */
@@ -34610,7 +34682,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp43 = yield* target.OwnPropertyKeys();
     /* c8 ignore if */
-    if (_temp43 && typeof _temp43 === 'object' && 'next' in _temp43) throw new Assert.Error('Forgot to yield*');
+    if (_temp43 && typeof _temp43 === 'object' && 'next' in _temp43) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp43 instanceof AbruptCompletion) return _temp43;
     /* c8 ignore if */
@@ -34624,7 +34696,7 @@ const InternalMethods$2 = {
       /* ReturnIfAbrupt */
       let _temp44 = yield* target.GetOwnProperty(key);
       /* c8 ignore if */
-      if (_temp44 && typeof _temp44 === 'object' && 'next' in _temp44) throw new Assert.Error('Forgot to yield*');
+      if (_temp44 && typeof _temp44 === 'object' && 'next' in _temp44) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp44 instanceof AbruptCompletion) return _temp44;
       /* c8 ignore if */
@@ -34675,7 +34747,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp45 = yield* GetMethod(handler, Value('apply'));
     /* c8 ignore if */
-    if (_temp45 && typeof _temp45 === 'object' && 'next' in _temp45) throw new Assert.Error('Forgot to yield*');
+    if (_temp45 && typeof _temp45 === 'object' && 'next' in _temp45) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp45 instanceof AbruptCompletion) return _temp45;
     /* c8 ignore if */
@@ -34710,7 +34782,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp47 = yield* GetMethod(handler, Value('construct'));
     /* c8 ignore if */
-    if (_temp47 && typeof _temp47 === 'object' && 'next' in _temp47) throw new Assert.Error('Forgot to yield*');
+    if (_temp47 && typeof _temp47 === 'object' && 'next' in _temp47) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp47 instanceof AbruptCompletion) return _temp47;
     /* c8 ignore if */
@@ -34733,7 +34805,7 @@ const InternalMethods$2 = {
     /* ReturnIfAbrupt */
     let _temp49 = yield* Call(trap, handler, [target, argArray, newTarget]);
     /* c8 ignore if */
-    if (_temp49 && typeof _temp49 === 'object' && 'next' in _temp49) throw new Assert.Error('Forgot to yield*');
+    if (_temp49 && typeof _temp49 === 'object' && 'next' in _temp49) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp49 instanceof AbruptCompletion) return _temp49;
     /* c8 ignore if */
@@ -34806,7 +34878,7 @@ function* ObjectProto_hasOwnProperty([V = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp = yield* ToPropertyKey(V);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -34817,7 +34889,7 @@ function* ObjectProto_hasOwnProperty([V = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp2 = ToObject(thisValue);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -34840,7 +34912,7 @@ function* ObjectProto_isPrototypeOf([V = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp3 = ToObject(thisValue);
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -34851,7 +34923,7 @@ function* ObjectProto_isPrototypeOf([V = Value.undefined], {
     /* ReturnIfAbrupt */
     let _temp4 = yield* V.GetPrototypeOf();
     /* c8 ignore if */
-    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) return _temp4;
     /* c8 ignore if */
@@ -34877,7 +34949,7 @@ function* ObjectProto_propertyIsEnumerable([V = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp5 = yield* ToPropertyKey(V);
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -34888,7 +34960,7 @@ function* ObjectProto_propertyIsEnumerable([V = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp6 = ToObject(thisValue);
   /* c8 ignore if */
-  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp6 instanceof AbruptCompletion) return _temp6;
   /* c8 ignore if */
@@ -34898,7 +34970,7 @@ function* ObjectProto_propertyIsEnumerable([V = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp7 = yield* O.GetOwnProperty(P);
   /* c8 ignore if */
-  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp7 instanceof AbruptCompletion) return _temp7;
   /* c8 ignore if */
@@ -34952,7 +35024,7 @@ function* ObjectProto_toString(_argList, {
   /* ReturnIfAbrupt */
   let _temp9 = IsArray(O);
   /* c8 ignore if */
-  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp9 instanceof AbruptCompletion) return _temp9;
   /* c8 ignore if */
@@ -34994,7 +35066,7 @@ function* ObjectProto_toString(_argList, {
   /* ReturnIfAbrupt */
   let _temp10 = yield* Get(O, wellKnownSymbols.toStringTag);
   /* c8 ignore if */
-  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp10 instanceof AbruptCompletion) return _temp10;
   /* c8 ignore if */
@@ -35028,7 +35100,7 @@ function* ObjectProto__defineGetter__([P = Value.undefined, getter = Value.undef
   /* ReturnIfAbrupt */
   let _temp11 = ToObject(thisValue);
   /* c8 ignore if */
-  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp11 instanceof AbruptCompletion) return _temp11;
   /* c8 ignore if */
@@ -35049,7 +35121,7 @@ function* ObjectProto__defineGetter__([P = Value.undefined, getter = Value.undef
   /* ReturnIfAbrupt */
   let _temp12 = yield* ToPropertyKey(P);
   /* c8 ignore if */
-  if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield*');
+  if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp12 instanceof AbruptCompletion) return _temp12;
   /* c8 ignore if */
@@ -35059,7 +35131,7 @@ function* ObjectProto__defineGetter__([P = Value.undefined, getter = Value.undef
   /* ReturnIfAbrupt */
   let _temp13 = yield* DefinePropertyOrThrow(O, key, desc);
   /* c8 ignore if */
-  if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield*');
+  if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp13 instanceof AbruptCompletion) return _temp13;
   /* c8 ignore if */
@@ -35076,7 +35148,7 @@ function* ObjectProto__defineSetter__([P = Value.undefined, setter = Value.undef
   /* ReturnIfAbrupt */
   let _temp14 = ToObject(thisValue);
   /* c8 ignore if */
-  if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield*');
+  if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp14 instanceof AbruptCompletion) return _temp14;
   /* c8 ignore if */
@@ -35097,7 +35169,7 @@ function* ObjectProto__defineSetter__([P = Value.undefined, setter = Value.undef
   /* ReturnIfAbrupt */
   let _temp15 = yield* ToPropertyKey(P);
   /* c8 ignore if */
-  if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield*');
+  if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp15 instanceof AbruptCompletion) return _temp15;
   /* c8 ignore if */
@@ -35107,7 +35179,7 @@ function* ObjectProto__defineSetter__([P = Value.undefined, setter = Value.undef
   /* ReturnIfAbrupt */
   let _temp16 = yield* DefinePropertyOrThrow(O, key, desc);
   /* c8 ignore if */
-  if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield*');
+  if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp16 instanceof AbruptCompletion) return _temp16;
   /* c8 ignore if */
@@ -35124,7 +35196,7 @@ function* ObjectProto__lookupGetter__([P = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp17 = ToObject(thisValue);
   /* c8 ignore if */
-  if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield*');
+  if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp17 instanceof AbruptCompletion) return _temp17;
   /* c8 ignore if */
@@ -35135,7 +35207,7 @@ function* ObjectProto__lookupGetter__([P = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp18 = yield* ToPropertyKey(P);
   /* c8 ignore if */
-  if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield*');
+  if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp18 instanceof AbruptCompletion) return _temp18;
   /* c8 ignore if */
@@ -35147,7 +35219,7 @@ function* ObjectProto__lookupGetter__([P = Value.undefined], {
     /* ReturnIfAbrupt */
     let _temp19 = yield* O.GetOwnProperty(key);
     /* c8 ignore if */
-    if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield*');
+    if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp19 instanceof AbruptCompletion) return _temp19;
     /* c8 ignore if */
@@ -35166,7 +35238,7 @@ function* ObjectProto__lookupGetter__([P = Value.undefined], {
     /* ReturnIfAbrupt */
     let _temp20 = yield* O.GetPrototypeOf();
     /* c8 ignore if */
-    if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield*');
+    if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp20 instanceof AbruptCompletion) return _temp20;
     /* c8 ignore if */
@@ -35187,7 +35259,7 @@ function* ObjectProto__lookupSetter__([P = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp21 = ToObject(thisValue);
   /* c8 ignore if */
-  if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield*');
+  if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp21 instanceof AbruptCompletion) return _temp21;
   /* c8 ignore if */
@@ -35198,7 +35270,7 @@ function* ObjectProto__lookupSetter__([P = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp22 = yield* ToPropertyKey(P);
   /* c8 ignore if */
-  if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield*');
+  if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp22 instanceof AbruptCompletion) return _temp22;
   /* c8 ignore if */
@@ -35210,7 +35282,7 @@ function* ObjectProto__lookupSetter__([P = Value.undefined], {
     /* ReturnIfAbrupt */
     let _temp23 = yield* O.GetOwnProperty(key);
     /* c8 ignore if */
-    if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield*');
+    if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp23 instanceof AbruptCompletion) return _temp23;
     /* c8 ignore if */
@@ -35229,7 +35301,7 @@ function* ObjectProto__lookupSetter__([P = Value.undefined], {
     /* ReturnIfAbrupt */
     let _temp24 = yield* O.GetPrototypeOf();
     /* c8 ignore if */
-    if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) throw new Assert.Error('Forgot to yield*');
+    if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp24 instanceof AbruptCompletion) return _temp24;
     /* c8 ignore if */
@@ -35250,7 +35322,7 @@ function* ObjectProto__proto__Get(_args, {
   /* ReturnIfAbrupt */
   let _temp25 = ToObject(thisValue);
   /* c8 ignore if */
-  if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield*');
+  if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp25 instanceof AbruptCompletion) return _temp25;
   /* c8 ignore if */
@@ -35269,7 +35341,7 @@ function* ObjectProto__proto__Set([proto = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp26 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield*');
+  if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp26 instanceof AbruptCompletion) return _temp26;
   /* c8 ignore if */
@@ -35288,7 +35360,7 @@ function* ObjectProto__proto__Set([proto = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp27 = yield* O.SetPrototypeOf(proto);
   /* c8 ignore if */
-  if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield*');
+  if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp27 instanceof AbruptCompletion) return _temp27;
   /* c8 ignore if */
@@ -35334,7 +35406,7 @@ function* AddEntriesFromIterable(target, iterable, adder) {
   /* ReturnIfAbrupt */
   let _temp = yield* GetIterator(iterable, 'sync');
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -35344,7 +35416,7 @@ function* AddEntriesFromIterable(target, iterable, adder) {
     /* ReturnIfAbrupt */
     let _temp2 = yield* IteratorStepValue(iteratorRecord);
     /* c8 ignore if */
-    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp2 instanceof AbruptCompletion) return _temp2;
     /* c8 ignore if */
@@ -35398,7 +35470,7 @@ function* MapConstructor([iterable = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp3 = yield* OrdinaryCreateFromConstructor(NewTarget, '%Map.prototype%', ['MapData']);
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -35414,7 +35486,7 @@ function* MapConstructor([iterable = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp4 = yield* Get(map, Value('set'));
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -35474,7 +35546,7 @@ function* Object_assign([target = Value.undefined, ...sources]) {
   /* ReturnIfAbrupt */
   let _temp2 = ToObject(target);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -35506,7 +35578,7 @@ function* Object_assign([target = Value.undefined, ...sources]) {
       /* ReturnIfAbrupt */
       let _temp4 = yield* from.OwnPropertyKeys();
       /* c8 ignore if */
-      if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+      if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp4 instanceof AbruptCompletion) return _temp4;
       /* c8 ignore if */
@@ -35517,7 +35589,7 @@ function* Object_assign([target = Value.undefined, ...sources]) {
         /* ReturnIfAbrupt */
         let _temp5 = yield* from.GetOwnProperty(nextKey);
         /* c8 ignore if */
-        if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+        if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp5 instanceof AbruptCompletion) return _temp5;
         /* c8 ignore if */
@@ -35529,7 +35601,7 @@ function* Object_assign([target = Value.undefined, ...sources]) {
           /* ReturnIfAbrupt */
           let _temp6 = yield* Get(from, nextKey);
           /* c8 ignore if */
-          if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+          if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp6 instanceof AbruptCompletion) return _temp6;
           /* c8 ignore if */
@@ -35540,7 +35612,7 @@ function* Object_assign([target = Value.undefined, ...sources]) {
           /* ReturnIfAbrupt */
           let _temp7 = yield* Set$1(to, nextKey, propValue, Value.true);
           /* c8 ignore if */
-          if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+          if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp7 instanceof AbruptCompletion) return _temp7;
           /* c8 ignore if */
@@ -35589,7 +35661,7 @@ function* ObjectDefineProperties(O, Properties) {
   /* ReturnIfAbrupt */
   let _temp8 = ToObject(Properties);
   /* c8 ignore if */
-  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp8 instanceof AbruptCompletion) return _temp8;
   /* c8 ignore if */
@@ -35599,7 +35671,7 @@ function* ObjectDefineProperties(O, Properties) {
   /* ReturnIfAbrupt */
   let _temp9 = yield* props.OwnPropertyKeys();
   /* c8 ignore if */
-  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp9 instanceof AbruptCompletion) return _temp9;
   /* c8 ignore if */
@@ -35612,7 +35684,7 @@ function* ObjectDefineProperties(O, Properties) {
     /* ReturnIfAbrupt */
     let _temp10 = yield* props.GetOwnProperty(nextKey);
     /* c8 ignore if */
-    if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+    if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp10 instanceof AbruptCompletion) return _temp10;
     /* c8 ignore if */
@@ -35624,7 +35696,7 @@ function* ObjectDefineProperties(O, Properties) {
       /* ReturnIfAbrupt */
       let _temp11 = yield* Get(props, nextKey);
       /* c8 ignore if */
-      if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+      if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp11 instanceof AbruptCompletion) return _temp11;
       /* c8 ignore if */
@@ -35635,7 +35707,7 @@ function* ObjectDefineProperties(O, Properties) {
       /* ReturnIfAbrupt */
       let _temp12 = yield* ToPropertyDescriptor(descObj);
       /* c8 ignore if */
-      if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield*');
+      if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp12 instanceof AbruptCompletion) return _temp12;
       /* c8 ignore if */
@@ -35655,7 +35727,7 @@ function* ObjectDefineProperties(O, Properties) {
     /* ReturnIfAbrupt */
     let _temp13 = yield* DefinePropertyOrThrow(O, P, desc);
     /* c8 ignore if */
-    if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield*');
+    if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp13 instanceof AbruptCompletion) return _temp13;
     /* c8 ignore if */
@@ -35676,7 +35748,7 @@ function* Object_defineProperty([O = Value.undefined, P = Value.undefined, Attri
   /* ReturnIfAbrupt */
   let _temp14 = yield* ToPropertyKey(P);
   /* c8 ignore if */
-  if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield*');
+  if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp14 instanceof AbruptCompletion) return _temp14;
   /* c8 ignore if */
@@ -35686,7 +35758,7 @@ function* Object_defineProperty([O = Value.undefined, P = Value.undefined, Attri
   /* ReturnIfAbrupt */
   let _temp15 = yield* ToPropertyDescriptor(Attributes);
   /* c8 ignore if */
-  if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield*');
+  if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp15 instanceof AbruptCompletion) return _temp15;
   /* c8 ignore if */
@@ -35696,7 +35768,7 @@ function* Object_defineProperty([O = Value.undefined, P = Value.undefined, Attri
   /* ReturnIfAbrupt */
   let _temp16 = yield* DefinePropertyOrThrow(O, key, desc);
   /* c8 ignore if */
-  if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield*');
+  if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp16 instanceof AbruptCompletion) return _temp16;
   /* c8 ignore if */
@@ -35711,7 +35783,7 @@ function* Object_entries([O = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp17 = ToObject(O);
   /* c8 ignore if */
-  if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield*');
+  if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp17 instanceof AbruptCompletion) return _temp17;
   /* c8 ignore if */
@@ -35722,7 +35794,7 @@ function* Object_entries([O = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp18 = yield* EnumerableOwnPropertyNames(obj, 'key+value');
   /* c8 ignore if */
-  if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield*');
+  if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp18 instanceof AbruptCompletion) return _temp18;
   /* c8 ignore if */
@@ -35743,7 +35815,7 @@ function* Object_freeze([O = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp19 = yield* SetIntegrityLevel(O, 'frozen');
   /* c8 ignore if */
-  if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield*');
+  if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp19 instanceof AbruptCompletion) return _temp19;
   /* c8 ignore if */
@@ -35763,7 +35835,7 @@ function* Object_fromEntries([iterable = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp20 = RequireObjectCoercible(iterable);
   /* c8 ignore if */
-  if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield*');
+  if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp20 instanceof AbruptCompletion) return _temp20;
   /* c8 ignore if */
@@ -35787,7 +35859,7 @@ function* Object_fromEntries([iterable = Value.undefined]) {
     /* ReturnIfAbrupt */
     let _temp22 = yield* ToPropertyKey(key);
     /* c8 ignore if */
-    if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield*');
+    if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp22 instanceof AbruptCompletion) return _temp22;
     /* c8 ignore if */
@@ -35830,7 +35902,7 @@ function* Object_getOwnPropertyDescriptor([O = Value.undefined, P = Value.undefi
   /* ReturnIfAbrupt */
   let _temp25 = ToObject(O);
   /* c8 ignore if */
-  if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield*');
+  if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp25 instanceof AbruptCompletion) return _temp25;
   /* c8 ignore if */
@@ -35841,7 +35913,7 @@ function* Object_getOwnPropertyDescriptor([O = Value.undefined, P = Value.undefi
   /* ReturnIfAbrupt */
   let _temp26 = yield* ToPropertyKey(P);
   /* c8 ignore if */
-  if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield*');
+  if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp26 instanceof AbruptCompletion) return _temp26;
   /* c8 ignore if */
@@ -35851,7 +35923,7 @@ function* Object_getOwnPropertyDescriptor([O = Value.undefined, P = Value.undefi
   /* ReturnIfAbrupt */
   let _temp27 = yield* obj.GetOwnProperty(key);
   /* c8 ignore if */
-  if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield*');
+  if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp27 instanceof AbruptCompletion) return _temp27;
   /* c8 ignore if */
@@ -35867,7 +35939,7 @@ function* Object_getOwnPropertyDescriptors([O = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp28 = ToObject(O);
   /* c8 ignore if */
-  if (_temp28 && typeof _temp28 === 'object' && 'next' in _temp28) throw new Assert.Error('Forgot to yield*');
+  if (_temp28 && typeof _temp28 === 'object' && 'next' in _temp28) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp28 instanceof AbruptCompletion) return _temp28;
   /* c8 ignore if */
@@ -35878,7 +35950,7 @@ function* Object_getOwnPropertyDescriptors([O = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp29 = yield* obj.OwnPropertyKeys();
   /* c8 ignore if */
-  if (_temp29 && typeof _temp29 === 'object' && 'next' in _temp29) throw new Assert.Error('Forgot to yield*');
+  if (_temp29 && typeof _temp29 === 'object' && 'next' in _temp29) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp29 instanceof AbruptCompletion) return _temp29;
   /* c8 ignore if */
@@ -35901,7 +35973,7 @@ function* Object_getOwnPropertyDescriptors([O = Value.undefined]) {
     /* ReturnIfAbrupt */
     let _temp31 = yield* obj.GetOwnProperty(key);
     /* c8 ignore if */
-    if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) throw new Assert.Error('Forgot to yield*');
+    if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp31 instanceof AbruptCompletion) return _temp31;
     /* c8 ignore if */
@@ -35944,7 +36016,7 @@ function* GetOwnPropertyKeys(O, type) {
   /* ReturnIfAbrupt */
   let _temp34 = ToObject(O);
   /* c8 ignore if */
-  if (_temp34 && typeof _temp34 === 'object' && 'next' in _temp34) throw new Assert.Error('Forgot to yield*');
+  if (_temp34 && typeof _temp34 === 'object' && 'next' in _temp34) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp34 instanceof AbruptCompletion) return _temp34;
   /* c8 ignore if */
@@ -35955,7 +36027,7 @@ function* GetOwnPropertyKeys(O, type) {
   /* ReturnIfAbrupt */
   let _temp35 = yield* obj.OwnPropertyKeys();
   /* c8 ignore if */
-  if (_temp35 && typeof _temp35 === 'object' && 'next' in _temp35) throw new Assert.Error('Forgot to yield*');
+  if (_temp35 && typeof _temp35 === 'object' && 'next' in _temp35) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp35 instanceof AbruptCompletion) return _temp35;
   /* c8 ignore if */
@@ -35994,7 +36066,7 @@ function* Object_getPrototypeOf([O = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp36 = ToObject(O);
   /* c8 ignore if */
-  if (_temp36 && typeof _temp36 === 'object' && 'next' in _temp36) throw new Assert.Error('Forgot to yield*');
+  if (_temp36 && typeof _temp36 === 'object' && 'next' in _temp36) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp36 instanceof AbruptCompletion) return _temp36;
   /* c8 ignore if */
@@ -36011,7 +36083,7 @@ function* Object_hasOwn([O = Value.undefined, P = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp37 = ToObject(O);
   /* c8 ignore if */
-  if (_temp37 && typeof _temp37 === 'object' && 'next' in _temp37) throw new Assert.Error('Forgot to yield*');
+  if (_temp37 && typeof _temp37 === 'object' && 'next' in _temp37) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp37 instanceof AbruptCompletion) return _temp37;
   /* c8 ignore if */
@@ -36022,7 +36094,7 @@ function* Object_hasOwn([O = Value.undefined, P = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp38 = yield* ToPropertyKey(P);
   /* c8 ignore if */
-  if (_temp38 && typeof _temp38 === 'object' && 'next' in _temp38) throw new Assert.Error('Forgot to yield*');
+  if (_temp38 && typeof _temp38 === 'object' && 'next' in _temp38) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp38 instanceof AbruptCompletion) return _temp38;
   /* c8 ignore if */
@@ -36078,7 +36150,7 @@ function* Object_keys([O = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp39 = ToObject(O);
   /* c8 ignore if */
-  if (_temp39 && typeof _temp39 === 'object' && 'next' in _temp39) throw new Assert.Error('Forgot to yield*');
+  if (_temp39 && typeof _temp39 === 'object' && 'next' in _temp39) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp39 instanceof AbruptCompletion) return _temp39;
   /* c8 ignore if */
@@ -36089,7 +36161,7 @@ function* Object_keys([O = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp40 = yield* EnumerableOwnPropertyNames(obj, 'key');
   /* c8 ignore if */
-  if (_temp40 && typeof _temp40 === 'object' && 'next' in _temp40) throw new Assert.Error('Forgot to yield*');
+  if (_temp40 && typeof _temp40 === 'object' && 'next' in _temp40) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp40 instanceof AbruptCompletion) return _temp40;
   /* c8 ignore if */
@@ -36110,7 +36182,7 @@ function* Object_preventExtensions([O = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp41 = yield* O.PreventExtensions();
   /* c8 ignore if */
-  if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) throw new Assert.Error('Forgot to yield*');
+  if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp41 instanceof AbruptCompletion) return _temp41;
   /* c8 ignore if */
@@ -36135,7 +36207,7 @@ function* Object_seal([O = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp42 = yield* SetIntegrityLevel(O, 'sealed');
   /* c8 ignore if */
-  if (_temp42 && typeof _temp42 === 'object' && 'next' in _temp42) throw new Assert.Error('Forgot to yield*');
+  if (_temp42 && typeof _temp42 === 'object' && 'next' in _temp42) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp42 instanceof AbruptCompletion) return _temp42;
   /* c8 ignore if */
@@ -36155,7 +36227,7 @@ function* Object_setPrototypeOf([O = Value.undefined, proto = Value.undefined]) 
   /* ReturnIfAbrupt */
   let _temp43 = RequireObjectCoercible(O);
   /* c8 ignore if */
-  if (_temp43 && typeof _temp43 === 'object' && 'next' in _temp43) throw new Assert.Error('Forgot to yield*');
+  if (_temp43 && typeof _temp43 === 'object' && 'next' in _temp43) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp43 instanceof AbruptCompletion) return _temp43;
   /* c8 ignore if */
@@ -36174,7 +36246,7 @@ function* Object_setPrototypeOf([O = Value.undefined, proto = Value.undefined]) 
   /* ReturnIfAbrupt */
   let _temp44 = yield* O.SetPrototypeOf(proto);
   /* c8 ignore if */
-  if (_temp44 && typeof _temp44 === 'object' && 'next' in _temp44) throw new Assert.Error('Forgot to yield*');
+  if (_temp44 && typeof _temp44 === 'object' && 'next' in _temp44) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp44 instanceof AbruptCompletion) return _temp44;
   /* c8 ignore if */
@@ -36194,7 +36266,7 @@ function* Object_values([O = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp45 = ToObject(O);
   /* c8 ignore if */
-  if (_temp45 && typeof _temp45 === 'object' && 'next' in _temp45) throw new Assert.Error('Forgot to yield*');
+  if (_temp45 && typeof _temp45 === 'object' && 'next' in _temp45) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp45 instanceof AbruptCompletion) return _temp45;
   /* c8 ignore if */
@@ -36205,7 +36277,7 @@ function* Object_values([O = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp46 = yield* EnumerableOwnPropertyNames(obj, 'value');
   /* c8 ignore if */
-  if (_temp46 && typeof _temp46 === 'object' && 'next' in _temp46) throw new Assert.Error('Forgot to yield*');
+  if (_temp46 && typeof _temp46 === 'object' && 'next' in _temp46) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp46 instanceof AbruptCompletion) return _temp46;
   /* c8 ignore if */
@@ -36248,7 +36320,7 @@ function* ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestricted =
       /* ReturnIfAbrupt */
       let _temp2 = yield* Get(obj, Pk);
       /* c8 ignore if */
-      if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+      if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp2 instanceof AbruptCompletion) return _temp2;
       /* c8 ignore if */
@@ -36258,7 +36330,7 @@ function* ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestricted =
       /* ReturnIfAbrupt */
       let _temp3 = yield* HasProperty(obj, Pk);
       /* c8 ignore if */
-      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp3 instanceof AbruptCompletion) return _temp3;
       /* c8 ignore if */
@@ -36268,7 +36340,7 @@ function* ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestricted =
         /* ReturnIfAbrupt */
         let _temp4 = yield* Get(obj, Pk);
         /* c8 ignore if */
-        if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+        if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp4 instanceof AbruptCompletion) return _temp4;
         /* c8 ignore if */
@@ -36308,7 +36380,7 @@ function* ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestricted =
           /* ReturnIfAbrupt */
           let _temp5 = yield* SortCompare(lBuffer[l], rBuffer[r]);
           /* c8 ignore if */
-          if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+          if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp5 instanceof AbruptCompletion) return _temp5;
           /* c8 ignore if */
@@ -36352,7 +36424,7 @@ function* ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestricted =
     /* ReturnIfAbrupt */
     let _temp6 = yield* Set$1(obj, _temp7, items[j], Value.true);
     /* c8 ignore if */
-    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp6 instanceof AbruptCompletion) return _temp6;
     /* c8 ignore if */
@@ -36373,7 +36445,7 @@ function* ArrayProto_sortBody(obj, len, SortCompare, internalMethodsRestricted =
     /* ReturnIfAbrupt */
     let _temp8 = yield* DeletePropertyOrThrow(obj, _temp9);
     /* c8 ignore if */
-    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp8 instanceof AbruptCompletion) return _temp8;
     /* c8 ignore if */
@@ -36405,7 +36477,7 @@ function* SortIndexedProperties(obj, len, SortCompare, holes) {
       /* ReturnIfAbrupt */
       let _temp11 = yield* HasProperty(obj, Pk);
       /* c8 ignore if */
-      if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+      if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp11 instanceof AbruptCompletion) return _temp11;
       /* c8 ignore if */
@@ -36419,7 +36491,7 @@ function* SortIndexedProperties(obj, len, SortCompare, holes) {
       /* ReturnIfAbrupt */
       let _temp12 = yield* Get(obj, Pk);
       /* c8 ignore if */
-      if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield*');
+      if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp12 instanceof AbruptCompletion) return _temp12;
       /* c8 ignore if */
@@ -36467,7 +36539,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp14 = priorToEvaluatingAlgorithm(thisValue);
     /* c8 ignore if */
-    if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield*');
+    if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp14 instanceof AbruptCompletion) return _temp14;
     /* c8 ignore if */
@@ -36475,7 +36547,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp15 = ToObject(thisValue);
     /* c8 ignore if */
-    if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield*');
+    if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp15 instanceof AbruptCompletion) return _temp15;
     /* c8 ignore if */
@@ -36484,7 +36556,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp16 = objectToLength(O);
     /* c8 ignore if */
-    if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield*');
+    if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp16 instanceof AbruptCompletion) return _temp16;
     /* c8 ignore if */
@@ -36509,7 +36581,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       /* ReturnIfAbrupt */
       let _temp18 = yield* HasProperty(O, Pk);
       /* c8 ignore if */
-      if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield*');
+      if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp18 instanceof AbruptCompletion) return _temp18;
       /* c8 ignore if */
@@ -36519,7 +36591,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         /* ReturnIfAbrupt */
         let _temp19 = yield* Get(O, Pk);
         /* c8 ignore if */
-        if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield*');
+        if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp19 instanceof AbruptCompletion) return _temp19;
         /* c8 ignore if */
@@ -36528,7 +36600,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         /* ReturnIfAbrupt */
         let _temp20 = yield* Call(callbackFn, thisArg, [kValue, F(k), O]);
         /* c8 ignore if */
-        if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield*');
+        if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp20 instanceof AbruptCompletion) return _temp20;
         /* c8 ignore if */
@@ -36552,7 +36624,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp21 = priorToEvaluatingAlgorithm(thisValue);
     /* c8 ignore if */
-    if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield*');
+    if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp21 instanceof AbruptCompletion) return _temp21;
     /* c8 ignore if */
@@ -36560,7 +36632,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp22 = ToObject(thisValue);
     /* c8 ignore if */
-    if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield*');
+    if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp22 instanceof AbruptCompletion) return _temp22;
     /* c8 ignore if */
@@ -36569,7 +36641,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp23 = objectToLength(O);
     /* c8 ignore if */
-    if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield*');
+    if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp23 instanceof AbruptCompletion) return _temp23;
     /* c8 ignore if */
@@ -36594,7 +36666,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       /* ReturnIfAbrupt */
       let _temp25 = yield* Get(O, Pk);
       /* c8 ignore if */
-      if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield*');
+      if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp25 instanceof AbruptCompletion) return _temp25;
       /* c8 ignore if */
@@ -36603,7 +36675,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       /* ReturnIfAbrupt */
       let _temp26 = yield* Call(predicate, thisArg, [kValue, F(k), O]);
       /* c8 ignore if */
-      if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield*');
+      if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp26 instanceof AbruptCompletion) return _temp26;
       /* c8 ignore if */
@@ -36626,7 +36698,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp27 = priorToEvaluatingAlgorithm(thisValue);
     /* c8 ignore if */
-    if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield*');
+    if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp27 instanceof AbruptCompletion) return _temp27;
     /* c8 ignore if */
@@ -36634,7 +36706,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp28 = ToObject(thisValue);
     /* c8 ignore if */
-    if (_temp28 && typeof _temp28 === 'object' && 'next' in _temp28) throw new Assert.Error('Forgot to yield*');
+    if (_temp28 && typeof _temp28 === 'object' && 'next' in _temp28) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp28 instanceof AbruptCompletion) return _temp28;
     /* c8 ignore if */
@@ -36643,7 +36715,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp29 = objectToLength(O);
     /* c8 ignore if */
-    if (_temp29 && typeof _temp29 === 'object' && 'next' in _temp29) throw new Assert.Error('Forgot to yield*');
+    if (_temp29 && typeof _temp29 === 'object' && 'next' in _temp29) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp29 instanceof AbruptCompletion) return _temp29;
     /* c8 ignore if */
@@ -36668,7 +36740,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       /* ReturnIfAbrupt */
       let _temp31 = yield* Get(O, Pk);
       /* c8 ignore if */
-      if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) throw new Assert.Error('Forgot to yield*');
+      if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp31 instanceof AbruptCompletion) return _temp31;
       /* c8 ignore if */
@@ -36677,7 +36749,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       /* ReturnIfAbrupt */
       let _temp32 = yield* Call(predicate, thisArg, [kValue, F(k), O]);
       /* c8 ignore if */
-      if (_temp32 && typeof _temp32 === 'object' && 'next' in _temp32) throw new Assert.Error('Forgot to yield*');
+      if (_temp32 && typeof _temp32 === 'object' && 'next' in _temp32) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp32 instanceof AbruptCompletion) return _temp32;
       /* c8 ignore if */
@@ -36700,7 +36772,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp33 = priorToEvaluatingAlgorithm(thisValue);
     /* c8 ignore if */
-    if (_temp33 && typeof _temp33 === 'object' && 'next' in _temp33) throw new Assert.Error('Forgot to yield*');
+    if (_temp33 && typeof _temp33 === 'object' && 'next' in _temp33) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp33 instanceof AbruptCompletion) return _temp33;
     /* c8 ignore if */
@@ -36709,7 +36781,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp34 = ToObject(thisValue);
     /* c8 ignore if */
-    if (_temp34 && typeof _temp34 === 'object' && 'next' in _temp34) throw new Assert.Error('Forgot to yield*');
+    if (_temp34 && typeof _temp34 === 'object' && 'next' in _temp34) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp34 instanceof AbruptCompletion) return _temp34;
     /* c8 ignore if */
@@ -36719,7 +36791,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp35 = objectToLength(O);
     /* c8 ignore if */
-    if (_temp35 && typeof _temp35 === 'object' && 'next' in _temp35) throw new Assert.Error('Forgot to yield*');
+    if (_temp35 && typeof _temp35 === 'object' && 'next' in _temp35) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp35 instanceof AbruptCompletion) return _temp35;
     /* c8 ignore if */
@@ -36749,7 +36821,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       /* ReturnIfAbrupt */
       let _temp37 = yield* Get(O, Pk);
       /* c8 ignore if */
-      if (_temp37 && typeof _temp37 === 'object' && 'next' in _temp37) throw new Assert.Error('Forgot to yield*');
+      if (_temp37 && typeof _temp37 === 'object' && 'next' in _temp37) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp37 instanceof AbruptCompletion) return _temp37;
       /* c8 ignore if */
@@ -36759,7 +36831,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       /* ReturnIfAbrupt */
       let _temp38 = yield* Call(predicate, thisArg, [kValue, F(k), O]);
       /* c8 ignore if */
-      if (_temp38 && typeof _temp38 === 'object' && 'next' in _temp38) throw new Assert.Error('Forgot to yield*');
+      if (_temp38 && typeof _temp38 === 'object' && 'next' in _temp38) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp38 instanceof AbruptCompletion) return _temp38;
       /* c8 ignore if */
@@ -36785,7 +36857,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp39 = priorToEvaluatingAlgorithm(thisValue);
     /* c8 ignore if */
-    if (_temp39 && typeof _temp39 === 'object' && 'next' in _temp39) throw new Assert.Error('Forgot to yield*');
+    if (_temp39 && typeof _temp39 === 'object' && 'next' in _temp39) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp39 instanceof AbruptCompletion) return _temp39;
     /* c8 ignore if */
@@ -36794,7 +36866,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp40 = ToObject(thisValue);
     /* c8 ignore if */
-    if (_temp40 && typeof _temp40 === 'object' && 'next' in _temp40) throw new Assert.Error('Forgot to yield*');
+    if (_temp40 && typeof _temp40 === 'object' && 'next' in _temp40) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp40 instanceof AbruptCompletion) return _temp40;
     /* c8 ignore if */
@@ -36804,7 +36876,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp41 = objectToLength(O);
     /* c8 ignore if */
-    if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) throw new Assert.Error('Forgot to yield*');
+    if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp41 instanceof AbruptCompletion) return _temp41;
     /* c8 ignore if */
@@ -36834,7 +36906,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       /* ReturnIfAbrupt */
       let _temp43 = yield* Get(O, Pk);
       /* c8 ignore if */
-      if (_temp43 && typeof _temp43 === 'object' && 'next' in _temp43) throw new Assert.Error('Forgot to yield*');
+      if (_temp43 && typeof _temp43 === 'object' && 'next' in _temp43) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp43 instanceof AbruptCompletion) return _temp43;
       /* c8 ignore if */
@@ -36844,7 +36916,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       /* ReturnIfAbrupt */
       let _temp44 = yield* Call(predicate, thisArg, [kValue, F(k), O]);
       /* c8 ignore if */
-      if (_temp44 && typeof _temp44 === 'object' && 'next' in _temp44) throw new Assert.Error('Forgot to yield*');
+      if (_temp44 && typeof _temp44 === 'object' && 'next' in _temp44) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp44 instanceof AbruptCompletion) return _temp44;
       /* c8 ignore if */
@@ -36870,7 +36942,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp45 = priorToEvaluatingAlgorithm(thisValue);
     /* c8 ignore if */
-    if (_temp45 && typeof _temp45 === 'object' && 'next' in _temp45) throw new Assert.Error('Forgot to yield*');
+    if (_temp45 && typeof _temp45 === 'object' && 'next' in _temp45) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp45 instanceof AbruptCompletion) return _temp45;
     /* c8 ignore if */
@@ -36878,7 +36950,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp46 = ToObject(thisValue);
     /* c8 ignore if */
-    if (_temp46 && typeof _temp46 === 'object' && 'next' in _temp46) throw new Assert.Error('Forgot to yield*');
+    if (_temp46 && typeof _temp46 === 'object' && 'next' in _temp46) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp46 instanceof AbruptCompletion) return _temp46;
     /* c8 ignore if */
@@ -36887,7 +36959,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp47 = objectToLength(O);
     /* c8 ignore if */
-    if (_temp47 && typeof _temp47 === 'object' && 'next' in _temp47) throw new Assert.Error('Forgot to yield*');
+    if (_temp47 && typeof _temp47 === 'object' && 'next' in _temp47) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp47 instanceof AbruptCompletion) return _temp47;
     /* c8 ignore if */
@@ -36912,7 +36984,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       /* ReturnIfAbrupt */
       let _temp49 = yield* HasProperty(O, Pk);
       /* c8 ignore if */
-      if (_temp49 && typeof _temp49 === 'object' && 'next' in _temp49) throw new Assert.Error('Forgot to yield*');
+      if (_temp49 && typeof _temp49 === 'object' && 'next' in _temp49) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp49 instanceof AbruptCompletion) return _temp49;
       /* c8 ignore if */
@@ -36922,7 +36994,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         /* ReturnIfAbrupt */
         let _temp50 = yield* Get(O, Pk);
         /* c8 ignore if */
-        if (_temp50 && typeof _temp50 === 'object' && 'next' in _temp50) throw new Assert.Error('Forgot to yield*');
+        if (_temp50 && typeof _temp50 === 'object' && 'next' in _temp50) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp50 instanceof AbruptCompletion) return _temp50;
         /* c8 ignore if */
@@ -36931,7 +37003,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         /* ReturnIfAbrupt */
         let _temp51 = yield* Call(callbackfn, thisArg, [kValue, F(k), O]);
         /* c8 ignore if */
-        if (_temp51 && typeof _temp51 === 'object' && 'next' in _temp51) throw new Assert.Error('Forgot to yield*');
+        if (_temp51 && typeof _temp51 === 'object' && 'next' in _temp51) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp51 instanceof AbruptCompletion) return _temp51;
         /* c8 ignore if */
@@ -36951,7 +37023,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp52 = priorToEvaluatingAlgorithm(thisValue);
     /* c8 ignore if */
-    if (_temp52 && typeof _temp52 === 'object' && 'next' in _temp52) throw new Assert.Error('Forgot to yield*');
+    if (_temp52 && typeof _temp52 === 'object' && 'next' in _temp52) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp52 instanceof AbruptCompletion) return _temp52;
     /* c8 ignore if */
@@ -36959,7 +37031,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp53 = ToObject(thisValue);
     /* c8 ignore if */
-    if (_temp53 && typeof _temp53 === 'object' && 'next' in _temp53) throw new Assert.Error('Forgot to yield*');
+    if (_temp53 && typeof _temp53 === 'object' && 'next' in _temp53) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp53 instanceof AbruptCompletion) return _temp53;
     /* c8 ignore if */
@@ -36968,7 +37040,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp54 = objectToLength(O);
     /* c8 ignore if */
-    if (_temp54 && typeof _temp54 === 'object' && 'next' in _temp54) throw new Assert.Error('Forgot to yield*');
+    if (_temp54 && typeof _temp54 === 'object' && 'next' in _temp54) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp54 instanceof AbruptCompletion) return _temp54;
     /* c8 ignore if */
@@ -36980,7 +37052,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp55 = yield* ToIntegerOrInfinity(fromIndex);
     /* c8 ignore if */
-    if (_temp55 && typeof _temp55 === 'object' && 'next' in _temp55) throw new Assert.Error('Forgot to yield*');
+    if (_temp55 && typeof _temp55 === 'object' && 'next' in _temp55) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp55 instanceof AbruptCompletion) return _temp55;
     /* c8 ignore if */
@@ -37013,7 +37085,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       /* ReturnIfAbrupt */
       let _temp57 = yield* Get(O, kStr);
       /* c8 ignore if */
-      if (_temp57 && typeof _temp57 === 'object' && 'next' in _temp57) throw new Assert.Error('Forgot to yield*');
+      if (_temp57 && typeof _temp57 === 'object' && 'next' in _temp57) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp57 instanceof AbruptCompletion) return _temp57;
       /* c8 ignore if */
@@ -37036,7 +37108,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp58 = priorToEvaluatingAlgorithm(thisValue);
     /* c8 ignore if */
-    if (_temp58 && typeof _temp58 === 'object' && 'next' in _temp58) throw new Assert.Error('Forgot to yield*');
+    if (_temp58 && typeof _temp58 === 'object' && 'next' in _temp58) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp58 instanceof AbruptCompletion) return _temp58;
     /* c8 ignore if */
@@ -37044,7 +37116,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp59 = ToObject(thisValue);
     /* c8 ignore if */
-    if (_temp59 && typeof _temp59 === 'object' && 'next' in _temp59) throw new Assert.Error('Forgot to yield*');
+    if (_temp59 && typeof _temp59 === 'object' && 'next' in _temp59) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp59 instanceof AbruptCompletion) return _temp59;
     /* c8 ignore if */
@@ -37053,7 +37125,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp60 = objectToLength(O);
     /* c8 ignore if */
-    if (_temp60 && typeof _temp60 === 'object' && 'next' in _temp60) throw new Assert.Error('Forgot to yield*');
+    if (_temp60 && typeof _temp60 === 'object' && 'next' in _temp60) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp60 instanceof AbruptCompletion) return _temp60;
     /* c8 ignore if */
@@ -37065,7 +37137,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp61 = yield* ToIntegerOrInfinity(fromIndex);
     /* c8 ignore if */
-    if (_temp61 && typeof _temp61 === 'object' && 'next' in _temp61) throw new Assert.Error('Forgot to yield*');
+    if (_temp61 && typeof _temp61 === 'object' && 'next' in _temp61) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp61 instanceof AbruptCompletion) return _temp61;
     /* c8 ignore if */
@@ -37101,7 +37173,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       /* ReturnIfAbrupt */
       let _temp63 = yield* HasProperty(O, kStr);
       /* c8 ignore if */
-      if (_temp63 && typeof _temp63 === 'object' && 'next' in _temp63) throw new Assert.Error('Forgot to yield*');
+      if (_temp63 && typeof _temp63 === 'object' && 'next' in _temp63) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp63 instanceof AbruptCompletion) return _temp63;
       /* c8 ignore if */
@@ -37111,7 +37183,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         /* ReturnIfAbrupt */
         let _temp64 = yield* Get(O, kStr);
         /* c8 ignore if */
-        if (_temp64 && typeof _temp64 === 'object' && 'next' in _temp64) throw new Assert.Error('Forgot to yield*');
+        if (_temp64 && typeof _temp64 === 'object' && 'next' in _temp64) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp64 instanceof AbruptCompletion) return _temp64;
         /* c8 ignore if */
@@ -37136,7 +37208,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp65 = priorToEvaluatingAlgorithm(thisValue);
     /* c8 ignore if */
-    if (_temp65 && typeof _temp65 === 'object' && 'next' in _temp65) throw new Assert.Error('Forgot to yield*');
+    if (_temp65 && typeof _temp65 === 'object' && 'next' in _temp65) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp65 instanceof AbruptCompletion) return _temp65;
     /* c8 ignore if */
@@ -37144,7 +37216,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp66 = ToObject(thisValue);
     /* c8 ignore if */
-    if (_temp66 && typeof _temp66 === 'object' && 'next' in _temp66) throw new Assert.Error('Forgot to yield*');
+    if (_temp66 && typeof _temp66 === 'object' && 'next' in _temp66) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp66 instanceof AbruptCompletion) return _temp66;
     /* c8 ignore if */
@@ -37153,7 +37225,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp67 = objectToLength(O);
     /* c8 ignore if */
-    if (_temp67 && typeof _temp67 === 'object' && 'next' in _temp67) throw new Assert.Error('Forgot to yield*');
+    if (_temp67 && typeof _temp67 === 'object' && 'next' in _temp67) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp67 instanceof AbruptCompletion) return _temp67;
     /* c8 ignore if */
@@ -37166,7 +37238,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       /* ReturnIfAbrupt */
       let _temp68 = yield* ToString(separator);
       /* c8 ignore if */
-      if (_temp68 && typeof _temp68 === 'object' && 'next' in _temp68) throw new Assert.Error('Forgot to yield*');
+      if (_temp68 && typeof _temp68 === 'object' && 'next' in _temp68) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp68 instanceof AbruptCompletion) return _temp68;
       /* c8 ignore if */
@@ -37193,7 +37265,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       /* ReturnIfAbrupt */
       let _temp70 = yield* Get(O, kStr);
       /* c8 ignore if */
-      if (_temp70 && typeof _temp70 === 'object' && 'next' in _temp70) throw new Assert.Error('Forgot to yield*');
+      if (_temp70 && typeof _temp70 === 'object' && 'next' in _temp70) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp70 instanceof AbruptCompletion) return _temp70;
       /* c8 ignore if */
@@ -37206,7 +37278,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         /* ReturnIfAbrupt */
         let _temp71 = yield* ToString(element);
         /* c8 ignore if */
-        if (_temp71 && typeof _temp71 === 'object' && 'next' in _temp71) throw new Assert.Error('Forgot to yield*');
+        if (_temp71 && typeof _temp71 === 'object' && 'next' in _temp71) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp71 instanceof AbruptCompletion) return _temp71;
         /* c8 ignore if */
@@ -37228,7 +37300,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp72 = priorToEvaluatingAlgorithm(thisValue);
     /* c8 ignore if */
-    if (_temp72 && typeof _temp72 === 'object' && 'next' in _temp72) throw new Assert.Error('Forgot to yield*');
+    if (_temp72 && typeof _temp72 === 'object' && 'next' in _temp72) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp72 instanceof AbruptCompletion) return _temp72;
     /* c8 ignore if */
@@ -37236,7 +37308,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp73 = ToObject(thisValue);
     /* c8 ignore if */
-    if (_temp73 && typeof _temp73 === 'object' && 'next' in _temp73) throw new Assert.Error('Forgot to yield*');
+    if (_temp73 && typeof _temp73 === 'object' && 'next' in _temp73) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp73 instanceof AbruptCompletion) return _temp73;
     /* c8 ignore if */
@@ -37245,7 +37317,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp74 = objectToLength(O);
     /* c8 ignore if */
-    if (_temp74 && typeof _temp74 === 'object' && 'next' in _temp74) throw new Assert.Error('Forgot to yield*');
+    if (_temp74 && typeof _temp74 === 'object' && 'next' in _temp74) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp74 instanceof AbruptCompletion) return _temp74;
     /* c8 ignore if */
@@ -37259,7 +37331,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       /* ReturnIfAbrupt */
       let _temp75 = yield* ToIntegerOrInfinity(fromIndex);
       /* c8 ignore if */
-      if (_temp75 && typeof _temp75 === 'object' && 'next' in _temp75) throw new Assert.Error('Forgot to yield*');
+      if (_temp75 && typeof _temp75 === 'object' && 'next' in _temp75) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp75 instanceof AbruptCompletion) return _temp75;
       /* c8 ignore if */
@@ -37289,7 +37361,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       /* ReturnIfAbrupt */
       let _temp77 = yield* HasProperty(O, kStr);
       /* c8 ignore if */
-      if (_temp77 && typeof _temp77 === 'object' && 'next' in _temp77) throw new Assert.Error('Forgot to yield*');
+      if (_temp77 && typeof _temp77 === 'object' && 'next' in _temp77) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp77 instanceof AbruptCompletion) return _temp77;
       /* c8 ignore if */
@@ -37299,7 +37371,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         /* ReturnIfAbrupt */
         let _temp78 = yield* Get(O, kStr);
         /* c8 ignore if */
-        if (_temp78 && typeof _temp78 === 'object' && 'next' in _temp78) throw new Assert.Error('Forgot to yield*');
+        if (_temp78 && typeof _temp78 === 'object' && 'next' in _temp78) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp78 instanceof AbruptCompletion) return _temp78;
         /* c8 ignore if */
@@ -37324,7 +37396,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp79 = priorToEvaluatingAlgorithm(thisValue);
     /* c8 ignore if */
-    if (_temp79 && typeof _temp79 === 'object' && 'next' in _temp79) throw new Assert.Error('Forgot to yield*');
+    if (_temp79 && typeof _temp79 === 'object' && 'next' in _temp79) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp79 instanceof AbruptCompletion) return _temp79;
     /* c8 ignore if */
@@ -37332,7 +37404,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp80 = ToObject(thisValue);
     /* c8 ignore if */
-    if (_temp80 && typeof _temp80 === 'object' && 'next' in _temp80) throw new Assert.Error('Forgot to yield*');
+    if (_temp80 && typeof _temp80 === 'object' && 'next' in _temp80) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp80 instanceof AbruptCompletion) return _temp80;
     /* c8 ignore if */
@@ -37341,7 +37413,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp81 = objectToLength(O);
     /* c8 ignore if */
-    if (_temp81 && typeof _temp81 === 'object' && 'next' in _temp81) throw new Assert.Error('Forgot to yield*');
+    if (_temp81 && typeof _temp81 === 'object' && 'next' in _temp81) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp81 instanceof AbruptCompletion) return _temp81;
     /* c8 ignore if */
@@ -37374,7 +37446,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         /* ReturnIfAbrupt */
         let _temp83 = yield* HasProperty(O, Pk);
         /* c8 ignore if */
-        if (_temp83 && typeof _temp83 === 'object' && 'next' in _temp83) throw new Assert.Error('Forgot to yield*');
+        if (_temp83 && typeof _temp83 === 'object' && 'next' in _temp83) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp83 instanceof AbruptCompletion) return _temp83;
         /* c8 ignore if */
@@ -37384,7 +37456,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
           /* ReturnIfAbrupt */
           let _temp84 = yield* Get(O, Pk);
           /* c8 ignore if */
-          if (_temp84 && typeof _temp84 === 'object' && 'next' in _temp84) throw new Assert.Error('Forgot to yield*');
+          if (_temp84 && typeof _temp84 === 'object' && 'next' in _temp84) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp84 instanceof AbruptCompletion) return _temp84;
           /* c8 ignore if */
@@ -37412,7 +37484,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       /* ReturnIfAbrupt */
       let _temp86 = yield* HasProperty(O, Pk);
       /* c8 ignore if */
-      if (_temp86 && typeof _temp86 === 'object' && 'next' in _temp86) throw new Assert.Error('Forgot to yield*');
+      if (_temp86 && typeof _temp86 === 'object' && 'next' in _temp86) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp86 instanceof AbruptCompletion) return _temp86;
       /* c8 ignore if */
@@ -37422,7 +37494,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         /* ReturnIfAbrupt */
         let _temp87 = yield* Get(O, Pk);
         /* c8 ignore if */
-        if (_temp87 && typeof _temp87 === 'object' && 'next' in _temp87) throw new Assert.Error('Forgot to yield*');
+        if (_temp87 && typeof _temp87 === 'object' && 'next' in _temp87) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp87 instanceof AbruptCompletion) return _temp87;
         /* c8 ignore if */
@@ -37431,7 +37503,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         /* ReturnIfAbrupt */
         let _temp88 = yield* Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), O]);
         /* c8 ignore if */
-        if (_temp88 && typeof _temp88 === 'object' && 'next' in _temp88) throw new Assert.Error('Forgot to yield*');
+        if (_temp88 && typeof _temp88 === 'object' && 'next' in _temp88) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp88 instanceof AbruptCompletion) return _temp88;
         /* c8 ignore if */
@@ -37452,7 +37524,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp89 = priorToEvaluatingAlgorithm(thisValue);
     /* c8 ignore if */
-    if (_temp89 && typeof _temp89 === 'object' && 'next' in _temp89) throw new Assert.Error('Forgot to yield*');
+    if (_temp89 && typeof _temp89 === 'object' && 'next' in _temp89) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp89 instanceof AbruptCompletion) return _temp89;
     /* c8 ignore if */
@@ -37460,7 +37532,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp90 = ToObject(thisValue);
     /* c8 ignore if */
-    if (_temp90 && typeof _temp90 === 'object' && 'next' in _temp90) throw new Assert.Error('Forgot to yield*');
+    if (_temp90 && typeof _temp90 === 'object' && 'next' in _temp90) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp90 instanceof AbruptCompletion) return _temp90;
     /* c8 ignore if */
@@ -37469,7 +37541,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp91 = objectToLength(O);
     /* c8 ignore if */
-    if (_temp91 && typeof _temp91 === 'object' && 'next' in _temp91) throw new Assert.Error('Forgot to yield*');
+    if (_temp91 && typeof _temp91 === 'object' && 'next' in _temp91) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp91 instanceof AbruptCompletion) return _temp91;
     /* c8 ignore if */
@@ -37502,7 +37574,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         /* ReturnIfAbrupt */
         let _temp93 = yield* HasProperty(O, Pk);
         /* c8 ignore if */
-        if (_temp93 && typeof _temp93 === 'object' && 'next' in _temp93) throw new Assert.Error('Forgot to yield*');
+        if (_temp93 && typeof _temp93 === 'object' && 'next' in _temp93) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp93 instanceof AbruptCompletion) return _temp93;
         /* c8 ignore if */
@@ -37512,7 +37584,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
           /* ReturnIfAbrupt */
           let _temp94 = yield* Get(O, Pk);
           /* c8 ignore if */
-          if (_temp94 && typeof _temp94 === 'object' && 'next' in _temp94) throw new Assert.Error('Forgot to yield*');
+          if (_temp94 && typeof _temp94 === 'object' && 'next' in _temp94) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp94 instanceof AbruptCompletion) return _temp94;
           /* c8 ignore if */
@@ -37540,7 +37612,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       /* ReturnIfAbrupt */
       let _temp96 = yield* HasProperty(O, Pk);
       /* c8 ignore if */
-      if (_temp96 && typeof _temp96 === 'object' && 'next' in _temp96) throw new Assert.Error('Forgot to yield*');
+      if (_temp96 && typeof _temp96 === 'object' && 'next' in _temp96) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp96 instanceof AbruptCompletion) return _temp96;
       /* c8 ignore if */
@@ -37550,7 +37622,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         /* ReturnIfAbrupt */
         let _temp97 = yield* Get(O, Pk);
         /* c8 ignore if */
-        if (_temp97 && typeof _temp97 === 'object' && 'next' in _temp97) throw new Assert.Error('Forgot to yield*');
+        if (_temp97 && typeof _temp97 === 'object' && 'next' in _temp97) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp97 instanceof AbruptCompletion) return _temp97;
         /* c8 ignore if */
@@ -37559,7 +37631,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         /* ReturnIfAbrupt */
         let _temp98 = yield* Call(callbackfn, Value.undefined, [accumulator, kValue, F(k), O]);
         /* c8 ignore if */
-        if (_temp98 && typeof _temp98 === 'object' && 'next' in _temp98) throw new Assert.Error('Forgot to yield*');
+        if (_temp98 && typeof _temp98 === 'object' && 'next' in _temp98) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp98 instanceof AbruptCompletion) return _temp98;
         /* c8 ignore if */
@@ -37580,7 +37652,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp99 = priorToEvaluatingAlgorithm(thisValue);
     /* c8 ignore if */
-    if (_temp99 && typeof _temp99 === 'object' && 'next' in _temp99) throw new Assert.Error('Forgot to yield*');
+    if (_temp99 && typeof _temp99 === 'object' && 'next' in _temp99) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp99 instanceof AbruptCompletion) return _temp99;
     /* c8 ignore if */
@@ -37588,7 +37660,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp100 = ToObject(thisValue);
     /* c8 ignore if */
-    if (_temp100 && typeof _temp100 === 'object' && 'next' in _temp100) throw new Assert.Error('Forgot to yield*');
+    if (_temp100 && typeof _temp100 === 'object' && 'next' in _temp100) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp100 instanceof AbruptCompletion) return _temp100;
     /* c8 ignore if */
@@ -37597,7 +37669,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp101 = objectToLength(O);
     /* c8 ignore if */
-    if (_temp101 && typeof _temp101 === 'object' && 'next' in _temp101) throw new Assert.Error('Forgot to yield*');
+    if (_temp101 && typeof _temp101 === 'object' && 'next' in _temp101) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp101 instanceof AbruptCompletion) return _temp101;
     /* c8 ignore if */
@@ -37632,7 +37704,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       /* ReturnIfAbrupt */
       let _temp104 = yield* HasProperty(O, lowerP);
       /* c8 ignore if */
-      if (_temp104 && typeof _temp104 === 'object' && 'next' in _temp104) throw new Assert.Error('Forgot to yield*');
+      if (_temp104 && typeof _temp104 === 'object' && 'next' in _temp104) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp104 instanceof AbruptCompletion) return _temp104;
       /* c8 ignore if */
@@ -37644,7 +37716,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         /* ReturnIfAbrupt */
         let _temp105 = yield* Get(O, lowerP);
         /* c8 ignore if */
-        if (_temp105 && typeof _temp105 === 'object' && 'next' in _temp105) throw new Assert.Error('Forgot to yield*');
+        if (_temp105 && typeof _temp105 === 'object' && 'next' in _temp105) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp105 instanceof AbruptCompletion) return _temp105;
         /* c8 ignore if */
@@ -37654,7 +37726,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       /* ReturnIfAbrupt */
       let _temp106 = yield* HasProperty(O, upperP);
       /* c8 ignore if */
-      if (_temp106 && typeof _temp106 === 'object' && 'next' in _temp106) throw new Assert.Error('Forgot to yield*');
+      if (_temp106 && typeof _temp106 === 'object' && 'next' in _temp106) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp106 instanceof AbruptCompletion) return _temp106;
       /* c8 ignore if */
@@ -37664,7 +37736,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         /* ReturnIfAbrupt */
         let _temp107 = yield* Get(O, upperP);
         /* c8 ignore if */
-        if (_temp107 && typeof _temp107 === 'object' && 'next' in _temp107) throw new Assert.Error('Forgot to yield*');
+        if (_temp107 && typeof _temp107 === 'object' && 'next' in _temp107) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp107 instanceof AbruptCompletion) return _temp107;
         /* c8 ignore if */
@@ -37675,7 +37747,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         /* ReturnIfAbrupt */
         let _temp108 = yield* Set$1(O, lowerP, upperValue, Value.true);
         /* c8 ignore if */
-        if (_temp108 && typeof _temp108 === 'object' && 'next' in _temp108) throw new Assert.Error('Forgot to yield*');
+        if (_temp108 && typeof _temp108 === 'object' && 'next' in _temp108) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp108 instanceof AbruptCompletion) return _temp108;
         /* c8 ignore if */
@@ -37683,7 +37755,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         /* ReturnIfAbrupt */
         let _temp109 = yield* Set$1(O, upperP, lowerValue, Value.true);
         /* c8 ignore if */
-        if (_temp109 && typeof _temp109 === 'object' && 'next' in _temp109) throw new Assert.Error('Forgot to yield*');
+        if (_temp109 && typeof _temp109 === 'object' && 'next' in _temp109) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp109 instanceof AbruptCompletion) return _temp109;
         /* c8 ignore if */
@@ -37692,7 +37764,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         /* ReturnIfAbrupt */
         let _temp110 = yield* Set$1(O, lowerP, upperValue, Value.true);
         /* c8 ignore if */
-        if (_temp110 && typeof _temp110 === 'object' && 'next' in _temp110) throw new Assert.Error('Forgot to yield*');
+        if (_temp110 && typeof _temp110 === 'object' && 'next' in _temp110) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp110 instanceof AbruptCompletion) return _temp110;
         /* c8 ignore if */
@@ -37700,7 +37772,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         /* ReturnIfAbrupt */
         let _temp111 = yield* DeletePropertyOrThrow(O, upperP);
         /* c8 ignore if */
-        if (_temp111 && typeof _temp111 === 'object' && 'next' in _temp111) throw new Assert.Error('Forgot to yield*');
+        if (_temp111 && typeof _temp111 === 'object' && 'next' in _temp111) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp111 instanceof AbruptCompletion) return _temp111;
         /* c8 ignore if */
@@ -37709,7 +37781,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         /* ReturnIfAbrupt */
         let _temp112 = yield* DeletePropertyOrThrow(O, lowerP);
         /* c8 ignore if */
-        if (_temp112 && typeof _temp112 === 'object' && 'next' in _temp112) throw new Assert.Error('Forgot to yield*');
+        if (_temp112 && typeof _temp112 === 'object' && 'next' in _temp112) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp112 instanceof AbruptCompletion) return _temp112;
         /* c8 ignore if */
@@ -37717,7 +37789,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         /* ReturnIfAbrupt */
         let _temp113 = yield* Set$1(O, upperP, lowerValue, Value.true);
         /* c8 ignore if */
-        if (_temp113 && typeof _temp113 === 'object' && 'next' in _temp113) throw new Assert.Error('Forgot to yield*');
+        if (_temp113 && typeof _temp113 === 'object' && 'next' in _temp113) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp113 instanceof AbruptCompletion) return _temp113;
         /* c8 ignore if */
@@ -37737,7 +37809,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp114 = priorToEvaluatingAlgorithm(thisValue);
     /* c8 ignore if */
-    if (_temp114 && typeof _temp114 === 'object' && 'next' in _temp114) throw new Assert.Error('Forgot to yield*');
+    if (_temp114 && typeof _temp114 === 'object' && 'next' in _temp114) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp114 instanceof AbruptCompletion) return _temp114;
     /* c8 ignore if */
@@ -37745,7 +37817,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp115 = ToObject(thisValue);
     /* c8 ignore if */
-    if (_temp115 && typeof _temp115 === 'object' && 'next' in _temp115) throw new Assert.Error('Forgot to yield*');
+    if (_temp115 && typeof _temp115 === 'object' && 'next' in _temp115) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp115 instanceof AbruptCompletion) return _temp115;
     /* c8 ignore if */
@@ -37754,7 +37826,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp116 = objectToLength(O);
     /* c8 ignore if */
-    if (_temp116 && typeof _temp116 === 'object' && 'next' in _temp116) throw new Assert.Error('Forgot to yield*');
+    if (_temp116 && typeof _temp116 === 'object' && 'next' in _temp116) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp116 instanceof AbruptCompletion) return _temp116;
     /* c8 ignore if */
@@ -37779,7 +37851,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       /* ReturnIfAbrupt */
       let _temp118 = yield* HasProperty(O, Pk);
       /* c8 ignore if */
-      if (_temp118 && typeof _temp118 === 'object' && 'next' in _temp118) throw new Assert.Error('Forgot to yield*');
+      if (_temp118 && typeof _temp118 === 'object' && 'next' in _temp118) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp118 instanceof AbruptCompletion) return _temp118;
       /* c8 ignore if */
@@ -37789,7 +37861,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         /* ReturnIfAbrupt */
         let _temp119 = yield* Get(O, Pk);
         /* c8 ignore if */
-        if (_temp119 && typeof _temp119 === 'object' && 'next' in _temp119) throw new Assert.Error('Forgot to yield*');
+        if (_temp119 && typeof _temp119 === 'object' && 'next' in _temp119) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp119 instanceof AbruptCompletion) return _temp119;
         /* c8 ignore if */
@@ -37798,7 +37870,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         /* ReturnIfAbrupt */
         let _temp120 = yield* Call(callbackfn, thisArg, [kValue, F(k), O]);
         /* c8 ignore if */
-        if (_temp120 && typeof _temp120 === 'object' && 'next' in _temp120) throw new Assert.Error('Forgot to yield*');
+        if (_temp120 && typeof _temp120 === 'object' && 'next' in _temp120) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp120 instanceof AbruptCompletion) return _temp120;
         /* c8 ignore if */
@@ -37822,7 +37894,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp121 = priorToEvaluatingAlgorithm(thisValue);
     /* c8 ignore if */
-    if (_temp121 && typeof _temp121 === 'object' && 'next' in _temp121) throw new Assert.Error('Forgot to yield*');
+    if (_temp121 && typeof _temp121 === 'object' && 'next' in _temp121) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp121 instanceof AbruptCompletion) return _temp121;
     /* c8 ignore if */
@@ -37830,7 +37902,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp122 = ToObject(thisValue);
     /* c8 ignore if */
-    if (_temp122 && typeof _temp122 === 'object' && 'next' in _temp122) throw new Assert.Error('Forgot to yield*');
+    if (_temp122 && typeof _temp122 === 'object' && 'next' in _temp122) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp122 instanceof AbruptCompletion) return _temp122;
     /* c8 ignore if */
@@ -37839,7 +37911,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
     /* ReturnIfAbrupt */
     let _temp123 = objectToLength(array);
     /* c8 ignore if */
-    if (_temp123 && typeof _temp123 === 'object' && 'next' in _temp123) throw new Assert.Error('Forgot to yield*');
+    if (_temp123 && typeof _temp123 === 'object' && 'next' in _temp123) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp123 instanceof AbruptCompletion) return _temp123;
     /* c8 ignore if */
@@ -37866,7 +37938,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
       /* ReturnIfAbrupt */
       let _temp125 = yield* Get(array, kStr);
       /* c8 ignore if */
-      if (_temp125 && typeof _temp125 === 'object' && 'next' in _temp125) throw new Assert.Error('Forgot to yield*');
+      if (_temp125 && typeof _temp125 === 'object' && 'next' in _temp125) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp125 instanceof AbruptCompletion) return _temp125;
       /* c8 ignore if */
@@ -37876,7 +37948,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         /* ReturnIfAbrupt */
         let _temp127 = yield* Invoke(nextElement, Value('toLocaleString'));
         /* c8 ignore if */
-        if (_temp127 && typeof _temp127 === 'object' && 'next' in _temp127) throw new Assert.Error('Forgot to yield*');
+        if (_temp127 && typeof _temp127 === 'object' && 'next' in _temp127) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp127 instanceof AbruptCompletion) return _temp127;
         /* c8 ignore if */
@@ -37884,7 +37956,7 @@ function bootstrapArrayPrototypeShared(realmRec, proto, priorToEvaluatingAlgorit
         /* ReturnIfAbrupt */
         let _temp126 = yield* ToString(_temp127);
         /* c8 ignore if */
-        if (_temp126 && typeof _temp126 === 'object' && 'next' in _temp126) throw new Assert.Error('Forgot to yield*');
+        if (_temp126 && typeof _temp126 === 'object' && 'next' in _temp126) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp126 instanceof AbruptCompletion) return _temp126;
         /* c8 ignore if */
@@ -37907,7 +37979,7 @@ function* ArrayProto_concat(args, {
   /* ReturnIfAbrupt */
   let _temp = ToObject(thisValue);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -37916,7 +37988,7 @@ function* ArrayProto_concat(args, {
   /* ReturnIfAbrupt */
   let _temp2 = yield* ArraySpeciesCreate(O, 0);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -37929,7 +38001,7 @@ function* ArrayProto_concat(args, {
     /* ReturnIfAbrupt */
     let _temp3 = yield* IsConcatSpreadable(E);
     /* c8 ignore if */
-    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp3 instanceof AbruptCompletion) return _temp3;
     /* c8 ignore if */
@@ -37940,7 +38012,7 @@ function* ArrayProto_concat(args, {
       /* ReturnIfAbrupt */
       let _temp4 = yield* LengthOfArrayLike(E);
       /* c8 ignore if */
-      if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+      if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp4 instanceof AbruptCompletion) return _temp4;
       /* c8 ignore if */
@@ -37964,7 +38036,7 @@ function* ArrayProto_concat(args, {
         /* ReturnIfAbrupt */
         let _temp6 = yield* HasProperty(E, P);
         /* c8 ignore if */
-        if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+        if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp6 instanceof AbruptCompletion) return _temp6;
         /* c8 ignore if */
@@ -37974,7 +38046,7 @@ function* ArrayProto_concat(args, {
           /* ReturnIfAbrupt */
           let _temp7 = yield* Get(E, P);
           /* c8 ignore if */
-          if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+          if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp7 instanceof AbruptCompletion) return _temp7;
           /* c8 ignore if */
@@ -37994,7 +38066,7 @@ function* ArrayProto_concat(args, {
           /* ReturnIfAbrupt */
           let _temp9 = yield* CreateDataPropertyOrThrow(A, nStr, subElement);
           /* c8 ignore if */
-          if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+          if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp9 instanceof AbruptCompletion) return _temp9;
           /* c8 ignore if */
@@ -38021,7 +38093,7 @@ function* ArrayProto_concat(args, {
       /* ReturnIfAbrupt */
       let _temp11 = yield* CreateDataPropertyOrThrow(A, nStr, E);
       /* c8 ignore if */
-      if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+      if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp11 instanceof AbruptCompletion) return _temp11;
       /* c8 ignore if */
@@ -38032,7 +38104,7 @@ function* ArrayProto_concat(args, {
   /* ReturnIfAbrupt */
   let _temp12 = yield* Set$1(A, Value('length'), F(n), Value.true);
   /* c8 ignore if */
-  if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield*');
+  if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp12 instanceof AbruptCompletion) return _temp12;
   /* c8 ignore if */
@@ -38048,7 +38120,7 @@ function* ArrayProto_copyWithin([target = Value.undefined, start = Value.undefin
   /* ReturnIfAbrupt */
   let _temp13 = ToObject(thisValue);
   /* c8 ignore if */
-  if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield*');
+  if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp13 instanceof AbruptCompletion) return _temp13;
   /* c8 ignore if */
@@ -38057,7 +38129,7 @@ function* ArrayProto_copyWithin([target = Value.undefined, start = Value.undefin
   /* ReturnIfAbrupt */
   let _temp14 = yield* LengthOfArrayLike(O);
   /* c8 ignore if */
-  if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield*');
+  if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp14 instanceof AbruptCompletion) return _temp14;
   /* c8 ignore if */
@@ -38066,7 +38138,7 @@ function* ArrayProto_copyWithin([target = Value.undefined, start = Value.undefin
   /* ReturnIfAbrupt */
   let _temp15 = yield* ToIntegerOrInfinity(target);
   /* c8 ignore if */
-  if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield*');
+  if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp15 instanceof AbruptCompletion) return _temp15;
   /* c8 ignore if */
@@ -38081,7 +38153,7 @@ function* ArrayProto_copyWithin([target = Value.undefined, start = Value.undefin
   /* ReturnIfAbrupt */
   let _temp16 = yield* ToIntegerOrInfinity(start);
   /* c8 ignore if */
-  if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield*');
+  if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp16 instanceof AbruptCompletion) return _temp16;
   /* c8 ignore if */
@@ -38100,7 +38172,7 @@ function* ArrayProto_copyWithin([target = Value.undefined, start = Value.undefin
     /* ReturnIfAbrupt */
     let _temp17 = yield* ToIntegerOrInfinity(end);
     /* c8 ignore if */
-    if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield*');
+    if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp17 instanceof AbruptCompletion) return _temp17;
     /* c8 ignore if */
@@ -38148,7 +38220,7 @@ function* ArrayProto_copyWithin([target = Value.undefined, start = Value.undefin
     /* ReturnIfAbrupt */
     let _temp20 = yield* HasProperty(O, fromKey);
     /* c8 ignore if */
-    if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield*');
+    if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp20 instanceof AbruptCompletion) return _temp20;
     /* c8 ignore if */
@@ -38158,7 +38230,7 @@ function* ArrayProto_copyWithin([target = Value.undefined, start = Value.undefin
       /* ReturnIfAbrupt */
       let _temp21 = yield* Get(O, fromKey);
       /* c8 ignore if */
-      if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield*');
+      if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp21 instanceof AbruptCompletion) return _temp21;
       /* c8 ignore if */
@@ -38167,7 +38239,7 @@ function* ArrayProto_copyWithin([target = Value.undefined, start = Value.undefin
       /* ReturnIfAbrupt */
       let _temp22 = yield* Set$1(O, toKey, fromVal, Value.true);
       /* c8 ignore if */
-      if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield*');
+      if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp22 instanceof AbruptCompletion) return _temp22;
       /* c8 ignore if */
@@ -38176,7 +38248,7 @@ function* ArrayProto_copyWithin([target = Value.undefined, start = Value.undefin
       /* ReturnIfAbrupt */
       let _temp23 = yield* DeletePropertyOrThrow(O, toKey);
       /* c8 ignore if */
-      if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield*');
+      if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp23 instanceof AbruptCompletion) return _temp23;
       /* c8 ignore if */
@@ -38197,7 +38269,7 @@ function ArrayProto_entries(_args, {
   /* ReturnIfAbrupt */
   let _temp24 = ToObject(thisValue);
   /* c8 ignore if */
-  if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) throw new Assert.Error('Forgot to yield*');
+  if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp24 instanceof AbruptCompletion) return _temp24;
   /* c8 ignore if */
@@ -38214,7 +38286,7 @@ function* ArrayProto_fill([value = Value.undefined, start = Value.undefined, end
   /* ReturnIfAbrupt */
   let _temp25 = ToObject(thisValue);
   /* c8 ignore if */
-  if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield*');
+  if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp25 instanceof AbruptCompletion) return _temp25;
   /* c8 ignore if */
@@ -38223,7 +38295,7 @@ function* ArrayProto_fill([value = Value.undefined, start = Value.undefined, end
   /* ReturnIfAbrupt */
   let _temp26 = yield* LengthOfArrayLike(O);
   /* c8 ignore if */
-  if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield*');
+  if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp26 instanceof AbruptCompletion) return _temp26;
   /* c8 ignore if */
@@ -38232,7 +38304,7 @@ function* ArrayProto_fill([value = Value.undefined, start = Value.undefined, end
   /* ReturnIfAbrupt */
   let _temp27 = yield* ToIntegerOrInfinity(start);
   /* c8 ignore if */
-  if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield*');
+  if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp27 instanceof AbruptCompletion) return _temp27;
   /* c8 ignore if */
@@ -38251,7 +38323,7 @@ function* ArrayProto_fill([value = Value.undefined, start = Value.undefined, end
     /* ReturnIfAbrupt */
     let _temp28 = yield* ToIntegerOrInfinity(end);
     /* c8 ignore if */
-    if (_temp28 && typeof _temp28 === 'object' && 'next' in _temp28) throw new Assert.Error('Forgot to yield*');
+    if (_temp28 && typeof _temp28 === 'object' && 'next' in _temp28) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp28 instanceof AbruptCompletion) return _temp28;
     /* c8 ignore if */
@@ -38279,7 +38351,7 @@ function* ArrayProto_fill([value = Value.undefined, start = Value.undefined, end
     /* ReturnIfAbrupt */
     let _temp30 = yield* Set$1(O, Pk, value, Value.true);
     /* c8 ignore if */
-    if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) throw new Assert.Error('Forgot to yield*');
+    if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp30 instanceof AbruptCompletion) return _temp30;
     /* c8 ignore if */
@@ -38297,7 +38369,7 @@ function* ArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undef
   /* ReturnIfAbrupt */
   let _temp31 = ToObject(thisValue);
   /* c8 ignore if */
-  if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) throw new Assert.Error('Forgot to yield*');
+  if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp31 instanceof AbruptCompletion) return _temp31;
   /* c8 ignore if */
@@ -38306,7 +38378,7 @@ function* ArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undef
   /* ReturnIfAbrupt */
   let _temp32 = yield* LengthOfArrayLike(O);
   /* c8 ignore if */
-  if (_temp32 && typeof _temp32 === 'object' && 'next' in _temp32) throw new Assert.Error('Forgot to yield*');
+  if (_temp32 && typeof _temp32 === 'object' && 'next' in _temp32) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp32 instanceof AbruptCompletion) return _temp32;
   /* c8 ignore if */
@@ -38318,7 +38390,7 @@ function* ArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undef
   /* ReturnIfAbrupt */
   let _temp33 = yield* ArraySpeciesCreate(O, 0);
   /* c8 ignore if */
-  if (_temp33 && typeof _temp33 === 'object' && 'next' in _temp33) throw new Assert.Error('Forgot to yield*');
+  if (_temp33 && typeof _temp33 === 'object' && 'next' in _temp33) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp33 instanceof AbruptCompletion) return _temp33;
   /* c8 ignore if */
@@ -38341,7 +38413,7 @@ function* ArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undef
     /* ReturnIfAbrupt */
     let _temp35 = yield* HasProperty(O, Pk);
     /* c8 ignore if */
-    if (_temp35 && typeof _temp35 === 'object' && 'next' in _temp35) throw new Assert.Error('Forgot to yield*');
+    if (_temp35 && typeof _temp35 === 'object' && 'next' in _temp35) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp35 instanceof AbruptCompletion) return _temp35;
     /* c8 ignore if */
@@ -38351,7 +38423,7 @@ function* ArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undef
       /* ReturnIfAbrupt */
       let _temp36 = yield* Get(O, Pk);
       /* c8 ignore if */
-      if (_temp36 && typeof _temp36 === 'object' && 'next' in _temp36) throw new Assert.Error('Forgot to yield*');
+      if (_temp36 && typeof _temp36 === 'object' && 'next' in _temp36) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp36 instanceof AbruptCompletion) return _temp36;
       /* c8 ignore if */
@@ -38360,7 +38432,7 @@ function* ArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undef
       /* ReturnIfAbrupt */
       let _temp37 = yield* Call(callbackfn, thisArg, [kValue, F(k), O]);
       /* c8 ignore if */
-      if (_temp37 && typeof _temp37 === 'object' && 'next' in _temp37) throw new Assert.Error('Forgot to yield*');
+      if (_temp37 && typeof _temp37 === 'object' && 'next' in _temp37) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp37 instanceof AbruptCompletion) return _temp37;
       /* c8 ignore if */
@@ -38380,7 +38452,7 @@ function* ArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undef
         /* ReturnIfAbrupt */
         let _temp38 = yield* CreateDataPropertyOrThrow(A, _temp39, kValue);
         /* c8 ignore if */
-        if (_temp38 && typeof _temp38 === 'object' && 'next' in _temp38) throw new Assert.Error('Forgot to yield*');
+        if (_temp38 && typeof _temp38 === 'object' && 'next' in _temp38) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp38 instanceof AbruptCompletion) return _temp38;
         /* c8 ignore if */
@@ -38419,7 +38491,7 @@ function* FlattenIntoArray(target, source, sourceLen, start, depth, mapperFuncti
     /* ReturnIfAbrupt */
     let _temp41 = yield* HasProperty(source, P);
     /* c8 ignore if */
-    if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) throw new Assert.Error('Forgot to yield*');
+    if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp41 instanceof AbruptCompletion) return _temp41;
     /* c8 ignore if */
@@ -38429,7 +38501,7 @@ function* FlattenIntoArray(target, source, sourceLen, start, depth, mapperFuncti
       /* ReturnIfAbrupt */
       let _temp42 = yield* Get(source, P);
       /* c8 ignore if */
-      if (_temp42 && typeof _temp42 === 'object' && 'next' in _temp42) throw new Assert.Error('Forgot to yield*');
+      if (_temp42 && typeof _temp42 === 'object' && 'next' in _temp42) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp42 instanceof AbruptCompletion) return _temp42;
       /* c8 ignore if */
@@ -38440,7 +38512,7 @@ function* FlattenIntoArray(target, source, sourceLen, start, depth, mapperFuncti
         /* ReturnIfAbrupt */
         let _temp43 = yield* Call(mapperFunction, thisArg, [element, F(sourceIndex), source]);
         /* c8 ignore if */
-        if (_temp43 && typeof _temp43 === 'object' && 'next' in _temp43) throw new Assert.Error('Forgot to yield*');
+        if (_temp43 && typeof _temp43 === 'object' && 'next' in _temp43) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp43 instanceof AbruptCompletion) return _temp43;
         /* c8 ignore if */
@@ -38452,7 +38524,7 @@ function* FlattenIntoArray(target, source, sourceLen, start, depth, mapperFuncti
         /* ReturnIfAbrupt */
         let _temp44 = IsArray(element);
         /* c8 ignore if */
-        if (_temp44 && typeof _temp44 === 'object' && 'next' in _temp44) throw new Assert.Error('Forgot to yield*');
+        if (_temp44 && typeof _temp44 === 'object' && 'next' in _temp44) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp44 instanceof AbruptCompletion) return _temp44;
         /* c8 ignore if */
@@ -38463,7 +38535,7 @@ function* FlattenIntoArray(target, source, sourceLen, start, depth, mapperFuncti
         /* ReturnIfAbrupt */
         let _temp45 = yield* LengthOfArrayLike(element);
         /* c8 ignore if */
-        if (_temp45 && typeof _temp45 === 'object' && 'next' in _temp45) throw new Assert.Error('Forgot to yield*');
+        if (_temp45 && typeof _temp45 === 'object' && 'next' in _temp45) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp45 instanceof AbruptCompletion) return _temp45;
         /* c8 ignore if */
@@ -38472,7 +38544,7 @@ function* FlattenIntoArray(target, source, sourceLen, start, depth, mapperFuncti
         /* ReturnIfAbrupt */
         let _temp46 = yield* FlattenIntoArray(target, element, elementLen, targetIndex, depth - 1);
         /* c8 ignore if */
-        if (_temp46 && typeof _temp46 === 'object' && 'next' in _temp46) throw new Assert.Error('Forgot to yield*');
+        if (_temp46 && typeof _temp46 === 'object' && 'next' in _temp46) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp46 instanceof AbruptCompletion) return _temp46;
         /* c8 ignore if */
@@ -38495,7 +38567,7 @@ function* FlattenIntoArray(target, source, sourceLen, start, depth, mapperFuncti
         /* ReturnIfAbrupt */
         let _temp47 = yield* CreateDataPropertyOrThrow(target, _temp48, element);
         /* c8 ignore if */
-        if (_temp47 && typeof _temp47 === 'object' && 'next' in _temp47) throw new Assert.Error('Forgot to yield*');
+        if (_temp47 && typeof _temp47 === 'object' && 'next' in _temp47) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp47 instanceof AbruptCompletion) return _temp47;
         /* c8 ignore if */
@@ -38516,7 +38588,7 @@ function* ArrayProto_flat([depth = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp49 = ToObject(thisValue);
   /* c8 ignore if */
-  if (_temp49 && typeof _temp49 === 'object' && 'next' in _temp49) throw new Assert.Error('Forgot to yield*');
+  if (_temp49 && typeof _temp49 === 'object' && 'next' in _temp49) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp49 instanceof AbruptCompletion) return _temp49;
   /* c8 ignore if */
@@ -38525,7 +38597,7 @@ function* ArrayProto_flat([depth = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp50 = yield* LengthOfArrayLike(O);
   /* c8 ignore if */
-  if (_temp50 && typeof _temp50 === 'object' && 'next' in _temp50) throw new Assert.Error('Forgot to yield*');
+  if (_temp50 && typeof _temp50 === 'object' && 'next' in _temp50) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp50 instanceof AbruptCompletion) return _temp50;
   /* c8 ignore if */
@@ -38536,7 +38608,7 @@ function* ArrayProto_flat([depth = Value.undefined], {
     /* ReturnIfAbrupt */
     let _temp51 = yield* ToIntegerOrInfinity(depth);
     /* c8 ignore if */
-    if (_temp51 && typeof _temp51 === 'object' && 'next' in _temp51) throw new Assert.Error('Forgot to yield*');
+    if (_temp51 && typeof _temp51 === 'object' && 'next' in _temp51) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp51 instanceof AbruptCompletion) return _temp51;
     /* c8 ignore if */
@@ -38546,7 +38618,7 @@ function* ArrayProto_flat([depth = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp52 = yield* ArraySpeciesCreate(O, 0);
   /* c8 ignore if */
-  if (_temp52 && typeof _temp52 === 'object' && 'next' in _temp52) throw new Assert.Error('Forgot to yield*');
+  if (_temp52 && typeof _temp52 === 'object' && 'next' in _temp52) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp52 instanceof AbruptCompletion) return _temp52;
   /* c8 ignore if */
@@ -38555,7 +38627,7 @@ function* ArrayProto_flat([depth = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp53 = yield* FlattenIntoArray(A, O, sourceLen, 0, depthNum);
   /* c8 ignore if */
-  if (_temp53 && typeof _temp53 === 'object' && 'next' in _temp53) throw new Assert.Error('Forgot to yield*');
+  if (_temp53 && typeof _temp53 === 'object' && 'next' in _temp53) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp53 instanceof AbruptCompletion) return _temp53;
   /* c8 ignore if */
@@ -38571,7 +38643,7 @@ function* ArrayProto_flatMap([mapperFunction = Value.undefined, thisArg = Value.
   /* ReturnIfAbrupt */
   let _temp54 = ToObject(thisValue);
   /* c8 ignore if */
-  if (_temp54 && typeof _temp54 === 'object' && 'next' in _temp54) throw new Assert.Error('Forgot to yield*');
+  if (_temp54 && typeof _temp54 === 'object' && 'next' in _temp54) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp54 instanceof AbruptCompletion) return _temp54;
   /* c8 ignore if */
@@ -38580,7 +38652,7 @@ function* ArrayProto_flatMap([mapperFunction = Value.undefined, thisArg = Value.
   /* ReturnIfAbrupt */
   let _temp55 = yield* LengthOfArrayLike(O);
   /* c8 ignore if */
-  if (_temp55 && typeof _temp55 === 'object' && 'next' in _temp55) throw new Assert.Error('Forgot to yield*');
+  if (_temp55 && typeof _temp55 === 'object' && 'next' in _temp55) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp55 instanceof AbruptCompletion) return _temp55;
   /* c8 ignore if */
@@ -38602,7 +38674,7 @@ function* ArrayProto_flatMap([mapperFunction = Value.undefined, thisArg = Value.
   /* ReturnIfAbrupt */
   let _temp57 = yield* ArraySpeciesCreate(O, 0);
   /* c8 ignore if */
-  if (_temp57 && typeof _temp57 === 'object' && 'next' in _temp57) throw new Assert.Error('Forgot to yield*');
+  if (_temp57 && typeof _temp57 === 'object' && 'next' in _temp57) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp57 instanceof AbruptCompletion) return _temp57;
   /* c8 ignore if */
@@ -38611,7 +38683,7 @@ function* ArrayProto_flatMap([mapperFunction = Value.undefined, thisArg = Value.
   /* ReturnIfAbrupt */
   let _temp58 = yield* FlattenIntoArray(A, O, sourceLen, 0, 1, mapperFunction, thisArg);
   /* c8 ignore if */
-  if (_temp58 && typeof _temp58 === 'object' && 'next' in _temp58) throw new Assert.Error('Forgot to yield*');
+  if (_temp58 && typeof _temp58 === 'object' && 'next' in _temp58) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp58 instanceof AbruptCompletion) return _temp58;
   /* c8 ignore if */
@@ -38627,7 +38699,7 @@ function ArrayProto_keys(_args, {
   /* ReturnIfAbrupt */
   let _temp59 = ToObject(thisValue);
   /* c8 ignore if */
-  if (_temp59 && typeof _temp59 === 'object' && 'next' in _temp59) throw new Assert.Error('Forgot to yield*');
+  if (_temp59 && typeof _temp59 === 'object' && 'next' in _temp59) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp59 instanceof AbruptCompletion) return _temp59;
   /* c8 ignore if */
@@ -38644,7 +38716,7 @@ function* ArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefine
   /* ReturnIfAbrupt */
   let _temp60 = ToObject(thisValue);
   /* c8 ignore if */
-  if (_temp60 && typeof _temp60 === 'object' && 'next' in _temp60) throw new Assert.Error('Forgot to yield*');
+  if (_temp60 && typeof _temp60 === 'object' && 'next' in _temp60) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp60 instanceof AbruptCompletion) return _temp60;
   /* c8 ignore if */
@@ -38653,7 +38725,7 @@ function* ArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefine
   /* ReturnIfAbrupt */
   let _temp61 = yield* LengthOfArrayLike(O);
   /* c8 ignore if */
-  if (_temp61 && typeof _temp61 === 'object' && 'next' in _temp61) throw new Assert.Error('Forgot to yield*');
+  if (_temp61 && typeof _temp61 === 'object' && 'next' in _temp61) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp61 instanceof AbruptCompletion) return _temp61;
   /* c8 ignore if */
@@ -38665,7 +38737,7 @@ function* ArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefine
   /* ReturnIfAbrupt */
   let _temp62 = yield* ArraySpeciesCreate(O, len);
   /* c8 ignore if */
-  if (_temp62 && typeof _temp62 === 'object' && 'next' in _temp62) throw new Assert.Error('Forgot to yield*');
+  if (_temp62 && typeof _temp62 === 'object' && 'next' in _temp62) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp62 instanceof AbruptCompletion) return _temp62;
   /* c8 ignore if */
@@ -38687,7 +38759,7 @@ function* ArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefine
     /* ReturnIfAbrupt */
     let _temp64 = yield* HasProperty(O, Pk);
     /* c8 ignore if */
-    if (_temp64 && typeof _temp64 === 'object' && 'next' in _temp64) throw new Assert.Error('Forgot to yield*');
+    if (_temp64 && typeof _temp64 === 'object' && 'next' in _temp64) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp64 instanceof AbruptCompletion) return _temp64;
     /* c8 ignore if */
@@ -38697,7 +38769,7 @@ function* ArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefine
       /* ReturnIfAbrupt */
       let _temp65 = yield* Get(O, Pk);
       /* c8 ignore if */
-      if (_temp65 && typeof _temp65 === 'object' && 'next' in _temp65) throw new Assert.Error('Forgot to yield*');
+      if (_temp65 && typeof _temp65 === 'object' && 'next' in _temp65) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp65 instanceof AbruptCompletion) return _temp65;
       /* c8 ignore if */
@@ -38706,7 +38778,7 @@ function* ArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefine
       /* ReturnIfAbrupt */
       let _temp66 = yield* Call(callbackfn, thisArg, [kValue, F(k), O]);
       /* c8 ignore if */
-      if (_temp66 && typeof _temp66 === 'object' && 'next' in _temp66) throw new Assert.Error('Forgot to yield*');
+      if (_temp66 && typeof _temp66 === 'object' && 'next' in _temp66) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp66 instanceof AbruptCompletion) return _temp66;
       /* c8 ignore if */
@@ -38715,7 +38787,7 @@ function* ArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefine
       /* ReturnIfAbrupt */
       let _temp67 = yield* CreateDataPropertyOrThrow(A, Pk, mappedValue);
       /* c8 ignore if */
-      if (_temp67 && typeof _temp67 === 'object' && 'next' in _temp67) throw new Assert.Error('Forgot to yield*');
+      if (_temp67 && typeof _temp67 === 'object' && 'next' in _temp67) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp67 instanceof AbruptCompletion) return _temp67;
       /* c8 ignore if */
@@ -38734,7 +38806,7 @@ function* ArrayProto_pop(_args, {
   /* ReturnIfAbrupt */
   let _temp68 = ToObject(thisValue);
   /* c8 ignore if */
-  if (_temp68 && typeof _temp68 === 'object' && 'next' in _temp68) throw new Assert.Error('Forgot to yield*');
+  if (_temp68 && typeof _temp68 === 'object' && 'next' in _temp68) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp68 instanceof AbruptCompletion) return _temp68;
   /* c8 ignore if */
@@ -38743,7 +38815,7 @@ function* ArrayProto_pop(_args, {
   /* ReturnIfAbrupt */
   let _temp69 = yield* LengthOfArrayLike(O);
   /* c8 ignore if */
-  if (_temp69 && typeof _temp69 === 'object' && 'next' in _temp69) throw new Assert.Error('Forgot to yield*');
+  if (_temp69 && typeof _temp69 === 'object' && 'next' in _temp69) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp69 instanceof AbruptCompletion) return _temp69;
   /* c8 ignore if */
@@ -38753,7 +38825,7 @@ function* ArrayProto_pop(_args, {
     /* ReturnIfAbrupt */
     let _temp70 = yield* Set$1(O, Value('length'), F(0), Value.true);
     /* c8 ignore if */
-    if (_temp70 && typeof _temp70 === 'object' && 'next' in _temp70) throw new Assert.Error('Forgot to yield*');
+    if (_temp70 && typeof _temp70 === 'object' && 'next' in _temp70) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp70 instanceof AbruptCompletion) return _temp70;
     /* c8 ignore if */
@@ -38764,7 +38836,7 @@ function* ArrayProto_pop(_args, {
     /* ReturnIfAbrupt */
     let _temp71 = yield* ToString(F(newLen));
     /* c8 ignore if */
-    if (_temp71 && typeof _temp71 === 'object' && 'next' in _temp71) throw new Assert.Error('Forgot to yield*');
+    if (_temp71 && typeof _temp71 === 'object' && 'next' in _temp71) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp71 instanceof AbruptCompletion) return _temp71;
     /* c8 ignore if */
@@ -38773,7 +38845,7 @@ function* ArrayProto_pop(_args, {
     /* ReturnIfAbrupt */
     let _temp72 = yield* Get(O, index);
     /* c8 ignore if */
-    if (_temp72 && typeof _temp72 === 'object' && 'next' in _temp72) throw new Assert.Error('Forgot to yield*');
+    if (_temp72 && typeof _temp72 === 'object' && 'next' in _temp72) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp72 instanceof AbruptCompletion) return _temp72;
     /* c8 ignore if */
@@ -38782,7 +38854,7 @@ function* ArrayProto_pop(_args, {
     /* ReturnIfAbrupt */
     let _temp73 = yield* DeletePropertyOrThrow(O, index);
     /* c8 ignore if */
-    if (_temp73 && typeof _temp73 === 'object' && 'next' in _temp73) throw new Assert.Error('Forgot to yield*');
+    if (_temp73 && typeof _temp73 === 'object' && 'next' in _temp73) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp73 instanceof AbruptCompletion) return _temp73;
     /* c8 ignore if */
@@ -38790,7 +38862,7 @@ function* ArrayProto_pop(_args, {
     /* ReturnIfAbrupt */
     let _temp74 = yield* Set$1(O, Value('length'), F(newLen), Value.true);
     /* c8 ignore if */
-    if (_temp74 && typeof _temp74 === 'object' && 'next' in _temp74) throw new Assert.Error('Forgot to yield*');
+    if (_temp74 && typeof _temp74 === 'object' && 'next' in _temp74) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp74 instanceof AbruptCompletion) return _temp74;
     /* c8 ignore if */
@@ -38808,7 +38880,7 @@ function* ArrayProto_push(_items, {
   /* ReturnIfAbrupt */
   let _temp75 = ToObject(thisValue);
   /* c8 ignore if */
-  if (_temp75 && typeof _temp75 === 'object' && 'next' in _temp75) throw new Assert.Error('Forgot to yield*');
+  if (_temp75 && typeof _temp75 === 'object' && 'next' in _temp75) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp75 instanceof AbruptCompletion) return _temp75;
   /* c8 ignore if */
@@ -38817,7 +38889,7 @@ function* ArrayProto_push(_items, {
   /* ReturnIfAbrupt */
   let _temp76 = yield* LengthOfArrayLike(O);
   /* c8 ignore if */
-  if (_temp76 && typeof _temp76 === 'object' && 'next' in _temp76) throw new Assert.Error('Forgot to yield*');
+  if (_temp76 && typeof _temp76 === 'object' && 'next' in _temp76) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp76 instanceof AbruptCompletion) return _temp76;
   /* c8 ignore if */
@@ -38842,7 +38914,7 @@ function* ArrayProto_push(_items, {
     /* ReturnIfAbrupt */
     let _temp77 = yield* Set$1(O, _temp78, E, Value.true);
     /* c8 ignore if */
-    if (_temp77 && typeof _temp77 === 'object' && 'next' in _temp77) throw new Assert.Error('Forgot to yield*');
+    if (_temp77 && typeof _temp77 === 'object' && 'next' in _temp77) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp77 instanceof AbruptCompletion) return _temp77;
     /* c8 ignore if */
@@ -38852,7 +38924,7 @@ function* ArrayProto_push(_items, {
   /* ReturnIfAbrupt */
   let _temp79 = yield* Set$1(O, Value('length'), F(len), Value.true);
   /* c8 ignore if */
-  if (_temp79 && typeof _temp79 === 'object' && 'next' in _temp79) throw new Assert.Error('Forgot to yield*');
+  if (_temp79 && typeof _temp79 === 'object' && 'next' in _temp79) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp79 instanceof AbruptCompletion) return _temp79;
   /* c8 ignore if */
@@ -38868,7 +38940,7 @@ function* ArrayProto_shift(_args, {
   /* ReturnIfAbrupt */
   let _temp80 = ToObject(thisValue);
   /* c8 ignore if */
-  if (_temp80 && typeof _temp80 === 'object' && 'next' in _temp80) throw new Assert.Error('Forgot to yield*');
+  if (_temp80 && typeof _temp80 === 'object' && 'next' in _temp80) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp80 instanceof AbruptCompletion) return _temp80;
   /* c8 ignore if */
@@ -38877,7 +38949,7 @@ function* ArrayProto_shift(_args, {
   /* ReturnIfAbrupt */
   let _temp81 = yield* LengthOfArrayLike(O);
   /* c8 ignore if */
-  if (_temp81 && typeof _temp81 === 'object' && 'next' in _temp81) throw new Assert.Error('Forgot to yield*');
+  if (_temp81 && typeof _temp81 === 'object' && 'next' in _temp81) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp81 instanceof AbruptCompletion) return _temp81;
   /* c8 ignore if */
@@ -38887,7 +38959,7 @@ function* ArrayProto_shift(_args, {
     /* ReturnIfAbrupt */
     let _temp82 = yield* Set$1(O, Value('length'), F(0), Value.true);
     /* c8 ignore if */
-    if (_temp82 && typeof _temp82 === 'object' && 'next' in _temp82) throw new Assert.Error('Forgot to yield*');
+    if (_temp82 && typeof _temp82 === 'object' && 'next' in _temp82) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp82 instanceof AbruptCompletion) return _temp82;
     /* c8 ignore if */
@@ -38897,7 +38969,7 @@ function* ArrayProto_shift(_args, {
   /* ReturnIfAbrupt */
   let _temp83 = yield* Get(O, Value('0'));
   /* c8 ignore if */
-  if (_temp83 && typeof _temp83 === 'object' && 'next' in _temp83) throw new Assert.Error('Forgot to yield*');
+  if (_temp83 && typeof _temp83 === 'object' && 'next' in _temp83) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp83 instanceof AbruptCompletion) return _temp83;
   /* c8 ignore if */
@@ -38930,7 +39002,7 @@ function* ArrayProto_shift(_args, {
     /* ReturnIfAbrupt */
     let _temp86 = yield* HasProperty(O, from);
     /* c8 ignore if */
-    if (_temp86 && typeof _temp86 === 'object' && 'next' in _temp86) throw new Assert.Error('Forgot to yield*');
+    if (_temp86 && typeof _temp86 === 'object' && 'next' in _temp86) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp86 instanceof AbruptCompletion) return _temp86;
     /* c8 ignore if */
@@ -38940,7 +39012,7 @@ function* ArrayProto_shift(_args, {
       /* ReturnIfAbrupt */
       let _temp87 = yield* Get(O, from);
       /* c8 ignore if */
-      if (_temp87 && typeof _temp87 === 'object' && 'next' in _temp87) throw new Assert.Error('Forgot to yield*');
+      if (_temp87 && typeof _temp87 === 'object' && 'next' in _temp87) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp87 instanceof AbruptCompletion) return _temp87;
       /* c8 ignore if */
@@ -38949,7 +39021,7 @@ function* ArrayProto_shift(_args, {
       /* ReturnIfAbrupt */
       let _temp88 = yield* Set$1(O, to, fromVal, Value.true);
       /* c8 ignore if */
-      if (_temp88 && typeof _temp88 === 'object' && 'next' in _temp88) throw new Assert.Error('Forgot to yield*');
+      if (_temp88 && typeof _temp88 === 'object' && 'next' in _temp88) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp88 instanceof AbruptCompletion) return _temp88;
       /* c8 ignore if */
@@ -38958,7 +39030,7 @@ function* ArrayProto_shift(_args, {
       /* ReturnIfAbrupt */
       let _temp89 = yield* DeletePropertyOrThrow(O, to);
       /* c8 ignore if */
-      if (_temp89 && typeof _temp89 === 'object' && 'next' in _temp89) throw new Assert.Error('Forgot to yield*');
+      if (_temp89 && typeof _temp89 === 'object' && 'next' in _temp89) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp89 instanceof AbruptCompletion) return _temp89;
       /* c8 ignore if */
@@ -38979,7 +39051,7 @@ function* ArrayProto_shift(_args, {
   /* ReturnIfAbrupt */
   let _temp90 = yield* DeletePropertyOrThrow(O, _temp92);
   /* c8 ignore if */
-  if (_temp90 && typeof _temp90 === 'object' && 'next' in _temp90) throw new Assert.Error('Forgot to yield*');
+  if (_temp90 && typeof _temp90 === 'object' && 'next' in _temp90) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp90 instanceof AbruptCompletion) return _temp90;
   /* c8 ignore if */
@@ -38987,7 +39059,7 @@ function* ArrayProto_shift(_args, {
   /* ReturnIfAbrupt */
   let _temp91 = yield* Set$1(O, Value('length'), F(len - 1), Value.true);
   /* c8 ignore if */
-  if (_temp91 && typeof _temp91 === 'object' && 'next' in _temp91) throw new Assert.Error('Forgot to yield*');
+  if (_temp91 && typeof _temp91 === 'object' && 'next' in _temp91) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp91 instanceof AbruptCompletion) return _temp91;
   /* c8 ignore if */
@@ -39003,7 +39075,7 @@ function* ArrayProto_slice([start = Value.undefined, end = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp93 = ToObject(thisValue);
   /* c8 ignore if */
-  if (_temp93 && typeof _temp93 === 'object' && 'next' in _temp93) throw new Assert.Error('Forgot to yield*');
+  if (_temp93 && typeof _temp93 === 'object' && 'next' in _temp93) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp93 instanceof AbruptCompletion) return _temp93;
   /* c8 ignore if */
@@ -39012,7 +39084,7 @@ function* ArrayProto_slice([start = Value.undefined, end = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp94 = yield* LengthOfArrayLike(O);
   /* c8 ignore if */
-  if (_temp94 && typeof _temp94 === 'object' && 'next' in _temp94) throw new Assert.Error('Forgot to yield*');
+  if (_temp94 && typeof _temp94 === 'object' && 'next' in _temp94) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp94 instanceof AbruptCompletion) return _temp94;
   /* c8 ignore if */
@@ -39021,7 +39093,7 @@ function* ArrayProto_slice([start = Value.undefined, end = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp95 = yield* ToIntegerOrInfinity(start);
   /* c8 ignore if */
-  if (_temp95 && typeof _temp95 === 'object' && 'next' in _temp95) throw new Assert.Error('Forgot to yield*');
+  if (_temp95 && typeof _temp95 === 'object' && 'next' in _temp95) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp95 instanceof AbruptCompletion) return _temp95;
   /* c8 ignore if */
@@ -39040,7 +39112,7 @@ function* ArrayProto_slice([start = Value.undefined, end = Value.undefined], {
     /* ReturnIfAbrupt */
     let _temp96 = yield* ToIntegerOrInfinity(end);
     /* c8 ignore if */
-    if (_temp96 && typeof _temp96 === 'object' && 'next' in _temp96) throw new Assert.Error('Forgot to yield*');
+    if (_temp96 && typeof _temp96 === 'object' && 'next' in _temp96) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp96 instanceof AbruptCompletion) return _temp96;
     /* c8 ignore if */
@@ -39057,7 +39129,7 @@ function* ArrayProto_slice([start = Value.undefined, end = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp97 = yield* ArraySpeciesCreate(O, count);
   /* c8 ignore if */
-  if (_temp97 && typeof _temp97 === 'object' && 'next' in _temp97) throw new Assert.Error('Forgot to yield*');
+  if (_temp97 && typeof _temp97 === 'object' && 'next' in _temp97) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp97 instanceof AbruptCompletion) return _temp97;
   /* c8 ignore if */
@@ -39079,7 +39151,7 @@ function* ArrayProto_slice([start = Value.undefined, end = Value.undefined], {
     /* ReturnIfAbrupt */
     let _temp99 = yield* HasProperty(O, Pk);
     /* c8 ignore if */
-    if (_temp99 && typeof _temp99 === 'object' && 'next' in _temp99) throw new Assert.Error('Forgot to yield*');
+    if (_temp99 && typeof _temp99 === 'object' && 'next' in _temp99) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp99 instanceof AbruptCompletion) return _temp99;
     /* c8 ignore if */
@@ -39089,7 +39161,7 @@ function* ArrayProto_slice([start = Value.undefined, end = Value.undefined], {
       /* ReturnIfAbrupt */
       let _temp100 = yield* Get(O, Pk);
       /* c8 ignore if */
-      if (_temp100 && typeof _temp100 === 'object' && 'next' in _temp100) throw new Assert.Error('Forgot to yield*');
+      if (_temp100 && typeof _temp100 === 'object' && 'next' in _temp100) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp100 instanceof AbruptCompletion) return _temp100;
       /* c8 ignore if */
@@ -39109,7 +39181,7 @@ function* ArrayProto_slice([start = Value.undefined, end = Value.undefined], {
       /* ReturnIfAbrupt */
       let _temp102 = yield* CreateDataPropertyOrThrow(A, nStr, kValue);
       /* c8 ignore if */
-      if (_temp102 && typeof _temp102 === 'object' && 'next' in _temp102) throw new Assert.Error('Forgot to yield*');
+      if (_temp102 && typeof _temp102 === 'object' && 'next' in _temp102) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp102 instanceof AbruptCompletion) return _temp102;
       /* c8 ignore if */
@@ -39121,7 +39193,7 @@ function* ArrayProto_slice([start = Value.undefined, end = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp103 = yield* Set$1(A, Value('length'), F(n), Value.true);
   /* c8 ignore if */
-  if (_temp103 && typeof _temp103 === 'object' && 'next' in _temp103) throw new Assert.Error('Forgot to yield*');
+  if (_temp103 && typeof _temp103 === 'object' && 'next' in _temp103) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp103 instanceof AbruptCompletion) return _temp103;
   /* c8 ignore if */
@@ -39140,7 +39212,7 @@ function* ArrayProto_sort([comparefn = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp104 = ToObject(thisValue);
   /* c8 ignore if */
-  if (_temp104 && typeof _temp104 === 'object' && 'next' in _temp104) throw new Assert.Error('Forgot to yield*');
+  if (_temp104 && typeof _temp104 === 'object' && 'next' in _temp104) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp104 instanceof AbruptCompletion) return _temp104;
   /* c8 ignore if */
@@ -39149,7 +39221,7 @@ function* ArrayProto_sort([comparefn = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp105 = yield* LengthOfArrayLike(obj);
   /* c8 ignore if */
-  if (_temp105 && typeof _temp105 === 'object' && 'next' in _temp105) throw new Assert.Error('Forgot to yield*');
+  if (_temp105 && typeof _temp105 === 'object' && 'next' in _temp105) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp105 instanceof AbruptCompletion) return _temp105;
   /* c8 ignore if */
@@ -39167,7 +39239,7 @@ function* ArrayProto_splice(args, {
   /* ReturnIfAbrupt */
   let _temp106 = ToObject(thisValue);
   /* c8 ignore if */
-  if (_temp106 && typeof _temp106 === 'object' && 'next' in _temp106) throw new Assert.Error('Forgot to yield*');
+  if (_temp106 && typeof _temp106 === 'object' && 'next' in _temp106) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp106 instanceof AbruptCompletion) return _temp106;
   /* c8 ignore if */
@@ -39176,7 +39248,7 @@ function* ArrayProto_splice(args, {
   /* ReturnIfAbrupt */
   let _temp107 = yield* LengthOfArrayLike(O);
   /* c8 ignore if */
-  if (_temp107 && typeof _temp107 === 'object' && 'next' in _temp107) throw new Assert.Error('Forgot to yield*');
+  if (_temp107 && typeof _temp107 === 'object' && 'next' in _temp107) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp107 instanceof AbruptCompletion) return _temp107;
   /* c8 ignore if */
@@ -39185,7 +39257,7 @@ function* ArrayProto_splice(args, {
   /* ReturnIfAbrupt */
   let _temp108 = yield* ToIntegerOrInfinity(start);
   /* c8 ignore if */
-  if (_temp108 && typeof _temp108 === 'object' && 'next' in _temp108) throw new Assert.Error('Forgot to yield*');
+  if (_temp108 && typeof _temp108 === 'object' && 'next' in _temp108) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp108 instanceof AbruptCompletion) return _temp108;
   /* c8 ignore if */
@@ -39210,7 +39282,7 @@ function* ArrayProto_splice(args, {
     /* ReturnIfAbrupt */
     let _temp109 = yield* ToIntegerOrInfinity(deleteCount);
     /* c8 ignore if */
-    if (_temp109 && typeof _temp109 === 'object' && 'next' in _temp109) throw new Assert.Error('Forgot to yield*');
+    if (_temp109 && typeof _temp109 === 'object' && 'next' in _temp109) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp109 instanceof AbruptCompletion) return _temp109;
     /* c8 ignore if */
@@ -39224,7 +39296,7 @@ function* ArrayProto_splice(args, {
   /* ReturnIfAbrupt */
   let _temp110 = yield* ArraySpeciesCreate(O, actualDeleteCount);
   /* c8 ignore if */
-  if (_temp110 && typeof _temp110 === 'object' && 'next' in _temp110) throw new Assert.Error('Forgot to yield*');
+  if (_temp110 && typeof _temp110 === 'object' && 'next' in _temp110) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp110 instanceof AbruptCompletion) return _temp110;
   /* c8 ignore if */
@@ -39246,7 +39318,7 @@ function* ArrayProto_splice(args, {
     /* ReturnIfAbrupt */
     let _temp112 = yield* HasProperty(O, from);
     /* c8 ignore if */
-    if (_temp112 && typeof _temp112 === 'object' && 'next' in _temp112) throw new Assert.Error('Forgot to yield*');
+    if (_temp112 && typeof _temp112 === 'object' && 'next' in _temp112) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp112 instanceof AbruptCompletion) return _temp112;
     /* c8 ignore if */
@@ -39256,7 +39328,7 @@ function* ArrayProto_splice(args, {
       /* ReturnIfAbrupt */
       let _temp113 = yield* Get(O, from);
       /* c8 ignore if */
-      if (_temp113 && typeof _temp113 === 'object' && 'next' in _temp113) throw new Assert.Error('Forgot to yield*');
+      if (_temp113 && typeof _temp113 === 'object' && 'next' in _temp113) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp113 instanceof AbruptCompletion) return _temp113;
       /* c8 ignore if */
@@ -39275,7 +39347,7 @@ function* ArrayProto_splice(args, {
       /* ReturnIfAbrupt */
       let _temp114 = yield* CreateDataPropertyOrThrow(A, _temp115, fromValue);
       /* c8 ignore if */
-      if (_temp114 && typeof _temp114 === 'object' && 'next' in _temp114) throw new Assert.Error('Forgot to yield*');
+      if (_temp114 && typeof _temp114 === 'object' && 'next' in _temp114) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp114 instanceof AbruptCompletion) return _temp114;
       /* c8 ignore if */
@@ -39286,7 +39358,7 @@ function* ArrayProto_splice(args, {
   /* ReturnIfAbrupt */
   let _temp116 = yield* Set$1(A, Value('length'), F(actualDeleteCount), Value.true);
   /* c8 ignore if */
-  if (_temp116 && typeof _temp116 === 'object' && 'next' in _temp116) throw new Assert.Error('Forgot to yield*');
+  if (_temp116 && typeof _temp116 === 'object' && 'next' in _temp116) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp116 instanceof AbruptCompletion) return _temp116;
   /* c8 ignore if */
@@ -39320,7 +39392,7 @@ function* ArrayProto_splice(args, {
       /* ReturnIfAbrupt */
       let _temp119 = yield* HasProperty(O, from);
       /* c8 ignore if */
-      if (_temp119 && typeof _temp119 === 'object' && 'next' in _temp119) throw new Assert.Error('Forgot to yield*');
+      if (_temp119 && typeof _temp119 === 'object' && 'next' in _temp119) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp119 instanceof AbruptCompletion) return _temp119;
       /* c8 ignore if */
@@ -39330,7 +39402,7 @@ function* ArrayProto_splice(args, {
         /* ReturnIfAbrupt */
         let _temp120 = yield* Get(O, from);
         /* c8 ignore if */
-        if (_temp120 && typeof _temp120 === 'object' && 'next' in _temp120) throw new Assert.Error('Forgot to yield*');
+        if (_temp120 && typeof _temp120 === 'object' && 'next' in _temp120) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp120 instanceof AbruptCompletion) return _temp120;
         /* c8 ignore if */
@@ -39339,7 +39411,7 @@ function* ArrayProto_splice(args, {
         /* ReturnIfAbrupt */
         let _temp121 = yield* Set$1(O, to, fromValue, Value.true);
         /* c8 ignore if */
-        if (_temp121 && typeof _temp121 === 'object' && 'next' in _temp121) throw new Assert.Error('Forgot to yield*');
+        if (_temp121 && typeof _temp121 === 'object' && 'next' in _temp121) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp121 instanceof AbruptCompletion) return _temp121;
         /* c8 ignore if */
@@ -39348,7 +39420,7 @@ function* ArrayProto_splice(args, {
         /* ReturnIfAbrupt */
         let _temp122 = yield* DeletePropertyOrThrow(O, to);
         /* c8 ignore if */
-        if (_temp122 && typeof _temp122 === 'object' && 'next' in _temp122) throw new Assert.Error('Forgot to yield*');
+        if (_temp122 && typeof _temp122 === 'object' && 'next' in _temp122) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp122 instanceof AbruptCompletion) return _temp122;
         /* c8 ignore if */
@@ -39371,7 +39443,7 @@ function* ArrayProto_splice(args, {
       /* ReturnIfAbrupt */
       let _temp123 = yield* DeletePropertyOrThrow(O, _temp124);
       /* c8 ignore if */
-      if (_temp123 && typeof _temp123 === 'object' && 'next' in _temp123) throw new Assert.Error('Forgot to yield*');
+      if (_temp123 && typeof _temp123 === 'object' && 'next' in _temp123) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp123 instanceof AbruptCompletion) return _temp123;
       /* c8 ignore if */
@@ -39406,7 +39478,7 @@ function* ArrayProto_splice(args, {
       /* ReturnIfAbrupt */
       let _temp127 = yield* HasProperty(O, from);
       /* c8 ignore if */
-      if (_temp127 && typeof _temp127 === 'object' && 'next' in _temp127) throw new Assert.Error('Forgot to yield*');
+      if (_temp127 && typeof _temp127 === 'object' && 'next' in _temp127) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp127 instanceof AbruptCompletion) return _temp127;
       /* c8 ignore if */
@@ -39416,7 +39488,7 @@ function* ArrayProto_splice(args, {
         /* ReturnIfAbrupt */
         let _temp128 = yield* Get(O, from);
         /* c8 ignore if */
-        if (_temp128 && typeof _temp128 === 'object' && 'next' in _temp128) throw new Assert.Error('Forgot to yield*');
+        if (_temp128 && typeof _temp128 === 'object' && 'next' in _temp128) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp128 instanceof AbruptCompletion) return _temp128;
         /* c8 ignore if */
@@ -39425,7 +39497,7 @@ function* ArrayProto_splice(args, {
         /* ReturnIfAbrupt */
         let _temp129 = yield* Set$1(O, to, fromValue, Value.true);
         /* c8 ignore if */
-        if (_temp129 && typeof _temp129 === 'object' && 'next' in _temp129) throw new Assert.Error('Forgot to yield*');
+        if (_temp129 && typeof _temp129 === 'object' && 'next' in _temp129) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp129 instanceof AbruptCompletion) return _temp129;
         /* c8 ignore if */
@@ -39434,7 +39506,7 @@ function* ArrayProto_splice(args, {
         /* ReturnIfAbrupt */
         let _temp130 = yield* DeletePropertyOrThrow(O, to);
         /* c8 ignore if */
-        if (_temp130 && typeof _temp130 === 'object' && 'next' in _temp130) throw new Assert.Error('Forgot to yield*');
+        if (_temp130 && typeof _temp130 === 'object' && 'next' in _temp130) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp130 instanceof AbruptCompletion) return _temp130;
         /* c8 ignore if */
@@ -39459,7 +39531,7 @@ function* ArrayProto_splice(args, {
     /* ReturnIfAbrupt */
     let _temp131 = yield* Set$1(O, _temp132, E, Value.true);
     /* c8 ignore if */
-    if (_temp131 && typeof _temp131 === 'object' && 'next' in _temp131) throw new Assert.Error('Forgot to yield*');
+    if (_temp131 && typeof _temp131 === 'object' && 'next' in _temp131) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp131 instanceof AbruptCompletion) return _temp131;
     /* c8 ignore if */
@@ -39469,7 +39541,7 @@ function* ArrayProto_splice(args, {
   /* ReturnIfAbrupt */
   let _temp133 = yield* Set$1(O, Value('length'), F(len - actualDeleteCount + itemCount), Value.true);
   /* c8 ignore if */
-  if (_temp133 && typeof _temp133 === 'object' && 'next' in _temp133) throw new Assert.Error('Forgot to yield*');
+  if (_temp133 && typeof _temp133 === 'object' && 'next' in _temp133) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp133 instanceof AbruptCompletion) return _temp133;
   /* c8 ignore if */
@@ -39485,7 +39557,7 @@ function* ArrayProto_toString(_a, {
   /* ReturnIfAbrupt */
   let _temp134 = ToObject(thisValue);
   /* c8 ignore if */
-  if (_temp134 && typeof _temp134 === 'object' && 'next' in _temp134) throw new Assert.Error('Forgot to yield*');
+  if (_temp134 && typeof _temp134 === 'object' && 'next' in _temp134) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp134 instanceof AbruptCompletion) return _temp134;
   /* c8 ignore if */
@@ -39494,7 +39566,7 @@ function* ArrayProto_toString(_a, {
   /* ReturnIfAbrupt */
   let _temp135 = yield* Get(array, Value('join'));
   /* c8 ignore if */
-  if (_temp135 && typeof _temp135 === 'object' && 'next' in _temp135) throw new Assert.Error('Forgot to yield*');
+  if (_temp135 && typeof _temp135 === 'object' && 'next' in _temp135) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp135 instanceof AbruptCompletion) return _temp135;
   /* c8 ignore if */
@@ -39514,7 +39586,7 @@ function* ArrayProto_unshift(args, {
   /* ReturnIfAbrupt */
   let _temp136 = ToObject(thisValue);
   /* c8 ignore if */
-  if (_temp136 && typeof _temp136 === 'object' && 'next' in _temp136) throw new Assert.Error('Forgot to yield*');
+  if (_temp136 && typeof _temp136 === 'object' && 'next' in _temp136) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp136 instanceof AbruptCompletion) return _temp136;
   /* c8 ignore if */
@@ -39523,7 +39595,7 @@ function* ArrayProto_unshift(args, {
   /* ReturnIfAbrupt */
   let _temp137 = yield* LengthOfArrayLike(O);
   /* c8 ignore if */
-  if (_temp137 && typeof _temp137 === 'object' && 'next' in _temp137) throw new Assert.Error('Forgot to yield*');
+  if (_temp137 && typeof _temp137 === 'object' && 'next' in _temp137) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp137 instanceof AbruptCompletion) return _temp137;
   /* c8 ignore if */
@@ -39561,7 +39633,7 @@ function* ArrayProto_unshift(args, {
       /* ReturnIfAbrupt */
       let _temp140 = yield* HasProperty(O, from);
       /* c8 ignore if */
-      if (_temp140 && typeof _temp140 === 'object' && 'next' in _temp140) throw new Assert.Error('Forgot to yield*');
+      if (_temp140 && typeof _temp140 === 'object' && 'next' in _temp140) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp140 instanceof AbruptCompletion) return _temp140;
       /* c8 ignore if */
@@ -39571,7 +39643,7 @@ function* ArrayProto_unshift(args, {
         /* ReturnIfAbrupt */
         let _temp141 = yield* Get(O, from);
         /* c8 ignore if */
-        if (_temp141 && typeof _temp141 === 'object' && 'next' in _temp141) throw new Assert.Error('Forgot to yield*');
+        if (_temp141 && typeof _temp141 === 'object' && 'next' in _temp141) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp141 instanceof AbruptCompletion) return _temp141;
         /* c8 ignore if */
@@ -39580,7 +39652,7 @@ function* ArrayProto_unshift(args, {
         /* ReturnIfAbrupt */
         let _temp142 = yield* Set$1(O, to, fromValue, Value.true);
         /* c8 ignore if */
-        if (_temp142 && typeof _temp142 === 'object' && 'next' in _temp142) throw new Assert.Error('Forgot to yield*');
+        if (_temp142 && typeof _temp142 === 'object' && 'next' in _temp142) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp142 instanceof AbruptCompletion) return _temp142;
         /* c8 ignore if */
@@ -39589,7 +39661,7 @@ function* ArrayProto_unshift(args, {
         /* ReturnIfAbrupt */
         let _temp143 = yield* DeletePropertyOrThrow(O, to);
         /* c8 ignore if */
-        if (_temp143 && typeof _temp143 === 'object' && 'next' in _temp143) throw new Assert.Error('Forgot to yield*');
+        if (_temp143 && typeof _temp143 === 'object' && 'next' in _temp143) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp143 instanceof AbruptCompletion) return _temp143;
         /* c8 ignore if */
@@ -39615,7 +39687,7 @@ function* ArrayProto_unshift(args, {
       /* ReturnIfAbrupt */
       let _temp145 = yield* Set$1(O, jStr, E, Value.true);
       /* c8 ignore if */
-      if (_temp145 && typeof _temp145 === 'object' && 'next' in _temp145) throw new Assert.Error('Forgot to yield*');
+      if (_temp145 && typeof _temp145 === 'object' && 'next' in _temp145) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp145 instanceof AbruptCompletion) return _temp145;
       /* c8 ignore if */
@@ -39626,7 +39698,7 @@ function* ArrayProto_unshift(args, {
   /* ReturnIfAbrupt */
   let _temp146 = yield* Set$1(O, Value('length'), F(len + argCount), Value.true);
   /* c8 ignore if */
-  if (_temp146 && typeof _temp146 === 'object' && 'next' in _temp146) throw new Assert.Error('Forgot to yield*');
+  if (_temp146 && typeof _temp146 === 'object' && 'next' in _temp146) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp146 instanceof AbruptCompletion) return _temp146;
   /* c8 ignore if */
@@ -39642,7 +39714,7 @@ function ArrayProto_values(_args, {
   /* ReturnIfAbrupt */
   let _temp147 = ToObject(thisValue);
   /* c8 ignore if */
-  if (_temp147 && typeof _temp147 === 'object' && 'next' in _temp147) throw new Assert.Error('Forgot to yield*');
+  if (_temp147 && typeof _temp147 === 'object' && 'next' in _temp147) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp147 instanceof AbruptCompletion) return _temp147;
   /* c8 ignore if */
@@ -39659,7 +39731,7 @@ function* ArrayProto_at([index = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp148 = ToObject(thisValue);
   /* c8 ignore if */
-  if (_temp148 && typeof _temp148 === 'object' && 'next' in _temp148) throw new Assert.Error('Forgot to yield*');
+  if (_temp148 && typeof _temp148 === 'object' && 'next' in _temp148) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp148 instanceof AbruptCompletion) return _temp148;
   /* c8 ignore if */
@@ -39670,7 +39742,7 @@ function* ArrayProto_at([index = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp149 = yield* LengthOfArrayLike(O);
   /* c8 ignore if */
-  if (_temp149 && typeof _temp149 === 'object' && 'next' in _temp149) throw new Assert.Error('Forgot to yield*');
+  if (_temp149 && typeof _temp149 === 'object' && 'next' in _temp149) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp149 instanceof AbruptCompletion) return _temp149;
   /* c8 ignore if */
@@ -39680,7 +39752,7 @@ function* ArrayProto_at([index = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp150 = yield* ToIntegerOrInfinity(index);
   /* c8 ignore if */
-  if (_temp150 && typeof _temp150 === 'object' && 'next' in _temp150) throw new Assert.Error('Forgot to yield*');
+  if (_temp150 && typeof _temp150 === 'object' && 'next' in _temp150) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp150 instanceof AbruptCompletion) return _temp150;
   /* c8 ignore if */
@@ -40013,7 +40085,7 @@ function* ArrayConstructor(argumentsList, {
     /* ReturnIfAbrupt */
     let _temp6 = yield* GetPrototypeFromConstructor(NewTarget, '%Array.prototype%');
     /* c8 ignore if */
-    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp6 instanceof AbruptCompletion) return _temp6;
     /* c8 ignore if */
@@ -40093,7 +40165,7 @@ function* Array_from([items = Value.undefined, mapper = Value.undefined, thisArg
   /* ReturnIfAbrupt */
   let _temp11 = yield* GetMethod(items, wellKnownSymbols.iterator);
   /* c8 ignore if */
-  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp11 instanceof AbruptCompletion) return _temp11;
   /* c8 ignore if */
@@ -40104,7 +40176,7 @@ function* Array_from([items = Value.undefined, mapper = Value.undefined, thisArg
       /* ReturnIfAbrupt */
       let _temp12 = yield* Construct(C);
       /* c8 ignore if */
-      if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield*');
+      if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp12 instanceof AbruptCompletion) return _temp12;
       /* c8 ignore if */
@@ -40126,7 +40198,7 @@ function* Array_from([items = Value.undefined, mapper = Value.undefined, thisArg
     /* ReturnIfAbrupt */
     let _temp14 = yield* GetIteratorFromMethod(items, usingIterator);
     /* c8 ignore if */
-    if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield*');
+    if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp14 instanceof AbruptCompletion) return _temp14;
     /* c8 ignore if */
@@ -40153,7 +40225,7 @@ function* Array_from([items = Value.undefined, mapper = Value.undefined, thisArg
       /* ReturnIfAbrupt */
       let _temp16 = yield* IteratorStepValue(iteratorRecord);
       /* c8 ignore if */
-      if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield*');
+      if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp16 instanceof AbruptCompletion) return _temp16;
       /* c8 ignore if */
@@ -40163,7 +40235,7 @@ function* Array_from([items = Value.undefined, mapper = Value.undefined, thisArg
         /* ReturnIfAbrupt */
         let _temp17 = yield* Set$1(A, Value('length'), F(k), Value.true);
         /* c8 ignore if */
-        if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield*');
+        if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp17 instanceof AbruptCompletion) return _temp17;
         /* c8 ignore if */
@@ -40204,7 +40276,7 @@ function* Array_from([items = Value.undefined, mapper = Value.undefined, thisArg
   /* ReturnIfAbrupt */
   let _temp19 = yield* LengthOfArrayLike(arrayLike);
   /* c8 ignore if */
-  if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield*');
+  if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp19 instanceof AbruptCompletion) return _temp19;
   /* c8 ignore if */
@@ -40214,7 +40286,7 @@ function* Array_from([items = Value.undefined, mapper = Value.undefined, thisArg
     /* ReturnIfAbrupt */
     let _temp20 = yield* Construct(C, [F(len)]);
     /* c8 ignore if */
-    if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield*');
+    if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp20 instanceof AbruptCompletion) return _temp20;
     /* c8 ignore if */
@@ -40224,7 +40296,7 @@ function* Array_from([items = Value.undefined, mapper = Value.undefined, thisArg
     /* ReturnIfAbrupt */
     let _temp21 = ArrayCreate(len);
     /* c8 ignore if */
-    if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield*');
+    if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp21 instanceof AbruptCompletion) return _temp21;
     /* c8 ignore if */
@@ -40247,7 +40319,7 @@ function* Array_from([items = Value.undefined, mapper = Value.undefined, thisArg
     /* ReturnIfAbrupt */
     let _temp23 = yield* Get(arrayLike, Pk);
     /* c8 ignore if */
-    if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield*');
+    if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp23 instanceof AbruptCompletion) return _temp23;
     /* c8 ignore if */
@@ -40258,7 +40330,7 @@ function* Array_from([items = Value.undefined, mapper = Value.undefined, thisArg
       /* ReturnIfAbrupt */
       let _temp24 = yield* Call(mapper, thisArg, [kValue, F(k)]);
       /* c8 ignore if */
-      if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) throw new Assert.Error('Forgot to yield*');
+      if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp24 instanceof AbruptCompletion) return _temp24;
       /* c8 ignore if */
@@ -40270,7 +40342,7 @@ function* Array_from([items = Value.undefined, mapper = Value.undefined, thisArg
     /* ReturnIfAbrupt */
     let _temp25 = yield* CreateDataPropertyOrThrow(A, Pk, mappedValue);
     /* c8 ignore if */
-    if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield*');
+    if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp25 instanceof AbruptCompletion) return _temp25;
     /* c8 ignore if */
@@ -40280,7 +40352,7 @@ function* Array_from([items = Value.undefined, mapper = Value.undefined, thisArg
   /* ReturnIfAbrupt */
   let _temp26 = yield* Set$1(A, Value('length'), F(len), Value.true);
   /* c8 ignore if */
-  if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield*');
+  if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp26 instanceof AbruptCompletion) return _temp26;
   /* c8 ignore if */
@@ -40307,7 +40379,7 @@ function* Array_of(items, {
     /* ReturnIfAbrupt */
     let _temp27 = yield* Construct(C, [F(len)]);
     /* c8 ignore if */
-    if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield*');
+    if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp27 instanceof AbruptCompletion) return _temp27;
     /* c8 ignore if */
@@ -40317,7 +40389,7 @@ function* Array_of(items, {
     /* ReturnIfAbrupt */
     let _temp28 = ArrayCreate(len);
     /* c8 ignore if */
-    if (_temp28 && typeof _temp28 === 'object' && 'next' in _temp28) throw new Assert.Error('Forgot to yield*');
+    if (_temp28 && typeof _temp28 === 'object' && 'next' in _temp28) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp28 instanceof AbruptCompletion) return _temp28;
     /* c8 ignore if */
@@ -40341,7 +40413,7 @@ function* Array_of(items, {
     /* ReturnIfAbrupt */
     let _temp30 = yield* CreateDataPropertyOrThrow(A, Pk, kValue);
     /* c8 ignore if */
-    if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) throw new Assert.Error('Forgot to yield*');
+    if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp30 instanceof AbruptCompletion) return _temp30;
     /* c8 ignore if */
@@ -40351,7 +40423,7 @@ function* Array_of(items, {
   /* ReturnIfAbrupt */
   let _temp31 = yield* Set$1(A, Value('length'), F(len), Value.true);
   /* c8 ignore if */
-  if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) throw new Assert.Error('Forgot to yield*');
+  if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp31 instanceof AbruptCompletion) return _temp31;
   /* c8 ignore if */
@@ -40388,7 +40460,7 @@ function* BigIntConstructor([value], {
   /* ReturnIfAbrupt */
   let _temp = yield* ToPrimitive(value, 'number');
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -40409,7 +40481,7 @@ function* BigInt_asIntN([_bits = Value.undefined, _bigint = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp2 = yield* ToIndex(_bits);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -40420,7 +40492,7 @@ function* BigInt_asIntN([_bits = Value.undefined, _bigint = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp3 = yield* ToBigInt(_bigint);
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -40437,7 +40509,7 @@ function* BigInt_asUintN([_bits = Value.undefined, _bigint = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp4 = yield* ToIndex(_bits);
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -40448,7 +40520,7 @@ function* BigInt_asUintN([_bits = Value.undefined, _bigint = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp5 = yield* ToBigInt(_bigint);
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -40495,7 +40567,7 @@ function* BigIntProto_toString([radix], {
   /* ReturnIfAbrupt */
   let _temp = thisBigIntValue(thisValue);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -40513,7 +40585,7 @@ function* BigIntProto_toString([radix], {
     /* ReturnIfAbrupt */
     let _temp2 = yield* ToIntegerOrInfinity(radix);
     /* c8 ignore if */
-    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp2 instanceof AbruptCompletion) return _temp2;
     /* c8 ignore if */
@@ -40580,7 +40652,7 @@ function BooleanProto_toString(_argList, {
   /* ReturnIfAbrupt */
   let _temp = thisBooleanValue(thisValue);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -40636,7 +40708,7 @@ function* BooleanConstructor([value = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp2 = yield* OrdinaryCreateFromConstructor(NewTarget, '%Boolean.prototype%', ['BooleanData']);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -40672,7 +40744,7 @@ function* NumberProto_toExponential([fractionDigits = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp = thisNumberValue(thisValue);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -40681,7 +40753,7 @@ function* NumberProto_toExponential([fractionDigits = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp2 = yield* ToIntegerOrInfinity(fractionDigits);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -40705,7 +40777,7 @@ function* NumberProto_toFixed([fractionDigits = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp3 = thisNumberValue(thisValue);
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -40714,7 +40786,7 @@ function* NumberProto_toFixed([fractionDigits = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp4 = yield* ToIntegerOrInfinity(fractionDigits);
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -40754,7 +40826,7 @@ function* NumberProto_toPrecision([precision = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp6 = thisNumberValue(thisValue);
   /* c8 ignore if */
-  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp6 instanceof AbruptCompletion) return _temp6;
   /* c8 ignore if */
@@ -40776,7 +40848,7 @@ function* NumberProto_toPrecision([precision = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp8 = yield* ToIntegerOrInfinity(precision);
   /* c8 ignore if */
-  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp8 instanceof AbruptCompletion) return _temp8;
   /* c8 ignore if */
@@ -40809,7 +40881,7 @@ function* NumberProto_toString([radix = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp10 = thisNumberValue(thisValue);
   /* c8 ignore if */
-  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp10 instanceof AbruptCompletion) return _temp10;
   /* c8 ignore if */
@@ -40822,7 +40894,7 @@ function* NumberProto_toString([radix = Value.undefined], {
     /* ReturnIfAbrupt */
     let _temp11 = yield* ToIntegerOrInfinity(radix);
     /* c8 ignore if */
-    if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+    if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp11 instanceof AbruptCompletion) return _temp11;
     /* c8 ignore if */
@@ -40876,7 +40948,7 @@ function* NumberConstructor([value], {
     /* ReturnIfAbrupt */
     let _temp = yield* ToNumeric(value);
     /* c8 ignore if */
-    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) return _temp;
     /* c8 ignore if */
@@ -41054,7 +41126,7 @@ function SymbolProto_descriptionGetter(_argList, {
   /* ReturnIfAbrupt */
   let _temp = thisSymbolValue(s);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -41072,7 +41144,7 @@ function SymbolProto_toString(_argList, {
   /* ReturnIfAbrupt */
   let _temp2 = thisSymbolValue(thisValue);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -41128,7 +41200,7 @@ function* SymbolConstructor([description = Value.undefined], {
     /* ReturnIfAbrupt */
     let _temp = yield* ToString(description);
     /* c8 ignore if */
-    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) return _temp;
     /* c8 ignore if */
@@ -41146,7 +41218,7 @@ function* Symbol_for([key = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp2 = yield* ToString(key);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -41225,7 +41297,7 @@ function* Math_abs([x = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp = yield* ToNumber(x);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -41250,7 +41322,7 @@ function* Math_acos([x = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp2 = yield* ToNumber(x);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -41274,7 +41346,7 @@ function* Math_pow([base = Value.undefined, exponent = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp3 = yield* ToNumber(base);
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -41285,7 +41357,7 @@ function* Math_pow([base = Value.undefined, exponent = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp4 = yield* ToNumber(exponent);
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -41380,7 +41452,7 @@ function bootstrapMath(realmRec) {
         /* ReturnIfAbrupt */
         let _temp7 = yield* ToNumber(args[i]);
         /* c8 ignore if */
-        if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+        if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp7 instanceof AbruptCompletion) return _temp7;
         /* c8 ignore if */
@@ -41426,7 +41498,7 @@ function DateProto_getDate(_args, {
   /* ReturnIfAbrupt */
   let _temp = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -41446,7 +41518,7 @@ function DateProto_getDay(_args, {
   /* ReturnIfAbrupt */
   let _temp2 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -41466,7 +41538,7 @@ function DateProto_getFullYear(_args, {
   /* ReturnIfAbrupt */
   let _temp3 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -41486,7 +41558,7 @@ function DateProto_getHours(_args, {
   /* ReturnIfAbrupt */
   let _temp4 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -41506,7 +41578,7 @@ function DateProto_getMilliseconds(_args, {
   /* ReturnIfAbrupt */
   let _temp5 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -41526,7 +41598,7 @@ function DateProto_getMinutes(_args, {
   /* ReturnIfAbrupt */
   let _temp6 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp6 instanceof AbruptCompletion) return _temp6;
   /* c8 ignore if */
@@ -41546,7 +41618,7 @@ function DateProto_getMonth(_args, {
   /* ReturnIfAbrupt */
   let _temp7 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp7 instanceof AbruptCompletion) return _temp7;
   /* c8 ignore if */
@@ -41566,7 +41638,7 @@ function DateProto_getSeconds(_args, {
   /* ReturnIfAbrupt */
   let _temp8 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp8 instanceof AbruptCompletion) return _temp8;
   /* c8 ignore if */
@@ -41594,7 +41666,7 @@ function DateProto_getTimezoneOffset(_args, {
   /* ReturnIfAbrupt */
   let _temp9 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp9 instanceof AbruptCompletion) return _temp9;
   /* c8 ignore if */
@@ -41614,7 +41686,7 @@ function DateProto_getUTCDate(_args, {
   /* ReturnIfAbrupt */
   let _temp10 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp10 instanceof AbruptCompletion) return _temp10;
   /* c8 ignore if */
@@ -41634,7 +41706,7 @@ function DateProto_getUTCDay(_args, {
   /* ReturnIfAbrupt */
   let _temp11 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp11 instanceof AbruptCompletion) return _temp11;
   /* c8 ignore if */
@@ -41654,7 +41726,7 @@ function DateProto_getUTCFullYear(_args, {
   /* ReturnIfAbrupt */
   let _temp12 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield*');
+  if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp12 instanceof AbruptCompletion) return _temp12;
   /* c8 ignore if */
@@ -41674,7 +41746,7 @@ function DateProto_getUTCHours(_args, {
   /* ReturnIfAbrupt */
   let _temp13 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield*');
+  if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp13 instanceof AbruptCompletion) return _temp13;
   /* c8 ignore if */
@@ -41694,7 +41766,7 @@ function DateProto_getUTCMilliseconds(_args, {
   /* ReturnIfAbrupt */
   let _temp14 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield*');
+  if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp14 instanceof AbruptCompletion) return _temp14;
   /* c8 ignore if */
@@ -41714,7 +41786,7 @@ function DateProto_getUTCMinutes(_args, {
   /* ReturnIfAbrupt */
   let _temp15 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield*');
+  if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp15 instanceof AbruptCompletion) return _temp15;
   /* c8 ignore if */
@@ -41734,7 +41806,7 @@ function DateProto_getUTCMonth(_args, {
   /* ReturnIfAbrupt */
   let _temp16 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield*');
+  if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp16 instanceof AbruptCompletion) return _temp16;
   /* c8 ignore if */
@@ -41754,7 +41826,7 @@ function DateProto_getUTCSeconds(_args, {
   /* ReturnIfAbrupt */
   let _temp17 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield*');
+  if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp17 instanceof AbruptCompletion) return _temp17;
   /* c8 ignore if */
@@ -41774,7 +41846,7 @@ function* DateProto_setDate([date = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp18 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield*');
+  if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp18 instanceof AbruptCompletion) return _temp18;
   /* c8 ignore if */
@@ -41783,7 +41855,7 @@ function* DateProto_setDate([date = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp19 = yield* ToNumber(date);
   /* c8 ignore if */
-  if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield*');
+  if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp19 instanceof AbruptCompletion) return _temp19;
   /* c8 ignore if */
@@ -41798,7 +41870,7 @@ function* DateProto_setDate([date = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp20 = surroundingAgent.debugger_tryTouchDuringPreview(thisValue);
   /* c8 ignore if */
-  if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield*');
+  if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp20 instanceof AbruptCompletion) return _temp20;
   /* c8 ignore if */
@@ -41815,7 +41887,7 @@ function* DateProto_setFullYear([year = Value.undefined, month, date], {
   /* ReturnIfAbrupt */
   let _temp21 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield*');
+  if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp21 instanceof AbruptCompletion) return _temp21;
   /* c8 ignore if */
@@ -41825,7 +41897,7 @@ function* DateProto_setFullYear([year = Value.undefined, month, date], {
   /* ReturnIfAbrupt */
   let _temp22 = yield* ToNumber(year);
   /* c8 ignore if */
-  if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield*');
+  if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp22 instanceof AbruptCompletion) return _temp22;
   /* c8 ignore if */
@@ -41836,7 +41908,7 @@ function* DateProto_setFullYear([year = Value.undefined, month, date], {
     /* ReturnIfAbrupt */
     let _temp23 = yield* ToNumber(month);
     /* c8 ignore if */
-    if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield*');
+    if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp23 instanceof AbruptCompletion) return _temp23;
     /* c8 ignore if */
@@ -41850,7 +41922,7 @@ function* DateProto_setFullYear([year = Value.undefined, month, date], {
     /* ReturnIfAbrupt */
     let _temp24 = yield* ToNumber(date);
     /* c8 ignore if */
-    if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) throw new Assert.Error('Forgot to yield*');
+    if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp24 instanceof AbruptCompletion) return _temp24;
     /* c8 ignore if */
@@ -41864,7 +41936,7 @@ function* DateProto_setFullYear([year = Value.undefined, month, date], {
   /* ReturnIfAbrupt */
   let _temp25 = surroundingAgent.debugger_tryTouchDuringPreview(thisValue);
   /* c8 ignore if */
-  if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield*');
+  if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp25 instanceof AbruptCompletion) return _temp25;
   /* c8 ignore if */
@@ -41881,7 +41953,7 @@ function* DateProto_setHours([hour = Value.undefined, min, sec, ms], {
   /* ReturnIfAbrupt */
   let _temp26 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield*');
+  if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp26 instanceof AbruptCompletion) return _temp26;
   /* c8 ignore if */
@@ -41890,7 +41962,7 @@ function* DateProto_setHours([hour = Value.undefined, min, sec, ms], {
   /* ReturnIfAbrupt */
   let _temp27 = yield* ToNumber(hour);
   /* c8 ignore if */
-  if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield*');
+  if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp27 instanceof AbruptCompletion) return _temp27;
   /* c8 ignore if */
@@ -41901,7 +41973,7 @@ function* DateProto_setHours([hour = Value.undefined, min, sec, ms], {
     /* ReturnIfAbrupt */
     let _temp28 = yield* ToNumber(min);
     /* c8 ignore if */
-    if (_temp28 && typeof _temp28 === 'object' && 'next' in _temp28) throw new Assert.Error('Forgot to yield*');
+    if (_temp28 && typeof _temp28 === 'object' && 'next' in _temp28) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp28 instanceof AbruptCompletion) return _temp28;
     /* c8 ignore if */
@@ -41915,7 +41987,7 @@ function* DateProto_setHours([hour = Value.undefined, min, sec, ms], {
     /* ReturnIfAbrupt */
     let _temp29 = yield* ToNumber(sec);
     /* c8 ignore if */
-    if (_temp29 && typeof _temp29 === 'object' && 'next' in _temp29) throw new Assert.Error('Forgot to yield*');
+    if (_temp29 && typeof _temp29 === 'object' && 'next' in _temp29) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp29 instanceof AbruptCompletion) return _temp29;
     /* c8 ignore if */
@@ -41929,7 +42001,7 @@ function* DateProto_setHours([hour = Value.undefined, min, sec, ms], {
     /* ReturnIfAbrupt */
     let _temp30 = yield* ToNumber(ms);
     /* c8 ignore if */
-    if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) throw new Assert.Error('Forgot to yield*');
+    if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp30 instanceof AbruptCompletion) return _temp30;
     /* c8 ignore if */
@@ -41943,7 +42015,7 @@ function* DateProto_setHours([hour = Value.undefined, min, sec, ms], {
   /* ReturnIfAbrupt */
   let _temp31 = surroundingAgent.debugger_tryTouchDuringPreview(thisValue);
   /* c8 ignore if */
-  if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) throw new Assert.Error('Forgot to yield*');
+  if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp31 instanceof AbruptCompletion) return _temp31;
   /* c8 ignore if */
@@ -41960,7 +42032,7 @@ function* DateProto_setMilliseconds([ms = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp32 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp32 && typeof _temp32 === 'object' && 'next' in _temp32) throw new Assert.Error('Forgot to yield*');
+  if (_temp32 && typeof _temp32 === 'object' && 'next' in _temp32) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp32 instanceof AbruptCompletion) return _temp32;
   /* c8 ignore if */
@@ -41969,7 +42041,7 @@ function* DateProto_setMilliseconds([ms = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp33 = yield* ToNumber(ms);
   /* c8 ignore if */
-  if (_temp33 && typeof _temp33 === 'object' && 'next' in _temp33) throw new Assert.Error('Forgot to yield*');
+  if (_temp33 && typeof _temp33 === 'object' && 'next' in _temp33) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp33 instanceof AbruptCompletion) return _temp33;
   /* c8 ignore if */
@@ -41980,7 +42052,7 @@ function* DateProto_setMilliseconds([ms = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp34 = surroundingAgent.debugger_tryTouchDuringPreview(thisValue);
   /* c8 ignore if */
-  if (_temp34 && typeof _temp34 === 'object' && 'next' in _temp34) throw new Assert.Error('Forgot to yield*');
+  if (_temp34 && typeof _temp34 === 'object' && 'next' in _temp34) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp34 instanceof AbruptCompletion) return _temp34;
   /* c8 ignore if */
@@ -41997,7 +42069,7 @@ function* DateProto_setMinutes([min = Value.undefined, sec, ms], {
   /* ReturnIfAbrupt */
   let _temp35 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp35 && typeof _temp35 === 'object' && 'next' in _temp35) throw new Assert.Error('Forgot to yield*');
+  if (_temp35 && typeof _temp35 === 'object' && 'next' in _temp35) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp35 instanceof AbruptCompletion) return _temp35;
   /* c8 ignore if */
@@ -42008,7 +42080,7 @@ function* DateProto_setMinutes([min = Value.undefined, sec, ms], {
   /* ReturnIfAbrupt */
   let _temp36 = yield* ToNumber(min);
   /* c8 ignore if */
-  if (_temp36 && typeof _temp36 === 'object' && 'next' in _temp36) throw new Assert.Error('Forgot to yield*');
+  if (_temp36 && typeof _temp36 === 'object' && 'next' in _temp36) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp36 instanceof AbruptCompletion) return _temp36;
   /* c8 ignore if */
@@ -42020,7 +42092,7 @@ function* DateProto_setMinutes([min = Value.undefined, sec, ms], {
     /* ReturnIfAbrupt */
     let _temp37 = yield* ToNumber(sec);
     /* c8 ignore if */
-    if (_temp37 && typeof _temp37 === 'object' && 'next' in _temp37) throw new Assert.Error('Forgot to yield*');
+    if (_temp37 && typeof _temp37 === 'object' && 'next' in _temp37) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp37 instanceof AbruptCompletion) return _temp37;
     /* c8 ignore if */
@@ -42035,7 +42107,7 @@ function* DateProto_setMinutes([min = Value.undefined, sec, ms], {
     /* ReturnIfAbrupt */
     let _temp38 = yield* ToNumber(ms);
     /* c8 ignore if */
-    if (_temp38 && typeof _temp38 === 'object' && 'next' in _temp38) throw new Assert.Error('Forgot to yield*');
+    if (_temp38 && typeof _temp38 === 'object' && 'next' in _temp38) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp38 instanceof AbruptCompletion) return _temp38;
     /* c8 ignore if */
@@ -42052,7 +42124,7 @@ function* DateProto_setMinutes([min = Value.undefined, sec, ms], {
   /* ReturnIfAbrupt */
   let _temp39 = surroundingAgent.debugger_tryTouchDuringPreview(thisValue);
   /* c8 ignore if */
-  if (_temp39 && typeof _temp39 === 'object' && 'next' in _temp39) throw new Assert.Error('Forgot to yield*');
+  if (_temp39 && typeof _temp39 === 'object' && 'next' in _temp39) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp39 instanceof AbruptCompletion) return _temp39;
   /* c8 ignore if */
@@ -42070,7 +42142,7 @@ function* DateProto_setMonth([month = Value.undefined, date], {
   /* ReturnIfAbrupt */
   let _temp40 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp40 && typeof _temp40 === 'object' && 'next' in _temp40) throw new Assert.Error('Forgot to yield*');
+  if (_temp40 && typeof _temp40 === 'object' && 'next' in _temp40) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp40 instanceof AbruptCompletion) return _temp40;
   /* c8 ignore if */
@@ -42079,7 +42151,7 @@ function* DateProto_setMonth([month = Value.undefined, date], {
   /* ReturnIfAbrupt */
   let _temp41 = yield* ToNumber(month);
   /* c8 ignore if */
-  if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) throw new Assert.Error('Forgot to yield*');
+  if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp41 instanceof AbruptCompletion) return _temp41;
   /* c8 ignore if */
@@ -42090,7 +42162,7 @@ function* DateProto_setMonth([month = Value.undefined, date], {
     /* ReturnIfAbrupt */
     let _temp42 = yield* ToNumber(date);
     /* c8 ignore if */
-    if (_temp42 && typeof _temp42 === 'object' && 'next' in _temp42) throw new Assert.Error('Forgot to yield*');
+    if (_temp42 && typeof _temp42 === 'object' && 'next' in _temp42) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp42 instanceof AbruptCompletion) return _temp42;
     /* c8 ignore if */
@@ -42104,7 +42176,7 @@ function* DateProto_setMonth([month = Value.undefined, date], {
   /* ReturnIfAbrupt */
   let _temp43 = surroundingAgent.debugger_tryTouchDuringPreview(thisValue);
   /* c8 ignore if */
-  if (_temp43 && typeof _temp43 === 'object' && 'next' in _temp43) throw new Assert.Error('Forgot to yield*');
+  if (_temp43 && typeof _temp43 === 'object' && 'next' in _temp43) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp43 instanceof AbruptCompletion) return _temp43;
   /* c8 ignore if */
@@ -42121,7 +42193,7 @@ function* DateProto_setSeconds([sec = Value.undefined, ms], {
   /* ReturnIfAbrupt */
   let _temp44 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp44 && typeof _temp44 === 'object' && 'next' in _temp44) throw new Assert.Error('Forgot to yield*');
+  if (_temp44 && typeof _temp44 === 'object' && 'next' in _temp44) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp44 instanceof AbruptCompletion) return _temp44;
   /* c8 ignore if */
@@ -42130,7 +42202,7 @@ function* DateProto_setSeconds([sec = Value.undefined, ms], {
   /* ReturnIfAbrupt */
   let _temp45 = yield* ToNumber(sec);
   /* c8 ignore if */
-  if (_temp45 && typeof _temp45 === 'object' && 'next' in _temp45) throw new Assert.Error('Forgot to yield*');
+  if (_temp45 && typeof _temp45 === 'object' && 'next' in _temp45) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp45 instanceof AbruptCompletion) return _temp45;
   /* c8 ignore if */
@@ -42141,7 +42213,7 @@ function* DateProto_setSeconds([sec = Value.undefined, ms], {
     /* ReturnIfAbrupt */
     let _temp46 = yield* ToNumber(ms);
     /* c8 ignore if */
-    if (_temp46 && typeof _temp46 === 'object' && 'next' in _temp46) throw new Assert.Error('Forgot to yield*');
+    if (_temp46 && typeof _temp46 === 'object' && 'next' in _temp46) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp46 instanceof AbruptCompletion) return _temp46;
     /* c8 ignore if */
@@ -42155,7 +42227,7 @@ function* DateProto_setSeconds([sec = Value.undefined, ms], {
   /* ReturnIfAbrupt */
   let _temp47 = surroundingAgent.debugger_tryTouchDuringPreview(thisValue);
   /* c8 ignore if */
-  if (_temp47 && typeof _temp47 === 'object' && 'next' in _temp47) throw new Assert.Error('Forgot to yield*');
+  if (_temp47 && typeof _temp47 === 'object' && 'next' in _temp47) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp47 instanceof AbruptCompletion) return _temp47;
   /* c8 ignore if */
@@ -42172,7 +42244,7 @@ function* DateProto_setTime([time = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp48 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp48 && typeof _temp48 === 'object' && 'next' in _temp48) throw new Assert.Error('Forgot to yield*');
+  if (_temp48 && typeof _temp48 === 'object' && 'next' in _temp48) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp48 instanceof AbruptCompletion) return _temp48;
   /* c8 ignore if */
@@ -42180,7 +42252,7 @@ function* DateProto_setTime([time = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp49 = yield* ToNumber(time);
   /* c8 ignore if */
-  if (_temp49 && typeof _temp49 === 'object' && 'next' in _temp49) throw new Assert.Error('Forgot to yield*');
+  if (_temp49 && typeof _temp49 === 'object' && 'next' in _temp49) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp49 instanceof AbruptCompletion) return _temp49;
   /* c8 ignore if */
@@ -42190,7 +42262,7 @@ function* DateProto_setTime([time = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp50 = surroundingAgent.debugger_tryTouchDuringPreview(thisValue);
   /* c8 ignore if */
-  if (_temp50 && typeof _temp50 === 'object' && 'next' in _temp50) throw new Assert.Error('Forgot to yield*');
+  if (_temp50 && typeof _temp50 === 'object' && 'next' in _temp50) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp50 instanceof AbruptCompletion) return _temp50;
   /* c8 ignore if */
@@ -42207,7 +42279,7 @@ function* DateProto_setUTCDate([date = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp51 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp51 && typeof _temp51 === 'object' && 'next' in _temp51) throw new Assert.Error('Forgot to yield*');
+  if (_temp51 && typeof _temp51 === 'object' && 'next' in _temp51) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp51 instanceof AbruptCompletion) return _temp51;
   /* c8 ignore if */
@@ -42216,7 +42288,7 @@ function* DateProto_setUTCDate([date = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp52 = yield* ToNumber(date);
   /* c8 ignore if */
-  if (_temp52 && typeof _temp52 === 'object' && 'next' in _temp52) throw new Assert.Error('Forgot to yield*');
+  if (_temp52 && typeof _temp52 === 'object' && 'next' in _temp52) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp52 instanceof AbruptCompletion) return _temp52;
   /* c8 ignore if */
@@ -42230,7 +42302,7 @@ function* DateProto_setUTCDate([date = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp53 = surroundingAgent.debugger_tryTouchDuringPreview(thisValue);
   /* c8 ignore if */
-  if (_temp53 && typeof _temp53 === 'object' && 'next' in _temp53) throw new Assert.Error('Forgot to yield*');
+  if (_temp53 && typeof _temp53 === 'object' && 'next' in _temp53) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp53 instanceof AbruptCompletion) return _temp53;
   /* c8 ignore if */
@@ -42247,7 +42319,7 @@ function* DateProto_setUTCFullYear([year = Value.undefined, month, date], {
   /* ReturnIfAbrupt */
   let _temp54 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp54 && typeof _temp54 === 'object' && 'next' in _temp54) throw new Assert.Error('Forgot to yield*');
+  if (_temp54 && typeof _temp54 === 'object' && 'next' in _temp54) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp54 instanceof AbruptCompletion) return _temp54;
   /* c8 ignore if */
@@ -42259,7 +42331,7 @@ function* DateProto_setUTCFullYear([year = Value.undefined, month, date], {
   /* ReturnIfAbrupt */
   let _temp55 = yield* ToNumber(year);
   /* c8 ignore if */
-  if (_temp55 && typeof _temp55 === 'object' && 'next' in _temp55) throw new Assert.Error('Forgot to yield*');
+  if (_temp55 && typeof _temp55 === 'object' && 'next' in _temp55) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp55 instanceof AbruptCompletion) return _temp55;
   /* c8 ignore if */
@@ -42270,7 +42342,7 @@ function* DateProto_setUTCFullYear([year = Value.undefined, month, date], {
     /* ReturnIfAbrupt */
     let _temp56 = yield* ToNumber(month);
     /* c8 ignore if */
-    if (_temp56 && typeof _temp56 === 'object' && 'next' in _temp56) throw new Assert.Error('Forgot to yield*');
+    if (_temp56 && typeof _temp56 === 'object' && 'next' in _temp56) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp56 instanceof AbruptCompletion) return _temp56;
     /* c8 ignore if */
@@ -42284,7 +42356,7 @@ function* DateProto_setUTCFullYear([year = Value.undefined, month, date], {
     /* ReturnIfAbrupt */
     let _temp57 = yield* ToNumber(date);
     /* c8 ignore if */
-    if (_temp57 && typeof _temp57 === 'object' && 'next' in _temp57) throw new Assert.Error('Forgot to yield*');
+    if (_temp57 && typeof _temp57 === 'object' && 'next' in _temp57) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp57 instanceof AbruptCompletion) return _temp57;
     /* c8 ignore if */
@@ -42298,7 +42370,7 @@ function* DateProto_setUTCFullYear([year = Value.undefined, month, date], {
   /* ReturnIfAbrupt */
   let _temp58 = surroundingAgent.debugger_tryTouchDuringPreview(thisValue);
   /* c8 ignore if */
-  if (_temp58 && typeof _temp58 === 'object' && 'next' in _temp58) throw new Assert.Error('Forgot to yield*');
+  if (_temp58 && typeof _temp58 === 'object' && 'next' in _temp58) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp58 instanceof AbruptCompletion) return _temp58;
   /* c8 ignore if */
@@ -42315,7 +42387,7 @@ function* DateProto_setUTCHours([hour = Value.undefined, min, sec, ms], {
   /* ReturnIfAbrupt */
   let _temp59 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp59 && typeof _temp59 === 'object' && 'next' in _temp59) throw new Assert.Error('Forgot to yield*');
+  if (_temp59 && typeof _temp59 === 'object' && 'next' in _temp59) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp59 instanceof AbruptCompletion) return _temp59;
   /* c8 ignore if */
@@ -42324,7 +42396,7 @@ function* DateProto_setUTCHours([hour = Value.undefined, min, sec, ms], {
   /* ReturnIfAbrupt */
   let _temp60 = yield* ToNumber(hour);
   /* c8 ignore if */
-  if (_temp60 && typeof _temp60 === 'object' && 'next' in _temp60) throw new Assert.Error('Forgot to yield*');
+  if (_temp60 && typeof _temp60 === 'object' && 'next' in _temp60) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp60 instanceof AbruptCompletion) return _temp60;
   /* c8 ignore if */
@@ -42335,7 +42407,7 @@ function* DateProto_setUTCHours([hour = Value.undefined, min, sec, ms], {
     /* ReturnIfAbrupt */
     let _temp61 = yield* ToNumber(min);
     /* c8 ignore if */
-    if (_temp61 && typeof _temp61 === 'object' && 'next' in _temp61) throw new Assert.Error('Forgot to yield*');
+    if (_temp61 && typeof _temp61 === 'object' && 'next' in _temp61) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp61 instanceof AbruptCompletion) return _temp61;
     /* c8 ignore if */
@@ -42349,7 +42421,7 @@ function* DateProto_setUTCHours([hour = Value.undefined, min, sec, ms], {
     /* ReturnIfAbrupt */
     let _temp62 = yield* ToNumber(sec);
     /* c8 ignore if */
-    if (_temp62 && typeof _temp62 === 'object' && 'next' in _temp62) throw new Assert.Error('Forgot to yield*');
+    if (_temp62 && typeof _temp62 === 'object' && 'next' in _temp62) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp62 instanceof AbruptCompletion) return _temp62;
     /* c8 ignore if */
@@ -42363,7 +42435,7 @@ function* DateProto_setUTCHours([hour = Value.undefined, min, sec, ms], {
     /* ReturnIfAbrupt */
     let _temp63 = yield* ToNumber(ms);
     /* c8 ignore if */
-    if (_temp63 && typeof _temp63 === 'object' && 'next' in _temp63) throw new Assert.Error('Forgot to yield*');
+    if (_temp63 && typeof _temp63 === 'object' && 'next' in _temp63) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp63 instanceof AbruptCompletion) return _temp63;
     /* c8 ignore if */
@@ -42377,7 +42449,7 @@ function* DateProto_setUTCHours([hour = Value.undefined, min, sec, ms], {
   /* ReturnIfAbrupt */
   let _temp64 = surroundingAgent.debugger_tryTouchDuringPreview(thisValue);
   /* c8 ignore if */
-  if (_temp64 && typeof _temp64 === 'object' && 'next' in _temp64) throw new Assert.Error('Forgot to yield*');
+  if (_temp64 && typeof _temp64 === 'object' && 'next' in _temp64) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp64 instanceof AbruptCompletion) return _temp64;
   /* c8 ignore if */
@@ -42394,7 +42466,7 @@ function* DateProto_setUTCMilliseconds([ms = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp65 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp65 && typeof _temp65 === 'object' && 'next' in _temp65) throw new Assert.Error('Forgot to yield*');
+  if (_temp65 && typeof _temp65 === 'object' && 'next' in _temp65) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp65 instanceof AbruptCompletion) return _temp65;
   /* c8 ignore if */
@@ -42403,7 +42475,7 @@ function* DateProto_setUTCMilliseconds([ms = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp66 = yield* ToNumber(ms);
   /* c8 ignore if */
-  if (_temp66 && typeof _temp66 === 'object' && 'next' in _temp66) throw new Assert.Error('Forgot to yield*');
+  if (_temp66 && typeof _temp66 === 'object' && 'next' in _temp66) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp66 instanceof AbruptCompletion) return _temp66;
   /* c8 ignore if */
@@ -42414,7 +42486,7 @@ function* DateProto_setUTCMilliseconds([ms = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp67 = surroundingAgent.debugger_tryTouchDuringPreview(thisValue);
   /* c8 ignore if */
-  if (_temp67 && typeof _temp67 === 'object' && 'next' in _temp67) throw new Assert.Error('Forgot to yield*');
+  if (_temp67 && typeof _temp67 === 'object' && 'next' in _temp67) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp67 instanceof AbruptCompletion) return _temp67;
   /* c8 ignore if */
@@ -42431,7 +42503,7 @@ function* DateProto_setUTCMinutes([min = Value.undefined, sec, ms], {
   /* ReturnIfAbrupt */
   let _temp68 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp68 && typeof _temp68 === 'object' && 'next' in _temp68) throw new Assert.Error('Forgot to yield*');
+  if (_temp68 && typeof _temp68 === 'object' && 'next' in _temp68) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp68 instanceof AbruptCompletion) return _temp68;
   /* c8 ignore if */
@@ -42440,7 +42512,7 @@ function* DateProto_setUTCMinutes([min = Value.undefined, sec, ms], {
   /* ReturnIfAbrupt */
   let _temp69 = yield* ToNumber(min);
   /* c8 ignore if */
-  if (_temp69 && typeof _temp69 === 'object' && 'next' in _temp69) throw new Assert.Error('Forgot to yield*');
+  if (_temp69 && typeof _temp69 === 'object' && 'next' in _temp69) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp69 instanceof AbruptCompletion) return _temp69;
   /* c8 ignore if */
@@ -42451,7 +42523,7 @@ function* DateProto_setUTCMinutes([min = Value.undefined, sec, ms], {
     /* ReturnIfAbrupt */
     let _temp70 = yield* ToNumber(sec);
     /* c8 ignore if */
-    if (_temp70 && typeof _temp70 === 'object' && 'next' in _temp70) throw new Assert.Error('Forgot to yield*');
+    if (_temp70 && typeof _temp70 === 'object' && 'next' in _temp70) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp70 instanceof AbruptCompletion) return _temp70;
     /* c8 ignore if */
@@ -42465,7 +42537,7 @@ function* DateProto_setUTCMinutes([min = Value.undefined, sec, ms], {
     /* ReturnIfAbrupt */
     let _temp71 = yield* ToNumber(ms);
     /* c8 ignore if */
-    if (_temp71 && typeof _temp71 === 'object' && 'next' in _temp71) throw new Assert.Error('Forgot to yield*');
+    if (_temp71 && typeof _temp71 === 'object' && 'next' in _temp71) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp71 instanceof AbruptCompletion) return _temp71;
     /* c8 ignore if */
@@ -42479,7 +42551,7 @@ function* DateProto_setUTCMinutes([min = Value.undefined, sec, ms], {
   /* ReturnIfAbrupt */
   let _temp72 = surroundingAgent.debugger_tryTouchDuringPreview(thisValue);
   /* c8 ignore if */
-  if (_temp72 && typeof _temp72 === 'object' && 'next' in _temp72) throw new Assert.Error('Forgot to yield*');
+  if (_temp72 && typeof _temp72 === 'object' && 'next' in _temp72) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp72 instanceof AbruptCompletion) return _temp72;
   /* c8 ignore if */
@@ -42496,7 +42568,7 @@ function* DateProto_setUTCMonth([month = Value.undefined, date], {
   /* ReturnIfAbrupt */
   let _temp73 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp73 && typeof _temp73 === 'object' && 'next' in _temp73) throw new Assert.Error('Forgot to yield*');
+  if (_temp73 && typeof _temp73 === 'object' && 'next' in _temp73) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp73 instanceof AbruptCompletion) return _temp73;
   /* c8 ignore if */
@@ -42505,7 +42577,7 @@ function* DateProto_setUTCMonth([month = Value.undefined, date], {
   /* ReturnIfAbrupt */
   let _temp74 = yield* ToNumber(month);
   /* c8 ignore if */
-  if (_temp74 && typeof _temp74 === 'object' && 'next' in _temp74) throw new Assert.Error('Forgot to yield*');
+  if (_temp74 && typeof _temp74 === 'object' && 'next' in _temp74) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp74 instanceof AbruptCompletion) return _temp74;
   /* c8 ignore if */
@@ -42516,7 +42588,7 @@ function* DateProto_setUTCMonth([month = Value.undefined, date], {
     /* ReturnIfAbrupt */
     let _temp75 = yield* ToNumber(date);
     /* c8 ignore if */
-    if (_temp75 && typeof _temp75 === 'object' && 'next' in _temp75) throw new Assert.Error('Forgot to yield*');
+    if (_temp75 && typeof _temp75 === 'object' && 'next' in _temp75) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp75 instanceof AbruptCompletion) return _temp75;
     /* c8 ignore if */
@@ -42530,7 +42602,7 @@ function* DateProto_setUTCMonth([month = Value.undefined, date], {
   /* ReturnIfAbrupt */
   let _temp76 = surroundingAgent.debugger_tryTouchDuringPreview(thisValue);
   /* c8 ignore if */
-  if (_temp76 && typeof _temp76 === 'object' && 'next' in _temp76) throw new Assert.Error('Forgot to yield*');
+  if (_temp76 && typeof _temp76 === 'object' && 'next' in _temp76) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp76 instanceof AbruptCompletion) return _temp76;
   /* c8 ignore if */
@@ -42547,7 +42619,7 @@ function* DateProto_setUTCSeconds([sec = Value.undefined, ms], {
   /* ReturnIfAbrupt */
   let _temp77 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp77 && typeof _temp77 === 'object' && 'next' in _temp77) throw new Assert.Error('Forgot to yield*');
+  if (_temp77 && typeof _temp77 === 'object' && 'next' in _temp77) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp77 instanceof AbruptCompletion) return _temp77;
   /* c8 ignore if */
@@ -42556,7 +42628,7 @@ function* DateProto_setUTCSeconds([sec = Value.undefined, ms], {
   /* ReturnIfAbrupt */
   let _temp78 = yield* ToNumber(sec);
   /* c8 ignore if */
-  if (_temp78 && typeof _temp78 === 'object' && 'next' in _temp78) throw new Assert.Error('Forgot to yield*');
+  if (_temp78 && typeof _temp78 === 'object' && 'next' in _temp78) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp78 instanceof AbruptCompletion) return _temp78;
   /* c8 ignore if */
@@ -42567,7 +42639,7 @@ function* DateProto_setUTCSeconds([sec = Value.undefined, ms], {
     /* ReturnIfAbrupt */
     let _temp79 = yield* ToNumber(ms);
     /* c8 ignore if */
-    if (_temp79 && typeof _temp79 === 'object' && 'next' in _temp79) throw new Assert.Error('Forgot to yield*');
+    if (_temp79 && typeof _temp79 === 'object' && 'next' in _temp79) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp79 instanceof AbruptCompletion) return _temp79;
     /* c8 ignore if */
@@ -42581,7 +42653,7 @@ function* DateProto_setUTCSeconds([sec = Value.undefined, ms], {
   /* ReturnIfAbrupt */
   let _temp80 = surroundingAgent.debugger_tryTouchDuringPreview(thisValue);
   /* c8 ignore if */
-  if (_temp80 && typeof _temp80 === 'object' && 'next' in _temp80) throw new Assert.Error('Forgot to yield*');
+  if (_temp80 && typeof _temp80 === 'object' && 'next' in _temp80) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp80 instanceof AbruptCompletion) return _temp80;
   /* c8 ignore if */
@@ -42602,7 +42674,7 @@ function* DateProto_toDateString(_args, {
   /* ReturnIfAbrupt */
   let _temp81 = thisTimeValue(O);
   /* c8 ignore if */
-  if (_temp81 && typeof _temp81 === 'object' && 'next' in _temp81) throw new Assert.Error('Forgot to yield*');
+  if (_temp81 && typeof _temp81 === 'object' && 'next' in _temp81) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp81 instanceof AbruptCompletion) return _temp81;
   /* c8 ignore if */
@@ -42623,7 +42695,7 @@ function DateProto_toISOString(_args, {
   /* ReturnIfAbrupt */
   let _temp82 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp82 && typeof _temp82 === 'object' && 'next' in _temp82) throw new Assert.Error('Forgot to yield*');
+  if (_temp82 && typeof _temp82 === 'object' && 'next' in _temp82) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp82 instanceof AbruptCompletion) return _temp82;
   /* c8 ignore if */
@@ -42663,7 +42735,7 @@ function* DateProto_toJSON(_args, {
   /* ReturnIfAbrupt */
   let _temp83 = ToObject(thisValue);
   /* c8 ignore if */
-  if (_temp83 && typeof _temp83 === 'object' && 'next' in _temp83) throw new Assert.Error('Forgot to yield*');
+  if (_temp83 && typeof _temp83 === 'object' && 'next' in _temp83) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp83 instanceof AbruptCompletion) return _temp83;
   /* c8 ignore if */
@@ -42672,7 +42744,7 @@ function* DateProto_toJSON(_args, {
   /* ReturnIfAbrupt */
   let _temp84 = yield* ToPrimitive(O, 'number');
   /* c8 ignore if */
-  if (_temp84 && typeof _temp84 === 'object' && 'next' in _temp84) throw new Assert.Error('Forgot to yield*');
+  if (_temp84 && typeof _temp84 === 'object' && 'next' in _temp84) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp84 instanceof AbruptCompletion) return _temp84;
   /* c8 ignore if */
@@ -42713,7 +42785,7 @@ function DateProto_toString(_args, {
   /* ReturnIfAbrupt */
   let _temp85 = thisTimeValue(thisValue);
   /* c8 ignore if */
-  if (_temp85 && typeof _temp85 === 'object' && 'next' in _temp85) throw new Assert.Error('Forgot to yield*');
+  if (_temp85 && typeof _temp85 === 'object' && 'next' in _temp85) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp85 instanceof AbruptCompletion) return _temp85;
   /* c8 ignore if */
@@ -42799,7 +42871,7 @@ function DateProto_toTimeString(_args, {
   /* ReturnIfAbrupt */
   let _temp87 = thisTimeValue(O);
   /* c8 ignore if */
-  if (_temp87 && typeof _temp87 === 'object' && 'next' in _temp87) throw new Assert.Error('Forgot to yield*');
+  if (_temp87 && typeof _temp87 === 'object' && 'next' in _temp87) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp87 instanceof AbruptCompletion) return _temp87;
   /* c8 ignore if */
@@ -42824,7 +42896,7 @@ function DateProto_toUTCString(_args, {
   /* ReturnIfAbrupt */
   let _temp88 = thisTimeValue(O);
   /* c8 ignore if */
-  if (_temp88 && typeof _temp88 === 'object' && 'next' in _temp88) throw new Assert.Error('Forgot to yield*');
+  if (_temp88 && typeof _temp88 === 'object' && 'next' in _temp88) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp88 instanceof AbruptCompletion) return _temp88;
   /* c8 ignore if */
@@ -42909,7 +42981,7 @@ function* DateConstructor(args, {
       /* ReturnIfAbrupt */
       let _temp = yield* ToNumber(year);
       /* c8 ignore if */
-      if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+      if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp instanceof AbruptCompletion) return _temp;
       /* c8 ignore if */
@@ -42918,7 +42990,7 @@ function* DateConstructor(args, {
       /* ReturnIfAbrupt */
       let _temp2 = yield* ToNumber(month);
       /* c8 ignore if */
-      if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+      if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp2 instanceof AbruptCompletion) return _temp2;
       /* c8 ignore if */
@@ -42929,7 +43001,7 @@ function* DateConstructor(args, {
         /* ReturnIfAbrupt */
         let _temp3 = yield* ToNumber(date);
         /* c8 ignore if */
-        if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+        if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp3 instanceof AbruptCompletion) return _temp3;
         /* c8 ignore if */
@@ -42943,7 +43015,7 @@ function* DateConstructor(args, {
         /* ReturnIfAbrupt */
         let _temp4 = yield* ToNumber(hours);
         /* c8 ignore if */
-        if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+        if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp4 instanceof AbruptCompletion) return _temp4;
         /* c8 ignore if */
@@ -42957,7 +43029,7 @@ function* DateConstructor(args, {
         /* ReturnIfAbrupt */
         let _temp5 = yield* ToNumber(minutes);
         /* c8 ignore if */
-        if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+        if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp5 instanceof AbruptCompletion) return _temp5;
         /* c8 ignore if */
@@ -42971,7 +43043,7 @@ function* DateConstructor(args, {
         /* ReturnIfAbrupt */
         let _temp6 = yield* ToNumber(seconds);
         /* c8 ignore if */
-        if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+        if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp6 instanceof AbruptCompletion) return _temp6;
         /* c8 ignore if */
@@ -42985,7 +43057,7 @@ function* DateConstructor(args, {
         /* ReturnIfAbrupt */
         let _temp7 = yield* ToNumber(ms);
         /* c8 ignore if */
-        if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+        if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp7 instanceof AbruptCompletion) return _temp7;
         /* c8 ignore if */
@@ -43019,7 +43091,7 @@ function* DateConstructor(args, {
       /* ReturnIfAbrupt */
       let _temp9 = yield* OrdinaryCreateFromConstructor(NewTarget, '%Date.prototype%', ['DateValue']);
       /* c8 ignore if */
-      if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+      if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp9 instanceof AbruptCompletion) return _temp9;
       /* c8 ignore if */
@@ -43053,7 +43125,7 @@ function* DateConstructor(args, {
         /* ReturnIfAbrupt */
         let _temp11 = yield* ToPrimitive(value);
         /* c8 ignore if */
-        if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+        if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp11 instanceof AbruptCompletion) return _temp11;
         /* c8 ignore if */
@@ -43066,7 +43138,7 @@ function* DateConstructor(args, {
           /* ReturnIfAbrupt */
           let _temp12 = yield* ToNumber(v);
           /* c8 ignore if */
-          if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield*');
+          if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp12 instanceof AbruptCompletion) return _temp12;
           /* c8 ignore if */
@@ -43077,7 +43149,7 @@ function* DateConstructor(args, {
       /* ReturnIfAbrupt */
       let _temp13 = yield* OrdinaryCreateFromConstructor(NewTarget, '%Date.prototype%', ['DateValue']);
       /* c8 ignore if */
-      if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield*');
+      if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp13 instanceof AbruptCompletion) return _temp13;
       /* c8 ignore if */
@@ -43096,7 +43168,7 @@ function* DateConstructor(args, {
       /* ReturnIfAbrupt */
       let _temp14 = yield* OrdinaryCreateFromConstructor(NewTarget, '%Date.prototype%', ['DateValue']);
       /* c8 ignore if */
-      if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield*');
+      if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp14 instanceof AbruptCompletion) return _temp14;
       /* c8 ignore if */
@@ -43131,7 +43203,7 @@ function* Date_UTC([year = Value.undefined, month, date, hours, minutes, seconds
   /* ReturnIfAbrupt */
   let _temp15 = yield* ToNumber(year);
   /* c8 ignore if */
-  if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield*');
+  if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp15 instanceof AbruptCompletion) return _temp15;
   /* c8 ignore if */
@@ -43142,7 +43214,7 @@ function* Date_UTC([year = Value.undefined, month, date, hours, minutes, seconds
     /* ReturnIfAbrupt */
     let _temp16 = yield* ToNumber(month);
     /* c8 ignore if */
-    if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield*');
+    if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp16 instanceof AbruptCompletion) return _temp16;
     /* c8 ignore if */
@@ -43156,7 +43228,7 @@ function* Date_UTC([year = Value.undefined, month, date, hours, minutes, seconds
     /* ReturnIfAbrupt */
     let _temp17 = yield* ToNumber(date);
     /* c8 ignore if */
-    if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield*');
+    if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp17 instanceof AbruptCompletion) return _temp17;
     /* c8 ignore if */
@@ -43170,7 +43242,7 @@ function* Date_UTC([year = Value.undefined, month, date, hours, minutes, seconds
     /* ReturnIfAbrupt */
     let _temp18 = yield* ToNumber(hours);
     /* c8 ignore if */
-    if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield*');
+    if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp18 instanceof AbruptCompletion) return _temp18;
     /* c8 ignore if */
@@ -43184,7 +43256,7 @@ function* Date_UTC([year = Value.undefined, month, date, hours, minutes, seconds
     /* ReturnIfAbrupt */
     let _temp19 = yield* ToNumber(minutes);
     /* c8 ignore if */
-    if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield*');
+    if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp19 instanceof AbruptCompletion) return _temp19;
     /* c8 ignore if */
@@ -43198,7 +43270,7 @@ function* Date_UTC([year = Value.undefined, month, date, hours, minutes, seconds
     /* ReturnIfAbrupt */
     let _temp20 = yield* ToNumber(seconds);
     /* c8 ignore if */
-    if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield*');
+    if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp20 instanceof AbruptCompletion) return _temp20;
     /* c8 ignore if */
@@ -43212,7 +43284,7 @@ function* Date_UTC([year = Value.undefined, month, date, hours, minutes, seconds
     /* ReturnIfAbrupt */
     let _temp21 = yield* ToNumber(ms);
     /* c8 ignore if */
-    if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield*');
+    if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp21 instanceof AbruptCompletion) return _temp21;
     /* c8 ignore if */
@@ -43271,7 +43343,7 @@ function CreateRegExpStringIterator(R$1, S, global, fullUnicode) {
       /* ReturnIfAbrupt */
       let _temp = yield* RegExpExec(R$1, S);
       /* c8 ignore if */
-      if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+      if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp instanceof AbruptCompletion) return _temp;
       /* c8 ignore if */
@@ -43287,7 +43359,7 @@ function CreateRegExpStringIterator(R$1, S, global, fullUnicode) {
         /* ReturnIfAbrupt */
         let _temp2 = yield* Yield(match);
         /* c8 ignore if */
-        if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+        if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp2 instanceof AbruptCompletion) return _temp2;
         /* c8 ignore if */
@@ -43299,7 +43371,7 @@ function CreateRegExpStringIterator(R$1, S, global, fullUnicode) {
       /* ReturnIfAbrupt */
       let _temp9 = yield* Get(match, Value('0'));
       /* c8 ignore if */
-      if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+      if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp9 instanceof AbruptCompletion) return _temp9;
       /* c8 ignore if */
@@ -43307,7 +43379,7 @@ function CreateRegExpStringIterator(R$1, S, global, fullUnicode) {
       /* ReturnIfAbrupt */
       let _temp3 = yield* ToString(_temp9);
       /* c8 ignore if */
-      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp3 instanceof AbruptCompletion) return _temp3;
       /* c8 ignore if */
@@ -43318,7 +43390,7 @@ function CreateRegExpStringIterator(R$1, S, global, fullUnicode) {
         /* ReturnIfAbrupt */
         let _temp7 = yield* Get(R$1, Value('lastIndex'));
         /* c8 ignore if */
-        if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+        if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp7 instanceof AbruptCompletion) return _temp7;
         /* c8 ignore if */
@@ -43326,7 +43398,7 @@ function CreateRegExpStringIterator(R$1, S, global, fullUnicode) {
         /* ReturnIfAbrupt */
         let _temp4 = yield* ToLength(_temp7);
         /* c8 ignore if */
-        if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+        if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp4 instanceof AbruptCompletion) return _temp4;
         /* c8 ignore if */
@@ -43349,7 +43421,7 @@ function CreateRegExpStringIterator(R$1, S, global, fullUnicode) {
         /* ReturnIfAbrupt */
         let _temp6 = yield* Set$1(R$1, Value('lastIndex'), F(nextIndex), Value.true);
         /* c8 ignore if */
-        if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+        if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp6 instanceof AbruptCompletion) return _temp6;
         /* c8 ignore if */
@@ -43359,7 +43431,7 @@ function CreateRegExpStringIterator(R$1, S, global, fullUnicode) {
       /* ReturnIfAbrupt */
       let _temp8 = yield* Yield(match);
       /* c8 ignore if */
-      if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+      if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp8 instanceof AbruptCompletion) return _temp8;
       /* c8 ignore if */
@@ -43404,7 +43476,7 @@ function* RegExpConstructor([pattern = Value.undefined, flags = Value.undefined]
   /* ReturnIfAbrupt */
   let _temp = yield* IsRegExp(pattern);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -43421,7 +43493,7 @@ function* RegExpConstructor([pattern = Value.undefined, flags = Value.undefined]
       /* ReturnIfAbrupt */
       let _temp2 = yield* Get(pattern, Value('constructor'));
       /* c8 ignore if */
-      if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+      if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp2 instanceof AbruptCompletion) return _temp2;
       /* c8 ignore if */
@@ -43454,7 +43526,7 @@ function* RegExpConstructor([pattern = Value.undefined, flags = Value.undefined]
     /* ReturnIfAbrupt */
     let _temp3 = yield* Get(pattern, Value('source'));
     /* c8 ignore if */
-    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp3 instanceof AbruptCompletion) return _temp3;
     /* c8 ignore if */
@@ -43467,7 +43539,7 @@ function* RegExpConstructor([pattern = Value.undefined, flags = Value.undefined]
       /* ReturnIfAbrupt */
       let _temp4 = yield* Get(pattern, Value('flags'));
       /* c8 ignore if */
-      if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+      if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp4 instanceof AbruptCompletion) return _temp4;
       /* c8 ignore if */
@@ -43489,7 +43561,7 @@ function* RegExpConstructor([pattern = Value.undefined, flags = Value.undefined]
   /* ReturnIfAbrupt */
   let _temp5 = yield* RegExpAlloc(newTarget);
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -43521,7 +43593,7 @@ function* RegExpProto_exec([string = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp = RequireInternalSlot(R, 'RegExpMatcher');
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -43529,7 +43601,7 @@ function* RegExpProto_exec([string = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp2 = yield* ToString(string);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -43546,7 +43618,7 @@ function* RegExpExec(R, S) {
   /* ReturnIfAbrupt */
   let _temp3 = yield* Get(R, Value('exec'));
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -43556,7 +43628,7 @@ function* RegExpExec(R, S) {
     /* ReturnIfAbrupt */
     let _temp4 = yield* Call(exec, R, [S]);
     /* c8 ignore if */
-    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) return _temp4;
     /* c8 ignore if */
@@ -43570,7 +43642,7 @@ function* RegExpExec(R, S) {
   /* ReturnIfAbrupt */
   let _temp5 = RequireInternalSlot(R, 'RegExpMatcher');
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -43591,7 +43663,7 @@ function* RegExpBuiltinExec(R$1, S) {
   /* ReturnIfAbrupt */
   let _temp25 = yield* Get(R$1, Value('lastIndex'));
   /* c8 ignore if */
-  if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield*');
+  if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp25 instanceof AbruptCompletion) return _temp25;
   /* c8 ignore if */
@@ -43599,7 +43671,7 @@ function* RegExpBuiltinExec(R$1, S) {
   /* ReturnIfAbrupt */
   let _temp6 = yield* ToLength(_temp25);
   /* c8 ignore if */
-  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp6 instanceof AbruptCompletion) return _temp6;
   /* c8 ignore if */
@@ -43633,7 +43705,7 @@ function* RegExpBuiltinExec(R$1, S) {
         /* ReturnIfAbrupt */
         let _temp7 = yield* Set$1(R$1, Value('lastIndex'), F(0), Value.true);
         /* c8 ignore if */
-        if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+        if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp7 instanceof AbruptCompletion) return _temp7;
         /* c8 ignore if */
@@ -43651,7 +43723,7 @@ function* RegExpBuiltinExec(R$1, S) {
         /* ReturnIfAbrupt */
         let _temp8 = yield* Set$1(R$1, Value('lastIndex'), F(0), Value.true);
         /* c8 ignore if */
-        if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+        if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp8 instanceof AbruptCompletion) return _temp8;
         /* c8 ignore if */
@@ -43692,7 +43764,7 @@ function* RegExpBuiltinExec(R$1, S) {
     /* ReturnIfAbrupt */
     let _temp10 = yield* Set$1(R$1, Value('lastIndex'), F(e), Value.true);
     /* c8 ignore if */
-    if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+    if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp10 instanceof AbruptCompletion) return _temp10;
     /* c8 ignore if */
@@ -43999,7 +44071,7 @@ function* RegExpProto_flagsGetter(_args, {
   /* ReturnIfAbrupt */
   let _temp27 = yield* Get(R, Value('hasIndices'));
   /* c8 ignore if */
-  if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield*');
+  if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp27 instanceof AbruptCompletion) return _temp27;
   /* c8 ignore if */
@@ -44011,7 +44083,7 @@ function* RegExpProto_flagsGetter(_args, {
   /* ReturnIfAbrupt */
   let _temp28 = yield* Get(R, Value('global'));
   /* c8 ignore if */
-  if (_temp28 && typeof _temp28 === 'object' && 'next' in _temp28) throw new Assert.Error('Forgot to yield*');
+  if (_temp28 && typeof _temp28 === 'object' && 'next' in _temp28) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp28 instanceof AbruptCompletion) return _temp28;
   /* c8 ignore if */
@@ -44023,7 +44095,7 @@ function* RegExpProto_flagsGetter(_args, {
   /* ReturnIfAbrupt */
   let _temp29 = yield* Get(R, Value('ignoreCase'));
   /* c8 ignore if */
-  if (_temp29 && typeof _temp29 === 'object' && 'next' in _temp29) throw new Assert.Error('Forgot to yield*');
+  if (_temp29 && typeof _temp29 === 'object' && 'next' in _temp29) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp29 instanceof AbruptCompletion) return _temp29;
   /* c8 ignore if */
@@ -44035,7 +44107,7 @@ function* RegExpProto_flagsGetter(_args, {
   /* ReturnIfAbrupt */
   let _temp30 = yield* Get(R, Value('multiline'));
   /* c8 ignore if */
-  if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) throw new Assert.Error('Forgot to yield*');
+  if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp30 instanceof AbruptCompletion) return _temp30;
   /* c8 ignore if */
@@ -44047,7 +44119,7 @@ function* RegExpProto_flagsGetter(_args, {
   /* ReturnIfAbrupt */
   let _temp31 = yield* Get(R, Value('dotAll'));
   /* c8 ignore if */
-  if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) throw new Assert.Error('Forgot to yield*');
+  if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp31 instanceof AbruptCompletion) return _temp31;
   /* c8 ignore if */
@@ -44059,7 +44131,7 @@ function* RegExpProto_flagsGetter(_args, {
   /* ReturnIfAbrupt */
   let _temp32 = yield* Get(R, Value('unicode'));
   /* c8 ignore if */
-  if (_temp32 && typeof _temp32 === 'object' && 'next' in _temp32) throw new Assert.Error('Forgot to yield*');
+  if (_temp32 && typeof _temp32 === 'object' && 'next' in _temp32) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp32 instanceof AbruptCompletion) return _temp32;
   /* c8 ignore if */
@@ -44071,7 +44143,7 @@ function* RegExpProto_flagsGetter(_args, {
   /* ReturnIfAbrupt */
   let _temp33 = yield* Get(R, Value('sticky'));
   /* c8 ignore if */
-  if (_temp33 && typeof _temp33 === 'object' && 'next' in _temp33) throw new Assert.Error('Forgot to yield*');
+  if (_temp33 && typeof _temp33 === 'object' && 'next' in _temp33) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp33 instanceof AbruptCompletion) return _temp33;
   /* c8 ignore if */
@@ -44146,7 +44218,7 @@ function* RegExpProto_match([string = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp34 = yield* ToString(string);
   /* c8 ignore if */
-  if (_temp34 && typeof _temp34 === 'object' && 'next' in _temp34) throw new Assert.Error('Forgot to yield*');
+  if (_temp34 && typeof _temp34 === 'object' && 'next' in _temp34) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp34 instanceof AbruptCompletion) return _temp34;
   /* c8 ignore if */
@@ -44156,7 +44228,7 @@ function* RegExpProto_match([string = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp46 = yield* Get(rx, Value('flags'));
   /* c8 ignore if */
-  if (_temp46 && typeof _temp46 === 'object' && 'next' in _temp46) throw new Assert.Error('Forgot to yield*');
+  if (_temp46 && typeof _temp46 === 'object' && 'next' in _temp46) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp46 instanceof AbruptCompletion) return _temp46;
   /* c8 ignore if */
@@ -44164,7 +44236,7 @@ function* RegExpProto_match([string = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp35 = yield* ToString(_temp46);
   /* c8 ignore if */
-  if (_temp35 && typeof _temp35 === 'object' && 'next' in _temp35) throw new Assert.Error('Forgot to yield*');
+  if (_temp35 && typeof _temp35 === 'object' && 'next' in _temp35) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp35 instanceof AbruptCompletion) return _temp35;
   /* c8 ignore if */
@@ -44182,7 +44254,7 @@ function* RegExpProto_match([string = Value.undefined], {
     /* ReturnIfAbrupt */
     let _temp36 = yield* Set$1(rx, Value('lastIndex'), F(0), Value.true);
     /* c8 ignore if */
-    if (_temp36 && typeof _temp36 === 'object' && 'next' in _temp36) throw new Assert.Error('Forgot to yield*');
+    if (_temp36 && typeof _temp36 === 'object' && 'next' in _temp36) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp36 instanceof AbruptCompletion) return _temp36;
     /* c8 ignore if */
@@ -44206,7 +44278,7 @@ function* RegExpProto_match([string = Value.undefined], {
       /* ReturnIfAbrupt */
       let _temp38 = yield* RegExpExec(rx, S);
       /* c8 ignore if */
-      if (_temp38 && typeof _temp38 === 'object' && 'next' in _temp38) throw new Assert.Error('Forgot to yield*');
+      if (_temp38 && typeof _temp38 === 'object' && 'next' in _temp38) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp38 instanceof AbruptCompletion) return _temp38;
       /* c8 ignore if */
@@ -44225,7 +44297,7 @@ function* RegExpProto_match([string = Value.undefined], {
         /* ReturnIfAbrupt */
         let _temp44 = yield* Get(result, Value('0'));
         /* c8 ignore if */
-        if (_temp44 && typeof _temp44 === 'object' && 'next' in _temp44) throw new Assert.Error('Forgot to yield*');
+        if (_temp44 && typeof _temp44 === 'object' && 'next' in _temp44) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp44 instanceof AbruptCompletion) return _temp44;
         /* c8 ignore if */
@@ -44233,7 +44305,7 @@ function* RegExpProto_match([string = Value.undefined], {
         /* ReturnIfAbrupt */
         let _temp39 = yield* ToString(_temp44);
         /* c8 ignore if */
-        if (_temp39 && typeof _temp39 === 'object' && 'next' in _temp39) throw new Assert.Error('Forgot to yield*');
+        if (_temp39 && typeof _temp39 === 'object' && 'next' in _temp39) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp39 instanceof AbruptCompletion) return _temp39;
         /* c8 ignore if */
@@ -44267,7 +44339,7 @@ function* RegExpProto_match([string = Value.undefined], {
           /* ReturnIfAbrupt */
           let _temp43 = yield* Get(rx, Value('lastIndex'));
           /* c8 ignore if */
-          if (_temp43 && typeof _temp43 === 'object' && 'next' in _temp43) throw new Assert.Error('Forgot to yield*');
+          if (_temp43 && typeof _temp43 === 'object' && 'next' in _temp43) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp43 instanceof AbruptCompletion) return _temp43;
           /* c8 ignore if */
@@ -44275,7 +44347,7 @@ function* RegExpProto_match([string = Value.undefined], {
           /* ReturnIfAbrupt */
           let _temp41 = yield* ToLength(_temp43);
           /* c8 ignore if */
-          if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) throw new Assert.Error('Forgot to yield*');
+          if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp41 instanceof AbruptCompletion) return _temp41;
           /* c8 ignore if */
@@ -44288,7 +44360,7 @@ function* RegExpProto_match([string = Value.undefined], {
           /* ReturnIfAbrupt */
           let _temp42 = yield* Set$1(rx, Value('lastIndex'), F(nextIndex), Value.true);
           /* c8 ignore if */
-          if (_temp42 && typeof _temp42 === 'object' && 'next' in _temp42) throw new Assert.Error('Forgot to yield*');
+          if (_temp42 && typeof _temp42 === 'object' && 'next' in _temp42) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp42 instanceof AbruptCompletion) return _temp42;
           /* c8 ignore if */
@@ -44313,7 +44385,7 @@ function* RegExpProto_matchAll([string = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp47 = yield* ToString(string);
   /* c8 ignore if */
-  if (_temp47 && typeof _temp47 === 'object' && 'next' in _temp47) throw new Assert.Error('Forgot to yield*');
+  if (_temp47 && typeof _temp47 === 'object' && 'next' in _temp47) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp47 instanceof AbruptCompletion) return _temp47;
   /* c8 ignore if */
@@ -44322,7 +44394,7 @@ function* RegExpProto_matchAll([string = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp48 = yield* SpeciesConstructor(R, surroundingAgent.intrinsic('%RegExp%'));
   /* c8 ignore if */
-  if (_temp48 && typeof _temp48 === 'object' && 'next' in _temp48) throw new Assert.Error('Forgot to yield*');
+  if (_temp48 && typeof _temp48 === 'object' && 'next' in _temp48) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp48 instanceof AbruptCompletion) return _temp48;
   /* c8 ignore if */
@@ -44331,7 +44403,7 @@ function* RegExpProto_matchAll([string = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp54 = yield* Get(R, Value('flags'));
   /* c8 ignore if */
-  if (_temp54 && typeof _temp54 === 'object' && 'next' in _temp54) throw new Assert.Error('Forgot to yield*');
+  if (_temp54 && typeof _temp54 === 'object' && 'next' in _temp54) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp54 instanceof AbruptCompletion) return _temp54;
   /* c8 ignore if */
@@ -44339,7 +44411,7 @@ function* RegExpProto_matchAll([string = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp49 = yield* ToString(_temp54);
   /* c8 ignore if */
-  if (_temp49 && typeof _temp49 === 'object' && 'next' in _temp49) throw new Assert.Error('Forgot to yield*');
+  if (_temp49 && typeof _temp49 === 'object' && 'next' in _temp49) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp49 instanceof AbruptCompletion) return _temp49;
   /* c8 ignore if */
@@ -44348,7 +44420,7 @@ function* RegExpProto_matchAll([string = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp50 = yield* Construct(C, [R, flags]);
   /* c8 ignore if */
-  if (_temp50 && typeof _temp50 === 'object' && 'next' in _temp50) throw new Assert.Error('Forgot to yield*');
+  if (_temp50 && typeof _temp50 === 'object' && 'next' in _temp50) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp50 instanceof AbruptCompletion) return _temp50;
   /* c8 ignore if */
@@ -44357,7 +44429,7 @@ function* RegExpProto_matchAll([string = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp55 = yield* Get(R, Value('lastIndex'));
   /* c8 ignore if */
-  if (_temp55 && typeof _temp55 === 'object' && 'next' in _temp55) throw new Assert.Error('Forgot to yield*');
+  if (_temp55 && typeof _temp55 === 'object' && 'next' in _temp55) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp55 instanceof AbruptCompletion) return _temp55;
   /* c8 ignore if */
@@ -44365,7 +44437,7 @@ function* RegExpProto_matchAll([string = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp51 = yield* ToLength(_temp55);
   /* c8 ignore if */
-  if (_temp51 && typeof _temp51 === 'object' && 'next' in _temp51) throw new Assert.Error('Forgot to yield*');
+  if (_temp51 && typeof _temp51 === 'object' && 'next' in _temp51) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp51 instanceof AbruptCompletion) return _temp51;
   /* c8 ignore if */
@@ -44374,7 +44446,7 @@ function* RegExpProto_matchAll([string = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp52 = yield* Set$1(matcher, Value('lastIndex'), lastIndex, Value.true);
   /* c8 ignore if */
-  if (_temp52 && typeof _temp52 === 'object' && 'next' in _temp52) throw new Assert.Error('Forgot to yield*');
+  if (_temp52 && typeof _temp52 === 'object' && 'next' in _temp52) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp52 instanceof AbruptCompletion) return _temp52;
   /* c8 ignore if */
@@ -44432,7 +44504,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
   /* ReturnIfAbrupt */
   let _temp56 = yield* ToString(string);
   /* c8 ignore if */
-  if (_temp56 && typeof _temp56 === 'object' && 'next' in _temp56) throw new Assert.Error('Forgot to yield*');
+  if (_temp56 && typeof _temp56 === 'object' && 'next' in _temp56) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp56 instanceof AbruptCompletion) return _temp56;
   /* c8 ignore if */
@@ -44447,7 +44519,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
     /* ReturnIfAbrupt */
     let _temp57 = yield* ToString(replaceValue);
     /* c8 ignore if */
-    if (_temp57 && typeof _temp57 === 'object' && 'next' in _temp57) throw new Assert.Error('Forgot to yield*');
+    if (_temp57 && typeof _temp57 === 'object' && 'next' in _temp57) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp57 instanceof AbruptCompletion) return _temp57;
     /* c8 ignore if */
@@ -44459,7 +44531,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
   /* ReturnIfAbrupt */
   let _temp79 = yield* Get(rx, Value('flags'));
   /* c8 ignore if */
-  if (_temp79 && typeof _temp79 === 'object' && 'next' in _temp79) throw new Assert.Error('Forgot to yield*');
+  if (_temp79 && typeof _temp79 === 'object' && 'next' in _temp79) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp79 instanceof AbruptCompletion) return _temp79;
   /* c8 ignore if */
@@ -44467,7 +44539,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
   /* ReturnIfAbrupt */
   let _temp58 = yield* ToString(_temp79);
   /* c8 ignore if */
-  if (_temp58 && typeof _temp58 === 'object' && 'next' in _temp58) throw new Assert.Error('Forgot to yield*');
+  if (_temp58 && typeof _temp58 === 'object' && 'next' in _temp58) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp58 instanceof AbruptCompletion) return _temp58;
   /* c8 ignore if */
@@ -44484,7 +44556,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
     /* ReturnIfAbrupt */
     let _temp59 = yield* Set$1(rx, Value('lastIndex'), F(0), Value.true);
     /* c8 ignore if */
-    if (_temp59 && typeof _temp59 === 'object' && 'next' in _temp59) throw new Assert.Error('Forgot to yield*');
+    if (_temp59 && typeof _temp59 === 'object' && 'next' in _temp59) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp59 instanceof AbruptCompletion) return _temp59;
     /* c8 ignore if */
@@ -44499,7 +44571,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
     /* ReturnIfAbrupt */
     let _temp60 = yield* RegExpExec(rx, S);
     /* c8 ignore if */
-    if (_temp60 && typeof _temp60 === 'object' && 'next' in _temp60) throw new Assert.Error('Forgot to yield*');
+    if (_temp60 && typeof _temp60 === 'object' && 'next' in _temp60) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp60 instanceof AbruptCompletion) return _temp60;
     /* c8 ignore if */
@@ -44520,7 +44592,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
         /* ReturnIfAbrupt */
         let _temp65 = yield* Get(result, Value('0'));
         /* c8 ignore if */
-        if (_temp65 && typeof _temp65 === 'object' && 'next' in _temp65) throw new Assert.Error('Forgot to yield*');
+        if (_temp65 && typeof _temp65 === 'object' && 'next' in _temp65) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp65 instanceof AbruptCompletion) return _temp65;
         /* c8 ignore if */
@@ -44528,7 +44600,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
         /* ReturnIfAbrupt */
         let _temp61 = yield* ToString(_temp65);
         /* c8 ignore if */
-        if (_temp61 && typeof _temp61 === 'object' && 'next' in _temp61) throw new Assert.Error('Forgot to yield*');
+        if (_temp61 && typeof _temp61 === 'object' && 'next' in _temp61) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp61 instanceof AbruptCompletion) return _temp61;
         /* c8 ignore if */
@@ -44541,7 +44613,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
           /* ReturnIfAbrupt */
           let _temp64 = yield* Get(rx, Value('lastIndex'));
           /* c8 ignore if */
-          if (_temp64 && typeof _temp64 === 'object' && 'next' in _temp64) throw new Assert.Error('Forgot to yield*');
+          if (_temp64 && typeof _temp64 === 'object' && 'next' in _temp64) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp64 instanceof AbruptCompletion) return _temp64;
           /* c8 ignore if */
@@ -44549,7 +44621,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
           /* ReturnIfAbrupt */
           let _temp62 = yield* ToLength(_temp64);
           /* c8 ignore if */
-          if (_temp62 && typeof _temp62 === 'object' && 'next' in _temp62) throw new Assert.Error('Forgot to yield*');
+          if (_temp62 && typeof _temp62 === 'object' && 'next' in _temp62) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp62 instanceof AbruptCompletion) return _temp62;
           /* c8 ignore if */
@@ -44562,7 +44634,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
           /* ReturnIfAbrupt */
           let _temp63 = yield* Set$1(rx, Value('lastIndex'), F(nextIndex), Value.true);
           /* c8 ignore if */
-          if (_temp63 && typeof _temp63 === 'object' && 'next' in _temp63) throw new Assert.Error('Forgot to yield*');
+          if (_temp63 && typeof _temp63 === 'object' && 'next' in _temp63) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp63 instanceof AbruptCompletion) return _temp63;
           /* c8 ignore if */
@@ -44580,7 +44652,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
     /* ReturnIfAbrupt */
     let _temp66 = yield* LengthOfArrayLike(result);
     /* c8 ignore if */
-    if (_temp66 && typeof _temp66 === 'object' && 'next' in _temp66) throw new Assert.Error('Forgot to yield*');
+    if (_temp66 && typeof _temp66 === 'object' && 'next' in _temp66) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp66 instanceof AbruptCompletion) return _temp66;
     /* c8 ignore if */
@@ -44593,7 +44665,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
     /* ReturnIfAbrupt */
     let _temp77 = yield* Get(result, Value('0'));
     /* c8 ignore if */
-    if (_temp77 && typeof _temp77 === 'object' && 'next' in _temp77) throw new Assert.Error('Forgot to yield*');
+    if (_temp77 && typeof _temp77 === 'object' && 'next' in _temp77) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp77 instanceof AbruptCompletion) return _temp77;
     /* c8 ignore if */
@@ -44601,7 +44673,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
     /* ReturnIfAbrupt */
     let _temp67 = yield* ToString(_temp77);
     /* c8 ignore if */
-    if (_temp67 && typeof _temp67 === 'object' && 'next' in _temp67) throw new Assert.Error('Forgot to yield*');
+    if (_temp67 && typeof _temp67 === 'object' && 'next' in _temp67) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp67 instanceof AbruptCompletion) return _temp67;
     /* c8 ignore if */
@@ -44613,7 +44685,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
     /* ReturnIfAbrupt */
     let _temp78 = yield* Get(result, Value('index'));
     /* c8 ignore if */
-    if (_temp78 && typeof _temp78 === 'object' && 'next' in _temp78) throw new Assert.Error('Forgot to yield*');
+    if (_temp78 && typeof _temp78 === 'object' && 'next' in _temp78) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp78 instanceof AbruptCompletion) return _temp78;
     /* c8 ignore if */
@@ -44621,7 +44693,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
     /* ReturnIfAbrupt */
     let _temp68 = yield* ToIntegerOrInfinity(_temp78);
     /* c8 ignore if */
-    if (_temp68 && typeof _temp68 === 'object' && 'next' in _temp68) throw new Assert.Error('Forgot to yield*');
+    if (_temp68 && typeof _temp68 === 'object' && 'next' in _temp68) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp68 instanceof AbruptCompletion) return _temp68;
     /* c8 ignore if */
@@ -44648,7 +44720,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
       /* ReturnIfAbrupt */
       let _temp69 = yield* Get(result, _temp71);
       /* c8 ignore if */
-      if (_temp69 && typeof _temp69 === 'object' && 'next' in _temp69) throw new Assert.Error('Forgot to yield*');
+      if (_temp69 && typeof _temp69 === 'object' && 'next' in _temp69) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp69 instanceof AbruptCompletion) return _temp69;
       /* c8 ignore if */
@@ -44660,7 +44732,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
         /* ReturnIfAbrupt */
         let _temp70 = yield* ToString(capN);
         /* c8 ignore if */
-        if (_temp70 && typeof _temp70 === 'object' && 'next' in _temp70) throw new Assert.Error('Forgot to yield*');
+        if (_temp70 && typeof _temp70 === 'object' && 'next' in _temp70) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp70 instanceof AbruptCompletion) return _temp70;
         /* c8 ignore if */
@@ -44680,7 +44752,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
     /* ReturnIfAbrupt */
     let _temp72 = yield* Get(result, Value('groups'));
     /* c8 ignore if */
-    if (_temp72 && typeof _temp72 === 'object' && 'next' in _temp72) throw new Assert.Error('Forgot to yield*');
+    if (_temp72 && typeof _temp72 === 'object' && 'next' in _temp72) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp72 instanceof AbruptCompletion) return _temp72;
     /* c8 ignore if */
@@ -44700,7 +44772,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
       /* ReturnIfAbrupt */
       let _temp73 = yield* Call(replaceValue, Value.undefined, replacerArgs);
       /* c8 ignore if */
-      if (_temp73 && typeof _temp73 === 'object' && 'next' in _temp73) throw new Assert.Error('Forgot to yield*');
+      if (_temp73 && typeof _temp73 === 'object' && 'next' in _temp73) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp73 instanceof AbruptCompletion) return _temp73;
       /* c8 ignore if */
@@ -44710,7 +44782,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
       /* ReturnIfAbrupt */
       let _temp74 = yield* ToString(replValue);
       /* c8 ignore if */
-      if (_temp74 && typeof _temp74 === 'object' && 'next' in _temp74) throw new Assert.Error('Forgot to yield*');
+      if (_temp74 && typeof _temp74 === 'object' && 'next' in _temp74) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp74 instanceof AbruptCompletion) return _temp74;
       /* c8 ignore if */
@@ -44723,7 +44795,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
         /* ReturnIfAbrupt */
         let _temp75 = ToObject(namedCaptures);
         /* c8 ignore if */
-        if (_temp75 && typeof _temp75 === 'object' && 'next' in _temp75) throw new Assert.Error('Forgot to yield*');
+        if (_temp75 && typeof _temp75 === 'object' && 'next' in _temp75) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp75 instanceof AbruptCompletion) return _temp75;
         /* c8 ignore if */
@@ -44735,7 +44807,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
       /* ReturnIfAbrupt */
       let _temp76 = yield* GetSubstitution(matched, S, position, captures, namedCaptures, replaceValue);
       /* c8 ignore if */
-      if (_temp76 && typeof _temp76 === 'object' && 'next' in _temp76) throw new Assert.Error('Forgot to yield*');
+      if (_temp76 && typeof _temp76 === 'object' && 'next' in _temp76) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp76 instanceof AbruptCompletion) return _temp76;
       /* c8 ignore if */
@@ -44773,7 +44845,7 @@ function* RegExpProto_search([string = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp80 = yield* ToString(string);
   /* c8 ignore if */
-  if (_temp80 && typeof _temp80 === 'object' && 'next' in _temp80) throw new Assert.Error('Forgot to yield*');
+  if (_temp80 && typeof _temp80 === 'object' && 'next' in _temp80) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp80 instanceof AbruptCompletion) return _temp80;
   /* c8 ignore if */
@@ -44782,7 +44854,7 @@ function* RegExpProto_search([string = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp81 = yield* Get(rx, Value('lastIndex'));
   /* c8 ignore if */
-  if (_temp81 && typeof _temp81 === 'object' && 'next' in _temp81) throw new Assert.Error('Forgot to yield*');
+  if (_temp81 && typeof _temp81 === 'object' && 'next' in _temp81) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp81 instanceof AbruptCompletion) return _temp81;
   /* c8 ignore if */
@@ -44792,7 +44864,7 @@ function* RegExpProto_search([string = Value.undefined], {
     /* ReturnIfAbrupt */
     let _temp82 = yield* Set$1(rx, Value('lastIndex'), F(0), Value.true);
     /* c8 ignore if */
-    if (_temp82 && typeof _temp82 === 'object' && 'next' in _temp82) throw new Assert.Error('Forgot to yield*');
+    if (_temp82 && typeof _temp82 === 'object' && 'next' in _temp82) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp82 instanceof AbruptCompletion) return _temp82;
     /* c8 ignore if */
@@ -44801,7 +44873,7 @@ function* RegExpProto_search([string = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp83 = yield* RegExpExec(rx, S);
   /* c8 ignore if */
-  if (_temp83 && typeof _temp83 === 'object' && 'next' in _temp83) throw new Assert.Error('Forgot to yield*');
+  if (_temp83 && typeof _temp83 === 'object' && 'next' in _temp83) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp83 instanceof AbruptCompletion) return _temp83;
   /* c8 ignore if */
@@ -44810,7 +44882,7 @@ function* RegExpProto_search([string = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp84 = yield* Get(rx, Value('lastIndex'));
   /* c8 ignore if */
-  if (_temp84 && typeof _temp84 === 'object' && 'next' in _temp84) throw new Assert.Error('Forgot to yield*');
+  if (_temp84 && typeof _temp84 === 'object' && 'next' in _temp84) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp84 instanceof AbruptCompletion) return _temp84;
   /* c8 ignore if */
@@ -44820,7 +44892,7 @@ function* RegExpProto_search([string = Value.undefined], {
     /* ReturnIfAbrupt */
     let _temp85 = yield* Set$1(rx, Value('lastIndex'), previousLastIndex, Value.true);
     /* c8 ignore if */
-    if (_temp85 && typeof _temp85 === 'object' && 'next' in _temp85) throw new Assert.Error('Forgot to yield*');
+    if (_temp85 && typeof _temp85 === 'object' && 'next' in _temp85) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp85 instanceof AbruptCompletion) return _temp85;
     /* c8 ignore if */
@@ -44865,7 +44937,7 @@ function* RegExpProto_split([string = Value.undefined, limit = Value.undefined],
   /* ReturnIfAbrupt */
   let _temp86 = yield* ToString(string);
   /* c8 ignore if */
-  if (_temp86 && typeof _temp86 === 'object' && 'next' in _temp86) throw new Assert.Error('Forgot to yield*');
+  if (_temp86 && typeof _temp86 === 'object' && 'next' in _temp86) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp86 instanceof AbruptCompletion) return _temp86;
   /* c8 ignore if */
@@ -44874,7 +44946,7 @@ function* RegExpProto_split([string = Value.undefined, limit = Value.undefined],
   /* ReturnIfAbrupt */
   let _temp87 = yield* SpeciesConstructor(rx, surroundingAgent.intrinsic('%RegExp%'));
   /* c8 ignore if */
-  if (_temp87 && typeof _temp87 === 'object' && 'next' in _temp87) throw new Assert.Error('Forgot to yield*');
+  if (_temp87 && typeof _temp87 === 'object' && 'next' in _temp87) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp87 instanceof AbruptCompletion) return _temp87;
   /* c8 ignore if */
@@ -44883,7 +44955,7 @@ function* RegExpProto_split([string = Value.undefined, limit = Value.undefined],
   /* ReturnIfAbrupt */
   let _temp88 = yield* Get(rx, Value('flags'));
   /* c8 ignore if */
-  if (_temp88 && typeof _temp88 === 'object' && 'next' in _temp88) throw new Assert.Error('Forgot to yield*');
+  if (_temp88 && typeof _temp88 === 'object' && 'next' in _temp88) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp88 instanceof AbruptCompletion) return _temp88;
   /* c8 ignore if */
@@ -44892,7 +44964,7 @@ function* RegExpProto_split([string = Value.undefined, limit = Value.undefined],
   /* ReturnIfAbrupt */
   let _temp89 = yield* ToString(flagsValue);
   /* c8 ignore if */
-  if (_temp89 && typeof _temp89 === 'object' && 'next' in _temp89) throw new Assert.Error('Forgot to yield*');
+  if (_temp89 && typeof _temp89 === 'object' && 'next' in _temp89) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp89 instanceof AbruptCompletion) return _temp89;
   /* c8 ignore if */
@@ -44903,7 +44975,7 @@ function* RegExpProto_split([string = Value.undefined, limit = Value.undefined],
   /* ReturnIfAbrupt */
   let _temp90 = yield* Construct(C, [rx, newFlags]);
   /* c8 ignore if */
-  if (_temp90 && typeof _temp90 === 'object' && 'next' in _temp90) throw new Assert.Error('Forgot to yield*');
+  if (_temp90 && typeof _temp90 === 'object' && 'next' in _temp90) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp90 instanceof AbruptCompletion) return _temp90;
   /* c8 ignore if */
@@ -44928,7 +45000,7 @@ function* RegExpProto_split([string = Value.undefined, limit = Value.undefined],
     /* ReturnIfAbrupt */
     let _temp92 = yield* ToUint32(limit);
     /* c8 ignore if */
-    if (_temp92 && typeof _temp92 === 'object' && 'next' in _temp92) throw new Assert.Error('Forgot to yield*');
+    if (_temp92 && typeof _temp92 === 'object' && 'next' in _temp92) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp92 instanceof AbruptCompletion) return _temp92;
     /* c8 ignore if */
@@ -44944,7 +45016,7 @@ function* RegExpProto_split([string = Value.undefined, limit = Value.undefined],
     /* ReturnIfAbrupt */
     let _temp93 = yield* RegExpExec(splitter, S);
     /* c8 ignore if */
-    if (_temp93 && typeof _temp93 === 'object' && 'next' in _temp93) throw new Assert.Error('Forgot to yield*');
+    if (_temp93 && typeof _temp93 === 'object' && 'next' in _temp93) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp93 instanceof AbruptCompletion) return _temp93;
     /* c8 ignore if */
@@ -44970,7 +45042,7 @@ function* RegExpProto_split([string = Value.undefined, limit = Value.undefined],
     /* ReturnIfAbrupt */
     let _temp95 = yield* Set$1(splitter, Value('lastIndex'), F(q), Value.true);
     /* c8 ignore if */
-    if (_temp95 && typeof _temp95 === 'object' && 'next' in _temp95) throw new Assert.Error('Forgot to yield*');
+    if (_temp95 && typeof _temp95 === 'object' && 'next' in _temp95) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp95 instanceof AbruptCompletion) return _temp95;
     /* c8 ignore if */
@@ -44978,7 +45050,7 @@ function* RegExpProto_split([string = Value.undefined, limit = Value.undefined],
     /* ReturnIfAbrupt */
     let _temp96 = yield* RegExpExec(splitter, S);
     /* c8 ignore if */
-    if (_temp96 && typeof _temp96 === 'object' && 'next' in _temp96) throw new Assert.Error('Forgot to yield*');
+    if (_temp96 && typeof _temp96 === 'object' && 'next' in _temp96) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp96 instanceof AbruptCompletion) return _temp96;
     /* c8 ignore if */
@@ -44990,7 +45062,7 @@ function* RegExpProto_split([string = Value.undefined, limit = Value.undefined],
       /* ReturnIfAbrupt */
       let _temp97 = yield* Get(splitter, Value('lastIndex'));
       /* c8 ignore if */
-      if (_temp97 && typeof _temp97 === 'object' && 'next' in _temp97) throw new Assert.Error('Forgot to yield*');
+      if (_temp97 && typeof _temp97 === 'object' && 'next' in _temp97) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp97 instanceof AbruptCompletion) return _temp97;
       /* c8 ignore if */
@@ -44999,7 +45071,7 @@ function* RegExpProto_split([string = Value.undefined, limit = Value.undefined],
       /* ReturnIfAbrupt */
       let _temp98 = yield* ToLength(lastIndex);
       /* c8 ignore if */
-      if (_temp98 && typeof _temp98 === 'object' && 'next' in _temp98) throw new Assert.Error('Forgot to yield*');
+      if (_temp98 && typeof _temp98 === 'object' && 'next' in _temp98) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp98 instanceof AbruptCompletion) return _temp98;
       /* c8 ignore if */
@@ -45038,7 +45110,7 @@ function* RegExpProto_split([string = Value.undefined, limit = Value.undefined],
         /* ReturnIfAbrupt */
         let _temp100 = yield* LengthOfArrayLike(z);
         /* c8 ignore if */
-        if (_temp100 && typeof _temp100 === 'object' && 'next' in _temp100) throw new Assert.Error('Forgot to yield*');
+        if (_temp100 && typeof _temp100 === 'object' && 'next' in _temp100) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp100 instanceof AbruptCompletion) return _temp100;
         /* c8 ignore if */
@@ -45060,7 +45132,7 @@ function* RegExpProto_split([string = Value.undefined, limit = Value.undefined],
           /* ReturnIfAbrupt */
           let _temp101 = yield* Get(z, _temp103);
           /* c8 ignore if */
-          if (_temp101 && typeof _temp101 === 'object' && 'next' in _temp101) throw new Assert.Error('Forgot to yield*');
+          if (_temp101 && typeof _temp101 === 'object' && 'next' in _temp101) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp101 instanceof AbruptCompletion) return _temp101;
           /* c8 ignore if */
@@ -45145,7 +45217,7 @@ function* RegExpProto_test([S = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp108 = yield* ToString(S);
   /* c8 ignore if */
-  if (_temp108 && typeof _temp108 === 'object' && 'next' in _temp108) throw new Assert.Error('Forgot to yield*');
+  if (_temp108 && typeof _temp108 === 'object' && 'next' in _temp108) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp108 instanceof AbruptCompletion) return _temp108;
   /* c8 ignore if */
@@ -45154,7 +45226,7 @@ function* RegExpProto_test([S = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp109 = yield* RegExpExec(R, string);
   /* c8 ignore if */
-  if (_temp109 && typeof _temp109 === 'object' && 'next' in _temp109) throw new Assert.Error('Forgot to yield*');
+  if (_temp109 && typeof _temp109 === 'object' && 'next' in _temp109) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp109 instanceof AbruptCompletion) return _temp109;
   /* c8 ignore if */
@@ -45178,7 +45250,7 @@ function* RegExpProto_toString(_args, {
   /* ReturnIfAbrupt */
   let _temp112 = yield* Get(R, Value('source'));
   /* c8 ignore if */
-  if (_temp112 && typeof _temp112 === 'object' && 'next' in _temp112) throw new Assert.Error('Forgot to yield*');
+  if (_temp112 && typeof _temp112 === 'object' && 'next' in _temp112) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp112 instanceof AbruptCompletion) return _temp112;
   /* c8 ignore if */
@@ -45186,7 +45258,7 @@ function* RegExpProto_toString(_args, {
   /* ReturnIfAbrupt */
   let _temp110 = yield* ToString(_temp112);
   /* c8 ignore if */
-  if (_temp110 && typeof _temp110 === 'object' && 'next' in _temp110) throw new Assert.Error('Forgot to yield*');
+  if (_temp110 && typeof _temp110 === 'object' && 'next' in _temp110) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp110 instanceof AbruptCompletion) return _temp110;
   /* c8 ignore if */
@@ -45195,7 +45267,7 @@ function* RegExpProto_toString(_args, {
   /* ReturnIfAbrupt */
   let _temp113 = yield* Get(R, Value('flags'));
   /* c8 ignore if */
-  if (_temp113 && typeof _temp113 === 'object' && 'next' in _temp113) throw new Assert.Error('Forgot to yield*');
+  if (_temp113 && typeof _temp113 === 'object' && 'next' in _temp113) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp113 instanceof AbruptCompletion) return _temp113;
   /* c8 ignore if */
@@ -45203,7 +45275,7 @@ function* RegExpProto_toString(_args, {
   /* ReturnIfAbrupt */
   let _temp111 = yield* ToString(_temp113);
   /* c8 ignore if */
-  if (_temp111 && typeof _temp111 === 'object' && 'next' in _temp111) throw new Assert.Error('Forgot to yield*');
+  if (_temp111 && typeof _temp111 === 'object' && 'next' in _temp111) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp111 instanceof AbruptCompletion) return _temp111;
   /* c8 ignore if */
@@ -45256,7 +45328,7 @@ function* PromiseProto_finally([onFinally = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp = yield* SpeciesConstructor(promise, surroundingAgent.intrinsic('%Promise%'));
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -45279,7 +45351,7 @@ function* PromiseProto_finally([onFinally = Value.undefined], {
       /* ReturnIfAbrupt */
       let _temp2 = yield* Call(onFinally, Value.undefined);
       /* c8 ignore if */
-      if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+      if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp2 instanceof AbruptCompletion) return _temp2;
       /* c8 ignore if */
@@ -45290,7 +45362,7 @@ function* PromiseProto_finally([onFinally = Value.undefined], {
       /* ReturnIfAbrupt */
       let _temp3 = yield* PromiseResolve(C, result);
       /* c8 ignore if */
-      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp3 instanceof AbruptCompletion) return _temp3;
       /* c8 ignore if */
@@ -45331,7 +45403,7 @@ function* PromiseProto_finally([onFinally = Value.undefined], {
       /* ReturnIfAbrupt */
       let _temp6 = yield* Call(onFinally, Value.undefined);
       /* c8 ignore if */
-      if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+      if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp6 instanceof AbruptCompletion) return _temp6;
       /* c8 ignore if */
@@ -45342,7 +45414,7 @@ function* PromiseProto_finally([onFinally = Value.undefined], {
       /* ReturnIfAbrupt */
       let _temp7 = yield* PromiseResolve(C, result);
       /* c8 ignore if */
-      if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+      if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp7 instanceof AbruptCompletion) return _temp7;
       /* c8 ignore if */
@@ -45398,7 +45470,7 @@ function* PromiseProto_then([onFulfilled = Value.undefined, onRejected = Value.u
   /* ReturnIfAbrupt */
   let _temp10 = yield* SpeciesConstructor(promise, surroundingAgent.intrinsic('%Promise%'));
   /* c8 ignore if */
-  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp10 instanceof AbruptCompletion) return _temp10;
   /* c8 ignore if */
@@ -45408,7 +45480,7 @@ function* PromiseProto_then([onFulfilled = Value.undefined, onRejected = Value.u
   /* ReturnIfAbrupt */
   let _temp11 = yield* NewPromiseCapability(C);
   /* c8 ignore if */
-  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp11 instanceof AbruptCompletion) return _temp11;
   /* c8 ignore if */
@@ -45418,7 +45490,7 @@ function* PromiseProto_then([onFulfilled = Value.undefined, onRejected = Value.u
   /* ReturnIfAbrupt */
   let _temp12 = surroundingAgent.debugger_tryTouchDuringPreview(promise);
   /* c8 ignore if */
-  if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield*');
+  if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp12 instanceof AbruptCompletion) return _temp12;
   /* c8 ignore if */
@@ -45464,7 +45536,7 @@ function* PromiseConstructor([executor = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp = yield* OrdinaryCreateFromConstructor(NewTarget, '%Promise.prototype%', ['PromiseState', 'PromiseResult', 'PromiseFulfillReactions', 'PromiseRejectReactions', 'PromiseIsHandled']);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -45487,7 +45559,7 @@ function* PromiseConstructor([executor = Value.undefined], {
     /* ReturnIfAbrupt */
     let _temp2 = yield* Call(resolvingFunctions.Reject, Value.undefined, [completion.Value]);
     /* c8 ignore if */
-    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp2 instanceof AbruptCompletion) return _temp2;
     /* c8 ignore if */
@@ -45528,7 +45600,7 @@ function* GetPromiseResolve(promiseConstructor) {
   /* ReturnIfAbrupt */
   let _temp3 = yield* Get(promiseConstructor, Value('resolve'));
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -45564,7 +45636,7 @@ function* PerformPromiseAll(iteratorRecord, constructor, resultCapability, promi
     /* ReturnIfAbrupt */
     let _temp4 = yield* IteratorStepValue(iteratorRecord);
     /* c8 ignore if */
-    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) return _temp4;
     /* c8 ignore if */
@@ -45583,7 +45655,7 @@ function* PerformPromiseAll(iteratorRecord, constructor, resultCapability, promi
         /* ReturnIfAbrupt */
         let _temp5 = yield* Call(resultCapability.Resolve, Value.undefined, [valuesArray]);
         /* c8 ignore if */
-        if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+        if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp5 instanceof AbruptCompletion) return _temp5;
         /* c8 ignore if */
@@ -45598,7 +45670,7 @@ function* PerformPromiseAll(iteratorRecord, constructor, resultCapability, promi
     /* ReturnIfAbrupt */
     let _temp6 = yield* Call(promiseResolve, constructor, [next]);
     /* c8 ignore if */
-    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp6 instanceof AbruptCompletion) return _temp6;
     /* c8 ignore if */
@@ -45638,7 +45710,7 @@ function* PerformPromiseAll(iteratorRecord, constructor, resultCapability, promi
     /* ReturnIfAbrupt */
     let _temp8 = yield* Invoke(nextPromise, Value('then'), [onFulfilled, resultCapability.Reject]);
     /* c8 ignore if */
-    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp8 instanceof AbruptCompletion) return _temp8;
     /* c8 ignore if */
@@ -45659,7 +45731,7 @@ function* Promise_all([iterable = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp9 = yield* NewPromiseCapability(C);
   /* c8 ignore if */
-  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp9 instanceof AbruptCompletion) return _temp9;
   /* c8 ignore if */
@@ -45864,7 +45936,7 @@ function* PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability
     /* ReturnIfAbrupt */
     let _temp19 = yield* IteratorStepValue(iteratorRecord);
     /* c8 ignore if */
-    if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield*');
+    if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp19 instanceof AbruptCompletion) return _temp19;
     /* c8 ignore if */
@@ -45893,7 +45965,7 @@ function* PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability
         /* ReturnIfAbrupt */
         let _temp21 = yield* Call(resultCapability.Resolve, Value.undefined, [valuesArray]);
         /* c8 ignore if */
-        if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield*');
+        if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp21 instanceof AbruptCompletion) return _temp21;
         /* c8 ignore if */
@@ -45908,7 +45980,7 @@ function* PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability
     /* ReturnIfAbrupt */
     let _temp22 = yield* Call(promiseResolve, constructor, [next]);
     /* c8 ignore if */
-    if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield*');
+    if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp22 instanceof AbruptCompletion) return _temp22;
     /* c8 ignore if */
@@ -45976,7 +46048,7 @@ function* PerformPromiseAllSettled(iteratorRecord, constructor, resultCapability
     /* ReturnIfAbrupt */
     let _temp25 = yield* Invoke(nextPromise, Value('then'), [onFulfilled, onRejected]);
     /* c8 ignore if */
-    if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield*');
+    if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp25 instanceof AbruptCompletion) return _temp25;
     /* c8 ignore if */
@@ -45997,7 +46069,7 @@ function* Promise_allSettled([iterable = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp26 = yield* NewPromiseCapability(C);
   /* c8 ignore if */
-  if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield*');
+  if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp26 instanceof AbruptCompletion) return _temp26;
   /* c8 ignore if */
@@ -46154,7 +46226,7 @@ function* PerformPromiseAny(iteratorRecord, constructor, resultCapability, promi
     /* ReturnIfAbrupt */
     let _temp31 = yield* IteratorStepValue(iteratorRecord);
     /* c8 ignore if */
-    if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) throw new Assert.Error('Forgot to yield*');
+    if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp31 instanceof AbruptCompletion) return _temp31;
     /* c8 ignore if */
@@ -46207,7 +46279,7 @@ function* PerformPromiseAny(iteratorRecord, constructor, resultCapability, promi
     /* ReturnIfAbrupt */
     let _temp34 = yield* Call(promiseResolve, constructor, [next]);
     /* c8 ignore if */
-    if (_temp34 && typeof _temp34 === 'object' && 'next' in _temp34) throw new Assert.Error('Forgot to yield*');
+    if (_temp34 && typeof _temp34 === 'object' && 'next' in _temp34) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp34 instanceof AbruptCompletion) return _temp34;
     /* c8 ignore if */
@@ -46247,7 +46319,7 @@ function* PerformPromiseAny(iteratorRecord, constructor, resultCapability, promi
     /* ReturnIfAbrupt */
     let _temp36 = yield* Invoke(nextPromise, Value('then'), [resultCapability.Resolve, onRejected]);
     /* c8 ignore if */
-    if (_temp36 && typeof _temp36 === 'object' && 'next' in _temp36) throw new Assert.Error('Forgot to yield*');
+    if (_temp36 && typeof _temp36 === 'object' && 'next' in _temp36) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp36 instanceof AbruptCompletion) return _temp36;
     /* c8 ignore if */
@@ -46268,7 +46340,7 @@ function* Promise_any([iterable = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp37 = yield* NewPromiseCapability(C);
   /* c8 ignore if */
-  if (_temp37 && typeof _temp37 === 'object' && 'next' in _temp37) throw new Assert.Error('Forgot to yield*');
+  if (_temp37 && typeof _temp37 === 'object' && 'next' in _temp37) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp37 instanceof AbruptCompletion) return _temp37;
   /* c8 ignore if */
@@ -46333,7 +46405,7 @@ function* PerformPromiseRace(iteratorRecord, constructor, resultCapability, prom
     /* ReturnIfAbrupt */
     let _temp38 = yield* IteratorStepValue(iteratorRecord);
     /* c8 ignore if */
-    if (_temp38 && typeof _temp38 === 'object' && 'next' in _temp38) throw new Assert.Error('Forgot to yield*');
+    if (_temp38 && typeof _temp38 === 'object' && 'next' in _temp38) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp38 instanceof AbruptCompletion) return _temp38;
     /* c8 ignore if */
@@ -46349,7 +46421,7 @@ function* PerformPromiseRace(iteratorRecord, constructor, resultCapability, prom
     /* ReturnIfAbrupt */
     let _temp39 = yield* Call(promiseResolve, constructor, [next]);
     /* c8 ignore if */
-    if (_temp39 && typeof _temp39 === 'object' && 'next' in _temp39) throw new Assert.Error('Forgot to yield*');
+    if (_temp39 && typeof _temp39 === 'object' && 'next' in _temp39) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp39 instanceof AbruptCompletion) return _temp39;
     /* c8 ignore if */
@@ -46359,7 +46431,7 @@ function* PerformPromiseRace(iteratorRecord, constructor, resultCapability, prom
     /* ReturnIfAbrupt */
     let _temp40 = yield* Invoke(nextPromise, Value('then'), [resultCapability.Resolve, resultCapability.Reject]);
     /* c8 ignore if */
-    if (_temp40 && typeof _temp40 === 'object' && 'next' in _temp40) throw new Assert.Error('Forgot to yield*');
+    if (_temp40 && typeof _temp40 === 'object' && 'next' in _temp40) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp40 instanceof AbruptCompletion) return _temp40;
     /* c8 ignore if */
@@ -46377,7 +46449,7 @@ function* Promise_race([iterable = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp41 = yield* NewPromiseCapability(C);
   /* c8 ignore if */
-  if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) throw new Assert.Error('Forgot to yield*');
+  if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp41 instanceof AbruptCompletion) return _temp41;
   /* c8 ignore if */
@@ -46441,7 +46513,7 @@ function* Promise_reject([r = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp42 = yield* NewPromiseCapability(C);
   /* c8 ignore if */
-  if (_temp42 && typeof _temp42 === 'object' && 'next' in _temp42) throw new Assert.Error('Forgot to yield*');
+  if (_temp42 && typeof _temp42 === 'object' && 'next' in _temp42) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp42 instanceof AbruptCompletion) return _temp42;
   /* c8 ignore if */
@@ -46451,7 +46523,7 @@ function* Promise_reject([r = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp43 = yield* Call(promiseCapability.Reject, Value.undefined, [r]);
   /* c8 ignore if */
-  if (_temp43 && typeof _temp43 === 'object' && 'next' in _temp43) throw new Assert.Error('Forgot to yield*');
+  if (_temp43 && typeof _temp43 === 'object' && 'next' in _temp43) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp43 instanceof AbruptCompletion) return _temp43;
   /* c8 ignore if */
@@ -46499,7 +46571,7 @@ function* Promise_try([callback, ...args], {
   /* ReturnIfAbrupt */
   let _temp44 = yield* NewPromiseCapability(C);
   /* c8 ignore if */
-  if (_temp44 && typeof _temp44 === 'object' && 'next' in _temp44) throw new Assert.Error('Forgot to yield*');
+  if (_temp44 && typeof _temp44 === 'object' && 'next' in _temp44) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp44 instanceof AbruptCompletion) return _temp44;
   /* c8 ignore if */
@@ -46511,7 +46583,7 @@ function* Promise_try([callback, ...args], {
     /* ReturnIfAbrupt */
     let _temp45 = yield* Call(promiseCapability.Reject, Value.undefined, [status.Value]);
     /* c8 ignore if */
-    if (_temp45 && typeof _temp45 === 'object' && 'next' in _temp45) throw new Assert.Error('Forgot to yield*');
+    if (_temp45 && typeof _temp45 === 'object' && 'next' in _temp45) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp45 instanceof AbruptCompletion) return _temp45;
     /* c8 ignore if */
@@ -46520,7 +46592,7 @@ function* Promise_try([callback, ...args], {
     /* ReturnIfAbrupt */
     let _temp46 = yield* Call(promiseCapability.Resolve, Value.undefined, [status.Value]);
     /* c8 ignore if */
-    if (_temp46 && typeof _temp46 === 'object' && 'next' in _temp46) throw new Assert.Error('Forgot to yield*');
+    if (_temp46 && typeof _temp46 === 'object' && 'next' in _temp46) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp46 instanceof AbruptCompletion) return _temp46;
     /* c8 ignore if */
@@ -46541,7 +46613,7 @@ function* Promise_withResolvers(_args, {
   /* ReturnIfAbrupt */
   let _temp47 = yield* NewPromiseCapability(C);
   /* c8 ignore if */
-  if (_temp47 && typeof _temp47 === 'object' && 'next' in _temp47) throw new Assert.Error('Forgot to yield*');
+  if (_temp47 && typeof _temp47 === 'object' && 'next' in _temp47) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp47 instanceof AbruptCompletion) return _temp47;
   /* c8 ignore if */
@@ -46659,7 +46731,7 @@ function Proxy_revocable([target = Value.undefined, handler = Value.undefined]) 
   /* ReturnIfAbrupt */
   let _temp = ProxyCreate(target, handler);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -46728,7 +46800,7 @@ function* Reflect_apply([target = Value.undefined, thisArgument = Value.undefine
   /* ReturnIfAbrupt */
   let _temp = yield* CreateListFromArrayLike(argumentsList);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -46758,7 +46830,7 @@ function* Reflect_construct([target = Value.undefined, argumentsList = Value.und
   /* ReturnIfAbrupt */
   let _temp2 = yield* CreateListFromArrayLike(argumentsList);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -46779,7 +46851,7 @@ function* Reflect_defineProperty([target = Value.undefined, propertyKey = Value.
   /* ReturnIfAbrupt */
   let _temp3 = yield* ToPropertyKey(propertyKey);
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -46789,7 +46861,7 @@ function* Reflect_defineProperty([target = Value.undefined, propertyKey = Value.
   /* ReturnIfAbrupt */
   let _temp4 = yield* ToPropertyDescriptor(attributes);
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -46810,7 +46882,7 @@ function* Reflect_deleteProperty([target = Value.undefined, propertyKey = Value.
   /* ReturnIfAbrupt */
   let _temp5 = yield* ToPropertyKey(propertyKey);
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -46831,7 +46903,7 @@ function* Reflect_get([target = Value.undefined, propertyKey = Value.undefined, 
   /* ReturnIfAbrupt */
   let _temp6 = yield* ToPropertyKey(propertyKey);
   /* c8 ignore if */
-  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp6 instanceof AbruptCompletion) return _temp6;
   /* c8 ignore if */
@@ -46857,7 +46929,7 @@ function* Reflect_getOwnPropertyDescriptor([target = Value.undefined, propertyKe
   /* ReturnIfAbrupt */
   let _temp7 = yield* ToPropertyKey(propertyKey);
   /* c8 ignore if */
-  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp7 instanceof AbruptCompletion) return _temp7;
   /* c8 ignore if */
@@ -46867,7 +46939,7 @@ function* Reflect_getOwnPropertyDescriptor([target = Value.undefined, propertyKe
   /* ReturnIfAbrupt */
   let _temp8 = yield* target.GetOwnProperty(key);
   /* c8 ignore if */
-  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp8 instanceof AbruptCompletion) return _temp8;
   /* c8 ignore if */
@@ -46899,7 +46971,7 @@ function* Reflect_has([target = Value.undefined, propertyKey = Value.undefined])
   /* ReturnIfAbrupt */
   let _temp9 = yield* ToPropertyKey(propertyKey);
   /* c8 ignore if */
-  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp9 instanceof AbruptCompletion) return _temp9;
   /* c8 ignore if */
@@ -46931,7 +47003,7 @@ function* Reflect_ownKeys([target = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp10 = yield* target.OwnPropertyKeys();
   /* c8 ignore if */
-  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp10 instanceof AbruptCompletion) return _temp10;
   /* c8 ignore if */
@@ -46963,7 +47035,7 @@ function* Reflect_set([target = Value.undefined, propertyKey = Value.undefined, 
   /* ReturnIfAbrupt */
   let _temp11 = yield* ToPropertyKey(propertyKey);
   /* c8 ignore if */
-  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp11 instanceof AbruptCompletion) return _temp11;
   /* c8 ignore if */
@@ -47016,7 +47088,7 @@ function* StringProto_charAt([pos = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -47025,7 +47097,7 @@ function* StringProto_charAt([pos = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp2 = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -47034,7 +47106,7 @@ function* StringProto_charAt([pos = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp3 = yield* ToIntegerOrInfinity(pos);
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -47055,7 +47127,7 @@ function* StringProto_charCodeAt([pos = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp4 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -47064,7 +47136,7 @@ function* StringProto_charCodeAt([pos = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp5 = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -47073,7 +47145,7 @@ function* StringProto_charCodeAt([pos = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp6 = yield* ToIntegerOrInfinity(pos);
   /* c8 ignore if */
-  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp6 instanceof AbruptCompletion) return _temp6;
   /* c8 ignore if */
@@ -47094,7 +47166,7 @@ function* StringProto_codePointAt([pos = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp7 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp7 instanceof AbruptCompletion) return _temp7;
   /* c8 ignore if */
@@ -47103,7 +47175,7 @@ function* StringProto_codePointAt([pos = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp8 = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp8 instanceof AbruptCompletion) return _temp8;
   /* c8 ignore if */
@@ -47112,7 +47184,7 @@ function* StringProto_codePointAt([pos = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp9 = yield* ToIntegerOrInfinity(pos);
   /* c8 ignore if */
-  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp9 instanceof AbruptCompletion) return _temp9;
   /* c8 ignore if */
@@ -47144,7 +47216,7 @@ function* StringProto_concat(args, {
   /* ReturnIfAbrupt */
   let _temp11 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp11 instanceof AbruptCompletion) return _temp11;
   /* c8 ignore if */
@@ -47153,7 +47225,7 @@ function* StringProto_concat(args, {
   /* ReturnIfAbrupt */
   let _temp12 = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield*');
+  if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp12 instanceof AbruptCompletion) return _temp12;
   /* c8 ignore if */
@@ -47166,7 +47238,7 @@ function* StringProto_concat(args, {
     /* ReturnIfAbrupt */
     let _temp13 = yield* ToString(next);
     /* c8 ignore if */
-    if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield*');
+    if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp13 instanceof AbruptCompletion) return _temp13;
     /* c8 ignore if */
@@ -47185,7 +47257,7 @@ function* StringProto_endsWith([searchString = Value.undefined, endPosition = Va
   /* ReturnIfAbrupt */
   let _temp14 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield*');
+  if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp14 instanceof AbruptCompletion) return _temp14;
   /* c8 ignore if */
@@ -47194,7 +47266,7 @@ function* StringProto_endsWith([searchString = Value.undefined, endPosition = Va
   /* ReturnIfAbrupt */
   let _temp15 = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield*');
+  if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp15 instanceof AbruptCompletion) return _temp15;
   /* c8 ignore if */
@@ -47203,7 +47275,7 @@ function* StringProto_endsWith([searchString = Value.undefined, endPosition = Va
   /* ReturnIfAbrupt */
   let _temp16 = yield* IsRegExp(searchString);
   /* c8 ignore if */
-  if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield*');
+  if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp16 instanceof AbruptCompletion) return _temp16;
   /* c8 ignore if */
@@ -47215,7 +47287,7 @@ function* StringProto_endsWith([searchString = Value.undefined, endPosition = Va
   /* ReturnIfAbrupt */
   let _temp17 = yield* ToString(searchString);
   /* c8 ignore if */
-  if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield*');
+  if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp17 instanceof AbruptCompletion) return _temp17;
   /* c8 ignore if */
@@ -47229,7 +47301,7 @@ function* StringProto_endsWith([searchString = Value.undefined, endPosition = Va
     /* ReturnIfAbrupt */
     let _temp18 = yield* ToIntegerOrInfinity(endPosition);
     /* c8 ignore if */
-    if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield*');
+    if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp18 instanceof AbruptCompletion) return _temp18;
     /* c8 ignore if */
@@ -47258,7 +47330,7 @@ function* StringProto_includes([searchString = Value.undefined, position = Value
   /* ReturnIfAbrupt */
   let _temp19 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield*');
+  if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp19 instanceof AbruptCompletion) return _temp19;
   /* c8 ignore if */
@@ -47267,7 +47339,7 @@ function* StringProto_includes([searchString = Value.undefined, position = Value
   /* ReturnIfAbrupt */
   let _temp20 = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield*');
+  if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp20 instanceof AbruptCompletion) return _temp20;
   /* c8 ignore if */
@@ -47276,7 +47348,7 @@ function* StringProto_includes([searchString = Value.undefined, position = Value
   /* ReturnIfAbrupt */
   let _temp21 = yield* IsRegExp(searchString);
   /* c8 ignore if */
-  if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield*');
+  if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp21 instanceof AbruptCompletion) return _temp21;
   /* c8 ignore if */
@@ -47288,7 +47360,7 @@ function* StringProto_includes([searchString = Value.undefined, position = Value
   /* ReturnIfAbrupt */
   let _temp22 = yield* ToString(searchString);
   /* c8 ignore if */
-  if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield*');
+  if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp22 instanceof AbruptCompletion) return _temp22;
   /* c8 ignore if */
@@ -47297,7 +47369,7 @@ function* StringProto_includes([searchString = Value.undefined, position = Value
   /* ReturnIfAbrupt */
   let _temp23 = yield* ToIntegerOrInfinity(position);
   /* c8 ignore if */
-  if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield*');
+  if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp23 instanceof AbruptCompletion) return _temp23;
   /* c8 ignore if */
@@ -47332,7 +47404,7 @@ function* StringProto_indexOf([searchString = Value.undefined, position = Value.
   /* ReturnIfAbrupt */
   let _temp24 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) throw new Assert.Error('Forgot to yield*');
+  if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp24 instanceof AbruptCompletion) return _temp24;
   /* c8 ignore if */
@@ -47343,7 +47415,7 @@ function* StringProto_indexOf([searchString = Value.undefined, position = Value.
   /* ReturnIfAbrupt */
   let _temp25 = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield*');
+  if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp25 instanceof AbruptCompletion) return _temp25;
   /* c8 ignore if */
@@ -47353,7 +47425,7 @@ function* StringProto_indexOf([searchString = Value.undefined, position = Value.
   /* ReturnIfAbrupt */
   let _temp26 = yield* ToString(searchString);
   /* c8 ignore if */
-  if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield*');
+  if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp26 instanceof AbruptCompletion) return _temp26;
   /* c8 ignore if */
@@ -47363,7 +47435,7 @@ function* StringProto_indexOf([searchString = Value.undefined, position = Value.
   /* ReturnIfAbrupt */
   let _temp27 = yield* ToIntegerOrInfinity(position);
   /* c8 ignore if */
-  if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield*');
+  if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp27 instanceof AbruptCompletion) return _temp27;
   /* c8 ignore if */
@@ -47397,7 +47469,7 @@ function* StringProto_isWellFormed(_args, {
   /* ReturnIfAbrupt */
   let _temp29 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp29 && typeof _temp29 === 'object' && 'next' in _temp29) throw new Assert.Error('Forgot to yield*');
+  if (_temp29 && typeof _temp29 === 'object' && 'next' in _temp29) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp29 instanceof AbruptCompletion) return _temp29;
   /* c8 ignore if */
@@ -47408,7 +47480,7 @@ function* StringProto_isWellFormed(_args, {
   /* ReturnIfAbrupt */
   let _temp30 = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) throw new Assert.Error('Forgot to yield*');
+  if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp30 instanceof AbruptCompletion) return _temp30;
   /* c8 ignore if */
@@ -47426,7 +47498,7 @@ function* StringProto_lastIndexOf([searchString = Value.undefined, position = Va
   /* ReturnIfAbrupt */
   let _temp31 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) throw new Assert.Error('Forgot to yield*');
+  if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp31 instanceof AbruptCompletion) return _temp31;
   /* c8 ignore if */
@@ -47435,7 +47507,7 @@ function* StringProto_lastIndexOf([searchString = Value.undefined, position = Va
   /* ReturnIfAbrupt */
   let _temp32 = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp32 && typeof _temp32 === 'object' && 'next' in _temp32) throw new Assert.Error('Forgot to yield*');
+  if (_temp32 && typeof _temp32 === 'object' && 'next' in _temp32) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp32 instanceof AbruptCompletion) return _temp32;
   /* c8 ignore if */
@@ -47444,7 +47516,7 @@ function* StringProto_lastIndexOf([searchString = Value.undefined, position = Va
   /* ReturnIfAbrupt */
   let _temp33 = yield* ToString(searchString);
   /* c8 ignore if */
-  if (_temp33 && typeof _temp33 === 'object' && 'next' in _temp33) throw new Assert.Error('Forgot to yield*');
+  if (_temp33 && typeof _temp33 === 'object' && 'next' in _temp33) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp33 instanceof AbruptCompletion) return _temp33;
   /* c8 ignore if */
@@ -47453,7 +47525,7 @@ function* StringProto_lastIndexOf([searchString = Value.undefined, position = Va
   /* ReturnIfAbrupt */
   let _temp34 = yield* ToNumber(position);
   /* c8 ignore if */
-  if (_temp34 && typeof _temp34 === 'object' && 'next' in _temp34) throw new Assert.Error('Forgot to yield*');
+  if (_temp34 && typeof _temp34 === 'object' && 'next' in _temp34) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp34 instanceof AbruptCompletion) return _temp34;
   /* c8 ignore if */
@@ -47506,7 +47578,7 @@ function* StringProto_localeCompare([that = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp36 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp36 && typeof _temp36 === 'object' && 'next' in _temp36) throw new Assert.Error('Forgot to yield*');
+  if (_temp36 && typeof _temp36 === 'object' && 'next' in _temp36) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp36 instanceof AbruptCompletion) return _temp36;
   /* c8 ignore if */
@@ -47515,7 +47587,7 @@ function* StringProto_localeCompare([that = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp37 = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp37 && typeof _temp37 === 'object' && 'next' in _temp37) throw new Assert.Error('Forgot to yield*');
+  if (_temp37 && typeof _temp37 === 'object' && 'next' in _temp37) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp37 instanceof AbruptCompletion) return _temp37;
   /* c8 ignore if */
@@ -47524,7 +47596,7 @@ function* StringProto_localeCompare([that = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp38 = yield* ToString(that);
   /* c8 ignore if */
-  if (_temp38 && typeof _temp38 === 'object' && 'next' in _temp38) throw new Assert.Error('Forgot to yield*');
+  if (_temp38 && typeof _temp38 === 'object' && 'next' in _temp38) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp38 instanceof AbruptCompletion) return _temp38;
   /* c8 ignore if */
@@ -47547,7 +47619,7 @@ function* StringProto_match([regexp = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp39 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp39 && typeof _temp39 === 'object' && 'next' in _temp39) throw new Assert.Error('Forgot to yield*');
+  if (_temp39 && typeof _temp39 === 'object' && 'next' in _temp39) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp39 instanceof AbruptCompletion) return _temp39;
   /* c8 ignore if */
@@ -47557,7 +47629,7 @@ function* StringProto_match([regexp = Value.undefined], {
     /* ReturnIfAbrupt */
     let _temp40 = yield* GetMethod(regexp, wellKnownSymbols.match);
     /* c8 ignore if */
-    if (_temp40 && typeof _temp40 === 'object' && 'next' in _temp40) throw new Assert.Error('Forgot to yield*');
+    if (_temp40 && typeof _temp40 === 'object' && 'next' in _temp40) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp40 instanceof AbruptCompletion) return _temp40;
     /* c8 ignore if */
@@ -47570,7 +47642,7 @@ function* StringProto_match([regexp = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp41 = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) throw new Assert.Error('Forgot to yield*');
+  if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp41 instanceof AbruptCompletion) return _temp41;
   /* c8 ignore if */
@@ -47579,7 +47651,7 @@ function* StringProto_match([regexp = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp42 = yield* RegExpCreate(regexp, Value.undefined);
   /* c8 ignore if */
-  if (_temp42 && typeof _temp42 === 'object' && 'next' in _temp42) throw new Assert.Error('Forgot to yield*');
+  if (_temp42 && typeof _temp42 === 'object' && 'next' in _temp42) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp42 instanceof AbruptCompletion) return _temp42;
   /* c8 ignore if */
@@ -47596,7 +47668,7 @@ function* StringProto_matchAll([regexp = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp43 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp43 && typeof _temp43 === 'object' && 'next' in _temp43) throw new Assert.Error('Forgot to yield*');
+  if (_temp43 && typeof _temp43 === 'object' && 'next' in _temp43) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp43 instanceof AbruptCompletion) return _temp43;
   /* c8 ignore if */
@@ -47608,7 +47680,7 @@ function* StringProto_matchAll([regexp = Value.undefined], {
     /* ReturnIfAbrupt */
     let _temp44 = yield* IsRegExp(regexp);
     /* c8 ignore if */
-    if (_temp44 && typeof _temp44 === 'object' && 'next' in _temp44) throw new Assert.Error('Forgot to yield*');
+    if (_temp44 && typeof _temp44 === 'object' && 'next' in _temp44) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp44 instanceof AbruptCompletion) return _temp44;
     /* c8 ignore if */
@@ -47620,7 +47692,7 @@ function* StringProto_matchAll([regexp = Value.undefined], {
       /* ReturnIfAbrupt */
       let _temp45 = yield* Get(regexp, Value('flags'));
       /* c8 ignore if */
-      if (_temp45 && typeof _temp45 === 'object' && 'next' in _temp45) throw new Assert.Error('Forgot to yield*');
+      if (_temp45 && typeof _temp45 === 'object' && 'next' in _temp45) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp45 instanceof AbruptCompletion) return _temp45;
       /* c8 ignore if */
@@ -47631,7 +47703,7 @@ function* StringProto_matchAll([regexp = Value.undefined], {
       /* ReturnIfAbrupt */
       let _temp46 = RequireObjectCoercible(flags);
       /* c8 ignore if */
-      if (_temp46 && typeof _temp46 === 'object' && 'next' in _temp46) throw new Assert.Error('Forgot to yield*');
+      if (_temp46 && typeof _temp46 === 'object' && 'next' in _temp46) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp46 instanceof AbruptCompletion) return _temp46;
       /* c8 ignore if */
@@ -47640,7 +47712,7 @@ function* StringProto_matchAll([regexp = Value.undefined], {
       /* ReturnIfAbrupt */
       let _temp47 = yield* ToString(flags);
       /* c8 ignore if */
-      if (_temp47 && typeof _temp47 === 'object' && 'next' in _temp47) throw new Assert.Error('Forgot to yield*');
+      if (_temp47 && typeof _temp47 === 'object' && 'next' in _temp47) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp47 instanceof AbruptCompletion) return _temp47;
       /* c8 ignore if */
@@ -47653,7 +47725,7 @@ function* StringProto_matchAll([regexp = Value.undefined], {
     /* ReturnIfAbrupt */
     let _temp48 = yield* GetMethod(regexp, wellKnownSymbols.matchAll);
     /* c8 ignore if */
-    if (_temp48 && typeof _temp48 === 'object' && 'next' in _temp48) throw new Assert.Error('Forgot to yield*');
+    if (_temp48 && typeof _temp48 === 'object' && 'next' in _temp48) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp48 instanceof AbruptCompletion) return _temp48;
     /* c8 ignore if */
@@ -47669,7 +47741,7 @@ function* StringProto_matchAll([regexp = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp49 = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp49 && typeof _temp49 === 'object' && 'next' in _temp49) throw new Assert.Error('Forgot to yield*');
+  if (_temp49 && typeof _temp49 === 'object' && 'next' in _temp49) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp49 instanceof AbruptCompletion) return _temp49;
   /* c8 ignore if */
@@ -47679,7 +47751,7 @@ function* StringProto_matchAll([regexp = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp50 = yield* RegExpCreate(regexp, Value('g'));
   /* c8 ignore if */
-  if (_temp50 && typeof _temp50 === 'object' && 'next' in _temp50) throw new Assert.Error('Forgot to yield*');
+  if (_temp50 && typeof _temp50 === 'object' && 'next' in _temp50) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp50 instanceof AbruptCompletion) return _temp50;
   /* c8 ignore if */
@@ -47697,7 +47769,7 @@ function* StringProto_normalize([form = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp51 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp51 && typeof _temp51 === 'object' && 'next' in _temp51) throw new Assert.Error('Forgot to yield*');
+  if (_temp51 && typeof _temp51 === 'object' && 'next' in _temp51) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp51 instanceof AbruptCompletion) return _temp51;
   /* c8 ignore if */
@@ -47706,7 +47778,7 @@ function* StringProto_normalize([form = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp52 = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp52 && typeof _temp52 === 'object' && 'next' in _temp52) throw new Assert.Error('Forgot to yield*');
+  if (_temp52 && typeof _temp52 === 'object' && 'next' in _temp52) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp52 instanceof AbruptCompletion) return _temp52;
   /* c8 ignore if */
@@ -47718,7 +47790,7 @@ function* StringProto_normalize([form = Value.undefined], {
     /* ReturnIfAbrupt */
     let _temp53 = yield* ToString(form);
     /* c8 ignore if */
-    if (_temp53 && typeof _temp53 === 'object' && 'next' in _temp53) throw new Assert.Error('Forgot to yield*');
+    if (_temp53 && typeof _temp53 === 'object' && 'next' in _temp53) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp53 instanceof AbruptCompletion) return _temp53;
     /* c8 ignore if */
@@ -47741,7 +47813,7 @@ function* StringProto_padEnd([maxLength = Value.undefined, fillString = Value.un
   /* ReturnIfAbrupt */
   let _temp54 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp54 && typeof _temp54 === 'object' && 'next' in _temp54) throw new Assert.Error('Forgot to yield*');
+  if (_temp54 && typeof _temp54 === 'object' && 'next' in _temp54) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp54 instanceof AbruptCompletion) return _temp54;
   /* c8 ignore if */
@@ -47758,7 +47830,7 @@ function* StringProto_padStart([maxLength = Value.undefined, fillString = Value.
   /* ReturnIfAbrupt */
   let _temp55 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp55 && typeof _temp55 === 'object' && 'next' in _temp55) throw new Assert.Error('Forgot to yield*');
+  if (_temp55 && typeof _temp55 === 'object' && 'next' in _temp55) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp55 instanceof AbruptCompletion) return _temp55;
   /* c8 ignore if */
@@ -47775,7 +47847,7 @@ function* StringProto_repeat([count = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp56 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp56 && typeof _temp56 === 'object' && 'next' in _temp56) throw new Assert.Error('Forgot to yield*');
+  if (_temp56 && typeof _temp56 === 'object' && 'next' in _temp56) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp56 instanceof AbruptCompletion) return _temp56;
   /* c8 ignore if */
@@ -47784,7 +47856,7 @@ function* StringProto_repeat([count = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp57 = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp57 && typeof _temp57 === 'object' && 'next' in _temp57) throw new Assert.Error('Forgot to yield*');
+  if (_temp57 && typeof _temp57 === 'object' && 'next' in _temp57) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp57 instanceof AbruptCompletion) return _temp57;
   /* c8 ignore if */
@@ -47793,7 +47865,7 @@ function* StringProto_repeat([count = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp58 = yield* ToIntegerOrInfinity(count);
   /* c8 ignore if */
-  if (_temp58 && typeof _temp58 === 'object' && 'next' in _temp58) throw new Assert.Error('Forgot to yield*');
+  if (_temp58 && typeof _temp58 === 'object' && 'next' in _temp58) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp58 instanceof AbruptCompletion) return _temp58;
   /* c8 ignore if */
@@ -47823,7 +47895,7 @@ function* StringProto_replace([searchValue = Value.undefined, replaceValue = Val
   /* ReturnIfAbrupt */
   let _temp59 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp59 && typeof _temp59 === 'object' && 'next' in _temp59) throw new Assert.Error('Forgot to yield*');
+  if (_temp59 && typeof _temp59 === 'object' && 'next' in _temp59) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp59 instanceof AbruptCompletion) return _temp59;
   /* c8 ignore if */
@@ -47833,7 +47905,7 @@ function* StringProto_replace([searchValue = Value.undefined, replaceValue = Val
     /* ReturnIfAbrupt */
     let _temp60 = yield* GetMethod(searchValue, wellKnownSymbols.replace);
     /* c8 ignore if */
-    if (_temp60 && typeof _temp60 === 'object' && 'next' in _temp60) throw new Assert.Error('Forgot to yield*');
+    if (_temp60 && typeof _temp60 === 'object' && 'next' in _temp60) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp60 instanceof AbruptCompletion) return _temp60;
     /* c8 ignore if */
@@ -47846,7 +47918,7 @@ function* StringProto_replace([searchValue = Value.undefined, replaceValue = Val
   /* ReturnIfAbrupt */
   let _temp61 = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp61 && typeof _temp61 === 'object' && 'next' in _temp61) throw new Assert.Error('Forgot to yield*');
+  if (_temp61 && typeof _temp61 === 'object' && 'next' in _temp61) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp61 instanceof AbruptCompletion) return _temp61;
   /* c8 ignore if */
@@ -47855,7 +47927,7 @@ function* StringProto_replace([searchValue = Value.undefined, replaceValue = Val
   /* ReturnIfAbrupt */
   let _temp62 = yield* ToString(searchValue);
   /* c8 ignore if */
-  if (_temp62 && typeof _temp62 === 'object' && 'next' in _temp62) throw new Assert.Error('Forgot to yield*');
+  if (_temp62 && typeof _temp62 === 'object' && 'next' in _temp62) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp62 instanceof AbruptCompletion) return _temp62;
   /* c8 ignore if */
@@ -47866,7 +47938,7 @@ function* StringProto_replace([searchValue = Value.undefined, replaceValue = Val
     /* ReturnIfAbrupt */
     let _temp63 = yield* ToString(replaceValue);
     /* c8 ignore if */
-    if (_temp63 && typeof _temp63 === 'object' && 'next' in _temp63) throw new Assert.Error('Forgot to yield*');
+    if (_temp63 && typeof _temp63 === 'object' && 'next' in _temp63) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp63 instanceof AbruptCompletion) return _temp63;
     /* c8 ignore if */
@@ -47883,7 +47955,7 @@ function* StringProto_replace([searchValue = Value.undefined, replaceValue = Val
     /* ReturnIfAbrupt */
     let _temp64 = yield* Call(replaceValue, Value.undefined, [matched, F(pos), string]);
     /* c8 ignore if */
-    if (_temp64 && typeof _temp64 === 'object' && 'next' in _temp64) throw new Assert.Error('Forgot to yield*');
+    if (_temp64 && typeof _temp64 === 'object' && 'next' in _temp64) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp64 instanceof AbruptCompletion) return _temp64;
     /* c8 ignore if */
@@ -47892,7 +47964,7 @@ function* StringProto_replace([searchValue = Value.undefined, replaceValue = Val
     /* ReturnIfAbrupt */
     let _temp65 = yield* ToString(replValue);
     /* c8 ignore if */
-    if (_temp65 && typeof _temp65 === 'object' && 'next' in _temp65) throw new Assert.Error('Forgot to yield*');
+    if (_temp65 && typeof _temp65 === 'object' && 'next' in _temp65) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp65 instanceof AbruptCompletion) return _temp65;
     /* c8 ignore if */
@@ -47925,7 +47997,7 @@ function* StringProto_replaceAll([searchValue = Value.undefined, replaceValue = 
   /* ReturnIfAbrupt */
   let _temp67 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp67 && typeof _temp67 === 'object' && 'next' in _temp67) throw new Assert.Error('Forgot to yield*');
+  if (_temp67 && typeof _temp67 === 'object' && 'next' in _temp67) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp67 instanceof AbruptCompletion) return _temp67;
   /* c8 ignore if */
@@ -47937,7 +48009,7 @@ function* StringProto_replaceAll([searchValue = Value.undefined, replaceValue = 
     /* ReturnIfAbrupt */
     let _temp68 = yield* IsRegExp(searchValue);
     /* c8 ignore if */
-    if (_temp68 && typeof _temp68 === 'object' && 'next' in _temp68) throw new Assert.Error('Forgot to yield*');
+    if (_temp68 && typeof _temp68 === 'object' && 'next' in _temp68) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp68 instanceof AbruptCompletion) return _temp68;
     /* c8 ignore if */
@@ -47949,7 +48021,7 @@ function* StringProto_replaceAll([searchValue = Value.undefined, replaceValue = 
       /* ReturnIfAbrupt */
       let _temp69 = yield* Get(searchValue, Value('flags'));
       /* c8 ignore if */
-      if (_temp69 && typeof _temp69 === 'object' && 'next' in _temp69) throw new Assert.Error('Forgot to yield*');
+      if (_temp69 && typeof _temp69 === 'object' && 'next' in _temp69) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp69 instanceof AbruptCompletion) return _temp69;
       /* c8 ignore if */
@@ -47960,7 +48032,7 @@ function* StringProto_replaceAll([searchValue = Value.undefined, replaceValue = 
       /* ReturnIfAbrupt */
       let _temp70 = RequireObjectCoercible(flags);
       /* c8 ignore if */
-      if (_temp70 && typeof _temp70 === 'object' && 'next' in _temp70) throw new Assert.Error('Forgot to yield*');
+      if (_temp70 && typeof _temp70 === 'object' && 'next' in _temp70) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp70 instanceof AbruptCompletion) return _temp70;
       /* c8 ignore if */
@@ -47969,7 +48041,7 @@ function* StringProto_replaceAll([searchValue = Value.undefined, replaceValue = 
       /* ReturnIfAbrupt */
       let _temp71 = yield* ToString(flags);
       /* c8 ignore if */
-      if (_temp71 && typeof _temp71 === 'object' && 'next' in _temp71) throw new Assert.Error('Forgot to yield*');
+      if (_temp71 && typeof _temp71 === 'object' && 'next' in _temp71) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp71 instanceof AbruptCompletion) return _temp71;
       /* c8 ignore if */
@@ -47982,7 +48054,7 @@ function* StringProto_replaceAll([searchValue = Value.undefined, replaceValue = 
     /* ReturnIfAbrupt */
     let _temp72 = yield* GetMethod(searchValue, wellKnownSymbols.replace);
     /* c8 ignore if */
-    if (_temp72 && typeof _temp72 === 'object' && 'next' in _temp72) throw new Assert.Error('Forgot to yield*');
+    if (_temp72 && typeof _temp72 === 'object' && 'next' in _temp72) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp72 instanceof AbruptCompletion) return _temp72;
     /* c8 ignore if */
@@ -47998,7 +48070,7 @@ function* StringProto_replaceAll([searchValue = Value.undefined, replaceValue = 
   /* ReturnIfAbrupt */
   let _temp73 = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp73 && typeof _temp73 === 'object' && 'next' in _temp73) throw new Assert.Error('Forgot to yield*');
+  if (_temp73 && typeof _temp73 === 'object' && 'next' in _temp73) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp73 instanceof AbruptCompletion) return _temp73;
   /* c8 ignore if */
@@ -48008,7 +48080,7 @@ function* StringProto_replaceAll([searchValue = Value.undefined, replaceValue = 
   /* ReturnIfAbrupt */
   let _temp74 = yield* ToString(searchValue);
   /* c8 ignore if */
-  if (_temp74 && typeof _temp74 === 'object' && 'next' in _temp74) throw new Assert.Error('Forgot to yield*');
+  if (_temp74 && typeof _temp74 === 'object' && 'next' in _temp74) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp74 instanceof AbruptCompletion) return _temp74;
   /* c8 ignore if */
@@ -48021,7 +48093,7 @@ function* StringProto_replaceAll([searchValue = Value.undefined, replaceValue = 
     /* ReturnIfAbrupt */
     let _temp75 = yield* ToString(replaceValue);
     /* c8 ignore if */
-    if (_temp75 && typeof _temp75 === 'object' && 'next' in _temp75) throw new Assert.Error('Forgot to yield*');
+    if (_temp75 && typeof _temp75 === 'object' && 'next' in _temp75) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp75 instanceof AbruptCompletion) return _temp75;
     /* c8 ignore if */
@@ -48076,7 +48148,7 @@ function* StringProto_replaceAll([searchValue = Value.undefined, replaceValue = 
       /* ReturnIfAbrupt */
       let _temp79 = yield* Call(replaceValue, Value.undefined, [searchString, F(position), string]);
       /* c8 ignore if */
-      if (_temp79 && typeof _temp79 === 'object' && 'next' in _temp79) throw new Assert.Error('Forgot to yield*');
+      if (_temp79 && typeof _temp79 === 'object' && 'next' in _temp79) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp79 instanceof AbruptCompletion) return _temp79;
       /* c8 ignore if */
@@ -48084,7 +48156,7 @@ function* StringProto_replaceAll([searchValue = Value.undefined, replaceValue = 
       /* ReturnIfAbrupt */
       let _temp78 = yield* ToString(_temp79);
       /* c8 ignore if */
-      if (_temp78 && typeof _temp78 === 'object' && 'next' in _temp78) throw new Assert.Error('Forgot to yield*');
+      if (_temp78 && typeof _temp78 === 'object' && 'next' in _temp78) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp78 instanceof AbruptCompletion) return _temp78;
       /* c8 ignore if */
@@ -48134,7 +48206,7 @@ function* StringProto_search([regexp = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp81 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp81 && typeof _temp81 === 'object' && 'next' in _temp81) throw new Assert.Error('Forgot to yield*');
+  if (_temp81 && typeof _temp81 === 'object' && 'next' in _temp81) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp81 instanceof AbruptCompletion) return _temp81;
   /* c8 ignore if */
@@ -48144,7 +48216,7 @@ function* StringProto_search([regexp = Value.undefined], {
     /* ReturnIfAbrupt */
     let _temp82 = yield* GetMethod(regexp, wellKnownSymbols.search);
     /* c8 ignore if */
-    if (_temp82 && typeof _temp82 === 'object' && 'next' in _temp82) throw new Assert.Error('Forgot to yield*');
+    if (_temp82 && typeof _temp82 === 'object' && 'next' in _temp82) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp82 instanceof AbruptCompletion) return _temp82;
     /* c8 ignore if */
@@ -48157,7 +48229,7 @@ function* StringProto_search([regexp = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp83 = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp83 && typeof _temp83 === 'object' && 'next' in _temp83) throw new Assert.Error('Forgot to yield*');
+  if (_temp83 && typeof _temp83 === 'object' && 'next' in _temp83) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp83 instanceof AbruptCompletion) return _temp83;
   /* c8 ignore if */
@@ -48166,7 +48238,7 @@ function* StringProto_search([regexp = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp84 = yield* RegExpCreate(regexp, Value.undefined);
   /* c8 ignore if */
-  if (_temp84 && typeof _temp84 === 'object' && 'next' in _temp84) throw new Assert.Error('Forgot to yield*');
+  if (_temp84 && typeof _temp84 === 'object' && 'next' in _temp84) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp84 instanceof AbruptCompletion) return _temp84;
   /* c8 ignore if */
@@ -48183,7 +48255,7 @@ function* StringProto_slice([start = Value.undefined, end = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp85 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp85 && typeof _temp85 === 'object' && 'next' in _temp85) throw new Assert.Error('Forgot to yield*');
+  if (_temp85 && typeof _temp85 === 'object' && 'next' in _temp85) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp85 instanceof AbruptCompletion) return _temp85;
   /* c8 ignore if */
@@ -48192,7 +48264,7 @@ function* StringProto_slice([start = Value.undefined, end = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp86 = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp86 && typeof _temp86 === 'object' && 'next' in _temp86) throw new Assert.Error('Forgot to yield*');
+  if (_temp86 && typeof _temp86 === 'object' && 'next' in _temp86) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp86 instanceof AbruptCompletion) return _temp86;
   /* c8 ignore if */
@@ -48202,7 +48274,7 @@ function* StringProto_slice([start = Value.undefined, end = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp87 = yield* ToIntegerOrInfinity(start);
   /* c8 ignore if */
-  if (_temp87 && typeof _temp87 === 'object' && 'next' in _temp87) throw new Assert.Error('Forgot to yield*');
+  if (_temp87 && typeof _temp87 === 'object' && 'next' in _temp87) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp87 instanceof AbruptCompletion) return _temp87;
   /* c8 ignore if */
@@ -48215,7 +48287,7 @@ function* StringProto_slice([start = Value.undefined, end = Value.undefined], {
     /* ReturnIfAbrupt */
     let _temp88 = yield* ToIntegerOrInfinity(end);
     /* c8 ignore if */
-    if (_temp88 && typeof _temp88 === 'object' && 'next' in _temp88) throw new Assert.Error('Forgot to yield*');
+    if (_temp88 && typeof _temp88 === 'object' && 'next' in _temp88) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp88 instanceof AbruptCompletion) return _temp88;
     /* c8 ignore if */
@@ -48246,7 +48318,7 @@ function* StringProto_split([separator = Value.undefined, limit = Value.undefine
   /* ReturnIfAbrupt */
   let _temp89 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp89 && typeof _temp89 === 'object' && 'next' in _temp89) throw new Assert.Error('Forgot to yield*');
+  if (_temp89 && typeof _temp89 === 'object' && 'next' in _temp89) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp89 instanceof AbruptCompletion) return _temp89;
   /* c8 ignore if */
@@ -48256,7 +48328,7 @@ function* StringProto_split([separator = Value.undefined, limit = Value.undefine
     /* ReturnIfAbrupt */
     let _temp90 = yield* GetMethod(separator, wellKnownSymbols.split);
     /* c8 ignore if */
-    if (_temp90 && typeof _temp90 === 'object' && 'next' in _temp90) throw new Assert.Error('Forgot to yield*');
+    if (_temp90 && typeof _temp90 === 'object' && 'next' in _temp90) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp90 instanceof AbruptCompletion) return _temp90;
     /* c8 ignore if */
@@ -48269,7 +48341,7 @@ function* StringProto_split([separator = Value.undefined, limit = Value.undefine
   /* ReturnIfAbrupt */
   let _temp91 = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp91 && typeof _temp91 === 'object' && 'next' in _temp91) throw new Assert.Error('Forgot to yield*');
+  if (_temp91 && typeof _temp91 === 'object' && 'next' in _temp91) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp91 instanceof AbruptCompletion) return _temp91;
   /* c8 ignore if */
@@ -48294,7 +48366,7 @@ function* StringProto_split([separator = Value.undefined, limit = Value.undefine
     /* ReturnIfAbrupt */
     let _temp93 = yield* ToUint32(limit);
     /* c8 ignore if */
-    if (_temp93 && typeof _temp93 === 'object' && 'next' in _temp93) throw new Assert.Error('Forgot to yield*');
+    if (_temp93 && typeof _temp93 === 'object' && 'next' in _temp93) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp93 instanceof AbruptCompletion) return _temp93;
     /* c8 ignore if */
@@ -48306,7 +48378,7 @@ function* StringProto_split([separator = Value.undefined, limit = Value.undefine
   /* ReturnIfAbrupt */
   let _temp94 = yield* ToString(separator);
   /* c8 ignore if */
-  if (_temp94 && typeof _temp94 === 'object' && 'next' in _temp94) throw new Assert.Error('Forgot to yield*');
+  if (_temp94 && typeof _temp94 === 'object' && 'next' in _temp94) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp94 instanceof AbruptCompletion) return _temp94;
   /* c8 ignore if */
@@ -48431,7 +48503,7 @@ function* StringProto_startsWith([searchString = Value.undefined, position = Val
   /* ReturnIfAbrupt */
   let _temp101 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp101 && typeof _temp101 === 'object' && 'next' in _temp101) throw new Assert.Error('Forgot to yield*');
+  if (_temp101 && typeof _temp101 === 'object' && 'next' in _temp101) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp101 instanceof AbruptCompletion) return _temp101;
   /* c8 ignore if */
@@ -48440,7 +48512,7 @@ function* StringProto_startsWith([searchString = Value.undefined, position = Val
   /* ReturnIfAbrupt */
   let _temp102 = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp102 && typeof _temp102 === 'object' && 'next' in _temp102) throw new Assert.Error('Forgot to yield*');
+  if (_temp102 && typeof _temp102 === 'object' && 'next' in _temp102) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp102 instanceof AbruptCompletion) return _temp102;
   /* c8 ignore if */
@@ -48449,7 +48521,7 @@ function* StringProto_startsWith([searchString = Value.undefined, position = Val
   /* ReturnIfAbrupt */
   let _temp103 = yield* IsRegExp(searchString);
   /* c8 ignore if */
-  if (_temp103 && typeof _temp103 === 'object' && 'next' in _temp103) throw new Assert.Error('Forgot to yield*');
+  if (_temp103 && typeof _temp103 === 'object' && 'next' in _temp103) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp103 instanceof AbruptCompletion) return _temp103;
   /* c8 ignore if */
@@ -48461,7 +48533,7 @@ function* StringProto_startsWith([searchString = Value.undefined, position = Val
   /* ReturnIfAbrupt */
   let _temp104 = yield* ToString(searchString);
   /* c8 ignore if */
-  if (_temp104 && typeof _temp104 === 'object' && 'next' in _temp104) throw new Assert.Error('Forgot to yield*');
+  if (_temp104 && typeof _temp104 === 'object' && 'next' in _temp104) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp104 instanceof AbruptCompletion) return _temp104;
   /* c8 ignore if */
@@ -48470,7 +48542,7 @@ function* StringProto_startsWith([searchString = Value.undefined, position = Val
   /* ReturnIfAbrupt */
   let _temp105 = yield* ToIntegerOrInfinity(position);
   /* c8 ignore if */
-  if (_temp105 && typeof _temp105 === 'object' && 'next' in _temp105) throw new Assert.Error('Forgot to yield*');
+  if (_temp105 && typeof _temp105 === 'object' && 'next' in _temp105) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp105 instanceof AbruptCompletion) return _temp105;
   /* c8 ignore if */
@@ -48499,7 +48571,7 @@ function* StringProto_substring([start = Value.undefined, end = Value.undefined]
   /* ReturnIfAbrupt */
   let _temp106 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp106 && typeof _temp106 === 'object' && 'next' in _temp106) throw new Assert.Error('Forgot to yield*');
+  if (_temp106 && typeof _temp106 === 'object' && 'next' in _temp106) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp106 instanceof AbruptCompletion) return _temp106;
   /* c8 ignore if */
@@ -48508,7 +48580,7 @@ function* StringProto_substring([start = Value.undefined, end = Value.undefined]
   /* ReturnIfAbrupt */
   let _temp107 = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp107 && typeof _temp107 === 'object' && 'next' in _temp107) throw new Assert.Error('Forgot to yield*');
+  if (_temp107 && typeof _temp107 === 'object' && 'next' in _temp107) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp107 instanceof AbruptCompletion) return _temp107;
   /* c8 ignore if */
@@ -48518,7 +48590,7 @@ function* StringProto_substring([start = Value.undefined, end = Value.undefined]
   /* ReturnIfAbrupt */
   let _temp108 = yield* ToIntegerOrInfinity(start);
   /* c8 ignore if */
-  if (_temp108 && typeof _temp108 === 'object' && 'next' in _temp108) throw new Assert.Error('Forgot to yield*');
+  if (_temp108 && typeof _temp108 === 'object' && 'next' in _temp108) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp108 instanceof AbruptCompletion) return _temp108;
   /* c8 ignore if */
@@ -48531,7 +48603,7 @@ function* StringProto_substring([start = Value.undefined, end = Value.undefined]
     /* ReturnIfAbrupt */
     let _temp109 = yield* ToIntegerOrInfinity(end);
     /* c8 ignore if */
-    if (_temp109 && typeof _temp109 === 'object' && 'next' in _temp109) throw new Assert.Error('Forgot to yield*');
+    if (_temp109 && typeof _temp109 === 'object' && 'next' in _temp109) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp109 instanceof AbruptCompletion) return _temp109;
     /* c8 ignore if */
@@ -48553,7 +48625,7 @@ function* StringProto_toLocaleLowerCase(_args, {
   /* ReturnIfAbrupt */
   let _temp110 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp110 && typeof _temp110 === 'object' && 'next' in _temp110) throw new Assert.Error('Forgot to yield*');
+  if (_temp110 && typeof _temp110 === 'object' && 'next' in _temp110) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp110 instanceof AbruptCompletion) return _temp110;
   /* c8 ignore if */
@@ -48562,7 +48634,7 @@ function* StringProto_toLocaleLowerCase(_args, {
   /* ReturnIfAbrupt */
   let _temp111 = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp111 && typeof _temp111 === 'object' && 'next' in _temp111) throw new Assert.Error('Forgot to yield*');
+  if (_temp111 && typeof _temp111 === 'object' && 'next' in _temp111) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp111 instanceof AbruptCompletion) return _temp111;
   /* c8 ignore if */
@@ -48580,7 +48652,7 @@ function* StringProto_toLocaleUpperCase(_args, {
   /* ReturnIfAbrupt */
   let _temp112 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp112 && typeof _temp112 === 'object' && 'next' in _temp112) throw new Assert.Error('Forgot to yield*');
+  if (_temp112 && typeof _temp112 === 'object' && 'next' in _temp112) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp112 instanceof AbruptCompletion) return _temp112;
   /* c8 ignore if */
@@ -48589,7 +48661,7 @@ function* StringProto_toLocaleUpperCase(_args, {
   /* ReturnIfAbrupt */
   let _temp113 = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp113 && typeof _temp113 === 'object' && 'next' in _temp113) throw new Assert.Error('Forgot to yield*');
+  if (_temp113 && typeof _temp113 === 'object' && 'next' in _temp113) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp113 instanceof AbruptCompletion) return _temp113;
   /* c8 ignore if */
@@ -48607,7 +48679,7 @@ function* StringProto_toLowerCase(_args, {
   /* ReturnIfAbrupt */
   let _temp114 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp114 && typeof _temp114 === 'object' && 'next' in _temp114) throw new Assert.Error('Forgot to yield*');
+  if (_temp114 && typeof _temp114 === 'object' && 'next' in _temp114) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp114 instanceof AbruptCompletion) return _temp114;
   /* c8 ignore if */
@@ -48616,7 +48688,7 @@ function* StringProto_toLowerCase(_args, {
   /* ReturnIfAbrupt */
   let _temp115 = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp115 && typeof _temp115 === 'object' && 'next' in _temp115) throw new Assert.Error('Forgot to yield*');
+  if (_temp115 && typeof _temp115 === 'object' && 'next' in _temp115) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp115 instanceof AbruptCompletion) return _temp115;
   /* c8 ignore if */
@@ -48642,7 +48714,7 @@ function* StringProto_toUpperCase(_args, {
   /* ReturnIfAbrupt */
   let _temp116 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp116 && typeof _temp116 === 'object' && 'next' in _temp116) throw new Assert.Error('Forgot to yield*');
+  if (_temp116 && typeof _temp116 === 'object' && 'next' in _temp116) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp116 instanceof AbruptCompletion) return _temp116;
   /* c8 ignore if */
@@ -48651,7 +48723,7 @@ function* StringProto_toUpperCase(_args, {
   /* ReturnIfAbrupt */
   let _temp117 = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp117 && typeof _temp117 === 'object' && 'next' in _temp117) throw new Assert.Error('Forgot to yield*');
+  if (_temp117 && typeof _temp117 === 'object' && 'next' in _temp117) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp117 instanceof AbruptCompletion) return _temp117;
   /* c8 ignore if */
@@ -48669,7 +48741,7 @@ function* StringProto_toWellFormed(_args, {
   /* ReturnIfAbrupt */
   let _temp118 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp118 && typeof _temp118 === 'object' && 'next' in _temp118) throw new Assert.Error('Forgot to yield*');
+  if (_temp118 && typeof _temp118 === 'object' && 'next' in _temp118) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp118 instanceof AbruptCompletion) return _temp118;
   /* c8 ignore if */
@@ -48680,7 +48752,7 @@ function* StringProto_toWellFormed(_args, {
   /* ReturnIfAbrupt */
   let _temp119 = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp119 && typeof _temp119 === 'object' && 'next' in _temp119) throw new Assert.Error('Forgot to yield*');
+  if (_temp119 && typeof _temp119 === 'object' && 'next' in _temp119) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp119 instanceof AbruptCompletion) return _temp119;
   /* c8 ignore if */
@@ -48755,7 +48827,7 @@ function* StringProto_iterator(_args, {
   /* ReturnIfAbrupt */
   let _temp120 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp120 && typeof _temp120 === 'object' && 'next' in _temp120) throw new Assert.Error('Forgot to yield*');
+  if (_temp120 && typeof _temp120 === 'object' && 'next' in _temp120) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp120 instanceof AbruptCompletion) return _temp120;
   /* c8 ignore if */
@@ -48766,7 +48838,7 @@ function* StringProto_iterator(_args, {
   /* ReturnIfAbrupt */
   let _temp121 = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp121 && typeof _temp121 === 'object' && 'next' in _temp121) throw new Assert.Error('Forgot to yield*');
+  if (_temp121 && typeof _temp121 === 'object' && 'next' in _temp121) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp121 instanceof AbruptCompletion) return _temp121;
   /* c8 ignore if */
@@ -48802,7 +48874,7 @@ function* StringProto_iterator(_args, {
       /* ReturnIfAbrupt */
       let _temp123 = yield* Yield(resultString);
       /* c8 ignore if */
-      if (_temp123 && typeof _temp123 === 'object' && 'next' in _temp123) throw new Assert.Error('Forgot to yield*');
+      if (_temp123 && typeof _temp123 === 'object' && 'next' in _temp123) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp123 instanceof AbruptCompletion) return _temp123;
       /* c8 ignore if */
@@ -48833,7 +48905,7 @@ function* StringProto_at([index = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp125 = RequireObjectCoercible(thisValue);
   /* c8 ignore if */
-  if (_temp125 && typeof _temp125 === 'object' && 'next' in _temp125) throw new Assert.Error('Forgot to yield*');
+  if (_temp125 && typeof _temp125 === 'object' && 'next' in _temp125) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp125 instanceof AbruptCompletion) return _temp125;
   /* c8 ignore if */
@@ -48844,7 +48916,7 @@ function* StringProto_at([index = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp126 = yield* ToString(O);
   /* c8 ignore if */
-  if (_temp126 && typeof _temp126 === 'object' && 'next' in _temp126) throw new Assert.Error('Forgot to yield*');
+  if (_temp126 && typeof _temp126 === 'object' && 'next' in _temp126) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp126 instanceof AbruptCompletion) return _temp126;
   /* c8 ignore if */
@@ -48856,7 +48928,7 @@ function* StringProto_at([index = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp127 = yield* ToIntegerOrInfinity(index);
   /* c8 ignore if */
-  if (_temp127 && typeof _temp127 === 'object' && 'next' in _temp127) throw new Assert.Error('Forgot to yield*');
+  if (_temp127 && typeof _temp127 === 'object' && 'next' in _temp127) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp127 instanceof AbruptCompletion) return _temp127;
   /* c8 ignore if */
@@ -48910,7 +48982,7 @@ function* StringConstructor([value], {
     /* ReturnIfAbrupt */
     let _temp2 = yield* ToString(value);
     /* c8 ignore if */
-    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp2 instanceof AbruptCompletion) return _temp2;
     /* c8 ignore if */
@@ -48923,7 +48995,7 @@ function* StringConstructor([value], {
   /* ReturnIfAbrupt */
   let _temp4 = yield* GetPrototypeFromConstructor(NewTarget, '%String.prototype%');
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -48952,7 +49024,7 @@ function* String_fromCharCode(codeUnits) {
     /* ReturnIfAbrupt */
     let _temp5 = yield* ToUint16(next);
     /* c8 ignore if */
-    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp5 instanceof AbruptCompletion) return _temp5;
     /* c8 ignore if */
@@ -48975,7 +49047,7 @@ function* String_fromCodePoint(codePoints) {
     /* ReturnIfAbrupt */
     let _temp6 = yield* ToNumber(next);
     /* c8 ignore if */
-    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp6 instanceof AbruptCompletion) return _temp6;
     /* c8 ignore if */
@@ -49016,7 +49088,7 @@ function* String_raw([template = Value.undefined, ...substitutions]) {
   /* ReturnIfAbrupt */
   let _temp8 = ToObject(template);
   /* c8 ignore if */
-  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp8 instanceof AbruptCompletion) return _temp8;
   /* c8 ignore if */
@@ -49025,7 +49097,7 @@ function* String_raw([template = Value.undefined, ...substitutions]) {
   /* ReturnIfAbrupt */
   let _temp15 = yield* Get(cooked, Value('raw'));
   /* c8 ignore if */
-  if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield*');
+  if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp15 instanceof AbruptCompletion) return _temp15;
   /* c8 ignore if */
@@ -49033,7 +49105,7 @@ function* String_raw([template = Value.undefined, ...substitutions]) {
   /* ReturnIfAbrupt */
   let _temp9 = ToObject(_temp15);
   /* c8 ignore if */
-  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp9 instanceof AbruptCompletion) return _temp9;
   /* c8 ignore if */
@@ -49042,7 +49114,7 @@ function* String_raw([template = Value.undefined, ...substitutions]) {
   /* ReturnIfAbrupt */
   let _temp10 = yield* LengthOfArrayLike(raw);
   /* c8 ignore if */
-  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp10 instanceof AbruptCompletion) return _temp10;
   /* c8 ignore if */
@@ -49069,7 +49141,7 @@ function* String_raw([template = Value.undefined, ...substitutions]) {
     /* ReturnIfAbrupt */
     let _temp14 = yield* Get(raw, nextKey);
     /* c8 ignore if */
-    if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield*');
+    if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp14 instanceof AbruptCompletion) return _temp14;
     /* c8 ignore if */
@@ -49077,7 +49149,7 @@ function* String_raw([template = Value.undefined, ...substitutions]) {
     /* ReturnIfAbrupt */
     let _temp12 = yield* ToString(_temp14);
     /* c8 ignore if */
-    if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield*');
+    if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp12 instanceof AbruptCompletion) return _temp12;
     /* c8 ignore if */
@@ -49096,7 +49168,7 @@ function* String_raw([template = Value.undefined, ...substitutions]) {
     /* ReturnIfAbrupt */
     let _temp13 = yield* ToString(next);
     /* c8 ignore if */
-    if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield*');
+    if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp13 instanceof AbruptCompletion) return _temp13;
     /* c8 ignore if */
@@ -49126,7 +49198,7 @@ function* ErrorProto_toString(_args, {
   /* ReturnIfAbrupt */
   let _temp = yield* Get(O, Value('name'));
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -49139,7 +49211,7 @@ function* ErrorProto_toString(_args, {
     /* ReturnIfAbrupt */
     let _temp2 = yield* ToString(name);
     /* c8 ignore if */
-    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp2 instanceof AbruptCompletion) return _temp2;
     /* c8 ignore if */
@@ -49150,7 +49222,7 @@ function* ErrorProto_toString(_args, {
   /* ReturnIfAbrupt */
   let _temp3 = yield* Get(O, Value('message'));
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -49163,7 +49235,7 @@ function* ErrorProto_toString(_args, {
     /* ReturnIfAbrupt */
     let _temp4 = yield* ToString(msg);
     /* c8 ignore if */
-    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) return _temp4;
     /* c8 ignore if */
@@ -49205,7 +49277,7 @@ function* ErrorConstructor([message = Value.undefined, options = Value.undefined
   /* ReturnIfAbrupt */
   let _temp = yield* OrdinaryCreateFromConstructor(newTarget, '%Error.prototype%', ['ErrorData', 'HostDefinedErrorStack']);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -49216,7 +49288,7 @@ function* ErrorConstructor([message = Value.undefined, options = Value.undefined
     /* ReturnIfAbrupt */
     let _temp2 = yield* ToString(message);
     /* c8 ignore if */
-    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp2 instanceof AbruptCompletion) return _temp2;
     /* c8 ignore if */
@@ -49247,7 +49319,7 @@ function* ErrorConstructor([message = Value.undefined, options = Value.undefined
   /* ReturnIfAbrupt */
   let _temp4 = yield* InstallErrorCause(O, options);
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -49292,7 +49364,7 @@ function bootstrapNativeError(realmRec) {
       /* ReturnIfAbrupt */
       let _temp = yield* OrdinaryCreateFromConstructor(newTarget, `%${name}.prototype%`, ['ErrorData']);
       /* c8 ignore if */
-      if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+      if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp instanceof AbruptCompletion) return _temp;
       /* c8 ignore if */
@@ -49303,7 +49375,7 @@ function bootstrapNativeError(realmRec) {
         /* ReturnIfAbrupt */
         let _temp2 = yield* ToString(message);
         /* c8 ignore if */
-        if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+        if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp2 instanceof AbruptCompletion) return _temp2;
         /* c8 ignore if */
@@ -49333,7 +49405,7 @@ function bootstrapNativeError(realmRec) {
       /* ReturnIfAbrupt */
       let _temp4 = yield* InstallErrorCause(O, options);
       /* c8 ignore if */
-      if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+      if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp4 instanceof AbruptCompletion) return _temp4;
       /* c8 ignore if */
@@ -49410,7 +49482,7 @@ function CreateMapIterator(map, kind) {
   /* ReturnIfAbrupt */
   let _temp = RequireInternalSlot(map, 'MapData');
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -49459,7 +49531,7 @@ function CreateMapIterator(map, kind) {
         /* ReturnIfAbrupt */
         let _temp3 = yield* Yield(result);
         /* c8 ignore if */
-        if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+        if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp3 instanceof AbruptCompletion) return _temp3;
         /* c8 ignore if */
@@ -49507,7 +49579,7 @@ function CreateSetIterator(set, kind) {
   /* ReturnIfAbrupt */
   let _temp = RequireInternalSlot(set, 'SetData');
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -49543,7 +49615,7 @@ function CreateSetIterator(set, kind) {
           /* ReturnIfAbrupt */
           let _temp2 = yield* Yield(_temp3);
           /* c8 ignore if */
-          if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+          if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp2 instanceof AbruptCompletion) return _temp2;
           /* c8 ignore if */
@@ -49556,7 +49628,7 @@ function CreateSetIterator(set, kind) {
           /* ReturnIfAbrupt */
           let _temp4 = yield* Yield(e);
           /* c8 ignore if */
-          if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+          if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp4 instanceof AbruptCompletion) return _temp4;
           /* c8 ignore if */
@@ -49620,7 +49692,7 @@ function MapProto_clear(_args, {
   /* ReturnIfAbrupt */
   let _temp = RequireInternalSlot(M, 'MapData');
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -49632,7 +49704,7 @@ function MapProto_clear(_args, {
     /* ReturnIfAbrupt */
     let _temp2 = surroundingAgent.debugger_tryTouchDuringPreview(M);
     /* c8 ignore if */
-    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp2 instanceof AbruptCompletion) return _temp2;
     /* c8 ignore if */
@@ -49659,7 +49731,7 @@ function MapProto_delete([key = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp3 = RequireInternalSlot(M, 'MapData');
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -49673,7 +49745,7 @@ function MapProto_delete([key = Value.undefined], {
       /* ReturnIfAbrupt */
       let _temp4 = surroundingAgent.debugger_tryTouchDuringPreview(M);
       /* c8 ignore if */
-      if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+      if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp4 instanceof AbruptCompletion) return _temp4;
       /* c8 ignore if */
@@ -49711,7 +49783,7 @@ function* MapProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefi
   /* ReturnIfAbrupt */
   let _temp5 = RequireInternalSlot(M, 'MapData');
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -49729,7 +49801,7 @@ function* MapProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefi
       /* ReturnIfAbrupt */
       let _temp6 = yield* Call(callbackfn, thisArg, [e.Value, e.Key, M]);
       /* c8 ignore if */
-      if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+      if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp6 instanceof AbruptCompletion) return _temp6;
       /* c8 ignore if */
@@ -49751,7 +49823,7 @@ function MapProto_get([key = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp7 = RequireInternalSlot(M, 'MapData');
   /* c8 ignore if */
-  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp7 instanceof AbruptCompletion) return _temp7;
   /* c8 ignore if */
@@ -49781,7 +49853,7 @@ function MapProto_has([key = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp8 = RequireInternalSlot(M, 'MapData');
   /* c8 ignore if */
-  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp8 instanceof AbruptCompletion) return _temp8;
   /* c8 ignore if */
@@ -49821,7 +49893,7 @@ function MapProto_set([key = Value.undefined, value = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp9 = RequireInternalSlot(M, 'MapData');
   /* c8 ignore if */
-  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp9 instanceof AbruptCompletion) return _temp9;
   /* c8 ignore if */
@@ -49835,7 +49907,7 @@ function MapProto_set([key = Value.undefined, value = Value.undefined], {
       /* ReturnIfAbrupt */
       let _temp10 = surroundingAgent.debugger_tryTouchDuringPreview(M);
       /* c8 ignore if */
-      if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+      if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp10 instanceof AbruptCompletion) return _temp10;
       /* c8 ignore if */
@@ -49858,7 +49930,7 @@ function MapProto_set([key = Value.undefined, value = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp11 = surroundingAgent.debugger_tryTouchDuringPreview(M);
   /* c8 ignore if */
-  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp11 instanceof AbruptCompletion) return _temp11;
   /* c8 ignore if */
@@ -49879,7 +49951,7 @@ function MapProto_sizeGetter(_args, {
   /* ReturnIfAbrupt */
   let _temp12 = RequireInternalSlot(M, 'MapData');
   /* c8 ignore if */
-  if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield*');
+  if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp12 instanceof AbruptCompletion) return _temp12;
   /* c8 ignore if */
@@ -49946,7 +50018,7 @@ function SetProto_add([value = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp = RequireInternalSlot(S, 'SetData');
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -49969,7 +50041,7 @@ function SetProto_add([value = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp2 = surroundingAgent.debugger_tryTouchDuringPreview(S);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -49990,7 +50062,7 @@ function SetProto_clear(_args, {
   /* ReturnIfAbrupt */
   let _temp3 = RequireInternalSlot(S, 'SetData');
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -50002,7 +50074,7 @@ function SetProto_clear(_args, {
     /* ReturnIfAbrupt */
     let _temp4 = surroundingAgent.debugger_tryTouchDuringPreview(S);
     /* c8 ignore if */
-    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) return _temp4;
     /* c8 ignore if */
@@ -50027,7 +50099,7 @@ function SetProto_delete([value = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp5 = RequireInternalSlot(S, 'SetData');
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -50042,7 +50114,7 @@ function SetProto_delete([value = Value.undefined], {
       /* ReturnIfAbrupt */
       let _temp6 = surroundingAgent.debugger_tryTouchDuringPreview(S);
       /* c8 ignore if */
-      if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+      if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp6 instanceof AbruptCompletion) return _temp6;
       /* c8 ignore if */
@@ -50078,7 +50150,7 @@ function* SetProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefi
   /* ReturnIfAbrupt */
   let _temp7 = RequireInternalSlot(S, 'SetData');
   /* c8 ignore if */
-  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp7 instanceof AbruptCompletion) return _temp7;
   /* c8 ignore if */
@@ -50096,7 +50168,7 @@ function* SetProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefi
       /* ReturnIfAbrupt */
       let _temp8 = yield* Call(callbackfn, thisArg, [e, e, S]);
       /* c8 ignore if */
-      if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+      if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp8 instanceof AbruptCompletion) return _temp8;
       /* c8 ignore if */
@@ -50118,7 +50190,7 @@ function SetProto_has([value = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp9 = RequireInternalSlot(S, 'SetData');
   /* c8 ignore if */
-  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp9 instanceof AbruptCompletion) return _temp9;
   /* c8 ignore if */
@@ -50147,7 +50219,7 @@ function SetProto_sizeGetter(_args, {
   /* ReturnIfAbrupt */
   let _temp10 = RequireInternalSlot(S, 'SetData');
   /* c8 ignore if */
-  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp10 instanceof AbruptCompletion) return _temp10;
   /* c8 ignore if */
@@ -50229,7 +50301,7 @@ function* SetConstructor([iterable = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp = yield* OrdinaryCreateFromConstructor(NewTarget, '%Set.prototype%', ['SetData']);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -50245,7 +50317,7 @@ function* SetConstructor([iterable = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp2 = yield* Get(set, Value('add'));
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -50259,7 +50331,7 @@ function* SetConstructor([iterable = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp3 = yield* GetIterator(iterable, 'sync');
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -50270,7 +50342,7 @@ function* SetConstructor([iterable = Value.undefined], {
     /* ReturnIfAbrupt */
     let _temp4 = yield* IteratorStepValue(iteratorRecord);
     /* c8 ignore if */
-    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) return _temp4;
     /* c8 ignore if */
@@ -51093,7 +51165,7 @@ function* ArrayBufferConstructor([length = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp = yield* ToIndex(length);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -51141,7 +51213,7 @@ function ArrayBufferProto_byteLength(_args, {
   /* ReturnIfAbrupt */
   let _temp = RequireInternalSlot(O, 'ArrayBufferData');
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -51171,7 +51243,7 @@ function* ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined
   /* ReturnIfAbrupt */
   let _temp2 = RequireInternalSlot(O, 'ArrayBufferData');
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -51190,7 +51262,7 @@ function* ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined
   /* ReturnIfAbrupt */
   let _temp3 = yield* ToIntegerOrInfinity(start);
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -51211,7 +51283,7 @@ function* ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined
     /* ReturnIfAbrupt */
     let _temp4 = yield* ToIntegerOrInfinity(end);
     /* c8 ignore if */
-    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) return _temp4;
     /* c8 ignore if */
@@ -51231,7 +51303,7 @@ function* ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined
   /* ReturnIfAbrupt */
   let _temp5 = yield* SpeciesConstructor(O, surroundingAgent.intrinsic('%ArrayBuffer%'));
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -51241,7 +51313,7 @@ function* ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined
   /* ReturnIfAbrupt */
   let _temp6 = yield* Construct(ctor, [F(newLen)]);
   /* c8 ignore if */
-  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp6 instanceof AbruptCompletion) return _temp6;
   /* c8 ignore if */
@@ -51251,7 +51323,7 @@ function* ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined
   /* ReturnIfAbrupt */
   let _temp7 = RequireInternalSlot(newO, 'ArrayBufferData');
   /* c8 ignore if */
-  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp7 instanceof AbruptCompletion) return _temp7;
   /* c8 ignore if */
@@ -51318,7 +51390,7 @@ class JSONValidator {
     /* ReturnIfAbrupt */
     let _temp2 = this.parseValue();
     /* c8 ignore if */
-    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp2 instanceof AbruptCompletion) return _temp2;
     /* c8 ignore if */
@@ -51415,7 +51487,7 @@ class JSONValidator {
         /* ReturnIfAbrupt */
         let _temp6 = this.expect('a');
         /* c8 ignore if */
-        if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+        if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp6 instanceof AbruptCompletion) return _temp6;
         /* c8 ignore if */
@@ -51423,7 +51495,7 @@ class JSONValidator {
         /* ReturnIfAbrupt */
         let _temp7 = this.expect('l');
         /* c8 ignore if */
-        if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+        if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp7 instanceof AbruptCompletion) return _temp7;
         /* c8 ignore if */
@@ -51431,7 +51503,7 @@ class JSONValidator {
         /* ReturnIfAbrupt */
         let _temp8 = this.expect('s');
         /* c8 ignore if */
-        if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+        if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp8 instanceof AbruptCompletion) return _temp8;
         /* c8 ignore if */
@@ -51439,7 +51511,7 @@ class JSONValidator {
         /* ReturnIfAbrupt */
         let _temp9 = this.expect('e');
         /* c8 ignore if */
-        if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+        if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp9 instanceof AbruptCompletion) return _temp9;
         /* c8 ignore if */
@@ -51469,7 +51541,7 @@ class JSONValidator {
         /* ReturnIfAbrupt */
         let _temp12 = this.expect('r');
         /* c8 ignore if */
-        if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield*');
+        if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp12 instanceof AbruptCompletion) return _temp12;
         /* c8 ignore if */
@@ -51477,7 +51549,7 @@ class JSONValidator {
         /* ReturnIfAbrupt */
         let _temp13 = this.expect('u');
         /* c8 ignore if */
-        if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield*');
+        if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp13 instanceof AbruptCompletion) return _temp13;
         /* c8 ignore if */
@@ -51485,7 +51557,7 @@ class JSONValidator {
         /* ReturnIfAbrupt */
         let _temp14 = this.expect('e');
         /* c8 ignore if */
-        if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield*');
+        if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp14 instanceof AbruptCompletion) return _temp14;
         /* c8 ignore if */
@@ -51515,7 +51587,7 @@ class JSONValidator {
         /* ReturnIfAbrupt */
         let _temp17 = this.expect('u');
         /* c8 ignore if */
-        if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield*');
+        if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp17 instanceof AbruptCompletion) return _temp17;
         /* c8 ignore if */
@@ -51523,7 +51595,7 @@ class JSONValidator {
         /* ReturnIfAbrupt */
         let _temp18 = this.expect('l');
         /* c8 ignore if */
-        if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield*');
+        if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp18 instanceof AbruptCompletion) return _temp18;
         /* c8 ignore if */
@@ -51531,7 +51603,7 @@ class JSONValidator {
         /* ReturnIfAbrupt */
         let _temp19 = this.expect('l');
         /* c8 ignore if */
-        if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield*');
+        if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp19 instanceof AbruptCompletion) return _temp19;
         /* c8 ignore if */
@@ -51555,7 +51627,7 @@ class JSONValidator {
     /* ReturnIfAbrupt */
     let _temp21 = this.expect('"');
     /* c8 ignore if */
-    if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield*');
+    if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp21 instanceof AbruptCompletion) return _temp21;
     /* c8 ignore if */
@@ -51566,7 +51638,7 @@ class JSONValidator {
           /* ReturnIfAbrupt */
           let _temp22 = this.expect('u');
           /* c8 ignore if */
-          if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield*');
+          if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp22 instanceof AbruptCompletion) return _temp22;
           /* c8 ignore if */
@@ -51574,7 +51646,7 @@ class JSONValidator {
           /* ReturnIfAbrupt */
           let _temp23 = this.expect(VALID_HEX);
           /* c8 ignore if */
-          if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield*');
+          if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp23 instanceof AbruptCompletion) return _temp23;
           /* c8 ignore if */
@@ -51582,7 +51654,7 @@ class JSONValidator {
           /* ReturnIfAbrupt */
           let _temp24 = this.expect(VALID_HEX);
           /* c8 ignore if */
-          if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) throw new Assert.Error('Forgot to yield*');
+          if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp24 instanceof AbruptCompletion) return _temp24;
           /* c8 ignore if */
@@ -51590,7 +51662,7 @@ class JSONValidator {
           /* ReturnIfAbrupt */
           let _temp25 = this.expect(VALID_HEX);
           /* c8 ignore if */
-          if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield*');
+          if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp25 instanceof AbruptCompletion) return _temp25;
           /* c8 ignore if */
@@ -51598,7 +51670,7 @@ class JSONValidator {
           /* ReturnIfAbrupt */
           let _temp26 = this.expect(VALID_HEX);
           /* c8 ignore if */
-          if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield*');
+          if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp26 instanceof AbruptCompletion) return _temp26;
           /* c8 ignore if */
@@ -51611,7 +51683,7 @@ class JSONValidator {
         /* ReturnIfAbrupt */
         let _temp27 = this.advance();
         /* c8 ignore if */
-        if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield*');
+        if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp27 instanceof AbruptCompletion) return _temp27;
         /* c8 ignore if */
@@ -51636,7 +51708,7 @@ class JSONValidator {
       /* ReturnIfAbrupt */
       let _temp29 = this.expect(NUMERIC);
       /* c8 ignore if */
-      if (_temp29 && typeof _temp29 === 'object' && 'next' in _temp29) throw new Assert.Error('Forgot to yield*');
+      if (_temp29 && typeof _temp29 === 'object' && 'next' in _temp29) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp29 instanceof AbruptCompletion) return _temp29;
       /* c8 ignore if */
@@ -51649,7 +51721,7 @@ class JSONValidator {
       /* ReturnIfAbrupt */
       let _temp30 = this.expect(NUMERIC);
       /* c8 ignore if */
-      if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) throw new Assert.Error('Forgot to yield*');
+      if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp30 instanceof AbruptCompletion) return _temp30;
       /* c8 ignore if */
@@ -51663,7 +51735,7 @@ class JSONValidator {
       /* ReturnIfAbrupt */
       let _temp31 = this.expect(NUMERIC);
       /* c8 ignore if */
-      if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) throw new Assert.Error('Forgot to yield*');
+      if (_temp31 && typeof _temp31 === 'object' && 'next' in _temp31) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp31 instanceof AbruptCompletion) return _temp31;
       /* c8 ignore if */
@@ -51687,7 +51759,7 @@ class JSONValidator {
     /* ReturnIfAbrupt */
     let _temp33 = this.expect('{');
     /* c8 ignore if */
-    if (_temp33 && typeof _temp33 === 'object' && 'next' in _temp33) throw new Assert.Error('Forgot to yield*');
+    if (_temp33 && typeof _temp33 === 'object' && 'next' in _temp33) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp33 instanceof AbruptCompletion) return _temp33;
     /* c8 ignore if */
@@ -51710,7 +51782,7 @@ class JSONValidator {
         /* ReturnIfAbrupt */
         let _temp35 = this.expect(',');
         /* c8 ignore if */
-        if (_temp35 && typeof _temp35 === 'object' && 'next' in _temp35) throw new Assert.Error('Forgot to yield*');
+        if (_temp35 && typeof _temp35 === 'object' && 'next' in _temp35) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp35 instanceof AbruptCompletion) return _temp35;
         /* c8 ignore if */
@@ -51729,7 +51801,7 @@ class JSONValidator {
       /* ReturnIfAbrupt */
       let _temp37 = this.parseString();
       /* c8 ignore if */
-      if (_temp37 && typeof _temp37 === 'object' && 'next' in _temp37) throw new Assert.Error('Forgot to yield*');
+      if (_temp37 && typeof _temp37 === 'object' && 'next' in _temp37) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp37 instanceof AbruptCompletion) return _temp37;
       /* c8 ignore if */
@@ -51747,7 +51819,7 @@ class JSONValidator {
       /* ReturnIfAbrupt */
       let _temp39 = this.expect(':');
       /* c8 ignore if */
-      if (_temp39 && typeof _temp39 === 'object' && 'next' in _temp39) throw new Assert.Error('Forgot to yield*');
+      if (_temp39 && typeof _temp39 === 'object' && 'next' in _temp39) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp39 instanceof AbruptCompletion) return _temp39;
       /* c8 ignore if */
@@ -51765,7 +51837,7 @@ class JSONValidator {
       /* ReturnIfAbrupt */
       let _temp41 = this.parseValue();
       /* c8 ignore if */
-      if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) throw new Assert.Error('Forgot to yield*');
+      if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp41 instanceof AbruptCompletion) return _temp41;
       /* c8 ignore if */
@@ -51796,7 +51868,7 @@ class JSONValidator {
     /* ReturnIfAbrupt */
     let _temp44 = this.expect('[');
     /* c8 ignore if */
-    if (_temp44 && typeof _temp44 === 'object' && 'next' in _temp44) throw new Assert.Error('Forgot to yield*');
+    if (_temp44 && typeof _temp44 === 'object' && 'next' in _temp44) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp44 instanceof AbruptCompletion) return _temp44;
     /* c8 ignore if */
@@ -51819,7 +51891,7 @@ class JSONValidator {
         /* ReturnIfAbrupt */
         let _temp46 = this.expect(',');
         /* c8 ignore if */
-        if (_temp46 && typeof _temp46 === 'object' && 'next' in _temp46) throw new Assert.Error('Forgot to yield*');
+        if (_temp46 && typeof _temp46 === 'object' && 'next' in _temp46) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp46 instanceof AbruptCompletion) return _temp46;
         /* c8 ignore if */
@@ -51838,7 +51910,7 @@ class JSONValidator {
       /* ReturnIfAbrupt */
       let _temp48 = this.parseValue();
       /* c8 ignore if */
-      if (_temp48 && typeof _temp48 === 'object' && 'next' in _temp48) throw new Assert.Error('Forgot to yield*');
+      if (_temp48 && typeof _temp48 === 'object' && 'next' in _temp48) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp48 instanceof AbruptCompletion) return _temp48;
       /* c8 ignore if */
@@ -51874,7 +51946,7 @@ function* InternalizeJSONProperty(holder, name, reviver) {
   /* ReturnIfAbrupt */
   let _temp51 = yield* Get(holder, name);
   /* c8 ignore if */
-  if (_temp51 && typeof _temp51 === 'object' && 'next' in _temp51) throw new Assert.Error('Forgot to yield*');
+  if (_temp51 && typeof _temp51 === 'object' && 'next' in _temp51) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp51 instanceof AbruptCompletion) return _temp51;
   /* c8 ignore if */
@@ -51884,7 +51956,7 @@ function* InternalizeJSONProperty(holder, name, reviver) {
     /* ReturnIfAbrupt */
     let _temp52 = IsArray(val);
     /* c8 ignore if */
-    if (_temp52 && typeof _temp52 === 'object' && 'next' in _temp52) throw new Assert.Error('Forgot to yield*');
+    if (_temp52 && typeof _temp52 === 'object' && 'next' in _temp52) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp52 instanceof AbruptCompletion) return _temp52;
     /* c8 ignore if */
@@ -51895,7 +51967,7 @@ function* InternalizeJSONProperty(holder, name, reviver) {
       /* ReturnIfAbrupt */
       let _temp53 = yield* LengthOfArrayLike(val);
       /* c8 ignore if */
-      if (_temp53 && typeof _temp53 === 'object' && 'next' in _temp53) throw new Assert.Error('Forgot to yield*');
+      if (_temp53 && typeof _temp53 === 'object' && 'next' in _temp53) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp53 instanceof AbruptCompletion) return _temp53;
       /* c8 ignore if */
@@ -51916,7 +51988,7 @@ function* InternalizeJSONProperty(holder, name, reviver) {
         /* ReturnIfAbrupt */
         let _temp55 = yield* InternalizeJSONProperty(val, Istr, reviver);
         /* c8 ignore if */
-        if (_temp55 && typeof _temp55 === 'object' && 'next' in _temp55) throw new Assert.Error('Forgot to yield*');
+        if (_temp55 && typeof _temp55 === 'object' && 'next' in _temp55) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp55 instanceof AbruptCompletion) return _temp55;
         /* c8 ignore if */
@@ -51926,7 +51998,7 @@ function* InternalizeJSONProperty(holder, name, reviver) {
           /* ReturnIfAbrupt */
           let _temp56 = yield* val.Delete(Istr);
           /* c8 ignore if */
-          if (_temp56 && typeof _temp56 === 'object' && 'next' in _temp56) throw new Assert.Error('Forgot to yield*');
+          if (_temp56 && typeof _temp56 === 'object' && 'next' in _temp56) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp56 instanceof AbruptCompletion) return _temp56;
           /* c8 ignore if */
@@ -51935,7 +52007,7 @@ function* InternalizeJSONProperty(holder, name, reviver) {
           /* ReturnIfAbrupt */
           let _temp57 = yield* CreateDataProperty(val, Istr, newElement);
           /* c8 ignore if */
-          if (_temp57 && typeof _temp57 === 'object' && 'next' in _temp57) throw new Assert.Error('Forgot to yield*');
+          if (_temp57 && typeof _temp57 === 'object' && 'next' in _temp57) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp57 instanceof AbruptCompletion) return _temp57;
           /* c8 ignore if */
@@ -51947,7 +52019,7 @@ function* InternalizeJSONProperty(holder, name, reviver) {
       /* ReturnIfAbrupt */
       let _temp58 = yield* EnumerableOwnPropertyNames(val, 'key');
       /* c8 ignore if */
-      if (_temp58 && typeof _temp58 === 'object' && 'next' in _temp58) throw new Assert.Error('Forgot to yield*');
+      if (_temp58 && typeof _temp58 === 'object' && 'next' in _temp58) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp58 instanceof AbruptCompletion) return _temp58;
       /* c8 ignore if */
@@ -51957,7 +52029,7 @@ function* InternalizeJSONProperty(holder, name, reviver) {
         /* ReturnIfAbrupt */
         let _temp59 = yield* InternalizeJSONProperty(val, P, reviver);
         /* c8 ignore if */
-        if (_temp59 && typeof _temp59 === 'object' && 'next' in _temp59) throw new Assert.Error('Forgot to yield*');
+        if (_temp59 && typeof _temp59 === 'object' && 'next' in _temp59) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp59 instanceof AbruptCompletion) return _temp59;
         /* c8 ignore if */
@@ -51967,7 +52039,7 @@ function* InternalizeJSONProperty(holder, name, reviver) {
           /* ReturnIfAbrupt */
           let _temp60 = yield* val.Delete(P);
           /* c8 ignore if */
-          if (_temp60 && typeof _temp60 === 'object' && 'next' in _temp60) throw new Assert.Error('Forgot to yield*');
+          if (_temp60 && typeof _temp60 === 'object' && 'next' in _temp60) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp60 instanceof AbruptCompletion) return _temp60;
           /* c8 ignore if */
@@ -51976,7 +52048,7 @@ function* InternalizeJSONProperty(holder, name, reviver) {
           /* ReturnIfAbrupt */
           let _temp61 = yield* CreateDataProperty(val, P, newElement);
           /* c8 ignore if */
-          if (_temp61 && typeof _temp61 === 'object' && 'next' in _temp61) throw new Assert.Error('Forgot to yield*');
+          if (_temp61 && typeof _temp61 === 'object' && 'next' in _temp61) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp61 instanceof AbruptCompletion) return _temp61;
           /* c8 ignore if */
@@ -51993,7 +52065,7 @@ function* JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp62 = yield* ToString(text);
   /* c8 ignore if */
-  if (_temp62 && typeof _temp62 === 'object' && 'next' in _temp62) throw new Assert.Error('Forgot to yield*');
+  if (_temp62 && typeof _temp62 === 'object' && 'next' in _temp62) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp62 instanceof AbruptCompletion) return _temp62;
   /* c8 ignore if */
@@ -52005,7 +52077,7 @@ function* JSON_parse([text = Value.undefined, reviver = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp63 = JSONValidator.validate(jsonString.stringValue());
   /* c8 ignore if */
-  if (_temp63 && typeof _temp63 === 'object' && 'next' in _temp63) throw new Assert.Error('Forgot to yield*');
+  if (_temp63 && typeof _temp63 === 'object' && 'next' in _temp63) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp63 instanceof AbruptCompletion) return _temp63;
   /* c8 ignore if */
@@ -52067,7 +52139,7 @@ function* SerializeJSONProperty(state, key, holder) {
   /* ReturnIfAbrupt */
   let _temp66 = yield* Get(holder, key);
   /* c8 ignore if */
-  if (_temp66 && typeof _temp66 === 'object' && 'next' in _temp66) throw new Assert.Error('Forgot to yield*');
+  if (_temp66 && typeof _temp66 === 'object' && 'next' in _temp66) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp66 instanceof AbruptCompletion) return _temp66;
   /* c8 ignore if */
@@ -52077,7 +52149,7 @@ function* SerializeJSONProperty(state, key, holder) {
     /* ReturnIfAbrupt */
     let _temp67 = yield* GetV(value, Value('toJSON'));
     /* c8 ignore if */
-    if (_temp67 && typeof _temp67 === 'object' && 'next' in _temp67) throw new Assert.Error('Forgot to yield*');
+    if (_temp67 && typeof _temp67 === 'object' && 'next' in _temp67) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp67 instanceof AbruptCompletion) return _temp67;
     /* c8 ignore if */
@@ -52087,7 +52159,7 @@ function* SerializeJSONProperty(state, key, holder) {
       /* ReturnIfAbrupt */
       let _temp68 = yield* Call(toJSON, value, [key]);
       /* c8 ignore if */
-      if (_temp68 && typeof _temp68 === 'object' && 'next' in _temp68) throw new Assert.Error('Forgot to yield*');
+      if (_temp68 && typeof _temp68 === 'object' && 'next' in _temp68) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp68 instanceof AbruptCompletion) return _temp68;
       /* c8 ignore if */
@@ -52099,7 +52171,7 @@ function* SerializeJSONProperty(state, key, holder) {
     /* ReturnIfAbrupt */
     let _temp69 = yield* Call(state.ReplacerFunction, holder, [key, value]);
     /* c8 ignore if */
-    if (_temp69 && typeof _temp69 === 'object' && 'next' in _temp69) throw new Assert.Error('Forgot to yield*');
+    if (_temp69 && typeof _temp69 === 'object' && 'next' in _temp69) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp69 instanceof AbruptCompletion) return _temp69;
     /* c8 ignore if */
@@ -52111,7 +52183,7 @@ function* SerializeJSONProperty(state, key, holder) {
       /* ReturnIfAbrupt */
       let _temp70 = yield* ToNumber(value);
       /* c8 ignore if */
-      if (_temp70 && typeof _temp70 === 'object' && 'next' in _temp70) throw new Assert.Error('Forgot to yield*');
+      if (_temp70 && typeof _temp70 === 'object' && 'next' in _temp70) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp70 instanceof AbruptCompletion) return _temp70;
       /* c8 ignore if */
@@ -52121,7 +52193,7 @@ function* SerializeJSONProperty(state, key, holder) {
       /* ReturnIfAbrupt */
       let _temp71 = yield* ToString(value);
       /* c8 ignore if */
-      if (_temp71 && typeof _temp71 === 'object' && 'next' in _temp71) throw new Assert.Error('Forgot to yield*');
+      if (_temp71 && typeof _temp71 === 'object' && 'next' in _temp71) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp71 instanceof AbruptCompletion) return _temp71;
       /* c8 ignore if */
@@ -52168,7 +52240,7 @@ function* SerializeJSONProperty(state, key, holder) {
     /* ReturnIfAbrupt */
     let _temp73 = IsArray(value);
     /* c8 ignore if */
-    if (_temp73 && typeof _temp73 === 'object' && 'next' in _temp73) throw new Assert.Error('Forgot to yield*');
+    if (_temp73 && typeof _temp73 === 'object' && 'next' in _temp73) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp73 instanceof AbruptCompletion) return _temp73;
     /* c8 ignore if */
@@ -52220,7 +52292,7 @@ function* SerializeJSONObject(state, value) {
     /* ReturnIfAbrupt */
     let _temp74 = yield* EnumerableOwnPropertyNames(value, 'key');
     /* c8 ignore if */
-    if (_temp74 && typeof _temp74 === 'object' && 'next' in _temp74) throw new Assert.Error('Forgot to yield*');
+    if (_temp74 && typeof _temp74 === 'object' && 'next' in _temp74) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp74 instanceof AbruptCompletion) return _temp74;
     /* c8 ignore if */
@@ -52232,7 +52304,7 @@ function* SerializeJSONObject(state, value) {
     /* ReturnIfAbrupt */
     let _temp75 = yield* SerializeJSONProperty(state, P, value);
     /* c8 ignore if */
-    if (_temp75 && typeof _temp75 === 'object' && 'next' in _temp75) throw new Assert.Error('Forgot to yield*');
+    if (_temp75 && typeof _temp75 === 'object' && 'next' in _temp75) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp75 instanceof AbruptCompletion) return _temp75;
     /* c8 ignore if */
@@ -52279,7 +52351,7 @@ function* SerializeJSONArray(state, value) {
   /* ReturnIfAbrupt */
   let _temp76 = yield* LengthOfArrayLike(value);
   /* c8 ignore if */
-  if (_temp76 && typeof _temp76 === 'object' && 'next' in _temp76) throw new Assert.Error('Forgot to yield*');
+  if (_temp76 && typeof _temp76 === 'object' && 'next' in _temp76) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp76 instanceof AbruptCompletion) return _temp76;
   /* c8 ignore if */
@@ -52301,7 +52373,7 @@ function* SerializeJSONArray(state, value) {
     /* ReturnIfAbrupt */
     let _temp78 = yield* SerializeJSONProperty(state, indexStr, value);
     /* c8 ignore if */
-    if (_temp78 && typeof _temp78 === 'object' && 'next' in _temp78) throw new Assert.Error('Forgot to yield*');
+    if (_temp78 && typeof _temp78 === 'object' && 'next' in _temp78) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp78 instanceof AbruptCompletion) return _temp78;
     /* c8 ignore if */
@@ -52346,7 +52418,7 @@ function* JSON_stringify([value = Value.undefined, replacer = Value.undefined, _
       /* ReturnIfAbrupt */
       let _temp79 = IsArray(replacer);
       /* c8 ignore if */
-      if (_temp79 && typeof _temp79 === 'object' && 'next' in _temp79) throw new Assert.Error('Forgot to yield*');
+      if (_temp79 && typeof _temp79 === 'object' && 'next' in _temp79) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp79 instanceof AbruptCompletion) return _temp79;
       /* c8 ignore if */
@@ -52357,7 +52429,7 @@ function* JSON_stringify([value = Value.undefined, replacer = Value.undefined, _
         /* ReturnIfAbrupt */
         let _temp80 = yield* LengthOfArrayLike(replacer);
         /* c8 ignore if */
-        if (_temp80 && typeof _temp80 === 'object' && 'next' in _temp80) throw new Assert.Error('Forgot to yield*');
+        if (_temp80 && typeof _temp80 === 'object' && 'next' in _temp80) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp80 instanceof AbruptCompletion) return _temp80;
         /* c8 ignore if */
@@ -52379,7 +52451,7 @@ function* JSON_stringify([value = Value.undefined, replacer = Value.undefined, _
           /* ReturnIfAbrupt */
           let _temp82 = yield* Get(replacer, vStr);
           /* c8 ignore if */
-          if (_temp82 && typeof _temp82 === 'object' && 'next' in _temp82) throw new Assert.Error('Forgot to yield*');
+          if (_temp82 && typeof _temp82 === 'object' && 'next' in _temp82) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp82 instanceof AbruptCompletion) return _temp82;
           /* c8 ignore if */
@@ -52405,7 +52477,7 @@ function* JSON_stringify([value = Value.undefined, replacer = Value.undefined, _
               /* ReturnIfAbrupt */
               let _temp84 = yield* ToString(v);
               /* c8 ignore if */
-              if (_temp84 && typeof _temp84 === 'object' && 'next' in _temp84) throw new Assert.Error('Forgot to yield*');
+              if (_temp84 && typeof _temp84 === 'object' && 'next' in _temp84) throw new Assert.Error('Forgot to yield* on the completion.');
               /* c8 ignore if */
               if (_temp84 instanceof AbruptCompletion) return _temp84;
               /* c8 ignore if */
@@ -52427,7 +52499,7 @@ function* JSON_stringify([value = Value.undefined, replacer = Value.undefined, _
       /* ReturnIfAbrupt */
       let _temp85 = yield* ToNumber(space);
       /* c8 ignore if */
-      if (_temp85 && typeof _temp85 === 'object' && 'next' in _temp85) throw new Assert.Error('Forgot to yield*');
+      if (_temp85 && typeof _temp85 === 'object' && 'next' in _temp85) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp85 instanceof AbruptCompletion) return _temp85;
       /* c8 ignore if */
@@ -52437,7 +52509,7 @@ function* JSON_stringify([value = Value.undefined, replacer = Value.undefined, _
       /* ReturnIfAbrupt */
       let _temp86 = yield* ToString(space);
       /* c8 ignore if */
-      if (_temp86 && typeof _temp86 === 'object' && 'next' in _temp86) throw new Assert.Error('Forgot to yield*');
+      if (_temp86 && typeof _temp86 === 'object' && 'next' in _temp86) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp86 instanceof AbruptCompletion) return _temp86;
       /* c8 ignore if */
@@ -52530,7 +52602,7 @@ function* IsFinite([number = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp = yield* ToNumber(number);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -52554,7 +52626,7 @@ function* IsNaN([number = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp = yield* ToNumber(number);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -52578,7 +52650,7 @@ function* ParseFloat([string = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp = yield* ToString(string);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -52703,7 +52775,7 @@ function* ParseInt([string = Value.undefined, radix = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp = yield* ToString(string);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -52730,7 +52802,7 @@ function* ParseInt([string = Value.undefined, radix = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp3 = yield* ToInt32(radix);
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -53027,7 +53099,7 @@ function* decodeURI([encodedURI = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp2 = yield* ToString(encodedURI);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -53046,7 +53118,7 @@ function* decodeURIComponent([encodedURIComponent = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp3 = yield* ToString(encodedURIComponent);
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -53065,7 +53137,7 @@ function* encodeURI([uri = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp4 = yield* ToString(uri);
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -53084,7 +53156,7 @@ function* encodeURIComponent([uriComponent = Value.undefined]) {
   /* ReturnIfAbrupt */
   let _temp5 = yield* ToString(uriComponent);
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -53145,7 +53217,7 @@ function TypedArrayProto_buffer(_args, {
   /* ReturnIfAbrupt */
   let _temp = RequireInternalSlot(O, 'TypedArrayName');
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -53169,7 +53241,7 @@ function TypedArrayProto_byteLength(_args, {
   /* ReturnIfAbrupt */
   let _temp2 = RequireInternalSlot(O, 'TypedArrayName');
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -53192,7 +53264,7 @@ function TypedArrayProto_byteOffset(_args, {
   /* ReturnIfAbrupt */
   let _temp3 = RequireInternalSlot(O, 'TypedArrayName');
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -53216,7 +53288,7 @@ function* TypedArrayProto_copyWithin([target = Value.undefined, start = Value.un
   /* ReturnIfAbrupt */
   let _temp4 = ValidateTypedArray(O);
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -53226,7 +53298,7 @@ function* TypedArrayProto_copyWithin([target = Value.undefined, start = Value.un
   /* ReturnIfAbrupt */
   let _temp5 = yield* ToIntegerOrInfinity(target);
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -53243,7 +53315,7 @@ function* TypedArrayProto_copyWithin([target = Value.undefined, start = Value.un
   /* ReturnIfAbrupt */
   let _temp6 = yield* ToIntegerOrInfinity(start);
   /* c8 ignore if */
-  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp6 instanceof AbruptCompletion) return _temp6;
   /* c8 ignore if */
@@ -53264,7 +53336,7 @@ function* TypedArrayProto_copyWithin([target = Value.undefined, start = Value.un
     /* ReturnIfAbrupt */
     let _temp7 = yield* ToIntegerOrInfinity(end);
     /* c8 ignore if */
-    if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+    if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp7 instanceof AbruptCompletion) return _temp7;
     /* c8 ignore if */
@@ -53307,7 +53379,7 @@ function* TypedArrayProto_copyWithin([target = Value.undefined, start = Value.un
         /* ReturnIfAbrupt */
         let _temp8 = yield* SetValueInBuffer(buffer, toByteIndex, 'Uint8', value);
         /* c8 ignore if */
-        if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+        if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp8 instanceof AbruptCompletion) return _temp8;
         /* c8 ignore if */
@@ -53334,7 +53406,7 @@ function TypedArrayProto_entries(_args, {
   /* ReturnIfAbrupt */
   let _temp9 = ValidateTypedArray(O);
   /* c8 ignore if */
-  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp9 instanceof AbruptCompletion) return _temp9;
   /* c8 ignore if */
@@ -53352,7 +53424,7 @@ function* TypedArrayProto_fill([value = Value.undefined, start = Value.undefined
   /* ReturnIfAbrupt */
   let _temp10 = ValidateTypedArray(O);
   /* c8 ignore if */
-  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp10 instanceof AbruptCompletion) return _temp10;
   /* c8 ignore if */
@@ -53363,7 +53435,7 @@ function* TypedArrayProto_fill([value = Value.undefined, start = Value.undefined
     /* ReturnIfAbrupt */
     let _temp11 = yield* ToBigInt(value);
     /* c8 ignore if */
-    if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+    if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp11 instanceof AbruptCompletion) return _temp11;
     /* c8 ignore if */
@@ -53373,7 +53445,7 @@ function* TypedArrayProto_fill([value = Value.undefined, start = Value.undefined
     /* ReturnIfAbrupt */
     let _temp12 = yield* ToNumber(value);
     /* c8 ignore if */
-    if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield*');
+    if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp12 instanceof AbruptCompletion) return _temp12;
     /* c8 ignore if */
@@ -53383,7 +53455,7 @@ function* TypedArrayProto_fill([value = Value.undefined, start = Value.undefined
   /* ReturnIfAbrupt */
   let _temp13 = yield* ToIntegerOrInfinity(start);
   /* c8 ignore if */
-  if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield*');
+  if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp13 instanceof AbruptCompletion) return _temp13;
   /* c8 ignore if */
@@ -53404,7 +53476,7 @@ function* TypedArrayProto_fill([value = Value.undefined, start = Value.undefined
     /* ReturnIfAbrupt */
     let _temp14 = yield* ToIntegerOrInfinity(end);
     /* c8 ignore if */
-    if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield*');
+    if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp14 instanceof AbruptCompletion) return _temp14;
     /* c8 ignore if */
@@ -53462,7 +53534,7 @@ function* TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.
   /* ReturnIfAbrupt */
   let _temp17 = ValidateTypedArray(O);
   /* c8 ignore if */
-  if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield*');
+  if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp17 instanceof AbruptCompletion) return _temp17;
   /* c8 ignore if */
@@ -53501,7 +53573,7 @@ function* TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.
     /* ReturnIfAbrupt */
     let _temp20 = yield* Call(callbackfn, thisArg, [kValue, F(k), O]);
     /* c8 ignore if */
-    if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield*');
+    if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp20 instanceof AbruptCompletion) return _temp20;
     /* c8 ignore if */
@@ -53516,7 +53588,7 @@ function* TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.
   /* ReturnIfAbrupt */
   let _temp21 = yield* TypedArraySpeciesCreate(O, [F(captured)]);
   /* c8 ignore if */
-  if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield*');
+  if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp21 instanceof AbruptCompletion) return _temp21;
   /* c8 ignore if */
@@ -53560,7 +53632,7 @@ function TypedArrayProto_keys(_args, {
   /* ReturnIfAbrupt */
   let _temp24 = ValidateTypedArray(O);
   /* c8 ignore if */
-  if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) throw new Assert.Error('Forgot to yield*');
+  if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp24 instanceof AbruptCompletion) return _temp24;
   /* c8 ignore if */
@@ -53578,7 +53650,7 @@ function TypedArrayProto_length(_args, {
   /* ReturnIfAbrupt */
   let _temp25 = RequireInternalSlot(O, 'TypedArrayName');
   /* c8 ignore if */
-  if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield*');
+  if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp25 instanceof AbruptCompletion) return _temp25;
   /* c8 ignore if */
@@ -53601,7 +53673,7 @@ function* TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.und
   /* ReturnIfAbrupt */
   let _temp26 = ValidateTypedArray(O);
   /* c8 ignore if */
-  if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield*');
+  if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp26 instanceof AbruptCompletion) return _temp26;
   /* c8 ignore if */
@@ -53614,7 +53686,7 @@ function* TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.und
   /* ReturnIfAbrupt */
   let _temp27 = yield* TypedArraySpeciesCreate(O, [F(len)]);
   /* c8 ignore if */
-  if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield*');
+  if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp27 instanceof AbruptCompletion) return _temp27;
   /* c8 ignore if */
@@ -53647,7 +53719,7 @@ function* TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.und
     /* ReturnIfAbrupt */
     let _temp30 = yield* Call(callbackfn, thisArg, [kValue, F(k), O]);
     /* c8 ignore if */
-    if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) throw new Assert.Error('Forgot to yield*');
+    if (_temp30 && typeof _temp30 === 'object' && 'next' in _temp30) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp30 instanceof AbruptCompletion) return _temp30;
     /* c8 ignore if */
@@ -53710,7 +53782,7 @@ function* SetTypedArrayFromTypedArray(target, targetOffset, source) {
     /* ReturnIfAbrupt */
     let _temp32 = yield* CloneArrayBuffer(srcBuffer, srcByteOffset, srcByteLength);
     /* c8 ignore if */
-    if (_temp32 && typeof _temp32 === 'object' && 'next' in _temp32) throw new Assert.Error('Forgot to yield*');
+    if (_temp32 && typeof _temp32 === 'object' && 'next' in _temp32) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp32 instanceof AbruptCompletion) return _temp32;
     /* c8 ignore if */
@@ -53728,7 +53800,7 @@ function* SetTypedArrayFromTypedArray(target, targetOffset, source) {
       /* ReturnIfAbrupt */
       let _temp33 = yield* SetValueInBuffer(targetBuffer, targetByteIndex, 'Uint8', value, Value.true);
       /* c8 ignore if */
-      if (_temp33 && typeof _temp33 === 'object' && 'next' in _temp33) throw new Assert.Error('Forgot to yield*');
+      if (_temp33 && typeof _temp33 === 'object' && 'next' in _temp33) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp33 instanceof AbruptCompletion) return _temp33;
       /* c8 ignore if */
@@ -53742,7 +53814,7 @@ function* SetTypedArrayFromTypedArray(target, targetOffset, source) {
       /* ReturnIfAbrupt */
       let _temp34 = yield* SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value, Value.true);
       /* c8 ignore if */
-      if (_temp34 && typeof _temp34 === 'object' && 'next' in _temp34) throw new Assert.Error('Forgot to yield*');
+      if (_temp34 && typeof _temp34 === 'object' && 'next' in _temp34) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp34 instanceof AbruptCompletion) return _temp34;
       /* c8 ignore if */
@@ -53765,7 +53837,7 @@ function* SetTypedArrayFromArrayLike(target, targetOffset, source) {
   /* ReturnIfAbrupt */
   let _temp35 = ToObject(source);
   /* c8 ignore if */
-  if (_temp35 && typeof _temp35 === 'object' && 'next' in _temp35) throw new Assert.Error('Forgot to yield*');
+  if (_temp35 && typeof _temp35 === 'object' && 'next' in _temp35) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp35 instanceof AbruptCompletion) return _temp35;
   /* c8 ignore if */
@@ -53774,7 +53846,7 @@ function* SetTypedArrayFromArrayLike(target, targetOffset, source) {
   /* ReturnIfAbrupt */
   let _temp36 = yield* LengthOfArrayLike(src);
   /* c8 ignore if */
-  if (_temp36 && typeof _temp36 === 'object' && 'next' in _temp36) throw new Assert.Error('Forgot to yield*');
+  if (_temp36 && typeof _temp36 === 'object' && 'next' in _temp36) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp36 instanceof AbruptCompletion) return _temp36;
   /* c8 ignore if */
@@ -53802,7 +53874,7 @@ function* SetTypedArrayFromArrayLike(target, targetOffset, source) {
     /* ReturnIfAbrupt */
     let _temp38 = yield* Get(src, Pk);
     /* c8 ignore if */
-    if (_temp38 && typeof _temp38 === 'object' && 'next' in _temp38) throw new Assert.Error('Forgot to yield*');
+    if (_temp38 && typeof _temp38 === 'object' && 'next' in _temp38) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp38 instanceof AbruptCompletion) return _temp38;
     /* c8 ignore if */
@@ -53812,7 +53884,7 @@ function* SetTypedArrayFromArrayLike(target, targetOffset, source) {
     /* ReturnIfAbrupt */
     let _temp39 = yield* TypedArraySetElement(target, targetIndex, value);
     /* c8 ignore if */
-    if (_temp39 && typeof _temp39 === 'object' && 'next' in _temp39) throw new Assert.Error('Forgot to yield*');
+    if (_temp39 && typeof _temp39 === 'object' && 'next' in _temp39) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp39 instanceof AbruptCompletion) return _temp39;
     /* c8 ignore if */
@@ -53833,7 +53905,7 @@ function* TypedArrayProto_set([source = Value.undefined, offset = Value.undefine
   /* ReturnIfAbrupt */
   let _temp40 = RequireInternalSlot(target, 'TypedArrayName');
   /* c8 ignore if */
-  if (_temp40 && typeof _temp40 === 'object' && 'next' in _temp40) throw new Assert.Error('Forgot to yield*');
+  if (_temp40 && typeof _temp40 === 'object' && 'next' in _temp40) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp40 instanceof AbruptCompletion) return _temp40;
   /* c8 ignore if */
@@ -53844,7 +53916,7 @@ function* TypedArrayProto_set([source = Value.undefined, offset = Value.undefine
   /* ReturnIfAbrupt */
   let _temp41 = yield* ToIntegerOrInfinity(offset);
   /* c8 ignore if */
-  if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) throw new Assert.Error('Forgot to yield*');
+  if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp41 instanceof AbruptCompletion) return _temp41;
   /* c8 ignore if */
@@ -53859,7 +53931,7 @@ function* TypedArrayProto_set([source = Value.undefined, offset = Value.undefine
     /* ReturnIfAbrupt */
     let _temp42 = yield* SetTypedArrayFromTypedArray(target, targetOffset, source);
     /* c8 ignore if */
-    if (_temp42 && typeof _temp42 === 'object' && 'next' in _temp42) throw new Assert.Error('Forgot to yield*');
+    if (_temp42 && typeof _temp42 === 'object' && 'next' in _temp42) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp42 instanceof AbruptCompletion) return _temp42;
     /* c8 ignore if */
@@ -53868,7 +53940,7 @@ function* TypedArrayProto_set([source = Value.undefined, offset = Value.undefine
     /* ReturnIfAbrupt */
     let _temp43 = yield* SetTypedArrayFromArrayLike(target, targetOffset, source);
     /* c8 ignore if */
-    if (_temp43 && typeof _temp43 === 'object' && 'next' in _temp43) throw new Assert.Error('Forgot to yield*');
+    if (_temp43 && typeof _temp43 === 'object' && 'next' in _temp43) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp43 instanceof AbruptCompletion) return _temp43;
     /* c8 ignore if */
@@ -53887,7 +53959,7 @@ function* TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]
   /* ReturnIfAbrupt */
   let _temp44 = ValidateTypedArray(O);
   /* c8 ignore if */
-  if (_temp44 && typeof _temp44 === 'object' && 'next' in _temp44) throw new Assert.Error('Forgot to yield*');
+  if (_temp44 && typeof _temp44 === 'object' && 'next' in _temp44) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp44 instanceof AbruptCompletion) return _temp44;
   /* c8 ignore if */
@@ -53897,7 +53969,7 @@ function* TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]
   /* ReturnIfAbrupt */
   let _temp45 = yield* ToIntegerOrInfinity(start);
   /* c8 ignore if */
-  if (_temp45 && typeof _temp45 === 'object' && 'next' in _temp45) throw new Assert.Error('Forgot to yield*');
+  if (_temp45 && typeof _temp45 === 'object' && 'next' in _temp45) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp45 instanceof AbruptCompletion) return _temp45;
   /* c8 ignore if */
@@ -53918,7 +53990,7 @@ function* TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]
     /* ReturnIfAbrupt */
     let _temp46 = yield* ToIntegerOrInfinity(end);
     /* c8 ignore if */
-    if (_temp46 && typeof _temp46 === 'object' && 'next' in _temp46) throw new Assert.Error('Forgot to yield*');
+    if (_temp46 && typeof _temp46 === 'object' && 'next' in _temp46) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp46 instanceof AbruptCompletion) return _temp46;
     /* c8 ignore if */
@@ -53937,7 +54009,7 @@ function* TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]
   /* ReturnIfAbrupt */
   let _temp47 = yield* TypedArraySpeciesCreate(O, [F(countBytes)]);
   /* c8 ignore if */
-  if (_temp47 && typeof _temp47 === 'object' && 'next' in _temp47) throw new Assert.Error('Forgot to yield*');
+  if (_temp47 && typeof _temp47 === 'object' && 'next' in _temp47) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp47 instanceof AbruptCompletion) return _temp47;
   /* c8 ignore if */
@@ -53965,7 +54037,7 @@ function* TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]
         /* ReturnIfAbrupt */
         let _temp48 = yield* SetValueInBuffer(targetBuffer, targetByteIndex, 'Uint8', value);
         /* c8 ignore if */
-        if (_temp48 && typeof _temp48 === 'object' && 'next' in _temp48) throw new Assert.Error('Forgot to yield*');
+        if (_temp48 && typeof _temp48 === 'object' && 'next' in _temp48) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
         if (_temp48 instanceof AbruptCompletion) return _temp48;
         /* c8 ignore if */
@@ -54039,7 +54111,7 @@ function* TypedArrayProto_sort([comparator = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp53 = ValidateTypedArray(obj);
   /* c8 ignore if */
-  if (_temp53 && typeof _temp53 === 'object' && 'next' in _temp53) throw new Assert.Error('Forgot to yield*');
+  if (_temp53 && typeof _temp53 === 'object' && 'next' in _temp53) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp53 instanceof AbruptCompletion) return _temp53;
   /* c8 ignore if */
@@ -54054,7 +54126,7 @@ function* TypedArrayProto_sort([comparator = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp54 = yield* SortIndexedProperties(obj, len, SortCompare, 'read-through-holes');
   /* c8 ignore if */
-  if (_temp54 && typeof _temp54 === 'object' && 'next' in _temp54) throw new Assert.Error('Forgot to yield*');
+  if (_temp54 && typeof _temp54 === 'object' && 'next' in _temp54) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp54 instanceof AbruptCompletion) return _temp54;
   /* c8 ignore if */
@@ -54096,7 +54168,7 @@ function* TypedArrayProto_subarray([begin = Value.undefined, end = Value.undefin
   /* ReturnIfAbrupt */
   let _temp57 = RequireInternalSlot(O, 'TypedArrayName');
   /* c8 ignore if */
-  if (_temp57 && typeof _temp57 === 'object' && 'next' in _temp57) throw new Assert.Error('Forgot to yield*');
+  if (_temp57 && typeof _temp57 === 'object' && 'next' in _temp57) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp57 instanceof AbruptCompletion) return _temp57;
   /* c8 ignore if */
@@ -54113,7 +54185,7 @@ function* TypedArrayProto_subarray([begin = Value.undefined, end = Value.undefin
   /* ReturnIfAbrupt */
   let _temp58 = yield* ToIntegerOrInfinity(begin);
   /* c8 ignore if */
-  if (_temp58 && typeof _temp58 === 'object' && 'next' in _temp58) throw new Assert.Error('Forgot to yield*');
+  if (_temp58 && typeof _temp58 === 'object' && 'next' in _temp58) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp58 instanceof AbruptCompletion) return _temp58;
   /* c8 ignore if */
@@ -54141,7 +54213,7 @@ function* TypedArrayProto_subarray([begin = Value.undefined, end = Value.undefin
       /* ReturnIfAbrupt */
       let _temp59 = yield* ToIntegerOrInfinity(end);
       /* c8 ignore if */
-      if (_temp59 && typeof _temp59 === 'object' && 'next' in _temp59) throw new Assert.Error('Forgot to yield*');
+      if (_temp59 && typeof _temp59 === 'object' && 'next' in _temp59) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp59 instanceof AbruptCompletion) return _temp59;
       /* c8 ignore if */
@@ -54173,7 +54245,7 @@ function TypedArrayProto_values(_args, {
   /* ReturnIfAbrupt */
   let _temp60 = ValidateTypedArray(O);
   /* c8 ignore if */
-  if (_temp60 && typeof _temp60 === 'object' && 'next' in _temp60) throw new Assert.Error('Forgot to yield*');
+  if (_temp60 && typeof _temp60 === 'object' && 'next' in _temp60) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp60 instanceof AbruptCompletion) return _temp60;
   /* c8 ignore if */
@@ -54214,7 +54286,7 @@ function* TypedArrayProto_at([index = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp61 = ValidateTypedArray(O);
   /* c8 ignore if */
-  if (_temp61 && typeof _temp61 === 'object' && 'next' in _temp61) throw new Assert.Error('Forgot to yield*');
+  if (_temp61 && typeof _temp61 === 'object' && 'next' in _temp61) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp61 instanceof AbruptCompletion) return _temp61;
   /* c8 ignore if */
@@ -54224,7 +54296,7 @@ function* TypedArrayProto_at([index = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp62 = yield* ToIntegerOrInfinity(index);
   /* c8 ignore if */
-  if (_temp62 && typeof _temp62 === 'object' && 'next' in _temp62) throw new Assert.Error('Forgot to yield*');
+  if (_temp62 && typeof _temp62 === 'object' && 'next' in _temp62) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp62 instanceof AbruptCompletion) return _temp62;
   /* c8 ignore if */
@@ -54280,7 +54352,7 @@ function bootstrapTypedArrayPrototype(realmRec) {
     /* ReturnIfAbrupt */
     let _temp66 = ValidateTypedArray(O);
     /* c8 ignore if */
-    if (_temp66 && typeof _temp66 === 'object' && 'next' in _temp66) throw new Assert.Error('Forgot to yield*');
+    if (_temp66 && typeof _temp66 === 'object' && 'next' in _temp66) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp66 instanceof AbruptCompletion) return _temp66;
     /* c8 ignore if */
@@ -54341,7 +54413,7 @@ function bootstrapTypedArrayConstructors(realmRec) {
           /* ReturnIfAbrupt */
           let _temp = yield* AllocateTypedArray(constructorName, NewTarget, proto);
           /* c8 ignore if */
-          if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+          if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp instanceof AbruptCompletion) return _temp;
           /* c8 ignore if */
@@ -54351,7 +54423,7 @@ function bootstrapTypedArrayConstructors(realmRec) {
             /* ReturnIfAbrupt */
             let _temp2 = yield* InitializeTypedArrayFromTypedArray(O, firstArgument);
             /* c8 ignore if */
-            if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+            if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
             /* c8 ignore if */
             if (_temp2 instanceof AbruptCompletion) return _temp2;
             /* c8 ignore if */
@@ -54372,7 +54444,7 @@ function bootstrapTypedArrayConstructors(realmRec) {
             /* ReturnIfAbrupt */
             let _temp3 = yield* InitializeTypedArrayFromArrayBuffer(O, firstArgument, byteOffset, length);
             /* c8 ignore if */
-            if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+            if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
             /* c8 ignore if */
             if (_temp3 instanceof AbruptCompletion) return _temp3;
             /* c8 ignore if */
@@ -54382,7 +54454,7 @@ function bootstrapTypedArrayConstructors(realmRec) {
             /* ReturnIfAbrupt */
             let _temp4 = yield* GetMethod(firstArgument, wellKnownSymbols.iterator);
             /* c8 ignore if */
-            if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+            if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
             /* c8 ignore if */
             if (_temp4 instanceof AbruptCompletion) return _temp4;
             /* c8 ignore if */
@@ -54392,7 +54464,7 @@ function bootstrapTypedArrayConstructors(realmRec) {
               /* ReturnIfAbrupt */
               let _temp7 = yield* GetIteratorFromMethod(firstArgument, usingIterator);
               /* c8 ignore if */
-              if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+              if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
               /* c8 ignore if */
               if (_temp7 instanceof AbruptCompletion) return _temp7;
               /* c8 ignore if */
@@ -54400,7 +54472,7 @@ function bootstrapTypedArrayConstructors(realmRec) {
               /* ReturnIfAbrupt */
               let _temp5 = yield* IteratorToList(_temp7);
               /* c8 ignore if */
-              if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+              if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
               /* c8 ignore if */
               if (_temp5 instanceof AbruptCompletion) return _temp5;
               /* c8 ignore if */
@@ -54409,7 +54481,7 @@ function bootstrapTypedArrayConstructors(realmRec) {
               /* ReturnIfAbrupt */
               let _temp6 = yield* InitializeTypedArrayFromList(O, values);
               /* c8 ignore if */
-              if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+              if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
               /* c8 ignore if */
               if (_temp6 instanceof AbruptCompletion) return _temp6;
               /* c8 ignore if */
@@ -54418,7 +54490,7 @@ function bootstrapTypedArrayConstructors(realmRec) {
               /* ReturnIfAbrupt */
               let _temp8 = yield* InitializeTypedArrayFromArrayLike(O, firstArgument);
               /* c8 ignore if */
-              if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+              if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
               /* c8 ignore if */
               if (_temp8 instanceof AbruptCompletion) return _temp8;
               /* c8 ignore if */
@@ -54431,7 +54503,7 @@ function bootstrapTypedArrayConstructors(realmRec) {
           /* ReturnIfAbrupt */
           let _temp9 = yield* ToIndex(firstArgument);
           /* c8 ignore if */
-          if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+          if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp9 instanceof AbruptCompletion) return _temp9;
           /* c8 ignore if */
@@ -54487,7 +54559,7 @@ function* DataViewConstructor([buffer = Value.undefined, byteOffset = Value.unde
   /* ReturnIfAbrupt */
   let _temp = RequireInternalSlot(buffer, 'ArrayBufferData');
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -54496,7 +54568,7 @@ function* DataViewConstructor([buffer = Value.undefined, byteOffset = Value.unde
   /* ReturnIfAbrupt */
   let _temp2 = yield* ToIndex(byteOffset);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -54520,7 +54592,7 @@ function* DataViewConstructor([buffer = Value.undefined, byteOffset = Value.unde
     /* ReturnIfAbrupt */
     let _temp3 = yield* ToIndex(byteLength);
     /* c8 ignore if */
-    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp3 instanceof AbruptCompletion) return _temp3;
     /* c8 ignore if */
@@ -54536,7 +54608,7 @@ function* DataViewConstructor([buffer = Value.undefined, byteOffset = Value.unde
   /* ReturnIfAbrupt */
   let _temp4 = yield* OrdinaryCreateFromConstructor(NewTarget, '%DataView.prototype%', ['DataView', 'ViewedArrayBuffer', 'ByteLength', 'ByteOffset']);
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -54571,7 +54643,7 @@ function DataViewProto_buffer(_args, {
   /* ReturnIfAbrupt */
   let _temp = RequireInternalSlot(O, 'DataView');
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -54595,7 +54667,7 @@ function* DataViewProto_byteLength(_args, {
   /* ReturnIfAbrupt */
   let _temp2 = RequireInternalSlot(O, 'DataView');
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -54625,7 +54697,7 @@ function* DataViewProto_byteOffset(_args, {
   /* ReturnIfAbrupt */
   let _temp3 = RequireInternalSlot(O, 'DataView');
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -54891,7 +54963,7 @@ function WeakMapProto_delete([key = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp = RequireInternalSlot(M, 'WeakMapData');
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -54909,7 +54981,7 @@ function WeakMapProto_delete([key = Value.undefined], {
       /* ReturnIfAbrupt */
       let _temp2 = surroundingAgent.debugger_tryTouchDuringPreview(M);
       /* c8 ignore if */
-      if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+      if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp2 instanceof AbruptCompletion) return _temp2;
       /* c8 ignore if */
@@ -54936,7 +55008,7 @@ function WeakMapProto_get([key = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp3 = RequireInternalSlot(M, 'WeakMapData');
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -54968,7 +55040,7 @@ function WeakMapProto_has([key = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp4 = RequireInternalSlot(M, 'WeakMapData');
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -55000,7 +55072,7 @@ function WeakMapProto_set([key = Value.undefined, value = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp5 = RequireInternalSlot(M, 'WeakMapData');
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -55017,7 +55089,7 @@ function WeakMapProto_set([key = Value.undefined, value = Value.undefined], {
       /* ReturnIfAbrupt */
       let _temp6 = surroundingAgent.debugger_tryTouchDuringPreview(M);
       /* c8 ignore if */
-      if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+      if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp6 instanceof AbruptCompletion) return _temp6;
       /* c8 ignore if */
@@ -55058,7 +55130,7 @@ function* WeakMapConstructor([iterable = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp = yield* OrdinaryCreateFromConstructor(NewTarget, '%WeakMap.prototype%', ['WeakMapData']);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -55074,7 +55146,7 @@ function* WeakMapConstructor([iterable = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp2 = yield* Get(map, Value('set'));
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -55102,7 +55174,7 @@ function WeakSetProto_add([value = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp = RequireInternalSlot(S, 'WeakSetData');
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -55137,7 +55209,7 @@ function WeakSetProto_delete([value = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp2 = RequireInternalSlot(S, 'WeakSetData');
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -55155,7 +55227,7 @@ function WeakSetProto_delete([value = Value.undefined], {
       /* ReturnIfAbrupt */
       let _temp3 = surroundingAgent.debugger_tryTouchDuringPreview(S);
       /* c8 ignore if */
-      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp3 instanceof AbruptCompletion) return _temp3;
       /* c8 ignore if */
@@ -55180,7 +55252,7 @@ function WeakSetProto_has([value = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp4 = RequireInternalSlot(S, 'WeakSetData');
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -55221,7 +55293,7 @@ function* WeakSetConstructor([iterable = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp = yield* OrdinaryCreateFromConstructor(NewTarget, '%WeakSet.prototype%', ['WeakSetData']);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -55237,7 +55309,7 @@ function* WeakSetConstructor([iterable = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp2 = yield* Get(set, Value('add'));
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -55251,7 +55323,7 @@ function* WeakSetConstructor([iterable = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp3 = yield* GetIterator(iterable, 'sync');
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -55262,7 +55334,7 @@ function* WeakSetConstructor([iterable = Value.undefined], {
     /* ReturnIfAbrupt */
     let _temp4 = yield* IteratorStepValue(iteratorRecord);
     /* c8 ignore if */
-    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) return _temp4;
     /* c8 ignore if */
@@ -55304,7 +55376,7 @@ function* AggregateErrorConstructor([errors = Value.undefined, message = Value.u
   /* ReturnIfAbrupt */
   let _temp = yield* OrdinaryCreateFromConstructor(newTarget, '%AggregateError.prototype%', ['ErrorData']);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -55315,7 +55387,7 @@ function* AggregateErrorConstructor([errors = Value.undefined, message = Value.u
     /* ReturnIfAbrupt */
     let _temp2 = yield* ToString(message);
     /* c8 ignore if */
-    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp2 instanceof AbruptCompletion) return _temp2;
     /* c8 ignore if */
@@ -55337,7 +55409,7 @@ function* AggregateErrorConstructor([errors = Value.undefined, message = Value.u
   /* ReturnIfAbrupt */
   let _temp4 = yield* InstallErrorCause(O, options);
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -55346,7 +55418,7 @@ function* AggregateErrorConstructor([errors = Value.undefined, message = Value.u
   /* ReturnIfAbrupt */
   let _temp8 = yield* GetIterator(errors, 'sync');
   /* c8 ignore if */
-  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp8 instanceof AbruptCompletion) return _temp8;
   /* c8 ignore if */
@@ -55354,7 +55426,7 @@ function* AggregateErrorConstructor([errors = Value.undefined, message = Value.u
   /* ReturnIfAbrupt */
   let _temp5 = yield* IteratorToList(_temp8);
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -55414,7 +55486,7 @@ function WeakRefProto_deref(_args, {
   /* ReturnIfAbrupt */
   let _temp = RequireInternalSlot(weakRef, 'WeakRefTarget');
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -55457,7 +55529,7 @@ function* WeakRefConstructor([target = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp = yield* OrdinaryCreateFromConstructor(NewTarget, '%WeakRef.prototype%', ['WeakRefTarget']);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -55495,7 +55567,7 @@ function* FinalizationRegistryProto_cleanupSome([callback = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp = RequireInternalSlot(finalizationRegistry, 'Cells');
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -55509,7 +55581,7 @@ function* FinalizationRegistryProto_cleanupSome([callback = Value.undefined], {
   let _temp2 = yield* CleanupFinalizationRegistry(finalizationRegistry, {
     Callback: callback});
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -55529,7 +55601,7 @@ function FinalizationRegistryProto_register([target = Value.undefined, heldValue
   /* ReturnIfAbrupt */
   let _temp3 = RequireInternalSlot(finalizationRegistry, 'Cells');
   /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
@@ -55561,7 +55633,7 @@ function FinalizationRegistryProto_register([target = Value.undefined, heldValue
   /* ReturnIfAbrupt */
   let _temp4 = surroundingAgent.debugger_tryTouchDuringPreview(finalizationRegistry);
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -55582,7 +55654,7 @@ function FinalizationRegistryProto_unregister([unregisterToken = Value.undefined
   /* ReturnIfAbrupt */
   let _temp5 = RequireInternalSlot(finalizationRegistry, 'Cells');
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -55596,7 +55668,7 @@ function FinalizationRegistryProto_unregister([unregisterToken = Value.undefined
   /* ReturnIfAbrupt */
   let _temp6 = surroundingAgent.debugger_tryTouchDuringPreview(finalizationRegistry);
   /* c8 ignore if */
-  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp6 instanceof AbruptCompletion) return _temp6;
   /* c8 ignore if */
@@ -55641,7 +55713,7 @@ function* FinalizationRegistryConstructor([cleanupCallback = Value.undefined], {
   /* ReturnIfAbrupt */
   let _temp = yield* OrdinaryCreateFromConstructor(NewTarget, '%FinalizationRegistry.prototype%', ['Realm', 'CleanupCallback', 'Cells']);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -55831,7 +55903,7 @@ function* SetDefaultGlobalBindings(realmRec) {
       Configurable: Value.false
     }));
     /* c8 ignore if */
-    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp3 instanceof AbruptCompletion) return _temp3;
     /* c8 ignore if */
@@ -55845,7 +55917,7 @@ function* SetDefaultGlobalBindings(realmRec) {
     Configurable: Value.true
   }));
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp4 instanceof AbruptCompletion) return _temp4;
   /* c8 ignore if */
@@ -55868,7 +55940,7 @@ function* SetDefaultGlobalBindings(realmRec) {
       Configurable: Value.true
     }));
     /* c8 ignore if */
-    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp5 instanceof AbruptCompletion) return _temp5;
     /* c8 ignore if */
@@ -55941,7 +56013,7 @@ function* GetValue(V) {
     /* ReturnIfAbrupt */
     let _temp = ToObject(V.Base);
     /* c8 ignore if */
-    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) return _temp;
     /* c8 ignore if */
@@ -56004,7 +56076,7 @@ function* PutValue(V, W) {
     /* ReturnIfAbrupt */
     let _temp2 = yield* Set$1(globalObj, V.ReferencedName, W, Value.false);
     /* c8 ignore if */
-    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp2 instanceof AbruptCompletion) return _temp2;
     /* c8 ignore if */
@@ -56034,7 +56106,7 @@ function* PutValue(V, W) {
     /* ReturnIfAbrupt */
     let _temp4 = yield* baseObj.Set(V.ReferencedName, W, GetThisValue(V));
     /* c8 ignore if */
-    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) return _temp4;
     /* c8 ignore if */
@@ -56158,7 +56230,7 @@ function* RegExpAlloc(newTarget) {
   /* ReturnIfAbrupt */
   let _temp = yield* OrdinaryCreateFromConstructor(newTarget, '%RegExp.prototype%', ['RegExpMatcher', 'OriginalSource', 'OriginalFlags']);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -56192,7 +56264,7 @@ function* RegExpInitialize(obj, pattern, flags) {
     /* ReturnIfAbrupt */
     let _temp3 = yield* ToString(pattern);
     /* c8 ignore if */
-    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp3 instanceof AbruptCompletion) return _temp3;
     /* c8 ignore if */
@@ -56208,7 +56280,7 @@ function* RegExpInitialize(obj, pattern, flags) {
     /* ReturnIfAbrupt */
     let _temp4 = yield* ToString(flags);
     /* c8 ignore if */
-    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) return _temp4;
     /* c8 ignore if */
@@ -56252,7 +56324,7 @@ function* RegExpInitialize(obj, pattern, flags) {
   /* ReturnIfAbrupt */
   let _temp5 = yield* Set$1(obj, Value('lastIndex'), F(0), Value.true);
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -56267,7 +56339,7 @@ function* RegExpCreate(P, F) {
   /* ReturnIfAbrupt */
   let _temp6 = yield* RegExpAlloc(surroundingAgent.intrinsic('%RegExp%'));
   /* c8 ignore if */
-  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp6 instanceof AbruptCompletion) return _temp6;
   /* c8 ignore if */
@@ -56691,7 +56763,7 @@ function* ToPropertyDescriptor(Obj) {
   /* ReturnIfAbrupt */
   let _temp7 = yield* HasProperty(Obj, Value('enumerable'));
   /* c8 ignore if */
-  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp7 instanceof AbruptCompletion) return _temp7;
   /* c8 ignore if */
@@ -56701,7 +56773,7 @@ function* ToPropertyDescriptor(Obj) {
     /* ReturnIfAbrupt */
     let _temp8 = yield* Get(Obj, Value('enumerable'));
     /* c8 ignore if */
-    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp8 instanceof AbruptCompletion) return _temp8;
     /* c8 ignore if */
@@ -56715,7 +56787,7 @@ function* ToPropertyDescriptor(Obj) {
   /* ReturnIfAbrupt */
   let _temp9 = yield* HasProperty(Obj, Value('configurable'));
   /* c8 ignore if */
-  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp9 instanceof AbruptCompletion) return _temp9;
   /* c8 ignore if */
@@ -56725,7 +56797,7 @@ function* ToPropertyDescriptor(Obj) {
     /* ReturnIfAbrupt */
     let _temp10 = yield* Get(Obj, Value('configurable'));
     /* c8 ignore if */
-    if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+    if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp10 instanceof AbruptCompletion) return _temp10;
     /* c8 ignore if */
@@ -56739,7 +56811,7 @@ function* ToPropertyDescriptor(Obj) {
   /* ReturnIfAbrupt */
   let _temp11 = yield* HasProperty(Obj, Value('value'));
   /* c8 ignore if */
-  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp11 instanceof AbruptCompletion) return _temp11;
   /* c8 ignore if */
@@ -56749,7 +56821,7 @@ function* ToPropertyDescriptor(Obj) {
     /* ReturnIfAbrupt */
     let _temp12 = yield* Get(Obj, Value('value'));
     /* c8 ignore if */
-    if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield*');
+    if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp12 instanceof AbruptCompletion) return _temp12;
     /* c8 ignore if */
@@ -56763,7 +56835,7 @@ function* ToPropertyDescriptor(Obj) {
   /* ReturnIfAbrupt */
   let _temp13 = yield* HasProperty(Obj, Value('writable'));
   /* c8 ignore if */
-  if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield*');
+  if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp13 instanceof AbruptCompletion) return _temp13;
   /* c8 ignore if */
@@ -56773,7 +56845,7 @@ function* ToPropertyDescriptor(Obj) {
     /* ReturnIfAbrupt */
     let _temp14 = yield* Get(Obj, Value('writable'));
     /* c8 ignore if */
-    if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield*');
+    if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp14 instanceof AbruptCompletion) return _temp14;
     /* c8 ignore if */
@@ -56787,7 +56859,7 @@ function* ToPropertyDescriptor(Obj) {
   /* ReturnIfAbrupt */
   let _temp15 = yield* HasProperty(Obj, Value('get'));
   /* c8 ignore if */
-  if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield*');
+  if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp15 instanceof AbruptCompletion) return _temp15;
   /* c8 ignore if */
@@ -56797,7 +56869,7 @@ function* ToPropertyDescriptor(Obj) {
     /* ReturnIfAbrupt */
     let _temp16 = yield* Get(Obj, Value('get'));
     /* c8 ignore if */
-    if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield*');
+    if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp16 instanceof AbruptCompletion) return _temp16;
     /* c8 ignore if */
@@ -56814,7 +56886,7 @@ function* ToPropertyDescriptor(Obj) {
   /* ReturnIfAbrupt */
   let _temp17 = yield* HasProperty(Obj, Value('set'));
   /* c8 ignore if */
-  if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield*');
+  if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp17 instanceof AbruptCompletion) return _temp17;
   /* c8 ignore if */
@@ -56824,7 +56896,7 @@ function* ToPropertyDescriptor(Obj) {
     /* ReturnIfAbrupt */
     let _temp18 = yield* Get(Obj, Value('set'));
     /* c8 ignore if */
-    if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield*');
+    if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp18 instanceof AbruptCompletion) return _temp18;
     /* c8 ignore if */
@@ -57280,7 +57352,7 @@ function* IsRegExp(argument) {
   /* ReturnIfAbrupt */
   let _temp = yield* Get(argument, wellKnownSymbols.match);
   /* c8 ignore if */
-  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp instanceof AbruptCompletion) return _temp;
   /* c8 ignore if */
@@ -57380,7 +57452,7 @@ function* AbstractRelationalComparison(x, y, LeftFirst = true) {
     /* ReturnIfAbrupt */
     let _temp3 = yield* ToPrimitive(x, 'number');
     /* c8 ignore if */
-    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp3 instanceof AbruptCompletion) return _temp3;
     /* c8 ignore if */
@@ -57391,7 +57463,7 @@ function* AbstractRelationalComparison(x, y, LeftFirst = true) {
     /* ReturnIfAbrupt */
     let _temp4 = yield* ToPrimitive(y, 'number');
     /* c8 ignore if */
-    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) return _temp4;
     /* c8 ignore if */
@@ -57401,7 +57473,7 @@ function* AbstractRelationalComparison(x, y, LeftFirst = true) {
     /* ReturnIfAbrupt */
     let _temp5 = yield* ToPrimitive(y, 'number');
     /* c8 ignore if */
-    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp5 instanceof AbruptCompletion) return _temp5;
     /* c8 ignore if */
@@ -57413,7 +57485,7 @@ function* AbstractRelationalComparison(x, y, LeftFirst = true) {
     /* ReturnIfAbrupt */
     let _temp6 = yield* ToPrimitive(x, 'number');
     /* c8 ignore if */
-    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp6 instanceof AbruptCompletion) return _temp6;
     /* c8 ignore if */
@@ -57477,7 +57549,7 @@ function* AbstractRelationalComparison(x, y, LeftFirst = true) {
     /* ReturnIfAbrupt */
     let _temp7 = yield* ToNumeric(px);
     /* c8 ignore if */
-    if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+    if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp7 instanceof AbruptCompletion) return _temp7;
     /* c8 ignore if */
@@ -57487,7 +57559,7 @@ function* AbstractRelationalComparison(x, y, LeftFirst = true) {
     /* ReturnIfAbrupt */
     let _temp8 = yield* ToNumeric(py);
     /* c8 ignore if */
-    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp8 instanceof AbruptCompletion) return _temp8;
     /* c8 ignore if */
@@ -57675,7 +57747,7 @@ function* IsLooselyEqual(x, y) {
     /* ReturnIfAbrupt */
     let _temp20 = yield* ToPrimitive(y);
     /* c8 ignore if */
-    if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield*');
+    if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp20 instanceof AbruptCompletion) return _temp20;
     /* c8 ignore if */
@@ -57697,7 +57769,7 @@ function* IsLooselyEqual(x, y) {
     /* ReturnIfAbrupt */
     let _temp22 = yield* ToPrimitive(x);
     /* c8 ignore if */
-    if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield*');
+    if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp22 instanceof AbruptCompletion) return _temp22;
     /* c8 ignore if */
@@ -57755,7 +57827,7 @@ function* ToPrimitive(input, preferredType) {
     /* ReturnIfAbrupt */
     let _temp = yield* GetMethod(input, wellKnownSymbols.toPrimitive);
     /* c8 ignore if */
-    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield*');
+    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp instanceof AbruptCompletion) return _temp;
     /* c8 ignore if */
@@ -57782,7 +57854,7 @@ function* ToPrimitive(input, preferredType) {
       /* ReturnIfAbrupt */
       let _temp2 = yield* Call(exoticToPrim, input, [hint]);
       /* c8 ignore if */
-      if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+      if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp2 instanceof AbruptCompletion) return _temp2;
       /* c8 ignore if */
@@ -57828,7 +57900,7 @@ function* OrdinaryToPrimitive(O, hint) {
     /* ReturnIfAbrupt */
     let _temp3 = yield* Get(O, name);
     /* c8 ignore if */
-    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp3 instanceof AbruptCompletion) return _temp3;
     /* c8 ignore if */
@@ -57840,7 +57912,7 @@ function* OrdinaryToPrimitive(O, hint) {
       /* ReturnIfAbrupt */
       let _temp4 = yield* Call(method, O);
       /* c8 ignore if */
-      if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+      if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp4 instanceof AbruptCompletion) return _temp4;
       /* c8 ignore if */
@@ -57905,7 +57977,7 @@ function* ToNumeric(value) {
   /* ReturnIfAbrupt */
   let _temp5 = yield* ToPrimitive(value, 'number');
   /* c8 ignore if */
-  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
@@ -57951,7 +58023,7 @@ function* ToNumber(argument) {
     /* ReturnIfAbrupt */
     let _temp6 = yield* ToPrimitive(argument, 'number');
     /* c8 ignore if */
-    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp6 instanceof AbruptCompletion) return _temp6;
     /* c8 ignore if */
@@ -57976,7 +58048,7 @@ function* ToIntegerOrInfinity(argument) {
   /* ReturnIfAbrupt */
   let _temp7 = yield* ToNumber(argument);
   /* c8 ignore if */
-  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield*');
+  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp7 instanceof AbruptCompletion) return _temp7;
   /* c8 ignore if */
@@ -58008,7 +58080,7 @@ function* ToInt32(argument) {
   /* ReturnIfAbrupt */
   let _temp8 = yield* ToNumber(argument);
   /* c8 ignore if */
-  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield*');
+  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp8 instanceof AbruptCompletion) return _temp8;
   /* c8 ignore if */
@@ -58036,7 +58108,7 @@ function* ToUint32(argument) {
   /* ReturnIfAbrupt */
   let _temp9 = yield* ToNumber(argument);
   /* c8 ignore if */
-  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield*');
+  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp9 instanceof AbruptCompletion) return _temp9;
   /* c8 ignore if */
@@ -58061,7 +58133,7 @@ function* ToInt16(argument) {
   /* ReturnIfAbrupt */
   let _temp10 = yield* ToNumber(argument);
   /* c8 ignore if */
-  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield*');
+  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp10 instanceof AbruptCompletion) return _temp10;
   /* c8 ignore if */
@@ -58089,7 +58161,7 @@ function* ToUint16(argument) {
   /* ReturnIfAbrupt */
   let _temp11 = yield* ToNumber(argument);
   /* c8 ignore if */
-  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield*');
+  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp11 instanceof AbruptCompletion) return _temp11;
   /* c8 ignore if */
@@ -58114,7 +58186,7 @@ function* ToInt8(argument) {
   /* ReturnIfAbrupt */
   let _temp12 = yield* ToNumber(argument);
   /* c8 ignore if */
-  if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield*');
+  if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp12 instanceof AbruptCompletion) return _temp12;
   /* c8 ignore if */
@@ -58142,7 +58214,7 @@ function* ToUint8(argument) {
   /* ReturnIfAbrupt */
   let _temp13 = yield* ToNumber(argument);
   /* c8 ignore if */
-  if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield*');
+  if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp13 instanceof AbruptCompletion) return _temp13;
   /* c8 ignore if */
@@ -58167,7 +58239,7 @@ function* ToUint8Clamp(argument) {
   /* ReturnIfAbrupt */
   let _temp14 = yield* ToNumber(argument);
   /* c8 ignore if */
-  if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield*');
+  if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp14 instanceof AbruptCompletion) return _temp14;
   /* c8 ignore if */
@@ -58210,7 +58282,7 @@ function* ToBigInt(argument) {
   /* ReturnIfAbrupt */
   let _temp15 = yield* ToPrimitive(argument, 'number');
   /* c8 ignore if */
-  if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield*');
+  if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp15 instanceof AbruptCompletion) return _temp15;
   /* c8 ignore if */
@@ -58268,7 +58340,7 @@ function* ToBigInt64(argument) {
   /* ReturnIfAbrupt */
   let _temp16 = yield* ToBigInt(argument);
   /* c8 ignore if */
-  if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield*');
+  if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp16 instanceof AbruptCompletion) return _temp16;
   /* c8 ignore if */
@@ -58290,7 +58362,7 @@ function* ToBigUint64(argument) {
   /* ReturnIfAbrupt */
   let _temp17 = yield* ToBigInt(argument);
   /* c8 ignore if */
-  if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield*');
+  if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp17 instanceof AbruptCompletion) return _temp17;
   /* c8 ignore if */
@@ -58352,7 +58424,7 @@ function* ToString(argument) {
     /* ReturnIfAbrupt */
     let _temp20 = yield* ToPrimitive(argument, 'string');
     /* c8 ignore if */
-    if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield*');
+    if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp20 instanceof AbruptCompletion) return _temp20;
     /* c8 ignore if */
@@ -58414,7 +58486,7 @@ function* ToPropertyKey(argument) {
   /* ReturnIfAbrupt */
   let _temp21 = yield* ToPrimitive(argument, 'string');
   /* c8 ignore if */
-  if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield*');
+  if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp21 instanceof AbruptCompletion) return _temp21;
   /* c8 ignore if */
@@ -58446,7 +58518,7 @@ function* ToLength(argument) {
   /* ReturnIfAbrupt */
   let _temp23 = yield* ToIntegerOrInfinity(argument);
   /* c8 ignore if */
-  if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield*');
+  if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp23 instanceof AbruptCompletion) return _temp23;
   /* c8 ignore if */
@@ -58511,7 +58583,7 @@ function* ToIndex(value) {
     /* ReturnIfAbrupt */
     let _temp26 = yield* ToIntegerOrInfinity(value);
     /* c8 ignore if */
-    if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield*');
+    if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp26 instanceof AbruptCompletion) return _temp26;
     /* c8 ignore if */
@@ -58684,7 +58756,7 @@ const InternalMethods = {
           /* ReturnIfAbrupt */
           let _temp2 = yield* TypedArraySetElement(O, numericIndex, V);
           /* c8 ignore if */
-          if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+          if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
           if (_temp2 instanceof AbruptCompletion) return _temp2;
           /* c8 ignore if */
@@ -58917,7 +58989,7 @@ function* TypedArraySetElement(O, index, value) {
     /* ReturnIfAbrupt */
     let _temp4 = yield* ToBigInt(value);
     /* c8 ignore if */
-    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield*');
+    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp4 instanceof AbruptCompletion) return _temp4;
     /* c8 ignore if */
@@ -58927,7 +58999,7 @@ function* TypedArraySetElement(O, index, value) {
     /* ReturnIfAbrupt */
     let _temp5 = yield* ToNumber(value);
     /* c8 ignore if */
-    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield*');
+    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp5 instanceof AbruptCompletion) return _temp5;
     /* c8 ignore if */
@@ -58942,7 +59014,7 @@ function* TypedArraySetElement(O, index, value) {
     /* ReturnIfAbrupt */
     let _temp6 = yield* SetValueInBuffer(O.ViewedArrayBuffer, byteIndexInBuffer, elementType, numValue);
     /* c8 ignore if */
-    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield*');
+    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp6 instanceof AbruptCompletion) return _temp6;
     /* c8 ignore if */
@@ -59011,7 +59083,7 @@ function* CleanupFinalizationRegistry(finalizationRegistry, callback) {
   /* ReturnIfAbrupt */
   let _temp2 = surroundingAgent.debugger_tryTouchDuringPreview(finalizationRegistry);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield*');
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
@@ -59036,7 +59108,7 @@ function* CleanupFinalizationRegistry(finalizationRegistry, callback) {
     /* ReturnIfAbrupt */
     let _temp3 = yield* HostCallJobCallback(callback, Value.undefined, [cell.HeldValue]);
     /* c8 ignore if */
-    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+    if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp3 instanceof AbruptCompletion) return _temp3;
     /* c8 ignore if */
@@ -59592,16 +59664,38 @@ class ManagedRealm extends Realm {
     this.HostDefined = HostDefined;
     this.topContext = newContext;
   }
-  scope(cb, inspectorPreview = false) {
-    if (this.active) {
-      return cb();
+  scope(arg0, arg2) {
+    if (typeof arg0 !== 'function') try {
+      var _usingCtx$1 = _usingCtx();
+      const inspectorPreview = arg0;
+      if (this.active) {
+        return null;
+      }
+      this.active = true;
+      surroundingAgent.executionContextStack.push(this.topContext);
+      const _ = _usingCtx$1.u(inspectorPreview ? surroundingAgent.debugger_scopePreview() : null);
+      return {
+        [Symbol.dispose]: () => {
+          surroundingAgent.executionContextStack.pop(this.topContext);
+          this.active = false;
+        }
+      };
+    } catch (_) {
+      _usingCtx$1.e = _;
+    } finally {
+      _usingCtx$1.d();
+    } else {
+      const callback = arg0;
+      if (this.active) {
+        return arg0();
+      }
+      this.active = true;
+      surroundingAgent.executionContextStack.push(this.topContext);
+      const result = arg2 ? surroundingAgent.debugger_scopePreview(callback) : callback();
+      surroundingAgent.executionContextStack.pop(this.topContext);
+      this.active = false;
+      return result;
     }
-    this.active = true;
-    surroundingAgent.executionContextStack.push(this.topContext);
-    const r = inspectorPreview ? surroundingAgent.debugger_scopePreview(cb) : cb();
-    surroundingAgent.executionContextStack.pop(this.topContext);
-    this.active = false;
-    return r;
   }
   compileScript(sourceText, hostDefined) {
     return this.scope(() => {
@@ -59648,7 +59742,7 @@ class ManagedRealm extends Realm {
         specifier
       });
       /* c8 ignore if */
-      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield*');
+      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
       if (_temp3 instanceof AbruptCompletion) return _temp3;
       /* c8 ignore if */
