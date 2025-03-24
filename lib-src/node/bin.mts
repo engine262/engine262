@@ -158,8 +158,6 @@ function oneShotEval(source: string, filename: string) {
       const inspected = inspect(completion);
       process.stderr.write(`${inspected}\n`);
       process.exit(1);
-    } else {
-      throw completion;
     }
   });
 }
