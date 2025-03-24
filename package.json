@@ -61,7 +61,7 @@
     "postpublish": "git reset --hard HEAD"
   },
   "bin": {
-    "engine262": "./lib/node/bin.mjs"
+    "engine262": "lib/node/bin.mjs"
   },
   "files": [
     "bin",
@@ -119,10 +119,10 @@
     "minimatch": "^10.0.1",
     "npm-run-all": "^4.1.5",
     "rollup": "^4.34.8",
-    "typescript": "5.8.1-rc",
+    "typescript": "5.8.2",
     "ws": "^8.18.0"
   },
   "overrides": {
-    "typescript": "5.8.1-rc"
+    "typescript": "5.8.2"
   }
 }

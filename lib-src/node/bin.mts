@@ -4,7 +4,7 @@ import { start } from 'node:repl';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { format as _format, inspect as _inspect, parseArgs } from 'node:util';
-import packageJson from '../../package.json' with { type: 'json' }; // eslint-disable-line import/order
+import packageJson from '../../package.json' with { type: 'json' };
 import { createConsole, createInternals } from '../inspector/utils.mts';
 import {
   setSurroundingAgent, FEATURES, inspect, Value, Completion, AbruptCompletion, JSStringValue,
@@ -19,6 +19,7 @@ import {
   CreateBuiltinFunction,
   ToString,
   ValueOfNormalCompletion,
+  ThrowCompletion,
 } from '#self';
 
 const help = `
@@ -118,7 +119,7 @@ skipDebugger(CreateDataProperty(realm.GlobalObject, Value('print'), CreateBuilti
   for (let i = 0; i < args.length; i += 1) {
     const arg = args[i];
     const s = yield* ToString(arg);
-    if (s instanceof AbruptCompletion) {
+    if (s instanceof ThrowCompletion) {
       return s;
     }
     process.stdout.write(ValueOfNormalCompletion(s).stringValue());
