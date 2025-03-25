@@ -5,9 +5,9 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { format as _format, inspect as _inspect, parseArgs } from 'node:util';
 import packageJson from '../../package.json' with { type: 'json' };
-import { createConsole, createInternals } from '../inspector/utils.mts';
+import { createConsole } from '../inspector/utils.mts';
 import {
-  setSurroundingAgent, FEATURES, inspect, Value, Completion, AbruptCompletion, JSStringValue,
+  setSurroundingAgent, FEATURES, inspect, Value, Completion, AbruptCompletion,
   type Arguments,
   evalQ,
   Agent,
@@ -15,11 +15,8 @@ import {
   Throw,
   skipDebugger,
   type ValueCompletion,
-  CreateDataProperty,
-  CreateBuiltinFunction,
+  createTest262Intrinsics,
   ToString,
-  ValueOfNormalCompletion,
-  ThrowCompletion,
 } from '#self';
 
 const help = `
@@ -38,6 +35,7 @@ Options:
     --features=...  A comma separated list of features.
     --features=all  Enable all features.
     --list-features List available features.
+    --no-test262    Do not expose $ and $262 for test262.
     --no-inspector  Do not attach an inspector.
     --no-preview    Do not enable preview in the inspector.
 `;
@@ -54,6 +52,7 @@ const argv = parseArgs({
     'list-features': { type: 'boolean' },
     'inspector': { type: 'boolean' },
     'preview': { type: 'boolean', default: true },
+    'test262': { type: 'boolean', default: true },
     // hidden options
     'preview-debug': { type: 'boolean' },
   },
@@ -98,41 +97,29 @@ setSurroundingAgent(agent);
 
 const realm = new ManagedRealm({});
 // Define console.log
-const format = (args: Arguments) => args.map((a, i) => {
-  if (i === 0 && a instanceof JSStringValue) {
-    return a.stringValue();
-  }
-  return inspect(a);
-}).join(' ');
-createConsole(realm, {
-  log: (args) => {
-    process.stdout.write(`${format(args)}\n`);
-  },
-  error: (args) => {
-    process.stderr.write(`${format(args)}\n`);
-  },
-  debug: (args) => {
-    process.stderr.write(`${_format(...args)}\n`);
-  },
-});
-realm.scope(() => {
-  skipDebugger(CreateDataProperty(realm.GlobalObject, Value('print'), CreateBuiltinFunction(function* print(args) {
-    for (let i = 0; i < args.length; i += 1) {
-      const arg = args[i];
-      const s = yield* ToString(arg);
-      if (s instanceof ThrowCompletion) {
-        return s;
-      }
-      process.stdout.write(ValueOfNormalCompletion(s).stringValue());
-      if (i !== args.length - 1) {
-        process.stdout.write(' ');
-      }
+{
+  const format = (args: Arguments) => evalQ(function* format(Q) {
+    const str = [];
+    for (const arg of args) {
+      str.push(Q(yield* ToString(arg)).stringValue());
     }
-    process.stdout.write('\n');
-    return Value.undefined;
-  }, 0, Value('print'), [])));
-});
-createInternals(realm);
+    return str.join(' ');
+  });
+  createConsole(realm, {
+    log: (args) => {
+      process.stdout.write(`${format(args)}\n`);
+    },
+    error: (args) => {
+      process.stderr.write(`${format(args)}\n`);
+    },
+    debug: (args) => {
+      process.stderr.write(`${_format(...args)}\n`);
+    },
+  });
+}
+if (argv.values.test262) {
+  createTest262Intrinsics(realm, argv.values.test262);
+}
 
 if (argv.values.inspector !== false) {
   let has_ws = false;

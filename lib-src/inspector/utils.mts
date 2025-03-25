@@ -1,9 +1,7 @@
 import type Protocol from 'devtools-protocol';
 import { Inspector } from './index.mts';
 import {
-  CreateBuiltinFunction, CreateDataProperty, CreateNonEnumerableDataPropertyOrThrow, DefinePropertyOrThrow, Descriptor, DetachArrayBuffer, isArrayBufferObject, NormalCompletion, OrdinaryObjectCreate, surroundingAgent, ThrowCompletion, skipDebugger, Value, type Arguments, type ManagedRealm,
-  type ValueEvaluator, gc,
-  isBuiltinFunctionObject,
+  CreateBuiltinFunction, CreateDataProperty, DefinePropertyOrThrow, Descriptor, NormalCompletion, OrdinaryObjectCreate, surroundingAgent, ThrowCompletion, skipDebugger, Value, type Arguments, type ManagedRealm,
 } from '#self';
 
 const consoleMethods = [
@@ -63,38 +61,5 @@ export function createConsole(realm: ManagedRealm, defaultBehaviour: Partial<Rec
       );
       skipDebugger(CreateDataProperty(console, Value(method), f));
     });
-  });
-}
-
-export function createInternals(realm: ManagedRealm) {
-  realm.scope(() => {
-    const $ = OrdinaryObjectCreate.from({
-      debugger: () => {
-        if (surroundingAgent.debugger_isPreviewing) {
-          return;
-        }
-        // eslint-disable-next-line no-debugger
-        debugger;
-      },
-      * detachArrayBuffer(object): ValueEvaluator {
-        if (!isArrayBufferObject(object)) {
-          return surroundingAgent.Throw('TypeError', 'Raw', 'Argument must be an ArrayBuffer');
-        }
-        const completion = DetachArrayBuffer(object);
-        if (completion instanceof ThrowCompletion) {
-          return completion;
-        }
-        return Value.undefined;
-      },
-      gc,
-      * spec(v) {
-        if (isBuiltinFunctionObject(v) && v.nativeFunction.section) {
-          return Value(v.nativeFunction.section);
-        }
-        return Value.undefined;
-      },
-    });
-    CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, Value('$'), $);
-    CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, Value('$262'), $);
   });
 }

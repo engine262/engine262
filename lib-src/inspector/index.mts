@@ -8,7 +8,7 @@ const ignoreNamespaces = ['Network'];
 const ignoreMethods: string[] = [];
 
 export type { DebuggerPreference } from './types.mts';
-export { createConsole, createInternals } from './utils.mts';
+export { createConsole } from './utils.mts';
 
 export abstract class Inspector {
   protected abstract send(data: object): void;

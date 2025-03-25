@@ -14,7 +14,7 @@ export {
   Throw, type ErrorType, gc, runJobQueue, type ManagedRealmHostDefined, ManagedRealm,
 } from './api.mts';
 export type { ParseNode } from './parser/ParseNode.mts';
-export { inspectDate } from './host-defined/inspect.mts';
+export { createTest262Intrinsics } from './host-defined/test262-intrinsics.mts';
 export {
   getHostDefinedErrorStack, skipDebugger, getCurrentStack, JSStringMap, JSStringSet, CallSite, type Mutable, PropertyKeyMap,
 } from './helpers.mts';

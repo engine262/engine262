@@ -106,11 +106,11 @@ __consolePrintHandle__('Test262:AsyncTestComplete');
 
     let asyncResult: WorkerToSupervisor | undefined;
     if (test.attrs.flags.async) {
-      setPrintHandle((m: any) => {
-        if (m.stringValue && m.stringValue() === 'Test262:AsyncTestComplete') {
+      setPrintHandle((m) => {
+        if (m === 'Test262:AsyncTestComplete') {
           asyncResult = { status: 'PASS', file: test.file };
         } else {
-          asyncResult = fails(test, m.stringValue ? m.stringValue() : inspect(m));
+          asyncResult = fails(test, m);
         }
         setPrintHandle(undefined);
       });
