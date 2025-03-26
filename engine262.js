@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 fd443ce8520cf2501193cb9ed0cc69e2d1ea9788
+ * engine262 0.0.1 fa38b3fee3b904f23dcad4131357cfecb70ba57b
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -59817,6 +59817,112 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
+  /** https://github.com/tc39/test262/blob/main/INTERPRETING.md */
+  function createTest262Intrinsics(realm, printCompatMode) {
+    return realm.scope(() => {
+      let test262PrintHandle;
+      const setPrintHandle = f => {
+        test262PrintHandle = f;
+      };
+      const print = CreateBuiltinFunction(args => {
+        if (exports.surroundingAgent.debugger_isPreviewing) {
+          return NormalCompletion(Value.undefined);
+        }
+        /* c8 ignore next */
+        if (test262PrintHandle) {
+          if (args[0] instanceof JSStringValue) {
+            test262PrintHandle(args[0].stringValue());
+            return Value.undefined;
+          }
+        } else {
+          if (printCompatMode) {
+            for (let i = 0; i < args.length; i += 1) {
+              const arg = args[i];
+              const s = EnsureCompletion(skipDebugger(ToString(arg)));
+              if (s.Type === 'throw') {
+                return s;
+              }
+              process.stdout.write(s.Value.stringValue());
+              if (i !== args.length - 1) {
+                process.stdout.write(' ');
+              }
+            }
+            process.stdout.write('\n');
+            return Value.undefined;
+          } else {
+            const formatted = args.map((a, i) => {
+              if (i === 0 && a instanceof JSStringValue) {
+                return a.stringValue();
+              }
+              return inspect(a);
+            }).join(' ');
+            console.log(formatted); // eslint-disable-line no-console
+          }
+        }
+        return Value.undefined;
+      }, 0, Value('print'), []);
+      CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, Value('print'), print);
+      const $262 = OrdinaryObjectCreate.from({
+        // TODO: AbstractModuleSource
+        createRealm: function* createRealm() {
+          const realm = new ManagedRealm();
+          const {
+            $262
+          } = createTest262Intrinsics(realm, printCompatMode);
+          return $262;
+        },
+        detachArrayBuffer: function* detachArrayBuffer(arrayBuffer) {
+          if (!isArrayBufferObject(arrayBuffer)) {
+            return exports.surroundingAgent.Throw('TypeError', 'Raw', 'Argument must be an ArrayBuffer');
+          }
+          /* ReturnIfAbrupt */
+          let _temp = DetachArrayBuffer(arrayBuffer);
+          /* c8 ignore if */
+          if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
+          /* c8 ignore if */
+          if (_temp instanceof AbruptCompletion) return _temp;
+          /* c8 ignore if */
+          if (_temp instanceof Completion) _temp = _temp.Value;
+          return Value.undefined;
+        },
+        evalScript: function* evalScript(sourceText) {
+          if (!(sourceText instanceof JSStringValue)) {
+            return exports.surroundingAgent.Throw('TypeError', 'Raw', 'Argument must be a string');
+          }
+          const s = ParseScript(sourceText.stringValue(), exports.surroundingAgent.currentRealmRecord);
+          if (isArray(s)) {
+            return ThrowCompletion(s[0]);
+          }
+          const status = yield* ScriptEvaluation(s);
+          return status;
+        },
+        gc,
+        global: realm.GlobalObject,
+        // TODO: agent only if we have multi-threading.
+
+        // engine262 only
+        spec: function* spec(value) {
+          if (isBuiltinFunctionObject(value) && value.nativeFunction.section) {
+            return Value(value.nativeFunction.section);
+          }
+          return Value.undefined;
+        },
+        debugger: function* hostDebugger() {
+          // eslint-disable-next-line no-debugger
+          debugger;
+          return Value.undefined;
+        }
+      });
+      // engine262 only
+      CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, Value('$262'), $262);
+      CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, Value('$'), $262);
+      return {
+        setPrintHandle,
+        $262
+      };
+    });
+  }
+
   exports.AbruptCompletion = AbruptCompletion;
   exports.AbstractModuleRecord = AbstractModuleRecord;
   exports.AbstractRelationalComparison = AbstractRelationalComparison;
@@ -60346,6 +60452,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.YearFromTime = YearFromTime;
   exports.Yield = Yield;
   exports.Z = Z;
+  exports.createTest262Intrinsics = createTest262Intrinsics;
   exports.evalQ = evalQ;
   exports.gc = gc;
   exports.generatorBrandToErrorMessageType = generatorBrandToErrorMessageType;

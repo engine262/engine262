@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 fd443ce8520cf2501193cb9ed0cc69e2d1ea9788
+ * engine262 0.0.1 fa38b3fee3b904f23dcad4131357cfecb70ba57b
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -1070,38 +1070,6 @@
       });
     });
   }
-  function createInternals(realm) {
-    realm.scope(() => {
-      const $ = engine262_mjs.OrdinaryObjectCreate.from({
-        debugger: () => {
-          if (engine262_mjs.surroundingAgent.debugger_isPreviewing) {
-            return;
-          }
-          // eslint-disable-next-line no-debugger
-          debugger;
-        },
-        *detachArrayBuffer(object) {
-          if (!engine262_mjs.isArrayBufferObject(object)) {
-            return engine262_mjs.surroundingAgent.Throw('TypeError', 'Raw', 'Argument must be an ArrayBuffer');
-          }
-          const completion = engine262_mjs.DetachArrayBuffer(object);
-          if (completion instanceof engine262_mjs.ThrowCompletion) {
-            return completion;
-          }
-          return engine262_mjs.Value.undefined;
-        },
-        gc: engine262_mjs.gc,
-        *spec(v) {
-          if (engine262_mjs.isBuiltinFunctionObject(v) && v.nativeFunction.section) {
-            return engine262_mjs.Value(v.nativeFunction.section);
-          }
-          return engine262_mjs.Value.undefined;
-        }
-      });
-      engine262_mjs.CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, engine262_mjs.Value('$'), $);
-      engine262_mjs.CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, engine262_mjs.Value('$262'), $);
-    });
-  }
 
   const ignoreNamespaces = ['Network'];
   const ignoreMethods = [];
@@ -1202,7 +1170,6 @@
 
   exports.Inspector = Inspector;
   exports.createConsole = createConsole;
-  exports.createInternals = createInternals;
 
 }));
 //# sourceMappingURL=inspector.js.map

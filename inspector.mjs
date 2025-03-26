@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 fd443ce8520cf2501193cb9ed0cc69e2d1ea9788
+ * engine262 0.0.1 fa38b3fee3b904f23dcad4131357cfecb70ba57b
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-import { surroundingAgent, evalQ, ObjectValue, skipDebugger, Get, Value, ToString, inspectDate, IsCallable, isDataViewObject, isArrayBufferObject, isTypedArrayObject, isPromiseObject, isProxyExoticObject, isErrorObject, isWeakSetObject, isWeakMapObject, isSetObject, isMapObject, isDateObject, isRegExpObject, isArrayExoticObject, BigIntValue, NumberValue, JSStringValue, SymbolValue, SymbolDescriptiveString, R, isIntegerIndex, IntrinsicsFunctionToString, isECMAScriptFunctionObject, PrivateName, UndefinedValue, IsPromise, ThrowCompletion, getHostDefinedErrorStack, EnsureCompletion, getCurrentStack, EnvironmentRecord, DeclarativeEnvironmentRecord, OrdinaryObjectCreate, isArgumentExoticObject, Descriptor, ObjectEnvironmentRecord, GlobalEnvironmentRecord, NullValue, FunctionEnvironmentRecord, ModuleEnvironmentRecord, Call, ParseScript, runJobQueue, DefinePropertyOrThrow, CreateBuiltinFunction, CreateDataProperty, gc, isBuiltinFunctionObject, DetachArrayBuffer, CreateNonEnumerableDataPropertyOrThrow } from './engine262.mjs';
+import { surroundingAgent, evalQ, ObjectValue, skipDebugger, Get, Value, ToString, inspectDate, IsCallable, isDataViewObject, isArrayBufferObject, isTypedArrayObject, isPromiseObject, isProxyExoticObject, isErrorObject, isWeakSetObject, isWeakMapObject, isSetObject, isMapObject, isDateObject, isRegExpObject, isArrayExoticObject, BigIntValue, NumberValue, JSStringValue, SymbolValue, SymbolDescriptiveString, R, isIntegerIndex, IntrinsicsFunctionToString, isECMAScriptFunctionObject, PrivateName, UndefinedValue, IsPromise, ThrowCompletion, getHostDefinedErrorStack, EnsureCompletion, getCurrentStack, EnvironmentRecord, DeclarativeEnvironmentRecord, OrdinaryObjectCreate, isArgumentExoticObject, Descriptor, ObjectEnvironmentRecord, GlobalEnvironmentRecord, NullValue, FunctionEnvironmentRecord, ModuleEnvironmentRecord, Call, ParseScript, runJobQueue, DefinePropertyOrThrow, CreateBuiltinFunction, CreateDataProperty } from './engine262.mjs';
 
 /*
 Test code: copy this into the inspector console.
@@ -1066,38 +1066,6 @@ function createConsole(realm, defaultBehaviour) {
     });
   });
 }
-function createInternals(realm) {
-  realm.scope(() => {
-    const $ = OrdinaryObjectCreate.from({
-      debugger: () => {
-        if (surroundingAgent.debugger_isPreviewing) {
-          return;
-        }
-        // eslint-disable-next-line no-debugger
-        debugger;
-      },
-      *detachArrayBuffer(object) {
-        if (!isArrayBufferObject(object)) {
-          return surroundingAgent.Throw('TypeError', 'Raw', 'Argument must be an ArrayBuffer');
-        }
-        const completion = DetachArrayBuffer(object);
-        if (completion instanceof ThrowCompletion) {
-          return completion;
-        }
-        return Value.undefined;
-      },
-      gc,
-      *spec(v) {
-        if (isBuiltinFunctionObject(v) && v.nativeFunction.section) {
-          return Value(v.nativeFunction.section);
-        }
-        return Value.undefined;
-      }
-    });
-    CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, Value('$'), $);
-    CreateNonEnumerableDataPropertyOrThrow(realm.GlobalObject, Value('$262'), $);
-  });
-}
 
 const ignoreNamespaces = ['Network'];
 const ignoreMethods = [];
@@ -1196,5 +1164,5 @@ class Inspector {
   };
 }
 
-export { Inspector, createConsole, createInternals };
+export { Inspector, createConsole };
 //# sourceMappingURL=inspector.mjs.map
