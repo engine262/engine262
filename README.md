@@ -82,7 +82,7 @@ If you install it globally, you can use the CLI like so:
 Or, you can install it locally and use the API:
 
 ```js
-import { Agent, setSurroundingAgent, ManagedRealm, Value, CreateDataProperty, inspect, CreateBuiltinFunction } from '@engine262/engine262';
+import { Agent, setSurroundingAgent, ManagedRealm, Value, CreateDataProperty, inspect, CreateBuiltinFunction, skipDebugger } from '@engine262/engine262';
 
 const agent = new Agent({
   // onDebugger() {},
@@ -107,7 +107,7 @@ realm.scope(() => {
     console.log(...args.map((tmp) => inspect(tmp)));
     return Value.undefined;
   }, 1, Value('print'), []);
-  CreateDataProperty(realm.GlobalObject, Value('print'), print);
+  skipDebugger(CreateDataProperty(realm.GlobalObject, Value('print'), print));
 });
 
 realm.evaluateScript(`
