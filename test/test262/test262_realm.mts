@@ -6,7 +6,7 @@ import {
   Agent,
   type OrdinaryObject,
   SourceTextModuleRecord,
-  attachTest262Intrinsics,
+  createTest262Intrinsics,
 } from '#self';
 
 export interface CreateAgentOptions {
@@ -44,7 +44,7 @@ export function createRealm({ printCompatMode = false }: CreateRealmOptions = {}
 
   return realm.scope(() => {
     const $262 = OrdinaryObjectCreate(realm.Intrinsics['%Object.prototype%']);
-    const { setPrintHandle } = attachTest262Intrinsics(realm, printCompatMode);
+    const { setPrintHandle } = createTest262Intrinsics(realm, printCompatMode);
     return {
       realm,
       $262,
