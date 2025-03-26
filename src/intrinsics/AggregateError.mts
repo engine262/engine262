@@ -18,6 +18,7 @@ import {
 import { Q, X, type ValueEvaluator } from '../completion.mts';
 import { captureStack } from '../helpers.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
+import type { ErrorObject } from './Error.mts';
 
 /** https://tc39.es/ecma262/#sec-aggregate-error-constructor */
 function* AggregateErrorConstructor([errors = Value.undefined, message = Value.undefined, options = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
@@ -29,9 +30,7 @@ function* AggregateErrorConstructor([errors = Value.undefined, message = Value.u
     newTarget = NewTarget;
   }
   // 2. Let O be ? OrdinaryCreateFromConstructor(newTarget, "%AggregateError.prototype%", « [[ErrorData]] »).
-  const O = Q(yield* OrdinaryCreateFromConstructor(newTarget, '%AggregateError.prototype%', [
-    'ErrorData',
-  ]));
+  const O = Q(yield* OrdinaryCreateFromConstructor(newTarget, '%AggregateError.prototype%', ['ErrorData', 'HostDefinedErrorStack'])) as ErrorObject;
   // 3. If message is not undefined, then
   if (message !== Value.undefined) {
     // a. Let msg be ? ToString(message).

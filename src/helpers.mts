@@ -1,11 +1,13 @@
 import type { Protocol } from 'devtools-protocol';
 import { ExecutionContext, type GCMarker, surroundingAgent } from './host-defined/engine.mts';
 import {
-  Value, Descriptor, JSStringValue, ObjectValue, UndefinedValue, NullValue, type PropertyKeyValue,
+  Value, JSStringValue, ObjectValue, UndefinedValue, NullValue, type PropertyKeyValue,
   SymbolValue,
 } from './value.mts';
 import {
-  ToString, DefinePropertyOrThrow, CreateBuiltinFunction,
+  Call,
+  RequireInternalSlot,
+  ToString,
   isFunctionObject,
   isBuiltinFunctionObject,
   isECMAScriptFunctionObject,
@@ -13,6 +15,7 @@ import {
 import { X } from './completion.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
 import type { Evaluator, EvaluatorNextType, YieldEvaluator } from './evaluator.mts';
+import type { ErrorObject } from './intrinsics/Error.mts';
 
 export const kInternal = Symbol('kInternal');
 
@@ -530,41 +533,32 @@ export function getCurrentStack(excludeGlobalStack = true) {
   return stack;
 }
 
-export function captureStack(O: ObjectValue) {
+export function captureStack(O: ErrorObject) {
+  X(RequireInternalSlot(O, 'ErrorData'));
   const stack = getCurrentStack();
-  let cache: Value | null = null;
-
-  const name = Value('stack');
 
   let __native_stack__: string | undefined;
   if (surroundingAgent.hostDefinedOptions.errorStackAttachNativeStack) {
+    const origStackTraceLimit = Error.stackTraceLimit;
     Error.stackTraceLimit = 12;
-    __native_stack__ = new Error().stack;
+    try {
+      __native_stack__ = new Error().stack;
+    } finally {
+      Error.stackTraceLimit = origStackTraceLimit;
+    }
   }
   if ('HostDefinedErrorStack' in O && (!O.HostDefinedErrorStack || O.HostDefinedErrorStack === Value.undefined)) {
     O.HostDefinedErrorStack = stack;
   }
-  X(DefinePropertyOrThrow(O, name, Descriptor({
-    Get: CreateBuiltinFunction(() => {
-      if (cache === null) {
-        let errorString = X(ToString(O)).stringValue();
-        stack.forEach((s) => {
-          errorString = `${errorString}\n    at ${s.toString()}`;
-        });
-        if (__native_stack__) {
-          errorString = `${errorString}\n    <NATIVE>\n${__native_stack__.split('\n').slice(6).join('\n')}`;
-        }
-        cache = Value(errorString);
-      }
-      return cache;
-    }, 0, name, [], undefined, undefined, Value('get')),
-    Set: CreateBuiltinFunction(([value = Value.undefined]) => {
-      cache = value;
-      return Value.undefined;
-    }, 1, name, [], undefined, undefined, Value('set')),
-    Enumerable: Value.false,
-    Configurable: Value.true,
-  })));
+
+  let errorString = (X(Call(surroundingAgent.intrinsic('%Error.prototype.toString%'), O)) as JSStringValue).stringValue();
+  stack.forEach((s) => {
+    errorString = `${errorString}\n    at ${s.toString()}`;
+  });
+  if (__native_stack__) {
+    errorString = `${errorString}\n    <NATIVE>\n${__native_stack__.split('\n').slice(6).join('\n')}`;
+  }
+  O.ErrorData = Value(errorString);
 }
 
 export function callable<Class extends object>(

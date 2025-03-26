@@ -19,6 +19,7 @@ import {
 import { Q, X, type ValueEvaluator } from '../completion.mts';
 import { captureStack } from '../helpers.mts';
 import { bootstrapConstructor, bootstrapPrototype } from './bootstrap.mts';
+import type { ErrorObject } from './Error.mts';
 
 const nativeErrorNames = [
   'EvalError',
@@ -46,7 +47,7 @@ export function bootstrapNativeError(realmRec: Realm) {
         newTarget = NewTarget;
       }
       // 2. Let O be ? OrdinaryCreateFromConstructor(newTarget, "%NativeError.prototype%", « [[ErrorData]] »).
-      const O = Q(yield* OrdinaryCreateFromConstructor(newTarget as FunctionObject, `%${name}.prototype%`, ['ErrorData']));
+      const O = Q(yield* OrdinaryCreateFromConstructor(newTarget as FunctionObject, `%${name}.prototype%`, ['ErrorData', 'HostDefinedErrorStack'])) as ErrorObject;
       // 3. If message is not undefined, then
       if (message !== Value.undefined) {
         // a. Let msg be ? ToString(message).
