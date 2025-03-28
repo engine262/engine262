@@ -1,5 +1,4 @@
 import {
-  Call,
   DefinePropertyOrThrow,
   OrdinaryCreateFromConstructor,
   InstallErrorCause,

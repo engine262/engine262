@@ -13,7 +13,9 @@ import {
 } from './abstract-ops/all.mts';
 import { Q, X } from './completion.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
-import type { Evaluator, EvaluatorNextType, YieldEvaluator } from './evaluator.mts';
+import type {
+  Evaluator, EvaluatorNextType, ValueEvaluator, YieldEvaluator,
+} from './evaluator.mts';
 import type { ErrorObject } from './intrinsics/Error.mts';
 
 export const kInternal = Symbol('kInternal');
@@ -552,7 +554,7 @@ export function captureStack() {
   };
 }
 
-export function* errorStackToString(O: ErrorObject, stack: readonly CallSite[], nativeStack: string | UndefinedValue = Value.undefined) {
+export function* errorStackToString(O: ErrorObject, stack: readonly CallSite[], nativeStack: string | UndefinedValue = Value.undefined): ValueEvaluator<JSStringValue> {
   let errorString = (Q(yield* Call(surroundingAgent.intrinsic('%Error.prototype.toString%'), O)) as JSStringValue).stringValue();
   stack.forEach((s) => {
     errorString = `${errorString}\n    at ${s.toString()}`;
