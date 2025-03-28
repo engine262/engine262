@@ -190,7 +190,7 @@ function* StringProto_indexOf([searchString = Value.undefined, position = Value.
   return X(StringIndexOf(S, searchStr, start));
 }
 
-/** https://tc39.es/proposal-is-usv-string/#sec-string.prototype.iswellformed */
+/** https://tc39.es/ecma262/#sec-string.prototype.iswellformed */
 function* StringProto_isWellFormed(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be ? RequireObjectCoercible(this value).
   const O = Q(RequireObjectCoercible(thisValue));
@@ -671,7 +671,7 @@ function* StringProto_toUpperCase(_args: Arguments, { thisValue }: FunctionCallC
   return Value(L);
 }
 
-/** https://tc39.es/proposal-is-usv-string/#sec-string.prototype.towellformed */
+/** https://tc39.es/ecma262/#sec-string.prototype.towellformed */
 function* StringProto_toWellFormed(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be ? RequireObjectCoercible(this value).
   const O = Q(RequireObjectCoercible(thisValue));
@@ -795,9 +795,7 @@ export function bootstrapStringPrototype(realmRec: Realm) {
     ['endsWith', StringProto_endsWith, 1],
     ['includes', StringProto_includes, 1],
     ['indexOf', StringProto_indexOf, 1],
-    surroundingAgent.feature('is-usv-string')
-      ? ['isWellFormed', StringProto_isWellFormed, 0]
-      : undefined,
+    ['isWellFormed', StringProto_isWellFormed, 0],
     ['at', StringProto_at, 1],
     ['lastIndexOf', StringProto_lastIndexOf, 1],
     ['localeCompare', StringProto_localeCompare, 1],
@@ -819,9 +817,7 @@ export function bootstrapStringPrototype(realmRec: Realm) {
     ['toLowerCase', StringProto_toLowerCase, 0],
     ['toString', StringProto_toString, 0],
     ['toUpperCase', StringProto_toUpperCase, 0],
-    surroundingAgent.feature('is-usv-string')
-      ? ['toWellFormed', StringProto_toWellFormed, 0]
-      : undefined,
+    ['toWellFormed', StringProto_toWellFormed, 0],
     ['trim', StringProto_trim, 0],
     ['trimEnd', StringProto_trimEnd, 0],
     ['trimStart', StringProto_trimStart, 0],

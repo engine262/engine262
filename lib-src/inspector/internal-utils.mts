@@ -1,11 +1,12 @@
 import type { Protocol } from 'devtools-protocol';
-import { type ScriptRecord } from '#self';
+import { SourceTextModuleRecord, type ScriptRecord } from '#self';
 
-export function getParsedEvent(script: ScriptRecord, id: number, executionContextId: number): Protocol.Debugger.ScriptParsedEvent {
-  const lines = script.ECMAScriptCode.sourceText().split('\n');
+export function getParsedEvent(source: ScriptRecord | SourceTextModuleRecord, id: string, executionContextId: number): Protocol.Debugger.ScriptParsedEvent {
+  const lines = source.ECMAScriptCode.sourceText().split('\n');
   return {
-    scriptId: `${id}`,
-    url: script.HostDefined.specifier || `vm:///${id}`,
+    isModule: source instanceof SourceTextModuleRecord,
+    scriptId: id,
+    url: source.HostDefined.specifier || `vm:///${id}`,
     startLine: 0,
     startColumn: 0,
     endLine: lines.length,
@@ -15,5 +16,3 @@ export function getParsedEvent(script: ScriptRecord, id: number, executionContex
     buildId: '',
   };
 }
-
-export const ParsedScripts: ScriptRecord[] = [];

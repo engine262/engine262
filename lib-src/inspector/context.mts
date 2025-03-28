@@ -1,5 +1,6 @@
 import type { Protocol } from 'devtools-protocol';
 import { getInspector } from './inspect.mts';
+import type { Inspector } from './index.mts';
 import {
   evalQ,
   EnsureCompletion, IsPromise, JSStringValue, ManagedRealm, NullValue, ObjectValue, SymbolValue, ThrowCompletion, UndefinedValue, Value,
@@ -20,20 +21,117 @@ import {
   OrdinaryObjectCreate,
   Descriptor,
   isArgumentExoticObject,
+  Agent,
+  surroundingAgent,
+  IsAccessorDescriptor,
+  isIntegerIndex,
+  isBuiltinFunctionObject,
+  isArrayBufferObject,
+  DataBlock,
 } from '#self';
 
+interface InspectedRealmDescriptor {
+  readonly realm: ManagedRealm;
+  readonly descriptor: Protocol.Runtime.ExecutionContextDescription;
+  readonly agent: Agent;
+  detach(): void;
+}
 export class InspectorContext {
-  realm: ManagedRealm;
+  #io: Inspector;
+
+  constructor(io: Inspector) {
+    this.#io = io;
+  }
+
+  realms: (InspectedRealmDescriptor | undefined)[] = [];
+
+  attachRealm(realm: ManagedRealm, agent: Agent) {
+    const id = this.realms.length;
+    const descriptor: Protocol.Runtime.ExecutionContextDescription = {
+      id,
+      origin: 'vm://realm',
+      name: 'engine262',
+      uniqueId: id.toString(),
+    };
+    this.realms.push({
+      realm,
+      descriptor,
+      agent,
+      detach: () => {
+        realm.HostDefined.attachingInspector = oldInspector;
+      },
+    });
+    const oldInspector = realm.HostDefined.attachingInspector;
+    realm.HostDefined.attachingInspector = this.#io;
+    const oldPromiseRejectionTracker = realm.HostDefined.promiseRejectionTracker;
+    realm.HostDefined.promiseRejectionTracker = (promise, operation) => {
+      oldPromiseRejectionTracker?.(promise, operation);
+      if (operation === 'reject') {
+        this.#io.sendEvent['Runtime.exceptionThrown']({
+          timestamp: Date.now(),
+          exceptionDetails: this.createExceptionDetails(promise, true),
+        });
+      } else {
+        const id = this.#exceptionMap.get(promise);
+        if (id) {
+          this.#io.sendEvent['Runtime.exceptionRevoked']({
+            reason: 'Handler added to rejected promise',
+            exceptionId: id,
+          });
+        }
+      }
+    };
+    this.#io.sendEvent['Runtime.executionContextCreated']({ context: descriptor });
+  }
+
+  detachAgent(agent: Agent) {
+    for (const realm of this.realms) {
+      if (realm?.agent === agent) {
+        this.detachRealm(realm.realm);
+      }
+    }
+  }
+
+  detachRealm(realm: ManagedRealm) {
+    const index = this.realms.findIndex((c) => c?.realm === realm);
+    if (index === -1) {
+      return;
+    }
+    const { descriptor } = this.realms[index]!;
+    realm.HostDefined.attachingInspector = undefined;
+    this.realms[index] = undefined;
+    this.#io.sendEvent['Runtime.executionContextDestroyed']({ executionContextId: descriptor.id, executionContextUniqueId: descriptor.uniqueId });
+  }
+
+  getRealm(realm: ManagedRealm | string | number | undefined) {
+    if (realm === undefined) {
+      if (surroundingAgent.runningExecutionContext && surroundingAgent.currentRealmRecord instanceof ManagedRealm) {
+        realm = surroundingAgent.currentRealmRecord;
+      } else {
+        return undefined;
+      }
+    }
+    if (typeof realm === 'string') {
+      return this.realms.find((c) => c?.descriptor.uniqueId === realm);
+    } else if (typeof realm === 'number') {
+      return this.realms[realm];
+    }
+    return this.realms.find((c) => c?.realm === realm);
+  }
+
+  /** @deprecated in this case we are guessing the realm should be using, which may create bad result */
+  getAnyRealm() {
+    return this.realms.find(Boolean);
+  }
 
   #idToObject = new Map<string, ObjectValue | SymbolValue>();
+
+  // id 0 is falsy, skip it
+  #idToArrayBufferBlock: (undefined | ArrayBuffer)[] = [undefined];
 
   #objectToId = new Map<ObjectValue | SymbolValue, string>();
 
   #objectCounter = 0;
-
-  constructor(realm: ManagedRealm) {
-    this.realm = realm;
-  }
 
   #internObject(object: ObjectValue | SymbolValue, group = 'default') {
     if (this.#objectToId.has(object)) {
@@ -67,12 +165,18 @@ export class InspectorContext {
     return this.#idToObject.get(objectId);
   }
 
-  toRemoteObject(value: Value, options: { objectGroup?: string }): Protocol.Runtime.RemoteObject {
-    return getInspector(value).toRemoteObject(value, (val) => this.#internObject(val, options.objectGroup));
+  toRemoteObject(value: Value, options: { objectGroup?: string, generatePreview?: boolean }): Protocol.Runtime.RemoteObject {
+    return getInspector(value).toRemoteObject(value, (val) => this.#internObject(val, options.objectGroup), options.generatePreview);
   }
 
-  getProperties(object: ObjectValue): Protocol.Runtime.GetPropertiesResponse {
-    const wrap = (v: Value) => this.toRemoteObject(v, {});
+  getProperties({
+    objectId, accessorPropertiesOnly, generatePreview, nonIndexedPropertiesOnly, ownProperties,
+  }: Protocol.Runtime.GetPropertiesRequest): Protocol.Runtime.GetPropertiesResponse {
+    const object = this.getObject(objectId);
+    if (!(object instanceof ObjectValue)) {
+      return { result: [] };
+    }
+    const wrap = (v: Value) => this.toRemoteObject(v, { generatePreview });
 
     const properties: Protocol.Runtime.PropertyDescriptor[] = [];
     const internalProperties: Protocol.Runtime.InternalPropertyDescriptor[] = [];
@@ -91,10 +195,13 @@ export class InspectorContext {
       let p: NullValue | ObjectValue = object;
       while (p instanceof ObjectValue) {
         for (const key of Q(skipDebugger(p.OwnPropertyKeys()))) {
+          if (nonIndexedPropertiesOnly && !isIntegerIndex(key)) {
+            continue;
+          }
           const desc = Q(skipDebugger(p.GetOwnProperty(key)));
-          // if (options.accessorPropertiesOnly && !IsAccessorDescriptor(desc)) {
-          //   continue;
-          // }
+          if (accessorPropertiesOnly && !IsAccessorDescriptor(desc)) {
+            continue;
+          }
           if (desc instanceof UndefinedValue) {
             return;
           }
@@ -102,10 +209,10 @@ export class InspectorContext {
             name: key instanceof JSStringValue
               ? key.stringValue()
               : SymbolDescriptiveString(key).stringValue(),
-            value: desc.Value && !('HostUninitializedBindingMarkerObject' in desc.Value) ? wrap(desc.Value!) : undefined,
+            value: desc.Value && !('HostUninitializedBindingMarkerObject' in desc.Value) ? wrap(desc.Value) : undefined,
             writable: desc.Writable === Value.true,
-            get: desc.Get ? wrap(desc.Get!) : undefined,
-            set: desc.Set ? wrap(desc.Set!) : undefined,
+            get: desc.Get ? wrap(desc.Get) : undefined,
+            set: desc.Set ? wrap(desc.Set) : undefined,
             configurable: desc.Configurable === Value.true,
             enumerable: desc.Enumerable === Value.true,
             wasThrown: false,
@@ -115,16 +222,16 @@ export class InspectorContext {
           properties.push(descriptor);
         }
 
-        // if (options.ownProperties) {
-        //   break;
-        // }
+        if (ownProperties) {
+          break;
+        }
         p = Q(skipDebugger(p.GetPrototypeOf()));
       }
     });
     if (value.Type === 'throw') {
       return {
         result: [],
-        exceptionDetails: this.createExceptionDetails(value),
+        exceptionDetails: this.createExceptionDetails(value, false),
       };
     }
 
@@ -147,21 +254,51 @@ export class InspectorContext {
         value: wrap(object.Prototype as Value),
       });
     }
+    if (isBuiltinFunctionObject(object) && object.nativeFunction.section) {
+      internalProperties.push({
+        name: '[[Section]]',
+        value: {
+          type: 'string',
+          value: object.nativeFunction.section,
+        },
+      });
+    }
+    if (isArrayBufferObject(object) && object.ArrayBufferData instanceof DataBlock) {
+      internalProperties.push({
+        name: '[[ArrayBufferByteLength]]',
+        value: {
+          type: 'number',
+          value: object.ArrayBufferByteLength,
+        },
+      });
+      this.#idToArrayBufferBlock.push(object.ArrayBufferData.buffer);
+      internalProperties.push({
+        name: '[[ArrayBufferData]]',
+        value: {
+          type: 'number',
+          value: this.#idToArrayBufferBlock.length - 1,
+        },
+      });
+    }
 
     return { result: properties, internalProperties, privateProperties };
   }
 
-  createExceptionDetails(completion: ThrowCompletion | Value): Protocol.Runtime.ExceptionDetails {
+  #exceptionMap = new WeakMap<Value, number>();
+
+  createExceptionDetails(completion: ThrowCompletion | Value, isPromise: boolean): Protocol.Runtime.ExceptionDetails {
     const value = completion instanceof ThrowCompletion ? completion.Value : completion;
     const stack = getHostDefinedErrorStack(value);
     const frames: Protocol.Runtime.CallFrame[] = stack?.map((call) => call.toCallFrame()!).filter(Boolean) || [];
+    const exceptionId = Math.random();
+    this.#exceptionMap.set(value, exceptionId);
     return {
-      text: 'Uncaught',
+      text: isPromise ? 'Uncaught (in promise)' : 'Uncaught',
       stackTrace: stack ? { callFrames: frames! } : undefined,
-      exception: getInspector(value).toRemoteObject(value, (val) => this.#internObject(val)),
+      exception: getInspector(value).toRemoteObject(value, (val) => this.#internObject(val), false),
       lineNumber: frames[0]?.lineNumber || 0,
       columnNumber: frames[0]?.columnNumber || 0,
-      exceptionId: 0,
+      exceptionId,
       scriptId: frames[0]?.scriptId,
       url: frames[0]?.url,
     };
@@ -173,13 +310,14 @@ export class InspectorContext {
       throw new RangeError('Invalid completion value');
     }
     return {
-      exceptionDetails: completion instanceof ThrowCompletion ? this.createExceptionDetails(completion) : undefined,
+      exceptionDetails: completion instanceof ThrowCompletion ? this.createExceptionDetails(completion, false) : undefined,
       result: this.toRemoteObject(completion.Value, {}),
     };
   }
 
   getDebuggerCallFrame(): Protocol.Debugger.CallFrame[] {
     const stacks = getCurrentStack(false);
+    const length = surroundingAgent.executionContextStack.length;
     return stacks.map((stack, index): Protocol.Debugger.CallFrame => {
       if (!stack.getScriptId()) {
         return undefined!;
@@ -194,7 +332,7 @@ export class InspectorContext {
         env = env.OuterEnv;
       }
       return {
-        callFrameId: String(index),
+        callFrameId: String(length - index - 1),
         functionName: stack.getFunctionName() || '<anonymous>',
         location: {
           scriptId: stack.getScriptId()!,

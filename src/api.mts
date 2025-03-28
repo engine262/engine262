@@ -28,10 +28,12 @@ import {
   ParseScript,
   ParseModule,
   ParseJSONModule,
+  ScriptRecord,
   type ParseScriptHostDefined,
-  type ScriptRecord,
 } from './parse.mts';
-import { AbstractModuleRecord, SourceTextModuleRecord, type ModuleRecordHostDefinedPublic } from './modules.mts';
+import {
+  AbstractModuleRecord, ModuleRecord, SourceTextModuleRecord, type ModuleRecordHostDefined, type ModuleRecordHostDefinedPublic,
+} from './modules.mts';
 import * as messages from './messages.mts';
 import { isWeakRef, type WeakRefObject } from './intrinsics/WeakRef.mts';
 import { isFinalizationRegistryObject, type FinalizationRegistryObject } from './intrinsics/FinalizationRegistry.mts';
@@ -40,7 +42,10 @@ import { isWeakSetObject, type WeakSetObject } from './intrinsics/WeakSet.mts';
 import type { PromiseObject } from './intrinsics/Promise.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
 import { skipDebugger } from './helpers.mts';
-import { GlobalEnvironmentRecord, type Intrinsics } from '#self';
+import {
+  EnsureCompletion, GetModuleNamespace, GlobalEnvironmentRecord, type Intrinsics,
+  type ValueEvaluator,
+} from '#self';
 
 export type ErrorType = 'AggregateError' | 'TypeError' | 'Error' | 'SyntaxError' | 'RangeError' | 'ReferenceError' | 'URIError';
 export function Throw<K extends keyof typeof messages>(type: ErrorType | Value, template: K, ...templateArgs: Parameters<typeof messages[K]>): ThrowCompletion {
@@ -233,6 +238,8 @@ export class ManagedRealm extends Realm {
     surroundingAgent.executionContextStack.pop(newContext);
     this.HostDefined = HostDefined;
     this.topContext = newContext;
+
+    surroundingAgent.hostDefinedOptions.onRealmCreated?.(this);
   }
 
   scope(inspectorPreview?: boolean): Disposable | null;
@@ -268,10 +275,22 @@ export class ManagedRealm extends Realm {
     }
   }
 
-  compileScript(sourceText: string, hostDefined?: ParseScriptHostDefined) {
+  compileScript(sourceText: string, hostDefined?: ParseScriptHostDefined): PlainCompletion<ScriptRecord> {
     return this.scope(() => {
-      const realm = surroundingAgent.currentRealmRecord;
-      const s = ParseScript(sourceText, realm, hostDefined);
+      const s = ParseScript(sourceText, this, hostDefined);
+      if (Array.isArray(s)) {
+        return ThrowCompletion(s[0]);
+      }
+      return NormalCompletion(s);
+    });
+  }
+
+  compileModule(sourceText: string, hostDefined?: ModuleRecordHostDefined) {
+    return this.scope(() => {
+      const s = ParseModule(sourceText, this, {
+        SourceTextModuleRecord: ManagedSourceTextModuleRecord,
+        ...hostDefined,
+      });
       if (Array.isArray(s)) {
         return ThrowCompletion(s[0]);
       }
@@ -284,30 +303,80 @@ export class ManagedRealm extends Realm {
    *
    * This function will synchronously return a completion if this is a nested evaluation and debugger cannot be triggered.
    */
-  evaluate(sourceText: ScriptRecord, callback: (completion: NormalCompletion<Value> | ThrowCompletion) => void) {
+  evaluate(sourceText: ScriptRecord | ModuleRecord | ValueEvaluator, callback: (completion: NormalCompletion<Value> | ThrowCompletion) => void) {
     if (!sourceText) {
-      throw new TypeError('sourceText must be a string or a ScriptRecord');
+      throw new TypeError('sourceText is null or undefined');
     }
-
-    const old = this.active;
-    this.active = true;
-    surroundingAgent.executionContextStack.push(this.topContext);
     let result: ValueCompletion | undefined;
-    surroundingAgent.evaluate(ScriptEvaluation(sourceText), (completion) => {
-      this.active = old;
-      surroundingAgent.executionContextStack.pop(this.topContext);
-      result = completion;
-      callback(completion);
-    });
-    return result;
+
+    if (sourceText instanceof ModuleRecord) {
+      const old = this.active;
+      this.active = true;
+      surroundingAgent.executionContextStack.push(this.topContext);
+
+      const loadModuleCompletion = sourceText.LoadRequestedModules();
+      const link = ((): PlainCompletion<void> => {
+        if (loadModuleCompletion.PromiseState === 'rejected') {
+          Q(Throw(loadModuleCompletion.PromiseResult!, 'Raw', 'Module load failed'));
+        } else if (loadModuleCompletion.PromiseState === 'pending') {
+          throw new Error('Internal error: .LoadRequestedModules() returned a pending promise');
+        }
+        Q(sourceText.Link());
+      })();
+      if (link instanceof ThrowCompletion) {
+        callback(link);
+        return link;
+      }
+      surroundingAgent.evaluate(sourceText.Evaluate(), (completion) => {
+        if (completion instanceof NormalCompletion && completion.Value.PromiseState === 'fulfilled') {
+          result = GetModuleNamespace(sourceText);
+        } else {
+          result = completion;
+        }
+        this.active = old;
+        surroundingAgent.executionContextStack.pop(this.topContext);
+        callback(EnsureCompletion(result!));
+      });
+      return result;
+    } else if (sourceText instanceof ScriptRecord) {
+      const old = this.active;
+      this.active = true;
+      surroundingAgent.executionContextStack.push(this.topContext);
+
+      surroundingAgent.evaluate(ScriptEvaluation(sourceText), (completion) => {
+        this.active = old;
+        surroundingAgent.executionContextStack.pop(this.topContext);
+        result = completion;
+        callback(completion);
+      });
+      return result;
+    } else {
+      // this path only called by the inspector
+      Assert(!!surroundingAgent.hostDefinedOptions.onDebugger);
+      let emptyExecutionStack = false;
+      if (!surroundingAgent.runningExecutionContext) {
+        emptyExecutionStack = true;
+        this.active = true;
+        surroundingAgent.executionContextStack.push(this.topContext);
+      }
+      surroundingAgent.evaluate(sourceText, (completion) => {
+        result = completion;
+        if (emptyExecutionStack) {
+          this.active = false;
+          surroundingAgent.executionContextStack.pop(this.topContext);
+        }
+        callback(completion);
+      });
+      return result;
+    }
   }
 
-  evaluateScript(sourceText: string | ScriptRecord, { specifier, inspectorPreview }: { specifier?: string, inspectorPreview?: boolean } = {}): ValueCompletion {
+  evaluateScript(sourceText: string | ScriptRecord, { specifier, doNotTrackScriptId }: { specifier?: string, doNotTrackScriptId?: boolean } = {}): ValueCompletion {
     if (sourceText === undefined || sourceText === null) {
       throw new TypeError('sourceText must be a string or a ScriptRecord');
     }
     if (typeof sourceText === 'string') {
-      sourceText = Q(this.compileScript(sourceText, { specifier }));
+      sourceText = Q(this.compileScript(sourceText, { specifier, doNotTrackScriptId }));
     }
 
     let completion;
@@ -315,17 +384,9 @@ export class ManagedRealm extends Realm {
       completion = c;
     });
     if (!completion) {
-      if (inspectorPreview) {
-        surroundingAgent.debugger_scopePreview(() => {
-          surroundingAgent.resumeEvaluate({
-            noBreakpoint: true,
-          });
-        });
-      } else {
-        surroundingAgent.resumeEvaluate({
-          noBreakpoint: true,
-        });
-      }
+      surroundingAgent.resumeEvaluate({
+        noBreakpoint: true,
+      });
     }
     if (!completion) {
       throw new Assert.Error('Expect evaluation completes synchronously');
@@ -337,6 +398,37 @@ export class ManagedRealm extends Realm {
     return completion;
   }
 
+  evaluateModule(sourceText: string, specifier: string): PlainCompletion<SourceTextModuleRecord>
+
+  evaluateModule<T extends ModuleRecord>(sourceText: T, specifier: string): PlainCompletion<T>
+
+  evaluateModule(sourceText: string | ModuleRecord, specifier: string): PlainCompletion<ModuleRecord> {
+    if (sourceText === undefined || sourceText === null) {
+      throw new TypeError('sourceText must be a string or a ModuleRecord');
+    }
+    if (typeof sourceText === 'string') {
+      sourceText = Q(this.compileModule(sourceText, { specifier }));
+    }
+
+    let completion;
+    completion = this.evaluate(sourceText, (c) => {
+      completion = c;
+      if (!(completion instanceof AbruptCompletion)) {
+        runJobQueue();
+      }
+    });
+    if (!completion) {
+      surroundingAgent.resumeEvaluate({
+        noBreakpoint: true,
+      });
+    }
+
+    return sourceText;
+  }
+
+  /**
+   * @deprecated use compileModule
+   */
   createSourceTextModule(specifier: string, sourceText: string): PlainCompletion<SourceTextModuleRecord> {
     if (typeof specifier !== 'string') {
       throw new TypeError('specifier must be a string');

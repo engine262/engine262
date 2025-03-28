@@ -364,7 +364,7 @@ export class CallSite {
   }
 
   getScriptId() {
-    if (!(this.context.Function instanceof NullValue) && !(this.context.ScriptOrModule instanceof NullValue)) {
+    if (!(this.context.ScriptOrModule instanceof NullValue)) {
       return this.context.ScriptOrModule.HostDefined.scriptId;
     }
     return this.context.HostDefined?.scriptId;

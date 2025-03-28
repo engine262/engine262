@@ -1,4 +1,5 @@
 {
+  "references": [{ "path": "../src/" }],
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,

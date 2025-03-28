@@ -2,7 +2,8 @@
   "references": [
     { "path": "./lib-src/node" },
     { "path": "./lib-src/inspector" },
-    { "path": "./src" }
+    { "path": "./src" },
+    { "path": "./test" }
   ],
   "files": []
 }

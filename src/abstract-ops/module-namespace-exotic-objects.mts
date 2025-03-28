@@ -12,6 +12,7 @@ import {
   type PropertyKeyValue,
   NullValue,
   BooleanValue,
+  ObjectValue,
 } from '../value.mts';
 import {
   isArray, JSStringSet, type Mutable,
@@ -40,6 +41,10 @@ export interface ModuleNamespaceObject extends ExoticObject {
   readonly Prototype: NullValue;
   // never used
   readonly Extensible: BooleanValue;
+}
+
+export function isModuleNamespaceObject(V: Value): V is ModuleNamespaceObject {
+  return V instanceof ObjectValue && 'Module' in V;
 }
 
 const InternalMethods = {

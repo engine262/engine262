@@ -13,6 +13,7 @@ export abstract class LanguageParser extends ModuleParser {
     } else {
       node.ScriptBody = this.parseScriptBody();
     }
+    node.sourceText = () => this.source;
     return this.finishNode(node, 'Script');
   }
 
@@ -29,6 +30,7 @@ export abstract class LanguageParser extends ModuleParser {
       node.StatementList = this.parseStatementList(Token.EOS, directives);
       node.strict = directives.includes('use strict');
     });
+    node.sourceText = () => this.source;
     return this.finishNode(node, 'ScriptBody');
   }
 
@@ -54,6 +56,7 @@ export abstract class LanguageParser extends ModuleParser {
         this.raiseEarly('ModuleUndefinedExport', importNode, name);
       });
       node.hasTopLevelAwait = this.state.hasTopLevelAwait;
+      node.sourceText = () => this.source;
       return this.finishNode(node, 'Module');
     });
   }
@@ -63,6 +66,7 @@ export abstract class LanguageParser extends ModuleParser {
   parseModuleBody(): ParseNode.ModuleBody {
     const node = this.startNode<ParseNode.ModuleBody>();
     node.ModuleItemList = this.parseModuleItemList();
+    node.sourceText = () => this.source;
     return this.finishNode(node, 'ModuleBody');
   }
 

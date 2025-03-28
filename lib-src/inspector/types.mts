@@ -8,9 +8,14 @@ export interface DebuggerPreference {
 
 export interface DebuggerContext {
   sendEvent: DevtoolEvents;
-  getContext(executionContextId?: number | undefined): InspectorContext;
   onDebuggerAttached(): void;
   preference: DebuggerPreference;
+  context: InspectorContext;
+}
+
+export interface DebuggerNamespace {
+  engine262_setEvaluateMode(req: { mode: string }, context: DebuggerContext): void;
+  engine262_setFeatures(req: { features: string[] }, context: DebuggerContext): void;
 }
 export interface DebuggerNamespace {
   /** https://chromedevtools.github.io/devtools-protocol/v8/Debugger/#method-continueToLocation */

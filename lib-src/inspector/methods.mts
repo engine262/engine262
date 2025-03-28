@@ -3,27 +3,30 @@ import type {
   DebuggerContext,
   DebuggerNamespace, HeapProfilerNamespace, ProfilerNamespace, RuntimeNamespace,
 } from './types.mts';
-import { getParsedEvent, ParsedScripts } from './internal-utils.mts';
+import { getParsedEvent } from './internal-utils.mts';
 import {
-  Call, NormalCompletion, ObjectValue, ParseScript, runJobQueue, surroundingAgent, ThrowCompletion, skipDebugger, Value, type FunctionObject,
-  type ScriptRecord,
+  Call, NormalCompletion, ObjectValue, ParseScript, runJobQueue, ScriptRecord, surroundingAgent, ThrowCompletion, skipDebugger, Value, type FunctionObject,
+  ParseModule,
+  SourceTextModuleRecord, performDevtoolsEval,
+  ValueOfNormalCompletion,
+  JSStringValue,
+  evalQ,
+  Assert,
+  kInternal,
 } from '#self';
 
+let evalMode: 'module' | 'script' | 'console' = 'console';
 export const Debugger: DebuggerNamespace = {
   enable(_req, { onDebuggerAttached }) {
     onDebuggerAttached();
     return { debuggerId: 'debugger.0' };
   },
   getScriptSource({ scriptId }) {
-    const id = parseInt(scriptId, 10);
-    if (Number.isNaN(id)) {
-      return { scriptSource: '// Invalid script id' };
+    const source = surroundingAgent.parsedSources.get(scriptId);
+    if (!source) {
+      throw new Error('Not found');
     }
-    const record = ParsedScripts[id];
-    if (!record) {
-      return { scriptSource: '// Not found' };
-    }
-    return { scriptSource: record.ECMAScriptCode.sourceText() };
+    return { scriptSource: source.ECMAScriptCode.sourceText() };
   },
   setAsyncCallStackDepth() { },
   setBlackboxPatterns() { },
@@ -49,7 +52,15 @@ export const Debugger: DebuggerNamespace = {
     surroundingAgent.resumeEvaluate({ pauseAt: 'step-out' });
   },
   evaluateOnCallFrame(req, context) {
-    return evaluate(req, context);
+    return evaluate(context.context.getRealm(undefined)!.descriptor.uniqueId, req, context);
+  },
+  engine262_setEvaluateMode({ mode }) {
+    if (mode === 'module' || mode === 'script' || mode === 'console') {
+      evalMode = mode;
+    }
+  },
+  engine262_setFeatures() {
+    throw new Error('Method should not be implemented here.');
   },
 };
 export const Profiler: ProfilerNamespace = {
@@ -58,34 +69,43 @@ export const Profiler: ProfilerNamespace = {
 export const Runtime: RuntimeNamespace = {
   discardConsoleEntries() { },
   enable() {},
-  compileScript(options, { getContext, sendEvent }) {
-    const context = getContext(options.executionContextId);
-    const scriptId = ParsedScripts.length;
-    let rec!: ScriptRecord | ObjectValue[];
-    context.realm.scope(() => {
-      rec = ParseScript(options.expression, context.realm, { specifier: options.sourceURL, scriptId: options.persistScript ? String(scriptId) : undefined });
+  compileScript(options, { context, sendEvent }) {
+    let parsed!: ScriptRecord | SourceTextModuleRecord | ObjectValue[];
+    const realm = context.getRealm(options.executionContextId);
+    realm?.realm.scope(() => {
+      if (evalMode === 'module') {
+        parsed = ParseModule(options.expression, realm.realm, { specifier: options.sourceURL, doNotTrackScriptId: !options.persistScript });
+      } else {
+        parsed = ParseScript(options.expression, realm.realm, { specifier: options.sourceURL, doNotTrackScriptId: !options.persistScript, [kInternal]: { allowAllPrivateNames: true } });
+      }
     });
-    if (Array.isArray(rec)) {
-      const e = context.createExceptionDetails(ThrowCompletion(rec[0]));
+    if (Array.isArray(parsed)) {
+      const e = context.createExceptionDetails(ThrowCompletion(parsed[0]), false);
       // Note: it has to be this message to trigger devtools' line wrap.
       e.exception!.description = 'SyntaxError: Unexpected end of input';
       return { exceptionDetails: e };
     }
     if (options.persistScript) {
-      ParsedScripts.push(rec);
-      const event = getParsedEvent(rec, scriptId, options.executionContextId || 0);
+      if (realm?.descriptor.id === undefined) {
+        throw new Error('No realm id found');
+      }
+      const event = getParsedEvent(parsed, parsed.HostDefined.scriptId!, realm.descriptor.id);
       sendEvent['Debugger.scriptParsed'](event);
       return { scriptId: event.scriptId };
     }
     return {};
   },
-  callFunctionOn(options, { getContext }) {
-    const context = getContext(options.executionContextId);
-    const { Value: F } = context.realm.evaluateScript(`(${options.functionDeclaration})`) as NormalCompletion<FunctionObject>;
+  callFunctionOn(options, { context }): Protocol.Runtime.CallFunctionOnResponse {
+    const realmDesc = context.getRealm(options.uniqueContextId || options.executionContextId) || context.getAnyRealm();
+    if (!realmDesc) {
+      throw new Error('No realm found');
+    }
+    const { Value: F } = realmDesc.realm.evaluateScript(`(${options.functionDeclaration})`, { doNotTrackScriptId: true }) as NormalCompletion<FunctionObject>;
     const thisValue = options.objectId
       ? context.getObject(options.objectId)!
       : Value.undefined;
     const args = options.arguments?.map((a) => {
+      // TODO: revisit
       if ('value' in a) {
         return Value(a.value);
       }
@@ -97,19 +117,32 @@ export const Runtime: RuntimeNamespace = {
       }
       return Value.undefined;
     });
-    const r = skipDebugger(Call(F, thisValue, args || []));
-    return context.createEvaluationResult(r);
+    return realmDesc.realm.scope((): Protocol.Runtime.CallFunctionOnResponse => {
+      const completion = evalQ((Q, X): Protocol.Runtime.CallFunctionOnResponse => {
+        const r = Q(skipDebugger(Call(F, thisValue, args || [])));
+        if (options.returnByValue) {
+          const value = X(Call(realmDesc.realm.Intrinsics['%JSON.stringify%'], Value.undefined, [r]));
+          if (value instanceof JSStringValue) {
+            const valueRealized = JSON.parse(value.stringValue());
+            return { result: { type: typeof value, value: valueRealized } };
+          }
+        }
+        return context.createEvaluationResult(r);
+      });
+      if (completion instanceof ThrowCompletion) {
+        return { result: { type: 'undefined' }, exceptionDetails: context.createExceptionDetails(completion, false) };
+      }
+      return completion.Value;
+    });
   },
   evaluate(options, _context) {
-    return evaluate(options, _context);
+    return evaluate(options.uniqueContextId!, options, _context);
   },
-  getExceptionDetails(req, { getContext }) {
-    const context = getContext();
+  getExceptionDetails(req, { context }) {
     const object = context.getObject(req.errorObjectId)!;
     if (object instanceof ObjectValue) {
       return {
-        // @ts-expect-error
-        exceptionDetails: context.createExceptionDetails(ThrowCompletion(object), {}),
+        exceptionDetails: context.createExceptionDetails(ThrowCompletion(object), false),
       };
     }
     return {
@@ -126,23 +159,25 @@ export const Runtime: RuntimeNamespace = {
   getIsolateId() {
     return { id: 'isolate.0' };
   },
-  getProperties(options, { getContext }) {
-    const context = getContext();
-    const object = context.getObject(options.objectId)!;
-    // @ts-expect-error
-    return context.getProperties(object, options);
+  getProperties(options, { context }) {
+    return context.getProperties(options);
   },
-  globalLexicalScopeNames({ executionContextId }, { getContext }) {
-    const context = getContext(executionContextId);
-    const envRec = context.realm.GlobalEnv;
-    const names = Array.from(envRec.DeclarativeRecord.bindings.keys(), (v) => v.stringValue());
-    return { names };
+  globalLexicalScopeNames({ executionContextId }, { context }) {
+    const global = context.getRealm(executionContextId)?.realm.GlobalObject;
+    if (!global) {
+      return { names: [] };
+    }
+    const keys = skipDebugger(global.OwnPropertyKeys());
+    if (keys instanceof ThrowCompletion) {
+      return { names: [] };
+    }
+    return { names: ValueOfNormalCompletion(keys).map((k) => (k instanceof JSStringValue ? k.stringValue() : null!)).filter(Boolean) };
   },
-  releaseObject(req, { getContext }) {
-    getContext().releaseObject(req.objectId);
+  releaseObject(req, { context }) {
+    context.releaseObject(req.objectId);
   },
-  releaseObjectGroup({ objectGroup }, { getContext }) {
-    getContext().releaseObjectGroup(objectGroup);
+  releaseObjectGroup({ objectGroup }, { context }) {
+    context.releaseObjectGroup(objectGroup);
   },
   runIfWaitingForDebugger() { },
 };
@@ -157,47 +192,99 @@ const unsupportedError: Protocol.Runtime.EvaluateResponse = {
     text: 'unsupported', lineNumber: 0, columnNumber: 0, exceptionId: 0,
   },
 };
-function evaluate(options: {
+function evaluate(uniqueContextId: string, options: {
   throwOnSideEffect?: boolean,
   awaitPromise?: boolean,
-  contextId?: number | undefined,
   callFrameId?: string,
   expression: string,
-}, _context: DebuggerContext) {
-  const { getContext, preference } = _context;
+}, _context: DebuggerContext): Protocol.Runtime.EvaluateResponse | Promise<Protocol.Runtime.EvaluateResponse> {
+  const { context, preference } = _context;
   const isPreview = options.throwOnSideEffect;
   if (options.awaitPromise || (!preference.preview && isPreview)) {
     return unsupportedError;
   }
+  const realm = context.getRealm(uniqueContextId);
+  if (!realm) {
+    return unsupportedError;
+  }
 
-  const context = getContext(options.contextId);
-  if (options.callFrameId) {
+  const isCallOnFrame = typeof options.callFrameId === 'string';
+  let callOnFramePoppedLevel = 0;
+  const oldExecutionStack = [...surroundingAgent.executionContextStack];
+  if (isCallOnFrame) {
     const frame = surroundingAgent.executionContextStack[options.callFrameId as `${number}`];
     if (!frame) {
       // eslint-disable-next-line no-console
       console.error('Execution context not found: ', options.callFrameId);
       return unsupportedError;
     }
-    // const old = surroundingAgent.executionContextStack;
-  }
-  // TODO: introduce devtool scoping
-  if (isPreview) {
-    const completion = context.realm.evaluateScript(options.expression, { inspectorPreview: true });
-    return context.createEvaluationResult(completion);
-  } else {
-    const compileResult = Runtime.compileScript!({
-      expression: options.expression, executionContextId: options.contextId, persistScript: true, sourceURL: '',
-    }, _context);
-    if (compileResult.exceptionDetails) {
-      return { exceptionDetails: compileResult.exceptionDetails, result: { type: 'undefined' } } as Protocol.Runtime.EvaluateResponse;
+    for (const currentFrame of [...surroundingAgent.executionContextStack].reverse()) {
+      if (currentFrame === frame) {
+        break;
+      }
+      callOnFramePoppedLevel += 1;
+      surroundingAgent.executionContextStack.pop(currentFrame);
     }
-    const parsedScript = ParsedScripts[compileResult.scriptId! as `${number}`];
-    return new Promise<Protocol.Runtime.EvaluateResponse>((resolve) => {
-      context.realm.evaluate(parsedScript, (completion) => {
-        resolve(context.createEvaluationResult(completion));
-        runJobQueue();
-      });
-      surroundingAgent.resumeEvaluate();
-    });
   }
+  const promise = new Promise<Protocol.Runtime.EvaluateResponse>((resolve) => {
+    let toBeEvaluated;
+    if (isPreview || evalMode === 'console' || isCallOnFrame) {
+      toBeEvaluated = performDevtoolsEval(options.expression, realm.realm, false, !!(isPreview || isCallOnFrame));
+    } else {
+      let parsed!: ScriptRecord | SourceTextModuleRecord | ObjectValue[];
+      const realm = context.getRealm(uniqueContextId);
+      realm?.realm.scope(() => {
+        if (evalMode === 'module') {
+          parsed = ParseModule(options.expression, realm.realm);
+        } else {
+          parsed = ParseScript(options.expression, realm.realm);
+        }
+      });
+      if (Array.isArray(parsed)) {
+        const e = context.createExceptionDetails(ThrowCompletion(parsed[0]), false);
+        // Note: it has to be this message to trigger devtools' line wrap.
+        e.exception!.description = 'SyntaxError: Unexpected end of input';
+        resolve({ exceptionDetails: e, result: { type: 'undefined' } });
+        return;
+      }
+      toBeEvaluated = parsed;
+    }
+
+    const noDebuggerEvaluate = () => {
+      if (!('next' in toBeEvaluated)) {
+        throw new Assert.Error('Unexpected');
+      }
+      resolve(context.createEvaluationResult(skipDebugger(toBeEvaluated)));
+    };
+    if (isPreview) {
+      surroundingAgent.debugger_scopePreview(noDebuggerEvaluate);
+      return;
+    }
+    if (isCallOnFrame) {
+      noDebuggerEvaluate();
+      return;
+    }
+
+    const completion = realm.realm.evaluate(toBeEvaluated, (completion) => {
+      resolve(context.createEvaluationResult(completion));
+      runJobQueue();
+    });
+    if (completion) {
+      return;
+    }
+    surroundingAgent.resumeEvaluate();
+  });
+  promise.then(() => {
+    if (callOnFramePoppedLevel) {
+      Assert(oldExecutionStack.length - callOnFramePoppedLevel === surroundingAgent.executionContextStack.length);
+      for (const [newIndex, newStack] of surroundingAgent.executionContextStack.entries()) {
+        Assert(newStack === oldExecutionStack[newIndex]);
+      }
+      surroundingAgent.executionContextStack.length = 0;
+      for (const stack of oldExecutionStack) {
+        surroundingAgent.executionContextStack.push(stack);
+      }
+    }
+  });
+  return promise;
 }

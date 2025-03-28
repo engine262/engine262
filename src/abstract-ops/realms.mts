@@ -207,6 +207,7 @@ export interface Intrinsics extends Intrinsics_Table6 {
   '%Int8Array%': FunctionObject;
   '%IteratorPrototype%': ObjectValue;
   '%JSON.parse%': FunctionObject;
+  '%JSON.stringify%': FunctionObject;
   '%Map.prototype%': ObjectValue;
   '%Number.prototype%': ObjectValue;
   '%Object.prototype.toString%': BuiltinFunctionObject;

@@ -25,6 +25,8 @@ import {
 import { CallSite, kAsyncContext } from '../helpers.mts';
 import {
   AbstractModuleRecord, CyclicModuleRecord, EnvironmentRecord, ObjectValue, PrivateEnvironmentRecord, runJobQueue, skipDebugger, type Arguments, type AsyncGeneratorObject, type ErrorType, type ValueCompletion, type GeneratorObject, type Intrinsics, type ModuleRecordHostDefined, type ParseScriptHostDefined, type ScriptRecord,
+  ManagedRealm,
+  SourceTextModuleRecord,
 } from '../index.mts';
 import * as messages from '../messages.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
@@ -33,18 +35,18 @@ import type { PromiseObject } from '../intrinsics/Promise.mts';
 import type { FinalizationRegistryObject } from '../intrinsics/FinalizationRegistry.mts';
 import { shouldStepOnNode } from './debugger-util.mts';
 
+export interface Engine262Feature {
+  name: string;
+  flag: string;
+  url: string;
+}
 export const FEATURES = ([
   {
     name: 'FinalizationRegistry.prototype.cleanupSome',
     flag: 'cleanup-some',
     url: 'https://github.com/tc39/proposal-cleanup-some',
   },
-  {
-    name: 'Well-Formed Unicode Strings',
-    flag: 'is-usv-string',
-    url: 'https://github.com/tc39/proposal-is-usv-string',
-  },
-]) as const;
+]) as const satisfies Engine262Feature[];
 Object.freeze(FEATURES);
 FEATURES.forEach(Object.freeze);
 
@@ -73,6 +75,8 @@ export interface AgentHostDefined {
   features?: readonly string[];
   loadImportedModule?(referrer: AbstractModuleRecord | ScriptRecord | NullValue | Realm, specifier: string, hostDefined: ModuleRecordHostDefined | undefined, finish: (res: PlainCompletion<AbstractModuleRecord>) => void): void;
   onDebugger?(): void;
+  onRealmCreated?(realm: ManagedRealm): void;
+  onScriptParsed?(script: ScriptRecord | SourceTextModuleRecord, scriptId: string): void;
   onNodeEvaluation?(node: ParseNode, realm: Realm): void;
   boost?: {
     evaluatePattern?(pattern: ParseNode.RegExp.Pattern): RegExpObject['RegExpMatcher'];
@@ -199,13 +203,14 @@ export class Agent {
   }
 
   // NON-SPEC
-  // Step-by-step evaluation
+  // #region Step-by-step evaluation
   #pausedEvaluator?: ValueEvaluator;
 
   #onEvaluatorFin?: (completion: NormalCompletion<Value> | ThrowCompletion) => void;
 
+  // NON-SPEC
   /** This function will synchronously return a completion if this is a nested evaluation and debugger cannot be triggered. */
-  evaluate(evaluator: ValueEvaluator, onFinished: (completion: NormalCompletion<Value> | ThrowCompletion) => void) {
+  evaluate<T extends Value>(evaluator: ValueEvaluator<T>, onFinished: (completion: NormalCompletion<T> | ThrowCompletion) => void) {
     if (this.#pausedEvaluator) {
       const result = EnsureCompletion(skipDebugger(evaluator));
       // only the top evaluator can be evaluted step by step.
@@ -213,14 +218,8 @@ export class Agent {
       return result;
     }
     this.#pausedEvaluator = evaluator;
-    this.#onEvaluatorFin = onFinished;
+    this.#onEvaluatorFin = onFinished as (completion: NormalCompletion<Value> | ThrowCompletion) => void;
     return undefined;
-  }
-
-  #breakpoints: Set<Breakpoint> = new Set();
-
-  addBreakpoint(breakpoint: Breakpoint) {
-    this.#breakpoints.add(breakpoint);
   }
 
   resumeEvaluate(options?: ResumeEvaluateOptions): IteratorResult<void, ValueCompletion> {
@@ -264,10 +263,32 @@ export class Agent {
       }
     }
   }
+  // #endregion
 
-  /**
-   * NON-SPEC
-   */
+  // NON-SPEC
+  // #region parsed scripts/modules
+  #script_id = 0;
+
+  parsedSources = new Map<string, ScriptRecord | SourceTextModuleRecord>();
+
+  addParsedSource(source: ScriptRecord | SourceTextModuleRecord) {
+    const id = `${this.#script_id}`;
+    if (source.HostDefined) {
+      source.HostDefined.scriptId = id;
+    }
+    this.hostDefinedOptions.onScriptParsed?.(source, id);
+    this.parsedSources.set(id, source);
+    this.#script_id += 1;
+  }
+  // #endregion
+
+  #breakpoints: Set<Breakpoint> = new Set();
+
+  addBreakpoint(breakpoint: Breakpoint) {
+    this.#breakpoints.add(breakpoint);
+  }
+
+  // #region side-effect free evaluator
   #debugger_previewing = false;
 
   #debugger_objectsCreatedDuringPreview = new Set<ObjectValue>();
@@ -323,6 +344,7 @@ export class Agent {
       }
     }
   }
+  // #endregion
 }
 
 export let surroundingAgent: Agent;
@@ -443,6 +465,9 @@ export function HostEnsureCanCompileStrings(callerRealm: Realm, calleeRealm: Rea
 }
 
 export function HostPromiseRejectionTracker(promise: PromiseObject, operation: 'reject' | 'handle') {
+  if (surroundingAgent.debugger_isPreviewing) {
+    return;
+  }
   const realm = surroundingAgent.currentRealmRecord;
   if (realm && realm.HostDefined.promiseRejectionTracker) {
     X(realm.HostDefined.promiseRejectionTracker(promise, operation));

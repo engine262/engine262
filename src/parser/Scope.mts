@@ -511,6 +511,9 @@ export class Scope {
   }
 
   checkUndefinedPrivate(PrivateIdentifier: ParseNode.PrivateIdentifier) {
+    if (this.parser.state.allowAllPrivateNames) {
+      return;
+    }
     const [{ node, name }] = getDeclarations(PrivateIdentifier);
 
     if (!this.privateScope) {

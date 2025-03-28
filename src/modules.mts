@@ -70,7 +70,8 @@ export type ModuleRecordHostDefined = {
   public?: ModuleRecordHostDefinedPublic;
   specifier?: string | undefined;
   readonly SourceTextModuleRecord?: typeof SourceTextModuleRecord;
-  readonly scriptId?: string;
+  scriptId?: string;
+  readonly doNotTrackScriptId?: boolean;
 };
 export type AbstractModuleInit = Pick<AbstractModuleRecord, 'Realm' | 'Environment' | 'Namespace' | 'HostDefined'>;
 

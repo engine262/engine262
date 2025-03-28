@@ -15,6 +15,7 @@ export interface ParserOptions {
   readonly source: string;
   readonly specifier?: string;
   readonly json?: boolean;
+  readonly allowAllPrivateNames?: boolean;
 }
 
 export class Parser extends LanguageParser {
@@ -28,11 +29,14 @@ export class Parser extends LanguageParser {
     hasTopLevelAwait: boolean;
     strict: boolean;
     json: boolean;
+    allowAllPrivateNames: boolean;
   };
 
   readonly scope = new Scope(this);
 
-  constructor({ source, specifier, json = false }: ParserOptions) {
+  constructor({
+    source, specifier, json = false, allowAllPrivateNames = false,
+  }: ParserOptions) {
     super();
     this.source = source;
     this.specifier = specifier;
@@ -41,6 +45,7 @@ export class Parser extends LanguageParser {
       hasTopLevelAwait: false,
       strict: false,
       json,
+      allowAllPrivateNames,
     };
   }
 

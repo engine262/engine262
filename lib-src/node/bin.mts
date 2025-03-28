@@ -17,6 +17,10 @@ import {
   type ValueCompletion,
   createTest262Intrinsics,
   ToString,
+  surroundingAgent,
+  ThrowCompletion,
+  ValueOfNormalCompletion,
+  ScriptEvaluation,
 } from '#self';
 
 const help = `
@@ -136,7 +140,7 @@ if (argv.values.inspector !== false) {
     // @ts-ignore
     const { NodeWebsocketInspector } = await import('./inspector.mts');
     const inspect = await NodeWebsocketInspector.new();
-    inspect.attachRealm(realm, 'Main Realm');
+    inspect.attachAgent(surroundingAgent, [realm]);
     inspect.preference.preview = argv.values.preview;
     inspect.preference.previewDebug = argv.values['preview-debug'] || false;
   }
@@ -191,14 +195,24 @@ Please report bugs to ${packageJson.bugs.url}
     prompt: '> ',
     eval: (cmd, _context, _filename, callback) => {
       try {
-        const result = realm.evaluateScript(cmd, { specifier: '(engine262)' });
-        callback(null, result);
+        const script = realm.compileScript(cmd, {});
+        if (script instanceof ThrowCompletion) {
+          callback(null, script);
+          return;
+        }
+        let c;
+        surroundingAgent.evaluate(ScriptEvaluation(ValueOfNormalCompletion(script)), (completion) => {
+          c = completion;
+          callback(null, completion);
+        });
+        if (!c) {
+          surroundingAgent.resumeEvaluate();
+        }
       } catch (e) {
         callback(e as Error, null);
       }
     },
     preview: false,
-    completer: () => [],
     writer: (o) => realm.scope(() => {
       if (o instanceof Value || o instanceof Completion) {
         return inspect(o as Value | ValueCompletion);

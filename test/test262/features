@@ -42,6 +42,3 @@
 -array-grouping
 -regexp-duplicate-named-groups
 -change-array-by-copy
-
-String.prototype.isWellFormed = is-usv-string
-String.prototype.toWellFormed = is-usv-string

@@ -2,7 +2,8 @@ import type { Protocol } from 'devtools-protocol';
 import { InspectorContext } from './context.mts';
 import * as impl from './methods.mts';
 import type { DebuggerContext, DebuggerPreference, DevtoolEvents } from './types.mts';
-import { surroundingAgent, type Arguments, type ManagedRealm } from '#self';
+import { getParsedEvent } from './internal-utils.mts';
+import { Agent, type Arguments, type ManagedRealm } from '#self';
 
 const ignoreNamespaces = ['Network'];
 const ignoreMethods: string[] = [];
@@ -10,41 +11,63 @@ const ignoreMethods: string[] = [];
 export type { DebuggerPreference } from './types.mts';
 export { createConsole } from './utils.mts';
 
+interface AgentRecord {
+  readonly agent: Agent;
+  onDetach(): void;
+}
 export abstract class Inspector {
+  #context = new InspectorContext(this);
+
+  #agents: AgentRecord[] = [];
+
+  attachAgent(agent: Agent, priorRealms: ManagedRealm[]) {
+    const oldOnDebugger = agent.hostDefinedOptions.onDebugger;
+    agent.hostDefinedOptions.onDebugger = () => {
+      oldOnDebugger?.();
+      this.sendEvent['Debugger.paused']({
+        reason: 'debugCommand',
+        callFrames: this.#context.getDebuggerCallFrame(),
+      });
+    };
+
+    const oldOnRealmCreated = agent.hostDefinedOptions.onRealmCreated;
+    agent.hostDefinedOptions.onRealmCreated = (realm) => {
+      oldOnRealmCreated?.(realm);
+      this.#context.attachRealm(realm, agent);
+    };
+
+    const oldOnScriptParsed = agent.hostDefinedOptions.onScriptParsed;
+    agent.hostDefinedOptions.onScriptParsed = (script, id) => {
+      oldOnScriptParsed?.(script, id);
+      const realmId = this.#context.getRealm(script.Realm as ManagedRealm)?.descriptor.id;
+      if (realmId === undefined) {
+        return;
+      }
+      this.sendEvent['Debugger.scriptParsed'](getParsedEvent(script, id, realmId));
+    };
+    this.#agents.push({
+      agent,
+      onDetach: () => {
+        agent.hostDefinedOptions.onDebugger = oldOnDebugger;
+        agent.hostDefinedOptions.onRealmCreated = oldOnRealmCreated;
+        agent.hostDefinedOptions.onScriptParsed = oldOnScriptParsed;
+        this.#agents = this.#agents.filter((x) => x.agent !== agent);
+      },
+    });
+    priorRealms.forEach((realm) => {
+      this.#context.attachRealm(realm, agent);
+    });
+  }
+
+  detachAgent(agent: Agent) {
+    const record = this.#agents.find((x) => x.agent === agent);
+    record?.onDetach();
+    this.#context.detachAgent(agent);
+  }
+
   protected abstract send(data: object): void;
 
   readonly preference: DebuggerPreference = { preview: false, previewDebug: false };
-
-  #contexts: [InspectorContext, Protocol.Runtime.ExecutionContextDescription][] = [];
-
-  attachRealm(realm: ManagedRealm, name = 'engine262') {
-    const id = this.#contexts.length;
-    const desc: Protocol.Runtime.ExecutionContextDescription = {
-      id,
-      origin: 'vm://realm',
-      name,
-      uniqueId: '',
-    };
-    this.#contexts.push([new InspectorContext(realm), desc]);
-    realm.HostDefined.attachingInspector = this;
-
-    const oldOnDebugger = surroundingAgent.hostDefinedOptions.onDebugger;
-    surroundingAgent.hostDefinedOptions.onDebugger = () => {
-      this.sendEvent['Debugger.paused']({
-        reason: 'debugCommand',
-        callFrames: this.#context.getContext().getDebuggerCallFrame(),
-      });
-      oldOnDebugger?.();
-    };
-
-    this.#context.sendEvent['Runtime.executionContextCreated']({ context: desc });
-  }
-
-  #onDebuggerAttached() {
-    for (const [, context] of this.#contexts) {
-      this.sendEvent['Runtime.executionContextCreated']({ context });
-    }
-  }
 
   protected onMessage(id: unknown, methodArg: string, params: unknown): void {
     if (ignoreMethods.includes(methodArg)) {
@@ -68,7 +91,7 @@ export abstract class Inspector {
 
     const f = (ns as Record<string, (args: unknown, context: DebuggerContext) => unknown>)[method];
     new Promise((resolve) => {
-      resolve(f(params, this.#context));
+      resolve(f(params, this.#debugContext));
     }).then((result = {}) => {
       this.send({ id, result });
     });
@@ -85,19 +108,30 @@ export abstract class Inspector {
   }));
 
   console(realm: ManagedRealm, type: Protocol.Runtime.ConsoleAPICalledEventType, args: Arguments) {
-    const context = this.#contexts.findIndex((c) => c[0].realm === realm);
+    const context = this.#context.getRealm(realm);
+    if (!context) {
+      return;
+    }
     this.sendEvent['Runtime.consoleAPICalled']({
       type,
-      args: args.map((x) => this.#contexts[context][0].toRemoteObject(x, { })),
-      executionContextId: context,
+      args: args.map((x) => this.#context.toRemoteObject(x, { })),
+      executionContextId: context.descriptor.id,
       timestamp: Date.now(),
     });
   }
 
-  #context: DebuggerContext = {
+  #debugContext: DebuggerContext = {
     sendEvent: this.sendEvent,
     preference: this.preference,
-    getContext: (id = 0) => this.#contexts.at(id)![0],
-    onDebuggerAttached: this.#onDebuggerAttached.bind(this),
+    context: this.#context,
+    onDebuggerAttached: () => {
+      this.#context.realms.forEach((realm) => {
+        if (realm) {
+          this.sendEvent['Runtime.executionContextCreated']({
+            context: realm.descriptor,
+          });
+        }
+      });
+    },
   };
 }

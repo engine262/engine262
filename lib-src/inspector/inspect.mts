@@ -5,9 +5,15 @@ import {
   evalQ,
   Get,
   inspectDate,
-  IntrinsicsFunctionToString, isArrayBufferObject, isArrayExoticObject, IsCallable, isDataViewObject, isDateObject, isECMAScriptFunctionObject, isErrorObject, isIntegerIndex, isMapObject, isPromiseObject, isProxyExoticObject, isRegExpObject, isSetObject, isTypedArrayObject, isWeakMapObject, isWeakSetObject, JSStringValue, NumberValue, ObjectValue, PrivateElementRecord, PrivateName, R, surroundingAgent, SymbolDescriptiveString, SymbolValue, ToString, skipDebugger, Value, type ArrayBufferObject, type BooleanValue, type DataViewObject, type DateObject, type FunctionObject, type MapObject, type NullValue, type PromiseObject, type PropertyKeyValue, type ProxyObject, type RegExpObject, type SetObject, type TypedArrayObject, type UndefinedValue,
+  IntrinsicsFunctionToString, isArrayBufferObject, isArrayExoticObject, IsCallable, isDataViewObject, isDateObject, isECMAScriptFunctionObject, isErrorObject, isIntegerIndex, isMapObject, isPromiseObject, isProxyExoticObject, isRegExpObject, isSetObject, isTypedArrayObject, isWeakMapObject, isWeakSetObject, JSStringValue, NumberValue, ObjectValue, PrivateElementRecord, PrivateName, R, surroundingAgent, SymbolDescriptiveString, SymbolValue, ToString, skipDebugger, UndefinedValue, Value, type ArrayBufferObject, type BooleanValue, type DataViewObject, type DateObject, type FunctionObject, type MapObject, type NullValue, type PromiseObject, type PropertyKeyValue, type ProxyObject, type RegExpObject, type SetObject, type TypedArrayObject,
   type WeakMapObject,
   type WeakSetObject,
+  type ModuleNamespaceObject,
+  isModuleNamespaceObject,
+  DataBlock,
+  TypedArrayGetElement,
+  TypedArrayLength,
+  MakeTypedArrayWithBufferWitnessRecord,
 } from '#self';
 
 /*
@@ -30,7 +36,7 @@ array: console.log('array:', [], [1, 2], Object.assign([1, 2], { a: 1 }), [0, ,,
 typedarray: console.log('typedarray:', new Int8Array(8), new Int16Array(8), new Int32Array(8), new Uint8Array(8), new Uint16Array(8), new Uint32Array(8), new Uint8ClampedArray(8), new Float32Array(8), new Float64Array(8), new BigInt64Array(8), new BigUint64Array(8));
 */
 interface Inspector<T extends Value> {
-    toRemoteObject(value: T, getObjectId: (val: SymbolValue | ObjectValue) => string): Protocol.Runtime.RemoteObject;
+    toRemoteObject(value: T, getObjectId: (val: SymbolValue | ObjectValue) => string, generatePreview: boolean | undefined): Protocol.Runtime.RemoteObject;
     toObjectPreview(value: T): Protocol.Runtime.ObjectPreview;
     toPropertyPreview(name: string, value: T): Protocol.Runtime.PropertyPreview;
     toDescription(value: T): string;
@@ -236,7 +242,7 @@ class ObjectInspector<T extends ObjectValue> implements Inspector<T> {
 }
 const Default = new ObjectInspector<ObjectValue>('Object', undefined, () => 'Object');
 
-const ArrayBuffer = new ObjectInspector<ArrayBufferObject>('ArrayBuffer', 'arraybuffer', (value) => `ArrayBuffer(${value.ArrayBufferByteLength})`);
+const ArrayBuffer = new ObjectInspector<ArrayBufferObject>('ArrayBuffer', 'arraybuffer', (value) => `ArrayBuffer(${value.ArrayBufferByteLength})`, {});
 const DataView = new ObjectInspector<DataViewObject>('DataView', 'dataview', (value) => `DataView(${value.ByteLength})`);
 const Error = new ObjectInspector<ObjectValue>('SyntaxError', 'error', (value) => {
   let text = '';
@@ -292,6 +298,7 @@ const Proxy = new ObjectInspector<ProxyObject>('Proxy', 'proxy', (value) => {
   return 'Proxy';
 });
 const RegExp = new ObjectInspector<RegExpObject>('RegExp', 'regexp', (value) => `/${value.OriginalSource.stringValue()}/${value.OriginalFlags.stringValue()}`);
+const Module = new ObjectInspector<ModuleNamespaceObject>('Module', undefined, () => 'Module', {});
 
 const Array: Inspector<ObjectValue> = {
   toRemoteObject(value, getObjectId) {
@@ -341,32 +348,7 @@ const Array: Inspector<ObjectValue> = {
     return `Array(${R(length[1].Value)})`;
   },
 };
-const TypedArray: Inspector<TypedArrayObject> = {
-  toRemoteObject(value, getObjectId) {
-    return {
-      type: 'object',
-      subtype: 'typedarray',
-      objectId: getObjectId(value),
-      className: value.TypedArrayName.stringValue(),
-      description: this.toDescription(value),
-      preview: this.toObjectPreview(value),
-    };
-  },
-  toObjectPreview(value) {
-    return {
-      type: 'object', subtype: 'typedarray', description: this.toDescription(value), properties: [], overflow: false,
-    };
-  },
-  toPropertyPreview(name, value) {
-    return {
-      name, type: 'object', subtype: 'typedarray', value: this.toDescription(value),
-    };
-  },
-  toDescription(value) {
-    const name = value.TypedArrayName;
-    return `${name.stringValue()}(${value.ArrayLength})`;
-  },
-};
+const TypedArray = new ObjectInspector<TypedArrayObject>('TypedArray', 'typedarray', (value) => `${value.TypedArrayName.stringValue()}(${value.ArrayLength})`);
 
 function propertyToPropertyPreview(key: PropertyKeyValue | PrivateName, desc: Descriptor | PrivateElementRecord): Protocol.Runtime.PropertyPreview {
   let name;
@@ -391,6 +373,29 @@ function propertiesToPropertyPreview(value: ObjectValue, extra: undefined | Iter
     for (const [key, value] of extra) {
       properties.push(getInspector(value).toPropertyPreview(key, value));
     }
+  }
+  if (isTypedArrayObject(value) && value.ViewedArrayBuffer instanceof ObjectValue && value.ViewedArrayBuffer.ArrayBufferData instanceof DataBlock) {
+    const record = MakeTypedArrayWithBufferWitnessRecord(value, 'seq-cst');
+    const length = TypedArrayLength(record);
+    for (let index = 0; index < length; index += 1) {
+      const index_value = TypedArrayGetElement(value, Value(index));
+      if (index_value instanceof UndefinedValue) {
+        break;
+      }
+      if (properties.length > 100) {
+        overflow = true;
+        break;
+      }
+      properties.push(getInspector(index_value).toPropertyPreview(index.toString(), index_value));
+    }
+    properties.push(
+      {
+        name: 'buffer', type: 'object', subtype: 'arraybuffer', value: `ArrayBuffer(${value.ViewedArrayBuffer.ArrayBufferData.byteLength})`,
+      },
+      { name: 'byteLength', type: 'number', value: globalThis.String(value.ArrayLength) },
+      { name: 'byteOffset', type: 'number', value: globalThis.String(value.ByteOffset) },
+      { name: 'length', type: 'number', value: globalThis.String(length) },
+    );
   }
   for (const [key, desc] of value.properties) {
     if (properties.length > max) {
@@ -453,6 +458,8 @@ export function getInspector(value: Value): Inspector<Value> {
       return ArrayBuffer;
     case isDataViewObject(value):
       return DataView;
+    case isModuleNamespaceObject(value):
+      return Module;
     default:
       return Default;
   }

@@ -73,10 +73,10 @@ export function* PerformEval(x: Value, callerRealm: Realm, strictCaller: boolean
       if (F.ConstructorKind === 'derived') {
         inDerivedConstructor = true;
       }
-      // v. Let classFieldIntializerName be F.[[ClassFieldInitializerName]].
-      const classFieldIntializerName = F.ClassFieldInitializerName;
-      // vi. If classFieldIntializerName is not empty, set inClassFieldInitializer to true.
-      if (classFieldIntializerName !== undefined) {
+      // v. Let classFieldInitializerName be F.[[ClassFieldInitializerName]].
+      const classFieldInitializerName = F.ClassFieldInitializerName;
+      // vi. If classFieldInitializerName is not empty, set inClassFieldInitializer to true.
+      if (classFieldInitializerName !== undefined) {
         inClassFieldInitializer = true;
       }
     }
@@ -192,7 +192,7 @@ export function* PerformEval(x: Value, callerRealm: Realm, strictCaller: boolean
 }
 
 /** https://tc39.es/ecma262/#sec-evaldeclarationinstantiation */
-function* EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv: EnvironmentRecord, lexEnv: DeclarativeEnvironmentRecord, privateEnv: PrivateEnvironmentRecord | NullValue, strict: boolean): PlainEvaluator {
+export function* EvalDeclarationInstantiation(body: ParseNode.ScriptBody, varEnv: EnvironmentRecord, lexEnv: DeclarativeEnvironmentRecord, privateEnv: PrivateEnvironmentRecord | NullValue, strict: boolean): PlainEvaluator {
   // 1. Let varNames be the VarDeclaredNames of body.
   const varNames = VarDeclaredNames(body);
   // 2. Let varDeclarations be the VarScopedDeclarations of body.

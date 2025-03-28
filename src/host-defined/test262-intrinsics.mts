@@ -6,6 +6,7 @@ import {
   ThrowCompletion,
   ScriptEvaluation,
   CreateNonEnumerableDataPropertyOrThrow,
+  type ValueEvaluator,
 } from '#self';
 
 /** https://github.com/tc39/test262/blob/main/INTERPRETING.md */
@@ -27,18 +28,17 @@ export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: bo
         }
       } else {
         if (printCompatMode) {
+          const str: string[] = [];
           for (let i = 0; i < args.length; i += 1) {
             const arg = args[i];
             const s = EnsureCompletion(skipDebugger(ToString(arg)));
             if (s.Type === 'throw') {
               return s;
             }
-            process.stdout.write(s.Value.stringValue());
-            if (i !== args.length - 1) {
-              process.stdout.write(' ');
-            }
+            str.push(s.Value.stringValue());
           }
-          process.stdout.write('\n');
+          // eslint-disable-next-line no-console
+          console.log(...str);
           return Value.undefined;
         } else {
           const formatted = args.map((a: Value, i: number) => {
@@ -56,7 +56,8 @@ export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: bo
 
     const $262 = OrdinaryObjectCreate.from({
       // TODO: AbstractModuleSource
-      createRealm: function* createRealm() {
+      createRealm: function* createRealm(): ValueEvaluator {
+        Q(surroundingAgent.debugger_cannotPreview);
         const realm = new ManagedRealm();
         const { $262 } = createTest262Intrinsics(realm, printCompatMode);
         return $262;
@@ -91,6 +92,9 @@ export function createTest262Intrinsics(realm: ManagedRealm, printCompatMode: bo
         return Value.undefined;
       },
       debugger: function* hostDebugger() {
+        if (surroundingAgent.debugger_isPreviewing) {
+          return Value.undefined;
+        }
         // eslint-disable-next-line no-debugger
         debugger;
         return Value.undefined;

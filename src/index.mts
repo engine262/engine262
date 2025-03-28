@@ -15,8 +15,9 @@ export {
 } from './api.mts';
 export type { ParseNode } from './parser/ParseNode.mts';
 export { createTest262Intrinsics } from './host-defined/test262-intrinsics.mts';
+export { performDevtoolsEval } from './host-defined/debugger-eval.mts';
 export {
-  getHostDefinedErrorStack, skipDebugger, getCurrentStack, JSStringMap, JSStringSet, CallSite, type Mutable, PropertyKeyMap,
+  getHostDefinedErrorStack, skipDebugger, getCurrentStack, JSStringMap, JSStringSet, CallSite, type Mutable, PropertyKeyMap, kInternal,
 } from './helpers.mts';
 
 export { isMapObject, type MapObject } from './intrinsics/Map.mts';

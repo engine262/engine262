@@ -55,17 +55,34 @@ export function wrappedParse<T>(init: ParserOptions, f: (parser: Parser) => T) {
   }
 }
 
-export interface ScriptRecord {
+export class ScriptRecord {
   readonly Realm: Realm;
+
   readonly ECMAScriptCode: ParseNode.Script;
+
   readonly LoadedModules: LoadedModuleRequestRecord[];
+
   readonly HostDefined: ParseScriptHostDefined;
-  mark(m: GCMarker): void;
+
+  mark(m: GCMarker) {
+    m(this.Realm);
+  }
+
+  constructor(record: Omit<ScriptRecord, 'mark'>) {
+    this.ECMAScriptCode = record.ECMAScriptCode;
+    this.Realm = record.Realm;
+    this.LoadedModules = record.LoadedModules;
+    this.HostDefined = record.HostDefined;
+  }
 }
 export interface ParseScriptHostDefined {
   readonly specifier?: string | undefined;
-  readonly [kInternal]?: { json: boolean };
-  readonly scriptId?: string;
+  readonly [kInternal]?: {
+    json?: boolean;
+    /** only used in inspector.compileScript */ allowAllPrivateNames?: boolean;
+  };
+  scriptId?: string;
+  readonly doNotTrackScriptId?: boolean;
 }
 export function ParseScript(sourceText: string, realm: Realm, hostDefined: ParseScriptHostDefined = {}): ScriptRecord | ObjectValue[] {
   // 1. Assert: sourceText is an ECMAScript source text (see clause 10).
@@ -80,6 +97,7 @@ export function ParseScript(sourceText: string, realm: Realm, hostDefined: Parse
     source: sourceText,
     specifier: hostDefined.specifier,
     json: hostDefined[kInternal]?.json,
+    allowAllPrivateNames: hostDefined[kInternal]?.allowAllPrivateNames,
   }, (p) => p.parseScript());
   // 3. If body is a List of errors, return body.
   if (Array.isArray(body)) {
@@ -87,16 +105,16 @@ export function ParseScript(sourceText: string, realm: Realm, hostDefined: Parse
   }
   setNodeParent(body, undefined);
   // 4. Return Script Record { [[Realm]]: realm, [[ECMAScriptCode]]: body, [[HostDefined]]: hostDefined }.
-  const rec: ScriptRecord = {
+  const script = new ScriptRecord({
     Realm: realm,
     ECMAScriptCode: body,
     LoadedModules: [],
     HostDefined: hostDefined,
-    mark(m: GCMarker) {
-      m(rec.Realm);
-    },
-  };
-  return rec;
+  });
+  if (!hostDefined.doNotTrackScriptId) {
+    surroundingAgent.addParsedSource(script);
+  }
+  return script;
 }
 
 export function ParseModule(sourceText: string, realm: Realm, hostDefined: ModuleRecordHostDefined = {}) {
@@ -164,7 +182,7 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined: Modul
     }
   }
   // 12. Return Source Text Module Record { [[Realm]]: realm, [[Environment]]: undefined, [[Namespace]]: undefined, [[Status]]: unlinked, [[EvaluationError]]: undefined, [[HostDefined]]: hostDefined, [[ECMAScriptCode]]: body, [[Context]]: empty, [[ImportMeta]]: empty, [[RequestedModules]]: requestedModules, [[ImportEntries]]: importEntries, [[LocalExportEntries]]: localExportEntries, [[IndirectExportEntries]]: indirectExportEntries, [[StarExportEntries]]: starExportEntries, [[DFSIndex]]: undefined, [[DFSAncestorIndex]]: undefined }.
-  return new (hostDefined.SourceTextModuleRecord || SourceTextModuleRecord)({
+  const module = new (hostDefined.SourceTextModuleRecord || SourceTextModuleRecord)({
     Realm: realm,
     Environment: undefined,
     Namespace: Value.undefined,
@@ -188,6 +206,10 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined: Modul
     DFSAncestorIndex: undefined,
     PendingAsyncDependencies: undefined,
   });
+  if (!hostDefined.doNotTrackScriptId) {
+    surroundingAgent.addParsedSource(module);
+  }
+  return module;
 }
 
 /** https://tc39.es/ecma262/#sec-parsejsonmodule */

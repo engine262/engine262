@@ -27,7 +27,6 @@ import {
   surroundingAgent,
   isPromiseObject,
   evalQ,
-  Assert,
   unwrapCompletion,
   R,
 } from '#self';
