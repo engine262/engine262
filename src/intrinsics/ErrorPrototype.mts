@@ -22,7 +22,7 @@ import { bootstrapPrototype } from './bootstrap.mts';
 import { isErrorObject } from './Error.mts';
 
 /** https://tc39.es/ecma262/#sec-error.prototype.tostring */
-function* ErrorProto_toString(_args: Arguments, { thisValue }: FunctionCallContext) {
+function* ErrorProto_toString(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator<JSStringValue> {
   // 1. Let O be this value.
   const O = thisValue;
   // 2. If Type(O) is not Object, throw a TypeError exception.

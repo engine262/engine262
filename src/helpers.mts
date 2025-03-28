@@ -6,13 +6,12 @@ import {
 } from './value.mts';
 import {
   Call,
-  RequireInternalSlot,
   ToString,
   isFunctionObject,
   isBuiltinFunctionObject,
   isECMAScriptFunctionObject,
 } from './abstract-ops/all.mts';
-import { X } from './completion.mts';
+import { Q, X } from './completion.mts';
 import type { ParseNode } from './parser/ParseNode.mts';
 import type { Evaluator, EvaluatorNextType, YieldEvaluator } from './evaluator.mts';
 import type { ErrorObject } from './intrinsics/Error.mts';
@@ -533,32 +532,36 @@ export function getCurrentStack(excludeGlobalStack = true) {
   return stack;
 }
 
-export function captureStack(O: ErrorObject) {
-  X(RequireInternalSlot(O, 'ErrorData'));
+export function captureStack() {
   const stack = getCurrentStack();
 
-  let __native_stack__: string | undefined;
+  let nativeStack: string | undefined;
   if (surroundingAgent.hostDefinedOptions.errorStackAttachNativeStack) {
     const origStackTraceLimit = Error.stackTraceLimit;
     Error.stackTraceLimit = 12;
     try {
-      __native_stack__ = new Error().stack;
+      nativeStack = new Error().stack;
     } finally {
       Error.stackTraceLimit = origStackTraceLimit;
     }
   }
-  if ('HostDefinedErrorStack' in O && (!O.HostDefinedErrorStack || O.HostDefinedErrorStack === Value.undefined)) {
-    O.HostDefinedErrorStack = stack;
-  }
 
-  let errorString = (X(Call(surroundingAgent.intrinsic('%Error.prototype.toString%'), O)) as JSStringValue).stringValue();
+  return {
+    stack,
+    nativeStack,
+  };
+}
+
+export function* errorStackToString(O: ErrorObject, stack: readonly CallSite[], nativeStack: string | UndefinedValue = Value.undefined) {
+  let errorString = (Q(yield* Call(surroundingAgent.intrinsic('%Error.prototype.toString%'), O)) as JSStringValue).stringValue();
   stack.forEach((s) => {
     errorString = `${errorString}\n    at ${s.toString()}`;
   });
-  if (__native_stack__) {
-    errorString = `${errorString}\n    <NATIVE>\n${__native_stack__.split('\n').slice(6).join('\n')}`;
+  if (typeof nativeStack === 'string') {
+    errorString = `${errorString}\n    <NATIVE>\n${nativeStack.split('\n').slice(6).join('\n')}`;
   }
-  O.ErrorData = Value(errorString);
+
+  return Value(errorString);
 }
 
 export function callable<Class extends object>(
