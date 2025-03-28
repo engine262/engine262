@@ -1,1 +1,1 @@
-export type * from "../declaration/index.d.mts";
+export * from "../declaration/index.d.mjs";

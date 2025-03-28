@@ -1,1 +1,1 @@
-export type * from "../lib/inspector/index.d.mts";
+export * from "../lib/inspector/index.d.mts";

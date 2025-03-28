@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 247e26f3cb908b03836f8f83f8cd5515ce6ca2f0
+ * engine262 0.0.1 355741079469f6f0aa2f0d21fef124fb298e47ab
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -1476,7 +1476,7 @@ class CallSite {
     return null;
   }
   getScriptId() {
-    if (!(this.context.Function instanceof NullValue) && !(this.context.ScriptOrModule instanceof NullValue)) {
+    if (!(this.context.ScriptOrModule instanceof NullValue)) {
       return this.context.ScriptOrModule.HostDefined.scriptId;
     }
     return this.context.HostDefined?.scriptId;
@@ -15463,6 +15463,9 @@ class Scope {
     });
   }
   checkUndefinedPrivate(PrivateIdentifier) {
+    if (this.parser.state.allowAllPrivateNames) {
+      return;
+    }
     const [{
       node,
       name
@@ -19517,6 +19520,7 @@ class LanguageParser extends ModuleParser {
     } else {
       node.ScriptBody = this.parseScriptBody();
     }
+    node.sourceText = () => this.source;
     return this.finishNode(node, 'Script');
   }
 
@@ -19533,6 +19537,7 @@ class LanguageParser extends ModuleParser {
       node.StatementList = this.parseStatementList(Token.EOS, directives);
       node.strict = directives.includes('use strict');
     });
+    node.sourceText = () => this.source;
     return this.finishNode(node, 'ScriptBody');
   }
 
@@ -19558,6 +19563,7 @@ class LanguageParser extends ModuleParser {
         this.raiseEarly('ModuleUndefinedExport', importNode, name);
       });
       node.hasTopLevelAwait = this.state.hasTopLevelAwait;
+      node.sourceText = () => this.source;
       return this.finishNode(node, 'Module');
     });
   }
@@ -19567,6 +19573,7 @@ class LanguageParser extends ModuleParser {
   parseModuleBody() {
     const node = this.startNode();
     node.ModuleItemList = this.parseModuleItemList();
+    node.sourceText = () => this.source;
     return this.finishNode(node, 'ModuleBody');
   }
 
@@ -19606,7 +19613,8 @@ class Parser extends LanguageParser {
   constructor({
     source,
     specifier,
-    json = false
+    json = false,
+    allowAllPrivateNames = false
   }) {
     super();
     this.source = source;
@@ -19615,7 +19623,8 @@ class Parser extends LanguageParser {
     this.state = {
       hasTopLevelAwait: false,
       strict: false,
-      json
+      json,
+      allowAllPrivateNames
     };
   }
   isStrictMode() {
@@ -19797,6 +19806,21 @@ function wrappedParse(init, f) {
     return [handleError(e)];
   }
 }
+class ScriptRecord {
+  Realm;
+  ECMAScriptCode;
+  LoadedModules;
+  HostDefined;
+  mark(m) {
+    m(this.Realm);
+  }
+  constructor(record) {
+    this.ECMAScriptCode = record.ECMAScriptCode;
+    this.Realm = record.Realm;
+    this.LoadedModules = record.LoadedModules;
+    this.HostDefined = record.HostDefined;
+  }
+}
 function ParseScript(sourceText, realm, hostDefined = {}) {
   // 1. Assert: sourceText is an ECMAScript source text (see clause 10).
   // 2. Parse sourceText using Script as the goal symbol and analyse the parse result for
@@ -19809,7 +19833,8 @@ function ParseScript(sourceText, realm, hostDefined = {}) {
   const body = wrappedParse({
     source: sourceText,
     specifier: hostDefined.specifier,
-    json: hostDefined[kInternal]?.json
+    json: hostDefined[kInternal]?.json,
+    allowAllPrivateNames: hostDefined[kInternal]?.allowAllPrivateNames
   }, p => p.parseScript());
   // 3. If body is a List of errors, return body.
   if (Array.isArray(body)) {
@@ -19817,16 +19842,16 @@ function ParseScript(sourceText, realm, hostDefined = {}) {
   }
   setNodeParent(body, undefined);
   // 4. Return Script Record { [[Realm]]: realm, [[ECMAScriptCode]]: body, [[HostDefined]]: hostDefined }.
-  const rec = {
+  const script = new ScriptRecord({
     Realm: realm,
     ECMAScriptCode: body,
     LoadedModules: [],
-    HostDefined: hostDefined,
-    mark(m) {
-      m(rec.Realm);
-    }
-  };
-  return rec;
+    HostDefined: hostDefined
+  });
+  if (!hostDefined.doNotTrackScriptId) {
+    surroundingAgent.addParsedSource(script);
+  }
+  return script;
 }
 function ParseModule(sourceText, realm, hostDefined = {}) {
   // 1. Assert: sourceText is an ECMAScript source text (see clause 10).
@@ -19900,7 +19925,7 @@ function ParseModule(sourceText, realm, hostDefined = {}) {
     }
   }
   // 12. Return Source Text Module Record { [[Realm]]: realm, [[Environment]]: undefined, [[Namespace]]: undefined, [[Status]]: unlinked, [[EvaluationError]]: undefined, [[HostDefined]]: hostDefined, [[ECMAScriptCode]]: body, [[Context]]: empty, [[ImportMeta]]: empty, [[RequestedModules]]: requestedModules, [[ImportEntries]]: importEntries, [[LocalExportEntries]]: localExportEntries, [[IndirectExportEntries]]: indirectExportEntries, [[StarExportEntries]]: starExportEntries, [[DFSIndex]]: undefined, [[DFSAncestorIndex]]: undefined }.
-  return new (hostDefined.SourceTextModuleRecord || SourceTextModuleRecord)({
+  const module = new (hostDefined.SourceTextModuleRecord || SourceTextModuleRecord)({
     Realm: realm,
     Environment: undefined,
     Namespace: Value.undefined,
@@ -19924,6 +19949,10 @@ function ParseModule(sourceText, realm, hostDefined = {}) {
     DFSAncestorIndex: undefined,
     PendingAsyncDependencies: undefined
   });
+  if (!hostDefined.doNotTrackScriptId) {
+    surroundingAgent.addParsedSource(module);
+  }
+  return module;
 }
 
 /** https://tc39.es/ecma262/#sec-parsejsonmodule */
@@ -25299,10 +25328,6 @@ const FEATURES = [{
   name: 'FinalizationRegistry.prototype.cleanupSome',
   flag: 'cleanup-some',
   url: 'https://github.com/tc39/proposal-cleanup-some'
-}, {
-  name: 'Well-Formed Unicode Strings',
-  flag: 'is-usv-string',
-  url: 'https://github.com/tc39/proposal-is-usv-string'
 }];
 Object.freeze(FEATURES);
 FEATURES.forEach(Object.freeze);
@@ -25447,10 +25472,11 @@ class Agent {
   }
 
   // NON-SPEC
-  // Step-by-step evaluation
+  // #region Step-by-step evaluation
   #pausedEvaluator;
   #onEvaluatorFin;
 
+  // NON-SPEC
   /** This function will synchronously return a completion if this is a nested evaluation and debugger cannot be triggered. */
   evaluate(evaluator, onFinished) {
     if (this.#pausedEvaluator) {
@@ -25462,10 +25488,6 @@ class Agent {
     this.#pausedEvaluator = evaluator;
     this.#onEvaluatorFin = onFinished;
     return undefined;
-  }
-  #breakpoints = new Set();
-  addBreakpoint(breakpoint) {
-    this.#breakpoints.add(breakpoint);
   }
   resumeEvaluate(options) {
     const {
@@ -25520,10 +25542,29 @@ class Agent {
       }
     }
   }
+  // #endregion
 
-  /**
-   * NON-SPEC
-   */
+  // NON-SPEC
+  // #region parsed scripts/modules
+  #script_id = 0;
+  parsedSources = new Map();
+  addParsedSource(source) {
+    const id = `${this.#script_id}`;
+    if (source.HostDefined) {
+      source.HostDefined.scriptId = id;
+    }
+    this.hostDefinedOptions.onScriptParsed?.(source, id);
+    this.parsedSources.set(id, source);
+    this.#script_id += 1;
+  }
+  // #endregion
+
+  #breakpoints = new Set();
+  addBreakpoint(breakpoint) {
+    this.#breakpoints.add(breakpoint);
+  }
+
+  // #region side-effect free evaluator
   #debugger_previewing = false;
   #debugger_objectsCreatedDuringPreview = new Set();
   get debugger_isPreviewing() {
@@ -25579,6 +25620,7 @@ class Agent {
       }
     }
   }
+  // #endregion
 }
 let surroundingAgent;
 function setSurroundingAgent(a) {
@@ -25691,6 +25733,9 @@ function HostEnsureCanCompileStrings(callerRealm, calleeRealm) {
   return NormalCompletion(undefined);
 }
 function HostPromiseRejectionTracker(promise, operation) {
+  if (surroundingAgent.debugger_isPreviewing) {
+    return;
+  }
   const realm = surroundingAgent.currentRealmRecord;
   if (realm && realm.HostDefined.promiseRejectionTracker) {
     /* X */
@@ -30115,10 +30160,10 @@ function* PerformEval(x, callerRealm, strictCaller, direct) {
       if (F.ConstructorKind === 'derived') {
         inDerivedConstructor = true;
       }
-      // v. Let classFieldIntializerName be F.[[ClassFieldInitializerName]].
-      const classFieldIntializerName = F.ClassFieldInitializerName;
-      // vi. If classFieldIntializerName is not empty, set inClassFieldInitializer to true.
-      if (classFieldIntializerName !== undefined) {
+      // v. Let classFieldInitializerName be F.[[ClassFieldInitializerName]].
+      const classFieldInitializerName = F.ClassFieldInitializerName;
+      // vi. If classFieldInitializerName is not empty, set inClassFieldInitializer to true.
+      if (classFieldInitializerName !== undefined) {
         inClassFieldInitializer = true;
       }
     }
@@ -31066,6 +31111,9 @@ function* AsyncFromSyncIteratorContinuation(result, promiseCapability, syncItera
 }
 AsyncFromSyncIteratorContinuation.section = 'https://tc39.es/ecma262/#sec-asyncfromsynciteratorcontinuation';
 
+function isModuleNamespaceObject(V) {
+  return V instanceof ObjectValue && 'Module' in V;
+}
 const InternalMethods$3 = {
   *SetPrototypeOf(V) {
     return yield* SetImmutablePrototype(this, V);
@@ -47461,7 +47509,7 @@ function* StringProto_indexOf([searchString = Value.undefined, position = Value.
   return _temp28;
 }
 
-/** https://tc39.es/proposal-is-usv-string/#sec-string.prototype.iswellformed */
+/** https://tc39.es/ecma262/#sec-string.prototype.iswellformed */
 StringProto_indexOf.section = 'https://tc39.es/ecma262/#sec-string.prototype.indexof';
 function* StringProto_isWellFormed(_args, {
   thisValue
@@ -47491,7 +47539,7 @@ function* StringProto_isWellFormed(_args, {
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.lastindexof */
-StringProto_isWellFormed.section = 'https://tc39.es/proposal-is-usv-string/#sec-string.prototype.iswellformed';
+StringProto_isWellFormed.section = 'https://tc39.es/ecma262/#sec-string.prototype.iswellformed';
 function* StringProto_lastIndexOf([searchString = Value.undefined, position = Value.undefined], {
   thisValue
 }) {
@@ -48733,7 +48781,7 @@ function* StringProto_toUpperCase(_args, {
   return Value(L);
 }
 
-/** https://tc39.es/proposal-is-usv-string/#sec-string.prototype.towellformed */
+/** https://tc39.es/ecma262/#sec-string.prototype.towellformed */
 StringProto_toUpperCase.section = 'https://tc39.es/ecma262/#sec-string.prototype.touppercase';
 function* StringProto_toWellFormed(_args, {
   thisValue
@@ -48785,7 +48833,7 @@ function* StringProto_toWellFormed(_args, {
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.trim */
-StringProto_toWellFormed.section = 'https://tc39.es/proposal-is-usv-string/#sec-string.prototype.towellformed';
+StringProto_toWellFormed.section = 'https://tc39.es/ecma262/#sec-string.prototype.towellformed';
 function* StringProto_trim(_args, {
   thisValue
 }) {
@@ -48954,7 +49002,7 @@ function* StringProto_at([index = Value.undefined], {
 StringProto_at.section = 'https://tc39.es/ecma262/#sec-string.prototype.at';
 function bootstrapStringPrototype(realmRec) {
   const proto = StringCreate(Value(''), realmRec.Intrinsics['%Object.prototype%']);
-  assignProps(realmRec, proto, [['charAt', StringProto_charAt, 1], ['charCodeAt', StringProto_charCodeAt, 1], ['codePointAt', StringProto_codePointAt, 1], ['concat', StringProto_concat, 1], ['endsWith', StringProto_endsWith, 1], ['includes', StringProto_includes, 1], ['indexOf', StringProto_indexOf, 1], surroundingAgent.feature('is-usv-string') ? ['isWellFormed', StringProto_isWellFormed, 0] : undefined, ['at', StringProto_at, 1], ['lastIndexOf', StringProto_lastIndexOf, 1], ['localeCompare', StringProto_localeCompare, 1], ['match', StringProto_match, 1], ['matchAll', StringProto_matchAll, 1], ['normalize', StringProto_normalize, 0], ['padEnd', StringProto_padEnd, 1], ['padStart', StringProto_padStart, 1], ['repeat', StringProto_repeat, 1], ['replace', StringProto_replace, 2], ['replaceAll', StringProto_replaceAll, 2], ['search', StringProto_search, 1], ['slice', StringProto_slice, 2], ['split', StringProto_split, 2], ['startsWith', StringProto_startsWith, 1], ['substring', StringProto_substring, 2], ['toLocaleLowerCase', StringProto_toLocaleLowerCase, 0], ['toLocaleUpperCase', StringProto_toLocaleUpperCase, 0], ['toLowerCase', StringProto_toLowerCase, 0], ['toString', StringProto_toString, 0], ['toUpperCase', StringProto_toUpperCase, 0], surroundingAgent.feature('is-usv-string') ? ['toWellFormed', StringProto_toWellFormed, 0] : undefined, ['trim', StringProto_trim, 0], ['trimEnd', StringProto_trimEnd, 0], ['trimStart', StringProto_trimStart, 0], ['valueOf', StringProto_valueOf, 0], [wellKnownSymbols.iterator, StringProto_iterator, 0]]);
+  assignProps(realmRec, proto, [['charAt', StringProto_charAt, 1], ['charCodeAt', StringProto_charCodeAt, 1], ['codePointAt', StringProto_codePointAt, 1], ['concat', StringProto_concat, 1], ['endsWith', StringProto_endsWith, 1], ['includes', StringProto_includes, 1], ['indexOf', StringProto_indexOf, 1], ['isWellFormed', StringProto_isWellFormed, 0], ['at', StringProto_at, 1], ['lastIndexOf', StringProto_lastIndexOf, 1], ['localeCompare', StringProto_localeCompare, 1], ['match', StringProto_match, 1], ['matchAll', StringProto_matchAll, 1], ['normalize', StringProto_normalize, 0], ['padEnd', StringProto_padEnd, 1], ['padStart', StringProto_padStart, 1], ['repeat', StringProto_repeat, 1], ['replace', StringProto_replace, 2], ['replaceAll', StringProto_replaceAll, 2], ['search', StringProto_search, 1], ['slice', StringProto_slice, 2], ['split', StringProto_split, 2], ['startsWith', StringProto_startsWith, 1], ['substring', StringProto_substring, 2], ['toLocaleLowerCase', StringProto_toLocaleLowerCase, 0], ['toLocaleUpperCase', StringProto_toLocaleUpperCase, 0], ['toLowerCase', StringProto_toLowerCase, 0], ['toString', StringProto_toString, 0], ['toUpperCase', StringProto_toUpperCase, 0], ['toWellFormed', StringProto_toWellFormed, 0], ['trim', StringProto_trim, 0], ['trimEnd', StringProto_trimEnd, 0], ['trimStart', StringProto_trimStart, 0], ['valueOf', StringProto_valueOf, 0], [wellKnownSymbols.iterator, StringProto_iterator, 0]]);
   realmRec.Intrinsics['%String.prototype%'] = proto;
 }
 
@@ -52579,6 +52627,17 @@ function bootstrapJSON(realmRec) {
   /* c8 ignore if */
   if (_temp89 instanceof Completion) _temp89 = _temp89.Value;
   realmRec.Intrinsics['%JSON.parse%'] = _temp89;
+  /* X */
+  let _temp90 = Get(json, Value('stringify'));
+  /* c8 ignore if */
+  if (_temp90 && typeof _temp90 === 'object' && 'next' in _temp90) _temp90 = skipDebugger(_temp90);
+  /* c8 ignore if */
+  if (_temp90 instanceof AbruptCompletion) throw new Assert.Error("! Get(json, Value('stringify')) returned an abrupt completion", {
+    cause: _temp90
+  });
+  /* c8 ignore if */
+  if (_temp90 instanceof Completion) _temp90 = _temp90.Value;
+  realmRec.Intrinsics['%JSON.stringify%'] = _temp90;
 }
 
 /** https://tc39.es/ecma262/#sec-eval-x */
@@ -59663,6 +59722,7 @@ class ManagedRealm extends Realm {
     surroundingAgent.executionContextStack.pop(newContext);
     this.HostDefined = HostDefined;
     this.topContext = newContext;
+    surroundingAgent.hostDefinedOptions.onRealmCreated?.(this);
   }
   scope(arg0, arg2) {
     if (typeof arg0 !== 'function') try {
@@ -59699,8 +59759,19 @@ class ManagedRealm extends Realm {
   }
   compileScript(sourceText, hostDefined) {
     return this.scope(() => {
-      const realm = surroundingAgent.currentRealmRecord;
-      const s = ParseScript(sourceText, realm, hostDefined);
+      const s = ParseScript(sourceText, this, hostDefined);
+      if (Array.isArray(s)) {
+        return ThrowCompletion(s[0]);
+      }
+      return NormalCompletion(s);
+    });
+  }
+  compileModule(sourceText, hostDefined) {
+    return this.scope(() => {
+      const s = ParseModule(sourceText, this, {
+        SourceTextModuleRecord: ManagedSourceTextModuleRecord,
+        ...hostDefined
+      });
       if (Array.isArray(s)) {
         return ThrowCompletion(s[0]);
       }
@@ -59715,56 +59786,111 @@ class ManagedRealm extends Realm {
    */
   evaluate(sourceText, callback) {
     if (!sourceText) {
-      throw new TypeError('sourceText must be a string or a ScriptRecord');
+      throw new TypeError('sourceText is null or undefined');
     }
-    const old = this.active;
-    this.active = true;
-    surroundingAgent.executionContextStack.push(this.topContext);
     let result;
-    surroundingAgent.evaluate(ScriptEvaluation(sourceText), completion => {
-      this.active = old;
-      surroundingAgent.executionContextStack.pop(this.topContext);
-      result = completion;
-      callback(completion);
-    });
-    return result;
+    if (sourceText instanceof AbstractModuleRecord) {
+      const old = this.active;
+      this.active = true;
+      surroundingAgent.executionContextStack.push(this.topContext);
+      const loadModuleCompletion = sourceText.LoadRequestedModules();
+      const link = (() => {
+        if (loadModuleCompletion.PromiseState === 'rejected') {
+          /* ReturnIfAbrupt */
+          let _temp3 = Throw(loadModuleCompletion.PromiseResult, 'Raw', 'Module load failed');
+          /* c8 ignore if */
+          if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
+          /* c8 ignore if */
+          if (_temp3 instanceof AbruptCompletion) return _temp3;
+          /* c8 ignore if */
+          if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+        } else if (loadModuleCompletion.PromiseState === 'pending') {
+          throw new Error('Internal error: .LoadRequestedModules() returned a pending promise');
+        }
+        /* ReturnIfAbrupt */
+        let _temp4 = sourceText.Link();
+        /* c8 ignore if */
+        if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
+        /* c8 ignore if */
+        if (_temp4 instanceof AbruptCompletion) return _temp4;
+        /* c8 ignore if */
+        if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+      })();
+      if (link instanceof ThrowCompletion) {
+        callback(link);
+        return link;
+      }
+      surroundingAgent.evaluate(sourceText.Evaluate(), completion => {
+        if (completion instanceof NormalCompletion && completion.Value.PromiseState === 'fulfilled') {
+          result = GetModuleNamespace(sourceText);
+        } else {
+          result = completion;
+        }
+        this.active = old;
+        surroundingAgent.executionContextStack.pop(this.topContext);
+        callback(EnsureCompletion(result));
+      });
+      return result;
+    } else if (sourceText instanceof ScriptRecord) {
+      const old = this.active;
+      this.active = true;
+      surroundingAgent.executionContextStack.push(this.topContext);
+      surroundingAgent.evaluate(ScriptEvaluation(sourceText), completion => {
+        this.active = old;
+        surroundingAgent.executionContextStack.pop(this.topContext);
+        result = completion;
+        callback(completion);
+      });
+      return result;
+    } else {
+      // this path only called by the inspector
+      Assert(!!surroundingAgent.hostDefinedOptions.onDebugger, "!!surroundingAgent.hostDefinedOptions.onDebugger");
+      let emptyExecutionStack = false;
+      if (!surroundingAgent.runningExecutionContext) {
+        emptyExecutionStack = true;
+        this.active = true;
+        surroundingAgent.executionContextStack.push(this.topContext);
+      }
+      surroundingAgent.evaluate(sourceText, completion => {
+        result = completion;
+        if (emptyExecutionStack) {
+          this.active = false;
+          surroundingAgent.executionContextStack.pop(this.topContext);
+        }
+        callback(completion);
+      });
+      return result;
+    }
   }
   evaluateScript(sourceText, {
     specifier,
-    inspectorPreview
+    doNotTrackScriptId
   } = {}) {
     if (sourceText === undefined || sourceText === null) {
       throw new TypeError('sourceText must be a string or a ScriptRecord');
     }
     if (typeof sourceText === 'string') {
       /* ReturnIfAbrupt */
-      let _temp3 = this.compileScript(sourceText, {
-        specifier
+      let _temp5 = this.compileScript(sourceText, {
+        specifier,
+        doNotTrackScriptId
       });
       /* c8 ignore if */
-      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
+      if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
-      if (_temp3 instanceof AbruptCompletion) return _temp3;
+      if (_temp5 instanceof AbruptCompletion) return _temp5;
       /* c8 ignore if */
-      if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
-      sourceText = _temp3;
+      if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+      sourceText = _temp5;
     }
     let completion;
     completion = this.evaluate(sourceText, c => {
       completion = c;
     });
     if (!completion) {
-      if (inspectorPreview) {
-        surroundingAgent.debugger_scopePreview(() => {
-          surroundingAgent.resumeEvaluate({
-            noBreakpoint: true
-          });
-        });
-      } else {
-        surroundingAgent.resumeEvaluate({
-          noBreakpoint: true
-        });
-      }
+      surroundingAgent.resumeEvaluate({
+        noBreakpoint: true
+      });
     }
     if (!completion) {
       throw new Assert.Error('Expect evaluation completes synchronously');
@@ -59774,6 +59900,41 @@ class ManagedRealm extends Realm {
     }
     return completion;
   }
+  evaluateModule(sourceText, specifier) {
+    if (sourceText === undefined || sourceText === null) {
+      throw new TypeError('sourceText must be a string or a ModuleRecord');
+    }
+    if (typeof sourceText === 'string') {
+      /* ReturnIfAbrupt */
+      let _temp6 = this.compileModule(sourceText, {
+        specifier
+      });
+      /* c8 ignore if */
+      if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
+      /* c8 ignore if */
+      if (_temp6 instanceof AbruptCompletion) return _temp6;
+      /* c8 ignore if */
+      if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+      sourceText = _temp6;
+    }
+    let completion;
+    completion = this.evaluate(sourceText, c => {
+      completion = c;
+      if (!(completion instanceof AbruptCompletion)) {
+        runJobQueue();
+      }
+    });
+    if (!completion) {
+      surroundingAgent.resumeEvaluate({
+        noBreakpoint: true
+      });
+    }
+    return sourceText;
+  }
+
+  /**
+   * @deprecated use compileModule
+   */
   createSourceTextModule(specifier, sourceText) {
     if (typeof specifier !== 'string') {
       throw new TypeError('specifier must be a string');
@@ -59830,18 +59991,17 @@ function createTest262Intrinsics(realm, printCompatMode) {
         }
       } else {
         if (printCompatMode) {
+          const str = [];
           for (let i = 0; i < args.length; i += 1) {
             const arg = args[i];
             const s = EnsureCompletion(skipDebugger(ToString(arg)));
             if (s.Type === 'throw') {
               return s;
             }
-            process.stdout.write(s.Value.stringValue());
-            if (i !== args.length - 1) {
-              process.stdout.write(' ');
-            }
+            str.push(s.Value.stringValue());
           }
-          process.stdout.write('\n');
+          // eslint-disable-next-line no-console
+          console.log(...str);
           return Value.undefined;
         } else {
           const formatted = args.map((a, i) => {
@@ -59859,6 +60019,14 @@ function createTest262Intrinsics(realm, printCompatMode) {
     const $262 = OrdinaryObjectCreate.from({
       // TODO: AbstractModuleSource
       createRealm: function* createRealm() {
+        /* ReturnIfAbrupt */
+        let _temp = surroundingAgent.debugger_cannotPreview;
+        /* c8 ignore if */
+        if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
+        /* c8 ignore if */
+        if (_temp instanceof AbruptCompletion) return _temp;
+        /* c8 ignore if */
+        if (_temp instanceof Completion) _temp = _temp.Value;
         const realm = new ManagedRealm();
         const {
           $262
@@ -59870,13 +60038,13 @@ function createTest262Intrinsics(realm, printCompatMode) {
           return surroundingAgent.Throw('TypeError', 'Raw', 'Argument must be an ArrayBuffer');
         }
         /* ReturnIfAbrupt */
-        let _temp = DetachArrayBuffer(arrayBuffer);
+        let _temp2 = DetachArrayBuffer(arrayBuffer);
         /* c8 ignore if */
-        if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
+        if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
-        if (_temp instanceof AbruptCompletion) return _temp;
+        if (_temp2 instanceof AbruptCompletion) return _temp2;
         /* c8 ignore if */
-        if (_temp instanceof Completion) _temp = _temp.Value;
+        if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
         return Value.undefined;
       },
       evalScript: function* evalScript(sourceText) {
@@ -59902,6 +60070,9 @@ function createTest262Intrinsics(realm, printCompatMode) {
         return Value.undefined;
       },
       debugger: function* hostDebugger() {
+        if (surroundingAgent.debugger_isPreviewing) {
+          return Value.undefined;
+        }
         // eslint-disable-next-line no-debugger
         debugger;
         return Value.undefined;
@@ -59917,5 +60088,146 @@ function createTest262Intrinsics(realm, printCompatMode) {
   });
 }
 
-export { AbruptCompletion, AbstractModuleRecord, AbstractRelationalComparison, AddToKeptObjects, Agent, AgentSignifier, AllocateArrayBuffer, ApplyStringOrNumericBinaryOperator, ArgumentListEvaluation, ArrayBufferByteLength, ArrayCreate, ArraySetLength, ArraySpeciesCreate, Assert, AsyncBlockStart, AsyncFromSyncIteratorContinuation, AsyncFunctionStart, AsyncGeneratorAwaitReturn, AsyncGeneratorEnqueue, AsyncGeneratorResume, AsyncGeneratorStart, AsyncGeneratorValidate, AsyncGeneratorYield, AsyncIteratorClose, Await, BigIntValue, BinaryUnicodeProperties, BindingClassDeclarationEvaluation, BindingInitialization, BlockDeclarationInstantiation, BodyText, BooleanValue, BoundNames, BreakCompletion, Call, CallSite, CanBeHeldWeakly, CanonicalNumericIndexString, CharacterValue, ClassDefinitionEvaluation, ClassFieldDefinitionEvaluation, ClassFieldDefinitionRecord, ClassStaticBlockDefinitionEvaluation, ClassStaticBlockDefinitionRecord, CleanupFinalizationRegistry, ClearKeptObjects, CloneArrayBuffer, CodePointAt, CodePointsToString, CompareArrayElements, CompletePropertyDescriptor, Completion, Construct, ConstructorMethod, ContainsArguments, ContainsExpression, ContinueCompletion, ContinueDynamicImport, ContinueModuleLoading, CopyDataBlockBytes, CopyDataProperties, CreateArrayFromList, CreateArrayIterator, CreateAsyncFromSyncIterator, CreateAsyncIteratorFromClosure, CreateBuiltinFunction, CreateByteDataBlock, CreateDataProperty, CreateDataPropertyOrThrow, CreateDefaultExportSyntheticModule, CreateDynamicFunction, CreateIntrinsics, CreateIteratorFromClosure, CreateIteratorResultObject, CreateListFromArrayLike, CreateListIteratorRecord, CreateMappedArgumentsObject, CreateMethodProperty, CreateNonEnumerableDataPropertyOrThrow, CreateResolvingFunctions, CreateSyntheticModule, CreateUnmappedArgumentsObject, CyclicModuleRecord, DataBlock, DateFromTime, Day, DayFromYear, DayWithinYear, DaysInYear, DeclarationPart, DeclarativeEnvironmentRecord, DefineField, DefineMethod, DefinePropertyOrThrow, DeletePropertyOrThrow, _Descriptor as Descriptor, DestructuringAssignmentEvaluation, DetachArrayBuffer, EnsureCompletion, EnumerableOwnPropertyNames, EnvironmentRecord, EscapeRegExpPattern, Evaluate, EvaluateBody, EvaluateBody_AssignmentExpression, EvaluateBody_AsyncFunctionBody, EvaluateBody_AsyncGeneratorBody, EvaluateBody_ConciseBody, EvaluateBody_FunctionBody, EvaluateBody_GeneratorBody, EvaluateCall, EvaluatePropertyAccessWithExpressionKey, EvaluatePropertyAccessWithIdentifierKey, EvaluateStringOrNumericBinaryExpression, Evaluate_AdditiveExpression, Evaluate_AnyFunctionBody, Evaluate_ArrayLiteral, Evaluate_ArrowFunction, Evaluate_AssignmentExpression, Evaluate_AsyncArrowFunction, Evaluate_AsyncFunctionExpression, Evaluate_AsyncGeneratorExpression, Evaluate_AwaitExpression, Evaluate_BinaryBitwiseExpression, Evaluate_BindingList, Evaluate_Block, Evaluate_BreakStatement, Evaluate_BreakableStatement, Evaluate_CallExpression, Evaluate_CaseClause, Evaluate_ClassDeclaration, Evaluate_ClassExpression, Evaluate_CoalesceExpression, Evaluate_CommaOperator, Evaluate_ConditionalExpression, Evaluate_ContinueStatement, Evaluate_DebuggerStatement, Evaluate_EmptyStatement, Evaluate_EqualityExpression, Evaluate_ExponentiationExpression, Evaluate_ExportDeclaration, Evaluate_ExpressionBody, Evaluate_ExpressionStatement, Evaluate_ForBinding, Evaluate_FunctionDeclaration, Evaluate_FunctionExpression, Evaluate_FunctionStatementList, Evaluate_GeneratorExpression, Evaluate_HoistableDeclaration, Evaluate_IdentifierReference, Evaluate_IfStatement, Evaluate_ImportCall, Evaluate_ImportDeclaration, Evaluate_ImportMeta, Evaluate_LabelledStatement, Evaluate_LexicalBinding, Evaluate_LexicalDeclaration, Evaluate_Literal, Evaluate_LogicalANDExpression, Evaluate_LogicalORExpression, Evaluate_MemberExpression, Evaluate_Module, Evaluate_ModuleBody, Evaluate_MultiplicativeExpression, Evaluate_NewExpression, Evaluate_NewTarget, Evaluate_ObjectLiteral, Evaluate_OptionalExpression, Evaluate_ParenthesizedExpression, Evaluate_Pattern, Evaluate_PropertyName, Evaluate_RegularExpressionLiteral, Evaluate_RelationalExpression, Evaluate_RelationalExpression_PrivateIdentifier, Evaluate_ReturnStatement, Evaluate_Script, Evaluate_ScriptBody, Evaluate_ShiftExpression, Evaluate_StatementList, Evaluate_SuperCall, Evaluate_SuperProperty, Evaluate_SwitchStatement, Evaluate_TaggedTemplateExpression, Evaluate_TemplateLiteral, Evaluate_This, Evaluate_ThrowStatement, Evaluate_TryStatement, Evaluate_UnaryExpression, Evaluate_UpdateExpression, Evaluate_VariableDeclarationList, Evaluate_VariableStatement, Evaluate_WithStatement, Evaluate_YieldExpression, ExecutionContext, ExpectedArgumentCount, ExportEntries, ExportEntriesForModule, F, FEATURES, FinishLoadingImportedModule, FlagText, FromPropertyDescriptor, FunctionDeclarationInstantiation, FunctionEnvironmentRecord, GeneratorResume, GeneratorResumeAbrupt, GeneratorStart, GeneratorValidate, GeneratorYield, Get, GetActiveScriptOrModule, GetAsyncCycleRoot, GetFunctionRealm, GetGeneratorKind, GetGlobalObject, GetIdentifierReference, GetImportedModule, GetIterator, GetIteratorDirect, GetIteratorFlattenable, GetIteratorFromMethod, GetMatchIndexPair, GetMatchString, GetMethod, GetModuleNamespace, GetNewTarget, GetPrototypeFromConstructor, GetStringIndex, GetSubstitution, GetThisEnvironment, GetThisValue, GetV, GetValue, GetValueFromBuffer, GetViewByteLength, GetViewValue, GlobalDeclarationInstantiation, GlobalEnvironmentRecord, GraphLoadingState, HasInitializer, HasName, HasOwnProperty, HasProperty, HostCallJobCallback, HostEnqueueFinalizationRegistryCleanupJob, HostEnqueuePromiseJob, HostEnsureCanCompileStrings, HostFinalizeImportMeta, HostGetImportMetaProperties, HostHasSourceTextAvailable, HostLoadImportedModule, HostMakeJobCallback, HostPromiseRejectionTracker, HourFromTime, HoursPerDay, IfAbruptCloseIterator, IfAbruptRejectPromise, ImportEntries, ImportEntriesForModule, ImportedLocalNames, InLeapYear, InitializeBoundName, InitializeHostDefinedRealm, InitializeInstanceElements, InitializeReferencedBinding, InnerModuleEvaluation, InnerModuleLinking, InnerModuleLoading, InstallErrorCause, InstanceofOperator, InstantiateArrowFunctionExpression, InstantiateAsyncArrowFunctionExpression, InstantiateAsyncFunctionExpression, InstantiateAsyncGeneratorFunctionExpression, InstantiateFunctionObject, InstantiateFunctionObject_AsyncFunctionDeclaration, InstantiateFunctionObject_AsyncGeneratorDeclaration, InstantiateFunctionObject_FunctionDeclaration, InstantiateFunctionObject_GeneratorDeclaration, InstantiateGeneratorFunctionExpression, InstantiateOrdinaryFunctionExpression, IntrinsicsFunctionToString, Invoke, IsAccessorDescriptor, IsAnonymousFunctionDefinition, IsArray, IsArrayBufferViewOutOfBounds, IsBigIntElementType, IsCallable, IsCompatiblePropertyDescriptor, IsComputedPropertyKey, IsConcatSpreadable, IsConstantDeclaration, IsConstructor, IsDataDescriptor, IsDestructuring, IsDetachedBuffer, IsExtensible, IsFixedLengthArrayBuffer, IsFunctionDefinition, IsGenericDescriptor, IsIdentifierRef, IsInTailPosition, IsIntegralNumber, IsLooselyEqual, IsPrivateReference, IsPromise, IsPropertyKey, IsPropertyReference, IsRegExp, IsSharedArrayBuffer, IsSimpleParameterList, IsStatic, IsStrict, IsStrictlyEqual, IsStringPrefix, IsStringWellFormedUnicode, IsSuperReference, IsTypedArrayFixedLength, IsTypedArrayOutOfBounds, IsUnresolvableReference, IsValidIntegerIndex, IsViewOutOfBounds, IteratorBindingInitialization_ArrayBindingPattern, IteratorBindingInitialization_FormalParameters, IteratorClose, IteratorComplete, IteratorNext, IteratorStep, IteratorStepValue, IteratorToList, IteratorValue, JSStringMap, JSStringSet, JSStringValue, KeyForSymbol, KeyedBindingInitialization, LabelledEvaluation, LengthOfArrayLike, LexicallyDeclaredNames, LexicallyScopedDeclarations, LocalTZA, LocalTime, MV_StringNumericLiteral, MakeBasicObject, MakeClassConstructor, MakeConstructor, MakeDataViewWithBufferWitnessRecord, MakeDate, MakeDay, MakeMatchIndicesIndexPairArray, MakeMethod, MakePrivateReference, MakeTime, MakeTypedArrayWithBufferWitnessRecord, ManagedRealm, MethodDefinitionEvaluation, MinFromTime, MinutesPerHour, ModuleEnvironmentRecord, ModuleNamespaceCreate, AbstractModuleRecord as ModuleRecord, ModuleRequests, MonthFromTime, NamedEvaluation, NewPromiseCapability, NonConstructorElements, NonbinaryUnicodeProperties, NormalCompletion, NullValue, NumberToBigInt, NumberValue, NumericToRawBytes, NumericValue, ObjectEnvironmentRecord, ObjectValue, OrdinaryCallBindThis, OrdinaryCallEvaluateBody, OrdinaryCreateFromConstructor, OrdinaryDefineOwnProperty, OrdinaryDelete, OrdinaryFunctionCreate, OrdinaryGet, OrdinaryGetOwnProperty, OrdinaryGetPrototypeOf, OrdinaryHasInstance, OrdinaryHasProperty, OrdinaryIsExtensible, OrdinaryObjectCreate, OrdinaryOwnPropertyKeys, OrdinaryPreventExtensions, OrdinarySet, OrdinarySetPrototypeOf, OrdinarySetWithOwnDescriptor, OrdinaryToPrimitive, ParseJSONModule, ParseModule, ParsePattern, ParseScript, Parser, PerformEval, PerformPromiseThen, PrepareForOrdinaryCall, PrepareForTailCall, PrimitiveValue, PrivateBoundIdentifiers, PrivateElementFind, PrivateElementRecord, PrivateEnvironmentRecord, PrivateFieldAdd, PrivateGet, PrivateMethodOrAccessorAdd, PrivateName, PrivateSet, PromiseCapabilityRecord, PromiseReactionRecord, PromiseResolve, PropName, PropertyBindingInitialization, PropertyDefinitionEvaluation_PropertyDefinitionList, PropertyKeyMap, ProxyCreate, PutValue, ReturnIfAbrupt as Q, R, RawBytesToNumeric, Realm, ReferenceRecord, RegExpAlloc, RegExpCreate, RegExpHasFlag, RegExpInitialize, RegExpParser, State as RegExpState, RequireInternalSlot, RequireObjectCoercible, ResolveBinding, ResolvePrivateIdentifier, ResolveThisBinding, ResolvedBindingRecord, RestBindingInitialization, ReturnCompletion, ReturnIfAbrupt, SameType, SameValue, SameValueNonNumber, SameValueZero, ScriptEvaluation, SecFromTime, SecondsPerMinute, Set$1 as Set, SetDefaultGlobalBindings, SetFunctionLength, SetFunctionName, SetImmutablePrototype, SetIntegrityLevel, SetValueInBuffer, SetViewValue, SourceTextModuleRecord, SpeciesConstructor, StringCreate, StringGetOwnProperty, StringIndexOf, StringPad, StringToBigInt, StringToCodePoints, StringValue, SymbolDescriptiveString, SymbolValue, SyntheticModuleRecord, TV, TemplateStrings, TestIntegrityLevel, Throw, ThrowCompletion, TimeClip, TimeFromYear, TimeWithinDay, ToBigInt, ToBigInt64, ToBigUint64, ToBoolean, ToIndex, ToInt16, ToInt32, ToInt8, ToIntegerOrInfinity, ToLength, ToNumber, ToNumeric, ToObject, ToPrimitive, ToPropertyDescriptor, ToPropertyKey, ToString, ToUint16, ToUint32, ToUint8, ToUint8Clamp, TopLevelLexicallyDeclaredNames, TopLevelLexicallyScopedDeclarations, TopLevelVarDeclaredNames, TopLevelVarScopedDeclarations, TrimString, TypedArrayByteLength, TypedArrayCreate, TypedArrayGetElement, TypedArrayLength, TypedArraySetElement, UTC, UTF16EncodeCodePoint, UTF16SurrogatePairToCodePoint, UndefinedValue, UnicodeGeneralCategoryValues, UnicodeMatchProperty, UnicodeMatchPropertyValue, UnicodeScriptValues, UnicodeSets, UpdateEmpty, ValidateAndApplyPropertyDescriptor, Value, ValueOfNormalCompletion, VarDeclaredNames, VarScopedDeclarations, WeakRefDeref, WeekDay, X, YearFromTime, Yield, Z, createTest262Intrinsics, evalQ, gc, generatorBrandToErrorMessageType, getCurrentStack, getHostDefinedErrorStack, getUnicodePropertyValueSet, inspect, inspectDate, isArgumentExoticObject, isArrayBufferObject, isArrayExoticObject, isArrayIndex, isBuiltinFunctionObject, isDataViewObject, isDateObject, isECMAScriptFunctionObject, isErrorObject, isFunctionObject, isIntegerIndex, isMapObject, isNonNegativeInteger, isPromiseObject, isProxyExoticObject, isRegExpObject, isSetObject, isStrictModeCode, isTypedArrayObject, isWeakMapObject, isWeakRef, isWeakSetObject, msFromTime, msPerAverageYear, msPerDay, msPerHour, msPerMinute, msPerSecond, refineLeftHandSideExpression, runJobQueue, setSurroundingAgent, skipDebugger, sourceTextMatchedBy, surroundingAgent, unwrapCompletion, wellKnownSymbols, wrappedParse };
+const cascadeStack = new WeakMap();
+// This is modified based on PerformEval, used internally for devtools console.
+function* performDevtoolsEval(source, evalRealm, strictCaller, doNotTrack) {
+  let inFunction = false;
+  let inMethod = false;
+  let inDerivedConstructor = false;
+  let inClassFieldInitializer = false;
+  let scriptContext;
+  if (!surroundingAgent.runningExecutionContext?.LexicalEnvironment) {
+    // top level devtools eval
+    const globalEnv = evalRealm.GlobalEnv;
+    scriptContext = new ExecutionContext();
+    scriptContext.Function = Value.null;
+    scriptContext.Realm = evalRealm;
+    // scriptContext.ScriptOrModule = scriptRecord;
+    scriptContext.VariableEnvironment = globalEnv;
+    if (!cascadeStack.has(globalEnv)) {
+      cascadeStack.set(globalEnv, new DeclarativeEnvironmentRecord(globalEnv));
+    }
+    scriptContext.LexicalEnvironment = cascadeStack.get(evalRealm.GlobalEnv);
+    scriptContext.PrivateEnvironment = Value.null;
+    // scriptContext.HostDefined = scriptRecord.HostDefined;
+    surroundingAgent.executionContextStack.push(scriptContext);
+  }
+  /* X */
+  let _temp = GetThisEnvironment();
+  /* c8 ignore if */
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
+  /* c8 ignore if */
+  if (_temp instanceof AbruptCompletion) throw new Assert.Error("! GetThisEnvironment() returned an abrupt completion", {
+    cause: _temp
+  });
+  /* c8 ignore if */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  const thisEnv = _temp;
+  if (thisEnv instanceof FunctionEnvironmentRecord) {
+    const F = thisEnv.FunctionObject;
+    inFunction = true;
+    inMethod = thisEnv.HasSuperBinding() === Value.true;
+    if (F.ConstructorKind === 'derived') {
+      inDerivedConstructor = true;
+    }
+    const classFieldInitializerName = F.ClassFieldInitializerName;
+    if (classFieldInitializerName !== undefined) {
+      inClassFieldInitializer = true;
+    }
+  }
+  const privateIdentifiers = [];
+  let pointer = surroundingAgent.runningExecutionContext.PrivateEnvironment;
+  while (!(pointer instanceof NullValue)) {
+    for (const binding of pointer.Names) {
+      privateIdentifiers.push(binding.Description.stringValue());
+    }
+    pointer = pointer.OuterPrivateEnvironment;
+  }
+  const script = wrappedParse({
+    source
+  }, parser => parser.scope.with({
+    strict: strictCaller,
+    newTarget: inFunction,
+    superProperty: inMethod,
+    superCall: inDerivedConstructor,
+    private: privateIdentifiers.length > 0
+  }, () => {
+    privateIdentifiers.forEach(name => {
+      parser.scope.privateScope.names.set(name, new Set(['field']));
+    });
+    return parser.parseScript();
+  }));
+  if (Array.isArray(script)) {
+    if (scriptContext) {
+      surroundingAgent.executionContextStack.pop(scriptContext);
+    }
+    return ThrowCompletion(script[0]);
+  }
+  if (!script.ScriptBody) {
+    if (scriptContext) {
+      surroundingAgent.executionContextStack.pop(scriptContext);
+    }
+    return Value.undefined;
+  }
+  const body = script.ScriptBody;
+  if (inClassFieldInitializer && ContainsArguments(body)) {
+    return surroundingAgent.Throw('SyntaxError', 'UnexpectedToken');
+  }
+  const scriptRecord = new ScriptRecord({
+    ECMAScriptCode: script,
+    HostDefined: {},
+    LoadedModules: [],
+    Realm: evalRealm
+  });
+  if (!doNotTrack) {
+    surroundingAgent.addParsedSource(scriptRecord);
+  }
+  if (scriptContext) {
+    scriptContext.ScriptOrModule = scriptRecord;
+    scriptContext.HostDefined = scriptRecord.HostDefined;
+  }
+  let strictEval;
+  if (strictCaller === true) {
+    strictEval = true;
+  } else {
+    strictEval = IsStrict(script);
+  }
+  const runningContext = surroundingAgent.runningExecutionContext;
+  let parentLexicalEnvironment;
+  if (cascadeStack.has(runningContext.LexicalEnvironment)) {
+    parentLexicalEnvironment = cascadeStack.get(runningContext.LexicalEnvironment);
+  } else {
+    parentLexicalEnvironment = runningContext.LexicalEnvironment;
+  }
+  const lexEnv = new DeclarativeEnvironmentRecord(parentLexicalEnvironment);
+  cascadeStack.set(runningContext.LexicalEnvironment, lexEnv);
+  let varEnv;
+  const privateEnv = runningContext.PrivateEnvironment;
+  varEnv = runningContext.VariableEnvironment;
+  if (strictEval === true) {
+    varEnv = lexEnv;
+  }
+  const evalContext = new ExecutionContext();
+  evalContext.Function = Value.null;
+  evalContext.Realm = evalRealm;
+  evalContext.ScriptOrModule = runningContext.ScriptOrModule;
+  evalContext.VariableEnvironment = varEnv;
+  evalContext.LexicalEnvironment = lexEnv;
+  evalContext.PrivateEnvironment = privateEnv;
+  surroundingAgent.executionContextStack.push(evalContext);
+  let result = EnsureCompletion(yield* EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strictEval));
+  if (result.Type === 'normal') {
+    result = EnsureCompletion(yield* Evaluate(body));
+  }
+  if (result.Type === 'normal' && result.Value === undefined) {
+    result = NormalCompletion(Value.undefined);
+  }
+  surroundingAgent.executionContextStack.pop(evalContext);
+  if (scriptContext) {
+    surroundingAgent.executionContextStack.pop(scriptContext);
+  }
+  return result;
+}
+
+export { AbruptCompletion, AbstractModuleRecord, AbstractRelationalComparison, AddToKeptObjects, Agent, AgentSignifier, AllocateArrayBuffer, ApplyStringOrNumericBinaryOperator, ArgumentListEvaluation, ArrayBufferByteLength, ArrayCreate, ArraySetLength, ArraySpeciesCreate, Assert, AsyncBlockStart, AsyncFromSyncIteratorContinuation, AsyncFunctionStart, AsyncGeneratorAwaitReturn, AsyncGeneratorEnqueue, AsyncGeneratorResume, AsyncGeneratorStart, AsyncGeneratorValidate, AsyncGeneratorYield, AsyncIteratorClose, Await, BigIntValue, BinaryUnicodeProperties, BindingClassDeclarationEvaluation, BindingInitialization, BlockDeclarationInstantiation, BodyText, BooleanValue, BoundNames, BreakCompletion, Call, CallSite, CanBeHeldWeakly, CanonicalNumericIndexString, CharacterValue, ClassDefinitionEvaluation, ClassFieldDefinitionEvaluation, ClassFieldDefinitionRecord, ClassStaticBlockDefinitionEvaluation, ClassStaticBlockDefinitionRecord, CleanupFinalizationRegistry, ClearKeptObjects, CloneArrayBuffer, CodePointAt, CodePointsToString, CompareArrayElements, CompletePropertyDescriptor, Completion, Construct, ConstructorMethod, ContainsArguments, ContainsExpression, ContinueCompletion, ContinueDynamicImport, ContinueModuleLoading, CopyDataBlockBytes, CopyDataProperties, CreateArrayFromList, CreateArrayIterator, CreateAsyncFromSyncIterator, CreateAsyncIteratorFromClosure, CreateBuiltinFunction, CreateByteDataBlock, CreateDataProperty, CreateDataPropertyOrThrow, CreateDefaultExportSyntheticModule, CreateDynamicFunction, CreateIntrinsics, CreateIteratorFromClosure, CreateIteratorResultObject, CreateListFromArrayLike, CreateListIteratorRecord, CreateMappedArgumentsObject, CreateMethodProperty, CreateNonEnumerableDataPropertyOrThrow, CreateResolvingFunctions, CreateSyntheticModule, CreateUnmappedArgumentsObject, CyclicModuleRecord, DataBlock, DateFromTime, Day, DayFromYear, DayWithinYear, DaysInYear, DeclarationPart, DeclarativeEnvironmentRecord, DefineField, DefineMethod, DefinePropertyOrThrow, DeletePropertyOrThrow, _Descriptor as Descriptor, DestructuringAssignmentEvaluation, DetachArrayBuffer, EnsureCompletion, EnumerableOwnPropertyNames, EnvironmentRecord, EscapeRegExpPattern, EvalDeclarationInstantiation, Evaluate, EvaluateBody, EvaluateBody_AssignmentExpression, EvaluateBody_AsyncFunctionBody, EvaluateBody_AsyncGeneratorBody, EvaluateBody_ConciseBody, EvaluateBody_FunctionBody, EvaluateBody_GeneratorBody, EvaluateCall, EvaluatePropertyAccessWithExpressionKey, EvaluatePropertyAccessWithIdentifierKey, EvaluateStringOrNumericBinaryExpression, Evaluate_AdditiveExpression, Evaluate_AnyFunctionBody, Evaluate_ArrayLiteral, Evaluate_ArrowFunction, Evaluate_AssignmentExpression, Evaluate_AsyncArrowFunction, Evaluate_AsyncFunctionExpression, Evaluate_AsyncGeneratorExpression, Evaluate_AwaitExpression, Evaluate_BinaryBitwiseExpression, Evaluate_BindingList, Evaluate_Block, Evaluate_BreakStatement, Evaluate_BreakableStatement, Evaluate_CallExpression, Evaluate_CaseClause, Evaluate_ClassDeclaration, Evaluate_ClassExpression, Evaluate_CoalesceExpression, Evaluate_CommaOperator, Evaluate_ConditionalExpression, Evaluate_ContinueStatement, Evaluate_DebuggerStatement, Evaluate_EmptyStatement, Evaluate_EqualityExpression, Evaluate_ExponentiationExpression, Evaluate_ExportDeclaration, Evaluate_ExpressionBody, Evaluate_ExpressionStatement, Evaluate_ForBinding, Evaluate_FunctionDeclaration, Evaluate_FunctionExpression, Evaluate_FunctionStatementList, Evaluate_GeneratorExpression, Evaluate_HoistableDeclaration, Evaluate_IdentifierReference, Evaluate_IfStatement, Evaluate_ImportCall, Evaluate_ImportDeclaration, Evaluate_ImportMeta, Evaluate_LabelledStatement, Evaluate_LexicalBinding, Evaluate_LexicalDeclaration, Evaluate_Literal, Evaluate_LogicalANDExpression, Evaluate_LogicalORExpression, Evaluate_MemberExpression, Evaluate_Module, Evaluate_ModuleBody, Evaluate_MultiplicativeExpression, Evaluate_NewExpression, Evaluate_NewTarget, Evaluate_ObjectLiteral, Evaluate_OptionalExpression, Evaluate_ParenthesizedExpression, Evaluate_Pattern, Evaluate_PropertyName, Evaluate_RegularExpressionLiteral, Evaluate_RelationalExpression, Evaluate_RelationalExpression_PrivateIdentifier, Evaluate_ReturnStatement, Evaluate_Script, Evaluate_ScriptBody, Evaluate_ShiftExpression, Evaluate_StatementList, Evaluate_SuperCall, Evaluate_SuperProperty, Evaluate_SwitchStatement, Evaluate_TaggedTemplateExpression, Evaluate_TemplateLiteral, Evaluate_This, Evaluate_ThrowStatement, Evaluate_TryStatement, Evaluate_UnaryExpression, Evaluate_UpdateExpression, Evaluate_VariableDeclarationList, Evaluate_VariableStatement, Evaluate_WithStatement, Evaluate_YieldExpression, ExecutionContext, ExpectedArgumentCount, ExportEntries, ExportEntriesForModule, F, FEATURES, FinishLoadingImportedModule, FlagText, FromPropertyDescriptor, FunctionDeclarationInstantiation, FunctionEnvironmentRecord, GeneratorResume, GeneratorResumeAbrupt, GeneratorStart, GeneratorValidate, GeneratorYield, Get, GetActiveScriptOrModule, GetAsyncCycleRoot, GetFunctionRealm, GetGeneratorKind, GetGlobalObject, GetIdentifierReference, GetImportedModule, GetIterator, GetIteratorDirect, GetIteratorFlattenable, GetIteratorFromMethod, GetMatchIndexPair, GetMatchString, GetMethod, GetModuleNamespace, GetNewTarget, GetPrototypeFromConstructor, GetStringIndex, GetSubstitution, GetThisEnvironment, GetThisValue, GetV, GetValue, GetValueFromBuffer, GetViewByteLength, GetViewValue, GlobalDeclarationInstantiation, GlobalEnvironmentRecord, GraphLoadingState, HasInitializer, HasName, HasOwnProperty, HasProperty, HostCallJobCallback, HostEnqueueFinalizationRegistryCleanupJob, HostEnqueuePromiseJob, HostEnsureCanCompileStrings, HostFinalizeImportMeta, HostGetImportMetaProperties, HostHasSourceTextAvailable, HostLoadImportedModule, HostMakeJobCallback, HostPromiseRejectionTracker, HourFromTime, HoursPerDay, IfAbruptCloseIterator, IfAbruptRejectPromise, ImportEntries, ImportEntriesForModule, ImportedLocalNames, InLeapYear, InitializeBoundName, InitializeHostDefinedRealm, InitializeInstanceElements, InitializeReferencedBinding, InnerModuleEvaluation, InnerModuleLinking, InnerModuleLoading, InstallErrorCause, InstanceofOperator, InstantiateArrowFunctionExpression, InstantiateAsyncArrowFunctionExpression, InstantiateAsyncFunctionExpression, InstantiateAsyncGeneratorFunctionExpression, InstantiateFunctionObject, InstantiateFunctionObject_AsyncFunctionDeclaration, InstantiateFunctionObject_AsyncGeneratorDeclaration, InstantiateFunctionObject_FunctionDeclaration, InstantiateFunctionObject_GeneratorDeclaration, InstantiateGeneratorFunctionExpression, InstantiateOrdinaryFunctionExpression, IntrinsicsFunctionToString, Invoke, IsAccessorDescriptor, IsAnonymousFunctionDefinition, IsArray, IsArrayBufferViewOutOfBounds, IsBigIntElementType, IsCallable, IsCompatiblePropertyDescriptor, IsComputedPropertyKey, IsConcatSpreadable, IsConstantDeclaration, IsConstructor, IsDataDescriptor, IsDestructuring, IsDetachedBuffer, IsExtensible, IsFixedLengthArrayBuffer, IsFunctionDefinition, IsGenericDescriptor, IsIdentifierRef, IsInTailPosition, IsIntegralNumber, IsLooselyEqual, IsPrivateReference, IsPromise, IsPropertyKey, IsPropertyReference, IsRegExp, IsSharedArrayBuffer, IsSimpleParameterList, IsStatic, IsStrict, IsStrictlyEqual, IsStringPrefix, IsStringWellFormedUnicode, IsSuperReference, IsTypedArrayFixedLength, IsTypedArrayOutOfBounds, IsUnresolvableReference, IsValidIntegerIndex, IsViewOutOfBounds, IteratorBindingInitialization_ArrayBindingPattern, IteratorBindingInitialization_FormalParameters, IteratorClose, IteratorComplete, IteratorNext, IteratorStep, IteratorStepValue, IteratorToList, IteratorValue, JSStringMap, JSStringSet, JSStringValue, KeyForSymbol, KeyedBindingInitialization, LabelledEvaluation, LengthOfArrayLike, LexicallyDeclaredNames, LexicallyScopedDeclarations, LocalTZA, LocalTime, MV_StringNumericLiteral, MakeBasicObject, MakeClassConstructor, MakeConstructor, MakeDataViewWithBufferWitnessRecord, MakeDate, MakeDay, MakeMatchIndicesIndexPairArray, MakeMethod, MakePrivateReference, MakeTime, MakeTypedArrayWithBufferWitnessRecord, ManagedRealm, MethodDefinitionEvaluation, MinFromTime, MinutesPerHour, ModuleEnvironmentRecord, ModuleNamespaceCreate, AbstractModuleRecord as ModuleRecord, ModuleRequests, MonthFromTime, NamedEvaluation, NewPromiseCapability, NonConstructorElements, NonbinaryUnicodeProperties, NormalCompletion, NullValue, NumberToBigInt, NumberValue, NumericToRawBytes, NumericValue, ObjectEnvironmentRecord, ObjectValue, OrdinaryCallBindThis, OrdinaryCallEvaluateBody, OrdinaryCreateFromConstructor, OrdinaryDefineOwnProperty, OrdinaryDelete, OrdinaryFunctionCreate, OrdinaryGet, OrdinaryGetOwnProperty, OrdinaryGetPrototypeOf, OrdinaryHasInstance, OrdinaryHasProperty, OrdinaryIsExtensible, OrdinaryObjectCreate, OrdinaryOwnPropertyKeys, OrdinaryPreventExtensions, OrdinarySet, OrdinarySetPrototypeOf, OrdinarySetWithOwnDescriptor, OrdinaryToPrimitive, ParseJSONModule, ParseModule, ParsePattern, ParseScript, Parser, PerformEval, PerformPromiseThen, PrepareForOrdinaryCall, PrepareForTailCall, PrimitiveValue, PrivateBoundIdentifiers, PrivateElementFind, PrivateElementRecord, PrivateEnvironmentRecord, PrivateFieldAdd, PrivateGet, PrivateMethodOrAccessorAdd, PrivateName, PrivateSet, PromiseCapabilityRecord, PromiseReactionRecord, PromiseResolve, PropName, PropertyBindingInitialization, PropertyDefinitionEvaluation_PropertyDefinitionList, PropertyKeyMap, ProxyCreate, PutValue, ReturnIfAbrupt as Q, R, RawBytesToNumeric, Realm, ReferenceRecord, RegExpAlloc, RegExpCreate, RegExpHasFlag, RegExpInitialize, RegExpParser, State as RegExpState, RequireInternalSlot, RequireObjectCoercible, ResolveBinding, ResolvePrivateIdentifier, ResolveThisBinding, ResolvedBindingRecord, RestBindingInitialization, ReturnCompletion, ReturnIfAbrupt, SameType, SameValue, SameValueNonNumber, SameValueZero, ScriptEvaluation, ScriptRecord, SecFromTime, SecondsPerMinute, Set$1 as Set, SetDefaultGlobalBindings, SetFunctionLength, SetFunctionName, SetImmutablePrototype, SetIntegrityLevel, SetValueInBuffer, SetViewValue, SourceTextModuleRecord, SpeciesConstructor, StringCreate, StringGetOwnProperty, StringIndexOf, StringPad, StringToBigInt, StringToCodePoints, StringValue, SymbolDescriptiveString, SymbolValue, SyntheticModuleRecord, TV, TemplateStrings, TestIntegrityLevel, Throw, ThrowCompletion, TimeClip, TimeFromYear, TimeWithinDay, ToBigInt, ToBigInt64, ToBigUint64, ToBoolean, ToIndex, ToInt16, ToInt32, ToInt8, ToIntegerOrInfinity, ToLength, ToNumber, ToNumeric, ToObject, ToPrimitive, ToPropertyDescriptor, ToPropertyKey, ToString, ToUint16, ToUint32, ToUint8, ToUint8Clamp, TopLevelLexicallyDeclaredNames, TopLevelLexicallyScopedDeclarations, TopLevelVarDeclaredNames, TopLevelVarScopedDeclarations, TrimString, TypedArrayByteLength, TypedArrayCreate, TypedArrayGetElement, TypedArrayLength, TypedArraySetElement, UTC, UTF16EncodeCodePoint, UTF16SurrogatePairToCodePoint, UndefinedValue, UnicodeGeneralCategoryValues, UnicodeMatchProperty, UnicodeMatchPropertyValue, UnicodeScriptValues, UnicodeSets, UpdateEmpty, ValidateAndApplyPropertyDescriptor, Value, ValueOfNormalCompletion, VarDeclaredNames, VarScopedDeclarations, WeakRefDeref, WeekDay, X, YearFromTime, Yield, Z, createTest262Intrinsics, evalQ, gc, generatorBrandToErrorMessageType, getCurrentStack, getHostDefinedErrorStack, getUnicodePropertyValueSet, inspect, inspectDate, isArgumentExoticObject, isArrayBufferObject, isArrayExoticObject, isArrayIndex, isBuiltinFunctionObject, isDataViewObject, isDateObject, isECMAScriptFunctionObject, isErrorObject, isFunctionObject, isIntegerIndex, isMapObject, isModuleNamespaceObject, isNonNegativeInteger, isPromiseObject, isProxyExoticObject, isRegExpObject, isSetObject, isStrictModeCode, isTypedArrayObject, isWeakMapObject, isWeakRef, isWeakSetObject, kInternal, msFromTime, msPerAverageYear, msPerDay, msPerHour, msPerMinute, msPerSecond, performDevtoolsEval, refineLeftHandSideExpression, runJobQueue, setSurroundingAgent, skipDebugger, sourceTextMatchedBy, surroundingAgent, unwrapCompletion, wellKnownSymbols, wrappedParse };
 //# sourceMappingURL=engine262.mjs.map

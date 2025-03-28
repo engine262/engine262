@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 247e26f3cb908b03836f8f83f8cd5515ce6ca2f0
+ * engine262 0.0.1 355741079469f6f0aa2f0d21fef124fb298e47ab
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -1482,7 +1482,7 @@
       return null;
     }
     getScriptId() {
-      if (!(this.context.Function instanceof NullValue) && !(this.context.ScriptOrModule instanceof NullValue)) {
+      if (!(this.context.ScriptOrModule instanceof NullValue)) {
         return this.context.ScriptOrModule.HostDefined.scriptId;
       }
       return this.context.HostDefined?.scriptId;
@@ -15469,6 +15469,9 @@
       });
     }
     checkUndefinedPrivate(PrivateIdentifier) {
+      if (this.parser.state.allowAllPrivateNames) {
+        return;
+      }
       const [{
         node,
         name
@@ -19523,6 +19526,7 @@
       } else {
         node.ScriptBody = this.parseScriptBody();
       }
+      node.sourceText = () => this.source;
       return this.finishNode(node, 'Script');
     }
 
@@ -19539,6 +19543,7 @@
         node.StatementList = this.parseStatementList(Token.EOS, directives);
         node.strict = directives.includes('use strict');
       });
+      node.sourceText = () => this.source;
       return this.finishNode(node, 'ScriptBody');
     }
 
@@ -19564,6 +19569,7 @@
           this.raiseEarly('ModuleUndefinedExport', importNode, name);
         });
         node.hasTopLevelAwait = this.state.hasTopLevelAwait;
+        node.sourceText = () => this.source;
         return this.finishNode(node, 'Module');
       });
     }
@@ -19573,6 +19579,7 @@
     parseModuleBody() {
       const node = this.startNode();
       node.ModuleItemList = this.parseModuleItemList();
+      node.sourceText = () => this.source;
       return this.finishNode(node, 'ModuleBody');
     }
 
@@ -19612,7 +19619,8 @@
     constructor({
       source,
       specifier,
-      json = false
+      json = false,
+      allowAllPrivateNames = false
     }) {
       super();
       this.source = source;
@@ -19621,7 +19629,8 @@
       this.state = {
         hasTopLevelAwait: false,
         strict: false,
-        json
+        json,
+        allowAllPrivateNames
       };
     }
     isStrictMode() {
@@ -19803,6 +19812,21 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return [handleError(e)];
     }
   }
+  class ScriptRecord {
+    Realm;
+    ECMAScriptCode;
+    LoadedModules;
+    HostDefined;
+    mark(m) {
+      m(this.Realm);
+    }
+    constructor(record) {
+      this.ECMAScriptCode = record.ECMAScriptCode;
+      this.Realm = record.Realm;
+      this.LoadedModules = record.LoadedModules;
+      this.HostDefined = record.HostDefined;
+    }
+  }
   function ParseScript(sourceText, realm, hostDefined = {}) {
     // 1. Assert: sourceText is an ECMAScript source text (see clause 10).
     // 2. Parse sourceText using Script as the goal symbol and analyse the parse result for
@@ -19815,7 +19839,8 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     const body = wrappedParse({
       source: sourceText,
       specifier: hostDefined.specifier,
-      json: hostDefined[kInternal]?.json
+      json: hostDefined[kInternal]?.json,
+      allowAllPrivateNames: hostDefined[kInternal]?.allowAllPrivateNames
     }, p => p.parseScript());
     // 3. If body is a List of errors, return body.
     if (Array.isArray(body)) {
@@ -19823,16 +19848,16 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     setNodeParent(body, undefined);
     // 4. Return Script Record { [[Realm]]: realm, [[ECMAScriptCode]]: body, [[HostDefined]]: hostDefined }.
-    const rec = {
+    const script = new ScriptRecord({
       Realm: realm,
       ECMAScriptCode: body,
       LoadedModules: [],
-      HostDefined: hostDefined,
-      mark(m) {
-        m(rec.Realm);
-      }
-    };
-    return rec;
+      HostDefined: hostDefined
+    });
+    if (!hostDefined.doNotTrackScriptId) {
+      exports.surroundingAgent.addParsedSource(script);
+    }
+    return script;
   }
   function ParseModule(sourceText, realm, hostDefined = {}) {
     // 1. Assert: sourceText is an ECMAScript source text (see clause 10).
@@ -19906,7 +19931,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
     }
     // 12. Return Source Text Module Record { [[Realm]]: realm, [[Environment]]: undefined, [[Namespace]]: undefined, [[Status]]: unlinked, [[EvaluationError]]: undefined, [[HostDefined]]: hostDefined, [[ECMAScriptCode]]: body, [[Context]]: empty, [[ImportMeta]]: empty, [[RequestedModules]]: requestedModules, [[ImportEntries]]: importEntries, [[LocalExportEntries]]: localExportEntries, [[IndirectExportEntries]]: indirectExportEntries, [[StarExportEntries]]: starExportEntries, [[DFSIndex]]: undefined, [[DFSAncestorIndex]]: undefined }.
-    return new (hostDefined.SourceTextModuleRecord || SourceTextModuleRecord)({
+    const module = new (hostDefined.SourceTextModuleRecord || SourceTextModuleRecord)({
       Realm: realm,
       Environment: undefined,
       Namespace: Value.undefined,
@@ -19930,6 +19955,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       DFSAncestorIndex: undefined,
       PendingAsyncDependencies: undefined
     });
+    if (!hostDefined.doNotTrackScriptId) {
+      exports.surroundingAgent.addParsedSource(module);
+    }
+    return module;
   }
 
   /** https://tc39.es/ecma262/#sec-parsejsonmodule */
@@ -25305,10 +25334,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     name: 'FinalizationRegistry.prototype.cleanupSome',
     flag: 'cleanup-some',
     url: 'https://github.com/tc39/proposal-cleanup-some'
-  }, {
-    name: 'Well-Formed Unicode Strings',
-    flag: 'is-usv-string',
-    url: 'https://github.com/tc39/proposal-is-usv-string'
   }];
   Object.freeze(FEATURES);
   FEATURES.forEach(Object.freeze);
@@ -25453,10 +25478,11 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
 
     // NON-SPEC
-    // Step-by-step evaluation
+    // #region Step-by-step evaluation
     #pausedEvaluator;
     #onEvaluatorFin;
 
+    // NON-SPEC
     /** This function will synchronously return a completion if this is a nested evaluation and debugger cannot be triggered. */
     evaluate(evaluator, onFinished) {
       if (this.#pausedEvaluator) {
@@ -25468,10 +25494,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       this.#pausedEvaluator = evaluator;
       this.#onEvaluatorFin = onFinished;
       return undefined;
-    }
-    #breakpoints = new Set();
-    addBreakpoint(breakpoint) {
-      this.#breakpoints.add(breakpoint);
     }
     resumeEvaluate(options) {
       const {
@@ -25526,10 +25548,29 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
       }
     }
+    // #endregion
 
-    /**
-     * NON-SPEC
-     */
+    // NON-SPEC
+    // #region parsed scripts/modules
+    #script_id = 0;
+    parsedSources = new Map();
+    addParsedSource(source) {
+      const id = `${this.#script_id}`;
+      if (source.HostDefined) {
+        source.HostDefined.scriptId = id;
+      }
+      this.hostDefinedOptions.onScriptParsed?.(source, id);
+      this.parsedSources.set(id, source);
+      this.#script_id += 1;
+    }
+    // #endregion
+
+    #breakpoints = new Set();
+    addBreakpoint(breakpoint) {
+      this.#breakpoints.add(breakpoint);
+    }
+
+    // #region side-effect free evaluator
     #debugger_previewing = false;
     #debugger_objectsCreatedDuringPreview = new Set();
     get debugger_isPreviewing() {
@@ -25585,6 +25626,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
       }
     }
+    // #endregion
   }
   exports.surroundingAgent = void 0;
   function setSurroundingAgent(a) {
@@ -25697,6 +25739,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return NormalCompletion(undefined);
   }
   function HostPromiseRejectionTracker(promise, operation) {
+    if (exports.surroundingAgent.debugger_isPreviewing) {
+      return;
+    }
     const realm = exports.surroundingAgent.currentRealmRecord;
     if (realm && realm.HostDefined.promiseRejectionTracker) {
       /* X */
@@ -30121,10 +30166,10 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         if (F.ConstructorKind === 'derived') {
           inDerivedConstructor = true;
         }
-        // v. Let classFieldIntializerName be F.[[ClassFieldInitializerName]].
-        const classFieldIntializerName = F.ClassFieldInitializerName;
-        // vi. If classFieldIntializerName is not empty, set inClassFieldInitializer to true.
-        if (classFieldIntializerName !== undefined) {
+        // v. Let classFieldInitializerName be F.[[ClassFieldInitializerName]].
+        const classFieldInitializerName = F.ClassFieldInitializerName;
+        // vi. If classFieldInitializerName is not empty, set inClassFieldInitializer to true.
+        if (classFieldInitializerName !== undefined) {
           inClassFieldInitializer = true;
         }
       }
@@ -31072,6 +31117,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
   AsyncFromSyncIteratorContinuation.section = 'https://tc39.es/ecma262/#sec-asyncfromsynciteratorcontinuation';
 
+  function isModuleNamespaceObject(V) {
+    return V instanceof ObjectValue && 'Module' in V;
+  }
   const InternalMethods$3 = {
     *SetPrototypeOf(V) {
       return yield* SetImmutablePrototype(this, V);
@@ -47467,7 +47515,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return _temp28;
   }
 
-  /** https://tc39.es/proposal-is-usv-string/#sec-string.prototype.iswellformed */
+  /** https://tc39.es/ecma262/#sec-string.prototype.iswellformed */
   StringProto_indexOf.section = 'https://tc39.es/ecma262/#sec-string.prototype.indexof';
   function* StringProto_isWellFormed(_args, {
     thisValue
@@ -47497,7 +47545,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   /** https://tc39.es/ecma262/#sec-string.prototype.lastindexof */
-  StringProto_isWellFormed.section = 'https://tc39.es/proposal-is-usv-string/#sec-string.prototype.iswellformed';
+  StringProto_isWellFormed.section = 'https://tc39.es/ecma262/#sec-string.prototype.iswellformed';
   function* StringProto_lastIndexOf([searchString = Value.undefined, position = Value.undefined], {
     thisValue
   }) {
@@ -48739,7 +48787,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     return Value(L);
   }
 
-  /** https://tc39.es/proposal-is-usv-string/#sec-string.prototype.towellformed */
+  /** https://tc39.es/ecma262/#sec-string.prototype.towellformed */
   StringProto_toUpperCase.section = 'https://tc39.es/ecma262/#sec-string.prototype.touppercase';
   function* StringProto_toWellFormed(_args, {
     thisValue
@@ -48791,7 +48839,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
 
   /** https://tc39.es/ecma262/#sec-string.prototype.trim */
-  StringProto_toWellFormed.section = 'https://tc39.es/proposal-is-usv-string/#sec-string.prototype.towellformed';
+  StringProto_toWellFormed.section = 'https://tc39.es/ecma262/#sec-string.prototype.towellformed';
   function* StringProto_trim(_args, {
     thisValue
   }) {
@@ -48960,7 +49008,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   StringProto_at.section = 'https://tc39.es/ecma262/#sec-string.prototype.at';
   function bootstrapStringPrototype(realmRec) {
     const proto = StringCreate(Value(''), realmRec.Intrinsics['%Object.prototype%']);
-    assignProps(realmRec, proto, [['charAt', StringProto_charAt, 1], ['charCodeAt', StringProto_charCodeAt, 1], ['codePointAt', StringProto_codePointAt, 1], ['concat', StringProto_concat, 1], ['endsWith', StringProto_endsWith, 1], ['includes', StringProto_includes, 1], ['indexOf', StringProto_indexOf, 1], exports.surroundingAgent.feature('is-usv-string') ? ['isWellFormed', StringProto_isWellFormed, 0] : undefined, ['at', StringProto_at, 1], ['lastIndexOf', StringProto_lastIndexOf, 1], ['localeCompare', StringProto_localeCompare, 1], ['match', StringProto_match, 1], ['matchAll', StringProto_matchAll, 1], ['normalize', StringProto_normalize, 0], ['padEnd', StringProto_padEnd, 1], ['padStart', StringProto_padStart, 1], ['repeat', StringProto_repeat, 1], ['replace', StringProto_replace, 2], ['replaceAll', StringProto_replaceAll, 2], ['search', StringProto_search, 1], ['slice', StringProto_slice, 2], ['split', StringProto_split, 2], ['startsWith', StringProto_startsWith, 1], ['substring', StringProto_substring, 2], ['toLocaleLowerCase', StringProto_toLocaleLowerCase, 0], ['toLocaleUpperCase', StringProto_toLocaleUpperCase, 0], ['toLowerCase', StringProto_toLowerCase, 0], ['toString', StringProto_toString, 0], ['toUpperCase', StringProto_toUpperCase, 0], exports.surroundingAgent.feature('is-usv-string') ? ['toWellFormed', StringProto_toWellFormed, 0] : undefined, ['trim', StringProto_trim, 0], ['trimEnd', StringProto_trimEnd, 0], ['trimStart', StringProto_trimStart, 0], ['valueOf', StringProto_valueOf, 0], [wellKnownSymbols.iterator, StringProto_iterator, 0]]);
+    assignProps(realmRec, proto, [['charAt', StringProto_charAt, 1], ['charCodeAt', StringProto_charCodeAt, 1], ['codePointAt', StringProto_codePointAt, 1], ['concat', StringProto_concat, 1], ['endsWith', StringProto_endsWith, 1], ['includes', StringProto_includes, 1], ['indexOf', StringProto_indexOf, 1], ['isWellFormed', StringProto_isWellFormed, 0], ['at', StringProto_at, 1], ['lastIndexOf', StringProto_lastIndexOf, 1], ['localeCompare', StringProto_localeCompare, 1], ['match', StringProto_match, 1], ['matchAll', StringProto_matchAll, 1], ['normalize', StringProto_normalize, 0], ['padEnd', StringProto_padEnd, 1], ['padStart', StringProto_padStart, 1], ['repeat', StringProto_repeat, 1], ['replace', StringProto_replace, 2], ['replaceAll', StringProto_replaceAll, 2], ['search', StringProto_search, 1], ['slice', StringProto_slice, 2], ['split', StringProto_split, 2], ['startsWith', StringProto_startsWith, 1], ['substring', StringProto_substring, 2], ['toLocaleLowerCase', StringProto_toLocaleLowerCase, 0], ['toLocaleUpperCase', StringProto_toLocaleUpperCase, 0], ['toLowerCase', StringProto_toLowerCase, 0], ['toString', StringProto_toString, 0], ['toUpperCase', StringProto_toUpperCase, 0], ['toWellFormed', StringProto_toWellFormed, 0], ['trim', StringProto_trim, 0], ['trimEnd', StringProto_trimEnd, 0], ['trimStart', StringProto_trimStart, 0], ['valueOf', StringProto_valueOf, 0], [wellKnownSymbols.iterator, StringProto_iterator, 0]]);
     realmRec.Intrinsics['%String.prototype%'] = proto;
   }
 
@@ -52585,6 +52633,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     /* c8 ignore if */
     if (_temp89 instanceof Completion) _temp89 = _temp89.Value;
     realmRec.Intrinsics['%JSON.parse%'] = _temp89;
+    /* X */
+    let _temp90 = Get(json, Value('stringify'));
+    /* c8 ignore if */
+    if (_temp90 && typeof _temp90 === 'object' && 'next' in _temp90) _temp90 = skipDebugger(_temp90);
+    /* c8 ignore if */
+    if (_temp90 instanceof AbruptCompletion) throw new Assert.Error("! Get(json, Value('stringify')) returned an abrupt completion", {
+      cause: _temp90
+    });
+    /* c8 ignore if */
+    if (_temp90 instanceof Completion) _temp90 = _temp90.Value;
+    realmRec.Intrinsics['%JSON.stringify%'] = _temp90;
   }
 
   /** https://tc39.es/ecma262/#sec-eval-x */
@@ -59669,6 +59728,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       exports.surroundingAgent.executionContextStack.pop(newContext);
       this.HostDefined = HostDefined;
       this.topContext = newContext;
+      exports.surroundingAgent.hostDefinedOptions.onRealmCreated?.(this);
     }
     scope(arg0, arg2) {
       if (typeof arg0 !== 'function') try {
@@ -59705,8 +59765,19 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     compileScript(sourceText, hostDefined) {
       return this.scope(() => {
-        const realm = exports.surroundingAgent.currentRealmRecord;
-        const s = ParseScript(sourceText, realm, hostDefined);
+        const s = ParseScript(sourceText, this, hostDefined);
+        if (Array.isArray(s)) {
+          return ThrowCompletion(s[0]);
+        }
+        return NormalCompletion(s);
+      });
+    }
+    compileModule(sourceText, hostDefined) {
+      return this.scope(() => {
+        const s = ParseModule(sourceText, this, {
+          SourceTextModuleRecord: ManagedSourceTextModuleRecord,
+          ...hostDefined
+        });
         if (Array.isArray(s)) {
           return ThrowCompletion(s[0]);
         }
@@ -59721,56 +59792,111 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
      */
     evaluate(sourceText, callback) {
       if (!sourceText) {
-        throw new TypeError('sourceText must be a string or a ScriptRecord');
+        throw new TypeError('sourceText is null or undefined');
       }
-      const old = this.active;
-      this.active = true;
-      exports.surroundingAgent.executionContextStack.push(this.topContext);
       let result;
-      exports.surroundingAgent.evaluate(ScriptEvaluation(sourceText), completion => {
-        this.active = old;
-        exports.surroundingAgent.executionContextStack.pop(this.topContext);
-        result = completion;
-        callback(completion);
-      });
-      return result;
+      if (sourceText instanceof AbstractModuleRecord) {
+        const old = this.active;
+        this.active = true;
+        exports.surroundingAgent.executionContextStack.push(this.topContext);
+        const loadModuleCompletion = sourceText.LoadRequestedModules();
+        const link = (() => {
+          if (loadModuleCompletion.PromiseState === 'rejected') {
+            /* ReturnIfAbrupt */
+            let _temp3 = Throw(loadModuleCompletion.PromiseResult, 'Raw', 'Module load failed');
+            /* c8 ignore if */
+            if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
+            /* c8 ignore if */
+            if (_temp3 instanceof AbruptCompletion) return _temp3;
+            /* c8 ignore if */
+            if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+          } else if (loadModuleCompletion.PromiseState === 'pending') {
+            throw new Error('Internal error: .LoadRequestedModules() returned a pending promise');
+          }
+          /* ReturnIfAbrupt */
+          let _temp4 = sourceText.Link();
+          /* c8 ignore if */
+          if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
+          /* c8 ignore if */
+          if (_temp4 instanceof AbruptCompletion) return _temp4;
+          /* c8 ignore if */
+          if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+        })();
+        if (link instanceof ThrowCompletion) {
+          callback(link);
+          return link;
+        }
+        exports.surroundingAgent.evaluate(sourceText.Evaluate(), completion => {
+          if (completion instanceof NormalCompletion && completion.Value.PromiseState === 'fulfilled') {
+            result = GetModuleNamespace(sourceText);
+          } else {
+            result = completion;
+          }
+          this.active = old;
+          exports.surroundingAgent.executionContextStack.pop(this.topContext);
+          callback(EnsureCompletion(result));
+        });
+        return result;
+      } else if (sourceText instanceof ScriptRecord) {
+        const old = this.active;
+        this.active = true;
+        exports.surroundingAgent.executionContextStack.push(this.topContext);
+        exports.surroundingAgent.evaluate(ScriptEvaluation(sourceText), completion => {
+          this.active = old;
+          exports.surroundingAgent.executionContextStack.pop(this.topContext);
+          result = completion;
+          callback(completion);
+        });
+        return result;
+      } else {
+        // this path only called by the inspector
+        Assert(!!exports.surroundingAgent.hostDefinedOptions.onDebugger, "!!surroundingAgent.hostDefinedOptions.onDebugger");
+        let emptyExecutionStack = false;
+        if (!exports.surroundingAgent.runningExecutionContext) {
+          emptyExecutionStack = true;
+          this.active = true;
+          exports.surroundingAgent.executionContextStack.push(this.topContext);
+        }
+        exports.surroundingAgent.evaluate(sourceText, completion => {
+          result = completion;
+          if (emptyExecutionStack) {
+            this.active = false;
+            exports.surroundingAgent.executionContextStack.pop(this.topContext);
+          }
+          callback(completion);
+        });
+        return result;
+      }
     }
     evaluateScript(sourceText, {
       specifier,
-      inspectorPreview
+      doNotTrackScriptId
     } = {}) {
       if (sourceText === undefined || sourceText === null) {
         throw new TypeError('sourceText must be a string or a ScriptRecord');
       }
       if (typeof sourceText === 'string') {
         /* ReturnIfAbrupt */
-        let _temp3 = this.compileScript(sourceText, {
-          specifier
+        let _temp5 = this.compileScript(sourceText, {
+          specifier,
+          doNotTrackScriptId
         });
         /* c8 ignore if */
-        if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
+        if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
-        if (_temp3 instanceof AbruptCompletion) return _temp3;
+        if (_temp5 instanceof AbruptCompletion) return _temp5;
         /* c8 ignore if */
-        if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
-        sourceText = _temp3;
+        if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+        sourceText = _temp5;
       }
       let completion;
       completion = this.evaluate(sourceText, c => {
         completion = c;
       });
       if (!completion) {
-        if (inspectorPreview) {
-          exports.surroundingAgent.debugger_scopePreview(() => {
-            exports.surroundingAgent.resumeEvaluate({
-              noBreakpoint: true
-            });
-          });
-        } else {
-          exports.surroundingAgent.resumeEvaluate({
-            noBreakpoint: true
-          });
-        }
+        exports.surroundingAgent.resumeEvaluate({
+          noBreakpoint: true
+        });
       }
       if (!completion) {
         throw new Assert.Error('Expect evaluation completes synchronously');
@@ -59780,6 +59906,41 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       return completion;
     }
+    evaluateModule(sourceText, specifier) {
+      if (sourceText === undefined || sourceText === null) {
+        throw new TypeError('sourceText must be a string or a ModuleRecord');
+      }
+      if (typeof sourceText === 'string') {
+        /* ReturnIfAbrupt */
+        let _temp6 = this.compileModule(sourceText, {
+          specifier
+        });
+        /* c8 ignore if */
+        if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
+        /* c8 ignore if */
+        if (_temp6 instanceof AbruptCompletion) return _temp6;
+        /* c8 ignore if */
+        if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+        sourceText = _temp6;
+      }
+      let completion;
+      completion = this.evaluate(sourceText, c => {
+        completion = c;
+        if (!(completion instanceof AbruptCompletion)) {
+          runJobQueue();
+        }
+      });
+      if (!completion) {
+        exports.surroundingAgent.resumeEvaluate({
+          noBreakpoint: true
+        });
+      }
+      return sourceText;
+    }
+
+    /**
+     * @deprecated use compileModule
+     */
     createSourceTextModule(specifier, sourceText) {
       if (typeof specifier !== 'string') {
         throw new TypeError('specifier must be a string');
@@ -59836,18 +59997,17 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           }
         } else {
           if (printCompatMode) {
+            const str = [];
             for (let i = 0; i < args.length; i += 1) {
               const arg = args[i];
               const s = EnsureCompletion(skipDebugger(ToString(arg)));
               if (s.Type === 'throw') {
                 return s;
               }
-              process.stdout.write(s.Value.stringValue());
-              if (i !== args.length - 1) {
-                process.stdout.write(' ');
-              }
+              str.push(s.Value.stringValue());
             }
-            process.stdout.write('\n');
+            // eslint-disable-next-line no-console
+            console.log(...str);
             return Value.undefined;
           } else {
             const formatted = args.map((a, i) => {
@@ -59865,6 +60025,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       const $262 = OrdinaryObjectCreate.from({
         // TODO: AbstractModuleSource
         createRealm: function* createRealm() {
+          /* ReturnIfAbrupt */
+          let _temp = exports.surroundingAgent.debugger_cannotPreview;
+          /* c8 ignore if */
+          if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
+          /* c8 ignore if */
+          if (_temp instanceof AbruptCompletion) return _temp;
+          /* c8 ignore if */
+          if (_temp instanceof Completion) _temp = _temp.Value;
           const realm = new ManagedRealm();
           const {
             $262
@@ -59876,13 +60044,13 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
             return exports.surroundingAgent.Throw('TypeError', 'Raw', 'Argument must be an ArrayBuffer');
           }
           /* ReturnIfAbrupt */
-          let _temp = DetachArrayBuffer(arrayBuffer);
+          let _temp2 = DetachArrayBuffer(arrayBuffer);
           /* c8 ignore if */
-          if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
+          if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
-          if (_temp instanceof AbruptCompletion) return _temp;
+          if (_temp2 instanceof AbruptCompletion) return _temp2;
           /* c8 ignore if */
-          if (_temp instanceof Completion) _temp = _temp.Value;
+          if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
           return Value.undefined;
         },
         evalScript: function* evalScript(sourceText) {
@@ -59908,6 +60076,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           return Value.undefined;
         },
         debugger: function* hostDebugger() {
+          if (exports.surroundingAgent.debugger_isPreviewing) {
+            return Value.undefined;
+          }
           // eslint-disable-next-line no-debugger
           debugger;
           return Value.undefined;
@@ -59921,6 +60092,147 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         $262
       };
     });
+  }
+
+  const cascadeStack = new WeakMap();
+  // This is modified based on PerformEval, used internally for devtools console.
+  function* performDevtoolsEval(source, evalRealm, strictCaller, doNotTrack) {
+    let inFunction = false;
+    let inMethod = false;
+    let inDerivedConstructor = false;
+    let inClassFieldInitializer = false;
+    let scriptContext;
+    if (!exports.surroundingAgent.runningExecutionContext?.LexicalEnvironment) {
+      // top level devtools eval
+      const globalEnv = evalRealm.GlobalEnv;
+      scriptContext = new ExecutionContext();
+      scriptContext.Function = Value.null;
+      scriptContext.Realm = evalRealm;
+      // scriptContext.ScriptOrModule = scriptRecord;
+      scriptContext.VariableEnvironment = globalEnv;
+      if (!cascadeStack.has(globalEnv)) {
+        cascadeStack.set(globalEnv, new DeclarativeEnvironmentRecord(globalEnv));
+      }
+      scriptContext.LexicalEnvironment = cascadeStack.get(evalRealm.GlobalEnv);
+      scriptContext.PrivateEnvironment = Value.null;
+      // scriptContext.HostDefined = scriptRecord.HostDefined;
+      exports.surroundingAgent.executionContextStack.push(scriptContext);
+    }
+    /* X */
+    let _temp = GetThisEnvironment();
+    /* c8 ignore if */
+    if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
+    /* c8 ignore if */
+    if (_temp instanceof AbruptCompletion) throw new Assert.Error("! GetThisEnvironment() returned an abrupt completion", {
+      cause: _temp
+    });
+    /* c8 ignore if */
+    if (_temp instanceof Completion) _temp = _temp.Value;
+    const thisEnv = _temp;
+    if (thisEnv instanceof FunctionEnvironmentRecord) {
+      const F = thisEnv.FunctionObject;
+      inFunction = true;
+      inMethod = thisEnv.HasSuperBinding() === Value.true;
+      if (F.ConstructorKind === 'derived') {
+        inDerivedConstructor = true;
+      }
+      const classFieldInitializerName = F.ClassFieldInitializerName;
+      if (classFieldInitializerName !== undefined) {
+        inClassFieldInitializer = true;
+      }
+    }
+    const privateIdentifiers = [];
+    let pointer = exports.surroundingAgent.runningExecutionContext.PrivateEnvironment;
+    while (!(pointer instanceof NullValue)) {
+      for (const binding of pointer.Names) {
+        privateIdentifiers.push(binding.Description.stringValue());
+      }
+      pointer = pointer.OuterPrivateEnvironment;
+    }
+    const script = wrappedParse({
+      source
+    }, parser => parser.scope.with({
+      strict: strictCaller,
+      newTarget: inFunction,
+      superProperty: inMethod,
+      superCall: inDerivedConstructor,
+      private: privateIdentifiers.length > 0
+    }, () => {
+      privateIdentifiers.forEach(name => {
+        parser.scope.privateScope.names.set(name, new Set(['field']));
+      });
+      return parser.parseScript();
+    }));
+    if (Array.isArray(script)) {
+      if (scriptContext) {
+        exports.surroundingAgent.executionContextStack.pop(scriptContext);
+      }
+      return ThrowCompletion(script[0]);
+    }
+    if (!script.ScriptBody) {
+      if (scriptContext) {
+        exports.surroundingAgent.executionContextStack.pop(scriptContext);
+      }
+      return Value.undefined;
+    }
+    const body = script.ScriptBody;
+    if (inClassFieldInitializer && ContainsArguments(body)) {
+      return exports.surroundingAgent.Throw('SyntaxError', 'UnexpectedToken');
+    }
+    const scriptRecord = new ScriptRecord({
+      ECMAScriptCode: script,
+      HostDefined: {},
+      LoadedModules: [],
+      Realm: evalRealm
+    });
+    if (!doNotTrack) {
+      exports.surroundingAgent.addParsedSource(scriptRecord);
+    }
+    if (scriptContext) {
+      scriptContext.ScriptOrModule = scriptRecord;
+      scriptContext.HostDefined = scriptRecord.HostDefined;
+    }
+    let strictEval;
+    if (strictCaller === true) {
+      strictEval = true;
+    } else {
+      strictEval = IsStrict(script);
+    }
+    const runningContext = exports.surroundingAgent.runningExecutionContext;
+    let parentLexicalEnvironment;
+    if (cascadeStack.has(runningContext.LexicalEnvironment)) {
+      parentLexicalEnvironment = cascadeStack.get(runningContext.LexicalEnvironment);
+    } else {
+      parentLexicalEnvironment = runningContext.LexicalEnvironment;
+    }
+    const lexEnv = new DeclarativeEnvironmentRecord(parentLexicalEnvironment);
+    cascadeStack.set(runningContext.LexicalEnvironment, lexEnv);
+    let varEnv;
+    const privateEnv = runningContext.PrivateEnvironment;
+    varEnv = runningContext.VariableEnvironment;
+    if (strictEval === true) {
+      varEnv = lexEnv;
+    }
+    const evalContext = new ExecutionContext();
+    evalContext.Function = Value.null;
+    evalContext.Realm = evalRealm;
+    evalContext.ScriptOrModule = runningContext.ScriptOrModule;
+    evalContext.VariableEnvironment = varEnv;
+    evalContext.LexicalEnvironment = lexEnv;
+    evalContext.PrivateEnvironment = privateEnv;
+    exports.surroundingAgent.executionContextStack.push(evalContext);
+    let result = EnsureCompletion(yield* EvalDeclarationInstantiation(body, varEnv, lexEnv, privateEnv, strictEval));
+    if (result.Type === 'normal') {
+      result = EnsureCompletion(yield* Evaluate(body));
+    }
+    if (result.Type === 'normal' && result.Value === undefined) {
+      result = NormalCompletion(Value.undefined);
+    }
+    exports.surroundingAgent.executionContextStack.pop(evalContext);
+    if (scriptContext) {
+      exports.surroundingAgent.executionContextStack.pop(scriptContext);
+    }
+    return result;
   }
 
   exports.AbruptCompletion = AbruptCompletion;
@@ -60024,6 +60336,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.EnumerableOwnPropertyNames = EnumerableOwnPropertyNames;
   exports.EnvironmentRecord = EnvironmentRecord;
   exports.EscapeRegExpPattern = EscapeRegExpPattern;
+  exports.EvalDeclarationInstantiation = EvalDeclarationInstantiation;
   exports.Evaluate = Evaluate;
   exports.EvaluateBody = EvaluateBody;
   exports.EvaluateBody_AssignmentExpression = EvaluateBody_AssignmentExpression;
@@ -60370,6 +60683,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.SameValueNonNumber = SameValueNonNumber;
   exports.SameValueZero = SameValueZero;
   exports.ScriptEvaluation = ScriptEvaluation;
+  exports.ScriptRecord = ScriptRecord;
   exports.SecFromTime = SecFromTime;
   exports.SecondsPerMinute = SecondsPerMinute;
   exports.Set = Set$1;
@@ -60473,6 +60787,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.isFunctionObject = isFunctionObject;
   exports.isIntegerIndex = isIntegerIndex;
   exports.isMapObject = isMapObject;
+  exports.isModuleNamespaceObject = isModuleNamespaceObject;
   exports.isNonNegativeInteger = isNonNegativeInteger;
   exports.isPromiseObject = isPromiseObject;
   exports.isProxyExoticObject = isProxyExoticObject;
@@ -60483,12 +60798,14 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.isWeakMapObject = isWeakMapObject;
   exports.isWeakRef = isWeakRef;
   exports.isWeakSetObject = isWeakSetObject;
+  exports.kInternal = kInternal;
   exports.msFromTime = msFromTime;
   exports.msPerAverageYear = msPerAverageYear;
   exports.msPerDay = msPerDay;
   exports.msPerHour = msPerHour;
   exports.msPerMinute = msPerMinute;
   exports.msPerSecond = msPerSecond;
+  exports.performDevtoolsEval = performDevtoolsEval;
   exports.refineLeftHandSideExpression = refineLeftHandSideExpression;
   exports.runJobQueue = runJobQueue;
   exports.setSurroundingAgent = setSurroundingAgent;
