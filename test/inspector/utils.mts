@@ -1,4 +1,4 @@
-import { Inspector } from '../../lib/inspector.mjs';
+import { Inspector } from '#self/inspector';
 import type { DebuggerContext, DebuggerNamespace, RuntimeNamespace } from '../../lib/inspector/types.d.mts';
 
 export class TestInspector extends Inspector {

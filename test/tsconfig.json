@@ -1,5 +1,5 @@
 {
-  "references": [{ "path": "../src/" }],
+  "references": [{ "path": "../src/" }, { "path": "../lib-src/inspector/" }],
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
