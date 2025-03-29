@@ -14,7 +14,8 @@
     "./supplemental.mts",
     "./test262/test262.mts",
     "./test262/test262-worker.mts",
+    "./test262/test262_realm.mts",
     "./json/json.mts",
-    "test262/test262_realm.mts"
+    "./inspector/*"
   ]
 }

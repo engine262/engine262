@@ -5,7 +5,7 @@ import {
   Call, IsArray, Get, LengthOfArrayLike,
   EscapeRegExpPattern, R, Realm, type BuiltinFunctionObject,
 } from '../abstract-ops/all.mts';
-import { Completion, ThrowCompletion, X } from '../completion.mts';
+import { Completion, X } from '../completion.mts';
 import { isRegExpObject } from '../intrinsics/RegExp.mts';
 import type { DateObject } from '../intrinsics/Date.mts';
 import type { BooleanObject } from '../intrinsics/Boolean.mts';
@@ -14,7 +14,6 @@ import type { BigIntObject } from '../intrinsics/BigInt.mts';
 import type { StringObject } from '../intrinsics/String.mts';
 import type { SymbolObject } from '../intrinsics/Symbol.mts';
 import { isTypedArrayObject } from '../intrinsics/TypedArray.mts';
-import { DateProto_toISOString } from '../intrinsics/DatePrototype.mts';
 import { surroundingAgent } from './engine.mts';
 import type { Descriptor, ValueCompletion, PromiseObject } from '#self';
 
@@ -232,12 +231,4 @@ export function inspect(value: Value | ValueCompletion) {
     value = value.Value;
   }
   return inner(value);
-}
-
-export function inspectDate(value: DateObject) {
-  const result = DateProto_toISOString([], { thisValue: value, NewTarget: Value.undefined });
-  if (result instanceof ThrowCompletion) {
-    return 'Invalid Date';
-  }
-  return result.stringValue();
 }

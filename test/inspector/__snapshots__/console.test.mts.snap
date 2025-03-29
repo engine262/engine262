@@ -1,0 +1,71 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`preview evaluation > [] 1`] = `
+{
+  "className": "Array",
+  "description": "Array(0)",
+  "objectId": "default:1",
+  "preview": {
+    "description": "Array(0)",
+    "overflow": false,
+    "properties": [],
+    "subtype": "array",
+    "type": "object",
+  },
+  "subtype": "array",
+  "type": "object",
+}
+`;
+
+exports[`preview evaluation > [1, 2, 3].map(x => x + 1) 1`] = `
+{
+  "className": "Array",
+  "description": "Array(3)",
+  "objectId": "default:4",
+  "preview": {
+    "description": "Array(3)",
+    "overflow": false,
+    "properties": [
+      {
+        "name": "0",
+        "type": "number",
+        "value": "2",
+      },
+      {
+        "name": "1",
+        "type": "number",
+        "value": "3",
+      },
+      {
+        "name": "2",
+        "type": "number",
+        "value": "4",
+      },
+    ],
+    "subtype": "array",
+    "type": "object",
+  },
+  "subtype": "array",
+  "type": "object",
+}
+`;
+
+exports[`preview evaluation > { let a = 1; a } 1`] = `
+{
+  "description": "1",
+  "type": "number",
+  "value": 1,
+}
+`;
+
+exports[`preview evaluation > { var a = 1; a } 1`] = `"side effect"`;
+
+exports[`preview evaluation > 1 1`] = `
+{
+  "description": "1",
+  "type": "number",
+  "value": 1,
+}
+`;
+
+exports[`preview evaluation > globalThis.x = 1 1`] = `"side effect"`;
