@@ -2,7 +2,6 @@ import type { Protocol } from 'devtools-protocol';
 import type { InspectorContext } from './context.mts';
 
 export interface DebuggerPreference {
-  preview: boolean;
   previewDebug: boolean;
 }
 
@@ -14,7 +13,7 @@ export interface DebuggerContext {
 }
 
 export interface DebuggerNamespace {
-  engine262_setEvaluateMode(req: { mode: string }, context: DebuggerContext): void;
+  engine262_setEvaluateMode(req: { mode: 'module' | 'script' | 'console' }, context: DebuggerContext): void;
   engine262_setFeatures(req: { features: string[] }, context: DebuggerContext): void;
 }
 export interface DebuggerNamespace {

@@ -515,7 +515,7 @@ function* DateProto_toDateString(_args: Arguments, { thisValue }: FunctionCallCo
 }
 
 /** https://tc39.es/ecma262/#sec-date.prototype.toisostring */
-export function DateProto_toISOString(_args: Arguments, { thisValue }: FunctionCallContext) {
+export function DateProto_toISOString(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion<JSStringValue> {
   const t = Q(thisTimeValue(thisValue));
   if (!Number.isFinite(R(t))) {
     return surroundingAgent.Throw('RangeError', 'DateInvalidTime');

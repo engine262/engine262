@@ -4,7 +4,6 @@ import {
   Descriptor,
   evalQ,
   Get,
-  inspectDate,
   IntrinsicsFunctionToString, isArrayBufferObject, isArrayExoticObject, IsCallable, isDataViewObject, isDateObject, isECMAScriptFunctionObject, isErrorObject, isIntegerIndex, isMapObject, isPromiseObject, isProxyExoticObject, isRegExpObject, isSetObject, isTypedArrayObject, isWeakMapObject, isWeakSetObject, JSStringValue, NumberValue, ObjectValue, PrivateElementRecord, PrivateName, R, surroundingAgent, SymbolDescriptiveString, SymbolValue, ToString, skipDebugger, UndefinedValue, Value, type ArrayBufferObject, type BooleanValue, type DataViewObject, type DateObject, type FunctionObject, type MapObject, type NullValue, type PromiseObject, type PropertyKeyValue, type ProxyObject, type RegExpObject, type SetObject, type TypedArrayObject,
   type WeakMapObject,
   type WeakSetObject,
@@ -14,6 +13,9 @@ import {
   TypedArrayGetElement,
   TypedArrayLength,
   MakeTypedArrayWithBufferWitnessRecord,
+  DateProto_toISOString,
+  ValueOfNormalCompletion,
+  NormalCompletion,
 } from '#self';
 
 /*
@@ -284,7 +286,13 @@ const WeakSet = new ObjectInspector<WeakSetObject>('WeakSet', 'weakset', () => '
   })),
 });
 
-const Date = new ObjectInspector<DateObject>('Date', 'date', inspectDate);
+const Date = new ObjectInspector<DateObject>('Date', 'date', ((value: DateObject) => {
+  if (!globalThis.Number.isFinite(R(value.DateValue))) {
+    return 'Invalid Date';
+  }
+  const val = DateProto_toISOString([], { thisValue: value, NewTarget: Value.undefined });
+  return ValueOfNormalCompletion(val as NormalCompletion<JSStringValue>).stringValue();
+}));
 const Promise = new ObjectInspector<PromiseObject>('Promise', 'promise', () => 'Promise', {
   additionalProperties: (value) => [['[[PromiseState]]', Value(value.PromiseState)], ['[[PromiseResult]]', value.PromiseResult || Value.undefined]],
 });
@@ -429,6 +437,8 @@ export function getInspector(value: Value): Inspector<Value> {
     case value instanceof NumberValue:
     case value instanceof BigIntValue:
       return Number;
+    case isProxyExoticObject(value):
+      return Proxy;
     case IsCallable(value) === Value.true:
       return Function;
     case isArrayExoticObject(value):
@@ -448,8 +458,6 @@ export function getInspector(value: Value): Inspector<Value> {
     // generator
     case isErrorObject(value):
       return Error;
-    case isProxyExoticObject(value):
-      return Proxy;
     case isPromiseObject(value):
       return Promise;
     case isTypedArrayObject(value):

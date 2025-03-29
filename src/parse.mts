@@ -32,7 +32,9 @@ function handleError(e: unknown) {
     if (e.decoration) {
       const stackString = Value('stack');
       const stack = X(Get(v, stackString));
-      const newStackString = `${e.decoration}\n${stack instanceof JSStringValue ? stack.stringValue() : ''}`;
+      // Note: in many cases the output will be padded by space or text like "Uncaught",
+      // insert a new line allow decoration lines get the same padding.
+      const newStackString = `\n${e.decoration}\n${stack instanceof JSStringValue ? stack.stringValue() : ''}`;
       X(Set(v, stackString, Value(newStackString), Value.true));
     }
     return v;

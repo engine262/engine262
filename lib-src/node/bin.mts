@@ -59,7 +59,6 @@ const argv = parseArgs({
     'features': { type: 'string' },
     'list-features': { type: 'boolean' },
     'inspector': { type: 'boolean' },
-    'preview': { type: 'boolean', default: true },
     'test262': { type: 'boolean', default: true },
     // hidden options
     'preview-debug': { type: 'boolean' },
@@ -145,7 +144,6 @@ if (argv.values.inspector !== false) {
     const { NodeWebsocketInspector } = await import('./inspector.mts');
     const inspect = await NodeWebsocketInspector.new();
     inspect.attachAgent(surroundingAgent, [realm]);
-    inspect.preference.preview = argv.values.preview;
     inspect.preference.previewDebug = argv.values['preview-debug'] || false;
   }
 }

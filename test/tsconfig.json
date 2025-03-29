@@ -1,5 +1,5 @@
 {
-  "references": [{ "path": "../src/" }],
+  "references": [{ "path": "../src/" }, { "path": "../lib-src/inspector/" }],
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
@@ -14,7 +14,8 @@
     "./supplemental.mts",
     "./test262/test262.mts",
     "./test262/test262-worker.mts",
+    "./test262/test262_realm.mts",
     "./json/json.mts",
-    "test262/test262_realm.mts"
+    "./inspector/*"
   ]
 }

@@ -4,6 +4,7 @@ import type {
   DebuggerNamespace, HeapProfilerNamespace, ProfilerNamespace, RuntimeNamespace,
 } from './types.mts';
 import { getParsedEvent } from './internal-utils.mts';
+import type { InspectorContext } from './context.mts';
 import {
   Call, NormalCompletion, ObjectValue, ParseScript, runJobQueue, ScriptRecord, surroundingAgent, ThrowCompletion, skipDebugger, Value, type FunctionObject,
   ParseModule,
@@ -15,7 +16,6 @@ import {
   kInternal,
 } from '#self';
 
-let evalMode: 'module' | 'script' | 'console' = 'console';
 export const Debugger: DebuggerNamespace = {
   enable(_req, { onDebuggerAttached }) {
     onDebuggerAttached();
@@ -52,11 +52,15 @@ export const Debugger: DebuggerNamespace = {
     surroundingAgent.resumeEvaluate({ pauseAt: 'step-out' });
   },
   evaluateOnCallFrame(req, context) {
-    return evaluate(context.context.getRealm(undefined)!.descriptor.uniqueId, req, context);
+    return evaluate({
+      ...req,
+      uniqueContextId: context.context.getRealm(undefined)!.descriptor.uniqueId!,
+      evalMode: context.context.evaluateMode,
+    }, context);
   },
-  engine262_setEvaluateMode({ mode }) {
+  engine262_setEvaluateMode({ mode }, { context }) {
     if (mode === 'module' || mode === 'script' || mode === 'console') {
-      evalMode = mode;
+      context.evaluateMode = mode;
     }
   },
   engine262_setFeatures() {
@@ -71,14 +75,23 @@ export const Runtime: RuntimeNamespace = {
   enable() {},
   compileScript(options, { context, sendEvent }) {
     let parsed!: ScriptRecord | SourceTextModuleRecord | ObjectValue[];
-    const realm = context.getRealm(options.executionContextId);
-    realm?.realm.scope(() => {
-      if (evalMode === 'module') {
+    let realm = context.getRealm(options.executionContextId);
+    if (!realm && !options.persistScript) {
+      realm = context.getAnyRealm();
+    }
+    if (!realm) {
+      return unsupportedError;
+    }
+    realm.realm.scope(() => {
+      if (context.evaluateMode === 'module') {
         parsed = ParseModule(options.expression, realm.realm, { specifier: options.sourceURL, doNotTrackScriptId: !options.persistScript });
       } else {
         parsed = ParseScript(options.expression, realm.realm, { specifier: options.sourceURL, doNotTrackScriptId: !options.persistScript, [kInternal]: { allowAllPrivateNames: true } });
       }
     });
+    if (!parsed) {
+      throw new Error('No parsed result');
+    }
     if (Array.isArray(parsed)) {
       const e = context.createExceptionDetails(ThrowCompletion(parsed[0]), false);
       // Note: it has to be this message to trigger devtools' line wrap.
@@ -135,8 +148,12 @@ export const Runtime: RuntimeNamespace = {
       return completion.Value;
     });
   },
-  evaluate(options, _context) {
-    return evaluate(options.uniqueContextId!, options, _context);
+  evaluate(options, context) {
+    return evaluate({
+      ...options,
+      evalMode: context.context.evaluateMode,
+      uniqueContextId: options.uniqueContextId!,
+    }, context);
   },
   getExceptionDetails(req, { context }) {
     const object = context.getObject(req.errorObjectId)!;
@@ -192,18 +209,20 @@ const unsupportedError: Protocol.Runtime.EvaluateResponse = {
     text: 'unsupported', lineNumber: 0, columnNumber: 0, exceptionId: 0,
   },
 };
-function evaluate(uniqueContextId: string, options: {
+function evaluate(options: {
+  uniqueContextId: string,
+  expression: string,
+  evalMode: InspectorContext['evaluateMode'],
   throwOnSideEffect?: boolean,
   awaitPromise?: boolean,
   callFrameId?: string,
-  expression: string,
 }, _context: DebuggerContext): Protocol.Runtime.EvaluateResponse | Promise<Protocol.Runtime.EvaluateResponse> {
-  const { context, preference } = _context;
+  const { context } = _context;
   const isPreview = options.throwOnSideEffect;
-  if (options.awaitPromise || (!preference.preview && isPreview)) {
+  if (options.awaitPromise) {
     return unsupportedError;
   }
-  const realm = context.getRealm(uniqueContextId);
+  const realm = context.getRealm(options.uniqueContextId);
   if (!realm) {
     return unsupportedError;
   }
@@ -228,13 +247,13 @@ function evaluate(uniqueContextId: string, options: {
   }
   const promise = new Promise<Protocol.Runtime.EvaluateResponse>((resolve) => {
     let toBeEvaluated;
-    if (isPreview || evalMode === 'console' || isCallOnFrame) {
+    if (isPreview || options.evalMode === 'console' || isCallOnFrame) {
       toBeEvaluated = performDevtoolsEval(options.expression, realm.realm, false, !!(isPreview || isCallOnFrame));
     } else {
       let parsed!: ScriptRecord | SourceTextModuleRecord | ObjectValue[];
-      const realm = context.getRealm(uniqueContextId);
+      const realm = context.getRealm(options.uniqueContextId);
       realm?.realm.scope(() => {
-        if (evalMode === 'module') {
+        if (options.evalMode === 'module') {
           parsed = ParseModule(options.expression, realm.realm);
         } else {
           parsed = ParseScript(options.expression, realm.realm);

@@ -340,7 +340,9 @@ export class Agent {
         return res;
       } finally {
         this.#debugger_previewing = old;
-        this.#debugger_objectsCreatedDuringPreview.clear();
+        if (!old) {
+          this.#debugger_objectsCreatedDuringPreview.clear();
+        }
       }
     }
   }
