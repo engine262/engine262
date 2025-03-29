@@ -89,6 +89,7 @@ export const NotASymbol = (v) => `${i(v)} is not a symbol`;
 export const NotAWeakKey = (v) => `${i(v)} is not an object or a symbol`;
 export const NotAString = (v) => `${i(v)} is not a string`;
 export const NotDefined = (n) => `${i(n)} is not defined`;
+export const NotEnoughArguments = (numArgs, minArgs) => `${minArgs} argument${minArgs !== 1 ? 's' : ''} required, but only ${numArgs} present`;
 export const NotInitialized = (n) => `${i(n)} cannot be used before initialization`;
 export const NotIterable = (n) => `${i(n)} is not iterable`;
 export const NotPropertyName = (p) => `${i(p)} is not a valid property name`;

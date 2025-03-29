@@ -461,3 +461,30 @@ export function* CopyDataProperties(target: ObjectValue, source: Value, excluded
   }
   return target;
 }
+
+/** https://tc39.es/ecma262/#sec-SetterThatIgnoresPrototypeProperties */
+export function* SetterThatIgnoresPrototypeProperties(thisValue: Value, home: ObjectValue, p: PropertyKeyValue, v: Value): PlainEvaluator {
+  // 1. If thisValue is not an Object, then
+  if (!(thisValue instanceof ObjectValue)) {
+    // a. Throw a TypeError exception.
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', thisValue);
+  }
+  // 2. If SameValue(thisValue, home) is true, then
+  if (SameValue(thisValue, home) === Value.true) {
+    // a. NOTE: Throwing here emulates assignment to a non-writable data property on the home object in strict mode code.
+    // b. Throw a TypeError exception.
+    return surroundingAgent.Throw('TypeError', 'CannotSetProperty', p, thisValue);
+  }
+  // 3. Let desc be ? thisValue.[[GetOwnProperty]](p).
+  const desc = Q(yield* thisValue.GetOwnProperty(p));
+  // 4. If desc is undefined, then
+  if (desc === Value.undefined) {
+    // a. Perform ? CreateDataPropertyOrThrow(thisValue, p, v).
+    Q(yield* CreateDataPropertyOrThrow(thisValue, p, v));
+  } else { // 5. Else,
+    // a. Perform ? Set(thisValue, p, v, true).
+    Q(yield* Set(thisValue, p, v, Value.true));
+  }
+  // 6. Return unused.
+  return undefined;
+}
