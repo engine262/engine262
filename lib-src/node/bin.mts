@@ -4,7 +4,10 @@ import { start } from 'node:repl';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { format as _format, inspect as _inspect, parseArgs } from 'node:util';
-import packageJson from '../../package.json' with { type: 'json' };
+// let's try if the following message on old node causes test failure on test262.fyi
+// "ExperimentalWarning: Importing JSON modules is an experimental feature and might change at any time"
+// import packageJson from '../../package.json' with { type: 'json' };
+import { createRequire } from 'node:module';
 import { createConsole } from '../inspector/utils.mts';
 import {
   setSurroundingAgent, FEATURES, inspect, Value, Completion, AbruptCompletion,
@@ -23,6 +26,7 @@ import {
   ScriptEvaluation,
 } from '#self';
 
+const packageJson = createRequire(import.meta.url)('../../package.json');
 const help = `
 engine262 v${packageJson.version}
 
