@@ -1,5 +1,5 @@
-import { Inspector } from '#self/inspector';
 import type { DebuggerContext, DebuggerNamespace, RuntimeNamespace } from '../../lib/inspector/types.d.mts';
+import { Inspector } from '#self/inspector';
 
 export class TestInspector extends Inspector {
   messages: object[] = [];
