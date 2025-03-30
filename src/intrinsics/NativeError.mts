@@ -17,8 +17,9 @@ import {
   type FunctionCallContext,
 } from '../value.mts';
 import { Q, X, type ValueEvaluator } from '../completion.mts';
-import { captureStack } from '../helpers.mts';
+import { captureStack, errorStackToString } from '../helpers.mts';
 import { bootstrapConstructor, bootstrapPrototype } from './bootstrap.mts';
+import type { ErrorObject } from './Error.mts';
 
 const nativeErrorNames = [
   'EvalError',
@@ -46,7 +47,10 @@ export function bootstrapNativeError(realmRec: Realm) {
         newTarget = NewTarget;
       }
       // 2. Let O be ? OrdinaryCreateFromConstructor(newTarget, "%NativeError.prototype%", « [[ErrorData]] »).
-      const O = Q(yield* OrdinaryCreateFromConstructor(newTarget as FunctionObject, `%${name}.prototype%`, ['ErrorData']));
+      const O = Q(yield* OrdinaryCreateFromConstructor(newTarget as FunctionObject, `%${name}.prototype%`, [
+        'ErrorData',
+        'HostDefinedErrorStack',
+      ])) as ErrorObject;
       // 3. If message is not undefined, then
       if (message !== Value.undefined) {
         // a. Let msg be ? ToString(message).
@@ -64,7 +68,9 @@ export function bootstrapNativeError(realmRec: Realm) {
       // 4. Perform ? InstallErrorCause(O, options).
       Q(yield* InstallErrorCause(O, options));
       // NON-SPEC
-      X(captureStack(O));
+      const S = captureStack();
+      O.HostDefinedErrorStack = S.stack;
+      O.ErrorData = X(errorStackToString(O, S.stack, S.nativeStack));
       // 5. Return O.
       return O;
     };

@@ -11,15 +11,24 @@ import {
   Value,
   type Arguments,
   type FunctionCallContext,
+  type JSStringValue,
+  type ObjectValue,
+  type UndefinedValue,
 } from '../value.mts';
 import { Q, X, type ValueEvaluator } from '../completion.mts';
 import { surroundingAgent } from '../host-defined/engine.mts';
-import { captureStack } from '../helpers.mts';
+import { captureStack, errorStackToString, type CallSite } from '../helpers.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 
-export function isErrorObject(value: Value): boolean {
+export interface ErrorObject extends ObjectValue {
+  ErrorData: JSStringValue;
+  HostDefinedErrorStack?: CallSite[] | UndefinedValue;
+}
+
+export function isErrorObject(value: Value): value is ErrorObject {
   return 'ErrorData' in value;
 }
+
 /** https://tc39.es/ecma262/#sec-error-constructor */
 function* ErrorConstructor([message = Value.undefined, options = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
   // 1. If NewTarget is undefined, let newTarget be the active function object; else let newTarget be NewTarget.
@@ -30,7 +39,10 @@ function* ErrorConstructor([message = Value.undefined, options = Value.undefined
     newTarget = NewTarget;
   }
   // 2. Let O be ? OrdinaryCreateFromConstructor(newTarget, "%Error.prototype%", « [[ErrorData]] »).
-  const O = Q(yield* OrdinaryCreateFromConstructor(newTarget as FunctionObject, '%Error.prototype%', ['ErrorData', 'HostDefinedErrorStack']));
+  const O = Q(yield* OrdinaryCreateFromConstructor(newTarget as FunctionObject, '%Error.prototype%', [
+    'ErrorData',
+    'HostDefinedErrorStack',
+  ])) as ErrorObject;
   // 3. If message is not undefined, then
   if (message !== Value.undefined) {
     // a. Let msg be ? ToString(message).
@@ -49,7 +61,10 @@ function* ErrorConstructor([message = Value.undefined, options = Value.undefined
   // 4. Perform ? InstallErrorCause(O, options).
   Q(yield* InstallErrorCause(O, options));
 
-  X(captureStack(O)); // NON-SPEC
+  // NON-SPEC
+  const S = captureStack();
+  O.HostDefinedErrorStack = S.stack;
+  O.ErrorData = X(errorStackToString(O, S.stack, S.nativeStack));
 
   // 5. Return O.
   return O;
