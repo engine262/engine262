@@ -35,6 +35,9 @@ jobs:
             lib/engine262.mjs
             lib/engine262.mjs.map
 
+      # it will break override the coverage data of the test262 run
+      - run: npm run test:inspector
+
       # run tests/coverage
       - run: npm run coverage
         env:
