@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 47a537a437c02b2ba420dcc2d7bd4afa219ac106
+ * engine262 0.0.1 64011e434eae0d1b05e9a512ce5e13ad6d8b4711
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -319,7 +319,16 @@
       value: getInspector(Value).toObjectPreview(Value)
     }))
   });
-  const Date$1 = new ObjectInspector('Date', 'date', engine262_mjs.inspectDate);
+  const Date$1 = new ObjectInspector('Date', 'date', value => {
+    if (!globalThis.Number.isFinite(engine262_mjs.R(value.DateValue))) {
+      return 'Invalid Date';
+    }
+    const val = engine262_mjs.DateProto_toISOString([], {
+      thisValue: value,
+      NewTarget: engine262_mjs.Value.undefined
+    });
+    return engine262_mjs.ValueOfNormalCompletion(val).stringValue();
+  });
   const Promise$1 = new ObjectInspector('Promise', 'promise', () => 'Promise', {
     additionalProperties: value => [['[[PromiseState]]', engine262_mjs.Value(value.PromiseState)], ['[[PromiseResult]]', value.PromiseResult || engine262_mjs.Value.undefined]]
   });
@@ -479,6 +488,8 @@
       case value instanceof engine262_mjs.NumberValue:
       case value instanceof engine262_mjs.BigIntValue:
         return Number;
+      case engine262_mjs.isProxyExoticObject(value):
+        return Proxy$1;
       case engine262_mjs.IsCallable(value) === engine262_mjs.Value.true:
         return Function;
       case engine262_mjs.isArrayExoticObject(value):
@@ -498,8 +509,6 @@
       // generator
       case engine262_mjs.isErrorObject(value):
         return Error$1;
-      case engine262_mjs.isProxyExoticObject(value):
-        return Proxy$1;
       case engine262_mjs.isPromiseObject(value):
         return Promise$1;
       case engine262_mjs.isTypedArrayObject(value):
@@ -608,7 +617,7 @@
     // id 0 is falsy, skip it
     #idToArrayBufferBlock = [undefined];
     #objectToId = new Map();
-    #objectCounter = 0;
+    #objectCounter = 1;
     #internObject(object, group = 'default') {
       if (this.#objectToId.has(object)) {
         return this.#objectToId.get(object);
@@ -763,7 +772,8 @@
       const value = completion instanceof engine262_mjs.ThrowCompletion ? completion.Value : completion;
       const stack = engine262_mjs.getHostDefinedErrorStack(value);
       const frames = stack?.map(call => call.toCallFrame()).filter(Boolean) || [];
-      const exceptionId = Math.random();
+      const exceptionId = this.#objectCounter;
+      this.#objectCounter += 1;
       this.#exceptionMap.set(value, exceptionId);
       return {
         text: isPromise ? 'Uncaught (in promise)' : 'Uncaught',
@@ -827,6 +837,7 @@
         };
       }).filter(Boolean);
     }
+    evaluateMode = 'script';
   }
   function HostGetThisEnvironment(env) {
     while (!(env instanceof engine262_mjs.NullValue)) {
@@ -900,7 +911,6 @@
     };
   }
 
-  let evalMode = 'console';
   const Debugger = {
     enable(_req, {
       onDebuggerAttached
@@ -962,13 +972,19 @@
       });
     },
     evaluateOnCallFrame(req, context) {
-      return evaluate(context.context.getRealm(undefined).descriptor.uniqueId, req, context);
+      return evaluate({
+        ...req,
+        uniqueContextId: context.context.getRealm(undefined).descriptor.uniqueId,
+        evalMode: context.context.evaluateMode
+      }, context);
     },
     engine262_setEvaluateMode({
       mode
+    }, {
+      context
     }) {
       if (mode === 'module' || mode === 'script' || mode === 'console') {
-        evalMode = mode;
+        context.evaluateMode = mode;
       }
     },
     engine262_setFeatures() {
@@ -986,9 +1002,15 @@
       sendEvent
     }) {
       let parsed;
-      const realm = context.getRealm(options.executionContextId);
-      realm?.realm.scope(() => {
-        if (evalMode === 'module') {
+      let realm = context.getRealm(options.executionContextId);
+      if (!realm && !options.persistScript) {
+        realm = context.getAnyRealm();
+      }
+      if (!realm) {
+        return unsupportedError;
+      }
+      realm.realm.scope(() => {
+        if (context.evaluateMode === 'module') {
           parsed = engine262_mjs.ParseModule(options.expression, realm.realm, {
             specifier: options.sourceURL,
             doNotTrackScriptId: !options.persistScript
@@ -1003,6 +1025,9 @@
           });
         }
       });
+      if (!parsed) {
+        throw new Error('No parsed result');
+      }
       if (Array.isArray(parsed)) {
         const e = context.createExceptionDetails(engine262_mjs.ThrowCompletion(parsed[0]), false);
         // Note: it has to be this message to trigger devtools' line wrap.
@@ -1077,8 +1102,12 @@
         return completion.Value;
       });
     },
-    evaluate(options, _context) {
-      return evaluate(options.uniqueContextId, options, _context);
+    evaluate(options, context) {
+      return evaluate({
+        ...options,
+        evalMode: context.context.evaluateMode,
+        uniqueContextId: options.uniqueContextId
+      }, context);
     },
     getExceptionDetails(req, {
       context
@@ -1166,16 +1195,15 @@
       exceptionId: 0
     }
   };
-  function evaluate(uniqueContextId, options, _context) {
+  function evaluate(options, _context) {
     const {
-      context,
-      preference
+      context
     } = _context;
     const isPreview = options.throwOnSideEffect;
-    if (options.awaitPromise || !preference.preview && isPreview) {
+    if (options.awaitPromise) {
       return unsupportedError;
     }
-    const realm = context.getRealm(uniqueContextId);
+    const realm = context.getRealm(options.uniqueContextId);
     if (!realm) {
       return unsupportedError;
     }
@@ -1199,13 +1227,13 @@
     }
     const promise = new Promise(resolve => {
       let toBeEvaluated;
-      if (isPreview || evalMode === 'console' || isCallOnFrame) {
+      if (isPreview || options.evalMode === 'console' || isCallOnFrame) {
         toBeEvaluated = engine262_mjs.performDevtoolsEval(options.expression, realm.realm, false, !!(isPreview || isCallOnFrame));
       } else {
         let parsed;
-        const realm = context.getRealm(uniqueContextId);
+        const realm = context.getRealm(options.uniqueContextId);
         realm?.realm.scope(() => {
-          if (evalMode === 'module') {
+          if (options.evalMode === 'module') {
             parsed = engine262_mjs.ParseModule(options.expression, realm.realm);
           } else {
             parsed = engine262_mjs.ParseScript(options.expression, realm.realm);
@@ -1349,7 +1377,6 @@
       this.#context.detachAgent(agent);
     }
     preference = {
-      preview: false,
       previewDebug: false
     };
     onMessage(id, methodArg, params) {

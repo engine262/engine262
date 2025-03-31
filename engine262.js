@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 47a537a437c02b2ba420dcc2d7bd4afa219ac106
+ * engine262 0.0.1 64011e434eae0d1b05e9a512ce5e13ad6d8b4711
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -1629,58 +1629,40 @@
     }
     return stack;
   }
-  function captureStack(O) {
+  function captureStack() {
     const stack = getCurrentStack();
-    let cache = null;
-    const name = Value('stack');
-    let __native_stack__;
+    let nativeStack;
     if (exports.surroundingAgent.hostDefinedOptions.errorStackAttachNativeStack) {
+      const origStackTraceLimit = Error.stackTraceLimit;
       Error.stackTraceLimit = 12;
-      __native_stack__ = new Error().stack;
+      try {
+        nativeStack = new Error().stack;
+      } finally {
+        Error.stackTraceLimit = origStackTraceLimit;
+      }
     }
-    if ('HostDefinedErrorStack' in O && (!O.HostDefinedErrorStack || O.HostDefinedErrorStack === Value.undefined)) {
-      O.HostDefinedErrorStack = stack;
-    }
-    /* X */
-    let _temp2 = DefinePropertyOrThrow(O, name, exports.Descriptor({
-      Get: CreateBuiltinFunction(() => {
-        if (cache === null) {
-          /* X */
-          let _temp3 = ToString(O);
-          /* c8 ignore if */
-          if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
-          /* c8 ignore if */
-          if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! ToString(O) returned an abrupt completion", {
-            cause: _temp3
-          });
-          /* c8 ignore if */
-          if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
-          let errorString = _temp3.stringValue();
-          stack.forEach(s => {
-            errorString = `${errorString}\n    at ${s.toString()}`;
-          });
-          if (__native_stack__) {
-            errorString = `${errorString}\n    <NATIVE>\n${__native_stack__.split('\n').slice(6).join('\n')}`;
-          }
-          cache = Value(errorString);
-        }
-        return cache;
-      }, 0, name, [], undefined, undefined, Value('get')),
-      Set: CreateBuiltinFunction(([value = Value.undefined]) => {
-        cache = value;
-        return Value.undefined;
-      }, 1, name, [], undefined, undefined, Value('set')),
-      Enumerable: Value.false,
-      Configurable: Value.true
-    }));
+    return {
+      stack,
+      nativeStack
+    };
+  }
+  function* errorStackToString(O, stack, nativeStack = Value.undefined) {
+    /* ReturnIfAbrupt */
+    let _temp2 = yield* Call(exports.surroundingAgent.intrinsic('%Error.prototype.toString%'), O);
     /* c8 ignore if */
-    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
+    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
-    if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(O, name, Descriptor({\n    Get: CreateBuiltinFunction(() => {\n      if (cache === null) {\n        let errorString = X(ToString(O)).stringValue();\n        stack.forEach((s) => {\n          errorString = `${errorString}\\n    at ${s.toString()}`;\n        });\n        if (__native_stack__) {\n          errorString = `${errorString}\\n    <NATIVE>\\n${__native_stack__.split('\\n').slice(6).join('\\n')}`;\n        }\n        cache = Value(errorString);\n      }\n      return cache;\n    }, 0, name, [], undefined, undefined, Value('get')),\n    Set: CreateBuiltinFunction(([value = Value.undefined]) => {\n      cache = value;\n      return Value.undefined;\n    }, 1, name, [], undefined, undefined, Value('set')),\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  })) returned an abrupt completion", {
-      cause: _temp2
-    });
+    if (_temp2 instanceof AbruptCompletion) return _temp2;
     /* c8 ignore if */
     if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+    let errorString = _temp2.stringValue();
+    stack.forEach(s => {
+      errorString = `${errorString}\n    at ${s.toString()}`;
+    });
+    if (typeof nativeStack === 'string') {
+      errorString = `${errorString}\n    <NATIVE>\n${nativeStack.split('\n').slice(6).join('\n')}`;
+    }
+    return Value(errorString);
   }
   function callable(onCalled = (target, _thisArg, args) => Reflect.construct(target, args)) {
     const handler = Object.freeze({
@@ -14810,6 +14792,7 @@
   const NotAWeakKey = v => `${i(v)} is not an object or a symbol`;
   const NotAString = v => `${i(v)} is not a string`;
   const NotDefined = n => `${i(n)} is not defined`;
+  const NotEnoughArguments = (numArgs, minArgs) => `${minArgs} argument${minArgs !== 1 ? 's' : ''} required, but only ${numArgs} present`;
   const NotInitialized = n => `${i(n)} cannot be used before initialization`;
   const NotIterable = n => `${i(n)} is not iterable`;
   const NotPropertyName = p => `${i(p)} is not a valid property name`;
@@ -14971,6 +14954,7 @@
     NotAWeakKey: NotAWeakKey,
     NotAnObject: NotAnObject,
     NotDefined: NotDefined,
+    NotEnoughArguments: NotEnoughArguments,
     NotInitialized: NotInitialized,
     NotIterable: NotIterable,
     NotPropertyName: NotPropertyName,
@@ -19783,7 +19767,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         /* c8 ignore if */
         if (_temp instanceof Completion) _temp = _temp.Value;
         const stack = _temp;
-        const newStackString = `${e.decoration}\n${stack instanceof JSStringValue ? stack.stringValue() : ''}`;
+        // Note: in many cases the output will be padded by space or text like "Uncaught",
+        // insert a new line allow decoration lines get the same padding.
+        const newStackString = `\n${e.decoration}\n${stack instanceof JSStringValue ? stack.stringValue() : ''}`;
         /* X */
         let _temp2 = Set$1(v, stackString, Value(newStackString), Value.true);
         /* c8 ignore if */
@@ -25622,7 +25608,9 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
           return res;
         } finally {
           this.#debugger_previewing = old;
-          this.#debugger_objectsCreatedDuringPreview.clear();
+          if (!old) {
+            this.#debugger_objectsCreatedDuringPreview.clear();
+          }
         }
       }
     }
@@ -32791,7 +32779,55 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     return target;
   }
+
+  /** https://tc39.es/ecma262/#sec-SetterThatIgnoresPrototypeProperties */
   CopyDataProperties.section = 'https://tc39.es/ecma262/#sec-copydataproperties';
+  function* SetterThatIgnoresPrototypeProperties(thisValue, home, p, v) {
+    // 1. If thisValue is not an Object, then
+    if (!(thisValue instanceof ObjectValue)) {
+      // a. Throw a TypeError exception.
+      return exports.surroundingAgent.Throw('TypeError', 'NotAnObject', thisValue);
+    }
+    // 2. If SameValue(thisValue, home) is true, then
+    if (SameValue(thisValue, home) === Value.true) {
+      // a. NOTE: Throwing here emulates assignment to a non-writable data property on the home object in strict mode code.
+      // b. Throw a TypeError exception.
+      return exports.surroundingAgent.Throw('TypeError', 'CannotSetProperty', p, thisValue);
+    }
+    // 3. Let desc be ? thisValue.[[GetOwnProperty]](p).
+    /* ReturnIfAbrupt */
+    let _temp41 = yield* thisValue.GetOwnProperty(p);
+    /* c8 ignore if */
+    if (_temp41 && typeof _temp41 === 'object' && 'next' in _temp41) throw new Assert.Error('Forgot to yield* on the completion.');
+    /* c8 ignore if */
+    if (_temp41 instanceof AbruptCompletion) return _temp41;
+    /* c8 ignore if */
+    if (_temp41 instanceof Completion) _temp41 = _temp41.Value;
+    const desc = _temp41;
+    // 4. If desc is undefined, then
+    if (desc === Value.undefined) {
+      /* ReturnIfAbrupt */
+      let _temp42 = yield* CreateDataPropertyOrThrow(thisValue, p, v);
+      /* c8 ignore if */
+      if (_temp42 && typeof _temp42 === 'object' && 'next' in _temp42) throw new Assert.Error('Forgot to yield* on the completion.');
+      /* c8 ignore if */
+      if (_temp42 instanceof AbruptCompletion) return _temp42;
+      /* c8 ignore if */
+      if (_temp42 instanceof Completion) _temp42 = _temp42.Value;
+    } else {
+      /* ReturnIfAbrupt */
+      let _temp43 = yield* Set$1(thisValue, p, v, Value.true);
+      /* c8 ignore if */
+      if (_temp43 && typeof _temp43 === 'object' && 'next' in _temp43) throw new Assert.Error('Forgot to yield* on the completion.');
+      /* c8 ignore if */
+      if (_temp43 instanceof AbruptCompletion) return _temp43;
+      /* c8 ignore if */
+      if (_temp43 instanceof Completion) _temp43 = _temp43.Value;
+    }
+    // 6. Return unused.
+    return undefined;
+  }
+  SetterThatIgnoresPrototypeProperties.section = 'https://tc39.es/ecma262/#sec-SetterThatIgnoresPrototypeProperties';
 
   // TODO: ban other direct extension from ObjectValue in the linter
 
@@ -49238,6 +49274,97 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     realmRec.Intrinsics['%String%'] = stringConstructor;
   }
 
+  function isErrorObject(value) {
+    return 'ErrorData' in value;
+  }
+
+  /** https://tc39.es/ecma262/#sec-error-constructor */
+  function* ErrorConstructor([message = Value.undefined, options = Value.undefined], {
+    NewTarget
+  }) {
+    // 1. If NewTarget is undefined, let newTarget be the active function object; else let newTarget be NewTarget.
+    let newTarget;
+    if (NewTarget === Value.undefined) {
+      newTarget = exports.surroundingAgent.activeFunctionObject;
+    } else {
+      newTarget = NewTarget;
+    }
+    // 2. Let O be ? OrdinaryCreateFromConstructor(newTarget, "%Error.prototype%", « [[ErrorData]] »).
+    /* ReturnIfAbrupt */
+    let _temp = yield* OrdinaryCreateFromConstructor(newTarget, '%Error.prototype%', ['ErrorData', 'HostDefinedErrorStack']);
+    /* c8 ignore if */
+    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
+    /* c8 ignore if */
+    if (_temp instanceof AbruptCompletion) return _temp;
+    /* c8 ignore if */
+    if (_temp instanceof Completion) _temp = _temp.Value;
+    const O = _temp;
+    // 3. If message is not undefined, then
+    if (message !== Value.undefined) {
+      /* ReturnIfAbrupt */
+      let _temp2 = yield* ToString(message);
+      /* c8 ignore if */
+      if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
+      /* c8 ignore if */
+      if (_temp2 instanceof AbruptCompletion) return _temp2;
+      /* c8 ignore if */
+      if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+      // a. Let msg be ? ToString(message).
+      const msg = _temp2;
+      // b. Let msgDesc be the PropertyDescriptor { [[Value]]: msg, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }.
+      const msgDesc = exports.Descriptor({
+        Value: msg,
+        Writable: Value.true,
+        Enumerable: Value.false,
+        Configurable: Value.true
+      });
+      // c. Perform ! DefinePropertyOrThrow(O, "message", msgDesc).
+      /* X */
+      let _temp3 = DefinePropertyOrThrow(O, Value('message'), msgDesc);
+      /* c8 ignore if */
+      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
+      /* c8 ignore if */
+      if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(O, Value('message'), msgDesc) returned an abrupt completion", {
+        cause: _temp3
+      });
+      /* c8 ignore if */
+      if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+    }
+
+    // 4. Perform ? InstallErrorCause(O, options).
+    /* ReturnIfAbrupt */
+    let _temp4 = yield* InstallErrorCause(O, options);
+    /* c8 ignore if */
+    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
+    /* c8 ignore if */
+    if (_temp4 instanceof AbruptCompletion) return _temp4;
+    /* c8 ignore if */
+    if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+
+    // NON-SPEC
+    const S = captureStack();
+    O.HostDefinedErrorStack = S.stack;
+    /* X */
+    let _temp5 = errorStackToString(O, S.stack, S.nativeStack);
+    /* c8 ignore if */
+    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
+    /* c8 ignore if */
+    if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! errorStackToString(O, S.stack, S.nativeStack) returned an abrupt completion", {
+      cause: _temp5
+    });
+    /* c8 ignore if */
+    if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+    O.ErrorData = _temp5;
+
+    // 5. Return O.
+    return O;
+  }
+  ErrorConstructor.section = 'https://tc39.es/ecma262/#sec-error-constructor';
+  function bootstrapError(realmRec) {
+    const error = bootstrapConstructor(realmRec, ErrorConstructor, 'Error', 1, realmRec.Intrinsics['%Error.prototype%'], []);
+    realmRec.Intrinsics['%Error%'] = error;
+  }
+
   /** https://tc39.es/ecma262/#sec-error.prototype.tostring */
   function* ErrorProto_toString(_args, {
     thisValue
@@ -49307,95 +49434,77 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 9. Return the string-concatenation of name, the code unit 0x003A (COLON), the code unit 0x0020 (SPACE), and msg.
     return Value(`${name.stringValue()}: ${msg.stringValue()}`);
   }
+
+  /** https://tc39.es/proposal-error-stack-accessor/#sec-get-error.prototype.stack */
   ErrorProto_toString.section = 'https://tc39.es/ecma262/#sec-error.prototype.tostring';
-  function bootstrapErrorPrototype(realmRec) {
-    const proto = bootstrapPrototype(realmRec, [['toString', ErrorProto_toString, 0], ['message', Value('')], ['name', Value('Error')]], realmRec.Intrinsics['%Object.prototype%']);
-    realmRec.Intrinsics['%Error.prototype%'] = proto;
-  }
-
-  function isErrorObject(value) {
-    return 'ErrorData' in value;
-  }
-  /** https://tc39.es/ecma262/#sec-error-constructor */
-  function* ErrorConstructor([message = Value.undefined, options = Value.undefined], {
-    NewTarget
+  function* ErrorProto_getStack(_args, {
+    thisValue
   }) {
-    // 1. If NewTarget is undefined, let newTarget be the active function object; else let newTarget be NewTarget.
-    let newTarget;
-    if (NewTarget === Value.undefined) {
-      newTarget = exports.surroundingAgent.activeFunctionObject;
-    } else {
-      newTarget = NewTarget;
+    // 1. Let E be the this value.
+    const E = thisValue;
+    // 2. If E is not an Object, throw a TypeError exception.
+    if (!(E instanceof ObjectValue)) {
+      return exports.surroundingAgent.Throw('TypeError', 'NotAnObject', E);
     }
-    // 2. Let O be ? OrdinaryCreateFromConstructor(newTarget, "%Error.prototype%", « [[ErrorData]] »).
-    /* ReturnIfAbrupt */
-    let _temp = yield* OrdinaryCreateFromConstructor(newTarget, '%Error.prototype%', ['ErrorData', 'HostDefinedErrorStack']);
-    /* c8 ignore if */
-    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
-    /* c8 ignore if */
-    if (_temp instanceof AbruptCompletion) return _temp;
-    /* c8 ignore if */
-    if (_temp instanceof Completion) _temp = _temp.Value;
-    const O = _temp;
-    // 3. If message is not undefined, then
-    if (message !== Value.undefined) {
-      /* ReturnIfAbrupt */
-      let _temp2 = yield* ToString(message);
-      /* c8 ignore if */
-      if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
-      /* c8 ignore if */
-      if (_temp2 instanceof AbruptCompletion) return _temp2;
-      /* c8 ignore if */
-      if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
-      // a. Let msg be ? ToString(message).
-      const msg = _temp2;
-      // b. Let msgDesc be the PropertyDescriptor { [[Value]]: msg, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }.
-      const msgDesc = exports.Descriptor({
-        Value: msg,
-        Writable: Value.true,
-        Enumerable: Value.false,
-        Configurable: Value.true
-      });
-      // c. Perform ! DefinePropertyOrThrow(O, "message", msgDesc).
-      /* X */
-      let _temp3 = DefinePropertyOrThrow(O, Value('message'), msgDesc);
-      /* c8 ignore if */
-      if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) _temp3 = skipDebugger(_temp3);
-      /* c8 ignore if */
-      if (_temp3 instanceof AbruptCompletion) throw new Assert.Error("! DefinePropertyOrThrow(O, Value('message'), msgDesc) returned an abrupt completion", {
-        cause: _temp3
-      });
-      /* c8 ignore if */
-      if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+    // 3. If E does not have an [[ErrorData]] internal slot, return undefined.
+    if (!isErrorObject(E)) {
+      return Value.undefined;
     }
+    // 4. Return an implementation-defined string that represents the stack trace of E.
+    Assert(E.ErrorData instanceof JSStringValue, "E.ErrorData instanceof JSStringValue");
+    return E.ErrorData;
+  }
 
-    // 4. Perform ? InstallErrorCause(O, options).
+  /** https://tc39.es/proposal-error-stack-accessor/#sec-set-error.prototype.stack */
+  ErrorProto_getStack.section = 'https://tc39.es/proposal-error-stack-accessor/#sec-get-error.prototype.stack';
+  function* ErrorProto_setStack(args, {
+    thisValue
+  }) {
+    const [v = Value.undefined] = args;
+
+    // 1. Let E be the this value.
+    const E = thisValue;
+    // 2. If E is not an Object, throw a TypeError exception.
+    if (!(E instanceof ObjectValue)) {
+      return exports.surroundingAgent.Throw('TypeError', 'NotAnObject', E);
+    }
+    // 3. Let numberOfArgs be the number of arguments passed to this function call.
+    const numberOfArgs = args.length;
+    // 4. If numberOfArgs is 0, throw a TypeError exception.
+    if (numberOfArgs === 0) {
+      return exports.surroundingAgent.Throw('TypeError', 'NotEnoughArguments', numberOfArgs, 1);
+    }
+    // 5. If E does not have an [[ErrorData]] internal slot, return undefined.
+    if (!isErrorObject(E)) {
+      return Value.undefined;
+    }
+    // 6. Perform ? SetterThatIgnoresPrototypeProperties(this value, %Error.prototype%, "stack", v).
     /* ReturnIfAbrupt */
-    let _temp4 = yield* InstallErrorCause(O, options);
+    let _temp5 = yield* SetterThatIgnoresPrototypeProperties(thisValue, exports.surroundingAgent.intrinsic('%Error.prototype%'), Value('stack'), v);
     /* c8 ignore if */
-    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
+    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
-    if (_temp4 instanceof AbruptCompletion) return _temp4;
-    /* c8 ignore if */
-    if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
-    /* X */
-    let _temp5 = captureStack(O);
-    /* c8 ignore if */
-    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
-    /* c8 ignore if */
-    if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! captureStack(O) returned an abrupt completion", {
-      cause: _temp5
-    });
+    if (_temp5 instanceof AbruptCompletion) return _temp5;
     /* c8 ignore if */
     if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
-
-    // 5. Return O.
-    return O;
+    // 7. Return undefined.
+    return Value.undefined;
   }
-  ErrorConstructor.section = 'https://tc39.es/ecma262/#sec-error-constructor';
-  function bootstrapError(realmRec) {
-    const error = bootstrapConstructor(realmRec, ErrorConstructor, 'Error', 1, realmRec.Intrinsics['%Error.prototype%'], []);
-    realmRec.Intrinsics['%Error%'] = error;
+  ErrorProto_setStack.section = 'https://tc39.es/proposal-error-stack-accessor/#sec-set-error.prototype.stack';
+  function bootstrapErrorPrototype(realmRec) {
+    const proto = bootstrapPrototype(realmRec, [['toString', ErrorProto_toString, 0], ['message', Value('')], ['name', Value('Error')], ['stack', [ErrorProto_getStack, ErrorProto_setStack]]], realmRec.Intrinsics['%Object.prototype%']);
+    realmRec.Intrinsics['%Error.prototype%'] = proto;
+    /* X */
+    let _temp6 = Get(proto, Value('toString'));
+    /* c8 ignore if */
+    if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) _temp6 = skipDebugger(_temp6);
+    /* c8 ignore if */
+    if (_temp6 instanceof AbruptCompletion) throw new Assert.Error("! Get(proto, Value('toString')) returned an abrupt completion", {
+      cause: _temp6
+    });
+    /* c8 ignore if */
+    if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+    realmRec.Intrinsics['%Error.prototype.toString%'] = _temp6;
   }
 
   const nativeErrorNames = ['EvalError', 'RangeError', 'ReferenceError', 'SyntaxError', 'TypeError', 'URIError'];
@@ -49416,7 +49525,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         }
         // 2. Let O be ? OrdinaryCreateFromConstructor(newTarget, "%NativeError.prototype%", « [[ErrorData]] »).
         /* ReturnIfAbrupt */
-        let _temp = yield* OrdinaryCreateFromConstructor(newTarget, `%${name}.prototype%`, ['ErrorData']);
+        let _temp = yield* OrdinaryCreateFromConstructor(newTarget, `%${name}.prototype%`, ['ErrorData', 'HostDefinedErrorStack']);
         /* c8 ignore if */
         if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
@@ -49465,16 +49574,19 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
         /* c8 ignore if */
         if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
         // NON-SPEC
+        const S = captureStack();
+        O.HostDefinedErrorStack = S.stack;
         /* X */
-        let _temp5 = captureStack(O);
+        let _temp5 = errorStackToString(O, S.stack, S.nativeStack);
         /* c8 ignore if */
         if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
         /* c8 ignore if */
-        if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! captureStack(O) returned an abrupt completion", {
+        if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! errorStackToString(O, S.stack, S.nativeStack) returned an abrupt completion", {
           cause: _temp5
         });
         /* c8 ignore if */
         if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+        O.ErrorData = _temp5;
         // 5. Return O.
         return O;
       };
@@ -55439,7 +55551,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     // 2. Let O be ? OrdinaryCreateFromConstructor(newTarget, "%AggregateError.prototype%", « [[ErrorData]] »).
     /* ReturnIfAbrupt */
-    let _temp = yield* OrdinaryCreateFromConstructor(newTarget, '%AggregateError.prototype%', ['ErrorData']);
+    let _temp = yield* OrdinaryCreateFromConstructor(newTarget, '%AggregateError.prototype%', ['ErrorData', 'HostDefinedErrorStack']);
     /* c8 ignore if */
     if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
@@ -55515,16 +55627,19 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
 
     // NON-SPEC
+    const S = captureStack();
+    O.HostDefinedErrorStack = S.stack;
     /* X */
-    let _temp7 = captureStack(O);
+    let _temp7 = errorStackToString(O, S.stack, S.nativeStack);
     /* c8 ignore if */
     if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) _temp7 = skipDebugger(_temp7);
     /* c8 ignore if */
-    if (_temp7 instanceof AbruptCompletion) throw new Assert.Error("! captureStack(O) returned an abrupt completion", {
+    if (_temp7 instanceof AbruptCompletion) throw new Assert.Error("! errorStackToString(O, S.stack, S.nativeStack) returned an abrupt completion", {
       cause: _temp7
     });
     /* c8 ignore if */
     if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+    O.ErrorData = _temp7;
 
     // 7. Return O.
     return O;
@@ -59533,16 +59648,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
     return inner(value);
   }
-  function inspectDate(value) {
-    const result = DateProto_toISOString([], {
-      thisValue: value,
-      NewTarget: Value.undefined
-    });
-    if (result instanceof ThrowCompletion) {
-      return 'Invalid Date';
-    }
-    return result.stringValue();
-  }
 
   function Throw(type, template, ...templateArgs) {
     return exports.surroundingAgent.Throw(type, template, ...templateArgs);
@@ -60320,6 +60425,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.CyclicModuleRecord = CyclicModuleRecord;
   exports.DataBlock = DataBlock;
   exports.DateFromTime = DateFromTime;
+  exports.DateProto_toISOString = DateProto_toISOString;
   exports.Day = Day;
   exports.DayFromYear = DayFromYear;
   exports.DayWithinYear = DayWithinYear;
@@ -60694,6 +60800,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.SetIntegrityLevel = SetIntegrityLevel;
   exports.SetValueInBuffer = SetValueInBuffer;
   exports.SetViewValue = SetViewValue;
+  exports.SetterThatIgnoresPrototypeProperties = SetterThatIgnoresPrototypeProperties;
   exports.SourceTextModuleRecord = SourceTextModuleRecord;
   exports.SpeciesConstructor = SpeciesConstructor;
   exports.StringCreate = StringCreate;
@@ -60774,7 +60881,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.getHostDefinedErrorStack = getHostDefinedErrorStack;
   exports.getUnicodePropertyValueSet = getUnicodePropertyValueSet;
   exports.inspect = inspect;
-  exports.inspectDate = inspectDate;
   exports.isArgumentExoticObject = isArgumentExoticObject;
   exports.isArrayBufferObject = isArrayBufferObject;
   exports.isArrayExoticObject = isArrayExoticObject;

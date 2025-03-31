@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 47a537a437c02b2ba420dcc2d7bd4afa219ac106
+ * engine262 0.0.1 64011e434eae0d1b05e9a512ce5e13ad6d8b4711
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -22,7 +22,7 @@
  * IN THE SOFTWARE.
  */
 
-import { surroundingAgent, evalQ, ObjectValue, skipDebugger, Get, Value, ToString, inspectDate, IsCallable, isModuleNamespaceObject, isDataViewObject, isArrayBufferObject, isTypedArrayObject, isPromiseObject, isProxyExoticObject, isErrorObject, isWeakSetObject, isWeakMapObject, isSetObject, isMapObject, isDateObject, isRegExpObject, isArrayExoticObject, BigIntValue, NumberValue, JSStringValue, SymbolValue, SymbolDescriptiveString, R, isIntegerIndex, IntrinsicsFunctionToString, isECMAScriptFunctionObject, DataBlock, MakeTypedArrayWithBufferWitnessRecord, TypedArrayLength, TypedArrayGetElement, UndefinedValue, PrivateName, ManagedRealm, IsAccessorDescriptor, IsPromise, isBuiltinFunctionObject, ThrowCompletion, getHostDefinedErrorStack, EnsureCompletion, getCurrentStack, EnvironmentRecord, DeclarativeEnvironmentRecord, OrdinaryObjectCreate, isArgumentExoticObject, Descriptor, ObjectEnvironmentRecord, GlobalEnvironmentRecord, NullValue, FunctionEnvironmentRecord, ModuleEnvironmentRecord, SourceTextModuleRecord, ValueOfNormalCompletion, Call, ParseModule, ParseScript, kInternal, performDevtoolsEval, runJobQueue, Assert, DefinePropertyOrThrow, CreateBuiltinFunction, CreateDataProperty } from './engine262.mjs';
+import { surroundingAgent, evalQ, ObjectValue, skipDebugger, Get, Value, ToString, R, DateProto_toISOString, ValueOfNormalCompletion, IsCallable, isModuleNamespaceObject, isDataViewObject, isArrayBufferObject, isTypedArrayObject, isPromiseObject, isErrorObject, isWeakSetObject, isWeakMapObject, isSetObject, isMapObject, isDateObject, isRegExpObject, isArrayExoticObject, isProxyExoticObject, BigIntValue, NumberValue, JSStringValue, SymbolValue, SymbolDescriptiveString, isIntegerIndex, IntrinsicsFunctionToString, isECMAScriptFunctionObject, DataBlock, MakeTypedArrayWithBufferWitnessRecord, TypedArrayLength, TypedArrayGetElement, UndefinedValue, PrivateName, ManagedRealm, IsAccessorDescriptor, IsPromise, isBuiltinFunctionObject, ThrowCompletion, getHostDefinedErrorStack, EnsureCompletion, getCurrentStack, EnvironmentRecord, DeclarativeEnvironmentRecord, OrdinaryObjectCreate, isArgumentExoticObject, Descriptor, ObjectEnvironmentRecord, GlobalEnvironmentRecord, NullValue, FunctionEnvironmentRecord, ModuleEnvironmentRecord, SourceTextModuleRecord, Call, ParseModule, ParseScript, kInternal, performDevtoolsEval, runJobQueue, Assert, DefinePropertyOrThrow, CreateBuiltinFunction, CreateDataProperty } from './engine262.mjs';
 
 /*
 Test code: copy this into the inspector console.
@@ -315,7 +315,16 @@ const WeakSet = new ObjectInspector('WeakSet', 'weakset', () => 'WeakSet', {
     value: getInspector(Value).toObjectPreview(Value)
   }))
 });
-const Date$1 = new ObjectInspector('Date', 'date', inspectDate);
+const Date$1 = new ObjectInspector('Date', 'date', value => {
+  if (!globalThis.Number.isFinite(R(value.DateValue))) {
+    return 'Invalid Date';
+  }
+  const val = DateProto_toISOString([], {
+    thisValue: value,
+    NewTarget: Value.undefined
+  });
+  return ValueOfNormalCompletion(val).stringValue();
+});
 const Promise$1 = new ObjectInspector('Promise', 'promise', () => 'Promise', {
   additionalProperties: value => [['[[PromiseState]]', Value(value.PromiseState)], ['[[PromiseResult]]', value.PromiseResult || Value.undefined]]
 });
@@ -475,6 +484,8 @@ function getInspector(value) {
     case value instanceof NumberValue:
     case value instanceof BigIntValue:
       return Number;
+    case isProxyExoticObject(value):
+      return Proxy$1;
     case IsCallable(value) === Value.true:
       return Function;
     case isArrayExoticObject(value):
@@ -494,8 +505,6 @@ function getInspector(value) {
     // generator
     case isErrorObject(value):
       return Error$1;
-    case isProxyExoticObject(value):
-      return Proxy$1;
     case isPromiseObject(value):
       return Promise$1;
     case isTypedArrayObject(value):
@@ -604,7 +613,7 @@ class InspectorContext {
   // id 0 is falsy, skip it
   #idToArrayBufferBlock = [undefined];
   #objectToId = new Map();
-  #objectCounter = 0;
+  #objectCounter = 1;
   #internObject(object, group = 'default') {
     if (this.#objectToId.has(object)) {
       return this.#objectToId.get(object);
@@ -759,7 +768,8 @@ class InspectorContext {
     const value = completion instanceof ThrowCompletion ? completion.Value : completion;
     const stack = getHostDefinedErrorStack(value);
     const frames = stack?.map(call => call.toCallFrame()).filter(Boolean) || [];
-    const exceptionId = Math.random();
+    const exceptionId = this.#objectCounter;
+    this.#objectCounter += 1;
     this.#exceptionMap.set(value, exceptionId);
     return {
       text: isPromise ? 'Uncaught (in promise)' : 'Uncaught',
@@ -823,6 +833,7 @@ class InspectorContext {
       };
     }).filter(Boolean);
   }
+  evaluateMode = 'script';
 }
 function HostGetThisEnvironment(env) {
   while (!(env instanceof NullValue)) {
@@ -896,7 +907,6 @@ function getParsedEvent(source, id, executionContextId) {
   };
 }
 
-let evalMode = 'console';
 const Debugger = {
   enable(_req, {
     onDebuggerAttached
@@ -958,13 +968,19 @@ const Debugger = {
     });
   },
   evaluateOnCallFrame(req, context) {
-    return evaluate(context.context.getRealm(undefined).descriptor.uniqueId, req, context);
+    return evaluate({
+      ...req,
+      uniqueContextId: context.context.getRealm(undefined).descriptor.uniqueId,
+      evalMode: context.context.evaluateMode
+    }, context);
   },
   engine262_setEvaluateMode({
     mode
+  }, {
+    context
   }) {
     if (mode === 'module' || mode === 'script' || mode === 'console') {
-      evalMode = mode;
+      context.evaluateMode = mode;
     }
   },
   engine262_setFeatures() {
@@ -982,9 +998,15 @@ const Runtime = {
     sendEvent
   }) {
     let parsed;
-    const realm = context.getRealm(options.executionContextId);
-    realm?.realm.scope(() => {
-      if (evalMode === 'module') {
+    let realm = context.getRealm(options.executionContextId);
+    if (!realm && !options.persistScript) {
+      realm = context.getAnyRealm();
+    }
+    if (!realm) {
+      return unsupportedError;
+    }
+    realm.realm.scope(() => {
+      if (context.evaluateMode === 'module') {
         parsed = ParseModule(options.expression, realm.realm, {
           specifier: options.sourceURL,
           doNotTrackScriptId: !options.persistScript
@@ -999,6 +1021,9 @@ const Runtime = {
         });
       }
     });
+    if (!parsed) {
+      throw new Error('No parsed result');
+    }
     if (Array.isArray(parsed)) {
       const e = context.createExceptionDetails(ThrowCompletion(parsed[0]), false);
       // Note: it has to be this message to trigger devtools' line wrap.
@@ -1073,8 +1098,12 @@ const Runtime = {
       return completion.Value;
     });
   },
-  evaluate(options, _context) {
-    return evaluate(options.uniqueContextId, options, _context);
+  evaluate(options, context) {
+    return evaluate({
+      ...options,
+      evalMode: context.context.evaluateMode,
+      uniqueContextId: options.uniqueContextId
+    }, context);
   },
   getExceptionDetails(req, {
     context
@@ -1162,16 +1191,15 @@ const unsupportedError = {
     exceptionId: 0
   }
 };
-function evaluate(uniqueContextId, options, _context) {
+function evaluate(options, _context) {
   const {
-    context,
-    preference
+    context
   } = _context;
   const isPreview = options.throwOnSideEffect;
-  if (options.awaitPromise || !preference.preview && isPreview) {
+  if (options.awaitPromise) {
     return unsupportedError;
   }
-  const realm = context.getRealm(uniqueContextId);
+  const realm = context.getRealm(options.uniqueContextId);
   if (!realm) {
     return unsupportedError;
   }
@@ -1195,13 +1223,13 @@ function evaluate(uniqueContextId, options, _context) {
   }
   const promise = new Promise(resolve => {
     let toBeEvaluated;
-    if (isPreview || evalMode === 'console' || isCallOnFrame) {
+    if (isPreview || options.evalMode === 'console' || isCallOnFrame) {
       toBeEvaluated = performDevtoolsEval(options.expression, realm.realm, false, !!(isPreview || isCallOnFrame));
     } else {
       let parsed;
-      const realm = context.getRealm(uniqueContextId);
+      const realm = context.getRealm(options.uniqueContextId);
       realm?.realm.scope(() => {
-        if (evalMode === 'module') {
+        if (options.evalMode === 'module') {
           parsed = ParseModule(options.expression, realm.realm);
         } else {
           parsed = ParseScript(options.expression, realm.realm);
@@ -1345,7 +1373,6 @@ class Inspector {
     this.#context.detachAgent(agent);
   }
   preference = {
-    preview: false,
     previewDebug: false
   };
   onMessage(id, methodArg, params) {
