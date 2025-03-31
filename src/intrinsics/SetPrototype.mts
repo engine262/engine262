@@ -21,14 +21,13 @@ import {
   ObjectValue,
   type Arguments,
   type FunctionCallContext,
-} from '../value.mjs';
+} from '../value.mts';
 import {
   EnsureCompletion, Q, X, type ValueCompletion, type ValueEvaluator,
-} from '../completion.mjs';
-import { R as MathematicalValue } from '../abstract-ops/all.mjs';
+} from '../completion.mts';
 import { __ts_cast__ } from '../helpers.mts';
-import { bootstrapPrototype } from './bootstrap.mjs';
-import { CreateSetIterator } from './SetIteratorPrototype.mjs';
+import { bootstrapPrototype } from './bootstrap.mts';
+import { CreateSetIterator } from './SetIteratorPrototype.mts';
 import type { SetObject } from './Set.mts';
 import type {
   IteratorRecord, Mutable, PlainEvaluator,
@@ -217,7 +216,7 @@ function* SetProto_union([other = Value.undefined]: Arguments, { thisValue }: Fu
       let nextValue = Q(yield* IteratorValue(next));
 
       // ii. If nextValue is -0𝔽, set nextValue to +0𝔽.
-      if (nextValue instanceof NumberValue && Object.is(MathematicalValue(nextValue), -0)) {
+      if (nextValue instanceof NumberValue && Object.is(R(nextValue), -0)) {
         nextValue = F(+0);
       }
 
