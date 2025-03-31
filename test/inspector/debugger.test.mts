@@ -426,10 +426,6 @@ test('evaluate on frame', async () => {
                 "type": "string",
                 "value": "'a' is not defined",
               },
-              {
-                "name": "stack",
-                "type": "accessor",
-              },
             ],
             "subtype": "error",
             "type": "object",
@@ -439,10 +435,27 @@ test('evaluate on frame', async () => {
         },
         "exceptionId": 4,
         "lineNumber": 0,
-        "scriptId": undefined,
-        "stackTrace": undefined,
+        "scriptId": "0",
+        "stackTrace": {
+          "callFrames": [
+            {
+              "columnNumber": 0,
+              "functionName": "<anonymous>",
+              "lineNumber": 0,
+              "scriptId": "0",
+              "url": "<anonymous>",
+            },
+            {
+              "columnNumber": 4,
+              "functionName": "<anonymous>",
+              "lineNumber": 10,
+              "scriptId": "0",
+              "url": "<anonymous>",
+            },
+          ],
+        },
         "text": "Uncaught",
-        "url": undefined,
+        "url": "<anonymous>",
       },
       "result": {
         "className": "SyntaxError",
@@ -461,10 +474,6 @@ test('evaluate on frame', async () => {
               "name": "message",
               "type": "string",
               "value": "'a' is not defined",
-            },
-            {
-              "name": "stack",
-              "type": "accessor",
             },
           ],
           "subtype": "error",

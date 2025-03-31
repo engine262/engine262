@@ -40,7 +40,11 @@ test('compile script (for invalid code break line)', async () => {
               },
               {
                 "name": "stack",
-                "type": "accessor",
+                "type": "string",
+                "value": "
+    function f() {
+                  ^
+    SyntaxError: Unexpected end of source",
               },
             ],
             "subtype": "error",
@@ -52,7 +56,9 @@ test('compile script (for invalid code break line)', async () => {
         "exceptionId": 1,
         "lineNumber": 0,
         "scriptId": undefined,
-        "stackTrace": undefined,
+        "stackTrace": {
+          "callFrames": [],
+        },
         "text": "Uncaught",
         "url": undefined,
       },

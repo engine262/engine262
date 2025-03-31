@@ -302,21 +302,17 @@ exports[`date > new Date(NaN) 1`] = `
 exports[`error > new (class MyError extends Error { constructor() { super(); this.message = "hello" } })() 1`] = `
 {
   "className": "SyntaxError",
-  "description": "Error: hello
+  "description": "Error
     at new MyError (<anonymous>:1:52)
     at <anonymous>:1:28",
   "objectId": "default:6",
   "preview": {
-    "description": "Error: hello
+    "description": "Error
     at new MyError (<anonymous>:1:52)
     at <anonymous>:1:28",
     "entries": undefined,
     "overflow": false,
     "properties": [
-      {
-        "name": "stack",
-        "type": "accessor",
-      },
       {
         "name": "message",
         "type": "string",
@@ -344,12 +340,7 @@ exports[`error > new (class MyError extends Error {})() 1`] = `
     at <anonymous>:1:28",
     "entries": undefined,
     "overflow": false,
-    "properties": [
-      {
-        "name": "stack",
-        "type": "accessor",
-      },
-    ],
+    "properties": [],
     "subtype": "error",
     "type": "object",
   },
@@ -374,10 +365,6 @@ exports[`error > new Error("message") 1`] = `
         "name": "message",
         "type": "string",
         "value": "message",
-      },
-      {
-        "name": "stack",
-        "type": "accessor",
       },
     ],
     "subtype": "error",
@@ -412,10 +399,6 @@ exports[`error > new Error("message", { cause: new Error("cause") }) 1`] = `
         "value": "Error: cause
     at <anonymous>:1:41",
       },
-      {
-        "name": "stack",
-        "type": "accessor",
-      },
     ],
     "subtype": "error",
     "type": "object",
@@ -436,12 +419,7 @@ exports[`error > new Error() 1`] = `
     at <anonymous>:1:5",
     "entries": undefined,
     "overflow": false,
-    "properties": [
-      {
-        "name": "stack",
-        "type": "accessor",
-      },
-    ],
+    "properties": [],
     "subtype": "error",
     "type": "object",
   },
@@ -461,12 +439,7 @@ exports[`error > new RangeError() 1`] = `
     at <anonymous>:1:5",
     "entries": undefined,
     "overflow": false,
-    "properties": [
-      {
-        "name": "stack",
-        "type": "accessor",
-      },
-    ],
+    "properties": [],
     "subtype": "error",
     "type": "object",
   },
@@ -637,10 +610,6 @@ exports[`functions > class C { constructor() {}; #f }; C.prototype.constructor 1
             "type": "string",
             "value": "'C' is already declared",
           },
-          {
-            "name": "stack",
-            "type": "accessor",
-          },
         ],
         "subtype": "error",
         "type": "object",
@@ -650,10 +619,20 @@ exports[`functions > class C { constructor() {}; #f }; C.prototype.constructor 1
     },
     "exceptionId": 26,
     "lineNumber": 0,
-    "scriptId": undefined,
-    "stackTrace": undefined,
+    "scriptId": "25",
+    "stackTrace": {
+      "callFrames": [
+        {
+          "columnNumber": 0,
+          "functionName": "<anonymous>",
+          "lineNumber": 0,
+          "scriptId": "25",
+          "url": "<anonymous>",
+        },
+      ],
+    },
     "text": "Uncaught",
-    "url": undefined,
+    "url": "<anonymous>",
   },
   "result": {
     "className": "SyntaxError",
@@ -670,10 +649,6 @@ exports[`functions > class C { constructor() {}; #f }; C.prototype.constructor 1
           "name": "message",
           "type": "string",
           "value": "'C' is already declared",
-        },
-        {
-          "name": "stack",
-          "type": "accessor",
         },
       ],
       "subtype": "error",
