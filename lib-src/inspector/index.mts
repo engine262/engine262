@@ -67,7 +67,7 @@ export abstract class Inspector {
 
   protected abstract send(data: object): void;
 
-  readonly preference: DebuggerPreference = { preview: false, previewDebug: false };
+  readonly preference: DebuggerPreference = { previewDebug: false };
 
   protected onMessage(id: unknown, methodArg: string, params: unknown): void {
     if (ignoreMethods.includes(methodArg)) {

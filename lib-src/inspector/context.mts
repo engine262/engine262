@@ -131,7 +131,7 @@ export class InspectorContext {
 
   #objectToId = new Map<ObjectValue | SymbolValue, string>();
 
-  #objectCounter = 0;
+  #objectCounter = 1;
 
   #internObject(object: ObjectValue | SymbolValue, group = 'default') {
     if (this.#objectToId.has(object)) {
@@ -290,7 +290,8 @@ export class InspectorContext {
     const value = completion instanceof ThrowCompletion ? completion.Value : completion;
     const stack = getHostDefinedErrorStack(value);
     const frames: Protocol.Runtime.CallFrame[] = stack?.map((call) => call.toCallFrame()!).filter(Boolean) || [];
-    const exceptionId = Math.random();
+    const exceptionId = this.#objectCounter;
+    this.#objectCounter += 1;
     this.#exceptionMap.set(value, exceptionId);
     return {
       text: isPromise ? 'Uncaught (in promise)' : 'Uncaught',
@@ -351,6 +352,8 @@ export class InspectorContext {
       };
     }).filter(Boolean);
   }
+
+  evaluateMode: 'script' | 'module' | 'console' = 'script';
 }
 
 function HostGetThisEnvironment(env: EnvironmentRecord | NullValue): Value {
