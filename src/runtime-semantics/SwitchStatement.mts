@@ -1,9 +1,10 @@
-// @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import { NewDeclarativeEnvironment } from '../environment.mjs';
-import { Assert, GetValue, StrictEqualityComparison } from '../abstract-ops/all.mjs';
-import { Value } from '../value.mjs';
+import { surroundingAgent } from '../host-defined/engine.mts';
+import { Evaluate, type StatementEvaluator, type ValueEvaluator } from '../evaluator.mts';
+import { DeclarativeEnvironmentRecord } from '../environment.mts';
+import { Assert, GetValue, IsStrictlyEqual } from '../abstract-ops/all.mts';
+import {
+  BooleanValue, ReferenceRecord, Value,
+} from '../value.mts';
 import {
   Completion,
   AbruptCompletion,
@@ -11,31 +12,32 @@ import {
   EnsureCompletion,
   UpdateEmpty,
   Q,
-} from '../completion.mjs';
-import { OutOfRange } from '../helpers.mjs';
+} from '../completion.mts';
+import { OutOfRange } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 import {
   BlockDeclarationInstantiation,
   Evaluate_StatementList,
-} from './all.mjs';
+} from './all.mts';
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-caseclauseisselected */
-function* CaseClauseIsSelected(C, input) {
+/** https://tc39.es/ecma262/#sec-runtime-semantics-caseclauseisselected */
+function* CaseClauseIsSelected(C: ParseNode.CaseClause, input: Value): ValueEvaluator<BooleanValue> {
   // 1. Assert: C is an instance of the production  CaseClause : `case` Expression `:` StatementList?.
   Assert(C.type === 'CaseClause');
   // 2. Let exprRef be the result of evaluating the Expression of C.
   const exprRef = yield* Evaluate(C.Expression);
   // 3. Let clauseSelector be ? GetValue(exprRef).
-  const clauseSelector = Q(GetValue(exprRef));
+  const clauseSelector = Q(yield* GetValue(exprRef));
   // 4. Return the result of performing Strict Equality Comparison input === clauseSelector.
-  return StrictEqualityComparison(input, clauseSelector);
+  return IsStrictlyEqual(input, clauseSelector);
 }
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-caseblockevaluation */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-caseblockevaluation */
 //   CaseBlock :
 //     `{` `}`
 //     `{` CaseClauses `}`
 //     `{` CaseClauses? DefaultClause CaseClauses? `}`
-function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, input) {
+function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }: ParseNode.CaseBlock, input: Value): StatementEvaluator {
   switch (true) {
     case !CaseClauses_a && !DefaultClause && !CaseClauses_b: {
       // 1. Return NormalCompletion(undefined).
@@ -43,11 +45,11 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, i
     }
     case !!CaseClauses_a && !DefaultClause && !CaseClauses_b: {
       // 1. Let V be undefined.
-      let V = Value.undefined;
+      let V: Value = Value.undefined;
       // 2. Let A be the List of CaseClause items in CaseClauses, in source text order.
       const A = CaseClauses_a;
       // 3. Let found be false.
-      let found = Value.false;
+      let found: BooleanValue = Value.false;
       // 4. For each CaseClause C in A, do
       for (const C of A) {
         // a. If found is false, then
@@ -61,7 +63,7 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, i
           const R = EnsureCompletion(yield* Evaluate(C));
           // ii. If R.[[Value]] is not empty, set V to R.[[Value]].
           if (R.Value !== undefined) {
-            V = R.Value;
+            V = R.Value as Value;
           }
           // iii. If R is an abrupt completion, return Completion(UpdateEmpty(R, V)).
           if (R instanceof AbruptCompletion) {
@@ -74,7 +76,7 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, i
     }
     case !!DefaultClause: {
       // 1. Let V be undefined.
-      let V = Value.undefined;
+      let V: Value | ReferenceRecord = Value.undefined;
       // 2. If the first CaseClauses is present, then
       let A;
       if (CaseClauses_a) {
@@ -84,7 +86,7 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, i
         // a. Let A be « ».
         A = [];
       }
-      let found = Value.false;
+      let found: BooleanValue = Value.false;
       // 4. For each CaseClause C in A, do
       for (const C of A) {
         // a. If found is false, then
@@ -107,7 +109,7 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, i
         }
       }
       // 6. Let foundInB be false.
-      let foundInB = Value.false;
+      let foundInB: BooleanValue = Value.false;
       // 7. If the second CaseClauses is present, then
       let B;
       if (CaseClauses_b) {
@@ -143,13 +145,13 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, i
       }
       // 10. If foundInB is true, return NormalCompletion(V).
       if (foundInB === Value.true) {
-        return NormalCompletion(V);
+        return NormalCompletion(V as Value);
       }
       // 11. Let R be the result of evaluating DefaultClause.
       const R = EnsureCompletion(yield* Evaluate(DefaultClause));
       // 12. If R.[[Value]] is not empty, set V to R.[[Value]].
       if (R.Value !== undefined) {
-        V = R.Value;
+        V = R.Value as Value;
       }
       // 13. If R is an abrupt completion, return Completion(UpdateEmpty(R, V)).
       if (R instanceof AbruptCompletion) {
@@ -171,27 +173,27 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }, i
       }
       // 16. Return NormalCompletion(V).
       //
-      return NormalCompletion(V);
+      return NormalCompletion(V as Value);
     }
     default:
-      throw new OutOfRange('CaseBlockEvaluation');
+      throw new OutOfRange('CaseBlockEvaluation', '');
   }
 }
 
-/** http://tc39.es/ecma262/#sec-switch-statement-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-switch-statement-runtime-semantics-evaluation */
 //   SwitchStatement :
 //     `switch` `(` Expression `)` CaseBlock
-export function* Evaluate_SwitchStatement({ Expression, CaseBlock }) {
+export function* Evaluate_SwitchStatement({ Expression, CaseBlock }: ParseNode.SwitchStatement): StatementEvaluator {
   // 1. Let exprRef be the result of evaluating Expression.
   const exprRef = yield* Evaluate(Expression);
   // 2. Let switchValue be ? GetValue(exprRef).
-  const switchValue = Q(GetValue(exprRef));
+  const switchValue = Q(yield* GetValue(exprRef));
   // 3. Let oldEnv be the running execution context's LexicalEnvironment.
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 4. Let blockEnv be NewDeclarativeEnvironment(oldEnv).
-  const blockEnv = NewDeclarativeEnvironment(oldEnv);
+  const blockEnv = new DeclarativeEnvironmentRecord(oldEnv);
   // 5. Perform BlockDeclarationInstantiation(CaseBlock, blockEnv).
-  BlockDeclarationInstantiation(CaseBlock, blockEnv);
+  yield* BlockDeclarationInstantiation(CaseBlock, blockEnv);
   // 6. Set the running execution context's LexicalEnvironment to blockEnv.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = blockEnv;
   // 7. Let R be CaseBlockEvaluation of CaseBlock with argument switchValue.
@@ -202,14 +204,14 @@ export function* Evaluate_SwitchStatement({ Expression, CaseBlock }) {
   return R;
 }
 
-/** http://tc39.es/ecma262/#sec-switch-statement-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-switch-statement-runtime-semantics-evaluation */
 //   CaseClause :
 //     `case` Expression `:`
 //     `case` Expression `:` StatementList
 //   DefaultClause :
 //     `case` `default` `:`
 //     `case` `default` `:` StatementList
-export function* Evaluate_CaseClause({ StatementList }) {
+export function* Evaluate_CaseClause({ StatementList }: ParseNode.CaseClause | ParseNode.DefaultClause) {
   if (!StatementList) {
     // 1. Return NormalCompletion(empty).
     return NormalCompletion(undefined);

@@ -1,17 +1,20 @@
-// @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Value } from '../value.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import { StringValue, NumericValue } from '../static-semantics/all.mjs';
+import { surroundingAgent } from '../host-defined/engine.mts';
+import { Value } from '../value.mts';
+import { Evaluate } from '../evaluator.mts';
+import { StringValue, NumericValue } from '../static-semantics/all.mts';
 import {
   Assert,
   ToString,
   GetValue,
   ToPropertyKey,
-} from '../abstract-ops/all.mjs';
-import { Q, X } from '../completion.mjs';
+} from '../abstract-ops/all.mts';
+import { Q, X } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import type {
+  PlainEvaluator, PrivateEnvironmentRecord, PrivateName, PropertyKeyValue,
+} from '#self';
 
-/** http://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-object-initializer-runtime-semantics-evaluation */
 // PropertyName :
 //   LiteralPropertyName
 //   ComputedPropertyName
@@ -21,12 +24,12 @@ import { Q, X } from '../completion.mjs';
 //   NumericLiteral
 // ComputedPropertyName :
 //   `[` AssignmentExpression `]`
-export function* Evaluate_PropertyName(PropertyName) {
+export function* Evaluate_PropertyName(PropertyName: ParseNode.PropertyNameLike | ParseNode.PrivateIdentifier): PlainEvaluator<PropertyKeyValue | PrivateName> {
   switch (PropertyName.type) {
     case 'IdentifierName':
       return StringValue(PropertyName);
     case 'StringLiteral':
-      return new Value(PropertyName.value);
+      return Value(PropertyName.value);
     case 'NumericLiteral': {
       // 1. Let nbr be the NumericValue of NumericLiteral.
       const nbr = NumericValue(PropertyName);
@@ -39,11 +42,11 @@ export function* Evaluate_PropertyName(PropertyName) {
       // 2. Let privateEnvRec be the running execution context's PrivateEnvironment.
       const privateEnvRec = surroundingAgent.runningExecutionContext.PrivateEnvironment;
       // 3. Let names be privateEnvRec.[[Names]].
-      const names = privateEnvRec.Names;
+      const names = (privateEnvRec as PrivateEnvironmentRecord).Names;
       // 4. Assert: Exactly one element of names is a Private Name whose [[Description]] is privateIdentifier.
       // 5. Let privateName be the Private Name in names whose [[Description]] is privateIdentifier.
       const privateName = names.find((n) => n.Description.stringValue() === privateIdentifier.stringValue());
-      Assert(privateName);
+      Assert(!!privateName);
       // 6. Return privateName.
       return privateName;
     }
@@ -51,9 +54,9 @@ export function* Evaluate_PropertyName(PropertyName) {
       // 1. Let exprValue be the result of evaluating AssignmentExpression.
       const exprValue = yield* Evaluate(PropertyName.ComputedPropertyName);
       // 2. Let propName be ? GetValue(exprValue).
-      const propName = Q(GetValue(exprValue));
+      const propName = Q(yield* GetValue(exprValue));
       // 3. Return ? ToPropertyKey(propName).
-      return Q(ToPropertyKey(propName));
+      return Q(yield* ToPropertyKey(propName));
     }
   }
 }

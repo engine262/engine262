@@ -1,11 +1,11 @@
-// @ts-nocheck
-import { NormalCompletion } from '../completion.mjs';
+import { NormalCompletion } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
-/** http://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluation */
 // FunctionDeclaration :
 //   function BindingIdentifier ( FormalParameters ) { FunctionBody }
 //   function ( FormalParameters ) { FunctionBody }
-export function Evaluate_FunctionDeclaration(_FunctionDeclaration) {
+export function Evaluate_FunctionDeclaration(_FunctionDeclaration: ParseNode.FunctionDeclaration) {
   // 1. Return NormalCompletion(empty).
   return NormalCompletion(undefined);
 }

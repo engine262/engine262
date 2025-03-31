@@ -1,63 +1,64 @@
-// @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Descriptor,
   Value,
   NumberValue,
-} from '../value.mjs';
+  type Arguments,
+} from '../value.mts';
 import {
   CreateBuiltinFunction,
   ToNumber,
-  F,
-} from '../abstract-ops/all.mjs';
-import { Q, X } from '../completion.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+  F, R,
+  Realm,
+} from '../abstract-ops/all.mts';
+import { Q, X, type ValueEvaluator } from '../completion.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 
-/** http://tc39.es/ecma262/#sec-math.abs */
-function Math_abs([x = Value.undefined]) {
-  const n = Q(ToNumber(x));
+/** https://tc39.es/ecma262/#sec-math.abs */
+function* Math_abs([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
   if (n.isNaN()) {
     return n;
-  } else if (Object.is(n.numberValue(), -0)) {
+  } else if (Object.is(R(n), -0)) {
     return F(+0);
   } else if (n.isInfinity()) {
     return F(Infinity);
   }
 
-  if (n.numberValue() < 0) {
-    return F(-n.numberValue());
+  if (R(n) < 0) {
+    return F(-R(n));
   }
   return n;
 }
 
-/** http://tc39.es/ecma262/#sec-math.acos */
-function Math_acos([x = Value.undefined]) {
-  const n = Q(ToNumber(x));
+/** https://tc39.es/ecma262/#sec-math.acos */
+function* Math_acos([x = Value.undefined]: Arguments): ValueEvaluator {
+  const n = Q(yield* ToNumber(x));
   if (n.isNaN()) {
     return n;
-  } else if (n.numberValue() > 1) {
+  } else if (R(n) > 1) {
     return F(NaN);
-  } else if (n.numberValue() < -1) {
+  } else if (R(n) < -1) {
     return F(NaN);
-  } else if (n.numberValue() === 1) {
+  } else if (R(n) === 1) {
     return F(+0);
   }
 
-  return F(Math.acos(n.numberValue()));
+  return F(Math.acos(R(n)));
 }
 
-/** http://tc39.es/ecma262/#sec-math.pow */
-function Math_pow([base = Value.undefined, exponent = Value.undefined]) {
+/** https://tc39.es/ecma262/#sec-math.pow */
+function* Math_pow([base = Value.undefined, exponent = Value.undefined]: Arguments): ValueEvaluator {
   // 1. Set base to ? ToNumber(base).
-  base = Q(ToNumber(base));
+  base = Q(yield* ToNumber(base));
   // 2. Set exponent to ? ToNumber(exponent).
-  exponent = Q(ToNumber(exponent));
+  exponent = Q(yield* ToNumber(exponent));
   // 3. Return ! Number::exponentiate(base, exponent).
   return X(NumberValue.exponentiate(base, exponent));
 }
 
 /** @param {bigint} h */
-function fmix64(h) {
+function fmix64(h: bigint) {
   h ^= h >> 33n;
   h *= 0xFF51AFD7ED558CCDn;
   h ^= h >> 33n;
@@ -68,7 +69,7 @@ function fmix64(h) {
 
 const floatView = new Float64Array(1);
 const big64View = new BigUint64Array(floatView.buffer);
-/** http://tc39.es/ecma262/#sec-math.random */
+/** https://tc39.es/ecma262/#sec-math.random */
 function Math_random() {
   const realm = surroundingAgent.currentRealmRecord;
   if (realm.randomState === undefined) {
@@ -98,33 +99,30 @@ function Math_random() {
   return F(result);
 }
 
-/** http://tc39.es/ecma262/#sec-math-object */
-export function bootstrapMath(realmRec) {
-  /** http://tc39.es/ecma262/#sec-value-properties-of-the-math-object */
+/** https://tc39.es/ecma262/#sec-math-object */
+export function bootstrapMath(realmRec: Realm) {
+  /** https://tc39.es/ecma262/#sec-value-properties-of-the-math-object */
   const readonly = { Writable: Value.false, Configurable: Value.false };
-  const valueProps = [
-    ['E', 2.718281828459045],
-    ['LN10', 2.302585092994046],
-    ['LN2', 0.6931471805599453],
-    ['LOG10E', 0.4342944819032518],
-    ['LOG2E', 1.4426950408889634],
-    ['PI', 3.141592653589793],
-    ['SQRT1_2', 0.7071067811865476],
-    ['SQRT2', 1.4142135623730951],
-  ].map(([name, value]) => [name, F(value), undefined, readonly]);
-  // @@toStringTag is handled in the bootstrapPrototype() call.
 
+  // @@toStringTag is handled in the bootstrapPrototype() call.
   const mathObj = bootstrapPrototype(realmRec, [
-    ...valueProps,
+    ['E', F(2.718281828459045), undefined, readonly],
+    ['LN10', F(2.302585092994046), undefined, readonly],
+    ['LN2', F(0.6931471805599453), undefined, readonly],
+    ['LOG10E', F(0.4342944819032518), undefined, readonly],
+    ['LOG2E', F(1.4426950408889634), undefined, readonly],
+    ['PI', F(3.141592653589793), undefined, readonly],
+    ['SQRT1_2', F(0.7071067811865476), undefined, readonly],
+    ['SQRT2', F(1.4142135623730951), undefined, readonly],
     ['abs', Math_abs, 1],
     ['acos', Math_acos, 1],
     ['pow', Math_pow, 2],
     ['random', Math_random, 0],
   ], realmRec.Intrinsics['%Object.prototype%'], 'Math');
 
-  /** http://tc39.es/ecma262/#sec-function-properties-of-the-math-object */
+  /** https://tc39.es/ecma262/#sec-function-properties-of-the-math-object */
 
-  [
+  ([
     ['acosh', 1],
     ['asin', 1],
     ['asinh', 1],
@@ -156,22 +154,24 @@ export function bootstrapMath(realmRec) {
     ['tan', 1],
     ['tanh', 1],
     ['trunc', 1],
-  ].forEach(([name, length]) => {
+  ] as const).forEach(([name, length]) => {
     // TODO(18): Math
-    /** http://tc39.es/ecma262/#sec-function-properties-of-the-math-object */
-    const method = (args) => {
+    /** https://tc39.es/ecma262/#sec-function-properties-of-the-math-object */
+    const method = function* method(args: Arguments): ValueEvaluator {
+      const nextArgs: number[] = [];
       for (let i = 0; i < args.length; i += 1) {
-        args[i] = Q(ToNumber(args[i])).numberValue();
+        nextArgs[i] = R(Q(yield* ToNumber(args[i])));
       }
-      return F(Math[name](...args));
+      // we're calling host Math functions here.
+      return F((Math[name] as (...args: unknown[]) => number)(...nextArgs));
     };
-    const func = CreateBuiltinFunction(method, length, new Value(name), [], realmRec);
-    mathObj.DefineOwnProperty(new Value(name), Descriptor({
+    const func = CreateBuiltinFunction(method, length, Value(name), [], realmRec);
+    X(mathObj.DefineOwnProperty(Value(name), Descriptor({
       Value: func,
       Writable: Value.true,
       Enumerable: Value.false,
       Configurable: Value.true,
-    }));
+    })));
   });
 
   realmRec.Intrinsics['%Math%'] = mathObj;

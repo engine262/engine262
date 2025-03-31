@@ -1,27 +1,31 @@
-// @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { ObjectValue } from '../value.mjs';
+import {
+  ThrowCompletion, type Completion, type Value,
+} from '../index.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { ObjectValue } from '../value.mts';
 
 class AssertError extends Error {}
-
-export function Assert(invariant, source) {
+export function Assert(invariant: boolean, source?: string, completion?: Completion<unknown>): asserts invariant {
   /* c8 ignore next */
   if (!invariant) {
-    throw new AssertError(source);
+    throw new AssertError(source, { cause: completion });
   }
 }
+Assert.Error = AssertError;
 
-/** http://tc39.es/ecma262/#sec-requireinternalslot */
-export function RequireInternalSlot(O, internalSlot) {
+/** https://tc39.es/ecma262/#sec-requireinternalslot */
+export function RequireInternalSlot(O: Value, internalSlot: string): ThrowCompletion | undefined {
   if (!(O instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
   }
   if (!(internalSlot in O)) {
     return surroundingAgent.Throw('TypeError', 'InternalSlotMissing', O, internalSlot);
   }
+  return undefined;
 }
 
-export function sourceTextMatchedBy(node) {
+export function sourceTextMatchedBy(node: ParseNode) {
   return node.sourceText();
 }
 
@@ -46,6 +50,6 @@ export function sourceTextMatchedBy(node) {
 //  - Function code that is supplied as the arguments to the built-in Function, Generator, AsyncFunction, and
 //    AsyncGenerator constructors is strict mode code if the last argument is a String that when processed is a
 //    FunctionBody that begins with a Directive Prologue that contains a Use Strict Directive.
-export function isStrictModeCode(node) {
+export function isStrictModeCode(node: ParseNode) {
   return node.strict;
 }

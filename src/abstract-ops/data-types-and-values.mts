@@ -1,44 +1,43 @@
-// @ts-nocheck
-import { JSStringValue, Value } from '../value.mjs';
-import { X } from '../completion.mjs';
-import { CanonicalNumericIndexString } from './all.mjs';
+import { JSStringValue, UndefinedValue, Value } from '../value.mts';
+import { X } from '../completion.mts';
+import { CanonicalNumericIndexString, R } from './all.mts';
 
 // This file covers predicates defined in
-/** http://tc39.es/ecma262/#sec-ecmascript-data-types-and-values */
+/** https://tc39.es/ecma262/#sec-ecmascript-data-types-and-values */
 
 // 6.1.7 #integer-index
-export function isIntegerIndex(V) {
+export function isIntegerIndex(V: Value) {
   if (!(V instanceof JSStringValue)) {
     return false;
   }
   const numeric = X(CanonicalNumericIndexString(V));
-  if (numeric === Value.undefined) {
+  if (numeric instanceof UndefinedValue) {
     return false;
   }
-  if (Object.is(numeric.numberValue(), +0)) {
+  if (Object.is(R(numeric), +0)) {
     return true;
   }
-  return numeric.numberValue() > 0 && Number.isSafeInteger(numeric.numberValue());
+  return R(numeric) > 0 && Number.isSafeInteger(R(numeric));
 }
 
 // 6.1.7 #array-index
-export function isArrayIndex(V) {
+export function isArrayIndex(V: Value) {
   if (!(V instanceof JSStringValue)) {
     return false;
   }
   const numeric = X(CanonicalNumericIndexString(V));
-  if (numeric === Value.undefined) {
+  if (numeric instanceof UndefinedValue) {
     return false;
   }
-  if (!Number.isInteger(numeric.numberValue())) {
+  if (!Number.isInteger(R(numeric))) {
     return false;
   }
-  if (Object.is(numeric.numberValue(), +0)) {
+  if (Object.is(R(numeric), +0)) {
     return true;
   }
-  return numeric.numberValue() > 0 && numeric.numberValue() < (2 ** 32) - 1;
+  return R(numeric) > 0 && R(numeric) < (2 ** 32) - 1;
 }
 
-export function isNonNegativeInteger(argument) {
+export function isNonNegativeInteger(argument: number) {
   return Number.isInteger(argument) && argument >= 0;
 }

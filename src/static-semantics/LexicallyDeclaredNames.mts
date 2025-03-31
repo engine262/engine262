@@ -1,9 +1,10 @@
-// @ts-nocheck
+import type { ParseNode } from '../parser/ParseNode.mts';
+import type { JSStringValue } from '../value.mts';
 import {
   TopLevelLexicallyDeclaredNames,
-} from './all.mjs';
+} from './all.mts';
 
-export function LexicallyDeclaredNames(node) {
+export function LexicallyDeclaredNames(node: ParseNode): JSStringValue[] {
   switch (node.type) {
     case 'Script':
       if (node.ScriptBody) {
@@ -14,7 +15,7 @@ export function LexicallyDeclaredNames(node) {
       return TopLevelLexicallyDeclaredNames(node.StatementList);
     case 'FunctionBody':
     case 'GeneratorBody':
-    case 'AsyncFunctionBody':
+    case 'AsyncBody':
     case 'AsyncGeneratorBody':
       return TopLevelLexicallyDeclaredNames(node.FunctionStatementList);
     case 'ClassStaticBlockBody':

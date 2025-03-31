@@ -1,27 +1,27 @@
-// @ts-nocheck
-import { Evaluate } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mts';
 import {
   GetValue,
   ToBoolean,
-} from '../abstract-ops/all.mjs';
+} from '../abstract-ops/all.mts';
 import {
   Completion,
   EnsureCompletion,
   NormalCompletion,
   Q,
   UpdateEmpty,
-} from '../completion.mjs';
-import { Value } from '../value.mjs';
+} from '../completion.mts';
+import { Value } from '../value.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
-/** http://tc39.es/ecma262/#sec-if-statement-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-if-statement-runtime-semantics-evaluation */
 // IfStatement :
 //   `if` `(` Expression `)` Statement `else` Statement
 //   `if` `(` Expression `)` Statement
-export function* Evaluate_IfStatement({ Expression, Statement_a, Statement_b }) {
+export function* Evaluate_IfStatement({ Expression, Statement_a, Statement_b }: ParseNode.IfStatement) {
   // 1. Let exprRef be the result of evaluating Expression.
   const exprRef = yield* Evaluate(Expression);
   // 2. Let exprValue be ! ToBoolean(? GetValue(exprRef)).
-  const exprValue = ToBoolean(Q(GetValue(exprRef)));
+  const exprValue = ToBoolean(Q(yield* GetValue(exprRef)));
   if (Statement_b) {
     let stmtCompletion;
     // 3. If exprValue is true, then

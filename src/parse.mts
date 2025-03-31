@@ -1,34 +1,41 @@
-// @ts-nocheck
-import { Parser } from './parser/Parser.mjs';
-import { RegExpParser } from './parser/RegExpParser.mjs';
-import { surroundingAgent } from './engine.mjs';
-import { SourceTextModuleRecord } from './modules.mjs';
-import { Value } from './value.mjs';
+import { Parser, type ParserOptions } from './parser/Parser.mts';
+import { RegExpParser, type RegExpParserContext } from './parser/RegExpParser.mts';
+import { surroundingAgent, type GCMarker } from './host-defined/engine.mts';
+import { SourceTextModuleRecord, SyntheticModuleRecord, type ModuleRecordHostDefined } from './modules.mts';
+import { JSStringValue, ObjectValue, Value } from './value.mts';
 import {
   Get,
   Set,
   Call,
   CreateDefaultExportSyntheticModule,
-} from './abstract-ops/all.mjs';
-import { Q, X } from './completion.mjs';
+  Realm,
+  type BuiltinFunctionObject,
+  type LoadedModuleRequestRecord,
+} from './abstract-ops/all.mts';
+import { Q, X, type PlainCompletion } from './completion.mts';
 import {
   ModuleRequests,
   ImportEntries,
   ExportEntries,
   ImportedLocalNames,
-} from './static-semantics/all.mjs';
-import { ValueSet, kInternal } from './helpers.mjs';
+} from './static-semantics/all.mts';
+import {
+  isArray, JSStringSet, kInternal, skipDebugger, type Mutable,
+} from './helpers.mts';
+import type { ParseNode } from './parser/ParseNode.mts';
 
 export { Parser, RegExpParser };
 
-function handleError(e) {
-  if (e.name === 'SyntaxError') {
-    const v = surroundingAgent.Throw('SyntaxError', 'Raw', e.message).Value;
+function handleError(e: unknown) {
+  if (e instanceof SyntaxError) {
+    const v = surroundingAgent.Throw('SyntaxError', 'Raw', e.message).Value as ObjectValue;
     if (e.decoration) {
-      const stackString = new Value('stack');
-      const stack = X(Get(v, stackString)).stringValue();
-      const newStackString = `${e.decoration}\n${stack}`;
-      X(Set(v, stackString, new Value(newStackString), Value.true));
+      const stackString = Value('stack');
+      const stack = X(Get(v, stackString));
+      // Note: in many cases the output will be padded by space or text like "Uncaught",
+      // insert a new line allow decoration lines get the same padding.
+      const newStackString = `\n${e.decoration}\n${stack instanceof JSStringValue ? stack.stringValue() : ''}`;
+      X(Set(v, stackString, Value(newStackString), Value.true));
     }
     return v;
   } else {
@@ -36,7 +43,7 @@ function handleError(e) {
   }
 }
 
-export function wrappedParse(init, f) {
+export function wrappedParse<T>(init: ParserOptions, f: (parser: Parser) => T) {
   const p = new Parser(init);
 
   try {
@@ -50,7 +57,36 @@ export function wrappedParse(init, f) {
   }
 }
 
-export function ParseScript(sourceText, realm, hostDefined = {}) {
+export class ScriptRecord {
+  readonly Realm: Realm;
+
+  readonly ECMAScriptCode: ParseNode.Script;
+
+  readonly LoadedModules: LoadedModuleRequestRecord[];
+
+  readonly HostDefined: ParseScriptHostDefined;
+
+  mark(m: GCMarker) {
+    m(this.Realm);
+  }
+
+  constructor(record: Omit<ScriptRecord, 'mark'>) {
+    this.ECMAScriptCode = record.ECMAScriptCode;
+    this.Realm = record.Realm;
+    this.LoadedModules = record.LoadedModules;
+    this.HostDefined = record.HostDefined;
+  }
+}
+export interface ParseScriptHostDefined {
+  readonly specifier?: string | undefined;
+  readonly [kInternal]?: {
+    json?: boolean;
+    /** only used in inspector.compileScript */ allowAllPrivateNames?: boolean;
+  };
+  scriptId?: string;
+  readonly doNotTrackScriptId?: boolean;
+}
+export function ParseScript(sourceText: string, realm: Realm, hostDefined: ParseScriptHostDefined = {}): ScriptRecord | ObjectValue[] {
   // 1. Assert: sourceText is an ECMAScript source text (see clause 10).
   // 2. Parse sourceText using Script as the goal symbol and analyse the parse result for
   //    any Early Error conditions. If the parse was successful and no early errors were found,
@@ -63,28 +99,27 @@ export function ParseScript(sourceText, realm, hostDefined = {}) {
     source: sourceText,
     specifier: hostDefined.specifier,
     json: hostDefined[kInternal]?.json,
+    allowAllPrivateNames: hostDefined[kInternal]?.allowAllPrivateNames,
   }, (p) => p.parseScript());
   // 3. If body is a List of errors, return body.
   if (Array.isArray(body)) {
     return body;
   }
+  setNodeParent(body, undefined);
   // 4. Return Script Record { [[Realm]]: realm, [[ECMAScriptCode]]: body, [[HostDefined]]: hostDefined }.
-  return {
+  const script = new ScriptRecord({
     Realm: realm,
     ECMAScriptCode: body,
     LoadedModules: [],
     HostDefined: hostDefined,
-    mark(m) {
-      m(this.Realm);
-      m(this.Environment);
-      for (const v of this.LoadedModules) {
-        m(v.Module);
-      }
-    },
-  };
+  });
+  if (!hostDefined.doNotTrackScriptId) {
+    surroundingAgent.addParsedSource(script);
+  }
+  return script;
 }
 
-export function ParseModule(sourceText, realm, hostDefined = {}) {
+export function ParseModule(sourceText: string, realm: Realm, hostDefined: ModuleRecordHostDefined = {}) {
   // 1. Assert: sourceText is an ECMAScript source text (see clause 10).
   // 2. Parse sourceText using Module as the goal symbol and analyse the parse result for
   //    any Early Error conditions. If the parse was successful and no early errors were found,
@@ -93,17 +128,18 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
   //    early error detection may be interweaved in an implementation-dependent manner. If more
   //    than one parsing error or early error is present, the number and ordering of error
   //    objects in the list is implementation-dependent, but at least one must be present.
-  const body = wrappedParse({ source: sourceText, specifier: hostDefined.specifier }, (p) => p.parseModule());
+  const body = wrappedParse<ParseNode.Module>({ source: sourceText, specifier: hostDefined.specifier }, (p) => p.parseModule());
   // 3. If body is a List of errors, return body.
   if (Array.isArray(body)) {
     return body;
   }
+  setNodeParent(body, undefined);
   // 4. Let requestedModules be the ModuleRequests of body.
   const requestedModules = ModuleRequests(body);
   // 5. Let importEntries be ImportEntries of body.
   const importEntries = ImportEntries(body);
   // 6. Let importedBoundNames be ImportedLocalNames(importEntries).
-  const importedBoundNames = new ValueSet(ImportedLocalNames(importEntries));
+  const importedBoundNames = new JSStringSet(ImportedLocalNames(importEntries));
   // 7. Let indirectExportEntries be a new empty List.
   const indirectExportEntries = [];
   // 8. Let localExportEntries be a new empty List.
@@ -122,9 +158,9 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
         localExportEntries.push(ee);
       } else { // ii. Else,
         // 1. Let ie be the element of importEntries whose [[LocalName]] is the same as ee.[[LocalName]].
-        const ie = importEntries.find((e) => e.LocalName.stringValue() === ee.LocalName.stringValue());
+        const ie = importEntries.find((e) => e.LocalName.stringValue() === (ee.LocalName as JSStringValue).stringValue());
         // 2. If ie.[[ImportName]] is ~namespace-object~, then
-        if (ie.ImportName === 'namespace-object') {
+        if (ie!.ImportName === 'namespace-object') {
           // a. NOTE: This is a re-export of an imported module namespace object.
           // b. Append ee to localExportEntries.
           localExportEntries.push(ee);
@@ -132,8 +168,8 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
           // a. NOTE: This is a re-export of a single name.
           // b. Append the ExportEntry Record { [[ModuleRequest]]: ie.[[ModuleRequest]], [[ImportName]]: ie.[[ImportName]], [[LocalName]]: null, [[ExportName]]: ee.[[ExportName]] } to indirectExportEntries.
           indirectExportEntries.push({
-            ModuleRequest: ie.ModuleRequest,
-            ImportName: ie.ImportName,
+            ModuleRequest: ie!.ModuleRequest,
+            ImportName: ie!.ImportName,
             LocalName: Value.null,
             ExportName: ee.ExportName,
           });
@@ -148,9 +184,9 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
     }
   }
   // 12. Return Source Text Module Record { [[Realm]]: realm, [[Environment]]: undefined, [[Namespace]]: undefined, [[Status]]: unlinked, [[EvaluationError]]: undefined, [[HostDefined]]: hostDefined, [[ECMAScriptCode]]: body, [[Context]]: empty, [[ImportMeta]]: empty, [[RequestedModules]]: requestedModules, [[ImportEntries]]: importEntries, [[LocalExportEntries]]: localExportEntries, [[IndirectExportEntries]]: indirectExportEntries, [[StarExportEntries]]: starExportEntries, [[DFSIndex]]: undefined, [[DFSAncestorIndex]]: undefined }.
-  return new (hostDefined.SourceTextModuleRecord || SourceTextModuleRecord)({
+  const module = new (hostDefined.SourceTextModuleRecord || SourceTextModuleRecord)({
     Realm: realm,
-    Environment: Value.undefined,
+    Environment: undefined,
     Namespace: Value.undefined,
     Status: 'new',
     EvaluationError: Value.undefined,
@@ -164,30 +200,55 @@ export function ParseModule(sourceText, realm, hostDefined = {}) {
     LocalExportEntries: localExportEntries,
     IndirectExportEntries: indirectExportEntries,
     StarExportEntries: starExportEntries,
-    DFSIndex: Value.undefined,
-    DFSAncestorIndex: Value.undefined,
-
     Async: body.hasTopLevelAwait ? Value.true : Value.false,
     AsyncEvaluating: Value.false,
     TopLevelCapability: Value.undefined,
-    AsyncParentModules: Value.undefined,
-    PendingAsyncDependencies: Value.undefined,
+    AsyncParentModules: [],
+    DFSIndex: undefined,
+    DFSAncestorIndex: undefined,
+    PendingAsyncDependencies: undefined,
   });
+  if (!hostDefined.doNotTrackScriptId) {
+    surroundingAgent.addParsedSource(module);
+  }
+  return module;
 }
 
-/** http://tc39.es/ecma262/#sec-parsejsonmodule */
-export function ParseJSONModule(sourceText, realm, hostDefined) {
+/** https://tc39.es/ecma262/#sec-parsejsonmodule */
+export function ParseJSONModule(sourceText: Value, realm: Realm, hostDefined: ModuleRecordHostDefined): PlainCompletion<SyntheticModuleRecord> {
   // 1. Let jsonParse be realm's intrinsic object named "%JSON.parse%".
-  const jsonParse = realm.Intrinsics['%JSON.parse%'];
+  const jsonParse = realm.Intrinsics['%JSON.parse%'] as BuiltinFunctionObject;
   // 1. Let json be ? Call(jsonParse, undefined, « sourceText »).
-  const json = Q(Call(jsonParse, Value.undefined, [sourceText]));
+  const json = Q(skipDebugger(Call(jsonParse, Value.undefined, [sourceText])));
   // 1. Return CreateDefaultExportSyntheticModule(json, realm, hostDefined).
   return CreateDefaultExportSyntheticModule(json, realm, hostDefined);
 }
 
-/** http://tc39.es/ecma262/#sec-parsepattern */
-export function ParsePattern(patternText, u) {
-  const parse = (flags) => {
+function setNodeParent(node: ParseNode, parent: ParseNode | undefined) {
+  (node as Mutable<ParseNode.BaseParseNode>).parent = parent;
+  for (const i in node) {
+    if (Object.hasOwn(node, i)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const value = (node as any)[i];
+      if (isArray(value)) {
+        value.forEach((val) => {
+          if (isParseNode(val) && !val.parent) {
+            setNodeParent(val, node);
+          }
+        });
+      } else if (isParseNode(value) && !value.parent) {
+        setNodeParent(value, node);
+      }
+    }
+  }
+}
+function isParseNode(value: unknown): value is ParseNode {
+  return !!(value && typeof value === 'object' && 'type' in value && 'location' in value);
+}
+
+/** https://tc39.es/ecma262/#sec-parsepattern */
+export function ParsePattern(patternText: string, u: boolean) {
+  const parse = (flags: RegExpParserContext) => {
     const p = new RegExpParser(patternText);
     return p.scope(flags, () => p.parsePattern());
   };

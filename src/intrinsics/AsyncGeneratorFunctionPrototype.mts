@@ -1,14 +1,14 @@
-// @ts-nocheck
-import { X } from '../completion.mjs';
-import { Descriptor, Value } from '../value.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+import { X } from '../completion.mts';
+import { Descriptor, Value } from '../value.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
+import type { Realm } from '#self';
 
-export function bootstrapAsyncGeneratorFunctionPrototype(realmRec) {
+export function bootstrapAsyncGeneratorFunctionPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['prototype', realmRec.Intrinsics['%AsyncGeneratorFunction.prototype.prototype%'], undefined, { Writable: Value.false }],
   ], realmRec.Intrinsics['%Function.prototype%'], 'AsyncGeneratorFunction');
 
-  X(realmRec.Intrinsics['%AsyncGeneratorFunction.prototype.prototype%'].DefineOwnProperty(new Value('constructor'), Descriptor({
+  X((realmRec.Intrinsics['%AsyncGeneratorFunction.prototype.prototype%']).DefineOwnProperty(Value('constructor'), Descriptor({
     Value: proto,
     Writable: Value.false,
     Enumerable: Value.false,

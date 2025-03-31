@@ -1,18 +1,20 @@
-// @ts-nocheck
-import { Value } from '../value.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import { GetValue, GetGeneratorKind } from '../abstract-ops/all.mjs';
+import { Value } from '../value.mts';
+import { Evaluate, type Evaluator } from '../evaluator.mts';
+import { GetValue, GetGeneratorKind } from '../abstract-ops/all.mts';
 import {
   Completion,
   Await,
   Q, X,
-} from '../completion.mjs';
+  ReturnCompletion,
+  ThrowCompletion,
+} from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
-/** http://tc39.es/ecma262/#sec-return-statement-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-return-statement-runtime-semantics-evaluation */
 //  ReturnStatement :
 //    `return` `;`
 //    `return` Expression `;`
-export function* Evaluate_ReturnStatement({ Expression }) {
+export function* Evaluate_ReturnStatement({ Expression }: ParseNode.ReturnStatement): Evaluator<ReturnCompletion | ThrowCompletion> {
   if (!Expression) {
     // 1. Return Completion { [[Type]]: return, [[Value]]: undefined, [[Target]]: empty }.
     return new Completion({ Type: 'return', Value: Value.undefined, Target: undefined });
@@ -20,7 +22,7 @@ export function* Evaluate_ReturnStatement({ Expression }) {
   // 1. Let exprRef be the result of evaluating Expression.
   const exprRef = yield* Evaluate(Expression);
   // 1. Let exprValue be ? GetValue(exprRef).
-  let exprValue = Q(GetValue(exprRef));
+  let exprValue = Q(yield* GetValue(exprRef));
   // 1. If ! GetGeneratorKind() is async, set exprValue to ? Await(exprValue).
   if (X(GetGeneratorKind()) === 'async') {
     exprValue = Q(yield* Await(exprValue));

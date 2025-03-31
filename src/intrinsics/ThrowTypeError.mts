@@ -1,21 +1,21 @@
-// @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Assert,
   CreateBuiltinFunction,
+  Realm,
   SetIntegrityLevel,
-} from '../abstract-ops/all.mjs';
-import { Value } from '../value.mjs';
-import { X } from '../completion.mjs';
+} from '../abstract-ops/all.mts';
+import { Value } from '../value.mts';
+import { X } from '../completion.mts';
 
-/** http://tc39.es/ecma262/#sec-%throwtypeerror% */
+/** https://tc39.es/ecma262/#sec-%throwtypeerror% */
 function ThrowTypeError() {
   // 1. Throw a TypeError exception.
   return surroundingAgent.Throw('TypeError', 'StrictPoisonPill');
 }
 
-export function bootstrapThrowTypeError(realmRec) {
-  const f = X(CreateBuiltinFunction(ThrowTypeError, 0, new Value(''), [], realmRec));
+export function bootstrapThrowTypeError(realmRec: Realm) {
+  const f = X(CreateBuiltinFunction(ThrowTypeError, 0, Value(''), [], realmRec));
   Assert(X(SetIntegrityLevel(f, 'frozen')) === Value.true);
   realmRec.Intrinsics['%ThrowTypeError%'] = f;
 }

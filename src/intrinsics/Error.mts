@@ -1,21 +1,36 @@
-// @ts-nocheck
 import {
   DefinePropertyOrThrow,
   OrdinaryCreateFromConstructor,
   InstallErrorCause,
   ToString,
-} from '../abstract-ops/all.mjs';
+  Realm,
+  type FunctionObject,
+} from '../abstract-ops/all.mts';
 import {
   Descriptor,
   Value,
-} from '../value.mjs';
-import { Q, X } from '../completion.mjs';
-import { surroundingAgent } from '../engine.mjs';
-import { captureStack } from '../helpers.mjs';
-import { bootstrapConstructor } from './bootstrap.mjs';
+  type Arguments,
+  type FunctionCallContext,
+  type JSStringValue,
+  type ObjectValue,
+  type UndefinedValue,
+} from '../value.mts';
+import { Q, X, type ValueEvaluator } from '../completion.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
+import { captureStack, errorStackToString, type CallSite } from '../helpers.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 
-/** http://tc39.es/ecma262/#sec-error-constructor */
-function ErrorConstructor([message = Value.undefined, options = Value.undefined], { NewTarget }) {
+export interface ErrorObject extends ObjectValue {
+  ErrorData: JSStringValue;
+  HostDefinedErrorStack?: CallSite[] | UndefinedValue;
+}
+
+export function isErrorObject(value: Value): value is ErrorObject {
+  return 'ErrorData' in value;
+}
+
+/** https://tc39.es/ecma262/#sec-error-constructor */
+function* ErrorConstructor([message = Value.undefined, options = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
   // 1. If NewTarget is undefined, let newTarget be the active function object; else let newTarget be NewTarget.
   let newTarget;
   if (NewTarget === Value.undefined) {
@@ -24,11 +39,14 @@ function ErrorConstructor([message = Value.undefined, options = Value.undefined]
     newTarget = NewTarget;
   }
   // 2. Let O be ? OrdinaryCreateFromConstructor(newTarget, "%Error.prototype%", « [[ErrorData]] »).
-  const O = Q(OrdinaryCreateFromConstructor(newTarget, '%Error.prototype%', ['ErrorData']));
+  const O = Q(yield* OrdinaryCreateFromConstructor(newTarget as FunctionObject, '%Error.prototype%', [
+    'ErrorData',
+    'HostDefinedErrorStack',
+  ])) as ErrorObject;
   // 3. If message is not undefined, then
   if (message !== Value.undefined) {
     // a. Let msg be ? ToString(message).
-    const msg = Q(ToString(message));
+    const msg = Q(yield* ToString(message));
     // b. Let msgDesc be the PropertyDescriptor { [[Value]]: msg, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }.
     const msgDesc = Descriptor({
       Value: msg,
@@ -37,19 +55,22 @@ function ErrorConstructor([message = Value.undefined, options = Value.undefined]
       Configurable: Value.true,
     });
     // c. Perform ! DefinePropertyOrThrow(O, "message", msgDesc).
-    X(DefinePropertyOrThrow(O, new Value('message'), msgDesc));
+    X(DefinePropertyOrThrow(O, Value('message'), msgDesc));
   }
 
   // 4. Perform ? InstallErrorCause(O, options).
-  Q(InstallErrorCause(O, options));
+  Q(yield* InstallErrorCause(O, options));
 
-  X(captureStack(O)); // NON-SPEC
+  // NON-SPEC
+  const S = captureStack();
+  O.HostDefinedErrorStack = S.stack;
+  O.ErrorData = X(errorStackToString(O, S.stack, S.nativeStack));
 
   // 5. Return O.
   return O;
 }
 
-export function bootstrapError(realmRec) {
+export function bootstrapError(realmRec: Realm) {
   const error = bootstrapConstructor(realmRec, ErrorConstructor, 'Error', 1, realmRec.Intrinsics['%Error.prototype%'], []);
 
   realmRec.Intrinsics['%Error%'] = error;

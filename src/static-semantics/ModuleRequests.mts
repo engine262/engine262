@@ -1,7 +1,8 @@
-// @ts-nocheck
-import { StringValue } from './all.mjs';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import type { JSStringValue } from '../value.mts';
+import { StringValue } from './all.mts';
 
-export function ModuleRequests(node) {
+export function ModuleRequests(node: ParseNode): JSStringValue[] {
   switch (node.type) {
     case 'Module':
       if (node.ModuleBody) {
@@ -9,7 +10,7 @@ export function ModuleRequests(node) {
       }
       return [];
     case 'ModuleBody': {
-      const moduleNames = [];
+      const moduleNames: JSStringValue[] = [];
       for (const item of node.ModuleItemList) {
         moduleNames.push(...ModuleRequests(item));
       }
@@ -19,7 +20,7 @@ export function ModuleRequests(node) {
       if (node.FromClause) {
         return ModuleRequests(node.FromClause);
       }
-      return [StringValue(node.ModuleSpecifier)];
+      return [StringValue(node.ModuleSpecifier!)];
     case 'ExportDeclaration':
       if (node.FromClause) {
         return ModuleRequests(node.FromClause);

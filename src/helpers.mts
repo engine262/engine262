@@ -1,142 +1,278 @@
-// @ts-nocheck
-import { surroundingAgent } from './engine.mjs';
+import type { Protocol } from 'devtools-protocol';
+import { ExecutionContext, type GCMarker, surroundingAgent } from './host-defined/engine.mts';
 import {
-  Value, Descriptor, JSStringValue, NumberValue,
-} from './value.mjs';
-import { ToString, DefinePropertyOrThrow, CreateBuiltinFunction } from './abstract-ops/all.mjs';
-import { X } from './completion.mjs';
+  Value, JSStringValue, ObjectValue, UndefinedValue, NullValue, type PropertyKeyValue,
+  SymbolValue,
+} from './value.mts';
+import {
+  Call,
+  ToString,
+  isFunctionObject,
+  isBuiltinFunctionObject,
+  isECMAScriptFunctionObject,
+} from './abstract-ops/all.mts';
+import { Q, X } from './completion.mts';
+import type { ParseNode } from './parser/ParseNode.mts';
+import type {
+  Evaluator, EvaluatorNextType, ValueEvaluator, YieldEvaluator,
+} from './evaluator.mts';
+import type { ErrorObject } from './intrinsics/Error.mts';
 
 export const kInternal = Symbol('kInternal');
 
-function convertValueForKey(key) {
-  if (key instanceof JSStringValue) {
-    return key.stringValue();
-  } else if (key instanceof NumberValue) {
-    return key.numberValue();
-  }
-  return key;
-}
+export class JSStringMap<V> implements Map<JSStringValue, V> {
+  #map = new Map<string, V>();
 
-export class ValueMap {
-  constructor() {
-    this.map = new Map();
+  clear() {
+    this.#map.clear();
   }
 
-  get size() {
-    return this.map.size;
+  delete(key: JSStringValue | string) {
+    if (key instanceof JSStringValue) {
+      key = key.stringValue();
+    }
+    return this.#map.delete(key);
   }
 
-  get(key) {
-    return this.map.get(convertValueForKey(key));
+  forEach(callbackfn: (value: V, key: JSStringValue, map: Map<JSStringValue, V>) => void, thisArg?: JSStringMap<V>) {
+    this.#map.forEach((value, key) => Reflect.apply(callbackfn, thisArg, [value, typeof key === 'string' ? Value(key) : key, this]));
   }
 
-  set(key, value) {
-    this.map.set(convertValueForKey(key), value);
+  get(key: JSStringValue | string) {
+    if (key instanceof JSStringValue) {
+      key = key.stringValue();
+    }
+    return this.#map.get(key);
+  }
+
+  has(key: JSStringValue | string) {
+    if (key instanceof JSStringValue) {
+      key = key.stringValue();
+    }
+    return this.#map.has(key);
+  }
+
+  set(key: JSStringValue | string, value: V): this {
+    if (key instanceof JSStringValue) {
+      key = key.stringValue();
+    }
+    this.#map.set(key, value);
     return this;
   }
 
-  has(key) {
-    return this.map.has(convertValueForKey(key));
+  get size() {
+    return this.#map.size;
   }
 
-  delete(key) {
-    return this.map.delete(convertValueForKey(key));
+  * entries() {
+    for (const [key, value] of this.#map.entries()) {
+      yield [Value(key), value] as [JSStringValue, V];
+    }
+    return undefined;
   }
 
   * keys() {
-    for (const [key] of this.entries()) {
-      yield key;
+    for (const key of this.#map.keys()) {
+      yield Value(key);
     }
+    return undefined;
   }
 
-  entries() {
-    return this[Symbol.iterator]();
+  values() {
+    return this.#map.values();
   }
 
-  forEach(cb) {
-    for (const [key, value] of this.entries()) {
-      cb(value, key, this);
-    }
+  declare [Symbol.iterator]: () => MapIterator<[JSStringValue, V]>;
+
+  declare [Symbol.toStringTag]: string;
+
+  static {
+    JSStringMap.prototype[Symbol.toStringTag] = 'JSStringMap';
+    JSStringMap.prototype[Symbol.iterator] = JSStringMap.prototype.entries;
   }
 
-  * [Symbol.iterator]() {
-    for (const [key, value] of this.map.entries()) {
-      if (typeof key === 'string' || typeof key === 'number') {
-        yield [new Value(key), value];
-      } else {
-        yield [key, value];
-      }
-    }
-  }
-
-  mark(m) {
-    for (const [k, v] of this.entries()) {
+  mark(m: GCMarker) {
+    for (const [k, v] of this.#map.entries()) {
       m(k);
       m(v);
     }
   }
 }
 
-export class ValueSet {
-  constructor(init) {
-    this.set = new Set();
-    if (init !== undefined && init !== null) {
-      for (const item of init) {
-        this.add(item);
-      }
+export class PropertyKeyMap<V> implements Map<PropertyKeyValue, V> {
+  #map = new Map<string | SymbolValue, V>();
+
+  clear() {
+    this.#map.clear();
+  }
+
+  delete(key: PropertyKeyValue | string) {
+    if (key instanceof JSStringValue) {
+      key = key.stringValue();
     }
+    return this.#map.delete(key);
   }
 
-  get size() {
-    return this.set.size;
+  forEach(callbackfn: (value: V, key: PropertyKeyValue, map: Map<PropertyKeyValue, V>) => void, thisArg?: PropertyKeyMap<V>) {
+    this.#map.forEach((value, key) => Reflect.apply(callbackfn, thisArg, [value, typeof key === 'string' ? Value(key) : key, this]));
   }
 
-  add(item) {
-    this.set.add(convertValueForKey(item));
+  get(key: PropertyKeyValue | string) {
+    if (key instanceof JSStringValue) {
+      key = key.stringValue();
+    }
+    return this.#map.get(key);
+  }
+
+  has(key: PropertyKeyValue | string) {
+    if (key instanceof JSStringValue) {
+      key = key.stringValue();
+    }
+    return this.#map.has(key);
+  }
+
+  set(key: PropertyKeyValue | string, value: V): this {
+    if (key instanceof JSStringValue) {
+      key = key.stringValue();
+    }
+    this.#map.set(key, value);
     return this;
   }
 
-  has(item) {
-    return this.set.has(convertValueForKey(item));
+  get size() {
+    return this.#map.size;
   }
 
-  delete(item) {
-    return this.set.delete(convertValueForKey(item));
+  * entries() {
+    for (const [key, value] of this.#map.entries()) {
+      if (typeof key === 'string') {
+        yield [Value(key), value] as [JSStringValue, V];
+      } else {
+        yield [key, value] as [SymbolValue, V];
+      }
+    }
+    return undefined;
   }
 
-  values() {
-    return this[Symbol.iterator]();
-  }
-
-  * [Symbol.iterator]() {
-    for (const key of this.set.values()) {
-      if (typeof key === 'string' || typeof key === 'number') {
-        yield new Value(key);
+  * keys() {
+    for (const key of this.#map.keys()) {
+      if (typeof key === 'string') {
+        yield Value(key);
       } else {
         yield key;
       }
     }
+    return undefined;
   }
 
-  mark(m) {
-    for (const v of this.values()) {
+  * values() {
+    for (const value of this.#map.values()) {
+      yield value;
+    }
+    return undefined;
+  }
+
+  declare [Symbol.iterator]: () => MapIterator<[PropertyKeyValue, V]>;
+
+  declare [Symbol.toStringTag]: string;
+
+  static {
+    PropertyKeyMap.prototype[Symbol.toStringTag] = 'PropertyKeyMap';
+    PropertyKeyMap.prototype[Symbol.iterator] = PropertyKeyMap.prototype.entries;
+  }
+
+  mark(m: GCMarker) {
+    for (const [k, v] of this.#map.entries()) {
+      m(k);
       m(v);
     }
   }
 }
 
+export class JSStringSet {
+  #set = new Set<string>();
+
+  constructor(value?: Iterable<JSStringValue | string>) {
+    if (value) {
+      for (const item of value) {
+        this.add(item);
+      }
+    }
+  }
+
+  add(value: JSStringValue | string): this {
+    this.#set.add(typeof value === 'string' ? value : value.stringValue());
+    return this;
+  }
+
+  clear(): void {
+    this.#set.clear();
+  }
+
+  delete(value: JSStringValue | string): boolean {
+    return this.#set.delete(typeof value === 'string' ? value : value.stringValue());
+  }
+
+  forEach(callbackfn: (value: JSStringValue, value2: JSStringValue, set: Set<JSStringValue>) => void, thisArg?: JSStringSet): void {
+    for (const value of this.#set) {
+      Reflect.apply(callbackfn, thisArg, [Value(value), Value(value), this]);
+    }
+  }
+
+  has(value: JSStringValue | NullValue | string): boolean {
+    if (value instanceof NullValue) {
+      return false;
+    }
+    return this.#set.has(typeof value === 'string' ? value : value.stringValue());
+  }
+
+  get size() {
+    return this.#set.size;
+  }
+
+  * entries(): SetIterator<[JSStringValue, JSStringValue]> {
+    for (const value of this.#set) {
+      yield [Value(value), Value(value)];
+    }
+    return undefined;
+  }
+
+  declare keys: () => SetIterator<JSStringValue>;
+
+  * values() {
+    for (const value of this.#set) {
+      yield Value(value);
+    }
+    return undefined;
+  }
+
+  declare [Symbol.iterator]: () => SetIterator<JSStringValue>;
+
+  declare [Symbol.toStringTag]: string;
+
+  static {
+    JSStringSet.prototype[Symbol.toStringTag] = 'JSStringSet';
+    JSStringSet.prototype[Symbol.iterator] = JSStringSet.prototype.values;
+    JSStringSet.prototype.keys = JSStringSet.prototype.values;
+  }
+
+  mark(_m: GCMarker) { }
+}
+
 export class OutOfRange extends RangeError {
+  detail: unknown;
+
   /* c8 ignore next */
-  constructor(fn, detail) {
+  constructor(fn: string, detail: unknown) {
     super(`${fn}() argument out of range`);
     this.detail = detail;
   }
 }
 
-export function unwind(iterator, maxSteps = 1) {
+export function skipDebugger<T>(iterator: Evaluator<T>, maxSteps = Infinity): T {
   let steps = 0;
   while (true) {
-    const { done, value } = iterator.next('Unwind');
+    const { done, value } = iterator.next({ type: 'debugger-resume', value: undefined });
     if (done) {
       return value;
     }
@@ -148,29 +284,41 @@ export function unwind(iterator, maxSteps = 1) {
   }
 }
 
-const kSafeToResume = Symbol('kSameToResume');
-
-export function handleInResume(fn, ...args) {
-  const bound = () => fn(...args);
-  bound[kSafeToResume] = true;
-  return bound;
-}
-
-export function resume(context, completion) {
-  const { value } = context.codeEvaluationState.next(completion);
-  if (typeof value === 'function' && value[kSafeToResume] === true) {
-    return X(value());
+export function* resume(context: ExecutionContext, completion: EvaluatorNextType): YieldEvaluator {
+  let result;
+  while (true) {
+    result = context.codeEvaluationState!.next(completion);
+    if (result.done) {
+      return result.value;
+    }
+    const { value } = result;
+    if (value.type === 'debugger' || value.type === 'potential-debugger') {
+      completion = yield value;
+    } else if (value.type === 'await' || value.type === 'async-generator-yield') {
+      return Value.undefined;
+    } else if (value.type === 'yield') {
+      return value.value;
+    } else {
+      unreachable(value);
+    }
   }
-  return value;
 }
 
 export class CallSite {
-  constructor(context) {
+  context: ExecutionContext;
+
+  lastNode: ParseNode | null = null;
+
+  nextNode: ParseNode | null = null;
+
+  lastCallNode: ParseNode.CallExpression | null = null;
+
+  inheritedLastCallNode: ParseNode.CallExpression | null = null;
+
+  constructCall = false;
+
+  constructor(context: ExecutionContext) {
     this.context = context;
-    this.lastNode = null;
-    this.lastCallNode = null;
-    this.inheritedLastCallNode = null;
-    this.constructCall = false;
   }
 
   clone(context = this.context) {
@@ -191,21 +339,21 @@ export class CallSite {
   }
 
   isAsync() {
-    if (this.context.Function !== Value.null && this.context.Function.ECMAScriptCode) {
+    if (!(this.context.Function instanceof NullValue) && isECMAScriptFunctionObject(this.context.Function) && this.context.Function.ECMAScriptCode) {
       const code = this.context.Function.ECMAScriptCode;
-      return code.type === 'AsyncFunctionBody' || code.type === 'AsyncGeneratorBody';
+      return code.type === 'AsyncBody' || code.type === 'AsyncGeneratorBody';
     }
     return false;
   }
 
   isNative() {
-    return !!this.context.Function.nativeFunction;
+    return isBuiltinFunctionObject(this.context.Function);
   }
 
-  getFunctionName() {
-    if (this.context.Function !== Value.null) {
-      const name = this.context.Function.properties.get(new Value('name'));
-      if (name) {
+  getFunctionName(): string | null {
+    if (isFunctionObject(this.context.Function)) {
+      const name = this.context.Function.properties.get('name');
+      if (name && name.Value) {
         return X(ToString(name.Value)).stringValue();
       }
     }
@@ -213,17 +361,28 @@ export class CallSite {
   }
 
   getSpecifier() {
-    if (this.context.ScriptOrModule !== Value.null) {
+    if (!(this.context.Function instanceof NullValue) && !(this.context.ScriptOrModule instanceof NullValue)) {
       return this.context.ScriptOrModule.HostDefined.specifier;
     }
     return null;
   }
 
-  setLocation(node) {
+  getScriptId() {
+    if (!(this.context.ScriptOrModule instanceof NullValue)) {
+      return this.context.ScriptOrModule.HostDefined.scriptId;
+    }
+    return this.context.HostDefined?.scriptId;
+  }
+
+  setLocation(node: ParseNode) {
     this.lastNode = node;
   }
 
-  setCallLocation(node) {
+  setNextLocation(node: ParseNode) {
+    this.nextNode = node;
+  }
+
+  setCallLocation(node: ParseNode.CallExpression | null) {
     this.lastCallNode = node;
   }
 
@@ -301,26 +460,40 @@ export class CallSite {
 
     return `${string} (${this.loc()})`;
   }
+
+  toCallFrame(): Protocol.Runtime.CallFrame | undefined {
+    const source = this.getScriptId();
+    if (source === undefined || source === null) {
+      return undefined;
+    }
+    return {
+      columnNumber: (this.columnNumber || 1) - 1,
+      lineNumber: (this.lineNumber || 1) - 1,
+      functionName: this.getFunctionName() || '<anonymous>',
+      scriptId: source,
+      url: this.getSpecifier() || '<anonymous>',
+    };
+  }
 }
 
 export const kAsyncContext = Symbol('kAsyncContext');
 
-function captureAsyncStack(stack) {
-  let promise = stack[0].context.promiseCapability.Promise;
+function captureAsyncStack(stack: CallSite[]) {
+  let promise = stack[0].context.promiseCapability!.Promise;
   for (let i = 0; i < 10; i += 1) {
-    if (promise.PromiseFulfillReactions.length !== 1) {
+    if (promise.PromiseFulfillReactions!.length !== 1) {
       return;
     }
-    const [reaction] = promise.PromiseFulfillReactions;
+    const [reaction] = promise.PromiseFulfillReactions!;
     if (reaction.Handler && reaction.Handler.Callback[kAsyncContext]) {
       const asyncContext = reaction.Handler.Callback[kAsyncContext];
       stack.push(asyncContext.callSite.clone());
-      if ('PromiseState' in asyncContext.promiseCapability.Promise) {
-        promise = asyncContext.promiseCapability.Promise;
+      if ('PromiseState' in asyncContext.promiseCapability!.Promise) {
+        promise = asyncContext.promiseCapability!.Promise;
       } else {
         return;
       }
-    } else if (reaction.Capability !== Value.undefined) {
+    } else if (!(reaction.Capability instanceof UndefinedValue)) {
       if ('PromiseState' in reaction.Capability.Promise) {
         promise = reaction.Capability.Promise;
       } else {
@@ -330,9 +503,16 @@ function captureAsyncStack(stack) {
   }
 }
 
-export function captureStack(O) {
-  const stack = [];
-  for (let i = surroundingAgent.executionContextStack.length - 2; i >= 0; i -= 1) {
+export function getHostDefinedErrorStack(O: Value) {
+  if (O instanceof ObjectValue && 'HostDefinedErrorStack' in O && isArray(O.HostDefinedErrorStack)) {
+    return O.HostDefinedErrorStack as readonly CallSite[];
+  }
+  return undefined;
+}
+
+export function getCurrentStack(excludeGlobalStack = true) {
+  const stack: CallSite[] = [];
+  for (let i = surroundingAgent.executionContextStack.length - (excludeGlobalStack ? 2 : 1); i >= 0; i -= 1) {
     const e = surroundingAgent.executionContextStack[i];
     if (e.VariableEnvironment === undefined && e.Function === Value.null) {
       break;
@@ -351,26 +531,59 @@ export function captureStack(O) {
   if (stack.length > 0 && stack[0].context.promiseCapability) {
     captureAsyncStack(stack);
   }
-
-  let cache = null;
-
-  const name = new Value('stack');
-  X(DefinePropertyOrThrow(O, name, Descriptor({
-    Get: CreateBuiltinFunction(() => {
-      if (cache === null) {
-        let errorString = X(ToString(O)).stringValue();
-        stack.forEach((s) => {
-          errorString = `${errorString}\n    at ${s.toString()}`;
-        });
-        cache = new Value(errorString);
-      }
-      return cache;
-    }, 0, name, [], undefined, undefined, new Value('get')),
-    Set: CreateBuiltinFunction(([value = Value.undefined]) => {
-      cache = value;
-      return Value.undefined;
-    }, 1, name, [], undefined, undefined, new Value('set')),
-    Enumerable: Value.false,
-    Configurable: Value.true,
-  })));
+  return stack;
 }
+
+export function captureStack() {
+  const stack = getCurrentStack();
+
+  let nativeStack: string | undefined;
+  if (surroundingAgent.hostDefinedOptions.errorStackAttachNativeStack) {
+    const origStackTraceLimit = Error.stackTraceLimit;
+    Error.stackTraceLimit = 12;
+    try {
+      nativeStack = new Error().stack;
+    } finally {
+      Error.stackTraceLimit = origStackTraceLimit;
+    }
+  }
+
+  return {
+    stack,
+    nativeStack,
+  };
+}
+
+export function* errorStackToString(O: ErrorObject, stack: readonly CallSite[], nativeStack: string | UndefinedValue = Value.undefined): ValueEvaluator<JSStringValue> {
+  let errorString = (Q(yield* Call(surroundingAgent.intrinsic('%Error.prototype.toString%'), O)) as JSStringValue).stringValue();
+  stack.forEach((s) => {
+    errorString = `${errorString}\n    at ${s.toString()}`;
+  });
+  if (typeof nativeStack === 'string') {
+    errorString = `${errorString}\n    <NATIVE>\n${nativeStack.split('\n').slice(6).join('\n')}`;
+  }
+
+  return Value(errorString);
+}
+
+export function callable<Class extends object>(
+  onCalled = (target: Class, _thisArg: unknown, args: unknown[]) => Reflect.construct(target as new (...args: unknown[]) => unknown, args),
+) {
+  const handler: ProxyHandler<Class> = Object.freeze({
+    __proto__: null,
+    apply: onCalled,
+  });
+  return function decorator(classValue: Class, _classContext: ClassDecoratorContext<Class & (new (...args: readonly unknown[]) => unknown)>) {
+    return new Proxy(classValue, handler);
+  };
+}
+
+export type Mutable<T> = {
+  -readonly [P in keyof T]: T[P];
+}
+
+export const isArray: (arg: unknown) => arg is readonly unknown[] = Array.isArray;
+export function unreachable(_: never): never {
+  throw new Error('Unreachable');
+}
+export function __ts_cast__<T>(_value: unknown): asserts _value is T { }

@@ -1,18 +1,21 @@
-// @ts-nocheck
 import {
   ObjectValue,
   BooleanValue,
   Value,
-} from '../value.mjs';
+  type Arguments,
+  type FunctionCallContext,
+} from '../value.mts';
 import {
   surroundingAgent,
-} from '../engine.mjs';
-import { Assert } from '../abstract-ops/all.mjs';
-import { Q } from '../completion.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+} from '../host-defined/engine.mts';
+import { Assert, Realm } from '../abstract-ops/all.mts';
+import { Q, type ValueCompletion } from '../completion.mts';
+import type { Mutable } from '../helpers.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
+import type { BooleanObject } from './Boolean.mts';
 
 
-function thisBooleanValue(value) {
+function thisBooleanValue(value: Value) {
   if (value instanceof BooleanValue) {
     return value;
   }
@@ -26,30 +29,30 @@ function thisBooleanValue(value) {
   return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Boolean', value);
 }
 
-/** http://tc39.es/ecma262/#sec-boolean.prototype.tostring */
-function BooleanProto_toString(argList, { thisValue }) {
+/** https://tc39.es/ecma262/#sec-boolean.prototype.tostring */
+function BooleanProto_toString(_argList: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let b be ? thisBooleanValue(this value).
   const b = Q(thisBooleanValue(thisValue));
   // 2. If b is true, return "true"; else return "false".
   if (b === Value.true) {
-    return new Value('true');
+    return Value('true');
   }
-  return new Value('false');
+  return Value('false');
 }
 
-/** http://tc39.es/ecma262/#sec-boolean.prototype.valueof */
-function BooleanProto_valueOf(argList, { thisValue }) {
+/** https://tc39.es/ecma262/#sec-boolean.prototype.valueof */
+function BooleanProto_valueOf(_argList: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Return ? thisBooleanValue(this value).
   return Q(thisBooleanValue(thisValue));
 }
 
-export function bootstrapBooleanPrototype(realmRec) {
+export function bootstrapBooleanPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['toString', BooleanProto_toString, 0],
     ['valueOf', BooleanProto_valueOf, 0],
   ], realmRec.Intrinsics['%Object.prototype%']);
 
-  proto.BooleanData = Value.false;
+  (proto as Mutable<BooleanObject>).BooleanData = Value.false;
 
   realmRec.Intrinsics['%Boolean.prototype%'] = proto;
 }

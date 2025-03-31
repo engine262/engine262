@@ -1,16 +1,16 @@
-// @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   BigIntValue,
   DataBlock,
   Descriptor,
   NumberValue,
-  Type,
   ObjectValue,
   UndefinedValue,
   Value,
-} from '../value.mjs';
-import { NormalCompletion, Q, X } from '../completion.mjs';
+  BooleanValue,
+} from '../value.mts';
+import { NormalCompletion, Q, X } from '../completion.mts';
+import type { PlainEvaluator } from '../evaluator.mts';
 import {
   Assert,
   CreateDataProperty,
@@ -19,23 +19,36 @@ import {
   IsCallable,
   OrdinaryObjectCreate,
   ToBoolean,
-} from './all.mjs';
-import { isNonNegativeInteger } from './data-types-and-values.mjs';
+  type FunctionObject,
+} from './all.mts';
+import { isNonNegativeInteger } from './data-types-and-values.mts';
 
 // #𝔽
-export function F(x) {
+export function F(x: number): NumberValue {
   Assert(typeof x === 'number');
-  return new NumberValue(x);
+  return Value(x);
 }
 
 // #ℤ
-export function Z(x) {
+export function Z(x: bigint): BigIntValue {
   Assert(typeof x === 'bigint');
-  return new BigIntValue(x);
+  return Value(x);
+}
+
+// #ℝ
+export function R(x: NumberValue): number;
+export function R(x: BigIntValue): bigint;
+export function R(x: BigIntValue | NumberValue): bigint | number;
+export function R(x: unknown) {
+  if (x instanceof BigIntValue) {
+    return x.bigintValue(); // eslint-disable-line @engine262/mathematical-value
+  }
+  Assert(x instanceof NumberValue);
+  return x.numberValue(); // eslint-disable-line @engine262/mathematical-value
 }
 
 // 6.2.5.1 IsAccessorDescriptor
-export function IsAccessorDescriptor(Desc) {
+export function IsAccessorDescriptor(Desc: Descriptor | UndefinedValue): Desc is Descriptor & { Get: Value; Set: Value } {
   if (Desc instanceof UndefinedValue) {
     return false;
   }
@@ -48,7 +61,7 @@ export function IsAccessorDescriptor(Desc) {
 }
 
 // 6.2.5.2 IsDataDescriptor
-export function IsDataDescriptor(Desc) {
+export function IsDataDescriptor(Desc: Descriptor | UndefinedValue): Desc is Descriptor & { Value: Value; Writable: BooleanValue } {
   if (Desc instanceof UndefinedValue) {
     return false;
   }
@@ -61,7 +74,7 @@ export function IsDataDescriptor(Desc) {
 }
 
 // 6.2.5.3 IsGenericDescriptor
-export function IsGenericDescriptor(Desc) {
+export function IsGenericDescriptor(Desc: Descriptor | UndefinedValue) {
   if (Desc instanceof UndefinedValue) {
     return false;
   }
@@ -73,76 +86,76 @@ export function IsGenericDescriptor(Desc) {
   return false;
 }
 
-/** http://tc39.es/ecma262/#sec-frompropertydescriptor */
-export function FromPropertyDescriptor(Desc) {
+/** https://tc39.es/ecma262/#sec-frompropertydescriptor */
+export function FromPropertyDescriptor(Desc: Descriptor | UndefinedValue) {
   if (Desc instanceof UndefinedValue) {
     return Value.undefined;
   }
   const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   if (Desc.Value !== undefined) {
-    X(CreateDataProperty(obj, new Value('value'), Desc.Value));
+    X(CreateDataProperty(obj, Value('value'), Desc.Value));
   }
   if (Desc.Writable !== undefined) {
-    X(CreateDataProperty(obj, new Value('writable'), Desc.Writable));
+    X(CreateDataProperty(obj, Value('writable'), Desc.Writable));
   }
   if (Desc.Get !== undefined) {
-    X(CreateDataProperty(obj, new Value('get'), Desc.Get));
+    X(CreateDataProperty(obj, Value('get'), Desc.Get));
   }
   if (Desc.Set !== undefined) {
-    X(CreateDataProperty(obj, new Value('set'), Desc.Set));
+    X(CreateDataProperty(obj, Value('set'), Desc.Set));
   }
   if (Desc.Enumerable !== undefined) {
-    X(CreateDataProperty(obj, new Value('enumerable'), Desc.Enumerable));
+    X(CreateDataProperty(obj, Value('enumerable'), Desc.Enumerable));
   }
   if (Desc.Configurable !== undefined) {
-    X(CreateDataProperty(obj, new Value('configurable'), Desc.Configurable));
+    X(CreateDataProperty(obj, Value('configurable'), Desc.Configurable));
   }
   // Assert: All of the above CreateDataProperty operations return true.
   return obj;
 }
 
-/** http://tc39.es/ecma262/#sec-topropertydescriptor */
-export function ToPropertyDescriptor(Obj) {
+/** https://tc39.es/ecma262/#sec-topropertydescriptor */
+export function* ToPropertyDescriptor(Obj: Value): PlainEvaluator<Descriptor> {
   if (!(Obj instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', Obj);
   }
 
-  const desc = Descriptor({});
-  const hasEnumerable = Q(HasProperty(Obj, new Value('enumerable')));
+  let desc = Descriptor({});
+  const hasEnumerable = Q(yield* HasProperty(Obj, Value('enumerable')));
   if (hasEnumerable === Value.true) {
-    const enumerable = ToBoolean(Q(Get(Obj, new Value('enumerable'))));
-    desc.Enumerable = enumerable;
+    const enumerable = ToBoolean(Q(yield* Get(Obj, Value('enumerable'))));
+    desc = Descriptor({ ...desc, Enumerable: enumerable });
   }
-  const hasConfigurable = Q(HasProperty(Obj, new Value('configurable')));
+  const hasConfigurable = Q(yield* HasProperty(Obj, Value('configurable')));
   if (hasConfigurable === Value.true) {
-    const conf = ToBoolean(Q(Get(Obj, new Value('configurable'))));
-    desc.Configurable = conf;
+    const conf = ToBoolean(Q(yield* Get(Obj, Value('configurable'))));
+    desc = Descriptor({ ...desc, Configurable: conf });
   }
-  const hasValue = Q(HasProperty(Obj, new Value('value')));
+  const hasValue = Q(yield* HasProperty(Obj, Value('value')));
   if (hasValue === Value.true) {
-    const value = Q(Get(Obj, new Value('value')));
-    desc.Value = value;
+    const value = Q(yield* Get(Obj, Value('value')));
+    desc = Descriptor({ ...desc, Value: value });
   }
-  const hasWritable = Q(HasProperty(Obj, new Value('writable')));
+  const hasWritable = Q(yield* HasProperty(Obj, Value('writable')));
   if (hasWritable === Value.true) {
-    const writable = ToBoolean(Q(Get(Obj, new Value('writable'))));
-    desc.Writable = writable;
+    const writable = ToBoolean(Q(yield* Get(Obj, Value('writable'))));
+    desc = Descriptor({ ...desc, Writable: writable });
   }
-  const hasGet = Q(HasProperty(Obj, new Value('get')));
+  const hasGet = Q(yield* HasProperty(Obj, Value('get')));
   if (hasGet === Value.true) {
-    const getter = Q(Get(Obj, new Value('get')));
+    const getter = Q(yield* Get(Obj, Value('get')));
     if (IsCallable(getter) === Value.false && !(getter instanceof UndefinedValue)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', getter);
     }
-    desc.Get = getter;
+    desc = Descriptor({ ...desc, Get: getter as FunctionObject });
   }
-  const hasSet = Q(HasProperty(Obj, new Value('set')));
+  const hasSet = Q(yield* HasProperty(Obj, Value('set')));
   if (hasSet === Value.true) {
-    const setter = Q(Get(Obj, new Value('set')));
+    const setter = Q(yield* Get(Obj, Value('set')));
     if (IsCallable(setter) === Value.false && !(setter instanceof UndefinedValue)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', setter);
     }
-    desc.Set = setter;
+    desc = Descriptor({ ...desc, Set: setter as FunctionObject });
   }
   if (desc.Get !== undefined || desc.Set !== undefined) {
     if (desc.Value !== undefined || desc.Writable !== undefined) {
@@ -152,8 +165,8 @@ export function ToPropertyDescriptor(Obj) {
   return desc;
 }
 
-/** http://tc39.es/ecma262/#sec-completepropertydescriptor */
-export function CompletePropertyDescriptor(Desc) {
+/** https://tc39.es/ecma262/#sec-completepropertydescriptor */
+export function CompletePropertyDescriptor(Desc: Descriptor) {
   Assert(Desc instanceof Descriptor);
   const like = Descriptor({
     Value: Value.undefined,
@@ -165,30 +178,30 @@ export function CompletePropertyDescriptor(Desc) {
   });
   if (IsGenericDescriptor(Desc) || IsDataDescriptor(Desc)) {
     if (Desc.Value === undefined) {
-      Desc.Value = like.Value;
+      Desc = Descriptor({ ...Desc, Value: like.Value });
     }
     if (Desc.Writable === undefined) {
-      Desc.Writable = like.Writable;
+      Desc = Descriptor({ ...Desc, Writable: like.Writable });
     }
   } else {
     if (Desc.Get === undefined) {
-      Desc.Get = like.Get;
+      Desc = Descriptor({ ...Desc, Get: like.Get });
     }
     if (Desc.Set === undefined) {
-      Desc.Set = like.Set;
+      Desc = Descriptor({ ...Desc, Set: like.Set });
     }
   }
   if (Desc.Enumerable === undefined) {
-    Desc.Enumerable = like.Enumerable;
+    Desc = Descriptor({ ...Desc, Enumerable: like.Enumerable });
   }
   if (Desc.Configurable === undefined) {
-    Desc.Configurable = like.Configurable;
+    Desc = Descriptor({ ...Desc, Configurable: like.Configurable });
   }
   return Desc;
 }
 
-/** http://tc39.es/ecma262/#sec-createbytedatablock */
-export function CreateByteDataBlock(size) {
+/** https://tc39.es/ecma262/#sec-createbytedatablock */
+export function CreateByteDataBlock(size: number) {
   Assert(isNonNegativeInteger(size));
   let db;
   try {
@@ -199,11 +212,9 @@ export function CreateByteDataBlock(size) {
   return db;
 }
 
-/** http://tc39.es/ecma262/#sec-copydatablockbytes */
-export function CopyDataBlockBytes(toBlock, toIndex, fromBlock, fromIndex, count) {
+/** https://tc39.es/ecma262/#sec-copydatablockbytes */
+export function CopyDataBlockBytes(toBlock: DataBlock, toIndex: number, fromBlock: DataBlock, fromIndex: number, count: number) {
   Assert(fromBlock !== toBlock);
-  Assert(fromBlock instanceof DataBlock || Type(fromBlock) === 'Shared Data Block');
-  Assert(toBlock instanceof DataBlock || Type(toBlock) === 'Shared Data Block');
   Assert(Number.isSafeInteger(fromIndex) && fromIndex >= 0);
   Assert(Number.isSafeInteger(toIndex) && toIndex >= 0);
   Assert(Number.isSafeInteger(count) && count >= 0);
@@ -212,12 +223,7 @@ export function CopyDataBlockBytes(toBlock, toIndex, fromBlock, fromIndex, count
   const toSize = toBlock.byteLength;
   Assert(toIndex + count <= toSize);
   while (count > 0) {
-    if (Type(fromBlock) === 'Shared Data Block') {
-      Assert(false);
-    } else {
-      Assert(Type(toBlock) !== 'Shared Data Block');
-      toBlock[toIndex] = fromBlock[fromIndex];
-    }
+    toBlock[toIndex] = fromBlock[fromIndex];
     toIndex += 1;
     fromIndex += 1;
     count -= 1;

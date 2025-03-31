@@ -1,8 +1,8 @@
-// @ts-nocheck
-import { ValueSet } from '../helpers.mjs';
-import { LabelledEvaluation } from './all.mjs';
+import { JSStringSet } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { LabelledEvaluation } from './all.mts';
 
-/** http://tc39.es/ecma262/#sec-statement-semantics-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-statement-semantics-runtime-semantics-evaluation */
 //   BreakableStatement :
 //     IterationStatement
 //     SwitchStatement
@@ -10,9 +10,9 @@ import { LabelledEvaluation } from './all.mjs';
 //   IterationStatement :
 //     (DoStatement)
 //     (WhileStatement)
-export function Evaluate_BreakableStatement(BreakableStatement) {
+export function Evaluate_BreakableStatement(BreakableStatement: ParseNode.BreakableStatement) {
   // 1. Let newLabelSet be a new empty List.
-  const newLabelSet = new ValueSet();
+  const newLabelSet = new JSStringSet();
   // 2. Return the result of performing LabelledEvaluation of this BreakableStatement with argument newLabelSet.
   return LabelledEvaluation(BreakableStatement, newLabelSet);
 }

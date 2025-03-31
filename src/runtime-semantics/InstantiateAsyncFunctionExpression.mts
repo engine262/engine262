@@ -1,19 +1,21 @@
-// @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Value } from '../value.mjs';
+import { surroundingAgent } from '../host-defined/engine.mts';
+import {
+  PrivateName, Value, type PropertyKeyValue,
+} from '../value.mts';
 import {
   Assert,
   OrdinaryFunctionCreate,
   SetFunctionName,
   sourceTextMatchedBy,
-} from '../abstract-ops/all.mjs';
-import { StringValue } from '../static-semantics/all.mjs';
-import { X } from '../completion.mjs';
-import { NewDeclarativeEnvironment } from '../environment.mjs';
+} from '../abstract-ops/all.mts';
+import { StringValue } from '../static-semantics/all.mts';
+import { X } from '../completion.mts';
+import { DeclarativeEnvironmentRecord } from '../environment.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncfunctionexpression */
-export function InstantiateAsyncFunctionExpression(AsyncFunctionExpression, name) {
-  const { BindingIdentifier, FormalParameters, AsyncFunctionBody } = AsyncFunctionExpression;
+/** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncfunctionexpression */
+export function InstantiateAsyncFunctionExpression(AsyncFunctionExpression: ParseNode.AsyncFunctionExpression, name?: PropertyKeyValue | PrivateName) {
+  const { BindingIdentifier, FormalParameters, AsyncBody } = AsyncFunctionExpression;
   if (BindingIdentifier) {
     // 1. Assert: name is not present.
     Assert(name === undefined);
@@ -22,19 +24,19 @@ export function InstantiateAsyncFunctionExpression(AsyncFunctionExpression, name
     // 3. Let scope be the LexicalEnvironment of the running execution context.
     const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
     // 4. Let funcEnv be ! NewDeclarativeEnvironment(scope).
-    const funcEnv = X(NewDeclarativeEnvironment(scope));
+    const funcEnv = X(new DeclarativeEnvironmentRecord(scope));
     // 5. Perform ! funcEnv.CreateImmutableBinding(name, false).
     X(funcEnv.CreateImmutableBinding(name, Value.false));
     // 6. Let privateScope be the running execution context's PrivateEnvironment.
     const privateScope = surroundingAgent.runningExecutionContext.PrivateEnvironment;
     // 7. Let sourceText be the source text matched by AsyncFunctionExpression.
     const sourceText = sourceTextMatchedBy(AsyncFunctionExpression);
-    // 8. Let closure be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, FormalParameters, AsyncFunctionBody, non-lexical-this, funcEnv, privateScope).
+    // 8. Let closure be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, FormalParameters, AsyncBody, non-lexical-this, funcEnv, privateScope).
     const closure = X(OrdinaryFunctionCreate(
       surroundingAgent.intrinsic('%AsyncFunction.prototype%'),
       sourceText,
       FormalParameters,
-      AsyncFunctionBody,
+      AsyncBody,
       'non-lexical-this',
       funcEnv,
       privateScope,
@@ -48,7 +50,7 @@ export function InstantiateAsyncFunctionExpression(AsyncFunctionExpression, name
   }
   // 1. If name is not present, set name to "".
   if (name === undefined) {
-    name = new Value('');
+    name = Value('');
   }
   // 2. Let scope be the LexicalEnvironment of the running execution context.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
@@ -56,12 +58,12 @@ export function InstantiateAsyncFunctionExpression(AsyncFunctionExpression, name
   const privateScope = surroundingAgent.runningExecutionContext.PrivateEnvironment;
   // 4. Let sourceText be the source text matched by AsyncFunctionExpression.
   const sourceText = sourceTextMatchedBy(AsyncFunctionExpression);
-  // 5. Let closure be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, FormalParameters, AsyncFunctionBody, non-lexical-this, scope, privateScope).
+  // 5. Let closure be ! OrdinaryFunctionCreate(%AsyncFunction.prototype%, sourceText, FormalParameters, AsyncBody, non-lexical-this, scope, privateScope).
   const closure = X(OrdinaryFunctionCreate(
     surroundingAgent.intrinsic('%AsyncFunction.prototype%'),
     sourceText,
     FormalParameters,
-    AsyncFunctionBody,
+    AsyncBody,
     'non-lexical-this',
     scope,
     privateScope,

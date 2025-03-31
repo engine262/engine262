@@ -1,10 +1,10 @@
-// @ts-nocheck
-import { OutOfRange } from '../helpers.mjs';
-import { Value } from '../value.mjs';
-import { StringValue } from './all.mjs';
+import { OutOfRange, isArray } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { JSStringValue, Value } from '../value.mts';
+import { StringValue } from './all.mts';
 
-export function BoundNames(node) {
-  if (Array.isArray(node)) {
+export function BoundNames(node: ParseNode | readonly ParseNode[]): JSStringValue[] {
+  if (isArray(node)) {
     const names = [];
     for (const item of node) {
       names.push(...BoundNames(item));
@@ -20,21 +20,21 @@ export function BoundNames(node) {
       if (node.BindingIdentifier) {
         return BoundNames(node.BindingIdentifier);
       }
-      return BoundNames(node.BindingPattern);
+      return BoundNames(node.BindingPattern!);
     case 'VariableStatement':
       return BoundNames(node.VariableDeclarationList);
     case 'VariableDeclaration':
       if (node.BindingIdentifier) {
         return BoundNames(node.BindingIdentifier);
       }
-      return BoundNames(node.BindingPattern);
+      return BoundNames(node.BindingPattern!);
     case 'ForDeclaration':
       return BoundNames(node.ForBinding);
     case 'ForBinding':
       if (node.BindingIdentifier) {
         return BoundNames(node.BindingIdentifier);
       }
-      return BoundNames(node.BindingPattern);
+      return BoundNames(node.BindingPattern!);
     case 'FunctionDeclaration':
     case 'GeneratorDeclaration':
     case 'AsyncFunctionDeclaration':
@@ -43,7 +43,7 @@ export function BoundNames(node) {
       if (node.BindingIdentifier) {
         return BoundNames(node.BindingIdentifier);
       }
-      return [new Value('*default*')];
+      return [Value('*default*')];
     case 'ImportSpecifier':
       return BoundNames(node.ImportedBinding);
     case 'ExportDeclaration':
@@ -65,7 +65,7 @@ export function BoundNames(node) {
         return declarationNames;
       }
       if (node.AssignmentExpression) {
-        return [new Value('*default*')];
+        return [Value('*default*')];
       }
       throw new OutOfRange('BoundNames', node);
     case 'SingleNameBinding':
@@ -74,7 +74,7 @@ export function BoundNames(node) {
       if (node.BindingIdentifier) {
         return BoundNames(node.BindingIdentifier);
       }
-      return BoundNames(node.BindingPattern);
+      return BoundNames(node.BindingPattern!);
     case 'BindingRestProperty':
       return BoundNames(node.BindingIdentifier);
     case 'BindingElement':

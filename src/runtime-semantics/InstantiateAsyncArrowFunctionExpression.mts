@@ -1,15 +1,16 @@
-// @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Value } from '../value.mjs';
-import { OrdinaryFunctionCreate, SetFunctionName, sourceTextMatchedBy } from '../abstract-ops/all.mjs';
+import { surroundingAgent } from '../host-defined/engine.mts';
+import { Value } from '../value.mts';
+import { OrdinaryFunctionCreate, SetFunctionName, sourceTextMatchedBy } from '../abstract-ops/all.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import type { PrivateName, PropertyKeyValue } from '#self';
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncarrowfunctionexpression */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncarrowfunctionexpression */
 // AsyncArrowFunction : ArrowParameters `=>` AsyncConciseBody
-export function InstantiateAsyncArrowFunctionExpression(AsyncArrowFunction, name) {
+export function InstantiateAsyncArrowFunctionExpression(AsyncArrowFunction: ParseNode.AsyncArrowFunction, name?: PropertyKeyValue | PrivateName) {
   const { ArrowParameters, AsyncConciseBody } = AsyncArrowFunction;
   // 1. If name is not present, set name to "".
   if (name === undefined) {
-    name = new Value('');
+    name = Value('');
   }
   // 2. Let scope be the LexicalEnvironment of the running execution context.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;

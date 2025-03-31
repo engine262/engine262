@@ -1,7 +1,6 @@
-// @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { EnvironmentRecord } from '../environment.mjs';
-import { Assert } from '../abstract-ops/all.mjs';
+import { surroundingAgent } from '../host-defined/engine.mts';
+import { GlobalEnvironmentRecord } from '../environment.mts';
+import { Assert } from '../abstract-ops/all.mts';
 import {
   BoundNames,
   IsConstantDeclaration,
@@ -9,15 +8,14 @@ import {
   LexicallyScopedDeclarations,
   VarDeclaredNames,
   VarScopedDeclarations,
-} from '../static-semantics/all.mjs';
-import { Value } from '../value.mjs';
-import { Q, NormalCompletion } from '../completion.mjs';
-import { ValueSet } from '../helpers.mjs';
-import { InstantiateFunctionObject } from './all.mjs';
+} from '../static-semantics/all.mts';
+import { Value } from '../value.mts';
+import { Q, NormalCompletion } from '../completion.mts';
+import { JSStringSet } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { InstantiateFunctionObject } from './all.mts';
 
-export function GlobalDeclarationInstantiation(script, env) {
-  // 1. Assert: env is a global Environment Record.
-  Assert(env instanceof EnvironmentRecord);
+export function* GlobalDeclarationInstantiation(script: ParseNode.Script, env: GlobalEnvironmentRecord) {
   // 2. Let lexNames be the LexicallyDeclaredNames of script.
   const lexNames = LexicallyDeclaredNames(script);
   // 3. Let varNames be the VarDeclaredNames of script.
@@ -29,11 +27,11 @@ export function GlobalDeclarationInstantiation(script, env) {
       return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
     }
     // 1. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
-    if (env.HasLexicalDeclaration(name) === Value.true) {
+    if ((yield* env.HasLexicalDeclaration(name)) === Value.true) {
       return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
     }
     // 1. Let hasRestrictedGlobal be ? env.HasRestrictedGlobalProperty(name).
-    const hasRestrictedGlobal = Q(env.HasRestrictedGlobalProperty(name));
+    const hasRestrictedGlobal = Q(yield* env.HasRestrictedGlobalProperty(name));
     // 1. If hasRestrictedGlobal is true, throw a SyntaxError exception.
     if (hasRestrictedGlobal === Value.true) {
       return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
@@ -42,7 +40,7 @@ export function GlobalDeclarationInstantiation(script, env) {
   // 5. For each name in varNames, do
   for (const name of varNames) {
     // 1. If env.HasLexicalDeclaration(name) is true, throw a SyntaxError exception.
-    if (env.HasLexicalDeclaration(name) === Value.true) {
+    if ((yield* env.HasLexicalDeclaration(name)) === Value.true) {
       return surroundingAgent.Throw('SyntaxError', 'AlreadyDeclared', name);
     }
   }
@@ -51,7 +49,7 @@ export function GlobalDeclarationInstantiation(script, env) {
   // 7. Let functionsToInitialize be a new empty List.
   const functionsToInitialize = [];
   // 8. Let declaredFunctionNames be a new empty List.
-  const declaredFunctionNames = new ValueSet();
+  const declaredFunctionNames = new JSStringSet();
   // 9. For each d in varDeclarations, in reverse list order, do
   for (const d of [...varDeclarations].reverse()) {
     // a. If d is neither a VariableDeclaration nor a ForBinding nor a BindingIdentifier, then
@@ -69,7 +67,7 @@ export function GlobalDeclarationInstantiation(script, env) {
       // iv. If fn is not an element of declaredFunctionNames, then
       if (!declaredFunctionNames.has(fn)) {
         // 1. Let fnDefinable be ? env.CanDeclareGlobalFunction(fn).
-        const fnDefinable = Q(env.CanDeclareGlobalFunction(fn));
+        const fnDefinable = Q(yield* env.CanDeclareGlobalFunction(fn));
         // 2. If fnDefinable is false, throw a TypeError exception.
         if (fnDefinable === Value.false) {
           return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', fn);
@@ -82,7 +80,7 @@ export function GlobalDeclarationInstantiation(script, env) {
     }
   }
   // 10. Let declaredVarNames be a new empty List.
-  const declaredVarNames = new ValueSet();
+  const declaredVarNames = new JSStringSet();
   // 11. For each d in varDeclarations, do
   for (const d of varDeclarations) {
     // a. If d is a VariableDeclaration, a ForBinding, or a BindingIdentifier, then
@@ -94,7 +92,7 @@ export function GlobalDeclarationInstantiation(script, env) {
         // 1. If vn is not an element of declaredFunctionNames, then
         if (!declaredFunctionNames.has(vn)) {
           // a. Let vnDefinable be ? env.CanDeclareGlobalVar(vn).
-          const vnDefinable = Q(env.CanDeclareGlobalVar(vn));
+          const vnDefinable = Q(yield* env.CanDeclareGlobalVar(vn));
           // b. If vnDefinable is false, throw a TypeError exception.
           if (vnDefinable === Value.false) {
             return surroundingAgent.Throw('TypeError', 'AlreadyDeclared', vn);
@@ -125,7 +123,7 @@ export function GlobalDeclarationInstantiation(script, env) {
         Q(env.CreateImmutableBinding(dn, Value.true));
       } else { // 1. Else,
         // 1. Perform ? env.CreateMutableBinding(dn, false).
-        Q(env.CreateMutableBinding(dn, Value.false));
+        Q(yield* env.CreateMutableBinding(dn, Value.false));
       }
     }
   }
@@ -136,12 +134,12 @@ export function GlobalDeclarationInstantiation(script, env) {
     // b. Let fo be InstantiateFunctionObject of f with argument env and privateEnv.
     const fo = InstantiateFunctionObject(f, env, privateEnv);
     // c. Perform ? env.CreateGlobalFunctionBinding(fn, fo, false).
-    Q(env.CreateGlobalFunctionBinding(fn, fo, Value.false));
+    Q(yield* env.CreateGlobalFunctionBinding(fn, fo, Value.false));
   }
   // 18. For each String vn in declaredVarNames, in list order, do
   for (const vn of declaredVarNames) {
     // a. Perform ? env.CreateGlobalVarBinding(vn, false).
-    Q(env.CreateGlobalVarBinding(vn, Value.false));
+    Q(yield* env.CreateGlobalVarBinding(vn, Value.false));
   }
   // 19. Return NormalCompletion(empty).
   return NormalCompletion(undefined);

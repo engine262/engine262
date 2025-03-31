@@ -1,8 +1,8 @@
-// @ts-nocheck
-import { OutOfRange } from '../helpers.mjs';
+import { OutOfRange, isArray } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
-export function IsSimpleParameterList(node) {
-  if (Array.isArray(node)) {
+export function IsSimpleParameterList(node: ParseNode | readonly ParseNode[]) {
+  if (isArray(node)) {
     for (const n of node) {
       if (!IsSimpleParameterList(n)) {
         return false;

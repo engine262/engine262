@@ -1,17 +1,19 @@
-// @ts-nocheck
-import { Q } from '../completion.mjs';
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   GetIdentifierReference,
   EnvironmentRecord,
-} from '../environment.mjs';
-import { Value } from '../value.mjs';
-import { Assert } from './all.mjs';
+  type EnvironmentRecordWithThisBinding,
+} from '../environment.mts';
+import { __ts_cast__ } from '../helpers.mts';
+import {
+  JSStringValue, NullValue, ObjectValue, UndefinedValue, Value,
+} from '../value.mts';
+import { Assert } from './all.mts';
 
 // This file covers abstract operations defined in
-/** http://tc39.es/ecma262/#sec-execution-contexts */
+/** https://tc39.es/ecma262/#sec-execution-contexts */
 
-/** http://tc39.es/ecma262/#sec-getactivescriptormodule */
+/** https://tc39.es/ecma262/#sec-getactivescriptormodule */
 export function GetActiveScriptOrModule() {
   for (let i = surroundingAgent.executionContextStack.length - 1; i >= 0; i -= 1) {
     const e = surroundingAgent.executionContextStack[i];
@@ -22,8 +24,8 @@ export function GetActiveScriptOrModule() {
   return Value.null;
 }
 
-/** http://tc39.es/ecma262/#sec-resolvebinding */
-export function ResolveBinding(name, env, strict) {
+/** https://tc39.es/ecma262/#sec-resolvebinding */
+export function ResolveBinding(name: JSStringValue, env?: EnvironmentRecord | UndefinedValue | NullValue, strict?: boolean) {
   // 1. If env is not present or if env is undefined, then
   if (env === undefined || env === Value.undefined) {
     // a. Set env to the running execution context's LexicalEnvironment.
@@ -36,41 +38,42 @@ export function ResolveBinding(name, env, strict) {
   return GetIdentifierReference(env, name, strict ? Value.true : Value.false);
 }
 
-/** http://tc39.es/ecma262/#sec-getthisenvironment */
-export function GetThisEnvironment() {
+/** https://tc39.es/ecma262/#sec-getthisenvironment */
+export function GetThisEnvironment(): EnvironmentRecordWithThisBinding {
   // 1. Let env be the running execution context's LexicalEnvironment.
   let env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 2. Repeat,
   while (true) {
+    __ts_cast__<EnvironmentRecord>(env);
     // a. Let exists be env.HasThisBinding().
     const exists = env.HasThisBinding();
     // b. If exists is true, return envRec.
     if (exists === Value.true) {
-      return env;
+      return env as EnvironmentRecordWithThisBinding;
     }
     // c. Let outer be env.[[OuterEnv]].
     const outer = env.OuterEnv;
     // d. Assert: outer is not null.
-    Assert(outer !== Value.null);
+    Assert(!(outer instanceof NullValue));
     // e. Set env to outer.
     env = outer;
   }
 }
 
-/** http://tc39.es/ecma262/#sec-resolvethisbinding */
+/** https://tc39.es/ecma262/#sec-resolvethisbinding */
 export function ResolveThisBinding() {
   const envRec = GetThisEnvironment();
-  return Q(envRec.GetThisBinding());
+  return envRec.GetThisBinding();
 }
 
-/** http://tc39.es/ecma262/#sec-getnewtarget */
-export function GetNewTarget() {
+/** https://tc39.es/ecma262/#sec-getnewtarget */
+export function GetNewTarget(): ObjectValue | UndefinedValue {
   const envRec = GetThisEnvironment();
   Assert('NewTarget' in envRec);
   return envRec.NewTarget;
 }
 
-/** http://tc39.es/ecma262/#sec-getglobalobject */
+/** https://tc39.es/ecma262/#sec-getglobalobject */
 export function GetGlobalObject() {
   const currentRealm = surroundingAgent.currentRealmRecord;
   return currentRealm.GlobalObject;

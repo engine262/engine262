@@ -1,32 +1,43 @@
-// @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Call,
   F,
   IsCallable,
   RequireInternalSlot,
-  SameValueZero,
   Get,
   ToNumber,
   ToIntegerOrInfinity,
   IteratorStep,
   IteratorValue,
   OrdinaryObjectCreate,
-} from '../abstract-ops/all.mjs';
+  SameValueZero, R,
+  Realm,
+} from '../abstract-ops/all.mts';
 import {
+  Descriptor,
   NumberValue,
   Value,
   wellKnownSymbols,
   ObjectValue,
+  type Arguments,
+  type FunctionCallContext,
 } from '../value.mjs';
-import { EnsureCompletion, Q, X } from '../completion.mjs';
+import {
+  EnsureCompletion, Q, X, type ValueCompletion, type ValueEvaluator,
+} from '../completion.mjs';
+import { R as MathematicalValue } from '../abstract-ops/all.mjs';
+import { __ts_cast__ } from '../helpers.mts';
 import { bootstrapPrototype } from './bootstrap.mjs';
 import { CreateSetIterator } from './SetIteratorPrototype.mjs';
+import type { SetObject } from './Set.mts';
+import type {
+  IteratorRecord, Mutable, PlainEvaluator,
+} from '#self';
 
-/** http://tc39.es/ecma262/#sec-set.prototype.add */
-function SetProto_add([value = Value.undefined], { thisValue }) {
+/** https://tc39.es/ecma262/#sec-set.prototype.add */
+function SetProto_add([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let S be the this value.
-  const S = thisValue;
+  const S = thisValue as SetObject;
   // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
   Q(RequireInternalSlot(S, 'SetData'));
   // 3. Let entries be the List that is S.[[SetData]].
@@ -40,24 +51,28 @@ function SetProto_add([value = Value.undefined], { thisValue }) {
     }
   }
   // 5. If value is -0𝔽, set value to +0𝔽.
-  if (value instanceof NumberValue && Object.is(value.numberValue(), -0)) {
+  if (value instanceof NumberValue && Object.is(R(value), -0)) {
     value = F(+0);
   }
   // 6. Append value as the last element of entries.
+  Q(surroundingAgent.debugger_tryTouchDuringPreview(S));
   entries.push(value);
   // 7. Return S.
   return S;
 }
 
-/** http://tc39.es/ecma262/#sec-set.prototype.clear */
-function SetProto_clear(args, { thisValue }) {
+/** https://tc39.es/ecma262/#sec-set.prototype.clear */
+function SetProto_clear(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let S be the this value.
-  const S = thisValue;
+  const S = thisValue as SetObject;
   // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
   Q(RequireInternalSlot(S, 'SetData'));
   // 3. Let entries be the List that is S.[[SetData]].
   const entries = S.SetData;
   // 4. For each e that is an element of entries, do
+  if (entries.length) {
+    Q(surroundingAgent.debugger_tryTouchDuringPreview(S));
+  }
   for (let i = 0; i < entries.length; i += 1) {
     // a. Replace the element of entries whose value is e with an element whose value is empty.
     entries[i] = undefined;
@@ -66,10 +81,10 @@ function SetProto_clear(args, { thisValue }) {
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-set.prototype.delete */
-function SetProto_delete([value = Value.undefined], { thisValue }) {
+/** https://tc39.es/ecma262/#sec-set.prototype.delete */
+function SetProto_delete([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let S be the this value.
-  const S = thisValue;
+  const S = thisValue as SetObject;
   // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
   Q(RequireInternalSlot(S, 'SetData'));
   // 3. Let entries be the List that is S.[[SetData]].
@@ -80,6 +95,7 @@ function SetProto_delete([value = Value.undefined], { thisValue }) {
     // a. If e is not empty and SameValueZero(e, value) is true, then
     if (e !== undefined && SameValueZero(e, value) === Value.true) {
       // i. Replace the element of entries whose value is e with an element whose value is empty.
+      Q(surroundingAgent.debugger_tryTouchDuringPreview(S));
       entries[i] = undefined;
       // ii. Return true.
       return Value.true;
@@ -89,18 +105,18 @@ function SetProto_delete([value = Value.undefined], { thisValue }) {
   return Value.false;
 }
 
-/** http://tc39.es/ecma262/#sec-set.prototype.entries */
-function SetProto_entries(args, { thisValue }) {
+/** https://tc39.es/ecma262/#sec-set.prototype.entries */
+function SetProto_entries(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let S be the this value.
   const S = thisValue;
   // 2. Return ? CreateSetIterator(S, key+value).
   return Q(CreateSetIterator(S, 'key+value'));
 }
 
-/** http://tc39.es/ecma262/#sec-set.prototype.foreach */
-function SetProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
+/** https://tc39.es/ecma262/#sec-set.prototype.foreach */
+function* SetProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let S be the this value.
-  const S = thisValue;
+  const S = thisValue as SetObject;
   // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
   Q(RequireInternalSlot(S, 'SetData'));
   // 3. If IsCallable(callbackfn) is false, throw a TypeError exception
@@ -114,17 +130,17 @@ function SetProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefin
     // a. If e is not empty, then
     if (e !== undefined) {
       // i. Perform ? Call(callbackfn, thisArg, « e, e, S »).
-      Q(Call(callbackfn, thisArg, [e, e, S]));
+      Q(yield* Call(callbackfn, thisArg, [e, e, S]));
     }
   }
   // 6. Return undefined.
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-set.prototype.has */
-function SetProto_has([value = Value.undefined], { thisValue }) {
+/** https://tc39.es/ecma262/#sec-set.prototype.has */
+function SetProto_has([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let S be the this value.
-  const S = thisValue;
+  const S = thisValue as SetObject;
   // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
   Q(RequireInternalSlot(S, 'SetData'));
   // 3. Let entries be the List that is S.[[SetData]].
@@ -140,10 +156,10 @@ function SetProto_has([value = Value.undefined], { thisValue }) {
   return Value.false;
 }
 
-/** http://tc39.es/ecma262/#sec-get-set.prototype.size */
-function SetProto_sizeGetter(args, { thisValue }) {
+/** https://tc39.es/ecma262/#sec-get-set.prototype.size */
+function SetProto_sizeGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let S be the this value.
-  const S = thisValue;
+  const S = thisValue as SetObject;
   // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
   Q(RequireInternalSlot(S, 'SetData'));
   // 3. Let entries be the List that is S.[[SetData]].
@@ -161,46 +177,47 @@ function SetProto_sizeGetter(args, { thisValue }) {
   return F(count);
 }
 
-/** http://tc39.es/ecma262/#sec-set.prototype.values */
-function SetProto_values(args, { thisValue }) {
+/** https://tc39.es/ecma262/#sec-set.prototype.values */
+function SetProto_values(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let S be the this value.
   const S = thisValue;
   // 2. Return ? CreateSetIterator(S, value).
   return Q(CreateSetIterator(S, 'value'));
 }
 
-/** https://tc39.es/proposal-set-methods/#sec-set.prototype.union */
-function SetProto_union([other = Value.undefined], { thisValue }) {
+/** https://tc39.es/ecma262/#sec-set.prototype.union */
+function* SetProto_union([other = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be the this value.
   const O = thisValue;
 
   // 2. Perform ? RequireInternalSlot(O, [[SetData]]).
   Q(RequireInternalSlot(O, 'SetData'));
+  __ts_cast__<SetObject>(O);
 
   // 3. Let otherRec be ? GetSetRecord(other).
-  const otherRec = Q(GetSetRecord(other));
+  const otherRec = Q(yield* GetSetRecord(other));
 
   // 4. Let keysIter be ? GetKeysIterator(otherRec).
-  const keysIter = Q(GetKeysIterator(otherRec));
+  const keysIter = Q(yield* GetKeysIterator(otherRec));
 
   // 5. Let resultSetData be a copy of O.[[SetData]].
   const resultSetData = [...O.SetData];
 
   // 6. Let next be true.
-  let next = Value.true;
+  let next: Value | 'done' = Value.true;
 
-  // 7. Repeat, while next is not false,
-  while (next !== Value.false) {
+  // 7. Repeat, while next is not DONE,
+  while (next !== 'done') {
     // a. Set next to ? IteratorStep(keysIter).
-    next = Q(IteratorStep(keysIter));
+    next = Q(yield* IteratorStep(keysIter));
 
-    // b. If next is not false, then
-    if (next !== Value.false) {
+    // b. If next is not DONE, then
+    if (next !== 'done') {
       // i. Let nextValue be ? IteratorValue(next).
-      let nextValue = Q(IteratorValue(next));
+      let nextValue = Q(yield* IteratorValue(next));
 
       // ii. If nextValue is -0𝔽, set nextValue to +0𝔽.
-      if (nextValue instanceof NumberValue && Object.is(nextValue.numberValue(), -0)) {
+      if (nextValue instanceof NumberValue && Object.is(MathematicalValue(nextValue), -0)) {
         nextValue = F(+0);
       }
 
@@ -213,7 +230,7 @@ function SetProto_union([other = Value.undefined], { thisValue }) {
   }
 
   // 8. Let result be OrdinaryObjectCreate(%Set.prototype%, « [[SetData]] »).
-  const result = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Set.prototype%'), ['SetData']);
+  const result = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Set.prototype%'), ['SetData']) as Mutable<SetObject>;
 
   // 9. Set result.[[SetData]] to resultSetData.
   result.SetData = resultSetData;
@@ -222,7 +239,7 @@ function SetProto_union([other = Value.undefined], { thisValue }) {
   return EnsureCompletion(result);
 }
 
-export function bootstrapSetPrototype(realmRec) {
+export function bootstrapSetPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['add', SetProto_add, 1],
     ['clear', SetProto_clear, 0],
@@ -235,37 +252,44 @@ export function bootstrapSetPrototype(realmRec) {
     ['union', SetProto_union, 1],
   ], realmRec.Intrinsics['%Object.prototype%'], 'Set');
 
-  const valuesFunc = X(proto.GetOwnProperty(new Value('values')));
-  X(proto.DefineOwnProperty(new Value('keys'), valuesFunc));
+  const valuesFunc = X(proto.GetOwnProperty(Value('values'))) as Descriptor;
+  X(proto.DefineOwnProperty(Value('keys'), valuesFunc));
   X(proto.DefineOwnProperty(wellKnownSymbols.iterator, valuesFunc));
 
   realmRec.Intrinsics['%Set.prototype%'] = proto;
 }
 
-/** https://tc39.es/proposal-set-methods/#sec-getsetrecord */
-function GetSetRecord(obj) {
+interface SetRecord {
+  readonly Set: ObjectValue;
+  readonly Size: number;
+  readonly Has: Value;
+  readonly Keys: Value;
+}
+
+/** https://tc39.es/ecma262/#sec-getsetrecord */
+function* GetSetRecord(obj: Value): PlainEvaluator<SetRecord> {
   // 1. If obj is not an Object, throw a TypeError exception.
   if (!(obj instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', obj);
   }
 
   // 2. Let rawSize be ? Get(obj, "size").
-  const rawSize = Q(Get(obj, new Value('size')));
+  const rawSize = Q(yield* Get(obj, Value('size')));
 
   // 3. Let numSize be ? ToNumber(rawSize).
   // 4. NOTE: If rawSize is undefined, then numSize will be NaN.
-  const numSize = Q(ToNumber(rawSize));
+  const numSize = Q(yield* ToNumber(rawSize));
 
   // 5. If numSize is NaN, throw a TypeError exception.
   if (numSize.isNaN()) {
-    return surroundingAgent.Throw('TypeError', 'SizeIsNaN', numSize);
+    return surroundingAgent.Throw('TypeError', 'SizeIsNaN');
   }
 
   // 6. Let intSize be ! ToIntegerOrInfinity(numSize).
   const intSize = X(ToIntegerOrInfinity(numSize));
 
   // 7. Let has be ? Get(obj, "has").
-  const has = Q(Get(obj, new Value('has')));
+  const has = Q(yield* Get(obj, Value('has')));
 
   // 8. If IsCallable(has) is false, throw a TypeError exception.
   if (IsCallable(has) === Value.false) {
@@ -273,7 +297,7 @@ function GetSetRecord(obj) {
   }
 
   // 9. Let keys be ? Get(obj, "keys").
-  const keys = Q(Get(obj, new Value('keys')));
+  const keys = Q(yield* Get(obj, Value('keys')));
 
   // 10. If IsCallable(keys) is false, throw a TypeError exception.
   if (IsCallable(keys) === Value.false) {
@@ -281,7 +305,7 @@ function GetSetRecord(obj) {
   }
 
   // 11. Return a new Set Record { [[Set]]: obj, [[Size]]: intSize, [[Has]]: has, [[Keys]]: keys }.
-  const setRecord = {
+  const setRecord: SetRecord = {
     Set: obj,
     Size: intSize,
     Has: has,
@@ -292,7 +316,7 @@ function GetSetRecord(obj) {
 }
 
 /** https://tc39.es/proposal-set-methods/#sec-getkeysiterator */
-function GetKeysIterator(setRec) {
+function* GetKeysIterator(setRec: SetRecord): PlainEvaluator<IteratorRecord> {
   // 1. Let keysIter be ? Call(setRec.[[Keys]], setRec.[[Set]]).
   const keysIter = Q(Call(setRec.Keys, setRec.Set));
 
@@ -302,7 +326,7 @@ function GetKeysIterator(setRec) {
   }
 
   // 3. Let nextMethod be ? Get(keysIter, "next").
-  const nextMethod = Q(Get(keysIter, new Value('next')));
+  const nextMethod = Q(yield* Get(keysIter, Value('next')));
 
   // 4. If IsCallable(nextMethod) is false, throw a TypeError exception.
   if (IsCallable(nextMethod) === Value.false) {
@@ -310,7 +334,7 @@ function GetKeysIterator(setRec) {
   }
 
   // 5. Return a new Iterator Record { [[Iterator]]: keysIter, [[NextMethod]]: nextMethod, [[Done]]: false }.
-  const iteratorRecord = {
+  const iteratorRecord: IteratorRecord = {
     Iterator: keysIter,
     NextMethod: nextMethod,
     Done: Value.false,
@@ -319,8 +343,8 @@ function GetKeysIterator(setRec) {
   return EnsureCompletion(iteratorRecord);
 }
 
-/** https://tc39.es/proposal-set-methods/#sec-setdatahas */
-function SetDataHas(resultSetData, value) {
+/** https://tc39.es/ecma262/#sec-setdatahas */
+function SetDataHas(resultSetData: (Value | undefined)[], value: Value) {
   // 1. For each element e of resultSetData, do
   for (const e of resultSetData) {
     // a. If e is not empty and SameValueZero(e, value) is true, return true.

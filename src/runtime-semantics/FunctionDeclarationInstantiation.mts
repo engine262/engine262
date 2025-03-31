@@ -1,12 +1,12 @@
-// @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Value } from '../value.mjs';
+import { surroundingAgent } from '../host-defined/engine.mts';
+import { Value, type Arguments } from '../value.mts';
 import {
   Assert,
   CreateListIteratorRecord,
   CreateMappedArgumentsObject,
   CreateUnmappedArgumentsObject,
-} from '../abstract-ops/all.mjs';
+  type ECMAScriptFunctionObject,
+} from '../abstract-ops/all.mts';
 import {
   BoundNames,
   IsConstantDeclaration,
@@ -16,21 +16,22 @@ import {
   VarScopedDeclarations,
   LexicallyDeclaredNames,
   LexicallyScopedDeclarations,
-} from '../static-semantics/all.mjs';
-import { NewDeclarativeEnvironment } from '../environment.mjs';
-import { Q, X, NormalCompletion } from '../completion.mjs';
-import { ValueSet } from '../helpers.mjs';
+} from '../static-semantics/all.mts';
+import { DeclarativeEnvironmentRecord } from '../environment.mts';
+import { Q, X, NormalCompletion } from '../completion.mts';
+import { JSStringSet } from '../helpers.mts';
+import type { StatementEvaluator } from '../evaluator.mts';
 import {
   InstantiateFunctionObject,
   IteratorBindingInitialization_FormalParameters,
-} from './all.mjs';
+} from './all.mts';
 
-/** http://tc39.es/ecma262/#sec-functiondeclarationinstantiation */
-export function* FunctionDeclarationInstantiation(func, argumentsList) {
+/** https://tc39.es/ecma262/#sec-functiondeclarationinstantiation */
+export function* FunctionDeclarationInstantiation(func: ECMAScriptFunctionObject, argumentsList: Arguments): StatementEvaluator {
   // 1. Let calleeContext be the running execution context.
   const calleeContext = surroundingAgent.runningExecutionContext;
   // 2. Let code be func.[[ECMAScriptCode]].
-  const code = func.ECMAScriptCode;
+  const code = func.ECMAScriptCode!;
   // 3. Let strict be func.[[Strict]].
   const strict = func.Strict;
   // 4. Let formals be func.[[FormalParameters]].
@@ -38,7 +39,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
   // 5. Let parameterNames be BoundNames of formals.
   const parameterNames = BoundNames(formals);
   // 6. If parameterNames has any duplicate entries, let hasDuplicates be true. Otherwise, let hasDuplicates be false.
-  const hasDuplicates = new ValueSet(parameterNames).size !== parameterNames.length;
+  const hasDuplicates = new JSStringSet(parameterNames).size !== parameterNames.length;
   // 7. Let simpleParameterList be IsSimpleParameterList of formals.
   const simpleParameterList = IsSimpleParameterList(formals);
   // 8. Let hasParameterExpressions be ContainsExpression of formals.
@@ -48,9 +49,9 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
   // 10. Let varDeclarations be the VarScopedDeclarations of code.
   const varDeclarations = VarScopedDeclarations(code);
   // 11. Let lexicalNames be the LexicallyDeclaredNames of code.
-  const lexicalNames = new ValueSet(LexicallyDeclaredNames(code));
+  const lexicalNames = new JSStringSet(LexicallyDeclaredNames(code));
   // 12. Let functionNames be a new empty List.
-  const functionNames = new ValueSet();
+  const functionNames = new JSStringSet();
   // 13. Let functionNames be a new empty List.
   const functionsToInitialize = [];
   // 14. For each d in varDeclarations, in reverse list order, do
@@ -83,12 +84,12 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
     // a. NOTE: Arrow functions never have an arguments objects.
     // b. Set argumentsObjectNeeded to false.
     argumentsObjectNeeded = false;
-  } else if (new ValueSet(parameterNames).has(new Value('arguments'))) {
+  } else if (new JSStringSet(parameterNames).has('arguments')) {
     // a. Set argumentsObjectNeeded to false.
     argumentsObjectNeeded = false;
   } else if (hasParameterExpressions === false) {
     // a. If "arguments" is an element of functionNames or if "arguments" is an element of lexicalNames, then
-    if (functionNames.has(new Value('arguments')) || lexicalNames.has(new Value('arguments'))) {
+    if (functionNames.has('arguments') || lexicalNames.has('arguments')) {
       // i. Set argumentsObjectNeeded to false.
       argumentsObjectNeeded = false;
     }
@@ -105,7 +106,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
     // b. Let calleeEnv be the LexicalEnvironment of calleeContext.
     const calleeEnv = calleeContext.LexicalEnvironment;
     // c. Let env be NewDeclarativeEnvironment(calleeEnv).
-    env = NewDeclarativeEnvironment(calleeEnv);
+    env = new DeclarativeEnvironmentRecord(calleeEnv);
     // d. Assert: The VariableEnvironment of calleeContext is calleeEnv.
     Assert(calleeContext.VariableEnvironment === calleeEnv);
     // e. Set the LexicalEnvironment of calleeContext to env.
@@ -114,7 +115,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
   // 21. For each String paramName in parameterNames, do
   for (const paramName of parameterNames) {
     // a. Let alreadyDeclared be env.HasBinding(paramName).
-    const alreadyDeclared = env.HasBinding(paramName);
+    const alreadyDeclared = yield* env.HasBinding(paramName);
     // b. NOTE: Early errors ensure that duplicate parameter names can only occur in
     //    non-strict functions that do not have parameter default values or rest parameters.
     // c. If alreadyDeclared is false, then
@@ -129,7 +130,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
     }
   }
   // 22. If argumentsObjectNeeded is true, then
-  let parameterBindings;
+  let parameterBindings: JSStringSet;
   if (argumentsObjectNeeded === true) {
     let ao;
     // a. If strict is true or if simpleParameterList is false, then
@@ -146,18 +147,19 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
     // c. If strict is true, then
     if (strict) {
       // i. Perform ! env.CreateImmutableBinding("arguments", false).
-      X(env.CreateImmutableBinding(new Value('arguments'), Value.false));
+      X(env.CreateImmutableBinding(Value('arguments'), Value.false));
     } else {
       // i. Perform ! env.CreateMutableBinding("arguments", false).
-      X(env.CreateMutableBinding(new Value('arguments'), Value.false));
+      X(env.CreateMutableBinding(Value('arguments'), Value.false));
     }
     // e. Call env.InitializeBinding("arguments", ao).
-    env.InitializeBinding(new Value('arguments'), ao);
+    yield* env.InitializeBinding(Value('arguments'), ao);
     // f. Let parameterBindings be a new List of parameterNames with "arguments" appended.
-    parameterBindings = new ValueSet([...parameterNames, new Value('arguments')]);
+    parameterBindings = new JSStringSet(parameterNames);
+    parameterBindings.add('arguments');
   } else {
     // a. Let parameterBindings be parameterNames.
-    parameterBindings = new ValueSet(parameterNames);
+    parameterBindings = new JSStringSet(parameterNames);
   }
   // 24. Let iteratorRecord be CreateListIteratorRecord(argumentsList).
   const iteratorRecord = CreateListIteratorRecord(argumentsList);
@@ -174,7 +176,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
   if (hasParameterExpressions === false) {
     // a. NOTE: Only a single lexical environment is needed for the parameters and top-level vars.
     // b. Let instantiatedVarNames be a copy of the List parameterBindings.
-    const instantiatedVarNames = new ValueSet(parameterBindings);
+    const instantiatedVarNames = new JSStringSet(parameterBindings);
     // c. For each n in varNames, do
     for (const n of varNames) {
       // i. If n is not an element of instantiatedVarNames, then
@@ -184,7 +186,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
         // 2. Perform ! env.CreateMutableBinding(n, false).
         X(env.CreateMutableBinding(n, Value.false));
         // 3. Call env.InitializeBinding(n, undefined).
-        env.InitializeBinding(n, Value.undefined);
+        yield* env.InitializeBinding(n, Value.undefined);
       }
     }
     // d. Let varEnv be env.
@@ -193,11 +195,11 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
     // a. NOTE: A separate Environment Record is needed to ensure that closures created by expressions
     //    in the formal parameter list do not have visibility of declarations in the function body.
     // b. Let varEnv be NewDeclarativeEnvironment(env).
-    varEnv = NewDeclarativeEnvironment(env);
+    varEnv = new DeclarativeEnvironmentRecord(env);
     // c. Set the VariableEnvironment of calleeContext to varEnv.
     calleeContext.VariableEnvironment = varEnv;
     // d. Let instantiatedVarNames be a new empty List.
-    const instantiatedVarNames = new ValueSet();
+    const instantiatedVarNames = new JSStringSet();
     // e. For each n in varNames, do
     for (const n of varNames) {
       // If n is not an element of instantiatedVarNames, then
@@ -215,7 +217,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
           initialValue = X(env.GetBindingValue(n, Value.false));
         }
         // 5. Call varEnv.InitializeBinding(n, initialValue).
-        varEnv.InitializeBinding(n, initialValue);
+        yield* varEnv.InitializeBinding(n, initialValue);
         // 6. NOTE: vars whose names are the same as a formal parameter, initially have the same value as the corresponding initialized parameter.
       }
     }
@@ -225,7 +227,7 @@ export function* FunctionDeclarationInstantiation(func, argumentsList) {
   // 30. If strict is false, then
   if (strict === false) {
     // a. Let lexEnv be NewDeclarativeEnvironment(varEnv).
-    lexEnv = NewDeclarativeEnvironment(varEnv);
+    lexEnv = new DeclarativeEnvironmentRecord(varEnv);
     // b. NOTE: Non-strict functions use a separate lexical Environment Record for top-level lexical declarations
     //    so that a direct eval can determine whether any var scoped declarations introduced by the eval code
     //    conflict with pre-existing top-level lexically scoped declarations. This is not needed for strict functions

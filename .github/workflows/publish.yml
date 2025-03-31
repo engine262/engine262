@@ -16,13 +16,13 @@ jobs:
       packages: write
     steps:
       # Set everything up
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - uses: actions/setup-node@master
+          submodules: 'recursive'
+      - uses: actions/setup-node@v4
         with:
-          node-version: 18
-      - run: git submodule update --init --recursive
+          node-version: 22
 
       # Run tests and whatnot
       - run: npm install
@@ -36,7 +36,7 @@ jobs:
       # Publish to npm registry
       - run: npm set //registry.npmjs.org/:_authToken ${{ secrets.NPM_TOKEN }}
       - run: npm config set registry https://registry.npmjs.org
-      - run: npm exec npm@latest -- publish --provenance --access public
+      - run: npm exec npm@latest -- publish --provenance --access public --tag latest
 
       # Push build to to gh-pages
       - run: |
@@ -47,8 +47,9 @@ jobs:
           git fetch github
           git checkout gh-pages
 
-          cp dist/* .
+          cp -r lib/* .
           git add engine262.*
+          git add inspector.*
           git commit -m "autobuild" || exit 0 # exit silently if nothing changed
           git push -u github gh-pages
         env:

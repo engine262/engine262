@@ -1,13 +1,13 @@
-// @ts-nocheck
-import { Value } from '../value.mjs';
-import { NormalCompletion } from '../completion.mjs';
-import { Evaluate } from '../evaluator.mjs';
+import { Value } from '../value.mts';
+import { NormalCompletion } from '../completion.mts';
+import { Evaluate } from '../evaluator.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
-/** http://tc39.es/ecma262/#sec-script-semantics-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-script-semantics-runtime-semantics-evaluation */
 // Script :
 //   [empty]
 //   ScriptBody
-export function* Evaluate_Script({ ScriptBody }) {
+export function* Evaluate_Script({ ScriptBody }: ParseNode.Script) {
   if (!ScriptBody) {
     return NormalCompletion(Value.undefined);
   }

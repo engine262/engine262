@@ -1,8 +1,8 @@
-// @ts-nocheck
-import { Value } from '../value.mjs';
-import { isHexDigit, isDecimalDigit, isLineTerminator } from '../parser/Lexer.mjs';
+import { Value } from '../value.mts';
+import { isHexDigit, isDecimalDigit, isLineTerminator } from '../parser/Lexer.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
-export function TV(s) {
+export function TV(s: string) {
   let buffer = '';
   for (let i = 0; i < s.length; i += 1) {
     if (s[i] === '\\') {
@@ -94,15 +94,15 @@ export function TV(s) {
   return buffer;
 }
 
-export function TemplateStrings(node, raw) {
+export function TemplateStrings(node: ParseNode.TemplateLiteral, raw: boolean) {
   if (raw) {
-    return node.TemplateSpanList.map((s) => new Value(s));
+    return node.TemplateSpanList.map((s) => Value(s));
   }
   return node.TemplateSpanList.map((v) => {
     const tv = TV(v);
     if (tv === undefined) {
       return Value.undefined;
     }
-    return new Value(tv);
+    return Value(tv);
   });
 }

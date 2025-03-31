@@ -1,17 +1,30 @@
-// @ts-nocheck
-import { Value, JSStringValue, ObjectValue } from '../value.mjs';
-import { surroundingAgent } from '../engine.mjs';
+import {
+  Value, JSStringValue, ObjectValue, type Arguments,
+  type FunctionCallContext,
+  UndefinedValue,
+  NullValue,
+} from '../value.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Assert,
   SameValue,
   OrdinaryObjectCreate,
-  CreateIterResultObject,
-} from '../abstract-ops/all.mjs';
-import { Q } from '../completion.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+  CreateIteratorResultObject,
+  Realm,
+  type OrdinaryObject,
+} from '../abstract-ops/all.mts';
+import { Q, type ValueEvaluator } from '../completion.mts';
+import { __ts_cast__, type Mutable } from '../helpers.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 
-/** http://tc39.es/ecma262/#sec-createforiniterator */
-export function CreateForInIterator(object) {
+export interface ForInIteratorInstance extends OrdinaryObject {
+  Object: ObjectValue | NullValue;
+  ObjectWasVisited: Value;
+  readonly VisitedKeys: JSStringValue[];
+  readonly RemainingKeys: JSStringValue[];
+}
+/** https://tc39.es/ecma262/#sec-createforiniterator */
+export function CreateForInIterator(object: ObjectValue) {
   // 1. Assert: Type(object) is Object.
   Assert(object instanceof ObjectValue);
   // 2. Let iterator be ObjectCreate(%ForInIteratorPrototype%, « [[Object]], [[ObjectWasVisited]], [[VisitedKeys]], [[RemainingKeys]] »).
@@ -20,7 +33,7 @@ export function CreateForInIterator(object) {
     'ObjectWasVisited',
     'VisitedKeys',
     'RemainingKeys',
-  ]);
+  ]) as Mutable<ForInIteratorInstance>;
   // 3. Set iterator.[[Object]] to object.
   iterator.Object = object;
   // 4. Set iterator.[[ObjectWasVisited]] to false.
@@ -33,26 +46,28 @@ export function CreateForInIterator(object) {
   return iterator;
 }
 
-/** http://tc39.es/ecma262/#sec-%foriniteratorprototype%.next */
-function ForInIteratorPrototype_next(args, { thisValue }) {
+/** https://tc39.es/ecma262/#sec-%foriniteratorprototype%.next */
+function* ForInIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be this value.
   const O = thisValue;
   // 2. Assert: Type(O) is Object.
   Assert(O instanceof ObjectValue);
   // 3. Assert: O has all the internal slot sof a For-In Iterator Instance.
-  Assert('Object' in O && 'ObjectWasVisited' in O && 'VisitedKeys' in O && 'RemainingKeys in O');
+  Assert('Object' in O && 'ObjectWasVisited' in O && 'VisitedKeys' in O && 'RemainingKeys' in O);
+  __ts_cast__<ForInIteratorInstance>(O);
   // 4. Let object be O.[[Object]].
-  let object = O.Object;
+  let object: ObjectValue | NullValue = O.Object;
   // 5. Let visited be O.[[VisitedKeys]].
   const visited = O.VisitedKeys;
   // 6. Let remaining be O.[[RemainingKeys]].
   const remaining = O.RemainingKeys;
   // 7. Repeat,
   while (true) {
+    __ts_cast__<ObjectValue>(object);
     // a. If O.[[ObjectWasVisited]] is false, then
     if (O.ObjectWasVisited === Value.false) {
       // i. Let keys be ? object.[[OwnPropertyKeys]]().
-      const keys = Q(object.OwnPropertyKeys());
+      const keys = Q(yield* object.OwnPropertyKeys());
       // ii. for each key of keys in List order, do
       for (const key of keys) {
         // 1. If Type(key) is String, then
@@ -67,36 +82,36 @@ function ForInIteratorPrototype_next(args, { thisValue }) {
     // b. Repeat, while remaining is not empty,
     while (remaining.length > 0) {
       // i. Remove the first element from remaining and let r be the value of the element.
-      const r = remaining.shift();
+      const r = remaining.shift()!;
       // ii. If there does not exist an element v of visisted such that SameValue(r, v) is true, then
       if (!visited.find((v) => SameValue(r, v) === Value.true)) {
         // 1. Let desc be ? object.[[GetOwnProperty]](r).
-        const desc = Q(object.GetOwnProperty(r));
+        const desc = Q(yield* object.GetOwnProperty(r));
         // 2. If desc is not undefined, then,
-        if (desc !== Value.undefined) {
+        if (!(desc instanceof UndefinedValue)) {
           // a. Append r to visited.
           visited.push(r);
-          // b. If desc.[[Enumerable]] is true, return CreateIterResultObject(r, false).
+          // b. If desc.[[Enumerable]] is true, return CreateIteratorResultObject(r, false).
           if (desc.Enumerable === Value.true) {
-            return CreateIterResultObject(r, Value.false);
+            return CreateIteratorResultObject(r, Value.false);
           }
         }
       }
     }
     // c. Set object to ? object.[[GetPrototypeOf]]().
-    object = Q(object.GetPrototypeOf());
+    object = Q(yield* object.GetPrototypeOf());
     // d. Set O.Object to object.
     O.Object = object;
     // e. Set O.ObjectWasVisited to false.
     O.ObjectWasVisited = Value.false;
-    // f. If object is null, return CreateIterResultObject(undefined, true).
+    // f. If object is null, return CreateIteratorResultObject(undefined, true).
     if (object === Value.null) {
-      return CreateIterResultObject(Value.undefined, Value.true);
+      return CreateIteratorResultObject(Value.undefined, Value.true);
     }
   }
 }
 
-export function bootstrapForInIteratorPrototype(realmRec) {
+export function bootstrapForInIteratorPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['next', ForInIteratorPrototype_next, 0],
   ], realmRec.Intrinsics['%IteratorPrototype%']);

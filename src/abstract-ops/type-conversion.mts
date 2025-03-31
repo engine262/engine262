@@ -1,6 +1,5 @@
-// @ts-nocheck
 import {
-  Type, UndefinedValue, JSStringValue, SymbolValue,
+  UndefinedValue, JSStringValue, SymbolValue,
   ObjectValue,
   Value,
   NumberValue,
@@ -8,13 +7,23 @@ import {
   wellKnownSymbols,
   NullValue,
   BooleanValue,
-} from '../value.mjs';
+  PrimitiveValue,
+  type PropertyKeyValue,
+} from '../value.mts';
 import {
   surroundingAgent,
-} from '../engine.mjs';
-import { Q, X } from '../completion.mjs';
-import { OutOfRange } from '../helpers.mjs';
-import { MV_StringNumericLiteral } from '../runtime-semantics/all.mjs';
+} from '../host-defined/engine.mts';
+import {
+  Q, X,
+  type ValueCompletion,
+} from '../completion.mts';
+import { OutOfRange, type Mutable } from '../helpers.mts';
+import { MV_StringNumericLiteral } from '../runtime-semantics/all.mts';
+import type { BooleanObject } from '../intrinsics/Boolean.mts';
+import type { NumberObject } from '../intrinsics/Number.mts';
+import type { SymbolObject } from '../intrinsics/Symbol.mts';
+import type { BigIntObject } from '../intrinsics/BigInt.mts';
+import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
 import {
   Assert,
   Call,
@@ -25,33 +34,33 @@ import {
   SameValue,
   StringCreate,
   Z,
-  F,
-} from './all.mjs';
+  F, R,
+} from './all.mts';
 
-/** http://tc39.es/ecma262/#sec-toprimitive */
-export function ToPrimitive(input, preferredType) {
+/** https://tc39.es/ecma262/#sec-toprimitive */
+export function* ToPrimitive(input: Value, preferredType?: 'string' | 'number'): ValueEvaluator<PrimitiveValue> {
   // 1. Assert: input is an ECMAScript language value.
   Assert(input instanceof Value);
   // 2. If Type(input) is Object, then
   if (input instanceof ObjectValue) {
     // a. Let exoticToPrim be ? GetMethod(input, @@toPrimitive).
-    const exoticToPrim = Q(GetMethod(input, wellKnownSymbols.toPrimitive));
+    const exoticToPrim = Q(yield* GetMethod(input, wellKnownSymbols.toPrimitive));
     // b. If exoticToPrim is not undefined, then
     if (exoticToPrim !== Value.undefined) {
       let hint;
       // i. If preferredType is not present, let hint be "default".
       if (preferredType === undefined) {
-        hint = new Value('default');
+        hint = Value('default');
       } else if (preferredType === 'string') { // ii. Else if preferredType is string, let hint be "string".
-        hint = new Value('string');
+        hint = Value('string');
       } else { // iii. Else,
         // 1. Assert: preferredType is number.
         Assert(preferredType === 'number');
         // 2. Let hint be "number".
-        hint = new Value('number');
+        hint = Value('number');
       }
       // iv. Let result be ? Call(exoticToPrim, input, « hint »).
-      const result = Q(Call(exoticToPrim, input, [hint]));
+      const result = Q(yield* Call(exoticToPrim, input, [hint]));
       // v. If Type(result) is not Object, return result.
       if (!(result instanceof ObjectValue)) {
         return result;
@@ -64,14 +73,14 @@ export function ToPrimitive(input, preferredType) {
       preferredType = 'number';
     }
     // d. Return ? OrdinaryToPrimitive(input, preferredType).
-    return Q(OrdinaryToPrimitive(input, preferredType));
+    return Q(yield* OrdinaryToPrimitive(input, preferredType));
   }
   // 3. Return input.
   return input;
 }
 
-/** http://tc39.es/ecma262/#sec-ordinarytoprimitive */
-export function OrdinaryToPrimitive(O, hint) {
+/** https://tc39.es/ecma262/#sec-ordinarytoprimitive */
+export function* OrdinaryToPrimitive(O: ObjectValue, hint: 'string' | 'number'): ValueEvaluator<PrimitiveValue> {
   // 1. Assert: Type(O) is Object.
   Assert(O instanceof ObjectValue);
   // 2. Assert: hint is either string or number.
@@ -80,19 +89,19 @@ export function OrdinaryToPrimitive(O, hint) {
   // 3. If hint is string, then
   if (hint === 'string') {
     // a. Let methodNames be « "toString", "valueOf" ».
-    methodNames = [new Value('toString'), new Value('valueOf')];
+    methodNames = [Value('toString'), Value('valueOf')];
   } else { // 4. Else,
     // a. Let methodNames be « "valueOf", "toString" ».
-    methodNames = [new Value('valueOf'), new Value('toString')];
+    methodNames = [Value('valueOf'), Value('toString')];
   }
   // 5. For each element name of methodNames, do
   for (const name of methodNames) {
     // a. Let method be ? Get(O, name).
-    const method = Q(Get(O, name));
+    const method = Q(yield* Get(O, name));
     // b. If IsCallable(method) is true, then
     if (IsCallable(method) === Value.true) {
       // i. Let result be ? Call(method, O).
-      const result = Q(Call(method, O));
+      const result = Q(yield* Call(method, O));
       // ii. If Type(result) is not Object, return result.
       if (!(result instanceof ObjectValue)) {
         return result;
@@ -103,8 +112,8 @@ export function OrdinaryToPrimitive(O, hint) {
   return surroundingAgent.Throw('TypeError', 'ObjectToPrimitive');
 }
 
-/** http://tc39.es/ecma262/#sec-toboolean */
-export function ToBoolean(argument) {
+/** https://tc39.es/ecma262/#sec-toboolean */
+export function ToBoolean(argument: Value) {
   if (argument instanceof UndefinedValue) {
     // Return false.
     return Value.false;
@@ -116,7 +125,7 @@ export function ToBoolean(argument) {
     return argument;
   } else if (argument instanceof NumberValue) {
     // If argument is +0𝔽, -0𝔽, or NaN, return false; otherwise return true.
-    if (argument.numberValue() === 0 || argument.isNaN()) {
+    if (R(argument) === 0 || argument.isNaN()) {
       return Value.false;
     }
     return Value.true;
@@ -131,7 +140,7 @@ export function ToBoolean(argument) {
     return Value.true;
   } else if (argument instanceof BigIntValue) {
     // If argument is 0ℤ, return false; otherwise return true.
-    if (argument.bigintValue() === 0n) {
+    if (R(argument) === 0n) {
       return Value.false;
     }
     return Value.true;
@@ -139,23 +148,23 @@ export function ToBoolean(argument) {
     // Return true.
     return Value.true;
   }
-  throw new OutOfRange('ToBoolean', { type: Type(argument), argument });
+  throw new OutOfRange('ToBoolean', { argument });
 }
 
-/** http://tc39.es/ecma262/#sec-tonumeric */
-export function ToNumeric(value) {
+/** https://tc39.es/ecma262/#sec-tonumeric */
+export function* ToNumeric(value: Value): ValueEvaluator<NumberValue | BigIntValue> {
   // 1. Let primValue be ? ToPrimitive(value, number).
-  const primValue = Q(ToPrimitive(value, 'number'));
+  const primValue = Q(yield* ToPrimitive(value, 'number'));
   // 2. If Type(primValue) is BigInt, return primValue.
   if (primValue instanceof BigIntValue) {
     return primValue;
   }
   // 3. Return ? ToNumber(primValue).
-  return Q(ToNumber(primValue));
+  return Q(yield* ToNumber(primValue));
 }
 
-/** http://tc39.es/ecma262/#sec-tonumber */
-export function ToNumber(argument) {
+/** https://tc39.es/ecma262/#sec-tonumber */
+export function* ToNumber(argument: Value): ValueEvaluator<NumberValue> {
   if (argument instanceof UndefinedValue) {
     // Return NaN.
     return F(NaN);
@@ -182,45 +191,45 @@ export function ToNumber(argument) {
     return surroundingAgent.Throw('TypeError', 'CannotConvertSymbol', 'number');
   } else if (argument instanceof ObjectValue) {
     // 1. Let primValue be ? ToPrimitive(argument, number).
-    const primValue = Q(ToPrimitive(argument, 'number'));
+    const primValue = Q(yield* ToPrimitive(argument, 'number'));
     // 2. Return ? ToNumber(primValue).
-    return Q(ToNumber(primValue));
+    return Q(yield* ToNumber(primValue));
   }
-  throw new OutOfRange('ToNumber', { type: Type(argument), argument });
+  throw new OutOfRange('ToNumber', { argument });
 }
 
-const mod = (n, m) => {
+const mod = (n: number, m: number) => {
   const r = n % m;
   return Math.floor(r >= 0 ? r : r + m);
 };
 
-/** http://tc39.es/ecma262/#sec-tointegerorinfinity */
-export function ToIntegerOrInfinity(argument) {
+/** https://tc39.es/ecma262/#sec-tointegerorinfinity */
+export function* ToIntegerOrInfinity(argument: Value): PlainEvaluator<number> {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument));
+  const number = Q(yield* ToNumber(argument));
   // 2. If number is NaN, +0𝔽, or -0𝔽, return 0.
-  if (number.isNaN() || number.numberValue() === 0) {
+  if (number.isNaN() || R(number) === 0) {
     return +0;
   }
   // 3. If number is +∞𝔽, return +∞.
   // 4. If number is -∞𝔽, return -∞.
   if (!number.isFinite()) {
-    return number.numberValue();
+    return R(number);
   }
   // 4. Let integer be floor(abs(ℝ(number))).
-  let integer = Math.floor(Math.abs(number.numberValue()));
+  let integer = Math.floor(Math.abs(R(number)));
   // 5. If number < +0𝔽, set integer to -integer.
-  if (number.numberValue() < 0 && integer !== 0) {
+  if (R(number) < 0 && integer !== 0) {
     integer = -integer;
   }
   // 6. Return integer.
   return integer;
 }
 
-/** http://tc39.es/ecma262/#sec-toint32 */
-export function ToInt32(argument) {
+/** https://tc39.es/ecma262/#sec-toint32 */
+export function* ToInt32(argument: Value): ValueEvaluator<NumberValue> {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument)).numberValue();
+  const number = R(Q(yield* ToNumber(argument)));
   // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(+0);
@@ -236,10 +245,10 @@ export function ToInt32(argument) {
   return F(int32bit);
 }
 
-/** http://tc39.es/ecma262/#sec-touint32 */
-export function ToUint32(argument) {
+/** https://tc39.es/ecma262/#sec-touint32 */
+export function* ToUint32(argument: Value): ValueEvaluator<NumberValue> {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument)).numberValue();
+  const number = R(Q(yield* ToNumber(argument)));
   // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(+0);
@@ -252,10 +261,10 @@ export function ToUint32(argument) {
   return F(int32bit);
 }
 
-/** http://tc39.es/ecma262/#sec-toint16 */
-export function ToInt16(argument) {
+/** https://tc39.es/ecma262/#sec-toint16 */
+export function* ToInt16(argument: Value): ValueEvaluator<NumberValue> {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument)).numberValue();
+  const number = R(Q(yield* ToNumber(argument)));
   // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(+0);
@@ -271,10 +280,10 @@ export function ToInt16(argument) {
   return F(int16bit);
 }
 
-/** http://tc39.es/ecma262/#sec-touint16 */
-export function ToUint16(argument) {
+/** https://tc39.es/ecma262/#sec-touint16 */
+export function* ToUint16(argument: Value): ValueEvaluator<NumberValue> {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument)).numberValue();
+  const number = R(Q(yield* ToNumber(argument)));
   // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(+0);
@@ -287,10 +296,10 @@ export function ToUint16(argument) {
   return F(int16bit);
 }
 
-/** http://tc39.es/ecma262/#sec-toint8 */
-export function ToInt8(argument) {
+/** https://tc39.es/ecma262/#sec-toint8 */
+export function* ToInt8(argument: Value): ValueEvaluator<NumberValue> {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument)).numberValue();
+  const number = R(Q(yield* ToNumber(argument)));
   // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(+0);
@@ -306,10 +315,10 @@ export function ToInt8(argument) {
   return F(int8bit);
 }
 
-/** http://tc39.es/ecma262/#sec-touint8 */
-export function ToUint8(argument) {
+/** https://tc39.es/ecma262/#sec-touint8 */
+export function* ToUint8(argument: Value): ValueEvaluator<NumberValue> {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument)).numberValue();
+  const number = R(Q(yield* ToNumber(argument)));
   // 2. If number is NaN, +0𝔽, -0𝔽, +∞𝔽, or -∞𝔽, return +0𝔽.
   if (Number.isNaN(number) || number === 0 || !Number.isFinite(number)) {
     return F(+0);
@@ -322,10 +331,10 @@ export function ToUint8(argument) {
   return F(int8bit);
 }
 
-/** http://tc39.es/ecma262/#sec-touint8clamp */
-export function ToUint8Clamp(argument) {
+/** https://tc39.es/ecma262/#sec-touint8clamp */
+export function* ToUint8Clamp(argument: Value): ValueEvaluator<NumberValue> {
   // 1. Let number be ? ToNumber(argument).
-  const number = Q(ToNumber(argument)).numberValue();
+  const number = R(Q(yield* ToNumber(argument)));
   // 2. If number is NaN, return +0𝔽.
   if (Number.isNaN(number)) {
     return F(+0);
@@ -356,10 +365,10 @@ export function ToUint8Clamp(argument) {
   return F(f);
 }
 
-/** http://tc39.es/ecma262/#sec-tobigint */
-export function ToBigInt(argument) {
+/** https://tc39.es/ecma262/#sec-tobigint */
+export function* ToBigInt(argument: Value): ValueEvaluator<BigIntValue> {
   // 1. Let prim be ? ToPrimitive(argument, number).
-  const prim = Q(ToPrimitive(argument, 'number'));
+  const prim = Q(yield* ToPrimitive(argument, 'number'));
   // 2. Return the value that prim corresponds to in Table 12 (#table-tobigint).
   if (prim instanceof UndefinedValue) {
     // Throw a TypeError exception.
@@ -380,10 +389,10 @@ export function ToBigInt(argument) {
     // Throw a TypeError exception.
     return surroundingAgent.Throw('TypeError', 'CannotConvertToBigInt', prim);
   } else if (prim instanceof JSStringValue) {
-    // 1. Let n be ! StringToBigInt(prim).
-    const n = X(StringToBigInt(prim));
+    // 1. Let n be StringToBigInt(prim).
+    const n = StringToBigInt(prim);
     // 2. If n is NaN, throw a SyntaxError exception.
-    if (Number.isNaN(n)) {
+    if (n === undefined) {
       return surroundingAgent.Throw('SyntaxError', 'CannotConvertToBigInt', prim);
     }
     // 3. Return n.
@@ -395,25 +404,21 @@ export function ToBigInt(argument) {
   throw new OutOfRange('ToBigInt', argument);
 }
 
-/** http://tc39.es/ecma262/#sec-stringtobigint */
-export function StringToBigInt(argument) {
-  // Apply the algorithm in 7.1.4.1 (#sec-tonumber-applied-to-the-string-type) with the following changes:
-  // 1. Replace the StrUnsignedDecimalLiteral production with DecimalDigits to not allow Infinity, decimal points, or exponents.
-  // 2. If the MV is NaN, return NaN, otherwise return the BigInt which exactly corresponds to the MV, rather than rounding to a Number.
-  // TODO: Adapt nearley grammar for this.
+/** https://tc39.es/ecma262/#sec-stringtobigint */
+export function StringToBigInt(argument: JSStringValue) {
   try {
     return Z(BigInt(argument.stringValue()));
   } catch {
-    return NaN;
+    return undefined;
   }
 }
 
-/** http://tc39.es/ecma262/#sec-tobigint64 */
-export function ToBigInt64(argument) {
+/** https://tc39.es/ecma262/#sec-tobigint64 */
+export function* ToBigInt64(argument: Value): ValueEvaluator<BigIntValue> {
   // 1. Let n be ? ToBigInt(argument).
-  const n = Q(ToBigInt(argument));
+  const n = Q(yield* (ToBigInt(argument)));
   // 2. Let int64bit be ℝ(n) modulo 2^64.
-  const int64bit = n.bigintValue() % (2n ** 64n);
+  const int64bit = R(n) % (2n ** 64n);
   // 3. If int64bit ≥ 2^63, return ℤ(int64bit - 2^64); otherwise return ℤ(int64bit).
   if (int64bit >= 2n ** 63n) {
     return Z(int64bit - (2n ** 64n));
@@ -421,28 +426,28 @@ export function ToBigInt64(argument) {
   return Z(int64bit);
 }
 
-/** http://tc39.es/ecma262/#sec-tobiguint64 */
-export function ToBigUint64(argument) {
+/** https://tc39.es/ecma262/#sec-tobiguint64 */
+export function* ToBigUint64(argument: Value): ValueEvaluator<BigIntValue> {
   // 1. Let n be ? ToBigInt(argument).
-  const n = Q(ToBigInt(argument));
+  const n = Q(yield* (ToBigInt(argument)));
   // 2. Let int64bit be ℝ(n) modulo 2^64.
-  const int64bit = n.bigintValue() % (2n ** 64n);
+  const int64bit = R(n) % (2n ** 64n);
   // 3. Return ℤ(int64bit).
   return Z(int64bit);
 }
 
-/** http://tc39.es/ecma262/#sec-tostring */
-export function ToString(argument) {
+/** https://tc39.es/ecma262/#sec-tostring */
+export function* ToString(argument: Value): ValueEvaluator<JSStringValue> {
   if (argument instanceof UndefinedValue) {
     // Return "undefined".
-    return new JSStringValue('undefined');
+    return Value('undefined');
   } else if (argument instanceof NullValue) {
     // Return "null".
-    return new JSStringValue('null');
+    return Value('null');
   } else if (argument instanceof BooleanValue) {
     // If argument is true, return "true".
     // If argument is false, return "false".
-    return new JSStringValue(argument === Value.true ? 'true' : 'false');
+    return Value(argument === Value.true ? 'true' : 'false');
   } else if (argument instanceof NumberValue) {
     // Return ! Number::toString(argument).
     return X(NumberValue.toString(argument));
@@ -457,15 +462,15 @@ export function ToString(argument) {
     return X(BigIntValue.toString(argument));
   } else if (argument instanceof ObjectValue) {
     // 1. Let primValue be ? ToPrimitive(argument, string).
-    const primValue = Q(ToPrimitive(argument, 'string'));
+    const primValue = Q(yield* ToPrimitive(argument, 'string'));
     // 2. Return ? ToString(primValue).
-    return Q(ToString(primValue));
+    return Q(yield* ToString(primValue));
   }
-  throw new OutOfRange('ToString', { type: Type(argument), argument });
+  throw new OutOfRange('ToString', { argument });
 }
 
-/** http://tc39.es/ecma262/#sec-toobject */
-export function ToObject(argument) {
+/** https://tc39.es/ecma262/#sec-toobject */
+export function ToObject(argument: Value): ValueCompletion<ObjectValue> {
   if (argument instanceof UndefinedValue) {
     // Throw a TypeError exception.
     return surroundingAgent.Throw('TypeError', 'CannotConvertToObject', 'undefined');
@@ -474,12 +479,12 @@ export function ToObject(argument) {
     return surroundingAgent.Throw('TypeError', 'CannotConvertToObject', 'null');
   } else if (argument instanceof BooleanValue) {
     // Return a new Boolean object whose [[BooleanData]] internal slot is set to argument.
-    const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Boolean.prototype%'), ['BooleanData']);
+    const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Boolean.prototype%'), ['BooleanData']) as Mutable<BooleanObject>;
     obj.BooleanData = argument;
     return obj;
   } else if (argument instanceof NumberValue) {
     // Return a new Number object whose [[NumberData]] internal slot is set to argument.
-    const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Number.prototype%'), ['NumberData']);
+    const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Number.prototype%'), ['NumberData']) as Mutable<NumberObject>;
     obj.NumberData = argument;
     return obj;
   } else if (argument instanceof JSStringValue) {
@@ -487,25 +492,25 @@ export function ToObject(argument) {
     return StringCreate(argument, surroundingAgent.intrinsic('%String.prototype%'));
   } else if (argument instanceof SymbolValue) {
     // Return a new Symbol object whose [[SymbolData]] internal slot is set to argument.
-    const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Symbol.prototype%'), ['SymbolData']);
+    const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Symbol.prototype%'), ['SymbolData']) as Mutable<SymbolObject>;
     obj.SymbolData = argument;
     return obj;
   } else if (argument instanceof BigIntValue) {
     // Return a new BigInt object whose [[BigIntData]] internal slot is set to argument.
-    const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%BigInt.prototype%'), ['BigIntData']);
+    const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%BigInt.prototype%'), ['BigIntData']) as Mutable<BigIntObject>;
     obj.BigIntData = argument;
     return obj;
   } else if (argument instanceof ObjectValue) {
     // Return argument.
     return argument;
   }
-  throw new OutOfRange('ToObject', { type: Type(argument), argument });
+  throw new OutOfRange('ToObject', { argument });
 }
 
-/** http://tc39.es/ecma262/#sec-topropertykey */
-export function ToPropertyKey(argument) {
+/** https://tc39.es/ecma262/#sec-topropertykey */
+export function* ToPropertyKey(argument: Value): ValueEvaluator<PropertyKeyValue> {
   // 1. Let key be ? ToPrimitive(argument, string).
-  const key = Q(ToPrimitive(argument, 'string'));
+  const key = Q(yield* ToPrimitive(argument, 'string'));
   // 2. If Type(key) is Symbol, then
   if (key instanceof SymbolValue) {
     // a. Return key.
@@ -515,10 +520,10 @@ export function ToPropertyKey(argument) {
   return X(ToString(key));
 }
 
-/** http://tc39.es/ecma262/#sec-tolength */
-export function ToLength(argument) {
+/** https://tc39.es/ecma262/#sec-tolength */
+export function* ToLength(argument: Value): ValueEvaluator<NumberValue> {
   // 1. Let len be ? ToIntegerOrInfinity(argument).
-  const len = Q(ToIntegerOrInfinity(argument));
+  const len = Q(yield* ToIntegerOrInfinity(argument));
   // 2. If len ≤ 0, return +0𝔽.
   if (len <= 0) {
     return F(+0);
@@ -527,8 +532,8 @@ export function ToLength(argument) {
   return F(Math.min(len, (2 ** 53) - 1));
 }
 
-/** http://tc39.es/ecma262/#sec-canonicalnumericindexstring */
-export function CanonicalNumericIndexString(argument) {
+/** https://tc39.es/ecma262/#sec-canonicalnumericindexstring */
+export function CanonicalNumericIndexString(argument: Value) {
   // 1. Assert: Type(argument) is String.
   Assert(argument instanceof JSStringValue);
   // 2. If argument is "-0", return -0𝔽.
@@ -545,17 +550,17 @@ export function CanonicalNumericIndexString(argument) {
   return n;
 }
 
-/** http://tc39.es/ecma262/#sec-toindex */
-export function ToIndex(value) {
+/** https://tc39.es/ecma262/#sec-toindex */
+export function* ToIndex(value: Value) {
   // 1. If value is undefined, then
   if (value instanceof UndefinedValue) {
     // a. Return 0.
     return 0;
   } else {
     // a. Let integerIndex be 𝔽(? ToIntegerOrInfinity(value)).
-    const integerIndex = F(Q(ToIntegerOrInfinity(value)));
+    const integerIndex = F(Q(yield* ToIntegerOrInfinity(value)));
     // b. If integerIndex < +0𝔽, throw a RangeError exception.
-    if (integerIndex.numberValue() < 0) {
+    if (R(integerIndex) < 0) {
       return surroundingAgent.Throw('RangeError', 'NegativeIndex', 'Index');
     }
     // c. Let index be ! ToLength(integerIndex).
@@ -565,6 +570,6 @@ export function ToIndex(value) {
       return surroundingAgent.Throw('RangeError', 'OutOfRange', 'Index');
     }
     // e. Return ℝ(index).
-    return index.numberValue();
+    return R(index);
   }
 }

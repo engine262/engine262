@@ -1,31 +1,33 @@
-// @ts-nocheck
-import { Evaluate } from '../evaluator.mjs';
+import { Evaluate } from '../evaluator.mts';
 import {
   EnsureCompletion,
   ReturnIfAbrupt,
   UpdateEmpty,
   NormalCompletion,
-} from '../completion.mjs';
+} from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { surroundingAgent, type Completion, type Value } from '#self';
 
-/** http://tc39.es/ecma262/#sec-block-runtime-semantics-evaluation */
-export function* Evaluate_StatementList(StatementList) {
+/** https://tc39.es/ecma262/#sec-block-runtime-semantics-evaluation */
+export function* Evaluate_StatementList(StatementList: ParseNode.StatementList) {
   if (StatementList.length === 0) {
     return NormalCompletion(undefined);
   }
 
-  let sl = yield* Evaluate(StatementList[0]);
-  if (StatementList.length === 1) {
-    return sl;
+  let blockCompletion: Completion<void | Value> = NormalCompletion(undefined);
+
+  for (let index = 0; index < StatementList.length; index += 1) {
+    const StatementListItem = StatementList[index];
+
+    if (surroundingAgent.hostDefinedOptions.onDebugger) {
+      const NextStatementListItem = StatementList[index + 1];
+      surroundingAgent.runningExecutionContext.callSite.setNextLocation(NextStatementListItem);
+    }
+
+    ReturnIfAbrupt(blockCompletion);
+    const itemCompletion = EnsureCompletion(yield* Evaluate(StatementListItem));
+    blockCompletion = UpdateEmpty(itemCompletion, blockCompletion);
   }
 
-  for (const StatementListItem of StatementList.slice(1)) {
-    ReturnIfAbrupt(sl);
-    let s = yield* Evaluate(StatementListItem);
-    // We don't always return a Completion value, but here we actually need it
-    // to be a Completion.
-    s = EnsureCompletion(s);
-    sl = UpdateEmpty(s, sl);
-  }
-
-  return sl;
+  return blockCompletion;
 }

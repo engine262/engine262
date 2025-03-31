@@ -1,17 +1,22 @@
-// @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Value, ObjectValue } from '../value.mjs';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
+  Value, type Arguments, type FunctionCallContext, BooleanValue,
+} from '../value.mts';
+import {
+  CanBeHeldWeakly,
   CleanupFinalizationRegistry,
   IsCallable,
+  Realm,
   RequireInternalSlot,
   SameValue,
-} from '../abstract-ops/all.mjs';
-import { Q } from '../completion.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+  type FunctionObject,
+} from '../abstract-ops/all.mts';
+import { Q } from '../completion.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
+import type { FinalizationRegistryCell, FinalizationRegistryObject } from './FinalizationRegistry.mts';
 
-/** http://tc39.es/ecma262/#sec-finalization-registry.prototype.cleanupSome */
-function FinalizationRegistryProto_cleanupSome([callback = Value.undefined], { thisValue }) {
+/** https://tc39.es/ecma262/#sec-finalization-registry.prototype.cleanupSome */
+function* FinalizationRegistryProto_cleanupSome([callback = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Let finalizationRegistry be the this value.
   const finalizationRegistry = thisValue;
   // 2. Perform ? RequireInternalSlot(finalizationRegistry, [[Cells]]).
@@ -21,58 +26,60 @@ function FinalizationRegistryProto_cleanupSome([callback = Value.undefined], { t
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callback);
   }
   // 4. Perform ? CleanupFinalizationRegistry(finalizationRegistry, callback).
-  Q(CleanupFinalizationRegistry(finalizationRegistry, callback));
+  Q(yield* CleanupFinalizationRegistry(finalizationRegistry as FinalizationRegistryObject, { Callback: callback as FunctionObject, HostDefined: undefined }));
   // 5. Return *undefined*.
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-finalization-registry.prototype.register */
-function FinalizationRegistryProto_register([target = Value.undefined, heldValue = Value.undefined, unregisterToken = Value.undefined], { thisValue }) {
+/** https://tc39.es/ecma262/#sec-finalization-registry.prototype.register */
+function FinalizationRegistryProto_register([target = Value.undefined, heldValue = Value.undefined, unregisterToken = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Let finalizationRegistry be the this value.
-  const finalizationRegistry = thisValue;
+  const finalizationRegistry = thisValue as FinalizationRegistryObject;
   // 2. Perform ? RequireInternalSlot(finalizationRegistry, [[Cells]]).
   Q(RequireInternalSlot(finalizationRegistry, 'Cells'));
-  // 3. If Type(target) is not Object, throw a TypeError exception.
-  if (!(target instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', target);
+  // 3. If CanBeHeldWeakly(target) is false, throw a TypeError exception.
+  if (CanBeHeldWeakly(target) === Value.false) {
+    return surroundingAgent.Throw('TypeError', 'NotAWeakKey', target);
   }
   // 4. If SameValue(target, heldValue), throw a TypeError exception.
   if (SameValue(target, heldValue) === Value.true) {
     return surroundingAgent.Throw('TypeError', 'TargetMatchesHeldValue', heldValue);
   }
-  // 5. If Type(unregisterToken) is not Object,
-  if (!(unregisterToken instanceof ObjectValue)) {
+  // 5. If CanBeHeldWeakly(unregisterToken) is false, then
+  if (CanBeHeldWeakly(unregisterToken) === Value.false) {
     // a. If unregisterToken is not undefined, throw a TypeError exception.
     if (unregisterToken !== Value.undefined) {
-      return surroundingAgent.Throw('TypeError', 'NotAnObject', unregisterToken);
+      return surroundingAgent.Throw('TypeError', 'NotAWeakKey', unregisterToken);
     }
     // b. Set unregisterToken to empty.
-    unregisterToken = undefined;
+    unregisterToken = undefined!;
   }
   // 6. Let cell be the Record { [[WeakRefTarget]] : target, [[HeldValue]]: heldValue, [[UnregisterToken]]: unregisterToken }.
-  const cell = {
+  const cell: FinalizationRegistryCell = {
     WeakRefTarget: target,
     HeldValue: heldValue,
     UnregisterToken: unregisterToken,
   };
   // 7. Append cell to finalizationRegistry.[[Cells]].
+  Q(surroundingAgent.debugger_tryTouchDuringPreview(finalizationRegistry));
   finalizationRegistry.Cells.push(cell);
   // 8. Return undefined.
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-finalization-registry.prototype.unregister */
-function FinalizationRegistryProto_unregister([unregisterToken = Value.undefined], { thisValue }) {
+/** https://tc39.es/ecma262/#sec-finalization-registry.prototype.unregister */
+function FinalizationRegistryProto_unregister([unregisterToken = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Let finalizationRegistry be the this value.
-  const finalizationRegistry = thisValue;
+  const finalizationRegistry = thisValue as FinalizationRegistryObject;
   // 2. Perform ? RequireInternalSlot(finalizationRegistry, [[Cells]]).
   Q(RequireInternalSlot(finalizationRegistry, 'Cells'));
-  // 3. If Type(unregisterToken) is not Object, throw a TypeError exception.
-  if (!(unregisterToken instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', unregisterToken);
+  // 3. If CanBeHeldWeakly(unregisterToken) is false, throw a TypeError exception.
+  if (CanBeHeldWeakly(unregisterToken) === Value.false) {
+    return surroundingAgent.Throw('TypeError', 'NotAWeakKey', unregisterToken);
   }
   // 4. Let removed be false.
-  let removed = Value.false;
+  let removed: BooleanValue = Value.false;
+  Q(surroundingAgent.debugger_tryTouchDuringPreview(finalizationRegistry));
   // 5. For each Record { [[WeakRefTarget]], [[HeldValue]], [[UnregisterToken]] } cell that is an element of finalizationRegistry.[[Cells]], do
   finalizationRegistry.Cells = finalizationRegistry.Cells.filter((cell) => {
     let r = true;
@@ -89,7 +96,7 @@ function FinalizationRegistryProto_unregister([unregisterToken = Value.undefined
   return removed;
 }
 
-export function bootstrapFinalizationRegistryPrototype(realmRec) {
+export function bootstrapFinalizationRegistryPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     surroundingAgent.feature('cleanup-some')
       ? ['cleanupSome', FinalizationRegistryProto_cleanupSome, 0]

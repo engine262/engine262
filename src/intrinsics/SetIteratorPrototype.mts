@@ -1,31 +1,34 @@
-// @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Assert,
   CreateArrayFromList,
   CreateIteratorFromClosure,
   GeneratorResume,
+  Realm,
   RequireInternalSlot,
   Yield,
-} from '../abstract-ops/all.mjs';
-import { Q, X } from '../completion.mjs';
-import { Value } from '../value.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+  type GeneratorObject,
+} from '../abstract-ops/all.mts';
+import { Q, X, type ValueCompletion } from '../completion.mts';
+import {
+  Value, type Arguments, type FunctionCallContext,
+} from '../value.mts';
+import type { ValueEvaluator, YieldEvaluator } from '../evaluator.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
+import type { SetObject } from './Set.mts';
 
-const kSetIteratorPrototype = new Value('%SetIteratorPrototype%');
-
-/** http://tc39.es/ecma262/#sec-createsetiterator */
-export function CreateSetIterator(set, kind) {
+/** https://tc39.es/ecma262/#sec-createsetiterator */
+export function CreateSetIterator(set: Value, kind: 'key+value' | 'value'): ValueCompletion<GeneratorObject> {
   // 1. Assert: kind is key+value or value.
   Assert(kind === 'key+value' || kind === 'value');
   // 2. Perform ? RequireInternalSlot(set, [[SetData]]).
   Q(RequireInternalSlot(set, 'SetData'));
   // 3. Let closure be a new Abstract Closure with no parameters that captures set and kind and performs the following steps when called:
-  const closure = function* closure() {
+  const closure = function* closure(): YieldEvaluator {
     // a. Let index be 0.
     let index = 0;
     // b. Let entries be the List that is set.[[SetData]].
-    const entries = set.SetData;
+    const entries = (set as SetObject).SetData;
     // c. Let numEntries be the number of elements of entries.
     let numEntries = entries.length;
     // d. Repeat, while index < numEntries,
@@ -54,16 +57,16 @@ export function CreateSetIterator(set, kind) {
     return Value.undefined;
   };
   // 4. Return ! CreateIteratorFromClosure(closure, "%SetIteratorPrototype%", %SetIteratorPrototype%).
-  return X(CreateIteratorFromClosure(closure, kSetIteratorPrototype, surroundingAgent.intrinsic('%SetIteratorPrototype%')));
+  return X(CreateIteratorFromClosure(closure, Value('%SetIteratorPrototype%'), surroundingAgent.intrinsic('%SetIteratorPrototype%')));
 }
 
-/** http://tc39.es/ecma262/#sec-%setiteratorprototype%.next */
-function SetIteratorPrototype_next(args, { thisValue }) {
+/** https://tc39.es/ecma262/#sec-%setiteratorprototype%.next */
+function* SetIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Return ? GeneratorResume(this value, empty, "%SetIteratorPrototype%").
-  return Q(GeneratorResume(thisValue, undefined, kSetIteratorPrototype));
+  return Q(yield* GeneratorResume(thisValue, undefined, Value('%SetIteratorPrototype%')));
 }
 
-export function bootstrapSetIteratorPrototype(realmRec) {
+export function bootstrapSetIteratorPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['next', SetIteratorPrototype_next, 0],
   ], realmRec.Intrinsics['%IteratorPrototype%'], 'Set Iterator');

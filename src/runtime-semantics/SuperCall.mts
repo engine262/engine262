@@ -1,5 +1,4 @@
-// @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Assert,
   Construct,
@@ -8,15 +7,17 @@ import {
   IsConstructor,
   InitializeInstanceElements,
   isECMAScriptFunctionObject,
-} from '../abstract-ops/all.mjs';
-import { ObjectValue, Value } from '../value.mjs';
-import { Q, X } from '../completion.mjs';
-import { FunctionEnvironmentRecord } from '../environment.mjs';
-import { ArgumentListEvaluation } from './all.mjs';
+  type FunctionObject,
+} from '../abstract-ops/all.mts';
+import { ObjectValue, Value } from '../value.mts';
+import { Q, X } from '../completion.mts';
+import { FunctionEnvironmentRecord } from '../environment.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { ArgumentListEvaluation } from './all.mts';
 
-/** http://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-super-keyword-runtime-semantics-evaluation */
 // SuperCall : `super` Arguments
-export function* Evaluate_SuperCall({ Arguments }) {
+export function* Evaluate_SuperCall({ Arguments }: ParseNode.SuperCall) {
   // 1. Let newTarget be GetNewTarget().
   const newTarget = GetNewTarget();
   // 2. Assert: Type(newTarget) is Object.
@@ -30,9 +31,11 @@ export function* Evaluate_SuperCall({ Arguments }) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', func);
   }
   // 6. Let result be ? Construct(func, argList, newTarget).
-  const result = Q(Construct(func, argList, newTarget));
+  const result = Q(yield* Construct(func as FunctionObject, argList, newTarget as FunctionObject));
   // 7. Let thisER be GetThisEnvironment().
   const thisER = GetThisEnvironment();
+  // 8. Assert: thisER is a Function Environment Record.
+  Assert(thisER instanceof FunctionEnvironmentRecord);
   // 8. Perform ? thisER.BindThisValue(result).
   Q(thisER.BindThisValue(result));
   // 9. Let F be thisER.[[FunctionObject]].
@@ -40,12 +43,12 @@ export function* Evaluate_SuperCall({ Arguments }) {
   // 10. Assert: F is an ECMAScript function object.
   Assert(isECMAScriptFunctionObject(F));
   // 11. Perform ? InitializeInstanceElements(result, F).
-  Q(InitializeInstanceElements(result, F));
+  Q(yield* InitializeInstanceElements(result, F));
   // 12. Return result.
   return result;
 }
 
-/** http://tc39.es/ecma262/#sec-getsuperconstructor */
+/** https://tc39.es/ecma262/#sec-getsuperconstructor */
 function GetSuperConstructor() {
   // 1. Let envRec be GetThisEnvironment().
   const envRec = GetThisEnvironment();

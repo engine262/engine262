@@ -1,30 +1,37 @@
-// @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Call,
   F,
   IsCallable,
   RequireInternalSlot,
-  SameValueZero,
-} from '../abstract-ops/all.mjs';
+  SameValueZero, R,
+} from '../abstract-ops/all.mts';
 import {
   NumberValue,
   Value,
   wellKnownSymbols,
-} from '../value.mjs';
-import { Q, X } from '../completion.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
-import { CreateMapIterator } from './MapIteratorPrototype.mjs';
+} from '../value.mts';
+import { Q, X } from '../completion.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
+import { CreateMapIterator } from './MapIteratorPrototype.mts';
+import type { MapObject } from './Map.mts';
+import type {
+  Arguments, Descriptor, ValueEvaluator, FunctionCallContext, Realm,
+  ValueCompletion,
+} from '#self';
 
-/** http://tc39.es/ecma262/#sec-map.prototype.clear */
-function MapProto_clear(args, { thisValue }) {
+/** https://tc39.es/ecma262/#sec-map.prototype.clear */
+function MapProto_clear(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let M be the this value.
-  const M = thisValue;
+  const M = thisValue as MapObject;
   // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
   Q(RequireInternalSlot(M, 'MapData'));
   // 3. Let entries be the List that is M.[[MapData]].
   const entries = M.MapData;
   // 4. For each Record { [[Key]], [[Value]] } p that is an element of entries, do
+  if (entries.length) {
+    Q(surroundingAgent.debugger_tryTouchDuringPreview(M));
+  }
   for (const p of entries) {
     // a. Set p.[[Key]] to empty.
     p.Key = undefined;
@@ -35,10 +42,10 @@ function MapProto_clear(args, { thisValue }) {
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-map.prototype.delete */
-function MapProto_delete([key = Value.undefined], { thisValue }) {
+/** https://tc39.es/ecma262/#sec-map.prototype.delete */
+function MapProto_delete([key = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let M be the this value.
-  const M = thisValue;
+  const M = thisValue as MapObject;
   // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
   Q(RequireInternalSlot(M, 'MapData'));
   // 3. Let entires be M.[[MapData]].
@@ -47,6 +54,7 @@ function MapProto_delete([key = Value.undefined], { thisValue }) {
   for (const p of entries) {
     // a. If p.[[Key]] is not empty and SameValueZero(p.[[Key]], key) is true, then
     if (p.Key !== undefined && SameValueZero(p.Key, key) === Value.true) {
+      Q(surroundingAgent.debugger_tryTouchDuringPreview(M));
       // i. Set p.[[Key]] to empty.
       p.Key = undefined;
       // ii. Set p.[[Value]] to empty.
@@ -58,18 +66,18 @@ function MapProto_delete([key = Value.undefined], { thisValue }) {
   return Value.false;
 }
 
-/** http://tc39.es/ecma262/#sec-map.prototype.entries */
-function MapProto_entries(args, { thisValue }) {
+/** https://tc39.es/ecma262/#sec-map.prototype.entries */
+function MapProto_entries(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let M be the this value.
   const M = thisValue;
   // 2. Return ? CreateMapIterator(M, key+value);
   return Q(CreateMapIterator(M, 'key+value'));
 }
 
-/** http://tc39.es/ecma262/#sec-map.prototype.foreach */
-function MapProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefined], { thisValue }) {
+/** https://tc39.es/ecma262/#sec-map.prototype.foreach */
+function* MapProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let M be the this value.
-  const M = thisValue;
+  const M = thisValue as MapObject;
   // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
   Q(RequireInternalSlot(M, 'MapData'));
   // 3. If IsCallable(callbackfn) is false, throw a TypeError exception.
@@ -83,17 +91,17 @@ function MapProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefin
     // a. If e.[[Key]] is not empty, then
     if (e.Key !== undefined) {
       // i. Perform ? Call(callbackfn, thisArg, « e.[[Value]], e.[[Key]], M »).
-      Q(Call(callbackfn, thisArg, [e.Value, e.Key, M]));
+      Q(yield* Call(callbackfn, thisArg, [e.Value!, e.Key, M]));
     }
   }
   // 6. Return undefined.
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-map.prototype.get */
-function MapProto_get([key = Value.undefined], { thisValue }) {
+/** https://tc39.es/ecma262/#sec-map.prototype.get */
+function MapProto_get([key = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let M be the this value.
-  const M = thisValue;
+  const M = thisValue as MapObject;
   // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
   Q(RequireInternalSlot(M, 'MapData'));
   // 3. Let entries be the List that is M.[[MapData]].
@@ -103,17 +111,17 @@ function MapProto_get([key = Value.undefined], { thisValue }) {
     // a. If p.[[Key]] is not empty and SameValueZero(p.[[Key]], key) is true, return p.[[Value]].
     if (p.Key !== undefined && SameValueZero(p.Key, key) === Value.true) {
       // i. Return p.[[Value]].
-      return p.Value;
+      return p.Value!;
     }
   }
   // 5. Return undefined.
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-map.prototype.has */
-function MapProto_has([key = Value.undefined], { thisValue }) {
+/** https://tc39.es/ecma262/#sec-map.prototype.has */
+function MapProto_has([key = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let M be the this value.
-  const M = thisValue;
+  const M = thisValue as MapObject;
   // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
   Q(RequireInternalSlot(M, 'MapData'));
   // 3. Let entries be the List that is M.[[MapData]].
@@ -129,18 +137,18 @@ function MapProto_has([key = Value.undefined], { thisValue }) {
   return Value.false;
 }
 
-/** http://tc39.es/ecma262/#sec-map.prototype.keys */
-function MapProto_keys(args, { thisValue }) {
+/** https://tc39.es/ecma262/#sec-map.prototype.keys */
+function MapProto_keys(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let M be the this value.
   const M = thisValue;
   // 2. Return ? CreateMapIterator(M, key).
   return Q(CreateMapIterator(M, 'key'));
 }
 
-/** http://tc39.es/ecma262/#sec-map.prototype.set */
-function MapProto_set([key = Value.undefined, value = Value.undefined], { thisValue }) {
+/** https://tc39.es/ecma262/#sec-map.prototype.set */
+function MapProto_set([key = Value.undefined, value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let M be the this value.
-  const M = thisValue;
+  const M = thisValue as MapObject;
   // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
   Q(RequireInternalSlot(M, 'MapData'));
   // 3. Let entries be the List that is M.[[MapData]].
@@ -150,27 +158,29 @@ function MapProto_set([key = Value.undefined, value = Value.undefined], { thisVa
     // a. If p.[[Key]] is not empty and SameValueZero(p.[[Key]], key) is true, then
     if (p.Key !== undefined && SameValueZero(p.Key, key) === Value.true) {
       // i. Set p.[[Value]] to value.
+      Q(surroundingAgent.debugger_tryTouchDuringPreview(M));
       p.Value = value;
       // ii. Return M.
       return M;
     }
   }
   // 5. If key is -0𝔽, set key to +0𝔽.
-  if (key instanceof NumberValue && Object.is(key.numberValue(), -0)) {
+  if (key instanceof NumberValue && Object.is(R(key), -0)) {
     key = F(+0);
   }
   // 6. Let p be the Record { [[Key]]: key, [[Value]]: value }.
   const p = { Key: key, Value: value };
   // 7. Append p as the last element of entries.
+  Q(surroundingAgent.debugger_tryTouchDuringPreview(M));
   entries.push(p);
   // 8. Return M.
   return M;
 }
 
-/** http://tc39.es/ecma262/#sec-get-map.prototype.size */
-function MapProto_sizeGetter(args, { thisValue }) {
+/** https://tc39.es/ecma262/#sec-get-map.prototype.size */
+function MapProto_sizeGetter(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let M be the this value.
-  const M = thisValue;
+  const M = thisValue as MapObject;
   // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
   Q(RequireInternalSlot(M, 'MapData'));
   // 3. Let entries be the List that is M.[[MapData]].
@@ -188,15 +198,15 @@ function MapProto_sizeGetter(args, { thisValue }) {
   return F(count);
 }
 
-/** http://tc39.es/ecma262/#sec-map.prototype.values */
-function MapProto_values(args, { thisValue }) {
+/** https://tc39.es/ecma262/#sec-map.prototype.values */
+function MapProto_values(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let M be the this value.
   const M = thisValue;
   // 2. Return ? CreateMapIterator(M, value).
   return Q(CreateMapIterator(M, 'value'));
 }
 
-export function bootstrapMapPrototype(realmRec) {
+export function bootstrapMapPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['clear', MapProto_clear, 0],
     ['delete', MapProto_delete, 1],
@@ -210,8 +220,8 @@ export function bootstrapMapPrototype(realmRec) {
     ['values', MapProto_values, 0],
   ], realmRec.Intrinsics['%Object.prototype%'], 'Map');
 
-  const entriesFunc = X(proto.GetOwnProperty(new Value('entries')));
-  X(proto.DefineOwnProperty(wellKnownSymbols.iterator, entriesFunc));
+  const entriesFunc = X(proto.GetOwnProperty(Value('entries')));
+  X(proto.DefineOwnProperty(wellKnownSymbols.iterator, entriesFunc as Descriptor));
 
   realmRec.Intrinsics['%Map.prototype%'] = proto;
 }

@@ -1,10 +1,11 @@
-// @ts-nocheck
-import { surroundingAgent, HostCallJobCallback } from '../engine.mjs';
-import { Value } from '../value.mjs';
-import { NormalCompletion, Q, X } from '../completion.mjs';
-import { Assert } from './all.mjs';
+import {
+  surroundingAgent, HostCallJobCallback, type JobCallbackRecord,
+  NormalCompletion, Q, X, type ValueEvaluator,
+  BooleanValue, ObjectValue, SymbolValue, UndefinedValue, Value,
+  type WeakRefObject, type FinalizationRegistryObject, Assert, KeyForSymbol,
+} from '#self';
 
-/** http://tc39.es/ecma262/#sec-clear-kept-objects */
+/** https://tc39.es/ecma262/#sec-clear-kept-objects */
 export function ClearKeptObjects() {
   // 1. Let agentRecord be the surrounding agent's Agent Record.
   const agentRecord = surroundingAgent.AgentRecord;
@@ -12,16 +13,16 @@ export function ClearKeptObjects() {
   agentRecord.KeptAlive = new Set();
 }
 
-/** http://tc39.es/ecma262/#sec-addtokeptobjects */
-export function AddToKeptObjects(object) {
+/** https://tc39.es/ecma262/#sec-addtokeptobjects */
+export function AddToKeptObjects(object: Value) {
   // 1. Let agentRecord be the surrounding agent's Agent Record.
   const agentRecord = surroundingAgent.AgentRecord;
   // 2. Append object to agentRecord.[[KeptAlive]].
   agentRecord.KeptAlive.add(object);
 }
 
-/** http://tc39.es/ecma262/#sec-weakrefderef */
-export function WeakRefDeref(weakRef) {
+/** https://tc39.es/ecma262/#sec-weakrefderef */
+export function WeakRefDeref(weakRef: WeakRefObject) {
   // 1. Let target be weakRef.[[WeakRefTarget]].
   const target = weakRef.WeakRefTarget;
   // 2. If target is not empty, then
@@ -35,12 +36,13 @@ export function WeakRefDeref(weakRef) {
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-cleanup-finalization-registry */
-export function CleanupFinalizationRegistry(finalizationRegistry, callback) {
+/** https://tc39.es/ecma262/#sec-cleanup-finalization-registry */
+export function* CleanupFinalizationRegistry(finalizationRegistry: FinalizationRegistryObject, callback?: JobCallbackRecord): ValueEvaluator<UndefinedValue> {
+  Q(surroundingAgent.debugger_tryTouchDuringPreview(finalizationRegistry));
   // 1. Assert: finalizationRegistry has [[Cells]] and [[CleanupCallback]] internal slots.
   Assert('Cells' in finalizationRegistry && 'CleanupCallback' in finalizationRegistry);
   // 2. Set callback to finalizationRegistry.[[CleanupCallback]].
-  if (callback === undefined || callback === Value.undefined) {
+  if (callback === undefined) {
     callback = finalizationRegistry.CleanupCallback;
   }
   // 3. While finalizationRegistry.[[Cells]] contains a Record cell such that cell.[[WeakRefTarget]] is empty, an implementation may perform the following steps:
@@ -54,8 +56,24 @@ export function CleanupFinalizationRegistry(finalizationRegistry, callback) {
     finalizationRegistry.Cells.splice(i, 1);
     i -= 1;
     // c. Perform ? HostCallJobCallback(callback, undefined, « cell.[[HeldValue]] »).
-    Q(HostCallJobCallback(callback, Value.undefined, [cell.HeldValue]));
+    Q(yield* HostCallJobCallback(callback, Value.undefined, [cell.HeldValue]));
   }
   // 4. Return NormalCompletion(undefined).
   return NormalCompletion(Value.undefined);
+}
+
+/** https://tc39.es/ecma262/#sec-canbeheldweakly */
+export function CanBeHeldWeakly(v: Value): BooleanValue {
+  // 1. If v is an Object, return true.
+  if (v instanceof ObjectValue) {
+    return Value.true;
+  }
+
+  // 2. If v is a Symbol and KeyForSymbol(v) is undefined, return true.
+  if (v instanceof SymbolValue && KeyForSymbol(v) === Value.undefined) {
+    return Value.true;
+  }
+
+  // 3. Return false.
+  return Value.false;
 }

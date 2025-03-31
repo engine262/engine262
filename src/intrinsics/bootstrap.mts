@@ -1,24 +1,38 @@
-// @ts-nocheck
 import {
   Assert,
   CreateBuiltinFunction,
   OrdinaryObjectCreate,
-} from '../abstract-ops/all.mjs';
+  Realm,
+  type FunctionObject,
+} from '../abstract-ops/all.mts';
 import {
   Descriptor,
+  JSStringValue,
+  NullValue,
+  ObjectValue,
+  SymbolValue,
+  UndefinedValue,
   Value,
   wellKnownSymbols,
-} from '../value.mjs';
-import { X } from '../completion.mjs';
+  type DescriptorInit,
+  type NativeSteps,
+} from '../value.mts';
+import { X } from '../completion.mts';
 
-/** http://tc39.es/ecma262/#sec-ecmascript-standard-built-in-objects */
-export function assignProps(realmRec, obj, props) {
+type Props = [
+  name: string | JSStringValue | SymbolValue,
+  value: [getter: NativeSteps | UndefinedValue | FunctionObject, setter?: NativeSteps | UndefinedValue | FunctionObject] | NativeSteps | Value,
+  fnLength?: number,
+  desc?: DescriptorInit
+];
+/** https://tc39.es/ecma262/#sec-ecmascript-standard-built-in-objects */
+export function assignProps(realmRec: Realm, obj: ObjectValue, props: readonly (Props | undefined)[]) {
   for (const item of props) {
     if (item === undefined) {
       continue;
     }
     const [n, v, len, descriptor] = item;
-    const name = n instanceof Value ? n : new Value(n);
+    const name = n instanceof Value ? n : Value(n);
     if (Array.isArray(v)) {
       // Every accessor property described in clauses 18 through 26 and in
       // Annex B.2 has the attributes { [[Enumerable]]: false,
@@ -38,7 +52,7 @@ export function assignProps(realmRec, obj, props) {
           [],
           realmRec,
           undefined,
-          new Value('get'),
+          Value('get'),
         );
       }
       if (typeof setter === 'function') {
@@ -49,7 +63,7 @@ export function assignProps(realmRec, obj, props) {
           [],
           realmRec,
           undefined,
-          new Value('set'),
+          Value('set'),
         );
       }
       X(obj.DefineOwnProperty(name, Descriptor({
@@ -81,7 +95,7 @@ export function assignProps(realmRec, obj, props) {
   }
 }
 
-export function bootstrapPrototype(realmRec, props, Prototype, stringTag) {
+export function bootstrapPrototype(realmRec: Realm, props: readonly (Props | undefined)[], Prototype: ObjectValue | NullValue, stringTag?: string) {
   Assert(Prototype !== undefined);
   const proto = OrdinaryObjectCreate(Prototype);
 
@@ -89,7 +103,7 @@ export function bootstrapPrototype(realmRec, props, Prototype, stringTag) {
 
   if (stringTag !== undefined) {
     X(proto.DefineOwnProperty(wellKnownSymbols.toStringTag, Descriptor({
-      Value: new Value(stringTag),
+      Value: Value(stringTag),
       Writable: Value.false,
       Enumerable: Value.false,
       Configurable: Value.true,
@@ -99,11 +113,11 @@ export function bootstrapPrototype(realmRec, props, Prototype, stringTag) {
   return proto;
 }
 
-export function bootstrapConstructor(realmRec, Constructor, name, length, Prototype, props = []) {
+export function bootstrapConstructor(realmRec: Realm, Constructor: NativeSteps, name: string, length: number, Prototype: ObjectValue, props: readonly Props[] = []) {
   const cons = CreateBuiltinFunction(
     Constructor,
     length,
-    new Value(name),
+    Value(name),
     [],
     realmRec,
     undefined,
@@ -111,14 +125,14 @@ export function bootstrapConstructor(realmRec, Constructor, name, length, Protot
     Value.true,
   );
 
-  X(cons.DefineOwnProperty(new Value('prototype'), Descriptor({
+  X(cons.DefineOwnProperty(Value('prototype'), Descriptor({
     Value: Prototype,
     Writable: Value.false,
     Enumerable: Value.false,
     Configurable: Value.false,
   })));
 
-  X(Prototype.DefineOwnProperty(new Value('constructor'), Descriptor({
+  X(Prototype.DefineOwnProperty(Value('constructor'), Descriptor({
     Value: cons,
     Writable: Value.true,
     Enumerable: Value.false,

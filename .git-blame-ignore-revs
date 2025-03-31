@@ -1,1 +1,12 @@
+# comment fixes
+38bf0e269181616b30ccf6e0d24e811f11da7ee5
+29a28e5329bfe814199d3beafbad19e7a28c0485
+
+# convert all file extension from mjs to mts
 2f8453351267d8b500c65303d19c16f0f3c72f80
+
+# replace new Value(...) with Value(...)
+af59abf2192b92604ce6a40417361291197689f8
+
+# enable --allowImportingTsExtensions
+fade10ff7f250493925670d40febc3024ca9d8cc
