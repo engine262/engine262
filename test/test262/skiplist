@@ -330,7 +330,6 @@ staging/sm/Set/is-disjoint-from.js
 staging/sm/Set/is-subset-of.js
 staging/sm/Set/is-superset-of.js
 staging/sm/Set/symmetric-difference.js
-staging/sm/Set/union.js
 staging/sm/statements/for-in-with-declaration.js
 staging/sm/statements/regress-642975.js
 staging/sm/strict/10.4.2.js
