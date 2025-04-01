@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 64011e434eae0d1b05e9a512ce5e13ad6d8b4711
+ * engine262 0.0.1 d840219fcd2b4918215d35d1fe600f23b9dd06b2
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -14833,6 +14833,7 @@ const RegExpArgumentNotAllowed = m => `First argument to ${m} must not be a regu
 const RegExpExecNotObject = o => `${i(o)} is not object or null`;
 const ResizableBufferInvalidMaxByteLength = () => 'Invalid maxByteLength for resizable ArrayBuffer';
 const ResolutionNullOrAmbiguous = (r, n, m) => r === null ? `Could not resolve import ${i(n)} from ${m.HostDefined.specifier}` : `Star export ${i(n)} from ${m.HostDefined.specifier} is ambiguous`;
+const SizeIsNaN = () => 'size property must not be undefined, as it will be NaN';
 const SpeciesNotConstructor = () => 'object.constructor[Symbol.species] is not a constructor';
 const StrictModeDelete = n => `Cannot not delete property ${i(n)}`;
 const StrictPoisonPill = () => 'The caller, callee, and arguments properties may not be accessed on functions or the arguments objects for calls to them';
@@ -14996,6 +14997,7 @@ var messages = /*#__PURE__*/Object.freeze({
   RegExpExecNotObject: RegExpExecNotObject,
   ResizableBufferInvalidMaxByteLength: ResizableBufferInvalidMaxByteLength,
   ResolutionNullOrAmbiguous: ResolutionNullOrAmbiguous,
+  SizeIsNaN: SizeIsNaN,
   SpeciesNotConstructor: SpeciesNotConstructor,
   StrictModeDelete: StrictModeDelete,
   StrictPoisonPill: StrictPoisonPill,
@@ -50409,42 +50411,286 @@ function SetProto_values(_args, {
   // 2. Return ? CreateSetIterator(S, value).
   return CreateSetIterator(S, 'value');
 }
+
+/** https://tc39.es/ecma262/#sec-set.prototype.union */
 SetProto_values.section = 'https://tc39.es/ecma262/#sec-set.prototype.values';
-function bootstrapSetPrototype(realmRec) {
-  const proto = bootstrapPrototype(realmRec, [['add', SetProto_add, 1], ['clear', SetProto_clear, 0], ['delete', SetProto_delete, 1], ['entries', SetProto_entries, 0], ['forEach', SetProto_forEach, 1], ['has', SetProto_has, 1], ['size', [SetProto_sizeGetter]], ['values', SetProto_values, 0]], realmRec.Intrinsics['%Object.prototype%'], 'Set');
-  /* X */
-  let _temp11 = proto.GetOwnProperty(Value('values'));
+function* SetProto_union([other = Value.undefined], {
+  thisValue
+}) {
+  // 1. Let O be the this value.
+  const O = thisValue;
+
+  // 2. Perform ? RequireInternalSlot(O, [[SetData]]).
+  /* ReturnIfAbrupt */
+  let _temp11 = RequireInternalSlot(O, 'SetData');
   /* c8 ignore if */
-  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) _temp11 = skipDebugger(_temp11);
+  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
-  if (_temp11 instanceof AbruptCompletion) throw new Assert.Error("! proto.GetOwnProperty(Value('values')) returned an abrupt completion", {
-    cause: _temp11
-  });
+  if (_temp11 instanceof AbruptCompletion) return _temp11;
   /* c8 ignore if */
   if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
-  const valuesFunc = _temp11;
-  /* X */
-  let _temp12 = proto.DefineOwnProperty(Value('keys'), valuesFunc);
+
+  // 3. Let otherRec be ? GetSetRecord(other).
+  /* ReturnIfAbrupt */
+  let _temp12 = yield* GetSetRecord(other);
   /* c8 ignore if */
-  if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) _temp12 = skipDebugger(_temp12);
+  if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
-  if (_temp12 instanceof AbruptCompletion) throw new Assert.Error("! proto.DefineOwnProperty(Value('keys'), valuesFunc) returned an abrupt completion", {
-    cause: _temp12
-  });
+  if (_temp12 instanceof AbruptCompletion) return _temp12;
   /* c8 ignore if */
   if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
-  /* X */
-  let _temp13 = proto.DefineOwnProperty(wellKnownSymbols.iterator, valuesFunc);
+  const otherRec = _temp12;
+
+  // 4. Let keysIter be ? GetKeysIterator(otherRec).
+  /* ReturnIfAbrupt */
+  let _temp13 = yield* GetKeysIterator(otherRec);
   /* c8 ignore if */
-  if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) _temp13 = skipDebugger(_temp13);
+  if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
-  if (_temp13 instanceof AbruptCompletion) throw new Assert.Error("! proto.DefineOwnProperty(wellKnownSymbols.iterator, valuesFunc) returned an abrupt completion", {
-    cause: _temp13
-  });
+  if (_temp13 instanceof AbruptCompletion) return _temp13;
   /* c8 ignore if */
   if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
+  const keysIter = _temp13;
+
+  // 5. Let resultSetData be a copy of O.[[SetData]].
+  const resultSetData = [...O.SetData];
+
+  // 6. Let next be true.
+  let next = Value.true;
+
+  // 7. Repeat, while next is not DONE,
+  while (next !== 'done') {
+    /* ReturnIfAbrupt */
+    let _temp14 = yield* IteratorStep(keysIter);
+    /* c8 ignore if */
+    if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
+    /* c8 ignore if */
+    if (_temp14 instanceof AbruptCompletion) return _temp14;
+    /* c8 ignore if */
+    if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
+    // a. Set next to ? IteratorStep(keysIter).
+    next = _temp14;
+
+    // b. If next is not DONE, then
+    if (next !== 'done') {
+      /* ReturnIfAbrupt */
+      let _temp15 = yield* IteratorValue(next);
+      /* c8 ignore if */
+      if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield* on the completion.');
+      /* c8 ignore if */
+      if (_temp15 instanceof AbruptCompletion) return _temp15;
+      /* c8 ignore if */
+      if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
+      // i. Let nextValue be ? IteratorValue(next).
+      let nextValue = _temp15;
+
+      // ii. If nextValue is -0𝔽, set nextValue to +0𝔽.
+      if (nextValue instanceof NumberValue && Object.is(R(nextValue), -0)) {
+        nextValue = F(0);
+      }
+
+      // iii. If SetDataHas(resultSetData, nextValue) is false, then
+      if (SetDataHas(resultSetData, nextValue) === Value.false) {
+        // 1. Append nextValue to resultSetData.
+        resultSetData.push(nextValue);
+      }
+    }
+  }
+
+  // 8. Let result be OrdinaryObjectCreate(%Set.prototype%, « [[SetData]] »).
+  const result = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Set.prototype%'), ['SetData']);
+
+  // 9. Set result.[[SetData]] to resultSetData.
+  result.SetData = resultSetData;
+
+  // 10. Return result.
+  return EnsureCompletion(result);
+}
+SetProto_union.section = 'https://tc39.es/ecma262/#sec-set.prototype.union';
+function bootstrapSetPrototype(realmRec) {
+  const proto = bootstrapPrototype(realmRec, [['add', SetProto_add, 1], ['clear', SetProto_clear, 0], ['delete', SetProto_delete, 1], ['entries', SetProto_entries, 0], ['forEach', SetProto_forEach, 1], ['has', SetProto_has, 1], ['size', [SetProto_sizeGetter]], ['values', SetProto_values, 0], ['union', SetProto_union, 1]], realmRec.Intrinsics['%Object.prototype%'], 'Set');
+  /* X */
+  let _temp16 = proto.GetOwnProperty(Value('values'));
+  /* c8 ignore if */
+  if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) _temp16 = skipDebugger(_temp16);
+  /* c8 ignore if */
+  if (_temp16 instanceof AbruptCompletion) throw new Assert.Error("! proto.GetOwnProperty(Value('values')) returned an abrupt completion", {
+    cause: _temp16
+  });
+  /* c8 ignore if */
+  if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+  const valuesFunc = _temp16;
+  /* X */
+  let _temp17 = proto.DefineOwnProperty(Value('keys'), valuesFunc);
+  /* c8 ignore if */
+  if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) _temp17 = skipDebugger(_temp17);
+  /* c8 ignore if */
+  if (_temp17 instanceof AbruptCompletion) throw new Assert.Error("! proto.DefineOwnProperty(Value('keys'), valuesFunc) returned an abrupt completion", {
+    cause: _temp17
+  });
+  /* c8 ignore if */
+  if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
+  /* X */
+  let _temp18 = proto.DefineOwnProperty(wellKnownSymbols.iterator, valuesFunc);
+  /* c8 ignore if */
+  if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) _temp18 = skipDebugger(_temp18);
+  /* c8 ignore if */
+  if (_temp18 instanceof AbruptCompletion) throw new Assert.Error("! proto.DefineOwnProperty(wellKnownSymbols.iterator, valuesFunc) returned an abrupt completion", {
+    cause: _temp18
+  });
+  /* c8 ignore if */
+  if (_temp18 instanceof Completion) _temp18 = _temp18.Value;
   realmRec.Intrinsics['%Set.prototype%'] = proto;
 }
+/** https://tc39.es/ecma262/#sec-getsetrecord */
+function* GetSetRecord(obj) {
+  // 1. If obj is not an Object, throw a TypeError exception.
+  if (!(obj instanceof ObjectValue)) {
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', obj);
+  }
+
+  // 2. Let rawSize be ? Get(obj, "size").
+  /* ReturnIfAbrupt */
+  let _temp19 = yield* Get(obj, Value('size'));
+  /* c8 ignore if */
+  if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp19 instanceof AbruptCompletion) return _temp19;
+  /* c8 ignore if */
+  if (_temp19 instanceof Completion) _temp19 = _temp19.Value;
+  const rawSize = _temp19;
+
+  // 3. Let numSize be ? ToNumber(rawSize).
+  // 4. NOTE: If rawSize is undefined, then numSize will be NaN.
+  /* ReturnIfAbrupt */
+  let _temp20 = yield* ToNumber(rawSize);
+  /* c8 ignore if */
+  if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp20 instanceof AbruptCompletion) return _temp20;
+  /* c8 ignore if */
+  if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
+  const numSize = _temp20;
+
+  // 5. If numSize is NaN, throw a TypeError exception.
+  if (numSize.isNaN()) {
+    return surroundingAgent.Throw('TypeError', 'SizeIsNaN');
+  }
+
+  // 6. Let intSize be ! ToIntegerOrInfinity(numSize).
+  /* X */
+  let _temp21 = ToIntegerOrInfinity(numSize);
+  /* c8 ignore if */
+  if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) _temp21 = skipDebugger(_temp21);
+  /* c8 ignore if */
+  if (_temp21 instanceof AbruptCompletion) throw new Assert.Error("! ToIntegerOrInfinity(numSize) returned an abrupt completion", {
+    cause: _temp21
+  });
+  /* c8 ignore if */
+  if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
+  const intSize = _temp21;
+
+  // 7. Let has be ? Get(obj, "has").
+  /* ReturnIfAbrupt */
+  let _temp22 = yield* Get(obj, Value('has'));
+  /* c8 ignore if */
+  if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp22 instanceof AbruptCompletion) return _temp22;
+  /* c8 ignore if */
+  if (_temp22 instanceof Completion) _temp22 = _temp22.Value;
+  const has = _temp22;
+
+  // 8. If IsCallable(has) is false, throw a TypeError exception.
+  if (IsCallable(has) === Value.false) {
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', has);
+  }
+
+  // 9. Let keys be ? Get(obj, "keys").
+  /* ReturnIfAbrupt */
+  let _temp23 = yield* Get(obj, Value('keys'));
+  /* c8 ignore if */
+  if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp23 instanceof AbruptCompletion) return _temp23;
+  /* c8 ignore if */
+  if (_temp23 instanceof Completion) _temp23 = _temp23.Value;
+  const keys = _temp23;
+
+  // 10. If IsCallable(keys) is false, throw a TypeError exception.
+  if (IsCallable(keys) === Value.false) {
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', keys);
+  }
+
+  // 11. Return a new Set Record { [[Set]]: obj, [[Size]]: intSize, [[Has]]: has, [[Keys]]: keys }.
+  const setRecord = {
+    Set: obj,
+    Size: intSize,
+    Has: has,
+    Keys: keys
+  };
+  return EnsureCompletion(setRecord);
+}
+
+/** https://tc39.es/proposal-set-methods/#sec-getkeysiterator */
+GetSetRecord.section = 'https://tc39.es/ecma262/#sec-getsetrecord';
+function* GetKeysIterator(setRec) {
+  /* ReturnIfAbrupt */
+  let _temp24 = Call(setRec.Keys, setRec.Set);
+  /* c8 ignore if */
+  if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp24 instanceof AbruptCompletion) return _temp24;
+  /* c8 ignore if */
+  if (_temp24 instanceof Completion) _temp24 = _temp24.Value;
+  // 1. Let keysIter be ? Call(setRec.[[Keys]], setRec.[[Set]]).
+  const keysIter = _temp24;
+
+  // 2. If keysIter is not an Object, throw a TypeError exception.
+  if (!(keysIter instanceof ObjectValue)) {
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', keysIter);
+  }
+
+  // 3. Let nextMethod be ? Get(keysIter, "next").
+  /* ReturnIfAbrupt */
+  let _temp25 = yield* Get(keysIter, Value('next'));
+  /* c8 ignore if */
+  if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp25 instanceof AbruptCompletion) return _temp25;
+  /* c8 ignore if */
+  if (_temp25 instanceof Completion) _temp25 = _temp25.Value;
+  const nextMethod = _temp25;
+
+  // 4. If IsCallable(nextMethod) is false, throw a TypeError exception.
+  if (IsCallable(nextMethod) === Value.false) {
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', nextMethod);
+  }
+
+  // 5. Return a new Iterator Record { [[Iterator]]: keysIter, [[NextMethod]]: nextMethod, [[Done]]: false }.
+  const iteratorRecord = {
+    Iterator: keysIter,
+    NextMethod: nextMethod,
+    Done: Value.false
+  };
+  return EnsureCompletion(iteratorRecord);
+}
+
+/** https://tc39.es/ecma262/#sec-setdatahas */
+GetKeysIterator.section = 'https://tc39.es/proposal-set-methods/#sec-getkeysiterator';
+function SetDataHas(resultSetData, value) {
+  // 1. For each element e of resultSetData, do
+  for (const e of resultSetData) {
+    // a. If e is not empty and SameValueZero(e, value) is true, return true.
+    if (e !== undefined && SameValueZero(e, value) === Value.true) {
+      return Value.true;
+    }
+  }
+
+  // 2. Return false.
+  return Value.false;
+}
+SetDataHas.section = 'https://tc39.es/ecma262/#sec-setdatahas';
 
 function isSetObject(value) {
   return 'SetData' in value;
