@@ -62,6 +62,7 @@ export const InvalidAssignmentTarget = () => 'Invalid assignment target';
 export const InvalidCodePoint = () => 'Not a valid code point';
 export const InvalidHint = (v) => `Invalid hint: ${i(v)}`;
 export const InvalidMethodName = (name) => `Method cannot be named '${i(name)}'`;
+export const InvalidNewTarget = (t) => `Invalid new target ${i(t)}`;
 export const InvalidPropertyDescriptor = () => 'Invalid property descriptor. Cannot both specify accessors and a value or writable attribute';
 export const InvalidRadix = () => 'Radix must be between 2 and 36, inclusive';
 export const InvalidReceiver = (f, v) => `${f} called on invalid receiver: ${i(v)}`;
@@ -72,6 +73,7 @@ export const InvalidTemplateEscape = () => 'Invalid escapes are only allowed in 
 export const InvalidThis = () => 'Invalid `this` access';
 export const InvalidUnicodeEscape = () => 'Invalid unicode escape';
 export const InvalidAlphabet = () => 'Invalid alphabet';
+export const IteratorCompleted = () => 'The iterator is already complete.';
 export const InvalidLastChunkHandling = () => 'Invalid lastChunkHandling';
 export const InvalidBase64String = () => 'Invalid base64 string';
 export const InvalidHexString = () => 'Invalid hex string';
