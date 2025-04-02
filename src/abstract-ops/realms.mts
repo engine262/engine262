@@ -59,6 +59,8 @@ import { bootstrapJSON } from '../intrinsics/JSON.mts';
 import { bootstrapEval } from '../intrinsics/eval.mts';
 import { bootstrapIsFinite } from '../intrinsics/isFinite.mts';
 import { bootstrapIsNaN } from '../intrinsics/isNaN.mts';
+import { bootstrapIteratorHelperPrototype } from '../intrinsics/IteratorHelperPrototype.mts';
+import { bootstrapIterator } from '../intrinsics/Iterator.mts';
 import { bootstrapParseFloat } from '../intrinsics/parseFloat.mts';
 import { bootstrapParseInt } from '../intrinsics/parseInt.mts';
 import { bootstrapURIHandling } from '../intrinsics/URIHandling.mts';
@@ -79,6 +81,7 @@ import { bootstrapWeakRefPrototype } from '../intrinsics/WeakRefPrototype.mts';
 import { bootstrapWeakRef } from '../intrinsics/WeakRef.mts';
 import { bootstrapFinalizationRegistryPrototype } from '../intrinsics/FinalizationRegistryPrototype.mts';
 import { bootstrapFinalizationRegistry } from '../intrinsics/FinalizationRegistry.mts';
+import { bootstrapWrapForValidIteratorPrototype } from '../intrinsics/WrapForValidIteratorPrototype.mts';
 import {
   AbstractModuleRecord, JSStringValue, ManagedRealm, ObjectValue, type BuiltinFunctionObject, type ValueEvaluator, type FunctionObject, type GCMarker, type ManagedRealmHostDefined,
 } from '../index.mts';
@@ -327,6 +330,10 @@ export function CreateIntrinsics(realmRec: Realm) {
   bootstrapFunction(realmRec);
 
   bootstrapIteratorPrototype(realmRec);
+  bootstrapIterator(realmRec);
+  bootstrapIteratorHelperPrototype(realmRec);
+  bootstrapWrapForValidIteratorPrototype(realmRec);
+
   bootstrapAsyncIteratorPrototype(realmRec);
   bootstrapArrayIteratorPrototype(realmRec);
   bootstrapMapIteratorPrototype(realmRec);

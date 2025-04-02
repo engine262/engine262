@@ -16,7 +16,6 @@
 -exponentiation
 -import-attributes
 -import-defer
--iterator-helpers
 -iterator-sequencing
 -json-parse-with-source
 -regexp-modifiers

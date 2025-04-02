@@ -19,6 +19,7 @@ import {
   AbruptCompletion,
   Q, X,
   EnsureCompletion,
+  ReturnCompletion,
 } from '../completion.mts';
 import { Evaluate, type StatementEvaluator } from '../evaluator.mts';
 import { IsAnonymousFunctionDefinition, type FunctionDeclaration } from '../static-semantics/all.mts';
@@ -87,14 +88,16 @@ function* EvaluateBody_AsyncConciseBody({ ExpressionBody }: ParseNode.AsyncConci
 export function* EvaluateBody_GeneratorBody(GeneratorBody: ParseNode.GeneratorBody, functionObject: ECMAScriptFunctionObject, argumentsList: Arguments): StatementEvaluator {
   // 1. Perform ? FunctionDeclarationInstantiation(functionObject, argumentsList).
   Q(yield* FunctionDeclarationInstantiation(functionObject, argumentsList));
-  // 2. Let G be ? OrdinaryCreateFromConstructor(functionObject, "%GeneratorFunction.prototype.prototype%", « [[GeneratorState]], [[GeneratorContext]], [[GeneratorBrand]] »).
+  // 2. Let G be ? OrdinaryCreateFromConstructor(functionObject, "%GeneratorPrototype%", « [[GeneratorState]], [[GeneratorContext]], [[GeneratorBrand]] »).
   const G = Q(yield* OrdinaryCreateFromConstructor(functionObject, '%GeneratorFunction.prototype.prototype%', ['GeneratorState', 'GeneratorContext', 'GeneratorBrand'])) as Mutable<GeneratorObject>;
   // 3. Set G.[[GeneratorBrand]] to empty.
   G.GeneratorBrand = undefined;
-  // 4. Perform GeneratorStart(G, FunctionBody).
+  // 4. Set G.[[GeneratorState]] to suspended-start.
+  G.GeneratorState = 'suspendedStart';
+  // 5. Perform GeneratorStart(G, FunctionBody).
   GeneratorStart(G, GeneratorBody);
-  // 5. Return Completion { [[Type]]: return, [[Value]]: G, [[Target]]: empty }.
-  return new Completion({ Type: 'return', Value: G, Target: undefined });
+  // 6. Return ReturnCompletion(G).
+  return ReturnCompletion(G);
 }
 
 /** https://tc39.es/ecma262/#sec-asyncgenerator-definitions-evaluatebody */
