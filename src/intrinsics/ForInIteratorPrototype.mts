@@ -114,7 +114,7 @@ function* ForInIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionC
 export function bootstrapForInIteratorPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['next', ForInIteratorPrototype_next, 0],
-  ], realmRec.Intrinsics['%IteratorPrototype%']);
+  ], realmRec.Intrinsics['%Iterator.prototype%']);
 
   realmRec.Intrinsics['%ForInIteratorPrototype%'] = proto;
 }

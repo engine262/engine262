@@ -19,9 +19,14 @@ import {
 } from '../value.mts';
 import { X } from '../completion.mts';
 
+type Accessor = [
+  getter: NativeSteps | UndefinedValue | FunctionObject,
+  setter?: NativeSteps | UndefinedValue | FunctionObject,
+];
+
 type Props = [
   name: string | JSStringValue | SymbolValue,
-  value: [getter: NativeSteps | UndefinedValue | FunctionObject, setter?: NativeSteps | UndefinedValue | FunctionObject] | NativeSteps | Value,
+  value: Accessor | NativeSteps | Value,
   fnLength?: number,
   desc?: DescriptorInit
 ];
@@ -132,12 +137,14 @@ export function bootstrapConstructor(realmRec: Realm, Constructor: NativeSteps, 
     Configurable: Value.false,
   })));
 
-  X(Prototype.DefineOwnProperty(Value('constructor'), Descriptor({
-    Value: cons,
-    Writable: Value.true,
-    Enumerable: Value.false,
-    Configurable: Value.true,
-  })));
+  if (!Prototype.properties.has('constructor')) {
+    X(Prototype.DefineOwnProperty(Value('constructor'), Descriptor({
+      Value: cons,
+      Writable: Value.true,
+      Enumerable: Value.false,
+      Configurable: Value.true,
+    })));
+  }
 
   assignProps(realmRec, cons, props);
 

@@ -28,6 +28,7 @@ export const BufferContentTypeMismatch = () => 'Newly created TypedArray did not
 export const BufferDetachKeyMismatch = (k, b) => `${i(k)} is not the [[ArrayBufferDetachKey]] of ${i(b)}`;
 export const CannotAllocateDataBlock = () => 'Cannot allocate memory';
 export const CannotCreateProxyWith = (x, y) => `Cannot create a proxy with a ${x} as ${y}`;
+export const CannotConstructAbstractFunction = (c) => `Cannot construct abstract ${i(c)}`;
 export const CannotConvertDecimalToBigInt = (n) => `Cannot convert ${i(n)} to a BigInt because it is not an integer`;
 export const CannotConvertSymbol = (t) => `Cannot convert a Symbol value to a ${t}`;
 export const CannotConvertToBigInt = (v) => `Cannot convert ${i(v)} to a BigInt`;
