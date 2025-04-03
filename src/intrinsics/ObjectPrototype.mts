@@ -9,6 +9,7 @@ import {
   wellKnownSymbols,
   type FunctionCallContext,
   type Arguments,
+  type ObjectInternalMethods,
 } from '../value.mts';
 import {
   DefinePropertyOrThrow,
@@ -18,18 +19,22 @@ import {
   IsAccessorDescriptor,
   IsArray,
   IsCallable,
+  MakeBasicObject,
   Realm,
   RequireObjectCoercible,
   SameValue,
+  SetImmutablePrototype,
   ToObject,
   ToPropertyKey,
   type BuiltinFunctionObject,
   type FunctionObject,
+  type ImmutablePrototypeObject,
+  type OrdinaryObject,
 } from '../abstract-ops/all.mts';
 import {
   Q, X, type ValueCompletion, type ValueEvaluator,
 } from '../completion.mts';
-import { __ts_cast__ } from '../helpers.mts';
+import { __ts_cast__, type Mutable } from '../helpers.mts';
 import { assignProps } from './bootstrap.mts';
 
 /** https://tc39.es/ecma262/#sec-object.prototype.hasownproperty */
@@ -275,6 +280,33 @@ function* ObjectProto__proto__Set([proto = Value.undefined]: Arguments, { thisVa
   }
   // 6. Return undefined.
   return Value.undefined;
+}
+
+const InternalMethods = {
+  /** https://tc39.es/ecma262/multipage/ordinary-and-exotic-objects-behaviours.html#sec-immutable-prototype-exotic-objects-setprototypeof-v */
+  * SetPrototypeOf(V) {
+    // 1. Return ? SetImmutablePrototype(O, V).
+    return Q(yield* SetImmutablePrototype(this, V));
+  },
+} satisfies Partial<ObjectInternalMethods<ImmutablePrototypeObject>>;
+
+/** https://tc39.es/ecma262/multipage/fundamental-objects.html#sec-properties-of-the-object-prototype-object */
+export function makeObjectPrototype(realmRec: Realm) {
+  // The Object prototype object:
+  const proto = MakeBasicObject(['Prototype', 'Extensible']) as Mutable<ImmutablePrototypeObject & OrdinaryObject>;
+
+  // * has an [[Extensible]] internal slot whose value is true.
+  proto.Extensible = Value.true;
+
+  // * has a [[Prototype]] internal slot whose value is null.
+  proto.Prototype = Value.null;
+
+  // * has the internal methods defined for ordinary objects, except for the [[SetPrototypeOf]] method, which is as defined in 10.4.7.1.
+  //   (Thus, it is an immutable prototype exotic object.)
+  proto.SetPrototypeOf = InternalMethods.SetPrototypeOf;
+
+  // * is %Object.prototype%.
+  realmRec.Intrinsics['%Object.prototype%'] = proto;
 }
 
 export function bootstrapObjectPrototype(realmRec: Realm) {
