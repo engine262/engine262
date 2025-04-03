@@ -285,7 +285,7 @@ function* ObjectProto__proto__Set([proto = Value.undefined]: Arguments, { thisVa
 const InternalMethods = {
   /** https://tc39.es/ecma262/multipage/ordinary-and-exotic-objects-behaviours.html#sec-immutable-prototype-exotic-objects-setprototypeof-v */
   * SetPrototypeOf(V) {
-    // 1. Return ? SetImmutablePrototype(O, V).
+    // 1. Return ? SetImmutablePrototype(O, V).
     return Q(yield* SetImmutablePrototype(this, V));
   },
 } satisfies Partial<ObjectInternalMethods<ImmutablePrototypeObject>>;
