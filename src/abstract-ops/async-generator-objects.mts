@@ -160,7 +160,7 @@ function AsyncGeneratorCompleteStep(generator: AsyncGeneratorObject, completion:
   // 7. If completion.[[Type]] is throw, then
   if (completion.Type === 'throw') {
     // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « value »).
-    X(Call(promiseCapability.Reject, Value.undefined, [value!]));
+    X(Call(promiseCapability.Reject, Value.undefined, [value]));
   } else { // 8. Else,
     // a. Assert: completion.[[Type]] is normal.
     Assert(completion.Type === 'normal');
@@ -172,12 +172,12 @@ function AsyncGeneratorCompleteStep(generator: AsyncGeneratorObject, completion:
       // ii. Set the running execution context's Realm to realm.
       surroundingAgent.runningExecutionContext.Realm = realm;
       // iii. Let iteratorResult be ! CreateIteratorResultObject(value, done).
-      iteratorResult = X(CreateIteratorResultObject(value!, done));
+      iteratorResult = X(CreateIteratorResultObject(value, done));
       // iv. Set the running execution context's Realm to oldRealm.
       surroundingAgent.runningExecutionContext.Realm = oldRealm;
     } else { // c. Else,
       // i. Let iteratorResult be ! CreateIteratorResultObject(value, done).
-      iteratorResult = X(CreateIteratorResultObject(value!, done));
+      iteratorResult = X(CreateIteratorResultObject(value, done));
     }
     // d. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iteratorResult »).
     X(Call(promiseCapability.Resolve, Value.undefined, [iteratorResult]));

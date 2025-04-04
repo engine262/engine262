@@ -362,7 +362,7 @@ function* StringProto_replace([searchValue = Value.undefined, replaceValue = Val
   const string = Q(yield* ToString(O));
   const searchString = Q(yield* ToString(searchValue));
   const functionalReplace = IsCallable(replaceValue);
-  if (functionalReplace === Value.false) {
+  if (!functionalReplace) {
     replaceValue = Q(yield* ToString(replaceValue));
   }
   const pos = string.stringValue().indexOf(searchString.stringValue());
@@ -371,7 +371,7 @@ function* StringProto_replace([searchValue = Value.undefined, replaceValue = Val
     return string;
   }
   let replStr;
-  if (functionalReplace === Value.true) {
+  if (functionalReplace) {
     const replValue = Q(yield* Call(replaceValue, Value.undefined, [matched, F(pos), string]));
     replStr = Q(yield* ToString(replValue));
   } else {
@@ -417,7 +417,7 @@ function* StringProto_replaceAll([searchValue = Value.undefined, replaceValue = 
   // 5. Let functionalReplace be IsCallable(replaceValue).
   const functionalReplace = IsCallable(replaceValue);
   // 6. If functionalReplace is false, then
-  if (functionalReplace === Value.false) {
+  if (!functionalReplace) {
     // a. Let replaceValue be ? ToString(replaceValue).
     replaceValue = Q(yield* ToString(replaceValue));
   }
@@ -444,7 +444,7 @@ function* StringProto_replaceAll([searchValue = Value.undefined, replaceValue = 
   for (position of matchPositions) {
     let replacement;
     // a. If functionalReplace is true, then
-    if (functionalReplace === Value.true) {
+    if (functionalReplace) {
       // i. Let replacement be ? ToString(? Call(replaceValue, undefined, « searchString, 𝔽(position), string »).
       replacement = Q(yield* ToString(Q(yield* Call(replaceValue, Value.undefined, [searchString, F(position), string]))));
     } else { // b. Else,

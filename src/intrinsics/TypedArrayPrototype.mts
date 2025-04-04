@@ -21,7 +21,6 @@ import {
   RequireInternalSlot,
   F,
   Realm,
-  type FunctionObject,
   type ArrayBufferObject,
   MakeTypedArrayWithBufferWitnessRecord,
   TypedArrayByteLength,
@@ -35,7 +34,7 @@ import {
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   BigIntValue,
-  Descriptor, JSStringValue, NumberValue, ObjectValue, UndefinedValue, Value, wellKnownSymbols,
+  Descriptor, JSStringValue, NumberValue, ObjectValue, Value, wellKnownSymbols,
   type Arguments,
   type FunctionCallContext,
 } from '../value.mts';
@@ -229,7 +228,7 @@ function* TypedArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.
   const O = thisValue as TypedArrayObject;
   const taRecord = Q(ValidateTypedArray(O, 'seq-cst'));
   const len = TypedArrayLength(taRecord);
-  if (IsCallable(callbackfn) === Value.false) {
+  if (!IsCallable(callbackfn)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
   const kept = [];
@@ -282,7 +281,7 @@ function* TypedArrayProto_map([callbackfn = Value.undefined, thisArg = Value.und
   const O = thisValue as TypedArrayObject;
   const taRecord = Q(ValidateTypedArray(O, 'seq-cst'));
   const len = TypedArrayLength(taRecord);
-  if (IsCallable(callbackfn) === Value.false) {
+  if (!IsCallable(callbackfn)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
   const A = Q(yield* TypedArraySpeciesCreate(O, [F(len)]));
@@ -482,7 +481,7 @@ function* TypedArrayProto_slice([start = Value.undefined, end = Value.undefined]
 
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.sort */
 function* TypedArrayProto_sort([comparator = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  if (comparator !== Value.undefined && IsCallable(comparator) === Value.false) {
+  if (comparator !== Value.undefined && !IsCallable(comparator)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', comparator);
   }
   const obj = thisValue as TypedArrayObject;
@@ -491,7 +490,7 @@ function* TypedArrayProto_sort([comparator = Value.undefined]: Arguments, { this
   const SortCompare = function* SortCompare(x: Value, y: Value): ValueEvaluator<NumberValue> {
     Assert(x instanceof NumberValue || x instanceof BigIntValue);
     Assert(y instanceof NumberValue || y instanceof BigIntValue);
-    return yield* CompareTypedArrayElements(x, y, comparator as UndefinedValue | FunctionObject);
+    return yield* CompareTypedArrayElements(x, y, comparator);
   };
   const sortedList = Q(yield* SortIndexedProperties(obj, len, SortCompare, 'read-through-holes'));
   let j = 0;

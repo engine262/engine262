@@ -28,7 +28,7 @@ export abstract class BaseParser extends Lexer {
     ) => void,
   ): ParseNodesByType[K] {
     // NOTE: must down-cast to `ParseNode` before up-casting to `Unfinished<T>` due to the incompatbile `type` discriminant.
-    const unfinished = node as ParseNode as ParseNode.Unfinished<ParseNodesByType[K]>;
+    const unfinished = node as ParseNode.Unfinished<ParseNodesByType[K]>;
     unfinished.type = type;
     update?.(unfinished, node, node);
     return unfinished as ParseNode as ParseNodesByType[K];

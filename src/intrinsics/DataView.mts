@@ -41,7 +41,7 @@ function* DataViewConstructor(this: FunctionObject, [buffer = Value.undefined, b
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 5. Let bufferByteLength be buffer.[[ArrayBufferByteLength]].
-  const bufferByteLength = (buffer as ArrayBufferObject).ArrayBufferByteLength;
+  const bufferByteLength = (buffer).ArrayBufferByteLength;
   // 6. If offset > bufferByteLength, throw a RangeError exception.
   if (offset > bufferByteLength) {
     return surroundingAgent.Throw('RangeError', 'DataViewOOB');

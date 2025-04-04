@@ -52,13 +52,13 @@ abstract class CharSet {
         cs.fns.forEach((fn) => {
           fns.add(fn);
         });
-        cs.concrete!.forEach((c) => {
+        cs.concrete.forEach((c) => {
           concrete.add(c);
         });
       } else if (cs instanceof VirtualCharSet) {
         fns.add(cs.fn);
       } else if (cs instanceof ConcreteCharSet) {
-        cs.concrete!.forEach((c) => {
+        cs.concrete.forEach((c) => {
           concrete.add(c);
         });
       }

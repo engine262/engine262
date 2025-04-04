@@ -9,7 +9,7 @@ import {
   isECMAScriptFunctionObject,
   type FunctionObject,
 } from '../abstract-ops/all.mts';
-import { ObjectValue, Value } from '../value.mts';
+import { ObjectValue } from '../value.mts';
 import { Q, X } from '../completion.mts';
 import { FunctionEnvironmentRecord } from '../environment.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
@@ -27,11 +27,11 @@ export function* Evaluate_SuperCall({ Arguments }: ParseNode.SuperCall) {
   // 4. Let argList be ? ArgumentListEvaluation of Arguments.
   const argList = Q(yield* ArgumentListEvaluation(Arguments));
   // 5. If IsConstructor(func) is false, throw a TypeError exception.
-  if (IsConstructor(func) === Value.false) {
+  if (!IsConstructor(func)) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', func);
   }
   // 6. Let result be ? Construct(func, argList, newTarget).
-  const result = Q(yield* Construct(func as FunctionObject, argList, newTarget as FunctionObject));
+  const result = Q(yield* Construct(func, argList, newTarget as FunctionObject));
   // 7. Let thisER be GetThisEnvironment().
   const thisER = GetThisEnvironment();
   // 8. Assert: thisER is a Function Environment Record.

@@ -119,7 +119,7 @@ function* SetProto_forEach([callbackfn = Value.undefined, thisArg = Value.undefi
   // 2. Perform ? RequireInternalSlot(S, [[SetData]]).
   Q(RequireInternalSlot(S, 'SetData'));
   // 3. If IsCallable(callbackfn) is false, throw a TypeError exception
-  if (IsCallable(callbackfn) === Value.false) {
+  if (!IsCallable(callbackfn)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
   // 4. Let entries be the List that is S.[[SetData]].
@@ -291,7 +291,7 @@ function* GetSetRecord(obj: Value): PlainEvaluator<SetRecord> {
   const has = Q(yield* Get(obj, Value('has')));
 
   // 8. If IsCallable(has) is false, throw a TypeError exception.
-  if (IsCallable(has) === Value.false) {
+  if (!IsCallable(has)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', has);
   }
 
@@ -299,7 +299,7 @@ function* GetSetRecord(obj: Value): PlainEvaluator<SetRecord> {
   const keys = Q(yield* Get(obj, Value('keys')));
 
   // 10. If IsCallable(keys) is false, throw a TypeError exception.
-  if (IsCallable(keys) === Value.false) {
+  if (!IsCallable(keys)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', keys);
   }
 
@@ -328,7 +328,7 @@ function* GetKeysIterator(setRec: SetRecord): PlainEvaluator<IteratorRecord> {
   const nextMethod = Q(yield* Get(keysIter, Value('next')));
 
   // 4. If IsCallable(nextMethod) is false, throw a TypeError exception.
-  if (IsCallable(nextMethod) === Value.false) {
+  if (!IsCallable(nextMethod)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', nextMethod);
   }
 

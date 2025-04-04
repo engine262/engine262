@@ -226,7 +226,7 @@ export abstract class Lexer {
   advance(): TokenData {
     this.lineTerminatorBeforeNextToken = false;
     this.escapeIndex = -1;
-    const type = this.nextToken()!;
+    const type = this.nextToken();
     return new TokenData({
       type,
       startIndex: this.positionForNextToken,

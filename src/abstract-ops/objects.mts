@@ -425,7 +425,7 @@ export function* OrdinaryCreateFromConstructor<const T extends string>(construct
 export function* GetPrototypeFromConstructor(constructor: FunctionObject, intrinsicDefaultProto: keyof Intrinsics): ValueEvaluator<ObjectValue> {
   // Assert: intrinsicDefaultProto is a String value that
   // is this specification's name of an intrinsic object.
-  Assert(IsCallable(constructor) === Value.true);
+  Assert(IsCallable(constructor));
   let proto = Q(yield* Get(constructor, Value('prototype')));
   if (!(proto instanceof ObjectValue)) {
     const realm = Q(GetFunctionRealm(constructor));

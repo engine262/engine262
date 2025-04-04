@@ -404,7 +404,8 @@ export function OrdinaryFunctionCreate(functionPrototype: ObjectValue, sourceTex
 export function MakeConstructor(F: Mutable<ECMAScriptFunctionObject> | BuiltinFunctionObject, writablePrototype?: BooleanValue, prototype?: ObjectValue): void {
   Assert(isECMAScriptFunctionObject(F) || F.Call === BuiltinFunctionCall);
   if (isECMAScriptFunctionObject(F)) {
-    Assert(IsConstructor(F) === Value.false);
+    // Assert(!IsConstructor(F)); but not applying type assertion
+    Assert(![IsConstructor(F)][0]);
     Assert(X(IsExtensible(F)) === Value.true && X(HasOwnProperty(F, Value('prototype'))) === Value.false);
     F.Construct = surroundingAgent.hostDefinedOptions.boost?.constructFunction || FunctionConstructSlot;
   }

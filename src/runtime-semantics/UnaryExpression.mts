@@ -117,7 +117,7 @@ function* Evaluate_UnaryExpression_Typeof({ UnaryExpression }: ParseNode.UnaryEx
   } else if (val instanceof SymbolValue) {
     return Value('symbol');
   } else if (val instanceof ObjectValue) {
-    if (IsCallable(val) === Value.true) {
+    if (IsCallable(val)) {
       return Value('function');
     }
     return Value('object');

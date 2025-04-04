@@ -159,7 +159,7 @@ const Function: Inspector<FunctionObject> = {
       type: 'function',
       objectId: getObjectId(value),
     };
-    result.description = IntrinsicsFunctionToString(value as FunctionObject);
+    result.description = IntrinsicsFunctionToString(value);
     if (isECMAScriptFunctionObject(value) && value.ECMAScriptCode) {
       if (value.ECMAScriptCode.type === 'FunctionBody') {
         result.className = 'Function';
@@ -264,25 +264,25 @@ const Error = new ObjectInspector<ObjectValue>('SyntaxError', 'error', (value) =
 const Map = new ObjectInspector<MapObject>('Map', 'map', (value) => `Map(${value.MapData.filter((x) => !!x.Key).length})`, {
   additionalProperties: (value) => [['size', Value(value.MapData.filter((x) => !!x.Key).length)]],
   entries: (value) => value.MapData.filter((x) => x.Key).map(({ Key, Value }) => ({
-    key: getInspector(Key!).toObjectPreview!(Key!),
-    value: getInspector(Value!).toObjectPreview!(Value!),
+    key: getInspector(Key!).toObjectPreview(Key!),
+    value: getInspector(Value!).toObjectPreview(Value!),
   })),
 });
 const Set = new ObjectInspector<SetObject>('Set', 'set', (value) => `Set(${value.SetData.filter(globalThis.Boolean).length})`, {
   additionalProperties: (value) => [['size', Value(value.SetData.filter(globalThis.Boolean).length)]],
   entries: (value) => value.SetData.filter(globalThis.Boolean).map((Value) => ({
-    value: getInspector(Value!).toObjectPreview!(Value!),
+    value: getInspector(Value!).toObjectPreview(Value!),
   })),
 });
 const WeakMap = new ObjectInspector<WeakMapObject>('WeakMap', 'weakmap', () => 'WeakMap', {
   entries: (value) => value.WeakMapData.filter((x) => x.Key).map(({ Key, Value }) => ({
-    key: getInspector(Key!).toObjectPreview!(Key!),
-    value: getInspector(Value!).toObjectPreview!(Value!),
+    key: getInspector(Key!).toObjectPreview(Key!),
+    value: getInspector(Value!).toObjectPreview(Value!),
   })),
 });
 const WeakSet = new ObjectInspector<WeakSetObject>('WeakSet', 'weakset', () => 'WeakSet', {
   entries: (value) => value.WeakSetData.filter(globalThis.Boolean).map((Value) => ({
-    value: getInspector(Value!).toObjectPreview!(Value!),
+    value: getInspector(Value!).toObjectPreview(Value!),
   })),
 });
 
@@ -297,7 +297,7 @@ const Promise = new ObjectInspector<PromiseObject>('Promise', 'promise', () => '
   additionalProperties: (value) => [['[[PromiseState]]', Value(value.PromiseState)], ['[[PromiseResult]]', value.PromiseResult || Value.undefined]],
 });
 const Proxy = new ObjectInspector<ProxyObject>('Proxy', 'proxy', (value) => {
-  if (IsCallable(value.ProxyTarget) === Value.true) {
+  if (IsCallable(value.ProxyTarget)) {
     return 'Proxy(Function)';
   }
   if (value.ProxyTarget instanceof ObjectValue) {
@@ -439,7 +439,7 @@ export function getInspector(value: Value): Inspector<Value> {
       return Number;
     case isProxyExoticObject(value):
       return Proxy;
-    case IsCallable(value) === Value.true:
+    case IsCallable(value):
       return Function;
     case isArrayExoticObject(value):
       return Array;

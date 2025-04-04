@@ -72,7 +72,7 @@ function* PromiseConstructor(this: FunctionObject, [executor = Value.undefined]:
     return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
   // 2. If IsCallable(executor) is false, throw a TypeError exception.
-  if (IsCallable(executor) === Value.false) {
+  if (!IsCallable(executor)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', executor);
   }
   // 3. Let promise be ? OrdinaryCreateFromConstructor(NewTarget, "%Promise.prototype%", « [[PromiseState]], [[PromiseResult]], [[PromiseFulfillReactions]], [[PromiseRejectReactions]], [[PromiseIsHandled]] »).
@@ -130,11 +130,11 @@ function* PromiseAllResolveElementFunctions([x = Value.undefined]: Arguments): V
 /** https://tc39.es/ecma262/#sec-getpromiseresolve */
 function* GetPromiseResolve(promiseConstructor: FunctionObject) {
   // 1. Assert: IsConstructor(promiseConstructor) is true.
-  Assert(IsConstructor(promiseConstructor) === Value.true);
+  Assert(IsConstructor(promiseConstructor));
   // 2. Let promiseResolve be ? Get(promiseConstructor, "resolve").
   const promiseResolve = Q(yield* Get(promiseConstructor, Value('resolve')));
   // 3. If IsCallable(promiseResolve) is false, throw a TypeError exception.
-  if (IsCallable(promiseResolve) === Value.false) {
+  if (!IsCallable(promiseResolve)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', promiseResolve);
   }
   // 4. Return promiseResolve.
@@ -144,11 +144,11 @@ function* GetPromiseResolve(promiseConstructor: FunctionObject) {
 /** https://tc39.es/ecma262/#sec-performpromiseall */
 function* PerformPromiseAll(iteratorRecord: IteratorRecord, constructor: FunctionObject, resultCapability: PromiseCapabilityRecord, promiseResolve: FunctionObject): ValueEvaluator {
   // 1. Assert: IsConstructor(constructor) is true.
-  Assert(IsConstructor(constructor) === Value.true);
+  Assert(IsConstructor(constructor));
   // 2. Assert: resultCapability is a PromiseCapability Record.
   Assert(resultCapability instanceof PromiseCapabilityRecord);
   // 3. Assert: IsCallable(promiseResolve) is true.
-  Assert(IsCallable(promiseResolve) === Value.true);
+  Assert(IsCallable(promiseResolve));
   // 4. Let values be a new empty List.
   const values = [];
   // 5. Let remainingElementsCount be the Record { [[Value]]: 1 }.
@@ -285,11 +285,11 @@ function* PromiseAllSettledRejectElementFunctions([x = Value.undefined]: Argumen
 /** https://tc39.es/ecma262/#sec-performpromiseallsettled */
 function* PerformPromiseAllSettled(iteratorRecord: IteratorRecord, constructor: FunctionObject, resultCapability: PromiseCapabilityRecord, promiseResolve: FunctionObject): ValueEvaluator {
   // 1. Assert: ! IsConstructor(constructor) is true.
-  Assert(X(IsConstructor(constructor) === Value.true));
+  Assert(IsConstructor(constructor));
   // 2. Assert: resultCapability is a PromiseCapability Record.
   Assert(resultCapability instanceof PromiseCapabilityRecord);
   // 3. Assert: IsCallable(promiseResolve) is true.
-  Assert(IsCallable(promiseResolve) === Value.true);
+  Assert(IsCallable(promiseResolve));
   // 4. Let values be a new empty List.
   const values = [];
   // 5. Let remainingElementsCount be the Record { [[Value]]: 1 }.
@@ -450,11 +450,11 @@ function* PromiseAnyRejectElementFunctions([x = Value.undefined]: Arguments): Va
 /** https://tc39.es/ecma262/#sec-performpromiseany */
 function* PerformPromiseAny(iteratorRecord: IteratorRecord, constructor: FunctionObject, resultCapability: PromiseCapabilityRecord, promiseResolve: FunctionObject) {
   // 1. Assert: ! IsConstructor(constructor) is true.
-  Assert(X(IsConstructor(constructor)) === Value.true);
+  Assert(IsConstructor(constructor));
   // 2. Assert: resultCapability is a PromiseCapability Record.
   Assert(resultCapability instanceof PromiseCapabilityRecord);
   // 3. Assert: ! IsCallable(promiseResolve) is true.
-  Assert(X(IsCallable(promiseResolve)) === Value.true);
+  Assert(IsCallable(promiseResolve));
   // 4. Let errors be a new empty List.
   const errors = [];
   // 5. Let remainingElementsCount be a new Record { [[Value]]: 1 }.
@@ -549,11 +549,11 @@ function* Promise_any([iterable = Value.undefined]: Arguments, { thisValue }: Fu
 
 function* PerformPromiseRace(iteratorRecord: IteratorRecord, constructor: FunctionObject, resultCapability: PromiseCapabilityRecord, promiseResolve: FunctionObject): ValueEvaluator {
   // 1. Assert: IsConstructor(constructor) is true.
-  Assert(IsConstructor(constructor) === Value.true);
+  Assert(IsConstructor(constructor));
   // 2. Assert: resultCapability is a PromiseCapability Record.
   Assert(resultCapability instanceof PromiseCapabilityRecord);
   // 3. Assert: IsCallable(promiseResolve) is true.
-  Assert(IsCallable(promiseResolve) === Value.true);
+  Assert(IsCallable(promiseResolve));
   // 4. Repeat,
   while (true) {
     // a. Let next be ? IteratorStepValue(iteratorRecord).

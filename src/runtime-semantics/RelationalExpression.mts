@@ -40,7 +40,7 @@ export function* InstanceofOperator(V: Value, target: Value) {
     return X(ToBoolean(Q(yield* Call(instOfHandler, target, [V]))));
   }
   // 4. If IsCallable(target) is false, throw a TypeError exception.
-  if (IsCallable(target) === Value.false) {
+  if (!IsCallable(target)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', target);
   }
   // 5. Return ? OrdinaryHasInstance(target, V).

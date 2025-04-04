@@ -79,11 +79,11 @@ function* MapConstructor(this: FunctionObject, [iterable = Value.undefined]: Arg
   }
   // 5. Let adder be ? Get(map, "set").
   const adder = Q(yield* Get(map, Value('set')));
-  if (IsCallable(adder) === Value.false) {
+  if (!IsCallable(adder)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', adder);
   }
   // 6. Return ? AddEntriesFromIterable(map, iterable, adder).
-  return Q(yield* AddEntriesFromIterable(map, iterable, adder as FunctionObject));
+  return Q(yield* AddEntriesFromIterable(map, iterable, adder));
 }
 
 /** https://tc39.es/ecma262/#sec-get-map-@@species */

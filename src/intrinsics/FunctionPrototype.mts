@@ -63,7 +63,7 @@ function* FunctionProto_apply([thisArg = Value.undefined, argArray = Value.undef
   // 1. Let func be the this value.
   const func = thisValue;
   // 2. If IsCallable(func) is false, throw a TypeError exception.
-  if (IsCallable(func) === Value.false) {
+  if (!IsCallable(func)) {
     return surroundingAgent.Throw('TypeError', 'ThisNotAFunction', func);
   }
   // 3. If argArray is undefined or null, then
@@ -95,7 +95,7 @@ function* BoundFunctionExoticObjectConstruct(this: BoundFunctionObject, argument
   const F = this;
 
   const target = F.BoundTargetFunction;
-  Assert(IsConstructor(target) === Value.true);
+  Assert(IsConstructor(target));
   const boundArgs = F.BoundArguments;
   const args = [...boundArgs, ...argumentsList];
   if (SameValue(F, newTarget) === Value.true) {
@@ -125,7 +125,7 @@ function* BoundFunctionCreate(targetFunction: ObjectValue, boundThis: Value, bou
   // 6. Set obj.[[Call]] as described in 9.4.1.1.
   obj.Call = BoundFunctionExoticObjectCall;
   // 7. If IsConstructor(targetFunction) is true, then
-  if (IsConstructor(targetFunction) === Value.true) {
+  if (IsConstructor(targetFunction)) {
     // a. Set obj.[[Construct]] as described in 9.4.1.2.
     obj.Construct = BoundFunctionExoticObjectConstruct;
   }
@@ -144,7 +144,7 @@ function* FunctionProto_bind([thisArg = Value.undefined, ...args]: Arguments, { 
   // 1. Let Target be the this value.
   const Target = thisValue;
   // 2. If IsCallable(Target) is false, throw a TypeError exception.
-  if (IsCallable(Target) === Value.false) {
+  if (!IsCallable(Target)) {
     return surroundingAgent.Throw('TypeError', 'ThisNotAFunction', Target);
   }
   __ts_cast__<ObjectValue>(Target);
@@ -196,7 +196,7 @@ function* FunctionProto_call([thisArg = Value.undefined, ...args]: Arguments, { 
   // 1. Let func be the this value.
   const func = thisValue;
   // 2. If IsCallable(func) is false, throw a TypeError exception.
-  if (IsCallable(func) === Value.false) {
+  if (!IsCallable(func)) {
     return surroundingAgent.Throw('TypeError', 'ThisNotAFunction', func);
   }
   // 3. Let argList be a new empty List.
@@ -237,7 +237,7 @@ export function FunctionProto_toString(_args: Arguments, { thisValue }: Function
   // 4. If Type(func) is Object and IsCallable(func) is true, then return an implementation
   //    dependent String source code representation of func. The representation must have
   //    the syntax of a NativeFunction.
-  if (func instanceof ObjectValue && IsCallable(func) === Value.true) {
+  if (func instanceof ObjectValue && IsCallable(func)) {
     return Value('function() { [native code] }');
   }
   // 5. Throw a TypeError exception.

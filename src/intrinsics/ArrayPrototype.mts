@@ -181,7 +181,7 @@ function* ArrayProto_fill([value = Value.undefined, start = Value.undefined, end
 function* ArrayProto_filter([callbackfn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = Q(ToObject(thisValue));
   const len = Q(yield* LengthOfArrayLike(O));
-  if (IsCallable(callbackfn) === Value.false) {
+  if (!IsCallable(callbackfn)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
   const A = Q(yield* ArraySpeciesCreate(O, 0));
@@ -259,11 +259,11 @@ function* ArrayProto_flat([depth = Value.undefined]: Arguments, { thisValue }: F
 function* ArrayProto_flatMap([mapperFunction = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = Q(ToObject(thisValue));
   const sourceLen = Q(yield* LengthOfArrayLike(O));
-  if (X(IsCallable(mapperFunction)) === Value.false) {
+  if (!IsCallable(mapperFunction)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', mapperFunction);
   }
   const A = Q(yield* ArraySpeciesCreate(O, 0));
-  Q(yield* FlattenIntoArray(A, O, sourceLen, 0, 1, mapperFunction as FunctionObject, thisArg));
+  Q(yield* FlattenIntoArray(A, O, sourceLen, 0, 1, mapperFunction, thisArg));
   return A;
 }
 
@@ -277,7 +277,7 @@ function ArrayProto_keys(_args: Arguments, { thisValue }: FunctionCallContext): 
 function* ArrayProto_map([callbackfn = Value.undefined, thisArg = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = Q(ToObject(thisValue));
   const len = Q(yield* LengthOfArrayLike(O));
-  if (IsCallable(callbackfn) === Value.false) {
+  if (!IsCallable(callbackfn)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
   }
   const A = Q(yield* ArraySpeciesCreate(O, len));
@@ -400,13 +400,13 @@ function* ArrayProto_slice([start = Value.undefined, end = Value.undefined]: Arg
 
 /** https://tc39.es/ecma262/#sec-array.prototype.sort */
 function* ArrayProto_sort([comparefn = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
-  if (comparefn !== Value.undefined && IsCallable(comparefn) === Value.false) {
+  if (comparefn !== Value.undefined && !IsCallable(comparefn)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', comparefn);
   }
   const obj = Q(ToObject(thisValue));
   const len = Q(yield* LengthOfArrayLike(obj));
 
-  return yield* ArrayProto_sortBody(obj, len, (x, y) => CompareArrayElements(x, y, comparefn as UndefinedValue | FunctionObject));
+  return yield* ArrayProto_sortBody(obj, len, (x, y) => CompareArrayElements(x, y, comparefn));
 }
 
 /** https://tc39.es/ecma262/#sec-array.prototype.splice */
@@ -498,7 +498,7 @@ function* ArrayProto_splice(args: Arguments, { thisValue }: FunctionCallContext)
 function* ArrayProto_toString(_a: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const array = Q(ToObject(thisValue));
   let func = Q(yield* Get(array, Value('join')));
-  if (IsCallable(func) === Value.false) {
+  if (!IsCallable(func)) {
     func = surroundingAgent.intrinsic('%Object.prototype.toString%');
   }
   return Q(yield* Call(func, array));

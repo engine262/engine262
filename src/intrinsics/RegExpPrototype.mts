@@ -67,7 +67,7 @@ export function* RegExpExec(R: ObjectValue, S: JSStringValue) {
   Assert(S instanceof JSStringValue);
 
   const exec = Q(yield* Get(R, Value('exec')));
-  if (IsCallable(exec) === Value.true) {
+  if (IsCallable(exec)) {
     const result = Q(yield* Call(exec, R, [S]));
     if (!(result instanceof ObjectValue) && !(result instanceof NullValue)) {
       return surroundingAgent.Throw('TypeError', 'RegExpExecNotObject', result);
@@ -472,7 +472,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
   // 5. Let functionalReplace be IsCallable(replaceValue).
   const functionalReplace = IsCallable(replaceValue);
   // 6. If functionalReplace is false, then
-  if (functionalReplace === Value.false) {
+  if (!functionalReplace) {
     // a. Set replaceValue to ? ToString(replaceValue).
     replaceValue = Q(yield* ToString(replaceValue));
   }
@@ -563,7 +563,7 @@ function* RegExpProto_replace([string = Value.undefined, replaceValue = Value.un
     let namedCaptures = Q(yield* Get(result, Value('groups')));
     let replacement;
     // k. If functionalReplace is true, then
-    if (functionalReplace === Value.true) {
+    if (functionalReplace) {
       // i. Let replacerArgs be the list-concatenation of « matched », captures, and « 𝔽(position), S ».
       const replacerArgs: Value[] = [matched, ...captures, F(position), S];
       // ii. If namedCaptures is not undefined, then

@@ -207,7 +207,7 @@ export function* TypedArrayCreateFromConstructor(constructor: FunctionObject, ar
 /** https://tc39.es/ecma262/#sec-typedarray-create-same-type */
 export function* TypedArrayCreateSameType(exemplar: TypedArrayObject, argumentList: Arguments): ValueEvaluator<TypedArrayObject> {
   const constructor = surroundingAgent.intrinsic(typedArrayInfoByName[exemplar.TypedArrayName.stringValue() as TypedArrayConstructorNames].IntrinsicName);
-  const result = Q(yield* TypedArrayCreateFromConstructor(constructor, argumentList)) as TypedArrayObject;
+  const result = Q(yield* TypedArrayCreateFromConstructor(constructor, argumentList));
   Assert('TypedArrayName' in result && 'ContentType' in result);
   Assert(result.ContentType === exemplar.ContentType);
   return result;
@@ -458,7 +458,7 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
   // 1. Let C be the this value.
   const C = thisValue;
   // 2. If IsConstructor(C) is false, throw a TypeError exception.
-  if (IsConstructor(C) === Value.false) {
+  if (!IsConstructor(C)) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
   }
   // 3. If mapfn is undefined, let mapping be false.
@@ -467,7 +467,7 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
     mapping = false;
   } else {
     // a. If IsCallable(mapfn) is false, throw a TypeError exception.
-    if (IsCallable(mapper) === Value.false) {
+    if (!IsCallable(mapper)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', mapper);
     }
     // b. Let mapping be true.
@@ -479,7 +479,7 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
   if (!(usingIterator instanceof UndefinedValue)) {
     const values = Q(yield* IteratorToList(Q(yield* GetIteratorFromMethod(source, usingIterator))));
     const len = values.length;
-    const targetObj = Q(yield* TypedArrayCreateFromConstructor(C as FunctionObject, [F(len)]));
+    const targetObj = Q(yield* TypedArrayCreateFromConstructor(C, [F(len)]));
     let k = 0;
     while (k < len) {
       const Pk = X(ToString(F(k)));
@@ -502,7 +502,7 @@ function* TypedArray_from([source = Value.undefined, mapper = Value.undefined, t
   // 9. Let len be ? LengthOfArrayLike(arrayLike).
   const len = Q(yield* LengthOfArrayLike(arrayLike));
   // 10. Let targetObj be ? TypedArrayCreate(C, « 𝔽(len) »).
-  const targetObj = Q(yield* TypedArrayCreateFromConstructor(C as FunctionObject, [F(len)]));
+  const targetObj = Q(yield* TypedArrayCreateFromConstructor(C, [F(len)]));
   // 11. Let k be 0.
   let k = 0;
   // 12. Repeat, while k < len
@@ -537,11 +537,11 @@ function* TypedArray_of(items: Arguments, { thisValue }: FunctionCallContext) {
   // 3. Let C be the this value.
   const C = thisValue;
   // 4. If IsConstructor(C) is false, throw a TypeError exception.
-  if (IsConstructor(C) === Value.false) {
+  if (!IsConstructor(C)) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
   }
   // 5. Let newObj be ? TypedArrayCreate(C, « 𝔽(len) »).
-  const newObj = Q(yield* TypedArrayCreateFromConstructor(C as FunctionObject, [F(len)]));
+  const newObj = Q(yield* TypedArrayCreateFromConstructor(C, [F(len)]));
   // 6. Let k be 0.
   let k = 0;
   // 7. Repeat, while k < len

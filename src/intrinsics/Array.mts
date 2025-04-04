@@ -109,15 +109,15 @@ function* Array_from([items = Value.undefined, mapper = Value.undefined, thisArg
   if (mapper === Value.undefined) {
     mapping = false;
   } else {
-    if (IsCallable(mapper) === Value.false) {
+    if (!IsCallable(mapper)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', mapper);
     }
     mapping = true;
   }
   const usingIterator = Q(yield* GetMethod(items, wellKnownSymbols.iterator));
   if (!(usingIterator instanceof UndefinedValue)) {
-    if (IsConstructor(C) === Value.true) {
-      A = Q(yield* Construct(C as FunctionObject));
+    if (IsConstructor(C)) {
+      A = Q(yield* Construct(C));
     } else {
       A = X(ArrayCreate(0));
     }
@@ -149,8 +149,8 @@ function* Array_from([items = Value.undefined, mapper = Value.undefined, thisArg
   }
   const arrayLike = X(ToObject(items));
   const len = Q(yield* LengthOfArrayLike(arrayLike));
-  if (IsConstructor(C) === Value.true) {
-    A = Q(yield* Construct(C as FunctionObject, [F(len)]));
+  if (IsConstructor(C)) {
+    A = Q(yield* Construct(C, [F(len)]));
   } else {
     A = Q(ArrayCreate(len));
   }
@@ -182,8 +182,8 @@ function* Array_of(items: Arguments, { thisValue }: FunctionCallContext): ValueE
   // Let items be the List of arguments passed to this function.
   const C = thisValue;
   let A;
-  if (IsConstructor(C) === Value.true) {
-    A = Q(yield* Construct(C as FunctionObject, [F(len)]));
+  if (IsConstructor(C)) {
+    A = Q(yield* Construct(C, [F(len)]));
   } else {
     A = Q(ArrayCreate(len));
   }
