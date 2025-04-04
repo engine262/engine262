@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 74f2d70be228d6e5fc156f654cecafc4c19619b5
+ * engine262 0.0.1 6f222511ba13b1448185463120d7da6059c79433
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -329,7 +329,7 @@ const Promise$1 = new ObjectInspector('Promise', 'promise', () => 'Promise', {
   additionalProperties: value => [['[[PromiseState]]', Value(value.PromiseState)], ['[[PromiseResult]]', value.PromiseResult || Value.undefined]]
 });
 const Proxy$1 = new ObjectInspector('Proxy', 'proxy', value => {
-  if (IsCallable(value.ProxyTarget) === Value.true) {
+  if (IsCallable(value.ProxyTarget)) {
     return 'Proxy(Function)';
   }
   if (value.ProxyTarget instanceof ObjectValue) {
@@ -486,7 +486,7 @@ function getInspector(value) {
       return Number;
     case isProxyExoticObject(value):
       return Proxy$1;
-    case IsCallable(value) === Value.true:
+    case IsCallable(value):
       return Function;
     case isArrayExoticObject(value):
       return Array$1;

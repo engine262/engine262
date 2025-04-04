@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 74f2d70be228d6e5fc156f654cecafc4c19619b5
+ * engine262 0.0.1 6f222511ba13b1448185463120d7da6059c79433
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -333,7 +333,7 @@
     additionalProperties: value => [['[[PromiseState]]', engine262_mjs.Value(value.PromiseState)], ['[[PromiseResult]]', value.PromiseResult || engine262_mjs.Value.undefined]]
   });
   const Proxy$1 = new ObjectInspector('Proxy', 'proxy', value => {
-    if (engine262_mjs.IsCallable(value.ProxyTarget) === engine262_mjs.Value.true) {
+    if (engine262_mjs.IsCallable(value.ProxyTarget)) {
       return 'Proxy(Function)';
     }
     if (value.ProxyTarget instanceof engine262_mjs.ObjectValue) {
@@ -490,7 +490,7 @@
         return Number;
       case engine262_mjs.isProxyExoticObject(value):
         return Proxy$1;
-      case engine262_mjs.IsCallable(value) === engine262_mjs.Value.true:
+      case engine262_mjs.IsCallable(value):
         return Function;
       case engine262_mjs.isArrayExoticObject(value):
         return Array$1;
