@@ -4,7 +4,7 @@ import {
 } from '../value.mts';
 import { GlobalEnvironmentRecord } from '../environment.mts';
 import { Q, X } from '../completion.mts';
-import { bootstrapObjectPrototype } from '../intrinsics/ObjectPrototype.mts';
+import { bootstrapObjectPrototype, makeObjectPrototype } from '../intrinsics/ObjectPrototype.mts';
 import { bootstrapObject } from '../intrinsics/Object.mts';
 import { bootstrapArrayPrototype } from '../intrinsics/ArrayPrototype.mts';
 import { bootstrapArray } from '../intrinsics/Array.mts';
@@ -88,7 +88,6 @@ import {
   Assert,
   DefinePropertyOrThrow,
   F as toNumberValue,
-  OrdinaryObjectCreate,
 } from './all.mts';
 
 export interface LoadedModuleRequestRecord {
@@ -303,7 +302,7 @@ function AddRestrictedFunctionProperties(F: ObjectValue, realm: Realm) {
 export function CreateIntrinsics(realmRec: Realm) {
   const intrinsics = Object.create(null);
   (realmRec as Mutable<Realm>).Intrinsics = intrinsics;
-  intrinsics['%Object.prototype%'] = OrdinaryObjectCreate(Value.null);
+  makeObjectPrototype(realmRec);
 
   bootstrapFunctionPrototype(realmRec);
   bootstrapObjectPrototype(realmRec);
