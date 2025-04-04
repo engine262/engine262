@@ -317,7 +317,7 @@ function* GetSetRecord(obj: Value): PlainEvaluator<SetRecord> {
 /** https://tc39.es/proposal-set-methods/#sec-getkeysiterator */
 function* GetKeysIterator(setRec: SetRecord): PlainEvaluator<IteratorRecord> {
   // 1. Let keysIter be ? Call(setRec.[[Keys]], setRec.[[Set]]).
-  const keysIter = Q(Call(setRec.Keys, setRec.Set));
+  const keysIter = Q(yield* Call(setRec.Keys, setRec.Set));
 
   // 2. If keysIter is not an Object, throw a TypeError exception.
   if (!(keysIter instanceof ObjectValue)) {

@@ -11,7 +11,9 @@ const rule = {
       noAbruptCompletion: 'The function return type does not include AbruptCompletion',
       noThrowCompletion: 'The function return type does not include ThrowCompletion',
       noNeedToUseQ: 'Unnecessary Q() call',
+      evaluator: 'It should be Q(yield* evaluator) instead of Q(evaluator)',
     },
+    fixable: 'code',
   },
   create(context) {
     const services = getParserServices(context);
@@ -52,6 +54,15 @@ const rule = {
           }
 
           const firstArgType = checker.getTypeAtLocation(services.esTreeNodeToTSNodeMap.get(firstArg));
+          if (firstArgType?.getSymbol() === GeneratorSymbol) {
+            context.report({
+              node,
+              messageId: 'evaluator',
+              * fix(fixer) {
+                yield fixer.insertTextBefore(firstArg, 'yield* ');
+              },
+            });
+          }
           const containingFunctionType = checker.getTypeAtLocation(containingFunction);
           if ((containingFunctionType.flags & ts.TypeFlags.Any) || (containingFunctionType.flags & ts.TypeFlags.Any)) {
             throw new Error('Unexpected any');
