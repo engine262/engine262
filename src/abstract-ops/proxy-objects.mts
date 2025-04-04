@@ -29,7 +29,6 @@ import {
   IsCompatiblePropertyDescriptor,
   IsDataDescriptor,
   IsAccessorDescriptor,
-  type FunctionObject,
 } from './all.mts';
 
 const InternalMethods = {
@@ -523,10 +522,10 @@ const InternalMethods = {
     }
     Assert(handler instanceof ObjectValue);
     const target = O.ProxyTarget;
-    Assert(IsConstructor(target) === Value.true);
+    Assert(IsConstructor(target));
     const trap = Q(yield* GetMethod(handler, Value('construct')));
     if (trap === Value.undefined) {
-      return Q(yield* Construct(target as FunctionObject, argumentsList, newTarget));
+      return Q(yield* Construct(target, argumentsList, newTarget));
     }
     const argArray = X(CreateArrayFromList(argumentsList));
     const newObj = Q(yield* Call(trap, handler, [target, argArray, newTarget]));
@@ -562,11 +561,11 @@ export function ProxyCreate(target: Value, handler: Value): ValueCompletion<Prox
   P.Delete = InternalMethods.Delete;
   P.OwnPropertyKeys = InternalMethods.OwnPropertyKeys;
   // 5. If IsCallable(target) is true, then
-  if (IsCallable(target) === Value.true) {
+  if (IsCallable(target)) {
     /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-call-thisargument-argumentslist. */
     P.Call = InternalMethods.Call;
     // b. If IsConstructor(target) is true, then
-    if (IsConstructor(target) === Value.true) {
+    if (IsConstructor(target)) {
       /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-construct-argumentslist-newtarget. */
       P.Construct = InternalMethods.Construct;
     }

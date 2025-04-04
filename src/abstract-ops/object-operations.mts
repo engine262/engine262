@@ -168,10 +168,10 @@ export function* GetMethod(V: Value, P: PropertyKeyValue): ValueEvaluator<Undefi
   if (func === Value.null || func === Value.undefined) {
     return Value.undefined;
   }
-  if (IsCallable(func) === Value.false) {
+  if (!IsCallable(func)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
   }
-  return func as FunctionObject;
+  return func;
 }
 
 /** https://tc39.es/ecma262/#sec-hasproperty */
@@ -196,11 +196,11 @@ export function* HasOwnProperty(O: ObjectValue, P: PropertyKeyValue): ValueEvalu
 export function* Call(F: Value, V: Value, argumentsList: Arguments = []): ValueEvaluator {
   Assert(argumentsList.every((a) => a instanceof Value));
 
-  if (IsCallable(F) === Value.false) {
+  if (!IsCallable(F)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', F);
   }
 
-  return EnsureCompletion(Q(yield* (F as FunctionObject).Call(V, argumentsList)));
+  return EnsureCompletion(Q(yield* F.Call(V, argumentsList)));
 }
 
 /** https://tc39.es/ecma262/#sec-construct */
@@ -208,8 +208,8 @@ export function* Construct(F: FunctionObject, argumentsList: Arguments = [], new
   if (!newTarget) {
     newTarget = F;
   }
-  Assert(IsConstructor(F) === Value.true);
-  Assert(IsConstructor(newTarget) === Value.true);
+  Assert(IsConstructor(F));
+  Assert(IsConstructor(newTarget));
   return Q(yield* F.Construct(argumentsList, newTarget));
 }
 
@@ -337,7 +337,7 @@ export function* Invoke(V: Value, P: PropertyKeyValue, argumentsList: Arguments 
 
 /** https://tc39.es/ecma262/#sec-ordinaryhasinstance */
 export function* OrdinaryHasInstance(C: Value, O: Value): ValueEvaluator<BooleanValue> {
-  if (IsCallable(C) === Value.false) {
+  if (!IsCallable(C)) {
     return Value.false;
   }
   if (isBoundFunctionObject(C)) {
@@ -347,7 +347,7 @@ export function* OrdinaryHasInstance(C: Value, O: Value): ValueEvaluator<Boolean
   if (!(O instanceof ObjectValue)) {
     return Value.false;
   }
-  const P = Q(yield* Get(C as FunctionObject, Value('prototype')));
+  const P = Q(yield* Get(C, Value('prototype')));
   if (!(P instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', P);
   }
@@ -376,8 +376,8 @@ export function* SpeciesConstructor(O: ObjectValue, defaultConstructor: Function
   if (S === Value.undefined || S === Value.null) {
     return defaultConstructor;
   }
-  if (IsConstructor(S) === Value.true) {
-    return S as FunctionObject;
+  if (IsConstructor(S)) {
+    return S;
   }
   return surroundingAgent.Throw('TypeError', 'SpeciesNotConstructor');
 }
@@ -414,7 +414,7 @@ export function* EnumerableOwnPropertyNames(O: ObjectValue, kind: 'key' | 'value
 
 /** https://tc39.es/ecma262/#sec-getfunctionrealm */
 export function GetFunctionRealm(obj: FunctionObject): PlainCompletion<Realm> {
-  Assert(X(IsCallable(obj)) === Value.true);
+  Assert(IsCallable(obj));
   if ('Realm' in (obj as object)) {
     return obj.Realm;
   }

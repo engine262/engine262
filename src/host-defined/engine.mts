@@ -556,7 +556,7 @@ export interface JobCallbackRecord {
 /** https://tc39.es/ecma262/#sec-hostmakejobcallback */
 export function HostMakeJobCallback(callback: FunctionObject): JobCallbackRecord {
   // 1. Assert: IsCallable(callback) is true.
-  Assert(IsCallable(callback) === Value.true);
+  Assert(IsCallable(callback));
   // 2. Return the JobCallback Record { [[Callback]]: callback, [[HostDefined]]: empty }.
   return { Callback: callback, HostDefined: undefined };
 }
@@ -564,7 +564,7 @@ export function HostMakeJobCallback(callback: FunctionObject): JobCallbackRecord
 /** https://tc39.es/ecma262/#sec-hostcalljobcallback */
 export function* HostCallJobCallback(jobCallback: JobCallbackRecord, V: Value, argumentsList: Arguments): ValueEvaluator {
   // 1. Assert: IsCallable(jobCallback.[[Callback]]) is true.
-  Assert(IsCallable(jobCallback.Callback) === Value.true);
+  Assert(IsCallable(jobCallback.Callback));
   // 1. Return ? Call(jobCallback.[[Callback]], V, argumentsList).
   return Q(yield* Call(jobCallback.Callback, V, argumentsList));
 }

@@ -144,7 +144,7 @@ export function* ToPropertyDescriptor(Obj: Value): PlainEvaluator<Descriptor> {
   const hasGet = Q(yield* HasProperty(Obj, Value('get')));
   if (hasGet === Value.true) {
     const getter = Q(yield* Get(Obj, Value('get')));
-    if (IsCallable(getter) === Value.false && !(getter instanceof UndefinedValue)) {
+    if (!IsCallable(getter) && !(getter instanceof UndefinedValue)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', getter);
     }
     desc = Descriptor({ ...desc, Get: getter as FunctionObject });
@@ -152,7 +152,7 @@ export function* ToPropertyDescriptor(Obj: Value): PlainEvaluator<Descriptor> {
   const hasSet = Q(yield* HasProperty(Obj, Value('set')));
   if (hasSet === Value.true) {
     const setter = Q(yield* Get(Obj, Value('set')));
-    if (IsCallable(setter) === Value.false && !(setter instanceof UndefinedValue)) {
+    if (!IsCallable(setter) && !(setter instanceof UndefinedValue)) {
       return surroundingAgent.Throw('TypeError', 'NotAFunction', setter);
     }
     desc = Descriptor({ ...desc, Set: setter as FunctionObject });

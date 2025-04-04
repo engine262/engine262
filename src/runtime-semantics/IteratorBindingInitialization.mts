@@ -102,7 +102,7 @@ function* IteratorBindingInitialization_SingleNameBinding({ BindingIdentifier, I
     return Q(yield* PutValue(lhs, v));
   }
   // 7. Return InitializeReferencedBinding(lhs, v).
-  return yield* InitializeReferencedBinding(lhs, X(v!));
+  return yield* InitializeReferencedBinding(lhs, X(v));
 }
 
 // BindingRestElement :
@@ -181,7 +181,7 @@ function* IteratorBindingInitialization_BindingPattern({ BindingPattern, Initial
     v = Q(yield* GetValue(defaultValue));
   }
   // 4. Return the result of performing BindingInitialization of BindingPattern with v and environment as the arguments.
-  return yield* BindingInitialization(BindingPattern, X(v!), environment);
+  return yield* BindingInitialization(BindingPattern, X(v), environment);
 }
 
 function* IteratorDestructuringAssignmentEvaluation(node: ParseNode.Elision, iteratorRecord: IteratorRecord): PlainEvaluator {

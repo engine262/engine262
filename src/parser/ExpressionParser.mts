@@ -619,7 +619,7 @@ export abstract class ExpressionParser extends FunctionParser {
         case Token.LPAREN: {
           const node = this.startNode<ParseNode.CallExpression>(result);
           // `async` [no LineTerminator here] `(`
-          const couldBeArrow = this.matches('async', this.currentToken!)
+          const couldBeArrow = this.matches('async', this.currentToken)
             && result.type === 'IdentifierReference'
             && !this.peek().hadLineTerminatorBefore;
           if (couldBeArrow) {

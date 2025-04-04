@@ -20,7 +20,7 @@ import { bootstrapPrototype } from './bootstrap.mts';
 /** https://tc39.es/ecma262/#sec-reflect.apply */
 function* Reflect_apply([target = Value.undefined, thisArgument = Value.undefined, argumentsList = Value.undefined]: Arguments) {
   // 1. If IsCallable(target) is false, throw a TypeError exception.
-  if (IsCallable(target) === Value.false) {
+  if (!IsCallable(target)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', target);
   }
   // 2. Let args be ? CreateListFromArrayLike(argumentsList).
@@ -34,19 +34,19 @@ function* Reflect_apply([target = Value.undefined, thisArgument = Value.undefine
 /** https://tc39.es/ecma262/#sec-reflect.construct */
 function* Reflect_construct([target = Value.undefined, argumentsList = Value.undefined, newTarget]: Arguments) {
   // 1. If IsConstructor(target) is false, throw a TypeError exception.
-  if (IsConstructor(target) === Value.false) {
+  if (!IsConstructor(target)) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', target);
   }
   // 2. If newTarget is not present, set newTarget to target.
   if (newTarget === undefined) {
     newTarget = target;
-  } else if (IsConstructor(newTarget) === Value.false) { // 3. Else if IsConstructor(newTarget) is false, throw a TypeError exception.
+  } else if (!IsConstructor(newTarget)) { // 3. Else if IsConstructor(newTarget) is false, throw a TypeError exception.
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', newTarget);
   }
   // 4. Let args be ? CreateListFromArrayLike(argumentsList).
   const args = Q(yield* CreateListFromArrayLike(argumentsList));
   // 5. Return ? Construct(target, args, newTarget).
-  return Q(yield* Construct(target as FunctionObject, args, newTarget as FunctionObject));
+  return Q(yield* Construct(target, args, newTarget as FunctionObject));
 }
 
 /** https://tc39.es/ecma262/#sec-reflect.defineproperty */

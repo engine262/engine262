@@ -162,7 +162,7 @@ function* KeyedDestructuringAssignmentEvaluation({
     return yield* DestructuringAssignmentEvaluation(assignmentPattern, X(rhsValue));
   }
   // 6. Return ? PutValue(lref, rhsValue).
-  return Q(yield* PutValue(X(lref!), rhsValue));
+  return Q(yield* PutValue(X(lref)!, rhsValue));
 }
 
 // ArrayAssignmentPattern :
@@ -247,7 +247,7 @@ function* IteratorDestructuringAssignmentEvaluation(node: ParseNode.AssignmentEl
           v = Q(yield* GetValue(defaultValue));
         }
       } else { // 5. Else, let v be value.
-        v = Q(value!);
+        v = Q(value);
       }
       // 6. If DestructuringAssignmentTarget is an ObjectLiteral or an ArrayLiteral, then
       if (DestructuringAssignmentTarget.type === 'ObjectLiteral'

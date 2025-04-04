@@ -21,6 +21,7 @@ import {
   isProxyExoticObject,
   isArrayExoticObject, R,
   SameType,
+  type FunctionObject,
 } from '#self';
 
 // This file covers abstract operations defined in
@@ -57,25 +58,25 @@ export function IsArray(argument: Value) {
 }
 
 /** https://tc39.es/ecma262/#sec-iscallable */
-export function IsCallable(argument: Value): BooleanValue {
+export function IsCallable(argument: Value): argument is FunctionObject {
   if (!(argument instanceof ObjectValue)) {
-    return Value.false;
+    return false;
   }
   if ('Call' in argument) {
-    return Value.true;
+    return true;
   }
-  return Value.false;
+  return false;
 }
 
 /** https://tc39.es/ecma262/#sec-isconstructor */
-export function IsConstructor(argument: Value) {
+export function IsConstructor(argument: Value): argument is FunctionObject {
   if (!(argument instanceof ObjectValue)) {
-    return Value.false;
+    return false;
   }
   if ('Construct' in argument) {
-    return Value.true;
+    return true;
   }
-  return Value.false;
+  return false;
 }
 
 /** https://tc39.es/ecma262/#sec-isextensible-o */

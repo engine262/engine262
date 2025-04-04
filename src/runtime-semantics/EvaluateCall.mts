@@ -43,7 +43,7 @@ export function* EvaluateCall(func: Value, ref: ReferenceRecord | Value, args: P
     return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
   }
   // 5. If IsCallable(func) is false, throw a TypeError exception.
-  if (IsCallable(func) === Value.false) {
+  if (!IsCallable(func)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
   }
   // 6. If tailPosition is true, perform PrepareForTailCall().

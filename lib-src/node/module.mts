@@ -17,7 +17,7 @@ export function createLoadImportedModule(getCache = (realm: ManagedRealm) => rea
       const base = path.dirname(referrer.HostDefined.specifier!);
       const resolved = path.resolve(base, specifier);
       if (cache?.has(resolved)) {
-        finish(cache!.get(resolved)!);
+        finish(cache.get(resolved)!);
         return;
       }
       try {

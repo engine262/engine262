@@ -722,7 +722,7 @@ function* ForInOfBodyEvaluation(lhs: ParseNode, stmt: ParseNode.Statement, itera
     }
     // o. If result.[[Value]] is not empty, set V to result.[[Value]].
     if (result.Value !== undefined) {
-      V = result.Value as Value;
+      V = result.Value;
     }
   }
 }

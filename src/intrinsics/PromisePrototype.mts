@@ -44,11 +44,11 @@ function* PromiseProto_finally([onFinally = Value.undefined]: Arguments, { thisV
   // 3. Let C be ? SpeciesConstructor(promise, %Promise%).
   const C = Q(yield* SpeciesConstructor(promise, surroundingAgent.intrinsic('%Promise%')));
   // 4. Assert: IsConstructor(C) is true.
-  Assert(IsConstructor(C) === Value.true);
+  Assert(IsConstructor(C));
   let thenFinally;
   let catchFinally;
   // 5. If IsCallable(onFinally) is false, then
-  if (IsCallable(onFinally) === Value.false) {
+  if (!IsCallable(onFinally)) {
     // a. Let thenFinally be onFinally.
     thenFinally = onFinally;
     // b. Let catchFinally be onFinally.

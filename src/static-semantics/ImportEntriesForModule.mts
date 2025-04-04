@@ -9,26 +9,26 @@ export function ImportEntriesForModule(node: ParseNode, module: JSStringValue | 
       switch (true) {
         case !!node.ImportedDefaultBinding && !!node.NameSpaceImport: {
           // 1. Let entries be ImportEntriesForModule of ImportedDefaultBinding with argument module.
-          const entries = ImportEntriesForModule(node.ImportedDefaultBinding!, module);
+          const entries = ImportEntriesForModule(node.ImportedDefaultBinding, module);
           // 2. Append to entries the elements of the ImportEntriesForModule of NameSpaceImport with argument module.
-          entries.push(...ImportEntriesForModule(node.NameSpaceImport!, module));
+          entries.push(...ImportEntriesForModule(node.NameSpaceImport, module));
           // 3. Return entries.
           return entries;
         }
         case !!node.ImportedDefaultBinding && !!node.NamedImports: {
           // 1. Let entries be ImportEntriesForModule of ImportedDefaultBinding with argument module.
-          const entries = ImportEntriesForModule(node.ImportedDefaultBinding!, module);
+          const entries = ImportEntriesForModule(node.ImportedDefaultBinding, module);
           // 2. Append to entries the elements of the ImportEntriesForModule of NamedImports with argument module.
-          entries.push(...ImportEntriesForModule(node.NamedImports!, module));
+          entries.push(...ImportEntriesForModule(node.NamedImports, module));
           // 3. Return entries.
           return entries;
         }
         case !!node.ImportedDefaultBinding:
-          return ImportEntriesForModule(node.ImportedDefaultBinding!, module);
+          return ImportEntriesForModule(node.ImportedDefaultBinding, module);
         case !!node.NameSpaceImport:
-          return ImportEntriesForModule(node.NameSpaceImport!, module);
+          return ImportEntriesForModule(node.NameSpaceImport, module);
         case !!node.NamedImports:
-          return ImportEntriesForModule(node.NamedImports!, module);
+          return ImportEntriesForModule(node.NamedImports, module);
         default:
           throw new OutOfRange('ImportEntriesForModule', node);
       }

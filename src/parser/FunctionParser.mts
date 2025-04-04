@@ -326,7 +326,7 @@ export abstract class FunctionParser extends IdentifierParser {
 
   // FormalParameter : BindingElement
   parseFormalParameter(): ParseNode.FormalParameter {
-    return this.parseBindingElement() as ParseNode.FormalParameter;
+    return this.parseBindingElement();
   }
 
   parseFormalParameters(): ParseNode.FormalParameters {
@@ -361,7 +361,7 @@ export abstract class FunctionParser extends IdentifierParser {
   }
 
   parseUniqueFormalParameters(): ParseNode.UniqueFormalParameters {
-    return this.parseFormalParameters() as ParseNode.UniqueFormalParameters;
+    return this.parseFormalParameters();
   }
 
   parseFunctionBody(isAsync: boolean, isGenerator: boolean, isArrow: boolean): ParseNode.FunctionBodyLike {

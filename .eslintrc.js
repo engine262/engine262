@@ -47,6 +47,8 @@ module.exports = {
         '@typescript-eslint/no-non-null-assertion': 'off',
         // spec convention
         '@typescript-eslint/no-this-alias': 'off',
+        // this rule errors for non null assertion.
+        // '@typescript-eslint/no-unnecessary-type-assertion': 'error',
       },
     },
   ],

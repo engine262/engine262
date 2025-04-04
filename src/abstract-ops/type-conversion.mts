@@ -99,7 +99,7 @@ export function* OrdinaryToPrimitive(O: ObjectValue, hint: 'string' | 'number'):
     // a. Let method be ? Get(O, name).
     const method = Q(yield* Get(O, name));
     // b. If IsCallable(method) is true, then
-    if (IsCallable(method) === Value.true) {
+    if (IsCallable(method)) {
       // i. Let result be ? Call(method, O).
       const result = Q(yield* Call(method, O));
       // ii. If Type(result) is not Object, return result.

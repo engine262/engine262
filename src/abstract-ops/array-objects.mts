@@ -112,9 +112,9 @@ export function* ArraySpeciesCreate(originalArray: ObjectValue, length: number):
     return Q(ArrayCreate(length));
   }
   let C = Q(yield* Get(originalArray, Value('constructor')));
-  if (IsConstructor(C) === Value.true) {
+  if (IsConstructor(C)) {
     const thisRealm = surroundingAgent.currentRealmRecord;
-    const realmC = Q(GetFunctionRealm(C as FunctionObject));
+    const realmC = Q(GetFunctionRealm(C));
     if (thisRealm !== realmC) {
       if (SameValue(C, realmC.Intrinsics['%Array%']) === Value.true) {
         C = Value.undefined;
@@ -130,10 +130,10 @@ export function* ArraySpeciesCreate(originalArray: ObjectValue, length: number):
   if (C === Value.undefined) {
     return Q(ArrayCreate(length));
   }
-  if (IsConstructor(C) === Value.false) {
+  if (!IsConstructor(C)) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
   }
-  return Q(yield* Construct(C as FunctionObject, [F(length)]));
+  return Q(yield* Construct(C, [F(length)]));
 }
 
 /** https://tc39.es/ecma262/#sec-arraysetlength */

@@ -54,7 +54,7 @@ export const Debugger: DebuggerNamespace = {
   evaluateOnCallFrame(req, context) {
     return evaluate({
       ...req,
-      uniqueContextId: context.context.getRealm(undefined)!.descriptor.uniqueId!,
+      uniqueContextId: context.context.getRealm(undefined)!.descriptor.uniqueId,
       evalMode: context.context.evaluateMode,
     }, context);
   },

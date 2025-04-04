@@ -226,7 +226,7 @@ export function inspect(value: Value | ValueCompletion) {
     compact: false,
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const inner = (v: Value) => (INSPECTORS[v.type]! as any)(v, context, inner);
+  const inner = (v: Value) => (INSPECTORS[v.type] as any)(v, context, inner);
   if (value instanceof Completion) {
     value = value.Value;
   }

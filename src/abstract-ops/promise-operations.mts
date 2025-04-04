@@ -29,7 +29,6 @@ import {
   SameValue,
   GetFunctionRealm,
   isFunctionObject,
-  type FunctionObject,
   type BuiltinFunctionObject,
   Realm,
 } from './all.mts';
@@ -212,7 +211,7 @@ function* PromiseResolveFunctions(this: BuiltinFunctionObject, [resolution = Val
   // 11. Let thenAction be then.[[Value]].
   const thenAction = then.Value;
   // 12. If IsCallable(thenAction) is false, then
-  if (IsCallable(thenAction) === Value.false) {
+  if (!IsCallable(thenAction)) {
     // a. Return FulfillPromise(promise, resolution).
     return FulfillPromise(promise, resolution);
   }
@@ -220,7 +219,7 @@ function* PromiseResolveFunctions(this: BuiltinFunctionObject, [resolution = Val
     return Value.undefined;
   }
   // 13. Let thenJobCallback be HostMakeJobCallback(thenAction).
-  const thenJobCallback = HostMakeJobCallback(thenAction as FunctionObject);
+  const thenJobCallback = HostMakeJobCallback(thenAction);
   // 14. Let job be NewPromiseResolveThenableJob(promise, resolution, thenJobCallback).
   const job = NewPromiseResolveThenableJob(promise, resolution, thenJobCallback);
   // 15. Perform HostEnqueuePromiseJob(job.[[Job]], job.[[Realm]]).
@@ -243,7 +242,7 @@ function FulfillPromise(promise: PromiseObject, value: Value) {
 /** https://tc39.es/ecma262/#sec-newpromisecapability */
 export function* NewPromiseCapability(C: Value): PlainEvaluator<PromiseCapabilityRecord> {
   // 1. If IsConstructor(C) is false, throw a TypeError exception.
-  if (IsConstructor(C) === Value.false) {
+  if (!IsConstructor(C)) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
   }
   // 2. NOTE: C is assumed to be a constructor function that supports the parameter conventions of the Promise constructor (see 26.2.3.1).
@@ -269,13 +268,13 @@ export function* NewPromiseCapability(C: Value): PlainEvaluator<PromiseCapabilit
   // 5. Let executor be ! CreateBuiltinFunction(executorClosure, 2, "", « »).
   const executor = X(CreateBuiltinFunction(executorClosure, 2, Value(''), []));
   // 8. Let promise be ? Construct(C, « executor »).
-  const promise = Q(yield* Construct(C as FunctionObject, [executor])) as PromiseObject;
+  const promise = Q(yield* Construct(C, [executor])) as PromiseObject;
   // 9. If IsCallable(promiseCapability.[[Resolve]]) is false, throw a TypeError exception.
-  if (IsCallable(promiseCapability.Resolve) === Value.false) {
+  if (!IsCallable(promiseCapability.Resolve)) {
     return surroundingAgent.Throw('TypeError', 'PromiseResolveFunction', promiseCapability.Resolve);
   }
   // 10. If IsCallable(promiseCapability.[[Reject]]) is false, throw a TypeError exception.
-  if (IsCallable(promiseCapability.Reject) === Value.false) {
+  if (!IsCallable(promiseCapability.Reject)) {
     return surroundingAgent.Throw('TypeError', 'PromiseRejectFunction', promiseCapability.Reject);
   }
   // 11. Set promiseCapability.[[Promise]] to promise.
@@ -415,20 +414,20 @@ export function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, o
   }
   let onFulfilledJobCallback;
   // 3. If IsCallable(onFulfilled) is false, then
-  if (IsCallable(onFulfilled) === Value.false) {
+  if (!IsCallable(onFulfilled)) {
     // a. Let onFulfilledJobCallback be empty.
     onFulfilledJobCallback = undefined;
   } else { // 4. Else,
     // a. Let onFulfilledJobCallback be HostMakeJobCallback(onFulfilled).
-    onFulfilledJobCallback = HostMakeJobCallback(onFulfilled as FunctionObject);
+    onFulfilledJobCallback = HostMakeJobCallback(onFulfilled);
   }
   let onRejectedJobCallback;
   // 5. If IsCallable(onRejected) is false, then
-  if (IsCallable(onRejected) === Value.false) {
+  if (!IsCallable(onRejected)) {
     // a. Let onRejectedJobCallback be empty.
     onRejectedJobCallback = undefined;
   } else { // 6. Else,
-    onRejectedJobCallback = HostMakeJobCallback(onRejected as FunctionObject);
+    onRejectedJobCallback = HostMakeJobCallback(onRejected);
   }
   // 7. Let fulfillReaction be the PromiseReaction { [[Capability]]: resultCapability, [[Type]]: Fulfill, [[Handler]]: onFulfilled }.
   const fulfillReaction = new PromiseReactionRecord({

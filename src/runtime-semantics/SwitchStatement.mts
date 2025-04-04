@@ -63,7 +63,7 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }: P
           const R = EnsureCompletion(yield* Evaluate(C));
           // ii. If R.[[Value]] is not empty, set V to R.[[Value]].
           if (R.Value !== undefined) {
-            V = R.Value as Value;
+            V = R.Value;
           }
           // iii. If R is an abrupt completion, return Completion(UpdateEmpty(R, V)).
           if (R instanceof AbruptCompletion) {
@@ -151,7 +151,7 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }: P
       const R = EnsureCompletion(yield* Evaluate(DefaultClause));
       // 12. If R.[[Value]] is not empty, set V to R.[[Value]].
       if (R.Value !== undefined) {
-        V = R.Value as Value;
+        V = R.Value;
       }
       // 13. If R is an abrupt completion, return Completion(UpdateEmpty(R, V)).
       if (R instanceof AbruptCompletion) {

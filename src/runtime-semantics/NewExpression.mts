@@ -4,9 +4,7 @@ import {
   Construct,
   GetValue,
   IsConstructor,
-  type FunctionObject,
 } from '../abstract-ops/all.mts';
-import { Value } from '../value.mts';
 import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
 import { Q } from '../completion.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
@@ -30,11 +28,11 @@ function* EvaluateNew(constructExpr: ParseNode.LeftHandSideExpression, args: und
     argList = Q(yield* ArgumentListEvaluation(args));
   }
   // 7. If IsConstructor(constructor) is false, throw a TypeError exception.
-  if (IsConstructor(constructor) === Value.false) {
+  if (!IsConstructor(constructor)) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', constructor);
   }
   // 8. Return ? Construct(constructor, argList).
-  return Q(yield* Construct(constructor as FunctionObject, argList));
+  return Q(yield* Construct(constructor, argList));
 }
 
 /** https://tc39.es/ecma262/#sec-new-operator-runtime-semantics-evaluation */

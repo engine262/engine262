@@ -335,7 +335,7 @@ export class ManagedRealm extends Realm {
         }
         this.active = old;
         surroundingAgent.executionContextStack.pop(this.topContext);
-        callback(EnsureCompletion(result!));
+        callback(EnsureCompletion(result));
       });
       return result;
     } else if (sourceText instanceof ScriptRecord) {

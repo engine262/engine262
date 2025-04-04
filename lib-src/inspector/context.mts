@@ -295,7 +295,7 @@ export class InspectorContext {
     this.#exceptionMap.set(value, exceptionId);
     return {
       text: isPromise ? 'Uncaught (in promise)' : 'Uncaught',
-      stackTrace: stack ? { callFrames: frames! } : undefined,
+      stackTrace: stack ? { callFrames: frames } : undefined,
       exception: getInspector(value).toRemoteObject(value, (val) => this.#internObject(val), false),
       lineNumber: frames[0]?.lineNumber || 0,
       columnNumber: frames[0]?.columnNumber || 0,

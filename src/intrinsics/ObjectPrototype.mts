@@ -155,12 +155,12 @@ function* ObjectProto__defineGetter__([P = Value.undefined, getter = Value.undef
   // 1. Let O be ? ToObject(this value).
   const O = Q(ToObject(thisValue));
   // 2. If IsCallable(getter) is false, throw a TypeError exception.
-  if (IsCallable(getter) === Value.false) {
+  if (!IsCallable(getter)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', getter);
   }
   // 3. Let desc be PropertyDescriptor { [[Get]]: getter, [[Enumerable]]: true, [[Configurable]]: true }.
   const desc = Descriptor({
-    Get: getter as FunctionObject,
+    Get: getter,
     Enumerable: Value.true,
     Configurable: Value.true,
   });
@@ -177,12 +177,12 @@ function* ObjectProto__defineSetter__([P = Value.undefined, setter = Value.undef
   // 1. Let O be ? ToObject(this value).
   const O = Q(ToObject(thisValue));
   // 2. If IsCallable(setter) is false, throw a TypeError exception.
-  if (IsCallable(setter) === Value.false) {
+  if (!IsCallable(setter)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', setter);
   }
   // 3. Let desc be PropertyDescriptor { [[Set]]: setter, [[Enumerable]]: true, [[Configurable]]: true }.
   const desc = Descriptor({
-    Set: setter as FunctionObject,
+    Set: setter,
     Enumerable: Value.true,
     Configurable: Value.true,
   });
@@ -209,7 +209,7 @@ function* ObjectProto__lookupGetter__([P = Value.undefined]: Arguments, { thisVa
     if (!(desc instanceof UndefinedValue)) {
       // i. If IsAccessorDescriptor(desc) is true, return desc.[[Get]].
       if (IsAccessorDescriptor(desc)) {
-        return desc.Get!;
+        return desc.Get;
       }
       // ii. Return undefined.
       return Value.undefined;
@@ -238,7 +238,7 @@ function* ObjectProto__lookupSetter__([P = Value.undefined]: Arguments, { thisVa
     if (!(desc instanceof UndefinedValue)) {
       // i. If IsAccessorDescriptor(desc) is true, return desc.[[Set]].
       if (IsAccessorDescriptor(desc)) {
-        return desc.Set!;
+        return desc.Set;
       }
       // ii. Return undefined.
       return Value.undefined;
