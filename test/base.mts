@@ -172,7 +172,7 @@ export function fatal(message: string): never {
 }
 export function skip() {
   skipped += 1;
-  handledPerSecCounter += 1;
+  // doesn't count towards testsPerSec
 }
 export function run(workerId: number, test: string, flags: string) {
   running[workerId] = [test, flags, Date.now()];
