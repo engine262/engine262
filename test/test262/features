@@ -5,8 +5,6 @@
 
 # Update with test262 on Feb 2025, to be investigated/implemented
 -Array.fromAsync
--Array.prototype.includes
--Error.isError
 -Float16Array
 -Math.sumPrecise
 -RegExp.escape

@@ -5,6 +5,7 @@ import {
   ToString,
   Realm,
   type FunctionObject,
+  IsError,
 } from '../abstract-ops/all.mts';
 import {
   Descriptor,
@@ -25,9 +26,7 @@ export interface ErrorObject extends ObjectValue {
   HostDefinedErrorStack?: CallSite[] | UndefinedValue;
 }
 
-export function isErrorObject(value: Value): value is ErrorObject {
-  return 'ErrorData' in value;
-}
+export { IsError as isErrorObject } from '../abstract-ops/error-objects.mts';
 
 /** https://tc39.es/ecma262/#sec-error-constructor */
 function* ErrorConstructor([message = Value.undefined, options = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
@@ -70,8 +69,14 @@ function* ErrorConstructor([message = Value.undefined, options = Value.undefined
   return O;
 }
 
+function Error_isError([value]: Arguments) {
+  return Value(IsError(value));
+}
+
 export function bootstrapError(realmRec: Realm) {
-  const error = bootstrapConstructor(realmRec, ErrorConstructor, 'Error', 1, realmRec.Intrinsics['%Error.prototype%'], []);
+  const error = bootstrapConstructor(realmRec, ErrorConstructor, 'Error', 1, realmRec.Intrinsics['%Error.prototype%'], [
+    ['isError', Error_isError, 1],
+  ]);
 
   realmRec.Intrinsics['%Error%'] = error;
 }

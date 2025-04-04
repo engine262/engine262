@@ -2,7 +2,7 @@
 import assert from 'assert';
 import { createAgent, createRealm } from './test262/test262_realm.mts';
 import {
-  incr_total, pass, fail, startTestPrinter,
+  incr_total, pass, fail,
 } from './base.mts';
 import {
   Agent,
@@ -33,7 +33,6 @@ import {
 
 // Features that cannot be tested by test262 should go here.
 
-startTestPrinter();
 [
   () => {
     const agent = new Agent();
