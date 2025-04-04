@@ -1,8 +1,12 @@
 node_modules
-dist
+declaration
+lib
 test.mjs
 test.js
 .eslintcache
 coverage
 .nyc_output
 *-gen.json
+test/test262/last-failed.log
+test/test262/last-failed-list
+**/tsconfig.tsbuildinfo

@@ -1,30 +1,50 @@
 name: test
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+    - main
+  pull_request:
+    branches:
+    - main
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       # Set everything up
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
-          persist-credentials: false
-      - uses: actions/setup-node@master
+          submodules: 'recursive'
+      - uses: actions/setup-node@v4
         with:
-          node-version: 15
-      - run: git submodule update --init --recursive
+          node-version: 22
 
-      # Run tests and whatnot
+      # build and lint
       - run: npm install
       - run: npm run build
       - run: npm run lint
+
+      # upload build artifacts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: engine262-lib
+          path: |
+            lib/engine262.js
+            lib/engine262.js.map
+            lib/engine262.mjs
+            lib/engine262.mjs.map
+
+      # it will break override the coverage data of the test262 run
+      - run: npm run test:inspector
+
+      # run tests/coverage
       - run: npm run coverage
         env:
           CONTINUOUS_INTEGRATION: 1
 
       # Upload coverage data
       - name: Coveralls
-        uses: coverallsapp/github-action@master
+        uses: coverallsapp/github-action@v2
         with:
           github-token: ${{github.token}}

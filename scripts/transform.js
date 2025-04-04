@@ -2,9 +2,7 @@
 
 const { relative, resolve } = require('path');
 
-const COMPLETION_PATH = resolve('./src/completion.mjs');
-const ABSTRACT_OPS_PATH = resolve('./src/abstract-ops/all.mjs');
-const VALUE_PATH = resolve('./src/value.mjs');
+const IMPORT_PATH = resolve('./src/index.mts');
 
 function fileToImport(file, refPath) {
   return relative(file.opts.filename, refPath)
@@ -31,35 +29,49 @@ function getEnclosingConditionalExpression(path) {
 
 module.exports = ({ types: t, template }) => {
   function createImportCompletion(file) {
-    const r = fileToImport(file, COMPLETION_PATH);
+    const r = fileToImport(file, IMPORT_PATH);
     return template.ast(`
       import { Completion } from "${r}";
     `);
   }
 
+  function createSkipDebuggerCompletion(file) {
+    const r = fileToImport(file, IMPORT_PATH);
+    return template.ast(`
+      import { skipDebugger } from "${r}";
+    `);
+  }
+
   function createImportAbruptCompletion(file) {
-    const r = fileToImport(file, COMPLETION_PATH);
+    const r = fileToImport(file, IMPORT_PATH);
     return template.ast(`
       import { AbruptCompletion } from "${r}";
     `);
   }
 
   function createImportAssert(file) {
-    const r = fileToImport(file, ABSTRACT_OPS_PATH);
+    const r = fileToImport(file, IMPORT_PATH);
     return template.ast(`
       import { Assert } from "${r}";
     `);
   }
 
   function createImportCall(file) {
-    const r = fileToImport(file, ABSTRACT_OPS_PATH);
+    const r = fileToImport(file, IMPORT_PATH);
     return template.ast(`
       import { Call } from "${r}";
     `);
   }
 
+  function createImportIteratorClose(file) {
+    const r = fileToImport(file, IMPORT_PATH);
+    return template.statement.ast`
+      import { IteratorClose } from "${r}";
+    `;
+  }
+
   function createImportValue(file) {
-    const r = fileToImport(file, VALUE_PATH);
+    const r = fileToImport(file, IMPORT_PATH);
     return template.ast(`
       import { Value } from "${r}";
     `);
@@ -68,12 +80,20 @@ module.exports = ({ types: t, template }) => {
   function addSectionFromComments(path) {
     if (path.node.leadingComments) {
       for (const c of path.node.leadingComments) {
+        let name;
+        if (path.node.id) {
+          name = path.node.id.name;
+        } else if (path.node.declaration) {
+          name = path.node.declaration.id.name;
+        } else {
+          name = path.node.declarations[0].id.name;
+        }
         const lines = c.value.split('\n');
         for (const line of lines) {
           if (/#sec/.test(line)) {
             const section = line.split(' ').find((l) => l.includes('#sec'));
             const url = section.includes('https') ? section : `https://tc39.es/ecma262/${section}`;
-            path.insertAfter(template.ast(`${path.node.id ? path.node.id.name : path.node.declarations[0].id.name}.section = '${url}';`));
+            path.insertAfter(template.ast(`${name}.section = '${url}';`));
             return;
           }
         }
@@ -84,45 +104,47 @@ module.exports = ({ types: t, template }) => {
   const MACROS = {
     Q: {
       template: template(`
+      /* ReturnIfAbrupt */
       let ID = ARGUMENT;
-      /* c8 ignore if */
-      if (ID instanceof AbruptCompletion) {
-        return ID;
-      }
-      /* c8 ignore if */
-      if (ID instanceof Completion) {
-        ID = ID.Value;
-      }
+      /* c8 ignore if */ if (ID && typeof ID === 'object' && 'next' in ID) throw new Assert.Error('Forgot to yield* on the completion.');
+      /* c8 ignore if */ if (ID instanceof AbruptCompletion) return ID;
+      /* c8 ignore if */ if (ID instanceof Completion) ID = ID.Value;
       `, { preserveComments: true }),
-      imports: ['AbruptCompletion', 'Completion'],
+      imports: ['AbruptCompletion', 'Completion', 'Assert'],
     },
     X: {
       template: template(`
+      /* X */
       let ID = ARGUMENT;
-      Assert(!(ID instanceof AbruptCompletion), SOURCE + ' returned an abrupt completion');
-      /* c8 ignore if */
-      if (ID instanceof Completion) {
-        ID = ID.Value;
-      }
+      /* c8 ignore if */ if (ID && typeof ID === 'object' && 'next' in ID) ID = skipDebugger(ID);
+      /* c8 ignore if */ if (ID instanceof AbruptCompletion) throw new Assert.Error(SOURCE, { cause: ID });
+      /* c8 ignore if */ if (ID instanceof Completion) ID = ID.Value;
       `, { preserveComments: true }),
-      imports: ['Assert', 'Completion', 'AbruptCompletion'],
+      imports: ['Assert', 'Completion', 'AbruptCompletion', 'skipDebugger'],
+    },
+    IfAbruptCloseIterator: {
+      template: template(`
+      /* IfAbruptCloseIterator */
+      /* c8 ignore if */
+      if (%%value%% instanceof AbruptCompletion) return skipDebugger(IteratorClose(%%iteratorRecord%%, %%value%%));
+      /* c8 ignore if */
+      if (%%value%% instanceof Completion) %%value%% = %%value%%.Value;
+      `, { preserveComments: true }),
+      imports: ['IteratorClose', 'AbruptCompletion', 'Completion', 'skipDebugger'],
     },
     IfAbruptRejectPromise: {
       template: template(`
+      /* IfAbruptRejectPromise */
       /* c8 ignore if */
       if (ID instanceof AbruptCompletion) {
-        const hygenicTemp2 = Call(CAPABILITY.Reject, Value.undefined, [ID.Value]);
-        if (hygenicTemp2 instanceof AbruptCompletion) {
-          return hygenicTemp2;
-        }
+        const hygenicTemp2 = skipDebugger(Call(CAPABILITY.Reject, Value.undefined, [ID.Value]));
+        if (hygenicTemp2 instanceof AbruptCompletion) return hygenicTemp2;
         return CAPABILITY.Promise;
       }
       /* c8 ignore if */
-      if (ID instanceof Completion) {
-        ID = ID.Value;
-      }
+      if (ID instanceof Completion) ID = ID.Value;
       `, { preserveComments: true }),
-      imports: ['Call', 'Value', 'AbruptCompletion', 'Completion'],
+      imports: ['Call', 'Value', 'AbruptCompletion', 'Completion', 'skipDebugger'],
     },
   };
   MACROS.ReturnIfAbrupt = MACROS.Q;
@@ -135,10 +157,13 @@ module.exports = ({ types: t, template }) => {
           state.needed = {};
         },
         exit(path, state) {
-          if (state.needed.Completion && !state.file.opts.filename.endsWith('completion.mjs')) {
+          if (state.needed.skipDebugger) {
+            path.node.body.unshift(createSkipDebuggerCompletion(state.file));
+          }
+          if (state.needed.Completion) {
             path.node.body.unshift(createImportCompletion(state.file));
           }
-          if (state.needed.AbruptCompletion && !state.file.opts.filename.endsWith('completion.mjs')) {
+          if (state.needed.AbruptCompletion) {
             path.node.body.unshift(createImportAbruptCompletion(state.file));
           }
           if (state.needed.Assert) {
@@ -146,6 +171,9 @@ module.exports = ({ types: t, template }) => {
           }
           if (state.needed.Call) {
             path.node.body.unshift(createImportCall(state.file));
+          }
+          if (state.needed.IteratorClose) {
+            path.unshiftContainer('body', createImportIteratorClose(state.file));
           }
           if (state.needed.Value) {
             path.node.body.unshift(createImportValue(state.file));
@@ -222,6 +250,27 @@ module.exports = ({ types: t, template }) => {
               const binding = path.scope.getBinding(argument.name);
               binding.path.parent.kind = 'let';
               statementPath.insertBefore(macro.template({ ID: argument, CAPABILITY: capability }));
+              try {
+                path.remove();
+              } catch (e) {
+                throw path.get('arguments.0').buildCodeFrameError(`Macros error: ${e.message}`);
+              }
+            } else if (macro === MACROS.IfAbruptCloseIterator) {
+              if (!t.isIdentifier(argument)) {
+                throw path.get('arguments.0').buildCodeFrameError('First argument to IfAbruptCloseIterator should be an identifier');
+              }
+              const iteratorRecord = path.get('arguments.1');
+              if (!iteratorRecord.isIdentifier()) {
+                throw iteratorRecord.buildCodeFrameError('Second argument to IfAbruptCloseIterator should be an identifier');
+              }
+              const binding = path.scope.getBinding(argument.name);
+              binding.path.parent.kind = 'let';
+              statementPath.insertBefore(
+                macro.template({
+                  value: argument,
+                  iteratorRecord: iteratorRecord.node,
+                }),
+              );
               path.remove();
             } else {
               const id = statementPath.scope.generateUidIdentifier();
@@ -230,7 +279,7 @@ module.exports = ({ types: t, template }) => {
                 ID: id,
               };
               if (macro === MACROS.X) {
-                replacement.SOURCE = t.stringLiteral(path.get('arguments.0').getSource());
+                replacement.SOURCE = t.stringLiteral(`! ${path.get('arguments.0').getSource()} returned an abrupt completion`);
               }
               statementPath.insertBefore(macro.template(replacement));
               path.replaceWith(id);
@@ -251,7 +300,12 @@ module.exports = ({ types: t, template }) => {
         addSectionFromComments(path);
       },
       VariableDeclaration(path) {
-        if (path.get('declarations.0.init').isArrowFunctionExpression()) {
+        if (path.get('declarations.0.init').isArrowFunctionExpression() || path.get('declarations.0.init').isFunctionExpression()) {
+          addSectionFromComments(path);
+        }
+      },
+      ExportNamedDeclaration(path) {
+        if (path.get('declaration').isFunctionDeclaration()) {
           addSectionFromComments(path);
         }
       },
