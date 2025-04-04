@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 d840219fcd2b4918215d35d1fe600f23b9dd06b2
+ * engine262 0.0.1 a042f8a5aab08f52527b24550e69700f42326908
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -462,7 +462,7 @@ function CreateMappedArgumentsObject(func, formals, argumentsList, env) {
 }
 CreateMappedArgumentsObject.section = 'https://tc39.es/ecma262/#sec-createmappedargumentsobject';
 
-const InternalMethods$4 = {
+const InternalMethods$5 = {
   /** https://tc39.es/ecma262/#sec-array-exotic-objects-defineownproperty-p-desc */
   *DefineOwnProperty(P, Desc) {
     const A = this;
@@ -526,7 +526,7 @@ const InternalMethods$4 = {
   }
 };
 function isArrayExoticObject(O) {
-  return O instanceof ObjectValue && O.DefineOwnProperty === InternalMethods$4.DefineOwnProperty;
+  return O instanceof ObjectValue && O.DefineOwnProperty === InternalMethods$5.DefineOwnProperty;
 }
 
 /** https://tc39.es/ecma262/#sec-arraycreate */
@@ -553,7 +553,7 @@ function ArrayCreate(length, proto) {
   if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
   const A = _temp4;
   A.Prototype = proto;
-  A.DefineOwnProperty = InternalMethods$4.DefineOwnProperty;
+  A.DefineOwnProperty = InternalMethods$5.DefineOwnProperty;
   /* X */
   let _temp5 = OrdinaryDefineOwnProperty(A, Value('length'), _Descriptor({
     Value: F(length),
@@ -31104,7 +31104,7 @@ AsyncFromSyncIteratorContinuation.section = 'https://tc39.es/ecma262/#sec-asyncf
 function isModuleNamespaceObject(V) {
   return V instanceof ObjectValue && 'Module' in V;
 }
-const InternalMethods$3 = {
+const InternalMethods$4 = {
   *SetPrototypeOf(V) {
     return yield* SetImmutablePrototype(this, V);
   },
@@ -31282,16 +31282,16 @@ function ModuleNamespaceCreate(module, exports) {
   if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
   const M = _temp4;
   /** https://tc39.es/ecma262/#sec-module-namespace-exotic-objects */
-  M.SetPrototypeOf = InternalMethods$3.SetPrototypeOf;
-  M.IsExtensible = InternalMethods$3.IsExtensible;
-  M.PreventExtensions = InternalMethods$3.PreventExtensions;
-  M.GetOwnProperty = InternalMethods$3.GetOwnProperty;
-  M.DefineOwnProperty = InternalMethods$3.DefineOwnProperty;
-  M.HasProperty = InternalMethods$3.HasProperty;
-  M.Get = InternalMethods$3.Get;
-  M.Set = InternalMethods$3.Set;
-  M.Delete = InternalMethods$3.Delete;
-  M.OwnPropertyKeys = InternalMethods$3.OwnPropertyKeys;
+  M.SetPrototypeOf = InternalMethods$4.SetPrototypeOf;
+  M.IsExtensible = InternalMethods$4.IsExtensible;
+  M.PreventExtensions = InternalMethods$4.PreventExtensions;
+  M.GetOwnProperty = InternalMethods$4.GetOwnProperty;
+  M.DefineOwnProperty = InternalMethods$4.DefineOwnProperty;
+  M.HasProperty = InternalMethods$4.HasProperty;
+  M.Get = InternalMethods$4.Get;
+  M.Set = InternalMethods$4.Set;
+  M.Delete = InternalMethods$4.Delete;
+  M.OwnPropertyKeys = InternalMethods$4.OwnPropertyKeys;
   // 7. Set M.[[Prototype]] to null.
   M.Prototype = Value.null;
   // 8. Set M.[[Module]] to module.
@@ -34015,7 +34015,7 @@ function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) 
 }
 PerformPromiseThen.section = 'https://tc39.es/ecma262/#sec-performpromisethen';
 
-const InternalMethods$2 = {
+const InternalMethods$3 = {
   /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-getprototypeof */
   *GetPrototypeOf() {
     const O = this;
@@ -34927,25 +34927,25 @@ function ProxyCreate(target, handler) {
   if (_temp50 instanceof Completion) _temp50 = _temp50.Value;
   const P = _temp50;
   // 4. Set P's essential internal methods, except for [[Call]] and [[Construct]], to the definitions specified in 9.5.
-  P.GetPrototypeOf = InternalMethods$2.GetPrototypeOf;
-  P.SetPrototypeOf = InternalMethods$2.SetPrototypeOf;
-  P.IsExtensible = InternalMethods$2.IsExtensible;
-  P.PreventExtensions = InternalMethods$2.PreventExtensions;
-  P.GetOwnProperty = InternalMethods$2.GetOwnProperty;
-  P.DefineOwnProperty = InternalMethods$2.DefineOwnProperty;
-  P.HasProperty = InternalMethods$2.HasProperty;
-  P.Get = InternalMethods$2.Get;
-  P.Set = InternalMethods$2.Set;
-  P.Delete = InternalMethods$2.Delete;
-  P.OwnPropertyKeys = InternalMethods$2.OwnPropertyKeys;
+  P.GetPrototypeOf = InternalMethods$3.GetPrototypeOf;
+  P.SetPrototypeOf = InternalMethods$3.SetPrototypeOf;
+  P.IsExtensible = InternalMethods$3.IsExtensible;
+  P.PreventExtensions = InternalMethods$3.PreventExtensions;
+  P.GetOwnProperty = InternalMethods$3.GetOwnProperty;
+  P.DefineOwnProperty = InternalMethods$3.DefineOwnProperty;
+  P.HasProperty = InternalMethods$3.HasProperty;
+  P.Get = InternalMethods$3.Get;
+  P.Set = InternalMethods$3.Set;
+  P.Delete = InternalMethods$3.Delete;
+  P.OwnPropertyKeys = InternalMethods$3.OwnPropertyKeys;
   // 5. If IsCallable(target) is true, then
   if (IsCallable(target) === Value.true) {
     /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-call-thisargument-argumentslist. */
-    P.Call = InternalMethods$2.Call;
+    P.Call = InternalMethods$3.Call;
     // b. If IsConstructor(target) is true, then
     if (IsConstructor(target) === Value.true) {
       /** https://tc39.es/ecma262/#sec-proxy-object-internal-methods-and-internal-slots-construct-argumentslist-newtarget. */
-      P.Construct = InternalMethods$2.Construct;
+      P.Construct = InternalMethods$3.Construct;
     }
   }
   // 6. Set P.[[ProxyTarget]] to target.
@@ -35460,6 +35460,33 @@ function* ObjectProto__proto__Set([proto = Value.undefined], {
   return Value.undefined;
 }
 ObjectProto__proto__Set.section = 'https://tc39.es/ecma262/#sec-set-object.prototype.__proto__';
+const InternalMethods$2 = {
+  /** https://tc39.es/ecma262/multipage/ordinary-and-exotic-objects-behaviours.html#sec-immutable-prototype-exotic-objects-setprototypeof-v */
+  *SetPrototypeOf(V) {
+    // 1. Return ? SetImmutablePrototype(O, V).
+    return yield* SetImmutablePrototype(this, V);
+  }
+};
+
+/** https://tc39.es/ecma262/multipage/fundamental-objects.html#sec-properties-of-the-object-prototype-object */
+function makeObjectPrototype(realmRec) {
+  // The Object prototype object:
+  const proto = MakeBasicObject(['Prototype', 'Extensible']);
+
+  // * has an [[Extensible]] internal slot whose value is true.
+  proto.Extensible = Value.true;
+
+  // * has a [[Prototype]] internal slot whose value is null.
+  proto.Prototype = Value.null;
+
+  // * has the internal methods defined for ordinary objects, except for the [[SetPrototypeOf]] method, which is as defined in 10.4.7.1.
+  //   (Thus, it is an immutable prototype exotic object.)
+  proto.SetPrototypeOf = InternalMethods$2.SetPrototypeOf;
+
+  // * is %Object.prototype%.
+  realmRec.Intrinsics['%Object.prototype%'] = proto;
+}
+makeObjectPrototype.section = 'https://tc39.es/ecma262/multipage/fundamental-objects.html#sec-properties-of-the-object-prototype-object';
 function bootstrapObjectPrototype(realmRec) {
   const proto = realmRec.Intrinsics['%Object.prototype%'];
   assignProps(realmRec, proto, [['hasOwnProperty', ObjectProto_hasOwnProperty, 1], ['isPrototypeOf', ObjectProto_isPrototypeOf, 1], ['propertyIsEnumerable', ObjectProto_propertyIsEnumerable, 1], ['toLocaleString', ObjectProto_toLocaleString, 0], ['toString', ObjectProto_toString, 0], ['valueOf', ObjectProto_valueOf, 0], ['__defineGetter__', ObjectProto__defineGetter__, 2], ['__defineSetter__', ObjectProto__defineSetter__, 2], ['__lookupGetter__', ObjectProto__lookupGetter__, 1], ['__lookupSetter__', ObjectProto__lookupSetter__, 1], ['__proto__', [ObjectProto__proto__Get, ObjectProto__proto__Set]]]);
@@ -50636,7 +50663,7 @@ function* GetSetRecord(obj) {
 GetSetRecord.section = 'https://tc39.es/ecma262/#sec-getsetrecord';
 function* GetKeysIterator(setRec) {
   /* ReturnIfAbrupt */
-  let _temp24 = Call(setRec.Keys, setRec.Set);
+  let _temp24 = yield* Call(setRec.Keys, setRec.Set);
   /* c8 ignore if */
   if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
@@ -56220,7 +56247,7 @@ function AddRestrictedFunctionProperties(F, realm) {
 function CreateIntrinsics(realmRec) {
   const intrinsics = Object.create(null);
   realmRec.Intrinsics = intrinsics;
-  intrinsics['%Object.prototype%'] = OrdinaryObjectCreate(Value.null);
+  makeObjectPrototype(realmRec);
   bootstrapFunctionPrototype(realmRec);
   bootstrapObjectPrototype(realmRec);
   bootstrapThrowTypeError(realmRec);
