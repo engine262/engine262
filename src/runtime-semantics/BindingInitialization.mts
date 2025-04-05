@@ -33,7 +33,7 @@ export function* InitializeBoundName(name: JSStringValue, value: Value, environm
     return NormalCompletion(undefined);
   } else {
     // a. Let lhs be ResolveBinding(name).
-    const lhs = yield* ResolveBinding(name, undefined, false);
+    const lhs = Q(yield* ResolveBinding(name, undefined, false));
     // b. Return ? PutValue(lhs, value).
     return Q(yield* PutValue(lhs, value));
   }

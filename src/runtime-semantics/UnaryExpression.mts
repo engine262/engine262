@@ -46,7 +46,7 @@ function* Evaluate_UnaryExpression_Delete({ UnaryExpression }: ParseNode.UnaryEx
   if (IsPropertyReference(ref) === Value.true) {
     __ts_cast__<PropertyReference>(ref);
     // a. Assert: IsPrivateReference(ref) is false.
-    Assert(IsPrivateReference(ref) === Value.false);
+    Assert(!IsPrivateReference(ref));
     // b. If IsSuperReference(ref) is true, throw a ReferenceError exception.
     if (IsSuperReference(ref) === Value.true) {
       return surroundingAgent.Throw('ReferenceError', 'CannotDeleteSuper');
@@ -80,7 +80,7 @@ function* Evaluate_UnaryExpression_Delete({ UnaryExpression }: ParseNode.UnaryEx
 //   UnaryExpression : `void` UnaryExpression
 function* Evaluate_UnaryExpression_Void({ UnaryExpression }: ParseNode.UnaryExpression): ValueEvaluator {
   // 1. Let expr be the result of evaluating UnaryExpression.
-  const expr = yield* Evaluate(UnaryExpression);
+  const expr = Q(yield* Evaluate(UnaryExpression));
   // 2. Perform ? GetValue(expr).
   Q(yield* GetValue(expr));
   // 3. Return undefined.
@@ -129,7 +129,7 @@ function* Evaluate_UnaryExpression_Typeof({ UnaryExpression }: ParseNode.UnaryEx
 //   UnaryExpression : `+` UnaryExpression
 function* Evaluate_UnaryExpression_Plus({ UnaryExpression }: ParseNode.UnaryExpression): ValueEvaluator {
   // 1. Let expr be the result of evaluating UnaryExpression.
-  const expr = yield* Evaluate(UnaryExpression);
+  const expr = Q(yield* Evaluate(UnaryExpression));
   // 2. Return ? ToNumber(? GetValue(expr)).
   return Q(yield* ToNumber(Q(yield* GetValue(expr))));
 }
@@ -138,7 +138,7 @@ function* Evaluate_UnaryExpression_Plus({ UnaryExpression }: ParseNode.UnaryExpr
 //   UnaryExpression : `-` UnaryExpression
 function* Evaluate_UnaryExpression_Minus({ UnaryExpression }: ParseNode.UnaryExpression): ValueEvaluator {
   // 1. Let expr be the result of evaluating UnaryExpression.
-  const expr = yield* Evaluate(UnaryExpression);
+  const expr = Q(yield* Evaluate(UnaryExpression));
   // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
   const oldValue = Q(yield* ToNumeric(Q(yield* GetValue(expr))));
   // 3. If oldValue is a Number, then
@@ -157,7 +157,7 @@ function* Evaluate_UnaryExpression_Minus({ UnaryExpression }: ParseNode.UnaryExp
 //   UnaryExpression : `~` UnaryExpression
 function* Evaluate_UnaryExpression_Tilde({ UnaryExpression }: ParseNode.UnaryExpression): ValueEvaluator {
   // 1. Let expr be the result of evaluating UnaryExpression.
-  const expr = yield* Evaluate(UnaryExpression);
+  const expr = Q(yield* Evaluate(UnaryExpression));
   // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
   const oldValue = Q(yield* ToNumeric(Q(yield* GetValue(expr))));
   // 3. If oldValue is a Number, then
@@ -176,7 +176,7 @@ function* Evaluate_UnaryExpression_Tilde({ UnaryExpression }: ParseNode.UnaryExp
 //   UnaryExpression : `!` UnaryExpression
 function* Evaluate_UnaryExpression_Bang({ UnaryExpression }: ParseNode.UnaryExpression): ValueEvaluator {
   // 1. Let expr be the result of evaluating UnaryExpression.
-  const expr = yield* Evaluate(UnaryExpression);
+  const expr = Q(yield* Evaluate(UnaryExpression));
   // 2. Let oldValue be ! ToBoolean(? GetValue(expr)).
   const oldValue = ToBoolean(Q(yield* GetValue(expr)));
   // 3. If oldValue is true, return false.

@@ -15,7 +15,7 @@ import type { ParseNode } from '../parser/ParseNode.mts';
 //   WithStatement : `with` `(` Expression `)` Statement
 export function* Evaluate_WithStatement({ Expression, Statement }: ParseNode.WithStatement) {
   // 1. Let val be the result of evaluating Expression.
-  const val = yield* Evaluate(Expression);
+  const val = Q(yield* Evaluate(Expression));
   // 2. Let obj be ? ToObject(? GetValue(val)).
   const obj = Q(ToObject(Q(yield* GetValue(val))));
   // 3. Let oldEnv be the running execution context's LexicalEnvironment.

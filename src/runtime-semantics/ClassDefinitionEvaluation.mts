@@ -114,7 +114,7 @@ export function* ClassDefinitionEvaluation(ClassTail: ParseNode.ClassTail, class
     // a. Set the running execution context's LexicalEnvironment to classScope.
     surroundingAgent.runningExecutionContext.LexicalEnvironment = classScope;
     // b. Let superclassRef be the result of evaluating ClassHeritage.
-    const superclassRef = yield* Evaluate(ClassHeritage);
+    const superclassRef = Q(yield* Evaluate(ClassHeritage));
     // c. Set the running execution context's LexicalEnvironment to env.
     surroundingAgent.runningExecutionContext.LexicalEnvironment = env;
     // d. Let superclass be ? GetValue(superclassRef).

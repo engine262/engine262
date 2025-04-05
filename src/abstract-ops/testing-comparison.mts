@@ -22,6 +22,7 @@ import {
   isArrayExoticObject, R,
   SameType,
   type FunctionObject,
+  type PropertyKeyValue,
 } from '#self';
 
 // This file covers abstract operations defined in
@@ -100,7 +101,7 @@ export function IsIntegralNumber(argument: Value) {
 }
 
 /** https://tc39.es/ecma262/#sec-ispropertykey */
-export function IsPropertyKey(argument: unknown) {
+export function IsPropertyKey(argument: unknown): argument is PropertyKeyValue {
   if (argument instanceof JSStringValue) {
     return true;
   }

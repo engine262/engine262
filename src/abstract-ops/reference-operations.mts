@@ -22,6 +22,8 @@ import {
   Set,
   PrivateGet,
   PrivateSet,
+  IsPropertyKey,
+  ToPropertyKey,
 } from './all.mts';
 
 /** https://tc39.es/ecma262/#sec-ispropertyreference */
@@ -54,37 +56,38 @@ export function IsSuperReference(V: ReferenceRecord) {
 }
 
 /** https://tc39.es/ecma262/#sec-isprivatereference */
-export function IsPrivateReference(V: ReferenceRecord) {
+export function IsPrivateReference(V: ReferenceRecord): V is ReferenceRecord & { readonly ReferencedName: PrivateName } {
   // 1. Assert: V is a Reference Record.
   Assert(V instanceof ReferenceRecord);
   // 2. If V.[[ReferencedName]] is a Private Name, return true; otherwise return false.
-  return V.ReferencedName instanceof PrivateName ? Value.true : Value.false;
+  return V.ReferencedName instanceof PrivateName;
 }
 
 /** https://tc39.es/ecma262/#sec-getvalue */
-export function* GetValue(V: PlainCompletion<ReferenceRecord | Value>): PlainEvaluator<Value> {
-  // 1. ReturnIfAbrupt(V).
-  V = ReturnIfAbrupt(V);
-  // 2. If V is not a Reference Record, return V.
+export function* GetValue(V: ReferenceRecord | Value): PlainEvaluator<Value> {
+  // 1. If V is not a Reference Record, return V.
   if (!(V instanceof ReferenceRecord)) {
     return V;
   }
-  // 3. If IsUnresolvableReference(V) is true, throw a ReferenceError exception.
+  // 2. If IsUnresolvableReference(V) is true, throw a ReferenceError exception.
   if (IsUnresolvableReference(V) === Value.true) {
     return surroundingAgent.Throw('ReferenceError', 'NotDefined', V.ReferencedName);
   }
-  // 4. If IsPropertyReference(V) is true, then
+  // 3. If IsPropertyReference(V) is true, then
   if (IsPropertyReference(V) === Value.true) {
     __ts_cast__<PropertyReference>(V);
     // a. Let baseObj be ? ToObject(V.[[Base]]).
     const baseObj = Q(ToObject(V.Base));
     // b. If IsPrivateReference(V) is true, then
-    if (IsPrivateReference(V) === Value.true) {
-      // i. Return ? PrivateGet(V.[[ReferencedName]], baseObj).
-      return Q(yield* PrivateGet(V.ReferencedName as PrivateName, baseObj));
+    if (IsPrivateReference(V)) {
+      // i. Return ? PrivateGet(baseObj, V.[[ReferencedName]]).
+      return Q(yield* PrivateGet(baseObj, V.ReferencedName));
+    }
+    if (!IsPropertyKey(V.ReferencedName)) {
+      V.ReferencedName = Q(yield* ToPropertyKey(V.ReferencedName as Value));
     }
     // c. Return ? baseObj.[[Get]](V.[[ReferencedName]], GetThisValue(V)).
-    return Q(yield* baseObj.Get(V.ReferencedName as JSStringValue, GetThisValue(V)));
+    return Q(yield* baseObj.Get(V.ReferencedName, GetThisValue(V)));
   } else { // 5. Else,
     // a. Let base be V.[[Base]].
     const base = V.Base;
@@ -96,16 +99,12 @@ export function* GetValue(V: PlainCompletion<ReferenceRecord | Value>): PlainEva
 }
 
 /** https://tc39.es/ecma262/#sec-putvalue */
-export function* PutValue(V: PlainCompletion<ReferenceRecord | Value>, W: PlainCompletion<Value>): PlainEvaluator {
-  // 1. ReturnIfAbrupt(V).
-  V = ReturnIfAbrupt(V);
-  // 2. ReturnIfAbrupt(W).
-  W = ReturnIfAbrupt(W);
-  // 3. If V is not a Reference Record, throw a ReferenceError exception.
+export function* PutValue(V: ReferenceRecord | Value, W: Value): PlainEvaluator {
+  // 1. If V is not a Reference Record, throw a ReferenceError exception.
   if (!(V instanceof ReferenceRecord)) {
     return surroundingAgent.Throw('ReferenceError', 'InvalidAssignmentTarget');
   }
-  // 4. If IsUnresolvableReference(V) is true, then
+  // 2. If IsUnresolvableReference(V) is true, then
   if (IsUnresolvableReference(V) === Value.true) {
     // a. If V.[[Strict]] is true, throw a ReferenceError exception.
     if (V.Strict === Value.true) {
@@ -119,15 +118,18 @@ export function* PutValue(V: PlainCompletion<ReferenceRecord | Value>, W: PlainC
   }
   // 5. If IsPropertyReference(V) is true, then
   if (IsPropertyReference(V) === Value.true) {
-    // a. Let baseObj be ! ToObject(V.[[Base]]).
-    const baseObj = X(ToObject(V.Base as JSStringValue));
+    // a. Let baseObj be ? ToObject(V.[[Base]]).
+    const baseObj = Q(ToObject(V.Base as JSStringValue));
     // b. If IsPrivateReference(V) is true, then
-    if (IsPrivateReference(V) === Value.true) {
-      // i. Return ? PrivateSet(V.[[ReferencedName]], baseObj, W).
-      return Q(yield* PrivateSet(V.ReferencedName as PrivateName, baseObj, W));
+    if (IsPrivateReference(V)) {
+      // i. Return ? PrivateSet(baseObj, V.[[ReferencedName]], W).
+      return Q(yield* PrivateSet(baseObj, V.ReferencedName, W));
+    }
+    if (!IsPropertyKey(V.ReferencedName)) {
+      V.ReferencedName = Q(yield* ToPropertyKey(V.ReferencedName as Value));
     }
     // c. Let succeeded be ? baseObj.[[Set]](V.[[ReferencedName]], W, GetThisValue(V)).
-    const succeeded = Q(yield* baseObj.Set(V.ReferencedName as JSStringValue, W, GetThisValue(V)));
+    const succeeded = Q(yield* baseObj.Set(V.ReferencedName, W, GetThisValue(V)));
     // d. If succeeded is false and V.[[Strict]] is true, throw a TypeError exception.
     if (succeeded === Value.false && V.Strict === Value.true) {
       return surroundingAgent.Throw('TypeError', 'CannotSetProperty', V.ReferencedName, V.Base);

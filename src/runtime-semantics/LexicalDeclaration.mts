@@ -32,7 +32,7 @@ function* Evaluate_LexicalBinding_BindingIdentifier({ BindingIdentifier, Initial
       value = Q(yield* NamedEvaluation(Initializer as FunctionDeclaration, bindingId));
     } else { // 4. Else,
       // a. Let rhs be the result of evaluating Initializer.
-      const rhs = yield* Evaluate(Initializer);
+      const rhs = Q(yield* Evaluate(Initializer));
       // b. Let value be ? GetValue(rhs).
       value = Q(yield* GetValue(rhs));
     }
@@ -50,7 +50,7 @@ function* Evaluate_LexicalBinding_BindingIdentifier({ BindingIdentifier, Initial
 //   LexicalBinding : BindingPattern Initializer
 function* Evaluate_LexicalBinding_BindingPattern(LexicalBinding: ParseNode.LexicalBinding) {
   const { BindingPattern, Initializer } = LexicalBinding;
-  const rhs = yield* Evaluate(Initializer!);
+  const rhs = Q(yield* Evaluate(Initializer!));
   const value = Q(yield* GetValue(rhs));
   const env = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   return yield* BindingInitialization(BindingPattern!, value, env);

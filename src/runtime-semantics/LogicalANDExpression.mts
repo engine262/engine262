@@ -9,7 +9,7 @@ import type { ParseNode } from '../parser/ParseNode.mts';
 //     LogicalANDExpression `&&` BitwiseORExpression
 export function* Evaluate_LogicalANDExpression({ LogicalANDExpression, BitwiseORExpression }: ParseNode.LogicalANDExpression): ValueEvaluator {
   // 1. Let lref be the result of evaluating LogicalANDExpression.
-  const lref = yield* Evaluate(LogicalANDExpression);
+  const lref = Q(yield* Evaluate(LogicalANDExpression));
   // 2. Let lval be ? GetValue(lref).
   const lval = Q(yield* GetValue(lref));
   // 3. Let lbool be ! ToBoolean(lval).
@@ -19,7 +19,7 @@ export function* Evaluate_LogicalANDExpression({ LogicalANDExpression, BitwiseOR
     return lval;
   }
   // 5. Let rref be the result of evaluating BitwiseORExpression.
-  const rref = yield* Evaluate(BitwiseORExpression);
+  const rref = Q(yield* Evaluate(BitwiseORExpression));
   // 6. Return ? GetValue(rref).
   return Q(yield* GetValue(rref));
 }

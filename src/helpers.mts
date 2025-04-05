@@ -264,7 +264,7 @@ export class OutOfRange extends RangeError {
 
   /* c8 ignore next */
   constructor(fn: string, detail: unknown) {
-    super(`${fn}() argument out of range`);
+    super(`${fn}() argument out of range`, { cause: detail });
     this.detail = detail;
   }
 }

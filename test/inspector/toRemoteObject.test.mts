@@ -79,7 +79,7 @@ test('functions', async () => {
     'class C { constructor() {}; #f }; C.prototype.constructor',
   ]) {
     // eslint-disable-next-line no-await-in-loop
-    expect(await inspector.eval(value)).toMatchSnapshot(value);
+    expect(await inspector.eval(value), value).toMatchSnapshot(value);
   }
 });
 

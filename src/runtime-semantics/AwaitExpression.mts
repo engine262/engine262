@@ -9,7 +9,7 @@ import { surroundingAgent } from '#self';
 export function* Evaluate_AwaitExpression({ UnaryExpression }: ParseNode.AwaitExpression): ValueEvaluator {
   Q(surroundingAgent.debugger_cannotPreview);
   // 1. Let exprRef be the result of evaluating UnaryExpression.
-  const exprRef = yield* Evaluate(UnaryExpression);
+  const exprRef = Q(yield* Evaluate(UnaryExpression));
   // 2. Let value be ? GetValue(exprRef).
   const value = Q(yield* GetValue(exprRef));
   // 3. Return ? Await(value).

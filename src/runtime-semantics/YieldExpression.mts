@@ -164,7 +164,7 @@ export function* Evaluate_YieldExpression({ hasStar, AssignmentExpression }: Par
   }
   if (AssignmentExpression) {
     // 1. Let exprRef be the result of evaluating AssignmentExpression.
-    const exprRef = yield* Evaluate(AssignmentExpression);
+    const exprRef = Q(yield* Evaluate(AssignmentExpression));
     // 2. Let value be ? GetValue(exprRef).
     const value = Q(yield* GetValue(exprRef));
     // 3. Return ? Yield(value).

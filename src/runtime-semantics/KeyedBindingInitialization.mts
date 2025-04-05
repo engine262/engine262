@@ -26,7 +26,7 @@ export function* KeyedBindingInitialization(node: ParseNode.BindingElement | Par
     // 2. If Initializer is present and v is undefined, then
     if (node.Initializer && v === Value.undefined) {
       // a. Let defaultValue be the result of evaluating Initializer.
-      const defaultValue = yield* Evaluate(node.Initializer);
+      const defaultValue = Q(yield* Evaluate(node.Initializer));
       // b. Set v to ? GetValue(defaultValue).
       v = Q(yield* GetValue(defaultValue));
     }
@@ -46,7 +46,7 @@ export function* KeyedBindingInitialization(node: ParseNode.BindingElement | Par
         v = (yield* NamedEvaluation(node.Initializer as FunctionDeclaration, bindingId)) as Value;
       } else { // b. Else,
         // i. Let defaultValue be the result of evaluating Initializer.
-        const defaultValue = yield* Evaluate(node.Initializer);
+        const defaultValue = Q(yield* Evaluate(node.Initializer));
         // ii. Set v to ? GetValue(defaultValue).
         v = Q(yield* GetValue(defaultValue));
       }

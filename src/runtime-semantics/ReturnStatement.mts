@@ -20,7 +20,7 @@ export function* Evaluate_ReturnStatement({ Expression }: ParseNode.ReturnStatem
     return new Completion({ Type: 'return', Value: Value.undefined, Target: undefined });
   }
   // 1. Let exprRef be the result of evaluating Expression.
-  const exprRef = yield* Evaluate(Expression);
+  const exprRef = Q(yield* Evaluate(Expression));
   // 1. Let exprValue be ? GetValue(exprRef).
   let exprValue = Q(yield* GetValue(exprRef));
   // 1. If ! GetGeneratorKind() is async, set exprValue to ? Await(exprValue).

@@ -57,7 +57,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition: Pa
   const { PropertyName, AssignmentExpression } = PropertyDefinition;
   if (!PropertyName) {
     // 1. Let exprValue be the result of evaluating AssignmentExpression.
-    const exprValue = yield* Evaluate(AssignmentExpression);
+    const exprValue = Q(yield* Evaluate(AssignmentExpression));
     // 2. Let fromValue be ? GetValue(exprValue).
     const fromValue = Q(yield* GetValue(exprValue));
     // 3. Let excludedNames be a new empty List.
@@ -86,7 +86,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition(PropertyDefinition: Pa
     propValue = yield* NamedEvaluation(AssignmentExpression as FunctionDeclaration, propKey);
   } else { // 6. Else,
     // a. Let exprValueRef be the result of evaluating AssignmentExpression.
-    const exprValueRef = yield* Evaluate(AssignmentExpression);
+    const exprValueRef = Q(yield* Evaluate(AssignmentExpression));
     // b. Let propValue be ? GetValue(exprValueRef).
     propValue = Q(yield* GetValue(exprValueRef));
   }
@@ -112,7 +112,7 @@ function* PropertyDefinitionEvaluation_PropertyDefinition_IdentifierReference(Id
   // 1. Let propName be StringValue of IdentifierReference.
   const propName = StringValue(IdentifierReference);
   // 2. Let exprValue be the result of evaluating IdentifierReference.
-  const exprValue = yield* Evaluate(IdentifierReference);
+  const exprValue = Q(yield* Evaluate(IdentifierReference));
   // 3. Let propValue be ? GetValue(exprValue).
   const propValue = Q(yield* GetValue(exprValue));
   // 4. Assert: enumerable is true.

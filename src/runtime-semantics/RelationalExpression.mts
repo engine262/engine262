@@ -52,7 +52,7 @@ export function* Evaluate_RelationalExpression_PrivateIdentifier({ PrivateIdenti
   // 1. Let privateIdentifier be the StringValue of PrivateIdentifier.
   const privateIdentifier = StringValue(PrivateIdentifier!);
   // 2. Let rref be the result of evaluating ShiftExpression.
-  const rref = yield* Evaluate(ShiftExpression);
+  const rref = Q(yield* Evaluate(ShiftExpression));
   // 3. Let rval be ? GetValue(rref).
   const rval = Q(yield* GetValue(rref));
   // 4. If Type(rval) is not Object, throw a TypeError exception.
@@ -88,11 +88,11 @@ export function* Evaluate_RelationalExpression(expr: ParseNode.RelationalExpress
   const { RelationalExpression, operator, ShiftExpression } = expr;
 
   // 1. Let lref be the result of evaluating RelationalExpression.
-  const lref = yield* Evaluate(RelationalExpression!);
+  const lref = Q(yield* Evaluate(RelationalExpression!));
   // 2. Let lval be ? GetValue(lref).
   const lval = Q(yield* GetValue(lref));
   // 3. Let rref be the result of evaluating ShiftExpression.
-  const rref = yield* Evaluate(ShiftExpression);
+  const rref = Q(yield* Evaluate(ShiftExpression));
   // 4. Let rval be ? GetValue(rref).
   const rval = Q(yield* GetValue(rref));
   switch (operator) {

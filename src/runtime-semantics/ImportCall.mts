@@ -26,7 +26,7 @@ export function* Evaluate_ImportCall({ AssignmentExpression }: ParseNode.ImportC
     referrer = surroundingAgent.currentRealmRecord;
   }
   // 3. Let argRef be the result of evaluating AssignmentExpression.
-  const argRef = yield* Evaluate(AssignmentExpression);
+  const argRef = Q(yield* Evaluate(AssignmentExpression));
   // 4. Let specifier be ? GetValue(argRef).
   const specifier = Q(yield* GetValue(argRef));
   // 5. Let promiseCapability be ! NewPromiseCapability(%Promise%).

@@ -31,10 +31,10 @@ function* Evaluate_VariableDeclaration({ BindingIdentifier, Initializer, Binding
     let value;
     if (IsAnonymousFunctionDefinition(Initializer)) {
       // a. Let value be NamedEvaluation of Initializer with argument bindingId.
-      value = yield* NamedEvaluation(Initializer as FunctionDeclaration, bindingId);
+      value = Q(yield* NamedEvaluation(Initializer as FunctionDeclaration, bindingId));
     } else { // 4. Else,
       // a. Let rhs be the result of evaluating Initializer.
-      const rhs = yield* Evaluate(Initializer);
+      const rhs = Q(yield* Evaluate(Initializer));
       // b. Let value be ? GetValue(rhs).
       value = Q(yield* GetValue(rhs));
     }
@@ -42,7 +42,7 @@ function* Evaluate_VariableDeclaration({ BindingIdentifier, Initializer, Binding
     return Q(yield* PutValue(lhs, value));
   }
   // 1. Let rhs be the result of evaluating Initializer.
-  const rhs = yield* Evaluate(Initializer!);
+  const rhs = Q(yield* Evaluate(Initializer!));
   // 2. Let rval be ? GetValue(rhs).
   const rval = Q(yield* GetValue(rhs));
   // 3. Return the result of performing BindingInitialization for BindingPattern passing rval and undefined as arguments.

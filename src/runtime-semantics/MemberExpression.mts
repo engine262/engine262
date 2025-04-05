@@ -1,4 +1,4 @@
-import { GetValue, MakePrivateReference, RequireObjectCoercible } from '../abstract-ops/all.mts';
+import { GetValue, MakePrivateReference } from '../abstract-ops/all.mts';
 import { Evaluate } from '../evaluator.mts';
 import { Q, X } from '../completion.mts';
 import { OutOfRange } from '../helpers.mts';
@@ -15,7 +15,7 @@ import type { PlainEvaluator, ReferenceRecord } from '#self';
 //   CallExpression : CallExpression `[` Expression `]`
 function* Evaluate_MemberExpression_Expression({ strict, MemberExpression, Expression }: ParseNode.MemberExpression): PlainEvaluator<ReferenceRecord> {
   // 1. Let baseReference be the result of evaluating |MemberExpression|.
-  const baseReference = yield* Evaluate(MemberExpression);
+  const baseReference = Q(yield* Evaluate(MemberExpression));
   // 2. Let baseValue be ? GetValue(baseReference).
   const baseValue = Q(yield* GetValue(baseReference));
   // 3. If the code matched by this |MemberExpression| is strict mode code, let strict be true; else let strict be false.
@@ -28,12 +28,12 @@ function* Evaluate_MemberExpression_Expression({ strict, MemberExpression, Expre
 //   CallExpression : CallExpression `.` IdentifierName
 function* Evaluate_MemberExpression_IdentifierName({ strict, MemberExpression, IdentifierName }: ParseNode.MemberExpression): PlainEvaluator<ReferenceRecord> {
   // 1. Let baseReference be the result of evaluating |MemberExpression|.
-  const baseReference = yield* Evaluate(MemberExpression);
+  const baseReference = Q(yield* Evaluate(MemberExpression));
   // 2. Let baseValue be ? GetValue(baseReference).
   const baseValue = Q(yield* GetValue(baseReference));
   // 3. If the code matched by this |MemberExpression| is strict mode code, let strict be true; else let strict be false.
-  // 4. Return ? EvaluatePropertyAccessWithIdentifierKey(baseValue, |IdentifierName|, strict).
-  return Q(EvaluatePropertyAccessWithIdentifierKey(baseValue, IdentifierName!, strict));
+  // 4. Return ! EvaluatePropertyAccessWithIdentifierKey(baseValue, |IdentifierName|, strict).
+  return X(EvaluatePropertyAccessWithIdentifierKey(baseValue, IdentifierName!, strict));
 }
 
 /** https://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation */
@@ -41,15 +41,13 @@ function* Evaluate_MemberExpression_IdentifierName({ strict, MemberExpression, I
 //   CallExpression : CallExpression `.` PrivateIdentifier
 function* Evaluate_MemberExpression_PrivateIdentifier({ MemberExpression, PrivateIdentifier }: ParseNode.MemberExpression): PlainEvaluator<ReferenceRecord> {
   // 1. Let baseReference be the result of evaluating MemberExpression.
-  const baseReference = yield* Evaluate(MemberExpression);
+  const baseReference = Q(yield* Evaluate(MemberExpression));
   // 2. Let baseValue be ? GetValue(baseReference).
   const baseValue = Q(yield* GetValue(baseReference));
-  // 3. Let bv be ? RequireObjectCoercible(baseValue).
-  const bv = Q(RequireObjectCoercible(baseValue));
-  // 4. Let fieldNameString be the StringValue of PrivateIdentifier.
+  // 3. Let fieldNameString be the StringValue of PrivateIdentifier.
   const fieldNameString = StringValue(PrivateIdentifier!);
-  // 5. Return ! MakePrivateReference(bv, fieldNameString).
-  return X(MakePrivateReference(bv, fieldNameString));
+  // 4. Return ! MakePrivateReference(bv, fieldNameString).
+  return X(MakePrivateReference(baseValue, fieldNameString));
 }
 
 /** https://tc39.es/ecma262/#sec-property-accessors-runtime-semantics-evaluation */
