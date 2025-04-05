@@ -307,9 +307,8 @@ function FromBase64(string: string, alphabet: 'base64' | 'base64url', lastChunkH
           const error = surroundingAgent.Throw('SyntaxError', 'InvalidBase64String').Value;
           return { Read: read, Bytes: bytes, Error: error };
         }
-      } else {
-        return { Read: read, Bytes: bytes, Error: undefined };
       }
+      return { Read: length, Bytes: bytes, Error: undefined };
     }
     let char = string.substring(index, index + 1);
     index += 1;

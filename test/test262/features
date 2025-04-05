@@ -3,15 +3,15 @@
 # Start with `-` to skip feature
 # Map feature to engine262 feature using `feature = engine262featurename`
 
+uint8array-base64 = uint8array-base64
+
 # Update with test262 on Feb 2025, to be investigated/implemented
 -Array.fromAsync
 -Float16Array
 -Math.sumPrecise
 -RegExp.escape
 -arraybuffer-transfer
--canonical-tz
 -explicit-resource-management
--exponentiation
 -import-attributes
 -import-defer
 -iterator-helpers
@@ -21,8 +21,6 @@
 -set-methods
 -source-phase-imports
 -source-phase-imports-module-source
--uint8array-base64
-uint8array-base64 = uint8array-base64
 
 # Added before Feb 2025
 
