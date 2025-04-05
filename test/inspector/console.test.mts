@@ -134,6 +134,7 @@ test('get local lexical names', async () => {
         "Int8Array",
         "Int16Array",
         "Int32Array",
+        "Iterator",
         "Map",
         "Number",
         "Object",

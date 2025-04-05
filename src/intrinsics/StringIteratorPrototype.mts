@@ -17,7 +17,7 @@ function* StringIteratorPrototype_next(_args: Arguments, { thisValue }: Function
 export function bootstrapStringIteratorPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['next', StringIteratorPrototype_next, 0],
-  ], realmRec.Intrinsics['%IteratorPrototype%'], 'String Iterator');
+  ], realmRec.Intrinsics['%Iterator.prototype%'], 'String Iterator');
 
   realmRec.Intrinsics['%StringIteratorPrototype%'] = proto;
 }

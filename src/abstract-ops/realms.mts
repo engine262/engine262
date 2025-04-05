@@ -33,6 +33,7 @@ import { bootstrapErrorPrototype } from '../intrinsics/ErrorPrototype.mts';
 import { bootstrapError } from '../intrinsics/Error.mts';
 import { bootstrapNativeError } from '../intrinsics/NativeError.mts';
 import { bootstrapIteratorPrototype } from '../intrinsics/IteratorPrototype.mts';
+import { bootstrapIterator } from '../intrinsics/Iterator.mts';
 import { bootstrapAsyncIteratorPrototype } from '../intrinsics/AsyncIteratorPrototype.mts';
 import { bootstrapArrayIteratorPrototype } from '../intrinsics/ArrayIteratorPrototype.mts';
 import { bootstrapMapIteratorPrototype } from '../intrinsics/MapIteratorPrototype.mts';
@@ -205,7 +206,7 @@ export interface Intrinsics extends Intrinsics_Table6 {
   '%Int32Array%': FunctionObject;
   '%Int8Array.prototype%': ObjectValue;
   '%Int8Array%': FunctionObject;
-  '%IteratorPrototype%': ObjectValue;
+  '%Iterator.prototype%': ObjectValue;
   '%JSON.parse%': FunctionObject;
   '%JSON.stringify%': FunctionObject;
   '%Map.prototype%': ObjectValue;
@@ -326,6 +327,8 @@ export function CreateIntrinsics(realmRec: Realm) {
   bootstrapFunction(realmRec);
 
   bootstrapIteratorPrototype(realmRec);
+  bootstrapIterator(realmRec);
+
   bootstrapAsyncIteratorPrototype(realmRec);
   bootstrapArrayIteratorPrototype(realmRec);
   bootstrapMapIteratorPrototype(realmRec);
@@ -477,6 +480,7 @@ export function* SetDefaultGlobalBindings(realmRec: Realm): ValueEvaluator<Objec
     'Int8Array',
     'Int16Array',
     'Int32Array',
+    'Iterator',
     'Map',
     'Number',
     'Object',

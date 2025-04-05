@@ -72,7 +72,7 @@ function* MapIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionCal
 export function bootstrapMapIteratorPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['next', MapIteratorPrototype_next, 0],
-  ], realmRec.Intrinsics['%IteratorPrototype%'], 'Map Iterator');
+  ], realmRec.Intrinsics['%Iterator.prototype%'], 'Map Iterator');
 
   realmRec.Intrinsics['%MapIteratorPrototype%'] = proto;
 }

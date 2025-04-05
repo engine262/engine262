@@ -245,7 +245,7 @@ export function CreateListIteratorRecord(list: Iterable<Value>): IteratorRecord 
     }
     return NormalCompletion(Value.undefined);
   };
-  const iterator = CreateIteratorFromClosure(closure, undefined, surroundingAgent.intrinsic('%IteratorPrototype%'));
+  const iterator = CreateIteratorFromClosure(closure, undefined, surroundingAgent.intrinsic('%Iterator.prototype%'));
   return {
     Iterator: iterator,
     NextMethod: surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype.next%'),

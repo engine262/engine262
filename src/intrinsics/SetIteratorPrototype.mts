@@ -69,7 +69,7 @@ function* SetIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionCal
 export function bootstrapSetIteratorPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['next', SetIteratorPrototype_next, 0],
-  ], realmRec.Intrinsics['%IteratorPrototype%'], 'Set Iterator');
+  ], realmRec.Intrinsics['%Iterator.prototype%'], 'Set Iterator');
 
   realmRec.Intrinsics['%SetIteratorPrototype%'] = proto;
 }
