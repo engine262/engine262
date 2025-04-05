@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { globbySync } from 'globby';
 import {
-  pass, fail, skip, incr_total, startTestPrinter,
+  pass, fail, skip, incr_total,
 } from '../base.mts';
 import {
   Agent,
@@ -13,7 +13,6 @@ import {
   inspect,
 } from '#self';
 
-startTestPrinter();
 const BASE_DIR = path.resolve(import.meta.dirname, 'JSONTestSuite');
 
 const agent = new Agent();

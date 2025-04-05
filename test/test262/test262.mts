@@ -23,13 +23,6 @@ const SLOW_LIST = path.resolve(import.meta.dirname, 'slowlist');
 let mayExit = false;
 const workerCanHoldTasks = 4;
 
-const disabledFeatures = new Set<string>();
-readList(FEATURES).forEach((f) => {
-  if (f.startsWith('-')) {
-    disabledFeatures.add(f.slice(1));
-  }
-});
-
 // Read everything in argv after node and this file.
 const ARGV = util.parseArgs({
   args: process.argv.slice(2),
@@ -38,13 +31,23 @@ const ARGV = util.parseArgs({
   strict: true,
   options: {
     'help': { type: 'boolean', short: 'h' },
+    'feature': { type: 'string' },
+    'list': { type: 'boolean' },
     'update-slow-tests': { type: 'string' },
     'update-failed-tests': { type: 'boolean' },
     'run-slow-tests': { type: 'boolean' },
     'run-failed-only': { type: 'boolean' },
-    'no-print-found-list': { type: 'boolean' },
   },
 });
+
+const disabledFeatures = new Set<string>();
+readList(FEATURES).forEach((f) => {
+  if (f.startsWith('-')) {
+    disabledFeatures.add(f.slice(1));
+  }
+});
+disabledFeatures.delete(ARGV.values.feature!);
+
 if (ARGV.values.help) {
   // eslint-disable-next-line prefer-template
   const usage = `
@@ -68,6 +71,10 @@ if (ARGV.values.help) {
         If empty, it defaults to a reasonable value based on CPU count.
 
     Flags:
+    --feature [feature]
+        Only run tests that has the specified feature.
+    --list
+        List all files found.
     --run-slow-tests
         Run slow tests that are listed in the slowlist file.
     --run-failed-only
@@ -76,8 +83,6 @@ if (ARGV.values.help) {
         Append tests that take longer than <number> seconds to the slowlist.
     --update-failed-tests
         Append failed tests to the skiplist.
-    --no-print-found-list
-        Do not print the list of found files after the test run.
 
     Files:
     features
@@ -154,6 +159,15 @@ function distributeTest() {
     }
     if (!pendingTasks.length) {
       if (mayExit && pendingWork.every((work) => work === 0)) {
+        if (ARGV.values.list) {
+          process.stdout.write('\n');
+          process.stdout.clearLine(0);
+          process.stdout.write(`${postRunShowFiles.length} tests found:\n`);
+          for (const file of postRunShowFiles) {
+            process.stdout.clearLine(0);
+            process.stdout.write(`  ${file}\n`);
+          }
+        }
         process.exit(0);
       }
       return;
@@ -179,13 +193,20 @@ for await (const file of files) {
     continue;
   }
 
-  if (ARGV.positionals.length && !ARGV.values['no-print-found-list']) {
+  if ((ARGV.positionals.length || ARGV.values.feature) && ARGV.values.list) {
     postRunShowFiles.push(path.relative(process.cwd(), file));
   }
   visited.add(file);
   promises.push(fs.promises.readFile(file, 'utf8').then((contents) => {
     const frontmatterYaml = contents.match(/\/\*---(.*?)---\*\//s)?.[1];
     const attrs: any = frontmatterYaml ? YAML.load(frontmatterYaml) : {};
+
+    if (ARGV.values.feature) {
+      if (!attrs.features || !attrs.features.includes(ARGV.values.feature)) {
+        postRunShowFiles.splice(postRunShowFiles.indexOf(path.relative(process.cwd(), file)), 1);
+        return;
+      }
+    }
 
     attrs.flags = (attrs.flags || []).reduce((acc: any, c: any) => {
       acc[c] = true;
@@ -223,6 +244,7 @@ if (ARGV.positionals.length && !promises.length) {
 
 await Promise.all(promises);
 mayExit = true;
+distributeTest();
 
 async function readListPaths(file: string) {
   const list = readList(file);
