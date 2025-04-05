@@ -11,7 +11,7 @@ import type { Value, ValueEvaluator } from '#self';
 export function* Evaluate_CommaOperator({ ExpressionList }: ParseNode.CommaOperator): ValueEvaluator {
   let result!: Value;
   for (const Expression of ExpressionList) {
-    const lref = yield* Evaluate(Expression);
+    const lref = Q(yield* Evaluate(Expression));
     result = Q(yield* GetValue(lref));
   }
   return result;

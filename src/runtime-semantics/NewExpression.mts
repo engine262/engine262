@@ -16,7 +16,7 @@ function* EvaluateNew(constructExpr: ParseNode.LeftHandSideExpression, args: und
   // 2. Assert: arguments is either empty or an Arguments.
   Assert(args === undefined || Array.isArray(args));
   // 3. Let ref be the result of evaluating constructExpr.
-  const ref = yield* Evaluate(constructExpr);
+  const ref = Q(yield* Evaluate(constructExpr));
   // 4. Let constructor be ? GetValue(ref).
   const constructor = Q(yield* GetValue(ref));
   let argList;

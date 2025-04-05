@@ -11,7 +11,7 @@ import {
   type DestructuringParseNode,
   type FunctionDeclaration,
 } from '../static-semantics/all.mts';
-import { Evaluate } from '../evaluator.mts';
+import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
 import { OutOfRange } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
 import {
@@ -136,7 +136,7 @@ export function refineLeftHandSideExpression(node: ParseNode.ArrayLiteral | Pars
 //     LeftHandSideExpression `??=` AssignmentExpression
 export function* Evaluate_AssignmentExpression({
   LeftHandSideExpression, AssignmentOperator, AssignmentExpression,
-}: ParseNode.AssignmentExpression) {
+}: ParseNode.AssignmentExpression): ValueEvaluator {
   if (AssignmentOperator === '=') {
     // 1. If LeftHandSideExpression is neither an ObjectLiteral nor an ArrayLiteral, then
     if (LeftHandSideExpression.type !== 'ObjectLiteral' && LeftHandSideExpression.type !== 'ArrayLiteral') {
@@ -148,10 +148,10 @@ export function* Evaluate_AssignmentExpression({
       let rval;
       if (IsAnonymousFunctionDefinition(AssignmentExpression) && IsIdentifierRef(LeftHandSideExpression)) {
         // i. Let rval be NamedEvaluation of AssignmentExpression with argument GetReferencedName(lref).
-        rval = yield* NamedEvaluation(AssignmentExpression as FunctionDeclaration, (lref as ReferenceRecord).ReferencedName as JSStringValue);
+        rval = Q(yield* NamedEvaluation(AssignmentExpression as FunctionDeclaration, (lref as ReferenceRecord).ReferencedName as JSStringValue));
       } else { // d. Else,
         // i. Let rref be the result of evaluating AssignmentExpression.
-        const rref = yield* Evaluate(AssignmentExpression);
+        const rref = Q(yield* Evaluate(AssignmentExpression));
         // ii. Let rval be ? GetValue(rref).
         rval = Q(yield* GetValue(rref));
       }
@@ -163,7 +163,7 @@ export function* Evaluate_AssignmentExpression({
     // 2. Let assignmentPattern be the AssignmentPattern that is covered by LeftHandSideExpression.
     const assignmentPattern = refineLeftHandSideExpression(LeftHandSideExpression);
     // 3. Let rref be the result of evaluating AssignmentExpression.
-    const rref = yield* Evaluate(AssignmentExpression);
+    const rref = Q(yield* Evaluate(AssignmentExpression));
     // 3. Let rval be ? GetValue(rref).
     const rval = Q(yield* GetValue(rref));
     // 4. Perform ? DestructuringAssignmentEvaluation of assignmentPattern using rval as the argument.
@@ -185,10 +185,10 @@ export function* Evaluate_AssignmentExpression({
     // 5. If IsAnonymousFunctionDefinition(AssignmentExpression) is true and IsIdentifierRef of LeftHandSideExpression is true, then
     if (IsAnonymousFunctionDefinition(AssignmentExpression) && IsIdentifierRef(LeftHandSideExpression)) {
       // a. Let rval be NamedEvaluation of AssignmentExpression with argument GetReferencedName(lref).
-      rval = yield* NamedEvaluation(AssignmentExpression as FunctionDeclaration, (lref as ReferenceRecord).ReferencedName as JSStringValue);
+      rval = Q(yield* NamedEvaluation(AssignmentExpression as FunctionDeclaration, (lref as ReferenceRecord).ReferencedName as JSStringValue));
     } else { // 6. Else,
       // a. Let rref be the result of evaluating AssignmentExpression.
-      const rref = yield* Evaluate(AssignmentExpression);
+      const rref = Q(yield* Evaluate(AssignmentExpression));
       // b. Let rval be ? GetValue(rref).
       rval = Q(yield* GetValue(rref));
     }
@@ -211,10 +211,10 @@ export function* Evaluate_AssignmentExpression({
     // 5. If IsAnonymousFunctionDefinition(AssignmentExpression) is true and IsIdentifierRef of LeftHandSideExpression is true, then
     if (IsAnonymousFunctionDefinition(AssignmentExpression) && IsIdentifierRef(LeftHandSideExpression)) {
       // a. Let rval be NamedEvaluation of AssignmentExpression with argument GetReferencedName(lref).
-      rval = yield* NamedEvaluation(AssignmentExpression as FunctionDeclaration, (lref as ReferenceRecord).ReferencedName as JSStringValue);
+      rval = Q(yield* NamedEvaluation(AssignmentExpression as FunctionDeclaration, (lref as ReferenceRecord).ReferencedName as JSStringValue));
     } else { // 6. Else,
       // a. Let rref be the result of evaluating AssignmentExpression.
-      const rref = yield* Evaluate(AssignmentExpression);
+      const rref = Q(yield* Evaluate(AssignmentExpression));
       // b. Let rval be ? GetValue(rref).
       rval = Q(yield* GetValue(rref));
     }
@@ -235,10 +235,10 @@ export function* Evaluate_AssignmentExpression({
     // 4. If IsAnonymousFunctionDefinition(AssignmentExpression) is true and IsIdentifierRef of LeftHandSideExpression is true, then
     if (IsAnonymousFunctionDefinition(AssignmentExpression) && IsIdentifierRef(LeftHandSideExpression)) {
       // a. Let rval be NamedEvaluation of AssignmentExpression with argument GetReferencedName(lref).
-      rval = yield* NamedEvaluation(AssignmentExpression as FunctionDeclaration, (lref as ReferenceRecord).ReferencedName as JSStringValue);
+      rval = Q(yield* NamedEvaluation(AssignmentExpression as FunctionDeclaration, (lref as ReferenceRecord).ReferencedName as JSStringValue));
     } else { // 5. Else,
       // a. Let rref be the result of evaluating AssignmentExpression.
-      const rref = yield* Evaluate(AssignmentExpression);
+      const rref = Q(yield* Evaluate(AssignmentExpression));
       // b. Let rval be ? GetValue(rref).
       rval = Q(yield* GetValue(rref));
     }
@@ -252,7 +252,7 @@ export function* Evaluate_AssignmentExpression({
     // 2. Let lval be ? GetValue(lref).
     const lval = Q(yield* GetValue(lref));
     // 3. Let rref be the result of evaluating AssignmentExpression.
-    const rref = yield* Evaluate(AssignmentExpression);
+    const rref = Q(yield* Evaluate(AssignmentExpression));
     // 4. Let rval be ? GetValue(rref).
     const rval = Q(yield* GetValue(rref));
     // 5. Let assignmentOpText be the source text matched by AssignmentOperator.
@@ -273,7 +273,7 @@ export function* Evaluate_AssignmentExpression({
       '|=': '|',
     } as const)[assignmentOpText];
     // 7. Let r be ApplyStringOrNumericBinaryOperator(lval, opText, rval).
-    const r = yield* ApplyStringOrNumericBinaryOperator(lval, opText, rval);
+    const r = Q(yield* ApplyStringOrNumericBinaryOperator(lval, opText, rval));
     // 8. Perform ? PutValue(lref, r).
     Q(yield* PutValue(lref, r));
     // 9. Return r.

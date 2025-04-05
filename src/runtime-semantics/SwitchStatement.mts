@@ -25,7 +25,7 @@ function* CaseClauseIsSelected(C: ParseNode.CaseClause, input: Value): ValueEval
   // 1. Assert: C is an instance of the production  CaseClause : `case` Expression `:` StatementList?.
   Assert(C.type === 'CaseClause');
   // 2. Let exprRef be the result of evaluating the Expression of C.
-  const exprRef = yield* Evaluate(C.Expression);
+  const exprRef = Q(yield* Evaluate(C.Expression));
   // 3. Let clauseSelector be ? GetValue(exprRef).
   const clauseSelector = Q(yield* GetValue(exprRef));
   // 4. Return the result of performing Strict Equality Comparison input === clauseSelector.
@@ -185,7 +185,7 @@ function* CaseBlockEvaluation({ CaseClauses_a, DefaultClause, CaseClauses_b }: P
 //     `switch` `(` Expression `)` CaseBlock
 export function* Evaluate_SwitchStatement({ Expression, CaseBlock }: ParseNode.SwitchStatement): StatementEvaluator {
   // 1. Let exprRef be the result of evaluating Expression.
-  const exprRef = yield* Evaluate(Expression);
+  const exprRef = Q(yield* Evaluate(Expression));
   // 2. Let switchValue be ? GetValue(exprRef).
   const switchValue = Q(yield* GetValue(exprRef));
   // 3. Let oldEnv be the running execution context's LexicalEnvironment.

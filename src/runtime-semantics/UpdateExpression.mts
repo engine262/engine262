@@ -24,7 +24,7 @@ export function* Evaluate_UpdateExpression({ LeftHandSideExpression, operator, U
     // https://tc39.es/ecma262/#sec-postfix-increment-operator-runtime-semantics-evaluation
     case operator === '++' && !!LeftHandSideExpression: {
       // 1. Let lhs be the result of evaluating LeftHandSideExpression.
-      const lhs = yield* Evaluate(LeftHandSideExpression);
+      const lhs = Q(yield* Evaluate(LeftHandSideExpression));
       // 2. Let oldValue be ? ToNumeric(? GetValue(lhs)).
       const oldValue = Q(yield* ToNumeric(Q(yield* GetValue(lhs))));
       // 3. If oldValue is a Number, then
@@ -49,7 +49,7 @@ export function* Evaluate_UpdateExpression({ LeftHandSideExpression, operator, U
     // https://tc39.es/ecma262/#sec-postfix-decrement-operator-runtime-semantics-evaluation
     case operator === '--' && !!LeftHandSideExpression: {
       // 1. Let lhs be the result of evaluating LeftHandSideExpression.
-      const lhs = yield* Evaluate(LeftHandSideExpression);
+      const lhs = Q(yield* Evaluate(LeftHandSideExpression));
       // 2. Let oldValue be ? ToNumeric(? GetValue(lhs)).
       const oldValue = Q(yield* ToNumeric(Q(yield* GetValue(lhs))));
       // 3. If oldValue is a Number, then
@@ -74,7 +74,7 @@ export function* Evaluate_UpdateExpression({ LeftHandSideExpression, operator, U
     // https://tc39.es/ecma262/#sec-prefix-increment-operator-runtime-semantics-evaluation
     case operator === '++' && !!UnaryExpression: {
       // 1. Let expr be the result of evaluating UnaryExpression.
-      const expr = yield* Evaluate(UnaryExpression);
+      const expr = Q(yield* Evaluate(UnaryExpression));
       // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
       const oldValue = Q(yield* ToNumeric(Q(yield* GetValue(expr))));
       // 3. If oldValue is a Number, then
@@ -99,7 +99,7 @@ export function* Evaluate_UpdateExpression({ LeftHandSideExpression, operator, U
     // https://tc39.es/ecma262/#sec-prefix-decrement-operator-runtime-semantics-evaluation
     case operator === '--' && !!UnaryExpression: {
       // 1. Let expr be the result of evaluating UnaryExpression.
-      const expr = yield* Evaluate(UnaryExpression);
+      const expr = Q(yield* Evaluate(UnaryExpression));
       // 2. Let oldValue be ? ToNumeric(? GetValue(expr)).
       const oldValue = Q(yield* ToNumeric(Q(yield* GetValue(expr))));
       // 3. If oldValue is a Number, then

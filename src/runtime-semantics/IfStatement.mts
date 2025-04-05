@@ -19,7 +19,7 @@ import type { ParseNode } from '../parser/ParseNode.mts';
 //   `if` `(` Expression `)` Statement
 export function* Evaluate_IfStatement({ Expression, Statement_a, Statement_b }: ParseNode.IfStatement) {
   // 1. Let exprRef be the result of evaluating Expression.
-  const exprRef = yield* Evaluate(Expression);
+  const exprRef = Q(yield* Evaluate(Expression));
   // 2. Let exprValue be ! ToBoolean(? GetValue(exprRef)).
   const exprValue = ToBoolean(Q(yield* GetValue(exprRef)));
   if (Statement_b) {

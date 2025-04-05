@@ -47,7 +47,7 @@ export function* EvaluateBody_FunctionBody({ FunctionStatementList }: ParseNode.
 // ExpressionBody : AssignmentExpression
 export function* Evaluate_ExpressionBody({ AssignmentExpression }: ParseNode.ExpressionBody): StatementEvaluator {
   // 1. Let exprRef be the result of evaluating AssignmentExpression.
-  const exprRef = yield* Evaluate(AssignmentExpression);
+  const exprRef = Q(yield* Evaluate(AssignmentExpression));
   // 2. Let exprValue be ? GetValue(exprRef).
   const exprValue = Q(yield* GetValue(exprRef));
   // 3. Return Completion { [[Type]]: return, [[Value]]: exprValue, [[Target]]: empty }.
@@ -150,7 +150,7 @@ export function* EvaluateBody_AssignmentExpression(AssignmentExpression: ParseNo
     value = yield* NamedEvaluation(AssignmentExpression as FunctionDeclaration, functionObject.ClassFieldInitializerName);
   } else { // 4. Else,
     // a. Let rhs be the result of evaluating AssignmentExpression.
-    const rhs = yield* Evaluate(AssignmentExpression);
+    const rhs = Q(yield* Evaluate(AssignmentExpression));
     // b. Let value be ? GetValue(rhs).
     value = Q(yield* GetValue(rhs));
   }

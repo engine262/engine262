@@ -51,7 +51,7 @@ function* ArrayAccumulation(ElementList: ParseNode.ElementList, array: ObjectVal
 // SpreadElement : `...` AssignmentExpression
 function* ArrayAccumulation_SpreadElement({ AssignmentExpression }: ParseNode.SpreadElement, array: ObjectValue, nextIndex: number): PlainEvaluator<number> {
   // 1. Let spreadRef be the result of evaluating AssignmentExpression.
-  const spreadRef = yield* Evaluate(AssignmentExpression);
+  const spreadRef = Q(yield* Evaluate(AssignmentExpression));
   // 2. Let spreadObj be ? GetValue(spreadRef).
   const spreadObj = Q(yield* GetValue(spreadRef));
   // 3. Let iteratorRecord be ? GetIterator(spreadObj).
@@ -74,7 +74,7 @@ function* ArrayAccumulation_SpreadElement({ AssignmentExpression }: ParseNode.Sp
 
 function* ArrayAccumulation_AssignmentExpression(AssignmentExpression: ParseNode.AssignmentExpressionOrHigher, array: ObjectValue, nextIndex: number): PlainEvaluator<number> {
   // 2. Let initResult be the result of evaluating AssignmentExpression.
-  const initResult = yield* Evaluate(AssignmentExpression);
+  const initResult = Q(yield* Evaluate(AssignmentExpression));
   // 3. Let initValue be ? GetValue(initResult).
   const initValue = Q(yield* GetValue(initResult));
   // 4. Let created be ! CreateDataPropertyOrThrow(array, ! ToString(𝔽(nextIndex)), initValue).

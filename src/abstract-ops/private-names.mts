@@ -18,7 +18,7 @@ export function PrivateElementFind(P: PrivateName, O: ObjectValue) {
 }
 
 /** https://tc39.es/ecma262/#sec-privateget */
-export function* PrivateGet(P: PrivateName, O: ObjectValue) {
+export function* PrivateGet(O: ObjectValue, P: PrivateName) {
   // 1. Let entry be ! PrivateElementFind(P, O).
   const entry = X(PrivateElementFind(P, O));
   // 2. If entry is empty, throw a TypeError exception.
@@ -42,7 +42,7 @@ export function* PrivateGet(P: PrivateName, O: ObjectValue) {
   return Q(yield* Call(getter, O));
 }
 
-export function* PrivateSet(P: PrivateName, O: ObjectValue, value: Value) {
+export function* PrivateSet(O: ObjectValue, P: PrivateName, value: Value) {
   // 1. Let entry be ! PrivateElementFind(P, O).
   const entry = X(PrivateElementFind(P, O));
   // 2. If entry is empty, throw a TypeError exception.

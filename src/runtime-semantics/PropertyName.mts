@@ -52,7 +52,7 @@ export function* Evaluate_PropertyName(PropertyName: ParseNode.PropertyNameLike 
     }
     default: {
       // 1. Let exprValue be the result of evaluating AssignmentExpression.
-      const exprValue = yield* Evaluate(PropertyName.ComputedPropertyName);
+      const exprValue = Q(yield* Evaluate(PropertyName.ComputedPropertyName));
       // 2. Let propName be ? GetValue(exprValue).
       const propName = Q(yield* GetValue(exprValue));
       // 3. Return ? ToPropertyKey(propName).

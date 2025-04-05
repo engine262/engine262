@@ -176,7 +176,7 @@ function* IteratorBindingInitialization_BindingPattern({ BindingPattern, Initial
   // 3. If Initializer is present and v is undefined, then
   if (Initializer && v instanceof UndefinedValue) {
     // a. Let defaultValue be the result of evaluating Initializer.
-    const defaultValue = yield* Evaluate(Initializer);
+    const defaultValue = Q(yield* Evaluate(Initializer));
     // b. Set v to ? GetValue(defaultValue).
     v = Q(yield* GetValue(defaultValue));
   }

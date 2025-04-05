@@ -75,7 +75,7 @@ export function* Evaluate_ExportDeclaration(ExportDeclaration: ParseNode.ExportD
       value = yield* NamedEvaluation(AssignmentExpression as FunctionDeclaration, Value('default'));
     } else { // 2. Else,
       // a. Let rhs be the result of evaluating AssignmentExpression.
-      const rhs = yield* Evaluate(AssignmentExpression);
+      const rhs = Q(yield* Evaluate(AssignmentExpression));
       // a. Let value be ? GetValue(rhs).
       value = Q(yield* GetValue(rhs));
     }

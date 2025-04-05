@@ -223,7 +223,7 @@ function* LabelledEvaluation_IterationStatement_DoWhileStatement({ Statement, Ex
       V = stmtResult.Value;
     }
     // d. Let exprRef be the result of evaluating Expression.
-    const exprRef = yield* Evaluate(Expression);
+    const exprRef = Q(yield* Evaluate(Expression));
     // e. Let exprValue be ? GetValue(exprRef).
     const exprValue = Q(yield* GetValue(exprRef));
     // f. If ! ToBoolean(exprValue) is false, return NormalCompletion(V).
@@ -243,7 +243,7 @@ function* LabelledEvaluation_IterationStatement_WhileStatement({ Expression, Sta
   // 2. Repeat,
   while (true) {
     // a. Let exprRef be the result of evaluating Expression.
-    const exprRef = yield* Evaluate(Expression);
+    const exprRef = Q(yield* Evaluate(Expression));
     // b. Let exprValue be ? GetValue(exprRef).
     const exprValue = Q(yield* GetValue(exprRef));
     // c. If ! ToBoolean(exprValue) is false, return NormalCompletion(V).
@@ -332,7 +332,7 @@ function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement: Parse
       // 1. If the first Expression is present, then
       if (Expression_a) {
         // a. Let exprRef be the result of evaluating the first Expression.
-        const exprRef = yield* Evaluate(Expression_a);
+        const exprRef = Q(yield* Evaluate(Expression_a));
         // b. Perform ? GetValue(exprRef).
         Q(yield* GetValue(exprRef));
       }
@@ -461,7 +461,7 @@ function* ForBodyEvaluation(test: ParseNode.Expression | undefined, increment: P
     // a. If test is not [empty], then
     if (test) {
       // i. Let testRef be the result of evaluating test.
-      const testRef = yield* Evaluate(test);
+      const testRef = Q(yield* Evaluate(test));
       // ii. Let testValue be ? GetValue(testRef).
       const testValue = Q(yield* GetValue(testRef));
       // iii. If ! ToBoolean(testValue) is false, return NormalCompletion(V).
@@ -484,7 +484,7 @@ function* ForBodyEvaluation(test: ParseNode.Expression | undefined, increment: P
     // f. If increment is not [empty], then
     if (increment) {
       // i. Let incRef be the result of evaluating increment.
-      const incRef = yield* Evaluate(increment);
+      const incRef = Q(yield* Evaluate(increment));
       // ii. Perform ? GetValue(incRef).
       Q(yield* GetValue(incRef));
     }
@@ -537,7 +537,7 @@ function* ForInOfHeadEvaluation(uninitializedBoundNames: readonly JSStringValue[
     surroundingAgent.runningExecutionContext.LexicalEnvironment = newEnv;
   }
   // 3. Let exprRef be the result of evaluating expr.
-  const exprRef = yield* Evaluate(expr);
+  const exprRef = Q(yield* Evaluate(expr));
   // 4. Set the running execution context's LexicalEnvironment to oldEnv.
   surroundingAgent.runningExecutionContext.LexicalEnvironment = oldEnv;
   // 5. Let exprValue be ? GetValue(exprRef).
@@ -655,9 +655,9 @@ function* ForInOfBodyEvaluation(lhs: ParseNode, stmt: ParseNode.Statement, itera
         status = lhsRef;
       } else if (lhsKind === 'lexicalBinding') { // ii. Else is lhsKind is lexicalBinding, then
         // 1. Let status be InitializeReferencedBinding(lhsRef, nextValue).
-        status = yield* InitializeReferencedBinding(lhsRef as ReferenceRecord, nextValue);
+        status = yield* InitializeReferencedBinding(Q(lhsRef) as ReferenceRecord, nextValue);
       } else { // iii. Else,
-        status = yield* PutValue(lhsRef as ReferenceRecord, nextValue);
+        status = yield* PutValue(Q(lhsRef) as ReferenceRecord, nextValue);
       }
     } else { // j. Else,
       // i. If lhsKind is assignment, then

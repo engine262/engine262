@@ -15,7 +15,7 @@ import type { PlainEvaluator, ReferenceRecord } from '#self';
 //   CallExpression : CallExpression `[` Expression `]`
 function* Evaluate_MemberExpression_Expression({ strict, MemberExpression, Expression }: ParseNode.MemberExpression): PlainEvaluator<ReferenceRecord> {
   // 1. Let baseReference be the result of evaluating |MemberExpression|.
-  const baseReference = yield* Evaluate(MemberExpression);
+  const baseReference = Q(yield* Evaluate(MemberExpression));
   // 2. Let baseValue be ? GetValue(baseReference).
   const baseValue = Q(yield* GetValue(baseReference));
   // 3. If the code matched by this |MemberExpression| is strict mode code, let strict be true; else let strict be false.
@@ -28,7 +28,7 @@ function* Evaluate_MemberExpression_Expression({ strict, MemberExpression, Expre
 //   CallExpression : CallExpression `.` IdentifierName
 function* Evaluate_MemberExpression_IdentifierName({ strict, MemberExpression, IdentifierName }: ParseNode.MemberExpression): PlainEvaluator<ReferenceRecord> {
   // 1. Let baseReference be the result of evaluating |MemberExpression|.
-  const baseReference = yield* Evaluate(MemberExpression);
+  const baseReference = Q(yield* Evaluate(MemberExpression));
   // 2. Let baseValue be ? GetValue(baseReference).
   const baseValue = Q(yield* GetValue(baseReference));
   // 3. If the code matched by this |MemberExpression| is strict mode code, let strict be true; else let strict be false.
@@ -41,7 +41,7 @@ function* Evaluate_MemberExpression_IdentifierName({ strict, MemberExpression, I
 //   CallExpression : CallExpression `.` PrivateIdentifier
 function* Evaluate_MemberExpression_PrivateIdentifier({ MemberExpression, PrivateIdentifier }: ParseNode.MemberExpression): PlainEvaluator<ReferenceRecord> {
   // 1. Let baseReference be the result of evaluating MemberExpression.
-  const baseReference = yield* Evaluate(MemberExpression);
+  const baseReference = Q(yield* Evaluate(MemberExpression));
   // 2. Let baseValue be ? GetValue(baseReference).
   const baseValue = Q(yield* GetValue(baseReference));
   // 3. Let fieldNameString be the StringValue of PrivateIdentifier.

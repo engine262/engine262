@@ -43,7 +43,7 @@ export function* Evaluate_SuperProperty({ Expression, IdentifierName, strict }: 
   const actualThis = Q(env.GetThisBinding());
   if (Expression) {
     // 3. Let propertyNameReference be the result of evaluating Expression.
-    const propertyNameReference = yield* Evaluate(Expression);
+    const propertyNameReference = Q(yield* Evaluate(Expression));
     // 4. Let propertyNameReference be the result of evaluating Expression.
     const propertyNameValue = Q(yield* GetValue(propertyNameReference));
     // 5. Let propertyNameValue be ? GetValue(propertyNameReference).

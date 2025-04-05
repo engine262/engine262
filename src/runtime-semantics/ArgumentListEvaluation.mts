@@ -106,7 +106,7 @@ function* ArgumentListEvaluation_TemplateLiteral(TemplateLiteral: ParseNode.Temp
       const siteObj = GetTemplateObject(templateLiteral);
       const restSub = [];
       for (const Expression of TemplateLiteral.ExpressionList) {
-        const subRef = yield* Evaluate(Expression);
+        const subRef = Q(yield* Evaluate(Expression));
         const subValue = Q(yield* GetValue(subRef));
         restSub.push(subValue);
       }
@@ -136,7 +136,7 @@ function* ArgumentListEvaluation_Arguments(Arguments: ParseNode.Arguments): Plai
     if (element.type === 'AssignmentRestElement') {
       const { AssignmentExpression } = element;
       // 2. Let spreadRef be the result of evaluating AssignmentExpression.
-      const spreadRef = yield* Evaluate(AssignmentExpression);
+      const spreadRef = Q(yield* Evaluate(AssignmentExpression));
       // 3. Let spreadObj be ? GetValue(spreadRef).
       const spreadObj = Q(yield* GetValue(spreadRef));
       // 4. Let iteratorRecord be ? GetIterator(spreadObj).
@@ -155,7 +155,7 @@ function* ArgumentListEvaluation_Arguments(Arguments: ParseNode.Arguments): Plai
     } else {
       const AssignmentExpression = element;
       // 2. Let ref be the result of evaluating AssignmentExpression.
-      const ref = yield* Evaluate(AssignmentExpression);
+      const ref = Q(yield* Evaluate(AssignmentExpression));
       // 3. Let arg be ? GetValue(ref).
       const arg = Q(yield* GetValue(ref));
       // 4. Append arg to the end of precedingArgs.

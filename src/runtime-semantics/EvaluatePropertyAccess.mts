@@ -11,7 +11,7 @@ import type { ParseNode } from '../parser/ParseNode.mts';
 /** https://tc39.es/ecma262/#sec-evaluate-expression-key-property-access */
 export function* EvaluatePropertyAccessWithExpressionKey(baseValue: Value, expression: ParseNode.Expression, strict: boolean): ReferenceEvaluator {
   // 1. Let propertyNameReference be the result of evaluating expression.
-  const propertyNameReference = yield* Evaluate(expression);
+  const propertyNameReference = Q(yield* Evaluate(expression));
   // 2. Let propertyNameValue be ? GetValue(propertyNameReference).
   const propertyNameValue = Q(yield* GetValue(propertyNameReference));
   // 3. Return the Reference Record { [[Base]]: bv, [[ReferencedName]]: propertyKey, [[Strict]]: strict, [[ThisValue]]: empty }.

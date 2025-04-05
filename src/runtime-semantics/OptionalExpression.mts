@@ -18,7 +18,7 @@ import {
 //     OptionalExpression OptionalChain
 export function* Evaluate_OptionalExpression({ MemberExpression, OptionalChain }: ParseNode.OptionalExpression) {
   // 1. Let baseReference be the result of evaluating MemberExpression.
-  const baseReference = yield* Evaluate(MemberExpression);
+  const baseReference = Q(yield* Evaluate(MemberExpression));
   // 2. Let baseValue be ? GetValue(baseReference).
   const baseValue = Q(yield* GetValue(baseReference));
   // 3. If baseValue is undefined or null, then
