@@ -195,7 +195,7 @@ export class InspectorContext {
       let p: NullValue | ObjectValue = object;
       while (p instanceof ObjectValue) {
         for (const key of Q(skipDebugger(p.OwnPropertyKeys()))) {
-          if (nonIndexedPropertiesOnly && !isIntegerIndex(key)) {
+          if (nonIndexedPropertiesOnly && isIntegerIndex(key)) {
             continue;
           }
           const desc = Q(skipDebugger(p.GetOwnProperty(key)));
