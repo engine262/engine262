@@ -49,7 +49,7 @@ export function bootstrapGeneratorFunctionPrototypePrototype(realmRec: Realm) {
     ['next', GeneratorProto_next, 1],
     ['return', GeneratorProto_return, 1],
     ['throw', GeneratorProto_throw, 1],
-  ], realmRec.Intrinsics['%IteratorPrototype%'], 'Generator');
+  ], realmRec.Intrinsics['%Iterator.prototype%'], 'Generator');
 
   realmRec.Intrinsics['%GeneratorFunction.prototype.prototype%'] = generatorPrototype;
 

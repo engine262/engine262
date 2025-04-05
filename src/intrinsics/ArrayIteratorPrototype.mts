@@ -17,7 +17,7 @@ function* ArrayIteratorPrototype_next(_args: Arguments, { thisValue }: FunctionC
 export function bootstrapArrayIteratorPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['next', ArrayIteratorPrototype_next, 0],
-  ], realmRec.Intrinsics['%IteratorPrototype%'], 'Array Iterator');
+  ], realmRec.Intrinsics['%Iterator.prototype%'], 'Array Iterator');
 
   realmRec.Intrinsics['%ArrayIteratorPrototype%'] = proto;
 }
