@@ -1,3 +1,7 @@
+import { __ts_cast__ } from '../helpers.mts';
+import {
+  type IteratorObject,
+} from '../abstract-ops/all.mts';
 import { bootstrapPrototype } from './bootstrap.mts';
 import {
   Assert,
@@ -23,7 +27,8 @@ function* WrapForValidIteratorPrototype_next(_args: Arguments, { thisValue }: Fu
   // 2. Perform ? RequireInternalSlot(O, [[Iterated]]).
   Q(RequireInternalSlot(O, 'Iterated'));
   // 3. Let iteratorRecord be O.[[Iterated]].
-  const iteratorRecord: IteratorRecord = (O as unknown as Record<'Iterated', IteratorRecord>).Iterated;
+  __ts_cast__<IteratorObject>(O);
+  const iteratorRecord: IteratorRecord = O.Iterated;
   // 4. Return ? Call(iteratorRecord.[[NextMethod]], iteratorRecord.[[Iterator]]).
   return Q(yield* Call(iteratorRecord.NextMethod, iteratorRecord.Iterator));
 }
@@ -35,7 +40,8 @@ function* WrapForValidIteratorPrototype_return(_args: Arguments, { thisValue }: 
   // 2. Perform ? RequireInternalSlot(O, [[Iterated]]).
   Q(RequireInternalSlot(O, 'Iterated'));
   // 3. Let iterator be O.[[Iterated]].[[Iterator]].
-  const iteratorRecord: IteratorRecord = (O as unknown as Record<'Iterated', IteratorRecord>).Iterated;
+  __ts_cast__<IteratorObject>(O);
+  const iteratorRecord: IteratorRecord = O.Iterated;
   const iterator = iteratorRecord.Iterator;
   // 4. Assert: iterator is an Object.
   Assert(iterator instanceof ObjectValue);

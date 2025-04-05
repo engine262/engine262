@@ -70,10 +70,10 @@ function* IteratorPrototype_drop([limit]: Arguments, { thisValue }: FunctionCall
   // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
   let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
   // 4. Let numLimit be Completion(ToNumber(limit)).
-  const numLimit: ValueCompletion<NumberValue> = yield* ToNumber(limit);
+  const numLimit: ValueCompletion<NumberValue> = EnsureCompletion(yield* ToNumber(limit));
   // 5. IfAbruptCloseIterator(numLimit, iterated).
   IfAbruptCloseIterator(numLimit, iterated);
-  __ts_cast__<Value>(numLimit);
+  __ts_cast__<NumberValue>(numLimit);
   // 6. If numLimit is NaN, then
   if (numLimit.isNaN()) {
     // a. Let error be ThrowCompletion(a newly created RangeError object).
@@ -654,8 +654,8 @@ function* IteratorPrototype_toArray(_args: Arguments, { thisValue }: FunctionCal
   if (!(O instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
   }
-  // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
-  const iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
+  // 3. Let iterated be ? GetIteratorDirect(O).
+  const iterated: IteratorRecord = Q(yield* GetIteratorDirect(O));
   // 4. Let items be a new empty List.
   const items: Value[] = [];
   // 5. Repeat,
@@ -699,10 +699,10 @@ export function bootstrapIteratorPrototype(realmRec: Realm) {
     ['flatMap', IteratorPrototype_flatMap, 1],
     ['forEach', IteratorPrototype_forEach, 1],
     ['map', IteratorPrototype_map, 1],
-    ['reduce', IteratorPrototype_reduce, 2],
+    ['reduce', IteratorPrototype_reduce, 1],
     ['some', IteratorPrototype_some, 1],
     ['take', IteratorPrototype_take, 1],
-    ['toArray', IteratorPrototype_toArray, 1],
+    ['toArray', IteratorPrototype_toArray, 0],
     [wellKnownSymbols.iterator, IteratorPrototype_iterator, 0],
     [wellKnownSymbols.toStringTag, [IteratorPrototype_toStringTagGetter, IteratorPrototype_toStringTagSetter]],
   ], realmRec.Intrinsics['%Object.prototype%']);

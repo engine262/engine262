@@ -4,8 +4,7 @@ import {
   OrdinaryHasInstance,
   OrdinaryObjectCreate,
   type BuiltinFunctionObject,
-  type IteratorRecord,
-  type OrdinaryObject,
+  type IteratorObject,
   type Realm,
 } from '../abstract-ops/all.mts';
 import { Q, type ValueEvaluator } from '../completion.mts';
@@ -19,9 +18,6 @@ import {
 } from '../value.mts';
 import { bootstrapConstructor } from './bootstrap.mts';
 
-interface IteratorObject extends OrdinaryObject {
-  Iterated: IteratorRecord;
-}
 
 /** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-iterator-constructor */
 function* IteratorConstructor(
