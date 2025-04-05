@@ -42,7 +42,7 @@ import {
 import { __ts_cast__, skipDebugger } from '../helpers.mts';
 import type { PlainEvaluator } from '../evaluator.mts';
 import { assignProps } from './bootstrap.mts';
-import { ArrayProto_sortBody, bootstrapArrayPrototypeShared } from './ArrayPrototypeShared.mts';
+import { ArrayProto_sortBody, bootstrapArrayPrototypeShared, SortIndexedProperties } from './ArrayPrototypeShared.mts';
 
 /** https://tc39.es/ecma262/#sec-array.prototype.concat */
 function* ArrayProto_concat(args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
@@ -409,6 +409,26 @@ function* ArrayProto_sort([comparefn = Value.undefined]: Arguments, { thisValue 
   return yield* ArrayProto_sortBody(obj, len, (x, y) => CompareArrayElements(x, y, comparefn));
 }
 
+/** https://tc39.es/ecma262/#sec-array.prototype.tosorted */
+function* ArrayProto_toSorted([comparator = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  if (comparator !== Value.undefined && !IsCallable(comparator)) {
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', comparator);
+  }
+  const O = Q(ToObject(thisValue));
+  const len = Q(yield* LengthOfArrayLike(O));
+  const A = Q(ArrayCreate(len));
+  const SortCompare = function* SortCompare(x: Value, y: Value) {
+    return yield* CompareArrayElements(x, y, comparator);
+  };
+  const sortedList = Q(yield* SortIndexedProperties(O, len, SortCompare, 'read-through-holes'));
+  let j = 0;
+  while (j < len) {
+    X(CreateDataPropertyOrThrow(A, X(ToString(F(j))), sortedList[j]));
+    j += 1;
+  }
+  return A;
+}
+
 /** https://tc39.es/ecma262/#sec-array.prototype.splice */
 function* ArrayProto_splice(args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const [start = Value.undefined, deleteCount = Value.undefined, ...items] = args;
@@ -494,6 +514,89 @@ function* ArrayProto_splice(args: Arguments, { thisValue }: FunctionCallContext)
   return A;
 }
 
+/** https://tc39.es/ecma262/#sec-array.prototype.tospliced */
+function* ArrayProto_toSpliced(args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const [start = Value.undefined, skipCount = Value.undefined, ...items] = args;
+  const O = Q(ToObject(thisValue));
+  const len = Q(yield* LengthOfArrayLike(O));
+  const relativeStart = Q(yield* ToIntegerOrInfinity(start));
+  let actualStart;
+  if (relativeStart === -Infinity) {
+    actualStart = 0;
+  } else if (relativeStart < 0) {
+    actualStart = Math.max(len + relativeStart, 0);
+  } else {
+    actualStart = Math.min(relativeStart, len);
+  }
+  const insertCount = items.length;
+  let actualSkipCount;
+  if (args[0] === undefined) {
+    actualSkipCount = 0;
+  } else if (args[1] === undefined) {
+    actualSkipCount = len - actualStart;
+  } else {
+    const sc = Q(yield* ToIntegerOrInfinity(skipCount));
+    actualSkipCount = Math.min(Math.max(sc, 0), len - actualStart);
+  }
+  const newLen = len - actualSkipCount + insertCount;
+  if (newLen > (2 ** 53) - 1) {
+    return surroundingAgent.Throw('TypeError', 'ArrayPastSafeLength');
+  }
+  const A = Q(ArrayCreate(newLen));
+  let i = 0;
+  let r = actualStart + actualSkipCount;
+  while (i < actualStart) {
+    const Pi = X(ToString(F(i)));
+    const iValue = Q(yield* Get(O, Pi));
+    X(CreateDataPropertyOrThrow(A, Pi, iValue));
+    i += 1;
+  }
+  for (const E of items) {
+    const Pi = X(ToString(F(i)));
+    X(CreateDataPropertyOrThrow(A, Pi, E));
+    i += 1;
+  }
+  while (i < newLen) {
+    const Pi = X(ToString(F(i)));
+    const from = X(ToString(F(r)));
+    const fromValue = Q(yield* Get(O, from));
+    X(CreateDataPropertyOrThrow(A, Pi, fromValue));
+    i += 1;
+    r += 1;
+  }
+  return A;
+}
+
+/** https://tc39.es/ecma262/#sec-array.prototype.with */
+function* ArrayProto_with([index = Value.undefined, value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const O = Q(ToObject(thisValue));
+  const len = Q(yield* LengthOfArrayLike(O));
+  const relativeIndex = Q(yield* ToIntegerOrInfinity(index));
+  let actualIndex;
+  if (relativeIndex >= 0) {
+    actualIndex = relativeIndex;
+  } else {
+    actualIndex = len + relativeIndex;
+  }
+  if (actualIndex >= len || actualIndex < 0) {
+    return surroundingAgent.Throw('RangeError', 'OutOfRange', index);
+  }
+  const A = Q(ArrayCreate(len));
+  let k = 0;
+  while (k < len) {
+    const Pk = X(ToString(F(k)));
+    let fromValue;
+    if (k === actualIndex) {
+      fromValue = value;
+    } else {
+      fromValue = Q(yield* Get(O, Pk));
+    }
+    X(CreateDataPropertyOrThrow(A, Pk, fromValue));
+    k += 1;
+  }
+  return A;
+}
+
 /** https://tc39.es/ecma262/#sec-array.prototype.tostring */
 function* ArrayProto_toString(_a: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const array = Q(ToObject(thisValue));
@@ -570,6 +673,22 @@ function* ArrayProto_at([index = Value.undefined]: Arguments, { thisValue }: Fun
   return Q(yield* Get(O, X(ToString(F(k)))));
 }
 
+/** https://tc39.es/ecma262/#sec-array.prototype.toreversed */
+function* ArrayProto_toReversed(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const O = Q(ToObject(thisValue));
+  const len = Q(yield* LengthOfArrayLike(O));
+  const A = Q(ArrayCreate(len));
+  let k = 0;
+  while (k < len) {
+    const from = X(ToString(F(len - 1 - k)));
+    const Pk = X(ToString(F(k)));
+    const fromValue = Q(yield* Get(O, from));
+    X(CreateDataPropertyOrThrow(A, Pk, fromValue));
+    k += 1;
+  }
+  return A;
+}
+
 export function bootstrapArrayPrototype(realmRec: Realm) {
   const proto = X(ArrayCreate(0, realmRec.Intrinsics['%Object.prototype%']));
 
@@ -589,10 +708,14 @@ export function bootstrapArrayPrototype(realmRec: Realm) {
     ['shift', ArrayProto_shift, 0],
     ['slice', ArrayProto_slice, 2],
     ['sort', ArrayProto_sort, 1],
+    ['toSorted', ArrayProto_toSorted, 1],
     ['splice', ArrayProto_splice, 2],
+    ['toSpliced', ArrayProto_toSpliced, 2],
     ['toString', ArrayProto_toString, 0],
     ['unshift', ArrayProto_unshift, 1],
     ['values', ArrayProto_values, 0],
+    ['with', ArrayProto_with, 2],
+    ['toReversed', ArrayProto_toReversed, 0],
   ]);
 
   bootstrapArrayPrototypeShared(
@@ -619,6 +742,9 @@ export function bootstrapArrayPrototype(realmRec: Realm) {
     Assert(X(CreateDataProperty(unscopableList, Value('flatMap'), Value.true)) === Value.true);
     Assert(X(CreateDataProperty(unscopableList, Value('includes'), Value.true)) === Value.true);
     Assert(X(CreateDataProperty(unscopableList, Value('keys'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, Value('toReversed'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, Value('toSorted'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, Value('toSpliced'), Value.true)) === Value.true);
     Assert(X(CreateDataProperty(unscopableList, Value('values'), Value.true)) === Value.true);
     X(proto.DefineOwnProperty(wellKnownSymbols.unscopables, Descriptor({
       Value: unscopableList,

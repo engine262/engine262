@@ -211,17 +211,10 @@ language/expressions/super/prop-expr-getsuperbase-before-topropertykey-putvalue.
 language/global-code/script-decl-lex-var-declared-via-eval.js
 language/literals/regexp/S7.8.5_A1.4_T2.js
 language/literals/regexp/S7.8.5_A2.4_T2.js
-staging/sm/Array/change-array-by-copy-cross-compartment-create.js
-staging/sm/Array/change-array-by-copy-errors-from-correct-realm.js
 staging/sm/Array/group-callback-evaluation.js
 staging/sm/Array/group-propertkey-is-length.js
 staging/sm/Array/group.js
 staging/sm/Array/toLocaleString-01.js
-staging/sm/Array/toSpliced-dense.js
-staging/sm/Array/toSpliced.js
-staging/sm/Array/unscopables.js
-staging/sm/Array/with-dense.js
-staging/sm/Array/with.js
 staging/sm/async-functions/await-error.js
 staging/sm/async-functions/await-in-arrow-parameters.js
 staging/sm/async-functions/await-in-parameters-of-async-func.js
@@ -338,4 +331,3 @@ staging/sm/TypedArray/sort_small.js
 staging/sm/TypedArray/sort-negative-nan.js
 staging/sm/TypedArray/toLocaleString-detached.js
 staging/sm/TypedArray/toString.js
-staging/sm/TypedArray/with.js
