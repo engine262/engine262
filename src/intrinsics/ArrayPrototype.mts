@@ -731,12 +731,13 @@ export function bootstrapArrayPrototype(realmRec: Realm) {
 
   {
     const unscopableList = OrdinaryObjectCreate(Value.null);
+    Assert(X(CreateDataProperty(unscopableList, Value('at'), Value.true)) === Value.true);
     Assert(X(CreateDataProperty(unscopableList, Value('copyWithin'), Value.true)) === Value.true);
     Assert(X(CreateDataProperty(unscopableList, Value('entries'), Value.true)) === Value.true);
     Assert(X(CreateDataProperty(unscopableList, Value('fill'), Value.true)) === Value.true);
     Assert(X(CreateDataProperty(unscopableList, Value('find'), Value.true)) === Value.true);
-    Assert(X(CreateDataProperty(unscopableList, Value('findLast'), Value.true)) === Value.true);
     Assert(X(CreateDataProperty(unscopableList, Value('findIndex'), Value.true)) === Value.true);
+    Assert(X(CreateDataProperty(unscopableList, Value('findLast'), Value.true)) === Value.true);
     Assert(X(CreateDataProperty(unscopableList, Value('findLastIndex'), Value.true)) === Value.true);
     Assert(X(CreateDataProperty(unscopableList, Value('flat'), Value.true)) === Value.true);
     Assert(X(CreateDataProperty(unscopableList, Value('flatMap'), Value.true)) === Value.true);
