@@ -14,7 +14,6 @@ uint8array-base64 = uint8array-base64
 -explicit-resource-management
 -import-attributes
 -import-defer
--iterator-helpers
 -iterator-sequencing
 -json-parse-with-source
 -regexp-modifiers
