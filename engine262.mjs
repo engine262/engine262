@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 b2c4a1cafc20e8e07773830628a7b5ede18d6b7b
+ * engine262 0.0.1 2414a1f609876a8a3fe4647b6b93fca2bc9a5992
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -2141,33 +2141,22 @@ class NumberValue extends PrimitiveValue {
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-tostring */
-  static toString(x) {
-    if (x.isNaN()) {
+  static toString(xV, radix) {
+    if (xV.isNaN()) {
       return Value('NaN');
     }
-    const xVal = R(x);
-    if (xVal === 0) {
+    const x = R(xV);
+    if (Object.is(x, -0) || Object.is(x, 0)) {
       return Value('0');
     }
-    if (xVal < 0) {
-      /* X */
-      let _temp8 = NumberValue.toString(F(-xVal));
-      /* c8 ignore if */
-      if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) _temp8 = skipDebugger(_temp8);
-      /* c8 ignore if */
-      if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! NumberValue.toString(F(-xVal)) returned an abrupt completion", {
-        cause: _temp8
-      });
-      /* c8 ignore if */
-      if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
-      const str = _temp8.stringValue();
-      return Value(`-${str}`);
+    if (x < 0) {
+      return Value(`-${NumberValue.toString(F(-x), radix).stringValue()}`);
     }
-    if (x.isInfinity()) {
+    if (xV.isInfinity()) {
       return Value('Infinity');
     }
-    // TODO: implement properly
-    return Value(`${xVal}`);
+    // TODO: implement properly, currently depends on host.
+    return Value(`${x.toString(radix)}`);
   }
   static unit = new NumberValue(1);
   static {
@@ -2181,29 +2170,29 @@ class NumberValue extends PrimitiveValue {
 /** https://tc39.es/ecma262/#sec-numberbitwiseop */
 function NumberBitwiseOp(op, x, y) {
   /* X */
-  let _temp9 = ToInt32(x);
+  let _temp8 = ToInt32(x);
+  /* c8 ignore if */
+  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) _temp8 = skipDebugger(_temp8);
+  /* c8 ignore if */
+  if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! ToInt32(x) returned an abrupt completion", {
+    cause: _temp8
+  });
+  /* c8 ignore if */
+  if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+  // 1. Let lnum be ! ToInt32(x).
+  const lnum = _temp8;
+  // 2. Let rnum be ! ToUint32(y).
+  /* X */
+  let _temp9 = ToUint32(y);
   /* c8 ignore if */
   if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) _temp9 = skipDebugger(_temp9);
   /* c8 ignore if */
-  if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! ToInt32(x) returned an abrupt completion", {
+  if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! ToUint32(y) returned an abrupt completion", {
     cause: _temp9
   });
   /* c8 ignore if */
   if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
-  // 1. Let lnum be ! ToInt32(x).
-  const lnum = _temp9;
-  // 2. Let rnum be ! ToUint32(y).
-  /* X */
-  let _temp10 = ToUint32(y);
-  /* c8 ignore if */
-  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) _temp10 = skipDebugger(_temp10);
-  /* c8 ignore if */
-  if (_temp10 instanceof AbruptCompletion) throw new Assert.Error("! ToUint32(y) returned an abrupt completion", {
-    cause: _temp10
-  });
-  /* c8 ignore if */
-  if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
-  const rnum = _temp10;
+  const rnum = _temp9;
   // 3. Return the result of applying the bitwise operator op to lnum and rnum. The result is a signed 32-bit integer.
   switch (op) {
     case '&':
@@ -2368,24 +2357,24 @@ class BigIntValue extends PrimitiveValue {
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-tostring */
-  static toString(x) {
+  static toString(x, radix) {
     // 1. If x is less than zero, return the string-concatenation of the String "-" and ! BigInt::toString(-x).
     if (R(x) < 0n) {
       /* X */
-      let _temp11 = BigIntValue.toString(Z(-R(x)));
+      let _temp10 = BigIntValue.toString(Z(-R(x)), radix);
       /* c8 ignore if */
-      if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) _temp11 = skipDebugger(_temp11);
+      if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) _temp10 = skipDebugger(_temp10);
       /* c8 ignore if */
-      if (_temp11 instanceof AbruptCompletion) throw new Assert.Error("! BigIntValue.toString(Z(-R(x))) returned an abrupt completion", {
-        cause: _temp11
+      if (_temp10 instanceof AbruptCompletion) throw new Assert.Error("! BigIntValue.toString(Z(-R(x)), radix) returned an abrupt completion", {
+        cause: _temp10
       });
       /* c8 ignore if */
-      if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
-      const str = _temp11.stringValue();
+      if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
+      const str = _temp10.stringValue();
       return Value(`-${str}`);
     }
     // 2. Return the String value consisting of the code units of the digits of the decimal representation of x.
-    return Value(`${R(x)}`);
+    return Value(`${R(x).toString(radix)}`);
   }
   static unit = new BigIntValue(1n);
   static {
@@ -2489,13 +2478,13 @@ class ObjectValue extends Value {
   // eslint-disable-next-line require-yield
   *SetPrototypeOf(V) {
     /* ReturnIfAbrupt */
-    let _temp12 = surroundingAgent.debugger_tryTouchDuringPreview(this);
+    let _temp11 = surroundingAgent.debugger_tryTouchDuringPreview(this);
     /* c8 ignore if */
-    if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
+    if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
-    if (_temp12 instanceof AbruptCompletion) return _temp12;
+    if (_temp11 instanceof AbruptCompletion) return _temp11;
     /* c8 ignore if */
-    if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
+    if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
     return OrdinarySetPrototypeOf(this, V);
   }
 
@@ -2507,13 +2496,13 @@ class ObjectValue extends Value {
   // eslint-disable-next-line require-yield
   *PreventExtensions() {
     /* ReturnIfAbrupt */
-    let _temp13 = surroundingAgent.debugger_tryTouchDuringPreview(this);
+    let _temp12 = surroundingAgent.debugger_tryTouchDuringPreview(this);
     /* c8 ignore if */
-    if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield* on the completion.');
+    if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
-    if (_temp13 instanceof AbruptCompletion) return _temp13;
+    if (_temp12 instanceof AbruptCompletion) return _temp12;
     /* c8 ignore if */
-    if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
+    if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
     return OrdinaryPreventExtensions(this);
   }
 
@@ -2523,13 +2512,13 @@ class ObjectValue extends Value {
   }
   *DefineOwnProperty(P, Desc) {
     /* ReturnIfAbrupt */
-    let _temp14 = surroundingAgent.debugger_tryTouchDuringPreview(this);
+    let _temp13 = surroundingAgent.debugger_tryTouchDuringPreview(this);
     /* c8 ignore if */
-    if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
+    if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
-    if (_temp14 instanceof AbruptCompletion) return _temp14;
+    if (_temp13 instanceof AbruptCompletion) return _temp13;
     /* c8 ignore if */
-    if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
+    if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
     return yield* OrdinaryDefineOwnProperty(this, P, Desc);
   }
   *HasProperty(P) {
@@ -2540,24 +2529,24 @@ class ObjectValue extends Value {
   }
   *Set(P, V, Receiver) {
     /* ReturnIfAbrupt */
-    let _temp15 = surroundingAgent.debugger_tryTouchDuringPreview(Receiver);
+    let _temp14 = surroundingAgent.debugger_tryTouchDuringPreview(Receiver);
+    /* c8 ignore if */
+    if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
+    /* c8 ignore if */
+    if (_temp14 instanceof AbruptCompletion) return _temp14;
+    /* c8 ignore if */
+    if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
+    return yield* OrdinarySet(this, P, V, Receiver);
+  }
+  *Delete(P) {
+    /* ReturnIfAbrupt */
+    let _temp15 = surroundingAgent.debugger_tryTouchDuringPreview(this);
     /* c8 ignore if */
     if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
     if (_temp15 instanceof AbruptCompletion) return _temp15;
     /* c8 ignore if */
     if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
-    return yield* OrdinarySet(this, P, V, Receiver);
-  }
-  *Delete(P) {
-    /* ReturnIfAbrupt */
-    let _temp16 = surroundingAgent.debugger_tryTouchDuringPreview(this);
-    /* c8 ignore if */
-    if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield* on the completion.');
-    /* c8 ignore if */
-    if (_temp16 instanceof AbruptCompletion) return _temp16;
-    /* c8 ignore if */
-    if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
     return yield* OrdinaryDelete(this, P);
   }
 
@@ -5114,9 +5103,7 @@ function CodePointsToString(text) {
   // 2. For each code point cp in text, do
   for (const cp of text) {
     // a. Set result to the string-concatenation of result and UTF16EncodeCodePoint(cp).
-    // TODO(ts): Argument of type 'string' is not assignable to parameter of type 'number'. Is this a mistake?
-    // @ts-expect-error
-    result += UTF16EncodeCodePoint(cp);
+    result += UTF16EncodeCodePoint(cp.codePointAt(0));
   }
   // 3. Return result.
   return result;
@@ -14770,6 +14757,10 @@ const InvalidSuperProperty = () => '`super` not expected here';
 const InvalidTemplateEscape = () => 'Invalid escapes are only allowed in tagged templates';
 const InvalidThis = () => 'Invalid `this` access';
 const InvalidUnicodeEscape = () => 'Invalid unicode escape';
+const InvalidAlphabet = () => 'Invalid alphabet';
+const InvalidLastChunkHandling = () => 'Invalid lastChunkHandling';
+const InvalidBase64String = () => 'Invalid base64 string';
+const InvalidHexString = () => 'Invalid hex string';
 const IteratorThrowMissing = () => 'The iterator does not provide a throw method';
 const JSONCircular = () => 'Cannot JSON stringify a circular structure';
 const JSONUnexpectedToken = () => 'Unexpected token in JSON';
@@ -14793,6 +14784,7 @@ const NotEnoughArguments = (numArgs, minArgs) => `${minArgs} argument${minArgs !
 const NotInitialized = n => `${i(n)} cannot be used before initialization`;
 const NotIterable = n => `${i(n)} is not iterable`;
 const NotPropertyName = p => `${i(p)} is not a valid property name`;
+const NotUint8Array = () => 'Not a Uint8Array';
 const NumberFormatRange = m => `Invalid format range for ${m}`;
 const ObjectToPrimitive = () => 'Cannot convert object to primitive value';
 const ObjectPrototypeType = () => 'Object prototype must be an Object or null';
@@ -14920,10 +14912,14 @@ var messages = /*#__PURE__*/Object.freeze({
   IllegalBreakContinue: IllegalBreakContinue,
   IllegalOctalEscape: IllegalOctalEscape,
   InternalSlotMissing: InternalSlotMissing,
+  InvalidAlphabet: InvalidAlphabet,
   InvalidArrayLength: InvalidArrayLength,
   InvalidAssignmentTarget: InvalidAssignmentTarget,
+  InvalidBase64String: InvalidBase64String,
   InvalidCodePoint: InvalidCodePoint,
+  InvalidHexString: InvalidHexString,
   InvalidHint: InvalidHint,
+  InvalidLastChunkHandling: InvalidLastChunkHandling,
   InvalidMethodName: InvalidMethodName,
   InvalidPropertyDescriptor: InvalidPropertyDescriptor,
   InvalidRadix: InvalidRadix,
@@ -14957,6 +14953,7 @@ var messages = /*#__PURE__*/Object.freeze({
   NotInitialized: NotInitialized,
   NotIterable: NotIterable,
   NotPropertyName: NotPropertyName,
+  NotUint8Array: NotUint8Array,
   NumberFormatRange: NumberFormatRange,
   ObjectPrototypeType: ObjectPrototypeType,
   ObjectSetPrototype: ObjectSetPrototype,
@@ -19621,7 +19618,6 @@ class Parser extends LanguageParser {
     return this.state.strict;
   }
   feature(name) {
-    // eslint-disable-next-line @engine262/valid-feature
     return surroundingAgent.feature(name);
   }
   startNode(inheritStart) {
@@ -25320,6 +25316,10 @@ const FEATURES = [{
   name: 'FinalizationRegistry.prototype.cleanupSome',
   flag: 'cleanup-some',
   url: 'https://github.com/tc39/proposal-cleanup-some'
+}, {
+  name: 'Uint8Array to/from base64 and hex',
+  flag: 'uint8array-base64',
+  url: 'https://tc39.es/proposal-arraybuffer-base64/'
 }];
 Object.freeze(FEATURES);
 FEATURES.forEach(Object.freeze);
@@ -28249,7 +28249,7 @@ function* SetViewValue(view, requestIndex, isLittleEndian, type, value) {
   const bufferIndex = getIndex + viewOffset;
   // 14. Perform ? SetValueInBuffer(buffer, bufferIndex, type, numberValue, false, Unordered, isLittleEndian).
   /* ReturnIfAbrupt */
-  let _temp7 = yield* SetValueInBuffer(view.ViewedArrayBuffer, bufferIndex, type, numberValue, Value.false, 'unordered', isLittleEndian);
+  let _temp7 = yield* SetValueInBuffer(view.ViewedArrayBuffer, bufferIndex, type, numberValue, false, 'unordered', isLittleEndian);
   /* c8 ignore if */
   if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
@@ -40871,7 +40871,7 @@ function* NumberProto_toExponential([fractionDigits = Value.undefined], {
   const f = _temp2;
   Assert(fractionDigits !== Value.undefined || f === 0, "fractionDigits !== Value.undefined || f === 0");
   if (!x.isFinite()) {
-    return NumberValue.toString(x);
+    return NumberValue.toString(x, 10);
   }
   if (f < 0 || f > 100) {
     return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toExponential');
@@ -40908,11 +40908,11 @@ function* NumberProto_toFixed([fractionDigits = Value.undefined], {
   }
   if (!x.isFinite()) {
     /* X */
-    let _temp5 = NumberValue.toString(x);
+    let _temp5 = NumberValue.toString(x, 10);
     /* c8 ignore if */
     if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
     /* c8 ignore if */
-    if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! NumberValue.toString(x) returned an abrupt completion", {
+    if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! NumberValue.toString(x, 10) returned an abrupt completion", {
       cause: _temp5
     });
     /* c8 ignore if */
@@ -40966,11 +40966,11 @@ function* NumberProto_toPrecision([precision = Value.undefined], {
   const p = _temp8;
   if (!x.isFinite()) {
     /* X */
-    let _temp9 = NumberValue.toString(x);
+    let _temp9 = NumberValue.toString(x, 10);
     /* c8 ignore if */
     if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) _temp9 = skipDebugger(_temp9);
     /* c8 ignore if */
-    if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! NumberValue.toString(x) returned an abrupt completion", {
+    if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! NumberValue.toString(x, 10) returned an abrupt completion", {
       cause: _temp9
     });
     /* c8 ignore if */
@@ -54279,7 +54279,7 @@ function* SetTypedArrayFromTypedArray(target, targetOffset, source) {
     while (targetByteIndex < limit) {
       const value = GetValueFromBuffer(srcBuffer, srcByteIndex, 'Uint8');
       /* ReturnIfAbrupt */
-      let _temp33 = yield* SetValueInBuffer(targetBuffer, targetByteIndex, 'Uint8', value, Value.true);
+      let _temp33 = yield* SetValueInBuffer(targetBuffer, targetByteIndex, 'Uint8', value);
       /* c8 ignore if */
       if (_temp33 && typeof _temp33 === 'object' && 'next' in _temp33) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
@@ -54293,7 +54293,7 @@ function* SetTypedArrayFromTypedArray(target, targetOffset, source) {
     while (targetByteIndex < limit) {
       const value = GetValueFromBuffer(srcBuffer, srcByteIndex, srcType);
       /* ReturnIfAbrupt */
-      let _temp34 = yield* SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value, Value.true);
+      let _temp34 = yield* SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value);
       /* c8 ignore if */
       if (_temp34 && typeof _temp34 === 'object' && 'next' in _temp34) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
@@ -55024,6 +55024,714 @@ function bootstrapTypedArrayPrototypes(realmRec) {
   });
 }
 bootstrapTypedArrayPrototypes.section = 'https://tc39.es/ecma262/#sec-properties-of-typedarray-prototype-objects';
+
+/** https://tc39.es/proposal-arraybuffer-base64/spec/#sec-uint8array.prototype.tobase64 */
+function* Uint8Array_prototype_toBase64([options = Value.undefined], {
+  thisValue
+}) {
+  const O = thisValue;
+  /* ReturnIfAbrupt */
+  let _temp = ValidateUint8Array(O);
+  /* c8 ignore if */
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp instanceof AbruptCompletion) return _temp;
+  /* c8 ignore if */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  /* ReturnIfAbrupt */
+  let _temp2 = GetOptionsObject(options);
+  /* c8 ignore if */
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp2 instanceof AbruptCompletion) return _temp2;
+  /* c8 ignore if */
+  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+  const opts = _temp2;
+  /* ReturnIfAbrupt */
+  let _temp3 = yield* Get(opts, Value('alphabet'));
+  /* c8 ignore if */
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp3 instanceof AbruptCompletion) return _temp3;
+  /* c8 ignore if */
+  if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+  let alphabet = _temp3;
+  if (alphabet instanceof UndefinedValue) {
+    alphabet = Value('base64');
+  }
+  if (!(alphabet instanceof JSStringValue) || alphabet.stringValue() !== 'base64' && alphabet.stringValue() !== 'base64url') {
+    return surroundingAgent.Throw('TypeError', 'InvalidAlphabet');
+  }
+  /* ReturnIfAbrupt */
+  let _temp4 = yield* Get(opts, Value('omitPadding'));
+  /* c8 ignore if */
+  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp4 instanceof AbruptCompletion) return _temp4;
+  /* c8 ignore if */
+  if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+  const omitPadding = ToBoolean(_temp4);
+  /* ReturnIfAbrupt */
+  let _temp5 = GetUint8ArrayBytes(O);
+  /* c8 ignore if */
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp5 instanceof AbruptCompletion) return _temp5;
+  /* c8 ignore if */
+  if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+  const toEncode = _temp5;
+  let outAscii;
+  if (alphabet.stringValue() === 'base64') {
+    outAscii = btoa(String.fromCharCode(...toEncode));
+    if (omitPadding !== Value.false) {
+      outAscii = outAscii.replace(/=/g, '');
+    }
+  } else {
+    Assert(alphabet.stringValue() === 'base64url', "alphabet.stringValue() === 'base64url'");
+    outAscii = btoa(String.fromCharCode(...toEncode)).replace(/\+/g, '-').replace(/\//g, '_');
+    if (omitPadding !== Value.false) {
+      outAscii = outAscii.replace(/=/g, '');
+    }
+  }
+  return Value(CodePointsToString(outAscii));
+}
+
+/** https://tc39.es/proposal-arraybuffer-base64/spec/#sec-uint8array.prototype.tohex */
+Uint8Array_prototype_toBase64.section = 'https://tc39.es/proposal-arraybuffer-base64/spec/#sec-uint8array.prototype.tobase64';
+function Uint8Array_prototype_toHex(_args, {
+  thisValue
+}) {
+  const O = thisValue;
+  /* ReturnIfAbrupt */
+  let _temp6 = ValidateUint8Array(O);
+  /* c8 ignore if */
+  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp6 instanceof AbruptCompletion) return _temp6;
+  /* c8 ignore if */
+  if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+  /* ReturnIfAbrupt */
+  let _temp7 = GetUint8ArrayBytes(O);
+  /* c8 ignore if */
+  if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp7 instanceof AbruptCompletion) return _temp7;
+  /* c8 ignore if */
+  if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+  const toEncode = _temp7;
+  let out = '';
+  for (const byte of toEncode) {
+    let hex = NumberValue.toString(F(byte), 16);
+    /* X */
+    let _temp8 = StringPad(hex, Value(2), Value('0'), 'start');
+    /* c8 ignore if */
+    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) _temp8 = skipDebugger(_temp8);
+    /* c8 ignore if */
+    if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! StringPad(hex, Value(2), Value('0'), 'start') returned an abrupt completion", {
+      cause: _temp8
+    });
+    /* c8 ignore if */
+    if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+    hex = _temp8;
+    out += hex.stringValue();
+  }
+  return Value(out);
+}
+Uint8Array_prototype_toHex.section = 'https://tc39.es/proposal-arraybuffer-base64/spec/#sec-uint8array.prototype.tohex';
+function* Uint8Array_fromBase64([string, options = Value.undefined]) {
+  if (!(string instanceof JSStringValue)) {
+    return surroundingAgent.Throw('TypeError', 'NotAString', string);
+  }
+  /* ReturnIfAbrupt */
+  let _temp9 = GetOptionsObject(options);
+  /* c8 ignore if */
+  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp9 instanceof AbruptCompletion) return _temp9;
+  /* c8 ignore if */
+  if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+  const opts = _temp9;
+  /* ReturnIfAbrupt */
+  let _temp10 = yield* Get(opts, Value('alphabet'));
+  /* c8 ignore if */
+  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp10 instanceof AbruptCompletion) return _temp10;
+  /* c8 ignore if */
+  if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
+  let alphabet = _temp10;
+  if (alphabet instanceof UndefinedValue) {
+    alphabet = Value('base64');
+  }
+  if (!(alphabet instanceof JSStringValue)) {
+    return surroundingAgent.Throw('TypeError', 'InvalidAlphabet');
+  }
+  const alphabetStr = alphabet.stringValue();
+  if (alphabetStr !== 'base64' && alphabetStr !== 'base64url') {
+    return surroundingAgent.Throw('TypeError', 'InvalidAlphabet');
+  }
+  /* ReturnIfAbrupt */
+  let _temp11 = yield* Get(opts, Value('lastChunkHandling'));
+  /* c8 ignore if */
+  if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp11 instanceof AbruptCompletion) return _temp11;
+  /* c8 ignore if */
+  if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
+  let lastChunkHandling = _temp11;
+  if (lastChunkHandling instanceof UndefinedValue) {
+    lastChunkHandling = Value('loose');
+  }
+  if (!(lastChunkHandling instanceof JSStringValue)) {
+    return surroundingAgent.Throw('TypeError', 'InvalidLastChunkHandling');
+  }
+  const lastChunkHandlingStr = lastChunkHandling.stringValue();
+  if (lastChunkHandlingStr !== 'loose' && lastChunkHandlingStr !== 'strict' && lastChunkHandlingStr !== 'stop-before-partial') {
+    return surroundingAgent.Throw('TypeError', 'InvalidLastChunkHandling');
+  }
+  const result = FromBase64(string.stringValue(), alphabetStr, lastChunkHandlingStr);
+  if (result.Error) {
+    return ThrowCompletion(result.Error);
+  }
+  const resultLength = result.Bytes.length;
+  /* ReturnIfAbrupt */
+  let _temp12 = yield* AllocateTypedArray(Value('Uint8Array'), surroundingAgent.intrinsic('%Uint8Array%'), '%Uint8Array.prototype%', resultLength);
+  /* c8 ignore if */
+  if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp12 instanceof AbruptCompletion) return _temp12;
+  /* c8 ignore if */
+  if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
+  const ta = _temp12;
+  for (let i = 0; i < resultLength; i += 1) {
+    const byte = result.Bytes[i];
+    yield* SetValueInBuffer(ta.ViewedArrayBuffer, ta.ByteOffset + i, 'Uint8', F(byte));
+  }
+  return ta;
+}
+
+/** https://tc39.es/proposal-arraybuffer-base64/spec/#sec-uint8array.prototype.setfrombase64 */
+function* Uint8Array_prototype_setFromBase64([string, options = Value.undefined], {
+  thisValue
+}) {
+  const into = thisValue;
+  /* ReturnIfAbrupt */
+  let _temp13 = ValidateUint8Array(into);
+  /* c8 ignore if */
+  if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp13 instanceof AbruptCompletion) return _temp13;
+  /* c8 ignore if */
+  if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
+  if (!(string instanceof JSStringValue)) {
+    return surroundingAgent.Throw('TypeError', 'NotAString', string);
+  }
+  /* ReturnIfAbrupt */
+  let _temp14 = GetOptionsObject(options);
+  /* c8 ignore if */
+  if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp14 instanceof AbruptCompletion) return _temp14;
+  /* c8 ignore if */
+  if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
+  const opts = _temp14;
+  /* ReturnIfAbrupt */
+  let _temp15 = yield* Get(opts, Value('alphabet'));
+  /* c8 ignore if */
+  if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp15 instanceof AbruptCompletion) return _temp15;
+  /* c8 ignore if */
+  if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
+  let alphabet = _temp15;
+  if (alphabet instanceof UndefinedValue) {
+    alphabet = Value('base64');
+  }
+  if (!(alphabet instanceof JSStringValue)) {
+    return surroundingAgent.Throw('TypeError', 'InvalidAlphabet');
+  }
+  const alphabetStr = alphabet.stringValue();
+  if (alphabetStr !== 'base64' && alphabetStr !== 'base64url') {
+    return surroundingAgent.Throw('TypeError', 'InvalidAlphabet');
+  }
+  /* ReturnIfAbrupt */
+  let _temp16 = yield* Get(opts, Value('lastChunkHandling'));
+  /* c8 ignore if */
+  if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp16 instanceof AbruptCompletion) return _temp16;
+  /* c8 ignore if */
+  if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+  let lastChunkHandling = _temp16;
+  if (lastChunkHandling instanceof UndefinedValue) {
+    lastChunkHandling = Value('loose');
+  }
+  if (!(lastChunkHandling instanceof JSStringValue)) {
+    return surroundingAgent.Throw('TypeError', 'InvalidLastChunkHandling');
+  }
+  const lastChunkHandlingStr = lastChunkHandling.stringValue();
+  if (lastChunkHandlingStr !== 'loose' && lastChunkHandlingStr !== 'strict' && lastChunkHandlingStr !== 'stop-before-partial') {
+    return surroundingAgent.Throw('TypeError', 'InvalidLastChunkHandling');
+  }
+  const taRecord = MakeTypedArrayWithBufferWitnessRecord(into);
+  if (IsTypedArrayOutOfBounds(taRecord)) {
+    return surroundingAgent.Throw('TypeError', 'TypedArrayOutOfBounds');
+  }
+  const byteLength = TypedArrayLength(taRecord);
+  const result = FromBase64(string.stringValue(), alphabetStr, lastChunkHandlingStr, byteLength);
+  const bytes = result.Bytes;
+  const written = bytes.length;
+  Assert(written <= byteLength, "written <= byteLength");
+  yield* SetUint8ArrayBytes(into, bytes);
+  if (result.Error) {
+    return ThrowCompletion(result.Error);
+  }
+  const resultObject = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+  /* X */
+  let _temp17 = CreateDataPropertyOrThrow(resultObject, Value('read'), F(result.Read));
+  /* c8 ignore if */
+  if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) _temp17 = skipDebugger(_temp17);
+  /* c8 ignore if */
+  if (_temp17 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(resultObject, Value('read'), F(result.Read)) returned an abrupt completion", {
+    cause: _temp17
+  });
+  /* c8 ignore if */
+  if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
+  /* X */
+  let _temp18 = CreateDataPropertyOrThrow(resultObject, Value('written'), F(written));
+  /* c8 ignore if */
+  if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) _temp18 = skipDebugger(_temp18);
+  /* c8 ignore if */
+  if (_temp18 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(resultObject, Value('written'), F(written)) returned an abrupt completion", {
+    cause: _temp18
+  });
+  /* c8 ignore if */
+  if (_temp18 instanceof Completion) _temp18 = _temp18.Value;
+  return resultObject;
+}
+Uint8Array_prototype_setFromBase64.section = 'https://tc39.es/proposal-arraybuffer-base64/spec/#sec-uint8array.prototype.setfrombase64';
+function* Uint8Array_fromHex([string]) {
+  if (!(string instanceof JSStringValue)) {
+    return surroundingAgent.Throw('TypeError', 'NotAString', string);
+  }
+  const result = FromHex(string.stringValue());
+  if (result.Error) {
+    return ThrowCompletion(result.Error);
+  }
+  const resultLength = result.Bytes.length;
+  /* ReturnIfAbrupt */
+  let _temp19 = yield* AllocateTypedArray(Value('Uint8Array'), surroundingAgent.intrinsic('%Uint8Array%'), '%Uint8Array.prototype%', resultLength);
+  /* c8 ignore if */
+  if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp19 instanceof AbruptCompletion) return _temp19;
+  /* c8 ignore if */
+  if (_temp19 instanceof Completion) _temp19 = _temp19.Value;
+  const ta = _temp19;
+  for (let i = 0; i < resultLength; i += 1) {
+    const byte = result.Bytes[i];
+    yield* SetValueInBuffer(ta.ViewedArrayBuffer, ta.ByteOffset + i, 'Uint8', F(byte));
+  }
+  return ta;
+}
+
+/** https://tc39.es/proposal-arraybuffer-base64/spec/#sec-uint8array.prototype.setfromhex */
+function* Uint8Array_prototype_setFromHex([string], {
+  thisValue
+}) {
+  const into = thisValue;
+  /* ReturnIfAbrupt */
+  let _temp20 = ValidateUint8Array(into);
+  /* c8 ignore if */
+  if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp20 instanceof AbruptCompletion) return _temp20;
+  /* c8 ignore if */
+  if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
+  if (!(string instanceof JSStringValue)) {
+    return surroundingAgent.Throw('TypeError', 'NotAString', string);
+  }
+  const taRecord = MakeTypedArrayWithBufferWitnessRecord(into);
+  if (IsTypedArrayOutOfBounds(taRecord)) {
+    return surroundingAgent.Throw('TypeError', 'TypedArrayOutOfBounds');
+  }
+  const byteLength = TypedArrayLength(taRecord);
+  const result = FromHex(string.stringValue(), byteLength);
+  const bytes = result.Bytes;
+  const written = bytes.length;
+  Assert(written <= byteLength, "written <= byteLength");
+  yield* SetUint8ArrayBytes(into, bytes);
+  if (result.Error) {
+    return ThrowCompletion(result.Error);
+  }
+  const resultObject = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
+  /* X */
+  let _temp21 = CreateDataPropertyOrThrow(resultObject, Value('read'), F(result.Read));
+  /* c8 ignore if */
+  if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) _temp21 = skipDebugger(_temp21);
+  /* c8 ignore if */
+  if (_temp21 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(resultObject, Value('read'), F(result.Read)) returned an abrupt completion", {
+    cause: _temp21
+  });
+  /* c8 ignore if */
+  if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
+  /* X */
+  let _temp22 = CreateDataPropertyOrThrow(resultObject, Value('written'), F(written));
+  /* c8 ignore if */
+  if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) _temp22 = skipDebugger(_temp22);
+  /* c8 ignore if */
+  if (_temp22 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataPropertyOrThrow(resultObject, Value('written'), F(written)) returned an abrupt completion", {
+    cause: _temp22
+  });
+  /* c8 ignore if */
+  if (_temp22 instanceof Completion) _temp22 = _temp22.Value;
+  return resultObject;
+}
+
+/** https://tc39.es/proposal-arraybuffer-base64/spec/#sec-validateuint8array */
+Uint8Array_prototype_setFromHex.section = 'https://tc39.es/proposal-arraybuffer-base64/spec/#sec-uint8array.prototype.setfromhex';
+function ValidateUint8Array(ta) {
+  /* ReturnIfAbrupt */
+  let _temp23 = RequireInternalSlot(ta, 'TypedArrayName');
+  /* c8 ignore if */
+  if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp23 instanceof AbruptCompletion) return _temp23;
+  /* c8 ignore if */
+  if (_temp23 instanceof Completion) _temp23 = _temp23.Value;
+  if (ta.TypedArrayName.stringValue() !== 'Uint8Array') {
+    return surroundingAgent.Throw('TypeError', 'NotUint8Array');
+  }
+  return undefined;
+}
+
+/** https://tc39.es/proposal-arraybuffer-base64/spec/#sec-getuint8arraybytes */
+ValidateUint8Array.section = 'https://tc39.es/proposal-arraybuffer-base64/spec/#sec-validateuint8array';
+function GetUint8ArrayBytes(ta) {
+  const buffer = ta.ViewedArrayBuffer;
+  const taRecord = MakeTypedArrayWithBufferWitnessRecord(ta);
+  if (IsTypedArrayOutOfBounds(taRecord)) {
+    return surroundingAgent.Throw('TypeError', 'TypedArrayOutOfBounds');
+  }
+  const len = TypedArrayLength(taRecord);
+  const byteOffset = ta.ByteOffset;
+  const bytes = [];
+  let index = 0;
+  while (index < len) {
+    const byteIndex = byteOffset + index;
+    const byte = R(GetValueFromBuffer(buffer, byteIndex, 'Uint8'));
+    Assert(typeof byte === 'number', "typeof byte === 'number'");
+    bytes.push(byte);
+    index += 1;
+  }
+  return bytes;
+}
+
+/** https://tc39.es/proposal-arraybuffer-base64/spec/#sec-writeuint8arraybytes */
+GetUint8ArrayBytes.section = 'https://tc39.es/proposal-arraybuffer-base64/spec/#sec-getuint8arraybytes';
+function* SetUint8ArrayBytes(into, bytes) {
+  const offset = into.ByteOffset;
+  const len = bytes.length;
+  let index = 0;
+  while (index < len) {
+    const byte = bytes[index];
+    const byteIndexInBuffer = index + offset;
+    yield* SetValueInBuffer(into.ViewedArrayBuffer, byteIndexInBuffer, 'Uint8', F(byte));
+    index += 1;
+  }
+}
+
+/** https://tc39.es/proposal-arraybuffer-base64/spec/#sec-skipasciiwhitespace */
+SetUint8ArrayBytes.section = 'https://tc39.es/proposal-arraybuffer-base64/spec/#sec-writeuint8arraybytes';
+function SkipAsciiWhitespace(string, index) {
+  const length = string.length;
+  while (index < length) {
+    const char = string.charCodeAt(index);
+    if (char !== 0x09 && char !== 0x0A && char !== 0x0C && char !== 0x0D && char !== 0x20) {
+      return index;
+    }
+    index += 1;
+  }
+  return index;
+}
+
+/** https://tc39.es/proposal-arraybuffer-base64/spec/#sec-decodebase64chunk */
+SkipAsciiWhitespace.section = 'https://tc39.es/proposal-arraybuffer-base64/spec/#sec-skipasciiwhitespace';
+function DecodeBase64Chunk(chunk, throwOnExtraBits) {
+  const chunkLength = chunk.length;
+  if (chunkLength === 2) {
+    chunk += 'AA';
+  } else if (chunkLength === 3) {
+    chunk += 'A';
+  } else {
+    Assert(chunkLength === 4, "chunkLength === 4");
+  }
+  const byteSequence = [...atob(chunk)].map(c => c.charCodeAt(0));
+  const bytes = [...byteSequence];
+  if (chunkLength === 2) {
+    Assert(throwOnExtraBits !== undefined, "throwOnExtraBits !== undefined");
+    if (throwOnExtraBits && bytes[1] !== 0) {
+      return surroundingAgent.Throw('SyntaxError', 'InvalidBase64String');
+    }
+    return [bytes[0]];
+  } else if (chunkLength === 3) {
+    Assert(throwOnExtraBits !== undefined, "throwOnExtraBits !== undefined");
+    if (throwOnExtraBits && bytes[2] !== 0) {
+      return surroundingAgent.Throw('SyntaxError', 'InvalidBase64String');
+    }
+    return [bytes[0], bytes[1]];
+  }
+  return bytes;
+}
+DecodeBase64Chunk.section = 'https://tc39.es/proposal-arraybuffer-base64/spec/#sec-decodebase64chunk';
+/** https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64 */
+function FromBase64(string, alphabet, lastChunkHandling, maxLength = 2 ** 53 - 1) {
+  if (maxLength === 0) {
+    return {
+      Read: 0,
+      Bytes: [],
+      Error: undefined
+    };
+  }
+  let read = 0;
+  const bytes = [];
+  let chunk = '';
+  let chunkLength = 0;
+  let index = 0;
+  const length = string.length;
+  while (true) {
+    index = SkipAsciiWhitespace(string, index);
+    if (index === length) {
+      if (chunkLength > 0) {
+        if (lastChunkHandling === 'stop-before-partial') {
+          return {
+            Read: read,
+            Bytes: bytes,
+            Error: undefined
+          };
+        } else if (lastChunkHandling === 'loose') {
+          if (chunkLength === 1) {
+            const error = surroundingAgent.Throw('SyntaxError', 'InvalidBase64String').Value;
+            return {
+              Read: read,
+              Bytes: bytes,
+              Error: error
+            };
+          }
+          /* X */
+          let _temp24 = DecodeBase64Chunk(chunk, false);
+          /* c8 ignore if */
+          if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) _temp24 = skipDebugger(_temp24);
+          /* c8 ignore if */
+          if (_temp24 instanceof AbruptCompletion) throw new Assert.Error("! DecodeBase64Chunk(chunk, false) returned an abrupt completion", {
+            cause: _temp24
+          });
+          /* c8 ignore if */
+          if (_temp24 instanceof Completion) _temp24 = _temp24.Value;
+          bytes.push(..._temp24);
+        } else {
+          Assert(lastChunkHandling === 'strict', "lastChunkHandling === 'strict'");
+          const error = surroundingAgent.Throw('SyntaxError', 'InvalidBase64String').Value;
+          return {
+            Read: read,
+            Bytes: bytes,
+            Error: error
+          };
+        }
+      } else {
+        return {
+          Read: read,
+          Bytes: bytes,
+          Error: undefined
+        };
+      }
+    }
+    let char = string.substring(index, index + 1);
+    index += 1;
+    if (char === '=') {
+      if (chunkLength < 2) {
+        const error = surroundingAgent.Throw('SyntaxError', 'InvalidBase64String').Value;
+        return {
+          Read: read,
+          Bytes: bytes,
+          Error: error
+        };
+      }
+      index = SkipAsciiWhitespace(string, index);
+      if (chunkLength === 2) {
+        if (index === length) {
+          if (lastChunkHandling === 'stop-before-partial') {
+            return {
+              Read: read,
+              Bytes: bytes,
+              Error: undefined
+            };
+          }
+          const error = surroundingAgent.Throw('SyntaxError', 'InvalidBase64String').Value;
+          return {
+            Read: read,
+            Bytes: bytes,
+            Error: error
+          };
+        }
+        char = string.substring(index, index + 1);
+        if (char === '=') {
+          index = SkipAsciiWhitespace(string, index + 1);
+        }
+      }
+      if (index < length) {
+        const error = surroundingAgent.Throw('SyntaxError', 'InvalidBase64String').Value;
+        return {
+          Read: read,
+          Bytes: bytes,
+          Error: error
+        };
+      }
+      let throwOnExtraBits;
+      if (lastChunkHandling === 'strict') {
+        throwOnExtraBits = true;
+      } else {
+        throwOnExtraBits = false;
+      }
+      const decodeResult = EnsureCompletion(DecodeBase64Chunk(chunk, throwOnExtraBits));
+      if (decodeResult instanceof ThrowCompletion) {
+        return {
+          Read: read,
+          Bytes: bytes,
+          Error: decodeResult.Value
+        };
+      }
+      /* X */
+      let _temp25 = decodeResult;
+      /* c8 ignore if */
+      if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) _temp25 = skipDebugger(_temp25);
+      /* c8 ignore if */
+      if (_temp25 instanceof AbruptCompletion) throw new Assert.Error("! decodeResult returned an abrupt completion", {
+        cause: _temp25
+      });
+      /* c8 ignore if */
+      if (_temp25 instanceof Completion) _temp25 = _temp25.Value;
+      bytes.push(..._temp25);
+      return {
+        Read: length,
+        Bytes: bytes,
+        Error: undefined
+      };
+    }
+    if (alphabet === 'base64url') {
+      if (char === '+' || char === '/') {
+        const error = surroundingAgent.Throw('SyntaxError', 'InvalidBase64String').Value;
+        return {
+          Read: read,
+          Bytes: bytes,
+          Error: error
+        };
+      } else if (char === '-') {
+        char = '+';
+      } else if (char === '_') {
+        char = '/';
+      }
+    }
+    if (!/[A-Za-z0-9+/]/.test(char)) {
+      const error = surroundingAgent.Throw('SyntaxError', 'InvalidBase64String').Value;
+      return {
+        Read: read,
+        Bytes: bytes,
+        Error: error
+      };
+    }
+    const remaining = maxLength - bytes.length;
+    if (remaining === 1 && chunkLength === 2 || remaining === 2 && chunkLength === 3) {
+      return {
+        Read: read,
+        Bytes: bytes,
+        Error: undefined
+      };
+    }
+    chunk += char;
+    chunkLength = chunk.length;
+    if (chunkLength === 4) {
+      /* X */
+      let _temp26 = DecodeBase64Chunk(chunk);
+      /* c8 ignore if */
+      if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) _temp26 = skipDebugger(_temp26);
+      /* c8 ignore if */
+      if (_temp26 instanceof AbruptCompletion) throw new Assert.Error("! DecodeBase64Chunk(chunk) returned an abrupt completion", {
+        cause: _temp26
+      });
+      /* c8 ignore if */
+      if (_temp26 instanceof Completion) _temp26 = _temp26.Value;
+      bytes.push(..._temp26);
+      chunk = '';
+      chunkLength = 0;
+      read = index;
+      if (bytes.length === maxLength) {
+        return {
+          Read: read,
+          Bytes: bytes,
+          Error: undefined
+        };
+      }
+    }
+  }
+}
+
+/** https://tc39.es/proposal-arraybuffer-base64/spec/#sec-fromhex */
+FromBase64.section = 'https://tc39.es/proposal-arraybuffer-base64/spec/#sec-frombase64';
+function FromHex(string, maxLength = 2 ** 53 - 1) {
+  const length = string.length;
+  const bytes = [];
+  let read = 0;
+  if (length % 2 !== 0) {
+    const error = surroundingAgent.Throw('SyntaxError', 'InvalidHexString').Value;
+    return {
+      Read: read,
+      Bytes: bytes,
+      Error: error
+    };
+  }
+  while (read < length && bytes.length < maxLength) {
+    const hexits = string.substring(read, read + 2);
+    if ([...hexits].some(c => !/[0-9a-fA-F]/.test(c))) {
+      const error = surroundingAgent.Throw('SyntaxError', 'InvalidHexString').Value;
+      return {
+        Read: read,
+        Bytes: bytes,
+        Error: error
+      };
+    }
+    read += 2;
+    const byte = parseInt(hexits, 16);
+    bytes.push(byte);
+  }
+  return {
+    Read: read,
+    Bytes: bytes,
+    Error: undefined
+  };
+}
+
+/** https://tc39.es/proposal-arraybuffer-base64/spec/#sec-getoptionsobject */
+FromHex.section = 'https://tc39.es/proposal-arraybuffer-base64/spec/#sec-fromhex';
+function GetOptionsObject(options) {
+  if (options instanceof UndefinedValue) {
+    return OrdinaryObjectCreate(Value.null);
+  }
+  if (options instanceof ObjectValue) {
+    return options;
+  }
+  return surroundingAgent.Throw('TypeError', 'NotAnObject', options);
+}
+GetOptionsObject.section = 'https://tc39.es/proposal-arraybuffer-base64/spec/#sec-getoptionsobject';
+function bootstrapUint8Array(realmRec) {
+  if (!surroundingAgent.feature('uint8array-base64')) {
+    return;
+  }
+  const proto = realmRec.Intrinsics['%Uint8Array.prototype%'];
+  const constructor = realmRec.Intrinsics['%Uint8Array%'];
+  assignProps(realmRec, proto, [['toBase64', Uint8Array_prototype_toBase64, 0], ['setFromBase64', Uint8Array_prototype_setFromBase64, 1], ['toHex', Uint8Array_prototype_toHex, 0], ['setFromHex', Uint8Array_prototype_setFromHex, 1]]);
+  assignProps(realmRec, constructor, [['fromBase64', Uint8Array_fromBase64, 1], ['fromHex', Uint8Array_fromHex, 1]]);
+}
 
 function isDataViewObject(V) {
   return 'DataView' in V;
@@ -56350,6 +57058,7 @@ function CreateIntrinsics(realmRec) {
   bootstrapTypedArray(realmRec);
   bootstrapTypedArrayPrototypes(realmRec);
   bootstrapTypedArrayConstructors(realmRec);
+  bootstrapUint8Array(realmRec);
   bootstrapDataViewPrototype(realmRec);
   bootstrapDataView(realmRec);
   bootstrapJSON(realmRec);
@@ -58875,11 +59584,11 @@ function* ToString(argument) {
     return Value(argument === Value.true ? 'true' : 'false');
   } else if (argument instanceof NumberValue) {
     /* X */
-    let _temp18 = NumberValue.toString(argument);
+    let _temp18 = NumberValue.toString(argument, 10);
     /* c8 ignore if */
     if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) _temp18 = skipDebugger(_temp18);
     /* c8 ignore if */
-    if (_temp18 instanceof AbruptCompletion) throw new Assert.Error("! NumberValue.toString(argument) returned an abrupt completion", {
+    if (_temp18 instanceof AbruptCompletion) throw new Assert.Error("! NumberValue.toString(argument, 10) returned an abrupt completion", {
       cause: _temp18
     });
     /* c8 ignore if */
@@ -58894,11 +59603,11 @@ function* ToString(argument) {
     return surroundingAgent.Throw('TypeError', 'CannotConvertSymbol', 'string');
   } else if (argument instanceof BigIntValue) {
     /* X */
-    let _temp19 = BigIntValue.toString(argument);
+    let _temp19 = BigIntValue.toString(argument, 10);
     /* c8 ignore if */
     if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) _temp19 = skipDebugger(_temp19);
     /* c8 ignore if */
-    if (_temp19 instanceof AbruptCompletion) throw new Assert.Error("! BigIntValue.toString(argument) returned an abrupt completion", {
+    if (_temp19 instanceof AbruptCompletion) throw new Assert.Error("! BigIntValue.toString(argument, 10) returned an abrupt completion", {
       cause: _temp19
     });
     /* c8 ignore if */
