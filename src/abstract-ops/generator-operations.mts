@@ -4,7 +4,6 @@ import {
   NormalCompletion,
   Q, X,
   EnsureCompletion,
-  type ValueCompletion,
   ReturnCompletion,
   ThrowCompletion,
 } from '../completion.mts';
@@ -13,7 +12,7 @@ import {
   JSStringValue, ObjectValue, UndefinedValue, Value,
 } from '../value.mts';
 import {
-  Evaluate, type YieldEvaluator,
+  Evaluate, type ValueEvaluator, type YieldEvaluator,
 } from '../evaluator.mts';
 import { __ts_cast__, resume, type Mutable } from '../helpers.mts';
 import type { ParseNode } from '../parser/ParseNode.mts';
@@ -24,6 +23,7 @@ import {
   OrdinaryObjectCreate,
   RequireInternalSlot,
   SameValue,
+  type IteratorRecord,
   type OrdinaryObject,
 } from './all.mts';
 
@@ -32,63 +32,73 @@ export interface GeneratorObject extends OrdinaryObject {
   GeneratorState: 'suspendedStart' | 'suspendedYield' | 'executing' | 'completed' | UndefinedValue;
   GeneratorContext: ExecutionContext | null;
   readonly GeneratorBrand: JSStringValue | undefined;
+  UnderlyingIterator?: IteratorRecord;
 }
 
 /** https://tc39.es/ecma262/#sec-generatorstart */
-export function GeneratorStart(generator: GeneratorObject, generatorBody: ParseNode.GeneratorBody | (() => YieldEvaluator)): ValueCompletion {
-  // 1. Assert: The value of generator.[[GeneratorState]] is undefined.
-  Assert(generator.GeneratorState === Value.undefined);
+export function GeneratorStart(generator: GeneratorObject, generatorBody: ParseNode.GeneratorBody | (() => YieldEvaluator)): undefined {
+  // 1. Assert: The value of generator.[[GeneratorState]] is suspended-start.
+  Assert(generator.GeneratorState === 'suspendedStart');
   // 2. Let genContext be the running execution context.
   const genContext = surroundingAgent.runningExecutionContext;
   // 3. Set the Generator component of genContext to generator.
   genContext.Generator = generator;
-  // 4. Set the code evaluation state of genContext such that when evaluation is resumed
-  //    for that execution context the following steps will be performed:
-  genContext.codeEvaluationState = (function* resumer(): YieldEvaluator {
-    // a. If generatorBody is a Parse Node, then
-    //    i. Let result be the result of evaluating generatorBody.
-    // b. Else,
-    //    i. Assert: generatorBody is an Abstract Closure.
-    //    ii. Let result be generatorBody().
+  // 4. Let closure be a new Abstract Closure with no parameters that captures generatorBody
+  //    and performs the following steps when called:
+  const closure = function* closure(): ValueEvaluator {
+    // a. Let acGenContext be the running execution context.
+    const acGenContext = surroundingAgent.runningExecutionContext;
+    // b. Let acGenerator be the Generator component of acGenContext.
+    const acGenerator = acGenContext.Generator as GeneratorObject;
+    // c. If generatorBody is a Parse Node, then
+    //   i. Let result be Completion(Evaluation of generatorBody).
+    // d. Else,
+    //   i. Assert: generatorBody is an Abstract Closure with no parameters.
+    //   ii. Let result be generatorBody().
     const result = EnsureCompletion(
       // Note: Engine262 can only perform the "If generatorBody is an Abstract Closure" check:
       yield* typeof generatorBody === 'function'
         ? generatorBody()
         : Evaluate(generatorBody),
     );
-    // c. Assert: If we return here, the generator either threw an exception or
-    //    performed either an implicit or explicit return.
-    // d. Remove genContext from the execution context stack and restore the execution context
+    // e. Assert: If we return here, the generator either threw an exception or performed either
+    //    an implicit or explicit return.
+    // f. Remove acGenContext from the execution context stack and restore the execution context
     //    that is at the top of the execution context stack as the running execution context.
-    surroundingAgent.executionContextStack.pop(genContext);
-    // e. Set generator.[[GeneratorState]] to completed.
-    generator.GeneratorState = 'completed';
-    // f. Once a generator enters the completed state it never leaves it and its
-    //    associated execution context is never resumed. Any execution state associated
-    //    with generator can be discarded at this point.
-    genContext.codeEvaluationState = undefined;
-    // g. If result.[[Type]] is normal, let resultValue be undefined.
-    let resultValue;
-    if (result.Type === 'normal') {
+    surroundingAgent.executionContextStack.pop(acGenContext);
+    // g. Set acGenerator.[[GeneratorState]] to completed.
+    acGenerator.GeneratorState = 'completed';
+    // h. NOTE: Once a generator enters the completed state it never leaves it and its associated execution context is never resumed. Any execution state associated with acGenerator can be discarded at this point.
+
+    let resultValue: Value;
+    if (result instanceof NormalCompletion) {
+      // i. If result is a normal completion, then
+      //   i. Let resultValue be undefined.
       resultValue = Value.undefined;
-    } else if (result.Type === 'return') {
-      // h. Else if result.[[Type]] is return, let resultValue be result.[[Value]].
+    } else if (result instanceof ReturnCompletion) {
+      // j. Else if result is a return completion, then
+      //   i. Let resultValue be result.[[Value]].
       resultValue = result.Value;
-    } else { // i. Else,
-      // i. Assert: result.[[Type]] is throw.
-      Assert(result.Type === 'throw');
-      // ii. Return Completion(result).
+    } else {
+      // k. Else,
+      //   i. Assert: result is a throw completion.
+      //   ii. Return ? result.
+      Assert(result instanceof ThrowCompletion);
       return Q(result);
     }
-    // j. Return CreateIteratorResultObject(resultValue, true).
-    return X(CreateIteratorResultObject(resultValue, Value.true));
+    // l. Return CreateIteratorResultObject(resultValue, true).
+    return CreateIteratorResultObject(resultValue, Value.true);
+  };
+
+  // 5. Set the code evaluation state of genContext such that when evaluation is resumed
+  //    for that execution context, closure will be called with no arguments.
+  genContext.codeEvaluationState = (function* resumer() {
+    return yield* closure();
   }());
-  // 5. Set generator.[[GeneratorContext]] to genContext.
+
+  // 6. Set generator.[[GeneratorContext]] to genContext.
   generator.GeneratorContext = genContext;
-  // 6. Set generator.[[GeneratorState]] to suspendedStart.
-  generator.GeneratorState = 'suspendedStart';
-  // 7. Return NormalCompletion(undefined).
-  return NormalCompletion(Value.undefined);
+  // 7. Return unused.
 }
 
 export function generatorBrandToErrorMessageType(generatorBrand: JSStringValue | undefined) {
@@ -273,19 +283,36 @@ export function* Yield(value: Value): YieldEvaluator {
 }
 
 /** https://tc39.es/ecma262/#sec-createiteratorfromclosure */
-export function CreateIteratorFromClosure(closure: () => YieldEvaluator, generatorBrand: JSStringValue | undefined, generatorPrototype: ObjectValue) {
+export function CreateIteratorFromClosure(closure: () => YieldEvaluator, generatorBrand: JSStringValue | undefined, generatorPrototype: ObjectValue, extraSlots?: string[]) {
   Assert(typeof closure === 'function');
   // 1. NOTE: closure can contain uses of the Yield shorthand to yield an IteratorResult object.
-  // 2. Let internalSlotsList be « [[GeneratorState]], [[GeneratorContext]], [[GeneratorBrand]] ».
-  const internalSlotsList = ['GeneratorState', 'GeneratorContext', 'GeneratorBrand'];
-  // 3. Let generator be ! OrdinaryObjectCreate(generatorPrototype, internalSlotsList).
-  const generator = X(OrdinaryObjectCreate(generatorPrototype, internalSlotsList)) as Mutable<GeneratorObject>;
-  // 4. Set generator.[[GeneratorBrand]] to generatorBrand.
+  // 2. If extraSlots is not present, set extraSlots to a new empty List.
+  extraSlots ??= [];
+  // 3. Let internalSlotsList be the list-concatenation of extraSlots and « [[GeneratorState]], [[GeneratorContext]], [[GeneratorBrand]] ».
+  const internalSlotsList = extraSlots.concat(['GeneratorState', 'GeneratorContext', 'GeneratorBrand']);
+  // 4. Let generator be OrdinaryObjectCreate(generatorPrototype, internalSlotsList).
+  const generator = OrdinaryObjectCreate(generatorPrototype, internalSlotsList) as Mutable<GeneratorObject>;
+  // 5. Set generator.[[GeneratorBrand]] to generatorBrand.
   generator.GeneratorBrand = generatorBrand;
-  // 5. Set generator.[[GeneratorState]] to undefined.
-  generator.GeneratorState = Value.undefined;
-  // 6. Perform ! GeneratorStart(generator, closure).
-  X(GeneratorStart(generator, closure));
-  // 7. Return generator.
+  // 6. Set generator.[[GeneratorState]] to suspended-start.
+  generator.GeneratorState = 'suspendedStart';
+  // 7. Let callerContext be the running execution context.
+  const callerContext = surroundingAgent.runningExecutionContext;
+  // 8. Let calleeContext be a new execution context.
+  const calleeContext = new ExecutionContext();
+  // 9. Set the Function of calleeContext to null.
+  calleeContext.Function = Value.null;
+  // 10. Set the Realm of calleeContext to the current Realm Record.
+  calleeContext.Realm = surroundingAgent.currentRealmRecord;
+  // 11. Set the ScriptOrModule of calleeContext to callerContext's ScriptOrModule.
+  calleeContext.ScriptOrModule = callerContext.ScriptOrModule;
+  // 12. If callerContext is not already suspended, suspend callerContext.
+  // 13. Push calleeContext onto the execution context stack; calleeContext is now the running execution context.
+  surroundingAgent.executionContextStack.push(calleeContext);
+  // 14. Perform GeneratorStart(generator, closure).
+  GeneratorStart(generator, closure);
+  // 15. Remove calleeContext from the execution context stack and restore callerContext as the running execution context.
+  surroundingAgent.executionContextStack.pop(calleeContext);
+  // 16. Return generator.
   return generator;
 }

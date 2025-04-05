@@ -32,6 +32,7 @@ import { bootstrapString } from '../intrinsics/String.mts';
 import { bootstrapErrorPrototype } from '../intrinsics/ErrorPrototype.mts';
 import { bootstrapError } from '../intrinsics/Error.mts';
 import { bootstrapNativeError } from '../intrinsics/NativeError.mts';
+import { bootstrapIteratorHelperPrototype } from '../intrinsics/IteratorHelperPrototype.mts';
 import { bootstrapIteratorPrototype } from '../intrinsics/IteratorPrototype.mts';
 import { bootstrapIterator } from '../intrinsics/Iterator.mts';
 import { bootstrapAsyncIteratorPrototype } from '../intrinsics/AsyncIteratorPrototype.mts';
@@ -79,6 +80,7 @@ import { bootstrapAggregateError } from '../intrinsics/AggregateError.mts';
 import { bootstrapAggregateErrorPrototype } from '../intrinsics/AggregateErrorPrototype.mts';
 import { bootstrapWeakRefPrototype } from '../intrinsics/WeakRefPrototype.mts';
 import { bootstrapWeakRef } from '../intrinsics/WeakRef.mts';
+import { bootstrapWrapForValidIteratorPrototype } from '../intrinsics/WrapForValidIteratorPrototype.mts';
 import { bootstrapFinalizationRegistryPrototype } from '../intrinsics/FinalizationRegistryPrototype.mts';
 import { bootstrapFinalizationRegistry } from '../intrinsics/FinalizationRegistry.mts';
 import {
@@ -329,6 +331,8 @@ export function CreateIntrinsics(realmRec: Realm) {
 
   bootstrapIteratorPrototype(realmRec);
   bootstrapIterator(realmRec);
+  bootstrapIteratorHelperPrototype(realmRec);
+  bootstrapWrapForValidIteratorPrototype(realmRec);
 
   bootstrapAsyncIteratorPrototype(realmRec);
   bootstrapArrayIteratorPrototype(realmRec);

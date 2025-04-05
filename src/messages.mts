@@ -75,6 +75,7 @@ export const InvalidAlphabet = () => 'Invalid alphabet';
 export const InvalidLastChunkHandling = () => 'Invalid lastChunkHandling';
 export const InvalidBase64String = () => 'Invalid base64 string';
 export const InvalidHexString = () => 'Invalid hex string';
+export const IteratorCompleted = () => 'The iterator is already complete.';
 export const IteratorThrowMissing = () => 'The iterator does not provide a throw method';
 export const JSONCircular = () => 'Cannot JSON stringify a circular structure';
 export const JSONUnexpectedToken = () => 'Unexpected token in JSON';
