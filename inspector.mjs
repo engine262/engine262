@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 3a087bf31d0cd3cfceaf6bb658ec37ad18d5d0d8
+ * engine262 0.0.1 5156b1f8a98a89fe335e1772b66c4a0d4ad800f9
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -676,7 +676,7 @@ class InspectorContext {
       let p = object;
       while (p instanceof ObjectValue) {
         for (const key of Q(skipDebugger(p.OwnPropertyKeys()))) {
-          if (nonIndexedPropertiesOnly && !isIntegerIndex(key)) {
+          if (nonIndexedPropertiesOnly && isIntegerIndex(key)) {
             continue;
           }
           const desc = Q(skipDebugger(p.GetOwnProperty(key)));

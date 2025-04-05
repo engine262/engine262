@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 3a087bf31d0cd3cfceaf6bb658ec37ad18d5d0d8
+ * engine262 0.0.1 5156b1f8a98a89fe335e1772b66c4a0d4ad800f9
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -56982,13 +56982,12 @@ function FromBase64(string, alphabet, lastChunkHandling, maxLength = 2 ** 53 - 1
             Error: error
           };
         }
-      } else {
-        return {
-          Read: read,
-          Bytes: bytes,
-          Error: undefined
-        };
       }
+      return {
+        Read: length,
+        Bytes: bytes,
+        Error: undefined
+      };
     }
     let char = string.substring(index, index + 1);
     index += 1;
