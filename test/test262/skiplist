@@ -9,18 +9,6 @@
 # https://github.com/tc39/test262/pull/3612
 built-ins/SharedArrayBuffer/prototype/prop-desc.js
 
-# https://github.com/tc39/ecma262/pull/2267
-language/expressions/assignment/target-member-computed-reference-null.js
-language/expressions/assignment/target-member-computed-reference-undefined.js
-language/expressions/assignment/target-member-identifier-reference-null.js
-language/expressions/assignment/target-member-identifier-reference-undefined.js
-language/expressions/assignment/target-super-computed-reference-null.js
-language/expressions/assignment/target-super-identifier-reference-null.js
-language/expressions/delete/member-computed-reference-null.js
-language/expressions/delete/member-computed-reference-undefined.js
-language/expressions/delete/member-identifier-reference-null.js
-language/expressions/delete/member-identifier-reference-undefined.js
-
 # https://github.com/tc39/ecma262/pull/2436
 built-ins/RegExp/match-indices/indices-array-non-unicode-match.js
 built-ins/RegExp/named-groups/non-unicode-match.js

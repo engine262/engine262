@@ -119,8 +119,8 @@ export function* PutValue(V: PlainCompletion<ReferenceRecord | Value>, W: PlainC
   }
   // 5. If IsPropertyReference(V) is true, then
   if (IsPropertyReference(V) === Value.true) {
-    // a. Let baseObj be ! ToObject(V.[[Base]]).
-    const baseObj = X(ToObject(V.Base as JSStringValue));
+    // a. Let baseObj be ? ToObject(V.[[Base]]).
+    const baseObj = Q(ToObject(V.Base as JSStringValue));
     // b. If IsPrivateReference(V) is true, then
     if (IsPrivateReference(V) === Value.true) {
       // i. Return ? PrivateSet(V.[[ReferencedName]], baseObj, W).
