@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 6f222511ba13b1448185463120d7da6059c79433
+ * engine262 0.0.1 b2c4a1cafc20e8e07773830628a7b5ede18d6b7b
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -13218,21 +13218,23 @@
     });
     /* c8 ignore if */
     if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
-    /* X */
-    let _temp4 = Prototype.DefineOwnProperty(Value('constructor'), exports.Descriptor({
-      Value: cons,
-      Writable: Value.true,
-      Enumerable: Value.false,
-      Configurable: Value.true
-    }));
-    /* c8 ignore if */
-    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) _temp4 = skipDebugger(_temp4);
-    /* c8 ignore if */
-    if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! Prototype.DefineOwnProperty(Value('constructor'), Descriptor({\n    Value: cons,\n    Writable: Value.true,\n    Enumerable: Value.false,\n    Configurable: Value.true,\n  })) returned an abrupt completion", {
-      cause: _temp4
-    });
-    /* c8 ignore if */
-    if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+    if (!Prototype.properties.has('constructor')) {
+      /* X */
+      let _temp4 = Prototype.DefineOwnProperty(Value('constructor'), exports.Descriptor({
+        Value: cons,
+        Writable: Value.true,
+        Enumerable: Value.false,
+        Configurable: Value.true
+      }));
+      /* c8 ignore if */
+      if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) _temp4 = skipDebugger(_temp4);
+      /* c8 ignore if */
+      if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! Prototype.DefineOwnProperty(Value('constructor'), Descriptor({\n      Value: cons,\n      Writable: Value.true,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    })) returned an abrupt completion", {
+        cause: _temp4
+      });
+      /* c8 ignore if */
+      if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+    }
     assignProps(realmRec, cons, props);
     return cons;
   }
@@ -13346,7 +13348,7 @@
   }
   ForInIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%foriniteratorprototype%.next';
   function bootstrapForInIteratorPrototype(realmRec) {
-    const proto = bootstrapPrototype(realmRec, [['next', ForInIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%']);
+    const proto = bootstrapPrototype(realmRec, [['next', ForInIteratorPrototype_next, 0]], realmRec.Intrinsics['%Iterator.prototype%']);
     realmRec.Intrinsics['%ForInIteratorPrototype%'] = proto;
   }
 
@@ -14731,6 +14733,7 @@
   const BufferDetachKeyMismatch = (k, b) => `${i(k)} is not the [[ArrayBufferDetachKey]] of ${i(b)}`;
   const CannotAllocateDataBlock = () => 'Cannot allocate memory';
   const CannotCreateProxyWith = (x, y) => `Cannot create a proxy with a ${x} as ${y}`;
+  const CannotConstructAbstractFunction = c => `Cannot construct abstract ${i(c)}`;
   const CannotConvertDecimalToBigInt = n => `Cannot convert ${i(n)} to a BigInt because it is not an integer`;
   const CannotConvertSymbol = t => `Cannot convert a Symbol value to a ${t}`;
   const CannotConvertToBigInt = v => `Cannot convert ${i(v)} to a BigInt`;
@@ -14893,6 +14896,7 @@
     BufferContentTypeMismatch: BufferContentTypeMismatch,
     BufferDetachKeyMismatch: BufferDetachKeyMismatch,
     CannotAllocateDataBlock: CannotAllocateDataBlock,
+    CannotConstructAbstractFunction: CannotConstructAbstractFunction,
     CannotConvertDecimalToBigInt: CannotConvertDecimalToBigInt,
     CannotConvertSymbol: CannotConvertSymbol,
     CannotConvertToBigInt: CannotConvertToBigInt,
@@ -28620,7 +28624,19 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 2. Return NormalCompletion(undefined).
     return NormalCompletion(Value.undefined);
   }
+
+  /** https://tc39.es/proposal-is-error/#sec-iserror */
   InstallErrorCause.section = 'https://tc39.es/ecma262/#sec-errorobjects-install-error-cause';
+  function IsError(argument) {
+    if (!(argument instanceof ObjectValue)) {
+      return false;
+    }
+    if ('ErrorData' in argument) {
+      return true;
+    }
+    return false;
+  }
+  IsError.section = 'https://tc39.es/proposal-is-error/#sec-iserror';
 
   // This file covers abstract operations defined in
   /** https://tc39.es/ecma262/#sec-execution-contexts */
@@ -31006,7 +31022,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       }
       return NormalCompletion(Value.undefined);
     };
-    const iterator = CreateIteratorFromClosure(closure, undefined, exports.surroundingAgent.intrinsic('%IteratorPrototype%'));
+    const iterator = CreateIteratorFromClosure(closure, undefined, exports.surroundingAgent.intrinsic('%Iterator.prototype%'));
     return {
       Iterator: iterator,
       NextMethod: exports.surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype.next%'),
@@ -43562,7 +43578,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
   RegExpStringIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%regexpstringiteratorprototype%.next';
   function bootstrapRegExpStringIteratorPrototype(realmRec) {
-    const proto = bootstrapPrototype(realmRec, [['next', RegExpStringIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'RegExp String Iterator');
+    const proto = bootstrapPrototype(realmRec, [['next', RegExpStringIteratorPrototype_next, 0]], realmRec.Intrinsics['%Iterator.prototype%'], 'RegExp String Iterator');
     realmRec.Intrinsics['%RegExpStringIteratorPrototype%'] = proto;
   }
 
@@ -49254,10 +49270,6 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     realmRec.Intrinsics['%String%'] = stringConstructor;
   }
 
-  function isErrorObject(value) {
-    return 'ErrorData' in value;
-  }
-
   /** https://tc39.es/ecma262/#sec-error-constructor */
   function* ErrorConstructor([message = Value.undefined, options = Value.undefined], {
     NewTarget
@@ -49339,9 +49351,15 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // 5. Return O.
     return O;
   }
+
+  /** https://tc39.es/proposal-is-error/#sec-error.iserror */
   ErrorConstructor.section = 'https://tc39.es/ecma262/#sec-error-constructor';
+  function Error_isError([value]) {
+    return Value(IsError(value));
+  }
+  Error_isError.section = 'https://tc39.es/proposal-is-error/#sec-error.iserror';
   function bootstrapError(realmRec) {
-    const error = bootstrapConstructor(realmRec, ErrorConstructor, 'Error', 1, realmRec.Intrinsics['%Error.prototype%'], []);
+    const error = bootstrapConstructor(realmRec, ErrorConstructor, 'Error', 1, realmRec.Intrinsics['%Error.prototype%'], [['isError', Error_isError, 1]]);
     realmRec.Intrinsics['%Error%'] = error;
   }
 
@@ -49427,7 +49445,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return exports.surroundingAgent.Throw('TypeError', 'NotAnObject', E);
     }
     // 3. If E does not have an [[ErrorData]] internal slot, return undefined.
-    if (!isErrorObject(E)) {
+    if (!IsError(E)) {
       return Value.undefined;
     }
     // 4. Return an implementation-defined string that represents the stack trace of E.
@@ -49455,7 +49473,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
       return exports.surroundingAgent.Throw('TypeError', 'NotEnoughArguments', numberOfArgs, 1);
     }
     // 5. If E does not have an [[ErrorData]] internal slot, return undefined.
-    if (!isErrorObject(E)) {
+    if (!IsError(E)) {
       return Value.undefined;
     }
     // 6. Perform ? SetterThatIgnoresPrototypeProperties(this value, %Error.prototype%, "stack", v).
@@ -49582,17 +49600,85 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     }
   }
 
-  /** https://tc39.es/ecma262/#sec-%iteratorprototype%-@@iterator */
+  /** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-get-iterator.prototype.constructor */
+  function IteratorProto_constructorGetter() {
+    // 1. Return %Iterator%.
+    return exports.surroundingAgent.intrinsic('%Iterator%');
+  }
+
+  /** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-set-iterator.prototype.constructor */
+  IteratorProto_constructorGetter.section = 'https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-get-iterator.prototype.constructor';
+  function* IteratorProto_constructorSetter([v], {
+    thisValue
+  }) {
+    /* ReturnIfAbrupt */
+    let _temp = yield* SetterThatIgnoresPrototypeProperties(thisValue, exports.surroundingAgent.intrinsic('%Iterator.prototype%'), Value('constructor'), v);
+    /* c8 ignore if */
+    if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
+    /* c8 ignore if */
+    if (_temp instanceof AbruptCompletion) return _temp;
+    /* c8 ignore if */
+    if (_temp instanceof Completion) _temp = _temp.Value;
+    // 2. Return undefined.
+    return Value.undefined;
+  }
+
+  /** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-iterator.prototype-%symbol.iterator% */
+  IteratorProto_constructorSetter.section = 'https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-set-iterator.prototype.constructor';
   function IteratorPrototype_iterator(_args, {
     thisValue
   }) {
-    // 1. Return this value.
+    // 1. Return the this value.
     return thisValue;
   }
-  IteratorPrototype_iterator.section = 'https://tc39.es/ecma262/#sec-%iteratorprototype%-@@iterator';
+
+  /** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-get-iterator.prototype-%symbol.tostringtag% */
+  IteratorPrototype_iterator.section = 'https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-iterator.prototype-%symbol.iterator%';
+  function IteratorPrototype_toStringTagGetter() {
+    return Value('Iterator');
+  }
+
+  /** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-set-iterator.prototype-%symbol.tostringtag% */
+  IteratorPrototype_toStringTagGetter.section = 'https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-get-iterator.prototype-%symbol.tostringtag%';
+  function* IteratorPrototype_toStringTagSetter([v], {
+    thisValue
+  }) {
+    /* ReturnIfAbrupt */
+    let _temp2 = yield* SetterThatIgnoresPrototypeProperties(thisValue, exports.surroundingAgent.intrinsic('%Iterator.prototype%'), wellKnownSymbols.toStringTag, v);
+    /* c8 ignore if */
+    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
+    /* c8 ignore if */
+    if (_temp2 instanceof AbruptCompletion) return _temp2;
+    /* c8 ignore if */
+    if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+    // 2. Return undefined.
+    return Value.undefined;
+  }
+  IteratorPrototype_toStringTagSetter.section = 'https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-set-iterator.prototype-%symbol.tostringtag%';
   function bootstrapIteratorPrototype(realmRec) {
-    const proto = bootstrapPrototype(realmRec, [[wellKnownSymbols.iterator, IteratorPrototype_iterator, 0]], realmRec.Intrinsics['%Object.prototype%']);
-    realmRec.Intrinsics['%IteratorPrototype%'] = proto;
+    const proto = bootstrapPrototype(realmRec, [['constructor', [IteratorProto_constructorGetter, IteratorProto_constructorSetter]], [wellKnownSymbols.iterator, IteratorPrototype_iterator, 0], [wellKnownSymbols.toStringTag, [IteratorPrototype_toStringTagGetter, IteratorPrototype_toStringTagSetter]]], realmRec.Intrinsics['%Object.prototype%']);
+    realmRec.Intrinsics['%Iterator.prototype%'] = proto;
+  }
+
+  /** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-iterator-constructor */
+  function* IteratorConstructor(_args, {
+    NewTarget
+  }) {
+    // 1. If NewTarget is either undefined or the active function object, throw a TypeError exception.
+    if (NewTarget instanceof UndefinedValue) {
+      return exports.surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
+    }
+    if (NewTarget === exports.surroundingAgent.activeFunctionObject) {
+      return exports.surroundingAgent.Throw('TypeError', 'CannotConstructAbstractFunction', NewTarget);
+    }
+
+    // 2. Return ? OrdinaryCreateFromConstructor(NewTarget, "%Iterator.prototype%").
+    return yield* OrdinaryCreateFromConstructor(NewTarget, '%Iterator.prototype%');
+  }
+  IteratorConstructor.section = 'https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-iterator-constructor';
+  function bootstrapIterator(realmRec) {
+    const cons = bootstrapConstructor(realmRec, IteratorConstructor, 'Iterator', 0, realmRec.Intrinsics['%Iterator.prototype%'], []);
+    realmRec.Intrinsics['%Iterator%'] = cons;
   }
 
   /** https://tc39.es/ecma262/#sec-asynciteratorprototype-asynciterator */
@@ -49617,7 +49703,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
   ArrayIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%arrayiteratorprototype%.next';
   function bootstrapArrayIteratorPrototype(realmRec) {
-    const proto = bootstrapPrototype(realmRec, [['next', ArrayIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'Array Iterator');
+    const proto = bootstrapPrototype(realmRec, [['next', ArrayIteratorPrototype_next, 0]], realmRec.Intrinsics['%Iterator.prototype%'], 'Array Iterator');
     realmRec.Intrinsics['%ArrayIteratorPrototype%'] = proto;
   }
 
@@ -49713,7 +49799,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
   MapIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%mapiteratorprototype%.next';
   function bootstrapMapIteratorPrototype(realmRec) {
-    const proto = bootstrapPrototype(realmRec, [['next', MapIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'Map Iterator');
+    const proto = bootstrapPrototype(realmRec, [['next', MapIteratorPrototype_next, 0]], realmRec.Intrinsics['%Iterator.prototype%'], 'Map Iterator');
     realmRec.Intrinsics['%MapIteratorPrototype%'] = proto;
   }
 
@@ -49811,7 +49897,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
   SetIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%setiteratorprototype%.next';
   function bootstrapSetIteratorPrototype(realmRec) {
-    const proto = bootstrapPrototype(realmRec, [['next', SetIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'Set Iterator');
+    const proto = bootstrapPrototype(realmRec, [['next', SetIteratorPrototype_next, 0]], realmRec.Intrinsics['%Iterator.prototype%'], 'Set Iterator');
     realmRec.Intrinsics['%SetIteratorPrototype%'] = proto;
   }
 
@@ -49824,7 +49910,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
   StringIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%stringiteratorprototype%.next';
   function bootstrapStringIteratorPrototype(realmRec) {
-    const proto = bootstrapPrototype(realmRec, [['next', StringIteratorPrototype_next, 0]], realmRec.Intrinsics['%IteratorPrototype%'], 'String Iterator');
+    const proto = bootstrapPrototype(realmRec, [['next', StringIteratorPrototype_next, 0]], realmRec.Intrinsics['%Iterator.prototype%'], 'String Iterator');
     realmRec.Intrinsics['%StringIteratorPrototype%'] = proto;
   }
 
@@ -50809,7 +50895,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   }
   GeneratorProto_throw.section = 'https://tc39.es/ecma262/#sec-generator.prototype.throw';
   function bootstrapGeneratorFunctionPrototypePrototype(realmRec) {
-    const generatorPrototype = bootstrapPrototype(realmRec, [['next', GeneratorProto_next, 1], ['return', GeneratorProto_return, 1], ['throw', GeneratorProto_throw, 1]], realmRec.Intrinsics['%IteratorPrototype%'], 'Generator');
+    const generatorPrototype = bootstrapPrototype(realmRec, [['next', GeneratorProto_next, 1], ['return', GeneratorProto_return, 1], ['throw', GeneratorProto_throw, 1]], realmRec.Intrinsics['%Iterator.prototype%'], 'Generator');
     realmRec.Intrinsics['%GeneratorFunction.prototype.prototype%'] = generatorPrototype;
 
     // Used by `CreateListIteratorRecord`:
@@ -56222,6 +56308,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     bootstrapAggregateError(realmRec);
     bootstrapFunction(realmRec);
     bootstrapIteratorPrototype(realmRec);
+    bootstrapIterator(realmRec);
     bootstrapAsyncIteratorPrototype(realmRec);
     bootstrapArrayIteratorPrototype(realmRec);
     bootstrapMapIteratorPrototype(realmRec);
@@ -56330,7 +56417,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
     // Function Properties of the Global Object
     'eval', 'isFinite', 'isNaN', 'parseFloat', 'parseInt', 'decodeURI', 'decodeURIComponent', 'encodeURI', 'encodeURIComponent',
     // Constructor Properties of the Global Object
-    'AggregateError', 'Array', 'ArrayBuffer', 'Boolean', 'BigInt', 'BigInt64Array', 'BigUint64Array', 'DataView', 'Date', 'Error', 'EvalError', 'FinalizationRegistry', 'Float32Array', 'Float64Array', 'Function', 'Int8Array', 'Int16Array', 'Int32Array', 'Map', 'Number', 'Object', 'Promise', 'Proxy', 'RangeError', 'ReferenceError', 'RegExp', 'Set',
+    'AggregateError', 'Array', 'ArrayBuffer', 'Boolean', 'BigInt', 'BigInt64Array', 'BigUint64Array', 'DataView', 'Date', 'Error', 'EvalError', 'FinalizationRegistry', 'Float32Array', 'Float64Array', 'Function', 'Int8Array', 'Int16Array', 'Int32Array', 'Iterator', 'Map', 'Number', 'Object', 'Promise', 'Proxy', 'RangeError', 'ReferenceError', 'RegExp', 'Set',
     // 'SharedArrayBuffer',
     'String', 'Symbol', 'SyntaxError', 'TypeError', 'Uint8Array', 'Uint8ClampedArray', 'Uint16Array', 'Uint32Array', 'URIError', 'WeakMap', 'WeakRef', 'WeakSet',
     // Other Properties of the Global Object
@@ -60862,6 +60949,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.IsDataDescriptor = IsDataDescriptor;
   exports.IsDestructuring = IsDestructuring;
   exports.IsDetachedBuffer = IsDetachedBuffer;
+  exports.IsError = IsError;
   exports.IsExtensible = IsExtensible;
   exports.IsFixedLengthArrayBuffer = IsFixedLengthArrayBuffer;
   exports.IsFunctionDefinition = IsFunctionDefinition;
@@ -61113,7 +61201,7 @@ ${' '.repeat(startIndex - lineStart)}${'^'.repeat(Math.max(endIndex - startIndex
   exports.isDataViewObject = isDataViewObject;
   exports.isDateObject = isDateObject;
   exports.isECMAScriptFunctionObject = isECMAScriptFunctionObject;
-  exports.isErrorObject = isErrorObject;
+  exports.isErrorObject = IsError;
   exports.isFunctionObject = isFunctionObject;
   exports.isIntegerIndex = isIntegerIndex;
   exports.isMapObject = isMapObject;
