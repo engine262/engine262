@@ -46,9 +46,15 @@ export const FEATURES = ([
     flag: 'cleanup-some',
     url: 'https://github.com/tc39/proposal-cleanup-some',
   },
+  {
+    name: 'Uint8Array to/from base64 and hex',
+    flag: 'uint8array-base64',
+    url: 'https://tc39.es/proposal-arraybuffer-base64/',
+  },
 ]) as const satisfies Engine262Feature[];
 Object.freeze(FEATURES);
 FEATURES.forEach(Object.freeze);
+export type Feature = typeof FEATURES[number]['flag'];
 
 class ExecutionContextStack extends Array<ExecutionContext> {
   // This ensures that only the length taking overload is supported.
@@ -188,7 +194,7 @@ export class Agent {
   }
 
   // NON-SPEC: Check if a feature is enabled in this agent.
-  feature(name: string): boolean {
+  feature(name: Feature): boolean {
     return !!this.hostDefinedOptions.features?.includes(name);
   }
 

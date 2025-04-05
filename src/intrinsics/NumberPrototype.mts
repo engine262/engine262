@@ -38,7 +38,7 @@ function* NumberProto_toExponential([fractionDigits = Value.undefined]: Argument
   const f = Q(yield* ToIntegerOrInfinity(fractionDigits));
   Assert(fractionDigits !== Value.undefined || f === 0);
   if (!x.isFinite()) {
-    return NumberValue.toString(x);
+    return NumberValue.toString(x, 10);
   }
   if (f < 0 || f > 100) {
     return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toExponential');
@@ -55,7 +55,7 @@ function* NumberProto_toFixed([fractionDigits = Value.undefined]: Arguments, { t
     return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toFixed');
   }
   if (!x.isFinite()) {
-    return X(NumberValue.toString(x));
+    return X(NumberValue.toString(x, 10));
   }
   return Value(R(x).toFixed(f));
 }
@@ -73,7 +73,7 @@ function* NumberProto_toPrecision([precision = Value.undefined]: Arguments, { th
   }
   const p = Q(yield* ToIntegerOrInfinity(precision));
   if (!x.isFinite()) {
-    return X(NumberValue.toString(x));
+    return X(NumberValue.toString(x, 10));
   }
   if (p < 1 || p > 100) {
     return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toPrecision');

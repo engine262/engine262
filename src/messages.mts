@@ -71,6 +71,10 @@ export const InvalidSuperProperty = () => '`super` not expected here';
 export const InvalidTemplateEscape = () => 'Invalid escapes are only allowed in tagged templates';
 export const InvalidThis = () => 'Invalid `this` access';
 export const InvalidUnicodeEscape = () => 'Invalid unicode escape';
+export const InvalidAlphabet = () => 'Invalid alphabet';
+export const InvalidLastChunkHandling = () => 'Invalid lastChunkHandling';
+export const InvalidBase64String = () => 'Invalid base64 string';
+export const InvalidHexString = () => 'Invalid hex string';
 export const IteratorThrowMissing = () => 'The iterator does not provide a throw method';
 export const JSONCircular = () => 'Cannot JSON stringify a circular structure';
 export const JSONUnexpectedToken = () => 'Unexpected token in JSON';
@@ -94,6 +98,7 @@ export const NotEnoughArguments = (numArgs, minArgs) => `${minArgs} argument${mi
 export const NotInitialized = (n) => `${i(n)} cannot be used before initialization`;
 export const NotIterable = (n) => `${i(n)} is not iterable`;
 export const NotPropertyName = (p) => `${i(p)} is not a valid property name`;
+export const NotUint8Array = () => 'Not a Uint8Array';
 export const NumberFormatRange = (m) => `Invalid format range for ${m}`;
 export const ObjectToPrimitive = () => 'Cannot convert object to primitive value';
 export const ObjectPrototypeType = () => 'Object prototype must be an Object or null';

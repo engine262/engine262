@@ -333,7 +333,7 @@ function createWorker(workerId: number) {
         const err = message.error.split('\n').map(message.description ? (l) => `    ${l}` : (l) => `  ${l}`).join('\n');
         failedTests_log.write(`${message.file}\n  ${message.flags ? `[${message.flags}] ` : ''}${message.description}\n${err}\n\n`);
         if (skipReport) {
-          return skip();
+          return skip(workerId);
         }
 
         failedTests.add(message.file);

@@ -344,14 +344,14 @@ function* SetTypedArrayFromTypedArray(target: TypedArrayObject, targetOffset: nu
   if (srcType === targetType) {
     while (targetByteIndex < limit) {
       const value = GetValueFromBuffer(srcBuffer, srcByteIndex, 'Uint8', true, 'unordered');
-      Q(yield* SetValueInBuffer(targetBuffer, targetByteIndex, 'Uint8', value, Value.true, 'unordered'));
+      Q(yield* SetValueInBuffer(targetBuffer, targetByteIndex, 'Uint8', value, true, 'unordered'));
       srcByteIndex += 1;
       targetByteIndex += 1;
     }
   } else {
     while (targetByteIndex < limit) {
       const value = GetValueFromBuffer(srcBuffer, srcByteIndex, srcType, true, 'unordered');
-      Q(yield* SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value, Value.true, 'unordered'));
+      Q(yield* SetValueInBuffer(targetBuffer, targetByteIndex, targetType, value, true, 'unordered'));
       srcByteIndex += srcElementSize;
       targetByteIndex += targetElementSize;
     }

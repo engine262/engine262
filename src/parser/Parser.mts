@@ -1,4 +1,4 @@
-import { surroundingAgent } from '../host-defined/engine.mts';
+import { surroundingAgent, type Feature } from '../host-defined/engine.mts';
 import * as messages from '../messages.mts';
 import { LanguageParser } from './LanguageParser.mts';
 import { isLineTerminator, type Locatable } from './Lexer.mts';
@@ -53,8 +53,7 @@ export class Parser extends LanguageParser {
     return this.state.strict;
   }
 
-  feature(name: string) {
-    // eslint-disable-next-line @engine262/valid-feature
+  feature(name: Feature) {
     return surroundingAgent.feature(name);
   }
 

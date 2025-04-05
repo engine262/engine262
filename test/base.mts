@@ -170,8 +170,11 @@ export function fatal(message: string): never {
   process.stderr.write(`\n${ANSI.red}ERROR: ${message}${ANSI.reset}\n\n`);
   process.exit(1);
 }
-export function skip() {
+export function skip(workerId?: number) {
   skipped += 1;
+  if (workerId) {
+    running[workerId][0] = '';
+  }
   // doesn't count towards testsPerSec
 }
 export function run(workerId: number, test: string, flags: string) {
