@@ -69,6 +69,7 @@ function* ErrorConstructor([message = Value.undefined, options = Value.undefined
   return O;
 }
 
+/** https://tc39.es/proposal-is-error/#sec-error.iserror */
 function Error_isError([value]: Arguments) {
   return Value(IsError(value));
 }
