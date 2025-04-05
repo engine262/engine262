@@ -40,4 +40,3 @@ uint8array-base64 = uint8array-base64
 -ShadowRealm
 -array-grouping
 -regexp-duplicate-named-groups
--change-array-by-copy

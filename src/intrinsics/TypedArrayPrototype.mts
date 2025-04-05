@@ -26,6 +26,7 @@ import {
   TypedArrayByteLength,
   IsTypedArrayOutOfBounds,
   TypedArrayLength,
+  IsValidIntegerIndex,
 } from '../abstract-ops/all.mts';
 import {
   Q, X, type ValueEvaluator, type PlainCompletion,
@@ -43,6 +44,7 @@ import { bootstrapPrototype } from './bootstrap.mts';
 import { bootstrapArrayPrototypeShared, SortIndexedProperties } from './ArrayPrototypeShared.mts';
 import {
   CompareTypedArrayElements,
+  TypedArrayCreateSameType,
   TypedArrayElementSize,
   TypedArrayElementType,
   TypedArraySpeciesCreate, ValidateTypedArray, type TypedArrayObject,
@@ -501,6 +503,29 @@ function* TypedArrayProto_sort([comparator = Value.undefined]: Arguments, { this
   return obj;
 }
 
+/** https://tc39.es/ecma262/#sec-%typedarray%.prototype.tosorted */
+function* TypedArrayProto_toSorted([comparator = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
+  if (comparator !== Value.undefined && !IsCallable(comparator)) {
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', comparator);
+  }
+  const O = thisValue as TypedArrayObject;
+  const taRecord = Q(ValidateTypedArray(O, 'seq-cst'));
+  const len = TypedArrayLength(taRecord);
+  const A = Q(yield* TypedArrayCreateSameType(O, [F(len)]));
+  const SortCompare = function* SortCompare(x: Value, y: Value): ValueEvaluator<NumberValue> {
+    Assert(x instanceof NumberValue || x instanceof BigIntValue);
+    Assert(y instanceof NumberValue || y instanceof BigIntValue);
+    return yield* CompareTypedArrayElements(x, y, comparator);
+  };
+  const sortedList = Q(yield* SortIndexedProperties(O, len, SortCompare, 'read-through-holes'));
+  let j = 0;
+  while (j < len) {
+    X(Set(A, X(ToString(F(j))), sortedList[j], Value.true));
+    j += 1;
+  }
+  return A;
+}
+
 /** https://tc39.es/ecma262/#sec-%typedarray%.prototype.subarray */
 function* TypedArrayProto_subarray([begin = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const O = thisValue as TypedArrayObject;
@@ -598,6 +623,61 @@ function* TypedArrayProto_at([index = Value.undefined]: Arguments, { thisValue }
   return X(Get(O, X(ToString(F(k)))));
 }
 
+/** https://tc39.es/ecma262/#sec-%typedarray%.prototype.with */
+function* TypedArrayProto_with([index = Value.undefined, value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const O = thisValue;
+  const taRecord = Q(ValidateTypedArray(O, 'seq-cst'));
+  __ts_cast__<TypedArrayObject>(O);
+  const len = TypedArrayLength(taRecord);
+  const relativeIndex = Q(yield* ToIntegerOrInfinity(index));
+  let actualIndex;
+  if (relativeIndex >= 0) {
+    actualIndex = relativeIndex;
+  } else {
+    actualIndex = len + relativeIndex;
+  }
+  let numericValue;
+  if (O.ContentType === 'BigInt') {
+    numericValue = Q(yield* ToBigInt(value));
+  } else {
+    numericValue = Q(yield* ToNumber(value));
+  }
+  if (IsValidIntegerIndex(O, F(actualIndex)) === Value.false) {
+    return surroundingAgent.Throw('RangeError', 'TypedArrayOOB');
+  }
+  const A = Q(yield* TypedArrayCreateSameType(O, [F(len)]));
+  let k = 0;
+  while (k < len) {
+    const Pk = X(ToString(F(k)));
+    let fromValue;
+    if (k === actualIndex) {
+      fromValue = numericValue;
+    } else {
+      fromValue = X(Get(O, Pk));
+    }
+    X(Set(A, Pk, fromValue, Value.true));
+    k += 1;
+  }
+  return A;
+}
+
+/** https://tc39.es/ecma262/#sec-%typedarray%.prototype.toreversed */
+function* TypedArrayProto_toReversed(_args: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  const O = thisValue as TypedArrayObject;
+  const taRecord = Q(ValidateTypedArray(O, 'seq-cst'));
+  const length = TypedArrayLength(taRecord);
+  const A = Q(yield* TypedArrayCreateSameType(O, [F(length)]));
+  let k = 0;
+  while (k < length) {
+    const from = X(ToString(F(length - k - 1)));
+    const Pk = X(ToString(F(k)));
+    const fromValue = X(Get(O, from));
+    X(Set(A, Pk, fromValue, Value.true));
+    k += 1;
+  }
+  return A;
+}
+
 export function bootstrapTypedArrayPrototype(realmRec: Realm) {
   const ArrayProto_toString = X(Get(realmRec.Intrinsics['%Array.prototype%'], Value('toString')));
   Assert(ArrayProto_toString instanceof ObjectValue);
@@ -617,8 +697,11 @@ export function bootstrapTypedArrayPrototype(realmRec: Realm) {
     ['set', TypedArrayProto_set, 1],
     ['slice', TypedArrayProto_slice, 2],
     ['sort', TypedArrayProto_sort, 1],
+    ['toSorted', TypedArrayProto_toSorted, 1],
     ['subarray', TypedArrayProto_subarray, 2],
     ['values', TypedArrayProto_values, 0],
+    ['with', TypedArrayProto_with, 2],
+    ['toReversed', TypedArrayProto_toReversed, 0],
     ['toString', ArrayProto_toString],
     [wellKnownSymbols.toStringTag, [TypedArrayProto_toStringTag]],
   ], realmRec.Intrinsics['%Object.prototype%']);

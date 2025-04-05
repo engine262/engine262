@@ -371,6 +371,7 @@ language/comments/S7.4_A6.js
 language/literals/regexp/S7.8.5_A1.1_T2.js
 language/literals/regexp/S7.8.5_A2.1_T2.js
 staging/sm/Array/length-truncate-nonconfigurable-sparse.js
+staging/sm/Array/toSpliced-dense.js
 staging/sm/Date/dst-offset-caching-1-of-8.js
 staging/sm/Date/dst-offset-caching-2-of-8.js
 staging/sm/Date/dst-offset-caching-3-of-8.js
