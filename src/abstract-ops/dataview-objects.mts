@@ -146,6 +146,6 @@ export function* SetViewValue(view: Value, requestIndex: Value, isLittleEndian: 
   // 13. Let bufferIndex be getIndex + viewOffset.
   const bufferIndex = getIndex + viewOffset;
   // 14. Perform ? SetValueInBuffer(buffer, bufferIndex, type, numberValue, false, Unordered, isLittleEndian).
-  Q(yield* SetValueInBuffer(view.ViewedArrayBuffer as ArrayBufferObject, bufferIndex, type, numberValue, Value.false, 'unordered', isLittleEndian));
+  Q(yield* SetValueInBuffer(view.ViewedArrayBuffer as ArrayBufferObject, bufferIndex, type, numberValue, false, 'unordered', isLittleEndian));
   return Value.undefined;
 }

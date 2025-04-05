@@ -22,6 +22,7 @@
 -source-phase-imports
 -source-phase-imports-module-source
 -uint8array-base64
+uint8array-base64 = uint8array-base64
 
 # Added before Feb 2025
 

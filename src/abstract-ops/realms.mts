@@ -67,6 +67,7 @@ import { bootstrapTypedArray } from '../intrinsics/TypedArray.mts';
 import { bootstrapTypedArrayPrototype } from '../intrinsics/TypedArrayPrototype.mts';
 import { bootstrapTypedArrayConstructors } from '../intrinsics/TypedArrayConstructors.mts';
 import { bootstrapTypedArrayPrototypes } from '../intrinsics/TypedArrayPrototypes.mts';
+import { bootstrapUint8Array } from '../intrinsics/TypedArray_Uint8Array.mts';
 import { bootstrapDataView } from '../intrinsics/DataView.mts';
 import { bootstrapDataViewPrototype } from '../intrinsics/DataViewPrototype.mts';
 import { bootstrapWeakMapPrototype } from '../intrinsics/WeakMapPrototype.mts';
@@ -393,6 +394,7 @@ export function CreateIntrinsics(realmRec: Realm) {
   bootstrapTypedArray(realmRec);
   bootstrapTypedArrayPrototypes(realmRec);
   bootstrapTypedArrayConstructors(realmRec);
+  bootstrapUint8Array(realmRec);
 
   bootstrapDataViewPrototype(realmRec);
   bootstrapDataView(realmRec);

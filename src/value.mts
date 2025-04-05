@@ -455,23 +455,22 @@ export class NumberValue extends PrimitiveValue {
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-number-tostring */
-  static override toString(x: NumberValue): JSStringValue {
-    if (x.isNaN()) {
+  static override toString(xV: NumberValue, radix: number): JSStringValue {
+    if (xV.isNaN()) {
       return Value('NaN');
     }
-    const xVal = R(x);
-    if (xVal === 0) {
+    const x = R(xV);
+    if (Object.is(x, -0) || Object.is(x, 0)) {
       return Value('0');
     }
-    if (xVal < 0) {
-      const str = X(NumberValue.toString(F(-xVal))).stringValue();
-      return Value(`-${str}`);
+    if (x < 0) {
+      return Value(`-${NumberValue.toString(F(-x), radix).stringValue()}`);
     }
-    if (x.isInfinity()) {
+    if (xV.isInfinity()) {
       return Value('Infinity');
     }
-    // TODO: implement properly
-    return Value(`${xVal}`);
+    // TODO: implement properly, currently depends on host.
+    return Value(`${x.toString(radix)}`);
   }
 
   static readonly unit = new NumberValue(1);
@@ -655,14 +654,14 @@ export class BigIntValue extends PrimitiveValue {
   }
 
   /** https://tc39.es/ecma262/#sec-numeric-types-bigint-tostring */
-  static override toString(x: BigIntValue): JSStringValue {
+  static override toString(x: BigIntValue, radix: number): JSStringValue {
     // 1. If x is less than zero, return the string-concatenation of the String "-" and ! BigInt::toString(-x).
     if (R(x) < 0n) {
-      const str = X(BigIntValue.toString(Z(-R(x)))).stringValue();
+      const str = X(BigIntValue.toString(Z(-R(x)), radix)).stringValue();
       return Value(`-${str}`);
     }
     // 2. Return the String value consisting of the code units of the digits of the decimal representation of x.
-    return Value(`${R(x)}`);
+    return Value(`${R(x).toString(radix)}`);
   }
 
   static readonly unit = new BigIntValue(1n);

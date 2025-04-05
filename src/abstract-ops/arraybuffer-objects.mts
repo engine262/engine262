@@ -193,7 +193,7 @@ export function NumericToRawBytes(type: TypedArrayTypes, value: NumberValue | Bi
 }
 
 /** https://tc39.es/ecma262/#sec-setvalueinbuffer */
-export function* SetValueInBuffer(arrayBuffer: ArrayBufferObject, byteIndex: number, type: TypedArrayTypes, value: BigIntValue | NumberValue, _isTypedArray: unknown, _order: unknown, isLittleEndian?: BooleanValue): ValueEvaluator<UndefinedValue> {
+export function* SetValueInBuffer(arrayBuffer: ArrayBufferObject, byteIndex: number, type: TypedArrayTypes, value: BigIntValue | NumberValue, _isTypedArray: boolean, _order: 'seq-cst' | 'unordered' | 'init', isLittleEndian?: BooleanValue): ValueEvaluator<UndefinedValue> {
   // 1. Assert: IsDetachedBuffer(arrayBuffer) is false.
   Assert(IsDetachedBuffer(arrayBuffer) === Value.false);
   // 2. Assert: There are sufficient bytes in arrayBuffer starting at byteIndex to represent a value of type.

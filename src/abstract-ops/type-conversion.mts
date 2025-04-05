@@ -450,7 +450,7 @@ export function* ToString(argument: Value): ValueEvaluator<JSStringValue> {
     return Value(argument === Value.true ? 'true' : 'false');
   } else if (argument instanceof NumberValue) {
     // Return ! Number::toString(argument).
-    return X(NumberValue.toString(argument));
+    return X(NumberValue.toString(argument, 10));
   } else if (argument instanceof JSStringValue) {
     // Return argument.
     return argument;
@@ -459,7 +459,7 @@ export function* ToString(argument: Value): ValueEvaluator<JSStringValue> {
     return surroundingAgent.Throw('TypeError', 'CannotConvertSymbol', 'string');
   } else if (argument instanceof BigIntValue) {
     // Return ! BigInt::toString(argument).
-    return X(BigIntValue.toString(argument));
+    return X(BigIntValue.toString(argument, 10));
   } else if (argument instanceof ObjectValue) {
     // 1. Let primValue be ? ToPrimitive(argument, string).
     const primValue = Q(yield* ToPrimitive(argument, 'string'));
