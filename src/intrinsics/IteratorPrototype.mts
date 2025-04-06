@@ -60,7 +60,7 @@ function* IteratorProto_constructorSetter([v]: Arguments, { thisValue }: Functio
 }
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.drop */
-function* IteratorPrototype_drop([limit]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* IteratorPrototype_drop([limit = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. If O is not an Object, throw a TypeError exception.
@@ -138,7 +138,7 @@ function* IteratorPrototype_drop([limit]: Arguments, { thisValue }: FunctionCall
 }
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.every */
-function* IteratorPrototype_every([predicate]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* IteratorPrototype_every([predicate = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. If O is not an Object, throw a TypeError exception.
@@ -170,9 +170,9 @@ function* IteratorPrototype_every([predicate]: Arguments, { thisValue }: Functio
     const result: ValueCompletion = yield* Call(predicate, Value.undefined, [value, Value(counter)]);
     // d. IfAbruptCloseIterator(result, iterated).
     IfAbruptCloseIterator(result, iterated);
-    __ts_cast__<NormalCompletion<BooleanValue>>(result);
+    __ts_cast__<BooleanValue>(result);
     // e. If ToBoolean(result) is false, return ? IteratorClose(iterated, NormalCompletion(false)).
-    if (ToBoolean(result.Value) === Value.false) {
+    if (ToBoolean(result) === Value.false) {
       return Q(yield* IteratorClose(iterated, EnsureCompletion(Value.false)));
     }
     // f. Set counter to counter + 1.
@@ -181,7 +181,7 @@ function* IteratorPrototype_every([predicate]: Arguments, { thisValue }: Functio
 }
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.filter */
-function* IteratorPrototype_filter([predicate]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* IteratorPrototype_filter([predicate = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. If O is not an Object, throw a TypeError exception.
@@ -241,7 +241,7 @@ function* IteratorPrototype_filter([predicate]: Arguments, { thisValue }: Functi
 }
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.find */
-function* IteratorPrototype_find([predicate]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* IteratorPrototype_find([predicate = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. If O is not an Object, throw a TypeError exception.
@@ -284,7 +284,7 @@ function* IteratorPrototype_find([predicate]: Arguments, { thisValue }: Function
 }
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.flatmap */
-function* IteratorPrototype_flatMap([mapper]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* IteratorPrototype_flatMap([mapper = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. If O is not an Object, throw a TypeError exception.
@@ -370,7 +370,7 @@ function* IteratorPrototype_flatMap([mapper]: Arguments, { thisValue }: Function
 }
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.foreach */
-function* IteratorPrototype_forEach([procedure]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* IteratorPrototype_forEach([procedure = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. If O is not an Object, throw a TypeError exception.
@@ -414,7 +414,7 @@ function IteratorPrototype_iterator(_args: Arguments, { thisValue }: FunctionCal
 }
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.map */
-function* IteratorPrototype_map([mapper]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* IteratorPrototype_map([mapper = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. If O is not an Object, throw a TypeError exception.
@@ -481,7 +481,7 @@ function* IteratorPrototype_reduce(args: Arguments, { thisValue }: FunctionCallC
   // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
   let iterated: IteratorRecord = { Iterator: O, NextMethod: Value.undefined, Done: Value.false };
   // 4. If IsCallable(reducer) is false, then
-  const reducer = args[0];
+  const reducer = args[0] ?? Value.undefined;
   if (IsCallable(reducer) === false) {
     // a. Let error be ThrowCompletion(a newly created TypeError object).
     const error = surroundingAgent.Throw('TypeError', 'NotAFunction', reducer);
@@ -506,7 +506,7 @@ function* IteratorPrototype_reduce(args: Arguments, { thisValue }: FunctionCallC
     // 7. Else,
     //   a. Let accumulator be initialValue.
     //   b. Let counter be 0.
-    accumulator = args[1];
+    accumulator = args[1] ?? Value.undefined;
     counter = 0;
   }
   // 8. Repeat,
@@ -530,7 +530,7 @@ function* IteratorPrototype_reduce(args: Arguments, { thisValue }: FunctionCallC
 }
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.some */
-function* IteratorPrototype_some([predicate]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* IteratorPrototype_some([predicate = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. If O is not an Object, throw a TypeError exception.
@@ -562,9 +562,9 @@ function* IteratorPrototype_some([predicate]: Arguments, { thisValue }: Function
     const result: ValueCompletion = yield* Call(predicate, Value.undefined, [value, Value(counter)]);
     // d. IfAbruptCloseIterator(result, iterated).
     IfAbruptCloseIterator(result, iterated);
-    __ts_cast__<NormalCompletion<BooleanValue>>(result);
+    __ts_cast__<BooleanValue>(result);
     // e. If ToBoolean(result) is true, return ? IteratorClose(iterated, NormalCompletion(true)).
-    if (ToBoolean(result.Value) === Value.true) {
+    if (ToBoolean(result) === Value.true) {
       return Q(yield* IteratorClose(iterated, EnsureCompletion(Value.true)));
     }
     // f. Set counter to counter + 1.
@@ -573,7 +573,7 @@ function* IteratorPrototype_some([predicate]: Arguments, { thisValue }: Function
 }
 
 /** https://tc39.es/ecma262/#sec-iterator.prototype.take */
-function* IteratorPrototype_take([limit]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+function* IteratorPrototype_take([limit = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let O be the this value.
   const O = thisValue;
   // 2. If O is not an Object, throw a TypeError exception.
