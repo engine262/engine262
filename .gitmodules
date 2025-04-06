@@ -4,3 +4,6 @@
 [submodule "test/test262/test262"]
 	path = test/test262/test262
 	url = https://github.com/tc39/test262
+[submodule "website"]
+	path = website
+	url = https://github.com/engine262/engine262.github.io

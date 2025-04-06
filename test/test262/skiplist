@@ -197,7 +197,6 @@ built-ins/RegExp/property-escapes/generated/Terminal_Punctuation.js
 built-ins/RegExp/property-escapes/generated/Uppercase.js
 built-ins/String/prototype/localeCompare/15.5.4.9_CE.js
 built-ins/String/prototype/replace/regexp-capture-by-index.js
-harness/asyncHelpers-asyncTest-without-async-flag.js
 language/expressions/assignment/destructuring/iterator-destructuring-property-reference-target-evaluation-order.js
 language/expressions/assignment/destructuring/keyed-destructuring-property-reference-target-evaluation-order-with-bindings.js
 language/expressions/assignment/destructuring/keyed-destructuring-property-reference-target-evaluation-order.js

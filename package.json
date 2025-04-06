@@ -47,6 +47,7 @@
   },
   "scripts": {
     "start": "node --enable-source-maps --disable-warning=ExperimentalWarning --experimental-strip-types ./lib-src/node/bin.mts",
+    "inspector": "node ./website/server.mjs",
     "lint": "eslint test/ src/ bin/ lib-src/ scripts/ --cache --ext=js,mjs,mts",
     "lint:fix": "npm run lint -- --fix",
     "watch": "run-p watch:*",
@@ -123,6 +124,7 @@
     "eslint-config-airbnb-base": "^15.0.0",
     "eslint-plugin-import": "^2.31.0",
     "globby": "^14.1.0",
+    "http-server": "^14.1.1",
     "js-yaml": "^4.1.0",
     "minimatch": "^10.0.1",
     "npm-run-all": "^4.1.5",

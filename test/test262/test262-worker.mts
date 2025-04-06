@@ -82,23 +82,24 @@ function run(test: Test): WorkerToSupervisor {
     }
 
     {
+      const DONE = `
+function $DONE(error) {
+  if (error) {
+    if (typeof error === 'object' && error !== null && 'stack' in error) {
+      __consolePrintHandle__('Test262:AsyncTestFailure:' + error.stack);
+    } else {
+      __consolePrintHandle__('Test262:AsyncTestFailure:Test262Error: ' + error);
+    }
+  } else {
+    __consolePrintHandle__('Test262:AsyncTestComplete');
+  }
+}`;
       const completion = realm.evaluateScript(`\
 var Test262Error = class Test262Error extends Error {};
 Test262Error.thrower = (...args) => {
-throw new Test262Error(...args);
+  throw new Test262Error(...args);
 };
-
-function $DONE(error) {
-if (error) {
-if (typeof error === 'object' && error !== null && 'stack' in error) {
-    __consolePrintHandle__('Test262:AsyncTestFailure:' + error.stack);
-} else {
-    __consolePrintHandle__('Test262:AsyncTestFailure:Test262Error: ' + error);
-}
-} else {
-__consolePrintHandle__('Test262:AsyncTestComplete');
-}
-}`);
+${test.attrs.flags.async ? DONE : ''}`);
       if (completion instanceof AbruptCompletion) {
         return fails(test, inspect(completion));
       }
