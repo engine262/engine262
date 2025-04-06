@@ -3,3 +3,4 @@ lib
 bin/engine262.mjs
 test/test262/test262
 test/json/JSONTestSuite
+website
