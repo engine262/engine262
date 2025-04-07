@@ -56,7 +56,7 @@ export const FunctionDeclarationStatement = () => 'Functions can only be declare
 export const GeneratorRunning = () => 'Cannot manipulate a running generator';
 export const IllegalBreakContinue = (isBreak) => `Illegal ${isBreak ? 'break' : 'continue'} statement`;
 export const IllegalOctalEscape = () => 'Illegal octal escape';
-export const InternalSlotMissing = (o, s) => `Internal slot ${s} is missing for ${i(o)}`;
+export const InternalSlotMissing = (o, s) => `Internal slot ${s} is missing`;
 export const InvalidArrayLength = (l) => `Invalid array length: ${i(l)}`;
 export const InvalidAssignmentTarget = () => 'Invalid assignment target';
 export const InvalidCodePoint = () => 'Not a valid code point';

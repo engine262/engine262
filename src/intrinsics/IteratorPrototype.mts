@@ -230,7 +230,7 @@ function* IteratorPrototype_filter([predicate = Value.undefined]: Arguments, { t
   // 7. Let result be CreateIteratorFromClosure(closure, "Iterator Helper", %IteratorHelperPrototype%, « [[UnderlyingIterator]] »).
   const result = CreateIteratorFromClosure(
     closure,
-    Value('IteratorHelper'),
+    Value('Iterator Helper'),
     surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'],
     ['UnderlyingIterator'],
   );
@@ -318,32 +318,33 @@ function* IteratorPrototype_flatMap([mapper = Value.undefined]: Arguments, { thi
       const mapped: ValueCompletion = EnsureCompletion(yield* Call(mapper, Value.undefined, [value, Value(counter)]));
       // iv. IfAbruptCloseIterator(mapped, iterated).
       IfAbruptCloseIterator(mapped, iterated);
+      __ts_cast__<Value>(mapped);
       // v. Let innerIterator be Completion(GetIteratorFlattenable(mapped, reject-primitives)).
-      const innerIterator: PlainCompletion<IteratorRecord> = EnsureCompletion(yield* GetIteratorFlattenable(mapped.Value, 'reject-primitives'));
+      const innerIterator: PlainCompletion<IteratorRecord> = EnsureCompletion(yield* GetIteratorFlattenable(mapped, 'reject-primitives'));
       // vi. IfAbruptCloseIterator(innerIterator, iterated).
       IfAbruptCloseIterator(innerIterator, iterated);
-      __ts_cast__<NormalCompletion<IteratorRecord>>(innerIterator);
+      __ts_cast__<IteratorRecord>(innerIterator);
       // vii. Let innerAlive be true.
       let innerAlive = true;
       // viii. Repeat, while innerAlive is true,
       while (innerAlive) {
         // 1. Let innerValue be Completion(IteratorStepValue(innerIterator)).
-        const innerValue: PlainCompletion<Value | 'done'> = yield* IteratorStepValue(innerIterator.Value);
+        const innerValue: PlainCompletion<Value | 'done'> = yield* IteratorStepValue(innerIterator);
         // 2. IfAbruptCloseIterator(innerValue, iterated).
         IfAbruptCloseIterator(innerValue, iterated);
+        __ts_cast__<Value | 'done'>(innerValue);
         // 3. If innerValue is done, then
         if (innerValue === 'done') {
           // a. Set innerAlive to false.
           innerAlive = false;
         // 4. Else,
         } else {
-          __ts_cast__<Value>(innerValue);
           // a. Let completion be Completion(Yield(innerValue)).
           const completion = EnsureCompletion(yield* Yield(innerValue));
           // b. If completion is an abrupt completion, then
           if (completion instanceof AbruptCompletion) {
             // i. Let backupCompletion be Completion(IteratorClose(innerIterator, completion)).
-            const backupCompletion = EnsureCompletion(yield* IteratorClose(innerIterator.Value, completion));
+            const backupCompletion = EnsureCompletion(yield* IteratorClose(innerIterator, completion));
             // ii. IfAbruptCloseIterator(backupCompletion, iterated).
             IfAbruptCloseIterator(backupCompletion, iterated);
             // iii. Return ? IteratorClose(iterated, completion).

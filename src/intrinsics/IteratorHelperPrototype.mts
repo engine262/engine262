@@ -32,7 +32,7 @@ function* IteratorHelperPrototype_return(_args: Arguments, { thisValue }: Functi
   Assert('GeneratorState' in O);
 
   // 4. If O.[[GeneratorState]] is suspended-start, then
-  if (O.GeneratorState === 'suspended-start') {
+  if (O.GeneratorState === 'suspendedStart') {
     // a. Set O.[[GeneratorState]] to completed.
     O.GeneratorState = 'completed';
 
