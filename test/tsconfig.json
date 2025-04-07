@@ -9,13 +9,12 @@
   },
   "include": [
     "./base.mts",
-    "./stepped.mts",
-    "./stepped-worker.mts",
     "./supplemental.mts",
     "./test262/test262.mts",
     "./test262/test262-worker.mts",
     "./test262/test262_realm.mts",
     "./json/json.mts",
-    "./inspector/*"
+    "./inspector/*",
+    "./next-runner.mts"
   ]
 }

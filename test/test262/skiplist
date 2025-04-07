@@ -6,9 +6,6 @@
 # Paths are relative to the `test262/test` directory.
 # Paths may contain globs.
 
-# https://github.com/tc39/test262/pull/3612
-built-ins/SharedArrayBuffer/prototype/prop-desc.js
-
 # https://github.com/tc39/ecma262/pull/2436
 built-ins/RegExp/match-indices/indices-array-non-unicode-match.js
 built-ins/RegExp/named-groups/non-unicode-match.js
@@ -26,17 +23,69 @@ language/literals/string/legacy-octal-escape-sequence.js
 # https://github.com/tc39/proposal-top-level-await/pull/159
 language/module-code/top-level-await/dfs-invariant.js
 
-# Spec bug
-built-ins/Date/prototype/setMonth/this-value-invalid-date.js
-
-# Spec bug
-built-ins/Function/prototype/bind/instance-length-tointeger.js
-
-# https://github.com/tc39/ecma262/issues/1426
-built-ins/String/prototype/replace/S15.5.4.11_A3_T*.js
+https://github.com/tc39/ecma262/issues/1426
+# https://github.com/tc39/ecma262/pull/3157
+built-ins/String/prototype/replace/S15.5.4.11_A3_T1.js
+built-ins/String/prototype/replace/S15.5.4.11_A3_T2.js
+built-ins/String/prototype/replace/S15.5.4.11_A3_T3.js
 
 # We need our own date parser
 built-ins/Date/parse/without-utc-offset.js
+
+# We need update our regexp impl
+built-ins/RegExp/CharacterClassEscapes/**
+built-ins/RegExp/property-escapes/generated/**
+
+# https://github.com/tc39/ecma262/pull/3009
+built-ins/String/prototype/match/cstm-matcher-on-bigint-primitive.js
+built-ins/String/prototype/match/cstm-matcher-on-boolean-primitive.js
+built-ins/String/prototype/match/cstm-matcher-on-number-primitive.js
+built-ins/String/prototype/match/cstm-matcher-on-string-primitive.js
+built-ins/String/prototype/matchAll/cstm-matchall-on-bigint-primitive.js
+built-ins/String/prototype/matchAll/cstm-matchall-on-number-primitive.js
+built-ins/String/prototype/matchAll/cstm-matchall-on-string-primitive.js
+built-ins/String/prototype/replace/cstm-replace-on-bigint-primitive.js
+built-ins/String/prototype/replace/cstm-replace-on-boolean-primitive.js
+built-ins/String/prototype/replace/cstm-replace-on-number-primitive.js
+built-ins/String/prototype/replace/cstm-replace-on-string-primitive.js
+built-ins/String/prototype/replaceAll/cstm-replaceall-on-bigint-primitive.js
+built-ins/String/prototype/replaceAll/cstm-replaceall-on-boolean-primitive.js
+built-ins/String/prototype/replaceAll/cstm-replaceall-on-number-primitive.js
+built-ins/String/prototype/replaceAll/cstm-replaceall-on-string-primitive.js
+built-ins/String/prototype/search/cstm-search-on-bigint-primitive.js
+built-ins/String/prototype/search/cstm-search-on-boolean-primitive.js
+built-ins/String/prototype/search/cstm-search-on-number-primitive.js
+built-ins/String/prototype/search/cstm-search-on-string-primitive.js
+built-ins/String/prototype/split/cstm-split-on-bigint-primitive.js
+built-ins/String/prototype/split/cstm-split-on-boolean-primitive.js
+built-ins/String/prototype/split/cstm-split-on-number-primitive.js
+built-ins/String/prototype/split/cstm-split-on-string-primitive.js
+
+# https://github.com/tc39/ecma262/pull/2136
+built-ins/Date/prototype/setHours/date-value-read-before-tonumber-when-date-is-invalid.js
+built-ins/Date/prototype/setMilliseconds/date-value-read-before-tonumber-when-date-is-invalid.js
+built-ins/Date/prototype/setMinutes/date-value-read-before-tonumber-when-date-is-invalid.js
+built-ins/Date/prototype/setMonth/date-value-read-before-tonumber-when-date-is-invalid.js
+built-ins/Date/prototype/setSeconds/date-value-read-before-tonumber-when-date-is-invalid.js
+built-ins/Date/prototype/setUTCHours/date-value-read-before-tonumber-when-date-is-invalid.js
+built-ins/Date/prototype/setUTCMilliseconds/date-value-read-before-tonumber-when-date-is-invalid.js
+built-ins/Date/prototype/setUTCMinutes/date-value-read-before-tonumber-when-date-is-invalid.js
+built-ins/Date/prototype/setUTCMonth/date-value-read-before-tonumber-when-date-is-invalid.js
+built-ins/Date/prototype/setUTCSeconds/date-value-read-before-tonumber-when-date-is-invalid.js
+
+# https://github.com/tc39/ecma262/pull/2683
+built-ins/AsyncGeneratorPrototype/return/return-state-completed-broken-promise.js
+built-ins/AsyncGeneratorPrototype/return/return-suspendedStart-broken-promise.js
+
+# https://github.com/tc39/ecma262/pull/3307
+language/expressions/delete/super-property-topropertykey.js
+language/expressions/super/prop-expr-getsuperbase-before-topropertykey-getvalue.js
+language/expressions/super/prop-expr-getsuperbase-before-topropertykey-putvalue-compound-assign.js
+language/expressions/super/prop-expr-getsuperbase-before-topropertykey-putvalue-increment.js
+language/expressions/super/prop-expr-getsuperbase-before-topropertykey-putvalue.js
+
+# https://github.com/tc39/ecma262/pull/3226
+language/global-code/script-decl-lex-var-declared-via-eval.js
 
 # https://github.com/tc39/test262/pull/2833#issuecomment-709635850
 built-ins/TypedArray/prototype/every/BigInt/callbackfn-detachbuffer.js
@@ -50,22 +99,8 @@ built-ins/TypedArray/prototype/reduceRight/callbackfn-detachbuffer.js
 built-ins/TypedArray/prototype/some/BigInt/callbackfn-detachbuffer.js
 built-ins/TypedArray/prototype/some/callbackfn-detachbuffer.js
 
-# https://github.com/tc39/test262/pull/3753
-built-ins/FinalizationRegistry/prototype/cleanupSome/not-a-constructor.js
-
 # Failed tests appended by --update-failed-tests
-built-ins/AsyncGeneratorPrototype/return/return-state-completed-broken-promise.js
-built-ins/AsyncGeneratorPrototype/return/return-suspendedStart-broken-promise.js
-built-ins/Date/prototype/setHours/date-value-read-before-tonumber-when-date-is-invalid.js
-built-ins/Date/prototype/setMilliseconds/date-value-read-before-tonumber-when-date-is-invalid.js
-built-ins/Date/prototype/setMinutes/date-value-read-before-tonumber-when-date-is-invalid.js
-built-ins/Date/prototype/setMonth/date-value-read-before-tonumber-when-date-is-invalid.js
-built-ins/Date/prototype/setSeconds/date-value-read-before-tonumber-when-date-is-invalid.js
-built-ins/Date/prototype/setUTCHours/date-value-read-before-tonumber-when-date-is-invalid.js
-built-ins/Date/prototype/setUTCMilliseconds/date-value-read-before-tonumber-when-date-is-invalid.js
-built-ins/Date/prototype/setUTCMinutes/date-value-read-before-tonumber-when-date-is-invalid.js
-built-ins/Date/prototype/setUTCMonth/date-value-read-before-tonumber-when-date-is-invalid.js
-built-ins/Date/prototype/setUTCSeconds/date-value-read-before-tonumber-when-date-is-invalid.js
+built-ins/Date/prototype/setMonth/this-value-invalid-date.js
 built-ins/decodeURI/S15.1.3.1_A2.3_T1.js
 built-ins/decodeURI/S15.1.3.1_A3_T1.js
 built-ins/decodeURI/S15.1.3.1_A3_T2.js
@@ -74,140 +109,9 @@ built-ins/decodeURI/S15.1.3.1_A4_T2.js
 built-ins/decodeURI/S15.1.3.1_A4_T4.js
 built-ins/decodeURIComponent/S15.1.3.2_A2.3_T1.js
 built-ins/decodeURIComponent/S15.1.3.2_A4_T2.js
-built-ins/RegExp/property-escapes/generated/Bidi_Mirrored.js
-built-ins/RegExp/property-escapes/generated/Case_Ignorable.js
-built-ins/RegExp/property-escapes/generated/Changes_When_Casefolded.js
-built-ins/RegExp/property-escapes/generated/Changes_When_Casemapped.js
-built-ins/RegExp/property-escapes/generated/Changes_When_Lowercased.js
-built-ins/RegExp/property-escapes/generated/Changes_When_Titlecased.js
-built-ins/RegExp/property-escapes/generated/Changes_When_Uppercased.js
-built-ins/RegExp/property-escapes/generated/Dash.js
-built-ins/RegExp/property-escapes/generated/Default_Ignorable_Code_Point.js
-built-ins/RegExp/property-escapes/generated/Diacritic.js
-built-ins/RegExp/property-escapes/generated/Emoji_Presentation.js
-built-ins/RegExp/property-escapes/generated/Emoji.js
-built-ins/RegExp/property-escapes/generated/Extended_Pictographic.js
-built-ins/RegExp/property-escapes/generated/Extender.js
-built-ins/RegExp/property-escapes/generated/General_Category_-_Dash_Punctuation.js
-built-ins/RegExp/property-escapes/generated/General_Category_-_Decimal_Number.js
-built-ins/RegExp/property-escapes/generated/General_Category_-_Lowercase_Letter.js
-built-ins/RegExp/property-escapes/generated/General_Category_-_Mark.js
-built-ins/RegExp/property-escapes/generated/General_Category_-_Math_Symbol.js
-built-ins/RegExp/property-escapes/generated/General_Category_-_Modifier_Letter.js
-built-ins/RegExp/property-escapes/generated/General_Category_-_Nonspacing_Mark.js
-built-ins/RegExp/property-escapes/generated/General_Category_-_Number.js
-built-ins/RegExp/property-escapes/generated/General_Category_-_Other_Punctuation.js
-built-ins/RegExp/property-escapes/generated/General_Category_-_Punctuation.js
-built-ins/RegExp/property-escapes/generated/General_Category_-_Spacing_Mark.js
-built-ins/RegExp/property-escapes/generated/General_Category_-_Uppercase_Letter.js
-built-ins/RegExp/property-escapes/generated/Grapheme_Extend.js
-built-ins/RegExp/property-escapes/generated/IDS_Binary_Operator.js
-built-ins/RegExp/property-escapes/generated/Lowercase.js
-built-ins/RegExp/property-escapes/generated/Math.js
-built-ins/RegExp/property-escapes/generated/Pattern_Syntax.js
-built-ins/RegExp/property-escapes/generated/Script_-_Arabic.js
-built-ins/RegExp/property-escapes/generated/Script_-_Balinese.js
-built-ins/RegExp/property-escapes/generated/Script_-_Cypro_Minoan.js
-built-ins/RegExp/property-escapes/generated/Script_-_Cyrillic.js
-built-ins/RegExp/property-escapes/generated/Script_-_Garay.js
-built-ins/RegExp/property-escapes/generated/Script_-_Gurung_Khema.js
-built-ins/RegExp/property-escapes/generated/Script_-_Hangul.js
-built-ins/RegExp/property-escapes/generated/Script_-_Kawi.js
-built-ins/RegExp/property-escapes/generated/Script_-_Khitan_Small_Script.js
-built-ins/RegExp/property-escapes/generated/Script_-_Kirat_Rai.js
-built-ins/RegExp/property-escapes/generated/Script_-_Latin.js
-built-ins/RegExp/property-escapes/generated/Script_-_Myanmar.js
-built-ins/RegExp/property-escapes/generated/Script_-_Nag_Mundari.js
-built-ins/RegExp/property-escapes/generated/Script_-_Ol_Onal.js
-built-ins/RegExp/property-escapes/generated/Script_-_Old_Uyghur.js
-built-ins/RegExp/property-escapes/generated/Script_-_Sunuwar.js
-built-ins/RegExp/property-escapes/generated/Script_-_Tangsa.js
-built-ins/RegExp/property-escapes/generated/Script_-_Tangut.js
-built-ins/RegExp/property-escapes/generated/Script_-_Todhri.js
-built-ins/RegExp/property-escapes/generated/Script_-_Toto.js
-built-ins/RegExp/property-escapes/generated/Script_-_Tulu_Tigalari.js
-built-ins/RegExp/property-escapes/generated/Script_-_Vithkuqi.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Adlam.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Arabic.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Armenian.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Avestan.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Balinese.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Bengali.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Bopomofo.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Carian.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Caucasian_Albanian.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Cherokee.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Coptic.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Cypro_Minoan.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Cyrillic.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Devanagari.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Duployan.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Elbasan.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Ethiopic.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Garay.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Georgian.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Glagolitic.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Gothic.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Greek.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Gunjala_Gondi.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Gurung_Khema.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Hangul.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Hebrew.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Kaithi.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Kannada.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Katakana.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Kawi.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Khitan_Small_Script.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Kirat_Rai.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Latin.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Lisu.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Lycian.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Lydian.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Mahajani.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Malayalam.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Meroitic_Hieroglyphs.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Mongolian.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Myanmar.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Nag_Mundari.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Ol_Onal.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Old_Hungarian.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Old_Permic.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Old_Turkic.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Old_Uyghur.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Osage.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Phags_Pa.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Runic.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Samaritan.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Sharada.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Shavian.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Sinhala.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Sunuwar.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Syriac.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Tai_Le.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Tangsa.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Thai.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Tibetan.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Tifinagh.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Todhri.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Toto.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Tulu_Tigalari.js
-built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Vithkuqi.js
-built-ins/RegExp/property-escapes/generated/Sentence_Terminal.js
-built-ins/RegExp/property-escapes/generated/Terminal_Punctuation.js
-built-ins/RegExp/property-escapes/generated/Uppercase.js
 built-ins/String/prototype/localeCompare/15.5.4.9_CE.js
 built-ins/String/prototype/replace/regexp-capture-by-index.js
-language/expressions/assignment/destructuring/iterator-destructuring-property-reference-target-evaluation-order.js
-language/expressions/assignment/destructuring/keyed-destructuring-property-reference-target-evaluation-order-with-bindings.js
-language/expressions/assignment/destructuring/keyed-destructuring-property-reference-target-evaluation-order.js
-language/expressions/assignment/target-member-computed-reference.js
 language/expressions/assignment/target-super-computed-reference.js
-language/expressions/delete/super-property-topropertykey.js
-language/expressions/super/prop-expr-getsuperbase-before-topropertykey-getvalue.js
-language/expressions/super/prop-expr-getsuperbase-before-topropertykey-putvalue-compound-assign.js
-language/expressions/super/prop-expr-getsuperbase-before-topropertykey-putvalue-increment.js
-language/expressions/super/prop-expr-getsuperbase-before-topropertykey-putvalue.js
-language/global-code/script-decl-lex-var-declared-via-eval.js
 language/literals/regexp/S7.8.5_A1.4_T2.js
 language/literals/regexp/S7.8.5_A2.4_T2.js
 staging/sm/Array/group-callback-evaluation.js
@@ -330,10 +234,3 @@ staging/sm/TypedArray/sort_small.js
 staging/sm/TypedArray/sort-negative-nan.js
 staging/sm/TypedArray/toLocaleString-detached.js
 staging/sm/TypedArray/toString.js
-
-# Failed tests appended by --update-failed-tests
-staging/sm/Iterator/prototype/every/check-fn-after-getting-iterator.js
-staging/sm/Iterator/prototype/find/check-fn-after-getting-iterator.js
-staging/sm/Iterator/prototype/forEach/check-fn-after-getting-iterator.js
-staging/sm/Iterator/prototype/reduce/check-fn-after-getting-iterator.js
-staging/sm/Iterator/prototype/some/check-fn-after-getting-iterator.js
