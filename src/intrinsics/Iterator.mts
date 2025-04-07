@@ -11,7 +11,9 @@ import { Q, type ValueEvaluator } from '../completion.mts';
 import type { Mutable } from '../helpers.mts';
 import { surroundingAgent } from '../host-defined/engine.mts';
 import {
+  type BooleanValue,
   UndefinedValue,
+  Value,
   type Arguments,
   type FunctionCallContext,
   type ObjectValue,
@@ -43,9 +45,9 @@ function* Iterator_from([O]: Arguments): ValueEvaluator {
   const iteratorRecord = Q(yield* GetIteratorFlattenable(O, 'iterate-string-primitives'));
 
   // 2. Let hasInstance be ? OrdinaryHasInstance(%Iterator%, iteratorRecord.[[Iterator]]).
-  const hasInstance = Q(yield* OrdinaryHasInstance(surroundingAgent.intrinsic('%Iterator%'), iteratorRecord.Iterator));
+  const hasInstance: BooleanValue = Q(yield* OrdinaryHasInstance(surroundingAgent.intrinsic('%Iterator%'), iteratorRecord.Iterator));
   // 3. If hasInstance is true, then
-  if (hasInstance.booleanValue()) {
+  if (hasInstance === Value.true) {
     // a. Return iteratorRecord.[[Iterator]].
     return iteratorRecord.Iterator;
   }
