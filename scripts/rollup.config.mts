@@ -100,7 +100,7 @@ export default defineConfig([
       babel({
         ...babelOptions,
         plugins: [
-          './scripts/transform.js',
+          './scripts/transform.mts',
           ['@babel/plugin-proposal-decorators', {
             'version': '2023-11',
           }],
