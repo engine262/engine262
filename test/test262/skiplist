@@ -330,3 +330,10 @@ staging/sm/TypedArray/sort_small.js
 staging/sm/TypedArray/sort-negative-nan.js
 staging/sm/TypedArray/toLocaleString-detached.js
 staging/sm/TypedArray/toString.js
+
+# Failed tests appended by --update-failed-tests
+staging/sm/Iterator/prototype/every/check-fn-after-getting-iterator.js
+staging/sm/Iterator/prototype/find/check-fn-after-getting-iterator.js
+staging/sm/Iterator/prototype/forEach/check-fn-after-getting-iterator.js
+staging/sm/Iterator/prototype/reduce/check-fn-after-getting-iterator.js
+staging/sm/Iterator/prototype/some/check-fn-after-getting-iterator.js
