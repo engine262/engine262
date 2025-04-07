@@ -1,97 +1,128 @@
-'use strict';
-
-const { relative, resolve } = require('path');
+import { relative, resolve } from 'path';
+import type {
+  BabelFile, Node, NodePath,
+  PluginObj, PluginPass,
+  types as t,
+} from '@babel/core';
 
 const IMPORT_PATH = resolve('./src/index.mts');
 
-function fileToImport(file, refPath) {
-  return relative(file.opts.filename, refPath)
+function __ts_cast__<T>(_value: unknown): asserts _value is T { }
+
+function fileToImport(file: BabelFile, refPath: string) {
+  return relative(file.opts.filename!, refPath)
     .replace(/\\/g, '/') // Support building on Windows
     .replace('../', './');
 }
 
-function findParentStatementPath(path) {
+function findParentStatementPath(path: NodePath): NodePath<t.Statement> | null {
   while (path && !path.isStatement()) {
-    path = path.parentPath;
+    path = path.parentPath!;
   }
   return path;
 }
 
-function getEnclosingConditionalExpression(path) {
+function getEnclosingConditionalExpression(path: NodePath) {
   while (path && !path.isStatement()) {
     if (path.isConditionalExpression()) {
       return path;
     }
-    path = path.parentPath;
+    path = path.parentPath!;
   }
   return null;
 }
 
-module.exports = ({ types: t, template }) => {
-  function createImportCompletion(file) {
+type NeededNames = 'Completion' | 'AbruptCompletion' | 'Assert' | 'Call' | 'IteratorClose' | 'Value' | 'skipDebugger';
+
+interface State extends PluginPass {
+  needed: Partial<Record<NeededNames, boolean>>;
+}
+
+interface Macro<R extends Record<string, Node> = Record<string, Node>> {
+  template(replacements: Readonly<R>): t.Statement | t.Statement[];
+  imports: readonly NeededNames[];
+}
+
+interface Macros {
+  [m: string]: Macro;
+  Q: Macro<{ ID: t.Identifier }>;
+  X: Macro<{ ID: t.Identifier, SOURCE: t.StringLiteral }>;
+  ReturnIfAbrupt: Macro<{ ID: t.Identifier }>;
+  IfAbruptCloseIterator: Macro<{ value: t.Identifier, iteratorRecord: t.Identifier }>;
+  IfAbruptRejectPromise: Macro<{ ID: t.Identifier, CAPABILITY: t.Identifier }>;
+}
+
+export default ({ types: t, template }: typeof import('@babel/core')): PluginObj<State> => {
+  function createImportCompletion(file: BabelFile) {
     const r = fileToImport(file, IMPORT_PATH);
     return template.ast(`
       import { Completion } from "${r}";
     `);
   }
 
-  function createSkipDebuggerCompletion(file) {
+  function createImportSkipDebugger(file: BabelFile) {
     const r = fileToImport(file, IMPORT_PATH);
     return template.ast(`
       import { skipDebugger } from "${r}";
     `);
   }
 
-  function createImportAbruptCompletion(file) {
+  function createImportAbruptCompletion(file: BabelFile) {
     const r = fileToImport(file, IMPORT_PATH);
     return template.ast(`
       import { AbruptCompletion } from "${r}";
     `);
   }
 
-  function createImportAssert(file) {
+  function createImportAssert(file: BabelFile) {
     const r = fileToImport(file, IMPORT_PATH);
     return template.ast(`
       import { Assert } from "${r}";
     `);
   }
 
-  function createImportCall(file) {
+  function createImportCall(file: BabelFile) {
     const r = fileToImport(file, IMPORT_PATH);
     return template.ast(`
       import { Call } from "${r}";
     `);
   }
 
-  function createImportIteratorClose(file) {
+  function createImportIteratorClose(file: BabelFile) {
     const r = fileToImport(file, IMPORT_PATH);
     return template.statement.ast`
       import { IteratorClose } from "${r}";
     `;
   }
 
-  function createImportValue(file) {
+  function createImportValue(file: BabelFile) {
     const r = fileToImport(file, IMPORT_PATH);
     return template.ast(`
       import { Value } from "${r}";
     `);
   }
 
-  function addSectionFromComments(path) {
+  function addSectionFromComments(path: NodePath<t.FunctionDeclaration> | NodePath<t.VariableDeclaration> | NodePath<t.ExportNamedDeclaration>) {
     if (path.node.leadingComments) {
       for (const c of path.node.leadingComments) {
-        let name;
-        if (path.node.id) {
-          name = path.node.id.name;
-        } else if (path.node.declaration) {
-          name = path.node.declaration.id.name;
-        } else {
-          name = path.node.declarations[0].id.name;
+        let name: string;
+        switch (path.type) {
+          case 'FunctionDeclaration':
+            name = path.node.id!.name;
+            break;
+          case 'ExportNamedDeclaration':
+            name = (path.node.declaration as t.FunctionDeclaration).id!.name;
+            break;
+          case 'VariableDeclaration':
+            name = (path.node.declarations[0].id as t.Identifier).name;
+            break;
+          default:
+            throw (path as NodePath).buildCodeFrameError('Internal error: Unsupported path to addSectionFromComments');
         }
         const lines = c.value.split('\n');
         for (const line of lines) {
           if (/#sec/.test(line)) {
-            const section = line.split(' ').find((l) => l.includes('#sec'));
+            const section = line.split(' ').find((l) => l.includes('#sec'))!;
             const url = section.includes('https') ? section : `https://tc39.es/ecma262/${section}`;
             path.insertAfter(template.ast(`${name}.section = '${url}';`));
             return;
@@ -101,7 +132,7 @@ module.exports = ({ types: t, template }) => {
     }
   }
 
-  const MACROS = {
+  const MACROS: Partial<Macros> = {
     Q: {
       template: template(`
       /* ReturnIfAbrupt */
@@ -147,36 +178,45 @@ module.exports = ({ types: t, template }) => {
       imports: ['Call', 'Value', 'AbruptCompletion', 'Completion', 'skipDebugger'],
     },
   };
+  __ts_cast__<Macros>(MACROS);
   MACROS.ReturnIfAbrupt = MACROS.Q;
   const MACRO_NAMES = Object.keys(MACROS);
+
+  function tryRemove(path: NodePath<t.CallExpression>) {
+    try {
+      path.remove();
+    } catch (e) {
+      throw path.get('arguments.0').buildCodeFrameError(`Macros error: ${(e as Error).message}`);
+    }
+  }
 
   return {
     visitor: {
       Program: {
-        enter(path, state) {
+        enter(_path, state) {
           state.needed = {};
         },
         exit(path, state) {
           if (state.needed.skipDebugger) {
-            path.node.body.unshift(createSkipDebuggerCompletion(state.file));
+            path.unshiftContainer('body', createImportSkipDebugger(state.file));
           }
           if (state.needed.Completion) {
-            path.node.body.unshift(createImportCompletion(state.file));
+            path.unshiftContainer('body', createImportCompletion(state.file));
           }
           if (state.needed.AbruptCompletion) {
-            path.node.body.unshift(createImportAbruptCompletion(state.file));
+            path.unshiftContainer('body', createImportAbruptCompletion(state.file));
           }
           if (state.needed.Assert) {
-            path.node.body.unshift(createImportAssert(state.file));
+            path.unshiftContainer('body', createImportAssert(state.file));
           }
           if (state.needed.Call) {
-            path.node.body.unshift(createImportCall(state.file));
+            path.unshiftContainer('body', createImportCall(state.file));
           }
           if (state.needed.IteratorClose) {
             path.unshiftContainer('body', createImportIteratorClose(state.file));
           }
           if (state.needed.Value) {
-            path.node.body.unshift(createImportValue(state.file));
+            path.unshiftContainer('body', createImportValue(state.file));
           }
         },
       },
@@ -209,7 +249,7 @@ module.exports = ({ types: t, template }) => {
           const macro = MACROS[macroName];
           const [argument] = path.node.arguments;
 
-          if (macro === MACROS.Q && (t.isReturnStatement(path.parentPath) || path.parentPath.isArrowFunctionExpression())) {
+          if (macro === MACROS.Q && (path.parentPath.isReturnStatement() || path.parentPath.isArrowFunctionExpression())) {
             path.replaceWith(path.node.arguments[0]);
             return;
           }
@@ -219,23 +259,22 @@ module.exports = ({ types: t, template }) => {
           }
 
           const statementPath = findParentStatementPath(path);
+          if (!statementPath) {
+            throw path.buildCodeFrameError('Internal error: no parent statement found');
+          }
 
           macro.imports.forEach((i) => {
             state.needed[i] = path.scope.getBinding(i) === undefined;
           });
 
           if (macro === MACROS.Q && t.isIdentifier(argument)) {
-            const binding = path.scope.getBinding(argument.name);
-            binding.path.parent.kind = 'let';
+            const binding = path.scope.getBinding(argument.name)!;
+            (binding.path.parent as t.VariableDeclaration).kind = 'let';
             statementPath.insertBefore(template(`
-              /* c8 ignore if */
-              if (ID instanceof AbruptCompletion) {
-                return ID;
-              }
-              /* c8 ignore if */
-              if (ID instanceof Completion) {
-                ID = ID.Value;
-              }
+              /* ReturnIfAbrupt */
+              /* c8 ignore if */ if (ID && typeof ID === 'object' && 'next' in ID) throw new Assert.Error('Forgot to yield* on the completion.');
+              /* c8 ignore if */ if (ID instanceof AbruptCompletion) return ID;
+              /* c8 ignore if */ if (ID instanceof Completion) ID = ID.Value;
             `, { preserveComments: true })({ ID: argument }));
             path.replaceWith(argument);
           } else {
@@ -247,14 +286,10 @@ module.exports = ({ types: t, template }) => {
               if (!t.isIdentifier(capability)) {
                 throw path.get('arguments.1').buildCodeFrameError('Second argument to IfAbruptRejectPromise should be an identifier');
               }
-              const binding = path.scope.getBinding(argument.name);
-              binding.path.parent.kind = 'let';
+              const binding = path.scope.getBinding(argument.name)!;
+              (binding.path.parent as t.VariableDeclaration).kind = 'let';
               statementPath.insertBefore(macro.template({ ID: argument, CAPABILITY: capability }));
-              try {
-                path.remove();
-              } catch (e) {
-                throw path.get('arguments.0').buildCodeFrameError(`Macros error: ${e.message}`);
-              }
+              tryRemove(path);
             } else if (macro === MACROS.IfAbruptCloseIterator) {
               if (!t.isIdentifier(argument)) {
                 throw path.get('arguments.0').buildCodeFrameError('First argument to IfAbruptCloseIterator should be an identifier');
@@ -263,18 +298,18 @@ module.exports = ({ types: t, template }) => {
               if (!iteratorRecord.isIdentifier()) {
                 throw iteratorRecord.buildCodeFrameError('Second argument to IfAbruptCloseIterator should be an identifier');
               }
-              const binding = path.scope.getBinding(argument.name);
-              binding.path.parent.kind = 'let';
+              const binding = path.scope.getBinding(argument.name)!;
+              (binding.path.parent as t.VariableDeclaration).kind = 'let';
               statementPath.insertBefore(
                 macro.template({
                   value: argument,
                   iteratorRecord: iteratorRecord.node,
                 }),
               );
-              path.remove();
+              tryRemove(path);
             } else {
               const id = statementPath.scope.generateUidIdentifier();
-              const replacement = {
+              const replacement: { ARGUMENT: typeof argument, ID: typeof id, SOURCE?: t.StringLiteral } = {
                 ARGUMENT: argument,
                 ID: id,
               };
@@ -291,9 +326,8 @@ module.exports = ({ types: t, template }) => {
       },
       SwitchCase(path) {
         const n = path.node.consequent[0];
-        if (t.isThrowStatement(n) && t.isNewExpression(n.argument) && n.argument.callee.name === 'OutOfRange') {
-          path.node.leadingComments = path.node.leadingComments || [];
-          path.node.leadingComments.push({ type: 'CommentBlock', value: 'c8 ignore next' });
+        if (t.isThrowStatement(n) && t.isNewExpression(n.argument) && (n.argument.callee as t.Identifier).name === 'OutOfRange') {
+          path.addComment('leading', 'c8 ignore next', false);
         }
       },
       FunctionDeclaration(path) {
