@@ -40,7 +40,7 @@ import {
   CreateDataPropertyOrThrow,
   GeneratorYield,
 } from './all.mts';
-import type { ValueCompletion, PromiseObject } from '#self';
+import type { ValueCompletion, PromiseObject, OrdinaryObject } from '#self';
 
 // This file covers abstract operations defined in
 /** https://tc39.es/ecma262/#sec-operations-on-iterator-objects */
@@ -51,6 +51,10 @@ export interface IteratorRecord {
   readonly Iterator: ObjectValue;
   readonly NextMethod: Value;
   Done: BooleanValue;
+}
+
+export interface IteratorObject extends OrdinaryObject {
+  Iterated: IteratorRecord;
 }
 
 /** https://tc39.es/ecma262/#sec-getiteratordirect */
@@ -129,7 +133,7 @@ export function* IteratorNext(iteratorRecord: IteratorRecord, value?: Value): Va
   }
   if (result instanceof ThrowCompletion) {
     iteratorRecord.Done = Value.true;
-    return result;
+    return Q(result);
   }
   result = X(result);
   if (!(result instanceof ObjectValue)) {

@@ -21,7 +21,7 @@ const SKIP_LIST = path.resolve(import.meta.dirname, 'skiplist');
 const FEATURES = path.resolve(import.meta.dirname, 'features');
 const SLOW_LIST = path.resolve(import.meta.dirname, 'slowlist');
 let mayExit = false;
-const workerCanHoldTasks = 4;
+const workerCanHoldTasks = 1;
 
 // Read everything in argv after node and this file.
 const ARGV = util.parseArgs({
@@ -153,7 +153,10 @@ function queueTest(test: Test) {
 
 function distributeTest() {
   while (true) {
-    const candidate = pendingWork.findIndex((work) => work < workerCanHoldTasks);
+    let candidate = pendingWork.findIndex((work) => work === 0);
+    if (candidate === -1) {
+      candidate = pendingWork.findIndex((work) => work < workerCanHoldTasks);
+    }
     if (candidate === -1) {
       return;
     }
@@ -222,17 +225,14 @@ for await (const file of files) {
     };
 
     if (test.attrs.flags.module) {
-      test.flags = 'module';
-      queueTest(test);
+      queueTest({ ...test, flags: 'module' });
     } else {
       if (!test.attrs.flags.onlyStrict) {
         queueTest(test);
       }
 
       if (!test.attrs.flags.noStrict && !test.attrs.flags.raw) {
-        test.contents = `'use strict';\n${test.contents}`;
-        test.flags = 'strict';
-        queueTest(test);
+        queueTest({ ...test, flags: 'strict', contents: `'use strict';\n${test.contents}` });
       }
     }
   }));

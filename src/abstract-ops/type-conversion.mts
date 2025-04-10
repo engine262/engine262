@@ -113,7 +113,7 @@ export function* OrdinaryToPrimitive(O: ObjectValue, hint: 'string' | 'number'):
 }
 
 /** https://tc39.es/ecma262/#sec-toboolean */
-export function ToBoolean(argument: Value) {
+export function ToBoolean(argument: Value): BooleanValue {
   if (argument instanceof UndefinedValue) {
     // Return false.
     return Value.false;
@@ -128,27 +128,18 @@ export function ToBoolean(argument: Value) {
     if (R(argument) === 0 || argument.isNaN()) {
       return Value.false;
     }
-    return Value.true;
   } else if (argument instanceof JSStringValue) {
     // If argument is the empty String, return false; otherwise return true.
     if (argument.stringValue().length === 0) {
       return Value.false;
     }
-    return Value.true;
-  } else if (argument instanceof SymbolValue) {
-    // Return true.
-    return Value.true;
   } else if (argument instanceof BigIntValue) {
     // If argument is 0ℤ, return false; otherwise return true.
     if (R(argument) === 0n) {
       return Value.false;
     }
-    return Value.true;
-  } else if (argument instanceof ObjectValue) {
-    // Return true.
-    return Value.true;
   }
-  throw new OutOfRange('ToBoolean', { argument });
+  return Value.true;
 }
 
 /** https://tc39.es/ecma262/#sec-tonumeric */
