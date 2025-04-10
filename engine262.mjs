@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 5156b1f8a98a89fe335e1772b66c4a0d4ad800f9
+ * engine262 0.0.1 541a5631dee2e95603eb0b195c572aed6e2a244f
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -7677,14 +7677,13 @@ function* ClassDefinitionEvaluation(ClassTail, classBinding, className) {
       return field;
     }
     // d. Set field to field.[[Value]].
+    /* ReturnIfAbrupt */
     /* c8 ignore if */
-    if (field instanceof AbruptCompletion) {
-      return field;
-    }
+    if (field && typeof field === 'object' && 'next' in field) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
-    if (field instanceof Completion) {
-      field = field.Value;
-    }
+    if (field instanceof AbruptCompletion) return field;
+    /* c8 ignore if */
+    if (field instanceof Completion) field = field.Value;
     // e. If field is a PrivateElement, then
     if (field instanceof PrivateElementRecord) {
       // i. Assert: field.[[Kind]] is either method or accessor.
@@ -8083,14 +8082,13 @@ function* Evaluate_AssignmentExpression({
       // a. Let lref be the result of evaluating LeftHandSideExpression.
       let lref = _temp;
       // b. ReturnIfAbrupt(lref).
+      /* ReturnIfAbrupt */
       /* c8 ignore if */
-      if (lref instanceof AbruptCompletion) {
-        return lref;
-      }
+      if (lref && typeof lref === 'object' && 'next' in lref) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
-      if (lref instanceof Completion) {
-        lref = lref.Value;
-      }
+      if (lref instanceof AbruptCompletion) return lref;
+      /* c8 ignore if */
+      if (lref instanceof Completion) lref = lref.Value;
       // c. If IsAnonymousFunctionDefinition(AssignmentExpression) and IsIdentifierRef of LeftHandSideExpression are both true, then
       let rval;
       if (IsAnonymousFunctionDefinition(AssignmentExpression) && IsIdentifierRef(LeftHandSideExpression)) {
@@ -9409,14 +9407,13 @@ function* Evaluate_StatementList(StatementList) {
       const NextStatementListItem = StatementList[index + 1];
       surroundingAgent.runningExecutionContext.callSite.setNextLocation(NextStatementListItem);
     }
+    /* ReturnIfAbrupt */
     /* c8 ignore if */
-    if (blockCompletion instanceof AbruptCompletion) {
-      return blockCompletion;
-    }
+    if (blockCompletion && typeof blockCompletion === 'object' && 'next' in blockCompletion) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
-    if (blockCompletion instanceof Completion) {
-      blockCompletion = blockCompletion.Value;
-    }
+    if (blockCompletion instanceof AbruptCompletion) return blockCompletion;
+    /* c8 ignore if */
+    if (blockCompletion instanceof Completion) blockCompletion = blockCompletion.Value;
     const itemCompletion = EnsureCompletion(yield* Evaluate(StatementListItem));
     blockCompletion = UpdateEmpty(itemCompletion, blockCompletion);
   }
@@ -9545,14 +9542,13 @@ function* Evaluate_VariableDeclarationList(VariableDeclarationList) {
   let next;
   for (const VariableDeclaration of VariableDeclarationList) {
     next = yield* Evaluate_VariableDeclaration(VariableDeclaration);
+    /* ReturnIfAbrupt */
     /* c8 ignore if */
-    if (next instanceof AbruptCompletion) {
-      return next;
-    }
+    if (next && typeof next === 'object' && 'next' in next) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
-    if (next instanceof Completion) {
-      next = next.Value;
-    }
+    if (next instanceof AbruptCompletion) return next;
+    /* c8 ignore if */
+    if (next instanceof Completion) next = next.Value;
   }
   return next;
 }
@@ -9564,14 +9560,13 @@ function* Evaluate_VariableStatement({
   VariableDeclarationList
 }) {
   let next = yield* Evaluate_VariableDeclarationList(VariableDeclarationList);
+  /* ReturnIfAbrupt */
   /* c8 ignore if */
-  if (next instanceof AbruptCompletion) {
-    return next;
-  }
+  if (next && typeof next === 'object' && 'next' in next) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
-  if (next instanceof Completion) {
-    next = next.Value;
-  }
+  if (next instanceof AbruptCompletion) return next;
+  /* c8 ignore if */
+  if (next instanceof Completion) next = next.Value;
   return NormalCompletion(undefined);
 }
 Evaluate_VariableStatement.section = 'https://tc39.es/ecma262/#sec-variable-statement-runtime-semantics-evaluation';
@@ -10152,7 +10147,7 @@ function* EvaluateBody_GeneratorBody(GeneratorBody, functionObject, argumentsLis
   if (_temp8 instanceof AbruptCompletion) return _temp8;
   /* c8 ignore if */
   if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
-  // 2. Let G be ? OrdinaryCreateFromConstructor(functionObject, "%GeneratorFunction.prototype.prototype%", « [[GeneratorState]], [[GeneratorContext]], [[GeneratorBrand]] »).
+  // 2. Let G be ? OrdinaryCreateFromConstructor(functionObject, "%GeneratorPrototype%", « [[GeneratorState]], [[GeneratorContext]], [[GeneratorBrand]] »).
   /* ReturnIfAbrupt */
   let _temp9 = yield* OrdinaryCreateFromConstructor(functionObject, '%GeneratorFunction.prototype.prototype%', ['GeneratorState', 'GeneratorContext', 'GeneratorBrand']);
   /* c8 ignore if */
@@ -10164,14 +10159,12 @@ function* EvaluateBody_GeneratorBody(GeneratorBody, functionObject, argumentsLis
   const G = _temp9;
   // 3. Set G.[[GeneratorBrand]] to empty.
   G.GeneratorBrand = undefined;
-  // 4. Perform GeneratorStart(G, FunctionBody).
+  // 4. Set G.[[GeneratorState]] to suspended-start.
+  G.GeneratorState = 'suspendedStart';
+  // 5. Perform GeneratorStart(G, FunctionBody).
   GeneratorStart(G, GeneratorBody);
-  // 5. Return Completion { [[Type]]: return, [[Value]]: G, [[Target]]: empty }.
-  return new Completion({
-    Type: 'return',
-    Value: G,
-    Target: undefined
-  });
+  // 6. Return ReturnCompletion(G).
+  return ReturnCompletion(G);
 }
 
 /** https://tc39.es/ecma262/#sec-asyncgenerator-definitions-evaluatebody */
@@ -10977,14 +10970,13 @@ function* IteratorBindingInitialization_BindingRestElement({
       });
       /* c8 ignore if */
       if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+      /* ReturnIfAbrupt */
       /* c8 ignore if */
-      if (next instanceof AbruptCompletion) {
-        return next;
-      }
+      if (next && typeof next === 'object' && 'next' in next) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
-      if (next instanceof Completion) {
-        next = next.Value;
-      }
+      if (next instanceof AbruptCompletion) return next;
+      /* c8 ignore if */
+      if (next instanceof Completion) next = next.Value;
       /* X */
       let _temp15 = CreateDataPropertyOrThrow(A, _temp16, next);
       /* c8 ignore if */
@@ -11493,14 +11485,13 @@ function* Evaluate_BindingList(BindingList) {
   let next;
   for (const LexicalBinding of BindingList) {
     next = yield* Evaluate_LexicalBinding(LexicalBinding);
+    /* ReturnIfAbrupt */
     /* c8 ignore if */
-    if (next instanceof AbruptCompletion) {
-      return next;
-    }
+    if (next && typeof next === 'object' && 'next' in next) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
-    if (next instanceof Completion) {
-      next = next.Value;
-    }
+    if (next instanceof AbruptCompletion) return next;
+    /* c8 ignore if */
+    if (next instanceof Completion) next = next.Value;
   }
   return next;
 }
@@ -11816,14 +11807,13 @@ function* NamedEvaluation_ClassExpression(ClassExpression, name) {
   // 1. Let value be the result of ClassDefinitionEvaluation of ClassTail with arguments undefined and name.
   let value = yield* ClassDefinitionEvaluation(ClassTail, Value.undefined, name);
   // 2. ReturnIfAbrupt(value).
+  /* ReturnIfAbrupt */
   /* c8 ignore if */
-  if (value instanceof AbruptCompletion) {
-    return value;
-  }
+  if (value && typeof value === 'object' && 'next' in value) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
-  if (value instanceof Completion) {
-    value = value.Value;
-  }
+  if (value instanceof AbruptCompletion) return value;
+  /* c8 ignore if */
+  if (value instanceof Completion) value = value.Value;
   // 3. Set value.[[SourceText]] to the source text matched by ClassExpression.
   value.SourceText = sourceTextMatchedBy(ClassExpression);
   // 4. Return value.
@@ -12259,14 +12249,13 @@ function* Evaluate_ArrayLiteral({
   // 2. Let len be the result of performing ArrayAccumulation for ElementList with arguments array and 0.
   let len = yield* ArrayAccumulation(ElementList, array, 0);
   // 3. ReturnIfAbrupt(len).
+  /* ReturnIfAbrupt */
   /* c8 ignore if */
-  if (len instanceof AbruptCompletion) {
-    return len;
-  }
+  if (len && typeof len === 'object' && 'next' in len) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
-  if (len instanceof Completion) {
-    len = len.Value;
-  }
+  if (len instanceof AbruptCompletion) return len;
+  /* c8 ignore if */
+  if (len instanceof Completion) len = len.Value;
   // 4. Return array.
   return array;
 }
@@ -12288,14 +12277,13 @@ function* Evaluate_UnaryExpression_Delete({
   // 1. Let ref be the result of evaluating UnaryExpression.
   let ref = _temp;
   // 2. ReturnIfAbrupt(ref).
+  /* ReturnIfAbrupt */
   /* c8 ignore if */
-  if (ref instanceof AbruptCompletion) {
-    return ref;
-  }
+  if (ref && typeof ref === 'object' && 'next' in ref) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
-  if (ref instanceof Completion) {
-    ref = ref.Value;
-  }
+  if (ref instanceof AbruptCompletion) return ref;
+  /* c8 ignore if */
+  if (ref instanceof Completion) ref = ref.Value;
   // 3. If ref is not a Reference Record, return true.
   if (!(ref instanceof ReferenceRecord)) {
     return Value.true;
@@ -12703,14 +12691,13 @@ function* Evaluate_EqualityExpression({
         // 5. Let r be the result of performing Abstract Equality Comparison rval == lval.
         let r = yield* IsLooselyEqual(rval, lval);
         // 6. ReturnIfAbrupt(r).
+        /* ReturnIfAbrupt */
         /* c8 ignore if */
-        if (r instanceof AbruptCompletion) {
-          return r;
-        }
+        if (r && typeof r === 'object' && 'next' in r) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
-        if (r instanceof Completion) {
-          r = r.Value;
-        }
+        if (r instanceof AbruptCompletion) return r;
+        /* c8 ignore if */
+        if (r instanceof Completion) r = r.Value;
         // 7. If r is true, return false. Otherwise, return true.
         if (r === Value.true) {
           return Value.false;
@@ -13448,14 +13435,13 @@ function* Evaluate_RelationalExpression(expr) {
         // 5. Let r be the result of performing Abstract Relational Comparison lval < rval.
         let r = yield* AbstractRelationalComparison(lval, rval);
         // 6. ReturnIfAbrupt(r).
+        /* ReturnIfAbrupt */
         /* c8 ignore if */
-        if (r instanceof AbruptCompletion) {
-          return r;
-        }
+        if (r && typeof r === 'object' && 'next' in r) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
-        if (r instanceof Completion) {
-          r = r.Value;
-        }
+        if (r instanceof AbruptCompletion) return r;
+        /* c8 ignore if */
+        if (r instanceof Completion) r = r.Value;
         // 7. If r is undefined, return false. Otherwise, return r.
         if (r === Value.undefined) {
           return Value.false;
@@ -13467,14 +13453,13 @@ function* Evaluate_RelationalExpression(expr) {
         // 5. Let r be the result of performing Abstract Relational Comparison rval < lval with LeftFirst equal to false.
         let r = yield* AbstractRelationalComparison(rval, lval, false);
         // 6. ReturnIfAbrupt(r).
+        /* ReturnIfAbrupt */
         /* c8 ignore if */
-        if (r instanceof AbruptCompletion) {
-          return r;
-        }
+        if (r && typeof r === 'object' && 'next' in r) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
-        if (r instanceof Completion) {
-          r = r.Value;
-        }
+        if (r instanceof AbruptCompletion) return r;
+        /* c8 ignore if */
+        if (r instanceof Completion) r = r.Value;
         // 7. If r is undefined, return false. Otherwise, return r.
         if (r === Value.undefined) {
           return Value.false;
@@ -13486,14 +13471,13 @@ function* Evaluate_RelationalExpression(expr) {
         // 5. Let r be the result of performing Abstract Relational Comparison rval < lval with LeftFirst equal to false.
         let r = yield* AbstractRelationalComparison(rval, lval, false);
         // 6. ReturnIfAbrupt(r).
+        /* ReturnIfAbrupt */
         /* c8 ignore if */
-        if (r instanceof AbruptCompletion) {
-          return r;
-        }
+        if (r && typeof r === 'object' && 'next' in r) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
-        if (r instanceof Completion) {
-          r = r.Value;
-        }
+        if (r instanceof AbruptCompletion) return r;
+        /* c8 ignore if */
+        if (r instanceof Completion) r = r.Value;
         // 7. If r is true or undefined, return false. Otherwise, return true.
         if (r === Value.true || r === Value.undefined) {
           return Value.false;
@@ -13505,14 +13489,13 @@ function* Evaluate_RelationalExpression(expr) {
         // 5. Let r be the result of performing Abstract Relational Comparison lval < rval.
         let r = yield* AbstractRelationalComparison(lval, rval);
         // 6. ReturnIfAbrupt(r).
+        /* ReturnIfAbrupt */
         /* c8 ignore if */
-        if (r instanceof AbruptCompletion) {
-          return r;
-        }
+        if (r && typeof r === 'object' && 'next' in r) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
-        if (r instanceof Completion) {
-          r = r.Value;
-        }
+        if (r instanceof AbruptCompletion) return r;
+        /* c8 ignore if */
+        if (r instanceof Completion) r = r.Value;
         // 7. If r is true or undefined, return false. Otherwise, return true.
         if (r === Value.true || r === Value.undefined) {
           return Value.false;
@@ -14151,14 +14134,13 @@ function* LabelledEvaluation_BreakableStatement_ForStatement(ForStatement, label
         // 1. Let varDcl be the result of evaluating VariableDeclarationList.
         let varDcl = yield* Evaluate_VariableDeclarationList(VariableDeclarationList);
         // 2. ReturnIfAbrupt(varDcl).
+        /* ReturnIfAbrupt */
         /* c8 ignore if */
-        if (varDcl instanceof AbruptCompletion) {
-          return varDcl;
-        }
+        if (varDcl && typeof varDcl === 'object' && 'next' in varDcl) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
-        if (varDcl instanceof Completion) {
-          varDcl = varDcl.Value;
-        }
+        if (varDcl instanceof AbruptCompletion) return varDcl;
+        /* c8 ignore if */
+        if (varDcl instanceof Completion) varDcl = varDcl.Value;
         // 3. Return ? ForBodyEvaluation(the first Expression, the second Expression, Statement, « », labelSet).
         return yield* ForBodyEvaluation(Expression_a, Expression_b, Statement, [], labelSet);
       }
@@ -14759,26 +14741,24 @@ function* ForInOfBodyEvaluation(lhs, stmt, iteratorRecord, iterationKind, lhsKin
         // 1. Let status be lhsRef.
         status = lhsRef;
       } else if (lhsKind === 'lexicalBinding') {
+        /* ReturnIfAbrupt */
         /* c8 ignore if */
-        if (lhsRef instanceof AbruptCompletion) {
-          return lhsRef;
-        }
+        if (lhsRef && typeof lhsRef === 'object' && 'next' in lhsRef) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
-        if (lhsRef instanceof Completion) {
-          lhsRef = lhsRef.Value;
-        }
+        if (lhsRef instanceof AbruptCompletion) return lhsRef;
+        /* c8 ignore if */
+        if (lhsRef instanceof Completion) lhsRef = lhsRef.Value;
         // ii. Else is lhsKind is lexicalBinding, then
         // 1. Let status be InitializeReferencedBinding(lhsRef, nextValue).
         status = yield* InitializeReferencedBinding(lhsRef, nextValue);
       } else {
+        /* ReturnIfAbrupt */
         /* c8 ignore if */
-        if (lhsRef instanceof AbruptCompletion) {
-          return lhsRef;
-        }
+        if (lhsRef && typeof lhsRef === 'object' && 'next' in lhsRef) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
-        if (lhsRef instanceof Completion) {
-          lhsRef = lhsRef.Value;
-        }
+        if (lhsRef instanceof AbruptCompletion) return lhsRef;
+        /* c8 ignore if */
+        if (lhsRef instanceof Completion) lhsRef = lhsRef.Value;
         // iii. Else,
         status = yield* PutValue(lhsRef, nextValue);
       }
@@ -15290,7 +15270,7 @@ const FunctionDeclarationStatement = () => 'Functions can only be declared at to
 const GeneratorRunning = () => 'Cannot manipulate a running generator';
 const IllegalBreakContinue = isBreak => `Illegal ${isBreak ? 'break' : 'continue'} statement`;
 const IllegalOctalEscape = () => 'Illegal octal escape';
-const InternalSlotMissing = (o, s) => `Internal slot ${s} is missing for ${i(o)}`;
+const InternalSlotMissing = (o, s) => `Internal slot ${s} is missing`;
 const InvalidArrayLength = l => `Invalid array length: ${i(l)}`;
 const InvalidAssignmentTarget = () => 'Invalid assignment target';
 const InvalidCodePoint = () => 'Not a valid code point';
@@ -15309,6 +15289,7 @@ const InvalidAlphabet = () => 'Invalid alphabet';
 const InvalidLastChunkHandling = () => 'Invalid lastChunkHandling';
 const InvalidBase64String = () => 'Invalid base64 string';
 const InvalidHexString = () => 'Invalid hex string';
+const IteratorCompleted = () => 'The iterator is already complete.';
 const IteratorThrowMissing = () => 'The iterator does not provide a throw method';
 const JSONCircular = () => 'Cannot JSON stringify a circular structure';
 const JSONUnexpectedToken = () => 'Unexpected token in JSON';
@@ -15478,6 +15459,7 @@ var messages = /*#__PURE__*/Object.freeze({
   InvalidTemplateEscape: InvalidTemplateEscape,
   InvalidThis: InvalidThis,
   InvalidUnicodeEscape: InvalidUnicodeEscape,
+  IteratorCompleted: IteratorCompleted,
   IteratorThrowMissing: IteratorThrowMissing,
   JSONCircular: JSONCircular,
   JSONExpected: JSONExpected,
@@ -23679,14 +23661,13 @@ function* PropertyBindingInitialization(node, value, environment) {
     // 1. Let P be the result of evaluating PropertyName.
     let P = yield* Evaluate_PropertyName(node.PropertyName);
     // 2. ReturnIfAbrupt(P).
+    /* ReturnIfAbrupt */
     /* c8 ignore if */
-    if (P instanceof AbruptCompletion) {
-      return P;
-    }
+    if (P && typeof P === 'object' && 'next' in P) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
-    if (P instanceof Completion) {
-      P = P.Value;
-    }
+    if (P instanceof AbruptCompletion) return P;
+    /* c8 ignore if */
+    if (P instanceof Completion) P = P.Value;
     // 3. Perform ? KeyedBindingInitialization of BindingElement with value, environment, and P as the arguments.
     /* ReturnIfAbrupt */
     let _temp2 = yield* KeyedBindingInitialization(node.BindingElement, value, environment, P);
@@ -23873,14 +23854,13 @@ function* RestDestructuringAssignmentEvaluation({
   // 1. Let lref be the result of evaluating DestructuringAssignmentTarget.
   let lref = _temp4;
   // 2. ReturnIfAbrupt(lref).
+  /* ReturnIfAbrupt */
   /* c8 ignore if */
-  if (lref instanceof AbruptCompletion) {
-    return lref;
-  }
+  if (lref && typeof lref === 'object' && 'next' in lref) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
-  if (lref instanceof Completion) {
-    lref = lref.Value;
-  }
+  if (lref instanceof AbruptCompletion) return lref;
+  /* c8 ignore if */
+  if (lref instanceof Completion) lref = lref.Value;
   // 3. Let restObj be OrdinaryObjectCreate(%Object.prototype%).
   const restObj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
   // 4. Perform ? CopyDataProperties(restObj, value, excludedNames).
@@ -23976,14 +23956,13 @@ function* PropertyDestructuringAssignmentEvaluation(AssignmentPropertyList, valu
       // 1. Let name be the result of evaluating PropertyName.
       let name = yield* Evaluate_PropertyName(AssignmentProperty.PropertyName);
       // 2. ReturnIfAbrupt(name).
+      /* ReturnIfAbrupt */
       /* c8 ignore if */
-      if (name instanceof AbruptCompletion) {
-        return name;
-      }
+      if (name && typeof name === 'object' && 'next' in name) throw new Assert.Error('Forgot to yield* on the completion.');
       /* c8 ignore if */
-      if (name instanceof Completion) {
-        name = name.Value;
-      }
+      if (name instanceof AbruptCompletion) return name;
+      /* c8 ignore if */
+      if (name instanceof Completion) name = name.Value;
       // 3. Perform ? KeyedDestructuringAssignmentEvaluation of AssignmentElement with value and name as the arguments.
       /* ReturnIfAbrupt */
       let _temp12 = yield* KeyedDestructuringAssignmentEvaluation(AssignmentProperty.AssignmentElement, value, name);
@@ -24250,14 +24229,13 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
             v = _temp27;
           }
         } else {
+          /* ReturnIfAbrupt */
           /* c8 ignore if */
-          if (value instanceof AbruptCompletion) {
-            return value;
-          }
+          if (value && typeof value === 'object' && 'next' in value) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
-          if (value instanceof Completion) {
-            value = value.Value;
-          }
+          if (value instanceof AbruptCompletion) return value;
+          /* c8 ignore if */
+          if (value instanceof Completion) value = value.Value;
           // 5. Else, let v be value.
           v = value;
         }
@@ -24279,14 +24257,13 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
           return yield* DestructuringAssignmentEvaluation(nestedAssignmentPattern, _temp28);
         }
         // 7. Return ? PutValue(lref, v).
+        /* ReturnIfAbrupt */
         /* c8 ignore if */
-        if (lref instanceof AbruptCompletion) {
-          return lref;
-        }
+        if (lref && typeof lref === 'object' && 'next' in lref) throw new Assert.Error('Forgot to yield* on the completion.');
         /* c8 ignore if */
-        if (lref instanceof Completion) {
-          lref = lref.Value;
-        }
+        if (lref instanceof AbruptCompletion) return lref;
+        /* c8 ignore if */
+        if (lref instanceof Completion) lref = lref.Value;
         return yield* PutValue(lref, v);
       }
     case 'AssignmentRestElement':
@@ -24298,14 +24275,13 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
         // 1. If DestructuringAssignmentTarget is neither an ObjectLiteral nor an ArrayLiteral, then
         if (DestructuringAssignmentTarget.type !== 'ObjectLiteral' && DestructuringAssignmentTarget.type !== 'ArrayLiteral') {
           lref = yield* Evaluate(DestructuringAssignmentTarget);
+          /* ReturnIfAbrupt */
           /* c8 ignore if */
-          if (lref instanceof AbruptCompletion) {
-            return lref;
-          }
+          if (lref && typeof lref === 'object' && 'next' in lref) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
-          if (lref instanceof Completion) {
-            lref = lref.Value;
-          }
+          if (lref instanceof AbruptCompletion) return lref;
+          /* c8 ignore if */
+          if (lref instanceof Completion) lref = lref.Value;
         }
         // 2. Let A be ! ArrayCreate(0).
         /* X */
@@ -24371,14 +24347,13 @@ function* IteratorDestructuringAssignmentEvaluation(node, iteratorRecord) {
         }
         // 5. If DestructuringAssignmentTarget is neither an ObjectLiteral nor an ArrayLiteral, then
         if (DestructuringAssignmentTarget.type !== 'ObjectLiteral' && DestructuringAssignmentTarget.type !== 'ArrayLiteral') {
+          /* ReturnIfAbrupt */
           /* c8 ignore if */
-          if (lref instanceof AbruptCompletion) {
-            return lref;
-          }
+          if (lref && typeof lref === 'object' && 'next' in lref) throw new Assert.Error('Forgot to yield* on the completion.');
           /* c8 ignore if */
-          if (lref instanceof Completion) {
-            lref = lref.Value;
-          }
+          if (lref instanceof AbruptCompletion) return lref;
+          /* c8 ignore if */
+          if (lref instanceof Completion) lref = lref.Value;
           return yield* PutValue(lref, A);
         }
         // 6. Let nestedAssignmentPattern be the AssignmentPattern that is covered by DestructuringAssignmentTarget.
@@ -25270,14 +25245,13 @@ function* MethodDefinitionEvaluation_GeneratorMethod(GeneratorMethod, object, en
   // 1. Let propKey be the result of evaluating ClassElementName.
   let propKey = yield* Evaluate_PropertyName(ClassElementName);
   // 2. ReturnIfAbrupt(propKey).
+  /* ReturnIfAbrupt */
   /* c8 ignore if */
-  if (propKey instanceof AbruptCompletion) {
-    return propKey;
-  }
+  if (propKey && typeof propKey === 'object' && 'next' in propKey) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
-  if (propKey instanceof Completion) {
-    propKey = propKey.Value;
-  }
+  if (propKey instanceof AbruptCompletion) return propKey;
+  /* c8 ignore if */
+  if (propKey instanceof Completion) propKey = propKey.Value;
   propKey = propKey;
   // 3. Let scope be the LexicalEnvironment of the running execution context.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
@@ -25354,14 +25328,13 @@ function* MethodDefinitionEvaluation_AsyncGeneratorMethod(AsyncGeneratorMethod, 
   // 1. Let propKey be the result of evaluating ClassElementName.
   let propKey = yield* Evaluate_PropertyName(ClassElementName);
   // 2. ReturnIfAbrupt(propKey).
+  /* ReturnIfAbrupt */
   /* c8 ignore if */
-  if (propKey instanceof AbruptCompletion) {
-    return propKey;
-  }
+  if (propKey && typeof propKey === 'object' && 'next' in propKey) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
-  if (propKey instanceof Completion) {
-    propKey = propKey.Value;
-  }
+  if (propKey instanceof AbruptCompletion) return propKey;
+  /* c8 ignore if */
+  if (propKey instanceof Completion) propKey = propKey.Value;
   propKey = propKey;
   // 3. Let scope be the LexicalEnvironment of the running execution context.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
@@ -29982,14 +29955,13 @@ function* FunctionCallSlot(thisArgument, argumentsList) {
     return NormalCompletion(result.Value);
   }
   // 10. ReturnIfAbrupt(result).
+  /* ReturnIfAbrupt */
   /* c8 ignore if */
-  if (result instanceof AbruptCompletion) {
-    return result;
-  }
+  if (result && typeof result === 'object' && 'next' in result) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
-  if (result instanceof Completion) {
-    result = result.Value;
-  }
+  if (result instanceof AbruptCompletion) return result;
+  /* c8 ignore if */
+  if (result instanceof Completion) result = result.Value;
   // 11. Return NormalCompletion(undefined).
   return NormalCompletion(Value.undefined);
 }
@@ -30060,14 +30032,13 @@ function* FunctionConstructSlot(argumentsList, newTarget) {
       return surroundingAgent.Throw('TypeError', 'DerivedConstructorReturnedNonObject');
     }
   } else {
+    /* ReturnIfAbrupt */
     /* c8 ignore if */
-    if (result instanceof AbruptCompletion) {
-      return result;
-    }
+    if (result && typeof result === 'object' && 'next' in result) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
-    if (result instanceof Completion) {
-      result = result.Value;
-    }
+    if (result instanceof AbruptCompletion) return result;
+    /* c8 ignore if */
+    if (result instanceof Completion) result = result.Value;
   }
   // 14. Return ? constructorEnv.GetThisBinding().
   return constructorEnv.GetThisBinding();
@@ -30340,14 +30311,13 @@ function* BuiltinFunctionCall(thisArgument, argumentsList) {
   // Remove calleeContext from the execution context stack and
   // restore callerContext as the running execution context.
   surroundingAgent.executionContextStack.pop(calleeContext);
+  /* ReturnIfAbrupt */
   /* c8 ignore if */
-  if (result instanceof AbruptCompletion) {
-    return result;
-  }
+  if (result && typeof result === 'object' && 'next' in result) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
-  if (result instanceof Completion) {
-    result = result.Value;
-  }
+  if (result instanceof AbruptCompletion) return result;
+  /* c8 ignore if */
+  if (result instanceof Completion) result = result.Value;
   return result || Value.undefined;
 }
 function* BuiltinFunctionConstruct(argumentsList, newTarget) {
@@ -30370,14 +30340,13 @@ function* BuiltinFunctionConstruct(argumentsList, newTarget) {
   // Remove calleeContext from the execution context stack and
   // restore callerContext as the running execution context.
   surroundingAgent.executionContextStack.pop(calleeContext);
+  /* ReturnIfAbrupt */
   /* c8 ignore if */
-  if (result instanceof AbruptCompletion) {
-    return result;
-  }
+  if (result && typeof result === 'object' && 'next' in result) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
-  if (result instanceof Completion) {
-    result = result.Value;
-  }
+  if (result instanceof AbruptCompletion) return result;
+  /* c8 ignore if */
+  if (result instanceof Completion) result = result.Value;
   Assert(result instanceof ObjectValue, "result instanceof ObjectValue");
   return result;
 }
@@ -30500,67 +30469,65 @@ function IntrinsicsFunctionToString(F) {
 
 /** https://tc39.es/ecma262/#sec-generatorstart */
 function GeneratorStart(generator, generatorBody) {
-  // 1. Assert: The value of generator.[[GeneratorState]] is undefined.
-  Assert(generator.GeneratorState === Value.undefined, "generator.GeneratorState === Value.undefined");
+  // 1. Assert: The value of generator.[[GeneratorState]] is suspended-start.
+  Assert(generator.GeneratorState === 'suspendedStart', "generator.GeneratorState === 'suspendedStart'");
   // 2. Let genContext be the running execution context.
   const genContext = surroundingAgent.runningExecutionContext;
   // 3. Set the Generator component of genContext to generator.
   genContext.Generator = generator;
-  // 4. Set the code evaluation state of genContext such that when evaluation is resumed
-  //    for that execution context the following steps will be performed:
-  genContext.codeEvaluationState = function* resumer() {
-    // a. If generatorBody is a Parse Node, then
-    //    i. Let result be the result of evaluating generatorBody.
-    // b. Else,
-    //    i. Assert: generatorBody is an Abstract Closure.
-    //    ii. Let result be generatorBody().
+  // 4. Let closure be a new Abstract Closure with no parameters that captures generatorBody
+  //    and performs the following steps when called:
+  const closure = function* closure() {
+    // a. Let acGenContext be the running execution context.
+    const acGenContext = surroundingAgent.runningExecutionContext;
+    // b. Let acGenerator be the Generator component of acGenContext.
+    const acGenerator = acGenContext.Generator;
+    // c. If generatorBody is a Parse Node, then
+    //   i. Let result be Completion(Evaluation of generatorBody).
+    // d. Else,
+    //   i. Assert: generatorBody is an Abstract Closure with no parameters.
+    //   ii. Let result be generatorBody().
     const result = EnsureCompletion(
     // Note: Engine262 can only perform the "If generatorBody is an Abstract Closure" check:
     yield* typeof generatorBody === 'function' ? generatorBody() : Evaluate(generatorBody));
-    // c. Assert: If we return here, the generator either threw an exception or
-    //    performed either an implicit or explicit return.
-    // d. Remove genContext from the execution context stack and restore the execution context
+    // e. Assert: If we return here, the generator either threw an exception or performed either
+    //    an implicit or explicit return.
+    // f. Remove acGenContext from the execution context stack and restore the execution context
     //    that is at the top of the execution context stack as the running execution context.
-    surroundingAgent.executionContextStack.pop(genContext);
-    // e. Set generator.[[GeneratorState]] to completed.
-    generator.GeneratorState = 'completed';
-    // f. Once a generator enters the completed state it never leaves it and its
-    //    associated execution context is never resumed. Any execution state associated
-    //    with generator can be discarded at this point.
-    genContext.codeEvaluationState = undefined;
-    // g. If result.[[Type]] is normal, let resultValue be undefined.
+    surroundingAgent.executionContextStack.pop(acGenContext);
+    // g. Set acGenerator.[[GeneratorState]] to completed.
+    acGenerator.GeneratorState = 'completed';
+    // h. NOTE: Once a generator enters the completed state it never leaves it and its associated execution context is never resumed. Any execution state associated with acGenerator can be discarded at this point.
+
     let resultValue;
-    if (result.Type === 'normal') {
+    if (result instanceof NormalCompletion) {
+      // i. If result is a normal completion, then
+      //   i. Let resultValue be undefined.
       resultValue = Value.undefined;
-    } else if (result.Type === 'return') {
-      // h. Else if result.[[Type]] is return, let resultValue be result.[[Value]].
+    } else if (result instanceof ReturnCompletion) {
+      // j. Else if result is a return completion, then
+      //   i. Let resultValue be result.[[Value]].
       resultValue = result.Value;
     } else {
-      // i. Else,
-      // i. Assert: result.[[Type]] is throw.
-      Assert(result.Type === 'throw', "result.Type === 'throw'");
-      // ii. Return Completion(result).
+      // k. Else,
+      //   i. Assert: result is a throw completion.
+      //   ii. Return ? result.
+      Assert(result instanceof ThrowCompletion, "result instanceof ThrowCompletion");
       return result;
     }
-    // j. Return CreateIteratorResultObject(resultValue, true).
-    /* X */
-    let _temp = CreateIteratorResultObject(resultValue, Value.true);
-    /* c8 ignore if */
-    if (_temp && typeof _temp === 'object' && 'next' in _temp) _temp = skipDebugger(_temp);
-    /* c8 ignore if */
-    if (_temp instanceof AbruptCompletion) throw new Assert.Error("! CreateIteratorResultObject(resultValue, Value.true) returned an abrupt completion", {
-      cause: _temp
-    });
-    /* c8 ignore if */
-    if (_temp instanceof Completion) _temp = _temp.Value;
-    return _temp;
+    // l. Return CreateIteratorResultObject(resultValue, true).
+    return CreateIteratorResultObject(resultValue, Value.true);
+  };
+
+  // 5. Set the code evaluation state of genContext such that when evaluation is resumed
+  //    for that execution context, closure will be called with no arguments.
+  genContext.codeEvaluationState = function* resumer() {
+    return yield* closure();
   }();
-  // 5. Set generator.[[GeneratorContext]] to genContext.
+
+  // 6. Set generator.[[GeneratorContext]] to genContext.
   generator.GeneratorContext = genContext;
-  // 6. Set generator.[[GeneratorState]] to suspendedStart.
-  generator.GeneratorState = 'suspendedStart';
-  // 7. Return NormalCompletion(undefined).
-  return NormalCompletion(Value.undefined);
+  // 7. Return unused.
 }
 GeneratorStart.section = 'https://tc39.es/ecma262/#sec-generatorstart';
 function generatorBrandToErrorMessageType(generatorBrand) {
@@ -30580,22 +30547,22 @@ function generatorBrandToErrorMessageType(generatorBrand) {
 /** https://tc39.es/ecma262/#sec-generatorvalidate */
 function GeneratorValidate(generator, generatorBrand) {
   /* ReturnIfAbrupt */
-  let _temp2 = RequireInternalSlot(generator, 'GeneratorState');
+  let _temp = RequireInternalSlot(generator, 'GeneratorState');
+  /* c8 ignore if */
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp instanceof AbruptCompletion) return _temp;
+  /* c8 ignore if */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  // 2. Perform ? RequireInternalSlot(generator, [[GeneratorBrand]]).
+  /* ReturnIfAbrupt */
+  let _temp2 = RequireInternalSlot(generator, 'GeneratorBrand');
   /* c8 ignore if */
   if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
   if (_temp2 instanceof AbruptCompletion) return _temp2;
   /* c8 ignore if */
   if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
-  // 2. Perform ? RequireInternalSlot(generator, [[GeneratorBrand]]).
-  /* ReturnIfAbrupt */
-  let _temp3 = RequireInternalSlot(generator, 'GeneratorBrand');
-  /* c8 ignore if */
-  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
-  /* c8 ignore if */
-  if (_temp3 instanceof AbruptCompletion) return _temp3;
-  /* c8 ignore if */
-  if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
   // 3. If generator.[[GeneratorBrand]] is not the same value as generatorBrand, throw a TypeError exception.
   const brand = generator.GeneratorBrand;
   if (brand === undefined || generatorBrand === undefined ? brand !== generatorBrand : SameValue(brand, generatorBrand) === Value.false) {
@@ -30617,28 +30584,28 @@ function GeneratorValidate(generator, generatorBrand) {
 GeneratorValidate.section = 'https://tc39.es/ecma262/#sec-generatorvalidate';
 function* GeneratorResume(generator, value, generatorBrand) {
   /* ReturnIfAbrupt */
-  let _temp4 = GeneratorValidate(generator, generatorBrand);
+  let _temp3 = GeneratorValidate(generator, generatorBrand);
   /* c8 ignore if */
-  if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
-  if (_temp4 instanceof AbruptCompletion) return _temp4;
+  if (_temp3 instanceof AbruptCompletion) return _temp3;
   /* c8 ignore if */
-  if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+  if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
   // 1. Let state be ? GeneratorValidate(generator, generatorBrand).
-  const state = _temp4;
+  const state = _temp3;
   // 2. If state is completed, return CreateIteratorResultObject(undefined, true).
   if (state === 'completed') {
     /* X */
-    let _temp5 = CreateIteratorResultObject(Value.undefined, Value.true);
+    let _temp4 = CreateIteratorResultObject(Value.undefined, Value.true);
     /* c8 ignore if */
-    if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) _temp5 = skipDebugger(_temp5);
+    if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) _temp4 = skipDebugger(_temp4);
     /* c8 ignore if */
-    if (_temp5 instanceof AbruptCompletion) throw new Assert.Error("! CreateIteratorResultObject(Value.undefined, Value.true) returned an abrupt completion", {
-      cause: _temp5
+    if (_temp4 instanceof AbruptCompletion) throw new Assert.Error("! CreateIteratorResultObject(Value.undefined, Value.true) returned an abrupt completion", {
+      cause: _temp4
     });
     /* c8 ignore if */
-    if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
-    return _temp5;
+    if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+    return _temp4;
   }
   // 3. Assert: state is either suspendedStart or suspendedYield.
   Assert(state === 'suspendedStart' || state === 'suspendedYield', "state === 'suspendedStart' || state === 'suspendedYield'");
@@ -30669,15 +30636,15 @@ function* GeneratorResume(generator, value, generatorBrand) {
 GeneratorResume.section = 'https://tc39.es/ecma262/#sec-generatorresume';
 function* GeneratorResumeAbrupt(generator, abruptCompletion, generatorBrand) {
   /* ReturnIfAbrupt */
-  let _temp6 = GeneratorValidate(generator, generatorBrand);
+  let _temp5 = GeneratorValidate(generator, generatorBrand);
   /* c8 ignore if */
-  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
+  if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
-  if (_temp6 instanceof AbruptCompletion) return _temp6;
+  if (_temp5 instanceof AbruptCompletion) return _temp5;
   /* c8 ignore if */
-  if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+  if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
   // 1. Let state be ? GeneratorValidate(generator, generatorBrand).
-  let state = _temp6;
+  let state = _temp5;
   // 2. If state is suspendedStart, then
   if (state === 'suspendedStart') {
     // a. Set generator.[[GeneratorState]] to completed.
@@ -30694,17 +30661,17 @@ function* GeneratorResumeAbrupt(generator, abruptCompletion, generatorBrand) {
     // a. If abruptCompletion.[[Type]] is return, then
     if (abruptCompletion.Type === 'return') {
       /* X */
-      let _temp7 = CreateIteratorResultObject(abruptCompletion.Value, Value.true);
+      let _temp6 = CreateIteratorResultObject(abruptCompletion.Value, Value.true);
       /* c8 ignore if */
-      if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) _temp7 = skipDebugger(_temp7);
+      if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) _temp6 = skipDebugger(_temp6);
       /* c8 ignore if */
-      if (_temp7 instanceof AbruptCompletion) throw new Assert.Error("! CreateIteratorResultObject(abruptCompletion.Value, Value.true) returned an abrupt completion", {
-        cause: _temp7
+      if (_temp6 instanceof AbruptCompletion) throw new Assert.Error("! CreateIteratorResultObject(abruptCompletion.Value, Value.true) returned an abrupt completion", {
+        cause: _temp6
       });
       /* c8 ignore if */
-      if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+      if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
       // i. Return CreateIteratorResultObject(abruptCompletion.[[Value]], true).
-      return _temp7;
+      return _temp6;
     }
     // b. Return Completion(abruptCompletion).
     return Completion(abruptCompletion);
@@ -30790,14 +30757,14 @@ function* Yield(value) {
   // 2. If generatorKind is async, return ? AsyncGeneratorYield(? Await(value)).
   if (generatorKind === 'async') {
     /* ReturnIfAbrupt */
-    let _temp8 = yield* Await(value);
+    let _temp7 = yield* Await(value);
     /* c8 ignore if */
-    if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
+    if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
     /* c8 ignore if */
-    if (_temp8 instanceof AbruptCompletion) return _temp8;
+    if (_temp7 instanceof AbruptCompletion) return _temp7;
     /* c8 ignore if */
-    if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
-    return yield* AsyncGeneratorYield(_temp8);
+    if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+    return yield* AsyncGeneratorYield(_temp7);
   }
   // 3. Otherwise, return ? GeneratorYield(CreateIteratorResultObject(value, false)).
   return yield* GeneratorYield(CreateIteratorResultObject(value, Value.false));
@@ -30805,39 +30772,37 @@ function* Yield(value) {
 
 /** https://tc39.es/ecma262/#sec-createiteratorfromclosure */
 Yield.section = 'https://tc39.es/ecma262/#sec-yield';
-function CreateIteratorFromClosure(closure, generatorBrand, generatorPrototype) {
+function CreateIteratorFromClosure(closure, generatorBrand, generatorPrototype, extraSlots) {
   Assert(typeof closure === 'function', "typeof closure === 'function'");
   // 1. NOTE: closure can contain uses of the Yield shorthand to yield an IteratorResult object.
-  // 2. Let internalSlotsList be « [[GeneratorState]], [[GeneratorContext]], [[GeneratorBrand]] ».
-  const internalSlotsList = ['GeneratorState', 'GeneratorContext', 'GeneratorBrand'];
-  // 3. Let generator be ! OrdinaryObjectCreate(generatorPrototype, internalSlotsList).
-  /* X */
-  let _temp9 = OrdinaryObjectCreate(generatorPrototype, internalSlotsList);
-  /* c8 ignore if */
-  if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) _temp9 = skipDebugger(_temp9);
-  /* c8 ignore if */
-  if (_temp9 instanceof AbruptCompletion) throw new Assert.Error("! OrdinaryObjectCreate(generatorPrototype, internalSlotsList) returned an abrupt completion", {
-    cause: _temp9
-  });
-  /* c8 ignore if */
-  if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
-  const generator = _temp9;
-  // 4. Set generator.[[GeneratorBrand]] to generatorBrand.
+  // 2. If extraSlots is not present, set extraSlots to a new empty List.
+  extraSlots ??= [];
+  // 3. Let internalSlotsList be the list-concatenation of extraSlots and « [[GeneratorState]], [[GeneratorContext]], [[GeneratorBrand]] ».
+  const internalSlotsList = extraSlots.concat(['GeneratorState', 'GeneratorContext', 'GeneratorBrand']);
+  // 4. Let generator be OrdinaryObjectCreate(generatorPrototype, internalSlotsList).
+  const generator = OrdinaryObjectCreate(generatorPrototype, internalSlotsList);
+  // 5. Set generator.[[GeneratorBrand]] to generatorBrand.
   generator.GeneratorBrand = generatorBrand;
-  // 5. Set generator.[[GeneratorState]] to undefined.
-  generator.GeneratorState = Value.undefined;
-  // 6. Perform ! GeneratorStart(generator, closure).
-  /* X */
-  let _temp10 = GeneratorStart(generator, closure);
-  /* c8 ignore if */
-  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) _temp10 = skipDebugger(_temp10);
-  /* c8 ignore if */
-  if (_temp10 instanceof AbruptCompletion) throw new Assert.Error("! GeneratorStart(generator, closure) returned an abrupt completion", {
-    cause: _temp10
-  });
-  /* c8 ignore if */
-  if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
-  // 7. Return generator.
+  // 6. Set generator.[[GeneratorState]] to suspended-start.
+  generator.GeneratorState = 'suspendedStart';
+  // 7. Let callerContext be the running execution context.
+  const callerContext = surroundingAgent.runningExecutionContext;
+  // 8. Let calleeContext be a new execution context.
+  const calleeContext = new ExecutionContext();
+  // 9. Set the Function of calleeContext to null.
+  calleeContext.Function = Value.null;
+  // 10. Set the Realm of calleeContext to the current Realm Record.
+  calleeContext.Realm = surroundingAgent.currentRealmRecord;
+  // 11. Set the ScriptOrModule of calleeContext to callerContext's ScriptOrModule.
+  calleeContext.ScriptOrModule = callerContext.ScriptOrModule;
+  // 12. If callerContext is not already suspended, suspend callerContext.
+  // 13. Push calleeContext onto the execution context stack; calleeContext is now the running execution context.
+  surroundingAgent.executionContextStack.push(calleeContext);
+  // 14. Perform GeneratorStart(generator, closure).
+  GeneratorStart(generator, closure);
+  // 15. Remove calleeContext from the execution context stack and restore callerContext as the running execution context.
+  surroundingAgent.executionContextStack.pop(calleeContext);
+  // 16. Return generator.
   return generator;
 }
 CreateIteratorFromClosure.section = 'https://tc39.es/ecma262/#sec-createiteratorfromclosure';
@@ -41073,17 +41038,17 @@ function bootstrapArrayPrototype(realmRec) {
   // TODO: remove skipDebugger
   O => skipDebugger(LengthOfArrayLike(O)));
   /* X */
-  let _temp204 = proto.GetOwnProperty(Value('values'));
+  let _temp205 = proto.GetOwnProperty(Value('values'));
   /* c8 ignore if */
-  if (_temp204 && typeof _temp204 === 'object' && 'next' in _temp204) _temp204 = skipDebugger(_temp204);
+  if (_temp205 && typeof _temp205 === 'object' && 'next' in _temp205) _temp205 = skipDebugger(_temp205);
   /* c8 ignore if */
-  if (_temp204 instanceof AbruptCompletion) throw new Assert.Error("! proto.GetOwnProperty(Value('values')) returned an abrupt completion", {
-    cause: _temp204
+  if (_temp205 instanceof AbruptCompletion) throw new Assert.Error("! proto.GetOwnProperty(Value('values')) returned an abrupt completion", {
+    cause: _temp205
   });
   /* c8 ignore if */
-  if (_temp204 instanceof Completion) _temp204 = _temp204.Value;
+  if (_temp205 instanceof Completion) _temp205 = _temp205.Value;
   /* X */
-  let _temp186 = proto.DefineOwnProperty(wellKnownSymbols.iterator, _temp204);
+  let _temp186 = proto.DefineOwnProperty(wellKnownSymbols.iterator, _temp205);
   /* c8 ignore if */
   if (_temp186 && typeof _temp186 === 'object' && 'next' in _temp186) _temp186 = skipDebugger(_temp186);
   /* c8 ignore if */
@@ -41095,60 +41060,60 @@ function bootstrapArrayPrototype(realmRec) {
   {
     const unscopableList = OrdinaryObjectCreate(Value.null);
     /* X */
-    let _temp187 = CreateDataProperty(unscopableList, Value('copyWithin'), Value.true);
+    let _temp187 = CreateDataProperty(unscopableList, Value('at'), Value.true);
     /* c8 ignore if */
     if (_temp187 && typeof _temp187 === 'object' && 'next' in _temp187) _temp187 = skipDebugger(_temp187);
     /* c8 ignore if */
-    if (_temp187 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('copyWithin'), Value.true) returned an abrupt completion", {
+    if (_temp187 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('at'), Value.true) returned an abrupt completion", {
       cause: _temp187
     });
     /* c8 ignore if */
     if (_temp187 instanceof Completion) _temp187 = _temp187.Value;
-    Assert(_temp187 === Value.true, "X(CreateDataProperty(unscopableList, Value('copyWithin'), Value.true)) === Value.true");
+    Assert(_temp187 === Value.true, "X(CreateDataProperty(unscopableList, Value('at'), Value.true)) === Value.true");
     /* X */
-    let _temp188 = CreateDataProperty(unscopableList, Value('entries'), Value.true);
+    let _temp188 = CreateDataProperty(unscopableList, Value('copyWithin'), Value.true);
     /* c8 ignore if */
     if (_temp188 && typeof _temp188 === 'object' && 'next' in _temp188) _temp188 = skipDebugger(_temp188);
     /* c8 ignore if */
-    if (_temp188 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('entries'), Value.true) returned an abrupt completion", {
+    if (_temp188 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('copyWithin'), Value.true) returned an abrupt completion", {
       cause: _temp188
     });
     /* c8 ignore if */
     if (_temp188 instanceof Completion) _temp188 = _temp188.Value;
-    Assert(_temp188 === Value.true, "X(CreateDataProperty(unscopableList, Value('entries'), Value.true)) === Value.true");
+    Assert(_temp188 === Value.true, "X(CreateDataProperty(unscopableList, Value('copyWithin'), Value.true)) === Value.true");
     /* X */
-    let _temp189 = CreateDataProperty(unscopableList, Value('fill'), Value.true);
+    let _temp189 = CreateDataProperty(unscopableList, Value('entries'), Value.true);
     /* c8 ignore if */
     if (_temp189 && typeof _temp189 === 'object' && 'next' in _temp189) _temp189 = skipDebugger(_temp189);
     /* c8 ignore if */
-    if (_temp189 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('fill'), Value.true) returned an abrupt completion", {
+    if (_temp189 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('entries'), Value.true) returned an abrupt completion", {
       cause: _temp189
     });
     /* c8 ignore if */
     if (_temp189 instanceof Completion) _temp189 = _temp189.Value;
-    Assert(_temp189 === Value.true, "X(CreateDataProperty(unscopableList, Value('fill'), Value.true)) === Value.true");
+    Assert(_temp189 === Value.true, "X(CreateDataProperty(unscopableList, Value('entries'), Value.true)) === Value.true");
     /* X */
-    let _temp190 = CreateDataProperty(unscopableList, Value('find'), Value.true);
+    let _temp190 = CreateDataProperty(unscopableList, Value('fill'), Value.true);
     /* c8 ignore if */
     if (_temp190 && typeof _temp190 === 'object' && 'next' in _temp190) _temp190 = skipDebugger(_temp190);
     /* c8 ignore if */
-    if (_temp190 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('find'), Value.true) returned an abrupt completion", {
+    if (_temp190 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('fill'), Value.true) returned an abrupt completion", {
       cause: _temp190
     });
     /* c8 ignore if */
     if (_temp190 instanceof Completion) _temp190 = _temp190.Value;
-    Assert(_temp190 === Value.true, "X(CreateDataProperty(unscopableList, Value('find'), Value.true)) === Value.true");
+    Assert(_temp190 === Value.true, "X(CreateDataProperty(unscopableList, Value('fill'), Value.true)) === Value.true");
     /* X */
-    let _temp191 = CreateDataProperty(unscopableList, Value('findLast'), Value.true);
+    let _temp191 = CreateDataProperty(unscopableList, Value('find'), Value.true);
     /* c8 ignore if */
     if (_temp191 && typeof _temp191 === 'object' && 'next' in _temp191) _temp191 = skipDebugger(_temp191);
     /* c8 ignore if */
-    if (_temp191 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('findLast'), Value.true) returned an abrupt completion", {
+    if (_temp191 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('find'), Value.true) returned an abrupt completion", {
       cause: _temp191
     });
     /* c8 ignore if */
     if (_temp191 instanceof Completion) _temp191 = _temp191.Value;
-    Assert(_temp191 === Value.true, "X(CreateDataProperty(unscopableList, Value('findLast'), Value.true)) === Value.true");
+    Assert(_temp191 === Value.true, "X(CreateDataProperty(unscopableList, Value('find'), Value.true)) === Value.true");
     /* X */
     let _temp192 = CreateDataProperty(unscopableList, Value('findIndex'), Value.true);
     /* c8 ignore if */
@@ -41161,133 +41126,144 @@ function bootstrapArrayPrototype(realmRec) {
     if (_temp192 instanceof Completion) _temp192 = _temp192.Value;
     Assert(_temp192 === Value.true, "X(CreateDataProperty(unscopableList, Value('findIndex'), Value.true)) === Value.true");
     /* X */
-    let _temp193 = CreateDataProperty(unscopableList, Value('findLastIndex'), Value.true);
+    let _temp193 = CreateDataProperty(unscopableList, Value('findLast'), Value.true);
     /* c8 ignore if */
     if (_temp193 && typeof _temp193 === 'object' && 'next' in _temp193) _temp193 = skipDebugger(_temp193);
     /* c8 ignore if */
-    if (_temp193 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('findLastIndex'), Value.true) returned an abrupt completion", {
+    if (_temp193 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('findLast'), Value.true) returned an abrupt completion", {
       cause: _temp193
     });
     /* c8 ignore if */
     if (_temp193 instanceof Completion) _temp193 = _temp193.Value;
-    Assert(_temp193 === Value.true, "X(CreateDataProperty(unscopableList, Value('findLastIndex'), Value.true)) === Value.true");
+    Assert(_temp193 === Value.true, "X(CreateDataProperty(unscopableList, Value('findLast'), Value.true)) === Value.true");
     /* X */
-    let _temp194 = CreateDataProperty(unscopableList, Value('flat'), Value.true);
+    let _temp194 = CreateDataProperty(unscopableList, Value('findLastIndex'), Value.true);
     /* c8 ignore if */
     if (_temp194 && typeof _temp194 === 'object' && 'next' in _temp194) _temp194 = skipDebugger(_temp194);
     /* c8 ignore if */
-    if (_temp194 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('flat'), Value.true) returned an abrupt completion", {
+    if (_temp194 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('findLastIndex'), Value.true) returned an abrupt completion", {
       cause: _temp194
     });
     /* c8 ignore if */
     if (_temp194 instanceof Completion) _temp194 = _temp194.Value;
-    Assert(_temp194 === Value.true, "X(CreateDataProperty(unscopableList, Value('flat'), Value.true)) === Value.true");
+    Assert(_temp194 === Value.true, "X(CreateDataProperty(unscopableList, Value('findLastIndex'), Value.true)) === Value.true");
     /* X */
-    let _temp195 = CreateDataProperty(unscopableList, Value('flatMap'), Value.true);
+    let _temp195 = CreateDataProperty(unscopableList, Value('flat'), Value.true);
     /* c8 ignore if */
     if (_temp195 && typeof _temp195 === 'object' && 'next' in _temp195) _temp195 = skipDebugger(_temp195);
     /* c8 ignore if */
-    if (_temp195 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('flatMap'), Value.true) returned an abrupt completion", {
+    if (_temp195 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('flat'), Value.true) returned an abrupt completion", {
       cause: _temp195
     });
     /* c8 ignore if */
     if (_temp195 instanceof Completion) _temp195 = _temp195.Value;
-    Assert(_temp195 === Value.true, "X(CreateDataProperty(unscopableList, Value('flatMap'), Value.true)) === Value.true");
+    Assert(_temp195 === Value.true, "X(CreateDataProperty(unscopableList, Value('flat'), Value.true)) === Value.true");
     /* X */
-    let _temp196 = CreateDataProperty(unscopableList, Value('includes'), Value.true);
+    let _temp196 = CreateDataProperty(unscopableList, Value('flatMap'), Value.true);
     /* c8 ignore if */
     if (_temp196 && typeof _temp196 === 'object' && 'next' in _temp196) _temp196 = skipDebugger(_temp196);
     /* c8 ignore if */
-    if (_temp196 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('includes'), Value.true) returned an abrupt completion", {
+    if (_temp196 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('flatMap'), Value.true) returned an abrupt completion", {
       cause: _temp196
     });
     /* c8 ignore if */
     if (_temp196 instanceof Completion) _temp196 = _temp196.Value;
-    Assert(_temp196 === Value.true, "X(CreateDataProperty(unscopableList, Value('includes'), Value.true)) === Value.true");
+    Assert(_temp196 === Value.true, "X(CreateDataProperty(unscopableList, Value('flatMap'), Value.true)) === Value.true");
     /* X */
-    let _temp197 = CreateDataProperty(unscopableList, Value('keys'), Value.true);
+    let _temp197 = CreateDataProperty(unscopableList, Value('includes'), Value.true);
     /* c8 ignore if */
     if (_temp197 && typeof _temp197 === 'object' && 'next' in _temp197) _temp197 = skipDebugger(_temp197);
     /* c8 ignore if */
-    if (_temp197 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('keys'), Value.true) returned an abrupt completion", {
+    if (_temp197 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('includes'), Value.true) returned an abrupt completion", {
       cause: _temp197
     });
     /* c8 ignore if */
     if (_temp197 instanceof Completion) _temp197 = _temp197.Value;
-    Assert(_temp197 === Value.true, "X(CreateDataProperty(unscopableList, Value('keys'), Value.true)) === Value.true");
+    Assert(_temp197 === Value.true, "X(CreateDataProperty(unscopableList, Value('includes'), Value.true)) === Value.true");
     /* X */
-    let _temp198 = CreateDataProperty(unscopableList, Value('toReversed'), Value.true);
+    let _temp198 = CreateDataProperty(unscopableList, Value('keys'), Value.true);
     /* c8 ignore if */
     if (_temp198 && typeof _temp198 === 'object' && 'next' in _temp198) _temp198 = skipDebugger(_temp198);
     /* c8 ignore if */
-    if (_temp198 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('toReversed'), Value.true) returned an abrupt completion", {
+    if (_temp198 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('keys'), Value.true) returned an abrupt completion", {
       cause: _temp198
     });
     /* c8 ignore if */
     if (_temp198 instanceof Completion) _temp198 = _temp198.Value;
-    Assert(_temp198 === Value.true, "X(CreateDataProperty(unscopableList, Value('toReversed'), Value.true)) === Value.true");
+    Assert(_temp198 === Value.true, "X(CreateDataProperty(unscopableList, Value('keys'), Value.true)) === Value.true");
     /* X */
-    let _temp199 = CreateDataProperty(unscopableList, Value('toSorted'), Value.true);
+    let _temp199 = CreateDataProperty(unscopableList, Value('toReversed'), Value.true);
     /* c8 ignore if */
     if (_temp199 && typeof _temp199 === 'object' && 'next' in _temp199) _temp199 = skipDebugger(_temp199);
     /* c8 ignore if */
-    if (_temp199 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('toSorted'), Value.true) returned an abrupt completion", {
+    if (_temp199 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('toReversed'), Value.true) returned an abrupt completion", {
       cause: _temp199
     });
     /* c8 ignore if */
     if (_temp199 instanceof Completion) _temp199 = _temp199.Value;
-    Assert(_temp199 === Value.true, "X(CreateDataProperty(unscopableList, Value('toSorted'), Value.true)) === Value.true");
+    Assert(_temp199 === Value.true, "X(CreateDataProperty(unscopableList, Value('toReversed'), Value.true)) === Value.true");
     /* X */
-    let _temp200 = CreateDataProperty(unscopableList, Value('toSpliced'), Value.true);
+    let _temp200 = CreateDataProperty(unscopableList, Value('toSorted'), Value.true);
     /* c8 ignore if */
     if (_temp200 && typeof _temp200 === 'object' && 'next' in _temp200) _temp200 = skipDebugger(_temp200);
     /* c8 ignore if */
-    if (_temp200 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('toSpliced'), Value.true) returned an abrupt completion", {
+    if (_temp200 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('toSorted'), Value.true) returned an abrupt completion", {
       cause: _temp200
     });
     /* c8 ignore if */
     if (_temp200 instanceof Completion) _temp200 = _temp200.Value;
-    Assert(_temp200 === Value.true, "X(CreateDataProperty(unscopableList, Value('toSpliced'), Value.true)) === Value.true");
+    Assert(_temp200 === Value.true, "X(CreateDataProperty(unscopableList, Value('toSorted'), Value.true)) === Value.true");
     /* X */
-    let _temp201 = CreateDataProperty(unscopableList, Value('values'), Value.true);
+    let _temp201 = CreateDataProperty(unscopableList, Value('toSpliced'), Value.true);
     /* c8 ignore if */
     if (_temp201 && typeof _temp201 === 'object' && 'next' in _temp201) _temp201 = skipDebugger(_temp201);
     /* c8 ignore if */
-    if (_temp201 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('values'), Value.true) returned an abrupt completion", {
+    if (_temp201 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('toSpliced'), Value.true) returned an abrupt completion", {
       cause: _temp201
     });
     /* c8 ignore if */
     if (_temp201 instanceof Completion) _temp201 = _temp201.Value;
-    Assert(_temp201 === Value.true, "X(CreateDataProperty(unscopableList, Value('values'), Value.true)) === Value.true");
+    Assert(_temp201 === Value.true, "X(CreateDataProperty(unscopableList, Value('toSpliced'), Value.true)) === Value.true");
     /* X */
-    let _temp202 = proto.DefineOwnProperty(wellKnownSymbols.unscopables, _Descriptor({
+    let _temp202 = CreateDataProperty(unscopableList, Value('values'), Value.true);
+    /* c8 ignore if */
+    if (_temp202 && typeof _temp202 === 'object' && 'next' in _temp202) _temp202 = skipDebugger(_temp202);
+    /* c8 ignore if */
+    if (_temp202 instanceof AbruptCompletion) throw new Assert.Error("! CreateDataProperty(unscopableList, Value('values'), Value.true) returned an abrupt completion", {
+      cause: _temp202
+    });
+    /* c8 ignore if */
+    if (_temp202 instanceof Completion) _temp202 = _temp202.Value;
+    Assert(_temp202 === Value.true, "X(CreateDataProperty(unscopableList, Value('values'), Value.true)) === Value.true");
+    /* X */
+    let _temp203 = proto.DefineOwnProperty(wellKnownSymbols.unscopables, _Descriptor({
       Value: unscopableList,
       Writable: Value.false,
       Enumerable: Value.false,
       Configurable: Value.true
     }));
     /* c8 ignore if */
-    if (_temp202 && typeof _temp202 === 'object' && 'next' in _temp202) _temp202 = skipDebugger(_temp202);
+    if (_temp203 && typeof _temp203 === 'object' && 'next' in _temp203) _temp203 = skipDebugger(_temp203);
     /* c8 ignore if */
-    if (_temp202 instanceof AbruptCompletion) throw new Assert.Error("! proto.DefineOwnProperty(wellKnownSymbols.unscopables, Descriptor({\n      Value: unscopableList,\n      Writable: Value.false,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    })) returned an abrupt completion", {
-      cause: _temp202
+    if (_temp203 instanceof AbruptCompletion) throw new Assert.Error("! proto.DefineOwnProperty(wellKnownSymbols.unscopables, Descriptor({\n      Value: unscopableList,\n      Writable: Value.false,\n      Enumerable: Value.false,\n      Configurable: Value.true,\n    })) returned an abrupt completion", {
+      cause: _temp203
     });
     /* c8 ignore if */
-    if (_temp202 instanceof Completion) _temp202 = _temp202.Value;
+    if (_temp203 instanceof Completion) _temp203 = _temp203.Value;
   }
 
   // Used in `arguments` objects.
   /* X */
-  let _temp203 = Get(proto, Value('values'));
+  let _temp204 = Get(proto, Value('values'));
   /* c8 ignore if */
-  if (_temp203 && typeof _temp203 === 'object' && 'next' in _temp203) _temp203 = skipDebugger(_temp203);
+  if (_temp204 && typeof _temp204 === 'object' && 'next' in _temp204) _temp204 = skipDebugger(_temp204);
   /* c8 ignore if */
-  if (_temp203 instanceof AbruptCompletion) throw new Assert.Error("! Get(proto, Value('values')) returned an abrupt completion", {
-    cause: _temp203
+  if (_temp204 instanceof AbruptCompletion) throw new Assert.Error("! Get(proto, Value('values')) returned an abrupt completion", {
+    cause: _temp204
   });
   /* c8 ignore if */
-  if (_temp203 instanceof Completion) _temp203 = _temp203.Value;
-  realmRec.Intrinsics['%Array.prototype.values%'] = _temp203;
+  if (_temp204 instanceof Completion) _temp204 = _temp204.Value;
+  realmRec.Intrinsics['%Array.prototype.values%'] = _temp204;
   realmRec.Intrinsics['%Array.prototype%'] = proto;
 }
 
@@ -50785,6 +50761,65 @@ function bootstrapNativeError(realmRec) {
   }
 }
 
+/** https://tc39.es/ecma262/#sec-%iteratorhelperprototype%.next */
+function* IteratorHelperPrototype_next(_args, {
+  thisValue
+}) {
+  // 1. Return ? GeneratorResume(this value, undefined, "Iterator Helper").
+  return yield* GeneratorResume(thisValue, Value.undefined, Value('Iterator Helper'));
+}
+
+/** https://tc39.es/ecma262/#sec-%iteratorhelperprototype%.return */
+IteratorHelperPrototype_next.section = 'https://tc39.es/ecma262/#sec-%iteratorhelperprototype%.next';
+function* IteratorHelperPrototype_return(_args, {
+  thisValue
+}) {
+  // 1. Let O be this value.
+  const O = thisValue;
+  // 2. Perform ? RequireInternalSlot(O, [[UnderlyingIterator]]).
+  /* ReturnIfAbrupt */
+  let _temp = RequireInternalSlot(O, 'UnderlyingIterator');
+  /* c8 ignore if */
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp instanceof AbruptCompletion) return _temp;
+  /* c8 ignore if */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  // 3. Assert: O has a [[GeneratorState]] internal slot.
+  Assert('GeneratorState' in O, "'GeneratorState' in O");
+
+  // 4. If O.[[GeneratorState]] is suspended-start, then
+  if (O.GeneratorState === 'suspendedStart') {
+    // a. Set O.[[GeneratorState]] to completed.
+    O.GeneratorState = 'completed';
+
+    // b. NOTE: Once a generator enters the completed state it never leaves it and its associated execution context is never resumed.
+    // Any execution state associated with O can be discarded at this point.
+    // c. Perform ? IteratorClose(O.[[UnderlyingIterator]], NormalCompletion(unused)).
+    /* ReturnIfAbrupt */
+    let _temp2 = yield* IteratorClose(O.UnderlyingIterator, NormalCompletion(undefined));
+    /* c8 ignore if */
+    if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
+    /* c8 ignore if */
+    if (_temp2 instanceof AbruptCompletion) return _temp2;
+    /* c8 ignore if */
+    if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+
+    // d. Return CreateIteratorResultObject(undefined, true).
+    return CreateIteratorResultObject(Value.undefined, Value.true);
+  }
+
+  // 5. Let C be ReturnCompletion(undefined).
+  const C = ReturnCompletion(Value.undefined);
+  // 6. Return ? GeneratorResumeAbrupt(O, C, "Iterator Helper").
+  return yield* GeneratorResumeAbrupt(O, C, Value('Iterator Helper'));
+}
+IteratorHelperPrototype_return.section = 'https://tc39.es/ecma262/#sec-%iteratorhelperprototype%.return';
+function bootstrapIteratorHelperPrototype(realmRec) {
+  const proto = bootstrapPrototype(realmRec, [['next', IteratorHelperPrototype_next, 0], ['return', IteratorHelperPrototype_return, 0]], realmRec.Intrinsics['%Iterator.prototype%'], 'Iterator Helper');
+  realmRec.Intrinsics['%IteratorHelperPrototype%'] = proto;
+}
+
 /** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-get-iterator.prototype.constructor */
 function IteratorProto_constructorGetter() {
   // 1. Return %Iterator%.
@@ -50808,8 +50843,533 @@ function* IteratorProto_constructorSetter([v], {
   return Value.undefined;
 }
 
-/** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-iterator.prototype-%symbol.iterator% */
+/** https://tc39.es/ecma262/#sec-iterator.prototype.drop */
 IteratorProto_constructorSetter.section = 'https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-set-iterator.prototype.constructor';
+function* IteratorPrototype_drop([limit = Value.undefined], {
+  thisValue
+}) {
+  // 1. Let O be the this value.
+  const O = thisValue;
+  // 2. If O is not an Object, throw a TypeError exception.
+  if (!(O instanceof ObjectValue)) {
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+  }
+  // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
+  let iterated = {
+    Iterator: O,
+    NextMethod: Value.undefined,
+    Done: Value.false
+  };
+  // 4. Let numLimit be Completion(ToNumber(limit)).
+  let numLimit = EnsureCompletion(yield* ToNumber(limit));
+  // 5. IfAbruptCloseIterator(numLimit, iterated).
+  /* IfAbruptCloseIterator */
+  /* c8 ignore if */
+  if (numLimit instanceof AbruptCompletion) return skipDebugger(IteratorClose(iterated, numLimit));
+  /* c8 ignore if */
+  if (numLimit instanceof Completion) numLimit = numLimit.Value;
+  // 6. If numLimit is NaN, then
+  if (numLimit.isNaN()) {
+    // a. Let error be ThrowCompletion(a newly created RangeError object).
+    const error = surroundingAgent.Throw('RangeError', 'OutOfRange', numLimit);
+    // b. Return ? IteratorClose(iterated, error).
+    return yield* IteratorClose(iterated, error);
+  }
+  // 7. Let integerLimit be ! ToIntegerOrInfinity(numLimit).
+  /* X */
+  let _temp2 = yield* ToIntegerOrInfinity(numLimit instanceof NormalCompletion ? numLimit.Value : numLimit);
+  /* c8 ignore if */
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) _temp2 = skipDebugger(_temp2);
+  /* c8 ignore if */
+  if (_temp2 instanceof AbruptCompletion) throw new Assert.Error("! yield* ToIntegerOrInfinity(numLimit instanceof NormalCompletion ? numLimit.Value : numLimit) returned an abrupt completion", {
+    cause: _temp2
+  });
+  /* c8 ignore if */
+  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+  const integerLimit = _temp2;
+  // 8. If integerLimit < 0, then
+  if (integerLimit < 0) {
+    // a. Let error be ThrowCompletion(a newly created RangeError object).
+    const error = surroundingAgent.Throw('RangeError', 'OutOfRange', numLimit);
+    // b. Return ? IteratorClose(iterated, error).
+    return yield* IteratorClose(iterated, error);
+  }
+  // 9. Set iterated to ? GetIteratorDirect(O).
+  /* ReturnIfAbrupt */
+  let _temp3 = yield* GetIteratorDirect(O);
+  /* c8 ignore if */
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp3 instanceof AbruptCompletion) return _temp3;
+  /* c8 ignore if */
+  if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+  iterated = _temp3;
+  // 10. Let closure be a new Abstract Closure with no parameters that captures iterated and integerLimit and performs the following steps when called:
+  const closure = function* closure() {
+    // a. Let remaining be integerLimit.
+    let remaining = integerLimit;
+    // b. Repeat, while remaining > 0,
+    while (remaining > 0) {
+      // i. If remaining ≠ +∞, then
+      if (remaining !== +Infinity) {
+        // 1. Set remaining to remaining - 1.
+        remaining -= 1;
+      }
+      // ii. Let next be ? IteratorStep(iterated).
+      /* ReturnIfAbrupt */
+      let _temp4 = yield* IteratorStep(iterated);
+      /* c8 ignore if */
+      if (_temp4 && typeof _temp4 === 'object' && 'next' in _temp4) throw new Assert.Error('Forgot to yield* on the completion.');
+      /* c8 ignore if */
+      if (_temp4 instanceof AbruptCompletion) return _temp4;
+      /* c8 ignore if */
+      if (_temp4 instanceof Completion) _temp4 = _temp4.Value;
+      const next = _temp4;
+      // iii. If next is done, return ReturnCompletion(undefined).
+      if (next === 'done') {
+        return ReturnCompletion(Value.undefined);
+      }
+    }
+    // c. Repeat,
+    while (true) {
+      /* ReturnIfAbrupt */
+      let _temp5 = yield* IteratorStepValue(iterated);
+      /* c8 ignore if */
+      if (_temp5 && typeof _temp5 === 'object' && 'next' in _temp5) throw new Assert.Error('Forgot to yield* on the completion.');
+      /* c8 ignore if */
+      if (_temp5 instanceof AbruptCompletion) return _temp5;
+      /* c8 ignore if */
+      if (_temp5 instanceof Completion) _temp5 = _temp5.Value;
+      // i. Let value be ? IteratorStepValue(iterated).
+      const value = _temp5;
+      // ii. If value is done, return ReturnCompletion(undefined).
+      if (value === 'done') {
+        return ReturnCompletion(Value.undefined);
+      }
+      // iii. Let completion be Completion(Yield(value)).
+      let completion = EnsureCompletion(yield* Yield(value));
+      // iv. IfAbruptCloseIterator(completion, iterated).
+      /* IfAbruptCloseIterator */
+      /* c8 ignore if */
+      if (completion instanceof AbruptCompletion) return skipDebugger(IteratorClose(iterated, completion));
+      /* c8 ignore if */
+      if (completion instanceof Completion) completion = completion.Value;
+    }
+  };
+  // 11. Let result be CreateIteratorFromClosure(closure, "Iterator Helper", %IteratorHelperPrototype%, « [[UnderlyingIterator]] »).
+  const result = CreateIteratorFromClosure(closure, Value('Iterator Helper'), surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterator']);
+  // 12. Set result.[[UnderlyingIterator]] to iterated.
+  result.UnderlyingIterator = iterated;
+  // 13. Return result.
+  return result;
+}
+
+/** https://tc39.es/ecma262/#sec-iterator.prototype.every */
+IteratorPrototype_drop.section = 'https://tc39.es/ecma262/#sec-iterator.prototype.drop';
+function* IteratorPrototype_every([predicate = Value.undefined], {
+  thisValue
+}) {
+  // 1. Let O be the this value.
+  const O = thisValue;
+  // 2. If O is not an Object, throw a TypeError exception.
+  if (!(O instanceof ObjectValue)) {
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+  }
+  // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
+  let iterated = {
+    Iterator: O,
+    NextMethod: Value.undefined,
+    Done: Value.false
+  };
+  // 4. If IsCallable(predicate) is false, then
+  if (IsCallable(predicate) === false) {
+    // a. Let error be ThrowCompletion(a newly created TypeError object).
+    const error = surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
+    // b. Return ? IteratorClose(iterated, error).
+    return yield* IteratorClose(iterated, error);
+  }
+  // 5. Set iterated to ? GetIteratorDirect(O).
+  /* ReturnIfAbrupt */
+  let _temp6 = yield* GetIteratorDirect(O);
+  /* c8 ignore if */
+  if (_temp6 && typeof _temp6 === 'object' && 'next' in _temp6) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp6 instanceof AbruptCompletion) return _temp6;
+  /* c8 ignore if */
+  if (_temp6 instanceof Completion) _temp6 = _temp6.Value;
+  iterated = _temp6;
+  // 6. Let counter be 0.
+  let counter = 0;
+  // 7. Repeat,
+  while (true) {
+    /* ReturnIfAbrupt */
+    let _temp7 = yield* IteratorStepValue(iterated);
+    /* c8 ignore if */
+    if (_temp7 && typeof _temp7 === 'object' && 'next' in _temp7) throw new Assert.Error('Forgot to yield* on the completion.');
+    /* c8 ignore if */
+    if (_temp7 instanceof AbruptCompletion) return _temp7;
+    /* c8 ignore if */
+    if (_temp7 instanceof Completion) _temp7 = _temp7.Value;
+    // a. Let value be ? IteratorStepValue(iterated).
+    const value = _temp7;
+    // b. If value is done, return true.
+    if (value === 'done') {
+      return Value.true;
+    }
+    // c. Let result be Completion(Call(predicate, undefined, « value, 𝔽(counter) »)).
+    let result = yield* Call(predicate, Value.undefined, [value, Value(counter)]);
+    // d. IfAbruptCloseIterator(result, iterated).
+    /* IfAbruptCloseIterator */
+    /* c8 ignore if */
+    if (result instanceof AbruptCompletion) return skipDebugger(IteratorClose(iterated, result));
+    /* c8 ignore if */
+    if (result instanceof Completion) result = result.Value;
+    // e. If ToBoolean(result) is false, return ? IteratorClose(iterated, NormalCompletion(false)).
+    if (ToBoolean(result) === Value.false) {
+      return yield* IteratorClose(iterated, EnsureCompletion(Value.false));
+    }
+    // f. Set counter to counter + 1.
+    counter += 1;
+  }
+}
+
+/** https://tc39.es/ecma262/#sec-iterator.prototype.filter */
+IteratorPrototype_every.section = 'https://tc39.es/ecma262/#sec-iterator.prototype.every';
+function* IteratorPrototype_filter([predicate = Value.undefined], {
+  thisValue
+}) {
+  // 1. Let O be the this value.
+  const O = thisValue;
+  // 2. If O is not an Object, throw a TypeError exception.
+  if (!(O instanceof ObjectValue)) {
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+  }
+  // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
+  let iterated = {
+    Iterator: O,
+    NextMethod: Value.undefined,
+    Done: Value.false
+  };
+  // 4. If IsCallable(predicate) is false, then
+  if (IsCallable(predicate) === false) {
+    // a. Let error be ThrowCompletion(a newly created TypeError object).
+    const error = surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
+    // b. Return ? IteratorClose(iterated, error).
+    return yield* IteratorClose(iterated, error);
+  }
+  // 5. Set iterated to ? GetIteratorDirect(O).
+  /* ReturnIfAbrupt */
+  let _temp8 = yield* GetIteratorDirect(O);
+  /* c8 ignore if */
+  if (_temp8 && typeof _temp8 === 'object' && 'next' in _temp8) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp8 instanceof AbruptCompletion) return _temp8;
+  /* c8 ignore if */
+  if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+  iterated = _temp8;
+  // 6. Let closure be a new Abstract Closure with no parameters that captures iterated and predicate and performs the following steps when called:
+  const closure = function* closure() {
+    // a. Let counter be 0.
+    let counter = 0;
+    // b. Repeat,
+    while (true) {
+      /* ReturnIfAbrupt */
+      let _temp9 = yield* IteratorStepValue(iterated);
+      /* c8 ignore if */
+      if (_temp9 && typeof _temp9 === 'object' && 'next' in _temp9) throw new Assert.Error('Forgot to yield* on the completion.');
+      /* c8 ignore if */
+      if (_temp9 instanceof AbruptCompletion) return _temp9;
+      /* c8 ignore if */
+      if (_temp9 instanceof Completion) _temp9 = _temp9.Value;
+      // i. Let value be ? IteratorStepValue(iterated).
+      const value = _temp9;
+      // ii. If value is done, return ReturnCompletion(undefined).
+      if (value === 'done') {
+        return ReturnCompletion(Value.undefined);
+      }
+      // iii. Let selected be Completion(Call(predicate, undefined, « value, 𝔽(counter) »)).
+      let selected = yield* Call(predicate, Value.undefined, [value, Value(counter)]);
+      // iv. IfAbruptCloseIterator(selected, iterated).
+      /* IfAbruptCloseIterator */
+      /* c8 ignore if */
+      if (selected instanceof AbruptCompletion) return skipDebugger(IteratorClose(iterated, selected));
+      /* c8 ignore if */
+      if (selected instanceof Completion) selected = selected.Value;
+      if (ToBoolean(selected) === Value.true) {
+        // 1. Let completion be Completion(Yield(value)).
+        let completion = EnsureCompletion(yield* Yield(value));
+        // 2. IfAbruptCloseIterator(completion, iterated).
+        /* IfAbruptCloseIterator */
+        /* c8 ignore if */
+        if (completion instanceof AbruptCompletion) return skipDebugger(IteratorClose(iterated, completion));
+        /* c8 ignore if */
+        if (completion instanceof Completion) completion = completion.Value;
+      }
+      // vi. Set counter to counter + 1.
+      counter += 1;
+    }
+  };
+  // 7. Let result be CreateIteratorFromClosure(closure, "Iterator Helper", %IteratorHelperPrototype%, « [[UnderlyingIterator]] »).
+  const result = CreateIteratorFromClosure(closure, Value('Iterator Helper'), surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterator']);
+  // 8. Set result.[[UnderlyingIterator]] to iterated.
+  result.UnderlyingIterator = iterated;
+  // 9. Return result.
+  return result;
+}
+
+/** https://tc39.es/ecma262/#sec-iterator.prototype.find */
+IteratorPrototype_filter.section = 'https://tc39.es/ecma262/#sec-iterator.prototype.filter';
+function* IteratorPrototype_find([predicate = Value.undefined], {
+  thisValue
+}) {
+  // 1. Let O be the this value.
+  const O = thisValue;
+  // 2. If O is not an Object, throw a TypeError exception.
+  if (!(O instanceof ObjectValue)) {
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+  }
+  // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
+  let iterated = {
+    Iterator: O,
+    NextMethod: Value.undefined,
+    Done: Value.false
+  };
+  // 4. If IsCallable(predicate) is false, then
+  if (IsCallable(predicate) === false) {
+    // a. Let error be ThrowCompletion(a newly created TypeError object).
+    const error = surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
+    // b. Return ? IteratorClose(iterated, error).
+    return yield* IteratorClose(iterated, error);
+  }
+  // 5. Set iterated to ? GetIteratorDirect(O).
+  /* ReturnIfAbrupt */
+  let _temp10 = yield* GetIteratorDirect(O);
+  /* c8 ignore if */
+  if (_temp10 && typeof _temp10 === 'object' && 'next' in _temp10) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp10 instanceof AbruptCompletion) return _temp10;
+  /* c8 ignore if */
+  if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
+  iterated = _temp10;
+  // 6. Let counter be 0.
+  let counter = 0;
+  // 7. Repeat,
+  while (true) {
+    /* ReturnIfAbrupt */
+    let _temp11 = yield* IteratorStepValue(iterated);
+    /* c8 ignore if */
+    if (_temp11 && typeof _temp11 === 'object' && 'next' in _temp11) throw new Assert.Error('Forgot to yield* on the completion.');
+    /* c8 ignore if */
+    if (_temp11 instanceof AbruptCompletion) return _temp11;
+    /* c8 ignore if */
+    if (_temp11 instanceof Completion) _temp11 = _temp11.Value;
+    // a. Let value be ? IteratorStepValue(iterated).
+    const value = _temp11;
+    // b. If value is done, return undefined.
+    if (value === 'done') {
+      return Value.undefined;
+    }
+    // c. Let result be Completion(Call(predicate, undefined, « value, 𝔽(counter) »)).
+    let result = yield* Call(predicate, Value.undefined, [value, Value(counter)]);
+    // d. IfAbruptCloseIterator(result, iterated).
+    /* IfAbruptCloseIterator */
+    /* c8 ignore if */
+    if (result instanceof AbruptCompletion) return skipDebugger(IteratorClose(iterated, result));
+    /* c8 ignore if */
+    if (result instanceof Completion) result = result.Value;
+    if (ToBoolean(result) === Value.true) {
+      return yield* IteratorClose(iterated, EnsureCompletion(value));
+    }
+    // f. Set counter to counter + 1.
+    counter += 1;
+  }
+}
+
+/** https://tc39.es/ecma262/#sec-iterator.prototype.flatmap */
+IteratorPrototype_find.section = 'https://tc39.es/ecma262/#sec-iterator.prototype.find';
+function* IteratorPrototype_flatMap([mapper = Value.undefined], {
+  thisValue
+}) {
+  // 1. Let O be the this value.
+  const O = thisValue;
+  // 2. If O is not an Object, throw a TypeError exception.
+  if (!(O instanceof ObjectValue)) {
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+  }
+  // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
+  let iterated = {
+    Iterator: O,
+    NextMethod: Value.undefined,
+    Done: Value.false
+  };
+  // 4. If IsCallable(mapper) is false, then
+  if (IsCallable(mapper) === false) {
+    // a. Let error be ThrowCompletion(a newly created TypeError object).
+    const error = surroundingAgent.Throw('TypeError', 'NotAFunction', mapper);
+    // b. Return ? IteratorClose(iterated, error).
+    return yield* IteratorClose(iterated, error);
+  }
+  // 5. Set iterated to ? GetIteratorDirect(O).
+  /* ReturnIfAbrupt */
+  let _temp12 = yield* GetIteratorDirect(O);
+  /* c8 ignore if */
+  if (_temp12 && typeof _temp12 === 'object' && 'next' in _temp12) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp12 instanceof AbruptCompletion) return _temp12;
+  /* c8 ignore if */
+  if (_temp12 instanceof Completion) _temp12 = _temp12.Value;
+  iterated = _temp12;
+  // 6. Let closure be a new Abstract Closure with no parameters that captures iterated and mapper and performs the following steps when called:
+  const closure = function* closure() {
+    //  a. Let counter be 0.
+    let counter = 0;
+    // b. Repeat,
+    while (true) {
+      /* ReturnIfAbrupt */
+      let _temp13 = yield* IteratorStepValue(iterated);
+      /* c8 ignore if */
+      if (_temp13 && typeof _temp13 === 'object' && 'next' in _temp13) throw new Assert.Error('Forgot to yield* on the completion.');
+      /* c8 ignore if */
+      if (_temp13 instanceof AbruptCompletion) return _temp13;
+      /* c8 ignore if */
+      if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
+      // i. Let value be ? IteratorStepValue(iterated).
+      const value = _temp13;
+      // ii. If value is done, return ReturnCompletion(undefined).
+      if (value === 'done') {
+        return ReturnCompletion(Value.undefined);
+      }
+      // iii. Let mapped be Completion(Call(mapper, undefined, « value, 𝔽(counter) »)).
+      let mapped = EnsureCompletion(yield* Call(mapper, Value.undefined, [value, Value(counter)]));
+      // iv. IfAbruptCloseIterator(mapped, iterated).
+      /* IfAbruptCloseIterator */
+      /* c8 ignore if */
+      if (mapped instanceof AbruptCompletion) return skipDebugger(IteratorClose(iterated, mapped));
+      /* c8 ignore if */
+      if (mapped instanceof Completion) mapped = mapped.Value;
+      // v. Let innerIterator be Completion(GetIteratorFlattenable(mapped, reject-primitives)).
+      let innerIterator = EnsureCompletion(yield* GetIteratorFlattenable(mapped, 'reject-primitives'));
+      // vi. IfAbruptCloseIterator(innerIterator, iterated).
+      /* IfAbruptCloseIterator */
+      /* c8 ignore if */
+      if (innerIterator instanceof AbruptCompletion) return skipDebugger(IteratorClose(iterated, innerIterator));
+      /* c8 ignore if */
+      if (innerIterator instanceof Completion) innerIterator = innerIterator.Value;
+      // vii. Let innerAlive be true.
+      let innerAlive = true;
+      // viii. Repeat, while innerAlive is true,
+      while (innerAlive) {
+        // 1. Let innerValue be Completion(IteratorStepValue(innerIterator)).
+        let innerValue = yield* IteratorStepValue(innerIterator);
+        // 2. IfAbruptCloseIterator(innerValue, iterated).
+        /* IfAbruptCloseIterator */
+        /* c8 ignore if */
+        if (innerValue instanceof AbruptCompletion) return skipDebugger(IteratorClose(iterated, innerValue));
+        /* c8 ignore if */
+        if (innerValue instanceof Completion) innerValue = innerValue.Value;
+        // 3. If innerValue is done, then
+        if (innerValue === 'done') {
+          // a. Set innerAlive to false.
+          innerAlive = false;
+          // 4. Else,
+        } else {
+          // a. Let completion be Completion(Yield(innerValue)).
+          const completion = EnsureCompletion(yield* Yield(innerValue));
+          // b. If completion is an abrupt completion, then
+          if (completion instanceof AbruptCompletion) {
+            // i. Let backupCompletion be Completion(IteratorClose(innerIterator, completion)).
+            let backupCompletion = EnsureCompletion(yield* IteratorClose(innerIterator, completion));
+            // ii. IfAbruptCloseIterator(backupCompletion, iterated).
+            /* IfAbruptCloseIterator */
+            /* c8 ignore if */
+            if (backupCompletion instanceof AbruptCompletion) return skipDebugger(IteratorClose(iterated, backupCompletion));
+            /* c8 ignore if */
+            if (backupCompletion instanceof Completion) backupCompletion = backupCompletion.Value;
+            // iii. Return ? IteratorClose(iterated, completion).
+            return yield* IteratorClose(iterated, completion);
+          }
+        }
+      }
+      // ix. Set counter to counter + 1.
+      counter += 1;
+    }
+  };
+
+  // 7. Let result be CreateIteratorFromClosure(closure, "Iterator Helper", %IteratorHelperPrototype%, « [[UnderlyingIterator]] »).
+  const result = CreateIteratorFromClosure(closure, Value('Iterator Helper'), surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterator']);
+  // 8. Set result.[[UnderlyingIterator]] to iterated.
+  result.UnderlyingIterator = iterated;
+  // 9. Return result.
+  return result;
+}
+
+/** https://tc39.es/ecma262/#sec-iterator.prototype.foreach */
+IteratorPrototype_flatMap.section = 'https://tc39.es/ecma262/#sec-iterator.prototype.flatmap';
+function* IteratorPrototype_forEach([procedure = Value.undefined], {
+  thisValue
+}) {
+  // 1. Let O be the this value.
+  const O = thisValue;
+  // 2. If O is not an Object, throw a TypeError exception.
+  if (!(O instanceof ObjectValue)) {
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+  }
+  // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
+  let iterated = {
+    Iterator: O,
+    NextMethod: Value.undefined,
+    Done: Value.false
+  };
+  // 4. If IsCallable(procedure) is false, then
+  if (IsCallable(procedure) === false) {
+    // a. Let error be ThrowCompletion(a newly created TypeError object).
+    const error = surroundingAgent.Throw('TypeError', 'NotAFunction', procedure);
+    // b. Return ? IteratorClose(iterated, error).
+    return yield* IteratorClose(iterated, error);
+  }
+  // 5. Set iterated to ? GetIteratorDirect(O).
+  /* ReturnIfAbrupt */
+  let _temp14 = yield* GetIteratorDirect(O);
+  /* c8 ignore if */
+  if (_temp14 && typeof _temp14 === 'object' && 'next' in _temp14) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp14 instanceof AbruptCompletion) return _temp14;
+  /* c8 ignore if */
+  if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
+  iterated = _temp14;
+  // 6. Let counter be 0.
+  let counter = 0;
+  // 7. Repeat,
+  while (true) {
+    /* ReturnIfAbrupt */
+    let _temp15 = yield* IteratorStepValue(iterated);
+    /* c8 ignore if */
+    if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) throw new Assert.Error('Forgot to yield* on the completion.');
+    /* c8 ignore if */
+    if (_temp15 instanceof AbruptCompletion) return _temp15;
+    /* c8 ignore if */
+    if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
+    // a. Let value be ? IteratorStepValue(iterated).
+    const value = _temp15;
+    // b. If value is done, return undefined.
+    if (value === 'done') {
+      return Value.undefined;
+    }
+    // c. Let result be Completion(Call(procedure, undefined, « value, 𝔽(counter) »)).
+    let result = yield* Call(procedure, Value.undefined, [value, Value(counter)]);
+    // d. IfAbruptCloseIterator(result, iterated).
+    /* IfAbruptCloseIterator */
+    /* c8 ignore if */
+    if (result instanceof AbruptCompletion) return skipDebugger(IteratorClose(iterated, result));
+    /* c8 ignore if */
+    if (result instanceof Completion) result = result.Value;
+    // e. Set counter to counter + 1.
+    counter += 1;
+  }
+}
+
+/** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-iterator.prototype-%symbol.iterator% */
+IteratorPrototype_forEach.section = 'https://tc39.es/ecma262/#sec-iterator.prototype.foreach';
 function IteratorPrototype_iterator(_args, {
   thisValue
 }) {
@@ -50817,8 +51377,403 @@ function IteratorPrototype_iterator(_args, {
   return thisValue;
 }
 
-/** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-get-iterator.prototype-%symbol.tostringtag% */
+/** https://tc39.es/ecma262/#sec-iterator.prototype.map */
 IteratorPrototype_iterator.section = 'https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-iterator.prototype-%symbol.iterator%';
+function* IteratorPrototype_map([mapper = Value.undefined], {
+  thisValue
+}) {
+  // 1. Let O be the this value.
+  const O = thisValue;
+  // 2. If O is not an Object, throw a TypeError exception.
+  if (!(O instanceof ObjectValue)) {
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+  }
+  // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
+  let iterated = {
+    Iterator: O,
+    NextMethod: Value.undefined,
+    Done: Value.false
+  };
+  // 4. If IsCallable(mapper) is false, then
+  if (IsCallable(mapper) === false) {
+    // a. Let error be ThrowCompletion(a newly created TypeError object).
+    const error = surroundingAgent.Throw('TypeError', 'NotAFunction', mapper);
+    // b. Return ? IteratorClose(iterated, error).
+    return yield* IteratorClose(iterated, error);
+  }
+  // 5. Set iterated to ? GetIteratorDirect(O).
+  /* ReturnIfAbrupt */
+  let _temp16 = yield* GetIteratorDirect(O);
+  /* c8 ignore if */
+  if (_temp16 && typeof _temp16 === 'object' && 'next' in _temp16) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp16 instanceof AbruptCompletion) return _temp16;
+  /* c8 ignore if */
+  if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+  iterated = _temp16;
+  // 6. Let closure be a new Abstract Closure with no parameters that captures iterated and mapper and performs the following steps when called:
+  const closure = function* closure() {
+    // a. Let counter be 0.
+    let counter = 0;
+    // b. Repeat,
+    while (true) {
+      /* ReturnIfAbrupt */
+      let _temp17 = yield* IteratorStepValue(iterated);
+      /* c8 ignore if */
+      if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) throw new Assert.Error('Forgot to yield* on the completion.');
+      /* c8 ignore if */
+      if (_temp17 instanceof AbruptCompletion) return _temp17;
+      /* c8 ignore if */
+      if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
+      // i. Let value be ? IteratorStepValue(iterated).
+      const value = _temp17;
+      // ii. If value is done, return ReturnCompletion(undefined).
+      if (value === 'done') {
+        return ReturnCompletion(Value.undefined);
+      }
+      // iii. Let mapped be Completion(Call(mapper, undefined, « value, 𝔽(counter) »)).
+      let mapped = yield* Call(mapper, Value.undefined, [value, Value(counter)]);
+      // iv. IfAbruptCloseIterator(mapped, iterated).
+      /* IfAbruptCloseIterator */
+      /* c8 ignore if */
+      if (mapped instanceof AbruptCompletion) return skipDebugger(IteratorClose(iterated, mapped));
+      /* c8 ignore if */
+      if (mapped instanceof Completion) mapped = mapped.Value;
+      let completion = EnsureCompletion(yield* Yield(mapped));
+      // vi. IfAbruptCloseIterator(completion, iterated).
+      /* IfAbruptCloseIterator */
+      /* c8 ignore if */
+      if (completion instanceof AbruptCompletion) return skipDebugger(IteratorClose(iterated, completion));
+      /* c8 ignore if */
+      if (completion instanceof Completion) completion = completion.Value;
+      // vii. Set counter to counter + 1.
+      counter += 1;
+    }
+  };
+  // 7. Let result be CreateIteratorFromClosure(closure, "Iterator Helper", %IteratorHelperPrototype%, « [[UnderlyingIterator]] »).
+  const result = CreateIteratorFromClosure(closure, Value('Iterator Helper'), surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterator']);
+  // 8. Set result.[[UnderlyingIterator]] to iterated.
+  result.UnderlyingIterator = iterated;
+  // 9. Return result.
+  return result;
+}
+
+/** https://tc39.es/ecma262/#sec-iterator.prototype.reduce */
+IteratorPrototype_map.section = 'https://tc39.es/ecma262/#sec-iterator.prototype.map';
+function* IteratorPrototype_reduce(args, {
+  thisValue
+}) {
+  // 1. Let O be the this value.
+  const O = thisValue;
+  // 2. If O is not an Object, throw a TypeError exception.
+  if (!(O instanceof ObjectValue)) {
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+  }
+  // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
+  let iterated = {
+    Iterator: O,
+    NextMethod: Value.undefined,
+    Done: Value.false
+  };
+  // 4. If IsCallable(reducer) is false, then
+  const reducer = args[0] ?? Value.undefined;
+  if (IsCallable(reducer) === false) {
+    // a. Let error be ThrowCompletion(a newly created TypeError object).
+    const error = surroundingAgent.Throw('TypeError', 'NotAFunction', reducer);
+    // b. Return ? IteratorClose(iterated, error).
+    return yield* IteratorClose(iterated, error);
+  }
+  // 5. Set iterated to ? GetIteratorDirect(O).
+  /* ReturnIfAbrupt */
+  let _temp18 = yield* GetIteratorDirect(O);
+  /* c8 ignore if */
+  if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp18 instanceof AbruptCompletion) return _temp18;
+  /* c8 ignore if */
+  if (_temp18 instanceof Completion) _temp18 = _temp18.Value;
+  iterated = _temp18;
+  // 6. If initialValue is not present, then
+  let accumulator;
+  let counter;
+  if (args.length < 2) {
+    /* ReturnIfAbrupt */
+    let _temp19 = yield* IteratorStepValue(iterated);
+    /* c8 ignore if */
+    if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) throw new Assert.Error('Forgot to yield* on the completion.');
+    /* c8 ignore if */
+    if (_temp19 instanceof AbruptCompletion) return _temp19;
+    /* c8 ignore if */
+    if (_temp19 instanceof Completion) _temp19 = _temp19.Value;
+    // a. Let accumulator be ? IteratorStepValue(iterated).
+    accumulator = _temp19;
+    // b. If accumulator is done, throw a TypeError exception.
+    if (accumulator === 'done') {
+      return surroundingAgent.Throw('TypeError', 'IteratorCompleted');
+    }
+    // c. Let counter be 1.
+    counter = 1;
+  } else {
+    // 7. Else,
+    //   a. Let accumulator be initialValue.
+    //   b. Let counter be 0.
+    accumulator = args[1] ?? Value.undefined;
+    counter = 0;
+  }
+  // 8. Repeat,
+  while (true) {
+    /* ReturnIfAbrupt */
+    let _temp20 = yield* IteratorStepValue(iterated);
+    /* c8 ignore if */
+    if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) throw new Assert.Error('Forgot to yield* on the completion.');
+    /* c8 ignore if */
+    if (_temp20 instanceof AbruptCompletion) return _temp20;
+    /* c8 ignore if */
+    if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
+    // a. Let value be ? IteratorStepValue(iterated).
+    const value = _temp20;
+    // b. If value is done, return accumulator.
+    if (value === 'done') {
+      return accumulator;
+    }
+    // c. Let result be Completion(Call(reducer, undefined, « accumulator, value, 𝔽(counter) »)).
+    let result = yield* Call(reducer, Value.undefined, [accumulator, value, Value(counter)]);
+    // d. IfAbruptCloseIterator(result, iterated).
+    /* IfAbruptCloseIterator */
+    /* c8 ignore if */
+    if (result instanceof AbruptCompletion) return skipDebugger(IteratorClose(iterated, result));
+    /* c8 ignore if */
+    if (result instanceof Completion) result = result.Value;
+    accumulator = result;
+    // f. Set counter to counter + 1.
+    counter += 1;
+  }
+}
+
+/** https://tc39.es/ecma262/#sec-iterator.prototype.some */
+IteratorPrototype_reduce.section = 'https://tc39.es/ecma262/#sec-iterator.prototype.reduce';
+function* IteratorPrototype_some([predicate = Value.undefined], {
+  thisValue
+}) {
+  // 1. Let O be the this value.
+  const O = thisValue;
+  // 2. If O is not an Object, throw a TypeError exception.
+  if (!(O instanceof ObjectValue)) {
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+  }
+  // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
+  let iterated = {
+    Iterator: O,
+    NextMethod: Value.undefined,
+    Done: Value.false
+  };
+  // 4. If IsCallable(predicate) is false, then
+  if (IsCallable(predicate) === false) {
+    // a. Let error be ThrowCompletion(a newly created TypeError object).
+    const error = surroundingAgent.Throw('TypeError', 'NotAFunction', predicate);
+    // b. Return ? IteratorClose(iterated, error).
+    return yield* IteratorClose(iterated, error);
+  }
+  // 5. Set iterated to ? GetIteratorDirect(O).
+  /* ReturnIfAbrupt */
+  let _temp21 = yield* GetIteratorDirect(O);
+  /* c8 ignore if */
+  if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp21 instanceof AbruptCompletion) return _temp21;
+  /* c8 ignore if */
+  if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
+  iterated = _temp21;
+  // 6. Let counter be 0.
+  let counter = 0;
+  // 7. Repeat,
+  while (true) {
+    /* ReturnIfAbrupt */
+    let _temp22 = yield* IteratorStepValue(iterated);
+    /* c8 ignore if */
+    if (_temp22 && typeof _temp22 === 'object' && 'next' in _temp22) throw new Assert.Error('Forgot to yield* on the completion.');
+    /* c8 ignore if */
+    if (_temp22 instanceof AbruptCompletion) return _temp22;
+    /* c8 ignore if */
+    if (_temp22 instanceof Completion) _temp22 = _temp22.Value;
+    // a. Let value be ? IteratorStepValue(iterated).
+    const value = _temp22;
+    // b. If value is done, return false.
+    if (value === 'done') {
+      return Value.false;
+    }
+    // c. Let result be Completion(Call(predicate, undefined, « value, 𝔽(counter) »)).
+    let result = yield* Call(predicate, Value.undefined, [value, Value(counter)]);
+    // d. IfAbruptCloseIterator(result, iterated).
+    /* IfAbruptCloseIterator */
+    /* c8 ignore if */
+    if (result instanceof AbruptCompletion) return skipDebugger(IteratorClose(iterated, result));
+    /* c8 ignore if */
+    if (result instanceof Completion) result = result.Value;
+    // e. If ToBoolean(result) is true, return ? IteratorClose(iterated, NormalCompletion(true)).
+    if (ToBoolean(result) === Value.true) {
+      return yield* IteratorClose(iterated, EnsureCompletion(Value.true));
+    }
+    // f. Set counter to counter + 1.
+    counter += 1;
+  }
+}
+
+/** https://tc39.es/ecma262/#sec-iterator.prototype.take */
+IteratorPrototype_some.section = 'https://tc39.es/ecma262/#sec-iterator.prototype.some';
+function* IteratorPrototype_take([limit = Value.undefined], {
+  thisValue
+}) {
+  // 1. Let O be the this value.
+  const O = thisValue;
+  // 2. If O is not an Object, throw a TypeError exception.
+  if (!(O instanceof ObjectValue)) {
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+  }
+  // 3. Let iterated be the Iterator Record { [[Iterator]]: O, [[NextMethod]]: undefined, [[Done]]: false }.
+  let iterated = {
+    Iterator: O,
+    NextMethod: Value.undefined,
+    Done: Value.false
+  };
+  // 4. Let numLimit be Completion(ToNumber(limit)).
+  let numLimit = yield* ToNumber(limit);
+  // 5. IfAbruptCloseIterator(numLimit, iterated).
+  /* IfAbruptCloseIterator */
+  /* c8 ignore if */
+  if (numLimit instanceof AbruptCompletion) return skipDebugger(IteratorClose(iterated, numLimit));
+  /* c8 ignore if */
+  if (numLimit instanceof Completion) numLimit = numLimit.Value;
+  // 6. If numLimit is NaN, then
+  if (numLimit.isNaN()) {
+    // a. Let error be ThrowCompletion(a newly created RangeError object).
+    const error = surroundingAgent.Throw('RangeError', 'OutOfRange', numLimit);
+    // b. Return ? IteratorClose(iterated, error).
+    return yield* IteratorClose(iterated, error);
+  }
+  // 7. Let integerLimit be ! ToIntegerOrInfinity(numLimit).
+  /* X */
+  let _temp23 = yield* ToIntegerOrInfinity(numLimit instanceof NormalCompletion ? numLimit.Value : numLimit);
+  /* c8 ignore if */
+  if (_temp23 && typeof _temp23 === 'object' && 'next' in _temp23) _temp23 = skipDebugger(_temp23);
+  /* c8 ignore if */
+  if (_temp23 instanceof AbruptCompletion) throw new Assert.Error("! yield* ToIntegerOrInfinity(numLimit instanceof NormalCompletion ? numLimit.Value : numLimit) returned an abrupt completion", {
+    cause: _temp23
+  });
+  /* c8 ignore if */
+  if (_temp23 instanceof Completion) _temp23 = _temp23.Value;
+  const integerLimit = _temp23;
+  // 8. If integerLimit < 0, then
+  if (integerLimit < 0) {
+    // a. Let error be ThrowCompletion(a newly created RangeError object).
+    const error = surroundingAgent.Throw('RangeError', 'OutOfRange', numLimit);
+    // b. Return ? IteratorClose(iterated, error).
+    return yield* IteratorClose(iterated, error);
+  }
+  // 9. Set iterated to ? GetIteratorDirect(O).
+  /* ReturnIfAbrupt */
+  let _temp24 = yield* GetIteratorDirect(O);
+  /* c8 ignore if */
+  if (_temp24 && typeof _temp24 === 'object' && 'next' in _temp24) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp24 instanceof AbruptCompletion) return _temp24;
+  /* c8 ignore if */
+  if (_temp24 instanceof Completion) _temp24 = _temp24.Value;
+  iterated = _temp24;
+  // 10. Let closure be a new Abstract Closure with no parameters that captures iterated and integerLimit and performs the following steps when called:
+  const closure = function* closure() {
+    // a. Let remaining be integerLimit.
+    let remaining = integerLimit;
+    //         b. Repeat,
+    while (true) {
+      // i. If remaining = 0, then
+      //   1. Return ? IteratorClose(iterated, ReturnCompletion(undefined)).
+      if (remaining === 0) {
+        return yield* IteratorClose(iterated, ReturnCompletion(Value.undefined));
+      }
+      // ii. If remaining ≠ +∞, then
+      //   1. Set remaining to remaining - 1.
+      if (remaining !== +Infinity) {
+        remaining -= 1;
+      }
+      // iii. Let value be ? IteratorStepValue(iterated).
+      /* ReturnIfAbrupt */
+      let _temp25 = yield* IteratorStepValue(iterated);
+      /* c8 ignore if */
+      if (_temp25 && typeof _temp25 === 'object' && 'next' in _temp25) throw new Assert.Error('Forgot to yield* on the completion.');
+      /* c8 ignore if */
+      if (_temp25 instanceof AbruptCompletion) return _temp25;
+      /* c8 ignore if */
+      if (_temp25 instanceof Completion) _temp25 = _temp25.Value;
+      const value = _temp25;
+      // iv. If value is done, return ReturnCompletion(undefined).
+      if (value === 'done') {
+        return ReturnCompletion(Value.undefined);
+      }
+      // v. Let completion be Completion(Yield(value)).
+      let completion = EnsureCompletion(yield* Yield(value));
+      // vi. IfAbruptCloseIterator(completion, iterated).
+      /* IfAbruptCloseIterator */
+      /* c8 ignore if */
+      if (completion instanceof AbruptCompletion) return skipDebugger(IteratorClose(iterated, completion));
+      /* c8 ignore if */
+      if (completion instanceof Completion) completion = completion.Value;
+    }
+  };
+  // 11. Let result be CreateIteratorFromClosure(closure, "Iterator Helper", %IteratorHelperPrototype%, « [[UnderlyingIterator]] »).
+  const result = CreateIteratorFromClosure(closure, Value('Iterator Helper'), surroundingAgent.currentRealmRecord.Intrinsics['%IteratorHelperPrototype%'], ['UnderlyingIterator']);
+  // 12. Set result.[[UnderlyingIterator]] to iterated.
+  result.UnderlyingIterator = iterated;
+  // 13. Return result.
+  return result;
+}
+
+/** https://tc39.es/ecma262/#sec-iterator.prototype.toarray */
+IteratorPrototype_take.section = 'https://tc39.es/ecma262/#sec-iterator.prototype.take';
+function* IteratorPrototype_toArray(_args, {
+  thisValue
+}) {
+  // 1. Let O be the this value.
+  const O = thisValue;
+  // 2. If O is not an Object, throw a TypeError exception.
+  if (!(O instanceof ObjectValue)) {
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', O);
+  }
+  // 3. Let iterated be ? GetIteratorDirect(O).
+  /* ReturnIfAbrupt */
+  let _temp26 = yield* GetIteratorDirect(O);
+  /* c8 ignore if */
+  if (_temp26 && typeof _temp26 === 'object' && 'next' in _temp26) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp26 instanceof AbruptCompletion) return _temp26;
+  /* c8 ignore if */
+  if (_temp26 instanceof Completion) _temp26 = _temp26.Value;
+  const iterated = _temp26;
+  // 4. Let items be a new empty List.
+  const items = [];
+  // 5. Repeat,
+  while (true) {
+    /* ReturnIfAbrupt */
+    let _temp27 = yield* IteratorStepValue(iterated);
+    /* c8 ignore if */
+    if (_temp27 && typeof _temp27 === 'object' && 'next' in _temp27) throw new Assert.Error('Forgot to yield* on the completion.');
+    /* c8 ignore if */
+    if (_temp27 instanceof AbruptCompletion) return _temp27;
+    /* c8 ignore if */
+    if (_temp27 instanceof Completion) _temp27 = _temp27.Value;
+    // a. Let value be ? IteratorStepValue(iterated).
+    const value = _temp27;
+    // b. If value is done, return CreateArrayFromList(items).
+    if (value === 'done') {
+      return CreateArrayFromList(items);
+    }
+    // c. Append value to items.
+    items.push(value);
+  }
+}
+
+/** https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-get-iterator.prototype-%symbol.tostringtag% */
+IteratorPrototype_toArray.section = 'https://tc39.es/ecma262/#sec-iterator.prototype.toarray';
 function IteratorPrototype_toStringTagGetter() {
   return Value('Iterator');
 }
@@ -50829,19 +51784,19 @@ function* IteratorPrototype_toStringTagSetter([v], {
   thisValue
 }) {
   /* ReturnIfAbrupt */
-  let _temp2 = yield* SetterThatIgnoresPrototypeProperties(thisValue, surroundingAgent.intrinsic('%Iterator.prototype%'), wellKnownSymbols.toStringTag, v);
+  let _temp28 = yield* SetterThatIgnoresPrototypeProperties(thisValue, surroundingAgent.intrinsic('%Iterator.prototype%'), wellKnownSymbols.toStringTag, v);
   /* c8 ignore if */
-  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
+  if (_temp28 && typeof _temp28 === 'object' && 'next' in _temp28) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
-  if (_temp2 instanceof AbruptCompletion) return _temp2;
+  if (_temp28 instanceof AbruptCompletion) return _temp28;
   /* c8 ignore if */
-  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+  if (_temp28 instanceof Completion) _temp28 = _temp28.Value;
   // 2. Return undefined.
   return Value.undefined;
 }
 IteratorPrototype_toStringTagSetter.section = 'https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-set-iterator.prototype-%symbol.tostringtag%';
 function bootstrapIteratorPrototype(realmRec) {
-  const proto = bootstrapPrototype(realmRec, [['constructor', [IteratorProto_constructorGetter, IteratorProto_constructorSetter]], [wellKnownSymbols.iterator, IteratorPrototype_iterator, 0], [wellKnownSymbols.toStringTag, [IteratorPrototype_toStringTagGetter, IteratorPrototype_toStringTagSetter]]], realmRec.Intrinsics['%Object.prototype%']);
+  const proto = bootstrapPrototype(realmRec, [['constructor', [IteratorProto_constructorGetter, IteratorProto_constructorSetter]], ['drop', IteratorPrototype_drop, 1], ['every', IteratorPrototype_every, 1], ['filter', IteratorPrototype_filter, 1], ['find', IteratorPrototype_find, 1], ['flatMap', IteratorPrototype_flatMap, 1], ['forEach', IteratorPrototype_forEach, 1], ['map', IteratorPrototype_map, 1], ['reduce', IteratorPrototype_reduce, 1], ['some', IteratorPrototype_some, 1], ['take', IteratorPrototype_take, 1], ['toArray', IteratorPrototype_toArray, 0], [wellKnownSymbols.iterator, IteratorPrototype_iterator, 0], [wellKnownSymbols.toStringTag, [IteratorPrototype_toStringTagGetter, IteratorPrototype_toStringTagSetter]]], realmRec.Intrinsics['%Object.prototype%']);
   realmRec.Intrinsics['%Iterator.prototype%'] = proto;
 }
 
@@ -50860,9 +51815,47 @@ function* IteratorConstructor(_args, {
   // 2. Return ? OrdinaryCreateFromConstructor(NewTarget, "%Iterator.prototype%").
   return yield* OrdinaryCreateFromConstructor(NewTarget, '%Iterator.prototype%');
 }
+
+/** https://tc39.es/ecma262/#sec-iterator.from */
 IteratorConstructor.section = 'https://tc39.es/ecma262/multipage/control-abstraction-objects.html#sec-iterator-constructor';
+function* Iterator_from([O]) {
+  /* ReturnIfAbrupt */
+  let _temp = yield* GetIteratorFlattenable(O, 'iterate-string-primitives');
+  /* c8 ignore if */
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp instanceof AbruptCompletion) return _temp;
+  /* c8 ignore if */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  // 1. Let iteratorRecord be ? GetIteratorFlattenable(O, iterate-string-primitives).
+  const iteratorRecord = _temp;
+
+  // 2. Let hasInstance be ? OrdinaryHasInstance(%Iterator%, iteratorRecord.[[Iterator]]).
+  /* ReturnIfAbrupt */
+  let _temp2 = yield* OrdinaryHasInstance(surroundingAgent.intrinsic('%Iterator%'), iteratorRecord.Iterator);
+  /* c8 ignore if */
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp2 instanceof AbruptCompletion) return _temp2;
+  /* c8 ignore if */
+  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+  const hasInstance = _temp2;
+  // 3. If hasInstance is true, then
+  if (hasInstance === Value.true) {
+    // a. Return iteratorRecord.[[Iterator]].
+    return iteratorRecord.Iterator;
+  }
+
+  // 4. Let wrapper be OrdinaryObjectCreate(%WrapForValidIteratorPrototype%, « [[Iterated]] »).
+  const wrapper = OrdinaryObjectCreate(surroundingAgent.intrinsic('%WrapForValidIteratorPrototype%'), ['Iterated']);
+  // 5. Set wrapper.[[Iterated]] to iteratorRecord.
+  wrapper.Iterated = iteratorRecord;
+  // 6. Return wrapper.
+  return wrapper;
+}
+Iterator_from.section = 'https://tc39.es/ecma262/#sec-iterator.from';
 function bootstrapIterator(realmRec) {
-  const cons = bootstrapConstructor(realmRec, IteratorConstructor, 'Iterator', 0, realmRec.Intrinsics['%Iterator.prototype%'], []);
+  const cons = bootstrapConstructor(realmRec, IteratorConstructor, 'Iterator', 0, realmRec.Intrinsics['%Iterator.prototype%'], [['from', Iterator_from, 1]]);
   realmRec.Intrinsics['%Iterator%'] = cons;
 }
 
@@ -52082,6 +53075,7 @@ GeneratorProto_throw.section = 'https://tc39.es/ecma262/#sec-generator.prototype
 function bootstrapGeneratorFunctionPrototypePrototype(realmRec) {
   const generatorPrototype = bootstrapPrototype(realmRec, [['next', GeneratorProto_next, 1], ['return', GeneratorProto_return, 1], ['throw', GeneratorProto_throw, 1]], realmRec.Intrinsics['%Iterator.prototype%'], 'Generator');
   realmRec.Intrinsics['%GeneratorFunction.prototype.prototype%'] = generatorPrototype;
+  realmRec.Intrinsics['%GeneratorPrototype%'] = realmRec.Intrinsics['%GeneratorFunction.prototype.prototype%'];
 
   // Used by `CreateListIteratorRecord`:
   /* X */
@@ -58192,6 +59186,70 @@ function bootstrapWeakRef(realmRec) {
   realmRec.Intrinsics['%WeakRef%'] = bigintConstructor;
 }
 
+/** https://tc39.es/ecma262/#sec-%wrapforvaliditeratorprototype%.next */
+function* WrapForValidIteratorPrototype_next(_args, {
+  thisValue
+}) {
+  // 1. Let O be this value.
+  const O = thisValue;
+  // 2. Perform ? RequireInternalSlot(O, [[Iterated]]).
+  /* ReturnIfAbrupt */
+  let _temp = RequireInternalSlot(O, 'Iterated');
+  /* c8 ignore if */
+  if (_temp && typeof _temp === 'object' && 'next' in _temp) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp instanceof AbruptCompletion) return _temp;
+  /* c8 ignore if */
+  if (_temp instanceof Completion) _temp = _temp.Value;
+  const iteratorRecord = O.Iterated;
+  // 4. Return ? Call(iteratorRecord.[[NextMethod]], iteratorRecord.[[Iterator]]).
+  return yield* Call(iteratorRecord.NextMethod, iteratorRecord.Iterator);
+}
+
+/** https://tc39.es/ecma262/#sec-%wrapforvaliditeratorprototype%.return */
+WrapForValidIteratorPrototype_next.section = 'https://tc39.es/ecma262/#sec-%wrapforvaliditeratorprototype%.next';
+function* WrapForValidIteratorPrototype_return(_args, {
+  thisValue
+}) {
+  // 1. Let O be this value.
+  const O = thisValue;
+  // 2. Perform ? RequireInternalSlot(O, [[Iterated]]).
+  /* ReturnIfAbrupt */
+  let _temp2 = RequireInternalSlot(O, 'Iterated');
+  /* c8 ignore if */
+  if (_temp2 && typeof _temp2 === 'object' && 'next' in _temp2) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp2 instanceof AbruptCompletion) return _temp2;
+  /* c8 ignore if */
+  if (_temp2 instanceof Completion) _temp2 = _temp2.Value;
+  const iteratorRecord = O.Iterated;
+  const iterator = iteratorRecord.Iterator;
+  // 4. Assert: iterator is an Object.
+  Assert(iterator instanceof ObjectValue, "iterator instanceof ObjectValue");
+  // 5. Let returnMethod be ? GetMethod(iterator, "return").
+  /* ReturnIfAbrupt */
+  let _temp3 = yield* GetMethod(iterator, Value('return'));
+  /* c8 ignore if */
+  if (_temp3 && typeof _temp3 === 'object' && 'next' in _temp3) throw new Assert.Error('Forgot to yield* on the completion.');
+  /* c8 ignore if */
+  if (_temp3 instanceof AbruptCompletion) return _temp3;
+  /* c8 ignore if */
+  if (_temp3 instanceof Completion) _temp3 = _temp3.Value;
+  const returnMethod = _temp3;
+  // 6. If returnMethod is undefined, then
+  if (returnMethod instanceof UndefinedValue) {
+    // a. Return CreateIteratorResultObject(undefined, true).
+    return CreateIteratorResultObject(Value.undefined, Value.true);
+  }
+  // 7. Return ? Call(returnMethod, iterator).
+  return yield* Call(returnMethod, iterator);
+}
+WrapForValidIteratorPrototype_return.section = 'https://tc39.es/ecma262/#sec-%wrapforvaliditeratorprototype%.return';
+function bootstrapWrapForValidIteratorPrototype(realmRec) {
+  const proto = bootstrapPrototype(realmRec, [['next', WrapForValidIteratorPrototype_next, 0], ['return', WrapForValidIteratorPrototype_return, 0]], realmRec.Intrinsics['%Iterator.prototype%']);
+  realmRec.Intrinsics['%WrapForValidIteratorPrototype%'] = proto;
+}
+
 /** https://tc39.es/ecma262/#sec-finalization-registry.prototype.cleanupSome */
 function* FinalizationRegistryProto_cleanupSome([callback = Value.undefined], {
   thisValue
@@ -58454,6 +59512,8 @@ function CreateIntrinsics(realmRec) {
   bootstrapFunction(realmRec);
   bootstrapIteratorPrototype(realmRec);
   bootstrapIterator(realmRec);
+  bootstrapIteratorHelperPrototype(realmRec);
+  bootstrapWrapForValidIteratorPrototype(realmRec);
   bootstrapAsyncIteratorPrototype(realmRec);
   bootstrapArrayIteratorPrototype(realmRec);
   bootstrapMapIteratorPrototype(realmRec);
@@ -58772,23 +59832,21 @@ function GetThisValue(V) {
 /** https://tc39.es/ecma262/#sec-initializereferencedbinding */
 GetThisValue.section = 'https://tc39.es/ecma262/#sec-getthisvalue';
 function* InitializeReferencedBinding(V, W) {
+  /* ReturnIfAbrupt */
   /* c8 ignore if */
-  if (V instanceof AbruptCompletion) {
-    return V;
-  }
+  if (V && typeof V === 'object' && 'next' in V) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
-  if (V instanceof Completion) {
-    V = V.Value;
-  }
+  if (V instanceof AbruptCompletion) return V;
+  /* c8 ignore if */
+  if (V instanceof Completion) V = V.Value;
   // 2. ReturnIfAbrupt(W).
+  /* ReturnIfAbrupt */
   /* c8 ignore if */
-  if (W instanceof AbruptCompletion) {
-    return W;
-  }
+  if (W && typeof W === 'object' && 'next' in W) throw new Assert.Error('Forgot to yield* on the completion.');
   /* c8 ignore if */
-  if (W instanceof Completion) {
-    W = W.Value;
-  }
+  if (W instanceof AbruptCompletion) return W;
+  /* c8 ignore if */
+  if (W instanceof Completion) W = W.Value;
   // 3. Assert: V is a Reference Record.
   Assert(V instanceof ReferenceRecord, "V instanceof ReferenceRecord");
   // 4. Assert: IsUnresolvableReference(V) is false.
@@ -60573,29 +61631,18 @@ function ToBoolean(argument) {
     if (R(argument) === 0 || argument.isNaN()) {
       return Value.false;
     }
-    return Value.true;
   } else if (argument instanceof JSStringValue) {
     // If argument is the empty String, return false; otherwise return true.
     if (argument.stringValue().length === 0) {
       return Value.false;
     }
-    return Value.true;
-  } else if (argument instanceof SymbolValue) {
-    // Return true.
-    return Value.true;
   } else if (argument instanceof BigIntValue) {
     // If argument is 0ℤ, return false; otherwise return true.
     if (R(argument) === 0n) {
       return Value.false;
     }
-    return Value.true;
-  } else if (argument instanceof ObjectValue) {
-    // Return true.
-    return Value.true;
   }
-  throw new OutOfRange$1('ToBoolean', {
-    argument
-  });
+  return Value.true;
 }
 
 /** https://tc39.es/ecma262/#sec-tonumeric */
