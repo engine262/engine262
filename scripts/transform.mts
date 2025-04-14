@@ -38,18 +38,19 @@ interface State extends PluginPass {
   needed: Partial<Record<NeededNames, boolean>>;
 }
 
-interface Macro<R extends Record<string, Node> = Record<string, Node>> {
+interface Macro<R extends Record<string, Node | null> = Record<string, Node | null>> {
   template(replacements: Readonly<R>): t.Statement | t.Statement[];
-  imports: readonly NeededNames[];
+  readonly imports: readonly NeededNames[];
+  readonly allowAnyExpression?: boolean;
 }
 
 interface Macros {
   [m: string]: Macro;
-  Q: Macro<{ ID: t.Identifier }>;
-  X: Macro<{ ID: t.Identifier, SOURCE: t.StringLiteral }>;
-  ReturnIfAbrupt: Macro<{ ID: t.Identifier }>;
+  Q: Macro<{ value: t.Identifier, checkYieldStar: t.Statement | null }>;
+  X: Macro<{ value: t.Identifier, checkYieldStar: t.Statement | null, source: t.StringLiteral }>;
+  ReturnIfAbrupt: Macro<{ value: t.Identifier, checkYieldStar: t.Statement | null }>;
   IfAbruptCloseIterator: Macro<{ value: t.Identifier, iteratorRecord: t.Identifier }>;
-  IfAbruptRejectPromise: Macro<{ ID: t.Identifier, CAPABILITY: t.Identifier }>;
+  IfAbruptRejectPromise: Macro<{ value: t.Identifier, capability: t.Identifier }>;
 }
 
 export default ({ types: t, template }: typeof import('@babel/core')): PluginObj<State> => {
@@ -132,26 +133,34 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
     }
   }
 
+  const assertYieldStar = template.statement(`
+    /* c8 ignore if */ if (%%value%% && typeof %%value%% === 'object' && 'next' in %%value%%) throw new Assert.Error('Forgot to yield* on the completion.');
+  `, { preserveComments: true });
+
+  const maybeSkipDebugger = template.statement(`
+    /* c8 ignore if */ if (%%value%% && typeof %%value%% === 'object' && 'next' in %%value%%) %%value%% = skipDebugger(%%value%%);
+  `, { preserveComments: true });
+
   const MACROS: Partial<Macros> = {
     Q: {
       template: template(`
       /* ReturnIfAbrupt */
-      let ID = ARGUMENT;
-      /* c8 ignore if */ if (ID && typeof ID === 'object' && 'next' in ID) throw new Assert.Error('Forgot to yield* on the completion.');
-      /* c8 ignore if */ if (ID instanceof AbruptCompletion) return ID;
-      /* c8 ignore if */ if (ID instanceof Completion) ID = ID.Value;
+      %%checkYieldStar%%
+      /* c8 ignore if */ if (%%value%% instanceof AbruptCompletion) return %%value%%;
+      /* c8 ignore if */ if (%%value%% instanceof Completion) %%value%% = %%value%%.Value;
       `, { preserveComments: true }),
       imports: ['AbruptCompletion', 'Completion', 'Assert'],
+      allowAnyExpression: true,
     },
     X: {
       template: template(`
       /* X */
-      let ID = ARGUMENT;
-      /* c8 ignore if */ if (ID && typeof ID === 'object' && 'next' in ID) ID = skipDebugger(ID);
-      /* c8 ignore if */ if (ID instanceof AbruptCompletion) throw new Assert.Error(SOURCE, { cause: ID });
-      /* c8 ignore if */ if (ID instanceof Completion) ID = ID.Value;
+      %%checkYieldStar%%
+      /* c8 ignore if */ if (%%value%% instanceof AbruptCompletion) throw new Assert.Error(%%source%%, { cause: %%value%% });
+      /* c8 ignore if */ if (%%value%% instanceof Completion) %%value%% = %%value%%.Value;
       `, { preserveComments: true }),
       imports: ['Assert', 'Completion', 'AbruptCompletion', 'skipDebugger'],
+      allowAnyExpression: true,
     },
     IfAbruptCloseIterator: {
       template: template(`
@@ -167,13 +176,13 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
       template: template(`
       /* IfAbruptRejectPromise */
       /* c8 ignore if */
-      if (ID instanceof AbruptCompletion) {
-        const hygenicTemp2 = skipDebugger(Call(CAPABILITY.Reject, Value.undefined, [ID.Value]));
+      if (%%value%% instanceof AbruptCompletion) {
+        const hygenicTemp2 = skipDebugger(Call(%%capability%%.Reject, Value.undefined, [%%value%%.Value]));
         if (hygenicTemp2 instanceof AbruptCompletion) return hygenicTemp2;
-        return CAPABILITY.Promise;
+        return %%capability%%.Promise;
       }
       /* c8 ignore if */
-      if (ID instanceof Completion) ID = ID.Value;
+      if (%%value%% instanceof Completion) %%value%% = %%value%%.Value;
       `, { preserveComments: true }),
       imports: ['Call', 'Value', 'AbruptCompletion', 'Completion', 'skipDebugger'],
     },
@@ -272,10 +281,10 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
             (binding.path.parent as t.VariableDeclaration).kind = 'let';
             statementPath.insertBefore(template(`
               /* ReturnIfAbrupt */
-              /* c8 ignore if */ if (ID && typeof ID === 'object' && 'next' in ID) throw new Assert.Error('Forgot to yield* on the completion.');
-              /* c8 ignore if */ if (ID instanceof AbruptCompletion) return ID;
-              /* c8 ignore if */ if (ID instanceof Completion) ID = ID.Value;
-            `, { preserveComments: true })({ ID: argument }));
+              /* c8 ignore if */ if (%%value%% && typeof %%value%% === 'object' && 'next' in %%value%%) throw new Assert.Error('Forgot to yield* on the completion.');
+              /* c8 ignore if */ if (%%value%% instanceof AbruptCompletion) return %%value%%;
+              /* c8 ignore if */ if (%%value%% instanceof Completion) %%value%% = %%value%%.Value;
+            `, { preserveComments: true })({ value: argument }));
             path.replaceWith(argument);
           } else {
             if (macro === MACROS.IfAbruptRejectPromise) {
@@ -288,7 +297,7 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
               }
               const binding = path.scope.getBinding(argument.name)!;
               (binding.path.parent as t.VariableDeclaration).kind = 'let';
-              statementPath.insertBefore(macro.template({ ID: argument, CAPABILITY: capability }));
+              statementPath.insertBefore(macro.template({ value: argument, capability }));
               tryRemove(path);
             } else if (macro === MACROS.IfAbruptCloseIterator) {
               if (!t.isIdentifier(argument)) {
@@ -308,13 +317,33 @@ export default ({ types: t, template }: typeof import('@babel/core')): PluginObj
               );
               tryRemove(path);
             } else {
-              const id = statementPath.scope.generateUidIdentifier();
-              const replacement: { ARGUMENT: typeof argument, ID: typeof id, SOURCE?: t.StringLiteral } = {
-                ARGUMENT: argument,
-                ID: id,
+              let id;
+              if (!macro.allowAnyExpression) {
+                if (!t.isIdentifier(argument)) {
+                  throw path.get('arguments.0').buildCodeFrameError(`First argument to ${macroName} should be an identifier`);
+                }
+                id = argument;
+              } else {
+                id = statementPath.scope.generateUidIdentifier();
+                statementPath.insertBefore(template(`
+                  /* ${macroName !== 'Q' ? macroName : 'ReturnIfAbrupt'} */
+                  let %%id%% = %%argument%%;
+                `, { preserveComments: true })({ id, argument }));
+              }
+
+              const replacement: { value: typeof id, checkYieldStar: t.Statement | null, source?: t.StringLiteral } = {
+                checkYieldStar: null,
+                value: id,
               };
               if (macro === MACROS.X) {
-                replacement.SOURCE = t.stringLiteral(`! ${path.get('arguments.0').getSource()} returned an abrupt completion`);
+                replacement.source = t.stringLiteral(`! ${path.get('arguments.0').getSource()} returned an abrupt completion`);
+                if (!t.isYieldExpression(argument, { delegate: true })) {
+                  replacement.checkYieldStar = maybeSkipDebugger({ value: id });
+                }
+              } else if (macro === MACROS.Q) {
+                if (!t.isYieldExpression(argument, { delegate: true })) {
+                  replacement.checkYieldStar = assertYieldStar({ value: id });
+                }
               }
               statementPath.insertBefore(macro.template(replacement));
               path.replaceWith(id);
