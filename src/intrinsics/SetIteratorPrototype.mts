@@ -53,11 +53,14 @@ export function CreateSetIterator(set: Value, kind: 'key+value' | 'value'): Valu
       // iv. Set numEntries to the number of elements of entries.
       numEntries = entries.length;
     }
+    // NON-SPEC
+    generator.EnclosedValue = undefined;
     // e. Return undefined.
     return Value.undefined;
   };
   // 4. Return ! CreateIteratorFromClosure(closure, "%SetIteratorPrototype%", %SetIteratorPrototype%).
-  return X(CreateIteratorFromClosure(closure, Value('%SetIteratorPrototype%'), surroundingAgent.intrinsic('%SetIteratorPrototype%')));
+  const generator = X(CreateIteratorFromClosure(closure, Value('%SetIteratorPrototype%'), surroundingAgent.intrinsic('%SetIteratorPrototype%'), ['EnclosedValue'], set));
+  return generator;
 }
 
 /** https://tc39.es/ecma262/#sec-%setiteratorprototype%.next */

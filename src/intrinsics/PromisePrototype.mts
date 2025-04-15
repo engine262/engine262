@@ -69,7 +69,9 @@ function* PromiseProto_finally([onFinally = Value.undefined]: Arguments, { thisV
       return Q(yield* Invoke(promiseInner, Value('then'), [valueThunk]));
     };
     // b. Let thenFinally be ! CreateBuiltinFunction(thenFinallyClosure, 1, "", « »).
-    thenFinally = X(CreateBuiltinFunction(thenFinallyClosure, 1, Value(''), []));
+    thenFinally = X(CreateBuiltinFunction(thenFinallyClosure, 1, Value(''), ['EnclosedValue']));
+    // NON-SPEC
+    (thenFinally as unknown as { EnclosedValue: Value }).EnclosedValue = onFinally;
     // c. Let catchFinallyClosure be a new Abstract Closure with parameters (reason) that captures onFinally and C and performs the following steps when called:
     const catchFinallyClosure = function* catchFinallyClosure([reason = Value.undefined]: Arguments): ValueEvaluator {
       // i. Let result be ? Call(onFinally, undefined).
@@ -86,6 +88,8 @@ function* PromiseProto_finally([onFinally = Value.undefined]: Arguments, { thisV
     };
     // d. Let catchFinally be ! CreateBuiltinFunction(catchFinallyClosure, 1, "", « »).
     catchFinally = X(CreateBuiltinFunction(catchFinallyClosure, 1, Value(''), []));
+    // NON-SPEC
+    (catchFinally as unknown as { EnclosedValue: Value }).EnclosedValue = onFinally;
   }
   // 7. Return ? Invoke(promise, "then", « thenFinally, catchFinally »).
   return Q(yield* Invoke(promise, Value('then'), [thenFinally, catchFinally]));

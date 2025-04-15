@@ -750,11 +750,14 @@ function* StringProto_iterator(_args: Arguments, { thisValue }: FunctionCallCont
       // v. Perform ? Yield(resultString).
       Q(yield* Yield(resultString));
     }
+    // NON-SPEC
+    generator.EnclosedValue = undefined;
     // d. Return undefined.
     return Value.undefined;
   };
   // 4. Return ! CreateIteratorFromClosure(closure, "%StringIteratorPrototype%", %StringIteratorPrototype%).
-  return X(CreateIteratorFromClosure(closure, Value('%StringIteratorPrototype%'), surroundingAgent.intrinsic('%StringIteratorPrototype%')));
+  const generator = X(CreateIteratorFromClosure(closure, Value('%StringIteratorPrototype%'), surroundingAgent.intrinsic('%StringIteratorPrototype%'), ['EnclosedValue'], O));
+  return generator;
 }
 
 /** https://tc39.es/ecma262/#sec-string.prototype.at */

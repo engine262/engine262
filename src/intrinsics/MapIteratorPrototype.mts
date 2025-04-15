@@ -56,11 +56,14 @@ export function CreateMapIterator(map: Value, kind: 'key+value' | 'key' | 'value
       // iv. Set numEntries to the number of elements of entries.
       numEntries = entries.length;
     }
+    // NON-SPEC
+    generator.EnclosedValue = undefined;
     // e. Return undefined.
     return Value.undefined;
   };
   // 3. Return ! CreateIteratorFromClosure(closure, "%MapIteratorPrototype%", %MapIteratorPrototype%).
-  return X(CreateIteratorFromClosure(closure, Value('%MapIteratorPrototype%'), surroundingAgent.intrinsic('%MapIteratorPrototype%')));
+  const generator = X(CreateIteratorFromClosure(closure, Value('%MapIteratorPrototype%'), surroundingAgent.intrinsic('%MapIteratorPrototype%'), ['EnclosedValue'], map));
+  return generator;
 }
 
 /** https://tc39.es/ecma262/#sec-%mapiteratorprototype%.next */
