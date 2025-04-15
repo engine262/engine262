@@ -1,11 +1,13 @@
-'use strict';
-
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 // eslint-disable-next-line import/no-extraneous-dependencies
-const acorn = require('acorn');
+import * as acorn from 'acorn';
+import type { Rule } from 'eslint';
+import type * as ESTree from 'estree';
 
-function isThrowCall(node) {
+const __dirname = import.meta.dirname;
+
+function isThrowCall(node: ESTree.CallExpression) {
   return node.callee.type === 'MemberExpression'
     && node.callee.computed === false
     && node.callee.object.type === 'Identifier'
@@ -14,7 +16,7 @@ function isThrowCall(node) {
     && node.callee.property.name === 'Throw';
 }
 
-function isRaiseCall(node) {
+function isRaiseCall(node: ESTree.CallExpression) {
   return node.callee.type === 'MemberExpression'
     && node.callee.computed === false
     && node.callee.object.type === 'ThisExpression'
@@ -25,7 +27,7 @@ function isRaiseCall(node) {
     );
 }
 
-const templates = {};
+const templates: Record<string, number> = {};
 
 {
   let sourceDir;
@@ -41,14 +43,18 @@ const templates = {};
     if (n.type !== 'ExportNamedDeclaration') {
       return;
     }
-    const [v] = n.declaration.declarations;
-    const name = v.id.name;
-    const length = v.init.params.length;
+    const [v] = (n.declaration as acorn.VariableDeclaration).declarations;
+    const name = (v.id as acorn.Identifier).name;
+    const length = (v.init as acorn.Function).params.length;
     templates[name] = length;
   });
 }
 
-module.exports = {
+function report(context: Rule.RuleContext, node: ESTree.Node, message: string) {
+  return context.report({ node, message });
+}
+
+export default {
   create(context) {
     return {
       CallExpression(node) {
@@ -61,7 +67,7 @@ module.exports = {
           let type;
           ([type, template, ...templateArgs] = node.arguments);
           if (!type || type.type !== 'Literal') {
-            context.report(node, 'Throw must use a valid error constructor');
+            report(context, node, 'Throw must use a valid error constructor');
             return;
           }
         } else if (isRaiseCall(node)) {
@@ -70,18 +76,18 @@ module.exports = {
           return;
         }
         if (!template || template.type !== 'Literal') {
-          context.report(node, 'Throw must use a valid message template');
+          report(context, node, 'Throw must use a valid message template');
           return;
         }
-        const tfn = templates[template.value];
+        const tfn = templates[template.value as string];
         if (tfn === undefined) {
-          context.report(template, `'${template.value}' is not a valid message template`);
+          report(context, template, `'${template.value}' is not a valid message template`);
           return;
         }
         if (tfn !== templateArgs.length) {
-          context.report(node, `Template expects ${tfn} args`);
+          report(context, node, `Template expects ${tfn} args`);
         }
       },
     };
   },
-};
+} satisfies Rule.RuleModule;
