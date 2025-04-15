@@ -87,7 +87,7 @@ function* PromiseProto_finally([onFinally = Value.undefined]: Arguments, { thisV
       return Q(yield* Invoke(promiseInner, Value('then'), [thrower]));
     };
     // d. Let catchFinally be ! CreateBuiltinFunction(catchFinallyClosure, 1, "", « »).
-    catchFinally = X(CreateBuiltinFunction(catchFinallyClosure, 1, Value(''), []));
+    catchFinally = X(CreateBuiltinFunction(catchFinallyClosure, 1, Value(''), ['EnclosedValue']));
     // NON-SPEC
     (catchFinally as unknown as { EnclosedValue: Value }).EnclosedValue = onFinally;
   }
