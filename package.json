@@ -48,7 +48,7 @@
   "scripts": {
     "start": "node --enable-source-maps --disable-warning=ExperimentalWarning --experimental-strip-types ./lib-src/node/bin.mts",
     "inspector": "node ./website/server.mjs",
-    "lint": "eslint test/ src/ bin/ lib-src/ scripts/ --cache --ext=js,mjs,mts",
+    "lint": "NODE_OPTIONS='--enable-source-maps --disable-warning=ExperimentalWarning --experimental-strip-types' eslint test/ src/ bin/ lib-src/ scripts/ --cache --ext=js,mjs,mts",
     "lint:fix": "npm run lint -- --fix",
     "watch": "run-p watch:*",
     "build": "run-s build:*",
@@ -112,6 +112,8 @@
     "@types/babel__code-frame": "^7.0.6",
     "@types/babel__core": "^7.20.5",
     "@types/babel__traverse": "^7.20.7",
+    "@types/eslint": "^8.56.12",
+    "@types/estree": "^1.0.6",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.13.4",
     "@types/ws": "^8.5.14",

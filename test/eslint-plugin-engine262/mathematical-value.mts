@@ -1,28 +1,20 @@
-'use strict';
+import path from 'node:path';
+import type { Rule, Scope } from 'eslint';
+import type * as ESTree from 'estree';
 
-const path = require('node:path');
-
-/** @type {import('eslint').Rule.RuleModule} */
-module.exports = {
+export default {
   meta: {
     fixable: 'code',
     hasSuggestions: true,
   },
   create(context) {
-    /**
-     * @typedef {import('estree').CallExpression & { callee: import('estree').MemberExpression & { computed: false, property: import('estree').Identifier } }} FixableCallExpression
-     */
+    type FixableCallExpression = ESTree.CallExpression & { callee: ESTree.MemberExpression & { computed: false, property: ESTree.Identifier } };
 
-    /** @type {{ node: FixableCallExpression, fixable: boolean, reachable: boolean, name: string }[] | undefined} */
-    let needsImportForR;
-    /** @type {import('estree').ImportSpecifier[]} */
-    let importSpecifiersForR;
-    /** @type {import('estree').ImportDeclaration | undefined} */
-    let importForAllModule;
-    /** @type {import('estree').ImportDeclaration | undefined} */
-    let importForSpecTypesModule;
-    /** @type {import('estree').ImportDeclaration | undefined} */
-    let lastImport;
+    let needsImportForR: { node: FixableCallExpression, fixable: boolean, reachable: boolean, name: string }[];
+    let importSpecifiersForR: ESTree.ImportSpecifier[];
+    let importForAllModule: ESTree.ImportDeclaration | undefined;
+    let importForSpecTypesModule: ESTree.ImportDeclaration | undefined;
+    let lastImport: ESTree.ImportDeclaration | undefined;
     const pathToAbstractOps = `${path.resolve(context.cwd, 'src/abstract-ops').replaceAll('\\', '/')}/`;
     const pathToSpecTypesModule = path.resolve(pathToAbstractOps, 'spec-types.mjs').replaceAll('\\', '/');
     const pathToAllModule = path.resolve(pathToAbstractOps, 'all.mjs').replaceAll('\\', '/');
@@ -44,13 +36,12 @@ module.exports = {
             const importNamePart = importName === 'R' ? 'R' : `R (imported as ${importName})`;
             const importSpecifier = importName === 'R' ? 'R' : `R as ${importName}`;
             const fixable = !lookup(context.sourceCode.getScope(node), importName);
-            /** @type {import('eslint').Rule.ReportFixer} */
-            const fix = function* fix(fixer) {
+            const fix: Rule.ReportFixer = function* fix(fixer) {
               if (importForSpecTypesModule) {
-                const last = importForSpecTypesModule.specifiers.at(-1);
+                const last = importForSpecTypesModule.specifiers.at(-1)!;
                 yield fixer.insertTextAfter(last, `, ${importSpecifier}`);
               } else if (importForAllModule) {
-                const last = importForAllModule.specifiers.at(-1);
+                const last = importForAllModule.specifiers.at(-1)!;
                 yield fixer.insertTextAfter(last, `, ${importSpecifier}`);
               } else {
                 const filename = path.resolve(context.filename).replaceAll('\\', '/');
@@ -82,11 +73,10 @@ module.exports = {
         }
 
         for (const { node: callNode, fixable, name } of needsImportForR) {
-          /** @type {import('eslint').Rule.ReportFixer} */
-          const fix = function* fix(fixer) {
+          const fix: Rule.ReportFixer = function* fix(fixer) {
             //    foo.numberValue()
             // -> foo
-            yield fixer.removeRange([callNode.callee.object.range[1], callNode.range[1]]);
+            yield fixer.removeRange([callNode.callee.object.range![1], callNode.range![1]]);
 
             //    foo
             // -> R(foo)
@@ -130,17 +120,14 @@ module.exports = {
             || node.callee.property.name === 'bigintValue') {
             const { fixable, reachable, name } = getUsableReferenceToR(context.sourceCode.getScope(node));
             needsImportForR.push({
-              node, fixable, reachable, name,
+              node: node as FixableCallExpression, fixable, reachable, name,
             });
           }
         }
       },
     };
 
-    /**
-     * @param {import('eslint').Scope.Scope} scope
-     */
-    function lookup(scope, name) {
+    function lookup(scope: Scope.Scope | null, name: string) {
       while (scope) {
         const v = scope.set.get(name);
         if (v) {
@@ -151,10 +138,7 @@ module.exports = {
       return undefined;
     }
 
-    /**
-     * @param {import('estree').ImportDeclaration} node
-     */
-    function isImportOfRModule(node) {
+    function isImportOfRModule(node: ESTree.ImportDeclaration) {
       if (!node.specifiers.length) {
         // `import {} from ...` not currently usable
       }
@@ -166,7 +150,7 @@ module.exports = {
         // `import X from ...` and `import X, {} from ...` not currently usable
         return false;
       }
-      const importPath = path.resolve(path.dirname(context.filename), node.source.value).replaceAll('\\', '/');
+      const importPath = path.resolve(path.dirname(context.filename), node.source.value as string).replaceAll('\\', '/');
       if (importPath === pathToAllModule) {
         return 'all';
       } else if (importPath === pathToSpecTypesModule) {
@@ -175,21 +159,15 @@ module.exports = {
       return false;
     }
 
-    /**
-     * @param {import('estree').ImportSpecifier & import('eslint').Rule.NodeParentExtension} node
-     */
-    function isImportOfR(node) {
-      if (node.imported.name === 'R'
+    function isImportOfR(node: ESTree.ImportSpecifier & Rule.NodeParentExtension) {
+      if ((node.imported as ESTree.Identifier).name === 'R'
         && node.parent.type === 'ImportDeclaration') {
         return !!isImportOfRModule(node.parent);
       }
       return false;
     }
 
-    /**
-     * @param {import('eslint').Scope.Scope} scope
-     */
-    function getUsableReferenceToR(scope) {
+    function getUsableReferenceToR(scope: Scope.Scope) {
       let candidate;
       for (const spec of importSpecifiersForR) {
         const varDecl = lookup(scope, spec.local.name);
@@ -225,4 +203,4 @@ module.exports = {
       return { fixable: false, reachable: false, name: 'R' };
     }
   },
-};
+} satisfies Rule.RuleModule;
