@@ -1,16 +1,15 @@
 // @ts-nocheck
 
-// TODO: this file must not contain TypeScript syntax until we removed valid-throw rule and use TSC to check the error message.
 import { surroundingAgent, inspect, Value } from './index.mts';
 
-function i(V) {
+function i(V: unknown) {
   if (V instanceof Value) {
-    return inspect(V, surroundingAgent.currentRealmRecord, true);
+    return inspect(V);
   }
   return `${V}`;
 }
 
-export const Raw = (s) => s;
+export const Raw = <const S, >(s: S) => s;
 
 export const AlreadyDeclared = (n) => `${i(n)} is already declared`;
 export const ArrayBufferDetached = () => 'Attempt to access detached ArrayBuffer';
