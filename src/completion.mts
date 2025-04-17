@@ -343,7 +343,7 @@ export { ReturnIfAbrupt as Q };
 
 /** https://tc39.es/ecma262/#sec-returnifabrupt-shorthands ! OperationName() */
 export function X<const T>(_completion: T | Evaluator<T>): ReturnIfAbrupt<T> {
-  /* c8 skip next */
+  /* node:coverage ignore next */
   throw new TypeError('X() requires build');
 }
 
