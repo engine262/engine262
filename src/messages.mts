@@ -9,7 +9,7 @@ function i(V: unknown) {
   return `${V}`;
 }
 
-export const Raw = <const S,>(s: S) => s;
+export const Raw = <const S, >(s: S) => s;
 
 export const AlreadyDeclared = (n) => `${i(n)} is already declared`;
 export const ArrayBufferDetached = () => 'Attempt to access detached ArrayBuffer';
