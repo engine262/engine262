@@ -7,10 +7,11 @@ import { ObjectValue } from '../value.mts';
 
 class AssertError extends Error {}
 export function Assert(invariant: boolean, source?: string, completion?: Completion<unknown>): asserts invariant {
-  /* c8 ignore next */
+  /* node:coverage disable */
   if (!invariant) {
     throw new AssertError(source, { cause: completion });
   }
+  /* node:coverage enable */
 }
 Assert.Error = AssertError;
 
