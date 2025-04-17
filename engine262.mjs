@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 9bf790fe28af5147c9b600492d527b28ae16f384
+ * engine262 0.0.1 31ef0c273010a18f01f05ea05606a4b7d765a275
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -14639,7 +14639,7 @@ Evaluate_CaseClause.section = 'https://tc39.es/ecma262/#sec-switch-statement-run
 
 function i(V) {
   if (V instanceof Value) {
-    return inspect(V, surroundingAgent.currentRealmRecord);
+    return inspect(V);
   }
   return `${V}`;
 }
