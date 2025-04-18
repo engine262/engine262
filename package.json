@@ -57,7 +57,8 @@
     "watch:dts": "tsc -b . -w",
     "build:engine": "NODE_OPTIONS='--enable-source-maps --disable-warning=ExperimentalWarning --experimental-strip-types' rollup -c ./scripts/rollup.config.mts",
     "watch:engine": "npm run build:engine -- --watch",
-    "test": "bash test/test_root.sh",
+    "test:all": "run-s -c test:inspector test:supplemental test:json test:test262",
+    "test": "run-s -c test:supplemental test:json test:test262",
     "test:test262": "node --enable-source-maps --disable-warning=ExperimentalWarning --experimental-strip-types test/test262/test262.mts",
     "test:supplemental": "node --enable-source-maps --disable-warning=ExperimentalWarning --experimental-strip-types test/supplemental.mts",
     "test:json": "node --enable-source-maps --disable-warning=ExperimentalWarning --experimental-strip-types test/json/json.mts",
@@ -65,6 +66,7 @@
     "test:inspector:watch": "vitest test/inspector",
     "test:inspector:coverage": "vitest test/inspector --coverage",
     "coverage": "c8 --reporter=lcov npm run test",
+    "coverage:all": "c8 --reporter=lcov npm run test:all",
     "prepublishOnly": "node --enable-source-maps --disable-warning=ExperimentalWarning --experimental-strip-types scripts/tag_version_with_git_hash.mts",
     "postpublish": "git reset --hard HEAD"
   },
