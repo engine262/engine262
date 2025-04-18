@@ -322,13 +322,13 @@ export type ReturnIfAbrupt<T> =
  * https://tc39.es/ecma262/#sec-returnifabrupt
  * https://tc39.es/ecma262/#sec-returnifabrupt-shorthands ? OperationName()
  */
-export function ReturnIfAbrupt<const T>(_completion: T): ReturnIfAbrupt<T>
 export function ReturnIfAbrupt<const T>(_completion: T): ReturnIfAbrupt<T> {
-  /* c8 skip next */
+  /* node:coverage ignore next */
   throw new TypeError('ReturnIfAbrupt requires build');
 }
 
 function ReturnIfAbruptRuntime<const T>(completion: T): ReturnIfAbrupt<T> {
+  /* node:coverage ignore next 3 */
   if (typeof completion === 'object' && completion && 'next' in completion) {
     throw new TypeError('Forgot to yield* on the completion.');
   }
@@ -343,11 +343,12 @@ export { ReturnIfAbrupt as Q };
 
 /** https://tc39.es/ecma262/#sec-returnifabrupt-shorthands ! OperationName() */
 export function X<const T>(_completion: T | Evaluator<T>): ReturnIfAbrupt<T> {
-  /* c8 skip next */
+  /* node:coverage ignore next */
   throw new TypeError('X() requires build');
 }
 
 export function unwrapCompletion<const T>(completion: T | Evaluator<T>): ReturnIfAbrupt<T> {
+  /* node:coverage ignore next 3 */
   if (typeof completion === 'object' && completion && 'next' in completion) {
     completion = skipDebugger(completion);
   }
@@ -355,18 +356,19 @@ export function unwrapCompletion<const T>(completion: T | Evaluator<T>): ReturnI
   if (c instanceof NormalCompletion) {
     return c.Value as ReturnIfAbrupt<T>;
   }
-  throw new Error('Unexpected AbruptCompletion.', { cause: c });
+  /* node:coverage ignore next */
+  throw new Assert.Error('Unexpected AbruptCompletion.', { cause: c });
 }
 
 /** https://tc39.es/ecma262/#sec-ifabruptcloseiterator */
 export function IfAbruptCloseIterator<T>(_value: T, _iteratorRecord: IteratorRecord): ReturnIfAbrupt<T> {
-  /* c8 skip next */
+  /* node:coverage ignore next */
   throw new TypeError('IfAbruptCloseIterator() requires build');
 }
 
 /** https://tc39.es/ecma262/#sec-ifabruptrejectpromise */
 export function IfAbruptRejectPromise<T>(_value: T, _capability: PromiseCapabilityRecord): ReturnIfAbrupt<T> {
-  /* c8 skip next */
+  /* node:coverage ignore next */
   throw new TypeError('IfAbruptRejectPromise requires build');
 }
 

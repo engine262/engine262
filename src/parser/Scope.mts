@@ -385,7 +385,7 @@ export class Scope {
         return scope;
       }
     }
-    /* c8 ignore next */
+    /* node:coverage ignore next */
     throw new RangeError();
   }
 
@@ -396,7 +396,7 @@ export class Scope {
         return scope;
       }
     }
-    /* c8 ignore next */
+    /* node:coverage ignore next */
     throw new RangeError();
   }
 
@@ -493,8 +493,8 @@ export class Scope {
           }
           break;
         }
+        /* node:coverage ignore next 2 */
         default:
-          /* c8 ignore next */
           throw new RangeError(type);
       }
     });
