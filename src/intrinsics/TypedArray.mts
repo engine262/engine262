@@ -26,6 +26,7 @@ import {
   ToString,
   F,
   Realm,
+  type BuiltinFunctionObject,
   type FunctionObject,
   GetIteratorFromMethod,
   AllocateArrayBuffer,
@@ -274,7 +275,7 @@ export function* CompareTypedArrayElements(x: NumberValue | BigIntValue, y: Numb
 }
 
 /** https://tc39.es/ecma262/#sec-%typedarray%-intrinsic-object */
-function TypedArrayConstructor(this: unknown) {
+function TypedArrayConstructor(this: BuiltinFunctionObject) {
   // 1. Throw a TypeError exception.
   return surroundingAgent.Throw('TypeError', 'NotAConstructor', this);
 }

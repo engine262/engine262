@@ -43,7 +43,7 @@ abstract class BaseValue {
 
   abstract type: Value['type']; // ensures new `Value` subtypes must be added to `Value` union
 
-  declare [Symbol.hasInstance]: (value: unknown) => value is Value; // no need to actually declare it.
+  declare static [Symbol.hasInstance]: (value: unknown) => value is Value; // no need to actually declare it.
 }
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types */
@@ -112,11 +112,15 @@ export type PrimitiveValue =
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types */
 export const PrimitiveValue = (() => {
-  // NOTE: Using IIFE so that the class does not conflict with the type of the same name
-  // NOTE: Only using IIFE because TypeScript errors when `abstract` is used on class expressions
-  abstract class PrimitiveValue extends Value {
-  }
-  return PrimitiveValue;
+  type PrimValue = PrimitiveValue;
+  return (() => {
+    // NOTE: Using nested IIFE so that the class does not conflict with the type of the same name
+    // NOTE: Only using IIFE because TypeScript errors when `abstract` is used on class expressions
+    abstract class PrimitiveValue extends Value {
+      declare static [Symbol.hasInstance]: (value: unknown) => value is PrimValue;
+    }
+    return PrimitiveValue;
+  })();
 })();
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-undefined-type */
@@ -134,6 +138,8 @@ export class UndefinedValue extends PrimitiveValue {
     Object.defineProperty(this.prototype, 'value', { value: undefined });
     Object.defineProperty(Value, 'undefined', { value: new this() });
   }
+
+  declare static [Symbol.hasInstance]: (value: unknown) => value is UndefinedValue;
 }
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-null-type */
@@ -151,6 +157,8 @@ export class NullValue extends PrimitiveValue {
     Object.defineProperty(this.prototype, 'value', { value: null });
     Object.defineProperty(Value, 'null', { value: new this() });
   }
+
+  declare static [Symbol.hasInstance]: (value: unknown) => value is NullValue;
 }
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-boolean-type */
@@ -177,6 +185,8 @@ export class BooleanValue<T extends boolean = boolean> extends PrimitiveValue {
     Object.defineProperty(Value, 'true', { value: new this(true) });
     Object.defineProperty(Value, 'false', { value: new this(false) });
   }
+
+  declare static [Symbol.hasInstance]: (value: unknown) => value is BooleanValue;
 }
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-string-type */
@@ -198,6 +208,8 @@ export class JSStringValue extends PrimitiveValue {
     Object.defineProperty(this.prototype, 'type', { value: 'String' });
     createStringValue = (value) => new this(value);
   }
+
+  declare static [Symbol.hasInstance]: (value: unknown) => value is JSStringValue;
 }
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-symbol-type */
@@ -214,6 +226,8 @@ export class SymbolValue extends PrimitiveValue {
   static {
     Object.defineProperty(this.prototype, 'type', { value: 'Symbol' });
   }
+
+  declare static [Symbol.hasInstance]: (value: unknown) => value is SymbolValue;
 }
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-symbol-type */
@@ -479,6 +493,8 @@ export class NumberValue extends PrimitiveValue {
     Object.defineProperty(this.prototype, 'type', { value: 'Number' });
     createNumberValue = (value) => new NumberValue(value);
   }
+
+  declare static [Symbol.hasInstance]: (value: unknown) => value is NumberValue;
 }
 
 /** https://tc39.es/ecma262/#sec-numberbitwiseop */
@@ -670,6 +686,8 @@ export class BigIntValue extends PrimitiveValue {
     Object.defineProperty(this.prototype, 'type', { value: 'BigInt' });
     createBigIntValue = (value) => new BigIntValue(value);
   }
+
+  declare static [Symbol.hasInstance]: (value: unknown) => value is BigIntValue;
 }
 
 /** https://tc39.es/ecma262/#sec-bigintbitwiseop */
@@ -848,6 +866,8 @@ export class ObjectValue extends Value implements ObjectInternalMethods<ObjectVa
   static {
     Object.defineProperty(this.prototype, 'type', { value: 'Object' });
   }
+
+  declare static [Symbol.hasInstance]: (value: unknown) => value is ObjectValue;
 }
 
 /** https://tc39.es/ecma262/#sec-private-names */
