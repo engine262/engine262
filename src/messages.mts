@@ -48,7 +48,7 @@ export const CannotSetProperty = (p: PropertyKeyValue, o: unknown) => `Cannot se
 export const ClassMissingBindingIdentifier = () => 'Class declaration missing binding identifier';
 export const ConstDeclarationMissingInitializer = () => 'Missing initialization of const declaration';
 export const ConstructorNonCallable = (f: Value) => `${i(f)} cannot be invoked without new`;
-export const CouldNotResolveModule = (s: JSStringValue | '') => `Could not resolve module ${i(s)}`;
+export const CouldNotResolveModule = (s: JSStringValue | string) => `Could not resolve module ${i(s)}`;
 export const DataViewOOB = () => 'Offset is outside the bounds of the DataView';
 export const DeleteIdentifier = () => 'Delete of identifier in strict mode';
 export const DeletePrivateName = () => 'Private fields cannot be deleted';
@@ -92,8 +92,8 @@ export const ModuleUndefinedExport = (n: string) => `Export '${i(n)}' is not def
 export const NegativeIndex = (n: string) => `${n} cannot be negative`;
 export const NewlineAfterThrow = () => 'Illegal newline after throw';
 export const NormalizeInvalidForm = () => 'Invalid normalization form';
-export const NotAConstructor = (v: Value) => `${i(v)} is not a constructor`;
-export const NotAFunction = (v: Value) => `${i(v)} is not a function`;
+export const NotAConstructor = (v: Value | string) => `${i(v)} is not a constructor`;
+export const NotAFunction = (v: Value | string) => `${i(v)} is not a function`;
 export const NotATypeObject = (t: string, v: Value) => `${i(v)} is not a ${t} object`;
 export const NotAnObject = (v: Value) => `${i(v)} is not an object`;
 export const NotASymbol = (v: Value) => `${i(v)} is not a symbol`;
@@ -109,7 +109,7 @@ export const NumberFormatRange = (m: string) => `Invalid format range for ${m}`;
 export const ObjectToPrimitive = () => 'Cannot convert object to primitive value';
 export const ObjectPrototypeType = () => 'Object prototype must be an Object or null';
 export const ObjectSetPrototype = () => 'Could not set prototype of object';
-export const OutOfRange = (n: NumberValue | string | number) => `${i(n)} is out of range`;
+export const OutOfRange = (n: Value | string | number) => `${i(n)} is out of range`;
 export const PrivateNameNoGetter = (p: PrivateName) => `${i(p)} was defined without a getter`;
 export const PrivateNameNoSetter = (p: PrivateName) => `${i(p)} was defined without a setter`;
 export const PrivateNameIsMethod = (p: PrivateName) => `Private method ${i(p)} is not writable`;

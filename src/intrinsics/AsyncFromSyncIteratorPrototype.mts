@@ -87,6 +87,7 @@ function* AsyncFromSyncIteratorPrototype_return([value]: Arguments, { thisValue 
   }
   // 10. IfAbruptRejectPromise(result, promiseCapability).
   IfAbruptRejectPromise(result, promiseCapability);
+  __ts_cast__<Value>(result);
   // 11. If result is not an Object, then
   if (!(result instanceof ObjectValue)) {
     // a. Perform ! Call(promiseCapability.[[Reject]], undefined, « a newly created TypeError object »).
