@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 787089acf5d96b9dcc291845965a02a86102ca08
+ * engine262 0.0.1 1d59ebea63d8b925d080032d4ed6700f9b00bbf4
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -1686,10 +1686,12 @@ const Value = (_initClass => {
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types */
 const PrimitiveValue = (() => {
-  // NOTE: Using IIFE so that the class does not conflict with the type of the same name
-  // NOTE: Only using IIFE because TypeScript errors when `abstract` is used on class expressions
-  class PrimitiveValue extends Value {}
-  return PrimitiveValue;
+  return (() => {
+    // NOTE: Using nested IIFE so that the class does not conflict with the type of the same name
+    // NOTE: Only using IIFE because TypeScript errors when `abstract` is used on class expressions
+    class PrimitiveValue extends Value {}
+    return PrimitiveValue;
+  })();
 })();
 
 /** https://tc39.es/ecma262/#sec-ecmascript-language-types-undefined-type */
@@ -14602,11 +14604,12 @@ function* Evaluate_CaseClause({
 }
 Evaluate_CaseClause.section = 'https://tc39.es/ecma262/#sec-switch-statement-runtime-semantics-evaluation';
 
-// @ts-nocheck
-
 function i(V) {
   if (V instanceof Value) {
     return inspect(V);
+  }
+  if (V instanceof PrivateName) {
+    return `#${V.Description.stringValue()}`;
   }
   return `${V}`;
 }
@@ -14655,7 +14658,7 @@ const FunctionDeclarationStatement = () => 'Functions can only be declared at to
 const GeneratorRunning = () => 'Cannot manipulate a running generator';
 const IllegalBreakContinue = isBreak => `Illegal ${isBreak ? 'break' : 'continue'} statement`;
 const IllegalOctalEscape = () => 'Illegal octal escape';
-const InternalSlotMissing = (o, s) => `Internal slot ${s} is missing`;
+const InternalSlotMissing = (_o, s) => `Internal slot ${s} is missing`;
 const InvalidArrayLength = l => `Invalid array length: ${i(l)}`;
 const InvalidAssignmentTarget = () => 'Invalid assignment target';
 const InvalidCodePoint = () => 'Not a valid code point';
@@ -14703,7 +14706,7 @@ const NumberFormatRange = m => `Invalid format range for ${m}`;
 const ObjectToPrimitive = () => 'Cannot convert object to primitive value';
 const ObjectPrototypeType = () => 'Object prototype must be an Object or null';
 const ObjectSetPrototype = () => 'Could not set prototype of object';
-const OutOfRange = n => `${n} is out of range`;
+const OutOfRange = n => `${i(n)} is out of range`;
 const PrivateNameNoGetter = p => `${i(p)} was defined without a getter`;
 const PrivateNameNoSetter = p => `${i(p)} was defined without a setter`;
 const PrivateNameIsMethod = p => `Private method ${i(p)} is not writable`;
@@ -30661,7 +30664,7 @@ function* AsyncIteratorClose(iteratorRecord, completion) {
     return innerResult;
   }
   if (!(innerResult.Value instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', innerResult);
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', innerResult.Value);
   }
   return completion;
 }
@@ -50892,7 +50895,6 @@ function* AsyncFromSyncIteratorPrototype_return([value], {
     return promiseCapability.Promise;
   }
   if (result instanceof Completion) result = result.Value;
-  /* node:coverage enable */
   // 11. If result is not an Object, then
   if (!(result instanceof ObjectValue)) {
     /* X */
@@ -56337,7 +56339,7 @@ function* FinalizationRegistryConstructor([cleanupCallback = Value.undefined], {
 }) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget instanceof UndefinedValue) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', 'FinalizationRegistry');
+    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
   // 2. If IsCallable(cleanupCallback) is false, throw a TypeError exception.
   if (!IsCallable(cleanupCallback)) {
