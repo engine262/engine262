@@ -3,7 +3,8 @@ import {
   UndefinedValue, Value, type Arguments, type FunctionCallContext,
 } from '../value.mts';
 import {
-  IsCallable, OrdinaryCreateFromConstructor, Realm, type FunctionObject, type OrdinaryObject,
+  IsCallable, OrdinaryCreateFromConstructor, Realm,
+  type BuiltinFunctionObject, type FunctionObject, type OrdinaryObject,
 } from '../abstract-ops/all.mts';
 import { Q } from '../completion.mts';
 import type { Mutable } from '../helpers.mts';
@@ -23,10 +24,10 @@ export function isFinalizationRegistryObject(object: object): object is Finaliza
   return 'Cells' in object;
 }
 /** https://tc39.es/ecma262/#sec-finalization-registry-cleanup-callback */
-function* FinalizationRegistryConstructor([cleanupCallback = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
+function* FinalizationRegistryConstructor(this: BuiltinFunctionObject, [cleanupCallback = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
   if (NewTarget instanceof UndefinedValue) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', 'FinalizationRegistry');
+    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
   // 2. If IsCallable(cleanupCallback) is false, throw a TypeError exception.
   if (!IsCallable(cleanupCallback)) {

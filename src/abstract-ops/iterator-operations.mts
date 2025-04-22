@@ -228,7 +228,7 @@ export function* AsyncIteratorClose<T, C extends Completion<T>>(iteratorRecord: 
     return innerResult;
   }
   if (!(innerResult.Value instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', innerResult);
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', innerResult.Value);
   }
   return completion;
 }
