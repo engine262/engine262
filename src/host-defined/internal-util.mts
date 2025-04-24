@@ -1,8 +1,7 @@
 import {
   Assert, IsAccessorDescriptor, IsDataDescriptor, IsPropertyKey,
 } from '../abstract-ops/all.mts';
-import { Q } from '../completion.mts';
-import type { PlainEvaluator } from '../evaluator.mts';
+import { X } from '../completion.mts';
 import { isProxyExoticObject } from '../intrinsics/Proxy.mts';
 import {
   Descriptor, NullValue, ObjectValue, UndefinedValue, Value,
@@ -12,20 +11,20 @@ import {
 /**
  * Like `OrdinaryGet`, but doesn't call into proxies or invoke getters.
  */
-export function* getNoSideEffects(
+export function getNoSideEffects(
   O: ObjectValue,
   P: PropertyKeyValue,
-): PlainEvaluator<Value | (Descriptor & { Get: Value; Set: Value }) | undefined> {
+): Value | (Descriptor & { Get: Value; Set: Value }) | undefined {
   Assert(O instanceof ObjectValue && !isProxyExoticObject(O));
   Assert(IsPropertyKey(P));
 
-  const desc = Q(yield* O.GetOwnProperty(P));
+  const desc = X(O.GetOwnProperty(P));
   if (desc instanceof UndefinedValue) {
-    const parent = Q(yield* O.GetPrototypeOf());
+    const parent = X(O.GetPrototypeOf());
     if (parent instanceof NullValue || isProxyExoticObject(parent)) {
       return undefined;
     }
-    return Q(yield* getNoSideEffects(parent, P));
+    return getNoSideEffects(parent, P);
   }
 
   if (IsDataDescriptor(desc)) {

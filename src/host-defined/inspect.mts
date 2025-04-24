@@ -9,20 +9,19 @@ import {
   Assert, EscapeRegExpPattern,
   IsAccessorDescriptor, isArrayExoticObject,
   isArrayIndex, IsCallable, IsDataDescriptor,
-  isECMAScriptFunctionObject,
+  isECMAScriptFunctionObject, IsError,
   LengthOfArrayLike, R, Realm,
   type FunctionObject,
 } from '../abstract-ops/all.mts';
 import { Completion, X, type ValueCompletion } from '../completion.mts';
 import { isRegExpObject } from '../intrinsics/RegExp.mts';
-import type { DateObject } from '../intrinsics/Date.mts';
-import type { BooleanObject } from '../intrinsics/Boolean.mts';
+import { isDateObject } from '../intrinsics/Date.mts';
+import { isBooleanObject } from '../intrinsics/Boolean.mts';
 import type { NumberObject } from '../intrinsics/Number.mts';
-import type { BigIntObject } from '../intrinsics/BigInt.mts';
+import { isBigIntObject } from '../intrinsics/BigInt.mts';
 import type { StringObject } from '../intrinsics/String.mts';
 import type { SymbolObject } from '../intrinsics/Symbol.mts';
-import type { ErrorObject } from '../intrinsics/Error.mts';
-import type { PromiseObject } from '../intrinsics/Promise.mts';
+import { isPromiseObject } from '../intrinsics/Promise.mts';
 import { isProxyExoticObject } from '../intrinsics/Proxy.mts';
 import { isTypedArrayObject } from '../intrinsics/TypedArray.mts';
 import { __ts_cast__, OutOfRange } from '../helpers.mts';
@@ -60,7 +59,7 @@ function getConstructorName(v: ObjectValue) {
   let obj: ObjectValue | NullValue = v;
   do {
     try {
-      const desc = X(v.GetOwnProperty(Value('constructor')));
+      const desc = X(obj.GetOwnProperty(Value('constructor')));
       if (IsDataDescriptor(desc) && (desc.Value instanceof ObjectValue) && !isProxyExoticObject(desc.Value)) {
         const name = X(getNoSideEffects(desc.Value, Value('name')));
         if (name instanceof JSStringValue) {
@@ -227,7 +226,7 @@ function strEscape(str: string) {
     default:
       throw new OutOfRange(`strEscape: Invalid quote code point: ${quote}`, quote);
   }
-};
+}
 
 function getPrefix(constructor: string | null, tag: string, type: string, size = '') {
   let prefix;
@@ -247,7 +246,7 @@ function getPrefix(constructor: string | null, tag: string, type: string, size =
   }
 
   return prefix;
-};
+}
 
 function getBoxedBase(
   type: 'Date' | PrimitiveValue['type'],
@@ -343,7 +342,7 @@ const INSPECTORS = Object.freeze({
   String: (v: JSStringValue, ctx) => ctx.stylize(strEscape(v.stringValue()), 'string'),
   Symbol: (v: SymbolValue, ctx) => ctx.stylize(
     `Symbol(${v.Description instanceof UndefinedValue ? '' : v.Description.stringValue()})`,
-    'symbol'
+    'symbol',
   ),
   Object: (v: ObjectValue, ctx, i) => {
     if (ctx.inspected.includes(v)) {
@@ -387,30 +386,24 @@ ${'  '.repeat(ctx.indent - 1)}}`;
     const slots: Array<readonly [name: string, value: string]> = [];
     const cache: Array<readonly [key: string, value: string]> = [];
 
-    if ('PromiseState' in v) {
-      ctx.indent += 1;
-      const result = v.PromiseState === 'pending' ? ctx.stylize('undefined', 'undefined') : i((v as PromiseObject).PromiseResult!);
-      ctx.indent -= 1;
-
-      base = getPrefix(constructor, tag, 'Promise');
-      slots.push(
-        ['[[PromiseState]]', ctx.stylize((v as PromiseObject).PromiseState, 'special')],
-        ['[[PromiseResult]]', result],
-      );
-    }
-
-    if ('Call' in v) {
+    if (IsCallable(v)) {
       base = ctx.stylize(getFunctionBase(v as FunctionObject, constructor, tag), 'special');
       if (keys.length === 0) {
         return base;
       }
-    }
+    } else if (isPromiseObject(v)) {
+      ctx.indent += 1;
+      const result = v.PromiseState === 'pending' ? ctx.stylize('undefined', 'undefined') : i(v.PromiseResult!);
+      ctx.indent -= 1;
 
-    if ('ErrorData' in v) {
-      return (v as ErrorObject).ErrorData.stringValue();
-    }
-
-    if (isRegExpObject(v)) {
+      base = getPrefix(constructor, tag, 'Promise');
+      slots.push(
+        ['[[PromiseState]]', ctx.stylize(v.PromiseState, 'special')],
+        ['[[PromiseResult]]', result],
+      );
+    } else if (IsError(v)) {
+      return v.ErrorData.stringValue();
+    } else if (isRegExpObject(v)) {
       const P = EscapeRegExpPattern(v.OriginalSource, v.OriginalFlags).stringValue();
       const F = v.OriginalFlags.stringValue();
       base = `/${P}/${F}`;
@@ -425,65 +418,50 @@ ${'  '.repeat(ctx.indent - 1)}}`;
       if (keys.length === 0) {
         return base;
       }
-    }
-
-    if ('DateValue' in v) {
-      const d = new Date(R((v as DateObject).DateValue));
+    } else if (isDateObject(v)) {
+      const d = new Date(R(v.DateValue));
       const str = Number.isNaN(d.getTime()) ? 'Invalid' : d.toISOString();
       base = getBoxedBase('Date', str, ctx, i, constructor, tag);
       if (keys.length === 0) {
         return base;
       }
-    }
-
-    if ('BooleanData' in v) {
-      base = getBoxedBase('Boolean', (v as BooleanObject).BooleanData, ctx, i, constructor, tag);
+    } else if (isBooleanObject(v)) {
+      base = getBoxedBase('Boolean', v.BooleanData, ctx, i, constructor, tag);
       if (keys.length === 0) {
         return base;
       }
-    }
-    if ('NumberData' in v) {
+    } else if ('NumberData' in v) {
       base = getBoxedBase('Number', (v as NumberObject).NumberData, ctx, i, constructor, tag);
       if (keys.length === 0) {
         return base;
       }
-    }
-    if ('BigIntData' in v) {
-      base = getBoxedBase('BigInt', (v as BigIntObject).BigIntData, ctx, i, constructor, tag);
+    } else if (isBigIntObject(v)) {
+      base = getBoxedBase('BigInt', v.BigIntData, ctx, i, constructor, tag);
       if (keys.length === 0) {
         return base;
       }
-    }
-    if ('StringData' in v) {
+    } else if ('StringData' in v) {
       base = getBoxedBase('String', (v as StringObject).StringData, ctx, i, constructor, tag);
       if (keys.length === 0) {
         return base;
       }
-    }
-    if ('SymbolData' in v) {
+    } else if ('SymbolData' in v) {
       base = getBoxedBase('Symbol', (v as SymbolObject).SymbolData, ctx, i, constructor, tag);
       if (keys.length === 0) {
         return base;
       }
-    }
-
-    const isArgumentsObject = 'ParameterMap' in v;
-    if (isArgumentsObject) {
+    } else if ('ParameterMap' in v) {
       base = ctx.stylize('[Arguments]', 'special');
       if (keys.length === 0) {
-        return `${base} {}`;
+        return `${base} { }`;
       }
     }
 
-    let prefix = base ? `${base} ` : '';
-    if (!base && constructor === 'Object') {
-      if (tag !== '') {
-        prefix = getPrefix(constructor, tag, 'Object');
-      }
-      
-      if (keys.length === 0) {
-        return `${prefix}{}`;
-      }
+    let prefix = '';
+    if (base) {
+      prefix = `${base} `;
+    } else if (tag !== '' || constructor !== 'Object') {
+      prefix = getPrefix(constructor, tag, 'Object');
     }
 
     ctx.indent += 1;
@@ -496,7 +474,7 @@ ${'  '.repeat(ctx.indent - 1)}}`;
       const outArray = [];
       if (isArray || isTypedArray) {
         const length = X(LengthOfArrayLike(v));
-        
+
         if (isTypedArray) {
           prefix = getPrefix(constructor, tag, v.TypedArrayName.stringValue(), `(${length})`);
         } else {
@@ -564,7 +542,7 @@ ${'  '.repeat(ctx.indent - 1)}}`;
       }
       return outStr;
     } catch {
-      return base;
+      return base || '[object Unknown]';
     } finally {
       ctx.indent -= 1;
       ctx.inspected.pop();
