@@ -9,6 +9,7 @@ import { format as _format, inspect as _inspect, parseArgs } from 'node:util';
 // import packageJson from '../../package.json' with { type: 'json' };
 import { createRequire } from 'node:module';
 import { createConsole } from '../inspector/utils.mts';
+import type { NodeWebsocketInspector } from './inspector.mts';
 import {
   setSurroundingAgent, FEATURES, inspect, Value, Completion, AbruptCompletion,
   type Arguments,
@@ -25,7 +26,6 @@ import {
   ValueOfNormalCompletion,
   ScriptEvaluation,
 } from '#self';
-import type { NodeWebsocketInspector } from './inspector.mts';
 
 const packageJson = createRequire(import.meta.url)('../../package.json');
 const help = `
