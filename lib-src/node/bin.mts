@@ -9,6 +9,7 @@ import { format as _format, inspect as _inspect, parseArgs } from 'node:util';
 // import packageJson from '../../package.json' with { type: 'json' };
 import { createRequire } from 'node:module';
 import { createConsole } from '../inspector/utils.mts';
+import type { NodeWebsocketInspector } from './inspector.mts';
 import {
   setSurroundingAgent, FEATURES, inspect, Value, Completion, AbruptCompletion,
   type Arguments,
@@ -128,6 +129,7 @@ if (argv.values.test262) {
   createTest262Intrinsics(realm, argv.values.test262);
 }
 
+let inspector: NodeWebsocketInspector | undefined;
 if (argv.values.inspector !== false) {
   let has_ws = false;
   try {
@@ -140,11 +142,10 @@ if (argv.values.inspector !== false) {
     }
   }
   if (has_ws) {
-    // @ts-ignore
     const { NodeWebsocketInspector } = await import('./inspector.mts');
-    const inspect = await NodeWebsocketInspector.new();
-    inspect.attachAgent(surroundingAgent, [realm]);
-    inspect.preference.previewDebug = argv.values['preview-debug'] || false;
+    inspector = await NodeWebsocketInspector.new();
+    inspector.attachAgent(surroundingAgent, [realm]);
+    inspector.preference.previewDebug = argv.values['preview-debug'] || false;
   }
 }
 
@@ -175,6 +176,8 @@ function oneShotEval(source: string, filename: string) {
       process.exit(1);
     }
   });
+
+  inspector?.stop();
 }
 
 if (argv.positionals[0]) {
@@ -193,7 +196,7 @@ if (argv.positionals[0]) {
   process.stdout.write(`${packageJson.name} v${packageJson.version}
 Please report bugs to ${packageJson.bugs.url}
 `);
-  start({
+  const server = start({
     prompt: '> ',
     eval: (cmd, _context, _filename, callback) => {
       try {
@@ -222,4 +225,6 @@ Please report bugs to ${packageJson.bugs.url}
       return _inspect(o);
     }),
   });
+
+  server.on('exit', () => inspector?.stop());
 }
