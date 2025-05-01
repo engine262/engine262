@@ -1,4 +1,4 @@
-import { surroundingAgent, HostLoadImportedModule } from '../host-defined/engine.mts';
+import { surroundingAgent, HostLoadImportedModule, IncrementModuleAsyncEvaluationCount } from '../host-defined/engine.mts';
 import {
   CyclicModuleRecord,
   SyntheticModuleRecord,
@@ -208,16 +208,18 @@ export function* InnerModuleEvaluation(module: AbstractModuleRecord, stack: Cycl
           return EnsureCompletion(module.EvaluationError);
         }
       }
-      if (requiredModule.AsyncEvaluation === Value.true) {
+      if (typeof requiredModule.AsyncEvaluationOrder === 'number') {
         module.PendingAsyncDependencies += 1;
         requiredModule.AsyncParentModules.push(module);
       }
     }
   }
-  if (module.PendingAsyncDependencies > 0) {
-    module.AsyncEvaluation = Value.true;
-  } else if (module.HasTLA === Value.true) {
-    X(yield* ExecuteAsyncModule(module));
+  if (module.PendingAsyncDependencies > 0 || module.HasTLA === Value.true) {
+    Assert(module.AsyncEvaluationOrder === 'unset');
+    module.AsyncEvaluationOrder = IncrementModuleAsyncEvaluationCount();
+    if (module.PendingAsyncDependencies === 0) {
+      X(yield* ExecuteAsyncModule(module));
+    }
   } else {
     Q(yield* module.ExecuteModule());
   }
@@ -228,7 +230,8 @@ export function* InnerModuleEvaluation(module: AbstractModuleRecord, stack: Cycl
     while (done === false) {
       const requiredModule = stack.pop();
       Assert(requiredModule instanceof CyclicModuleRecord);
-      if (requiredModule.AsyncEvaluation === Value.false) {
+      Assert(typeof requiredModule.AsyncEvaluationOrder === 'number' || requiredModule.AsyncEvaluationOrder === 'unset');
+      if (requiredModule.AsyncEvaluationOrder === 'unset') {
         requiredModule.Status = 'evaluated';
       } else {
         requiredModule.Status = 'evaluating-async';
@@ -248,33 +251,31 @@ function* ExecuteAsyncModule(module: CyclicModuleRecord) {
   Assert(module.Status === 'evaluating' || module.Status === 'evaluating-async');
   // 2. Assert: module.[[HasTLA]] is true.
   Assert(module.HasTLA === Value.true);
-  // 3. Set module.[[AsyncEvaluation]] to true.
-  module.AsyncEvaluation = Value.true;
-  // 4. Let capability be ! NewPromiseCapability(%Promise%).
+  // 3. Let capability be ! NewPromiseCapability(%Promise%).
   const capability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
-  // 5. Let fulfilledClosure be a new Abstract Closure with no parameters that captures module and performs the following steps when called:
+  // 4. Let fulfilledClosure be a new Abstract Closure with no parameters that captures module and performs the following steps when called:
   function* fulfilledClosure() {
     // a. Perform ! AsyncModuleExecutionFulfilled(module).
     X(yield* AsyncModuleExecutionFulfilled(module));
     // b. Return undefined.
     return Value.undefined;
   }
-  // 6. Let onFulfilled be ! CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
+  // 5. Let onFulfilled be ! CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
   const onFulfilled = CreateBuiltinFunction(fulfilledClosure, 0, Value(''), ['Module']);
-  // 7. Let rejectedClosure be a new Abstract Closure with parameters (error) that captures module and performs the following steps when called:
+  // 6. Let rejectedClosure be a new Abstract Closure with parameters (error) that captures module and performs the following steps when called:
   const rejectedClosure = ([error = Value.undefined]: Arguments) => {
     // a. Perform ! AsyncModuleExecutionRejected(module, error).
     X(AsyncModuleExecutionRejected(module, error));
     // b. Return undefined.
     return Value.undefined;
   };
-  // 8. Let onRejected be ! CreateBuiltinFunction(rejectedClosure, 0, "", « »).
+  // 7. Let onRejected be ! CreateBuiltinFunction(rejectedClosure, 0, "", « »).
   const onRejected = CreateBuiltinFunction(rejectedClosure, 0, Value(''), ['Module']);
-  // 9. Perform ! PerformPromiseThen(capability.[[Promise]], onFulfilled, onRejected).
+  // 8. Perform ! PerformPromiseThen(capability.[[Promise]], onFulfilled, onRejected).
   X(PerformPromiseThen(capability.Promise, onFulfilled, onRejected));
-  // 10. Perform ! module.ExecuteModule(capability).
+  // 9. Perform ! module.ExecuteModule(capability).
   X(yield* (module as SourceTextModuleRecord).ExecuteModule(capability));
-  // 11. Return.
+  // 10. Return.
   return Value.undefined;
 }
 
@@ -284,7 +285,7 @@ function GatherAvailableAncestors(module: CyclicModuleRecord, execList: CyclicMo
     if (!execList.includes(m) && m.CycleRoot!.EvaluationError === undefined) {
       Assert(m.Status === 'evaluating-async');
       Assert(m.EvaluationError === undefined);
-      Assert(m.AsyncEvaluation === Value.true);
+      Assert(typeof m.AsyncEvaluationOrder === 'number');
       Assert(m.PendingAsyncDependencies! > 0);
       m.PendingAsyncDependencies! -= 1;
       if (m.PendingAsyncDependencies === 0) {
@@ -304,20 +305,19 @@ function* AsyncModuleExecutionFulfilled(module: CyclicModuleRecord): PlainEvalua
     return;
   }
   Assert(module.Status === 'evaluating-async');
-  Assert(module.AsyncEvaluation === Value.true);
+  Assert(typeof module.AsyncEvaluationOrder === 'number');
   Assert(module.EvaluationError === undefined);
-  module.AsyncEvaluation = Value.false;
+  module.AsyncEvaluationOrder = 'done';
   module.Status = 'evaluated';
   if (module.TopLevelCapability !== undefined) {
     Assert(module.CycleRoot === module);
     X(Call(module.TopLevelCapability.Resolve, Value.undefined, [Value.undefined]));
   }
+
   const execList: CyclicModuleRecord[] = [];
   GatherAvailableAncestors(module, execList);
-  // TODO: Sort this
-  // 10. Let sortedExecList be a List whose elements are the elements of execList, in the order in which they had their [[AsyncEvaluation]] fields set to true in InnerModuleEvaluation.
-  const sortedExecList = execList;
-  Assert(sortedExecList.every((m) => m.AsyncEvaluation === Value.true && m.PendingAsyncDependencies === 0 && m.EvaluationError === undefined));
+  Assert(execList.every((m) => typeof m.AsyncEvaluationOrder === 'number' && m.PendingAsyncDependencies === 0 && m.EvaluationError === undefined));
+  const sortedExecList = execList.toSorted((m1, m2) => (m1.AsyncEvaluationOrder as number) - (m2.AsyncEvaluationOrder as number));
 
   for (const m of sortedExecList) {
     if (m.Status === 'evaluated') {
@@ -329,6 +329,7 @@ function* AsyncModuleExecutionFulfilled(module: CyclicModuleRecord): PlainEvalua
       if (result instanceof AbruptCompletion) {
         X(AsyncModuleExecutionRejected(m, result.Value));
       } else {
+        m.AsyncEvaluationOrder = 'done';
         m.Status = 'evaluated';
         if (m.TopLevelCapability !== undefined) {
           Assert(m.CycleRoot === m);
@@ -346,10 +347,11 @@ function AsyncModuleExecutionRejected(module: CyclicModuleRecord, error: Value) 
     return;
   }
   Assert(module.Status === 'evaluating-async');
-  Assert(module.AsyncEvaluation === Value.true);
+  Assert(typeof module.AsyncEvaluationOrder === 'number');
   Assert(module.EvaluationError === undefined);
   module.EvaluationError = ThrowCompletion(error);
   module.Status = 'evaluated';
+  module.AsyncEvaluationOrder = 'done';
   for (const m of module.AsyncParentModules) {
     AsyncModuleExecutionRejected(m, error);
   }

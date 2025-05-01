@@ -115,7 +115,7 @@ export abstract class AbstractModuleRecord {
 
 export { AbstractModuleRecord as ModuleRecord };
 
-export type CyclicModuleRecordInit = AbstractModuleInit & Readonly<Pick<CyclicModuleRecord, 'Status' | 'EvaluationError' | 'DFSIndex' | 'DFSAncestorIndex' | 'RequestedModules' | 'LoadedModules' | 'CycleRoot' | 'HasTLA' | 'AsyncEvaluation' | 'TopLevelCapability' | 'AsyncParentModules' | 'PendingAsyncDependencies'>>;
+export type CyclicModuleRecordInit = AbstractModuleInit & Readonly<Pick<CyclicModuleRecord, 'Status' | 'EvaluationError' | 'DFSIndex' | 'DFSAncestorIndex' | 'RequestedModules' | 'LoadedModules' | 'CycleRoot' | 'HasTLA' | 'AsyncEvaluationOrder' | 'TopLevelCapability' | 'AsyncParentModules' | 'PendingAsyncDependencies'>>;
 export type CyclicModuleRecordStatus = 'new' | 'unlinked' | 'linking' | 'linked' | 'evaluating' | 'evaluating-async' | 'evaluated';
 /** https://tc39.es/ecma262/#sec-cyclic-module-records */
 export abstract class CyclicModuleRecord extends AbstractModuleRecord {
@@ -133,7 +133,7 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
 
   readonly HasTLA: BooleanValue;
 
-  AsyncEvaluation: BooleanValue;
+  AsyncEvaluationOrder: 'unset' | number | 'done';
 
   AsyncParentModules: CyclicModuleRecord[];
 
@@ -153,7 +153,7 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
     this.LoadedModules = init.LoadedModules;
     this.CycleRoot = init.CycleRoot;
     this.HasTLA = init.HasTLA;
-    this.AsyncEvaluation = init.AsyncEvaluation;
+    this.AsyncEvaluationOrder = init.AsyncEvaluationOrder;
     this.TopLevelCapability = init.TopLevelCapability;
     this.AsyncParentModules = init.AsyncParentModules;
     this.PendingAsyncDependencies = init.PendingAsyncDependencies;
@@ -239,9 +239,11 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
       for (const m of stack) {
         // i. Assert: m.[[Status]] is evaluating.
         Assert(m.Status === 'evaluating');
-        // ii. Set m.[[Status]] to evaluated.
+        // ii. Assert: m.[[AsyncEvaluationOrder]] is unset.
+        Assert(m.AsyncEvaluationOrder === 'unset');
+        // iii. Set m.[[Status]] to evaluated.
         m.Status = 'evaluated';
-        // iii. Set m.[[EvaluationError]] to result.
+        // iv. Set m.[[EvaluationError]] to result.
         m.EvaluationError = result;
       }
       // b. Assert: module.[[Status]] is evaluated and module.[[EvaluationError]] is result.
@@ -254,9 +256,11 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
       Assert(module.Status === 'evaluating-async' || module.Status === 'evaluated');
       // b. Assert: module.[[EvaluationError]] is ~empty~.
       Assert(module.EvaluationError === undefined);
-      // c. If module.[[AsyncEvaluation]] is false, then
-      if (module.AsyncEvaluation === Value.false) {
-        // i. Perform ! Call(capability.[[Resolve]], undefined, «undefined»).
+      // c. If module.[[Status]] is evaluated, then
+      if (module.Status === 'evaluated') {
+        // i. Assert: module.[[AsyncEvaluationOrder]] is unset.
+        Assert(module.AsyncEvaluationOrder === 'unset');
+        // ii. Perform ! Call(capability.[[Resolve]], undefined, «undefined»).
         X(Call(capability.Resolve, Value.undefined, [Value.undefined]));
       }
       // d. Assert: stack is empty.

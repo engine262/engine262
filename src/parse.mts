@@ -202,7 +202,7 @@ export function ParseModule(sourceText: string, realm: Realm, hostDefined: Modul
     StarExportEntries: starExportEntries,
     CycleRoot: undefined,
     HasTLA: body.hasTopLevelAwait ? Value.true : Value.false,
-    AsyncEvaluation: Value.false,
+    AsyncEvaluationOrder: 'unset',
     TopLevelCapability: undefined,
     AsyncParentModules: [],
     DFSIndex: undefined,
