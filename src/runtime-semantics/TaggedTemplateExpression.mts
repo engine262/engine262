@@ -1,19 +1,19 @@
-// @ts-nocheck
-import { Evaluate } from '../evaluator.mjs';
-import { GetValue } from '../abstract-ops/all.mjs';
-import { IsInTailPosition } from '../static-semantics/all.mjs';
-import { Q } from '../completion.mjs';
-import { EvaluateCall } from './all.mjs';
+import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
+import { GetValue } from '../abstract-ops/all.mts';
+import { IsInTailPosition } from '../static-semantics/all.mts';
+import { Q } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { EvaluateCall } from './all.mts';
 
-/** http://tc39.es/ecma262/#sec-tagged-templates-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-tagged-templates-runtime-semantics-evaluation */
 //   MemberExpression :
 //     MemberExpression TemplateLiteral
-export function* Evaluate_TaggedTemplateExpression(node) {
+export function* Evaluate_TaggedTemplateExpression(node: ParseNode.TaggedTemplateExpression): ValueEvaluator {
   const { MemberExpression, TemplateLiteral } = node;
-  // 1. Let tagRef be the result of evaluating MemberExpression.
-  const tagRef = yield* Evaluate(MemberExpression);
+  // 1. Let tagRef be ? Evaluation of MemberExpression.
+  const tagRef = Q(yield* Evaluate(MemberExpression));
   // 1. Let tagFunc be ? GetValue(tagRef).
-  const tagFunc = Q(GetValue(tagRef));
+  const tagFunc = Q(yield* GetValue(tagRef));
   // 1. Let thisCall be this MemberExpression.
   const thisCall = node;
   // 1. Let tailCall be IsInTailPosition(thisCall).

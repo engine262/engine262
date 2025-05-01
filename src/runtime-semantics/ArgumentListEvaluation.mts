@@ -1,9 +1,10 @@
-// @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Value, Descriptor } from '../value.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import { Q, X } from '../completion.mjs';
-import { OutOfRange } from '../helpers.mjs';
+import { surroundingAgent } from '../host-defined/engine.mts';
+import {
+  Value, Descriptor, type Arguments,
+} from '../value.mts';
+import { Evaluate, type PlainEvaluator } from '../evaluator.mts';
+import { Q, X } from '../completion.mts';
+import { OutOfRange, isArray } from '../helpers.mts';
 import {
   Assert,
   ArrayCreate,
@@ -11,14 +12,14 @@ import {
   ToString,
   GetIterator,
   GetValue,
-  IteratorStep,
-  IteratorValue,
   F,
-} from '../abstract-ops/all.mjs';
-import { TemplateStrings } from '../static-semantics/all.mjs';
+  IteratorStepValue,
+} from '../abstract-ops/all.mts';
+import { TemplateStrings } from '../static-semantics/all.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
-/** http://tc39.es/ecma262/#sec-gettemplateobjec */
-function GetTemplateObject(templateLiteral) {
+/** https://tc39.es/ecma262/#sec-gettemplateobjec */
+function GetTemplateObject(templateLiteral: ParseNode.TemplateLiteral) {
   // 1. Let realm be the current Realm Record.
   const realm = surroundingAgent.currentRealmRecord;
   // 2. Let templateRegistry be realm.[[TemplateMap]].
@@ -73,7 +74,7 @@ function GetTemplateObject(templateLiteral) {
   // 12. Perform SetIntegrityLevel(rawObj, frozen).
   X(SetIntegrityLevel(rawObj, 'frozen'));
   // 13. Perform SetIntegrityLevel(rawObj, frozen).
-  X(template.DefineOwnProperty(new Value('raw'), Descriptor({
+  X(template.DefineOwnProperty(Value('raw'), Descriptor({
     Value: rawObj,
     Writable: Value.false,
     Enumerable: Value.false,
@@ -87,17 +88,17 @@ function GetTemplateObject(templateLiteral) {
   return template;
 }
 
-/** http://tc39.es/ecma262/#sec-template-literals-runtime-semantics-argumentlistevaluation */
+/** https://tc39.es/ecma262/#sec-template-literals-runtime-semantics-argumentlistevaluation */
 //   TemplateLiteral : NoSubstitutionTemplate
 //
 // https://github.com/tc39/ecma262/pull/1402
 //   TemplateLiteral : SubstitutionTemplate
-function* ArgumentListEvaluation_TemplateLiteral(TemplateLiteral) {
+function* ArgumentListEvaluation_TemplateLiteral(TemplateLiteral: ParseNode.TemplateLiteral): PlainEvaluator<Arguments> {
   switch (true) {
     case TemplateLiteral.TemplateSpanList.length === 1: {
       const templateLiteral = TemplateLiteral;
       const siteObj = GetTemplateObject(templateLiteral);
-      return [siteObj];
+      return [siteObj] as Arguments;
     }
 
     case TemplateLiteral.TemplateSpanList.length > 1: {
@@ -105,11 +106,11 @@ function* ArgumentListEvaluation_TemplateLiteral(TemplateLiteral) {
       const siteObj = GetTemplateObject(templateLiteral);
       const restSub = [];
       for (const Expression of TemplateLiteral.ExpressionList) {
-        const subRef = yield* Evaluate(Expression);
-        const subValue = Q(GetValue(subRef));
+        const subRef = Q(yield* Evaluate(Expression));
+        const subValue = Q(yield* GetValue(subRef));
         restSub.push(subValue);
       }
-      return [siteObj, ...restSub];
+      return [siteObj, ...restSub] as Arguments;
     }
 
     default:
@@ -117,7 +118,7 @@ function* ArgumentListEvaluation_TemplateLiteral(TemplateLiteral) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-argument-lists-runtime-semantics-argumentlistevaluation */
+/** https://tc39.es/ecma262/#sec-argument-lists-runtime-semantics-argumentlistevaluation */
 //   Arguments : `(` `)`
 //   ArgumentList :
 //     AssignmentExpression
@@ -129,49 +130,47 @@ function* ArgumentListEvaluation_TemplateLiteral(TemplateLiteral) {
 //   Arguments :
 //     `(` ArgumentList `)`
 //     `(` ArgumentList `,` `)`
-function* ArgumentListEvaluation_Arguments(Arguments) {
+function* ArgumentListEvaluation_Arguments(Arguments: ParseNode.Arguments): PlainEvaluator<Arguments> {
   const precedingArgs = [];
   for (const element of Arguments) {
     if (element.type === 'AssignmentRestElement') {
       const { AssignmentExpression } = element;
       // 2. Let spreadRef be the result of evaluating AssignmentExpression.
-      const spreadRef = yield* Evaluate(AssignmentExpression);
+      const spreadRef = Q(yield* Evaluate(AssignmentExpression));
       // 3. Let spreadObj be ? GetValue(spreadRef).
-      const spreadObj = Q(GetValue(spreadRef));
+      const spreadObj = Q(yield* GetValue(spreadRef));
       // 4. Let iteratorRecord be ? GetIterator(spreadObj).
-      const iteratorRecord = Q(GetIterator(spreadObj));
+      const iteratorRecord = Q(yield* GetIterator(spreadObj, 'sync'));
       // 5. Repeat,
       while (true) {
-        // a. Let next be ? IteratorStep(iteratorRecord).
-        const next = Q(IteratorStep(iteratorRecord));
+        // a. Let next be ? IteratorStepValue(iteratorRecord).
+        const next = Q(yield* IteratorStepValue(iteratorRecord));
         // b. If next is false, return list.
-        if (next === Value.false) {
+        if (next === 'done') {
           break;
         }
-        // c. Let nextArg be ? IteratorValue(next).
-        const nextArg = Q(IteratorValue(next));
-        // d. Append nextArg as the last element of list.
-        precedingArgs.push(nextArg);
+        // d. Append next as the last element of list.
+        precedingArgs.push(next);
       }
     } else {
       const AssignmentExpression = element;
       // 2. Let ref be the result of evaluating AssignmentExpression.
-      const ref = yield* Evaluate(AssignmentExpression);
+      const ref = Q(yield* Evaluate(AssignmentExpression));
       // 3. Let arg be ? GetValue(ref).
-      const arg = Q(GetValue(ref));
+      const arg = Q(yield* GetValue(ref));
       // 4. Append arg to the end of precedingArgs.
       precedingArgs.push(arg);
       // 5. Return precedingArgs.
     }
   }
-  return precedingArgs;
+  return precedingArgs as Arguments;
 }
 
-export function ArgumentListEvaluation(ArgumentsOrTemplateLiteral) {
+export function ArgumentListEvaluation(ArgumentsOrTemplateLiteral: ParseNode | ParseNode.Arguments) {
   switch (true) {
-    case Array.isArray(ArgumentsOrTemplateLiteral):
+    case isArray(ArgumentsOrTemplateLiteral):
       return ArgumentListEvaluation_Arguments(ArgumentsOrTemplateLiteral);
-    case ArgumentsOrTemplateLiteral.type === 'TemplateLiteral':
+    case ('type' in ArgumentsOrTemplateLiteral && ArgumentsOrTemplateLiteral.type === 'TemplateLiteral'):
       return ArgumentListEvaluation_TemplateLiteral(ArgumentsOrTemplateLiteral);
     default:
       throw new OutOfRange('ArgumentListEvaluation', ArgumentsOrTemplateLiteral);

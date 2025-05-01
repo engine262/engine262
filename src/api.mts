@@ -1,47 +1,58 @@
-// @ts-nocheck
-import { Value } from './value.mjs';
+import { ObjectValue, Value, type PropertyKeyValue } from './value.mts';
 import {
   surroundingAgent,
   ExecutionContext,
   HostEnqueueFinalizationRegistryCleanupJob,
   ScriptEvaluation,
-} from './engine.mjs';
+  type Markable,
+  AgentSignifier,
+} from './host-defined/engine.mts';
 import {
   X,
   ThrowCompletion,
   AbruptCompletion,
-  EnsureCompletion,
-} from './completion.mjs';
+  type PlainCompletion,
+  type ValueCompletion,
+  NormalCompletion,
+  Q,
+} from './completion.mts';
 import {
   Realm,
   ClearKeptObjects,
   CreateIntrinsics,
-  SetRealmGlobalObject,
   SetDefaultGlobalBindings,
-} from './abstract-ops/all.mjs';
+  OrdinaryObjectCreate,
+  Assert,
+} from './abstract-ops/all.mts';
 import {
   ParseScript,
   ParseModule,
   ParseJSONModule,
-} from './parse.mjs';
-import { SourceTextModuleRecord } from './modules.mjs';
+  ScriptRecord,
+  type ParseScriptHostDefined,
+} from './parse.mts';
+import {
+  AbstractModuleRecord, ModuleRecord, SourceTextModuleRecord, type ModuleRecordHostDefined, type ModuleRecordHostDefinedPublic,
+} from './modules.mts';
+import * as messages from './messages.mts';
+import { isWeakRef, type WeakRefObject } from './intrinsics/WeakRef.mts';
+import { isFinalizationRegistryObject, type FinalizationRegistryObject } from './intrinsics/FinalizationRegistry.mts';
+import { isWeakMapObject, type WeakMapObject } from './intrinsics/WeakMap.mts';
+import { isWeakSetObject, type WeakSetObject } from './intrinsics/WeakSet.mts';
+import type { PromiseObject } from './intrinsics/Promise.mts';
+import type { ParseNode } from './parser/ParseNode.mts';
+import { skipDebugger } from './helpers.mts';
+import {
+  EnsureCompletion, GetModuleNamespace, GlobalEnvironmentRecord, type Intrinsics,
+  type ValueEvaluator,
+} from '#self';
 
-export * from './value.mjs';
-export * from './engine.mjs';
-export * from './completion.mjs';
-export * from './abstract-ops/all.mjs';
-export * from './static-semantics/all.mjs';
-export * from './runtime-semantics/all.mjs';
-export * from './environment.mjs';
-export * from './parse.mjs';
-export * from './modules.mjs';
-export * from './inspect.mjs';
-
-export function Throw(...args) {
-  return surroundingAgent.Throw(...args);
+export type ErrorType = 'AggregateError' | 'TypeError' | 'Error' | 'SyntaxError' | 'RangeError' | 'ReferenceError' | 'URIError';
+export function Throw<K extends keyof typeof messages>(type: ErrorType | Value, template: K, ...templateArgs: Parameters<typeof messages[K]>): ThrowCompletion {
+  return surroundingAgent.Throw(type, template, ...templateArgs);
 }
 
-/** http://tc39.es/ecma262/#sec-weakref-execution */
+/** https://tc39.es/ecma262/#sec-weakref-execution */
 export function gc() {
   // At any time, if a set of objects S is not live, an ECMAScript implementation may perform the following steps atomically:
   // 1. For each obj of S, do
@@ -56,14 +67,14 @@ export function gc() {
   //   d. For each WeakSet set such that set.[[WeakSetData]] contains obj,
   //     i. Replace the element of set whose value is obj with an element whose value is empty.
 
-  const marked = new Set();
-  const weakrefs = new Set();
-  const fgs = new Set();
-  const weakmaps = new Set();
-  const weaksets = new Set();
-  const ephemeronQueue = [];
+  const marked = new Set<unknown>();
+  const weakrefs = new Set<WeakRefObject>();
+  const fgs = new Set<FinalizationRegistryObject>();
+  const weakmaps = new Set<WeakMapObject>();
+  const weaksets = new Set<WeakSetObject>();
+  const ephemeronQueue: WeakMapObject['WeakMapData'][number][] = [];
 
-  const markCb = (O) => {
+  const markCb = (O: unknown) => {
     if (typeof O !== 'object' || O === null) {
       return;
     }
@@ -73,37 +84,37 @@ export function gc() {
     }
     marked.add(O);
 
-    if ('WeakRefTarget' in O && !('HeldValue' in O)) {
+    if (isWeakRef(O)) {
       weakrefs.add(O);
       markCb(O.properties);
       markCb(O.Prototype);
-    } else if ('Cells' in O) {
+    } else if (isFinalizationRegistryObject(O)) {
       fgs.add(O);
       markCb(O.properties);
       markCb(O.Prototype);
       O.Cells.forEach((cell) => {
         markCb(cell.HeldValue);
       });
-    } else if ('WeakMapData' in O) {
+    } else if (isWeakMapObject(O)) {
       weakmaps.add(O);
       markCb(O.properties);
       markCb(O.Prototype);
       O.WeakMapData.forEach((r) => {
         ephemeronQueue.push(r);
       });
-    } else if ('WeakSetData' in O) {
+    } else if (isWeakSetObject(O)) {
       weaksets.add(O);
       markCb(O.properties);
       markCb(O.Prototype);
-    } else if (O.mark) {
-      O.mark(markCb);
+    } else if ('mark' in O) {
+      (O as Markable).mark(markCb);
     }
   };
 
   markCb(surroundingAgent);
 
   while (ephemeronQueue.length > 0) {
-    const item = ephemeronQueue.shift();
+    const item = ephemeronQueue.shift()!;
     if (marked.has(item.Key)) {
       markCb(item.Value);
     }
@@ -159,7 +170,7 @@ export function runJobQueue() {
       job: abstractClosure,
       callerRealm,
       callerScriptOrModule,
-    } = surroundingAgent.jobQueue.shift();
+    } = surroundingAgent.jobQueue.shift()!;
 
     // 1. Perform any implementation-defined preparation steps.
     const newContext = new ExecutionContext();
@@ -176,74 +187,249 @@ export function runJobQueue() {
   }
 }
 
-export function evaluateScript(sourceText, realm, hostDefined) {
-  const s = ParseScript(sourceText, realm, hostDefined);
-  if (Array.isArray(s)) {
-    return ThrowCompletion(s[0]);
-  }
+export interface ManagedRealmHostDefined {
+  promiseRejectionTracker?(promise: PromiseObject, operation: 'reject' | 'handle'): void;
+  getImportMetaProperties?(module: ModuleRecordHostDefinedPublic): readonly { readonly Key: PropertyKeyValue, readonly Value: Value }[];
+  finalizeImportMeta?(meta: ObjectValue, module: ModuleRecordHostDefinedPublic): PlainCompletion<void>;
+  resolverCache?: Map<string, AbstractModuleRecord>;
 
-  return EnsureCompletion(ScriptEvaluation(s));
+  randomSeed?(): string;
+  attachingInspector?: unknown;
 }
-
 export class ManagedRealm extends Realm {
-  constructor(HostDefined = {}) {
-    super();
-    // CreateRealm()
-    CreateIntrinsics(this);
-    this.GlobalObject = Value.undefined;
-    this.GlobalEnv = Value.undefined;
-    this.TemplateMap = [];
-    this.LoadedModules = [];
+  override TemplateMap: { Site: ParseNode.TemplateLiteral; Array: ObjectValue; }[];
 
-    // InitializeHostDefinedRealm()
+  override AgentSignifier: unknown;
+
+  override Intrinsics: Intrinsics;
+
+  override randomState: BigUint64Array<ArrayBufferLike> | undefined;
+
+  override GlobalObject: ObjectValue;
+
+  override GlobalEnv: GlobalEnvironmentRecord;
+
+  override HostDefined: ManagedRealmHostDefined;
+
+  topContext: ExecutionContext;
+
+  active = false;
+
+  /** https://tc39.es/ecma262/#sec-initializehostdefinedrealm */
+  constructor(HostDefined: ManagedRealmHostDefined = {}) {
+    super();
+    this.Intrinsics = CreateIntrinsics(this);
+    this.AgentSignifier = AgentSignifier();
+    this.TemplateMap = [];
     const newContext = new ExecutionContext();
     newContext.Function = Value.null;
     newContext.Realm = this;
     newContext.ScriptOrModule = Value.null;
     surroundingAgent.executionContextStack.push(newContext);
-    SetRealmGlobalObject(this, Value.undefined, Value.undefined);
-    SetDefaultGlobalBindings(this);
+    // TODO: a host hook for exotic global object
+    const global = OrdinaryObjectCreate(this.Intrinsics['%Object.prototype%']);
+    // TODO: a host hook for global "this" binding
+    const thisValue = global;
+    this.GlobalObject = global;
+    this.GlobalEnv = new GlobalEnvironmentRecord(global, thisValue);
+    skipDebugger(SetDefaultGlobalBindings(this));
 
     // misc
     surroundingAgent.executionContextStack.pop(newContext);
     this.HostDefined = HostDefined;
     this.topContext = newContext;
-    this.active = false;
+
+    surroundingAgent.hostDefinedOptions.onRealmCreated?.(this);
   }
 
-  scope(cb) {
-    if (this.active) {
-      return cb();
+  scope(inspectorPreview?: boolean): Disposable | null;
+
+  scope<T>(cb: () => T, inspectorPreview?: boolean): T
+
+  scope<T>(arg0?: (() => T) | boolean, arg2?: boolean): T | Disposable | null {
+    if (typeof arg0 !== 'function') {
+      const inspectorPreview = arg0;
+      if (this.active) {
+        return null;
+      }
+      this.active = true;
+      surroundingAgent.executionContextStack.push(this.topContext);
+      using _ = inspectorPreview ? surroundingAgent.debugger_scopePreview() : null;
+      return {
+        [Symbol.dispose]: () => {
+          surroundingAgent.executionContextStack.pop(this.topContext);
+          this.active = false;
+        },
+      };
+    } else {
+      const callback = arg0;
+      if (this.active) {
+        return arg0();
+      }
+      this.active = true;
+      surroundingAgent.executionContextStack.push(this.topContext);
+      const result = arg2 ? surroundingAgent.debugger_scopePreview(callback) : callback();
+      surroundingAgent.executionContextStack.pop(this.topContext);
+      this.active = false;
+      return result;
     }
-    this.active = true;
-    surroundingAgent.executionContextStack.push(this.topContext);
-    const r = cb();
-    surroundingAgent.executionContextStack.pop(this.topContext);
-    this.active = false;
-    return r;
   }
 
-  evaluateScript(sourceText, { specifier } = {}) {
-    if (typeof sourceText !== 'string') {
-      throw new TypeError('sourceText must be a string');
-    }
-
-    const res = this.scope(() => {
-      const realm = surroundingAgent.currentRealmRecord;
-      return evaluateScript(sourceText, realm, {
-        specifier,
-        public: { specifier },
-      });
+  compileScript(sourceText: string, hostDefined?: ParseScriptHostDefined): PlainCompletion<ScriptRecord> {
+    return this.scope(() => {
+      const s = ParseScript(sourceText, this, hostDefined);
+      if (Array.isArray(s)) {
+        return ThrowCompletion(s[0]);
+      }
+      return NormalCompletion(s);
     });
+  }
 
-    if (!(res instanceof AbruptCompletion)) {
+  compileModule(sourceText: string, hostDefined?: ModuleRecordHostDefined) {
+    return this.scope(() => {
+      const s = ParseModule(sourceText, this, {
+        SourceTextModuleRecord: ManagedSourceTextModuleRecord,
+        ...hostDefined,
+      });
+      if (Array.isArray(s)) {
+        return ThrowCompletion(s[0]);
+      }
+      return NormalCompletion(s);
+    });
+  }
+
+  /**
+   * Call surroundingAgent.resumeEvaluate() to continue evaluation.
+   *
+   * This function will synchronously return a completion if this is a nested evaluation and debugger cannot be triggered.
+   */
+  evaluate(sourceText: ScriptRecord | ModuleRecord | ValueEvaluator, callback: (completion: NormalCompletion<Value> | ThrowCompletion) => void) {
+    if (!sourceText) {
+      throw new TypeError('sourceText is null or undefined');
+    }
+    let result: ValueCompletion | undefined;
+
+    if (sourceText instanceof ModuleRecord) {
+      const old = this.active;
+      this.active = true;
+      surroundingAgent.executionContextStack.push(this.topContext);
+
+      const loadModuleCompletion = sourceText.LoadRequestedModules();
+      const link = ((): PlainCompletion<void> => {
+        if (loadModuleCompletion.PromiseState === 'rejected') {
+          Q(Throw(loadModuleCompletion.PromiseResult!, 'Raw', 'Module load failed'));
+        } else if (loadModuleCompletion.PromiseState === 'pending') {
+          throw new Error('Internal error: .LoadRequestedModules() returned a pending promise');
+        }
+        Q(sourceText.Link());
+      })();
+      if (link instanceof ThrowCompletion) {
+        callback(link);
+        return link;
+      }
+      surroundingAgent.evaluate(sourceText.Evaluate(), (completion) => {
+        if (completion instanceof NormalCompletion && completion.Value.PromiseState === 'fulfilled') {
+          result = GetModuleNamespace(sourceText);
+        } else {
+          result = completion;
+        }
+        this.active = old;
+        surroundingAgent.executionContextStack.pop(this.topContext);
+        callback(EnsureCompletion(result));
+      });
+      return result;
+    } else if (sourceText instanceof ScriptRecord) {
+      const old = this.active;
+      this.active = true;
+      surroundingAgent.executionContextStack.push(this.topContext);
+
+      surroundingAgent.evaluate(ScriptEvaluation(sourceText), (completion) => {
+        this.active = old;
+        surroundingAgent.executionContextStack.pop(this.topContext);
+        result = completion;
+        callback(completion);
+      });
+      return result;
+    } else {
+      // this path only called by the inspector
+      Assert(!!surroundingAgent.hostDefinedOptions.onDebugger);
+      let emptyExecutionStack = false;
+      if (!surroundingAgent.runningExecutionContext) {
+        emptyExecutionStack = true;
+        this.active = true;
+        surroundingAgent.executionContextStack.push(this.topContext);
+      }
+      surroundingAgent.evaluate(sourceText, (completion) => {
+        result = completion;
+        if (emptyExecutionStack) {
+          this.active = false;
+          surroundingAgent.executionContextStack.pop(this.topContext);
+        }
+        callback(completion);
+      });
+      return result;
+    }
+  }
+
+  evaluateScript(sourceText: string | ScriptRecord, { specifier, doNotTrackScriptId }: { specifier?: string, doNotTrackScriptId?: boolean } = {}): ValueCompletion {
+    if (sourceText === undefined || sourceText === null) {
+      throw new TypeError('sourceText must be a string or a ScriptRecord');
+    }
+    if (typeof sourceText === 'string') {
+      sourceText = Q(this.compileScript(sourceText, { specifier, doNotTrackScriptId }));
+    }
+
+    let completion;
+    completion = this.evaluate(sourceText, (c) => {
+      completion = c;
+    });
+    if (!completion) {
+      surroundingAgent.resumeEvaluate({
+        noBreakpoint: true,
+      });
+    }
+    if (!completion) {
+      throw new Assert.Error('Expect evaluation completes synchronously');
+    }
+    if (!(completion instanceof AbruptCompletion)) {
       runJobQueue();
     }
 
-    return res;
+    return completion;
   }
 
-  createSourceTextModule(specifier, sourceText) {
+  evaluateModule(sourceText: string, specifier: string): PlainCompletion<SourceTextModuleRecord>
+
+  evaluateModule<T extends ModuleRecord>(sourceText: T, specifier: string): PlainCompletion<T>
+
+  evaluateModule(sourceText: string | ModuleRecord, specifier: string): PlainCompletion<ModuleRecord> {
+    if (sourceText === undefined || sourceText === null) {
+      throw new TypeError('sourceText must be a string or a ModuleRecord');
+    }
+    if (typeof sourceText === 'string') {
+      sourceText = Q(this.compileModule(sourceText, { specifier }));
+    }
+
+    let completion;
+    completion = this.evaluate(sourceText, (c) => {
+      completion = c;
+      if (!(completion instanceof AbruptCompletion)) {
+        runJobQueue();
+      }
+    });
+    if (!completion) {
+      surroundingAgent.resumeEvaluate({
+        noBreakpoint: true,
+      });
+    }
+
+    return sourceText;
+  }
+
+  /**
+   * @deprecated use compileModule
+   */
+  createSourceTextModule(specifier: string, sourceText: string): PlainCompletion<SourceTextModuleRecord> {
     if (typeof specifier !== 'string') {
       throw new TypeError('specifier must be a string');
     }
@@ -260,14 +446,14 @@ export class ManagedRealm extends Realm {
     return module;
   }
 
-  createJSONModule(specifier, sourceText) {
+  createJSONModule(specifier: string, sourceText: string) {
     if (typeof specifier !== 'string') {
       throw new TypeError('specifier must be a string');
     }
     if (typeof sourceText !== 'string') {
       throw new TypeError('sourceText must be a string');
     }
-    const module = this.scope(() => ParseJSONModule(new Value(sourceText), this, {
+    const module = this.scope(() => ParseJSONModule(Value(sourceText), this, {
       specifier,
     }));
     return module;
@@ -275,11 +461,9 @@ export class ManagedRealm extends Realm {
 }
 
 class ManagedSourceTextModuleRecord extends SourceTextModuleRecord {
-  Evaluate() {
-    const r = super.Evaluate();
-    if (!(r instanceof AbruptCompletion)) {
-      runJobQueue();
-    }
+  override* Evaluate() {
+    const r = yield* super.Evaluate();
+    runJobQueue();
     return r;
   }
 }

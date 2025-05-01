@@ -1,8 +1,10 @@
-// @ts-nocheck
-import { BoundNames, VarDeclaredNames } from './all.mjs';
+import { isArray } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import type { JSStringValue } from '../value.mts';
+import { BoundNames, VarDeclaredNames } from './all.mts';
 
-export function TopLevelVarDeclaredNames(node) {
-  if (Array.isArray(node)) {
+export function TopLevelVarDeclaredNames(node: ParseNode | readonly ParseNode[]): JSStringValue[] {
+  if (isArray(node)) {
     const names = [];
     for (const item of node) {
       names.push(...TopLevelVarDeclaredNames(item));

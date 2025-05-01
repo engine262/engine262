@@ -1,42 +1,50 @@
-// @ts-nocheck
 import {
   IsIntegralNumber,
   OrdinaryCreateFromConstructor,
   ToNumeric,
-  F,
-} from '../abstract-ops/all.mjs';
+  F, R,
+  Realm,
+  type OrdinaryObject,
+} from '../abstract-ops/all.mts';
 import {
   Descriptor,
   NumberValue,
   BigIntValue,
   Value,
-} from '../value.mjs';
-import { Q, X } from '../completion.mjs';
-import { bootstrapConstructor } from './bootstrap.mjs';
+  type Arguments,
+  type FunctionCallContext,
+  UndefinedValue,
+} from '../value.mts';
+import { Q, X, type ValueEvaluator } from '../completion.mts';
+import type { Mutable } from '../helpers.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 
-/** http://tc39.es/ecma262/#sec-number-constructor-number-value */
-function NumberConstructor([value], { NewTarget }) {
+export interface NumberObject extends OrdinaryObject {
+  readonly NumberData: NumberValue;
+}
+/** https://tc39.es/ecma262/#sec-number-constructor-number-value */
+function* NumberConstructor([value]: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
   let n;
   if (value !== undefined) {
-    const prim = Q(ToNumeric(value));
+    const prim = Q(yield* ToNumeric(value));
     if (prim instanceof BigIntValue) {
-      n = F(Number(prim.bigintValue()));
+      n = F(Number(R(prim)));
     } else {
       n = prim;
     }
   } else {
     n = F(+0);
   }
-  if (NewTarget === Value.undefined) {
+  if (NewTarget instanceof UndefinedValue) {
     return n;
   }
-  const O = OrdinaryCreateFromConstructor(NewTarget, '%Number.prototype%', ['NumberData']);
+  const O = (yield* OrdinaryCreateFromConstructor(NewTarget, '%Number.prototype%', ['NumberData'])) as Mutable<NumberObject>;
   O.NumberData = n;
   return O;
 }
 
-/** http://tc39.es/ecma262/#sec-number.isfinite */
-function Number_isFinite([number = Value.undefined]) {
+/** https://tc39.es/ecma262/#sec-number.isfinite */
+function Number_isFinite([number = Value.undefined]: Arguments) {
   if (!(number instanceof NumberValue)) {
     return Value.false;
   }
@@ -47,13 +55,13 @@ function Number_isFinite([number = Value.undefined]) {
   return Value.true;
 }
 
-/** http://tc39.es/ecma262/#sec-number.isinteger */
-function Number_isInteger([number = Value.undefined]) {
+/** https://tc39.es/ecma262/#sec-number.isinteger */
+function Number_isInteger([number = Value.undefined]: Arguments) {
   return X(IsIntegralNumber(number));
 }
 
-/** http://tc39.es/ecma262/#sec-number.isnan */
-function Number_isNaN([number = Value.undefined]) {
+/** https://tc39.es/ecma262/#sec-number.isnan */
+function Number_isNaN([number = Value.undefined]: Arguments) {
   if (!(number instanceof NumberValue)) {
     return Value.false;
   }
@@ -64,14 +72,14 @@ function Number_isNaN([number = Value.undefined]) {
   return Value.false;
 }
 
-/** http://tc39.es/ecma262/#sec-number.issafeinteger */
-function Number_isSafeInteger([number = Value.undefined]) {
+/** https://tc39.es/ecma262/#sec-number.issafeinteger */
+function Number_isSafeInteger([number = Value.undefined]: Arguments) {
   if (!(number instanceof NumberValue)) {
     return Value.false;
   }
 
   if (X(IsIntegralNumber(number)) === Value.true) {
-    if (Math.abs(number.numberValue()) <= (2 ** 53) - 1) {
+    if (Math.abs(R(number)) <= (2 ** 53) - 1) {
       return Value.true;
     }
   }
@@ -79,7 +87,7 @@ function Number_isSafeInteger([number = Value.undefined]) {
   return Value.false;
 }
 
-export function bootstrapNumber(realmRec) {
+export function bootstrapNumber(realmRec: Realm) {
   const override = {
     Writable: Value.false,
     Enumerable: Value.false,
@@ -101,18 +109,18 @@ export function bootstrapNumber(realmRec) {
     ['isSafeInteger', Number_isSafeInteger, 1],
   ]);
 
-  /** http://tc39.es/ecma262/#sec-number.parsefloat */
+  /** https://tc39.es/ecma262/#sec-number.parsefloat */
   // The value of the Number.parseFloat data property is the same built-in function object that is the value of the parseFloat property of the global object defined in 18.2.4.
-  X(numberConstructor.DefineOwnProperty(new Value('parseFloat'), Descriptor({
+  X(numberConstructor.DefineOwnProperty(Value('parseFloat'), Descriptor({
     Value: realmRec.Intrinsics['%parseFloat%'],
     Writable: Value.true,
     Enumerable: Value.false,
     Configurable: Value.true,
   })));
 
-  /** http://tc39.es/ecma262/#sec-number.parseint */
+  /** https://tc39.es/ecma262/#sec-number.parseint */
   // The value of the Number.parseInt data property is the same built-in function object that is the value of the parseInt property of the global object defined in 18.2.5.
-  X(numberConstructor.DefineOwnProperty(new Value('parseInt'), Descriptor({
+  X(numberConstructor.DefineOwnProperty(Value('parseInt'), Descriptor({
     Value: realmRec.Intrinsics['%parseInt%'],
     Writable: Value.true,
     Enumerable: Value.false,

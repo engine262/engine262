@@ -1,16 +1,13 @@
-// @ts-nocheck
-import { EnsureCompletion, X } from '../completion.mjs';
-import { surroundingAgent } from '../engine.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import { Value } from '../value.mjs';
-import { resume } from '../helpers.mjs';
-import { Assert, Call } from './all.mjs';
+import { resume } from '../helpers.mts';
+import {
+  EnsureCompletion, X, ExecutionContext, surroundingAgent, Evaluate, Value, type ParseNode, Assert, Call, PromiseCapabilityRecord,
+} from '#self';
 
 // This file covers abstract operations defined in
-/** http://tc39.es/ecma262/#sec-async-function-objects */
+/** https://tc39.es/ecma262/#sec-async-function-objects */
 
-/** http://tc39.es/ecma262/#sec-asyncblockstart */
-export function AsyncBlockStart(promiseCapability, asyncBody, asyncContext) {
+/** https://tc39.es/ecma262/#sec-asyncblockstart */
+export function* AsyncBlockStart(promiseCapability: PromiseCapabilityRecord, asyncBody: ParseNode.AsyncBody | ParseNode.ExpressionBody | ParseNode.Module, asyncContext: ExecutionContext) {
   asyncContext.promiseCapability = promiseCapability;
 
   const runningContext = surroundingAgent.runningExecutionContext;
@@ -29,15 +26,15 @@ export function AsyncBlockStart(promiseCapability, asyncBody, asyncContext) {
     return Value.undefined;
   }());
   surroundingAgent.executionContextStack.push(asyncContext);
-  const result = EnsureCompletion(resume(asyncContext, undefined));
+  const result = EnsureCompletion(yield* resume(asyncContext, { type: 'await-resume', value: Value.undefined }));
   Assert(surroundingAgent.runningExecutionContext === runningContext);
   Assert(result.Type === 'normal' && result.Value === Value.undefined);
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-async-functions-abstract-operations-async-function-start */
-export function AsyncFunctionStart(promiseCapability, asyncFunctionBody) {
+/** https://tc39.es/ecma262/#sec-async-functions-abstract-operations-async-function-start */
+export function* AsyncFunctionStart(promiseCapability: PromiseCapabilityRecord, asyncFunctionBody: ParseNode.AsyncBody | ParseNode.ExpressionBody) {
   const runningContext = surroundingAgent.runningExecutionContext;
   const asyncContext = runningContext.copy();
-  X(AsyncBlockStart(promiseCapability, asyncFunctionBody, asyncContext));
+  X(yield* AsyncBlockStart(promiseCapability, asyncFunctionBody, asyncContext));
 }

@@ -1,10 +1,10 @@
-// @ts-nocheck
-import { typedArrayInfoByName, F } from '../abstract-ops/all.mjs';
-import { Value } from '../value.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+import { F, Realm } from '../abstract-ops/all.mts';
+import { Value } from '../value.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
+import { typedArrayInfoByName, type TypedArrayConstructorNames } from './TypedArray.mts';
 
-/** http://tc39.es/ecma262/#sec-properties-of-typedarray-prototype-objects */
-export function bootstrapTypedArrayPrototypes(realmRec) {
+/** https://tc39.es/ecma262/#sec-properties-of-typedarray-prototype-objects */
+export function bootstrapTypedArrayPrototypes(realmRec: Realm) {
   Object.entries(typedArrayInfoByName).forEach(([TypedArray, info]) => {
     const proto = bootstrapPrototype(realmRec, [
       ['BYTES_PER_ELEMENT', F(info.ElementSize), undefined, {
@@ -12,6 +12,6 @@ export function bootstrapTypedArrayPrototypes(realmRec) {
         Configurable: Value.false,
       }],
     ], realmRec.Intrinsics['%TypedArray.prototype%']);
-    realmRec.Intrinsics[`%${TypedArray}.prototype%`] = proto;
+    realmRec.Intrinsics[`%${TypedArray as TypedArrayConstructorNames}.prototype%`] = proto;
   });
 }

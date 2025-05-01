@@ -1,18 +1,21 @@
-// @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Value } from '../value.mjs';
-import { Q } from '../completion.mjs';
+import { surroundingAgent } from '../host-defined/engine.mts';
+import {
+  DataBlock, Value, type Arguments, type FunctionCallContext,
+} from '../value.mts';
+import { Q } from '../completion.mts';
 import {
   RequireInternalSlot, IsDetachedBuffer, IsSharedArrayBuffer,
   SpeciesConstructor, Construct, ToIntegerOrInfinity, SameValue, CopyDataBlockBytes,
   F,
-} from '../abstract-ops/all.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+  Realm,
+  type ArrayBufferObject,
+} from '../abstract-ops/all.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 
-/** http://tc39.es/ecma262/#sec-get-arraybuffer.prototype.bytelength */
-function ArrayBufferProto_byteLength(args, { thisValue }) {
+/** https://tc39.es/ecma262/#sec-get-arraybuffer.prototype.bytelength */
+function ArrayBufferProto_byteLength(_args: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Let O be this value.
-  const O = thisValue;
+  const O = thisValue as ArrayBufferObject;
   // 2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
   Q(RequireInternalSlot(O, 'ArrayBufferData'));
   // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
@@ -29,10 +32,10 @@ function ArrayBufferProto_byteLength(args, { thisValue }) {
   return F(length);
 }
 
-/** http://tc39.es/ecma262/#sec-arraybuffer.prototype.slice */
-function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined], { thisValue }) {
+/** https://tc39.es/ecma262/#sec-arraybuffer.prototype.slice */
+function* ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Let O be the this value.
-  const O = thisValue;
+  const O = thisValue as ArrayBufferObject;
   // 2. Perform ? RequireInternalSlot(O, [[ArrayBufferData]]).
   Q(RequireInternalSlot(O, 'ArrayBufferData'));
   // 3. If IsSharedArrayBuffer(O) is true, throw a TypeError exception.
@@ -46,7 +49,7 @@ function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]
   // 5. Let len be O.[[ArrayBufferByteLength]].
   const len = O.ArrayBufferByteLength;
   // 6. Let relativeStart be ? ToIntegerOrInfinity(start).
-  const relativeStart = Q(ToIntegerOrInfinity(start));
+  const relativeStart = Q(yield* ToIntegerOrInfinity(start));
   let first;
   // 7. If relativeStart < 0, let first be max((len + relativeStart), 0); else let first be min(relativeStart, len).
   if (relativeStart < 0) {
@@ -59,7 +62,7 @@ function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]
   if (end === Value.undefined) {
     relativeEnd = len;
   } else {
-    relativeEnd = Q(ToIntegerOrInfinity(end));
+    relativeEnd = Q(yield* ToIntegerOrInfinity(end));
   }
   let final;
   // 9. If relativeEnd < 0, let final be max((len + relativeEnd), 0); else let final be min(relativeEnd, len).
@@ -71,9 +74,9 @@ function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]
   // 10. Let newLen be max(final - first, 0).
   const newLen = Math.max(final - first, 0);
   // 11. Let ctor be ? SpeciesConstructor(O, %ArrayBuffer%).
-  const ctor = Q(SpeciesConstructor(O, surroundingAgent.intrinsic('%ArrayBuffer%')));
+  const ctor = Q(yield* SpeciesConstructor(O, surroundingAgent.intrinsic('%ArrayBuffer%')));
   // 12. Let new be ? Construct(ctor, « newLen »).
-  const newO = Q(Construct(ctor, [F(newLen)]));
+  const newO = Q(yield* Construct(ctor, [F(newLen)])) as ArrayBufferObject;
   // 13. Perform ? RequireInternalSlot(new, [[ArrayBufferData]]).
   Q(RequireInternalSlot(newO, 'ArrayBufferData'));
   // 14. If IsSharedArrayBuffer(new) is true, throw a TypeError exception.
@@ -98,16 +101,16 @@ function ArrayBufferProto_slice([start = Value.undefined, end = Value.undefined]
     return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
   }
   // 20. Let fromBuf be O.[[ArrayBufferData]].
-  const fromBuf = O.ArrayBufferData;
+  const fromBuf = O.ArrayBufferData as DataBlock;
   // 21. Let toBuf be new.[[ArrayBufferData]].
-  const toBuf = newO.ArrayBufferData;
+  const toBuf = newO.ArrayBufferData as DataBlock;
   // 22. Perform CopyDataBlockBytes(toBuf, 0, fromBuf, first, newLen).
   CopyDataBlockBytes(toBuf, 0, fromBuf, first, newLen);
   // 23. Return new.
   return newO;
 }
 
-export function bootstrapArrayBufferPrototype(realmRec) {
+export function bootstrapArrayBufferPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['byteLength', [ArrayBufferProto_byteLength]],
     ['slice', ArrayBufferProto_slice, 2],

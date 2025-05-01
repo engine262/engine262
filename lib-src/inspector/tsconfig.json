@@ -1,0 +1,17 @@
+{
+  "references": [{ "path": "../../src/" }],
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "incremental": true,
+    "declarationDir": "../../lib/inspector",
+    "tsBuildInfoFile": "../../lib/inspector/.tsbuildinfo",
+    "erasableSyntaxOnly": true,
+    "rootDir": "./",
+    "outDir": "../../lib/inspector/",
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
+    "resolveJsonModule": true
+  },
+  "include": ["./*.mts"]
+}

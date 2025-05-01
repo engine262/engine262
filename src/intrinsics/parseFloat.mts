@@ -1,19 +1,19 @@
-// @ts-nocheck
 import {
   CreateBuiltinFunction,
   ToString,
   F,
-} from '../abstract-ops/all.mjs';
-import { Q, X } from '../completion.mjs';
-import { Value } from '../value.mjs';
+  Realm,
+} from '../abstract-ops/all.mts';
+import { Q, X, type ValueEvaluator } from '../completion.mts';
+import { Value, type Arguments } from '../value.mts';
 import {
   TrimString,
-} from '../runtime-semantics/all.mjs';
+} from '../runtime-semantics/all.mts';
 
-/** http://tc39.es/ecma262/#sec-parsefloat-string */
-function ParseFloat([string = Value.undefined]) {
+/** https://tc39.es/ecma262/#sec-parsefloat-string */
+function* ParseFloat([string = Value.undefined]: Arguments): ValueEvaluator {
   // 1. Let inputString be ? ToString(string).
-  const inputString = Q(ToString(string));
+  const inputString = Q(yield* ToString(string));
   // 2. Let trimmedString be ! TrimString(inputString, start).
   const trimmedString = X(TrimString(inputString, 'start')).stringValue();
   // 3. If neither trimmedString nor any prefix of trimmedString satisfies the syntax of a StrDecimalLiteral (see 7.1.4.1), return NaN.
@@ -73,6 +73,6 @@ function ParseFloat([string = Value.undefined]) {
   return F(parseFloat(numberString.slice(0, index)) * multiplier);
 }
 
-export function bootstrapParseFloat(realmRec) {
-  realmRec.Intrinsics['%parseFloat%'] = CreateBuiltinFunction(ParseFloat, 1, new Value('parseFloat'), [], realmRec);
+export function bootstrapParseFloat(realmRec: Realm) {
+  realmRec.Intrinsics['%parseFloat%'] = CreateBuiltinFunction(ParseFloat, 1, Value('parseFloat'), [], realmRec);
 }

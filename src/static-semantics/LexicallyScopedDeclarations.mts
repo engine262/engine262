@@ -1,8 +1,9 @@
-// @ts-nocheck
-import { TopLevelLexicallyScopedDeclarations, DeclarationPart } from './all.mjs';
+import { isArray } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { TopLevelLexicallyScopedDeclarations, DeclarationPart } from './all.mts';
 
-export function LexicallyScopedDeclarations(node) {
-  if (Array.isArray(node)) {
+export function LexicallyScopedDeclarations(node: ParseNode | readonly ParseNode[]): (ParseNode.Declaration | ParseNode.ExportDeclaration)[] {
+  if (isArray(node)) {
     const declarations = [];
     for (const item of node) {
       declarations.push(...LexicallyScopedDeclarations(item));
@@ -28,7 +29,7 @@ export function LexicallyScopedDeclarations(node) {
       return LexicallyScopedDeclarations(node.ModuleItemList);
     case 'FunctionBody':
     case 'GeneratorBody':
-    case 'AsyncFunctionBody':
+    case 'AsyncBody':
     case 'AsyncGeneratorBody':
       return TopLevelLexicallyScopedDeclarations(node.FunctionStatementList);
     case 'ClassStaticBlockBody':

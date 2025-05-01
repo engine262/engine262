@@ -1,29 +1,31 @@
-// @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Q, X } from '../completion.mjs';
-import { CreateDynamicFunction } from '../runtime-semantics/all.mjs';
-import { Descriptor, Value } from '../value.mjs';
-import { bootstrapConstructor } from './bootstrap.mjs';
+import { surroundingAgent } from '../host-defined/engine.mts';
+import { Q, X } from '../completion.mts';
+import { CreateDynamicFunction } from '../runtime-semantics/all.mts';
+import { Descriptor, Value } from '../value.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
+import type {
+  Arguments, ValueEvaluator, FunctionCallContext, FunctionObject, Realm,
+} from '#self';
 
-/** http://tc39.es/ecma262/#sec-asyncgeneratorfunction */
-function AsyncGeneratorFunctionConstructor(args, { NewTarget }) {
+/** https://tc39.es/ecma262/#sec-asyncgeneratorfunction */
+function* AsyncGeneratorFunctionConstructor(args: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
   // 1. Let C be the active function object.
-  const C = surroundingAgent.activeFunctionObject;
+  const C = surroundingAgent.activeFunctionObject as FunctionObject;
   // 2. Let args be the argumentsList that was passed to this function by [[Call]] or [[Construct]].
   // 3. Return ? CreateDynamicFunction(C, NewTarget, asyncGenerator, args).
-  return Q(CreateDynamicFunction(C, NewTarget, 'asyncGenerator', args));
+  return Q(yield* CreateDynamicFunction(C, NewTarget, 'asyncGenerator', args));
 }
 
-export function bootstrapAsyncGeneratorFunction(realmRec) {
+export function bootstrapAsyncGeneratorFunction(realmRec: Realm) {
   const cons = bootstrapConstructor(realmRec, AsyncGeneratorFunctionConstructor, 'AsyncGeneratorFunction', 1, realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'], []);
 
-  X(cons.DefineOwnProperty(new Value('prototype'), Descriptor({
+  X(cons.DefineOwnProperty(Value('prototype'), Descriptor({
     Writable: Value.false,
     Enumerable: Value.false,
     Configurable: Value.false,
   })));
 
-  X(realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%'].DefineOwnProperty(new Value('constructor'), Descriptor({
+  X((realmRec.Intrinsics['%AsyncGeneratorFunction.prototype%']).DefineOwnProperty(Value('constructor'), Descriptor({
     Writable: Value.false,
     Enumerable: Value.false,
     Configurable: Value.true,

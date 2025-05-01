@@ -1,4 +1,3 @@
-// @ts-nocheck
 import {
   Assert,
   DefinePropertyOrThrow,
@@ -8,18 +7,22 @@ import {
   OrdinaryObjectCreate,
   SetFunctionName,
   ToString,
-} from '../abstract-ops/all.mjs';
-import { Q, X } from '../completion.mjs';
+  type FunctionObject,
+  type Intrinsics,
+} from '../abstract-ops/all.mts';
+import { Q, ThrowCompletion, X } from '../completion.mts';
 import {
   HostEnsureCanCompileStrings,
   surroundingAgent,
-} from '../engine.mjs';
-import { wrappedParse } from '../parse.mjs';
-import { Token } from '../parser/tokens.mjs';
+} from '../host-defined/engine.mts';
+import { wrappedParse } from '../parse.mts';
+import { Token } from '../parser/tokens.mts';
 import {
   Descriptor, UndefinedValue, Value,
-} from '../value.mjs';
-import { OutOfRange } from '../helpers.mjs';
+  type Arguments,
+} from '../value.mts';
+import { __ts_cast__, OutOfRange } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
 // #table-dynamic-function-sourcetext-prefixes
 const DynamicFunctionSourceTextPrefixes = {
@@ -29,7 +32,7 @@ const DynamicFunctionSourceTextPrefixes = {
   'asyncGenerator': 'async function*',
 };
 
-export function CreateDynamicFunction(constructor, newTarget, kind, args) {
+export function* CreateDynamicFunction(constructor: FunctionObject, newTarget: FunctionObject | UndefinedValue, kind: 'normal' | 'generator' | 'async' | 'asyncGenerator', args: Arguments) {
   // 1. Assert: The execution context stack has at least two elements.
   Assert(surroundingAgent.executionContextStack.length >= 2);
   // 2. Let callerContext be the second to top element of the execution context stack.
@@ -45,7 +48,7 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
     newTarget = constructor;
   }
   // 7. If kind is normal, then
-  let fallbackProto;
+  let fallbackProto: keyof Intrinsics;
   if (kind === 'normal') {
     // a. Let goal be the grammar symbol FunctionBody[~Yield, ~Await].
     // b. Let parameterGoal be the grammar symbol FormalParameters[~Yield, ~Await].
@@ -57,7 +60,7 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
     // c. Let fallbackProto be "%GeneratorFunction.prototype%".
     fallbackProto = '%GeneratorFunction.prototype%';
   } else if (kind === 'async') { // 9. Else if kind is async, then
-    // a. Let goal be the grammar symbol AsyncFunctionBody.
+    // a. Let goal be the grammar symbol AsyncBody.
     // b. Let parameterGoal be the grammar symbol FormalParameters[~Yield, +Await].
     // c. Let fallbackProto be "%AsyncFunction.prototype%".
     fallbackProto = '%AsyncFunction.prototype%';
@@ -76,7 +79,7 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
   // 13. If argCount = 0, let bodyArg be the empty String.
   let bodyArg;
   if (argCount === 0) {
-    bodyArg = new Value('');
+    bodyArg = Value('');
   } else if (argCount === 1) { // 14. Else if argCount = 1, let bodyArg be args[0].
     bodyArg = args[0];
   } else { // 15. Else,
@@ -85,7 +88,7 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
     // b. Let firstArg be args[0].
     const firstArg = args[0];
     // c. Set P to ? ToString(firstArg).
-    P = Q(ToString(firstArg)).stringValue();
+    P = Q(yield* ToString(firstArg)).stringValue();
     // d. Let k be 1.
     let k = 1;
     // e. Repeat, while k < argCount - 1
@@ -93,7 +96,7 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
       // i. Let nextArg be args[k].
       const nextArg = args[k];
       // ii. Let nextArgString be ? ToString(nextArg).
-      const nextArgString = Q(ToString(nextArg));
+      const nextArgString = Q(yield* ToString(nextArg));
       // iii. Set P to the string-concatenation of the previous value of P, "," (a comma), and nextArgString.
       P = `${P},${nextArgString.stringValue()}`;
       // iv. Set k to k + 1.
@@ -103,7 +106,7 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
     bodyArg = args[k];
   }
   // 16. Let bodyString be the string-concatenation of 0x000A (LINE FEED), ? ToString(bodyArg), and 0x000A (LINE FEED).
-  const bodyString = `\u{000A}${Q(ToString(bodyArg)).stringValue()}\u{000A}`;
+  const bodyString = `\u{000A}${Q(yield* ToString(bodyArg)).stringValue()}\u{000A}`;
   // 17. Let prefix be the prefix associated with kind in Table 48.
   const prefix = DynamicFunctionSourceTextPrefixes[kind];
   // 18. Let sourceString be the string-concatenation of prefix, " anonymous(", P, 0x000A (LINE FEED), ") {", bodyString, and "}".
@@ -136,28 +139,29 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
       return r;
     });
     if (Array.isArray(f)) {
-      return surroundingAgent.Throw(f[0]);
+      return ThrowCompletion(f[0]);
     }
+    __ts_cast__<ParseNode.FunctionExpression | ParseNode.GeneratorExpression | ParseNode.AsyncFunctionExpression | ParseNode.AsyncGeneratorExpression>(f);
     parameters = f.FormalParameters;
     switch (kind) {
       case 'normal':
-        body = f.FunctionBody;
+        body = (f as ParseNode.FunctionExpression).FunctionBody;
         break;
       case 'generator':
-        body = f.GeneratorBody;
+        body = (f as ParseNode.GeneratorExpression).GeneratorBody;
         break;
       case 'async':
-        body = f.AsyncFunctionBody;
+        body = (f as ParseNode.AsyncFunctionExpression).AsyncBody;
         break;
       case 'asyncGenerator':
-        body = f.AsyncGeneratorBody;
+        body = (f as ParseNode.AsyncGeneratorExpression).AsyncGeneratorBody;
         break;
       default:
         throw new OutOfRange('kind', kind);
     }
   }
   // 21. Let proto be ? GetPrototypeFromConstructor(newTarget, fallbackProto).
-  const proto = Q(GetPrototypeFromConstructor(newTarget, fallbackProto));
+  const proto = Q(yield* GetPrototypeFromConstructor(newTarget, fallbackProto));
   // 22. Let realmF be the current Realm Record.
   const realmF = surroundingAgent.currentRealmRecord;
   // 23. Let scope be realmF.[[GlobalEnv]].
@@ -165,28 +169,28 @@ export function CreateDynamicFunction(constructor, newTarget, kind, args) {
   // 24. Let F be ! OrdinaryFunctionCreate(proto, sourceText, parameters, body, non-lexical-this, scope, null).
   const F = X(OrdinaryFunctionCreate(proto, sourceText, parameters, body, 'non-lexical-this', scope, Value.null));
   // 25. Perform SetFunctionName(F, "anonymous").
-  SetFunctionName(F, new Value('anonymous'));
+  SetFunctionName(F, Value('anonymous'));
   // 26. If kind is generator, then
   if (kind === 'generator') {
     // a. Let prototype be OrdinaryObjectCreate(%GeneratorFunction.prototype.prototype%).
     const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype%'));
     // b. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-    DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
+    X(DefinePropertyOrThrow(F, Value('prototype'), Descriptor({
       Value: prototype,
       Writable: Value.true,
       Enumerable: Value.false,
       Configurable: Value.false,
-    }));
+    })));
   } else if (kind === 'asyncGenerator') { // 27. Else if kind is asyncGenerator, then
     // a. Let prototype be OrdinaryObjectCreate(%AsyncGeneratorFunction.prototype.prototype%).
     const prototype = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncGeneratorFunction.prototype.prototype%'));
     // b. Perform DefinePropertyOrThrow(F, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
-    DefinePropertyOrThrow(F, new Value('prototype'), Descriptor({
+    X(DefinePropertyOrThrow(F, Value('prototype'), Descriptor({
       Value: prototype,
       Writable: Value.true,
       Enumerable: Value.false,
       Configurable: Value.false,
-    }));
+    })));
   } else if (kind === 'normal') { // 28. Else if kind is normal, then perform MakeConstructor(F).
     MakeConstructor(F);
   }

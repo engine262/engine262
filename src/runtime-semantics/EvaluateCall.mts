@@ -1,8 +1,7 @@
-// @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   ObjectValue, Value, ReferenceRecord,
-} from '../value.mjs';
+} from '../value.mts';
 import {
   Assert,
   IsPropertyReference,
@@ -10,13 +9,14 @@ import {
   GetThisValue,
   PrepareForTailCall,
   Call,
-} from '../abstract-ops/all.mjs';
-import { Q, Completion, AbruptCompletion } from '../completion.mjs';
-import { EnvironmentRecord } from '../environment.mjs';
-import { ArgumentListEvaluation } from './all.mjs';
+} from '../abstract-ops/all.mts';
+import { Q, Completion, AbruptCompletion } from '../completion.mts';
+import { EnvironmentRecord } from '../environment.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { ArgumentListEvaluation } from './all.mts';
 
-/** http://tc39.es/ecma262/#sec-evaluatecall */
-export function* EvaluateCall(func, ref, args, tailPosition) {
+/** https://tc39.es/ecma262/#sec-evaluatecall */
+export function* EvaluateCall(func: Value, ref: ReferenceRecord | Value, args: ParseNode | ParseNode.Arguments, tailPosition: boolean) {
   // 1. If Type(ref) is Reference, then
   let thisValue;
   if (ref instanceof ReferenceRecord) {
@@ -43,7 +43,7 @@ export function* EvaluateCall(func, ref, args, tailPosition) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
   }
   // 5. If IsCallable(func) is false, throw a TypeError exception.
-  if (IsCallable(func) === Value.false) {
+  if (!IsCallable(func)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
   }
   // 6. If tailPosition is true, perform PrepareForTailCall().
@@ -51,7 +51,7 @@ export function* EvaluateCall(func, ref, args, tailPosition) {
     PrepareForTailCall();
   }
   // 7. Let result be Call(func, thisValue, argList).
-  const result = Call(func, thisValue, argList);
+  const result = yield* Call(func, thisValue, argList);
   // 8. Assert: If tailPosition is true, the above call will not return here but instead
   //    evaluation will continue as if the following return has already occurred.
   // 9. Assert: If result is not an abrupt completion, then Type(result) is an ECMAScript language type.

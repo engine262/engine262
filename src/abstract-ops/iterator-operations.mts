@@ -1,11 +1,13 @@
-// @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   BooleanValue,
+  JSStringValue,
   ObjectValue,
+  UndefinedValue,
   Value,
   wellKnownSymbols,
-} from '../value.mjs';
+  type Arguments,
+} from '../value.mts';
 import {
   Completion,
   EnsureCompletion,
@@ -13,199 +15,241 @@ import {
   Q, X,
   Await,
   NormalCompletion,
-} from '../completion.mjs';
+  type ValueEvaluator,
+  ThrowCompletion,
+  AbruptCompletion,
+} from '../completion.mts';
+import { __ts_cast__, type Mutable } from '../helpers.mts';
+import type { AsyncFromSyncIteratorObject } from '../intrinsics/AsyncFromSyncIteratorPrototype.mts';
+import type {
+  Evaluator, PlainEvaluator, YieldEvaluator,
+} from '../evaluator.mts';
 import {
   Assert,
   Call,
   CreateBuiltinFunction,
-  CreateDataProperty,
   Get,
   GetMethod,
-  GetV,
   PromiseResolve,
   OrdinaryObjectCreate,
   PerformPromiseThen,
   ToBoolean,
-  Yield,
   CreateIteratorFromClosure,
-} from './all.mjs';
+  type FunctionObject,
+  PromiseCapabilityRecord,
+  CreateDataPropertyOrThrow,
+  GeneratorYield,
+} from './all.mts';
+import type { ValueCompletion, PromiseObject, OrdinaryObject } from '#self';
 
 // This file covers abstract operations defined in
-/** http://tc39.es/ecma262/#sec-operations-on-iterator-objects */
+/** https://tc39.es/ecma262/#sec-operations-on-iterator-objects */
 // and
-/** http://tc39.es/ecma262/#sec-iteration */
+/** https://tc39.es/ecma262/#sec-iteration */
 
-/** http://tc39.es/ecma262/#sec-getiterator */
-export function GetIterator(obj, hint, method) {
-  if (!hint) {
-    hint = 'sync';
-  }
-  Assert(hint === 'sync' || hint === 'async');
-  if (!method) {
-    if (hint === 'async') {
-      method = Q(GetMethod(obj, wellKnownSymbols.asyncIterator));
-      if (method === Value.undefined) {
-        const syncMethod = Q(GetMethod(obj, wellKnownSymbols.iterator));
-        const syncIteratorRecord = Q(GetIterator(obj, 'sync', syncMethod));
-        return Q(CreateAsyncFromSyncIterator(syncIteratorRecord));
-      }
-    } else {
-      method = Q(GetMethod(obj, wellKnownSymbols.iterator));
-    }
-  }
-  const iterator = Q(Call(method, obj));
-  if (!(iterator instanceof ObjectValue)) {
-    return surroundingAgent.Throw('TypeError', 'NotAnObject', iterator);
-  }
-  const nextMethod = Q(GetV(iterator, new Value('next')));
-  const iteratorRecord = {
-    Iterator: iterator,
+export interface IteratorRecord {
+  readonly Iterator: ObjectValue;
+  readonly NextMethod: Value;
+  Done: BooleanValue;
+}
+
+export interface IteratorObject extends OrdinaryObject {
+  Iterated: IteratorRecord;
+}
+
+/** https://tc39.es/ecma262/#sec-getiteratordirect */
+export function* GetIteratorDirect(obj: ObjectValue): PlainEvaluator<IteratorRecord> {
+  const nextMethod = Q(yield* Get(obj, Value('next')));
+  const iteratorRecord: IteratorRecord = {
+    Iterator: obj,
     NextMethod: nextMethod,
     Done: Value.false,
   };
-  return EnsureCompletion(iteratorRecord);
+  return iteratorRecord;
 }
 
-/** http://tc39.es/ecma262/#sec-iteratornext */
-export function IteratorNext(iteratorRecord, value) {
+/** https://tc39.es/ecma262/#sec-getiteratorfrommethod */
+export function* GetIteratorFromMethod(obj: Value, method: FunctionObject): PlainEvaluator<IteratorRecord> {
+  const iterator = Q(yield* Call(method, obj));
+  if (!(iterator instanceof ObjectValue)) {
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', iterator);
+  }
+  return yield* GetIteratorDirect(iterator);
+}
+
+/** https://tc39.es/ecma262/#sec-getiterator */
+export function* GetIterator(obj: Value, kind: 'sync' | 'async'): PlainEvaluator<IteratorRecord> {
+  let method;
+  if (kind === 'async') {
+    method = Q(yield* GetMethod(obj, wellKnownSymbols.asyncIterator));
+    if (method === Value.undefined) {
+      const syncMethod = Q(yield* GetMethod(obj, wellKnownSymbols.iterator));
+      if (syncMethod instanceof UndefinedValue) {
+        return surroundingAgent.Throw('TypeError', 'NotIterable', obj);
+      }
+      const syncIteratorRecord = Q(yield* GetIteratorFromMethod(obj, syncMethod));
+      return CreateAsyncFromSyncIterator(syncIteratorRecord);
+    }
+  } else {
+    method = Q(yield* GetMethod(obj, wellKnownSymbols.iterator));
+  }
+  if (method instanceof UndefinedValue) {
+    return surroundingAgent.Throw('TypeError', 'NotIterable', obj);
+  }
+  return yield* GetIteratorFromMethod(obj, method);
+}
+
+export type PrimitiveHanding = 'iterate-string-primitives' | 'reject-primitives'
+export function* GetIteratorFlattenable(obj: Value, primitiveHandling: PrimitiveHanding): PlainEvaluator<IteratorRecord> {
+  if (!(obj instanceof ObjectValue)) {
+    if (primitiveHandling === 'reject-primitives') {
+      return surroundingAgent.Throw('TypeError', 'NotAnObject', obj);
+    }
+    Assert(primitiveHandling === 'iterate-string-primitives');
+    if (!(obj instanceof JSStringValue)) {
+      return surroundingAgent.Throw('TypeError', 'NotAString', obj);
+    }
+  }
+  const method = Q(yield* GetMethod(obj, wellKnownSymbols.iterator));
+  let iterator;
+  if (method instanceof UndefinedValue) {
+    iterator = obj;
+  } else {
+    iterator = Q(yield* Call(method, obj));
+  }
+  if (!(iterator instanceof ObjectValue)) {
+    return surroundingAgent.Throw('TypeError', 'NotAnObject', iterator);
+  }
+  return yield* GetIteratorDirect(iterator);
+}
+
+/** https://tc39.es/ecma262/#sec-iteratornext */
+export function* IteratorNext(iteratorRecord: IteratorRecord, value?: Value): ValueEvaluator<ObjectValue> {
   let result;
   if (!value) {
-    result = Q(Call(iteratorRecord.NextMethod, iteratorRecord.Iterator));
+    result = EnsureCompletion(yield* Call(iteratorRecord.NextMethod, iteratorRecord.Iterator));
   } else {
-    result = Q(Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, [value]));
+    result = EnsureCompletion(yield* Call(iteratorRecord.NextMethod, iteratorRecord.Iterator, [value]));
   }
+  if (result instanceof ThrowCompletion) {
+    iteratorRecord.Done = Value.true;
+    return Q(result);
+  }
+  result = X(result);
   if (!(result instanceof ObjectValue)) {
+    iteratorRecord.Done = Value.true;
     return surroundingAgent.Throw('TypeError', 'NotAnObject', result);
   }
-  return EnsureCompletion(result);
+  return result;
 }
 
-/** http://tc39.es/ecma262/#sec-iteratorcomplete */
-export function IteratorComplete(iterResult) {
-  Assert(iterResult instanceof ObjectValue);
-  return EnsureCompletion(ToBoolean(Q(Get(iterResult, new Value('done')))));
+/** https://tc39.es/ecma262/#sec-iteratorcomplete */
+export function* IteratorComplete(iteratorResult: ObjectValue): ValueEvaluator<BooleanValue> {
+  return ToBoolean(Q(yield* Get(iteratorResult, Value('done'))));
 }
 
-/** http://tc39.es/ecma262/#sec-iteratorvalue */
-export function IteratorValue(iterResult) {
-  Assert(iterResult instanceof ObjectValue);
-  return EnsureCompletion(Q(Get(iterResult, new Value('value'))));
+/** https://tc39.es/ecma262/#sec-iteratorvalue */
+export function IteratorValue(iterResult: ObjectValue): ValueEvaluator {
+  return Get(iterResult, Value('value'));
 }
 
-/** http://tc39.es/ecma262/#sec-iteratorstep */
-export function IteratorStep(iteratorRecord) {
-  const result = Q(IteratorNext(iteratorRecord));
-  const done = Q(IteratorComplete(result));
+/** https://tc39.es/ecma262/#sec-iteratorstep */
+export function* IteratorStep(iteratorRecord: IteratorRecord): PlainEvaluator<ObjectValue | 'done'> {
+  const result = Q(yield* IteratorNext(iteratorRecord));
+  let done: ValueCompletion = EnsureCompletion(yield* IteratorComplete(result));
+  if (done instanceof ThrowCompletion) {
+    iteratorRecord.Done = Value.true;
+    return done;
+  }
+  done = X(done);
   if (done === Value.true) {
-    return EnsureCompletion(Value.false);
+    iteratorRecord.Done = Value.true;
+    return 'done';
   }
-  return EnsureCompletion(result);
+  return result;
 }
 
-/** http://tc39.es/ecma262/#sec-iteratorclose */
-export function IteratorClose(iteratorRecord, completion) {
-  // 1. Assert: Type(iteratorRecord.[[Iterator]]) is Object.
+/** https://tc39.es/ecma262/#sec-iteratorstepvalue */
+export function* IteratorStepValue(iteratorRecord: IteratorRecord): PlainEvaluator<Value | 'done'> {
+  const result = Q(yield* IteratorStep(iteratorRecord));
+  if (result === 'done') {
+    return 'done';
+  }
+  const value = EnsureCompletion(yield* IteratorValue(result));
+  if (value instanceof ThrowCompletion) {
+    iteratorRecord.Done = Value.true;
+  }
+  return value;
+}
+
+/** https://tc39.es/ecma262/#sec-iteratorclose */
+export function* IteratorClose<T, C extends Completion<T>>(iteratorRecord: IteratorRecord, completion: C): Evaluator<C | ThrowCompletion> {
   Assert(iteratorRecord.Iterator instanceof ObjectValue);
-  // 2. Assert: completion is a Completion Record.
-  // TODO: completion should be a Completion Record so this should not be necessary
-  completion = EnsureCompletion(completion);
-  Assert(completion instanceof Completion);
-  // 3. Let iterator be iteratorRecord.[[Iterator]].
   const iterator = iteratorRecord.Iterator;
-  // 4. Let innerResult be GetMethod(iterator, "return").
-  let innerResult = EnsureCompletion(GetMethod(iterator, new Value('return')));
-  // 5. If innerResult.[[Type]] is normal, then
-  if (innerResult.Type === 'normal') {
-    // a. Let return be innerResult.[[Value]].
+  let innerResult: ValueCompletion = EnsureCompletion(yield* GetMethod(iterator, Value('return')));
+  if (innerResult instanceof NormalCompletion) {
     const ret = innerResult.Value;
-    // b. If return is undefined, return Completion(completion).
     if (ret === Value.undefined) {
-      return Completion(completion);
+      return completion;
     }
-    // c. Set innerResult to Call(return, iterator).
-    innerResult = Call(ret, iterator);
+    innerResult = EnsureCompletion(yield* Call(ret, iterator));
   }
-  // 6. If completion.[[Type]] is throw, return Completion(completion).
-  if (completion.Type === 'throw') {
-    return Completion(completion);
+  if (completion instanceof ThrowCompletion) {
+    return completion;
   }
-  // 7. If innerResult.[[Type]] is throw, return Completion(innerResult).
-  if (innerResult.Type === 'throw') {
-    return Completion(innerResult);
+  if (innerResult instanceof ThrowCompletion) {
+    return innerResult;
   }
-  // 8. If Type(innerResult.[[Value]]) is not Object, throw a TypeError exception.
   if (!(innerResult.Value instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', innerResult.Value);
   }
-  // 9. Return Completion(completion).
-  return Completion(completion);
+  return completion;
 }
 
-/** http://tc39.es/ecma262/#sec-asynciteratorclose */
-export function* AsyncIteratorClose(iteratorRecord, completion) {
-  // 1. Assert: Type(iteratorRecord.[[Iterator]]) is Object.
+/** https://tc39.es/ecma262/#sec-asynciteratorclose */
+export function* AsyncIteratorClose<T, C extends Completion<T>>(iteratorRecord: IteratorRecord, completion: C | T) {
   Assert(iteratorRecord.Iterator instanceof ObjectValue);
-  // 2. Assert: completion is a Completion Record.
-  Assert(completion instanceof Completion);
-  // 3. Let iterator be iteratorRecord.[[Iterator]].
   const iterator = iteratorRecord.Iterator;
-  // 4. Let innerResult be GetMethod(iterator, "return").
-  let innerResult = EnsureCompletion(GetMethod(iterator, new Value('return')));
-  // 5. If innerResult.[[Type]] is normal, then
-  if (innerResult.Type === 'normal') {
-    // a. Let return be innerResult.[[Value]].
+  let innerResult: NormalCompletion<Value> | ThrowCompletion = EnsureCompletion(yield* GetMethod(iterator, Value('return')));
+  if (innerResult instanceof NormalCompletion) {
     const ret = innerResult.Value;
-    // b. If return is undefined, return Completion(completion).
-    if (ret === Value.undefined) {
-      return Completion(completion);
+    if (ret instanceof UndefinedValue) {
+      return completion;
     }
-    // c. Set innerResult to Call(return, iterator).
-    innerResult = Call(ret, iterator);
-    // d. If innerResult.[[Type]] is normal, set innerResult to Await(innerResult.[[Value]]).
-    if (innerResult.Type === 'normal') {
+    innerResult = EnsureCompletion(yield* Call(ret, iterator));
+    if (innerResult instanceof NormalCompletion) {
       innerResult = EnsureCompletion(yield* Await(innerResult.Value));
     }
   }
-  // 6. If completion.[[Type]] is throw, return Completion(completion).
-  if (completion.Type === 'throw') {
-    return Completion(completion);
+  if (completion instanceof ThrowCompletion) {
+    return completion;
   }
-  // 7. If innerResult.[[Type]] is throw, return Completion(innerResult).
-  if (innerResult.Type === 'throw') {
-    return Completion(innerResult);
+  if (innerResult instanceof ThrowCompletion) {
+    return innerResult;
   }
-  // 8. If Type(innerResult.[[Value]]) is not Object, throw a TypeError exception.
   if (!(innerResult.Value instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotAnObject', innerResult.Value);
   }
-  // 9. Return Completion(completion).
-  return Completion(completion);
+  return completion;
 }
 
-/** http://tc39.es/ecma262/#sec-createiterresultobject */
-export function CreateIterResultObject(value, done) {
-  Assert(done instanceof BooleanValue);
+/** https://tc39.es/ecma262/#sec-createiterresultobject */
+export function CreateIteratorResultObject(value: Value, done: BooleanValue) {
   const obj = OrdinaryObjectCreate(surroundingAgent.intrinsic('%Object.prototype%'));
-  X(CreateDataProperty(obj, new Value('value'), value));
-  X(CreateDataProperty(obj, new Value('done'), done));
+  X(CreateDataPropertyOrThrow(obj, Value('value'), value));
+  X(CreateDataPropertyOrThrow(obj, Value('done'), done));
   return obj;
 }
 
-/** http://tc39.es/ecma262/#sec-createlistiteratorRecord */
-export function CreateListIteratorRecord(list) {
-  // 1. Let closure be a new Abstract Closure with no parameters that captures list and performs the following steps when called:
-  const closure = function* closure() {
-    // a. For each element E of list, do
+/** https://tc39.es/ecma262/#sec-createlistiteratorRecord */
+export function CreateListIteratorRecord(list: Iterable<Value>): IteratorRecord {
+  const closure = function* closure(): YieldEvaluator {
     for (const E of list) {
-      // i. Perform ? Yield(E).
-      Q(yield* Yield(E));
+      Q(yield* GeneratorYield(CreateIteratorResultObject(E, Value.false)));
     }
-    // b. Return undefined.
     return NormalCompletion(Value.undefined);
   };
-  // 2. Let iterator be ! CreateIteratorFromClosure(closure, empty, %IteratorPrototype%).
-  const iterator = X(CreateIteratorFromClosure(closure, undefined, surroundingAgent.intrinsic('%IteratorPrototype%')));
-  // 3. Return Record { [[Iterator]]: iterator, [[NextMethod]]: %GeneratorFunction.prototype.prototype.next%, [[Done]]: false }.
+  const iterator = CreateIteratorFromClosure(closure, undefined, surroundingAgent.intrinsic('%Iterator.prototype%'));
   return {
     Iterator: iterator,
     NextMethod: surroundingAgent.intrinsic('%GeneratorFunction.prototype.prototype.next%'),
@@ -213,13 +257,25 @@ export function CreateListIteratorRecord(list) {
   };
 }
 
-/** http://tc39.es/ecma262/#sec-createasyncfromsynciterator */
-export function CreateAsyncFromSyncIterator(syncIteratorRecord) {
-  const asyncIterator = X(OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncFromSyncIteratorPrototype%'), [
+/** https://tc39.es/ecma262/#sec-iteratortolist */
+export function* IteratorToList(iteratorRecord: IteratorRecord): PlainEvaluator<Value[]> {
+  const list: Value[] = [];
+  while (true) {
+    const next = Q(yield* IteratorStepValue(iteratorRecord));
+    if (next === 'done') {
+      return list;
+    }
+    list.push(next);
+  }
+}
+
+/** https://tc39.es/ecma262/#sec-createasyncfromsynciterator */
+export function CreateAsyncFromSyncIterator(syncIteratorRecord: IteratorRecord) {
+  const asyncIterator = OrdinaryObjectCreate(surroundingAgent.intrinsic('%AsyncFromSyncIteratorPrototype%'), [
     'SyncIteratorRecord',
-  ]));
+  ]) as Mutable<AsyncFromSyncIteratorObject>;
   asyncIterator.SyncIteratorRecord = syncIteratorRecord;
-  const nextMethod = X(Get(asyncIterator, new Value('next')));
+  const nextMethod = X(Get(asyncIterator, Value('next')));
   return {
     Iterator: asyncIterator,
     NextMethod: nextMethod,
@@ -227,31 +283,29 @@ export function CreateAsyncFromSyncIterator(syncIteratorRecord) {
   };
 }
 
-/** http://tc39.es/ecma262/#sec-asyncfromsynciteratorcontinuation */
-export function AsyncFromSyncIteratorContinuation(result, promiseCapability) {
-  // 1. Let done be IteratorComplete(result).
-  const done = IteratorComplete(result);
-  // 2. IfAbruptRejectPromise(done, promiseCapability).
+/** https://tc39.es/ecma262/#sec-asyncfromsynciteratorcontinuation */
+export function* AsyncFromSyncIteratorContinuation(result: ObjectValue, promiseCapability: PromiseCapabilityRecord, syncIteratorRecord: IteratorRecord, closeOnRejection: BooleanValue): ValueEvaluator<PromiseObject> {
+  const done = yield* IteratorComplete(result);
   IfAbruptRejectPromise(done, promiseCapability);
-  // 3. Let value be IteratorValue(result).
-  const value = IteratorValue(result);
-  // 4. IfAbruptRejectPromise(value, promiseCapability).
+  __ts_cast__<BooleanValue>(done);
+  const value = yield* IteratorValue(result);
   IfAbruptRejectPromise(value, promiseCapability);
-  // 5. Let valueWrapper be PromiseResolve(%Promise%, value).
-  const valueWrapper = PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value);
-  // 6. IfAbruptRejectPromise(valueWrapper, promiseCapability).
+  __ts_cast__<Value>(value);
+  let valueWrapper = yield* PromiseResolve(surroundingAgent.intrinsic('%Promise%'), value);
+  if (valueWrapper instanceof AbruptCompletion && done === Value.false && closeOnRejection === Value.true) {
+    valueWrapper = yield* IteratorClose(syncIteratorRecord, valueWrapper);
+  }
   IfAbruptRejectPromise(valueWrapper, promiseCapability);
-  // 7. Let unwrap be a new Abstract Closure with parameters (value) that captures done and performs the following steps when called:
-  // eslint-disable-next-line arrow-body-style
-  const unwrap = ([valueInner = Value.undefined]) => {
-    // a. Return ! CreateIterResultObject(value, done).
-    return X(CreateIterResultObject(valueInner, done));
-  };
-  // 8. Let onFulfilled be ! CreateBuiltinFunction(unwrap, 1, "", « »).
-  const onFulfilled = X(CreateBuiltinFunction(unwrap, 1, new Value(''), ['Done']));
-  // 9. NOTE: onFulfilled is used when processing the "value" property of an IteratorResult object in order to wait for its value if it is a promise and re-package the result in a new "unwrapped" IteratorResult object.
-  // 10. Perform ! PerformPromiseThen(valueWrapper, onFulfilled, undefined, promiseCapability).
-  X(PerformPromiseThen(valueWrapper, onFulfilled, Value.undefined, promiseCapability));
-  // 11. Return promiseCapability.[[Promise]].
+  __ts_cast__<PromiseObject>(valueWrapper);
+  const unwrap = ([v]: Arguments) => CreateIteratorResultObject(v, done);
+  const onFullfilled = CreateBuiltinFunction(unwrap, 1, Value(''), []);
+  let onRejected;
+  if (done === Value.true || closeOnRejection === Value.false) {
+    onRejected = Value.undefined;
+  } else {
+    const closeIterator = ([error]: Arguments) => IteratorClose(syncIteratorRecord, ThrowCompletion(error));
+    onRejected = CreateBuiltinFunction(closeIterator, 1, Value(''), []);
+  }
+  PerformPromiseThen(valueWrapper, onFullfilled, onRejected, promiseCapability);
   return promiseCapability.Promise;
 }

@@ -1,5 +1,10 @@
 'use strict';
 
+// TODO:
+// - Any spec object must inherit from OrdinaryObject or ExoticObject.
+// - JSString | SymbolValue => PropertyKeyValue
+// - NormalCompletion<T> | ThrowCompletion => PlainCompletion<T>
+// - PlainCompletion<Value> => ExpressionCompletion
 module.exports = {
   root: true,
   extends: 'airbnb-base',
@@ -7,7 +12,14 @@ module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
     tsconfigRootDir: __dirname,
-    project: ['./tsconfig.json'],
+    project: [
+      './src/tsconfig.json',
+      './test/tsconfig.json',
+      './test/eslint-plugin-engine262/tsconfig.json',
+      './scripts/tsconfig.json',
+      './lib-src/node/tsconfig.json',
+      './lib-src/inspector/tsconfig.json',
+    ],
   },
   overrides: [
     {
@@ -15,18 +27,21 @@ module.exports = {
       parserOptions: { sourceType: 'script', project: null },
     },
     {
+      files: ['src/**/*.mts'],
+      rules: {
+        '@engine262/safe-function-with-q': 'error',
+      },
+    },
+    {
       files: ['*.mts'],
       extends: 'plugin:@typescript-eslint/recommended',
       rules: {
-        '@typescript-eslint/lines-between-class-members': ['error', 'always', {
-          'exceptAfterOverload': true,
-          'exceptAfterSingleLine': true,
-        }],
-        '@typescript-eslint/padding-line-between-statements': ['error', {
-          blankLine: 'always',
-          prev: '*',
-          next: ['interface', 'type'],
-        }],
+        // TODO: enable this rule after upgrade eslint
+        // '@stylistic/padding-line-between-statements': ['error', {
+        //   blankLine: 'always',
+        //   prev: '*',
+        //   next: ['interface', 'type'],
+        // }],
         // checked by tsc.
         '@typescript-eslint/no-unused-vars': 'off',
         'no-redeclare': 'off',
@@ -39,6 +54,8 @@ module.exports = {
         '@typescript-eslint/no-non-null-assertion': 'off',
         // spec convention
         '@typescript-eslint/no-this-alias': 'off',
+        // this rule errors for non null assertion.
+        // '@typescript-eslint/no-unnecessary-type-assertion': 'error',
       },
     },
   ],
@@ -51,7 +68,7 @@ module.exports = {
   },
   rules: {
     '@engine262/no-use-in-def': 'error',
-    '@engine262/valid-feature': 'error',
+    '@engine262/mathematical-value': 'error',
     'arrow-parens': ['error', 'always'],
     'brace-style': ['error', '1tbs', { allowSingleLine: false }],
     'curly': ['error', 'all'],
@@ -78,7 +95,7 @@ module.exports = {
     'import/no-cycle': 'off',
     'import/no-mutable-exports': 'off',
     'import/prefer-default-export': 'off',
-    'lines-between-class-members': 'off',
+    '@stylistic/eslint-plugin-js/lines-between-class-members': 'off',
     'max-classes-per-file': 'off',
     'max-len': 'off',
     'no-bitwise': 'off',
@@ -92,5 +109,6 @@ module.exports = {
     'no-underscore-dangle': 'off',
     'no-use-before-define': 'off',
     'prefer-destructuring': 'off',
+    'require-yield': 'off',
   },
 };

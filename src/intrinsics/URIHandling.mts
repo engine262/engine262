@@ -1,16 +1,16 @@
-// @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Value } from '../value.mjs';
+import { surroundingAgent } from '../host-defined/engine.mts';
+import { JSStringValue, Value, type Arguments } from '../value.mts';
 import {
   Assert,
   CreateBuiltinFunction,
+  Realm,
   ToString,
-} from '../abstract-ops/all.mjs';
-import { CodePointAt } from '../static-semantics/all.mjs';
-import { isHexDigit } from '../parser/Lexer.mjs';
-import { Q, X } from '../completion.mjs';
+} from '../abstract-ops/all.mts';
+import { CodePointAt } from '../static-semantics/all.mts';
+import { isHexDigit } from '../parser/Lexer.mts';
+import { Q, X, type ValueEvaluator } from '../completion.mts';
 
-function utf8Encode(utf) {
+function utf8Encode(utf: number) {
   if (utf <= 0x7F) {
     return [utf];
   }
@@ -38,7 +38,7 @@ function utf8Encode(utf) {
   return null;
 }
 
-function utf8Decode(octets) {
+function utf8Decode(octets: readonly number[]) {
   const b0 = octets[0];
   if (b0 <= 0x7F) {
     return b0;
@@ -78,7 +78,7 @@ function utf8Decode(octets) {
 
   if (b0 <= 0xDF) {
     return ((b0 & 0x1F) << 6)
-           | (b0 & 0x3F);
+      | (b0 & 0x3F);
   }
 
   const b2 = octets[2];
@@ -87,8 +87,8 @@ function utf8Decode(octets) {
   }
   if (b0 <= 0xEF) {
     return ((b0 & 0x0F) << 12)
-           | ((b1 & 0x3F) << 6)
-           | (b2 & 0x3F);
+      | ((b1 & 0x3F) << 6)
+      | (b2 & 0x3F);
   }
 
   const b3 = octets[3];
@@ -97,9 +97,9 @@ function utf8Decode(octets) {
   }
 
   return ((b0 & 0x07) << 18)
-         | ((b1 & 0x3F) << 12)
-         | ((b2 & 0x3F) << 6)
-         | (b3 & 0x3F);
+    | ((b1 & 0x3F) << 12)
+    | ((b2 & 0x3F) << 6)
+    | (b3 & 0x3F);
 }
 
 const uriReserved = ';/?:@&=+$,';
@@ -108,9 +108,9 @@ const uriMark = '-_.!~*\'()';
 const DecimalDigit = '0123456789';
 const uriUnescaped = uriAlpha + DecimalDigit + uriMark;
 
-/** http://tc39.es/ecma262/#sec-encode */
-function Encode(string, unescapedSet) {
-  string = string.stringValue();
+/** https://tc39.es/ecma262/#sec-encode */
+function Encode(_string: JSStringValue, unescapedSet: string) {
+  const string = _string.stringValue();
   // 1. Let strLen be the number of code units in string.
   const strLen = string.length;
   // 2. Let R be the empty String.
@@ -121,7 +121,7 @@ function Encode(string, unescapedSet) {
   while (true) {
     // a. If k equals strLen, return R.
     if (k === strLen) {
-      return new Value(R);
+      return Value(R);
     }
     // b. Let C be the code unit at index k within string.
     const C = string[k];
@@ -141,7 +141,7 @@ function Encode(string, unescapedSet) {
       // iii. Set k to k + cp.[[CodeUnitCount]].
       k += cp.CodeUnitCount;
       // iv. Let Octets be the List of octets resulting by applying the UTF-8 transformation to cp.[[CodePoint]].
-      const Octets = utf8Encode(cp.CodePoint);
+      const Octets = utf8Encode(cp.CodePoint)!;
       // v. For each element octet of Octets in List order, do
       Octets.forEach((octet) => {
         // 1. Set R to the string-concatenation of:
@@ -154,9 +154,9 @@ function Encode(string, unescapedSet) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-decode */
-function Decode(string, reservedSet) {
-  string = string.stringValue();
+/** https://tc39.es/ecma262/#sec-decode */
+function Decode(_string: JSStringValue, reservedSet: string) {
+  const string = _string.stringValue();
   // 1. Let strLen be the number of code units in string.
   const strLen = string.length;
   // 2. Let R be the empty String.
@@ -167,7 +167,7 @@ function Decode(string, reservedSet) {
   while (true) {
     // a. If k equals strLen, return R.
     if (k === strLen) {
-      return new Value(R);
+      return Value(R);
     }
     // b. Let C be the code unit at index k within string.
     const C = string[k];
@@ -204,7 +204,7 @@ function Decode(string, reservedSet) {
         }
       } else { // vii. Else,
         // 1. Assert: the most significant bit in B is 1.
-        Assert(B & 0b10000000);
+        Assert(!!(B & 0b10000000));
         // 2. Let n be the smallest nonnegative integer such that (B << n) & 0x80 is equal to 0.
         let n = 0;
         while (((B << n) & 0x80) !== 0) {
@@ -269,53 +269,53 @@ function Decode(string, reservedSet) {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-decodeuri-encodeduri */
-function decodeURI([encodedURI = Value.undefined]) {
+/** https://tc39.es/ecma262/#sec-decodeuri-encodeduri */
+function* decodeURI([encodedURI = Value.undefined]: Arguments): ValueEvaluator {
   // 1. Let uriString be ? ToString(encodedURI).
-  const uriString = Q(ToString(encodedURI));
+  const uriString = Q(yield* ToString(encodedURI));
   // 2. Let reservedURISet be a String containing one instance of each code unit valid in uriReserved plus "#".
   const reservedURISet = `${uriReserved}#`;
   // 3. Return ? Decode(uriString, reservedURISet).
   return Q(Decode(uriString, reservedURISet));
 }
 
-/** http://tc39.es/ecma262/#sec-decodeuricomponent-encodeduricomponent */
-function decodeURIComponent([encodedURIComponent = Value.undefined]) {
+/** https://tc39.es/ecma262/#sec-decodeuricomponent-encodeduricomponent */
+function* decodeURIComponent([encodedURIComponent = Value.undefined]: Arguments): ValueEvaluator {
   // 1. Let componentString be ? ToString(encodedURIComponent).
-  const componentString = Q(ToString(encodedURIComponent));
+  const componentString = Q(yield* ToString(encodedURIComponent));
   // 2. Let reservedURIComponentSet be the empty String.
   const reservedURIComponentSet = '';
   // 3. Return ? Decode(componentString, reservedURIComponentSet).
   return Q(Decode(componentString, reservedURIComponentSet));
 }
 
-/** http://tc39.es/ecma262/#sec-encodeuri-uri */
-function encodeURI([uri = Value.undefined]) {
+/** https://tc39.es/ecma262/#sec-encodeuri-uri */
+function* encodeURI([uri = Value.undefined]: Arguments): ValueEvaluator {
   // 1. Let uriString be ? ToString(uri).
-  const uriString = Q(ToString(uri));
+  const uriString = Q(yield* ToString(uri));
   // 2. Let unescapedURISet be a String containing one instance of each code unit valid in uriReserved and uriUnescaped plus "#".
   const unescapedURISet = `${uriReserved}${uriUnescaped}#`;
   // 3. Return ? Encode(uriString, unescapedURISet).
   return Q(Encode(uriString, unescapedURISet));
 }
 
-/** http://tc39.es/ecma262/#sec-encodeuricomponent-uricomponent */
-function encodeURIComponent([uriComponent = Value.undefined]) {
+/** https://tc39.es/ecma262/#sec-encodeuricomponent-uricomponent */
+function* encodeURIComponent([uriComponent = Value.undefined]: Arguments): ValueEvaluator {
   // 1. Let componentString be ? ToString(uriComponent).
-  const componentString = Q(ToString(uriComponent));
+  const componentString = Q(yield* ToString(uriComponent));
   // 2. Let unescapedURIComponentSet be a String containing one instance of each code unit valid in uriUnescaped.
   const unescapedURIComponentSet = uriUnescaped;
   // 3. Return ? Encode(componentString, unescapedURIComponentSet).
   return Q(Encode(componentString, unescapedURIComponentSet));
 }
 
-export function bootstrapURIHandling(realmRec) {
-  [
+export function bootstrapURIHandling(realmRec: Realm) {
+  ([
     ['decodeURI', decodeURI, 1],
     ['decodeURIComponent', decodeURIComponent, 1],
     ['encodeURI', encodeURI, 1],
     ['encodeURIComponent', encodeURIComponent, 1],
-  ].forEach(([name, f, length]) => {
-    realmRec.Intrinsics[`%${name}%`] = CreateBuiltinFunction(f, length, new Value(name), [], realmRec);
+  ] as const).forEach(([name, f, length]) => {
+    realmRec.Intrinsics[`%${name}%`] = CreateBuiltinFunction(f, length, Value(name), [], realmRec);
   });
 }

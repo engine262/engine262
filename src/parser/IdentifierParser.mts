@@ -1,21 +1,22 @@
-// @ts-nocheck
 import {
   Token,
   isKeyword,
   isReservedWordStrict,
   isKeywordRaw,
-} from './tokens.mjs';
-import { BaseParser } from './BaseParser.mjs';
+} from './tokens.mts';
+import { BaseParser } from './BaseParser.mts';
+import type { ParseNode } from './ParseNode.mts';
+import { type Locatable } from './Lexer.mts';
 
-export class IdentifierParser extends BaseParser {
+export abstract class IdentifierParser extends BaseParser {
   // IdentifierName
   parseIdentifierName() {
-    const node = this.startNode();
+    const node = this.startNode<ParseNode.IdentifierName>();
     const p = this.peek();
     if (p.type === Token.IDENTIFIER
         || p.type === Token.ESCAPED_KEYWORD
         || isKeyword(p.type)) {
-      node.name = this.next().value;
+      node.name = this.next().valueAsString();
     } else {
       this.unexpected();
     }
@@ -27,14 +28,14 @@ export class IdentifierParser extends BaseParser {
   //   `yield`
   //   `await`
   parseBindingIdentifier() {
-    const node = this.startNode();
+    const node = this.startNode<ParseNode.BindingIdentifier>();
     const token = this.next();
     switch (token.type) {
       case Token.IDENTIFIER:
-        node.name = token.value;
+        node.name = token.valueAsString();
         break;
       case Token.ESCAPED_KEYWORD:
-        node.name = token.value;
+        node.name = token.valueAsString();
         break;
       case Token.YIELD:
         node.name = 'yield';
@@ -47,7 +48,7 @@ export class IdentifierParser extends BaseParser {
             break;
           }
           if (arrowInfo.isAsync) {
-            arrowInfo.awaitIdentifiers.push(node);
+            arrowInfo.awaitIdentifiers.push(node as ParseNode.BindingIdentifier);
             break;
           }
         }
@@ -67,15 +68,15 @@ export class IdentifierParser extends BaseParser {
   //   [~Yield] `yield`
   //   [~Await] `await`
   parseIdentifierReference() {
-    const node = this.startNode();
+    const node = this.startNode<ParseNode.IdentifierReference>();
     const token = this.next();
     node.escaped = token.escaped;
     switch (token.type) {
       case Token.IDENTIFIER:
-        node.name = token.value;
+        node.name = token.valueAsString();
         break;
       case Token.ESCAPED_KEYWORD:
-        node.name = token.value;
+        node.name = token.valueAsString();
         break;
       case Token.YIELD:
         if (this.scope.hasYield()) {
@@ -93,7 +94,7 @@ export class IdentifierParser extends BaseParser {
             break;
           }
           if (arrowInfo.isAsync) {
-            arrowInfo.awaitIdentifiers.push(node);
+            arrowInfo.awaitIdentifiers.push(node as ParseNode.IdentifierReference);
             break;
           }
         }
@@ -106,7 +107,7 @@ export class IdentifierParser extends BaseParser {
     return this.finishNode(node, 'IdentifierReference');
   }
 
-  validateIdentifierReference(name, token) {
+  validateIdentifierReference(name: string, token: Locatable) {
     if (name === 'yield' && (this.scope.hasYield() || this.scope.isModule())) {
       this.raiseEarly('UnexpectedReservedWordStrict', token);
     }
@@ -130,15 +131,14 @@ export class IdentifierParser extends BaseParser {
   //   [~Await] `await`
   parseLabelIdentifier() {
     const node = this.parseIdentifierReference();
-    node.type = 'LabelIdentifier';
-    return node;
+    return this.repurpose(node, 'LabelIdentifier');
   }
 
   // PrivateIdentifier ::
   //   `#` IdentifierName
   parsePrivateIdentifier() {
-    const node = this.startNode();
-    node.name = this.expect(Token.PRIVATE_IDENTIFIER).value;
+    const node = this.startNode<ParseNode.PrivateIdentifier>();
+    node.name = this.expect(Token.PRIVATE_IDENTIFIER).valueAsString();
     return this.finishNode(node, 'PrivateIdentifier');
   }
 }

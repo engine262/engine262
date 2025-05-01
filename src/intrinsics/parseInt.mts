@@ -1,17 +1,17 @@
-// @ts-nocheck
 import {
   Assert,
   CreateBuiltinFunction,
   ToInt32,
   ToString,
-  F,
-} from '../abstract-ops/all.mjs';
-import { TrimString } from '../runtime-semantics/all.mjs';
-import { Q, X } from '../completion.mjs';
-import { Value } from '../value.mjs';
+  F, R as MathematicalValue,
+  Realm,
+} from '../abstract-ops/all.mts';
+import { TrimString } from '../runtime-semantics/all.mts';
+import { Q, X, type ValueEvaluator } from '../completion.mts';
+import { Value, type Arguments } from '../value.mts';
 
-function digitToNumber(digit) {
-  digit = digit.charCodeAt(0);
+function digitToNumber(_digit: string) {
+  let digit = _digit.charCodeAt(0);
   if (digit < 0x30 /* 0 */) {
     return NaN;
   }
@@ -29,7 +29,7 @@ function digitToNumber(digit) {
   return NaN;
 }
 
-function stringToRadixNumber(str, R) {
+function stringToRadixNumber(str: string, R: number) {
   let num = 0;
   for (let i = 0; i < str.length; i += 1) {
     const power = str.length - i - 1;
@@ -41,7 +41,7 @@ function stringToRadixNumber(str, R) {
   return num;
 }
 
-function searchNotRadixDigit(str, R) {
+function searchNotRadixDigit(str: string, R: number) {
   for (let i = 0; i < str.length; i += 1) {
     const num = digitToNumber(str[i]);
     if (Number.isNaN(num) || num >= R) {
@@ -51,9 +51,9 @@ function searchNotRadixDigit(str, R) {
   return str.length;
 }
 
-/** http://tc39.es/ecma262/#sec-parseint-string-radix */
-function ParseInt([string = Value.undefined, radix = Value.undefined]) {
-  const inputString = Q(ToString(string));
+/** https://tc39.es/ecma262/#sec-parseint-string-radix */
+function* ParseInt([string = Value.undefined, radix = Value.undefined]: Arguments): ValueEvaluator {
+  const inputString = Q(yield* ToString(string));
   let S = X(TrimString(inputString, 'start')).stringValue();
   let sign = 1;
   if (S !== '' && S[0] === '\x2D') {
@@ -63,7 +63,7 @@ function ParseInt([string = Value.undefined, radix = Value.undefined]) {
     S = S.slice(1);
   }
 
-  let R = Q(ToInt32(radix)).numberValue();
+  let R = MathematicalValue(Q(yield* ToInt32(radix)));
   let stripPrefix = true;
   if (R !== 0) {
     if (R < 2 || R > 36) {
@@ -96,6 +96,6 @@ function ParseInt([string = Value.undefined, radix = Value.undefined]) {
   return F(sign * number);
 }
 
-export function bootstrapParseInt(realmRec) {
-  realmRec.Intrinsics['%parseInt%'] = CreateBuiltinFunction(ParseInt, 2, new Value('parseInt'), [], realmRec);
+export function bootstrapParseInt(realmRec: Realm) {
+  realmRec.Intrinsics['%parseInt%'] = CreateBuiltinFunction(ParseInt, 2, Value('parseInt'), [], realmRec);
 }

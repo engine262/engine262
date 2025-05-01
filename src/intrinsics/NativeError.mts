@@ -1,38 +1,44 @@
-// @ts-nocheck
 import {
   surroundingAgent,
-} from '../engine.mjs';
+} from '../host-defined/engine.mts';
 import {
   DefinePropertyOrThrow,
   OrdinaryCreateFromConstructor,
   InstallErrorCause,
   ToString,
-} from '../abstract-ops/all.mjs';
+  Realm,
+  type FunctionObject,
+} from '../abstract-ops/all.mts';
 import {
   Descriptor,
   UndefinedValue,
   Value,
-} from '../value.mjs';
-import { Q, X } from '../completion.mjs';
-import { captureStack } from '../helpers.mjs';
-import { bootstrapConstructor, bootstrapPrototype } from './bootstrap.mjs';
+  type Arguments,
+  type FunctionCallContext,
+} from '../value.mts';
+import { Q, X, type ValueEvaluator } from '../completion.mts';
+import { captureStack, errorStackToString } from '../helpers.mts';
+import { bootstrapConstructor, bootstrapPrototype } from './bootstrap.mts';
+import type { ErrorObject } from './Error.mts';
 
-export function bootstrapNativeError(realmRec) {
-  for (const name of [
-    'EvalError',
-    'RangeError',
-    'ReferenceError',
-    'SyntaxError',
-    'TypeError',
-    'URIError',
-  ]) {
+const nativeErrorNames = [
+  'EvalError',
+  'RangeError',
+  'ReferenceError',
+  'SyntaxError',
+  'TypeError',
+  'URIError',
+] as const;
+export type NativeErrorNames = typeof nativeErrorNames[number];
+export function bootstrapNativeError(realmRec: Realm) {
+  for (const name of nativeErrorNames) {
     const proto = bootstrapPrototype(realmRec, [
-      ['name', new Value(name)],
-      ['message', new Value('')],
+      ['name', Value(name)],
+      ['message', Value('')],
     ], realmRec.Intrinsics['%Error.prototype%']);
 
-    /** http://tc39.es/ecma262/#sec-nativeerror */
-    const Constructor = ([message = Value.undefined, options = Value.undefined], { NewTarget }) => {
+    /** https://tc39.es/ecma262/#sec-nativeerror */
+    const Constructor = function* Constructor([message = Value.undefined, options = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext): ValueEvaluator {
       // 1. If NewTarget is undefined, let newTarget be the active function object; else let newTarget be NewTarget.
       let newTarget;
       if (NewTarget instanceof UndefinedValue) {
@@ -41,11 +47,14 @@ export function bootstrapNativeError(realmRec) {
         newTarget = NewTarget;
       }
       // 2. Let O be ? OrdinaryCreateFromConstructor(newTarget, "%NativeError.prototype%", « [[ErrorData]] »).
-      const O = Q(OrdinaryCreateFromConstructor(newTarget, `%${name}.prototype%`, ['ErrorData']));
+      const O = Q(yield* OrdinaryCreateFromConstructor(newTarget as FunctionObject, `%${name}.prototype%`, [
+        'ErrorData',
+        'HostDefinedErrorStack',
+      ])) as ErrorObject;
       // 3. If message is not undefined, then
       if (message !== Value.undefined) {
         // a. Let msg be ? ToString(message).
-        const msg = Q(ToString(message));
+        const msg = Q(yield* ToString(message));
         // b. Let msgDesc be the PropertyDescriptor { [[Value]]: msg, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: true }.
         const msgDesc = Descriptor({
           Value: msg,
@@ -54,12 +63,14 @@ export function bootstrapNativeError(realmRec) {
           Configurable: Value.true,
         });
         // c. Perform ! DefinePropertyOrThrow(O, "message", msgDesc).
-        X(DefinePropertyOrThrow(O, new Value('message'), msgDesc));
+        X(DefinePropertyOrThrow(O, Value('message'), msgDesc));
       }
       // 4. Perform ? InstallErrorCause(O, options).
-      Q(InstallErrorCause(O, options));
+      Q(yield* InstallErrorCause(O, options));
       // NON-SPEC
-      X(captureStack(O));
+      const S = captureStack();
+      O.HostDefinedErrorStack = S.stack;
+      O.ErrorData = X(errorStackToString(O, S.stack, S.nativeStack));
       // 5. Return O.
       return O;
     };

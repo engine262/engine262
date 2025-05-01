@@ -1,11 +1,11 @@
-// @ts-nocheck
-import { Value } from '../value.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+import { Value } from '../value.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
+import type { Realm } from '#self';
 
-export function bootstrapAggregateErrorPrototype(realmRec) {
+export function bootstrapAggregateErrorPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
-    ['name', new Value('AggregateError')],
-    ['message', new Value('')],
+    ['name', Value('AggregateError')],
+    ['message', Value('')],
   ], realmRec.Intrinsics['%Error.prototype%'], 'AggregateError');
 
   realmRec.Intrinsics['%AggregateError.prototype%'] = proto;

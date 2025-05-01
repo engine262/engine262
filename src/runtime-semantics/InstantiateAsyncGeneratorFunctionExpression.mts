@@ -1,6 +1,7 @@
-// @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Value, Descriptor } from '../value.mjs';
+import { surroundingAgent } from '../host-defined/engine.mts';
+import {
+  Value, Descriptor, type PropertyKeyValue, PrivateName,
+} from '../value.mts';
 import {
   Assert,
   DefinePropertyOrThrow,
@@ -8,16 +9,17 @@ import {
   OrdinaryObjectCreate,
   SetFunctionName,
   sourceTextMatchedBy,
-} from '../abstract-ops/all.mjs';
-import { StringValue } from '../static-semantics/all.mjs';
-import { X } from '../completion.mjs';
-import { NewDeclarativeEnvironment } from '../environment.mjs';
+} from '../abstract-ops/all.mts';
+import { StringValue } from '../static-semantics/all.mts';
+import { X } from '../completion.mts';
+import { DeclarativeEnvironmentRecord } from '../environment.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncgeneratorfunctionexpression */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-instantiateasyncgeneratorfunctionexpression */
 //   AsyncGeneratorExpression :
 //     `async` `function` `*` `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
 //     `async` `function` `*` BindingIdentifier `(` FormalParameters `)` `{` AsyncGeneratorBody `}`
-export function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpression, name) {
+export function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpression: ParseNode.AsyncGeneratorExpression, name?: PropertyKeyValue | PrivateName) {
   const { BindingIdentifier, FormalParameters, AsyncGeneratorBody } = AsyncGeneratorExpression;
   if (BindingIdentifier) {
     // 1. Assert: name is not present.
@@ -27,7 +29,7 @@ export function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpres
     // 3. Let scope be the running execution context's LexicalEnvironment.
     const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
     // 4. Let funcEnv be NewDeclarativeEnvironment(scope).
-    const funcEnv = NewDeclarativeEnvironment(scope);
+    const funcEnv = new DeclarativeEnvironmentRecord(scope);
     // 5. Perform funcEnv.CreateImmutableBinding(name, false).
     funcEnv.CreateImmutableBinding(name, Value.false);
     // 6. Let privateScope be the running execution context's PrivateEnvironment.
@@ -43,7 +45,7 @@ export function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpres
     // 11. Perform DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
     X(DefinePropertyOrThrow(
       closure,
-      new Value('prototype'),
+      Value('prototype'),
       Descriptor({
         Value: prototype,
         Writable: Value.true,
@@ -52,13 +54,13 @@ export function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpres
       }),
     ));
     // 12. Perform funcEnv.InitializeBinding(name, closure).
-    funcEnv.InitializeBinding(name, closure);
+    X(funcEnv.InitializeBinding(name, closure));
     // 13. Return closure.
     return closure;
   }
   // 1. If name is not present, set name to "".
   if (name === undefined) {
-    name = new Value('');
+    name = Value('');
   }
   // 2. Let scope be the LexicalEnvironment of the running execution context.
   const scope = surroundingAgent.runningExecutionContext.LexicalEnvironment;
@@ -75,7 +77,7 @@ export function InstantiateAsyncGeneratorFunctionExpression(AsyncGeneratorExpres
   // 8. Perform ! DefinePropertyOrThrow(closure, "prototype", PropertyDescriptor { [[Value]]: prototype, [[Writable]]: true, [[Enumerable]]: false, [[Configurable]]: false }).
   X(DefinePropertyOrThrow(
     closure,
-    new Value('prototype'),
+    Value('prototype'),
     Descriptor({
       Value: prototype,
       Writable: Value.true,

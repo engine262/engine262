@@ -1,6 +1,8 @@
-// @ts-nocheck
-export function TopLevelLexicallyScopedDeclarations(node) {
-  if (Array.isArray(node)) {
+import { isArray } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+
+export function TopLevelLexicallyScopedDeclarations(node: ParseNode | readonly ParseNode[]): LexicallyScopedDeclaration[] {
+  if (isArray(node)) {
     const declarations = [];
     for (const item of node) {
       declarations.push(...TopLevelLexicallyScopedDeclarations(item));
@@ -15,3 +17,7 @@ export function TopLevelLexicallyScopedDeclarations(node) {
       return [];
   }
 }
+
+export type LexicallyScopedDeclaration =
+  | ParseNode.ClassDeclaration
+  | ParseNode.LexicalDeclaration;

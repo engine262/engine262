@@ -1,13 +1,12 @@
-// @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   X,
   Completion,
   NormalCompletion,
   ThrowCompletion,
   IfAbruptRejectPromise,
-} from '../completion.mjs';
-import { Value } from '../value.mjs';
+} from '../completion.mts';
+import { Value, type Arguments, type FunctionCallContext } from '../value.mts';
 import {
   Assert,
   Call,
@@ -16,12 +15,15 @@ import {
   AsyncGeneratorEnqueue,
   AsyncGeneratorResume,
   AsyncGeneratorAwaitReturn,
-  CreateIterResultObject,
-} from '../abstract-ops/all.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+  CreateIteratorResultObject,
+  type AsyncGeneratorObject,
+  Realm,
+} from '../abstract-ops/all.mts';
+import { __ts_cast__ } from '../helpers.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
 
-/** http://tc39.es/ecma262/#sec-asyncgenerator-prototype-next */
-function AsyncGeneratorPrototype_next([value = Value.undefined], { thisValue }) {
+/** https://tc39.es/ecma262/#sec-asyncgenerator-prototype-next */
+function* AsyncGeneratorPrototype_next([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Let generator be the this value.
   const generator = thisValue;
   // 2. Let promiseCapability be ! NewPromiseCapability(%Promise%).
@@ -30,12 +32,13 @@ function AsyncGeneratorPrototype_next([value = Value.undefined], { thisValue }) 
   const result = AsyncGeneratorValidate(generator, undefined);
   // 4. IfAbruptRejectPromise(result, promiseCapability).
   IfAbruptRejectPromise(result, promiseCapability);
+  __ts_cast__<AsyncGeneratorObject>(generator);
   // 5. Let state be generator.[[AsyncGeneratorState]].
   const state = generator.AsyncGeneratorState;
   // 6. If state is completed, then
   if (state === 'completed') {
-    // a. Let iteratorResult be ! CreateIterResultObject(undefined, true).
-    const iteratorResult = X(CreateIterResultObject(Value.undefined, Value.true));
+    // a. Let iteratorResult be ! CreateIteratorResultObject(undefined, true).
+    const iteratorResult = X(CreateIteratorResultObject(Value.undefined, Value.true));
     // b. Perform ! Call(promiseCapability.[[Resolve]], undefined, « iteratorResult »).
     X(Call(promiseCapability.Resolve, Value.undefined, [iteratorResult]));
     // c. Return promiseCapability.[[Promise]].
@@ -48,7 +51,7 @@ function AsyncGeneratorPrototype_next([value = Value.undefined], { thisValue }) 
   // 9. If state is either suspendedStart or suspendedYield, then
   if (state === 'suspendedStart' || state === 'suspendedYield') {
     // a. Perform ! AsyncGeneratorResume(generator, completion).
-    X(AsyncGeneratorResume(generator, completion));
+    X(yield* AsyncGeneratorResume(generator, completion));
   } else { // 10. Else,
     // a. Assert: state is either executing or awaiting-return.
     Assert(state === 'executing' || state === 'awaiting-return');
@@ -57,8 +60,8 @@ function AsyncGeneratorPrototype_next([value = Value.undefined], { thisValue }) 
   return promiseCapability.Promise;
 }
 
-/** http://tc39.es/ecma262/#sec-asyncgenerator-prototype-return */
-function AsyncGeneratorPrototype_return([value = Value.undefined], { thisValue }) {
+/** https://tc39.es/ecma262/#sec-asyncgenerator-prototype-return */
+function* AsyncGeneratorPrototype_return([value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Let generator be the this value.
   const generator = thisValue;
   // 2. Let promiseCapability be ! NewPromiseCapability(%Promise%).
@@ -67,6 +70,7 @@ function AsyncGeneratorPrototype_return([value = Value.undefined], { thisValue }
   const result = AsyncGeneratorValidate(generator, undefined);
   // 4. IfAbruptRejectPromise(result, promiseCapability).
   IfAbruptRejectPromise(result, promiseCapability);
+  __ts_cast__<AsyncGeneratorObject>(generator);
   // 5. Let completion be Completion { [[Type]]: return, [[Value]]: value, [[Target]]: empty }.
   const completion = new Completion({ Type: 'return', Value: value, Target: undefined });
   // 6. Perform ! AsyncGeneratorEnqueue(generator, completion, promiseCapability).
@@ -81,7 +85,7 @@ function AsyncGeneratorPrototype_return([value = Value.undefined], { thisValue }
     X(AsyncGeneratorAwaitReturn(generator));
   } else if (state === 'suspendedYield') { // 9. Else if state is suspendedYield, then
     // a. Perform ! AsyncGeneratorResume(generator, completion).
-    X(AsyncGeneratorResume(generator, completion));
+    X(yield* AsyncGeneratorResume(generator, completion));
   } else { // 10. Else,
     // a. Assert: state is either executing or awaiting-return.
     Assert(state === 'executing' || state === 'awaiting-return');
@@ -90,8 +94,8 @@ function AsyncGeneratorPrototype_return([value = Value.undefined], { thisValue }
   return promiseCapability.Promise;
 }
 
-/** http://tc39.es/ecma262/#sec-asyncgenerator-prototype-throw */
-function AsyncGeneratorPrototype_throw([exception = Value.undefined], { thisValue }) {
+/** https://tc39.es/ecma262/#sec-asyncgenerator-prototype-throw */
+function* AsyncGeneratorPrototype_throw([exception = Value.undefined]: Arguments, { thisValue }: FunctionCallContext) {
   // 1. Let generator be the this value.
   const generator = thisValue;
   // 2. Let promiseCapability be ! NewPromiseCapability(%Promise%).
@@ -100,6 +104,7 @@ function AsyncGeneratorPrototype_throw([exception = Value.undefined], { thisValu
   const result = AsyncGeneratorValidate(generator, undefined);
   // 4. IfAbruptRejectPromise(result, promiseCapability).
   IfAbruptRejectPromise(result, promiseCapability);
+  __ts_cast__<AsyncGeneratorObject>(generator);
   // 5. Let state be generator.[[AsyncGeneratorState]].
   let state = generator.AsyncGeneratorState;
   // 6. If state is suspendedStart, then
@@ -123,7 +128,7 @@ function AsyncGeneratorPrototype_throw([exception = Value.undefined], { thisValu
   // 10. If state is suspendedYield, then
   if (state === 'suspendedYield') {
     // a. Perform ! AsyncGeneratorResume(generator, completion).
-    X(AsyncGeneratorResume(generator, completion));
+    X(yield* AsyncGeneratorResume(generator, completion));
   } else { // 11. Else,
     // a. Assert: state is either executing or awaiting-return.
     Assert(state === 'executing' || state === 'awaiting-return');
@@ -132,7 +137,7 @@ function AsyncGeneratorPrototype_throw([exception = Value.undefined], { thisValu
   return promiseCapability.Promise;
 }
 
-export function bootstrapAsyncGeneratorFunctionPrototypePrototype(realmRec) {
+export function bootstrapAsyncGeneratorFunctionPrototypePrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['next', AsyncGeneratorPrototype_next, 1],
     ['return', AsyncGeneratorPrototype_return, 1],

@@ -1,20 +1,26 @@
-// @ts-nocheck
 import {
   ObjectValue,
   Value,
   NumberValue,
-} from '../value.mjs';
+  type Arguments,
+  type FunctionCallContext,
+} from '../value.mts';
 import {
   Assert,
   ToIntegerOrInfinity,
   ToString,
-  F,
-} from '../abstract-ops/all.mjs';
-import { surroundingAgent } from '../engine.mjs';
-import { Q, X } from '../completion.mjs';
-import { bootstrapPrototype } from './bootstrap.mjs';
+  F, R,
+  Realm,
+} from '../abstract-ops/all.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
+import {
+  Q, X, type ValueCompletion, type ValueEvaluator,
+} from '../completion.mts';
+import type { Mutable } from '../helpers.mts';
+import { bootstrapPrototype } from './bootstrap.mts';
+import type { NumberObject } from './Number.mts';
 
-function thisNumberValue(value) {
+function thisNumberValue(value: Value) {
   if (value instanceof NumberValue) {
     return value;
   }
@@ -26,63 +32,63 @@ function thisNumberValue(value) {
   return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'Number', value);
 }
 
-/** http://tc39.es/ecma262/#sec-number.prototype.toexponential */
-function NumberProto_toExponential([fractionDigits = Value.undefined], { thisValue }) {
+/** https://tc39.es/ecma262/#sec-number.prototype.toexponential */
+function* NumberProto_toExponential([fractionDigits = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const x = Q(thisNumberValue(thisValue));
-  const f = Q(ToIntegerOrInfinity(fractionDigits));
+  const f = Q(yield* ToIntegerOrInfinity(fractionDigits));
   Assert(fractionDigits !== Value.undefined || f === 0);
   if (!x.isFinite()) {
-    return NumberValue.toString(x);
+    return NumberValue.toString(x, 10);
   }
   if (f < 0 || f > 100) {
     return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toExponential');
   }
-  return new Value(x.numberValue().toExponential(fractionDigits === Value.undefined ? undefined : f));
+  return Value(R(x).toExponential(fractionDigits === Value.undefined ? undefined : f));
 }
 
-/** http://tc39.es/ecma262/#sec-number.prototype.tofixed */
-function NumberProto_toFixed([fractionDigits = Value.undefined], { thisValue }) {
+/** https://tc39.es/ecma262/#sec-number.prototype.tofixed */
+function* NumberProto_toFixed([fractionDigits = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const x = Q(thisNumberValue(thisValue));
-  const f = Q(ToIntegerOrInfinity(fractionDigits));
+  const f = Q(yield* ToIntegerOrInfinity(fractionDigits));
   Assert(fractionDigits !== Value.undefined || f === 0);
   if (f < 0 || f > 100) {
     return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toFixed');
   }
   if (!x.isFinite()) {
-    return X(NumberValue.toString(x));
+    return X(NumberValue.toString(x, 10));
   }
-  return new Value(x.numberValue().toFixed(f));
+  return Value(R(x).toFixed(f));
 }
 
-/** http://tc39.es/ecma262/#sec-number.prototype.tolocalestring */
-function NumberProto_toLocaleString(args, { thisValue }) {
-  return NumberProto_toString([], { thisValue });
+/** https://tc39.es/ecma262/#sec-number.prototype.tolocalestring */
+function NumberProto_toLocaleString(_args: Arguments, context: FunctionCallContext): ValueEvaluator {
+  return NumberProto_toString([], context);
 }
 
-/** http://tc39.es/ecma262/#sec-number.prototype.toprecision */
-function NumberProto_toPrecision([precision = Value.undefined], { thisValue }) {
+/** https://tc39.es/ecma262/#sec-number.prototype.toprecision */
+function* NumberProto_toPrecision([precision = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const x = Q(thisNumberValue(thisValue));
   if (precision === Value.undefined) {
     return X(ToString(x));
   }
-  const p = Q(ToIntegerOrInfinity(precision));
+  const p = Q(yield* ToIntegerOrInfinity(precision));
   if (!x.isFinite()) {
-    return X(NumberValue.toString(x));
+    return X(NumberValue.toString(x, 10));
   }
   if (p < 1 || p > 100) {
     return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toPrecision');
   }
-  return new Value(x.numberValue().toPrecision(p));
+  return Value(R(x).toPrecision(p));
 }
 
-/** http://tc39.es/ecma262/#sec-number.prototype.tostring */
-function NumberProto_toString([radix = Value.undefined], { thisValue }) {
+/** https://tc39.es/ecma262/#sec-number.prototype.tostring */
+function* NumberProto_toString([radix = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   const x = Q(thisNumberValue(thisValue));
   let radixNumber;
   if (radix === Value.undefined) {
     radixNumber = 10;
   } else {
-    radixNumber = Q(ToIntegerOrInfinity(radix));
+    radixNumber = Q(yield* ToIntegerOrInfinity(radix));
   }
   if (radixNumber < 2 || radixNumber > 36) {
     return surroundingAgent.Throw('RangeError', 'NumberFormatRange', 'toString');
@@ -95,15 +101,15 @@ function NumberProto_toString([radix = Value.undefined], { thisValue }) {
   // used for digits with values 10 through 35. The precise algorithm
   // is implementation-dependent, however the algorithm should be a
   // generalization of that specified in 7.1.12.1.
-  return new Value(x.numberValue().toString(radixNumber));
+  return Value(R(x).toString(radixNumber));
 }
 
-/** http://tc39.es/ecma262/#sec-number.prototype.valueof */
-function NumberProto_valueOf(args, { thisValue }) {
+/** https://tc39.es/ecma262/#sec-number.prototype.valueof */
+function NumberProto_valueOf(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   return Q(thisNumberValue(thisValue));
 }
 
-export function bootstrapNumberPrototype(realmRec) {
+export function bootstrapNumberPrototype(realmRec: Realm) {
   const proto = bootstrapPrototype(realmRec, [
     ['toExponential', NumberProto_toExponential, 1],
     ['toFixed', NumberProto_toFixed, 1],
@@ -113,7 +119,7 @@ export function bootstrapNumberPrototype(realmRec) {
     ['valueOf', NumberProto_valueOf, 0],
   ], realmRec.Intrinsics['%Object.prototype%']);
 
-  proto.NumberData = F(+0);
+  (proto as Mutable<NumberObject>).NumberData = F(+0);
 
   realmRec.Intrinsics['%Number.prototype%'] = proto;
 }

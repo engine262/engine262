@@ -1,9 +1,8 @@
-// @ts-nocheck
-import { X } from '../completion.mjs';
-import { CodePointAt } from './all.mjs';
+import { X } from '../completion.mts';
+import { CodePointAt } from './all.mts';
 
-/** http://tc39.es/ecma262/#sec-stringtocodepoints */
-export function StringToCodePoints(string) {
+/** https://tc39.es/ecma262/#sec-stringtocodepoints */
+export function StringToCodePoints(string: string) {
   // 1. Let codePoints be a new empty List.
   const codePoints = [];
   // 2. Let size be the length of string.

@@ -1,11 +1,11 @@
-// @ts-nocheck
-import { InstantiateOrdinaryFunctionExpression } from './all.mjs';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { InstantiateOrdinaryFunctionExpression } from './all.mts';
 
-/** http://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-function-definitions-runtime-semantics-evaluation */
 //   FunctionExpression :
 //     `function` `(` FormalParameters `)` `{` FunctionBody `}`
 //     `function` BindingIdentifier `(` FormalParameters `)` `{` FunctionBody `}`
-export function Evaluate_FunctionExpression(FunctionExpression) {
+export function Evaluate_FunctionExpression(FunctionExpression: ParseNode.FunctionExpression) {
   // 1. Return InstantiateOrdinaryFunctionExpression of FunctionExpression.
   return InstantiateOrdinaryFunctionExpression(FunctionExpression);
 }

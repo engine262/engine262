@@ -1,7 +1,9 @@
-// @ts-nocheck
-import { Q, X } from '../completion.mjs';
-import { surroundingAgent } from '../engine.mjs';
-import { Value } from '../value.mjs';
+import { Q } from '../completion.mts';
+import { surroundingAgent } from '../host-defined/engine.mts';
+import { __ts_cast__ } from '../helpers.mts';
+import type { DataViewObject } from '../intrinsics/DataView.mts';
+import { type TypedArrayTypes, typedArrayInfoByType } from '../intrinsics/TypedArray.mts';
+import { Value } from '../value.mts';
 import {
   Assert,
   GetValueFromBuffer,
@@ -13,32 +15,90 @@ import {
   ToNumber,
   ToBigInt,
   RequireInternalSlot,
-  typedArrayInfoByType,
-} from './all.mjs';
+  type ArrayBufferObject,
+  ArrayBufferByteLength,
+  IsFixedLengthArrayBuffer,
+} from './all.mts';
 
 // This file covers abstract operations defined in
-/** http://tc39.es/ecma262/#sec-dataview-objects */
+/** https://tc39.es/ecma262/#sec-dataview-objects */
 
-/** http://tc39.es/ecma262/#sec-getviewvalue */
-export function GetViewValue(view, requestIndex, isLittleEndian, type) {
+/** https://tc39.es/ecma262/#sec-dataview-with-buffer-witness-records */
+export interface DataViewWithBufferWitnessRecord {
+  readonly Object: DataViewObject;
+  CachedBufferByteLength: number | 'detached';
+}
+
+/** https://tc39.es/ecma262/#sec-makedataviewwithbufferwitnessrecord */
+export function MakeDataViewWithBufferWitnessRecord(obj: DataViewObject, order: 'seq-cst' | 'unordered'): DataViewWithBufferWitnessRecord {
+  const buffer = obj.ViewedArrayBuffer as ArrayBufferObject;
+  let byteLength: DataViewWithBufferWitnessRecord['CachedBufferByteLength'];
+  if (IsDetachedBuffer(buffer) === Value.true) {
+    byteLength = 'detached';
+  } else {
+    byteLength = ArrayBufferByteLength(buffer, order);
+  }
+  return { Object: obj, CachedBufferByteLength: byteLength };
+}
+
+/** https://tc39.es/ecma262/#sec-getviewbytelength */
+export function GetViewByteLength(viewRecord: DataViewWithBufferWitnessRecord): number {
+  Assert(!IsViewOutOfBounds(viewRecord));
+  const view = viewRecord.Object;
+  // @ts-expect-error
+  if (view.ByteLength !== 'auto') {
+    return view.ByteLength;
+  }
+  Assert(!IsFixedLengthArrayBuffer(view.ViewedArrayBuffer as ArrayBufferObject));
+  const byteOffset = view.ByteOffset;
+  const byteLength = viewRecord.CachedBufferByteLength;
+  Assert(byteLength !== 'detached');
+  return byteLength - byteOffset;
+}
+
+/** https://tc39.es/ecma262/#sec-isviewoutofbounds */
+export function IsViewOutOfBounds(viewRecord: DataViewWithBufferWitnessRecord): boolean {
+  const view = viewRecord.Object;
+  const bufferByteLength = viewRecord.CachedBufferByteLength;
+  Assert(
+    (IsDetachedBuffer(view.ViewedArrayBuffer as ArrayBufferObject) === Value.true && bufferByteLength === 'detached')
+    || (IsDetachedBuffer(view.ViewedArrayBuffer as ArrayBufferObject) === Value.false && bufferByteLength !== 'detached'),
+  );
+  if (bufferByteLength === 'detached') {
+    return true;
+  }
+  const byteOffsetStart = view.ByteOffset;
+  let byteOffsetEnd;
+  // @ts-expect-error
+  if (view.ByteLength === 'auto') {
+    byteOffsetEnd = bufferByteLength;
+  } else {
+    byteOffsetEnd = byteOffsetStart + view.ByteLength;
+  }
+  if (byteOffsetStart > bufferByteLength || byteOffsetEnd > bufferByteLength) {
+    return true;
+  }
+  return false;
+}
+
+/** https://tc39.es/ecma262/#sec-getviewvalue */
+export function* GetViewValue(view: Value, requestIndex: Value, isLittleEndian: Value, type: TypedArrayTypes) {
   // 1. Perform ? RequireInternalSlot(view, [[DataView]]).
   Q(RequireInternalSlot(view, 'DataView'));
+  __ts_cast__<DataViewObject>(view);
   // 2. Assert: view has a [[ViewedArrayBuffer]] internal slot.
   Assert('ViewedArrayBuffer' in view);
   // 3. Let getIndex be ? ToIndex(requestIndex).
-  const getIndex = Q(ToIndex(requestIndex));
-  // 4. Set isLittleEndian to ! ToBoolean(isLittleEndian).
-  isLittleEndian = X(ToBoolean(isLittleEndian));
-  // 5. Let buffer be view.[[ViewedArrayBuffer]].
-  const buffer = view.ViewedArrayBuffer;
-  // 6. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(buffer) === Value.true) {
-    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
-  }
+  const getIndex = Q(yield* ToIndex(requestIndex));
+  // 4. Set isLittleEndian to ToBoolean(isLittleEndian).
+  isLittleEndian = ToBoolean(isLittleEndian);
   // 7. Let viewOffset be view.[[ByteOffset]].
   const viewOffset = view.ByteOffset;
-  // 8. Let viewSize be view.[[ByteLength]].
-  const viewSize = view.ByteLength;
+  const viewRecord = MakeDataViewWithBufferWitnessRecord(view, 'unordered');
+  if (IsViewOutOfBounds(viewRecord)) {
+    return surroundingAgent.Throw('TypeError', 'DataViewOOB');
+  }
+  const viewSize = GetViewByteLength(viewRecord);
   // 9. Let elementSize be the Element Size value specified in Table 61 for Element Type type.
   const elementSize = typedArrayInfoByType[type].ElementSize;
   // 10. If getIndex + elementSize > viewSize, throw a RangeError exception.
@@ -48,37 +108,35 @@ export function GetViewValue(view, requestIndex, isLittleEndian, type) {
   // 11. Let bufferIndex be getIndex + viewOffset.
   const bufferIndex = getIndex + viewOffset;
   // 12. Return GetValueFromBuffer(buffer, bufferIndex, type, false, Unordered, isLittleEndian).
-  return GetValueFromBuffer(buffer, bufferIndex, type, Value.false, 'Unordered', isLittleEndian);
+  return GetValueFromBuffer(view.ViewedArrayBuffer as ArrayBufferObject, bufferIndex, type, false, 'unordered', isLittleEndian);
 }
 
-/** http://tc39.es/ecma262/#sec-setviewvalue */
-export function SetViewValue(view, requestIndex, isLittleEndian, type, value) {
+/** https://tc39.es/ecma262/#sec-setviewvalue */
+export function* SetViewValue(view: Value, requestIndex: Value, isLittleEndian: Value, type: TypedArrayTypes, value: Value) {
   // 1. Perform ? RequireInternalSlot(view, [[DataView]]).
   Q(RequireInternalSlot(view, 'DataView'));
   // 2. Assert: view has a [[ViewedArrayBuffer]] internal slot.
   Assert('ViewedArrayBuffer' in view);
+  __ts_cast__<DataViewObject>(view);
   // 3. Let getIndex be ? ToIndex(requestIndex).
-  const getIndex = Q(ToIndex(requestIndex));
-  // 4. If ! IsBigIntElementType(type) is true, let numberValue be ? ToBigInt(value).
+  const getIndex = Q(yield* ToIndex(requestIndex));
+  // 4. If IsBigIntElementType(type) is true, let numberValue be ? ToBigInt(value).
   // 5. Otherwise, let numberValue be ? ToNumber(value).
   let numberValue;
-  if (X(IsBigIntElementType(type)) === Value.true) {
-    numberValue = Q(ToBigInt(value));
+  if (IsBigIntElementType(type) === Value.true) {
+    numberValue = Q(yield* ToBigInt(value));
   } else {
-    numberValue = Q(ToNumber(value));
+    numberValue = Q(yield* ToNumber(value));
   }
-  // 6. Set isLittleEndian to ! ToBoolean(isLittleEndian).
-  isLittleEndian = X(ToBoolean(isLittleEndian));
-  // 7. Let buffer be view.[[ViewedArrayBuffer]].
-  const buffer = view.ViewedArrayBuffer;
-  // 8. If IsDetachedBuffer(buffer) is true, throw a TypeError exception.
-  if (IsDetachedBuffer(buffer) === Value.true) {
-    return surroundingAgent.Throw('TypeError', 'ArrayBufferDetached');
-  }
+  // 6. Set isLittleEndian to ToBoolean(isLittleEndian).
+  isLittleEndian = ToBoolean(isLittleEndian);
   // 9. Let viewOffset be view.[[ByteOffset]].
   const viewOffset = view.ByteOffset;
-  // 10. Let viewSize be view.[[ByteLength]].
-  const viewSize = view.ByteLength;
+  const viewRecord = MakeDataViewWithBufferWitnessRecord(view, 'unordered');
+  if (IsViewOutOfBounds(viewRecord)) {
+    return surroundingAgent.Throw('TypeError', 'DataViewOOB');
+  }
+  const viewSize = GetViewByteLength(viewRecord);
   // 11. Let elementSize be the Element Size value specified in Table 61 for Element Type type.
   const elementSize = typedArrayInfoByType[type].ElementSize;
   // 12. If getIndex + elementSize > viewSize, throw a RangeError exception.
@@ -87,6 +145,7 @@ export function SetViewValue(view, requestIndex, isLittleEndian, type, value) {
   }
   // 13. Let bufferIndex be getIndex + viewOffset.
   const bufferIndex = getIndex + viewOffset;
-  // 14. Return SetValueInBuffer(buffer, bufferIndex, type, numberValue, false, Unordered, isLittleEndian).
-  return SetValueInBuffer(buffer, bufferIndex, type, numberValue, Value.false, 'Unordered', isLittleEndian);
+  // 14. Perform ? SetValueInBuffer(buffer, bufferIndex, type, numberValue, false, Unordered, isLittleEndian).
+  Q(yield* SetValueInBuffer(view.ViewedArrayBuffer as ArrayBufferObject, bufferIndex, type, numberValue, false, 'unordered', isLittleEndian));
+  return Value.undefined;
 }

@@ -1,39 +1,57 @@
-// @ts-nocheck
-import { surroundingAgent, HostMakeJobCallback } from '../engine.mjs';
-import { Value } from '../value.mjs';
-import { IsCallable, OrdinaryCreateFromConstructor } from '../abstract-ops/all.mjs';
-import { Q } from '../completion.mjs';
-import { bootstrapConstructor } from './bootstrap.mjs';
+import { surroundingAgent, HostMakeJobCallback, type JobCallbackRecord } from '../host-defined/engine.mts';
+import {
+  UndefinedValue, Value, type Arguments, type FunctionCallContext,
+} from '../value.mts';
+import {
+  IsCallable, OrdinaryCreateFromConstructor, Realm,
+  type BuiltinFunctionObject, type FunctionObject, type OrdinaryObject,
+} from '../abstract-ops/all.mts';
+import { Q } from '../completion.mts';
+import type { Mutable } from '../helpers.mts';
+import { bootstrapConstructor } from './bootstrap.mts';
 
-/** http://tc39.es/ecma262/#sec-finalization-registry-cleanup-callback */
-function FinalizationRegistryConstructor([cleanupCallback = Value.undefined], { NewTarget }) {
+export interface FinalizationRegistryCell {
+  WeakRefTarget: Value | undefined;
+  readonly HeldValue: Value;
+  readonly UnregisterToken: Value | undefined;
+}
+export interface FinalizationRegistryObject extends OrdinaryObject {
+  readonly Realm: Realm;
+  readonly CleanupCallback: JobCallbackRecord;
+  Cells: FinalizationRegistryCell[];
+}
+export function isFinalizationRegistryObject(object: object): object is FinalizationRegistryObject {
+  return 'Cells' in object;
+}
+/** https://tc39.es/ecma262/#sec-finalization-registry-cleanup-callback */
+function* FinalizationRegistryConstructor(this: BuiltinFunctionObject, [cleanupCallback = Value.undefined]: Arguments, { NewTarget }: FunctionCallContext) {
   // 1. If NewTarget is undefined, throw a TypeError exception.
-  if (NewTarget === Value.undefined) {
-    return surroundingAgent.Throw('TypeError', 'NotAFunction', 'FinalizationRegistry');
+  if (NewTarget instanceof UndefinedValue) {
+    return surroundingAgent.Throw('TypeError', 'ConstructorNonCallable', this);
   }
   // 2. If IsCallable(cleanupCallback) is false, throw a TypeError exception.
-  if (IsCallable(cleanupCallback) === Value.false) {
+  if (!IsCallable(cleanupCallback)) {
     return surroundingAgent.Throw('TypeError', 'NotAFunction', cleanupCallback);
   }
   // 3. Let finalizationGroup be ? OrdinaryCreateFromConstructor(NewTarget, "%FinalizationRegistryPrototype%", « [[Realm]], [[CleanupCallback]], [[Cells]] »).
-  const finalizationGroup = Q(OrdinaryCreateFromConstructor(NewTarget, '%FinalizationRegistry.prototype%', [
+  const finalizationGroup = Q(yield* OrdinaryCreateFromConstructor(NewTarget, '%FinalizationRegistry.prototype%', [
     'Realm',
     'CleanupCallback',
     'Cells',
-  ]));
+  ])) as Mutable<FinalizationRegistryObject>;
   // 4. Let fn be the active function object.
   const fn = surroundingAgent.activeFunctionObject;
   // 5. Set finalizationGroup.[[Realm]] to fn.[[Realm]].
-  finalizationGroup.Realm = fn.Realm;
+  finalizationGroup.Realm = (fn as FunctionObject).Realm;
   // 6. Set finalizationGroup.[[CleanupCallback]] to HostMakeJobCallback(cleanupCallback).
   finalizationGroup.CleanupCallback = HostMakeJobCallback(cleanupCallback);
   // 7. Set finalizationGroup.[[Cells]] to be an empty List.
   finalizationGroup.Cells = [];
   // 8. Return finalizationGroup.
-  return finalizationGroup;
+  return finalizationGroup as FinalizationRegistryObject;
 }
 
-export function bootstrapFinalizationRegistry(realmRec) {
+export function bootstrapFinalizationRegistry(realmRec: Realm) {
   const cons = bootstrapConstructor(
     realmRec,
     FinalizationRegistryConstructor,

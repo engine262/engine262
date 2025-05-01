@@ -1,11 +1,11 @@
-// @ts-nocheck
-import { Value } from '../value.mjs';
-import { OutOfRange } from '../helpers.mjs';
-import { BoundNames, ModuleRequests, ExportEntriesForModule } from './all.mjs';
+import { JSStringValue, NullValue, Value } from '../value.mts';
+import { OutOfRange, isArray } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { BoundNames, ModuleRequests, ExportEntriesForModule } from './all.mts';
 
-export function ExportEntries(node) {
-  if (Array.isArray(node)) {
-    const entries = [];
+export function ExportEntries(node: ParseNode | readonly ParseNode[]): ExportEntry[] {
+  if (isArray(node)) {
+    const entries: ExportEntry[] = [];
     node.forEach((n) => {
       entries.push(...ExportEntries(n));
     });
@@ -55,7 +55,7 @@ export function ExportEntries(node) {
         case !!node.Declaration: {
           // `export` Declaration
           // 1. Let entries be a new empty List.
-          const entries = [];
+          const entries: ExportEntry[] = [];
           // 2. Let names be the BoundNames of Declaration.
           const names = BoundNames(node.Declaration);
           // 3. For each name in names, do
@@ -82,7 +82,7 @@ export function ExportEntries(node) {
             ModuleRequest: Value.null,
             ImportName: Value.null,
             LocalName: localName,
-            ExportName: new Value('default'),
+            ExportName: Value('default'),
           }];
         }
         case node.default && !!node.ClassDeclaration: {
@@ -96,7 +96,7 @@ export function ExportEntries(node) {
             ModuleRequest: Value.null,
             ImportName: Value.null,
             LocalName: localName,
-            ExportName: new Value('default'),
+            ExportName: Value('default'),
           }];
         }
         case node.default && !!node.AssignmentExpression: {
@@ -105,8 +105,8 @@ export function ExportEntries(node) {
           const entry = {
             ModuleRequest: Value.null,
             ImportName: Value.null,
-            LocalName: new Value('*default*'),
-            ExportName: new Value('default'),
+            LocalName: Value('*default*'),
+            ExportName: Value('default'),
           };
           // 2. Return a new List containing entry.
           return [entry];
@@ -117,4 +117,11 @@ export function ExportEntries(node) {
     default:
       return [];
   }
+}
+
+export interface ExportEntry {
+  readonly ModuleRequest: JSStringValue | NullValue;
+  readonly ImportName: JSStringValue | NullValue | 'all' | 'all-but-default';
+  readonly LocalName: JSStringValue | NullValue;
+  readonly ExportName: JSStringValue | NullValue;
 }

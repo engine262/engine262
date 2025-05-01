@@ -1,9 +1,9 @@
-// @ts-nocheck
-import { X } from '../completion.mjs';
-import { CodePointAt } from './all.mjs';
+import { X } from '../completion.mts';
+import type { JSStringValue } from '../value.mts';
+import { CodePointAt } from './all.mts';
 
-export function IsStringWellFormedUnicode(string) {
-  string = string.stringValue();
+export function IsStringWellFormedUnicode(string_: JSStringValue) {
+  const string = string_.stringValue();
   // 1. Let _strLen_ be the number of code units in string.
   const strLen = string.length;
   // 2. Let k be 0.

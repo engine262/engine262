@@ -1,25 +1,25 @@
-// @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Value } from '../value.mjs';
-import { Evaluate } from '../evaluator.mjs';
+import { surroundingAgent } from '../host-defined/engine.mts';
+import { Value } from '../value.mts';
+import { Evaluate, type StatementEvaluator } from '../evaluator.mts';
 import {
   Completion,
   AbruptCompletion,
   UpdateEmpty,
   EnsureCompletion,
   X,
-} from '../completion.mjs';
-import { BoundNames } from '../static-semantics/all.mjs';
-import { NewDeclarativeEnvironment } from '../environment.mjs';
-import { OutOfRange } from '../helpers.mjs';
-import { BindingInitialization } from './all.mjs';
+} from '../completion.mts';
+import { BoundNames } from '../static-semantics/all.mts';
+import { DeclarativeEnvironmentRecord } from '../environment.mts';
+import { OutOfRange } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { BindingInitialization } from './all.mts';
 
-/** http://tc39.es/ecma262/#sec-try-statement-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-try-statement-runtime-semantics-evaluation */
 //   TryStatement :
 //     `try` Block Catch
 //     `try` Block Finally
 //     `try` Block Catch Finally
-export function Evaluate_TryStatement(TryStatement) {
+export function Evaluate_TryStatement(TryStatement: ParseNode.TryStatement) {
   switch (true) {
     case !!TryStatement.Catch && !TryStatement.Finally:
       return Evaluate_TryStatement_BlockCatch(TryStatement);
@@ -33,13 +33,13 @@ export function Evaluate_TryStatement(TryStatement) {
 }
 
 // TryStatement : `try` Block Catch
-function* Evaluate_TryStatement_BlockCatch({ Block, Catch }) {
+function* Evaluate_TryStatement_BlockCatch({ Block, Catch }: ParseNode.TryStatement) {
   // 1. Let B be the result of evaluating Block.
   const B = EnsureCompletion(yield* Evaluate(Block));
   // 2. If B.[[Type]] is throw, let C be CatchClauseEvaluation of Catch with argument B.[[Value]].
   let C;
   if (B.Type === 'throw') {
-    C = EnsureCompletion(yield* CatchClauseEvaluation(Catch, B.Value));
+    C = EnsureCompletion(yield* CatchClauseEvaluation(Catch!, B.Value));
   } else { // 3. Else, let C be B.
     C = B;
   }
@@ -48,11 +48,11 @@ function* Evaluate_TryStatement_BlockCatch({ Block, Catch }) {
 }
 
 // TryStatement : `try` Block Finally
-function* Evaluate_TryStatement_BlockFinally({ Block, Finally }) {
+function* Evaluate_TryStatement_BlockFinally({ Block, Finally }: ParseNode.TryStatement) {
   // 1. Let B be the result of evaluating Block.
   const B = EnsureCompletion(yield* Evaluate(Block));
   // 1. Let F be the result of evaluating Finally.
-  let F = EnsureCompletion(yield* Evaluate(Finally));
+  let F = EnsureCompletion(yield* Evaluate(Finally!));
   // 1. If F.[[Type]] is normal, set F to B.
   if (F.Type === 'normal') {
     F = B;
@@ -62,18 +62,18 @@ function* Evaluate_TryStatement_BlockFinally({ Block, Finally }) {
 }
 
 // TryStatement : `try` Block Catch Finally
-function* Evaluate_TryStatement_BlockCatchFinally({ Block, Catch, Finally }) {
+function* Evaluate_TryStatement_BlockCatchFinally({ Block, Catch, Finally }: ParseNode.TryStatement) {
   // 1. Let B be the result of evaluating Block.
   const B = EnsureCompletion(yield* Evaluate(Block));
   // 2. If B.[[Type]] is throw, let C be CatchClauseEvaluation of Catch with argument B.[[Value]].
-  let C;
+  let C: Completion<Value | void>;
   if (B.Type === 'throw') {
-    C = EnsureCompletion(yield* CatchClauseEvaluation(Catch, B.Value));
+    C = EnsureCompletion(yield* CatchClauseEvaluation(Catch!, B.Value));
   } else { // 3. Else, let C be B.
     C = B;
   }
   // 4. Let F be the result of evaluating Finally.
-  let F = EnsureCompletion(yield* Evaluate(Finally));
+  let F = EnsureCompletion(yield* Evaluate(Finally!));
   // 5. If F.[[Type]] is normal, set F to C.
   if (F.Type === 'normal') {
     F = C;
@@ -82,11 +82,11 @@ function* Evaluate_TryStatement_BlockCatchFinally({ Block, Catch, Finally }) {
   return Completion(UpdateEmpty(F, Value.undefined));
 }
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-catchclauseevaluation */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-catchclauseevaluation */
 //  Catch :
 //    `catch` Block
 //    `catch` `(` CatchParameter `)` Block
-function* CatchClauseEvaluation({ CatchParameter, Block }, thrownValue) {
+function* CatchClauseEvaluation({ CatchParameter, Block }: ParseNode.Catch, thrownValue: Value): StatementEvaluator {
   if (!CatchParameter) {
     // 1. Return the result of evaluating Block.
     return yield* Evaluate(Block);
@@ -94,7 +94,7 @@ function* CatchClauseEvaluation({ CatchParameter, Block }, thrownValue) {
   // 1. Let oldEnv be the running execution context's LexicalEnvironment.
   const oldEnv = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 2. Let catchEnv be NewDeclarativeEnvironment(oldEnv).
-  const catchEnv = NewDeclarativeEnvironment(oldEnv);
+  const catchEnv = new DeclarativeEnvironmentRecord(oldEnv);
   // 3. For each element argName of the BoundNames of CatchParameter, do
   for (const argName of BoundNames(CatchParameter)) {
     // a. Perform ! catchEnv.CreateMutableBinding(argName, false).

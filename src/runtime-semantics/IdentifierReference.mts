@@ -1,14 +1,15 @@
-// @ts-nocheck
-import { ResolveBinding } from '../abstract-ops/all.mjs';
-import { StringValue } from '../static-semantics/all.mjs';
-import { Q } from '../completion.mjs';
+import { ResolveBinding } from '../abstract-ops/all.mts';
+import { StringValue } from '../static-semantics/all.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import type { ReferenceRecord } from '../value.mts';
+import type { PlainEvaluator } from '../evaluator.mts';
 
-/** http://tc39.es/ecma262/#sec-identifiers-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-identifiers-runtime-semantics-evaluation */
 // IdentifierReference :
 //   Identifier
 //   `yield`
 //   `await`
-export function Evaluate_IdentifierReference(IdentifierReference) {
+export function* Evaluate_IdentifierReference(IdentifierReference: ParseNode.IdentifierReference): PlainEvaluator<ReferenceRecord> {
   // 1. Return ? ResolveBinding(StringValue of Identifier).
-  return Q(ResolveBinding(StringValue(IdentifierReference), undefined, IdentifierReference.strict));
+  return yield* ResolveBinding(StringValue(IdentifierReference), undefined, IdentifierReference.strict);
 }

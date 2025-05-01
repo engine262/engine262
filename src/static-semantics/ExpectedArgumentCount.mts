@@ -1,7 +1,7 @@
-// @ts-nocheck
-import { HasInitializer } from './all.mjs';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { HasInitializer } from './all.mts';
 
-export function ExpectedArgumentCount(FormalParameterList) {
+export function ExpectedArgumentCount(FormalParameterList: ParseNode.FormalParameters) {
   if (FormalParameterList.length === 0) {
     return 0;
   }

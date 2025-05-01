@@ -1,8 +1,8 @@
-// @ts-nocheck
-import { IsFunctionDefinition, HasName } from './all.mjs';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { IsFunctionDefinition, HasName } from './all.mts';
 
-/** http://tc39.es/ecma262/#sec-isanonymousfunctiondefinition */
-export function IsAnonymousFunctionDefinition(expr) {
+/** https://tc39.es/ecma262/#sec-isanonymousfunctiondefinition */
+export function IsAnonymousFunctionDefinition(expr: ParseNode) {
   // 1. If IsFunctionDefinition of expr is false, return false.
   if (!IsFunctionDefinition(expr)) {
     return false;

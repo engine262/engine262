@@ -1,9 +1,9 @@
-// @ts-nocheck
-import { Value } from '../value.mjs';
-import { OutOfRange } from '../helpers.mjs';
-import { BoundNames, StringValue } from './all.mjs';
+import { JSStringValue, NullValue, Value } from '../value.mts';
+import { OutOfRange } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { BoundNames, StringValue, type ImportEntry } from './all.mts';
 
-export function ImportEntriesForModule(node, module) {
+export function ImportEntriesForModule(node: ParseNode, module: JSStringValue | NullValue): ImportEntry[] {
   switch (node.type) {
     case 'ImportClause':
       switch (true) {
@@ -36,9 +36,9 @@ export function ImportEntriesForModule(node, module) {
       // 1. Let localName be the sole element of BoundNames of ImportedBinding.
       const localName = BoundNames(node.ImportedBinding)[0];
       // 2. Let defaultEntry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: "default", [[LocalName]]: localName }.
-      const defaultEntry = {
+      const defaultEntry: ImportEntry = {
         ModuleRequest: module,
-        ImportName: new Value('default'),
+        ImportName: Value('default'),
         LocalName: localName,
       };
       // 3. Return a new List containing defaultEntry.
@@ -48,7 +48,7 @@ export function ImportEntriesForModule(node, module) {
       // 1. Let localName be the StringValue of ImportedBinding.
       const localName = StringValue(node.ImportedBinding);
       // 2. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: ~namespace-object~, [[LocalName]]: localName }.
-      const entry = {
+      const entry: ImportEntry = {
         ModuleRequest: module,
         ImportName: 'namespace-object',
         LocalName: localName,
@@ -57,7 +57,7 @@ export function ImportEntriesForModule(node, module) {
       return [entry];
     }
     case 'NamedImports': {
-      const specs = [];
+      const specs: ImportEntry[] = [];
       node.ImportsList.forEach((n) => {
         specs.push(...ImportEntriesForModule(n, module));
       });
@@ -70,7 +70,7 @@ export function ImportEntriesForModule(node, module) {
         // 2. Let localName be the StringValue of ImportedBinding.
         const localName = StringValue(node.ImportedBinding);
         // 3. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: importName, [[LocalName]]: localName }.
-        const entry = {
+        const entry: ImportEntry = {
           ModuleRequest: module,
           ImportName: importName,
           LocalName: localName,
@@ -81,7 +81,7 @@ export function ImportEntriesForModule(node, module) {
         // 1. Let localName be the sole element of BoundNames of ImportedBinding.
         const localName = BoundNames(node.ImportedBinding)[0];
         // 2. Let entry be the ImportEntry Record { [[ModuleRequest]]: module, [[ImportName]]: localName, [[LocalName]]: localName }.
-        const entry = {
+        const entry: ImportEntry = {
           ModuleRequest: module,
           ImportName: localName,
           LocalName: localName,

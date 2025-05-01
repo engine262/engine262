@@ -1,20 +1,24 @@
-// @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   MakeMethod,
   OrdinaryFunctionCreate,
-} from '../abstract-ops/all.mjs';
-import { X } from '../completion.mjs';
+  type ECMAScriptFunctionObject,
+} from '../abstract-ops/all.mts';
+import { X } from '../completion.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import type { ObjectValue } from '#self';
 
 export class ClassStaticBlockDefinitionRecord {
-  constructor({ BodyFunction }) {
+  BodyFunction: ECMAScriptFunctionObject;
+
+  constructor({ BodyFunction }: ClassStaticBlockDefinitionRecord) {
     this.BodyFunction = BodyFunction;
   }
 }
 
-/** http://tc39.es/ecma262/#sec-runtime-semantics-classstaticblockdefinitionevaluation */
+/** https://tc39.es/ecma262/#sec-runtime-semantics-classstaticblockdefinitionevaluation */
 //    ClassStaticBlock : `static` `{` ClassStaticBlockBody `}`
-export function ClassStaticBlockDefinitionEvaluation({ ClassStaticBlockBody }, homeObject) {
+export function ClassStaticBlockDefinitionEvaluation({ ClassStaticBlockBody }: ParseNode.ClassStaticBlock, homeObject: ObjectValue) {
   // 1. Let lex be the running execution context's LexicalEnvironment.
   const lex = surroundingAgent.runningExecutionContext.LexicalEnvironment;
   // 2. Let privateEnv be the running execution context's PrivateEnvironment.
@@ -22,7 +26,7 @@ export function ClassStaticBlockDefinitionEvaluation({ ClassStaticBlockBody }, h
   // 3. Let sourceText be the empty sequence of Unicode code points.
   const sourceText = '';
   // 4. Let formalParameters be an instance of the production FormalParameters : [empty] .
-  const formalParameters = [];
+  const formalParameters: readonly [] = [];
   // 5. Let bodyFunction be OrdinaryFunctionCreate(%Function.prototype%, sourceText, formalParameters, ClassStaticBlockBody, non-lexical-this, lex, privateEnv).
   const bodyFunction = X(OrdinaryFunctionCreate(
     surroundingAgent.intrinsic('%Function.prototype%'),

@@ -1,8 +1,7 @@
-// @ts-nocheck
-import { Assert } from '../abstract-ops/all.mjs';
+import { Assert } from '../abstract-ops/all.mts';
 
 /** https://tc39.es/ecma262/#sec-utf16encodecodepoint */
-export function UTF16EncodeCodePoint(cp) {
+export function UTF16EncodeCodePoint(cp: number) {
   // 1. Assert: 0 ≤ cp ≤ 0x10FFFF.
   Assert(cp >= 0 && cp <= 0x10FFFF);
   // 2. If cp ≤ 0xFFFF, return the String value consisting of the code unit whose value is cp.

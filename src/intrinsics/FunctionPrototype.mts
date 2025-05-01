@@ -1,8 +1,7 @@
-// @ts-nocheck
 import {
   surroundingAgent,
   HostHasSourceTextAvailable,
-} from '../engine.mjs';
+} from '../host-defined/engine.mts';
 import {
   Assert,
   Call,
@@ -19,30 +18,52 @@ import {
   SetFunctionName,
   ToIntegerOrInfinity,
   CreateBuiltinFunction,
-  MakeBasicObject,
-} from '../abstract-ops/all.mjs';
+  MakeBasicObject, R,
+  Realm,
+  type ExoticObject,
+  type FunctionObject,
+  isBuiltinFunctionObject,
+  type BuiltinFunctionObject,
+  isECMAScriptFunctionObject,
+} from '../abstract-ops/all.mts';
 import {
   JSStringValue,
   NumberValue,
   ObjectValue,
+  UndefinedValue,
   Value,
   wellKnownSymbols,
-} from '../value.mjs';
-import { Q, X } from '../completion.mjs';
-import { assignProps } from './bootstrap.mjs';
+  type Arguments,
+  type FunctionCallContext,
+} from '../value.mts';
+import {
+  Q, X, type ValueCompletion, type ValueEvaluator,
+} from '../completion.mts';
+import { __ts_cast__, type Mutable } from '../helpers.mts';
+import { assignProps } from './bootstrap.mts';
 
-/** http://tc39.es/ecma262/#sec-properties-of-the-function-prototype-object */
-function FunctionProto(_args, _meta) {
+export interface BoundFunctionObject extends ExoticObject, BuiltinFunctionObject {
+  readonly BoundTargetFunction: FunctionObject;
+  readonly BoundThis: Value;
+  readonly BoundArguments: Arguments;
+}
+
+export function isBoundFunctionObject(object: object): object is BoundFunctionObject {
+  return 'BoundTargetFunction' in object;
+}
+
+/** https://tc39.es/ecma262/#sec-properties-of-the-function-prototype-object */
+function FunctionProto() {
   // * accepts any arguments and returns undefined when invoked.
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-function.prototype.apply */
-function FunctionProto_apply([thisArg = Value.undefined, argArray = Value.undefined], { thisValue }) {
+/** https://tc39.es/ecma262/#sec-function.prototype.apply */
+function* FunctionProto_apply([thisArg = Value.undefined, argArray = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let func be the this value.
   const func = thisValue;
   // 2. If IsCallable(func) is false, throw a TypeError exception.
-  if (IsCallable(func) === Value.false) {
+  if (!IsCallable(func)) {
     return surroundingAgent.Throw('TypeError', 'ThisNotAFunction', func);
   }
   // 3. If argArray is undefined or null, then
@@ -50,45 +71,45 @@ function FunctionProto_apply([thisArg = Value.undefined, argArray = Value.undefi
     // a. Perform PrepareForTailCall().
     PrepareForTailCall();
     // b. Return ? Call(func, thisArg).
-    return Q(Call(func, thisArg));
+    return Q(yield* Call(func, thisArg));
   }
   // 4. Let argList be ? CreateListFromArrayLike(argArray).
-  const argList = Q(CreateListFromArrayLike(argArray));
+  const argList = Q(yield* CreateListFromArrayLike(argArray));
   // 5. Perform PrepareForTailCall().
   PrepareForTailCall();
   // 6. Return ? Call(func, thisArg, argList).
-  return Q(Call(func, thisArg, argList));
+  return Q(yield* Call(func, thisArg, argList));
 }
 
-function BoundFunctionExoticObjectCall(thisArgument, argumentsList) {
+function* BoundFunctionExoticObjectCall(this: BoundFunctionObject, _thisArgument: ObjectValue, argumentsList: Arguments): ValueEvaluator {
   const F = this;
 
   const target = F.BoundTargetFunction;
   const boundThis = F.BoundThis;
   const boundArgs = F.BoundArguments;
   const args = [...boundArgs, ...argumentsList];
-  return Q(Call(target, boundThis, args));
+  return Q(yield* Call(target, boundThis, args));
 }
 
-function BoundFunctionExoticObjectConstruct(argumentsList, newTarget) {
+function* BoundFunctionExoticObjectConstruct(this: BoundFunctionObject, argumentsList: Arguments, newTarget: FunctionObject | UndefinedValue): ValueEvaluator<ObjectValue> {
   const F = this;
 
   const target = F.BoundTargetFunction;
-  Assert(IsConstructor(target) === Value.true);
+  Assert(IsConstructor(target));
   const boundArgs = F.BoundArguments;
   const args = [...boundArgs, ...argumentsList];
   if (SameValue(F, newTarget) === Value.true) {
     newTarget = target;
   }
-  return Q(Construct(target, args, newTarget));
+  return Q(yield* Construct(target, args, newTarget));
 }
 
-/** http://tc39.es/ecma262/#sec-boundfunctioncreate */
-function BoundFunctionCreate(targetFunction, boundThis, boundArgs) {
+/** https://tc39.es/ecma262/#sec-boundfunctioncreate */
+function* BoundFunctionCreate(targetFunction: ObjectValue, boundThis: Value, boundArgs: Arguments): ValueEvaluator<BoundFunctionObject> {
   // 1. Assert: Type(targetFunction) is Object.
   Assert(targetFunction instanceof ObjectValue);
   // 2. Let proto be ? targetFunction.[[GetPrototypeOf]]().
-  const proto = Q(targetFunction.GetPrototypeOf());
+  const proto = Q(yield* targetFunction.GetPrototypeOf());
   // 3. Let internalSlotsList be the internal slots listed in Table 30, plus [[Prototype]] and [[Extensible]].
   const internalSlotsList = [
     'BoundTargetFunction',
@@ -98,18 +119,18 @@ function BoundFunctionCreate(targetFunction, boundThis, boundArgs) {
     'Extensible',
   ];
   // 4. Let obj be ! MakeBasicObject(internalSlotsList).
-  const obj = X(MakeBasicObject(internalSlotsList));
+  const obj = X(MakeBasicObject(internalSlotsList)) as Mutable<BoundFunctionObject>;
   // 5. Set obj.[[Prototype]] to proto.
   obj.Prototype = proto;
   // 6. Set obj.[[Call]] as described in 9.4.1.1.
   obj.Call = BoundFunctionExoticObjectCall;
   // 7. If IsConstructor(targetFunction) is true, then
-  if (IsConstructor(targetFunction) === Value.true) {
+  if (IsConstructor(targetFunction)) {
     // a. Set obj.[[Construct]] as described in 9.4.1.2.
     obj.Construct = BoundFunctionExoticObjectConstruct;
   }
   // 8. Set obj.[[BoundTargetFunction]] to targetFunction.
-  obj.BoundTargetFunction = targetFunction;
+  obj.BoundTargetFunction = targetFunction as FunctionObject;
   // 9. Set obj.[[BoundThis]] to boundThis.
   obj.BoundThis = boundThis;
   // 10. Set obj.[[BoundArguments]] to boundArguments.
@@ -118,34 +139,35 @@ function BoundFunctionCreate(targetFunction, boundThis, boundArgs) {
   return obj;
 }
 
-/** http://tc39.es/ecma262/#sec-function.prototype.bind */
-function FunctionProto_bind([thisArg = Value.undefined, ...args], { thisValue }) {
+/** https://tc39.es/ecma262/#sec-function.prototype.bind */
+function* FunctionProto_bind([thisArg = Value.undefined, ...args]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let Target be the this value.
   const Target = thisValue;
   // 2. If IsCallable(Target) is false, throw a TypeError exception.
-  if (IsCallable(Target) === Value.false) {
+  if (!IsCallable(Target)) {
     return surroundingAgent.Throw('TypeError', 'ThisNotAFunction', Target);
   }
+  __ts_cast__<ObjectValue>(Target);
   // 3. Let F be ? BoundFunctionCreate(Target, thisArg, args).
-  const F = Q(BoundFunctionCreate(Target, thisArg, args));
+  const F = Q(yield* BoundFunctionCreate(Target, thisArg, args));
   // 4. Let L be 0.
   let L = 0;
   // 5. Let targetHasLength be ? HasOwnProperty(Target, "length").
-  const targetHasLength = Q(HasOwnProperty(Target, new Value('length')));
+  const targetHasLength = Q(yield* HasOwnProperty(Target, Value('length')));
   // 6. If targetHasLength is true, then
   if (targetHasLength === Value.true) {
     // a. Let targetLen be ? Get(Target, "length").
-    const targetLen = Q(Get(Target, new Value('length')));
+    const targetLen = Q(yield* Get(Target, Value('length')));
     // b. If Type(targetLen) is Number, then
     if (targetLen instanceof NumberValue) {
       // i. If targetLen is +∞𝔽, set L to +∞.
-      if (targetLen.numberValue() === +Infinity) {
+      if (R(targetLen) === +Infinity) {
         L = +Infinity;
-      } else if (targetLen.numberValue() === -Infinity) { // ii. Else if targetLen is -∞𝔽, set L to 0.
+      } else if (R(targetLen) === -Infinity) { // ii. Else if targetLen is -∞𝔽, set L to 0.
         L = 0;
       } else { // iii. Else,
         // 1. Set targetLen to ! ToIntegerOrInfinity(targetLen).
-        const targetLenAsInt = Q(ToIntegerOrInfinity(targetLen));
+        const targetLenAsInt = Q(yield* ToIntegerOrInfinity(targetLen));
         // 2. Assert: targetLenAsInt is finite.
         Assert(Number.isFinite(targetLenAsInt));
         // 3. Let argCount be the number of elements in args.
@@ -158,23 +180,23 @@ function FunctionProto_bind([thisArg = Value.undefined, ...args], { thisValue })
   // 7. Perform ! SetFunctionLength(F, L).
   X(SetFunctionLength(F, L));
   // 8. Let targetName be ? Get(Target, "name").
-  let targetName = Q(Get(Target, new Value('name')));
+  let targetName = Q(yield* Get(Target, Value('name')));
   // 9. If Type(targetName) is not String, set targetName to the empty String.
   if (!(targetName instanceof JSStringValue)) {
-    targetName = new Value('');
+    targetName = Value('');
   }
   // 10. Perform SetFunctionName(F, targetName, "bound").
-  SetFunctionName(F, targetName, new Value('bound'));
+  SetFunctionName(F, targetName, Value('bound'));
   // 11. Return F.
   return F;
 }
 
-/** http://tc39.es/ecma262/#sec-function.prototype.call */
-function FunctionProto_call([thisArg = Value.undefined, ...args], { thisValue }) {
+/** https://tc39.es/ecma262/#sec-function.prototype.call */
+function* FunctionProto_call([thisArg = Value.undefined, ...args]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let func be the this value.
   const func = thisValue;
   // 2. If IsCallable(func) is false, throw a TypeError exception.
-  if (IsCallable(func) === Value.false) {
+  if (!IsCallable(func)) {
     return surroundingAgent.Throw('TypeError', 'ThisNotAFunction', func);
   }
   // 3. Let argList be a new empty List.
@@ -186,20 +208,19 @@ function FunctionProto_call([thisArg = Value.undefined, ...args], { thisValue })
   // 5. Perform PrepareForTailCall().
   PrepareForTailCall();
   // 6. Return ? Call(func, thisArg, argList).
-  return Q(Call(func, thisArg, argList));
+  return Q(yield* Call(func, thisArg, argList));
 }
 
-/** http://tc39.es/ecma262/#sec-function.prototype.tostring */
-function FunctionProto_toString(args, { thisValue }) {
+/** https://tc39.es/ecma262/#sec-function.prototype.tostring */
+export function FunctionProto_toString(_args: Arguments, { thisValue }: FunctionCallContext): ValueCompletion<JSStringValue> {
   // 1. Let func be the this value.
   const func = thisValue;
   // 2. If Type(func) is Object and func has a [[SourceText]] internal slot and func.[[SourceText]]
   //    is a sequence of Unicode code points and ! HostHasSourceTextAvailable(func) is true, then
-  if (func instanceof ObjectValue
-      && 'SourceText' in func
-      && X(HostHasSourceTextAvailable(func)) === Value.true) {
+  if (isECMAScriptFunctionObject(func)
+    && X(HostHasSourceTextAvailable(func)) === Value.true) {
     // Return ! UTF16Encode(func.[[SourceText]]).
-    return new Value(func.SourceText);
+    return Value(func.SourceText);
   }
   // 3. If func is a built-in function object, then return an implementation-defined
   //    String source code representation of func. The representation must have the
@@ -207,35 +228,35 @@ function FunctionProto_toString(args, { thisValue }) {
   //    slot and func.[[InitialName]] is a String, the portion of the returned String
   //    that would be matched by `NativeFunctionAccessor? PropertyName` must be the
   //    value of func.[[InitialName]].
-  if ('nativeFunction' in func) {
-    if (func.InitialName !== Value.null) {
-      return new Value(`function ${func.InitialName.stringValue()}() { [native code] }`);
+  if (isBuiltinFunctionObject(func)) {
+    if (func.InitialName instanceof JSStringValue) {
+      return Value(`function ${func.InitialName.stringValue()}() { [native code] }`);
     }
-    return new Value('function() { [native code] }');
+    return Value('function() { [native code] }');
   }
   // 4. If Type(func) is Object and IsCallable(func) is true, then return an implementation
   //    dependent String source code representation of func. The representation must have
   //    the syntax of a NativeFunction.
-  if (func instanceof ObjectValue && IsCallable(func) === Value.true) {
-    return new Value('function() { [native code] }');
+  if (func instanceof ObjectValue && IsCallable(func)) {
+    return Value('function() { [native code] }');
   }
   // 5. Throw a TypeError exception.
   return surroundingAgent.Throw('TypeError', 'NotAFunction', func);
 }
 
-/** http://tc39.es/ecma262/#sec-function.prototype-@@hasinstance */
-function FunctionProto_hasInstance([V = Value.undefined], { thisValue }) {
+/** https://tc39.es/ecma262/#sec-function.prototype-@@hasinstance */
+function* FunctionProto_hasInstance([V = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
   // 1. Let F be this value.
   const F = thisValue;
   // 2. Return ? OrdinaryHasInstance(F, V).
-  return Q(OrdinaryHasInstance(F, V));
+  return Q(yield* OrdinaryHasInstance(F, V));
 }
 
-export function bootstrapFunctionPrototype(realmRec) {
+export function bootstrapFunctionPrototype(realmRec: Realm) {
   const proto = CreateBuiltinFunction(
     FunctionProto,
     0,
-    new Value(''),
+    Value(''),
     [],
     realmRec,
     realmRec.Intrinsics['%Object.prototype%'],

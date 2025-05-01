@@ -1,7 +1,8 @@
-// @ts-nocheck
-import { ImportEntriesForModule, ModuleRequests } from './all.mjs';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import type { JSStringValue, NullValue } from '../value.mts';
+import { ImportEntriesForModule, ModuleRequests } from './all.mts';
 
-export function ImportEntries(node) {
+export function ImportEntries(node: ParseNode): ImportEntry[] {
   switch (node.type) {
     case 'Module':
       if (node.ModuleBody) {
@@ -9,7 +10,7 @@ export function ImportEntries(node) {
       }
       return [];
     case 'ModuleBody': {
-      const entries = [];
+      const entries: ImportEntry[] = [];
       for (const item of node.ModuleItemList) {
         entries.push(...ImportEntries(item));
       }
@@ -20,10 +21,16 @@ export function ImportEntries(node) {
         // 1. Let module be the sole element of ModuleRequests of FromClause.
         const module = ModuleRequests(node.FromClause)[0];
         // 2. Return ImportEntriesForModule of ImportClause with argument module.
-        return ImportEntriesForModule(node.ImportClause, module);
+        return ImportEntriesForModule(node.ImportClause!, module);
       }
       return [];
     default:
       return [];
   }
+}
+
+export interface ImportEntry {
+  readonly ModuleRequest: JSStringValue | NullValue;
+  readonly ImportName: JSStringValue | 'namespace-object';
+  readonly LocalName: JSStringValue;
 }

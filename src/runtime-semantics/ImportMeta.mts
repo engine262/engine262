@@ -1,18 +1,18 @@
-// @ts-nocheck
-import { HostGetImportMetaProperties, HostFinalizeImportMeta } from '../engine.mjs';
-import { ObjectValue, Value } from '../value.mjs';
+import { HostGetImportMetaProperties, HostFinalizeImportMeta } from '../host-defined/engine.mts';
+import { ObjectValue, Value } from '../value.mts';
 import {
   Assert,
   GetActiveScriptOrModule,
   OrdinaryObjectCreate,
   CreateDataPropertyOrThrow,
-} from '../abstract-ops/all.mjs';
-import { X } from '../completion.mjs';
-import { SourceTextModuleRecord } from '../modules.mjs';
+} from '../abstract-ops/all.mts';
+import { X } from '../completion.mts';
+import { SourceTextModuleRecord } from '../modules.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
-/** http://tc39.es/ecma262/#sec-meta-properties */
+/** https://tc39.es/ecma262/#sec-meta-properties */
 //   ImportMeta : `import` `.` `meta`
-export function Evaluate_ImportMeta(_ImportMeta) {
+export function Evaluate_ImportMeta(_ImportMeta: ParseNode.ImportMeta) {
   // 1. Let module be ! GetActiveScriptOrModule().
   const module = X(GetActiveScriptOrModule());
   // 2. Assert: module is a Source Text Module Record.

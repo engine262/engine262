@@ -1,22 +1,22 @@
-// @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
-import { Value, ReferenceRecord, JSStringValue } from '../value.mjs';
+import { surroundingAgent } from '../host-defined/engine.mts';
+import { Value, ReferenceRecord, JSStringValue } from '../value.mts';
 import {
   GetValue,
   IsPropertyReference,
   PerformEval,
   SameValue,
-} from '../abstract-ops/all.mjs';
-import { IsInTailPosition } from '../static-semantics/all.mjs';
-import { Q } from '../completion.mjs';
-import { Evaluate } from '../evaluator.mjs';
-import { EvaluateCall, ArgumentListEvaluation } from './all.mjs';
+} from '../abstract-ops/all.mts';
+import { IsInTailPosition } from '../static-semantics/all.mts';
+import { Q } from '../completion.mts';
+import { Evaluate, type ValueEvaluator } from '../evaluator.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
+import { EvaluateCall, ArgumentListEvaluation } from './all.mts';
 
-/** http://tc39.es/ecma262/#sec-function-calls-runtime-semantics-evaluation */
+/** https://tc39.es/ecma262/#sec-function-calls-runtime-semantics-evaluation */
 // CallExpression :
 //   CoverCallExpressionAndAsyncArrowHead
 //   CallExpression Arguments
-export function* Evaluate_CallExpression(CallExpression) {
+export function* Evaluate_CallExpression(CallExpression: ParseNode.CallExpression): ValueEvaluator {
   // 1. Let expr be CoveredCallExpression of CoverCallExpressionAndAsyncArrowHead.
   const expr = CallExpression;
   // 2. Let memberExpr be the MemberExpression of expr.
@@ -24,9 +24,9 @@ export function* Evaluate_CallExpression(CallExpression) {
   // 3. Let arguments be the Arguments of expr.
   const args = expr.Arguments;
   // 4. Let ref be the result of evaluating memberExpr.
-  const ref = yield* Evaluate(memberExpr);
+  const ref = Q(yield* Evaluate(memberExpr));
   // 5. Let func be ? GetValue(ref).
-  const func = Q(GetValue(ref));
+  const func = Q(yield* GetValue(ref));
   // 6. If Type(ref) is Reference, IsPropertyReference(ref) is false, and GetReferencedName(ref) is "eval", then
   if (ref instanceof ReferenceRecord
       && IsPropertyReference(ref) === Value.false
@@ -47,7 +47,7 @@ export function* Evaluate_CallExpression(CallExpression) {
       // v. Let evalRealm be the current Realm Record.
       const evalRealm = surroundingAgent.currentRealmRecord;
       // vi. Return ? PerformEval(evalText, evalRealm, strictCaller, true).
-      return Q(PerformEval(evalText, evalRealm, strictCaller, true));
+      return Q(yield* PerformEval(evalText, evalRealm, strictCaller, true));
     }
   }
   // 7. Let thisCall be this CallExpression.

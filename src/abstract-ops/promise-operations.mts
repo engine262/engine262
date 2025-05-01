@@ -1,21 +1,23 @@
-// @ts-nocheck
 import {
   HostMakeJobCallback,
   HostCallJobCallback,
   HostEnqueuePromiseJob,
   HostPromiseRejectionTracker,
   surroundingAgent,
-} from '../engine.mjs';
-import { ObjectValue, Value, UndefinedValue } from '../value.mjs';
+} from '../host-defined/engine.mts';
+import {
+  ObjectValue, Value, UndefinedValue, BooleanValue, NullValue, type Arguments,
+} from '../value.mts';
 import {
   AbruptCompletion,
-  Completion,
   EnsureCompletion,
   NormalCompletion,
   Q,
   ThrowCompletion,
   X,
-} from '../completion.mjs';
+} from '../completion.mts';
+import type { Mutable } from '../helpers.mts';
+import type { PlainEvaluator } from '../evaluator.mts';
 import {
   Assert,
   Call,
@@ -27,23 +29,58 @@ import {
   SameValue,
   GetFunctionRealm,
   isFunctionObject,
-} from './all.mjs';
+  type BuiltinFunctionObject,
+  Realm,
+} from './all.mts';
+import type {
+  ValueEvaluator, JobCallbackRecord, PromiseObject,
+  ValueCompletion,
+} from '#self';
 
 // This file covers abstract operations defined in
-/** http://tc39.es/ecma262/#sec-promise-objects */
+/** https://tc39.es/ecma262/#sec-promise-objects */
 
-/** http://tc39.es/ecma262/#sec-promisecapability-records */
-export class PromiseCapabilityRecord {
-  constructor() {
-    this.Promise = Value.undefined;
-    this.Resolve = Value.undefined;
-    this.Reject = Value.undefined;
-  }
+export interface PromiseResolvingFunctionObject extends BuiltinFunctionObject {
+  readonly Promise: PromiseObject;
+  readonly AlreadyResolved: { Value: boolean };
 }
 
-/** http://tc39.es/ecma262/#sec-promisereaction-records */
+/** https://tc39.es/ecma262/#sec-promise.all-resolve-element-functions */
+export interface PromiseAllResolveElementFunctionObject extends BuiltinFunctionObject {
+  readonly Index: number;
+  readonly Values: Value[];
+  readonly Capability: PromiseCapabilityRecord;
+  readonly RemainingElements: { Value: number };
+  readonly AlreadyCalled: { Value: boolean };
+}
+
+/** https://tc39.es/ecma262/#sec-promise.any-reject-element-functions */
+export interface PromiseAllRejectElementFunctionObject extends BuiltinFunctionObject {
+  readonly Index: number;
+  readonly Errors: Value[];
+  readonly Capability: PromiseCapabilityRecord;
+  readonly RemainingElements: { Value: number };
+  readonly AlreadyCalled: { Value: boolean };
+}
+
+/** https://tc39.es/ecma262/#sec-promisecapability-records */
+export class PromiseCapabilityRecord {
+  readonly Promise!: PromiseObject;
+
+  readonly Resolve: Value = Value.undefined;
+
+  readonly Reject: Value = Value.undefined;
+}
+
+/** https://tc39.es/ecma262/#sec-promisereaction-records */
 export class PromiseReactionRecord {
-  constructor(O) {
+  readonly Capability: PromiseCapabilityRecord | UndefinedValue;
+
+  readonly Type: 'Fulfill' | 'Reject';
+
+  readonly Handler: JobCallbackRecord | undefined;
+
+  constructor(O: PromiseReactionRecord) {
     Assert(O.Capability instanceof PromiseCapabilityRecord
         || O.Capability === Value.undefined);
     Assert(O.Type === 'Fulfill' || O.Type === 'Reject');
@@ -55,8 +92,8 @@ export class PromiseReactionRecord {
   }
 }
 
-/** http://tc39.es/ecma262/#sec-createresolvingfunctions */
-export function CreateResolvingFunctions(promise) {
+/** https://tc39.es/ecma262/#sec-createresolvingfunctions */
+export function CreateResolvingFunctions(promise: PromiseObject) {
   // 1. Let alreadyResolved be the Record { [[Value]]: false }.
   const alreadyResolved = { Value: false };
   // 2. Let stepsResolve be the algorithm steps defined in Promise Resolve Functions.
@@ -64,7 +101,7 @@ export function CreateResolvingFunctions(promise) {
   // 3. Let lengthResolve be the number of non-optional parameters of the function definition in Promise Resolve Functions.
   const lengthResolve = 1;
   // 4. Let resolve be ! CreateBuiltinFunction(stepsResolve, lengthResolve, "", « [[Promise]], [[AlreadyResolved]] »).
-  const resolve = X(CreateBuiltinFunction(stepsResolve, lengthResolve, new Value(''), ['Promise', 'AlreadyResolved']));
+  const resolve = X(CreateBuiltinFunction(stepsResolve, lengthResolve, Value(''), ['Promise', 'AlreadyResolved'])) as Mutable<PromiseResolvingFunctionObject>;
   // 5. Set resolve.[[Promise]] to promise.
   resolve.Promise = promise;
   // 6. Set resolve.[[AlreadyResolved]] to alreadyResolved.
@@ -74,7 +111,7 @@ export function CreateResolvingFunctions(promise) {
   // 8. Let lengthReject be the number of non-optional parameters of the function definition in Promise Reject Functions.
   const lengthReject = 1;
   // 9. Let reject be ! CreateBuiltinFunction(stepsReject, lengthReject, "", « [[Promise]], [[AlreadyResolved]] »).
-  const reject = X(CreateBuiltinFunction(stepsReject, lengthReject, new Value(''), ['Promise', 'AlreadyResolved']));
+  const reject = X(CreateBuiltinFunction(stepsReject, lengthReject, Value(''), ['Promise', 'AlreadyResolved'])) as Mutable<PromiseResolvingFunctionObject>;
   // 10. Set reject.[[Promise]] to promise.
   reject.Promise = promise;
   // 11. Set reject.[[AlreadyResolved]] to alreadyResolved.
@@ -86,9 +123,9 @@ export function CreateResolvingFunctions(promise) {
   };
 }
 
-/** http://tc39.es/ecma262/#sec-promise-reject-functions */
-function PromiseRejectFunctions([reason = Value.undefined]) {
-  const F = this;
+/** https://tc39.es/ecma262/#sec-promise-reject-functions */
+function PromiseRejectFunctions(this: BuiltinFunctionObject, [reason = Value.undefined]: Arguments): ValueCompletion<UndefinedValue> {
+  const F = this as PromiseResolvingFunctionObject;
 
   Assert('Promise' in F && F.Promise instanceof ObjectValue);
   const promise = F.Promise;
@@ -96,29 +133,30 @@ function PromiseRejectFunctions([reason = Value.undefined]) {
   if (alreadyResolved.Value === true) {
     return Value.undefined;
   }
+  Q(surroundingAgent.debugger_tryTouchDuringPreview(promise));
   alreadyResolved.Value = true;
   return RejectPromise(promise, reason);
 }
 
-/** http://tc39.es/ecma262/#sec-newpromiseresolvethenablejob */
-function NewPromiseResolveThenableJob(promiseToResolve, thenable, then) {
+/** https://tc39.es/ecma262/#sec-newpromiseresolvethenablejob */
+function NewPromiseResolveThenableJob(promiseToResolve: PromiseObject, thenable: Value, then: JobCallbackRecord) {
   // 1. Let job be a new Job abstract closure with no parameters that captures
   //    promiseToResolve, thenable, and then and performs the following steps when called:
-  const job = () => {
+  function* job() {
     // a. Let resolvingFunctions be CreateResolvingFunctions(promiseToResolve).
     const resolvingFunctions = CreateResolvingFunctions(promiseToResolve);
     // b. Let thenCallResult be HostCallJobCallback(then, thenable, « resolvingFunctions.[[Resolve]], resolvingFunctions.[[Reject]] »).
-    const thenCallResult = HostCallJobCallback(then, thenable, [resolvingFunctions.Resolve, resolvingFunctions.Reject]);
+    const thenCallResult = yield* HostCallJobCallback(then, thenable, [resolvingFunctions.Resolve, resolvingFunctions.Reject]);
     // c. If thenCallResult is an abrupt completion, then
     if (thenCallResult instanceof AbruptCompletion) {
       // i .Let status be Call(resolvingFunctions.[[Reject]], undefined, « thenCallResult.[[Value]] »).
-      const status = Call(resolvingFunctions.Reject, Value.undefined, [thenCallResult.Value]);
+      const status = yield* Call(resolvingFunctions.Reject, Value.undefined, [thenCallResult.Value]);
       // ii. Return Completion(status).
-      return Completion(status);
+      return status;
     }
     // d. Return Completion(thenCallResult).
-    return Completion(thenCallResult);
-  };
+    return EnsureCompletion(thenCallResult);
+  }
   // 2. Let getThenRealmResult be GetFunctionRealm(then.[[Callback]]).
   const getThenRealmResult = EnsureCompletion(GetFunctionRealm(then.Callback));
   // 3. If getThenRealmResult is a normal completion, then let thenRealm be getThenRealmResult.[[Value]].
@@ -134,10 +172,10 @@ function NewPromiseResolveThenableJob(promiseToResolve, thenable, then) {
   return { Job: job, Realm: thenRealm };
 }
 
-/** http://tc39.es/ecma262/#sec-promise-resolve-functions */
-function PromiseResolveFunctions([resolution = Value.undefined]) {
+/** https://tc39.es/ecma262/#sec-promise-resolve-functions */
+function* PromiseResolveFunctions(this: BuiltinFunctionObject, [resolution = Value.undefined]: Arguments): ValueEvaluator {
   // 1. Let F be the active function object.
-  const F = this;
+  const F = this as PromiseResolvingFunctionObject;
   // 2. Assert: F has a [[Promise]] internal slot whose value is an Object.
   Assert('Promise' in F && F.Promise instanceof ObjectValue);
   // 3. Let promise be F.[[Promise]].
@@ -148,6 +186,7 @@ function PromiseResolveFunctions([resolution = Value.undefined]) {
   if (alreadyResolved.Value === true) {
     return Value.undefined;
   }
+  Q(surroundingAgent.debugger_tryTouchDuringPreview(promise));
   // 6. Set alreadyResolved.[[Value]] to true.
   alreadyResolved.Value = true;
   // 7. If SameValue(resolution, promise) is true, then
@@ -163,7 +202,7 @@ function PromiseResolveFunctions([resolution = Value.undefined]) {
     return FulfillPromise(promise, resolution);
   }
   // 9. Let then be Get(resolution, "then").
-  const then = Get(resolution, new Value('then'));
+  const then = EnsureCompletion(yield* Get(resolution, Value('then')));
   // 10. If then is an abrupt completion, then
   if (then instanceof AbruptCompletion) {
     // a. Return RejectPromise(promise, then.[[Value]]).
@@ -172,9 +211,12 @@ function PromiseResolveFunctions([resolution = Value.undefined]) {
   // 11. Let thenAction be then.[[Value]].
   const thenAction = then.Value;
   // 12. If IsCallable(thenAction) is false, then
-  if (IsCallable(thenAction) === Value.false) {
+  if (!IsCallable(thenAction)) {
     // a. Return FulfillPromise(promise, resolution).
     return FulfillPromise(promise, resolution);
+  }
+  if (surroundingAgent.debugger_isPreviewing) {
+    return Value.undefined;
   }
   // 13. Let thenJobCallback be HostMakeJobCallback(thenAction).
   const thenJobCallback = HostMakeJobCallback(thenAction);
@@ -186,28 +228,28 @@ function PromiseResolveFunctions([resolution = Value.undefined]) {
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-fulfillpromise */
-function FulfillPromise(promise, value) {
+/** https://tc39.es/ecma262/#sec-fulfillpromise */
+function FulfillPromise(promise: PromiseObject, value: Value) {
   Assert(promise.PromiseState === 'pending');
   const reactions = promise.PromiseFulfillReactions;
   promise.PromiseResult = value;
   promise.PromiseFulfillReactions = undefined;
   promise.PromiseRejectReactions = undefined;
   promise.PromiseState = 'fulfilled';
-  return TriggerPromiseReactions(reactions, value);
+  return TriggerPromiseReactions(reactions!, value);
 }
 
-/** http://tc39.es/ecma262/#sec-newpromisecapability */
-export function NewPromiseCapability(C) {
+/** https://tc39.es/ecma262/#sec-newpromisecapability */
+export function* NewPromiseCapability(C: Value): PlainEvaluator<PromiseCapabilityRecord> {
   // 1. If IsConstructor(C) is false, throw a TypeError exception.
-  if (IsConstructor(C) === Value.false) {
+  if (!IsConstructor(C)) {
     return surroundingAgent.Throw('TypeError', 'NotAConstructor', C);
   }
   // 2. NOTE: C is assumed to be a constructor function that supports the parameter conventions of the Promise constructor (see 26.2.3.1).
   // 3. Let promiseCapability be the PromiseCapability Record { [[Promise]]: undefined, [[Resolve]]: undefined, [[Reject]]: undefined }.
-  const promiseCapability = new PromiseCapabilityRecord();
+  const promiseCapability = new PromiseCapabilityRecord() as Mutable<PromiseCapabilityRecord>;
   // 4. Let executorClosure be a new Abstract Closure with parameters (resolve, reject) that captures promiseCapability and performs the following steps when called:
-  const executorClosure = ([resolve = Value.undefined, reject = Value.undefined]) => {
+  const executorClosure = ([resolve = Value.undefined, reject = Value.undefined]: Arguments) => {
     // a. If promiseCapability.[[Resolve]] is not undefined, throw a TypeError exception.
     if (!(promiseCapability.Resolve instanceof UndefinedValue)) {
       return surroundingAgent.Throw('TypeError', 'PromiseCapabilityFunctionAlreadySet', 'resolve');
@@ -224,25 +266,25 @@ export function NewPromiseCapability(C) {
     return Value.undefined;
   };
   // 5. Let executor be ! CreateBuiltinFunction(executorClosure, 2, "", « »).
-  const executor = X(CreateBuiltinFunction(executorClosure, 2, new Value(''), []));
+  const executor = X(CreateBuiltinFunction(executorClosure, 2, Value(''), []));
   // 8. Let promise be ? Construct(C, « executor »).
-  const promise = Q(Construct(C, [executor]));
+  const promise = Q(yield* Construct(C, [executor])) as PromiseObject;
   // 9. If IsCallable(promiseCapability.[[Resolve]]) is false, throw a TypeError exception.
-  if (IsCallable(promiseCapability.Resolve) === Value.false) {
+  if (!IsCallable(promiseCapability.Resolve)) {
     return surroundingAgent.Throw('TypeError', 'PromiseResolveFunction', promiseCapability.Resolve);
   }
   // 10. If IsCallable(promiseCapability.[[Reject]]) is false, throw a TypeError exception.
-  if (IsCallable(promiseCapability.Reject) === Value.false) {
+  if (!IsCallable(promiseCapability.Reject)) {
     return surroundingAgent.Throw('TypeError', 'PromiseRejectFunction', promiseCapability.Reject);
   }
   // 11. Set promiseCapability.[[Promise]] to promise.
   promiseCapability.Promise = promise;
   // 12. Return promiseCapability.
-  return promiseCapability;
+  return NormalCompletion(promiseCapability);
 }
 
-/** http://tc39.es/ecma262/#sec-ispromise */
-export function IsPromise(x) {
+/** https://tc39.es/ecma262/#sec-ispromise */
+export function IsPromise(x: Value): BooleanValue {
   if (!(x instanceof ObjectValue)) {
     return Value.false;
   }
@@ -252,8 +294,8 @@ export function IsPromise(x) {
   return Value.true;
 }
 
-/** http://tc39.es/ecma262/#sec-rejectpromise */
-function RejectPromise(promise, reason) {
+/** https://tc39.es/ecma262/#sec-rejectpromise */
+function RejectPromise(promise: PromiseObject, reason: Value) {
   Assert(promise.PromiseState === 'pending');
   const reactions = promise.PromiseRejectReactions;
   promise.PromiseResult = reason;
@@ -263,11 +305,11 @@ function RejectPromise(promise, reason) {
   if (promise.PromiseIsHandled === Value.false) {
     HostPromiseRejectionTracker(promise, 'reject');
   }
-  return TriggerPromiseReactions(reactions, reason);
+  return TriggerPromiseReactions(reactions!, reason);
 }
 
-/** http://tc39.es/ecma262/#sec-triggerpromisereactions */
-function TriggerPromiseReactions(reactions, argument) {
+/** https://tc39.es/ecma262/#sec-triggerpromisereactions */
+function TriggerPromiseReactions(reactions: readonly PromiseReactionRecord[], argument: Value) {
   // 1. For each reaction in reactions, do
   reactions.forEach((reaction) => {
     // a. Let job be NewPromiseReactionJob(reaction, argument).
@@ -279,25 +321,25 @@ function TriggerPromiseReactions(reactions, argument) {
   return Value.undefined;
 }
 
-/** http://tc39.es/ecma262/#sec-promise-resolve */
-export function PromiseResolve(C, x) {
+/** https://tc39.es/ecma262/#sec-promise-resolve */
+export function* PromiseResolve(C: ObjectValue, x: Value): ValueEvaluator<PromiseObject> {
   Assert(C instanceof ObjectValue);
   if (IsPromise(x) === Value.true) {
-    const xConstructor = Q(Get(x, new Value('constructor')));
+    const xConstructor = Q(yield* Get(x as PromiseObject, Value('constructor')));
     if (SameValue(xConstructor, C) === Value.true) {
-      return x;
+      return x as PromiseObject;
     }
   }
-  const promiseCapability = Q(NewPromiseCapability(C));
-  Q(Call(promiseCapability.Resolve, Value.undefined, [x]));
+  const promiseCapability = Q(yield* NewPromiseCapability(C));
+  Q(yield* Call(promiseCapability.Resolve, Value.undefined, [x]));
   return promiseCapability.Promise;
 }
 
-/** http://tc39.es/ecma262/#sec-newpromisereactionjob */
-function NewPromiseReactionJob(reaction, argument) {
+/** https://tc39.es/ecma262/#sec-newpromisereactionjob */
+function NewPromiseReactionJob(reaction: PromiseReactionRecord, argument: Value) {
   // 1. Let job be a new Job abstract closure with no parameters that captures
   //    reaction and argument and performs the following steps when called:
-  const job = () => {
+  function* job() {
     // a. Assert: reaction is a PromiseReaction Record.
     Assert(reaction instanceof PromiseReactionRecord);
     // b. Let promiseCapability be reaction.[[Capability]].
@@ -306,7 +348,7 @@ function NewPromiseReactionJob(reaction, argument) {
     const type = reaction.Type;
     // d. Let handler be reaction.[[Handler]].
     const handler = reaction.Handler;
-    let handlerResult;
+    let handlerResult: ValueCompletion;
     // e. If handler is empty, then
     if (handler === undefined) {
       // i. If type is Fulfill, let handlerResult be NormalCompletion(argument).
@@ -320,10 +362,10 @@ function NewPromiseReactionJob(reaction, argument) {
       }
     } else {
       // f. Else, let handlerResult be HostCallJobCallback(handler, undefined, « argument »).
-      handlerResult = HostCallJobCallback(handler, Value.undefined, [argument]);
+      handlerResult = yield* HostCallJobCallback(handler, Value.undefined, [argument]);
     }
     // g. If promiseCapability is undefined, then
-    if (promiseCapability === Value.undefined) {
+    if (promiseCapability instanceof UndefinedValue) {
       // i. Assert: handlerResult is not an abrupt completion.
       Assert(!(handlerResult instanceof AbruptCompletion));
       // ii. Return NormalCompletion(empty).
@@ -333,16 +375,16 @@ function NewPromiseReactionJob(reaction, argument) {
     // h. If handlerResult is an abrupt completion, then
     if (handlerResult instanceof AbruptCompletion) {
       // i. Let status be Call(promiseCapability.[[Reject]], undefined, « handlerResult.[[Value]] »).
-      status = Call(promiseCapability.Reject, Value.undefined, [handlerResult.Value]);
+      status = yield* Call(promiseCapability.Reject, Value.undefined, [handlerResult.Value]);
     } else {
       // ii. Let status be Call(promiseCapability.[[Resolve]], undefined, « handlerResult.[[Value]] »).
-      status = Call(promiseCapability.Resolve, Value.undefined, [handlerResult.Value]);
+      status = yield* Call(promiseCapability.Resolve, Value.undefined, [X(handlerResult)]);
     }
     // j. Return Completion(status).
-    return Completion(status);
-  };
+    return status;
+  }
   // 2. Let handlerRealm be null.
-  let handlerRealm = Value.null;
+  let handlerRealm: NullValue | Realm = Value.null;
   // 3. If reaction.[[Handler]] is not empty, then
   if (reaction.Handler !== undefined) {
     // a. Let getHandlerRealmResult be GetFunctionRealm(reaction.[[Handler]].[[Callback]]).
@@ -361,8 +403,8 @@ function NewPromiseReactionJob(reaction, argument) {
   return { Job: job, Realm: handlerRealm };
 }
 
-/** http://tc39.es/ecma262/#sec-performpromisethen */
-export function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapability) {
+/** https://tc39.es/ecma262/#sec-performpromisethen */
+export function PerformPromiseThen(promise: PromiseObject, onFulfilled: Value, onRejected: Value, resultCapability?: PromiseCapabilityRecord | UndefinedValue) {
   // 1. Assert: IsPromise(promise) is true.
   Assert(IsPromise(promise) === Value.true);
   // 2. If resultCapability is not present, then
@@ -372,7 +414,7 @@ export function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapab
   }
   let onFulfilledJobCallback;
   // 3. If IsCallable(onFulfilled) is false, then
-  if (IsCallable(onFulfilled) === Value.false) {
+  if (!IsCallable(onFulfilled)) {
     // a. Let onFulfilledJobCallback be empty.
     onFulfilledJobCallback = undefined;
   } else { // 4. Else,
@@ -381,7 +423,7 @@ export function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapab
   }
   let onRejectedJobCallback;
   // 5. If IsCallable(onRejected) is false, then
-  if (IsCallable(onRejected) === Value.false) {
+  if (!IsCallable(onRejected)) {
     // a. Let onRejectedJobCallback be empty.
     onRejectedJobCallback = undefined;
   } else { // 6. Else,
@@ -401,13 +443,14 @@ export function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapab
   });
   // 9. If promise.[[PromiseState]] is pending, then
   if (promise.PromiseState === 'pending') {
+    surroundingAgent.debugger_tryTouchDuringPreview(promise);
     // a. Append fulfillReaction as the last element of the List that is promise.[[PromiseFulfillReactions]].
-    promise.PromiseFulfillReactions.push(fulfillReaction);
+    promise.PromiseFulfillReactions!.push(fulfillReaction);
     // b. Append rejectReaction as the last element of the List that is promise.[[PromiseRejectReactions]].
-    promise.PromiseRejectReactions.push(rejectReaction);
+    promise.PromiseRejectReactions!.push(rejectReaction);
   } else if (promise.PromiseState === 'fulfilled') {
     // a. Let value be promise.[[PromiseResult]].
-    const value = promise.PromiseResult;
+    const value = promise.PromiseResult!;
     // b. Let fulfillJob be NewPromiseReactionJob(fulfillReaction, value).
     const fulfillJob = NewPromiseReactionJob(fulfillReaction, value);
     // c. Perform HostEnqueuePromiseJob(fulfillJob.[[Job]], fulfillJob.[[Realm]]).
@@ -416,7 +459,7 @@ export function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapab
     // a. Assert: The value of promise.[[PromiseState]] is rejected.
     Assert(promise.PromiseState === 'rejected');
     // b. Let reason be promise.[[PromiseResult]].
-    const reason = promise.PromiseResult;
+    const reason = promise.PromiseResult!;
     // c. If promise.[[PromiseIsHandled]] is false, perform HostPromiseRejectionTracker(promise, "handle").
     if (promise.PromiseIsHandled === Value.false) {
       HostPromiseRejectionTracker(promise, 'handle');
@@ -429,7 +472,7 @@ export function PerformPromiseThen(promise, onFulfilled, onRejected, resultCapab
   // 12. Set promise.[[PromiseIsHandled]] to true.
   promise.PromiseIsHandled = Value.true;
   // 13. If resultCapability is undefined, then
-  if (resultCapability === Value.undefined) {
+  if (resultCapability instanceof UndefinedValue) {
     // a. Return undefined.
     return Value.undefined;
   } else { // 14. Else,

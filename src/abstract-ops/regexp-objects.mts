@@ -1,12 +1,14 @@
-// @ts-nocheck
-import { surroundingAgent } from '../engine.mjs';
+import { surroundingAgent } from '../host-defined/engine.mts';
 import {
   Descriptor, Value, ObjectValue, BooleanValue, JSStringValue,
-} from '../value.mjs';
-import { Q, X } from '../completion.mjs';
-import { Evaluate_Pattern } from '../runtime-semantics/all.mjs';
-import { ParsePattern } from '../parse.mjs';
-import { isLineTerminator } from '../parser/Lexer.mjs';
+  UndefinedValue,
+} from '../value.mts';
+import { Q, X, type ValueEvaluator } from '../completion.mts';
+import { Evaluate_Pattern } from '../runtime-semantics/all.mts';
+import { ParsePattern } from '../parse.mts';
+import { isLineTerminator } from '../parser/Lexer.mts';
+import type { Mutable } from '../helpers.mts';
+import type { RegExpObject } from '../intrinsics/RegExp.mts';
 import {
   ArrayCreate,
   Assert,
@@ -19,12 +21,13 @@ import {
   Set,
   ToString,
   F as toNumberValue,
-} from './all.mjs';
+  type FunctionObject,
+} from './all.mts';
 
-/** http://tc39.es/ecma262/#sec-regexpalloc */
-export function RegExpAlloc(newTarget) {
-  const obj = Q(OrdinaryCreateFromConstructor(newTarget, '%RegExp.prototype%', ['RegExpMatcher', 'OriginalSource', 'OriginalFlags']));
-  X(DefinePropertyOrThrow(obj, new Value('lastIndex'), Descriptor({
+/** https://tc39.es/ecma262/#sec-regexpalloc */
+export function* RegExpAlloc(newTarget: FunctionObject): ValueEvaluator<RegExpObject> {
+  const obj = Q(yield* OrdinaryCreateFromConstructor(newTarget, '%RegExp.prototype%', ['RegExpMatcher', 'OriginalSource', 'OriginalFlags'])) as Mutable<RegExpObject>;
+  X(DefinePropertyOrThrow(obj, Value('lastIndex'), Descriptor({
     Writable: Value.true,
     Enumerable: Value.false,
     Configurable: Value.false,
@@ -32,21 +35,21 @@ export function RegExpAlloc(newTarget) {
   return obj;
 }
 
-/** http://tc39.es/ecma262/#sec-regexpinitialize */
-export function RegExpInitialize(obj, pattern, flags) {
+/** https://tc39.es/ecma262/#sec-regexpinitialize */
+export function* RegExpInitialize(obj: Mutable<RegExpObject>, pattern: Value, flags: Value) {
   let P;
   // 1. If pattern is undefined, let P be the empty String.
   if (pattern === Value.undefined) {
-    P = new Value('');
+    P = Value('');
   } else { // 2. Else, let P be ? ToString(pattern).
-    P = Q(ToString(pattern));
+    P = Q(yield* ToString(pattern));
   }
   let F;
   // 3. If flags is undefined, let F be the empty String.
   if (flags === Value.undefined) {
-    F = new Value('');
+    F = Value('');
   } else { // 4. Else, let F be ? ToString(flags).
-    F = Q(ToString(flags));
+    F = Q(yield* ToString(flags));
   }
   const f = F.stringValue();
   // 5. If F contains any code unit other than "d", "g", "i", "m", "s", "u", or "y" or if it contains the same code unit more than once, throw a SyntaxError exception.
@@ -66,7 +69,7 @@ export function RegExpInitialize(obj, pattern, flags) {
   const parseResult = ParsePattern(patternText, u);
   // 10. If parseResult is a non-empty List of SyntaxError objects, throw a SyntaxError exception.
   if (Array.isArray(parseResult)) {
-    return surroundingAgent.Throw(parseResult[0]);
+    return surroundingAgent.Throw(parseResult[0], 'Raw', parseResult[0]);
   }
   obj.parsedPattern = parseResult;
   // 11. Assert: parseResult is a Parse Node for Pattern.
@@ -81,22 +84,22 @@ export function RegExpInitialize(obj, pattern, flags) {
   const evaluatePattern = surroundingAgent.hostDefinedOptions.boost?.evaluatePattern || Evaluate_Pattern;
   obj.RegExpMatcher = evaluatePattern(parseResult, F.stringValue());
   // 15. Perform ? Set(obj, "lastIndex", +0𝔽, true).
-  Q(Set(obj, new Value('lastIndex'), toNumberValue(+0), Value.true));
+  Q(yield* Set(obj, Value('lastIndex'), toNumberValue(+0), Value.true));
   // 16. Return obj.
   return obj;
 }
 
-/** http://tc39.es/ecma262/#sec-regexpcreate */
-export function RegExpCreate(P, F) {
-  const obj = Q(RegExpAlloc(surroundingAgent.intrinsic('%RegExp%')));
-  return Q(RegExpInitialize(obj, P, F));
+/** https://tc39.es/ecma262/#sec-regexpcreate */
+export function* RegExpCreate(P: Value, F: Value): ValueEvaluator<RegExpObject> {
+  const obj = Q(yield* RegExpAlloc(surroundingAgent.intrinsic('%RegExp%')));
+  return Q(yield* RegExpInitialize(obj, P, F));
 }
 
-/** http://tc39.es/ecma262/#sec-escaperegexppattern */
-export function EscapeRegExpPattern(P, _F) {
+/** https://tc39.es/ecma262/#sec-escaperegexppattern */
+export function EscapeRegExpPattern(P: JSStringValue, _F: Value) {
   const source = P.stringValue();
   if (source === '') {
-    return new Value('(:?)');
+    return Value('(:?)');
   }
   let index = 0;
   let escaped = '';
@@ -152,11 +155,11 @@ export function EscapeRegExpPattern(P, _F) {
         break;
     }
   }
-  return new Value(escaped);
+  return Value(escaped);
 }
 
-/** http://tc39.es/ecma262/#sec-getstringindex */
-export function GetStringIndex(S, Input, e) {
+/** https://tc39.es/ecma262/#sec-getstringindex */
+export function GetStringIndex(S: JSStringValue, Input: readonly string[], e: number) {
   // 1. Assert: Type(S) is String.
   Assert(S instanceof JSStringValue);
   // 2. Assert: Input is a List of the code points of S interpreted as a UTF-16 encoded string.
@@ -181,8 +184,12 @@ export function GetStringIndex(S, Input, e) {
   return eUTF;
 }
 
-/** http://tc39.es/ecma262/#sec-getmatchstring */
-export function GetMatchString(S, match) {
+export interface MatchRecord {
+  readonly StartIndex: number;
+  readonly EndIndex: number;
+}
+/** https://tc39.es/ecma262/#sec-getmatchstring */
+export function GetMatchString(S: JSStringValue, match: MatchRecord) {
   // 1. Assert: Type(S) is String.
   Assert(S instanceof JSStringValue);
   // 2. Assert: match is a Match Record.
@@ -192,11 +199,11 @@ export function GetMatchString(S, match) {
   // 4. Assert: match.[[EndIndex]] is an integer value ≥ match.[[StartIndex]] and ≤ the length of S.
   Assert(match.EndIndex >= match.StartIndex && match.EndIndex <= S.stringValue().length);
   // 5. Return the portion of S between offset match.[[StartIndex]] inclusive and offset match.[[EndIndex]] exclusive.
-  return new Value(S.stringValue().slice(match.StartIndex, match.EndIndex));
+  return Value(S.stringValue().slice(match.StartIndex, match.EndIndex));
 }
 
-/** http://tc39.es/ecma262/#sec-getmatchindexpair */
-export function GetMatchIndexPair(S, match) {
+/** https://tc39.es/ecma262/#sec-getmatchindexpair */
+export function GetMatchIndexPair(S: JSStringValue, match: MatchRecord) {
   // 1. Assert: Type(S) is String.
   Assert(S instanceof JSStringValue);
   // 2. Assert: match is a Match Record.
@@ -212,8 +219,8 @@ export function GetMatchIndexPair(S, match) {
   ]);
 }
 
-/** http://tc39.es/ecma262/#sec-makematchindicesindexpairarray */
-export function MakeMatchIndicesIndexPairArray(S, indices, groupNames, hasGroups) {
+/** https://tc39.es/ecma262/#sec-makematchindicesindexpairarray */
+export function MakeMatchIndicesIndexPairArray(S: JSStringValue, indices: readonly (MatchRecord | UndefinedValue)[], groupNames: readonly (JSStringValue | UndefinedValue)[], hasGroups: BooleanValue) {
   // 1. Assert: Type(S) is String.
   Assert(S instanceof JSStringValue);
   // 2. Assert: indices is a List.
@@ -231,7 +238,7 @@ export function MakeMatchIndicesIndexPairArray(S, indices, groupNames, hasGroups
   // 9. Assert: The value of A's "length" property is n.
   const A = X(ArrayCreate(n));
   // 10. If hasGroups is true, then
-  let groups;
+  let groups: ObjectValue | UndefinedValue;
   if (hasGroups === Value.true) {
     // a. Let groups be ! ObjectCreate(null).
     groups = X(OrdinaryObjectCreate(Value.null));
@@ -240,7 +247,7 @@ export function MakeMatchIndicesIndexPairArray(S, indices, groupNames, hasGroups
     groups = Value.undefined;
   }
   // 11. Perform ! CreateDataProperty(A, "groups", groups).
-  X(CreateDataPropertyOrThrow(A, new Value('groups'), groups));
+  X(CreateDataPropertyOrThrow(A, Value('groups'), groups));
   // 12. For each integer i such that i ≥ 0 and i < n, do
   for (let i = 0; i < n; i += 1) {
     // a. Let matchIndices be indices[i].
@@ -249,7 +256,7 @@ export function MakeMatchIndicesIndexPairArray(S, indices, groupNames, hasGroups
     let matchIndicesArray;
     if (matchIndices !== Value.undefined) {
       // i. Let matchIndicesArray be ! GetMatchIndexPair(S, matchIndices).
-      matchIndicesArray = X(GetMatchIndexPair(S, matchIndices));
+      matchIndicesArray = X(GetMatchIndexPair(S, matchIndices as MatchRecord));
     } else { // c. Else,
       // i. Let matchIndicesArray be undefined.
       matchIndicesArray = Value.undefined;
@@ -259,15 +266,15 @@ export function MakeMatchIndicesIndexPairArray(S, indices, groupNames, hasGroups
     // e. If i > 0 and groupNames[i - 1] is not undefined, then
     if (i > 0 && groupNames[i - 1] !== Value.undefined) {
       // i. Perform ! CreateDataProperty(groups, groupNames[i - 1], matchIndicesArray).
-      X(CreateDataPropertyOrThrow(groups, groupNames[i - 1], matchIndicesArray));
+      X(CreateDataPropertyOrThrow(groups as ObjectValue, groupNames[i - 1] as JSStringValue, matchIndicesArray));
     }
   }
   // 13. Return A.
   return A;
 }
 
-/** http://tc39.es/ecma262/#sec-regexphasflag */
-export function RegExpHasFlag(R, codeUnit) {
+/** https://tc39.es/ecma262/#sec-regexphasflag */
+export function RegExpHasFlag(R: Value, codeUnit: string) {
   // 1. If Type(R) is not Object, throw a TypeError exception.
   if (!(R instanceof ObjectValue)) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
@@ -282,7 +289,7 @@ export function RegExpHasFlag(R, codeUnit) {
     return surroundingAgent.Throw('TypeError', 'NotATypeObject', 'RegExp', R);
   }
   // 3. Let flags be R.[[OriginalFlags]].
-  const flags = R.OriginalFlags.stringValue();
+  const flags = (R as RegExpObject).OriginalFlags.stringValue();
   // 4. If flags contains codeUnit, return true.
   if (flags.includes(codeUnit)) {
     return Value.true;

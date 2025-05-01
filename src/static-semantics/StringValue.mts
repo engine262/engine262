@@ -1,19 +1,18 @@
-// @ts-nocheck
-import { Value } from '../value.mjs';
-import { OutOfRange } from '../helpers.mjs';
+import { Value } from '../value.mts';
+import { OutOfRange } from '../helpers.mts';
+import type { ParseNode } from '../parser/ParseNode.mts';
 
-export function StringValue(node) {
+export function StringValue(node: ParseNode) {
   switch (node.type) {
-    case 'Identifier':
     case 'IdentifierName':
     case 'BindingIdentifier':
     case 'IdentifierReference':
     case 'LabelIdentifier':
-      return new Value(node.name);
+      return Value(node.name);
     case 'PrivateIdentifier':
-      return new Value(`#${node.name}`);
+      return Value(`#${node.name}`);
     case 'StringLiteral':
-      return new Value(node.value);
+      return Value(node.value);
     default:
       throw new OutOfRange('StringValue', node);
   }
