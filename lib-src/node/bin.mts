@@ -10,6 +10,7 @@ import { format as _format, inspect as _inspect, parseArgs } from 'node:util';
 import { createRequire } from 'node:module';
 import { createConsole } from '../inspector/utils.mts';
 import type { NodeWebsocketInspector } from './inspector.mts';
+import { loadImportedModuleSync } from './module.mts';
 import {
   setSurroundingAgent, FEATURES, inspect, Value, Completion, AbruptCompletion,
   type Arguments,
@@ -100,10 +101,10 @@ if (argv.values.features === 'all') {
   features = [];
 }
 
-const agent = new Agent({ features });
+const agent = new Agent({ features, loadImportedModule: loadImportedModuleSync });
 setSurroundingAgent(agent);
 
-const realm = new ManagedRealm({});
+const realm = new ManagedRealm({ resolverCache: new Map() });
 // Define console.log
 {
   const format = (args: Arguments) => evalQ(function* format(Q) {
