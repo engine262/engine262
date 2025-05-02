@@ -118,6 +118,75 @@ function MapProto_get([key = Value.undefined]: Arguments, { thisValue }: Functio
   return Value.undefined;
 }
 
+/**  https://tc39.es/proposal-upsert/#sec-map.prototype.getOrInsert */
+function MapProto_getOrInsert([key = Value.undefined, value = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
+  // 1. Let M be the this value.
+  const M = thisValue as MapObject;
+  // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
+  Q(RequireInternalSlot(M, 'MapData'));
+  // 3. Set key to CanonicalizeKeyedCollectionKey(key).
+  if (key instanceof NumberValue && Object.is(R(key), -0)) {
+    key = F(+0);
+  }
+  // 4. For each Record { [[Key]], [[Value]] } p of M.[[MapData]], do
+  const entries = M.MapData;
+  for (const p of entries) {
+    // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, return p.[[Value]].
+    if (p.Key !== undefined && SameValueZero(p.Key, key) === Value.true) {
+      return p.Value!;
+    }
+  }
+  // 5. Let p be the Record { [[Key]]: key, [[Value]]: value }.
+  const p = { Key: key, Value: value };
+  // 6. Append p to M.[[MapData]].
+  entries.push(p);
+  // 7. Return value.
+  return value;
+}
+
+/**  https://tc39.es/proposal-upsert/#sec-map.prototype.getOrInsertComputed */
+function* MapProto_getOrInsertComputed([key = Value.undefined, callbackfn = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueEvaluator {
+  // 1. Let M be the this value.
+  const M = thisValue as MapObject;
+  // 2. Perform ? RequireInternalSlot(M, [[MapData]]).
+  Q(RequireInternalSlot(M, 'MapData'));
+  // 3. If IsCallable(callbackfn) is false, throw a TypeError exception.
+  if (!IsCallable(callbackfn)) {
+    return surroundingAgent.Throw('TypeError', 'NotAFunction', callbackfn);
+  }
+  // 4. Set key to CanonicalizeKeyedCollectionKey(key).
+  if (key instanceof NumberValue && Object.is(R(key), -0)) {
+    key = F(+0);
+  }
+  // 5. For each Record { [[Key]], [[Value]] } p of M.[[MapData]], do
+  const entries = M.MapData;
+  for (const p of entries) {
+    // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, return p.[[Value]].
+    if (p.Key !== undefined && SameValueZero(p.Key, key) === Value.true) {
+      return p.Value!;
+    }
+  }
+  // 6. Let value be ? Call(callbackfn, undefined, « key »).
+  const value = Q(yield* Call(callbackfn, Value.undefined, [key]));
+  // 7. NOTE: The Map may have been modified during execution of callbackfn.
+  // 8. For each Record { [[Key]], [[Value]] } p of M.[[MapData]], do
+  for (const p of entries) {
+    // a. If p.[[Key]] is not empty and SameValue(p.[[Key]], key) is true, then
+    if (p.Key !== undefined && SameValueZero(p.Key, key) === Value.true) {
+      // i. Set p.[[Value]] to value.
+      p.Value = value;
+      // ii. Return value.
+      return value;
+    }
+  }
+  // 9. Let p be the Record { [[Key]]: key, [[Value]]: value }.
+  const p = { Key: key, Value: value };
+  // 10. Append p to M.[[MapData]].
+  entries.push(p);
+  // 11. Return value.
+  return value;
+}
+
 /** https://tc39.es/ecma262/#sec-map.prototype.has */
 function MapProto_has([key = Value.undefined]: Arguments, { thisValue }: FunctionCallContext): ValueCompletion {
   // 1. Let M be the this value.
@@ -213,6 +282,8 @@ export function bootstrapMapPrototype(realmRec: Realm) {
     ['entries', MapProto_entries, 0],
     ['forEach', MapProto_forEach, 1],
     ['get', MapProto_get, 1],
+    ['getOrInsert', MapProto_getOrInsert, 2],
+    ['getOrInsertComputed', MapProto_getOrInsertComputed, 2],
     ['has', MapProto_has, 1],
     ['keys', MapProto_keys, 0],
     ['set', MapProto_set, 2],
