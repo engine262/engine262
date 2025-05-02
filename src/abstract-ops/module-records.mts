@@ -274,7 +274,7 @@ function* ExecuteAsyncModule(module: CyclicModuleRecord) {
   // 8. Perform ! PerformPromiseThen(capability.[[Promise]], onFulfilled, onRejected).
   X(PerformPromiseThen(capability.Promise, onFulfilled, onRejected));
   // 9. Perform ! module.ExecuteModule(capability).
-  X(yield* (module as SourceTextModuleRecord).ExecuteModule(capability));
+  X(yield* module.ExecuteModule(capability));
   // 10. Return.
   return Value.undefined;
 }
@@ -325,7 +325,7 @@ function* AsyncModuleExecutionFulfilled(module: CyclicModuleRecord): PlainEvalua
     } else if (m.HasTLA === Value.true) {
       X(yield* ExecuteAsyncModule(m));
     } else {
-      const result = m.ExecuteModule();
+      const result = yield* m.ExecuteModule();
       if (result instanceof AbruptCompletion) {
         X(AsyncModuleExecutionRejected(m, result.Value));
       } else {
