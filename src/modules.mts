@@ -216,11 +216,14 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
     let module: CyclicModuleRecord = this;
     // 3. Assert: module.[[Status]] is linked or evaluated.
     Assert(module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated');
-    // (*TopLevelAwait) 3. If module.[[Status]] is evaluating-async or evaluated, set module to module.[[CycleRoot]].
+    // 3. If module.[[Status]] is evaluating-async or evaluated, then
     if (module.Status === 'evaluating-async' || module.Status === 'evaluated') {
+      // a. Assert: _module_.[[CycleRoot]] is not ~empty~.
+      Assert(module.CycleRoot !== undefined);
+      // b. Set _module_ to _module_.[[CycleRoot]].
       module = module.CycleRoot!;
     }
-    // (*TopLevelAwait) 4. If module.[[TopLevelCapability]] is not ~empty~, then
+    // 4. If module.[[TopLevelCapability]] is not ~empty~, then
     if (module.TopLevelCapability !== undefined) {
       // a. Return module.[[TopLevelCapability]].[[Promise]].
       return module.TopLevelCapability.Promise;
@@ -245,6 +248,8 @@ export abstract class CyclicModuleRecord extends AbstractModuleRecord {
         m.Status = 'evaluated';
         // iv. Set m.[[EvaluationError]] to result.
         m.EvaluationError = result;
+        // v. Set _m_.[[CycleRoot]] to _m_.
+        m.CycleRoot = m;
       }
       // b. Assert: module.[[Status]] is evaluated and module.[[EvaluationError]] is result.
       Assert(module.Status === 'evaluated' && module.EvaluationError === result);
