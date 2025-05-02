@@ -133,6 +133,7 @@ export class Agent {
       IsLockFree2: Value.true,
       CandidateExecution: undefined,
       KeptAlive: new Set<Value>(),
+      ModuleAsyncEvaluationCount: 0,
     };
 
     this.hostDefinedOptions = {
@@ -353,6 +354,14 @@ export class Agent {
     }
   }
   // #endregion
+}
+
+// https://tc39.es/ecma262/#sec-IncrementModuleAsyncEvaluationCount
+export function IncrementModuleAsyncEvaluationCount() {
+  const AR = surroundingAgent.AgentRecord;
+  const count = AR.ModuleAsyncEvaluationCount;
+  AR.ModuleAsyncEvaluationCount = count + 1;
+  return count;
 }
 
 export let surroundingAgent: Agent;

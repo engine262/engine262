@@ -1,4 +1,4 @@
-import { surroundingAgent, HostLoadImportedModule } from '../host-defined/engine.mts';
+import { surroundingAgent, HostLoadImportedModule, IncrementModuleAsyncEvaluationCount } from '../host-defined/engine.mts';
 import {
   CyclicModuleRecord,
   SyntheticModuleRecord,
@@ -10,11 +10,10 @@ import {
   JSStringValue, ObjectValue, UndefinedValue, Value,
 } from '../value.mts';
 import {
-  Q, X, NormalCompletion, ThrowCompletion,
+  Q, X, NormalCompletion, ThrowCompletion, AbruptCompletion,
   type PlainCompletion,
   EnsureCompletion,
-} from '../completion.mts';
-import type { PlainEvaluator, ValueEvaluator } from '../evaluator.mts';
+} from '../completion.mjs';
 import {
   Assert,
   ModuleNamespaceCreate,
@@ -27,7 +26,8 @@ import {
   Realm,
 } from './all.mts';
 import type {
-  Arguments, ScriptRecord, SourceTextModuleRecord, ValueCompletion,
+  Arguments, PlainEvaluator, ScriptRecord, SourceTextModuleRecord, ValueCompletion,
+  ValueEvaluator,
 } from '#self';
 
 /** https://tc39.es/ecma262/#graphloadingstate-record */
@@ -176,7 +176,7 @@ export function* InnerModuleEvaluation(module: AbstractModuleRecord, stack: Cycl
     return NormalCompletion(index);
   }
   if (module.Status === 'evaluating-async' || module.Status === 'evaluated') {
-    if (module.EvaluationError instanceof UndefinedValue) {
+    if (module.EvaluationError === undefined) {
       return NormalCompletion(index);
     } else {
       return module.EvaluationError;
@@ -202,24 +202,26 @@ export function* InnerModuleEvaluation(module: AbstractModuleRecord, stack: Cycl
       if (requiredModule.Status === 'evaluating') {
         module.DFSAncestorIndex = Math.min(module.DFSAncestorIndex, requiredModule.DFSAncestorIndex!);
       } else {
-        requiredModule = GetAsyncCycleRoot(requiredModule);
+        requiredModule = requiredModule.CycleRoot!;
         Assert(requiredModule.Status === 'evaluating-async' || requiredModule.Status === 'evaluated');
-        if (!(requiredModule.EvaluationError instanceof UndefinedValue)) {
+        if (requiredModule.EvaluationError !== undefined) {
           return EnsureCompletion(module.EvaluationError);
         }
       }
-      if (requiredModule.AsyncEvaluating === Value.true) {
+      if (typeof requiredModule.AsyncEvaluationOrder === 'number') {
         module.PendingAsyncDependencies += 1;
         requiredModule.AsyncParentModules.push(module);
       }
     }
   }
-  if (module.PendingAsyncDependencies > 0) {
-    module.AsyncEvaluating = Value.true;
-  } else if (module.Async === Value.true) {
-    X(yield* ExecuteAsyncModule(module));
+  if (module.PendingAsyncDependencies > 0 || module.HasTLA === Value.true) {
+    Assert(module.AsyncEvaluationOrder === 'unset');
+    module.AsyncEvaluationOrder = IncrementModuleAsyncEvaluationCount();
+    if (module.PendingAsyncDependencies === 0) {
+      X(yield* ExecuteAsyncModule(module));
+    }
   } else {
-    Q(yield* (module as SourceTextModuleRecord).ExecuteModule());
+    Q(yield* module.ExecuteModule());
   }
   Assert(stack.indexOf(module) === stack.lastIndexOf(module));
   Assert(module.DFSAncestorIndex <= module.DFSIndex);
@@ -228,7 +230,8 @@ export function* InnerModuleEvaluation(module: AbstractModuleRecord, stack: Cycl
     while (done === false) {
       const requiredModule = stack.pop();
       Assert(requiredModule instanceof CyclicModuleRecord);
-      if (requiredModule.AsyncEvaluating === Value.false) {
+      Assert(typeof requiredModule.AsyncEvaluationOrder === 'number' || requiredModule.AsyncEvaluationOrder === 'unset');
+      if (requiredModule.AsyncEvaluationOrder === 'unset') {
         requiredModule.Status = 'evaluated';
       } else {
         requiredModule.Status = 'evaluating-async';
@@ -236,6 +239,7 @@ export function* InnerModuleEvaluation(module: AbstractModuleRecord, stack: Cycl
       if (requiredModule === module) {
         done = true;
       }
+      requiredModule.CycleRoot = module;
     }
   }
   return index;
@@ -245,114 +249,116 @@ export function* InnerModuleEvaluation(module: AbstractModuleRecord, stack: Cycl
 function* ExecuteAsyncModule(module: CyclicModuleRecord) {
   // 1. Assert: module.[[Status]] is evaluating or evaluating-async.
   Assert(module.Status === 'evaluating' || module.Status === 'evaluating-async');
-  // 2. Assert: module.[[Async]] is true.
-  Assert(module.Async === Value.true);
-  // 3. Set module.[[AsyncEvaluating]] to true.
-  module.AsyncEvaluating = Value.true;
-  // 4. Let capability be ! NewPromiseCapability(%Promise%).
+  // 2. Assert: module.[[HasTLA]] is true.
+  Assert(module.HasTLA === Value.true);
+  // 3. Let capability be ! NewPromiseCapability(%Promise%).
   const capability = X(NewPromiseCapability(surroundingAgent.intrinsic('%Promise%')));
-  // 5. Let fulfilledClosure be a new Abstract Closure with no parameters that captures module and performs the following steps when called:
+  // 4. Let fulfilledClosure be a new Abstract Closure with no parameters that captures module and performs the following steps when called:
   function* fulfilledClosure() {
     // a. Perform ! AsyncModuleExecutionFulfilled(module).
     X(yield* AsyncModuleExecutionFulfilled(module));
     // b. Return undefined.
     return Value.undefined;
   }
-  // 6. Let onFulfilled be ! CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
+  // 5. Let onFulfilled be ! CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
   const onFulfilled = CreateBuiltinFunction(fulfilledClosure, 0, Value(''), ['Module']);
-  // 7. Let rejectedClosure be a new Abstract Closure with parameters (error) that captures module and performs the following steps when called:
+  // 6. Let rejectedClosure be a new Abstract Closure with parameters (error) that captures module and performs the following steps when called:
   const rejectedClosure = ([error = Value.undefined]: Arguments) => {
     // a. Perform ! AsyncModuleExecutionRejected(module, error).
     X(AsyncModuleExecutionRejected(module, error));
     // b. Return undefined.
     return Value.undefined;
   };
-  // 8. Let onRejected be ! CreateBuiltinFunction(rejectedClosure, 0, "", « »).
+  // 7. Let onRejected be ! CreateBuiltinFunction(rejectedClosure, 0, "", « »).
   const onRejected = CreateBuiltinFunction(rejectedClosure, 0, Value(''), ['Module']);
-  // 9. Perform ! PerformPromiseThen(capability.[[Promise]], onFulfilled, onRejected).
+  // 8. Perform ! PerformPromiseThen(capability.[[Promise]], onFulfilled, onRejected).
   X(PerformPromiseThen(capability.Promise, onFulfilled, onRejected));
-  // 10. Perform ! module.ExecuteModule(capability).
-  X(yield* (module as SourceTextModuleRecord).ExecuteModule(capability));
-  // 11. Return.
+  // 9. Perform ! module.ExecuteModule(capability).
+  X(yield* module.ExecuteModule(capability));
+  // 10. Return.
   return Value.undefined;
 }
 
-/** https://tc39.es/ecma262/#sec-getcycleroot */
-export function GetAsyncCycleRoot(module: CyclicModuleRecord) {
-  Assert(module.Status === 'evaluated' || module.Status === 'evaluating-async');
-  if (module.AsyncParentModules.length === 0) {
-    return module;
-  }
-  while (module.DFSIndex! > module.DFSAncestorIndex!) {
-    Assert(module.AsyncParentModules.length > 0);
-    const nextCycleModule = module.AsyncParentModules[0];
-    Assert(nextCycleModule.DFSAncestorIndex === module.DFSAncestorIndex);
-    module = nextCycleModule;
-  }
-  Assert(module.DFSIndex === module.DFSAncestorIndex);
-  return module;
-}
-
-/** https://tc39.es/ecma262/#sec-asyncmodulexecutionfulfilled */
-function* AsyncModuleExecutionFulfilled(module: CyclicModuleRecord): ValueEvaluator {
-  if (module.Status === 'evaluated') {
-    Assert(module.EvaluationError !== Value.undefined);
-    return Value.undefined;
-  }
-  Assert(module.Status === 'evaluating-async');
-  Assert(module.EvaluationError === Value.undefined);
-  module.AsyncEvaluating = Value.false;
+/** https://tc39.es/ecma262/#sec-gather-available-ancestors */
+function GatherAvailableAncestors(module: CyclicModuleRecord, execList: CyclicModuleRecord[]) {
   for (const m of module.AsyncParentModules) {
-    if (module.DFSIndex !== module.DFSAncestorIndex) {
-      Assert(m.DFSAncestorIndex === module.DFSAncestorIndex);
-    }
-    m.PendingAsyncDependencies! -= 1;
-    if (m.PendingAsyncDependencies === 0 && m.EvaluationError === Value.undefined) {
-      Assert(m.AsyncEvaluating === Value.true);
-      const cycleRoot = X(GetAsyncCycleRoot(m));
-      if (cycleRoot.EvaluationError !== Value.undefined) {
-        return Value.undefined;
-      }
-      if (m.Async === Value.true) {
-        X(yield* ExecuteAsyncModule(m));
-      } else {
-        const result = EnsureCompletion(yield* (m as SourceTextModuleRecord).ExecuteModule());
-        if (result instanceof NormalCompletion) {
-          X(yield* AsyncModuleExecutionFulfilled(m));
-        } else {
-          X(AsyncModuleExecutionRejected(m, result.Value));
+    if (!execList.includes(m) && m.CycleRoot!.EvaluationError === undefined) {
+      Assert(m.Status === 'evaluating-async');
+      Assert(m.EvaluationError === undefined);
+      Assert(typeof m.AsyncEvaluationOrder === 'number');
+      Assert(m.PendingAsyncDependencies! > 0);
+      m.PendingAsyncDependencies! -= 1;
+      if (m.PendingAsyncDependencies === 0) {
+        execList.push(m);
+        if (m.HasTLA === Value.false) {
+          GatherAvailableAncestors(m, execList);
         }
       }
     }
   }
-  if (!(module.TopLevelCapability instanceof UndefinedValue)) {
-    Assert(module.DFSIndex === module.DFSAncestorIndex);
+}
+
+/** https://tc39.es/ecma262/#sec-asyncmodulexecutionfulfilled */
+function* AsyncModuleExecutionFulfilled(module: CyclicModuleRecord): PlainEvaluator {
+  if (module.Status === 'evaluated') {
+    Assert(module.EvaluationError !== undefined);
+    return;
+  }
+  Assert(module.Status === 'evaluating-async');
+  Assert(typeof module.AsyncEvaluationOrder === 'number');
+  Assert(module.EvaluationError === undefined);
+  module.AsyncEvaluationOrder = 'done';
+  module.Status = 'evaluated';
+  if (module.TopLevelCapability !== undefined) {
+    Assert(module.CycleRoot === module);
     X(Call(module.TopLevelCapability.Resolve, Value.undefined, [Value.undefined]));
   }
-  return Value.undefined;
+
+  const execList: CyclicModuleRecord[] = [];
+  GatherAvailableAncestors(module, execList);
+  Assert(execList.every((m) => typeof m.AsyncEvaluationOrder === 'number' && m.PendingAsyncDependencies === 0 && m.EvaluationError === undefined));
+  const sortedExecList = execList.toSorted((m1, m2) => (m1.AsyncEvaluationOrder as number) - (m2.AsyncEvaluationOrder as number));
+
+  for (const m of sortedExecList) {
+    if (m.Status === 'evaluated') {
+      Assert(m.EvaluationError !== undefined);
+    } else if (m.HasTLA === Value.true) {
+      X(yield* ExecuteAsyncModule(m));
+    } else {
+      const result = yield* m.ExecuteModule();
+      if (result instanceof AbruptCompletion) {
+        X(AsyncModuleExecutionRejected(m, result.Value));
+      } else {
+        m.AsyncEvaluationOrder = 'done';
+        m.Status = 'evaluated';
+        if (m.TopLevelCapability !== undefined) {
+          Assert(m.CycleRoot === m);
+          X(Call(m.TopLevelCapability.Resolve, Value.undefined, [Value.undefined]));
+        }
+      }
+    }
+  }
 }
 
 /** https://tc39.es/ecma262/#sec-AsyncModuleExecutionRejected */
 function AsyncModuleExecutionRejected(module: CyclicModuleRecord, error: Value) {
   if (module.Status === 'evaluated') {
-    Assert(module.EvaluationError !== Value.undefined);
-    return Value.undefined;
+    Assert(module.EvaluationError !== undefined);
+    return;
   }
   Assert(module.Status === 'evaluating-async');
-  Assert(module.EvaluationError === Value.undefined);
+  Assert(typeof module.AsyncEvaluationOrder === 'number');
+  Assert(module.EvaluationError === undefined);
   module.EvaluationError = ThrowCompletion(error);
-  module.AsyncEvaluating = Value.false;
+  module.Status = 'evaluated';
+  module.AsyncEvaluationOrder = 'done';
   for (const m of module.AsyncParentModules) {
-    if (module.DFSIndex !== module.DFSAncestorIndex) {
-      Assert(m.DFSAncestorIndex === module.DFSAncestorIndex);
-    }
-    X(AsyncModuleExecutionRejected(m, error));
+    AsyncModuleExecutionRejected(m, error);
   }
-  if (!(module.TopLevelCapability instanceof UndefinedValue)) {
+  if (module.TopLevelCapability !== undefined) {
     Assert(module.DFSIndex === module.DFSAncestorIndex);
     X(Call(module.TopLevelCapability.Reject, Value.undefined, [error]));
   }
-  return Value.undefined;
 }
 
 function getRecordWithSpecifier(loadedModules: CyclicModuleRecord['LoadedModules'], specifier: JSStringValue) {
