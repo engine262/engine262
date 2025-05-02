@@ -1,5 +1,5 @@
 /*!
- * engine262 0.0.1 b621378bfaa2d926d91001c34b7b1fe231c0468a
+ * engine262 0.0.1 f7aac74928e432c39847108b2c4e6d9701fbde22
  *
  * Copyright (c) 2018 engine262 Contributors
  * 
@@ -5519,10 +5519,11 @@ class CyclicModuleRecord extends AbstractModuleRecord {
   DFSAncestorIndex;
   RequestedModules;
   LoadedModules;
-  Async;
-  AsyncEvaluating;
-  TopLevelCapability;
+  HasTLA;
+  AsyncEvaluationOrder;
   AsyncParentModules;
+  CycleRoot;
+  TopLevelCapability;
   PendingAsyncDependencies;
   constructor(init) {
     super(init);
@@ -5532,13 +5533,13 @@ class CyclicModuleRecord extends AbstractModuleRecord {
     this.DFSAncestorIndex = init.DFSAncestorIndex;
     this.RequestedModules = init.RequestedModules;
     this.LoadedModules = init.LoadedModules;
-    this.Async = init.Async;
-    this.AsyncEvaluating = init.AsyncEvaluating;
+    this.CycleRoot = init.CycleRoot;
+    this.HasTLA = init.HasTLA;
+    this.AsyncEvaluationOrder = init.AsyncEvaluationOrder;
     this.TopLevelCapability = init.TopLevelCapability;
     this.AsyncParentModules = init.AsyncParentModules;
     this.PendingAsyncDependencies = init.PendingAsyncDependencies;
   }
-
   /** https://tc39.es/ecma262/#sec-LoadRequestedModules */
   LoadRequestedModules(hostDefined) {
     const module = this;
@@ -5604,12 +5605,15 @@ class CyclicModuleRecord extends AbstractModuleRecord {
     let module = this;
     // 3. Assert: module.[[Status]] is linked or evaluated.
     Assert(module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated', "module.Status === 'linked' || module.Status === 'evaluating-async' || module.Status === 'evaluated'");
-    // (*TopLevelAwait) 3. If module.[[Status]] is evaluating-async or evaluated, set module to GetAsyncCycleRoot(module).
+    // 3. If module.[[Status]] is evaluating-async or evaluated, then
     if (module.Status === 'evaluating-async' || module.Status === 'evaluated') {
-      module = GetAsyncCycleRoot(module);
+      // a. Assert: _module_.[[CycleRoot]] is not ~empty~.
+      Assert(module.CycleRoot !== undefined, "module.CycleRoot !== undefined");
+      // b. Set _module_ to _module_.[[CycleRoot]].
+      module = module.CycleRoot;
     }
-    // (*TopLevelAwait) 4. If module.[[TopLevelCapability]] is not undefined, then
-    if (!(module.TopLevelCapability instanceof UndefinedValue)) {
+    // 4. If module.[[TopLevelCapability]] is not ~empty~, then
+    if (module.TopLevelCapability !== undefined) {
       // a. Return module.[[TopLevelCapability]].[[Promise]].
       return module.TopLevelCapability.Promise;
     }
@@ -5637,10 +5641,14 @@ class CyclicModuleRecord extends AbstractModuleRecord {
       for (const m of stack) {
         // i. Assert: m.[[Status]] is evaluating.
         Assert(m.Status === 'evaluating', "m.Status === 'evaluating'");
-        // ii. Set m.[[Status]] to evaluated.
+        // ii. Assert: m.[[AsyncEvaluationOrder]] is unset.
+        Assert(m.AsyncEvaluationOrder === 'unset', "m.AsyncEvaluationOrder === 'unset'");
+        // iii. Set m.[[Status]] to evaluated.
         m.Status = 'evaluated';
-        // iii. Set m.[[EvaluationError]] to result.
+        // iv. Set m.[[EvaluationError]] to result.
         m.EvaluationError = result;
+        // v. Set _m_.[[CycleRoot]] to _m_.
+        m.CycleRoot = m;
       }
       // b. Assert: module.[[Status]] is evaluated and module.[[EvaluationError]] is result.
       Assert(module.Status === 'evaluated' && module.EvaluationError === result, "module.Status === 'evaluated' && module.EvaluationError === result");
@@ -5660,10 +5668,13 @@ class CyclicModuleRecord extends AbstractModuleRecord {
       // (*TopLevelAwait) 10. Otherwise,
       // a. Assert: module.[[Status]] is evaluating-async or evaluated.
       Assert(module.Status === 'evaluating-async' || module.Status === 'evaluated', "module.Status === 'evaluating-async' || module.Status === 'evaluated'");
-      // b. Assert: module.[[EvaluationError]] is undefined.
-      Assert(module.EvaluationError === Value.undefined, "module.EvaluationError === Value.undefined");
-      // c. If module.[[AsyncEvaluating]] is false, then
-      if (module.AsyncEvaluating === Value.false) {
+      // b. Assert: module.[[EvaluationError]] is ~empty~.
+      Assert(module.EvaluationError === undefined, "module.EvaluationError === undefined");
+      // c. If module.[[Status]] is evaluated, then
+      if (module.Status === 'evaluated') {
+        // i. Assert: module.[[AsyncEvaluationOrder]] is unset.
+        Assert(module.AsyncEvaluationOrder === 'unset', "module.AsyncEvaluationOrder === 'unset'");
+        // ii. Perform ! Call(capability.[[Resolve]], undefined, «undefined»).
         /* X */
         let _temp4 = Call(capability.Resolve, Value.undefined, [Value.undefined]);
         /* node:coverage ignore next */
@@ -6084,7 +6095,7 @@ class SourceTextModuleRecord extends CyclicModuleRecord {
     // 2. Suspend the currently running execution context.
     // 3. Let moduleContext be module.[[Context]].
     const moduleContext = module.Context;
-    if (module.Async === Value.false) {
+    if (module.HasTLA === Value.false) {
       Assert(capability === undefined, "capability === undefined");
       // 4. Push moduleContext onto the execution context stack; moduleContext is now the running execution context.
       surroundingAgent.executionContextStack.push(moduleContext);
@@ -19837,7 +19848,7 @@ function ParseModule(sourceText, realm, hostDefined = {}) {
     Environment: undefined,
     Namespace: Value.undefined,
     Status: 'new',
-    EvaluationError: Value.undefined,
+    EvaluationError: undefined,
     HostDefined: hostDefined,
     ECMAScriptCode: body,
     Context: undefined,
@@ -19848,9 +19859,10 @@ function ParseModule(sourceText, realm, hostDefined = {}) {
     LocalExportEntries: localExportEntries,
     IndirectExportEntries: indirectExportEntries,
     StarExportEntries: starExportEntries,
-    Async: body.hasTopLevelAwait ? Value.true : Value.false,
-    AsyncEvaluating: Value.false,
-    TopLevelCapability: Value.undefined,
+    CycleRoot: undefined,
+    HasTLA: body.hasTopLevelAwait ? Value.true : Value.false,
+    AsyncEvaluationOrder: 'unset',
+    TopLevelCapability: undefined,
     AsyncParentModules: [],
     DFSIndex: undefined,
     DFSAncestorIndex: undefined,
@@ -25285,7 +25297,8 @@ class Agent {
       IsLockFree1: Value.true,
       IsLockFree2: Value.true,
       CandidateExecution: undefined,
-      KeptAlive: new Set()
+      KeptAlive: new Set(),
+      ModuleAsyncEvaluationCount: 0
     };
     this.hostDefinedOptions = {
       ...options,
@@ -25539,6 +25552,15 @@ class Agent {
   }
   // #endregion
 }
+
+// https://tc39.es/ecma262/#sec-IncrementModuleAsyncEvaluationCount
+function IncrementModuleAsyncEvaluationCount() {
+  const AR = surroundingAgent.AgentRecord;
+  const count = AR.ModuleAsyncEvaluationCount;
+  AR.ModuleAsyncEvaluationCount = count + 1;
+  return count;
+}
+IncrementModuleAsyncEvaluationCount.section = 'https://tc39.es/ecma262/#sec-IncrementModuleAsyncEvaluationCount';
 let surroundingAgent;
 function setSurroundingAgent(a) {
   surroundingAgent = a;
@@ -31213,7 +31235,7 @@ function* InnerModuleEvaluation(module, stack, index) {
     return NormalCompletion(index);
   }
   if (module.Status === 'evaluating-async' || module.Status === 'evaluated') {
-    if (module.EvaluationError instanceof UndefinedValue) {
+    if (module.EvaluationError === undefined) {
       return NormalCompletion(index);
     } else {
       return module.EvaluationError;
@@ -31245,29 +31267,31 @@ function* InnerModuleEvaluation(module, stack, index) {
       if (requiredModule.Status === 'evaluating') {
         module.DFSAncestorIndex = Math.min(module.DFSAncestorIndex, requiredModule.DFSAncestorIndex);
       } else {
-        requiredModule = GetAsyncCycleRoot(requiredModule);
+        requiredModule = requiredModule.CycleRoot;
         Assert(requiredModule.Status === 'evaluating-async' || requiredModule.Status === 'evaluated', "requiredModule.Status === 'evaluating-async' || requiredModule.Status === 'evaluated'");
-        if (!(requiredModule.EvaluationError instanceof UndefinedValue)) {
+        if (requiredModule.EvaluationError !== undefined) {
           return EnsureCompletion(module.EvaluationError);
         }
       }
-      if (requiredModule.AsyncEvaluating === Value.true) {
+      if (typeof requiredModule.AsyncEvaluationOrder === 'number') {
         module.PendingAsyncDependencies += 1;
         requiredModule.AsyncParentModules.push(module);
       }
     }
   }
-  if (module.PendingAsyncDependencies > 0) {
-    module.AsyncEvaluating = Value.true;
-  } else if (module.Async === Value.true) {
-    /* X */
-    let _temp8 = yield* ExecuteAsyncModule(module);
-    /* node:coverage ignore next */
-    if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! yield* ExecuteAsyncModule(module) returned an abrupt completion", {
-      cause: _temp8
-    });
-    /* node:coverage ignore next */
-    if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+  if (module.PendingAsyncDependencies > 0 || module.HasTLA === Value.true) {
+    Assert(module.AsyncEvaluationOrder === 'unset', "module.AsyncEvaluationOrder === 'unset'");
+    module.AsyncEvaluationOrder = IncrementModuleAsyncEvaluationCount();
+    if (module.PendingAsyncDependencies === 0) {
+      /* X */
+      let _temp8 = yield* ExecuteAsyncModule(module);
+      /* node:coverage ignore next */
+      if (_temp8 instanceof AbruptCompletion) throw new Assert.Error("! yield* ExecuteAsyncModule(module) returned an abrupt completion", {
+        cause: _temp8
+      });
+      /* node:coverage ignore next */
+      if (_temp8 instanceof Completion) _temp8 = _temp8.Value;
+    }
   } else {
     /* ReturnIfAbrupt */
     let _temp9 = yield* module.ExecuteModule();
@@ -31283,7 +31307,8 @@ function* InnerModuleEvaluation(module, stack, index) {
     while (done === false) {
       const requiredModule = stack.pop();
       Assert(requiredModule instanceof CyclicModuleRecord, "requiredModule instanceof CyclicModuleRecord");
-      if (requiredModule.AsyncEvaluating === Value.false) {
+      Assert(typeof requiredModule.AsyncEvaluationOrder === 'number' || requiredModule.AsyncEvaluationOrder === 'unset', "typeof requiredModule.AsyncEvaluationOrder === 'number' || requiredModule.AsyncEvaluationOrder === 'unset'");
+      if (requiredModule.AsyncEvaluationOrder === 'unset') {
         requiredModule.Status = 'evaluated';
       } else {
         requiredModule.Status = 'evaluating-async';
@@ -31291,6 +31316,7 @@ function* InnerModuleEvaluation(module, stack, index) {
       if (requiredModule === module) {
         done = true;
       }
+      requiredModule.CycleRoot = module;
     }
   }
   return index;
@@ -31300,11 +31326,9 @@ InnerModuleEvaluation.section = 'https://tc39.es/ecma262/#sec-innermoduleevaluat
 function* ExecuteAsyncModule(module) {
   // 1. Assert: module.[[Status]] is evaluating or evaluating-async.
   Assert(module.Status === 'evaluating' || module.Status === 'evaluating-async', "module.Status === 'evaluating' || module.Status === 'evaluating-async'");
-  // 2. Assert: module.[[Async]] is true.
-  Assert(module.Async === Value.true, "module.Async === Value.true");
-  // 3. Set module.[[AsyncEvaluating]] to true.
-  module.AsyncEvaluating = Value.true;
-  // 4. Let capability be ! NewPromiseCapability(%Promise%).
+  // 2. Assert: module.[[HasTLA]] is true.
+  Assert(module.HasTLA === Value.true, "module.HasTLA === Value.true");
+  // 3. Let capability be ! NewPromiseCapability(%Promise%).
   /* X */
   let _temp10 = NewPromiseCapability(surroundingAgent.intrinsic('%Promise%'));
   /* node:coverage ignore next */
@@ -31316,7 +31340,7 @@ function* ExecuteAsyncModule(module) {
   /* node:coverage ignore next */
   if (_temp10 instanceof Completion) _temp10 = _temp10.Value;
   const capability = _temp10;
-  // 5. Let fulfilledClosure be a new Abstract Closure with no parameters that captures module and performs the following steps when called:
+  // 4. Let fulfilledClosure be a new Abstract Closure with no parameters that captures module and performs the following steps when called:
   function* fulfilledClosure() {
     /* X */
     let _temp11 = yield* AsyncModuleExecutionFulfilled(module);
@@ -31329,9 +31353,9 @@ function* ExecuteAsyncModule(module) {
     // b. Return undefined.
     return Value.undefined;
   }
-  // 6. Let onFulfilled be ! CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
+  // 5. Let onFulfilled be ! CreateBuiltinFunction(fulfilledClosure, 0, "", « »).
   const onFulfilled = CreateBuiltinFunction(fulfilledClosure, 0, Value(''), ['Module']);
-  // 7. Let rejectedClosure be a new Abstract Closure with parameters (error) that captures module and performs the following steps when called:
+  // 6. Let rejectedClosure be a new Abstract Closure with parameters (error) that captures module and performs the following steps when called:
   const rejectedClosure = ([error = Value.undefined]) => {
     /* X */
     let _temp12 = AsyncModuleExecutionRejected(module, error);
@@ -31346,9 +31370,9 @@ function* ExecuteAsyncModule(module) {
     // b. Return undefined.
     return Value.undefined;
   };
-  // 8. Let onRejected be ! CreateBuiltinFunction(rejectedClosure, 0, "", « »).
+  // 7. Let onRejected be ! CreateBuiltinFunction(rejectedClosure, 0, "", « »).
   const onRejected = CreateBuiltinFunction(rejectedClosure, 0, Value(''), ['Module']);
-  // 9. Perform ! PerformPromiseThen(capability.[[Promise]], onFulfilled, onRejected).
+  // 8. Perform ! PerformPromiseThen(capability.[[Promise]], onFulfilled, onRejected).
   /* X */
   let _temp13 = PerformPromiseThen(capability.Promise, onFulfilled, onRejected);
   /* node:coverage ignore next */
@@ -31359,92 +31383,102 @@ function* ExecuteAsyncModule(module) {
   });
   /* node:coverage ignore next */
   if (_temp13 instanceof Completion) _temp13 = _temp13.Value;
-  // 10. Perform ! module.ExecuteModule(capability).
+  // 9. Perform ! module.ExecuteModule(capability).
   /* X */
   let _temp14 = yield* module.ExecuteModule(capability);
   /* node:coverage ignore next */
-  if (_temp14 instanceof AbruptCompletion) throw new Assert.Error("! yield* (module as SourceTextModuleRecord).ExecuteModule(capability) returned an abrupt completion", {
+  if (_temp14 instanceof AbruptCompletion) throw new Assert.Error("! yield* module.ExecuteModule(capability) returned an abrupt completion", {
     cause: _temp14
   });
   /* node:coverage ignore next */
   if (_temp14 instanceof Completion) _temp14 = _temp14.Value;
-  // 11. Return.
+  // 10. Return.
   return Value.undefined;
 }
 ExecuteAsyncModule.section = 'https://tc39.es/ecma262/#sec-execute-async-module';
-/** https://tc39.es/ecma262/#sec-getcycleroot */
-function GetAsyncCycleRoot(module) {
-  Assert(module.Status === 'evaluated' || module.Status === 'evaluating-async', "module.Status === 'evaluated' || module.Status === 'evaluating-async'");
-  if (module.AsyncParentModules.length === 0) {
-    return module;
+/** https://tc39.es/ecma262/#sec-gather-available-ancestors */
+function GatherAvailableAncestors(module, execList) {
+  for (const m of module.AsyncParentModules) {
+    if (!execList.includes(m) && m.CycleRoot.EvaluationError === undefined) {
+      Assert(m.Status === 'evaluating-async', "m.Status === 'evaluating-async'");
+      Assert(m.EvaluationError === undefined, "m.EvaluationError === undefined");
+      Assert(typeof m.AsyncEvaluationOrder === 'number', "typeof m.AsyncEvaluationOrder === 'number'");
+      Assert(m.PendingAsyncDependencies > 0, "m.PendingAsyncDependencies! > 0");
+      m.PendingAsyncDependencies -= 1;
+      if (m.PendingAsyncDependencies === 0) {
+        execList.push(m);
+        if (m.HasTLA === Value.false) {
+          GatherAvailableAncestors(m, execList);
+        }
+      }
+    }
   }
-  while (module.DFSIndex > module.DFSAncestorIndex) {
-    Assert(module.AsyncParentModules.length > 0, "module.AsyncParentModules.length > 0");
-    const nextCycleModule = module.AsyncParentModules[0];
-    Assert(nextCycleModule.DFSAncestorIndex === module.DFSAncestorIndex, "nextCycleModule.DFSAncestorIndex === module.DFSAncestorIndex");
-    module = nextCycleModule;
-  }
-  Assert(module.DFSIndex === module.DFSAncestorIndex, "module.DFSIndex === module.DFSAncestorIndex");
-  return module;
 }
-GetAsyncCycleRoot.section = 'https://tc39.es/ecma262/#sec-getcycleroot';
+GatherAvailableAncestors.section = 'https://tc39.es/ecma262/#sec-gather-available-ancestors';
 /** https://tc39.es/ecma262/#sec-asyncmodulexecutionfulfilled */
 function* AsyncModuleExecutionFulfilled(module) {
   if (module.Status === 'evaluated') {
-    Assert(module.EvaluationError !== Value.undefined, "module.EvaluationError !== Value.undefined");
-    return Value.undefined;
+    Assert(module.EvaluationError !== undefined, "module.EvaluationError !== undefined");
+    return;
   }
   Assert(module.Status === 'evaluating-async', "module.Status === 'evaluating-async'");
-  Assert(module.EvaluationError === Value.undefined, "module.EvaluationError === Value.undefined");
-  module.AsyncEvaluating = Value.false;
-  for (const m of module.AsyncParentModules) {
-    if (module.DFSIndex !== module.DFSAncestorIndex) {
-      Assert(m.DFSAncestorIndex === module.DFSAncestorIndex, "m.DFSAncestorIndex === module.DFSAncestorIndex");
-    }
-    m.PendingAsyncDependencies -= 1;
-    if (m.PendingAsyncDependencies === 0 && m.EvaluationError === Value.undefined) {
-      Assert(m.AsyncEvaluating === Value.true, "m.AsyncEvaluating === Value.true");
+  Assert(typeof module.AsyncEvaluationOrder === 'number', "typeof module.AsyncEvaluationOrder === 'number'");
+  Assert(module.EvaluationError === undefined, "module.EvaluationError === undefined");
+  module.AsyncEvaluationOrder = 'done';
+  module.Status = 'evaluated';
+  if (module.TopLevelCapability !== undefined) {
+    Assert(module.CycleRoot === module, "module.CycleRoot === module");
+    /* X */
+    let _temp15 = Call(module.TopLevelCapability.Resolve, Value.undefined, [Value.undefined]);
+    /* node:coverage ignore next */
+    if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) _temp15 = skipDebugger(_temp15);
+    /* node:coverage ignore next */
+    if (_temp15 instanceof AbruptCompletion) throw new Assert.Error("! Call(module.TopLevelCapability.Resolve, Value.undefined, [Value.undefined]) returned an abrupt completion", {
+      cause: _temp15
+    });
+    /* node:coverage ignore next */
+    if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
+  }
+  const execList = [];
+  GatherAvailableAncestors(module, execList);
+  Assert(execList.every(m => typeof m.AsyncEvaluationOrder === 'number' && m.PendingAsyncDependencies === 0 && m.EvaluationError === undefined), "execList.every((m) => typeof m.AsyncEvaluationOrder === 'number' && m.PendingAsyncDependencies === 0 && m.EvaluationError === undefined)");
+  const sortedExecList = execList.toSorted((m1, m2) => m1.AsyncEvaluationOrder - m2.AsyncEvaluationOrder);
+  for (const m of sortedExecList) {
+    if (m.Status === 'evaluated') {
+      Assert(m.EvaluationError !== undefined, "m.EvaluationError !== undefined");
+    } else if (m.HasTLA === Value.true) {
       /* X */
-      let _temp15 = GetAsyncCycleRoot(m);
+      let _temp16 = yield* ExecuteAsyncModule(m);
       /* node:coverage ignore next */
-      if (_temp15 && typeof _temp15 === 'object' && 'next' in _temp15) _temp15 = skipDebugger(_temp15);
-      /* node:coverage ignore next */
-      if (_temp15 instanceof AbruptCompletion) throw new Assert.Error("! GetAsyncCycleRoot(m) returned an abrupt completion", {
-        cause: _temp15
+      if (_temp16 instanceof AbruptCompletion) throw new Assert.Error("! yield* ExecuteAsyncModule(m) returned an abrupt completion", {
+        cause: _temp16
       });
       /* node:coverage ignore next */
-      if (_temp15 instanceof Completion) _temp15 = _temp15.Value;
-      const cycleRoot = _temp15;
-      if (cycleRoot.EvaluationError !== Value.undefined) {
-        return Value.undefined;
-      }
-      if (m.Async === Value.true) {
+      if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+    } else {
+      const result = yield* m.ExecuteModule();
+      if (result instanceof AbruptCompletion) {
         /* X */
-        let _temp16 = yield* ExecuteAsyncModule(m);
+        let _temp17 = AsyncModuleExecutionRejected(m, result.Value);
         /* node:coverage ignore next */
-        if (_temp16 instanceof AbruptCompletion) throw new Assert.Error("! yield* ExecuteAsyncModule(m) returned an abrupt completion", {
-          cause: _temp16
+        if (_temp17 && typeof _temp17 === 'object' && 'next' in _temp17) _temp17 = skipDebugger(_temp17);
+        /* node:coverage ignore next */
+        if (_temp17 instanceof AbruptCompletion) throw new Assert.Error("! AsyncModuleExecutionRejected(m, result.Value) returned an abrupt completion", {
+          cause: _temp17
         });
         /* node:coverage ignore next */
-        if (_temp16 instanceof Completion) _temp16 = _temp16.Value;
+        if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
       } else {
-        const result = EnsureCompletion(yield* m.ExecuteModule());
-        if (result instanceof NormalCompletion) {
+        m.AsyncEvaluationOrder = 'done';
+        m.Status = 'evaluated';
+        if (m.TopLevelCapability !== undefined) {
+          Assert(m.CycleRoot === m, "m.CycleRoot === m");
           /* X */
-          let _temp17 = yield* AsyncModuleExecutionFulfilled(m);
-          /* node:coverage ignore next */
-          if (_temp17 instanceof AbruptCompletion) throw new Assert.Error("! yield* AsyncModuleExecutionFulfilled(m) returned an abrupt completion", {
-            cause: _temp17
-          });
-          /* node:coverage ignore next */
-          if (_temp17 instanceof Completion) _temp17 = _temp17.Value;
-        } else {
-          /* X */
-          let _temp18 = AsyncModuleExecutionRejected(m, result.Value);
+          let _temp18 = Call(m.TopLevelCapability.Resolve, Value.undefined, [Value.undefined]);
           /* node:coverage ignore next */
           if (_temp18 && typeof _temp18 === 'object' && 'next' in _temp18) _temp18 = skipDebugger(_temp18);
           /* node:coverage ignore next */
-          if (_temp18 instanceof AbruptCompletion) throw new Assert.Error("! AsyncModuleExecutionRejected(m, result.Value) returned an abrupt completion", {
+          if (_temp18 instanceof AbruptCompletion) throw new Assert.Error("! Call(m.TopLevelCapability.Resolve, Value.undefined, [Value.undefined]) returned an abrupt completion", {
             cause: _temp18
           });
           /* node:coverage ignore next */
@@ -31453,61 +31487,36 @@ function* AsyncModuleExecutionFulfilled(module) {
       }
     }
   }
-  if (!(module.TopLevelCapability instanceof UndefinedValue)) {
-    Assert(module.DFSIndex === module.DFSAncestorIndex, "module.DFSIndex === module.DFSAncestorIndex");
-    /* X */
-    let _temp19 = Call(module.TopLevelCapability.Resolve, Value.undefined, [Value.undefined]);
-    /* node:coverage ignore next */
-    if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) _temp19 = skipDebugger(_temp19);
-    /* node:coverage ignore next */
-    if (_temp19 instanceof AbruptCompletion) throw new Assert.Error("! Call(module.TopLevelCapability.Resolve, Value.undefined, [Value.undefined]) returned an abrupt completion", {
-      cause: _temp19
-    });
-    /* node:coverage ignore next */
-    if (_temp19 instanceof Completion) _temp19 = _temp19.Value;
-  }
-  return Value.undefined;
 }
 AsyncModuleExecutionFulfilled.section = 'https://tc39.es/ecma262/#sec-asyncmodulexecutionfulfilled';
 /** https://tc39.es/ecma262/#sec-AsyncModuleExecutionRejected */
 function AsyncModuleExecutionRejected(module, error) {
   if (module.Status === 'evaluated') {
-    Assert(module.EvaluationError !== Value.undefined, "module.EvaluationError !== Value.undefined");
-    return Value.undefined;
+    Assert(module.EvaluationError !== undefined, "module.EvaluationError !== undefined");
+    return;
   }
   Assert(module.Status === 'evaluating-async', "module.Status === 'evaluating-async'");
-  Assert(module.EvaluationError === Value.undefined, "module.EvaluationError === Value.undefined");
+  Assert(typeof module.AsyncEvaluationOrder === 'number', "typeof module.AsyncEvaluationOrder === 'number'");
+  Assert(module.EvaluationError === undefined, "module.EvaluationError === undefined");
   module.EvaluationError = ThrowCompletion(error);
-  module.AsyncEvaluating = Value.false;
+  module.Status = 'evaluated';
+  module.AsyncEvaluationOrder = 'done';
   for (const m of module.AsyncParentModules) {
-    if (module.DFSIndex !== module.DFSAncestorIndex) {
-      Assert(m.DFSAncestorIndex === module.DFSAncestorIndex, "m.DFSAncestorIndex === module.DFSAncestorIndex");
-    }
-    /* X */
-    let _temp20 = AsyncModuleExecutionRejected(m, error);
-    /* node:coverage ignore next */
-    if (_temp20 && typeof _temp20 === 'object' && 'next' in _temp20) _temp20 = skipDebugger(_temp20);
-    /* node:coverage ignore next */
-    if (_temp20 instanceof AbruptCompletion) throw new Assert.Error("! AsyncModuleExecutionRejected(m, error) returned an abrupt completion", {
-      cause: _temp20
-    });
-    /* node:coverage ignore next */
-    if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
+    AsyncModuleExecutionRejected(m, error);
   }
-  if (!(module.TopLevelCapability instanceof UndefinedValue)) {
+  if (module.TopLevelCapability !== undefined) {
     Assert(module.DFSIndex === module.DFSAncestorIndex, "module.DFSIndex === module.DFSAncestorIndex");
     /* X */
-    let _temp21 = Call(module.TopLevelCapability.Reject, Value.undefined, [error]);
+    let _temp19 = Call(module.TopLevelCapability.Reject, Value.undefined, [error]);
     /* node:coverage ignore next */
-    if (_temp21 && typeof _temp21 === 'object' && 'next' in _temp21) _temp21 = skipDebugger(_temp21);
+    if (_temp19 && typeof _temp19 === 'object' && 'next' in _temp19) _temp19 = skipDebugger(_temp19);
     /* node:coverage ignore next */
-    if (_temp21 instanceof AbruptCompletion) throw new Assert.Error("! Call(module.TopLevelCapability.Reject, Value.undefined, [error]) returned an abrupt completion", {
-      cause: _temp21
+    if (_temp19 instanceof AbruptCompletion) throw new Assert.Error("! Call(module.TopLevelCapability.Reject, Value.undefined, [error]) returned an abrupt completion", {
+      cause: _temp19
     });
     /* node:coverage ignore next */
-    if (_temp21 instanceof Completion) _temp21 = _temp21.Value;
+    if (_temp19 instanceof Completion) _temp19 = _temp19.Value;
   }
-  return Value.undefined;
 }
 AsyncModuleExecutionRejected.section = 'https://tc39.es/ecma262/#sec-AsyncModuleExecutionRejected';
 function getRecordWithSpecifier(loadedModules, specifier) {
@@ -31612,11 +31621,11 @@ function CreateDefaultExportSyntheticModule(defaultExport, realm, hostDefined) {
   // 1. Let closure be the a Abstract Closure with parameters (module) that captures defaultExport and performs the following steps when called:
   const closure = function* closure(module) {
     /* ReturnIfAbrupt */
-    let _temp22 = yield* module.SetSyntheticExport(Value('default'), defaultExport);
+    let _temp20 = yield* module.SetSyntheticExport(Value('default'), defaultExport);
     /* node:coverage ignore next */
-    if (_temp22 instanceof AbruptCompletion) return _temp22;
+    if (_temp20 instanceof AbruptCompletion) return _temp20;
     /* node:coverage ignore next */
-    if (_temp22 instanceof Completion) _temp22 = _temp22.Value;
+    if (_temp20 instanceof Completion) _temp20 = _temp20.Value;
     return Value.undefined;
   };
   // 2. Return CreateSyntheticModule(« "default" », closure, realm)
@@ -60574,5 +60583,5 @@ function* performDevtoolsEval(source, evalRealm, strictCaller, doNotTrack) {
   return result;
 }
 
-export { AbruptCompletion, AbstractModuleRecord, AbstractRelationalComparison, AddToKeptObjects, Agent, AgentSignifier, AllocateArrayBuffer, ApplyStringOrNumericBinaryOperator, ArgumentListEvaluation, ArrayBufferByteLength, ArrayCreate, ArraySetLength, ArraySpeciesCreate, Assert, AsyncBlockStart, AsyncFromSyncIteratorContinuation, AsyncFunctionStart, AsyncGeneratorAwaitReturn, AsyncGeneratorEnqueue, AsyncGeneratorResume, AsyncGeneratorStart, AsyncGeneratorValidate, AsyncGeneratorYield, AsyncIteratorClose, Await, BigIntValue, BinaryUnicodeProperties, BindingClassDeclarationEvaluation, BindingInitialization, BlockDeclarationInstantiation, BodyText, BooleanValue, BoundNames, BreakCompletion, Call, CallSite, CanBeHeldWeakly, CanonicalNumericIndexString, CharacterValue, ClassDefinitionEvaluation, ClassFieldDefinitionEvaluation, ClassFieldDefinitionRecord, ClassStaticBlockDefinitionEvaluation, ClassStaticBlockDefinitionRecord, CleanupFinalizationRegistry, ClearKeptObjects, CloneArrayBuffer, CodePointAt, CodePointsToString, CompareArrayElements, CompletePropertyDescriptor, Completion, Construct, ConstructorMethod, ContainsArguments, ContainsExpression, ContinueCompletion, ContinueDynamicImport, ContinueModuleLoading, CopyDataBlockBytes, CopyDataProperties, CreateArrayFromList, CreateArrayIterator, CreateAsyncFromSyncIterator, CreateAsyncIteratorFromClosure, CreateBuiltinFunction, CreateByteDataBlock, CreateDataProperty, CreateDataPropertyOrThrow, CreateDefaultExportSyntheticModule, CreateDynamicFunction, CreateIntrinsics, CreateIteratorFromClosure, CreateIteratorResultObject, CreateListFromArrayLike, CreateListIteratorRecord, CreateMappedArgumentsObject, CreateMethodProperty, CreateNonEnumerableDataPropertyOrThrow, CreateResolvingFunctions, CreateSyntheticModule, CreateUnmappedArgumentsObject, CyclicModuleRecord, DataBlock, DateFromTime, DateProto_toISOString, Day, DayFromYear, DayWithinYear, DaysInYear, DeclarationPart, DeclarativeEnvironmentRecord, DefineField, DefineMethod, DefinePropertyOrThrow, DeletePropertyOrThrow, _Descriptor as Descriptor, DestructuringAssignmentEvaluation, DetachArrayBuffer, EnsureCompletion, EnumerableOwnPropertyNames, EnvironmentRecord, EscapeRegExpPattern, EvalDeclarationInstantiation, Evaluate, EvaluateBody, EvaluateBody_AssignmentExpression, EvaluateBody_AsyncFunctionBody, EvaluateBody_AsyncGeneratorBody, EvaluateBody_ConciseBody, EvaluateBody_FunctionBody, EvaluateBody_GeneratorBody, EvaluateCall, EvaluatePropertyAccessWithExpressionKey, EvaluatePropertyAccessWithIdentifierKey, EvaluateStringOrNumericBinaryExpression, Evaluate_AdditiveExpression, Evaluate_AnyFunctionBody, Evaluate_ArrayLiteral, Evaluate_ArrowFunction, Evaluate_AssignmentExpression, Evaluate_AsyncArrowFunction, Evaluate_AsyncFunctionExpression, Evaluate_AsyncGeneratorExpression, Evaluate_AwaitExpression, Evaluate_BinaryBitwiseExpression, Evaluate_BindingList, Evaluate_Block, Evaluate_BreakStatement, Evaluate_BreakableStatement, Evaluate_CallExpression, Evaluate_CaseClause, Evaluate_ClassDeclaration, Evaluate_ClassExpression, Evaluate_CoalesceExpression, Evaluate_CommaOperator, Evaluate_ConditionalExpression, Evaluate_ContinueStatement, Evaluate_DebuggerStatement, Evaluate_EmptyStatement, Evaluate_EqualityExpression, Evaluate_ExponentiationExpression, Evaluate_ExportDeclaration, Evaluate_ExpressionBody, Evaluate_ExpressionStatement, Evaluate_ForBinding, Evaluate_FunctionDeclaration, Evaluate_FunctionExpression, Evaluate_FunctionStatementList, Evaluate_GeneratorExpression, Evaluate_HoistableDeclaration, Evaluate_IdentifierReference, Evaluate_IfStatement, Evaluate_ImportCall, Evaluate_ImportDeclaration, Evaluate_ImportMeta, Evaluate_LabelledStatement, Evaluate_LexicalBinding, Evaluate_LexicalDeclaration, Evaluate_Literal, Evaluate_LogicalANDExpression, Evaluate_LogicalORExpression, Evaluate_MemberExpression, Evaluate_Module, Evaluate_ModuleBody, Evaluate_MultiplicativeExpression, Evaluate_NewExpression, Evaluate_NewTarget, Evaluate_ObjectLiteral, Evaluate_OptionalExpression, Evaluate_ParenthesizedExpression, Evaluate_Pattern, Evaluate_PropertyName, Evaluate_RegularExpressionLiteral, Evaluate_RelationalExpression, Evaluate_RelationalExpression_PrivateIdentifier, Evaluate_ReturnStatement, Evaluate_Script, Evaluate_ScriptBody, Evaluate_ShiftExpression, Evaluate_StatementList, Evaluate_SuperCall, Evaluate_SuperProperty, Evaluate_SwitchStatement, Evaluate_TaggedTemplateExpression, Evaluate_TemplateLiteral, Evaluate_This, Evaluate_ThrowStatement, Evaluate_TryStatement, Evaluate_UnaryExpression, Evaluate_UpdateExpression, Evaluate_VariableDeclarationList, Evaluate_VariableStatement, Evaluate_WithStatement, Evaluate_YieldExpression, ExecutionContext, ExpectedArgumentCount, ExportEntries, ExportEntriesForModule, F, FEATURES, FinishLoadingImportedModule, FlagText, FromPropertyDescriptor, FunctionDeclarationInstantiation, FunctionEnvironmentRecord, GeneratorResume, GeneratorResumeAbrupt, GeneratorStart, GeneratorValidate, GeneratorYield, Get, GetActiveScriptOrModule, GetAsyncCycleRoot, GetFunctionRealm, GetGeneratorKind, GetGlobalObject, GetIdentifierReference, GetImportedModule, GetIterator, GetIteratorDirect, GetIteratorFlattenable, GetIteratorFromMethod, GetMatchIndexPair, GetMatchString, GetMethod, GetModuleNamespace, GetNewTarget, GetPrototypeFromConstructor, GetStringIndex, GetSubstitution, GetThisEnvironment, GetThisValue, GetV, GetValue, GetValueFromBuffer, GetViewByteLength, GetViewValue, GlobalDeclarationInstantiation, GlobalEnvironmentRecord, GraphLoadingState, HasInitializer, HasName, HasOwnProperty, HasProperty, HostCallJobCallback, HostEnqueueFinalizationRegistryCleanupJob, HostEnqueuePromiseJob, HostEnsureCanCompileStrings, HostFinalizeImportMeta, HostGetImportMetaProperties, HostHasSourceTextAvailable, HostLoadImportedModule, HostMakeJobCallback, HostPromiseRejectionTracker, HourFromTime, HoursPerDay, IfAbruptCloseIterator, IfAbruptRejectPromise, ImportEntries, ImportEntriesForModule, ImportedLocalNames, InLeapYear, InitializeBoundName, InitializeHostDefinedRealm, InitializeInstanceElements, InitializeReferencedBinding, InnerModuleEvaluation, InnerModuleLinking, InnerModuleLoading, InstallErrorCause, InstanceofOperator, InstantiateArrowFunctionExpression, InstantiateAsyncArrowFunctionExpression, InstantiateAsyncFunctionExpression, InstantiateAsyncGeneratorFunctionExpression, InstantiateFunctionObject, InstantiateFunctionObject_AsyncFunctionDeclaration, InstantiateFunctionObject_AsyncGeneratorDeclaration, InstantiateFunctionObject_FunctionDeclaration, InstantiateFunctionObject_GeneratorDeclaration, InstantiateGeneratorFunctionExpression, InstantiateOrdinaryFunctionExpression, IntrinsicsFunctionToString, Invoke, IsAccessorDescriptor, IsAnonymousFunctionDefinition, IsArray, IsArrayBufferViewOutOfBounds, IsBigIntElementType, IsCallable, IsCompatiblePropertyDescriptor, IsComputedPropertyKey, IsConcatSpreadable, IsConstantDeclaration, IsConstructor, IsDataDescriptor, IsDestructuring, IsDetachedBuffer, IsError, IsExtensible, IsFixedLengthArrayBuffer, IsFunctionDefinition, IsGenericDescriptor, IsIdentifierRef, IsInTailPosition, IsIntegralNumber, IsLooselyEqual, IsPrivateReference, IsPromise, IsPropertyKey, IsPropertyReference, IsRegExp, IsSharedArrayBuffer, IsSimpleParameterList, IsStatic, IsStrict, IsStrictlyEqual, IsStringPrefix, IsStringWellFormedUnicode, IsSuperReference, IsTypedArrayFixedLength, IsTypedArrayOutOfBounds, IsUnresolvableReference, IsValidIntegerIndex, IsViewOutOfBounds, IteratorBindingInitialization_ArrayBindingPattern, IteratorBindingInitialization_FormalParameters, IteratorClose, IteratorComplete, IteratorNext, IteratorStep, IteratorStepValue, IteratorToList, IteratorValue, JSStringMap, JSStringSet, JSStringValue, KeyForSymbol, KeyedBindingInitialization, LabelledEvaluation, LengthOfArrayLike, LexicallyDeclaredNames, LexicallyScopedDeclarations, LocalTZA, LocalTime, MV_StringNumericLiteral, MakeBasicObject, MakeClassConstructor, MakeConstructor, MakeDataViewWithBufferWitnessRecord, MakeDate, MakeDay, MakeMatchIndicesIndexPairArray, MakeMethod, MakePrivateReference, MakeTime, MakeTypedArrayWithBufferWitnessRecord, ManagedRealm, MethodDefinitionEvaluation, MinFromTime, MinutesPerHour, ModuleEnvironmentRecord, ModuleNamespaceCreate, AbstractModuleRecord as ModuleRecord, ModuleRequests, MonthFromTime, NamedEvaluation, NewPromiseCapability, NonConstructorElements, NonbinaryUnicodeProperties, NormalCompletion, NullValue, NumberToBigInt, NumberValue, NumericToRawBytes, NumericValue, ObjectEnvironmentRecord, ObjectValue, OrdinaryCallBindThis, OrdinaryCallEvaluateBody, OrdinaryCreateFromConstructor, OrdinaryDefineOwnProperty, OrdinaryDelete, OrdinaryFunctionCreate, OrdinaryGet, OrdinaryGetOwnProperty, OrdinaryGetPrototypeOf, OrdinaryHasInstance, OrdinaryHasProperty, OrdinaryIsExtensible, OrdinaryObjectCreate, OrdinaryOwnPropertyKeys, OrdinaryPreventExtensions, OrdinarySet, OrdinarySetPrototypeOf, OrdinarySetWithOwnDescriptor, OrdinaryToPrimitive, ParseJSONModule, ParseModule, ParsePattern, ParseScript, Parser, PerformEval, PerformPromiseThen, PrepareForOrdinaryCall, PrepareForTailCall, PrimitiveValue, PrivateBoundIdentifiers, PrivateElementFind, PrivateElementRecord, PrivateEnvironmentRecord, PrivateFieldAdd, PrivateGet, PrivateMethodOrAccessorAdd, PrivateName, PrivateSet, PromiseCapabilityRecord, PromiseReactionRecord, PromiseResolve, PropName, PropertyBindingInitialization, PropertyDefinitionEvaluation_PropertyDefinitionList, PropertyKeyMap, ProxyCreate, PutValue, ReturnIfAbrupt as Q, R, RawBytesToNumeric, Realm, ReferenceRecord, RegExpAlloc, RegExpCreate, RegExpHasFlag, RegExpInitialize, RegExpParser, State as RegExpState, RequireInternalSlot, RequireObjectCoercible, ResolveBinding, ResolvePrivateIdentifier, ResolveThisBinding, ResolvedBindingRecord, RestBindingInitialization, ReturnCompletion, ReturnIfAbrupt, SameType, SameValue, SameValueNonNumber, SameValueZero, ScriptEvaluation, ScriptRecord, SecFromTime, SecondsPerMinute, Set$1 as Set, SetDefaultGlobalBindings, SetFunctionLength, SetFunctionName, SetImmutablePrototype, SetIntegrityLevel, SetValueInBuffer, SetViewValue, SetterThatIgnoresPrototypeProperties, SourceTextModuleRecord, SpeciesConstructor, StringCreate, StringGetOwnProperty, StringIndexOf, StringPad, StringToBigInt, StringToCodePoints, StringValue, SymbolDescriptiveString, SymbolValue, SyntheticModuleRecord, TV, TemplateStrings, TestIntegrityLevel, Throw, ThrowCompletion, TimeClip, TimeFromYear, TimeWithinDay, ToBigInt, ToBigInt64, ToBigUint64, ToBoolean, ToIndex, ToInt16, ToInt32, ToInt8, ToIntegerOrInfinity, ToLength, ToNumber, ToNumeric, ToObject, ToPrimitive, ToPropertyDescriptor, ToPropertyKey, ToString, ToUint16, ToUint32, ToUint8, ToUint8Clamp, TopLevelLexicallyDeclaredNames, TopLevelLexicallyScopedDeclarations, TopLevelVarDeclaredNames, TopLevelVarScopedDeclarations, TrimString, TypedArrayByteLength, TypedArrayCreate, TypedArrayGetElement, TypedArrayLength, TypedArraySetElement, UTC, UTF16EncodeCodePoint, UTF16SurrogatePairToCodePoint, UndefinedValue, UnicodeGeneralCategoryValues, UnicodeMatchProperty, UnicodeMatchPropertyValue, UnicodeScriptValues, UnicodeSets, UpdateEmpty, ValidateAndApplyPropertyDescriptor, Value, ValueOfNormalCompletion, VarDeclaredNames, VarScopedDeclarations, WeakRefDeref, WeekDay, X, YearFromTime, Yield, Z, createTest262Intrinsics, evalQ, gc, generatorBrandToErrorMessageType, getCurrentStack, getHostDefinedErrorStack, getUnicodePropertyValueSet, inspect, isArgumentExoticObject, isArrayBufferObject, isArrayExoticObject, isArrayIndex, isBuiltinFunctionObject, isDataViewObject, isDateObject, isECMAScriptFunctionObject, IsError as isErrorObject, isFunctionObject, isIntegerIndex, isMapObject, isModuleNamespaceObject, isNonNegativeInteger, isPromiseObject, isProxyExoticObject, isRegExpObject, isSetObject, isStrictModeCode, isTypedArrayObject, isWeakMapObject, isWeakRef, isWeakSetObject, kInternal, msFromTime, msPerAverageYear, msPerDay, msPerHour, msPerMinute, msPerSecond, performDevtoolsEval, refineLeftHandSideExpression, runJobQueue, setSurroundingAgent, skipDebugger, sourceTextMatchedBy, surroundingAgent, unwrapCompletion, wellKnownSymbols, wrappedParse };
+export { AbruptCompletion, AbstractModuleRecord, AbstractRelationalComparison, AddToKeptObjects, Agent, AgentSignifier, AllocateArrayBuffer, ApplyStringOrNumericBinaryOperator, ArgumentListEvaluation, ArrayBufferByteLength, ArrayCreate, ArraySetLength, ArraySpeciesCreate, Assert, AsyncBlockStart, AsyncFromSyncIteratorContinuation, AsyncFunctionStart, AsyncGeneratorAwaitReturn, AsyncGeneratorEnqueue, AsyncGeneratorResume, AsyncGeneratorStart, AsyncGeneratorValidate, AsyncGeneratorYield, AsyncIteratorClose, Await, BigIntValue, BinaryUnicodeProperties, BindingClassDeclarationEvaluation, BindingInitialization, BlockDeclarationInstantiation, BodyText, BooleanValue, BoundNames, BreakCompletion, Call, CallSite, CanBeHeldWeakly, CanonicalNumericIndexString, CharacterValue, ClassDefinitionEvaluation, ClassFieldDefinitionEvaluation, ClassFieldDefinitionRecord, ClassStaticBlockDefinitionEvaluation, ClassStaticBlockDefinitionRecord, CleanupFinalizationRegistry, ClearKeptObjects, CloneArrayBuffer, CodePointAt, CodePointsToString, CompareArrayElements, CompletePropertyDescriptor, Completion, Construct, ConstructorMethod, ContainsArguments, ContainsExpression, ContinueCompletion, ContinueDynamicImport, ContinueModuleLoading, CopyDataBlockBytes, CopyDataProperties, CreateArrayFromList, CreateArrayIterator, CreateAsyncFromSyncIterator, CreateAsyncIteratorFromClosure, CreateBuiltinFunction, CreateByteDataBlock, CreateDataProperty, CreateDataPropertyOrThrow, CreateDefaultExportSyntheticModule, CreateDynamicFunction, CreateIntrinsics, CreateIteratorFromClosure, CreateIteratorResultObject, CreateListFromArrayLike, CreateListIteratorRecord, CreateMappedArgumentsObject, CreateMethodProperty, CreateNonEnumerableDataPropertyOrThrow, CreateResolvingFunctions, CreateSyntheticModule, CreateUnmappedArgumentsObject, CyclicModuleRecord, DataBlock, DateFromTime, DateProto_toISOString, Day, DayFromYear, DayWithinYear, DaysInYear, DeclarationPart, DeclarativeEnvironmentRecord, DefineField, DefineMethod, DefinePropertyOrThrow, DeletePropertyOrThrow, _Descriptor as Descriptor, DestructuringAssignmentEvaluation, DetachArrayBuffer, EnsureCompletion, EnumerableOwnPropertyNames, EnvironmentRecord, EscapeRegExpPattern, EvalDeclarationInstantiation, Evaluate, EvaluateBody, EvaluateBody_AssignmentExpression, EvaluateBody_AsyncFunctionBody, EvaluateBody_AsyncGeneratorBody, EvaluateBody_ConciseBody, EvaluateBody_FunctionBody, EvaluateBody_GeneratorBody, EvaluateCall, EvaluatePropertyAccessWithExpressionKey, EvaluatePropertyAccessWithIdentifierKey, EvaluateStringOrNumericBinaryExpression, Evaluate_AdditiveExpression, Evaluate_AnyFunctionBody, Evaluate_ArrayLiteral, Evaluate_ArrowFunction, Evaluate_AssignmentExpression, Evaluate_AsyncArrowFunction, Evaluate_AsyncFunctionExpression, Evaluate_AsyncGeneratorExpression, Evaluate_AwaitExpression, Evaluate_BinaryBitwiseExpression, Evaluate_BindingList, Evaluate_Block, Evaluate_BreakStatement, Evaluate_BreakableStatement, Evaluate_CallExpression, Evaluate_CaseClause, Evaluate_ClassDeclaration, Evaluate_ClassExpression, Evaluate_CoalesceExpression, Evaluate_CommaOperator, Evaluate_ConditionalExpression, Evaluate_ContinueStatement, Evaluate_DebuggerStatement, Evaluate_EmptyStatement, Evaluate_EqualityExpression, Evaluate_ExponentiationExpression, Evaluate_ExportDeclaration, Evaluate_ExpressionBody, Evaluate_ExpressionStatement, Evaluate_ForBinding, Evaluate_FunctionDeclaration, Evaluate_FunctionExpression, Evaluate_FunctionStatementList, Evaluate_GeneratorExpression, Evaluate_HoistableDeclaration, Evaluate_IdentifierReference, Evaluate_IfStatement, Evaluate_ImportCall, Evaluate_ImportDeclaration, Evaluate_ImportMeta, Evaluate_LabelledStatement, Evaluate_LexicalBinding, Evaluate_LexicalDeclaration, Evaluate_Literal, Evaluate_LogicalANDExpression, Evaluate_LogicalORExpression, Evaluate_MemberExpression, Evaluate_Module, Evaluate_ModuleBody, Evaluate_MultiplicativeExpression, Evaluate_NewExpression, Evaluate_NewTarget, Evaluate_ObjectLiteral, Evaluate_OptionalExpression, Evaluate_ParenthesizedExpression, Evaluate_Pattern, Evaluate_PropertyName, Evaluate_RegularExpressionLiteral, Evaluate_RelationalExpression, Evaluate_RelationalExpression_PrivateIdentifier, Evaluate_ReturnStatement, Evaluate_Script, Evaluate_ScriptBody, Evaluate_ShiftExpression, Evaluate_StatementList, Evaluate_SuperCall, Evaluate_SuperProperty, Evaluate_SwitchStatement, Evaluate_TaggedTemplateExpression, Evaluate_TemplateLiteral, Evaluate_This, Evaluate_ThrowStatement, Evaluate_TryStatement, Evaluate_UnaryExpression, Evaluate_UpdateExpression, Evaluate_VariableDeclarationList, Evaluate_VariableStatement, Evaluate_WithStatement, Evaluate_YieldExpression, ExecutionContext, ExpectedArgumentCount, ExportEntries, ExportEntriesForModule, F, FEATURES, FinishLoadingImportedModule, FlagText, FromPropertyDescriptor, FunctionDeclarationInstantiation, FunctionEnvironmentRecord, GeneratorResume, GeneratorResumeAbrupt, GeneratorStart, GeneratorValidate, GeneratorYield, Get, GetActiveScriptOrModule, GetFunctionRealm, GetGeneratorKind, GetGlobalObject, GetIdentifierReference, GetImportedModule, GetIterator, GetIteratorDirect, GetIteratorFlattenable, GetIteratorFromMethod, GetMatchIndexPair, GetMatchString, GetMethod, GetModuleNamespace, GetNewTarget, GetPrototypeFromConstructor, GetStringIndex, GetSubstitution, GetThisEnvironment, GetThisValue, GetV, GetValue, GetValueFromBuffer, GetViewByteLength, GetViewValue, GlobalDeclarationInstantiation, GlobalEnvironmentRecord, GraphLoadingState, HasInitializer, HasName, HasOwnProperty, HasProperty, HostCallJobCallback, HostEnqueueFinalizationRegistryCleanupJob, HostEnqueuePromiseJob, HostEnsureCanCompileStrings, HostFinalizeImportMeta, HostGetImportMetaProperties, HostHasSourceTextAvailable, HostLoadImportedModule, HostMakeJobCallback, HostPromiseRejectionTracker, HourFromTime, HoursPerDay, IfAbruptCloseIterator, IfAbruptRejectPromise, ImportEntries, ImportEntriesForModule, ImportedLocalNames, InLeapYear, IncrementModuleAsyncEvaluationCount, InitializeBoundName, InitializeHostDefinedRealm, InitializeInstanceElements, InitializeReferencedBinding, InnerModuleEvaluation, InnerModuleLinking, InnerModuleLoading, InstallErrorCause, InstanceofOperator, InstantiateArrowFunctionExpression, InstantiateAsyncArrowFunctionExpression, InstantiateAsyncFunctionExpression, InstantiateAsyncGeneratorFunctionExpression, InstantiateFunctionObject, InstantiateFunctionObject_AsyncFunctionDeclaration, InstantiateFunctionObject_AsyncGeneratorDeclaration, InstantiateFunctionObject_FunctionDeclaration, InstantiateFunctionObject_GeneratorDeclaration, InstantiateGeneratorFunctionExpression, InstantiateOrdinaryFunctionExpression, IntrinsicsFunctionToString, Invoke, IsAccessorDescriptor, IsAnonymousFunctionDefinition, IsArray, IsArrayBufferViewOutOfBounds, IsBigIntElementType, IsCallable, IsCompatiblePropertyDescriptor, IsComputedPropertyKey, IsConcatSpreadable, IsConstantDeclaration, IsConstructor, IsDataDescriptor, IsDestructuring, IsDetachedBuffer, IsError, IsExtensible, IsFixedLengthArrayBuffer, IsFunctionDefinition, IsGenericDescriptor, IsIdentifierRef, IsInTailPosition, IsIntegralNumber, IsLooselyEqual, IsPrivateReference, IsPromise, IsPropertyKey, IsPropertyReference, IsRegExp, IsSharedArrayBuffer, IsSimpleParameterList, IsStatic, IsStrict, IsStrictlyEqual, IsStringPrefix, IsStringWellFormedUnicode, IsSuperReference, IsTypedArrayFixedLength, IsTypedArrayOutOfBounds, IsUnresolvableReference, IsValidIntegerIndex, IsViewOutOfBounds, IteratorBindingInitialization_ArrayBindingPattern, IteratorBindingInitialization_FormalParameters, IteratorClose, IteratorComplete, IteratorNext, IteratorStep, IteratorStepValue, IteratorToList, IteratorValue, JSStringMap, JSStringSet, JSStringValue, KeyForSymbol, KeyedBindingInitialization, LabelledEvaluation, LengthOfArrayLike, LexicallyDeclaredNames, LexicallyScopedDeclarations, LocalTZA, LocalTime, MV_StringNumericLiteral, MakeBasicObject, MakeClassConstructor, MakeConstructor, MakeDataViewWithBufferWitnessRecord, MakeDate, MakeDay, MakeMatchIndicesIndexPairArray, MakeMethod, MakePrivateReference, MakeTime, MakeTypedArrayWithBufferWitnessRecord, ManagedRealm, MethodDefinitionEvaluation, MinFromTime, MinutesPerHour, ModuleEnvironmentRecord, ModuleNamespaceCreate, AbstractModuleRecord as ModuleRecord, ModuleRequests, MonthFromTime, NamedEvaluation, NewPromiseCapability, NonConstructorElements, NonbinaryUnicodeProperties, NormalCompletion, NullValue, NumberToBigInt, NumberValue, NumericToRawBytes, NumericValue, ObjectEnvironmentRecord, ObjectValue, OrdinaryCallBindThis, OrdinaryCallEvaluateBody, OrdinaryCreateFromConstructor, OrdinaryDefineOwnProperty, OrdinaryDelete, OrdinaryFunctionCreate, OrdinaryGet, OrdinaryGetOwnProperty, OrdinaryGetPrototypeOf, OrdinaryHasInstance, OrdinaryHasProperty, OrdinaryIsExtensible, OrdinaryObjectCreate, OrdinaryOwnPropertyKeys, OrdinaryPreventExtensions, OrdinarySet, OrdinarySetPrototypeOf, OrdinarySetWithOwnDescriptor, OrdinaryToPrimitive, ParseJSONModule, ParseModule, ParsePattern, ParseScript, Parser, PerformEval, PerformPromiseThen, PrepareForOrdinaryCall, PrepareForTailCall, PrimitiveValue, PrivateBoundIdentifiers, PrivateElementFind, PrivateElementRecord, PrivateEnvironmentRecord, PrivateFieldAdd, PrivateGet, PrivateMethodOrAccessorAdd, PrivateName, PrivateSet, PromiseCapabilityRecord, PromiseReactionRecord, PromiseResolve, PropName, PropertyBindingInitialization, PropertyDefinitionEvaluation_PropertyDefinitionList, PropertyKeyMap, ProxyCreate, PutValue, ReturnIfAbrupt as Q, R, RawBytesToNumeric, Realm, ReferenceRecord, RegExpAlloc, RegExpCreate, RegExpHasFlag, RegExpInitialize, RegExpParser, State as RegExpState, RequireInternalSlot, RequireObjectCoercible, ResolveBinding, ResolvePrivateIdentifier, ResolveThisBinding, ResolvedBindingRecord, RestBindingInitialization, ReturnCompletion, ReturnIfAbrupt, SameType, SameValue, SameValueNonNumber, SameValueZero, ScriptEvaluation, ScriptRecord, SecFromTime, SecondsPerMinute, Set$1 as Set, SetDefaultGlobalBindings, SetFunctionLength, SetFunctionName, SetImmutablePrototype, SetIntegrityLevel, SetValueInBuffer, SetViewValue, SetterThatIgnoresPrototypeProperties, SourceTextModuleRecord, SpeciesConstructor, StringCreate, StringGetOwnProperty, StringIndexOf, StringPad, StringToBigInt, StringToCodePoints, StringValue, SymbolDescriptiveString, SymbolValue, SyntheticModuleRecord, TV, TemplateStrings, TestIntegrityLevel, Throw, ThrowCompletion, TimeClip, TimeFromYear, TimeWithinDay, ToBigInt, ToBigInt64, ToBigUint64, ToBoolean, ToIndex, ToInt16, ToInt32, ToInt8, ToIntegerOrInfinity, ToLength, ToNumber, ToNumeric, ToObject, ToPrimitive, ToPropertyDescriptor, ToPropertyKey, ToString, ToUint16, ToUint32, ToUint8, ToUint8Clamp, TopLevelLexicallyDeclaredNames, TopLevelLexicallyScopedDeclarations, TopLevelVarDeclaredNames, TopLevelVarScopedDeclarations, TrimString, TypedArrayByteLength, TypedArrayCreate, TypedArrayGetElement, TypedArrayLength, TypedArraySetElement, UTC, UTF16EncodeCodePoint, UTF16SurrogatePairToCodePoint, UndefinedValue, UnicodeGeneralCategoryValues, UnicodeMatchProperty, UnicodeMatchPropertyValue, UnicodeScriptValues, UnicodeSets, UpdateEmpty, ValidateAndApplyPropertyDescriptor, Value, ValueOfNormalCompletion, VarDeclaredNames, VarScopedDeclarations, WeakRefDeref, WeekDay, X, YearFromTime, Yield, Z, createTest262Intrinsics, evalQ, gc, generatorBrandToErrorMessageType, getCurrentStack, getHostDefinedErrorStack, getUnicodePropertyValueSet, inspect, isArgumentExoticObject, isArrayBufferObject, isArrayExoticObject, isArrayIndex, isBuiltinFunctionObject, isDataViewObject, isDateObject, isECMAScriptFunctionObject, IsError as isErrorObject, isFunctionObject, isIntegerIndex, isMapObject, isModuleNamespaceObject, isNonNegativeInteger, isPromiseObject, isProxyExoticObject, isRegExpObject, isSetObject, isStrictModeCode, isTypedArrayObject, isWeakMapObject, isWeakRef, isWeakSetObject, kInternal, msFromTime, msPerAverageYear, msPerDay, msPerHour, msPerMinute, msPerSecond, performDevtoolsEval, refineLeftHandSideExpression, runJobQueue, setSurroundingAgent, skipDebugger, sourceTextMatchedBy, surroundingAgent, unwrapCompletion, wellKnownSymbols, wrappedParse };
 //# sourceMappingURL=engine262.mjs.map
