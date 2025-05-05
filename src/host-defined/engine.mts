@@ -80,7 +80,8 @@ export interface AgentHostDefined {
   ensureCanCompileStrings?(callerRealm: Realm, calleeRealm: Realm): PlainCompletion<void>;
   cleanupFinalizationRegistry?(FinalizationRegistry: FinalizationRegistryObject): PlainCompletion<void>;
   features?: readonly string[];
-  loadImportedModule?(referrer: AbstractModuleRecord | ScriptRecord | NullValue | Realm, specifier: string, hostDefined: ModuleRecordHostDefined | undefined, finish: (res: PlainCompletion<AbstractModuleRecord>) => void): void;
+  supportedImportAttributes?: readonly string[];
+  loadImportedModule?(referrer: AbstractModuleRecord | ScriptRecord | NullValue | Realm, specifier: string, attributes: Map<string, string>, hostDefined: ModuleRecordHostDefined | undefined, finish: (res: PlainCompletion<AbstractModuleRecord>) => void): void;
   onDebugger?(): void;
   onRealmCreated?(realm: ManagedRealm): void;
   onScriptParsed?(script: ScriptRecord | SourceTextModuleRecord, scriptId: string): void;
@@ -500,7 +501,9 @@ export function HostHasSourceTextAvailable(func: FunctionObject) {
 }
 
 export function HostGetSupportedImportAttributes(): readonly string[] {
-  // TODO: Allow hosts to customize this.
+  if (surroundingAgent.hostDefinedOptions.supportedImportAttributes) {
+    return surroundingAgent.hostDefinedOptions.supportedImportAttributes;
+  }
   return [];
 }
 
@@ -510,8 +513,8 @@ export function HostLoadImportedModule(referrer: CyclicModuleRecord | ScriptReco
     const executionContext = surroundingAgent.runningExecutionContext;
     let result: PlainCompletion<AbstractModuleRecord> | undefined;
     let sync = true;
-    // TODO: Actually pass the attributes here :)
-    surroundingAgent.hostDefinedOptions.loadImportedModule(referrer, moduleRequest.Specifier.stringValue(), hostDefined, (res) => {
+    const attributes = new Map(moduleRequest.Attributes.map(({ Key, Value }) => [Key.stringValue(), Value.stringValue()]));
+    surroundingAgent.hostDefinedOptions.loadImportedModule(referrer, moduleRequest.Specifier.stringValue(), attributes, hostDefined, (res) => {
       result = res;
       if (!sync) {
         // If this callback has been called asynchronously, restore the correct execution context and enqueue a job.

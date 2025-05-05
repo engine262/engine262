@@ -326,6 +326,55 @@ Error: owo
     }
     assert(!varNames.has('deleteMe'), "`realm.[[GlobalEnv]].[[VarNames]]` shouldn't have 'deleteMe'.");
   },
+  () => {
+    let attributes!: Map<string, string>;
+    let calls = 0;
+
+    const agent = new Agent({
+      supportedImportAttributes: ['fruit', 'animal'],
+      loadImportedModule: (_referrer, _specifier, attrs, _hostDefined, finish) => {
+        calls += 1;
+        attributes = attrs;
+        finish(realm.compileModule(''));
+      },
+    });
+    setSurroundingAgent(agent);
+    const realm = new ManagedRealm();
+
+    realm.evaluateModule('import "test" with {}', 'case 1');
+    assert.deepStrictEqual([...attributes], []);
+
+
+    realm.evaluateModule('import "test" with { fruit: "banana" }', 'case 2');
+    assert.deepStrictEqual([...attributes], [['fruit', 'banana']]);
+
+
+    realm.evaluateModule('import "test" with { fruit: "banana", animal: "monkey" }', 'case 3');
+    assert.deepStrictEqual([...attributes], [['animal', 'monkey'], ['fruit', 'banana']]);
+
+    realm.evaluateModule('import "test" with { animal: "monkey", fruit: "banana" }', 'case 4');
+    assert.deepStrictEqual([...attributes], [['animal', 'monkey'], ['fruit', 'banana']]);
+
+    calls = 0;
+    realm.evaluateModule('import "test" with { fruit: "banana" }; import "test" with { fruit: "banana" }', 'case 5');
+    assert.strictEqual(calls, 1);
+
+    calls = 0;
+    realm.evaluateModule('import "test" with { fruit: "banana" }; import "test" with { animal: "monkey" }', 'case 6');
+    assert.strictEqual(calls, 2);
+
+    calls = 0;
+    realm.evaluateModule('import "test" with { fruit: "banana", animal: "monkey" }; import "test" with { animal: "monkey", fruit: "banana" };', 'case 7');
+    assert.strictEqual(calls, 1);
+
+    calls = 0;
+    realm.evaluateModule('import "test" with { animal: "monkey" }; import "test" with { animal: "elephant" };', 'case 8');
+    assert.strictEqual(calls, 2);
+
+    calls = 0;
+    realm.evaluateModule('import "test"; import "test" with {};', 'case 9');
+    assert.strictEqual(calls, 1);
+  },
 ].forEach((test, i) => {
   incr_total();
   try {

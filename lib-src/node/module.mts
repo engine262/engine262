@@ -6,7 +6,7 @@ import {
 } from '#self';
 
 export function createLoadImportedModule(getCache = (realm: ManagedRealm) => realm.HostDefined.resolverCache) {
-  const loadImportedModule: NonNullable<AgentHostDefined['loadImportedModule']> = (referrer, specifier, _hostDefined, finish) => {
+  const loadImportedModule: NonNullable<AgentHostDefined['loadImportedModule']> = (referrer, specifier, _attributes, _hostDefined, finish) => {
     if (referrer instanceof Realm || referrer instanceof NullValue) {
       throw new Error('Internal error: loadImportedModule called without a ScriptOrModule referrer.');
     }
@@ -32,7 +32,7 @@ export function createLoadImportedModule(getCache = (realm: ManagedRealm) => rea
       }
     });
   };
-  const loadImportedModuleSync: NonNullable<AgentHostDefined['loadImportedModule']> = (referrer, specifier, _hostDefined, finish) => {
+  const loadImportedModuleSync: NonNullable<AgentHostDefined['loadImportedModule']> = (referrer, specifier, _attributes, _hostDefined, finish) => {
     if (referrer instanceof Realm || referrer instanceof NullValue) {
       throw new Error('Internal error: loadImportedModule called without a ScriptOrModule referrer.');
     }
